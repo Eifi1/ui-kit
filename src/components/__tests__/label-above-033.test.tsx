@@ -71,7 +71,11 @@ describe("the floating label above the field at Large (§10.17)", () => {
   it("Textarea: the strip that hides scrolled text never shows at Large", () => {
     const { container } = render(<Textarea label="Notes" />);
     const strip = container.querySelector('[data-slot="label-strip"]')!;
-    expect(strip).toHaveClass("hidden", "not-large:peer-focus:block", "not-large:peer-[:not(:placeholder-shown)]:block");
+    expect(strip).toHaveClass(
+      "hidden",
+      "not-large:peer-focus:block",
+      "not-large:peer-[:not(:placeholder-shown)]:block",
+    );
     expect(strip).not.toHaveClass("peer-focus:block");
   });
 
@@ -83,9 +87,7 @@ describe("the floating label above the field at Large (§10.17)", () => {
   });
 
   it("DatePicker: a labelled box is a grid at Large, so the glyph measures the trigger's row", () => {
-    const { container, rerender } = render(
-      <DatePicker label="Booking date" value="2026-09-07" onChange={() => {}} />,
-    );
+    const { container, rerender } = render(<DatePicker label="Booking date" value="2026-09-07" onChange={() => {}} />);
     const label = screen.getByText("Booking date", { selector: "[data-field-label]" });
     expect(label.parentElement!).toHaveClass(...BOX);
     rerender(<DatePicker aria-label="Booking date" value="2026-09-07" onChange={() => {}} />);

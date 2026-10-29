@@ -127,12 +127,11 @@ function ColourRamp() {
       </div>
       <div className="mt-3">
         <Note>
-          {code("colorFrom")} + {code("colorTo")} (both needed) replace the {code("levels")} steps of{" "}
-          {code("color")} with a continuous scale from the smallest value to the busiest day. Two{" "}
-          {code("#rrggbb")} colours are interpolated in JS, so each cell is a concrete hex and the
-          month layout's day number picks black or white ink by MEASURING it; anything else (a{" "}
-          {code("var()")}) is mixed with {code("color-mix()")}. {code("fill(value, max)")} wins over
-          both — here a threshold rather than a scale — and also paints the legend.{" "}
+          {code("colorFrom")} + {code("colorTo")} (both needed) replace the {code("levels")} steps of {code("color")}{" "}
+          with a continuous scale from the smallest value to the busiest day. Two {code("#rrggbb")} colours are
+          interpolated in JS, so each cell is a concrete hex and the month layout's day number picks black or white ink
+          by MEASURING it; anything else (a {code("var()")}) is mixed with {code("color-mix()")}.{" "}
+          {code("fill(value, max)")} wins over both — here a threshold rather than a scale — and also paints the legend.{" "}
           {code("emptyColor")} is any CSS background for a day with no value.
         </Note>
       </div>
@@ -181,13 +180,12 @@ function AnchorSpecimen() {
       />
       <div className="mt-3">
         <Note>
-          The window is {A_FROM} to {A_TO} — it runs a year into the future, as a report's
-          &ldquo;all&rdquo; preset does — and {code("maxDays={140}")} keeps only 140 days of it. With{" "}
-          {code('anchor="to"')} (the default) those are 140 empty future days; {code('"today"')} ends on
-          today, {code('"latest"')} on the later of today and the last day with a value, and a{" "}
-          {code('"YYYY-MM-DD"')} on that day. The end is always clamped into {code("from")}…{code("to")}.
-          The table above is {code("heatmapWindowEnd")}, the exported pure function the component
-          calls — for a caller that has to know which days are on screen (a caption, a total).
+          The window is {A_FROM} to {A_TO} — it runs a year into the future, as a report's &ldquo;all&rdquo; preset does
+          — and {code("maxDays={140}")} keeps only 140 days of it. With {code('anchor="to"')} (the default) those are
+          140 empty future days; {code('"today"')} ends on today, {code('"latest"')} on the later of today and the last
+          day with a value, and a {code('"YYYY-MM-DD"')} on that day. The end is always clamped into {code("from")}…
+          {code("to")}. The table above is {code("heatmapWindowEnd")}, the exported pure function the component calls —
+          for a caller that has to know which days are on screen (a caption, a total).
         </Note>
       </div>
     </Example>

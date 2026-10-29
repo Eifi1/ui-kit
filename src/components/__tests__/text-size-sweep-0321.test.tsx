@@ -218,7 +218,13 @@ describe("Date and month fields at Large (0.32.1)", () => {
     );
     const field = container.querySelector("[data-slot=date-step-field]")!;
     const row = field.parentElement!;
-    expect(row).toHaveClass("large:max-sm:flex-wrap", "large:max-sm:[&>[data-slot=date-step-field]]:order-first", "large:max-sm:[&>[data-slot=date-step-field]]:basis-full", "large:max-sm:[&_[role=combobox]]:rounded-md", "large:max-sm:[&>span]:flex-1");
+    expect(row).toHaveClass(
+      "large:max-sm:flex-wrap",
+      "large:max-sm:[&>[data-slot=date-step-field]]:order-first",
+      "large:max-sm:[&>[data-slot=date-step-field]]:basis-full",
+      "large:max-sm:[&_[role=combobox]]:rounded-md",
+      "large:max-sm:[&>span]:flex-1",
+    );
   });
 
   it("a bare DatePicker carries no row marker", () => {
@@ -254,7 +260,15 @@ describe("ButtonGroup, joined, at Large (0.32.1)", () => {
       </ButtonGroup>,
     );
     const el = screen.getByRole("group", { name: "Display pages" });
-    expect(el).toHaveClass("large:flex-wrap", "large:max-w-full", "large:border-0", "large:[&>*]:border", "large:[&>*]:-ms-px", "large:[&>*]:-mt-px", "large:[&>*]:grow");
+    expect(el).toHaveClass(
+      "large:flex-wrap",
+      "large:max-w-full",
+      "large:border-0",
+      "large:[&>*]:border",
+      "large:[&>*]:-ms-px",
+      "large:[&>*]:-mt-px",
+      "large:[&>*]:grow",
+    );
     // Normal keeps the group's own frame.
     expect(el).toHaveClass("border");
     expect(el).not.toHaveClass("flex-wrap");

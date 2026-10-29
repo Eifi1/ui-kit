@@ -13,8 +13,7 @@ export const DEFAULT_FILE_PICKER_LABELS: FilePickerLabels = {
     `“${name}” was not added: at most ${maxFiles} ${maxFiles === 1 ? "file" : "files"}`,
   rejectedInvalid: (name) => `“${name}” cannot be used here`,
   rejectedMany: (count) => `${count} files were not added`,
-  rejectedPick: (count) =>
-    count === 1 ? "The file was not added" : `None of the ${count} files were added`,
+  rejectedPick: (count) => (count === 1 ? "The file was not added" : `None of the ${count} files were added`),
   selected: (count, firstName) => (count === 1 ? `“${firstName}” selected` : `${count} files selected`),
   remove: (name) => `Remove “${name}”`,
   clearAll: "Remove all files",

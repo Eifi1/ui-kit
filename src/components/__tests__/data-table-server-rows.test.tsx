@@ -93,7 +93,15 @@ describe("DataTable serverRows (0.48.1, keksdose K-052-1)", () => {
     const many = Array.from({ length: 30 }, (_, i) => ({ id: 100 + i, payee: `P${29 - i}`, amount: i }));
     const { container } = render(
       <MemoryRouter>
-        <DataTable rows={many} columns={COLUMNS} rowKey={(r) => r.id} serverRows sorts={SORTS} onSortsChange={() => {}} defaultPageSize={10} />
+        <DataTable
+          rows={many}
+          columns={COLUMNS}
+          rowKey={(r) => r.id}
+          serverRows
+          sorts={SORTS}
+          onSortsChange={() => {}}
+          defaultPageSize={10}
+        />
       </MemoryRouter>,
     );
     const rows = container.querySelectorAll("tbody tr");
@@ -104,7 +112,14 @@ describe("DataTable serverRows (0.48.1, keksdose K-052-1)", () => {
 
   it("serverRows={false} beside loadMore keeps the client filter and sort", () => {
     const { container } = render(
-      <Table loadMore={loadMore} serverRows={false} filters={{ payee: { type: "text", q: "transfer" } }} onFiltersChange={() => {}} sorts={SORTS} onSortsChange={() => {}} />,
+      <Table
+        loadMore={loadMore}
+        serverRows={false}
+        filters={{ payee: { type: "text", q: "transfer" } }}
+        onFiltersChange={() => {}}
+        sorts={SORTS}
+        onSortsChange={() => {}}
+      />,
     );
     expect(bodyPayees(container)).toEqual(["Transfer to savings", "Transfer from checking"]);
   });
@@ -117,14 +132,28 @@ describe("DataTable serverRows (0.48.1, keksdose K-052-1)", () => {
   });
 
   it("a plain client table still filters, sorts and pages", () => {
-    const { container } = render(<Table filters={{ payee: { type: "text", q: "transfer" } }} onFiltersChange={() => {}} sorts={SORTS} onSortsChange={() => {}} />);
+    const { container } = render(
+      <Table
+        filters={{ payee: { type: "text", q: "transfer" } }}
+        onFiltersChange={() => {}}
+        sorts={SORTS}
+        onSortsChange={() => {}}
+      />,
+    );
     expect(bodyPayees(container)).toEqual(["Transfer to savings", "Transfer from checking"]);
   });
 
   it("serverPagination is unchanged: rows as given, its pager, serverRows={false} does not undo it", () => {
     const sp = { page: 0, pageSize: 2, total: 40, onPageChange: () => {}, onPageSizeChange: () => {} };
     const { container } = render(
-      <Table serverPagination={sp} serverRows={false} filters={FILTERS} onFiltersChange={() => {}} sorts={SORTS} onSortsChange={() => {}} />,
+      <Table
+        serverPagination={sp}
+        serverRows={false}
+        filters={FILTERS}
+        onFiltersChange={() => {}}
+        sorts={SORTS}
+        onSortsChange={() => {}}
+      />,
     );
     expect(bodyPayees(container)).toEqual(LEGS.map((l) => l.payee));
     expect(screen.getByRole("button", { name: /next page/i })).toBeInTheDocument();

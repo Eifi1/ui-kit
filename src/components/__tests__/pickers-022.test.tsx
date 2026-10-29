@@ -51,7 +51,9 @@ describe("SwatchPicker / IconPicker label (keksdose K2)", () => {
       <SwatchPicker label="Flag" aria-label="Row flag" value="red" onChange={vi.fn()} options={SWATCHES} />,
     );
     expect(screen.getByRole("radiogroup", { name: "Row flag" })).toBeInTheDocument();
-    rerender(<SwatchPicker aria-label="Row flag" className="gap-3" value="red" onChange={vi.fn()} options={SWATCHES} />);
+    rerender(
+      <SwatchPicker aria-label="Row flag" className="gap-3" value="red" onChange={vi.fn()} options={SWATCHES} />,
+    );
     expect(container.firstElementChild).toBe(screen.getByRole("radiogroup"));
     expect(screen.getByRole("radiogroup").className).toContain("gap-3");
   });
@@ -198,9 +200,7 @@ describe("DatePicker / DateRangePicker hint and error (keksdose K4)", () => {
   });
 
   it("a FieldHint rides the label line", () => {
-    render(
-      <DatePicker label="Due date" value="" onChange={vi.fn()} hint={<FieldHint label="When it is due" />} />,
-    );
+    render(<DatePicker label="Due date" value="" onChange={vi.fn()} hint={<FieldHint label="When it is due" />} />);
     const hint = screen.getByRole("button", { name: "When it is due" });
     // On the label's own row, in the field's top strip.
     expect(hint.closest(".top-1")).not.toBeNull();
@@ -231,7 +231,14 @@ describe("DatePicker / DateRangePicker hint and error (keksdose K4)", () => {
 
   it("DateRangePicker: the same anatomy", () => {
     render(
-      <DateRangePicker label="Period" from="2026-09-01" to="2026-09-30" onChange={vi.fn()} hint="Inclusive." error="Too long." />,
+      <DateRangePicker
+        label="Period"
+        from="2026-09-01"
+        to="2026-09-30"
+        onChange={vi.fn()}
+        hint="Inclusive."
+        error="Too long."
+      />,
     );
     expect(screen.getByRole("combobox")).toHaveAccessibleDescription("Inclusive. Too long.");
   });
@@ -244,7 +251,16 @@ describe("DatePicker / DateRangePicker hint and error (keksdose K4)", () => {
 
 describe("MonthPicker error, hint and size=sm (keksdose K4, K13)", () => {
   it("error: message, aria-invalid, description", () => {
-    render(<MonthPicker label="Month" value="2026-08" onChange={vi.fn()} locale="en-GB" error="Closed month." hint="Budget period." />);
+    render(
+      <MonthPicker
+        label="Month"
+        value="2026-08"
+        onChange={vi.fn()}
+        locale="en-GB"
+        error="Closed month."
+        hint="Budget period."
+      />,
+    );
     const trigger = screen.getByRole("combobox");
     expect(trigger).toHaveAttribute("aria-invalid", "true");
     expect(trigger).toHaveAccessibleDescription("Budget period. Closed month.");
@@ -271,7 +287,16 @@ describe('MonthPicker mode="year" (kastlan 7, keksdose tax-tab.tsx:33)', () => {
   it("shows the year and offers exactly the bounded years, with no paging", () => {
     const onChange = vi.fn();
     render(
-      <MonthPicker mode="year" label="Tax year" value="2026" min="2022" max="2026" currentMonth="2026-10" onChange={onChange} locale="en-GB" />,
+      <MonthPicker
+        mode="year"
+        label="Tax year"
+        value="2026"
+        min="2022"
+        max="2026"
+        currentMonth="2026-10"
+        onChange={onChange}
+        locale="en-GB"
+      />,
     );
     const trigger = screen.getByRole("combobox");
     expect(trigger).toHaveAccessibleName("Tax year 2026");
@@ -288,7 +313,9 @@ describe('MonthPicker mode="year" (kastlan 7, keksdose tax-tab.tsx:33)', () => {
 
   it("pages twelve years at a time from min, refusing what is out of bounds", () => {
     const onChange = vi.fn();
-    render(<MonthPicker mode="year" aria-label="Fiscal year" value="2026" min="2020" onChange={onChange} locale="en-GB" />);
+    render(
+      <MonthPicker mode="year" aria-label="Fiscal year" value="2026" min="2020" onChange={onChange} locale="en-GB" />,
+    );
     fireEvent.click(screen.getByRole("combobox"));
     const grid = screen.getByRole("grid");
     expect(within(grid).getAllByRole("gridcell")).toHaveLength(12);
@@ -307,7 +334,15 @@ describe('MonthPicker mode="year" (kastlan 7, keksdose tax-tab.tsx:33)', () => {
   it("the stepper steps a year, and its Today reads This year", () => {
     const onChange = vi.fn();
     render(
-      <MonthPicker mode="year" variant="stepper" value="2024" max="2025" currentMonth="2026-10" onChange={onChange} locale="en-GB" />,
+      <MonthPicker
+        mode="year"
+        variant="stepper"
+        value="2024"
+        max="2025"
+        currentMonth="2026-10"
+        onChange={onChange}
+        locale="en-GB"
+      />,
     );
     fireEvent.click(screen.getByRole("button", { name: "Previous year" }));
     expect(onChange).toHaveBeenLastCalledWith("2023");
@@ -319,7 +354,8 @@ describe('MonthPicker mode="year" (kastlan 7, keksdose tax-tab.tsx:33)', () => {
 });
 
 describe("<UiKitProvider formatDate> (keksdose K12)", () => {
-  const fmt: KitDateFormatter = (iso, ctx) => `[${iso} ${ctx.unit} ${ctx.source} ${ctx.weekday ? "wd" : "-"} ${ctx.locale}]`;
+  const fmt: KitDateFormatter = (iso, ctx) =>
+    `[${iso} ${ctx.unit} ${ctx.source} ${ctx.weekday ? "wd" : "-"} ${ctx.locale}]`;
 
   it("writes the DatePicker trigger, with the weekday suggested", () => {
     render(
@@ -361,7 +397,9 @@ describe("<UiKitProvider formatDate> (keksdose K12)", () => {
         <MonthPicker aria-label="Year" mode="year" value="2026" onChange={vi.fn()} />
       </UiKitProvider>,
     );
-    expect(screen.getByRole("combobox", { name: /^Month/ })).toHaveTextContent("[2026-08 month monthPicker - undefined]");
+    expect(screen.getByRole("combobox", { name: /^Month/ })).toHaveTextContent(
+      "[2026-08 month monthPicker - undefined]",
+    );
     expect(screen.getByRole("combobox", { name: /^Year/ })).toHaveTextContent("[2026 year monthPicker - undefined]");
   });
 

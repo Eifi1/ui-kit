@@ -40,8 +40,7 @@ export type { InlineEntityComboboxProps } from "./inline-entity-combobox";
  * the DOM events of the wrapper. Everything else a wrapper needs reaches the root.
  */
 export interface ComboboxProps
-  extends Omit<ComponentPropsWithoutRef<"div">, "id" | "onChange" | "onBlur" | "onSubmit">,
-    FieldHelpProps {
+  extends Omit<ComponentPropsWithoutRef<"div">, "id" | "onChange" | "onBlur" | "onSubmit">, FieldHelpProps {
   value: string;
   onChange: (v: string) => void;
   /** Suggestion pool (e.g. existing payee names). */
@@ -592,10 +591,7 @@ export function Combobox(props: ComboboxProps) {
                       role="option"
                       aria-selected={o === value}
                       onClick={() => take(o)}
-                      className={cn(
-                        SHEET_ROW_CLASS,
-                        optionAdornment && "flex items-center justify-between gap-2",
-                      )}
+                      className={cn(SHEET_ROW_CLASS, optionAdornment && "flex items-center justify-between gap-2")}
                     >
                       {optionAdornment ? <span className="truncate-until-large">{o}</span> : o}
                       {optionAdornment?.(o)}

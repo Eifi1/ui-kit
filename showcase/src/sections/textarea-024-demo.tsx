@@ -105,12 +105,11 @@ export function Textarea024Demo() {
           />
         </div>
         <Note>
-          The strip is the field&apos;s top padding made to stay put: an {code("aria-hidden")} layer behind the
-          label, inside the border, in the same {code("--bg-surface")} / {code("--bg-surface-2")} the field
-          itself wears in that state, and only while the label is floated — an empty, unfocused field and an
-          unlabelled one look exactly as before. It stops short of a classic scrollbar (either side, so RTL too)
-          rather than hiding its top arrow, and it sits at the top, so the resize handle, {code("rows")} and{" "}
-          {code("showCount")} are untouched.
+          The strip is the field&apos;s top padding made to stay put: an {code("aria-hidden")} layer behind the label,
+          inside the border, in the same {code("--bg-surface")} / {code("--bg-surface-2")} the field itself wears in
+          that state, and only while the label is floated — an empty, unfocused field and an unlabelled one look exactly
+          as before. It stops short of a classic scrollbar (either side, so RTL too) rather than hiding its top arrow,
+          and it sits at the top, so the resize handle, {code("rows")} and {code("showCount")} are untouched.
         </Note>
       </div>
     </Example>

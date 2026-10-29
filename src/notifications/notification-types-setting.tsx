@@ -34,8 +34,10 @@ function devChecks(): boolean {
   return Boolean(import.meta.env?.DEV);
 }
 
-export interface NotificationTypesSettingProps<Id extends string = string>
-  extends Omit<ComponentPropsWithRef<"div">, "children" | "onChange"> {
+export interface NotificationTypesSettingProps<Id extends string = string> extends Omit<
+  ComponentPropsWithRef<"div">,
+  "children" | "onChange"
+> {
   /** The app's words for its types, in its order. Where an app types its ids. */
   types: readonly NotificationTypeEntry<Id>[];
   /** The `GET`'s `types` (§3.2); `undefined` while the first load runs. */
@@ -217,7 +219,8 @@ export function NotificationTypesSetting<Id extends string = string>({
     email: labels.channelEmail,
   };
   /** The columns on a wide screen: every channel some several-channel row offers. */
-  const drawnRows = value && !loading ? rowsOf(groups ? groups.flatMap((group) => group.types) : types.map((entry) => entry.id)) : [];
+  const drawnRows =
+    value && !loading ? rowsOf(groups ? groups.flatMap((group) => group.types) : types.map((entry) => entry.id)) : [];
   const multi = drawnRows.filter((row) => channelsOf(row.switches).length > 1);
   const columns = CHANNELS.filter((channel) => multi.some((row) => channelsOf(row.switches).includes(channel)));
   const columnHeadings =
@@ -357,26 +360,24 @@ export function NotificationTypesSetting<Id extends string = string>({
   if (loading || value === undefined) {
     body = <Skeleton lines={3} label={labels.typesLoading} />;
   } else if (groups) {
-    const drawn = groups
-      .map((group) => ({ group, rows: rowsOf(group.types) }))
-      .filter(({ rows }) => rows.length > 0);
+    const drawn = groups.map((group) => ({ group, rows: rowsOf(group.types) })).filter(({ rows }) => rows.length > 0);
     body =
       drawn.length === 0 ? (
         <p className={CARD_DESCRIPTION_CLASS}>{labels.typesEmpty}</p>
       ) : (
         <>
-        {columnHeadings}
-        {drawn.map(({ group, rows }) => {
-          const headingId = `${groupId}-${group.id}`;
-          return (
-            <div key={group.id} role="group" aria-labelledby={headingId} className="space-y-3">
-              <SectionLabel as="div" size="xs" id={headingId}>
-                {group.label}
-              </SectionLabel>
-              {rows.map(renderRow)}
-            </div>
-          );
-        })}
+          {columnHeadings}
+          {drawn.map(({ group, rows }) => {
+            const headingId = `${groupId}-${group.id}`;
+            return (
+              <div key={group.id} role="group" aria-labelledby={headingId} className="space-y-3">
+                <SectionLabel as="div" size="xs" id={headingId}>
+                  {group.label}
+                </SectionLabel>
+                {rows.map(renderRow)}
+              </div>
+            );
+          })}
         </>
       );
   } else {

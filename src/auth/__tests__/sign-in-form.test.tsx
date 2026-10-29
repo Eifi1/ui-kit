@@ -102,7 +102,10 @@ describe("SignInForm — credentials", () => {
   });
 
   it("no tag hint when the typed address already carries a tag", async () => {
-    const { user } = setup({ onSubmit: async () => Promise.reject(refusal(401, "invalid_credentials")), emailTag: "kastlan" });
+    const { user } = setup({
+      onSubmit: async () => Promise.reject(refusal(401, "invalid_credentials")),
+      emailTag: "kastlan",
+    });
     await signIn(user, "ada+kastlan@example.com");
     expect(await screen.findByRole("alert")).not.toHaveTextContent("Signed up with");
   });
@@ -111,7 +114,8 @@ describe("SignInForm — credentials", () => {
     const throttled = refusal(429, undefined, "slow down");
     const { user } = setup({
       onSubmit: async () => Promise.reject(throttled),
-      describeError: (error, action) => (error === throttled && action === "password" ? "Too many attempts." : undefined),
+      describeError: (error, action) =>
+        error === throttled && action === "password" ? "Too many attempts." : undefined,
     });
     await signIn(user);
     expect(await screen.findByRole("alert")).toHaveTextContent("Too many attempts.");
@@ -211,7 +215,11 @@ describe("SignInForm — a backup code (0.30.0)", () => {
     await user.type(field, "p ");
     expect(verify).toBeEnabled();
     await user.click(verify);
-    expect(onCode).toHaveBeenCalledWith({ challengeToken: "challenge-1", code: "abcd-efgh ijkl mnop", kind: "recovery" });
+    expect(onCode).toHaveBeenCalledWith({
+      challengeToken: "challenge-1",
+      code: "abcd-efgh ijkl mnop",
+      kind: "recovery",
+    });
   });
 
   it("a refused backup code says so; switching back clears it, focuses the digits, and sends no kind", async () => {
@@ -342,8 +350,7 @@ describe("SignInForm — a throttled request (0.30.0)", () => {
 
   it("names the wait a Retry-After asks for — keksdose's uncoded 429", async () => {
     const { user } = setup({
-      onSubmit: async () =>
-        Promise.reject(refusal(429, undefined, "x", { "retry-after": "30" })),
+      onSubmit: async () => Promise.reject(refusal(429, undefined, "x", { "retry-after": "30" })),
     });
     await signIn(user);
     expect(await screen.findByRole("alert")).toHaveTextContent("Too many attempts. Try again in 30 s.");

@@ -93,7 +93,10 @@ const CARD_TONES: Array<{ tone: CardTone; title: string; body: string }> = [
 function CardTones() {
   const [variant, setVariant] = useState<"default" | "inset">("default");
   return (
-    <Example label="Card — tone" hint="a status card: border and title in the tone; an inset card takes the tone's fill">
+    <Example
+      label="Card — tone"
+      hint="a status card: border and title in the tone; an inset card takes the tone's fill"
+    >
       <Row className="mb-3">
         <span className="text-xs text-muted">variant</span>
         <ToggleGroup<"default" | "inset">
@@ -126,7 +129,10 @@ function CardTones() {
 
 function SpinnerLabels() {
   return (
-    <Example label="Spinner — showLabel and labelPosition" hint="the label as visible text; the ring is then decorative">
+    <Example
+      label="Spinner — showLabel and labelPosition"
+      hint="the label as visible text; the ring is then decorative"
+    >
       <Stage>
         <div className="flex justify-center">
           <Spinner showLabel />
@@ -274,10 +280,7 @@ function Shutter() {
         className="relative mx-auto flex aspect-[3/4] w-full max-w-72 items-end justify-center overflow-hidden rounded-lg pb-6"
         style={{ background: VIEWFINDER }}
       >
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-6 rounded-md border border-white/30"
-        />
+        <div aria-hidden className="pointer-events-none absolute inset-6 rounded-md border border-white/30" />
         {flash && <div aria-hidden className="pointer-events-none absolute inset-0 bg-white/70" />}
         <span className="absolute start-3 top-3 rounded bg-black/50 px-2 py-0.5 font-mono text-xs text-white">
           {shots} photo{shots === 1 ? "" : "s"}

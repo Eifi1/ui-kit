@@ -41,14 +41,7 @@ function activeOption(field: HTMLElement): HTMLElement | null {
 
 describe("EntityCombobox's trigger is a combobox, not a button wearing aria-invalid", () => {
   const open = () => {
-    render(
-      <EntityCombobox<string>
-        label="Account"
-        value={null}
-        onChange={vi.fn()}
-        options={OPTIONS}
-      />,
-    );
+    render(<EntityCombobox<string> label="Account" value={null} onChange={vi.fn()} options={OPTIONS} />);
     return screen.getByRole("combobox", { name: /Account/ });
   };
 
@@ -73,32 +66,14 @@ describe("EntityCombobox's trigger is a combobox, not a button wearing aria-inva
   });
 
   it("carries aria-invalid on a role that supports it", () => {
-    render(
-      <EntityCombobox<string>
-        label="Account"
-        value={null}
-        onChange={vi.fn()}
-        options={OPTIONS}
-        invalid
-      />,
-    );
-    expect(screen.getByRole("combobox", { name: /Account/ })).toHaveAttribute(
-      "aria-invalid",
-      "true",
-    );
+    render(<EntityCombobox<string> label="Account" value={null} onChange={vi.fn()} options={OPTIONS} invalid />);
+    expect(screen.getByRole("combobox", { name: /Account/ })).toHaveAttribute("aria-invalid", "true");
   });
 });
 
 describe("the open panel says which option is active, and moves it from the keyboard", () => {
   function setup(onChange = vi.fn()) {
-    render(
-      <EntityCombobox<string>
-        label="Account"
-        value={null}
-        onChange={onChange}
-        options={OPTIONS}
-      />,
-    );
+    render(<EntityCombobox<string> label="Account" value={null} onChange={onChange} options={OPTIONS} />);
     const trigger = screen.getByRole("combobox", { name: /Account/ });
     fireEvent.click(trigger);
     // Focus lands in the panel's search box, so that is what owns the active
@@ -155,39 +130,19 @@ describe("the open panel says which option is active, and moves it from the keyb
   });
 
   it("marks the chosen option selected, not merely highlighted", () => {
-    render(
-      <EntityCombobox<string>
-        label="Account"
-        value="b"
-        onChange={vi.fn()}
-        options={OPTIONS}
-      />,
-    );
+    render(<EntityCombobox<string> label="Account" value="b" onChange={vi.fn()} options={OPTIONS} />);
     fireEvent.click(screen.getByRole("combobox", { name: /Account/ }));
     // `aria-selected` is the CHOSEN state; the keyboard highlight is
     // `aria-activedescendant`. Conflating them tells a reader the row under the
     // cursor is already the answer.
-    expect(screen.getByRole("option", { name: "Savings" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
-    expect(screen.getByRole("option", { name: "Checking" })).toHaveAttribute(
-      "aria-selected",
-      "false",
-    );
+    expect(screen.getByRole("option", { name: "Savings" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("option", { name: "Checking" })).toHaveAttribute("aria-selected", "false");
   });
 });
 
 describe("MultiEntityCombobox announces a multiple selection", () => {
   it("is a multiselectable listbox whose chosen rows say so", () => {
-    render(
-      <MultiEntityCombobox<string>
-        label="Payees"
-        value={["a", "c"]}
-        onChange={vi.fn()}
-        options={OPTIONS}
-      />,
-    );
+    render(<MultiEntityCombobox<string> label="Payees" value={["a", "c"]} onChange={vi.fn()} options={OPTIONS} />);
     fireEvent.click(screen.getByRole("combobox", { name: /Payees/ }));
 
     expect(screen.getByRole("listbox")).toHaveAttribute("aria-multiselectable", "true");
@@ -221,14 +176,8 @@ describe("MultiSelect's checked state is semantic, not a decorative span", () =>
     fireEvent.click(trigger);
 
     expect(screen.getByRole("listbox")).toHaveAttribute("aria-multiselectable", "true");
-    expect(screen.getByRole("option", { name: /Groceries/ })).toHaveAttribute(
-      "aria-selected",
-      "false",
-    );
-    expect(screen.getByRole("option", { name: /Fuel/ })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
+    expect(screen.getByRole("option", { name: /Groceries/ })).toHaveAttribute("aria-selected", "false");
+    expect(screen.getByRole("option", { name: /Fuel/ })).toHaveAttribute("aria-selected", "true");
   });
 
   it("toggles the active row with Enter", () => {
@@ -254,14 +203,7 @@ describe("the two input-shaped comboboxes point at the list they opened", () => 
   it("Combobox: aria-controls resolves and the highlight is announced", () => {
     function Harness() {
       const [value, setValue] = useState("");
-      return (
-        <Combobox
-          label="Payee"
-          value={value}
-          onChange={setValue}
-          options={["Migros", "Coop", "Denner"]}
-        />
-      );
+      return <Combobox label="Payee" value={value} onChange={setValue} options={["Migros", "Coop", "Denner"]} />;
     }
     render(<Harness />);
     const field = screen.getByRole("combobox", { name: "Payee" });
@@ -294,28 +236,18 @@ describe("the two input-shaped comboboxes point at the list they opened", () => 
   });
 
   it("InlineEntityCombobox: the rows are options and the field names the list", () => {
-    render(
-      <InlineEntityCombobox<string>
-        label="Account"
-        value="b"
-        onChange={vi.fn()}
-        options={OPTIONS}
-      />,
-    );
+    render(<InlineEntityCombobox<string> label="Account" value="b" onChange={vi.fn()} options={OPTIONS} />);
     const field = screen.getByRole("combobox", { name: "Account" });
     fireEvent.focus(field);
 
     const listbox = screen.getByRole("listbox");
     expect(field.getAttribute("aria-controls")).toBe(listbox.id);
-    expect(within(listbox).getAllByRole("option").map((o) => o.textContent)).toEqual([
-      "Checking",
-      "Savings",
-      "Credit card",
-    ]);
-    expect(screen.getByRole("option", { name: "Savings" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
+    expect(
+      within(listbox)
+        .getAllByRole("option")
+        .map((o) => o.textContent),
+    ).toEqual(["Checking", "Savings", "Credit card"]);
+    expect(screen.getByRole("option", { name: "Savings" })).toHaveAttribute("aria-selected", "true");
   });
 });
 

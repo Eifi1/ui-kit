@@ -29,9 +29,7 @@ function ToastTones() {
         </Button>
         <Button
           variant="secondary"
-          onClick={() =>
-            toast.warning("Storage almost full", { description: "Older attachments will not be synced." })
-          }
+          onClick={() => toast.warning("Storage almost full", { description: "Older attachments will not be synced." })}
         >
           Warning
         </Button>
@@ -44,14 +42,13 @@ function ToastTones() {
       </Row>
       <div className="mt-3">
         <Note>
-          The import is the only change from sonner: <code className="font-mono">toast(msg, opts)</code>{" "}
-          and its tone methods take the same message and options (<code className="font-mono">description</code>,{" "}
+          The import is the only change from sonner: <code className="font-mono">toast(msg, opts)</code> and its tone
+          methods take the same message and options (<code className="font-mono">description</code>,{" "}
           <code className="font-mono">action</code>, <code className="font-mono">cancel</code>,{" "}
           <code className="font-mono">duration</code>, <code className="font-mono">id</code>,{" "}
-          <code className="font-mono">onDismiss</code>, <code className="font-mono">onAutoClose</code>) and
-          return the id. The colours are the AlertBanner tokens, layered on{" "}
-          <code className="font-mono">--bg-surface</code> so a dark toast is not see-through, and the toaster
-          follows the theme toggle in the top bar by itself.
+          <code className="font-mono">onDismiss</code>, <code className="font-mono">onAutoClose</code>) and return the
+          id. The colours are the AlertBanner tokens, layered on <code className="font-mono">--bg-surface</code> so a
+          dark toast is not see-through, and the toaster follows the theme toggle in the top bar by itself.
         </Note>
       </div>
     </Example>
@@ -85,7 +82,9 @@ function ToastUndo() {
             {/* In the row's menu; no confirmation, the toast's Undo is the way back. */}
             <RowActions
               name={name}
-              actions={[{ label: "Delete", icon: Trash2, tone: "danger", confirm: false, onSelect: () => remove(name) }]}
+              actions={[
+                { label: "Delete", icon: Trash2, tone: "danger", confirm: false, onSelect: () => remove(name) },
+              ]}
             />
           </li>
         ))}
@@ -108,14 +107,13 @@ function ToastUndo() {
       </Row>
       <div className="mt-3">
         <Note>
-          Delete a row (its &ldquo;⋯&rdquo; menu — a delete is never a bin in every row): the toast offers the
-          step back, which is why this one passes <code className="font-mono">confirm: false</code> instead of
-          asking first, and undoing it offers the step forward again —
-          a journal pattern, with the journal left to the app. Any toast with an{" "}
-          <code className="font-mono">action</code> stays up 8s rather than 4s unless it is given a{" "}
-          <code className="font-mono">duration</code>, so the button can be reached. The action is a real
-          button inside the toaster&apos;s polite live region: it is announced with the message, Tab reaches
-          it, the timer pauses while focus or the pointer is on the toast, and Alt+T jumps to the newest one.
+          Delete a row (its &ldquo;⋯&rdquo; menu — a delete is never a bin in every row): the toast offers the step
+          back, which is why this one passes <code className="font-mono">confirm: false</code> instead of asking first,
+          and undoing it offers the step forward again — a journal pattern, with the journal left to the app. Any toast
+          with an <code className="font-mono">action</code> stays up 8s rather than 4s unless it is given a{" "}
+          <code className="font-mono">duration</code>, so the button can be reached. The action is a real button inside
+          the toaster&apos;s polite live region: it is announced with the message, Tab reaches it, the timer pauses
+          while focus or the pointer is on the toast, and Alt+T jumps to the newest one.
         </Note>
       </div>
     </Example>
@@ -169,9 +167,9 @@ function ToastReplaceAndPromise() {
       </Row>
       <div className="mt-3">
         <Note>
-          Press <strong>Save</strong> several times: one toast counts up instead of a stack of them, because
-          they share <code className="font-mono">id: &quot;demo-save&quot;</code>. An update replaces the toast
-          wholesale, so pass every option again (an action left off the second call disappears).
+          Press <strong>Save</strong> several times: one toast counts up instead of a stack of them, because they share{" "}
+          <code className="font-mono">id: &quot;demo-save&quot;</code>. An update replaces the toast wholesale, so pass
+          every option again (an action left off the second call disappears).
         </Note>
       </div>
     </Example>
@@ -210,12 +208,12 @@ function ToastRedact() {
           <code className="font-mono">.demo-mode [data-private]</code> blur) hides them like any other figure.
         </Note>
         <Note>
-          On a phone (below 768px) the toaster moves to the bottom centre, lifted above AppShell&apos;s bottom
-          nav (<code className="font-mono">--app-nav-h</code>) and the safe area, so it covers neither the
-          header&apos;s buttons nor the nav&apos;s; from 768px up it is top centre, below the top bar. It sits at{" "}
-          <code className="font-mono">--z-toast</code>, above every dialog and sheet, and swipes away in any
-          direction. <code className="font-mono">position</code> and <code className="font-mono">navOffset</code>{" "}
-          override the defaults.
+          On a phone (below 768px) the toaster moves to the bottom centre, lifted above AppShell&apos;s bottom nav (
+          <code className="font-mono">--app-nav-h</code>) and the safe area, so it covers neither the header&apos;s
+          buttons nor the nav&apos;s; from 768px up it is top centre, below the top bar. It sits at{" "}
+          <code className="font-mono">--z-toast</code>, above every dialog and sheet, and swipes away in any direction.{" "}
+          <code className="font-mono">position</code> and <code className="font-mono">navOffset</code> override the
+          defaults.
         </Note>
       </div>
     </Example>

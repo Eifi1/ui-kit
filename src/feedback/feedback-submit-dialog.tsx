@@ -107,12 +107,12 @@ export function FeedbackSubmitDialog({
         )
       }
       onCaptureScreenshot={onCaptureScreenshot}
-      publicNotice={
-        publicNotice ? (dialogText.publicNotice ?? DEFAULT_FEEDBACK_DIALOG_LABELS.publicNotice) : undefined
-      }
+      publicNotice={publicNotice ? (dialogText.publicNotice ?? DEFAULT_FEEDBACK_DIALOG_LABELS.publicNotice) : undefined}
       // The context is read off the very values the box below shows (§3.2).
       onSubmit={(data) => onSubmit(data, feedbackContext({ user, attachUrl, url, environment, version }))}
-      contextSlot={<FeedbackContextBox user={user} url={url} attachUrl={attachUrl} onAttachUrlChange={onAttachUrlChange} />}
+      contextSlot={
+        <FeedbackContextBox user={user} url={url} attachUrl={attachUrl} onAttachUrlChange={onAttachUrlChange} />
+      }
     />
   );
 }

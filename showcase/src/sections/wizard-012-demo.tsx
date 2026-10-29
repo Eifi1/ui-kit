@@ -106,7 +106,12 @@ function PayeesStep({
           {payees.map((p, i) => (
             <li key={`${p}-${i}`} className="flex items-center justify-between gap-2">
               <span className="truncate">{p}</span>
-              <Button type="button" size="sm" variant="ghost" onClick={() => setPayees(payees.filter((_, j) => j !== i))}>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => setPayees(payees.filter((_, j) => j !== i))}
+              >
                 Remove
               </Button>
             </li>
@@ -196,13 +201,12 @@ export function WizardStepHooksDemo() {
       <p className={`mt-3 ${READOUT}`}>log: {log.length ? log.join(" · ") : "—"}</p>
       <div className="mt-3">
         <Note>
-          {code("<WizardStep title description>")} draws every step&apos;s heading in one style (an{" "}
-          {code("h3")} by default, {code("headingLevel")} to change it). The shares step calls{" "}
-          {code("useWizardNextGate(sum !== 100)")}: Next and Skip are disabled before any click, and the
-          gate lifts when the step unmounts. The payees step calls {code("useWizardStepValidate")} with an
-          inline closure over its list; Next runs it with the step&apos;s other validators, and its{" "}
-          {code("errors")} land in {code("wizard.fieldErrors")}, shown here in a banner. This wizard has{" "}
-          {code("urlSync: false")}, so it leaves the address bar alone.
+          {code("<WizardStep title description>")} draws every step&apos;s heading in one style (an {code("h3")} by
+          default, {code("headingLevel")} to change it). The shares step calls {code("useWizardNextGate(sum !== 100)")}:
+          Next and Skip are disabled before any click, and the gate lifts when the step unmounts. The payees step calls{" "}
+          {code("useWizardStepValidate")} with an inline closure over its list; Next runs it with the step&apos;s other
+          validators, and its {code("errors")} land in {code("wizard.fieldErrors")}, shown here in a banner. This wizard
+          has {code("urlSync: false")}, so it leaves the address bar alone.
         </Note>
       </div>
     </Example>

@@ -43,7 +43,10 @@ function answer(status: number, body: unknown, json = true): Response {
 
 const STORED = { stored: true, duplicate: false, feedback_id: 512, reference: "3fae6774" };
 
-function setup(over: Partial<CrashReporterOptions> = {}, reply: () => Response | Promise<Response> = () => answer(202, STORED)) {
+function setup(
+  over: Partial<CrashReporterOptions> = {},
+  reply: () => Response | Promise<Response> = () => answer(202, STORED),
+) {
   const fetchImpl = vi.fn((..._args: Parameters<typeof fetch>) => Promise.resolve(reply()));
   let tok: string | null = "token-000";
   let demo = false;

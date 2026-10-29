@@ -56,12 +56,10 @@ async function runVariant(browser, base, dir) {
       waitUntil: "networkidle",
       timeout: 60_000,
     });
-    if (dir === "rtl")
-      await page.evaluate(() => (document.documentElement.dir = "rtl"));
+    if (dir === "rtl") await page.evaluate(() => (document.documentElement.dir = "rtl"));
     const status = page.getByTestId("gt-status");
     await status.waitFor({ timeout: 30_000 });
-    const index = async () =>
-      /index (\d+)/.exec((await status.textContent()) ?? "")?.[1] ?? "idle";
+    const index = async () => /index (\d+)/.exec((await status.textContent()) ?? "")?.[1] ?? "idle";
     const card = page.locator("[data-tour-card]");
     const geometry = () =>
       page.evaluate(() => {
@@ -80,17 +78,12 @@ async function runVariant(browser, base, dir) {
         const seen = (el) => {
           const b = el?.getBoundingClientRect();
           if (!b) return false;
-          const hit = document.elementFromPoint(
-            b.left + b.width / 2,
-            b.top + b.height / 2,
-          );
+          const hit = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2);
           return !!hit && el.contains(hit);
         };
         const cardEl = document.querySelector("[data-tour-card]");
         const next = cardEl
-          ? [...cardEl.querySelectorAll("button")].find((b) =>
-              /^(Next|Done)$/.test(b.textContent.trim()),
-            )
+          ? [...cardEl.querySelectorAll("button")].find((b) => /^(Next|Done)$/.test(b.textContent.trim()))
           : null;
         const field = document.querySelector('[data-tour="gt-category"]');
         const list = [...document.querySelectorAll('[role="listbox"]')].find(
@@ -102,45 +95,26 @@ async function runVariant(browser, base, dir) {
           nextSeen: seen(next),
           nextLocked: next?.getAttribute("aria-disabled") === "true",
           focusInField: !!field && field.contains(document.activeElement),
-          expanded:
-            field
-              ?.querySelector('[role="combobox"]')
-              ?.getAttribute("aria-expanded") ?? null,
+          expanded: field?.querySelector('[role="combobox"]')?.getAttribute("aria-expanded") ?? null,
           list: r(list),
-          overlayDir: document
-            .querySelector("[data-tour-overlay]")
-            ?.getAttribute("dir"),
+          overlayDir: document.querySelector("[data-tour-overlay]")?.getAttribute("dir"),
         };
       });
     const overlap = (a, b) =>
-      !!a &&
-      !!b &&
-      a.left < b.right &&
-      b.left < a.right &&
-      a.top < b.bottom &&
-      b.top < a.bottom;
-    const inView = (b) =>
-      !!b && b.left >= 0 && b.right <= W && b.top >= 0 && b.bottom <= H;
+      !!a && !!b && a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+    const inView = (b) => !!b && b.left >= 0 && b.right <= W && b.top >= 0 && b.bottom <= H;
 
     // 1. Guide me → the amount step; type, Next.
     await page.getByRole("button", { name: "New transaction" }).click();
     await page.getByRole("button", { name: "Guide me" }).click();
     await card.waitFor();
     await sleep(400);
-    check(
-      "1 starts at the amount step",
-      (await index()) === "2",
-      await status.textContent(),
-    );
+    check("1 starts at the amount step", (await index()) === "2", await status.textContent());
     await page.keyboard.type("12");
     await sleep(200);
     await card.getByRole("button", { name: "Next" }).click();
     await sleep(500);
-    check(
-      "1 Next moves on to the category",
-      (await index()) === "3",
-      await status.textContent(),
-    );
+    check("1 Next moves on to the category", (await index()) === "3", await status.textContent());
 
     // 2. Arrival on the Combobox step: focused, closed, card unobstructed.
     let g = await geometry();
@@ -152,16 +126,8 @@ async function runVariant(browser, base, dir) {
     );
     check("2 the card is seen (elementFromPoint)", g.cardSeen);
     check("2 the card's Next is seen and locked", g.nextSeen && g.nextLocked);
-    check(
-      "2 the card is inside the viewport",
-      inView(g.card),
-      JSON.stringify(g.card),
-    );
-    check(
-      "2 the card takes the page's direction",
-      g.overlayDir === dir,
-      `dir=${g.overlayDir}`,
-    );
+    check("2 the card is inside the viewport", inView(g.card), JSON.stringify(g.card));
+    check("2 the card takes the page's direction", g.overlayDir === dir, `dir=${g.overlayDir}`);
 
     // 3. ArrowDown opens; Escape closes only the list.
     await page.keyboard.press("ArrowDown");
@@ -171,10 +137,7 @@ async function runVariant(browser, base, dir) {
     await page.keyboard.press("Escape");
     await sleep(300);
     g = await geometry();
-    check(
-      "3 Escape closes only the list",
-      g.expanded === "false" && (await index()) === "3" && g.cardSeen,
-    );
+    check("3 Escape closes only the list", g.expanded === "false" && (await index()) === "3" && g.cardSeen);
 
     // 4. The person's click opens the list; its overlap with the card is reported.
     await page.locator('[data-tour="gt-category"] [role="combobox"]').click();
@@ -190,10 +153,7 @@ async function runVariant(browser, base, dir) {
     await page.getByRole("option", { name: "Rent" }).click();
     await sleep(400);
     g = await geometry();
-    check(
-      "5 a pick unlocks Next, the card is seen",
-      !g.nextLocked && g.nextSeen && g.cardSeen,
-    );
+    check("5 a pick unlocks Next, the card is seen", !g.nextLocked && g.nextSeen && g.cardSeen);
     check("no page errors", errors.length === 0, errors.join(" | "));
   } catch (error) {
     check("ran to the end", false, String(error).split("\n")[0]);
@@ -204,9 +164,7 @@ async function runVariant(browser, base, dir) {
 }
 
 const given = arg("--url");
-const server = given
-  ? { url: given, stop: () => {} }
-  : await startDev(Number(process.env.SHOWCASE_PORT ?? 4182));
+const server = given ? { url: given, stop: () => {} } : await startDev(Number(process.env.SHOWCASE_PORT ?? 4182));
 let failed = 0;
 const browser = await chromium.launch();
 try {
@@ -215,9 +173,7 @@ try {
     console.log(`\ndesktop-${dir}`);
     for (const [name, ok, detail] of results) {
       if (!ok) failed++;
-      console.log(
-        `  ${ok ? "PASS" : "FAIL"}  ${name}${!ok && detail ? `  — ${detail}` : ""}`,
-      );
+      console.log(`  ${ok ? "PASS" : "FAIL"}  ${name}${!ok && detail ? `  — ${detail}` : ""}`);
     }
     for (const note of notes) console.log(`  NOTE  ${note}`);
   }

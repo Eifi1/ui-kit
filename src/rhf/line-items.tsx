@@ -49,15 +49,13 @@ import {
 } from "../components/line-items";
 
 /** A cell's context, with the row's path in the form. */
-export interface RhfLineItemCellContext<TItem, TArrayName extends string>
-  extends LineItemCellContext<TItem> {
+export interface RhfLineItemCellContext<TItem, TArrayName extends string> extends LineItemCellContext<TItem> {
   /** The row's path: `${name}.${index}` — bind the cell's field to
    *  `` `${name}.amount` ``. */
   name: `${TArrayName}.${number}`;
 }
 
-export interface RhfLineItemsColumn<TItem, TArrayName extends string>
-  extends Omit<LineItemsColumn<TItem>, "render"> {
+export interface RhfLineItemsColumn<TItem, TArrayName extends string> extends Omit<LineItemsColumn<TItem>, "render"> {
   render: (ctx: RhfLineItemCellContext<TItem, TArrayName>) => ReactNode;
 }
 
@@ -66,9 +64,9 @@ export interface RhfLineItemsProps<
   TArrayName extends FieldArrayPath<TFieldValues> = FieldArrayPath<TFieldValues>,
   TTransformed = TFieldValues,
 > extends Omit<
-    LineItemsProps<FieldArrayWithId<TFieldValues, TArrayName, "id">>,
-    "items" | "columns" | "onAdd" | "onRemove" | "getKey"
-  > {
+  LineItemsProps<FieldArrayWithId<TFieldValues, TArrayName, "id">>,
+  "items" | "columns" | "onAdd" | "onRemove" | "getKey"
+> {
   name: TArrayName;
   /** `form.control`. Optional under `<Form {...form}>`. */
   control?: UseFieldArrayProps<TFieldValues, TArrayName, "id", TTransformed>["control"];

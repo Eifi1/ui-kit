@@ -46,11 +46,7 @@ import type { MeasuredGridLabels } from "../components/measured-grid";
 import type { FeedbackAttachmentFieldLabels } from "../feedback/feedback-attachment";
 import type { FeedbackDialogTextLabels } from "../feedback/feedback-dialog";
 import type { FeedbackComposerLabels, FeedbackThreadLabels } from "../feedback/feedback-thread";
-import type {
-  FeedbackCategoryLabels,
-  FeedbackStatusLabels,
-  FeedbackToastLabels,
-} from "../feedback/feedback-labels";
+import type { FeedbackCategoryLabels, FeedbackStatusLabels, FeedbackToastLabels } from "../feedback/feedback-labels";
 import type { FeedbackMenuLabels } from "../feedback/feedback-menu";
 import type { FeedbackPublicLabels } from "../feedback/feedback-public-labels";
 import type { FeedbackNotificationTypesLabels } from "../notifications/feedback-notification-types-labels";
@@ -893,9 +889,7 @@ function mergeOverrides(
  * `columnsCount` from `columns`): merge the component's prop over it — a record key by
  * key — and feed the result to that resolver.
  */
-export function useKitLabelOverrides<K extends keyof UiKitLabels>(
-  ns: K,
-): LabelOverride<UiKitLabels[K]> | undefined {
+export function useKitLabelOverrides<K extends keyof UiKitLabels>(ns: K): LabelOverride<UiKitLabels[K]> | undefined {
   return useContext(KitI18nContext).labels?.[ns];
 }
 
@@ -912,10 +906,7 @@ export function useKitLabels<K extends keyof UiKitLabels>(
   prop?: LabelOverride<UiKitLabels[K]>,
 ): UiKitLabels[K] {
   const fromProvider = useKitLabelOverrides(ns);
-  return useMemo(
-    () => mergeNamespace(mergeNamespace(defaults, fromProvider), prop),
-    [defaults, fromProvider, prop],
-  );
+  return useMemo(() => mergeNamespace(mergeNamespace(defaults, fromProvider), prop), [defaults, fromProvider, prop]);
 }
 
 /** The component's own `locale` prop, else the provider's, else `undefined` (which
@@ -973,10 +964,7 @@ export function useKitDocumentTitle(): { format: string | undefined; appName: st
 /** {@link DEFAULT_FILE_LABELS}, but formatting in the provider's locale. */
 export function useKitFileLabels(prop?: Partial<FileLabels>): FileLabels {
   const locale = useKitLocale();
-  const defaults = useMemo<FileLabels>(
-    () => ({ size: (bytes) => formatFileSize(bytes, locale) }),
-    [locale],
-  );
+  const defaults = useMemo<FileLabels>(() => ({ size: (bytes) => formatFileSize(bytes, locale) }), [locale]);
   return useKitLabels("file", defaults, prop);
 }
 
@@ -992,10 +980,7 @@ export function useKitFileLabels(prop?: Partial<FileLabels>): FileLabels {
  * those components. Left out (a test file is not type-checked), it throws saying so
  * rather than "Cannot convert undefined or null to object" (keksdose, 0.18).
  */
-export function missingKitLabels(
-  labels: UiKitLabelOverrides | undefined,
-  reference: UiKitLabels,
-): string[] {
+export function missingKitLabels(labels: UiKitLabelOverrides | undefined, reference: UiKitLabels): string[] {
   if (!isRecord(reference)) {
     throw new TypeError(
       "missingKitLabels(labels, reference): pass DEFAULT_UI_KIT_LABELS as the reference — " +

@@ -60,9 +60,7 @@ describe("ToggleGroup as a field (lenkbank's ToggleField, gear/common.tsx:97)", 
   });
 
   it("shows an error, paints the field and describes the group with it", () => {
-    render(
-      <ToggleGroup label="Direction" error="Pick one" value="a" onChange={vi.fn()} options={OPTIONS} />,
-    );
+    render(<ToggleGroup label="Direction" error="Pick one" value="a" onChange={vi.fn()} options={OPTIONS} />);
     const group = screen.getByRole("radiogroup", { name: "Direction" });
     expect(group).toHaveAttribute("aria-invalid", "true");
     expect(group).toHaveAccessibleDescription("Pick one");
@@ -70,9 +68,7 @@ describe("ToggleGroup as a field (lenkbank's ToggleField, gear/common.tsx:97)", 
   });
 
   it("lets an explicit aria-label name the group instead", () => {
-    render(
-      <ToggleGroup label="Dir." aria-label="Direction" value="a" onChange={vi.fn()} options={OPTIONS} />,
-    );
+    render(<ToggleGroup label="Dir." aria-label="Direction" value="a" onChange={vi.fn()} options={OPTIONS} />);
     const group = screen.getByRole("radiogroup", { name: "Direction" });
     expect(group).not.toHaveAttribute("aria-labelledby");
   });

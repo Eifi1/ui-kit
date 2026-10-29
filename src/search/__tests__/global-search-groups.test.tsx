@@ -90,7 +90,11 @@ describe("GlobalSearch: one source, several groups", () => {
     expect(headings()).toEqual(["Pages", "Properties", "Units", "Contacts", "Other records"]);
     const contacts = screen.getByRole("group", { name: "Contacts" });
     // Within a group the source's ranking stands.
-    expect(within(contacts).getAllByRole("option").map((o) => o.textContent)).toEqual(["Müller, Anna", "Müller, Ben"]);
+    expect(
+      within(contacts)
+        .getAllByRole("option")
+        .map((o) => o.textContent),
+    ).toEqual(["Müller, Anna", "Müller, Ben"]);
     // Same id "1" in two groups: both rows exist (the group key is part of the row id).
     expect(screen.getByRole("option", { name: "Müllerstraße 4" })).toBeInTheDocument();
     expect(screen.getByRole("group", { name: "Other records" })).toHaveTextContent("Müller invoice");
@@ -149,7 +153,9 @@ describe("GlobalSearch: one source, several groups", () => {
     const pending = deferred<SearchEntry[]>();
     const onError = vi.fn();
     renderSearch({
-      sources: [{ id: "records", group: "Records", groups: GROUPS, debounceMs: 0, onError, search: () => pending.promise }],
+      sources: [
+        { id: "records", group: "Records", groups: GROUPS, debounceMs: 0, onError, search: () => pending.promise },
+      ],
     });
     await open();
     type("müller");
@@ -188,7 +194,12 @@ describe("GlobalSearch: one source, several groups", () => {
   it("leaves a source without `groups` as it was: one group, entries' own `group` ignored", async () => {
     renderSearch({
       sources: [
-        { id: "tx", group: "Transactions", debounceMs: 0, search: async () => [{ id: "t", title: "Müller rent", group: "unit" }] },
+        {
+          id: "tx",
+          group: "Transactions",
+          debounceMs: 0,
+          search: async () => [{ id: "t", title: "Müller rent", group: "unit" }],
+        },
       ],
     });
     await open();

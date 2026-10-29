@@ -25,8 +25,10 @@ export const THEME_KEY = "uikit-showcase-theme";
 export const PALETTE_KEY = "uikit-showcase-palette";
 
 export const { useTheme, useApplyTheme } = createThemeStore(THEME_KEY);
-export const { usePalette, useApplyPalette, useActiveTokenSet, useChartHex, useHeatStops } =
-  createPaletteStore(PALETTE_KEY, useTheme);
+export const { usePalette, useApplyPalette, useActiveTokenSet, useChartHex, useHeatStops } = createPaletteStore(
+  PALETTE_KEY,
+  useTheme,
+);
 
 /** The text size and the contrast (0.32, docs/text-size-harmonization.md §6) — device
  *  choices only: the showcase has no account, so the sizes in force are the device's

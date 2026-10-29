@@ -17,9 +17,7 @@ const PRESETS: DateRangePickerPreset[] = [
   { id: "this_month", label: "This month", from: "2026-09-01", to: "2026-09-30" },
 ];
 
-function Harness(
-  props: Partial<DateRangePickerProps> & { onCommit?: DateRangePickerProps["onChange"] },
-) {
+function Harness(props: Partial<DateRangePickerProps> & { onCommit?: DateRangePickerProps["onChange"] }) {
   const { onCommit, ...rest } = props;
   const [range, setRange] = useState({ from: "2026-08-01", to: "2026-08-31" });
   return (
@@ -110,12 +108,7 @@ describe("DateRangePicker on a phone", () => {
 });
 
 describe("DateRangePicker renderTrigger", () => {
-  const renderTrigger: DateRangePickerProps["renderTrigger"] = ({
-    triggerProps,
-    valueProps,
-    preset,
-    text,
-  }) => (
+  const renderTrigger: DateRangePickerProps["renderTrigger"] = ({ triggerProps, valueProps, preset, text }) => (
     <button {...triggerProps} className={cn(triggerProps.className, "rounded-e-none")}>
       <span {...valueProps}>{preset ? preset.label : text}</span>
     </button>

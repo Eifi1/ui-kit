@@ -439,9 +439,7 @@ function BarDrilldown() {
     })).sort(byValueDesc);
     title = `${monthLabel} by category`;
     sub = "Coloured by group · click a category for its payees";
-    config = Object.fromEntries(
-      GROUPS.map((g, i) => [g.id, { label: g.name, color: paletteFor(i) }]),
-    );
+    config = Object.fromEntries(GROUPS.map((g, i) => [g.id, { label: g.name, color: paletteFor(i) }]));
     horizontal = true;
   } else {
     const month = path.month;
@@ -527,9 +525,7 @@ function BarDrilldown() {
     }
   }
 
-  const crumbs: Crumb[] = [
-    { label: "All months", onSelect: path.month != null ? toTop : undefined },
-  ];
+  const crumbs: Crumb[] = [{ label: "All months", onSelect: path.month != null ? toTop : undefined }];
   if (path.month != null) {
     const month = path.month;
     crumbs.push({
@@ -603,14 +599,7 @@ function BarDrilldown() {
               {horizontal ? (
                 <>
                   <XAxis type="number" {...valueAxis} />
-                  <YAxis
-                    type="category"
-                    dataKey="label"
-                    width={132}
-                    tickLine={false}
-                    axisLine={false}
-                    interval={0}
-                  />
+                  <YAxis type="category" dataKey="label" width={132} tickLine={false} axisLine={false} interval={0} />
                 </>
               ) : (
                 <>
@@ -618,9 +607,7 @@ function BarDrilldown() {
                   <YAxis width={44} {...valueAxis} />
                 </>
               )}
-              <ChartTooltip
-                content={<ChartTooltipContent valueFormatter={(v) => MONEY.format(v)} />}
-              />
+              <ChartTooltip content={<ChartTooltipContent valueFormatter={(v) => MONEY.format(v)} />} />
               <ChartLegend content={() => <ChartLegendContent payload={legendPayload} />} />
               <Bar dataKey="value" name="Spent" radius={horizontal ? [0, 3, 3, 0] : [3, 3, 0, 0]}>
                 {rows.map((r, i) => (
@@ -638,13 +625,8 @@ function BarDrilldown() {
           </ChartContainer>
         </div>
       </div>
-      <p
-        id={readoutId}
-        aria-live="polite"
-        className={cn("min-h-4 text-xs text-secondary", !focused && "invisible")}
-      >
-        {current &&
-          `${current.label}: ${MONEY.format(current.value)}${terminal ? "" : " — Enter to open"}`}
+      <p id={readoutId} aria-live="polite" className={cn("min-h-4 text-xs text-secondary", !focused && "invisible")}>
+        {current && `${current.label}: ${MONEY.format(current.value)}${terminal ? "" : " — Enter to open"}`}
       </p>
     </div>
   );
@@ -669,9 +651,7 @@ function TreemapDrilldown() {
 
   const groupIndex = GROUPS.findIndex((g) => g.id === path.group);
   const group = GROUPS[groupIndex];
-  const category = group
-    ? CATEGORIES.find((c) => c.id === path.category && c.group === group)
-    : undefined;
+  const category = group ? CATEGORIES.find((c) => c.id === path.category && c.group === group) : undefined;
   const groupFill = pal[groupIndex % pal.length];
 
   let data: TreemapNode[];
@@ -683,10 +663,7 @@ function TreemapDrilldown() {
     data = GROUPS.map((g) => ({
       id: g.id,
       name: g.name,
-      value: CATEGORIES.filter((c) => c.group === g).reduce(
-        (s, c) => s + categoryTotal(c, ALL_MONTHS),
-        0,
-      ),
+      value: CATEGORIES.filter((c) => c.group === g).reduce((s, c) => s + categoryTotal(c, ALL_MONTHS), 0),
     }));
     title = "Spending by group";
     onNodeClick = (id, name) => {
@@ -788,12 +765,12 @@ export function ChartDrilldowns() {
           </div>
         </Stage>
         <Note>
-          The drill state is a path (<code className="font-mono">{"{ month, category }"}</code>),
-          and every level — rows, title, colours, legend — is derived from it. The chart is wrapped
-          in <code className="font-mono">{'<div key={path} className="animate-drill">'}</code>, so a
-          new level is a remount and eases in. Recharts bars have no keyboard handling of their own:
-          the chart is one tab stop, the arrow keys move an outline between bars (the value is read
-          out below the chart), Enter or Space opens the bar, Escape or Backspace goes up.
+          The drill state is a path (<code className="font-mono">{"{ month, category }"}</code>), and every level —
+          rows, title, colours, legend — is derived from it. The chart is wrapped in{" "}
+          <code className="font-mono">{'<div key={path} className="animate-drill">'}</code>, so a new level is a remount
+          and eases in. Recharts bars have no keyboard handling of their own: the chart is one tab stop, the arrow keys
+          move an outline between bars (the value is read out below the chart), Enter or Space opens the bar, Escape or
+          Backspace goes up.
         </Note>
       </Example>
 
@@ -808,16 +785,14 @@ export function ChartDrilldowns() {
         </Stage>
         <Note>
           With <code className="font-mono">onNodeClick</code> each tile is a{" "}
-          <code className="font-mono">role=&quot;button&quot;</code> in the tab order, named by its
-          node name: Tab to a tile, Enter or Space to open it, Escape to go up. The payee level
-          passes no <code className="font-mono">onNodeClick</code>, so its tiles are not buttons,
-          and sets <code className="font-mono">redactNames</code>, because payees are the
-          user&apos;s data. Children are painted in their group&apos;s colour as concrete hex from{" "}
-          <code className="font-mono">useChartHex()</code>, so the label ink is still measured. The
-          breadcrumb&apos;s last crumb is the current level (
-          <code className="font-mono">aria-current=&quot;page&quot;</code>), not a button; a level
-          change is announced politely, and when it removed the element that had focus, focus moves
-          to the new level&apos;s title.
+          <code className="font-mono">role=&quot;button&quot;</code> in the tab order, named by its node name: Tab to a
+          tile, Enter or Space to open it, Escape to go up. The payee level passes no{" "}
+          <code className="font-mono">onNodeClick</code>, so its tiles are not buttons, and sets{" "}
+          <code className="font-mono">redactNames</code>, because payees are the user&apos;s data. Children are painted
+          in their group&apos;s colour as concrete hex from <code className="font-mono">useChartHex()</code>, so the
+          label ink is still measured. The breadcrumb&apos;s last crumb is the current level (
+          <code className="font-mono">aria-current=&quot;page&quot;</code>), not a button; a level change is announced
+          politely, and when it removed the element that had focus, focus moves to the new level&apos;s title.
         </Note>
       </Example>
     </>

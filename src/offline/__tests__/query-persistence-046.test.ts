@@ -56,7 +56,8 @@ describe("createQueryPersistence — persistMutations (K1)", () => {
 });
 
 describe("removeStaleQueryCopies (K2)", () => {
-  const at = (timestamp: number) => JSON.stringify({ timestamp, buster: "1", clientState: { queries: [], mutations: [] } });
+  const at = (timestamp: number) =>
+    JSON.stringify({ timestamp, buster: "1", clientState: { queries: [], mutations: [] } });
 
   it("with no persistence (the sign-in page): drops every copy of this app older than maxAge", async () => {
     const now = Date.now();

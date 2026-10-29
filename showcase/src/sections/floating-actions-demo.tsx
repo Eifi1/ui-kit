@@ -1,18 +1,7 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { Link } from "react-router";
-import {
-  Bot,
-  CalendarClock,
-  CloudCheck,
-  Clock,
-  Eye,
-  EyeOff,
-  FileText,
-  Plus,
-  RefreshCw,
-  WifiOff,
-} from "lucide-react";
+import { Bot, CalendarClock, CloudCheck, Clock, Eye, EyeOff, FileText, Plus, RefreshCw, WifiOff } from "lucide-react";
 import {
   Button,
   FloatingAction,
@@ -168,12 +157,12 @@ function StatusFab({ active, setActive }: { active: Which; setActive: (w: Which)
           <code className="font-mono">extended</code> shows the <code className="font-mono">label</code> beside the icon
           (a 3rem pill, the disc&apos;s height); untick it and the same button is the round disc.{" "}
           <code className="font-mono">variant=&quot;surface&quot;</code> is the page surface with a hairline — a status,
-          not a call to action; switch to <code className="font-mono">accent</code> to see why a brand pill is wrong
-          for &ldquo;you are offline&rdquo;. <code className="font-mono">live</code> mirrors the label into a polite{" "}
+          not a call to action; switch to <code className="font-mono">accent</code> to see why a brand pill is wrong for
+          &ldquo;you are offline&rdquo;. <code className="font-mono">live</code> mirrors the label into a polite{" "}
           <code className="font-mono">role=&quot;status&quot;</code> region, so each change — offline, queued, syncing,
           synced — is announced. The button is mounted from the start and passed{" "}
-          <code className="font-mono">hidden</code> while there is nothing to report: a live region that mounted
-          already saying &ldquo;Offline&rdquo; would say it to nobody.
+          <code className="font-mono">hidden</code> while there is nothing to report: a live region that mounted already
+          saying &ldquo;Offline&rdquo; would say it to nobody.
         </Note>
       </div>
     </Example>
@@ -244,11 +233,11 @@ function TooltipFab({ active, setActive }: { active: Which; setActive: (w: Which
       )}
       <div className="mt-3">
         <Note>
-          Hover or Tab to the two buttons in the bottom-end corner. <code className="font-mono">tooltip</code> puts
-          the FAB in the kit <code className="font-mono">Tooltip</code> (a fixed wrapper carries the corner and the
-          offset), and the native <code className="font-mono">title</code> goes — one hover hint, not two.{" "}
-          <code className="font-mono">true</code> shows the label, and the bubble then does not describe the button
-          with its own name again; other content is a real description. <code className="font-mono">tooltipSide</code>{" "}
+          Hover or Tab to the two buttons in the bottom-end corner. <code className="font-mono">tooltip</code> puts the
+          FAB in the kit <code className="font-mono">Tooltip</code> (a fixed wrapper carries the corner and the offset),
+          and the native <code className="font-mono">title</code> goes — one hover hint, not two.{" "}
+          <code className="font-mono">true</code> shows the label, and the bubble then does not describe the button with
+          its own name again; other content is a real description. <code className="font-mono">tooltipSide</code>{" "}
           defaults to <code className="font-mono">top</code>; the bubble is portalled and kept on screen, so{" "}
           <code className="font-mono">end</code> here is flipped back inside the window. The assistant above it is a{" "}
           <code className="font-mono">FloatingPanel</code> whose <code className="font-mono">fabTooltip</code> passes
@@ -331,10 +320,7 @@ function Group({ active, setActive }: { active: Which; setActive: (w: Which) => 
         rows={[
           ["Upcoming only (pressed)", String(upcoming)],
           ["Pending only (pressed)", String(pending)],
-          [
-            "Invoices link name",
-            badge > 0 ? `Invoices, ${badgeLabel ?? `${badge} new`}` : "Invoices (no badge at 0)",
-          ],
+          ["Invoices link name", badge > 0 ? `Invoices, ${badgeLabel ?? `${badge} new`}` : "Invoices (no badge at 0)"],
           ["Invoices dot", badge > 99 ? "99+" : badge > 0 ? String(badge) : "—"],
           ["“+” presses (tooltip={false})", String(adds)],
           ["link clicks", String(linkClicks)],
@@ -375,28 +361,29 @@ function Group({ active, setActive }: { active: Which; setActive: (w: Which) => 
       )}
       <div className="mt-3 space-y-2">
         <Note>
-          <code className="font-mono">role=&quot;group&quot;</code> named by its <code className="font-mono">aria-label</code>,
-          every member its own tab stop. The first two are toggles (<code className="font-mono">pressed</code>: brand
-          glyph on the brand wash when on). &ldquo;Invoices&rdquo; is a LINK through{" "}
-          <code className="font-mono">renderLink</code> (react-router&apos;s <code className="font-mono">Link</code>, so
-          following it goes to the data table page without a reload); its <code className="font-mono">badge</code>{" "}
-          draws nothing at 0, the count at 3 and <code className="font-mono">99+</code> at 120, and the count joins the
-          name — <code className="font-mono">floatingPanel.badge</code> (&ldquo;3 new&rdquo;, translated by the
-          language menu) or <code className="font-mono">badgeLabel</code>. The brand &ldquo;+&rdquo; is{" "}
+          <code className="font-mono">role=&quot;group&quot;</code> named by its{" "}
+          <code className="font-mono">aria-label</code>, every member its own tab stop. The first two are toggles (
+          <code className="font-mono">pressed</code>: brand glyph on the brand wash when on). &ldquo;Invoices&rdquo; is
+          a LINK through <code className="font-mono">renderLink</code> (react-router&apos;s{" "}
+          <code className="font-mono">Link</code>, so following it goes to the data table page without a reload); its{" "}
+          <code className="font-mono">badge</code> draws nothing at 0, the count at 3 and{" "}
+          <code className="font-mono">99+</code> at 120, and the count joins the name —{" "}
+          <code className="font-mono">floatingPanel.badge</code> (&ldquo;3 new&rdquo;, translated by the language menu)
+          or <code className="font-mono">badgeLabel</code>. The brand &ldquo;+&rdquo; is{" "}
           <code className="font-mono">variant=&quot;accent&quot;</code> with{" "}
-          <code className="font-mono">tooltip=&#123;false&#125;</code>: hover it, no bubble — the others show their label
-          in the kit tooltip. <code className="font-mono">corner</code> is logical and{" "}
+          <code className="font-mono">tooltip=&#123;false&#125;</code>: hover it, no bubble — the others show their
+          label in the kit tooltip. <code className="font-mono">corner</code> is logical and{" "}
           <code className="font-mono">offset</code> lifts the pill above the nav by that much more.
         </Note>
         <Note>
           While it floats, the page scrolls clear of it: every launcher publishes its room as{" "}
           <code className="font-mono">--app-float-clearance</code> (above the nav) and{" "}
           <code className="font-mono">--kit-floating-inset</code> (from the screen&apos;s bottom edge, the phone&apos;s
-          nav included), and <code className="font-mono">AppShell</code> pads its <code className="font-mono">main</code>{" "}
-          by it at every width — scroll to the end of this page: its last row stays above the pill and can be
-          pressed. Open a dialog, a sheet, a popover or a menu and the pill steps aside until it closes (
-          <code className="font-mono">hideWhenOverlay</code>, default <code className="font-mono">true</code>); a
-          tooltip does not count.
+          nav included), and <code className="font-mono">AppShell</code> pads its{" "}
+          <code className="font-mono">main</code> by it at every width — scroll to the end of this page: its last row
+          stays above the pill and can be pressed. Open a dialog, a sheet, a popover or a menu and the pill steps aside
+          until it closes (<code className="font-mono">hideWhenOverlay</code>, default{" "}
+          <code className="font-mono">true</code>); a tooltip does not count.
         </Note>
       </div>
     </Example>

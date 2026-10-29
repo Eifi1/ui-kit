@@ -22,8 +22,7 @@ import { numberFormat } from "../lib/number-format";
  * Figures are formatted once with en-GB, so the specimens do not move with the language.
  */
 
-const chf = (n: number) =>
-  numberFormat("en-GB", { style: "currency", currency: "CHF" }).format(n);
+const chf = (n: number) => numberFormat("en-GB", { style: "currency", currency: "CHF" }).format(n);
 
 type Line = { label: string; amount: number };
 const GROUPS: Array<{ name: string; lines: Line[] }> = [
@@ -79,12 +78,12 @@ export function TableVariantsDemo() {
       </Table>
       <div className="mt-3">
         <Note>
-          {code('variant="group"')} is the tinted heading row, {code('"subtotal"')} the medium-weight sum
-          under a group, {code('"total"')} the heavy rule over the last line. Zebra and hover (both on here)
-          tint ordinary rows only. {code("rowDividers={false}")} drops the rule between body rows — and a
-          single row can take it back with {code("bordered")}: each subtotal keeps its rule whatever the
-          table says. {code("framed")} draws the rounded border on the scroll wrapper, so the tints clip to
-          its corners; {code("TableHead bordered={false}")} loses the rule under the head.
+          {code('variant="group"')} is the tinted heading row, {code('"subtotal"')} the medium-weight sum under a group,{" "}
+          {code('"total"')} the heavy rule over the last line. Zebra and hover (both on here) tint ordinary rows only.{" "}
+          {code("rowDividers={false}")} drops the rule between body rows — and a single row can take it back with{" "}
+          {code("bordered")}: each subtotal keeps its rule whatever the table says. {code("framed")} draws the rounded
+          border on the scroll wrapper, so the tints clip to its corners; {code("TableHead bordered={false}")} loses the
+          rule under the head.
         </Note>
       </div>
     </Example>
@@ -147,10 +146,9 @@ export function DescriptionPlaceholderDemo() {
       </div>
       <div className="mt-3">
         <Note>
-          The placeholder is drawn in the muted ink, so an absent value does not read as a value of “—”.
-          Precedence: the item&apos;s {code("placeholder")}, else the list&apos;s, else{" "}
-          {code("descriptionList.empty")} from the provider — switch the language to see it translated —
-          else “—”. {code("placeholder={null}")} shows nothing.
+          The placeholder is drawn in the muted ink, so an absent value does not read as a value of “—”. Precedence: the
+          item&apos;s {code("placeholder")}, else the list&apos;s, else {code("descriptionList.empty")} from the
+          provider — switch the language to see it translated — else “—”. {code("placeholder={null}")} shows nothing.
         </Note>
       </div>
     </Example>
@@ -166,7 +164,10 @@ const TERMS: Array<[term: string, raises: string, costs: string]> = [
 /** 0.15.2: a table of sentences stacks into labelled blocks on a phone. */
 export function TableStackDemo() {
   return (
-    <Example label={'Table — stack="phone", a table of prose on a phone'} hint="narrow the window below 640px: each row becomes a labelled block">
+    <Example
+      label={'Table — stack="phone", a table of prose on a phone'}
+      hint="narrow the window below 640px: each row becomes a labelled block"
+    >
       <Table stack="phone" density="compact" aria-label="Controller terms">
         <TableHead>
           <TableRow>
@@ -187,9 +188,9 @@ export function TableStackDemo() {
       </Table>
       <Note>
         Three columns of sentences leave each about 110px on a phone, two words a line. With{" "}
-        <code>stack=&quot;phone&quot;</code> each row is a block there: the first cell is its title and every
-        further cell sits under its column&apos;s header, read from the head row. The head is only visually
-        hidden. A table of figures should keep scrolling sideways, so it is opt-in.
+        <code>stack=&quot;phone&quot;</code> each row is a block there: the first cell is its title and every further
+        cell sits under its column&apos;s header, read from the head row. The head is only visually hidden. A table of
+        figures should keep scrolling sideways, so it is opt-in.
       </Note>
     </Example>
   );

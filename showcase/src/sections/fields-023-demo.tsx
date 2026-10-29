@@ -87,10 +87,10 @@ export function Rhf023Demo() {
       <p className={READOUT_PRE}>submitted: {submitted}</p>
       <Note>
         Both bind the way {code("RhfIbanInput")} does: {code("field.ref")} reaches the trigger, so a failed submit
-        focuses it; the form&apos;s error paints the trigger and is the message under it; the hint is the
-        form&apos;s description. {code("RhfCountrySelect")} stores the upper-case code, or {code("clearValue")} (
-        {code("null")} by default) once cleared. {code("RhfMonthPicker")} stores {code('"YYYY-MM"')}, or with{" "}
-        {code('mode="year"')} {code('"YYYY"')} — a number with {code("valueAsNumber")}.
+        focuses it; the form&apos;s error paints the trigger and is the message under it; the hint is the form&apos;s
+        description. {code("RhfCountrySelect")} stores the upper-case code, or {code("clearValue")} ({code("null")} by
+        default) once cleared. {code("RhfMonthPicker")} stores {code('"YYYY-MM"')}, or with {code('mode="year"')}{" "}
+        {code('"YYYY"')} — a number with {code("valueAsNumber")}.
       </Note>
     </Example>
   );
@@ -125,8 +125,8 @@ export function CountryClear023Demo() {
       </div>
       <Note>
         {code("clearable")} types {code("onChange")} as {code("(code: string | null) => void")}; without it the handler
-        is the {code("(code: string) => void")} it always was. The {code("×")} is the combobox family&apos;s — out of the
-        tab order, named by {code("combobox.clear")} or {code("clearLabel")} — and is not offered while disabled or
+        is the {code("(code: string) => void")} it always was. The {code("×")} is the combobox family&apos;s — out of
+        the tab order, named by {code("combobox.clear")} or {code("clearLabel")} — and is not offered while disabled or
         locked. {code("ref")} is the trigger button, which is what react-hook-form&apos;s focus-on-error needs.
       </Note>
     </Example>
@@ -150,13 +150,19 @@ export function AmountClass023Demo() {
           calculator={false}
           inputClassName="text-end tabular-nums"
         />
-        <MoneyField aria-label="VAT" value={vat} onCommit={setVat} calculator={false} inputClassName="text-end tabular-nums" />
+        <MoneyField
+          aria-label="VAT"
+          value={vat}
+          onCommit={setVat}
+          calculator={false}
+          inputClassName="text-end tabular-nums"
+        />
       </div>
       <Note>
         A money column right-aligns its figures so the decimal points line up (a VAT cell, say), with no{" "}
-        {code("className=\"[&_input]:text-end\"")}: {code("inputClassName")} is the element&apos;s own, merged
-        after the field&apos;s base and before the room the calculator and the currency chip reserve and the invalid
-        border — as on {code("NumberInput")} and {code("Input")}. {code("RhfMoneyField")} takes it too.
+        {code('className="[&_input]:text-end"')}: {code("inputClassName")} is the element&apos;s own, merged after the
+        field&apos;s base and before the room the calculator and the currency chip reserve and the invalid border — as
+        on {code("NumberInput")} and {code("Input")}. {code("RhfMoneyField")} takes it too.
       </Note>
     </Example>
   );

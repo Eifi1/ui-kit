@@ -95,8 +95,17 @@ describe("anchored panels clamp against the glass (DUP-7)", () => {
 
   it("the entity picker's panel, which had no clamp in a left-to-right form", () => {
     viewport(400, 400);
-    stubRects((el) => (el.getAttribute("role") === "combobox" ? { left: 300, right: 390, top: 10, bottom: 40 } : undefined));
-    render(<EntityCombobox<string> label="Account" value={null} onChange={() => {}} options={[{ value: "a", label: "A" }]} />);
+    stubRects((el) =>
+      el.getAttribute("role") === "combobox" ? { left: 300, right: 390, top: 10, bottom: 40 } : undefined,
+    );
+    render(
+      <EntityCombobox<string>
+        label="Account"
+        value={null}
+        onChange={() => {}}
+        options={[{ value: "a", label: "A" }]}
+      />,
+    );
     fireEvent.click(screen.getByRole("combobox", { name: /Account/ }));
     const panel = screen.getByRole("listbox").closest("[dir]") as HTMLElement;
     // 220 px wide (13.75rem), so it starts 228 px before the glass ends.
@@ -107,7 +116,9 @@ describe("anchored panels clamp against the glass (DUP-7)", () => {
   it("HoverMenu", () => {
     viewport(400, 430);
     stubRects((el) =>
-      el instanceof HTMLElement && el.className.includes("top-full") ? { left: 300, right: 420, top: 40, bottom: 140 } : undefined,
+      el instanceof HTMLElement && el.className.includes("top-full")
+        ? { left: 300, right: 420, top: 40, bottom: 140 }
+        : undefined,
     );
     render(
       <HoverMenu
@@ -134,7 +145,12 @@ describe("anchored panels clamp against the glass (DUP-7)", () => {
         <MemoryRouter>
           <AppShell
             nav={[
-              { to: "/", label: "Home", icon: Home, items: [{ to: "/fields", label: "Fields", icon: TextCursorInput }] },
+              {
+                to: "/",
+                label: "Home",
+                icon: Home,
+                items: [{ to: "/fields", label: "Fields", icon: TextCursorInput }],
+              },
             ]}
             topBar={<div>bar</div>}
             collapseStorageKey="dup7-test"

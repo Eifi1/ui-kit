@@ -37,9 +37,7 @@ export function DropdownParts() {
   const sheetHits = useMemo(() => {
     const q = sheetQuery.trim().toLowerCase();
     if (!q) return ACCOUNTS;
-    return ACCOUNTS.filter(
-      (a) => a.label.toLowerCase().includes(q) || (a.sublabel ?? "").toLowerCase().includes(q),
-    );
+    return ACCOUNTS.filter((a) => a.label.toLowerCase().includes(q) || (a.sublabel ?? "").toLowerCase().includes(q));
   }, [sheetQuery]);
 
   // Hand-built menu #1: open state + outside-click only.
@@ -72,9 +70,7 @@ export function DropdownParts() {
   const storeHits = useMemo(() => {
     const q = storeQuery.trim().toLowerCase();
     if (!q) return STORES;
-    return STORES.filter(
-      (s) => s.label.toLowerCase().includes(q) || s.hint.toLowerCase().includes(q),
-    );
+    return STORES.filter((s) => s.label.toLowerCase().includes(q) || s.hint.toLowerCase().includes(q));
   }, [storeQuery]);
 
   const pickedLabel = (() => {
@@ -117,18 +113,14 @@ export function DropdownParts() {
           </div>
         </Stage>
         <Current label="values" value={markets.length ? JSON.stringify(markets) : "[] (= all)"} />
-        <Current
-          label="second"
-          value={plainMarkets.length ? JSON.stringify(plainMarkets) : "[] (= all)"}
-        />
+        <Current label="second" value={plainMarkets.length ? JSON.stringify(plainMarkets) : "[] (= all)"} />
         <p className="mt-2 text-xs text-secondary">
-          The second one passes no strings but <code className="font-mono">placeholder</code>: its
-          search box, its two actions and its count come from{" "}
-          <code className="font-mono">multiSelect.*</code> in the provider — switch the showcase
-          language to see them follow. Ticking every market reads as &quot;all&quot; again. Its{" "}
+          The second one passes no strings but <code className="font-mono">placeholder</code>: its search box, its two
+          actions and its count come from <code className="font-mono">multiSelect.*</code> in the provider — switch the
+          showcase language to see them follow. Ticking every market reads as &quot;all&quot; again. Its{" "}
           <code className="font-mono">invalid</code>, <code className="font-mono">error</code> and{" "}
-          <code className="font-mono">disabled</code> are with the other pickers&apos; field states
-          on the Entity pickers page.
+          <code className="font-mono">disabled</code> are with the other pickers&apos; field states on the Entity
+          pickers page.
         </p>
       </Example>
 
@@ -143,15 +135,11 @@ export function DropdownParts() {
             filterPlaceholder="Filter categories"
           />
         </Stage>
-        <Current
-          label="selected"
-          value={picked ? `{ group: "${picked.group}", item: "${picked.item}" }` : "null"}
-        />
+        <Current label="selected" value={picked ? `{ group: "${picked.group}", item: "${picked.item}" }` : "null"} />
         <p className="mt-2 text-xs text-secondary">
-          The filter treats a group name as a whole-group match: typing{" "}
-          <code className="font-mono">food</code> keeps every row under Food, while{" "}
-          <code className="font-mono">bike</code> reduces Transport to its one matching row and
-          drops the other groups entirely.
+          The filter treats a group name as a whole-group match: typing <code className="font-mono">food</code> keeps
+          every row under Food, while <code className="font-mono">bike</code> reduces Transport to its one matching row
+          and drops the other groups entirely.
         </p>
       </Example>
 
@@ -193,22 +181,18 @@ export function DropdownParts() {
                   className={cn(SHEET_ROW_CLASS, a.value === sheetAccount && "font-medium")}
                 >
                   <span className="min-w-0 flex-1 truncate">{a.label}</span>
-                  {a.sublabel && (
-                    <span className="shrink-0 text-xs text-muted">{a.sublabel}</span>
-                  )}
+                  {a.sublabel && <span className="shrink-0 text-xs text-muted">{a.sublabel}</span>}
                 </button>
               </li>
             ))}
-            {sheetHits.length === 0 && (
-              <li className="px-4 py-3 text-sm text-muted">No account matches.</li>
-            )}
+            {sheetHits.length === 0 && <li className="px-4 py-3 text-sm text-muted">No account matches.</li>}
           </ul>
         </PickerSheet>
         <Current label="value" value={sheetAccount === null ? "null" : `"${sheetAccount}"`} />
         <Note>
-          The sheet focuses its own search box on open, pins itself to the VISUAL viewport (so the
-          on-screen keyboard cannot hide the last rows) and registers a history entry — Back, or the
-          browser's back gesture, closes the sheet and not the dialog that opened it.
+          The sheet focuses its own search box on open, pins itself to the VISUAL viewport (so the on-screen keyboard
+          cannot hide the last rows) and registers a history entry — Back, or the browser's back gesture, closes the
+          sheet and not the dialog that opened it.
         </Note>
         <div className="mt-3">
           <ConstList items={[["SHEET_ROW_CLASS", SHEET_ROW_CLASS]]} />
@@ -272,10 +256,9 @@ export function DropdownParts() {
         </Stage>
         <Current label="sort" value={`"${sortKey}"`} />
         <p className="mt-2 text-xs text-secondary">
-          Open it and press Escape: the list closes and focus is back on the button, because the
-          button carries <code className="font-mono">triggerRef</code>. Browser Back closes the
-          list too, without leaving the page (<code className="font-mono">backCloses</code>,
-          default on).
+          Open it and press Escape: the list closes and focus is back on the button, because the button carries{" "}
+          <code className="font-mono">triggerRef</code>. Browser Back closes the list too, without leaving the page (
+          <code className="font-mono">backCloses</code>, default on).
         </p>
       </Example>
 
@@ -357,18 +340,16 @@ export function DropdownParts() {
         />
         <Current label="store" value={storeKey === null ? "null" : `"${storeKey}"`} />
         <Note>
-          Tick the box and open it again: the 288px panel now hangs from the trigger&apos;s right
-          edge and its rows read right to left. The panel is portalled to{" "}
-          <code className="font-mono">&lt;body&gt;</code>, outside the field&apos;s{" "}
-          <code className="font-mono">dir</code>, so it reads the direction off{" "}
+          Tick the box and open it again: the 288px panel now hangs from the trigger&apos;s right edge and its rows read
+          right to left. The panel is portalled to <code className="font-mono">&lt;body&gt;</code>, outside the
+          field&apos;s <code className="font-mono">dir</code>, so it reads the direction off{" "}
           <code className="font-mono">anchorRef</code> and carries it itself.
         </Note>
         <Note>
-          Anchored, the panel is <code className="font-mono">position: fixed</code> against the
-          trigger's rect in a portal: it re-aligns on scroll and resize, flips above the trigger
-          when there is no room below, caps its height against the visible viewport and is clamped
-          8px from either screen edge. That is the difference between a list an ancestor's{" "}
-          <code className="font-mono">overflow</code> can slice in half and one it cannot.
+          Anchored, the panel is <code className="font-mono">position: fixed</code> against the trigger's rect in a
+          portal: it re-aligns on scroll and resize, flips above the trigger when there is no room below, caps its
+          height against the visible viewport and is clamped 8px from either screen edge. That is the difference between
+          a list an ancestor's <code className="font-mono">overflow</code> can slice in half and one it cannot.
         </Note>
       </Example>
     </>
@@ -445,10 +426,10 @@ export function PickerSheetClipsDemo() {
       <Current label="value" value={account === null ? "null" : `"${account}"`} />
       <div className="mt-3">
         <Note>
-          The sheet's scrolling body is marked {code("data-clips")}, so any Tooltip in a row —
-          including a {code("Combobox")}'s {code("optionAdornment")} when the combobox opens as a sheet on
-          a phone — portals its bubble out of the scroller instead of drawing it inside, where the
-          scroller's edge would clip it. Hover (or focus) a group badge.
+          The sheet's scrolling body is marked {code("data-clips")}, so any Tooltip in a row — including a{" "}
+          {code("Combobox")}'s {code("optionAdornment")} when the combobox opens as a sheet on a phone — portals its
+          bubble out of the scroller instead of drawing it inside, where the scroller's edge would clip it. Hover (or
+          focus) a group badge.
         </Note>
       </div>
     </Example>

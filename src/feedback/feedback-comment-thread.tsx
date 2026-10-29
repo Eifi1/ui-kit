@@ -128,10 +128,7 @@ type Entry = { at: number; order: number; message: FeedbackThreadMessage };
 
 /** The admin's Hide / Unhide as a promise — a sync throw or a `void` return included —
  *  so the click can catch it as Delete's does. */
-const hideComment = async (
-  onHide: NonNullable<FeedbackCommentThreadProps["onHide"]>,
-  comment: FeedbackComment,
-) => {
+const hideComment = async (onHide: NonNullable<FeedbackCommentThreadProps["onHide"]>, comment: FeedbackComment) => {
   await onHide(comment, !comment.hidden);
 };
 
@@ -186,7 +183,10 @@ export function FeedbackCommentThread({
             ? [{ name: attachmentName(reply.attachment_url), url: reply.attachment_url }]
             : undefined,
           badge: (
-            <span className="inline-flex min-w-0 max-w-full flex-wrap items-center gap-1" data-feedback-entry-kind="rework">
+            <span
+              className="inline-flex min-w-0 max-w-full flex-wrap items-center gap-1"
+              data-feedback-entry-kind="rework"
+            >
               <FeedbackReworkEntryChip />
               {reply.status_to && (
                 <span className="inline-flex items-center gap-1" data-feedback-reply-status={reply.status_to}>
@@ -215,7 +215,10 @@ export function FeedbackCommentThread({
           : undefined,
         staff: true,
         badge: reply.status_to ? (
-          <span className="inline-flex min-w-0 max-w-full flex-wrap items-center gap-1" data-feedback-reply-status={reply.status_to}>
+          <span
+            className="inline-flex min-w-0 max-w-full flex-wrap items-center gap-1"
+            data-feedback-reply-status={reply.status_to}
+          >
             <span className="sr-only">{replyLabels.statusChanged}</span>
             <span aria-hidden>→</span>
             <FeedbackStatusBadge status={reply.status_to} />

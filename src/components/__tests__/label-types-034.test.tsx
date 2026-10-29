@@ -61,7 +61,10 @@ describe("labels props take what the merge takes: a partial at every depth", () 
       return null;
     }
     render(<Probe />);
-    expect(fromHook?.groups.security).toEqual({ title: "Sicherheit", help: DEFAULT_SETTINGS_LABELS.groups.security.help });
+    expect(fromHook?.groups.security).toEqual({
+      title: "Sicherheit",
+      help: DEFAULT_SETTINGS_LABELS.groups.security.help,
+    });
     expect(fromHook?.groups.account).toEqual(DEFAULT_SETTINGS_LABELS.groups.account);
     expect(fromKit?.groups.data).toEqual({ title: DEFAULT_SETTINGS_LABELS.groups.data.title, help: "Deine Daten." });
   });
@@ -97,7 +100,9 @@ describe("label is the visible label: a ReactNode on the combobox family and Chi
   });
 
   it("InlineEntityCombobox", () => {
-    render(<InlineEntityCombobox value={null} onChange={noop} options={[{ value: 1, label: "Migros" }]} label={visible} />);
+    render(
+      <InlineEntityCombobox value={null} onChange={noop} options={[{ value: 1, label: "Migros" }]} label={visible} />,
+    );
     expect(screen.getByRole("combobox", { name: /Payee/ })).toBeInTheDocument();
   });
 

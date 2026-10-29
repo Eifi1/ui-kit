@@ -8,8 +8,10 @@ import { useKitLocale } from "../i18n/kit-labels";
 
 type NumberInputProps = ComponentProps<typeof NumberInput>;
 
-export interface NumberFieldProps
-  extends Omit<NumberInputProps, "value" | "onChange" | "onCommit" | "suffix" | "invalid" | "error" | "locale"> {
+export interface NumberFieldProps extends Omit<
+  NumberInputProps,
+  "value" | "onChange" | "onCommit" | "suffix" | "invalid" | "error" | "locale"
+> {
   /** The committed number. `null` is "no value" — shown as an empty field. */
   value: number | null;
   /**
@@ -205,8 +207,7 @@ export function NumberField(props: NumberFieldProps) {
     // Live mode echoing back what it was just told: the draft already says it, in
     // the typist's own spelling ("1," or "12+5"), and reformatting would fight them.
     // Only a changed `value` qualifies — a new mark or `digits` still re-renders.
-    const echo =
-      onValueChange !== undefined && value === reported && seen.mark === mark && seen.digits === digits;
+    const echo = onValueChange !== undefined && value === reported && seen.mark === mark && seen.digits === digits;
     if (!echo) {
       setDraft(format(value));
       setCommitted(value);
@@ -263,17 +264,19 @@ export function NumberField(props: NumberFieldProps) {
   const required = ariaRequired === true || ariaRequired === "true";
 
   const labelWithUnit =
-    unit !== undefined && unitPlacement === "label"
-      ? label === undefined || label === ""
-        ? unit
-        : typeof label === "string" && typeof unit === "string"
-          ? `${label} (${unit})`
-          : (
-            <>
-              {label} ({unit})
-            </>
-          )
-      : label;
+    unit !== undefined && unitPlacement === "label" ? (
+      label === undefined || label === "" ? (
+        unit
+      ) : typeof label === "string" && typeof unit === "string" ? (
+        `${label} (${unit})`
+      ) : (
+        <>
+          {label} ({unit})
+        </>
+      )
+    ) : (
+      label
+    );
 
   return (
     <NumberInput

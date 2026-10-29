@@ -122,7 +122,9 @@ describe("PageHeader inline keeps whole words in the title (keksdose H1)", () =>
   });
 
   it("truncateTitle keeps the shrinking block — that is the point of truncating", () => {
-    render(<PageHeader title="Payees" truncateTitle mobileLayout="inline" actions={<button type="button">Add</button>} />);
+    render(
+      <PageHeader title="Payees" truncateTitle mobileLayout="inline" actions={<button type="button">Add</button>} />,
+    );
     expect(screen.getByRole("heading", { level: 1 }).parentElement!).toHaveClass("min-w-0");
     expect(group("Add").parentElement!).not.toHaveClass("flex-wrap");
   });

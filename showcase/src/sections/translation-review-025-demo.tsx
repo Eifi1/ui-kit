@@ -99,9 +99,39 @@ const FR = {
 
 const at = "2026-09-28T09:30:00Z";
 const SEED: TranslationReview[] = [
-  { locale: "fr", key: "common.save", text: "Enregistrer", referenceText: "Save", verdict: "APPROVED", note: null, suggestion: null, reviewerName: "Example Reviewer", reviewedAt: at },
-  { locale: "fr", key: "budget.rta", text: "A attribuer", referenceText: "Ready to Assign", verdict: "APPROVED", note: null, suggestion: null, reviewerName: "Example Reviewer", reviewedAt: at },
-  { locale: "fr", key: "legal.terms", text: "Conditions d’utilisation", referenceText: "Terms of Service", verdict: "NEEDS_CHANGE", note: "« conditions générales »", suggestion: "Conditions générales d’utilisation", reviewerName: null, reviewedAt: at },
+  {
+    locale: "fr",
+    key: "common.save",
+    text: "Enregistrer",
+    referenceText: "Save",
+    verdict: "APPROVED",
+    note: null,
+    suggestion: null,
+    reviewerName: "Example Reviewer",
+    reviewedAt: at,
+  },
+  {
+    locale: "fr",
+    key: "budget.rta",
+    text: "A attribuer",
+    referenceText: "Ready to Assign",
+    verdict: "APPROVED",
+    note: null,
+    suggestion: null,
+    reviewerName: "Example Reviewer",
+    reviewedAt: at,
+  },
+  {
+    locale: "fr",
+    key: "legal.terms",
+    text: "Conditions d’utilisation",
+    referenceText: "Terms of Service",
+    verdict: "NEEDS_CHANGE",
+    note: "« conditions générales »",
+    suggestion: "Conditions générales d’utilisation",
+    reviewerName: null,
+    reviewedAt: at,
+  },
 ];
 
 /** A large app's shape, in synthetic strings: 20 long areas and 102 short ones. Every ninth
@@ -156,11 +186,21 @@ export function TranslationReview025Demo() {
   // What the app's mutation would do: write, patch its copy, and toast "Saved" — except
   // where the panel says it has toasted already (its Undo toast).
   const note = (what: string, info: TranslationReviewSaveInfo) =>
-    setLog((prev) => [`${what} — ${info.origin}${info.toasted ? ", the kit toasted" : ", the app would toast “Saved”"}`, ...prev].slice(0, 4));
+    setLog((prev) =>
+      [
+        `${what} — ${info.origin}${info.toasted ? ", the kit toasted" : ", the app would toast “Saved”"}`,
+        ...prev,
+      ].slice(0, 4),
+    );
   const save = async (writes: TranslationReviewWrite[], info: TranslationReviewSaveInfo) => {
     await beat(300);
     const now = new Date().toISOString();
-    setReviews((prev) => mergeReviews(prev, writes.map((w) => ({ ...w, reviewerName: "You", reviewedAt: now }))));
+    setReviews((prev) =>
+      mergeReviews(
+        prev,
+        writes.map((w) => ({ ...w, reviewerName: "You", reviewedAt: now })),
+      ),
+    );
     note(`${writes.length} saved`, info);
   };
   const clear = async (keys: TranslationReviewKey[], info: TranslationReviewSaveInfo) => {
@@ -250,31 +290,30 @@ export function TranslationReview025Demo() {
           </ul>
         )}
         <Note>
-          {code("swipe")} gives each phone card DataTable&apos;s swipe sides: toward the reading end approves (with
-          the kit&apos;s Undo toast), toward the start opens the editor with the cursor in the wording — a string is
-          never sent back blind. Every swipe is also a button (Tab onto a card), and there is none under the write
-          lock, in a read-only locale, or toward Approve on a missing or approved string. In right-to-left the sides
-          mirror. {code("groupBy=\"namespace\"")} puts each area under a heading with “n unreviewed / total” and
-          “Approve unreviewed (n)” — one write, one Undo; larger than a page, it asks first. Filters narrow before
-          grouping; each area pages on its own; a column sort orders every area alike. On a phone the areas start
-          folded. {code("onSave(writes, { origin, toasted })")} tells the app when the kit has toasted, so its own
-          “Saved” is skipped. A folded area renders its header only, and on a wide screen the areas
-          start folded once opening them all would render more than 100 rows — “Many areas” is a large app&apos;s
-          catalogue, 122 areas. {code("defaultGroupsOpen")} ({code("\"auto\"")},{" "}
-          {code("true")}, {code("false")}) overrides it; an area the reviewer opens or folds keeps that.
+          {code("swipe")} gives each phone card DataTable&apos;s swipe sides: toward the reading end approves (with the
+          kit&apos;s Undo toast), toward the start opens the editor with the cursor in the wording — a string is never
+          sent back blind. Every swipe is also a button (Tab onto a card), and there is none under the write lock, in a
+          read-only locale, or toward Approve on a missing or approved string. In right-to-left the sides mirror.{" "}
+          {code('groupBy="namespace"')} puts each area under a heading with “n unreviewed / total” and “Approve
+          unreviewed (n)” — one write, one Undo; larger than a page, it asks first. Filters narrow before grouping; each
+          area pages on its own; a column sort orders every area alike. On a phone the areas start folded.{" "}
+          {code("onSave(writes, { origin, toasted })")} tells the app when the kit has toasted, so its own “Saved” is
+          skipped. A folded area renders its header only, and on a wide screen the areas start folded once opening them
+          all would render more than 100 rows — “Many areas” is a large app&apos;s catalogue, 122 areas.{" "}
+          {code("defaultGroupsOpen")} ({code('"auto"')}, {code("true")}, {code("false")}) overrides it; an area the
+          reviewer opens or folds keeps that.
         </Note>
         <Note>
-          {code("swipe")} also takes a binding, for an app whose users bind their swipes in its settings (one place
-          for every list&apos;s): per logical side an ordered ladder of {code('"approve"')},{" "}
-          {code('"edit"')} and {code('"clear"')} — index 0 at the first threshold, index 1 at the longer drag. An
-          action a card cannot offer drops out and the ladder closes up: “Two stages” on an approved string is just
-          “Mark unreviewed” toward the end, on an unreviewed one just “Approve”. {code('"clear"')} needs{" "}
-          {code("onClear")} and answers with Undo, which stores the verdict again. {code("true")} is{" "}
-          {code('{ end: ["approve"], start: ["edit"] }')}; there is no separate “needs a change”, because{" "}
-          {code('"edit"')} already is one — it opens the editor with the cursor in the wording. On a wide screen
-          the binding is the row&apos;s actions column too: Approve where the string can take it, then the
-          bound actions — so {code('"clear"')} is a button there, not a swipe only; under the write lock they stay
-          and say why.
+          {code("swipe")} also takes a binding, for an app whose users bind their swipes in its settings (one place for
+          every list&apos;s): per logical side an ordered ladder of {code('"approve"')}, {code('"edit"')} and{" "}
+          {code('"clear"')} — index 0 at the first threshold, index 1 at the longer drag. An action a card cannot offer
+          drops out and the ladder closes up: “Two stages” on an approved string is just “Mark unreviewed” toward the
+          end, on an unreviewed one just “Approve”. {code('"clear"')} needs {code("onClear")} and answers with Undo,
+          which stores the verdict again. {code("true")} is {code('{ end: ["approve"], start: ["edit"] }')}; there is no
+          separate “needs a change”, because {code('"edit"')} already is one — it opens the editor with the cursor in
+          the wording. On a wide screen the binding is the row&apos;s actions column too: Approve where the string can
+          take it, then the bound actions — so {code('"clear"')} is a button there, not a swipe only; under the write
+          lock they stay and say why.
         </Note>
       </div>
     </Example>

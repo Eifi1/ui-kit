@@ -1,17 +1,6 @@
 import { useRef, useState } from "react";
 import { MemoryRouter, UNSAFE_LocationContext } from "react-router";
-import {
-  BarChart3,
-  CalendarDays,
-  Flower2,
-  Home,
-  Pencil,
-  Settings,
-  Share2,
-  Sprout,
-  Trash2,
-  Users,
-} from "lucide-react";
+import { BarChart3, CalendarDays, Flower2, Home, Pencil, Settings, Share2, Sprout, Trash2, Users } from "lucide-react";
 import {
   AppShell,
   Button,
@@ -64,7 +53,12 @@ function SizeSwitch() {
   const { size, scale } = useTextSize();
   return (
     <div className="grid gap-2">
-      <TextSizeSetting label="This page's text size" labelPlacement="above" value={resolveTextSize(device)} onChange={setSize} />
+      <TextSizeSetting
+        label="This page's text size"
+        labelPlacement="above"
+        value={resolveTextSize(device)}
+        onChange={setSize}
+      />
       <p className="text-xs text-muted">
         In force: {code(size)} × {scale}. Every example below reads it.
       </p>
@@ -76,7 +70,10 @@ function SizeSwitch() {
 
 function ControlsDemo() {
   return (
-    <Example label="Buttons and icons" hint="at Large: 48 px targets, an IconButton's label as text, the top bar's icons alone">
+    <Example
+      label="Buttons and icons"
+      hint="at Large: 48 px targets, an IconButton's label as text, the top bar's icons alone"
+    >
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-2">
           <Button size="sm" variant="secondary">
@@ -114,10 +111,10 @@ function ControlsDemo() {
         </div>
       </div>
       <Note>
-        At Large `sm` grows to `md`&apos;s height and every target is at least 48 px. An
-        IconButton shows its `label` beside the glyph and drops the tooltip; an overlay or
-        shutter, `labelVisible={"{false}"}` and a `CompactControls` region (AppShell&apos;s top bar)
-        keep the icon alone. A dense row&apos;s icons belong in `RowActions` (below).
+        At Large `sm` grows to `md`&apos;s height and every target is at least 48 px. An IconButton shows its `label`
+        beside the glyph and drops the tooltip; an overlay or shutter, `labelVisible={"{false}"}` and a
+        `CompactControls` region (AppShell&apos;s top bar) keep the icon alone. A dense row&apos;s icons belong in
+        `RowActions` (below).
       </Note>
     </Example>
   );
@@ -168,11 +165,10 @@ function TooltipFactsDemo() {
         </div>
       </div>
       <Note>
-        At Normal with a mouse a reason is a tooltip and a hint a "?". At Large and Extra
-        large — and on any touch screen — the reason is a line under its control
-        (`disabledReasonDisplay`: `auto` / `line` / `tooltip`) and a FieldHint becomes the
-        field&apos;s caption. A relative date shows the exact one at every size; SignChip
-        says what a press does and FieldSyncIndicator its state&apos;s word at Large.
+        At Normal with a mouse a reason is a tooltip and a hint a "?". At Large and Extra large — and on any touch
+        screen — the reason is a line under its control (`disabledReasonDisplay`: `auto` / `line` / `tooltip`) and a
+        FieldHint becomes the field&apos;s caption. A relative date shows the exact one at every size; SignChip says
+        what a press does and FieldSyncIndicator its state&apos;s word at Large.
       </Note>
     </Example>
   );
@@ -189,7 +185,13 @@ interface Bed {
 }
 
 const BEDS: Bed[] = [
-  { id: 1, name: "North bed by the greenhouse door", crop: "Tomatoes (Black Krim)", sown: "2026-03-14", notes: "Stake before June; feed fortnightly" },
+  {
+    id: 1,
+    name: "North bed by the greenhouse door",
+    crop: "Tomatoes (Black Krim)",
+    sown: "2026-03-14",
+    notes: "Stake before June; feed fortnightly",
+  },
   { id: 2, name: "Herb spiral", crop: "Basil, thyme, sage", sown: "2026-04-02", notes: "Pinch basil tops weekly" },
   { id: 3, name: "South border", crop: "Runner beans", sown: "2026-05-10", notes: "Canes up; net against pigeons" },
 ];
@@ -250,12 +252,10 @@ function RowsDemo() {
         </List>
       </div>
       <Note>
-        `RowActions` keeps a row&apos;s icons inline at Normal and folds two or more into a
-        "⋯" menu at Large, where a locked one stays listed and says why. DataTable&apos;s
-        `rowActions` go through it (`rowName` names each menu). On the phone card at Large
-        each label sits above its value and nothing truncates; `mobileDetailsInRow` puts the
-        `mobileHidden` Notes into the opened row. ListItem wraps its title, subtitle and meta
-        at Large.
+        `RowActions` keeps a row&apos;s icons inline at Normal and folds two or more into a "⋯" menu at Large, where a
+        locked one stays listed and says why. DataTable&apos;s `rowActions` go through it (`rowName` names each menu).
+        On the phone card at Large each label sits above its value and nothing truncates; `mobileDetailsInRow` puts the
+        `mobileHidden` Notes into the opened row. ListItem wraps its title, subtitle and meta at Large.
       </Note>
     </Example>
   );
@@ -286,10 +286,9 @@ function FormAndTileDemo() {
         />
       </div>
       <Note>
-        On the phone layout at Large FormActions stacks its buttons full width, Save at the
-        bottom under the thumb (`stack`: `auto` / `phone` / `never`). StatTile at Large puts
-        the hint in words, never truncates its label, and moves the sub-values (label over
-        figure) and then the sparkline below the one big number.
+        On the phone layout at Large FormActions stacks its buttons full width, Save at the bottom under the thumb
+        (`stack`: `auto` / `phone` / `never`). StatTile at Large puts the hint in words, never truncates its label, and
+        moves the sub-values (label over figure) and then the sparkline below the one big number.
       </Note>
     </Example>
   );
@@ -317,17 +316,23 @@ const SHELL_NAV: AppShellNavItem[] = [
 function ShellDemo() {
   const { size } = useTextSize();
   return (
-    <Example label="The phone bar folds into More" hint="six entries: four + More at Normal and Large, three + More at Extra large">
+    <Example
+      label="The phone bar folds into More"
+      hint="six entries: four + More at Normal and Large, three + More at Extra large"
+    >
       <div className="h-[24rem] max-w-sm overflow-hidden rounded-md border border-subtle bg-page">
         <UNSAFE_LocationContext.Provider value={NO_ROUTER}>
           <MemoryRouter initialEntries={["/beds"]}>
             <AppShell
               nav={SHELL_NAV}
               embedded
-              topBar={<div className="flex h-12 items-center px-3 text-sm font-semibold">Ada&apos;s Garden Planner</div>}
+              topBar={
+                <div className="flex h-12 items-center px-3 text-sm font-semibold">Ada&apos;s Garden Planner</div>
+              }
             >
               <div className="p-4 text-sm text-secondary">
-                The bar holds {DEFAULT_MOBILE_MAX_ITEMS[size]} cells at this size: {DEFAULT_MOBILE_MAX_ITEMS[size] - 1} entries and More.
+                The bar holds {DEFAULT_MOBILE_MAX_ITEMS[size]} cells at this size: {DEFAULT_MOBILE_MAX_ITEMS[size] - 1}{" "}
+                entries and More.
               </div>
             </AppShell>
           </MemoryRouter>
@@ -335,11 +340,10 @@ function ShellDemo() {
       </div>
       <Note>
         `mobileMaxItems` counts the bar&apos;s cells, More included; the entries&apos; `mobilePriority`, else the
-        app&apos;s order, decides which stay, and the rest open from "More" as a sheet, each group with its pages. The More cell carries the hidden
-        entries&apos; links and `dataTour` anchors, so a tour step aimed at "Allotment members"
-        lands on More. Labels wrap to two lines instead of truncating; the sidebar never
-        collapses to icons at Large. The bar is the phone layout&apos;s: narrow the window (or
-        open the device preview) to see it.
+        app&apos;s order, decides which stay, and the rest open from "More" as a sheet, each group with its pages. The
+        More cell carries the hidden entries&apos; links and `dataTour` anchors, so a tour step aimed at "Allotment
+        members" lands on More. Labels wrap to two lines instead of truncating; the sidebar never collapses to icons at
+        Large. The bar is the phone layout&apos;s: narrow the window (or open the device preview) to see it.
       </Note>
     </Example>
   );
@@ -376,10 +380,9 @@ function WindowedDemo() {
         </div>
       </div>
       <Note>
-        A row is placed at `offsetOf(i)` with `minHeight: estimate` (`rowHeight × scale`),
-        and `measureRef` hands its real height back, so a diary entry that wraps to three
-        lines at Extra large pushes the next one down instead of being cut. MeasuredGrid
-        does the same.
+        A row is placed at `offsetOf(i)` with `minHeight: estimate` (`rowHeight × scale`), and `measureRef` hands its
+        real height back, so a diary entry that wraps to three lines at Extra large pushes the next one down instead of
+        being cut. MeasuredGrid does the same.
       </Note>
     </Example>
   );

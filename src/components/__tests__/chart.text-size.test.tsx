@@ -66,10 +66,19 @@ describe("SeriesChart height", () => {
   });
 
   it("tells a length from a class", () => {
-    for (const length of ["20rem", "320px", "50%", "min(20rem, 60dvh)", "clamp(12rem, 40vh, 30rem)", "calc(100% - 1rem)", "var(--h)"]) {
+    for (const length of [
+      "20rem",
+      "320px",
+      "50%",
+      "min(20rem, 60dvh)",
+      "clamp(12rem, 40vh, 30rem)",
+      "calc(100% - 1rem)",
+      "var(--h)",
+    ]) {
       expect(isCssLength(length), length).toBe(true);
     }
-    for (const cls of ["h-72", "h-[20rem]", "h-64 md:h-80", "min-h-0 flex-1"]) expect(isCssLength(cls), cls).toBe(false);
+    for (const cls of ["h-72", "h-[20rem]", "h-64 md:h-80", "min-h-0 flex-1"])
+      expect(isCssLength(cls), cls).toBe(false);
     expect(chartHeightProps(300)).toEqual({ style: { height: 300 } });
     expect(chartHeightProps(undefined)).toEqual({});
   });
@@ -98,7 +107,9 @@ describe("SeriesChart at Large and Extra large", () => {
     expect(plotLeft(xl.container)).toBe(AXIS_TICK_WIDTH * 1.5);
     xl.unmount();
     // keksdose's MONEY_AXIS_WIDTH-style own width, titled.
-    const own = render(<SeriesChart rows={ROWS} series={[{ key: "a", label: "A" }]} axes={oneAxis(undefined, "CHF", 60)} />);
+    const own = render(
+      <SeriesChart rows={ROWS} series={[{ key: "a", label: "A" }]} axes={oneAxis(undefined, "CHF", 60)} />,
+    );
     expect(plotLeft(own.container)).toBe(Math.round((60 + AXIS_TITLE_STRIP) * 1.5));
   });
 
@@ -199,7 +210,8 @@ describe("legends beside a chart go under it at Large (§4)", () => {
     );
     const [toggle, key, horizontal] = [...container.children];
     for (const legend of [toggle, key]) {
-      for (const cls of [...UNDER, "flex-col", "large:flex-row", "large:flex-wrap"]) expect(legend.classList, cls).toContain(cls);
+      for (const cls of [...UNDER, "flex-col", "large:flex-row", "large:flex-wrap"])
+        expect(legend.classList, cls).toContain(cls);
     }
     for (const cls of UNDER) expect(horizontal.classList).not.toContain(cls);
   });

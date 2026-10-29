@@ -159,10 +159,7 @@ function ResendStatus({
           : labels.resendError))
       : "";
   return (
-    <span
-      role="status"
-      className={cn(phase === "failed" ? "text-danger" : "text-success", className)}
-    >
+    <span role="status" className={cn(phase === "failed" ? "text-danger" : "text-success", className)}>
       {phase === "sent" ? labels.resent : failed}
     </span>
   );
@@ -259,9 +256,7 @@ export function VerifyEmailStatus({
   useOncePerKey(token === "" ? null : token, onVerify, (key, result) => {
     // Without a classifier, the coded refusal decides (0.30.0): `token_expired` is
     // "expired", anything else "invalid".
-    const next: VerifyOutcome = result.ok
-      ? "verified"
-      : (classifyError ?? defaultVerifyFailure)(result.error);
+    const next: VerifyOutcome = result.ok ? "verified" : (classifyError ?? defaultVerifyFailure)(result.error);
     setSettled({ token: key, outcome: next });
     announce(labels[next]);
   });

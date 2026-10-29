@@ -53,8 +53,7 @@ const fail = (message) => {
 };
 if (!existsSync(OUT)) fail(`${relative(ROOT, OUT)} is missing — run tsup first (npm run build)`);
 
-const sourceOf = (base) =>
-  [".ts", ".tsx", "/index.ts", "/index.tsx"].map((ext) => base + ext).find(existsSync);
+const sourceOf = (base) => [".ts", ".tsx", "/index.ts", "/index.tsx"].map((ext) => base + ext).find(existsSync);
 
 const result = await build({
   entryPoints: [ENTRY],
@@ -98,8 +97,11 @@ if (strays.length) {
       .join("\n  ")}\nmove the defaults it needs into a *-labels.ts module (see src/i18n/defaults.ts)`,
   );
 }
-const imports = [...readFileSync(OUT, "utf8").matchAll(/(?:^|[;\s])(?:import|export)\s[^"']*?from\s*["']([^"']+)["']|import\s*["']([^"']+)["']/g)]
-  .map((m) => m[1] ?? m[2]);
+const imports = [
+  ...readFileSync(OUT, "utf8").matchAll(
+    /(?:^|[;\s])(?:import|export)\s[^"']*?from\s*["']([^"']+)["']|import\s*["']([^"']+)["']/g,
+  ),
+].map((m) => m[1] ?? m[2]);
 const unexpected = imports.filter((s) => s !== "../kit-labels.js");
 if (unexpected.length) fail(`en.js imports ${unexpected.join(", ")} — only ../kit-labels.js is expected`);
 

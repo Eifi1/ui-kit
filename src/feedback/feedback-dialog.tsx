@@ -251,16 +251,15 @@ export function FeedbackDialog(props: FeedbackDialogProps) {
   const [files, setFiles] = useState<File[]>([]);
   const isMobile = usePhoneLayout();
   const noticeId = useId();
-  const hasNotice = publicNotice !== undefined && publicNotice !== null && publicNotice !== false && publicNotice !== "";
+  const hasNotice =
+    publicNotice !== undefined && publicNotice !== null && publicNotice !== false && publicNotice !== "";
   const labels = useKitLabels("feedbackDialog", DEFAULT_FEEDBACK_DIALOG_LABELS, labelsProp);
   const attachmentText = useKitLabels("feedbackAttachment", DEFAULT_FEEDBACK_ATTACHMENT_LABELS, labelsProp);
   // Under `multiple` the heading is `attachmentList` — a screenshot AND photos — which
   // also names the chip list beneath it: one string, so the two cannot disagree. Its old
   // second name, `feedbackDialog.attachments`, went in 0.34.
   const listHeading =
-    labelsProp?.attachmentList ??
-    attachmentText.attachmentList ??
-    DEFAULT_FEEDBACK_ATTACHMENT_LABELS.attachmentList!;
+    labelsProp?.attachmentList ?? attachmentText.attachmentList ?? DEFAULT_FEEDBACK_ATTACHMENT_LABELS.attachmentList!;
   // The attachment field resolves its own keys from `feedbackAttachment`; it gets the
   // prop's (so a caller's `attachmentAdd` still wins) plus the resolved heading.
   const attachmentLabels =

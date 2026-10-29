@@ -27,11 +27,22 @@ const CATALOGUES = {
  * generated client (`err.body`), a body thrown as it came, and FastAPI's nested `detail`.
  */
 
-const axios = (data: unknown, status = 402) => ({ isAxiosError: true, code: "ERR_BAD_REQUEST", response: { status, data } });
+const axios = (data: unknown, status = 402) => ({
+  isAxiosError: true,
+  code: "ERR_BAD_REQUEST",
+  response: { status, data },
+});
 const ofetch = (data: unknown) => ({ name: "FetchError", status: 402, data });
 const generated = (body: unknown) => ({ name: "ApiError", status: 402, body });
 
-const LIMIT = { detail: "Plan limit reached", code: "plan_limit", dimension: "budgets", plan: "free", limit: 1, used: 1 };
+const LIMIT = {
+  detail: "Plan limit reached",
+  code: "plan_limit",
+  dimension: "budgets",
+  plan: "free",
+  limit: 1,
+  used: 1,
+};
 
 describe("BillingErrorCode — read by authErrorCode and isAuthError", () => {
   it("knows the codes in every shape, server-kit 0.7's four new ones included (§14.2)", () => {
@@ -65,7 +76,9 @@ describe("BillingErrorCode — read by authErrorCode and isAuthError", () => {
     expect(isBillingError(axios({ code: "billing_already_subscribed" }, 409))).toBe(true);
     expect(isBillingError(axios({ code: "billing_not_at_provider" }, 409), "billing_not_at_provider")).toBe(true);
     expect(isBillingError(axios({ code: "billing_not_subscribed" }, 409), "billing_not_subscribed")).toBe(true);
-    expect(isBillingError(axios({ detail: { code: "billing_plan_unchanged" } }, 409), "billing_plan_unchanged")).toBe(true);
+    expect(isBillingError(axios({ detail: { code: "billing_plan_unchanged" } }, 409), "billing_plan_unchanged")).toBe(
+      true,
+    );
     expect(isBillingError(axios({ code: "billing_plan_unchanged" }, 409), "billing_not_subscribed")).toBe(false);
     // The audits' drafts were never the wire's names (decision 22).
     expect(isBillingError(axios({ code: "not_at_provider" }, 409))).toBe(false);
@@ -78,7 +91,9 @@ describe("BillingErrorCode — read by authErrorCode and isAuthError", () => {
 
 describe("the words of the plan switch's refusals (0.39, §15.2.10)", () => {
   it("say what to do instead, and no longer send a plan change to the portal", () => {
-    expect(DEFAULT_BILLING_LABELS.notSubscribed).toBe("There’s no running subscription to change. Choose a plan to subscribe.");
+    expect(DEFAULT_BILLING_LABELS.notSubscribed).toBe(
+      "There’s no running subscription to change. Choose a plan to subscribe.",
+    );
     expect(DEFAULT_BILLING_LABELS.planUnchanged).toBe("That’s already your plan. Pick another plan or billing period.");
     expect(DEFAULT_BILLING_LABELS.alreadySubscribed).toBe("You already have a subscription. Change your plan above.");
     for (const [code, labels] of Object.entries(CATALOGUES)) {
@@ -118,7 +133,11 @@ describe("isPlanLimit — {dimension, plan, limit, used} off the refusal (§3.4)
   });
 
   it("reads keksdose's legacy plan_budget_limit as budgets for the release in between (§12.16)", () => {
-    expect(isPlanLimit(axios({ detail: "Your FREE plan allows 1 budget(s).", code: "plan_budget_limit", plan: "FREE", limit: 1 }))).toEqual({
+    expect(
+      isPlanLimit(
+        axios({ detail: "Your FREE plan allows 1 budget(s).", code: "plan_budget_limit", plan: "FREE", limit: 1 }),
+      ),
+    ).toEqual({
       dimension: "budgets",
       plan: "free",
       limit: 1,

@@ -85,4 +85,3 @@ describe("matchesSearch: every word of a picker's query (0.51.4, keksdose /price
     expect(matchesSearch(searchWords("bern"), ["Migros", undefined, "Bern"])).toBe(true);
   });
 });
-

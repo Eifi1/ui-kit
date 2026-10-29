@@ -20,7 +20,12 @@ afterEach(() => {
 describe("PublicPage", () => {
   it("draws the header, the heading, the description and the content in <main>, then the legal footer", () => {
     render(
-      <PublicPage header={<header>Site header</header>} title="Prices near you" description="Shared by households." seo={null}>
+      <PublicPage
+        header={<header>Site header</header>}
+        title="Prices near you"
+        description="Shared by households."
+        seo={null}
+      >
         <p>Regional figures</p>
       </PublicPage>,
     );
@@ -56,7 +61,10 @@ describe("PublicPage", () => {
     meta.content = "The app.";
     document.head.appendChild(meta);
     const { unmount } = render(
-      <PublicPage title="Prices" seo={{ canonicalPath: "/prices", title: "Prices — Keksdose", description: "What households pay." }}>
+      <PublicPage
+        title="Prices"
+        seo={{ canonicalPath: "/prices", title: "Prices — Keksdose", description: "What households pay." }}
+      >
         x
       </PublicPage>,
     );

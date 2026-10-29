@@ -18,8 +18,7 @@ import type { UiKitLabels } from "../../i18n/kit-labels";
  * Select has it) and K11 (`showCount`).
  */
 
-const described = (el: Element) =>
-  (el.getAttribute("aria-describedby") ?? "").split(/\s+/).filter(Boolean);
+const described = (el: Element) => (el.getAttribute("aria-describedby") ?? "").split(/\s+/).filter(Boolean);
 const descriptions = (el: Element) =>
   described(el).map((id) => document.getElementById(id)?.textContent ?? `#${id} MISSING`);
 
@@ -62,14 +61,7 @@ describe("kastlan 8: a labelled field keeps the caller's placeholder", () => {
 
 describe("keksdose K4: hint on Input and Textarea", () => {
   it("text is a caption under the field, described before the error", () => {
-    render(
-      <Input
-        label="IBAN"
-        hint="22 characters"
-        error="That IBAN has 21 digits"
-        aria-describedby="outside"
-      />,
-    );
+    render(<Input label="IBAN" hint="22 characters" error="That IBAN has 21 digits" aria-describedby="outside" />);
     const input = screen.getByRole("textbox", { name: "IBAN" });
     const ids = described(input);
     expect(ids[0]).toBe("outside");
@@ -232,14 +224,27 @@ describe("keksdose K4: hint on the combobox family", () => {
 
   it("Combobox: a text caption describes the input, before the error", () => {
     render(
-      <Combobox label="Payee" value="" onChange={() => {}} options={["REWE"]} hint="As on the receipt" error="Required" />,
+      <Combobox
+        label="Payee"
+        value=""
+        onChange={() => {}}
+        options={["REWE"]}
+        hint="As on the receipt"
+        error="Required"
+      />,
     );
     expect(descriptions(screen.getByRole("combobox", { name: "Payee" }))).toEqual(["As on the receipt", "Required"]);
   });
 
   it("Combobox: a FieldHint shares the label's strip and follows the input in the tab order", () => {
     render(
-      <Combobox label="Payee" value="" onChange={() => {}} options={["REWE"]} hint={<FieldHint label="Who was paid" />} />,
+      <Combobox
+        label="Payee"
+        value=""
+        onChange={() => {}}
+        options={["REWE"]}
+        hint={<FieldHint label="Who was paid" />}
+      />,
     );
     const input = screen.getByRole("combobox", { name: "Payee" });
     const hint = screen.getByRole("button", { name: "Who was paid" });
@@ -251,7 +256,13 @@ describe("keksdose K4: hint on the combobox family", () => {
 
   it("Combobox: unlabelled, a FieldHint sits at the end edge outside the field", () => {
     render(
-      <Combobox aria-label="Payee" value="" onChange={() => {}} options={["REWE"]} hint={<FieldHint label="Who was paid" />} />,
+      <Combobox
+        aria-label="Payee"
+        value=""
+        onChange={() => {}}
+        options={["REWE"]}
+        hint={<FieldHint label="Who was paid" />}
+      />,
     );
     const input = screen.getByRole("combobox", { name: "Payee" });
     const hint = screen.getByRole("button", { name: "Who was paid" });
@@ -260,13 +271,27 @@ describe("keksdose K4: hint on the combobox family", () => {
 
   it("InlineEntityCombobox", () => {
     render(
-      <InlineEntityCombobox<string> label="Account" value={null} onChange={() => {}} options={options} hint="The money leaves from here" />,
+      <InlineEntityCombobox<string>
+        label="Account"
+        value={null}
+        onChange={() => {}}
+        options={options}
+        hint="The money leaves from here"
+      />,
     );
     expect(descriptions(screen.getByRole("combobox", { name: "Account" }))).toEqual(["The money leaves from here"]);
   });
 
   it("EntityCombobox: the caption describes the trigger", () => {
-    render(<EntityCombobox<string> label="Account" value={null} onChange={() => {}} options={options} hint="Only open accounts" />);
+    render(
+      <EntityCombobox<string>
+        label="Account"
+        value={null}
+        onChange={() => {}}
+        options={options}
+        hint="Only open accounts"
+      />,
+    );
     const trigger = screen.getByRole("combobox");
     expect(descriptions(trigger)).toEqual(["Only open accounts"]);
   });
@@ -291,7 +316,9 @@ describe("keksdose K4: hint on the combobox family", () => {
   });
 
   it("Autocomplete: a FieldHint keeps the label as the field's name", () => {
-    render(<Autocomplete label="Address" value="" onChange={() => {}} hint={<FieldHint label="We never store it" />} />);
+    render(
+      <Autocomplete label="Address" value="" onChange={() => {}} hint={<FieldHint label="We never store it" />} />,
+    );
     expect(screen.getByRole("combobox", { name: "Address" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "We never store it" })).toBeInTheDocument();
   });

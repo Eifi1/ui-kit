@@ -52,7 +52,8 @@ const groups = async () => {
   return within(listbox)
     .getAllByRole("group")
     .map((group) => [
-      group.getAttribute("aria-labelledby") && document.getElementById(group.getAttribute("aria-labelledby")!)?.textContent,
+      group.getAttribute("aria-labelledby") &&
+        document.getElementById(group.getAttribute("aria-labelledby")!)?.textContent,
       within(group)
         .getAllByRole("option")
         .map((o) => o.textContent),

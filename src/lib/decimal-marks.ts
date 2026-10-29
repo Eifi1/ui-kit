@@ -56,9 +56,7 @@ export function normalizeTypedMarks(raw: string, mark: "," | "."): string {
     const hasMark = operand.includes(mark);
     const count = operand.split(other).length - 1;
     if (count === 0) return operand;
-    const grouping = hasMark
-      ? true
-      : count > 1 || (mark === "," && /^[1-9]\d{0,2}(\.\d{3})+$/.test(operand));
+    const grouping = hasMark ? true : count > 1 || (mark === "," && /^[1-9]\d{0,2}(\.\d{3})+$/.test(operand));
     return grouping ? operand.split(other).join("") : operand;
   });
 }

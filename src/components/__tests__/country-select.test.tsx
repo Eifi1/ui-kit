@@ -260,7 +260,9 @@ describe("CountrySelect: the write lock", () => {
     fireEvent.keyDown(t, { key: "ArrowDown" });
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
     expect(onChange).not.toHaveBeenCalled();
-    const described = (t.getAttribute("aria-describedby") ?? "").split(" ").map((id) => document.getElementById(id)?.textContent);
+    const described = (t.getAttribute("aria-describedby") ?? "")
+      .split(" ")
+      .map((id) => document.getElementById(id)?.textContent);
     expect(described).toContain("Signed handovers cannot change");
   });
 

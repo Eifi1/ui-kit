@@ -53,7 +53,14 @@ const FAMILY: Array<[string, (lock: Lock, onChange: (v: unknown) => void) => Rea
   [
     "InlineEntityCombobox",
     (lock, onChange) => (
-      <InlineEntityCombobox<string> label="Account" value="a1" onChange={onChange} options={OPTIONS} clearable {...lock} />
+      <InlineEntityCombobox<string>
+        label="Account"
+        value="a1"
+        onChange={onChange}
+        options={OPTIONS}
+        clearable
+        {...lock}
+      />
     ),
   ],
   [
@@ -65,7 +72,14 @@ const FAMILY: Array<[string, (lock: Lock, onChange: (v: unknown) => void) => Rea
   [
     "MultiEntityCombobox",
     (lock, onChange) => (
-      <MultiEntityCombobox<string> label="Accounts" value={["a1"]} onChange={onChange} options={OPTIONS} clearable {...lock} />
+      <MultiEntityCombobox<string>
+        label="Accounts"
+        value={["a1"]}
+        onChange={onChange}
+        options={OPTIONS}
+        clearable
+        {...lock}
+      />
     ),
   ],
 ];
@@ -118,11 +132,7 @@ describe.each(FAMILY)("%s: the write lock (keksdose G2)", (name, field) => {
   });
 
   it("without `commit` it stays live under the lock — the form's Save is the commit", () => {
-    render(
-      <WriteLockProvider locked>
-        {field({}, vi.fn())}
-      </WriteLockProvider>,
-    );
+    render(<WriteLockProvider locked>{field({}, vi.fn())}</WriteLockProvider>);
     expect(control()).not.toHaveAttribute("aria-disabled");
     expect(control()).not.toHaveAttribute("readonly");
     fireEvent.click(control());
@@ -135,7 +145,14 @@ describe("the lock on the typed fields", () => {
   it("a locked Combobox swallows Enter and calls no onSubmit", () => {
     const onSubmit = vi.fn();
     render(
-      <Combobox label="Payee" value="Example Ltd" onChange={vi.fn()} options={[]} onSubmit={onSubmit} disabledReason="Locked" />,
+      <Combobox
+        label="Payee"
+        value="Example Ltd"
+        onChange={vi.fn()}
+        options={[]}
+        onSubmit={onSubmit}
+        disabledReason="Locked"
+      />,
     );
     const notPrevented = fireEvent.keyDown(screen.getByRole("combobox"), { key: "Enter" });
     expect(notPrevented).toBe(false);
@@ -145,7 +162,13 @@ describe("the lock on the typed fields", () => {
   it("a lock arriving mid-edit closes the list and drops the loose text unjudged", () => {
     const onChange = vi.fn();
     const ui = (reason?: string) => (
-      <InlineEntityCombobox<string> label="Account" value="a1" onChange={onChange} options={OPTIONS} disabledReason={reason} />
+      <InlineEntityCombobox<string>
+        label="Account"
+        value="a1"
+        onChange={onChange}
+        options={OPTIONS}
+        disabledReason={reason}
+      />
     );
     const { rerender } = render(ui());
     const input = screen.getByRole("combobox");
@@ -164,7 +187,15 @@ describe("the lock on the typed fields", () => {
   it("a locked picker opens no phone sheet", () => {
     const undo = asPhone();
     try {
-      render(<InlineEntityCombobox<string> label="Account" value="a1" onChange={vi.fn()} options={OPTIONS} disabledReason="Locked" />);
+      render(
+        <InlineEntityCombobox<string>
+          label="Account"
+          value="a1"
+          onChange={vi.fn()}
+          options={OPTIONS}
+          disabledReason="Locked"
+        />,
+      );
       fireEvent.focus(screen.getByRole("combobox"));
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     } finally {
@@ -262,7 +293,7 @@ describe("InlineEntityCombobox: the create row (keksdose G9)", () => {
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
   });
 
-  it("`createEmptyLabel` offers the row with nothing typed, and creates with \"\"", async () => {
+  it('`createEmptyLabel` offers the row with nothing typed, and creates with ""', async () => {
     const user = userEvent.setup();
     const onCreate = vi.fn();
     render(<CreateHost onCreate={onCreate} createEmptyLabel="Create cash account" />);
@@ -338,7 +369,7 @@ describe("InlineEntityCombobox: the create row (keksdose G9)", () => {
 });
 
 describe("the panel pickers: createEmptyLabel and createCommit", () => {
-  it("EntityCombobox offers the named row on an empty query and creates with \"\"", () => {
+  it('EntityCombobox offers the named row on an empty query and creates with ""', () => {
     const onCreate = vi.fn();
     render(
       <EntityCombobox<string>
@@ -357,7 +388,9 @@ describe("the panel pickers: createEmptyLabel and createCommit", () => {
   });
 
   it("without createEmptyLabel an empty query still offers nothing (unchanged)", () => {
-    render(<EntityCombobox<string> label="Account" value={null} onChange={vi.fn()} options={OPTIONS} onCreate={vi.fn()} />);
+    render(
+      <EntityCombobox<string> label="Account" value={null} onChange={vi.fn()} options={OPTIONS} onCreate={vi.fn()} />,
+    );
     fireEvent.click(screen.getByRole("combobox", { name: /Account/ }));
     expect(screen.queryByRole("option", { name: /Create/ })).not.toBeInTheDocument();
   });
@@ -444,11 +477,15 @@ describe("MultiEntityCombobox: hint, like the rest of the family", () => {
 const HINTED: Array<[string, (hint: ReactElement | string | undefined) => ReactElement]> = [
   [
     "InlineEntityCombobox",
-    (hint) => <InlineEntityCombobox<string> label="Account" value="a1" onChange={vi.fn()} options={OPTIONS} hint={hint} />,
+    (hint) => (
+      <InlineEntityCombobox<string> label="Account" value="a1" onChange={vi.fn()} options={OPTIONS} hint={hint} />
+    ),
   ],
   [
     "InlineEntityCombobox, unlabelled",
-    (hint) => <InlineEntityCombobox<string> aria-label="Account" value="a1" onChange={vi.fn()} options={OPTIONS} hint={hint} />,
+    (hint) => (
+      <InlineEntityCombobox<string> aria-label="Account" value="a1" onChange={vi.fn()} options={OPTIONS} hint={hint} />
+    ),
   ],
   [
     "EntityCombobox",
@@ -456,15 +493,27 @@ const HINTED: Array<[string, (hint: ReactElement | string | undefined) => ReactE
   ],
   [
     "EntityCombobox, unlabelled",
-    (hint) => <EntityCombobox<string> aria-label="Account" value="a1" onChange={vi.fn()} options={OPTIONS} hint={hint} />,
+    (hint) => (
+      <EntityCombobox<string> aria-label="Account" value="a1" onChange={vi.fn()} options={OPTIONS} hint={hint} />
+    ),
   ],
   [
     "MultiEntityCombobox",
-    (hint) => <MultiEntityCombobox<string> label="Accounts" value={["a1"]} onChange={vi.fn()} options={OPTIONS} hint={hint} />,
+    (hint) => (
+      <MultiEntityCombobox<string> label="Accounts" value={["a1"]} onChange={vi.fn()} options={OPTIONS} hint={hint} />
+    ),
   ],
   [
     "MultiEntityCombobox, unlabelled",
-    (hint) => <MultiEntityCombobox<string> aria-label="Accounts" value={["a1"]} onChange={vi.fn()} options={OPTIONS} hint={hint} />,
+    (hint) => (
+      <MultiEntityCombobox<string>
+        aria-label="Accounts"
+        value={["a1"]}
+        onChange={vi.fn()}
+        options={OPTIONS}
+        hint={hint}
+      />
+    ),
   ],
   [
     "Combobox, unlabelled",
@@ -501,7 +550,16 @@ describe.each(HINTED)("%s: a hint coming and going keeps the control", (_name, f
 describe("the trigger pickers' keyboard clear", () => {
   it("EntityCombobox: Delete on the closed trigger emits clearValue", () => {
     const onChange = vi.fn();
-    render(<EntityCombobox<string, ""> label="Account" value="a1" onChange={onChange} options={OPTIONS} clearable clearValue="" />);
+    render(
+      <EntityCombobox<string, "">
+        label="Account"
+        value="a1"
+        onChange={onChange}
+        options={OPTIONS}
+        clearable
+        clearValue=""
+      />,
+    );
     const trigger = screen.getByRole("combobox", { name: /Account/ });
     fireEvent.keyDown(trigger, { key: "Delete" });
     expect(onChange).toHaveBeenCalledWith("");
@@ -509,14 +567,24 @@ describe("the trigger pickers' keyboard clear", () => {
 
   it("MultiEntityCombobox: Backspace on the closed trigger empties the selection", () => {
     const onChange = vi.fn();
-    render(<MultiEntityCombobox<string> label="Accounts" value={["a1", "a2"]} onChange={onChange} options={OPTIONS} clearable />);
+    render(
+      <MultiEntityCombobox<string>
+        label="Accounts"
+        value={["a1", "a2"]}
+        onChange={onChange}
+        options={OPTIONS}
+        clearable
+      />,
+    );
     fireEvent.keyDown(screen.getByRole("combobox", { name: /Accounts/ }), { key: "Backspace" });
     expect(onChange).toHaveBeenCalledWith([]);
   });
 
   it("not without `clearable`, not with the list open, not while locked", () => {
     const onChange = vi.fn();
-    const { rerender } = render(<EntityCombobox<string> label="Account" value="a1" onChange={onChange} options={OPTIONS} />);
+    const { rerender } = render(
+      <EntityCombobox<string> label="Account" value="a1" onChange={onChange} options={OPTIONS} />,
+    );
     const trigger = () => screen.getByRole("combobox", { name: /Account/ });
     fireEvent.keyDown(trigger(), { key: "Delete" });
 
@@ -526,7 +594,14 @@ describe("the trigger pickers' keyboard clear", () => {
     fireEvent.keyDown(trigger(), { key: "Backspace" });
 
     rerender(
-      <EntityCombobox<string> label="Account" value="a1" onChange={onChange} options={OPTIONS} clearable disabledReason="Locked" />,
+      <EntityCombobox<string>
+        label="Account"
+        value="a1"
+        onChange={onChange}
+        options={OPTIONS}
+        clearable
+        disabledReason="Locked"
+      />,
     );
     fireEvent.keyDown(trigger(), { key: "Delete" });
     expect(onChange).not.toHaveBeenCalled();

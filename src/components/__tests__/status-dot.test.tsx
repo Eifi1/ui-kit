@@ -3,8 +3,19 @@ import { describe, expect, it } from "vitest";
 import { StatusDot, statusDotColor, type StatusDotTone } from "../status-dot";
 
 const TONES: StatusDotTone[] = [
-  "brand", "neutral", "success", "warning", "danger", "info", "income", "expense",
-  "blue", "indigo", "purple", "teal", "orange",
+  "brand",
+  "neutral",
+  "success",
+  "warning",
+  "danger",
+  "info",
+  "income",
+  "expense",
+  "blue",
+  "indigo",
+  "purple",
+  "teal",
+  "orange",
 ];
 
 /** The role utility that paints each colour (tokens.css, `@theme inline`): the dot's class

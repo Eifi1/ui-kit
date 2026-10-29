@@ -24,21 +24,32 @@ type Server = "online" | "offline" | "lapsed" | "error";
 
 /** The pretend server: rows in memory, a knowledge counter, and the mode picked above. */
 function pretendServer(mode: () => Server) {
-  const rows = new Map<string, { entity: string; id: string; data: Record<string, unknown>; pk: number; knowledge: number }>();
+  const rows = new Map<
+    string,
+    { entity: string; id: string; data: Record<string, unknown>; pk: number; knowledge: number }
+  >();
   let knowledge = 0;
   let pk = 1;
   return async (body: SyncRequestBody): Promise<SyncResponseBody> => {
     await new Promise((r) => setTimeout(r, 400));
     const now = mode();
     if (now === "offline") throw Object.assign(new Error("Network Error"), { isAxiosError: true, response: undefined });
-    if (now === "error") throw Object.assign(new Error("Server error"), { isAxiosError: true, response: { status: 503, data: {} } });
+    if (now === "error")
+      throw Object.assign(new Error("Server error"), { isAxiosError: true, response: { status: 503, data: {} } });
     const refused = now === "lapsed" && body.changes.length > 0;
     if (!refused) {
       for (const change of body.changes) {
         knowledge += 1;
         const key = `${change.entity}:${change.id}`;
         if (change.op === "delete") rows.delete(key);
-        else rows.set(key, { entity: change.entity, id: change.id, data: change.data ?? {}, pk: rows.get(key)?.pk ?? pk++, knowledge });
+        else
+          rows.set(key, {
+            entity: change.entity,
+            id: change.id,
+            data: change.data ?? {},
+            pk: rows.get(key)?.pk ?? pk++,
+            knowledge,
+          });
       }
     }
     return {
@@ -47,7 +58,11 @@ function pretendServer(mode: () => Server) {
         .filter((r) => r.knowledge > body.last_knowledge)
         .map((r) => ({ entity: r.entity, id: r.id, op: "upsert" as const, pk: r.pk, data: r.data })),
       refused: refused
-        ? { code: "billing_read_only", detail: "Read-only for now: changes need an active plan", change_ids: body.changes.map((c) => c.id) }
+        ? {
+            code: "billing_read_only",
+            detail: "Read-only for now: changes need an active plan",
+            change_ids: body.changes.map((c) => c.id),
+          }
         : null,
       rejections: [],
       page_cursor: null,
@@ -95,7 +110,10 @@ function EngineDemo() {
 
   if (!demo) {
     return (
-      <Example label="createSyncEngine — a Dexie copy in this browser, a pretend server in memory" hint="needs IndexedDB">
+      <Example
+        label="createSyncEngine — a Dexie copy in this browser, a pretend server in memory"
+        hint="needs IndexedDB"
+      >
         <Note>This browser has no IndexedDB: the recipe below shows the wiring.</Note>
       </Example>
     );
@@ -142,14 +160,16 @@ function EngineDemo() {
       </Row>
       <StateLine label="phase">{state.phase}</StateLine>
       <StateLine label="counts">{JSON.stringify(state.counts)}</StateLine>
-      <StateLine label="next retry">{state.nextRetryAt ? new Date(state.nextRetryAt).toLocaleTimeString() : "—"}</StateLine>
+      <StateLine label="next retry">
+        {state.nextRetryAt ? new Date(state.nextRetryAt).toLocaleTimeString() : "—"}
+      </StateLine>
       <StateLine label="notes in the copy">{notes.data ?? "…"}</StateLine>
       <StateLine label="outbox">{statuses}</StateLine>
       {shared && <Note>This tab is marked a shared computer: the engine does not start.</Note>}
       <Note>
         A write lands in the copy at once and syncs 800 ms later. {code("Plan lapsed")} keeps the changes as{" "}
-        {code("waiting")} (sent again every round); {code("No connection")} waits for the {code("online")} event or
-        the 30 s poll, with no retry timer; {code("Server error")} retries on the backoff.
+        {code("waiting")} (sent again every round); {code("No connection")} waits for the {code("online")} event or the
+        30 s poll, with no retry timer; {code("Server error")} retries on the backoff.
       </Note>
     </Example>
   );
@@ -186,8 +206,8 @@ export function SyncDemo() {
         <pre className={READOUT_PRE}>{RECIPE}</pre>
         <Note>
           The leaf utilities {code("stampAfter")}, {code("isOfflineError")}, {code("readLocalFirst")} and{" "}
-          {code("writeLocalFirst")} come from either {code("@eifi1/ui-kit/offline")} or {code("/sync")}: one module,
-          no Dexie and no TanStack behind it.
+          {code("writeLocalFirst")} come from either {code("@eifi1/ui-kit/offline")} or {code("/sync")}: one module, no
+          Dexie and no TanStack behind it.
         </Note>
       </Example>
     </>

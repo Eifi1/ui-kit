@@ -23,10 +23,7 @@ const STEPS: WizardStepConfig[] = [
   { id: "result", label: "Result" },
 ];
 
-type NavProps = Pick<
-  Parameters<typeof StepperNav<Data>>[0],
-  "finishCommit" | "finishDisabledReason" | "renderFinish"
->;
+type NavProps = Pick<Parameters<typeof StepperNav<Data>>[0], "finishCommit" | "finishDisabledReason" | "renderFinish">;
 
 function Harness({ onComplete, ...nav }: NavProps & { onComplete: () => void }) {
   const wizard = useWizard<Data>({ steps: STEPS, onComplete });
@@ -41,7 +38,13 @@ function renderNav(nav: NavProps & { onComplete: () => void }, locked?: string) 
   const harness = <Harness {...nav} />;
   return render(
     <MemoryRouter>
-      {locked === undefined ? harness : <WriteLockProvider locked reason={locked}>{harness}</WriteLockProvider>}
+      {locked === undefined ? (
+        harness
+      ) : (
+        <WriteLockProvider locked reason={locked}>
+          {harness}
+        </WriteLockProvider>
+      )}
     </MemoryRouter>,
   );
 }

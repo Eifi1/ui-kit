@@ -101,26 +101,26 @@ export function FileInputs() {
           <DropzoneAcceptOnly />
         </Stage>
         <Note>
-          Drop a non-.zip on the second zone: the refusal reads{" "}
-          <em>&ldquo;Only .zip files&rdquo;</em> —{" "}
+          Drop a non-.zip on the second zone: the refusal reads <em>&ldquo;Only .zip files&rdquo;</em> —{" "}
           <code className="font-mono">filePicker.rejectedTypeOnly(accept, name)</code>, handed{" "}
-          <code className="font-mono">accept</code>&apos;s tokens lower-cased and joined with
-          &ldquo;, &rdquo;. No <code className="font-mono">isValid</code> +{" "}
-          <code className="font-mono">invalidMessage</code> is needed just to say which type is
-          wanted; <code className="font-mono">accept</code> already knows. Keep{" "}
-          <code className="font-mono">isValid</code> for what <code className="font-mono">accept</code>{" "}
-          cannot see — the empty statement in &ldquo;own check, own words&rdquo; above. A host that
-          translated <code className="font-mono">rejectedType</code> but not yet{" "}
-          <code className="font-mono">rejectedTypeOnly</code> keeps its own sentence rather than
-          an English one (that button does exactly this). All seven shipped locales carry it.
+          <code className="font-mono">accept</code>&apos;s tokens lower-cased and joined with &ldquo;, &rdquo;. No{" "}
+          <code className="font-mono">isValid</code> + <code className="font-mono">invalidMessage</code> is needed just
+          to say which type is wanted; <code className="font-mono">accept</code> already knows. Keep{" "}
+          <code className="font-mono">isValid</code> for what <code className="font-mono">accept</code> cannot see — the
+          empty statement in &ldquo;own check, own words&rdquo; above. A host that translated{" "}
+          <code className="font-mono">rejectedType</code> but not yet{" "}
+          <code className="font-mono">rejectedTypeOnly</code> keeps its own sentence rather than an English one (that
+          button does exactly this). All seven shipped locales carry it.
         </Note>
         <Note>
           With no <code className="font-mono">onInvalid</code>, a rejection calls the kit&apos;s{" "}
-          <code className="font-mono">toast.error</code>, which loads sonner lazily. The static
-          import is avoided on purpose: sonner is an OPTIONAL peer, and the barrel re-exports
-          this module — so importing it at the top would have broken{" "}
-          <code className="font-mono">import {"{"} Button {"}"}</code> for any app that never
-          installs it.
+          <code className="font-mono">toast.error</code>, which loads sonner lazily. The static import is avoided on
+          purpose: sonner is an OPTIONAL peer, and the barrel re-exports this module — so importing it at the top would
+          have broken{" "}
+          <code className="font-mono">
+            import {"{"} Button {"}"}
+          </code>{" "}
+          for any app that never installs it.
         </Note>
       </Example>
 
@@ -290,11 +290,7 @@ function HeadlessPicker() {
         }}
         className="w-full resize-none rounded-md border border-dashed border-subtle bg-transparent p-2 text-xs text-secondary"
       />
-      <Checkbox
-        label="Lock the card (disabled)"
-        checked={locked}
-        onChange={(e) => setLocked(e.target.checked)}
-      />
+      <Checkbox label="Lock the card (disabled)" checked={locked} onChange={(e) => setLocked(e.target.checked)} />
       <p className={READOUT}>files: {names(files)}</p>
       <Refusal rejections={rejections} />
     </div>
@@ -331,11 +327,7 @@ function OwnWordsButton() {
       </FileButton>
       <p className="text-xs text-secondary">
         No button handy?{" "}
-        <button
-          type="button"
-          className="text-brand underline"
-          onClick={() => ref.current?.click()}
-        >
+        <button type="button" className="text-brand underline" onClick={() => ref.current?.click()}>
           Open it from this link
         </button>
         .
@@ -435,9 +427,9 @@ function DropzoneMultiple() {
       <Refusal rejections={rejections} />
       <Note>
         <code className="font-mono">onReject</code> switches the toast off, as{" "}
-        <code className="font-mono">onInvalid</code> does. A caller that passes neither gets the
-        toast; <code className="font-mono">rejectionFeedback</code> picks{" "}
-        <code className="font-mono">"inline"</code> or <code className="font-mono">"none"</code> explicitly.
+        <code className="font-mono">onInvalid</code> does. A caller that passes neither gets the toast;{" "}
+        <code className="font-mono">rejectionFeedback</code> picks <code className="font-mono">"inline"</code> or{" "}
+        <code className="font-mono">"none"</code> explicitly.
       </Note>
     </div>
   );
@@ -490,10 +482,9 @@ function WholePickDropzone() {
         hint="PDF or images, 1 MB each — all or nothing"
       />
       <Note>
-        Returning <code className="font-mono">false</code> from{" "}
-        <code className="font-mono">onPick</code> delivers nothing, still hands the screening&apos;s
-        refusals to <code className="font-mono">onReject</code>, and replaces the per-file message
-        with one sentence for the pick (<code className="font-mono">labels.rejectedPick</code>) —
+        Returning <code className="font-mono">false</code> from <code className="font-mono">onPick</code> delivers
+        nothing, still hands the screening&apos;s refusals to <code className="font-mono">onReject</code>, and replaces
+        the per-file message with one sentence for the pick (<code className="font-mono">labels.rejectedPick</code>) —
         spoken, and shown inline here.
       </Note>
     </div>
@@ -572,24 +563,19 @@ function DropzoneFeedback() {
           ["file", file ? `${file.name} (${file.size} B)` : "null"],
           [
             "onReject(rejections)",
-            rejections
-              ? rejections.map((r) => `{ reason: "${r.reason}", message: "${r.message}" }`).join(", ")
-              : "—",
+            rejections ? rejections.map((r) => `{ reason: "${r.reason}", message: "${r.message}" }`).join(", ") : "—",
           ],
         ]}
       />
       <Note>
         <code className="font-mono">"toast"</code> goes through the kit&apos;s <code className="font-mono">toast</code>;{" "}
-        <code className="font-mono">"inline"</code> prints under the zone in the danger colour
-        and ties it to the zone with <code className="font-mono">aria-describedby</code>;{" "}
-        <code className="font-mono">"none"</code> shows nothing and leaves it to the caller — the
-        payload above. Inline and none are also spoken through the zone&apos;s live region (a
-        toast through sonner&apos;s own). Drag a file over the zone to see the drag-over wash.
-        The zone is a named <code className="font-mono">role=&quot;group&quot;</code>, not a
-        button: Tab reaches Browse (and the remove button) directly, and a click anywhere on the
-        zone is a pointer shortcut for Browse — no{" "}
-        <code className="font-mono">role=&quot;button&quot;</code> with real buttons nested in
-        it, which ARIA forbids.
+        <code className="font-mono">"inline"</code> prints under the zone in the danger colour and ties it to the zone
+        with <code className="font-mono">aria-describedby</code>; <code className="font-mono">"none"</code> shows
+        nothing and leaves it to the caller — the payload above. Inline and none are also spoken through the zone&apos;s
+        live region (a toast through sonner&apos;s own). Drag a file over the zone to see the drag-over wash. The zone
+        is a named <code className="font-mono">role=&quot;group&quot;</code>, not a button: Tab reaches Browse (and the
+        remove button) directly, and a click anywhere on the zone is a pointer shortcut for Browse — no{" "}
+        <code className="font-mono">role=&quot;button&quot;</code> with real buttons nested in it, which ARIA forbids.
       </Note>
     </div>
   );
@@ -648,7 +634,11 @@ function DropzoneStates() {
           busy={busy}
           renderBody={(state) => (
             <div className="flex flex-col items-center gap-2 text-center text-sm">
-              {state.busy ? <Spinner className="size-5 border-2" label={null} /> : <Camera aria-hidden className="size-6 text-muted" />}
+              {state.busy ? (
+                <Spinner className="size-5 border-2" label={null} />
+              ) : (
+                <Camera aria-hidden className="size-6 text-muted" />
+              )}
               <p className={cn("text-secondary", state.dragOver && "font-medium text-brand")}>
                 {state.busy
                   ? state.labels.busy
@@ -670,16 +660,15 @@ function DropzoneStates() {
         />
       </Stage>
       <Note>
-        <code className="font-mono">disabled</code> takes no drop, opens no picker and removes no file,
-        with <code className="font-mono">aria-disabled</code> on the group. <code className="font-mono">busy</code>{" "}
-        is inert the same way plus <code className="font-mono">aria-busy</code>, a spinner for the upload
-        icon and <code className="font-mono">filePicker.busy</code> as the text — pick a PDF on the first
-        zone (untick <code className="font-mono">disabled</code> first) and it goes busy while it
-        &ldquo;uploads&rdquo;. The second zone&apos;s <code className="font-mono">renderBody</code> is handed{" "}
-        <code className="font-mono">{"{ dragOver, disabled, busy, files, error, open, labels }"}</code>{" "}
-        and brings a second trigger; the Browse button, the inline error region and the live regions
-        stay, because Browse is the keyboard path. None of the four label props is passed: they
-        default to the provider&apos;s strings.
+        <code className="font-mono">disabled</code> takes no drop, opens no picker and removes no file, with{" "}
+        <code className="font-mono">aria-disabled</code> on the group. <code className="font-mono">busy</code> is inert
+        the same way plus <code className="font-mono">aria-busy</code>, a spinner for the upload icon and{" "}
+        <code className="font-mono">filePicker.busy</code> as the text — pick a PDF on the first zone (untick{" "}
+        <code className="font-mono">disabled</code> first) and it goes busy while it &ldquo;uploads&rdquo;. The second
+        zone&apos;s <code className="font-mono">renderBody</code> is handed{" "}
+        <code className="font-mono">{"{ dragOver, disabled, busy, files, error, open, labels }"}</code> and brings a
+        second trigger; the Browse button, the inline error region and the live regions stay, because Browse is the
+        keyboard path. None of the four label props is passed: they default to the provider&apos;s strings.
       </Note>
     </>
   );
@@ -712,10 +701,7 @@ function DropOnCard() {
       <Card
         {...dropProps}
         data-drop-over={isOver || undefined}
-        className={cn(
-          "p-4 transition-colors",
-          isOver && "border-brand bg-hover ring-2 ring-brand",
-        )}
+        className={cn("p-4 transition-colors", isOver && "border-brand bg-hover ring-2 ring-brand")}
       >
         {/* Wraps: at Extra large "Attach…" beside the heading ran past a 360 px phone. */}
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
@@ -728,12 +714,16 @@ function DropOnCard() {
           {docs.map((d, i) => (
             <li key={`${d.name}-${i}`} className="flex items-center gap-2 py-2 text-secondary">
               <FileText className="size-4 shrink-0 text-muted" aria-hidden />
-              <span className="min-w-0 flex-1 truncate large:whitespace-normal large:[overflow-wrap:anywhere]">{d.name}</span>
+              <span className="min-w-0 flex-1 truncate large:whitespace-normal large:[overflow-wrap:anywhere]">
+                {d.name}
+              </span>
               <span className="shrink-0 text-xs tabular-nums text-muted">{formatFileSize(d.size, "en-GB")}</span>
             </li>
           ))}
         </ul>
-        <p className="mt-2 text-xs text-muted">{isOver ? "Drop to attach" : "Drop PDFs anywhere on this card (up to 5 MB)."}</p>
+        <p className="mt-2 text-xs text-muted">
+          {isOver ? "Drop to attach" : "Drop PDFs anywhere on this card (up to 5 MB)."}
+        </p>
         {error && (
           <AlertBanner tone="danger" className="mt-2">
             {error}
@@ -769,13 +759,22 @@ export function FileLock022Demo() {
   const [file, setFile] = useState<File | null>(null);
   const [log, setLog] = useState("—");
   return (
-    <Example label="FileButton, FileDropzone — commit" hint="an upload that starts on pick is a commit; under a lock it says why">
+    <Example
+      label="FileButton, FileDropzone — commit"
+      hint="an upload that starts on pick is a commit; under a lock it says why"
+    >
       <Stage>
         <div data-stage="wide" className="flex flex-col items-center gap-4">
           <Switch checked={locked} onCheckedChange={setLocked} label="Viewing a budget shared to read" />
           <WriteLockProvider locked={locked} reason="Shared with you to read — uploads are off.">
             <div className="flex w-80 max-w-full flex-col gap-3">
-              <FileButton commit droppable variant="secondary" accept="image/*,application/pdf" onFiles={([f]) => setLog(`uploaded ${f.name}`)}>
+              <FileButton
+                commit
+                droppable
+                variant="secondary"
+                accept="image/*,application/pdf"
+                onFiles={([f]) => setLog(`uploaded ${f.name}`)}
+              >
                 <Upload aria-hidden className="size-4" />
                 Attach receipt
               </FileButton>

@@ -111,9 +111,7 @@ export function useDragTarget<E extends Element = Element>({
   return { dropProps, isOver: over && !disabled };
 }
 
-export function useFileDrop<E extends Element = Element>(
-  options: UseFileDropOptions,
-): UseFileDropReturn<E> {
+export function useFileDrop<E extends Element = Element>(options: UseFileDropOptions): UseFileDropReturn<E> {
   const picker = useFilePicker(options);
   const { dropProps, isOver } = useDragTarget<E>({
     disabled: options.disabled,

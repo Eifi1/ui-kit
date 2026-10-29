@@ -283,12 +283,7 @@ export function DeleteAccountSetting({
   };
 
   return (
-    <Card
-      {...rest}
-      data-state={done ? "done" : "form"}
-      tone="danger"
-      className={cn("p-4 space-y-3", className)}
-    >
+    <Card {...rest} data-state={done ? "done" : "form"} tone="danger" className={cn("p-4 space-y-3", className)}>
       <div>
         <SettingsCardTitle>{labels.title}</SettingsCardTitle>
         <div className={CARD_DESCRIPTION_CLASS}>{modeSentence}</div>

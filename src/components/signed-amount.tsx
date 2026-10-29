@@ -20,16 +20,7 @@ import { DEFAULT_SIGNED_AMOUNT_LABELS } from "./signed-amount-labels";
  * Colour is never the only carrier: pair a verdict with an arrow, a word, or a sign.
  */
 export type TextTone =
-  | "default"
-  | "muted"
-  | "brand"
-  | "income"
-  | "expense"
-  | "net"
-  | "success"
-  | "warning"
-  | "danger"
-  | "info";
+  "default" | "muted" | "brand" | "income" | "expense" | "net" | "success" | "warning" | "danger" | "info";
 
 const TEXT_TONE: Record<TextTone, string> = {
   default: "text-primary",
@@ -166,9 +157,7 @@ function signedToneClass(
 
 const ARROW = { up: ArrowUp, down: ArrowDown, flat: Minus } as const;
 
-export interface SignedAmountProps
-  extends SignedFormatProps,
-    Omit<ComponentPropsWithRef<"span">, "children"> {
+export interface SignedAmountProps extends SignedFormatProps, Omit<ComponentPropsWithRef<"span">, "children"> {
   value: number;
   /** See {@link SignedAmountTone}. Default `signed`, or `verdict` with `goodDirection`. */
   tone?: SignedAmountTone;
@@ -324,7 +313,10 @@ export function Delta({
       data-direction={dir}
       className={cn("relative inline-flex flex-wrap items-center gap-x-1.5 tabular-nums", className)}
     >
-      <span data-private={sensitive ? "" : undefined} className={cn("inline-flex items-center gap-0.5 font-medium", tone)}>
+      <span
+        data-private={sensitive ? "" : undefined}
+        className={cn("inline-flex items-center gap-0.5 font-medium", tone)}
+      >
         {arrow && <Icon className="size-[1em] shrink-0" aria-hidden />}
         {/* The figure at zero too, beside the flat dash (kastlan feedback #48). Before
             this a flat delta with an arrow drew the dash ALONE, as a StatTile does — so

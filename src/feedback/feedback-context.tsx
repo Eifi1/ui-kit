@@ -179,10 +179,7 @@ export function FeedbackContextBox({
   const lead = line.endsWith(submitter) ? line.slice(0, line.length - submitter.length) : null;
   return (
     <div
-      className={cn(
-        "space-y-1 rounded-md border border-subtle bg-surface-2 px-3 py-2 text-xs text-muted",
-        className,
-      )}
+      className={cn("space-y-1 rounded-md border border-subtle bg-surface-2 px-3 py-2 text-xs text-muted", className)}
     >
       <div className="[overflow-wrap:anywhere]">
         {lead === null ? (

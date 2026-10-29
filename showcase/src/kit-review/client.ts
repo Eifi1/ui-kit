@@ -195,7 +195,12 @@ export function createReviewClient({
         const { status, text } = outcome;
         if (status >= 200 && status < 300) return parse(text, status);
         if (status === 401) {
-          throw new ReviewApiError("unauthorized", "The review token has expired or was revoked.", status, detailOf(text));
+          throw new ReviewApiError(
+            "unauthorized",
+            "The review token has expired or was revoked.",
+            status,
+            detailOf(text),
+          );
         }
         if (status === 403) {
           const detail = detailOf(text);
@@ -229,7 +234,8 @@ export function createReviewClient({
     health: async (options) => {
       await request<unknown>({ method: "GET", path: "/health", auth: false }, options);
     },
-    list: (options) => request<ApiTranslationReviews>({ method: "GET", path: "/translations/reviews", auth: true }, options),
+    list: (options) =>
+      request<ApiTranslationReviews>({ method: "GET", path: "/translations/reviews", auth: true }, options),
     save: async (items, options) =>
       (
         await request<{ reviews: ApiTranslationReview[] }>(

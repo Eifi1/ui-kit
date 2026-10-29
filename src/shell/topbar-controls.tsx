@@ -19,11 +19,7 @@ export const TOPBAR_MENU_ITEM_CLASS =
 
 /** The small uppercase heading row the top-bar menus share (`heading`). */
 function MenuHeading({ children }: { children: string }) {
-  return (
-    <li className="px-3 py-1 text-micro font-semibold uppercase tracking-wide text-placeholder">
-      {children}
-    </li>
-  );
+  return <li className="px-3 py-1 text-micro font-semibold uppercase tracking-wide text-placeholder">{children}</li>;
 }
 
 /**
@@ -108,12 +104,7 @@ export function PaletteMenu({
       aria-label={labels.palette}
       trigger={({ toggle }) => (
         <Tooltip label={activeName} portal>
-          <button
-            type="button"
-            onClick={toggle}
-            aria-label={labels.palette}
-            className={TOPBAR_TRIGGER_CLASS}
-          >
+          <button type="button" onClick={toggle} aria-label={labels.palette} className={TOPBAR_TRIGGER_CLASS}>
             {/* A DATA colour, not a semantic one: the palette mark is the
                 "colour" control, so it carries a colour, and which hue is
                 arbitrary. `--chart-1` is the violet end of the CVD-safe
@@ -155,14 +146,10 @@ export function PaletteMenu({
                     </span>
                     <span className="flex min-w-0 flex-col text-start">
                       <span className="truncate">{p.name}</span>
-                      <span className="truncate text-caption text-placeholder">
-                        {p.blurb}
-                      </span>
+                      <span className="truncate text-caption text-placeholder">{p.blurb}</span>
                     </span>
                   </span>
-                  {activeId === p.id && (
-                    <Check className="size-4 shrink-0 text-secondary" />
-                  )}
+                  {activeId === p.id && <Check className="size-4 shrink-0 text-secondary" />}
                 </button>
               </li>
             );
@@ -186,8 +173,7 @@ export type LanguageMenuTrigger = "flag+code" | "code" | "flag";
 /** The trigger with a code: as tall as the others, as wide as flag and code need. */
 const LANGUAGE_TRIGGER_WIDE_CLASS = TOPBAR_TRIGGER_CLASS.replace("size-9", "h-9 min-w-9 gap-1.5 px-2");
 
-const FLAG_CLASS =
-  "inline-block h-[0.9375rem] w-5 shrink-0 rounded-sm shadow-[0_0_0_1px_rgba(0,0,0,0.08)]";
+const FLAG_CLASS = "inline-block h-[0.9375rem] w-5 shrink-0 rounded-sm shadow-[0_0_0_1px_rgba(0,0,0,0.08)]";
 
 /** Language switcher: a hover menu of options with flags and a check on the
  *  active one. Controlled — the app owns the current code and change handler.

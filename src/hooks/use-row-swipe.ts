@@ -83,12 +83,7 @@ function lastArmed(stages: SwipeStage[] | undefined, magnitude: number): number 
   return idx;
 }
 
-export function useRowSwipe({
-  enabled,
-  leftStages,
-  rightStages,
-  maxDrag = 252,
-}: RowSwipeOptions): RowSwipeReturn {
+export function useRowSwipe({ enabled, leftStages, rightStages, maxDrag = 252 }: RowSwipeOptions): RowSwipeReturn {
   const [dx, setDx] = useState(0);
   const [dragging, setDragging] = useState(false);
   const startX = useRef(0);

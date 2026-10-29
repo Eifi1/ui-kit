@@ -252,7 +252,9 @@ export function EmailChangeSetting({
       <Card {...rest} data-state="pending" className={cn("p-4 space-y-3", className)}>
         <div>
           <SettingsCardTitle id={titleId}>{labels.title}</SettingsCardTitle>
-          <div className={cn(CARD_DESCRIPTION_CLASS, "break-all")}>{common.fieldValue(labels.current, currentEmail)}</div>
+          <div className={cn(CARD_DESCRIPTION_CLASS, "break-all")}>
+            {common.fieldValue(labels.current, currentEmail)}
+          </div>
         </div>
         {/* Focusable, not a control: the request's answer is read out when it takes the
             focus from the submit that went with the form. */}

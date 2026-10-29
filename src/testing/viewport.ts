@@ -89,9 +89,7 @@ function condition(part: string, width: number, options: ViewportOptions): boole
 function answer(query: string, width: number, options: ViewportOptions): boolean {
   return query
     .split(",")
-    .some((alternative) =>
-      alternative.split(/\s+and\s+/).every((part) => condition(part, width, options)),
-    );
+    .some((alternative) => alternative.split(/\s+and\s+/).every((part) => condition(part, width, options)));
 }
 
 /** A list {@link viewportMatchMedia} handed out: what {@link setViewportWidth} flips. */
@@ -155,7 +153,12 @@ function mediaQueryList(query: string, viewport: StubViewport): StubMediaQueryLi
  *  `matches` and `media`, on an `Event` (jsdom has no `MediaQueryListEvent`). */
 function changeEvent(list: StubMediaQueryList): Event {
   const event = new Event("change");
-  for (const [key, value] of Object.entries({ matches: list.matches, media: list.media, target: list, currentTarget: list })) {
+  for (const [key, value] of Object.entries({
+    matches: list.matches,
+    media: list.media,
+    target: list,
+    currentTarget: list,
+  })) {
     Object.defineProperty(event, key, { value, enumerable: true });
   }
   return event;
@@ -175,10 +178,7 @@ function changeEvent(list: StubMediaQueryList): Event {
  * `vi.stubGlobal("matchMedia", viewportMatchMedia(375))` — or use
  * {@link stubViewportWidth}.
  */
-export function viewportMatchMedia(
-  width: number,
-  options: ViewportOptions = {},
-): (query: string) => MediaQueryList {
+export function viewportMatchMedia(width: number, options: ViewportOptions = {}): (query: string) => MediaQueryList {
   const viewport: StubViewport = { width, options, lists: new Set() };
   const matchMedia = (query: string) => {
     const list = mediaQueryList(query, viewport);
@@ -215,7 +215,7 @@ export function setViewportWidth(width: number): void {
   if (!viewport) {
     throw new Error(
       "setViewportWidth: no viewport stub is in force — put one in first with " +
-        "stubViewportWidth(width), or vi.stubGlobal(\"matchMedia\", viewportMatchMedia(width)).",
+        'stubViewportWidth(width), or vi.stubGlobal("matchMedia", viewportMatchMedia(width)).',
     );
   }
   viewport.width = width;

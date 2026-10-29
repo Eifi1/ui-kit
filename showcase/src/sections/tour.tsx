@@ -44,7 +44,6 @@ import { Example, Note, OutTable, Row, beat } from "../lib/section";
  * and swipeable-row-demo.tsx; its three FileDropzone specimens went to the Files page.
  */
 
-
 export function GuidedTour() {
   return (
     <>
@@ -78,14 +77,29 @@ export function GuidedTour() {
               ["body: ReactNode", "Card copy — a node, not a string."],
               ["action?: ReactNode", "Extra footer row, e.g. a shortcut button."],
               ["padding?: number", "Spotlight padding around the target, px (default 8)."],
-              ["placement?", '"top" | "bottom" | "start" | "end" | "left" | "right" | "center" | "dock"; omit for auto. start/end follow the target\'s reading direction, left/right are physical; "dock" pins the card to the band\'s edge on a phone (the default for field steps)'],
+              [
+                "placement?",
+                '"top" | "bottom" | "start" | "end" | "left" | "right" | "center" | "dock"; omit for auto. start/end follow the target\'s reading direction, left/right are physical; "dock" pins the card to the band\'s edge on a phone (the default for field steps)',
+              ],
               ["awaitClick?: boolean", "Advance only when the TARGET is clicked. Needs `target`."],
-              ["interactive?: boolean", "The target is for using — the layers it opens (number pad, menus, popovers at z-50) sit above the scrim."],
-              ["awaitInput?: boolean", "Advance once a value was entered in the target's field (blur or Enter). Implies interactive."],
-              ["gate?: string", "0.50: Next stays locked until the form's useTourGate(key, true). Implies interactive."],
+              [
+                "interactive?: boolean",
+                "The target is for using — the layers it opens (number pad, menus, popovers at z-50) sit above the scrim.",
+              ],
+              [
+                "awaitInput?: boolean",
+                "Advance once a value was entered in the target's field (blur or Enter). Implies interactive.",
+              ],
+              [
+                "gate?: string",
+                "0.50: Next stays locked until the form's useTourGate(key, true). Implies interactive.",
+              ],
               ["optional?: boolean", "0.50: an Optional chip, and Leave empty while the gate is unsatisfied."],
               ["when?: (ctx) => boolean", "0.50: shown only if true on arrival; ctx.gate(key) reads a published fact."],
-              ["awaitGate?: string", "0.50: advances only on useTourGateRelease().release(key), e.g. a save's onSuccess."],
+              [
+                "awaitGate?: string",
+                "0.50: advances only on useTourGateRelease().release(key), e.g. a save's onSuccess.",
+              ],
               ["beforeStep?", "Sync or async; awaited before the target is located. Receives { gate, via } (0.50)."],
             ]}
           />
@@ -228,18 +242,16 @@ function TourLauncher() {
       />
 
       <Note>
-        The four targets are marked with <code className="font-mono">data-tour</code>{" "}
-        attributes, the same convention <code className="font-mono">AppShell</code> uses for
-        its nav items. The step matches the first VISIBLE element for the selector, not the
-        first in DOM order, so one selector can cover a desktop and a mobile copy of the same
+        The four targets are marked with <code className="font-mono">data-tour</code> attributes, the same convention{" "}
+        <code className="font-mono">AppShell</code> uses for its nav items. The step matches the first VISIBLE element
+        for the selector, not the first in DOM order, so one selector can cover a desktop and a mobile copy of the same
         control.
       </Note>
       <Note>
         <code className="font-mono">stop()</code> sits in the welcome step&apos;s{" "}
-        <code className="font-mono">action</code> rather than beside the launcher: while a tour
-        runs the page outside the card and the spotlit target takes no clicks (the tour is{" "}
-        <code className="font-mono">aria-modal</code>, and the pointer is held to that
-        too), so a Stop button out on the page could never be pressed.
+        <code className="font-mono">action</code> rather than beside the launcher: while a tour runs the page outside
+        the card and the spotlit target takes no clicks (the tour is <code className="font-mono">aria-modal</code>, and
+        the pointer is held to that too), so a Stop button out on the page could never be pressed.
       </Note>
     </div>
   );
@@ -288,7 +300,7 @@ function PlacementTour() {
     {
       target: '[data-tour="showcase-place-rtl"]',
       title: 'placement: "end" in \u2066dir="rtl"\u2069',
-      body: "The same placement on a target inside \u2066dir=\"rtl\"\u2069: its end is the LEFT. The card takes the target's direction too — and so do the keys: ← advances here and → goes back.",
+      body: 'The same placement on a target inside \u2066dir="rtl"\u2069: its end is the LEFT. The card takes the target\'s direction too — and so do the keys: ← advances here and → goes back.',
       placement: "end",
       padding: 4,
     },
@@ -345,10 +357,7 @@ function PlacementTour() {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-3">
-        <span
-          data-tour="showcase-place-a"
-          className="rounded-md border border-subtle px-3 py-1.5 text-xs text-primary"
-        >
+        <span data-tour="showcase-place-a" className="rounded-md border border-subtle px-3 py-1.5 text-xs text-primary">
           Target A
         </span>
         {revealed && (
@@ -359,10 +368,7 @@ function PlacementTour() {
             Target C (revealed by beforeStep)
           </span>
         )}
-        <span
-          data-tour="showcase-place-b"
-          className="rounded-md border border-subtle px-3 py-1.5 text-xs text-primary"
-        >
+        <span data-tour="showcase-place-b" className="rounded-md border border-subtle px-3 py-1.5 text-xs text-primary">
           Target B
         </span>
       </div>
@@ -419,19 +425,17 @@ function PlacementTour() {
       <Note>
         Without a <code className="font-mono">labels</code> prop the tour reads the{" "}
         <code className="font-mono">tour</code> namespace of the nearest{" "}
-        <code className="font-mono">UiKitProvider</code>, then English. On this page the
-        page-level tour&apos;s provider sits ABOVE the showcase&apos;s{" "}
-        <code className="font-mono">UiKitProvider</code>, which is why its card stays English
-        whatever the language menu says; this nested one sits below it.
+        <code className="font-mono">UiKitProvider</code>, then English. On this page the page-level tour&apos;s provider
+        sits ABOVE the showcase&apos;s <code className="font-mono">UiKitProvider</code>, which is why its card stays
+        English whatever the language menu says; this nested one sits below it.
       </Note>
       <Note>
-        Keys follow the reading direction of the step&apos;s target (the document&apos;s for a
-        centred step): Enter and the forward arrow advance — → in LTR, ← in RTL, as on Target D
-        above — the other arrow goes back, Esc skips. Enter on a focused control belongs to that
-        control: Tab to <strong>Zurück</strong> or <strong>Überspringen</strong> and press Enter,
-        and only that button runs; the tour does not step forward too. The page is blocked outside
-        the card and the spotlit target — try clicking <strong>Start the labelled tour</strong>{" "}
-        mid-tour — while the target itself stays clickable for{" "}
+        Keys follow the reading direction of the step&apos;s target (the document&apos;s for a centred step): Enter and
+        the forward arrow advance — → in LTR, ← in RTL, as on Target D above — the other arrow goes back, Esc skips.
+        Enter on a focused control belongs to that control: Tab to <strong>Zurück</strong> or{" "}
+        <strong>Überspringen</strong> and press Enter, and only that button runs; the tour does not step forward too.
+        The page is blocked outside the card and the spotlit target — try clicking{" "}
+        <strong>Start the labelled tour</strong> mid-tour — while the target itself stays clickable for{" "}
         <code className="font-mono">awaitClick</code>.
       </Note>
     </div>
@@ -479,7 +483,12 @@ export function TourStaleSpotlight022Demo() {
 /* ── since 0.43: the tours page ─────────────────────────────────────────── */
 
 const CATALOGUE_GROUPS: TourGroup[] = [
-  { id: "start", title: "Getting started", help: "The first steps, in the order most people take them.", icon: <GraduationCap /> },
+  {
+    id: "start",
+    title: "Getting started",
+    help: "The first steps, in the order most people take them.",
+    icon: <GraduationCap />,
+  },
   { id: "budgeting", title: "Everyday budgeting", help: "Plan a month, and see where it went.", icon: <Wallet /> },
   { id: "import", title: "Importing", help: "Bring transactions in from your bank.", icon: <FileUp /> },
   { id: "reports", title: "Reports", help: "The charts, and what they answer.", icon: <BarChart3 /> },
@@ -635,8 +644,8 @@ function TourAccountDemo() {
         With {"`account: {load, save, adopt?}`"} the device key is the account&apos;s cache: the page paints from it,
         loads the account on the first reader, on `online` and after each save. A completion goes to the cache and to
         `&lt;key&gt;:pending`, sent as one PATCH; a failure with no answer keeps it, a 403 or 422 drops it.
-        `signOutTourProgress(key)` removes the cache only and keeps the pending record for its owner. An app moving off a device-wide record passes
-        `adopt: {"{"}storageKey, discard: true{"}"}` to drop it. Nothing leaves this page.
+        `signOutTourProgress(key)` removes the cache only and keeps the pending record for its owner. An app moving off
+        a device-wide record passes `adopt: {"{"}storageKey, discard: true{"}"}` to drop it. Nothing leaves this page.
       </Note>
     </Example>
   );
@@ -749,9 +758,9 @@ function TourCatalogueBody({ toast }: { toast: string | null }) {
         `useTourUrlSync` starts a tour from `?tour=` and mirrors `&tourStep=`. Progress is `useTourProgress` on this
         device; &quot;Goals&quot; was completed before its update, so it is to do again, with the reason. The header
         counts with `doneCount` and `earnedPoints`, and &ldquo;Forget&rdquo; is `resetTourProgress`, what the device
-        reset calls. The `TourProvider` takes `progress` and `onComplete(tour, {'{'}awarded{'}'})`:
-        a launch passes `start(steps, {'{'} tour {'}'})`, the provider writes the completion once and the app shows its
-        toast there. &ldquo;Seed&rdquo; is `completeTour`, for an app&apos;s tests and seeds.
+        reset calls. The `TourProvider` takes `progress` and `onComplete(tour, {"{"}awarded{"}"})`: a launch passes
+        `start(steps, {"{"} tour {"}"})`, the provider writes the completion once and the app shows its toast there.
+        &ldquo;Seed&rdquo; is `completeTour`, for an app&apos;s tests and seeds.
       </Note>
     </Example>
   );

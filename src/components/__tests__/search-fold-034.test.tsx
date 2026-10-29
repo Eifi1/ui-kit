@@ -70,7 +70,16 @@ describe('"zurich" finds Zürich', () => {
       <GroupedPicker
         aria-label="City"
         buttonLabel="Pick"
-        groups={[{ key: "ch", label: "Schweiz", items: [{ key: "zh", label: "Zürich" }, { key: "bs", label: "Basel" }] }]}
+        groups={[
+          {
+            key: "ch",
+            label: "Schweiz",
+            items: [
+              { key: "zh", label: "Zürich" },
+              { key: "bs", label: "Basel" },
+            ],
+          },
+        ]}
         selected={null}
         onSelect={vi.fn()}
         filterPlaceholder="Filter"
@@ -82,9 +91,7 @@ describe('"zurich" finds Zürich', () => {
   });
 
   it("in a CurrencySelect, by a translated name", () => {
-    render(
-      <CurrencySelect value="EUR" onChange={vi.fn()} currencyNames={{ CHF: "Schweizer Fränkli" }} />,
-    );
+    render(<CurrencySelect value="EUR" onChange={vi.fn()} currencyNames={{ CHF: "Schweizer Fränkli" }} />);
     fireEvent.click(screen.getByRole("combobox"));
     search("frankli");
     expect(optionNames()).toEqual([expect.stringContaining("CHF")]);
@@ -111,6 +118,10 @@ describe("the combobox family folds case by the locale", () => {
     fireEvent.focus(field);
     fireEvent.change(field, { target: { value: "ırm" } });
     const list = screen.getByRole("listbox");
-    expect(within(list).getAllByRole("option").map((o) => o.textContent)).toEqual(["IRMAK"]);
+    expect(
+      within(list)
+        .getAllByRole("option")
+        .map((o) => o.textContent),
+    ).toEqual(["IRMAK"]);
   });
 });

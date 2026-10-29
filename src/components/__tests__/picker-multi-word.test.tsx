@@ -35,7 +35,14 @@ describe("multi-word search in the pickers", () => {
         onSelect={() => {}}
         filterPlaceholder="Filter"
         groups={[
-          { key: "migros", label: "Migros", items: [{ key: "m-8004", label: "8004 Zürich" }, { key: "m-3011", label: "3011 Bern" }] },
+          {
+            key: "migros",
+            label: "Migros",
+            items: [
+              { key: "m-8004", label: "8004 Zürich" },
+              { key: "m-3011", label: "3011 Bern" },
+            ],
+          },
           { key: "coop", label: "Coop", items: [{ key: "c-8004", label: "8004 Zürich" }] },
         ]}
       />,

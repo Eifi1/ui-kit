@@ -85,8 +85,10 @@ function keysOf<R extends string>(roles: RoleVocabulary<R>): R[] {
 
 /* ── RoleSelect ─────────────────────────────────────────────────────────────── */
 
-export interface RoleSelectProps<R extends string = string>
-  extends Omit<SelectProps, "value" | "defaultValue" | "onChange" | "children" | "multiple" | "disabledReason"> {
+export interface RoleSelectProps<R extends string = string> extends Omit<
+  SelectProps,
+  "value" | "defaultValue" | "onChange" | "children" | "multiple" | "disabledReason"
+> {
   /** The role the server has. Controlled: a pick does not move the select until the
    *  app's request lands and the row comes back with the new role. */
   value: R | null | undefined;

@@ -398,7 +398,10 @@ describe("useSearchParamsState", () => {
   const commits = { count: 0 };
   function Filters() {
     const state = useSearchParamsState({
-      status: { default: "all" as Status, parse: (raw) => (STATUSES.includes(raw as Status) ? (raw as Status) : undefined) },
+      status: {
+        default: "all" as Status,
+        parse: (raw) => (STATUSES.includes(raw as Status) ? (raw as Status) : undefined),
+      },
       namespace: { param: "ns", default: "all" },
       query: { param: "q", default: "", history: "replace" },
       page: { default: 1, parse: (raw) => (Number(raw) > 0 ? Number(raw) : undefined) },

@@ -29,7 +29,12 @@ import {
   type FeedbackCategoryLabels,
   type FeedbackStatusLabels,
 } from "./feedback-labels";
-import { FEEDBACK_AWAITING_STATUSES, feedbackReworkCount, type FeedbackContext, type FeedbackRecord } from "./feedback-record";
+import {
+  FEEDBACK_AWAITING_STATUSES,
+  feedbackReworkCount,
+  type FeedbackContext,
+  type FeedbackRecord,
+} from "./feedback-record";
 import type { FeedbackStatusChange } from "./feedback-status-undo";
 import { feedbackPageHref, feedbackPagePath } from "./feedback-row-detail";
 import type { CommitScope } from "../components/write-lock";
@@ -356,8 +361,7 @@ function FeedbackPageLinkCell({ context, openPage }: { context: FeedbackContext 
     <>
       {/* The space outside the hidden span: a flex container drops it from the layout,
           and the accessible name keeps it ("Open page /accounts"). */}
-      <span className="sr-only">{openPage}</span>{" "}
-      <code className="min-w-0 truncate text-xs">{path}</code>
+      <span className="sr-only">{openPage}</span> <code className="min-w-0 truncate text-xs">{path}</code>
       <ExternalLink className="size-3 shrink-0" aria-hidden />
     </>
   );
@@ -568,9 +572,7 @@ export function feedbackColumns<T extends FeedbackTableRow>({
       // Name AND email, so either finds the person; the erased ones by the placeholder
       // (their context holds no name any more).
       filterBy: (row) =>
-        row.user_id == null
-          ? labels.deletedUser
-          : `${feedbackSubmitter(row, labels)} ${feedbackSubmitterEmail(row)}`,
+        row.user_id == null ? labels.deletedUser : `${feedbackSubmitter(row, labels)} ${feedbackSubmitterEmail(row)}`,
       // Sixth to go (0.51.4, Kurvenschmiede): with only 1–5, Subject reached its floor while
       // #, Date and User were still drawn, and the inbox scrolled sideways from 768 to
       // ~1115px beside an open sidebar. The open report names the submitter.
@@ -654,8 +656,10 @@ export function feedbackColumns<T extends FeedbackTableRow>({
 
 /** What {@link useFeedbackColumns} takes: {@link FeedbackColumnsOptions} with the words
  *  read from the provider, and `renderDate` optional. */
-export interface UseFeedbackColumnsOptions
-  extends Omit<FeedbackColumnsOptions, "renderDate" | "labels" | "statusLabels" | "categoryLabels" | "votesHeader"> {
+export interface UseFeedbackColumnsOptions extends Omit<
+  FeedbackColumnsOptions,
+  "renderDate" | "labels" | "statusLabels" | "categoryLabels" | "votesHeader"
+> {
   /** Default: the kit's date with the weekday ({@link useFeedbackRenderDate}). */
   renderDate?: FeedbackRenderDate;
   /** Over the `feedbackPage` namespace. Keep it stable (module scope or memoised): it is

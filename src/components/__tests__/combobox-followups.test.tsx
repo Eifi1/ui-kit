@@ -67,13 +67,8 @@ describe("Autocomplete disabled options", () => {
 
   it("lists a disabled row with aria-disabled", () => {
     open();
-    expect(screen.getByRole("option", { name: /Bahnhofstrasse 2/ })).toHaveAttribute(
-      "aria-disabled",
-      "true",
-    );
-    expect(screen.getByRole("option", { name: "Bahnhofstrasse 1" })).not.toHaveAttribute(
-      "aria-disabled",
-    );
+    expect(screen.getByRole("option", { name: /Bahnhofstrasse 2/ })).toHaveAttribute("aria-disabled", "true");
+    expect(screen.getByRole("option", { name: "Bahnhofstrasse 1" })).not.toHaveAttribute("aria-disabled");
   });
 
   it("passes it over with the arrows, both ways", () => {
@@ -122,14 +117,7 @@ describe("Autocomplete open / onOpenChange", () => {
   it("open={false} keeps the list shut through focus, typing and ↓ — and asks nothing", async () => {
     const load = vi.fn(async () => ROWS);
     const onOpenChange = vi.fn();
-    render(
-      <AutoHarness
-        options={undefined}
-        loadOptions={load}
-        open={false}
-        onOpenChange={onOpenChange}
-      />,
-    );
+    render(<AutoHarness options={undefined} loadOptions={load} open={false} onOpenChange={onOpenChange} />);
     fireEvent.focus(field());
     fireEvent.change(field(), { target: { value: "Bahn" } });
     fireEvent.keyDown(field(), { key: "ArrowDown" });
@@ -189,9 +177,7 @@ describe("Autocomplete open / onOpenChange", () => {
 
 describe("Autocomplete size", () => {
   it('size="sm" is the compact field, with a smaller icon', () => {
-    render(
-      <Autocomplete value="" onChange={vi.fn()} aria-label="Search" size="sm" icon={<Search />} />,
-    );
+    render(<Autocomplete value="" onChange={vi.fn()} aria-label="Search" size="sm" icon={<Search />} />);
     const input = screen.getByRole("combobox", { name: "Search" });
     expect(input.className).toContain("h-7");
     expect(input.className).toContain("text-xs");
@@ -238,14 +224,7 @@ describe("the floating label is a real <label for>", () => {
   });
 
   it("InlineEntityCombobox", () => {
-    render(
-      <InlineEntityCombobox<string>
-        value={null}
-        onChange={vi.fn()}
-        options={ROWS}
-        label="Account"
-      />,
-    );
+    render(<InlineEntityCombobox<string> value={null} onChange={vi.fn()} options={ROWS} label="Account" />);
     const input = screen.getByLabelText("Account");
     expect(input).toHaveAttribute("role", "combobox");
     expect(screen.getByRole("combobox", { name: "Account" })).toBe(input);
@@ -262,14 +241,7 @@ describe("the floating label is a real <label for>", () => {
 
 describe("InlineEntityCombobox disabled options", () => {
   function setup(onChange = vi.fn()) {
-    render(
-      <InlineEntityCombobox<string>
-        value={null}
-        onChange={onChange}
-        options={ROWS}
-        label="Street"
-      />,
-    );
+    render(<InlineEntityCombobox<string> value={null} onChange={onChange} options={ROWS} label="Street" />);
     const input = screen.getByRole("combobox", { name: "Street" });
     fireEvent.focus(input);
     return { input, onChange };
@@ -303,9 +275,7 @@ describe("EntityCombobox disabled options", () => {
       { value: "c", label: "Savings" },
       { value: "d", label: "Archived", disabled: true },
     ];
-    render(
-      <EntityCombobox<string> label="Account" value={null} onChange={onChange} options={options} />,
-    );
+    render(<EntityCombobox<string> label="Account" value={null} onChange={onChange} options={options} />);
     fireEvent.click(screen.getByRole("combobox", { name: /Account/ }));
     return { search: screen.getByRole("textbox"), onChange };
   }

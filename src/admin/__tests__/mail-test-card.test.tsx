@@ -41,7 +41,9 @@ describe("MailTestCard", () => {
   it("console: says nothing was sent although the answer says sent", async () => {
     renderCard(() => Promise.resolve({ sent: true, mail_backend: "console" }), "resend");
     await userEvent.click(button());
-    expect(await screen.findByRole("status")).toHaveTextContent("The console transport only logs mail; nothing was sent.");
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "The console transport only logs mail; nothing was sent.",
+    );
     expect(screen.queryByText(/Sent to/)).toBeNull();
     // The chip follows the answer's transport.
     expect(screen.getByText("Transport: console")).toBeInTheDocument();
@@ -54,7 +56,9 @@ describe("MailTestCard", () => {
       .mockRejectedValueOnce(Object.assign(new Error("boom"), { status: 502 }));
     renderCard(send);
     await userEvent.click(button());
-    expect(await screen.findByRole("alert")).toHaveTextContent("Could not send. The server log has the provider’s answer.");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Could not send. The server log has the provider’s answer.",
+    );
     await userEvent.click(button());
     await waitFor(() => expect(send).toHaveBeenCalledTimes(2));
     expect(await screen.findByRole("alert")).toHaveTextContent("Could not send.");
@@ -69,7 +73,9 @@ describe("MailTestCard", () => {
     await userEvent.click(button());
     expect(await screen.findByRole("status")).toHaveTextContent("Too many attempts. Try again in 2 min.");
     await userEvent.click(button());
-    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Too many attempts. Wait a moment and try again."));
+    await waitFor(() =>
+      expect(screen.getByRole("status")).toHaveTextContent("Too many attempts. Wait a moment and try again."),
+    );
   });
 
   it("mailBackend is optional: no chip until an answer names the transport, then it stays (0.46, N1)", async () => {
@@ -122,23 +128,30 @@ describe("MailTestCard — seven languages", () => {
   } as const;
   const english = DEFAULT_UI_KIT_LABELS.mailTestCard;
 
-  it.each(Object.entries(CATALOGUES))("%s: its own words, the console line from the provider", async (_code, catalogue) => {
-    const words = catalogue.mailTestCard;
-    for (const key of ["title", "description", "action", "console", "failed", "keywords"] as const) {
-      expect(words[key].trim(), key).not.toBe("");
-      expect(words[key], key).not.toBe(english[key]);
-    }
-    expect(words.sent("a…@example.com")).toContain("a…@example.com");
-    expect(words.transport("smtp")).toContain("smtp");
-    expect(words.rateLimited()).not.toBe(english.rateLimited());
-    render(
-      <UiKitProvider labels={catalogue}>
-        <MailTestCard mailBackend="console" address={ADDRESS} send={() => Promise.resolve({ sent: true, mail_backend: "console" })} />
-      </UiKitProvider>,
-    );
-    await userEvent.click(screen.getByRole("button", { name: words.action }));
-    expect(await screen.findByRole("status")).toHaveTextContent(words.console);
-  });
+  it.each(Object.entries(CATALOGUES))(
+    "%s: its own words, the console line from the provider",
+    async (_code, catalogue) => {
+      const words = catalogue.mailTestCard;
+      for (const key of ["title", "description", "action", "console", "failed", "keywords"] as const) {
+        expect(words[key].trim(), key).not.toBe("");
+        expect(words[key], key).not.toBe(english[key]);
+      }
+      expect(words.sent("a…@example.com")).toContain("a…@example.com");
+      expect(words.transport("smtp")).toContain("smtp");
+      expect(words.rateLimited()).not.toBe(english.rateLimited());
+      render(
+        <UiKitProvider labels={catalogue}>
+          <MailTestCard
+            mailBackend="console"
+            address={ADDRESS}
+            send={() => Promise.resolve({ sent: true, mail_backend: "console" })}
+          />
+        </UiKitProvider>,
+      );
+      await userEvent.click(screen.getByRole("button", { name: words.action }));
+      expect(await screen.findByRole("status")).toHaveTextContent(words.console);
+    },
+  );
 
   it("de-CH is Swiss: no ß", () => {
     expect(JSON.stringify(UI_KIT_LABELS_DE_CH.mailTestCard)).not.toContain("ß");

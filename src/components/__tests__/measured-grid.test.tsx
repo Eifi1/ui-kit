@@ -35,8 +35,7 @@ function Harness({
   return <MeasuredGrid label="Table" columns={COLUMNS} {...table.props} {...props} />;
 }
 
-const cell = (column: string, row: number) =>
-  screen.getByRole("textbox", { name: `${column}, row ${row}` });
+const cell = (column: string, row: number) => screen.getByRole("textbox", { name: `${column}, row ${row}` });
 const press = (key: string, init: Partial<KeyboardEventInit> = {}) =>
   fireEvent.keyDown(document.activeElement ?? document.body, { key, ...init });
 /** Arrive in a cell the way the keyboard does — which selects its text. */
@@ -63,33 +62,61 @@ describe("useMeasuredRows", () => {
     const { result } = renderHook(() => useMeasuredRows([[1, 2, 3]]));
     expect(result.current.ready).toBe(false); // one row is not a curve
 
-    act(() => result.current.setCells([["1", "2", "3"], ["4", "", "6"]]));
+    act(() =>
+      result.current.setCells([
+        ["1", "2", "3"],
+        ["4", "", "6"],
+      ]),
+    );
     expect(result.current.ready).toBe(false);
     expect(result.current.rows).toEqual([]);
 
     // A wholly empty row is what walking off the bottom leaves; it is not a row.
-    act(() => result.current.setCells([["1", "2", "3"], ["4", "5", "6"], ["", "", ""]]));
+    act(() =>
+      result.current.setCells([
+        ["1", "2", "3"],
+        ["4", "5", "6"],
+        ["", "", ""],
+      ]),
+    );
     expect(result.current.ready).toBe(true);
-    expect(result.current.rows).toEqual([[1, 2, 3], [4, 5, 6]]);
+    expect(result.current.rows).toEqual([
+      [1, 2, 3],
+      [4, 5, 6],
+    ]);
   });
 
   it("counts the cells that are typed but are not numbers", () => {
     const { result } = renderHook(() => useMeasuredRows([]));
-    act(() => result.current.setCells([["1", "abc", ""], ["1e", "2", "3"]]));
+    act(() =>
+      result.current.setCells([
+        ["1", "abc", ""],
+        ["1e", "2", "3"],
+      ]),
+    );
     expect(result.current.problems).toBe(2);
     expect(result.current.ready).toBe(false);
   });
 
   it("writes computed numbers rounded, and with the locale's decimal mark", () => {
-    const { result } = renderHook(() =>
-      useMeasuredRows(() => [[1.23456, 2.5]], { digits: 2, locale: "de-DE" }),
-    );
+    const { result } = renderHook(() => useMeasuredRows(() => [[1.23456, 2.5]], { digits: 2, locale: "de-DE" }));
     expect(result.current.cells).toEqual([["1,23", "2,5"]]);
 
-    act(() => result.current.setRows([[0.1 + 0.2, 10], [1, 2]]));
-    expect(result.current.cells).toEqual([["0,3", "10"], ["1", "2"]]);
+    act(() =>
+      result.current.setRows([
+        [0.1 + 0.2, 10],
+        [1, 2],
+      ]),
+    );
+    expect(result.current.cells).toEqual([
+      ["0,3", "10"],
+      ["1", "2"],
+    ]);
     // Read back through the cell rule, where a comma is always the decimal mark.
-    expect(result.current.rows).toEqual([[0.3, 10], [1, 2]]);
+    expect(result.current.rows).toEqual([
+      [0.3, 10],
+      [1, 2],
+    ]);
   });
 
   it("follows the provider's locale when given none", () => {
@@ -208,7 +235,14 @@ describe("MeasuredGrid — header and view", () => {
 
 describe("MeasuredGrid is an ARIA grid", () => {
   it("is named by its label and is ONE tab stop", () => {
-    render(<Harness initial={[[1, 2, 3], [4, 5, 6]]} />);
+    render(
+      <Harness
+        initial={[
+          [1, 2, 3],
+          [4, 5, 6],
+        ]}
+      />,
+    );
     const grid = screen.getByRole("grid", { name: "Table" });
     const stops = [...grid.querySelectorAll("input, button")].filter(
       (element) => (element as HTMLElement).tabIndex === 0,
@@ -228,7 +262,14 @@ describe("MeasuredGrid is an ARIA grid", () => {
   });
 
   it("walks all four directions, and Home/End, and moves the tab stop with it", () => {
-    render(<Harness initial={[[1, 2, 3], [4, 5, 6]]} />);
+    render(
+      <Harness
+        initial={[
+          [1, 2, 3],
+          [4, 5, 6],
+        ]}
+      />,
+    );
     enter(cell("x", 1));
     press("ArrowRight");
     expect(cell("y", 1)).toHaveFocus();
@@ -251,7 +292,14 @@ describe("MeasuredGrid is an ARIA grid", () => {
   });
 
   it("reaches the row's remove button with the arrows", () => {
-    render(<Harness initial={[[1, 2, 3], [4, 5, 6]]} />);
+    render(
+      <Harness
+        initial={[
+          [1, 2, 3],
+          [4, 5, 6],
+        ]}
+      />,
+    );
     enter(cell("z", 1));
     press("ArrowRight");
     expect(screen.getByRole("button", { name: "Remove row 1" })).toHaveFocus();
@@ -346,14 +394,26 @@ describe("MeasuredGrid — editing", () => {
   it("walks but does not change a disabled grid", async () => {
     const user = userEvent.setup();
     let cells: string[][] = [];
-    render(<Harness disabled initial={[[1, 2, 3], [4, 5, 6]]} onState={(next) => (cells = next.cells)} />);
+    render(
+      <Harness
+        disabled
+        initial={[
+          [1, 2, 3],
+          [4, 5, 6],
+        ]}
+        onState={(next) => (cells = next.cells)}
+      />,
+    );
     expect(screen.getByRole("grid")).toHaveAttribute("aria-readonly", "true");
     enter(cell("x", 1));
     await user.keyboard("9");
     press("ArrowDown");
     press("ArrowDown");
     expect(cell("x", 2)).toHaveFocus();
-    expect(cells).toEqual([["1", "2", "3"], ["4", "5", "6"]]);
+    expect(cells).toEqual([
+      ["1", "2", "3"],
+      ["4", "5", "6"],
+    ]);
     expect(screen.getByRole("button", { name: /Add row/ })).toBeDisabled();
   });
 });

@@ -275,9 +275,7 @@ export function reviewStatus(
  * copies of it apply the same rule.
  */
 export function keyInArea(key: string, area: string): boolean {
-  return (
-    key === area || key.startsWith(`${area}.`) || key.startsWith(`${area}:`) || key.startsWith(`kit.${area}.`)
-  );
+  return key === area || key.startsWith(`${area}.`) || key.startsWith(`${area}:`) || key.startsWith(`kit.${area}.`);
 }
 
 /**

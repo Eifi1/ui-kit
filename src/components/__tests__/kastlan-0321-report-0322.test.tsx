@@ -40,6 +40,8 @@ describe("PageHeader stacks its actions on a phone at Large", () => {
 
   it("leaves the inline layout's actions beside the title", () => {
     render(<PageHeader title="Invoices" mobileLayout="inline" actions={actions} />);
-    expect(screen.getByRole("button", { name: "Export" }).parentElement!.className).not.toContain("large:max-sm:flex-col");
+    expect(screen.getByRole("button", { name: "Export" }).parentElement!.className).not.toContain(
+      "large:max-sm:flex-col",
+    );
   });
 });

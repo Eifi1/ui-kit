@@ -493,7 +493,9 @@ export function CalendarHeatmap({
   const gridName = ariaLabel ?? labels.grid;
   let body: ReactNode;
   if (layout === "weeks") {
-    const columns = { gridTemplateColumns: `var(--heatmap-label, 2rem) repeat(${weekCount}, var(--heatmap-cell, 0.75rem))` } as CSSProperties;
+    const columns = {
+      gridTemplateColumns: `var(--heatmap-label, 2rem) repeat(${weekCount}, var(--heatmap-cell, 0.75rem))`,
+    } as CSSProperties;
     const cellSize = "size-[var(--heatmap-cell,0.75rem)]";
     // A month's name over the first column that holds its 1st — or over the first
     // column, when the window opens far enough before the next month for it to fit.
@@ -576,20 +578,13 @@ export function CalendarHeatmap({
 
   return (
     <div {...rest} className={cn("min-w-0", className)}>
-      {dropped > 0 && (
-        <div className="mb-2 text-xs text-muted">{labels.truncated(dropped)}</div>
-      )}
+      {dropped > 0 && <div className="mb-2 text-xs text-muted">{labels.truncated(dropped)}</div>}
       {body}
       {legend && (
         <div aria-hidden className="mt-2 flex items-center justify-end gap-1 text-micro text-muted">
           <span className="me-0.5">{labels.less}</span>
           {legendLevels.map((l) => (
-            <span
-              key={l}
-              data-legend-level={l}
-              className="size-2.5 rounded-sm"
-              style={{ background: legendFill(l) }}
-            />
+            <span key={l} data-legend-level={l} className="size-2.5 rounded-sm" style={{ background: legendFill(l) }} />
           ))}
           <span className="ms-0.5">{labels.more}</span>
         </div>

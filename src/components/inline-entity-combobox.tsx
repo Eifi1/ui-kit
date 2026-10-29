@@ -50,8 +50,7 @@ const CREATE_ROW_CLASS = "flex items-center gap-2 font-medium text-brand";
 /** `id` is the INPUT's and `onChange` is the field's — see {@link ComboboxProps}
  *  for why the div's spellings of them are omitted. */
 export interface InlineEntityComboboxProps<V extends string | number, C extends ComboClearValue = null>
-  extends Omit<ComponentPropsWithoutRef<"div">, "id" | "onChange">,
-    FieldHelpProps {
+  extends Omit<ComponentPropsWithoutRef<"div">, "id" | "onChange">, FieldHelpProps {
   /** Selected option id; `null` or `clearValue` when nothing is selected. */
   value: V | C | null;
   /** Required and unanswered — see {@link Combobox}'s `invalid`. */
@@ -358,9 +357,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
   const createText = createQuery ? labels.create(createQuery) : createEmptyLabel;
   // Every row the keyboard can land on: the options, then the create row — passed over
   // like a disabled option while a write lock holds it.
-  const rows: readonly { disabled?: boolean }[] = showCreate
-    ? [...matches, { disabled: createLocked }]
-    : matches;
+  const rows: readonly { disabled?: boolean }[] = showCreate ? [...matches, { disabled: createLocked }] : matches;
   const createIndex = matches.length;
 
   // Pointer-device only: the phone's rows live in a {@link PickerSheet} whose own
@@ -414,9 +411,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
       } else {
         // A disabled option's label typed out in full is not a way round `disabled`:
         // it is not a hit, so the text reverts like any other non-answer.
-        const hits = options.filter(
-          (o) => !o.disabled && o.label.toLowerCase() === q.toLowerCase(),
-        );
+        const hits = options.filter((o) => !o.disabled && o.label.toLowerCase() === q.toLowerCase());
         const ids = new Set(hits.map((h) => h.value));
         if (ids.size === 1 && hits[0].value !== value) onChange(hits[0].value);
       }
@@ -435,9 +430,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
       <span className="min-w-0 flex-1">
         <span className="block truncate-until-large">{createText}</span>
         {createLocked && (
-          <span className="block truncate-until-large text-xs font-normal text-placeholder">
-            {createReason}
-          </span>
+          <span className="block truncate-until-large text-xs font-normal text-placeholder">{createReason}</span>
         )}
       </span>
     </>
@@ -702,11 +695,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
                   aria-selected={false}
                   aria-disabled={createLocked || undefined}
                   onClick={create}
-                  className={cn(
-                    SHEET_ROW_CLASS,
-                    CREATE_ROW_CLASS,
-                    createLocked && DISABLED_ROW_CLASS,
-                  )}
+                  className={cn(SHEET_ROW_CLASS, CREATE_ROW_CLASS, createLocked && DISABLED_ROW_CLASS)}
                 >
                   {createRowContent}
                 </button>
@@ -772,11 +761,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
                   )}
                 >
                   {o.label}
-                  {o.sublabel && (
-                    <span className="ms-2 text-xs text-placeholder">
-                      {o.sublabel}
-                    </span>
-                  )}
+                  {o.sublabel && <span className="ms-2 text-xs text-placeholder">{o.sublabel}</span>}
                 </button>
               </li>
             </Fragment>

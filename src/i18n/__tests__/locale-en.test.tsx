@@ -42,9 +42,7 @@ describe("uiKitLabelsEn (@eifi1/ui-kit/i18n/en)", () => {
     expect(l.bulkActionBar.selected(12345)).toBe(`${big} selected`);
     expect(l.filePicker.selected(12345, "a.pdf")).toBe(`${big} files selected`);
     expect(l.filePicker.selected(1, "a.pdf")).toBe("“a.pdf” selected");
-    expect(l.filePicker.rejectedCount("a.pdf", 12345)).toBe(
-      `“a.pdf” was not added: at most ${big} files`,
-    );
+    expect(l.filePicker.rejectedCount("a.pdf", 12345)).toBe(`“a.pdf” was not added: at most ${big} files`);
     expect(l.file.size(3_400_000)).toBe(formatFileSize(3_400_000, "en-CH"));
   });
 
@@ -161,13 +159,9 @@ describe("uiKitLabelsEn (@eifi1/ui-kit/i18n/en)", () => {
       pairs.filter(([k]) => k !== "file.size").map(([k, v]) => [k, v.replace(/,/g, "")]);
     // 12345 so a grouped figure appears wherever a count is printed; the defaults'
     // own commas (none in a count) are stripped from both sides alike.
-    expect(ungroup(leaves(uiKitLabelsEn("en-US"), 12345))).toEqual(
-      ungroup(leaves(DEFAULT_UI_KIT_LABELS, 12345)),
-    );
+    expect(ungroup(leaves(uiKitLabelsEn("en-US"), 12345))).toEqual(ungroup(leaves(DEFAULT_UI_KIT_LABELS, 12345)));
     // And the singular branches are untouched.
-    expect(ungroup(leaves(uiKitLabelsEn("en-US"), 1))).toEqual(
-      ungroup(leaves(DEFAULT_UI_KIT_LABELS, 1)),
-    );
+    expect(ungroup(leaves(uiKitLabelsEn("en-US"), 1))).toEqual(ungroup(leaves(DEFAULT_UI_KIT_LABELS, 1)));
   });
 
   it("reaches components through the provider", () => {

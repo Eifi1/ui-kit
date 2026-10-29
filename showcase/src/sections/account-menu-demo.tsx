@@ -99,17 +99,16 @@ function AccountMenu() {
           <input type="radio" name="account-align" checked={align === "end"} onChange={() => setAlign("end")} /> end
         </label>
         <label className="flex items-center gap-1 text-sm text-secondary">
-          <input type="radio" name="account-align" checked={align === "start"} onChange={() => setAlign("start")} /> start
+          <input type="radio" name="account-align" checked={align === "start"} onChange={() => setAlign("start")} />{" "}
+          start
         </label>
-        <button
-          type="button"
-          className="text-sm text-brand underline"
-          onClick={() => setUnread((n) => n + 1)}
-        >
+        <button type="button" className="text-sm text-brand underline" onClick={() => setUnread((n) => n + 1)}>
           one more notification
         </button>
       </Row>
-      <div className={`flex rounded-md border border-subtle bg-surface-2 p-2 ${align === "end" ? "justify-end" : "justify-start"}`}>
+      <div
+        className={`flex rounded-md border border-subtle bg-surface-2 p-2 ${align === "end" ? "justify-end" : "justify-start"}`}
+      >
         <TopBarActionMenu
           aria-label="Account menu"
           align={align}
@@ -189,17 +188,18 @@ function AccountMenu() {
           <code className="font-mono">trigger</code> draws the face INSIDE the kit&apos;s button, so the wiring stays —{" "}
           <code className="font-mono">aria-haspopup</code>, <code className="font-mono">aria-expanded</code>, the
           keyboard — and <code className="font-mono">open</code> turns the chevron. The button is named by{" "}
-          <code className="font-mono">aria-label</code> plus the face&apos;s readable text, so the badge&apos;s
-          &ldquo;3 unread&rdquo; is heard. <code className="font-mono">triggerClassName</code> rounds it round the
-          avatar. The <code className="font-mono">header</code> is text, not a row: ↑/↓ skip it. Entries are{" "}
+          <code className="font-mono">aria-label</code> plus the face&apos;s readable text, so the badge&apos;s &ldquo;3
+          unread&rdquo; is heard. <code className="font-mono">triggerClassName</code> rounds it round the avatar. The{" "}
+          <code className="font-mono">header</code> is text, not a row: ↑/↓ skip it. Entries are{" "}
           <code className="font-mono">MenuItem</code>s — a <code className="font-mono">current</code> link (this page),
           radio-checked theme rows, a <code className="font-mono">checkable: &quot;checkbox&quot;</code> row, a disabled
           row once everything is read, and the <code className="font-mono">danger</code> sign-out.{" "}
           <code className="font-mono">children</code> adds rows the data cannot describe (the workspace switcher, given{" "}
           <code className="font-mono">close</code>). The <code className="font-mono">footer</code> is a{" "}
-          <code className="font-mono">&lt;nav aria-label=&quot;Legal&quot;&gt;</code> (<code className="font-mono">footerLabel</code>):
-          its links are not menu rows — the arrows skip them and Tab reaches them without closing the panel.{" "}
-          <code className="font-mono">align</code> picks the edge of the trigger the panel lines up with.
+          <code className="font-mono">&lt;nav aria-label=&quot;Legal&quot;&gt;</code> (
+          <code className="font-mono">footerLabel</code>): its links are not menu rows — the arrows skip them and Tab
+          reaches them without closing the panel. <code className="font-mono">align</code> picks the edge of the trigger
+          the panel lines up with.
         </Note>
       </div>
     </Example>

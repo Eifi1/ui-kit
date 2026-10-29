@@ -1,7 +1,12 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
-import { DEFAULT_ACCOUNT_SETTINGS_LABELS, PasswordSetting, ProfileSetting, TwoFactorSetting } from "../account-settings";
+import {
+  DEFAULT_ACCOUNT_SETTINGS_LABELS,
+  PasswordSetting,
+  ProfileSetting,
+  TwoFactorSetting,
+} from "../account-settings";
 import type { ProfileNameValues } from "../account-settings";
 import { WriteLockProvider } from "../../components/write-lock";
 import { UiKitProvider } from "../../i18n/kit-labels";
@@ -209,18 +214,24 @@ describe("ProfileSetting — first and last name (0.30.0, §6.1)", () => {
 
 describe("account settings labels (0.12.0)", () => {
   it("renders in English with no labels at all, and reads the provider's accountSettings", () => {
-    const { unmount } = render(
-      <PasswordSetting onSubmit={() => {}} />,
-    );
+    const { unmount } = render(<PasswordSetting onSubmit={() => {}} />);
     expect(screen.getByText("Change password", { selector: "div" })).toBeInTheDocument();
     expect(screen.getByLabelText("Current password")).toBeInTheDocument();
     unmount();
 
     render(
       <UiKitProvider
-        labels={{ accountSettings: { ...DEFAULT_ACCOUNT_SETTINGS_LABELS, profile: UI_KIT_LABELS_DE_CH.accountSettings.profile } }}
+        labels={{
+          accountSettings: { ...DEFAULT_ACCOUNT_SETTINGS_LABELS, profile: UI_KIT_LABELS_DE_CH.accountSettings.profile },
+        }}
       >
-        <ProfileSetting email="ada@example.com" value="" onChange={() => {}} onSave={() => {}} labels={{ save: "Übernehmen" }} />
+        <ProfileSetting
+          email="ada@example.com"
+          value=""
+          onChange={() => {}}
+          onSave={() => {}}
+          labels={{ save: "Übernehmen" }}
+        />
       </UiKitProvider>,
     );
     expect(screen.getByLabelText("Anzeigename")).toBeInTheDocument();
@@ -375,7 +386,13 @@ describe("TwoFactorSetting code fields (0.22.0: OneTimeCodeInput)", () => {
   it("keeps the setup field read-only until focus, looking editable, and takes digits only", async () => {
     const onEnable = vi.fn();
     render(
-      <TwoFactorSetting enabled={false} setup={{ otpauthUri: URI }} onStartSetup={noop} onEnable={onEnable} onDisable={noop} />,
+      <TwoFactorSetting
+        enabled={false}
+        setup={{ otpauthUri: URI }}
+        onStartSetup={noop}
+        onEnable={onEnable}
+        onDisable={noop}
+      />,
     );
     const field = screen.getByLabelText("Verification code");
     expect(field).toHaveAttribute("readonly");
@@ -393,7 +410,13 @@ describe("TwoFactorSetting code fields (0.22.0: OneTimeCodeInput)", () => {
 
   it("still takes up to eight digits, as its maxLength did", () => {
     render(
-      <TwoFactorSetting enabled={false} setup={{ otpauthUri: URI }} onStartSetup={noop} onEnable={noop} onDisable={noop} />,
+      <TwoFactorSetting
+        enabled={false}
+        setup={{ otpauthUri: URI }}
+        onStartSetup={noop}
+        onEnable={noop}
+        onDisable={noop}
+      />,
     );
     const field = screen.getByLabelText("Verification code");
     fireEvent.focus(field);

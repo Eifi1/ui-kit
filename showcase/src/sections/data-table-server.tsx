@@ -19,12 +19,7 @@ import {
   textFilter,
   useTableUrlState,
 } from "@eifi1/ui-kit";
-import type {
-  DataTableColumn,
-  FilterState,
-  MobileSwipeActions,
-  SortState,
-} from "@eifi1/ui-kit";
+import type { DataTableColumn, FilterState, MobileSwipeActions, SortState } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row, code } from "../lib/section";
 import {
   Amount,
@@ -64,7 +59,6 @@ export function DataTableServerSection() {
 }
 
 /* ── urlSync ─────────────────────────────────────────────────────────────── */
-
 
 function UrlSyncTable() {
   // Sort is CONTROLLED here (`sorts` + `onSortsChange`), which is the other half
@@ -124,28 +118,25 @@ function UrlSyncTable() {
           ]}
         />
         <Note>
-          Only non-default state is written: page 1 drops <code className="font-mono">p</code>
-          , a page size equal to <code className="font-mono">defaultPageSize</code> drops{" "}
-          <code className="font-mono">ps</code>, and a filter at its empty value drops{" "}
-          <code className="font-mono">f.&lt;column&gt;</code> — so an untouched table leaves
-          the URL alone. Every write is <code className="font-mono">replace: true</code>:
-          sorting a table is not a history entry you want to press Back through.
+          Only non-default state is written: page 1 drops <code className="font-mono">p</code>, a page size equal to{" "}
+          <code className="font-mono">defaultPageSize</code> drops <code className="font-mono">ps</code>, and a filter
+          at its empty value drops <code className="font-mono">f.&lt;column&gt;</code> — so an untouched table leaves
+          the URL alone. Every write is <code className="font-mono">replace: true</code>: sorting a table is not a
+          history entry you want to press Back through.
         </Note>
         <Note>
-          The URL is read exactly <em>once</em>, on mount, and only ever written afterwards.
-          That is what stops the browser's own history fighting the user's next click — but
-          it also means editing the address by hand does nothing until the table remounts
-          (a reload, or the <em>Remount</em> button above).
+          The URL is read exactly <em>once</em>, on mount, and only ever written afterwards. That is what stops the
+          browser's own history fighting the user's next click — but it also means editing the address by hand does
+          nothing until the table remounts (a reload, or the <em>Remount</em> button above).
         </Note>
         <Note>
-          The showcase runs under <code className="font-mono">HashRouter</code>, where the
-          router&apos;s query lives after the <code className="font-mono">#</code> (
+          The showcase runs under <code className="font-mono">HashRouter</code>, where the router&apos;s query lives
+          after the <code className="font-mono">#</code> (
           <code className="font-mono">#/data-table-server?f.status=…</code>) and{" "}
-          <code className="font-mono">window.location.search</code> is empty. The table reads{" "}
-          <em>and</em> writes through <code className="font-mono">useSearchParams</code>, so
-          the round trip works under every router: <em>Open a shared link</em> puts a filter
-          and a page size into the hash and remounts, and the table opens filtered on 25 rows
-          per page.
+          <code className="font-mono">window.location.search</code> is empty. The table reads <em>and</em> writes
+          through <code className="font-mono">useSearchParams</code>, so the round trip works under every router:{" "}
+          <em>Open a shared link</em> puts a filter and a page size into the hash and remounts, and the table opens
+          filtered on 25 rows per page.
         </Note>
       </div>
     </Example>
@@ -275,10 +266,7 @@ function ServerTable() {
         <Button variant="secondary" className="px-2 py-1 text-xs" onClick={coldStart}>
           Cold start
         </Button>
-        <span
-          role="status"
-          className={cn("text-xs", loading ? "text-brand" : "text-muted")}
-        >
+        <span role="status" className={cn("text-xs", loading ? "text-brand" : "text-muted")}>
           {loading ? "request in flight…" : `${result.total} rows on the server`}
         </span>
       </Row>
@@ -307,8 +295,7 @@ function ServerTable() {
               onFiltersChange: (filters: FilterState) =>
                 request({ filters, page: 0 }, `onFiltersChange(${j(filters)})`),
               sorts: query.sorts,
-              onSortsChange: (sorts: SortState[]) =>
-                request({ sorts, page: 0 }, `onSortsChange(${j(sorts)})`),
+              onSortsChange: (sorts: SortState[]) => request({ sorts, page: 0 }, `onSortsChange(${j(sorts)})`),
             }
           : {})}
         empty="The server returned no rows for this query."
@@ -318,23 +305,20 @@ function ServerTable() {
         <OutTable rows={[["request", queryString(query)]]} />
         <CallbackLog log={log} />
         <Note>
-          In this mode the table renders <code className="font-mono">rows</code> as-is — no
-          filtering, sorting or slicing — and the footer is driven by{" "}
-          <code className="font-mono">page</code> / <code className="font-mono">pageSize</code>{" "}
-          / <code className="font-mono">total</code>. Sort arrows and filter funnels only
-          appear when the page takes them over; unchecked above, the headers are plain text.
-          On a phone the pager stays (there is no endless scroll over rows that are not here).
+          In this mode the table renders <code className="font-mono">rows</code> as-is — no filtering, sorting or
+          slicing — and the footer is driven by <code className="font-mono">page</code> /{" "}
+          <code className="font-mono">pageSize</code> / <code className="font-mono">total</code>. Sort arrows and filter
+          funnels only appear when the page takes them over; unchecked above, the headers are plain text. On a phone the
+          pager stays (there is no endless scroll over rows that are not here).
         </Note>
         <Note>
-          <code className="font-mono">serverPagination.isLoading</code> is the only loading
-          signal this table gets — there is no <code className="font-mono">rowClassName</code>{" "}
-          here. While a page is in flight the table sets{" "}
-          <code className="font-mono">aria-busy</code> and dims the rows it still shows (they
-          are the previous page&apos;s, about to go); <em>Cold start</em> empties the table
-          first, and then it shows a spinner with “Loading…” instead of the{" "}
-          <code className="font-mono">empty</code> text. The pager stays usable during a
-          fetch, so focus never drops off the button just pressed. Uncheck{" "}
-          <em>pass onPageSizeChange</em> and the page-size select disappears.
+          <code className="font-mono">serverPagination.isLoading</code> is the only loading signal this table gets —
+          there is no <code className="font-mono">rowClassName</code> here. While a page is in flight the table sets{" "}
+          <code className="font-mono">aria-busy</code> and dims the rows it still shows (they are the previous
+          page&apos;s, about to go); <em>Cold start</em> empties the table first, and then it shows a spinner with
+          “Loading…” instead of the <code className="font-mono">empty</code> text. The pager stays usable during a
+          fetch, so focus never drops off the button just pressed. Uncheck <em>pass onPageSizeChange</em> and the
+          page-size select disappears.
         </Note>
       </div>
     </Example>
@@ -345,9 +329,7 @@ function ServerTable() {
 
 /** Pre-sorted by status, then name: `mobileGroupBy` groups CONSECUTIVE rows. */
 const BY_STATUS = [...ROWS].sort(
-  (a, b) =>
-    STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status) ||
-    a.name.localeCompare(b.name),
+  (a, b) => STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status) || a.name.localeCompare(b.name),
 );
 
 function PhoneTable() {
@@ -360,9 +342,7 @@ function PhoneTable() {
   const rows = useMemo(() => {
     const withOverrides = BY_STATUS.map((r) => ({ ...r, status: statusById[r.id] ?? r.status }));
     return withOverrides.sort(
-      (a, b) =>
-        STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status) ||
-        a.name.localeCompare(b.name),
+      (a, b) => STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status) || a.name.localeCompare(b.name),
     );
   }, [statusById]);
 
@@ -471,23 +451,20 @@ function PhoneTable() {
       <div className="mt-3 space-y-2">
         <CallbackLog log={log} />
         <Note>
-          On a phone the table becomes a card list and never both — the desktop header, the
-          column rail and selection are not rendered at all. Filters move into a{" "}
-          <em>Filters</em> bar that opens a bottom sheet; paging becomes endless scroll that
-          reveals <code className="font-mono">defaultPageSize</code> more cards (8 here) as
-          the “Loading…” sentinel nears the viewport. The actions are logical:{" "}
-          <em>Done</em> is <code className="font-mono">end</code> and <em>Archive</em> is{" "}
-          <code className="font-mono">start</code>, so a card swipes right for Done and left for
-          Archive — and with <em>right-to-left</em> ticked the same definition swipes left for
-          Done and right for Archive (<code className="font-mono">left</code> /{" "}
-          <code className="font-mono">right</code> exist for a truly physical side).
-          Archived and expanded cards do not move. On a wide screen the same two actions are the
-          row&apos;s last column, derived from the same plan (<code className="font-mono">desktopSwipeActions</code>,
-          on by default; <code className="font-mono">false</code> where the row has its own buttons,{" "}
-          <code className="font-mono">{"{ omit }"}</code> to leave one out by its{" "}
-          <code className="font-mono">id</code>). With the custom
-          card unchecked you get the default body: the <code className="font-mono">mobilePrimary</code>{" "}
-          column bold on top, the rest as labelled pairs, ID skipped by{" "}
+          On a phone the table becomes a card list and never both — the desktop header, the column rail and selection
+          are not rendered at all. Filters move into a <em>Filters</em> bar that opens a bottom sheet; paging becomes
+          endless scroll that reveals <code className="font-mono">defaultPageSize</code> more cards (8 here) as the
+          “Loading…” sentinel nears the viewport. The actions are logical: <em>Done</em> is{" "}
+          <code className="font-mono">end</code> and <em>Archive</em> is <code className="font-mono">start</code>, so a
+          card swipes right for Done and left for Archive — and with <em>right-to-left</em> ticked the same definition
+          swipes left for Done and right for Archive (<code className="font-mono">left</code> /{" "}
+          <code className="font-mono">right</code> exist for a truly physical side). Archived and expanded cards do not
+          move. On a wide screen the same two actions are the row&apos;s last column, derived from the same plan (
+          <code className="font-mono">desktopSwipeActions</code>, on by default;{" "}
+          <code className="font-mono">false</code> where the row has its own buttons,{" "}
+          <code className="font-mono">{"{ omit }"}</code> to leave one out by its <code className="font-mono">id</code>
+          ). With the custom card unchecked you get the default body: the{" "}
+          <code className="font-mono">mobilePrimary</code> column bold on top, the rest as labelled pairs, ID skipped by{" "}
           <code className="font-mono">mobileHidden</code>.
         </Note>
       </div>
@@ -666,13 +643,24 @@ export function DataTableUrlFiltersDemo() {
     ["Vacant or under notice", filterHref(pathname, "occupancy", ["vacant", "notice"], { prefix: UNITS_PREFIX })],
     ["Furnished", filterHref(pathname, "furnished", ["true"], { prefix: UNITS_PREFIX })],
     ["Tenant “Kiss”", filterHref(pathname, "tenant", "Kiss", { prefix: UNITS_PREFIX })],
-    ["Rent €1,000–1,400", filterHref(pathname, "rent", { type: "number", min: "1000", max: "1400", abs: false }, { prefix: UNITS_PREFIX })],
-    ["Free in the first half of 2026", filterHref(pathname, "free", { type: "date", from: "2026-01-01", to: "2026-06-30" }, { prefix: UNITS_PREFIX })],
+    [
+      "Rent €1,000–1,400",
+      filterHref(pathname, "rent", { type: "number", min: "1000", max: "1400", abs: false }, { prefix: UNITS_PREFIX }),
+    ],
+    [
+      "Free in the first half of 2026",
+      filterHref(pathname, "free", { type: "date", from: "2026-01-01", to: "2026-06-30" }, { prefix: UNITS_PREFIX }),
+    ],
   ];
   return (
     <Example
       label="useTableUrlState, filterHref and the filter builders"
-      hint={<>{code("textFilter")} · {code("selectFilter")} · {code("dateFilter")} · {code("numberFilter")} · {code("booleanColumn")}</>}
+      hint={
+        <>
+          {code("textFilter")} · {code("selectFilter")} · {code("dateFilter")} · {code("numberFilter")} ·{" "}
+          {code("booleanColumn")}
+        </>
+      }
     >
       <Row className="mb-3 gap-x-4 gap-y-1">
         {links.map(([label, href]) => (
@@ -685,7 +673,11 @@ export function DataTableUrlFiltersDemo() {
             {label}
           </Link>
         ))}
-        <Link to={pathname} state={{ unitsSeed: seed + 1 }} className="text-sm text-secondary underline underline-offset-2">
+        <Link
+          to={pathname}
+          state={{ unitsSeed: seed + 1 }}
+          className="text-sm text-secondary underline underline-offset-2"
+        >
           No filter
         </Link>
       </Row>
@@ -698,19 +690,19 @@ export function DataTableUrlFiltersDemo() {
           ]}
         />
         <Note>
-          A {code("serverPagination")} table owns none of its state: {code("useTableUrlState")} holds the
-          filters, sorts, page, page size and (with {code("search: true")}) the {code("q")} term, writes them
-          into the address in the table&apos;s own scheme, and hands the table everything it needs through{" "}
-          {code("tableProps(total)")}. The owner turns that state into its query — here a pretend server
-          that filters with {code("rowMatches")}. Any change but the page itself goes back to page 1.
+          A {code("serverPagination")} table owns none of its state: {code("useTableUrlState")} holds the filters,
+          sorts, page, page size and (with {code("search: true")}) the {code("q")} term, writes them into the address in
+          the table&apos;s own scheme, and hands the table everything it needs through {code("tableProps(total)")}. The
+          owner turns that state into its query — here a pretend server that filters with {code("rowMatches")}. Any
+          change but the page itself goes back to page 1.
         </Note>
         <Note>
-          The links are {code("filterHref(path, column, value, { prefix })")}: a string is a text filter, an
-          array a select filter, and any {code("FilterValue")} works for dates and numbers — the link a
-          dashboard tile or another page would write to open this list pre-filtered. This page has a second
-          URL-synced table above, so this one is namespaced with {code('urlPrefix: "units."')}: its keys
-          are {code("units.f.<column>")}, {code("units.sort")}, {code("units.p")}, {code("units.ps")} and{" "}
-          {code("units.q")}, and the two tables no longer share a sort or a page.
+          The links are {code("filterHref(path, column, value, { prefix })")}: a string is a text filter, an array a
+          select filter, and any {code("FilterValue")} works for dates and numbers — the link a dashboard tile or
+          another page would write to open this list pre-filtered. This page has a second URL-synced table above, so
+          this one is namespaced with {code('urlPrefix: "units."')}: its keys are {code("units.f.<column>")},{" "}
+          {code("units.sort")}, {code("units.p")}, {code("units.ps")} and {code("units.q")}, and the two tables no
+          longer share a sort or a page.
         </Note>
       </div>
     </Example>
@@ -729,9 +721,30 @@ interface Contact {
 }
 
 const CONTACTS: Contact[] = [
-  { id: "c1", name: "Ada Example", company: "Example AG", phone: "+41 44 000 00 01", email: "ada@example.com", notes: "Calls back after 5" },
-  { id: "c2", name: "Ben Sample", company: "Sample GmbH", phone: "+41 44 000 00 02", email: "ben@example.com", notes: "Prefers email" },
-  { id: "c3", name: "Chiara Muster", company: "Muster & Co.", phone: "+41 44 000 00 03", email: "chiara@example.com", notes: "—" },
+  {
+    id: "c1",
+    name: "Ada Example",
+    company: "Example AG",
+    phone: "+41 44 000 00 01",
+    email: "ada@example.com",
+    notes: "Calls back after 5",
+  },
+  {
+    id: "c2",
+    name: "Ben Sample",
+    company: "Sample GmbH",
+    phone: "+41 44 000 00 02",
+    email: "ben@example.com",
+    notes: "Prefers email",
+  },
+  {
+    id: "c3",
+    name: "Chiara Muster",
+    company: "Muster & Co.",
+    phone: "+41 44 000 00 03",
+    email: "chiara@example.com",
+    notes: "—",
+  },
 ];
 
 function ContactCardsTable() {
@@ -740,41 +753,61 @@ function ContactCardsTable() {
   const [rtl, setRtl] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const columns: DataTableColumn<Contact>[] = [
-      { key: "name", header: "Name", cell: (c) => c.name, mobilePrimary: true },
-      { key: "company", header: "Company", cell: (c) => c.company },
-      {
-        key: "phone",
-        header: "Phone",
-        noRowLink: true,
-        cell: (c) => (
-          <a href={`tel:${c.phone.replace(/ /g, "")}`} dir="ltr" className="text-brand underline" onClick={(e) => { e.preventDefault(); record(`tel: ${c.name}`); }}>
-            {c.phone}
-          </a>
-        ),
-      },
-      {
-        key: "email",
-        header: "Email",
-        noRowLink: true,
-        cell: (c) => (
-          <a href={`mailto:${c.email}`} className="text-brand underline" onClick={(e) => { e.preventDefault(); record(`mailto: ${c.name}`); }}>
-            {c.email}
-          </a>
-        ),
-      },
-      { key: "notes", header: "Notes", cell: (c) => c.notes },
-      rowActionsColumn<Contact>({
-        name: (c) => c.name,
-        actions: (c) => [
-          { key: "edit", label: "Edit", onSelect: () => record(`edit ${c.name}`) },
-          { key: "delete", label: "Delete", onSelect: () => record(`delete ${c.name}`) },
-        ],
-      }),
+    { key: "name", header: "Name", cell: (c) => c.name, mobilePrimary: true },
+    { key: "company", header: "Company", cell: (c) => c.company },
+    {
+      key: "phone",
+      header: "Phone",
+      noRowLink: true,
+      cell: (c) => (
+        <a
+          href={`tel:${c.phone.replace(/ /g, "")}`}
+          dir="ltr"
+          className="text-brand underline"
+          onClick={(e) => {
+            e.preventDefault();
+            record(`tel: ${c.name}`);
+          }}
+        >
+          {c.phone}
+        </a>
+      ),
+    },
+    {
+      key: "email",
+      header: "Email",
+      noRowLink: true,
+      cell: (c) => (
+        <a
+          href={`mailto:${c.email}`}
+          className="text-brand underline"
+          onClick={(e) => {
+            e.preventDefault();
+            record(`mailto: ${c.name}`);
+          }}
+        >
+          {c.email}
+        </a>
+      ),
+    },
+    { key: "notes", header: "Notes", cell: (c) => c.notes },
+    rowActionsColumn<Contact>({
+      name: (c) => c.name,
+      actions: (c) => [
+        { key: "edit", label: "Edit", onSelect: () => record(`edit ${c.name}`) },
+        { key: "delete", label: "Delete", onSelect: () => record(`delete ${c.name}`) },
+      ],
+    }),
   ];
   return (
     <Example
       label="A contact card: own links, and tap to open"
-      hint={<>{code("noRowLink")} tel: / mailto: fields · {code("rowActionsColumn")} · {code("onRowClick")} or {code("rowHref")}</>}
+      hint={
+        <>
+          {code("noRowLink")} tel: / mailto: fields · {code("rowActionsColumn")} · {code("onRowClick")} or{" "}
+          {code("rowHref")}
+        </>
+      }
     >
       <Row>
         <Button size="sm" variant="secondary" data-demo="contact-linked" onClick={() => setLinked((v) => !v)}>
@@ -805,9 +838,9 @@ function ContactCardsTable() {
       <Note>
         Narrow the window below 768px. The phone and email are links of their own ({code("noRowLink")}), and the
         row&apos;s actions keep their buttons; the rest of the card still opens the contact. The card&apos;s title is
-        the row&apos;s link ({code("rowHref")}) or button ({code("onRowClick")} only), stretched over the card, with
-        the own-click cells drawn above it: no control inside another, and Tab goes title, phone, email, actions.
-        The title alone names the card for a screen reader.
+        the row&apos;s link ({code("rowHref")}) or button ({code("onRowClick")} only), stretched over the card, with the
+        own-click cells drawn above it: no control inside another, and Tab goes title, phone, email, actions. The title
+        alone names the card for a screen reader.
       </Note>
     </Example>
   );

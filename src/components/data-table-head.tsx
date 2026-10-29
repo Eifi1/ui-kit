@@ -148,13 +148,7 @@ export function DataTableHead<T>({
               // exactly one sorted column, and the priority is carried by the
               // badge and by what the header button announces on press.
               aria-sort={
-                sortable
-                  ? sortIdx === 0
-                    ? sorts[0].dir === "asc"
-                      ? "ascending"
-                      : "descending"
-                    : "none"
-                  : undefined
+                sortable ? (sortIdx === 0 ? (sorts[0].dir === "asc" ? "ascending" : "descending") : "none") : undefined
               }
               style={
                 ownHead.style || pinnedHead || lockedWidths?.[col.key] !== undefined || growFloor
@@ -180,31 +174,19 @@ export function DataTableHead<T>({
                 headClass,
               )}
             >
-              <div
-                className={cn(
-                  "flex items-center gap-1",
-                  isEndAligned && "flex-row-reverse",
-                )}
-              >
+              <div className={cn("flex items-center gap-1", isEndAligned && "flex-row-reverse")}>
                 <Tooltip label={sortable && multiSort ? labels.sortHint : undefined} portal>
                   <button
                     type="button"
                     onClick={(e) => sortable && toggleSort(col.key, e.shiftKey)}
                     disabled={!sortable}
-                    className={cn(
-                      "flex items-center gap-1 text-start",
-                      sortable && "hover:text-primary",
-                    )}
+                    className={cn("flex items-center gap-1 text-start", sortable && "hover:text-primary")}
                   >
                     <span>{col.header}</span>
-                    {sortable && (
-                      <Icon className={cn("size-3", active ? "opacity-100" : "opacity-40")} />
-                    )}
+                    {sortable && <Icon className={cn("size-3", active ? "opacity-100" : "opacity-40")} />}
                     {/* Priority badge, only meaningful with 2+ sort keys */}
                     {active && sorts.length > 1 && (
-                      <span className="text-micro font-semibold leading-none text-brand">
-                        {sortIdx + 1}
-                      </span>
+                      <span className="text-micro font-semibold leading-none text-brand">{sortIdx + 1}</span>
                     )}
                   </button>
                 </Tooltip>
@@ -254,30 +236,30 @@ export function DataTableHead<T>({
               </div>
               {/* A `grow` column takes the rest: no width of its own to drag (0.48, KS N2). */}
               {resizable && !isTableOwnColumn(col.key) && !col.grow && (
-              /* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- a
+                /* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- a
                  pointer-only drag handle for a visual preference (column width); it is
                  deliberately not a tab stop, and no content or action depends on it. */
-              <span
-                role="separator"
-                aria-orientation="vertical"
-                onPointerDown={(e) => startResize(e, col.key)}
-                onPointerMove={moveResize}
-                onPointerUp={(e) => finishResize(e, true)}
-                onPointerCancel={(e) => finishResize(e, false)}
-                onDoubleClick={(e) => {
-                  e.preventDefault();
-                  setWidths((w) => {
-                    const next = { ...w };
-                    delete next[col.key];
-                    return next;
-                  });
-                }}
-                // `touch-none`: without it the browser claims a finger drag for
-                // scrolling before the first `pointermove` ever arrives.
-                // `end-0` and a translate that flips with it: the handle sits on the column's
-                // trailing edge, which is its left one in a right-to-left table.
-                className="absolute end-0 top-0 z-10 h-full w-1.5 -translate-x-1/2 rtl:translate-x-1/2 cursor-col-resize select-none touch-none hover:bg-brand-soft-hover"
-              />
+                <span
+                  role="separator"
+                  aria-orientation="vertical"
+                  onPointerDown={(e) => startResize(e, col.key)}
+                  onPointerMove={moveResize}
+                  onPointerUp={(e) => finishResize(e, true)}
+                  onPointerCancel={(e) => finishResize(e, false)}
+                  onDoubleClick={(e) => {
+                    e.preventDefault();
+                    setWidths((w) => {
+                      const next = { ...w };
+                      delete next[col.key];
+                      return next;
+                    });
+                  }}
+                  // `touch-none`: without it the browser claims a finger drag for
+                  // scrolling before the first `pointermove` ever arrives.
+                  // `end-0` and a translate that flips with it: the handle sits on the column's
+                  // trailing edge, which is its left one in a right-to-left table.
+                  className="absolute end-0 top-0 z-10 h-full w-1.5 -translate-x-1/2 rtl:translate-x-1/2 cursor-col-resize select-none touch-none hover:bg-brand-soft-hover"
+                />
               )}
             </th>
           );

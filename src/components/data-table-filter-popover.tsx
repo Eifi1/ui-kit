@@ -84,8 +84,7 @@ export function FilterPopover<T>({
     " " +
     // §10.1: a filter field is a field — 16 px on touch, or iOS zooms on focus.
     FIELD_TOUCH_TEXT;
-  const buttonBase =
-    "rounded border border-subtle bg-surface px-2 py-1 text-xs text-secondary hover:bg-hover";
+  const buttonBase = "rounded border border-subtle bg-surface px-2 py-1 text-xs text-secondary hover:bg-hover";
 
   const clearRow = (
     <div className="flex justify-end pt-1">
@@ -135,11 +134,7 @@ export function FilterPopover<T>({
             >
               {labels.selectAll}
             </button>
-            <button
-              type="button"
-              onClick={() => onChange({ type: "select", values: [] })}
-              className={buttonBase}
-            >
+            <button type="button" onClick={() => onChange({ type: "select", values: [] })} className={buttonBase}>
               {labels.selectNone}
             </button>
           </div>
@@ -150,20 +145,13 @@ export function FilterPopover<T>({
             return (
               <li key={o.value}>
                 <label className="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm hover:bg-hover">
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => toggle(o.value)}
-                    className="size-3.5"
-                  />
+                  <input type="checkbox" checked={checked} onChange={() => toggle(o.value)} className="size-3.5" />
                   <span className="truncate">{o.label}</span>
                 </label>
               </li>
             );
           })}
-          {selectOptions.length === 0 && (
-            <li className="px-2 py-2 text-sm text-muted">—</li>
-          )}
+          {selectOptions.length === 0 && <li className="px-2 py-2 text-sm text-muted">—</li>}
         </ul>
         {clearRow}
       </div>
@@ -190,9 +178,7 @@ export function FilterPopover<T>({
                   onClick={() => set(p.from, p.to)}
                   className={cn(
                     "block rounded px-2 py-1 text-start transition-colors sm:w-full",
-                    active
-                      ? "bg-brand-soft text-brand-muted"
-                      : "text-secondary hover:bg-hover",
+                    active ? "bg-brand-soft text-brand-muted" : "text-secondary hover:bg-hover",
                   )}
                 >
                   {labels.presets[p.key] ?? p.key}

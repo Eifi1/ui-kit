@@ -139,13 +139,7 @@ export function AcceptInvitation({
   });
 
   const outcome: Outcome | "accepting" =
-    token === ""
-      ? "invalid"
-      : settled?.token === token
-        ? settled.outcome
-        : signedIn
-          ? "accepting"
-          : "signIn";
+    token === "" ? "invalid" : settled?.token === token ? settled.outcome : signedIn ? "accepting" : "signIn";
 
   const continueButton = (variant: "accent" | "secondary") => (
     <Button href={continueHref} replace variant={variant}>

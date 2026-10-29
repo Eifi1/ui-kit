@@ -6,7 +6,11 @@ import { WizardStep } from "../wizard-step";
 describe("WizardStep actions", () => {
   it("renders the actions in the header, beside the title", () => {
     const { container } = render(
-      <WizardStep title="Buildings" description="One row per building." actions={<button type="button">Add building</button>}>
+      <WizardStep
+        title="Buildings"
+        description="One row per building."
+        actions={<button type="button">Add building</button>}
+      >
         <p>body</p>
       </WizardStep>,
     );
@@ -26,7 +30,11 @@ describe("WizardStep actions", () => {
   });
 
   it("leaves the header as before without actions", () => {
-    const { container } = render(<WizardStep title="Units" actions={false}>x</WizardStep>);
+    const { container } = render(
+      <WizardStep title="Units" actions={false}>
+        x
+      </WizardStep>,
+    );
     expect(container.querySelector("[data-slot=wizard-step-actions]")).toBeNull();
     expect(container.querySelector("[data-slot=wizard-step-header]")).toHaveClass("space-y-1");
   });

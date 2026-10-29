@@ -209,7 +209,14 @@ describe("ButtonGroupLink — the provider's router link", () => {
           <ButtonGroupLink href="/report" current>
             Report
           </ButtonGroupLink>
-          <ButtonGroupLink href="/own" renderLink={(p) => <a {...p} data-own="">{p.children}</a>}>
+          <ButtonGroupLink
+            href="/own"
+            renderLink={(p) => (
+              <a {...p} data-own="">
+                {p.children}
+              </a>
+            )}
+          >
             Own
           </ButtonGroupLink>
         </ButtonGroup>

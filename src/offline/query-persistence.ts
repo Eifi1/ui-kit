@@ -292,12 +292,15 @@ export function createQueryPersistence({
         timestamp,
         buster: stored,
         clientState: {
-          mutations: persistMutations && Array.isArray(clientState.mutations)
-            ? clientState.mutations.filter(
-                (m) => !carriesScrubbed((m as { state?: { variables?: unknown } } | null)?.state?.variables),
-              )
-            : [],
-          queries: clientState.queries.map(restorable).filter((q) => q !== null) as PersistedClient["clientState"]["queries"],
+          mutations:
+            persistMutations && Array.isArray(clientState.mutations)
+              ? clientState.mutations.filter(
+                  (m) => !carriesScrubbed((m as { state?: { variables?: unknown } } | null)?.state?.variables),
+                )
+              : [],
+          queries: clientState.queries
+            .map(restorable)
+            .filter((q) => q !== null) as PersistedClient["clientState"]["queries"],
         },
       };
     } catch {

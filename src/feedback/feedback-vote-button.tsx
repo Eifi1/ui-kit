@@ -74,8 +74,7 @@ export function FeedbackVoteButton({
   // pressed against: a refetch that brings new numbers is the truth.
   const [shown, setShown] = useState<{ base: FeedbackVoteState; state: FeedbackVoteState } | null>(null);
   const busy = useRef(false);
-  const current =
-    shown && shown.base.votes === votes && shown.base.voted === voted ? shown.state : { votes, voted };
+  const current = shown && shown.base.votes === votes && shown.base.voted === voted ? shown.state : { votes, voted };
   const pressed = own || current.voted;
 
   const press = () => {
@@ -85,12 +84,14 @@ export function FeedbackVoteButton({
     const next = !before.voted;
     busy.current = true;
     setShown({ base, state: { votes: Math.max(0, before.votes + (next ? 1 : -1)), voted: next } });
-    onVote(next).then(
-      (answer) => setShown({ base, state: { votes: answer.votes, voted: answer.voted } }),
-      () => setShown({ base, state: before }),
-    ).finally(() => {
-      busy.current = false;
-    });
+    onVote(next)
+      .then(
+        (answer) => setShown({ base, state: { votes: answer.votes, voted: answer.voted } }),
+        () => setShown({ base, state: before }),
+      )
+      .finally(() => {
+        busy.current = false;
+      });
   };
 
   const count = formatNumber(current.votes, { locale });

@@ -74,10 +74,7 @@ describe("SeriesChart — what it draws", () => {
         { key: "b", label: "B" },
       ],
     });
-    expect(paths(container).map((p) => p.getAttribute("stroke"))).toEqual([
-      "var(--color-a)",
-      "var(--color-b)",
-    ]);
+    expect(paths(container).map((p) => p.getAttribute("stroke"))).toEqual(["var(--color-a)", "var(--color-b)"]);
   });
 
   it("defaults series colours to the kit's --chart-N ramp, and keeps a caller's own", () => {
@@ -179,7 +176,12 @@ describe("SeriesChart — what it draws", () => {
       { x: 974, a: 974 },
     ];
     const { container } = render(
-      <SeriesChart rows={rows} series={[{ key: "a", label: "A" }]} axes={oneAxis(String, "V")} x={{ format: String }} />,
+      <SeriesChart
+        rows={rows}
+        series={[{ key: "a", label: "A" }]}
+        axes={oneAxis(String, "V")}
+        x={{ format: String }}
+      />,
     );
     const read = (axis: string) =>
       [...container.querySelectorAll(`.recharts-${axis}-tick-labels tspan`)].map((t) => Number(t.textContent));

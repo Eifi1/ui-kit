@@ -37,9 +37,7 @@ function resolve(preference: ThemePreference): ThemeMode {
  *  persisted the concrete `mode` (light/dark); carry that over as an explicit
  *  preference so the choice survives. Shared by the store's `migrate` and the
  *  pre-hydration {@link applyPersistedTheme}. */
-function preferenceFromState(
-  s: { mode?: string; preference?: string } | null | undefined,
-): ThemePreference {
+function preferenceFromState(s: { mode?: string; preference?: string } | null | undefined): ThemePreference {
   if (s?.preference === "light" || s?.preference === "dark" || s?.preference === "system") {
     return s.preference;
   }
@@ -112,9 +110,7 @@ export function createThemeStore(storageKey: string) {
           // Only the preference is persisted; `mode` is derived on load.
           partialize: (s) => ({ preference: s.preference }),
           migrate: (persistedState): { preference: ThemePreference } => ({
-            preference: preferenceFromState(
-              persistedState as { mode?: string; preference?: string } | null,
-            ),
+            preference: preferenceFromState(persistedState as { mode?: string; preference?: string } | null),
           }),
           onRehydrateStorage: () => (state) => {
             // The persisted preference decides the concrete mode at load.

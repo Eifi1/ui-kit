@@ -32,7 +32,9 @@ describe("ProgressBar hint and overage", () => {
   });
 
   it("says how far past max, the bar staying full", () => {
-    const { container, rerender } = render(<ProgressBar value={12} max={10} aria-label="Units" overage locale="en-US" />);
+    const { container, rerender } = render(
+      <ProgressBar value={12} max={10} aria-label="Units" overage locale="en-US" />,
+    );
     expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "10");
     expect(container.querySelector('[data-part="overage"]')).toHaveTextContent("2 over the limit");
     rerender(<ProgressBar value={12} max={10} aria-label="Units" overage={(over) => `CHF ${over} extra`} />);
@@ -50,9 +52,7 @@ describe("ProgressBar legend extras", () => {
   ];
 
   it("lists legend-only entries without drawing them or naming them in the valuetext", () => {
-    const { container } = render(
-      <ProgressBar max={1} aria-label="Split" segments={segments} legend locale="en-US" />,
-    );
+    const { container } = render(<ProgressBar max={1} aria-label="Split" segments={segments} legend locale="en-US" />);
     const bar = screen.getByRole("meter");
     expect(container.querySelectorAll('[data-part="segment"]')).toHaveLength(2);
     expect(bar.getAttribute("aria-valuetext")).not.toContain("Free");

@@ -96,10 +96,7 @@ describe("applyPersistedTextSize — pre-paint", () => {
 });
 
 describe("TEXT_SIZE_INLINE_SCRIPT — the boot splash's copy", () => {
-  const snippet = new Function(`return ${TEXT_SIZE_INLINE_SCRIPT}`)() as (
-    key: string,
-    account?: () => unknown,
-  ) => void;
+  const snippet = new Function(`return ${TEXT_SIZE_INLINE_SCRIPT}`)() as (key: string, account?: () => unknown) => void;
 
   const cases: [string, unknown, (() => unknown) | undefined][] = [
     ["a stored size", "large", undefined],
@@ -107,9 +104,13 @@ describe("TEXT_SIZE_INLINE_SCRIPT — the boot splash's copy", () => {
     ["the account without a stored size", null, () => "large"],
     ["an unknown stored value, falling to the account", "huge", () => "xlarge"],
     ["nothing at all", undefined, undefined],
-    ["a throwing account", null, () => {
-      throw new Error("x");
-    }],
+    [
+      "a throwing account",
+      null,
+      () => {
+        throw new Error("x");
+      },
+    ],
     ["an unknown account value", null, () => "tiny"],
   ];
 
@@ -149,9 +150,12 @@ describe("createTextSizeStore", () => {
 
   it("applies device → account → Normal on <html>", () => {
     const { useTextSizeStore, useApplyTextSize } = createTextSizeStore(KEY);
-    const { result, rerender } = renderHook(({ account }: { account?: string | null }) => useApplyTextSize({ account }), {
-      initialProps: { account: undefined as string | null | undefined },
-    });
+    const { result, rerender } = renderHook(
+      ({ account }: { account?: string | null }) => useApplyTextSize({ account }),
+      {
+        initialProps: { account: undefined as string | null | undefined },
+      },
+    );
     expect(result.current).toBe("normal");
     expect(root().getAttribute("data-text-size")).toBe("normal");
 

@@ -27,11 +27,7 @@ export function Separator({ orientation = "horizontal", decorative = false, clas
       role={decorative ? "none" : "separator"}
       aria-orientation={!decorative && vertical ? "vertical" : undefined}
       data-orientation={orientation}
-      className={cn(
-        "shrink-0 bg-[var(--border)]",
-        vertical ? "w-px self-stretch" : "h-px w-full",
-        className,
-      )}
+      className={cn("shrink-0 bg-[var(--border)]", vertical ? "w-px self-stretch" : "h-px w-full", className)}
     />
   );
 }

@@ -126,7 +126,16 @@ describe("CurrencySelect commit / disabledReason", () => {
   });
 
   it("with a caption and an error: hint, then reason, then error", () => {
-    render(<CurrencySelect aria-label="Pay in" value="EUR" onChange={() => {}} hint="Saved on change" error="Pick one" disabledReason="Archived." />);
+    render(
+      <CurrencySelect
+        aria-label="Pay in"
+        value="EUR"
+        onChange={() => {}}
+        hint="Saved on change"
+        error="Pick one"
+        disabledReason="Archived."
+      />,
+    );
     expect(descriptions(screen.getByRole("combobox", { name: "Pay in" }))).toEqual([
       "Saved on change",
       "Archived.",

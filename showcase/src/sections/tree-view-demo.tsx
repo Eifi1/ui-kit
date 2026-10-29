@@ -34,19 +34,45 @@ const ACCOUNTS: TreeNode<Account>[] = [
             label: "Bank",
             icon: <Wallet className="size-4" />,
             children: [
-              { id: "1020", label: "1020 Operating account", textValue: "Operating account", trailing: EUR.format(18240), data: { number: "1020", balance: 18240 } },
-              { id: "1030", label: "1030 Savings account", textValue: "Savings account", trailing: EUR.format(52000), data: { number: "1030", balance: 52000 } },
-              { id: "1040", label: "1040 Closed account", textValue: "Closed account", trailing: EUR.format(0), disabled: true },
+              {
+                id: "1020",
+                label: "1020 Operating account",
+                textValue: "Operating account",
+                trailing: EUR.format(18240),
+                data: { number: "1020", balance: 18240 },
+              },
+              {
+                id: "1030",
+                label: "1030 Savings account",
+                textValue: "Savings account",
+                trailing: EUR.format(52000),
+                data: { number: "1030", balance: 52000 },
+              },
+              {
+                id: "1040",
+                label: "1040 Closed account",
+                textValue: "Closed account",
+                trailing: EUR.format(0),
+                disabled: true,
+              },
             ],
           },
-          { id: "1200", label: "1200 Receivables", textValue: "Receivables", trailing: EUR.format(7310), data: { number: "1200", balance: 7310 } },
+          {
+            id: "1200",
+            label: "1200 Receivables",
+            textValue: "Receivables",
+            trailing: EUR.format(7310),
+            data: { number: "1200", balance: 7310 },
+          },
         ],
       },
       {
         id: "fixed",
         label: "Fixed assets",
         icon: <Building2 className="size-4" />,
-        children: [{ id: "0400", label: "0400 Office equipment", textValue: "Office equipment", trailing: EUR.format(4100) }],
+        children: [
+          { id: "0400", label: "0400 Office equipment", textValue: "Office equipment", trailing: EUR.format(4100) },
+        ],
       },
     ],
   },
@@ -82,13 +108,12 @@ function Uncontrolled() {
       <p className="mt-2 font-mono text-xs text-secondary">onSelectedChange → {picked}</p>
       <div className="mt-3">
         <Note>
-          Type &ldquo;sav&rdquo; with focus in the tree and it jumps to the savings account: the
-          accounts carry a <code className="font-mono">textValue</code> without the number, so
-          type-ahead matches the name. &ldquo;1040 Closed account&rdquo; is{" "}
-          <code className="font-mono">disabled</code> — focusable and announced as unavailable, not
-          selectable. <code className="font-mono">data</code> rides along and comes back in{" "}
-          <code className="font-mono">onSelectedChange</code>. Only the chevron toggles on click; a
-          click on the label selects.
+          Type &ldquo;sav&rdquo; with focus in the tree and it jumps to the savings account: the accounts carry a{" "}
+          <code className="font-mono">textValue</code> without the number, so type-ahead matches the name. &ldquo;1040
+          Closed account&rdquo; is <code className="font-mono">disabled</code> — focusable and announced as unavailable,
+          not selectable. <code className="font-mono">data</code> rides along and comes back in{" "}
+          <code className="font-mono">onSelectedChange</code>. Only the chevron toggles on click; a click on the label
+          selects.
         </Note>
       </div>
     </Example>
@@ -218,12 +243,12 @@ function Lazy() {
       <p className="mt-2 font-mono text-xs text-secondary">loaded: {loads.length ? loads.join(", ") : "—"}</p>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">selectionMode=&quot;none&quot;</code> makes it a navigation-only
-          tree: no <code className="font-mono">aria-selected</code>, and Enter toggles. The whole row
-          after the chevron is <code className="font-mono">renderItem</code>, handed the node and its
-          state — the open-folder icon and the level readout come from{" "}
-          <code className="font-mono">state.expanded</code> and <code className="font-mono">state.level</code>.
-          &ldquo;Empty folder&rdquo; loads no children, and its chevron goes away.
+          <code className="font-mono">selectionMode=&quot;none&quot;</code> makes it a navigation-only tree: no{" "}
+          <code className="font-mono">aria-selected</code>, and Enter toggles. The whole row after the chevron is{" "}
+          <code className="font-mono">renderItem</code>, handed the node and its state — the open-folder icon and the
+          level readout come from <code className="font-mono">state.expanded</code> and{" "}
+          <code className="font-mono">state.level</code>. &ldquo;Empty folder&rdquo; loads no children, and its chevron
+          goes away.
         </Note>
       </div>
     </Example>
@@ -250,10 +275,9 @@ function Rtl() {
       </div>
       <div className="mt-3">
         <Note>
-          The indent, the guides and the chevron hang from the reading start (logical properties,
-          no second code path), and the arrow keys follow the direction: here the children hang
-          to the left, and <strong>←</strong> is what opens them. The chevron points left when
-          closed and turns down — the other way round from LTR.
+          The indent, the guides and the chevron hang from the reading start (logical properties, no second code path),
+          and the arrow keys follow the direction: here the children hang to the left, and <strong>←</strong> is what
+          opens them. The chevron points left when closed and turns down — the other way round from LTR.
         </Note>
       </div>
     </Example>
@@ -308,7 +332,13 @@ function StandaloneRows() {
           ),
         )}
         <TreeRow level={2} expanded={false} loading label="Fetching subtasks…" />
-        <TreeRow level={1} expanded={false} onToggle={() => undefined} label="Custom row" toggleLabel="Open the custom row">
+        <TreeRow
+          level={1}
+          expanded={false}
+          onToggle={() => undefined}
+          label="Custom row"
+          toggleLabel="Open the custom row"
+        >
           <span className="flex flex-1 items-center justify-between text-xs">
             <span className="font-medium text-primary">children replace label + trailing</span>
             <span className="rounded bg-surface-2 px-1.5 font-mono">custom</span>
@@ -317,12 +347,12 @@ function StandaloneRows() {
       </div>
       <div className="mt-3">
         <Note>
-          Each parent row&apos;s chevron here is a <code className="font-mono">&lt;button&gt;</code>{" "}
-          with <code className="font-mono">aria-expanded</code>, named by the row&apos;s label — or by{" "}
-          <code className="font-mono">toggleLabel</code> when <code className="font-mono">children</code>{" "}
-          replaced the label (the last row). A leaf gets a chevron-sized gap so labels line up;{" "}
-          <code className="font-mono">loading</code> puts a spinner in the chevron&apos;s place. The
-          leaves pass <code className="font-mono">indent={"{20}"}</code>, and the third level{" "}
+          Each parent row&apos;s chevron here is a <code className="font-mono">&lt;button&gt;</code> with{" "}
+          <code className="font-mono">aria-expanded</code>, named by the row&apos;s label — or by{" "}
+          <code className="font-mono">toggleLabel</code> when <code className="font-mono">children</code> replaced the
+          label (the last row). A leaf gets a chevron-sized gap so labels line up;{" "}
+          <code className="font-mono">loading</code> puts a spinner in the chevron&apos;s place. The leaves pass{" "}
+          <code className="font-mono">indent={"{20}"}</code>, and the third level{" "}
           <code className="font-mono">guides={"{false}"}</code>.
         </Note>
       </div>

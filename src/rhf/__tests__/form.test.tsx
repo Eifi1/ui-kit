@@ -140,9 +140,7 @@ describe("an invalid field", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "Save" }));
     await screen.findByText("Name is required");
-    expect(input).toHaveAccessibleDescription(
-      "Shown on the invoice As on the passport Name is required",
-    );
+    expect(input).toHaveAccessibleDescription("Shown on the invoice As on the passport Name is required");
   });
 
   it("renders no message, and points at none, for an error without words", async () => {
@@ -194,9 +192,7 @@ describe("FormMessage without an error", () => {
         )}
       </Harness>,
     );
-    expect(screen.getByRole("textbox", { name: "Name" })).toHaveAccessibleDescription(
-      "Checked against the register",
-    );
+    expect(screen.getByRole("textbox", { name: "Name" })).toHaveAccessibleDescription("Checked against the register");
   });
 });
 

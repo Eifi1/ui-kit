@@ -249,7 +249,14 @@ describe("planBodies", () => {
     const bodies = planBodies({ n: 4, tops, h, gTop }, groups, 2, 3, []);
     expect(bodies).toEqual([
       { kind: "spacer", key: "vs:0", height: 30 },
-      { kind: "group", group: 1, items: [{ kind: "row", index: 2 }, { kind: "gap", key: "gap:end:1", height: 10 }] },
+      {
+        kind: "group",
+        group: 1,
+        items: [
+          { kind: "row", index: 2 },
+          { kind: "gap", key: "gap:end:1", height: 10 },
+        ],
+      },
     ]);
   });
 });

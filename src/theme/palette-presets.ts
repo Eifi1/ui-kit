@@ -174,7 +174,6 @@ export const DEFAULT_PRESET: PalettePreset = {
   },
 };
 
-
 /**
  * The 0.48 default: the same surfaces, brand and money, with Paul Tol's "Muted" nine
  * as the chart ramp and the teal/amber heat stops that went with it. Selectable, no

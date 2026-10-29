@@ -34,13 +34,7 @@ describe("MiniCalendar showOutsideDays", () => {
 
   it("fills the first and last rows with the neighbouring months' days", () => {
     const { container } = draw({ showOutsideDays: true });
-    expect(outside(container)).toEqual([
-      "2026-08-31",
-      "2026-10-01",
-      "2026-10-02",
-      "2026-10-03",
-      "2026-10-04",
-    ]);
+    expect(outside(container)).toEqual(["2026-08-31", "2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04"]);
     const first = container.querySelector<HTMLElement>('[data-iso="2026-08-31"]')!;
     expect(first).toHaveTextContent("31");
     expect(first).toHaveClass("text-placeholder");

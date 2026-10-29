@@ -211,8 +211,7 @@ export const it: Dictionary = {
     fields: {
       title: "Campi di testo",
       short: "Testo",
-      blurb:
-        "I campi di input e le costanti di classe con cui un’app compone i propri campi.",
+      blurb: "I campi di input e le costanti di classe con cui un’app compone i propri campi.",
     },
     forms: {
       title: "Moduli (react-hook-form)",
@@ -400,8 +399,7 @@ export const it: Dictionary = {
     layout: {
       title: "Sezione espandibile e cornice dei dialoghi",
       short: "Espandibile",
-      blurb:
-        "Una sezione che si richiude e la cornice intestazione-corpo-azioni che ogni finestra di dialogo ripete.",
+      blurb: "Una sezione che si richiude e la cornice intestazione-corpo-azioni che ogni finestra di dialogo ripete.",
     },
     overlays: {
       title: "Overlay",
@@ -502,8 +500,7 @@ export const it: Dictionary = {
     "hooks-lib": {
       title: "Hook e lib",
       short: "Hook",
-      blurb:
-        "Le esportazioni non visive: gli hook osservati dal vivo e le funzioni pure come input → output.",
+      blurb: "Le esportazioni non visive: gli hook osservati dal vivo e le funzioni pure come input → output.",
     },
     "clipboard-timing": {
       title: "Appunti e tempi",
@@ -584,7 +581,6 @@ export const it: Dictionary = {
         "I formati di scambio della revisione delle traduzioni, chi può rivedere quali chiavi e lingue, e i token di revisione con cui un revisore apre la pagina di revisione del kit.",
     },
   },
-
 
   // The top-bar search's "Di cosa hai bisogno?" rows: a task in the reader's words, and
   // the page that does it. Phrased as typed into a search box — lower case, no full stop.
@@ -1338,7 +1334,6 @@ export const it: Dictionary = {
       "chiavi di traduzione del kit",
     ],
   },
-
 
   // The kit's own words ship with the package — the same import an app writes.
   kit: UI_KIT_LABELS_IT,

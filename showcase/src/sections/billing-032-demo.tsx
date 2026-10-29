@@ -153,9 +153,9 @@ export function PlanPicker032Demo() {
         catalogue holds GROSS prices in minor units per currency and period; a whole amount drops its decimals
         (&ldquo;CHF 49&rdquo;), any other keeps both (&ldquo;CHF 4.90&rdquo;). Estate has no monthly price, so it is
         &ldquo;not offered&rdquo; in that period and cannot be picked. With {code("current")} the button says{" "}
-        &ldquo;Upgrade to …&rdquo; or &ldquo;Switch to …&rdquo;, and is off on the current plan; without one
-        (a trial, an ended plan) every plan is &ldquo;Choose …&rdquo;. Limits read {code("null")} as
-        &ldquo;Unlimited&rdquo;; {code("formatLimit")} writes the storage in bytes.
+        &ldquo;Upgrade to …&rdquo; or &ldquo;Switch to …&rdquo;, and is off on the current plan; without one (a trial,
+        an ended plan) every plan is &ldquo;Choose …&rdquo;. Limits read {code("null")} as &ldquo;Unlimited&rdquo;;{" "}
+        {code("formatLimit")} writes the storage in bytes.
       </Note>
     </Example>
   );
@@ -248,10 +248,10 @@ export function BillingBanners032Demo() {
         </div>
       </Sandbox>
       <Note>
-        The app picks the banner from {code("GET /billing/overview")} and hides them all while billing is off; the
-        trial and grant banners start 7 days before the end ({code("billingDaysLeft(trial_ends_at)")}). The guest
-        banner takes no status at all — its type lets none in. {code("processing")} is a live region; the page
-        re-polls the overview until the webhook landed, and the banner goes.
+        The app picks the banner from {code("GET /billing/overview")} and hides them all while billing is off; the trial
+        and grant banners start 7 days before the end ({code("billingDaysLeft(trial_ends_at)")}). The guest banner takes
+        no status at all — its type lets none in. {code("processing")} is a live region; the page re-polls the overview
+        until the webhook landed, and the banner goes.
       </Note>
     </Example>
   );
@@ -285,11 +285,11 @@ export function PlanLimitNotice032Demo() {
         </div>
       </Sandbox>
       <Note>
-        {code("const hit = isPlanLimit(err); hit && <PlanLimitNotice {...hit} mode=\"upgrade\" href=… />")} — the
+        {code('const hit = isPlanLimit(err); hit && <PlanLimitNotice {...hit} mode="upgrade" href=… />')} — the
         refusal&apos;s {code("dimension")}, {code("plan")}, {code("limit")} and {code("used")} spread in whole.{" "}
-        {code("upgrade")} links to the subscription page; {code("contact")} (the operator grants plans by hand) opens
-        a mail to support. A downgrade never deletes what is over the new limit, so {code("used")} may pass it: the
-        bar stays full and the figures say the rest.
+        {code("upgrade")} links to the subscription page; {code("contact")} (the operator grants plans by hand) opens a
+        mail to support. A downgrade never deletes what is over the new limit, so {code("used")} may pass it: the bar
+        stays full and the figures say the rest.
       </Note>
     </Example>
   );
@@ -307,7 +307,10 @@ export function BillingLock032Demo() {
     { locked: billing, reason: billingReason },
   ]);
   return (
-    <Example label="The read-only lock — the demo's and billing's in one provider" hint="combineWriteLocks; §3.3, §12.6">
+    <Example
+      label="The read-only lock — the demo's and billing's in one provider"
+      hint="combineWriteLocks; §3.3, §12.6"
+    >
       <div className="mb-3 flex flex-wrap gap-x-6 gap-y-2">
         <Switch size="sm" label="Demo (read-only data)" checked={demo} onChange={(e) => setDemo(e.target.checked)} />
         <Switch size="sm" label="Billing lapsed" checked={billing} onChange={(e) => setBilling(e.target.checked)} />
@@ -325,10 +328,10 @@ export function BillingLock032Demo() {
         </div>
       </WriteLockProvider>
       <Note>
-        {code("<WriteLockProvider {...combineWriteLocks([demoLock, billingLock])}>")} — locked when either is, with
-        the first locked reason in the server&apos;s order (the demo&apos;s 403 before billing&apos;s 402, §12.3). Two
-        nested providers would not do: an inner {code("locked={false}")} reopens an outer lock on purpose. A guest
-        reads &ldquo;for now; its owner can lift that&rdquo;, never the owner&apos;s status.
+        {code("<WriteLockProvider {...combineWriteLocks([demoLock, billingLock])}>")} — locked when either is, with the
+        first locked reason in the server&apos;s order (the demo&apos;s 403 before billing&apos;s 402, §12.3). Two
+        nested providers would not do: an inner {code("locked={false}")} reopens an outer lock on purpose. A guest reads
+        &ldquo;for now; its owner can lift that&rdquo;, never the owner&apos;s status.
       </Note>
     </Example>
   );
@@ -352,8 +355,8 @@ export function SubscriptionActions032Demo() {
       />
       <Note>
         Payment method and invoices live in the provider&apos;s hosted portal, never in the app. The cancel link stays
-        in plain sight: Germany&apos;s cancellation button (§312k BGB) and the EU withdrawal function are in the
-        portal, and the app&apos;s page must not hide the way there.
+        in plain sight: Germany&apos;s cancellation button (§312k BGB) and the EU withdrawal function are in the portal,
+        and the app&apos;s page must not hide the way there.
       </Note>
     </Example>
   );

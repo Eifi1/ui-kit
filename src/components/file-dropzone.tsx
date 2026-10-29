@@ -235,8 +235,7 @@ export function FileDropzone({
   // page is not announced by itself.
   const status = useAnnounce();
   const alert = useAnnounce({ politeness: "assertive" });
-  const feedback: FileDropzoneRejectionFeedback =
-    rejectionFeedback ?? (onInvalid || onReject ? "none" : "toast");
+  const feedback: FileDropzoneRejectionFeedback = rejectionFeedback ?? (onInvalid || onReject ? "none" : "toast");
   const dropLabel = dropLabelProp ?? labels.dropzone;
   const browseLabel = browseLabelProp ?? labels.browse;
   const emptyLabel = emptyLabelProp ?? (multiple ? labels.emptyMultiple : labels.empty);
@@ -272,9 +271,7 @@ export function FileDropzone({
     if (!stands || rejected.length > 0) {
       for (const r of rejected) onInvalid?.(r.file);
       if (rejected.length > 0) onReject?.(rejected);
-      const message = stands
-        ? summariseRejections(rejected, labels)
-        : labels.rejectedPick(picked.length);
+      const message = stands ? summariseRejections(rejected, labels) : labels.rejectedPick(picked.length);
       if (feedback === "toast") {
         // The kit's `toast`, which loads sonner (an optional peer) lazily, so an app
         // that never trips this never has to install it. Nothing downstream depends
@@ -378,10 +375,10 @@ export function FileDropzone({
               : locked
                 ? "cursor-not-allowed border-subtle"
                 : dragOver
-                ? "cursor-pointer border-strong bg-active"
-                : showError
-                  ? "cursor-pointer border-danger-strong"
-                  : "cursor-pointer border-subtle hover:border-strong",
+                  ? "cursor-pointer border-strong bg-active"
+                  : showError
+                    ? "cursor-pointer border-danger-strong"
+                    : "cursor-pointer border-subtle hover:border-strong",
           className,
         )}
       >
@@ -468,9 +465,7 @@ export function FileDropzone({
                 {locked && !(file && !multiple) ? (
                   reasonLine
                 ) : (
-                  <div className="text-xs text-muted">
-                    {file && !multiple ? fileText.size(file.size) : hint}
-                  </div>
+                  <div className="text-xs text-muted">{file && !multiple ? fileText.size(file.size) : hint}</div>
                 )}
                 {locked && file && !multiple && reasonLine}
               </>

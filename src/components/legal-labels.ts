@@ -26,8 +26,7 @@ export const DEFAULT_LEGAL_LABELS: LegalLabels = {
       "Closed beta. The legal wording below has not been reviewed by a lawyer yet and will be before a public launch. The technical descriptions — what is stored, where, and who can read it — describe what the software actually does today, and are meant to be checked against it.",
   },
   translation: {
-    note: (o) =>
-      `This is a translation for your convenience. The ${o.bindingLanguage} version is binding.`,
+    note: (o) => `This is a translation for your convenience. The ${o.bindingLanguage} version is binding.`,
     show: (o) => `Show the ${o.bindingLanguage} version`,
   },
   updated: (date) => `Last updated: ${date}`,

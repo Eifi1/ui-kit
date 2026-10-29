@@ -62,8 +62,7 @@ export interface SwatchOption<T extends string> {
  * is omitted rather than shadowed, as on {@link ToggleGroup}.
  */
 export interface SwatchPickerProps<T extends string>
-  extends Omit<ComponentPropsWithRef<"div">, "onChange" | "children" | "defaultValue">,
-    FieldHelpProps {
+  extends Omit<ComponentPropsWithRef<"div">, "onChange" | "children" | "defaultValue">, FieldHelpProps {
   options: SwatchOption<T>[];
   /** The chosen colour, or `null` for none. */
   value: T | null;
@@ -270,7 +269,13 @@ export function SwatchPicker<T extends string>({
   );
   if (!labelled) return group;
   return (
-    <LabelStrip labelId={labelId} label={label} hint={messages.labelHint} disabled={disabled || locked} className={className}>
+    <LabelStrip
+      labelId={labelId}
+      label={label}
+      hint={messages.labelHint}
+      disabled={disabled || locked}
+      className={className}
+    >
       {group}
       {messages.below}
     </LabelStrip>

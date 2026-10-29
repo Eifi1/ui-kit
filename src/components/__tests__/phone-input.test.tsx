@@ -129,7 +129,9 @@ describe("PhoneInput", () => {
 
   it("starts from defaultCountry and offers only the countries asked for", () => {
     const onValueChange = vi.fn();
-    render(<PhoneInput label="Phone" value="" defaultCountry="DE" countries={["DE", "AT"]} onValueChange={onValueChange} />);
+    render(
+      <PhoneInput label="Phone" value="" defaultCountry="DE" countries={["DE", "AT"]} onValueChange={onValueChange} />,
+    );
     expect(select()).toHaveValue("DE");
     expect(Array.from(select().options).map((o) => o.value)).toEqual(["DE", "AT", "other"]);
     fireEvent.change(number(), { target: { value: "030 0000001" } });
@@ -137,16 +139,21 @@ describe("PhoneInput", () => {
   });
 
   it("puts a text hint and the error under the whole row, attached to the number", () => {
-    render(
-      <PhoneInput label="Phone" value="" onValueChange={vi.fn()} hint="Mobile preferred" error="Required" />,
-    );
+    render(<PhoneInput label="Phone" value="" onValueChange={vi.fn()} hint="Mobile preferred" error="Required" />);
     expect(number()).toHaveAccessibleDescription("Mobile preferred Required");
     expect(number()).toHaveAttribute("aria-invalid", "true");
     expect(screen.getByRole("group", { name: "Phone" })).toContainElement(select());
   });
 
   it("takes its words as labels", () => {
-    render(<PhoneInput label="Phone" value="" onValueChange={vi.fn()} labels={{ countryCode: "Vorwahl", other: "Andere" }} />);
+    render(
+      <PhoneInput
+        label="Phone"
+        value=""
+        onValueChange={vi.fn()}
+        labels={{ countryCode: "Vorwahl", other: "Andere" }}
+      />,
+    );
     const sel = screen.getByRole("combobox", { name: "Vorwahl" }) as HTMLSelectElement;
     expect(sel.options[sel.options.length - 1]).toHaveTextContent("Andere");
   });

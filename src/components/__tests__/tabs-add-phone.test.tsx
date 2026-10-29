@@ -6,13 +6,7 @@ import { Tabs } from "../tabs";
 describe("Tabs add button on phones", () => {
   it("keeps the label as the name and hides it visually below md on a scrolling strip", () => {
     render(
-      <Tabs
-        tabs={[{ id: "a", label: "A" }]}
-        active="a"
-        onChange={() => {}}
-        onAdd={() => {}}
-        addLabel="Add loop"
-      />,
+      <Tabs tabs={[{ id: "a", label: "A" }]} active="a" onChange={() => {}} onAdd={() => {}} addLabel="Add loop" />,
     );
     const add = screen.getByRole("button", { name: "Add loop" });
     expect(add.className).toContain("relative");

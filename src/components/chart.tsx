@@ -10,11 +10,7 @@
 // that make shadcn charts read as "designed" rather than "default Recharts".
 import { createContext, useContext, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { ComponentProps, CSSProperties, ReactNode, RefObject } from "react";
-import {
-  Legend as RechartsLegend,
-  ResponsiveContainer,
-  Tooltip as RechartsTooltip,
-} from "recharts";
+import { Legend as RechartsLegend, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts";
 import { cn } from "../lib/cn";
 import { isRtl } from "../lib/direction";
 import { TYPOGRAPHIC_MINUS } from "../lib/minus";
@@ -116,8 +112,7 @@ const CSS_IDENT = /^[A-Za-z_][A-Za-z0-9_-]*$/;
  * deliberately not accepted: its second argument is an arbitrary value, i.e. the same
  * hole in a shape that looks safe.
  */
-const CSS_COLOR =
-  /^(?:#[0-9a-fA-F]{3}|#[0-9a-fA-F]{6}|(?:rgba?|hsla?)\([0-9A-Za-z.,%/ -]*\)|var\(--[A-Za-z0-9_-]+\))$/;
+const CSS_COLOR = /^(?:#[0-9a-fA-F]{3}|#[0-9a-fA-F]{6}|(?:rgba?|hsla?)\([0-9A-Za-z.,%/ -]*\)|var\(--[A-Za-z0-9_-]+\))$/;
 
 /**
  * The colour an entry is painted with, or `undefined` when the style block refuses it.
@@ -152,9 +147,7 @@ function ChartStyle({ id, config }: { id: string; config: ChartConfig }) {
     return true;
   });
   if (!entries.length) return null;
-  const css = `[data-chart=${id}] {\n${entries
-    .map(([key, c]) => `  --color-${key}: ${c.color};`)
-    .join("\n")}\n}`;
+  const css = `[data-chart=${id}] {\n${entries.map(([key, c]) => `  --color-${key}: ${c.color};`).join("\n")}\n}`;
   return <style dangerouslySetInnerHTML={{ __html: css }} />;
 }
 
@@ -387,17 +380,10 @@ export function ChartTooltipContent({
         className={cn("flex items-center", inRow ? "min-w-0 max-w-[12rem] gap-1.5" : "gap-2")}
       >
         <span
-          className={cn(
-            "shrink-0 rounded-[2px]",
-            indicator === "dot" ? "h-2.5 w-2.5 rounded-full" : "h-2.5 w-1",
-          )}
+          className={cn("shrink-0 rounded-[2px]", indicator === "dot" ? "h-2.5 w-2.5 rounded-full" : "h-2.5 w-1")}
           style={{ backgroundColor: color }}
         />
-        <span
-          className={cn("min-w-0 text-muted", inRow ? "truncate" : "break-words")}
-        >
-          {name}
-        </span>
+        <span className={cn("min-w-0 text-muted", inRow ? "truncate" : "break-words")}>{name}</span>
         <span
           data-private
           // Isolated, so an RTL page does not turn "-26.6" into "26.6-": a figure has no
@@ -457,9 +443,7 @@ export function ChartTooltipContent({
       className="min-w-[9rem] max-w-[min(20rem,calc(100vw-2rem))] rounded-lg border border-subtle bg-surface px-2.5 py-2 text-xs shadow-xl"
     >
       {!hideLabel && label != null && (
-        <div className="mb-1.5 font-medium text-primary">
-          {labelFormatter ? labelFormatter(label) : label}
-        </div>
+        <div className="mb-1.5 font-medium text-primary">{labelFormatter ? labelFormatter(label) : label}</div>
       )}
       <div className="grid gap-1.5">{items.map((item, i) => tooltipRow(item, i, false))}</div>
     </div>
@@ -490,12 +474,7 @@ interface ChartLegendContentProps {
   activeKey?: string | null;
 }
 
-export function ChartLegendContent({
-  payload,
-  onItemClick,
-  hiddenKeys,
-  activeKey,
-}: ChartLegendContentProps) {
+export function ChartLegendContent({ payload, onItemClick, hiddenKeys, activeKey }: ChartLegendContentProps) {
   const hidden = hiddenKeys ? new Set(hiddenKeys) : null;
   const config = useChart();
   if (!payload?.length) return null;
@@ -536,9 +515,7 @@ export function ChartLegendContent({
             // in isolate mode pressed = the isolated one. With neither supplied the
             // legend knows nothing about state, and a pressed="false" it cannot vouch
             // for would lie — so it says nothing.
-            aria-pressed={
-              hidden ? !off : activeKey === undefined ? undefined : activeKey === cfgKey
-            }
+            aria-pressed={hidden ? !off : activeKey === undefined ? undefined : activeKey === cfgKey}
             className={className}
           >
             {swatch}

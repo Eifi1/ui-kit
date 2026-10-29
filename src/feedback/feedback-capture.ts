@@ -260,7 +260,9 @@ export interface CaptureAppScreenshotOptions {
  * Call it from the "Capture screenshot" button's own click and nowhere else (keksdose
  * checked: running it at dialog OPEN was suspected and was never the cause of the wait).
  */
-export async function captureAppScreenshot({ rootId = "root" }: CaptureAppScreenshotOptions = {}): Promise<File | null> {
+export async function captureAppScreenshot({
+  rootId = "root",
+}: CaptureAppScreenshotOptions = {}): Promise<File | null> {
   let domToBlob: (typeof import("modern-screenshot"))["domToBlob"];
   try {
     ({ domToBlob } = await import("modern-screenshot"));

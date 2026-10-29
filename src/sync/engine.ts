@@ -103,7 +103,13 @@ export interface SyncEngine {
   /** Into the copy at once and into the queue, in the scope the caller names (D11). An edit
    *  merges into the row's last `pending` upsert; deleting a row that never reached the
    *  server forgets its queue; stamped with `stampAfter`. */
-  write(scope: string, entity: string, id: string, op: "upsert" | "delete", data?: Record<string, unknown>): Promise<void>;
+  write(
+    scope: string,
+    entity: string,
+    id: string,
+    op: "upsert" | "delete",
+    data?: Record<string, unknown>,
+  ): Promise<void>;
   start(): void;
   /** Stops the poll and the timers, aborts the round in flight and drops its answer (the
    *  queue is laid back). A new engine's round on the same database waits for it. */
@@ -164,9 +170,9 @@ function defaultPlanCode(err: unknown): string | null {
  *  `{detail: {code, detail}}`. */
 function refusalOf(err: unknown): { code?: string; detail?: string } {
   const body = (err as { response?: { data?: unknown } }).response?.data as
-    | { code?: unknown; detail?: unknown }
-    | undefined;
-  const inner = body?.detail && typeof body.detail === "object" ? (body.detail as { code?: unknown; detail?: unknown }) : body;
+    { code?: unknown; detail?: unknown } | undefined;
+  const inner =
+    body?.detail && typeof body.detail === "object" ? (body.detail as { code?: unknown; detail?: unknown }) : body;
   const text = (v: unknown) => (typeof v === "string" && v ? v : undefined);
   return { code: text(inner?.code), detail: text(inner?.detail) };
 }
@@ -200,7 +206,13 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
   const sharedComputer = options.sharedComputer ?? isSharedComputer;
 
   let generation = 0;
-  let state: SyncEngineState = { phase: "idle", online: browserOnline(), counts: ZERO, lastSyncedAt: null, nextRetryAt: null };
+  let state: SyncEngineState = {
+    phase: "idle",
+    online: browserOnline(),
+    counts: ZERO,
+    lastSyncedAt: null,
+    nextRetryAt: null,
+  };
   const listeners = new Set<() => void>();
   let started = false;
   let poll: ReturnType<typeof setInterval> | null = null;
@@ -281,7 +293,8 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
       const rejected = sent.filter((c) => !refusedIds.has(c.id) && rejections.has(c.id));
       await db.outbox.bulkDelete(sent.filter((c) => !refusedIds.has(c.id) && !rejections.has(c.id)).map((c) => c.seq!));
       const hold = refused != null && holdCodes.has(refused.code);
-      if (refused) await mark(kept, { status: hold ? "waiting" : "blocked", code: refused.code, reason: refused.detail });
+      if (refused)
+        await mark(kept, { status: hold ? "waiting" : "blocked", code: refused.code, reason: refused.detail });
       for (const change of rejected) {
         const why = rejections.get(change.id)!;
         await db.outbox.update(change.seq!, { status: "rejected", code: why.code, reason: why.detail });
@@ -313,7 +326,13 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
           continue;
         }
         const row = (await db.rows.get([change.entity, change.id])) as CopyRow | undefined;
-        await db.rows.put({ ...row, entity: change.entity, id: change.id, pk: row?.pk ?? null, data: { ...row?.data, ...change.data } });
+        await db.rows.put({
+          ...row,
+          entity: change.entity,
+          id: change.id,
+          pk: row?.pk ?? null,
+          data: { ...row?.data, ...change.data },
+        });
       }
       if (lastPage) {
         await db.meta.put({ key: lastKnowledgeKey(scope), value: answer.server_knowledge });
@@ -345,7 +364,12 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
 
   type ScopeResult = { offline: true } | { offline: false; waiting: number; blocked: number; rejected: number };
 
-  async function syncScope(scope: string, gen: number, signal: AbortSignal, withBlocked: boolean): Promise<ScopeResult> {
+  async function syncScope(
+    scope: string,
+    gen: number,
+    signal: AbortSignal,
+    withBlocked: boolean,
+  ): Promise<ScopeResult> {
     const sent = await takeQueue(scope, withBlocked);
     const last = Number((await db.meta.get(lastKnowledgeKey(scope)))?.value ?? 0) || 0;
     const body = (changes: SyncWireChange[], page_cursor: SyncRequestBody["page_cursor"]): SyncRequestBody => ({
@@ -369,7 +393,8 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
         await mark(sent, { status: "waiting", code: plan, reason: plan });
         return { offline: false, waiting: sent.length, blocked: 0, rejected: 0 };
       }
-      if (httpStatusOf(err) === 403) return { offline: false, waiting: 0, blocked: 0, rejected: await loseScope(scope, err) };
+      if (httpStatusOf(err) === 403)
+        return { offline: false, waiting: 0, blocked: 0, rejected: await loseScope(scope, err) };
       throw err;
     }
     let cursor = options.paged ? (answer.page_cursor ?? null) : null;
@@ -545,7 +570,9 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
         const row = (await db.rows.get([entity, id])) as CopyRow | undefined;
         const ofRow = await db.outbox.where("[entity+id]").equals([entity, id]).toArray();
         ofRow.sort((a, b) => a.seq! - b.seq!);
-        const updated_at = stampAfter(latest([row?.updated_at, row?.data.updated_at, ...ofRow.map((c) => c.updated_at)]));
+        const updated_at = stampAfter(
+          latest([row?.updated_at, row?.data.updated_at, ...ofRow.map((c) => c.updated_at)]),
+        );
         // A new edit to the row moves a rejected change out of the way (D13).
         const rejected = ofRow.filter((c) => c.scope === scope && c.status === "rejected");
         if (op === "delete") {
@@ -564,7 +591,10 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
         const next: CopyRow = { ...row, entity, id, pk: row?.pk ?? null, data: { ...row?.data, ...data } };
         if (!row) next.local = true;
         await db.rows.put(next);
-        const carried = Object.assign({}, ...rejected.filter((c) => c.op === "upsert").map((c) => c.data)) as Record<string, unknown>;
+        const carried = Object.assign({}, ...rejected.filter((c) => c.op === "upsert").map((c) => c.data)) as Record<
+          string,
+          unknown
+        >;
         await db.outbox.bulkDelete(rejected.map((c) => c.seq!));
         const last = ofRow.filter((c) => c.scope === scope && c.status === "pending").at(-1);
         if (last && last.op === "upsert") {
@@ -628,7 +658,9 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
     },
 
     async discardRejected(scope) {
-      const gone = (await db.outbox.where("status").equals("rejected").toArray()).filter((c) => !scope || c.scope === scope);
+      const gone = (await db.outbox.where("status").equals("rejected").toArray()).filter(
+        (c) => !scope || c.scope === scope,
+      );
       if (gone.length === 0) return;
       await db.transaction("rw", db.rows, db.outbox, db.meta, async () => {
         await db.outbox.bulkDelete(gone.map((c) => c.seq!));

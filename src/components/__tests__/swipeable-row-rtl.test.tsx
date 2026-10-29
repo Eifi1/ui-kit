@@ -43,7 +43,10 @@ function drag(dx: number, release = false) {
 
 /** The reveal panel: the painted layer holding the previewed action's label. */
 const panel = (label: string) =>
-  screen.getAllByText(label).find((el) => el.tagName === "SPAN")!.closest(".absolute")!;
+  screen
+    .getAllByText(label)
+    .find((el) => el.tagName === "SPAN")!
+    .closest(".absolute")!;
 
 describe("SwipeableRow in RTL", () => {
   it("puts the keyboard buttons at the logical end, not the physical right", () => {

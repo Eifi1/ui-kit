@@ -110,8 +110,7 @@ function renderTable(columns: DataTableColumn<Row>[] = FIT, storageKey?: string)
   return { table, scroller };
 }
 
-const heads = (table: HTMLElement) =>
-  [...table.querySelectorAll<HTMLElement>("thead th")].map(key);
+const heads = (table: HTMLElement) => [...table.querySelectorAll<HTMLElement>("thead th")].map(key);
 
 function setWidth(scroller: HTMLElement, width: number) {
   avail = width;
@@ -131,9 +130,7 @@ describe("DataTable fit (0.48, keksdose live #451)", () => {
   it("with a `grow` column the OTHER cells keep one line at Normal (kastlan S2)", () => {
     // A `w-full max-w-0` column squeezes the others to their min-content width, so any
     // text with a space ("CHF 2'568.38", "Peter Mueller") broke in two even at 1920px.
-    const { table } = renderTable(
-      FIT.map((c) => (c.key === "status" ? { ...c, footer: () => "total" } : c)),
-    );
+    const { table } = renderTable(FIT.map((c) => (c.key === "status" ? { ...c, footer: () => "total" } : c)));
     expect(table).toHaveAttribute("data-fit-grow");
     for (const k of ["id", "url", "email", "status", "resolved"]) {
       expect(table.querySelector(`tbody td[data-col="${k}"]`)).toHaveClass(GROW_PEER_CELL_CLASS);
@@ -410,7 +407,15 @@ describe("the kit's feedback columns adopt it (0.48)", () => {
     });
     expect(cols.find((c) => c.key === "title")?.grow).toBe(true);
     // 0.51.4 (Kurvenschmiede): then User, Date and #, the number last.
-    expect(fitHideOrder(cols).map((c) => c.key)).toEqual(["url", "email", "resolved", "category", "user", "date", "id"]);
+    expect(fitHideOrder(cols).map((c) => c.key)).toEqual([
+      "url",
+      "email",
+      "resolved",
+      "category",
+      "user",
+      "date",
+      "id",
+    ]);
   });
 
   it("then Votes and Category, before Subject would drop below 10rem (Kurvenschmiede S1)", () => {

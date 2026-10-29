@@ -111,26 +111,26 @@ function PageHeaders() {
         <Note>
           <code className="font-mono">as</code> is the title&apos;s element and defaults to{" "}
           <code className="font-mono">h1</code> — a page has one, and this is it; the specimen uses{" "}
-          <code className="font-mono">h2</code>/<code className="font-mono">h3</code> because this page already
-          has its <code className="font-mono">h1</code>. <code className="font-mono">title</code> is a ReactNode (a
-          status chip beside the name); <code className="font-mono">eyebrow</code> is the section-label type
-          above it; <code className="font-mono">size=&quot;sm&quot;</code> is the dense tool page&apos;s title.
-          The header has no outer margin — the page&apos;s own rhythm places it. Narrow the window: the
-          three actions drop under the title and wrap instead of running off the screen.
+          <code className="font-mono">h2</code>/<code className="font-mono">h3</code> because this page already has its{" "}
+          <code className="font-mono">h1</code>. <code className="font-mono">title</code> is a ReactNode (a status chip
+          beside the name); <code className="font-mono">eyebrow</code> is the section-label type above it;{" "}
+          <code className="font-mono">size=&quot;sm&quot;</code> is the dense tool page&apos;s title. The header has no
+          outer margin — the page&apos;s own rhythm places it. Narrow the window: the three actions drop under the title
+          and wrap instead of running off the screen.
         </Note>
         <Note>
           The trail ends at &ldquo;Units&rdquo;, a link: inside a header with a title,{" "}
           <code className="font-mono">Breadcrumbs</code> hides its current entry (
-          <code className="font-mono">hideCurrent</code>, default <code className="font-mono">true</code> there), so
-          the title is not said twice, and no trail is drawn when only the home entry would be left — in a
-          header, and wherever <code className="font-mono">hideCurrent</code> hides the current entry, such as a
-          trail the layout draws above the page.{" "}
-          <code className="font-mono">hideCurrent={"{false}"}</code> keeps the current entry as text with{" "}
-          <code className="font-mono">aria-current=&quot;page&quot;</code>. An <code className="font-mono">h1</code>{" "}
-          header also titles the window: <code className="font-mono">documentTitle</code> (default: a string{" "}
-          <code className="font-mono">title</code>) goes through <code className="font-mono">useDocumentTitle</code>{" "}
-          in the provider&apos;s format, <code className="font-mono">&quot;{"{page} · {section} · {app}"}&quot;</code>,
-          a missing part dropping with its separator.
+          <code className="font-mono">hideCurrent</code>, default <code className="font-mono">true</code> there), so the
+          title is not said twice, and no trail is drawn when only the home entry would be left — in a header, and
+          wherever <code className="font-mono">hideCurrent</code> hides the current entry, such as a trail the layout
+          draws above the page. <code className="font-mono">hideCurrent={"{false}"}</code> keeps the current entry as
+          text with <code className="font-mono">aria-current=&quot;page&quot;</code>. An{" "}
+          <code className="font-mono">h1</code> header also titles the window:{" "}
+          <code className="font-mono">documentTitle</code> (default: a string <code className="font-mono">title</code>)
+          goes through <code className="font-mono">useDocumentTitle</code> in the provider&apos;s format,{" "}
+          <code className="font-mono">&quot;{"{page} · {section} · {app}"}&quot;</code>, a missing part dropping with
+          its separator.
         </Note>
       </div>
     </Example>
@@ -186,18 +186,23 @@ function BreadcrumbCollapse() {
       </Row>
       {/* Keyed on the settings, so a changed keepEnd collapses the trail again rather
           than staying expanded from the last press of "…". */}
-      <Breadcrumbs key={`${collapse}-${keepEnd}`} items={TRAIL} renderLink={routerCrumb} collapse={collapse} keepEnd={Number(keepEnd)} />
+      <Breadcrumbs
+        key={`${collapse}-${keepEnd}`}
+        items={TRAIL}
+        renderLink={routerCrumb}
+        collapse={collapse}
+        keepEnd={Number(keepEnd)}
+      />
       <div className="mt-3">
         <Note>
           On a phone the middle of the trail folds into a &ldquo;…&rdquo; button (
           <code className="font-mono">breadcrumbs.showAll</code>), keeping the first crumb and the last{" "}
-          <code className="font-mono">keepEnd</code> — the current page and its parent by default, because
-          &ldquo;up one level&rdquo; is what a phone user reaches for. Pressing it reveals the rest and puts
-          focus on the first crumb it revealed. The collapse is CSS (<code className="font-mono">hidden md:flex</code>),
-          so it costs no media-query listener. <code className="font-mono">collapse={"{false}"}</code> lets the
-          trail wrap instead. &ldquo;Buildings&rdquo; has no <code className="font-mono">href</code>, so it is text;
-          the last crumb is the page (<code className="font-mono">aria-current=&quot;page&quot;</code>) whether or
-          not it has one.
+          <code className="font-mono">keepEnd</code> — the current page and its parent by default, because &ldquo;up one
+          level&rdquo; is what a phone user reaches for. Pressing it reveals the rest and puts focus on the first crumb
+          it revealed. The collapse is CSS (<code className="font-mono">hidden md:flex</code>), so it costs no
+          media-query listener. <code className="font-mono">collapse={"{false}"}</code> lets the trail wrap instead.
+          &ldquo;Buildings&rdquo; has no <code className="font-mono">href</code>, so it is text; the last crumb is the
+          page (<code className="font-mono">aria-current=&quot;page&quot;</code>) whether or not it has one.
         </Note>
       </div>
     </Example>
@@ -223,19 +228,29 @@ function BreadcrumbVariants() {
           />
         </div>
         <div>
-          <p className={`mb-1 ${READOUT}`}>labels={"{{ label: \"Account path\" }}"} · renderLink</p>
+          <p className={`mb-1 ${READOUT}`}>labels={'{{ label: "Account path" }}'} · renderLink</p>
           <Breadcrumbs
             labels={{ label: "Account path" }}
             renderLink={routerCrumb}
             items={[
               { label: "Settings", href: "/settings" },
-              { label: <span className="inline-flex items-center gap-1">Security <StatusDot tone="warning" /></span>, key: "security", href: "/settings" },
+              {
+                label: (
+                  <span className="inline-flex items-center gap-1">
+                    Security <StatusDot tone="warning" />
+                  </span>
+                ),
+                key: "security",
+                href: "/settings",
+              },
               { label: "Passkeys" },
             ]}
           />
         </div>
         <div dir="rtl">
-          <p className={`mb-1 ${READOUT}`} dir="ltr">dir=&quot;rtl&quot;</p>
+          <p className={`mb-1 ${READOUT}`} dir="ltr">
+            dir=&quot;rtl&quot;
+          </p>
           <Breadcrumbs
             renderLink={routerCrumb}
             items={[
@@ -250,12 +265,12 @@ function BreadcrumbVariants() {
       </div>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">separator</code> is drawn as given — a slash needs no mirroring — while
-          the default chevron flips in a right-to-left trail, so it still points from where you came.{" "}
+          <code className="font-mono">separator</code> is drawn as given — a slash needs no mirroring — while the
+          default chevron flips in a right-to-left trail, so it still points from where you came.{" "}
           <code className="font-mono">labels.label</code> names the landmark (default{" "}
-          <code className="font-mono">breadcrumbs.label</code>, &ldquo;Breadcrumb&rdquo;). A crumb whose label is
-          not a string takes a <code className="font-mono">key</code>. Long labels truncate at 14rem (16rem for
-          the current page).
+          <code className="font-mono">breadcrumbs.label</code>, &ldquo;Breadcrumb&rdquo;). A crumb whose label is not a
+          string takes a <code className="font-mono">key</code>. Long labels truncate at 14rem (16rem for the current
+          page).
         </Note>
       </div>
     </Example>
@@ -314,11 +329,11 @@ function TextPrimitives() {
       <div className="mt-3">
         <Note>
           <code className="font-mono">SectionLabel</code>&apos;s <code className="font-mono">as</code> is the heading
-          LEVEL, so it is the caller&apos;s to pick — the kit cannot know where in the outline the label sits.
-          The uppercase is CSS: write the text in normal case and a screen reader reads it as written.{" "}
+          LEVEL, so it is the caller&apos;s to pick — the kit cannot know where in the outline the label sits. The
+          uppercase is CSS: write the text in normal case and a screen reader reads it as written.{" "}
           <code className="font-mono">Caption</code> is prose ABOUT the thing above it — not{" "}
-          <code className="font-mono">FieldHint</code>, which hides behind a label&apos;s ? so a paragraph does
-          not make one field taller than its neighbours. Both are token-coloured, so they follow the palette.
+          <code className="font-mono">FieldHint</code>, which hides behind a label&apos;s ? so a paragraph does not make
+          one field taller than its neighbours. Both are token-coloured, so they follow the palette.
         </Note>
       </div>
     </Example>
@@ -370,7 +385,12 @@ function StatusDots() {
         </div>
         <Row>
           <span className="relative inline-flex">
-            <UserAvatar name="Ada Lovelace" aria-hidden={false} role="img" aria-label={`Ada Lovelace, ${unread} unread`} />
+            <UserAvatar
+              name="Ada Lovelace"
+              aria-hidden={false}
+              role="img"
+              aria-label={`Ada Lovelace, ${unread} unread`}
+            />
             {unread > 0 && <StatusDot tone="danger" size="md" ring className="absolute -end-0.5 -top-0.5" />}
           </span>
           <span className="relative inline-flex">
@@ -398,14 +418,13 @@ function StatusDots() {
       </div>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">ring</code> draws the surface colour round the dot, so one laid over
-          the corner of an avatar or an icon reads as a separate mark (the first two) and not a smudge (the
-          third, without). Position it with <code className="font-mono">className</code>. Without a{" "}
-          <code className="font-mono">label</code> the dot is hidden from assistive technology — say the
-          state where it IS read (the avatar&apos;s &ldquo;3 unread&rdquo;) or give the dot an{" "}
-          <code className="font-mono">aria-label</code>, which makes it an image with that name. With a label
-          the text is what is read and the dot is decoration; <code className="font-mono">dotClassName</code>{" "}
-          styles the dot alone.
+          <code className="font-mono">ring</code> draws the surface colour round the dot, so one laid over the corner of
+          an avatar or an icon reads as a separate mark (the first two) and not a smudge (the third, without). Position
+          it with <code className="font-mono">className</code>. Without a <code className="font-mono">label</code> the
+          dot is hidden from assistive technology — say the state where it IS read (the avatar&apos;s &ldquo;3
+          unread&rdquo;) or give the dot an <code className="font-mono">aria-label</code>, which makes it an image with
+          that name. With a label the text is what is read and the dot is decoration;{" "}
+          <code className="font-mono">dotClassName</code> styles the dot alone.
         </Note>
       </div>
     </Example>
@@ -434,7 +453,10 @@ export function SectionLabelMdDemo() {
     ["Available", "€ 528"],
   ];
   return (
-    <Example label="SectionLabel — size md" hint="11px, the rung between xs (10px) and sm (12px): the label over a figure">
+    <Example
+      label="SectionLabel — size md"
+      hint="11px, the rung between xs (10px) and sm (12px): the label over a figure"
+    >
       <div className="grid grid-cols-3 gap-4">
         {figures.map(([label, value]) => (
           <div key={label}>
@@ -447,8 +469,8 @@ export function SectionLabelMdDemo() {
       </div>
       <div className="mt-3">
         <Note>
-          10px reads as a footnote under a figure this size and 12px competes with it. It is named{" "}
-          {code("md")} rather than slotted into order because {code("sm")} was already the default.
+          10px reads as a footnote under a figure this size and 12px competes with it. It is named {code("md")} rather
+          than slotted into order because {code("sm")} was already the default.
         </Note>
       </div>
     </Example>
@@ -481,9 +503,9 @@ export function StatusDotHuesDemo() {
       </div>
       <div className="mt-3">
         <Note>
-          A dot in a legend and the Chip in the table it explains are the same colour, because both paint with
-          the {code("--hue-*")} tokens. Use a hue for values that only need telling apart, and a semantic tone
-          for values that mean something (overdue is {code("danger")}).
+          A dot in a legend and the Chip in the table it explains are the same colour, because both paint with the{" "}
+          {code("--hue-*")} tokens. Use a hue for values that only need telling apart, and a semantic tone for values
+          that mean something (overdue is {code("danger")}).
         </Note>
       </div>
     </Example>

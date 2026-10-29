@@ -13,7 +13,24 @@ describe("COUNTRY_CODES", () => {
   });
 
   it("holds both apps' countries and leaves user-assigned codes to the app", () => {
-    for (const code of ["CH", "LI", "DE", "AT", "FR", "IT", "ES", "NL", "BE", "PT", "PL", "SE", "DK", "FI", "GB", "IE"]) {
+    for (const code of [
+      "CH",
+      "LI",
+      "DE",
+      "AT",
+      "FR",
+      "IT",
+      "ES",
+      "NL",
+      "BE",
+      "PT",
+      "PL",
+      "SE",
+      "DK",
+      "FI",
+      "GB",
+      "IE",
+    ]) {
       expect(COUNTRY_CODES).toContain(code);
     }
     expect(COUNTRY_CODES).not.toContain("XK");

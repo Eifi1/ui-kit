@@ -79,14 +79,14 @@ function ModalOpen() {
       )}
       <div className="mt-3">
         <Note>
-          Press <strong>Save</strong> in each: the first dialog is told <code className="font-mono">open={"{false}"}</code>{" "}
-          when the save succeeds and lowers itself with the same exit Escape and the backdrop use; the second is
-          unmounted by its gate and simply vanishes. With <code className="font-mono">open</code> the focus trap, the
-          scroll lock and the Back entry are released the moment it turns false — focus is back on the trigger
-          while the panel is still on its way out — and the body is unmounted once the exit ends, so the field
-          starts fresh on the next open. A dismissal animates first and then calls{" "}
-          <code className="font-mono">onClose</code>; the <code className="font-mono">false</code> that comes back is
-          not animated twice.
+          Press <strong>Save</strong> in each: the first dialog is told{" "}
+          <code className="font-mono">open={"{false}"}</code> when the save succeeds and lowers itself with the same
+          exit Escape and the backdrop use; the second is unmounted by its gate and simply vanishes. With{" "}
+          <code className="font-mono">open</code> the focus trap, the scroll lock and the Back entry are released the
+          moment it turns false — focus is back on the trigger while the panel is still on its way out — and the body is
+          unmounted once the exit ends, so the field starts fresh on the next open. A dismissal animates first and then
+          calls <code className="font-mono">onClose</code>; the <code className="font-mono">false</code> that comes back
+          is not animated twice.
         </Note>
       </div>
     </Example>

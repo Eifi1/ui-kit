@@ -161,11 +161,7 @@ export const DEFAULT_MAX_ATTACHMENTS = 5;
  * A plain array (not frozen) because `accept` takes `string[]`, as
  * `DEFAULT_ATTACHMENT_ACCEPT` does — copy it before changing it.
  */
-export const FEEDBACK_ATTACHMENT_ACCEPT: string[] = [
-  ...DEFAULT_ATTACHMENT_ACCEPT,
-  "application/pdf",
-  "text/plain",
-];
+export const FEEDBACK_ATTACHMENT_ACCEPT: string[] = [...DEFAULT_ATTACHMENT_ACCEPT, "application/pdf", "text/plain"];
 
 /**
  * The categories a person can pick — every one but `CRASH`, in triage order (Bug, Idea,
@@ -305,12 +301,7 @@ export function feedbackAttachmentLine(url: string): string {
  * something foreign — and written anyway it would sit in the body as prose that no
  * reader recognises as a file.
  */
-export function appendRework(
-  body: string,
-  note: string,
-  url?: string | null,
-  now: Date = new Date(),
-): string | null {
+export function appendRework(body: string, note: string, url?: string | null, now: Date = new Date()): string | null {
   const text = note.trim();
   if (!text) return null;
   if (url && !ATTACHMENT_URL.test(url)) {
@@ -339,9 +330,10 @@ export function reworkCount(body: string): number {
  * before server-kit 0.13, whose reworks are still `--- REWORK … ---` blocks). What the
  * Rework chip counts.
  */
-export function feedbackReworkCount(
-  row: { body?: string | null; replies?: readonly Pick<FeedbackReply, "kind">[] | null },
-): number {
+export function feedbackReworkCount(row: {
+  body?: string | null;
+  replies?: readonly Pick<FeedbackReply, "kind">[] | null;
+}): number {
   if (row.replies) {
     const entries = row.replies.filter((reply) => reply.kind === "rework").length;
     // A row migrated by an app that answers `replies` but not yet `kind` keeps its body's

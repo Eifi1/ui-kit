@@ -114,36 +114,17 @@ const CASES: Array<[name: string, mount: () => void]> = [
   [
     "MiniCalendar",
     () =>
-      void render(
-        <MiniCalendar
-          from=""
-          to=""
-          locale="en-GB"
-          onSelect={noop}
-          data-tour={ANCHOR}
-          aria-label={NAME}
-        />,
-      ),
+      void render(<MiniCalendar from="" to="" locale="en-GB" onSelect={noop} data-tour={ANCHOR} aria-label={NAME} />),
   ],
   [
     "DatePicker",
-    () =>
-      void render(
-        <DatePicker value="" onChange={noop} locale="en-GB" data-tour={ANCHOR} aria-label={NAME} />,
-      ),
+    () => void render(<DatePicker value="" onChange={noop} locale="en-GB" data-tour={ANCHOR} aria-label={NAME} />),
   ],
   [
     "DateRangePicker",
     () =>
       void render(
-        <DateRangePicker
-          from=""
-          to=""
-          onChange={noop}
-          locale="en-GB"
-          data-tour={ANCHOR}
-          aria-label={NAME}
-        />,
+        <DateRangePicker from="" to="" onChange={noop} locale="en-GB" data-tour={ANCHOR} aria-label={NAME} />,
       ),
   ],
   [
@@ -305,8 +286,14 @@ describe("HoverMenu's accessible name", () => {
   });
 
   it("takes no other spelling: the deprecated ariaLabel went in 0.34", () => {
-    // @ts-expect-error — `ariaLabel` is gone: pass `aria-label`.
-    void (<HoverMenu ariaLabel="Tours" trigger={() => null}>{() => null}</HoverMenu>);
+    void (
+      (
+        // @ts-expect-error — `ariaLabel` is gone: pass `aria-label`.
+        <HoverMenu ariaLabel="Tours" trigger={() => null}>
+          {() => null}
+        </HoverMenu>
+      )
+    );
   });
 });
 

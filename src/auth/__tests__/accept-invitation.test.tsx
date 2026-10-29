@@ -62,15 +62,11 @@ describe("AcceptInvitation", () => {
     const { container } = render(<AcceptInvitation token="inv" signedIn onAccept={async () => {}} />);
     expect(await screen.findByText("Invitation accepted.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Continue" })).toHaveAttribute("href", "/");
-    await waitFor(() =>
-      expect(container.querySelector(".sr-only-fixed")).toHaveTextContent("Invitation accepted."),
-    );
+    await waitFor(() => expect(container.querySelector(".sr-only-fixed")).toHaveTextContent("Invitation accepted."));
   });
 
   it("says an invitation is not valid — invitation_invalid, or anything unknown", async () => {
-    const { unmount } = render(
-      <AcceptInvitation token="inv" signedIn onAccept={refused("invitation_invalid")} />,
-    );
+    const { unmount } = render(<AcceptInvitation token="inv" signedIn onAccept={refused("invitation_invalid")} />);
     expect(await screen.findByText("Could not join with this link")).toBeInTheDocument();
     expect(screen.getByText("Ask the person who invited you to send a new invitation.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Continue" })).toBeInTheDocument();

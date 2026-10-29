@@ -122,7 +122,9 @@ describe("SubscriptionActions — the portal in a new tab (§17.3)", () => {
     expect(manage.querySelector("[data-external]")).not.toBeNull();
     expect(screen.getByRole("link", { name: /^Cancel subscription/ })).toHaveAttribute("target", "_blank");
     expect(document.querySelector("[data-portal-note]")).toHaveTextContent(L.portalOpensNewTab("Paddle"));
-    expect(L.portalOpensNewTab("Paddle")).toBe("Payment and invoices open at Paddle in a new tab; this page stays open.");
+    expect(L.portalOpensNewTab("Paddle")).toBe(
+      "Payment and invoices open at Paddle in a new tab; this page stays open.",
+    );
   });
 
   it("leaves the in-app cancel and Keep subscription unmarked", () => {
@@ -145,7 +147,14 @@ describe("SubscriptionActions — the portal in a new tab (§17.3)", () => {
   });
 
   it("says it in every language, Swiss German with ss", () => {
-    const catalogues = [UI_KIT_LABELS_DE_CH, UI_KIT_LABELS_ES, UI_KIT_LABELS_FR, UI_KIT_LABELS_HU, UI_KIT_LABELS_IT, UI_KIT_LABELS_ZH];
+    const catalogues = [
+      UI_KIT_LABELS_DE_CH,
+      UI_KIT_LABELS_ES,
+      UI_KIT_LABELS_FR,
+      UI_KIT_LABELS_HU,
+      UI_KIT_LABELS_IT,
+      UI_KIT_LABELS_ZH,
+    ];
     for (const c of catalogues) {
       const words = c.billing.portalOpensNewTab("Paddle", "Kastlan");
       expect(words).toContain("Paddle");
@@ -258,7 +267,13 @@ describe("useCancelRequest and cancelRequested (kastlan 18bf4c0)", () => {
     expect(screen.queryByRole("button", { name: L.cancel })).toBeNull();
     expect(screen.queryByRole("button", { name: L.keepSubscription })).toBeNull();
     rerender(
-      <SubscriptionActions onManage={vi.fn()} onCancelInApp={vi.fn()} onResume={vi.fn()} cancelAtPeriodEnd cancelRequested="resume" />,
+      <SubscriptionActions
+        onManage={vi.fn()}
+        onCancelInApp={vi.fn()}
+        onResume={vi.fn()}
+        cancelAtPeriodEnd
+        cancelRequested="resume"
+      />,
     );
     expect(screen.getByRole("button", { name: L.cancel })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: L.keepSubscription })).toBeNull();

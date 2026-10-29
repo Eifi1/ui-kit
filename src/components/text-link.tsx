@@ -177,8 +177,10 @@ export interface TextLinkRenderProps {
   [key: `data-${string}`]: unknown;
 }
 
-export interface TextLinkProps
-  extends Omit<ComponentPropsWithoutRef<"a">, "href" | "children" | "aria-current" | "onClick" | "onKeyDown"> {
+export interface TextLinkProps extends Omit<
+  ComponentPropsWithoutRef<"a">,
+  "href" | "children" | "aria-current" | "onClick" | "onKeyDown"
+> {
   href: string;
   children: ReactNode;
   /** Default `brand`. */
@@ -285,8 +287,7 @@ export function TextLink({
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
   const kitLink = useKitLink();
   const underline = underlineProp ?? (UNDERLINED_BY_DEFAULT.has(tone) ? "always" : "hover");
-  const ariaCurrent: TextLinkCurrent | undefined =
-    current === true ? "page" : current === false ? undefined : current;
+  const ariaCurrent: TextLinkCurrent | undefined = current === true ? "page" : current === false ? undefined : current;
 
   const look = cn(
     "rounded-sm underline-offset-2 transition-colors",
@@ -303,8 +304,7 @@ export function TextLink({
       {children}
       {external && (
         <>
-          <ExternalLink aria-hidden className="ms-1 inline size-[0.85em] align-[-0.1em] rtl:-scale-x-100" />
-          {" "}
+          <ExternalLink aria-hidden className="ms-1 inline size-[0.85em] align-[-0.1em] rtl:-scale-x-100" />{" "}
           <span className="sr-only">({common.opensInNewTab})</span>
         </>
       )}

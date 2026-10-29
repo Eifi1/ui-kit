@@ -260,7 +260,10 @@ describe("TreeView state", () => {
     render(
       <TreeView
         aria-label="Accounts"
-        items={[{ id: "a", label: "Archived", disabled: true }, { id: "b", label: "Bank" }]}
+        items={[
+          { id: "a", label: "Archived", disabled: true },
+          { id: "b", label: "Bank" },
+        ]}
         onSelectedChange={onSelectedChange}
       />,
     );

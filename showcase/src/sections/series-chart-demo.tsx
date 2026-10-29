@@ -25,12 +25,7 @@ import {
   toggleHidden,
   visibleSeries,
 } from "@eifi1/ui-kit";
-import type {
-  LegendEntry,
-  SeriesChartAxis,
-  SeriesChartSeries,
-  SeriesChartTooltipPlacement,
-} from "@eifi1/ui-kit";
+import type { LegendEntry, SeriesChartAxis, SeriesChartSeries, SeriesChartTooltipPlacement } from "@eifi1/ui-kit";
 import { Example, Note, OutTable } from "../lib/section";
 // 0.32: from the source until the barrel names it (the coordinator wires src/index.ts).
 import { useTextSize } from "../../../src/theme/text-size";
@@ -84,7 +79,14 @@ const CURVE_AXES: SeriesChartAxis[] = [
   { id: "vel", title: "Velocity (mm/s)", color: paletteFor(2), format: (v) => WHOLE.format(v), width: 36 },
   { id: "pos", title: "Position (mm)", color: paletteFor(0), format: (v) => WHOLE.format(v), width: 36 },
   { id: "acc", title: "Accel. (mm/s²)", color: paletteFor(4), format: (v) => WHOLE.format(v), width: 36 },
-  { id: "load", title: "Load (N)", orientation: "right", color: paletteFor(6), format: (v) => WHOLE.format(v), width: 44 },
+  {
+    id: "load",
+    title: "Load (N)",
+    orientation: "right",
+    color: paletteFor(6),
+    format: (v) => WHOLE.format(v),
+    width: 44,
+  },
 ];
 
 type BudgetMode = "off" | "auto" | "one";
@@ -167,7 +169,14 @@ export function SeriesChartDemo() {
   const axes: SeriesChartAxis[] = [
     { id: "mm", title: "Position (mm)", color: paletteFor(0), format: (v) => WHOLE.format(v) },
     { id: "vel", title: "Velocity (mm/s)", hide: true },
-    { id: "n", title: "Load (N)", orientation: "right", width: 56, color: paletteFor(6), format: (v) => WHOLE.format(v) },
+    {
+      id: "n",
+      title: "Load (N)",
+      orientation: "right",
+      width: 56,
+      color: paletteFor(6),
+      format: (v) => WHOLE.format(v),
+    },
     { id: "seg", title: "Segment", hide: true },
   ];
   const legend: LegendEntry[] = channels.map((c) => ({
@@ -191,11 +200,12 @@ export function SeriesChartDemo() {
   return (
     <>
       <Note>
-        <strong>Needs <code className="font-mono">recharts</code></strong>, like everything behind{" "}
-        <code className="font-mono">@eifi1/ui-kit/chart</code>. Drag across a plot to zoom: a roughly
-        square selection zooms both axes, a long thin one only its own (the other refits to what is
-        inside). Double-click or press <em>Reset zoom</em> to go back — the button is a real button,
-        so Tab reaches it.
+        <strong>
+          Needs <code className="font-mono">recharts</code>
+        </strong>
+        , like everything behind <code className="font-mono">@eifi1/ui-kit/chart</code>. Drag across a plot to zoom: a
+        roughly square selection zooms both axes, a long thin one only its own (the other refits to what is inside).
+        Double-click or press <em>Reset zoom</em> to go back — the button is a real button, so Tab reaches it.
       </Note>
 
       <Example
@@ -211,20 +221,15 @@ export function SeriesChartDemo() {
           animationMs={180}
           empty={<p className="text-xs text-muted">Every channel is switched off.</p>}
         />
-        <ToggleLegend
-          entries={legend}
-          hidden={hidden}
-          onToggle={(key) => setHidden(toggleHidden(hidden, key))}
-        />
+        <ToggleLegend entries={legend} hidden={hidden} onToggle={(key) => setHidden(toggleHidden(hidden, key))} />
         <div className="mt-3">
           <Note>
-            The ticks are round numbers — every multiple of a 1, 2 or 5 × 10<sup>n</sup> step that
-            falls inside the fitted domain — not the equal fractions of it recharts would print
-            (−11, 189, 389 …). The domain keeps its air, so the frame edge simply has no number of its
-            own; drag to zoom and the ticks stay round, just finer. Switch every channel off while
-            zoomed and <em>Reset zoom</em> goes away with the plot (the zoom is kept for when a line
-            comes back). A switched-off stroke in the legend dims with its button, once — it no
-            longer fades twice to near-invisible.
+            The ticks are round numbers — every multiple of a 1, 2 or 5 × 10<sup>n</sup> step that falls inside the
+            fitted domain — not the equal fractions of it recharts would print (−11, 189, 389 …). The domain keeps its
+            air, so the frame edge simply has no number of its own; drag to zoom and the ticks stay round, just finer.
+            Switch every channel off while zoomed and <em>Reset zoom</em> goes away with the plot (the zoom is kept for
+            when a line comes back). A switched-off stroke in the legend dims with its button, once — it no longer fades
+            twice to near-invisible.
           </Note>
         </div>
       </Example>
@@ -265,14 +270,13 @@ export function SeriesChartDemo() {
         </p>
         <div className="mt-3">
           <Note>
-            <em>every axis</em> is <code className="font-mono">axisBudget="off"</code>, every axis
-            drawn: on a phone the four bands leave the curves a sliver. <em>auto</em> is the default —
-            it changes nothing on a desktop and draws one axis a side once the plot would drop under
-            160 px. <em>one a side</em> is{" "}
-            <code className="font-mono">maxVisibleAxes=&#123;&#123; left: 1, right: 1 &#125;&#125;</code>{" "}
-            at every width. An axis over budget still scales its line (drag to zoom: it refits), and its
-            unit — <code className="font-mono">unit</code>, or the bracket at the end of its title —
-            moves to the legend entry and the tooltip.
+            <em>every axis</em> is <code className="font-mono">axisBudget="off"</code>, every axis drawn: on a phone the
+            four bands leave the curves a sliver. <em>auto</em> is the default — it changes nothing on a desktop and
+            draws one axis a side once the plot would drop under 160 px. <em>one a side</em> is{" "}
+            <code className="font-mono">maxVisibleAxes=&#123;&#123; left: 1, right: 1 &#125;&#125;</code> at every
+            width. An axis over budget still scales its line (drag to zoom: it refits), and its unit —{" "}
+            <code className="font-mono">unit</code>, or the bracket at the end of its title — moves to the legend entry
+            and the tooltip.
           </Note>
         </div>
       </Example>
@@ -304,13 +308,16 @@ export function SeriesChartDemo() {
         />
         <div className="mt-3">
           <Note>
-            <code className="font-mono">tooltip=&#123;&#123; placement &#125;&#125;</code>, or once for the
-            whole app with <code className="font-mono [overflow-wrap:anywhere]">&lt;UiKitProvider chartTooltipPlacement="auto"&gt;</code>{" "}
-            (a chart's own prop wins; the default stays <em>cursor</em>). <em>auto</em> is the readout
-            above the plot below 640 px and the floating box from there up. The row is there before the
-            first tap — idle it lists the series with a dash — so the plot never jumps; hover, a tap,
-            a drag along the line and the arrow keys all fill it, while the cursor line and the active
-            dots stay on the plot. Series whose axis the budget hid say their unit there, as in the box.
+            <code className="font-mono">tooltip=&#123;&#123; placement &#125;&#125;</code>, or once for the whole app
+            with{" "}
+            <code className="font-mono [overflow-wrap:anywhere]">
+              &lt;UiKitProvider chartTooltipPlacement="auto"&gt;
+            </code>{" "}
+            (a chart's own prop wins; the default stays <em>cursor</em>). <em>auto</em> is the readout above the plot
+            below 640 px and the floating box from there up. The row is there before the first tap — idle it lists the
+            series with a dash — so the plot never jumps; hover, a tap, a drag along the line and the arrow keys all
+            fill it, while the cursor line and the active dots stay on the plot. Series whose axis the budget hid say
+            their unit there, as in the box.
           </Note>
         </div>
       </Example>
@@ -426,7 +433,10 @@ export function SeriesChartDemo() {
         </SharedXZoom>
       </Example>
 
-      <Example label="SeriesChart — nothing to draw" hint="the empty state keeps the chart's height, so nothing under it moves">
+      <Example
+        label="SeriesChart — nothing to draw"
+        hint="the empty state keeps the chart's height, so nothing under it moves"
+      >
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <p className="mb-1 font-mono text-caption text-muted">empty omitted: the label</p>
@@ -471,13 +481,12 @@ export function SeriesChartDemo() {
         />
         <div className="mt-3">
           <Note>
-            A missing key is a hole: without <code className="font-mono">connectNulls</code> the line
-            stops and restarts, which is the honest picture of a logger that dropped out. The two
-            spans are drawn on the named axis <code className="font-mono">n</code> in their own{" "}
-            <code className="font-mono">color</code> (default: <code className="font-mono">--text-muted</code>).{" "}
-            <code className="font-mono">StaticSeriesChart</code> is for a thumbnail, a print view, or
-            a chart wrapped in the consumer&apos;s own interaction; <code className="font-mono">className</code>{" "}
-            reaches its <code className="font-mono">ChartContainer</code>.
+            A missing key is a hole: without <code className="font-mono">connectNulls</code> the line stops and
+            restarts, which is the honest picture of a logger that dropped out. The two spans are drawn on the named
+            axis <code className="font-mono">n</code> in their own <code className="font-mono">color</code> (default:{" "}
+            <code className="font-mono">--text-muted</code>). <code className="font-mono">StaticSeriesChart</code> is
+            for a thumbnail, a print view, or a chart wrapped in the consumer&apos;s own interaction;{" "}
+            <code className="font-mono">className</code> reaches its <code className="font-mono">ChartContainer</code>.
           </Note>
         </div>
       </Example>
@@ -489,11 +498,7 @@ export function SeriesChartDemo() {
         <div dir="rtl" lang="ar">
           <SeriesChart
             rows={TEMPERATURE}
-            series={
-              hiddenTemp.has("temp")
-                ? []
-                : [{ key: "temp", label: "درجة الحرارة", color: paletteFor(3) }]
-            }
+            series={hiddenTemp.has("temp") ? [] : [{ key: "temp", label: "درجة الحرارة", color: paletteFor(3) }]}
             axes={oneAxis(undefined, "درجة الحرارة (°م)")}
             x={{ key: "t", title: "الزمن (ث)" }}
             locale="ar-EG"
@@ -510,16 +515,15 @@ export function SeriesChartDemo() {
         </div>
         <div className="mt-3">
           <Note>
-            <code className="font-mono">labels</code> overrides the{" "}
-            <code className="font-mono">seriesChart</code> namespace per chart:{" "}
-            <code className="font-mono">resetZoom</code> is the button,{" "}
+            <code className="font-mono">labels</code> overrides the <code className="font-mono">seriesChart</code>{" "}
+            namespace per chart: <code className="font-mono">resetZoom</code> is the button,{" "}
             <code className="font-mono">zoomHint</code> the drag surface&apos;s accessible name,{" "}
             <code className="font-mono">empty</code> what shows when you switch the one series off, and{" "}
-            <code className="font-mono">legend</code> the legend group&apos;s accessible name. The plot
-            itself stays left-to-right — an abscissa is a number line, not text. The rows are keyed{" "}
+            <code className="font-mono">legend</code> the legend group&apos;s accessible name. The plot itself stays
+            left-to-right — an abscissa is a number line, not text. The rows are keyed{" "}
             <code className="font-mono">t</code> (<code className="font-mono">x.key</code>), and{" "}
-            <code className="font-mono">showSingle</code> keeps a one-entry legend, because it is the
-            only switch that brings the series back.
+            <code className="font-mono">showSingle</code> keeps a one-entry legend, because it is the only switch that
+            brings the series back.
           </Note>
         </div>
       </Example>

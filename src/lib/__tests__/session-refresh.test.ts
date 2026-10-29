@@ -50,7 +50,7 @@ const noAnswer = () => Object.assign(new Error("Network Error"), { isAxiosError:
  * status for each request as it went out.
  */
 function fakeAxios(server: (config: Cfg) => number | Promise<number>) {
-  const manager = <V,>() => {
+  const manager = <V>() => {
     const handlers: Array<{ ok: (v: V) => V | Promise<V>; err: (e: unknown) => unknown } | null> = [];
     return {
       handlers,
@@ -111,7 +111,9 @@ function setup(
     demo: overrides.demo ?? false,
   };
   const valid = new Set(overrides.valid ?? ["t2"]);
-  const refresh = vi.fn(overrides.refresh ?? (async (): Promise<Renewal | null> => ({ token: "t2", refreshToken: "r2" })));
+  const refresh = vi.fn(
+    overrides.refresh ?? (async (): Promise<Renewal | null> => ({ token: "t2", refreshToken: "r2" })),
+  );
   const store = vi.fn(
     overrides.store ??
       ((renewal: Renewal) => {
@@ -155,7 +157,7 @@ function deferred<T>() {
 }
 
 /** Settle a request either way, for assertions on what it rejected with. */
-const settle = <T,>(p: Promise<T>) =>
+const settle = <T>(p: Promise<T>) =>
   p.then(
     (value) => ({ ok: true as const, value }),
     (error: unknown) => ({ ok: false as const, error: error as HttpError }),
@@ -303,7 +305,9 @@ describe("transient: the session stays", () => {
     const r = await settle(api.get("/a"));
     if (r.ok) throw new Error("resolved");
     expect(r.error).toBeInstanceOf(Error);
-    expect((r.error as unknown as Record<symbol, unknown>)[Symbol.for("@eifi1/ui-kit:session-refresh.transient")]).toBe(true);
+    expect((r.error as unknown as Record<symbol, unknown>)[Symbol.for("@eifi1/ui-kit:session-refresh.transient")]).toBe(
+      true,
+    );
     expect(JSON.stringify({ ...r.error, config: undefined })).not.toContain("transient");
     expect(Object.keys(r.error)).not.toContain("transient");
   });
@@ -707,7 +711,10 @@ describe("session.refresh()", () => {
 
   it("resolves renewed after store()", async () => {
     const { session, store, app } = setup();
-    await expect(session.refresh()).resolves.toEqual({ result: "renewed", renewal: { token: "t2", refreshToken: "r2" } });
+    await expect(session.refresh()).resolves.toEqual({
+      result: "renewed",
+      renewal: { token: "t2", refreshToken: "r2" },
+    });
     expect(store).toHaveBeenCalledTimes(1);
     expect(app.token).toBe("t2");
   });
@@ -767,7 +774,13 @@ describe("attachSessionRefresh", () => {
     const api = fakeAxios(() => 403);
     attachSessionRefresh(
       api,
-      createSessionRefresh({ refresh, store: vi.fn(), currentToken: () => "t1", isDemo: () => false, onEnded: vi.fn() }),
+      createSessionRefresh({
+        refresh,
+        store: vi.fn(),
+        currentToken: () => "t1",
+        isDemo: () => false,
+        onEnded: vi.fn(),
+      }),
     );
     const r = await settle(api.get("/a"));
     expect(r.ok ? 0 : r.error.response.status).toBe(403);
@@ -807,9 +820,12 @@ describe("attachSessionRefresh", () => {
   });
 
   it("refuses a session it did not make", () => {
-    expect(() => attachSessionRefresh(fakeAxios(() => 200), { refresh: async () => ({ result: "transient" as const }) })).toThrow(
-      TypeError,
-    );
+    expect(() =>
+      attachSessionRefresh(
+        fakeAxios(() => 200),
+        { refresh: async () => ({ result: "transient" as const }) },
+      ),
+    ).toThrow(TypeError);
   });
 
   it("sits after attachServerWake: the replay is counted afresh and the count returns to zero", async () => {

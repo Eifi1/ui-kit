@@ -3,19 +3,8 @@ import { X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { FieldChevron, FIELD_TRIGGER, FIELD_FLOATING_PAD, FIELD_INVALID } from "./field-base";
 import { FieldLabel } from "./field-parts";
-import {
-  ComboboxPanel,
-  endHintRowProps,
-  offersCreate,
-  useComboboxCore,
-  type ComboOption,
-} from "./combobox-core";
-import {
-  DEFAULT_COMBOBOX_LABELS,
-  DEFAULT_COMMON_LABELS,
-  useKitLabels,
-  useKitLocale,
-} from "../i18n/kit-labels";
+import { ComboboxPanel, endHintRowProps, offersCreate, useComboboxCore, type ComboOption } from "./combobox-core";
+import { DEFAULT_COMBOBOX_LABELS, DEFAULT_COMMON_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import {
   assignRef,
   EndHintRow,
@@ -35,8 +24,7 @@ import { useCommitReason, type CommitScope } from "./write-lock";
 /** `onChange` is the kit's — "a selection was made", carrying values — rather
  *  than the div's form event, so the DOM's spelling of it is omitted. */
 export interface MultiEntityComboboxProps<V extends string | number>
-  extends Omit<ComponentPropsWithoutRef<"div">, "onChange">,
-    FieldHelpProps {
+  extends Omit<ComponentPropsWithoutRef<"div">, "onChange">, FieldHelpProps {
   /** Selected ids. */
   value: V[];
   onChange: (value: V[]) => void;
@@ -210,17 +198,12 @@ export function MultiEntityCombobox<V extends string | number>(props: MultiEntit
   // natural fit for a summary, but in ja/zh it concatenates the names with nothing
   // between them at all.
   const locale = useKitLocale();
-  const listFormat = useMemo(
-    () => new Intl.ListFormat(locale, { type: "conjunction", style: "narrow" }),
-    [locale],
-  );
+  const listFormat = useMemo(() => new Intl.ListFormat(locale, { type: "conjunction", style: "narrow" }), [locale]);
   const summary = (() => {
     if (value.length === 0) return placeholder ?? "";
     if (itemLabel) return itemLabel(value.length);
     const chosen = value.map(resolve);
-    return chosen.every(Boolean)
-      ? listFormat.format(chosen.map((o) => o!.label))
-      : labels.selectedCount(value.length);
+    return chosen.every(Boolean) ? listFormat.format(chosen.map((o) => o!.label)) : labels.selectedCount(value.length);
   })();
 
   // While locked the trigger sits in the reason's Tooltip, as on EntityCombobox.
@@ -282,10 +265,7 @@ export function MultiEntityCombobox<V extends string | number>(props: MultiEntit
             // A caller's own name wins over the composition: two fields labelled
             // "Account" on a transfer form are the from and the to, and only the
             // caller knows which is which.
-            aria-label={
-              ariaLabel ??
-              (typeof label === "string" ? common.fieldValue(label, summary) : undefined)
-            }
+            aria-label={ariaLabel ?? (typeof label === "string" ? common.fieldValue(label, summary) : undefined)}
             // Focusable while locked — see EntityCombobox.
             disabled={lock.locked ? undefined : disabled}
             aria-disabled={lock.locked || undefined}

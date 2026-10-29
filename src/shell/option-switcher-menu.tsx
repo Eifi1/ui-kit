@@ -60,9 +60,7 @@ export function OptionSwitcherMenu<T extends string>({
       {(close) => (
         <ul className="py-1">
           {heading && (
-            <li className="px-3 py-1 text-micro font-semibold uppercase tracking-wide text-placeholder">
-              {heading}
-            </li>
+            <li className="px-3 py-1 text-micro font-semibold uppercase tracking-wide text-placeholder">{heading}</li>
           )}
           {options.map((opt) => (
             <li key={opt.value}>

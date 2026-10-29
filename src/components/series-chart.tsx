@@ -67,7 +67,14 @@ import {
 } from "./chart-zoom-core";
 import { STEP_DASH, strokeDash, type LegendEntry } from "./toggle-legend";
 import { DEFAULT_SERIES_CHART_LABELS, type SeriesChartLabels } from "./series-chart-labels";
-import { categoryTicks, integerTicks, niceTicks, tickTarget, timeTicksWithUnit, type TimeTickUnit } from "./series-chart-ticks";
+import {
+  categoryTicks,
+  integerTicks,
+  niceTicks,
+  tickTarget,
+  timeTicksWithUnit,
+  type TimeTickUnit,
+} from "./series-chart-ticks";
 // The tick module stays internal; the one type of it a public prop names is re-exported.
 export type { TimeTickUnit } from "./series-chart-ticks";
 import { autoAxisBudget, axisUnit, budgetedAxes, type SeriesChartAxisBudget } from "./series-chart-budget";
@@ -233,9 +240,7 @@ export type SeriesChartXValue = number | string | Date;
 
 /** Ticks a caller decides — a list, or a function of the domain on show, so a zoom
  *  window gets ticks from the same rule instead of none. */
-export type SeriesChartTickValues<T> =
-  | readonly T[]
-  | ((domain: [number, number]) => readonly T[] | undefined);
+export type SeriesChartTickValues<T> = readonly T[] | ((domain: [number, number]) => readonly T[] | undefined);
 
 interface SeriesChartAxisShape {
   id: string;
@@ -312,8 +317,7 @@ interface SeriesChartAxisShape {
  * pair, whose neighbour already said it). A HIDDEN axis scales its lines and draws
  * nothing, so there is nowhere for a title to go.
  */
-export type SeriesChartAxis = SeriesChartAxisShape &
-  ({ title: string; hide?: false } | { title?: string; hide: true });
+export type SeriesChartAxis = SeriesChartAxisShape & ({ title: string; hide?: false } | { title?: string; hide: true });
 
 /**
  * What a tick or the tooltip heading of the abscissa is handed besides its position —
@@ -408,7 +412,6 @@ export interface SeriesChartX {
 /** Where the tooltip goes — see {@link SeriesChartTooltip.placement}. */
 export type SeriesChartTooltipPlacement = ChartTooltipPlacement;
 
-
 /**
  * The placement a chart actually uses: its own, else the provider's, else `"cursor"`;
  * `"auto"` is `"above"` on a phone (`phone`: below `sm`) and `"cursor"` from `sm` up.
@@ -479,15 +482,7 @@ export interface SeriesChartSpan {
 /** The colours a reference or a marker can take by name — the kit's semantic tokens,
  *  so a threshold reads the same on every chart and flips with the theme. */
 export type SeriesChartTone =
-  | "muted"
-  | "brand"
-  | "income"
-  | "expense"
-  | "net"
-  | "success"
-  | "warning"
-  | "danger"
-  | "info";
+  "muted" | "brand" | "income" | "expense" | "net" | "success" | "warning" | "danger" | "info";
 
 const TONE_COLOR: Record<SeriesChartTone, string> = {
   muted: "var(--text-muted)",
@@ -806,9 +801,7 @@ interface PointStop {
 function focusedBarShape(index: number) {
   return function FocusedBar(props: BarShapeProps) {
     const focused = props.originalDataIndex === index;
-    return (
-      <Rectangle {...props} {...(focused ? { stroke: "var(--text-primary)", strokeWidth: 2 } : {})} />
-    );
+    return <Rectangle {...props} {...(focused ? { stroke: "var(--text-primary)", strokeWidth: 2 } : {})} />;
   };
 }
 
@@ -826,13 +819,7 @@ const REFERENCE_LABEL_SIZE = 10;
  * the card — "over the c" on a phone. The width is measured once drawn; the first
  * frame (and a DOM without layout) uses a 0.6em-per-character estimate, which errs wide.
  */
-function MarkerLabel({
-  viewBox,
-  value,
-}: {
-  viewBox?: { x?: number; y?: number; width?: number };
-  value?: ReactNode;
-}) {
+function MarkerLabel({ viewBox, value }: { viewBox?: { x?: number; y?: number; width?: number }; value?: ReactNode }) {
   const plot = usePlotArea();
   const ref = useRef<SVGTextElement>(null);
   const [measured, setMeasured] = useState<number>();
@@ -1060,12 +1047,7 @@ function SeriesPlot({
       ? []
       : budgetedAxes(
           afterCap,
-          autoAxisBudget(
-            afterCap,
-            width,
-            (axis) => axisBandWidth(axis.width, Boolean(axis.title), scale),
-            scale,
-          ),
+          autoAxisBudget(afterCap, width, (axis) => axisBandWidth(axis.width, Boolean(axis.title), scale), scale),
         );
   const budgeted = [...capped, ...auto];
   const budgetKey = budgeted.join("\n");
@@ -1108,15 +1090,8 @@ function SeriesPlot({
   // the moment a legend entry was switched off.
   if (!model.source.length || !series.length) {
     return (
-      <div
-        className={cn("flex w-full items-center justify-center px-2 text-center", heightClass)}
-        style={heightStyle}
-      >
-        {empty !== undefined ? (
-          empty
-        ) : (
-          <p className="text-xs text-muted">{labels.empty}</p>
-        )}
+      <div className={cn("flex w-full items-center justify-center px-2 text-center", heightClass)} style={heightStyle}>
+        {empty !== undefined ? empty : <p className="text-xs text-muted">{labels.empty}</p>}
       </div>
     );
   }
@@ -1137,9 +1112,7 @@ function SeriesPlot({
   const drawnAxes = budgeted.length
     ? axes.map((axis) => (budgeted.includes(axis.id) ? { ...axis, hide: true as const } : axis))
     : axes;
-  const lostUnit = new Map(
-    axes.filter((axis) => budgeted.includes(axis.id)).map((axis) => [axis.id, axisUnit(axis)]),
-  );
+  const lostUnit = new Map(axes.filter((axis) => budgeted.includes(axis.id)).map((axis) => [axis.id, axisUnit(axis)]));
   const config: ChartConfig = Object.fromEntries(
     series.map((entry, index) => [
       entry.key,
@@ -1185,14 +1158,11 @@ function SeriesPlot({
     (model.kind === "category"
       ? [-0.5, rows.length - 0.5]
       : padBand(
-          ...(extend(
-            undefined,
-            [
-              ...allPlotted.map((row) => finite(row[xKey])),
-              ...xRefs.map((ref) => xPos(ref.value)),
-              ...(markers ?? []).map((marker) => xPos(marker.x)),
-            ],
-          ) ?? [Infinity, -Infinity]),
+          ...(extend(undefined, [
+            ...allPlotted.map((row) => finite(row[xKey])),
+            ...xRefs.map((ref) => xPos(ref.value)),
+            ...(markers ?? []).map((marker) => xPos(marker.x)),
+          ]) ?? [Infinity, -Infinity]),
         ));
 
   const timeUnit = model.kind === "time" ? timeTicksWithUnit(fittedX, ticksAim) : undefined;
@@ -1222,11 +1192,7 @@ function SeriesPlot({
     ...(timeUnit?.unit === "hour" ? { timeStyle: "short" } : {}),
   });
   const categoryText = (value: SeriesChartXValue) =>
-    value instanceof Date
-      ? dateFormat.format(value)
-      : typeof value === "number"
-        ? number(value)
-        : String(value ?? "");
+    value instanceof Date ? dateFormat.format(value) : typeof value === "number" ? number(value) : String(value ?? "");
   const tickAt = (position: number): SeriesChartXTick => ({
     value: model.valueAt(position),
     ...(model.kind === "category" ? { index: Math.round(position) } : {}),
@@ -1240,13 +1206,15 @@ function SeriesPlot({
         : number(position);
   const format = x.format ?? defaultFormat;
   const xFormat = (position: number) => format(position, tickAt(position));
-  const label =
-    x.label ??
-    (model.kind === "time" ? (position: number) => dateFormat.format(position) : format);
+  const label = x.label ?? (model.kind === "time" ? (position: number) => dateFormat.format(position) : format);
   const xLabel = (position: number) => label(position, tickAt(position));
 
   const tickAngle = x.ticks === false ? 0 : (x.tickAngle ?? 0);
-  const tickBand = tiltedTickBand((xTicks ?? []).map((tick) => xFormat(tick)), tickAngle, scale);
+  const tickBand = tiltedTickBand(
+    (xTicks ?? []).map((tick) => xFormat(tick)),
+    tickAngle,
+    scale,
+  );
 
   const source: ZoomFitSource = {
     rows: allPlotted,
@@ -1257,9 +1225,7 @@ function SeriesPlot({
   // An axis a bar or an area stands on is read from zero (see `includeZero`).
   const anchored = (axis: SeriesChartAxis) =>
     axis.includeZero ??
-    series.some(
-      (entry) => (entry.axis ?? DEFAULT_Y_AXIS) === axis.id && (entry.type ?? "line") !== "line",
-    );
+    series.some((entry) => (entry.axis ?? DEFAULT_Y_AXIS) === axis.id && (entry.type ?? "line") !== "line");
   // Whole-number ticks on an axis whose values are all whole — see
   // `SeriesChartAxis.integerTicks`. A stack of whole layers sums to a whole number, so
   // the layers are enough to look at.
@@ -1317,7 +1283,9 @@ function SeriesPlot({
     const [low, high] = fittedX ?? [-Infinity, Infinity];
     const placed = plotted
       .map((row, index) => ({ index, at: model.kind === "category" ? index : finite(row[xKey]) }))
-      .filter((slot): slot is { index: number; at: number } => slot.at !== undefined && slot.at >= low && slot.at <= high)
+      .filter(
+        (slot): slot is { index: number; at: number } => slot.at !== undefined && slot.at >= low && slot.at <= high,
+      )
       .sort((a, b) => a.at - b.at);
     placed.forEach(({ index, at }, k) => {
       const from = k > 0 ? (placed[k - 1].at + at) / 2 : low;
@@ -1449,28 +1417,19 @@ function SeriesPlot({
           // other tick, keeping the last, gives 4 8 12 — still an even ruler.
           interval="equidistantPreserveEnd"
           tick={x.ticks === false ? false : undefined}
-          {...(tickAngle
-            ? { angle: tickAngle, textAnchor: tickAngle < 0 ? "end" : "start" }
-            : {})}
+          {...(tickAngle ? { angle: tickAngle, textAnchor: tickAngle < 0 ? "end" : "start" } : {})}
           // With neither ticks nor title there is nothing to reserve the band for, and
           // recharts' own 30 px would leave a gap under every chart of a stack.
           height={x.ticks === false && !x.title ? 4 : tickBand}
           tickFormatter={(value: number) => xFormat(Number(value))}
         >
           {x.title && (
-            <Label
-              value={x.title}
-              position="insideBottom"
-              offset={-grow(12)}
-              className="fill-muted text-caption"
-            />
+            <Label value={x.title} position="insideBottom" offset={-grow(12)} className="fill-muted text-caption" />
           )}
         </XAxis>
         {drawnAxes.map((axis) => {
           const domain = fittedY(axis);
-          const zoomed = anchored(axis)
-            ? zoom?.xDomain !== undefined
-            : zoom?.yDomains[axis.id] !== undefined;
+          const zoomed = anchored(axis) ? zoom?.xDomain !== undefined : zoom?.yDomains[axis.id] !== undefined;
           return (
             <YAxis
               key={axis.id}
@@ -1577,7 +1536,12 @@ function SeriesPlot({
                 radius={entry.stack === undefined ? BAR_RADIUS : 0}
                 // Read off the row rather than recharts' `value`: in a stack that is the
                 // layer's running top, which a hole has too — and a hole gets no stub.
-                {...(stub ? { minPointSize: (_value: unknown, index: number) => (finite(plotted[index]?.[entry.key]) === undefined ? 0 : stub) } : {})}
+                {...(stub
+                  ? {
+                      minPointSize: (_value: unknown, index: number) =>
+                        finite(plotted[index]?.[entry.key]) === undefined ? 0 : stub,
+                    }
+                  : {})}
                 // Only the focused stop's series swaps its shape, and only for as long
                 // as it has focus: every other bar keeps recharts' own.
                 {...(focusedStop?.key === entry.key ? { shape: focusedBarShape(focusedStop.index) } : {})}
@@ -1692,11 +1656,7 @@ function SeriesPlot({
               stroke="var(--bg-surface)"
               strokeWidth={1.5}
               ifOverflow="discard"
-              label={
-                marker.label
-                  ? { value: marker.label, position: "top", content: <MarkerLabel /> }
-                  : undefined
-              }
+              label={marker.label ? { value: marker.label, position: "top", content: <MarkerLabel /> } : undefined}
             />
           );
         })}

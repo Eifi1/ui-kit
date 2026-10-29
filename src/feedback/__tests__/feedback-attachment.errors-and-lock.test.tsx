@@ -51,7 +51,14 @@ function Multiple({
   const [files, setFiles] = useState(initial);
   return (
     <>
-      <FeedbackAttachmentField multiple value={files} onChange={setFiles} onError={onError} disabled={disabled} max={max} />
+      <FeedbackAttachmentField
+        multiple
+        value={files}
+        onChange={setFiles}
+        onError={onError}
+        disabled={disabled}
+        max={max}
+      />
       <output data-testid="names">{files.map((f) => f.name).join(",")}</output>
     </>
   );
@@ -94,12 +101,20 @@ describe("G5a: onError names the file and the limit", () => {
   it("single: a type refusal names what IS accepted, as FileButton's does", () => {
     const onError = vi.fn();
     const { container } = render(
-      <FeedbackAttachmentField value={null} onChange={() => {}} onError={onError} accept={["image/png", "application/pdf"]} />,
+      <FeedbackAttachmentField
+        value={null}
+        onChange={() => {}}
+        onError={onError}
+        accept={["image/png", "application/pdf"]}
+      />,
     );
     pick(container, [svg("logo.svg")]);
     expect(onError).toHaveBeenCalledWith(
       "type",
-      expect.objectContaining({ accept: ["image/png", "application/pdf"], message: "Only image/png, application/pdf files" }),
+      expect.objectContaining({
+        accept: ["image/png", "application/pdf"],
+        message: "Only image/png, application/pdf files",
+      }),
     );
   });
 

@@ -1,7 +1,12 @@
 import { act, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { checkoutFingerprint, checkoutLanded, noteCheckoutStarted, useCheckoutProcessing } from "../checkout-processing";
+import {
+  checkoutFingerprint,
+  checkoutLanded,
+  noteCheckoutStarted,
+  useCheckoutProcessing,
+} from "../checkout-processing";
 import type { CheckoutOverview, CheckoutProcessingOptions } from "../checkout-processing";
 
 /**
@@ -51,7 +56,13 @@ describe("checkoutFingerprint and checkoutLanded (§14.4 rule 1)", () => {
     expect(checkoutLanded(before, { ...paying, paid: { plan: "business", interval: "month" } })).toBe(true);
     // And an active payer's switch, which keeps `active`.
     const active = { ...PAID, paid: { plan: "pro", interval: "year" as const } };
-    expect(checkoutLanded(checkoutFingerprint(active), { ...active, plan: "business", paid: { plan: "business", interval: "year" } })).toBe(true);
+    expect(
+      checkoutLanded(checkoutFingerprint(active), {
+        ...active,
+        plan: "business",
+        paid: { plan: "business", interval: "year" },
+      }),
+    ).toBe(true);
   });
 
   it("reads no paid price, null or left out, as the same, and its plan without case", () => {
@@ -80,7 +91,13 @@ type Probe = Omit<CheckoutProcessingOptions, "refetch" | "onConsumed"> & {
 };
 
 /** Two instances side by side — keksdose's banner and its subscription page. */
-function Two({ refetchA = () => {}, refetchB = () => {}, onConsumed = () => {}, hook = useCheckoutProcessing, ...rest }: Probe) {
+function Two({
+  refetchA = () => {},
+  refetchB = () => {},
+  onConsumed = () => {},
+  hook = useCheckoutProcessing,
+  ...rest
+}: Probe) {
   const a = hook({ ...rest, refetch: refetchA, onConsumed });
   const b = hook({ ...rest, refetch: refetchB, onConsumed });
   return (
@@ -152,7 +169,14 @@ describe("useCheckoutProcessing (§14.4)", () => {
     );
     expect(shown()).toBe("true true");
     rerender(
-      <Two payer="company:3" storageKey={storageKey} returned={false} overview={BETA} refetchB={refetchB} timeoutMs={60_000} />,
+      <Two
+        payer="company:3"
+        storageKey={storageKey}
+        returned={false}
+        overview={BETA}
+        refetchB={refetchB}
+        timeoutMs={60_000}
+      />,
     );
     act(() => void vi.advanceTimersByTime(60_000));
     expect(shown()).toBe("false false");
@@ -185,7 +209,9 @@ describe("useCheckoutProcessing (§14.4)", () => {
     );
     vi.resetModules();
     const fresh = await import("../checkout-processing");
-    render(<Two payer={7} storageKey={storageKey} returned={false} overview={TRIAL} hook={fresh.useCheckoutProcessing} />);
+    render(
+      <Two payer={7} storageKey={storageKey} returned={false} overview={TRIAL} hook={fresh.useCheckoutProcessing} />,
+    );
     expect(shown()).toBe("false false");
     expect(window.localStorage.getItem(storageKey)).toBeNull();
   });
@@ -228,7 +254,9 @@ describe("useCheckoutProcessing (§14.4)", () => {
       const storageKey = freshKey();
       expect(() => noteCheckoutStarted(7, TRIAL, { storageKey })).not.toThrow();
       const onLanded = vi.fn();
-      const { rerender } = render(<Two payer={7} storageKey={storageKey} returned overview={TRIAL} onLanded={onLanded} />);
+      const { rerender } = render(
+        <Two payer={7} storageKey={storageKey} returned overview={TRIAL} onLanded={onLanded} />,
+      );
       expect(shown()).toBe("true true");
       rerender(<Two payer={7} storageKey={storageKey} returned={false} overview={PAID} onLanded={onLanded} />);
       expect(shown()).toBe("false false");

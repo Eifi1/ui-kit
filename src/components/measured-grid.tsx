@@ -181,8 +181,7 @@ export function useMeasuredRows(
   return { cells, setCells, rows, setRows, ready, problems, props };
 }
 
-export interface MeasuredGridProps
-  extends Omit<ComponentPropsWithRef<"div">, "children" | "onChange"> {
+export interface MeasuredGridProps extends Omit<ComponentPropsWithRef<"div">, "children" | "onChange"> {
   /** What the table is — shown above it, and the grid's accessible name. */
   label: string;
   /** A note under the table (which columns a layout expects, say). Also the grid's
@@ -393,9 +392,7 @@ function CellGrid({
   useEffect(() => {
     const target = pending.current;
     if (!target) return;
-    const element = scrollRef.current?.querySelector<HTMLElement>(
-      `[data-cell="${target.row}:${target.column}"]`,
-    );
+    const element = scrollRef.current?.querySelector<HTMLElement>(`[data-cell="${target.row}:${target.column}"]`);
     if (!element) return;
     pending.current = null;
     // `preventScroll`: `reveal` already scrolled the row clear of the sticky header,
@@ -595,26 +592,12 @@ function CellGrid({
                 #
               </div>
               {columns.map((column, index) => (
-                <div
-                  key={index}
-                  role="columnheader"
-                  className="min-w-0 border-s border-subtle px-2 py-1 text-end"
-                >
-                  <span className="block truncate font-medium text-primary">
-                    {column.label}
-                  </span>
-                  {column.unit && (
-                    <span className="block truncate text-micro text-muted">
-                      {column.unit}
-                    </span>
-                  )}
+                <div key={index} role="columnheader" className="min-w-0 border-s border-subtle px-2 py-1 text-end">
+                  <span className="block truncate font-medium text-primary">{column.label}</span>
+                  {column.unit && <span className="block truncate text-micro text-muted">{column.unit}</span>}
                 </div>
               ))}
-              <div
-                role="columnheader"
-                aria-label={labels.rowActions}
-                className="border-s border-subtle"
-              />
+              <div role="columnheader" aria-label={labels.rowActions} className="border-s border-subtle" />
             </div>
           </div>
           {/* Only the rows in the window are mounted — a swept linkage is thousands of
@@ -711,10 +694,7 @@ function CellGrid({
                       </div>
                     );
                   })}
-                  <div
-                    role="gridcell"
-                    className="flex items-center justify-center border-s border-subtle"
-                  >
+                  <div role="gridcell" className="flex items-center justify-center border-s border-subtle">
                     <button
                       type="button"
                       data-cell={`${index}:${width}`}
@@ -776,9 +756,7 @@ function CellGrid({
           {/* bdi: an LTR label ("3 points") in an RTL grid would reorder to "points 3". */}
           <bdi>{labels.points(filled.length)}</bdi>
         </span>
-        {problems > 0 && (
-          <span className="text-caption text-danger">{labels.problems(problems)}</span>
-        )}
+        {problems > 0 && <span className="text-caption text-danger">{labels.problems(problems)}</span>}
         <span className="ms-auto flex items-center gap-1 text-caption text-muted">
           <ClipboardPaste aria-hidden className="size-3.5" /> {labels.pasteHint}
         </span>

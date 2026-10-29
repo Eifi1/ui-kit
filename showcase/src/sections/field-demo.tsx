@@ -13,11 +13,7 @@ const IBAN = /^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/;
 
 /** Prints what the render prop handed the control, so the wiring is visible. */
 function Wiring({ ids }: { ids: FieldControlProps }) {
-  return (
-    <span className="block font-mono text-micro text-muted [overflow-wrap:anywhere]">
-      {JSON.stringify(ids)}
-    </span>
-  );
+  return <span className="block font-mono text-micro text-muted [overflow-wrap:anywhere]">{JSON.stringify(ids)}</span>;
 }
 
 function RenderProp() {
@@ -45,7 +41,12 @@ function RenderProp() {
         <Field label="Country" required error={countryError}>
           {(ids) => (
             <>
-              <Select {...ids} value={country} onChange={(e) => setCountry(e.target.value)} onBlur={() => setTouched(true)}>
+              <Select
+                {...ids}
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                onBlur={() => setTouched(true)}
+              >
                 <option value="">Choose…</option>
                 <option value="de">Germany</option>
                 <option value="at">Austria</option>
@@ -65,11 +66,7 @@ function RenderProp() {
         </Field>
       </div>
       <Row className="mt-3">
-        <button
-          type="button"
-          className="text-sm text-brand underline"
-          onClick={() => setTouched((t) => !t)}
-        >
+        <button type="button" className="text-sm text-brand underline" onClick={() => setTouched((t) => !t)}>
           {touched ? "Hide the errors" : "Show the errors"}
         </button>
       </Row>
@@ -90,8 +87,8 @@ function RenderProp() {
           <code className="font-mono">aria-hidden</code>. <code className="font-mono">error</code> is a plain value:{" "}
           <code className="font-mono">null</code>, <code className="font-mono">false</code> and{" "}
           <code className="font-mono">&quot;&quot;</code> are no error (the Country passes an empty string while
-          untouched). The error is not <code className="font-mono">role=&quot;alert&quot;</code>: it is read when
-          focus reaches the control. The kit&apos;s own <code className="font-mono">Input</code> with no{" "}
+          untouched). The error is not <code className="font-mono">role=&quot;alert&quot;</code>: it is read when focus
+          reaches the control. The kit&apos;s own <code className="font-mono">Input</code> with no{" "}
           <code className="font-mono">label</code> is the unlabelled field, so it takes the label from here.
         </Note>
       </div>

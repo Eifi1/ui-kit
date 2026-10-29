@@ -16,7 +16,7 @@ const OPTIONS = [
  * kastlan #47: `aria-pressed` toggle buttons without `allowEmpty`'s "press again to
  * clear" — they took the clearable shape and dropped the `null` in `onChange`.
  */
-describe("ToggleGroup — semantics=\"pressed\" (kastlan #47)", () => {
+describe('ToggleGroup — semantics="pressed" (kastlan #47)', () => {
   it("renders toggle buttons in a group, each its own Tab stop", () => {
     render(<ToggleGroup semantics="pressed" value="list" onChange={vi.fn()} options={OPTIONS} aria-label="View" />);
     const group = screen.getByRole("group", { name: "View" });
@@ -91,7 +91,7 @@ describe("Delta at zero (kastlan #48)", () => {
 });
 
 /** kastlan #49: the gantt's "today" key at the legend's inline end. */
-describe("legend entry align=\"end\" (kastlan #49)", () => {
+describe('legend entry align="end" (kastlan #49)', () => {
   const ENTRIES: LegendEntry[] = [
     { key: "active", label: "Active", color: "#117733" },
     { key: "ended", label: "Ended", color: "#888" },
@@ -110,7 +110,7 @@ describe("legend entry align=\"end\" (kastlan #49)", () => {
     expect(screen.getByRole("button", { name: "Active" })).not.toHaveClass("ms-auto");
   });
 
-  it("treats align=\"start\" as the default", () => {
+  it('treats align="start" as the default', () => {
     render(<StaticLegend entries={[{ key: "a", label: "A", color: "red", align: "start" }]} />);
     expect(screen.getByRole("listitem")).not.toHaveClass("ms-auto");
   });

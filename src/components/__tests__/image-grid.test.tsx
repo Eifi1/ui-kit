@@ -84,16 +84,21 @@ describe("ImageGrid", () => {
 
   it("is responsive by default and takes a fixed column count", () => {
     const { unmount } = render(<ImageGrid items={ITEMS} minTileSize={120} />);
-    expect(screen.getByRole("list").style.gridTemplateColumns).toBe(
-      "repeat(auto-fill, minmax(min(120px, 100%), 1fr))",
-    );
+    expect(screen.getByRole("list").style.gridTemplateColumns).toBe("repeat(auto-fill, minmax(min(120px, 100%), 1fr))");
     unmount();
     render(<ImageGrid items={ITEMS} columns={4} />);
     expect(screen.getByRole("list").style.gridTemplateColumns).toBe("repeat(4, minmax(0, 1fr))");
   });
 
   it("names a tile with no alt by its position", () => {
-    render(<ImageGrid items={[{ src: "/x.jpg", alt: "" }, { src: "/y.jpg", alt: "" }]} />);
+    render(
+      <ImageGrid
+        items={[
+          { src: "/x.jpg", alt: "" },
+          { src: "/y.jpg", alt: "" },
+        ]}
+      />,
+    );
     expect(screen.getByRole("button", { name: "Image 2 of 2" })).toBeInTheDocument();
   });
 });

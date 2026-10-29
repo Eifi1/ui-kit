@@ -110,14 +110,74 @@ const LOCALES = [
 
 const at = "2026-09-28T09:30:00Z";
 const SEED: TranslationReview[] = [
-  { locale: "fr", key: "common.save", text: "Enregistrer", referenceText: "Save", verdict: "APPROVED", note: null, suggestion: null, reviewerName: "Amélie", reviewedAt: at },
+  {
+    locale: "fr",
+    key: "common.save",
+    text: "Enregistrer",
+    referenceText: "Save",
+    verdict: "APPROVED",
+    note: null,
+    suggestion: null,
+    reviewerName: "Amélie",
+    reviewedAt: at,
+  },
   // Approved on an older wording: "changed since review".
-  { locale: "fr", key: "budget.rta", text: "A attribuer", referenceText: "Ready to Assign", verdict: "APPROVED", note: null, suggestion: null, reviewerName: "Amélie", reviewedAt: at },
-  { locale: "fr", key: "legal.terms", text: "Conditions d’utilisation", referenceText: "Terms of Service", verdict: "NEEDS_CHANGE", note: "Le terme juridique est « conditions générales ».", suggestion: "Conditions générales d’utilisation", reviewerName: null, reviewedAt: at },
-  { locale: "fr", key: "kit.common.close", text: UI_KIT_LABELS_FR.common.close, referenceText: "Close", verdict: "APPROVED", note: null, suggestion: null, reviewerName: "Amélie", reviewedAt: at },
+  {
+    locale: "fr",
+    key: "budget.rta",
+    text: "A attribuer",
+    referenceText: "Ready to Assign",
+    verdict: "APPROVED",
+    note: null,
+    suggestion: null,
+    reviewerName: "Amélie",
+    reviewedAt: at,
+  },
+  {
+    locale: "fr",
+    key: "legal.terms",
+    text: "Conditions d’utilisation",
+    referenceText: "Terms of Service",
+    verdict: "NEEDS_CHANGE",
+    note: "Le terme juridique est « conditions générales ».",
+    suggestion: "Conditions générales d’utilisation",
+    reviewerName: null,
+    reviewedAt: at,
+  },
+  {
+    locale: "fr",
+    key: "kit.common.close",
+    text: UI_KIT_LABELS_FR.common.close,
+    referenceText: "Close",
+    verdict: "APPROVED",
+    note: null,
+    suggestion: null,
+    reviewerName: "Amélie",
+    reviewedAt: at,
+  },
   // The English reference moved on since this was approved.
-  { locale: "fr", key: "kit.combobox.resultCount(3)", text: UI_KIT_LABELS_FR.combobox.resultCount(3), referenceText: "3 hits", verdict: "APPROVED", note: null, suggestion: null, reviewerName: "Amélie", reviewedAt: at },
-  { locale: "it", key: "common.save", text: "Salva", referenceText: "Save", verdict: "APPROVED", note: null, suggestion: null, reviewerName: "Giulia", reviewedAt: at },
+  {
+    locale: "fr",
+    key: "kit.combobox.resultCount(3)",
+    text: UI_KIT_LABELS_FR.combobox.resultCount(3),
+    referenceText: "3 hits",
+    verdict: "APPROVED",
+    note: null,
+    suggestion: null,
+    reviewerName: "Amélie",
+    reviewedAt: at,
+  },
+  {
+    locale: "it",
+    key: "common.save",
+    text: "Salva",
+    referenceText: "Save",
+    verdict: "APPROVED",
+    note: null,
+    suggestion: null,
+    reviewerName: "Giulia",
+    reviewedAt: at,
+  },
 ];
 
 export function TranslationReviewDemo() {
@@ -155,7 +215,12 @@ export function TranslationReviewDemo() {
     await beat(500);
     if (refuse) throw new Error("403");
     const now = new Date().toISOString();
-    setReviews((prev) => mergeReviews(prev, writes.map((w) => ({ ...w, reviewerName: "You", reviewedAt: now }))));
+    setReviews((prev) =>
+      mergeReviews(
+        prev,
+        writes.map((w) => ({ ...w, reviewerName: "You", reviewedAt: now })),
+      ),
+    );
   };
   const clear = async (keys: TranslationReviewKey[]) => {
     await beat(500);
@@ -212,13 +277,13 @@ export function TranslationReviewDemo() {
           <Note>
             Rows come from {code("translationRows({ locale, strings, reference, reviews, areas })")}: the app&apos;s
             bundle through {code("flattenStrings")}, the kit&apos;s words through{" "}
-            {code("flattenStrings(kitLabelStrings(labels), \"kit.\")")}, and whichever reference THIS app reads
-            against. Shown here: a verdict on an older wording ({code("budget.rta")}) and on an older reference (
+            {code('flattenStrings(kitLabelStrings(labels), "kit.")')}, and whichever reference THIS app reads against.
+            Shown here: a verdict on an older wording ({code("budget.rta")}) and on an older reference (
             {code("kit.combobox.resultCount(3)")}) read “Changed since review”; {code("common.items")} lost its{" "}
             {code("{{count}}")} and {code("legal.privacy_intro")} its {code("<1>")} link; French lacks{" "}
             {code("budget.goal_hint")}, so it is Missing and can only get a suggested translation. Refuse saves, then
-            send a string back: the editor keeps its text and shows the error. The server&apos;s snake_case maps
-            through {code("fromApiReview")} / {code("toApiWrite")}.
+            send a string back: the editor keeps its text and shows the error. The server&apos;s snake_case maps through{" "}
+            {code("fromApiReview")} / {code("toApiWrite")}.
           </Note>
         </div>
       </Example>
@@ -236,7 +301,10 @@ export function TranslationReviewDemo() {
 
       {/* The panel's two parts on their own (round 0.34: neither had a specimen —
           refactor audit 2026-10, DOC-9). Same rows and "server" as the panel above. */}
-      <Example label="TranslationProgress — one locale's bar and legend" hint="the panel's header, for an app's own overview">
+      <Example
+        label="TranslationProgress — one locale's bar and legend"
+        hint="the panel's header, for an app's own overview"
+      >
         <TranslationProgress rows={rowsByLocale.get("fr") ?? []} />
       </Example>
 

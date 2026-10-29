@@ -52,13 +52,7 @@ const COLUMNS: DataTableColumn<Row>[] = [
 function renderTable(extra: Partial<DataTableProps<Row>> = {}) {
   return render(
     <MemoryRouter>
-      <DataTable
-        rows={ROWS}
-        columns={COLUMNS}
-        rowKey={(r) => r.id}
-        defaultPageSize={10}
-        {...extra}
-      />
+      <DataTable rows={ROWS} columns={COLUMNS} rowKey={(r) => r.id} defaultPageSize={10} {...extra} />
     </MemoryRouter>,
   );
 }
@@ -206,12 +200,7 @@ describe("DataTable announcements", () => {
 
     rerender(
       <MemoryRouter>
-        <DataTable
-          rows={ROWS.slice(0, 5)}
-          columns={COLUMNS}
-          rowKey={(r) => r.id}
-          defaultPageSize={10}
-        />
+        <DataTable rows={ROWS.slice(0, 5)} columns={COLUMNS} rowKey={(r) => r.id} defaultPageSize={10} />
       </MemoryRouter>,
     );
     await settleAnnouncement();

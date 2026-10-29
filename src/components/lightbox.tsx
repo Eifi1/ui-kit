@@ -310,9 +310,7 @@ export function Lightbox({
       fetched={fetched}
       alt={item.alt}
       labels={imageLabels}
-      wrapperClassName={
-        zoomed ? "max-w-none shrink-0" : "flex h-full w-full items-center justify-center"
-      }
+      wrapperClassName={zoomed ? "max-w-none shrink-0" : "flex h-full w-full items-center justify-center"}
       className={cn(
         zoomed ? "max-w-none cursor-zoom-out" : "max-h-full max-w-full object-contain",
         !zoomed && zoomEnabled && "cursor-zoom-in",

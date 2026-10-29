@@ -80,7 +80,14 @@ describe("geometry that holds text follows the root size", () => {
 
   const openPopover = (width?: number | `${number}rem`) => {
     render(
-      <Popover width={width} trigger={({ toggle, ref }) => <button ref={ref} onClick={toggle}>Open</button>}>
+      <Popover
+        width={width}
+        trigger={({ toggle, ref }) => (
+          <button ref={ref} onClick={toggle}>
+            Open
+          </button>
+        )}
+      >
         {() => <p>panel</p>}
       </Popover>,
     );

@@ -115,11 +115,11 @@ describe("tooltip placement on the chart", () => {
   });
 
   it("takes the provider's default, and the chart's own prop over it", () => {
-    const { container, rerender } = render(
-      <UiKitProvider chartTooltipPlacement="below">{chart()}</UiKitProvider>,
-    );
+    const { container, rerender } = render(<UiKitProvider chartTooltipPlacement="below">{chart()}</UiKitProvider>);
     expect(readout(container)?.dataset.tooltipReadout).toBe("below");
-    rerender(<UiKitProvider chartTooltipPlacement="below">{chart({ tooltip: { placement: "cursor" } })}</UiKitProvider>);
+    rerender(
+      <UiKitProvider chartTooltipPlacement="below">{chart({ tooltip: { placement: "cursor" } })}</UiKitProvider>,
+    );
     expect(readout(container)).toBeNull();
   });
 

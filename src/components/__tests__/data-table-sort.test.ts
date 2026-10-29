@@ -20,9 +20,7 @@ describe("normalizeSorts", () => {
       { key: "date", dir: "desc" },
       { key: "amount", dir: "asc" },
     ]);
-    expect(normalizeSorts([{ key: "date" }, { key: "date", dir: "desc" }])).toEqual([
-      { key: "date", dir: "asc" },
-    ]);
+    expect(normalizeSorts([{ key: "date" }, { key: "date", dir: "desc" }])).toEqual([{ key: "date", dir: "asc" }]);
     expect(normalizeSorts([null, 42, { dir: "asc" }, { key: "" }])).toEqual([]);
   });
 
@@ -35,7 +33,10 @@ describe("normalizeSorts", () => {
 
 describe("encodeSorts / decodeSorts", () => {
   it("round-trips, leaving asc implicit", () => {
-    const sorts: SortState[] = [{ key: "date", dir: "desc" }, { key: "amount", dir: "asc" }];
+    const sorts: SortState[] = [
+      { key: "date", dir: "desc" },
+      { key: "amount", dir: "asc" },
+    ];
     const raw = encodeSorts(sorts);
     expect(raw).toBe("date.desc,amount");
     expect(decodeSorts(raw, KEYS)).toEqual(sorts);
@@ -70,23 +71,40 @@ describe("nextSorts (header click semantics)", () => {
   });
 
   it("replaces the whole sort on a plain click of a different column", () => {
-    const s = nextSorts([{ key: "date", dir: "desc" }, { key: "amount", dir: "asc" }], "payee", false);
+    const s = nextSorts(
+      [
+        { key: "date", dir: "desc" },
+        { key: "amount", dir: "asc" },
+      ],
+      "payee",
+      false,
+    );
     expect(s).toEqual([{ key: "payee", dir: "asc" }]);
   });
 
   it("appends on shift-click, then cycles that entry in place", () => {
     let s: SortState[] = [{ key: "date", dir: "desc" }];
     s = nextSorts(s, "amount", true);
-    expect(s).toEqual([{ key: "date", dir: "desc" }, { key: "amount", dir: "asc" }]);
+    expect(s).toEqual([
+      { key: "date", dir: "desc" },
+      { key: "amount", dir: "asc" },
+    ]);
     s = nextSorts(s, "amount", true);
-    expect(s).toEqual([{ key: "date", dir: "desc" }, { key: "amount", dir: "desc" }]);
+    expect(s).toEqual([
+      { key: "date", dir: "desc" },
+      { key: "amount", dir: "desc" },
+    ]);
     s = nextSorts(s, "amount", true);
     expect(s).toEqual([{ key: "date", dir: "desc" }]);
   });
 
   it("keeps priority order when a middle entry cycles", () => {
     const s = nextSorts(
-      [{ key: "date", dir: "asc" }, { key: "amount", dir: "asc" }, { key: "payee", dir: "asc" }],
+      [
+        { key: "date", dir: "asc" },
+        { key: "amount", dir: "asc" },
+        { key: "payee", dir: "asc" },
+      ],
       "amount",
       true,
     );
@@ -98,9 +116,7 @@ describe("nextSorts (header click semantics)", () => {
 describe("nextSorts cycle options", () => {
   it("defaults to the pre-0.8.0 asc → desc → none cycle", () => {
     expect(nextSorts([], "date", false)).toEqual([{ key: "date", dir: "asc" }]);
-    expect(nextSorts([{ key: "date", dir: "asc" }], "date", false)).toEqual([
-      { key: "date", dir: "desc" },
-    ]);
+    expect(nextSorts([{ key: "date", dir: "asc" }], "date", false)).toEqual([{ key: "date", dir: "desc" }]);
     expect(nextSorts([{ key: "date", dir: "desc" }], "date", false)).toEqual([]);
   });
 
@@ -120,21 +136,25 @@ describe("nextSorts cycle options", () => {
     expect(b).toEqual([{ key: "amount", dir: "asc" }]);
     expect(nextSorts(b, "amount", false, o)).toEqual([{ key: "amount", dir: "desc" }]);
 
-    const two: SortState[] = [{ key: "date", dir: "asc" }, { key: "amount", dir: "asc" }];
+    const two: SortState[] = [
+      { key: "date", dir: "asc" },
+      { key: "amount", dir: "asc" },
+    ];
     expect(nextSorts(two, "amount", true, o)).toEqual([
       { key: "date", dir: "asc" },
       { key: "amount", dir: "desc" },
     ]);
     // Another column still replaces the sort outright, in ITS first direction.
-    expect(nextSorts(b, "payee", false, { cycle: "toggle" })).toEqual([
-      { key: "payee", dir: "asc" },
-    ]);
+    expect(nextSorts(b, "payee", false, { cycle: "toggle" })).toEqual([{ key: "payee", dir: "asc" }]);
   });
 
   it("appends an additive criterion in its first direction and removes it under tri", () => {
     const o = { firstDir: "desc" } as const;
     const a = nextSorts([{ key: "date", dir: "asc" }], "amount", true, o);
-    expect(a).toEqual([{ key: "date", dir: "asc" }, { key: "amount", dir: "desc" }]);
+    expect(a).toEqual([
+      { key: "date", dir: "asc" },
+      { key: "amount", dir: "desc" },
+    ]);
     const b = nextSorts(a, "amount", true, o);
     expect(b[1]).toEqual({ key: "amount", dir: "asc" });
     expect(nextSorts(b, "amount", true, o)).toEqual([{ key: "date", dir: "asc" }]);

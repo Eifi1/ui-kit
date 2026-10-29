@@ -118,9 +118,7 @@ export function Pagination({
         {onPageSize && (
           <select
             value={pageSize === Infinity ? "all" : pageSize}
-            onChange={(e) =>
-              onPageSize(e.target.value === "all" ? Infinity : Number(e.target.value))
-            }
+            onChange={(e) => onPageSize(e.target.value === "all" ? Infinity : Number(e.target.value))}
             className="rounded border border-subtle bg-surface px-1 py-0.5 text-xs"
             aria-label={labels.pageSize}
           >
@@ -165,9 +163,7 @@ export function Pagination({
                   className={cn(
                     "rounded",
                     compact ? "min-w-6 px-1.5 py-0" : "min-w-7 px-2 py-0.5",
-                    it === page
-                      ? "bg-inverse text-inverse"
-                      : "hover:bg-hover",
+                    it === page ? "bg-inverse text-inverse" : "hover:bg-hover",
                   )}
                 >
                   {num.format(it + 1)}

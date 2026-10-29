@@ -52,8 +52,7 @@ export interface IconOption<T extends string> {
 }
 
 export interface IconPickerProps<T extends string>
-  extends Omit<ComponentPropsWithRef<"div">, "onChange" | "children" | "defaultValue">,
-    FieldHelpProps {
+  extends Omit<ComponentPropsWithRef<"div">, "onChange" | "children" | "defaultValue">, FieldHelpProps {
   options: IconOption<T>[];
   /** The chosen icon, or `null` for none. */
   value: T | null;
@@ -152,12 +151,7 @@ export function IconPicker<T extends string>({
   const needle = words.length > 0;
 
   const visible = useMemo(
-    () =>
-      needle
-        ? options.filter((o) =>
-            matchesSearch(words, [o.label, ...(o.keywords ?? [])], locale),
-          )
-        : options,
+    () => (needle ? options.filter((o) => matchesSearch(words, [o.label, ...(o.keywords ?? [])], locale)) : options),
     [options, needle, words, locale],
   );
   const byValue = useMemo(() => new Map(options.map((o) => [o.value, o])), [options]);
@@ -209,17 +203,10 @@ export function IconPicker<T extends string>({
             const Icon = item.key === null ? undefined : byValue.get(item.key)?.icon;
             return Icon ? <Icon aria-hidden className={TILE_SIZE[size].glyph} /> : null;
           }}
-          tileClassName={(_item, selected) =>
-            cn(
-              selected ? "text-primary" : "text-secondary",
-              tileClassName,
-            )
-          }
+          tileClassName={(_item, selected) => cn(selected ? "text-primary" : "text-secondary", tileClassName)}
         />
       </div>
-      {needle && visible.length === 0 && (
-        <p className="text-xs text-muted">{text.noResults}</p>
-      )}
+      {needle && visible.length === 0 && <p className="text-xs text-muted">{text.noResults}</p>}
       {mixed && (
         <span id={mixedId} hidden>
           {text.mixed}

@@ -44,10 +44,9 @@ export function FieldSync() {
   return (
     <>
       <Note>
-        Nothing on this page reaches a network. &ldquo;The server&rdquo; below is a promise on a
-        timer, which is the whole point of a design-system showcase: the kit is domain-free, so
-        there is no API to mock — a component takes its data as props and hands events back as
-        callbacks.
+        Nothing on this page reaches a network. &ldquo;The server&rdquo; below is a promise on a timer, which is the
+        whole point of a design-system showcase: the kit is domain-free, so there is no API to mock — a component takes
+        its data as props and hands events back as callbacks.
       </Note>
 
       <StatesExample />
@@ -86,11 +85,11 @@ function StatesExample() {
         </div>
       </Stage>
       <Note>
-        <strong>The field never changes size.</strong> The state is the frame&apos;s colour and an
-        icon inside the field&apos;s end — a pencil while edited, a spinning circle for as long as
-        the save is in flight, a green check that fades after {FIELD_SYNC_SAVED_MS / 1000}s, and a
-        red mark whose tooltip is the reason (click it to retry). Colour is never the only signal:
-        each state has its own icon, and the state text is announced through a live region.
+        <strong>The field never changes size.</strong> The state is the frame&apos;s colour and an icon inside the
+        field&apos;s end — a pencil while edited, a spinning circle for as long as the save is in flight, a green check
+        that fades after {FIELD_SYNC_SAVED_MS / 1000}s, and a red mark whose tooltip is the reason (click it to retry).
+        Colour is never the only signal: each state has its own icon, and the state text is announced through a live
+        region.
       </Note>
     </Example>
   );
@@ -133,10 +132,7 @@ function CompactIndicatorExample() {
   const t = useT();
   const [retries, setRetries] = useState(0);
   return (
-    <Example
-      label="Compact indicator"
-      hint="for a table cell or a toolbar, where there is no room for a helper line"
-    >
+    <Example label="Compact indicator" hint="for a table cell or a toolbar, where there is no room for a helper line">
       <Stage>
         <div data-stage="wide" className="space-y-4">
           <Row className="justify-center">
@@ -167,9 +163,8 @@ function CompactIndicatorExample() {
         </div>
       </Stage>
       <p className="text-xs text-muted">
-        Top row: <code className="font-mono">showLabel</code> and{" "}
-        <code className="font-mono">onRetry</code> (retries pressed: {retries}). Bottom row: the
-        defaults — icon only, hover for the words, no retry.
+        Top row: <code className="font-mono">showLabel</code> and <code className="font-mono">onRetry</code> (retries
+        pressed: {retries}). Bottom row: the defaults — icon only, hover for the words, no retry.
       </p>
     </Example>
   );
@@ -253,10 +248,9 @@ function LiveFieldExample() {
       </dl>
 
       <Note>
-        <strong>External update</strong> writes the row from &ldquo;another session&rdquo;. While
-        the field is clean the new value is adopted; while you have unsaved edits it is{" "}
-        <em>ignored</em>, because taking it would delete what you are typing. The draft keeps
-        winning until it is saved or discarded.
+        <strong>External update</strong> writes the row from &ldquo;another session&rdquo;. While the field is clean the
+        new value is adopted; while you have unsaved edits it is <em>ignored</em>, because taking it would delete what
+        you are typing. The draft keeps winning until it is saved or discarded.
       </Note>
     </Example>
   );
@@ -310,10 +304,9 @@ function RaceExample() {
       </pre>
 
       <Note>
-        A save in flight is neither cancelled nor raced. Cancelling would drop the keystroke that
-        arrived mid-flight; firing immediately would let two writes land out of order. The hook
-        waits for the first to settle, compares the draft again, and sends the difference exactly
-        once — so the log always ends committed to what is on screen.
+        A save in flight is neither cancelled nor raced. Cancelling would drop the keystroke that arrived mid-flight;
+        firing immediately would let two writes land out of order. The hook waits for the first to settle, compares the
+        draft again, and sends the difference exactly once — so the log always ends committed to what is on screen.
       </Note>
     </Example>
   );
@@ -349,12 +342,7 @@ function AutoSaveExample() {
     >
       <Stage>
         <FieldSyncRow sync={note} labels={t.kit.fieldSync} savedMs={4000}>
-          <Textarea
-            label="Handover note"
-            rows={3}
-            value={note.value}
-            onChange={(e) => note.setValue(e.target.value)}
-          />
+          <Textarea label="Handover note" rows={3} value={note.value} onChange={(e) => note.setValue(e.target.value)} />
         </FieldSyncRow>
         {/* A select commits on change: there is no half-typed value to wait for, so
             the caller saves straight away rather than on blur. */}
@@ -391,9 +379,8 @@ function AutoSaveExample() {
         ))}
       </dl>
       <Note>
-        Stop typing in the note for a moment and it saves without leaving the field; the green
-        confirmation then stays for four seconds (<code className="font-mono">savedMs</code>) instead
-        of {FIELD_SYNC_SAVED_MS / 1000}.
+        Stop typing in the note for a moment and it saves without leaving the field; the green confirmation then stays
+        for four seconds (<code className="font-mono">savedMs</code>) instead of {FIELD_SYNC_SAVED_MS / 1000}.
       </Note>
     </Example>
   );
@@ -444,11 +431,7 @@ function ExplicitSaveExample() {
               sync.retry();
             }}
           >
-            <Input
-              label="IBAN"
-              value={sync.value}
-              onChange={(e) => sync.setValue(e.target.value)}
-            />
+            <Input label="IBAN" value={sync.value} onChange={(e) => sync.setValue(e.target.value)} />
           </FieldSyncRow>
           <Row>
             <Button variant="secondary" onClick={sync.save} disabled={!sync.dirty}>
@@ -467,12 +450,11 @@ function ExplicitSaveExample() {
         {log.length ? log.join("\n") : "— nothing yet —"}
       </pre>
       <Note>
-        Click away from the field: nothing is sent — with{" "}
-        <code className="font-mono">saveOnBlur</code> off only the button saves. Add or remove a
-        space and the field stays clean, because <code className="font-mono">equals</code> says the
-        value did not change. The first save fails: <code className="font-mono">onError</code> logs
-        it once, and the red mark in the field calls the caller&apos;s{" "}
-        <code className="font-mono">onRetry</code> instead of the hook&apos;s own.
+        Click away from the field: nothing is sent — with <code className="font-mono">saveOnBlur</code> off only the
+        button saves. Add or remove a space and the field stays clean, because <code className="font-mono">equals</code>{" "}
+        says the value did not change. The first save fails: <code className="font-mono">onError</code> logs it once,
+        and the red mark in the field calls the caller&apos;s <code className="font-mono">onRetry</code> instead of the
+        hook&apos;s own.
       </Note>
     </Example>
   );
@@ -494,8 +476,8 @@ function RtlExample() {
         ))}
       </Stage>
       <p className="text-xs text-muted">
-        The icon sits at the field&apos;s END and the input reserves end padding for it — logical
-        sides, so in a right-to-left page both move to the left edge.
+        The icon sits at the field&apos;s END and the input reserves end padding for it — logical sides, so in a
+        right-to-left page both move to the left edge.
       </p>
     </Example>
   );
@@ -516,19 +498,15 @@ function TokensExample() {
       </Stage>
       <div className="mt-4">
         <ConstList
-          items={Object.entries(DEFAULT_FIELD_SYNC_LABELS).map(([k, v]) => [
-            `DEFAULT_FIELD_SYNC_LABELS.${k}`,
-            v,
-          ])}
+          items={Object.entries(DEFAULT_FIELD_SYNC_LABELS).map(([k, v]) => [`DEFAULT_FIELD_SYNC_LABELS.${k}`, v])}
         />
       </div>
       <Note>
         These four are the only colours in the kit that are <em>not</em> part of{" "}
-        <code className="font-mono">TokenSet</code> and do not change with the palette preset. They
-        are functional signals, like a traffic light: a field that means &ldquo;saved&rdquo; must
-        not change meaning because somebody picked a different appearance. They do flip with
-        light/dark, because contrast is not optional — all four clear WCAG AA for normal text
-        against the worst of the three surfaces in both themes.
+        <code className="font-mono">TokenSet</code> and do not change with the palette preset. They are functional
+        signals, like a traffic light: a field that means &ldquo;saved&rdquo; must not change meaning because somebody
+        picked a different appearance. They do flip with light/dark, because contrast is not optional — all four clear
+        WCAG AA for normal text against the worst of the three surfaces in both themes.
       </Note>
     </Example>
   );

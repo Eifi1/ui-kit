@@ -109,10 +109,7 @@ describe("useSearchParamState", () => {
 
 describe("useTabParam", () => {
   it("keeps the default tab out of the URL and rejects a tab that does not exist", () => {
-    const hook = setup(
-      () => useTabParam("overview", { tabs: ["overview", "history"] as const }),
-      "/?tab=gone",
-    );
+    const hook = setup(() => useTabParam("overview", { tabs: ["overview", "history"] as const }), "/?tab=gone");
     expect(hook.current[0]).toBe("overview");
     act(() => hook.current[1]("history"));
     expect(param("tab")).toBe("history");

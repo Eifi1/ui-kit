@@ -119,7 +119,6 @@ export interface UseWizardOptions<TData extends Record<string, unknown>> {
 
 export type StepStatus = "upcoming" | "active" | "completed" | "skipped";
 
-
 /** What `finish` resolves to at run time (0.50): whether the commit went through, and the
  *  error's message when `onComplete` threw. `undefined` when there was nothing to run. */
 export interface WizardFinishResult {
@@ -168,9 +167,7 @@ export interface UseWizardReturn<TData extends Record<string, unknown>> {
   /** Leave after the post-commit steps: drops the URL param, then calls `onDone`. */
   done: () => void;
   /** Register a validator for the mounted step (used by useRhfWizardStep). */
-  registerStepValidate: (
-    fn: () => ValidateResult | Promise<ValidateResult>,
-  ) => () => void;
+  registerStepValidate: (fn: () => ValidateResult | Promise<ValidateResult>) => () => void;
   /** True when the mounted step has blocked forward navigation (Next/Skip disabled). */
   nextBlocked: boolean;
   /** Set by the active step (via useWizardNextGate) to disable/enable Next+Skip. */

@@ -85,12 +85,11 @@ function CurveExample() {
         <ResultLine result={result} />
       </div>
       <Note>
-        The parse says what it assumed — the separator, the decimal convention, the header line (a
-        checkbox, because detection is a guess) — and lists every line it could not read by number
-        and text: the German sample&apos;s dropout row, where `actual` is no number, and its footer.
-        The English sample names its columns, so `Actual` is placed by name. Picking a role another
-        column holds moves it there. Drop a `.csv` on the box or the button; a Windows-1252 file is
-        read as such. The rows are strings; convert with `tableNumber(cell, result.decimalComma)`.
+        The parse says what it assumed — the separator, the decimal convention, the header line (a checkbox, because
+        detection is a guess) — and lists every line it could not read by number and text: the German sample&apos;s
+        dropout row, where `actual` is no number, and its footer. The English sample names its columns, so `Actual` is
+        placed by name. Picking a role another column holds moves it there. Drop a `.csv` on the box or the button; a
+        Windows-1252 file is read as such. The rows are strings; convert with `tableNumber(cell, result.decimalComma)`.
       </Note>
     </Example>
   );
@@ -142,12 +141,11 @@ function BankExample() {
         <p className="font-mono text-xs break-words text-muted">mapping = {JSON.stringify(mapping)}</p>
       </div>
       <Note>
-        The preview with the role selects alone, controlled, over rows the caller already has —
-        an import&apos;s step two, whose rows come from its server&apos;s sniff. `required: "money"` makes
-        a group: any one of Amount, Debit and Credit satisfies it, so a bank that splits debit and
-        credit needs no amount column. Ignored columns are dimmed, not hidden. The table scrolls
-        sideways in its own box on a phone. A two-step wizard reading the file itself uses
-        `parseTextTable` for step one and `readMappedTable` at the end.
+        The preview with the role selects alone, controlled, over rows the caller already has — an import&apos;s step
+        two, whose rows come from its server&apos;s sniff. `required: "money"` makes a group: any one of Amount, Debit
+        and Credit satisfies it, so a bank that splits debit and credit needs no amount column. Ignored columns are
+        dimmed, not hidden. The table scrolls sideways in its own box on a phone. A two-step wizard reading the file
+        itself uses `parseTextTable` for step one and `readMappedTable` at the end.
       </Note>
     </Example>
   );
@@ -228,20 +226,17 @@ function FadeExample() {
         </div>
       </div>
       <Note>
-        On a phone the fourth column&apos;s select sat past the right edge and
-        nothing said there was more. The edge with columns behind it now fades — measured, so
-        a table that fits is drawn as before; both edges once scrolled into the middle; the
-        reading direction&apos;s own end in RTL. It is the Tabs strip&apos;s fade, a{" "}
-        {code("mask-image")}: no layout change, no animation, nothing to fade to. A role select
-        tabbed to behind the fade is scrolled clear of it. The roles are all required, so
-        none says {code("(required)")} — it told no option from another and cut{" "}
-        {code("Zeit (s) (erforderl…")} short; the {code("Still needed")} line names what is missing.
+        On a phone the fourth column&apos;s select sat past the right edge and nothing said there was more. The edge
+        with columns behind it now fades — measured, so a table that fits is drawn as before; both edges once scrolled
+        into the middle; the reading direction&apos;s own end in RTL. It is the Tabs strip&apos;s fade, a{" "}
+        {code("mask-image")}: no layout change, no animation, nothing to fade to. A role select tabbed to behind the
+        fade is scrolled clear of it. The roles are all required, so none says {code("(required)")} — it told no option
+        from another and cut {code("Zeit (s) (erforderl…")} short; the {code("Still needed")} line names what is
+        missing.
       </Note>
     </Example>
   );
 }
-
-
 
 const SNIFF_024 = {
   columns: ["Buchungstag", "Empfänger", "Verwendungszweck", "Soll", "Haben"],
@@ -277,12 +272,12 @@ function PrivateExample() {
         </div>
       </div>
       <Note>
-        Sample rows may be the user&apos;s own bank data, and a demo mode blurs{" "}
-        {code("[data-private]")}. On the table&apos;s {code("<tbody>")} that is {code('bodyProps={{ "data-private": "" }}')}. The head stays
-        readable: the column names and role selects are what demo mode shows. {code("rowProps(row, index)")}{" "}
-        puts attributes on each previewed {code("<tr>")}, as LineItems&apos; {code("rowProps")} does on its
-        rows. Here some roles are optional, so the required one still says so — Booking date —
-        and a group&apos;s members do not: the line under the table names the group.
+        Sample rows may be the user&apos;s own bank data, and a demo mode blurs {code("[data-private]")}. On the
+        table&apos;s {code("<tbody>")} that is {code('bodyProps={{ "data-private": "" }}')}. The head stays readable:
+        the column names and role selects are what demo mode shows. {code("rowProps(row, index)")} puts attributes on
+        each previewed {code("<tr>")}, as LineItems&apos; {code("rowProps")} does on its rows. Here some roles are
+        optional, so the required one still says so — Booking date — and a group&apos;s members do not: the line under
+        the table names the group.
       </Note>
     </Example>
   );
@@ -298,7 +293,6 @@ function ColumnMapper024Demo() {
 }
 
 /* ── since 0.25 ─────────────────────────────────────────────────────────── */
-
 
 const ROLE_SETS: Record<"en" | "de" | "fr", ColumnRole<BankRole>[]> = {
   en: [
@@ -385,14 +379,13 @@ function ColumnRoleRequired025Demo() {
           />
         </div>
         <Note>
-          On a phone the closed select said {code("Booking date (re…")} — the mark took
-          the room the role&apos;s name needed. It is short now, {code("Booking date *")}, and the
-          option is still NAMED {code("Booking date (required)")} ({code("aria-label")}), so a
-          screen reader hears the word, not &ldquo;star&rdquo;; {code("requiredRoleShort")} and{" "}
-          {code("requiredRole")} are the two labels. And no role name is cut at all: each column
-          is at least as wide as its select&apos;s longest option, up to 14rem, so a long
-          translation widens the columns and the edge fade says there are more to scroll to.
-          Short roles keep the 9rem column they had.
+          On a phone the closed select said {code("Booking date (re…")} — the mark took the room the role&apos;s name
+          needed. It is short now, {code("Booking date *")}, and the option is still NAMED{" "}
+          {code("Booking date (required)")} ({code("aria-label")}), so a screen reader hears the word, not
+          &ldquo;star&rdquo;; {code("requiredRoleShort")} and {code("requiredRole")} are the two labels. And no role
+          name is cut at all: each column is at least as wide as its select&apos;s longest option, up to 14rem, so a
+          long translation widens the columns and the edge fade says there are more to scroll to. Short roles keep the
+          9rem column they had.
         </Note>
       </div>
     </Example>

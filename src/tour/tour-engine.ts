@@ -12,10 +12,7 @@ export function liveEngine<T extends object>(
 ): { engine: T; set: (current: T) => void } {
   let current = initial;
   const read = () => {
-    if (!current)
-      throw new Error(
-        "[ui-kit] The tour engine was read before its provider rendered.",
-      );
+    if (!current) throw new Error("[ui-kit] The tour engine was read before its provider rendered.");
     return current;
   };
   const engine = {} as T;
@@ -26,8 +23,7 @@ export function liveEngine<T extends object>(
         const value = read()[key];
         // A method is looked up when it is CALLED, so a kept `engine.stop` is the latest too.
         return typeof value === "function"
-          ? (...args: unknown[]) =>
-              (read()[key] as (...a: unknown[]) => unknown)(...args)
+          ? (...args: unknown[]) => (read()[key] as (...a: unknown[]) => unknown)(...args)
           : value;
       },
     });

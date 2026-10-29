@@ -33,13 +33,32 @@ const reasonOf = () => {
 describe("combineWriteLocks — one provider, the first locked reason (§12.6)", () => {
   it("locks when any source does, with the first locked source's sentence", () => {
     const { rerender } = render(
-      <Save lock={combineWriteLocks([{ locked: false, reason: DEMO }, { locked: true, reason: PAYER }])} />,
+      <Save
+        lock={combineWriteLocks([
+          { locked: false, reason: DEMO },
+          { locked: true, reason: PAYER },
+        ])}
+      />,
     );
     expect(reasonOf()).toBe(PAYER);
     // The demo's refusal comes first on the server (§12.3), so its sentence does here.
-    rerender(<Save lock={combineWriteLocks([{ locked: true, reason: DEMO }, { locked: true, reason: PAYER }])} />);
+    rerender(
+      <Save
+        lock={combineWriteLocks([
+          { locked: true, reason: DEMO },
+          { locked: true, reason: PAYER },
+        ])}
+      />,
+    );
     expect(reasonOf()).toBe(DEMO);
-    rerender(<Save lock={combineWriteLocks([{ locked: false, reason: DEMO }, { locked: false, reason: PAYER }])} />);
+    rerender(
+      <Save
+        lock={combineWriteLocks([
+          { locked: false, reason: DEMO },
+          { locked: false, reason: PAYER },
+        ])}
+      />,
+    );
     expect(reasonOf()).toBeNull();
   });
 
@@ -133,9 +152,9 @@ describe("the dates a device locks itself at (§12.5)", () => {
   const NOW = Date.parse("2026-11-07T12:00:00Z");
 
   it("locks a trial at trial_ends_at and a grant at comped_until, nothing else by date", () => {
-    expect(billingLockAt({ status: "trialing", in_good_standing: true, trial_ends_at: "2026-11-08T00:00:00Z" })).toEqual(
-      new Date("2026-11-08T00:00:00Z"),
-    );
+    expect(
+      billingLockAt({ status: "trialing", in_good_standing: true, trial_ends_at: "2026-11-08T00:00:00Z" }),
+    ).toEqual(new Date("2026-11-08T00:00:00Z"));
     expect(billingLockAt({ status: "comped", in_good_standing: true, comped_until: "2027-10-07T00:00:00Z" })).toEqual(
       new Date("2027-10-07T00:00:00Z"),
     );
@@ -152,7 +171,9 @@ describe("the dates a device locks itself at (§12.5)", () => {
     expect(isBillingReadOnly({ ...trial, trial_ends_at: "2026-11-07T12:01:00Z" }, NOW)).toBe(false);
     expect(isBillingReadOnly({ status: "active", in_good_standing: true }, NOW)).toBe(false);
     expect(isBillingReadOnly({ status: "expired", in_good_standing: false }, NOW)).toBe(true);
-    expect(isBillingReadOnly({ status: "comped", in_good_standing: true, comped_until: null }, new Date(NOW))).toBe(false);
+    expect(isBillingReadOnly({ status: "comped", in_good_standing: true, comped_until: null }, new Date(NOW))).toBe(
+      false,
+    );
   });
 
   it("counts calendar days in the device's zone: 0 today, 1 tomorrow, never below 0", () => {

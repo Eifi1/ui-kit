@@ -134,11 +134,22 @@ describe("IbanInput", () => {
     );
     expect(field()).toHaveAccessibleDescription("Already on file");
     rerender(
-      <IbanInput label="IBAN" value={CH_BAD} onValueChange={vi.fn()} error={null} labels={{ checksum: "Prüfziffer falsch" }} />,
+      <IbanInput
+        label="IBAN"
+        value={CH_BAD}
+        onValueChange={vi.fn()}
+        error={null}
+        labels={{ checksum: "Prüfziffer falsch" }}
+      />,
     );
     expect(field()).toHaveAccessibleDescription("Prüfziffer falsch");
     rerender(
-      <IbanInput label="IBAN" value={CH.slice(0, 8)} onValueChange={vi.fn()} labels={{ length: (a, e) => `${a}/${e}` }} />,
+      <IbanInput
+        label="IBAN"
+        value={CH.slice(0, 8)}
+        onValueChange={vi.fn()}
+        labels={{ length: (a, e) => `${a}/${e}` }}
+      />,
     );
     expect(field()).toHaveAccessibleDescription("8/21");
   });

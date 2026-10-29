@@ -90,7 +90,8 @@ describe("per-point dots", () => {
           dot: (point) => {
             seen.push(point);
             if (point.index === 0) return true;
-            if (point.value === 4) return <rect data-testid="trade" x={point.cx - 3} y={point.cy - 3} width={6} height={6} />;
+            if (point.value === 4)
+              return <rect data-testid="trade" x={point.cx - 3} y={point.cy - 3} width={6} height={6} />;
             return false;
           },
         },
@@ -264,7 +265,11 @@ describe("a category abscissa", () => {
   it("hands `format` the slot and the category", () => {
     const format = vi.fn((slot: number, tick: { value: unknown; index?: number }) => `${slot}:${String(tick.value)}`);
     const { container } = render(
-      <SeriesChart rows={MONTHS} x={{ type: "category", key: "period", format }} series={[{ key: "net", label: "Net" }]} />,
+      <SeriesChart
+        rows={MONTHS}
+        x={{ type: "category", key: "period", format }}
+        series={[{ key: "net", label: "Net" }]}
+      />,
     );
     expect(xTicks(container)).toEqual(["0:2026-01", "1:2026-02", "2:2026-03"]);
     expect(format).toHaveBeenCalledWith(1, expect.objectContaining({ value: "2026-02", index: 1 }));

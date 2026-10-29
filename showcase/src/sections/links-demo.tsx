@@ -141,17 +141,19 @@ function ProviderLink() {
             data-demo="ListItem external"
           />
         </List>
-        <OutTable rows={[["last link followed (?via=)", via], ...hrefs.map(([k, v]) => [`${k} → href`, v] as [string, string])]} />
+        <OutTable
+          rows={[["last link followed (?via=)", via], ...hrefs.map(([k, v]) => [`${k} → href`, v] as [string, string])]}
+        />
       </div>
       <div className="mt-3">
         <Note>
           The showcase hands its {code("<UiKitProvider>")} a {code("linkComponent")} —{" "}
           {code("({ href, ...p }) => <Link to={href} {...p} />")} with react-router&apos;s {code("Link")} — once, in
           showcase.tsx. Every kit link below it now routes: the hrefs above read {code("#/links?…")} because the
-          HashRouter&apos;s {code("Link")} drew them, and following one changes the hash without reloading the page
-          (the {code("?via=")} readout updates in place). A component&apos;s own {code("renderLink")} still wins — the
-          second row&apos;s link carries {code("&own=1")}, which only its renderLink adds — and an external href is
-          always a plain {code("<a>")}. {code("useKitLink()")} hands the same component to an app&apos;s own links.
+          HashRouter&apos;s {code("Link")} drew them, and following one changes the hash without reloading the page (the{" "}
+          {code("?via=")} readout updates in place). A component&apos;s own {code("renderLink")} still wins — the second
+          row&apos;s link carries {code("&own=1")}, which only its renderLink adds — and an external href is always a
+          plain {code("<a>")}. {code("useKitLink()")} hands the same component to an app&apos;s own links.
         </Note>
       </div>
     </Example>
@@ -231,10 +233,7 @@ function TextLinkKinds() {
               className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-md border border-subtle bg-page px-3 py-2 hover:bg-hover"
             >
               <span className="min-w-0">Invoice 2026-041 (the row opens a preview)</span>
-              <TextLink
-                href={`/links?via=${stop ? "stopPropagation" : "no-stopPropagation"}`}
-                stopPropagation={stop}
-              >
+              <TextLink href={`/links?via=${stop ? "stopPropagation" : "no-stopPropagation"}`} stopPropagation={stop}>
                 {stop ? "Tenant (stopPropagation)" : "Tenant (no stopPropagation)"}
               </TextLink>
             </div>
@@ -274,11 +273,11 @@ function TextLinkKinds() {
       </div>
       <div className="mt-3">
         <Note>
-          Click each &ldquo;Tenant&rdquo; link. With {code("stopPropagation")} the link routes and the row click
-          count stays put; without it the row&apos;s handler runs too. Enter on the focused link behaves the same.
-          The legal links are {code('tone="muted"')} and {code("current")} on the one you are on (semibold,{" "}
-          {code('aria-current="page"')}); {code("current")} also takes a token ({code('"step"')}). {code("icon")}{" "}
-          puts a Lucide icon before the text at the text&apos;s size.
+          Click each &ldquo;Tenant&rdquo; link. With {code("stopPropagation")} the link routes and the row click count
+          stays put; without it the row&apos;s handler runs too. Enter on the focused link behaves the same. The legal
+          links are {code('tone="muted"')} and {code("current")} on the one you are on (semibold,{" "}
+          {code('aria-current="page"')}); {code("current")} also takes a token ({code('"step"')}). {code("icon")} puts a
+          Lucide icon before the text at the text&apos;s size.
         </Note>
       </div>
     </Example>
@@ -323,18 +322,19 @@ function ButtonHref() {
           </Button>
         </Row>
         <div className="mt-3">
-          <OutTable rows={[["last link followed (?via=)", via], ...hrefs.map(([k, v]) => [k, v] as [string, string])]} />
+          <OutTable
+            rows={[["last link followed (?via=)", via], ...hrefs.map(([k, v]) => [k, v] as [string, string])]}
+          />
         </div>
       </div>
       <div className="mt-3">
         <Note>
-          With {code("href")} a Button is an {code("<a>")}: middle-click and &ldquo;open in new tab&rdquo; work. An in-app
-          path goes through the provider&apos;s {code("linkComponent")}, or {code("renderLink")} when given — the third
-          button&apos;s renderLink returns a bare {code("<a>")}, so its hand-written {code("#/…")} href is used as is
-          (a full page navigation within the hash). {code("external")} is a plain{" "}
-          {code('target="_blank"')} link with &ldquo;(opens in a new tab)&rdquo; read after the label.{" "}
-          {code("disabled")} draws an {code("<a>")} with no href at all ({code('role="link" aria-disabled')}), out of
-          the tab order.
+          With {code("href")} a Button is an {code("<a>")}: middle-click and &ldquo;open in new tab&rdquo; work. An
+          in-app path goes through the provider&apos;s {code("linkComponent")}, or {code("renderLink")} when given — the
+          third button&apos;s renderLink returns a bare {code("<a>")}, so its hand-written {code("#/…")} href is used as
+          is (a full page navigation within the hash). {code("external")} is a plain {code('target="_blank"')} link with
+          &ldquo;(opens in a new tab)&rdquo; read after the label. {code("disabled")} draws an {code("<a>")} with no
+          href at all ({code('role="link" aria-disabled')}), out of the tab order.
         </Note>
       </div>
     </Example>

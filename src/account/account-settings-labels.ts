@@ -223,8 +223,7 @@ export function useAccountSettingsLabels<K extends keyof AccountSettingsLabels>(
   prop?: Partial<AccountSettingsLabels[K]>,
 ): AccountSettingsLabels[K] {
   const fromProvider = useKitLabelOverrides("accountSettings")?.[section] as
-    | Partial<AccountSettingsLabels[K]>
-    | undefined;
+    Partial<AccountSettingsLabels[K]> | undefined;
   return useMemo(
     () => ({
       ...DEFAULT_ACCOUNT_SETTINGS_LABELS[section],

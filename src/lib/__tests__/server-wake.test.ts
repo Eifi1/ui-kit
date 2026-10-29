@@ -171,7 +171,9 @@ describe("createServerWake", () => {
   });
 
   it("hands the request to a custom filter as its third argument", () => {
-    const shouldWatch = vi.fn((_method: string, _url: string, request: { responseType?: string }) => request.responseType === "text");
+    const shouldWatch = vi.fn(
+      (_method: string, _url: string, request: { responseType?: string }) => request.responseType === "text",
+    );
     const w = createServerWake({ shouldWatch });
     expect(w.start("get", "/a", { responseType: "text" })).toBe(true);
     // Without a request, the filter still gets the method and URL in one.
@@ -251,7 +253,7 @@ describe("track()", () => {
 function fakeAxios() {
   type Cfg = ServerWakeAxiosConfig & Record<string, unknown>;
   type Res = { config: Cfg; status: number };
-  const manager = <V,>() => {
+  const manager = <V>() => {
     const handlers: Array<{ ok: (v: V) => V | Promise<V>; err: (e: unknown) => unknown } | null> = [];
     return {
       handlers,
@@ -393,7 +395,10 @@ describe("wrapFetch", () => {
 
   it("ends the wait when fetch rejects", async () => {
     const w = createServerWake();
-    const apiFetch = wrapFetch(vi.fn(() => Promise.reject(new TypeError("Failed to fetch"))) as unknown as typeof fetch, w);
+    const apiFetch = wrapFetch(
+      vi.fn(() => Promise.reject(new TypeError("Failed to fetch"))) as unknown as typeof fetch,
+      w,
+    );
     await expect(apiFetch(new URL("http://localhost/x"))).rejects.toThrow("Failed to fetch");
     expect(w.getInFlight()).toBe(0);
   });

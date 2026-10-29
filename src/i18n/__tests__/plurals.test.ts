@@ -73,6 +73,7 @@ describe("pluralForm (0.33.1)", () => {
   });
 
   it("reads a locale Intl cannot, or none, as the runtime's, instead of throwing", () => {
-    for (const locale of [undefined, "", "not a tag"]) expect(pluralForm(2, budget, locale)).toBe(pluralForm(2, budget));
+    for (const locale of [undefined, "", "not a tag"])
+      expect(pluralForm(2, budget, locale)).toBe(pluralForm(2, budget));
   });
 });

@@ -39,15 +39,24 @@ describe("resolveAccountLanguage — the order", () => {
   const base = { offered: OFFERED, fallback: "en", browser: ["fr-FR", "en"] };
 
   it("takes the device's own choice first", () => {
-    expect(resolveAccountLanguage({ ...base, device: "de-CH", account: "fr" })).toEqual({ language: "de-CH", source: "device" });
+    expect(resolveAccountLanguage({ ...base, device: "de-CH", account: "fr" })).toEqual({
+      language: "de-CH",
+      source: "device",
+    });
   });
 
   it("then the account", () => {
-    expect(resolveAccountLanguage({ ...base, device: null, account: "de" })).toEqual({ language: "de-CH", source: "account" });
+    expect(resolveAccountLanguage({ ...base, device: null, account: "de" })).toEqual({
+      language: "de-CH",
+      source: "account",
+    });
   });
 
   it("then the browser, the first offered of its languages", () => {
-    expect(resolveAccountLanguage({ ...base, device: null, account: undefined })).toEqual({ language: "fr", source: "browser" });
+    expect(resolveAccountLanguage({ ...base, device: null, account: undefined })).toEqual({
+      language: "fr",
+      source: "browser",
+    });
     expect(resolveAccountLanguage({ ...base, device: null, account: null, browser: ["it", "en-US"] })).toEqual({
       language: "en",
       source: "browser",

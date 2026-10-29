@@ -16,9 +16,7 @@ export type Direction = "ltr" | "rtl";
 /** The effective direction at `el`: its nearest `[dir]` ancestor (or itself), else the
  *  document's, else LTR. Attribute-based on purpose — jsdom computes no `direction`. */
 export function dirOf(el: Element | null | undefined): Direction {
-  const source =
-    el?.closest("[dir]") ??
-    (typeof document !== "undefined" ? document.documentElement : null);
+  const source = el?.closest("[dir]") ?? (typeof document !== "undefined" ? document.documentElement : null);
   return source?.getAttribute("dir") === "rtl" ? "rtl" : "ltr";
 }
 

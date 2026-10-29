@@ -102,7 +102,9 @@ describe("FeedbackPublicList — desktop", () => {
     restore = stubViewportWidth(DESKTOP_WIDTH);
     const { onSortChange } = renderList({ total: 2 });
     const group = screen.getByRole("radiogroup", { name: "Sort" });
-    const options = within(group).getAllByRole("radio").map((r) => r.textContent);
+    const options = within(group)
+      .getAllByRole("radio")
+      .map((r) => r.textContent);
     expect(options).toEqual(["Newest", "Most wanted", "Recently updated"]);
     fireEvent.click(within(group).getByRole("radio", { name: "Most wanted" }));
     expect(onSortChange).toHaveBeenCalledWith("votes");
@@ -161,7 +163,13 @@ describe("FeedbackPublicList — desktop", () => {
     restore = stubViewportWidth(DESKTOP_WIDTH);
     render(
       <UiKitProvider labels={UI_KIT_LABELS_DE_CH}>
-        <FeedbackPublicList rows={ROWS} sort="votes" onSortChange={() => {}} onVote={vi.fn()} renderDetail={() => null} />
+        <FeedbackPublicList
+          rows={ROWS}
+          sort="votes"
+          onSortChange={() => {}}
+          onVote={vi.fn()}
+          renderDetail={() => null}
+        />
       </UiKitProvider>,
     );
     expect(screen.getByRole("radio", { name: "Meistgewünscht" })).toBeChecked();
@@ -312,13 +320,35 @@ const RECORD: FeedbackPublicRecord = {
   ...ROWS[0],
   body: "It jumps when I save.\n\n--- REWORK 2026-10-05 08:00 ---\nStill on a phone.",
   replies: [
-    { id: 1, author_name: null, body: "Looking into it.", status_to: "IN_PROGRESS", created_at: "2026-10-04T10:00:00Z" },
+    {
+      id: 1,
+      author_name: null,
+      body: "Looking into it.",
+      status_to: "IN_PROGRESS",
+      created_at: "2026-10-04T10:00:00Z",
+    },
   ],
 };
 
 const COMMENTS: FeedbackComment[] = [
-  { id: 5, author_name: "Ben", mine: false, staff: false, body: "Same on the iPad.", hidden: false, created_at: "2026-10-04T11:00:00Z" },
-  { id: 6, author_name: null, mine: false, staff: false, body: "Me too.", hidden: false, created_at: "2026-10-04T12:00:00Z" },
+  {
+    id: 5,
+    author_name: "Ben",
+    mine: false,
+    staff: false,
+    body: "Same on the iPad.",
+    hidden: false,
+    created_at: "2026-10-04T11:00:00Z",
+  },
+  {
+    id: 6,
+    author_name: null,
+    mine: false,
+    staff: false,
+    body: "Me too.",
+    hidden: false,
+    created_at: "2026-10-04T12:00:00Z",
+  },
 ];
 
 describe("FeedbackPublicDetail", () => {
@@ -361,7 +391,9 @@ describe("FeedbackPublicDetail", () => {
     );
     expect(screen.getByRole("button", { name: /I want this too/ })).toHaveAttribute("aria-disabled", "true");
     unmount();
-    render(<FeedbackPublicDetail row={RECORD} comments={[]} onVote={vi.fn()} voteDisabled="Not in the demo" now={NOW} />);
+    render(
+      <FeedbackPublicDetail row={RECORD} comments={[]} onVote={vi.fn()} voteDisabled="Not in the demo" now={NOW} />,
+    );
     expect(screen.getByRole("button", { name: /I want this too/ })).toHaveAttribute("aria-disabled", "true");
   });
 

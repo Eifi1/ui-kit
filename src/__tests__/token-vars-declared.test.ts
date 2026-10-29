@@ -28,9 +28,7 @@ import { CONTRAST_STEPPED_VARS } from "../theme/contrast-tokens";
  *  `import.meta.glob(…, { query: "?raw" })` the `invalid` sweep and the sonner sweep
  *  use. */
 const SOURCES = Object.fromEntries(
-  Object.entries(
-    import.meta.glob<string>("../**/*.{ts,tsx}", { query: "?raw", import: "default", eager: true }),
-  )
+  Object.entries(import.meta.glob<string>("../**/*.{ts,tsx}", { query: "?raw", import: "default", eager: true }))
     .filter(([path]) => !path.includes("__tests__") && !path.startsWith("../test/"))
     .map(([path, text]) => [path.replace("../", "src/"), text]),
 );
@@ -153,7 +151,10 @@ describe("undeclaredCssVariables (§8.2, §8.3)", () => {
   });
 
   it("checks fallback uses on request, where --app-nav-h counts and nowhere else", () => {
-    const files = { "src/a.tsx": 'const a = "bottom-[var(--app-nav-h,0px)] text-[var(--maybe,red)]";\nconst b = "h-[var(--app-nav-h)]";' };
+    const files = {
+      "src/a.tsx":
+        'const a = "bottom-[var(--app-nav-h,0px)] text-[var(--maybe,red)]";\nconst b = "h-[var(--app-nav-h)]";',
+    };
     expect(run(files, { checkFallbacks: true })).toEqual(["src/a.tsx:1 --maybe", "src/a.tsx:2 --app-nav-h"]);
     expect(run(files)).toEqual(["src/a.tsx:2 --app-nav-h"]);
   });
@@ -167,12 +168,19 @@ describe("undeclaredCssVariables (§8.2, §8.3)", () => {
   });
 
   it("counts a chart series' --color-<key> where the file configures that key", () => {
-    expect(run({ "src/c.tsx": 'const config = { total: { label: "Total", color: "var(--chart-1)" } };\nconst f = "var(--color-total)";' })).toEqual([]);
+    expect(
+      run({
+        "src/c.tsx":
+          'const config = { total: { label: "Total", color: "var(--chart-1)" } };\nconst f = "var(--color-total)";',
+      }),
+    ).toEqual([]);
     expect(run({ "src/c.tsx": 'const f = "var(--color-total)";' })).toEqual(["src/c.tsx:1 --color-total"]);
   });
 
   it("takes a library's runtime variables as names or patterns", () => {
-    const files = { "src/a.tsx": 'const h = "h-[var(--radix-collapsible-content-height)] w-[var(--radix-popper-anchor-width)]";' };
+    const files = {
+      "src/a.tsx": 'const h = "h-[var(--radix-collapsible-content-height)] w-[var(--radix-popper-anchor-width)]";',
+    };
     expect(run(files, { runtime: ["--radix-collapsible-content-height", /^--radix-popper-/] })).toEqual([]);
   });
 

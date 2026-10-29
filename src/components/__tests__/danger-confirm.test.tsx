@@ -184,7 +184,7 @@ describe("DangerConfirm", () => {
     expect(screen.getByRole("button", { name: "Zurück" })).toBeInTheDocument();
   });
 
-  it("phraseMatch=\"exact\" refuses surrounding spaces", async () => {
+  it('phraseMatch="exact" refuses surrounding spaces', async () => {
     const user = userEvent.setup();
     render(<DangerConfirm phrase="DELETE" phraseMatch="exact" onConfirm={() => {}} />);
     await user.click(screen.getByRole("button", { name: "Delete…" }));
@@ -222,7 +222,7 @@ describe("DangerConfirm", () => {
     expect(field.getAttribute("placeholder")?.trim() ?? "").toBe("");
   });
 
-  it("phraseMatch=\"caseless\" takes an address in any case, still not a different one", async () => {
+  it('phraseMatch="caseless" takes an address in any case, still not a different one', async () => {
     const user = userEvent.setup();
     render(<DangerConfirm phrase="Anna@Example.org" phraseMatch="caseless" armed onConfirm={() => {}} />);
     const field = screen.getByLabelText("Type “Anna@Example.org” to confirm");
@@ -252,7 +252,15 @@ describe("DangerConfirm — requireAcknowledge and consequences (0.22)", () => {
 
   it("takes a node as the tick's own label, and combines with the phrase", async () => {
     const user = userEvent.setup();
-    render(<DangerConfirm armed phrase="anna@example.org" phraseMatch="caseless" requireAcknowledge="Sign Anna out everywhere" onConfirm={() => {}} />);
+    render(
+      <DangerConfirm
+        armed
+        phrase="anna@example.org"
+        phraseMatch="caseless"
+        requireAcknowledge="Sign Anna out everywhere"
+        onConfirm={() => {}}
+      />,
+    );
     await user.click(screen.getByRole("checkbox", { name: "Sign Anna out everywhere" }));
     expectHeld("Type “anna@example.org” to confirm");
     await user.type(screen.getByLabelText("Type “anna@example.org” to confirm"), "Anna@Example.org");
@@ -281,7 +289,10 @@ describe("DangerConfirm — requireAcknowledge and consequences (0.22)", () => {
     const user = userEvent.setup();
     render(
       <DangerConfirm
-        consequences={["Every session ends now.", { key: "only_door", text: "The only way into the data goes.", severe: true }]}
+        consequences={[
+          "Every session ends now.",
+          { key: "only_door", text: "The only way into the data goes.", severe: true },
+        ]}
         onConfirm={() => {}}
       />,
     );
@@ -502,7 +513,13 @@ describe("CurrentPasswordInput", () => {
     const onChange = vi.fn();
     const onValueChange = vi.fn();
     render(
-      <CurrentPasswordInput ref={ref} name="password" error="Wrong password." onChange={onChange} onValueChange={onValueChange} />,
+      <CurrentPasswordInput
+        ref={ref}
+        name="password"
+        error="Wrong password."
+        onChange={onChange}
+        onValueChange={onValueChange}
+      />,
     );
     const field = screen.getByLabelText("Password");
     expect(ref.current).toBe(field);
@@ -557,7 +574,9 @@ describe("DangerConfirm — confirmVariant, confirmDisabledReason and fields of 
     expect(onConfirm).not.toHaveBeenCalled();
     // Not the lock's sentence under the buttons: only the button's hidden description
     // and the tooltip carry it.
-    const printed = Array.from(container.querySelectorAll("p")).filter((p) => p.textContent === "Pick a different plan");
+    const printed = Array.from(container.querySelectorAll("p")).filter(
+      (p) => p.textContent === "Pick a different plan",
+    );
     expect(printed).toEqual([]);
     rerender(<DangerConfirm armed confirmDisabledReason={undefined} onConfirm={onConfirm} />);
     expectReady();
@@ -587,7 +606,9 @@ describe("DangerConfirm — confirmVariant, confirmDisabledReason and fields of 
     const tile = (props: { lockedReason?: string; confirmDisabledReason?: string }) => (
       <DangerConfirm armed requireAcknowledge phrase="ok" onConfirm={() => {}} {...props} />
     );
-    const { rerender } = render(tile({ lockedReason: "Read-only demo", confirmDisabledReason: "Pick a different plan" }));
+    const { rerender } = render(
+      tile({ lockedReason: "Read-only demo", confirmDisabledReason: "Pick a different plan" }),
+    );
     expectHeld("Read-only demo");
     rerender(tile({ confirmDisabledReason: "Pick a different plan" }));
     expectHeld("Pick a different plan");
@@ -603,7 +624,13 @@ describe("DangerConfirm — confirmVariant, confirmDisabledReason and fields of 
   it("draws the caller's fields only once armed, after the consequences and before the guards", async () => {
     const user = userEvent.setup();
     render(
-      <DangerConfirm consequences={["Budgets are kept."]} requireAcknowledge phrase="ok" requirePassword onConfirm={() => {}}>
+      <DangerConfirm
+        consequences={["Budgets are kept."]}
+        requireAcknowledge
+        phrase="ok"
+        requirePassword
+        onConfirm={() => {}}
+      >
         <label>
           Plan
           <select defaultValue="FREE">
@@ -699,7 +726,11 @@ describe("DangerConfirm — confirmVariant, confirmDisabledReason and fields of 
     const form = container.querySelector("form")!;
     // The prompt and the button row.
     expect(form.children).toHaveLength(2);
-    rerender(<DangerConfirm armed onConfirm={() => {}}>{false}</DangerConfirm>);
+    rerender(
+      <DangerConfirm armed onConfirm={() => {}}>
+        {false}
+      </DangerConfirm>,
+    );
     expect(container.querySelector("form")!.children).toHaveLength(2);
     rerender(
       <DangerConfirm armed onConfirm={() => {}}>

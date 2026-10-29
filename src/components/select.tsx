@@ -157,9 +157,7 @@ export function Select(props: SelectProps) {
   // account type became read-only and still looked exactly like a picker). A locked
   // one has no menu either.
   const chevron =
-    rest.disabled || listBox || locked ? null : (
-      <FieldChevron className={small ? "end-1.5 size-3.5" : undefined} />
-    );
+    rest.disabled || listBox || locked ? null : <FieldChevron className={small ? "end-1.5 size-3.5" : undefined} />;
   // `pe-9` is the room the chevron takes; a list box has none to make room for.
   //
   // A list box's height is `size` rows plus its padding, but its rows are clipped at
@@ -263,13 +261,7 @@ export function Select(props: SelectProps) {
   return (
     <FieldGroup errorEl={below} reserve={reserve}>
       {withReason(
-        <FloatingField
-          className={boxClass}
-          htmlFor={fieldId}
-          label={label}
-          staticLabel
-          hint={hint}
-        >
+        <FloatingField className={boxClass} htmlFor={fieldId} label={label} staticLabel hint={hint}>
           <select
             ref={ref}
             id={fieldId}

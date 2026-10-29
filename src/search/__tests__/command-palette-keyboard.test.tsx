@@ -172,4 +172,3 @@ describe("the command palette's keyboard", () => {
     expect(screen.getByRole("combobox")).toHaveValue("bank");
   });
 });
-

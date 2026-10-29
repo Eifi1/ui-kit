@@ -40,10 +40,7 @@ function Harness({ groupBy, loadMore }: { groupBy?: boolean; loadMore?: boolean 
     () => [{ key: "name", header: "Name", cell: (r) => <Counted row={r} /> }],
     [],
   );
-  const swipes = useMemo(
-    () => () => ({ end: [{ label: "Delete", tone: "danger" as const, onCommit: () => {} }] }),
-    [],
-  );
+  const swipes = useMemo(() => () => ({ end: [{ label: "Delete", tone: "danger" as const, onCommit: () => {} }] }), []);
   const group = useMemo(() => ({ key: (r: Row) => (r.id <= 6 ? "a" : "b") }), []);
   return (
     <MemoryRouter>

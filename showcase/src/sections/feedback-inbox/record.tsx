@@ -60,10 +60,10 @@ function FeedbackNoteButtons025Demo() {
           Last sent: <span className="font-mono text-secondary">{sent ?? "— nothing yet —"}</span>
         </p>
         <Note>
-          The note editor sits inline in a triage panel and ends in a ghost Discard and a brand
-          Send; two bordered full-size attachment buttons above them read as a second form. The
-          {" "}{code("attachment")} config ({code("FeedbackNoteAttachment")}) now carries the
-          field&apos;s {code("buttonVariant")} / {code("buttonSize")}. Left out, nothing changes.
+          The note editor sits inline in a triage panel and ends in a ghost Discard and a brand Send; two bordered
+          full-size attachment buttons above them read as a second form. The {code("attachment")} config (
+          {code("FeedbackNoteAttachment")}) now carries the field&apos;s {code("buttonVariant")} / {code("buttonSize")}.
+          Left out, nothing changes.
         </Note>
       </div>
     </Example>
@@ -157,7 +157,10 @@ function FeedbackRecord027Demo() {
           PATCH in the toast trio; the table, the row detail and the phone swipes all go through it.
         </Note>
       </Example>
-      <Example label="The body's rework rounds" hint="appendRework writes them, reworkCount counts them, splitDescription keeps them out of the editor">
+      <Example
+        label="The body's rework rounds"
+        hint="appendRework writes them, reworkCount counts them, splitDescription keeps them out of the editor"
+      >
         <div className="grid gap-2 text-xs sm:grid-cols-2">
           <pre className="overflow-x-auto whitespace-pre-wrap rounded-md bg-surface-2 p-2 font-mono">{body}</pre>
           <div className="flex flex-col gap-1">

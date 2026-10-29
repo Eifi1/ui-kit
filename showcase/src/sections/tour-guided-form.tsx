@@ -32,7 +32,10 @@ type Row = { amount: string; category: string; memo: string; transfer: boolean }
 function steps(): TourStep[] {
   const transfer = (c: TourStepContext) => c.gate("gt.transfer") === true;
   return [
-    { title: "Book a transaction", body: "A guided walk through the real form below: each field unlocks Next once it holds a value." },
+    {
+      title: "Book a transaction",
+      body: "A guided walk through the real form below: each field unlocks Next once it holds a value.",
+    },
     {
       target: '[data-tour="gt-new"]',
       title: "Open the form",
@@ -107,21 +110,35 @@ export function GuidedFormTourDemo() {
           <BookingDemo outcome={outcome} onClose={() => stopRef.current()} />
         </TourProvider>
       </Example>
-      <Example label="The form's side — one line per field" hint="useTourGate beside each field, release/refuse from the save">
+      <Example
+        label="The form's side — one line per field"
+        hint="useTourGate beside each field, release/refuse from the save"
+      >
         <OutTable
           rows={[
-            ['useTourGate("gt.amount", amount !== "")', "Publishes whether the field holds what the tour waits for. A no-op without a provider."],
+            [
+              'useTourGate("gt.amount", amount !== "")',
+              "Publishes whether the field holds what the tour waits for. A no-op without a provider.",
+            ],
             ['useTourGate("gt.transfer", transfer)', "A fact no step names as `gate`: a step's `when` asks it."],
             ['release("gt.saved")', "From the save's onSuccess: the awaitGate step moves on (the form may stay open)."],
-            ['refuse("gt.saved", reason)', "From onError: the step stays, shows the reason and offers Back to an emptied field."],
-            ['<TourGuideButton tour="…" at="gt-amount" />', "Starts the tour inside the open form: no intro, no Back past the amount."],
-            ["<TourProvider launch={(id, opts, start, engine) => …}>", "The app's launcher builds the steps and calls start, the provider's own (third argument): no ref. The fourth is the whole engine, read live: engine.stop() ends the run (0.50.1)."],
+            [
+              'refuse("gt.saved", reason)',
+              "From onError: the step stays, shows the reason and offers Back to an emptied field.",
+            ],
+            [
+              '<TourGuideButton tour="…" at="gt-amount" />',
+              "Starts the tour inside the open form: no intro, no Back past the amount.",
+            ],
+            [
+              "<TourProvider launch={(id, opts, start, engine) => …}>",
+              "The app's launcher builds the steps and calls start, the provider's own (third argument): no ref. The fourth is the whole engine, read live: engine.stop() ends the run (0.50.1).",
+            ],
           ]}
         />
         <Note>
-          The step&apos;s side is `gate`, `optional`, `when` and `awaitGate`. On a phone the field steps dock
-          their card at the edge away from the field; inside the full-screen sheet there is no scrim, only the
-          ring.
+          The step&apos;s side is `gate`, `optional`, `when` and `awaitGate`. On a phone the field steps dock their card
+          at the edge away from the field; inside the full-screen sheet there is no scrim, only the ring.
         </Note>
       </Example>
     </>
@@ -136,21 +153,13 @@ function BookingDemo({ outcome, onClose }: { outcome: string | null; onClose: ()
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
-        <Button
-          variant="accent"
-          disabled={tour.active}
-          onClick={() => tour.start(INFO.id)}
-        >
+        <Button variant="accent" disabled={tour.active} onClick={() => tour.start(INFO.id)}>
           Take the guided tour
         </Button>
         <Button variant="secondary" data-tour="gt-new" onClick={() => setOpen(true)}>
           New transaction
         </Button>
-        <Checkbox
-          label="The server refuses the next save"
-          checked={refuseNext}
-          onCheckedChange={setRefuseNext}
-        />
+        <Checkbox label="The server refuses the next save" checked={refuseNext} onCheckedChange={setRefuseNext} />
       </div>
       <p className="text-sm text-muted" data-testid="gt-status">
         {tour.active && tour.activeId === INFO.id
@@ -210,7 +219,10 @@ function BookingForm({
       if (refuse || amount === "") {
         onRefused();
         setAmount("");
-        gates.refuse("gt.saved", amount === "" ? "Enter an amount first." : "The server said no (simulated). Try again.");
+        gates.refuse(
+          "gt.saved",
+          amount === "" ? "Enter an amount first." : "The server said no (simulated). Try again.",
+        );
         return;
       }
       gates.release("gt.saved");

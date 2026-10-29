@@ -18,6 +18,5 @@ export const DEFAULT_PASSWORD_STRENGTH_LABELS: PasswordStrengthLabels = {
   optional: (rule) => `${rule} (optional)`,
   met: "Met:",
   notMet: "Not met:",
-  tooLong: (maxBytes) =>
-    `At most ${maxBytes} characters (accents and emoji count for more than one).`,
+  tooLong: (maxBytes) => `At most ${maxBytes} characters (accents and emoji count for more than one).`,
 };

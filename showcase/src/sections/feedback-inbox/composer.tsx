@@ -112,7 +112,9 @@ function FeedbackThreadDemo() {
       ? [{ name: file.name, type: file.type, size: file.size, url: URL.createObjectURL(file) }]
       : undefined;
     setMessages((all) => [...all, { id: Date.now(), own: true, createdAt: NOW, body, attachments }]);
-    setLog(`onSend("${body.slice(0, 20)}${body.length > 20 ? "…" : ""}", ${file ? file.name : "null"}) → resolved; the box clears`);
+    setLog(
+      `onSend("${body.slice(0, 20)}${body.length > 20 ? "…" : ""}", ${file ? file.name : "null"}) → resolved; the box clears`,
+    );
   };
 
   return (
@@ -132,14 +134,21 @@ function FeedbackThreadDemo() {
               { value: "loading", label: "loading" },
             ]}
           />
-          <Switch label="redact" description="data-private on bodies, authors, files" checked={redact} onCheckedChange={setRedact} />
-          <Switch label="demo-mode blur" description="This page's [data-private] rule" checked={blur} onCheckedChange={setBlur} />
+          <Switch
+            label="redact"
+            description="data-private on bodies, authors, files"
+            checked={redact}
+            onCheckedChange={setRedact}
+          />
+          <Switch
+            label="demo-mode blur"
+            description="This page's [data-private] rule"
+            checked={blur}
+            onCheckedChange={setBlur}
+          />
           <Switch label="dir=rtl" description="Adds a Hebrew reply" checked={rtl} onCheckedChange={setRtl} />
         </Row>
-        <div
-          dir={rtl ? "rtl" : undefined}
-          className={`mt-4 max-w-2xl ${blur ? "[&_[data-private]]:blur-[5px]" : ""}`}
-        >
+        <div dir={rtl ? "rtl" : undefined} className={`mt-4 max-w-2xl ${blur ? "[&_[data-private]]:blur-[5px]" : ""}`}>
           <FeedbackThread
             messages={shown}
             loading={state === "loading"}
@@ -150,17 +159,16 @@ function FeedbackThreadDemo() {
         </div>
         <div className="mt-3 space-y-2">
           <Note>
-            {code("own")} is the caller&apos;s per message — whose words sit at the end side depends on who is
-            reading, and only the app knows that. An own message without an {code("author")} reads
-            &ldquo;You&rdquo;. An image attachment with a {code("url")} is a thumbnail link; anything else is a file
-            link with its size ({code("renderAttachment")} takes over for files behind auth). Times are relative
-            to {code("now")}, pinned here so the page reads the same every day.
+            {code("own")} is the caller&apos;s per message — whose words sit at the end side depends on who is reading,
+            and only the app knows that. An own message without an {code("author")} reads &ldquo;You&rdquo;. An image
+            attachment with a {code("url")} is a thumbnail link; anything else is a file link with its size (
+            {code("renderAttachment")} takes over for files behind auth). Times are relative to {code("now")}, pinned
+            here so the page reads the same every day.
           </Note>
           <Note>
             Turn on the blur: with {code("redact")} (the default) the bodies, authors and attachments are{" "}
             {code("data-private")} and a host&apos;s demo mode hides them; with it off they stay readable. Sides are
-            logical — under {code("dir=rtl")} own messages move to the left — and each body is{" "}
-            {code('dir="auto"')}.
+            logical — under {code("dir=rtl")} own messages move to the left — and each body is {code('dir="auto"')}.
           </Note>
         </div>
       </Example>
@@ -170,9 +178,19 @@ function FeedbackThreadDemo() {
         hint="appends to the thread above; plain Enter is a new line"
       >
         <Row>
-          <Switch label="attachment" description="One picture: file, paste or screenshot" checked={attachment} onCheckedChange={setAttachment} />
+          <Switch
+            label="attachment"
+            description="One picture: file, paste or screenshot"
+            checked={attachment}
+            onCheckedChange={setAttachment}
+          />
           <Switch label="reject the next send" checked={failNext} onCheckedChange={setFailNext} />
-          <Switch label="disabledReason" description="The thread is closed" checked={closed} onCheckedChange={setClosed} />
+          <Switch
+            label="disabledReason"
+            description="The thread is closed"
+            checked={closed}
+            onCheckedChange={setClosed}
+          />
         </Row>
         <div className="mt-4 max-w-2xl">
           <ChatComposer
@@ -189,8 +207,8 @@ function FeedbackThreadDemo() {
           <Note>
             Ctrl+Enter (⌘+Enter on a Mac — the hint names the platform&apos;s key) sends, as in the report dialog and
             the note editor. While {code("pending")} the button shows a spinner and a second send is refused. The box
-            clears when the promise RESOLVES, and only of what was sent: type more while it is in flight and that
-            stays. A rejection keeps everything. Paste a screenshot into the box and it lands in the attachment field.
+            clears when the promise RESOLVES, and only of what was sent: type more while it is in flight and that stays.
+            A rejection keeps everything. Paste a screenshot into the box and it lands in the attachment field.
           </Note>
         </div>
       </Example>
@@ -238,10 +256,9 @@ function ComposerCannedRepliesDemo() {
         <span className={READOUT}>sent: {sent.length}</span>
       </Row>
       <Note>
-        A chip inserts at the caret the box last had and replaces a selection — the
-        selection survives the chip's click — then focuses the box after the text. The
-        draft here is controlled; a resolved send still clears only what was sent,
-        reaching the host as {code('onValueChange("")')}.
+        A chip inserts at the caret the box last had and replaces a selection — the selection survives the chip's click
+        — then focuses the box after the text. The draft here is controlled; a resolved send still clears only what was
+        sent, reaching the host as {code('onValueChange("")')}.
       </Note>
     </Example>
   );
@@ -254,7 +271,6 @@ function ComposerCannedRepliesDemo() {
  * ChatComposer — event lines, day lines and clock times in the thread; Enter to
  * send and files uploaded ahead of the send in the composer.
  */
-
 
 const DAY = 24 * 60 * MINUTE;
 
@@ -316,21 +332,12 @@ function Feedback014Demo() {
         placeholder="Reply to Jana…"
         attachmentSlot={
           <Row>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={upload}
-              disabled={files.length + uploading >= MAX_FILES}
-            >
+            <Button variant="ghost" size="sm" onClick={upload} disabled={files.length + uploading >= MAX_FILES}>
               <Paperclip className="size-4" aria-hidden />
               Attach
             </Button>
             {files.map((file) => (
-              <Chip
-                key={file.id}
-                size="sm"
-                onRemove={() => setFiles((list) => list.filter((f) => f.id !== file.id))}
-              >
+              <Chip key={file.id} size="sm" onRemove={() => setFiles((list) => list.filter((f) => f.id !== file.id))}>
                 {file.name}
               </Chip>
             ))}
@@ -349,13 +356,11 @@ function Feedback014Demo() {
         }}
       />
       <Note>
-        Event lines are list items without an author or a side, worded for whoever reads
-        them. Day lines say {code("Today")} / {code("Yesterday")} in the kit locale via{" "}
-        {code("Intl.RelativeTimeFormat")}, so the clock times under them need no date; the
-        Tooltip still has it. In the box, Enter sends and Shift+Enter is a new line (not
-        while an IME is composing). Up to {MAX_FILES} files upload ahead of the send; the
-        host keeps their refs, reads them in {code("onSend")} and passes{" "}
-        {code("canSend")} so a message of files alone can go.
+        Event lines are list items without an author or a side, worded for whoever reads them. Day lines say{" "}
+        {code("Today")} / {code("Yesterday")} in the kit locale via {code("Intl.RelativeTimeFormat")}, so the clock
+        times under them need no date; the Tooltip still has it. In the box, Enter sends and Shift+Enter is a new line
+        (not while an IME is composing). Up to {MAX_FILES} files upload ahead of the send; the host keeps their refs,
+        reads them in {code("onSend")} and passes {code("canSend")} so a message of files alone can go.
       </Note>
     </Example>
   );
@@ -384,11 +389,9 @@ function ChatComposer022Demo() {
         />
       </div>
       <Note>
-        {code("ChatComposer")} is the composer under a name that is not about feedback, for a chat that is
-        not a report. It
-        puts {code("id")} and any {code("data-*")} on its root (the box, or the{" "}
-        {code("disabledReason")} line in its place): a tour step can point at{" "}
-        {code('[data-tour="assistant-ask"]')}.
+        {code("ChatComposer")} is the composer under a name that is not about feedback, for a chat that is not a report.
+        It puts {code("id")} and any {code("data-*")} on its root (the box, or the {code("disabledReason")} line in its
+        place): a tour step can point at {code('[data-tour="assistant-ask"]')}.
       </Note>
     </Example>
   );
@@ -419,7 +422,10 @@ function ChatComposerCount023Demo() {
     const files = refs;
     return new Promise<void>((resolve) => {
       window.setTimeout(() => {
-        setSent((list) => [...list, files.length ? `${body} (+${files.length} file${files.length === 1 ? "" : "s"})` : body]);
+        setSent((list) => [
+          ...list,
+          files.length ? `${body} (+${files.length} file${files.length === 1 ? "" : "s"})` : body,
+        ]);
         setRefs((current) => (current === files ? [] : current));
         setPending(false);
         resolve();
@@ -472,8 +478,8 @@ function ChatComposerCount023Demo() {
         />
       </div>
       <Note>
-        The reply box of a support chat: {code("maxLength={120}")} caps the box (the server&apos;s limit — 4,000
-        there) and {code("showCount")} draws Textarea&apos;s own counter under it, read with the box on focus and announced
+        The reply box of a support chat: {code("maxLength={120}")} caps the box (the server&apos;s limit — 4,000 there)
+        and {code("showCount")} draws Textarea&apos;s own counter under it, read with the box on focus and announced
         only near and at the limit. Under {code('size="sm"')} the hidden send hint is still the box&apos;s description,
         the count after it. A canned reply inserted past the limit is kept whole and holds Send back until it is
         trimmed. The picker in {code("attachmentSlot")} is {code("FeedbackAttachmentField refs")} with{" "}
@@ -492,9 +498,6 @@ function ChatComposerCount023Demo() {
  * called.
  */
 
-
-
-
 /** A screenshot's name as macOS writes it, and then some: wider than a phone. */
 const LONG_NAME = "Screenshot 2026-10-03 at 07.45.12 — Example Ltd overview, all accounts.png";
 
@@ -511,7 +514,10 @@ function ChatComposerSlot024Demo() {
     const files = refs;
     return new Promise<void>((resolve) => {
       window.setTimeout(() => {
-        setSent((list) => [...list, files.length ? `${body} (+${files.length} file${files.length === 1 ? "" : "s"})` : body]);
+        setSent((list) => [
+          ...list,
+          files.length ? `${body} (+${files.length} file${files.length === 1 ? "" : "s"})` : body,
+        ]);
         setRefs((current) => (current === files ? [] : current));
         setPending(false);
         resolve();
@@ -578,14 +584,13 @@ function ChatComposerSlot024Demo() {
       <Note>
         {code("attachmentSlot")} may be a function of {code("{ root, pending }")}: {code("root")} is the composer&apos;s
         own element, round the box and the slot, as a ref — exactly what {code("pasteFrom")} takes — so a screenshot
-        pasted into the reply lands in the field, with no ref&apos;d{" "}
-        {code("<div>")} of the app&apos;s own round the composer to hand over. It is attached before the field&apos;s first effect,
-        so the first paste works and nothing renders twice. {code("pending")} is the field&apos;s {code("disabled")}. A
-        plain node still works as before. The field&apos;s add and capture buttons take {code('buttonVariant="ghost"')}{" "}
-        and {code('buttonSize="sm"')} (every mode; default secondary / md), the quiet small buttons that suit a picker
-        beside Send. And the field&apos;s root is {code("min-w-0 max-w-full")} now: a flex item is never
-        narrower than its content, so a long name like the one above ran off a 390px composer unless the host bounded
-        the field itself.
+        pasted into the reply lands in the field, with no ref&apos;d {code("<div>")} of the app&apos;s own round the
+        composer to hand over. It is attached before the field&apos;s first effect, so the first paste works and nothing
+        renders twice. {code("pending")} is the field&apos;s {code("disabled")}. A plain node still works as before. The
+        field&apos;s add and capture buttons take {code('buttonVariant="ghost"')} and {code('buttonSize="sm"')} (every
+        mode; default secondary / md), the quiet small buttons that suit a picker beside Send. And the field&apos;s root
+        is {code("min-w-0 max-w-full")} now: a flex item is never narrower than its content, so a long name like the one
+        above ran off a 390px composer unless the host bounded the field itself.
       </Note>
     </Example>
   );

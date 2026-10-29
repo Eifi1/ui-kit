@@ -55,7 +55,9 @@ describe("SettingsLayout sidebarFooter", () => {
     // The tablist is no longer sticky on its own inside the sticky column.
     expect(tabs.closest("[class*='md:sticky']")).toBe(column);
     // Before the open section, in the reading order.
-    expect(footer.compareDocumentPosition(screen.getByRole("tabpanel")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(
+      footer.compareDocumentPosition(screen.getByRole("tabpanel")) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it("leaves the sidebar as it was without one", () => {

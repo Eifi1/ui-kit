@@ -79,9 +79,9 @@ describe("reworkCount (keksdose live #331)", () => {
   it("counts the composer's rule lines", () => {
     expect(reworkCount("just a report")).toBe(0);
     expect(reworkCount("report\n\n--- REWORK 2026-09-16 03:57 ---\nagain")).toBe(1);
-    expect(
-      reworkCount("report\n\n--- REWORK 2026-09-14 20:16 ---\none\n\n--- REWORK 2026-09-16 03:57 ---\ntwo"),
-    ).toBe(2);
+    expect(reworkCount("report\n\n--- REWORK 2026-09-14 20:16 ---\none\n\n--- REWORK 2026-09-16 03:57 ---\ntwo")).toBe(
+      2,
+    );
   });
 
   it("cannot be impersonated by something a user writes", () => {
@@ -90,7 +90,8 @@ describe("reworkCount (keksdose live #331)", () => {
   });
 
   it("never counts kastlan's folded comment blocks (§7.7)", () => {
-    const body = "report\n\n--- COMMENT 2026-09-01 10:00 · Example Ltd ---\nseen it\n\n--- REWORK 2026-09-02 11:00 ---\nagain";
+    const body =
+      "report\n\n--- COMMENT 2026-09-01 10:00 · Example Ltd ---\nseen it\n\n--- REWORK 2026-09-02 11:00 ---\nagain";
     expect(reworkCount(body)).toBe(1);
   });
 
@@ -165,12 +166,9 @@ describe("splitDescription / replaceDescription (§4.4.1)", () => {
   it("puts the file lines and every appended block back unchanged", () => {
     const next = replaceDescription(body, "  The chart jumps on save.  ");
     expect(next).toBe(
-      [
-        "The chart jumps on save.",
-        `[screenshot] ${A}/first.png`,
-        "",
-        body.slice(body.indexOf("--- COMMENT")),
-      ].join("\n"),
+      ["The chart jumps on save.", `[screenshot] ${A}/first.png`, "", body.slice(body.indexOf("--- COMMENT"))].join(
+        "\n",
+      ),
     );
     expect(reworkCount(next)).toBe(1);
     expect(splitBodyAttachments(next).urls).toEqual([`${A}/first.png`, `${A}/second.png`]);
@@ -202,7 +200,8 @@ describe("splitDescription / replaceDescription (§4.4.1)", () => {
 
 describe("attachment URLs", () => {
   it("tells pictures from downloads by the key's extension", () => {
-    for (const ext of ["png", "jpg", "jpeg", "webp", "gif", "PNG"]) expect(isImageAttachment(`${A}/k.${ext}`)).toBe(true);
+    for (const ext of ["png", "jpg", "jpeg", "webp", "gif", "PNG"])
+      expect(isImageAttachment(`${A}/k.${ext}`)).toBe(true);
     for (const ext of ["pdf", "txt", "svg"]) expect(isImageAttachment(`${A}/k.${ext}`)).toBe(false);
     expect(isImageAttachment(KASTLAN_KEY)).toBe(true);
   });
@@ -281,7 +280,9 @@ describe("feedbackReworkCount", () => {
   const entry = (id: number, kind?: "reply" | "rework") => ({ id, kind });
 
   it("counts the rework entries when the row carries replies", () => {
-    expect(feedbackReworkCount({ body: "Cut off.", replies: [entry(1, "rework"), entry(2, "reply"), entry(3, "rework")] })).toBe(2);
+    expect(
+      feedbackReworkCount({ body: "Cut off.", replies: [entry(1, "rework"), entry(2, "reply"), entry(3, "rework")] }),
+    ).toBe(2);
   });
 
   it("falls back to the body without replies — a server before server-kit 0.13", () => {

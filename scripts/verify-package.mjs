@@ -27,8 +27,7 @@ import { join, resolve } from "node:path";
 
 const root = resolve(import.meta.dirname, "..");
 const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-const run = (cmd, args, cwd) =>
-  execFileSync(cmd, args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+const run = (cmd, args, cwd) => execFileSync(cmd, args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
 
 // `--quiet` (how `npm run check` calls it): the ~40-line walk is held back and a passing
 // run prints one line. The first failure prints everything held so far, and the rest of
@@ -105,9 +104,7 @@ for (const dir of ["dist", "src"]) {
 }
 
 log("• installing into a scratch project with ONLY the required peers");
-const required = Object.keys(pkg.peerDependencies ?? {}).filter(
-  (p) => !pkg.peerDependenciesMeta?.[p]?.optional,
-);
+const required = Object.keys(pkg.peerDependencies ?? {}).filter((p) => !pkg.peerDependenciesMeta?.[p]?.optional);
 const scratch = mkdtempSync(join(tmpdir(), "uikit-verify-"));
 try {
   writeFileSync(
@@ -212,7 +209,9 @@ try {
     const walk = (file) => {
       if (seen.has(file)) return;
       seen.add(file);
-      for (const [, specifier] of readFileSync(file, "utf8").matchAll(/(?:\bfrom\s*|\bimport\s*\(?\s*)["']([^"']+)["']/g)) {
+      for (const [, specifier] of readFileSync(file, "utf8").matchAll(
+        /(?:\bfrom\s*|\bimport\s*\(?\s*)["']([^"']+)["']/g,
+      )) {
         if (specifier.startsWith(".")) walk(join(file, "..", specifier));
         else packages.add(specifier);
       }
@@ -232,9 +231,7 @@ try {
 
   log("• table-text is pure and reads what it promises");
   const tableText = join(scratch, "node_modules", pkg.name, "dist", "lib", "table-text.js");
-  const bare = [...readFileSync(tableText, "utf8").matchAll(/\bfrom\s*["']([^."'][^"']*)["']/g)].map(
-    (m) => m[1],
-  );
+  const bare = [...readFileSync(tableText, "utf8").matchAll(/\bfrom\s*["']([^."'][^"']*)["']/g)].map((m) => m[1]);
   if (bare.length === 0) ok("dist/lib/table-text.js imports no package");
   else fail(`dist/lib/table-text.js imports ${bare.join(", ")}`);
   const [parsed] = runProbe(
@@ -260,7 +257,8 @@ try {
     `import { CURRENCIES, CURRENCY_COUNTRIES } from ${JSON.stringify(specifierOf("./currencies"))};\n` +
       `console.log(JSON.stringify([typeof window, CURRENCY_COUNTRIES.CHF, CURRENCY_COUNTRIES.EUR, Object.keys(CURRENCY_COUNTRIES).length === CURRENCIES.length]));`,
   );
-  if (countries === JSON.stringify(["undefined", "ch", "eu", true])) ok("CURRENCY_COUNTRIES loads by package name without a DOM");
+  if (countries === JSON.stringify(["undefined", "ch", "eu", true]))
+    ok("CURRENCY_COUNTRIES loads by package name without a DOM");
   else fail(`the currencies entry by package name answered ${countries}`);
 
   log("• eslint is a plugin an app's ESLint config loads in plain Node");
@@ -271,7 +269,9 @@ try {
   const eslintDir = join(installed, "dist", "eslint");
   const eslintImports = readdirSync(eslintDir)
     .filter((f) => f.endsWith(".js"))
-    .flatMap((f) => [...readFileSync(join(eslintDir, f), "utf8").matchAll(/(?:\bfrom\s*|\bimport\s*\(?\s*)["']([^."'][^"']*)["']/g)])
+    .flatMap((f) => [
+      ...readFileSync(join(eslintDir, f), "utf8").matchAll(/(?:\bfrom\s*|\bimport\s*\(?\s*)["']([^."'][^"']*)["']/g),
+    ])
     .map((m) => m[1]);
   if (eslintImports.length === 0) ok("dist/eslint imports no package");
   else fail(`dist/eslint imports ${eslintImports.join(", ")}`);
@@ -318,7 +318,11 @@ try {
       fail(`eifi1-pay-page failed: ${e.stderr || e.message}`);
     }
     try {
-      run(bin, ["--out", join(scratch, "srv-pay-wrong"), "--token", "test_verify", "--environment", "live", ...page], scratch);
+      run(
+        bin,
+        ["--out", join(scratch, "srv-pay-wrong"), "--token", "test_verify", "--environment", "live", ...page],
+        scratch,
+      );
       fail("eifi1-pay-page accepted a sandbox token for live");
     } catch (e) {
       if (e.status === 1 && /sandbox token/.test(e.stderr ?? "")) ok("eifi1-pay-page refuses a sandbox token for live");
@@ -328,7 +332,8 @@ try {
       run(bin, ["--out", join(scratch, "srv-pay-old"), "--app-name", "Example"], scratch);
       fail("eifi1-pay-page accepted the 0.33 flags");
     } catch (e) {
-      if (e.status === 2 && /--app <tag>/.test(e.stderr ?? "")) ok("eifi1-pay-page refuses the 0.33 flags, naming --app");
+      if (e.status === 2 && /--app <tag>/.test(e.stderr ?? ""))
+        ok("eifi1-pay-page refuses the 0.33 flags, naming --app");
       else fail(`eifi1-pay-page refused the 0.33 flags oddly: ${e.stderr || e.message}`);
     }
   }
@@ -360,7 +365,8 @@ try {
       `const files = Object.fromEntries(Array.from({ length: 10 }, (_, i) => ["f" + i + ".tsx", i ? "" : 'const a = "fill-[var(--surface)] bg-[var(--bg-surface)]";']));\n` +
       `console.log(JSON.stringify([KIT_CSS_VARIABLES.has("--text-muted"), KIT_CSS_VARIABLES.has("--text-color-muted"), KIT_CSS_VARIABLES.has("--app-nav-h"), undeclaredCssVariables(files)]));`,
   );
-  if (guard === JSON.stringify([true, false, false, ["f0.tsx:1 --surface"]])) ok("undeclaredCssVariables finds an undeclared token by package name");
+  if (guard === JSON.stringify([true, false, false, ["f0.tsx:1 --surface"]]))
+    ok("undeclaredCssVariables finds an undeclared token by package name");
   else fail(`the testing entry by package name answered ${guard}`);
 
   log("• the CSS entry is reachable as a file");

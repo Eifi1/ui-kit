@@ -471,7 +471,15 @@ function useActionHref(action: RowAction): string | undefined {
 }
 
 /** One entry of the "⋯" menu: the words, as a link for an `href`, else a button. */
-function MenuAction({ action, close, run }: { action: RowAction; close: () => void; run: (action: RowAction) => void }) {
+function MenuAction({
+  action,
+  close,
+  run,
+}: {
+  action: RowAction;
+  close: () => void;
+  run: (action: RowAction) => void;
+}) {
   const href = useActionHref(action);
   const glyph = glyphOf(action.icon);
   const glyphTone = action.tone === undefined ? undefined : MENU_GLYPH_TONE[action.tone];

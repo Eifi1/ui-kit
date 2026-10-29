@@ -206,9 +206,17 @@ const identity = (href: string) => href;
 function signature(entries: readonly SearchEntry[]): string {
   return entries
     .map((e) =>
-      [e.id, e.title, (e.keywords ?? []).join("\u0003"), e.description, e.group, e.hint, e.href, e.weight, e.redact].join(
-        "\u0001",
-      ),
+      [
+        e.id,
+        e.title,
+        (e.keywords ?? []).join("\u0003"),
+        e.description,
+        e.group,
+        e.hint,
+        e.href,
+        e.weight,
+        e.redact,
+      ].join("\u0001"),
     )
     .join("\u0002");
 }
@@ -217,7 +225,9 @@ function signature(entries: readonly SearchEntry[]): string {
  *  row that was clicked (and held focus) is gone. */
 function refocusField() {
   requestAnimationFrame(() => {
-    const fields = document.querySelectorAll<HTMLInputElement>('[role="dialog"][aria-modal="true"] input[role="combobox"]');
+    const fields = document.querySelectorAll<HTMLInputElement>(
+      '[role="dialog"][aria-modal="true"] input[role="combobox"]',
+    );
     fields[fields.length - 1]?.focus();
   });
 }
@@ -458,8 +468,7 @@ function GlobalSearchImpl({
 
     if (!q) {
       const out: CommandItem[] = [];
-      const groupOf = (entry: SearchEntry) =>
-        suggestionsKeepGroups ? (entry.group ?? l.suggestions) : l.suggestions;
+      const groupOf = (entry: SearchEntry) => (suggestionsKeepGroups ? (entry.group ?? l.suggestions) : l.suggestions);
       suggestionList.forEach((s, i) => {
         if (typeof s === "string") {
           const entry = byId.get(s);
@@ -532,7 +541,26 @@ function GlobalSearchImpl({
     }
 
     return ordered(out);
-  }, [q, suggestionList, suggestionsKeepGroups, byId, index, sourceList, sourceResults, order, groupLimit, toItem, l.suggestions, l.results, pl.loading, pl.error, setOpen, setQuery, noop, redactLabels]);
+  }, [
+    q,
+    suggestionList,
+    suggestionsKeepGroups,
+    byId,
+    index,
+    sourceList,
+    sourceResults,
+    order,
+    groupLimit,
+    toItem,
+    l.suggestions,
+    l.results,
+    pl.loading,
+    pl.error,
+    setOpen,
+    setQuery,
+    noop,
+    redactLabels,
+  ]);
   /* eslint-enable react-hooks/refs */
 
   // The palette re-runs its provider on a `revision` change, never on the provider's
@@ -577,7 +605,9 @@ function GlobalSearchImpl({
               >
                 <Search
                   className={triggerIconSize === undefined ? "size-4" : undefined}
-                  style={triggerIconSize === undefined ? undefined : { width: triggerIconSize, height: triggerIconSize }}
+                  style={
+                    triggerIconSize === undefined ? undefined : { width: triggerIconSize, height: triggerIconSize }
+                  }
                 />
               </button>
             </Tooltip>

@@ -225,7 +225,8 @@ let serverApi;
 function serverKitApi() {
   if (serverApi === undefined) {
     serverApi = existsSync(SERVER_KIT_API) ? JSON.parse(readFileSync(SERVER_KIT_API, "utf8")) : null;
-    if (!serverApi) errors.push(`${SERVER_KIT_API.slice(ROOT.length + 1)} is missing — run node scripts/sync-server-kit.mjs`);
+    if (!serverApi)
+      errors.push(`${SERVER_KIT_API.slice(ROOT.length + 1)} is missing — run node scripts/sync-server-kit.mjs`);
   }
   return serverApi;
 }
@@ -417,7 +418,7 @@ export function render(index, sections = {}) {
   lines.push(
     "/**",
     " * Per page slug, the lazy sections its Body renders: the names routes.tsx gives",
-    " * `lazySection(…, \"Name\")`. A test that mounts a few pages preloads only these",
+    ' * `lazySection(…, "Name")`. A test that mounts a few pages preloads only these',
     " * (lib/lazy-section.ts `preloadSections`) instead of all of them (refactor audit",
     " * 2026-10, TST-8).",
     " */",

@@ -52,7 +52,13 @@ export interface AdminToolLinksProps {
  *
  * With no visible link it renders nothing.
  */
-export function AdminToolLinks({ links, variant = "sidebar", renderLink, labels: labelsProp, className }: AdminToolLinksProps) {
+export function AdminToolLinks({
+  links,
+  variant = "sidebar",
+  renderLink,
+  labels: labelsProp,
+  className,
+}: AdminToolLinksProps) {
   const labels = useAdminAreaLabels(labelsProp);
   const headingId = useId();
   const shown = links.filter((l) => l.visible !== false);

@@ -237,49 +237,45 @@ export function FloatingActionButton({
   // tooltip replaces it outright.
   const nativeTip = !wrapped && nativeTitle && title !== "" ? (title ?? label) : undefined;
   const button = (
-          <button
-            {...rest}
-            hidden={wrapped ? undefined : hidden}
-            ref={buttonRef}
-            type={type}
-            dir={dir}
-            aria-label={label}
-            aria-pressed={pressed ?? rest["aria-pressed"]}
-            title={nativeTip}
-            style={wrapped ? style : { ...cornerStyle(corner, offset), ...style }}
-            className={cn(
-              // Wrapped, the wrapper is the fixed thing and the button sits in it.
-              !wrapped && "fixed z-40",
-              "inline-flex items-center justify-center rounded-full",
-              extended ? "h-12 gap-2 px-4 text-sm font-medium [&_svg]:size-5" : "size-12 [&_svg]:size-6",
-              "shadow-lg transition-colors disabled:cursor-default",
-              !toggle &&
-                variant === "accent" &&
-                "bg-brand text-brand-contrast hover:bg-brand-hover",
-              !toggle &&
-                variant === "surface" &&
-                "border border-subtle bg-surface text-primary hover:bg-hover disabled:hover:bg-surface",
-              // A toggle sits on the page's surface — a solid brand disc would read as
-              // "on" in both states — and says "on" in the brand family.
-              toggle && "border border-subtle",
-              pressed === false &&
-                "bg-surface text-secondary hover:bg-hover hover:text-primary",
-              pressed === true &&
-                "border-brand bg-brand-soft text-brand hover:bg-brand-soft-hover hover:text-brand-muted",
-              "outline-none focus-visible:ring-offset-2",
-              FOCUS_RING,
-              className,
-            )}
-          >
-            {icon}
-            {/* Visible words, not the name: `aria-label` already is the name, and the
+    <button
+      {...rest}
+      hidden={wrapped ? undefined : hidden}
+      ref={buttonRef}
+      type={type}
+      dir={dir}
+      aria-label={label}
+      aria-pressed={pressed ?? rest["aria-pressed"]}
+      title={nativeTip}
+      style={wrapped ? style : { ...cornerStyle(corner, offset), ...style }}
+      className={cn(
+        // Wrapped, the wrapper is the fixed thing and the button sits in it.
+        !wrapped && "fixed z-40",
+        "inline-flex items-center justify-center rounded-full",
+        extended ? "h-12 gap-2 px-4 text-sm font-medium [&_svg]:size-5" : "size-12 [&_svg]:size-6",
+        "shadow-lg transition-colors disabled:cursor-default",
+        !toggle && variant === "accent" && "bg-brand text-brand-contrast hover:bg-brand-hover",
+        !toggle &&
+          variant === "surface" &&
+          "border border-subtle bg-surface text-primary hover:bg-hover disabled:hover:bg-surface",
+        // A toggle sits on the page's surface — a solid brand disc would read as
+        // "on" in both states — and says "on" in the brand family.
+        toggle && "border border-subtle",
+        pressed === false && "bg-surface text-secondary hover:bg-hover hover:text-primary",
+        pressed === true && "border-brand bg-brand-soft text-brand hover:bg-brand-soft-hover hover:text-brand-muted",
+        "outline-none focus-visible:ring-offset-2",
+        FOCUS_RING,
+        className,
+      )}
+    >
+      {icon}
+      {/* Visible words, not the name: `aria-label` already is the name, and the
                 span would only repeat it. */}
-            {extended && (
-              <span aria-hidden className="whitespace-nowrap">
-                {label}
-              </span>
-            )}
-          </button>
+      {extended && (
+        <span aria-hidden className="whitespace-nowrap">
+          {label}
+        </span>
+      )}
+    </button>
   );
   return (
     <>
@@ -561,14 +557,15 @@ export function FloatingPanel({
                   setOpen(false);
                 }}
                 aria-label={labels.close}
-                className={cn("-me-1.5 shrink-0 rounded p-1.5 text-muted outline-none hover:bg-hover hover:text-secondary", FOCUS_RING)}
+                className={cn(
+                  "-me-1.5 shrink-0 rounded p-1.5 text-muted outline-none hover:bg-hover hover:text-secondary",
+                  FOCUS_RING,
+                )}
               >
                 <X aria-hidden className="size-5" />
               </button>
             </div>
-            <div className={cn("min-h-0 flex-1 overflow-y-auto overscroll-contain p-4", bodyClassName)}>
-              {children}
-            </div>
+            <div className={cn("min-h-0 flex-1 overflow-y-auto overscroll-contain p-4", bodyClassName)}>{children}</div>
           </div>,
           document.body,
         )}
@@ -796,11 +793,7 @@ export function FloatingAction({
     };
     const { children: content, ...anchor } = linkProps;
     const render = pickLinkRenderer(renderLink, kitLink, href);
-    member = render ? (
-      <RenderedFloatingLink render={render} {...linkProps} />
-    ) : (
-      <a {...anchor}>{content}</a>
-    );
+    member = render ? <RenderedFloatingLink render={render} {...linkProps} /> : <a {...anchor}>{content}</a>;
   } else {
     member = (
       <button

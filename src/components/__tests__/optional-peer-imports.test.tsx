@@ -67,10 +67,7 @@ describe("FileDropzone's rejection path", () => {
     // Through the kit's `toast`, which loads sonner dynamically — so the toast lands a
     // microtask later, carrying the id the kit chose.
     await vi.waitFor(() =>
-      expect(toast.error).toHaveBeenCalledWith(
-        "Nur .zip-Dateien",
-        expect.objectContaining({ id: expect.any(String) }),
-      ),
+      expect(toast.error).toHaveBeenCalledWith("Nur .zip-Dateien", expect.objectContaining({ id: expect.any(String) })),
     );
   });
 
@@ -115,9 +112,7 @@ describe("no module imports sonner statically", () => {
     // is imported statically by `components/chart.tsx` on purpose — the tree-shaking
     // note in package.json is about exactly that — so a sweep that could not see it
     // could not see anything either.
-    const recharts = Object.values(SOURCES).filter((src) =>
-      /^\s*import\s[^;]*?["']recharts["']/m.test(src),
-    );
+    const recharts = Object.values(SOURCES).filter((src) => /^\s*import\s[^;]*?["']recharts["']/m.test(src));
     expect(recharts.length).toBeGreaterThan(0);
     expect(Object.keys(SOURCES).length).toBeGreaterThan(40);
   });

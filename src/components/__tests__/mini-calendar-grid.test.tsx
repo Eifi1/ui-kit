@@ -254,13 +254,7 @@ describe("range mode says which end the next click sets", () => {
 
   it("speaks the host's words, not these", () => {
     render(
-      <MiniCalendar
-        from="2026-09-10"
-        to=""
-        locale={LOCALE}
-        onSelect={noop}
-        labels={{ chooseEnd: "Bis wann?" }}
-      />,
+      <MiniCalendar from="2026-09-10" to="" locale={LOCALE} onSelect={noop} labels={{ chooseEnd: "Bis wann?" }} />,
     );
     expect(hint()).toBe("Bis wann?");
   });

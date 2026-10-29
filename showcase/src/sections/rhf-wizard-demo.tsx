@@ -41,7 +41,10 @@ function useFocusReadout(root: RefObject<HTMLElement | null>) {
 }
 
 function PayeeStep({ form, onLog }: { form: UseFormReturn<Transfer>; onLog: (line: string) => void }) {
-  useRhfWizardStep(form, { fields: ["name", "iban"], onValid: (v: Transfer) => onLog(`step 1 valid → ${v.name}, ${v.iban}`) });
+  useRhfWizardStep(form, {
+    fields: ["name", "iban"],
+    onValid: (v: Transfer) => onLog(`step 1 valid → ${v.name}, ${v.iban}`),
+  });
   const { errors } = form.formState;
   return (
     <WizardStep>
@@ -49,7 +52,12 @@ function PayeeStep({ form, onLog }: { form: UseFormReturn<Transfer>; onLog: (lin
         <Field label="Payee" required error={errors.name?.message}>
           {(ids) => <Input {...ids} {...form.register("name", { required: "Who is the money for?" })} />}
         </Field>
-        <Field label="IBAN" required hint="Two letters, two digits, then up to 30 characters" error={errors.iban?.message}>
+        <Field
+          label="IBAN"
+          required
+          hint="Two letters, two digits, then up to 30 characters"
+          error={errors.iban?.message}
+        >
           {(ids) => (
             <Input
               {...ids}
@@ -162,9 +170,9 @@ function WizardSteps() {
           <code className="font-mono">[&quot;name&quot;, &quot;iban&quot;]</code>, the payment step with{" "}
           <code className="font-mono">[&quot;amount&quot;, &quot;schedule&quot;]</code> — which registers its validator
           with the <code className="font-mono">StepperNav</code> it is mounted in. Next (and &ldquo;Send
-          transfer&rdquo;, the last step&apos;s Finish) runs <code className="font-mono">form.trigger(fields)</code>:
-          on failure the step stays, only THAT step&apos;s messages appear (the payment fields are not flagged while
-          you are on the payee), the first field in error takes focus — watch the readout — and the wizard says its
+          transfer&rdquo;, the last step&apos;s Finish) runs <code className="font-mono">form.trigger(fields)</code>: on
+          failure the step stays, only THAT step&apos;s messages appear (the payment fields are not flagged while you
+          are on the payee), the first field in error takes focus — watch the readout — and the wizard says its
           &ldquo;fill in the required fields&rdquo; line (<code className="font-mono">onValidationFailed</code>). On
           success <code className="font-mono">onValid</code> gets <code className="font-mono">form.getValues()</code>{" "}
           and the wizard advances. Focus works because <code className="font-mono">register</code> hands each{" "}
@@ -235,9 +243,9 @@ function OwnNav() {
       />
       <div className="mt-3">
         <Note>
-          Called as <code className="font-mono">useRhfWizardStep(form, onValid)</code> — the positional
-          shape — it validates the WHOLE form through <code className="font-mono">handleSubmit</code>: every rule and a
-          resolver run, focus follows the form&apos;s own <code className="font-mono">shouldFocusError</code>, and{" "}
+          Called as <code className="font-mono">useRhfWizardStep(form, onValid)</code> — the positional shape — it
+          validates the WHOLE form through <code className="font-mono">handleSubmit</code>: every rule and a resolver
+          run, focus follows the form&apos;s own <code className="font-mono">shouldFocusError</code>, and{" "}
           <code className="font-mono">onValid</code> receives the (transformed) values. There is no{" "}
           <code className="font-mono">StepperNav</code> here, so there is no wizard to register with; the hook returns
           the validator, and this page&apos;s own &ldquo;Continue&rdquo; awaits it.

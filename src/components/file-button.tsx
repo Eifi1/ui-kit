@@ -64,7 +64,8 @@ export type {
 type ButtonOwnProps = ComponentPropsWithoutRef<typeof Button>;
 
 export interface FileButtonProps
-  extends Omit<UseFilePickerOptions, "disabled">,
+  extends
+    Omit<UseFilePickerOptions, "disabled">,
     // `onDrop` & co. stay the caller's own when `droppable` is off; `type` is fixed to
     // "button" (see 2. above) — a file trigger never submits a form.
     Omit<ButtonOwnProps, "type" | "children" | "accept" | "capture" | "multiple"> {
@@ -105,7 +106,6 @@ export interface FileButtonProps
    *  was `forwardRef`. */
   ref?: Ref<HTMLButtonElement>;
 }
-
 
 /**
  * {@link useFilePicker} behind a {@link Button}: `variant` and every other button prop
@@ -177,7 +177,11 @@ export function FileButton({
     disabled: refusing,
   });
   const pickedText =
-    picked.length === 0 ? "" : picked.length === 1 ? picked[0].name : pickerLabels.selected(picked.length, picked[0].name);
+    picked.length === 0
+      ? ""
+      : picked.length === 1
+        ? picked[0].name
+        : pickerLabels.selected(picked.length, picked[0].name);
   const [dragOver, setDragOver] = useState(false);
 
   const hasFiles = (e: DragEvent) => Array.from(e.dataTransfer?.types ?? []).includes("Files");

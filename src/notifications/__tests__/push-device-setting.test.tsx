@@ -35,13 +35,21 @@ const card = (push: PushDevice, extra: Partial<Parameters<typeof PushDeviceSetti
 
 describe("PushDeviceSetting — the states, in keksdose's order", () => {
   it.each([
-    ["unsupported", { supported: false, ios: true, configured: false }, "This browser doesn’t support push notifications."],
+    [
+      "unsupported",
+      { supported: false, ios: true, configured: false },
+      "This browser doesn’t support push notifications.",
+    ],
     [
       "iOS outside the installed app",
       { ios: true, installed: false, configured: false },
       "On iPhone or iPad, add Example to your Home Screen first: iOS delivers notifications only to the installed app.",
     ],
-    ["not set up on the server", { configured: false, permission: "denied" as const }, "Push notifications aren’t set up on this server."],
+    [
+      "not set up on the server",
+      { configured: false, permission: "denied" as const },
+      "Push notifications aren’t set up on this server.",
+    ],
     ["blocked", { permission: "denied" as const }, "Notifications are blocked in this browser’s settings."],
   ])("%s", (_name, overrides, text) => {
     card(device(overrides));
@@ -107,8 +115,16 @@ describe("PushDeviceSetting — turning on", () => {
   });
 
   it.each([
-    ["no service worker", new PushDeviceError("no_service_worker"), "Couldn’t reach the app’s service worker. Reload the page and try again."],
-    ["a silent push service", new PushDeviceError("push_timeout"), "The browser’s push service didn’t answer. Check your connection and try again."],
+    [
+      "no service worker",
+      new PushDeviceError("no_service_worker"),
+      "Couldn’t reach the app’s service worker. Reload the page and try again.",
+    ],
+    [
+      "a silent push service",
+      new PushDeviceError("push_timeout"),
+      "The browser’s push service didn’t answer. Check your connection and try again.",
+    ],
     ["anything else", new Error("500"), "Couldn’t turn on notifications."],
   ])("says what went wrong: %s", async (_name, error, text) => {
     const user = userEvent.setup();

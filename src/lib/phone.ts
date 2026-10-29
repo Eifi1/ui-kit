@@ -82,13 +82,7 @@ const RULES: Record<PhoneCountryCode, CountryRule> = {
     min: 6,
     max: 13,
     group: (n) =>
-      /^15/.test(n)
-        ? cut(n, [4])
-        : /^1[67]/.test(n)
-          ? cut(n, [3])
-          : /^(30|40|69|89)/.test(n)
-            ? cut(n, [2])
-            : [n],
+      /^15/.test(n) ? cut(n, [4]) : /^1[67]/.test(n) ? cut(n, [3]) : /^(30|40|69|89)/.test(n) ? cut(n, [2]) : [n],
   },
   // Vienna is "1"; mobile numbers start 6xx; other area codes vary, so one block.
   AT: {
@@ -169,7 +163,10 @@ export function parsePhone(input: string, country: PhoneCountry = "CH"): ParsedP
   }
   if (international) {
     // "+41 (0)21 …": the bracketed trunk prefix written for callers inside the country.
-    digits = text.replace(/\(\s*0\s*\)/g, "").replace(/\D/g, "").replace(/^00/, "");
+    digits = text
+      .replace(/\(\s*0\s*\)/g, "")
+      .replace(/\D/g, "")
+      .replace(/^00/, "");
     if (digits.startsWith("0")) return null;
     const known = BY_DIAL.find((c) => digits.startsWith(RULES[c].dial));
     if (known) {

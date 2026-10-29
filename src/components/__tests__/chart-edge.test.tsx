@@ -54,8 +54,8 @@ function bars(series: { key: string; color?: string }[], type: "bar" | "area" = 
 }
 
 const barStrokes = (container: HTMLElement) =>
-  [...container.querySelectorAll(".recharts-bar")].map((g) =>
-    g.querySelector(".recharts-bar-rectangle path")?.getAttribute("stroke") ?? null,
+  [...container.querySelectorAll(".recharts-bar")].map(
+    (g) => g.querySelector(".recharts-bar-rectangle path")?.getAttribute("stroke") ?? null,
   );
 
 describe("SeriesChart's ink edge", () => {
@@ -129,7 +129,9 @@ describe("TreemapCell's ink edge", () => {
 });
 
 describe("resolveChartColor", () => {
-  const style = { getPropertyValue: (n: string) => ({ "--chart-1": " #009e73 ", "--x": "oklch(0.5 0.1 120)" })[n] ?? "" };
+  const style = {
+    getPropertyValue: (n: string) => ({ "--chart-1": " #009e73 ", "--x": "oklch(0.5 0.1 120)" })[n] ?? "",
+  };
   it("reads a hex, a bare token, and refuses what it cannot measure", () => {
     expect(resolveChartColor("#abc", style)).toBe("#abc");
     expect(resolveChartColor("var(--chart-1)", style)).toBe("#009e73");

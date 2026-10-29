@@ -148,7 +148,15 @@ export function TourMenu({
   const tail: TopBarMenuEntry[] = [
     ...rest.map(entryFor),
     ...(href
-      ? [{ kind: "link" as const, key: "all-tours", icon: <Compass className="size-4" />, label: words.allTours, to: href }]
+      ? [
+          {
+            kind: "link" as const,
+            key: "all-tours",
+            icon: <Compass className="size-4" />,
+            label: words.allTours,
+            to: href,
+          },
+        ]
       : []),
   ];
 

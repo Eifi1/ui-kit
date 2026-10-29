@@ -192,14 +192,7 @@ const PEEK_PX = 40;
  * the eye and not from the accessibility tree, so the row also ANNOUNCES what can be
  * done to it rather than keeping it behind a gesture nobody can hear.
  */
-export function SwipeableRow({
-  right,
-  left,
-  enabled = true,
-  actionsLabel,
-  className,
-  children,
-}: SwipeableRowProps) {
+export function SwipeableRow({ right, left, enabled = true, actionsLabel, className, children }: SwipeableRowProps) {
   const labels = useKitLabels("swipeableRow", DEFAULT_SWIPEABLE_ROW_LABELS, {
     actions: actionsLabel,
   });
@@ -309,9 +302,7 @@ export function SwipeableRow({
               {shown.icon}
             </span>
           )}
-          <span className={cn("truncate transition-all", armed && "text-sm font-semibold")}>
-            {shown.label}
-          </span>
+          <span className={cn("truncate transition-all", armed && "text-sm font-semibold")}>{shown.label}</span>
         </div>
       )}
       <div

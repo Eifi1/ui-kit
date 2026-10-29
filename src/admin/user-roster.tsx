@@ -81,9 +81,7 @@ export interface AdminUserStateFields {
 
 /** One state chip of a row: an {@link AccountState}, or one with its `date` (the
  *  `deletion` day), a `tone` or the app's own words. */
-export type RosterState =
-  | AccountState
-  | { state: AccountState; date?: DateInput; tone?: ChipTone; label?: ReactNode };
+export type RosterState = AccountState | { state: AccountState; date?: DateInput; tone?: ChipTone; label?: ReactNode };
 
 /**
  * The contract's row as state chips (§3.2: "map 1:1 to the kit's AccountStateChip"):
@@ -234,14 +232,7 @@ export interface UserRowActionsProps {
  */
 export function UserRowActions({ actions, name, labels: labelsProp }: UserRowActionsProps) {
   const labels = useKitLabels("userRoster", DEFAULT_USER_ROSTER_LABELS, labelsProp);
-  return (
-    <RowActions
-      actions={actions}
-      name={name}
-      collapse="menu"
-      labels={{ actionsFor: labels.actionsFor }}
-    />
-  );
+  return <RowActions actions={actions} name={name} collapse="menu" labels={{ actionsFor: labels.actionsFor }} />;
 }
 
 /* ── The preset ─────────────────────────────────────────────────────────────── */

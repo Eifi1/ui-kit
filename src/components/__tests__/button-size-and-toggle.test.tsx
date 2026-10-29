@@ -11,7 +11,14 @@ import type { ButtonVariant } from "../button-look";
  * is disabled.
  */
 
-const VARIANTS = ["default", "accent", "secondary", "ghost", "danger", "link"] as const satisfies readonly ButtonVariant[];
+const VARIANTS = [
+  "default",
+  "accent",
+  "secondary",
+  "ghost",
+  "danger",
+  "link",
+] as const satisfies readonly ButtonVariant[];
 
 describe("Button size", () => {
   it("md is the default and the pre-0.8.0 geometry", () => {
@@ -21,7 +28,11 @@ describe("Button size", () => {
   });
 
   it("sm is keksdose's px-2 py-1 text-xs, with no md geometry left over", () => {
-    render(<Button variant="secondary" size="sm">Export</Button>);
+    render(
+      <Button variant="secondary" size="sm">
+        Export
+      </Button>,
+    );
     const cls = screen.getByRole("button").className.split(" ");
     for (const c of ["px-2", "py-1", "text-xs"]) expect(cls).toContain(c);
     for (const c of ["px-3", "py-2", "text-sm"]) expect(cls).not.toContain(c);
@@ -30,7 +41,11 @@ describe("Button size", () => {
   it("buttonClasses matches <Button> for every variant at both sizes", () => {
     for (const variant of VARIANTS) {
       for (const size of ["sm", "md"] as const) {
-        const { unmount } = render(<Button variant={variant} size={size}>x</Button>);
+        const { unmount } = render(
+          <Button variant={variant} size={size}>
+            x
+          </Button>,
+        );
         expect(screen.getByRole("button").className).toBe(buttonClasses(variant, { size }));
         unmount();
       }
@@ -44,7 +59,11 @@ describe("Button size", () => {
   });
 
   it("a caller's className still wins over the size", () => {
-    render(<Button size="sm" className="py-0.5">x</Button>);
+    render(
+      <Button size="sm" className="py-0.5">
+        x
+      </Button>,
+    );
     const cls = screen.getByRole("button").className.split(" ");
     expect(cls).toContain("py-0.5");
     expect(cls).not.toContain("py-1");
@@ -65,7 +84,11 @@ describe("IconButton pressed", () => {
   });
 
   it("pressed=true is aria-pressed with the brand glyph on the quiet brand fill", () => {
-    render(<IconButton pressed tone="muted" aria-label="Share budget">x</IconButton>);
+    render(
+      <IconButton pressed tone="muted" aria-label="Share budget">
+        x
+      </IconButton>,
+    );
     const button = screen.getByRole("button", { name: "Share budget", pressed: true });
     const cls = button.className;
     expect(button).toHaveClass("text-brand");
@@ -75,20 +98,32 @@ describe("IconButton pressed", () => {
   });
 
   it("pressed=false is still a toggle, with the resting look", () => {
-    render(<IconButton pressed={false} aria-label="Share budget">x</IconButton>);
+    render(
+      <IconButton pressed={false} aria-label="Share budget">
+        x
+      </IconButton>,
+    );
     const button = screen.getByRole("button", { pressed: false });
     expect(button).not.toHaveClass("bg-brand-soft");
   });
 
   it("a caller's own aria-pressed is kept when pressed is left out", () => {
-    render(<IconButton aria-pressed="mixed" aria-label="Select all">x</IconButton>);
+    render(
+      <IconButton aria-pressed="mixed" aria-label="Select all">
+        x
+      </IconButton>,
+    );
     expect(screen.getByRole("button")).toHaveAttribute("aria-pressed", "mixed");
   });
 });
 
 describe("IconButton tone=info", () => {
   it("is sky at rest, with the info hover and ring", () => {
-    render(<IconButton tone="info" aria-label="Reconcile">x</IconButton>);
+    render(
+      <IconButton tone="info" aria-label="Reconcile">
+        x
+      </IconButton>,
+    );
     const cls = screen.getByRole("button").className;
     expect(screen.getByRole("button")).toHaveClass("text-info");
     expect(cls).toContain("hover:bg-info-soft");
@@ -107,21 +142,37 @@ describe("IconButton disabled", () => {
       link: "disabled:hover:bg-transparent",
     };
     for (const variant of VARIANTS) {
-      const { unmount } = render(<IconButton variant={variant} disabled aria-label="x">x</IconButton>);
+      const { unmount } = render(
+        <IconButton variant={variant} disabled aria-label="x">
+          x
+        </IconButton>,
+      );
       expect(screen.getByRole("button").className).toContain(rest[variant]);
       unmount();
     }
-    render(<IconButton variant="overlay" disabled aria-label="Rotate">x</IconButton>);
+    render(
+      <IconButton variant="overlay" disabled aria-label="Rotate">
+        x
+      </IconButton>,
+    );
     expect(screen.getByRole("button").className).toContain(
       "disabled:hover:bg-[color-mix(in_srgb,var(--bg-inverse)_60%,transparent)]",
     );
   });
 
   it("keeps a hover-changing tone's glyph at rest, and a pressed one's fill", () => {
-    const { unmount } = render(<IconButton tone="danger" disabled aria-label="Delete">x</IconButton>);
+    const { unmount } = render(
+      <IconButton tone="danger" disabled aria-label="Delete">
+        x
+      </IconButton>,
+    );
     expect(screen.getByRole("button").className).toContain("disabled:hover:text-placeholder");
     unmount();
-    render(<IconButton pressed disabled aria-label="Share">x</IconButton>);
+    render(
+      <IconButton pressed disabled aria-label="Share">
+        x
+      </IconButton>,
+    );
     const cls = screen.getByRole("button").className;
     expect(screen.getByRole("button")).toHaveClass("disabled:hover:bg-brand-soft");
     // tailwind-merge dropped the ghost reset the pressed one replaces.
@@ -129,7 +180,11 @@ describe("IconButton disabled", () => {
   });
 
   it("leaves the plain hover classes alone, so a caller's hover override still wins", () => {
-    render(<IconButton className="hover:bg-hover" aria-label="x">x</IconButton>);
+    render(
+      <IconButton className="hover:bg-hover" aria-label="x">
+        x
+      </IconButton>,
+    );
     const cls = screen.getByRole("button").className;
     expect(cls).toContain("hover:bg-hover");
     // The ghost's own hover, the translucent ink since 0.33 (B′), is gone.

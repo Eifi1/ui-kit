@@ -140,8 +140,9 @@ export function ReviewerScopeEditor({
   labels: labelsProp,
 }: ReviewerScopeEditorProps) {
   const labels = useKitLabels("reviewerScope", DEFAULT_REVIEWER_SCOPE_LABELS, labelsProp);
-  const areaOptions: readonly ReviewerScopeArea[] =
-    areasProp ?? [{ value: "legal", label: labels.legalOnly, hint: labels.legalOnlyHint }];
+  const areaOptions: readonly ReviewerScopeArea[] = areasProp ?? [
+    { value: "legal", label: labels.legalOnly, hint: labels.legalOnlyHint },
+  ];
   const savedLocales = [...(value.locales ?? [])];
   const savedAreas = [...(value.areas ?? [])];
   const [locales, setLocales] = useState<string[]>(savedLocales);
@@ -216,13 +217,7 @@ export function ReviewerScopeEditor({
       {locked ? (
         <Caption>{disabledReason}</Caption>
       ) : (
-        <FormActions
-          onSubmit={save}
-          onCancel={onCancel}
-          pending={pending}
-          submitDisabled={!dirty}
-          commit={commit}
-        />
+        <FormActions onSubmit={save} onCancel={onCancel} pending={pending} submitDisabled={!dirty} commit={commit} />
       )}
     </div>
   );

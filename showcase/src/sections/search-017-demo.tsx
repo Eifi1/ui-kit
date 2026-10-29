@@ -100,8 +100,8 @@ export function Search017Demo() {
           <code className="font-mono">{"{ key, label }"}</code> pairs and each returned entry names its key in{" "}
           <code className="font-mono">group</code>. While the one request runs there is one &ldquo;Searching…&rdquo;
           line under the first group; when it answers, Properties, Units, Contacts and Leases appear in that order
-          whatever order the answer had, each capped at <code className="font-mono">limit</code>, and ↑/↓ walks
-          them as shown. The request counter goes up once per query, not once per group.
+          whatever order the answer had, each capped at <code className="font-mono">limit</code>, and ↑/↓ walks them as
+          shown. The request counter goes up once per query, not once per group.
         </Note>
       </div>
     </Example>

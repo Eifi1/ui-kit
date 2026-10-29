@@ -46,13 +46,7 @@ import type {
   OptionSwitcherOption,
   TopBarMenuEntry,
 } from "@eifi1/ui-kit";
-import {
-  PageContents,
-  PageContentsLayout,
-  Switch,
-  ToggleGroup,
-  useScrollSpy,
-} from "@eifi1/ui-kit";
+import { PageContents, PageContentsLayout, Switch, ToggleGroup, useScrollSpy } from "@eifi1/ui-kit";
 import { ConstList, Example, Note, OutTable, Row, NO_ROUTER, code, READOUT } from "../lib/section";
 import { usePalette, useTheme } from "../stores";
 
@@ -126,8 +120,7 @@ const NAV_REFERENCE: AppShellNavItem[] = [
 
 // Anything this page draws for itself is painted in tokens — a control panel in
 // `slate-*` would keep looking right while the palette switch beside it did nothing.
-const MINI_BUTTON =
-  "rounded-md border border-subtle bg-surface-2 px-2 py-1 text-xs text-primary hover:border-brand";
+const MINI_BUTTON = "rounded-md border border-subtle bg-surface-2 px-2 py-1 text-xs text-primary hover:border-brand";
 
 const READOUT_STRONG = "font-mono text-xs text-primary";
 
@@ -170,10 +163,7 @@ export function ShellSection() {
         <Roles />
       </Example>
 
-      <Example
-        label="TopBarActionMenu"
-        hint="Rows as data: actions, react-router links and dividers. Needs a Router."
-      >
+      <Example label="TopBarActionMenu" hint="Rows as data: actions, react-router links and dividers. Needs a Router.">
         <ActionMenu />
       </Example>
 
@@ -199,18 +189,15 @@ export function ShellSection() {
           </Row>
           <Note>
             With <code className="font-mono">href</code> the trigger is the router&apos;s link, with{" "}
-            <code className="font-mono">aria-haspopup=&quot;menu&quot;</code>: a click or Enter follows it and
-            shuts the panel, hover still opens the list, and ↓/↑ on the focused icon open it onto the first or
-            last row. A tap on a phone follows the link, so point it where everything in the menu is reachable
-            (here the page itself, so the demo stays put).
+            <code className="font-mono">aria-haspopup=&quot;menu&quot;</code>: a click or Enter follows it and shuts the
+            panel, hover still opens the list, and ↓/↑ on the focused icon open it onto the first or last row. A tap on
+            a phone follows the link, so point it where everything in the menu is reachable (here the page itself, so
+            the demo stays put).
           </Note>
         </div>
       </Example>
 
-      <Example
-        label="Top-bar class constants"
-        hint="Exported so an app's own menus line up with the shared ones."
-      >
+      <Example label="Top-bar class constants" hint="Exported so an app's own menus line up with the shared ones.">
         <ConstList
           items={[
             ["TOPBAR_TRIGGER_CLASS", TOPBAR_TRIGGER_CLASS],
@@ -219,9 +206,8 @@ export function ShellSection() {
         />
         <div className="mt-3">
           <Note>
-            Both paint in <code className="font-mono">var(--…)</code> tokens, so an app-owned
-            trigger built from them follows the palette switch exactly as the kit&apos;s own do —
-            the bell in the TopBar specimen above is one.
+            Both paint in <code className="font-mono">var(--…)</code> tokens, so an app-owned trigger built from them
+            follows the palette switch exactly as the kit&apos;s own do — the bell in the TopBar specimen above is one.
           </Note>
         </div>
       </Example>
@@ -236,16 +222,71 @@ export function ShellSection() {
       <Example label="AppShellNavItem — field by field" hint="Defaults are the kit's, not react-router's.">
         <OutTable
           rows={[
-            ["to", <span className={PROSE}>Route path, the NavLink target — and the React key in both navs, so two items may not share one.</span>],
+            [
+              "to",
+              <span className={PROSE}>
+                Route path, the NavLink target — and the React key in both navs, so two items may not share one.
+              </span>,
+            ],
             ["label", <span className={PROSE}>Sidebar text, the tooltip when collapsed, and the flyout header.</span>],
-            ["shortLabel?", <span className={PROSE}>Mobile bottom bar only. The bar divides the viewport into equal cells, so every entry added shrinks the room a label has. It shortens the label: a development build warns when it does not start with the label&apos;s first word (or an abbreviation of it).</span>],
-            ["shortLabelFrom?", <span className={PROSE}>The text size from which the bar uses shortLabel — &quot;large&quot; keeps the full label at Normal. Default &quot;normal&quot;.</span>],
-            ["shortLabelIsAlias?", <span className={PROSE}>shortLabel is another word for the page on purpose (&quot;Data&quot; for &quot;Import &amp; Export&quot;): no warning.</span>],
-            ["mobilePriority?", <span className={PROSE}>Which entries sit in the phone bar when they do not all fit: lower first, then the list&apos;s order. The bar still shows them in the list&apos;s order.</span>],
-            ["icon", <span className={PROSE}>A LucideIcon — the component itself (Wallet), never an element (&lt;Wallet /&gt;). AppShell renders it as &lt;item.icon /&gt; at size-4 in the sidebar and size-5 in the bar.</span>],
-            ["end?", <span className={PROSE}>NavLink exact match. Defaults to TRUE, which is the opposite of react-router's own default: pass end: false for a section whose children are routes.</span>],
-            ["dataTour?", <span className={PROSE}>data-tour on this item's link in BOTH navs, so a tour can spotlight one entry instead of matching by href.</span>],
-            ["items?", <span className={PROSE}>AppShellSubItem[] (to/label/icon/end). Opens a portalled flyout beside the sidebar on hover or focus, collapsed or expanded. On the phone the bar&apos;s cell opens a sheet of these pages (its own page first, as &quot;Overview&quot;) instead of linking to `to`.</span>],
+            [
+              "shortLabel?",
+              <span className={PROSE}>
+                Mobile bottom bar only. The bar divides the viewport into equal cells, so every entry added shrinks the
+                room a label has. It shortens the label: a development build warns when it does not start with the
+                label&apos;s first word (or an abbreviation of it).
+              </span>,
+            ],
+            [
+              "shortLabelFrom?",
+              <span className={PROSE}>
+                The text size from which the bar uses shortLabel — &quot;large&quot; keeps the full label at Normal.
+                Default &quot;normal&quot;.
+              </span>,
+            ],
+            [
+              "shortLabelIsAlias?",
+              <span className={PROSE}>
+                shortLabel is another word for the page on purpose (&quot;Data&quot; for &quot;Import &amp;
+                Export&quot;): no warning.
+              </span>,
+            ],
+            [
+              "mobilePriority?",
+              <span className={PROSE}>
+                Which entries sit in the phone bar when they do not all fit: lower first, then the list&apos;s order.
+                The bar still shows them in the list&apos;s order.
+              </span>,
+            ],
+            [
+              "icon",
+              <span className={PROSE}>
+                A LucideIcon — the component itself (Wallet), never an element (&lt;Wallet /&gt;). AppShell renders it
+                as &lt;item.icon /&gt; at size-4 in the sidebar and size-5 in the bar.
+              </span>,
+            ],
+            [
+              "end?",
+              <span className={PROSE}>
+                NavLink exact match. Defaults to TRUE, which is the opposite of react-router's own default: pass end:
+                false for a section whose children are routes.
+              </span>,
+            ],
+            [
+              "dataTour?",
+              <span className={PROSE}>
+                data-tour on this item's link in BOTH navs, so a tour can spotlight one entry instead of matching by
+                href.
+              </span>,
+            ],
+            [
+              "items?",
+              <span className={PROSE}>
+                AppShellSubItem[] (to/label/icon/end). Opens a portalled flyout beside the sidebar on hover or focus,
+                collapsed or expanded. On the phone the bar&apos;s cell opens a sheet of these pages (its own page
+                first, as &quot;Overview&quot;) instead of linking to `to`.
+              </span>,
+            ],
           ]}
         />
       </Example>
@@ -264,10 +305,7 @@ export function ShellSection() {
         <PhoneNavExample />
       </Example>
 
-      <Example
-        label="AppShell — the contracts"
-        hint="The shell around this page, read live."
-      >
+      <Example label="AppShell — the contracts" hint="The shell around this page, read live.">
         <AppShellNotes />
       </Example>
     </>
@@ -298,9 +336,7 @@ function TopBarSpecimen() {
             <Wallet className="size-5 shrink-0 text-brand" aria-hidden />
             {/* Wraps from Large up rather than reading "Acme Bo…" (text size §10.17). */}
             <span className="truncate-until-large font-semibold text-primary">Acme Books</span>
-            <span className="hidden truncate text-xs text-muted sm:inline">
-              / Q3 2026
-            </span>
+            <span className="hidden truncate text-xs text-muted sm:inline">/ Q3 2026</span>
           </>
         }
         actions={
@@ -329,17 +365,15 @@ function TopBarSpecimen() {
       />
       <div className="space-y-2 px-4 py-3">
         <p className="text-xs text-secondary">
-          The bell is app-owned markup wearing{" "}
-          <code className="font-mono">TOPBAR_TRIGGER_CLASS</code>; the sun/moon is the kit's{" "}
-          <code className="font-mono">ThemeToggle</code>. Same box, same hover, same rhythm.
+          The bell is app-owned markup wearing <code className="font-mono">TOPBAR_TRIGGER_CLASS</code>; the sun/moon is
+          the kit's <code className="font-mono">ThemeToggle</code>. Same box, same hover, same rhythm.
         </p>
         <Note>
-          <code className="font-mono">z-40</code> in the real thing, above sticky page content
-          (<code className="font-mono">z-30</code>) but below modals and the tour
-          (<code className="font-mono">z-50</code>/<code className="font-mono">z-60</code>).
-          The bar is <code className="font-mono">h-12</code>, which is also what{" "}
-          <code className="font-mono">AppShell</code>'s sidebar offsets itself by — change one
-          and the sidebar hangs.
+          <code className="font-mono">z-40</code> in the real thing, above sticky page content (
+          <code className="font-mono">z-30</code>) but below modals and the tour (
+          <code className="font-mono">z-50</code>/<code className="font-mono">z-60</code>). The bar is{" "}
+          <code className="font-mono">h-12</code>, which is also what <code className="font-mono">AppShell</code>'s
+          sidebar offsets itself by — change one and the sidebar hangs.
         </Note>
       </div>
     </>
@@ -385,18 +419,16 @@ function ThemeAndPalette() {
       </p>
       <Note>
         <code className="font-mono">mode</code> is the RESOLVED light/dark and{" "}
-        <code className="font-mono">preference</code> is what the user chose — only the
-        preference is persisted, and <code className="font-mono">mode</code> is derived again on
-        every load. Read <code className="font-mono">mode</code> for anything that needs a
-        concrete theme (token selection, the toaster); read{" "}
-        <code className="font-mono">preference</code> only to show the choice back.
+        <code className="font-mono">preference</code> is what the user chose — only the preference is persisted, and{" "}
+        <code className="font-mono">mode</code> is derived again on every load. Read{" "}
+        <code className="font-mono">mode</code> for anything that needs a concrete theme (token selection, the toaster);
+        read <code className="font-mono">preference</code> only to show the choice back.
       </Note>
       <Note>
-        <code className="font-mono">PaletteMenu</code> indexes each preset by{" "}
-        <code className="font-mono">mode</code> to draw its swatches, so the menu's own colours
-        change when you flip the theme.{" "}
-        <code className="font-mono">PALETTES</code> is {PALETTES.length} presets, and passing it
-        is a choice about which presets an app offers: a list of its own works the same.
+        <code className="font-mono">PaletteMenu</code> indexes each preset by <code className="font-mono">mode</code> to
+        draw its swatches, so the menu's own colours change when you flip the theme.{" "}
+        <code className="font-mono">PALETTES</code> is {PALETTES.length} presets, and passing it is a choice about which
+        presets an app offers: a list of its own works the same.
       </Note>
     </div>
   );
@@ -446,30 +478,26 @@ function Languages() {
         <span className={READOUT_STRONG}>de-CH · fr-CH · it-CH, closed</span>
       </Row>
       <Note>
-        The flags are <code className="font-mono">flag-icons</code> spans (
-        <code className="font-mono">fi fi-gb</code>), keyed off{" "}
-        <code className="font-mono">country</code> — which is deliberately not the language
-        code: English is <code className="font-mono">gb</code> and Portuguese here is{" "}
-        <code className="font-mono">br</code>. <code className="font-mono">flag-icons</code> is a
-        dependency of the package that nothing inside the package imports, so a consumer that
-        never imports the stylesheet gets empty boxes and no error.
+        The flags are <code className="font-mono">flag-icons</code> spans (<code className="font-mono">fi fi-gb</code>),
+        keyed off <code className="font-mono">country</code> — which is deliberately not the language code: English is{" "}
+        <code className="font-mono">gb</code> and Portuguese here is <code className="font-mono">br</code>.{" "}
+        <code className="font-mono">flag-icons</code> is a dependency of the package that nothing inside the package
+        imports, so a consumer that never imports the stylesheet gets empty boxes and no error.
       </Note>
       <Note>
         The trigger shows the active flag and the language code in capitals (
         <code className="font-mono">trigger=&quot;flag+code&quot;</code>, the default;{" "}
         <code className="font-mono">&quot;code&quot;</code> or <code className="font-mono">&quot;flag&quot;</code>{" "}
-        alone): the three Swiss languages share one flag, and only the code tells them apart without opening the
-        menu. Its name is <code className="font-mono">topBar.languageCurrent</code>, &ldquo;Choose language,
-        current: Deutsch&rdquo; in seven languages; an <code className="font-mono">aria-label</code> of the
-        app&apos;s own names it as given.
+        alone): the three Swiss languages share one flag, and only the code tells them apart without opening the menu.
+        Its name is <code className="font-mono">topBar.languageCurrent</code>, &ldquo;Choose language, current:
+        Deutsch&rdquo; in seven languages; an <code className="font-mono">aria-label</code> of the app&apos;s own names
+        it as given.
       </Note>
       <Note>
-        <code className="font-mono">heading</code> is the same small uppercase
-        row <code className="font-mono">PaletteMenu</code>,{" "}
-        <code className="font-mono">OptionSwitcherMenu</code> and{" "}
-        <code className="font-mono">TopBarActionMenu</code> draw, so a row of top-bar menus
-        reads alike. Like every top-bar menu this one is a{" "}
-        <code className="font-mono">HoverMenu</code>: focus the flag and press ↓ or Enter to
+        <code className="font-mono">heading</code> is the same small uppercase row{" "}
+        <code className="font-mono">PaletteMenu</code>, <code className="font-mono">OptionSwitcherMenu</code> and{" "}
+        <code className="font-mono">TopBarActionMenu</code> draw, so a row of top-bar menus reads alike. Like every
+        top-bar menu this one is a <code className="font-mono">HoverMenu</code>: focus the flag and press ↓ or Enter to
         open it onto the first language, ↑/↓ to move, Escape to close back onto the flag.
       </Note>
     </div>
@@ -494,12 +522,11 @@ function Environments() {
         <span className={READOUT_STRONG}>value: {env}</span>
       </Row>
       <Note>
-        Generic in the option type, so <code className="font-mono">onSelect</code> hands back the
-        union rather than <code className="font-mono">string</code> — a switch over it is
-        exhaustive. <code className="font-mono">label</code> is a{" "}
-        <code className="font-mono">ReactNode</code>, so a row can carry a badge or a muted
-        subtitle; <code className="font-mono">value</code> must be a string, because it is also
-        the list key.
+        Generic in the option type, so <code className="font-mono">onSelect</code> hands back the union rather than{" "}
+        <code className="font-mono">string</code> — a switch over it is exhaustive.{" "}
+        <code className="font-mono">label</code> is a <code className="font-mono">ReactNode</code>, so a row can carry a
+        badge or a muted subtitle; <code className="font-mono">value</code> must be a string, because it is also the
+        list key.
       </Note>
     </div>
   );
@@ -515,11 +542,10 @@ function Roles() {
         <span className={READOUT_STRONG}>value: {role}</span>
       </Row>
       <Note>
-        A thin wrapper: the flask icon, and a default{" "}
-        <code className="font-mono">title</code> of{" "}
-        <code className="font-mono">Role: {role}</code> when none is passed. Typically a dev or
-        UI-only affordance — the kit has no opinion about whether the server honours the
-        switch, so nothing here should be mistaken for authorisation.
+        A thin wrapper: the flask icon, and a default <code className="font-mono">title</code> of{" "}
+        <code className="font-mono">Role: {role}</code> when none is passed. Typically a dev or UI-only affordance — the
+        kit has no opinion about whether the server honours the switch, so nothing here should be mistaken for
+        authorisation.
       </Note>
     </div>
   );
@@ -576,16 +602,15 @@ function ActionMenu() {
       </Row>
       <Note>
         The <code className="font-mono">link</code> row renders a react-router{" "}
-        <code className="font-mono">&lt;Link&gt;</code>, so this component throws outside a
-        Router — one is mounted above this page. Choosing it navigates the showcase to{" "}
-        <code className="font-mono">/docs</code>, which has no route of its own here; that is
-        the link working, not failing. Non-divider rows close the menu for you, so a handler
-        that also closes it is a handler doing the component's job twice.
+        <code className="font-mono">&lt;Link&gt;</code>, so this component throws outside a Router — one is mounted
+        above this page. Choosing it navigates the showcase to <code className="font-mono">/docs</code>, which has no
+        route of its own here; that is the link working, not failing. Non-divider rows close the menu for you, so a
+        handler that also closes it is a handler doing the component's job twice.
       </Note>
       <Note>
-        Only one <code className="font-mono">HoverMenu</code> panel is open at a time across the
-        whole document — opening this one shuts the palette or language menu above. That is
-        module-level coordination inside the kit, not something a call site arranges.
+        Only one <code className="font-mono">HoverMenu</code> panel is open at a time across the whole document —
+        opening this one shuts the palette or language menu above. That is module-level coordination inside the kit, not
+        something a call site arranges.
       </Note>
     </div>
   );
@@ -613,18 +638,17 @@ function NavItemReference() {
       </ul>
       <Note>
         The right-hand column is what the MOBILE bar would print — it is the only consumer of{" "}
-        <code className="font-mono">shortLabel</code>, and it truncates to one line whether or
-        not one was supplied, because an ellipsis in one cell is a smaller problem than a bar
-        whose cells are different heights. The sidebar, its collapsed tooltips and anything else
-        built on this list keep the full <code className="font-mono">label</code>.
+        <code className="font-mono">shortLabel</code>, and it truncates to one line whether or not one was supplied,
+        because an ellipsis in one cell is a smaller problem than a bar whose cells are different heights. The sidebar,
+        its collapsed tooltips and anything else built on this list keep the full{" "}
+        <code className="font-mono">label</code>.
       </Note>
       <Note>
-        Sub-items reach the desktop sidebar only. Hover or keyboard focus opens a flyout beside
-        the item — portalled, because the sidebar is{" "}
-        <code className="font-mono">overflow-hidden</code> and would otherwise clip it — with a
-        140ms grace period so the cursor can travel onto the panel. The mobile bar drops them
-        and links to <code className="font-mono">to</code>, so a parent route that renders
-        nothing on its own is a dead end on a phone.
+        Sub-items reach the desktop sidebar only. Hover or keyboard focus opens a flyout beside the item — portalled,
+        because the sidebar is <code className="font-mono">overflow-hidden</code> and would otherwise clip it — with a
+        140ms grace period so the cursor can travel onto the panel. The mobile bar drops them and links to{" "}
+        <code className="font-mono">to</code>, so a parent route that renders nothing on its own is a dead end on a
+        phone.
       </Note>
     </div>
   );
@@ -646,43 +670,34 @@ function AppShellNotes() {
         <button
           type="button"
           className={MINI_BUTTON}
-          onClick={() =>
-            setNavHeight(document.documentElement.style.getPropertyValue("--app-nav-h") || "unset")
-          }
+          onClick={() => setNavHeight(document.documentElement.style.getPropertyValue("--app-nav-h") || "unset")}
         >
           Read --app-nav-h
         </button>
         <span className={READOUT_STRONG}>{navHeight ?? "press to read"}</span>
       </Row>
       <Note>
-        <code className="font-mono">--app-nav-h</code> is the mobile bar's MEASURED height,
-        republished on resize and floored to a whole pixel, so anything that has to sit on the
-        bar can write <code className="font-mono">bottom-[var(--app-nav-h,0px)]</code> once and
-        be right at both widths. Above 768px the bar is{" "}
-        <code className="font-mono">display:none</code>, which measures as zero — so read this
-        on a wide window and expect <code className="font-mono">0px</code>, then narrow the
-        window past 768px and read it again.
+        <code className="font-mono">--app-nav-h</code> is the mobile bar's MEASURED height, republished on resize and
+        floored to a whole pixel, so anything that has to sit on the bar can write{" "}
+        <code className="font-mono">bottom-[var(--app-nav-h,0px)]</code> once and be right at both widths. Above 768px
+        the bar is <code className="font-mono">display:none</code>, which measures as zero — so read this on a wide
+        window and expect <code className="font-mono">0px</code>, then narrow the window past 768px and read it again.
       </Note>
       <Note>
-        The mobile bar is <code className="font-mono">fixed bottom-0</code>, which on a
-        notched phone means the home indicator sits over it unless the document opts in with{" "}
-        <code className="font-mono">
-          &lt;meta name="viewport" content="…, viewport-fit=cover"&gt;
-        </code>
-        . This showcase's <code className="font-mono">index.html</code> carries it. Note that
-        the tag only unlocks the <code className="font-mono">safe-area-inset-*</code> values:
-        the bar itself does not currently pad by them, so until it does, an app also has to
-        leave that room.
+        The mobile bar is <code className="font-mono">fixed bottom-0</code>, which on a notched phone means the home
+        indicator sits over it unless the document opts in with{" "}
+        <code className="font-mono">&lt;meta name="viewport" content="…, viewport-fit=cover"&gt;</code>. This showcase's{" "}
+        <code className="font-mono">index.html</code> carries it. Note that the tag only unlocks the{" "}
+        <code className="font-mono">safe-area-inset-*</code> values: the bar itself does not currently pad by them, so
+        until it does, an app also has to leave that room.
       </Note>
       <Note>
-        The sidebar's collapsed state persists under{" "}
-        <code className="font-mono">collapseStorageKey</code>, read through the kit's guarded
-        storage helpers rather than <code className="font-mono">localStorage</code> directly —
-        that read happens during render, and <code className="font-mono">localStorage</code>{" "}
-        throws where site data is blocked, which would take the whole application down rather
-        than lose a preference. The default key is a shared literal, so two apps on one origin
-        in development want their own. An embedded (or nested) shell has no default key: it
-        would otherwise overwrite the outer app&apos;s preference with its own.
+        The sidebar's collapsed state persists under <code className="font-mono">collapseStorageKey</code>, read through
+        the kit's guarded storage helpers rather than <code className="font-mono">localStorage</code> directly — that
+        read happens during render, and <code className="font-mono">localStorage</code> throws where site data is
+        blocked, which would take the whole application down rather than lose a preference. The default key is a shared
+        literal, so two apps on one origin in development want their own. An embedded (or nested) shell has no default
+        key: it would otherwise overwrite the outer app&apos;s preference with its own.
       </Note>
     </div>
   );
@@ -740,7 +755,9 @@ const PHONE_NAV: AppShellNavItem[] = [
 
 function PhoneNavExample() {
   const [rulesFirst, setRulesFirst] = useState(false);
-  const nav = rulesFirst ? PHONE_NAV.map((item) => (item.to === "/rules" ? { ...item, mobilePriority: 1 } : item)) : PHONE_NAV;
+  const nav = rulesFirst
+    ? PHONE_NAV.map((item) => (item.to === "/rules" ? { ...item, mobilePriority: 1 } : item))
+    : PHONE_NAV;
   return (
     <div className="space-y-3">
       <Switch
@@ -766,9 +783,9 @@ function PhoneNavExample() {
         {code("mobileMaxItems")} (default 5 cells, More included; 4 at Extra large): eight entries are four and
         &ldquo;More&rdquo;, whose sheet lists the other four. {code("mobilePriority")} picks which entries keep a cell;
         without it the list&apos;s order does. Books has pages, so on the phone its cell opens a sheet of them —
-        Overview, Ledger, Receipts, Invoices — instead of linking to /books, and while one of them is open the row
-        above the bar lists them too. The bar is the phone layout&apos;s: narrow the window (or open the device
-        preview) to see it.
+        Overview, Ledger, Receipts, Invoices — instead of linking to /books, and while one of them is open the row above
+        the bar lists them too. The bar is the phone layout&apos;s: narrow the window (or open the device preview) to
+        see it.
       </Note>
     </div>
   );
@@ -910,9 +927,7 @@ function AppShellPlayground() {
                   brand={
                     <>
                       <Wallet className="size-5 shrink-0 text-brand" aria-hidden />
-                      <span className="truncate-until-large font-semibold text-primary">
-                        Acme Books
-                      </span>
+                      <span className="truncate-until-large font-semibold text-primary">Acme Books</span>
                     </>
                   }
                 />
@@ -957,29 +972,26 @@ function AppShellPlayground() {
       </Row>
       <Note>
         Narrow the window below 768px and read again: the box&apos;s own bar is measured onto{" "}
-        <code className="font-mono">#demo-shell</code>, while{" "}
-        <code className="font-mono">&lt;html&gt;</code> keeps the page shell&apos;s value — the
-        page&apos;s bottom bar does not move when this box mounts, and nothing is left behind when
-        it unmounts. Inside the box, <code className="font-mono">var(--app-nav-h)</code> resolves
-        to the nearest shell&apos;s bar.
+        <code className="font-mono">#demo-shell</code>, while <code className="font-mono">&lt;html&gt;</code> keeps the
+        page shell&apos;s value — the page&apos;s bottom bar does not move when this box mounts, and nothing is left
+        behind when it unmounts. Inside the box, <code className="font-mono">var(--app-nav-h)</code> resolves to the
+        nearest shell&apos;s bar.
       </Note>
       <Note>
-        Try: hover or expand <strong>Books</strong> (flyout vs inline), collapse the sidebar with
-        the button at its foot (the state persists under{" "}
-        <code className="font-mono">collapseStorageKey</code>), and open the screen-size preview
-        from the top bar to see the phone bar with its page row. The collapsed sidebar always
-        uses the flyout, whatever <code className="font-mono">subNav</code> says.
+        Try: hover or expand <strong>Books</strong> (flyout vs inline), collapse the sidebar with the button at its foot
+        (the state persists under <code className="font-mono">collapseStorageKey</code>), and open the screen-size
+        preview from the top bar to see the phone bar with its page row. The collapsed sidebar always uses the flyout,
+        whatever <code className="font-mono">subNav</code> says.
       </Note>
       <Note>
         <code className="font-mono">sidebarFooterItems</code> sits above{" "}
         <code className="font-mono">sidebarFooter</code>. Expanded, the version link shows its{" "}
-        <code className="font-mono">text</code> with <code className="font-mono">hint</code> as a
-        tooltip, and the legal links are a <code className="font-mono">&lt;nav aria-label=&quot;Legal&quot;&gt;</code>{" "}
-        of small links; collapsed, each item is one icon named and tooltipped by its{" "}
-        <code className="font-mono">label</code> (Legal goes to its first link). Internal links
-        use the provider&apos;s <code className="font-mono">linkComponent</code> (else
-        react-router&apos;s <code className="font-mono">Link</code>) — follow one and the route
-        above changes; the help link is a plain new-tab <code className="font-mono">&lt;a&gt;</code>.
+        <code className="font-mono">text</code> with <code className="font-mono">hint</code> as a tooltip, and the legal
+        links are a <code className="font-mono">&lt;nav aria-label=&quot;Legal&quot;&gt;</code> of small links;
+        collapsed, each item is one icon named and tooltipped by its <code className="font-mono">label</code> (Legal
+        goes to its first link). Internal links use the provider&apos;s <code className="font-mono">linkComponent</code>{" "}
+        (else react-router&apos;s <code className="font-mono">Link</code>) — follow one and the route above changes; the
+        help link is a plain new-tab <code className="font-mono">&lt;a&gt;</code>.
       </Note>
     </div>
   );
@@ -991,12 +1003,11 @@ function DemoShellPage() {
   return (
     <div className="space-y-2 p-4">
       <p className="text-sm text-primary">
-        children — the current route is{" "}
-        <code className="font-mono text-brand">{pathname}</code>
+        children — the current route is <code className="font-mono text-brand">{pathname}</code>
       </p>
       <p className="text-xs text-secondary">
-        A real app renders its <code className="font-mono">&lt;Outlet /&gt;</code> here. The
-        group holding this page stays marked in the sidebar while one of its pages is open.
+        A real app renders its <code className="font-mono">&lt;Outlet /&gt;</code> here. The group holding this page
+        stays marked in the sidebar while one of its pages is open.
       </p>
     </div>
   );
@@ -1093,10 +1104,7 @@ function PageContentsExample() {
         contents={variant === "rail" ? contents : null}
       >
         {variant === "disclosure" && <div className="mb-3">{contents}</div>}
-        <div
-          ref={setBox}
-          className="relative h-48 overflow-y-auto rounded border border-subtle px-3"
-        >
+        <div ref={setBox} className="relative h-48 overflow-y-auto rounded border border-subtle px-3">
           {/* The reading line, drawn where the spy puts it. */}
           <div
             aria-hidden
@@ -1119,10 +1127,9 @@ function PageContentsExample() {
         useScrollSpy(ids, {"{"} root: box, line: {line.toFixed(2)} {"}"}) → {JSON.stringify(activeId)}
       </p>
       <p className="mt-2 text-xs text-secondary">
-        Below <code className="font-mono">xl</code> the page&apos;s rail has no room; the same
-        entries go in <code className="font-mono">{'<PageContents variant="disclosure">'}</code>{" "}
-        under the title, as on this page at a narrower window.{" "}
-        <code className="font-mono">labels.title</code> overrides the provider&apos;s{" "}
+        Below <code className="font-mono">xl</code> the page&apos;s rail has no room; the same entries go in{" "}
+        <code className="font-mono">{'<PageContents variant="disclosure">'}</code> under the title, as on this page at a
+        narrower window. <code className="font-mono">labels.title</code> overrides the provider&apos;s{" "}
         <code className="font-mono">pageContents.title</code> for one instance.
       </p>
     </Example>
@@ -1181,9 +1188,8 @@ export function AccountHeaderLinkDemo() {
         <span className={READOUT}>{log}</span>
       </Row>
       <Note>
-        A router link does not unmount the menu, so a header link that is handed nothing
-        leaves the panel open over the page it navigated to. The plain {code("ReactNode")}{" "}
-        form still works for a chip that is only a label.
+        A router link does not unmount the menu, so a header link that is handed nothing leaves the panel open over the
+        page it navigated to. The plain {code("ReactNode")} form still works for a chip that is only a label.
       </Note>
     </Example>
   );

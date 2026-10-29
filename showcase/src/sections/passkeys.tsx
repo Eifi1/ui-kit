@@ -46,10 +46,10 @@ function Passkeys016Demo() {
       </div>
       <div className={READOUT}>{log}</div>
       <Note>
-        {code("PasskeysSetting")} infers its id type from {code("passkeys")}: numeric ids come
-        back to {code("onRename")} / {code("onDelete")} as numbers. {code("id")} and{" "}
-        {code("data-*")} land on the card; {code("rowProps")} gives each row's {code("<li>")}{" "}
-        an id (here {code("#passkey-101")}), and every row carries {code("data-passkey-id")}.
+        {code("PasskeysSetting")} infers its id type from {code("passkeys")}: numeric ids come back to{" "}
+        {code("onRename")} / {code("onDelete")} as numbers. {code("id")} and {code("data-*")} land on the card;{" "}
+        {code("rowProps")} gives each row's {code("<li>")} an id (here {code("#passkey-101")}), and every row carries{" "}
+        {code("data-passkey-id")}.
       </Note>
     </Example>
   );
@@ -99,7 +99,10 @@ function Passkeys018Demo() {
           }}
           onAdd={(name) => {
             setLog(`onAdd("${name}") with ${options.current}`);
-            setItems((list) => [...list, { id: Date.now(), name: name || "Passkey", createdAt: new Date(), lastUsedAt: null }]);
+            setItems((list) => [
+              ...list,
+              { id: Date.now(), name: name || "Passkey", createdAt: new Date(), lastUsedAt: null },
+            ]);
           }}
           onDelete={(id) => setItems((list) => list.filter((k) => k.id !== id))}
         />
@@ -140,10 +143,9 @@ function Passkeys018Demo() {
         </DialogFrame>
       )}
       <Note>
-        {code('mode="alongside"')} swaps the line under the title for{" "}
-        {code("labels.descriptionAlongside")} — the password keeps working; the default{" "}
-        {code('"instead"')} keeps "instead of a password". {code("beforeAdd")} runs first: resolve{" "}
-        {code("true")} to go on to {code("onAdd")}, {code("false")} to stop with the typed name kept.
+        {code('mode="alongside"')} swaps the line under the title for {code("labels.descriptionAlongside")} — the
+        password keeps working; the default {code('"instead"')} keeps "instead of a password". {code("beforeAdd")} runs
+        first: resolve {code("true")} to go on to {code("onAdd")}, {code("false")} to stop with the typed name kept.
         What the step produced reaches {code("onAdd")} through a ref.
       </Note>
     </Example>

@@ -194,9 +194,7 @@ const PICKERS: [string, PickerCase][] = [
   ],
 ];
 
-const CASES = HOSTS.flatMap(([host, Host]) =>
-  PICKERS.map(([picker, c]) => [picker, host, Host, c] as const),
-);
+const CASES = HOSTS.flatMap(([host, Host]) => PICKERS.map(([picker, c]) => [picker, host, Host, c] as const));
 
 describe("Escape on an open picker list inside a dialog (BUG-1)", () => {
   it.each(CASES)("%s in a %s: the first Escape closes the list, the second the dialog", async (_p, _h, Host, c) => {

@@ -166,17 +166,32 @@ export function UserRoster030Demo() {
   const me = people.find((p) => p.id === ME)!;
   const activeAdmins = people.filter((p) => p.role === "ADMIN" && p.is_active).length;
 
-  const record = useCallback((action: string, person: Person | null, detail?: string) => {
-    setLog((rows) => [
-      { id: rows.length + 1, at: new Date().toISOString(), actor: asPerson(me), action, target: person && asPerson(person), detail },
-      ...rows,
-    ]);
-  }, [me]);
+  const record = useCallback(
+    (action: string, person: Person | null, detail?: string) => {
+      setLog((rows) => [
+        {
+          id: rows.length + 1,
+          at: new Date().toISOString(),
+          actor: asPerson(me),
+          action,
+          target: person && asPerson(person),
+          detail,
+        },
+        ...rows,
+      ]);
+    },
+    [me],
+  );
   const patch = (id: number, change: Partial<Person>) =>
     setPeople((rows) => rows.map((row) => (row.id === id ? { ...row, ...change } : row)));
 
   const ask = useCallback(
-    (person: Person, action: AdminActionKind, words: Omit<Pending, "person" | "action" | "level" | "run">, run: () => void) =>
+    (
+      person: Person,
+      action: AdminActionKind,
+      words: Omit<Pending, "person" | "action" | "level" | "run">,
+      run: () => void,
+    ) =>
       setPending({
         person,
         action,
@@ -320,10 +335,11 @@ export function UserRoster030Demo() {
           The column preset in the app&apos;s own {code("DataTable")}: {code("UserIdentityCell")} (name in the
           reader&apos;s order, address under it), {code("RoleSelect")} where {code("editableRole")} says so — locked on
           your own row, CUSTOMER unavailable for an account that owns work — the state chips from{" "}
-          {code("adminUserStates")} (deletion with its day), the two dates, the app&apos;s {code("Owned")} column and the
-          row&apos;s menu. Every action asks at the level the pretend server states: resend and reactivate at{" "}
+          {code("adminUserStates")} (deletion with its day), the two dates, the app&apos;s {code("Owned")} column and
+          the row&apos;s menu. Every action asks at the level the pretend server states: resend and reactivate at{" "}
           {code("none")}, the role and the password requirement at {code("acknowledge")}, deactivation at{" "}
-          {code("type_email")}. Deactivating Eva answers {code("other_companies")}: the account belongs to other companies too.
+          {code("type_email")}. Deactivating Eva answers {code("other_companies")}: the account belongs to other
+          companies too.
         </Note>
       </Example>
 
@@ -465,7 +481,8 @@ export function Invitations030Demo() {
     { id: 2, email: "tim@example.com", role: "MEMBER", created_at: ago(20), status: "accepted" },
     { id: 1, email: "old@example.com", role: "MEMBER", created_at: ago(30), expires_at: ago(16), status: "expired" },
   ]);
-  const link = (id: number) => `https://app.example.com/register?invite=demo-${id}-${Math.random().toString(36).slice(2, 8)}`;
+  const link = (id: number) =>
+    `https://app.example.com/register?invite=demo-${id}-${Math.random().toString(36).slice(2, 8)}`;
   return (
     <Example label="Invitations — InvitationsPanel" hint="the link is shown once, while mail goes to the console">
       <Switch label="Mail goes to the server console" checked={consoleMail} onCheckedChange={setConsoleMail} />
@@ -504,9 +521,9 @@ export function Invitations030Demo() {
         />
       </div>
       <Note>
-        No word in it says &ldquo;admin&rdquo;: an owner can invite from a sharing screen too. The address
-        field offers no {code("+app")} tag — it is someone else&apos;s address. With the console backend the answer
-        carries the one-time link, and the row offers to copy it until the page is left.
+        No word in it says &ldquo;admin&rdquo;: an owner can invite from a sharing screen too. The address field offers
+        no {code("+app")} tag — it is someone else&apos;s address. With the console backend the answer carries the
+        one-time link, and the row offers to copy it until the page is left.
       </Note>
     </Example>
   );
@@ -523,8 +540,8 @@ export function AccountDeletionChip030Demo() {
         <AccountStateChip state="deletion" date={ahead(30)} variant="dot" caps={false} />
       </div>
       <Note>
-        In place of {code("inactive")} — an account marked for deletion is always deactivated. The date goes through
-        the provider&apos;s {code("formatDate")} when the app set one.
+        In place of {code("inactive")} — an account marked for deletion is always deactivated. The date goes through the
+        provider&apos;s {code("formatDate")} when the app set one.
       </Note>
     </Example>
   );

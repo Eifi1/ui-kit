@@ -70,7 +70,10 @@ export function TableSkeleton({
     ) : (
       <div
         key={key}
-        className={cn("flex items-center gap-4 px-4 py-3", stack && "max-sm:flex-col max-sm:items-stretch max-sm:gap-2")}
+        className={cn(
+          "flex items-center gap-4 px-4 py-3",
+          stack && "max-sm:flex-col max-sm:items-stretch max-sm:gap-2",
+        )}
         data-skeleton-row=""
       >
         <Skeleton className={cn("h-4", NAME_WIDTHS[key % NAME_WIDTHS.length])} />

@@ -17,8 +17,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
   // 0.30.0 — a throttled request (HTTP 429), as `englishRateLimited` in
   // src/auth/auth-errors.ts: no wait → "un momento", under a minute → seconds, else
   // minutes rounded up. kastlan's reviewed "auth.throttled" is the sentence without one.
-  const wait = (seconds: number) =>
-    seconds < 60 ? `${n(Math.ceil(seconds))} s` : `${n(Math.ceil(seconds / 60))} min`;
+  const wait = (seconds: number) => (seconds < 60 ? `${n(Math.ceil(seconds))} s` : `${n(Math.ceil(seconds / 60))} min`);
   const rateLimited = (seconds?: number) =>
     !seconds || seconds <= 0
       ? "Troppi tentativi. Attenda un momento e riprovi."
@@ -196,8 +195,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       reworkTitle: "Rimanda in rielaborazione",
       reworkSend: "Richiedi rielaborazione",
       reworkPlaceholder: "Cosa va ancora perfezionato? Eventuali nuovi vincoli o cambi di direzione.",
-      reworkUploadFailed:
-        "Non è stato possibile caricare il file. La richiesta di rielaborazione non è stata inviata.",
+      reworkUploadFailed: "Non è stato possibile caricare il file. La richiesta di rielaborazione non è stata inviata.",
       status: "Stato",
       note: "Nota",
     },
@@ -258,8 +256,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         enabledText: "Attiva",
         disabledText: "Non attiva",
         enable: "Configura l’autenticazione a due fattori",
-        scanHint:
-          "Scansioni questo codice con la Sua app di autenticazione, poi inserisca il codice che mostra.",
+        scanHint: "Scansioni questo codice con la Sua app di autenticazione, poi inserisca il codice che mostra.",
         codeLabel: "Codice di verifica",
         verify: "Verifica e attiva",
         disableSection: "Disattiva l’autenticazione a due fattori",
@@ -274,7 +271,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       passkeys: {
         title: "Passkey",
         description: "Acceda con impronta, volto o PIN del dispositivo invece che con una password.",
-        descriptionAlongside: "Acceda con impronta, volto o PIN del dispositivo. La Sua password continua a funzionare.",
+        descriptionAlongside:
+          "Acceda con impronta, volto o PIN del dispositivo. La Sua password continua a funzionare.",
         empty: "Ancora nessuna passkey",
         loading: "Caricamento delle passkey…",
         list: "Le Sue passkey",
@@ -311,8 +309,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         "I tasti freccia spostano tra le celle. Digiti per sostituire una cella, F2 per modificarla, Esc per annullare la modifica. Invio scende e aggiunge una riga alla fine.",
       lineError: (line) => `Impossibile leggere la riga ${line}`,
       points: (count) => (count === 1 ? "1 punto" : `${n(count)} punti`),
-      problems: (count) =>
-        count === 1 ? "1 cella non è un numero" : `${n(count)} celle non sono numeri`,
+      problems: (count) => (count === 1 ? "1 cella non è un numero" : `${n(count)} celle non sono numeri`),
     },
     pageContents: { title: "In questa pagina" },
     common: {
@@ -379,8 +376,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         last_year: "Anno scorso",
       },
       table: "Tabella dati",
-      filterResults: (shown, total) =>
-        `${n(shown)} di ${n(total)} ${plural(total, "riga", "righe")}`,
+      filterResults: (shown, total) => `${n(shown)} di ${n(total)} ${plural(total, "riga", "righe")}`,
       sortedAscending: (column) => `Ordinato per ${column}, crescente`,
       sortedDescending: (column) => `Ordinato per ${column}, decrescente`,
       sortCleared: (column) => `Ordinamento per ${column} rimosso`,
@@ -582,13 +578,11 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       rejectedType: (name) => `Il tipo di file di «${name}» non è supportato`,
       rejectedTypeOnly: (accept) => `Solo file ${accept}`,
       rejectedSize: (name, maxSize) => `«${name}» supera ${maxSize}`,
-      rejectedCount: (name, maxFiles) =>
-        `«${name}» non è stato aggiunto: al massimo ${n(maxFiles)} file`,
+      rejectedCount: (name, maxFiles) => `«${name}» non è stato aggiunto: al massimo ${n(maxFiles)} file`,
       rejectedInvalid: (name) => `«${name}» non può essere usato qui`,
       rejectedMany: (count) =>
         count === 1 ? "1 file non è stato aggiunto" : `${n(count)} file non sono stati aggiunti`,
-      selected: (count, firstName) =>
-        count === 1 ? `«${firstName}» selezionato` : `${n(count)} file selezionati`,
+      selected: (count, firstName) => (count === 1 ? `«${firstName}» selezionato` : `${n(count)} file selezionati`),
       remove: (name) => `Rimuovi «${name}»`,
       clearAll: "Rimuovi tutti i file",
       removed: (name) => `«${name}» rimosso`,
@@ -724,8 +718,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       strong: "Forte",
       announcement: (level) => `Sicurezza della password: ${level}`,
       // Unformatted, as in the English default.
-      ruleLength: (minLength) =>
-        `Almeno ${n(minLength)} ${plural(minLength, "carattere", "caratteri")}`,
+      ruleLength: (minLength) => `Almeno ${n(minLength)} ${plural(minLength, "carattere", "caratteri")}`,
       ruleCase: "Maiuscole e minuscole",
       ruleDigit: "Un numero",
       ruleSymbol: "Un simbolo",
@@ -813,7 +806,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       details: "Dettagli dell’errore",
       reload: "Ricarica",
       updateTitle: "È disponibile una nuova versione",
-      updateMessage: "Una parte dell’app è cambiata da quando questa pagina è stata caricata. Ricarichi per ottenere la nuova versione.",
+      updateMessage:
+        "Una parte dell’app è cambiata da quando questa pagina è stata caricata. Ricarichi per ottenere la nuova versione.",
       offlineTitle: "Nessuna connessione",
       offlineMessage: "Impossibile caricare questa pagina senza connessione. Si riconnetta, poi ricarichi la pagina.",
       copyReport: "Copia il rapporto di errore",
@@ -921,8 +915,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
           "Beta chiusa. Le formulazioni legali qui sotto non sono ancora state verificate da un avvocato; lo saranno prima di un lancio pubblico. Le descrizioni tecniche — cosa viene memorizzato, dove e chi può leggerlo — descrivono ciò che il software fa davvero oggi e sono pensate per essere verificate rispetto a esso.",
       },
       translation: {
-        note: (o) =>
-          `Questa è una traduzione fornita per Sua comodità. Fa fede la versione in ${o.bindingLanguage}.`,
+        note: (o) => `Questa è una traduzione fornita per Sua comodità. Fa fede la versione in ${o.bindingLanguage}.`,
         show: (o) => `Mostra la versione in ${o.bindingLanguage}`,
       },
       updated: (date) => `Ultimo aggiornamento: ${date}`,
@@ -1027,8 +1020,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       verify: "Verifica",
       codeInvalid: "Codice 2FA non valido.",
       setPasswordTitle: "Scelga una nuova password",
-      setPasswordIntro:
-        "Per questo account è stata richiesta una nuova password. Ne scelga una e accederà subito.",
+      setPasswordIntro: "Per questo account è stata richiesta una nuova password. Ne scelga una e accederà subito.",
       newPassword: "Nuova password",
       confirmPassword: "Ripeti la nuova password",
       passwordMismatch: "Le password non coincidono.",
@@ -1085,8 +1077,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     },
     forgotPassword: {
       title: "Password dimenticata",
-      intro:
-        "Inserisca l’indirizzo email del Suo account. Le invieremo un link per scegliere una nuova password.",
+      intro: "Inserisca l’indirizzo email del Suo account. Le invieremo un link per scegliere una nuova password.",
       email: "Email",
       submit: "Invia il link",
       sent: (email) => `Se esiste un account per ${email}, il link è in arrivo.`,
@@ -1106,8 +1097,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       failed: "Impossibile cambiare la password.",
       noToken: "Questo link è incompleto.",
       invalid: "Questo link non è valido o è scaduto.",
-      invalidHint:
-        "I link sono validi per un’ora e funzionano una sola volta. Ne richieda semplicemente uno nuovo.",
+      invalidHint: "I link sono validi per un’ora e funzionano una sola volta. Ne richieda semplicemente uno nuovo.",
       requestNew: "Richiedi un nuovo link",
       success: "La Sua password è stata cambiata. Ora può accedere con quella.",
       sessionsEnded: "I dispositivi connessi sono stati disconnessi: lì dovrà accedere di nuovo.",
@@ -1300,8 +1290,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     },
     sessions: {
       title: "Sessioni",
-      description:
-        "Ha effettuato l’accesso su un dispositivo che non usa più o di cui non si fida? Esca ovunque.",
+      description: "Ha effettuato l’accesso su un dispositivo che non usa più o di cui non si fida? Esca ovunque.",
       signOutEverywhere: "Esci ovunque…",
       signOutEverywherePrompt:
         "Tutte le sessioni terminano, compresa questa: anche questo dispositivo verrà disconnesso e dovrà accedere di nuovo da qui.",
@@ -1390,11 +1379,9 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       confirm: "Conferma",
       cancel: "Annulla",
       close: "Chiudi",
-      lastAdmin:
-        "Questo è l’ultimo account amministratore attivo. Renda prima amministratore qualcun altro.",
+      lastAdmin: "Questo è l’ultimo account amministratore attivo. Renda prima amministratore qualcun altro.",
       self: "Non può farlo sul Suo account.",
-      confirmationMismatch:
-        "L’indirizzo non corrisponde a questo account. Controlli su quale account si trova.",
+      confirmationMismatch: "L’indirizzo non corrisponde a questo account. Controlli su quale account si trova.",
       otherCompanies:
         "Questo account appartiene anche ad altre aziende, quindi solo il gestore della piattaforma può farlo. Può invece rimuoverlo da questa azienda.",
       removeFromCompany: "Rimuovi dall’azienda",
@@ -1524,8 +1511,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     },
     characterCount: {
       count: (used, max) => `${n(used)} di ${n(max)} ${plural(max, "carattere", "caratteri")}`,
-      remaining: (left) =>
-        left === 1 ? "Resta 1 carattere" : `Restano ${n(left)} caratteri`,
+      remaining: (left) => (left === 1 ? "Resta 1 carattere" : `Restano ${n(left)} caratteri`),
       limitReached: "Limite di caratteri raggiunto",
     },
     countrySelect: {
@@ -1541,8 +1527,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     ibanInput: {
       format: "Un IBAN inizia con un codice paese di due lettere e due cifre di controllo.",
       country: (code) => `«${code}» non è il codice paese di un IBAN.`,
-      length: (actual, expected) =>
-        `Un IBAN di questo paese ha ${n(expected)} caratteri, questo ne ha ${n(actual)}.`,
+      length: (actual, expected) => `Un IBAN di questo paese ha ${n(expected)} caratteri, questo ne ha ${n(actual)}.`,
       checksum: "Le cifre di controllo non corrispondono: probabilmente un carattere è stato digitato male.",
       qrRequired: "Questo è un IBAN normale. Una QR-fattura richiede il QR-IBAN del conto.",
       qrNotAllowed:
@@ -1561,8 +1546,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     },
     columnMapper: {
       paste: "Incolla una tabella",
-      pasteHint:
-        "Copi le righe da un foglio di calcolo e le incolli qui, oppure trascini un file CSV o di testo.",
+      pasteHint: "Copi le righe da un foglio di calcolo e le incolli qui, oppure trascini un file CSV o di testo.",
       chooseFile: "Scegli un file",
       readError: (name) => `Impossibile leggere «${name}»`,
       headerRow: "La prima riga contiene i nomi delle colonne",
@@ -1577,8 +1561,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       // The examples stay as written: they show the convention, not the reader's locale.
       decimalComma: "virgola decimale (1,5)",
       decimalPoint: "punto decimale (1.5)",
-      unreadCount: (count) =>
-        count === 1 ? "Impossibile leggere 1 riga" : `Impossibile leggere ${n(count)} righe`,
+      unreadCount: (count) => (count === 1 ? "Impossibile leggere 1 riga" : `Impossibile leggere ${n(count)} righe`),
       unreadLine: (line) => `Impossibile leggere la riga ${line}`,
       unreadMore: (count) => (count === 1 ? "…e un’altra" : `…e altre ${n(count)}`),
       noRows: "Nessuna riga di questo testo si può leggere come riga della tabella.",
@@ -1589,9 +1572,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       requiredRole: (role) => `${role} (obbligatorio)`,
       requiredRoleShort: (role) => `${role} *`,
       previewOf: (shown, total) =>
-        shown === 1
-          ? `La prima di ${n(total)} righe`
-          : `Le prime ${n(shown)} di ${n(total)} righe`,
+        shown === 1 ? `La prima di ${n(total)} righe` : `Le prime ${n(shown)} di ${n(total)} righe`,
       // `roles` arrives joined with "o" ("Dare o Avere").
       oneOf: (roles) => `${roles} (a scelta)`,
       // A participle phrase: no verb to agree with however many roles follow.
@@ -1647,7 +1628,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       exportCorrections: (count) => `Esporta le correzioni (${n(count)})`,
       failed: "Non ha funzionato. Riprovi.",
       approvedToast: (count) => (count === 1 ? "Testo approvato" : `${n(count)} testi approvati`),
-      clearedToast: (count) => (count === 1 ? "Testo segnato come non rivisto" : `${n(count)} testi segnati come non rivisti`),
+      clearedToast: (count) =>
+        count === 1 ? "Testo segnato come non rivisto" : `${n(count)} testi segnati come non rivisti`,
       groupCount: (unreviewed, total) =>
         `${n(unreviewed)} ${plural(unreviewed, "non rivisto", "non rivisti")} / ${n(total)}`,
       approveGroup: (count) => `Approva i non rivisti (${n(count)})`,
@@ -1807,8 +1789,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       manage: "Pagamento e fatture",
       cancel: "Disdici l’abbonamento",
       // §14.5: no customer at the provider yet, so no portal to open.
-      notAtProvider:
-        "Ancora niente da gestire. Pagamenti e fatture compariranno qui quando avrà un piano a pagamento.",
+      notAtProvider: "Ancora niente da gestire. Pagamenti e fatture compariranno qui quando avrà un piano a pagamento.",
       // §14.4: the pay page's lines, built into its bundle. "Lei".
       payOpening: "Apertura del pagamento sicuro…",
       payNothing: "Qui non c’è nulla da pagare. Per scegliere un piano, torni all’app.",
@@ -1828,8 +1809,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
           ? `Il metodo di pagamento e le fatture sono gestiti da ${buyer}, che ha sottoscritto l’abbonamento.`
           : "Il metodo di pagamento e le fatture sono gestiti dall’amministratore che ha sottoscritto l’abbonamento.",
       cancelConfirmTitle: "Disdici l’abbonamento",
-      cancelConfirmBody: (date) =>
-        `Il Suo abbonamento termina il ${date}. Fino ad allora tutto funziona come prima.`,
+      cancelConfirmBody: (date) => `Il Suo abbonamento termina il ${date}. Fino ad allora tutto funziona come prima.`,
       cancelConfirmAction: "Disdici ora",
       keepSubscription: "Mantieni l’abbonamento",
       portalOpensNewTab: (provider, app) =>
@@ -1923,7 +1903,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     // the rest of the catalogue.
     mailTestCard: {
       title: "Email di prova",
-      description: "Invia un’email al Suo indirizzo, tramite il trasporto con cui questa installazione invia tutte le sue email.",
+      description:
+        "Invia un’email al Suo indirizzo, tramite il trasporto con cui questa installazione invia tutte le sue email.",
       transport: (backend) => `Trasporto: ${backend}`,
       action: "Inviami un’email di prova",
       sent: (address) => `Inviata a ${address}. Controlli la posta in arrivo.`,
@@ -1944,7 +1925,10 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       sections: {
         overview: { title: "Panoramica", help: "Ciò che è in attesa, a colpo d’occhio." },
         users: { title: "Utenti", help: "Chi ha un account e cosa può fare ciascuno." },
-        invitations: { title: "Inviti", help: "Inviti persone via e-mail nella loro lingua; reinvii o revochi gli inviti ancora aperti." },
+        invitations: {
+          title: "Inviti",
+          help: "Inviti persone via e-mail nella loro lingua; reinvii o revochi gli inviti ancora aperti.",
+        },
         billing: { title: "Fatturazione", help: "Il piano, il pagamento e le fatture." },
         activity: { title: "Attività", help: "Ciò che hanno fatto gli amministratori, dal più recente." },
       },
@@ -1984,8 +1968,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         offline: "Offline: le modifiche vengono salvate su questo dispositivo e sincronizzate alla riconnessione",
         refused: "Il server ha rifiutato l’ultima sincronizzazione",
         syncing: "Sincronizzazione…",
-        pending: (count) =>
-          `${n(count)} ${plural(count, "modifica", "modifiche")} in attesa di sincronizzazione`,
+        pending: (count) => `${n(count)} ${plural(count, "modifica", "modifiche")} in attesa di sincronizzazione`,
         syncedAt: (time) => `Sincronizzato alle ${time}`,
         idle: "Aggiornato",
         syncHint: "Tocchi per sincronizzare ora",

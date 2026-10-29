@@ -94,9 +94,7 @@ describe("SearchField", () => {
     // — two crosses, one of them nameless. Ours is the one that keeps an accessible
     // name and matches the app's other icon buttons.
     render(<Harness clearLabel="Clear search" />);
-    expect(screen.getByRole("searchbox").className).toContain(
-      "[&::-webkit-search-cancel-button]:appearance-none",
-    );
+    expect(screen.getByRole("searchbox").className).toContain("[&::-webkit-search-cancel-button]:appearance-none");
   });
 
   it("falls back to the name when no placeholder is given", () => {

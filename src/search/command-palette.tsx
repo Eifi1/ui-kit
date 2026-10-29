@@ -227,8 +227,7 @@ export function CommandPalette({
   // go from a German name to an English "Search" on update — so a translated
   // placeholder keeps doing the job until a `dialog` is supplied.
   const dialogName =
-    l.dialog ??
-    (l.placeholder !== DEFAULT_COMMAND_PALETTE_LABELS.placeholder ? l.placeholder : DEFAULT_DIALOG_NAME);
+    l.dialog ?? (l.placeholder !== DEFAULT_COMMAND_PALETTE_LABELS.placeholder ? l.placeholder : DEFAULT_DIALOG_NAME);
   const [ownQuery, setOwnQuery] = useState("");
   const controlled = queryProp !== undefined;
   const query = controlled ? queryProp : ownQuery;
@@ -426,9 +425,7 @@ export function CommandPalette({
         data-fullscreen={isPhone || undefined}
         className={cn(
           "flex w-full flex-col overflow-hidden bg-surface outline-none",
-          isPhone
-            ? "h-full"
-            : "max-h-[70vh] max-w-xl rounded-xl border border-subtle shadow-2xl",
+          isPhone ? "h-full" : "max-h-[70vh] max-w-xl rounded-xl border border-subtle shadow-2xl",
         )}
         // Full screen means edge to edge, so the notch, the home indicator and the
         // rounded corners are the panel's to keep clear of.
@@ -518,7 +515,13 @@ export function CommandPalette({
             the list markup in between is presentational so the listbox's children are
             groups and options only — as a plain <li>/<ul> tree a reader announced
             "list, 2 items" between options and never tied the heading to its rows. */}
-        <ul id={listId} ref={listRef} role="listbox" aria-label={dialogName} className="min-h-0 flex-1 overflow-y-auto py-1">
+        <ul
+          id={listId}
+          ref={listRef}
+          role="listbox"
+          aria-label={dialogName}
+          className="min-h-0 flex-1 overflow-y-auto py-1"
+        >
           {groups.map(({ group, items }, groupIndex) => (
             <li key={group} role="presentation">
               <div
@@ -540,7 +543,9 @@ export function CommandPalette({
                           comfortable ? "min-h-11 py-2.5" : "py-2",
                         )}
                       >
-                        {item.icon && <span className="flex size-4 shrink-0 items-center justify-center">{item.icon}</span>}
+                        {item.icon && (
+                          <span className="flex size-4 shrink-0 items-center justify-center">{item.icon}</span>
+                        )}
                         <span className="min-w-0 flex-1 truncate">{item.label}</span>
                       </li>
                     );
@@ -561,9 +566,7 @@ export function CommandPalette({
                     className: cn(
                       "flex w-full items-center gap-2.5 px-3 text-start",
                       comfortable ? "min-h-11 py-2.5 text-base" : "py-2 text-sm",
-                      isActive
-                        ? "bg-active text-primary"
-                        : "text-secondary",
+                      isActive ? "bg-active text-primary" : "text-secondary",
                     ),
                   };
                   const inner = (
@@ -595,14 +598,7 @@ export function CommandPalette({
                             // #451) — and the palette deliberately stays OPEN for
                             // it: ⌘-clicking three results in a row is the reason to
                             // want this, and closing after the first would undo it.
-                            if (
-                              e.button !== 0 ||
-                              e.metaKey ||
-                              e.ctrlKey ||
-                              e.shiftKey ||
-                              e.altKey
-                            )
-                              return;
+                            if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
                             e.preventDefault();
                             choose(item);
                           }}
@@ -622,11 +618,7 @@ export function CommandPalette({
           ))}
         </ul>
 
-        {l.hint && (
-          <div className="border-t border-subtle px-3 py-1.5 text-caption text-placeholder">
-            {l.hint}
-          </div>
-        )}
+        {l.hint && <div className="border-t border-subtle px-3 py-1.5 text-caption text-placeholder">{l.hint}</div>}
       </div>
     </div>,
     document.body,

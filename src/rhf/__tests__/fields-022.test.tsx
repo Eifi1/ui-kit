@@ -167,7 +167,14 @@ describe("RhfDateRangePicker (kastlan 4)", () => {
     const formRef: FormRef = { current: null };
     render(
       <Harness formRef={formRef}>
-        <RhfDateRangePicker fromName="from" toName="to" label="Period" hint="Billing period" required presets={PRESETS} />
+        <RhfDateRangePicker
+          fromName="from"
+          toName="to"
+          label="Period"
+          hint="Billing period"
+          required
+          presets={PRESETS}
+        />
       </Harness>,
     );
     expect(trigger()).toHaveAccessibleDescription("Billing period");
@@ -281,7 +288,13 @@ describe("RhfToggleGroup (kastlan 4)", () => {
     const formRef: FormRef = { current: null };
     render(
       <Harness formRef={formRef}>
-        <RhfToggleGroup name="interval" label="Interval" hint="How often rent is due" required options={[...INTERVALS]} />
+        <RhfToggleGroup
+          name="interval"
+          label="Interval"
+          hint="How often rent is due"
+          required
+          options={[...INTERVALS]}
+        />
       </Harness>,
     );
     const group = screen.getByRole("radiogroup", { name: /Interval/ });
@@ -355,7 +368,7 @@ describe("RhfToggleGroup (kastlan 4)", () => {
     expect(screen.getByText("Any status")).toBeTruthy();
   });
 
-  it("allowEmpty with emptyValue=\"\" stores the empty string", () => {
+  it('allowEmpty with emptyValue="" stores the empty string', () => {
     const formRef: FormRef = { current: null };
     render(
       <Harness formRef={formRef} defaults={{ ...DEFAULTS, interval: "monthly" }}>

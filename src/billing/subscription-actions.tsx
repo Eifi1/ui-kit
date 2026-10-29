@@ -169,7 +169,9 @@ export function SubscriptionActions({
   const portalCancel = onCancel ?? (onPortal ? () => onPortal("cancel") : undefined);
   // Under "buyer_only" the in-app cancel only; under "open" the portal's first, the
   // in-app cancel only where no way to the portal's is given.
-  const cancelCall = buyerOnly ? onCancelInApp : (portalCancel ?? (cancelHref === undefined ? onCancelInApp : undefined));
+  const cancelCall = buyerOnly
+    ? onCancelInApp
+    : (portalCancel ?? (cancelHref === undefined ? onCancelInApp : undefined));
   // 0.43: what was asked in the app wins over the row until the row moves.
   const scheduled = cancelRequested === "cancel" ? true : cancelRequested === "resume" ? false : cancelAtPeriodEnd;
   // 0.43 (§17): the portal's actions are marked, a link opens a tab of its own.
@@ -229,7 +231,8 @@ export function SubscriptionActions({
   if (!manage && !cancel) return null;
   // The note while a way to the portal shows: "Payment and invoices open at Paddle in a
   // new tab; Kastlan stays open here."
-  const portalShown = !buyerOnly && (manage !== null || (cancel !== null && portalCancelShown && !(scheduled && onResume)));
+  const portalShown =
+    !buyerOnly && (manage !== null || (cancel !== null && portalCancelShown && !(scheduled && onResume)));
   return (
     <div {...rest} className={cn("flex flex-wrap items-center gap-x-4 gap-y-2", className)}>
       {manage}

@@ -21,13 +21,20 @@ const EVENTS: Record<string, string[]> = {
   "2026-09-14": ["Rent due", "Plumber"],
   "2026-09-30": ["Lease ends"],
 };
-const events = (_: Date, s: MiniCalendarDayState) =>
-  EVENTS[s.iso]?.map((e) => <span key={e}>{e}</span>) ?? null;
+const events = (_: Date, s: MiniCalendarDayState) => EVENTS[s.iso]?.map((e) => <span key={e}>{e}</span>) ?? null;
 
 describe("MiniCalendar renderDay", () => {
   it("draws the content inside the day's button, and leaves empty days alone", () => {
     render(
-      <MiniCalendar size="lg" mode="single" from="2026-09-14" to="2026-09-14" locale={LOCALE} onSelect={noop} renderDay={events} />,
+      <MiniCalendar
+        size="lg"
+        mode="single"
+        from="2026-09-14"
+        to="2026-09-14"
+        locale={LOCALE}
+        onSelect={noop}
+        renderDay={events}
+      />,
     );
     const cell = day("2026-09-14");
     expect(cell.tagName).toBe("BUTTON");
@@ -38,9 +45,7 @@ describe("MiniCalendar renderDay", () => {
   });
 
   it("keeps the date as the name and makes the content its description", () => {
-    render(
-      <MiniCalendar size="lg" mode="single" locale={LOCALE} month="2026-09" onSelect={noop} renderDay={events} />,
-    );
+    render(<MiniCalendar size="lg" mode="single" locale={LOCALE} month="2026-09" onSelect={noop} renderDay={events} />);
     // Named by the whole date still — `aria-label` would otherwise be all a screen
     // reader hears, and the events inside would be lost.
     const cell = day("2026-09-14");
@@ -65,7 +70,14 @@ describe("MiniCalendar renderDay", () => {
       />,
     );
     expect(seen.size).toBe(30);
-    expect(seen.get("2026-09-10")).toMatchObject({ rangeStart: true, selected: true, inRange: false, size: "sm", label: "10", active: true });
+    expect(seen.get("2026-09-10")).toMatchObject({
+      rangeStart: true,
+      selected: true,
+      inRange: false,
+      size: "sm",
+      label: "10",
+      active: true,
+    });
     expect(seen.get("2026-09-11")).toMatchObject({ inRange: true, selected: true });
     expect(seen.get("2026-09-12")).toMatchObject({ rangeEnd: true, active: false });
     expect(seen.get("2026-09-01")).toMatchObject({ disabled: true, selected: false });
@@ -87,7 +99,9 @@ describe("MiniCalendar renderDay", () => {
 
   it("selects the DAY on a click, the way clickable events are reached", () => {
     const onSelect = vi.fn();
-    render(<MiniCalendar size="lg" mode="single" locale={LOCALE} month="2026-09" onSelect={onSelect} renderDay={events} />);
+    render(
+      <MiniCalendar size="lg" mode="single" locale={LOCALE} month="2026-09" onSelect={onSelect} renderDay={events} />,
+    );
     fireEvent.click(screen.getByText("Plumber"));
     expect(onSelect).toHaveBeenCalledWith("2026-09-14", "2026-09-14");
   });
@@ -95,7 +109,17 @@ describe("MiniCalendar renderDay", () => {
 
 describe("MiniCalendar size=lg", () => {
   it("is the same grid: one tab stop, full-date names, blanks as cells", () => {
-    render(<MiniCalendar size="lg" mode="single" from="2026-09-14" to="2026-09-14" locale={LOCALE} weekStartsOn={1} onSelect={noop} />);
+    render(
+      <MiniCalendar
+        size="lg"
+        mode="single"
+        from="2026-09-14"
+        to="2026-09-14"
+        locale={LOCALE}
+        weekStartsOn={1}
+        onSelect={noop}
+      />,
+    );
     expect(screen.getByRole("grid", { name: "September 2026" })).toBeTruthy();
     const cells = screen.getAllByRole("gridcell");
     // 1 September 2026 is a Tuesday: one blank before it, 30 days, 4 blanks after.
@@ -120,7 +144,17 @@ describe("MiniCalendar size=lg", () => {
   });
 
   it("keeps the week start", () => {
-    render(<MiniCalendar size="lg" mode="single" from="2026-09-14" to="2026-09-14" locale={LOCALE} weekStartsOn={0} onSelect={noop} />);
+    render(
+      <MiniCalendar
+        size="lg"
+        mode="single"
+        from="2026-09-14"
+        to="2026-09-14"
+        locale={LOCALE}
+        weekStartsOn={0}
+        onSelect={noop}
+      />,
+    );
     expect(screen.getAllByRole("columnheader")[0]).toHaveAttribute("aria-label", "Sunday");
   });
 });
@@ -136,7 +170,14 @@ describe("MiniCalendar month / onMonthChange / hideNavigation", () => {
   it("reports the user's month moves", () => {
     const onMonthChange = vi.fn();
     render(
-      <MiniCalendar mode="single" from="2026-09-30" to="2026-09-30" locale={LOCALE} onSelect={noop} onMonthChange={onMonthChange} />,
+      <MiniCalendar
+        mode="single"
+        from="2026-09-30"
+        to="2026-09-30"
+        locale={LOCALE}
+        onSelect={noop}
+        onMonthChange={onMonthChange}
+      />,
     );
     fireEvent.click(screen.getByRole("button", { name: "Next month" }));
     expect(onMonthChange).toHaveBeenLastCalledWith("2026-10");

@@ -23,13 +23,7 @@ import {
   DEFAULT_UI_KIT_LABELS,
   useKitLabels,
 } from "@eifi1/ui-kit";
-import type {
-  ColumnFilter,
-  DataTableColumn,
-  DataTableLabels,
-  FilterState,
-  SortState,
-} from "@eifi1/ui-kit";
+import type { ColumnFilter, DataTableColumn, DataTableLabels, FilterState, SortState } from "@eifi1/ui-kit";
 import { ConstList, Example, Note, OutTable } from "../lib/section";
 import {
   AMOUNT_FILTER,
@@ -75,10 +69,7 @@ function PaginationSpecimen() {
   const safePage = Math.min(page, totalPages - 1);
 
   return (
-    <Example
-      label="Pagination"
-      hint="the DataTable's footer, usable on its own — 137 imaginary rows"
-    >
+    <Example label="Pagination" hint="the DataTable's footer, usable on its own — 137 imaginary rows">
       <Pagination
         page={safePage}
         totalPages={totalPages}
@@ -118,46 +109,36 @@ function PaginationSpecimen() {
         <div className="rounded-md border border-subtle">
           {/* No `labels`, no `locale`, no `onPageSize`: everything from the provider. */}
           <UiKitProvider labels={{ dataTable: PROVIDER_PAGER_LABELS }} locale="de-DE">
-            <Pagination
-              page={safePage}
-              totalPages={totalPages}
-              pageSize={pageSize}
-              total={total}
-              onPage={setPage}
-            />
+            <Pagination page={safePage} totalPages={totalPages} pageSize={pageSize} total={total} onPage={setPage} />
           </UiKitProvider>
         </div>
         <Note>
-          The first pager passes no <code className="font-mono">labels</code>, so it speaks
-          the showcase&apos;s language: a standalone <code className="font-mono">Pagination</code>{" "}
-          reads the provider&apos;s <code className="font-mono">dataTable</code> labels (prop
-          over provider over English), like <code className="font-mono">FilterPopover</code>.
-          The second is the same state with{" "}
-          <code className="font-mono">locale=&quot;ar-EG&quot;</code> (Arabic-Indic digits on
-          the strip and in the select) and a <em>partial</em>{" "}
-          <code className="font-mono">labels</code> object overriding{" "}
-          <code className="font-mono">pageRange</code>, <code className="font-mono">rowCount</code>{" "}
-          and <code className="font-mono">pageSizeAll</code> — the range summary is a function
-          precisely so a translation can format its own numbers. The third sits under a nested{" "}
-          <code className="font-mono">&lt;UiKitProvider labels=&#123;&#123; dataTable &#125;&#125; locale=&quot;de-DE&quot;&gt;</code>{" "}
-          and passes no <code className="font-mono">onPageSize</code>: its text is the
-          provider&apos;s German and it has no page-size select at all, because a size the
-          user cannot change should not be offered.
+          The first pager passes no <code className="font-mono">labels</code>, so it speaks the showcase&apos;s
+          language: a standalone <code className="font-mono">Pagination</code> reads the provider&apos;s{" "}
+          <code className="font-mono">dataTable</code> labels (prop over provider over English), like{" "}
+          <code className="font-mono">FilterPopover</code>. The second is the same state with{" "}
+          <code className="font-mono">locale=&quot;ar-EG&quot;</code> (Arabic-Indic digits on the strip and in the
+          select) and a <em>partial</em> <code className="font-mono">labels</code> object overriding{" "}
+          <code className="font-mono">pageRange</code>, <code className="font-mono">rowCount</code> and{" "}
+          <code className="font-mono">pageSizeAll</code> — the range summary is a function precisely so a translation
+          can format its own numbers. The third sits under a nested{" "}
+          <code className="font-mono">
+            &lt;UiKitProvider labels=&#123;&#123; dataTable &#125;&#125; locale=&quot;de-DE&quot;&gt;
+          </code>{" "}
+          and passes no <code className="font-mono">onPageSize</code>: its text is the provider&apos;s German and it has
+          no page-size select at all, because a size the user cannot change should not be offered.
         </Note>
         <Note>
-          The page strip is windowed: up to seven pages are all shown, beyond that it is
-          first, last and ±2 around the current page with an ellipsis across the gap. Jump
-          to page 7 of 14 to see both ellipses at once. On a phone at Large it is ±1, and
-          where even that does not fit the numbers wrap between the two arrows rather than
-          run past the screen.
+          The page strip is windowed: up to seven pages are all shown, beyond that it is first, last and ±2 around the
+          current page with an ellipsis across the gap. Jump to page 7 of 14 to see both ellipses at once. On a phone at
+          Large it is ±1, and where even that does not fit the numbers wrap between the two arrows rather than run past
+          the screen.
         </Note>
         <Note>
-          <code className="font-mono">page</code> is 0-based in the props and 1-based on the
-          buttons, and the size select offers exactly{" "}
-          <code className="font-mono">PAGE_SIZE_OPTIONS</code> plus “All”. A{" "}
-          <code className="font-mono">defaultPageSize</code> that is not one of those five
-          values leaves the select showing nothing at all, because no{" "}
-          <code className="font-mono">&lt;option&gt;</code> matches it.
+          <code className="font-mono">page</code> is 0-based in the props and 1-based on the buttons, and the size
+          select offers exactly <code className="font-mono">PAGE_SIZE_OPTIONS</code> plus “All”. A{" "}
+          <code className="font-mono">defaultPageSize</code> that is not one of those five values leaves the select
+          showing nothing at all, because no <code className="font-mono">&lt;option&gt;</code> matches it.
         </Note>
       </div>
     </Example>
@@ -169,15 +150,13 @@ const AR_NUM = numberFormat("ar-EG");
 // Partial: the pager merges it over the provider's labels and the English defaults.
 const PAGER_LABELS = {
   pageSizeAll: "Everything",
-  pageRange: (from, to, total) =>
-    `rows ${AR_NUM.format(from)} to ${AR_NUM.format(to)} of ${AR_NUM.format(total)}`,
+  pageRange: (from, to, total) => `rows ${AR_NUM.format(from)} to ${AR_NUM.format(to)} of ${AR_NUM.format(total)}`,
   rowCount: (total) => `all ${AR_NUM.format(total)} rows`,
 } satisfies Partial<DataTableLabels>;
 
 const DE_NUM = numberFormat("de-DE");
 const PROVIDER_PAGER_LABELS = {
-  pageRange: (from, to, total) =>
-    `${DE_NUM.format(from)}–${DE_NUM.format(to)} von ${DE_NUM.format(total)}`,
+  pageRange: (from, to, total) => `${DE_NUM.format(from)}–${DE_NUM.format(to)} von ${DE_NUM.format(total)}`,
   prevPage: "Vorherige Seite",
   nextPage: "Nächste Seite",
 } satisfies Partial<DataTableLabels>;
@@ -187,11 +166,10 @@ const PROVIDER_PAGER_LABELS = {
 /** The columns that actually have a filter, paired with the resolved config —
  *  `resolveFilter` is the only thing that knows `filterBy` is shorthand for a
  *  text filter, so it is what decides the list. */
-const FILTERABLE: Array<{ col: DataTableColumn<TableRow>; filter: ColumnFilter<TableRow> }> =
-  COLUMNS.flatMap((col) => {
-    const filter = resolveFilter(col);
-    return filter ? [{ col, filter }] : [];
-  });
+const FILTERABLE: Array<{ col: DataTableColumn<TableRow>; filter: ColumnFilter<TableRow> }> = COLUMNS.flatMap((col) => {
+  const filter = resolveFilter(col);
+  return filter ? [{ col, filter }] : [];
+});
 
 function FilterPopoverSpecimen() {
   const [state, setState] = useState<FilterState>({});
@@ -280,29 +258,25 @@ function FilterPopoverSpecimen() {
       <div className="mt-3 space-y-2">
         <OutTable rows={encoded} />
         <Note>
-          <code className="font-mono">autoFocus</code> defaults to true, which is right for
-          the popover the table opens on an explicit press of <em>Filter</em>. Embedded in a
-          page, pass <code className="font-mono">false</code> — as the four panels above do —
-          or the text input takes focus on mount and the browser scrolls to it. The mount
-          button shows the default: the input is focused the moment it appears, and it
-          shares its state with the Name panel above.
+          <code className="font-mono">autoFocus</code> defaults to true, which is right for the popover the table opens
+          on an explicit press of <em>Filter</em>. Embedded in a page, pass <code className="font-mono">false</code> —
+          as the four panels above do — or the text input takes focus on mount and the browser scrolls to it. The mount
+          button shows the default: the input is focused the moment it appears, and it shares its state with the Name
+          panel above.
         </Note>
         <Note>
           <code className="font-mono">FilterPopover</code> takes a <em>complete</em>{" "}
-          <code className="font-mono">DataTableLabels</code> (or none, and then reads the
-          provider), while <code className="font-mono">DataTable</code> and{" "}
-          <code className="font-mono">Pagination</code> take a{" "}
-          <code className="font-mono">Partial</code> and merge it for you. Handing the popover
-          one changed string means spreading it over{" "}
-          <code className="font-mono">DEFAULT_DATA_TABLE_LABELS</code> — which is what this
-          specimen does to change the text placeholder — or leaving the popover none, under a
-          provider whose <code className="font-mono">dataTable</code> has it.
+          <code className="font-mono">DataTableLabels</code> (or none, and then reads the provider), while{" "}
+          <code className="font-mono">DataTable</code> and <code className="font-mono">Pagination</code> take a{" "}
+          <code className="font-mono">Partial</code> and merge it for you. Handing the popover one changed string means
+          spreading it over <code className="font-mono">DEFAULT_DATA_TABLE_LABELS</code> — which is what this specimen
+          does to change the text placeholder — or leaving the popover none, under a provider whose{" "}
+          <code className="font-mono">dataTable</code> has it.
         </Note>
         <Note>
-          Ticking <em>Absolute value</em> on Amount with no min and no max marks the column
-          as filtered and writes <code className="font-mono">f.amount=..!</code>, but every
-          row still passes: with no bound to compare against, the absolute value changes
-          nothing.
+          Ticking <em>Absolute value</em> on Amount with no min and no max marks the column as filtered and writes{" "}
+          <code className="font-mono">f.amount=..!</code>, but every row still passes: with no bound to compare against,
+          the absolute value changes nothing.
         </Note>
       </div>
     </Example>
@@ -314,8 +288,8 @@ function FilterPopoverSpecimen() {
 /** Every string the suite can show, minus `presets` (an object, listed below).
  *  This IS the translation surface: a consumer that covers these keys has no
  *  English left anywhere in the table. */
-const LABEL_ITEMS: Array<[string, string]> = Object.entries(DEFAULT_DATA_TABLE_LABELS).flatMap(
-  ([key, value]) => (typeof value === "string" ? [[key, value] as [string, string]] : []),
+const LABEL_ITEMS: Array<[string, string]> = Object.entries(DEFAULT_DATA_TABLE_LABELS).flatMap(([key, value]) =>
+  typeof value === "string" ? [[key, value] as [string, string]] : [],
 );
 
 const PRESET_ITEMS: Array<[string, string]> = Object.entries(DEFAULT_DATA_TABLE_LABELS.presets);
@@ -354,30 +328,26 @@ function LabelsSpecimen() {
       </UiKitProvider>
       <div className="mt-4 grid gap-6 md:grid-cols-2">
         <div>
-          <div className="mb-2 text-xs font-medium text-primary">
-            DataTableLabels
-          </div>
+          <div className="mb-2 text-xs font-medium text-primary">DataTableLabels</div>
           <ConstList items={LABEL_ITEMS} />
         </div>
         <div>
           <div className="mb-2 text-xs font-medium text-primary">
-            …presets, keyed by the key <code className="font-mono">dateRangePresets()</code>{" "}
-            returns
+            …presets, keyed by the key <code className="font-mono">dateRangePresets()</code> returns
           </div>
           <ConstList items={PRESET_ITEMS} />
         </div>
       </div>
       <div className="mt-3">
         <Note>
-          Nested <code className="font-mono">presets</code> are merged key by key, so
-          translating one preset does not blank the other ten — in the provider and in a
-          table&apos;s own <code className="font-mono">labels</code> prop alike.
+          Nested <code className="font-mono">presets</code> are merged key by key, so translating one preset does not
+          blank the other ten — in the provider and in a table&apos;s own <code className="font-mono">labels</code> prop
+          alike.
         </Note>
         <Note>
-          <code className="font-mono">missingKitLabels</code> is the other half of that
-          lenient merge: it lists every key that would fall back to English (presets one by
-          one), so a translated app can assert <code className="font-mono">toEqual([])</code>{" "}
-          in its own test.
+          <code className="font-mono">missingKitLabels</code> is the other half of that lenient merge: it lists every
+          key that would fall back to English (presets one by one), so a translated app can assert{" "}
+          <code className="font-mono">toEqual([])</code> in its own test.
         </Note>
       </div>
     </Example>
@@ -386,17 +356,13 @@ function LabelsSpecimen() {
 
 /* ── pure helpers ────────────────────────────────────────────────────────── */
 
-
 const ASC: SortState[] = [{ key: "name", dir: "asc" }];
 const DESC: SortState[] = [{ key: "name", dir: "desc" }];
 const VALID_KEYS = new Set(COLUMNS.map((c) => c.key));
 
 function HelperTable() {
   return (
-    <Example
-      label="The pure helpers"
-      hint="every value below is computed at render — nothing here is a transcript"
-    >
+    <Example label="The pure helpers" hint="every value below is computed at render — nothing here is a transcript">
       <OutTable
         rows={[
           ["resolveFilter(NAME_COL)?.type", String(resolveFilter(NAME_COL)?.type)],
@@ -417,10 +383,7 @@ function HelperTable() {
           ],
           ["defaultFilterState(AMOUNT_FILTER)", j(defaultFilterState(AMOUNT_FILTER))],
           ["defaultFilterState(OPENED_FILTER)", j(defaultFilterState(OPENED_FILTER))],
-          [
-            'encodeFilterValue({ type: "text", q: "   " })',
-            String(encodeFilterValue({ type: "text", q: "   " })),
-          ],
+          ['encodeFilterValue({ type: "text", q: "   " })', String(encodeFilterValue({ type: "text", q: "   " }))],
           [
             'encodeFilterValue({ type: "date", from: "2026-01-01", to: "" })',
             String(encodeFilterValue({ type: "date", from: "2026-01-01", to: "" })),
@@ -433,18 +396,9 @@ function HelperTable() {
             'encodeFilterValue({ type: "select", values: ["a,b", "100%"] })',
             String(encodeFilterValue({ type: "select", values: ["a,b", "100%"] })),
           ],
-          [
-            'decodeFilterValue(STATUS_FILTER, "a%2Cb,100%25")',
-            j(decodeFilterValue(STATUS_FILTER, "a%2Cb,100%25")),
-          ],
-          [
-            'decodeFilterValueOfType("number", "..50!")',
-            j(decodeFilterValueOfType("number", "..50!")),
-          ],
-          [
-            'normalizeSorts({ key: "opened", dir: "desc" })',
-            j(normalizeSorts({ key: "opened", dir: "desc" })),
-          ],
+          ['decodeFilterValue(STATUS_FILTER, "a%2Cb,100%25")', j(decodeFilterValue(STATUS_FILTER, "a%2Cb,100%25"))],
+          ['decodeFilterValueOfType("number", "..50!")', j(decodeFilterValueOfType("number", "..50!"))],
+          ['normalizeSorts({ key: "opened", dir: "desc" })', j(normalizeSorts({ key: "opened", dir: "desc" }))],
           [
             'normalizeSorts([{ key: "a" }, { key: "a", dir: "desc" }, null])',
             j(normalizeSorts([{ key: "a" }, { key: "a", dir: "desc" }, null])),
@@ -454,46 +408,50 @@ function HelperTable() {
           ['nextSorts(DESC, "name", false)', j(nextSorts(DESC, "name", false))],
           ['nextSorts(ASC, "amount", true) // shift-click', j(nextSorts(ASC, "amount", true))],
           // 0.8.0: a column's first direction, and a cycle that never unsorts.
-          ['nextSorts([], "amount", false, { firstDir: "desc" })', j(nextSorts([], "amount", false, { firstDir: "desc" }))],
+          [
+            'nextSorts([], "amount", false, { firstDir: "desc" })',
+            j(nextSorts([], "amount", false, { firstDir: "desc" })),
+          ],
           [
             'nextSorts([{ key: "amount", dir: "asc" }], "amount", false, { firstDir: "desc" })',
             j(nextSorts([{ key: "amount", dir: "asc" }], "amount", false, { firstDir: "desc" })),
           ],
-          ['nextSorts(DESC, "name", false, { cycle: "toggle" })', j(nextSorts(DESC, "name", false, { cycle: "toggle" }))],
           [
-            'encodeSorts([{ opened, desc }, { name, asc }])',
-            String(encodeSorts([{ key: "opened", dir: "desc" }, { key: "name", dir: "asc" }])),
+            'nextSorts(DESC, "name", false, { cycle: "toggle" })',
+            j(nextSorts(DESC, "name", false, { cycle: "toggle" })),
+          ],
+          [
+            "encodeSorts([{ opened, desc }, { name, asc }])",
+            String(
+              encodeSorts([
+                { key: "opened", dir: "desc" },
+                { key: "name", dir: "asc" },
+              ]),
+            ),
           ],
           ["encodeSorts([])", String(encodeSorts([]))],
-          [
-            'decodeSorts("opened.desc,ghost,name", validKeys)',
-            j(decodeSorts("opened.desc,ghost,name", VALID_KEYS)),
-          ],
+          ['decodeSorts("opened.desc,ghost,name", validKeys)', j(decodeSorts("opened.desc,ghost,name", VALID_KEYS))],
         ]}
       />
       <div className="mt-3 space-y-2">
         <Note>
-          The select codec escapes only <code className="font-mono">,</code> and{" "}
-          <code className="font-mono">%</code>, not the whole string: these values sit inside
-          a query parameter that <code className="font-mono">URLSearchParams</code> already
-          encodes, and a second pass would turn every space into{" "}
-          <code className="font-mono">%2520</code>. The comma is the one character that could
-          be misread, because it is the separator.
+          The select codec escapes only <code className="font-mono">,</code> and <code className="font-mono">%</code>,
+          not the whole string: these values sit inside a query parameter that{" "}
+          <code className="font-mono">URLSearchParams</code> already encodes, and a second pass would turn every space
+          into <code className="font-mono">%2520</code>. The comma is the one character that could be misread, because
+          it is the separator.
         </Note>
         <Note>
-          <code className="font-mono">normalizeSorts</code> exists for the blobs written
-          before the table could sort by more than one column: a lone{" "}
-          <code className="font-mono">{"{ key, dir }"}</code> object comes back as a
-          one-element list, and duplicate or malformed entries are dropped rather than
-          thrown on. <code className="font-mono">decodeSorts</code> is the same idea for a
-          URL a user may have edited — it takes the set of real column keys and silently
-          drops anything else.
+          <code className="font-mono">normalizeSorts</code> exists for the blobs written before the table could sort by
+          more than one column: a lone <code className="font-mono">{"{ key, dir }"}</code> object comes back as a
+          one-element list, and duplicate or malformed entries are dropped rather than thrown on.{" "}
+          <code className="font-mono">decodeSorts</code> is the same idea for a URL a user may have edited — it takes
+          the set of real column keys and silently drops anything else.
         </Note>
         <Note>
-          Plain click cycles the single sort asc → desc → none; Shift-click{" "}
-          (<code className="font-mono">additive</code>) appends a second key, then cycles
-          that one in place. That is the whole of the header's click semantics, and it is a
-          pure function you can test without rendering a table.
+          Plain click cycles the single sort asc → desc → none; Shift-click (<code className="font-mono">additive</code>
+          ) appends a second key, then cycles that one in place. That is the whole of the header's click semantics, and
+          it is a pure function you can test without rendering a table.
         </Note>
       </div>
     </Example>

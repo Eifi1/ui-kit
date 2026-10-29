@@ -141,9 +141,7 @@ describe("every component passes an arbitrary attribute to its root element", ()
   });
 
   it("Tabs", () => {
-    expect(
-      reaches(<Tabs tabs={TABS} active="one" onChange={vi.fn()} data-tour="anchor" />),
-    ).toBe(true);
+    expect(reaches(<Tabs tabs={TABS} active="one" onChange={vi.fn()} data-tour="anchor" />)).toBe(true);
   });
 
   it("Chip", () => {
@@ -151,23 +149,13 @@ describe("every component passes an arbitrary attribute to its root element", ()
   });
 
   it("ChipInput", () => {
-    expect(
-      reaches(
-        <ChipInput value={[]} onChange={vi.fn()} aria-label="Tags" data-tour="anchor" />,
-      ),
-    ).toBe(true);
+    expect(reaches(<ChipInput value={[]} onChange={vi.fn()} aria-label="Tags" data-tour="anchor" />)).toBe(true);
   });
 
   it("ToggleGroup", () => {
     expect(
       reaches(
-        <ToggleGroup
-          value="a"
-          onChange={vi.fn()}
-          options={TOGGLE_OPTIONS}
-          aria-label="Status"
-          data-tour="anchor"
-        />,
+        <ToggleGroup value="a" onChange={vi.fn()} options={TOGGLE_OPTIONS} aria-label="Status" data-tour="anchor" />,
       ),
     ).toBe(true);
   });
@@ -181,9 +169,7 @@ describe("every component passes an arbitrary attribute to its root element", ()
   });
 
   it("SearchField", () => {
-    expect(
-      reaches(<SearchField value="" onChange={vi.fn()} aria-label="Find" data-tour="anchor" />),
-    ).toBe(true);
+    expect(reaches(<SearchField value="" onChange={vi.fn()} aria-label="Find" data-tour="anchor" />)).toBe(true);
   });
 
   it("ThemeSetting", () => {
@@ -215,14 +201,7 @@ describe("every component passes an arbitrary attribute to its root element", ()
   });
 
   it("the Card sub-parts", () => {
-    for (const Part of [
-      CardHeader,
-      CardTitle,
-      CardDescription,
-      CardAction,
-      CardContent,
-      CardFooter,
-    ]) {
+    for (const Part of [CardHeader, CardTitle, CardDescription, CardAction, CardContent, CardFooter]) {
       expect(reaches(<Part data-tour="anchor" />)).toBe(true);
     }
   });
@@ -235,9 +214,7 @@ describe("every component passes an arbitrary attribute to its root element", ()
  */
 describe("the accessible-name prop is the DOM spelling", () => {
   it("ToggleGroup takes aria-label", () => {
-    render(
-      <ToggleGroup value="a" onChange={vi.fn()} options={TOGGLE_OPTIONS} aria-label="Status" />,
-    );
+    render(<ToggleGroup value="a" onChange={vi.fn()} options={TOGGLE_OPTIONS} aria-label="Status" />);
     expect(screen.getByRole("radiogroup", { name: "Status" })).toBeInTheDocument();
   });
 

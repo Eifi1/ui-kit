@@ -32,14 +32,7 @@ export interface QrCodeProps extends Omit<ComponentPropsWithRef<"svg">, "childre
  * A value too long for any QR version (≈2.9 kB) renders nothing rather than throwing
  * in render.
  */
-export function QrCode({
-  value,
-  label,
-  errorCorrection = "M",
-  margin = 4,
-  className,
-  ...rest
-}: QrCodeProps) {
+export function QrCode({ value, label, errorCorrection = "M", margin = 4, className, ...rest }: QrCodeProps) {
   const path = useMemo(() => {
     try {
       const { modules, size } = encodeQr(value, { errorCorrection });
@@ -47,7 +40,7 @@ export function QrCode({
       // commands rather than one <rect> per module.
       let d = "";
       for (let y = 0; y < size; y++) {
-        for (let x = 0; x < size; ) {
+        for (let x = 0; x < size;) {
           if (!modules[y][x]) {
             x++;
             continue;

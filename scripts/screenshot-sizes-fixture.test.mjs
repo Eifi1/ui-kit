@@ -53,7 +53,10 @@ const blocks = report.out.split(/\n(?=fixture--)/).filter((b) => b.startsWith("f
 expect(blocks.length === 4, `four variants, got ${blocks.length}`);
 // Run at once, printed in order (TST-6): each variant's block whole, in VARIANTS order.
 const order = blocks.map((b) => b.split(/\s/)[0]).join(" ");
-expect(order === "fixture--360-xlarge fixture--390-normal fixture--390-large fixture--390-xlarge", `variants in order, got ${order}`);
+expect(
+  order === "fixture--360-xlarge fixture--390-normal fixture--390-large fixture--390-xlarge",
+  `variants in order, got ${order}`,
+);
 for (const block of blocks) {
   const name = block.split(/\s/)[0];
   const truncated = block.match(/^ {4}TRUNCATED .*$/gm) ?? [];
@@ -63,9 +66,17 @@ for (const block of blocks) {
     continue;
   }
   expect(truncated.length === 1, `${name}: one TRUNCATED, got ${truncated.length}`);
-  expect(/\[fixture-cut\] «An ellipsis that cuts» 120px ellipsis <[a-z]+[^>]*>: "A label far too long/.test(truncated[0] ?? ""), `${name}: the cut one, named by slot and heading`);
+  expect(
+    /\[fixture-cut\] «An ellipsis that cuts» 120px ellipsis <[a-z]+[^>]*>: "A label far too long/.test(
+      truncated[0] ?? "",
+    ),
+    `${name}: the cut one, named by slot and heading`,
+  );
   expect(pinned.length === 1, `${name}: one PINNED, got ${pinned.length}`);
-  expect(/\[fixture-tall\] «A tall sticky box» sticky \d+px \(60 % of the viewport\)/.test(pinned[0] ?? ""), `${name}: the tall sticky box`);
+  expect(
+    /\[fixture-tall\] «A tall sticky box» sticky \d+px \(60 % of the viewport\)/.test(pinned[0] ?? ""),
+    `${name}: the tall sticky box`,
+  );
 }
 expect(report.code === 0, `report-only exits 0, got ${report.code}`);
 expect(/TRUNCATED: 3 in 3 runs \(report-only\)/.test(report.out), "the TRUNCATED total");

@@ -134,7 +134,12 @@ function exportedNames(file: string, seen = new Set<string>()): Set<string> {
   for (const m of source.matchAll(/export\s+\*\s+as\s+([A-Za-z_$][\w$]*)/g)) names.add(m[1]);
   for (const m of source.matchAll(/export\s+(?:type\s+)?\{([^}]*)\}/g)) {
     for (const entry of m[1].split(",")) {
-      const name = entry.trim().replace(/^type\s+/, "").split(/\s+as\s+/).pop()?.trim();
+      const name = entry
+        .trim()
+        .replace(/^type\s+/, "")
+        .split(/\s+as\s+/)
+        .pop()
+        ?.trim();
       if (name) names.add(name);
     }
   }

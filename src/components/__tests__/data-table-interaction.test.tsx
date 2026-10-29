@@ -63,11 +63,7 @@ const SELECTION_BASE = {
 
 /** A parent that re-renders for reasons of its own — a sibling field being typed
  *  into, a poll landing — without changing anything the table is showing. */
-function Host({
-  children,
-}: {
-  children: (bump: number) => React.ReactNode;
-}) {
+function Host({ children }: { children: (bump: number) => React.ReactNode }) {
   const [bump, setBump] = useState(0);
   return (
     <MemoryRouter>
@@ -85,11 +81,7 @@ function rerenderParent(times = 3) {
 
 describe("DataTable does not redo its work for an unrelated render", () => {
   it("keeps the sorted rows it has when only the parent re-rendered", () => {
-    render(
-      <Host>
-        {() => <DataTable rows={FIVE} columns={columns()} rowKey={(r) => r.id} />}
-      </Host>,
-    );
+    render(<Host>{() => <DataTable rows={FIVE} columns={columns()} rowKey={(r) => r.id} />}</Host>);
     fireEvent.click(screen.getByRole("button", { name: "Name" }));
     const afterSort = sortCalls.mock.calls.length;
     expect(afterSort).toBeGreaterThan(0);
@@ -221,12 +213,7 @@ describe("DataTable shift-range selection", () => {
     fireEvent.click(rowOf("Eve"), { shiftKey: true });
 
     expect(onToggleMany).toHaveBeenCalledTimes(1);
-    expect(onToggleMany.mock.calls[0][0].map((r: Row) => r.name)).toEqual([
-      "Bob",
-      "Cy",
-      "Dee",
-      "Eve",
-    ]);
+    expect(onToggleMany.mock.calls[0][0].map((r: Row) => r.name)).toEqual(["Bob", "Cy", "Dee", "Eve"]);
     expect(onToggleMany.mock.calls[0][1]).toBe(true);
     expect(onToggle).not.toHaveBeenCalled();
   });
@@ -235,23 +222,13 @@ describe("DataTable shift-range selection", () => {
     const onToggle = vi.fn();
     render(
       <MemoryRouter>
-        <DataTable
-          rows={FIVE}
-          columns={columns()}
-          rowKey={(r) => r.id}
-          selection={{ ...SELECTION_BASE, onToggle }}
-        />
+        <DataTable rows={FIVE} columns={columns()} rowKey={(r) => r.id} selection={{ ...SELECTION_BASE, onToggle }} />
       </MemoryRouter>,
     );
     fireEvent.click(rowOf("Bob"), { ctrlKey: true });
     onToggle.mockClear();
     fireEvent.click(rowOf("Eve"), { shiftKey: true });
-    expect(onToggle.mock.calls.map((c) => (c[0] as Row).name)).toEqual([
-      "Bob",
-      "Cy",
-      "Dee",
-      "Eve",
-    ]);
+    expect(onToggle.mock.calls.map((c) => (c[0] as Row).name)).toEqual(["Bob", "Cy", "Dee", "Eve"]);
   });
 
   it("anchors on the ROW, not on where that row happened to sit", () => {

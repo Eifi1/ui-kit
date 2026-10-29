@@ -11,7 +11,9 @@ type Dir = (typeof OPTIONS)[number]["value"];
 
 describe("ToggleGroup caption (lenkbank ToggleField hint)", () => {
   it("a static caption describes the group", () => {
-    render(<ToggleGroup aria-label="Dir" value="up" onChange={vi.fn()} options={[...OPTIONS]} caption="Applies to all" />);
+    render(
+      <ToggleGroup aria-label="Dir" value="up" onChange={vi.fn()} options={[...OPTIONS]} caption="Applies to all" />,
+    );
     const group = screen.getByRole("radiogroup", { name: "Dir" });
     expect(group).toHaveAccessibleDescription("Applies to all");
     expect(screen.getByText("Applies to all")).not.toHaveAttribute("aria-live");
@@ -58,7 +60,14 @@ describe("ToggleGroup caption (lenkbank ToggleField hint)", () => {
 
   it("a function caption returning nothing adds no description", () => {
     render(
-      <ToggleGroup allowEmpty aria-label="F" value={null} onChange={vi.fn()} options={[...OPTIONS]} caption={(v) => v && `Only ${v}`} />,
+      <ToggleGroup
+        allowEmpty
+        aria-label="F"
+        value={null}
+        onChange={vi.fn()}
+        options={[...OPTIONS]}
+        caption={(v) => v && `Only ${v}`}
+      />,
     );
     expect(screen.getByRole("group", { name: "F" })).not.toHaveAttribute("aria-describedby");
   });

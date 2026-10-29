@@ -87,12 +87,13 @@ describe("seoCopyProblems", () => {
   });
 
   it("counts characters, not UTF-16 units, and takes other limits", () => {
-    expect(seoCopyProblems({ title: `${brand} — 🌱🌱🌱`, description: "🌿".repeat(10), brand }, { maxDescription: 10 })).toEqual(
-      [],
-    );
-    expect(seoCopyProblems({ title: `${brand} — beds`, description: "z".repeat(11), brand }, { maxDescription: 10 })[0]!.code).toBe(
-      "description-too-long",
-    );
+    expect(
+      seoCopyProblems({ title: `${brand} — 🌱🌱🌱`, description: "🌿".repeat(10), brand }, { maxDescription: 10 }),
+    ).toEqual([]);
+    expect(
+      seoCopyProblems({ title: `${brand} — beds`, description: "z".repeat(11), brand }, { maxDescription: 10 })[0]!
+        .code,
+    ).toBe("description-too-long");
   });
 
   it("flags a description that opens with the title's tagline", () => {
@@ -106,10 +107,12 @@ describe("seoCopyProblems", () => {
   });
 
   it("reads the brand at the end too, and flags a title without it", () => {
-    expect(seoCopyProblems({ title: "Plan every bed | Ada's Garden Planner", description: "Sow on time.", brand })).toEqual([]);
-    expect(seoCopyProblems({ title: "Plan every bed", description: "Sow on time.", brand }).map((p) => p.code)).toEqual([
-      "title-without-brand",
-    ]);
+    expect(
+      seoCopyProblems({ title: "Plan every bed | Ada's Garden Planner", description: "Sow on time.", brand }),
+    ).toEqual([]);
+    expect(seoCopyProblems({ title: "Plan every bed", description: "Sow on time.", brand }).map((p) => p.code)).toEqual(
+      ["title-without-brand"],
+    );
   });
 
   it("flags empty copy", () => {

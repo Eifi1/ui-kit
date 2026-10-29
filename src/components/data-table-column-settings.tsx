@@ -80,9 +80,7 @@ export function ColumnSettingsPanel<T>({
       >
         <div className="flex w-56 flex-col border-s border-subtle p-2">
           <div className="mb-2 flex items-center justify-between gap-1">
-            <div className="text-xs font-medium uppercase tracking-wide text-muted">
-              {columnsCountLabel}
-            </div>
+            <div className="text-xs font-medium uppercase tracking-wide text-muted">{columnsCountLabel}</div>
             <Tooltip label={labels.close} portal>
               <button
                 type="button"

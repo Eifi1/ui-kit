@@ -46,9 +46,9 @@ function ReplaceAndReload() {
           {code("replace")} reaches the provider&apos;s {code("linkComponent")} as a prop — react-router&apos;s{" "}
           {code("<Link>")} takes it as is, any other router maps it:{" "}
           {code("({ href, replace, ...p }) => <Link to={href} replace={replace} {...p} />")}. It is only passed when
-          asked, and never lands on a plain {code("<a>")}: there a plain click becomes {code("location.replace")}.
-          Press Back after &ldquo;Replace&rdquo;: it skips the replaced URL. {code("reloadDocument")} skips the router
-          link altogether — for a route the SPA does not own, or a logout that must drop every in-memory cache.
+          asked, and never lands on a plain {code("<a>")}: there a plain click becomes {code("location.replace")}. Press
+          Back after &ldquo;Replace&rdquo;: it skips the replaced URL. {code("reloadDocument")} skips the router link
+          altogether — for a route the SPA does not own, or a logout that must drop every in-memory cache.
         </Note>
       </div>
     </Example>
@@ -158,8 +158,8 @@ function ToneColorPair() {
       <div className="mt-3">
         <Note>
           Switch the theme: the pair sets {code("--icon-button-tone-light")} and {code("--icon-button-tone-dark")} and a
-          class picks one by the kit&apos;s {code("dark")} variant, so it follows {code(".dark")} in CSS alone. The single
-          rose stays too dark on the dark surface.
+          class picks one by the kit&apos;s {code("dark")} variant, so it follows {code(".dark")} in CSS alone. The
+          single rose stays too dark on the dark surface.
         </Note>
       </div>
     </Example>

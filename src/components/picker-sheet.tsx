@@ -20,8 +20,7 @@ import { DEFAULT_PICKER_SHEET_LABELS, useKitLabels } from "../i18n/kit-labels";
  * tooltip string, and `onClose` is "the sheet was dismissed", not the DOM's
  * `<dialog>` close event. Everything else a caller can pass reaches the sheet.
  */
-export interface PickerSheetProps
-  extends Omit<ComponentPropsWithoutRef<"div">, "title" | "onClose"> {
+export interface PickerSheetProps extends Omit<ComponentPropsWithoutRef<"div">, "title" | "onClose"> {
   open: boolean;
   onClose: () => void;
   /** The field's own label — a sheet that fills the screen has to say what it is
@@ -270,9 +269,7 @@ export function PickerSheet({
       className={cn("fixed inset-0 z-50 flex flex-col bg-surface outline-none", className)}
     >
       <div className="flex items-center gap-2 border-b border-subtle px-3 py-2">
-        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-primary">
-          {title}
-        </span>
+        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-primary">{title}</span>
         <button
           type="button"
           aria-label={labels.close}

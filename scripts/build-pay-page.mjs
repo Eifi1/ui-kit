@@ -117,4 +117,6 @@ for (const [what, pattern] of [
 }
 if (!readFileSync(BIN, "utf8").startsWith("#!/usr/bin/env node")) fail(`${BIN} lost its hashbang`);
 
-console.log(`✓ pay page: dist/pay (${STATIC.length + 1} files, ${LANGUAGES.length} languages), dist/bin/eifi1-pay-page.mjs`);
+console.log(
+  `✓ pay page: dist/pay (${STATIC.length + 1} files, ${LANGUAGES.length} languages), dist/bin/eifi1-pay-page.mjs`,
+);

@@ -84,7 +84,13 @@ describe("useKitLabelOverrides (deep partial, round 0.35 R3)", () => {
       void [passkeys, whole, presets];
       // …so it is handed to one with no cast.
       return (
-        <PasskeysSetting passkeys={[]} onAdd={() => {}} onRename={() => {}} onDelete={() => {}} labels={over?.passkeys} />
+        <PasskeysSetting
+          passkeys={[]}
+          onAdd={() => {}}
+          onRename={() => {}}
+          onDelete={() => {}}
+          labels={over?.passkeys}
+        />
       );
     }
     expect(Probe).toBeTypeOf("function");

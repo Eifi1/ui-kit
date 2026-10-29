@@ -42,9 +42,7 @@ function CardParts016() {
               </Button>
             </CardAction>
           </CardHeader>
-          <CardContent className="pt-3 text-sm text-secondary">
-            Not set up yet.
-          </CardContent>
+          <CardContent className="pt-3 text-sm text-secondary">Not set up yet.</CardContent>
         </Card>
         <Card variant="outline" padding="sm">
           <CardHeader>
@@ -62,12 +60,11 @@ function CardParts016() {
       </div>
       <div className="mt-3">
         <Note>
-          A card with {code("padding")} (or {code("inset")} / {code("outline")}, which carry one)
-          tells its parts so, and they add no {code("px-6")} / {code("pt-6")} of their own — the
-          card is padded once. {code("stackAction")} puts a wide action under the title below{" "}
-          {code("sm")}; the icon action on the right stays beside its title at every width at Normal.
-          At Large, where an IconButton shows its label, an unset {code("stackAction")} stacks it below{" "}
-          {code("sm")} too, and {code("stackAction={false}")} keeps it beside the title.
+          A card with {code("padding")} (or {code("inset")} / {code("outline")}, which carry one) tells its parts so,
+          and they add no {code("px-6")} / {code("pt-6")} of their own — the card is padded once. {code("stackAction")}{" "}
+          puts a wide action under the title below {code("sm")}; the icon action on the right stays beside its title at
+          every width at Normal. At Large, where an IconButton shows its label, an unset {code("stackAction")} stacks it
+          below {code("sm")} too, and {code("stackAction={false}")} keeps it beside the title.
         </Note>
       </div>
     </Example>
@@ -161,8 +158,8 @@ function StatTiles016() {
           </Button>
         </Row>
         <Note>
-          A loading grid says “Loading…” once, in a status region, and its tiles keep the
-          sentence to themselves; before, every tile carried its own.
+          A loading grid says “Loading…” once, in a status region, and its tiles keep the sentence to themselves;
+          before, every tile carried its own.
         </Note>
       </div>
     </Example>

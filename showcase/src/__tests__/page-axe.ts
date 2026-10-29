@@ -90,8 +90,21 @@ export function duplicateIds(root: Element, exclude?: Element): AxeFinding[] {
 
 /** The elements the HTML default stylesheet hides (`display: none`), as jsdom applies it. */
 const HIDDEN_BY_DEFAULT = new Set([
-  "area", "base", "basefont", "datalist", "head", "link", "meta", "noembed", "noframes", "param", "rp", "script",
-  "style", "template", "title",
+  "area",
+  "base",
+  "basefont",
+  "datalist",
+  "head",
+  "link",
+  "meta",
+  "noembed",
+  "noframes",
+  "param",
+  "rp",
+  "script",
+  "style",
+  "template",
+  "title",
 ]);
 
 /** An element's `visibility`: its own inline value, else its nearest ancestor's. */
@@ -182,14 +195,18 @@ export async function axeFindings(
       xpath: false,
     });
     const found = [
-      ...result.violations.flatMap((violation) => violation.nodes.map((node) => ({ rule: violation.id, html: node.html }))),
+      ...result.violations.flatMap((violation) =>
+        violation.nodes.map((node) => ({ rule: violation.id, html: node.html })),
+      ),
       ...duplicateIds(root, exclude),
     ];
     return found.filter(
       (finding) =>
         !known.some(
           (entry) =>
-            entry.rule === finding.rule && (!entry.pages || entry.pages.includes(slug)) && entry.html.test(finding.html),
+            entry.rule === finding.rule &&
+            (!entry.pages || entry.pages.includes(slug)) &&
+            entry.html.test(finding.html),
         ),
     );
   } finally {

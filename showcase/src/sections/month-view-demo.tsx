@@ -106,21 +106,13 @@ function MonthViewWithDayPanel() {
           }}
           renderDay={(_day, state) => <EventLines iso={state.iso} state={state} />}
         />
-        <section
-          aria-label={`Events on ${longDate(day)}`}
-          className="rounded-lg border border-subtle bg-surface-2 p-3"
-        >
+        <section aria-label={`Events on ${longDate(day)}`} className="rounded-lg border border-subtle bg-surface-2 p-3">
           <h4 className="text-sm font-semibold text-primary">{longDate(day)}</h4>
           {events.length ? (
             <ul className="mt-2 space-y-1">
               {events.map((e) => (
                 <li key={e.id}>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-start"
-                    onClick={() => setOpened(e.title)}
-                  >
+                  <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => setOpened(e.title)}>
                     <span aria-hidden className={`size-2 shrink-0 rounded-full ${TONE_DOT[e.tone]}`} />
                     {e.time && <span className="tabular-nums text-muted">{e.time}</span>}
                     {e.title}
@@ -135,7 +127,7 @@ function MonthViewWithDayPanel() {
       </div>
       <OutTable
         rows={[
-          ["onSelect (mode=\"single\")", day],
+          ['onSelect (mode="single")', day],
           ["event opened from the panel", opened ?? "—"],
         ]}
       />
@@ -145,9 +137,9 @@ function MonthViewWithDayPanel() {
           stop, arrow keys, PageUp/PageDown, RTL — drawn as a ruled month with tall cells.{" "}
           <code className="font-mono">renderDay</code> returns up to two event lines and a &ldquo;+1 more&rdquo; (the
           14th and the 28th). That content sits INSIDE the day&apos;s button, so it is plain text: a link in there would
-          be a control inside a control. It is attached as the day&apos;s description, so a reader hears
-          &ldquo;Monday, 14 September 2026&rdquo; and then the events. The clickable versions, with their times, live in the
-          panel below, which <code className="font-mono">onSelect</code> fills.
+          be a control inside a control. It is attached as the day&apos;s description, so a reader hears &ldquo;Monday,
+          14 September 2026&rdquo; and then the events. The clickable versions, with their times, live in the panel
+          below, which <code className="font-mono">onSelect</code> fills.
         </Note>
       </div>
     </Example>
@@ -174,11 +166,21 @@ function OwnHeader() {
       hint="the page's own header drives the grid; the grid reports every move back"
     >
       <div className="mb-3 flex flex-wrap items-center gap-2">
-        <IconButton label="Show the previous month" size="sm" variant="secondary" onClick={() => setMonth((m) => shiftMonth(m, -1))}>
+        <IconButton
+          label="Show the previous month"
+          size="sm"
+          variant="secondary"
+          onClick={() => setMonth((m) => shiftMonth(m, -1))}
+        >
           <ChevronLeft className="rtl:-scale-x-100" />
         </IconButton>
         <h4 className="min-w-36 text-center text-base font-semibold text-primary">{monthTitle(month)}</h4>
-        <IconButton label="Show the next month" size="sm" variant="secondary" onClick={() => setMonth((m) => shiftMonth(m, 1))}>
+        <IconButton
+          label="Show the next month"
+          size="sm"
+          variant="secondary"
+          onClick={() => setMonth((m) => shiftMonth(m, 1))}
+        >
           <ChevronRight className="rtl:-scale-x-100" />
         </IconButton>
         <select
@@ -220,18 +222,21 @@ function OwnHeader() {
       <OutTable
         rows={[
           ["month (the page's state)", month],
-          ["onMonthChange, latest first", log.length ? log.join(" · ") : "— arrow off the edge of the month, or PageDown"],
+          [
+            "onMonthChange, latest first",
+            log.length ? log.join(" · ") : "— arrow off the edge of the month, or PageDown",
+          ],
           ["selected", day || "—"],
         ]}
       />
       <div className="mt-3">
         <Note>
           <code className="font-mono">month</code> is FOLLOWED, not controlled: when the header changes it the grid
-          moves there, and in between the user pages freely. Put focus in the grid and press PageDown, or arrow past
-          the last row: the grid moves and <code className="font-mono">onMonthChange</code> reports it, which is how
-          the header&apos;s title and the select stay in step. <code className="font-mono">hideNavigation</code> drops
-          the built-in arrows and caption because the page draws its own — untick it to see both. The caption stays in
-          the tree, visually hidden, because it names the grid.
+          moves there, and in between the user pages freely. Put focus in the grid and press PageDown, or arrow past the
+          last row: the grid moves and <code className="font-mono">onMonthChange</code> reports it, which is how the
+          header&apos;s title and the select stay in step. <code className="font-mono">hideNavigation</code> drops the
+          built-in arrows and caption because the page draws its own — untick it to see both. The caption stays in the
+          tree, visually hidden, because it names the grid.
         </Note>
       </div>
     </Example>
@@ -277,8 +282,8 @@ function SmallDots() {
       </Row>
       <div className="mt-3">
         <Note>
-          At the default <code className="font-mono">size=&quot;sm&quot;</code> the content is drawn under the number
-          — one dot per event here, up to three, in the event&apos;s tone. The dots are{" "}
+          At the default <code className="font-mono">size=&quot;sm&quot;</code> the content is drawn under the number —
+          one dot per event here, up to three, in the event&apos;s tone. The dots are{" "}
           <code className="font-mono">aria-hidden</code> and an <code className="font-mono">sr-only</code> &ldquo;3
           events&rdquo; says what they mean, since a colour is not something a screen reader can read. The range
           selection works as before.

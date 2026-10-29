@@ -24,12 +24,7 @@ function Account() {
   useTourGate("form.account", value !== null);
   return (
     <div data-tour="account">
-      <InlineEntityCombobox<string>
-        label="Account"
-        value={value}
-        onChange={setValue}
-        options={OPTIONS}
-      />
+      <InlineEntityCombobox<string> label="Account" value={value} onChange={setValue} options={OPTIONS} />
     </div>
   );
 }
@@ -56,13 +51,10 @@ const box = {
 let rectSpy: ReturnType<typeof vi.spyOn>;
 beforeEach(() => {
   const original = Element.prototype.getBoundingClientRect;
-  rectSpy = vi
-    .spyOn(Element.prototype, "getBoundingClientRect")
-    .mockImplementation(function (this: Element) {
-      if (this.getAttribute("data-tour") === "account")
-        return { ...box, toJSON: () => box } as DOMRect;
-      return original.call(this);
-    });
+  rectSpy = vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
+    if (this.getAttribute("data-tour") === "account") return { ...box, toJSON: () => box } as DOMRect;
+    return original.call(this);
+  });
   Element.prototype.scrollIntoView = vi.fn();
 });
 afterEach(() => {
@@ -98,13 +90,9 @@ describe("Tour arrival on a picker field (0.50.1)", () => {
     expect(input).toHaveFocus();
     expect(listbox()).not.toBeInTheDocument();
     expect(input).toHaveAttribute("aria-expanded", "false");
-    expect(input).toHaveAccessibleDescription(
-      /Pick the account it was paid from\./,
-    );
+    expect(input).toHaveAccessibleDescription(/Pick the account it was paid from\./);
     // The card is not covered: its Next is there to be pressed.
-    expect(
-      screen.getByRole("button", { name: /^(Next|Done)$/ }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^(Next|Done)$/ })).toBeInTheDocument();
 
     // The person opens it as usual: ArrowDown …
     fireEvent.keyDown(input, { key: "ArrowDown" });
@@ -130,14 +118,7 @@ describe("Tour arrival on a picker field (0.50.1)", () => {
 
 describe("focusQuietly", () => {
   it("InlineEntityCombobox: quiet focus stays closed, the person's own focus opens", () => {
-    render(
-      <InlineEntityCombobox<string>
-        label="Account"
-        value={null}
-        onChange={() => {}}
-        options={OPTIONS}
-      />,
-    );
+    render(<InlineEntityCombobox<string> label="Account" value={null} onChange={() => {}} options={OPTIONS} />);
     act(() => focusQuietly(field("Account")));
     expect(field("Account")).toHaveFocus();
     expect(listbox()).not.toBeInTheDocument();
@@ -147,14 +128,7 @@ describe("focusQuietly", () => {
   });
 
   it("Combobox: quiet focus stays closed, the person's own focus opens", () => {
-    render(
-      <Combobox
-        label="Payee"
-        value=""
-        onChange={() => {}}
-        options={["Bakery", "Butcher"]}
-      />,
-    );
+    render(<Combobox label="Payee" value="" onChange={() => {}} options={["Bakery", "Butcher"]} />);
     act(() => focusQuietly(field("Payee")));
     expect(field("Payee")).toHaveFocus();
     expect(listbox()).not.toBeInTheDocument();
@@ -188,14 +162,7 @@ describe("focusQuietly", () => {
   });
 
   it("marks only the focus it makes", () => {
-    render(
-      <InlineEntityCombobox<string>
-        label="Account"
-        value={null}
-        onChange={() => {}}
-        options={OPTIONS}
-      />,
-    );
+    render(<InlineEntityCombobox<string> label="Account" value={null} onChange={() => {}} options={OPTIONS} />);
     const other = document.createElement("button");
     document.body.appendChild(other);
     act(() => focusQuietly(other));

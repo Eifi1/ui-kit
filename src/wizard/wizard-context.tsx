@@ -9,9 +9,7 @@ export interface WizardContextValue {
    * AND-combining the results — this replaces the per-page `useRef` +
    * `validate: () => ref.current?.()` bridge each RHF step used to wire.
    */
-  registerStepValidate: (
-    fn: () => ValidateResult | Promise<ValidateResult>,
-  ) => () => void;
+  registerStepValidate: (fn: () => ValidateResult | Promise<ValidateResult>) => () => void;
   /** Lets the mounted step disable Next/Skip (e.g. invalid tenant shares). */
   setNextBlocked: (blocked: boolean) => void;
 }
@@ -52,9 +50,7 @@ export function useOptionalWizardContext(): WizardContextValue | null {
  * `<StepperNav>`, like {@link useWizardContext}: a validator with nothing to run it is
  * a bug to hear about.
  */
-export function useWizardStepValidate(
-  validate: () => ValidateResult | Promise<ValidateResult>,
-): void {
+export function useWizardStepValidate(validate: () => ValidateResult | Promise<ValidateResult>): void {
   const { registerStepValidate } = useWizardContext();
   const ref = useRef(validate);
   useEffect(() => {

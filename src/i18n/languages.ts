@@ -112,10 +112,7 @@ const languagePart = (tag: string) => tag.split("-")[0].toLowerCase();
  * rather than landing on a guess. Underscores are read as hyphens (`de_CH`), the way a
  * Java or Python backend may have stored the account's locale.
  */
-function answer(
-  candidate: unknown,
-  offered: readonly KitLanguageCode[],
-): KitLanguageCode | undefined {
+function answer(candidate: unknown, offered: readonly KitLanguageCode[]): KitLanguageCode | undefined {
   if (typeof candidate !== "string") return undefined;
   const tag = candidate.trim().replace(/_/g, "-");
   if (!tag) return undefined;
@@ -275,10 +272,7 @@ function cacheKey(code: string, formatLocale: string): [KitLanguageCode, string]
  * A rejected fetch (a deploy replaced the chunk, the device went offline) is not
  * remembered, so the next call tries again.
  */
-export function loadUiKitLabels(
-  code: string,
-  formatLocale: string = catalogueFormat(code),
-): Promise<UiKitLabels> {
+export function loadUiKitLabels(code: string, formatLocale: string = catalogueFormat(code)): Promise<UiKitLabels> {
   const [language, key] = cacheKey(code, formatLocale);
   let labels = loaded.get(key);
   if (!labels) {

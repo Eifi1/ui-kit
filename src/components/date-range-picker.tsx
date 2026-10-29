@@ -191,11 +191,7 @@ function PresetColumn({
     <div
       role="group"
       aria-label={label}
-      className={
-        sheet
-          ? "grid grid-cols-2 gap-0.5"
-          : "flex w-32 shrink-0 flex-col gap-0.5 border-e border-subtle pe-2"
-      }
+      className={sheet ? "grid grid-cols-2 gap-0.5" : "flex w-32 shrink-0 flex-col gap-0.5 border-e border-subtle pe-2"}
     >
       {presets.map((p, i) => {
         const selected = i === marked;
@@ -210,9 +206,7 @@ function PresetColumn({
               "rounded px-2 text-start",
               // 44px on a phone: the kit's touch-target size (`SHEET_ROW_CLASS`).
               sheet ? "min-h-11 py-2 text-sm" : "py-1.5 text-xs",
-              selected
-                ? "bg-active font-medium text-primary"
-                : "text-secondary hover:bg-hover",
+              selected ? "bg-active font-medium text-primary" : "text-secondary hover:bg-hover",
             )}
           >
             {p.label}
@@ -419,11 +413,7 @@ export function DateRangePicker(props: DateRangePickerProps) {
   const activeId = controlled ? preset : ownPreset;
   const a = from ? render(from) : "";
   const b = to ? render(to) : "";
-  const triggerText = from
-    ? to
-      ? `${a}${separator}${b}`
-      : `${a}${separator}…`
-    : (placeholder ?? "");
+  const triggerText = from ? (to ? `${a}${separator}${b}` : `${a}${separator}…`) : (placeholder ?? "");
   const hasPresets = Boolean(presets && presets.length > 0);
   const sheet = usePhoneLayout();
   const commitRange = (f: string, t: string, presetId: string | undefined) => {

@@ -198,6 +198,8 @@ describe("AdminWaitingBadge (0.45, admin §9.3.4)", () => {
         </ul>
       </MemoryRouter>,
     );
-    expect(screen.getByRole("menuitem", { name: "Administration, 5 waiting" }).querySelector("[data-slot='admin-badge']")).not.toBeNull();
+    expect(
+      screen.getByRole("menuitem", { name: "Administration, 5 waiting" }).querySelector("[data-slot='admin-badge']"),
+    ).not.toBeNull();
   });
 });

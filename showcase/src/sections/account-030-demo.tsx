@@ -75,10 +75,10 @@ export function ProfileNames030Demo() {
       </Column>
       <Readout lines={lines} />
       <Note>
-        A migrated account: the whole old display name in {code("firstName")}, no {code("lastName")} — Save holds
-        and says why until both are filled in. Once the pretend save comes back with the new names, the drafts
-        follow them and Save turns off. Without {code("firstName")} / {code("lastName")} the card is the single{" "}
-        {code("value")} / {code("onChange")} field it was.
+        A migrated account: the whole old display name in {code("firstName")}, no {code("lastName")} — Save holds and
+        says why until both are filled in. Once the pretend save comes back with the new names, the drafts follow them
+        and Save turns off. Without {code("firstName")} / {code("lastName")} the card is the single {code("value")} /{" "}
+        {code("onChange")} field it was.
       </Note>
     </Example>
   );
@@ -136,10 +136,10 @@ export function EmailChange030Demo() {
       <Readout lines={lines} />
       <Note>
         The password is {code(`"${PASSWORD}"`)} (another is {code("400 password_incorrect")}, under the field).{" "}
-        {code("grace@example.com")} is taken ({code("email_taken")} under the field); {code("slow@example.com")}{" "}
-        plays a throttle (429). A request ends on &quot;Confirm the link we
-        sent to …&quot;, from the app&apos;s {code("pendingEmail")}; &quot;Open the link&quot; plays the confirm
-        route coming back with {code("confirmed")}, and the done state says a passkey keeps its old label.
+        {code("grace@example.com")} is taken ({code("email_taken")} under the field); {code("slow@example.com")} plays a
+        throttle (429). A request ends on &quot;Confirm the link we sent to …&quot;, from the app&apos;s{" "}
+        {code("pendingEmail")}; &quot;Open the link&quot; plays the confirm route coming back with {code("confirmed")},
+        and the done state says a passkey keeps its old label.
       </Note>
     </Example>
   );
@@ -198,7 +198,10 @@ export function DeleteAccount030Demo() {
   const [run, setRun] = useState(0);
   const { lines, log } = useLog();
   return (
-    <Example label="DeleteAccountSetting — deactivated now, erased later" hint="typed address + password; coded refusals">
+    <Example
+      label="DeleteAccountSetting — deactivated now, erased later"
+      hint="typed address + password; coded refusals"
+    >
       <div className="mb-3 flex flex-wrap items-center gap-3">
         <ToggleGroup<DeletionMode>
           aria-label="mode"
@@ -238,10 +241,10 @@ export function DeleteAccount030Demo() {
       <Readout lines={lines} />
       <Note>
         The password is {code(`"${PASSWORD}"`)}; the address is compared in any case. The mode&apos;s sentence sits
-        under the title, read before anything is pressed. &quot;Owns shared work&quot; adds the
-        hand-over line ({code("handOverCount")}); &quot;Last admin&quot; answers {code("409 {code: \"last_admin\"}")}
-        — in the operator mode with the app&apos;s {code("companies")}, which the sentence names. A wrong password
-        is server-kit&apos;s {code("400 password_incorrect")}, said under the field.
+        under the title, read before anything is pressed. &quot;Owns shared work&quot; adds the hand-over line (
+        {code("handOverCount")}); &quot;Last admin&quot; answers {code('409 {code: "last_admin"}')}— in the operator
+        mode with the app&apos;s {code("companies")}, which the sentence names. A wrong password is server-kit&apos;s{" "}
+        {code("400 password_incorrect")}, said under the field.
       </Note>
     </Example>
   );
@@ -297,7 +300,10 @@ export function SignInExtras030Demo() {
     }
   };
   return (
-    <Example label="SignInForm — a backup code, and 'too many attempts'" hint="recoveryCode, twoFactorContent(token), 429">
+    <Example
+      label="SignInForm — a backup code, and 'too many attempts'"
+      hint="recoveryCode, twoFactorContent(token), 429"
+    >
       <div className="mb-3">
         <Button
           size="sm"
@@ -324,7 +330,11 @@ export function SignInExtras030Demo() {
                   // One app's shape: uncoded, with the wait in a Retry-After header.
                   if (email === "slow@example.com")
                     throw Object.assign(refusal(429), {
-                      response: { status: 429, headers: { "retry-after": "30" }, data: { detail: "Too many requests" } },
+                      response: {
+                        status: 429,
+                        headers: { "retry-after": "30" },
+                        data: { detail: "Too many requests" },
+                      },
                     });
                   if (email === "busy@example.com") throw refusal(429);
                   if (password !== PASSWORD) throw refusal(401, "invalid_credentials");
@@ -336,13 +346,21 @@ export function SignInExtras030Demo() {
               answer(
                 `onCode({ challengeToken: "${challengeToken}", code: "${typed}"${kind ? `, kind: "${kind}"` : ""} })`,
                 beat(700).then((): SignInAnswer => {
-                  const ok = kind === "recovery" ? typed.replace(/[^a-z0-9]/gi, "").toUpperCase() === "ABCDEFGHJKLMNPQR" : typed === "123456";
+                  const ok =
+                    kind === "recovery"
+                      ? typed.replace(/[^a-z0-9]/gi, "").toUpperCase() === "ABCDEFGHJKLMNPQR"
+                      : typed === "123456";
                   if (!ok) throw refusal(401);
                   return { kind: "signed-in" };
                 }),
               )
             }
-            onSetPassword={() => answer("onSetPassword()", beat(700).then((): SignInAnswer => ({ kind: "signed-in" })))}
+            onSetPassword={() =>
+              answer(
+                "onSetPassword()",
+                beat(700).then((): SignInAnswer => ({ kind: "signed-in" })),
+              )
+            }
           />
         </AuthLayout>
       </div>
@@ -351,9 +369,9 @@ export function SignInExtras030Demo() {
         {code("grace@example.com")} with {code(`"${PASSWORD}"`)} reaches the second factor: {code("123456")}, or
         &quot;Use a backup code&quot; and {code("ABCD-EFGH-JKLM-NPQR")} (any case, dashes optional) — posted with{" "}
         {code('kind: "recovery"')}. The line under the intro is {code("twoFactorContent")} as a function of the
-        challenge token. {code("slow@example.com")} answers 429 with {code("Retry-After: 30")}: &quot;Too many
-        attempts. Try again in 30 s.&quot; ({code("retryAfterSeconds")}); {code("busy@example.com")} a bare 429:
-        &quot;… Wait a moment and try again.&quot; — no {code("describeError")} needed for either.
+        challenge token. {code("slow@example.com")} answers 429 with {code("Retry-After: 30")}: &quot;Too many attempts.
+        Try again in 30 s.&quot; ({code("retryAfterSeconds")}); {code("busy@example.com")} a bare 429: &quot;… Wait a
+        moment and try again.&quot; — no {code("describeError")} needed for either.
       </Note>
     </Example>
   );

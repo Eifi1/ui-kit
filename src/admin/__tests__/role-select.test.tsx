@@ -35,7 +35,9 @@ describe("RoleSelect", () => {
         value="ADMIN"
         roles={ROLES}
         offered={["ADMIN", "MEMBER", "CUSTOMER"]}
-        optionDisabledReason={(role) => (role === "MEMBER" ? "last_admin" : role === "CUSTOMER" ? "owns work" : undefined)}
+        optionDisabledReason={(role) =>
+          role === "MEMBER" ? "last_admin" : role === "CUSTOMER" ? "owns work" : undefined
+        }
         onChange={onChange}
       />,
     );
@@ -62,18 +64,36 @@ describe("RoleSelect", () => {
 
   it("locks the whole control with the kit's words, or the app's, and keeps it focusable", () => {
     const { rerender } = render(
-      <RoleSelect<Role> name="Ada Example" value="ADMIN" roles={ROLES} disabledReason="self" onChange={() => undefined} />,
+      <RoleSelect<Role>
+        name="Ada Example"
+        value="ADMIN"
+        roles={ROLES}
+        disabledReason="self"
+        onChange={() => undefined}
+      />,
     );
     const select = screen.getByRole("combobox", { name: "Role of Ada Example" });
     expect(select).toHaveAttribute("aria-disabled", "true");
     expect(select).not.toBeDisabled();
     expect(select).toHaveAccessibleDescription("You can’t change your own role.");
     rerender(
-      <RoleSelect<Role> name="Ada Example" value="ADMIN" roles={ROLES} disabledReason="last_admin" onChange={() => undefined} />,
+      <RoleSelect<Role>
+        name="Ada Example"
+        value="ADMIN"
+        roles={ROLES}
+        disabledReason="last_admin"
+        onChange={() => undefined}
+      />,
     );
     expect(select).toHaveAccessibleDescription("The last active administrator keeps this role.");
     rerender(
-      <RoleSelect<Role> name="Ada Example" value="ADMIN" roles={ROLES} disabledReason="Demo accounts keep their role." onChange={() => undefined} />,
+      <RoleSelect<Role>
+        name="Ada Example"
+        value="ADMIN"
+        roles={ROLES}
+        disabledReason="Demo accounts keep their role."
+        onChange={() => undefined}
+      />,
     );
     expect(select).toHaveAccessibleDescription("Demo accounts keep their role.");
   });

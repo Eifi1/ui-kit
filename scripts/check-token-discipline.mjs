@@ -70,10 +70,8 @@ const SRC = resolve(import.meta.dirname, "..", "src");
 // `text-neutral-contrast` are the kit's own role utilities now, and Tailwind's
 // `neutral` palette is only ever used with a number.
 const NEUTRAL = "slate|gray|zinc|neutral-\\d{2,3}|stone|white|black";
-const COLOURED =
-  "indigo|sky|blue|emerald|green|teal|amber|yellow|orange|rose|red|violet|purple|fuchsia|pink|cyan|lime";
-const PROP =
-  "bg|text|border|ring|fill|stroke|placeholder|divide|outline|decoration|from|to|via|accent|caret|shadow";
+const COLOURED = "indigo|sky|blue|emerald|green|teal|amber|yellow|orange|rose|red|violet|purple|fuchsia|pink|cyan|lime";
+const PROP = "bg|text|border|ring|fill|stroke|placeholder|divide|outline|decoration|from|to|via|accent|caret|shadow";
 const HARDCODED = new RegExp(
   `\\b(?:[a-z][a-z0-9-]*:)*(?:${PROP})-(?:${NEUTRAL}|${COLOURED})(?:-\\d{2,3})?(?:\\/\\d{1,3})?\\b`,
   "g",
@@ -88,9 +86,7 @@ const HARDCODED = new RegExp(
  * would punish the comments this package is unusually good at.
  */
 function stripComments(src) {
-  return src
-    .replace(/\/\*[\s\S]*?\*\//g, "")
-    .replace(/(^|[^:])\/\/[^\n]*/g, "$1");
+  return src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
 }
 
 // Allowed: a scrim is not a surface, and `text-white` on a coloured fill is the
@@ -212,7 +208,9 @@ if (roleTotal > ROLE_BUDGET) {
 } else {
   console.log(`✓ [var(--role)] classes with a role utility in src/: ${roleTotal}  (budget ${ROLE_BUDGET})`);
   if (roleTotal < ROLE_BUDGET) {
-    console.log(`  Budget is ${ROLE_BUDGET - roleTotal} above the real count — lower ROLE_CLASS_BUDGET to ${roleTotal}.`);
+    console.log(
+      `  Budget is ${ROLE_BUDGET - roleTotal} above the real count — lower ROLE_CLASS_BUDGET to ${roleTotal}.`,
+    );
   }
 }
 if (failed) process.exit(1);

@@ -29,7 +29,10 @@ describe("SignInForm access", () => {
   });
 
   it("a request turns the link into Request access, the mail to support", () => {
-    setup({ registerHref: "/register", access: { kind: "request", email: "support@example.com", app: "Kastlan", askCompany: true } });
+    setup({
+      registerHref: "/register",
+      access: { kind: "request", email: "support@example.com", app: "Kastlan", askCompany: true },
+    });
     expect(screen.queryByRole("link", { name: "Create account" })).toBeNull();
     const link = screen.getByRole("link", { name: "Request access" });
     expect(link).toHaveAttribute(

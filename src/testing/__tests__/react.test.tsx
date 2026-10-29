@@ -24,7 +24,9 @@ describe("rowMenuAction", () => {
     const entry = await rowMenuAction("Ada Example", "Delete");
     expect(entry.tagName).toBe("BUTTON");
     // The menu it came from is that row's dialog, not a menu of menuitems.
-    expect(within(screen.getByRole("dialog", { name: "Actions for Ada Example" })).getByRole("button", { name: "Delete" })).toBe(entry);
+    expect(
+      within(screen.getByRole("dialog", { name: "Actions for Ada Example" })).getByRole("button", { name: "Delete" }),
+    ).toBe(entry);
     expect(screen.queryByRole("menuitem")).toBeNull();
     expect(onDelete).not.toHaveBeenCalled();
     fireEvent.click(entry);

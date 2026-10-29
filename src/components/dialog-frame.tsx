@@ -152,7 +152,9 @@ export function DialogFrame({
       labelledBy={titleId}
       // The caller's own description (a warning inside the body, say) is ADDED to the
       // frame's, not traded for it: both are the dialog's.
-      aria-describedby={[hasDescription ? descriptionId : undefined, describedBy].filter(Boolean).join(" ") || undefined}
+      aria-describedby={
+        [hasDescription ? descriptionId : undefined, describedBy].filter(Boolean).join(" ") || undefined
+      }
       // `overflow-hidden` replaces the panel's own `overflow-y-auto` (tailwind-merge
       // treats them as one group), `p-0` its `p-4`: the scroller and the padding move
       // to the body, which is the only part that should move.
@@ -210,13 +212,20 @@ export function DialogFrame({
  *  only exists INSIDE the `Modal` (the frame's own body runs outside it). */
 function FrameClose({ label, onClose }: { label?: string; onClose: () => void }) {
   const close = useContext(ModalCloseContext) ?? onClose;
-  const labels = useKitLabels("dialogFrame", DEFAULT_DIALOG_FRAME_LABELS, label === undefined ? undefined : { close: label });
+  const labels = useKitLabels(
+    "dialogFrame",
+    DEFAULT_DIALOG_FRAME_LABELS,
+    label === undefined ? undefined : { close: label },
+  );
   return (
     <button
       type="button"
       onClick={close}
       aria-label={labels.close}
-      className={cn("-me-1.5 -mt-1 shrink-0 rounded p-1.5 text-muted outline-none hover:bg-hover hover:text-secondary", FOCUS_RING)}
+      className={cn(
+        "-me-1.5 -mt-1 shrink-0 rounded p-1.5 text-muted outline-none hover:bg-hover hover:text-secondary",
+        FOCUS_RING,
+      )}
     >
       <X aria-hidden className="size-5" />
     </button>

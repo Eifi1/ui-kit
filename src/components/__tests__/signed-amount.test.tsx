@@ -103,7 +103,14 @@ describe("palette='money' and flatWithin (keksdose dev#434 price changes)", () =
   it("counts |value| <= flatWithin as no change: no sign, muted, no verdict", () => {
     render(
       <>
-        <SignedAmount value={-0.004} digits={2} flatWithin={0.005} goodDirection="down" data-testid="tiny" locale="en-US" />
+        <SignedAmount
+          value={-0.004}
+          digits={2}
+          flatWithin={0.005}
+          goodDirection="down"
+          data-testid="tiny"
+          locale="en-US"
+        />
         <SignedAmount value={0.005} flatWithin={0.005} data-testid="edge" locale="en-US" />
         <SignedAmount value={0.006} flatWithin={0.005} digits={3} data-testid="past" locale="en-US" />
         <Delta value={0.004} digits={2} flatWithin={0.005} goodDirection="down" palette="money" locale="en-US" />
@@ -127,7 +134,15 @@ describe("ratio={false}: percent POINTS (keksdose 0.17 Q4)", () => {
     render(
       <>
         <Delta value={12.5} unit="percent" ratio={false} goodDirection="down" locale="en-US" data-testid="pts" />
-        <Delta value={0.4} unit="percent" ratio={false} flatWithin={0.5} goodDirection="down" locale="en-US" data-testid="flat" />
+        <Delta
+          value={0.4}
+          unit="percent"
+          ratio={false}
+          flatWithin={0.5}
+          goodDirection="down"
+          locale="en-US"
+          data-testid="flat"
+        />
         <Delta value={0.125} unit="percent" locale="en-US" data-testid="default" />
         <SignedAmount value={-3} unit="percent" ratio={false} locale="en-US" data-testid="sa" />
       </>,

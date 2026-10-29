@@ -93,15 +93,18 @@ function build(world: World, say: (line: string) => void) {
   });
   // The app's own request interceptor: the token, from where the app keeps it.
   client.interceptors.request.use(
-    (config) => (world.token ? { ...config, headers: { ...config.headers, Authorization: `Bearer ${world.token}` } } : config),
+    (config) =>
+      world.token ? { ...config, headers: { ...config.headers, Authorization: `Bearer ${world.token}` } } : config,
     (error) => Promise.reject(error),
   );
   const session = createSessionRefresh<SessionRenewal>({
     async refresh() {
       say(`${at()}  POST /auth/refresh`);
       await beat(600);
-      if (world.answer === "ended") throw Object.assign(new Error("Request failed with status code 401"), { status: 401 });
-      if (world.answer === "busy") throw Object.assign(new Error("Request failed with status code 503"), { status: 503 });
+      if (world.answer === "ended")
+        throw Object.assign(new Error("Request failed with status code 401"), { status: 401 });
+      if (world.answer === "busy")
+        throw Object.assign(new Error("Request failed with status code 503"), { status: 503 });
       world.issued += 1;
       const token = `a${world.issued}`;
       world.valid = token;
@@ -240,7 +243,11 @@ export function SessionRefresh034Demo() {
             Sign in again
           </Button>
         </div>
-        <ol aria-label="What happened" aria-live="polite" className="min-h-24 space-y-0.5 rounded-md border border-subtle bg-surface-2 p-3 font-mono text-xs text-secondary [overflow-wrap:anywhere]">
+        <ol
+          aria-label="What happened"
+          aria-live="polite"
+          className="min-h-24 space-y-0.5 rounded-md border border-subtle bg-surface-2 p-3 font-mono text-xs text-secondary [overflow-wrap:anywhere]"
+        >
           {shown.length === 0 ? <li>Nothing sent yet.</li> : shown.map((line, i) => <li key={i}>{line}</li>)}
         </ol>
         <Note>

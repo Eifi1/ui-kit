@@ -109,7 +109,9 @@ export function useGroupBandTops(
       const lead = leadEl ? leadEl.getBoundingClientRect().height : 0;
       if (bandEl) bandHeight = bandEl.getBoundingClientRect().height;
       const band = bandHeight;
-      setTops((prev) => (prev[0] === head + lead && prev[1] === head + lead + band ? prev : [head + lead, head + lead + band]));
+      setTops((prev) =>
+        prev[0] === head + lead && prev[1] === head + lead + band ? prev : [head + lead, head + lead + band],
+      );
     };
     measure();
     if (typeof ResizeObserver === "undefined") return;

@@ -29,9 +29,12 @@ describe("taggedEmail", () => {
     },
   );
 
-  it.each(["", "  ", "kast lan", "a+b", "a@b", "-x"])("offers nothing for a tag that is not a plain name: %j", (tag) => {
-    expect(taggedEmail("ada@example.com", tag)).toBeNull();
-  });
+  it.each(["", "  ", "kast lan", "a+b", "a@b", "-x"])(
+    "offers nothing for a tag that is not a plain name: %j",
+    (tag) => {
+      expect(taggedEmail("ada@example.com", tag)).toBeNull();
+    },
+  );
 
   it("allows digits, dots, underscores and hyphens in the tag", () => {
     expect(taggedEmail("ada@example.com", "app-2_x.y")).toBe("ada+app-2_x.y@example.com");

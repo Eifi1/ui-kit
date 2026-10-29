@@ -163,8 +163,7 @@ export function useDropdown<T extends HTMLElement = HTMLDivElement>({
  * input each time the panel opens, so typing filters immediately.
  */
 export function useDropdownSearch<T extends HTMLElement = HTMLDivElement>() {
-  const { open, setOpen, wrapperRef, panelRef, triggerRef, closeToTrigger } =
-    useDropdown<T>();
+  const { open, setOpen, wrapperRef, panelRef, triggerRef, closeToTrigger } = useDropdown<T>();
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   // The list's layer again, under `inputRef` for the search box's handler (round 0.35
@@ -196,8 +195,7 @@ export function useDropdownSearch<T extends HTMLElement = HTMLDivElement>() {
 /** `onKeyDown` is the INPUT's, not the wrapper's — the list's keyboard is handled
  *  where the focus is (see the note above), so the div's own handler signature is
  *  omitted in favour of it. */
-export interface DropdownSearchHeaderProps
-  extends Omit<ComponentPropsWithRef<"div">, "onKeyDown"> {
+export interface DropdownSearchHeaderProps extends Omit<ComponentPropsWithRef<"div">, "onKeyDown"> {
   query: string;
   onQueryChange: (v: string) => void;
   inputRef: RefObject<HTMLInputElement | null>;
@@ -251,13 +249,7 @@ export function DropdownSearchHeader({
     // input whose only name is its placeholder has none the moment a character is
     // typed into it — the placeholder disappears — which is why this is worth a prop
     // at all rather than something a caller could add from outside.
-    <div
-      {...rest}
-      className={cn(
-        "flex items-center gap-2 border-b border-subtle px-2 py-1.5",
-        className,
-      )}
-    >
+    <div {...rest} className={cn("flex items-center gap-2 border-b border-subtle px-2 py-1.5", className)}>
       <Search className="size-4 text-placeholder" />
       <input
         ref={inputRef}

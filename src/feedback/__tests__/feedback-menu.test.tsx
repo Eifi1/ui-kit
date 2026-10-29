@@ -28,7 +28,10 @@ const openMenu = (name: string | RegExp = "Send feedback") => {
 };
 
 /** Every row, in order, by its text. */
-const rows = (menu: HTMLElement) => within(menu).getAllByRole("menuitem").map((row) => row.textContent?.trim());
+const rows = (menu: HTMLElement) =>
+  within(menu)
+    .getAllByRole("menuitem")
+    .map((row) => row.textContent?.trim());
 
 describe("FeedbackMenu", () => {
   it("is a 'Send feedback' trigger with Bug, Idea, Question, Other, and My feedback — never Crash", () => {
@@ -64,7 +67,10 @@ describe("FeedbackMenu", () => {
     expect(within(openMenu()).getByRole("menuitem", { name: "My feedback" })).toHaveAttribute("href", "/me/reports");
     cleanup();
     renderMenu({ isAdmin: true, myFeedbackHref: "/me/reports", inboxHref: "/admin/reports" });
-    expect(within(openMenu()).getByRole("menuitem", { name: "Feedback inbox" })).toHaveAttribute("href", "/admin/reports");
+    expect(within(openMenu()).getByRole("menuitem", { name: "Feedback inbox" })).toHaveAttribute(
+      "href",
+      "/admin/reports",
+    );
   });
 
   it("puts the app's extra entries between the divider and the list link", () => {
@@ -100,13 +106,10 @@ describe("FeedbackMenu", () => {
   });
 
   it("reads its words from feedbackMenu and the rows from feedbackCategory; the prop wins", () => {
-    renderMenu(
-      { isAdmin: true, labels: { inbox: "Inbox" } },
-      {
-        feedbackMenu: { trigger: "Feedback senden", myFeedback: "Mein Feedback", inbox: "Feedback-Eingang" },
-        feedbackCategory: { CRASH: "Absturz", BUG: "Fehler", IDEA: "Idee", QUESTION: "Frage", OTHER: "Sonstiges" },
-      } as UiKitLabelOverrides,
-    );
+    renderMenu({ isAdmin: true, labels: { inbox: "Inbox" } }, {
+      feedbackMenu: { trigger: "Feedback senden", myFeedback: "Mein Feedback", inbox: "Feedback-Eingang" },
+      feedbackCategory: { CRASH: "Absturz", BUG: "Fehler", IDEA: "Idee", QUESTION: "Frage", OTHER: "Sonstiges" },
+    } as UiKitLabelOverrides);
     const menu = openMenu("Feedback senden");
     expect(rows(menu)).toEqual(["Fehler", "Idee", "Frage", "Sonstiges", "Mein Feedback", "Inbox"]);
   });
@@ -133,7 +136,10 @@ describe("FeedbackMenu publicHref", () => {
     renderMenu({ publicHref: "/all-feedback" });
     const menu = openMenu();
     expect(rows(menu)).toEqual(["Bug", "Idea", "Question", "Other", "Feedback discussion", "My feedback"]);
-    expect(within(menu).getByRole("menuitem", { name: "Feedback discussion" })).toHaveAttribute("href", "/all-feedback");
+    expect(within(menu).getByRole("menuitem", { name: "Feedback discussion" })).toHaveAttribute(
+      "href",
+      "/all-feedback",
+    );
   });
 
   it("gives an admin all three, in order, after the app's own rows", () => {
@@ -155,8 +161,13 @@ describe("FeedbackMenu publicHref", () => {
   });
 
   it("speaks the provider's language", () => {
-    renderMenu({ publicHref: "/all-feedback" }, { feedbackMenu: { trigger: "Feedback senden", discussion: "Feedback-Diskussion" } });
-    expect(within(openMenu("Feedback senden")).getByRole("menuitem", { name: "Feedback-Diskussion" })).toBeInTheDocument();
+    renderMenu(
+      { publicHref: "/all-feedback" },
+      { feedbackMenu: { trigger: "Feedback senden", discussion: "Feedback-Diskussion" } },
+    );
+    expect(
+      within(openMenu("Feedback senden")).getByRole("menuitem", { name: "Feedback-Diskussion" }),
+    ).toBeInTheDocument();
   });
 });
 
@@ -179,8 +190,12 @@ describe("FeedbackMenu by role (0.40)", () => {
   it("keeps the keys' routes and draws Users, User and Inbox", () => {
     renderMenu({ isAdmin: true, publicHref: "/all-feedback" });
     const menu = openMenu();
-    const icon = (name: string) => within(menu).getByRole("menuitem", { name }).querySelector("svg")?.getAttribute("class");
-    expect(within(menu).getByRole("menuitem", { name: "Feedback discussion" })).toHaveAttribute("href", "/all-feedback");
+    const icon = (name: string) =>
+      within(menu).getByRole("menuitem", { name }).querySelector("svg")?.getAttribute("class");
+    expect(within(menu).getByRole("menuitem", { name: "Feedback discussion" })).toHaveAttribute(
+      "href",
+      "/all-feedback",
+    );
     expect(within(menu).getByRole("menuitem", { name: "My feedback" })).toHaveAttribute("href", "/my-feedback");
     expect(within(menu).getByRole("menuitem", { name: "Feedback inbox" })).toHaveAttribute("href", "/feedback");
     expect(icon("Feedback discussion")).toContain("lucide-users");

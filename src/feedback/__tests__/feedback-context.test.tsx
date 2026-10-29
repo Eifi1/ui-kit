@@ -131,7 +131,9 @@ describe("FeedbackContextBox", () => {
   });
 
   it("reads its words from the provider's feedbackContext, and the prop wins", () => {
-    const labels = { feedbackContext: { user: "Nutzer", attachUrl: "Aktuelle Seiten-URL anhängen" } } as UiKitLabelOverrides;
+    const labels = {
+      feedbackContext: { user: "Nutzer", attachUrl: "Aktuelle Seiten-URL anhängen" },
+    } as UiKitLabelOverrides;
     const { unmount } = render(
       <UiKitProvider labels={labels}>
         <Box />
@@ -174,7 +176,9 @@ describe("FeedbackContextBox", () => {
 
   it("shows an app's fieldValue whole when it does not end in the value", () => {
     const { container } = render(
-      <UiKitProvider labels={{ common: { fieldValue: (field, value) => `${value} — ${field}` } } as UiKitLabelOverrides}>
+      <UiKitProvider
+        labels={{ common: { fieldValue: (field, value) => `${value} — ${field}` } } as UiKitLabelOverrides}
+      >
         <Box />
       </UiKitProvider>,
     );

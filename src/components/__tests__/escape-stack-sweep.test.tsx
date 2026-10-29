@@ -549,7 +549,9 @@ describe("the owner's handler hears Escape only while its dialog is on top (0.35
     ],
   ];
 
-  const OWNED_CASES = OWNED_HOSTS.flatMap(([host, Host]) => CHILDREN.map(([name, c]) => [name, host, Host, c] as const));
+  const OWNED_CASES = OWNED_HOSTS.flatMap(([host, Host]) =>
+    CHILDREN.map(([name, c]) => [name, host, Host, c] as const),
+  );
 
   it.each(OWNED_CASES)("%s in a %s: the first Escape closes it, the second asks", async (_o, _h, Host, c) => {
     const user = userEvent.setup();

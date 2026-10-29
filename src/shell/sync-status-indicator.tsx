@@ -160,10 +160,7 @@ export function SyncStatusIndicator({
 
   const onlineOnly = storage === "none";
   // Online-only: nothing waits on the device, so only offline, error, saving and settled.
-  const state = syncState(
-    onlineOnly ? { ...status, pending: 0, blocked: 0, waitingForPlan: 0 } : status,
-    refreshing,
-  );
+  const state = syncState(onlineOnly ? { ...status, pending: 0, blocked: 0, waitingForPlan: 0 } : status, refreshing);
   const data = dataAttributes(rest);
   if (hideWhenIdle && state === "synced") return null;
 
@@ -190,12 +187,13 @@ export function SyncStatusIndicator({
       text = words.pending(status.pending);
       break;
     default:
-      text = !onlineOnly && status.lastSyncedAt
-        ? words.syncedAt(
-            // A clock time in the UI's language, never the browser's (keksdose live #246).
-            new Date(status.lastSyncedAt).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" }),
-          )
-        : words.idle;
+      text =
+        !onlineOnly && status.lastSyncedAt
+          ? words.syncedAt(
+              // A clock time in the UI's language, never the browser's (keksdose live #246).
+              new Date(status.lastSyncedAt).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" }),
+            )
+          : words.idle;
   }
   if (scope) {
     text = state === "offline" && scope.offline ? scope.offline : words.scoped(scope.name, text);
@@ -272,7 +270,10 @@ export function SyncStatusIndicator({
         {...data}
         role="status"
         data-sync-state={state}
-        className={cn("relative inline-flex size-9 shrink-0 items-center justify-center [&>svg]:size-5", TEXT_TONE[tone])}
+        className={cn(
+          "relative inline-flex size-9 shrink-0 items-center justify-center [&>svg]:size-5",
+          TEXT_TONE[tone],
+        )}
       >
         {glyph}
         <span className="sr-only">{name}</span>
@@ -288,7 +289,8 @@ export function SyncStatusIndicator({
     </Tooltip>
   );
 
-  if (!showLabel || !short) return className ? <span className={cn("inline-flex", className)}>{control}</span> : control;
+  if (!showLabel || !short)
+    return className ? <span className={cn("inline-flex", className)}>{control}</span> : control;
   return (
     <span className={cn("inline-flex items-center gap-1", className)}>
       {control}

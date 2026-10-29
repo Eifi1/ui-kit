@@ -46,7 +46,11 @@ function stubBubbleRect(box: Box) {
 function renderTooltip(opts: { side?: TooltipSide; lazy?: boolean; dir?: "ltr" | "rtl" } = {}) {
   render(
     <div dir={opts.dir ?? "ltr"}>
-      <Tooltip label="gcloud run jobs execute nightly-import --region europe-west3 --wait" side={opts.side} lazy={opts.lazy}>
+      <Tooltip
+        label="gcloud run jobs execute nightly-import --region europe-west3 --wait"
+        side={opts.side}
+        lazy={opts.lazy}
+      >
         <button type="button">Command</button>
       </Tooltip>
     </div>,
@@ -228,4 +232,3 @@ describe("Tooltip viewport clamp measures the glass, not the grown window (live 
     expect(parseFloat(screen.getByRole("tooltip").style.left)).toBe(82);
   });
 });
-

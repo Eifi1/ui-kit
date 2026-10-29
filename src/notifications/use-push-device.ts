@@ -307,7 +307,10 @@ export function usePushDevice(options: UsePushDeviceOptions): PushDevice {
         within(
           (async () =>
             (reuse ? await registration.pushManager.getSubscription() : null) ??
-            (await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(key) })))(),
+            (await registration.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: keyBytes(key),
+            })))(),
           PUSH_TIMEOUT_MS,
           "push_timeout",
         );

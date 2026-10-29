@@ -38,15 +38,27 @@ function PrivacyPage() {
   return (
     <LegalPage page="privacy" operator={OPERATOR}>
       <LegalKitSection section="controller" />
-      <LegalSection key="data" heading="What data we process" body="Receipts: see section {ref:retention} for how long." />
-      <LegalKitSection section="legal_basis">Your consent (Art. 6(1)(a) GDPR) for what you switch on yourself.</LegalKitSection>
+      <LegalSection
+        key="data"
+        heading="What data we process"
+        body="Receipts: see section {ref:retention} for how long."
+      />
+      <LegalKitSection section="legal_basis">
+        Your consent (Art. 6(1)(a) GDPR) for what you switch on yourself.
+      </LegalKitSection>
       <LegalSection key="third_parties" heading="Hosting and processors" body="Example Cloud." />
       <LegalKitSection section="browser" entries={["your sign-in tokens", "the language you picked"]}>
         Signing out also wipes the offline copy.
       </LegalKitSection>
       <LegalSection key="transfers" heading="International data transfers" body="None." />
-      <LegalSection key="retention" heading="Retention and deletion" body="Write to the address in section {ref:contact}." />
-      <LegalKitSection section="rights">{"Export it under Settings.\nDelete it there too (section {ref:retention})."}</LegalKitSection>
+      <LegalSection
+        key="retention"
+        heading="Retention and deletion"
+        body="Write to the address in section {ref:contact}."
+      />
+      <LegalKitSection section="rights">
+        {"Export it under Settings.\nDelete it there too (section {ref:retention})."}
+      </LegalKitSection>
       <LegalKitSection section="contact" />
     </LegalPage>
   );
@@ -66,11 +78,11 @@ describe("LegalPage — the frame (§3.2)", () => {
     expect(screen.getByRole("main")).toContainElement(screen.getByRole("heading", { level: 1 }));
     const footer = screen.getByRole("contentinfo");
     const nav = within(footer).getByRole("navigation", { name: L.navLabel });
-    expect(within(nav).getAllByRole("link").map((a) => a.getAttribute("href"))).toEqual([
-      "/impressum",
-      "/privacy",
-      "/terms",
-    ]);
+    expect(
+      within(nav)
+        .getAllByRole("link")
+        .map((a) => a.getAttribute("href")),
+    ).toEqual(["/impressum", "/privacy", "/terms"]);
     // The default footer marks the page it is on.
     expect(within(nav).getByRole("link", { name: L.links.terms })).toHaveAttribute("aria-current", "page");
   });
@@ -127,7 +139,9 @@ describe("LegalPage — the frame (§3.2)", () => {
         <LegalKitSection section="law" />
       </LegalPage>,
     );
-    expect(screen.getByText("This is a translation for your convenience. The German version is binding.", { exact: false })).toBeInTheDocument();
+    expect(
+      screen.getByText("This is a translation for your convenience. The German version is binding.", { exact: false }),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Show the German version" }));
     expect(show).toHaveBeenCalledTimes(1);
     // The terms' clause names the binding language, numbered between changes and law.
@@ -164,7 +178,11 @@ describe("LegalPage — the frame (§3.2)", () => {
     expect(title.compareDocumentPosition(line) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(line.compareDocumentPosition(screen.getByRole("note")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     // The switch to the binding version changes the provider: words and date follow it.
-    rerender(<UiKitProvider labels={UI_KIT_LABELS_DE_CH} locale="de-CH">{terms("2026-10-29")}</UiKitProvider>);
+    rerender(
+      <UiKitProvider labels={UI_KIT_LABELS_DE_CH} locale="de-CH">
+        {terms("2026-10-29")}
+      </UiKitProvider>,
+    );
     expect(screen.getByText("Stand: 29. Oktober 2026")).toBeInTheDocument();
     // No date, and a day that does not exist: no line, never a rolled-over one.
     rerender(<UiKitProvider locale="en-GB">{terms("2026-02-30")}</UiKitProvider>);
@@ -193,7 +211,11 @@ describe("LegalPage — the frame (§3.2)", () => {
     // After the notice, before section 1; the sections keep their numbers.
     expect(screen.getByRole("note").compareDocumentPosition(box) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(sectionIds(container)).toEqual(["summary", "warranty", "law"]);
-    expect(headings()).toEqual([L.summary!.title, `1. ${L.sections.terms.warranty.title}`, `2. ${L.sections.terms.law.title}`]);
+    expect(headings()).toEqual([
+      L.summary!.title,
+      `1. ${L.sections.terms.warranty.title}`,
+      `2. ${L.sections.terms.law.title}`,
+    ]);
     // In the provider's language; none when there are no points.
     rerender(
       <UiKitProvider labels={UI_KIT_LABELS_DE_CH}>
@@ -256,7 +278,11 @@ describe("LegalPage — the frame (§3.2)", () => {
       <LegalPage
         page="terms"
         operator={OPERATOR}
-        labels={{ backHome: "Home", titles: { terms: "Conditions" }, sections: { terms: { warranty: { title: "As is" } } } }}
+        labels={{
+          backHome: "Home",
+          titles: { terms: "Conditions" },
+          sections: { terms: { warranty: { title: "As is" } } },
+        }}
       >
         <LegalKitSection section="warranty" />
       </LegalPage>,
@@ -486,10 +512,11 @@ describe("LegalKitSection (§4.3)", () => {
     const blocks = [...section.querySelectorAll(":scope > div > div > *")];
     expect(blocks.map((b) => b.tagName)).toEqual(["P", "UL", "P", "P"]);
     expect(blocks[0]).toHaveTextContent(L.sections.privacy.browser.lead);
-    expect(within(blocks[1] as HTMLElement).getAllByRole("listitem").map((li) => li.textContent)).toEqual([
-      "your sign-in tokens",
-      "the language you picked",
-    ]);
+    expect(
+      within(blocks[1] as HTMLElement)
+        .getAllByRole("listitem")
+        .map((li) => li.textContent),
+    ).toEqual(["your sign-in tokens", "the language you picked"]);
     expect(blocks[2]).toHaveTextContent(L.sections.privacy.browser.tail);
     expect(blocks[3]).toHaveTextContent("Signing out also wipes the offline copy.");
   });
@@ -545,7 +572,9 @@ describe("LegalAcceptCheckbox (§3.4)", () => {
   });
 
   it("takes the hrefs", () => {
-    render(<LegalAcceptCheckbox checked onCheckedChange={() => {}} termsHref="/legal/terms" privacyHref="/legal/privacy" />);
+    render(
+      <LegalAcceptCheckbox checked onCheckedChange={() => {}} termsHref="/legal/terms" privacyHref="/legal/privacy" />,
+    );
     expect(screen.getByRole("checkbox")).toBeChecked();
     expect(screen.getByRole("link", { name: L.titles.terms })).toHaveAttribute("href", "/legal/terms");
     expect(screen.getByRole("link", { name: L.titles.privacy })).toHaveAttribute("href", "/legal/privacy");
@@ -570,7 +599,9 @@ describe("LegalAcceptCheckbox (§3.4)", () => {
 
   it("puts the links where the language's template does (fr: articles in the template)", () => {
     render(
-      <UiKitProvider labels={{ legal: { accept: "J’accepte les {terms} et la {privacy}", titles: { terms: "Conditions" } } }}>
+      <UiKitProvider
+        labels={{ legal: { accept: "J’accepte les {terms} et la {privacy}", titles: { terms: "Conditions" } } }}
+      >
         <LegalAcceptCheckbox checked={false} onCheckedChange={() => {}} />
       </UiKitProvider>,
     );

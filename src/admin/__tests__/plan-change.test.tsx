@@ -97,7 +97,11 @@ describe("planColumn (§14.12)", () => {
   });
 
   it("reads the forms in the provider's locale and words, and keeps an override's hook", () => {
-    const objekte = (r: Row) => ({ used: r.used ?? 0, limit: r.limit ?? null, label: { one: "Objekt", other: "Objekte" } });
+    const objekte = (r: Row) => ({
+      used: r.used ?? 0,
+      limit: r.limit ?? null,
+      label: { one: "Objekt", other: "Objekte" },
+    });
     const row = (limit: number): Row => ({ id: 1, plan: "pro", used: 1, limit });
     const inGerman = (node: ReactNode) => (
       <UiKitProvider locale="de-CH" labels={UI_KIT_LABELS_DE_CH}>
@@ -305,16 +309,36 @@ describe("usePlanChangeResult — the answer's lines and tones (§14.12)", () =>
     expect(result({ previous_plan: null, plan: "pro", over_limit: false, limits: {}, usage: {} }, planName)).toEqual([
       { tone: "success", text: "Plan set to Pro." },
     ]);
-    expect(result({ previous_plan: "pro", plan: "pro", over_limit: false, limits: {}, usage: {} }, planName)[0].text).toBe("Plan set to Pro.");
+    expect(
+      result({ previous_plan: "pro", plan: "pro", over_limit: false, limits: {}, usage: {} }, planName)[0].text,
+    ).toBe("Plan set to Pro.");
   });
 
   it("says a kept beta as info, else a grant's end as a success", () => {
     const result = lines(({ children }) => <UiKitProvider locale="en-GB">{children}</UiKitProvider>);
     expect(
-      result({ previous_plan: "free", plan: "pro", over_limit: false, limits: {}, usage: {}, kept_beta: true, comped_until: null }, planName)[1],
+      result(
+        {
+          previous_plan: "free",
+          plan: "pro",
+          over_limit: false,
+          limits: {},
+          usage: {},
+          kept_beta: true,
+          comped_until: null,
+        },
+        planName,
+      )[1],
     ).toEqual({ tone: "info", text: "The beta keeps its end; only the plan changed." });
     const until = result(
-      { previous_plan: "free", plan: "pro", over_limit: false, limits: {}, usage: {}, comped_until: "2027-01-31T22:59:59Z" },
+      {
+        previous_plan: "free",
+        plan: "pro",
+        over_limit: false,
+        limits: {},
+        usage: {},
+        comped_until: "2027-01-31T22:59:59Z",
+      },
       planName,
     );
     expect(until[1].tone).toBe("success");

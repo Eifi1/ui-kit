@@ -98,13 +98,12 @@ function DonutAndPie() {
       <p className={`mt-2 ${READOUT}`}>hiddenSlices = [{[...hidden].join(", ")}]</p>
       <div className="mt-3">
         <Note>
-          With {code('legend="toggle"')} each legend entry is a switch: turn off Rent and the other
-          slices' percentages — and the donut's total — are re-read as shares of what is left. The
-          set is controlled here ({code("hiddenSlices")} / {code("onHiddenSlicesChange")}), so the
-          readout follows it. {code('"static"')} is the same key with nothing to press. Insurance
-          ({code("null")}) and Gifts ({code("0")}) are in the data but neither drawn nor listed, and
-          Bank fees is a sliver under {code("minLabelShare")}: its figure is in the tooltip and its
-          accessible name only.
+          With {code('legend="toggle"')} each legend entry is a switch: turn off Rent and the other slices' percentages
+          — and the donut's total — are re-read as shares of what is left. The set is controlled here (
+          {code("hiddenSlices")} / {code("onHiddenSlicesChange")}), so the readout follows it. {code('"static"')} is the
+          same key with nothing to press. Insurance ({code("null")}) and Gifts ({code("0")}) are in the data but neither
+          drawn nor listed, and Bank fees is a sliver under {code("minLabelShare")}: its figure is in the tooltip and
+          its accessible name only.
         </Note>
       </div>
     </Example>
@@ -128,12 +127,11 @@ function ClickAndKeyboard() {
       <p className={`mt-2 ${READOUT}`}>onSliceClick → {picked}</p>
       <div className="mt-3">
         <Note>
-          Tab into the chart: focus lands on the first slice, and ←/→ or ↑/↓ walk the slices
-          clockwise from twelve o'clock (the legend's order), Home/End jump to the ends. The focused
-          slice is written in the donut's centre and named &ldquo;Let: 38 (79%)&rdquo; for a screen
-          reader. With {code("onSliceClick")} each slice is a {code('role="button"')}: click one, or
-          press Enter. The colours here are the slices' own {code("color")} — status tokens — rather
-          than the by-index ramp.
+          Tab into the chart: focus lands on the first slice, and ←/→ or ↑/↓ walk the slices clockwise from twelve
+          o'clock (the legend's order), Home/End jump to the ends. The focused slice is written in the donut's centre
+          and named &ldquo;Let: 38 (79%)&rdquo; for a screen reader. With {code("onSliceClick")} each slice is a{" "}
+          {code('role="button"')}: click one, or press Enter. The colours here are the slices' own {code("color")} —
+          status tokens — rather than the by-index ramp.
         </Note>
       </div>
     </Example>
@@ -190,13 +188,11 @@ function RedactEmptyRtl() {
       </div>
       <div className="mt-3">
         <Note>
-          {code("redact")} marks every figure on screen — the centre, {code('"value"')} slice labels
-          and the tooltip bubble — {code("data-private")}, which the host's demo-mode rule blurs; the
-          slices and the percentages stay, since a share reveals no amount. The middle chart has
-          nothing to draw and shows its {code("empty")} text instead of an empty box. The third
-          sits in {code('dir="rtl"')} with {code('locale="ar-EG"')}: the legend and the centre
-          follow the page and ←/→ follow the reading direction, while the plot itself is not
-          mirrored.
+          {code("redact")} marks every figure on screen — the centre, {code('"value"')} slice labels and the tooltip
+          bubble — {code("data-private")}, which the host's demo-mode rule blurs; the slices and the percentages stay,
+          since a share reveals no amount. The middle chart has nothing to draw and shows its {code("empty")} text
+          instead of an empty box. The third sits in {code('dir="rtl"')} with {code('locale="ar-EG"')}: the legend and
+          the centre follow the page and ←/→ follow the reading direction, while the plot itself is not mirrored.
         </Note>
       </div>
     </Example>
@@ -238,15 +234,17 @@ function StaticLegendSpecimen() {
         <StaticLegend
           orientation="vertical"
           aria-label="Single entry"
-          entries={[{ key: "buffer", label: "Cash buffer (target)", color: paletteFor(3), marker: "stroke", dash: "4 3" }]}
+          entries={[
+            { key: "buffer", label: "Cash buffer (target)", color: paletteFor(3), marker: "stroke", dash: "4 3" },
+          ]}
         />
       </div>
       <div className="mt-3">
         <Note>
-          The same entries and marks as {code("ToggleLegend")}, but a {code("<ul>")}: a screen reader
-          hears &ldquo;list, 5 items&rdquo; rather than five switches, and Tab skips it. Unlike{" "}
-          {code("ToggleLegend")} it draws a single entry too (the vertical one below), because a key
-          with one line still says what the one mark on the chart means.
+          The same entries and marks as {code("ToggleLegend")}, but a {code("<ul>")}: a screen reader hears &ldquo;list,
+          5 items&rdquo; rather than five switches, and Tab skips it. Unlike {code("ToggleLegend")} it draws a single
+          entry too (the vertical one below), because a key with one line still says what the one mark on the chart
+          means.
         </Note>
       </div>
     </Example>

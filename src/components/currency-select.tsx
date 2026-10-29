@@ -23,12 +23,7 @@ import {
   type CurrencyFlagProps,
   type CurrencyOption,
 } from "./currency-option-list";
-import {
-  DEFAULT_COMMON_LABELS,
-  DEFAULT_CURRENCY_LABELS,
-  useKitLabels,
-  useKitLocale,
-} from "../i18n/kit-labels";
+import { DEFAULT_COMMON_LABELS, DEFAULT_CURRENCY_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-labels";
 
 // The data and the flag are declared beside the one list both currency pickers render
 // (./currency-option-list, round 0.34 Wave 2, DUP-4) and are this module's exports, as
@@ -278,7 +273,7 @@ export function CurrencySelect({
             <span className="font-medium">{selected.code}</span>
           </>
         ) : (
-          placeholder ?? text.currency
+          (placeholder ?? text.currency)
         )}
       </span>
       {/* No menu to drop while disabled or locked, so no chevron — the arrow is the one

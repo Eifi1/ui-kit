@@ -79,12 +79,7 @@ function localDay(raw: string): string {
  * The text filter folds as every kit list does ({@link foldForSearch}, DUP-5): accents
  * off too, so "zurich" finds Zürich.
  */
-export function rowMatches<T>(
-  col: DataTableColumn<T>,
-  row: T,
-  state: FilterValue,
-  locale?: string,
-): boolean {
+export function rowMatches<T>(col: DataTableColumn<T>, row: T, state: FilterValue, locale?: string): boolean {
   const filter = resolveFilter(col);
   if (!filter) return true;
   switch (filter.type) {

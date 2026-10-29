@@ -90,9 +90,7 @@ const BREAKPOINTS = ["xl", "lg", "md", "sm"] as const;
  *  `base`. The queries are subscribed unconditionally (hooks cannot be skipped); a
  *  plain string ignores them. Without `matchMedia` (SSR, tests) none match, so the row
  *  renders its `base`, the phone's. The same resolution as BulkActionBar's variant. */
-function useResolvedPlacement(
-  placement: FormActionsPlacement | ResponsiveFormActionsPlacement,
-): FormActionsPlacement {
+function useResolvedPlacement(placement: FormActionsPlacement | ResponsiveFormActionsPlacement): FormActionsPlacement {
   const matches = {
     xl: useBreakpoint("xl"),
     lg: useBreakpoint("lg"),
@@ -327,7 +325,6 @@ export interface FormActionsProps extends Omit<ComponentPropsWithoutRef<"div">, 
    *  rest props before, after the row's own, and a caller's ref took the shortcut's. */
   ref?: Ref<HTMLDivElement>;
 }
-
 
 /**
  * Where {@link FormActionsProps.submitShortcut} listens: the form Save submits (named

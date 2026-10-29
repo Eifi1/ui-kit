@@ -50,7 +50,9 @@ export function useSettingsHeadingLevel(): SettingsHeadingTag | null {
 export function SettingsCardTitle({ className, ...props }: ComponentPropsWithoutRef<"div">) {
   const level = useSettingsHeadingLevel();
   if (!level) return <div {...props} className={cn(CARD_TITLE_CLASS, className)} />;
-  return <SettingsHeading as={level} tabIndex={-1} {...props} className={cn(CARD_TITLE_CLASS, "outline-none", className)} />;
+  return (
+    <SettingsHeading as={level} tabIndex={-1} {...props} className={cn(CARD_TITLE_CLASS, "outline-none", className)} />
+  );
 }
 
 /**

@@ -25,9 +25,8 @@ export function CommandPaletteDemo() {
         label="CommandPalette"
         hint={
           <>
-            <code className="font-mono">useCommandKey</code> binds ⌘K on macOS and Ctrl-K
-            elsewhere — the listener is on <code className="font-mono">document</code>, so it
-            fires anywhere on this page.
+            <code className="font-mono">useCommandKey</code> binds ⌘K on macOS and Ctrl-K elsewhere — the listener is on{" "}
+            <code className="font-mono">document</code>, so it fires anywhere on this page.
           </>
         }
       >
@@ -110,11 +109,29 @@ interface PaletteEntry {
  * a fixture rebuilt inline on every render would re-arm the debounce forever.
  */
 const PALETTE_INDEX: PaletteEntry[] = [
-  { id: "foundations", label: "Foundations & tokens", group: "Sections", icon: <Palette className="size-4" />, href: "#foundations" },
-  { id: "data-table", label: "Data table", group: "Sections", icon: <Table2 className="size-4" />, href: "#data-table" },
+  {
+    id: "foundations",
+    label: "Foundations & tokens",
+    group: "Sections",
+    icon: <Palette className="size-4" />,
+    href: "#foundations",
+  },
+  {
+    id: "data-table",
+    label: "Data table",
+    group: "Sections",
+    icon: <Table2 className="size-4" />,
+    href: "#data-table",
+  },
   { id: "overlays", label: "Overlays", group: "Sections", icon: <Layers className="size-4" />, href: "#overlays" },
-  { id: "toggle-theme", label: "Toggle theme", group: "Actions", hint: "top bar", icon: <Command className="size-4" /> },
-  { id: "copy-import", label: "Copy the import line", group: "Actions", hint: '@eifi1/ui-kit' },
+  {
+    id: "toggle-theme",
+    label: "Toggle theme",
+    group: "Actions",
+    hint: "top bar",
+    icon: <Command className="size-4" />,
+  },
+  { id: "copy-import", label: "Copy the import line", group: "Actions", hint: "@eifi1/ui-kit" },
   { id: "readme", label: "README", group: "Docs", icon: <FileText className="size-4" /> },
   { id: "adopting", label: "ADOPTING.md", group: "Docs", icon: <FileText className="size-4" /> },
 ];
@@ -134,10 +151,7 @@ function PaletteDemo() {
   const search = (query: string): CommandItem[] => {
     const needle = query.trim().toLowerCase();
     return PALETTE_INDEX.filter(
-      (e) =>
-        !needle ||
-        e.label.toLowerCase().includes(needle) ||
-        e.group.toLowerCase().includes(needle),
+      (e) => !needle || e.label.toLowerCase().includes(needle) || e.group.toLowerCase().includes(needle),
     ).map((e) => ({ ...e, onSelect: () => setChosen(e.label) }));
   };
 
@@ -164,36 +178,33 @@ function PaletteDemo() {
       />
 
       <Note>
-        An empty query is allowed and returns everything here, which is how an app
-        surfaces recents or default pages. The debounce is 150ms while typing and zero
-        for the empty query, so the first open is not artificially slow.
+        An empty query is allowed and returns everything here, which is how an app surfaces recents or default pages.
+        The debounce is 150ms while typing and zero for the empty query, so the first open is not artificially slow.
       </Note>
       <Note>
-        The rows under <em>Sections</em> carry an <code className="font-mono">href</code>, so
-        they render as real anchors and can be middle- or ⌘-clicked into a new tab; a plain
-        click is intercepted and runs <code className="font-mono">onSelect</code> instead.
-        The palette stays OPEN for a modified click, deliberately — ⌘-clicking three results
-        in a row is the reason the prop exists.
+        The rows under <em>Sections</em> carry an <code className="font-mono">href</code>, so they render as real
+        anchors and can be middle- or ⌘-clicked into a new tab; a plain click is intercepted and runs{" "}
+        <code className="font-mono">onSelect</code> instead. The palette stays OPEN for a modified click, deliberately —
+        ⌘-clicking three results in a row is the reason the prop exists.
       </Note>
       <Note>
-        A modal like the others: Tab stays inside the panel, the page behind does
-        not scroll, Escape closes from anywhere in it (not only the field), and focus goes back
-        to whatever opened it — press <strong>Open palette</strong>, Escape, and focus is on the
-        button again. Each group is a <code className="font-mono">role=&quot;group&quot;</code>{" "}
-        named by its heading, and the ids are per instance, so the two palettes on this page do
-        not point each other&apos;s <code className="font-mono">aria-activedescendant</code> at the
-        wrong list.
+        A modal like the others: Tab stays inside the panel, the page behind does not scroll, Escape closes from
+        anywhere in it (not only the field), and focus goes back to whatever opened it — press{" "}
+        <strong>Open palette</strong>, Escape, and focus is on the button again. Each group is a{" "}
+        <code className="font-mono">role=&quot;group&quot;</code> named by its heading, and the ids are per instance, so
+        the two palettes on this page do not point each other&apos;s{" "}
+        <code className="font-mono">aria-activedescendant</code> at the wrong list.
       </Note>
       <Note>
-        Type something with no match (&ldquo;zzz&rdquo;) for the <code className="font-mono">empty</code>{" "}
-        label, then the <strong>×</strong> at the field&apos;s end: the clear button (
-        <code className="font-mono">commandPalette.clear</code>) empties the field, commits the empty
-        query and puts the caret back. From 768px up the panel is a top-centred card; below it (
-        <code className="font-mono">fullScreenOnPhone</code>, on by default) it fills the screen — no inset,
-        no rounded panel, the field pinned at the top inside the safe areas, a 16px field so iOS does
-        not zoom, and a Close button (<code className="font-mono">commandPalette.close</code>) because
-        there is no backdrop to tap. Try the screen-size preview in the top bar; the next specimen
-        has the <code className="font-mono">={"{false}"}</code> form.
+        Type something with no match (&ldquo;zzz&rdquo;) for the <code className="font-mono">empty</code> label, then
+        the <strong>×</strong> at the field&apos;s end: the clear button (
+        <code className="font-mono">commandPalette.clear</code>) empties the field, commits the empty query and puts the
+        caret back. From 768px up the panel is a top-centred card; below it (
+        <code className="font-mono">fullScreenOnPhone</code>, on by default) it fills the screen — no inset, no rounded
+        panel, the field pinned at the top inside the safe areas, a 16px field so iOS does not zoom, and a Close button
+        (<code className="font-mono">commandPalette.close</code>) because there is no backdrop to tap. Try the
+        screen-size preview in the top bar; the next specimen has the <code className="font-mono">={"{false}"}</code>{" "}
+        form.
       </Note>
     </div>
   );
@@ -202,8 +213,20 @@ function PaletteDemo() {
 /** Stable empties/fixtures, because `revision` is compared by identity. */
 const NO_RECORDS: PaletteEntry[] = [];
 const RECORDS: PaletteEntry[] = [
-  { id: "tx-1", label: "Rewe — groceries", group: "Transactions", hint: "−48.20 €", icon: <Receipt className="size-4" /> },
-  { id: "tx-2", label: "Rent, September", group: "Transactions", hint: "−950.00 €", icon: <Receipt className="size-4" /> },
+  {
+    id: "tx-1",
+    label: "Rewe — groceries",
+    group: "Transactions",
+    hint: "−48.20 €",
+    icon: <Receipt className="size-4" />,
+  },
+  {
+    id: "tx-2",
+    label: "Rent, September",
+    group: "Transactions",
+    hint: "−950.00 €",
+    icon: <Receipt className="size-4" />,
+  },
   { id: "tx-3", label: "Salary", group: "Transactions", hint: "+3,100.00 €", icon: <Receipt className="size-4" /> },
 ];
 
@@ -260,16 +283,14 @@ function AsyncPaletteDemo() {
         }}
       />
       <Note>
-        Watch the calls list: opening searches once for &ldquo;&rdquo;, and the records arriving
-        change <code className="font-mono">revision</code>, which searches again for the same
-        query and adds the Transactions group. Typing re-arms a 150ms debounce; a slow answer
-        to an old query is dropped, so results never jump back. No{" "}
+        Watch the calls list: opening searches once for &ldquo;&rdquo;, and the records arriving change{" "}
+        <code className="font-mono">revision</code>, which searches again for the same query and adds the Transactions
+        group. Typing re-arms a 150ms debounce; a slow answer to an old query is dropped, so results never jump back. No{" "}
         <code className="font-mono">hint</code> label here, so there is no footer.
       </Note>
     </div>
   );
 }
-
 
 /** The search provider is down while the switch is on; `labels.error` is optional, and
  *  without it the provider's `commandPalette.error` (then English) is shown. */
@@ -288,9 +309,10 @@ function FailingPaletteDemo() {
       throw new Error("503 Service Unavailable");
     }
     const needle = query.trim().toLowerCase();
-    return PALETTE_INDEX.filter((e) => !needle || e.label.toLowerCase().includes(needle)).map(
-      (e) => ({ ...e, onSelect: () => setOpen(false) }),
-    );
+    return PALETTE_INDEX.filter((e) => !needle || e.label.toLowerCase().includes(needle)).map((e) => ({
+      ...e,
+      onSelect: () => setOpen(false),
+    }));
   };
 
   return (
@@ -304,11 +326,7 @@ function FailingPaletteDemo() {
           search backend down
         </label>
         <label className="flex items-center gap-2 text-xs text-secondary">
-          <input
-            type="checkbox"
-            checked={customError}
-            onChange={(e) => setCustomError(e.target.checked)}
-          />
+          <input type="checkbox" checked={customError} onChange={(e) => setCustomError(e.target.checked)} />
           <code className="font-mono">labels.error</code>
         </label>
         <span className={READOUT}>rejections: {failures}</span>
@@ -323,13 +341,11 @@ function FailingPaletteDemo() {
         }}
       />
       <Note>
-        A rejected search never leaves the previous query&apos;s results on screen as if they
-        answered the new one: the list is emptied and the{" "}
-        <code className="font-mono">error</code> line is announced (
-        <code className="font-mono">role=&quot;alert&quot;</code>); the next successful search
-        clears it. With <code className="font-mono">labels.error</code> off the line is the
-        provider&apos;s <code className="font-mono">commandPalette.error</code> — switch this
-        page&apos;s language to see it translated.
+        A rejected search never leaves the previous query&apos;s results on screen as if they answered the new one: the
+        list is emptied and the <code className="font-mono">error</code> line is announced (
+        <code className="font-mono">role=&quot;alert&quot;</code>); the next successful search clears it. With{" "}
+        <code className="font-mono">labels.error</code> off the line is the provider&apos;s{" "}
+        <code className="font-mono">commandPalette.error</code> — switch this page&apos;s language to see it translated.
       </Note>
     </div>
   );
@@ -378,18 +394,18 @@ function SubmitPaletteDemo() {
         labels={{ dialog: "Search (on submit)", placeholder: "Type, then press ↵…" }}
       />
       <Note>
-        Type &ldquo;rent&rdquo;: the counter does not move and the list stays on the last committed query,
-        while a submit button (<code className="font-mono">commandPalette.submit</code>, ↵ glyph) appears
-        beside the field. Press ↵ or that button and the draft becomes THE query — one search call, one{" "}
-        <code className="font-mono">onQueryChange</code>. ↵ again with nothing new typed chooses the
-        highlighted row, as in <code className="font-mono">&quot;input&quot;</code> mode. The × commits the empty
-        query straight away in both modes, and an uncommitted draft is dropped when the palette closes. The
-        phone keyboard&apos;s key reads &ldquo;search&rdquo; (<code className="font-mono">enterKeyHint</code>).
+        Type &ldquo;rent&rdquo;: the counter does not move and the list stays on the last committed query, while a
+        submit button (<code className="font-mono">commandPalette.submit</code>, ↵ glyph) appears beside the field.
+        Press ↵ or that button and the draft becomes THE query — one search call, one{" "}
+        <code className="font-mono">onQueryChange</code>. ↵ again with nothing new typed chooses the highlighted row, as
+        in <code className="font-mono">&quot;input&quot;</code> mode. The × commits the empty query straight away in
+        both modes, and an uncommitted draft is dropped when the palette closes. The phone keyboard&apos;s key reads
+        &ldquo;search&rdquo; (<code className="font-mono">enterKeyHint</code>).
       </Note>
       <Note>
-        Untick <code className="font-mono">fullScreenOnPhone</code> and, at a phone width (or in the
-        screen-size preview), this palette keeps the desktop card — inset, rounded, 70vh — instead of
-        filling the screen, and has no Close button: the backdrop and Escape close it.
+        Untick <code className="font-mono">fullScreenOnPhone</code> and, at a phone width (or in the screen-size
+        preview), this palette keeps the desktop card — inset, rounded, 70vh — instead of filling the screen, and has no
+        Close button: the backdrop and Escape close it.
       </Note>
     </div>
   );
@@ -399,7 +415,13 @@ function SubmitPaletteDemo() {
 
 const PRIVATE_ENTRIES: PaletteEntry[] = [
   ...RECORDS,
-  { id: "acct-1", label: "Joint checking ·· 0130", group: "Accounts", hint: "2,418.55 €", icon: <Table2 className="size-4" /> },
+  {
+    id: "acct-1",
+    label: "Joint checking ·· 0130",
+    group: "Accounts",
+    hint: "2,418.55 €",
+    icon: <Table2 className="size-4" />,
+  },
 ];
 
 function RedactPaletteDemo() {
@@ -411,7 +433,14 @@ function RedactPaletteDemo() {
     const rows: CommandItem[] = [
       ...PRIVATE_ENTRIES.map((e) => ({ ...e, onSelect: () => setOpen(false) })),
       // An app's own page, not the user's data: un-masked in a palette that masks by default.
-      { id: "settings", label: "Settings", group: "Pages", hint: "redact: false", redact: false, onSelect: () => setOpen(false) },
+      {
+        id: "settings",
+        label: "Settings",
+        group: "Pages",
+        hint: "redact: false",
+        redact: false,
+        onSelect: () => setOpen(false),
+      },
     ];
     return rows.filter((e) => !needle || e.label.toLowerCase().includes(needle));
   };
@@ -445,13 +474,13 @@ function RedactPaletteDemo() {
       />
       <Note>
         <code className="font-mono">redactLabels</code> marks every row&apos;s label and hint{" "}
-        <code className="font-mono">data-private</code> — payees, amounts, an account name — so session
-        replay and screenshot tooling mask them; here the page&apos;s own demo-mode rule blurs them. The
-        &ldquo;Settings&rdquo; row passes <code className="font-mono">redact: false</code> and stays readable:
-        an item&apos;s <code className="font-mono">redact</code> overrides the palette either way, so with{" "}
+        <code className="font-mono">data-private</code> — payees, amounts, an account name — so session replay and
+        screenshot tooling mask them; here the page&apos;s own demo-mode rule blurs them. The &ldquo;Settings&rdquo; row
+        passes <code className="font-mono">redact: false</code> and stays readable: an item&apos;s{" "}
+        <code className="font-mono">redact</code> overrides the palette either way, so with{" "}
         <code className="font-mono">redactLabels</code> off a single row could opt IN with{" "}
-        <code className="font-mono">redact: true</code> instead. Group headings are the app&apos;s words and
-        are never marked.
+        <code className="font-mono">redact: true</code> instead. Group headings are the app&apos;s words and are never
+        marked.
       </Note>
     </div>
   );
@@ -503,7 +532,12 @@ function ControlledQueryDemo() {
         <span className={READOUT}>onQueryChange calls: {edits}</span>
       </Row>
       <div className="max-w-xs">
-        <Input aria-label="The query, outside the palette" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Type here, or in the palette" />
+        <Input
+          aria-label="The query, outside the palette"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Type here, or in the palette"
+        />
       </div>
       <CommandPalette
         open={open}
@@ -519,10 +553,9 @@ function ControlledQueryDemo() {
       />
       <Note>
         Type in the palette and the field above follows, and so does the address bar (
-        <code className="font-mono">#/command-palette?q=…</code>); close it and reopen and the text is
-        still there — a controlled palette is never reset on open, because the owner decides what an
-        open shows. <code className="font-mono">onQueryChange</code> fires in both modes; uncontrolled,
-        it only observes.
+        <code className="font-mono">#/command-palette?q=…</code>); close it and reopen and the text is still there — a
+        controlled palette is never reset on open, because the owner decides what an open shows.{" "}
+        <code className="font-mono">onQueryChange</code> fires in both modes; uncontrolled, it only observes.
       </Note>
     </div>
   );
@@ -533,13 +566,61 @@ function ControlledQueryDemo() {
 /** A small app's static index: pages, actions and settings, with keywords in the words
  *  a user types rather than the ones on the page. */
 const APP_ENTRIES: SearchEntry[] = [
-  { id: "budget", title: "Budget", group: "Pages", href: "/budget", icon: <Table2 className="size-4" />, keywords: ["envelopes", "plan"] },
-  { id: "accounts", title: "Accounts", group: "Pages", href: "/accounts", icon: <Layers className="size-4" />, keywords: ["bank", "wallet"] },
-  { id: "reports", title: "Reports", group: "Pages", href: "/reports", icon: <FileText className="size-4" />, keywords: ["charts", "spending"] },
-  { id: "new-transaction", title: "New transaction", group: "Actions", href: "/transactions?action=new", icon: <Plus className="size-4" />, keywords: ["add", "expense", "income"] },
-  { id: "new-account", title: "New account", group: "Actions", href: "/accounts?action=new", icon: <Plus className="size-4" /> },
-  { id: "dark-mode", title: "Dark mode", group: "Settings", href: "/settings#theme", icon: <Moon className="size-4" />, keywords: ["theme", "appearance"] },
-  { id: "two-factor", title: "Two-factor authentication", group: "Settings", href: "/settings#2fa", icon: <User className="size-4" />, keywords: ["2fa", "security", "otp"] },
+  {
+    id: "budget",
+    title: "Budget",
+    group: "Pages",
+    href: "/budget",
+    icon: <Table2 className="size-4" />,
+    keywords: ["envelopes", "plan"],
+  },
+  {
+    id: "accounts",
+    title: "Accounts",
+    group: "Pages",
+    href: "/accounts",
+    icon: <Layers className="size-4" />,
+    keywords: ["bank", "wallet"],
+  },
+  {
+    id: "reports",
+    title: "Reports",
+    group: "Pages",
+    href: "/reports",
+    icon: <FileText className="size-4" />,
+    keywords: ["charts", "spending"],
+  },
+  {
+    id: "new-transaction",
+    title: "New transaction",
+    group: "Actions",
+    href: "/transactions?action=new",
+    icon: <Plus className="size-4" />,
+    keywords: ["add", "expense", "income"],
+  },
+  {
+    id: "new-account",
+    title: "New account",
+    group: "Actions",
+    href: "/accounts?action=new",
+    icon: <Plus className="size-4" />,
+  },
+  {
+    id: "dark-mode",
+    title: "Dark mode",
+    group: "Settings",
+    href: "/settings#theme",
+    icon: <Moon className="size-4" />,
+    keywords: ["theme", "appearance"],
+  },
+  {
+    id: "two-factor",
+    title: "Two-factor authentication",
+    group: "Settings",
+    href: "/settings#2fa",
+    icon: <User className="size-4" />,
+    keywords: ["2fa", "security", "otp"],
+  },
 ];
 
 /** What a server would hold — searched by the async source, never by the index. */
@@ -608,13 +689,12 @@ function GlobalSearchDemo() {
       />
       <Note>
         Try <code className="font-mono">accnt</code> (a typo), <code className="font-mono">2fa</code> (a keyword),{" "}
-        <code className="font-mono">mode dark</code> (either order), or <code className="font-mono">bu</code> —
-        the static rows show at once, and the Transactions group streams in 600ms later with its own
+        <code className="font-mono">mode dark</code> (either order), or <code className="font-mono">bu</code> — the
+        static rows show at once, and the Transactions group streams in 600ms later with its own
         &ldquo;Searching…&rdquo; line; with the server down that group alone shows the error. Its rows are{" "}
-        <code className="font-mono">redact: true</code>, hints (amounts) included. A request whose query has moved
-        on is aborted. <code className="font-mono">navigate</code> is passed here so choosing a row only reports
-        it; inside a router the default is the router&apos;s own, and every row is still a real link for a
-        middle-click.
+        <code className="font-mono">redact: true</code>, hints (amounts) included. A request whose query has moved on is
+        aborted. <code className="font-mono">navigate</code> is passed here so choosing a row only reports it; inside a
+        router the default is the router&apos;s own, and every row is still a real link for a middle-click.
       </Note>
     </div>
   );
@@ -683,9 +763,9 @@ function DensitySyncDemo() {
         labels={{ placeholder: "Filter a list already in memory…", loading: "Searching…" }}
       />
       <Note>
-        Type into each: the array-returning provider answers at once and the &ldquo;Searching…&rdquo; line never
-        flashes through the debounce; the promise-returning one shows it from its first answer on. There is no
-        prop to keep in step — the palette looks at what the provider returns, call by call.{" "}
+        Type into each: the array-returning provider answers at once and the &ldquo;Searching…&rdquo; line never flashes
+        through the debounce; the promise-returning one shows it from its first answer on. There is no prop to keep in
+        step — the palette looks at what the provider returns, call by call.{" "}
         <code className="font-mono">density=&quot;comfortable&quot;</code> gives every row{" "}
         <code className="font-mono">min-h-11</code> and body-size text, for a thumb; the default{" "}
         <code className="font-mono">compact</code> is the 36px desktop list.
@@ -764,19 +844,19 @@ function GlobalSearchGroupsDemo() {
         ]}
       />
       <Note>
-        Open it with the field empty. With <code className="font-mono">suggestionsKeepGroups</code> each
-        suggested entry stands under its own <code className="font-mono">group</code> — Actions, then Pages,
-        then Settings, ordered by <code className="font-mono">groupOrder</code> as results are — and the query
-        suggestion (&ldquo;rent&rdquo;) stays under the one <em>Suggestions</em> heading; off, all of them share
-        that heading. <code className="font-mono">triggerIconSize</code> is the magnifier in px — 20 matches the
-        kit&apos;s other top-bar triggers, the default 16 is what it always was.{" "}
+        Open it with the field empty. With <code className="font-mono">suggestionsKeepGroups</code> each suggested entry
+        stands under its own <code className="font-mono">group</code> — Actions, then Pages, then Settings, ordered by{" "}
+        <code className="font-mono">groupOrder</code> as results are — and the query suggestion (&ldquo;rent&rdquo;)
+        stays under the one <em>Suggestions</em> heading; off, all of them share that heading.{" "}
+        <code className="font-mono">triggerIconSize</code> is the magnifier in px — 20 matches the kit&apos;s other
+        top-bar triggers, the default 16 is what it always was.{" "}
         <code className="font-mono">triggerName=&quot;withShortcut&quot;</code> names the trigger by{" "}
-        <code className="font-mono">globalSearch.shortcut(keys)</code> — &ldquo;Search (⌘K)&rdquo; on Apple
-        platforms, &ldquo;Search (Ctrl K)&rdquo; elsewhere — instead of the plain &ldquo;Search&rdquo;, so a
-        screen-reader user meets the shortcut in the name itself (<code className="font-mono">aria-keyshortcuts</code>{" "}
-        is set either way); the readout shows the name. It belongs with a live shortcut: this specimen leaves ⌘K to
-        the first one on the page, but the top bar&apos;s own search uses it on every other page.{" "}
-        <code className="font-mono">density</code> is handed to the palette.
+        <code className="font-mono">globalSearch.shortcut(keys)</code> — &ldquo;Search (⌘K)&rdquo; on Apple platforms,
+        &ldquo;Search (Ctrl K)&rdquo; elsewhere — instead of the plain &ldquo;Search&rdquo;, so a screen-reader user
+        meets the shortcut in the name itself (<code className="font-mono">aria-keyshortcuts</code> is set either way);
+        the readout shows the name. It belongs with a live shortcut: this specimen leaves ⌘K to the first one on the
+        page, but the top bar&apos;s own search uses it on every other page. <code className="font-mono">density</code>{" "}
+        is handed to the palette.
       </Note>
     </div>
   );

@@ -78,10 +78,10 @@ function IbanDemo() {
         <Note>
           The field shows the paper format and emits the electronic one ({code("onValueChange")}); the caret stays
           between the same two characters while the groups move. {code('kind="qr"')} refuses a regular IBAN and{" "}
-          {code('kind="plain"')} a QR-IBAN (institution id 30000–31999): a QR-bill can only be paid to a QR-IBAN,
-          and a QR-IBAN receives nothing else. While typing, only what more typing cannot fix is shown; the rest
-          waits for the full length or for blur. Whether the field is required, and whether an invalid IBAN may be
-          submitted, stays the form&apos;s rule — check {code("isValidIban")} / {code("ibanProblem")} on submit.
+          {code('kind="plain"')} a QR-IBAN (institution id 30000–31999): a QR-bill can only be paid to a QR-IBAN, and a
+          QR-IBAN receives nothing else. While typing, only what more typing cannot fix is shown; the rest waits for the
+          full length or for blur. Whether the field is required, and whether an invalid IBAN may be submitted, stays
+          the form&apos;s rule — check {code("isValidIban")} / {code("ibanProblem")} on submit.
         </Note>
       </div>
     </Example>
@@ -91,7 +91,10 @@ function IbanDemo() {
 function IsinDemo() {
   const [isin, setIsin] = useState(ISIN);
   return (
-    <Example label="ISIN helpers — isValidIsin, formatIsin" hint="Luhn over the letter-expanded form; ISINs print unbroken">
+    <Example
+      label="ISIN helpers — isValidIsin, formatIsin"
+      hint="Luhn over the letter-expanded form; ISINs print unbroken"
+    >
       <div className="flex flex-col gap-3">
         <Input
           label="ISIN"
@@ -129,12 +132,12 @@ function PhoneDemo() {
         />
         <PhoneInput label="Phone (saved as free text)" value={legacy} onValueChange={setLegacy} />
         <Note>
-          Try {code("021 000 00 01")}, {code("+41 (0)21 000 00 01")}, {code("0041 21 000 00 01")} — all three
-          store {code("+41210000001")} — or {code("+33 1 99 00 00 01")}, which switches the select to FR. Text the
-          rules cannot read is kept exactly as typed, never refused, and a value saved before the field existed (the
-          second field) is shown as it is until someone edits it. Light rules, no libphonenumber: CH, LI, DE, AT, FR
-          and IT check the trunk 0 and the length (Italy keeps its 0); any other country is a {code("+")} with 8–15
-          digits. A well-formed number that does not exist passes.
+          Try {code("021 000 00 01")}, {code("+41 (0)21 000 00 01")}, {code("0041 21 000 00 01")} — all three store{" "}
+          {code("+41210000001")} — or {code("+33 1 99 00 00 01")}, which switches the select to FR. Text the rules
+          cannot read is kept exactly as typed, never refused, and a value saved before the field existed (the second
+          field) is shown as it is until someone edits it. Light rules, no libphonenumber: CH, LI, DE, AT, FR and IT
+          check the trunk 0 and the length (Italy keeps its 0); any other country is a {code("+")} with 8–15 digits. A
+          well-formed number that does not exist passes.
         </Note>
       </div>
     </Example>

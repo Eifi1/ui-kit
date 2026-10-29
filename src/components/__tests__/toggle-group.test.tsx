@@ -40,21 +40,10 @@ describe("ToggleGroup", () => {
 
   it("refuses the click and says so to a screen reader", () => {
     const onChange = vi.fn();
-    render(
-      <ToggleGroup
-        value="a"
-        onChange={onChange}
-        options={OPTIONS}
-        aria-label="Status"
-        disabled
-      />,
-    );
+    render(<ToggleGroup value="a" onChange={onChange} options={OPTIONS} aria-label="Status" disabled />);
     // `disabled` on each button is what actually stops the click; `aria-disabled` on
     // the group is what names the thing being refused, which is the GROUP.
-    expect(screen.getByRole("radiogroup", { name: "Status" })).toHaveAttribute(
-      "aria-disabled",
-      "true",
-    );
+    expect(screen.getByRole("radiogroup", { name: "Status" })).toHaveAttribute("aria-disabled", "true");
     for (const option of OPTIONS) {
       expect(screen.getByRole("radio", { name: option.label })).toBeDisabled();
     }
@@ -66,18 +55,14 @@ describe("ToggleGroup", () => {
     // `aria-disabled="false"` is a claim of its own and screen readers announce it;
     // an ordinary group should carry no such attribute at all.
     render(<ToggleGroup value="a" onChange={vi.fn()} options={OPTIONS} aria-label="Status" />);
-    expect(screen.getByRole("radiogroup", { name: "Status" })).not.toHaveAttribute(
-      "aria-disabled",
-    );
+    expect(screen.getByRole("radiogroup", { name: "Status" })).not.toHaveAttribute("aria-disabled");
   });
 });
 
 describe("ToggleGroup — allowEmpty (0.6.0)", () => {
   it("clears when the active option is clicked, and becomes toggle buttons", () => {
     const onChange = vi.fn();
-    render(
-      <ToggleGroup allowEmpty value="a" onChange={onChange} options={OPTIONS} aria-label="Filter" />,
-    );
+    render(<ToggleGroup allowEmpty value="a" onChange={onChange} options={OPTIONS} aria-label="Filter" />);
     // Not a radiogroup: a radio cannot be unchecked by pressing it again, and a
     // screen reader would not say that it had been.
     expect(screen.queryByRole("radiogroup")).not.toBeInTheDocument();

@@ -27,8 +27,7 @@ export interface CopyButtonLabels {
 // Defined in ./copy-button-labels, which holds no component code (0.34, KS U8).
 export { DEFAULT_COPY_BUTTON_LABELS };
 
-export interface CopyButtonProps
-  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children" | "onClick"> {
+export interface CopyButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children" | "onClick"> {
   /** What to copy. A function is read at click time — for a value that is expensive
    *  to build (a CSV of the table) or that changes under the button. */
   text: string | (() => string);
@@ -112,8 +111,7 @@ export function CopyButton({
   const idleText = label ?? words.copy;
   const stateText = state === "copied" ? words.copied : state === "failed" ? words.failed : idleText;
   const Icon = ICONS[state];
-  const iconTone =
-    state === "copied" ? "text-success" : state === "failed" ? "text-danger" : undefined;
+  const iconTone = state === "copied" ? "text-success" : state === "failed" ? "text-danger" : undefined;
 
   const onClick = async () => {
     const ok = await copy(typeof text === "function" ? text() : text);

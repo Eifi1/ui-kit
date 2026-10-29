@@ -159,9 +159,7 @@ export function DescriptionList({
   // outer `min(100%, …)` keeps a single card from overflowing a pane narrower than
   // its minimum.
   const track =
-    columns !== undefined
-      ? `max(${minCardWidth}, (100% - ${columns - 1} * ${gap.len}) / ${columns})`
-      : minCardWidth;
+    columns !== undefined ? `max(${minCardWidth}, (100% - ${columns - 1} * ${gap.len}) / ${columns})` : minCardWidth;
   const grid: CSSProperties | undefined = cards
     ? { gridTemplateColumns: `repeat(auto-fill, minmax(min(100%, ${track}), 1fr))` }
     : undefined;
@@ -293,9 +291,7 @@ export function DescriptionItem({
   // A hint is a fact: on a touch screen and at Large it is words under the term, not a
   // 14 px "?" nobody can hover open — the fields' rule (DUP-2, refactor audit 2026-10),
   // which this string hint had been left out of. Elsewhere the "?" as before.
-  const shownHint = useInlineHint(
-    hint ? <FieldHint label={hint} side="top" className="shrink-0" /> : undefined,
-  );
+  const shownHint = useInlineHint(hint ? <FieldHint label={hint} side="top" className="shrink-0" /> : undefined);
   const spanClass =
     span === "full"
       ? "col-span-full"
@@ -317,7 +313,10 @@ export function DescriptionItem({
       {typeof shownHint === "string" ? (
         // Its own line under the term, in the reading case of a sentence rather than a
         // card term's capitals — StatTile's inline hint.
-        <span data-slot="description-hint" className="basis-full text-caption leading-tight normal-case tracking-normal">
+        <span
+          data-slot="description-hint"
+          className="basis-full text-caption leading-tight normal-case tracking-normal"
+        >
           {shownHint}
         </span>
       ) : (
@@ -350,12 +349,7 @@ export function DescriptionItem({
     return (
       <div
         {...rest}
-        className={cn(
-          "min-w-0 rounded-md border border-subtle bg-surface",
-          CARD_PAD[density],
-          spanClass,
-          className,
-        )}
+        className={cn("min-w-0 rounded-md border border-subtle bg-surface", CARD_PAD[density], spanClass, className)}
       >
         {termNode}
         {detail}

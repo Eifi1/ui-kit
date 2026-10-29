@@ -39,7 +39,10 @@ function isEditable(node: Node | null | undefined): boolean {
   const el = node instanceof Element ? node : node?.parentElement;
   if (!el) return false;
   if (el.closest("input, textarea, select")) return true;
-  return (el as HTMLElement).isContentEditable === true || el.closest('[contenteditable=""], [contenteditable="true"]') !== null;
+  return (
+    (el as HTMLElement).isContentEditable === true ||
+    el.closest('[contenteditable=""], [contenteditable="true"]') !== null
+  );
 }
 
 /** Table parts copied alone are wrapped back into a table, which Excel reads as cells. */

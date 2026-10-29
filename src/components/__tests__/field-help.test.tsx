@@ -81,8 +81,7 @@ import { DESKTOP_WIDTH, viewportMatchMedia } from "../../test/viewport";
  */
 
 const FACT = "Excludes transfers between your own accounts";
-const HELP =
-  "Pending: entered, not yet seen by the bank. Accepted: the bank has it. Cleared: it is on the statement.";
+const HELP = "Pending: entered, not yet seen by the bank. Accepted: the bank has it. Cleared: it is on the statement.";
 const ABOUT = /^About /;
 
 afterEach(() => {
@@ -138,7 +137,17 @@ const THEMES = { system: "System", light: "Light", dark: "Dark" };
 /** A bound field in a form of its own. */
 function InForm({ children }: { children: ReactNode }) {
   const form = useForm({
-    defaultValues: { text: "", count: 1, date: "", from: "", to: "", month: "", choice: "a", flag: false, country: "CH" },
+    defaultValues: {
+      text: "",
+      count: 1,
+      date: "",
+      from: "",
+      to: "",
+      month: "",
+      choice: "a",
+      flag: false,
+      country: "CH",
+    },
   });
   return (
     <Form {...form}>
@@ -171,16 +180,10 @@ const SWEEP: Record<SweptField, Make> = {
   IntegerField: (hint, help) => <IntegerField label="Status" value={1} onCommit={noop} hint={hint} help={help} />,
   AmountInput: (hint, help) => <AmountInput label="Status" value="1" onChange={noop} hint={hint} help={help} />,
   MoneyField: (hint, help) => <MoneyField label="Status" value={1} onCommit={noop} hint={hint} help={help} />,
-  Slider: (hint, help) => (
-    <Slider label="Status" value={1} min={0} max={10} onChange={noop} hint={hint} help={help} />
-  ),
-  CurrencySelect: (hint, help) => (
-    <CurrencySelect label="Status" value="CHF" onChange={noop} hint={hint} help={help} />
-  ),
+  Slider: (hint, help) => <Slider label="Status" value={1} min={0} max={10} onChange={noop} hint={hint} help={help} />,
+  CurrencySelect: (hint, help) => <CurrencySelect label="Status" value="CHF" onChange={noop} hint={hint} help={help} />,
   CountrySelect: (hint, help) => <CountrySelect label="Status" value="CH" onChange={noop} hint={hint} help={help} />,
-  LanguageSelect: (hint, help) => (
-    <LanguageSelect label="Status" value="en" onChange={noop} hint={hint} help={help} />
-  ),
+  LanguageSelect: (hint, help) => <LanguageSelect label="Status" value="en" onChange={noop} hint={hint} help={help} />,
   RoleSelect: (hint, help) => (
     <RoleSelect label="Status" value="member" roles={ROLES} onChange={noop} hint={hint} help={help} />
   ),
@@ -225,9 +228,7 @@ const SWEEP: Record<SweptField, Make> = {
     <MultiSelect label="Status" options={OPTIONS} value={[]} onChange={noop} hint={hint} help={help} />
   ),
   Autocomplete: (hint, help) => <Autocomplete label="Status" value="" onChange={noop} hint={hint} help={help} />,
-  DatePicker: (hint, help) => (
-    <DatePicker label="Status" value="2026-09-14" onChange={noop} hint={hint} help={help} />
-  ),
+  DatePicker: (hint, help) => <DatePicker label="Status" value="2026-09-14" onChange={noop} hint={hint} help={help} />,
   DateRangePicker: (hint, help) => (
     <DateRangePicker label="Status" from="2026-09-01" to="2026-09-14" onChange={noop} hint={hint} help={help} />
   ),
@@ -519,7 +520,16 @@ describe("the help's '?'", () => {
   });
 
   it("leaves a CheckboxGroup named by its legend's words, the '?' after the legend", () => {
-    render(<CheckboxGroup legend="Areas" options={OPTIONS} value={[]} onChange={noop} hint="Pick one or more." help={HELP} />);
+    render(
+      <CheckboxGroup
+        legend="Areas"
+        options={OPTIONS}
+        value={[]}
+        onChange={noop}
+        hint="Pick one or more."
+        help={HELP}
+      />,
+    );
     const group = screen.getByRole("group", { name: "Areas" });
     expect(group).toHaveAccessibleDescription("Pick one or more.");
     const button = within(group).getByRole("button", { name: "About “Areas”" });

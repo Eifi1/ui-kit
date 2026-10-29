@@ -69,8 +69,7 @@ const SECTION_LABEL_BAND_CLASS: Record<SectionLabelSize, string> = {
   md: "text-caption",
   sm: "text-xs",
 };
-const BAND =
-  "block border-b border-subtle bg-surface-2 px-4 py-2 font-medium uppercase tracking-wide text-secondary";
+const BAND = "block border-b border-subtle bg-surface-2 px-4 py-2 font-medium uppercase tracking-wide text-secondary";
 
 type SectionLabelElement = "h2" | "h3" | "h4" | "h5" | "h6" | "p" | "span" | "div" | "legend";
 

@@ -50,8 +50,12 @@ describe("the shared focus frame (§5)", () => {
       "focus-visible:ring-focus",
       "focus-visible:ring-strong",
     ]);
-    expect(cn(FOCUS_RING_WIDTH, "focus-visible:ring-brand-contrast")).toBe("focus-visible:ring-focus focus-visible:ring-brand-contrast");
-    expect(cn("focus-visible:outline-focus", "focus-visible:outline-brand")).toBe("focus-visible:outline-focus focus-visible:outline-brand");
+    expect(cn(FOCUS_RING_WIDTH, "focus-visible:ring-brand-contrast")).toBe(
+      "focus-visible:ring-focus focus-visible:ring-brand-contrast",
+    );
+    expect(cn("focus-visible:outline-focus", "focus-visible:outline-brand")).toBe(
+      "focus-visible:outline-focus focus-visible:outline-brand",
+    );
     // …and merges as the width it is: a later width replaces it, both ways.
     expect(cn("ring-2", "ring-focus")).toBe("ring-focus");
     expect(cn("outline-focus", "outline-2")).toBe("outline-2");
@@ -121,7 +125,13 @@ describe("TextSizeSetting / ContrastSetting (§6)", () => {
       <>
         <TextSizeSetting value="normal" onChange={() => {}} />
         <ContrastSetting value="system" onChange={() => {}} />
-        <ThemeSetting variant="toggle" value="system" onChange={() => {}} aria-label="Theme" optionLabels={optionLabels} />
+        <ThemeSetting
+          variant="toggle"
+          value="system"
+          onChange={() => {}}
+          aria-label="Theme"
+          optionLabels={optionLabels}
+        />
         <ThemeSetting
           variant="toggle"
           overflow="truncate"

@@ -26,8 +26,7 @@ import { numberFormat } from "../lib/number-format";
  * specimens do not move with the language.
  */
 
-const gbp = (n: number) =>
-  numberFormat("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
+const gbp = (n: number) => numberFormat("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 
 interface Payment {
   id: string;
@@ -41,11 +40,56 @@ interface Payment {
 }
 
 const PAYMENTS: Payment[] = [
-  { id: "P-0001", date: "01 Feb 2026", payee: "Example Ltd", reference: "Invoice 0001", account: "6000 Rent", net: 1_200, vat: 0, status: "Booked" },
-  { id: "P-0002", date: "03 Feb 2026", payee: "Sample Utilities", reference: "Account 000000", account: "6100 Energy", net: 84.5, vat: 16.9, status: "Booked" },
-  { id: "P-0003", date: "07 Feb 2026", payee: "Test Insurance plc", reference: "Policy 000-000", account: "6300 Insurance", net: 312, vat: 0, status: "Open" },
-  { id: "P-0004", date: "12 Feb 2026", payee: "Example Supplies", reference: "Order 0042", account: "6500 Office supplies", net: 47.2, vat: 9.44, status: "Booked" },
-  { id: "P-0005", date: "19 Feb 2026", payee: "Sample Cleaning Co", reference: "Invoice 0007", account: "6200 Maintenance", net: 260, vat: 52, status: "Open" },
+  {
+    id: "P-0001",
+    date: "01 Feb 2026",
+    payee: "Example Ltd",
+    reference: "Invoice 0001",
+    account: "6000 Rent",
+    net: 1_200,
+    vat: 0,
+    status: "Booked",
+  },
+  {
+    id: "P-0002",
+    date: "03 Feb 2026",
+    payee: "Sample Utilities",
+    reference: "Account 000000",
+    account: "6100 Energy",
+    net: 84.5,
+    vat: 16.9,
+    status: "Booked",
+  },
+  {
+    id: "P-0003",
+    date: "07 Feb 2026",
+    payee: "Test Insurance plc",
+    reference: "Policy 000-000",
+    account: "6300 Insurance",
+    net: 312,
+    vat: 0,
+    status: "Open",
+  },
+  {
+    id: "P-0004",
+    date: "12 Feb 2026",
+    payee: "Example Supplies",
+    reference: "Order 0042",
+    account: "6500 Office supplies",
+    net: 47.2,
+    vat: 9.44,
+    status: "Booked",
+  },
+  {
+    id: "P-0005",
+    date: "19 Feb 2026",
+    payee: "Sample Cleaning Co",
+    reference: "Invoice 0007",
+    account: "6200 Maintenance",
+    net: 260,
+    vat: 52,
+    status: "Open",
+  },
 ];
 
 type Width = "phone" | "full";
@@ -156,16 +200,13 @@ export function TableEdgeFadeDemo() {
         </div>
       </div>
       <Note>
-        A table wider than its box scrolls inside it, and on a phone nothing said so: the
-        columns simply ended at the edge. {code("edgeFade")} fades the edge with columns behind
-        it — measured, so a table that fits is drawn exactly as without it; both edges once
-        scrolled into the middle; the reading direction&apos;s end in RTL. It is the Tabs
-        strip&apos;s fade, a {code("mask-image")}: no layout change, nothing to fade to, no
-        animation; the wrapper&apos;s own scrollbars stay out of it. An Open button tabbed to
-        behind the fade is scrolled clear of it, and while the scroll box itself holds keyboard
-        focus the fade lifts so its outline is drawn whole. The wrapper says{" "}
-        {code('data-overflow="start" | "end" | "both"')}. ColumnRoleTable&apos;s preview
-        is this prop.
+        A table wider than its box scrolls inside it, and on a phone nothing said so: the columns simply ended at the
+        edge. {code("edgeFade")} fades the edge with columns behind it — measured, so a table that fits is drawn exactly
+        as without it; both edges once scrolled into the middle; the reading direction&apos;s end in RTL. It is the Tabs
+        strip&apos;s fade, a {code("mask-image")}: no layout change, nothing to fade to, no animation; the
+        wrapper&apos;s own scrollbars stay out of it. An Open button tabbed to behind the fade is scrolled clear of it,
+        and while the scroll box itself holds keyboard focus the fade lifts so its outline is drawn whole. The wrapper
+        says {code('data-overflow="start" | "end" | "both"')}. ColumnRoleTable&apos;s preview is this prop.
       </Note>
     </Example>
   );
@@ -174,7 +215,14 @@ export function TableEdgeFadeDemo() {
 const COLUMNS: DataTableColumn<Payment>[] = [
   { key: "id", header: "No.", cell: (r) => r.id, sortBy: (r) => r.id, className: "whitespace-nowrap tabular-nums" },
   { key: "date", header: "Date", cell: (r) => r.date, className: "whitespace-nowrap" },
-  { key: "payee", header: "Payee", cell: (r) => r.payee, sortBy: (r) => r.payee, mobilePrimary: true, className: "whitespace-nowrap" },
+  {
+    key: "payee",
+    header: "Payee",
+    cell: (r) => r.payee,
+    sortBy: (r) => r.payee,
+    mobilePrimary: true,
+    className: "whitespace-nowrap",
+  },
   { key: "reference", header: "Reference", cell: (r) => r.reference, className: "whitespace-nowrap" },
   { key: "account", header: "Account", cell: (r) => r.account, className: "whitespace-nowrap" },
   {
@@ -232,17 +280,19 @@ export function DataTableEdgeFadeDemo() {
             density="compact"
             maxBodyHeight="12rem"
             labels={{ table: "Payments, February 2026" }}
-            rowActions={[{ kind: "edit", onAction: () => {} }, { kind: "delete", onAction: () => {} }]}
+            rowActions={[
+              { kind: "edit", onAction: () => {} },
+              { kind: "delete", onAction: () => {} },
+            ]}
           />
         </div>
       </div>
       <Note>
-        DataTable draws its own {code("<table>")} rather than going through Table, so the prop
-        is its own: the same measured fade on the desktop scroller, with that scroller&apos;s
-        vertical scrollbar — at the inline end, in the very band that fades — kept whole. The
-        sticky header and the rows fade together; a row action tabbed to behind the fade is
-        scrolled clear of it. Off by default: it changes how every overflowing desktop table
-        looks. The phone layout is a list of cards, which never scrolls sideways.
+        DataTable draws its own {code("<table>")} rather than going through Table, so the prop is its own: the same
+        measured fade on the desktop scroller, with that scroller&apos;s vertical scrollbar — at the inline end, in the
+        very band that fades — kept whole. The sticky header and the rows fade together; a row action tabbed to behind
+        the fade is scrolled clear of it. Off by default: it changes how every overflowing desktop table looks. The
+        phone layout is a list of cards, which never scrolls sideways.
       </Note>
     </Example>
   );

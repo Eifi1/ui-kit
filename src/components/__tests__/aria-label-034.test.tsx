@@ -49,15 +49,53 @@ const CASES: Array<[string, (name: Name) => ReactElement, string]> = [
   ["NumberField", (n) => <NumberField value={1} onCommit={noop} {...n} />, "textbox"],
   ["IntegerField", (n) => <IntegerField value={1} onCommit={noop} {...n} />, "textbox"],
   ["CalculatorButton", (n) => <CalculatorButton value="1" onChange={noop} {...n} />, "button"],
-  ["RhfNumberField", (n) => <RhfHarness><RhfNumberField name="count" {...n} /></RhfHarness>, "textbox"],
-  ["RhfIntegerField", (n) => <RhfHarness><RhfIntegerField name="count" {...n} /></RhfHarness>, "textbox"],
-  ["RhfMoneyField", (n) => <RhfHarness><RhfMoneyField name="amount" currency="CHF" {...n} /></RhfHarness>, "textbox"],
+  [
+    "RhfNumberField",
+    (n) => (
+      <RhfHarness>
+        <RhfNumberField name="count" {...n} />
+      </RhfHarness>
+    ),
+    "textbox",
+  ],
+  [
+    "RhfIntegerField",
+    (n) => (
+      <RhfHarness>
+        <RhfIntegerField name="count" {...n} />
+      </RhfHarness>
+    ),
+    "textbox",
+  ],
+  [
+    "RhfMoneyField",
+    (n) => (
+      <RhfHarness>
+        <RhfMoneyField name="amount" currency="CHF" {...n} />
+      </RhfHarness>
+    ),
+    "textbox",
+  ],
   ["WizardStepper", (n) => <WizardStepper steps={[{ key: "a", label: "Upload" }]} current="a" {...n} />, "list"],
   ["ThemeToggle", (n) => <ThemeToggle mode="light" onToggle={noop} {...n} />, "button"],
-  ["PaletteMenu", (n) => <PaletteMenu palettes={PALETTES} activeId={PALETTES[0].id} mode="light" onSelect={noop} {...n} />, "button"],
-  ["LanguageMenu", (n) => <LanguageMenu options={[{ code: "en", label: "English", country: "gb" }]} current="en" onChange={noop} {...n} />, "button"],
+  [
+    "PaletteMenu",
+    (n) => <PaletteMenu palettes={PALETTES} activeId={PALETTES[0].id} mode="light" onSelect={noop} {...n} />,
+    "button",
+  ],
+  [
+    "LanguageMenu",
+    (n) => (
+      <LanguageMenu options={[{ code: "en", label: "English", country: "gb" }]} current="en" onChange={noop} {...n} />
+    ),
+    "button",
+  ],
   ["RoleSwitcher", (n) => <RoleSwitcher roles={["admin", "viewer"]} value="admin" onChange={noop} {...n} />, "button"],
-  ["OptionSwitcherMenu", (n) => <OptionSwitcherMenu icon={<span />} options={OPTIONS} value="a" onSelect={noop} {...n} />, "button"],
+  [
+    "OptionSwitcherMenu",
+    (n) => <OptionSwitcherMenu icon={<span />} options={OPTIONS} value="a" onSelect={noop} {...n} />,
+    "button",
+  ],
   [
     "TopBarActionMenu",
     (n) => (

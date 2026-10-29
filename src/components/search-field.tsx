@@ -6,11 +6,10 @@ import { FIELD_BASE, FIELD_TOUCH_TEXT } from "./field-base";
 import { mergeRefs } from "./field-parts";
 import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
 
-interface SearchFieldOwnProps
-  extends Omit<
-    InputHTMLAttributes<HTMLInputElement>,
-    "value" | "onChange" | "type" | "aria-label"
-  > {
+interface SearchFieldOwnProps extends Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  "value" | "onChange" | "type" | "aria-label"
+> {
   value: string;
   /** The typed text. Emitted as a plain string, not an event: every caller of the
    *  four this replaced wanted the string, and one of them held it in a URL param

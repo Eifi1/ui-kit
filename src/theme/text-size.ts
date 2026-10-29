@@ -260,7 +260,7 @@ export function createTextSizeStore(storageKey: string) {
           merge: (persisted, current) => ({
             ...current,
             size: isTextSize((persisted as { size?: unknown } | null)?.size)
-              ? ((persisted as { size: TextSize }).size)
+              ? (persisted as { size: TextSize }).size
               : null,
           }),
         },

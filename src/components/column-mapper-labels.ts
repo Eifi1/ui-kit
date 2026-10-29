@@ -10,8 +10,7 @@ export const markedShort = (role: string) => `${role} *`;
 
 export const DEFAULT_COLUMN_MAPPER_LABELS: ColumnMapperLabels = {
   paste: "Paste a table",
-  pasteHint:
-    "Copy the rows out of a spreadsheet and paste them here, or drop a CSV or text file.",
+  pasteHint: "Copy the rows out of a spreadsheet and paste them here, or drop a CSV or text file.",
   chooseFile: "Choose a file",
   readError: (name) => `“${name}” could not be read`,
   headerRow: "The first line names the columns",
@@ -23,10 +22,7 @@ export const DEFAULT_COLUMN_MAPPER_LABELS: ColumnMapperLabels = {
   separatorSpace: "separated by spaces",
   decimalComma: "decimal comma (1,5)",
   decimalPoint: "decimal point (1.5)",
-  unreadCount: (count) =>
-    count === 1
-      ? "1 line could not be read"
-      : `${count} lines could not be read`,
+  unreadCount: (count) => (count === 1 ? "1 line could not be read" : `${count} lines could not be read`),
   unreadLine: (line) => `Line ${line} could not be read`,
   unreadMore: (count) => `…and ${count} more`,
   noRows: "No line of this text reads as a row of the table.",
@@ -36,10 +32,7 @@ export const DEFAULT_COLUMN_MAPPER_LABELS: ColumnMapperLabels = {
   ignore: "Ignore",
   requiredRole: (role) => `${role} (required)`,
   requiredRoleShort: markedShort,
-  previewOf: (shown, total) =>
-    shown === 1
-      ? `The first of ${total} rows`
-      : `The first ${shown} of ${total} rows`,
+  previewOf: (shown, total) => (shown === 1 ? `The first of ${total} rows` : `The first ${shown} of ${total} rows`),
   oneOf: (roles) => `either ${roles}`,
   missing: (roles) => `Still needed: ${roles}.`,
 };

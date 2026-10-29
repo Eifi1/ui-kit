@@ -76,7 +76,6 @@ export function usePromisePending() {
   return { pending, run };
 }
 
-
 /** The one word {@link CurrentPasswordInput} says on its own behalf — the
  *  `dangerConfirm.password` label, shared with DangerConfirm's password field, so an
  *  app translates "Password" once. */
@@ -153,7 +152,9 @@ export function CurrentPasswordInput({
       // text field, or into one the password manager offers a new password for.
       type="password"
       autoComplete="current-password"
-      label={label === undefined ? (namedOtherwise ? undefined : labels.password) : hasContent(label) ? label : undefined}
+      label={
+        label === undefined ? (namedOtherwise ? undefined : labels.password) : hasContent(label) ? label : undefined
+      }
       readOnly={Boolean(busy) || readOnly}
       onChange={(e) => {
         onChange?.(e);
@@ -168,8 +169,10 @@ export function CurrentPasswordInput({
  *  so the sentence "Type “X” to confirm" is translated once. */
 export type TypedConfirmFieldLabels = Pick<DangerConfirmLabels, "phrase" | "phrasePlaceholder">;
 
-export interface TypedConfirmFieldProps
-  extends Omit<InputProps, "type" | "value" | "defaultValue" | "label" | "placeholder"> {
+export interface TypedConfirmFieldProps extends Omit<
+  InputProps,
+  "type" | "value" | "defaultValue" | "label" | "placeholder"
+> {
   /** The text to repeat — a word ("DELETE"), a name, an e-mail address. */
   target: string;
   /** How the typed text is compared with `target` — {@link TypedMatch}. Default
@@ -251,11 +254,7 @@ export function TypedConfirmField({
   const generated = useId();
   const fieldId = id ?? generated;
   const label =
-    labelProp !== undefined
-      ? labelProp
-      : typeof labels.phrase === "function"
-        ? labels.phrase(target)
-        : labels.phrase;
+    labelProp !== undefined ? labelProp : typeof labels.phrase === "function" ? labels.phrase(target) : labels.phrase;
   const fromLabels =
     labels.phrasePlaceholder === undefined
       ? undefined

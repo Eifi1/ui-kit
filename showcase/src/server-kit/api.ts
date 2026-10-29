@@ -253,11 +253,7 @@ export interface RoleContext {
  * `:class:\`ValueError\``, a submodule, a third-party type — which the renderer then
  * shows as plain code rather than a link to nowhere.
  */
-export function resolveTarget(
-  api: ServerKitApi,
-  rawTarget: string,
-  context: RoleContext,
-): ResolvedTarget | undefined {
+export function resolveTarget(api: ServerKitApi, rawTarget: string, context: RoleContext): ResolvedTarget | undefined {
   const target = rawTarget.replace(/^[~!.]+/, "").trim();
   if (!target) return undefined;
   const modules = new Map(api.modules.map((m) => [moduleShort(m.name), m]));

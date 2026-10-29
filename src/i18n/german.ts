@@ -20,16 +20,14 @@ export function germanLabels(numberLocale: string): UiKitLabels {
   // 0.30.0 — a throttled request (HTTP 429), as `englishRateLimited` in
   // src/auth/auth-errors.ts: no wait → "einen Moment", under a minute → seconds, else
   // minutes rounded up. kastlan's reviewed "auth.throttled" is the sentence without one.
-  const wait = (seconds: number) =>
-    seconds < 60 ? `${n(Math.ceil(seconds))} s` : `${n(Math.ceil(seconds / 60))} min`;
+  const wait = (seconds: number) => (seconds < 60 ? `${n(Math.ceil(seconds))} s` : `${n(Math.ceil(seconds / 60))} min`);
   const rateLimited = (seconds?: number) =>
     !seconds || seconds <= 0
       ? "Zu viele Versuche. Bitte warten Sie einen Moment und versuchen Sie es dann noch einmal."
       : `Zu viele Versuche. Versuchen Sie es in ${wait(seconds)} erneut.`;
   // 0.32.0 — when a trial or a grant ends, as `inDays` in src/billing/billing-labels.ts:
   // 0 (or less) is today, 1 tomorrow.
-  const inDays = (days: number) =>
-    days <= 0 ? "heute" : days === 1 ? "morgen" : `in ${n(days)} Tagen`;
+  const inDays = (days: number) => (days <= 0 ? "heute" : days === 1 ? "morgen" : `in ${n(days)} Tagen`);
 
   return {
     feedbackAttachment: {
@@ -281,7 +279,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       passkeys: {
         title: "Passkeys",
         description: "Mit Fingerabdruck, Gesichtserkennung oder Geräte-PIN statt Passwort anmelden.",
-        descriptionAlongside: "Mit Fingerabdruck, Gesichtserkennung oder Geräte-PIN anmelden. Das Passwort funktioniert weiterhin.",
+        descriptionAlongside:
+          "Mit Fingerabdruck, Gesichtserkennung oder Geräte-PIN anmelden. Das Passwort funktioniert weiterhin.",
         empty: "Noch keine Passkeys",
         loading: "Passkeys werden geladen…",
         list: "Registrierte Passkeys",
@@ -318,8 +317,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         "Pfeiltasten wechseln zwischen Zellen. Tippen ersetzt eine Zelle, F2 bearbeitet sie, Escape macht die Bearbeitung rückgängig. Enter geht nach unten und fügt am Ende eine Zeile hinzu.",
       lineError: (line) => `Zeile ${line} konnte nicht gelesen werden`,
       points: (count) => (count === 1 ? "1 Punkt" : `${n(count)} Punkte`),
-      problems: (count) =>
-        count === 1 ? "1 Zelle ist keine Zahl" : `${n(count)} Zellen sind keine Zahlen`,
+      problems: (count) => (count === 1 ? "1 Zelle ist keine Zahl" : `${n(count)} Zellen sind keine Zahlen`),
     },
     pageContents: { title: "Auf dieser Seite" },
     common: {
@@ -388,8 +386,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         last_year: "Letztes Jahr",
       },
       table: "Datentabelle",
-      filterResults: (shown, total) =>
-        `${n(shown)} von ${n(total)} ${total === 1 ? "Zeile" : "Zeilen"}`,
+      filterResults: (shown, total) => `${n(shown)} von ${n(total)} ${total === 1 ? "Zeile" : "Zeilen"}`,
       sortedAscending: (column) => `Sortiert nach ${column}, aufsteigend`,
       sortedDescending: (column) => `Sortiert nach ${column}, absteigend`,
       sortCleared: (column) => `Sortierung nach ${column} aufgehoben`,
@@ -420,8 +417,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       chooseStart: "Startdatum wählen",
       chooseEnd: "Enddatum wählen",
       startSelected: (date) => `${date} als Startdatum gewählt. Wählen Sie jetzt ein Enddatum.`,
-      rangeSelected: (from, to) =>
-        `Zeitraum ${from} bis ${to} gewählt. Wählen Sie ein Startdatum, um neu zu beginnen.`,
+      rangeSelected: (from, to) => `Zeitraum ${from} bis ${to} gewählt. Wählen Sie ein Startdatum, um neu zu beginnen.`,
     },
     calendarHeatmap: {
       grid: "Tageswerte",
@@ -587,9 +583,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       hint: (accept) => (accept ? `Erlaubt: ${accept}` : "Beliebiger Dateityp"),
       busy: "Wird hochgeladen…",
       rejectedPick: (count) =>
-        count === 1
-          ? "Die Datei wurde nicht hinzugefügt"
-          : `Keine der ${n(count)} Dateien wurde hinzugefügt`,
+        count === 1 ? "Die Datei wurde nicht hinzugefügt" : `Keine der ${n(count)} Dateien wurde hinzugefügt`,
       rejectedType: (name) => `„${name}“ hat einen nicht unterstützten Dateityp`,
       rejectedTypeOnly: (accept) => `Nur ${accept}-Dateien`,
       rejectedSize: (name, maxSize) => `„${name}“ ist größer als ${maxSize}`,
@@ -597,11 +591,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         `„${name}“ wurde nicht hinzugefügt: höchstens ${n(maxFiles)} ${maxFiles === 1 ? "Datei" : "Dateien"}`,
       rejectedInvalid: (name) => `„${name}“ kann hier nicht verwendet werden`,
       rejectedMany: (count) =>
-        count === 1
-          ? "1 Datei wurde nicht hinzugefügt"
-          : `${n(count)} Dateien wurden nicht hinzugefügt`,
-      selected: (count, firstName) =>
-        count === 1 ? `„${firstName}“ ausgewählt` : `${n(count)} Dateien ausgewählt`,
+        count === 1 ? "1 Datei wurde nicht hinzugefügt" : `${n(count)} Dateien wurden nicht hinzugefügt`,
+      selected: (count, firstName) => (count === 1 ? `„${firstName}“ ausgewählt` : `${n(count)} Dateien ausgewählt`),
       remove: (name) => `„${name}“ entfernen`,
       clearAll: "Alle Dateien entfernen",
       removed: (name) => `„${name}“ entfernt`,
@@ -745,8 +736,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       optional: (rule) => `${rule} (optional)`,
       met: "Erfüllt:",
       notMet: "Nicht erfüllt:",
-      tooLong: (maxBytes) =>
-        `Höchstens ${n(maxBytes)} Zeichen (Buchstaben mit Akzent und Emojis zählen mehrfach).`,
+      tooLong: (maxBytes) => `Höchstens ${n(maxBytes)} Zeichen (Buchstaben mit Akzent und Emojis zählen mehrfach).`,
     },
     seriesChart: {
       resetZoom: "Zoom zurücksetzen",
@@ -827,9 +817,11 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       details: "Fehlerdetails",
       reload: "Neu laden",
       updateTitle: "Eine neue Version ist verfügbar",
-      updateMessage: "Ein Teil der App hat sich seit dem Laden dieser Seite geändert. Zum Aktualisieren die Seite neu laden.",
+      updateMessage:
+        "Ein Teil der App hat sich seit dem Laden dieser Seite geändert. Zum Aktualisieren die Seite neu laden.",
       offlineTitle: "Keine Internetverbindung",
-      offlineMessage: "Diese Seite konnte ohne Verbindung nicht geladen werden. Nach dem Wiederherstellen der Verbindung die Seite neu laden.",
+      offlineMessage:
+        "Diese Seite konnte ohne Verbindung nicht geladen werden. Nach dem Wiederherstellen der Verbindung die Seite neu laden.",
       copyReport: "Fehlerbericht kopieren",
       reported: "Der Fehler wurde automatisch gemeldet.",
       reportedAs: (reference) => `Gemeldet unter ${reference}`,
@@ -1030,8 +1022,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       failed: "Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.",
       passkeyFailed: "Passkey-Anmeldung fehlgeschlagen.",
       deactivatedHint: "Konto deaktiviert? Schreiben Sie an {contact}.",
-      tagHint: (taggedAddress) =>
-        `Mit ${taggedAddress} registriert? Verwenden Sie diese Adresse.`,
+      tagHint: (taggedAddress) => `Mit ${taggedAddress} registriert? Verwenden Sie diese Adresse.`,
       twoFactorTitle: "Zwei-Faktor-Authentifizierung",
       twoFactorIntro: "Geben Sie den Code aus Ihrer Authenticator-App ein.",
       code: "2FA-Code",
@@ -1264,10 +1255,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         "Der Service Worker der App ist nicht erreichbar. Laden Sie die Seite neu und versuchen Sie es erneut.",
       pushTimeout:
         "Der Push-Dienst des Browsers antwortet nicht. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
-      testSent: (count) =>
-        count === 1 ? `Test an ${n(count)} Gerät gesendet` : `Test an ${n(count)} Geräte gesendet`,
-      testNone:
-        "Kein Gerät hat den Test angenommen. Schalten Sie zuerst die Benachrichtigungen für dieses Gerät ein.",
+      testSent: (count) => (count === 1 ? `Test an ${n(count)} Gerät gesendet` : `Test an ${n(count)} Geräte gesendet`),
+      testNone: "Kein Gerät hat den Test angenommen. Schalten Sie zuerst die Benachrichtigungen für dieses Gerät ein.",
       testFailed: "Die Test-Benachrichtigung konnte nicht gesendet werden.",
       explainerTitle: "Benachrichtigungen einschalten?",
       explainerBody: (app) =>
@@ -1417,8 +1406,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       lastAdmin:
         "Dies ist das letzte aktive Konto mit Administratorrechten. Geben Sie zuerst einem anderen Konto Administratorrechte.",
       self: "Mit Ihrem eigenen Konto ist das nicht möglich.",
-      confirmationMismatch:
-        "Die Adresse passt nicht zu diesem Konto. Prüfen Sie, bei welchem Konto Sie sind.",
+      confirmationMismatch: "Die Adresse passt nicht zu diesem Konto. Prüfen Sie, bei welchem Konto Sie sind.",
       otherCompanies:
         "Dieses Konto gehört auch zu anderen Unternehmen, deshalb kann nur der Plattformbetreiber das tun. Sie können es stattdessen aus diesem Unternehmen entfernen.",
       removeFromCompany: "Aus dem Unternehmen entfernen",
@@ -1542,8 +1530,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       consoleHint:
         "Dieser Server verschickt keine Mails – sie werden ins Server-Log geschrieben. Kopieren Sie jeden Einladungslink hier und geben Sie ihn selbst weiter: Er wird nur einmal angezeigt.",
       linkReady: (email) => `Der Einladungslink für ${email}, nur dieses eine Mal angezeigt:`,
-      notSent: (email) =>
-        `${email} ist eingeladen, aber die Mail konnte nicht gesendet werden. Senden Sie sie erneut.`,
+      notSent: (email) => `${email} ist eingeladen, aber die Mail konnte nicht gesendet werden. Senden Sie sie erneut.`,
       failed: "Das hat nicht geklappt. Bitte erneut versuchen.",
     },
     characterCount: {
@@ -1565,8 +1552,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
     ibanInput: {
       format: "Eine IBAN beginnt mit einem Ländercode aus zwei Buchstaben und zwei Prüfziffern.",
       country: (code) => `„${code}“ ist kein Ländercode einer IBAN.`,
-      length: (actual, expected) =>
-        `Eine IBAN aus diesem Land hat ${n(expected)} Zeichen – diese hat ${n(actual)}.`,
+      length: (actual, expected) => `Eine IBAN aus diesem Land hat ${n(expected)} Zeichen – diese hat ${n(actual)}.`,
       checksum: "Die Prüfziffern stimmen nicht – vermutlich ist ein Zeichen falsch eingegeben.",
       qrRequired: "Dies ist eine reguläre IBAN. Eine QR-Rechnung braucht die QR-IBAN des Kontos.",
       qrNotAllowed:
@@ -1600,9 +1586,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       decimalComma: "Dezimalkomma (1,5)",
       decimalPoint: "Dezimalpunkt (1.5)",
       unreadCount: (count) =>
-        count === 1
-          ? "1 Zeile konnte nicht gelesen werden"
-          : `${n(count)} Zeilen konnten nicht gelesen werden`,
+        count === 1 ? "1 Zeile konnte nicht gelesen werden" : `${n(count)} Zeilen konnten nicht gelesen werden`,
       // A line number is a position, not a count: unformatted, as `measuredGrid.lineError`.
       unreadLine: (line) => `Zeile ${line} konnte nicht gelesen werden`,
       unreadMore: (count) => `…und ${n(count)} weitere`,
@@ -1614,9 +1598,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       requiredRole: (role) => `${role} (erforderlich)`,
       requiredRoleShort: (role) => `${role} *`,
       previewOf: (shown, total) =>
-        shown === 1
-          ? `Die erste von ${n(total)} Zeilen`
-          : `Die ersten ${n(shown)} von ${n(total)} Zeilen`,
+        shown === 1 ? `Die erste von ${n(total)} Zeilen` : `Die ersten ${n(shown)} von ${n(total)} Zeilen`,
       // `roles` arrives joined with "oder" ("Soll oder Haben").
       oneOf: (roles) => `entweder ${roles}`,
       missing: (roles) => `Noch erforderlich: ${roles}.`,
@@ -1672,7 +1654,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       exportCorrections: (count) => `Korrekturen exportieren (${n(count)})`,
       failed: "Das hat nicht geklappt. Bitte erneut versuchen.",
       approvedToast: (count) => (count === 1 ? "Text bestätigt" : `${n(count)} Texte bestätigt`),
-      clearedToast: (count) => (count === 1 ? "Text als ungeprüft markiert" : `${n(count)} Texte als ungeprüft markiert`),
+      clearedToast: (count) =>
+        count === 1 ? "Text als ungeprüft markiert" : `${n(count)} Texte als ungeprüft markiert`,
       groupCount: (unreviewed, total) => `${n(unreviewed)} ungeprüft / ${n(total)}`,
       approveGroup: (count) => `Ungeprüfte bestätigen (${n(count)})`,
       // The group's name quoted, as `columnMapper.roleOf`'s column: it is often a key
@@ -1874,9 +1857,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         "Ihr kostenloser Zugang hat kein Enddatum. Solange er läuft, ändert ein Kauf Ihren Tarif nicht: Sie würden für einen Tarif bezahlen, der nicht gilt.",
       grantWarningAction: "Trotzdem kaufen",
       waitingChanges: (count) =>
-        count === 1
-          ? `${n(count)} Änderung wartet auf einen Tarif`
-          : `${n(count)} Änderungen warten auf einen Tarif`,
+        count === 1 ? `${n(count)} Änderung wartet auf einen Tarif` : `${n(count)} Änderungen warten auf einen Tarif`,
       // "Verwerfen", as `wizard.cancelConfirmLabel`.
       discardWaiting: "Wartende Änderungen verwerfen",
       notConfigured: "Zahlungen sind noch nicht eingerichtet. Bitte versuchen Sie es später noch einmal.",
@@ -1888,8 +1869,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       planNotSold:
         "Dieser Tarif ist für diesen Abrechnungszeitraum oder diese Währung nicht erhältlich. Bitte wählen Sie einen anderen.",
       // 0.39 (§15.2.10): the plan switch's refusals.
-      notSubscribed:
-        "Es läuft kein Abonnement, das sich ändern ließe. Wählen Sie einen Tarif, um eines abzuschließen.",
+      notSubscribed: "Es läuft kein Abonnement, das sich ändern ließe. Wählen Sie einen Tarif, um eines abzuschließen.",
       planUnchanged: "Das ist bereits Ihr Tarif. Wählen Sie einen anderen Tarif oder Abrechnungszeitraum.",
     },
     // 0.33.0 — docs/billing-harmonization.md §14.12: the operator's plan parts, "Tarif" as
@@ -1965,7 +1945,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
     // Administratoren", which would give the reader a gender (as `transferOwnership`).
     mailTestCard: {
       title: "Testmail",
-      description: "Sendet eine Mail an Ihre eigene Adresse, über den Versand, mit dem diese Installation alle Mails verschickt.",
+      description:
+        "Sendet eine Mail an Ihre eigene Adresse, über den Versand, mit dem diese Installation alle Mails verschickt.",
       transport: (backend) => `Versand: ${backend}`,
       action: "Testmail an mich senden",
       sent: (address) => `An ${address} gesendet. Bitte prüfen Sie den Posteingang.`,
@@ -1985,7 +1966,10 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       sections: {
         overview: { title: "Übersicht", help: "Was gerade wartet, auf einen Blick." },
         users: { title: "Benutzer", help: "Wer ein Konto hat und was jede Person darf." },
-        invitations: { title: "Einladungen", help: "Laden Sie Personen per E-Mail in ihrer Sprache ein; senden Sie offene Einladungen erneut oder widerrufen Sie sie." },
+        invitations: {
+          title: "Einladungen",
+          help: "Laden Sie Personen per E-Mail in ihrer Sprache ein; senden Sie offene Einladungen erneut oder widerrufen Sie sie.",
+        },
         billing: { title: "Abrechnung", help: "Tarif, Zahlung und Rechnungen." },
         activity: { title: "Aktivität", help: "Was in der Verwaltung getan wurde, das Neueste zuerst." },
       },

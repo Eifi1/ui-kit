@@ -149,7 +149,11 @@ describe("a parent with pages on the phone", () => {
     expect(reports).toHaveAttribute("aria-haspopup", "dialog");
     fireEvent.click(reports);
     const sheet = screen.getByRole("dialog", { name: "Reports" });
-    expect(within(sheet).getAllByRole("link").map((a) => a.textContent)).toEqual(["Overview", "Spending", "Income"]);
+    expect(
+      within(sheet)
+        .getAllByRole("link")
+        .map((a) => a.textContent),
+    ).toEqual(["Overview", "Spending", "Income"]);
     fireEvent.click(within(sheet).getByRole("link", { name: "Income" }));
     expect(screen.getByTestId("where")).toHaveTextContent("/reports/income");
     expect(screen.queryByRole("dialog", { name: "Reports" })).toBeNull();
@@ -168,7 +172,11 @@ describe("a parent with pages on the phone", () => {
     renderShell();
     fireEvent.click(screen.getByRole("button", { name: "More" }));
     const pages = within(screen.getByRole("dialog", { name: "More pages" })).getByRole("list", { name: "Reports" });
-    expect(within(pages).getAllByRole("link").map((a) => a.textContent)).toEqual(["Spending", "Income"]);
+    expect(
+      within(pages)
+        .getAllByRole("link")
+        .map((a) => a.textContent),
+    ).toEqual(["Spending", "Income"]);
   });
 
   it("follows a size switch while mounted", () => {

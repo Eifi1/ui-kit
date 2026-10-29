@@ -386,9 +386,7 @@ export function Disclosure({
         ) : (
           <span className={cn("block", card && "text-sm font-semibold text-primary")}>{title}</span>
         )}
-        {hint !== undefined && (
-          <span className="mt-0.5 block text-xs font-normal text-muted">{hint}</span>
-        )}
+        {hint !== undefined && <span className="mt-0.5 block text-xs font-normal text-muted">{hint}</span>}
       </span>
       {/* The space is for the accessible name — "Net profit 1,234.50", not
           "Net profit1,234.50"; between flex items it renders as nothing. */}
@@ -404,22 +402,20 @@ export function Disclosure({
 
   // Preflight already makes h1–h6 inherit size and weight, so the heading adds
   // structure and nothing visible.
-  const header = Heading ? <Heading className={trailingBeside ? "min-w-0 flex-1" : undefined}>{button}</Heading> : button;
+  const header = Heading ? (
+    <Heading className={trailingBeside ? "min-w-0 flex-1" : undefined}>{button}</Heading>
+  ) : (
+    button
+  );
 
   return (
-    <div
-      {...rest}
-      className={cn(card && "rounded-lg border border-subtle bg-surface shadow-sm", className)}
-    >
+    <div {...rest} className={cn(card && "rounded-lg border border-subtle bg-surface shadow-sm", className)}>
       {trailingBeside ? (
         <div
           className={cn(
             "relative flex items-center gap-2",
             card &&
-              cn(
-                "rounded-lg pe-4 has-[[data-disclosure-trigger]:enabled:hover]:bg-hover",
-                joined && "rounded-b-none",
-              ),
+              cn("rounded-lg pe-4 has-[[data-disclosure-trigger]:enabled:hover]:bg-hover", joined && "rounded-b-none"),
           )}
         >
           {header}

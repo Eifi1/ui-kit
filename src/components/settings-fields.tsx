@@ -34,8 +34,7 @@ import type { KitLanguageCode } from "../i18n/languages";
  * The `Select` half of {@link ThemeSettingProps}; until 0.34 it carried that name, which
  * left the toggle out of the type the component is documented by (API-9).
  */
-export interface ThemeSettingSelectProps
-  extends Omit<SelectProps, "value" | "onChange" | "children"> {
+export interface ThemeSettingSelectProps extends Omit<SelectProps, "value" | "onChange" | "children"> {
   /** The `Select` (default). See {@link ThemeSettingToggleProps} for `"toggle"`. */
   variant?: "select";
   value: ThemePreference;
@@ -63,8 +62,7 @@ export interface ThemeSettingSelectProps
  * system-dark device a control bound to the mode shows "dark" and cannot say "follow the
  * system" (keksdose's control, §8).
  */
-export interface ThemeSettingToggleProps
-  extends Omit<ToggleGroupBaseProps<ThemePreference>, "options" | "label"> {
+export interface ThemeSettingToggleProps extends Omit<ToggleGroupBaseProps<ThemePreference>, "options" | "label"> {
   variant: "toggle";
   value: ThemePreference;
   onChange: (value: ThemePreference) => void;
@@ -106,13 +104,7 @@ export function ThemeSetting(props: ThemeSettingProps) {
   }
   const { variant: _variant, value, onChange, label, optionLabels, id, ...rest } = props;
   return (
-    <Select
-      {...rest}
-      id={id}
-      label={label}
-      value={value}
-      onChange={(e) => onChange(e.target.value as ThemePreference)}
-    >
+    <Select {...rest} id={id} label={label} value={value} onChange={(e) => onChange(e.target.value as ThemePreference)}>
       <option value="system">{optionLabels.system}</option>
       <option value="light">{optionLabels.light}</option>
       <option value="dark">{optionLabels.dark}</option>
@@ -122,8 +114,7 @@ export function ThemeSetting(props: ThemeSettingProps) {
 
 /** See {@link ThemeSettingSelectProps}: a `Select`'s props with the value and the change
  *  handler re-typed to the language CODE the caller stores. */
-export interface LanguageSettingProps
-  extends Omit<SelectProps, "value" | "onChange" | "children" | "multiple"> {
+export interface LanguageSettingProps extends Omit<SelectProps, "value" | "onChange" | "children" | "multiple"> {
   /** The reader's language: one of the rows' codes — or any tag, shown as the row it
    *  resolves to ({@link LanguageSelect}'s rule). */
   value: string;
@@ -190,7 +181,14 @@ export type TextSizeSettingProps = AppearanceToggleProps<TextSize>;
  * phone the group has 240 px, and "Extra large" cut to "Extra l…" would be the one
  * setting that cannot read its own value.
  */
-export function TextSizeSetting({ value, onChange, label, labels: labelsProp, overflow = "wrap", ...rest }: TextSizeSettingProps) {
+export function TextSizeSetting({
+  value,
+  onChange,
+  label,
+  labels: labelsProp,
+  overflow = "wrap",
+  ...rest
+}: TextSizeSettingProps) {
   const labels = useAppearanceLabels(labelsProp);
   const named = label !== undefined && label !== null && label !== false;
   return (
@@ -215,7 +213,14 @@ export type ContrastSettingProps = AppearanceToggleProps<ContrastMode>;
  * "More" and could not say "follow the device" (the theme's lesson, §8 of the settings
  * contract). `useAccountAppearance().contrast` is that mode.
  */
-export function ContrastSetting({ value, onChange, label, labels: labelsProp, overflow = "wrap", ...rest }: ContrastSettingProps) {
+export function ContrastSetting({
+  value,
+  onChange,
+  label,
+  labels: labelsProp,
+  overflow = "wrap",
+  ...rest
+}: ContrastSettingProps) {
   const labels = useAppearanceLabels(labelsProp);
   const named = label !== undefined && label !== null && label !== false;
   return (

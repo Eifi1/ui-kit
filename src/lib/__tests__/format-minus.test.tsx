@@ -64,20 +64,16 @@ describe("one minus sign (KIT-1)", () => {
     expect(formatWithMinus(new Intl.NumberFormat("en"), 12)).toBe("12");
   });
 
-  it("an export written with minus: \"ascii\" holds numbers a machine parses back", () => {
+  it('an export written with minus: "ascii" holds numbers a machine parses back', () => {
     const values = [-1234.5, -0.01, 0, 12.25, -98765.43];
     // A plain-number export (no grouping): Number() and the kit's own import read it.
-    const cells = values.map((v) =>
-      formatNumber(v, { locale: "en", minus: "ascii", options: { useGrouping: false } }),
-    );
+    const cells = values.map((v) => formatNumber(v, { locale: "en", minus: "ascii", options: { useGrouping: false } }));
     expect(cells.map(Number)).toEqual(values);
     expect(cells.map(cellNumber)).toEqual(values);
     const csv = `amount;delta\n${values.map((_, i) => `${cells[i]};${cells[i]}`).join("\n")}`;
     expect(parseTable(csv, { decimal: "whole-text" }).rows).toEqual(values.map((v) => [v, v]));
     // A comma-decimal locale reads back through the unconditional cell rule.
-    const de = values.map((v) =>
-      formatNumber(v, { locale: "de-CH", minus: "ascii", options: { useGrouping: false } }),
-    );
+    const de = values.map((v) => formatNumber(v, { locale: "de-CH", minus: "ascii", options: { useGrouping: false } }));
     expect(de.map(cellNumber)).toEqual(values);
     // The typographic default is what Number() would NOT read: the reason for the option.
     expect(Number(formatNumber(-1.5, { locale: "en" }))).toBeNaN();

@@ -131,7 +131,9 @@ describe("Disclosure", () => {
     );
     for (const b of screen.getAllByRole("button")) {
       // A token: a role utility (0.34) or a `[var(--…)]`.
-      expect(b.className).toMatch(/focus-visible:ring-(?:\[var\(--[a-z-]+\)\]|brand|subtle|strong|danger-strong|warning-strong|media-ink)(?![\w-])/);
+      expect(b.className).toMatch(
+        /focus-visible:ring-(?:\[var\(--[a-z-]+\)\]|brand|subtle|strong|danger-strong|warning-strong|media-ink)(?![\w-])/,
+      );
     }
   });
 });
@@ -191,9 +193,21 @@ describe("Collapse, with motion", () => {
       const [open, setOpen] = useState(false);
       return (
         <>
-          <Disclosure variant="bare" title="Details: 3 hidden" controls="hidden-rows" open={open} onOpenChange={setOpen} />
+          <Disclosure
+            variant="bare"
+            title="Details: 3 hidden"
+            controls="hidden-rows"
+            open={open}
+            onOpenChange={setOpen}
+          />
           <table>
-            <tbody id="hidden-rows">{open && <tr><td>Old savings</td></tr>}</tbody>
+            <tbody id="hidden-rows">
+              {open && (
+                <tr>
+                  <td>Old savings</td>
+                </tr>
+              )}
+            </tbody>
           </table>
         </>
       );
@@ -235,7 +249,9 @@ describe("Collapse, with motion", () => {
     expect(header()).toHaveAttribute("aria-expanded", "false");
     // The header is stretched over the row, and the ring moves with it.
     expect(header().className).toContain("after:absolute");
-    expect(header().className).toMatch(/focus-visible:after:ring-(?:\[var\(--[a-z-]+\)\]|brand|subtle|strong|danger-strong|warning-strong|media-ink)(?![\w-])/);
+    expect(header().className).toMatch(
+      /focus-visible:after:ring-(?:\[var\(--[a-z-]+\)\]|brand|subtle|strong|danger-strong|warning-strong|media-ink)(?![\w-])/,
+    );
     fireEvent.click(header());
     expect(screen.getByText("Body")).toBeInTheDocument();
   });
@@ -259,7 +275,10 @@ describe("Disclosure triggerProps", () => {
 
   it("as a function of open, renames the toggle when it turns", () => {
     render(
-      <Disclosure title="Food" triggerProps={(open) => ({ "aria-label": `${open ? "Collapse" : "Expand"} group Food` })}>
+      <Disclosure
+        title="Food"
+        triggerProps={(open) => ({ "aria-label": `${open ? "Collapse" : "Expand"} group Food` })}
+      >
         <p>Body</p>
       </Disclosure>,
     );

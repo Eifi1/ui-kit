@@ -32,7 +32,8 @@ describe("DevicePreview", () => {
     const tablet = screen.getByTitle(/768 × 1024 · Large/) as HTMLIFrameElement;
     expect(tablet.src).toMatch(/\?text-size=large#\/buttons$/);
     fireEvent.click(screen.getByRole("radio", { name: "All three" }));
-    for (const frame of screen.getAllByTitle(/× /) as HTMLIFrameElement[]) expect(frame.src).toContain("text-size=large");
+    for (const frame of screen.getAllByTitle(/× /) as HTMLIFrameElement[])
+      expect(frame.src).toContain("text-size=large");
     fireEvent.click(screen.getByRole("radio", { name: "Phone 360 · Extra large" }));
     const small = screen.getByTitle(/360 × 780 · Extra large/) as HTMLIFrameElement;
     expect(small.src).toContain("text-size=xlarge");

@@ -50,7 +50,11 @@ describe("breakpointQuery", () => {
 describe("useBreakpoint / usePhoneLayout follow the text size", () => {
   it("a 1000 px window is md at Normal and Large, and the phone layout at Extra large", () => {
     viewport(1000);
-    const { result } = renderHook(() => ({ md: useBreakpoint("md"), phone: usePhoneLayout(), lg: useBreakpoint("lg") }));
+    const { result } = renderHook(() => ({
+      md: useBreakpoint("md"),
+      phone: usePhoneLayout(),
+      lg: useBreakpoint("lg"),
+    }));
     expect(result.current).toEqual({ md: true, phone: false, lg: false });
 
     act(() => applyTextSize("large"));
@@ -122,10 +126,14 @@ describe("tokens.css's breakpoint variants are the same numbers", () => {
   }
 
   it("scopes each query to its size inside :where(), Normal by exclusion", () => {
-    const body = CSS.slice(CSS.indexOf("@custom-variant md {"), CSS.indexOf("\n}", CSS.indexOf("@custom-variant md {")));
-    expect(body).toContain("&:where(:not([data-text-size$=large] *))");
-    expect(body).toContain("&:where([data-text-size=large] *)");
-    expect(body).toContain("&:where([data-text-size=xlarge] *)");
+    const body = CSS.slice(
+      CSS.indexOf("@custom-variant md {"),
+      CSS.indexOf("\n}", CSS.indexOf("@custom-variant md {")),
+    );
+    // Prettier quotes an attribute selector's value (the same selector in CSS).
+    expect(body).toContain('&:where(:not([data-text-size$="large"] *))');
+    expect(body).toContain('&:where([data-text-size="large"] *)');
+    expect(body).toContain('&:where([data-text-size="xlarge"] *)');
   });
 
   it("sets the root size in percent, and the size and contrast variants", () => {

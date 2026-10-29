@@ -39,17 +39,7 @@ export { DEFAULT_SPARKLINE_LABELS };
  *    own value, a line or area takes the colour of its LAST value (where it ended up).
  */
 export type SparklineTone =
-  | "chart"
-  | "brand"
-  | "muted"
-  | "income"
-  | "expense"
-  | "net"
-  | "signed"
-  | "success"
-  | "warning"
-  | "danger"
-  | "info";
+  "chart" | "brand" | "muted" | "income" | "expense" | "net" | "signed" | "success" | "warning" | "danger" | "info";
 
 // `color`, not `stroke`/`fill`: every mark paints with `currentColor`, so one class
 // per element is enough and a signed bar chart needs no second lookup table.
@@ -70,8 +60,7 @@ const signedClass = (v: number) => (v < 0 ? TONE_CLASS.expense : TONE_CLASS.inco
 
 /** `children` is the marks and `width`/`height` are numbers here (or `fluid`), so
  *  those three are the sparkline's own; everything else lands on the `<svg>`. */
-export interface SparklineProps
-  extends Omit<ComponentPropsWithRef<"svg">, "children" | "width" | "height"> {
+export interface SparklineProps extends Omit<ComponentPropsWithRef<"svg">, "children" | "width" | "height"> {
   /** The series, oldest first. `null`/`undefined`/`NaN` is a GAP — the line breaks
    *  there rather than drawing a zero or bridging across the missing point. */
   data: ReadonlyArray<number | null | undefined>;

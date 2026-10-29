@@ -245,8 +245,7 @@ export const DEFAULT_NOTIFICATIONS_LABELS: NotificationsLabels = {
   added: (date) => `Added ${date}`,
   lastDelivery: (date) => `Last delivery ${date}`,
   noDelivery: "No delivery yet",
-  failures: (count) =>
-    count === 1 ? "1 failed delivery in a row" : `${count} failed deliveries in a row`,
+  failures: (count) => (count === 1 ? "1 failed delivery in a row" : `${count} failed deliveries in a row`),
   remove: "Remove",
   removeItem: (device) => `Remove ${device}`,
   removePrompt: "Stop sending notifications to this device?",

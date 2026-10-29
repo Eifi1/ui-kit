@@ -50,10 +50,7 @@ function isAfterCommit(state: { currentStepIndex: number; committedStepIndex: nu
 }
 
 /** Whether `index` is on the far side of a commit the wizard has already moved past. */
-function crossesCommit(
-  state: { currentStepIndex: number; committedStepIndex: number | null },
-  index: number,
-) {
+function crossesCommit(state: { currentStepIndex: number; committedStepIndex: number | null }, index: number) {
   return isAfterCommit(state) && index <= (state.committedStepIndex as number);
 }
 
@@ -74,10 +71,7 @@ type WizardAction<TData> =
   | { type: "SHOW_CANCEL_DIALOG"; show: boolean };
 
 function createReducer<TData>(stepCount: number) {
-  return function reducer(
-    state: WizardState<TData>,
-    action: WizardAction<TData>,
-  ): WizardState<TData> {
+  return function reducer(state: WizardState<TData>, action: WizardAction<TData>): WizardState<TData> {
     switch (action.type) {
       case "GO_NEXT": {
         if (action.from !== state.currentStepIndex) return state;
@@ -187,27 +181,20 @@ export function useWizard<TData extends Record<string, unknown>>(
   // step's validators are present — each unregisters on unmount. `goNext` and
   // `finish` run them (via `runStepValidators`) alongside the step config's own
   // `validate`.
-  const validatorsRef = useRef(
-    new Map<symbol, () => ValidateResult | Promise<ValidateResult>>(),
-  );
-  const registerStepValidate = useCallback(
-    (fn: () => ValidateResult | Promise<ValidateResult>) => {
-      const token = Symbol();
-      validatorsRef.current.set(token, fn);
-      return () => {
-        validatorsRef.current.delete(token);
-      };
-    },
-    [],
-  );
+  const validatorsRef = useRef(new Map<symbol, () => ValidateResult | Promise<ValidateResult>>());
+  const registerStepValidate = useCallback((fn: () => ValidateResult | Promise<ValidateResult>) => {
+    const token = Symbol();
+    validatorsRef.current.set(token, fn);
+    return () => {
+      validatorsRef.current.delete(token);
+    };
+  }, []);
 
   // Chosen once, at mount: a hook may not be called conditionally, but it may be
   // chosen once and then called unconditionally on every render — which is what
   // makes `urlSync: false` work with no router above the wizard at all.
   const [useStepUrl] = useState(() => (urlSync === false ? useNoStepUrl : useSearchParamStepUrl));
-  const [urlParam] = useState(() =>
-    typeof urlSync === "object" && urlSync.param ? urlSync.param : "step",
-  );
+  const [urlParam] = useState(() => (typeof urlSync === "object" && urlSync.param ? urlSync.param : "step"));
   // The wizard's entered `data` and `completedSteps` are NOT persisted across a
   // reload / deep-link (the reducer re-inits to empty defaults on every mount).
   // Restoring a later step index from `?step=N` would therefore leave the wizard
@@ -234,10 +221,7 @@ export function useWizard<TData extends Record<string, unknown>>(
   // state is invalid (e.g. tenant shares != 100%). Defaults to false, so
   // wizards that never call setNextBlocked behave exactly as before.
   const [nextBlocked, setNextBlockedState] = useState(false);
-  const setNextBlocked = useCallback(
-    (blocked: boolean) => setNextBlockedState(blocked),
-    [],
-  );
+  const setNextBlocked = useCallback((blocked: boolean) => setNextBlockedState(blocked), []);
 
   // Sync step index to URL (a no-op under `urlSync: false`). `clearStepUrl` drops
   // the param when the wizard is left through the kit, and stops the sync writing
@@ -259,14 +243,9 @@ export function useWizard<TData extends Record<string, unknown>>(
   // been walked through (completed or skipped). Guards against a restored/last-step
   // index submitting a payload built from empty defaults.
   const canFinish = steps.every(
-    (_, index) =>
-      index >= commitStepIndex ||
-      state.completedSteps.has(index) ||
-      state.skippedSteps.has(index),
+    (_, index) => index >= commitStepIndex || state.completedSteps.has(index) || state.skippedSteps.has(index),
   );
-  const canGoBack =
-    (!isFirstStep || onExit !== undefined) &&
-    !crossesCommit(state, state.currentStepIndex - 1);
+  const canGoBack = (!isFirstStep || onExit !== undefined) && !crossesCommit(state, state.currentStepIndex - 1);
   const canCancel = cancellable && !afterCommit;
   const canDone = isLastStep && afterCommit && onDone !== undefined;
 
@@ -551,18 +530,24 @@ function useSearchParamStepUrl(param: string, index: number): () => void {
   const leftRef = useRef(false);
   useEffect(() => {
     if (leftRef.current) return;
-    setUrlParams((prev) => {
-      prev.set(param, String(index));
-      return prev;
-    }, { replace: true });
+    setUrlParams(
+      (prev) => {
+        prev.set(param, String(index));
+        return prev;
+      },
+      { replace: true },
+    );
   }, [param, index, setUrlParams]);
   return useCallback(() => {
     if (leftRef.current) return;
     leftRef.current = true;
-    setUrlParams((prev) => {
-      prev.delete(param);
-      return prev;
-    }, { replace: true });
+    setUrlParams(
+      (prev) => {
+        prev.delete(param);
+        return prev;
+      },
+      { replace: true },
+    );
   }, [param, setUrlParams]);
 }
 

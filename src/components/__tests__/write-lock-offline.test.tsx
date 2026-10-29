@@ -56,15 +56,19 @@ describe("the offline lock", () => {
     expect(result.current.reason).toBe("Offline.");
   });
 
-  it.each([UI_KIT_LABELS_DE_CH, UI_KIT_LABELS_ES, UI_KIT_LABELS_FR, UI_KIT_LABELS_HU, UI_KIT_LABELS_IT, UI_KIT_LABELS_ZH])(
-    "every language has its own words (%#)",
-    (catalogue) => {
-      const { result } = renderHook(() => useOfflineWriteLock(true), {
-        wrapper: ({ children }) => <UiKitProvider labels={catalogue}>{children}</UiKitProvider>,
-      });
-      expect(result.current.reason).toBe(catalogue.writeLock.offline);
-      expect(result.current.reason).not.toBe(DEFAULT_WRITE_LOCK_LABELS.offline);
-      expect(String(result.current.reason)).not.toContain("ß");
-    },
-  );
+  it.each([
+    UI_KIT_LABELS_DE_CH,
+    UI_KIT_LABELS_ES,
+    UI_KIT_LABELS_FR,
+    UI_KIT_LABELS_HU,
+    UI_KIT_LABELS_IT,
+    UI_KIT_LABELS_ZH,
+  ])("every language has its own words (%#)", (catalogue) => {
+    const { result } = renderHook(() => useOfflineWriteLock(true), {
+      wrapper: ({ children }) => <UiKitProvider labels={catalogue}>{children}</UiKitProvider>,
+    });
+    expect(result.current.reason).toBe(catalogue.writeLock.offline);
+    expect(result.current.reason).not.toBe(DEFAULT_WRITE_LOCK_LABELS.offline);
+    expect(String(result.current.reason)).not.toContain("ß");
+  });
 });

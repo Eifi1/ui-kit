@@ -165,8 +165,7 @@ export const fr: Dictionary = {
     overview: {
       title: "Présentation",
       short: "Présentation",
-      blurb:
-        "Ce qu’est @eifi1/ui-kit, les huit couches qui le composent et comment lire une page de cette vitrine.",
+      blurb: "Ce qu’est @eifi1/ui-kit, les huit couches qui le composent et comment lire une page de cette vitrine.",
     },
     foundations: {
       title: "Fondations",
@@ -406,13 +405,11 @@ export const fr: Dictionary = {
     layout: {
       title: "Section repliable et cadre de dialogue",
       short: "Repliable",
-      blurb:
-        "Une section qui se replie, et le cadre en-tête, corps, actions que répète chaque boîte de dialogue.",
+      blurb: "Une section qui se replie, et le cadre en-tête, corps, actions que répète chaque boîte de dialogue.",
     },
     overlays: {
       title: "Superpositions",
-      blurb:
-        "Tout ce qui flotte au-dessus de la page, et la temporisation unique qu’ils partagent tous en se fermant.",
+      blurb: "Tout ce qui flotte au-dessus de la page, et la temporisation unique qu’ils partagent tous en se fermant.",
     },
     dialogs: {
       title: "Dialogues",
@@ -590,7 +587,6 @@ export const fr: Dictionary = {
         "Les formats d’échange de la relecture des traductions, qui peut relire quelles clés et quelles langues, et les jetons de relecture avec lesquels un relecteur ouvre la page de relecture du kit.",
     },
   },
-
 
   // The top-bar search's « De quoi avez-vous besoin ? » rows, as a French reader types
   // them: infinitives and plain nouns, lower case, no full stop.
@@ -1344,7 +1340,6 @@ export const fr: Dictionary = {
       "clés de traduction du kit",
     ],
   },
-
 
   // The kit's own words ship with the package — the same import an app writes.
   kit: UI_KIT_LABELS_FR,

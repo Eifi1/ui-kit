@@ -147,9 +147,7 @@ export function personInitials(name: PersonName, locale?: string): string {
   if (!first || !last) {
     const words = (first || last).split(/\s+/);
     const initials =
-      words.length >= 2
-        ? firstGrapheme(words[0]!) + firstGrapheme(words[1]!)
-        : [...words[0]!].slice(0, 2).join("");
+      words.length >= 2 ? firstGrapheme(words[0]!) + firstGrapheme(words[1]!) : [...words[0]!].slice(0, 2).join("");
     return upper(initials, locale);
   }
   const pair = order === "family-first" ? [last, first] : [first, last];

@@ -26,13 +26,7 @@ import { DEFAULT_SERIES_CHART_LABELS, type SeriesChartLabels } from "./series-ch
  * Kept here, beside the legend's own mark, and read by `SeriesChart` from here — so
  * the key under a chart and the lines on it cannot disagree.
  */
-export const STROKE_PATTERNS: readonly (string | undefined)[] = [
-  undefined,
-  "5 4",
-  "1 3",
-  "9 3 2 3",
-  "9 3 2 3 2 3",
-];
+export const STROKE_PATTERNS: readonly (string | undefined)[] = [undefined, "5 4", "1 3", "9 3 2 3", "9 3 2 3 2 3"];
 
 /** The dash array for the nth pattern, wrapping past the fifth. */
 export function strokeDash(order: number): string | undefined {
@@ -79,8 +73,7 @@ export function toggleHidden(hidden: ReadonlySet<string>, key: string): Readonly
  * A caller that places its legend itself and wants it kept beside the chart at every
  * size overrides with `large:col-auto large:basis-auto`.
  */
-const UNDER_THE_CHART_AT_LARGE =
-  "large:order-last large:col-span-full large:basis-full large:[*:has(>&)]:flex-wrap";
+const UNDER_THE_CHART_AT_LARGE = "large:order-last large:col-span-full large:basis-full large:[*:has(>&)]:flex-wrap";
 
 /** A vertical legend's entries from Large up: across, wrapping — it is under the chart
  *  now (see {@link UNDER_THE_CHART_AT_LARGE}), where a column of entries would be a
@@ -284,10 +277,7 @@ export function StaticLegend({
       {entries.map((entry) => (
         <Item
           key={entry.key}
-          className={cn(
-            "flex items-center gap-1.5 text-caption text-secondary",
-            entry.align === "end" && "ms-auto",
-          )}
+          className={cn("flex items-center gap-1.5 text-caption text-secondary", entry.align === "end" && "ms-auto")}
         >
           <LegendMark entry={entry} off={false} />
           {entry.label}
@@ -335,9 +325,7 @@ export function LegendColumn({ children, className }: { children: ReactNode; cla
 export function LegendGroup({ title, children }: { title: ReactNode; children: ReactNode }) {
   return (
     <div className="flex min-w-0 flex-col items-start gap-1">
-      <span className="text-micro font-semibold uppercase tracking-wide text-muted">
-        {title}
-      </span>
+      <span className="text-micro font-semibold uppercase tracking-wide text-muted">{title}</span>
       <div className="flex flex-col items-start gap-y-0.5">{children}</div>
     </div>
   );

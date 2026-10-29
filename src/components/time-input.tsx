@@ -35,11 +35,10 @@ import { cn } from "../lib/cn";
  * at the site"), a {@link FieldHint} rides the label line. `showCount` is typed out — a
  * time has no length worth counting.
  */
-export interface TimeInputProps
-  extends Omit<
-    InputProps,
-    "type" | "value" | "defaultValue" | "min" | "max" | "step" | "variant" | "showCount" | "countLabels"
-  > {
+export interface TimeInputProps extends Omit<
+  InputProps,
+  "type" | "value" | "defaultValue" | "min" | "max" | "step" | "variant" | "showCount" | "countLabels"
+> {
   /** `"HH:mm"` (or `"HH:mm:ss"` with a sub-minute `step`); `""` is "no time". */
   value: string;
   /** The normalised value on every change the browser reports — which for a time

@@ -73,7 +73,9 @@ describe("RowActions danger actions (KIT-12)", () => {
 
     render(
       <RowActions
-        actions={row(() => {}, { confirm: { title: "Remove Ada?", body: "Her bookings stay.", confirmLabel: "Remove" } })}
+        actions={row(() => {}, {
+          confirm: { title: "Remove Ada?", body: "Her bookings stay.", confirmLabel: "Remove" },
+        })}
         name="Ada Example"
       />,
     );

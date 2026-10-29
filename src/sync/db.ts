@@ -98,7 +98,11 @@ export const SYNC_DB_PK_INDEX = {
  */
 export async function rowByPk(db: SyncDb, entity: string, pk: number): Promise<SyncedRow | undefined> {
   if (db.rows.schema.idxByName["[entity+pk]"]) return db.rows.where("[entity+pk]").equals([entity, pk]).first();
-  return db.rows.where("entity").equals(entity).filter((row) => row.pk === pk).first();
+  return db.rows
+    .where("entity")
+    .equals(entity)
+    .filter((row) => row.pk === pk)
+    .first();
 }
 
 /**

@@ -67,9 +67,7 @@ export function usePageSeoIf(seo: PageSeo | null): void {
 
     // The description tag ships in index.html, so upsert rather than append —
     // two `meta[name=description]` tags would be a coin flip for the scraper.
-    const meta = description
-      ? document.head.querySelector<HTMLMetaElement>('meta[name="description"]')
-      : null;
+    const meta = description ? document.head.querySelector<HTMLMetaElement>('meta[name="description"]') : null;
     const previousDescription = meta?.content;
     if (meta && description) meta.content = description;
 

@@ -64,8 +64,7 @@ describe("overlay motion (live #320)", () => {
 });
 
 describe("overlay exit (live #320 rework)", () => {
-  const motion = (reduced: boolean) =>
-    stubViewportWidth(DESKTOP_WIDTH, { reducedMotion: reduced });
+  const motion = (reduced: boolean) => stubViewportWidth(DESKTOP_WIDTH, { reducedMotion: reduced });
 
   beforeEach(() => {
     vi.useFakeTimers();

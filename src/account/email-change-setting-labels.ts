@@ -20,8 +20,7 @@ export const DEFAULT_EMAIL_CHANGE_LABELS: EmailChangeLabels = {
   emailTaken: "An account with this email address already exists.",
   wrongPassword: "The password is incorrect.",
   pending: (newEmail) => `Confirm the link we sent to ${newEmail}.`,
-  pendingHint: (currentEmail) =>
-    `Until you do, you keep signing in with ${currentEmail}. Check your spam folder too.`,
+  pendingHint: (currentEmail) => `Until you do, you keep signing in with ${currentEmail}. Check your spam folder too.`,
   resend: "Send the link again",
   resent: "We sent the link again.",
   cancel: "Cancel the change",

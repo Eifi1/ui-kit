@@ -119,12 +119,7 @@ export function ImageGrid({
 
   return (
     <>
-      <ul
-        aria-label={labels.list}
-        {...rest}
-        className={cn("grid gap-2", className)}
-        style={gridStyle}
-      >
+      <ul aria-label={labels.list} {...rest} className={cn("grid gap-2", className)} style={gridStyle}>
         {items.map((item, i) => {
           const name = item.alt || labels.item(i + 1, count);
           const kind = imageItemKind(item);

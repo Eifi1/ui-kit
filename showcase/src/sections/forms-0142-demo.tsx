@@ -24,12 +24,18 @@ export function Forms0142Demo() {
   const total = rows.reduce((sum, r) => sum + (r.amount ?? 0), 0);
   return (
     <>
-      <Example label="MoneyField — a number per row" hint='type 1200+80 or 99.999; the row stores a number only when it settles'>
+      <Example
+        label="MoneyField — a number per row"
+        hint="type 1200+80 or 99.999; the row stores a number only when it settles"
+      >
         <div className="space-y-2">
           {rows.map((row) => (
             // One column on a phone at Large: an 8rem name column left the field less than
             // its own width on a 360 px phone at Extra large (0.32.1).
-            <div key={row.id} className="grid grid-cols-[8rem_1fr] items-center gap-3 large:max-sm:grid-cols-1 large:max-sm:gap-1">
+            <div
+              key={row.id}
+              className="grid grid-cols-[8rem_1fr] items-center gap-3 large:max-sm:grid-cols-1 large:max-sm:gap-1"
+            >
               <span className="text-sm">{row.name}</span>
               <MoneyField
                 aria-label={`${row.name} amount`}
@@ -48,8 +54,8 @@ export function Forms0142Demo() {
           </p>
         </div>
         <Note>
-          The same parse-and-settle glue as RhfMoneyField: a half-typed sum never reaches the row, and an
-          unchanged amount is not committed twice.
+          The same parse-and-settle glue as RhfMoneyField: a half-typed sum never reaches the row, and an unchanged
+          amount is not committed twice.
         </Note>
       </Example>
       <Example label="IntegerField — whole numbers" hint="digits 0 and no calculator, each overridable">

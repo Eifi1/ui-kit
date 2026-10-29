@@ -27,14 +27,18 @@ describe("SignOutPendingDialog — the words", () => {
   it("keepsChanges: the changes stay on this device for their owner (kastlan)", () => {
     renderDialog({ keepsChanges: true, queued: 3 });
     expect(screen.getByRole("alertdialog")).toHaveAccessibleName("Some changes have not been saved to the server yet");
-    expect(screen.getByText(/3 changes are still waiting to sync\. They stay on this device for you/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/3 changes are still waiting to sync\. They stay on this device for you/),
+    ).toBeInTheDocument();
     expect(screen.queryByText(/only copy/)).toBeNull();
   });
 
   it("keepsChanges={false}: keksdose's words — the copy is lost", () => {
     renderDialog({ keepsChanges: false, queued: 1 });
     expect(
-      screen.getByText("1 change is still waiting to sync. Logging out clears this device’s copy, and it is the only copy."),
+      screen.getByText(
+        "1 change is still waiting to sync. Logging out clears this device’s copy, and it is the only copy.",
+      ),
     ).toBeInTheDocument();
     expect(screen.queryByText(/stays? on this device/)).toBeNull();
   });

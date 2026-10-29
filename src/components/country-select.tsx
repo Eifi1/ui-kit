@@ -4,13 +4,7 @@ import { X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { COUNTRY_CODES, countryName, normalizeCountryCode } from "../lib/countries";
 import { rankMatch } from "../lib/text-match";
-import {
-  FieldChevron,
-  FIELD_FLOATING_PAD,
-  FIELD_INVALID,
-  FIELD_TRIGGER,
-  FloatingField,
-} from "./field-base";
+import { FieldChevron, FIELD_FLOATING_PAD, FIELD_INVALID, FIELD_TRIGGER, FloatingField } from "./field-base";
 import {
   assignRef,
   EndHintRow,
@@ -67,8 +61,7 @@ export { DEFAULT_COUNTRY_SELECT_LABELS };
  * `null` of a clear cannot reach a handler that was never told about it.
  */
 export interface CountrySelectProps<Clearable extends boolean = false>
-  extends Omit<ComponentPropsWithoutRef<"div">, "onChange" | "defaultValue">,
-    FieldHelpProps {
+  extends Omit<ComponentPropsWithoutRef<"div">, "onChange" | "defaultValue">, FieldHelpProps {
   /** The chosen country as an ISO 3166-1 alpha-2 code ("CH"), in either case;
    *  `null`, `undefined` or `""` when none is. A code outside the list still shows
    *  its name — the list restricts what can be PICKED, not what can be shown. */
@@ -106,9 +99,10 @@ export interface CountrySelectProps<Clearable extends boolean = false>
    * way — the order given is not kept, because the reader looks a country up by its
    * name in their own language, and any other order is one they cannot predict.
    *
-   * keksdose's bank picker offers the fifteen countries its banks are in
-   * (DE AT CH FR IT ES NL BE PT PL SE DK FI GB IE). A code that is not in ISO's list
-   * is allowed here on purpose: `XK` (Kosovo) is the app's decision, not the kit's.
+   * keksdose's bank picker passes the countries its configured bank-connection provider
+   * serves, read at runtime: its connections are provider-neutral since 2026-10-29, so
+   * the list is no longer a fixed fifteen. A code that is not in ISO's list is allowed
+   * here on purpose: `XK` (Kosovo) is the app's decision, not the kit's.
    */
   countries?: readonly string[];
   /**
@@ -218,7 +212,7 @@ function collator(locale: string): Intl.Collator {
  * A country picker: the value is the ISO 3166-1 alpha-2 code ("CH"), the names are the
  * runtime's own (`Intl.DisplayNames`) in the provider's locale, sorted by that
  * locale's collation. Requested by kastlan (customer and handover addresses, with its
- * six neighbours on top) and keksdose (the bank picker's fifteen countries) — both
+ * six neighbours on top) and keksdose (its bank picker's countries) — both
  * apps carried a hand-written list of names in two languages.
  *
  * ## Built on the kit's searchable combobox
@@ -318,10 +312,7 @@ export function CountrySelect<Clearable extends boolean = false>({
   // `filter: false` — the panel is handed the rows `search` ranks below instead of
   // the core's substring filter; the core still owns open, query, the highlighted row,
   // anchoring and dismissal.
-  const allOptions = useMemo(
-    () => [...top, ...others].map((e) => toOption(e, flags)),
-    [top, others, flags],
-  );
+  const allOptions = useMemo(() => [...top, ...others].map((e) => toOption(e, flags)), [top, others, flags]);
   const core = useComboboxCore<string>({ options: allOptions, filter: false });
   const { open, setOpen, query, triggerRef, closeToTrigger } = core;
   // The core anchors the panel to the trigger and hands focus back to it; the caller's
@@ -467,10 +458,7 @@ export function CountrySelect<Clearable extends boolean = false>({
         {/* A long name ("Saint Vincent and the Grenadines") truncates rather than
             widening the field: the kit is checked at 390px. From Large up it wraps and
             the trigger grows instead (text size §10.17, round 0.34 T1). */}
-        <span
-          id={valueId}
-          className={cn("truncate-until-large", selectedName === undefined && "text-placeholder")}
-        >
+        <span id={valueId} className={cn("truncate-until-large", selectedName === undefined && "text-placeholder")}>
           {selectedName ?? emptyText}
         </span>
       </span>

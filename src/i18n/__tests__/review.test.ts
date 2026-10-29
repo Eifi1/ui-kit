@@ -55,7 +55,7 @@ describe("kitLabelStrings", () => {
     expect(reference["combobox.resultCount(1)"]).toBe("1 result");
     expect(reference["combobox.resultCount(3)"]).toBe("3 results");
     expect(reference["shareCard.removeConfirm(name)"]).toBe("Remove access for {{name}}?");
-    expect(reference["filePicker.hint(\"\")"]).toBe("Any file type");
+    expect(reference['filePicker.hint("")']).toBe("Any file type");
     expect(reference["serverWake.waking()"]).toContain("the app");
     expect(reference["serverWake.waking(appName)"]).toContain("{{appName}}");
     expect(reference).not.toHaveProperty("combobox.resultCount");

@@ -12,25 +12,14 @@ import {
   readTextFile,
   roleOfColumn,
 } from "../lib/column-mapping";
-import type {
-  ColumnMapperResult,
-  ColumnMapping,
-  ColumnRole,
-} from "../lib/column-mapping";
+import type { ColumnMapperResult, ColumnMapping, ColumnRole } from "../lib/column-mapping";
 import { parseTextTable } from "../lib/table-text";
 import type { TableSeparator, TextTable } from "../lib/table-text";
 import { AlertBanner } from "./alert-banner";
 import { Checkbox } from "./checkbox";
 import { Disclosure } from "./disclosure";
 import { FileButton, useFilePicker } from "./file-button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeaderCell,
-  TableRow,
-} from "./table";
+import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from "./table";
 import type { FieldHelpProps } from "./field-parts";
 import { Select } from "./select";
 import { Textarea } from "./textarea";
@@ -142,11 +131,7 @@ const UNREAD_LISTED = 100;
  *  .tsv, … files" rather than a list of MIME types; the parse is the real check. */
 const DEFAULT_ACCEPT = ".csv,.tsv,.txt,.dat,.asc";
 
-function formatList(
-  items: string[],
-  type: "conjunction" | "disjunction",
-  locale: string | undefined,
-): string {
+function formatList(items: string[], type: "conjunction" | "disjunction", locale: string | undefined): string {
   try {
     return new Intl.ListFormat(locale, { type, style: "long" }).format(items);
   } catch {
@@ -179,10 +164,7 @@ export type ColumnRoleTableRowProps = Omit<
 > &
   DataAttributes;
 
-export interface ColumnRoleTableProps<
-  R extends string,
-  M extends ColumnMapping<R> = ColumnMapping<R>,
-> {
+export interface ColumnRoleTableProps<R extends string, M extends ColumnMapping<R> = ColumnMapping<R>> {
   /** The columns' names — the file's header line — or `null` for a table without one
    *  (each column is then "Column 1", "Column 2", …). */
   header: readonly string[] | null;
@@ -271,10 +253,7 @@ export interface ColumnRoleTableProps<
  * focused behind the fade is scrolled clear of it, cell and all, and the Table's
  * wrapper says which ends are cut in `data-overflow`.
  */
-export function ColumnRoleTable<
-  R extends string,
-  M extends ColumnMapping<R> = ColumnMapping<R>,
->({
+export function ColumnRoleTable<R extends string, M extends ColumnMapping<R> = ColumnMapping<R>>({
   header,
   rows,
   width: widthProp,
@@ -289,38 +268,22 @@ export function ColumnRoleTable<
   labels: labelsProp,
   className,
 }: ColumnRoleTableProps<R, M>) {
-  const labels: ColumnMapperLabels = useKitLabels(
-    "columnMapper",
-    DEFAULT_COLUMN_MAPPER_LABELS,
-    labelsProp,
-  );
+  const labels: ColumnMapperLabels = useKitLabels("columnMapper", DEFAULT_COLUMN_MAPPER_LABELS, labelsProp);
   const locale = useKitLocale();
   const shown = rows.slice(0, previewRows);
-  const width =
-    widthProp ??
-    shown.reduce(
-      (widest, row) => Math.max(widest, row.length),
-      header?.length ?? 0,
-    );
+  const width = widthProp ?? shown.reduce((widest, row) => Math.max(widest, row.length), header?.length ?? 0);
   const columns = Array.from({ length: width }, (_, index) => index);
   const total = totalRows ?? rows.length;
-  const nameOf = (column: number) =>
-    header?.[column] || labels.columnN(column + 1);
-  const labelOf = (value: R) =>
-    roles.find((role) => role.value === value)?.label ?? value;
+  const nameOf = (column: number) => header?.[column] || labels.columnN(column + 1);
+  const labelOf = (value: R) => roles.find((role) => role.value === value)?.label ?? value;
   const gaps = missingRoles(roles, mapping, width).map((gap) =>
-    gap.length === 1
-      ? labelOf(gap[0])
-      : labels.oneOf(formatList(gap.map(labelOf), "disjunction", locale)),
+    gap.length === 1 ? labelOf(gap[0]) : labels.oneOf(formatList(gap.map(labelOf), "disjunction", locale)),
   );
   // The required mark only where it tells one option from another.
   const markRequired = roles.some((role) => role.required !== true);
 
   return (
-    <div
-      className={cn("min-w-0 space-y-1.5", className)}
-      data-slot="column-role-table"
-    >
+    <div className={cn("min-w-0 space-y-1.5", className)} data-slot="column-role-table">
       <Table density="compact" framed edgeFade aria-label={labels.table}>
         <TableHead>
           <TableRow>
@@ -328,14 +291,8 @@ export function ColumnRoleTable<
               const role = roleOfColumn(roles, mapping, column);
               const name = nameOf(column);
               return (
-                <TableHeaderCell
-                  key={column}
-                  scope="col"
-                  className="min-w-36 py-2 align-top"
-                >
-                  <span className="block max-w-56 truncate pb-1 text-caption font-normal text-muted">
-                    {name}
-                  </span>
+                <TableHeaderCell key={column} scope="col" className="min-w-36 py-2 align-top">
+                  <span className="block max-w-56 truncate pb-1 text-caption font-normal text-muted">{name}</span>
                   <Select
                     size="sm"
                     className="w-full"
@@ -353,9 +310,7 @@ export function ColumnRoleTable<
                           roles,
                           mapping,
                           column,
-                          event.target.value === ""
-                            ? null
-                            : (event.target.value as R),
+                          event.target.value === "" ? null : (event.target.value as R),
                         ),
                       )
                     }
@@ -368,13 +323,9 @@ export function ColumnRoleTable<
                           key={option.value}
                           value={option.value}
                           // The short mark on screen, the word for a screen reader.
-                          aria-label={
-                            marked ? labels.requiredRole(option.label) : undefined
-                          }
+                          aria-label={marked ? labels.requiredRole(option.label) : undefined}
                         >
-                          {marked
-                            ? (labels.requiredRoleShort ?? markedShort)(option.label)
-                            : option.label}
+                          {marked ? (labels.requiredRoleShort ?? markedShort)(option.label) : option.label}
                         </option>
                       );
                     })}
@@ -390,31 +341,22 @@ export function ColumnRoleTable<
               {columns.map((column) => (
                 <TableCell
                   key={column}
-                  data-ignored={
-                    roleOfColumn(roles, mapping, column) === null || undefined
-                  }
+                  data-ignored={roleOfColumn(roles, mapping, column) === null || undefined}
                   className={cn(
                     "font-mono whitespace-nowrap",
                     // Dimmed, not hidden: its values are what tell you whether ignoring
                     // it was right.
-                    roleOfColumn(roles, mapping, column) === null &&
-                      "text-muted",
+                    roleOfColumn(roles, mapping, column) === null && "text-muted",
                   )}
                 >
-                  <span className="block max-w-56 truncate">
-                    {row[column] ?? ""}
-                  </span>
+                  <span className="block max-w-56 truncate">{row[column] ?? ""}</span>
                 </TableCell>
               ))}
             </TableRow>
           ))}
         </TableBody>
       </Table>
-      {total > shown.length && (
-        <p className="text-xs text-muted">
-          {labels.previewOf(shown.length, total)}
-        </p>
-      )}
+      {total > shown.length && <p className="text-xs text-muted">{labels.previewOf(shown.length, total)}</p>}
       {gaps.length > 0 && (
         <AlertBanner tone="warning" variant="inline" size="sm" block>
           {labels.missing(formatList(gaps, "conjunction", locale))}
@@ -477,8 +419,7 @@ interface MapperState<R extends string> {
   mapping: ColumnMapping<R>;
 }
 
-const hasFiles = (event: DragEvent) =>
-  Array.from(event.dataTransfer?.types ?? []).includes("Files");
+const hasFiles = (event: DragEvent) => Array.from(event.dataTransfer?.types ?? []).includes("Files");
 
 /**
  * Paste, drop or choose a table, see what it was read as, and say which column is
@@ -517,13 +458,8 @@ export function ColumnMapper<R extends string>({
   labels: labelsProp,
   className,
 }: ColumnMapperProps<R>) {
-  const labels: ColumnMapperLabels = useKitLabels(
-    "columnMapper",
-    DEFAULT_COLUMN_MAPPER_LABELS,
-    labelsProp,
-  );
-  const firstMapping = (table: TextTable) =>
-    guess ? guess(table) : guessMapping(roles, table.header, table.width);
+  const labels: ColumnMapperLabels = useKitLabels("columnMapper", DEFAULT_COLUMN_MAPPER_LABELS, labelsProp);
+  const firstMapping = (table: TextTable) => (guess ? guess(table) : guessMapping(roles, table.header, table.width));
   const [state, setState] = useState<MapperState<R>>(() => {
     const table = parseTextTable(defaultText);
     return {
@@ -544,19 +480,14 @@ export function ColumnMapper<R extends string>({
 
   const commit = (next: MapperState<R>) => {
     setState(next);
-    onChange(
-      next.table.width === 0
-        ? null
-        : readMappedTable(next.table, roles, next.mapping),
-    );
+    onChange(next.table.width === 0 ? null : readMappedTable(next.table, roles, next.mapping));
   };
 
   /** New text. `fresh` (a file): the reader's header answer and the mapping start over. */
   const take = (text: string, fresh: boolean) => {
     const header = fresh ? null : state.header;
     const table = parseTextTable(text, header === null ? {} : { header });
-    const keep =
-      !fresh && table.width === state.table.width && state.table.width > 0;
+    const keep = !fresh && table.width === state.table.width && state.table.width > 0;
     commit({
       text,
       header,
@@ -577,8 +508,7 @@ export function ColumnMapper<R extends string>({
       .finally(() => setReading(false));
   };
 
-  const refuse = (rejections: { message: string }[]) =>
-    setRefusal(rejections[0]?.message ?? null);
+  const refuse = (rejections: { message: string }[]) => setRefusal(rejections[0]?.message ?? null);
 
   // A file dropped on the paste box. The same screening as the button's.
   const drop = useFilePicker({
@@ -601,10 +531,7 @@ export function ColumnMapper<R extends string>({
   const unread = result.unread;
 
   return (
-    <div
-      className={cn("min-w-0 space-y-3", className)}
-      data-slot="column-mapper"
-    >
+    <div className={cn("min-w-0 space-y-3", className)} data-slot="column-mapper">
       <Textarea
         label={label ?? labels.paste}
         hint={hint ?? labels.pasteHint}
@@ -616,10 +543,7 @@ export function ColumnMapper<R extends string>({
         autoCorrect="off"
         value={state.text}
         disabled={disabled}
-        className={cn(
-          "font-mono text-xs",
-          dragOver && "rounded-md ring-2 ring-brand",
-        )}
+        className={cn("font-mono text-xs", dragOver && "rounded-md ring-2 ring-brand")}
         data-drag-over={dragOver || undefined}
         onChange={(event: ChangeEvent<HTMLTextAreaElement>) => {
           setRefusal(null);
@@ -684,10 +608,7 @@ export function ColumnMapper<R extends string>({
 
       {table.width > 0 && (
         <>
-          <p
-            className="text-xs text-secondary"
-            data-slot="column-mapper-summary"
-          >
+          <p className="text-xs text-secondary" data-slot="column-mapper-summary">
             {[
               labels.summary(table.width, result.rows.length),
               separator,
@@ -713,26 +634,16 @@ export function ColumnMapper<R extends string>({
             labels={labelsProp}
           />
           {unread.length > 0 && (
-            <Disclosure
-              variant="bare"
-              title={labels.unreadCount(unread.length)}
-              data-slot="column-mapper-unread"
-            >
+            <Disclosure variant="bare" title={labels.unreadCount(unread.length)} data-slot="column-mapper-unread">
               <ul className="space-y-1 text-xs">
                 {unread.slice(0, UNREAD_LISTED).map((line) => (
                   <li key={line.line} className="min-w-0">
-                    <span className="block text-secondary">
-                      {labels.unreadLine(line.line)}
-                    </span>
-                    <code className="block truncate font-mono text-muted">
-                      {line.text}
-                    </code>
+                    <span className="block text-secondary">{labels.unreadLine(line.line)}</span>
+                    <code className="block truncate font-mono text-muted">{line.text}</code>
                   </li>
                 ))}
                 {unread.length > UNREAD_LISTED && (
-                  <li className="text-muted">
-                    {labels.unreadMore(unread.length - UNREAD_LISTED)}
-                  </li>
+                  <li className="text-muted">{labels.unreadMore(unread.length - UNREAD_LISTED)}</li>
                 )}
               </ul>
             </Disclosure>

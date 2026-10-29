@@ -85,8 +85,7 @@ export function Fields() {
   const emailInvalid = email.trim() !== "" && !email.includes("@");
   const reasonInvalid = reason.length > 80;
   const ibanDigits = iban.replace(/\s/g, "");
-  const ibanError =
-    ibanDigits.length === 22 ? undefined : `That IBAN has ${ibanDigits.length} characters, not 22.`;
+  const ibanError = ibanDigits.length === 22 ? undefined : `That IBAN has ${ibanDigits.length} characters, not 22.`;
 
   return (
     <>
@@ -114,9 +113,9 @@ export function Fields() {
           <Input className="w-56 max-w-full" label="Closed on" disabled readOnly value="12 March 2024" />
         </Row>
         <p className="mt-3 text-xs text-muted">
-          Clear the second field and click away: the label drops back to the centre. The float is
-          driven by <code className="font-mono">:placeholder-shown</code>, which is why a labelled
-          Input forces its placeholder to a single space — pass your own and it is ignored.
+          Clear the second field and click away: the label drops back to the centre. The float is driven by{" "}
+          <code className="font-mono">:placeholder-shown</code>, which is why a labelled Input forces its placeholder to
+          a single space — pass your own and it is ignored.
         </p>
       </Example>
 
@@ -141,10 +140,9 @@ export function Fields() {
           />
         </Stage>
         <p className="mt-3 text-xs text-muted">
-          The highlight is a border <em>plus</em> a 1px ring, not a thicker border. A ring is a
-          box-shadow, so it adds no layout and nothing beside the field moves when the value arrives
-          — and at 125% display scaling the two together guarantee one fully covered device pixel on
-          the vertical edges, which a lone 1px border does not.
+          The highlight is a border <em>plus</em> a 1px ring, not a thicker border. A ring is a box-shadow, so it adds
+          no layout and nothing beside the field moves when the value arrives — and at 125% display scaling the two
+          together guarantee one fully covered device pixel on the vertical edges, which a lone 1px border does not.
         </p>
       </Example>
 
@@ -192,9 +190,9 @@ export function Fields() {
           <code className="font-mono">
             passwordLabels={"{{"} show, hide {"}}"}
           </code>{" "}
-          — without it the names come from <code className="font-mono">&lt;UiKitProvider labels&gt;</code>
-          , then English. A disabled field disables its toggle too: a value the user may not edit
-          is not one the keyboard may reveal.
+          — without it the names come from <code className="font-mono">&lt;UiKitProvider labels&gt;</code>, then
+          English. A disabled field disables its toggle too: a value the user may not edit is not one the keyboard may
+          reveal.
         </p>
       </Example>
 
@@ -259,20 +257,19 @@ export function Fields() {
               />
             </div>
             <p id={ibanHintId} className="text-xs text-muted">
-              IBAN hint: 22 characters for a German account — this line is the IBAN field&apos;s
-              own <code className="font-mono">aria-describedby</code>.
+              IBAN hint: 22 characters for a German account — this line is the IBAN field&apos;s own{" "}
+              <code className="font-mono">aria-describedby</code>.
             </p>
           </div>
         </Stage>
         <p className="text-xs text-muted">
-          The last column passes <code className="font-mono">error</code>: the message renders under
-          the field, implies <code className="font-mono">invalid</code>, and is attached through{" "}
-          <code className="font-mono">aria-describedby</code> — MERGED with one the caller passed
-          (the IBAN field keeps pointing at its hint line and adds the error after it). Type a valid
-          IBAN, pick an account or give a reason and the message goes; a falsy{" "}
-          <code className="font-mono">error</code> (<code className="font-mono">undefined</code>,{" "}
-          <code className="font-mono">&quot;&quot;</code>, <code className="font-mono">false</code>)
-          renders nothing and leaves the DOM exactly as without the prop.
+          The last column passes <code className="font-mono">error</code>: the message renders under the field, implies{" "}
+          <code className="font-mono">invalid</code>, and is attached through{" "}
+          <code className="font-mono">aria-describedby</code> — MERGED with one the caller passed (the IBAN field keeps
+          pointing at its hint line and adds the error after it). Type a valid IBAN, pick an account or give a reason
+          and the message goes; a falsy <code className="font-mono">error</code> (
+          <code className="font-mono">undefined</code>, <code className="font-mono">&quot;&quot;</code>,{" "}
+          <code className="font-mono">false</code>) renders nothing and leaves the DOM exactly as without the prop.
         </p>
       </Example>
 
@@ -282,12 +279,7 @@ export function Fields() {
       >
         <Stage>
           <div className="space-y-4">
-            <Input
-              label="Subject"
-              variant="display"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-            />
+            <Input label="Subject" variant="display" value={subject} onChange={(e) => setSubject(e.target.value)} />
             {/* The same treatment assembled by hand, so it is visible on a desktop
                 too: FIELD_DISPLAY plus the size/weight the control adds on top, with
                 the label kept in the accessibility tree by `srOnlyLabel`. This is
@@ -304,10 +296,10 @@ export function Fields() {
           </div>
         </Stage>
         <p className="mt-3 text-xs text-muted">
-          Narrow the window past 768px and the first field becomes the second. The chrome goes so
-          the one field a form is about reads as the thing itself; a hairline baseline stays, and
-          the label goes <code className="font-mono">sr-only</code> rather than away — display type
-          is legible to the eye, not to a screen reader.
+          Narrow the window past 768px and the first field becomes the second. The chrome goes so the one field a form
+          is about reads as the thing itself; a hairline baseline stays, and the label goes{" "}
+          <code className="font-mono">sr-only</code> rather than away — display type is legible to the eye, not to a
+          screen reader.
         </p>
       </Example>
 
@@ -326,11 +318,11 @@ export function Fields() {
           />
         </Stage>
         <p className="mt-3 text-xs text-muted">
-          The grey is matched on the <code className="font-mono">[readonly]</code> ATTRIBUTE, never
-          the <code className="font-mono">:read-only</code> pseudo-class — per Selectors 4 that
-          pseudo-class matches everything that is not <code className="font-mono">:read-write</code>
-          , so it also caught every <code className="font-mono">&lt;select&gt;</code> and every
-          field-styled button and painted three different-looking families out of one field style.
+          The grey is matched on the <code className="font-mono">[readonly]</code> ATTRIBUTE, never the{" "}
+          <code className="font-mono">:read-only</code> pseudo-class — per Selectors 4 that pseudo-class matches
+          everything that is not <code className="font-mono">:read-write</code>, so it also caught every{" "}
+          <code className="font-mono">&lt;select&gt;</code> and every field-styled button and painted three
+          different-looking families out of one field style.
         </p>
       </Example>
 
@@ -356,9 +348,8 @@ export function Fields() {
           />
         </Stage>
         <p className="mt-3 text-xs text-muted">
-          <code className="font-mono">className</code> and{" "}
-          <code className="font-mono">inputClassName</code> are not interchangeable: once a{" "}
-          <code className="font-mono">label</code> turns an Input into a FloatingField,{" "}
+          <code className="font-mono">className</code> and <code className="font-mono">inputClassName</code> are not
+          interchangeable: once a <code className="font-mono">label</code> turns an Input into a FloatingField,{" "}
           <code className="font-mono">className</code> styles the WRAPPER, and{" "}
           <code className="font-mono">inputClassName</code> is the only way to reach the{" "}
           <code className="font-mono">&lt;input&gt;</code> itself.
@@ -406,10 +397,9 @@ export function Fields() {
           </Select>
         </Stage>
         <p className="mt-3 text-xs text-muted">
-          Pick an account and the rose ring goes. The third select is disabled and has{" "}
-          <em>dropped its chevron</em> on purpose: the arrow is the one thing on the control that
-          promises a choice, and a read-only account type that still looked like a picker is what
-          produced the rule.
+          Pick an account and the rose ring goes. The third select is disabled and has <em>dropped its chevron</em> on
+          purpose: the arrow is the one thing on the control that promises a choice, and a read-only account type that
+          still looked like a picker is what produced the rule.
         </p>
       </Example>
 
@@ -419,12 +409,7 @@ export function Fields() {
       >
         <Stage>
           <div className="flex items-center gap-2">
-            <Select
-              size="sm"
-              aria-label="Period"
-              value={period}
-              onChange={(e) => setPeriod(e.target.value)}
-            >
+            <Select size="sm" aria-label="Period" value={period} onChange={(e) => setPeriod(e.target.value)}>
               <option value="q3">Q3 2026</option>
               <option value="q2">Q2 2026</option>
             </Select>
@@ -473,14 +458,13 @@ export function Fields() {
           </Select>
         </Stage>
         <p className="text-xs text-muted">
-          <code className="font-mono">size=&quot;sm&quot;</code> is honoured by unlabelled selects
-          only — a floating label needs the tall box to float in, so a labelled Select ignores it.{" "}
-          <code className="font-mono">size={"{4}"}</code> passes straight through as the HTML
-          attribute (the rows of a list box; picked: <code className="font-mono">{listPick}</code>).
-          Above 1, or with <code className="font-mono">multiple</code>, the browser draws a list box
-          and the Select drops its chevron and the end padding reserved for it, so no row is
-          clipped and nothing sits on the text. Ctrl/⌘-click picks several in the last one:{" "}
-          <code className="font-mono">{JSON.stringify(multiPick)}</code>.
+          <code className="font-mono">size=&quot;sm&quot;</code> is honoured by unlabelled selects only — a floating
+          label needs the tall box to float in, so a labelled Select ignores it.{" "}
+          <code className="font-mono">size={"{4}"}</code> passes straight through as the HTML attribute (the rows of a
+          list box; picked: <code className="font-mono">{listPick}</code>). Above 1, or with{" "}
+          <code className="font-mono">multiple</code>, the browser draws a list box and the Select drops its chevron and
+          the end padding reserved for it, so no row is clipped and nothing sits on the text. Ctrl/⌘-click picks several
+          in the last one: <code className="font-mono">{JSON.stringify(multiPick)}</code>.
         </p>
       </Example>
 
@@ -539,10 +523,9 @@ export function Fields() {
             </Select>
             <div>
               <p className="mb-2 text-xs text-muted">
-                Every side — hover or tab to each. <code>start</code> (the default) and{" "}
-                <code>end</code> follow the reading direction; <code>left</code>/<code>right</code>{" "}
-                are the screen&apos;s. The bubble is portalled, so it measures
-                itself and turns round when the chosen side would not fit.
+                Every side — hover or tab to each. <code>start</code> (the default) and <code>end</code> follow the
+                reading direction; <code>left</code>/<code>right</code> are the screen&apos;s. The bubble is portalled,
+                so it measures itself and turns round when the chosen side would not fit.
               </p>
               <Row>
                 {(["start", "end", "left", "right", "top", "bottom"] as const).map((side) => (
@@ -606,8 +589,8 @@ export function Fields() {
               label="Reference"
               hint={
                 <HelpPopover label="About the reference">
-                  The bank prints it on the counterparty&apos;s statement, so they can match the payment to an
-                  invoice. Leave it empty for a transfer between your own accounts.
+                  The bank prints it on the counterparty&apos;s statement, so they can match the payment to an invoice.
+                  Leave it empty for a transfer between your own accounts.
                 </HelpPopover>
               }
             />
@@ -646,8 +629,8 @@ export function Fields() {
                     describes both.
                   </p>
                   <p>
-                    <strong>Out and return</strong> — the wheel turned out and back, so the sheet holds the loop the
-                    rod draws, friction included.
+                    <strong>Out and return</strong> — the wheel turned out and back, so the sheet holds the loop the rod
+                    draws, friction included.
                   </p>
                 </>
               }
@@ -665,8 +648,8 @@ export function Fields() {
           </div>
         </Stage>
         <Note>
-          <strong>One &ldquo;?&rdquo; per field</strong> (text size §4): <code className="font-mono">hint</code>{" "}
-          is the fact, a caption under the field that its <code className="font-mono">aria-describedby</code> names;{" "}
+          <strong>One &ldquo;?&rdquo; per field</strong> (text size §4): <code className="font-mono">hint</code> is the
+          fact, a caption under the field that its <code className="font-mono">aria-describedby</code> names;{" "}
           <code className="font-mono">help</code> is the help, a HelpPopover on the label line named &ldquo;About{" "}
           <em>label</em>&rdquo; in the reader&apos;s language (pass a HelpPopover to name it yourself). While{" "}
           <code className="font-mono">help</code> is set, a FieldHint hint draws no &ldquo;?&rdquo; of its own: two
@@ -698,9 +681,9 @@ export function Fields() {
         </Stage>
         <p className="mt-3 text-xs text-muted">
           Textarea has no <code className="font-mono">inputClassName</code> escape hatch and no{" "}
-          <code className="font-mono">hint</code> slot — on a labelled one,{" "}
-          <code className="font-mono">className</code> reaches the wrapper only. Compose with{" "}
-          <code className="font-mono">FloatingField</code> directly if you need either.
+          <code className="font-mono">hint</code> slot — on a labelled one, <code className="font-mono">className</code>{" "}
+          reaches the wrapper only. Compose with <code className="font-mono">FloatingField</code> directly if you need
+          either.
         </p>
       </Example>
 
@@ -785,12 +768,7 @@ export function Fields() {
       <Example label="SearchField" hint="controlled, and emits a plain string rather than an event">
         <Stage>
           <div className="space-y-4">
-            <SearchField
-              value={query}
-              onChange={setQuery}
-              aria-label="Filter entries"
-              clearLabel="Clear filter"
-            />
+            <SearchField value={query} onChange={setQuery} aria-label="Filter entries" clearLabel="Clear filter" />
             <SearchField
               value={plainQuery}
               onChange={setPlainQuery}
@@ -815,12 +793,7 @@ export function Fields() {
               disabled
             />
             <div dir="rtl">
-              <SearchField
-                value={rtlQuery}
-                onChange={setRtlQuery}
-                aria-label="تصفية القيود"
-                clearLabel="مسح"
-              />
+              <SearchField value={rtlQuery} onChange={setRtlQuery} aria-label="تصفية القيود" clearLabel="مسح" />
             </div>
             <p className="text-xs text-muted">
               Current value: <code className="font-mono">{JSON.stringify(query)}</code>
@@ -828,40 +801,37 @@ export function Fields() {
           </div>
         </Stage>
         <p className="mt-3 text-xs text-muted">
-          A name is required — <code className="font-mono">aria-label</code> — and the placeholder falls back to it, never the
-          other way round — a placeholder vanishes the moment someone types, so a field named only
-          by one is unnamed exactly when a screen-reader user is working in it. Omitting{" "}
-          <code className="font-mono">clearLabel</code> removes the clear button entirely, and the
-          end padding with it; that is a decision, not a default. Chrome paints its own native
-          cross on <code className="font-mono">type=&quot;search&quot;</code>, so the kit suppresses
-          it and keeps the named one that also returns focus to the input. The last field sits in{" "}
-          <code className="font-mono">dir=&quot;rtl&quot;</code>: the icon and the clear button are
-          placed with logical sides, so they swap ends with the writing direction.
+          A name is required — <code className="font-mono">aria-label</code> — and the placeholder falls back to it,
+          never the other way round — a placeholder vanishes the moment someone types, so a field named only by one is
+          unnamed exactly when a screen-reader user is working in it. Omitting{" "}
+          <code className="font-mono">clearLabel</code> removes the clear button entirely, and the end padding with it;
+          that is a decision, not a default. Chrome paints its own native cross on{" "}
+          <code className="font-mono">type=&quot;search&quot;</code>, so the kit suppresses it and keeps the named one
+          that also returns focus to the input. The last field sits in{" "}
+          <code className="font-mono">dir=&quot;rtl&quot;</code>: the icon and the clear button are placed with logical
+          sides, so they swap ends with the writing direction.
         </p>
       </Example>
 
       <Note>
         <strong>`invalid` paints and announces; `error` also explains.</strong>{" "}
-        <code className="font-mono">invalid</code> sets{" "}
-        <code className="font-mono">aria-invalid</code> on the control and applies{" "}
-        <code className="font-mono">FIELD_INVALID</code> — the two were fused into one prop because
-        writing the attribute by hand announced the problem and painted nothing. A caller&apos;s own{" "}
-        <code className="font-mono">aria-invalid</code> (what a form library sets) now paints too,
-        on all three. <code className="font-mono">error</code> is the message: rendered under the
-        field and wired through <code className="font-mono">aria-describedby</code>, merged with any
-        id you pass. Use <code className="font-mono">invalid</code> alone when the message lives
-        elsewhere — a summary at the top of a dialog.
+        <code className="font-mono">invalid</code> sets <code className="font-mono">aria-invalid</code> on the control
+        and applies <code className="font-mono">FIELD_INVALID</code> — the two were fused into one prop because writing
+        the attribute by hand announced the problem and painted nothing. A caller&apos;s own{" "}
+        <code className="font-mono">aria-invalid</code> (what a form library sets) now paints too, on all three.{" "}
+        <code className="font-mono">error</code> is the message: rendered under the field and wired through{" "}
+        <code className="font-mono">aria-describedby</code>, merged with any id you pass. Use{" "}
+        <code className="font-mono">invalid</code> alone when the message lives elsewhere — a summary at the top of a
+        dialog.
       </Note>
 
       <Note>
-        <strong>Fields follow the palette like everything else.</strong> The surface, the text, the
-        border, the floating label, the focus ring and the invalid highlight are all tokens (
-        <code className="font-mono">--bg-surface</code>,{" "}
-        <code className="font-mono">--text-primary</code>,{" "}
-        <code className="font-mono">--brand</code>,{" "}
-        <code className="font-mono">--danger-border</code>), so switching the palette in the top bar
-        re-skins the field interiors with the cards around them. The class constants a custom field
-        is composed from are on the Helpers page.
+        <strong>Fields follow the palette like everything else.</strong> The surface, the text, the border, the floating
+        label, the focus ring and the invalid highlight are all tokens (<code className="font-mono">--bg-surface</code>,{" "}
+        <code className="font-mono">--text-primary</code>, <code className="font-mono">--brand</code>,{" "}
+        <code className="font-mono">--danger-border</code>), so switching the palette in the top bar re-skins the field
+        interiors with the cards around them. The class constants a custom field is composed from are on the Helpers
+        page.
       </Note>
     </>
   );
@@ -987,14 +957,12 @@ export function TextareaEdge025Demo() {
           />
         </div>
         <Note>
-          Under the label strip, a line scrolled most of the way out
-          left a row of comma tails above the first whole line. The strip&apos;s edge now follows
-          the scroll. Half a line or less left: covered, solid, to exactly where that line ends —
-          the strip snaps to the line box, and the next line is untouched. More than half: a 3px
-          soft edge instead of a cut. On a line boundary, and at rest, nothing at all — an
-          unscrolled first line is never covered. It is a pseudo-element of the strip, so it
-          inherits the strip&apos;s surface ({code("--bg-surface")}, {code("--bg-surface-2")} when
-          disabled or read-only, both themes), its scrollbar inset and its RTL side.
+          Under the label strip, a line scrolled most of the way out left a row of comma tails above the first whole
+          line. The strip&apos;s edge now follows the scroll. Half a line or less left: covered, solid, to exactly where
+          that line ends — the strip snaps to the line box, and the next line is untouched. More than half: a 3px soft
+          edge instead of a cut. On a line boundary, and at rest, nothing at all — an unscrolled first line is never
+          covered. It is a pseudo-element of the strip, so it inherits the strip&apos;s surface ({code("--bg-surface")},{" "}
+          {code("--bg-surface-2")} when disabled or read-only, both themes), its scrollbar inset and its RTL side.
         </Note>
       </div>
     </Example>
@@ -1008,22 +976,13 @@ export function Fields022Demo() {
   const [subject, setSubject] = useState("Maintenance on Saturday");
   const [start, setStart] = useState("08:30");
   return (
-    <Example
-      label="Placeholder, hint and counter on a labelled field"
-      hint="the field anatomy, one slot each"
-    >
+    <Example label="Placeholder, hint and counter on a labelled field" hint="the field anatomy, one slot each">
       <div className="grid gap-4 sm:grid-cols-2">
         <Input label="Access note" placeholder="e.g. the key is with the caretaker" />
         <Input label="IBAN" hint="22 characters, spaces allowed" />
         <Input label="Interest rate" hint={<FieldHint label="Per year, before tax" />} />
         <TimeInput label="Start" value={start} onValueChange={setStart} hint="Local time at the site" />
-        <Input
-          label="Subject"
-          maxLength={60}
-          showCount
-          value={subject}
-          onChange={(e) => setSubject(e.target.value)}
-        />
+        <Input label="Subject" maxLength={60} showCount value={subject} onChange={(e) => setSubject(e.target.value)} />
         <Input aria-label="Reference" placeholder="Reference" hint={<FieldHint label="From the letter, top right" />} />
         <div className="sm:col-span-2">
           <Textarea
@@ -1042,9 +1001,9 @@ export function Fields022Demo() {
         A labelled field keeps a caller&apos;s {code("placeholder")} and shows it once the label has floated up (focus
         the first field). {code("hint")} follows Select&apos;s rule: text is a caption under the field, on its{" "}
         {code("aria-describedby")} before any error; a {code("FieldHint")} rides the label line, or the end edge when
-        there is no label. {code("showCount")} with {code("maxLength")} reads as &quot;12 of 60 characters&quot; with the
-        field and is announced only on entering the last tenth and at the limit — type into Subject to see the colours
-        turn.
+        there is no label. {code("showCount")} with {code("maxLength")} reads as &quot;12 of 60 characters&quot; with
+        the field and is announced only on entering the last tenth and at the limit — type into Subject to see the
+        colours turn.
       </Note>
     </Example>
   );

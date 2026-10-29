@@ -8,12 +8,7 @@ import {
   toggleHidden,
   visibleSeries,
 } from "@eifi1/ui-kit";
-import type {
-  SeriesChartHit,
-  SeriesChartPoint,
-  SeriesChartSeries,
-  ZoomAxesSetting,
-} from "@eifi1/ui-kit";
+import type { SeriesChartHit, SeriesChartPoint, SeriesChartSeries, ZoomAxesSetting } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row, code } from "../lib/section";
 import { numberFormat } from "../lib/number-format";
 
@@ -30,7 +25,12 @@ import { numberFormat } from "../lib/number-format";
  */
 
 const EUR = numberFormat("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
-const EUR2 = numberFormat("en-GB", { style: "currency", currency: "EUR", minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const EUR2 = numberFormat("en-GB", {
+  style: "currency",
+  currency: "EUR",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 const WHOLE = numberFormat("en-GB", { maximumFractionDigits: 0 });
 const MONTH = new Intl.DateTimeFormat("en-GB", { month: "short" });
 
@@ -88,13 +88,12 @@ function GroupedBars() {
       />
       <div className="mt-3">
         <Note>
-          Click a bar and the hit names its series; click between bars and it names only the slot —
-          the period a drilldown opens. The axis carrying bars always includes zero, and the
-          expenses hang below it. There is no drag layer: a chart with bars defaults to{" "}
-          <code className="font-mono">zoomAxes: &quot;none&quot;</code>, because every bar chart in the
-          apps is clicked, and a drag layer would swallow the clicks. The tick labels come from{" "}
-          <code className="font-mono">format(slot, tick)</code>, whose <code className="font-mono">tick.value</code>{" "}
-          is the row&apos;s own <code className="font-mono">&quot;2026-03&quot;</code>.
+          Click a bar and the hit names its series; click between bars and it names only the slot — the period a
+          drilldown opens. The axis carrying bars always includes zero, and the expenses hang below it. There is no drag
+          layer: a chart with bars defaults to <code className="font-mono">zoomAxes: &quot;none&quot;</code>, because
+          every bar chart in the apps is clicked, and a drag layer would swallow the clicks. The tick labels come from{" "}
+          <code className="font-mono">format(slot, tick)</code>, whose <code className="font-mono">tick.value</code> is
+          the row&apos;s own <code className="font-mono">&quot;2026-03&quot;</code>.
         </Note>
       </div>
     </Example>
@@ -143,11 +142,11 @@ function Stacks() {
       />
       <div className="mt-3">
         <Note>
-          The stacked areas are drawn at <code className="font-mono">fillOpacity</code> 0.55 by default
-          (0.2 for a lone area) so the layers stay tellable apart where they meet. An area chart zooms
-          along x only — drag across a few months and the y axis refits to them, still from zero; the
-          same data as bars does not zoom at all. Switching the mark keeps each category&apos;s colour,
-          because the colours are by position in <code className="font-mono">series</code>.
+          The stacked areas are drawn at <code className="font-mono">fillOpacity</code> 0.55 by default (0.2 for a lone
+          area) so the layers stay tellable apart where they meet. An area chart zooms along x only — drag across a few
+          months and the y axis refits to them, still from zero; the same data as bars does not zoom at all. Switching
+          the mark keeps each category&apos;s colour, because the colours are by position in{" "}
+          <code className="font-mono">series</code>.
         </Note>
       </div>
     </Example>
@@ -192,7 +191,15 @@ function eventDot(point: SeriesChartPoint) {
       strokeWidth={1}
     />
   ) : (
-    <rect x={point.cx - 5} y={point.cy - 5} width={10} height={10} fill="var(--warning)" stroke="var(--bg-surface)" strokeWidth={1} />
+    <rect
+      x={point.cx - 5}
+      y={point.cy - 5}
+      width={10}
+      height={10}
+      fill="var(--warning)"
+      stroke="var(--bg-surface)"
+      strokeWidth={1}
+    />
   );
 }
 
@@ -240,18 +247,17 @@ function TimeAxis() {
       />
       <div className="mt-3">
         <Note>
-          <code className="font-mono">dot</code> as a function draws per point: the green triangles are
-          buys and the amber square a change of shop — any SVG node at <code className="font-mono">cx</code>/
-          <code className="font-mono">cy</code> — and every other sample returns{" "}
-          <code className="font-mono">true</code> for the default ring. The price is{" "}
-          <code className="font-mono">strokeWidth: 2.5</code>, the projection and the step average it is
-          read against 1.5. The projection is{" "}
+          <code className="font-mono">dot</code> as a function draws per point: the green triangles are buys and the
+          amber square a change of shop — any SVG node at <code className="font-mono">cx</code>/
+          <code className="font-mono">cy</code> — and every other sample returns <code className="font-mono">true</code>{" "}
+          for the default ring. The price is <code className="font-mono">strokeWidth: 2.5</code>, the projection and the
+          step average it is read against 1.5. The projection is{" "}
           <code className="font-mono">curve: &quot;linear&quot;</code>, because a monotone curve would dress an
-          extrapolation up as data. The two <code className="font-mono">references</code> are a threshold
-          on the price axis (widening the fitted band to show it) and a date down the x axis; the{" "}
+          extrapolation up as data. The two <code className="font-mono">references</code> are a threshold on the price
+          axis (widening the fitted band to show it) and a date down the x axis; the{" "}
           <code className="font-mono">markers</code> are two single labelled points. The y{" "}
-          <code className="font-mono">tickValues</code> is a function of the window, so a zoom refines the
-          cent grid — drag a box around the spring prices.
+          <code className="font-mono">tickValues</code> is a function of the window, so a zoom refines the cent grid —
+          drag a box around the spring prices.
         </Note>
       </div>
     </Example>
@@ -282,11 +288,10 @@ function CategoryTicks() {
       />
       <div className="mt-3">
         <Note>
-          Only January, March, May, July and September are labelled, from{" "}
-          <code className="font-mono">tickValues</code> in the axis&apos; own terms (the ISO periods); the
-          tooltip heading comes from <code className="font-mono">x.label</code>. The y ticks are a fixed
-          list. A lone area is drawn at 0.2 by default — this one says{" "}
-          <code className="font-mono">fillOpacity: 0.35</code>.
+          Only January, March, May, July and September are labelled, from <code className="font-mono">tickValues</code>{" "}
+          in the axis&apos; own terms (the ISO periods); the tooltip heading comes from{" "}
+          <code className="font-mono">x.label</code>. The y ticks are a fixed list. A lone area is drawn at 0.2 by
+          default — this one says <code className="font-mono">fillOpacity: 0.35</code>.
         </Note>
       </div>
     </Example>
@@ -313,7 +318,12 @@ function ZoomAxesDemo() {
       hint="default is read off the marks: lines both, areas x, bars none"
     >
       <Row className="mb-3">
-        <ToggleGroup<ZoomAxesSetting | "default"> aria-label="zoomAxes" value={zoom} onChange={setZoom} options={ZOOM_OPTIONS} />
+        <ToggleGroup<ZoomAxesSetting | "default">
+          aria-label="zoomAxes"
+          value={zoom}
+          onChange={setZoom}
+          options={ZOOM_OPTIONS}
+        />
         <span className="font-mono text-xs text-muted">clicked: {clicked}</span>
       </Row>
       <SeriesChart
@@ -328,15 +338,14 @@ function ZoomAxesDemo() {
       <div className="mt-3">
         <Note>
           Left out, <code className="font-mono">zoomAxes</code> follows what the series are:{" "}
-          <code className="font-mono">both</code> for lines only, <code className="font-mono">x</code>{" "}
-          with an area among them, <code className="font-mono">none</code> with a bar.
+          <code className="font-mono">both</code> for lines only, <code className="font-mono">x</code> with an area
+          among them, <code className="font-mono">none</code> with a bar.
         </Note>
         <Note>
-          With <code className="font-mono">zoomAxes=&quot;x&quot;</code> a drag across the bars picks a
-          stretch of days — the axis ticks whole slots and the bars at the edge are clipped — and a
-          click still reports, but the slot rather than the bar, since the drag layer lies over them.
-          On <code className="font-mono">default</code> (none, for bars) and{" "}
-          <code className="font-mono">none</code> there is nothing to drag and a click on a bar names it.
+          With <code className="font-mono">zoomAxes=&quot;x&quot;</code> a drag across the bars picks a stretch of days
+          — the axis ticks whole slots and the bars at the edge are clipped — and a click still reports, but the slot
+          rather than the bar, since the drag layer lies over them. On <code className="font-mono">default</code> (none,
+          for bars) and <code className="font-mono">none</code> there is nothing to drag and a click on a bar names it.
           An axis carrying bars never takes a dragged y window: it refits from zero.
         </Note>
       </div>
@@ -386,18 +395,17 @@ function StableLegend() {
       <div className="mt-3">
         <Note>
           A series with no <code className="font-mono">color</code> takes{" "}
-          <code className="font-mono">paletteFor(its position)</code>. Hand the chart a filtered list and
-          every later series moves up a position and repaints in its neighbour&apos;s colour — with the
-          second button, switch Housing off and Food turns Housing&apos;s colour while its legend swatch
-          stays put. <code className="font-mono">visibleSeries</code> settles the colours first;{" "}
-          <code className="font-mono">seriesLegendEntries</code> builds the legend from the same rule, a
-          swatch for a bar or an area and a dashed stroke for the dashed budget line.
+          <code className="font-mono">paletteFor(its position)</code>. Hand the chart a filtered list and every later
+          series moves up a position and repaints in its neighbour&apos;s colour — with the second button, switch
+          Housing off and Food turns Housing&apos;s colour while its legend swatch stays put.{" "}
+          <code className="font-mono">visibleSeries</code> settles the colours first;{" "}
+          <code className="font-mono">seriesLegendEntries</code> builds the legend from the same rule, a swatch for a
+          bar or an area and a dashed stroke for the dashed budget line.
         </Note>
       </div>
     </Example>
   );
 }
-
 
 /* ── late 0.8.0 additions ───────────────────────────────────────────────── */
 
@@ -488,19 +496,18 @@ function LateAdditions() {
       <ToggleLegend entries={seriesLegendEntries(WEEK_SERIES)} hidden={new Set()} onToggle={() => undefined} />
       <div className="mt-3">
         <Note>
-          The twelve category names are long, so the ticks are tilted by{" "}
-          <code className="font-mono">x.tickAngle</code> and the chart reserves the band they need. The
-          chart is wider than the card and scrolls sideways; <code className="font-mono">tooltip.boundary</code>{" "}
-          is the scroll wrapper, so near its visible right edge the tooltip flips to the left of the cursor
-          instead of hiding past the edge you have not scrolled to (and{" "}
+          The twelve category names are long, so the ticks are tilted by <code className="font-mono">x.tickAngle</code>{" "}
+          and the chart reserves the band they need. The chart is wider than the card and scrolls sideways;{" "}
+          <code className="font-mono">tooltip.boundary</code> is the scroll wrapper, so near its visible right edge the
+          tooltip flips to the left of the cursor instead of hiding past the edge you have not scrolled to (and{" "}
           <code className="font-mono">allowEscapeViewBox</code> lets it leave the plot box).{" "}
-          <code className="font-mono">height</code> is a number of pixels here (340, 220) rather than a
-          Tailwind class. The week chart&apos;s abscissa is all whole numbers, so it ticks whole weeks
-          without being told; <code className="font-mono">integerTicks: false</code> brings back the
-          fractional ladder (7.5, 12.5 …) and <code className="font-mono">true</code> would force whole ticks.
-          The target is <code className="font-mono">dash: &quot;4 3&quot;</code>, a custom dash array the
-          legend draws too, and the orders line has <code className="font-mono">activeDot: false</code>: its
-          ringed samples stay as they are under the pointer, with no enlarged hover dot.
+          <code className="font-mono">height</code> is a number of pixels here (340, 220) rather than a Tailwind class.
+          The week chart&apos;s abscissa is all whole numbers, so it ticks whole weeks without being told;{" "}
+          <code className="font-mono">integerTicks: false</code> brings back the fractional ladder (7.5, 12.5 …) and{" "}
+          <code className="font-mono">true</code> would force whole ticks. The target is{" "}
+          <code className="font-mono">dash: &quot;4 3&quot;</code>, a custom dash array the legend draws too, and the
+          orders line has <code className="font-mono">activeDot: false</code>: its ringed samples stay as they are under
+          the pointer, with no enlarged hover dot.
         </Note>
       </div>
     </Example>
@@ -511,9 +518,11 @@ export function SeriesChartMarks() {
   return (
     <>
       <Note>
-        <strong>Needs <code className="font-mono">recharts</code></strong>, like every chart. The first
-        page, &ldquo;Series chart&rdquo;, has the numeric measurement plots, the zoom and the axis helpers;
-        this one has the marks for money and time.
+        <strong>
+          Needs <code className="font-mono">recharts</code>
+        </strong>
+        , like every chart. The first page, &ldquo;Series chart&rdquo;, has the numeric measurement plots, the zoom and
+        the axis helpers; this one has the marks for money and time.
       </Note>
       <GroupedBars />
       <Stacks />
@@ -576,9 +585,9 @@ export function MinBarLengthDemo() {
       <div className="mt-3">
         <Note>
           Sunday is 0 in both series and Thursday&apos;s €1 is too small to see. With the chart&apos;s{" "}
-          {code("minBarLength")} each is drawn as a 3px stub, so an empty slot still reads as a slot with a
-          value rather than a gap; the Average series sets {code("0")} to opt out. Only the drawing changes. The
-          axis is fitted to the values, and hovering Sunday still says €0.
+          {code("minBarLength")} each is drawn as a 3px stub, so an empty slot still reads as a slot with a value rather
+          than a gap; the Average series sets {code("0")} to opt out. Only the drawing changes. The axis is fitted to
+          the values, and hovering Sunday still says €0.
         </Note>
       </div>
     </Example>

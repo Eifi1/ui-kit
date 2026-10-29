@@ -34,8 +34,26 @@ interface Invoice {
 }
 
 const ROWS: Invoice[] = [
-  { id: 1, number: "INV-1", tenant: "Ada Example", due: "31 Oct", amount: "CHF 1,850.00", note: "", status: "Unpaid", reference: "R-77" },
-  { id: 2, number: "INV-2", tenant: "Ben Sample", due: null, amount: "CHF 920.00", note: "Keys", status: "Overdue", reference: "—" },
+  {
+    id: 1,
+    number: "INV-1",
+    tenant: "Ada Example",
+    due: "31 Oct",
+    amount: "CHF 1,850.00",
+    note: "",
+    status: "Unpaid",
+    reference: "R-77",
+  },
+  {
+    id: 2,
+    number: "INV-2",
+    tenant: "Ben Sample",
+    due: null,
+    amount: "CHF 920.00",
+    note: "Keys",
+    status: "Overdue",
+    reference: "—",
+  },
 ];
 
 const COLUMNS: DataTableColumn<Invoice>[] = [
@@ -71,9 +89,12 @@ describe("the default phone card (KIT-7)", () => {
     expect(labels(cardOf("INV-1"))).toEqual(["Tenant", "Due", "Amount"]);
   });
 
-  it("hides a field whose value is empty — null, \"\" or the formatted empty \"—\"", () => {
+  it('hides a field whose value is empty — null, "" or the formatted empty "—"', () => {
     viewport(390);
-    renderTable({}, COLUMNS.map((c) => (c.key === "note" || c.key === "reference" ? { ...c, mobile: "secondary" as const } : c)));
+    renderTable(
+      {},
+      COLUMNS.map((c) => (c.key === "note" || c.key === "reference" ? { ...c, mobile: "secondary" as const } : c)),
+    );
     // Row 1: note "" hidden; row 2: reference "—" hidden.
     expect(labels(cardOf("INV-1"))).toEqual(["Reference"]);
     expect(labels(cardOf("INV-2"))).toEqual(["Note"]);
@@ -90,7 +111,7 @@ describe("the default phone card (KIT-7)", () => {
     expect(isEmptyCell(0)).toBe(false);
   });
 
-  it("takes the columns marked mobile: \"secondary\", and leaves out mobile: \"hidden\"", () => {
+  it('takes the columns marked mobile: "secondary", and leaves out mobile: "hidden"', () => {
     viewport(390);
     const columns = COLUMNS.map((c) =>
       c.key === "amount" || c.key === "note"
@@ -104,10 +125,14 @@ describe("the default phone card (KIT-7)", () => {
     expect(within(cardOf("INV-2")).queryByText("Ben Sample")).toBeNull();
   });
 
-  it("mobile: \"primary\" is the title, as mobilePrimary", () => {
+  it('mobile: "primary" is the title, as mobilePrimary', () => {
     viewport(390);
     const columns = COLUMNS.map((c) =>
-      c.key === "tenant" ? { ...c, mobile: "primary" as const } : c.key === "number" ? { ...c, mobilePrimary: undefined } : c,
+      c.key === "tenant"
+        ? { ...c, mobile: "primary" as const }
+        : c.key === "number"
+          ? { ...c, mobilePrimary: undefined }
+          : c,
     );
     renderTable({}, columns);
     const card = cardOf("Ada Example");
@@ -129,7 +154,16 @@ describe("the default phone card (KIT-7)", () => {
   it("keeps a status cell that is already a chip as it is", () => {
     viewport(390);
     const columns = COLUMNS.map((c) =>
-      c.key === "status" ? { ...c, cell: (r: Invoice) => <Chip tone="warning" data-testid={`chip-${r.id}`}>{r.status}</Chip> } : c,
+      c.key === "status"
+        ? {
+            ...c,
+            cell: (r: Invoice) => (
+              <Chip tone="warning" data-testid={`chip-${r.id}`}>
+                {r.status}
+              </Chip>
+            ),
+          }
+        : c,
     );
     renderTable({}, columns);
     const chip = screen.getByTestId("chip-1");
@@ -209,10 +243,16 @@ describe("the dev warning for a noRowLink column the card drops (KIT-7)", () => 
     expect(warn.mock.calls[2]![0]).toMatch(/^\[ui-kit\] DataTable "dun\.": column "bin" /);
   });
 
-  it("never fires for a role: \"actions\" column", () => {
+  it('never fires for a role: "actions" column', () => {
     const warn = devBuild();
-    renderTable({}, withButtons("bin-actions").map((c) => (c.key === "bin-actions" ? { ...c, role: "actions" as const } : c)));
-    renderTable({}, [...COLUMNS, rowActionsColumn<Invoice>({ actions: () => [{ label: "Delete", onSelect: () => {} }] })]);
+    renderTable(
+      {},
+      withButtons("bin-actions").map((c) => (c.key === "bin-actions" ? { ...c, role: "actions" as const } : c)),
+    );
+    renderTable({}, [
+      ...COLUMNS,
+      rowActionsColumn<Invoice>({ actions: () => [{ label: "Delete", onSelect: () => {} }] }),
+    ]);
     expect(warn).not.toHaveBeenCalled();
   });
 
@@ -221,11 +261,17 @@ describe("the dev warning for a noRowLink column the card drops (KIT-7)", () => 
     // The title and two fields before it: the bin is the third field.
     renderTable({}, withButtons("bin-third", 3));
     // Columns marked mobile: "secondary" are the app's choice.
-    renderTable({}, withButtons("bin-marked").map((c) => (c.key === "tenant" ? { ...c, mobile: "secondary" as const } : c)));
+    renderTable(
+      {},
+      withButtons("bin-marked").map((c) => (c.key === "tenant" ? { ...c, mobile: "secondary" as const } : c)),
+    );
     renderTable({ mobileCard: (r) => <p>{r.number}</p> }, withButtons("bin-card"));
     // In the opened row the button is still a tap away.
     renderTable({ mobileDetailsInRow: true }, withButtons("bin-details"));
-    renderTable({}, withButtons("bin-hidden").map((c) => (c.key === "bin-hidden" ? { ...c, mobileHidden: true } : c)));
+    renderTable(
+      {},
+      withButtons("bin-hidden").map((c) => (c.key === "bin-hidden" ? { ...c, mobileHidden: true } : c)),
+    );
     renderTable({ rowActions: [{ kind: "delete", onAction: () => {} }] });
     expect(warn).not.toHaveBeenCalled();
   });
@@ -240,14 +286,14 @@ describe("the dev warning for a noRowLink column the card drops (KIT-7)", () => 
   });
 });
 
-describe("a role: \"actions\" column on the default phone card (KIT-7)", () => {
+describe('a role: "actions" column on the default phone card (KIT-7)', () => {
   const onDelete = vi.fn();
   const actions = rowActionsColumn<Invoice>({
     actions: (r) => [{ key: "delete", label: `Delete ${r.number}`, onSelect: () => onDelete(r.id) }],
     collapse: "inline",
   });
 
-  it("rowActionsColumn is role: \"actions\", and its column option still overrides it", () => {
+  it('rowActionsColumn is role: "actions", and its column option still overrides it', () => {
     expect(actions.role).toBe("actions");
     expect(actions.noRowLink).toBe(true);
     expect(rowActionsColumn<Invoice>({ actions: () => [], column: { role: undefined } }).role).toBeUndefined();
@@ -273,7 +319,7 @@ describe("a role: \"actions\" column on the default phone card (KIT-7)", () => {
     expect(fields.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("draws them whatever is marked mobile: \"secondary\", and only mobileHidden takes them off", () => {
+  it('draws them whatever is marked mobile: "secondary", and only mobileHidden takes them off', () => {
     viewport(390);
     const marked = COLUMNS.map((c) => (c.key === "note" ? { ...c, mobile: "secondary" as const } : c));
     const { unmount } = renderTable({}, [...marked, actions]);

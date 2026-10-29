@@ -3,11 +3,7 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { toast } from "../../components/toast";
 import { UiKitProvider, type UiKitLabelOverrides } from "../../i18n/kit-labels";
-import {
-  FEEDBACK_UNDO_DURATION,
-  useFeedbackStatusUndo,
-  type FeedbackStatusMutate,
-} from "../feedback-status-undo";
+import { FEEDBACK_UNDO_DURATION, useFeedbackStatusUndo, type FeedbackStatusMutate } from "../feedback-status-undo";
 
 vi.mock("../../components/toast", () => ({
   toast: Object.assign(vi.fn(), { undo: vi.fn(), success: vi.fn(), error: vi.fn() }),

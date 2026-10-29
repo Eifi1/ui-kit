@@ -11,8 +11,22 @@ import { numberFormat } from "../lib/number-format";
 const EUR = numberFormat("en-GB", { style: "currency", currency: "EUR" });
 
 const RESULTS = [
-  { label: "Revenue", value: 48210.5, parts: [["Rent", 45100], ["Parking", 3110.5]] },
-  { label: "Operating costs", value: -21340.2, parts: [["Maintenance", -12880.2], ["Insurance", -8460]] },
+  {
+    label: "Revenue",
+    value: 48210.5,
+    parts: [
+      ["Rent", 45100],
+      ["Parking", 3110.5],
+    ],
+  },
+  {
+    label: "Operating costs",
+    value: -21340.2,
+    parts: [
+      ["Maintenance", -12880.2],
+      ["Insurance", -8460],
+    ],
+  },
   { label: "Net profit", value: 26870.3, parts: [["Before tax", 26870.3]] },
 ] as const;
 
@@ -23,7 +37,10 @@ function ResultRows() {
       hint="the figure is part of the button and its name; the chevron hugs the label so the labels keep one column"
     >
       <Stage>
-        <div data-stage="wide" className="mx-auto w-full max-w-md divide-y divide-subtle rounded-lg border border-subtle">
+        <div
+          data-stage="wide"
+          className="mx-auto w-full max-w-md divide-y divide-subtle rounded-lg border border-subtle"
+        >
           {RESULTS.map((r) => (
             <Disclosure
               key={r.label}
@@ -53,12 +70,12 @@ function ResultRows() {
       </Stage>
       <Note>
         <code className="font-mono">trailingInTrigger</code> renders <code className="font-mono">trailing</code> inside
-        the header button: the whole row — figure included — is one click target, and the button is named
-        &ldquo;Net profit €26,870.30&rdquo;, not &ldquo;Net profit&rdquo; beside an unexplained number. Only for
-        content that is not interactive — an action still belongs in the default, sibling{" "}
-        <code className="font-mono">trailing</code>. <code className="font-mono">chevronPosition=&quot;after-title&quot;</code>{" "}
-        puts the chevron right after the label&apos;s text, pointing down and turning up, so the expandable labels
-        start on the same column as the plain row below them, and the far end stays the figure&apos;s.
+        the header button: the whole row — figure included — is one click target, and the button is named &ldquo;Net
+        profit €26,870.30&rdquo;, not &ldquo;Net profit&rdquo; beside an unexplained number. Only for content that is
+        not interactive — an action still belongs in the default, sibling <code className="font-mono">trailing</code>.{" "}
+        <code className="font-mono">chevronPosition=&quot;after-title&quot;</code> puts the chevron right after the
+        label&apos;s text, pointing down and turning up, so the expandable labels start on the same column as the plain
+        row below them, and the far end stays the figure&apos;s.
       </Note>
     </Example>
   );
@@ -126,16 +143,14 @@ function EmptyControls() {
               <li className="px-3 py-1.5 text-xs text-muted">{open ? "No rows match." : "Folded."}</li>
             )}
           </ul>
-          <p className="font-mono text-xs text-secondary">
-            aria-controls = {attr === null ? "(none)" : `"${attr}"`}
-          </p>
+          <p className="font-mono text-xs text-secondary">aria-controls = {attr === null ? "(none)" : `"${attr}"`}</p>
         </div>
       </Stage>
       <Note>
         <code className="font-mono">controls</code> is an IDREF LIST — here each rendered row&apos;s id, joined with
-        spaces, since what folds is several siblings of the header. Filter every row away (or fold the group) and
-        it becomes the empty string: the header then carries no <code className="font-mono">aria-controls</code>,
-        which the readout shows, and still toggles.
+        spaces, since what folds is several siblings of the header. Filter every row away (or fold the group) and it
+        becomes the empty string: the header then carries no <code className="font-mono">aria-controls</code>, which the
+        readout shows, and still toggles.
       </Note>
     </Example>
   );

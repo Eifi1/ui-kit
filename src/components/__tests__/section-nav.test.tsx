@@ -24,7 +24,13 @@ describe("SectionNav", () => {
     render(<SectionNav label="Accounting" items={ITEMS} current="invoices" />);
     const nav = screen.getByRole("navigation", { name: "Accounting" });
     const links = within(nav).getAllByRole("link");
-    expect(links.map((a) => a.textContent)).toEqual(["Journal", "Accounts", "Invoices", "Balance sheet", "Trial balance"]);
+    expect(links.map((a) => a.textContent)).toEqual([
+      "Journal",
+      "Accounts",
+      "Invoices",
+      "Balance sheet",
+      "Trial balance",
+    ]);
     expect(within(nav).getByRole("link", { name: "Invoices" })).toHaveAttribute("aria-current", "page");
   });
 

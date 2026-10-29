@@ -1,5 +1,14 @@
 import { useState } from "react";
-import { Button, FieldHint, LanguageSelect, OneTimeCodeInput, PasswordSetting, Switch, TILE_SIZE, TileRadioGroup } from "@eifi1/ui-kit";
+import {
+  Button,
+  FieldHint,
+  LanguageSelect,
+  OneTimeCodeInput,
+  PasswordSetting,
+  Switch,
+  TILE_SIZE,
+  TileRadioGroup,
+} from "@eifi1/ui-kit";
 import type { KitLanguageCode } from "@eifi1/ui-kit";
 import { Example, Note, Row, code, READOUT } from "../lib/section";
 
@@ -25,7 +34,10 @@ export function OneTimeCode022Demo() {
     }
   };
   return (
-    <Example label="OneTimeCodeInput — the sign-in verification code" hint="one field: paste and the platform's code autofill land in it">
+    <Example
+      label="OneTimeCodeInput — the sign-in verification code"
+      hint="one field: paste and the platform's code autofill land in it"
+    >
       <div className="max-w-sm space-y-3">
         <form
           className="space-y-3"
@@ -61,8 +73,8 @@ export function OneTimeCode022Demo() {
       <div className="mt-3 space-y-2">
         <Note>
           Type or paste {code("123 456")} or {code("012-345")}: spaces and dashes go, letters are refused, and the
-          leading zero stays — the value is a string. A pasted whole code replaces what is there. Try{" "}
-          {code("000000")} for the error.
+          leading zero stays — the value is a string. A pasted whole code replaces what is there. Try {code("000000")}{" "}
+          for the error.
         </Note>
         <Note>
           {code("onComplete")} only reports that six digits are in. Nothing submits by itself: the button (or Enter)
@@ -77,7 +89,10 @@ export function OneTimeCode022Demo() {
 export function OneTimeCodeUnlabelled022Demo() {
   const [value, setValue] = useState("");
   return (
-    <Example label="OneTimeCodeInput — named by its prompt" hint="aria-labelledby, a placeholder, a FieldHint at the end edge">
+    <Example
+      label="OneTimeCodeInput — named by its prompt"
+      hint="aria-labelledby, a placeholder, a FieldHint at the end edge"
+    >
       <div className="max-w-xs space-y-2">
         <p id="otp-022-prompt" className="text-sm text-secondary">
           Enter the code from your authenticator app.
@@ -115,8 +130,8 @@ export function PasswordStrength022Demo() {
       <div className="mt-3 space-y-2">
         <Note>
           {code("strength")} draws the PasswordStrengthMeter under the new password, its length rule taken from{" "}
-          {code("minLength")} (8 here, the default). {code("maxBytes={72}")} is bcrypt&apos;s ceiling: the meter
-          warns as you type and the card refuses to submit over it — an accent or emoji counts for more than one.
+          {code("minLength")} (8 here, the default). {code("maxBytes={72}")} is bcrypt&apos;s ceiling: the meter warns
+          as you type and the card refuses to submit over it — an accent or emoji counts for more than one.
         </Note>
       </div>
     </Example>
@@ -129,7 +144,10 @@ export function LanguageSelect022Demo() {
   const [invite, setInvite] = useState<string>("de-CH");
   const [reviewer, setReviewer] = useState<KitLanguageCode>("fr");
   return (
-    <Example label="LanguageSelect — a language as a form field" hint="label, hint, error; the names from the kit's registry">
+    <Example
+      label="LanguageSelect — a language as a form field"
+      hint="label, hint, error; the names from the kit's registry"
+    >
       <div className="grid max-w-2xl gap-4 sm:grid-cols-2">
         <LanguageSelect
           label="Invitation language"
@@ -154,9 +172,9 @@ export function LanguageSelect022Demo() {
       </Row>
       <div className="mt-3 space-y-2">
         <Note>
-          {code("codes")} are the languages offered, in that order; each shows by its own name, marked with its
-          language for a screen reader. A tag that is not one of them shows as the code it resolves to —{" "}
-          {code("de-AT")} as Deutsch — without being written back.
+          {code("codes")} are the languages offered, in that order; each shows by its own name, marked with its language
+          for a screen reader. A tag that is not one of them shows as the code it resolves to — {code("de-AT")} as
+          Deutsch — without being written back.
         </Note>
       </div>
     </Example>
@@ -177,8 +195,12 @@ function PatternGlyph({ pattern }: { pattern: Pattern }) {
   const glyph = TILE_SIZE.lg.glyph;
   return (
     <svg aria-hidden viewBox="0 0 20 20" className={glyph} fill="currentColor" stroke="currentColor">
-      {pattern === "dots" && [4, 10, 16].flatMap((x) => [4, 10, 16].map((y) => <circle key={`${x}-${y}`} cx={x} cy={y} r={1.6} stroke="none" />))}
-      {pattern === "stripes" && [3, 8, 13, 18].map((x) => <line key={x} x1={x} y1={2} x2={x} y2={18} strokeWidth={2} />)}
+      {pattern === "dots" &&
+        [4, 10, 16].flatMap((x) =>
+          [4, 10, 16].map((y) => <circle key={`${x}-${y}`} cx={x} cy={y} r={1.6} stroke="none" />),
+        )}
+      {pattern === "stripes" &&
+        [3, 8, 13, 18].map((x) => <line key={x} x1={x} y1={2} x2={x} y2={18} strokeWidth={2} />)}
       {pattern === "grid" && (
         <g fill="none" strokeWidth={1.5}>
           <rect x={2} y={2} width={16} height={16} />
@@ -217,9 +239,9 @@ export function TileRadioGroup022Demo() {
       </div>
       <div className="mt-3 space-y-2">
         <Note>
-          The machinery under SwatchPicker and IconPicker, public: one tab stop, arrows to move and choose,
-          a bubble with each tile&apos;s name. It draws the tiles only — the {code('role="radiogroup"')} element and its
-          name are the caller&apos;s. For an option that has to be read (a plan with a price and features), use{" "}
+          The machinery under SwatchPicker and IconPicker, public: one tab stop, arrows to move and choose, a bubble
+          with each tile&apos;s name. It draws the tiles only — the {code('role="radiogroup"')} element and its name are
+          the caller&apos;s. For an option that has to be read (a plan with a price and features), use{" "}
           {code('ChoiceCardGroup type="radio"')} instead.
         </Note>
       </div>

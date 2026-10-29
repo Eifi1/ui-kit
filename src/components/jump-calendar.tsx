@@ -19,8 +19,7 @@ import { claimEscape } from "../hooks/use-dismiss";
 /** A "YYYY-MM" key as a count of months, and back: month arithmetic with no `Date`
  *  rollover to step around. */
 const monthIndex = (key: string) => Number(key.slice(0, 4)) * 12 + Number(key.slice(5, 7)) - 1;
-const keyOfIndex = (index: number) =>
-  `${String(Math.floor(index / 12)).padStart(4, "0")}-${pad((index % 12) + 1)}`;
+const keyOfIndex = (index: number) => `${String(Math.floor(index / 12)).padStart(4, "0")}-${pad((index % 12) + 1)}`;
 const shiftKey = (key: string, delta: number) => keyOfIndex(monthIndex(key) + delta);
 /** The 1st of a "YYYY-MM" month, for `Intl` to name. */
 const firstOfKey = (key: string) => new Date(Number(key.slice(0, 4)), Number(key.slice(5, 7)) - 1, 1);
@@ -287,10 +286,7 @@ function JumpCalendar({
           <span id={captionId} aria-live="polite" className="truncate">
             {caption}
           </span>
-          <ChevronDown
-            aria-hidden
-            className={cn("size-3.5 shrink-0 text-muted", !inDays && "rotate-180")}
-          />
+          <ChevronDown aria-hidden className={cn("size-3.5 shrink-0 text-muted", !inDays && "rotate-180")} />
         </button>
         <button
           type="button"

@@ -26,7 +26,11 @@ describe("the REWORK status", () => {
   });
 
   it("is drawn with the Rework button's RotateCcw in the danger tint, apart from IN_PROGRESS and WONT_DO", () => {
-    expect(FEEDBACK_STATUS_META.REWORK).toEqual({ icon: RotateCcw, activeBg: "bg-danger-soft", activeText: "text-danger" });
+    expect(FEEDBACK_STATUS_META.REWORK).toEqual({
+      icon: RotateCcw,
+      activeBg: "bg-danger-soft",
+      activeText: "text-danger",
+    });
     expect(FEEDBACK_STATUS_META.IN_PROGRESS.icon).toBe(Wrench);
     expect(FEEDBACK_STATUS_META.WONT_DO.icon).toBe(Ban);
   });
@@ -38,9 +42,22 @@ describe("the REWORK status", () => {
   });
 
   it("offers IN_PROGRESS and the off-chain verdicts from a REWORK row", () => {
-    expect(visibleFeedbackStatuses("REWORK")).toEqual(["REWORK", "IN_PROGRESS", "NEEDS_LIVE_TEST", "POSTPONED", "WONT_DO"]);
+    expect(visibleFeedbackStatuses("REWORK")).toEqual([
+      "REWORK",
+      "IN_PROGRESS",
+      "NEEDS_LIVE_TEST",
+      "POSTPONED",
+      "WONT_DO",
+    ]);
     // Nothing else moved: READY is as it was.
-    expect(visibleFeedbackStatuses("READY")).toEqual(["OPEN", "READY", "IN_PROGRESS", "NEEDS_LIVE_TEST", "POSTPONED", "WONT_DO"]);
+    expect(visibleFeedbackStatuses("READY")).toEqual([
+      "OPEN",
+      "READY",
+      "IN_PROGRESS",
+      "NEEDS_LIVE_TEST",
+      "POSTPONED",
+      "WONT_DO",
+    ]);
   });
 
   it("is in the composer's list, by the order", () => {

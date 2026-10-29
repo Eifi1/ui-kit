@@ -21,7 +21,14 @@ const CANDIDATES: TransferCandidate[] = [
 
 describe("TransferOwnershipDialog", () => {
   it("shows every candidate, the unavailable ones with why", async () => {
-    render(<TransferOwnershipDialog from={FROM} candidates={CANDIDATES} onTransfer={() => undefined} onClose={() => undefined} />);
+    render(
+      <TransferOwnershipDialog
+        from={FROM}
+        candidates={CANDIDATES}
+        onTransfer={() => undefined}
+        onClose={() => undefined}
+      />,
+    );
     const dialog = await screen.findByRole("alertdialog", { name: "Hand on Ada Example’s work" });
     const select = within(dialog).getByRole("combobox", { name: "Hand it to" });
     const options = within(select)

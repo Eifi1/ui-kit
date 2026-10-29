@@ -86,8 +86,7 @@ const ELEVATED_JOINED = "bg-surface shadow-lg";
 // `elevated`, gapped: there is no frame, so each disc carries the shadow. Aimed at the
 // control, not the tooltip's square wrapper span, whose shadow would be a box round a
 // round disc.
-const ELEVATED_GAPPED =
-  "[&>button]:shadow-md [&>a]:shadow-md [&>*>button]:shadow-md [&>*>a]:shadow-md";
+const ELEVATED_GAPPED = "[&>button]:shadow-md [&>a]:shadow-md [&>*>button]:shadow-md [&>*>a]:shadow-md";
 
 export interface ButtonGroupProps extends Omit<ComponentPropsWithRef<"div">, "role"> {
   /** `horizontal` (default): side by side, in reading order. `vertical`: stacked —

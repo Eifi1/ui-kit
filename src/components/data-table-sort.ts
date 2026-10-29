@@ -93,8 +93,7 @@ export function nextSorts(
   // One step from `dir`: the second direction after the first, then either back to
   // the first (toggle) or off (null). Judged against THIS column's first direction,
   // so a desc-first column goes desc → asc → none rather than skipping a step.
-  const step = (dir: SortDir): SortDir | null =>
-    dir === first ? flip(first) : toggle ? first : null;
+  const step = (dir: SortDir): SortDir | null => (dir === first ? flip(first) : toggle ? first : null);
   if (!additive) {
     if (prev.length === 1 && idx === 0) {
       const dir = step(prev[0].dir);

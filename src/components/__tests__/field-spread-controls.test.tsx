@@ -87,7 +87,9 @@ describe("controls take Field's render-prop spread on their focusable element", 
       <Field label="Account" hint="The hint" error="Required" required>
         {(ids) => {
           fieldId = ids.id;
-          return <InlineEntityCombobox {...ids} data-testid="wrapper" value={null} onChange={vi.fn()} options={OPTIONS} />;
+          return (
+            <InlineEntityCombobox {...ids} data-testid="wrapper" value={null} onChange={vi.fn()} options={OPTIONS} />
+          );
         }}
       </Field>,
     );
@@ -100,7 +102,14 @@ describe("controls take Field's render-prop spread on their focusable element", 
     render(
       <>
         <p id="ext">External</p>
-        <InlineEntityCombobox aria-label="To" aria-describedby="ext" error="Pick one" value={null} onChange={vi.fn()} options={OPTIONS} />
+        <InlineEntityCombobox
+          aria-label="To"
+          aria-describedby="ext"
+          error="Pick one"
+          value={null}
+          onChange={vi.fn()}
+          options={OPTIONS}
+        />
       </>,
     );
     expect(screen.getByRole("combobox", { name: "To" })).toHaveAccessibleDescription("External Pick one");

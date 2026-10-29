@@ -165,12 +165,7 @@ describe("FeedbackDialog attachments", () => {
     const onSubmit = vi.fn();
     const shot = png("screenshot.png");
     render(
-      <FeedbackDialog
-        {...base}
-        attachments="multiple"
-        onSubmit={onSubmit}
-        onCaptureScreenshot={async () => shot}
-      />,
+      <FeedbackDialog {...base} attachments="multiple" onSubmit={onSubmit} onCaptureScreenshot={async () => shot} />,
     );
     expect(screen.getByText("Attachments")).toBeInTheDocument();
     await act(async () => fireEvent.click(screen.getByRole("button", { name: /Capture screenshot/ })));

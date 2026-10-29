@@ -121,7 +121,10 @@ describe("eifi1-pay-page (§14.4)", () => {
     expect(run(["--out", out, "--app", "lenkbank", "--apps", apps]).code).toBe(0);
     expect(config().app).toBe("lenkbank");
     expect(Object.keys(config().apps)).toEqual(["keksdose", "kastlan", "kurvenschmiede", "lenkbank"]);
-    expect(config().apps.keksdose).toEqual({ ...PAY_PAGE_APPS.keksdose, returnUrl: "http://localhost:5173/settings/subscription" });
+    expect(config().apps.keksdose).toEqual({
+      ...PAY_PAGE_APPS.keksdose,
+      returnUrl: "http://localhost:5173/settings/subscription",
+    });
 
     writeFileSync(apps, JSON.stringify({ shop: { name: "Shop", returnUrl: "http://shop.example/" } }));
     const bad = run(["--out", out, "--app", "keksdose", "--apps", apps]);
@@ -163,9 +166,7 @@ describe("eifi1-pay-page (§14.4)", () => {
 
   it("refuses when the kit's page isn't built", () => {
     rmSync(join(bundle, "pay.js"));
-    expect(() =>
-      writePayPage({ out, app: "keksdose" }, bundle),
-    ).toThrow(PayPageError);
+    expect(() => writePayPage({ out, app: "keksdose" }, bundle)).toThrow(PayPageError);
     expect(existsSync(out)).toBe(false);
   });
 });

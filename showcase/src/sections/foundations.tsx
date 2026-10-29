@@ -24,15 +24,7 @@ import {
 } from "@eifi1/ui-kit";
 import type { HeatStops, PalettePreset, TokenSet } from "@eifi1/ui-kit";
 import { ConstList, Example, Note, OutTable, Row, Swatch } from "../lib/section";
-import {
-  PALETTE_KEY,
-  THEME_KEY,
-  useActiveTokenSet,
-  useChartHex,
-  useHeatStops,
-  usePalette,
-  useTheme,
-} from "../stores";
+import { PALETTE_KEY, THEME_KEY, useActiveTokenSet, useChartHex, useHeatStops, usePalette, useTheme } from "../stores";
 
 /**
  * Foundations & tokens.
@@ -54,9 +46,7 @@ import {
  * fall out of the filter and get examples of their own.
  */
 function scalarTokens(t: TokenSet): Array<[string, string]> {
-  return (Object.entries(t) as Array<[string, unknown]>).filter(
-    (e): e is [string, string] => typeof e[1] === "string",
-  );
+  return (Object.entries(t) as Array<[string, unknown]>).filter((e): e is [string, string] => typeof e[1] === "string");
 }
 
 /**
@@ -72,8 +62,14 @@ function cssVar(field: string): string {
 
 /** The six heat stops, typed against the interface so a renamed stop is a compile
  *  error here rather than a quietly missing swatch. */
-const HEAT_STOPS = ["neutral", "under", "over", "seqLow", "seqHigh", "empty"] as const satisfies
-  readonly (keyof HeatStops)[];
+const HEAT_STOPS = [
+  "neutral",
+  "under",
+  "over",
+  "seqLow",
+  "seqHigh",
+  "empty",
+] as const satisfies readonly (keyof HeatStops)[];
 
 /** A colour result inside an `OutTable` cell: the returned string, plus the colour
  *  it names, because "#62653c" tells a reader nothing on its own. */
@@ -96,10 +92,7 @@ function TextOn({ fill }: { fill: string }) {
   const out = textOn(fill);
   return (
     <span className="inline-flex items-center gap-2">
-      <span
-        className="rounded px-1.5 py-0.5 text-caption font-semibold"
-        style={{ background: fill, color: out }}
-      >
+      <span className="rounded px-1.5 py-0.5 text-caption font-semibold" style={{ background: fill, color: out }}>
         −12.50
       </span>
       {out}
@@ -123,10 +116,7 @@ export function Foundations() {
 
   return (
     <>
-      <Example
-        label="The active TokenSet"
-        hint={`live — preset "${activeId}", ${mode} mode`}
-      >
+      <Example label="The active TokenSet" hint={`live — preset "${activeId}", ${mode} mode`}>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {scalarTokens(tokens).map(([field, value]) => (
             <Swatch key={field} name={`${field} · ${cssVar(field)}`} value={value} />
@@ -136,18 +126,16 @@ export function Foundations() {
 
       <Note>
         <code className="font-mono">applyTokenSet</code> writes these fourteen onto{" "}
-        <code className="font-mono">&lt;html&gt;</code> as inline custom properties
-        (camelCase → kebab), plus <code className="font-mono">--chart-1…9</code> from the{" "}
-        <code className="font-mono">chart</code> array — Imprint&rsquo;s eight repeated, so{" "}
-        <code className="font-mono">--chart-9</code> is slot 1 again. The <code className="font-mono">heat</code>{" "}
-        stops get no custom property at all — CSS variables cannot be interpolated, so the
-        heatmaps read them from JS via <code className="font-mono">useHeatStops()</code>. The{" "}
+        <code className="font-mono">&lt;html&gt;</code> as inline custom properties (camelCase → kebab), plus{" "}
+        <code className="font-mono">--chart-1…9</code> from the <code className="font-mono">chart</code> array —
+        Imprint&rsquo;s eight repeated, so <code className="font-mono">--chart-9</code> is slot 1 again. The{" "}
+        <code className="font-mono">heat</code> stops get no custom property at all — CSS variables cannot be
+        interpolated, so the heatmaps read them from JS via <code className="font-mono">useHeatStops()</code>. The{" "}
         <code className="font-mono">:root</code> / <code className="font-mono">.dark</code> blocks in{" "}
-        <code className="font-mono">tokens.css</code> mirror the default preset and are live CSS
-        (Tailwind 4 keeps them): in an app with a palette layer the inline write beats them, and in one without
-        they are what paints. A test holds the mirror to{" "}
-        <code className="font-mono">DEFAULT_PRESET</code>. The semantic layer — every fill and its
-        foreground, the lines, the well — is on the Colour roles page.
+        <code className="font-mono">tokens.css</code> mirror the default preset and are live CSS (Tailwind 4 keeps
+        them): in an app with a palette layer the inline write beats them, and in one without they are what paints. A
+        test holds the mirror to <code className="font-mono">DEFAULT_PRESET</code>. The semantic layer — every fill and
+        its foreground, the lines, the well — is on the Colour roles page.
       </Note>
 
       <Example
@@ -161,10 +149,7 @@ export function Foundations() {
         </div>
       </Example>
 
-      <Example
-        label="heat — heatmap interpolation stops"
-        hint="JS-only: no CSS custom property is written for these"
-      >
+      <Example label="heat — heatmap interpolation stops" hint="JS-only: no CSS custom property is written for these">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {HEAT_STOPS.map((k) => (
             <Swatch key={k} name={`heat.${k}`} value={heat[k]} />
@@ -173,17 +158,12 @@ export function Foundations() {
       </Example>
 
       <Note>
-        <code className="font-mono">heat.empty</code> is an{" "}
-        <code className="font-mono">rgba()</code> string, not a hex — it is the fill for a cell
-        with no data, and being translucent is the point. It is also the reason{" "}
-        <code className="font-mono">textOn</code> has a fallback at all; see the helper table
-        below.
+        <code className="font-mono">heat.empty</code> is an <code className="font-mono">rgba()</code> string, not a hex
+        — it is the fill for a cell with no data, and being translucent is the point. It is also the reason{" "}
+        <code className="font-mono">textOn</code> has a fallback at all; see the helper table below.
       </Note>
 
-      <Example
-        label="paletteFor(i)"
-        hint="returns a CSS var, so these chips are painted by the live custom property"
-      >
+      <Example label="paletteFor(i)" hint="returns a CSS var, so these chips are painted by the live custom property">
         <div className="grid gap-3 sm:grid-cols-3">
           {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
             <Swatch key={i} name={`paletteFor(${i})`} value={paletteFor(i)} />
@@ -192,19 +172,17 @@ export function Foundations() {
       </Example>
 
       <Note>
-        These nine are the same colours as the <code className="font-mono">chart</code> grid above,
-        reached the other way round — that grid is hex out of the store, this one is whatever{" "}
-        <code className="font-mono">--chart-N</code> currently resolves to in the browser. If the
-        two ever disagree, <code className="font-mono">applyTokenSet</code> has not run.
-        (In jsdom nothing applies them, so in the render test these chips are simply blank.) The
-        index wraps at eight (anyplot&rsquo;s pool) — <code className="font-mono">paletteFor(8)</code> is{" "}
-        <code className="font-mono">var(--chart-1)</code> — so a ninth series reuses the first
-        one&rsquo;s colour, and the first series is always the green. It wraps backwards too:{" "}
-        <code className="font-mono">paletteFor(-1)</code> is <code className="font-mono">var(--chart-8)</code>,
-        and a <code className="font-mono">NaN</code> index takes the first colour rather than naming a
-        token that does not exist. <code className="font-mono">{"paletteFor(i, { order: \"cvd\" })"}</code>{" "}
-        walks anyplot&rsquo;s colour-vision-optimal order instead,{" "}
-        <code className="font-mono">[{CVD_ORDER.join(", ")}]</code>.
+        These nine are the same colours as the <code className="font-mono">chart</code> grid above, reached the other
+        way round — that grid is hex out of the store, this one is whatever <code className="font-mono">--chart-N</code>{" "}
+        currently resolves to in the browser. If the two ever disagree, <code className="font-mono">applyTokenSet</code>{" "}
+        has not run. (In jsdom nothing applies them, so in the render test these chips are simply blank.) The index
+        wraps at eight (anyplot&rsquo;s pool) — <code className="font-mono">paletteFor(8)</code> is{" "}
+        <code className="font-mono">var(--chart-1)</code> — so a ninth series reuses the first one&rsquo;s colour, and
+        the first series is always the green. It wraps backwards too: <code className="font-mono">paletteFor(-1)</code>{" "}
+        is <code className="font-mono">var(--chart-8)</code>, and a <code className="font-mono">NaN</code> index takes
+        the first colour rather than naming a token that does not exist.{" "}
+        <code className="font-mono">{'paletteFor(i, { order: "cvd" })'}</code> walks anyplot&rsquo;s
+        colour-vision-optimal order instead, <code className="font-mono">[{CVD_ORDER.join(", ")}]</code>.
       </Note>
 
       <Example label="CHART_COLORS" hint="semantic money roles, as theme-aware CSS vars">
@@ -216,12 +194,11 @@ export function Foundations() {
       </Example>
 
       <Note>
-        <code className="font-mono">activity</code> and <code className="font-mono">expense</code>{" "}
-        are the same token (<code className="font-mono">--money-expense</code>), and{" "}
-        <code className="font-mono">assigned</code> is the brand accent rather than a money
-        colour — so a chart that plots activity against expense must separate them by something
-        other than colour. <code className="font-mono">total</code> is not money: a generic total
-        line takes the chart ink.
+        <code className="font-mono">activity</code> and <code className="font-mono">expense</code> are the same token (
+        <code className="font-mono">--money-expense</code>), and <code className="font-mono">assigned</code> is the
+        brand accent rather than a money colour — so a chart that plots activity against expense must separate them by
+        something other than colour. <code className="font-mono">total</code> is not money: a generic total line takes
+        the chart ink.
       </Note>
 
       <Example
@@ -231,10 +208,7 @@ export function Foundations() {
         <ChartRoles />
       </Example>
 
-      <Example
-        label="PALETTE_HEX"
-        hint={`the frozen ${mode} mirror — does NOT follow the palette menu`}
-      >
+      <Example label="PALETTE_HEX" hint={`the frozen ${mode} mirror — does NOT follow the palette menu`}>
         <div className="grid gap-3 sm:grid-cols-3">
           {PALETTE_HEX[mode].map((hex, i) => (
             <Swatch key={i} name={`PALETTE_HEX.${mode}[${i}]`} value={hex} />
@@ -242,10 +216,7 @@ export function Foundations() {
         </div>
       </Example>
 
-      <Example
-        label="HEATMAP_HEX"
-        hint={`the frozen ${mode} mirror of the heat stops`}
-      >
+      <Example label="HEATMAP_HEX" hint={`the frozen ${mode} mirror of the heat stops`}>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {HEAT_STOPS.map((k) => (
             <Swatch key={k} name={`HEATMAP_HEX.${mode}.${k}`} value={heatHex[k]} />
@@ -254,15 +225,13 @@ export function Foundations() {
       </Example>
 
       <Note>
-        Both of these are module constants in{" "}
-        <code className="font-mono">theme/chart-palette.ts</code>, written before the palette layer
-        existed. Select <em>Paul Tol muted</em> in the top bar: the{" "}
-        <code className="font-mono">chart</code> grid moves and{" "}
-        <code className="font-mono">PALETTE_HEX</code> does not. They mirror the default (Imprint) —
-        anyplot&rsquo;s eight hues, its green → blue sequential scale and its red ↔ paper ↔
-        blue diverging one — and a test keeps them equal to <code className="font-mono">DEFAULT_PRESET</code>. Prefer{" "}
-        <code className="font-mono">useHeatStops()</code> / <code className="font-mono">useChartHex()</code>{" "}
-        in app code and treat these two as the pre-palette fallback.
+        Both of these are module constants in <code className="font-mono">theme/chart-palette.ts</code>, written before
+        the palette layer existed. Select <em>Paul Tol muted</em> in the top bar: the{" "}
+        <code className="font-mono">chart</code> grid moves and <code className="font-mono">PALETTE_HEX</code> does not.
+        They mirror the default (Imprint) — anyplot&rsquo;s eight hues, its green → blue sequential scale and its red ↔
+        paper ↔ blue diverging one — and a test keeps them equal to <code className="font-mono">DEFAULT_PRESET</code>.
+        Prefer <code className="font-mono">useHeatStops()</code> / <code className="font-mono">useChartHex()</code> in
+        app code and treat these two as the pre-palette fallback.
       </Note>
 
       <Example label="lerpHex + textOn" hint="live calls against the active heat stops">
@@ -272,20 +241,11 @@ export function Foundations() {
               `lerpHex(heat.seqLow, heat.seqHigh, 0)  // ${heat.seqLow} → ${heat.seqHigh}`,
               <Hex value={lerpHex(heat.seqLow, heat.seqHigh, 0)} />,
             ],
-            [
-              "lerpHex(heat.seqLow, heat.seqHigh, 0.5)",
-              <Hex value={lerpHex(heat.seqLow, heat.seqHigh, 0.5)} />,
-            ],
-            [
-              "lerpHex(heat.seqLow, heat.seqHigh, 1)",
-              <Hex value={lerpHex(heat.seqLow, heat.seqHigh, 1)} />,
-            ],
+            ["lerpHex(heat.seqLow, heat.seqHigh, 0.5)", <Hex value={lerpHex(heat.seqLow, heat.seqHigh, 0.5)} />],
+            ["lerpHex(heat.seqLow, heat.seqHigh, 1)", <Hex value={lerpHex(heat.seqLow, heat.seqHigh, 1)} />],
             // t is clamped, not wrapped — an out-of-range domain value lands on the
             // endpoint instead of producing a colour outside the scale.
-            [
-              "lerpHex(heat.seqLow, heat.seqHigh, 2.5)",
-              <Hex value={lerpHex(heat.seqLow, heat.seqHigh, 2.5)} />,
-            ],
+            ["lerpHex(heat.seqLow, heat.seqHigh, 2.5)", <Hex value={lerpHex(heat.seqLow, heat.seqHigh, 2.5)} />],
             ['lerpHex("#fff", "#000", 0.5)', <Hex value={lerpHex("#fff", "#000", 0.5)} />],
             // An unparseable stop degrades to mid-grey rather than the literal
             // "#nannannan" this used to emit.
@@ -306,13 +266,11 @@ export function Foundations() {
       </Example>
 
       <Note>
-        <code className="font-mono">textOn</code> returns{" "}
-        <code className="font-mono">&quot;currentColor&quot;</code> for anything it cannot parse,
-        and that is a real case rather than defensive padding: the variance heatmap paints a figure
-        on an <code className="font-mono">empty</code> cell whenever a category has zero assigned
-        and positive activity (a refund). The earlier version computed{" "}
-        <code className="font-mono">NaN &gt; 0.6 === false</code> and returned the near-white label
-        colour, on a near-white cell.
+        <code className="font-mono">textOn</code> returns <code className="font-mono">&quot;currentColor&quot;</code>{" "}
+        for anything it cannot parse, and that is a real case rather than defensive padding: the variance heatmap paints
+        a figure on an <code className="font-mono">empty</code> cell whenever a category has zero assigned and positive
+        activity (a refund). The earlier version computed <code className="font-mono">NaN &gt; 0.6 === false</code> and
+        returned the near-white label colour, on a near-white cell.
       </Note>
 
       <Example
@@ -353,42 +311,31 @@ export function Foundations() {
 
       <Note>
         The two <code className="font-mono">-muted</code> variants are the same colour at{" "}
-        <code className="font-mono">opacity: 0.72</code>, not a second token — so they dim whatever
-        is behind them too, and are for a figure that is genuinely secondary rather than for
-        disabled text. Six money classes — <code className="font-mono">.text-money-pos</code> and{" "}
-        <code className="font-mono">-neg</code>, their two <code className="font-mono">-muted</code>{" "}
-        variants, <code className="font-mono">.bg-money-pos</code> and{" "}
-        <code className="font-mono">-neg</code> — are plain CSS, written unlayered on purpose, so they
-        beat Tailwind&rsquo;s layered colour utilities and need no <code className="font-mono">dark:</code>{" "}
-        variant — and take none. They are also NOT generated by Tailwind: they exist because the
-        stylesheet is imported, so an app that misses{" "}
-        <code className="font-mono">@import &quot;@eifi1/ui-kit/tokens.css&quot;</code> gets unstyled
-        text with no error. They are aliases: the money colours are theme utilities,{" "}
+        <code className="font-mono">opacity: 0.72</code>, not a second token — so they dim whatever is behind them too,
+        and are for a figure that is genuinely secondary rather than for disabled text. Six money classes —{" "}
+        <code className="font-mono">.text-money-pos</code> and <code className="font-mono">-neg</code>, their two{" "}
+        <code className="font-mono">-muted</code> variants, <code className="font-mono">.bg-money-pos</code> and{" "}
+        <code className="font-mono">-neg</code> — are plain CSS, written unlayered on purpose, so they beat
+        Tailwind&rsquo;s layered colour utilities and need no <code className="font-mono">dark:</code> variant — and
+        take none. They are also NOT generated by Tailwind: they exist because the stylesheet is imported, so an app
+        that misses <code className="font-mono">@import &quot;@eifi1/ui-kit/tokens.css&quot;</code> gets unstyled text
+        with no error. They are aliases: the money colours are theme utilities,{" "}
         <code className="font-mono">text-money-income</code>, <code className="font-mono">-expense</code>,{" "}
-        <code className="font-mono">-net</code> and <code className="font-mono">-neutral</code> and the
-        same four as <code className="font-mono">bg-</code>, layered and with variants, so{" "}
+        <code className="font-mono">-net</code> and <code className="font-mono">-neutral</code> and the same four as{" "}
+        <code className="font-mono">bg-</code>, layered and with variants, so{" "}
         <code className="font-mono">hover:bg-money-expense</code> works where a site kept the{" "}
-        <code className="font-mono">[var(--money-…)]</code> form for it.{" "}
-        <code className="font-mono">text-brand</code>, <code className="font-mono">bg-brand</code> and{" "}
-        <code className="font-mono">border-brand</code> are theme utilities too (the Colour roles page has the
-        whole set). A label on a fill takes that
-        fill&rsquo;s own <code className="font-mono">-contrast</code>.{" "}
-        <code className="font-mono">bg-money-neutral</code> means &ldquo;no money has moved&rdquo; —
-        scheduled or future-dated rows — and is deliberately neither brand nor money-pos, both of
-        which read as settled.
+        <code className="font-mono">[var(--money-…)]</code> form for it. <code className="font-mono">text-brand</code>,{" "}
+        <code className="font-mono">bg-brand</code> and <code className="font-mono">border-brand</code> are theme
+        utilities too (the Colour roles page has the whole set). A label on a fill takes that fill&rsquo;s own{" "}
+        <code className="font-mono">-contrast</code>. <code className="font-mono">bg-money-neutral</code> means
+        &ldquo;no money has moved&rdquo; — scheduled or future-dated rows — and is deliberately neither brand nor
+        money-pos, both of which read as settled.
       </Note>
 
-      <Example
-        label="Form-control accent"
-        hint="a base-layer rule in tokens.css, not a utility"
-      >
+      <Example label="Form-control accent" hint="a base-layer rule in tokens.css, not a utility">
         <div className="space-y-3 text-sm text-primary">
           <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={reconciled}
-              onChange={(e) => setReconciled(e.target.checked)}
-            />
+            <input type="checkbox" checked={reconciled} onChange={(e) => setReconciled(e.target.checked)} />
             <span>
               Reconciled — inherits <code className="font-mono">accent-color: var(--brand)</code>
             </span>
@@ -407,12 +354,7 @@ export function Foundations() {
           <Row className="gap-x-5">
             {(["income", "expense"] as const).map((t) => (
               <label key={t} className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="foundations-tone"
-                  checked={tone === t}
-                  onChange={() => setTone(t)}
-                />
+                <input type="radio" name="foundations-tone" checked={tone === t} onChange={() => setTone(t)} />
                 {t}
               </label>
             ))}
@@ -421,10 +363,9 @@ export function Foundations() {
       </Example>
 
       <Note>
-        The accent rule sits inside <code className="font-mono">@layer base</code> precisely so the
-        second checkbox can win. Unlayered it beat every <code className="font-mono">accent-*</code>{" "}
-        utility regardless of specificity, which silently overrode deliberate choices like a
-        destructive checkbox.
+        The accent rule sits inside <code className="font-mono">@layer base</code> precisely so the second checkbox can
+        win. Unlayered it beat every <code className="font-mono">accent-*</code> utility regardless of specificity,
+        which silently overrode deliberate choices like a destructive checkbox.
       </Note>
 
       <Example label="Animation utilities" hint="also shipped by tokens.css">
@@ -449,13 +390,12 @@ export function Foundations() {
       </Example>
 
       <Note>
-        Both exit classes carry <code className="font-mono">forwards</code> because the element is
-        unmounted by a timer (<code className="font-mono">OVERLAY_EXIT_MS</code>): without a
-        retained end state the last painted frame is the panel back at full opacity. Under{" "}
-        <code className="font-mono">prefers-reduced-motion</code> the sheet stops travelling and the
-        overlay fade collapses to 0.01ms; the exit pair is not listed there because{" "}
-        <code className="font-mono">useCloseTransition</code> reads the same query and closes
-        immediately, so those classes are never applied.
+        Both exit classes carry <code className="font-mono">forwards</code> because the element is unmounted by a timer
+        (<code className="font-mono">OVERLAY_EXIT_MS</code>): without a retained end state the last painted frame is the
+        panel back at full opacity. Under <code className="font-mono">prefers-reduced-motion</code> the sheet stops
+        travelling and the overlay fade collapses to 0.01ms; the exit pair is not listed there because{" "}
+        <code className="font-mono">useCloseTransition</code> reads the same query and closes immediately, so those
+        classes are never applied.
       </Note>
 
       <Example label="PALETTES" hint={`the ${PALETTES.length} presets an app offers, in menu order`}>
@@ -579,10 +519,7 @@ function PresetPreview() {
           ))}
         </Select>
       </div>
-      <div
-        ref={card}
-        className="space-y-3 rounded-lg border border-subtle bg-page p-4 text-primary"
-      >
+      <div ref={card} className="space-y-3 rounded-lg border border-subtle bg-page p-4 text-primary">
         <p className="text-sm">
           {preset.name} <span className="text-muted">— {preset.blurb}</span>
         </p>
@@ -617,19 +554,17 @@ function PresetPreview() {
             'presetById("warm-paper").id',
             <>
               {presetById("warm-paper").id}{" "}
-              <span className="font-sans font-normal text-muted">
-                — not in PALETTES, so the default
-              </span>
+              <span className="font-sans font-normal text-muted">— not in PALETTES, so the default</span>
             </>,
           ],
         ]}
       />
       <Note>
-        Only the semantic layer comes from <code className="font-mono">tokens.css</code> (danger,
-        warning, info…), so those do not change with the preset here — the same is true of the
-        page itself. The palette store only knows <code className="font-mono">PALETTES</code>: a
-        preset of the app&apos;s own (<code className="font-mono">derivePalette</code>) is
-        something it adds to its own list, not an id it can persist.
+        Only the semantic layer comes from <code className="font-mono">tokens.css</code> (danger, warning, info…), so
+        those do not change with the preset here — the same is true of the page itself. The palette store only knows{" "}
+        <code className="font-mono">PALETTES</code>: a preset of the app&apos;s own (
+        <code className="font-mono">derivePalette</code>) is something it adds to its own list, not an id it can
+        persist.
       </Note>
     </div>
   );
@@ -708,13 +643,12 @@ applyPersistedPalette("${PALETTE_KEY}", mode);`}
         ]}
       />
       <Note>
-        <code className="font-mono">setMode</code> and <code className="font-mono">toggle</code>{" "}
-        both store an explicit preference, which is why neither can hand the user back to
-        &ldquo;system&rdquo; — only <code className="font-mono">setPreference</code> can.{" "}
-        <code className="font-mono">useApplyTheme</code> and{" "}
-        <code className="font-mono">useApplyPalette</code> are mounted once, in the app root
-        (<code className="font-mono">showcase.tsx</code> here): they write the class and the
-        tokens onto <code className="font-mono">&lt;html&gt;</code>.
+        <code className="font-mono">setMode</code> and <code className="font-mono">toggle</code> both store an explicit
+        preference, which is why neither can hand the user back to &ldquo;system&rdquo; — only{" "}
+        <code className="font-mono">setPreference</code> can. <code className="font-mono">useApplyTheme</code> and{" "}
+        <code className="font-mono">useApplyPalette</code> are mounted once, in the app root (
+        <code className="font-mono">showcase.tsx</code> here): they write the class and the tokens onto{" "}
+        <code className="font-mono">&lt;html&gt;</code>.
       </Note>
     </div>
   );

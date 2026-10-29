@@ -8,7 +8,10 @@ const fmt = (v: number) => String(v);
 /** The drawn line paths (not the reference line, not the last-point dot). */
 const lines = (svg: Element) =>
   [...svg.querySelectorAll("path")].filter(
-    (p) => p.getAttribute("fill") === "none" && !p.hasAttribute("stroke-dasharray") && !p.hasAttribute("data-sparkline-last"),
+    (p) =>
+      p.getAttribute("fill") === "none" &&
+      !p.hasAttribute("stroke-dasharray") &&
+      !p.hasAttribute("data-sparkline-last"),
   );
 
 /** The y coordinates of a path's `M`/`L` commands. */
@@ -22,9 +25,7 @@ describe("sparklineSummary", () => {
   });
 
   it("skips gaps when finding the ends", () => {
-    expect(sparklineSummary([null, 3, null, 7, undefined], DEFAULT_SPARKLINE_LABELS, fmt)).toBe(
-      "Rising from 3 to 7",
-    );
+    expect(sparklineSummary([null, 3, null, 7, undefined], DEFAULT_SPARKLINE_LABELS, fmt)).toBe("Rising from 3 to 7");
   });
 
   it("does not call one value, or none, a trend", () => {

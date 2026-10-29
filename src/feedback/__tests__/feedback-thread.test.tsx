@@ -32,21 +32,15 @@ describe("FeedbackThread", () => {
 
   it("renders author, relative time, body and attachments per message", () => {
     render(<FeedbackThread messages={MESSAGES} now={NOW} locale="en" />);
-    const [first, second, third] = within(screen.getByRole("list", { name: "Comments" })).getAllByRole(
-      "article",
-    );
+    const [first, second, third] = within(screen.getByRole("list", { name: "Comments" })).getAllByRole("article");
     expect(first).toHaveTextContent("Ada");
     const time = within(first).getByText("5 minutes ago");
     expect(time.tagName).toBe("TIME");
     expect(time).toHaveAttribute("dateTime", new Date(NOW.getTime() - 5 * 60_000).toISOString());
-    expect(within(first).getByText(/The chart is empty/)).toHaveTextContent(
-      "The chart is empty. Since Monday.",
-      { normalizeWhitespace: true },
-    );
-    expect(within(first).getByRole("img", { name: "shot.png" })).toHaveAttribute(
-      "src",
-      "https://example.com/shot.png",
-    );
+    expect(within(first).getByText(/The chart is empty/)).toHaveTextContent("The chart is empty. Since Monday.", {
+      normalizeWhitespace: true,
+    });
+    expect(within(first).getByRole("img", { name: "shot.png" })).toHaveAttribute("src", "https://example.com/shot.png");
     expect(within(first).getByRole("link", { name: /log\.txt/ })).toHaveTextContent("2 kB");
 
     expect(within(second).getByText("Staff")).toBeInTheDocument();

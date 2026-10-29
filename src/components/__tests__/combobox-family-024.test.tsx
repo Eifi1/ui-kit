@@ -32,11 +32,17 @@ const noop = vi.fn();
 type Focusable = HTMLInputElement | HTMLButtonElement;
 
 const REFS: Array<[string, "INPUT" | "BUTTON", (ref: ReturnType<typeof createRef<Focusable>>) => ReactElement]> = [
-  ["Combobox", "INPUT", (ref) => <Combobox ref={ref as never} label="Payee" value="" onChange={noop} options={["A"]} />],
+  [
+    "Combobox",
+    "INPUT",
+    (ref) => <Combobox ref={ref as never} label="Payee" value="" onChange={noop} options={["A"]} />,
+  ],
   [
     "InlineEntityCombobox",
     "INPUT",
-    (ref) => <InlineEntityCombobox<string> ref={ref as never} label="Account" value="a1" onChange={noop} options={OPTIONS} />,
+    (ref) => (
+      <InlineEntityCombobox<string> ref={ref as never} label="Account" value="a1" onChange={noop} options={OPTIONS} />
+    ),
   ],
   [
     "EntityCombobox",
@@ -46,9 +52,21 @@ const REFS: Array<[string, "INPUT" | "BUTTON", (ref: ReturnType<typeof createRef
   [
     "MultiEntityCombobox",
     "BUTTON",
-    (ref) => <MultiEntityCombobox<string> ref={ref as never} label="Accounts" value={["a1"]} onChange={noop} options={OPTIONS} />,
+    (ref) => (
+      <MultiEntityCombobox<string>
+        ref={ref as never}
+        label="Accounts"
+        value={["a1"]}
+        onChange={noop}
+        options={OPTIONS}
+      />
+    ),
   ],
-  ["Autocomplete", "INPUT", (ref) => <Autocomplete ref={ref as never} label="Address" value="" onChange={noop} options={[]} />],
+  [
+    "Autocomplete",
+    "INPUT",
+    (ref) => <Autocomplete ref={ref as never} label="Address" value="" onChange={noop} options={[]} />,
+  ],
 ];
 
 describe.each(REFS)("%s: ref", (_name, tag, field) => {
@@ -170,7 +188,13 @@ describe("sheetTitle: the phone sheet's heading for a field labelled by a form",
     [
       "InlineEntityCombobox",
       (title?: string) => (
-        <InlineEntityCombobox<string> aria-label="Account" sheetTitle={title} value={null} onChange={noop} options={OPTIONS} />
+        <InlineEntityCombobox<string>
+          aria-label="Account"
+          sheetTitle={title}
+          value={null}
+          onChange={noop}
+          options={OPTIONS}
+        />
       ),
     ],
     [
@@ -180,7 +204,13 @@ describe("sheetTitle: the phone sheet's heading for a field labelled by a form",
     [
       "EntityCombobox",
       (title?: string) => (
-        <EntityCombobox<string> aria-label="Account" sheetTitle={title} value={null} onChange={noop} options={OPTIONS} />
+        <EntityCombobox<string>
+          aria-label="Account"
+          sheetTitle={title}
+          value={null}
+          onChange={noop}
+          options={OPTIONS}
+        />
       ),
     ],
   ])("%s titles and names the sheet with it", (_name, field) => {

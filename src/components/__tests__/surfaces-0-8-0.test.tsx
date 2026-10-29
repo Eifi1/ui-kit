@@ -74,8 +74,12 @@ describe("AlertBanner 0.8.0", () => {
     expect(alertFrameClass("neutral")).toContain("p-3");
     render(
       <>
-        <AlertBanner tone="info" data-testid="info">Preview build</AlertBanner>
-        <AlertBanner tone="neutral" data-testid="neutral">Values are rounded</AlertBanner>
+        <AlertBanner tone="info" data-testid="info">
+          Preview build
+        </AlertBanner>
+        <AlertBanner tone="neutral" data-testid="neutral">
+          Values are rounded
+        </AlertBanner>
       </>,
     );
     expect(screen.getByTestId("info")).toHaveClass("text-info");
@@ -99,7 +103,11 @@ describe("AlertBanner 0.8.0", () => {
 
   it("onDismiss renders a labelled × that calls it", () => {
     const onDismiss = vi.fn();
-    render(<AlertBanner tone="info" onDismiss={onDismiss}>Preview build</AlertBanner>);
+    render(
+      <AlertBanner tone="info" onDismiss={onDismiss}>
+        Preview build
+      </AlertBanner>,
+    );
     fireEvent.click(screen.getByRole("button", { name: "Dismiss" }));
     expect(onDismiss).toHaveBeenCalledOnce();
   });
@@ -192,7 +200,11 @@ describe("AlertBanner 0.8.0", () => {
 
 describe("Chip 0.8.0", () => {
   it("variant=outline drops the surface and keeps the tone's border and text", () => {
-    render(<Chip variant="outline" tone="warning" data-testid="c">DEV</Chip>);
+    render(
+      <Chip variant="outline" tone="warning" data-testid="c">
+        DEV
+      </Chip>,
+    );
     const chip = screen.getByTestId("c");
     expect(chip.className).toContain("bg-transparent");
     expect(chip).toHaveClass("border-warning");
@@ -201,7 +213,11 @@ describe("Chip 0.8.0", () => {
   });
 
   it("variant=solid is the filled count style under contrasting text", () => {
-    render(<Chip variant="solid" tone="brand" size="sm" data-testid="c">3</Chip>);
+    render(
+      <Chip variant="solid" tone="brand" size="sm" data-testid="c">
+        3
+      </Chip>,
+    );
     const chip = screen.getByTestId("c");
     // The fill under its own foreground, as role utilities since 0.33.
     expect(chip.className.split(" ")).toContain("bg-brand");
@@ -210,12 +226,20 @@ describe("Chip 0.8.0", () => {
   });
 
   it("the default is still the soft look", () => {
-    render(<Chip tone="warning" data-testid="c">x</Chip>);
+    render(
+      <Chip tone="warning" data-testid="c">
+        x
+      </Chip>,
+    );
     expect(screen.getByTestId("c").className).toContain("bg-warning-soft");
   });
 
   it("shape=square swaps the pill radius, on the split pill too", () => {
-    const { rerender } = render(<Chip shape="square" data-testid="c">x</Chip>);
+    const { rerender } = render(
+      <Chip shape="square" data-testid="c">
+        x
+      </Chip>,
+    );
     expect(screen.getByTestId("c").className).toContain("rounded-md");
     expect(screen.getByTestId("c").className).not.toContain("rounded-full");
     rerender(
@@ -229,7 +253,11 @@ describe("Chip 0.8.0", () => {
   });
 
   it("caps sets the tracked uppercase status-badge type in place of the size's", () => {
-    render(<Chip caps size="sm" data-testid="c">Paid</Chip>);
+    render(
+      <Chip caps size="sm" data-testid="c">
+        Paid
+      </Chip>,
+    );
     const chip = screen.getByTestId("c");
     expect(chip.className).toContain("uppercase");
     expect(chip.className).toContain("tracking-wider");
@@ -288,10 +316,18 @@ describe("Chip 0.8.0", () => {
   });
 
   it("keeps href and onClick mutually exclusive in the types, renderLink included", () => {
-    // @ts-expect-error — a link chip's onClick is the anchor's (0.8.x), never a button's.
-    const both = <Chip href="/a" onClick={(e: MouseEvent<HTMLButtonElement>) => e}>x</Chip>;
-    // @ts-expect-error — renderLink belongs to the link shape.
-    const renderOnButton = <Chip onClick={() => {}} renderLink={() => <a href="/b">b</a>}>x</Chip>;
+    const both = (
+      // @ts-expect-error — a link chip's onClick is the anchor's (0.8.x), never a button's.
+      <Chip href="/a" onClick={(e: MouseEvent<HTMLButtonElement>) => e}>
+        x
+      </Chip>
+    );
+    const renderOnButton = (
+      // @ts-expect-error — renderLink belongs to the link shape.
+      <Chip onClick={() => {}} renderLink={() => <a href="/b">b</a>}>
+        x
+      </Chip>
+    );
     expect(both).toBeTruthy();
     expect(renderOnButton).toBeTruthy();
   });
@@ -322,12 +358,20 @@ describe("Button variant=link", () => {
 
 describe("IconButton 0.8.0", () => {
   it("size=lg is the 44px touch target", () => {
-    render(<IconButton size="lg" aria-label="Delete selected">x</IconButton>);
+    render(
+      <IconButton size="lg" aria-label="Delete selected">
+        x
+      </IconButton>,
+    );
     expect(screen.getByRole("button").className).toContain("size-11");
   });
 
   it("tone=warning is amber at rest", () => {
-    render(<IconButton tone="warning" aria-label="Needs review">x</IconButton>);
+    render(
+      <IconButton tone="warning" aria-label="Needs review">
+        x
+      </IconButton>,
+    );
     const cls = screen.getByRole("button").className;
     expect(screen.getByRole("button")).toHaveClass("text-warning");
     // Warning's loud line since 0.33: amber-300 was a 1.1:1 focus ring on the light surfaces.
@@ -335,7 +379,11 @@ describe("IconButton 0.8.0", () => {
   });
 
   it("variant=overlay is a round translucent disc, even at the small sizes", () => {
-    render(<IconButton variant="overlay" size="xs" aria-label="Rotate">x</IconButton>);
+    render(
+      <IconButton variant="overlay" size="xs" aria-label="Rotate">
+        x
+      </IconButton>,
+    );
     const cls = screen.getByRole("button").className;
     expect(cls).toContain("rounded-full");
     expect(cls).not.toMatch(/\brounded(?!-full)\b/);
@@ -346,7 +394,11 @@ describe("IconButton 0.8.0", () => {
 
 describe("Card variant=inset", () => {
   it("is surface-2 with its own small padding, no border and no shadow", () => {
-    render(<Card variant="inset" data-testid="c">Results</Card>);
+    render(
+      <Card variant="inset" data-testid="c">
+        Results
+      </Card>,
+    );
     const cls = screen.getByTestId("c").className;
     expect(cls).toContain("bg-surface-2");
     expect(cls).toContain("p-3");
@@ -355,7 +407,11 @@ describe("Card variant=inset", () => {
   });
 
   it("a caller's padding still wins, and the default card is unchanged", () => {
-    const { rerender } = render(<Card variant="inset" className="p-2" data-testid="c">x</Card>);
+    const { rerender } = render(
+      <Card variant="inset" className="p-2" data-testid="c">
+        x
+      </Card>,
+    );
     expect(screen.getByTestId("c").className).not.toContain("p-3");
     rerender(<Card data-testid="c">x</Card>);
     expect(screen.getByTestId("c").className).toContain("shadow-sm");
@@ -431,7 +487,11 @@ describe("Disclosure bare chevronPosition=end", () => {
   });
 
   it("the default bare disclosure still leads with its chevron", () => {
-    render(<Disclosure variant="bare" title="Show more">x</Disclosure>);
+    render(
+      <Disclosure variant="bare" title="Show more">
+        x
+      </Disclosure>,
+    );
     const button = screen.getByRole("button", { name: "Show more" });
     expect(button.firstElementChild!.tagName.toLowerCase()).toBe("svg");
   });

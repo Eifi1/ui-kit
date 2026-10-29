@@ -26,9 +26,4 @@ export {
 } from "./viewport";
 // 0.50.1 (keksdose N4): a valid `TourStepContext` for a test that calls a step's
 // `beforeStep` or `when` itself — `beforeStep!(tourStepContext())`.
-export {
-  tourStepContext,
-  type TestTourStepContext,
-  type TourStepContextOptions,
-  type TourStepVia,
-} from "./tour";
+export { tourStepContext, type TestTourStepContext, type TourStepContextOptions, type TourStepVia } from "./tour";

@@ -43,7 +43,9 @@ describe("group 4 parts wrap from Large up", () => {
   });
 
   it("Breadcrumbs: a link, a plain crumb and the current page", () => {
-    render(<Breadcrumbs items={[{ label: "Estates", href: "/estates" }, { label: "Riverside" }, { label: "Unit 4" }]} />);
+    render(
+      <Breadcrumbs items={[{ label: "Estates", href: "/estates" }, { label: "Riverside" }, { label: "Unit 4" }]} />,
+    );
     for (const text of ["Estates", "Riverside", "Unit 4"]) {
       expect(screen.getByText(text), text).toHaveClass("truncate-until-large");
     }
@@ -98,9 +100,9 @@ describe("what the 0.34 sweep found", () => {
 
 /** The kit's sources, as text — read, never run. */
 const SOURCES = Object.fromEntries(
-  Object.entries(
-    import.meta.glob<string>("/src/**/*.tsx", { query: "?raw", import: "default", eager: true }),
-  ).filter(([path]) => !path.includes("/__tests__/")),
+  Object.entries(import.meta.glob<string>("/src/**/*.tsx", { query: "?raw", import: "default", eager: true })).filter(
+    ([path]) => !path.includes("/__tests__/"),
+  ),
 );
 
 /** The double-quoted string literals of `source` outside comments — where a class is. */
@@ -153,7 +155,10 @@ describe("no part of group 4 truncates at Large", () => {
   it.each(GROUP_4)("%s has no bare `truncate` class", (file) => {
     const source = SOURCES[`/src/${file}`];
     expect(source, file).toBeDefined();
-    expect(classLiterals(source!).filter((literal) => BARE.test(literal)), file).toEqual([]);
+    expect(
+      classLiterals(source!).filter((literal) => BARE.test(literal)),
+      file,
+    ).toEqual([]);
   });
 
   it("the DataTable column chooser's label wraps, and its checkbox keeps its size", () => {
@@ -186,6 +191,8 @@ describe("data-truncate-ok", () => {
     expect(found).toEqual(TRUNCATE_OK);
     const shell = SOURCES["/src/shell/app-shell.tsx"];
     // The reason, right above the attribute's component.
-    expect(shell).toMatch(/`data-truncate-ok` \(text size §10\.17, round 0\.34 T1\)[\s\S]{0,600}function MobileCellLabel/);
+    expect(shell).toMatch(
+      /`data-truncate-ok` \(text size §10\.17, round 0\.34 T1\)[\s\S]{0,600}function MobileCellLabel/,
+    );
   });
 });

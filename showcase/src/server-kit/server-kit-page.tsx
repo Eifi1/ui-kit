@@ -186,15 +186,7 @@ function Fact({ term, children }: { term: string; children: ReactNode }) {
   );
 }
 
-function ModuleFacts({
-  mod,
-  short,
-  groups,
-}: {
-  mod: ApiModule;
-  short: string;
-  groups: Array<[string, ApiMember[]]>;
-}) {
+function ModuleFacts({ mod, short, groups }: { mod: ApiModule; short: string; groups: Array<[string, ApiMember[]]> }) {
   const { pathname } = useLocation();
   const counterparts = KIT_COUNTERPARTS[short] ?? [];
   return (
@@ -207,9 +199,7 @@ function ModuleFacts({
                 <TextLink href={link.url} external>
                   {`${mod.contract!.doc.split("/").pop()} ${link.section}`}
                 </TextLink>{" "}
-                <span className="text-muted">
-                  {link.heading.replace(/^\d+(?:\.\d+)*\.?\s*/, "")}
-                </span>
+                <span className="text-muted">{link.heading.replace(/^\d+(?:\.\d+)*\.?\s*/, "")}</span>
               </li>
             ))}
           </ul>
@@ -235,10 +225,7 @@ function ModuleFacts({
         <ul className="flex flex-wrap gap-x-3 gap-y-1">
           {groups.map(([kind, members]) => (
             <li key={kind}>
-              <Link
-                to={`${pathname}#${slugify(kindHeading(short, kind))}`}
-                className="text-brand hover:underline"
-              >
+              <Link to={`${pathname}#${slugify(kindHeading(short, kind))}`} className="text-brand hover:underline">
                 {members.length} {members.length === 1 ? kind : kindTitle(kind).toLowerCase()}
               </Link>
             </li>
@@ -275,10 +262,7 @@ function MemberEntry({ short, member, compact }: { short: string; member: ApiMem
   return (
     <article
       aria-labelledby={anchor}
-      className={cn(
-        "min-w-0 space-y-3 p-4",
-        !compact && "rounded-lg border border-subtle bg-surface",
-      )}
+      className={cn("min-w-0 space-y-3 p-4", !compact && "rounded-lg border border-subtle bg-surface")}
     >
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
         <h4
@@ -287,13 +271,13 @@ function MemberEntry({ short, member, compact }: { short: string; member: ApiMem
         >
           {member.name}
         </h4>
-        <span className="rounded border border-subtle px-1.5 text-caption text-muted">
-          {member.kind}
-        </span>
+        <span className="rounded border border-subtle px-1.5 text-caption text-muted">{member.kind}</span>
       </div>
       {/* Wrapped, not scrolled: a signature is read whole, and formatSignature has
           already put one parameter on each line wherever it is long. */}
-      <CodeBlock className="whitespace-pre-wrap [overflow-wrap:anywhere]">{formatSignature(member.signature)}</CodeBlock>
+      <CodeBlock className="whitespace-pre-wrap [overflow-wrap:anywhere]">
+        {formatSignature(member.signature)}
+      </CodeBlock>
       <Docstring text={member.doc} resolve={resolve} />
       {member.fields && member.fields.length > 0 && <FieldsTable member={member} resolve={resolve} />}
       {member.values && member.values.length > 0 && <ValuesTable member={member} resolve={resolve} />}
@@ -363,7 +347,9 @@ function ValuesTable({ member, resolve }: { member: ApiMember; resolve: ResolveR
             <TableCell>
               <code className={MONO}>{v.name}</code>
             </TableCell>
-            <TableCell>{v.value !== undefined ? <code className={MONO}>{JSON.stringify(v.value)}</code> : DASH}</TableCell>
+            <TableCell>
+              {v.value !== undefined ? <code className={MONO}>{JSON.stringify(v.value)}</code> : DASH}
+            </TableCell>
             {described && <TableCell>{v.doc?.trim() ? <Docstring text={v.doc} resolve={resolve} /> : DASH}</TableCell>}
           </TableRow>
         ))}
@@ -409,18 +395,17 @@ export function ServerKitOverview({ group }: { group: ShowcaseGroup }) {
     <div className="space-y-8">
       <div className="max-w-3xl space-y-3 text-sm leading-relaxed text-secondary">
         <p>
-          <strong className="text-primary">eifi1-server-kit</strong> is the Python package the
-          apps&rsquo; backends share, beside this kit for their frontends: the contracts these pages&rsquo;
-          components speak — schemas, rules, validators, the rate limiter, the CORS layer, the account mails —
-          as code, lifted from the app that settled each one and parameterised per app. The database, the routes
-          and the sign-in stay in each app.
+          <strong className="text-primary">eifi1-server-kit</strong> is the Python package the apps&rsquo; backends
+          share, beside this kit for their frontends: the contracts these pages&rsquo; components speak — schemas,
+          rules, validators, the rate limiter, the CORS layer, the account mails — as code, lifted from the app that
+          settled each one and parameterised per app. The database, the routes and the sign-in stay in each app.
         </p>
         <p>
-          These pages document <strong className="text-primary">server-kit {VERSION}</strong>, from
-          the <code className="font-mono">server-kit-api.json</code> its release attaches. The file is pinned in
-          this repository the way an app pins the wheel: the pages change when the pin does, not when
-          server-kit&rsquo;s main branch moves. Each module links the contract section it implements and the kit
-          pages it is the server half of; those pages link back under their title.
+          These pages document <strong className="text-primary">server-kit {VERSION}</strong>, from the{" "}
+          <code className="font-mono">server-kit-api.json</code> its release attaches. The file is pinned in this
+          repository the way an app pins the wheel: the pages change when the pin does, not when server-kit&rsquo;s main
+          branch moves. Each module links the contract section it implements and the kit pages it is the server half of;
+          those pages link back under their title.
         </p>
         <p className="flex flex-wrap gap-x-4 gap-y-1">
           <TextLink href={releaseUrl(VERSION)} external>
@@ -473,10 +458,7 @@ function ServerPageCard({ page }: { page: ShowcasePage }) {
             className="max-w-full rounded border border-subtle bg-surface-2 px-1.5 py-0.5 font-mono text-caption text-secondary [overflow-wrap:anywhere]"
           >
             {mod.name}
-            <span className="text-muted">
-              {" "}
-              · {mod.members.length}
-            </span>
+            <span className="text-muted"> · {mod.members.length}</span>
           </li>
         ))}
       </ul>

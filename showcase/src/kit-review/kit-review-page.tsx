@@ -314,8 +314,9 @@ export function KitReviewPage() {
     <Shell base={base} onClearDevBase={clearDevBase}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-secondary">
-          {allRows.length.toLocaleString(tag)} kit strings in {allowed.length === 1 ? "one language" : `${allowed.length} languages`}
-          , as the app&rsquo;s Translations page lists them.
+          {allRows.length.toLocaleString(tag)} kit strings in{" "}
+          {allowed.length === 1 ? "one language" : `${allowed.length} languages`}, as the app&rsquo;s Translations page
+          lists them.
         </p>
         <div className="flex flex-wrap items-center gap-2">
           <TranslationExportButton
@@ -346,7 +347,11 @@ export function KitReviewPage() {
       </div>
       {allowed.length > 1 && (
         <TranslationLocaleTabs
-          locales={allowed.map((code) => ({ value: code, label: languageLabel(code), rows: rowsByLocale.get(code) ?? [] }))}
+          locales={allowed.map((code) => ({
+            value: code,
+            label: languageLabel(code),
+            rows: rowsByLocale.get(code) ?? [],
+          }))}
           active={locale}
           onChange={setLocaleParam}
         />
@@ -435,13 +440,13 @@ function Intro() {
     <div className="max-w-3xl space-y-2 text-sm text-secondary">
       <p>
         Every string the kit renders, in each language the configured app ships, as the rows the app&rsquo;s{" "}
-        <code className="font-mono">/translations</code> page lists under <code className="font-mono">kit.</code> —
-        and the same verdicts, stored in the app&rsquo;s database. Approving a string here approves it there.
+        <code className="font-mono">/translations</code> page lists under <code className="font-mono">kit.</code> — and
+        the same verdicts, stored in the app&rsquo;s database. Approving a string here approves it there.
       </p>
       <p>
-        To start, open the app&rsquo;s Translations page and follow its link to the kit review: the app opens this
-        page with a short-lived review token, which leaves the address at once and is kept for this tab only. Or paste
-        a token here.
+        To start, open the app&rsquo;s Translations page and follow its link to the kit review: the app opens this page
+        with a short-lived review token, which leaves the address at once and is kept for this tab only. Or paste a
+        token here.
       </p>
     </div>
   );
@@ -504,8 +509,8 @@ function Waiting() {
     <div className="py-8" data-waking="">
       <AlertBanner tone="warning" icon={<Spinner label={null} className="size-4" />}>
         <Titled title="Waking the server…">
-          The app sleeps when nobody is using it, and the first request after a break has to start it again — that
-          can take up to a minute. This page keeps asking for {BUDGET_S} seconds; the review fills in by itself.
+          The app sleeps when nobody is using it, and the first request after a break has to start it again — that can
+          take up to a minute. This page keeps asking for {BUDGET_S} seconds; the review fills in by itself.
         </Titled>
       </AlertBanner>
     </div>
@@ -529,9 +534,10 @@ function NotConfigured({
         title="The live review is not configured in this build"
         hint={
           <>
-            This page reads and writes the configured app&rsquo;s review database, and this build was made without its address (
-            <code className="font-mono">VITE_REVIEW_API_BASE</code>). The GitHub Pages build sets it from the repository
-            variable <code className="font-mono">REVIEW_API_BASE</code>; a local dev server or a fork has none.
+            This page reads and writes the configured app&rsquo;s review database, and this build was made without its
+            address (<code className="font-mono">VITE_REVIEW_API_BASE</code>). The GitHub Pages build sets it from the
+            repository variable <code className="font-mono">REVIEW_API_BASE</code>; a local dev server or a fork has
+            none.
           </>
         }
       />

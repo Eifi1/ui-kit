@@ -45,8 +45,7 @@ export { DEFAULT_FORGOT_PASSWORD_LABELS };
 
 /* ── The form ────────────────────────────────────────────────────────────── */
 
-export interface ForgotPasswordFormProps
-  extends Omit<ComponentPropsWithRef<"div">, "onSubmit" | "children" | "title"> {
+export interface ForgotPasswordFormProps extends Omit<ComponentPropsWithRef<"div">, "onSubmit" | "children" | "title"> {
   /**
    * The address was submitted, trimmed: send `POST /auth/password-reset/request`.
    * Resolve when the server answered — whatever it answered: it is `204` whether or not
@@ -185,11 +184,7 @@ export function ForgotPasswordForm({
 
   return (
     <div {...rest} data-state="form" className={cn("space-y-3", className)}>
-      <form
-        className="space-y-3"
-        aria-labelledby={title === null ? undefined : headingId}
-        onSubmit={submit}
-      >
+      <form className="space-y-3" aria-labelledby={title === null ? undefined : headingId} onSubmit={submit}>
         {heading}
         <p className={INTRO_CLASS}>{labels.intro}</p>
         {formContent}

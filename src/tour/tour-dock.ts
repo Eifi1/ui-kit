@@ -89,7 +89,11 @@ export function dockStyle(edge: DockEdge, spot: DockRect | null, band: Band): CS
     maxHeight: cap,
   };
   if (edge === "top") {
-    return { ...base, top: band.top <= 0 ? `max(${GUTTER}px, env(safe-area-inset-top))` : band.top + GUTTER, bottom: "auto" };
+    return {
+      ...base,
+      top: band.top <= 0 ? `max(${GUTTER}px, env(safe-area-inset-top))` : band.top + GUTTER,
+      bottom: "auto",
+    };
   }
   const fromBottom = vh - band.bottom;
   return {

@@ -53,17 +53,13 @@ function SignatureSpecimens() {
   return (
     <>
       <Note>
-        <strong>Accessibility:</strong> the canvas is an image named by the label and described by
-        the instructions and its state (&ldquo;Nothing drawn yet&rdquo; / &ldquo;Signature
-        drawn&rdquo;). Drawing itself needs a pointer — no ARIA changes that — so{" "}
-        <code className="font-mono">allowTypedName</code> offers a typed name instead. It is opt-in
-        because whether a typed name counts as a signature is a product decision.
+        <strong>Accessibility:</strong> the canvas is an image named by the label and described by the instructions and
+        its state (&ldquo;Nothing drawn yet&rdquo; / &ldquo;Signature drawn&rdquo;). Drawing itself needs a pointer — no
+        ARIA changes that — so <code className="font-mono">allowTypedName</code> offers a typed name instead. It is
+        opt-in because whether a typed name counts as a signature is a product decision.
       </Note>
 
-      <Example
-        label="SignaturePad — onChange"
-        hint="switch the theme: the ink follows it, the PNG does not"
-      >
+      <Example label="SignaturePad — onChange" hint="switch the theme: the ink follows it, the PNG does not">
         <Stage>
           <SignaturePad onChange={(url) => setPng(url)} />
         </Stage>
@@ -91,10 +87,7 @@ function SignatureSpecimens() {
 
       <Example label="SignaturePad — required, read through a ref" hint="error, ref.toDataURL()">
         <Stage>
-          <SignaturePad
-            ref={pad}
-            error={submitted && !refValue ? "Please sign before submitting." : undefined}
-          />
+          <SignaturePad ref={pad} error={submitted && !refValue ? "Please sign before submitting." : undefined} />
         </Stage>
         <Row className="mt-3">
           <Button
@@ -107,11 +100,7 @@ function SignatureSpecimens() {
           >
             Submit
           </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => setRefEmpty(pad.current?.isEmpty() ?? null)}
-          >
+          <Button type="button" variant="ghost" onClick={() => setRefEmpty(pad.current?.isEmpty() ?? null)}>
             ref.isEmpty()
           </Button>
           <Button type="button" variant="ghost" onClick={() => pad.current?.clear()}>
@@ -151,9 +140,8 @@ function SignatureSpecimens() {
           />
         </Stage>
         <p className="text-xs text-muted">
-          The ink on screen follows the theme; the PNG below is drawn in{" "}
-          <code className="font-mono">exportInk</code> (dark blue) on an opaque{" "}
-          <code className="font-mono">exportBackground</code>, with a 4px base stroke.
+          The ink on screen follows the theme; the PNG below is drawn in <code className="font-mono">exportInk</code>{" "}
+          (dark blue) on an opaque <code className="font-mono">exportBackground</code>, with a 4px base stroke.
         </p>
         <Preview src={styled} />
       </Example>
@@ -177,16 +165,13 @@ function PasswordSpecimens() {
   return (
     <>
       <Note>
-        <strong>Not colour alone:</strong> the level is written beside the bar, each checklist item
-        tells a screen reader whether it is met, and a change of level is announced through a polite
-        live region. The scorer is exported as <code className="font-mono">scorePassword</code>, so
-        a form can gate on the same numbers the meter shows.
+        <strong>Not colour alone:</strong> the level is written beside the bar, each checklist item tells a screen
+        reader whether it is met, and a change of level is announced through a polite live region. The scorer is
+        exported as <code className="font-mono">scorePassword</code>, so a form can gate on the same numbers the meter
+        shows.
       </Note>
 
-      <Example
-        label="PasswordStrengthMeter — sign-in password"
-        hint="maxBytes={72}, the bcrypt ceiling"
-      >
+      <Example label="PasswordStrengthMeter — sign-in password" hint="maxBytes={72}, the bcrypt ceiling">
         <Stage>
           <Input
             type="password"
@@ -264,8 +249,8 @@ function PasswordSpecimens() {
         />
         <StateLine>{`lengthScore(value) = ${custom ? lengthScore(custom) : 0}   built-in = ${scorePassword(custom)}`}</StateLine>
         <p className="text-xs text-muted">
-          The checklist still lists the built-in rules — it describes what a password looks like,
-          while <code className="font-mono">score</code> alone decides the bar and the level. Type
+          The checklist still lists the built-in rules — it describes what a password looks like, while{" "}
+          <code className="font-mono">score</code> alone decides the bar and the level. Type
           &quot;aaaaaaaaaaaaaaaa&quot;: strong by length, weak by the built-in rules.
         </p>
       </Example>
@@ -289,7 +274,10 @@ function SignIn() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
   return (
-    <Example label="CurrentPasswordInput" hint="a sign-in or re-auth field the password manager fills — never offers a new one for">
+    <Example
+      label="CurrentPasswordInput"
+      hint="a sign-in or re-auth field the password manager fills — never offers a new one for"
+    >
       <Stage>
         <form
           className="flex flex-col gap-3"
@@ -323,8 +311,8 @@ function SignIn() {
       <Note>
         {code('type="password"')} and {code('autoComplete="current-password"')} are fixed; everything else is{" "}
         {code("Input")} — {code("error")}, {code("name")}, the reveal toggle, a forwarded ref for{" "}
-        {code("@eifi1/ui-kit/rhf")}. {code("busy")} makes it read-only, not disabled, so the focus Enter left in it
-        is still there when the answer comes. Not for a NEW password: that is {code("new-password")}.
+        {code("@eifi1/ui-kit/rhf")}. {code("busy")} makes it read-only, not disabled, so the focus Enter left in it is
+        still there when the answer comes. Not for a NEW password: that is {code("new-password")}.
       </Note>
     </Example>
   );

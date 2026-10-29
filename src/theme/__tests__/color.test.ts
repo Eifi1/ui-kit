@@ -1,14 +1,4 @@
-import {
-  contrast,
-  deltaE,
-  hexToOklch,
-  luminance,
-  oklchToHex,
-  parseHex,
-
-  simulateCvd,
-  solveLightness,
-} from "../color";
+import { contrast, deltaE, hexToOklch, luminance, oklchToHex, parseHex, simulateCvd, solveLightness } from "../color";
 
 describe("sRGB ↔ OKLCH", () => {
   it("round-trips every in-gamut colour it is given", () => {

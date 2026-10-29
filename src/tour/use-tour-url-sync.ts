@@ -58,7 +58,9 @@ function navigationInFlight(history: Navigator | undefined, dataRouter: DataRout
   const live = state?.location ?? (history as (Navigator & { location?: Partial<Place> }) | undefined)?.location;
   if (!live) return false;
   return (
-    live.pathname !== rendered.pathname || (live.search ?? "") !== rendered.search || (live.hash ?? "") !== rendered.hash
+    live.pathname !== rendered.pathname ||
+    (live.search ?? "") !== rendered.search ||
+    (live.hash ?? "") !== rendered.hash
   );
 }
 

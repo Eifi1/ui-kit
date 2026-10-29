@@ -140,8 +140,7 @@ const privately = (node: ReactNode) => <span data-private="">{node}</span>;
  * whitespace-free class token.
  */
 const ID_CLASS = "kit-toast-id-";
-const idClass = (id: ToastId) =>
-  `${ID_CLASS}${typeof id === "number" ? "n" : "s"}-${encodeURIComponent(String(id))}`;
+const idClass = (id: ToastId) => `${ID_CLASS}${typeof id === "number" ? "n" : "s"}-${encodeURIComponent(String(id))}`;
 
 /** The id {@link idClass} stamped on a toast element, or null for a toast the kit did
  *  not make (an app still calling sonner directly). */
@@ -284,13 +283,7 @@ export const toast = Object.assign(
 
 /* ── The Toaster ─────────────────────────────────────────────────────────── */
 
-export type ToastPosition =
-  | "top-left"
-  | "top-center"
-  | "top-right"
-  | "bottom-left"
-  | "bottom-center"
-  | "bottom-right";
+export type ToastPosition = "top-left" | "top-center" | "top-right" | "bottom-left" | "bottom-center" | "bottom-right";
 
 export type ToastSwipeDirection = "top" | "right" | "bottom" | "left";
 
@@ -381,9 +374,7 @@ const ALL_DIRECTIONS: ToastSwipeDirection[] = ["top", "right", "bottom", "left"]
 
 /** Light or dark, as the `.dark` class on `<html>` says right now. */
 function readDocumentTheme(): "light" | "dark" {
-  return typeof document !== "undefined" && document.documentElement.classList.contains("dark")
-    ? "dark"
-    : "light";
+  return typeof document !== "undefined" && document.documentElement.classList.contains("dark") ? "dark" : "light";
 }
 
 function subscribeDocumentTheme(onChange: () => void): () => void {

@@ -19,7 +19,9 @@ export function useDocumentTitle(parts: ReadonlyArray<string | null | undefined 
   const { format, appName } = useKitDocumentTitle();
   const [page, section, app] = parts.map((p) => (typeof p === "string" && p.trim() !== "" ? p : undefined));
   const any = parts.some((p) => typeof p === "string" && p.trim() !== "");
-  const title = any ? formatDocumentTitle(format ?? DEFAULT_DOCUMENT_TITLE_FORMAT, { page, section, app: app ?? appName }) : null;
+  const title = any
+    ? formatDocumentTitle(format ?? DEFAULT_DOCUMENT_TITLE_FORMAT, { page, section, app: app ?? appName })
+    : null;
   useEffect(() => {
     if (title === null || title === "") return;
     const before = document.title;

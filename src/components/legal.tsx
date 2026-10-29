@@ -446,7 +446,13 @@ export function LegalLinks({
     ...infoLinks(labels, { security: securityHref, accessibility: accessibilityHref }),
   ];
   const items = shown.flatMap((link, i) => [
-    ...(i > 0 ? [<span key={`sep-${link.href}`} aria-hidden="true">·</span>] : []),
+    ...(i > 0
+      ? [
+          <span key={`sep-${link.href}`} aria-hidden="true">
+            ·
+          </span>,
+        ]
+      : []),
     <TextLink key={link.href} href={link.href} tone="muted" current={link.href === currentHref} onClick={onLinkClick}>
       {link.label}
     </TextLink>,
@@ -573,9 +579,7 @@ export function LegalSection({ heading, body, children, id: idProp, headingAs }:
         {heading}
       </Heading>
       <LegalSlotContext.Provider value={null}>
-        {body !== undefined && (
-          <LegalText text={body} className="mt-2 text-sm leading-relaxed text-secondary" />
-        )}
+        {body !== undefined && <LegalText text={body} className="mt-2 text-sm leading-relaxed text-secondary" />}
         {children !== undefined && (
           <div className="mt-2 text-sm leading-relaxed break-words text-secondary">
             {typeof children === "string" ? resolveLegalRefs(children, page) : children}
@@ -650,7 +654,12 @@ export function LegalLayout({
         {children}
       </div>
       {links !== undefined && links.length > 0 && (
-        <LegalLinks links={links} currentHref={currentHref} labels={labels} className="mt-12 border-t border-subtle pt-4" />
+        <LegalLinks
+          links={links}
+          currentHref={currentHref}
+          labels={labels}
+          className="mt-12 border-t border-subtle pt-4"
+        />
       )}
     </article>
   );

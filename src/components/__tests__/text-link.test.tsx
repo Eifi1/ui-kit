@@ -68,7 +68,14 @@ describe("TextLink", () => {
     render(
       <UiKitProvider linkComponent={routerLink}>
         <TextLink href="/units">Units</TextLink>
-        <TextLink href="/own" renderLink={(p) => <a {...p} data-own="">{p.children}</a>}>
+        <TextLink
+          href="/own"
+          renderLink={(p) => (
+            <a {...p} data-own="">
+              {p.children}
+            </a>
+          )}
+        >
           Own
         </TextLink>
         <TextLink href="https://example.com">Absolute</TextLink>
@@ -83,7 +90,15 @@ describe("TextLink", () => {
   it("external: a new tab, a mirrored mark, and the words for a reader — never the router link", () => {
     render(
       <UiKitProvider linkComponent={routerLink} labels={{ common: { opensInNewTab: "öffnet in neuem Tab" } }}>
-        <TextLink href="https://www.bwo.admin.ch" external renderLink={(p) => <a {...p} data-own="">{p.children}</a>}>
+        <TextLink
+          href="https://www.bwo.admin.ch"
+          external
+          renderLink={(p) => (
+            <a {...p} data-own="">
+              {p.children}
+            </a>
+          )}
+        >
           BWO
         </TextLink>
       </UiKitProvider>,
@@ -144,7 +159,12 @@ describe("TextLink", () => {
   it("forwards its ref to the anchor", () => {
     let el: HTMLAnchorElement | null = null;
     render(
-      <TextLink href="/x" ref={(node) => { el = node; }}>
+      <TextLink
+        href="/x"
+        ref={(node) => {
+          el = node;
+        }}
+      >
         X
       </TextLink>,
     );

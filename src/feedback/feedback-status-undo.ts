@@ -37,10 +37,7 @@ export interface FeedbackStatusPatch {
  * Failure is the mutation's own business: its `onError` toasts the server's `detail`,
  * else `feedbackToast.updateFailed` (§4.4) — this hook adds no second error toast.
  */
-export type FeedbackStatusMutate = (
-  patch: FeedbackStatusPatch,
-  callbacks: { onSuccess: () => void },
-) => void;
+export type FeedbackStatusMutate = (patch: FeedbackStatusPatch, callbacks: { onSuccess: () => void }) => void;
 
 /** What the change needs to know about the row: which one, what it is called in the
  *  toast, and where it stood (the status Undo goes back to). */

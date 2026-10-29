@@ -22,8 +22,9 @@ export { readStored, writeStored } from "./lib/safe-storage";
 // (`filename*` first) — 0.34, KS U5; the kit's own three downloads use them.
 export { saveBlob, filenameFromDisposition } from "./lib/download";
 // Date helpers are also available via the "@eifi1/ui-kit/dates" subpath.
-// One fold and one ranking for every list's search box (DUP-5), for an app's own lists.
-export { foldForSearch, rankMatch } from "./lib/text-match";
+// One fold and one ranking for every list's search box (DUP-5), for an app's own lists;
+// and the pickers' every-word match (0.51.5), for an async `loadOptions` that filters itself.
+export { foldForSearch, rankMatch, searchWords, matchesSearch } from "./lib/text-match";
 export type { MatchRank } from "./lib/text-match";
 // 0.12.0: the QR encoder QrCode draws with — no dependency, see lib/qr-encode.ts.
 export { encodeQr } from "./lib/qr-encode";
@@ -31,11 +32,29 @@ export type { QrEncodeOptions, QrErrorCorrection, QrMatrix } from "./lib/qr-enco
 // 0.18: the cold-start notice keksdose built (#199), for every app: the framework-free
 // watchdog over the app's requests (the corner notice is components/server-wake).
 export { createServerWake, serverWake, watchReadsAnd, attachServerWake, wrapFetch } from "./lib/server-wake";
-export type { ServerWakeStage, ServerWakeFilter, ServerWakeOptions, ServerWakeRequest, ServerWakeWatcher, ServerWakeAxiosConfig, AxiosLikeInstance } from "./lib/server-wake";
+export type {
+  ServerWakeStage,
+  ServerWakeFilter,
+  ServerWakeOptions,
+  ServerWakeRequest,
+  ServerWakeWatcher,
+  ServerWakeAxiosConfig,
+  AxiosLikeInstance,
+} from "./lib/server-wake";
 // 0.34 (docs/auth-harmonization.md §11, round 0.34 C7): renewing a session — one refresh
 // per tab, a definitive failure ends the session once, a transient one keeps it.
-export { createSessionRefresh, attachSessionRefresh, isTransientRefreshFailure, isSignedOutStep } from "./lib/session-refresh";
-export type { SessionRefresh, SessionRefreshOptions, SessionRenewal, SessionRefreshOutcome } from "./lib/session-refresh";
+export {
+  createSessionRefresh,
+  attachSessionRefresh,
+  isTransientRefreshFailure,
+  isSignedOutStep,
+} from "./lib/session-refresh";
+export type {
+  SessionRefresh,
+  SessionRefreshOptions,
+  SessionRenewal,
+  SessionRefreshOutcome,
+} from "./lib/session-refresh";
 // 0.29.0 (docs/auth-harmonization.md): the person-name order of each language.
 export { formatPersonName, personInitials } from "./lib/person-name";
 export type { PersonName } from "./lib/person-name";
@@ -93,25 +112,10 @@ export type {
 // 0.22.0, the inputs round: the country list and the IBAN, ISIN and phone helpers that
 // CountrySelect, IbanInput and PhoneInput are built on.
 export { COUNTRY_CODES, countryName } from "./lib/countries";
-export {
-  IBAN_LENGTHS,
-  compactIban,
-  formatIban,
-  ibanCheckDigits,
-  ibanProblem,
-  isValidIban,
-  isQrIban,
-} from "./lib/iban";
+export { IBAN_LENGTHS, compactIban, formatIban, ibanCheckDigits, ibanProblem, isValidIban, isQrIban } from "./lib/iban";
 export type { IbanKind, IbanProblem } from "./lib/iban";
 export { formatIsin, isinCheckDigit, isValidIsin } from "./lib/isin";
-export {
-  PHONE_DIAL_CODES,
-  PHONE_COUNTRIES,
-  parsePhone,
-  formatNationalPhone,
-  formatPhone,
-  isE164,
-} from "./lib/phone";
+export { PHONE_DIAL_CODES, PHONE_COUNTRIES, parsePhone, formatNationalPhone, formatPhone, isE164 } from "./lib/phone";
 export type { PhoneCountryCode, PhoneCountry, ParsedPhone } from "./lib/phone";
 // 0.23.0: ColumnMapper's pure half (Kurvenschmiede's columns input, keksdose's import map).
 export {
@@ -188,7 +192,14 @@ export { useWindowedRows, WINDOWED_ROW_INDEX } from "./hooks/use-windowed-rows";
 export type { WindowedRows } from "./hooks/use-windowed-rows";
 // 0.32.0 (docs/text-size-harmonization.md): the breakpoints, and the hooks components read
 // the behaviours at Large from (§4, §10.7–10.9).
-export { useBreakpoint, usePhoneLayout, breakpointQuery, BREAKPOINT_REM, remPx, useRemPx } from "./hooks/use-breakpoint";
+export {
+  useBreakpoint,
+  usePhoneLayout,
+  breakpointQuery,
+  BREAKPOINT_REM,
+  remPx,
+  useRemPx,
+} from "./hooks/use-breakpoint";
 export type { Breakpoint, BreakpointVariant, RemLength } from "./hooks/use-breakpoint";
 export { useLargeText, useCoarsePointer, useInlineFacts } from "./hooks/use-large-text";
 
@@ -418,13 +429,42 @@ export * from "./components/form-actions";
 // 0.33: a lock says its source, and a control can be exempt from one
 // (docs/billing-harmonization.md §12.36): the kinds, the holds, `CommitScope`,
 // `COMMIT_EXCEPT_BILLING` and the pure `writeLockFor`.
-export { WriteLockProvider, useWriteLock, writeLockFor, COMMIT_EXCEPT_BILLING, DEFAULT_WRITE_LOCK_LABELS } from "./components/write-lock";
+export {
+  WriteLockProvider,
+  useWriteLock,
+  writeLockFor,
+  COMMIT_EXCEPT_BILLING,
+  DEFAULT_WRITE_LOCK_LABELS,
+} from "./components/write-lock";
 // 0.46 (kastlan K4): the offline lock kind, its scope and its source.
 export { OFFLINE_LOCK, COMMIT_EXCEPT_OFFLINE, useOfflineWriteLock } from "./components/write-lock";
-export type { WriteLock, WriteLockLabels, WriteLockProviderProps, WriteLockKind, WriteLockHold, CommitScope } from "./components/write-lock";
+export type {
+  WriteLock,
+  WriteLockLabels,
+  WriteLockProviderProps,
+  WriteLockKind,
+  WriteLockHold,
+  CommitScope,
+} from "./components/write-lock";
 // 0.18: the parts both apps' admin rosters repeat (Kurvenschmiede 6).
-export { RoleChip, AccountStateChip, DateMark, dateColumn, DEFAULT_ACCOUNT_STATE_LABELS, ACCOUNT_STATE_TONES } from "./components/account-chips";
-export type { RoleChipProps, RoleDefinition, RoleVocabulary, AccountState, AccountStateLabels, AccountStateChipProps, DateMarkProps, DateColumnOptions } from "./components/account-chips";
+export {
+  RoleChip,
+  AccountStateChip,
+  DateMark,
+  dateColumn,
+  DEFAULT_ACCOUNT_STATE_LABELS,
+  ACCOUNT_STATE_TONES,
+} from "./components/account-chips";
+export type {
+  RoleChipProps,
+  RoleDefinition,
+  RoleVocabulary,
+  AccountState,
+  AccountStateLabels,
+  AccountStateChipProps,
+  DateMarkProps,
+  DateColumnOptions,
+} from "./components/account-chips";
 // 0.42 (docs/admin-harmonization.md §2.1): the role in the account menu's header, a link
 // to the role's tool (`RoleDefinition.href`).
 export { AccountRoleChip } from "./components/account-chips";
@@ -435,7 +475,17 @@ export { ServerWakeNotice, useServerWakeStage, DEFAULT_SERVER_WAKE_LABELS } from
 export type { ServerWakeLabels, ServerWakeNoticeProps } from "./components/server-wake";
 // 0.18: sharing — grantees, roles, pending grants, candidates (Kurvenschmiede 1).
 export { ShareCard, ShareDialog, SharePanel, DEFAULT_SHARE_CARD_LABELS } from "./components/share-card";
-export type { ShareCardProps, ShareDialogProps, SharePanelProps, ShareCardLabels, ShareRole, ShareGrantee, SharePendingGrant, ShareCandidate, ShareAddRequest } from "./components/share-card";
+export type {
+  ShareCardProps,
+  ShareDialogProps,
+  SharePanelProps,
+  ShareCardLabels,
+  ShareRole,
+  ShareGrantee,
+  SharePendingGrant,
+  ShareCandidate,
+  ShareAddRequest,
+} from "./components/share-card";
 export * from "./components/line-items";
 export * from "./components/progress-bar";
 // Named: skeleton.tsx also holds SKELETON_CLASS, the look StatTile shares — internal.
@@ -742,7 +792,13 @@ export type {
   EmailChangeAction,
 } from "./account/email-change-setting";
 export { SessionsSetting, DEFAULT_SESSIONS_LABELS } from "./account/sessions-setting";
-export type { SessionsSettingProps, SessionsLabels, SessionItem, SessionId, SessionsAction } from "./account/sessions-setting";
+export type {
+  SessionsSettingProps,
+  SessionsLabels,
+  SessionItem,
+  SessionId,
+  SessionsAction,
+} from "./account/sessions-setting";
 export { DeleteAccountSetting, DEFAULT_DELETE_ACCOUNT_LABELS } from "./account/delete-account-setting";
 export type {
   DeleteAccountSettingProps,
@@ -884,9 +940,22 @@ export type {
 export { DEFAULT_BILLING_LABELS, useBillingLabels, SUBSCRIPTION_STATUSES } from "./billing/billing-labels";
 export type { BillingLabels, SubscriptionStatus } from "./billing/billing-labels";
 export { BILLING_INTERVALS, planPrice, minorToMajor, formatPlanPrice, billingCurrencyFor } from "./billing/plan-price";
-export type { BillingInterval, BillingCurrency, PlanIntervalPrices, PlanPrices, PlanPriceAnswer } from "./billing/plan-price";
+export type {
+  BillingInterval,
+  BillingCurrency,
+  PlanIntervalPrices,
+  PlanPrices,
+  PlanPriceAnswer,
+} from "./billing/plan-price";
 export { PlanCard, PlanPicker, GrantWarningConfirm, planRelation } from "./billing/plan-card";
-export type { BillingPlan, PlanRelation, PlanCardProps, PlanPickerProps, PlanChoice, GrantWarningConfirmProps } from "./billing/plan-card";
+export type {
+  BillingPlan,
+  PlanRelation,
+  PlanCardProps,
+  PlanPickerProps,
+  PlanChoice,
+  GrantWarningConfirmProps,
+} from "./billing/plan-card";
 export { SubscriptionStatusChip, SUBSCRIPTION_STATUS_TONES } from "./billing/subscription-status-chip";
 export type { SubscriptionStatusChipProps } from "./billing/subscription-status-chip";
 export { BillingBanner } from "./billing/billing-banner";
@@ -912,7 +981,12 @@ export {
   withoutCheckoutReturn,
   checkoutReturnUrl,
 } from "./billing/checkout-return";
-export { checkoutFingerprint, checkoutLanded, noteCheckoutStarted, useCheckoutProcessing } from "./billing/checkout-processing";
+export {
+  checkoutFingerprint,
+  checkoutLanded,
+  noteCheckoutStarted,
+  useCheckoutProcessing,
+} from "./billing/checkout-processing";
 export type { CheckoutOverview, CheckoutProcessingOptions } from "./billing/checkout-processing";
 // The link to the pay page and Paddle's locale (§14.4); the page itself ships as dist/pay/.
 export { PAY_PAGE_LANG_PARAM, paddleLocale, payPageUrl } from "./billing/pay-page";

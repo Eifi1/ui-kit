@@ -6,7 +6,8 @@ import { TopBar } from "../top-bar";
 /** docs/top-bar-harmonization.md §2.1, §6.6: the one order, slots by name, no gaps. */
 
 const item = (name: string) => <span data-slot-name={name}>{name}</span>;
-const order = (root: HTMLElement) => [...root.querySelectorAll("[data-slot-name]")].map((e) => e.getAttribute("data-slot-name"));
+const order = (root: HTMLElement) =>
+  [...root.querySelectorAll("[data-slot-name]")].map((e) => e.getAttribute("data-slot-name"));
 
 describe("TopBarActions", () => {
   it("draws every slot in §2.1's order, whatever order the props come in", () => {
@@ -42,7 +43,10 @@ describe("TopBarActions", () => {
 
   it("leaves an empty slot out entirely: no wrapper, so the row's gap closes", () => {
     const { container } = render(
-      <TopBar brand="App" actions={<TopBarActions search={item("search")} theme={null} feedback={false} account={item("account")} />} />,
+      <TopBar
+        brand="App"
+        actions={<TopBarActions search={item("search")} theme={null} feedback={false} account={item("account")} />}
+      />,
     );
     const row = container.querySelector("header > div:last-child")!;
     expect(row.children).toHaveLength(2);
@@ -67,7 +71,12 @@ describe("TopBarActions", () => {
 
   it("signed in: the signed-out slots are not drawn — the language is in the account menu", () => {
     const { container } = render(
-      <TopBarActions theme={item("theme")} language={item("language")} signIn={item("signIn")} account={item("account")} />,
+      <TopBarActions
+        theme={item("theme")}
+        language={item("language")}
+        signIn={item("signIn")}
+        account={item("account")}
+      />,
     );
     expect(order(container)).toEqual(["theme", "account"]);
   });

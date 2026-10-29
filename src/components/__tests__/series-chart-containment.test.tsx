@@ -206,9 +206,7 @@ describe("per-series activeDot", () => {
   it("sets its radius with `{ r }`, on an area too", async () => {
     const { container } = two({ r: 7 }, "area");
     await hover(container, 400);
-    const radii = [...container.querySelectorAll(".recharts-active-dot circle")].map((dot) =>
-      dot.getAttribute("r"),
-    );
+    const radii = [...container.querySelectorAll(".recharts-active-dot circle")].map((dot) => dot.getAttribute("r"));
     expect(radii).toContain("7");
   });
 });

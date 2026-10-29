@@ -46,9 +46,27 @@ const OPTIONS = [
 ];
 
 const BINDINGS: Array<[string, Values, ReactElement, string, () => HTMLElement]> = [
-  ["RhfNumberField", { f: 12.5 }, <RhfNumberField name="f" label="Field" />, "f", () => screen.getByRole("textbox", { name: "Field" })],
-  ["RhfIntegerField", { f: 3 }, <RhfIntegerField name="f" label="Field" />, "f", () => screen.getByRole("textbox", { name: "Field" })],
-  ["RhfDateField", { f: "" }, <RhfDateField name="f" label="Field" />, "f", () => screen.getByRole("combobox", { name: /Field/ })],
+  [
+    "RhfNumberField",
+    { f: 12.5 },
+    <RhfNumberField name="f" label="Field" />,
+    "f",
+    () => screen.getByRole("textbox", { name: "Field" }),
+  ],
+  [
+    "RhfIntegerField",
+    { f: 3 },
+    <RhfIntegerField name="f" label="Field" />,
+    "f",
+    () => screen.getByRole("textbox", { name: "Field" }),
+  ],
+  [
+    "RhfDateField",
+    { f: "" },
+    <RhfDateField name="f" label="Field" />,
+    "f",
+    () => screen.getByRole("combobox", { name: /Field/ }),
+  ],
   [
     "RhfDateRangePicker, from",
     { from: "", to: "" },
@@ -63,8 +81,20 @@ const BINDINGS: Array<[string, Values, ReactElement, string, () => HTMLElement]>
     "to",
     () => screen.getByRole("combobox", { name: /Field/ }),
   ],
-  ["RhfMonthPicker", { f: "" }, <RhfMonthPicker name="f" label="Field" />, "f", () => screen.getByRole("combobox", { name: /Field/ })],
-  ["RhfToggleGroup", { f: "b" }, <RhfToggleGroup name="f" label="Field" options={OPTIONS} />, "f", () => screen.getByRole("radio", { name: "B" })],
+  [
+    "RhfMonthPicker",
+    { f: "" },
+    <RhfMonthPicker name="f" label="Field" />,
+    "f",
+    () => screen.getByRole("combobox", { name: /Field/ }),
+  ],
+  [
+    "RhfToggleGroup",
+    { f: "b" },
+    <RhfToggleGroup name="f" label="Field" options={OPTIONS} />,
+    "f",
+    () => screen.getByRole("radio", { name: "B" }),
+  ],
 ];
 
 describe.each(BINDINGS)("%s: field.ref is the control (API-3)", (_name, defaults, field, name, control) => {

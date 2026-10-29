@@ -109,9 +109,7 @@ export function Hero({
     >
       <div>
         {shownBadge != null && <div className="mb-4">{shownBadge}</div>}
-        <Heading className="text-4xl font-bold tracking-tight text-balance text-primary sm:text-5xl">
-          {title}
-        </Heading>
+        <Heading className="text-4xl font-bold tracking-tight text-balance text-primary sm:text-5xl">{title}</Heading>
         {subtitle != null && <p className="mt-4 max-w-xl text-lg text-secondary">{subtitle}</p>}
         <div className="mt-8">
           {actions ?? (
@@ -143,11 +141,7 @@ export type FeatureRowsProps = ComponentPropsWithRef<"section">;
  */
 export function FeatureRows({ className, children, ...rest }: FeatureRowsProps) {
   return (
-    <section
-      {...rest}
-      data-slot="landing-feature-rows"
-      className={cn("border-t border-subtle bg-surface", className)}
-    >
+    <section {...rest} data-slot="landing-feature-rows" className={cn("border-t border-subtle bg-surface", className)}>
       <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">{children}</div>
     </section>
   );
@@ -191,7 +185,11 @@ export function FeatureRow({
     <div
       {...rest}
       data-slot="landing-feature-row"
-      className={cn("group/feature grid grid-cols-1 items-center gap-8 py-10", visual != null && "lg:grid-cols-2 lg:gap-16", className)}
+      className={cn(
+        "group/feature grid grid-cols-1 items-center gap-8 py-10",
+        visual != null && "lg:grid-cols-2 lg:gap-16",
+        className,
+      )}
     >
       <div className="lg:group-even/feature:order-last">
         {(icon != null || eyebrow != null) && (
@@ -250,7 +248,12 @@ export interface TrustStripProps extends Omit<ComponentPropsWithRef<"section">, 
 export function TrustStrip({ items, headingAs: Heading = "h3", className, ...rest }: TrustStripProps) {
   return (
     <section {...rest} data-slot="landing-trust" className={cn("mx-auto max-w-6xl px-4 py-12 sm:py-16", className)}>
-      <ul className={cn("grid grid-cols-1 gap-8 sm:grid-cols-2", items.length === 3 ? "lg:grid-cols-3" : "lg:grid-cols-4")}>
+      <ul
+        className={cn(
+          "grid grid-cols-1 gap-8 sm:grid-cols-2",
+          items.length === 3 ? "lg:grid-cols-3" : "lg:grid-cols-4",
+        )}
+      >
         {items.map((item, i) => (
           <li key={i}>
             {item.icon != null && (
@@ -298,11 +301,7 @@ export function CtaBand({
   ...rest
 }: CtaBandProps) {
   return (
-    <section
-      {...rest}
-      data-slot="landing-cta"
-      className={cn("border-t border-subtle bg-surface", className)}
-    >
+    <section {...rest} data-slot="landing-cta" className={cn("border-t border-subtle bg-surface", className)}>
       <div className="mx-auto max-w-5xl px-4 py-16 text-center">
         <Heading className="text-2xl font-semibold tracking-tight text-balance text-primary sm:text-3xl">
           {title}

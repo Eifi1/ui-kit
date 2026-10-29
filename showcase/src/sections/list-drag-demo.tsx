@@ -90,8 +90,8 @@ function DraggableRows() {
           <code className="font-mono">onDragEnd</code>, and an <code className="font-mono">aria-roledescription</code>.
           They also pass <code className="font-mono">role: &quot;listitem&quot;</code>, which is dropped: inspect a row
           and it is still a <code className="font-mono">button</code> — a role from outside would silently turn the row
-          into something else. Drag needs a mouse; the keyboard reorder is the app&apos;s to add (a pair of move
-          buttons in <code className="font-mono">actions</code>).
+          into something else. Drag needs a mouse; the keyboard reorder is the app&apos;s to add (a pair of move buttons
+          in <code className="font-mono">actions</code>).
         </Note>
       </div>
     </Example>
@@ -126,11 +126,11 @@ function BorderedStrip() {
       <OutTable rows={[["selected", active]]} />
       <div className="mt-3">
         <Note>
-          The <code className="font-mono">List</code> is laid out as <code className="font-mono">flex-row flex-wrap</code>{" "}
-          through its <code className="font-mono">className</code>, so the rows wrap at phone width.{" "}
-          <code className="font-mono">bordered</code> draws <code className="font-mono">--border</code> round each
-          unselected row instead of a transparent border — untick it and the strip reads as loose words. The selected
-          row keeps its brand border either way.
+          The <code className="font-mono">List</code> is laid out as{" "}
+          <code className="font-mono">flex-row flex-wrap</code> through its <code className="font-mono">className</code>
+          , so the rows wrap at phone width. <code className="font-mono">bordered</code> draws{" "}
+          <code className="font-mono">--border</code> round each unselected row instead of a transparent border — untick
+          it and the strip reads as loose words. The selected row keeps its brand border either way.
         </Note>
       </div>
     </Example>

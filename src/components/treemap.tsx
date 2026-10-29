@@ -279,8 +279,7 @@ export function TreemapCell({
   // 29px down and an 11px glyph hangs ~2px below it, so 36 leaves the same ~5px under
   // the note that the label keeps under itself at the 20px floor.
   const rawNote = id != null && nodeNote ? nodeNote(id) : undefined;
-  const note =
-    label != null && rawNote != null && ph >= 36 * scale ? fitLabel(rawNote, pw, noteSize) : null;
+  const note = label != null && rawNote != null && ph >= 36 * scale ? fitLabel(rawNote, pw, noteSize) : null;
   // The label's START edge, 6px in from the tile's. The tiles themselves are laid out
   // physically (the plot is not mirrored, see `ChartContainer`) and the chart's SVG is
   // pinned `ltr`, so the direction is set on each <text> explicitly: `start` is then
@@ -312,16 +311,7 @@ export function TreemapCell({
     >
       {/* The 2px gutter is the card showing through, not a white grid — on a dark
           surface white lines glare harder than the tiles. */}
-      <rect
-        x={px}
-        y={py}
-        width={pw}
-        height={ph}
-        fill={tileFill}
-        stroke="var(--bg-surface)"
-        strokeWidth={2}
-        rx={3}
-      />
+      <rect x={px} y={py} width={pw} height={ph} fill={tileFill} stroke="var(--bg-surface)" strokeWidth={2} rx={3} />
       {edge && pw > 3 && ph > 3 && (
         <rect
           data-edge=""
@@ -481,9 +471,7 @@ export function Treemap({
         dataKey="size"
         fill="var(--chart-1)"
         isAnimationActive={false}
-        content={
-          <TreemapCell onNodeClick={onNodeClick} redactNames={redactNames} nodeNote={nodeNote} dir={dir} />
-        }
+        content={<TreemapCell onNodeClick={onNodeClick} redactNames={redactNames} nodeNote={nodeNote} dir={dir} />}
       >
         <ChartTooltip content={<Content hideLabel valueFormatter={format} />} />
       </RechartsTreemap>

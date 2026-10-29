@@ -19,11 +19,7 @@ import { useKitLabelOverrides, useKitLabels, type LabelOverride } from "../i18n/
 import { Chip } from "../components/chip";
 import { useAccountSettingsLabels } from "./account-settings-labels";
 import { SettingsCardTitle } from "../settings/settings-heading";
-import type {
-  PasswordSettingLabels,
-  ProfileSettingLabels,
-  TwoFactorSettingLabels,
-} from "./account-settings-labels";
+import type { PasswordSettingLabels, ProfileSettingLabels, TwoFactorSettingLabels } from "./account-settings-labels";
 import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
 import { AlertBanner } from "../components/alert-banner";
 import { hasContent } from "../lib/presence";
@@ -527,9 +523,7 @@ type PasswordField = "current" | "next" | "confirm";
  * base64-encoded SVG image — is what the section took before, which made every app
  * render a QR library to a static string and base64 it only for the kit to draw it back.
  */
-export type TwoFactorSetupData =
-  | { qrSvg: string; secret: string }
-  | { otpauthUri: string; secret?: string };
+export type TwoFactorSetupData = { qrSvg: string; secret: string } | { otpauthUri: string; secret?: string };
 
 /** The `secret` parameter of an `otpauth://` URI, or null. */
 function otpauthSecret(uri: string): string | null {
@@ -594,9 +588,7 @@ export function TwoFactorSetting({
   //    pasted from an authenticator that groups its digits used to reach `onEnable`
   //    with the space in it.
   //  - one `code` state for both, as before.
-  const secret = setup
-    ? (setup.secret ?? ("otpauthUri" in setup ? otpauthSecret(setup.otpauthUri) : null))
-    : null;
+  const secret = setup ? (setup.secret ?? ("otpauthUri" in setup ? otpauthSecret(setup.otpauthUri) : null)) : null;
 
   return (
     <Card id={id} className="p-4 space-y-3">
@@ -637,11 +629,7 @@ export function TwoFactorSetting({
             </div>
           ) : (
             <div data-private className="inline-block rounded-md bg-white p-2">
-              <img
-                alt={labels.qrAlt}
-                src={`data:image/svg+xml;base64,${setup.qrSvg}`}
-                className="h-48 w-48"
-              />
+              <img alt={labels.qrAlt} src={`data:image/svg+xml;base64,${setup.qrSvg}`} className="h-48 w-48" />
             </div>
           )}
           {secret && (
@@ -680,7 +668,13 @@ export function TwoFactorSetting({
       {enabled && (
         <div className="space-y-3 border-t border-subtle pt-3">
           <div className="text-sm font-medium">{labels.disableSection}</div>
-          <Input type="password" autoComplete="current-password" label={labels.password} value={password} onChange={(e) => setPassword(e.target.value)} />
+          <Input
+            type="password"
+            autoComplete="current-password"
+            label={labels.password}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
           <OneTimeCodeInput
             readOnlyUntilFocus
             length={8}

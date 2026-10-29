@@ -43,7 +43,11 @@ export function ToggleCaptionDemo() {
           value={diff}
           onChange={setDiff}
           caption={(v) =>
-            v === null ? "Pick one — the setup sheet needs it." : v === "lsd" ? "Limited slip: the usual race choice." : null
+            v === null
+              ? "Pick one — the setup sheet needs it."
+              : v === "lsd"
+                ? "Limited slip: the usual race choice."
+                : null
           }
           options={[
             { value: "open", label: "Open" },
@@ -75,14 +79,14 @@ export function ToggleCaptionDemo() {
       />
       <div className="mt-3">
         <Note>
-          The caption sits in muted 11px text under the field (or under the bare group, as in the third, which has
-          only an <code className="font-mono">aria-label</code>) and is attached with{" "}
+          The caption sits in muted 11px text under the field (or under the bare group, as in the third, which has only
+          an <code className="font-mono">aria-label</code>) and is attached with{" "}
           <code className="font-mono">aria-describedby</code>. A FUNCTION caption is also a polite live region: a
           description is read when focus enters the group, not again when an arrow key changes the choice — so without
           it, the Tyre caption would change on screen and in silence. The Differential&apos;s function returns{" "}
-          <code className="font-mono">null</code> for Open and Locked: the line empties without leaving a gap, and
-          its value is <code className="font-mono">null</code> until something is picked
-          (<code className="font-mono">allowEmpty</code>).
+          <code className="font-mono">null</code> for Open and Locked: the line empties without leaving a gap, and its
+          value is <code className="font-mono">null</code> until something is picked (
+          <code className="font-mono">allowEmpty</code>).
         </Note>
       </div>
     </Example>

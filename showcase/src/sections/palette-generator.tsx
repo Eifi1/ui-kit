@@ -54,8 +54,10 @@ import { useActiveTokenSet, useTheme } from "../stores";
  */
 
 /** The roles a caller may pin by hand. `brand` is required and handled separately. */
-const OPTIONAL_ROLES = ["accent", "danger", "warning", "success", "info"] as const satisfies
-  readonly Exclude<AnchorRole, "brand">[];
+const OPTIONAL_ROLES = ["accent", "danger", "warning", "success", "info"] as const satisfies readonly Exclude<
+  AnchorRole,
+  "brand"
+>[];
 
 type OptionalRole = (typeof OPTIONAL_ROLES)[number];
 
@@ -189,10 +191,7 @@ function AuditSummary({ label, report }: { label: string; report: ContrastReport
   const failed = report.failures.length;
   return (
     <span
-      className={cn(
-        "inline-flex items-center gap-1.5 text-xs",
-        failed ? "font-semibold text-danger" : "text-muted",
-      )}
+      className={cn("inline-flex items-center gap-1.5 text-xs", failed ? "font-semibold text-danger" : "text-muted")}
     >
       {failed ? <TriangleAlert aria-hidden className="size-3.5" /> : <Check aria-hidden className="size-3.5" />}
       {label}: {failed ? `${failed} of ${report.checks.length} checks fail` : `all ${report.checks.length} checks pass`}
@@ -218,11 +217,21 @@ function AuditTable({ light, dark }: { light: ContrastReport; dark: ContrastRepo
     <table className="w-full text-left text-xs max-sm:block">
       <thead className="max-sm:block">
         <tr className={cn("border-b border-subtle text-muted", AUDIT_ROW)}>
-          <th scope="col" className="py-1.5 pr-3 font-medium">Pair</th>
-          <th scope="col" className="py-1.5 pr-3 font-medium">Needs</th>
-          <th scope="col" className="py-1.5 pr-3 font-medium">Light</th>
-          <th scope="col" className="py-1.5 pr-3 font-medium">Dark</th>
-          <th scope="col" className="py-1.5 font-medium max-sm:hidden">Rule</th>
+          <th scope="col" className="py-1.5 pr-3 font-medium">
+            Pair
+          </th>
+          <th scope="col" className="py-1.5 pr-3 font-medium">
+            Needs
+          </th>
+          <th scope="col" className="py-1.5 pr-3 font-medium">
+            Light
+          </th>
+          <th scope="col" className="py-1.5 pr-3 font-medium">
+            Dark
+          </th>
+          <th scope="col" className="py-1.5 font-medium max-sm:hidden">
+            Rule
+          </th>
         </tr>
       </thead>
       <tbody className="max-sm:block">
@@ -234,16 +243,16 @@ function AuditTable({ light, dark }: { light: ContrastReport; dark: ContrastRepo
               key={check.pair}
               // The fill is the fourth signal, and the only one that finds the row while
               // you are scrolling past rather than reading it.
-              className={cn(
-                "border-b border-subtle last:border-b-0",
-                AUDIT_ROW,
-                failed && "bg-danger-soft",
-              )}
+              className={cn("border-b border-subtle last:border-b-0", AUDIT_ROW, failed && "bg-danger-soft")}
             >
               <td className="py-1.5 pr-3 align-top font-mono text-primary max-sm:break-words">{check.pair}</td>
               <td className="py-1.5 pr-3 align-top font-mono text-muted">{check.required}:1</td>
-              <td className="py-1.5 pr-3 align-top"><Verdict check={check} /></td>
-              <td className="py-1.5 pr-3 align-top"><Verdict check={other} /></td>
+              <td className="py-1.5 pr-3 align-top">
+                <Verdict check={check} />
+              </td>
+              <td className="py-1.5 pr-3 align-top">
+                <Verdict check={other} />
+              </td>
               <td className="py-1.5 align-top text-muted max-sm:col-span-full max-sm:pt-0">{check.rule}</td>
             </tr>
           );
@@ -356,9 +365,15 @@ function ThemePreview({ p }: { p: DerivedPalette }) {
   return (
     <div className="rounded-lg border p-3" style={{ background: t.bgPage, borderColor: t.border }}>
       <div className="rounded-md border p-3" style={{ background: t.bgSurface, borderColor: t.border }}>
-        <p className="text-sm font-semibold" style={{ color: t.textPrimary }}>Payment run</p>
-        <p className="mt-0.5 text-xs" style={{ color: t.textSecondary }}>Nine invoices, two flagged.</p>
-        <p className="text-xs" style={{ color: t.textMuted }}>Updated a moment ago</p>
+        <p className="text-sm font-semibold" style={{ color: t.textPrimary }}>
+          Payment run
+        </p>
+        <p className="mt-0.5 text-xs" style={{ color: t.textSecondary }}>
+          Nine invoices, two flagged.
+        </p>
+        <p className="text-xs" style={{ color: t.textMuted }}>
+          Updated a moment ago
+        </p>
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <span
             className="rounded-md px-2 py-1 text-xs font-medium"
@@ -372,8 +387,12 @@ function ThemePreview({ p }: { p: DerivedPalette }) {
           >
             2 failed
           </span>
-          <span className="text-xs font-medium" style={{ color: t.moneyIncome }}>+1,240.00</span>
-          <span className="text-xs font-medium" style={{ color: t.moneyExpense }}>−380.00</span>
+          <span className="text-xs font-medium" style={{ color: t.moneyIncome }}>
+            +1,240.00
+          </span>
+          <span className="text-xs font-medium" style={{ color: t.moneyExpense }}>
+            −380.00
+          </span>
         </div>
       </div>
     </div>
@@ -394,31 +413,26 @@ function RampReport({ report }: { report: ChartRampReport }) {
         ],
         [
           ".minContrast",
-          <span className={report.minContrast < 3 ? "text-danger" : undefined}>
-            {report.minContrast.toFixed(2)}:1
-          </span>,
+          <span className={report.minContrast < 3 ? "text-danger" : undefined}>{report.minContrast.toFixed(2)}:1</span>,
         ],
         [
           ".collisions.length",
-          <span className={report.collisions.length ? "text-danger" : undefined}>
-            {report.collisions.length}
-          </span>,
+          <span className={report.collisions.length ? "text-danger" : undefined}>{report.collisions.length}</span>,
         ],
         [
           ".lowContrast.length",
-          <span className={report.lowContrast.length ? "text-danger" : undefined}>
-            {report.lowContrast.length}
-          </span>,
+          <span className={report.lowContrast.length ? "text-danger" : undefined}>{report.lowContrast.length}</span>,
         ],
         [
           ".passes",
           <span
-            className={cn(
-              "inline-flex items-center gap-1.5",
-              report.passes ? undefined : "font-semibold text-danger",
-            )}
+            className={cn("inline-flex items-center gap-1.5", report.passes ? undefined : "font-semibold text-danger")}
           >
-            {report.passes ? <Check aria-hidden className="size-3.5" /> : <CircleAlert aria-hidden className="size-3.5" />}
+            {report.passes ? (
+              <Check aria-hidden className="size-3.5" />
+            ) : (
+              <CircleAlert aria-hidden className="size-3.5" />
+            )}
             {String(report.passes)}
           </span>,
         ],
@@ -472,10 +486,7 @@ export function PaletteGenerator() {
   // anchors OBJECT so a keystroke that does not change a parsed colour — a second `#`,
   // a half-typed digit — costs nothing, and so the two themes below are always the same
   // input seen twice rather than two inputs that happen to agree.
-  const textContrast = useMemo(
-    () => (mutedTarget === undefined ? undefined : { muted: mutedTarget }),
-    [mutedTarget],
-  );
+  const textContrast = useMemo(() => (mutedTarget === undefined ? undefined : { muted: mutedTarget }), [mutedTarget]);
   const light = useMemo(
     () => derivePalette({ anchors, mode: "light", surfaceTint, textContrast }),
     [anchors, surfaceTint, textContrast],
@@ -500,10 +511,7 @@ export function PaletteGenerator() {
 
   // The shipped ramp, audited rather than trusted. `activeTokens` is the live preset, so
   // switching the palette menu in the top bar moves these numbers.
-  const presetRamp = useMemo(
-    () => auditChartRamp(activeTokens.chart, surfacesOf(activeTokens)),
-    [activeTokens],
-  );
+  const presetRamp = useMemo(() => auditChartRamp(activeTokens.chart, surfacesOf(activeTokens)), [activeTokens]);
 
   const css = useMemo(
     () =>
@@ -563,8 +571,8 @@ export function PaletteGenerator() {
           />
           <div className="border-t border-subtle pt-3">
             <p className="mb-2 text-xs text-muted">
-              Hard points. Unpinned, each is placed away from the brand and from its
-              siblings within its own licence to move; pinned, it is honoured exactly.
+              Hard points. Unpinned, each is placed away from the brand and from its siblings within its own licence to
+              move; pinned, it is honoured exactly.
             </p>
             <div className="space-y-2">
               {OPTIONAL_ROLES.map((role) => (
@@ -604,13 +612,11 @@ export function PaletteGenerator() {
       </Example>
 
       <Note>
-        The semantic roles have a home hue and a narrow licence to move — danger is red
-        because every other interface the reader has ever used made it red, and a danger
-        button in the brand&rsquo;s teal is a worse button however well it matches. So
-        pinning is for a brand that already owns one of those hues, not for taste. Pinning{" "}
-        <code className="font-mono">accent</code> is the exception: it is the only role
-        that does not exist until you ask for it, and the only one{" "}
-        <code className="font-mono">tokens.css</code> has no variable for yet.
+        The semantic roles have a home hue and a narrow licence to move — danger is red because every other interface
+        the reader has ever used made it red, and a danger button in the brand&rsquo;s teal is a worse button however
+        well it matches. So pinning is for a brand that already owns one of those hues, not for taste. Pinning{" "}
+        <code className="font-mono">accent</code> is the exception: it is the only role that does not exist until you
+        ask for it, and the only one <code className="font-mono">tokens.css</code> has no variable for yet.
       </Note>
 
       <Example
@@ -628,8 +634,8 @@ export function PaletteGenerator() {
               onChange={setSurfaceTint}
             />
             <p className="text-xs text-muted">
-              How much of the brand hue the surfaces carry. 0 is neutral grey; the default is
-              0.55; above ~0.5 they start competing with the content.
+              How much of the brand hue the surfaces carry. 0 is neutral grey; the default is 0.55; above ~0.5 they
+              start competing with the content.
             </p>
             <Button variant="ghost" className="text-xs" onClick={() => setSurfaceTint(undefined)}>
               <RotateCcw aria-hidden className="size-3.5" /> default
@@ -645,9 +651,9 @@ export function PaletteGenerator() {
               onChange={setMutedTarget}
             />
             <p className="text-xs text-muted">
-              The contrast the muted text is solved to against the worst surface (default
-              4.6). <code className="font-mono">primary</code> (10) and{" "}
-              <code className="font-mono">secondary</code> (7) take a target the same way.
+              The contrast the muted text is solved to against the worst surface (default 4.6).{" "}
+              <code className="font-mono">primary</code> (10) and <code className="font-mono">secondary</code> (7) take
+              a target the same way.
             </p>
             <Button variant="ghost" className="text-xs" onClick={() => setMutedTarget(undefined)}>
               <RotateCcw aria-hidden className="size-3.5" /> default
@@ -656,16 +662,16 @@ export function PaletteGenerator() {
         </div>
       </Example>
 
-      <Example
-        label="The derived palette, both themes"
-        hint="one set of anchors, two token sets — no second input"
-      >
+      <Example label="The derived palette, both themes" hint="one set of anchors, two token sets — no second input">
         <div className="grid gap-6 lg:grid-cols-2">
-          {([["Light", light], ["Dark", dark]] as const).map(([label, p]) => (
+          {(
+            [
+              ["Light", light],
+              ["Dark", dark],
+            ] as const
+          ).map(([label, p]) => (
             <div key={label} className="min-w-0 space-y-3">
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-muted">
-                {label}
-              </h4>
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-muted">{label}</h4>
               <ThemePreview p={p} />
               <div className="grid gap-3 sm:grid-cols-2">
                 {TOKEN_VARS.map(([name, key]) => (
@@ -684,13 +690,11 @@ export function PaletteGenerator() {
       </Example>
 
       <Note>
-        The two columns are one call each and share every input. That the dark set is not
-        the light set inverted is the part worth staring at: the surfaces are solved at
-        different lightnesses, the text is solved against the WORST of the three surfaces
-        it can land on in that theme, and the brand keeps its hue in both while its
-        lightness moves to clear 3:1 in each. The <code className="font-mono">heat</code>{" "}
-        stops are derived too but get no custom property — CSS variables cannot be
-        interpolated, so heatmaps read them from JS.
+        The two columns are one call each and share every input. That the dark set is not the light set inverted is the
+        part worth staring at: the surfaces are solved at different lightnesses, the text is solved against the WORST of
+        the three surfaces it can land on in that theme, and the brand keeps its hue in both while its lightness moves
+        to clear 3:1 in each. The <code className="font-mono">heat</code> stops are derived too but get no custom
+        property — CSS variables cannot be interpolated, so heatmaps read them from JS.
       </Note>
 
       <Example label="Contrast audit" hint="every pair that has a requirement, measured">
@@ -706,26 +710,27 @@ export function PaletteGenerator() {
       </Example>
 
       <Note>
-        A derived palette almost always passes, because every one of these numbers was
-        SOLVED to its target and then measured — that is the difference between this and a
-        comment claiming a ratio. Almost: try <code className="font-mono">#538180</code>{" "}
-        above and watch <code className="font-mono">brandContrast on brand</code> fail at
-        4.36:1. Neither white nor near-black is legible on a mid-lightness, mid-chroma
-        fill, so no choice of ink saves it and the deriver says so rather than shipping a
-        button nobody can read. The one row that is measured looser than it was solved is{" "}
-        <code className="font-mono">border</code>: solved to 1.5:1 against{" "}
-        <code className="font-mono">bgSurface</code>, checked at 1.1:1 against all three,
-        which is what lets one hairline sit on the page and on a raised card without a
-        second token.
+        A derived palette almost always passes, because every one of these numbers was SOLVED to its target and then
+        measured — that is the difference between this and a comment claiming a ratio. Almost: try{" "}
+        <code className="font-mono">#538180</code> above and watch{" "}
+        <code className="font-mono">brandContrast on brand</code> fail at 4.36:1. Neither white nor near-black is
+        legible on a mid-lightness, mid-chroma fill, so no choice of ink saves it and the deriver says so rather than
+        shipping a button nobody can read. The one row that is measured looser than it was solved is{" "}
+        <code className="font-mono">border</code>: solved to 1.5:1 against <code className="font-mono">bgSurface</code>,
+        checked at 1.1:1 against all three, which is what lets one hairline sit on the page and on a raised card without
+        a second token.
       </Note>
 
       <Example label="Warnings" hint="compromises the deriver had to make, in plain words">
         <div className="grid gap-4 lg:grid-cols-2">
-          {([["Light", light], ["Dark", dark]] as const).map(([label, p]) => (
+          {(
+            [
+              ["Light", light],
+              ["Dark", dark],
+            ] as const
+          ).map(([label, p]) => (
             <div key={label} className="space-y-2">
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-muted">
-                {label}
-              </h4>
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-muted">{label}</h4>
               {p.warnings.length === 0 ? (
                 <p className="inline-flex items-center gap-1.5 text-xs text-muted">
                   <Check aria-hidden className="size-3.5" />
@@ -750,15 +755,13 @@ export function PaletteGenerator() {
       </Example>
 
       <Note>
-        A warning is not the same thing as a failed check. The audit measures the palette
-        that came out; a warning names what the deriver had to give up to get there — a
-        brand lifted off the colour you asked for, a semantic hue that could not get far
-        enough from the brand to be told apart at a glance, an anchor that was not a hex
-        and was ignored. Most of them sit happily beside an audit that passes. The
-        text-on-brand warning is the exception, and it is the interesting one: there the
-        compromise could not be made at all, so the same input that raises it also fails a
-        row above. The array is never silent and never swallowed, which is why this section
-        exists even when it is empty.
+        A warning is not the same thing as a failed check. The audit measures the palette that came out; a warning names
+        what the deriver had to give up to get there — a brand lifted off the colour you asked for, a semantic hue that
+        could not get far enough from the brand to be told apart at a glance, an anchor that was not a hex and was
+        ignored. Most of them sit happily beside an audit that passes. The text-on-brand warning is the exception, and
+        it is the interesting one: there the compromise could not be made at all, so the same input that raises it also
+        fails a row above. The array is never silent and never swallowed, which is why this section exists even when it
+        is empty.
       </Note>
 
       <Example label="Apply to this page" hint="a preview, not a setting">
@@ -778,11 +781,7 @@ export function PaletteGenerator() {
             )}
           </Row>
           <label className="flex items-center gap-2 text-xs text-primary">
-            <input
-              type="checkbox"
-              checked={useDerivedRamp}
-              onChange={(e) => setUseDerivedRamp(e.target.checked)}
-            />
+            <input type="checkbox" checked={useDerivedRamp} onChange={(e) => setUseDerivedRamp(e.target.checked)} />
             Include the derived chart ramp — see the last section for what that costs
           </label>
         </div>
@@ -790,17 +789,16 @@ export function PaletteGenerator() {
 
       <Note>
         This writes the token set onto <code className="font-mono">&lt;html&gt;</code> with{" "}
-        <code className="font-mono">applyTokenSet</code>, exactly as the palette store
-        does. It is a preview and nothing more: it is not persisted, and the next theme
-        toggle or palette selection re-applies the active preset over it, because that
-        store&rsquo;s effect runs on every change of either. Two things stay put even so —{" "}
+        <code className="font-mono">applyTokenSet</code>, exactly as the palette store does. It is a preview and nothing
+        more: it is not persisted, and the next theme toggle or palette selection re-applies the active preset over it,
+        because that store&rsquo;s effect runs on every change of either. Two things stay put even so —{" "}
         <code className="font-mono">applyTokenSet</code> writes no semantic variables, so{" "}
         <code className="font-mono">--danger</code> and its siblings keep their{" "}
         <code className="font-mono">tokens.css</code> values, and a derived set&rsquo;s{" "}
-        <code className="font-mono">chart</code> array is empty, so the chart hues stay as
-        they were unless you tick the box — and a ramp shorter than nine replaces only as
-        many as it has, because <code className="font-mono">applyTokenSet</code> writes{" "}
-        <code className="font-mono">--chart-N</code> per index and never clears one.
+        <code className="font-mono">chart</code> array is empty, so the chart hues stay as they were unless you tick the
+        box — and a ramp shorter than nine replaces only as many as it has, because{" "}
+        <code className="font-mono">applyTokenSet</code> writes <code className="font-mono">--chart-N</code> per index
+        and never clears one.
       </Note>
 
       <Example label="CSS to paste" hint="the output a consumer actually ships">
@@ -819,11 +817,10 @@ export function PaletteGenerator() {
       </Example>
 
       <Note>
-        <code className="font-mono">.dark</code> rather than a media query, because that is
-        the selector <code className="font-mono">tokens.css</code> defines its dark block
-        under and the one the kit&rsquo;s theme store toggles. Paste this AFTER importing{" "}
-        <code className="font-mono">@eifi1/ui-kit/tokens.css</code> and it overrides the
-        shipped values; paste it before and it does not. Note also what is missing: the{" "}
+        <code className="font-mono">.dark</code> rather than a media query, because that is the selector{" "}
+        <code className="font-mono">tokens.css</code> defines its dark block under and the one the kit&rsquo;s theme
+        store toggles. Paste this AFTER importing <code className="font-mono">@eifi1/ui-kit/tokens.css</code> and it
+        overrides the shipped values; paste it before and it does not. Note also what is missing: the{" "}
         <code className="font-mono">heat</code> stops, which are JS-only, and{" "}
         <code className="font-mono">--chart-N</code> unless you asked for a derived ramp.
       </Note>
@@ -838,12 +835,11 @@ export function PaletteGenerator() {
       <Example label="The categorical chart ramp" hint="a separate system, deliberately">
         <div className="space-y-5">
           <p className="max-w-3xl text-sm text-secondary">
-            A UI colour needs contrast against one known surface and carries a fixed
-            meaning. A chart colour needs to stay separable from eight unknown siblings at
-            roughly equal salience with no implied order. Optimising for one makes a set
-            worse at the other, so <code className="font-mono">derivePalette</code> returns{" "}
-            <code className="font-mono">chart: []</code> and leaves the ramp alone unless
-            you ask for <code className="font-mono">deriveChartRamp</code> by name.
+            A UI colour needs contrast against one known surface and carries a fixed meaning. A chart colour needs to
+            stay separable from eight unknown siblings at roughly equal salience with no implied order. Optimising for
+            one makes a set worse at the other, so <code className="font-mono">derivePalette</code> returns{" "}
+            <code className="font-mono">chart: []</code> and leaves the ramp alone unless you ask for{" "}
+            <code className="font-mono">deriveChartRamp</code> by name.
           </p>
 
           <div className="space-y-2">
@@ -852,12 +848,7 @@ export function PaletteGenerator() {
             </h4>
             <Row className="gap-1.5">
               {presetRamp.colors.map((hex, i) => (
-                <span
-                  key={i}
-                  title={hex}
-                  className="size-6 rounded border border-subtle"
-                  style={{ background: hex }}
-                />
+                <span key={i} title={hex} className="size-6 rounded border border-subtle" style={{ background: hex }} />
               ))}
             </Row>
             <RampReport report={presetRamp} />
@@ -865,9 +856,7 @@ export function PaletteGenerator() {
               <p className="text-xs text-secondary">
                 Below 3:1 against a surface it may be drawn on:{" "}
                 <span className="font-mono text-danger">
-                  {[...new Set(presetRamp.lowContrast.map((l) => l.index))]
-                    .map((i) => `chart[${i}]`)
-                    .join(", ")}
+                  {[...new Set(presetRamp.lowContrast.map((l) => l.index))].map((i) => `chart[${i}]`).join(", ")}
                 </span>
                 .
               </p>
@@ -889,18 +878,15 @@ export function PaletteGenerator() {
                 className={cn(FIELD_BASE, "w-auto py-1 text-xs")}
               >
                 {[3, 4, 5, 6, 7, 8, 9].map((n) => (
-                  <option key={n} value={n}>{n}</option>
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
                 ))}
               </select>
             </Row>
             <Row className="gap-1.5">
               {modeRamp.colors.map((hex, i) => (
-                <span
-                  key={i}
-                  title={hex}
-                  className="size-6 rounded border border-subtle"
-                  style={{ background: hex }}
-                />
+                <span key={i} title={hex} className="size-6 rounded border border-subtle" style={{ background: hex }} />
               ))}
             </Row>
             <RampReport report={modeRamp} />
@@ -909,34 +895,26 @@ export function PaletteGenerator() {
       </Example>
 
       <Note>
-        <strong className="font-semibold text-primary">
-          The trade-off, as the deriver measured it.
-        </strong>{" "}
-        At a SINGLE lightness, the most series that can satisfy both the 3:1 fill contrast
-        of WCAG 1.4.11 and the 0.05 minimum separation under dichromacy is FOUR — searched
-        exhaustively over starting hue and lightness, the best achievable separation is
-        0.065 at four series, 0.041 at five and 0.015 at nine. The reason is structural:
-        dichromacy collapses the red-green axis, so hue alone stops distinguishing colours
-        past a handful, and the channel that is left is LIGHTNESS — the very thing a
-        uniform-contrast ramp holds constant. Paul Tol&rsquo;s set varies lightness
-        deliberately and pays for it in contrast; that is not an oversight in their
-        palette, it is the only currency left. Above four series{" "}
-        <code className="font-mono">deriveChartRamp</code> varies lightness too, in a
-        three-step cycle so that ADJACENT series differ in lightness as well as hue, and
-        reports what it gave up rather than pretending both constraints were met.
+        <strong className="font-semibold text-primary">The trade-off, as the deriver measured it.</strong> At a SINGLE
+        lightness, the most series that can satisfy both the 3:1 fill contrast of WCAG 1.4.11 and the 0.05 minimum
+        separation under dichromacy is FOUR — searched exhaustively over starting hue and lightness, the best achievable
+        separation is 0.065 at four series, 0.041 at five and 0.015 at nine. The reason is structural: dichromacy
+        collapses the red-green axis, so hue alone stops distinguishing colours past a handful, and the channel that is
+        left is LIGHTNESS — the very thing a uniform-contrast ramp holds constant. Paul Tol&rsquo;s set varies lightness
+        deliberately and pays for it in contrast; that is not an oversight in their palette, it is the only currency
+        left. Above four series <code className="font-mono">deriveChartRamp</code> varies lightness too, in a three-step
+        cycle so that ADJACENT series differ in lightness as well as hue, and reports what it gave up rather than
+        pretending both constraints were met.
       </Note>
 
       <Note>
-        Which is why the report above is the thing to read, not the four. That figure is
-        what an exhaustive search over starting hue and lightness can reach;{" "}
-        <code className="font-mono">deriveChartRamp</code> does no such search — it spaces
-        hues evenly starting from YOUR brand&rsquo;s hue, so most brands do not land on it
-        even at four series. The shipped ramps (anyplot&rsquo;s &ldquo;Imprint&rdquo;, the
-        default, and Paul Tol&rsquo;s &ldquo;Muted&rdquo;) are curated for the same
-        reason: they were optimised against real confusion lines rather than spaced by
-        formula, and <code className="font-mono">MIN_SEPARATION</code> was
-        calibrated just under what it achieves, so an audit that failed it would be an
-        audit nobody would leave switched on.
+        Which is why the report above is the thing to read, not the four. That figure is what an exhaustive search over
+        starting hue and lightness can reach; <code className="font-mono">deriveChartRamp</code> does no such search —
+        it spaces hues evenly starting from YOUR brand&rsquo;s hue, so most brands do not land on it even at four
+        series. The shipped ramps (anyplot&rsquo;s &ldquo;Imprint&rdquo;, the default, and Paul Tol&rsquo;s
+        &ldquo;Muted&rdquo;) are curated for the same reason: they were optimised against real confusion lines rather
+        than spaced by formula, and <code className="font-mono">MIN_SEPARATION</code> was calibrated just under what it
+        achieves, so an audit that failed it would be an audit nobody would leave switched on.
       </Note>
     </>
   );
@@ -946,18 +924,13 @@ const fmt = (n: number, digits = 3) => n.toFixed(digits);
 const lch = (v: { l: number; c: number; h: number } | null) =>
   v ? `{ l: ${fmt(v.l)}, c: ${fmt(v.c)}, h: ${fmt(v.h, 1)} }` : "null";
 /** Rounded like the other rows: the raw round trip printed `79.00000202059144`. */
-const rgbText = (v: { r: number; g: number; b: number }) =>
-  `{ r: ${fmt(v.r)}, g: ${fmt(v.g)}, b: ${fmt(v.b)} }`;
+const rgbText = (v: { r: number; g: number; b: number }) => `{ r: ${fmt(v.r)}, g: ${fmt(v.g)}, b: ${fmt(v.b)} }`;
 const CVD_TYPES: CvdType[] = ["protanopia", "deuteranopia", "tritanopia"];
 
 function Chip({ hex }: { hex: string }) {
   return (
     <span className="inline-flex items-center gap-1.5">
-      <span
-        aria-hidden
-        className="inline-block size-3.5 rounded-sm border border-subtle"
-        style={{ background: hex }}
-      />
+      <span aria-hidden className="inline-block size-3.5 rounded-sm border border-subtle" style={{ background: hex }} />
       {hex}
     </span>
   );
@@ -988,7 +961,7 @@ function ColourMaths({ brand, tokens }: { brand: string; tokens: TokenSet }) {
           ["luminance(rgb)", fmt(luminance(rgb), 4)],
           [`contrast("${brand}", "#ffffff")`, `${fmt(contrast(brand, "#ffffff"), 2)} : 1`],
           [
-            "solveLightness(4.5, white, h, c, \"darker\")",
+            'solveLightness(4.5, white, h, c, "darker")',
             <>
               l = {fmt(solvedL)} → <Chip hex={solved} /> ({fmt(contrast(solved, "#ffffff"), 2)} : 1)
             </>,
@@ -1012,10 +985,9 @@ function ColourMaths({ brand, tokens }: { brand: string; tokens: TokenSet }) {
         ]}
       />
       <p className="text-xs text-secondary">
-        <code className="font-mono">deltaE</code> is a distance in OKLab — the number the chart
-        ramp&apos;s separability is measured in. <code className="font-mono">solveLightness</code>{" "}
-        keeps hue and chroma and searches only lightness, which is how the deriver moves a
-        colour until it clears a contrast target.
+        <code className="font-mono">deltaE</code> is a distance in OKLab — the number the chart ramp&apos;s separability
+        is measured in. <code className="font-mono">solveLightness</code> keeps hue and chroma and searches only
+        lightness, which is how the deriver moves a colour until it clears a contrast target.
       </p>
     </div>
   );

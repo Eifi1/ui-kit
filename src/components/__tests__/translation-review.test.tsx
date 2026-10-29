@@ -122,11 +122,17 @@ describe("TranslationReviewPanel", () => {
 
     fireEvent.change(screen.getByLabelText("Area"), { target: { value: "all" } });
     fireEvent.click(screen.getByLabelText("Only placeholder problems (1)"));
-    expect(within(table()).getAllByRole("row").filter((r) => r.closest("tbody"))).toHaveLength(1);
+    expect(
+      within(table())
+        .getAllByRole("row")
+        .filter((r) => r.closest("tbody")),
+    ).toHaveLength(1);
     expect(within(table()).getByText("des éléments")).toBeInTheDocument();
 
     fireEvent.click(screen.getByLabelText("Only placeholder problems (1)"));
-    fireEvent.change(screen.getByRole("searchbox", { name: "Search keys and text" }), { target: { value: "terms of" } });
+    fireEvent.change(screen.getByRole("searchbox", { name: "Search keys and text" }), {
+      target: { value: "terms of" },
+    });
     expect(within(table()).getByText("Conditions d’utilisation")).toBeInTheDocument();
     expect(within(table()).queryByText("Enregistrer")).toBeNull();
   });
@@ -137,24 +143,29 @@ describe("TranslationReviewPanel", () => {
     // Controlled: the app's status wins.
     expect(within(table()).queryByText("Enregistrer")).toBeNull();
     fireEvent.change(screen.getByLabelText("Area"), { target: { value: "common" } });
-    expect(onFilterChange).toHaveBeenLastCalledWith(expect.objectContaining({ status: "unreviewed", namespace: "common" }));
+    expect(onFilterChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({ status: "unreviewed", namespace: "common" }),
+    );
   });
 
   it("stores a row's approval together with the wording it was given on", async () => {
     const { onSave } = setup();
     fireEvent.click(within(rowOf("À attribuer")).getByRole("button", { name: "Approve" }));
     await waitFor(() =>
-      expect(onSave).toHaveBeenCalledWith([
-        {
-          locale: "fr",
-          key: "budget.rta",
-          text: "À attribuer",
-          referenceText: "Ready to Assign",
-          verdict: "APPROVED",
-          note: null,
-          suggestion: null,
-        },
-      ], { origin: "row", toasted: false }),
+      expect(onSave).toHaveBeenCalledWith(
+        [
+          {
+            locale: "fr",
+            key: "budget.rta",
+            text: "À attribuer",
+            referenceText: "Ready to Assign",
+            verdict: "APPROVED",
+            note: null,
+            suggestion: null,
+          },
+        ],
+        { origin: "row", toasted: false },
+      ),
     );
     // The row's own click opens the editor; the button only approves.
     expect(screen.queryByLabelText("Better wording")).toBeNull();
@@ -173,9 +184,10 @@ describe("TranslationReviewPanel", () => {
     fireEvent.change(suggestion, { target: { value: "{{count}} éléments" } });
     fireEvent.click(screen.getByRole("button", { name: "Needs a change" }));
     await waitFor(() =>
-      expect(onSave).toHaveBeenCalledWith([
-        expect.objectContaining({ key: "common.items", verdict: "NEEDS_CHANGE", suggestion: "{{count}} éléments" }),
-      ], { origin: "editor", toasted: false }),
+      expect(onSave).toHaveBeenCalledWith(
+        [expect.objectContaining({ key: "common.items", verdict: "NEEDS_CHANGE", suggestion: "{{count}} éléments" })],
+        { origin: "editor", toasted: false },
+      ),
     );
     // Resolved: the editor closes.
     await waitFor(() => expect(screen.queryByLabelText("Better wording")).toBeNull());
@@ -219,10 +231,13 @@ describe("TranslationReviewPanel", () => {
     fireEvent.click(screen.getByRole("checkbox", { name: "Select all rows" }));
     fireEvent.click(screen.getByRole("button", { name: "Mark selected unreviewed" }));
     await waitFor(() =>
-      expect(onClear).toHaveBeenCalledWith([
-        { locale: "fr", key: "budget.rta" },
-        { locale: "fr", key: "common.save" },
-      ], { origin: "selection", toasted: false }),
+      expect(onClear).toHaveBeenCalledWith(
+        [
+          { locale: "fr", key: "budget.rta" },
+          { locale: "fr", key: "common.save" },
+        ],
+        { origin: "selection", toasted: false },
+      ),
     );
   });
 
@@ -258,7 +273,11 @@ describe("TranslationReviewPanel", () => {
     const rows = translationRows({
       locale: "fr",
       strings: { "common:save": "Enregistrer", "doc_text.invoice:due": "Payable jusqu’au {date}." },
-      reference: { "common:save": "Speichern", "common:cancel": "Abbrechen", "doc_text.invoice:due": "Zahlbar bis {date}." },
+      reference: {
+        "common:save": "Speichern",
+        "common:cancel": "Abbrechen",
+        "doc_text.invoice:due": "Zahlbar bis {date}.",
+      },
       sourceOf: (key) => (key.startsWith("doc_text.") ? "documents" : "screen"),
     });
     setup({ rows, referenceLabel: "Deutsch", sourceLabels: { screen: "Screen", documents: "PDFs and emails" } });
@@ -270,10 +289,11 @@ describe("TranslationReviewPanel", () => {
     expect(within(table()).queryByText("Enregistrer")).toBeNull();
     expect(screen.getByRole("option", { name: "PDFs and emails" })).toBeInTheDocument();
     // The namespace filter follows the source.
-    expect(within(screen.getByLabelText("Area")).getAllByRole("option").map((o) => o.textContent)).toEqual([
-      "All areas",
-      "doc_text.invoice",
-    ]);
+    expect(
+      within(screen.getByLabelText("Area"))
+        .getAllByRole("option")
+        .map((o) => o.textContent),
+    ).toEqual(["All areas", "doc_text.invoice"]);
   });
 
   it("takes its words from the provider; the prop wins", () => {
@@ -303,7 +323,13 @@ describe("TranslationReviewEditor", () => {
     const onSave = vi.fn();
     const onClose = vi.fn();
     render(
-      <TranslationReviewEditor row={missingRow} referenceLabel="Deutsch" localeLabel="Italiano" onSave={onSave} onClose={onClose} />,
+      <TranslationReviewEditor
+        row={missingRow}
+        referenceLabel="Deutsch"
+        localeLabel="Italiano"
+        onSave={onSave}
+        onClose={onClose}
+      />,
     );
     expect(screen.queryByRole("button", { name: "Approve" })).toBeNull();
     const field = screen.getByLabelText("Translation");
@@ -321,7 +347,15 @@ describe("TranslationReviewEditor", () => {
   it("resets a verdict through onClear, with the row's key", async () => {
     const onClear = vi.fn();
     const row = ROWS.find((r) => r.key === "common.save")!;
-    render(<TranslationReviewEditor row={row} referenceLabel="English" localeLabel="Français" onSave={vi.fn()} onClear={onClear} />);
+    render(
+      <TranslationReviewEditor
+        row={row}
+        referenceLabel="English"
+        localeLabel="Français"
+        onSave={vi.fn()}
+        onClear={onClear}
+      />,
+    );
     fireEvent.click(screen.getByRole("button", { name: "Mark unreviewed" }));
     await waitFor(() => expect(onClear).toHaveBeenCalledWith({ locale: "fr", key: "common.save" }));
   });
@@ -331,9 +365,21 @@ describe("TranslationReviewEditor", () => {
       locale: "fr",
       strings: { a: "Un" },
       reference: { a: "One" },
-      reviews: [review({ key: "a", text: "Un", referenceText: "One", verdict: "NEEDS_CHANGE", suggestion: "Une", note: "féminin", reviewerName: null })],
+      reviews: [
+        review({
+          key: "a",
+          text: "Un",
+          referenceText: "One",
+          verdict: "NEEDS_CHANGE",
+          suggestion: "Une",
+          note: "féminin",
+          reviewerName: null,
+        }),
+      ],
     });
-    render(<TranslationReviewEditor row={row} referenceLabel="English" localeLabel="Français" formatDate={() => "today"} />);
+    render(
+      <TranslationReviewEditor row={row} referenceLabel="English" localeLabel="Français" formatDate={() => "today"} />,
+    );
     expect(screen.getByText("Marked as needing a change by a deleted account on today")).toBeInTheDocument();
     expect(screen.getByText("Une")).toBeInTheDocument();
     expect(screen.getByText("féminin")).toBeInTheDocument();
@@ -383,7 +429,13 @@ describe("TranslationReview under a write lock (0.33, billing §12.13, §12.36)"
     const onClear = vi.fn();
     const { unmount } = render(
       <WriteLockProvider locked kind="billing" reason={PLAN}>
-        <TranslationReviewEditor row={row} referenceLabel="English" localeLabel="Français" onSave={onSave} onClear={onClear} />
+        <TranslationReviewEditor
+          row={row}
+          referenceLabel="English"
+          localeLabel="Français"
+          onSave={onSave}
+          onClear={onClear}
+        />
       </WriteLockProvider>,
     );
     fireEvent.click(screen.getByRole("button", { name: "Approve" }));
@@ -391,7 +443,13 @@ describe("TranslationReview under a write lock (0.33, billing §12.13, §12.36)"
     unmount();
     render(
       <WriteLockProvider locked holds={BOTH}>
-        <TranslationReviewEditor row={row} referenceLabel="English" localeLabel="Français" onSave={onSave} onClear={onClear} />
+        <TranslationReviewEditor
+          row={row}
+          referenceLabel="English"
+          localeLabel="Français"
+          onSave={onSave}
+          onClear={onClear}
+        />
       </WriteLockProvider>,
     );
     const approve = screen.getByRole("button", { name: "Approve" });
@@ -438,7 +496,13 @@ describe("TranslationProgress and TranslationLocaleTabs", () => {
     expect(screen.getByRole("tab", { name: /Français/ })).toHaveTextContent("1/4");
     fireEvent.click(screen.getByRole("tab", { name: /Italiano/ }));
     expect(onChange).toHaveBeenCalledWith("it");
-    rerender(<TranslationLocaleTabs locales={[{ value: "fr", label: "Français", rows: ROWS }]} active="fr" onChange={onChange} />);
+    rerender(
+      <TranslationLocaleTabs
+        locales={[{ value: "fr", label: "Français", rows: ROWS }]}
+        active="fr"
+        onChange={onChange}
+      />,
+    );
     expect(screen.queryByRole("tab")).toBeNull();
   });
 });
@@ -456,7 +520,12 @@ describe("TranslationExportButton", () => {
     fireEvent.click(screen.getByRole("button", { name: "Export corrections (1)" }));
     const [corrections, file] = onExport.mock.calls[0] as [unknown[], Blob];
     expect(corrections).toEqual([
-      expect.objectContaining({ key: "common.save", suggestion: "Sauvegarder", note: "plus courant", reviewed_at: "2026-10-02T10:00:00Z" }),
+      expect.objectContaining({
+        key: "common.save",
+        suggestion: "Sauvegarder",
+        note: "plus courant",
+        reviewed_at: "2026-10-02T10:00:00Z",
+      }),
     ]);
     expect(file.type).toBe("application/json");
     const json = JSON.parse(await file.text());
@@ -481,7 +550,11 @@ describe("TranslationExportButton", () => {
     URL.revokeObjectURL = vi.fn();
     const saved: { href: string; download: string; inBody: boolean }[] = [];
     const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (this: HTMLAnchorElement) {
-      saved.push({ href: this.getAttribute("href") ?? "", download: this.download, inBody: document.body.contains(this) });
+      saved.push({
+        href: this.getAttribute("href") ?? "",
+        download: this.download,
+        inBody: document.body.contains(this),
+      });
     });
     render(<TranslationExportButton rows={rows} fileName="fr-corrections.json" />);
     fireEvent.click(screen.getByRole("button", { name: "Export corrections (1)" }));

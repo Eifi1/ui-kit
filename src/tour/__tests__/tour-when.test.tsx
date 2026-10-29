@@ -271,7 +271,10 @@ describe("Tour optional", () => {
   });
 
   it("optional without a gate: only the chip, and a plain Next", async () => {
-    renderTour([{ title: "Note", body: "n", optional: true }, { title: "End", body: "e" }]);
+    renderTour([
+      { title: "Note", body: "n", optional: true },
+      { title: "End", body: "e" },
+    ]);
     await start();
     expect(screen.getByText("Optional")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Leave empty" })).toBeNull();

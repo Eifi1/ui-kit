@@ -30,7 +30,10 @@ describe("FeedbackReplyTimeline", () => {
     expect(items[0]).toHaveTextContent("Marcel");
     expect(items[1]).toHaveTextContent("Admin");
     expect(items[1]).toHaveTextContent("Status changed to");
-    expect(items[1].querySelector("[data-feedback-reply-status]")).toHaveAttribute("data-feedback-reply-status", "DONE");
+    expect(items[1].querySelector("[data-feedback-reply-status]")).toHaveAttribute(
+      "data-feedback-reply-status",
+      "DONE",
+    );
   });
 
   it("says so when there is none", () => {
@@ -65,11 +68,15 @@ describe("FeedbackReplyTimeline — rework entries (0.40)", () => {
     expect(item.querySelector("[data-feedback-entry-rework]")).toHaveTextContent("Rework");
     expect(item.querySelector("[data-feedback-reply-status]")).toHaveAttribute("data-feedback-reply-status", "OPEN");
     // 0.47 (§12): its file drawn inline (a picture through the fetcher), not a name.
-    expect(item.querySelector('[data-feedback-entry-file="/api/v1/feedback/attachments/0123456789ab.png"]')).not.toBeNull();
+    expect(
+      item.querySelector('[data-feedback-entry-file="/api/v1/feedback/attachments/0123456789ab.png"]'),
+    ).not.toBeNull();
   });
 
   it("draws a migrated rework without the arrow, and a null author as A user — never Admin", () => {
-    render(<FeedbackReplyTimeline replies={[reply({ id: 6, kind: "rework", author_name: null, body: "Old block." })]} />);
+    render(
+      <FeedbackReplyTimeline replies={[reply({ id: 6, kind: "rework", author_name: null, body: "Old block." })]} />,
+    );
     const [item] = items();
     expect(item.querySelector("[data-feedback-reply-status]")).toBeNull();
     expect(item).not.toHaveTextContent("→");
@@ -78,7 +85,11 @@ describe("FeedbackReplyTimeline — rework entries (0.40)", () => {
   });
 
   it("draws an admin's REWORK reply as a reply with the status", () => {
-    render(<FeedbackReplyTimeline replies={[reply({ id: 7, author_name: null, status_from: "DONE", status_to: "REWORK" })]} />);
+    render(
+      <FeedbackReplyTimeline
+        replies={[reply({ id: 7, author_name: null, status_from: "DONE", status_to: "REWORK" })]}
+      />,
+    );
     const [item] = items();
     expect(item).not.toHaveAttribute("data-feedback-entry-kind");
     expect(item).toHaveTextContent("Admin");
@@ -93,7 +104,10 @@ describe("FeedbackReplyTimeline — rework entries (0.40)", () => {
         renderAttachment={(url) => <a href={url}>the file</a>}
       />,
     );
-    expect(screen.getByRole("link", { name: "the file" })).toHaveAttribute("href", "/api/v1/feedback/attachments/a.pdf");
+    expect(screen.getByRole("link", { name: "the file" })).toHaveAttribute(
+      "href",
+      "/api/v1/feedback/attachments/a.pdf",
+    );
   });
 });
 

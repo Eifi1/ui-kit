@@ -57,8 +57,7 @@ export type VirtualItem = { kind: "row"; index: number } | { kind: "gap"; key: s
 /** A group's `<tbody>` with its rendered rows, or one spacer `<tbody>` for a run of
  *  groups of which nothing is rendered. */
 export type VirtualBody =
-  | { kind: "spacer"; key: string; height: number }
-  | { kind: "group"; group: number; items: VirtualItem[] };
+  { kind: "spacer"; key: string; height: number } | { kind: "group"; group: number; items: VirtualItem[] };
 
 export interface RowWindow {
   bodies: VirtualBody[];
@@ -234,7 +233,11 @@ export function useRowWindow<T>({
     band: [estimate, estimate * 0.8],
   }));
   const initialEnd = () =>
-    Math.min(n, Math.ceil((typeof window === "undefined" ? 800 : Math.min(window.innerHeight || 800, 1600)) / estimate) + overscan);
+    Math.min(
+      n,
+      Math.ceil((typeof window === "undefined" ? 800 : Math.min(window.innerHeight || 800, 1600)) / estimate) +
+        overscan,
+    );
   const [range, setRange] = useState(() => ({ start: 0, end: initialEnd() }));
   const [focusTarget, setFocusTarget] = useState<number | null>(null);
   const [focusKey, setFocusKey] = useState<string | number | null>(null);
@@ -437,7 +440,9 @@ export function useRowWindow<T>({
       update();
     };
     frame.current =
-      typeof requestAnimationFrame === "undefined" ? -(setTimeout(run, 16) as unknown as number) : requestAnimationFrame(run);
+      typeof requestAnimationFrame === "undefined"
+        ? -(setTimeout(run, 16) as unknown as number)
+        : requestAnimationFrame(run);
   }, [measure, update]);
   useEffect(
     () => () => {

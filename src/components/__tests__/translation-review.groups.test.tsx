@@ -54,7 +54,8 @@ function panel(props: Partial<TranslationReviewPanelProps> = {}) {
   );
 }
 
-const toggle = (name: string) => within(screen.getByRole("heading", { name: new RegExp(`^${name}`) })).getByRole("button");
+const toggle = (name: string) =>
+  within(screen.getByRole("heading", { name: new RegExp(`^${name}`) })).getByRole("button");
 const expanded = () =>
   screen.getAllByRole("heading", { level: 2 }).map((h) => within(h).getByRole("button").getAttribute("aria-expanded"));
 const section = (name: string) => toggle(name).closest<HTMLElement>("[data-review-group]")!;
@@ -86,7 +87,11 @@ describe("TranslationReviewPanel groups on a wide screen (keksdose, 0.25.1)", ()
     expect(header).toHaveAttribute("aria-expanded", "true");
     expect(header).toHaveFocus();
     const table = screen.getByRole("table", { name: "area004" });
-    expect(within(table).getAllByRole("row").filter((r) => r.closest("tbody"))).toHaveLength(6);
+    expect(
+      within(table)
+        .getAllByRole("row")
+        .filter((r) => r.closest("tbody")),
+    ).toHaveLength(6);
     // The others stay headers only.
     expect(screen.getAllByRole("table")).toHaveLength(1);
     fireEvent.click(header);
@@ -197,7 +202,10 @@ describe("TranslationReviewPanel's grouped view in storage (Kurvenschmiede, 0.35
 
   /** Three areas of twelve strings: every group open, one page each by default. */
   const rows = areaRows({ areas: 3, big: 0, smallSize: 12 });
-  const bodyRows = (table: HTMLElement) => within(table).getAllByRole("row").filter((r) => r.closest("tbody"));
+  const bodyRows = (table: HTMLElement) =>
+    within(table)
+      .getAllByRole("row")
+      .filter((r) => r.closest("tbody"));
   const keyHeader = (table: HTMLElement) => within(table).getByRole("columnheader", { name: /Key/ });
   const pageSizeOf = (name: string) => within(section(name)).getByRole("combobox", { name: "Rows per page" });
   const stored = (key = "hbui-table:translations") => JSON.parse(localStorage.getItem(key) ?? "null") as unknown;
@@ -325,7 +333,9 @@ describe("TranslationReviewPanel controlled filter check (Kurvenschmiede, 0.25.1
     fireEvent.click(screen.getByRole("radio", { name: /^Unreviewed/ }));
     settle();
     expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn.mock.calls[0]![0]).toMatch(/the "status" filter was changed to "unreviewed", but the `filter` prop still says "all"/);
+    expect(warn.mock.calls[0]![0]).toMatch(
+      /the "status" filter was changed to "unreviewed", but the `filter` prop still says "all"/,
+    );
   });
 
   it("says nothing for a field the app leaves out — the panel keeps it (keksdose's placeholder switch)", () => {
@@ -360,8 +370,7 @@ describe("TranslationReviewPanel controlled filter check (Kurvenschmiede, 0.25.1
       return panel({
         groupBy: undefined,
         filter: { status: (params.get("status") ?? "all") as ReviewStatus | "all", placeholdersOnly: params.has("p") },
-        onFilterChange: (next) =>
-          setParams({ status: next.status, ...(next.placeholdersOnly ? { p: "1" } : {}) }),
+        onFilterChange: (next) => setParams({ status: next.status, ...(next.placeholdersOnly ? { p: "1" } : {}) }),
       });
     }
     render(<InTheUrl />);

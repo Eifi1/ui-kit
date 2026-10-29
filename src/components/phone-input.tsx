@@ -2,14 +2,7 @@ import { useState } from "react";
 import type { ChangeEvent, FocusEvent } from "react";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
-import {
-  PHONE_COUNTRIES,
-  PHONE_DIAL_CODES,
-  formatNationalPhone,
-  formatPhone,
-  isE164,
-  parsePhone,
-} from "../lib/phone";
+import { PHONE_COUNTRIES, PHONE_DIAL_CODES, formatNationalPhone, formatPhone, isE164, parsePhone } from "../lib/phone";
 import type { ParsedPhone, PhoneCountry, PhoneCountryCode } from "../lib/phone";
 import { useFieldMessages } from "./field-parts";
 import { Input, type InputProps } from "./input";
@@ -237,11 +230,7 @@ export function PhoneInput({
   const named = typeof label === "string" && label !== "";
 
   return (
-    <div
-      className={className}
-      role={named ? "group" : undefined}
-      aria-label={named ? label : undefined}
-    >
+    <div className={className} role={named ? "group" : undefined} aria-label={named ? label : undefined}>
       {/* On a phone at Large the number takes a line of its own under the country (0.32.1,
           the 360 px Extra-large sweep; docs/text-size-harmonization.md §4 "nothing
           truncates"): the 7rem select is 168 px at 150 %, and on a 360 px phone it left

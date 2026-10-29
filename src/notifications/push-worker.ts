@@ -133,9 +133,17 @@ export async function resubscribeAfterChange(
 
 /** The parts of a `ServiceWorkerGlobalScope` this needs. */
 export interface PushWorkerScope {
-  addEventListener: (type: "pushsubscriptionchange", listener: (event: PushSubscriptionChangeEventLike) => void) => void;
+  addEventListener: (
+    type: "pushsubscriptionchange",
+    listener: (event: PushSubscriptionChangeEventLike) => void,
+  ) => void;
   registration: { pushManager: PushManager };
-  clients?: { matchAll: (options?: { type?: "window"; includeUncontrolled?: boolean }) => Promise<readonly { postMessage: (message: unknown) => void }[]> };
+  clients?: {
+    matchAll: (options?: {
+      type?: "window";
+      includeUncontrolled?: boolean;
+    }) => Promise<readonly { postMessage: (message: unknown) => void }[]>;
+  };
 }
 
 /**

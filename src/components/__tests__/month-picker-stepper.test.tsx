@@ -68,9 +68,7 @@ describe("MonthPicker variant='stepper'", () => {
   it("follows a controlled value, and says where it went", () => {
     function Page() {
       const [month, setMonth] = useState("2026-08");
-      return (
-        <MonthPicker variant="stepper" value={month} onChange={setMonth} locale="en-GB" currentMonth="2026-09" />
-      );
+      return <MonthPicker variant="stepper" value={month} onChange={setMonth} locale="en-GB" currentMonth="2026-09" />;
     }
     render(<Page />);
     fireEvent.click(screen.getByRole("button", { name: "Next month" }));

@@ -141,7 +141,14 @@ describe("a ref on every focusable field (API-3)", () => {
       <>
         <ToggleGroup ref={checked} aria-label="Range" options={OPTIONS} value="week" onChange={noop} />
         <ToggleGroup ref={empty} aria-label="Empty" options={OPTIONS} value={null} onChange={noop} allowEmpty />
-        <ToggleGroup ref={pressed} aria-label="Pressed" options={OPTIONS} value="month" onChange={noop} semantics="pressed" />
+        <ToggleGroup
+          ref={pressed}
+          aria-label="Pressed"
+          options={OPTIONS}
+          value="month"
+          onChange={noop}
+          semantics="pressed"
+        />
       </>,
     );
     expect(checked.current).toBe(screen.getByRole("radiogroup", { name: "Range" }));
@@ -168,6 +175,8 @@ describe("a ref on every focusable field (API-3)", () => {
     const chips: ComponentProps<typeof ChipInput>["ref"] = createRef<HTMLInputElement>();
     // @ts-expect-error — a picker's ref is its trigger button, not the wrapper div
     const wrapper: ComponentProps<typeof CurrencySelect>["ref"] = createRef<HTMLDivElement>();
-    expect([input, numberField, integerField, date, dateRange, month, toggle, currency, chips, wrapper].every(Boolean)).toBe(true);
+    expect(
+      [input, numberField, integerField, date, dateRange, month, toggle, currency, chips, wrapper].every(Boolean),
+    ).toBe(true);
   });
 });

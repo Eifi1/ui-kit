@@ -310,10 +310,7 @@ export function HoverMenu({
       {open && (
         <div
           ref={panelRef}
-          className={cn(
-            "absolute top-full z-40 pt-2",
-            ALIGN_CLASS[align],
-          )}
+          className={cn("absolute top-full z-40 pt-2", ALIGN_CLASS[align])}
           style={shiftX ? { transform: `translateX(${shiftX}px)` } : undefined}
         >
           <div

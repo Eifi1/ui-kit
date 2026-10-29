@@ -222,8 +222,7 @@ export const de: Dictionary = {
     fields: {
       title: "Textfelder",
       short: "Text",
-      blurb:
-        "Eingabefelder und die Klassenkonstanten, aus denen eine Anwendung ihre eigenen Felder zusammensetzt.",
+      blurb: "Eingabefelder und die Klassenkonstanten, aus denen eine Anwendung ihre eigenen Felder zusammensetzt.",
     },
     forms: {
       title: "Formulare (react-hook-form)",
@@ -416,8 +415,7 @@ export const de: Dictionary = {
     },
     overlays: {
       title: "Overlays",
-      blurb:
-        "Alles, was über der Seite schwebt, und das eine Timing, das sie alle beim Schliessen teilen.",
+      blurb: "Alles, was über der Seite schwebt, und das eine Timing, das sie alle beim Schliessen teilen.",
     },
     dialogs: {
       title: "Dialoge",
@@ -595,7 +593,6 @@ export const de: Dictionary = {
         "Die Übertragungsformate der Übersetzungsprüfung, wer welche Schlüssel und Sprachen prüfen darf, und die Prüf-Tokens, mit denen ein Prüfer die Prüfseite des Kits öffnet.",
     },
   },
-
 
   // The top-bar search's „Was brauchen Sie?“ rows, in the words a German reader types:
   // infinitives and plain nouns, no „Sie“ — a search phrase, not a sentence.
@@ -1077,13 +1074,7 @@ export const de: Dictionary = {
       "Tage nach Wert einfärben",
       "Jahr auf einen Blick",
     ],
-    overlays: [
-      "etwas über der Seite anzeigen",
-      "Dialog öffnen",
-      "Popup oder Menü",
-      "Tooltip",
-      "Befehlspalette",
-    ],
+    overlays: ["etwas über der Seite anzeigen", "Dialog öffnen", "Popup oder Menü", "Tooltip", "Befehlspalette"],
     dialogs: [
       "modalen Dialog öffnen",
       "Vollbild-Dialog",
@@ -1349,7 +1340,6 @@ export const de: Dictionary = {
       "Übersetzungsschlüssel des Kits",
     ],
   },
-
 
   // The kit's own words ship with the package — the same import an app writes.
   kit: UI_KIT_LABELS_DE_CH,

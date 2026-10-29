@@ -63,11 +63,11 @@ describe("TopBarActionMenu columns", () => {
     const columns = columnsOf();
     expect(columns).toHaveLength(3);
     // The roles' way back stays under the roles, behind its rule.
-    expect(within(columns[0]!).getAllByRole("menuitem").map((m) => m.textContent)).toEqual([
-      "Admin",
-      "Member",
-      "Back to Admin",
-    ]);
+    expect(
+      within(columns[0]!)
+        .getAllByRole("menuitem")
+        .map((m) => m.textContent),
+    ).toEqual(["Admin", "Member", "Back to Admin"]);
     expect(within(columns[0]!).getByRole("group", { name: "Role" })).toBeInTheDocument();
     expect(columns[0]!.querySelector(".border-t")).not.toBeNull();
     // A rule that would only end a column is not drawn: the column's edge separates.

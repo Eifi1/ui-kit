@@ -1,15 +1,6 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, Hammer, Search } from "lucide-react";
-import {
-  Button,
-  IconButton,
-  List,
-  ListItem,
-  PageHeader,
-  SectionLabel,
-  Sparkline,
-  ToggleGroup,
-} from "@eifi1/ui-kit";
+import { Button, IconButton, List, ListItem, PageHeader, SectionLabel, Sparkline, ToggleGroup } from "@eifi1/ui-kit";
 import type { PageHeaderSize } from "@eifi1/ui-kit";
 import { Example, Note, code } from "../lib/section";
 
@@ -45,8 +36,8 @@ function PageHeaderSizes() {
         />
         <Note>
           {code("sm")} is {code("text-lg")}, {code("compact")} {code("text-xl")} everywhere, {code("md")}{" "}
-          {code("text-xl")} on a phone and {code("text-2xl")} from {code("sm")} up. A word rather than a letter
-          because no letter sits between {code("sm")} and {code("md")}.
+          {code("text-xl")} on a phone and {code("text-2xl")} from {code("sm")} up. A word rather than a letter because
+          no letter sits between {code("sm")} and {code("md")}.
         </Note>
       </div>
     </Example>
@@ -90,8 +81,8 @@ function PageHeaderInline() {
           />
         </div>
         <Note>
-          {code("inline")} keeps a header tuned for the phone a row: the actions stay beside
-          the title and do not wrap, so use it for one or two small controls.
+          {code("inline")} keeps a header tuned for the phone a row: the actions stay beside the title and do not wrap,
+          so use it for one or two small controls.
         </Note>
       </div>
     </Example>
@@ -112,7 +103,11 @@ function SectionLabelBand() {
     ["Yesterday", [["Salary", "€ 2,480.00"]]],
   ];
   return (
-    <Example label="SectionLabel — variant band" hint="a list's group header: surface-2 bar, bottom border" className="p-0">
+    <Example
+      label="SectionLabel — variant band"
+      hint="a list's group header: surface-2 bar, bottom border"
+      className="p-0"
+    >
       <div className="overflow-hidden rounded-lg">
         {days.map(([day, rows]) => (
           <section key={day}>
@@ -153,8 +148,8 @@ function SectionLabelChartColumns() {
       </div>
       <div className="mt-3">
         <Note>
-          {code("xs")} inside a control (a legend, a menu), {code("md")} over a figure or a plot, {code("sm")}{" "}
-          over a block of page content.
+          {code("xs")} inside a control (a legend, a menu), {code("md")} over a figure or a plot, {code("sm")} over a
+          block of page content.
         </Note>
       </div>
     </Example>
@@ -164,13 +159,19 @@ function SectionLabelChartColumns() {
 /* ── ListItem ─────────────────────────────────────────────────────────────── */
 
 function ListItemTitleLines() {
-  const defect =
-    "Crack in the bathroom tiles behind the washbasin, about 20 cm long, running down to the skirting";
+  const defect = "Crack in the bathroom tiles behind the washbasin, about 20 cm long, running down to the skirting";
   return (
     <Example label="ListItem — titleLines" hint="a free-text name that one truncated line cannot tell apart">
       <List separator="divider">
         <ListItem icon={Hammer} title={defect} subtitle="titleLines={1} (default)" onClick={() => {}} />
-        <ListItem icon={Hammer} title={defect} titleLines={2} align="start" subtitle="titleLines={2}" onClick={() => {}} />
+        <ListItem
+          icon={Hammer}
+          title={defect}
+          titleLines={2}
+          align="start"
+          subtitle="titleLines={2}"
+          onClick={() => {}}
+        />
         <ListItem
           icon={Hammer}
           title={defect}

@@ -101,7 +101,13 @@ export function PushDeviceSetting({
       (ok): Outcome => (ok ? null : { tone: "danger", text: labels.enableFailed }),
       labels.enableFailed,
     );
-  const disable = () => run("disable", () => push.disable(), () => null, labels.failed);
+  const disable = () =>
+    run(
+      "disable",
+      () => push.disable(),
+      () => null,
+      labels.failed,
+    );
   const test = () =>
     run(
       "test",

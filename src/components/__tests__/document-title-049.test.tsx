@@ -9,9 +9,9 @@ import { useDocumentTitle } from "../../hooks/use-document-title";
 describe("formatDocumentTitle (KIT-9)", () => {
   it("writes page · section · app by default", () => {
     expect(DEFAULT_DOCUMENT_TITLE_FORMAT).toBe("{page} · {section} · {app}");
-    expect(formatDocumentTitle(DEFAULT_DOCUMENT_TITLE_FORMAT, { page: "Invoices", section: "Finance", app: "Kastlan" })).toBe(
-      "Invoices · Finance · Kastlan",
-    );
+    expect(
+      formatDocumentTitle(DEFAULT_DOCUMENT_TITLE_FORMAT, { page: "Invoices", section: "Finance", app: "Kastlan" }),
+    ).toBe("Invoices · Finance · Kastlan");
   });
 
   it("drops a missing part together with its separator", () => {
@@ -131,7 +131,9 @@ const TRAIL = [
 
 describe("Breadcrumbs hideCurrent (KIT-9)", () => {
   it("inside a titled PageHeader hides the current entry; the one before stays a link, nothing is current", () => {
-    render(<PageHeader title="Unit 4" documentTitle={false} breadcrumbs={<Breadcrumbs items={TRAIL} collapse={false} />} />);
+    render(
+      <PageHeader title="Unit 4" documentTitle={false} breadcrumbs={<Breadcrumbs items={TRAIL} collapse={false} />} />,
+    );
     const nav = screen.getByRole("navigation", { name: "Breadcrumb" });
     expect(nav).not.toHaveTextContent("Unit 4");
     expect(screen.getByRole("link", { name: "Lindenstrasse 12" })).toHaveAttribute("href", "/buildings/12");
@@ -191,12 +193,7 @@ describe("Breadcrumbs hideCurrent (KIT-9)", () => {
   });
 
   it("a PageHeader without a title-string still hides the current entry", () => {
-    render(
-      <PageHeader
-        title={<span>Unit 4</span>}
-        breadcrumbs={<Breadcrumbs items={TRAIL} collapse={false} />}
-      />,
-    );
+    render(<PageHeader title={<span>Unit 4</span>} breadcrumbs={<Breadcrumbs items={TRAIL} collapse={false} />} />);
     expect(screen.getByRole("navigation")).not.toHaveTextContent("Unit 4");
   });
 });

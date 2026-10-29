@@ -40,7 +40,13 @@ describe("stepNumber", () => {
 });
 
 describe("NumberInput step keys", () => {
-  function Controlled(props: { initial: string; step?: number; min?: number; max?: number; onCommit?: (v: string) => void }) {
+  function Controlled(props: {
+    initial: string;
+    step?: number;
+    min?: number;
+    max?: number;
+    onCommit?: (v: string) => void;
+  }) {
     const [value, setValue] = useState(props.initial);
     return (
       <NumberInput
@@ -112,9 +118,7 @@ describe("NumberField live mode", () => {
     const user = userEvent.setup();
     const onValueChange = vi.fn();
     const onCommit = vi.fn();
-    render(
-      <NumberField label="Rooms" value={3} min={1} max={10} onCommit={onCommit} onValueChange={onValueChange} />,
-    );
+    render(<NumberField label="Rooms" value={3} min={1} max={10} onCommit={onCommit} onValueChange={onValueChange} />);
     const input = screen.getByRole("textbox");
     await user.clear(input);
     await user.type(input, "15");
@@ -190,7 +194,15 @@ describe("NumberField live mode", () => {
     const onCommit = vi.fn();
     render(
       <UiKitProvider locale="de">
-        <NumberField label="Rate" value={2.5} digits={2} step={0.25} min={0} onCommit={onCommit} onValueChange={onValueChange} />
+        <NumberField
+          label="Rate"
+          value={2.5}
+          digits={2}
+          step={0.25}
+          min={0}
+          onCommit={onCommit}
+          onValueChange={onValueChange}
+        />
       </UiKitProvider>,
     );
     const input = screen.getByRole("textbox");

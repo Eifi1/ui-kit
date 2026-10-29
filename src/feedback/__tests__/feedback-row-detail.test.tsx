@@ -66,8 +66,7 @@ beforeEach(() => {
   vi.mocked(toast.undo).mockClear();
 });
 
-const headings = () =>
-  Array.from(document.querySelectorAll(".uppercase")).map((el) => el.textContent);
+const headings = () => Array.from(document.querySelectorAll(".uppercase")).map((el) => el.textContent);
 
 describe("FeedbackRowDetail — sections", () => {
   it("renders the contract's sections in order, the body without its file lines", () => {
@@ -91,7 +90,12 @@ describe("FeedbackRowDetail — sections", () => {
 
   it("shows a dash for an empty body and no URL section without a page", () => {
     render(
-      <FeedbackRowDetail row={record({ body: "  ", context: null })} canEdit={false} viewerId={OTHER} onUpdate={landing()} />,
+      <FeedbackRowDetail
+        row={record({ body: "  ", context: null })}
+        canEdit={false}
+        viewerId={OTHER}
+        onUpdate={landing()}
+      />,
     );
     expect(headings()).toEqual(["Subject", "Description", "Outcome", "Status"]);
     expect(screen.getAllByText("—")).toHaveLength(2); // body and outcome
@@ -336,7 +340,13 @@ describe("FeedbackRowDetail — replies (0.38 §9.7)", () => {
   it("gives the admin the composer, which sends the body and the status picked", async () => {
     const onReply = vi.fn(() => Promise.resolve());
     render(
-      <FeedbackRowDetail row={record({ replies: [] })} canEdit viewerId={ADMIN} onUpdate={landing()} onReply={onReply} />,
+      <FeedbackRowDetail
+        row={record({ replies: [] })}
+        canEdit
+        viewerId={ADMIN}
+        onUpdate={landing()}
+        onReply={onReply}
+      />,
     );
     fireEvent.change(screen.getByRole("textbox", { name: "Write a reply" }), { target: { value: " Looking. " } });
     fireEvent.change(screen.getByRole("combobox", { name: "Status with the reply" }), {
@@ -443,7 +453,14 @@ describe("FeedbackRowDetail — replies (0.38 §9.7)", () => {
     fireEvent.click(screen.getByRole("switch", { name: "Visible to others" }));
     expect(onPublicChange).toHaveBeenCalledTimes(1);
     // Not drawn without the handler.
-    rerender(<FeedbackRowDetail row={record({ public: true, mine: true })} canEdit={false} viewerId={AUTHOR} onUpdate={landing()} />);
+    rerender(
+      <FeedbackRowDetail
+        row={record({ public: true, mine: true })}
+        canEdit={false}
+        viewerId={AUTHOR}
+        onUpdate={landing()}
+      />,
+    );
     expect(screen.queryByRole("switch")).toBeNull();
   });
 
@@ -489,7 +506,14 @@ describe("FeedbackRowDetail — rework", () => {
   it("needs a note, sends the body ALONE as an append, and closes once it landed", () => {
     const onUpdate = landing();
     const body = "The chart jumps when I save.";
-    render(<FeedbackRowDetail row={record({ status: "DONE", body })} canEdit={false} viewerId={AUTHOR} onUpdate={onUpdate} />);
+    render(
+      <FeedbackRowDetail
+        row={record({ status: "DONE", body })}
+        canEdit={false}
+        viewerId={AUTHOR}
+        onUpdate={onUpdate}
+      />,
+    );
     fireEvent.click(screen.getByRole("button", { name: "Rework" }));
     expect(headings()).toContain("Send for rework");
     const send = screen.getByRole("button", { name: "Send rework" });
@@ -508,7 +532,9 @@ describe("FeedbackRowDetail — rework", () => {
     expect(onUpdate).toHaveBeenCalledTimes(1);
     const patch = onUpdate.mock.calls[0][0];
     expect(Object.keys(patch).sort()).toEqual(["body", "id"]);
-    expect(patch.body).toMatch(/^The chart jumps when I save\.\n\n--- REWORK \d{4}-\d{2}-\d{2} \d{2}:\d{2} ---\nStill jumps on Safari\.$/);
+    expect(patch.body).toMatch(
+      /^The chart jumps when I save\.\n\n--- REWORK \d{4}-\d{2}-\d{2} \d{2}:\d{2} ---\nStill jumps on Safari\.$/,
+    );
     expect(screen.queryByText("Send for rework")).toBeNull();
   });
 
@@ -597,7 +623,13 @@ describe("FeedbackRowDetail — status", () => {
   it("shows everyone else the narrow set, read-only", () => {
     const statusChange = vi.fn();
     render(
-      <FeedbackRowDetail row={record()} canEdit={false} viewerId={AUTHOR} onUpdate={landing()} statusChange={statusChange} />,
+      <FeedbackRowDetail
+        row={record()}
+        canEdit={false}
+        viewerId={AUTHOR}
+        onUpdate={landing()}
+        statusChange={statusChange}
+      />,
     );
     const done = screen.queryByRole("button", { name: "Done" });
     expect(done).toBeNull(); // OPEN → the chain's next step and the three off it
@@ -614,7 +646,14 @@ describe("FeedbackRowDetail — write lock (opt-in)", () => {
     const statusChange = vi.fn();
     render(
       <WriteLockProvider locked reason="Read-only demo">
-        <FeedbackRowDetail row={record()} canEdit viewerId={ADMIN} onUpdate={onUpdate} statusChange={statusChange} commit />
+        <FeedbackRowDetail
+          row={record()}
+          canEdit
+          viewerId={ADMIN}
+          onUpdate={onUpdate}
+          statusChange={statusChange}
+          commit
+        />
       </WriteLockProvider>,
     );
     const done = screen.getByRole("button", { name: "Done" });
@@ -648,7 +687,9 @@ describe("feedbackRowAccess", () => {
       canRework: true,
       canChangeStatus: false,
     });
-    expect(feedbackRowAccess({ user_id: null, status: "OPEN" }, { canEdit: false, viewerId: null }).isAuthor).toBe(false);
+    expect(feedbackRowAccess({ user_id: null, status: "OPEN" }, { canEdit: false, viewerId: null }).isAuthor).toBe(
+      false,
+    );
     expect(feedbackRowAccess({ user_id: AUTHOR, status: "OPEN" }, { canEdit: true }).canEditDescription).toBe(false);
   });
 });
@@ -685,15 +726,17 @@ describe("FeedbackRowDetail — the subject and READY (feedback contract §8, 0.
     expect(subject).toHaveTextContent("Chart jumps on save");
     expect(within(subject as HTMLElement).getByText("Bug")).toBeInTheDocument();
     unmount();
-    render(<FeedbackRowDetail row={record()} canEdit={false} viewerId={OTHER} onUpdate={landing()} showSubject={false} />);
+    render(
+      <FeedbackRowDetail row={record()} canEdit={false} viewerId={OTHER} onUpdate={landing()} showSubject={false} />,
+    );
     expect(document.querySelector("[data-feedback-subject]")).toBeNull();
     expect(headings()[0]).toBe("Description");
   });
 
   it("lets the author edit a READY row: nothing has been answered yet", () => {
-    expect(feedbackRowAccess(record({ status: "READY" }), { canEdit: false, viewerId: AUTHOR }).canEditDescription).toBe(
-      true,
-    );
+    expect(
+      feedbackRowAccess(record({ status: "READY" }), { canEdit: false, viewerId: AUTHOR }).canEditDescription,
+    ).toBe(true);
     expect(feedbackRowAccess(record({ status: "READY" }), { canEdit: false, viewerId: AUTHOR }).canRework).toBe(false);
   });
 });
@@ -701,7 +744,13 @@ describe("FeedbackRowDetail — the subject and READY (feedback contract §8, 0.
 /** 0.40 (docs/feedback-harmonization.md §10.2 decision 6, §10.3, §10.8): the rework as the
  *  author's entry — `onRework` — and the Rework button only where the composer is not. */
 describe("FeedbackRowDetail — rework as an entry (0.40)", () => {
-  const reply = { id: 1, author_name: null, body: "Done in 0.4.", status_to: "DONE" as const, created_at: "2026-10-05T10:00:00Z" };
+  const reply = {
+    id: 1,
+    author_name: null,
+    body: "Done in 0.4.",
+    status_to: "DONE" as const,
+    created_at: "2026-10-05T10:00:00Z",
+  };
 
   it("sends the note and the file through onRework, never the PATCH, and closes when it resolves", async () => {
     const onUpdate = landing();
@@ -735,7 +784,9 @@ describe("FeedbackRowDetail — rework as an entry (0.40)", () => {
     const onRework = vi.fn(async () => {
       throw new Error("403");
     });
-    render(<FeedbackReworkSection row={{ id: 9, body: "b" }} onRework={onRework} onCancel={vi.fn()} onSent={vi.fn()} />);
+    render(
+      <FeedbackReworkSection row={{ id: 9, body: "b" }} onRework={onRework} onCancel={vi.fn()} onSent={vi.fn()} />,
+    );
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "note" } });
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "Send rework" }));
@@ -764,7 +815,13 @@ describe("FeedbackRowDetail — rework as an entry (0.40)", () => {
 
   it("shows the button to a member author, and to an admin author where no composer is shown", () => {
     const { unmount } = render(
-      <FeedbackRowDetail row={record({ status: "DONE", replies: [reply] })} canEdit={false} viewerId={AUTHOR} onUpdate={landing()} onRework={vi.fn()} />,
+      <FeedbackRowDetail
+        row={record({ status: "DONE", replies: [reply] })}
+        canEdit={false}
+        viewerId={AUTHOR}
+        onUpdate={landing()}
+        onRework={vi.fn()}
+      />,
     );
     expect(screen.getByRole("button", { name: "Rework" })).toBeInTheDocument();
     unmount();
@@ -783,7 +840,14 @@ describe("FeedbackRowDetail — rework as an entry (0.40)", () => {
 
   it("falls back to the PATCH append without onRework (one minor)", () => {
     const onUpdate = landing();
-    render(<FeedbackRowDetail row={record({ status: "DONE", body: "B." })} canEdit={false} viewerId={AUTHOR} onUpdate={onUpdate} />);
+    render(
+      <FeedbackRowDetail
+        row={record({ status: "DONE", body: "B." })}
+        canEdit={false}
+        viewerId={AUTHOR}
+        onUpdate={onUpdate}
+      />,
+    );
     fireEvent.click(screen.getByRole("button", { name: "Rework" }));
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "Again." } });
     fireEvent.click(screen.getByRole("button", { name: "Send rework" }));
@@ -804,7 +868,11 @@ describe("FeedbackRowDetail — rework as an entry (0.40)", () => {
   });
 
   it("answers canRework for the author only", () => {
-    expect(feedbackRowAccess({ user_id: AUTHOR, status: "DONE" }, { canEdit: true, viewerId: ADMIN }).canRework).toBe(false);
-    expect(feedbackRowAccess({ user_id: AUTHOR, status: "REWORK" }, { canEdit: false, viewerId: AUTHOR }).canRework).toBe(true);
+    expect(feedbackRowAccess({ user_id: AUTHOR, status: "DONE" }, { canEdit: true, viewerId: ADMIN }).canRework).toBe(
+      false,
+    );
+    expect(
+      feedbackRowAccess({ user_id: AUTHOR, status: "REWORK" }, { canEdit: false, viewerId: AUTHOR }).canRework,
+    ).toBe(true);
   });
 });

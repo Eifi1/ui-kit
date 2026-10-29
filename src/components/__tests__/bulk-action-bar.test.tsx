@@ -12,8 +12,7 @@ import { DESKTOP_WIDTH, stubViewportWidth } from "../../test/viewport";
  * actions, above the phone nav, announced, animated, and absent at zero.
  */
 
-const motion = (reduced: boolean) =>
-  stubViewportWidth(DESKTOP_WIDTH, { reducedMotion: reduced });
+const motion = (reduced: boolean) => stubViewportWidth(DESKTOP_WIDTH, { reducedMotion: reduced });
 
 function bar(count: number, extra: Partial<Parameters<typeof BulkActionBar>[0]> = {}) {
   return (

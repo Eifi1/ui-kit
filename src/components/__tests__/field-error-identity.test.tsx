@@ -68,23 +68,17 @@ describe("a field keeps its control while `error` toggles", () => {
   });
 
   it("Input, unlabelled — the bare <input> in a flex row", async () => {
-    const setError = mount((error) => (
-      <Input aria-label="Name" className="flex-1" defaultValue="" error={error} />
-    ));
+    const setError = mount((error) => <Input aria-label="Name" className="flex-1" defaultValue="" error={error} />);
     await typeThroughToggle(() => screen.getByLabelText("Name"), setError);
   });
 
   it("Input, password with the reveal toggle", async () => {
-    const setError = mount((error) => (
-      <Input type="password" label="Password" defaultValue="" error={error} />
-    ));
+    const setError = mount((error) => <Input type="password" label="Password" defaultValue="" error={error} />);
     await typeThroughToggle(() => screen.getByLabelText("Password"), setError);
   });
 
   it("Input, unlabelled password", async () => {
-    const setError = mount((error) => (
-      <Input type="password" aria-label="Password" defaultValue="" error={error} />
-    ));
+    const setError = mount((error) => <Input type="password" aria-label="Password" defaultValue="" error={error} />);
     await typeThroughToggle(() => screen.getByLabelText("Password"), setError);
   });
 
@@ -180,9 +174,7 @@ describe("what a field without `error` renders is unchanged", () => {
   });
 
   it("a field that passes `error` keeps one plain box, message or not, className on the field", () => {
-    const { container, rerender } = render(
-      <Input aria-label="Bare" className="flex-1" error={undefined} />,
-    );
+    const { container, rerender } = render(<Input aria-label="Bare" className="flex-1" error={undefined} />);
     const box = container.firstElementChild!;
     expect(box.tagName).toBe("DIV");
     expect(box.getAttribute("class")).toBeNull();

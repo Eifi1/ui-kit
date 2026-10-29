@@ -48,14 +48,7 @@ describe("InlineEntityCombobox clearable", () => {
   });
 
   it("is opt-in — a field without the prop keeps only its chevron", () => {
-    render(
-      <InlineEntityCombobox<string>
-        label="Category"
-        value="c1"
-        onChange={vi.fn()}
-        options={options}
-      />,
-    );
+    render(<InlineEntityCombobox<string> label="Category" value="c1" onChange={vi.fn()} options={options} />);
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 });
@@ -80,12 +73,7 @@ describe("InlineEntityCombobox clearable", () => {
 describe("the desktop suggestion list", () => {
   it("renders outside the field's own subtree, so no ancestor can clip it", () => {
     const { container } = render(
-      <InlineEntityCombobox<string>
-        label="Category"
-        value={null}
-        onChange={vi.fn()}
-        options={options}
-      />,
+      <InlineEntityCombobox<string> label="Category" value={null} onChange={vi.fn()} options={options} />,
     );
     fireEvent.focus(screen.getByRole("combobox"));
 
@@ -96,14 +84,7 @@ describe("the desktop suggestion list", () => {
 
   it("still commits the option that is clicked in it", () => {
     const onChange = vi.fn();
-    render(
-      <InlineEntityCombobox<string>
-        label="Category"
-        value={null}
-        onChange={onChange}
-        options={options}
-      />,
-    );
+    render(<InlineEntityCombobox<string> label="Category" value={null} onChange={onChange} options={options} />);
     fireEvent.focus(screen.getByRole("combobox"));
     fireEvent.mouseDown(screen.getByRole("option", { name: "Fuel" }));
 

@@ -215,11 +215,7 @@ export type FilePickHandler = (accepted: File[], rejected: FileRejection[]) => b
 /** @internal The shared tail of both pickers: run `onPick`, and say whether the pick
  *  stands. A pick with nothing accepted has nothing to refuse, so `false` there is
  *  treated as no verdict and the usual per-file messages are kept. */
-export function judgePick(
-  onPick: FilePickHandler | undefined,
-  accepted: File[],
-  rejected: FileRejection[],
-): boolean {
+export function judgePick(onPick: FilePickHandler | undefined, accepted: File[], rejected: FileRejection[]): boolean {
   if (!onPick) return true;
   return onPick(accepted, rejected) !== false || accepted.length === 0;
 }

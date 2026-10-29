@@ -53,7 +53,10 @@ const AREA_TITLES = {
 /* ── The build, read through TypeScript ───────────────────────────────────── */
 
 /** `dist/components/ui.d.ts` → `components/ui`, POSIX-separated on every platform. */
-const moduleId = (fileName) => relative(DIST, fileName).replace(/\\/g, "/").replace(/\.d\.ts$/, "");
+const moduleId = (fileName) =>
+  relative(DIST, fileName)
+    .replace(/\\/g, "/")
+    .replace(/\.d\.ts$/, "");
 
 /** The entry points with a declaration file of their own, in `exports` order (patterns left out). */
 function entryPoints() {
@@ -167,10 +170,7 @@ const byName = (a, b) => a.name.localeCompare(b.name, "en");
 function renderNames(names) {
   const values = names.filter((n) => !n.isType).sort(byName);
   const typeNames = names.filter((n) => n.isType).sort(byName);
-  return [
-    ...values.map((n) => `\`${n.name}\``),
-    ...typeNames.map((n) => `_\`${n.name}\`_`),
-  ].join(", ");
+  return [...values.map((n) => `\`${n.name}\``), ...typeNames.map((n) => `_\`${n.name}\`_`)].join(", ");
 }
 
 function renderEntryPoints({ entries, exportsOf }) {

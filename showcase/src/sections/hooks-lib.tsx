@@ -48,8 +48,7 @@ import { Example, Note, OutTable, Row } from "../lib/section";
  */
 
 /** Panel chrome shared by the four specimens that open something. */
-const PANEL =
-  "rounded-md border border-subtle bg-surface-2 p-3 text-sm text-primary";
+const PANEL = "rounded-md border border-subtle bg-surface-2 p-3 text-sm text-primary";
 
 /** Rects are fractional in a real browser (device pixel ratios that are not whole
  *  numbers) and exactly 0 in jsdom. One decimal keeps the first readable without
@@ -62,13 +61,7 @@ const px = (n: number) => `${Math.round(n * 10) / 10}px`;
 function Bool({ value }: { value: boolean }) {
   return (
     <span className="inline-flex items-center gap-1.5">
-      <span
-        aria-hidden
-        className={cn(
-          "inline-block size-2 rounded-full",
-          value ? "bg-brand" : "bg-[var(--border)]",
-        )}
-      />
+      <span aria-hidden className={cn("inline-block size-2 rounded-full", value ? "bg-brand" : "bg-[var(--border)]")} />
       {String(value)}
     </span>
   );
@@ -89,9 +82,7 @@ function Aside({ children }: { children: ReactNode }) {
  * claim, not a demonstration.
  */
 function useLiveWidth(): number {
-  const [width, setWidth] = useState(() =>
-    typeof window === "undefined" ? 0 : window.innerWidth,
-  );
+  const [width, setWidth] = useState(() => (typeof window === "undefined" ? 0 : window.innerWidth));
   useEffect(() => {
     const update = () => setWidth(window.innerWidth);
     update();
@@ -129,8 +120,7 @@ function MediaQueryReadout() {
         [
           "useMediaQuery('(prefers-reduced-motion: reduce)', false)",
           <>
-            <Bool value={reduced} />{" "}
-            <Aside>— when true, useCloseTransition below never animates</Aside>
+            <Bool value={reduced} /> <Aside>— when true, useCloseTransition below never animates</Aside>
           </>,
         ],
       ]}
@@ -226,13 +216,13 @@ function AnchoredPanelSpecimen() {
           [
             "panel.above",
             <>
-              <Bool value={panel.above} />{" "}
-              <Aside>— flipped only when below is unusable AND above is roomier</Aside>
+              <Bool value={panel.above} /> <Aside>— flipped only when below is unusable AND above is roomier</Aside>
             </>,
           ],
         ]}
       />
-      {open && rect &&
+      {open &&
+        rect &&
         createPortal(
           <div
             role="dialog"
@@ -256,10 +246,7 @@ function AnchoredPanelSpecimen() {
           >
             <ul className="space-y-1">
               {Array.from({ length: 12 }, (_, i) => (
-                <li
-                  key={i}
-                  className="rounded px-2 py-1 text-sm text-secondary hover:bg-surface-2"
-                >
+                <li key={i} className="rounded px-2 py-1 text-sm text-secondary hover:bg-surface-2">
                   Row {i + 1}
                 </li>
               ))}
@@ -279,21 +266,16 @@ function AnchoredPanelSpecimen() {
  * implementation that nothing compares against.
  */
 function PlacementMath() {
-  const cases: Array<[note: string, rect: Pick<AnchorRect, "top" | "bottom">, view: ViewportBox]> =
+  const cases: Array<[note: string, rect: Pick<AnchorRect, "top" | "bottom">, view: ViewportBox]> = [
+    ["room below, so no flip", { top: 100, bottom: 130 }, { top: 0, height: 800 }],
+    ["trigger low on the page", { top: 700, bottom: 730 }, { top: 0, height: 800 }],
+    ["same trigger, keyboard up: only 360px is on screen", { top: 500, bottom: 530 }, { top: 0, height: 360 }],
     [
-      ["room below, so no flip", { top: 100, bottom: 130 }, { top: 0, height: 800 }],
-      ["trigger low on the page", { top: 700, bottom: 730 }, { top: 0, height: 800 }],
-      [
-        "same trigger, keyboard up: only 360px is on screen",
-        { top: 500, bottom: 530 },
-        { top: 0, height: 360 },
-      ],
-      [
-        "neither side usable — takes the 96px floor and overflows the margin",
-        { top: 10, bottom: 150 },
-        { top: 0, height: 200 },
-      ],
-    ];
+      "neither side usable — takes the 96px floor and overflows the margin",
+      { top: 10, bottom: 150 },
+      { top: 0, height: 200 },
+    ],
+  ];
 
   const rows: Array<[string, ReactNode]> = cases.map(([note, rect, view]) => {
     const out = anchoredPanelPlacement(rect, view);
@@ -365,11 +347,7 @@ function DismissSpecimen() {
   // Passing the TRIGGER's ref as well as the panel's is not belt-and-braces: without
   // it a click on the trigger while open would fire the outside-click on pointerdown
   // and the toggle on click, closing and immediately reopening the panel.
-  useOutsideClick(
-    [triggerRef, panelRef],
-    () => closeBy("useOutsideClick — a press that landed outside"),
-    open,
-  );
+  useOutsideClick([triggerRef, panelRef], () => closeBy("useOutsideClick — a press that landed outside"), open);
 
   return (
     <div className="space-y-3">
@@ -382,15 +360,11 @@ function DismissSpecimen() {
         >
           {open ? "Close" : "Open a dismissible panel"}
         </button>
-        <span className="text-xs text-muted">
-          then press Escape, or click anywhere off the panel
-        </span>
+        <span className="text-xs text-muted">then press Escape, or click anywhere off the panel</span>
       </Row>
       {open && (
         <div ref={panelRef} className={cn(PANEL, "max-w-sm")}>
-          <p>
-            Rendered inline, not portalled, so &ldquo;outside&rdquo; is somewhere you can see.
-          </p>
+          <p>Rendered inline, not portalled, so &ldquo;outside&rdquo; is somewhere you can see.</p>
           <Row className="mt-3">
             <Button variant="secondary" onClick={() => closeBy("a button inside the panel")}>
               Close from inside
@@ -442,9 +416,8 @@ function OverlayHistorySpecimen() {
       </Row>
       {open && (
         <div className={cn(PANEL, "max-w-sm")}>
-          A same-URL history entry is on the stack while this is open. Press the browser&rsquo;s
-          Back gesture: the address does not change and the page underneath does not re-render
-          — only this panel closes.
+          A same-URL history entry is on the stack while this is open. Press the browser&rsquo;s Back gesture: the
+          address does not change and the page underneath does not re-render — only this panel closes.
         </div>
       )}
       <OutTable
@@ -479,15 +452,9 @@ function CloseTransitionSpecimen() {
         </Button>
       </Row>
       {open && (
-        <div
-          className={cn(
-            PANEL,
-            "max-w-sm",
-            closing ? "animate-overlay-out" : "animate-overlay",
-          )}
-        >
-          Still mounted while <code className="font-mono">closing</code> is true — that is what
-          buys the exit its {OVERLAY_EXIT_MS}ms.
+        <div className={cn(PANEL, "max-w-sm", closing ? "animate-overlay-out" : "animate-overlay")}>
+          Still mounted while <code className="font-mono">closing</code> is true — that is what buys the exit its{" "}
+          {OVERLAY_EXIT_MS}ms.
         </div>
       )}
       <OutTable
@@ -497,8 +464,7 @@ function CloseTransitionSpecimen() {
           [
             "closing",
             <>
-              <Bool value={closing} />{" "}
-              {reduced && <Aside>— reduced motion is on, so this never turns true</Aside>}
+              <Bool value={closing} /> {reduced && <Aside>— reduced motion is on, so this never turns true</Aside>}
             </>,
           ],
         ]}
@@ -534,11 +500,7 @@ function FocusTrapSpecimen() {
           Open a trapped panel
         </Button>
         <label className="flex items-center gap-1.5 text-xs text-secondary">
-          <input
-            type="checkbox"
-            checked={restoreFocus}
-            onChange={(e) => setRestoreFocus(e.target.checked)}
-          />
+          <input type="checkbox" checked={restoreFocus} onChange={(e) => setRestoreFocus(e.target.checked)} />
           restoreFocus
         </label>
         <label className="flex items-center gap-1.5 text-xs text-secondary">
@@ -557,9 +519,7 @@ function FocusTrapSpecimen() {
       {open && (
         // tabIndex -1: the default `initialFocus` focuses the container itself.
         <div ref={panel} tabIndex={-1} className={cn(PANEL, "max-w-md space-y-2 outline-none")}>
-          <p className="text-xs text-secondary">
-            Tab and Shift+Tab cycle inside this box; Escape closes it.
-          </p>
+          <p className="text-xs text-secondary">Tab and Shift+Tab cycle inside this box; Escape closes it.</p>
           <input
             aria-label="Name"
             placeholder="A field"
@@ -579,9 +539,7 @@ function FocusTrapSpecimen() {
           </Row>
           {nested && (
             <div ref={inner} className={cn(PANEL, "space-y-2 bg-surface")}>
-              <p className="text-xs text-secondary">
-                The innermost trap owns Tab now; closing it hands control back.
-              </p>
+              <p className="text-xs text-secondary">The innermost trap owns Tab now; closing it hands control back.</p>
               <Row>
                 <Button variant="secondary">One</Button>
                 <Button variant="secondary">Two</Button>
@@ -637,10 +595,7 @@ function AnnounceSpecimen() {
         rows={[
           ["last announce()", said ?? "(none yet)"],
           ["useAnnounce().regionProps.role", polite.regionProps.role],
-          [
-            'useAnnounce({ politeness: "assertive" }).regionProps.role',
-            assertive.regionProps.role,
-          ],
+          ['useAnnounce({ politeness: "assertive" }).regionProps.role', assertive.regionProps.role],
           ["regionProps.className", polite.regionProps.className],
         ]}
       />
@@ -684,8 +639,7 @@ function LoggerSpecimen() {
         setStoreLog(false)
       </Button>
       <span className="font-mono text-xs text-muted">
-        {enabled === null ? "default for this build" : `logging ${enabled ? "on" : "off"}`} — open
-        the console and bump
+        {enabled === null ? "default for this build" : `logging ${enabled ? "on" : "off"}`} — open the console and bump
       </span>
     </Row>
   );
@@ -748,8 +702,7 @@ function ScrollLockSpecimen() {
               </>
             ) : (
               <>
-                {`"${body.paddingRight}"`}{" "}
-                <Aside>— replacing the classic scrollbar's width</Aside>
+                {`"${body.paddingRight}"`} <Aside>— replacing the classic scrollbar's width</Aside>
               </>
             ),
           ],
@@ -769,10 +722,7 @@ function ScrollLockSpecimen() {
 const CN_CASES: Array<[string, string]> = [
   ['cn("px-2", "px-4")', cn("px-2", "px-4")],
   ['cn("px-2 py-1", "p-4")', cn("px-2 py-1", "p-4")],
-  [
-    'cn("text-muted", "text-primary")',
-    cn("text-muted", "text-primary"),
-  ],
+  ['cn("text-muted", "text-primary")', cn("text-muted", "text-primary")],
   [
     'cn("rounded-md", false && "shadow-lg", undefined)',
     // The constantly-false argument IS the specimen: it shows cn dropping falsy values.
@@ -797,7 +747,10 @@ const DISPOSITION_CASES: Array<[string, string]> = [
   `attachment; filename="../../etc/passwd"`,
   `attachment; filename*=UTF-8''bad%E2%80.txt; filename="plain.txt"`,
   "attachment",
-].map((header): [string, string] => [`filenameFromDisposition(${JSON.stringify(header)}, "export.json")`, filenameFromDisposition(header, "export.json")]);
+].map((header): [string, string] => [
+  `filenameFromDisposition(${JSON.stringify(header)}, "export.json")`,
+  filenameFromDisposition(header, "export.json"),
+]);
 
 function SaveBlobSpecimen() {
   return (
@@ -818,33 +771,25 @@ function SaveBlobSpecimen() {
 export function HooksLib() {
   return (
     <>
-      <Example
-        label="useMediaQuery(query, fallback)"
-        hint="Drag the window across 768px and watch the first two rows."
-      >
+      <Example label="useMediaQuery(query, fallback)" hint="Drag the window across 768px and watch the first two rows.">
         <MediaQueryReadout />
         <Note>
-          <code className="font-mono">fallback</code> is required, not optional, because there is
-          a real moment when there is no answer: SSR, and any environment without{" "}
-          <code className="font-mono">matchMedia</code>. Every phone branch in the kit —
-          the sheet pickers, the numpad, the mobile feedback dialog — reads{" "}
+          <code className="font-mono">fallback</code> is required, not optional, because there is a real moment when
+          there is no answer: SSR, and any environment without <code className="font-mono">matchMedia</code>. Every
+          phone branch in the kit — the sheet pickers, the numpad, the mobile feedback dialog — reads{" "}
           <code className="font-mono">usePhoneLayout()</code>, which asks this hook with{" "}
-          <code className="font-mono">false</code>, so &ldquo;not known yet&rdquo; renders the
-          desktop path rather than flashing a sheet.
+          <code className="font-mono">false</code>, so &ldquo;not known yet&rdquo; renders the desktop path rather than
+          flashing a sheet.
         </Note>
       </Example>
 
-      <Example
-        label="useAnchoredRect(ref, open)"
-        hint="Measures while open; scroll or resize and the numbers follow."
-      >
+      <Example label="useAnchoredRect(ref, open)" hint="Measures while open; scroll or resize and the numbers follow.">
         <AnchoredRectReadout />
         <Note>
-          The hook publishes a rect only when one of the six fields actually changed. That guard
-          is not a micro-optimisation: it listens for scroll on the CAPTURE phase so nested
-          scroll containers are caught too, every measurement allocates a fresh object, and
-          React compares state by identity — so without it a momentum scroll re-rendered the
-          anchored panel roughly once a frame whether or not the anchor had moved.
+          The hook publishes a rect only when one of the six fields actually changed. That guard is not a
+          micro-optimisation: it listens for scroll on the CAPTURE phase so nested scroll containers are caught too,
+          every measurement allocates a fresh object, and React compares state by identity — so without it a momentum
+          scroll re-rendered the anchored panel roughly once a frame whether or not the anchor had moved.
         </Note>
       </Example>
 
@@ -854,15 +799,13 @@ export function HooksLib() {
       >
         <AnchoredPanelSpecimen />
         <Note>
-          The returned <code className="font-mono">maxHeight</code> is what makes the flip
-          sufficient rather than merely different: a tall panel placed above without a cap just
-          runs off the top instead of the bottom. Apply it together with an internal{" "}
-          <code className="font-mono">overflow-y</code>, as the portal above does. Once{" "}
-          <code className="font-mono">above</code> is true, place the panel by{" "}
-          <code className="font-mono">bottom</code> and not <code className="font-mono">top</code>:
-          the panel is only as tall as its content, and <code className="font-mono">top</code> is
-          where a full-height one would start, so three rows under a 256px cap hung far above
-          their field.
+          The returned <code className="font-mono">maxHeight</code> is what makes the flip sufficient rather than merely
+          different: a tall panel placed above without a cap just runs off the top instead of the bottom. Apply it
+          together with an internal <code className="font-mono">overflow-y</code>, as the portal above does. Once{" "}
+          <code className="font-mono">above</code> is true, place the panel by <code className="font-mono">bottom</code>{" "}
+          and not <code className="font-mono">top</code>: the panel is only as tall as its content, and{" "}
+          <code className="font-mono">top</code> is where a full-height one would start, so three rows under a 256px cap
+          hung far above their field.
         </Note>
       </Example>
 
@@ -872,12 +815,10 @@ export function HooksLib() {
       >
         <PlacementMath />
         <Note>
-          Split out of the hook so the geometry is testable without a browser and a fake
-          keyboard. The third row is the case the whole thing exists for: on
-          Android the layout viewport does NOT shrink when the on-screen keyboard opens, so a
-          panel pinned below a trigger in the lower half of the screen ends up behind it with
-          nothing the user can do — <code className="font-mono">position: fixed</code> does not
-          scroll.
+          Split out of the hook so the geometry is testable without a browser and a fake keyboard. The third row is the
+          case the whole thing exists for: on Android the layout viewport does NOT shrink when the on-screen keyboard
+          opens, so a panel pinned below a trigger in the lower half of the screen ends up behind it with nothing the
+          user can do — <code className="font-mono">position: fixed</code> does not scroll.
         </Note>
       </Example>
 
@@ -887,15 +828,13 @@ export function HooksLib() {
       >
         <VisualViewportReadout />
         <Note>
-          The same measurement <code className="font-mono">useAnchoredPanel</code> caps a
-          dropdown with, handed over as a box for the callers that need it — a full-screen sheet
-          cannot use <code className="font-mono">inset-0</code>, because that still spans the
-          whole screen while the keyboard is up. It returns null wherever there is nothing to
-          correct, so the caller keeps its static layout and the desktop renders exactly the
-          markup it always did. The 1px slack in the comparison is not superstition:{" "}
-          <code className="font-mono">visualViewport.height</code> is fractional on a
-          non-integer device pixel ratio, and a strict test would report a 0.4px
-          &ldquo;keyboard&rdquo; on every phone.
+          The same measurement <code className="font-mono">useAnchoredPanel</code> caps a dropdown with, handed over as
+          a box for the callers that need it — a full-screen sheet cannot use <code className="font-mono">inset-0</code>
+          , because that still spans the whole screen while the keyboard is up. It returns null wherever there is
+          nothing to correct, so the caller keeps its static layout and the desktop renders exactly the markup it always
+          did. The 1px slack in the comparison is not superstition:{" "}
+          <code className="font-mono">visualViewport.height</code> is fractional on a non-integer device pixel ratio,
+          and a strict test would report a 0.4px &ldquo;keyboard&rdquo; on every phone.
         </Note>
       </Example>
 
@@ -906,11 +845,10 @@ export function HooksLib() {
         <DismissSpecimen />
         <Note>
           The outside-click listens for <code className="font-mono">pointerdown</code>, not{" "}
-          <code className="font-mono">mousedown</code>: one event covering mouse, touch and pen.
-          A tap that begins a scroll, or one on an element that preventDefaults the touch
-          sequence, may never synthesise a mousedown at all — and every picker, menu and flyout
-          in a phone-first app dismisses through this hook. The deliberate consequence is that a
-          touch-drag starting outside an open panel now dismisses it at touch-down.
+          <code className="font-mono">mousedown</code>: one event covering mouse, touch and pen. A tap that begins a
+          scroll, or one on an element that preventDefaults the touch sequence, may never synthesise a mousedown at all
+          — and every picker, menu and flyout in a phone-first app dismisses through this hook. The deliberate
+          consequence is that a touch-drag starting outside an open panel now dismisses it at touch-down.
         </Note>
       </Example>
 
@@ -920,13 +858,11 @@ export function HooksLib() {
       >
         <OverlayHistorySpecimen />
         <Note>
-          A throwaway SAME-URL entry, not a URL parameter — deliberately. Encoding &ldquo;a
-          dialog is open&rdquo; in the address bar makes it shareable and restorable, which is
-          wrong for a confirm dialog, and it would fight the page-owned{" "}
-          <code className="font-mono">?row=</code> and <code className="font-mono">f.*</code>{" "}
-          params that ARE meaningful state. A pop is only claimed when the entry we land on is
-          no longer ours, so a second sentinel stacked on top by an app&rsquo;s own unsaved-edit
-          guard cannot close the overlay underneath it.
+          A throwaway SAME-URL entry, not a URL parameter — deliberately. Encoding &ldquo;a dialog is open&rdquo; in the
+          address bar makes it shareable and restorable, which is wrong for a confirm dialog, and it would fight the
+          page-owned <code className="font-mono">?row=</code> and <code className="font-mono">f.*</code> params that ARE
+          meaningful state. A pop is only claimed when the entry we land on is no longer ours, so a second sentinel
+          stacked on top by an app&rsquo;s own unsaved-edit guard cannot close the overlay underneath it.
         </Note>
       </Example>
 
@@ -936,14 +872,12 @@ export function HooksLib() {
       >
         <CloseTransitionSpecimen />
         <Note>
-          It deliberately does not intercept a close the CALLER decides on. A dialog that closes
-          itself after a successful save unmounts with no exit animation, and that is the right
-          trade — otherwise every overlay would need an{" "}
-          <code className="font-mono">open</code> prop and every caller would wait on a callback
-          to learn when its own state took effect. What gets animated is what the user
-          dismissed. Under reduced motion it closes immediately and the{" "}
-          <code className="font-mono">-out</code> classes are never applied, which is why
-          tokens.css needs no reduced-motion rule for them.
+          It deliberately does not intercept a close the CALLER decides on. A dialog that closes itself after a
+          successful save unmounts with no exit animation, and that is the right trade — otherwise every overlay would
+          need an <code className="font-mono">open</code> prop and every caller would wait on a callback to learn when
+          its own state took effect. What gets animated is what the user dismissed. Under reduced motion it closes
+          immediately and the <code className="font-mono">-out</code> classes are never applied, which is why tokens.css
+          needs no reduced-motion rule for them.
         </Note>
       </Example>
 
@@ -953,14 +887,12 @@ export function HooksLib() {
       >
         <ScrollLockSpecimen />
         <Note>
-          The count is module-level because the lockers do not know about each other, and that
-          is the only place they can agree. Per-locker save/restore composes only if releases
-          are strictly nested in reverse order of acquisition — and React runs unmount cleanups
-          PARENT FIRST, which is the opposite. The gesture that broke it was ordinary: open a
-          dialog, tap the amount so the numpad sheet opens and captures the
-          &ldquo;hidden&rdquo; the dialog had already set, press Save. Both unmounted together,
-          the dialog restored first, the sheet put &ldquo;hidden&rdquo; back, and the page was
-          left unscrollable with no overlay on it. Only a reload cleared it.
+          The count is module-level because the lockers do not know about each other, and that is the only place they
+          can agree. Per-locker save/restore composes only if releases are strictly nested in reverse order of
+          acquisition — and React runs unmount cleanups PARENT FIRST, which is the opposite. The gesture that broke it
+          was ordinary: open a dialog, tap the amount so the numpad sheet opens and captures the &ldquo;hidden&rdquo;
+          the dialog had already set, press Save. Both unmounted together, the dialog restored first, the sheet put
+          &ldquo;hidden&rdquo; back, and the page was left unscrollable with no overlay on it. Only a reload cleared it.
         </Note>
       </Example>
 
@@ -970,11 +902,10 @@ export function HooksLib() {
       >
         <FocusTrapSpecimen />
         <Note>
-          The tabbable list is recomputed on every Tab, so fields that appear later are included.
-          With <code className="font-mono">restoreFocus</code> on, closing puts focus back on the
-          button that opened the panel. <code className="font-mono">&quot;container&quot;</code>{" "}
-          is the default because focusing a field first pops the phone keyboard before the user
-          has asked to type.
+          The tabbable list is recomputed on every Tab, so fields that appear later are included. With{" "}
+          <code className="font-mono">restoreFocus</code> on, closing puts focus back on the button that opened the
+          panel. <code className="font-mono">&quot;container&quot;</code> is the default because focusing a field first
+          pops the phone keyboard before the user has asked to type.
         </Note>
       </Example>
 
@@ -984,26 +915,21 @@ export function HooksLib() {
       >
         <AnnounceSpecimen />
         <Note>
-          <code className="font-mono">announce</code> clears the region and sets the text a tick
-          later, so saying the same sentence twice is still read twice.
+          <code className="font-mono">announce</code> clears the region and sets the text a tick later, so saying the
+          same sentence twice is still read twice.
         </Note>
       </Example>
 
-      <Example
-        label="cn(...inputs)"
-        hint="clsx for the conditionals, tailwind-merge for the conflicts."
-      >
+      <Example label="cn(...inputs)" hint="clsx for the conditionals, tailwind-merge for the conflicts.">
         <OutTable rows={CN_CASES.map(([expr, out]) => [expr, `"${out}"`])} />
         <Note>
-          The first two rows are the reason this is not just{" "}
-          <code className="font-mono">clsx</code>. A plain join would emit{" "}
-          <code className="font-mono">&quot;px-2 px-4&quot;</code> and leave the winner to CSS
-          source order — i.e. to the order Tailwind happened to generate the utilities in, which
-          a caller cannot see and cannot influence. tailwind-merge makes LATER WIN, which is
-          what a <code className="font-mono">className</code> prop has to mean if a consumer is
-          to override anything a component sets by default. Row two shows it understands
-          shorthand: <code className="font-mono">p-4</code> supersedes both{" "}
-          <code className="font-mono">px-2</code> and <code className="font-mono">py-1</code>.
+          The first two rows are the reason this is not just <code className="font-mono">clsx</code>. A plain join would
+          emit <code className="font-mono">&quot;px-2 px-4&quot;</code> and leave the winner to CSS source order — i.e.
+          to the order Tailwind happened to generate the utilities in, which a caller cannot see and cannot influence.
+          tailwind-merge makes LATER WIN, which is what a <code className="font-mono">className</code> prop has to mean
+          if a consumer is to override anything a component sets by default. Row two shows it understands shorthand:{" "}
+          <code className="font-mono">p-4</code> supersedes both <code className="font-mono">px-2</code> and{" "}
+          <code className="font-mono">py-1</code>.
         </Note>
       </Example>
 
@@ -1036,12 +962,11 @@ export const useTx = create<TxState>()(
           ]}
         />
         <Note>
-          The middleware wraps a zustand store&rsquo;s <code className="font-mono">set</code>: the
-          counter above is a real store built with it, and each bump logs{" "}
-          <code className="font-mono">{"{ prev, next }"}</code> while logging is on. The decision above is read
-          ONCE at module scope rather than on every <code className="font-mono">set</code> — the
-          stores this wraps transition per pointer event, and the override cannot change without
-          a reload anyway. <code className="font-mono">setStoreLog</code> is the console escape
+          The middleware wraps a zustand store&rsquo;s <code className="font-mono">set</code>: the counter above is a
+          real store built with it, and each bump logs <code className="font-mono">{"{ prev, next }"}</code> while
+          logging is on. The decision above is read ONCE at module scope rather than on every{" "}
+          <code className="font-mono">set</code> — the stores this wraps transition per pointer event, and the override
+          cannot change without a reload anyway. <code className="font-mono">setStoreLog</code> is the console escape
           hatch that per-call read was really buying.
         </Note>
       </Example>
@@ -1054,32 +979,28 @@ export const useTx = create<TxState>()(
         <OutTable rows={DISPOSITION_CASES} />
         <Note>
           An <code className="font-mono">{"<a href>"}</code> to an API route carries no{" "}
-          <code className="font-mono">Authorization</code> header, so an app behind a token
-          fetches the file and hands it over: <code className="font-mono">saveBlob</code> clicks
-          one hidden link, attached to the page while it is clicked, and revokes the object URL
-          a minute later — the click only starts the download, and the browser reads the URL
-          after the call has returned. <code className="font-mono">filenameFromDisposition</code>{" "}
-          reads the RFC 8187 <code className="font-mono">filename*</code> first, because
-          server-kit writes the original name only there and an ASCII stand-in in{" "}
-          <code className="font-mono">filename=</code>; it drops directory parts and never
-          throws. The kit&rsquo;s own downloads — the corrections export, a feedback attachment,
-          the account data export — use them. Across origins the header reaches the page only
-          when the server lists it in <code className="font-mono">Access-Control-Expose-Headers</code>.
+          <code className="font-mono">Authorization</code> header, so an app behind a token fetches the file and hands
+          it over: <code className="font-mono">saveBlob</code> clicks one hidden link, attached to the page while it is
+          clicked, and revokes the object URL a minute later — the click only starts the download, and the browser reads
+          the URL after the call has returned. <code className="font-mono">filenameFromDisposition</code> reads the RFC
+          8187 <code className="font-mono">filename*</code> first, because server-kit writes the original name only
+          there and an ASCII stand-in in <code className="font-mono">filename=</code>; it drops directory parts and
+          never throws. The kit&rsquo;s own downloads — the corrections export, a feedback attachment, the account data
+          export — use them. Across origins the header reaches the page only when the server lists it in{" "}
+          <code className="font-mono">Access-Control-Expose-Headers</code>.
         </Note>
       </Example>
 
       <Note>
         The rest of the non-visual surface, and what is deliberately not on this page:{" "}
         <code className="font-mono">useRowSwipe</code> is exported and is shown with{" "}
-        <code className="font-mono">SwipeableRow</code> under &ldquo;Swipeable
-        row&rdquo;; the <code className="font-mono">lib/calc</code> helpers are exported and
-        shown under &ldquo;Numbers &amp; money&rdquo;, where the fields that parse with them
-        are. Two things a reader may go looking for are NOT exported from the barrel at all:{" "}
-        <code className="font-mono">useMobileReveal</code> (src/components/use-mobile-reveal.ts,
-        imported only by DataTable) and{" "}
-        <code className="font-mono">readStored</code>/<code className="font-mono">writeStored</code>{" "}
-        (src/lib/safe-storage.ts, the localStorage guard the logger and AppShell read through).
-        They cannot be demonstrated from a consumer&rsquo;s import, so they are not demonstrated
+        <code className="font-mono">SwipeableRow</code> under &ldquo;Swipeable row&rdquo;; the{" "}
+        <code className="font-mono">lib/calc</code> helpers are exported and shown under &ldquo;Numbers &amp;
+        money&rdquo;, where the fields that parse with them are. Two things a reader may go looking for are NOT exported
+        from the barrel at all: <code className="font-mono">useMobileReveal</code> (src/components/use-mobile-reveal.ts,
+        imported only by DataTable) and <code className="font-mono">readStored</code>/
+        <code className="font-mono">writeStored</code> (src/lib/safe-storage.ts, the localStorage guard the logger and
+        AppShell read through). They cannot be demonstrated from a consumer&rsquo;s import, so they are not demonstrated
         here.
       </Note>
     </>

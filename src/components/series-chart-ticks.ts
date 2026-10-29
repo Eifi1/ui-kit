@@ -90,10 +90,7 @@ export function integerTicks(
  * third to ninth month. A tick belongs on every whole slot inside it, and on nothing in
  * between: there is no month 2.5. Recharts' `minTickGap` thins them where they crowd.
  */
-export function categoryTicks(
-  domain: readonly [number, number] | undefined,
-  count: number,
-): number[] | undefined {
+export function categoryTicks(domain: readonly [number, number] | undefined, count: number): number[] | undefined {
   if (!domain || !(count > 0)) return undefined;
   const first = Math.max(0, Math.ceil(domain[0] - 1e-6));
   const last = Math.min(count - 1, Math.floor(domain[1] + 1e-6));

@@ -18,8 +18,7 @@ export interface PlanLimitRefusal {
 /** keksdose's code before §3.4: `402 {detail, code: "plan_budget_limit", plan, limit}`. */
 const LEGACY_BUDGET_LIMIT = "plan_budget_limit";
 
-const text = (value: unknown): string | undefined =>
-  typeof value === "string" && value !== "" ? value : undefined;
+const text = (value: unknown): string | undefined => (typeof value === "string" && value !== "" ? value : undefined);
 const count = (value: unknown): number | undefined =>
   typeof value === "number" && Number.isFinite(value) ? value : undefined;
 

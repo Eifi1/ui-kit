@@ -142,7 +142,6 @@ function readPending(key: string): PendingCheckout | null {
   return null;
 }
 
-
 function storeOf(key: string): CheckoutStore {
   let store = stores.get(key);
   if (!store) {

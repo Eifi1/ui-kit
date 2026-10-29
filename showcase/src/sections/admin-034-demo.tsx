@@ -46,13 +46,36 @@ export function GroupActions034Demo() {
   const [team, setTeam] = useState<Team | null>(WORKSHOP);
   const [deleting, setDeleting] = useState(false);
   const [log, setLog] = useState<AdminActionLogEntry[]>([
-    { id: 7, at: ago(1), actor: ADA, action: "membership_role", target: BEN, group: asGroup(WORKSHOP), detail: "Member → Manager" },
-    { id: 6, at: ago(2), actor: BEN, action: "membership_add", target: BEN, group: asGroup(WORKSHOP), detail: "Member" },
+    {
+      id: 7,
+      at: ago(1),
+      actor: ADA,
+      action: "membership_role",
+      target: BEN,
+      group: asGroup(WORKSHOP),
+      detail: "Member → Manager",
+    },
+    {
+      id: 6,
+      at: ago(2),
+      actor: BEN,
+      action: "membership_add",
+      target: BEN,
+      group: asGroup(WORKSHOP),
+      detail: "Member",
+    },
     { id: 5, at: ago(2), actor: ADA, action: "invite", target: { email: "ben@example.com" }, group: asGroup(WORKSHOP) },
     { id: 4, at: ago(3), actor: ADA, action: "group_rename", target: asGroup(WORKSHOP) },
     { id: 3, at: ago(4), actor: ADA, action: "group_create", target: asGroup(WORKSHOP) },
     // A team deleted long ago, its group_delete row lost to retention: no name to join.
-    { id: 2, at: ago(30), actor: ADA, action: "membership_remove", target: BEN, group: { kind: "group", id: 3, name: null } },
+    {
+      id: 2,
+      at: ago(30),
+      actor: ADA,
+      action: "membership_remove",
+      target: BEN,
+      group: { kind: "group", id: 3, name: null },
+    },
     { id: 1, at: ago(40), actor: ADA, action: "reseed_demo", target: { kind: "other", label: "The demo dataset" } },
   ]);
 
@@ -71,11 +94,7 @@ export function GroupActions034Demo() {
             Delete Workshop…
           </Button>
         </div>
-        <AdminActionLog
-          entries={log}
-          groupNoun={noun}
-          labels={{ actions: { reseed_demo: "Demo data reset" } }}
-        />
+        <AdminActionLog entries={log} groupNoun={noun} labels={{ actions: { reseed_demo: "Demo data reset" } }} />
       </div>
       {deleting && team && (
         <AdminActionConfirm
@@ -105,15 +124,15 @@ export function GroupActions034Demo() {
         />
       )}
       <Note>
-        A row about the group itself — created, renamed, deleted — has the group as its `target`; a row about a person in
-        it has the person as its target and the group as its `group`, drawn after the person by its name alone, muted,
-        with no preposition for a language to inflect. The words say the app&apos;s noun (`groupNoun`): whole phrases per
-        noun, since a noun dropped into one phrase breaks the participle&apos;s agreement in French and Italian and the
-        suffix in Hungarian. The `company` set&apos;s &ldquo;Removed from the company&rdquo; is the log&apos;s plain
-        wording. A group with no name left reads as the noun&apos;s &ldquo;a deleted team&rdquo;; only a missing
-        person is &ldquo;an erased account&rdquo;, and a `kind: &quot;other&quot;` target is said by its `label`.
-        Deleting a group is `acknowledge`: a tick under the app&apos;s own sentence of what goes with it — a group has no
-        address to type, so its types allow it only at `none` and `acknowledge`.
+        A row about the group itself — created, renamed, deleted — has the group as its `target`; a row about a person
+        in it has the person as its target and the group as its `group`, drawn after the person by its name alone,
+        muted, with no preposition for a language to inflect. The words say the app&apos;s noun (`groupNoun`): whole
+        phrases per noun, since a noun dropped into one phrase breaks the participle&apos;s agreement in French and
+        Italian and the suffix in Hungarian. The `company` set&apos;s &ldquo;Removed from the company&rdquo; is the
+        log&apos;s plain wording. A group with no name left reads as the noun&apos;s &ldquo;a deleted team&rdquo;; only
+        a missing person is &ldquo;an erased account&rdquo;, and a `kind: &quot;other&quot;` target is said by its
+        `label`. Deleting a group is `acknowledge`: a tick under the app&apos;s own sentence of what goes with it — a
+        group has no address to type, so its types allow it only at `none` and `acknowledge`.
       </Note>
     </Example>
   );

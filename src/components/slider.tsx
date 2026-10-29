@@ -120,10 +120,11 @@ export interface SliderMark {
 }
 
 export interface SliderProps
-  extends Omit<
-    InputHTMLAttributes<HTMLInputElement>,
-    "type" | "value" | "defaultValue" | "onChange" | "min" | "max" | "step" | "children"
-  >,
+  extends
+    Omit<
+      InputHTMLAttributes<HTMLInputElement>,
+      "type" | "value" | "defaultValue" | "onChange" | "min" | "max" | "step" | "children"
+    >,
     FieldHelpProps {
   /** The value. On a log scale this is the real value, not the track position. */
   value: number;
@@ -235,8 +236,7 @@ export function Slider({
   // digits; it is not formatting, and `formatValue` is how to get a locale.
   const valueText = formatValue
     ? formatValue(value)
-    : (rest["aria-valuetext"] ??
-      (log || outOfRange ? String(Number(value.toPrecision(4))) : undefined));
+    : (rest["aria-valuetext"] ?? (log || outOfRange ? String(Number(value.toPrecision(4))) : undefined));
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const raw = Number(e.target.value);
@@ -280,21 +280,13 @@ export function Slider({
         // drops to a line of its own, still at the end, only when the two don't fit.
         <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
           {label !== undefined && (
-            <label
-              htmlFor={inputId}
-              className="min-w-0 select-none text-xs font-medium text-secondary"
-            >
+            <label htmlFor={inputId} className="min-w-0 select-none text-xs font-medium text-secondary">
               {label}
             </label>
           )}
           {labelHint !== undefined && <span className="flex shrink-0 items-center">{labelHint}</span>}
           {readout !== undefined && (
-            <span
-              className={cn(
-                "ms-auto max-w-full text-xs tabular-nums text-primary",
-                plainReadout && "select-none",
-              )}
-            >
+            <span className={cn("ms-auto max-w-full text-xs tabular-nums text-primary", plainReadout && "select-none")}>
               {readout}
             </span>
           )}
@@ -323,10 +315,7 @@ export function Slider({
         // `min`, not under the track's rounded end. Each tick is a zero-width column
         // centred on its point, which centres its label on it in either direction
         // without a `translate` that would need flipping for right-to-left.
-        <div
-          aria-hidden
-          className={cn("relative mx-2 -mt-1.5", MARKS_LARGE, hasMarkLabels ? "h-5" : "h-1.5")}
-        >
+        <div aria-hidden className={cn("relative mx-2 -mt-1.5", MARKS_LARGE, hasMarkLabels ? "h-5" : "h-1.5")}>
           {normalizedMarks.map((m) => (
             <span
               key={m.value}

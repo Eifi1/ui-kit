@@ -1,11 +1,5 @@
 import { act, fireEvent, render, renderHook, screen, waitFor } from "@testing-library/react";
-import {
-  FIELD_SYNC_FRAME,
-  FIELD_SYNC_SAVED_MS,
-  FieldSyncIndicator,
-  FieldSyncRow,
-  useFieldSync,
-} from "../field-sync";
+import { FIELD_SYNC_FRAME, FIELD_SYNC_SAVED_MS, FieldSyncIndicator, FieldSyncRow, useFieldSync } from "../field-sync";
 import type { FieldSyncState, UseFieldSyncReturn } from "../field-sync";
 
 /**
@@ -130,14 +124,9 @@ describe("useFieldSync", () => {
   });
 
   it("enters error with the rejection's message, and retry() resends", async () => {
-    const onSave = vi
-      .fn()
-      .mockRejectedValueOnce(new Error("row is locked"))
-      .mockResolvedValue(undefined);
+    const onSave = vi.fn().mockRejectedValueOnce(new Error("row is locked")).mockResolvedValue(undefined);
     const onError = vi.fn();
-    const { result } = renderHook(() =>
-      useFieldSync({ value: "a", onSave, debounceMs: 10, onError }),
-    );
+    const { result } = renderHook(() => useFieldSync({ value: "a", onSave, debounceMs: 10, onError }));
 
     act(() => result.current.setValue("ab"));
     await act(async () => {
@@ -186,10 +175,9 @@ describe("useFieldSync", () => {
 
   it("adopts a new server value while clean", () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
-    const { result, rerender } = renderHook(
-      ({ value }) => useFieldSync({ value, onSave, debounceMs: 10 }),
-      { initialProps: { value: "a" } },
-    );
+    const { result, rerender } = renderHook(({ value }) => useFieldSync({ value, onSave, debounceMs: 10 }), {
+      initialProps: { value: "a" },
+    });
 
     rerender({ value: "server" });
     expect(result.current.value).toBe("server");
@@ -200,10 +188,9 @@ describe("useFieldSync", () => {
     // Adopting here would delete what somebody is typing — a data-loss bug, and the
     // reason the effect checks the draft before taking the new value.
     const onSave = vi.fn().mockResolvedValue(undefined);
-    const { result, rerender } = renderHook(
-      ({ value }) => useFieldSync({ value, onSave, debounceMs: 5000 }),
-      { initialProps: { value: "a" } },
-    );
+    const { result, rerender } = renderHook(({ value }) => useFieldSync({ value, onSave, debounceMs: 5000 }), {
+      initialProps: { value: "a" },
+    });
 
     act(() => result.current.setValue("mine"));
     rerender({ value: "theirs" });
@@ -231,9 +218,7 @@ describe("useFieldSync", () => {
     const d = deferred();
     const onSave = vi.fn().mockReturnValue(d.promise);
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
-    const { result, unmount } = renderHook(() =>
-      useFieldSync({ value: "a", onSave, debounceMs: 10 }),
-    );
+    const { result, unmount } = renderHook(() => useFieldSync({ value: "a", onSave, debounceMs: 10 }));
 
     act(() => result.current.setValue("ab"));
     await act(async () => {
@@ -250,9 +235,7 @@ describe("useFieldSync", () => {
 
   it("a debounce that has not fired yet is cancelled by unmount", async () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
-    const { result, unmount } = renderHook(() =>
-      useFieldSync({ value: "a", onSave, debounceMs: 100 }),
-    );
+    const { result, unmount } = renderHook(() => useFieldSync({ value: "a", onSave, debounceMs: 100 }));
 
     act(() => result.current.setValue("ab"));
     unmount();

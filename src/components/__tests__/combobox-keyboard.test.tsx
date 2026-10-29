@@ -96,10 +96,7 @@ describe("the suggestion combobox's keyboard", () => {
     await user.keyboard("c");
 
     // "Checking" starts with it, "Credit card" too, "Savings" does not match at all.
-    expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual([
-      "Checking",
-      "Credit card",
-    ]);
+    expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual(["Checking", "Credit card"]);
 
     await user.keyboard("r");
     expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual(["Credit card"]);

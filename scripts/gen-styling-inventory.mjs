@@ -109,7 +109,9 @@ function declaredAt(token) {
 /** `.text-money-pos { color: var(--money-income); … }` — unlayered, so no variants. */
 function plainClasses() {
   return [
-    ...css.matchAll(/^\.((?:text|bg|border)-[a-z0-9-]+)\s*\{\s*(?:color|background-color|border-color)\s*:\s*var\((--[a-z0-9-]+)\)\s*;([^}]*)\}/gm),
+    ...css.matchAll(
+      /^\.((?:text|bg|border)-[a-z0-9-]+)\s*\{\s*(?:color|background-color|border-color)\s*:\s*var\((--[a-z0-9-]+)\)\s*;([^}]*)\}/gm,
+    ),
   ].map(([, name, token, rest]) => ({ name, token, note: /opacity\s*:\s*([0-9.]+)/.exec(rest)?.[1] }));
 }
 
@@ -127,9 +129,7 @@ function renderMatrix(utilities) {
     const cells = rows.get(u.token).cells;
     cells.set(u.property, [...(cells.get(u.property) ?? []), u.utility]);
   });
-  const sorted = [...rows].sort(
-    ([a, ra], [b, rb]) => declaredAt(a) - declaredAt(b) || ra.order - rb.order,
-  );
+  const sorted = [...rows].sort(([a, ra], [b, rb]) => declaredAt(a) - declaredAt(b) || ra.order - rb.order);
   return [
     `| Token | ${used.map((n) => n.heading).join(" | ")} |`,
     `|---|${used.map(() => "---").join("|")}|`,
@@ -152,7 +152,8 @@ function render() {
   const themeValues = theme
     ? [...theme.matchAll(/--([a-z0-9-]+)\s*:\s*([^;]+);/g)].map(([, name, value]) => {
         if (name.startsWith("text-")) return `${code(name)} (font size ${value.trim()})`;
-        if (name.startsWith("breakpoint-")) return `${code(`${name.slice(11)}:`)} (breakpoint, ${value.trim()} at Normal)`;
+        if (name.startsWith("breakpoint-"))
+          return `${code(`${name.slice(11)}:`)} (breakpoint, ${value.trim()} at Normal)`;
         return `${code(`--${name}`)} (${value.trim()})`;
       })
     : [];
@@ -174,9 +175,7 @@ function render() {
   if (plain.length) {
     out.push(
       "Plain classes (unlayered, so they win over Tailwind's colour utilities and take **no** variants): " +
-        plain
-          .map((p) => `${code(p.name)} (${code(p.token)}${p.note ? `, opacity ${p.note}` : ""})`)
-          .join(", ") +
+        plain.map((p) => `${code(p.name)} (${code(p.token)}${p.note ? `, opacity ${p.note}` : ""})`).join(", ") +
         ".",
       "",
     );
@@ -213,7 +212,9 @@ if (process.argv.includes("--check")) {
   const missing = utilities.map((u) => u.utility).filter((name) => !documented.has(name));
   console.error("README styling inventory is stale — run `node scripts/gen-styling-inventory.mjs`.");
   if (missing.length) {
-    console.error(`${missing.length} role utilit${missing.length === 1 ? "y" : "ies"} the README does not name:\n  ${missing.join("\n  ")}`);
+    console.error(
+      `${missing.length} role utilit${missing.length === 1 ? "y" : "ies"} the README does not name:\n  ${missing.join("\n  ")}`,
+    );
   }
   process.exit(1);
 }

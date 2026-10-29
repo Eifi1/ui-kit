@@ -60,10 +60,7 @@ const VARIANTS: ButtonVariant[] = ["default", "accent", "secondary", "ghost", "d
 function ButtonVariants() {
   const [last, setLast] = useState<ButtonVariant | null>(null);
   return (
-    <Example
-      label="Button — the six variants"
-      hint="only accent, danger and link leave the neutral tokens"
-    >
+    <Example label="Button — the six variants" hint="only accent, danger and link leave the neutral tokens">
       <Row>
         {VARIANTS.map((variant) => (
           <Button key={variant} variant={variant} onClick={() => setLast(variant)}>
@@ -82,15 +79,13 @@ function ButtonVariants() {
       </p>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">default</code> is the warm bordered chip, not a
-          saturated fill, and what a Button with no variant draws —{" "}
-          <code className="font-mono">accent</code> is the solid brand fill, kept for the one
-          strong call to action on a screen. Both draw from the palette tokens, so
-          they move when you switch preset in the top bar. <code className="font-mono">danger</code>{" "}
-          paints from the semantic <code className="font-mono">--danger</code> family instead:
-          destructive is a meaning, not a brand colour, so a preset does not move it — but a
-          consumer can re-point that one family on purpose. <code className="font-mono">link</code>{" "}
-          drops the box altogether — see &ldquo;Button — link&rdquo; below.
+          <code className="font-mono">default</code> is the warm bordered chip, not a saturated fill, and what a Button
+          with no variant draws — <code className="font-mono">accent</code> is the solid brand fill, kept for the one
+          strong call to action on a screen. Both draw from the palette tokens, so they move when you switch preset in
+          the top bar. <code className="font-mono">danger</code> paints from the semantic{" "}
+          <code className="font-mono">--danger</code> family instead: destructive is a meaning, not a brand colour, so a
+          preset does not move it — but a consumer can re-point that one family on purpose.{" "}
+          <code className="font-mono">link</code> drops the box altogether — see &ldquo;Button — link&rdquo; below.
         </Note>
       </div>
     </Example>
@@ -99,10 +94,7 @@ function ButtonVariants() {
 
 function ButtonStretch() {
   return (
-    <Example
-      label="Button — stretch"
-      hint="self-stretch; only visible in a flex row where something else is taller"
-    >
+    <Example label="Button — stretch" hint="self-stretch; only visible in a flex row where something else is taller">
       {/* Not <Row>: Row is items-center, which is exactly the alignment `stretch`
           exists to override. A hand-rolled items-start row is what makes the
           difference between the two buttons show at all. */}
@@ -120,10 +112,9 @@ function ButtonStretch() {
       </div>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">stretch</code> adds nothing but{" "}
-          <code className="font-mono">self-stretch</code>. Outside a flex row — or where the
-          button is already the tallest item — it is a no-op, which is why a specimen for it
-          needs a taller neighbour to stand next to.
+          <code className="font-mono">stretch</code> adds nothing but <code className="font-mono">self-stretch</code>.
+          Outside a flex row — or where the button is already the tallest item — it is a no-op, which is why a specimen
+          for it needs a taller neighbour to stand next to.
         </Note>
       </div>
     </Example>
@@ -160,26 +151,20 @@ function ButtonRef() {
         <Button variant="ghost" onClick={() => saveRef.current?.focus()}>
           Focus the Save button
         </Button>
-        <Button
-          ref={saveRef}
-          variant="accent"
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-        >
+        <Button ref={saveRef} variant="accent" onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}>
           Save
         </Button>
       </Row>
       <p className="mt-3 text-xs text-muted">
-        Save is focused: <span className="font-mono text-secondary">{String(focused)}</span>{" "}
-        — the first button calls <code className="font-mono">saveRef.current.focus()</code>.
+        Save is focused: <span className="font-mono text-secondary">{String(focused)}</span> — the first button calls{" "}
+        <code className="font-mono">saveRef.current.focus()</code>.
       </p>
       <div className="mt-3">
         <Note>
           <code className="font-mono">ButtonProps</code> declares{" "}
-          <code className="font-mono">ref?: Ref&lt;HTMLButtonElement&gt;</code>. React 19 hands a
-          function component its <code className="font-mono">ref</code> as a prop, so it rides onto
-          the element with no <code className="font-mono">forwardRef</code>; the declaration
-          makes TypeScript accept it.
+          <code className="font-mono">ref?: Ref&lt;HTMLButtonElement&gt;</code>. React 19 hands a function component its{" "}
+          <code className="font-mono">ref</code> as a prop, so it rides onto the element with no{" "}
+          <code className="font-mono">forwardRef</code>; the declaration makes TypeScript accept it.
         </Note>
       </div>
     </Example>
@@ -188,10 +173,7 @@ function ButtonRef() {
 
 function ButtonClasses() {
   return (
-    <Example
-      label="buttonClasses()"
-      hint="for the element <Button> cannot render — a router Link, a Radix action"
-    >
+    <Example label="buttonClasses()" hint="for the element <Button> cannot render — a router Link, a Radix action">
       {/* A real anchor, not a mock-up: this is the whole point of the helper — the
           styling lands on an element that is genuinely not a <button>, and still
           has to be indistinguishable from one. */}
@@ -204,18 +186,14 @@ function ButtonClasses() {
         </a>
       </Row>
       <div className="mt-4">
-        <ConstList
-          items={VARIANTS.map((variant) => [`buttonClasses("${variant}")`, buttonClasses(variant)])}
-        />
+        <ConstList items={VARIANTS.map((variant) => [`buttonClasses("${variant}")`, buttonClasses(variant)])} />
       </div>
       <div className="mt-3">
         <Note>
-          These strings are computed live by the real helper, not transcribed — if the base
-          ring or a variant changes, this list changes with it. The helper defaults to{" "}
-          <code className="font-mono">default</code>, so{" "}
+          These strings are computed live by the real helper, not transcribed — if the base ring or a variant changes,
+          this list changes with it. The helper defaults to <code className="font-mono">default</code>, so{" "}
           <code className="font-mono">buttonClasses()</code> is the first row above. Prefer{" "}
-          <code className="font-mono">&lt;Button&gt;</code> anywhere a real button element
-          works.
+          <code className="font-mono">&lt;Button&gt;</code> anywhere a real button element works.
         </Note>
       </div>
     </Example>
@@ -226,10 +204,7 @@ function IconButtons() {
   const [starred, setStarred] = useState(false);
   const starRef = useRef<HTMLButtonElement>(null);
   return (
-    <Example
-      label="IconButton"
-      hint="square box, icon locked to 20px, ref forwarded to the <button>"
-    >
+    <Example label="IconButton" hint="square box, icon locked to 20px, ref forwarded to the <button>">
       <Row>
         <IconButton
           ref={starRef}
@@ -268,12 +243,11 @@ function IconButtons() {
       </div>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">IconButton</code> takes its{" "}
-          <code className="font-mono">ref</code> as a prop (React 19) — the button above is focused by a real
-          ref, not by a query selector. It carries no label of its own, so every specimen here
-          needs an <code className="font-mono">aria-label</code>; the box is 36px at{" "}
-          <code className="font-mono">md</code> (matching the top bar) and 32px at{" "}
-          <code className="font-mono">sm</code>, while the icon stays 20px in both.
+          <code className="font-mono">IconButton</code> takes its <code className="font-mono">ref</code> as a prop
+          (React 19) — the button above is focused by a real ref, not by a query selector. It carries no label of its
+          own, so every specimen here needs an <code className="font-mono">aria-label</code>; the box is 36px at{" "}
+          <code className="font-mono">md</code> (matching the top bar) and 32px at <code className="font-mono">sm</code>
+          , while the icon stays 20px in both.
         </Note>
       </div>
     </Example>
@@ -284,10 +258,7 @@ function PlanCard() {
   const [seats, setSeats] = useState(12);
   const [autoRenew, setAutoRenew] = useState(true);
   return (
-    <Example
-      label="Card — the whole family, composed"
-      hint="Card is padding-less; the sub-parts own the rhythm"
-    >
+    <Example label="Card — the whole family, composed" hint="Card is padding-less; the sub-parts own the rhythm">
       <Card className="max-w-md">
         <CardHeader>
           {/* CardTitle sets weight and leading only — no colour — so it inherits.
@@ -309,9 +280,7 @@ function PlanCard() {
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-secondary">Auto-renew</dt>
-              <dd className="font-medium text-primary">
-                {autoRenew ? "On" : "Off"}
-              </dd>
+              <dd className="font-medium text-primary">{autoRenew ? "On" : "Off"}</dd>
             </div>
           </dl>
         </CardContent>
@@ -326,13 +295,12 @@ function PlanCard() {
       </Card>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">CardHeader</code> is a grid, not a flex row, and switches
-          to two columns only when a <code className="font-mono">CardAction</code> is present —
-          that is what lets the action sit top-right across both title and description rows
-          without the title having to know it is there.{" "}
-          <code className="font-mono">CardContent</code> pads its own bottom only as the{" "}
-          <em>last</em> child, so a card without a footer still closes properly; add your own
-          top padding between header and content, as this card does.
+          <code className="font-mono">CardHeader</code> is a grid, not a flex row, and switches to two columns only when
+          a <code className="font-mono">CardAction</code> is present — that is what lets the action sit top-right across
+          both title and description rows without the title having to know it is there.{" "}
+          <code className="font-mono">CardContent</code> pads its own bottom only as the <em>last</em> child, so a card
+          without a footer still closes properly; add your own top padding between header and content, as this card
+          does.
         </Note>
       </div>
     </Example>
@@ -348,9 +316,8 @@ function FlushCard() {
       <Card flush>
         <CardContent className="py-4 text-sm text-secondary">
           On a phone this spans the viewport edge to edge with only a top and bottom rule; from{" "}
-          <code className="font-mono">md</code> up it is an ordinary card again. For primary
-          content on a data page — not for a centred dialog panel, which should keep its
-          chrome at every width.
+          <code className="font-mono">md</code> up it is an ordinary card again. For primary content on a data page —
+          not for a centred dialog panel, which should keep its chrome at every width.
         </CardContent>
       </Card>
     </Example>
@@ -379,15 +346,13 @@ function SpinnerDemo() {
       </Row>
       <div className="mt-3">
         <Note>
-          The busy state here is a plain toggle rather than a timer — nothing on this page
-          should depend on a clock, because the render test mounts every section at once. In an
-          app, drive it from your request&apos;s pending flag. The first three spinners are
-          polite live regions: the first says the provider&apos;s{" "}
-          <code className="font-mono">common.loading</code> (it changes with the page
-          language), the second its own <code className="font-mono">label</code>. The one in
-          the button is <code className="font-mono">label={"{null}"}</code> — hidden from
-          assistive tech, because the button&apos;s text already says &ldquo;Saving…&rdquo;.
-          The ring paints from <code className="font-mono">--border</code> and{" "}
+          The busy state here is a plain toggle rather than a timer — nothing on this page should depend on a clock,
+          because the render test mounts every section at once. In an app, drive it from your request&apos;s pending
+          flag. The first three spinners are polite live regions: the first says the provider&apos;s{" "}
+          <code className="font-mono">common.loading</code> (it changes with the page language), the second its own{" "}
+          <code className="font-mono">label</code>. The one in the button is{" "}
+          <code className="font-mono">label={"{null}"}</code> — hidden from assistive tech, because the button&apos;s
+          text already says &ldquo;Saving…&rdquo;. The ring paints from <code className="font-mono">--border</code> and{" "}
           <code className="font-mono">--text-primary</code>, so it follows the palette.
         </Note>
       </div>
@@ -429,14 +394,12 @@ function Avatars() {
       </Row>
       <div className="mt-3">
         <Note>
-          The chip is <code className="font-mono">aria-hidden</code> on purpose — two letters
-          read aloud are noise — so whatever wraps it has to carry the name, as the account-menu
-          button does. That is a default, not an invariant: the last avatar stands alone, so it
-          passes <code className="font-mono">aria-hidden={"{false}"}</code> with its own{" "}
-          <code className="font-mono">aria-label</code>, which the spread lets win. Sizes are{" "}
-          <code className="font-mono">sm</code> 28px, <code className="font-mono">md</code> 32px
-          (the default), <code className="font-mono">lg</code> 48px; the fill is the inverse
-          token pair.
+          The chip is <code className="font-mono">aria-hidden</code> on purpose — two letters read aloud are noise — so
+          whatever wraps it has to carry the name, as the account-menu button does. That is a default, not an invariant:
+          the last avatar stands alone, so it passes <code className="font-mono">aria-hidden={"{false}"}</code> with its
+          own <code className="font-mono">aria-label</code>, which the spread lets win. Sizes are{" "}
+          <code className="font-mono">sm</code> 28px, <code className="font-mono">md</code> 32px (the default),{" "}
+          <code className="font-mono">lg</code> 48px; the fill is the inverse token pair.
         </Note>
       </div>
     </Example>
@@ -454,22 +417,23 @@ function AvatarInitials() {
       />
       <div className="mt-3">
         <Note>
-          The third row is the one worth reading: a whitespace-only display name falls through
-          to the email. An earlier version used <code className="font-mono">name ?? email</code>
-          , and <code className="font-mono">??</code> only falls through on null or undefined —
-          so a user whose profile name was an empty string got &quot;?&quot; while the kit had
-          a perfectly good address in hand. Results here are computed by the real function.
+          The third row is the one worth reading: a whitespace-only display name falls through to the email. An earlier
+          version used <code className="font-mono">name ?? email</code>, and <code className="font-mono">??</code> only
+          falls through on null or undefined — so a user whose profile name was an empty string got &quot;?&quot; while
+          the kit had a perfectly good address in hand. Results here are computed by the real function.
         </Note>
       </div>
     </Example>
   );
 }
 
-
 function LinkVariant() {
   const [shown, setShown] = useState(false);
   return (
-    <Example label="Button — link" hint='variant="link": no box, no padding — an action that reads as a word in a sentence'>
+    <Example
+      label="Button — link"
+      hint='variant="link": no box, no padding — an action that reads as a word in a sentence'
+    >
       <p className="text-sm text-secondary">
         Twelve rows could not be matched to a payee.{" "}
         <Button variant="link" onClick={() => setShown((v) => !v)}>
@@ -485,10 +449,10 @@ function LinkVariant() {
       )}
       <div className="mt-3">
         <Note>
-          A real <code className="font-mono">&lt;button&gt;</code> that looks like a link — for an
-          action inside running text, where a boxed button would break the line. It keeps the focus
-          ring (on a small radius) and the <code className="font-mono">--brand</code> colour, so the
-          palette switch reaches it. For navigation use a real anchor, not this.
+          A real <code className="font-mono">&lt;button&gt;</code> that looks like a link — for an action inside running
+          text, where a boxed button would break the line. It keeps the focus ring (on a small radius) and the{" "}
+          <code className="font-mono">--brand</code> colour, so the palette switch reaches it. For navigation use a real
+          anchor, not this.
         </Note>
       </div>
     </Example>
@@ -502,7 +466,10 @@ function OverlayIconButtons() {
   const [liked, setLiked] = useState(false);
   const [removed, setRemoved] = useState(false);
   return (
-    <Example label="IconButton — overlay" hint='variant="overlay": a round translucent disc over an image, legible on any photo'>
+    <Example
+      label="IconButton — overlay"
+      hint='variant="overlay": a round translucent disc over an image, legible on any photo'
+    >
       <div className="flex flex-wrap gap-4">
         {removed ? (
           <div className="flex h-40 w-64 max-w-full items-center justify-center rounded-lg border border-dashed border-subtle text-sm text-muted">
@@ -511,7 +478,10 @@ function OverlayIconButtons() {
             </Button>
           </div>
         ) : (
-          <div className="relative h-40 w-64 max-w-full overflow-hidden rounded-lg" style={{ background: PHOTO_GRADIENT }}>
+          <div
+            className="relative h-40 w-64 max-w-full overflow-hidden rounded-lg"
+            style={{ background: PHOTO_GRADIENT }}
+          >
             <div className="absolute end-2 top-2 flex gap-1.5">
               <IconButton
                 variant="overlay"
@@ -536,10 +506,10 @@ function OverlayIconButtons() {
       </div>
       <div className="mt-3">
         <Note>
-          The disc is <code className="font-mono">--bg-inverse</code> at 60% with a backdrop blur
-          and <code className="font-mono">--text-inverse</code> ink, so it contrasts with the photo
-          rather than with the page — the dark theme flips both. The large one is{" "}
-          <code className="font-mono">size=&quot;lg&quot;</code>, the 44px phone target.
+          The disc is <code className="font-mono">--bg-inverse</code> at 60% with a backdrop blur and{" "}
+          <code className="font-mono">--text-inverse</code> ink, so it contrasts with the photo rather than with the
+          page — the dark theme flips both. The large one is <code className="font-mono">size=&quot;lg&quot;</code>, the
+          44px phone target.
         </Note>
       </div>
     </Example>
@@ -548,7 +518,10 @@ function OverlayIconButtons() {
 
 function InsetCard() {
   return (
-    <Example label="Card — inset" hint='variant="inset": a panel inside a card — surface-2, small radius, its own p-3, no border'>
+    <Example
+      label="Card — inset"
+      hint='variant="inset": a panel inside a card — surface-2, small radius, its own p-3, no border'
+    >
       <Card className="max-w-md">
         <CardHeader>
           <CardTitle className="text-primary">Loan calculation</CardTitle>
@@ -567,11 +540,11 @@ function InsetCard() {
       </Card>
       <div className="mt-3">
         <Note>
-          Unlike the default card, an inset one brings its padding, because every hand-written
-          copy (<code className="font-mono">rounded-md bg-surface-2 p-3</code>) wanted the same one;
-          a caller&apos;s <code className="font-mono">p-*</code> still wins, as the second panel&apos;s{" "}
-          <code className="font-mono">p-4</code> does. <code className="font-mono">flush</code> is
-          ignored: an inset panel never runs edge to edge.
+          Unlike the default card, an inset one brings its padding, because every hand-written copy (
+          <code className="font-mono">rounded-md bg-surface-2 p-3</code>) wanted the same one; a caller&apos;s{" "}
+          <code className="font-mono">p-*</code> still wins, as the second panel&apos;s{" "}
+          <code className="font-mono">p-4</code> does. <code className="font-mono">flush</code> is ignored: an inset
+          panel never runs edge to edge.
         </Note>
       </div>
     </Example>
@@ -639,7 +612,9 @@ function ButtonGroups() {
           </ButtonGroup>
         </div>
         <div dir="rtl" className="space-y-2">
-          <p className="font-mono text-caption text-muted" dir="ltr">dir=&quot;rtl&quot;</p>
+          <p className="font-mono text-caption text-muted" dir="ltr">
+            dir=&quot;rtl&quot;
+          </p>
           <ButtonGroup aria-label="التنقل">
             <Button variant="secondary">الأول</Button>
             <Button variant="secondary">الثاني</Button>
@@ -649,19 +624,17 @@ function ButtonGroups() {
       </div>
       <div className="mt-3">
         <Note>
-          The group draws the frame and each member gives up its own border, radius and shadow; the
-          edges are logical (<code className="font-mono">rounded-s-md</code>,{" "}
-          <code className="font-mono">border-s</code>), so under <code className="font-mono">dir=&quot;rtl&quot;</code>{" "}
-          the first button sits on the right with the right-hand corners rounded. It is not a
-          toolbar — no arrow-key roving — and not a choice: the alignment trio carries its own{" "}
-          <code className="font-mono">aria-pressed</code>. For one-of-many use{" "}
+          The group draws the frame and each member gives up its own border, radius and shadow; the edges are logical (
+          <code className="font-mono">rounded-s-md</code>, <code className="font-mono">border-s</code>), so under{" "}
+          <code className="font-mono">dir=&quot;rtl&quot;</code> the first button sits on the right with the right-hand
+          corners rounded. It is not a toolbar — no arrow-key roving — and not a choice: the alignment trio carries its
+          own <code className="font-mono">aria-pressed</code>. For one-of-many use{" "}
           <code className="font-mono">ToggleGroup</code>, which has the radio semantics.
         </Note>
       </div>
     </Example>
   );
 }
-
 
 function ButtonSizes() {
   const [shared, setShared] = useState(false);
@@ -700,11 +673,7 @@ function ButtonSizes() {
         </Button>
       </Row>
       <Row className="mt-4">
-        <IconButton
-          aria-label="Share budget"
-          pressed={shared}
-          onClick={() => setShared((v) => !v)}
-        >
+        <IconButton aria-label="Share budget" pressed={shared} onClick={() => setShared((v) => !v)}>
           <Share2 />
         </IconButton>
         <span className="font-mono text-xs text-muted">aria-pressed={String(shared)}</span>
@@ -724,15 +693,15 @@ function ButtonSizes() {
       </Row>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">buttonClasses(&quot;secondary&quot;, {"{ size: \"sm\" }"})</code>{" "}
-          dresses the anchor in the toolbar the same way — the second argument is either the old
-          extra-class string or <code className="font-mono">{"{ size, className }"}</code>.{" "}
-          <code className="font-mono">pressed</code> sets <code className="font-mono">aria-pressed</code>{" "}
-          and draws the &ldquo;on&rdquo; look (brand glyph on the quiet brand fill); <code className="font-mono">false</code>{" "}
-          still says <code className="font-mono">aria-pressed=&quot;false&quot;</code>, so a reader hears a toggle
-          that is off — the name stays &ldquo;Share budget&rdquo; in both states.{" "}
-          <code className="font-mono">tone=&quot;info&quot;</code> is sky at rest, for a harmless action worth
-          noticing. Hover the two disabled buttons: no hover tint any more, on any variant or tone.
+          <code className="font-mono">buttonClasses(&quot;secondary&quot;, {'{ size: "sm" }'})</code> dresses the anchor
+          in the toolbar the same way — the second argument is either the old extra-class string or{" "}
+          <code className="font-mono">{"{ size, className }"}</code>. <code className="font-mono">pressed</code> sets{" "}
+          <code className="font-mono">aria-pressed</code> and draws the &ldquo;on&rdquo; look (brand glyph on the quiet
+          brand fill); <code className="font-mono">false</code> still says{" "}
+          <code className="font-mono">aria-pressed=&quot;false&quot;</code>, so a reader hears a toggle that is off —
+          the name stays &ldquo;Share budget&rdquo; in both states.{" "}
+          <code className="font-mono">tone=&quot;info&quot;</code> is sky at rest, for a harmless action worth noticing.
+          Hover the two disabled buttons: no hover tint any more, on any variant or tone.
         </Note>
       </div>
     </Example>
@@ -824,18 +793,18 @@ function IconButtonQuiet() {
       </Row>
       <div className="mt-3">
         <Note>
-          The bulk bar&apos;s delete is <code className="font-mono">tone=&quot;danger&quot; quiet=&#123;false&#125;</code>:
-          red at rest, because it stands alone and a touch screen never hovers to reveal it, and it asks
-          first (<code className="font-mono">useConfirm</code>). In the list, the flag is{" "}
-          <code className="font-mono">tone=&quot;warning&quot;</code> with{" "}
-          <code className="font-mono">quiet</code> until you flag the row (then toned amber), the info button
-          is <code className="font-mono">tone=&quot;info&quot; quiet</code> — hover or Tab onto a grey one and its
-          tone arrives. Delete is not a bin in every row: it sits in the row&apos;s{" "}
+          The bulk bar&apos;s delete is{" "}
+          <code className="font-mono">tone=&quot;danger&quot; quiet=&#123;false&#125;</code>: red at rest, because it
+          stands alone and a touch screen never hovers to reveal it, and it asks first (
+          <code className="font-mono">useConfirm</code>). In the list, the flag is{" "}
+          <code className="font-mono">tone=&quot;warning&quot;</code> with <code className="font-mono">quiet</code>{" "}
+          until you flag the row (then toned amber), the info button is{" "}
+          <code className="font-mono">tone=&quot;info&quot; quiet</code> — hover or Tab onto a grey one and its tone
+          arrives. Delete is not a bin in every row: it sits in the row&apos;s{" "}
           <code className="font-mono">RowActions</code> menu (&ldquo;⋯&rdquo;), where a{" "}
-          <code className="font-mono">tone: &quot;danger&quot;</code> action goes by default and opens a
-          confirmation before it runs. Left out,{" "}
-          <code className="font-mono">quiet</code> keeps each tone&apos;s old default (last row): danger quiet,
-          warning and info toned. It is ignored for <code className="font-mono">muted</code> and{" "}
+          <code className="font-mono">tone: &quot;danger&quot;</code> action goes by default and opens a confirmation
+          before it runs. Left out, <code className="font-mono">quiet</code> keeps each tone&apos;s old default (last
+          row): danger quiet, warning and info toned. It is ignored for <code className="font-mono">muted</code> and{" "}
           <code className="font-mono">default</code>.
         </Note>
       </div>

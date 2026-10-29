@@ -172,11 +172,10 @@ export function NotificationTypesFinanceDemo() {
       <Note>
         The server&apos;s {code("types")} is the only list: the card draws what it answered, in the order of the
         app&apos;s {code("groups")}, with the app&apos;s words and headings. A type the server answers that is in no
-        group throws in development — a compile-time guard, at run time. The cadence shows under
-        the digest while it is on, the threshold under Low balance ({code("renderExtra")}). Each
-        channel is a column — &quot;In the app&quot;, &quot;Push&quot;, &quot;E-mail&quot; — stacked under the label on a
-        phone; a channel the server answers {code("null")} is not drawn, so the e-mail column holds the admin&apos;s{" "}
-        {code("feedback_received")} alone.
+        group throws in development — a compile-time guard, at run time. The cadence shows under the digest while it is
+        on, the threshold under Low balance ({code("renderExtra")}). Each channel is a column — &quot;In the app&quot;,
+        &quot;Push&quot;, &quot;E-mail&quot; — stacked under the label on a phone; a channel the server answers{" "}
+        {code("null")} is not drawn, so the e-mail column holds the admin&apos;s {code("feedback_received")} alone.
       </Note>
     </Example>
   );
@@ -217,9 +216,9 @@ export function NotificationTypesInvoicingDemo() {
       </Column>
       <Readout lines={lines} />
       <Note>
-        An app without push ({code("NotificationTypes(..., push_channel=False)")} answers {code("push: null")}), so
-        two columns; {code("dunnings_pending")} offers no mail and keeps one switch named by its type. A flip shows
-        at once and goes back if the PATCH fails, said under the card.
+        An app without push ({code("NotificationTypes(..., push_channel=False)")} answers {code("push: null")}), so two
+        columns; {code("dunnings_pending")} offers no mail and keeps one switch named by its type. A flip shows at once
+        and goes back if the PATCH fails, said under the card.
       </Note>
     </Example>
   );
@@ -305,11 +304,11 @@ export function QuietHoursDemo() {
       </Column>
       <Readout lines={lines} />
       <Note>
-        The zone is the account&apos;s, and automatic only: the zone of the device
-        last used ({code("/auth/me")}&apos;s {code("device_timezone")}, reported by {code("useDeviceZoneReport")} when
-        it differs, never for a demo), else Zurich. The card names it read-only and a time sends no zone; screens
-        keep showing device time. {code("held")} says a held push arrives when the window ends — an app that runs
-        the notifications tick. Switch the report off for the fallback.
+        The zone is the account&apos;s, and automatic only: the zone of the device last used ({code("/auth/me")}&apos;s{" "}
+        {code("device_timezone")}, reported by {code("useDeviceZoneReport")} when it differs, never for a demo), else
+        Zurich. The card names it read-only and a time sends no zone; screens keep showing device time. {code("held")}{" "}
+        says a held push arrives when the window ends — an app that runs the notifications tick. Switch the report off
+        for the fallback.
       </Note>
     </Example>
   );
@@ -357,7 +356,11 @@ const INBOX: NotificationInboxItem<number>[] = [
   },
 ];
 
-const INBOX_ICONS: Record<string, LucideIcon> = { scan_done: ScanLine, low_balance: Wallet, recurring_posted: CalendarClock };
+const INBOX_ICONS: Record<string, LucideIcon> = {
+  scan_done: ScanLine,
+  low_balance: Wallet,
+  recurring_posted: CalendarClock,
+};
 
 function useInbox() {
   const [items, setItems] = useState(INBOX);
@@ -367,7 +370,9 @@ function useInbox() {
     log(`POST /notifications/inbox/read ${JSON.stringify({ ids })}`);
     await beat(300);
     const now = new Date().toISOString();
-    setItems((current) => current.map((item) => (ids === null || ids.includes(item.id) ? { ...item, read_at: item.read_at ?? now } : item)));
+    setItems((current) =>
+      current.map((item) => (ids === null || ids.includes(item.id) ? { ...item, read_at: item.read_at ?? now } : item)),
+    );
   };
   return { items, setItems, unread, markRead, lines, log };
 }
@@ -398,9 +403,9 @@ export function NotificationInboxDemo() {
       <Readout lines={lines} />
       <Note>
         Props only: the app polls the count every {code("INBOX_BADGE_INTERVAL")} (60 s) and invalidates on its
-        worker&apos;s push message. Unread rows are bold with a dot; a row may name a company (an app
-        with several companies keeps every company&apos;s rows in one inbox). Without {code("onOpen")} a row with a {code("url")} is a real link
-        that marks itself read on a click or a middle click.
+        worker&apos;s push message. Unread rows are bold with a dot; a row may name a company (an app with several
+        companies keeps every company&apos;s rows in one inbox). Without {code("onOpen")} a row with a {code("url")} is
+        a real link that marks itself read on a click or a middle click.
       </Note>
     </Example>
   );
@@ -409,7 +414,10 @@ export function NotificationInboxDemo() {
 export function NotificationBellDemo() {
   const { items, unread, markRead, lines, log } = useInbox();
   return (
-    <Example label="NotificationBell — the top bar's notifications slot" hint="badge (99+), the newest 20, All notifications">
+    <Example
+      label="NotificationBell — the top bar's notifications slot"
+      hint="badge (99+), the newest 20, All notifications"
+    >
       <div className="flex items-center gap-1 rounded-lg border border-subtle p-2">
         <span className="me-auto text-sm text-secondary">Top bar</span>
         <NotificationBell<number>
@@ -425,9 +433,9 @@ export function NotificationBellDemo() {
       </div>
       <Readout lines={lines} />
       <Note>
-        Optional per app, in {code("TopBarActions")}&apos; {code("notifications")} slot right before the account
-        menu. One badge per signal: an app shows the bell or an unread dot on the avatar, never both — the
-        dot without an inbox, or the inbox here.
+        Optional per app, in {code("TopBarActions")}&apos; {code("notifications")} slot right before the account menu.
+        One badge per signal: an app shows the bell or an unread dot on the avatar, never both — the dot without an
+        inbox, or the inbox here.
       </Note>
     </Example>
   );
@@ -483,7 +491,13 @@ export function PushDeviceDemo() {
   return (
     <Example label="PushDeviceSetting — every state" hint="a switcher over a fake PushDevice">
       <div className="mb-3">
-        <ToggleGroup<PushState> aria-label="State" value={state} onChange={setState} options={PUSH_STATES} overflow="wrap" />
+        <ToggleGroup<PushState>
+          aria-label="State"
+          value={state}
+          onChange={setState}
+          options={PUSH_STATES}
+          overflow="wrap"
+        />
       </div>
       <Column>
         <PushDeviceSetting push={fakePush(state, setState, log)} appName="Example" />
@@ -548,16 +562,18 @@ export function PushDevicesDemo() {
           onMutedTypesChange={async (id, mutedTypes) => {
             log(`PATCH /notifications/devices/${id} ${JSON.stringify({ muted_types: mutedTypes })}`);
             await beat(400);
-            setDevices((current) => current.map((device) => (device.id === id ? { ...device, muted_types: mutedTypes } : device)));
+            setDevices((current) =>
+              current.map((device) => (device.id === id ? { ...device, muted_types: mutedTypes } : device)),
+            );
           }}
         />
       </Column>
       <Readout lines={lines} />
       <Note>
-        Removing this device also unsubscribes the browser and fires {code("PUSH_SUBSCRIPTION_CHANGED")}, so the
-        push card stops saying &quot;on&quot;. The browser and system come from the stored user agent
-        ({code("describeUserAgent")}). &quot;Types on this device&quot; lists the types with push on; a device
-        can mute one, never add one, and each flip saves its whole {code("muted_types")} list.
+        Removing this device also unsubscribes the browser and fires {code("PUSH_SUBSCRIPTION_CHANGED")}, so the push
+        card stops saying &quot;on&quot;. The browser and system come from the stored user agent (
+        {code("describeUserAgent")}). &quot;Types on this device&quot; lists the types with push on; a device can mute
+        one, never add one, and each flip saves its whole {code("muted_types")} list.
       </Note>
     </Example>
   );
@@ -598,7 +614,13 @@ export function UnsubscribePanelDemo() {
   return (
     <Example label="UnsubscribePanel — the signed-out page" hint="asks first; a GET never unsubscribes">
       <div className="mb-3">
-        <ToggleGroup<PanelCase> aria-label="Case" value={panelCase} onChange={setPanelCase} options={PANEL_CASES} overflow="wrap" />
+        <ToggleGroup<PanelCase>
+          aria-label="Case"
+          value={panelCase}
+          onChange={setPanelCase}
+          options={PANEL_CASES}
+          overflow="wrap"
+        />
       </div>
       <div className="max-w-sm rounded-lg border border-subtle p-4">
         <UnsubscribePanel

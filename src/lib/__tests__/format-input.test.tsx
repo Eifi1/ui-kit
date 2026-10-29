@@ -32,7 +32,7 @@ describe("numeric input (KIT-2)", () => {
     expect(formatMoney("-12.5", "CHF", { locale: "de-CH" })).toBe(`CHF${M}12.50`);
   });
 
-  it("formats 0 and \"0\" as zero, never as the dash", () => {
+  it('formats 0 and "0" as zero, never as the dash', () => {
     expect(formatMoney(0, "CHF", { locale: "en", currencyDisplay: "code" })).toBe("CHF 0.00");
     expect(formatMoney("0", "CHF", { locale: "en", currencyDisplay: "code" })).toBe("CHF 0.00");
     expect(formatMoney("0.00", "CHF", { locale: "en", currencyDisplay: "code" })).toBe("CHF 0.00");

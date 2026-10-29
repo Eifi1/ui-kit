@@ -141,11 +141,7 @@ const routerLink: KitLinkComponent = ({ href, children, ...p }) => (
 
 describe("Breadcrumbs — the provider's router link", () => {
   it("draws in-app crumbs with linkComponent, an absolute URL as <a>, and its own renderLink wins", () => {
-    const items = [
-      { label: "Site", href: "https://example.com" },
-      { label: "Home", href: "/" },
-      { label: "Here" },
-    ];
+    const items = [{ label: "Site", href: "https://example.com" }, { label: "Home", href: "/" }, { label: "Here" }];
     const { unmount } = render(
       <UiKitProvider linkComponent={routerLink}>
         <Breadcrumbs items={items} collapse={false} />
@@ -156,7 +152,15 @@ describe("Breadcrumbs — the provider's router link", () => {
     unmount();
     render(
       <UiKitProvider linkComponent={routerLink}>
-        <Breadcrumbs items={items} collapse={false} renderLink={(p) => <a {...p} data-own="">{p.children}</a>} />
+        <Breadcrumbs
+          items={items}
+          collapse={false}
+          renderLink={(p) => (
+            <a {...p} data-own="">
+              {p.children}
+            </a>
+          )}
+        />
       </UiKitProvider>,
     );
     expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute("data-own");

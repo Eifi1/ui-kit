@@ -29,9 +29,7 @@ describe("DialogFrame", () => {
         <p id="extra">Three rows reference it.</p>
       </DialogFrame>,
     );
-    expect(screen.getByRole("dialog")).toHaveAccessibleDescription(
-      "This cannot be undone. Three rows reference it.",
-    );
+    expect(screen.getByRole("dialog")).toHaveAccessibleDescription("This cannot be undone. Three rows reference it.");
   });
 
   it("gives two open instances different ids", () => {
@@ -179,8 +177,7 @@ describe("DialogFrame", () => {
     );
     // Three levels up since 0.7.0: heading → title block → the title/headerActions
     // wrapping row → the header row (it was two before `headerActions`).
-    const headerRow = screen.getByRole("heading", { name: "Edit row" }).parentElement!.parentElement!
-      .parentElement!;
+    const headerRow = screen.getByRole("heading", { name: "Edit row" }).parentElement!.parentElement!.parentElement!;
     expect(headerRow.className).toContain("border-b");
     expect(headerRow.className).toContain("px-3");
     expect(headerRow.className).not.toContain("px-4");

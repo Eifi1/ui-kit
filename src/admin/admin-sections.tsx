@@ -61,7 +61,9 @@ export interface AdminSectionOrderOptions<L extends AdminSharedSection = AdminSh
   leaveOut?: readonly L[];
 }
 
-export interface AdminSectionsOptions<L extends AdminSharedSection = AdminSharedSection> extends AdminSectionOrderOptions<L> {
+export interface AdminSectionsOptions<
+  L extends AdminSharedSection = AdminSharedSection,
+> extends AdminSectionOrderOptions<L> {
   /**
    * A shared section that is in the catalogue but hidden for now, as
    * {@link SettingsGroup.visible}: kastlan's `{ billing: billingEnabled }` (settings §5),

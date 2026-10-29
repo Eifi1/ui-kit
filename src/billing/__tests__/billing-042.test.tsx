@@ -33,7 +33,6 @@ const L = DEFAULT_BILLING_LABELS;
  *  without it. */
 const portalName = (words: string) => new RegExp(`^${words}( \\(opens in a new tab\\))?$`);
 
-
 describe("isPermanentGrant (§16.7 E)", () => {
   const base = { status: "comped", source: "manual", comped_until: null } as const;
 
@@ -117,7 +116,9 @@ describe("SubscriptionActions — the portal for the buyer only (§16.2, §16.7 
     const user = userEvent.setup();
     const portal = vi.fn();
     const inApp = vi.fn();
-    const { rerender } = render(<SubscriptionActions portal="open" buyerName="Ada" onPortal={portal} onCancelInApp={inApp} />);
+    const { rerender } = render(
+      <SubscriptionActions portal="open" buyerName="Ada" onPortal={portal} onCancelInApp={inApp} />,
+    );
     await user.click(screen.getByRole("button", { name: portalName(L.manage) }));
     await user.click(screen.getByRole("button", { name: portalName(L.cancel) }));
     expect(portal.mock.calls).toEqual([["overview"], ["cancel"]]);
@@ -139,11 +140,19 @@ describe("CancelSubscriptionConfirm — the in-app cancel (§16.2 decision 2)", 
     const onConfirm = vi.fn();
     const onOpenChange = vi.fn();
     render(
-      <CancelSubscriptionConfirm open onOpenChange={onOpenChange} periodEnd={END} onConfirm={onConfirm} locale="en-GB" />,
+      <CancelSubscriptionConfirm
+        open
+        onOpenChange={onOpenChange}
+        periodEnd={END}
+        onConfirm={onConfirm}
+        locale="en-GB"
+      />,
     );
     const dialog = screen.getByRole("dialog", { name: L.cancelConfirmTitle });
     const date = formatDate(END, "medium", { locale: "en-GB" });
-    expect(within(dialog).getByText(`Your subscription ends on ${date}. Until then everything works as before.`)).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(`Your subscription ends on ${date}. Until then everything works as before.`),
+    ).toBeInTheDocument();
     await user.click(within(dialog).getByRole("button", { name: "Cancel subscription now" }));
     expect(onConfirm).toHaveBeenCalledTimes(1);
     expect(onOpenChange).not.toHaveBeenCalled();
@@ -155,7 +164,9 @@ describe("CancelSubscriptionConfirm — the in-app cancel (§16.2 decision 2)", 
     const user = userEvent.setup();
     const onConfirm = vi.fn();
     const onOpenChange = vi.fn();
-    render(<CancelSubscriptionConfirm open onOpenChange={onOpenChange} periodEnd={END} onConfirm={onConfirm} pending />);
+    render(
+      <CancelSubscriptionConfirm open onOpenChange={onOpenChange} periodEnd={END} onConfirm={onConfirm} pending />,
+    );
     await user.click(screen.getByRole("button", { name: /Cancel subscription now/ }));
     await user.keyboard("{Escape}");
     expect(onConfirm).not.toHaveBeenCalled();
@@ -197,7 +208,13 @@ describe("BillingBanner payment-failed — ask the buyer (§16.7 A, §16.8)", ()
   it("names the buyer and shows no button under buyer_only", () => {
     const onAction = vi.fn();
     const { rerender } = render(
-      <BillingBanner kind="payment-failed" portal="buyer_only" buyerName="Ada Gardener" onAction={onAction} actionHref="/x" />,
+      <BillingBanner
+        kind="payment-failed"
+        portal="buyer_only"
+        buyerName="Ada Gardener"
+        onAction={onAction}
+        actionHref="/x"
+      />,
     );
     expect(screen.getByText("The payment failed. Ada Gardener can update the payment method.")).toBeInTheDocument();
     expect(screen.queryByRole("button")).toBeNull();
@@ -240,11 +257,20 @@ describe("PlanPicker and PlanSwitchConfirm — the permanent-grant warning (§16
   it("no grant, or a pick into the switch: straight to onChoose, no picker warning", async () => {
     const user = userEvent.setup();
     const onChoose = vi.fn();
-    const { rerender } = render(<PlanPicker plans={PLANS} defaultValue="pro" defaultCurrency="CHF" onChoose={onChoose} />);
+    const { rerender } = render(
+      <PlanPicker plans={PLANS} defaultValue="pro" defaultCurrency="CHF" onChoose={onChoose} />,
+    );
     await user.click(screen.getByRole("button", { name: "Choose Gardener" }));
     expect(onChoose).toHaveBeenCalledTimes(1);
     rerender(
-      <PlanPicker plans={PLANS} defaultValue="pro" defaultCurrency="CHF" permanentGrant switching onChoose={onChoose} />,
+      <PlanPicker
+        plans={PLANS}
+        defaultValue="pro"
+        defaultCurrency="CHF"
+        permanentGrant
+        switching
+        onChoose={onChoose}
+      />,
     );
     await user.click(screen.getByRole("button", { name: "Choose Gardener" }));
     expect(onChoose).toHaveBeenCalledTimes(2);
@@ -267,7 +293,14 @@ describe("PlanPicker and PlanSwitchConfirm — the permanent-grant warning (§16
     expect(onConfirm).not.toHaveBeenCalled();
 
     onOpenChange.mockClear();
-    rerender(<GrantWarningConfirm open onOpenChange={onOpenChange} onConfirm={onConfirm} labels={{ grantWarningAction: "Pay now" }} />);
+    rerender(
+      <GrantWarningConfirm
+        open
+        onOpenChange={onOpenChange}
+        onConfirm={onConfirm}
+        labels={{ grantWarningAction: "Pay now" }}
+      />,
+    );
     dialog = screen.getByRole("dialog", { name: L.grantWarningTitle });
     await user.click(within(dialog).getByRole("button", { name: "Pay now" }));
     expect(onConfirm).toHaveBeenCalledTimes(1);
@@ -280,9 +313,7 @@ describe("PlanPicker and PlanSwitchConfirm — the permanent-grant warning (§16
         <GrantWarningConfirm open onOpenChange={() => {}} onConfirm={() => {}} />
       </UiKitProvider>,
     );
-    expect(
-      screen.getByRole("dialog", { name: UI_KIT_LABELS_DE_CH.billing.grantWarningTitle }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: UI_KIT_LABELS_DE_CH.billing.grantWarningTitle })).toBeInTheDocument();
   });
 
   it("PlanSwitchConfirm shows the warning above its figures, once", () => {
@@ -363,6 +394,8 @@ describe("the 0.42 words in every catalogue", () => {
     expect(all).not.toMatch(/ß/);
     expect(all).not.toMatch(/\b(du|dein|deine|dir|dich)\b/i);
     expect(b.cancelConfirmAction).toBe("Jetzt kündigen");
-    expect(b.cancelConfirmBody("9. Nov. 2026")).toBe("Ihr Abonnement endet am 9. Nov. 2026. Bis dahin funktioniert alles wie bisher.");
+    expect(b.cancelConfirmBody("9. Nov. 2026")).toBe(
+      "Ihr Abonnement endet am 9. Nov. 2026. Bis dahin funktioniert alles wie bisher.",
+    );
   });
 });

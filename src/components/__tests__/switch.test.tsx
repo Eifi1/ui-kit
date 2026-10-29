@@ -111,7 +111,9 @@ describe("Switch", () => {
     // stood off the track in the card's colour.
     expect(screen.getByRole("switch")).toHaveClass("focus-visible:ring-focus", "focus-visible:ring-offset-surface");
     // A token: a role utility (0.34) or a `[var(--…)]`.
-    expect(cls).toMatch(/focus-visible:ring-(?:\[var\(--[a-z-]+\)\]|brand|subtle|strong|danger-strong|warning-strong|media-ink)(?![\w-])/);
+    expect(cls).toMatch(
+      /focus-visible:ring-(?:\[var\(--[a-z-]+\)\]|brand|subtle|strong|danger-strong|warning-strong|media-ink)(?![\w-])/,
+    );
   });
 
   it("moves the thumb with a LOGICAL offset, so it travels the right way in RTL", () => {

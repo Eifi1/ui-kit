@@ -108,14 +108,7 @@ describe("MiniCalendar week start", () => {
 
   it("lets `weekStartsOn` override the locale", () => {
     render(
-      <MiniCalendar
-        from="2026-09-14"
-        to="2026-09-14"
-        mode="single"
-        locale="en-US"
-        weekStartsOn={1}
-        onSelect={noop}
-      />,
+      <MiniCalendar from="2026-09-14" to="2026-09-14" mode="single" locale="en-US" weekStartsOn={1} onSelect={noop} />,
     );
     expect(screen.getAllByRole("columnheader")[0]).toHaveAttribute("aria-label", "Monday");
   });
@@ -138,9 +131,7 @@ describe("MiniCalendar week start", () => {
 
 describe("DatePicker under a provider", () => {
   it("names its today and clear buttons, and its panel, from the provider", () => {
-    render(
-      withKit(<DatePicker value="2026-09-14" onChange={() => {}} today="2026-09-20" clearable />),
-    );
+    render(withKit(<DatePicker value="2026-09-14" onChange={() => {}} today="2026-09-20" clearable />));
     expect(screen.getByRole("button", { name: "Heute" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Leeren" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("combobox"));
@@ -186,9 +177,7 @@ describe("the calculator keypads under a provider", () => {
     expect(screen.getByRole("group", { name: "Rechner" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Plus (de)" })).toBeInTheDocument();
     unmount();
-    render(
-      withKit(<NumberPadSheet value="1" onChange={() => {}} onDone={() => {}} labels={{ pad: "Zahlenfeld" }} />),
-    );
+    render(withKit(<NumberPadSheet value="1" onChange={() => {}} onDone={() => {}} labels={{ pad: "Zahlenfeld" }} />));
     expect(screen.getByRole("group", { name: "Zahlenfeld" })).toBeInTheDocument();
   });
 });

@@ -52,12 +52,11 @@ export function OutsideDaysDemo() {
       </p>
       <div className="mt-3">
         <Note>
-          The leading and trailing cells are real days, not decoration: each is named with its whole
-          date and honours {code("min")}/{code("max")} (page to October: the 11th onwards is dead). Click
-          one — 31 August, say — and it is selected and the grid moves to its month. They are not stops
-          of the roving tabindex, since arrowing off the month's edge already reaches them, and{" "}
-          {code("renderDay")} is not called for them, so a day's events are drawn once, in its own
-          month. Default {code("false")}: the cells stay empty.
+          The leading and trailing cells are real days, not decoration: each is named with its whole date and honours{" "}
+          {code("min")}/{code("max")} (page to October: the 11th onwards is dead). Click one — 31 August, say — and it
+          is selected and the grid moves to its month. They are not stops of the roving tabindex, since arrowing off the
+          month's edge already reaches them, and {code("renderDay")} is not called for them, so a day's events are drawn
+          once, in its own month. Default {code("false")}: the cells stay empty.
         </Note>
       </div>
     </Example>
@@ -99,14 +98,13 @@ export function MonthStepperDemo() {
       </p>
       <div className="mt-3">
         <Note>
-          What a calendar page would otherwise assemble by hand around the field. The heading is a button that
-          opens the month grid; its text is its name and it is {code("aria-live")}, so pressing ‹ or ›
-          (focus stays on the arrow) still says where the arrow went. Today jumps to the current month
-          and is disabled when that is outside the bounds; the arrows disable at {code("min")}/
-          {code("max")}. The second is German, set in an {code("<h3>")} ({code("headingLevel={3}")})
-          without Today; the third has {code("headingLevel={false}")} — no heading element, for a page
-          that already has one — and sits right-to-left with the arrows mirrored. It shares its value
-          with the first.
+          What a calendar page would otherwise assemble by hand around the field. The heading is a button that opens the
+          month grid; its text is its name and it is {code("aria-live")}, so pressing ‹ or › (focus stays on the arrow)
+          still says where the arrow went. Today jumps to the current month and is disabled when that is outside the
+          bounds; the arrows disable at {code("min")}/{code("max")}. The second is German, set in an {code("<h3>")} (
+          {code("headingLevel={3}")}) without Today; the third has {code("headingLevel={false}")} — no heading element,
+          for a page that already has one — and sits right-to-left with the arrows mirrored. It shares its value with
+          the first.
         </Note>
       </div>
     </Example>

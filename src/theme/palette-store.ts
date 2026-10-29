@@ -41,10 +41,7 @@ interface PaletteState {
  * that app's theme store (for the active light/dark mode). Returns the palette
  * hook plus the effect + selector hooks that read the active preset's tokens.
  */
-export function createPaletteStore(
-  storageKey: string,
-  useTheme: UseBoundStore<StoreApi<ThemeState>>,
-) {
+export function createPaletteStore(storageKey: string, useTheme: UseBoundStore<StoreApi<ThemeState>>) {
   const usePalette = create<PaletteState>()(
     logger(
       persist(

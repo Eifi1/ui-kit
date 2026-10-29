@@ -418,8 +418,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       day: (date, value) => `${date}：${value}`,
       less: "较少",
       more: "较多",
-      truncated: (count) =>
-        `仅显示最近的日期；另有 ${n(count)} 天未显示。`,
+      truncated: (count) => `仅显示最近的日期；另有 ${n(count)} 天未显示。`,
     },
     datePicker: {
       apply: "应用",
@@ -566,8 +565,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       rejectedCount: (name, maxFiles) => `未添加“${name}”：最多 ${n(maxFiles)} 个文件`,
       rejectedInvalid: (name) => `“${name}”无法在此使用`,
       rejectedMany: (count) => `${n(count)} 个文件未添加`,
-      selected: (count, firstName) =>
-        count === 1 ? `已选择“${firstName}”` : `已选择 ${n(count)} 个文件`,
+      selected: (count, firstName) => (count === 1 ? `已选择“${firstName}”` : `已选择 ${n(count)} 个文件`),
       remove: (name) => `移除“${name}”`,
       clearAll: "移除所有文件",
       removed: (name) => `已移除“${name}”`,
@@ -714,8 +712,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     },
     seriesChart: {
       resetZoom: "重置缩放",
-      zoomHint:
-        "拖动以缩放：近似正方形的选区同时缩放两条坐标轴，细长的选区只缩放其所沿的那条轴。双击可重置。",
+      zoomHint: "拖动以缩放：近似正方形的选区同时缩放两条坐标轴，细长的选区只缩放其所沿的那条轴。双击可重置。",
       empty: "无数据",
       legend: "数据系列",
       points: "图表数值",
@@ -895,8 +892,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
           "封闭测试阶段。以下法律措辞尚未经律师审阅，将在公开发布之前完成审阅。其中的技术说明——存储了什么、存储在哪里以及谁可以读取——描述的是软件目前的实际行为，旨在供人对照软件加以核实。",
       },
       translation: {
-        note: (o) =>
-          `本页为方便阅读而提供的译文，以${o.bindingLanguage}版本为准。`,
+        note: (o) => `本页为方便阅读而提供的译文，以${o.bindingLanguage}版本为准。`,
         show: (o) => `查看${o.bindingLanguage}版本`,
       },
       updated: (date) => `最后更新：${date}`,
@@ -1294,9 +1290,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       started: "下载已开始。",
       saveAgain: "没有开始？保存文件",
       rateLimited: (seconds) =>
-        seconds && seconds > 0
-          ? `您刚刚导出过数据，请 ${wait(seconds)}后重试。`
-          : "您刚刚导出过数据，请一分钟后重试。",
+        seconds && seconds > 0 ? `您刚刚导出过数据，请 ${wait(seconds)}后重试。` : "您刚刚导出过数据，请一分钟后重试。",
       failed: "导出失败，请重试。",
     },
     userRoster: {
@@ -1336,8 +1330,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       lastAdmin: "这是最后一位活跃管理员。请先将其他人设为管理员。",
       self: "不能对您自己的账户执行此操作。",
       confirmationMismatch: "该地址与此账户不符。请检查您当前所在的账户。",
-      otherCompanies:
-        "此账户也属于其他公司，因此只有平台运营者才能执行此操作。您可以改为将其从本公司移除。",
+      otherCompanies: "此账户也属于其他公司，因此只有平台运营者才能执行此操作。您可以改为将其从本公司移除。",
       removeFromCompany: "从公司移除",
       failed: "操作未成功，请重试。",
     },
@@ -1452,8 +1445,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       resend: (email) => `向 ${email} 发送新链接`,
       copyLink: "复制邀请链接",
       revoke: (email) => `撤回对 ${email} 的邀请`,
-      consoleHint:
-        "此服务器不发送邮件——邮件会写入服务器日志。请在这里复制每个邀请链接并自行转交：链接只显示一次。",
+      consoleHint: "此服务器不发送邮件——邮件会写入服务器日志。请在这里复制每个邀请链接并自行转交：链接只显示一次。",
       linkReady: (email) => `${email} 的邀请链接，仅显示这一次：`,
       notSent: (email) => `已邀请 ${email}，但邮件未能发送。请重新发送。`,
       failed: "操作未成功，请重试。",
@@ -1476,8 +1468,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     ibanInput: {
       format: "IBAN 以两个字母的国家代码和两位校验码开头。",
       country: (code) => `“${code}”不是 IBAN 的国家代码。`,
-      length: (actual, expected) =>
-        `该国家的 IBAN 应为 ${n(expected)} 个字符，当前为 ${n(actual)} 个。`,
+      length: (actual, expected) => `该国家的 IBAN 应为 ${n(expected)} 个字符，当前为 ${n(actual)} 个。`,
       checksum: "校验码不匹配，可能有字符输入错误。",
       qrRequired: "这是普通 IBAN。QR 账单需要该账户的 QR-IBAN。",
       qrNotAllowed: "这是 QR-IBAN，只能接收 QR 账单付款。请输入该账户的普通 IBAN。",
@@ -1635,9 +1626,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     demo: {
       starting: "正在启动演示…",
       rateLimited: (minutes) =>
-        minutes
-          ? `来自此网络的演示过多，请 ${n(minutes)} 分钟后重试。`
-          : "来自此网络的演示过多，请稍后重试。",
+        minutes ? `来自此网络的演示过多，请 ${n(minutes)} 分钟后重试。` : "来自此网络的演示过多，请稍后重试。",
       capacity: "演示名额已满，请稍后重试。",
       unavailable: "演示暂不可用。",
       failed: "无法启动演示，请重试。",
@@ -1689,17 +1678,13 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         expired: "已过期",
         comped: "免费赠送",
       },
-      trialEnding: (days) =>
-        `您的试用期将于${inDays(days)}结束。之后您仍可查看所有内容，但需要套餐才能进行修改。`,
-      grantEnding: (days) =>
-        `您的免费使用权将于${inDays(days)}结束。之后您仍可查看所有内容，但需要套餐才能进行修改。`,
+      trialEnding: (days) => `您的试用期将于${inDays(days)}结束。之后您仍可查看所有内容，但需要套餐才能进行修改。`,
+      grantEnding: (days) => `您的免费使用权将于${inDays(days)}结束。之后您仍可查看所有内容，但需要套餐才能进行修改。`,
       paymentFailed: "您的上一笔付款未成功。请更新付款方式，以保留您的套餐。",
       planEnded: "您的套餐已结束。您仍可查看和导出所有内容；选择套餐后即可再次进行修改。",
       // Never why: the owner's payment status is the owner's personal data (§12.6).
       guestReadOnly: (item) =>
-        item
-          ? `“${item}”目前为只读；其所有者可以解除此限制。`
-          : "此内容目前为只读；其所有者可以解除此限制。",
+        item ? `“${item}”目前为只读；其所有者可以解除此限制。` : "此内容目前为只读；其所有者可以解除此限制。",
       processing: "您的付款正在处理中。确认后您的套餐即会生效；此页面会自动更新。",
       choosePlan: "选择套餐",
       updatePayment: "更新付款方式",
@@ -1738,9 +1723,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       switchConfirm: "更改套餐",
       // 0.42 (§16): the portal for the buyer only, the in-app cancel, the grant warning.
       buyerHolds: (buyer) =>
-        buyer
-          ? `付款方式和发票由购买该订阅的 ${buyer} 管理。`
-          : "付款方式和发票由购买该订阅的管理员管理。",
+        buyer ? `付款方式和发票由购买该订阅的 ${buyer} 管理。` : "付款方式和发票由购买该订阅的管理员管理。",
       cancelConfirmTitle: "取消订阅",
       cancelConfirmBody: (date) => `您的订阅将于 ${date} 结束。在此之前，一切照常使用。`,
       cancelConfirmAction: "立即取消订阅",
@@ -1795,8 +1778,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       saveFailed: "无法保存到您的账户。此设备上仍然生效。",
       // 0.46: DateFormatSetting (keksdose's words where it has them).
       dateFormat: "日期格式",
-      dateFormatHelp:
-        "整个应用中日期的书写方式。与界面语言无关，因此您可以用英文阅读应用，同时仍看到德式日期。",
+      dateFormatHelp: "整个应用中日期的书写方式。与界面语言无关，因此您可以用英文阅读应用，同时仍看到德式日期。",
       dateFormatAuto: "跟随语言",
       // 0.46: AccountMenuTextSize (keksdose live #426).
       textSmaller: "缩小文字",

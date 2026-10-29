@@ -26,7 +26,9 @@ const ROOT = resolve(import.meta.dirname, "..");
 const OUT = join(ROOT, "src/testing/css-variables.generated.ts");
 const require = createRequire(import.meta.url);
 const TAILWIND_THEME = require.resolve("tailwindcss/theme.css", { paths: [ROOT] });
-const TAILWIND_VERSION = JSON.parse(readFileSync(require.resolve("tailwindcss/package.json", { paths: [ROOT] }), "utf8")).version;
+const TAILWIND_VERSION = JSON.parse(
+  readFileSync(require.resolve("tailwindcss/package.json", { paths: [ROOT] }), "utf8"),
+).version;
 
 /** Mirrors `declaredCustomProperties` in src/testing/css-variables.ts. */
 function declared(css) {

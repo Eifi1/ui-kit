@@ -308,7 +308,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // one dev flask (`DevSwitchers` stays, deprecated, until 0.52).
   // 0.51.4 (+1, here and in /shell): `useFocusParam`, `useSettingsFocus` for any page
   // (keksdose run 89).
-  ["@eifi1/ui-kit", barrel, 1015],
+  // 0.51.5 (+2): `searchWords`, `matchesSearch`, the pickers' every-word match, for an app's
+  // own async source (keksdose's shop picker past its first hundred shops).
+  ["@eifi1/ui-kit", barrel, 1017],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -454,9 +456,7 @@ const STANDALONE = new Set([
 describe("public surface", () => {
   it.each(ENTRIES)("%s exports exactly %#", (name, mod, count) => {
     const names = Object.keys(mod).sort();
-    expect(names, `${name} gained or lost an export:\n  ${names.join("\n  ")}`).toHaveLength(
-      count,
-    );
+    expect(names, `${name} gained or lost an export:\n  ${names.join("\n  ")}`).toHaveLength(count);
   });
 
   it("exports no name twice under a different spelling of the same thing", () => {
@@ -472,9 +472,7 @@ describe("public surface", () => {
     const inBarrel = new Set(Object.keys(barrel));
     for (const [name, mod] of ENTRIES.slice(1).filter(([n]) => !STANDALONE.has(n))) {
       const extra = Object.keys(mod).filter((k) => !inBarrel.has(k));
-      expect(extra, `${name} exports names the barrel does not: ${extra.join(", ")}`).toEqual(
-        [],
-      );
+      expect(extra, `${name} exports names the barrel does not: ${extra.join(", ")}`).toEqual([]);
     }
   });
 });

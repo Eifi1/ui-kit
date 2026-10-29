@@ -74,7 +74,9 @@ describe("QuietHoursSetting", () => {
   it("names the zone read-only: `zone`, else `fallbackZone`", () => {
     const { rerender } = render(<QuietHoursSetting start="22:00" end="07:00" zone={null} onChange={vi.fn()} />);
     expect(screen.getByText(/In your time zone \(Europe \/ Zurich\)/)).toBeInTheDocument();
-    rerender(<QuietHoursSetting start="22:00" end="07:00" zone={null} fallbackZone="Europe/Vienna" onChange={vi.fn()} />);
+    rerender(
+      <QuietHoursSetting start="22:00" end="07:00" zone={null} fallbackZone="Europe/Vienna" onChange={vi.fn()} />,
+    );
     expect(screen.getByText(/In your time zone \(Europe \/ Vienna\)/)).toBeInTheDocument();
     rerender(<QuietHoursSetting start="22:00" end="07:00" zone="Pacific/Auckland" onChange={vi.fn()} />);
     expect(screen.getByText(/In your time zone \(Pacific \/ Auckland\)/)).toBeInTheDocument();
@@ -126,7 +128,9 @@ describe("QuietHoursSetting — the account's zone (0.46, §10.3, §10.4)", () =
   });
 
   it("`held`: the description says a held push arrives when the window ends", () => {
-    const { rerender } = render(<QuietHoursSetting start={null} end={null} zone="Europe/Zurich" held inbox onChange={vi.fn()} />);
+    const { rerender } = render(
+      <QuietHoursSetting start={null} end={null} zone="Europe/Zurich" held inbox onChange={vi.fn()} />,
+    );
     expect(screen.getByText(/arrive when it ends\. They reach your inbox at once\./)).toBeInTheDocument();
     rerender(<QuietHoursSetting start={null} end={null} zone="Europe/Zurich" onChange={vi.fn()} />);
     expect(screen.getByText("No push notifications during this window.")).toBeInTheDocument();

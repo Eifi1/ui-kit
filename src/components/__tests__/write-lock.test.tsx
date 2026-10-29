@@ -4,7 +4,13 @@ import { Save } from "lucide-react";
 import { Button } from "../button";
 import { IconButton } from "../icon-button";
 import { FormActions } from "../form-actions";
-import { COMMIT_EXCEPT_BILLING, DEFAULT_WRITE_LOCK_LABELS, WriteLockProvider, useWriteLock, writeLockFor } from "../write-lock";
+import {
+  COMMIT_EXCEPT_BILLING,
+  DEFAULT_WRITE_LOCK_LABELS,
+  WriteLockProvider,
+  useWriteLock,
+  writeLockFor,
+} from "../write-lock";
 import type { CommitScope, WriteLock, WriteLockHold } from "../write-lock";
 
 /**
@@ -247,7 +253,11 @@ const BILLING: WriteLockHold = { kind: "billing", reason: "Your plan has ended."
 function ScopedProbe({ scope }: { scope?: CommitScope }) {
   const lock = useWriteLock(scope);
   return (
-    <output data-locked={String(lock.locked)} data-kind={lock.kind ?? ""} data-holds={lock.holds.map((h) => h.kind ?? "?").join(",")}>
+    <output
+      data-locked={String(lock.locked)}
+      data-kind={lock.kind ?? ""}
+      data-holds={lock.holds.map((h) => h.kind ?? "?").join(",")}
+    >
       {lock.reason}
     </output>
   );
@@ -344,7 +354,11 @@ describe("write lock sources (0.33)", () => {
     expect(writeLockFor(lock, true)).toBe(lock);
     expect(writeLockFor(lock, undefined)).toMatchObject({ locked: false, reason: undefined, kind: undefined });
     expect(writeLockFor(lock, false).holds).toBe(lock.holds);
-    expect(writeLockFor(lock, { except: ["demo"] })).toMatchObject({ locked: true, reason: BILLING.reason, kind: "billing" });
+    expect(writeLockFor(lock, { except: ["demo"] })).toMatchObject({
+      locked: true,
+      reason: BILLING.reason,
+      kind: "billing",
+    });
     expect(writeLockFor(lock, { except: ["demo", "billing"] }).locked).toBe(false);
     // Nothing was written to the lock it was given.
     expect(JSON.stringify(lock)).toBe(before);

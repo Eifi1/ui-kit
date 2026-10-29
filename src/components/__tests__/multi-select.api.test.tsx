@@ -71,7 +71,15 @@ describe("MultiSelect is generic over its option value", () => {
 describe("MultiSelect: value and labels, the family's names", () => {
   it("reads `value`", () => {
     render(
-      <MultiSelect label="Tags" options={[{ value: "a", label: "Alpha" }, { value: "b", label: "Beta" }]} value={["a"]} onChange={vi.fn()} />,
+      <MultiSelect
+        label="Tags"
+        options={[
+          { value: "a", label: "Alpha" },
+          { value: "b", label: "Beta" },
+        ]}
+        value={["a"]}
+        onChange={vi.fn()}
+      />,
     );
     expect(screen.getByRole("combobox", { name: "Tags: 1" })).toBeInTheDocument();
   });
@@ -120,7 +128,13 @@ describe("MultiSelect locks like the rest of the select family", () => {
   it("disabledReason: focusable, aria-disabled, no list, the reason on the trigger", () => {
     const onChange = vi.fn();
     render(
-      <MultiSelect label="Tags" options={OPTIONS} value={[]} onChange={onChange} disabledReason="Archived budgets are read-only." />,
+      <MultiSelect
+        label="Tags"
+        options={OPTIONS}
+        value={[]}
+        onChange={onChange}
+        disabledReason="Archived budgets are read-only."
+      />,
     );
     const trigger = screen.getByRole("combobox", { name: /Tags/ });
     expect(trigger).not.toBeDisabled();

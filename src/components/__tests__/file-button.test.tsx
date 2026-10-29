@@ -6,8 +6,7 @@ import type { FileRejection } from "../file-button";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import { WriteLockProvider } from "../write-lock";
 
-const pdf = (name = "lease.pdf", bytes = 10) =>
-  new File([new Uint8Array(bytes)], name, { type: "application/pdf" });
+const pdf = (name = "lease.pdf", bytes = 10) => new File([new Uint8Array(bytes)], name, { type: "application/pdf" });
 const png = (name = "plan.png") => new File(["x"], name, { type: "image/png" });
 
 /** The hidden input FileButton renders next to its button. */
@@ -402,7 +401,7 @@ describe("FileButton showFileName (keksdose P8)", () => {
     expect(screen.getByRole("tooltip")).toHaveTextContent("a.pdf, b.pdf");
   });
 
-  it("ends the name in \"…\" at Normal only, and wraps it from Large up (0.33, §10.17)", () => {
+  it('ends the name in "…" at Normal only, and wraps it from Large up (0.33, §10.17)', () => {
     const { container } = render(
       <FileButton showFileName onFiles={() => {}}>
         Attach

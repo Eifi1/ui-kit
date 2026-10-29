@@ -102,7 +102,8 @@ export function Rhf022Demo() {
         {code("RhfDateRangePicker")} binds TWO fields, {code("fromName")} and {code("toName")}: one pick writes both, a
         clear empties both, and an error on either paints the trigger and is listed under it — the end&apos;s own
         &quot;End before start&quot; included, which a shell bound to the start alone never shows.{" "}
-        {code("RhfToggleGroup")} is required unless {code("allowEmpty")}, which stores {code("emptyValue")} — {code("null")}
+        {code("RhfToggleGroup")} is required unless {code("allowEmpty")}, which stores {code("emptyValue")} —{" "}
+        {code("null")}
         by default — on a second press. {code("RhfTimeInput")}&apos;s {code("min")}/{code("max")} paint; the{" "}
         {code("validate")} with {code("isTimeInRange")} is what fails the form.
       </Note>

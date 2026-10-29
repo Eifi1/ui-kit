@@ -5,11 +5,7 @@ import { cn } from "../lib/cn";
 import { FIELD_TOUCH_TEXT } from "./field-base";
 import { FOCUS_RING } from "./focus-ring";
 import { evaluateExpression, formatResult, isBareAmount, splitLeadingSign } from "../lib/calc";
-import {
-  DEFAULT_CALCULATOR_LABELS,
-  useKitLabels,
-  type CalculatorLabels,
-} from "../i18n/kit-labels";
+import { DEFAULT_CALCULATOR_LABELS, useKitLabels, type CalculatorLabels } from "../i18n/kit-labels";
 
 /** Screen-reader names for the calculator panel's own controls — any part of the
  *  kit's `calculator` namespace. Once three optional keys of its own; widened, not
@@ -46,9 +42,7 @@ interface CalculatorButtonProps {
 /** Keypad layout (4 columns). The final C/= row is rendered separately. `name` is
  *  the key of the {@link CalculatorLabels} entry that names a non-digit key; a digit
  *  is named by its own glyph. */
-type Key =
-  | { kind: "ins"; label: string; ins: string; accent?: boolean; name?: KeyName }
-  | { kind: "back" };
+type Key = { kind: "ins"; label: string; ins: string; accent?: boolean; name?: KeyName } | { kind: "back" };
 
 type KeyName = "plus" | "minus" | "times" | "divide" | "decimal";
 
@@ -158,7 +152,10 @@ function CalculatorPanel({
         // is right-aligned in every script too — so both stay physical, pinned
         // with `dir="ltr"` rather than mirrored in a right-to-left form.
         dir="ltr"
-        className={cn("block w-full rounded-md border border-subtle bg-surface px-2 py-1.5 text-right font-mono text-sm text-primary focus:border-strong focus:ring-strong", FIELD_TOUCH_TEXT)}
+        className={cn(
+          "block w-full rounded-md border border-subtle bg-surface px-2 py-1.5 text-right font-mono text-sm text-primary focus:border-strong focus:ring-strong",
+          FIELD_TOUCH_TEXT,
+        )}
       />
       <div dir="ltr" className="h-4 pr-1 text-right font-mono text-xs text-placeholder">
         {result !== null && formatResult(result) !== text.trim() ? `= ${formatResult(result)}` : ""}

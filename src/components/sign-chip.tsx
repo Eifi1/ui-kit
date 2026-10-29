@@ -86,23 +86,23 @@ export function SignChip({ negative, onNegativeChange, disabled, labels: labelsP
   // and the bubble that said only that goes.
   const large = useLargeText();
   const chip = (
-      <Chip
-        size="lg"
-        tone={negative ? "expense" : "income"}
-        icon={negative ? Minus : Plus}
-        onClick={() => onNegativeChange(!negative)}
-        disabled={disabled}
-        aria-label={name}
-        // `gap-1.5 px-3`: the chip's narrower body, because on a 375px screen every
-        // pixel of it is taken from the figure beside it (#430). `md:py-2.5` with the
-        // hairline border is the 42px a labelled field measures (#431).
-        className={cn("shrink-0 gap-1.5 whitespace-nowrap px-3 font-medium md:min-h-0 md:py-2.5", !large && className)}
-      >
-        {current}
-        {/* The swap arrows after the word, in the label's own row: decoration (the
+    <Chip
+      size="lg"
+      tone={negative ? "expense" : "income"}
+      icon={negative ? Minus : Plus}
+      onClick={() => onNegativeChange(!negative)}
+      disabled={disabled}
+      aria-label={name}
+      // `gap-1.5 px-3`: the chip's narrower body, because on a 375px screen every
+      // pixel of it is taken from the figure beside it (#430). `md:py-2.5` with the
+      // hairline border is the 42px a labelled field measures (#431).
+      className={cn("shrink-0 gap-1.5 whitespace-nowrap px-3 font-medium md:min-h-0 md:py-2.5", !large && className)}
+    >
+      {current}
+      {/* The swap arrows after the word, in the label's own row: decoration (the
             name already says what a press does), set a little apart from the word. */}
-        <ArrowUpDown className="ms-1.5 inline size-3.5 align-[-0.2em] opacity-60" aria-hidden />
-      </Chip>
+      <ArrowUpDown className="ms-1.5 inline size-3.5 align-[-0.2em] opacity-60" aria-hidden />
+    </Chip>
   );
   if (!large) {
     return (

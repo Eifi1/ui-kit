@@ -73,7 +73,14 @@ describe("RowActions at Normal", () => {
       <RowActions actions={[{ label: "Edit", icon: Pencil, onSelect: vi.fn(), hidden: true }]} />,
     );
     expect(container).toBeEmptyDOMElement();
-    rerender(<RowActions actions={[{ label: "Edit", icon: Pencil, onSelect: vi.fn() }, { label: "Copy", onSelect: vi.fn() }]} />);
+    rerender(
+      <RowActions
+        actions={[
+          { label: "Edit", icon: Pencil, onSelect: vi.fn() },
+          { label: "Copy", onSelect: vi.fn() },
+        ]}
+      />,
+    );
     // An action without an icon is a small text button.
     expect(screen.getByRole("button", { name: "Copy" })).toHaveTextContent("Copy");
   });
@@ -94,9 +101,7 @@ describe("RowActions at Normal", () => {
 
   it("keeps a locked inline action's reason in the tooltip, not a line (a row has no room)", () => {
     render(
-      <RowActions
-        actions={[{ label: "Delete", icon: Trash2, onSelect: vi.fn(), disabledReason: "Has bookings" }]}
-      />,
+      <RowActions actions={[{ label: "Delete", icon: Trash2, onSelect: vi.fn(), disabledReason: "Has bookings" }]} />,
     );
     const del = screen.getByRole("button", { name: "Delete" });
     expect(del).toHaveAttribute("aria-disabled", "true");
@@ -119,12 +124,16 @@ describe("RowActions at Large (§10.8)", () => {
 
     await user.click(trigger);
     const menu = await screen.findByRole("dialog", { name: "Actions for Ada Example" });
-    expect(within(menu).getAllByRole("button").map((b) => b.textContent)).toEqual(["Edit", "Archive", "Delete"]);
+    expect(
+      within(menu)
+        .getAllByRole("button")
+        .map((b) => b.textContent),
+    ).toEqual(["Edit", "Archive", "Delete"]);
     await user.click(within(menu).getByRole("button", { name: "Delete" }));
     expect(remove).toHaveBeenCalledTimes(1);
   });
 
-  it("names the button \"Actions\" without a row name", () => {
+  it('names the button "Actions" without a row name', () => {
     setSize("large");
     render(<RowActions actions={actions()} />);
     expect(screen.getByRole("button", { name: "Actions" })).toBeInTheDocument();
@@ -177,18 +186,18 @@ describe("RowActions at Large (§10.8)", () => {
 });
 
 describe("RowActions collapse", () => {
-  it("\"menu\" is the menu at Normal too (the roster's choice)", () => {
+  it('"menu" is the menu at Normal too (the roster\'s choice)', () => {
     render(<RowActions actions={actions()} name="Ada" collapse="menu" />);
     expect(screen.getByRole("button", { name: "Actions for Ada" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Edit" })).toBeNull();
   });
 
-  it("\"menu\" is the menu even for a single action", () => {
+  it('"menu" is the menu even for a single action', () => {
     render(<RowActions actions={[{ label: "Edit", icon: Pencil, onSelect: vi.fn() }]} collapse="menu" />);
     expect(screen.getByRole("button", { name: "Actions" })).toBeInTheDocument();
   });
 
-  it("\"inline\" keeps the icons at Large, each showing its words", () => {
+  it('"inline" keeps the icons at Large, each showing its words', () => {
     setSize("large");
     render(<RowActions actions={actions()} collapse="inline" />);
     expect(screen.queryByRole("button", { name: "Actions" })).toBeNull();
@@ -208,7 +217,15 @@ describe("RowActions — commit, pending, disabled (an admin panel's row, 0.32)"
   function flight(onResend = vi.fn(), onRevoke = vi.fn()): RowActionList {
     return [
       { key: "resend", label: "Resend", icon: Pencil, commit: true, pending: true, disabled: true, onSelect: onResend },
-      { key: "revoke", label: "Revoke", icon: Trash2, tone: "danger", commit: true, disabled: true, onSelect: onRevoke },
+      {
+        key: "revoke",
+        label: "Revoke",
+        icon: Trash2,
+        tone: "danger",
+        commit: true,
+        disabled: true,
+        onSelect: onRevoke,
+      },
     ];
   }
 

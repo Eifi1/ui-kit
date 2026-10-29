@@ -12,7 +12,13 @@ describe("IconButton disabledReason", () => {
     render(
       // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- a clickable row stand-in
       <div onClick={onRow}>
-        <IconButton label="Delete" disabled disabledReason="The account still has bookings." onClick={onClick} stopPropagation>
+        <IconButton
+          label="Delete"
+          disabled
+          disabledReason="The account still has bookings."
+          onClick={onClick}
+          stopPropagation
+        >
           <Trash2 />
         </IconButton>
       </div>,

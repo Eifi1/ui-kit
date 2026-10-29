@@ -14,15 +14,7 @@ import {
   Utensils,
   Wrench,
 } from "lucide-react";
-import {
-  Button,
-  Chip,
-  ChoiceCard,
-  ChoiceCardGroup,
-  IconPicker,
-  SwatchPicker,
-  ToggleGroup,
-} from "@eifi1/ui-kit";
+import { Button, Chip, ChoiceCard, ChoiceCardGroup, IconPicker, SwatchPicker, ToggleGroup } from "@eifi1/ui-kit";
 import type { IconOption, SwatchOption } from "@eifi1/ui-kit";
 import { Example, Note, Stage } from "../lib/section";
 
@@ -43,18 +35,7 @@ const COLOURS: SwatchOption<Colour>[] = [
   { value: "c6", color: "var(--chart-6)", label: "Colour 6" },
 ];
 
-type Glyph =
-  | "home"
-  | "cart"
-  | "food"
-  | "coffee"
-  | "car"
-  | "bike"
-  | "plane"
-  | "health"
-  | "gift"
-  | "game"
-  | "tools";
+type Glyph = "home" | "cart" | "food" | "coffee" | "car" | "bike" | "plane" | "health" | "gift" | "game" | "tools";
 const SYMBOLS: IconOption<Glyph>[] = [
   { value: "home", icon: House, label: "House", keywords: ["rent", "home"] },
   { value: "cart", icon: ShoppingCart, label: "Shopping cart", keywords: ["groceries"] },
@@ -85,8 +66,7 @@ const CLASS_SWATCHES: SwatchOption<Colour>[] = [
 ];
 type Status = "open" | "waiting" | "closed";
 
-const shown = (v: unknown) =>
-  v === null ? "null" : v === undefined ? "undefined" : JSON.stringify(v);
+const shown = (v: unknown) => (v === null ? "null" : v === undefined ? "undefined" : JSON.stringify(v));
 
 export function SelectionDemo() {
   const [colour, setColour] = useState<Colour | null>("c2");
@@ -118,10 +98,7 @@ export function SelectionDemo() {
 
   return (
     <>
-      <Example
-        label="SwatchPicker"
-        hint="role=radiogroup; one tab stop, arrows move and choose, flipped in RTL"
-      >
+      <Example label="SwatchPicker" hint="role=radiogroup; one tab stop, arrows move and choose, flipped in RTL">
         <Stage>
           <div className="space-y-2">
             <SwatchPicker
@@ -147,18 +124,15 @@ export function SelectionDemo() {
               activation="manual"
               size="lg"
             />
-            <p className="text-xs text-muted">
-              {bulkMixed ? "mixed — the rows disagree" : `value: ${shown(flag)}`}
-            </p>
+            <p className="text-xs text-muted">{bulkMixed ? "mixed — the rows disagree" : `value: ${shown(flag)}`}</p>
           </div>
         </Stage>
         <Note>
-          The second is a bulk edit: <code className="font-mono">mixed</code> checks nothing (not
-          even &quot;none&quot;) and describes the group as mixed;{" "}
-          <code className="font-mono">activation=&quot;manual&quot;</code> lets the arrows move
-          without saving on every step, and <code className="font-mono">size=&quot;lg&quot;</code>{" "}
-          is the 44px touch target. A tile with a <code className="font-mono">note</code> wears a
-          dot and says the note in its bubble and its description.
+          The second is a bulk edit: <code className="font-mono">mixed</code> checks nothing (not even &quot;none&quot;)
+          and describes the group as mixed; <code className="font-mono">activation=&quot;manual&quot;</code> lets the
+          arrows move without saving on every step, and <code className="font-mono">size=&quot;lg&quot;</code> is the
+          44px touch target. A tile with a <code className="font-mono">note</code> wears a dot and says the note in its
+          bubble and its description.
         </Note>
       </Example>
 
@@ -190,9 +164,7 @@ export function SelectionDemo() {
               value={themed}
               onChange={setThemed}
             />
-            <p className="text-xs text-muted">
-              value: {shown(themed)} · the last tile is disabled
-            </p>
+            <p className="text-xs text-muted">value: {shown(themed)} · the last tile is disabled</p>
           </div>
           <div className="space-y-2">
             <SwatchPicker
@@ -264,17 +236,12 @@ export function SelectionDemo() {
                 mixed: "Gemischt: die gewählten Zeilen haben verschiedene Farben",
               }}
             />
-            <p className="text-xs text-muted">
-              labels.none names the ∅ tile; labels.mixed describes the group
-            </p>
+            <p className="text-xs text-muted">labels.none names the ∅ tile; labels.mixed describes the group</p>
           </div>
         </Stage>
       </Example>
 
-      <Example
-        label="Tiles that follow their container"
-        hint='tileClassName="@max-md:size-11" · size="sm" · allowNone'
-      >
+      <Example label="Tiles that follow their container" hint='tileClassName="@max-md:size-11" · size="sm" · allowNone'>
         <Stage>
           {/* `@container` on the caller's own box: the query is the caller's, and the
               kit's markup is never reached into. Narrower than 28rem, the tiles grow
@@ -301,18 +268,14 @@ export function SelectionDemo() {
           </div>
         </Stage>
         <Note>
-          <code className="font-mono">tileClassName</code> is merged after the kit&apos;s own
-          classes, so a <code className="font-mono">size-*</code> in it beats{" "}
-          <code className="font-mono">size</code>&apos;s. The dot or glyph inside keeps{" "}
-          <code className="font-mono">size</code>&apos;s dimensions; only the tile grows. Narrow
+          <code className="font-mono">tileClassName</code> is merged after the kit&apos;s own classes, so a{" "}
+          <code className="font-mono">size-*</code> in it beats <code className="font-mono">size</code>&apos;s. The dot
+          or glyph inside keeps <code className="font-mono">size</code>&apos;s dimensions; only the tile grows. Narrow
           the window below about 500px to see it switch.
         </Note>
       </Example>
 
-      <Example
-        label="ChoiceCard"
-        hint="a native checkbox or radio; the whole card is the hit area"
-      >
+      <Example label="ChoiceCard" hint="a native checkbox or radio; the whole card is the hit area">
         <Stage>
           <div data-stage="wide" className="mx-auto max-w-2xl space-y-4">
             <ChoiceCardGroup<Role>
@@ -392,12 +355,7 @@ export function SelectionDemo() {
                 checked={autopay === "off"}
                 onCheckedChange={(on) => on && setAutopay("off")}
               />
-              <ChoiceCard
-                title="All permissions"
-                description="Some but not all are granted."
-                indeterminate
-                readOnly
-              />
+              <ChoiceCard title="All permissions" description="Some but not all are granted." indeterminate readOnly />
               <ChoiceCard title="Disabled, checked" description="Set by the plan." disabled checked readOnly />
               <ChoiceCard title="Invalid, no message" invalid />
               <ChoiceCard
@@ -496,16 +454,15 @@ export function SelectionDemo() {
         </Stage>
         <Note>
           Press <strong>Continue</strong> with nothing chosen to raise both errors.{" "}
-          <code className="font-mono">cardClassName</code> reaches every card of a group (tighter
-          padding on the plan cards), <code className="font-mono">className</code> the grid; a
-          per-option <code className="font-mono">disabled</code> greys one card (Pro), the
-          group&apos;s own <code className="font-mono">disabled</code> is the fieldset&apos;s.{" "}
+          <code className="font-mono">cardClassName</code> reaches every card of a group (tighter padding on the plan
+          cards), <code className="font-mono">className</code> the grid; a per-option{" "}
+          <code className="font-mono">disabled</code> greys one card (Pro), the group&apos;s own{" "}
+          <code className="font-mono">disabled</code> is the fieldset&apos;s.{" "}
           <code className="font-mono">required</code> is the native attribute plus the kit&apos;s{" "}
-          <code className="font-mono">aria-hidden</code> star: after the title on a lone card (the
-          lease), after the <code className="font-mono">legend</code> on a group (&quot;Notify me
-          by&quot;). On a radio group every radio is required; on a checkbox group it means
-          &quot;at least one&quot; — every box is required while none is ticked, so an empty set
-          cannot be submitted and nothing demands a second box once one is ticked.
+          <code className="font-mono">aria-hidden</code> star: after the title on a lone card (the lease), after the{" "}
+          <code className="font-mono">legend</code> on a group (&quot;Notify me by&quot;). On a radio group every radio
+          is required; on a checkbox group it means &quot;at least one&quot; — every box is required while none is
+          ticked, so an empty set cannot be submitted and nothing demands a second box once one is ticked.
         </Note>
       </Example>
 
@@ -559,18 +516,17 @@ export function SelectionDemo() {
           </div>
         </Stage>
         <Note>
-          With <code className="font-mono">allowEmpty</code> the options are toggle buttons
-          (<code className="font-mono">aria-pressed</code>) rather than radios, and{" "}
-          <code className="font-mono">onChange</code> is typed to receive{" "}
-          <code className="font-mono">null</code> — without it, a pick is always one of the
-          options. The value type is inferred from{" "}
-          <code className="font-mono">value</code> and <code className="font-mono">onChange</code>{" "}
-          in both modes, so a <code className="font-mono">useState&lt;Status | null&gt;</code>{" "}
-          setter goes straight in — no <code className="font-mono">&lt;ToggleGroup&lt;Status&gt;&gt;</code>.
-          In radio mode (the Period group) the group is ONE tab stop — the checked option, or the
-          first — and ← → (and ↑ ↓, Home, End) move and choose, following the reading direction in
-          RTL, as a native radio set does. The <code className="font-mono">allowEmpty</code> buttons
-          stay separate tab stops, each toggled with Space or Enter.
+          With <code className="font-mono">allowEmpty</code> the options are toggle buttons (
+          <code className="font-mono">aria-pressed</code>) rather than radios, and{" "}
+          <code className="font-mono">onChange</code> is typed to receive <code className="font-mono">null</code> —
+          without it, a pick is always one of the options. The value type is inferred from{" "}
+          <code className="font-mono">value</code> and <code className="font-mono">onChange</code> in both modes, so a{" "}
+          <code className="font-mono">useState&lt;Status | null&gt;</code> setter goes straight in — no{" "}
+          <code className="font-mono">&lt;ToggleGroup&lt;Status&gt;&gt;</code>. In radio mode (the Period group) the
+          group is ONE tab stop — the checked option, or the first — and ← → (and ↑ ↓, Home, End) move and choose,
+          following the reading direction in RTL, as a native radio set does. The{" "}
+          <code className="font-mono">allowEmpty</code> buttons stay separate tab stops, each toggled with Space or
+          Enter.
         </Note>
       </Example>
 
@@ -599,8 +555,8 @@ export function SelectionDemo() {
           </div>
         </Stage>
         <p className="text-xs text-muted">
-          colour: {shown(rtlColour)} · role: {shown(rtlRole)} — focus a swatch and press ← : it moves
-          left, to the next tile, as the arrow points.
+          colour: {shown(rtlColour)} · role: {shown(rtlRole)} — focus a swatch and press ← : it moves left, to the next
+          tile, as the arrow points.
         </p>
       </Example>
 

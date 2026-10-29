@@ -94,12 +94,9 @@ export interface ResetPasswordResult {
 }
 
 type Phase =
-  | { kind: "form"; check: ResetPasswordCheck }
-  | { kind: "invalid" }
-  | { kind: "done"; result: ResetPasswordResult };
+  { kind: "form"; check: ResetPasswordCheck } | { kind: "invalid" } | { kind: "done"; result: ResetPasswordResult };
 
-export interface ResetPasswordFormProps
-  extends Omit<ComponentPropsWithRef<"div">, "onSubmit" | "children" | "title"> {
+export interface ResetPasswordFormProps extends Omit<ComponentPropsWithRef<"div">, "onSubmit" | "children" | "title"> {
   /** The link's token — the app's `?token=` (keksdose, kastlan: `/reset-password?token=…`).
    *  Empty: the link was cut short, and the page says so without asking anyone. */
   token: string;

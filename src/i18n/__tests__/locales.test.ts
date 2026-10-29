@@ -66,9 +66,7 @@ describe("de-CH", () => {
     expect(text.join(" ")).not.toMatch(/ß/);
     // The check bites: the internal source it is derived from does write "ß".
     expect(leaves(germanLabels("de-CH")).some(([, v]) => v.includes("ß"))).toBe(true);
-    expect(UI_KIT_LABELS_DE_CH.dataTable.rowCount(1234)).toBe(
-      new Intl.NumberFormat("de-CH").format(1234),
-    );
+    expect(UI_KIT_LABELS_DE_CH.dataTable.rowCount(1234)).toBe(new Intl.NumberFormat("de-CH").format(1234));
   });
 
   it("respells what the app passes into a function label too", () => {
@@ -83,15 +81,15 @@ describe("de-CH", () => {
   });
 
   it("the factory takes a number locale without changing the words", () => {
-    expect(uiKitLabelsDeCh().dataTable.rowCount(1234)).toBe(
-      UI_KIT_LABELS_DE_CH.dataTable.rowCount(1234),
-    );
+    expect(uiKitLabelsDeCh().dataTable.rowCount(1234)).toBe(UI_KIT_LABELS_DE_CH.dataTable.rowCount(1234));
     const germanDigits = uiKitLabelsDeCh("de-DE");
     expect(germanDigits.dataTable.rowCount(1234)).toBe(new Intl.NumberFormat("de-DE").format(1234));
-    expect(germanDigits.dataTable.pageChanged(1, 2)).toBe(
-      UI_KIT_LABELS_DE_CH.dataTable.pageChanged(1, 2),
-    );
-    expect(leaves(germanDigits).map(([, v]) => v).join(" ")).not.toMatch(/ß/);
+    expect(germanDigits.dataTable.pageChanged(1, 2)).toBe(UI_KIT_LABELS_DE_CH.dataTable.pageChanged(1, 2));
+    expect(
+      leaves(germanDigits)
+        .map(([, v]) => v)
+        .join(" "),
+    ).not.toMatch(/ß/);
   });
 });
 

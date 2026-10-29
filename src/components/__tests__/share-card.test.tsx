@@ -220,7 +220,8 @@ describe("ShareCard under a write lock", () => {
     expect(screen.queryByRole("alertdialog")).toBeNull();
 
     const roleOfAnna = screen.getByRole("radiogroup", { name: "Role of Anna" });
-    for (const radio of within(roleOfAnna).getAllByRole("radio")) expect((radio as HTMLButtonElement).disabled).toBe(true);
+    for (const radio of within(roleOfAnna).getAllByRole("radio"))
+      expect((radio as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(within(roleOfAnna).getByRole("radio", { name: "Editor" }));
     expect(onRoleChange).not.toHaveBeenCalled();
 
@@ -254,7 +255,12 @@ describe("ShareCard under a billing lock (0.33, billing §12.36, decision 26 ame
     return render(
       <ConfirmProvider>
         <WriteLockProvider locked holds={holds}>
-          <ShareCard grantees={[ANNA, BEN]} roles={ROLES} pending={[{ id: 7, email: "later@example.com" }]} {...props} />
+          <ShareCard
+            grantees={[ANNA, BEN]}
+            roles={ROLES}
+            pending={[{ id: 7, email: "later@example.com" }]}
+            {...props}
+          />
         </WriteLockProvider>
       </ConfirmProvider>,
     );
@@ -273,7 +279,9 @@ describe("ShareCard under a billing lock (0.33, billing §12.36, decision 26 ame
     const withdraw = screen.getByRole("button", { name: "Withdraw invitation" });
     expect(withdraw).not.toHaveAttribute("aria-disabled");
     fireEvent.click(withdraw);
-    fireEvent.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Withdraw invitation" }));
+    fireEvent.click(
+      within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Withdraw invitation" }),
+    );
     await waitFor(() => expect(onRevokePending).toHaveBeenCalledWith(expect.objectContaining({ id: 7 })));
   });
 
@@ -347,7 +355,9 @@ describe("ShareCard under a billing lock (0.33, billing §12.36, decision 26 ame
         expect(radio).toBeDisabled();
       }
     }
-    fireEvent.click(within(screen.getByRole("radiogroup", { name: "Role of Ben" })).getByRole("radio", { name: "Viewer" }));
+    fireEvent.click(
+      within(screen.getByRole("radiogroup", { name: "Role of Ben" })).getByRole("radio", { name: "Viewer" }),
+    );
     expect(onRoleChange).not.toHaveBeenCalled();
   });
 });

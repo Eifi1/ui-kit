@@ -286,7 +286,19 @@ export function RhfField<
 
 type OwnInputProps = Omit<
   InputProps,
-  "name" | "value" | "defaultValue" | "onChange" | "onBlur" | "ref" | "label" | "error" | "invalid" | "className" | "disabled" | "required" | "inputClassName"
+  | "name"
+  | "value"
+  | "defaultValue"
+  | "onChange"
+  | "onBlur"
+  | "ref"
+  | "label"
+  | "error"
+  | "invalid"
+  | "className"
+  | "disabled"
+  | "required"
+  | "inputClassName"
 > & {
   /**
    * Classes for the `<input>` — `className` is the item's box (kastlan 42: a
@@ -344,7 +356,18 @@ export function RhfTextField<
 
 type OwnTextareaProps = Omit<
   TextareaProps,
-  "name" | "value" | "defaultValue" | "onChange" | "onBlur" | "ref" | "label" | "error" | "invalid" | "className" | "disabled" | "required"
+  | "name"
+  | "value"
+  | "defaultValue"
+  | "onChange"
+  | "onBlur"
+  | "ref"
+  | "label"
+  | "error"
+  | "invalid"
+  | "className"
+  | "disabled"
+  | "required"
 > & {
   /** Classes for the `<textarea>`. */
   inputClassName?: string;
@@ -420,8 +443,23 @@ function toNumber(value: unknown, mark: "," | "."): number | null {
  *  label, the hint, the item's `className`). Everything else of the field's passes
  *  through (DUP-9, refactor audit 2026-10: a `Pick` allow-list dropped what the field
  *  gained without a word). */
-type BoundByForm = "value" | "defaultValue" | "onChange" | "onBlur" | "ref" | "name" | "disabled" | "required"
-  | "invalid" | "error" | "label" | "hint" | "className" | "aria-describedby" | "aria-invalid" | "aria-required";
+type BoundByForm =
+  | "value"
+  | "defaultValue"
+  | "onChange"
+  | "onBlur"
+  | "ref"
+  | "name"
+  | "disabled"
+  | "required"
+  | "invalid"
+  | "error"
+  | "label"
+  | "hint"
+  | "className"
+  | "aria-describedby"
+  | "aria-invalid"
+  | "aria-required";
 
 export type RhfNumberFieldProps<
   TFieldValues extends FieldValues = FieldValues,
@@ -1009,12 +1047,7 @@ function RangeBody({
       {messages.map((message, i) => (
         // FormMessage's look and its rule: no `role="alert"` — read when focus reaches
         // the trigger, which names these in its description.
-        <p
-          key={message}
-          id={messageIds[i]}
-          data-slot="form-message"
-          className="text-caption leading-tight text-danger"
-        >
+        <p key={message} id={messageIds[i]} data-slot="form-message" className="text-caption leading-tight text-danger">
           {message}
         </p>
       ))}
@@ -1565,13 +1598,14 @@ export type RhfCheckboxProps<
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
   TTransformed = TFieldValues,
-> = // No `help` (0.36): a box has no label line — its label sits beside it, inside the
+> =
+  // No `help` (0.36): a box has no label line — its label sits beside it, inside the
   // `<label>` a "?" cannot join — and Checkbox takes none.
   Omit<RhfFieldBaseProps<TFieldValues, TName, TTransformed>, "help"> &
-  // Checkbox's own — its lock (`commit`, `disabledReason`) among them, which a `Pick`
-  // list dropped until 0.34 (DUP-9) — less the box's state the form holds, and its
-  // `description`, which is the twin's `hint`.
-  Omit<CheckboxProps, BoundByForm | "checked" | "defaultChecked" | "onCheckedChange" | "description">;
+    // Checkbox's own — its lock (`commit`, `disabledReason`) among them, which a `Pick`
+    // list dropped until 0.34 (DUP-9) — less the box's state the form holds, and its
+    // `description`, which is the twin's `hint`.
+    Omit<CheckboxProps, BoundByForm | "checked" | "defaultChecked" | "onCheckedChange" | "description">;
 
 /**
  * The kit's {@link Checkbox}, label beside the box and `hint` under it (the
@@ -1652,10 +1686,7 @@ export type RhfToggleGroupProps<
   // The group's own (its `disabledReasonDisplay` was not on the `Pick` list this was
   // until 0.34, DUP-9), less what the form binds, the ids, and the label's placement:
   // the label is the form's, above.
-  Omit<
-    ToggleGroupBaseProps<T>,
-    BoundByForm | "id" | "aria-labelledby" | "labelPlacement" | "chromeClassName"
-  > & {
+  Omit<ToggleGroupBaseProps<T>, BoundByForm | "id" | "aria-labelledby" | "labelPlacement" | "chromeClassName"> & {
     /** Classes for the group itself — `className` is the item's box. */
     groupClassName?: string;
   } & RhfToggleGroupMode<T>;

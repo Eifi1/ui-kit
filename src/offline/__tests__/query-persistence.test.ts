@@ -39,7 +39,11 @@ function setup(over: Partial<QueryPersistenceOptions> = {}) {
 const client = () => new QueryClient({ defaultOptions: { queries: { gcTime: DAY } } });
 
 /** Save through the real persistQueryClientSave, then wait for the throttled write. */
-async function save(persistence: ReturnType<typeof setup>["persistence"], queryClient: QueryClient, storage: ReturnType<typeof memoryStorage>) {
+async function save(
+  persistence: ReturnType<typeof setup>["persistence"],
+  queryClient: QueryClient,
+  storage: ReturnType<typeof memoryStorage>,
+) {
   const { persister, buster, dehydrateOptions } = persistence.persistOptions;
   await persistQueryClientSave({ queryClient, persister, buster, dehydrateOptions });
   await vi.waitFor(() => expect(storage.map.has(persistence.key)).toBe(true));
@@ -157,14 +161,22 @@ describe("createQueryPersistence — what is restored", () => {
 
   it("scrubs on the way in too, for what an older build wrote", async () => {
     const { persistence, storage } = setup();
-    storage.map.set(persistence.key, blob([{ queryKey: ["contacts"], state: { data: { iban: "CH93", name: "Ada" } } }], "x"));
+    storage.map.set(
+      persistence.key,
+      blob([{ queryKey: ["contacts"], state: { data: { iban: "CH93", name: "Ada" } } }], "x"),
+    );
     const restored = await persistence.persistOptions.persister.restoreClient();
     expect(restored!.clientState.queries[0].state.data).toEqual({ name: "Ada" });
     expect(restored!.clientState.mutations).toEqual([]);
   });
 
   it("turns an unreadable blob into an unusable one (timestamp 0) instead of throwing", async () => {
-    for (const raw of ["{not json", "null", JSON.stringify({ timestamp: "x" }), JSON.stringify({ timestamp: 1, buster: "" })]) {
+    for (const raw of [
+      "{not json",
+      "null",
+      JSON.stringify({ timestamp: "x" }),
+      JSON.stringify({ timestamp: 1, buster: "" }),
+    ]) {
       const { persistence, storage } = setup();
       storage.map.set(persistence.key, raw);
       const restored = await persistence.persistOptions.persister.restoreClient();
@@ -174,7 +186,16 @@ describe("createQueryPersistence — what is restored", () => {
 
   it("restores into a QueryClient under the same buster within maxAge", async () => {
     const { persistence, storage } = setup();
-    storage.map.set(persistence.key, blob([{ queryKey: ["estates"], queryHash: '["estates"]', state: { data: [1], status: "success", dataUpdatedAt: Date.now() } }]));
+    storage.map.set(
+      persistence.key,
+      blob([
+        {
+          queryKey: ["estates"],
+          queryHash: '["estates"]',
+          state: { data: [1], status: "success", dataUpdatedAt: Date.now() },
+        },
+      ]),
+    );
     const queryClient = client();
     const { persister, buster, maxAge } = persistence.persistOptions;
     await persistQueryClientRestore({ queryClient, persister, buster, maxAge });
@@ -209,19 +230,28 @@ describe("createQueryPersistence — clear and removeStale", () => {
 
   it("clear never throws", async () => {
     const { persistence } = setup();
-    const broken = { clear: () => { throw new Error("boom"); } } as unknown as QueryClient;
+    const broken = {
+      clear: () => {
+        throw new Error("boom");
+      },
+    } as unknown as QueryClient;
     await expect(persistence.clear(broken)).resolves.toBeUndefined();
   });
 
   it("leave never throws", async () => {
     const { persistence } = setup();
-    const broken = { clear: () => { throw new Error("boom"); } } as unknown as QueryClient;
+    const broken = {
+      clear: () => {
+        throw new Error("boom");
+      },
+    } as unknown as QueryClient;
     await expect(persistence.leave(broken)).resolves.toBeUndefined();
   });
 
   it("removeStale drops this app's other caches older than maxAge; fresh ones and other apps' stay", async () => {
     const now = Date.now();
-    const at = (timestamp: number) => JSON.stringify({ timestamp, buster: "1.0.0", clientState: { queries: [], mutations: [] } });
+    const at = (timestamp: number) =>
+      JSON.stringify({ timestamp, buster: "1.0.0", clientState: { queries: [], mutations: [] } });
     const storage = memoryStorage({
       "kastlan-query-cache-7": at(now - 3 * DAY), // the current key: the persister's own business
       "kastlan-query-cache-8-1": at(now - 2 * DAY), // another account: stale

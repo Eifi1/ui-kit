@@ -138,10 +138,8 @@ const TILE_BASE =
   FOCUS_RING +
   " focus-visible:ring-offset-2 focus-visible:ring-offset-surface " +
   "disabled:cursor-not-allowed disabled:opacity-50";
-const TILE_IDLE =
-  "border-subtle bg-surface hover:border-strong hover:bg-hover";
-const TILE_SELECTED =
-  "border-[var(--text-primary)] bg-surface ring-1 ring-[var(--text-primary)]";
+const TILE_IDLE = "border-subtle bg-surface hover:border-strong hover:bg-hover";
+const TILE_SELECTED = "border-[var(--text-primary)] bg-surface ring-1 ring-[var(--text-primary)]";
 /** A locked tile: the disabled look without `disabled` — dimmed, a not-allowed cursor. */
 const TILE_LOCKED = "cursor-not-allowed opacity-50";
 /** …and no hover offer on an idle one, which cannot be chosen. Not on the selected
@@ -180,15 +178,11 @@ export function TileRadioGroup<T extends string>({
   const noteId = useId();
   const reasonId = useId();
   const s = TILE_SIZE[size];
-  const checkedIndex =
-    checked === undefined ? -1 : items.findIndex((it) => it.key === checked);
+  const checkedIndex = checked === undefined ? -1 : items.findIndex((it) => it.key === checked);
   // The ONE tab stop: the checked tile, else the first that can be reached — the APG
   // rule, so Tab into a group with nothing checked still lands somewhere. A locked
   // tile is reachable: landing on it is how its reason is read.
-  const tabStop =
-    checkedIndex >= 0 && !isOff(items[checkedIndex])
-      ? checkedIndex
-      : items.findIndex((it) => !isOff(it));
+  const tabStop = checkedIndex >= 0 && !isOff(items[checkedIndex]) ? checkedIndex : items.findIndex((it) => !isOff(it));
 
   const onKeyDown = (e: KeyboardEvent<HTMLButtonElement>, index: number) => {
     // Left and right are VISUAL directions: in a right-to-left page the row runs the
@@ -269,19 +263,12 @@ export function TileRadioGroup<T extends string>({
               tileClassName?.(item, selected),
             )}
           >
-            {item.key === null ? (
-              <Ban aria-hidden className={cn(s.glyph, "text-muted")} />
-            ) : (
-              renderTile(item, selected)
-            )}
+            {item.key === null ? <Ban aria-hidden className={cn(s.glyph, "text-muted")} /> : renderTile(item, selected)}
             {item.note && (
               <>
                 {/* A dot rather than a dimmed tile: dimming reads as "disabled", and a
                     tile with a note is entirely available. */}
-                <span
-                  aria-hidden
-                  className="absolute end-0.5 top-0.5 size-1.5 rounded-full bg-[var(--text-muted)]"
-                />
+                <span aria-hidden className="absolute end-0.5 top-0.5 size-1.5 rounded-full bg-[var(--text-muted)]" />
                 {/* `hidden` still serves as a description: aria-describedby reads
                     hidden text, which is what keeps it out of the layout. */}
                 <span id={`${noteId}-${i}`} hidden>

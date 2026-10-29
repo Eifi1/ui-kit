@@ -3,7 +3,8 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { isOfflineError, readLocalFirst, stampAfter, uuid5, writeLocalFirst } from "../local-first";
 
 const noAnswer = Object.assign(new Error("Network Error"), { isAxiosError: true, response: undefined });
-const answered = (status: number) => Object.assign(new Error(`status ${status}`), { isAxiosError: true, response: { status, data: {} } });
+const answered = (status: number) =>
+  Object.assign(new Error(`status ${status}`), { isAxiosError: true, response: { status, data: {} } });
 
 describe("stampAfter", () => {
   it("is now when the previous stamp is behind this clock", () => {
@@ -60,9 +61,19 @@ describe("readLocalFirst", () => {
   });
 
   it("falls back to the copy offline, and throws on an answer", async () => {
-    expect(await readLocalFirst(() => Promise.reject(noAnswer), async () => "copy")).toBe("copy");
+    expect(
+      await readLocalFirst(
+        () => Promise.reject(noAnswer),
+        async () => "copy",
+      ),
+    ).toBe("copy");
     const missing = answered(404);
-    await expect(readLocalFirst(() => Promise.reject(missing), async () => "copy")).rejects.toBe(missing);
+    await expect(
+      readLocalFirst(
+        () => Promise.reject(missing),
+        async () => "copy",
+      ),
+    ).rejects.toBe(missing);
   });
 });
 

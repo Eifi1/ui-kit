@@ -101,12 +101,7 @@ function SwipeDemo() {
 
   return (
     <div className="space-y-3">
-      <SwipeableRow
-        left={left}
-        right={right}
-        enabled={enabled}
-        className="rounded-md border border-subtle"
-      >
+      <SwipeableRow left={left} right={right} enabled={enabled} className="rounded-md border border-subtle">
         {/* The row content carries its own click handler on purpose: a drag past 24px
             has its trailing click swallowed in the capture phase, so committing an
             action does not ALSO open whatever the row opens. A short, clumsy drag is
@@ -117,12 +112,8 @@ function SwipeDemo() {
           className="flex w-full items-center justify-between gap-3 px-4 py-3 text-start"
         >
           <span className="min-w-0">
-            <span className="block truncate-until-large text-sm text-primary">
-              Monthly groceries
-            </span>
-            <span className="block truncate-until-large text-xs text-muted">
-              22 Sep · Rewe
-            </span>
+            <span className="block truncate-until-large text-sm text-primary">Monthly groceries</span>
+            <span className="block truncate-until-large text-xs text-muted">22 Sep · Rewe</span>
           </span>
           <span className="shrink-0 font-mono text-sm text-[var(--money-expense)]">−48.20 €</span>
         </button>
@@ -135,9 +126,7 @@ function SwipeDemo() {
         <Button variant="ghost" disabled={log.length === 0} onClick={() => setLog([])}>
           Clear log
         </Button>
-        <span className={READOUT}>
-          usePhoneLayout(): {String(belowPhone)}
-        </span>
+        <span className={READOUT}>usePhoneLayout(): {String(belowPhone)}</span>
       </Row>
 
       <ul className="space-y-1">
@@ -150,27 +139,23 @@ function SwipeDemo() {
       </ul>
 
       <Note>
-        Narrow the window to see this the way the kit actually ships it: the only place
-        the package mounts a <code className="font-mono">SwipeableRow</code> is{" "}
-        <code className="font-mono">DataTable</code>&apos;s card list, which is{" "}
-        <code className="font-mono">md:hidden</code>. The component itself is not gated on
-        width, though — that is the table&apos;s decision, not the row&apos;s, and a mouse
-        drag works here at any size. Narrowing does change the feel: thresholds are
-        proportional to row width, so the stages sit closer together.
+        Narrow the window to see this the way the kit actually ships it: the only place the package mounts a{" "}
+        <code className="font-mono">SwipeableRow</code> is <code className="font-mono">DataTable</code>&apos;s card
+        list, which is <code className="font-mono">md:hidden</code>. The component itself is not gated on width, though
+        — that is the table&apos;s decision, not the row&apos;s, and a mouse drag works here at any size. Narrowing does
+        change the feel: thresholds are proportional to row width, so the stages sit closer together.
       </Note>
       <Note>
-        The keyboard path is buttons, not a typed gesture: every action is also a real button,
-        visually hidden until it takes focus. Tab past the row&apos;s own button and
-        &ldquo;Restore&rdquo;, &ldquo;Archive&rdquo; and &ldquo;Delete&rdquo; surface at its edge
-        in turn, firing the same <code className="font-mono">onCommit</code>. Disabling the
-        gesture withdraws them too.
+        The keyboard path is buttons, not a typed gesture: every action is also a real button, visually hidden until it
+        takes focus. Tab past the row&apos;s own button and &ldquo;Restore&rdquo;, &ldquo;Archive&rdquo; and
+        &ldquo;Delete&rdquo; surface at its edge in turn, firing the same <code className="font-mono">onCommit</code>.
+        Disabling the gesture withdraws them too.
       </Note>
       <Note>
-        Each action names its <code className="font-mono">tone</code> — here neutral, danger
-        and success — and the kit paints both states from it, with a foreground measured
-        against every shipped preset in both modes. There is no class of the caller&apos;s under a
-        hard-coded <code className="font-mono">text-white</code>: that would read 2.4–4.5:1 on the
-        kit&apos;s own swipes, dimmed until armed, and white on near-white on every dark pastel.
+        Each action names its <code className="font-mono">tone</code> — here neutral, danger and success — and the kit
+        paints both states from it, with a foreground measured against every shipped preset in both modes. There is no
+        class of the caller&apos;s under a hard-coded <code className="font-mono">text-white</code>: that would read
+        2.4–4.5:1 on the kit&apos;s own swipes, dimmed until armed, and white on near-white on every dark pastel.
       </Note>
     </div>
   );
@@ -226,11 +211,7 @@ function SwipeVariants() {
 
   return (
     <div className="space-y-3">
-      <SwipeableRow
-        left={three}
-        actionsLabel="Actions for Rent"
-        className="rounded-md border border-subtle"
-      >
+      <SwipeableRow left={three} actionsLabel="Actions for Rent" className="rounded-md border border-subtle">
         {rowContent("Rent", "left only · three stages · actionsLabel", "−950.00 €")}
       </SwipeableRow>
       <SwipeableRow right={pinOnly} className="rounded-md border border-subtle">
@@ -250,19 +231,17 @@ function SwipeVariants() {
         ))}
       </ul>
       <Note>
-        Drag the Rent row RIGHT, or the Salary row LEFT: a side with no actions still moves a
-        resisted ~28px and snaps back, with nothing painted behind it — not even on the way
-        back. <code className="font-mono">actionsLabel</code> names the group of keyboard
-        buttons (default: the provider&apos;s <code className="font-mono">swipeableRow.actions</code>).
+        Drag the Rent row RIGHT, or the Salary row LEFT: a side with no actions still moves a resisted ~28px and snaps
+        back, with nothing painted behind it — not even on the way back. <code className="font-mono">actionsLabel</code>{" "}
+        names the group of keyboard buttons (default: the provider&apos;s{" "}
+        <code className="font-mono">swipeableRow.actions</code>).
       </Note>
       <Note>
-        Right-to-left: <code className="font-mono">left</code> and{" "}
-        <code className="font-mono">right</code> stay physical drag directions on purpose — a
-        swipe is a movement across the glass, and which way is destructive is the app&apos;s
-        call (swap the arrays for a mirrored RTL layout). What the row lays out does mirror:
-        the revealed label hugs the edge being uncovered in either direction, and
-        the keyboard buttons (Tab into the Arabic row) surface at the row&apos;s logical END —
-        the left here — instead of over its title.
+        Right-to-left: <code className="font-mono">left</code> and <code className="font-mono">right</code> stay
+        physical drag directions on purpose — a swipe is a movement across the glass, and which way is destructive is
+        the app&apos;s call (swap the arrays for a mirrored RTL layout). What the row lays out does mirror: the revealed
+        label hugs the edge being uncovered in either direction, and the keyboard buttons (Tab into the Arabic row)
+        surface at the row&apos;s logical END — the left here — instead of over its title.
       </Note>
     </div>
   );
@@ -312,7 +291,12 @@ function SwipeTones() {
   const [tone, setTone] = useState<SwipeTone>("danger");
   const [log, setLog] = useState<string | null>(null);
   const actions: SwipeAction[] = [
-    { label: `Swipe (${tone})`, icon: <Trash2 className="size-4" />, tone, onCommit: () => setLog(`committed: ${tone}`) },
+    {
+      label: `Swipe (${tone})`,
+      icon: <Trash2 className="size-4" />,
+      tone,
+      onCommit: () => setLog(`committed: ${tone}`),
+    },
   ];
   return (
     <div className="space-y-4">
@@ -341,13 +325,13 @@ function SwipeTones() {
       </div>
       <p className={READOUT}>{log ?? "nothing committed yet"}</p>
       <Note>
-        The tones are StatusDot&apos;s, Chip&apos;s and ProgressBar&apos;s, so a curtain can be &ldquo;the
-        colour of the status it produces&rdquo; by name. Idle is the tone&apos;s soft wash under its own text
-        (≥ 4.5:1; brand&apos;s 4.43 in a few derived dark presets is the Chip brand soft pair&apos;s own edge),
-        armed the plain fill — not `-hover` — under its `-contrast` (≥ 5:1): the soft→solid step is the
-        &ldquo;let go and it fires&rdquo; signal. The money pair washes in the well, as Chip&apos;s soft money
-        look does. DataTable&apos;s row swipes, the feedback inbox&apos;s plan and TranslationReviewPanel&apos;s
-        swipes take tones, so every app gets the look without an edit.
+        The tones are StatusDot&apos;s, Chip&apos;s and ProgressBar&apos;s, so a curtain can be &ldquo;the colour of the
+        status it produces&rdquo; by name. Idle is the tone&apos;s soft wash under its own text (≥ 4.5:1; brand&apos;s
+        4.43 in a few derived dark presets is the Chip brand soft pair&apos;s own edge), armed the plain fill — not
+        `-hover` — under its `-contrast` (≥ 5:1): the soft→solid step is the &ldquo;let go and it fires&rdquo; signal.
+        The money pair washes in the well, as Chip&apos;s soft money look does. DataTable&apos;s row swipes, the
+        feedback inbox&apos;s plan and TranslationReviewPanel&apos;s swipes take tones, so every app gets the look
+        without an edit.
       </Note>
     </div>
   );
@@ -382,13 +366,12 @@ function SwipePaints() {
         {`{ label: "Uncleared", paint: { fill: "#d97706", foreground: "#0f172a" }, onCommit }`}
       </pre>
       <Note>
-        `paint` is for the case a tone cannot say: an UNCLEARED curtain must be its pill&apos;s own
-        amber, and its two deletes are two strengths of one red on purpose. The kit lays the fill on the panel as
-        a custom property: idle is `color-mix(in oklab, fill 14%, var(--bg-surface))` under the body ink — a
-        mid-tone as text on its own wash would be 2.4:1 — armed is the fill under the foreground. Values are CSS
-        colours or `var()`s, the same in both themes unless the app declares the variable per theme. The kit
-        cannot measure an app&apos;s paint, so the app&apos;s tests pin the pair. It is the one way past the
-        tones.
+        `paint` is for the case a tone cannot say: an UNCLEARED curtain must be its pill&apos;s own amber, and its two
+        deletes are two strengths of one red on purpose. The kit lays the fill on the panel as a custom property: idle
+        is `color-mix(in oklab, fill 14%, var(--bg-surface))` under the body ink — a mid-tone as text on its own wash
+        would be 2.4:1 — armed is the fill under the foreground. Values are CSS colours or `var()`s, the same in both
+        themes unless the app declares the variable per theme. The kit cannot measure an app&apos;s paint, so the
+        app&apos;s tests pin the pair. It is the one way past the tones.
       </Note>
     </div>
   );
@@ -453,17 +436,16 @@ function RawSwipe() {
       />
 
       <Note>
-        Drag the strip more than 24px and release over the Tap button: the counter does not
-        move, because <code className="font-mono">consumeClick()</code> swallowed the
-        trailing click. Under 24px it counts as a clumsy click and the button fires — which
-        is the whole point of the threshold, on rows whose content is itself interactive.
+        Drag the strip more than 24px and release over the Tap button: the counter does not move, because{" "}
+        <code className="font-mono">consumeClick()</code> swallowed the trailing click. Under 24px it counts as a clumsy
+        click and the button fires — which is the whole point of the threshold, on rows whose content is itself
+        interactive.
       </Note>
       <Note>
-        Both sides here have stages. Drag one that does not (disable the row above, or read
-        the source) and the row still moves a resisted ~28px and snaps back — inert would be
-        indistinguishable from &ldquo;this row is not swipeable&rdquo;.
+        Both sides here have stages. Drag one that does not (disable the row above, or read the source) and the row
+        still moves a resisted ~28px and snaps back — inert would be indistinguishable from &ldquo;this row is not
+        swipeable&rdquo;.
       </Note>
     </div>
   );
 }
-

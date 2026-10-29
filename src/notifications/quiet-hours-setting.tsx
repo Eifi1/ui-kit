@@ -25,7 +25,10 @@ function zoneName(zone: string, regions: NotificationRegionLabels): string {
   const named = Object.prototype.hasOwnProperty.call(regions, region)
     ? regions[region as keyof NotificationRegionLabels]
     : region;
-  return `${named} / ${zone.slice(slash + 1).replace(/_/g, " ").replace(/\//g, " / ")}`;
+  return `${named} / ${zone
+    .slice(slash + 1)
+    .replace(/_/g, " ")
+    .replace(/\//g, " / ")}`;
 }
 
 export interface QuietHoursSettingProps extends Omit<ComponentPropsWithRef<"div">, "children" | "onChange"> {

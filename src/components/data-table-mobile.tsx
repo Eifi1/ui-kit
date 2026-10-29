@@ -42,10 +42,7 @@ function dataAttrsOf(props: DataTableCellProps | undefined): Record<string, unkn
 }
 
 /** The logical sides onto the physical drag directions {@link SwipeableRow} takes. */
-function physicalSwipe(
-  actions: MobileSwipeActions,
-  dir: Direction,
-): { left?: SwipeAction[]; right?: SwipeAction[] } {
+function physicalSwipe(actions: MobileSwipeActions, dir: Direction): { left?: SwipeAction[]; right?: SwipeAction[] } {
   const rtl = dir === "rtl";
   return {
     left: (rtl ? actions.end : actions.start) ?? actions.left,
@@ -62,8 +59,7 @@ function physicalSwipe(
  * reaches the cells without the table knowing what they render; `large:`, so Normal
  * keeps every ellipsis it had.
  */
-const CARD_NO_TRUNCATE =
-  "large:[&_.truncate]:whitespace-normal large:[&_.truncate]:[overflow-wrap:anywhere]";
+const CARD_NO_TRUNCATE = "large:[&_.truncate]:whitespace-normal large:[&_.truncate]:[overflow-wrap:anywhere]";
 
 /**
  * Columns as label-above-value pairs: the phone card's fields at Large (§4), and the
@@ -89,14 +85,21 @@ export function StackedFields<T>({
   return (
     <dl
       data-card-fields="stacked"
-      className={cn("relative flex min-w-0 flex-col", compact ? "gap-1.5 text-xs" : "gap-2.5 text-sm", CARD_NO_TRUNCATE)}
+      className={cn(
+        "relative flex min-w-0 flex-col",
+        compact ? "gap-1.5 text-xs" : "gap-2.5 text-sm",
+        CARD_NO_TRUNCATE,
+      )}
     >
       {fields.map(({ col, value }) => (
         <div key={col.key} className="min-w-0">
           <dt className="text-xs uppercase tracking-wide text-muted">{col.header}</dt>
           <dd
             {...dataAttrsOf(col.cellProps?.(row))}
-            className={cn("mt-0.5 min-w-0 break-words text-secondary", liftOwnClicks && keepsOwnClicks(col) && LIFTED_FIELD)}
+            className={cn(
+              "mt-0.5 min-w-0 break-words text-secondary",
+              liftOwnClicks && keepsOwnClicks(col) && LIFTED_FIELD,
+            )}
           >
             {value}
           </dd>
@@ -543,7 +546,12 @@ export function MobileRow<T>({
                 {statuses.length > 0 && (
                   <div className="flex shrink-0 flex-wrap items-center justify-end gap-1">
                     {statuses.map(({ col, value }) => (
-                      <span key={col.key} {...dataAttrsOf(col.cellProps?.(row))} data-card-status="" className="inline-flex">
+                      <span
+                        key={col.key}
+                        {...dataAttrsOf(col.cellProps?.(row))}
+                        data-card-status=""
+                        className="inline-flex"
+                      >
                         <StatusChip value={value} />
                       </span>
                     ))}
@@ -555,27 +563,27 @@ export function MobileRow<T>({
               // §4: each label ABOVE its value at Large. Side by side, a label column
               // sized to the widest label leaves a value a sliver of a 240 px card.
               <StackedFields columns={mobileSecondaryColumns} row={row} compact={compact} liftOwnClicks={stretched} />
-            ) : fields.length > 0 && (
-              <dl
-                className={cn(
-                  "grid grid-cols-[auto_1fr] gap-x-3",
-                  compact ? "gap-y-0.5 text-xs" : "gap-y-1 text-sm",
-                )}
-              >
-                {fields.map(({ col, value }) => (
-                  <Fragment key={col.key}>
-                    <dt className="text-xs uppercase tracking-wide text-muted self-center">
-                      {col.header}
-                    </dt>
-                    <dd
-                      {...dataAttrsOf(col.cellProps?.(row))}
-                      className={cn("min-w-0 text-secondary self-center", stretched && keepsOwnClicks(col) && LIFTED_FIELD)}
-                    >
-                      {value}
-                    </dd>
-                  </Fragment>
-                ))}
-              </dl>
+            ) : (
+              fields.length > 0 && (
+                <dl
+                  className={cn("grid grid-cols-[auto_1fr] gap-x-3", compact ? "gap-y-0.5 text-xs" : "gap-y-1 text-sm")}
+                >
+                  {fields.map(({ col, value }) => (
+                    <Fragment key={col.key}>
+                      <dt className="text-xs uppercase tracking-wide text-muted self-center">{col.header}</dt>
+                      <dd
+                        {...dataAttrsOf(col.cellProps?.(row))}
+                        className={cn(
+                          "min-w-0 text-secondary self-center",
+                          stretched && keepsOwnClicks(col) && LIFTED_FIELD,
+                        )}
+                      >
+                        {value}
+                      </dd>
+                    </Fragment>
+                  ))}
+                </dl>
+              )
             )}
             {/* The row's actions after the fields, at the card's end (0.49 KIT-7): its
                 buttons keep their own clicks, and RowActions folds into "⋯" at Large. */}
@@ -595,22 +603,17 @@ export function MobileRow<T>({
           </>
         )}
       </div>
-      {opensDetail && !selecting &&
+      {opensDetail &&
+        !selecting &&
         // `aria-hidden`: the row already announces itself as a button with
         // `aria-expanded`, so the icon would only add a second, wordless stop.
         (mobileExpandAsDialog ? (
           // Points INTO the sheet, which is the reading-forward direction.
-          <ChevronRight
-            aria-hidden
-            className="size-4 shrink-0 text-placeholder rtl:-scale-x-100"
-          />
+          <ChevronRight aria-hidden className="size-4 shrink-0 text-placeholder rtl:-scale-x-100" />
         ) : (
           <ChevronDown
             aria-hidden
-            className={cn(
-              "size-4 shrink-0 text-placeholder transition-transform",
-              expanded && "rotate-180",
-            )}
+            className={cn("size-4 shrink-0 text-placeholder transition-transform", expanded && "rotate-180")}
           />
         ))}
     </>
@@ -684,64 +687,64 @@ export function MobileRow<T>({
       {cardInner}
     </div>
   ) : interactive && href ? (
-      // A card with a URL of its own is a LINK, not a div wearing role="button"
-      // (feedback #451): the phone's long-press "open in new tab" and a screen
-      // reader's link semantics both come free, and the fake role goes away.
-      <RowLink
-        href={href}
-        {...press}
-        onActivate={() => onRowClick!(row)}
-        aria-expanded={opensRow ? expanded : undefined}
-        className={cardClass}
-        // Enter already activates a link natively, and that routes through
-        // RowLink's own onClick — handling it here too would open the row twice.
-        // Space is the only key left, and only so it opens the row instead of
-        // scrolling the list.
-        onKeyDown={(e) => {
-          if (e.key !== " ") return;
-          e.preventDefault();
-          onRowClick!(row);
-        }}
-      >
-        {cardInner}
-      </RowLink>
-    ) : (
-      /* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- the handlers are
+    // A card with a URL of its own is a LINK, not a div wearing role="button"
+    // (feedback #451): the phone's long-press "open in new tab" and a screen
+    // reader's link semantics both come free, and the fake role goes away.
+    <RowLink
+      href={href}
+      {...press}
+      onActivate={() => onRowClick!(row)}
+      aria-expanded={opensRow ? expanded : undefined}
+      className={cardClass}
+      // Enter already activates a link natively, and that routes through
+      // RowLink's own onClick — handling it here too would open the row twice.
+      // Space is the only key left, and only so it opens the row instead of
+      // scrolling the list.
+      onKeyDown={(e) => {
+        if (e.key !== " ") return;
+        e.preventDefault();
+        onRowClick!(row);
+      }}
+    >
+      {cardInner}
+    </RowLink>
+  ) : (
+    /* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- the handlers are
          only attached when `interactive`, and then so are role="button", tabIndex 0 and the
          Enter/Space handler below; the rule cannot follow the conditional role. */
-      <div
-        {...press}
-        role={interactive ? "button" : undefined}
-        tabIndex={interactive ? 0 : undefined}
-        onClick={
-          interactive
-            ? (e) => {
-                if (fromOutside(e.target, e.currentTarget)) return;
-                // A tap on a control in a cell (a select, a button) is that
-                // control's, as on the desktop `<tr>` (keksdose live #428).
-                if (fromOwnControl(e.target, e.currentTarget)) return;
+    <div
+      {...press}
+      role={interactive ? "button" : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      onClick={
+        interactive
+          ? (e) => {
+              if (fromOutside(e.target, e.currentTarget)) return;
+              // A tap on a control in a cell (a select, a button) is that
+              // control's, as on the desktop `<tr>` (keksdose live #428).
+              if (fromOwnControl(e.target, e.currentTarget)) return;
+              onRowClick!(row);
+            }
+          : undefined
+      }
+      onKeyDown={
+        interactive
+          ? (e) => {
+              // A key press inside a nested control is that control's.
+              if (e.target !== e.currentTarget) return;
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
                 onRowClick!(row);
               }
-            : undefined
-        }
-        onKeyDown={
-          interactive
-            ? (e) => {
-                // A key press inside a nested control is that control's.
-                if (e.target !== e.currentTarget) return;
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  onRowClick!(row);
-                }
-              }
-            : undefined
-        }
-        aria-expanded={opensRow ? expanded : undefined}
-        className={cardClass}
-      >
-        {cardInner}
-      </div>
-    );
+            }
+          : undefined
+      }
+      aria-expanded={opensRow ? expanded : undefined}
+      className={cardClass}
+    >
+      {cardInner}
+    </div>
+  );
   return (
     <li
       className={cn(tint)}
@@ -765,12 +768,7 @@ export function MobileRow<T>({
         body
       )}
       {expansion && !mobileExpandAsDialog && (
-        <div
-          className={cn(
-            "bg-surface-2 border-t border-subtle",
-            compact ? "px-3 py-2" : "px-4 py-3",
-          )}
-        >
+        <div className={cn("bg-surface-2 border-t border-subtle", compact ? "px-3 py-2" : "px-4 py-3")}>
           {expansion}
         </div>
       )}
@@ -952,11 +950,7 @@ export function MobileFilters<T>({
         )}
       </button>
       {activeCount > 0 && (
-        <button
-          type="button"
-          onClick={onClearAll}
-          className="text-xs text-muted hover:text-secondary"
-        >
+        <button type="button" onClick={onClearAll} className="text-xs text-muted hover:text-secondary">
           {labels.clearAll}
         </button>
       )}
@@ -1015,10 +1009,7 @@ export function MobileFilters<T>({
                   {active && <span className="size-1.5 rounded-full bg-brand" />}
                 </span>
                 <ChevronDown
-                  className={cn(
-                    "size-4 shrink-0 text-placeholder transition-transform",
-                    isItemOpen && "rotate-180",
-                  )}
+                  className={cn("size-4 shrink-0 text-placeholder transition-transform", isItemOpen && "rotate-180")}
                 />
               </button>
               {isItemOpen && (

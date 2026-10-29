@@ -51,8 +51,14 @@ const TEXT_SIZE_CSS = [
   // step for More contrast's darker well, in a block of custom properties only — and the
   // link's brand as text under the `contrast:` variant reaches the built CSS.
   ["the light More-contrast literals", /:root\[data-contrast="?more"?\]:not\(\.dark\)\{[^}]*--danger:#ba0739/],
-  ["the light More-contrast --bg-active", /:root\[data-contrast="?more"?\]:not\(\.dark\)\{[^}]*--bg-active:color-mix\(in oklab, ?var\(--text-primary\) ?16%, ?var\(--bg-surface\)\)/],
-  ["the link's brand as text under More contrast", /\.contrast\\:text-brand-muted:where\([^)]*data-contrast=more[^{]*\{color:var\(--brand-muted\)\}/],
+  [
+    "the light More-contrast --bg-active",
+    /:root\[data-contrast="?more"?\]:not\(\.dark\)\{[^}]*--bg-active:color-mix\(in oklab, ?var\(--text-primary\) ?16%, ?var\(--bg-surface\)\)/,
+  ],
+  [
+    "the link's brand as text under More contrast",
+    /\.contrast\\:text-brand-muted:where\([^)]*data-contrast=more[^{]*\{color:var\(--brand-muted\)\}/,
+  ],
   ["md: at Normal, scoped", /@media \(width>=48rem\)\{\.md\\:[^{]*:where\(:not\(\[data-text-size\$=large\] \*\)\)\{/],
   ["md: at Large", /@media \(width>=60rem\)\{\.md\\:[^{]*:where\(\[data-text-size=large\] \*\)\{/],
   ["md: at Extra large", /@media \(width>=72rem\)\{\.md\\:[^{]*:where\(\[data-text-size=xlarge\] \*\)\{/],
@@ -88,11 +94,20 @@ const COLOUR_ROLES_CSS = [
   ["the lighter row hover", /--bg-hover:color-mix\(in oklab, ?var\(--text-primary\) ?5\.5%, ?var\(--bg-surface\)\)/],
   ["a text role utility", /\.text-danger-contrast\{color:var\(--danger-contrast\)\}/],
   ["a background role utility", /\.bg-danger-soft\{background-color:var\(--danger-bg\)\}/],
-  ["a ring role utility", /\.focus-visible\\:ring-warning-strong:focus-visible\{--tw-ring-color:var\(--warning-border-strong\)\}/],
+  [
+    "a ring role utility",
+    /\.focus-visible\\:ring-warning-strong:focus-visible\{--tw-ring-color:var\(--warning-border-strong\)\}/,
+  ],
   // 0.34 (refactor audit 2026-10, DOC-7): the focus frame's width, a ring offset and a
   // money colour, as the kit's own markup writes them.
-  ["the focus frame's width utility", /\.focus-visible\\:ring-focus:focus-visible\{--tw-ring-shadow:[^;}]*calc\(var\(--focus-ring-width\) ?\+ ?var\(--tw-ring-offset-width\)\)/],
-  ["a ring-offset role utility", /\.focus-visible\\:ring-offset-surface:focus-visible\{--tw-ring-offset-color:var\(--bg-surface\)\}/],
+  [
+    "the focus frame's width utility",
+    /\.focus-visible\\:ring-focus:focus-visible\{--tw-ring-shadow:[^;}]*calc\(var\(--focus-ring-width\) ?\+ ?var\(--tw-ring-offset-width\)\)/,
+  ],
+  [
+    "a ring-offset role utility",
+    /\.focus-visible\\:ring-offset-surface:focus-visible\{--tw-ring-offset-color:var\(--bg-surface\)\}/,
+  ],
   ["a money role utility", /\.text-money-income\{color:var\(--money-income\)\}/],
 ];
 for (const [what, re] of COLOUR_ROLES_CSS) {
@@ -129,17 +144,32 @@ const NAMESPACES = [
   ["outline-strong", /\.outline-strong\s*\{\s*outline-color:\s*var\(--border-strong\);/],
   ["fill-surface", /\.fill-surface\s*\{\s*fill:\s*var\(--bg-surface\);/],
   ["stroke-subtle", /\.stroke-subtle\s*\{\s*stroke:\s*var\(--border\);/],
-  ["hover:bg-brand (a variant on a former plain class)", /\.hover\\:bg-brand:hover\s*\{\s*background-color:\s*var\(--brand\);/],
+  [
+    "hover:bg-brand (a variant on a former plain class)",
+    /\.hover\\:bg-brand:hover\s*\{\s*background-color:\s*var\(--brand\);/,
+  ],
   ["text-muted/60 (an opacity)", /color-mix\(in oklab, var\(--text-muted\) 60%, transparent\)/],
-  ["truncate-until-large (text-size §10.17)", /\.truncate-until-large\s*\{[^}]*white-space:\s*nowrap;[\s\S]*?\[data-text-size\$=large\][^{]*\{\s*white-space:\s*normal;\s*overflow-wrap:\s*anywhere;/],
+  [
+    "truncate-until-large (text-size §10.17)",
+    /\.truncate-until-large\s*\{[^}]*white-space:\s*nowrap;[\s\S]*?\[data-text-size\$=large\][^{]*\{\s*white-space:\s*normal;\s*overflow-wrap:\s*anywhere;/,
+  ],
   // 0.33.1: the figures' sibling wraps at spaces only, so an amount never splits.
-  ["truncate-until-large-words (figures, 0.33.1)", /\.truncate-until-large-words\s*\{[^}]*white-space:\s*nowrap;[\s\S]*?\[data-text-size\$=large\][^{]*\{\s*white-space:\s*normal;\s*overflow-wrap:\s*normal;/],
+  [
+    "truncate-until-large-words (figures, 0.33.1)",
+    /\.truncate-until-large-words\s*\{[^}]*white-space:\s*nowrap;[\s\S]*?\[data-text-size\$=large\][^{]*\{\s*white-space:\s*normal;\s*overflow-wrap:\s*normal;/,
+  ],
   // 0.34 (DOC-7): the width namespaces — `ring-focus` must stay a WIDTH, which Tailwind
   // tries only after finding no colour of that name — the ring offsets, and money.
-  ["ring-focus", /\.ring-focus\s*\{\s*--tw-ring-shadow:[^;]*calc\(var\(--focus-ring-width\) \+ var\(--tw-ring-offset-width\)\)/],
+  [
+    "ring-focus",
+    /\.ring-focus\s*\{\s*--tw-ring-shadow:[^;]*calc\(var\(--focus-ring-width\) \+ var\(--tw-ring-offset-width\)\)/,
+  ],
   ["outline-focus", /\.outline-focus\s*\{[^}]*outline-width:\s*var\(--focus-ring-width\);/],
   ["ring-offset-surface", /\.ring-offset-surface\s*\{\s*--tw-ring-offset-color:\s*var\(--bg-surface\);/],
-  ["hover:text-money-income (a money colour with a variant)", /\.hover\\:text-money-income:hover\s*\{\s*color:\s*var\(--money-income\);/],
+  [
+    "hover:text-money-income (a money colour with a variant)",
+    /\.hover\\:text-money-income:hover\s*\{\s*color:\s*var\(--money-income\);/,
+  ],
 ];
 const NOT_NAMES = ["bg-muted", "text-surface", "text-subtle", "fill-brand"];
 const probe = compiler.build([...NAMESPACES.map(([cls]) => cls.split(" ")[0]), ...NOT_NAMES]);

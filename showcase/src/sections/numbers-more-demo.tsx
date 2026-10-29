@@ -69,16 +69,14 @@ function LiveCalculator() {
           <StateLine>{`live = ${String(liveRate)} · committed = ${String(rate)}`}</StateLine>
         </div>
         <p data-stage="wide" className="text-center text-sm text-primary">
-          Rent estimate, recomputed per keystroke:{" "}
-          <strong className="tabular-nums">{total.toFixed(2)}</strong>
+          Rent estimate, recomputed per keystroke: <strong className="tabular-nums">{total.toFixed(2)}</strong>
         </p>
       </Stage>
       <Note>
-        <code>onValueChange</code> fires per keystroke with the number the text reads as —{" "}
-        <em>not</em> rounded or clamped yet, so typing 25 rooms shows 25 until the field is left,
-        then 20. A half-typed draft (<code>-</code>, <code>12+</code>) fires nothing. On blur it
-        fires once more with the committed number, so live and committed always end equal.
-        Steps are decimal-exact and land on the <code>min + k × step</code> grid.
+        <code>onValueChange</code> fires per keystroke with the number the text reads as — <em>not</em> rounded or
+        clamped yet, so typing 25 rooms shows 25 until the field is left, then 20. A half-typed draft (<code>-</code>,{" "}
+        <code>12+</code>) fires nothing. On blur it fires once more with the committed number, so live and committed
+        always end equal. Steps are decimal-exact and land on the <code>min + k × step</code> grid.
       </Note>
     </Example>
   );
@@ -95,8 +93,8 @@ function StepInput() {
         </div>
       </Stage>
       <Note>
-        NumberInput stays a string field: <code>min</code>/<code>max</code> bound the step keys
-        only. ArrowUp from 0.2 is 0.3, not 0.30000000000000004.
+        NumberInput stays a string field: <code>min</code>/<code>max</code> bound the step keys only. ArrowUp from 0.2
+        is 0.3, not 0.30000000000000004.
       </Note>
     </Example>
   );
@@ -120,16 +118,12 @@ function SignatureViews() {
           // ink could not be read on.
           frameClassName="border-2 border-dashed border-brand bg-brand-soft"
         />
-        <SignatureView
-          label="Unterschrift"
-          value={null}
-          labels={{ viewEmpty: "Noch nicht unterschrieben" }}
-        />
+        <SignatureView label="Unterschrift" value={null} labels={{ viewEmpty: "Noch nicht unterschrieben" }} />
       </Stage>
       <Note>
-        <code>adaptInk</code> (on by default) inverts dark ink in the dark theme; turn it off for an
-        opaque scan, which would otherwise turn into a white box. <code>frameClassName</code>{" "}
-        restyles the frame only; <code>labels</code> overrides the provider for this view.
+        <code>adaptInk</code> (on by default) inverts dark ink in the dark theme; turn it off for an opaque scan, which
+        would otherwise turn into a white box. <code>frameClassName</code> restyles the frame only; <code>labels</code>{" "}
+        overrides the provider for this view.
       </Note>
     </Example>
   );
@@ -139,15 +133,14 @@ function WeekStart() {
   const [start, setStart] = useState<WeekDay>(1);
   const [day, setDay] = useState("2026-09-24");
   return (
-    <Example label="UiKitProvider weekStartsOn" hint={`locale="en" (Sunday-first) pinned to ${start === 1 ? "Monday" : "Sunday"}`}>
+    <Example
+      label="UiKitProvider weekStartsOn"
+      hint={`locale="en" (Sunday-first) pinned to ${start === 1 ? "Monday" : "Sunday"}`}
+    >
       <Stage>
         <div>
           <label className="mb-2 flex items-center gap-2 text-xs text-secondary">
-            <input
-              type="checkbox"
-              checked={start === 1}
-              onChange={(e) => setStart(e.target.checked ? 1 : 0)}
-            />
+            <input type="checkbox" checked={start === 1} onChange={(e) => setStart(e.target.checked ? 1 : 0)} />
             Pin Monday
           </label>
           <UiKitProvider locale="en" weekStartsOn={start}>
@@ -156,9 +149,9 @@ function WeekStart() {
         </div>
       </Stage>
       <Note>
-        Resolved as: the calendar&rsquo;s own <code>weekStartsOn</code>, else the provider&rsquo;s,
-        else the locale&rsquo;s week info, else Monday. DatePicker and DateRangePicker render
-        MiniCalendar, so they follow; <code>useKitWeekStart()</code> reads it for a grid of your own.
+        Resolved as: the calendar&rsquo;s own <code>weekStartsOn</code>, else the provider&rsquo;s, else the
+        locale&rsquo;s week info, else Monday. DatePicker and DateRangePicker render MiniCalendar, so they follow;{" "}
+        <code>useKitWeekStart()</code> reads it for a grid of your own.
       </Note>
     </Example>
   );

@@ -1,5 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Button, CopyButton, Input, copyToClipboard, useCopyToClipboard, useDebounce, useDebouncedCallback } from "@eifi1/ui-kit";
+import {
+  Button,
+  CopyButton,
+  Input,
+  copyToClipboard,
+  useCopyToClipboard,
+  useDebounce,
+  useDebouncedCallback,
+} from "@eifi1/ui-kit";
 import type { CopyState } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row, Stage, READOUT } from "../lib/section";
 
@@ -45,12 +53,24 @@ function CopyButtons() {
           <div className="flex flex-wrap items-center gap-2 text-sm text-secondary">
             <span className="font-mono">{IBAN}</span>
             <CopyButton text={IBAN} label="Copy IBAN" onCopied={log("icon")} />
-            <CopyButton text={IBAN} label="Copy IBAN" size="md" buttonVariant="secondary" tooltipSide="bottom" onCopied={log("icon md")} />
+            <CopyButton
+              text={IBAN}
+              label="Copy IBAN"
+              size="md"
+              buttonVariant="secondary"
+              tooltipSide="bottom"
+              onCopied={log("icon md")}
+            />
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <CopyButton
               variant="label"
-              text={() => ["date;text;amount", ...Array.from({ length: rows }, (_, i) => `2026-09-0${i + 1};row ${i + 1};${(i + 1) * 10}`)].join("\n")}
+              text={() =>
+                [
+                  "date;text;amount",
+                  ...Array.from({ length: rows }, (_, i) => `2026-09-0${i + 1};row ${i + 1};${(i + 1) * 10}`),
+                ].join("\n")
+              }
               label={`Copy ${rows} rows as CSV`}
               resetAfter={4000}
               onCopied={log("csv")}
@@ -60,8 +80,19 @@ function CopyButtons() {
             </Button>
           </div>
           <div className="flex flex-wrap items-center gap-2" onClickCapture={breakClipboardForOneClick}>
-            <CopyButton variant="label" buttonVariant="ghost" text="this will not arrive" label="Copy (simulated failure)" onCopied={log("failing label")} />
-            <CopyButton text="this will not arrive" label="Copy (simulated failure)" tooltipPortal onCopied={log("failing icon")} />
+            <CopyButton
+              variant="label"
+              buttonVariant="ghost"
+              text="this will not arrive"
+              label="Copy (simulated failure)"
+              onCopied={log("failing label")}
+            />
+            <CopyButton
+              text="this will not arrive"
+              label="Copy (simulated failure)"
+              tooltipPortal
+              onCopied={log("failing icon")}
+            />
             <CopyButton
               variant="label"
               text="this will not arrive"
@@ -76,16 +107,15 @@ function CopyButtons() {
       <div className="mt-3">
         <Note>
           The icon variant is a square <code className="font-mono">IconButton</code> (
-          <code className="font-mono">size</code>, default <code className="font-mono">sm</code>)
-          whose tooltip states the result on <code className="font-mono">tooltipSide</code>; its
-          accessible name stays <code className="font-mono">label</code> in every state, and the
-          result is spoken through a live region — polite for success, assertive for failure. The
-          label variant&apos;s words change instead. <code className="font-mono">text</code> as a
-          function is read at click time, so the CSV button copies the current row count.{" "}
-          <code className="font-mono">resetAfter</code> is how long the result stays (4 s on the CSV
-          button, 2 s elsewhere). The third row is wired to a browser with no clipboard at all: it
-          says &ldquo;Couldn&rsquo;t copy&rdquo;, in the page&apos;s language — or, on the last button,
-          in its own <code className="font-mono">labels</code>.
+          <code className="font-mono">size</code>, default <code className="font-mono">sm</code>) whose tooltip states
+          the result on <code className="font-mono">tooltipSide</code>; its accessible name stays{" "}
+          <code className="font-mono">label</code> in every state, and the result is spoken through a live region —
+          polite for success, assertive for failure. The label variant&apos;s words change instead.{" "}
+          <code className="font-mono">text</code> as a function is read at click time, so the CSV button copies the
+          current row count. <code className="font-mono">resetAfter</code> is how long the result stays (4 s on the CSV
+          button, 2 s elsewhere). The third row is wired to a browser with no clipboard at all: it says
+          &ldquo;Couldn&rsquo;t copy&rdquo;, in the page&apos;s language — or, on the last button, in its own{" "}
+          <code className="font-mono">labels</code>.
         </Note>
       </div>
     </Example>
@@ -128,31 +158,55 @@ function CopyHook() {
       </Row>
       <OutTable
         rows={[
-          ["state", <span key="s" className={STATE_TONE[state]}>{state}</span>],
+          [
+            "state",
+            <span key="s" className={STATE_TONE[state]}>
+              {state}
+            </span>,
+          ],
           ["await copyToClipboard(value)", helper],
         ]}
       />
       <div className="mt-3">
         <Note>
           <code className="font-mono">resetAfter: 0</code> here, so the state stays until{" "}
-          <code className="font-mono">reset()</code> — the default is 2000 ms. The Clipboard API
-          exists only in a secure context; without it, or when it refuses, the hook falls back to{" "}
-          <code className="font-mono">execCommand(&quot;copy&quot;)</code> on a throwaway textarea
-          and puts focus and the selection back afterwards. It never throws.
+          <code className="font-mono">reset()</code> — the default is 2000 ms. The Clipboard API exists only in a secure
+          context; without it, or when it refuses, the hook falls back to{" "}
+          <code className="font-mono">execCommand(&quot;copy&quot;)</code> on a throwaway textarea and puts focus and
+          the selection back afterwards. It never throws.
         </Note>
       </div>
     </Example>
   );
 }
 
-const FRUIT = ["Apple", "Apricot", "Banana", "Blackberry", "Blueberry", "Cherry", "Grape", "Lemon", "Lime", "Mango", "Melon", "Orange", "Peach", "Pear", "Plum"];
+const FRUIT = [
+  "Apple",
+  "Apricot",
+  "Banana",
+  "Blackberry",
+  "Blueberry",
+  "Cherry",
+  "Grape",
+  "Lemon",
+  "Lime",
+  "Mango",
+  "Melon",
+  "Orange",
+  "Peach",
+  "Pear",
+  "Plum",
+];
 
 function DebouncedValue() {
   const [query, setQuery] = useState("");
   const [ms, setMs] = useState(400);
   const debounced = useDebounce(query, ms);
   const [runs, setRuns] = useState(0);
-  const results = useMemo(() => FRUIT.filter((f) => f.toLowerCase().includes(debounced.trim().toLowerCase())), [debounced]);
+  const results = useMemo(
+    () => FRUIT.filter((f) => f.toLowerCase().includes(debounced.trim().toLowerCase())),
+    [debounced],
+  );
   // Counts how often the "search" would have run — once per settled value, not per key.
   const first = useRef(true);
   useEffect(() => {
@@ -165,7 +219,12 @@ function DebouncedValue() {
   return (
     <Example label="useDebounce(value, ms)" hint="a value that follows, once it has stopped changing for ms">
       <Stage>
-        <Input aria-label="Search fruit" placeholder="Type quickly…" value={query} onChange={(e) => setQuery(e.target.value)} />
+        <Input
+          aria-label="Search fruit"
+          placeholder="Type quickly…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
       </Stage>
       <Row>
         {[150, 400, 1000].map((n) => (
@@ -184,10 +243,9 @@ function DebouncedValue() {
       />
       <div className="mt-3">
         <Note>
-          The first render returns the value itself, not <code className="font-mono">undefined</code>,
-          so the list is filled immediately. Every change restarts the wait and the effect&apos;s
-          cleanup clears the old timer — the line hand-rolled copies forget, so
-          a stale query landed after the fresh one.
+          The first render returns the value itself, not <code className="font-mono">undefined</code>, so the list is
+          filled immediately. Every change restarts the wait and the effect&apos;s cleanup clears the old timer — the
+          line hand-rolled copies forget, so a stale query landed after the fresh one.
         </Note>
       </div>
     </Example>
@@ -261,10 +319,9 @@ function DebouncedCallback() {
         <Note>
           The returned function keeps its identity across renders and always calls the LATEST{" "}
           <code className="font-mono">fn</code>, with the arguments of the last call.{" "}
-          <code className="font-mono">flush()</code> runs the pending call now — the textarea
-          flushes on blur, so the last keystrokes are never lost — and{" "}
-          <code className="font-mono">cancel()</code> drops it. A pending call is cancelled on unmount:
-          leave this page mid-sentence and nothing saves into a page that is gone.
+          <code className="font-mono">flush()</code> runs the pending call now — the textarea flushes on blur, so the
+          last keystrokes are never lost — and <code className="font-mono">cancel()</code> drops it. A pending call is
+          cancelled on unmount: leave this page mid-sentence and nothing saves into a page that is gone.
         </Note>
       </div>
     </Example>

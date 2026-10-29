@@ -216,13 +216,7 @@ export function AccountRoleChip<R extends string = string>({
  * state, as keksdose's state column does.
  */
 export type AccountState =
-  | "active"
-  | "inactive"
-  | "invited"
-  | "registered"
-  | "unverified"
-  | "passwordChange"
-  | "deletion";
+  "active" | "inactive" | "invited" | "registered" | "unverified" | "passwordChange" | "deletion";
 
 /**
  * The `accountState` namespace. One word per state, plus the two forms of `deletion`.

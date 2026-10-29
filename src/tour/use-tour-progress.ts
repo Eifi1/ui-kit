@@ -197,7 +197,10 @@ function fromRecord(value: unknown): TourCompletions | undefined {
  * The record, and whether the text was READ (empty, the kit's shape, or a shape `migrate`
  * knows) rather than dropped: a write over an unread text would lose it (B-1).
  */
-function parse(raw: string | null, migrate: UseTourProgressOptions["migrate"]): { value: TourCompletions; readable: boolean } {
+function parse(
+  raw: string | null,
+  migrate: UseTourProgressOptions["migrate"],
+): { value: TourCompletions; readable: boolean } {
   if (raw === null || raw.trim() === "") return { value: EMPTY, readable: true };
   let value: unknown = raw;
   try {
@@ -294,7 +297,10 @@ function devWarn(message: string) {
  * Remember `account` for `key` if it is the first one, and return the key's account.
  * @internal Not part of the barrel; `TourProvider` registers its `progress` with it.
  */
-export function rememberAccount(key: string, account: TourProgressAccount | undefined): TourProgressAccount | undefined {
+export function rememberAccount(
+  key: string,
+  account: TourProgressAccount | undefined,
+): TourProgressAccount | undefined {
   if (account && !accounts.has(key)) {
     accounts.set(key, account);
     if (account.adopt && account.adopt.storageKey === key) {

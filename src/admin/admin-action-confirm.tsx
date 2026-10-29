@@ -206,7 +206,8 @@ function refusalOf(
 }
 
 /** The selector for the first field among the caller's `children` — what opening focuses. */
-const FIELD = 'input:not([type="hidden"]):not(:disabled), select:not(:disabled), textarea:not(:disabled), [role="combobox"]';
+const FIELD =
+  'input:not([type="hidden"]):not(:disabled), select:not(:disabled), textarea:not(:disabled), [role="combobox"]';
 
 export function AdminActionConfirm({
   level,
@@ -406,9 +407,7 @@ export function AdminActionConfirm({
 
   const submit = () => {
     if (busy || guardReason !== undefined) return;
-    perform(() =>
-      onConfirm(askTyped ? { confirmEmail: typed.trim(), acknowledged: true } : { acknowledged: true }),
-    );
+    perform(() => onConfirm(askTyped ? { confirmEmail: typed.trim(), acknowledged: true } : { acknowledged: true }));
   };
 
   const lines = Array.isArray(consequence)
@@ -467,9 +466,7 @@ export function AdminActionConfirm({
             ))}
           </ul>
         ) : (
-          hasContent(consequence as ReactNode) && (
-            <p className="text-sm text-secondary">{consequence as ReactNode}</p>
-          )
+          hasContent(consequence as ReactNode) && <p className="text-sm text-secondary">{consequence as ReactNode}</p>
         )}
         {Children.toArray(children).some(hasContent) && (
           <div ref={slotRef} className="space-y-3">

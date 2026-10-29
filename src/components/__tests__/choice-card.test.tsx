@@ -47,9 +47,7 @@ describe("ChoiceCardGroup", () => {
   it("single: radios sharing a name, in a fieldset named by its legend", () => {
     function Single() {
       const [role, setRole] = useState<Role | null>(null);
-      return (
-        <ChoiceCardGroup legend="Role" options={[...ROLES]} value={role} onChange={setRole} />
-      );
+      return <ChoiceCardGroup legend="Role" options={[...ROLES]} value={role} onChange={setRole} />;
     }
     render(<Single />);
     expect(screen.getByRole("group", { name: "Role" })).toBeInTheDocument();
@@ -62,15 +60,7 @@ describe("ChoiceCardGroup", () => {
 
   it("multiple: checkboxes, and the value stays in option order", () => {
     const onChange = vi.fn();
-    render(
-      <ChoiceCardGroup
-        multiple
-        aria-label="Roles"
-        options={[...ROLES]}
-        value={["viewer"]}
-        onChange={onChange}
-      />,
-    );
+    render(<ChoiceCardGroup multiple aria-label="Roles" options={[...ROLES]} value={["viewer"]} onChange={onChange} />);
     fireEvent.click(screen.getByRole("checkbox", { name: "Owner" }));
     expect(onChange).toHaveBeenCalledWith(["owner", "viewer"]);
     fireEvent.click(screen.getByRole("checkbox", { name: "Viewer" }));
@@ -78,9 +68,7 @@ describe("ChoiceCardGroup", () => {
   });
 
   it("disables every card through the fieldset", () => {
-    render(
-      <ChoiceCardGroup legend="Role" options={[...ROLES]} value="owner" onChange={vi.fn()} disabled />,
-    );
+    render(<ChoiceCardGroup legend="Role" options={[...ROLES]} value="owner" onChange={vi.fn()} disabled />);
     for (const r of screen.getAllByRole("radio")) expect(r).toBeDisabled();
   });
 });

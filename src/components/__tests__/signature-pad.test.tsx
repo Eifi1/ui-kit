@@ -56,7 +56,15 @@ beforeEach(() => {
   } as unknown as HTMLCanvasElement["getContext"]);
   vi.spyOn(HTMLCanvasElement.prototype, "toDataURL").mockReturnValue(PNG);
   vi.spyOn(HTMLCanvasElement.prototype, "getBoundingClientRect").mockReturnValue({
-    x: 0, y: 0, left: 0, top: 0, right: 300, bottom: 160, width: 300, height: 160, toJSON: () => ({}),
+    x: 0,
+    y: 0,
+    left: 0,
+    top: 0,
+    right: 300,
+    bottom: 160,
+    width: 300,
+    height: 160,
+    toJSON: () => ({}),
   } as DOMRect);
 });
 
@@ -77,7 +85,10 @@ describe("SignaturePad", () => {
   it("is a labelled, described image that says it is empty", () => {
     render(<SignaturePad />);
     const el = canvas();
-    const description = el.getAttribute("aria-describedby")!.split(" ").map((id) => document.getElementById(id)?.textContent);
+    const description = el
+      .getAttribute("aria-describedby")!
+      .split(" ")
+      .map((id) => document.getElementById(id)?.textContent);
     expect(description).toContain("Sign in the box with a mouse, your finger or a pen.");
     expect(description).toContain("Nothing drawn yet");
   });

@@ -69,8 +69,7 @@ function namesOnScreen(): string[] {
 }
 
 /** The header cell for a column, by its visible text. */
-const header = (name: string) =>
-  screen.getAllByRole("columnheader").find((th) => th.textContent?.includes(name))!;
+const header = (name: string) => screen.getAllByRole("columnheader").find((th) => th.textContent?.includes(name))!;
 
 describe("DataTable sorting", () => {
   it("cycles ascending → descending → unsorted, and the rows follow", () => {

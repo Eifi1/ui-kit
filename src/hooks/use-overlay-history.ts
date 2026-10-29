@@ -408,10 +408,7 @@ function taggedSentinel(): string | null {
  *  written there — we are a passenger in that object, not its owner. */
 function retag(id: string): void {
   const prev = window.history.state;
-  window.history.replaceState(
-    { ...(prev && typeof prev === "object" ? prev : {}), [SENTINEL_KEY]: id },
-    "",
-  );
+  window.history.replaceState({ ...(prev && typeof prev === "object" ? prev : {}), [SENTINEL_KEY]: id }, "");
 }
 
 function currentSentinel(): string | null {
@@ -571,7 +568,15 @@ export function useOverlayHistory(open: boolean, onClose: () => void): void {
       // The abandoned ones beneath come back owed; ours takes the top slot.
       for (const owed of inherited.slice(0, -1)) pushed.push({ ...owed, dead: true });
       const was = inherited[inherited.length - 1];
-      pushed.push({ id, href: currentHref(), seen: currentHref(), dead: false, idx: was.idx, key: was.key, route: was.route });
+      pushed.push({
+        id,
+        href: currentHref(),
+        seen: currentHref(),
+        dead: false,
+        idx: was.idx,
+        key: was.key,
+        route: was.route,
+      });
       standing = id;
     } else {
       // A push DESTROYS every entry ahead of the one we are on, so anything we

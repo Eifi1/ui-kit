@@ -76,7 +76,9 @@ describe("usePlanLimitToast (§14.11)", () => {
 
   it("draws no figure without a limit, and reads keksdose's legacy refusal as budgets", () => {
     const show = useToast({ mode: "upgrade", dimensionLabels: { budgets: "Budgets" } });
-    const legacy = isPlanLimit({ response: { data: { detail: "…", code: "plan_budget_limit", plan: "FREE", limit: 1 } } });
+    const legacy = isPlanLimit({
+      response: { data: { detail: "…", code: "plan_budget_limit", plan: "FREE", limit: 1 } },
+    });
     show(legacy);
     expect(shown[0].options.id).toBe("plan-limit:budgets");
     // `used` absent: refused for being AT the limit.
@@ -100,7 +102,10 @@ describe("usePlanLimitToast (§14.11)", () => {
         {children}
       </UiKitProvider>
     );
-    useToast({ mode: "upgrade", onChoosePlan: () => {}, dimensionLabels: { budgets: "Budgets" } }, de)({
+    useToast(
+      { mode: "upgrade", onChoosePlan: () => {}, dimensionLabels: { budgets: "Budgets" } },
+      de,
+    )({
       ...HIT,
       used: 1234,
       limit: 1000,

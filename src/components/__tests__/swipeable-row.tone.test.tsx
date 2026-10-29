@@ -36,7 +36,10 @@ function dragLeft(dx: number) {
 
 /** The reveal panel: the painted layer holding the previewed action's label. */
 const panel = (label: string) =>
-  screen.getAllByText(label).find((el) => el.tagName === "SPAN" && !el.closest("button"))!.closest(".absolute") as HTMLElement;
+  screen
+    .getAllByText(label)
+    .find((el) => el.tagName === "SPAN" && !el.closest("button"))!
+    .closest(".absolute") as HTMLElement;
 
 describe("SwipeAction tone", () => {
   it("previews the tone's soft wash under the tone's text, at full strength", () => {
@@ -60,8 +63,19 @@ describe("SwipeAction tone", () => {
 
   it("gives every tone of the shared vocabulary an idle and an armed look", () => {
     const tones: SwipeTone[] = [
-      "brand", "neutral", "success", "warning", "danger", "info", "income", "expense",
-      "blue", "indigo", "purple", "teal", "orange",
+      "brand",
+      "neutral",
+      "success",
+      "warning",
+      "danger",
+      "info",
+      "income",
+      "expense",
+      "blue",
+      "indigo",
+      "purple",
+      "teal",
+      "orange",
     ];
     expect(Object.keys(SWIPE_TONE).sort()).toEqual([...tones].sort());
     for (const tone of tones) {

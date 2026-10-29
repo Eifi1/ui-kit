@@ -169,15 +169,15 @@ export function Dates() {
   return (
     <>
       <Note>
-        <strong>The locale comes from the app, never from the browser.</strong> Each of these takes
-        a <code className="font-mono">locale</code> prop and, without one, the{" "}
-        <code className="font-mono">&lt;UiKitProvider locale&gt;</code> the app mounted — there is
-        still no <code className="font-mono">navigator.language</code> read, because a component
-        that guessed would disagree with the host on every page it appeared on. The specimens below
-        say <code className="font-mono">locale=&quot;en-GB&quot;</code> out loud so they stay put
-        while you switch the showcase language; the pickers without one follow the top bar. Their
-        accessible names (<code className="font-mono">miniCalendar.*</code>,{" "}
-        <code className="font-mono">datePicker.*</code>) come from the provider the same way.
+        <strong>The locale comes from the app, never from the browser.</strong> Each of these takes a{" "}
+        <code className="font-mono">locale</code> prop and, without one, the{" "}
+        <code className="font-mono">&lt;UiKitProvider locale&gt;</code> the app mounted — there is still no{" "}
+        <code className="font-mono">navigator.language</code> read, because a component that guessed would disagree with
+        the host on every page it appeared on. The specimens below say{" "}
+        <code className="font-mono">locale=&quot;en-GB&quot;</code> out loud so they stay put while you switch the
+        showcase language; the pickers without one follow the top bar. Their accessible names (
+        <code className="font-mono">miniCalendar.*</code>, <code className="font-mono">datePicker.*</code>) come from
+        the provider the same way.
       </Note>
 
       <Example
@@ -199,23 +199,21 @@ export function Dates() {
           from={iso(rangeFrom)} to={iso(rangeTo)}
         </StateLine>
         <p className="mt-2 text-xs text-secondary">
-          Clicking backwards works: pick a day earlier than the open start and the component swaps
-          the ends for you rather than refusing. Clicking again once both ends are set starts a new
-          selection — there is no third state to get stuck in. The week starts on the locale&apos;s
-          own first day (Monday for en-GB, Sunday for en-US), or on{" "}
-          <code className="font-mono">weekStartsOn</code> when given.
+          Clicking backwards works: pick a day earlier than the open start and the component swaps the ends for you
+          rather than refusing. Clicking again once both ends are set starts a new selection — there is no third state
+          to get stuck in. The week starts on the locale&apos;s own first day (Monday for en-GB, Sunday for en-US), or
+          on <code className="font-mono">weekStartsOn</code> when given.
         </p>
       </Example>
 
       <Note>
-        <strong>Completing a range scrolls the calendar back to the start month.</strong> The view
-        month is component state, re-derived whenever <code className="font-mono">from|to</code>{" "}
-        changes — and it derives from <code className="font-mono">from</code> first. So if you open
-        the range in one month, page forward and click the end in the next, the grid snaps back to
-        the month the start is in the moment the range closes. Inside{" "}
-        <code className="font-mono">DateRangePicker</code> nobody sees it, because the popover
-        closes on that same click; on a calendar left open — the data-table date filter — it is
-        visible. Reproduce it above: page forward, click, watch it jump.
+        <strong>Completing a range scrolls the calendar back to the start month.</strong> The view month is component
+        state, re-derived whenever <code className="font-mono">from|to</code> changes — and it derives from{" "}
+        <code className="font-mono">from</code> first. So if you open the range in one month, page forward and click the
+        end in the next, the grid snaps back to the month the start is in the moment the range closes. Inside{" "}
+        <code className="font-mono">DateRangePicker</code> nobody sees it, because the popover closes on that same
+        click; on a calendar left open — the data-table date filter — it is visible. Reproduce it above: page forward,
+        click, watch it jump.
       </Note>
 
       <Example
@@ -237,10 +235,10 @@ export function Dates() {
           value={iso(singleDay)} · min={nearMin} · max={nearMax}
         </StateLine>
         <p className="mt-2 text-xs text-secondary">
-          Both ends of the same day, which is how <code className="font-mono">DatePicker</code>{" "}
-          drives it internally. The bounds are inclusive and a bounded month still pages — you can
-          navigate to a month that is entirely out of range and find every day in it dead, which is
-          deliberate: a calendar that refused to move gives the reader no way to see WHY.
+          Both ends of the same day, which is how <code className="font-mono">DatePicker</code> drives it internally.
+          The bounds are inclusive and a bounded month still pages — you can navigate to a month that is entirely out of
+          range and find every day in it dead, which is deliberate: a calendar that refused to move gives the reader no
+          way to see WHY.
         </p>
       </Example>
 
@@ -250,12 +248,7 @@ export function Dates() {
       >
         <Stage>
           <div className="space-y-3">
-            <ToggleGroup
-              value={loc}
-              onChange={setLoc}
-              options={LOCALE_OPTIONS}
-              aria-label="Calendar locale"
-            />
+            <ToggleGroup value={loc} onChange={setLoc} options={LOCALE_OPTIONS} aria-label="Calendar locale" />
             <div className="max-w-xs">
               <MiniCalendar
                 mode="single"
@@ -312,9 +305,9 @@ export function Dates() {
           weekStartsOn=0 → {iso(sundayDay)} · focusOnOpen → {iso(focusDay)}
         </StateLine>
         <p className="mt-2 text-xs text-secondary">
-          Open the second calendar with the keyboard (Enter on the button): focus lands on the
-          selected day, so ←/→ move a day and Enter picks — no hunt through 42 cells. The first
-          calendar is rendered inline and so does not take focus merely by existing.
+          Open the second calendar with the keyboard (Enter on the button): focus lands on the selected day, so ←/→ move
+          a day and Enter picks — no hunt through 42 cells. The first calendar is rendered inline and so does not take
+          focus merely by existing.
         </p>
       </Example>
 
@@ -337,12 +330,10 @@ export function Dates() {
         </Stage>
         <StateLine>value={iso(due)}</StateLine>
         <p className="mt-2 text-xs text-secondary">
-          <code className="font-mono">clearable</code> emits{" "}
-          <code className="font-mono">&quot;&quot;</code>, not{" "}
-          <code className="font-mono">null</code> — the empty value is the empty string everywhere
-          in this kit. Clear it and the trigger keeps its height: the empty span holds a
-          non-breaking space, because an ordinary one is collapsible white space and the button
-          collapsed to 22px beside 42px fields.
+          <code className="font-mono">clearable</code> emits <code className="font-mono">&quot;&quot;</code>, not{" "}
+          <code className="font-mono">null</code> — the empty value is the empty string everywhere in this kit. Clear it
+          and the trigger keeps its height: the empty span holds a non-breaking space, because an ordinary one is
+          collapsible white space and the button collapsed to 22px beside 42px fields.
         </p>
       </Example>
 
@@ -368,11 +359,10 @@ export function Dates() {
           value={iso(stepped)} · min={stepMin} · max={stepMax}
         </StateLine>
         <p className="mt-2 text-xs text-secondary">
-          Walk the arrows to either edge and they go flat rather than disappearing — a control that
-          comes and goes with the value reflows whatever sits beside it, which is the complaint the
-          behaviour exists to answer. The today button starts flat because the value already is
-          today. Note what <code className="font-mono">today</code> is: the day is passed IN, so
-          this field can be tested at a fixed date and so the host keeps a single definition of
+          Walk the arrows to either edge and they go flat rather than disappearing — a control that comes and goes with
+          the value reflows whatever sits beside it, which is the complaint the behaviour exists to answer. The today
+          button starts flat because the value already is today. Note what <code className="font-mono">today</code> is:
+          the day is passed IN, so this field can be tested at a fixed date and so the host keeps a single definition of
           &quot;today&quot; across its pages.
         </p>
       </Example>
@@ -402,9 +392,7 @@ export function Dates() {
               // separate format preference. `locale` still drives the calendar.
               formatValue={(value) => {
                 const d = parseIsoDate(value);
-                return d
-                  ? `${d.toLocaleDateString("de-DE", { weekday: "short" })} ${value}`
-                  : value;
+                return d ? `${d.toLocaleDateString("de-DE", { weekday: "short" })} ${value}` : value;
               }}
             />
           </div>
@@ -444,10 +432,9 @@ export function Dates() {
           </div>
         </Stage>
         <p className="mt-2 text-xs text-secondary">
-          <code className="font-mono">invalid</code> paints and sets{" "}
-          <code className="font-mono">aria-invalid</code>; it carries no message, so the error text
-          is yours to render. <code className="font-mono">disabled</code> also suppresses the clear
-          button, which is why the frozen field shows the calendar glyph despite being{" "}
+          <code className="font-mono">invalid</code> paints and sets <code className="font-mono">aria-invalid</code>; it
+          carries no message, so the error text is yours to render. <code className="font-mono">disabled</code> also
+          suppresses the clear button, which is why the frozen field shows the calendar glyph despite being{" "}
           <code className="font-mono">clearable</code>.
         </p>
       </Example>
@@ -474,11 +461,10 @@ export function Dates() {
           from={iso(from)} to={iso(to)}
         </StateLine>
         <p className="mt-2 text-xs text-secondary">
-          One <code className="font-mono">onChange(from, to)</code> for both ends rather than two
-          callbacks — a half-applied range is not a state a filter should ever be in. The separator
-          is a prop (<code className="font-mono">separator</code>, default{" "}
-          <code className="font-mono">&quot; – &quot;</code>) because an en dash between two dates
-          is a typographic choice the host may not share.
+          One <code className="font-mono">onChange(from, to)</code> for both ends rather than two callbacks — a
+          half-applied range is not a state a filter should ever be in. The separator is a prop (
+          <code className="font-mono">separator</code>, default <code className="font-mono">&quot; – &quot;</code>)
+          because an en dash between two dates is a typographic choice the host may not share.
         </p>
       </Example>
 
@@ -505,10 +491,9 @@ export function Dates() {
         </StateLine>
         <p className="mt-2 text-xs text-secondary">
           The presets here are <code className="font-mono">dateRangePresets()</code> from the{" "}
-          <code className="font-mono">@eifi1/ui-kit/dates</code> subpath, relabelled through this
-          page&apos;s own map. A preset is selected-looking only when both ends match exactly, so
-          the field opens on &quot;Last month&quot; already highlighted — and stops being
-          highlighted the moment you touch the calendar.
+          <code className="font-mono">@eifi1/ui-kit/dates</code> subpath, relabelled through this page&apos;s own map. A
+          preset is selected-looking only when both ends match exactly, so the field opens on &quot;Last month&quot;
+          already highlighted — and stops being highlighted the moment you touch the calendar.
         </p>
       </Example>
 
@@ -590,10 +575,9 @@ export function Dates() {
           value={iso(deDay)} · from={iso(deFrom)} to={iso(deTo)}
         </StateLine>
         <p className="mt-2 text-xs text-secondary">
-          <code className="font-mono">calendarLabels</code> reaches the calendar inside the popover —
-          its month arrows and the spoken &quot;choose a start / end date&quot; — which the trigger
-          has no other way to pass down. The provider&apos;s{" "}
-          <code className="font-mono">miniCalendar.*</code> usually makes it unnecessary; the prop is
+          <code className="font-mono">calendarLabels</code> reaches the calendar inside the popover — its month arrows
+          and the spoken &quot;choose a start / end date&quot; — which the trigger has no other way to pass down. The
+          provider&apos;s <code className="font-mono">miniCalendar.*</code> usually makes it unnecessary; the prop is
           for the one field that says it differently.
         </p>
       </Example>
@@ -634,23 +618,21 @@ export function Dates() {
           value={iso(rtlDay)} · from={iso(rtlFrom)} to={iso(rtlTo)}
         </StateLine>
         <p className="mt-2 text-xs text-secondary">
-          The weeks run from the right, and ← → follow the reading direction: focus a day and press
-          ← to reach the NEXT day, which sits to its left. The month chevrons and the picker&apos;s ‹ ›
-          day steps are mirrored so &ldquo;previous&rdquo; points to the reading start, and the
-          chevron and × sit at the field&apos;s logical end. The picker&apos;s calendar is portalled
-          to <code className="font-mono">&lt;body&gt;</code>, outside this{" "}
-          <code className="font-mono">dir</code>; it reads the direction off the field when it
-          opens and carries it, so the popover grid is right-to-left too.
+          The weeks run from the right, and ← → follow the reading direction: focus a day and press ← to reach the NEXT
+          day, which sits to its left. The month chevrons and the picker&apos;s ‹ › day steps are mirrored so
+          &ldquo;previous&rdquo; points to the reading start, and the chevron and × sit at the field&apos;s logical end.
+          The picker&apos;s calendar is portalled to <code className="font-mono">&lt;body&gt;</code>, outside this{" "}
+          <code className="font-mono">dir</code>; it reads the direction off the field when it opens and carries it, so
+          the popover grid is right-to-left too.
         </p>
       </Example>
 
       <Note>
         <strong>The palette reaches all of it.</strong> The day cells, the selected ends (
         <code className="font-mono">--brand</code>) and the band between them (
-        <code className="font-mono">--brand-bg</code>) are tokens, and so is the panel the pickers
-        open in — switch the palette in the top bar and the calendar re-skins with the page. The
-        range is drawn as one continuous band with round ends rather than a tinted box per day, so a
-        fortnight reads as a span, not as fourteen chips.
+        <code className="font-mono">--brand-bg</code>) are tokens, and so is the panel the pickers open in — switch the
+        palette in the top bar and the calendar re-skins with the page. The range is drawn as one continuous band with
+        round ends rather than a tinted box per day, so a fortnight reads as a span, not as fourteen chips.
       </Note>
     </>
   );
@@ -698,20 +680,20 @@ function ReportRangeExample() {
         />
       </Stage>
       <StateLine>
-        from={iso(range.from)} to={iso(range.to)} preset={range.preset === null ? "null" : `"${range.preset}"`} · commits={commits}
+        from={iso(range.from)} to={iso(range.to)} preset={range.preset === null ? "null" : `"${range.preset}"`} ·
+        commits={commits}
       </StateLine>
       <p className="mt-2 text-xs text-secondary">
-        Open it: &ldquo;Last 3 full months&rdquo; is marked, by its <code className="font-mono">id</code>{" "}
-        (the controlled <code className="font-mono">preset</code>) as long as its dates still match.
-        Pick &ldquo;Last 6 full months&rdquo;, then nudge the end a few days — nothing has been
-        committed yet, the preset mark goes away, and Apply stays disabled until both ends exist.
-        Apply hands <code className="font-mono">onChange(from, to, presetId)</code> the id, or{" "}
-        <code className="font-mono">undefined</code> for days picked by hand; Cancel, Escape and a
-        click outside throw the draft away. The presets are{" "}
-        <code className="font-mono">calendarMonthPresets()</code>: WHOLE calendar months and years,
-        never the rolling 90 days up to this morning. Apply and Cancel are{" "}
-        <code className="font-mono">datePicker.apply</code> / <code className="font-mono">.cancel</code>{" "}
-        and the column&apos;s name <code className="font-mono">datePicker.presets</code>, from the provider.
+        Open it: &ldquo;Last 3 full months&rdquo; is marked, by its <code className="font-mono">id</code> (the
+        controlled <code className="font-mono">preset</code>) as long as its dates still match. Pick &ldquo;Last 6 full
+        months&rdquo;, then nudge the end a few days — nothing has been committed yet, the preset mark goes away, and
+        Apply stays disabled until both ends exist. Apply hands{" "}
+        <code className="font-mono">onChange(from, to, presetId)</code> the id, or{" "}
+        <code className="font-mono">undefined</code> for days picked by hand; Cancel, Escape and a click outside throw
+        the draft away. The presets are <code className="font-mono">calendarMonthPresets()</code>: WHOLE calendar months
+        and years, never the rolling 90 days up to this morning. Apply and Cancel are{" "}
+        <code className="font-mono">datePicker.apply</code> / <code className="font-mono">.cancel</code> and the
+        column&apos;s name <code className="font-mono">datePicker.presets</code>, from the provider.
       </p>
     </Example>
   );
@@ -738,8 +720,7 @@ function RangeDraftSummaryExample() {
     const name = preset ? preset.label : "Custom";
     return (
       <>
-        <span className="font-medium text-secondary">{name}</span> · {summaryDay(from)} –{" "}
-        {to ? summaryDay(to) : "…"}
+        <span className="font-medium text-secondary">{name}</span> · {summaryDay(from)} – {to ? summaryDay(to) : "…"}
       </>
     );
   };
@@ -766,15 +747,15 @@ function RangeDraftSummaryExample() {
         from={iso(range.from)} to={iso(range.to)} preset={range.preset === null ? "null" : `"${range.preset}"`}
       </StateLine>
       <p className="mt-2 text-xs text-secondary">
-        Open it: the line reads &ldquo;Last 3 full months · …&rdquo;. Pick another preset and it follows; nudge a
-        day and it becomes &ldquo;Custom&rdquo; — the one place a preset armed and then changed is seen to have
-        stopped being one; click a first day and the end reads &ldquo;…&rdquo; until the second click. The
-        callback gets the DRAFT (<code className="font-mono">from</code>, <code className="font-mono">to</code>{" "}
-        — <code className="font-mono">&quot;&quot;</code> until the second click — and the marked{" "}
-        <code className="font-mono">preset</code>), in the popover and the phone sheet alike. The line is a polite
-        live region, so a screen reader hears the draft change. Returning <code className="font-mono">null</code>{" "}
-        hides it for that draft; in <code className="font-mono">commit=&quot;immediate&quot;</code> there is no
-        draft and it is ignored.
+        Open it: the line reads &ldquo;Last 3 full months · …&rdquo;. Pick another preset and it follows; nudge a day
+        and it becomes &ldquo;Custom&rdquo; — the one place a preset armed and then changed is seen to have stopped
+        being one; click a first day and the end reads &ldquo;…&rdquo; until the second click. The callback gets the
+        DRAFT (<code className="font-mono">from</code>, <code className="font-mono">to</code> —{" "}
+        <code className="font-mono">&quot;&quot;</code> until the second click — and the marked{" "}
+        <code className="font-mono">preset</code>), in the popover and the phone sheet alike. The line is a polite live
+        region, so a screen reader hears the draft change. Returning <code className="font-mono">null</code> hides it
+        for that draft; in <code className="font-mono">commit=&quot;immediate&quot;</code> there is no draft and it is
+        ignored.
       </p>
     </Example>
   );
@@ -824,15 +805,14 @@ function RangeSheetExample() {
       <div className="mt-3">
         <Note>
           On a desktop this is the 440px popover. In the phone layout (
-          <code className="font-mono">usePhoneLayout()</code>) the same field opens a full-screen sheet
-          instead — use the screen-size preview in the top bar, or a phone-width window: the presets
-          become a two-column grid of 44px rows ABOVE the calendar, and Cancel / Apply sit pinned in the
-          sheet&apos;s footer as two thumb-wide halves. The sheet wears the popover&apos;s id, so the
-          trigger&apos;s <code className="font-mono">aria-controls</code> holds in both.{" "}
-          <code className="font-mono">sheetBackCloses</code> (default on) makes the phone&apos;s Back dismiss
-          the sheet; untick it for an app whose commit rewrites the URL with{" "}
-          <code className="font-mono">replaceState</code> in the same tick — then Back is the page&apos;s
-          Back again (here: it leaves this page), and the sheet closes by its × or its buttons.
+          <code className="font-mono">usePhoneLayout()</code>) the same field opens a full-screen sheet instead — use
+          the screen-size preview in the top bar, or a phone-width window: the presets become a two-column grid of 44px
+          rows ABOVE the calendar, and Cancel / Apply sit pinned in the sheet&apos;s footer as two thumb-wide halves.
+          The sheet wears the popover&apos;s id, so the trigger&apos;s <code className="font-mono">aria-controls</code>{" "}
+          holds in both. <code className="font-mono">sheetBackCloses</code> (default on) makes the phone&apos;s Back
+          dismiss the sheet; untick it for an app whose commit rewrites the URL with{" "}
+          <code className="font-mono">replaceState</code> in the same tick — then Back is the page&apos;s Back again
+          (here: it leaves this page), and the sheet closes by its × or its buttons.
         </Note>
       </div>
     </Example>
@@ -914,18 +894,18 @@ function RangeTriggerExample() {
       <div className="mt-3">
         <Note>
           <code className="font-mono">renderTrigger</code> gets{" "}
-          <code className="font-mono">{"{ triggerProps, valueProps, open, from, to, preset, text }"}</code>.
-          The button spreads <code className="font-mono">triggerProps</code> whole — the ref focus returns
-          to, the id pair and <code className="font-mono">aria-labelledby</code>,{" "}
-          <code className="font-mono">role=&quot;combobox&quot;</code>, <code className="font-mono">aria-haspopup</code>,{" "}
-          <code className="font-mono">aria-controls</code>, <code className="font-mono">aria-expanded</code> — and
+          <code className="font-mono">{"{ triggerProps, valueProps, open, from, to, preset, text }"}</code>. The button
+          spreads <code className="font-mono">triggerProps</code> whole — the ref focus returns to, the id pair and{" "}
+          <code className="font-mono">aria-labelledby</code>,{" "}
+          <code className="font-mono">role=&quot;combobox&quot;</code>, <code className="font-mono">aria-haspopup</code>
+          , <code className="font-mono">aria-controls</code>, <code className="font-mono">aria-expanded</code> — and
           merges its own class after the kit&apos;s: <code className="font-mono">rounded-e-none</code> squares the end
           so the granularity group joins it flush. <code className="font-mono">valueProps</code> goes on the span
-          showing the value, so the trigger is still named &ldquo;Report period, Last 3 full months …&rdquo;.
-          It shows <code className="font-mono">preset.label</code> (the preset the column marks for the committed
-          range) with <code className="font-mono">text</code>, the kit&apos;s own formatted range, as a muted
-          suffix; pick days by hand and the preset is gone, so it falls back to the dates. The label, the
-          calendar glyph and the popover or phone sheet are the field&apos;s, unchanged.
+          showing the value, so the trigger is still named &ldquo;Report period, Last 3 full months …&rdquo;. It shows{" "}
+          <code className="font-mono">preset.label</code> (the preset the column marks for the committed range) with{" "}
+          <code className="font-mono">text</code>, the kit&apos;s own formatted range, as a muted suffix; pick days by
+          hand and the preset is gone, so it falls back to the dates. The label, the calendar glyph and the popover or
+          phone sheet are the field&apos;s, unchanged.
         </Note>
       </div>
     </Example>
@@ -938,10 +918,7 @@ function RangeTriggerExample() {
  * it places, and between two picker specimens they read as part of the pickers.
  */
 export function DateHelpers() {
-  const presetRows: Array<[string, ReactNode]> = dateRangePresets().map((p) => [
-    `"${p.key}"`,
-    `${p.from} → ${p.to}`,
-  ]);
+  const presetRows: Array<[string, ReactNode]> = dateRangePresets().map((p) => [`"${p.key}"`, `${p.from} → ${p.to}`]);
   const localMidnight = parseIsoDate(todayIso());
   return (
     <>
@@ -997,7 +974,7 @@ export function DateHelpers() {
             ["lastFullMonthsRange(3)", `${lastFullMonthsRange(3).from} → ${lastFullMonthsRange(3).to}`],
             ["lastFullYearsRange(2)", `${lastFullYearsRange(2).from} → ${lastFullYearsRange(2).to}`],
             [
-              'lastFullMonthsRange(1, new Date(2026, 2, 15))',
+              "lastFullMonthsRange(1, new Date(2026, 2, 15))",
               `${lastFullMonthsRange(1, new Date(2026, 2, 15)).from} → ${lastFullMonthsRange(1, new Date(2026, 2, 15)).to}`,
             ],
             [
@@ -1016,10 +993,9 @@ export function DateHelpers() {
       >
         <OutTable rows={presetRows} />
         <p className="mt-3 text-xs text-secondary">
-          Every one of these is computed from the local calendar day, which is why they are printed
-          rather than asserted here: the same call answers differently in Berlin and in Los Angeles,
-          and that is the point — the server compares plain dates with no zone at all, so the
-          user&apos;s local day is what it wants.
+          Every one of these is computed from the local calendar day, which is why they are printed rather than asserted
+          here: the same call answers differently in Berlin and in Los Angeles, and that is the point — the server
+          compares plain dates with no zone at all, so the user&apos;s local day is what it wants.
         </p>
       </Example>
     </>
@@ -1071,13 +1047,18 @@ export function Dates022Demo() {
         </div>
         <Note>
           A text {code("hint")} is a caption under the field, a {code("FieldHint")} rides the label line, as on{" "}
-          {code("Select")}. {code("error")} goes under the whole row (steppers included) and implies{" "}
-          {code("invalid")}; step past today to see it.
+          {code("Select")}. {code("error")} goes under the whole row (steppers included) and implies {code("invalid")};
+          step past today to see it.
         </Note>
       </Example>
       <Example label="<UiKitProvider formatDate>" hint="one date look for every picker trigger and DateMark">
         <div className="flex flex-col gap-3">
-          <Select label="Weekday language" value={language} onChange={(e) => setLanguage(e.target.value)} className="sm:w-56">
+          <Select
+            label="Weekday language"
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+            className="sm:w-56"
+          >
             <option value="en-GB">English</option>
             <option value="de-CH">Deutsch (Schweiz)</option>
             <option value="fr-CH">Français (Suisse)</option>
@@ -1098,11 +1079,10 @@ export function Dates022Demo() {
           </UiKitProvider>
         </div>
         <Note>
-          An app&apos;s preference — ISO digits, the weekday in the UI language — set once on the provider
-          instead of a {code("formatValue")} on every field. The formatter is told the {code("unit")}, the{" "}
-          {code("source")} and a {code("weekday")} suggestion (a single date yes, a range&apos;s ends no); returning{" "}
-          {code('""')} falls back to the kit&apos;s own. A field&apos;s own {code("formatValue")} or{" "}
-          {code("formatOptions")} still wins.
+          An app&apos;s preference — ISO digits, the weekday in the UI language — set once on the provider instead of a{" "}
+          {code("formatValue")} on every field. The formatter is told the {code("unit")}, the {code("source")} and a{" "}
+          {code("weekday")} suggestion (a single date yes, a range&apos;s ends no); returning {code('""')} falls back to
+          the kit&apos;s own. A field&apos;s own {code("formatValue")} or {code("formatOptions")} still wins.
         </Note>
       </Example>
     </>

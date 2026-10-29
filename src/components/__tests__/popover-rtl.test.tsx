@@ -13,7 +13,8 @@ const TRIGGER = { top: 100, bottom: 130, left: 300, right: 400, width: 100, heig
 beforeEach(() => {
   const original = Element.prototype.getBoundingClientRect;
   vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
-    if (this.textContent === "Open" && this.tagName === "BUTTON") return { ...TRIGGER, toJSON: () => TRIGGER } as DOMRect;
+    if (this.textContent === "Open" && this.tagName === "BUTTON")
+      return { ...TRIGGER, toJSON: () => TRIGGER } as DOMRect;
     return original.call(this);
   });
   vi.spyOn(window, "innerWidth", "get").mockReturnValue(1024);

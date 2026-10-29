@@ -6,14 +6,7 @@ import { hasContent } from "../lib/presence";
 import { FOCUS_RING, FOCUS_RING_WIDTH } from "./focus-ring";
 import { horizontalStep } from "../lib/direction";
 import { useAnnounce } from "../hooks/use-announce";
-import {
-  addMonthsClamped,
-  localeWeekStart,
-  monthKey,
-  parseIsoDate,
-  sameYmd,
-  toLocalIso,
-} from "../lib/dates";
+import { addMonthsClamped, localeWeekStart, monthKey, parseIsoDate, sameYmd, toLocalIso } from "../lib/dates";
 import { useKitLabels, useKitLocale, useKitWeekStart, type LabelOverride } from "../i18n/kit-labels";
 import { DEFAULT_MINI_CALENDAR_LABELS } from "./mini-calendar-labels";
 
@@ -514,41 +507,39 @@ export function MiniCalendar({
           {monthLabel}
         </div>
       ) : (
-      <div className={cn("flex items-center justify-between", lg ? "pb-2" : "pb-1")}>
-        <button
-          type="button"
-          onClick={() => moveMonth(-1)}
-          aria-label={labels.previousMonth}
-          className="rounded p-1 text-muted hover:bg-hover"
-        >
-          {/* Mirrored in RTL: "previous" points to the reading START, which is right. */}
-          <ChevronLeft className="size-4 rtl:-scale-x-100" aria-hidden />
-        </button>
-        {/* Named by this element rather than by a string of its own, and `aria-live`
+        <div className={cn("flex items-center justify-between", lg ? "pb-2" : "pb-1")}>
+          <button
+            type="button"
+            onClick={() => moveMonth(-1)}
+            aria-label={labels.previousMonth}
+            className="rounded p-1 text-muted hover:bg-hover"
+          >
+            {/* Mirrored in RTL: "previous" points to the reading START, which is right. */}
+            <ChevronLeft className="size-4 rtl:-scale-x-100" aria-hidden />
+          </button>
+          {/* Named by this element rather than by a string of its own, and `aria-live`
             so paging months says which month you have landed on — the caption is the
             only thing on screen that changes when the grid moves, and the user
             pressing the arrow is not inside the grid to hear the cells change. */}
-        <div
-          id={monthId}
-          aria-live="polite"
-          className={cn(
-            "capitalize",
-            lg
-              ? "text-base font-semibold text-primary"
-              : "text-xs font-medium text-secondary",
-          )}
-        >
-          {monthLabel}
+          <div
+            id={monthId}
+            aria-live="polite"
+            className={cn(
+              "capitalize",
+              lg ? "text-base font-semibold text-primary" : "text-xs font-medium text-secondary",
+            )}
+          >
+            {monthLabel}
+          </div>
+          <button
+            type="button"
+            onClick={() => moveMonth(1)}
+            aria-label={labels.nextMonth}
+            className="rounded p-1 text-muted hover:bg-hover"
+          >
+            <ChevronRight className="size-4 rtl:-scale-x-100" aria-hidden />
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={() => moveMonth(1)}
-          aria-label={labels.nextMonth}
-          className="rounded p-1 text-muted hover:bg-hover"
-        >
-          <ChevronRight className="size-4 rtl:-scale-x-100" aria-hidden />
-        </button>
-      </div>
       )}
       <div
         ref={gridRef}
@@ -559,27 +550,18 @@ export function MiniCalendar({
           "grid",
           // The month view is RULED: a 1px gap over a border-coloured ground draws the
           // lines between the cells, the way a wall calendar does.
-          lg
-            ? "gap-px overflow-hidden rounded-lg border border-subtle bg-[var(--border)]"
-            : "gap-y-0.5",
+          lg ? "gap-px overflow-hidden rounded-lg border border-subtle bg-[var(--border)]" : "gap-y-0.5",
         )}
       >
         <div
           role="row"
           className={cn(
             "grid grid-cols-7 text-center font-medium",
-            lg
-              ? "gap-px text-xs text-muted"
-              : "text-micro uppercase text-placeholder",
+            lg ? "gap-px text-xs text-muted" : "text-micro uppercase text-placeholder",
           )}
         >
           {weekdayLabels.map((w, i) => (
-            <div
-              key={i}
-              role="columnheader"
-              aria-label={w.long}
-              className={lg ? "bg-surface py-2" : "py-0.5"}
-            >
+            <div key={i} role="columnheader" aria-label={w.long} className={lg ? "bg-surface py-2" : "py-0.5"}>
               {lg ? w.short : w.narrow}
             </div>
           ))}
@@ -592,13 +574,7 @@ export function MiniCalendar({
               // The padding cells still have to BE cells, or the rows are ragged and
               // a screen reader's "column 3" stops meaning Wednesday.
               if (!d) {
-                return (
-                  <div
-                    key={di}
-                    role="gridcell"
-                    className={lg ? cn(LG_CELL_HEIGHT, "bg-surface-2") : "h-8"}
-                  />
-                );
+                return <div key={di} role="gridcell" className={lg ? cn(LG_CELL_HEIGHT, "bg-surface-2") : "h-8"} />;
               }
               const iso = toLocalIso(d);
               const disabled = isDisabled(d);
@@ -678,8 +654,7 @@ export function MiniCalendar({
               // or the month breaks it. Only when both ends exist and differ — a lone
               // start is a dot, not a band of one. The month view tints whole cells
               // instead, so it has no band.
-              const banded =
-                !lg && hasBand && !disabled && (isStart || isEnd || isInRange);
+              const banded = !lg && hasBand && !disabled && (isStart || isEnd || isInRange);
               const lastOfMonth = d.getDate() === daysInMonth(d);
               const band = banded
                 ? cn(
@@ -695,109 +670,104 @@ export function MiniCalendar({
                 <div
                   key={di}
                   role="none"
-                  className={cn(
-                    "relative flex",
-                    lg ? "min-w-0" : "h-8 items-center justify-center",
-                  )}
+                  className={cn("relative flex", lg ? "min-w-0" : "h-8 items-center justify-center")}
                 >
-                {band && <span aria-hidden className={band} />}
-                <button
-                  key={di}
-                  type="button"
-                  role="gridcell"
-                  data-iso={iso}
-                  // The roving tabindex: ONE tab stop for the whole month. Every day
-                  // being tabbable meant 31 stops between a date field and the next
-                  // control, which is the same reason the pattern exists.
-                  tabIndex={isActive ? 0 : -1}
-                  aria-label={labels.day(formatDay(d))}
-                  // The custom content is the day's DESCRIPTION: `aria-label` replaces
-                  // the button's text as its name, so without this link a screen
-                  // reader would hear the date and never the events drawn under it.
-                  aria-describedby={filled ? contentId : undefined}
-                  aria-selected={isSelected}
-                  aria-disabled={disabled || undefined}
-                  aria-current={isToday ? "date" : undefined}
-                  onClick={() => handleClick(d)}
-                  onKeyDown={onDayKeyDown}
-                  className={
-                    lg
-                      ? cn(
-                          "flex w-full min-w-0 flex-col items-stretch gap-1 overflow-hidden p-1.5 text-start text-xs transition-colors",
-                          LG_CELL_HEIGHT,
-                          FOCUS_RING,
-                        "focus-visible:ring-inset",
-                          disabled
-                            ? "cursor-not-allowed bg-surface text-placeholder"
-                            : isSelected
-                              ? "bg-brand-soft text-primary hover:bg-brand-soft-hover"
-                              : "bg-surface text-primary hover:bg-hover",
-                        )
-                      : cn(
-                    "relative size-8 rounded-full text-xs tabular-nums transition-colors",
-                    // A grid you can walk with the keyboard needs to show where the
-                    // keyboard IS. Inset because the cells sit half a pixel apart and
-                    // an outset ring would be drawn over by its neighbours; the
-                    // colour flips on the selected days for the reason the numpad's
-                    // "Done" key does — a --brand ring on a --brand fill is a ring
-                    // that exists only in the DOM.
-                    FOCUS_RING_WIDTH,
-                    "focus-visible:outline-none focus-visible:ring-inset",
-                    isStart || isEnd
-                      ? "focus-visible:ring-brand-contrast"
-                      : "focus-visible:ring-brand",
-                    disabled
-                      ? "cursor-not-allowed text-placeholder"
-                      // The two selected states are the BRAND, not a fixed sky: the endpoints
-                      // are the solid fill and the days between them its soft tint. Hardcoding
-                      // them left an app that changed `--brand` with a calendar in the old
-                      // colour (docs/module-audit-2026-09-22.md §theming). Both token pairs
-                      // flip light/dark themselves, so there is no `dark:` partner to carry —
-                      // one would override the token and bring the hardcoded hue back.
-                      : isStart || isEnd
-                        ? "bg-brand text-brand-contrast hover:bg-brand-hover"
-                        : isInRange
-                          ? "font-medium text-brand-muted hover:bg-brand-soft-hover"
-                          : "text-primary hover:bg-hover",
-                    isToday && !isStart && !isEnd && !isInRange && !disabled && "ring-1 ring-inset ring-strong",
-                  )
-                  }
-                >
-                  {lg ? (
-                    <>
-                      <span
-                        className={cn(
-                          "inline-flex size-6 shrink-0 items-center justify-center self-start rounded-full tabular-nums",
-                          isStart || isEnd
-                            ? "bg-brand font-semibold text-brand-contrast"
-                            : isToday && !disabled
-                              ? "font-semibold text-brand ring-1 ring-inset ring-brand"
-                              : isInRange && "font-medium text-brand-muted",
-                        )}
-                      >
-                        {label}
-                      </span>
-                      {filled && (
-                        <span id={contentId} className="flex min-w-0 flex-col gap-0.5">
-                          {content}
-                        </span>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      {label}
-                      {/* Under the number, inside the circle: room for a dot or two. */}
-                      {filled && (
+                  {band && <span aria-hidden className={band} />}
+                  <button
+                    key={di}
+                    type="button"
+                    role="gridcell"
+                    data-iso={iso}
+                    // The roving tabindex: ONE tab stop for the whole month. Every day
+                    // being tabbable meant 31 stops between a date field and the next
+                    // control, which is the same reason the pattern exists.
+                    tabIndex={isActive ? 0 : -1}
+                    aria-label={labels.day(formatDay(d))}
+                    // The custom content is the day's DESCRIPTION: `aria-label` replaces
+                    // the button's text as its name, so without this link a screen
+                    // reader would hear the date and never the events drawn under it.
+                    aria-describedby={filled ? contentId : undefined}
+                    aria-selected={isSelected}
+                    aria-disabled={disabled || undefined}
+                    aria-current={isToday ? "date" : undefined}
+                    onClick={() => handleClick(d)}
+                    onKeyDown={onDayKeyDown}
+                    className={
+                      lg
+                        ? cn(
+                            "flex w-full min-w-0 flex-col items-stretch gap-1 overflow-hidden p-1.5 text-start text-xs transition-colors",
+                            LG_CELL_HEIGHT,
+                            FOCUS_RING,
+                            "focus-visible:ring-inset",
+                            disabled
+                              ? "cursor-not-allowed bg-surface text-placeholder"
+                              : isSelected
+                                ? "bg-brand-soft text-primary hover:bg-brand-soft-hover"
+                                : "bg-surface text-primary hover:bg-hover",
+                          )
+                        : cn(
+                            "relative size-8 rounded-full text-xs tabular-nums transition-colors",
+                            // A grid you can walk with the keyboard needs to show where the
+                            // keyboard IS. Inset because the cells sit half a pixel apart and
+                            // an outset ring would be drawn over by its neighbours; the
+                            // colour flips on the selected days for the reason the numpad's
+                            // "Done" key does — a --brand ring on a --brand fill is a ring
+                            // that exists only in the DOM.
+                            FOCUS_RING_WIDTH,
+                            "focus-visible:outline-none focus-visible:ring-inset",
+                            isStart || isEnd ? "focus-visible:ring-brand-contrast" : "focus-visible:ring-brand",
+                            disabled
+                              ? "cursor-not-allowed text-placeholder"
+                              : // The two selected states are the BRAND, not a fixed sky: the endpoints
+                                // are the solid fill and the days between them its soft tint. Hardcoding
+                                // them left an app that changed `--brand` with a calendar in the old
+                                // colour (docs/module-audit-2026-09-22.md §theming). Both token pairs
+                                // flip light/dark themselves, so there is no `dark:` partner to carry —
+                                // one would override the token and bring the hardcoded hue back.
+                                isStart || isEnd
+                                ? "bg-brand text-brand-contrast hover:bg-brand-hover"
+                                : isInRange
+                                  ? "font-medium text-brand-muted hover:bg-brand-soft-hover"
+                                  : "text-primary hover:bg-hover",
+                            isToday && !isStart && !isEnd && !isInRange && !disabled && "ring-1 ring-inset ring-strong",
+                          )
+                    }
+                  >
+                    {lg ? (
+                      <>
                         <span
-                          id={contentId}
-                          className="pointer-events-none absolute inset-x-0 bottom-0.5 flex justify-center gap-px leading-none"
+                          className={cn(
+                            "inline-flex size-6 shrink-0 items-center justify-center self-start rounded-full tabular-nums",
+                            isStart || isEnd
+                              ? "bg-brand font-semibold text-brand-contrast"
+                              : isToday && !disabled
+                                ? "font-semibold text-brand ring-1 ring-inset ring-brand"
+                                : isInRange && "font-medium text-brand-muted",
+                          )}
                         >
-                          {content}
+                          {label}
                         </span>
-                      )}
-                    </>
-                  )}
-                </button>
+                        {filled && (
+                          <span id={contentId} className="flex min-w-0 flex-col gap-0.5">
+                            {content}
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        {label}
+                        {/* Under the number, inside the circle: room for a dot or two. */}
+                        {filled && (
+                          <span
+                            id={contentId}
+                            className="pointer-events-none absolute inset-x-0 bottom-0.5 flex justify-center gap-px leading-none"
+                          >
+                            {content}
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </button>
                 </div>
               );
             })}

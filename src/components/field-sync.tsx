@@ -282,8 +282,7 @@ export function FieldSyncIndicator({
   const large = useLargeText();
   showLabel = showLabel || large;
   const { color, Icon } = STATE_STYLE[state];
-  const text =
-    state === "error" ? (error?.message?.trim() ? error.message : l.error) : l[state];
+  const text = state === "error" ? (error?.message?.trim() ? error.message : l.error) : l[state];
 
   return (
     <span
@@ -443,11 +442,12 @@ export function FieldSyncRow<T>({
     >
       {children}
       <span className="pointer-events-none absolute inset-y-0 end-0 flex items-center pe-3">
-        {state === "edited" && (
-          <PencilLine aria-hidden className="size-4 text-[var(--status-edited)]" />
-        )}
+        {state === "edited" && <PencilLine aria-hidden className="size-4 text-[var(--status-edited)]" />}
         {state === "pending" && (
-          <Loader2 aria-hidden className="size-4 animate-spin text-[var(--status-pending)] motion-reduce:animate-none" />
+          <Loader2
+            aria-hidden
+            className="size-4 animate-spin text-[var(--status-pending)] motion-reduce:animate-none"
+          />
         )}
         {state === "synced" && (
           <Check
@@ -474,11 +474,7 @@ export function FieldSyncRow<T>({
           </Tooltip>
         )}
       </span>
-      <span
-        role={isError ? "alert" : "status"}
-        aria-live={isError ? "assertive" : "polite"}
-        className="sr-only"
-      >
+      <span role={isError ? "alert" : "status"} aria-live={isError ? "assertive" : "polite"} className="sr-only">
         {shown === null ? "" : text}
       </span>
     </div>

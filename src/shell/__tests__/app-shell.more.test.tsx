@@ -167,7 +167,11 @@ describe("the More sheet", () => {
       expect(within(sheet).getByRole("link", { name })).toBeInTheDocument();
     }
     const pages = within(sheet).getByRole("list", { name: "Reports" });
-    expect(within(pages).getAllByRole("link").map((a) => a.textContent)).toEqual(["Spending", "Income"]);
+    expect(
+      within(pages)
+        .getAllByRole("link")
+        .map((a) => a.textContent),
+    ).toEqual(["Spending", "Income"]);
     // The entries the bar shows are not repeated.
     expect(within(sheet).queryByRole("link", { name: "Budget" })).toBeNull();
   });

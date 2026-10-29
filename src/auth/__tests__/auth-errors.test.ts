@@ -74,7 +74,9 @@ describe("isAuthError", () => {
 
   it("is false for an uncoded error", () => {
     expect(isAuthError(new Error("Network Error"))).toBe(false);
-    expect(isAuthError({ response: { status: 500, data: "Internal Server Error" } }, "invalid_credentials")).toBe(false);
+    expect(isAuthError({ response: { status: 500, data: "Internal Server Error" } }, "invalid_credentials")).toBe(
+      false,
+    );
   });
 });
 
@@ -122,9 +124,9 @@ describe("authErrorCode — the account codes (0.30.0, server-kit 0.4.0's Accoun
     expect(authErrorCode(err)).toBe("last_admin");
     expect(isAuthError(err, "last_admin")).toBe(true);
     expect(isAuthError(err, "self_action")).toBe(false);
-    expect(isAuthError({ response: { status: 400, data: { code: "password_incorrect" } } }, "invalid_credentials")).toBe(
-      false,
-    );
+    expect(
+      isAuthError({ response: { status: 400, data: { code: "password_incorrect" } } }, "invalid_credentials"),
+    ).toBe(false);
   });
 });
 

@@ -105,14 +105,12 @@ export function GroupedPicker({
             .filter((g) => g.items.length > 0)
         : groups;
     return kept.flatMap((g) =>
-      g.items.map(
-        (item): ComboOption<string> => ({
-          value: itemValue(g.key, item.key),
-          label: item.label,
-          icon: item.icon,
-          group: g.label,
-        }),
-      ),
+      g.items.map((item): ComboOption<string> => ({
+        value: itemValue(g.key, item.key),
+        label: item.label,
+        icon: item.icon,
+        group: g.label,
+      })),
     );
   }, [groups, query, locale]);
   // Back to keys for `onSelect`, by the value the row carries.

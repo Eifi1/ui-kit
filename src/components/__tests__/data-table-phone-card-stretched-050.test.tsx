@@ -65,7 +65,8 @@ const phone = () => vi.stubGlobal("matchMedia", viewportMatchMedia(390));
 const cardOf = (title: string) => screen.getByText(title).closest("li") as HTMLElement;
 const titleControl = (card: HTMLElement) => card.querySelector("[data-card-link]") as HTMLElement;
 
-const INTERACTIVE = 'a[href],button,[role="button"],[role="link"],input,select,textarea,[tabindex]:not([tabindex="-1"])';
+const INTERACTIVE =
+  'a[href],button,[role="button"],[role="link"],input,select,textarea,[tabindex]:not([tabindex="-1"])';
 
 /** No interactive element of the card holds another. */
 function expectNoNesting(card: HTMLElement) {
@@ -129,7 +130,9 @@ describe("a stretched phone card (0.50 K4)", () => {
       Array.from(card.querySelectorAll("dt")).find((dt) => dt.textContent === label)!.nextElementSibling as HTMLElement;
     expect(dd("Phone").className).toMatch(/\brelative\b.*z-\[2\]/);
     expect(dd("Company").className).not.toMatch(/z-\[2\]/);
-    const actionCell = within(card).getByRole("button", { name: "Delete Ada Example" }).closest("[data-card-actions] > div")!;
+    const actionCell = within(card)
+      .getByRole("button", { name: "Delete Ada Example" })
+      .closest("[data-card-actions] > div")!;
     expect(actionCell.className).toMatch(/z-\[2\]/);
     // The keyboard's frame is the card's, drawn while the title control has the focus.
     const box = card.querySelector("[data-card-stretched]")!;
@@ -268,7 +271,7 @@ describe("cards that stay as they were (0.50 K4)", () => {
     expect(within(card).getByRole("button")).toHaveTextContent(/Ada Example.*Example AG/);
   });
 
-  it("a mobileCard renderer keeps the role=\"button\" fallback", () => {
+  it('a mobileCard renderer keeps the role="button" fallback', () => {
     phone();
     renderTable({ onRowClick: vi.fn(), rowHref: (r) => `/contacts/${r.id}`, mobileCard: (r) => <span>{r.name}</span> });
     const card = cardOf("Ada Example");

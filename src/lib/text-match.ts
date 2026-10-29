@@ -26,7 +26,10 @@ export function foldForSearch(text: string, locale?: string): string {
   } catch {
     lower = text.toLocaleLowerCase();
   }
-  return lower.normalize("NFD").replace(/\p{M}+/gu, "").replace(/ß/g, "ss");
+  return lower
+    .normalize("NFD")
+    .replace(/\p{M}+/gu, "")
+    .replace(/ß/g, "ss");
 }
 
 /**
@@ -34,7 +37,9 @@ export function foldForSearch(text: string, locale?: string): string {
  * "Migros  Zürich" → `["migros", "zurich"]`. An empty or blank query has no words.
  */
 export function searchWords(query: string, locale?: string): string[] {
-  return foldForSearch(query, locale).split(/\s+/).filter((word) => word !== "");
+  return foldForSearch(query, locale)
+    .split(/\s+/)
+    .filter((word) => word !== "");
 }
 
 /**
@@ -46,6 +51,10 @@ export function searchWords(query: string, locale?: string): string[] {
  * was a substring. No words match everything.
  *
  * `words` from {@link searchWords}; `texts` as they are (folded here), `undefined` skipped.
+ *
+ * Exported since 0.51.5 for an app's own async source: a picker shows `loadOptions`'
+ * rows as they come, so a source that narrows on the client filters with this, the same
+ * rule the kit applies to `options` (keksdose's shop picker past its first hundred shops).
  */
 export function matchesSearch(
   words: readonly string[],
@@ -55,7 +64,10 @@ export function matchesSearch(
   if (words.length === 0) return true;
   // One haystack per row; a word holds no whitespace, so it cannot match across the
   // newline between two texts.
-  const hay = texts.filter((t): t is string => t !== undefined).map((t) => foldForSearch(t, locale)).join("\n");
+  const hay = texts
+    .filter((t): t is string => t !== undefined)
+    .map((t) => foldForSearch(t, locale))
+    .join("\n");
   return words.every((word) => hay.includes(word));
 }
 

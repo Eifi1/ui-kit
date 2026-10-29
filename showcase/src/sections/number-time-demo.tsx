@@ -24,10 +24,9 @@ export function NumberFieldDemo() {
   return (
     <>
       <Note>
-        <strong>NumberField</strong> commits on blur or Enter, never per keystroke. Type a
-        calculation (<code>2700+50</code>) and it resolves; empty or unparsable text snaps back to
-        the last value, unless the field is <code>nullable</code>, where empty commits{" "}
-        <code>null</code>.
+        <strong>NumberField</strong> commits on blur or Enter, never per keystroke. Type a calculation (
+        <code>2700+50</code>) and it resolves; empty or unparsable text snaps back to the last value, unless the field
+        is <code>nullable</code>, where empty commits <code>null</code>.
       </Note>
 
       <Example label="NumberField — unit as suffix" hint="digits={0}, clamped to 1000–5000">
@@ -45,10 +44,7 @@ export function NumberFieldDemo() {
         <StateLine label="value">{String(wheelbase)}</StateLine>
       </Example>
 
-      <Example
-        label="NumberField — unit in the label"
-        hint='unitPlacement="label", a row of narrow fields'
-      >
+      <Example label="NumberField — unit in the label" hint='unitPlacement="label", a row of narrow fields'>
         <Stage>
           <NumberField
             className="w-36"
@@ -104,22 +100,12 @@ export function NumberFieldDemo() {
             invalid={track === null}
           />
           <NumberField label="Kerb weight" unit="kg" value={1450} onCommit={() => {}} disabled />
-          <NumberField
-            label="Montant"
-            unit="€"
-            digits={2}
-            locale="fr-FR"
-            value={french}
-            onCommit={setFrench}
-          />
+          <NumberField label="Montant" unit="€" digits={2} locale="fr-FR" value={french} onCommit={setFrench} />
         </Stage>
         <StateLine label="value">{`track ${String(track)}, montant ${String(french)}`}</StateLine>
       </Example>
 
-      <Example
-        label="NumberField — German decimal comma"
-        hint='locale from <UiKitProvider locale="de-DE">'
-      >
+      <Example label="NumberField — German decimal comma" hint='locale from <UiKitProvider locale="de-DE">'>
         <UiKitProvider locale="de-DE">
           <div className="max-w-xs">
             <NumberField label="Betrag" unit="€" digits={2} value={german} onCommit={setGerman} />
@@ -142,10 +128,10 @@ export function TimeInputDemo() {
   return (
     <>
       <Note>
-        <strong>TimeInput</strong> is the browser&apos;s own time control: 12- or 24-hour display
-        follows the viewer&apos;s system settings, phones get their native wheel, and a click
-        anywhere in the field opens the picker. The value is always <code>HH:mm</code> — or{" "}
-        <code>HH:mm:ss</code> when <code>step</code> is not a whole minute.
+        <strong>TimeInput</strong> is the browser&apos;s own time control: 12- or 24-hour display follows the
+        viewer&apos;s system settings, phones get their native wheel, and a click anywhere in the field opens the
+        picker. The value is always <code>HH:mm</code> — or <code>HH:mm:ss</code> when <code>step</code> is not a whole
+        minute.
       </Note>
 
       <Example label="TimeInput — labelled" hint="floating label, like Input">
@@ -172,21 +158,13 @@ export function TimeInputDemo() {
             <label htmlFor="demo-quiet-end" className="text-xs text-muted">
               to
             </label>
-            <TimeInput
-              id="demo-quiet-end"
-              className="w-auto px-2 py-1"
-              value={quietEnd}
-              onValueChange={setQuietEnd}
-            />
+            <TimeInput id="demo-quiet-end" className="w-auto px-2 py-1" value={quietEnd} onValueChange={setQuietEnd} />
           </div>
         </Stage>
         <StateLine label="value">{`${JSON.stringify(quietStart)} – ${JSON.stringify(quietEnd)}`}</StateLine>
       </Example>
 
-      <Example
-        label="TimeInput — bounds and seconds"
-        hint="min/max paint out-of-range; step={1} adds seconds"
-      >
+      <Example label="TimeInput — bounds and seconds" hint="min/max paint out-of-range; step={1} adds seconds">
         <Stage>
           <div className="w-48 max-w-full">
             <TimeInput

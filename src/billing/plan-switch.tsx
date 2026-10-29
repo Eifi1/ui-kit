@@ -125,8 +125,7 @@ export function PlanSwitchConfirm({
 
   const period = (interval: BillingInterval) => (interval === "year" ? labels.yearly : labels.monthly);
   const side = (s: PlanSwitchSide) => `${planName(s.plan.toLowerCase())} (${period(s.interval)})`;
-  const money = (minor: number, currency: string) =>
-    formatMoney(minorToMajor(minor, currency), currency, { locale });
+  const money = (minor: number, currency: string) => formatMoney(minorToMajor(minor, currency), currency, { locale });
   const figure = (dimension: string, value: number) =>
     formatLimit ? formatLimit(dimension, value) : formatNumber(value, { locale });
 

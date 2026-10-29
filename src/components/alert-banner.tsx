@@ -84,11 +84,7 @@ export function alertFrameClass(tone: AlertTone, size: AlertSize = "md"): string
  *  border, 1px — a strip is a band across the top of a page, and its one visible edge
  *  is the line it draws under itself. kastlan's trial, past-due and tour banners. */
 function stripFrameClass(tone: AlertTone, size: AlertSize): string {
-  return cn(
-    TONE_FRAME[tone],
-    "rounded-none border-0 border-b",
-    size === "sm" ? "px-4 py-1.5" : "px-4 py-2",
-  );
+  return cn(TONE_FRAME[tone], "rounded-none border-0 border-b", size === "sm" ? "px-4 py-1.5" : "px-4 py-2");
 }
 
 const TONE_TEXT: Record<AlertTone, string> = {
@@ -429,9 +425,7 @@ export function AlertBanner({
       )}
     </div>
   ) : (
-    <Body className={cn(!inlineRow && (nested ? "flex-1" : grow), "min-w-0 text-start")}>
-      {children}
-    </Body>
+    <Body className={cn(!inlineRow && (nested ? "flex-1" : grow), "min-w-0 text-start")}>{children}</Body>
   );
   const content = (
     <>

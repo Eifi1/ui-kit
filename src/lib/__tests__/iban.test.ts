@@ -1,13 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  IBAN_LENGTHS,
-  compactIban,
-  formatIban,
-  ibanCheckDigits,
-  ibanProblem,
-  isQrIban,
-  isValidIban,
-} from "../iban";
+import { IBAN_LENGTHS, compactIban, formatIban, ibanCheckDigits, ibanProblem, isQrIban, isValidIban } from "../iban";
 
 /**
  * IBAN helpers (kastlan, keksdose). Every IBAN here is SYNTHETIC: a country code and an

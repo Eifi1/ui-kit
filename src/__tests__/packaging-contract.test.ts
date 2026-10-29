@@ -63,16 +63,12 @@ const DYNAMIC = /\bimport\(\s*["']([^"']+)["']\s*\)/g;
 
 /** `zustand/middleware` is an install of `zustand`. */
 const packageOf = (specifier: string) =>
-  specifier.startsWith("@")
-    ? specifier.split("/").slice(0, 2).join("/")
-    : specifier.split("/")[0];
+  specifier.startsWith("@") ? specifier.split("/").slice(0, 2).join("/") : specifier.split("/")[0];
 
 /** Every import specifier in one module, relative ones included. */
 function specifiersOf(file: string): string[] {
   const source = stripComments(readFileSync(file, "utf8"));
-  return [STATIC, BARE, DYNAMIC].flatMap((pattern) =>
-    [...source.matchAll(pattern)].map(([, specifier]) => specifier),
-  );
+  return [STATIC, BARE, DYNAMIC].flatMap((pattern) => [...source.matchAll(pattern)].map(([, specifier]) => specifier));
 }
 
 const isRelative = (specifier: string) => specifier.startsWith(".") || specifier.startsWith("/");
@@ -132,14 +128,9 @@ describe("packaging contract", () => {
   });
 
   it("declares every package src imports", () => {
-    const declared = new Set([
-      ...Object.keys(pkg.dependencies),
-      ...Object.keys(pkg.peerDependencies),
-    ]);
+    const declared = new Set([...Object.keys(pkg.dependencies), ...Object.keys(pkg.peerDependencies)]);
     const undeclared = [...imported.keys()].filter((name) => !declared.has(name));
-    expect(undeclared, "imported by src but in neither dependencies nor peerDependencies").toEqual(
-      [],
-    );
+    expect(undeclared, "imported by src but in neither dependencies nor peerDependencies").toEqual([]);
   });
 
   it("installs no runtime dependency that nothing imports", () => {
@@ -313,7 +304,10 @@ describe("dexie stays behind @eifi1/ui-kit/sync", () => {
 
   it("are exports entries", () => {
     expect(pkg.exports["./sync"]).toEqual({ types: "./dist/sync.d.ts", import: "./dist/sync.js" });
-    expect(pkg.exports["./sync/testing"]).toEqual({ types: "./dist/sync/testing.d.ts", import: "./dist/sync/testing.js" });
+    expect(pkg.exports["./sync/testing"]).toEqual({
+      types: "./dist/sync/testing.d.ts",
+      import: "./dist/sync/testing.js",
+    });
   });
 });
 
@@ -340,7 +334,10 @@ describe("@eifi1/ui-kit/push-worker is worker-safe", () => {
 
   it("reaches no package and no module but the handler", () => {
     expect([...packagesReachedFrom("src/push-worker.ts")]).toEqual([]);
-    expect(modulesReachedFrom("src/push-worker.ts")).toEqual(["src/notifications/push-worker.ts", "src/push-worker.ts"]);
+    expect(modulesReachedFrom("src/push-worker.ts")).toEqual([
+      "src/notifications/push-worker.ts",
+      "src/push-worker.ts",
+    ]);
   });
 
   it("is an exports entry", () => {
@@ -432,9 +429,13 @@ describe("@eifi1/ui-kit/currencies is pure data (0.35)", () => {
 
   it("is what the pickers read, so the data and the flags cannot drift", () => {
     const readers = shippedSources(join(ROOT, "src"))
-      .filter((file) => specifiersOf(file).some((s) => isRelative(s) && resolveRelative(file, s) === join(ROOT, "src/currencies.ts")))
+      .filter((file) =>
+        specifiersOf(file).some((s) => isRelative(s) && resolveRelative(file, s) === join(ROOT, "src/currencies.ts")),
+      )
       .map((file) => file.slice(ROOT.length + 1));
-    expect(readers).toEqual(expect.arrayContaining(["src/components/currency-option-list.tsx", "src/components/number-input.tsx"]));
+    expect(readers).toEqual(
+      expect.arrayContaining(["src/components/currency-option-list.tsx", "src/components/number-input.tsx"]),
+    );
   });
 
   it("is an exports entry", () => {
@@ -529,7 +530,7 @@ describe("README's install table says what package.json declares (DOC-3)", () =>
  * author never wrote.
  */
 describe("the build marks the package as client code", () => {
-  it("emits a \"use client\" banner", async () => {
+  it('emits a "use client" banner', async () => {
     const config = (await import("../../tsup.config")).default as { banner?: { js?: string } };
     expect(config.banner?.js).toBe('"use client";');
   });

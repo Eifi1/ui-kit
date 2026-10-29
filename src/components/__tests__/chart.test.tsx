@@ -1,13 +1,7 @@
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
-import {
-  ChartContainer,
-  ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "../chart";
+import { ChartContainer, ChartLegendContent, ChartTooltip, ChartTooltipContent, type ChartConfig } from "../chart";
 
 /**
  * The chart shell's three consumer-facing defects (module audit 2026-09-22 §7).
@@ -29,8 +23,7 @@ vi.mock("recharts", async () => {
       tooltipProps.last = props;
       return null;
     },
-    ResponsiveContainer: ({ children }: { children: ReactNode }) =>
-      createElement("div", null, children),
+    ResponsiveContainer: ({ children }: { children: ReactNode }) => createElement("div", null, children),
   };
 });
 
@@ -178,9 +171,22 @@ describe("ChartTooltipContent", () => {
   });
 
   it("clamps itself into the viewport when placed past its edge (lenkbank 0.15.2)", () => {
-    const rect = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+    const rect = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (
+      this: HTMLElement,
+    ) {
       // The tooltip box: 320px wide, placed at x=108 on a 390px page.
-      if (this.className.includes("max-w-")) return { left: 108, right: 428, width: 320, top: 0, bottom: 100, height: 100, x: 108, y: 0, toJSON() {} } as DOMRect;
+      if (this.className.includes("max-w-"))
+        return {
+          left: 108,
+          right: 428,
+          width: 320,
+          top: 0,
+          bottom: 100,
+          height: 100,
+          x: 108,
+          y: 0,
+          toJSON() {},
+        } as DOMRect;
       return { left: 0, right: 0, width: 0, top: 0, bottom: 0, height: 0, x: 0, y: 0, toJSON() {} } as DOMRect;
     });
     const width = vi.spyOn(document.documentElement, "clientWidth", "get").mockReturnValue(390);
@@ -356,11 +362,7 @@ describe("ChartTooltip — the missing-value path runs by default", () => {
   it("still drops series drawn with `hide`, unless recharts says includeHidden", () => {
     // The other half of the filter recharts no longer applies: a legend toggle must
     // still take its series out of the tooltip.
-    const payload = [
-      { dataKey: "revenue", value: 1 },
-      { dataKey: "gone", value: 2, hide: true },
-      { dataKey: "gap" },
-    ];
+    const payload = [{ dataKey: "revenue", value: 1 }, { dataKey: "gone", value: 2, hide: true }, { dataKey: "gap" }];
     const { unmount } = render(
       <ChartContainer id="tiphide" config={CONFIG}>
         <ChartTooltipContent active payload={payload} />

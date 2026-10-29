@@ -18,13 +18,7 @@ import {
   Switch,
   WriteLockProvider,
 } from "@eifi1/ui-kit";
-import type {
-  SummarySection,
-  ValidateResult,
-  WizardContextValue,
-  WizardLabels,
-  WizardStepConfig,
-} from "@eifi1/ui-kit";
+import type { SummarySection, ValidateResult, WizardContextValue, WizardLabels, WizardStepConfig } from "@eifi1/ui-kit";
 import { ConstList, Example, Note, OutTable, Row, code } from "../lib/section";
 
 /**
@@ -89,14 +83,12 @@ export function Wizard() {
   return (
     <>
       <Note>
-        <strong>This wizard writes to the page URL.</strong> `useWizard` mirrors the active step
-        to <code className="font-mono">?step=N</code> through{" "}
-        <code className="font-mono">useSearchParams</code>, on mount and on every move — so it
-        cannot be mounted outside a router (this page supplies a{" "}
-        <code className="font-mono">HashRouter</code>), and clicking Next below changes the
-        address bar for the whole showcase. It only ever WRITES the param: the hook's own
-        comment explains that reading it back would restore a late step index over an EMPTY
-        data set, letting Finish submit nothing at all.
+        <strong>This wizard writes to the page URL.</strong> `useWizard` mirrors the active step to{" "}
+        <code className="font-mono">?step=N</code> through <code className="font-mono">useSearchParams</code>, on mount
+        and on every move — so it cannot be mounted outside a router (this page supplies a{" "}
+        <code className="font-mono">HashRouter</code>), and clicking Next below changes the address bar for the whole
+        showcase. It only ever WRITES the param: the hook's own comment explains that reading it back would restore a
+        late step index over an EMPTY data set, letting Finish submit nothing at all.
       </Note>
 
       <ToyWizard key={runId} onRestart={() => setRunId((n) => n + 1)} />
@@ -104,12 +96,10 @@ export function Wizard() {
       <ImportWizardDemo />
 
       <Note>
-        <strong>Skip bypasses validation entirely.</strong> Step 1 is{" "}
-        <code className="font-mono">optional</code>, so it offers Skip — and{" "}
-        <code className="font-mono">skip()</code> dispatches straight to the next step without
-        running a single validator, where <code className="font-mono">goNext()</code> runs all of
-        them. An optional step's gate is therefore advisory, and{" "}
-        <code className="font-mono">stepStatus</code> reports it as{" "}
+        <strong>Skip bypasses validation entirely.</strong> Step 1 is <code className="font-mono">optional</code>, so it
+        offers Skip — and <code className="font-mono">skip()</code> dispatches straight to the next step without running
+        a single validator, where <code className="font-mono">goNext()</code> runs all of them. An optional step's gate
+        is therefore advisory, and <code className="font-mono">stepStatus</code> reports it as{" "}
         <code className="font-mono">&quot;skipped&quot;</code> rather than{" "}
         <code className="font-mono">&quot;completed&quot;</code>. Both count towards{" "}
         <code className="font-mono">canFinish</code>.
@@ -117,13 +107,12 @@ export function Wizard() {
 
       <Note>
         <strong>
-          <code className="font-mono">nextBlocked</code> belongs to the wizard, not to the step
-          that set it.
+          <code className="font-mono">nextBlocked</code> belongs to the wizard, not to the step that set it.
         </strong>{" "}
-        Nothing in <code className="font-mono">useWizard</code> clears it on navigation, so a step
-        that leaves it set disables Next and Skip on every step after it. The name step above
-        therefore returns <code className="font-mono">setNextBlocked(false)</code> from its effect
-        cleanup, and a step that sets it and forgets to is a wizard nobody can finish.
+        Nothing in <code className="font-mono">useWizard</code> clears it on navigation, so a step that leaves it set
+        disables Next and Skip on every step after it. The name step above therefore returns{" "}
+        <code className="font-mono">setNextBlocked(false)</code> from its effect cleanup, and a step that sets it and
+        forgets to is a wizard nobody can finish.
       </Note>
 
       <Example
@@ -164,41 +153,25 @@ export function Wizard() {
             ],
             [
               'requiredFieldsValidator({ qty: 0 }, [{ key: "qty", valid: (v) => Number(v) > 0 }], "Must be > 0")',
-              show(
-                requiredFieldsValidator(
-                  { qty: 0 },
-                  [{ key: "qty", valid: (v) => Number(v) > 0 }],
-                  "Must be > 0",
-                ),
-              ),
+              show(requiredFieldsValidator({ qty: 0 }, [{ key: "qty", valid: (v) => Number(v) > 0 }], "Must be > 0")),
             ],
             [
               'requiredFieldsValidator({ a: "", b: "" }, [{ key: "a", message: "A?" }, { key: "b" }], "Required")',
-              show(
-                requiredFieldsValidator(
-                  { a: "", b: "" },
-                  [{ key: "a", message: "A?" }, { key: "b" }],
-                  "Required",
-                ),
-              ),
+              show(requiredFieldsValidator({ a: "", b: "" }, [{ key: "a", message: "A?" }, { key: "b" }], "Required")),
             ],
           ]}
         />
         <p className="mt-3 text-xs text-secondary">
           Row four is the trap: the default check is a trimmed non-empty string OR{" "}
-          <code className="font-mono">value != null</code>, so <code className="font-mono">0</code>{" "}
-          and <code className="font-mono">false</code> pass it. Anything numeric needs the{" "}
-          <code className="font-mono">valid</code> predicate, which is what it exists for. Note
-          also that the helper returns <code className="font-mono">errors</code> even when{" "}
-          <code className="font-mono">ok</code> is true — an empty object, not{" "}
-          <code className="font-mono">undefined</code>.
+          <code className="font-mono">value != null</code>, so <code className="font-mono">0</code> and{" "}
+          <code className="font-mono">false</code> pass it. Anything numeric needs the{" "}
+          <code className="font-mono">valid</code> predicate, which is what it exists for. Note also that the helper
+          returns <code className="font-mono">errors</code> even when <code className="font-mono">ok</code> is true — an
+          empty object, not <code className="font-mono">undefined</code>.
         </p>
       </Example>
 
-      <Example
-        label="DEFAULT_WIZARD_LABELS"
-        hint="every string the chrome shows; `step` is a function, not a template"
-      >
+      <Example label="DEFAULT_WIZARD_LABELS" hint="every string the chrome shows; `step` is a function, not a template">
         <ConstList
           items={[
             ["cancel", DEFAULT_WIZARD_LABELS.cancel],
@@ -245,29 +218,24 @@ export function Wizard() {
             >
               Next
             </Button>
-            <span className="font-mono text-xs text-muted">
-              current={JSON.stringify(importStep)}
-            </span>
+            <span className="font-mono text-xs text-muted">current={JSON.stringify(importStep)}</span>
           </Row>
         </div>
       </Example>
 
       <Note>
-        <strong>The two are not a pair.</strong>{" "}
-        <code className="font-mono">WizardStepper</code> takes{" "}
-        <code className="font-mono">{"{ key, label }"}</code> and a{" "}
-        <code className="font-mono">current</code> KEY; the engine&apos;s indicator is built into{" "}
-        <code className="font-mono">StepperNav</code>, takes{" "}
+        <strong>The two are not a pair.</strong> <code className="font-mono">WizardStepper</code> takes{" "}
+        <code className="font-mono">{"{ key, label }"}</code> and a <code className="font-mono">current</code> KEY; the
+        engine&apos;s indicator is built into <code className="font-mono">StepperNav</code>, takes{" "}
         <code className="font-mono">WizardStepConfig</code> and is driven by{" "}
-        <code className="font-mono">stepStatus</code>. Nothing is shared between them — not a
-        type, not a style. A `current` that matches no key is also not an error here: the index
-        resolves to <code className="font-mono">-1</code> and every chip renders as a future step, so a typo reads as &quot;not
+        <code className="font-mono">stepStatus</code>. Nothing is shared between them — not a type, not a style. A
+        `current` that matches no key is also not an error here: the index resolves to{" "}
+        <code className="font-mono">-1</code> and every chip renders as a future step, so a typo reads as &quot;not
         started&quot;.
       </Note>
     </>
   );
 }
-
 
 /* ── a committing step with a step after it ─────────────────────────────── */
 
@@ -316,26 +284,24 @@ function ImportWizardDemo() {
       <div className="mt-3">
         <Note>
           Step 2 is flagged <code className="font-mono">commits</code>: its button is Finish (labelled by the
-          step&apos;s <code className="font-mono">nextLabel</code>, &ldquo;Import 214 rows&rdquo;) and a
-          successful <code className="font-mono">onComplete</code> moves ON to step 3 instead of ending. From
-          there Back and the indicator cannot cross the commit and Cancel is gone; the last step&apos;s button
-          is Done, which calls <code className="font-mono">onDone</code>. Step 1&apos;s Next,
-          &ldquo;Analyse&rdquo;, runs a 900 ms async check: it shows pending (spinner,{" "}
-          <code className="font-mono">aria-busy</code>, disabled) until the check settles. Back on step 1 is
-          offered because <code className="font-mono">onExit</code> is given — &ldquo;back to the
-          dropzone&rdquo;. <code className="font-mono">urlSync: false</code> keeps the step in memory, so this
+          step&apos;s <code className="font-mono">nextLabel</code>, &ldquo;Import 214 rows&rdquo;) and a successful{" "}
+          <code className="font-mono">onComplete</code> moves ON to step 3 instead of ending. From there Back and the
+          indicator cannot cross the commit and Cancel is gone; the last step&apos;s button is Done, which calls{" "}
+          <code className="font-mono">onDone</code>. Step 1&apos;s Next, &ldquo;Analyse&rdquo;, runs a 900 ms async
+          check: it shows pending (spinner, <code className="font-mono">aria-busy</code>, disabled) until the check
+          settles. Back on step 1 is offered because <code className="font-mono">onExit</code> is given — &ldquo;back to
+          the dropzone&rdquo;. <code className="font-mono">urlSync: false</code> keeps the step in memory, so this
           wizard never touches the address bar the one above writes to.
         </Note>
         <Note>
-          Tick &ldquo;replace&rdquo; on step 2 and Finish becomes <code className="font-mono">finishVariant=&quot;danger&quot;</code>;
-          tick the write lock and it is <code className="font-mono">finishDisabled</code>, wrapped by{" "}
-          <code className="font-mono">renderFinish</code> in a tooltip that says why — on a wrapping span,
-          since a disabled button gets no pointer events. On step 3, &ldquo;Create 12 rules&rdquo; writes
-          one rule every 250 ms; while it runs, Done is <code className="font-mono">doneDisabled</code> —
-          still in place, just not yet — and it comes back when the loop ends. The review summary&apos;s
-          first section has no{" "}
-          <code className="font-mono">stepIndex</code>, so it has no edit button, and{" "}
-          <code className="font-mono">disabled</code> greys the others while the import runs.
+          Tick &ldquo;replace&rdquo; on step 2 and Finish becomes{" "}
+          <code className="font-mono">finishVariant=&quot;danger&quot;</code>; tick the write lock and it is{" "}
+          <code className="font-mono">finishDisabled</code>, wrapped by <code className="font-mono">renderFinish</code>{" "}
+          in a tooltip that says why — on a wrapping span, since a disabled button gets no pointer events. On step 3,
+          &ldquo;Create 12 rules&rdquo; writes one rule every 250 ms; while it runs, Done is{" "}
+          <code className="font-mono">doneDisabled</code> — still in place, just not yet — and it comes back when the
+          loop ends. The review summary&apos;s first section has no <code className="font-mono">stepIndex</code>, so it
+          has no edit button, and <code className="font-mono">disabled</code> greys the others while the import runs.
         </Note>
       </div>
     </Example>
@@ -445,8 +411,8 @@ function ImportWizard({
       {wizard.currentStepIndex === 0 && (
         <WizardStep>
           <p className="text-sm text-secondary">
-            <span className="font-mono text-primary">{wizard.data.file}</span> — press
-            &ldquo;Analyse&rdquo; and watch it pend while the pretend server checks the file.
+            <span className="font-mono text-primary">{wizard.data.file}</span> — press &ldquo;Analyse&rdquo; and watch
+            it pend while the pretend server checks the file.
           </p>
         </WizardStep>
       )}
@@ -466,9 +432,7 @@ function ImportWizard({
       )}
       {wizard.currentStepIndex === 2 && (
         <WizardStep>
-          <p className="text-sm text-secondary">
-            Imported. Set up rules for the 12 payees seen for the first time?
-          </p>
+          <p className="text-sm text-secondary">Imported. Set up rules for the 12 payees seen for the first time?</p>
           <label className="mt-2 flex items-center gap-2 text-sm text-secondary">
             <input
               type="checkbox"
@@ -623,44 +587,31 @@ function ToyWizard({ onRestart }: { onRestart: () => void }) {
           )}
           {wizard.currentStepIndex === 2 && (
             <WizardStep>
-              <WizardSummary
-                sections={summarySections}
-                onEditStep={wizard.goToStep}
-                labels={LABELS}
-              />
+              <WizardSummary sections={summarySections} onEditStep={wizard.goToStep} labels={LABELS} />
             </WizardStep>
           )}
         </StepperNav>
       </Example>
 
       <Note>
-        <strong>Double-click Next.</strong> Step 2&apos;s <code className="font-mono">validate</code>{" "}
-        is async (a 600ms pretend server check). Pick a size and double-click Next: the counter
-        in the table below goes up by one, not two, and the wizard moves one step.{" "}
-        <code className="font-mono">goNext</code>, <code className="font-mono">skip</code> and{" "}
-        <code className="font-mono">finish</code> refuse to start while a move is in flight, and a move decided on a step that is no
-        longer current is dropped; a double-click on Finish calls{" "}
-        <code className="font-mono">onComplete</code> once.
+        <strong>Double-click Next.</strong> Step 2&apos;s <code className="font-mono">validate</code> is async (a 600ms
+        pretend server check). Pick a size and double-click Next: the counter in the table below goes up by one, not
+        two, and the wizard moves one step. <code className="font-mono">goNext</code>,{" "}
+        <code className="font-mono">skip</code> and <code className="font-mono">finish</code> refuse to start while a
+        move is in flight, and a move decided on a step that is no longer current is dropped; a double-click on Finish
+        calls <code className="font-mono">onComplete</code> once.
       </Note>
 
       <Example label="Engine state, live" hint="read off the same `wizard` object the chrome above is driven by">
         <OutTable
           rows={[
             ["wizard.currentStep.id", wizard.currentStep.id],
-            [
-              "wizard.currentStepIndex",
-              `${wizard.currentStepIndex} of ${wizard.steps.length - 1}`,
-            ],
+            ["wizard.currentStepIndex", `${wizard.currentStepIndex} of ${wizard.steps.length - 1}`],
             ["wizard.isFirstStep / isLastStep", `${wizard.isFirstStep} / ${wizard.isLastStep}`],
-            [
-              "wizard.steps.map((_, i) => stepStatus(i))",
-              wizard.steps.map((_, i) => wizard.stepStatus(i)).join(", "),
-            ],
+            ["wizard.steps.map((_, i) => stepStatus(i))", wizard.steps.map((_, i) => wizard.stepStatus(i)).join(", ")],
             [
               "wizard.completedSteps",
-              wizard.completedSteps.size === 0
-                ? "(empty)"
-                : [...wizard.completedSteps].join(", "),
+              wizard.completedSteps.size === 0 ? "(empty)" : [...wizard.completedSteps].join(", "),
             ],
             ["wizard.canFinish", String(wizard.canFinish)],
             ["wizard.nextBlocked", String(wizard.nextBlocked)],
@@ -676,8 +627,8 @@ function ToyWizard({ onRestart }: { onRestart: () => void }) {
           <p className="text-xs text-secondary">
             What Finish should do — the failing branches reject, which is how{" "}
             <code className="font-mono">wizard.error</code> and the alert inside{" "}
-            <code className="font-mono">StepperNav</code> get populated. A rejection with no
-            readable message shows <code className="font-mono">genericError</code>.
+            <code className="font-mono">StepperNav</code> get populated. A rejection with no readable message shows{" "}
+            <code className="font-mono">genericError</code>.
           </p>
           <Row className="items-start">
             <ToggleGroup<"succeed" | "fail" | "opaque">
@@ -700,12 +651,7 @@ function ToyWizard({ onRestart }: { onRestart: () => void }) {
                     : "onComplete rejects with a non-Error (no readable message)"
               }
             />
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={!wizard.error}
-              onClick={wizard.clearError}
-            >
+            <Button type="button" variant="secondary" disabled={!wizard.error} onClick={wizard.clearError}>
               clearError()
             </Button>
             <Button
@@ -728,15 +674,7 @@ function ToyWizard({ onRestart }: { onRestart: () => void }) {
 
 /** Step 1. The one that consumes the wizard context — it registers its validator
  *  and drives the hard Next gate without ever being handed the `wizard` object. */
-function NameStep({
-  value,
-  error,
-  onChange,
-}: {
-  value: string;
-  error?: string;
-  onChange: (value: string) => void;
-}) {
+function NameStep({ value, error, onChange }: { value: string; error?: string; onChange: (value: string) => void }) {
   const { registerStepValidate, setNextBlocked } = useWizardContext();
   const tooLong = value.length > 24;
 
@@ -746,11 +684,7 @@ function NameStep({
   useEffect(
     () =>
       registerStepValidate(() =>
-        requiredFieldsValidator(
-          { name: value },
-          [{ key: "name", message: "A name is required." }],
-          "Required",
-        ),
+        requiredFieldsValidator({ name: value }, [{ key: "name", message: "A name is required." }], "Required"),
       ),
     [registerStepValidate, value],
   );
@@ -776,8 +710,8 @@ function NameStep({
             key `updateData` touches, so this message disappears as you type. */}
         {error && <p className="text-xs text-secondary">{error}</p>}
         <p className="text-xs text-muted">
-          {value.length}/24 — over that, Next and Skip go dead via{" "}
-          <code className="font-mono">setNextBlocked</code> rather than failing on click.
+          {value.length}/24 — over that, Next and Skip go dead via <code className="font-mono">setNextBlocked</code>{" "}
+          rather than failing on click.
         </p>
       </div>
     </WizardStep>
@@ -811,12 +745,7 @@ function SizeStep({
           aria-label="Size"
         />
       </div>
-      <Textarea
-        label="Note (not gated)"
-        rows={3}
-        value={note}
-        onChange={(e) => onChange({ note: e.target.value })}
-      />
+      <Textarea label="Note (not gated)" rows={3} value={note} onChange={(e) => onChange({ note: e.target.value })} />
       {message && <AlertBanner tone="warning">{message}</AlertBanner>}
     </WizardStep>
   );
@@ -894,11 +823,11 @@ export function StepperNavFinishLock023Demo() {
           <FinishLockWizard key={run} onDone={() => setRun((n) => n + 1)} />
         </WriteLockProvider>
         <Note>
-          With {code("finishCommit")}, Finish is the kit Button&apos;s {code("commit")}: under a locked provider it
-          is {code("aria-disabled")} but focusable, the reason is in its Tooltip, and {code("wizard.finish")} does
-          not run. Back, Next and Cancel stay live — the steps before the commit write nothing.{" "}
-          {code("finishDisabledReason")} is the same lock with a reason of the app&apos;s own. A{" "}
-          {code("renderFinish")} that clones {code("commit")} in keeps working.
+          With {code("finishCommit")}, Finish is the kit Button&apos;s {code("commit")}: under a locked provider it is{" "}
+          {code("aria-disabled")} but focusable, the reason is in its Tooltip, and {code("wizard.finish")} does not run.
+          Back, Next and Cancel stay live — the steps before the commit write nothing. {code("finishDisabledReason")} is
+          the same lock with a reason of the app&apos;s own. A {code("renderFinish")} that clones {code("commit")} in
+          keeps working.
         </Note>
       </div>
     </Example>

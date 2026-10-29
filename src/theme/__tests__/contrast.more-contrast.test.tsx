@@ -228,9 +228,12 @@ describe("useApplyContrast", () => {
   it("takes the account's mode while the device has none", () => {
     stubPrefersMore(false);
     const { useContrastStore, useApplyContrast } = createContrastStore(KEY);
-    const { result, rerender } = renderHook(({ account }: { account?: string | null }) => useApplyContrast({ account }), {
-      initialProps: { account: "more" as string | null | undefined },
-    });
+    const { result, rerender } = renderHook(
+      ({ account }: { account?: string | null }) => useApplyContrast({ account }),
+      {
+        initialProps: { account: "more" as string | null | undefined },
+      },
+    );
     expect(result.current).toBe("more");
     act(() => useContrastStore.getState().setContrast("standard"));
     expect(result.current).toBe("standard");

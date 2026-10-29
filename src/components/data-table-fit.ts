@@ -144,9 +144,7 @@ export function useColumnFit<T>({
     if (!table || avail <= 0) return;
     const growTh = growKey ? headRefs.get(growKey) : undefined;
     const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-    let need = growTh
-      ? table.offsetWidth - growTh.offsetWidth + growMin * rem
-      : table.offsetWidth;
+    let need = growTh ? table.offsetWidth - growTh.offsetWidth + growMin * rem : table.offsetWidth;
     if (!growTh && need <= avail + 0.5 && current.length > 0) {
       // A `w-full` table is at least the scroller's width, which says nothing about how
       // much room its content leaves: probe its content's width (what it takes once it

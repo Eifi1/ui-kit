@@ -328,9 +328,7 @@ export interface FeedbackAttachmentFieldRefsProps extends FeedbackAttachmentFiel
 }
 
 export type FeedbackAttachmentFieldProps =
-  | FeedbackAttachmentFieldSingleProps
-  | FeedbackAttachmentFieldMultipleProps
-  | FeedbackAttachmentFieldRefsProps;
+  FeedbackAttachmentFieldSingleProps | FeedbackAttachmentFieldMultipleProps | FeedbackAttachmentFieldRefsProps;
 
 /**
  * Picking one picture: the file dialog, a capture of the app view, or a paste.
@@ -444,11 +442,7 @@ function SingleField({
       {value ? (
         <div className="flex items-start gap-2">
           {value.type.startsWith("image/") && preview ? (
-            <img
-              src={preview}
-              alt={value.name}
-              className="h-20 w-20 rounded border border-subtle object-cover"
-            />
+            <img src={preview} alt={value.name} className="h-20 w-20 rounded border border-subtle object-cover" />
           ) : (
             // Non-image attachments (PDF, text) can't preview as an <img>, so
             // show a neutral file tile with the name/size beside it instead.
@@ -458,9 +452,7 @@ function SingleField({
           )}
           <div className="min-w-0 flex-1">
             <div className="truncate-until-large text-sm text-secondary">{value.name}</div>
-            <div className="text-xs text-muted">
-              {fileText.size(value.size)}
-            </div>
+            <div className="text-xs text-muted">{fileText.size(value.size)}</div>
           </div>
           <RemoveButton label={text.attachmentRemove} onClick={() => onChange(null)} disabled={disabled} />
         </div>
@@ -489,9 +481,7 @@ function SingleField({
           </div>
           {/* Said out loud, because a gesture with no affordance is a gesture
               nobody finds. */}
-          <p className="text-xs text-muted">
-            {text.attachmentPaste}
-          </p>
+          <p className="text-xs text-muted">{text.attachmentPaste}</p>
         </div>
       )}
       <input
@@ -614,8 +604,7 @@ function MultipleField({
     const root = rootRef.current;
     if (!root) return;
     const removes = root.querySelectorAll<HTMLElement>("[data-attachment-remove]");
-    const target =
-      removes[index] ?? root.querySelector<HTMLElement>("[data-attachment-action]") ?? removes[index - 1];
+    const target = removes[index] ?? root.querySelector<HTMLElement>("[data-attachment-action]") ?? removes[index - 1];
     target?.focus();
   }, [value, screenshot]);
 
@@ -650,7 +639,9 @@ function MultipleField({
                 <div className="truncate-until-large text-xs text-muted">
                   {/* The screenshot's file name moves down here: still there for the
                       reporter who wants to know what will be sent, not its title. */}
-                  {chip.screenshot ? `${chip.file.name} · ${fileText.size(chip.file.size)}` : fileText.size(chip.file.size)}
+                  {chip.screenshot
+                    ? `${chip.file.name} · ${fileText.size(chip.file.size)}`
+                    : fileText.size(chip.file.size)}
                 </div>
               </div>
               <RemoveButton
@@ -692,9 +683,7 @@ function MultipleField({
           )}
         </div>
       )}
-      <p className="text-xs text-muted">
-        {room > 0 ? text.attachmentPaste : limitLabel(max)}
-      </p>
+      <p className="text-xs text-muted">{room > 0 ? text.attachmentPaste : limitLabel(max)}</p>
       <input
         ref={fileInputRef}
         type="file"
@@ -857,8 +846,7 @@ function RefsField({
     const root = rootRef.current;
     if (!root) return;
     const removes = root.querySelectorAll<HTMLElement>("[data-attachment-remove]");
-    const target =
-      removes[index] ?? root.querySelector<HTMLElement>("[data-attachment-action]") ?? removes[index - 1];
+    const target = removes[index] ?? root.querySelector<HTMLElement>("[data-attachment-action]") ?? removes[index - 1];
     target?.focus();
   }, [value]);
 
@@ -973,18 +961,18 @@ function RefsField({
 function RefGlyph({ type }: { type?: string }) {
   return (
     <span className="flex size-12 shrink-0 items-center justify-center rounded border border-subtle bg-surface-2 text-placeholder">
-      {type?.startsWith("image/") ? <ImageIcon aria-hidden className="size-6" /> : <FileText aria-hidden className="size-6" />}
+      {type?.startsWith("image/") ? (
+        <ImageIcon aria-hidden className="size-6" />
+      ) : (
+        <FileText aria-hidden className="size-6" />
+      )}
     </span>
   );
 }
 
 function Heading({ text, className }: { text?: string; className?: string }) {
   if (!text) return null;
-  return (
-    <div className={cn("mb-1 text-xs font-medium uppercase tracking-wide text-muted", className)}>
-      {text}
-    </div>
-  );
+  return <div className={cn("mb-1 text-xs font-medium uppercase tracking-wide text-muted", className)}>{text}</div>;
 }
 
 function CaptureButton({
@@ -1063,7 +1051,6 @@ function RemoveButton({
     </IconButton>
   );
 }
-
 
 /**
  * The {@link FeedbackAttachmentErrorInfo} builder of one field: its limits, and the

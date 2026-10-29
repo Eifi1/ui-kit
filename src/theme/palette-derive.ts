@@ -218,8 +218,7 @@ function surfaceSet(hue: number, mode: ThemeMode, tint: number, weight: number) 
   // the three. Solving against `bgSurface` alone left it at 1.36:1 on `bgPage`, so the
   // target and the audit disagreed about the same border.
   const hardest = [bgPage, bgSurface, bgSurface2].reduce((a, b) =>
-    contrast(a, mode === "light" ? "#000000" : "#ffffff") <
-    contrast(b, mode === "light" ? "#000000" : "#ffffff")
+    contrast(a, mode === "light" ? "#000000" : "#ffffff") < contrast(b, mode === "light" ? "#000000" : "#ffffff")
       ? a
       : b,
   );
@@ -261,12 +260,7 @@ function tintOn(hue: number, chroma: number, surface: string, mode: ThemeMode): 
   return oklchToHex({ l, c: Math.min(chroma * 0.45, 0.06), h: hue });
 }
 
-export function derivePalette({
-  anchors,
-  mode,
-  surfaceTint = 0.55,
-  textContrast,
-}: DeriveOptions): DerivedPalette {
+export function derivePalette({ anchors, mode, surfaceTint = 0.55, textContrast }: DeriveOptions): DerivedPalette {
   const warnings: string[] = [];
   const brand = hexToOklch(anchors.brand);
   if (!brand) {
@@ -285,8 +279,7 @@ export function derivePalette({
   // wherever it lands. Solving against `bgSurface` alone is the mistake that makes a
   // muted label fail on the page background it also sits on.
   const worstSurface = [surfaces.bgPage, surfaces.bgSurface, surfaces.bgSurface2].reduce((a, b) =>
-    contrast(a, mode === "light" ? "#000000" : "#ffffff") <
-    contrast(b, mode === "light" ? "#000000" : "#ffffff")
+    contrast(a, mode === "light" ? "#000000" : "#ffffff") < contrast(b, mode === "light" ? "#000000" : "#ffffff")
       ? a
       : b,
   );
@@ -304,8 +297,7 @@ export function derivePalette({
   // roles above keep their margin (4.6:1 and up) and need no second solve.
   const hover = hoverFill({ textPrimary, bgSurface: surfaces.bgSurface });
   const worstText = [worstSurface, hover].reduce((a, b) =>
-    contrast(a, mode === "light" ? "#000000" : "#ffffff") <
-    contrast(b, mode === "light" ? "#000000" : "#ffffff")
+    contrast(a, mode === "light" ? "#000000" : "#ffffff") < contrast(b, mode === "light" ? "#000000" : "#ffffff")
       ? a
       : b,
   );
@@ -328,9 +320,7 @@ export function derivePalette({
   // and passing either through unchanged put a value in the TokenSet that is not a CSS
   // colour — it then fails silently at paint time, three layers from here.
   let brandHex =
-    brandRatio >= 3
-      ? toHex(parseHex(anchors.brand)!)
-      : solveAgainst(brand.h, brandChroma, 3, brandGround, mode);
+    brandRatio >= 3 ? toHex(parseHex(anchors.brand)!) : solveAgainst(brand.h, brandChroma, 3, brandGround, mode);
   if (brandRatio < 3) {
     warnings.push(
       `brand ${anchors.brand} sits at ${brandRatio.toFixed(2)}:1 against the ${mode} surfaces, ` +
@@ -425,20 +415,8 @@ export function derivePalette({
     const hue = semanticHue[role];
     const chroma = semanticChroma[role];
     const bg = tintOn(hue, chroma, surfaces.bgSurface, mode);
-    const onSurface = solveLightness(
-      4.5,
-      parseHex(worstText)!,
-      hue,
-      chroma,
-      mode === "light" ? "darker" : "lighter",
-    );
-    const onTint = solveLightness(
-      4.5,
-      parseHex(bg)!,
-      hue,
-      chroma,
-      mode === "light" ? "darker" : "lighter",
-    );
+    const onSurface = solveLightness(4.5, parseHex(worstText)!, hue, chroma, mode === "light" ? "darker" : "lighter");
+    const onTint = solveLightness(4.5, parseHex(bg)!, hue, chroma, mode === "light" ? "darker" : "lighter");
     const l = mode === "light" ? Math.min(onSurface, onTint) : Math.max(onSurface, onTint);
     return oklchToHex({ l, c: chroma, h: hue });
   };
@@ -508,7 +486,13 @@ export function derivePalette({
   // numpad's sign, a future row's figure), so it gets the text floor too (0.33). The
   // fixed lightness left it at 4.24:1 on four light pages.
   const neutralChroma = 0.012 * weight;
-  const neutralFloor = solveLightness(4.5, parseHex(worstText)!, brand.h, neutralChroma, mode === "light" ? "darker" : "lighter");
+  const neutralFloor = solveLightness(
+    4.5,
+    parseHex(worstText)!,
+    brand.h,
+    neutralChroma,
+    mode === "light" ? "darker" : "lighter",
+  );
   const moneyNeutral = oklchToHex({
     l: mode === "light" ? Math.min(0.52, neutralFloor) : Math.max(0.72, neutralFloor),
     c: neutralChroma,
@@ -557,12 +541,7 @@ export function derivePalette({
  * `moneyIncome`/`moneyExpense` — so a heatmap cell and the figure printed beside it
  * agree about which way is which, rather than each inventing its own convention.
  */
-function deriveHeat(
-  income: string,
-  expense: string,
-  surfaces: { bgSurface2: string },
-  mode: ThemeMode,
-): HeatStops {
+function deriveHeat(income: string, expense: string, surfaces: { bgSurface2: string }, mode: ThemeMode): HeatStops {
   const exp = hexToOklch(expense)!;
   return {
     neutral: surfaces.bgSurface2,
@@ -649,7 +628,13 @@ export function auditPalette(
   }
   // The stepped light well, a hex `applyTokenSet` writes (§13.3, decision 2).
   if (step?.well) {
-    add("bgSurface2 on bgSurface", t.bgSurface2, t.bgSurface, WELL_STEP_MIN, "house rule: the well stands two hover steps from the card");
+    add(
+      "bgSurface2 on bgSurface",
+      t.bgSurface2,
+      t.bgSurface,
+      WELL_STEP_MIN,
+      "house rule: the well stands two hover steps from the card",
+    );
   }
   for (const [name, bg] of textGrounds) {
     add(`textPrimary on ${name}`, t.textPrimary, bg, 7, "WCAG 1.4.6 AAA body text");
@@ -694,13 +679,7 @@ export function auditPalette(
     add("warning on warningBg", semantic.warning, semantic.warningBg, 4.5, "WCAG 1.4.3 — badge text");
     add("info on infoBg", semantic.info, semantic.infoBg, 4.5, "WCAG 1.4.3 — badge text");
     add("success on successBg", semantic.success, semantic.successBg, 4.5, "WCAG 1.4.3 — badge text");
-    add(
-      "dangerContrast on danger",
-      semantic.dangerContrast,
-      semantic.danger,
-      4.5,
-      "WCAG 1.4.3 AA body text",
-    );
+    add("dangerContrast on danger", semantic.dangerContrast, semantic.danger, 4.5, "WCAG 1.4.3 AA body text");
   }
 
   const failures = checks.filter((c) => !c.passes);
@@ -771,12 +750,7 @@ const SINGLE_LIGHTNESS_MAX_SERIES = 4;
  * wants their charts to follow their brand and is willing to read the report — not as
  * a silent upgrade to the default.
  */
-export function deriveChartRamp(
-  brandHex: string,
-  mode: ThemeMode,
-  surfaces: string[],
-  count = 9,
-): ChartRampReport {
+export function deriveChartRamp(brandHex: string, mode: ThemeMode, surfaces: string[], count = 9): ChartRampReport {
   const brand = hexToOklch(brandHex) ?? { l: 0.6, c: 0.12, h: 264 };
   const base = mode === "light" ? 0.58 : 0.74;
   const c = Math.max(0.09, Math.min(brand.c, 0.15));

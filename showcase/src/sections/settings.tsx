@@ -18,12 +18,7 @@ import {
   TwoFactorSetting,
   writeStored,
 } from "@eifi1/ui-kit";
-import type {
-  DeviceSetting,
-  PasswordSettingLabels,
-  ProfileSettingLabels,
-  TwoFactorSettingLabels,
-} from "@eifi1/ui-kit";
+import type { DeviceSetting, PasswordSettingLabels, ProfileSettingLabels, TwoFactorSettingLabels } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row, beat } from "../lib/section";
 import { useTheme } from "../stores";
 
@@ -79,10 +74,9 @@ const FAKE_SECRET = "JBSWY3DPEHPK3PXPKRUGKIDROVUWG2ZA";
 function PaletteBlindNote() {
   return (
     <Note>
-      The cards paint in the kit&apos;s tokens throughout — switch the palette in the top bar and
-      all of it moves. The one literal colour is the white mat behind the QR code, on purpose: a
-      camera reads a code by the contrast between its modules and a light quiet zone, which a
-      dark-theme surface would lower.
+      The cards paint in the kit&apos;s tokens throughout — switch the palette in the top bar and all of it moves. The
+      one literal colour is the white mat behind the QR code, on purpose: a camera reads a code by the contrast between
+      its modules and a light quiet zone, which a dark-theme surface would lower.
     </Note>
   );
 }
@@ -100,10 +94,7 @@ function ThemeRow() {
   const mode = useTheme((s) => s.mode);
 
   return (
-    <Example
-      label="ThemeSetting"
-      hint="bound to this page's real theme preference — changing it repaints the showcase"
-    >
+    <Example label="ThemeSetting" hint="bound to this page's real theme preference — changing it repaints the showcase">
       <div className="max-w-xs">
         <ThemeSetting
           value={preference}
@@ -113,18 +104,16 @@ function ThemeRow() {
         />
       </div>
       <p className="mt-3 text-xs text-secondary">
-        preference <code className="font-mono text-brand">{preference}</code> → resolved
-        mode <code className="font-mono text-brand">{mode}</code>
+        preference <code className="font-mono text-brand">{preference}</code> → resolved mode{" "}
+        <code className="font-mono text-brand">{mode}</code>
       </p>
       <div className="mt-3">
         <Note>
-          The props are <code className="font-mono">label</code> plus{" "}
-          <code className="font-mono">optionLabels</code>, not a{" "}
-          <code className="font-mono">labels</code> object like the three cards below — and the
-          option VALUES are the{" "}
-          <code className="font-mono">"system" | "light" | "dark"</code> union baked into the
-          component, so an app cannot add a fourth choice. Nothing here touches a theme store:
-          the select reports a preference and the app decides what that means.
+          The props are <code className="font-mono">label</code> plus <code className="font-mono">optionLabels</code>,
+          not a <code className="font-mono">labels</code> object like the three cards below — and the option VALUES are
+          the <code className="font-mono">"system" | "light" | "dark"</code> union baked into the component, so an app
+          cannot add a fourth choice. Nothing here touches a theme store: the select reports a preference and the app
+          decides what that means.
         </Note>
       </div>
     </Example>
@@ -140,10 +129,7 @@ function LanguageRow() {
   const [lang, setLang] = useState("de");
 
   return (
-    <Example
-      label="LanguageSetting"
-      hint="app-supplied options; no flags, unlike the top bar's LanguageMenu"
-    >
+    <Example label="LanguageSetting" hint="app-supplied options; no flags, unlike the top bar's LanguageMenu">
       <div className="max-w-xs">
         <LanguageSetting
           value={lang}
@@ -162,10 +148,10 @@ function LanguageRow() {
       <div className="mt-3">
         <Note>
           Its option type is <code className="font-mono">{"{ code, label }"}</code> — no{" "}
-          <code className="font-mono">country</code>, so this row cannot show a flag. That is the
-          one difference from the top bar's <code className="font-mono">LanguageMenu</code>, whose
-          <code className="font-mono"> LanguageOption</code> carries an ISO-3166 country precisely
-          to draw one. An app with both ends up mapping between the two shapes.
+          <code className="font-mono">country</code>, so this row cannot show a flag. That is the one difference from
+          the top bar's <code className="font-mono">LanguageMenu</code>, whose
+          <code className="font-mono"> LanguageOption</code> carries an ISO-3166 country precisely to draw one. An app
+          with both ends up mapping between the two shapes.
         </Note>
       </div>
     </Example>
@@ -199,10 +185,7 @@ function ProfileRow() {
   };
 
   return (
-    <Example
-      label="ProfileSetting"
-      hint="Save stays disabled until the draft differs from `name` and is non-empty"
-    >
+    <Example label="ProfileSetting" hint="Save stays disabled until the draft differs from `name` and is non-empty">
       <div className="max-w-md">
         <ProfileSetting
           name={name}
@@ -218,19 +201,15 @@ function ProfileRow() {
       </div>
       <div className="mt-3 space-y-2">
         <Note>
-          The dirty test is <code className="font-mono">value.trim() !== (name ?? "")</code>, so
-          clearing the field does not enable Save: this card cannot express "remove my display
-          name". Deletion needs a different affordance.
+          The dirty test is <code className="font-mono">value.trim() !== (name ?? "")</code>, so clearing the field does
+          not enable Save: this card cannot express "remove my display name". Deletion needs a different affordance.
         </Note>
         <Note>
           <code className="font-mono">name</code> and <code className="font-mono">email</code> take{" "}
-          <code className="font-mono">null</code> as well as a string — that is the
-          not-loaded-yet case, and both fall back to an em dash rather than to empty space.{" "}
-          <code className="font-mono">role</code> and{" "}
-          <code className="font-mono">memberSince</code> are <code className="font-mono">
-            ReactNode
-          </code>
-          , so a badge or a formatted date element can go in where these pass plain text.
+          <code className="font-mono">null</code> as well as a string — that is the not-loaded-yet case, and both fall
+          back to an em dash rather than to empty space. <code className="font-mono">role</code> and{" "}
+          <code className="font-mono">memberSince</code> are <code className="font-mono">ReactNode</code>, so a badge or
+          a formatted date element can go in where these pass plain text.
         </Note>
         <PaletteBlindNote />
       </div>
@@ -293,23 +272,19 @@ function PasswordRow() {
             labels={PASSWORD_LABELS}
           />
         </div>
-        {receipt && (
-          <p className="mt-3 font-mono text-xs text-secondary">{receipt}</p>
-        )}
+        {receipt && <p className="mt-3 font-mono text-xs text-secondary">{receipt}</p>}
         <div className="mt-3 space-y-2">
           <Note>
             Both validation messages come out of <code className="font-mono">labels</code> —{" "}
-            <code className="font-mono">tooShort</code> and{" "}
-            <code className="font-mono">mismatch</code> — because the card has no strings of its
-            own and no way to translate one. The check runs on click, not while typing, so the
-            message stands under the field it is about and clears as that field is typed in.
+            <code className="font-mono">tooShort</code> and <code className="font-mono">mismatch</code> — because the
+            card has no strings of its own and no way to translate one. The check runs on click, not while typing, so
+            the message stands under the field it is about and clears as that field is typed in.
           </Note>
           <Note>
-            The card holds the three passwords itself and never lifts them; the app sees them
-            only as the two arguments to <code className="font-mono">onSubmit</code>, and only
-            after they validate. There is no <code className="font-mono">value</code>/
-            <code className="font-mono">onChange</code> pair to hold them with, which also means
-            nothing outside can clear the form — only a resolving submit does that.
+            The card holds the three passwords itself and never lifts them; the app sees them only as the two arguments
+            to <code className="font-mono">onSubmit</code>, and only after they validate. There is no{" "}
+            <code className="font-mono">value</code>/<code className="font-mono">onChange</code> pair to hold them with,
+            which also means nothing outside can clear the form — only a resolving submit does that.
           </Note>
         </div>
       </Example>
@@ -335,10 +310,10 @@ function PasswordRow() {
           <Note>
             The card reads a rejection by its code: server-kit&apos;s{" "}
             <code className="font-mono">400 password_incorrect</code> is said under the current password, in{" "}
-            <code className="font-mono">labels.wrongPassword</code> — the words the email-change and deletion cards
-            use — and that field takes the focus. <code className="font-mono">describeError</code> is asked first, for
-            every failure, and its words stand in the card; anything else stays the app&apos;s to say, in its own
-            toast, as before. The typed values stay for a retry either way.
+            <code className="font-mono">labels.wrongPassword</code> — the words the email-change and deletion cards use
+            — and that field takes the focus. <code className="font-mono">describeError</code> is asked first, for every
+            failure, and its words stand in the card; anything else stays the app&apos;s to say, in its own toast, as
+            before. The typed values stay for a retry either way.
           </Note>
         </div>
       </Example>
@@ -405,10 +380,7 @@ function TwoFactorRow() {
   };
 
   return (
-    <Example
-      label="TwoFactorSetting"
-      hint="any code is accepted here — the real check lives in the app's verify call"
-    >
+    <Example label="TwoFactorSetting" hint="any code is accepted here — the real check lives in the app's verify call">
       <div className="max-w-md">
         <TwoFactorSetting
           enabled={enabled}
@@ -436,23 +408,21 @@ function TwoFactorRow() {
       </Row>
       <div className="mt-3 space-y-2">
         <Note>
-          The code field is <code className="font-mono">readOnly</code> until you focus it — a
-          guard against browsers autofilling a one-time-code field with the saved username. It
-          keeps the look of an editable field via{" "}
-          <code className="font-mono">FIELD_WRITABLE_LOOK</code>, so it reads as typeable and
-          becomes typeable on click. Enter submits, as does the button.
+          The code field is <code className="font-mono">readOnly</code> until you focus it — a guard against browsers
+          autofilling a one-time-code field with the saved username. It keeps the look of an editable field via{" "}
+          <code className="font-mono">FIELD_WRITABLE_LOOK</code>, so it reads as typeable and becomes typeable on click.
+          Enter submits, as does the button.
         </Note>
         <Note>
           <code className="font-mono">setup</code> is opaque to the card:{" "}
-          <code className="font-mono">{"{ qrSvg, secret }"}</code>, where{" "}
-          <code className="font-mono">qrSvg</code> is base64 of an SVG document — not a URL and
-          not raw markup. Nothing validates it, so a wrong shape shows a broken image rather
-          than an error.
+          <code className="font-mono">{"{ qrSvg, secret }"}</code>, where <code className="font-mono">qrSvg</code> is
+          base64 of an SVG document — not a URL and not raw markup. Nothing validates it, so a wrong shape shows a
+          broken image rather than an error.
         </Note>
         <Note>
-          One <code className="font-mono">code</code> state is shared by the enable form and the
-          disable form. They never show together in this specimen, but they can (see above), and
-          then both fields are the same box typed twice.
+          One <code className="font-mono">code</code> state is shared by the enable form and the disable form. They
+          never show together in this specimen, but they can (see above), and then both fields are the same box typed
+          twice.
         </Note>
         <PaletteBlindNote />
       </div>
@@ -513,11 +483,7 @@ function ProfileLoadingRow() {
         <ProfileSetting
           name={null}
           email={null}
-          role={
-            <span className="rounded bg-surface-2 px-1.5 py-0.5 text-xs font-medium">
-              Owner
-            </span>
-          }
+          role={<span className="rounded bg-surface-2 px-1.5 py-0.5 text-xs font-medium">Owner</span>}
           memberSince={<time dateTime="2019-03-14">14.03.2019</time>}
           value={draft}
           onChange={setDraft}
@@ -527,9 +493,9 @@ function ProfileLoadingRow() {
       </div>
       <div className="mt-3">
         <Note>
-          Two cards on one page, as here: the display-name field&apos;s{" "}
-          <code className="font-mono">id</code> is generated per card, so each label focuses its
-          own input — click this card&apos;s label and the caret lands here, not in the card above.
+          Two cards on one page, as here: the display-name field&apos;s <code className="font-mono">id</code> is
+          generated per card, so each label focuses its own input — click this card&apos;s label and the caret lands
+          here, not in the card above.
         </Note>
       </div>
     </Example>
@@ -561,10 +527,7 @@ function DeviceResetRow() {
   useEffect(() => {
     writeStored(DEMO_HINTS_KEY, hints ? "1" : "0");
   }, [hints]);
-  useEffect(
-    () => registerDeviceSetting({ key: DEMO_HINTS_KEY, kind: "view", reset: () => setHints(false) }),
-    [],
-  );
+  useEffect(() => registerDeviceSetting({ key: DEMO_HINTS_KEY, kind: "view", reset: () => setHints(false) }), []);
   // The provider joins a microtask after it mounts; read the list once everything has.
   useEffect(() => {
     const id = window.setTimeout(() => setEntries(deviceSettings()), 0);
@@ -601,12 +564,11 @@ function DeviceResetRow() {
         )}
       </div>
       <Note>
-        docs/settings-harmonization.md §11: the appearance group&apos;s last card.
-        The kit&apos;s stores join `registerDeviceSetting` when they are created, `UiKitProvider`
-        and `AppShell` while mounted; an app adds its own keys beside the store that owns each.
-        A confirm, not an undo, and no commit: nothing is written to the account, so a write
-        lock leaves it enabled. The sign-in, the session and anything waiting to be sent never
-        join, so they never go.
+        docs/settings-harmonization.md §11: the appearance group&apos;s last card. The kit&apos;s stores join
+        `registerDeviceSetting` when they are created, `UiKitProvider` and `AppShell` while mounted; an app adds its own
+        keys beside the store that owns each. A confirm, not an undo, and no commit: nothing is written to the account,
+        so a write lock leaves it enabled. The sign-in, the session and anything waiting to be sent never join, so they
+        never go.
       </Note>
     </Example>
   );

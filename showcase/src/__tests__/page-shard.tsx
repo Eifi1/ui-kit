@@ -89,10 +89,7 @@ export async function checkPage(slug: string, title: string): Promise<void> {
     for (const id of rendered) expect(indexed, `#${id} is on /${slug} but not indexed`).toContain(id);
 
     const findings = await axeFindings(document.querySelector("main")!, slug);
-    expect(
-      findings,
-      `axe on /${slug}:\n${findings.map((f) => `  ${f.rule}  ${f.html}`).join("\n")}`,
-    ).toEqual([]);
+    expect(findings, `axe on /${slug}:\n${findings.map((f) => `  ${f.rule}  ${f.html}`).join("\n")}`).toEqual([]);
   } finally {
     unmount();
   }

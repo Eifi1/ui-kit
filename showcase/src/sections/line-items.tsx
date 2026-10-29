@@ -63,7 +63,14 @@ function LineItemsTotals() {
       width: "5rem",
       align: "end",
       render: ({ item, index, label }) => (
-        <NumberField aria-label={label} value={item.qty} digits={0} min={0} nullable onCommit={(qty) => update(index, { qty })} />
+        <NumberField
+          aria-label={label}
+          value={item.qty}
+          digits={0}
+          min={0}
+          nullable
+          onCommit={(qty) => update(index, { qty })}
+        />
       ),
     },
     {
@@ -72,7 +79,14 @@ function LineItemsTotals() {
       width: "7rem",
       align: "end",
       render: ({ item, index, label }) => (
-        <NumberField aria-label={label} value={item.price} digits={2} min={0} nullable onCommit={(price) => update(index, { price })} />
+        <NumberField
+          aria-label={label}
+          value={item.price}
+          digits={2}
+          min={0}
+          nullable
+          onCommit={(price) => update(index, { price })}
+        />
       ),
     },
     {
@@ -136,10 +150,10 @@ function LineItemsTotals() {
       />
       <div className="mt-3">
         <Note>
-          {code("minItems={1}")} disables the last remove button; {code("maxItems={6}")} disables Add at six
-          rows. With {code("confirmRemove")} set to {code("true")} the remove button asks for a second press
-          (Escape or leaving it calls it off); as a function it is asked — here {code("useConfirm")} with a
-          danger tone. Raise a quantity until the total passes €2,000 to see the list-level {code("error")}.
+          {code("minItems={1}")} disables the last remove button; {code("maxItems={6}")} disables Add at six rows. With{" "}
+          {code("confirmRemove")} set to {code("true")} the remove button asks for a second press (Escape or leaving it
+          calls it off); as a function it is asked — here {code("useConfirm")} with a danger tone. Raise a quantity
+          until the total passes €2,000 to see the list-level {code("error")}.
         </Note>
       </div>
     </Example>
@@ -261,12 +275,12 @@ function LineItems016Demo() {
       />
       <div className="mt-3">
         <Note>
-          {code("summary")} takes a {code("label")}, a {code("value")} in a {code("tone")} (
-          {code("success")} at zero, {code("danger")} otherwise, {code("muted")} while an amount is
-          missing) and an {code("action")}. With {code("fieldLabels=\"floating\"")} each cell's render gets{" "}
-          {code("fieldLabel")}, the column's name, for the field's own label, and the header row goes;{" "}
-          {code("aria-label")} still names the row. {code("narrowColumns={2}")} pairs Amount and Date on a
-          phone; Category's {code("narrowSpan={2}")} keeps a row to itself.
+          {code("summary")} takes a {code("label")}, a {code("value")} in a {code("tone")} ({code("success")} at zero,{" "}
+          {code("danger")} otherwise, {code("muted")} while an amount is missing) and an {code("action")}. With{" "}
+          {code('fieldLabels="floating"')} each cell's render gets {code("fieldLabel")}, the column's name, for the
+          field's own label, and the header row goes; {code("aria-label")} still names the row.{" "}
+          {code("narrowColumns={2}")} pairs Amount and Date on a phone; Category's {code("narrowSpan={2}")} keeps a row
+          to itself.
         </Note>
       </div>
     </Example>
@@ -347,8 +361,8 @@ function LineItemsJournal017Demo() {
       />
       <div className="mt-3">
         <Note>
-          {code("summary.status")} sits beside the value — a chip that names the state, so the colour is
-          never the only signal. Change an amount to see it flip.
+          {code("summary.status")} sits beside the value — a chip that names the state, so the colour is never the only
+          signal. Change an amount to see it flip.
         </Note>
       </div>
     </Example>
@@ -489,12 +503,11 @@ function LineItemsSplit017Demo() {
       />
       <div className="mt-3">
         <Note>
-          {code("tone")} takes {code("income")} / {code("expense")}, SignedAmount's money pair; with no{" "}
-          {code("value")} it colours the label, so a state line can be {code("muted")} whole.{" "}
-          {code("action.variant=\"link\"")} is a muted text link. On a phone,{" "}
-          {code("removePlacement=\"inline\"")} puts the delete button beside the last field — Category
-          and Amount over Memo and delete. Wide, {code("removeAlign")} places it in the row's height; unset,
-          it centres on floating fields (level with their control) and keeps to the top otherwise.
+          {code("tone")} takes {code("income")} / {code("expense")}, SignedAmount's money pair; with no {code("value")}{" "}
+          it colours the label, so a state line can be {code("muted")} whole. {code('action.variant="link"')} is a muted
+          text link. On a phone, {code('removePlacement="inline"')} puts the delete button beside the last field —
+          Category and Amount over Memo and delete. Wide, {code("removeAlign")} places it in the row's height; unset, it
+          centres on floating fields (level with their control) and keeps to the top otherwise.
         </Note>
       </div>
     </Example>
@@ -566,10 +579,10 @@ function LineItemsRowProps022Demo() {
         </Button>
       </div>
       <Note>
-        The row&apos;s {code("role")}, its {code("aria-label")} ({code("rowLabel")}) and {code("data-line-items-row")} stay
-        the list&apos;s; a {code("className")} is added after the row&apos;s own, and an {code("onKeyDown")} runs before
-        the row&apos;s Ctrl/⌘+Enter &ldquo;add a row&rdquo; ({code("preventDefault()")} keeps it from adding). A tour step can
-        anchor on the row itself rather than on a span around one field.
+        The row&apos;s {code("role")}, its {code("aria-label")} ({code("rowLabel")}) and {code("data-line-items-row")}{" "}
+        stay the list&apos;s; a {code("className")} is added after the row&apos;s own, and an {code("onKeyDown")} runs
+        before the row&apos;s Ctrl/⌘+Enter &ldquo;add a row&rdquo; ({code("preventDefault()")} keeps it from adding). A
+        tour step can anchor on the row itself rather than on a span around one field.
       </Note>
     </Example>
   );

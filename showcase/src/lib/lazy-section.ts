@@ -30,10 +30,7 @@ const registry: Section<never>[] = [];
  *  generator fails a second section of one name. */
 const byName = new Map<string, Section<never>>();
 
-export function lazySection<M, K extends keyof M & string>(
-  load: () => Promise<M>,
-  name: K,
-): Section<PropsOf<M[K]>> {
+export function lazySection<M, K extends keyof M & string>(load: () => Promise<M>, name: K): Section<PropsOf<M[K]>> {
   type P = PropsOf<M[K]>;
   let loaded: ComponentType<P> | undefined;
   let pending: Promise<void> | undefined;

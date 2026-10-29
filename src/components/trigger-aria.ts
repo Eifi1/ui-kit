@@ -20,9 +20,7 @@ export interface TriggerAria {
 }
 
 /** Split a field's props into what its trigger takes and what its wrapper takes. */
-export function splitTriggerAria<T extends TriggerAria>(
-  props: T,
-): [TriggerAria, Omit<T, keyof TriggerAria>] {
+export function splitTriggerAria<T extends TriggerAria>(props: T): [TriggerAria, Omit<T, keyof TriggerAria>] {
   const {
     id,
     "aria-label": label,
@@ -44,4 +42,3 @@ export function splitTriggerAria<T extends TriggerAria>(
     rest,
   ];
 }
-

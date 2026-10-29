@@ -36,7 +36,17 @@ function useLauncher() {
   return vi.fn((id: string, { startIndex }: { startIndex: number }) => start(STEPS, { id, startIndex }));
 }
 
-function App({ path, ready, stepAliases, spy }: { path: string; ready?: boolean; stepAliases?: string[]; spy?: (id: string, o: { startIndex: number }) => void }) {
+function App({
+  path,
+  ready,
+  stepAliases,
+  spy,
+}: {
+  path: string;
+  ready?: boolean;
+  stepAliases?: string[];
+  spy?: (id: string, o: { startIndex: number }) => void;
+}) {
   return (
     <MemoryRouter initialEntries={[path]}>
       <TourProvider>
@@ -46,7 +56,15 @@ function App({ path, ready, stepAliases, spy }: { path: string; ready?: boolean;
   );
 }
 
-function Inner({ ready, stepAliases, spy }: { ready?: boolean; stepAliases?: string[]; spy?: (id: string, o: { startIndex: number }) => void }) {
+function Inner({
+  ready,
+  stepAliases,
+  spy,
+}: {
+  ready?: boolean;
+  stepAliases?: string[];
+  spy?: (id: string, o: { startIndex: number }) => void;
+}) {
   const launcher = useLauncher();
   return (
     <>
@@ -155,7 +173,9 @@ describe("useTourUrlSync", () => {
 
   it("one launcher for TourProvider and useTourUrlSync: both hand it the provider's start (keksdose N4)", async () => {
     // At module scope in an app, above its provider: no ref, no useTour().
-    const launch = vi.fn<TourLauncher>((id, opts, start) => start(STEPS, { id, startIndex: opts.startIndex, at: opts.at }));
+    const launch = vi.fn<TourLauncher>((id, opts, start) =>
+      start(STEPS, { id, startIndex: opts.startIndex, at: opts.at }),
+    );
     function Shared() {
       useTourUrlSync({ launch });
       return <Probe />;

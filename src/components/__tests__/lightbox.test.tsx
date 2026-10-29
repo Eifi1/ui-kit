@@ -14,11 +14,7 @@ const ITEMS: ImageItem[] = [
   { src: "/c.jpg", alt: "Bathroom" },
 ];
 
-function Harness({
-  start = 0,
-  onClose = () => {},
-  ...props
-}: Partial<LightboxProps> & { start?: number }) {
+function Harness({ start = 0, onClose = () => {}, ...props }: Partial<LightboxProps> & { start?: number }) {
   const [index, setIndex] = useState(start);
   const [open, setOpen] = useState(true);
   return (
@@ -168,7 +164,13 @@ describe("Lightbox", () => {
 
   it("offers a download link named after the file; `onDownload` replaces it with a button", () => {
     const { unmount } = render(
-      <Lightbox open onClose={() => {}} items={[{ src: "/a.jpg", alt: "A", fileName: "a.jpg" }]} index={0} onIndexChange={() => {}} />,
+      <Lightbox
+        open
+        onClose={() => {}}
+        items={[{ src: "/a.jpg", alt: "A", fileName: "a.jpg" }]}
+        index={0}
+        onIndexChange={() => {}}
+      />,
     );
     const link = screen.getByRole("link", { name: "Download" });
     expect(link).toHaveAttribute("href", "/a.jpg");
@@ -231,8 +233,7 @@ describe("Lightbox's toolbar at Large (docs/text-size-harmonization.md §4, §10
   function viewport(width: number) {
     vi.stubGlobal("matchMedia", viewportMatchMedia(width));
   }
-  const words = (name: string) =>
-    screen.getByRole("button", { name }).querySelector("[data-slot=icon-button-label]");
+  const words = (name: string) => screen.getByRole("button", { name }).querySelector("[data-slot=icon-button-label]");
 
   afterEach(() => {
     document.documentElement.removeAttribute("data-text-size");
@@ -279,7 +280,14 @@ describe("Lightbox with a fetcher", () => {
   it("learns a file is not an image from the type the server sent", async () => {
     const fetcher = async () => new Blob(["%PDF"], { type: "application/pdf" });
     render(
-      <Lightbox open onClose={() => {}} items={[{ src: "/docs/7", alt: "Plan" }]} index={0} onIndexChange={() => {}} fetcher={fetcher} />,
+      <Lightbox
+        open
+        onClose={() => {}}
+        items={[{ src: "/docs/7", alt: "Plan" }]}
+        index={0}
+        onIndexChange={() => {}}
+        fetcher={fetcher}
+      />,
     );
     await waitFor(() => expect(screen.getByText("No preview available for this file")).toBeInTheDocument());
     expect(screen.getByRole("link", { name: "Open in new tab" })).toHaveAttribute("href", "blob:t/1");

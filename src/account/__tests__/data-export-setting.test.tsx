@@ -27,7 +27,11 @@ beforeEach(() => {
     revoked.push(url);
   });
   vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (this: HTMLAnchorElement) {
-    clicks.push({ href: this.getAttribute("href") ?? "", download: this.download, inBody: document.body.contains(this) });
+    clicks.push({
+      href: this.getAttribute("href") ?? "",
+      download: this.download,
+      inBody: document.body.contains(this),
+    });
   });
 });
 

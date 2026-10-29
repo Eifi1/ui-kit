@@ -159,14 +159,30 @@ export interface ListItemLinkProps {
   [key: `data-${string}`]: unknown;
 }
 
-const PAD: Record<
-  ListDensity,
-  { target: string; actions: string; leadingActions: string; gap: string; body: string }
-> = {
-  compact: { target: "gap-2 px-2 py-1.5", actions: "pe-1.5", leadingActions: "ps-1.5", gap: "gap-0.5", body: "px-2 pb-1.5" },
-  default: { target: "gap-3 px-3 py-2.5", actions: "pe-2", leadingActions: "ps-2", gap: "gap-1", body: "px-3 pb-2.5" },
-  comfortable: { target: "gap-3 px-4 py-3", actions: "pe-3", leadingActions: "ps-3", gap: "gap-1", body: "px-4 pb-3" },
-};
+const PAD: Record<ListDensity, { target: string; actions: string; leadingActions: string; gap: string; body: string }> =
+  {
+    compact: {
+      target: "gap-2 px-2 py-1.5",
+      actions: "pe-1.5",
+      leadingActions: "ps-1.5",
+      gap: "gap-0.5",
+      body: "px-2 pb-1.5",
+    },
+    default: {
+      target: "gap-3 px-3 py-2.5",
+      actions: "pe-2",
+      leadingActions: "ps-2",
+      gap: "gap-1",
+      body: "px-3 pb-2.5",
+    },
+    comfortable: {
+      target: "gap-3 px-4 py-3",
+      actions: "pe-3",
+      leadingActions: "ps-3",
+      gap: "gap-1",
+      body: "px-4 pb-3",
+    },
+  };
 
 /** {@link ListItemBaseProps.trailingTone}: a {@link TextTone}, or `inherit` — no
  *  colour of the slot's own, so an element's colour (or the row's) stands. */
@@ -584,12 +600,7 @@ export function ListItem({
 
   const body = (
     <>
-      {Icon && (
-        <Icon
-          className={cn("size-4 shrink-0 text-muted", align === "start" && "mt-0.5")}
-          aria-hidden
-        />
-      )}
+      {Icon && <Icon className={cn("size-4 shrink-0 text-muted", align === "start" && "mt-0.5")} aria-hidden />}
       {leading}
       {/* With a trailing slot, a basis at Large: below it the trailing chip or figure
           wraps under the text (the target wraps, see `target`) rather than squeezing the
@@ -652,9 +663,8 @@ export function ListItem({
       {loading ? (
         <Spinner label={null} className="size-3.5 shrink-0" />
       ) : (
-        external && href !== undefined && (
-          <ExternalLink className="size-3.5 shrink-0 text-muted rtl:-scale-x-100" aria-hidden />
-        )
+        external &&
+        href !== undefined && <ExternalLink className="size-3.5 shrink-0 text-muted rtl:-scale-x-100" aria-hidden />
       )}
       {mark}
       {expandable && (
@@ -703,9 +713,7 @@ export function ListItem({
       className: target,
       "aria-current": selected ? "true" : undefined,
       "aria-busy": loading || undefined,
-      onClick: loading
-        ? (e) => e.preventDefault()
-        : (onClick as ListItemLinkProps["onClick"]),
+      onClick: loading ? (e) => e.preventDefault() : (onClick as ListItemLinkProps["onClick"]),
       onAuxClick,
       children: body,
     };
@@ -795,11 +803,7 @@ export function ListItem({
         stacked ? "flex-col" : "items-center",
         // See `renderRow`: the wrapper may be inline, the row is not.
         renderRow && "w-full",
-        selected
-          ? "border-brand bg-surface-2"
-          : bordered
-            ? "border-subtle"
-            : "border-transparent",
+        selected ? "border-brand bg-surface-2" : bordered ? "border-subtle" : "border-transparent",
         !stacked && interactive && !inert && !selected && "hover:bg-hover",
         (disabled || locked) && "opacity-50",
         className,

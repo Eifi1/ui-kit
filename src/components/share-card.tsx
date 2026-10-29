@@ -385,10 +385,7 @@ export function SharePanel({
       {canAdd && (
         <div className="space-y-2">
           <div
-            className={cn(
-              "grid grid-cols-1 gap-2",
-              choosable && "sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start",
-            )}
+            className={cn("grid grid-cols-1 gap-2", choosable && "sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start")}
           >
             <Autocomplete<string>
               label={addWithoutEmail ? labels.emailOptional : labels.email}
@@ -434,9 +431,7 @@ export function SharePanel({
                 value={newRole}
                 onChange={setNewRole}
                 disabled={busy !== null}
-                caption={
-                  roles.some((r) => r.description) ? (key: string) => roleOf(key)?.description : undefined
-                }
+                caption={roles.some((r) => r.description) ? (key: string) => roleOf(key)?.description : undefined}
                 // Level with the floating field beside it, as the two apps do by hand.
                 optionClassName="sm:min-h-10"
               />
@@ -520,7 +515,8 @@ export function SharePanel({
                                 if (next === g.role) return;
                                 // A raise under a lock that allows only lowerings: refused,
                                 // and the tooltip round the choice says why.
-                                if (roleLock.raise !== undefined && roles.findIndex((r) => r.key === next) > rank) return;
+                                if (roleLock.raise !== undefined && roles.findIndex((r) => r.key === next) > rank)
+                                  return;
                                 void run(`role:${g.id}`, () => onRoleChange(g, next));
                               }}
                             />
@@ -570,10 +566,7 @@ export function SharePanel({
                     <div className="min-w-0 flex-1 basis-40">
                       <div
                         data-private={p.email ? true : undefined}
-                        className={cn(
-                          "truncate-until-large text-sm",
-                          p.email ? "text-primary" : "text-muted",
-                        )}
+                        className={cn("truncate-until-large text-sm", p.email ? "text-primary" : "text-muted")}
                       >
                         {name}
                       </div>
@@ -648,8 +641,7 @@ export function ShareCard({ title, variant = "outline", className, ...panel }: S
 }
 
 export interface ShareDialogProps
-  extends SharePanelProps,
-    Pick<DialogFrameProps, "open" | "onClose" | "size" | "className"> {
+  extends SharePanelProps, Pick<DialogFrameProps, "open" | "onClose" | "size" | "className"> {
   /** The heading. Default {@link ShareCardLabels.dialogTitle}. */
   title?: ReactNode;
   /** Under the heading — what is being shared (Kurvenschmiede passes its name). */

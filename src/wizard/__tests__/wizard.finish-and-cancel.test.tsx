@@ -358,7 +358,10 @@ describe("B16.6 optional URL sync", () => {
     renderInRouter(
       <Harness
         options={{
-          steps: [{ id: "a", label: "A", commits: true }, { id: "b", label: "B" }],
+          steps: [
+            { id: "a", label: "A", commits: true },
+            { id: "b", label: "B" },
+          ],
           onComplete: vi.fn(),
           onDone: vi.fn(),
         }}

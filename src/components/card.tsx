@@ -205,14 +205,14 @@ export function Card({
             ? // No shadow and no `flush`: it sits on a surface that already has both.
               "rounded-lg border border-subtle bg-surface p-4"
             : cn(
-              // Surface + border are theme tokens so the palette switcher (feedback
-              // #307) can re-skin every card; a caller's own bg-*/border-* override
-              // still wins via tailwind-merge.
-              "bg-surface",
-              flush
-                ? "border-y border-subtle md:rounded-lg md:border md:shadow-sm"
-                : "rounded-lg border border-subtle shadow-sm",
-            ),
+                // Surface + border are theme tokens so the palette switcher (feedback
+                // #307) can re-skin every card; a caller's own bg-*/border-* override
+                // still wins via tailwind-merge.
+                "bg-surface",
+                flush
+                  ? "border-y border-subtle md:rounded-lg md:border md:shadow-sm"
+                  : "rounded-lg border border-subtle shadow-sm",
+              ),
         toned && (bordered ? toned.border : toned.fill),
         strong && tone && CARD_TONES_STRONG[tone],
         toneFill && bordered && tone && CARD_TONE_WASH[tone],
@@ -372,10 +372,6 @@ export function CardContent({ className, ...props }: CardContentProps) {
 export function CardFooter({ className, ...props }: CardFooterProps) {
   const padded = useContext(CardPaddedContext);
   return (
-    <div
-      data-slot="card-footer"
-      className={cn("flex items-center", !padded && "px-6 pb-6", className)}
-      {...props}
-    />
+    <div data-slot="card-footer" className={cn("flex items-center", !padded && "px-6 pb-6", className)} {...props} />
   );
 }
