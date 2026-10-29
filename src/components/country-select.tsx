@@ -99,9 +99,10 @@ export interface CountrySelectProps<Clearable extends boolean = false>
    * way — the order given is not kept, because the reader looks a country up by its
    * name in their own language, and any other order is one they cannot predict.
    *
-   * keksdose's bank picker offers the fifteen countries its banks are in
-   * (DE AT CH FR IT ES NL BE PT PL SE DK FI GB IE). A code that is not in ISO's list
-   * is allowed here on purpose: `XK` (Kosovo) is the app's decision, not the kit's.
+   * keksdose's bank picker passes the countries its configured bank-connection provider
+   * serves, read at runtime: its connections are provider-neutral since 2026-10-29, so
+   * the list is no longer a fixed fifteen. A code that is not in ISO's list is allowed
+   * here on purpose: `XK` (Kosovo) is the app's decision, not the kit's.
    */
   countries?: readonly string[];
   /**
@@ -211,7 +212,7 @@ function collator(locale: string): Intl.Collator {
  * A country picker: the value is the ISO 3166-1 alpha-2 code ("CH"), the names are the
  * runtime's own (`Intl.DisplayNames`) in the provider's locale, sorted by that
  * locale's collation. Requested by kastlan (customer and handover addresses, with its
- * six neighbours on top) and keksdose (the bank picker's fifteen countries) — both
+ * six neighbours on top) and keksdose (its bank picker's countries) — both
  * apps carried a hand-written list of names in two languages.
  *
  * ## Built on the kit's searchable combobox
