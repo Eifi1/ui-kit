@@ -173,6 +173,44 @@ describe("LegalPage — the frame (§3.2)", () => {
     expect(screen.queryByText(/Last updated/)).toBeNull();
   });
 
+  it("0.51.4: a plain-language summary before section 1, unnumbered, its refs resolved", () => {
+    const { container, rerender } = render(
+      <LegalPage
+        page="terms"
+        operator={OPERATOR}
+        summary={["You can leave at any time (section {ref:law}).", <strong key="b">Back up your data.</strong>]}
+      >
+        <LegalKitSection section="warranty" />
+        <LegalKitSection section="law" />
+      </LegalPage>,
+    );
+    const box = container.querySelector("section#summary")!;
+    expect(within(box as HTMLElement).getByRole("heading", { level: 2 })).toHaveTextContent(L.summary!.title);
+    expect(within(box as HTMLElement).getAllByRole("listitem")).toHaveLength(2);
+    expect(within(box as HTMLElement).getByRole("link", { name: "2" })).toHaveAttribute("href", "#law");
+    expect(box).toHaveTextContent("Back up your data.");
+    expect(box).toHaveTextContent(L.summary!.note);
+    // After the notice, before section 1; the sections keep their numbers.
+    expect(screen.getByRole("note").compareDocumentPosition(box) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(sectionIds(container)).toEqual(["summary", "warranty", "law"]);
+    expect(headings()).toEqual([L.summary!.title, `1. ${L.sections.terms.warranty.title}`, `2. ${L.sections.terms.law.title}`]);
+    // In the provider's language; none when there are no points.
+    rerender(
+      <UiKitProvider labels={UI_KIT_LABELS_DE_CH}>
+        <LegalPage page="terms" operator={OPERATOR} summary={["Kurz gesagt."]}>
+          <LegalKitSection section="warranty" />
+        </LegalPage>
+      </UiKitProvider>,
+    );
+    expect(screen.getByRole("heading", { name: "Das Wichtigste in Kürze" })).toBeInTheDocument();
+    rerender(
+      <LegalPage page="terms" operator={OPERATOR} summary={[]}>
+        <LegalKitSection section="warranty" />
+      </LegalPage>,
+    );
+    expect(container.querySelector("section#summary")).toBeNull();
+  });
+
   it("0.51.3: the terms' changes clause gives notice and a way out instead of consent by use", () => {
     render(
       <LegalPage page="terms" operator={OPERATOR}>

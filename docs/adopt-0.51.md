@@ -387,3 +387,31 @@ decision 10).
   stores it with the time, in a users column of its own (decision 10). The kit's
   `LegalAcceptCheckbox` still sends nothing.
 - **kastlan, Kurvenschmiede:** nothing else.
+
+## 0.51.4
+
+**The legal benchmark's optional rows** (Marcel 2026-10-29: "you can already add the
+optional points"; docs/legal-harmonization.md decision 11).
+
+- **`LegalPage` takes `summary`**, the app's three to six plain-language points. They are
+  drawn before section 1 as a list under the kit's heading `legal.summary.title` ("In
+  short", "Das Wichtigste in Kürze"), with the kit's `legal.summary.note` under them: "This
+  summary is for orientation; only the full text is binding." A string point resolves
+  `{ref:key}` like section text: `"You can delete your account at any time (section
+  {ref:ending})."` The summary is unnumbered (id `summary`), and the sections keep their
+  numbers. Left out or empty, nothing is drawn.
+- **`LegalLinks`, `LegalFooter` and `PublicFooter` take `securityHref` and
+  `accessibilityHref`.** Each adds a link after Terms, "Security" and "Accessibility" in
+  the kit's words (`legal.links.security` / `accessibility`, seven languages), only where
+  the app passes its route. The pages themselves are the app's: `PublicPage
+  width="prose"` with `LegalSection`s in its own words, at routes it chooses.
+- **New exported type `LegalInfoPageKey`** (`"security" | "accessibility"`) and new optional
+  labels `legal.summary` and `legal.links.security` / `accessibility` in every catalogue.
+
+**Apps:**
+- **keksdose:** `summary` on /terms and /privacy. Pass `securityHref="/security"` and
+  `accessibilityHref="/accessibility"` in `SiteFooter`; every page that renders it gets
+  both, its `PublicPage` and `LegalPage` uses included. Pass them too wherever it
+  renders `LegalLinks` itself (the account menu, `AuthLayout`'s footer).
+- **kastlan, Kurvenschmiede:** a plain bump; nothing changes until they pass a summary or
+  the two hrefs.

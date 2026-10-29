@@ -548,6 +548,7 @@ export type {
   LegalOperator,
   LegalOperatorText,
   LegalPageKey,
+  LegalInfoPageKey,
   LegalTextSectionLabels,
   LegalOperatorSectionLabels,
   LegalFramedSectionLabels,

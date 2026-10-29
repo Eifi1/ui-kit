@@ -10,6 +10,8 @@ export const DEFAULT_LEGAL_LABELS: LegalLabels = {
     impressum: "Imprint",
     privacy: "Privacy Policy",
     terms: "Terms",
+    security: "Security",
+    accessibility: "Accessibility",
   },
   titles: {
     impressum: "Imprint",
@@ -29,6 +31,10 @@ export const DEFAULT_LEGAL_LABELS: LegalLabels = {
     show: (o) => `Show the ${o.bindingLanguage} version`,
   },
   updated: (date) => `Last updated: ${date}`,
+  summary: {
+    title: "In short",
+    note: "This summary is for orientation; only the full text is binding.",
+  },
   sections: {
     impressum: {
       operator: {

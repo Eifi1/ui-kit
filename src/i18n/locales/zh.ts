@@ -876,6 +876,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         impressum: "运营者信息",
         privacy: "隐私政策",
         terms: "使用条款",
+        security: "安全",
+        accessibility: "无障碍",
       },
       titles: {
         impressum: "运营者信息",
@@ -896,6 +898,10 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         show: (o) => `查看${o.bindingLanguage}版本`,
       },
       updated: (date) => `最后更新：${date}`,
+      summary: {
+        title: "要点",
+        note: "本摘要仅供参考；只有完整文本具有约束力。",
+      },
       sections: {
         impressum: {
           operator: {

@@ -917,6 +917,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         impressum: "Impressum",
         privacy: "Datenschutz",
         terms: "Nutzungsbedingungen",
+        security: "Sicherheit",
+        accessibility: "Barrierefreiheit",
       },
       titles: {
         impressum: "Impressum",
@@ -936,6 +938,10 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         show: (o) => `Fassung auf ${o.bindingLanguage} anzeigen`,
       },
       updated: (date) => `Stand: ${date}`,
+      summary: {
+        title: "Das Wichtigste in Kürze",
+        note: "Diese Zusammenfassung dient der Orientierung; verbindlich ist allein der vollständige Text.",
+      },
       sections: {
         impressum: {
           operator: {

@@ -902,6 +902,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         impressum: "Impressum",
         privacy: "Privacy",
         terms: "Condizioni d’uso",
+        security: "Sicurezza",
+        accessibility: "Accessibilità",
       },
       titles: {
         impressum: "Impressum",
@@ -922,6 +924,10 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         show: (o) => `Mostra la versione in ${o.bindingLanguage}`,
       },
       updated: (date) => `Ultimo aggiornamento: ${date}`,
+      summary: {
+        title: "In breve",
+        note: "Questo riepilogo serve da orientamento; fa fede solo il testo completo.",
+      },
       sections: {
         impressum: {
           operator: {

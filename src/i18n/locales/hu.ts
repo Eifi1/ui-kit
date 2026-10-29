@@ -901,6 +901,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         impressum: "Impresszum",
         privacy: "Adatvédelmi tájékoztató",
         terms: "Felhasználási feltételek",
+        security: "Biztonság",
+        accessibility: "Akadálymentesség",
       },
       titles: {
         impressum: "Impresszum",
@@ -923,6 +925,10 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         show: (o) => `Az irányadó változat megjelenítése (${o.bindingLanguage})`,
       },
       updated: (date) => `Utolsó frissítés: ${date}`,
+      summary: {
+        title: "Röviden",
+        note: "Ez az összefoglaló tájékoztató jellegű; kizárólag a teljes szöveg az irányadó.",
+      },
       sections: {
         impressum: {
           operator: {

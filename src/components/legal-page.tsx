@@ -21,6 +21,7 @@ import {
   LegalSlotContext,
   LegalText,
   legalOperatorText,
+  resolveLegalRefs,
   useLegalLabels,
   warnLegalOnce,
 } from "./legal";
@@ -354,6 +355,18 @@ export interface LegalPageProps {
    */
   updated?: string;
   /**
+   * 0.51.4: a plain-language summary before the first section (legal benchmark, Marcel
+   * 2026-10-29) — the app's three to six points, each a sentence. The kit draws them as a
+   * list under `legal.summary.title` ("In short", "Das Wichtigste in Kürze") and adds
+   * `legal.summary.note`: the summary orients, only the full text binds. Worded without
+   * "below", because on a translated page the text below is a translation too.
+   *
+   * A string point is running text with its `{ref:key}` resolved, as in a section:
+   * "You can delete your account at any time (section {ref:ending})." Unnumbered, with
+   * the id `summary`; the sections' numbers do not count it. Left out or empty, nothing.
+   */
+  summary?: readonly ReactNode[];
+  /**
    * 0.28.1: switches the app to the operator's `bindingLanguage` — the button after the
    * translation note on a page read in another language. Without it the note stands
    * alone; the app's own language switcher is in its header anyway.
@@ -471,6 +484,7 @@ function slotSections(
  * What it adds to the column:
  * - the title, from `legal.titles`, and "← Back to home" pointing at `homeHref`;
  * - the as-of line under the title, from `updated` (0.51.3);
+ * - the plain-language summary before the sections, from `summary` (0.51.4);
  * - the default notice per page — the beta notice, or the privacy notice on the privacy
  *   policy, whose technical sections describe running code (§3.2, §7.3);
  * - numbers: the privacy and terms sections are "N. Title" in render order, the
@@ -492,6 +506,7 @@ export function LegalPage({
   homeHref = "/",
   notice,
   updated,
+  summary,
   onShowBindingLanguage,
   locale: localeProp,
   headingAs = "h1",
@@ -550,6 +565,25 @@ export function LegalPage({
       {(labels.updated ?? DEFAULT_LEGAL_LABELS.updated!)(formatDate(updated, "long", { locale }))}
     </time>
   ) : undefined;
+  const summaryLabels = labels.summary ?? DEFAULT_LEGAL_LABELS.summary!;
+  const SummaryHeading = context.sectionHeading;
+  const summaryBox =
+    summary !== undefined && summary.length > 0 ? (
+      <section id="summary" className="rounded-lg border border-subtle bg-surface p-4 sm:p-5">
+        <SummaryHeading className="text-lg font-semibold break-words text-primary">{summaryLabels.title}</SummaryHeading>
+        <ul className="mt-3 space-y-2">
+          {summary.map((point, i) => (
+            <li key={i} className="flex gap-2.5 text-sm leading-relaxed text-secondary">
+              <span aria-hidden className="mt-2 size-1.5 shrink-0 rounded-full bg-brand" />
+              <span className="min-w-0 break-words">
+                {typeof point === "string" ? resolveLegalRefs(point, context) : point}
+              </span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-3 text-xs text-muted">{summaryLabels.note}</p>
+      </section>
+    ) : undefined;
 
   return (
     <UiKitProvider labels={overrides}>
@@ -567,6 +601,7 @@ export function LegalPage({
               notice={shownNotice}
               updated={updatedLine}
               translationNote={translationNote}
+              summary={summaryBox}
               headingAs={headingAs}
             >
               {nodes}

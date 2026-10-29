@@ -251,6 +251,19 @@ const TERMS = (
 
 const SECTIONS: Record<LegalPageKey, React.JSX.Element> = { impressum: IMPRESSUM, privacy: PRIVACY, terms: TERMS };
 
+/** 0.51.4: the app's plain-language points; the heading and the "only the full text binds"
+ *  line are the kit's. */
+const SUMMARY: Partial<Record<LegalPageKey, string[]>> = {
+  privacy: [
+    "We keep what you enter to run the service, and nothing to track you.",
+    "You can export or delete your data at any time (section {ref:rights}).",
+  ],
+  terms: [
+    "Example App is a free closed beta, without warranty: keep your own backups.",
+    "We announce a material change 30 days ahead (section {ref:changes}).",
+  ],
+};
+
 function Legal028Demo() {
   const [page, setPage] = useState<LegalPageKey>("privacy");
   const link = usePreviewLink(setPage);
@@ -281,6 +294,7 @@ function Legal028Demo() {
               operator={OPERATOR}
               header={<DemoHeader />}
               updated="2026-10-29"
+              summary={SUMMARY[page]}
               homeHref={HERE_028}
               headingAs="h2"
               landmark={false}
@@ -293,7 +307,8 @@ function Legal028Demo() {
         <Note>
           {code('<LegalPage page="privacy" operator={OPERATOR} header={<AppHeader />}>')} draws the app&apos;s header,
           &ldquo;← Back to home&rdquo;, the title, the as-of line from {code('updated="2026-10-29"')} (0.51.3, the date
-          written out in the page&apos;s language), the page&apos;s notice from the kit&apos;s labels, the sections, and{" "}
+          written out in the page&apos;s language), the page&apos;s notice from the kit&apos;s labels, the app&apos;s{" "}
+          {code("summary")} points under the kit&apos;s &ldquo;In short&rdquo; (0.51.4), the sections, and{" "}
           {code("<LegalFooter />")} with the page marked. {code('<LegalKitSection section="rights">')} renders a shared
           section in the page&apos;s language, filled in with the operator (the country named by {code("Intl")}); its
           children are the app&apos;s paragraph where the contract gives it one. The privacy and terms sections are

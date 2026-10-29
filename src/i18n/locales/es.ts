@@ -897,6 +897,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         impressum: "Aviso legal",
         privacy: "Política de privacidad",
         terms: "Condiciones de uso",
+        security: "Seguridad",
+        accessibility: "Accesibilidad",
       },
       titles: {
         impressum: "Aviso legal",
@@ -916,6 +918,10 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         show: (o) => `Ver la versión en ${o.bindingLanguage}`,
       },
       updated: (date) => `Última actualización: ${date}`,
+      summary: {
+        title: "En resumen",
+        note: "Este resumen es solo orientativo; únicamente el texto completo es vinculante.",
+      },
       sections: {
         impressum: {
           operator: {

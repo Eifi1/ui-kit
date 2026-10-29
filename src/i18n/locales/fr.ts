@@ -916,6 +916,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         impressum: "Mentions légales",
         privacy: "Confidentialité",
         terms: "Conditions d’utilisation",
+        security: "Sécurité",
+        accessibility: "Accessibilité",
       },
       titles: {
         impressum: "Mentions légales",
@@ -935,6 +937,10 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         show: (o) => `Afficher la version en ${o.bindingLanguage}`,
       },
       updated: (date) => `Dernière mise à jour\u00a0: ${date}`,
+      summary: {
+        title: "En bref",
+        note: "Ce résumé sert d’orientation\u202f; seul le texte complet fait foi.",
+      },
       sections: {
         impressum: {
           operator: {

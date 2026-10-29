@@ -44,6 +44,11 @@ export const LEGAL_HREFS: Readonly<Record<LegalPageKey, string>> = Object.freeze
   terms: "/terms",
 });
 
+/** 0.51.4: the two public pages an app MAY have beside the legal ones, linked after
+ *  them in the footer (§3.3) — keksdose's /security and /accessibility. Not legal pages:
+ *  an app draws them with `PublicPage`, in its own words, at routes of its choosing. */
+export type LegalInfoPageKey = "security" | "accessibility";
+
 /**
  * Who runs the app — the values the kit's legal sections are filled in with (§5).
  *
@@ -179,8 +184,11 @@ export interface LegalFramedSectionLabels {
 export interface LegalLabels {
   /** The accessible name of {@link LegalLinks}' and {@link LegalFooter}'s `<nav>`. */
   navLabel: string;
-  /** The short labels of the three links, everywhere the links appear (§3.3). */
-  links: Record<LegalPageKey, string>;
+  /** The short labels of the three links, everywhere the links appear (§3.3), and since
+   *  0.51.4 of the two optional public pages after them (`securityHref`,
+   *  `accessibilityHref` on {@link LegalLinks}) — optional keys, as every key added to a
+   *  namespace an app may annotate: left out, the provider's, then English. */
+  links: Record<LegalPageKey, string> & Partial<Record<LegalInfoPageKey, string>>;
   /** The pages' titles — the `<h1>`, and the links of the terms checkbox. */
   titles: Record<LegalPageKey, string>;
   /** The back link above the title: "← Back to home". */
@@ -215,6 +223,15 @@ export interface LegalLabels {
    * the provider's, then English.
    */
   updated?: (date: string) => string;
+  /**
+   * 0.51.4: the plain-language summary at the top of a page ({@link LegalPage}'s
+   * `summary`, §3.2) — its heading, and the line under the points saying that only the
+   * full text binds. Optional, as `updated`.
+   */
+  summary?: {
+    title: string;
+    note: string;
+  };
   /** The kit's sections (§4.3), by page and section key. */
   sections: {
     impressum: {
@@ -363,6 +380,15 @@ export interface LegalLinksProps {
   /** Default (0.28): the three routes, `/impressum`, `/privacy` and `/terms`, with the
    *  kit's short link labels (`legal.links`), in the contract's order. */
   links?: readonly LegalLink[];
+  /**
+   * 0.51.4: the app's security page — a "Security" link after the others, with the kit's
+   * label (`legal.links.security`). Left out, no link: only an app that has the page
+   * names its route.
+   */
+  securityHref?: string;
+  /** 0.51.4: the app's accessibility statement — "Accessibility", last. As
+   *  `securityHref`. */
+  accessibilityHref?: string;
   /** The page being shown; its link is marked `aria-current="page"`. Usually the
    *  router's pathname. */
   currentHref?: string;
@@ -387,6 +413,14 @@ function defaultLinks(labels: LegalLabels): LegalLink[] {
   }));
 }
 
+/** The optional pages after them, each only where the app named its route. */
+function infoLinks(labels: LegalLabels, hrefs: Partial<Record<LegalInfoPageKey, string>>): LegalLink[] {
+  return (["security", "accessibility"] as const).flatMap((page) => {
+    const href = hrefs[page];
+    return href ? [{ href, label: labels.links[page] ?? DEFAULT_LEGAL_LABELS.links[page] }] : [];
+  });
+}
+
 /**
  * The legal pages as a row of quiet links, the one you are on marked (kastlan's
  * `LegalLinks`). Wraps on a phone.
@@ -398,6 +432,8 @@ function defaultLinks(labels: LegalLabels): LegalLink[] {
  */
 export function LegalLinks({
   links,
+  securityHref,
+  accessibilityHref,
   currentHref,
   nav = true,
   onLinkClick,
@@ -405,7 +441,10 @@ export function LegalLinks({
   className,
 }: LegalLinksProps) {
   const labels = useLegalLabels(labelsProp);
-  const shown = links ?? defaultLinks(labels);
+  const shown = [
+    ...(links ?? defaultLinks(labels)),
+    ...infoLinks(labels, { security: securityHref, accessibility: accessibilityHref }),
+  ];
   const items = shown.flatMap((link, i) => [
     ...(i > 0 ? [<span key={`sep-${link.href}`} aria-hidden="true">·</span>] : []),
     <TextLink key={link.href} href={link.href} tone="muted" current={link.href === currentHref} onClick={onLinkClick}>
@@ -429,6 +468,10 @@ export interface LegalFooterProps {
   children?: ReactNode;
   /** Default: the three routes with the kit's link labels — see {@link LegalLinks}. */
   links?: readonly LegalLink[];
+  /** 0.51.4: "Security" after the others — see {@link LegalLinksProps.securityHref}. */
+  securityHref?: string;
+  /** 0.51.4: "Accessibility", last — see {@link LegalLinksProps.accessibilityHref}. */
+  accessibilityHref?: string;
   /** Marks that link `aria-current="page"`. {@link LegalPage}'s default footer passes
    *  its own page. */
   currentHref?: string;
@@ -454,14 +497,29 @@ export interface LegalFooterProps {
  * landing, auth, legal and 404 pages; kastlan and Kurvenschmiede had them on some pages
  * only. Its palette classes (`border-slate-200 bg-white dark:…`) became the surface and
  * border tokens, so it follows the theme like the rest of the kit.
+ *
+ * 0.51.4: an app with a security page or an accessibility statement passes their routes
+ * (`securityHref`, `accessibilityHref`) and the row goes on with "Security · Accessibility"
+ * in the kit's words, so the footer reads the same in every app that has them.
  */
-export function LegalFooter({ children, links, currentHref, landmark = true, className, labels }: LegalFooterProps) {
+export function LegalFooter({
+  children,
+  links,
+  securityHref,
+  accessibilityHref,
+  currentHref,
+  landmark = true,
+  className,
+  labels,
+}: LegalFooterProps) {
   const Root = landmark ? "footer" : "div";
   return (
     <Root className={cn("border-t border-subtle bg-surface", className)}>
       <div className="mx-auto max-w-5xl px-4 py-8 text-sm text-muted">
         <LegalLinks
           links={links}
+          securityHref={securityHref}
+          accessibilityHref={accessibilityHref}
           currentHref={currentHref}
           labels={labels}
           className="justify-center gap-y-2 text-sm"
@@ -547,6 +605,8 @@ export interface LegalLayoutProps {
   /** 0.28.1: under the title, before the notice — {@link LegalPage}'s note that this
    *  page is a translation and which language is binding. */
   translationNote?: ReactNode;
+  /** 0.51.4: before the sections — {@link LegalPage}'s plain-language summary. */
+  summary?: ReactNode;
   /** The sections — {@link LegalSection}s. */
   children: ReactNode;
   /** The three pages, linked at the end of the column with the current one marked.
@@ -566,6 +626,7 @@ export function LegalLayout({
   notice,
   updated,
   translationNote,
+  summary,
   children,
   links,
   currentHref,
@@ -584,7 +645,10 @@ export function LegalLayout({
           {notice}
         </AlertBanner>
       )}
-      <div className="mt-8 space-y-8">{children}</div>
+      <div className="mt-8 space-y-8">
+        {summary}
+        {children}
+      </div>
       {links !== undefined && links.length > 0 && (
         <LegalLinks links={links} currentHref={currentHref} labels={labels} className="mt-12 border-t border-subtle pt-4" />
       )}

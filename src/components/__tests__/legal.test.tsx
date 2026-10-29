@@ -168,4 +168,35 @@ describe("LegalFooter", () => {
     );
     expect(screen.getByRole("navigation", { name: "Rechtliches" })).toBeInTheDocument();
   });
+
+  it("0.51.4: goes on with Security and Accessibility where the app names their routes", () => {
+    const row = () =>
+      within(screen.getByRole("navigation"))
+        .getAllByRole("link")
+        .map((a) => [a.textContent, a.getAttribute("href")]);
+    const { rerender } = render(
+      <LegalFooter securityHref="/security" accessibilityHref="/accessibility" currentHref="/security" />,
+    );
+    expect(row()).toEqual([
+      ["Imprint", "/impressum"],
+      ["Privacy Policy", "/privacy"],
+      ["Terms", "/terms"],
+      ["Security", "/security"],
+      ["Accessibility", "/accessibility"],
+    ]);
+    expect(screen.getByRole("link", { name: "Security" })).toHaveAttribute("aria-current", "page");
+    // One of the two: only that one.
+    rerender(<LegalFooter accessibilityHref="/accessibility" />);
+    expect(row().map(([label]) => label)).toEqual(["Imprint", "Privacy Policy", "Terms", "Accessibility"]);
+    // In the provider's words; after an app's own links too.
+    rerender(
+      <UiKitProvider labels={UI_KIT_LABELS_DE_CH}>
+        <LegalLinks links={LINKS} securityHref="/security" accessibilityHref="/accessibility" />
+      </UiKitProvider>,
+    );
+    expect(row().slice(-2)).toEqual([
+      ["Sicherheit", "/security"],
+      ["Barrierefreiheit", "/accessibility"],
+    ]);
+  });
 });
