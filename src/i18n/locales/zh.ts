@@ -746,6 +746,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     list: {
       unread: "未读",
       opensInNewTab: "在新标签页中打开",
+      showAll: (count) => `显示全部（${n(count)}）`,
+      showFewer: "收起",
     },
     breadcrumbs: {
       label: "面包屑导航",

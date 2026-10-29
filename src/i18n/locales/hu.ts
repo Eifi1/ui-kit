@@ -766,6 +766,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     list: {
       unread: "Olvasatlan",
       opensInNewTab: "új lapon nyílik meg",
+      showAll: (count) => `Összes megjelenítése (${n(count)})`,
+      showFewer: "Kevesebb megjelenítése",
     },
     breadcrumbs: {
       label: "Morzsamenü",

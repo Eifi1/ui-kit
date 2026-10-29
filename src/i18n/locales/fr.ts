@@ -781,6 +781,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     list: {
       unread: "Non lu",
       opensInNewTab: "s’ouvre dans un nouvel onglet",
+      showAll: (count) => `Tout afficher (${n(count)})`,
+      showFewer: "Afficher moins",
     },
     breadcrumbs: {
       label: "Fil d’Ariane",

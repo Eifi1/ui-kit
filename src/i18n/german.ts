@@ -782,6 +782,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
     list: {
       unread: "Ungelesen",
       opensInNewTab: "öffnet in einem neuen Tab",
+      showAll: (count) => `Alle anzeigen (${n(count)})`,
+      showFewer: "Weniger anzeigen",
     },
     breadcrumbs: {
       label: "Brotkrümelnavigation",

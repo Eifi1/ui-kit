@@ -769,6 +769,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     list: {
       unread: "Non letto",
       opensInNewTab: "si apre in una nuova scheda",
+      showAll: (count) => `Mostra tutto (${n(count)})`,
+      showFewer: "Mostra meno",
     },
     breadcrumbs: {
       label: "Percorso di navigazione",
