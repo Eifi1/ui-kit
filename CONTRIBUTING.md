@@ -283,6 +283,25 @@ Say so in the commit message: which test, and what it printed against the unfixe
 Where a new test earns the most is still `lib/`, `theme/` and the data-table's pure
 helpers: highest return per line, no DOM needed.
 
+## Formatting: Prettier
+
+```bash
+npm run format        # prettier --write .
+npm run format:check  # prettier --check . — first in check:static, so CI runs it too
+```
+
+`.prettierrc.json` sets `printWidth` 120 and leaves the rest at Prettier's defaults, the
+same file as in keksdose, kastlan and Kurvenschmiede (Marcel, 2026-10-29). Markdown is
+left alone (`.prettierignore`): the docs are prose wrapped by hand, and the README's
+inventories and the changelog are generated. The one-time reformat is in
+`.git-blame-ignore-revs`; `git config blame.ignoreRevsFile .git-blame-ignore-revs` makes
+`git blame` skip it.
+
+Two things to know. Prettier 3.9 does not always settle in one pass (a long member chain
+can change again), so run `format:check` after `format`. And a `@ts-expect-error` goes
+directly above the line TypeScript reports, which after a reformat is the JSX element's
+opening line, inside its parentheses, not above the `const`.
+
 ## Lint: zero warnings
 
 ```bash

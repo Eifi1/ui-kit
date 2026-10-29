@@ -1,0 +1,28 @@
+# Prettier formats the code: TypeScript, JavaScript, CSS, HTML, JSON and YAML.
+# `printWidth` 120 is in .prettierrc.json, the same in keksdose, kastlan and
+# Kurvenschmiede (Marcel 2026-10-29); everything else is Prettier's default.
+
+# Build output and reports (as in .gitignore), and what npm writes.
+dist/
+coverage/
+showcase/dist/
+showcase/dist-pages/
+ci-artifacts/
+package-lock.json
+
+# Markdown is prose, wrapped by hand, and two files hold generated blocks:
+# CHANGELOG.md (commit-and-tag-version) and README.md's export and styling inventories
+# (scripts/gen-*-inventory.mjs). Prettier would re-flow tables and lists the generators
+# and the docs' authors own.
+*.md
+
+# Vendored byte for byte from Eifi1/shared-workflows and pinned by
+# scripts/check-commit-rules.mjs: formatted there, never here.
+scripts/check-commit-msg.cjs
+scripts/check-pushed-commits.cjs
+scripts/shared-commit-rules.json
+
+# Written by scripts whose `--check` compares the file byte for byte with a fresh run
+# (gen-showcase-search-index, gen-kit-css-variables, gen-role-utilities, sync-server-kit).
+*.generated.ts
+showcase/src/server-kit/api.json

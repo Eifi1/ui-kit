@@ -14,6 +14,11 @@
   // These are the families the token ratchet counts; see scripts/check-token-discipline.mjs.
   "editor.quickSuggestions": { "strings": "on" },
 
+  // Prettier formats with this repo's .prettierrc.json (printWidth 120) and only where
+  // a config is in reach: without one the extension falls back to 80 columns.
+  "prettier.requireConfig": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+
   "eslint.useFlatConfig": true,
   "eslint.validate": ["typescript", "typescriptreact"],
   "editor.codeActionsOnSave": { "source.fixAll.eslint": "explicit" },
