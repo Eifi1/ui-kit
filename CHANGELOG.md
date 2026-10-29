@@ -21,18 +21,6 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
-## [0.51.4](https://github.com/Eifi1/ui-kit/compare/v0.51.3...v0.51.4) (2026-10-29)
-
-### Added
-
-* **legal:** a plain-language summary, and Security and Accessibility in the footer ([6b1e98b](https://github.com/Eifi1/ui-kit/commit/6b1e98b41f17633b367b7b9e3938ac6483197221))
-* **legal:** the terms say what an objection to a change leads to ([aada095](https://github.com/Eifi1/ui-kit/commit/aada095c286004e578e6ab237b06b1052d53c902))
-* **shell:** DevMenu lays its groups out in columns on a desktop ([cd966f1](https://github.com/Eifi1/ui-kit/commit/cd966f1cf9b0b6bd77142b2c33b62c72fc2612db))
-
-### Fixed
-
-* **feedback:** User, Date and # give way on a narrow inbox instead of scrolling ([b629d2b](https://github.com/Eifi1/ui-kit/commit/b629d2b2304acbfd77bc0c122d0a3d05ecf6d6cd))
-
 ## [0.51.3](https://github.com/Eifi1/ui-kit/compare/v0.51.2...v0.51.3) (2026-10-29)
 
 ### Added
