@@ -21,6 +21,12 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.51.5](https://github.com/Eifi1/ui-kit/compare/v0.51.4...v0.51.5) (2026-10-29)
+
+### Added
+
+* **search:** export `searchWords` and `matchesSearch` for an app's own async source ([6756352](https://github.com/Eifi1/ui-kit/commit/6756352692b8fca75dd421844e3476b74aadf8cb))
+
 ## [0.51.4](https://github.com/Eifi1/ui-kit/compare/v0.51.3...v0.51.4) (2026-10-29)
 
 ### Added
