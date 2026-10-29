@@ -51,6 +51,10 @@ export function searchWords(query: string, locale?: string): string[] {
  * was a substring. No words match everything.
  *
  * `words` from {@link searchWords}; `texts` as they are (folded here), `undefined` skipped.
+ *
+ * Exported since 0.51.5 for an app's own async source: a picker shows `loadOptions`'
+ * rows as they come, so a source that narrows on the client filters with this, the same
+ * rule the kit applies to `options` (keksdose's shop picker past its first hundred shops).
  */
 export function matchesSearch(
   words: readonly string[],

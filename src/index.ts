@@ -22,8 +22,9 @@ export { readStored, writeStored } from "./lib/safe-storage";
 // (`filename*` first) — 0.34, KS U5; the kit's own three downloads use them.
 export { saveBlob, filenameFromDisposition } from "./lib/download";
 // Date helpers are also available via the "@eifi1/ui-kit/dates" subpath.
-// One fold and one ranking for every list's search box (DUP-5), for an app's own lists.
-export { foldForSearch, rankMatch } from "./lib/text-match";
+// One fold and one ranking for every list's search box (DUP-5), for an app's own lists;
+// and the pickers' every-word match (0.51.5), for an async `loadOptions` that filters itself.
+export { foldForSearch, rankMatch, searchWords, matchesSearch } from "./lib/text-match";
 export type { MatchRank } from "./lib/text-match";
 // 0.12.0: the QR encoder QrCode draws with — no dependency, see lib/qr-encode.ts.
 export { encodeQr } from "./lib/qr-encode";

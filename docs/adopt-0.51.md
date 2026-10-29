@@ -487,3 +487,23 @@ top-bar menu may use.
 - **All three:** the feedback inbox drops User, Date and # on a narrow table instead of
   scrolling. An app that pins those columns or wants the old set can map them back with
   `{ ...col, fitPriority: undefined }`.
+
+## 0.51.5
+
+**Legal wording:** none.
+
+**`searchWords` and `matchesSearch` are exported** from `@eifi1/ui-kit` (keksdose,
+2026-10-29). A picker shows an async `loadOptions` source's rows as they come, so a
+source that narrows on the client applies the kit's every-word rule itself:
+
+```ts
+loadOptions={async (query) => {
+  const words = searchWords(query);
+  return shops.filter((s) => matchesSearch(words, [s.label, s.sublabel]));
+}}
+```
+
+keksdose's shop picker past its first hundred shops drops its own copy of the filter.
+
+**Apps:** keksdose: the shop picker's `loadOptions`. kastlan, Kurvenschmiede: a plain
+bump.
