@@ -389,7 +389,8 @@ describe("the kit's feedback columns adopt it (0.48)", () => {
       categoryLabels: new Proxy({}, { get: () => "x" }) as never,
     });
     expect(cols.find((c) => c.key === "title")?.grow).toBe(true);
-    expect(fitHideOrder(cols).map((c) => c.key)).toEqual(["url", "email", "resolved", "category"]);
+    // 0.51.4 (Kurvenschmiede): then User, Date and #, the number last.
+    expect(fitHideOrder(cols).map((c) => c.key)).toEqual(["url", "email", "resolved", "category", "user", "date", "id"]);
   });
 
   it("then Votes and Category, before Subject would drop below 10rem (Kurvenschmiede S1)", () => {
@@ -402,6 +403,15 @@ describe("the kit's feedback columns adopt it (0.48)", () => {
       categoryLabels: new Proxy({}, { get: () => "x" }) as never,
       votes: true,
     });
-    expect(fitHideOrder(cols).map((c) => c.key)).toEqual(["url", "email", "resolved", "votes", "category"]);
+    expect(fitHideOrder(cols).map((c) => c.key)).toEqual([
+      "url",
+      "email",
+      "resolved",
+      "votes",
+      "category",
+      "user",
+      "date",
+      "id",
+    ]);
   });
 });
