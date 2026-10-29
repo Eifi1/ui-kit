@@ -208,6 +208,13 @@ export interface LegalLabels {
     note: (o: LegalOperatorText) => string;
     show: (o: LegalOperatorText) => string;
   };
+  /**
+   * 0.51.3: the as-of line under the title (§3.2), "Last updated: 29 October 2026" —
+   * {@link LegalPage}'s `updated`, called with the date already written out in the page's
+   * locale. OPTIONAL, as every key added to a namespace an app may annotate: left out,
+   * the provider's, then English.
+   */
+  updated?: (date: string) => string;
   /** The kit's sections (§4.3), by page and section key. */
   sections: {
     impressum: {
@@ -535,6 +542,8 @@ export interface LegalLayoutProps {
    * than the others (its technical sections describe running code).
    */
   notice?: ReactNode;
+  /** 0.51.3: right under the title — {@link LegalPage}'s "Last updated: …" line. */
+  updated?: ReactNode;
   /** 0.28.1: under the title, before the notice — {@link LegalPage}'s note that this
    *  page is a translation and which language is binding. */
   translationNote?: ReactNode;
@@ -555,6 +564,7 @@ export function LegalLayout({
   title,
   back,
   notice,
+  updated,
   translationNote,
   children,
   links,
@@ -567,6 +577,7 @@ export function LegalLayout({
     <article className={cn("mx-auto w-full max-w-3xl px-4 py-12", className)}>
       {back !== undefined && <div className="mb-4 text-sm">{back}</div>}
       <Heading className="text-3xl font-bold tracking-tight break-words text-primary">{title}</Heading>
+      {updated !== undefined && updated !== null && <p className="mt-2 text-sm text-muted">{updated}</p>}
       {translationNote !== undefined && translationNote !== null && <div className="mt-3">{translationNote}</div>}
       {notice !== undefined && notice !== null && (
         <AlertBanner tone="warning" role="note" className="mt-4">

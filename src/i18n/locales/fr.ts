@@ -934,6 +934,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
           `Ceci est une traduction fournie pour votre commodité. Seule la version en ${o.bindingLanguage} fait foi.`,
         show: (o) => `Afficher la version en ${o.bindingLanguage}`,
       },
+      updated: (date) => `Dernière mise à jour\u00a0: ${date}`,
       sections: {
         impressum: {
           operator: {
@@ -990,7 +991,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
           },
           changes: {
             title: "Modifications des présentes conditions",
-            body: "Ces conditions peuvent être mises à jour au fil de l’évolution du service. Les modifications importantes seront annoncées par e-mail ou dans l’app\u202f; continuer à utiliser le service après une modification vaut acceptation.",
+            body: "Nous pouvons mettre à jour ces conditions au fil de l’évolution du service. Nous annonçons toute modification importante au moins 30 jours avant son entrée en vigueur, par e-mail et dans l’app, avec le nouveau texte. Si vous n’êtes pas d’accord, vous pouvez vous y opposer ou supprimer votre compte avant cette date, et exporter vos données jusque-là. Si vous continuez à utiliser le service après cette date, les conditions modifiées s’appliquent.",
           },
           language: {
             title: "Langue",

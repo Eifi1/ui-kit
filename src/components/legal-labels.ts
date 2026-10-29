@@ -28,6 +28,7 @@ export const DEFAULT_LEGAL_LABELS: LegalLabels = {
       `This is a translation for your convenience. The ${o.bindingLanguage} version is binding.`,
     show: (o) => `Show the ${o.bindingLanguage} version`,
   },
+  updated: (date) => `Last updated: ${date}`,
   sections: {
     impressum: {
       operator: {
@@ -82,7 +83,7 @@ export const DEFAULT_LEGAL_LABELS: LegalLabels = {
       },
       changes: {
         title: "Changes to these terms",
-        body: "These terms may be updated as the service evolves. Material changes will be announced by email or in the app; continued use after a change means you accept it.",
+        body: "We may update these terms as the service evolves. We announce a material change at least 30 days before it takes effect, by email and in the app, together with the new text. If you do not agree, you can object or delete your account before that date, and you can export your data until then. If you keep using the service after that date, the changed terms apply.",
       },
       language: {
         title: "Language",

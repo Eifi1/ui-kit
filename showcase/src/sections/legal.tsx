@@ -280,6 +280,7 @@ function Legal028Demo() {
               page={page}
               operator={OPERATOR}
               header={<DemoHeader />}
+              updated="2026-10-29"
               homeHref={HERE_028}
               headingAs="h2"
               landmark={false}
@@ -291,7 +292,8 @@ function Legal028Demo() {
         </div>
         <Note>
           {code('<LegalPage page="privacy" operator={OPERATOR} header={<AppHeader />}>')} draws the app&apos;s header,
-          &ldquo;← Back to home&rdquo;, the title and the page&apos;s notice from the kit&apos;s labels, the sections, and{" "}
+          &ldquo;← Back to home&rdquo;, the title, the as-of line from {code('updated="2026-10-29"')} (0.51.3, the date
+          written out in the page&apos;s language), the page&apos;s notice from the kit&apos;s labels, the sections, and{" "}
           {code("<LegalFooter />")} with the page marked. {code('<LegalKitSection section="rights">')} renders a shared
           section in the page&apos;s language, filled in with the operator (the country named by {code("Intl")}); its
           children are the app&apos;s paragraph where the contract gives it one. The privacy and terms sections are

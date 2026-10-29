@@ -922,6 +922,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
           `Ez a szöveg tájékoztató jellegű fordítás; az irányadó változat nyelve: ${o.bindingLanguage}.`,
         show: (o) => `Az irányadó változat megjelenítése (${o.bindingLanguage})`,
       },
+      updated: (date) => `Utolsó frissítés: ${date}`,
       sections: {
         impressum: {
           operator: {
@@ -978,7 +979,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
           },
           changes: {
             title: "A feltételek módosítása",
-            body: "Ezek a feltételek a szolgáltatás fejlődésével módosulhatnak. A lényeges változásokat e-mailben vagy az alkalmazásban jelentjük be; aki a változás után tovább használja a szolgáltatást, elfogadja azt.",
+            body: "Ezeket a feltételeket a szolgáltatás fejlődésével módosíthatjuk. A lényeges változásokat legalább 30 nappal a hatálybalépésük előtt bejelentjük e-mailben és az alkalmazásban, az új szöveggel együtt. Ha nem ért egyet, ezen időpont előtt tiltakozhat, vagy törölheti a fiókját, és addig exportálhatja az adatait. Ha ezen időpont után is használja a szolgáltatást, a módosított feltételek érvényesek.",
           },
           language: {
             title: "Nyelv",

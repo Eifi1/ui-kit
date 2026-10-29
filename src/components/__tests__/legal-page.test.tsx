@@ -2,6 +2,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { UiKitProvider } from "../../i18n/kit-labels";
+import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
 import { DEFAULT_LEGAL_LABELS, LegalSection } from "../legal";
 import type { LegalOperator } from "../legal";
 import { LEGAL_SKELETON, LegalAcceptCheckbox, LegalKitSection, LegalPage } from "../legal-page";
@@ -146,6 +147,44 @@ describe("LegalPage — the frame (§3.2)", () => {
       </LegalPage>,
     );
     expect(screen.queryByText(/translation for your convenience/)).toBeNull();
+  });
+
+  it("0.51.3: dates the page under its title, in the page's language, the binding switch included", () => {
+    const terms = (updated?: string) => (
+      <LegalPage page="terms" operator={OPERATOR} updated={updated}>
+        <LegalKitSection section="changes" />
+      </LegalPage>
+    );
+    const { rerender } = render(<UiKitProvider locale="en-GB">{terms("2026-10-29")}</UiKitProvider>);
+    const line = screen.getByText("Last updated: 29 October 2026");
+    expect(line.tagName).toBe("TIME");
+    expect(line).toHaveAttribute("datetime", "2026-10-29");
+    // Under the title, before the notice.
+    const title = screen.getByRole("heading", { level: 1 });
+    expect(title.compareDocumentPosition(line) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(line.compareDocumentPosition(screen.getByRole("note")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // The switch to the binding version changes the provider: words and date follow it.
+    rerender(<UiKitProvider labels={UI_KIT_LABELS_DE_CH} locale="de-CH">{terms("2026-10-29")}</UiKitProvider>);
+    expect(screen.getByText("Stand: 29. Oktober 2026")).toBeInTheDocument();
+    // No date, and a day that does not exist: no line, never a rolled-over one.
+    rerender(<UiKitProvider locale="en-GB">{terms("2026-02-30")}</UiKitProvider>);
+    expect(screen.queryByText(/Last updated/)).toBeNull();
+    rerender(<UiKitProvider locale="en-GB">{terms()}</UiKitProvider>);
+    expect(screen.queryByText(/Last updated/)).toBeNull();
+  });
+
+  it("0.51.3: the terms' changes clause gives notice and a way out instead of consent by use", () => {
+    render(
+      <LegalPage page="terms" operator={OPERATOR}>
+        <LegalKitSection section="changes" />
+      </LegalPage>,
+    );
+    const body = L.sections.terms.changes.body;
+    expect(screen.getByText(body)).toBeInTheDocument();
+    expect(body).toContain("at least 30 days before it takes effect");
+    expect(body).toContain("object or delete your account");
+    expect(body).toContain("export your data");
+    expect(body).not.toContain("continued use after a change means you accept it");
   });
 
   it("0.28.1: the language section needs the operator's bindingLanguage", () => {

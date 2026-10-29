@@ -25,9 +25,9 @@ snapshot of the three apps, the per-repo to-dos and the reviews' list as written
 | § | Section | Shipped in | Amended by |
 |---|---|---|---|
 | 1 | Where each one stands | — (archived) | |
-| 2 | Decisions | — | §7.8; decision 9 (0.28.1); decision 7 by billing §8, §9 (Paddle) |
-| 3 | The page contract | ui-kit 0.28.0 | §7.3, §7.6, §7.9; 0.28.1 (translation note, `AuthLayout` footer); landing-demo §4.3 (robots, sitemap) |
-| 4 | The content contract | ui-kit 0.28.0 | §7.1–§7.4; 0.28.1 (`language` section); 0.32.0 (commercial disclaimer) |
+| 2 | Decisions | — | §7.8; decision 9 (0.28.1); decision 7 by billing §8, §9 (Paddle); decision 10 (0.51.3) |
+| 3 | The page contract | ui-kit 0.28.0 | §7.3, §7.6, §7.9; 0.28.1 (translation note, `AuthLayout` footer); landing-demo §4.3 (robots, sitemap); 0.51.3 (as-of line, keksdose's stored version) |
+| 4 | The content contract | ui-kit 0.28.0 | §7.1–§7.4; 0.28.1 (`language` section); 0.32.0 (commercial disclaimer); 0.51.3 (`changes` wording, `updated` label) |
 | 5 | What the kit adds, what stays app-side | ui-kit 0.28.0, server-kit 0.2.1 | §7.5; 0.28.1; 0.32.0 |
 | 6 | Per repo | — (archived) | |
 | 7 | Settled after the reviews | — | index; folded items point to their § |
@@ -49,6 +49,7 @@ before the 0.28 round, and how far their wording differed.
 3. **"What your browser stores"** goes into all three privacy policies.
 4. **keksdose's terms checkbox** on every app's register page: required, linking Terms
    and Privacy, client-side as keksdose does it (no stored version, no re-acceptance).
+   Amended for keksdose by decision 10: it stores the accepted version.
 5. **The shared wording lives in the kit**, in all 7 languages, filled in with each
    app's values. Apps keep only their app-specific sections, and there is one text to
    change after the lawyer's review.
@@ -75,6 +76,16 @@ before the 0.28 round, and how far their wording differed.
    - Privacy translations must still be accurate: an information duty is met by what the
      reader read, so native reviewers check them on /translations, and a lawyer only for
      the languages of markets an app actively targets.
+10. **Dated pages and a notice period for changes** (Marcel, 2026-10-29, from keksdose's
+    legal benchmark, gaps 7 and 8; ui-kit 0.51.3):
+    - Every legal page carries an as-of date under its title (`LegalPage`'s `updated`,
+      §3.2).
+    - The terms' `changes` section gives at least 30 days' notice, a right to object or
+      leave, and time to export, instead of consent by continued use (§4.3; lawyer
+      question 4: continued use alone may not bind German consumers).
+    - keksdose stores the accepted terms version (the terms page's `updated` date) and the
+      time at registration, in a users column of its own. This reverses decision 4's "no
+      stored version" for keksdose only; the kit's checkbox still sends nothing (§3.4).
 
 ## 3. The page contract
 
@@ -96,6 +107,7 @@ From top to bottom:
 2. **The column**: the kit's `LegalLayout` with:
    - the back link `← Back to home`, pointing to `/`;
    - the title;
+   - the as-of line, "Last updated: 29 October 2026" (decision 10);
    - the translation note, on a page read in another language than the binding one
      (decision 9);
    - the notice;
@@ -115,6 +127,13 @@ back into the app (landing-demo §3.1).
   Kurvenschmiede's "what is stored, where, and who can read it" (§4.3).
 
 An app may still pass its own notice (`LegalPage`'s `notice`; `null` for none).
+
+**As-of line** (decision 10): `LegalPage`'s `updated`, the day the page's text last
+changed as `"YYYY-MM-DD"`, shown as `legal.updated` with the date written out in the
+page's locale (`dateStyle: "long"`): "Last updated: 29 October 2026", "Stand: 29. Oktober
+2026". It follows the language like every other kit word, so the switch to the binding
+version shows the binding version's date line. One date per page; left out, no line. A
+malformed date shows no line rather than a rolled-over one.
 
 **Translation note** (decision 9): when the operator names a `bindingLanguage` and the
 page is read in another language, a line under the title says the binding version
@@ -172,6 +191,10 @@ The register page shows a **required checkbox** labelled "I accept the [Terms of
 and the [Privacy Policy]", with the page titles as links. Submit stays disabled while it
 is unticked; it is never an error message. Nothing is sent to the backend. This is
 keksdose's `register-page.tsx` behaviour, now the kit's `LegalAcceptCheckbox`.
+
+keksdose (decision 10) also records which terms were accepted: with the registration it
+sends the terms page's `updated` date, which its backend stores with the time. That is
+the app's own request and column; the checkbox itself still sends nothing.
 
 ## 4. The content contract
 
@@ -299,9 +322,11 @@ The texts are keksdose's unless marked otherwise.
     the operator is not liable for any indirect or consequential damage arising from the
     use of, or inability to use, the service. Nothing here limits liability that cannot be
     limited by law.
-  - **changes**, "Changes to these terms": These terms may be updated as the service
-    evolves. Material changes will be announced by email or in the app; continued use after
-    a change means you accept it.
+  - **changes**, "Changes to these terms" (decision 10): We may update these terms as the
+    service evolves. We announce a material change at least 30 days before it takes effect,
+    by email and in the app, together with the new text. If you do not agree, you can
+    object or delete your account before that date, and you can export your data until
+    then. If you keep using the service after that date, the changed terms apply.
   - **language**, "Language" (decision 9): These terms are written in
     `{bindingLanguage}`. Translations into other languages are provided for convenience
     only; where a translation differs, the `{bindingLanguage}` version prevails.
@@ -331,6 +356,7 @@ The texts are keksdose's unless marked otherwise.
 | `titles.impressum` / `privacy` / `terms` | Imprint / Privacy Policy / Terms of Service | Impressum / Datenschutzerklärung / Nutzungsbedingungen |
 | `backHome` | Back to home | Zurück zur Startseite |
 | `accept` | I accept the {terms} and the {privacy} | Ich akzeptiere die {terms} und die {privacy} |
+| `updated` | Last updated: {date} | Stand: {date} |
 | `translation.note` / `show` | This is a translation for your convenience. The {bindingLanguage} version is binding. / Show the {bindingLanguage} version | Dies ist eine Übersetzung zu Ihrer Information. Massgebend ist die Fassung auf {bindingLanguage}. / Fassung auf {bindingLanguage} anzeigen |
 
 fr and it come from keksdose's `landing.footer.*`, `legal.*` and `auth.accept_*`. es, hu
