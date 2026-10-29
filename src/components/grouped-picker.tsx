@@ -2,7 +2,7 @@ import { useCallback, useId, useMemo } from "react";
 import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "../lib/cn";
-import { foldForSearch } from "../lib/text-match";
+import { matchesSearch, searchWords } from "../lib/text-match";
 import { ComboboxPanel, useComboboxCore, type ComboOption } from "./combobox-core";
 import { assignRef } from "./field-parts";
 import { DEFAULT_COMBOBOX_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-labels";
@@ -90,13 +90,20 @@ export function GroupedPicker({
   // plain `toLowerCase` gets wrong), and now the accents too — "zurich" finds Zürich.
   const locale = useKitLocale();
   const results = useMemo(() => {
-    const q = foldForSearch(query.trim(), locale);
-    const has = (s: string) => foldForSearch(s, locale).includes(q);
-    const kept = q
-      ? groups
-          .map((g) => (has(g.label) ? g : { ...g, items: g.items.filter((i) => has(i.label)) }))
-          .filter((g) => g.items.length > 0)
-      : groups;
+    // Every word of the query (0.51.4): all in the group's name keeps the whole group;
+    // otherwise an item stays when each word is in its label or its group's name, so
+    // "migros 8004" finds Migros' 8004 shop.
+    const words = searchWords(query, locale);
+    const kept =
+      words.length > 0
+        ? groups
+            .map((g) =>
+              matchesSearch(words, [g.label], locale)
+                ? g
+                : { ...g, items: g.items.filter((i) => matchesSearch(words, [g.label, i.label], locale)) },
+            )
+            .filter((g) => g.items.length > 0)
+        : groups;
     return kept.flatMap((g) =>
       g.items.map(
         (item): ComboOption<string> => ({

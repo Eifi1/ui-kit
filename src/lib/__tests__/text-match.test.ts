@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { foldForSearch, rankMatch } from "../text-match";
+import { foldForSearch, matchesSearch, rankMatch, searchWords } from "../text-match";
 import { normalizeSearchText } from "../../search/search-index";
 
 /**
@@ -60,3 +60,29 @@ describe("rankMatch", () => {
     expect(rankMatch("Anything", "  ")).toBe(0);
   });
 });
+
+describe("matchesSearch: every word of a picker's query (0.51.4, keksdose /prices)", () => {
+  it("splits and folds the query into words", () => {
+    expect(searchWords("  Migros   Zürich ")).toEqual(["migros", "zurich"]);
+    expect(searchWords("   ")).toEqual([]);
+  });
+
+  it("finds a row when each word is in one of its texts, in any order", () => {
+    const shop = ["8004 Zürich", "Migros"];
+    expect(matchesSearch(searchWords("migros 8004"), shop)).toBe(true);
+    expect(matchesSearch(searchWords("zurich migros"), shop)).toBe(true);
+    expect(matchesSearch(searchWords("coop zurich"), shop)).toBe(false);
+  });
+
+  it("matches one word, and a phrase that is a substring, as before", () => {
+    expect(matchesSearch(searchWords("zur"), ["8004 Zürich"])).toBe(true);
+    expect(matchesSearch(searchWords("8004 zur"), ["8004 Zürich"])).toBe(true);
+    expect(matchesSearch([], ["anything"])).toBe(true);
+  });
+
+  it("never matches a word across two texts, and skips a missing one", () => {
+    expect(matchesSearch(searchWords("grosbern"), ["Migros", "Bern"])).toBe(false);
+    expect(matchesSearch(searchWords("bern"), ["Migros", undefined, "Bern"])).toBe(true);
+  });
+});
+

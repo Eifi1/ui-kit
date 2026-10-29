@@ -22,7 +22,7 @@ import { anchoredInline, useAnchoredPanel, viewportSize, type AnchoredPanel } fr
 import { pressInside, takeEscape, useDismissLayer, useOutsideClick } from "../hooks/use-dismiss";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { isImeEnter } from "../lib/ime";
-import { foldForSearch } from "../lib/text-match";
+import { matchesSearch, searchWords } from "../lib/text-match";
 import { DEFAULT_COMBOBOX_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import { hasContent } from "../lib/presence";
 
@@ -283,10 +283,10 @@ export function useOptionSource<V extends string | number>({
   const clientResults = useMemo(() => {
     if (isAsync) return [];
     const src = options ?? [];
-    const q = foldForSearch(query.trim(), locale);
-    if (!filter || !q) return src;
-    const hit = (s: string | undefined) => s !== undefined && foldForSearch(s, locale).includes(q);
-    return src.filter((o) => hit(o.label) || hit(o.sublabel));
+    // Every word of the query, in the label or the sublabel (0.51.4): "migros zürich".
+    const words = searchWords(query, locale);
+    if (!filter || words.length === 0) return src;
+    return src.filter((o) => matchesSearch(words, [o.label, o.sublabel], locale));
   }, [isAsync, options, query, filter, locale]);
 
   const pending = isAsync && active && !tooShort && settled.query !== query;
