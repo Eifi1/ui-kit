@@ -568,16 +568,16 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2194 names from 363 modules** — 1014 values and 1180 types. _Italic_ is a type-only export.
+**2195 names from 363 modules** — 1015 values and 1180 types. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
 is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2194 |
+| `@eifi1/ui-kit` | 2195 |
 | `@eifi1/ui-kit/chart` | 100 |
-| `@eifi1/ui-kit/shell` | 119 |
+| `@eifi1/ui-kit/shell` | 120 |
 | `@eifi1/ui-kit/data-table` | 56 |
 | `@eifi1/ui-kit/wizard` | 25 |
 | `@eifi1/ui-kit/tour` | 49 |
@@ -865,7 +865,7 @@ re-slicing of it, never a second API.
 |---|---|
 | `settings/settings-layout` | `SETTINGS_SEARCH_THRESHOLD`, `SettingsLayout`, _`SettingsDocumentTitleParts`_, _`SettingsLayoutProps`_, _`SettingsLayoutWidth`_ |
 | `settings/use-settings-route` | `resolveSettingsLocation`, `SETTINGS_FROM_LIST_STATE`, `settingsFromListState`, `useSettingsRoute`, _`SettingsLayoutMode`_, _`SettingsLocation`_, _`SettingsLocationResult`_, _`SettingsLocationRules`_, _`SettingsRoute`_, _`UseSettingsRouteOptions`_ |
-| `settings/use-settings-focus` | `SETTINGS_FOCUS_MS`, `SETTINGS_FOCUS_RING`, `useSettingsFocus` |
+| `settings/use-settings-focus` | `SETTINGS_FOCUS_MS`, `SETTINGS_FOCUS_RING`, `useFocusParam`, `useSettingsFocus` |
 | `settings/settings-section` | `SettingsSection`, _`SettingsSectionProps`_ |
 | `settings/settings-context` | `useSettingsLayout`, _`SettingsLayoutContextValue`_ |
 | `settings/settings-heading` | `SettingsHeadingLevel`, `useSettingsHeadingLevel`, _`SettingsHeadingLevelProps`_, _`SettingsHeadingTag`_ |
