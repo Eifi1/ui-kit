@@ -453,7 +453,8 @@ function statusRank(status: FeedbackStatus): number {
  * - Fitted to the table's width (0.48, keksdose live #451): Subject `grow`s and
  *   ellipsises, and a narrow table leaves out URL, then Email, then Resolved
  *   (`fitPriority` 1–3) — the open report repeats all three — then Votes and Category
- *   (4, 5), then User, Date and # (6–8, 0.51.4) before Subject would drop below 10rem.
+ *   (4, 5), then User, Date and # (6–8, 0.51.4) before Subject would drop below 8rem
+ *   (`growMin`, 0.51.4; the table's default floor is 10).
  *   Drop the two keys with
  *   `{ ...col, grow: undefined, fitPriority: undefined }` for the 0.47 layout.
  * - `/my-feedback` shows the same nine: the Email cell's context fallback exists for it
@@ -542,6 +543,11 @@ export function feedbackColumns<T extends FeedbackTableRow>({
       // The rest of the row, one line and an ellipsis (0.48, keksdose live #451: one long
       // crash title pushed Status and the row actions off the edge).
       grow: true,
+      // 8rem, not the table's 10 (0.51.4, Kurvenschmiede): at 768px beside a sidebar only
+      // Subject, Status (a fixed 13.5rem) and the row actions are left, and they were up
+      // to 20px too wide (Hungarian). A subject's first words carry it; the open report
+      // has the rest.
+      growMin: 8,
     },
     {
       key: "user",

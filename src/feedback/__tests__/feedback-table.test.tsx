@@ -228,6 +228,8 @@ describe("feedbackColumns", () => {
     // Subject grows into what they leave; Status and the row actions always stay.
     expect(col("title").grow).toBe(true);
     expect(col("title").fitPriority).toBeUndefined();
+    // 8rem rather than the table's 10, so 768px beside a sidebar does not scroll (0.51.4).
+    expect(col("title").growMin).toBe(8);
     expect(col("status").fitPriority).toBeUndefined();
   });
 
