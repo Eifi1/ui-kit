@@ -408,10 +408,26 @@ optional points"; docs/legal-harmonization.md decision 11).
 - **New exported type `LegalInfoPageKey`** (`"security" | "accessibility"`) and new optional
   labels `legal.summary` and `legal.links.security` / `accessibility` in every catalogue.
 
+**The feedback inbox stops scrolling sideways on narrow desktops** (Kurvenschmiede).
+`feedbackColumns` gives User, Date and # a `fitPriority` (6, 7, 8): after URL, Email,
+Resolved, Votes and Category (1–5) they give way in that order, the number last because
+replies and the feedback loop name a report by it. Before, Subject reached its 10rem floor
+while all three were still drawn. Kurvenschmiede measured its inbox beside an open sidebar
+(German, 0.51.2): it scrolled 15px at 1100 and 347px at 768. With the change it fits from
+800px up in all seven languages, and from 1120px up the column sets are as before. At 768
+only Subject, Status and the row actions are left, and the table can still scroll 0–20px
+depending on the language: Status has a fixed width and the actions column no
+`fitPriority`.
+
 **Apps:**
 - **keksdose:** `summary` on /terms and /privacy. Pass `securityHref="/security"` and
   `accessibilityHref="/accessibility"` in `SiteFooter`; every page that renders it gets
   both, its `PublicPage` and `LegalPage` uses included. Pass them too wherever it
   renders `LegalLinks` itself (the account menu, `AuthLayout`'s footer).
-- **kastlan, Kurvenschmiede:** a plain bump; nothing changes until they pass a summary or
-  the two hrefs.
+- **Kurvenschmiede:** drop the local `fitPriority` map over `useFeedbackColumns` in
+  `features/feedback/feedback-page.tsx`; the kit's columns now carry the same numbers.
+- **kastlan, Kurvenschmiede:** otherwise a plain bump. The legal pages don't change until
+  they pass a summary or the two hrefs.
+- **All three:** the feedback inbox drops User, Date and # on a narrow table instead of
+  scrolling. An app that pins those columns or wants the old set can map them back with
+  `{ ...col, fitPriority: undefined }`.
