@@ -352,3 +352,38 @@ Both go to the next round's candidates.
 **Apps:** a plain bump to `^0.51.2`. keksdose's register stops overflowing. kastlan and
 Kurvenschmiede have no `virtualize`, but any `fitPriority` table now also re-fits when it
 widens after a render; their tables already fitted, so nothing visible changes.
+
+## 0.51.3
+
+**Legal pages: an as-of date, and a notice period for changes to the terms** (Marcel
+2026-10-29, keksdose's legal benchmark, gaps 7 and 8; docs/legal-harmonization.md
+decision 10).
+
+- **`LegalPage` takes `updated="YYYY-MM-DD"`**, the day that page's text last changed. It
+  shows under the title as "Last updated: 29 October 2026" ("Stand: 29. Oktober 2026",
+  "Dernière mise à jour : 29 octobre 2026"), the date written out in the page's locale, so
+  it follows the language switch like the other kit words. Optional: without it there is
+  no line, as before. A malformed date shows no line (and a dev warning).
+- **The terms' kit section `changes` has new wording**, in all seven languages:
+  > We may update these terms as the service evolves. We announce a material change at
+  > least 30 days before it takes effect, by email and in the app, together with the new
+  > text. If you do not agree, you can object or delete your account before that date,
+  > and you can export your data until then. If you keep using the service after that
+  > date, the changed terms apply.
+
+  It replaces "continued use after a change means you accept it". The clause comes from
+  the kit, so **every app's terms change on this bump**. It promises an email and an
+  in-app notice, account deletion and a data export; all three apps have the last two
+  (keksdose and kastlan in Settings, Kurvenschmiede's account cards).
+- **New label `legal.updated`** (`(date) => string`), in every catalogue. An app's own
+  `legal` overrides need nothing. Translation review: the rows `legal.updated(date)` and
+  `legal.sections.terms.changes.body` are new or changed, so they reopen on keksdose's
+  /translations.
+
+**Apps:**
+- **All three:** bump to `^0.51.3` and pass `updated` on each legal page. The terms' date
+  is at least the day this version goes live, since its `changes` text is new.
+- **keksdose:** also sends the terms page's `updated` date with the registration and
+  stores it with the time, in a users column of its own (decision 10). The kit's
+  `LegalAcceptCheckbox` still sends nothing.
+- **kastlan, Kurvenschmiede:** nothing else.

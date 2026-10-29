@@ -935,6 +935,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
           `Dies ist eine Übersetzung zu Ihrer Information. Massgebend ist die Fassung auf ${o.bindingLanguage}.`,
         show: (o) => `Fassung auf ${o.bindingLanguage} anzeigen`,
       },
+      updated: (date) => `Stand: ${date}`,
       sections: {
         impressum: {
           operator: {
@@ -991,7 +992,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
           },
           changes: {
             title: "Änderungen dieser Bedingungen",
-            body: "Diese Bedingungen können im Zuge der Weiterentwicklung des Dienstes angepasst werden. Wesentliche Änderungen werden per E-Mail oder in der App angekündigt; die weitere Nutzung nach einer Änderung gilt als Zustimmung.",
+            body: "Wir können diese Bedingungen im Zuge der Weiterentwicklung des Dienstes anpassen. Wesentliche Änderungen kündigen wir mindestens 30 Tage vor ihrem Inkrafttreten per E-Mail und in der App an, zusammen mit dem neuen Text. Wenn Sie nicht einverstanden sind, können Sie vor diesem Datum widersprechen oder Ihr Konto löschen und bis dahin Ihre Daten exportieren. Nutzen Sie den Dienst nach diesem Datum weiter, gelten die geänderten Bedingungen.",
           },
           language: {
             title: "Sprache",

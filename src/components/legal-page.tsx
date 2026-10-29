@@ -6,6 +6,8 @@ import { UiKitProvider, useKitLocale } from "../i18n/kit-labels";
 import type { LabelOverride, UiKitLabelOverrides } from "../i18n/kit-labels";
 import { useNoIndex } from "../hooks/use-noindex";
 import { cn } from "../lib/cn";
+import { parseIsoDate } from "../lib/dates";
+import { formatDate } from "../lib/format";
 import { Checkbox } from "./checkbox";
 import type { CheckboxProps } from "./checkbox";
 import {
@@ -340,6 +342,18 @@ export interface LegalPageProps {
    *  the privacy policy (§3.2). `null` for none. */
   notice?: ReactNode;
   /**
+   * 0.51.3: the day this page's text last changed, "YYYY-MM-DD" (legal benchmark
+   * 2026-10-29, gap 8). Shown under the title as `legal.updated` — "Last updated:
+   * 29 October 2026", "Stand: 29. Oktober 2026" — with the date written out in `locale`,
+   * so it follows the page's language like every other kit word, the switch to the
+   * binding version included. Left out, no line. One date per page: the imprint, the
+   * privacy policy and the terms change on their own days.
+   *
+   * An app that records which terms someone accepted (keksdose) stores the terms page's
+   * date: it is the version the reader saw.
+   */
+  updated?: string;
+  /**
    * 0.28.1: switches the app to the operator's `bindingLanguage` — the button after the
    * translation note on a page read in another language. Without it the note stands
    * alone; the app's own language switcher is in its header anyway.
@@ -456,6 +470,7 @@ function slotSections(
  *
  * What it adds to the column:
  * - the title, from `legal.titles`, and "← Back to home" pointing at `homeHref`;
+ * - the as-of line under the title, from `updated` (0.51.3);
  * - the default notice per page — the beta notice, or the privacy notice on the privacy
  *   policy, whose technical sections describe running code (§3.2, §7.3);
  * - numbers: the privacy and terms sections are "N. Title" in render order, the
@@ -476,6 +491,7 @@ export function LegalPage({
   footer,
   homeHref = "/",
   notice,
+  updated,
   onShowBindingLanguage,
   locale: localeProp,
   headingAs = "h1",
@@ -522,6 +538,18 @@ export function LegalPage({
       )}
     </p>
   ) : undefined;
+  // A calendar day, written out in the page's language; `formatDate` reads a bare
+  // "YYYY-MM-DD" as that day in every zone. A malformed date shows no line rather than a
+  // made-up one ("2026-02-30" would roll over into March).
+  const updatedValid = updated !== undefined && parseIsoDate(updated) !== null;
+  if (updated !== undefined && !updatedValid) {
+    warnLegalOnce(`LegalPage: updated="${updated}" is not a "YYYY-MM-DD" date; no "Last updated" line is shown.`);
+  }
+  const updatedLine = updatedValid ? (
+    <time dateTime={updated}>
+      {(labels.updated ?? DEFAULT_LEGAL_LABELS.updated!)(formatDate(updated, "long", { locale }))}
+    </time>
+  ) : undefined;
 
   return (
     <UiKitProvider labels={overrides}>
@@ -537,6 +565,7 @@ export function LegalPage({
               }
               title={labels.titles[page]}
               notice={shownNotice}
+              updated={updatedLine}
               translationNote={translationNote}
               headingAs={headingAs}
             >
@@ -596,8 +625,10 @@ function acceptLabel(labels: LegalLabels, termsHref: string, privacyHref: string
  *
  * A REQUIRED kit `Checkbox` — not a Switch: a form answer that waits for the submit
  * button. The app keeps its submit disabled while it is unticked, so there is never a
- * failed attempt and no `error` to show. Nothing is sent to the backend: no stored
- * version, no re-acceptance (Marcel, §2.4).
+ * failed attempt and no `error` to show. The checkbox itself sends nothing and asks for
+ * no re-acceptance (Marcel, §2.4). An app that records which terms someone accepted
+ * stores, with the account, the terms page's `updated` date — the version the reader
+ * saw — on its own (keksdose since 2026-10-29; §3.4).
  *
  * The label is ONE template, `legal.accept`, so a language puts the links where its
  * grammar needs them, articles included — fr "J’accepte les {terms} et la {privacy}",

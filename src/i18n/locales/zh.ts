@@ -895,6 +895,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
           `本页为方便阅读而提供的译文，以${o.bindingLanguage}版本为准。`,
         show: (o) => `查看${o.bindingLanguage}版本`,
       },
+      updated: (date) => `最后更新：${date}`,
       sections: {
         impressum: {
           operator: {
@@ -951,7 +952,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
           },
           changes: {
             title: "条款变更",
-            body: "本条款可能会随着服务的发展而更新。重大变更将通过电子邮件或在应用程序中公布；变更后继续使用本服务即表示您接受变更。",
+            body: "我们可能会随着服务的发展更新本条款。重大变更将至少在生效前 30 天通过电子邮件和应用程序公布，并附上新文本。如您不同意，可在该日期前提出异议或删除您的账户，并可在此之前导出您的数据。如您在该日期后继续使用本服务，则适用变更后的条款。",
           },
           language: {
             title: "语言",
