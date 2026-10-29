@@ -29,6 +29,36 @@ export function foldForSearch(text: string, locale?: string): string {
   return lower.normalize("NFD").replace(/\p{M}+/gu, "").replace(/ß/g, "ss");
 }
 
+/**
+ * A picker's query as its words, each folded (0.51.4, keksdose's /prices shop picker):
+ * "Migros  Zürich" → `["migros", "zurich"]`. An empty or blank query has no words.
+ */
+export function searchWords(query: string, locale?: string): string[] {
+  return foldForSearch(query, locale).split(/\s+/).filter((word) => word !== "");
+}
+
+/**
+ * Whether a row matches a picker's query: EVERY word appears in at least one of the row's
+ * texts — "migros 8004" finds a row named "Migros · 8004 Zürich", and a row whose chain is
+ * its group and whose place is its label (pass both). Until 0.51.4 the whole query had to
+ * be ONE substring of one text, so two words found nothing unless they stood side by side
+ * in that order. One word matches exactly as before, and so does the old query when it
+ * was a substring. No words match everything.
+ *
+ * `words` from {@link searchWords}; `texts` as they are (folded here), `undefined` skipped.
+ */
+export function matchesSearch(
+  words: readonly string[],
+  texts: readonly (string | undefined)[],
+  locale?: string,
+): boolean {
+  if (words.length === 0) return true;
+  // One haystack per row; a word holds no whitespace, so it cannot match across the
+  // newline between two texts.
+  const hay = texts.filter((t): t is string => t !== undefined).map((t) => foldForSearch(t, locale)).join("\n");
+  return words.every((word) => hay.includes(word));
+}
+
 /** {@link rankMatch}'s answer: lower is better, `-1` is no match. */
 export type MatchRank = -1 | 0 | 1 | 2;
 

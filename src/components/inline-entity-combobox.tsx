@@ -24,7 +24,7 @@ import {
   type ComboOption,
 } from "./combobox-core";
 import { DEFAULT_COMBOBOX_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-labels";
-import { foldForSearch, rankMatch } from "../lib/text-match";
+import { matchesSearch, rankMatch, searchWords } from "../lib/text-match";
 import {
   EndHintRow,
   FieldCaption,
@@ -311,8 +311,9 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
   const matches = useMemo(() => {
     let ranked = options;
     if (query) {
-      const q = foldForSearch(query, locale);
-      const hit = (s: string | undefined) => s !== undefined && foldForSearch(s, locale).includes(q);
+      // Every word of the query, in the label or the sublabel (0.51.4).
+      const words = searchWords(query, locale);
+      const hit = (o: ComboOption<V>) => matchesSearch(words, [o.label, o.sublabel], locale);
       // The label's whole name or its start first (`rankMatch` 0 and 1), then a match
       // anywhere in the label or the sublabel. Not the group (0.40, kk run 79): with
       // first-letter groups one typed letter matched its whole group.
@@ -321,7 +322,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
         return rank === 0 || rank === 1;
       };
       const starts = options.filter(leads);
-      const rest = options.filter((o) => !leads(o) && (hit(o.label) || hit(o.sublabel)));
+      const rest = options.filter((o) => !leads(o) && hit(o));
       ranked = [...starts, ...rest];
     }
     if (!ranked.some((o) => o.group)) return ranked;

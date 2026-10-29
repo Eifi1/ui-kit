@@ -453,7 +453,9 @@ function statusRank(status: FeedbackStatus): number {
  * - Fitted to the table's width (0.48, keksdose live #451): Subject `grow`s and
  *   ellipsises, and a narrow table leaves out URL, then Email, then Resolved
  *   (`fitPriority` 1–3) — the open report repeats all three — then Votes and Category
- *   (4, 5) before Subject would drop below 10rem. Drop the two keys with
+ *   (4, 5), then User, Date and # (6–8, 0.51.4) before Subject would drop below 8rem
+ *   (`growMin`, 0.51.4; the table's default floor is 10).
+ *   Drop the two keys with
  *   `{ ...col, grow: undefined, fitPriority: undefined }` for the 0.47 layout.
  * - `/my-feedback` shows the same nine: the Email cell's context fallback exists for it
  *   (the admin list's join is absent there, §3.1), and its phone card drops the submitter
@@ -499,6 +501,9 @@ export function feedbackColumns<T extends FeedbackTableRow>({
       sortBy: (row) => row.id,
       filter: { type: "number", getValue: (row) => row.id },
       mobileHidden: true,
+      // The very last to go (0.51.4, Kurvenschmiede): replies and the feedback loop name a
+      // report by its number, so it stays while anything else can give way.
+      fitPriority: 8,
     },
     {
       key: "date",
@@ -506,6 +511,8 @@ export function feedbackColumns<T extends FeedbackTableRow>({
       cell: (row) => <FeedbackDate value={row.created_at} renderDate={renderDate} />,
       sortBy: (row) => instant(row.created_at),
       filter: { type: "date", getValue: (row) => row.created_at },
+      // Seventh to go (0.51.4): the open report shows it.
+      fitPriority: 7,
     },
     {
       key: "category",
@@ -536,6 +543,11 @@ export function feedbackColumns<T extends FeedbackTableRow>({
       // The rest of the row, one line and an ellipsis (0.48, keksdose live #451: one long
       // crash title pushed Status and the row actions off the edge).
       grow: true,
+      // 8rem, not the table's 10 (0.51.4, Kurvenschmiede): at 768px beside a sidebar only
+      // Subject, Status (a fixed 13.5rem) and the row actions are left, and they were up
+      // to 20px too wide (Hungarian). A subject's first words carry it; the open report
+      // has the rest.
+      growMin: 8,
     },
     {
       key: "user",
@@ -559,6 +571,10 @@ export function feedbackColumns<T extends FeedbackTableRow>({
         row.user_id == null
           ? labels.deletedUser
           : `${feedbackSubmitter(row, labels)} ${feedbackSubmitterEmail(row)}`,
+      // Sixth to go (0.51.4, Kurvenschmiede): with only 1–5, Subject reached its floor while
+      // #, Date and User were still drawn, and the inbox scrolled sideways from 768 to
+      // ~1115px beside an open sidebar. The open report names the submitter.
+      fitPriority: 6,
     },
     {
       key: "email",

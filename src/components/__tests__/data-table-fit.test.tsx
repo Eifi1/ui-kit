@@ -66,8 +66,14 @@ function layout(table: HTMLElement) {
   // `w-full`: the table is at least the scroller's width; `min-content` (the fit's own
   // probe of what a table without a `grow` column needs) is its content's width.
   if (!growTh) return { table: table.style.width === "min-content" ? others : Math.max(avail, others), grow: 0 };
-  // `min-w-[10rem]` on the grow header: the column's floor (Kurvenschmiede S1).
-  const grow = Math.max(avail - others, growTh.className.includes("min-w-[10rem]") ? 160 : 24);
+  // `min-w-[10rem]` on the grow header: the column's floor (Kurvenschmiede S1); a
+  // column's own `growMin` (0.51.4) as an inline min-width over it.
+  const floor = growTh.style.minWidth
+    ? parseFloat(growTh.style.minWidth) * 16
+    : growTh.className.includes("min-w-[10rem]")
+      ? 160
+      : 24;
+  const grow = Math.max(avail - others, floor);
   return { table: others + grow, grow, growTh };
 }
 
@@ -155,6 +161,20 @@ describe("DataTable fit (0.48, keksdose live #451)", () => {
     expect(heads(table)).toEqual(["id", "title", "status"]);
     expect(th.offsetWidth).toBe(160);
     expect(table.offsetWidth).toBeGreaterThan(300);
+  });
+
+  it("0.51.4: a column's own `growMin` lowers its floor, for the fit and for the scroll", () => {
+    const columns = FIT.map((c) => (c.key === "title" ? { ...c, growMin: 8 } : c));
+    // 920: the default floor needs 780 + 160 = 940 and would leave URL out; 8rem needs 908.
+    avail = 920;
+    const { table, scroller } = renderTable(columns);
+    expect(heads(table)).toEqual(["id", "title", "url", "email", "status", "resolved"]);
+    const th = [...table.querySelectorAll<HTMLElement>("thead th")].find((h) => key(h) === "title")!;
+    expect(th.style.minWidth).toBe("8rem");
+    // Nothing left to leave out: Subject holds 8rem, and the table scrolls past that.
+    setWidth(scroller, 300);
+    expect(heads(table)).toEqual(["id", "title", "status"]);
+    expect(th.offsetWidth).toBe(128);
   });
 
   it("is opt-in: without `grow`/`fitPriority` nothing is classed or left out", () => {
@@ -389,7 +409,8 @@ describe("the kit's feedback columns adopt it (0.48)", () => {
       categoryLabels: new Proxy({}, { get: () => "x" }) as never,
     });
     expect(cols.find((c) => c.key === "title")?.grow).toBe(true);
-    expect(fitHideOrder(cols).map((c) => c.key)).toEqual(["url", "email", "resolved", "category"]);
+    // 0.51.4 (Kurvenschmiede): then User, Date and #, the number last.
+    expect(fitHideOrder(cols).map((c) => c.key)).toEqual(["url", "email", "resolved", "category", "user", "date", "id"]);
   });
 
   it("then Votes and Category, before Subject would drop below 10rem (Kurvenschmiede S1)", () => {
@@ -402,6 +423,15 @@ describe("the kit's feedback columns adopt it (0.48)", () => {
       categoryLabels: new Proxy({}, { get: () => "x" }) as never,
       votes: true,
     });
-    expect(fitHideOrder(cols).map((c) => c.key)).toEqual(["url", "email", "resolved", "votes", "category"]);
+    expect(fitHideOrder(cols).map((c) => c.key)).toEqual([
+      "url",
+      "email",
+      "resolved",
+      "votes",
+      "category",
+      "user",
+      "date",
+      "id",
+    ]);
   });
 });

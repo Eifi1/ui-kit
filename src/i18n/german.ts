@@ -782,6 +782,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
     list: {
       unread: "Ungelesen",
       opensInNewTab: "öffnet in einem neuen Tab",
+      showAll: (count) => `Alle anzeigen (${n(count)})`,
+      showFewer: "Weniger anzeigen",
     },
     breadcrumbs: {
       label: "Brotkrümelnavigation",
@@ -917,6 +919,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         impressum: "Impressum",
         privacy: "Datenschutz",
         terms: "Nutzungsbedingungen",
+        security: "Sicherheit",
+        accessibility: "Barrierefreiheit",
       },
       titles: {
         impressum: "Impressum",
@@ -936,6 +940,10 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         show: (o) => `Fassung auf ${o.bindingLanguage} anzeigen`,
       },
       updated: (date) => `Stand: ${date}`,
+      summary: {
+        title: "Das Wichtigste in Kürze",
+        note: "Diese Zusammenfassung dient der Orientierung; verbindlich ist allein der vollständige Text.",
+      },
       sections: {
         impressum: {
           operator: {
@@ -992,7 +1000,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
           },
           changes: {
             title: "Änderungen dieser Bedingungen",
-            body: "Wir können diese Bedingungen im Zuge der Weiterentwicklung des Dienstes anpassen. Wesentliche Änderungen kündigen wir mindestens 30 Tage vor ihrem Inkrafttreten per E-Mail und in der App an, zusammen mit dem neuen Text. Wenn Sie nicht einverstanden sind, können Sie vor diesem Datum widersprechen oder Ihr Konto löschen und bis dahin Ihre Daten exportieren. Nutzen Sie den Dienst nach diesem Datum weiter, gelten die geänderten Bedingungen.",
+            body: "Wir können diese Bedingungen im Zuge der Weiterentwicklung des Dienstes anpassen. Wesentliche Änderungen kündigen wir mindestens 30 Tage vor ihrem Inkrafttreten per E-Mail und in der App an, zusammen mit dem neuen Text. Wenn Sie nicht einverstanden sind, können Sie vor diesem Datum widersprechen oder Ihr Konto löschen und bis dahin Ihre Daten exportieren. Nutzen Sie den Dienst nach diesem Datum weiter, gelten die geänderten Bedingungen. Änderungen, die nur zu Ihrem Vorteil sind oder gesetzlich vorgeschrieben sind, gelten ohne diese Ankündigung; ihnen kann nicht widersprochen werden. Widersprechen Sie einer Änderung, können wir Ihr Konto auf den Tag ihres Inkrafttretens schließen. Haben Sie einen Zeitraum bezahlt, der über dieses Datum hinausgeht, erstatten wir den nicht genutzten Teil.",
           },
           language: {
             title: "Sprache",

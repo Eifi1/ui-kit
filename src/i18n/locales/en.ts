@@ -95,6 +95,10 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
       ...d.chipInput,
       atLimit: (max) => `Limit of ${n(max)} reached`,
     },
+    list: {
+      ...d.list,
+      showAll: (count) => `Show all (${n(count)})`,
+    },
     iconPicker: {
       ...d.iconPicker,
       resultCount: (count) => (count === 1 ? "1 icon" : `${n(count)} icons`),

@@ -781,6 +781,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     list: {
       unread: "Non lu",
       opensInNewTab: "s’ouvre dans un nouvel onglet",
+      showAll: (count) => `Tout afficher (${n(count)})`,
+      showFewer: "Afficher moins",
     },
     breadcrumbs: {
       label: "Fil d’Ariane",
@@ -916,6 +918,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         impressum: "Mentions légales",
         privacy: "Confidentialité",
         terms: "Conditions d’utilisation",
+        security: "Sécurité",
+        accessibility: "Accessibilité",
       },
       titles: {
         impressum: "Mentions légales",
@@ -935,6 +939,10 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         show: (o) => `Afficher la version en ${o.bindingLanguage}`,
       },
       updated: (date) => `Dernière mise à jour\u00a0: ${date}`,
+      summary: {
+        title: "En bref",
+        note: "Ce résumé sert d’orientation\u202f; seul le texte complet fait foi.",
+      },
       sections: {
         impressum: {
           operator: {
@@ -991,7 +999,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
           },
           changes: {
             title: "Modifications des présentes conditions",
-            body: "Nous pouvons mettre à jour ces conditions au fil de l’évolution du service. Nous annonçons toute modification importante au moins 30 jours avant son entrée en vigueur, par e-mail et dans l’app, avec le nouveau texte. Si vous n’êtes pas d’accord, vous pouvez vous y opposer ou supprimer votre compte avant cette date, et exporter vos données jusque-là. Si vous continuez à utiliser le service après cette date, les conditions modifiées s’appliquent.",
+            body: "Nous pouvons mettre à jour ces conditions au fil de l’évolution du service. Nous annonçons toute modification importante au moins 30 jours avant son entrée en vigueur, par e-mail et dans l’app, avec le nouveau texte. Si vous n’êtes pas d’accord, vous pouvez vous y opposer ou supprimer votre compte avant cette date, et exporter vos données jusque-là. Si vous continuez à utiliser le service après cette date, les conditions modifiées s’appliquent. Les modifications qui sont uniquement à votre avantage, ou que la loi impose, s’appliquent sans ce préavis et ne peuvent pas faire l’objet d’une opposition. Si vous vous opposez à une modification, nous pouvons fermer votre compte à la date de son entrée en vigueur. Si vous avez payé une période qui s’étend au-delà de cette date, nous remboursons la part non utilisée.",
           },
           language: {
             title: "Langue",

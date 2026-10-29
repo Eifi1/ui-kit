@@ -41,7 +41,7 @@ export type {
   SettingsLocationRules,
   SettingsLocationResult,
 } from "./settings/use-settings-route";
-export { useSettingsFocus, SETTINGS_FOCUS_RING, SETTINGS_FOCUS_MS } from "./settings/use-settings-focus";
+export { useSettingsFocus, useFocusParam, SETTINGS_FOCUS_RING, SETTINGS_FOCUS_MS } from "./settings/use-settings-focus";
 export { SettingsSection } from "./settings/settings-section";
 export type { SettingsSectionProps } from "./settings/settings-section";
 export { useSettingsLayout } from "./settings/settings-context";

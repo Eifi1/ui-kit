@@ -7,4 +7,6 @@ import type { ListLabels } from "./list";
 export const DEFAULT_LIST_LABELS: ListLabels = {
   unread: "Unread",
   opensInNewTab: "opens in a new tab",
+  showAll: (count) => `Show all (${count})`,
+  showFewer: "Show fewer",
 };

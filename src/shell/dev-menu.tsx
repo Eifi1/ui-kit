@@ -126,6 +126,11 @@ const isRow = (entry: TopBarMenuEntry) => entry.kind !== "heading" && entry.kind
  *
  * Nothing renders unless `enabled`, and nothing with no row to show. The panel scrolls
  * (`TopBarActionMenu`'s `scrollable`): some 25 rows ran off a 390×844 phone.
+ *
+ * From `md` up the groups stand side by side, one column each, in that order (0.51.4,
+ * `TopBarActionMenu`'s `columns`; keksdose dev #640, Marcel: "Each group gets a column").
+ * "Back to {role}" stays under the roles. A desktop too narrow for all of them wraps
+ * the columns onto a second row; a phone keeps the one scrolling column.
  */
 export function DevMenu<R extends string, P extends string>({
   enabled,
@@ -254,6 +259,7 @@ export function DevMenu<R extends string, P extends string>({
       aria-label={name}
       entries={entries}
       scrollable
+      columns
     />
   );
 }

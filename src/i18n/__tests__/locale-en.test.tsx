@@ -112,6 +112,8 @@ describe("uiKitLabelsEn (@eifi1/ui-kit/i18n/en)", () => {
       "imageGrid.item",
       "lightbox.counter",
       "lightbox.position",
+      // 0.51.4: a limited list's "Show all (n)".
+      "list.showAll",
       "measuredGrid.points",
       "measuredGrid.problems",
       "multiSelect.selectedCount",

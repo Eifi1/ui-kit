@@ -115,3 +115,11 @@ export function useSettingsFocus(anchor?: string | null): void {
     [],
   );
 }
+
+/**
+ * {@link useSettingsFocus} under a name for any page (0.51.4, keksdose run 89): the hook
+ * was always allowed on an app's own pages (keksdose's /reports/matching lands
+ * `?focus=matching-unmatched` on a card), but its name said Settings at every such call
+ * site. The same function, so the two cannot drift; `useSettingsFocus` stays.
+ */
+export const useFocusParam: typeof useSettingsFocus = useSettingsFocus;

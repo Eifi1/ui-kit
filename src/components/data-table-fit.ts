@@ -119,17 +119,19 @@ export function useColumnFit<T>({
     () => (active ? order.filter((c) => hidden.includes(c.key)).map((c) => c.key) : []),
     [active, order, hidden],
   );
-  const growKey = columns.find((c) => c.grow && !hiddenCols.has(c.key))?.key;
+  const growCol = columns.find((c) => c.grow && !hiddenCols.has(c.key));
+  const growKey = growCol?.key;
+  const growMin = growCol?.growMin ?? GROW_MIN_REM;
 
   // What `measure` reads, refreshed after each render (before the measure below runs):
   // the ResizeObserver's callback is set up once and must see the current columns.
-  const latest = useRef({ order, current, growKey, active, scroller });
+  const latest = useRef({ order, current, growKey, growMin, active, scroller });
   useLayoutEffect(() => {
-    latest.current = { order, current, growKey, active, scroller };
+    latest.current = { order, current, growKey, growMin, active, scroller };
   });
 
   const measure = useCallback(() => {
-    const { order, current, growKey, active, scroller } = latest.current;
+    const { order, current, growKey, growMin, active, scroller } = latest.current;
     // Only the measure right after a bring-back can undo it.
     const flip = lastShown.current;
     lastShown.current = null;
@@ -143,7 +145,7 @@ export function useColumnFit<T>({
     const growTh = growKey ? headRefs.get(growKey) : undefined;
     const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
     let need = growTh
-      ? table.offsetWidth - growTh.offsetWidth + GROW_MIN_REM * rem
+      ? table.offsetWidth - growTh.offsetWidth + growMin * rem
       : table.offsetWidth;
     if (!growTh && need <= avail + 0.5 && current.length > 0) {
       // A `w-full` table is at least the scroller's width, which says nothing about how

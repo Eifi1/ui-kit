@@ -6,7 +6,7 @@ import { SearchField } from "./search-field";
 import { TILE_SIZE, TileRadioGroup } from "./tile-radio";
 import type { TileItem, TileSize } from "./tile-radio";
 import { hasContent } from "../lib/presence";
-import { foldForSearch } from "../lib/text-match";
+import { matchesSearch, searchWords } from "../lib/text-match";
 import { LabelStrip, useFieldMessages, type FieldHelpProps } from "./field-parts";
 import { DEFAULT_ICON_PICKER_LABELS } from "./icon-picker-labels";
 
@@ -147,16 +147,18 @@ export function IconPicker<T extends string>({
   });
   const [query, setQuery] = useState("");
   // Case- and accent-insensitive, so "cafe" finds "Café" — every kit list's fold (DUP-5).
-  const needle = foldForSearch(query.trim(), locale);
+  // Every word of the query, in the label or a keyword (0.51.4).
+  const words = useMemo(() => searchWords(query, locale), [query, locale]);
+  const needle = words.length > 0;
 
   const visible = useMemo(
     () =>
       needle
         ? options.filter((o) =>
-            [o.label, ...(o.keywords ?? [])].some((w) => foldForSearch(w, locale).includes(needle)),
+            matchesSearch(words, [o.label, ...(o.keywords ?? [])], locale),
           )
         : options,
-    [options, needle, locale],
+    [options, needle, words, locale],
   );
   const byValue = useMemo(() => new Map(options.map((o) => [o.value, o])), [options]);
   const items: TileItem<T>[] = [

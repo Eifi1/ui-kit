@@ -380,6 +380,9 @@ decision 10).
   `legal.sections.terms.changes.body` are new or changed, so they reopen on keksdose's
   /translations.
 
+**Legal wording:** the terms (`changes`). Move /terms' `updated` to the day you ship this
+bump.
+
 **Apps:**
 - **All three:** bump to `^0.51.3` and pass `updated` on each legal page. The terms' date
   is at least the day this version goes live, since its `changes` text is new.
@@ -387,3 +390,100 @@ decision 10).
   stores it with the time, in a users column of its own (decision 10). The kit's
   `LegalAcceptCheckbox` still sends nothing.
 - **kastlan, Kurvenschmiede:** nothing else.
+
+## 0.51.4
+
+**The legal benchmark's optional rows** (Marcel 2026-10-29: "you can already add the
+optional points"; docs/legal-harmonization.md decision 11).
+
+- **`LegalPage` takes `summary`**, the app's three to six plain-language points. They are
+  drawn before section 1 as a list under the kit's heading `legal.summary.title` ("In
+  short", "Das Wichtigste in Kürze"), with the kit's `legal.summary.note` under them: "This
+  summary is for orientation; only the full text is binding." A string point resolves
+  `{ref:key}` like section text: `"You can delete your account at any time (section
+  {ref:ending})."` The summary is unnumbered (id `summary`), and the sections keep their
+  numbers. Left out or empty, nothing is drawn.
+- **`LegalLinks`, `LegalFooter` and `PublicFooter` take `securityHref` and
+  `accessibilityHref`.** Each adds a link after Terms, "Security" and "Accessibility" in
+  the kit's words (`legal.links.security` / `accessibility`, seven languages), only where
+  the app passes its route. The pages themselves are the app's: `PublicPage
+  width="prose"` with `LegalSection`s in its own words, at routes it chooses.
+- **New exported type `LegalInfoPageKey`** (`"security" | "accessibility"`) and new optional
+  labels `legal.summary` and `legal.links.security` / `accessibility` in every catalogue.
+
+**The feedback inbox stops scrolling sideways on narrow desktops** (Kurvenschmiede).
+`feedbackColumns` gives User, Date and # a `fitPriority` (6, 7, 8): after URL, Email,
+Resolved, Votes and Category (1–5) they give way in that order, the number last because
+replies and the feedback loop name a report by it. Before, Subject reached its 10rem floor
+while all three were still drawn. Kurvenschmiede measured its inbox beside an open sidebar
+(German, 0.51.2): it scrolled 15px at 1100 and 347px at 768. With the change it fits from
+800px up in all seven languages, and from 1120px up the column sets are as before. At 768
+only Subject, Status and the row actions are left, and the table can still scroll 0–20px
+depending on the language: Status has a fixed width and the actions column no
+`fitPriority`.
+
+**Legal wording: the terms (`changes`).** Move /terms' `updated` to the day you ship this
+bump. A page that adds a `summary` changes too, so its date moves with it.
+
+**The terms say what an objection leads to** (Marcel 2026-10-29; lawyer question 4).
+Three sentences follow the `changes` text 0.51.3 brought, in all seven languages:
+> Changes that only benefit you, or that the law requires, apply without this notice and
+> cannot be objected to. If you object to a change, we may end your account on the date it
+> takes effect. If you have paid for a period that runs beyond that date, we refund the
+> unused part.
+
+German (binding): «Änderungen, die nur zu Ihrem Vorteil sind oder gesetzlich vorgeschrieben
+sind, gelten ohne diese Ankündigung; ihnen kann nicht widersprochen werden. Widersprechen
+Sie einer Änderung, können wir Ihr Konto auf den Tag ihres Inkrafttretens schliessen.
+Haben Sie einen Zeitraum bezahlt, der über dieses Datum hinausgeht, erstatten wir den nicht
+genutzten Teil.» No app bills yet, so the refund sentence is for later.
+
+**Pickers find a row by each word of the query** (keksdose's /prices shop picker: "Migros
+Zürich" found nothing). Every word must appear in one of the row's texts, in any order:
+label or sublabel in the combobox family (`EntityCombobox`, `MultiEntityCombobox`,
+`MultiSelect`, `Combobox`, `InlineEntityCombobox`), group name or item label in
+`GroupedPicker` ("Migros 8004": the group Migros, the item "8004 Zürich"), code, name or
+symbol in `CurrencySelect`, label or keyword in `IconPicker`. One word, or a query that
+was already a substring, finds what it found before. The helpers are `searchWords` and
+`matchesSearch` in `lib/text-match`. keksdose can drop its own word filter in the shop
+picker's `loadOptions` and pass `options`.
+
+**`List limit`** (keksdose run 89). `<List limit={5}>` draws the first five rows, then a
+"Show all (n)" row with the whole list's count, which opens the rest and turns into "Show
+fewer". The button has `aria-expanded` and `aria-controls`; its row is `role="none"`, so a
+reader hears the rows it can see. A list of `limit` rows or fewer draws whole. New optional
+labels `list.showAll` / `list.showFewer`, seven languages.
+
+**`useFocusParam`** (keksdose run 89): `useSettingsFocus` under a name for any page, the
+same function. keksdose's /reports/matching can switch; `useSettingsFocus` stays.
+
+**`growMin` on a `grow` column; the inbox's Subject keeps 8rem** (Kurvenschmiede's 768px
+band). A `grow` column keeps at least 10rem before the table scrolls; `growMin` (rem) sets
+that floor per column, for the fit and the header alike. The feedback inbox's Subject
+takes 8. At 768px beside a sidebar only Subject, Status and the row actions are left, and
+they were 0–20px too wide by language; 8rem frees 32px. Computed from Kurvenschmiede's
+measurements, not yet measured in a browser: Kurvenschmiede, please re-measure at 768.
+
+**`DevMenu`: one column per group on a desktop** (keksdose dev #640, Marcel: "Each group
+gets a column. That way it would be much better visible for desktop users"). From `md` up
+the flask's panel lays its groups side by side: the role group (with "Back to {role}"),
+the plan group, then the app's `sections` in their order, 14rem each. The panel is as
+wide as the columns and never wider than the window; a narrower desktop wraps the columns
+onto a second row. Below `md` it stays the one scrolling column. Nothing to pass: it is
+`TopBarActionMenu`'s new `columns` option, which `DevMenu` turns on and any grouped
+top-bar menu may use.
+
+**Apps:**
+- **keksdose:** `summary` on /terms and /privacy. Pass `securityHref="/security"` and
+  `accessibilityHref="/accessibility"` in `SiteFooter`; every page that renders it gets
+  both, its `PublicPage` and `LegalPage` uses included. Pass them too wherever it
+  renders `LegalLinks` itself (the account menu, `AuthLayout`'s footer).
+- **Kurvenschmiede:** drop the local `fitPriority` map over `useFeedbackColumns` in
+  `features/feedback/feedback-page.tsx`; the kit's columns now carry the same numbers.
+- **keksdose:** the shop picker can drop its `loadOptions` word filter; /reports/matching
+  can use `useFocusParam` and give "Placed only roughly" a `limit`.
+- **kastlan, Kurvenschmiede:** otherwise a plain bump. The legal pages don't change until
+  they pass a summary or the two hrefs.
+- **All three:** the feedback inbox drops User, Date and # on a narrow table instead of
+  scrolling. An app that pins those columns or wants the old set can map them back with
+  `{ ...col, fitPriority: undefined }`.

@@ -765,6 +765,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     list: {
       unread: "No leído",
       opensInNewTab: "se abre en una pestaña nueva",
+      showAll: (count) => `Mostrar todo (${n(count)})`,
+      showFewer: "Mostrar menos",
     },
     breadcrumbs: {
       label: "Ruta de navegación",
@@ -897,6 +899,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         impressum: "Aviso legal",
         privacy: "Política de privacidad",
         terms: "Condiciones de uso",
+        security: "Seguridad",
+        accessibility: "Accesibilidad",
       },
       titles: {
         impressum: "Aviso legal",
@@ -916,6 +920,10 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         show: (o) => `Ver la versión en ${o.bindingLanguage}`,
       },
       updated: (date) => `Última actualización: ${date}`,
+      summary: {
+        title: "En resumen",
+        note: "Este resumen es solo orientativo; únicamente el texto completo es vinculante.",
+      },
       sections: {
         impressum: {
           operator: {
@@ -972,7 +980,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
           },
           changes: {
             title: "Cambios en estas condiciones",
-            body: "Podemos actualizar estas condiciones a medida que evolucione el servicio. Anunciamos cualquier cambio importante al menos 30 días antes de que entre en vigor, por correo electrónico y en la aplicación, junto con el nuevo texto. Si no está de acuerdo, puede oponerse o eliminar su cuenta antes de esa fecha, y puede exportar sus datos hasta entonces. Si sigue usando el servicio después de esa fecha, se aplican las condiciones modificadas.",
+            body: "Podemos actualizar estas condiciones a medida que evolucione el servicio. Anunciamos cualquier cambio importante al menos 30 días antes de que entre en vigor, por correo electrónico y en la aplicación, junto con el nuevo texto. Si no está de acuerdo, puede oponerse o eliminar su cuenta antes de esa fecha, y puede exportar sus datos hasta entonces. Si sigue usando el servicio después de esa fecha, se aplican las condiciones modificadas. Los cambios que solo le benefician, o que exige la ley, se aplican sin este preaviso y no admiten oposición. Si se opone a un cambio, podemos cerrar su cuenta en la fecha en que entre en vigor. Si ha pagado un periodo que va más allá de esa fecha, le reembolsamos la parte no utilizada.",
           },
           language: {
             title: "Idioma",

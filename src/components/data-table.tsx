@@ -185,6 +185,14 @@ export interface DataTableColumn<T> {
    */
   grow?: boolean;
   /**
+   * The least this `grow` column keeps, in rem (0.51.4; default 10): the floor below which
+   * the table leaves out `fitPriority` columns, and once none is left, scrolls sideways.
+   * Lower it for a column whose first words carry it — the feedback inbox's Subject, 8,
+   * so the inbox at 768px with a sidebar keeps Subject, Status and the row actions
+   * without scrolling (Kurvenschmiede). In rem, so Large text asks for more.
+   */
+  growMin?: number;
+  /**
    * Leave this column out while the TABLE is too narrow for it (0.48, keksdose live
    * #451) — measured on the table's own scroller, so a sidebar, the window and Large
    * text count alike. The lowest number goes first (ties: the later column first), and

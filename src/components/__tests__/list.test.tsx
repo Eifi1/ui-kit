@@ -447,3 +447,45 @@ describe("ListItem docs guards (keksdose 0.17 Q5)", () => {
     expect(column).not.toHaveTextContent("CHF 40");
   });
 });
+
+describe("List limit (0.51.4, keksdose run 89)", () => {
+  const rows = (count: number) =>
+    Array.from({ length: count }, (_, i) => <ListItem key={i} title={`Row ${i + 1}`} />);
+
+  it("opens on the first rows, a Show all (n) row opens the rest and folds them again", () => {
+    render(<List limit={3}>{rows(5)}</List>);
+    const list = screen.getByRole("list");
+    // The control is no item of the list: a reader hears three rows.
+    expect(within(list).getAllByRole("listitem")).toHaveLength(3);
+    const more = screen.getByRole("button", { name: "Show all (5)" });
+    expect(more).toHaveAttribute("aria-expanded", "false");
+    expect(more).toHaveAttribute("aria-controls", list.id);
+    fireEvent.click(more);
+    expect(within(list).getAllByRole("listitem")).toHaveLength(5);
+    expect(screen.getByRole("button", { name: "Show fewer" })).toHaveAttribute("aria-expanded", "true");
+    fireEvent.click(screen.getByRole("button", { name: "Show fewer" }));
+    expect(within(list).getAllByRole("listitem")).toHaveLength(3);
+  });
+
+  it("draws a list that fits its limit whole, with no such row, and keeps the caller's id", () => {
+    const { rerender } = render(<List limit={5}>{rows(5)}</List>);
+    expect(screen.getAllByRole("listitem")).toHaveLength(5);
+    expect(screen.queryByRole("button")).toBeNull();
+    rerender(
+      <List limit={2} id="placed">
+        {rows(4)}
+      </List>,
+    );
+    expect(screen.getByRole("list")).toHaveAttribute("id", "placed");
+    expect(screen.getByRole("button", { name: "Show all (4)" })).toHaveAttribute("aria-controls", "placed");
+  });
+
+  it("speaks the provider's language", () => {
+    render(
+      <UiKitProvider labels={{ list: { showAll: (n: number) => `Alle anzeigen (${n})`, showFewer: "Weniger anzeigen" } }}>
+        <List limit={1}>{rows(3)}</List>
+      </UiKitProvider>,
+    );
+    expect(screen.getByRole("button", { name: "Alle anzeigen (3)" })).toBeInTheDocument();
+  });
+});

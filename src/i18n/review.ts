@@ -311,6 +311,8 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "legal.translation.show": operatorSample,
   // 0.51.3: the as-of line, with the date already written out.
   "legal.updated": [["{{date}}"]],
+  // 0.51.4: a limited list's "Show all (n)", with the whole list's count.
+  "list.showAll": [[12], [1240]],
   // 0.29.0: the sign-in and sign-up parts (docs/auth-harmonization.md).
   "signIn.tagHint": [["{{taggedAddress}}"]],
   "register.emailTagUse": [["{{address}}"]],

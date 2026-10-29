@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { ComponentPropsWithRef, ReactNode } from "react";
 import { cn } from "../lib/cn";
-import { foldForSearch } from "../lib/text-match";
+import { matchesSearch, searchWords } from "../lib/text-match";
 import { ComboboxPanel, type ComboboxCore, type ComboOption } from "./combobox-core";
 import { CURRENCIES, type CurrencyOption } from "../currencies";
 
@@ -136,10 +136,9 @@ export function CurrencyOptionList({
   // it is written in) and the symbol — folded as every kit list folds (DUP-5).
   const query = core.query;
   const results = useMemo(() => {
-    const q = foldForSearch(query.trim(), locale);
-    const hits = q
-      ? named.filter(({ c, name }) => [c.code, name, c.symbol].some((s) => foldForSearch(s, locale).includes(q)))
-      : named;
+    // Every word of the query, in the code, the name or the symbol (0.51.4).
+    const words = searchWords(query, locale);
+    const hits = words.length > 0 ? named.filter(({ c, name }) => matchesSearch(words, [c.code, name, c.symbol], locale)) : named;
     return hits.map(
       ({ c, name }): ComboOption<string> => ({
         value: c.code,

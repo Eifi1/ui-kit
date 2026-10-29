@@ -21,6 +21,26 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.51.4](https://github.com/Eifi1/ui-kit/compare/v0.51.3...v0.51.4) (2026-10-29)
+
+### Added
+
+* **data-table:** `growMin`, a grow column's own floor; the inbox's Subject keeps 8rem ([9da08c7](https://github.com/Eifi1/ui-kit/commit/9da08c757aee71ed8414d510c86b6c2268c2323e))
+* **legal:** a plain-language summary, and Security and Accessibility in the footer ([6b1e98b](https://github.com/Eifi1/ui-kit/commit/6b1e98b41f17633b367b7b9e3938ac6483197221))
+* **legal:** the terms say what an objection to a change leads to ([aada095](https://github.com/Eifi1/ui-kit/commit/aada095c286004e578e6ab237b06b1052d53c902))
+* **list:** `limit` opens a long list on its first rows, with "Show all (n)" ([0d1e8a1](https://github.com/Eifi1/ui-kit/commit/0d1e8a1243fca64d2a0dbd4988eb14eb0297e477))
+* **pickers:** a query's words each match, not the whole query as one substring ([9c4545a](https://github.com/Eifi1/ui-kit/commit/9c4545a5ed7d882bbc805a555b5e68e56ace39e3))
+* **settings:** `useFocusParam`, the `?focus=` hook under a name for any page ([0692bbe](https://github.com/Eifi1/ui-kit/commit/0692bbe5638ea559f513fe5a5eb20699880f83d2))
+* **shell:** DevMenu lays its groups out in columns on a desktop ([cd966f1](https://github.com/Eifi1/ui-kit/commit/cd966f1cf9b0b6bd77142b2c33b62c72fc2612db))
+
+### Fixed
+
+* **feedback:** User, Date and # give way on a narrow inbox instead of scrolling ([b629d2b](https://github.com/Eifi1/ui-kit/commit/b629d2b2304acbfd77bc0c122d0a3d05ecf6d6cd))
+
+### Reverts
+
+* the first 0.51.4 release commit, to cut it again with the open points ([aaa22ec](https://github.com/Eifi1/ui-kit/commit/aaa22ec931473a1e546e5b4d341f6a7ff682789b))
+
 ## [0.51.3](https://github.com/Eifi1/ui-kit/compare/v0.51.2...v0.51.3) (2026-10-29)
 
 ### Added

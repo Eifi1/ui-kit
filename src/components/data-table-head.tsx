@@ -125,6 +125,7 @@ export function DataTableHead<T>({
           const isEndAligned = !!headClass && END_ALIGN.test(headClass);
           const width = widths[col.key];
           const ownHead = splitCellProps(col.headProps);
+          const growFloor = col.grow && col.growMin != null ? `${col.growMin}rem` : undefined;
           const pinnedHead = width ? { width, minWidth: width, maxWidth: width } : undefined;
           return (
             <th
@@ -156,8 +157,11 @@ export function DataTableHead<T>({
                   : undefined
               }
               style={
-                ownHead.style || pinnedHead || lockedWidths?.[col.key] !== undefined
+                ownHead.style || pinnedHead || lockedWidths?.[col.key] !== undefined || growFloor
                   ? {
+                      // A `grow` column's own floor (0.51.4), over the class's 10rem; a
+                      // locked width below wins, as it does over the class.
+                      ...(growFloor ? { minWidth: growFloor } : null),
                       ...ownHead.style,
                       ...(lockedWidths?.[col.key] !== undefined ? { minWidth: lockedWidths[col.key] } : null),
                       ...pinnedHead,

@@ -1,4 +1,4 @@
-import { createContext, useContext, useId, useState } from "react";
+import { Children, createContext, useContext, useId, useState } from "react";
 import type { ComponentPropsWithoutRef, HTMLAttributes, MouseEvent, ReactElement, ReactNode, Ref } from "react";
 import { ChevronDown, ExternalLink } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -14,6 +14,7 @@ import { pickLinkRenderer } from "./text-link";
 import { LockedReason, mergeDescribedBy, useLockReason, type DisabledReasonDisplay } from "./field-parts";
 import type { CommitScope } from "./write-lock";
 import { DEFAULT_LIST_LABELS } from "./list-labels";
+import { Button } from "./button";
 
 /* ── Labels ───────────────────────────────────────────────────────────────── */
 
@@ -22,6 +23,12 @@ export interface ListLabels {
   unread: string;
   /** Read after an external row's title: the row leaves the app in a new tab. */
   opensInNewTab: string;
+  /** 0.51.4: the row under a {@link ListProps.limit}ed list that opens the rest, with
+   *  the WHOLE list's count — "Show all (12)". Optional, as every key added to a
+   *  namespace an app may annotate: left out, the provider's, then English. */
+  showAll?: (count: number) => string;
+  /** 0.51.4: the same row once the list is open, folding it back. */
+  showFewer?: string;
 }
 
 // Defined in ./list-labels, which holds no component code (0.34, KS U8).
@@ -53,7 +60,25 @@ export interface ListProps extends Omit<ComponentPropsWithoutRef<"ul">, "role"> 
   /** The `<ul>` (or `<ol>`). A React 19 ref prop since 0.34 (MOD-4, refactor audit
    *  2026-10); it was `forwardRef`. */
   ref?: Ref<HTMLUListElement>;
+  /**
+   * Show the first `limit` rows, then a "Show all (n)" row that opens the rest and turns
+   * into "Show fewer" (0.51.4, keksdose run 89: a long "Placed only roughly" list on its
+   * Matching report could only fold as a whole, so it opened as nothing or everything).
+   * A list of `limit` rows or fewer draws them all, with no such row. Rows are counted as
+   * `Children` counts them: one per `ListItem`, a fragment as one.
+   *
+   * The row is a button with `aria-expanded`, controlling the list; it sits in the list
+   * as `role="none"`, so a reader still hears "list, 5 items" for five rows.
+   */
+  limit?: number;
 }
+
+/** The show-all row's inset, in step with each density's row padding (`PAD`). */
+const MORE_PAD: Record<ListDensity, string> = {
+  compact: "px-2 py-1",
+  default: "px-3 py-1.5",
+  comfortable: "px-4 py-2",
+};
 
 /**
  * The list of {@link ListItem}s.
@@ -67,15 +92,23 @@ export function List({
   as = "ul",
   density = "default",
   separator = "gap",
+  limit,
   className,
   children,
   ...rest
 }: ListProps) {
   const Tag = as;
+  const labels = useKitLabels("list", DEFAULT_LIST_LABELS);
+  const [open, setOpen] = useState(false);
+  const generatedId = useId();
+  const id = rest.id ?? generatedId;
+  const rows = limit === undefined ? null : Children.toArray(children);
+  const folds = rows !== null && rows.length > Math.max(0, limit!);
   return (
     <ListContext.Provider value={{ density, separator }}>
       <Tag
         {...rest}
+        id={folds ? id : rest.id}
         ref={ref as Ref<HTMLUListElement & HTMLOListElement>}
         role="list"
         className={cn(
@@ -84,7 +117,24 @@ export function List({
           className,
         )}
       >
-        {children}
+        {folds && !open ? rows.slice(0, Math.max(0, limit!)) : children}
+        {folds && (
+          <li role="none" className={MORE_PAD[density]}>
+            <Button
+              type="button"
+              variant="link"
+              size="sm"
+              className="h-auto p-0"
+              aria-expanded={open}
+              aria-controls={id}
+              onClick={() => setOpen((was) => !was)}
+            >
+              {open
+                ? (labels.showFewer ?? DEFAULT_LIST_LABELS.showFewer)
+                : (labels.showAll ?? DEFAULT_LIST_LABELS.showAll!)(rows.length)}
+            </Button>
+          </li>
+        )}
       </Tag>
     </ListContext.Provider>
   );

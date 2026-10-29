@@ -25,9 +25,9 @@ snapshot of the three apps, the per-repo to-dos and the reviews' list as written
 | § | Section | Shipped in | Amended by |
 |---|---|---|---|
 | 1 | Where each one stands | — (archived) | |
-| 2 | Decisions | — | §7.8; decision 9 (0.28.1); decision 7 by billing §8, §9 (Paddle); decision 10 (0.51.3) |
-| 3 | The page contract | ui-kit 0.28.0 | §7.3, §7.6, §7.9; 0.28.1 (translation note, `AuthLayout` footer); landing-demo §4.3 (robots, sitemap); 0.51.3 (as-of line, keksdose's stored version) |
-| 4 | The content contract | ui-kit 0.28.0 | §7.1–§7.4; 0.28.1 (`language` section); 0.32.0 (commercial disclaimer); 0.51.3 (`changes` wording, `updated` label) |
+| 2 | Decisions | — | §7.8; decision 9 (0.28.1); decision 7 by billing §8, §9 (Paddle); decisions 10 (0.51.3) and 11 (0.51.4) |
+| 3 | The page contract | ui-kit 0.28.0 | §7.3, §7.6, §7.9; 0.28.1 (translation note, `AuthLayout` footer); landing-demo §4.3 (robots, sitemap); 0.51.3 (as-of line, keksdose's stored version); 0.51.4 (summary, footer's optional pages) |
+| 4 | The content contract | ui-kit 0.28.0 | §7.1–§7.4; 0.28.1 (`language` section); 0.32.0 (commercial disclaimer); 0.51.3 (`changes` wording, `updated` label); 0.51.4 (`summary`, `links.security`/`accessibility` labels) |
 | 5 | What the kit adds, what stays app-side | ui-kit 0.28.0, server-kit 0.2.1 | §7.5; 0.28.1; 0.32.0 |
 | 6 | Per repo | — (archived) | |
 | 7 | Settled after the reviews | — | index; folded items point to their § |
@@ -82,10 +82,27 @@ before the 0.28 round, and how far their wording differed.
       §3.2).
     - The terms' `changes` section gives at least 30 days' notice, a right to object or
       leave, and time to export, instead of consent by continued use (§4.3; lawyer
-      question 4: continued use alone may not bind German consumers).
+      question 4: continued use alone may not bind German consumers). Since 0.51.4 it says
+      what an objection leads to: the operator may end the account on the effective date,
+      with a pro-rata refund of a paid period; changes that only benefit the user or that
+      the law requires apply without notice or objection (Marcel, 2026-10-29).
     - keksdose stores the accepted terms version (the terms page's `updated` date) and the
       time at registration, in a users column of its own. This reverses decision 4's "no
       stored version" for keksdose only; the kit's checkbox still sends nothing (§3.4).
+    - **A page's date moves with the kit's words too** (Marcel, 2026-10-29). The kit's
+      sections are printed word for word on every app's pages, so a kit release can change
+      a page whose date the app typed. A ui-kit release that changes any kit-owned wording
+      a legal page prints says so in its adoption note, under a "Legal wording" line naming
+      the pages. Each app moves those pages' `updated` to the day it ships that release.
+      Without it, keksdose's stored version would no longer say which text someone
+      accepted.
+11. **The benchmark's optional rows** (Marcel, 2026-10-29: "you can already add the
+    optional points"; ui-kit 0.51.4):
+    - A plain-language summary at the top of the terms and the privacy policy, the full
+      text binding (`LegalPage`'s `summary`, §3.2).
+    - A security page and an accessibility statement are an app's own public pages
+      (`PublicPage`, its own words), not legal pages. The footer links them after the
+      three, in the kit's words, where the app has them (§3.3).
 
 ## 3. The page contract
 
@@ -111,6 +128,7 @@ From top to bottom:
    - the translation note, on a page read in another language than the binding one
      (decision 9);
    - the notice;
+   - the app's summary, if it has one (decision 11);
    - the sections.
 3. **The public footer**: the three links with `·` separators.
 
@@ -134,6 +152,14 @@ page's locale (`dateStyle: "long"`): "Last updated: 29 October 2026", "Stand: 29
 2026". It follows the language like every other kit word, so the switch to the binding
 version shows the binding version's date line. One date per page; left out, no line. A
 malformed date shows no line rather than a rolled-over one.
+
+**Summary** (decision 11): `LegalPage`'s `summary`, the app's three to six points, drawn
+before the first section as a list under `legal.summary.title` ("In short", "Das
+Wichtigste in Kürze"), with `legal.summary.note` under it: "This summary is for
+orientation; only the full text is binding." The note says "the full text", not "the
+text below": on a translated page the text below is a translation, and the binding one is
+the version in the binding language. A string point resolves `{ref:key}` like a section's
+text. The summary is unnumbered (id `summary`) and the sections' numbers do not count it.
 
 **Translation note** (decision 9): when the operator names a `bindingLanguage` and the
 page is read in another language, a line under the title says the binding version
@@ -181,7 +207,11 @@ links are one click away.** That includes Kurvenschmiede's public `/control` and
 `/steering`.
 
 The labels are always the kit's short link labels (`legal.links.*`, §4.4), in the order
-Imprint · Privacy Policy · Terms, with `·` separators (`aria-hidden`). This applies in the
+Imprint · Privacy Policy · Terms, with `·` separators (`aria-hidden`). An app with a
+security page or an accessibility statement (decision 11) passes their routes,
+`securityHref` and `accessibilityHref`, to `LegalLinks` / `LegalFooter` / `PublicFooter`.
+The row then goes on with Security · Accessibility, in the kit's words, each only where
+its route is given. This applies in the
 account menu too, so keksdose's menu gains the dots. The current page is marked
 `aria-current="page"` wherever the router's path is known.
 
@@ -326,7 +356,11 @@ The texts are keksdose's unless marked otherwise.
     service evolves. We announce a material change at least 30 days before it takes effect,
     by email and in the app, together with the new text. If you do not agree, you can
     object or delete your account before that date, and you can export your data until
-    then. If you keep using the service after that date, the changed terms apply.
+    then. If you keep using the service after that date, the changed terms apply. Changes
+    that only benefit you, or that the law requires, apply without this notice and cannot
+    be objected to. If you object to a change, we may end your account on the date it
+    takes effect. If you have paid for a period that runs beyond that date, we refund the
+    unused part. (The last three sentences: ui-kit 0.51.4, Marcel 2026-10-29.)
   - **language**, "Language" (decision 9): These terms are written in
     `{bindingLanguage}`. Translations into other languages are provided for convenience
     only; where a translation differs, the `{bindingLanguage}` version prevails.
@@ -357,6 +391,8 @@ The texts are keksdose's unless marked otherwise.
 | `backHome` | Back to home | Zurück zur Startseite |
 | `accept` | I accept the {terms} and the {privacy} | Ich akzeptiere die {terms} und die {privacy} |
 | `updated` | Last updated: {date} | Stand: {date} |
+| `summary.title` / `note` | In short / This summary is for orientation; only the full text is binding. | Das Wichtigste in Kürze / Diese Zusammenfassung dient der Orientierung; verbindlich ist allein der vollständige Text. |
+| `links.security` / `accessibility` | Security / Accessibility | Sicherheit / Barrierefreiheit |
 | `translation.note` / `show` | This is a translation for your convenience. The {bindingLanguage} version is binding. / Show the {bindingLanguage} version | Dies ist eine Übersetzung zu Ihrer Information. Massgebend ist die Fassung auf {bindingLanguage}. / Fassung auf {bindingLanguage} anzeigen |
 
 fr and it come from keksdose's `landing.footer.*`, `legal.*` and `auth.accept_*`. es, hu

@@ -769,6 +769,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     list: {
       unread: "Non letto",
       opensInNewTab: "si apre in una nuova scheda",
+      showAll: (count) => `Mostra tutto (${n(count)})`,
+      showFewer: "Mostra meno",
     },
     breadcrumbs: {
       label: "Percorso di navigazione",
@@ -902,6 +904,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         impressum: "Impressum",
         privacy: "Privacy",
         terms: "Condizioni d’uso",
+        security: "Sicurezza",
+        accessibility: "Accessibilità",
       },
       titles: {
         impressum: "Impressum",
@@ -922,6 +926,10 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         show: (o) => `Mostra la versione in ${o.bindingLanguage}`,
       },
       updated: (date) => `Ultimo aggiornamento: ${date}`,
+      summary: {
+        title: "In breve",
+        note: "Questo riepilogo serve da orientamento; fa fede solo il testo completo.",
+      },
       sections: {
         impressum: {
           operator: {
@@ -980,7 +988,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
           },
           changes: {
             title: "Modifiche a queste condizioni",
-            body: "Possiamo aggiornare queste condizioni con l’evoluzione del servizio. Annunciamo ogni modifica sostanziale almeno 30 giorni prima della sua entrata in vigore, via email e nell’app, insieme al nuovo testo. Se non è d’accordo, può opporsi o eliminare il Suo account prima di tale data, e può esportare i Suoi dati fino ad allora. Se continua a usare il servizio dopo tale data, si applicano le condizioni modificate.",
+            body: "Possiamo aggiornare queste condizioni con l’evoluzione del servizio. Annunciamo ogni modifica sostanziale almeno 30 giorni prima della sua entrata in vigore, via email e nell’app, insieme al nuovo testo. Se non è d’accordo, può opporsi o eliminare il Suo account prima di tale data, e può esportare i Suoi dati fino ad allora. Se continua a usare il servizio dopo tale data, si applicano le condizioni modificate. Le modifiche che vanno solo a Suo vantaggio, o che sono imposte dalla legge, si applicano senza questo preavviso e non è possibile opporvisi. Se si oppone a una modifica, possiamo chiudere il Suo account alla data della sua entrata in vigore. Se ha pagato un periodo che va oltre tale data, Le rimborsiamo la parte non utilizzata.",
           },
           language: {
             title: "Lingua",

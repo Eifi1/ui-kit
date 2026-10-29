@@ -219,6 +219,20 @@ describe("feedbackColumns", () => {
     expect(col("url").noRowLink).toBe(true);
   });
 
+  it("gives way column by column on a narrow table, the number last (0.48; 0.51.4, Kurvenschmiede)", () => {
+    const order = columns
+      .filter((c) => c.fitPriority !== undefined)
+      .sort((a, b) => a.fitPriority! - b.fitPriority!)
+      .map((c) => c.key);
+    expect(order).toEqual(["url", "email", "resolved", "category", "user", "date", "id"]);
+    // Subject grows into what they leave; Status and the row actions always stay.
+    expect(col("title").grow).toBe(true);
+    expect(col("title").fitPriority).toBeUndefined();
+    // 8rem rather than the table's 10, so 768px beside a sidebar does not scroll (0.51.4).
+    expect(col("title").growMin).toBe(8);
+    expect(col("status").fitPriority).toBeUndefined();
+  });
+
   it("offers the whole vocabulary in both select filters, translated, in its own order", () => {
     const category = col("category").filter;
     const status = col("status").filter;

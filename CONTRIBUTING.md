@@ -552,6 +552,10 @@ class that broke two of three consumers silently. When a release's adoption note
 adopted by all three apps, move them to `docs/archive/adopt/` and update `docs/README.md`.
 Each adoption note's head repeats the bump's standing line: restart the Vite dev server after
 the install (its `.vite/deps` pre-bundle keeps serving the old kit; ADOPTING.md → Every later bump).
+A release that changes kit-owned wording a legal page prints (a `legal.*` text, a kit
+section's body) says so in its adoption note, in a "Legal wording" line naming the pages:
+each app moves those pages' `updated` date to the day it ships the bump
+(docs/legal-harmonization.md decision 10).
 
 **The contracts follow the build.** Apps implement from the bodies of
 `docs/*-harmonization.md`, so a round's last commit folds its `docs/adopt-0.x.md` list

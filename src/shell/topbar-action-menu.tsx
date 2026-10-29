@@ -1,5 +1,5 @@
 import { useId, useLayoutEffect, useRef } from "react";
-import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
+import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
 import { Link } from "react-router";
 import { cn } from "../lib/cn";
 import { HoverMenu, type HoverMenuProps } from "../components/hover-menu";
@@ -108,6 +108,40 @@ function toBlocks(entries: readonly TopBarMenuEntry[]): Block[] {
   // A heading with nothing under it names nothing: not drawn (see the `heading` kind).
   return blocks.filter((block) => block.kind === "loose" || block.rows.length > 0);
 }
+
+/** One column of `columns` (0.51.4): a group and the loose entries after it, up to the
+ *  next group — so a group's own way out behind a rule (DevMenu's "Back to {role}") stays
+ *  under it instead of running across the panel. */
+type LooseBlock = Extract<Block, { kind: "loose" }>;
+type Column = { group: Extract<Block, { kind: "group" }>; after: Array<RowEntry | DividerEntry>; index: number };
+
+/** `blocks` as the columns layout draws them: what comes before the first group, then a
+ *  column per group. A rule that would end a column is dropped: the column's edge is the
+ *  separation there. */
+function toColumns(blocks: readonly Block[]): { lead: LooseBlock[]; columns: Column[] } {
+  const lead: LooseBlock[] = [];
+  const columns: Column[] = [];
+  blocks.forEach((block, index) => {
+    if (block.kind === "group") columns.push({ group: block, after: [], index });
+    else if (columns.length === 0) lead.push(block);
+    else columns[columns.length - 1]!.after.push(block.entry);
+  });
+  for (const column of columns) {
+    while (column.after.at(-1)?.kind === "divider") column.after.pop();
+  }
+  return { lead, columns };
+}
+
+/**
+ * `columns`' panel: each column 14rem, the panel as wide as its columns (a CSS variable
+ * the list sets) but never wider than the glass, and from `md` up only. The grid places
+ * as many 14rem columns as that width holds, so a narrow desktop wraps the groups onto a
+ * second row instead of scrolling sideways. The header, the title and the footer span
+ * the row.
+ */
+const COLUMNS_PANEL =
+  "md:grid md:grid-cols-[repeat(auto-fill,minmax(14rem,1fr))] md:items-start md:gap-y-2 md:w-[min(calc(100vw-2rem),var(--menu-columns-width))]";
+const SPAN_ALL = "md:col-span-full";
 
 /**
  * The non-interactive identity block at the top of an account menu — kastlan's name +
@@ -225,6 +259,7 @@ export function TopBarActionMenu({
   align,
   panelClassName,
   scrollable = false,
+  columns = false,
   triggerAttributes,
 }: {
   /** The trigger's face for the usual icon button. Ignored when `trigger` is given. */
@@ -308,6 +343,19 @@ export function TopBarActionMenu({
    * header and the footer are inside the list and scroll with the rows.
    */
   scrollable?: boolean;
+  /**
+   * From `md` up, lay the heading groups side by side, one column per group (0.51.4,
+   * `DevMenu`; keksdose dev #640, Marcel: "Each group gets a column. That way it would be
+   * much better visible for desktop users"). Below `md`, the one column as before.
+   *
+   * A column is a group and the loose rows after it up to the next heading, so a row
+   * behind a rule at the end of a group (DevMenu's "Back to {role}") stays in that
+   * group's column. Loose rows before the first heading, the header, the menu-wide
+   * `heading` and the footer span the panel. The DOM order is unchanged, so ↓/↑ walk the
+   * rows down one column and on into the next, as a reader reads them. `leading` and
+   * `children` rows take a cell each; add `md:col-span-full` to one that should span.
+   */
+  columns?: boolean;
   /** `data-*` attributes for the trigger itself — a tour's anchor (`data-tour`), a test
    *  hook. The parts built on this menu (`TourMenu`) pass theirs through here. */
   triggerAttributes?: { [key: `data-${string}`]: string | number | boolean | undefined };
@@ -316,6 +364,10 @@ export function TopBarActionMenu({
   // entry's `key`, which is the caller's text and may hold a space — and a space in
   // `aria-labelledby` is a list separator.
   const uid = useId();
+  const blocks = toBlocks(entries);
+  const grouped = columns ? toColumns(blocks) : null;
+  // A menu with no group has nothing to put side by side: the list as always.
+  const laidOut = grouped && grouped.columns.length > 0 ? grouped : null;
   return (
     <HoverMenu
       aria-label={ariaLabel}
@@ -380,8 +432,8 @@ export function TopBarActionMenu({
         const footerClass =
           "flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted [&_a:hover]:text-primary [&_a]:rounded-sm [&_a:focus-visible]:outline-none [&_a:focus-visible]:ring-focus [&_a:focus-visible]:ring-brand";
         /** One action or link row — loose, or inside a heading's group. */
-        const row = (entry: RowEntry) => (
-          <li key={entry.key}>
+        const row = (entry: RowEntry, className?: string) => (
+          <li key={entry.key} className={className}>
             {entry.kind === "link" ? (
               <MenuItem
                 href={entry.to}
@@ -413,11 +465,46 @@ export function TopBarActionMenu({
             )}
           </li>
         );
+        /** A rule or a row outside any group; `span` stretches it across the columns. */
+        const loose = (block: LooseBlock, span: boolean) => {
+          const entry = block.entry;
+          if (entry.kind === "divider") {
+            return <li key={entry.key} className={cn("my-1 border-t border-subtle", span && SPAN_ALL)} />;
+          }
+          return row(entry, span ? SPAN_ALL : undefined);
+        };
+        /** A heading's group: its name, then its rows in a named `role="group"`. */
+        const group = (block: Extract<Block, { kind: "group" }>, i: number, tight: boolean, inColumn = false) => {
+          const headingId = `${uid}-group-${i}`;
+          return (
+            <li key={block.heading.key} role="none">
+              <div
+                id={headingId}
+                role="presentation"
+                className={cn(
+                  "px-3 pb-0.5 text-caption font-semibold uppercase tracking-wide text-muted [overflow-wrap:anywhere]",
+                  // A column's heading lines up with its neighbours' at the top of the
+                  // grid row; under `md` the columns stack, and it spaces like the list's.
+                  tight ? "pt-1" : cn("pt-2.5", inColumn && "md:pt-1"),
+                )}
+              >
+                {block.heading.label}
+              </div>
+              <ul role="group" aria-labelledby={headingId}>
+                {block.rows.map((entry) => row(entry))}
+              </ul>
+            </li>
+          );
+        };
         return (
           // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- a Tab bubbling up from a row or footer link, see keepTabInsidePanel
-          <ul className={cn("py-1", scrollable && SCROLLABLE_PANEL, panelClassName)} onKeyDown={keepTabInsidePanel}>
+          <ul
+            className={cn("py-1", scrollable && SCROLLABLE_PANEL, laidOut && COLUMNS_PANEL, panelClassName)}
+            style={laidOut ? ({ "--menu-columns-width": `${laidOut.columns.length * 14}rem` } as CSSProperties) : undefined}
+            onKeyDown={keepTabInsidePanel}
+          >
             {header && (
-              <MenuSection className="mb-1 border-b border-subtle px-3 py-2">
+              <MenuSection className={cn("mb-1 border-b border-subtle px-3 py-2", laidOut && SPAN_ALL)}>
                 <div className="truncate text-sm font-medium text-primary">{header.title}</div>
                 {header.subtitle != null && (
                   <div className="truncate text-xs text-muted">{header.subtitle}</div>
@@ -426,45 +513,42 @@ export function TopBarActionMenu({
               </MenuSection>
             )}
             {heading && (
-              <li className="px-3 py-1 text-micro font-semibold uppercase tracking-wide text-placeholder">
+              <li
+                className={cn(
+                  "px-3 py-1 text-micro font-semibold uppercase tracking-wide text-placeholder",
+                  laidOut && SPAN_ALL,
+                )}
+              >
                 {heading}
               </li>
             )}
             {leading?.(close)}
-            {toBlocks(entries).map((block, i, blocks) => {
-              if (block.kind === "loose") {
-                const entry = block.entry;
-                if (entry.kind === "divider") {
-                  return <li key={entry.key} className="my-1 border-t border-subtle" />;
-                }
-                return row(entry);
-              }
-              const headingId = `${uid}-group-${i}`;
-              const before = blocks[i - 1];
-              // Under a rule (or at the top of the rows) the rule's margin is the gap;
-              // straight under another group's last row the heading makes its own.
-              const tight = !before || (before.kind === "loose" && before.entry.kind === "divider");
-              return (
-                <li key={block.heading.key} role="none">
-                  <div
-                    id={headingId}
-                    role="presentation"
-                    className={cn(
-                      "px-3 pb-0.5 text-caption font-semibold uppercase tracking-wide text-muted [overflow-wrap:anywhere]",
-                      tight ? "pt-1" : "pt-2.5",
-                    )}
-                  >
-                    {block.heading.label}
-                  </div>
-                  <ul role="group" aria-labelledby={headingId}>
-                    {block.rows.map(row)}
-                  </ul>
-                </li>
-              );
-            })}
+            {laidOut ? (
+              <>
+                {laidOut.lead.map((block) => loose(block, true))}
+                {laidOut.columns.map((column, c) => (
+                  // A column of the grid; under `md` a group as in the list, its rows
+                  // following.
+                  <li key={column.group.heading.key} role="none" data-menu-column="" className="min-w-0">
+                    <ul role="none">
+                      {group(column.group, column.index, c === 0 && laidOut.lead.length === 0, true)}
+                      {column.after.map((entry) => loose({ kind: "loose", entry }, false))}
+                    </ul>
+                  </li>
+                ))}
+              </>
+            ) : (
+              blocks.map((block, i) => {
+                if (block.kind === "loose") return loose(block, false);
+                const before = blocks[i - 1];
+                // Under a rule (or at the top of the rows) the rule's margin is the gap;
+                // straight under another group's last row the heading makes its own.
+                return group(block, i, !before || (before.kind === "loose" && before.entry.kind === "divider"));
+              })
+            )}
             {children?.(close)}
             {footerBody != null && footerBody !== false && (
-              <MenuSection className="mt-1 border-t border-subtle px-3 py-2">
+              <MenuSection className={cn("mt-1 border-t border-subtle px-3 py-2", laidOut && SPAN_ALL)}>
                 {footerLabel ? (
                   <nav aria-label={footerLabel} className={footerClass}>
                     {footerBody}
