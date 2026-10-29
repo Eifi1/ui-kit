@@ -978,7 +978,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
           },
           changes: {
             title: "Cambios en estas condiciones",
-            body: "Podemos actualizar estas condiciones a medida que evolucione el servicio. Anunciamos cualquier cambio importante al menos 30 días antes de que entre en vigor, por correo electrónico y en la aplicación, junto con el nuevo texto. Si no está de acuerdo, puede oponerse o eliminar su cuenta antes de esa fecha, y puede exportar sus datos hasta entonces. Si sigue usando el servicio después de esa fecha, se aplican las condiciones modificadas.",
+            body: "Podemos actualizar estas condiciones a medida que evolucione el servicio. Anunciamos cualquier cambio importante al menos 30 días antes de que entre en vigor, por correo electrónico y en la aplicación, junto con el nuevo texto. Si no está de acuerdo, puede oponerse o eliminar su cuenta antes de esa fecha, y puede exportar sus datos hasta entonces. Si sigue usando el servicio después de esa fecha, se aplican las condiciones modificadas. Los cambios que solo le benefician, o que exige la ley, se aplican sin este preaviso y no admiten oposición. Si se opone a un cambio, podemos cerrar su cuenta en la fecha en que entre en vigor. Si ha pagado un periodo que va más allá de esa fecha, le reembolsamos la parte no utilizada.",
           },
           language: {
             title: "Idioma",

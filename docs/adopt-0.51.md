@@ -422,8 +422,21 @@ only Subject, Status and the row actions are left, and the table can still scrol
 depending on the language: Status has a fixed width and the actions column no
 `fitPriority`.
 
-**Legal wording:** none of the kit's existing texts changes, so no page's date has to move
-for the bump alone. A page that adds a `summary` changes, so its date moves with it.
+**Legal wording: the terms (`changes`).** Move /terms' `updated` to the day you ship this
+bump. A page that adds a `summary` changes too, so its date moves with it.
+
+**The terms say what an objection leads to** (Marcel 2026-10-29; lawyer question 4).
+Three sentences follow the `changes` text 0.51.3 brought, in all seven languages:
+> Changes that only benefit you, or that the law requires, apply without this notice and
+> cannot be objected to. If you object to a change, we may end your account on the date it
+> takes effect. If you have paid for a period that runs beyond that date, we refund the
+> unused part.
+
+German (binding): «Änderungen, die nur zu Ihrem Vorteil sind oder gesetzlich vorgeschrieben
+sind, gelten ohne diese Ankündigung; ihnen kann nicht widersprochen werden. Widersprechen
+Sie einer Änderung, können wir Ihr Konto auf den Tag ihres Inkrafttretens schliessen.
+Haben Sie einen Zeitraum bezahlt, der über dieses Datum hinausgeht, erstatten wir den nicht
+genutzten Teil.» No app bills yet, so the refund sentence is for later.
 
 **`DevMenu`: one column per group on a desktop** (keksdose dev #640, Marcel: "Each group
 gets a column. That way it would be much better visible for desktop users"). From `md` up

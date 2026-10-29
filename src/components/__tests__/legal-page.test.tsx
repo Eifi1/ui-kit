@@ -223,6 +223,10 @@ describe("LegalPage — the frame (§3.2)", () => {
     expect(body).toContain("object or delete your account");
     expect(body).toContain("export your data");
     expect(body).not.toContain("continued use after a change means you accept it");
+    // 0.51.4 (Marcel): what an objection leads to.
+    expect(body).toContain("only benefit you, or that the law requires, apply without this notice");
+    expect(body).toContain("If you object to a change, we may end your account on the date it takes effect.");
+    expect(body).toContain("we refund the unused part");
   });
 
   it("0.28.1: the language section needs the operator's bindingLanguage", () => {

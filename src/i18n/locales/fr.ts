@@ -997,7 +997,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
           },
           changes: {
             title: "Modifications des présentes conditions",
-            body: "Nous pouvons mettre à jour ces conditions au fil de l’évolution du service. Nous annonçons toute modification importante au moins 30 jours avant son entrée en vigueur, par e-mail et dans l’app, avec le nouveau texte. Si vous n’êtes pas d’accord, vous pouvez vous y opposer ou supprimer votre compte avant cette date, et exporter vos données jusque-là. Si vous continuez à utiliser le service après cette date, les conditions modifiées s’appliquent.",
+            body: "Nous pouvons mettre à jour ces conditions au fil de l’évolution du service. Nous annonçons toute modification importante au moins 30 jours avant son entrée en vigueur, par e-mail et dans l’app, avec le nouveau texte. Si vous n’êtes pas d’accord, vous pouvez vous y opposer ou supprimer votre compte avant cette date, et exporter vos données jusque-là. Si vous continuez à utiliser le service après cette date, les conditions modifiées s’appliquent. Les modifications qui sont uniquement à votre avantage, ou que la loi impose, s’appliquent sans ce préavis et ne peuvent pas faire l’objet d’une opposition. Si vous vous opposez à une modification, nous pouvons fermer votre compte à la date de son entrée en vigueur. Si vous avez payé une période qui s’étend au-delà de cette date, nous remboursons la part non utilisée.",
           },
           language: {
             title: "Langue",

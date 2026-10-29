@@ -985,7 +985,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
           },
           changes: {
             title: "A feltételek módosítása",
-            body: "Ezeket a feltételeket a szolgáltatás fejlődésével módosíthatjuk. A lényeges változásokat legalább 30 nappal a hatálybalépésük előtt bejelentjük e-mailben és az alkalmazásban, az új szöveggel együtt. Ha nem ért egyet, ezen időpont előtt tiltakozhat, vagy törölheti a fiókját, és addig exportálhatja az adatait. Ha ezen időpont után is használja a szolgáltatást, a módosított feltételek érvényesek.",
+            body: "Ezeket a feltételeket a szolgáltatás fejlődésével módosíthatjuk. A lényeges változásokat legalább 30 nappal a hatálybalépésük előtt bejelentjük e-mailben és az alkalmazásban, az új szöveggel együtt. Ha nem ért egyet, ezen időpont előtt tiltakozhat, vagy törölheti a fiókját, és addig exportálhatja az adatait. Ha ezen időpont után is használja a szolgáltatást, a módosított feltételek érvényesek. Azok a változások, amelyek kizárólag az Ön javát szolgálják, vagy amelyeket jogszabály ír elő, e bejelentés nélkül is hatályosak, és ellenük nem lehet tiltakozni. Ha tiltakozik egy változás ellen, a hatálybalépés napjával megszüntethetjük a fiókját. Ha olyan időszakra fizetett, amely ezen a napon túlnyúlik, a fel nem használt részt visszatérítjük.",
           },
           language: {
             title: "Nyelv",

@@ -89,7 +89,7 @@ export const DEFAULT_LEGAL_LABELS: LegalLabels = {
       },
       changes: {
         title: "Changes to these terms",
-        body: "We may update these terms as the service evolves. We announce a material change at least 30 days before it takes effect, by email and in the app, together with the new text. If you do not agree, you can object or delete your account before that date, and you can export your data until then. If you keep using the service after that date, the changed terms apply.",
+        body: "We may update these terms as the service evolves. We announce a material change at least 30 days before it takes effect, by email and in the app, together with the new text. If you do not agree, you can object or delete your account before that date, and you can export your data until then. If you keep using the service after that date, the changed terms apply. Changes that only benefit you, or that the law requires, apply without this notice and cannot be objected to. If you object to a change, we may end your account on the date it takes effect. If you have paid for a period that runs beyond that date, we refund the unused part.",
       },
       language: {
         title: "Language",

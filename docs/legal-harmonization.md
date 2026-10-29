@@ -82,7 +82,10 @@ before the 0.28 round, and how far their wording differed.
       §3.2).
     - The terms' `changes` section gives at least 30 days' notice, a right to object or
       leave, and time to export, instead of consent by continued use (§4.3; lawyer
-      question 4: continued use alone may not bind German consumers).
+      question 4: continued use alone may not bind German consumers). Since 0.51.4 it says
+      what an objection leads to: the operator may end the account on the effective date,
+      with a pro-rata refund of a paid period; changes that only benefit the user or that
+      the law requires apply without notice or objection (Marcel, 2026-10-29).
     - keksdose stores the accepted terms version (the terms page's `updated` date) and the
       time at registration, in a users column of its own. This reverses decision 4's "no
       stored version" for keksdose only; the kit's checkbox still sends nothing (§3.4).
@@ -353,7 +356,11 @@ The texts are keksdose's unless marked otherwise.
     service evolves. We announce a material change at least 30 days before it takes effect,
     by email and in the app, together with the new text. If you do not agree, you can
     object or delete your account before that date, and you can export your data until
-    then. If you keep using the service after that date, the changed terms apply.
+    then. If you keep using the service after that date, the changed terms apply. Changes
+    that only benefit you, or that the law requires, apply without this notice and cannot
+    be objected to. If you object to a change, we may end your account on the date it
+    takes effect. If you have paid for a period that runs beyond that date, we refund the
+    unused part. (The last three sentences: ui-kit 0.51.4, Marcel 2026-10-29.)
   - **language**, "Language" (decision 9): These terms are written in
     `{bindingLanguage}`. Translations into other languages are provided for convenience
     only; where a translation differs, the `{bindingLanguage}` version prevails.
