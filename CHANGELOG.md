@@ -21,6 +21,12 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.51.3](https://github.com/Eifi1/ui-kit/compare/v0.51.2...v0.51.3) (2026-10-29)
+
+### Added
+
+* **legal:** dated legal pages, and notice before the terms change ([cceb1de](https://github.com/Eifi1/ui-kit/commit/cceb1de9e839071b1bf937384b58a0cae27a9b9d))
+
 ## [0.51.2](https://github.com/Eifi1/ui-kit/compare/v0.51.1...v0.51.2) (2026-10-27)
 
 ### Fixed
