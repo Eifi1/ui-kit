@@ -49,10 +49,12 @@ export function kitLabelStrings(labels: UiKitLabels, options: KitLabelStringsOpt
         // The key is the SAMPLE's (`…body(operator)`), whatever the label is called with,
         // so rows with and without the app's operator join on the same keys.
         const called = operator ? args.map((arg) => (arg === LEGAL_OPERATOR_SAMPLE ? operator : arg)) : args;
-        out[`${path}(${args.map(sampleName).filter((a) => a !== "").join(", ")})`] = render(
-          node as (...args: unknown[]) => unknown,
-          called,
-        );
+        out[
+          `${path}(${args
+            .map(sampleName)
+            .filter((a) => a !== "")
+            .join(", ")})`
+        ] = render(node as (...args: unknown[]) => unknown, called);
       }
     } else if (node !== null && typeof node === "object") {
       for (const [key, value] of Object.entries(node)) walk(value, path ? `${path}.${key}` : key);
@@ -407,7 +409,10 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "billing.buyerHolds": [["{{buyer}}"], [undefined]],
   "billing.paymentFailedAskBuyer": [["{{buyer}}"], [undefined]],
   "billing.cancelConfirmBody": [["{{date}}"]],
-  "billing.portalOpensNewTab": [["{{provider}}", "{{app}}"], ["{{provider}}", undefined]],
+  "billing.portalOpensNewTab": [
+    ["{{provider}}", "{{app}}"],
+    ["{{provider}}", undefined],
+  ],
   "planChange.current": [["{{plan}}"]],
   "planChange.changed": [["{{from}}", "{{to}}"]],
   "planChange.set": [["{{to}}"]],
@@ -417,7 +422,10 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   // the users tile's new accounts.
   "adminArea.waiting": one,
   // 0.45.0 (admin §9.3.4): an IconButton's name with its waiting count.
-  "adminArea.waitingLabel": [["{{label}}", 1], ["{{label}}", 3]],
+  "adminArea.waitingLabel": [
+    ["{{label}}", 1],
+    ["{{label}}", 3],
+  ],
   // 0.45.0 (admin §9.2.4): the test mail's transport, masked address and limiter.
   "mailTestCard.transport": [["{{backend}}"]],
   "mailTestCard.sent": [["{{address}}"]],
@@ -437,7 +445,10 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   // 0.43.0 (docs/tours-harmonization.md §3, §8): the tours page's counts, its group
   // option, the completion day and a reset's day and reason.
   "tourCatalogue.groupAll": one,
-  "tourCatalogue.groupOption": [["{{group}}", 1], ["{{group}}", 3]],
+  "tourCatalogue.groupOption": [
+    ["{{group}}", 1],
+    ["{{group}}", 3],
+  ],
   "tourCatalogue.stateAll": one,
   "tourCatalogue.stateTodo": one,
   "tourCatalogue.stateDone": one,

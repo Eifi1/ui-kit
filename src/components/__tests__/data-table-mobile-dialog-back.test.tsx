@@ -26,8 +26,7 @@ const ROWS: Row[] = [
 const COLUMNS: DataTableColumn<Row>[] = [{ key: "name", header: "Name", cell: (r) => r.name }];
 
 const SENTINEL_KEY = "__hbUiOverlayHistory";
-const hasSentinel = () =>
-  typeof (window.history.state as Record<string, unknown> | null)?.[SENTINEL_KEY] === "string";
+const hasSentinel = () => typeof (window.history.state as Record<string, unknown> | null)?.[SENTINEL_KEY] === "string";
 
 async function settle() {
   await act(async () => {

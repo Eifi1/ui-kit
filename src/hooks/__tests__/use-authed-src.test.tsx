@@ -114,8 +114,7 @@ describe("useAuthedSrc", () => {
 
   it("reports an error (a thrown fetcher, or a Response that is not ok) and can retry", async () => {
     let fail = true;
-    const fetcher: AuthedFetcher = async () =>
-      fail ? new Response("nope", { status: 401 }) : new Response(png());
+    const fetcher: AuthedFetcher = async () => (fail ? new Response("nope", { status: 401 }) : new Response(png()));
     const { result } = renderHook(() => useAuthedSrc("/a.png", { fetcher }));
     await waitFor(() => expect(result.current.status).toBe("error"));
     expect(result.current.src).toBeNull();
@@ -206,9 +205,7 @@ describe("useAuthedSrc", () => {
     });
     const fetcher = vi.fn<AuthedFetcher>(async () => png());
     expect(renderHook(() => useAuthedSrc(null, { fetcher })).result.current.status).toBe("idle");
-    expect(
-      renderHook(() => useAuthedSrc("/a.png", { fetcher, enabled: false })).result.current.status,
-    ).toBe("idle");
+    expect(renderHook(() => useAuthedSrc("/a.png", { fetcher, enabled: false })).result.current.status).toBe("idle");
     expect(fetcher).not.toHaveBeenCalled();
   });
 });

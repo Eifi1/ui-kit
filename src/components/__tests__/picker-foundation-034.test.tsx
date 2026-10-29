@@ -187,8 +187,22 @@ describe("MultiSelect on the shared panel (DUP-4)", () => {
 
 describe("GroupedPicker is a listbox of grouped options (BUG-12)", () => {
   const GROUPS: PickerGroup[] = [
-    { key: "food", label: "Food", items: [{ key: "bread", label: "Bread" }, { key: "milk", label: "Milk" }] },
-    { key: "home", label: "Home", items: [{ key: "rent", label: "Rent" }, { key: "milk", label: "Milk" }] },
+    {
+      key: "food",
+      label: "Food",
+      items: [
+        { key: "bread", label: "Bread" },
+        { key: "milk", label: "Milk" },
+      ],
+    },
+    {
+      key: "home",
+      label: "Home",
+      items: [
+        { key: "rent", label: "Rent" },
+        { key: "milk", label: "Milk" },
+      ],
+    },
   ];
 
   function renderPicker(onSelect = vi.fn()) {

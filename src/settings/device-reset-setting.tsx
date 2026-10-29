@@ -41,8 +41,10 @@ export { DEFAULT_DEVICE_RESET_LABELS };
 export const DEVICE_RESET_ANCHOR = "settings-device-reset";
 
 // `onReset` is the card's own: the DOM's form-reset handler never fires on a div.
-export interface DeviceResetSettingProps
-  extends Omit<SettingsSectionProps, "anchor" | "title" | "description" | "children" | "onReset"> {
+export interface DeviceResetSettingProps extends Omit<
+  SettingsSectionProps,
+  "anchor" | "title" | "description" | "children" | "onReset"
+> {
   /** The app's sentence after the kit's description: what of its own goes back, and what
    *  stays (keksdose: the date format, the feature set and the gestures go; presentation
    *  mode and the home position stay). */
@@ -72,12 +74,7 @@ export interface DeviceResetSettingProps
  * `deviceReset`; `title` and `keywords` from these labels), last in its appearance group:
  * inside a `SettingsLayout`, `SettingsSection` throws in development without it.
  */
-export function DeviceResetSetting({
-  description,
-  labels: labelsProp,
-  onReset,
-  ...rest
-}: DeviceResetSettingProps) {
+export function DeviceResetSetting({ description, labels: labelsProp, onReset, ...rest }: DeviceResetSettingProps) {
   const labels = useKitLabels("deviceReset", DEFAULT_DEVICE_RESET_LABELS, labelsProp);
   const confirm = useConfirm();
 

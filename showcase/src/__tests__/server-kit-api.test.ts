@@ -85,7 +85,10 @@ describe("a nested module (server-kit 0.9's feedback.router)", () => {
     expect(findModule(api, "feedback")!.members.some((m) => m.name === "router")).toBe(false);
     const anchors = api.modules.flatMap((mod) => {
       const short = moduleShort(mod.name);
-      return [targetAnchor({ module: short }), ...mod.members.map((m) => targetAnchor({ module: short, member: m.name }))];
+      return [
+        targetAnchor({ module: short }),
+        ...mod.members.map((m) => targetAnchor({ module: short, member: m.name })),
+      ];
     });
     expect(anchors).toContain("feedback.router");
     expect(new Set(anchors).size).toBe(anchors.length);
@@ -147,10 +150,17 @@ describe("members", () => {
     expect(formatSignature("f(x: int) -> int")).toBe("f(x: int) -> int");
     const constant = 'LONG_CONSTANT: Mapping[str, str] = dict(a="1, 2", b="3", c="4", d="5", e="6", f="7")';
     expect(formatSignature(constant)).toBe(constant);
-    expect(formatSignature('g(sep: str = ",", pair: tuple[int, int] = (1, 2), *rest: object, **extra: object) -> None', 40)).toBe(
-      ["g(", '    sep: str = ",",', "    pair: tuple[int, int] = (1, 2),", "    *rest: object,", "    **extra: object,", ") -> None"].join(
-        "\n",
-      ),
+    expect(
+      formatSignature('g(sep: str = ",", pair: tuple[int, int] = (1, 2), *rest: object, **extra: object) -> None', 40),
+    ).toBe(
+      [
+        "g(",
+        '    sep: str = ",",',
+        "    pair: tuple[int, int] = (1, 2),",
+        "    *rest: object,",
+        "    **extra: object,",
+        ") -> None",
+      ].join("\n"),
     );
   });
 });

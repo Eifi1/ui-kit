@@ -78,7 +78,9 @@ describe("PasswordSetting reads a wrong password (KS U3)", () => {
     await fill("wrong-example", "new-example-1");
     press();
     await waitFor(() =>
-      expect(screen.getByLabelText("Current password")).toHaveAccessibleDescription("That is not your current password."),
+      expect(screen.getByLabelText("Current password")).toHaveAccessibleDescription(
+        "That is not your current password.",
+      ),
     );
   });
 });
@@ -97,7 +99,10 @@ describe("PasswordSetting's describeError (KS U3)", () => {
 
   it("answering `undefined` leaves the kit's reading: the wrong password under its field", async () => {
     render(
-      <PasswordSetting onSubmit={() => Promise.reject(refusal(400, "password_incorrect"))} describeError={() => undefined} />,
+      <PasswordSetting
+        onSubmit={() => Promise.reject(refusal(400, "password_incorrect"))}
+        describeError={() => undefined}
+      />,
     );
     await fill("wrong-example", "new-example-1");
     press();
@@ -122,7 +127,9 @@ describe("PasswordSetting's describeError (KS U3)", () => {
   });
 
   it("typing anywhere clears the banner", async () => {
-    render(<PasswordSetting onSubmit={() => Promise.reject(refusal(503))} describeError={() => "The server is asleep."} />);
+    render(
+      <PasswordSetting onSubmit={() => Promise.reject(refusal(503))} describeError={() => "The server is asleep."} />,
+    );
     const user = await fill("old-example", "new-example-1");
     press();
     await screen.findByRole("alert");

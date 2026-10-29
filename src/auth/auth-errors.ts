@@ -84,12 +84,7 @@ export type AccountErrorCode =
  *   mail, uploads, the account export (§6.4).
  */
 export type DemoErrorCode =
-  | "demo_disabled"
-  | "demo_rate_limited"
-  | "demo_capacity"
-  | "demo_not_ready"
-  | "demo_read_only"
-  | "demo_refused";
+  "demo_disabled" | "demo_rate_limited" | "demo_capacity" | "demo_not_ready" | "demo_read_only" | "demo_refused";
 
 /**
  * 0.32.0: billing's coded refusals (docs/billing-harmonization.md §3.3, §3.4, §4, §12.3) —

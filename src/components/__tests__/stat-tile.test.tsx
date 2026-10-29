@@ -89,7 +89,14 @@ describe("StatTile", () => {
 
   it("tags every figure data-private when sensitive", () => {
     const { container } = render(
-      <StatTile label="Balance" value={10} delta={2} subValues={[{ label: "AUG", value: 8 }]} trend={[1, 2]} sensitive />,
+      <StatTile
+        label="Balance"
+        value={10}
+        delta={2}
+        subValues={[{ label: "AUG", value: 8 }]}
+        trend={[1, 2]}
+        sensitive
+      />,
     );
     // Value, delta, the one sub-value and the sparkline.
     expect(container.querySelectorAll("[data-private]")).toHaveLength(4);
@@ -150,9 +157,7 @@ describe("StatTile", () => {
   });
 
   it("keeps every sr-only node in a positioned ancestor", () => {
-    const { container } = render(
-      <StatTile label="X" value={null} delta={1} />,
-    );
+    const { container } = render(<StatTile label="X" value={null} delta={1} />);
     for (const el of container.querySelectorAll(".sr-only")) {
       let node = el.parentElement;
       let positioned = false;
@@ -313,7 +318,16 @@ describe("StatTile — the provider's router link", () => {
     unmount();
     render(
       <UiKitProvider linkComponent={routerLink}>
-        <StatTile label="Units" value={12} href="/units" renderLink={(p) => <a {...p} data-own="">{p.children}</a>} />
+        <StatTile
+          label="Units"
+          value={12}
+          href="/units"
+          renderLink={(p) => (
+            <a {...p} data-own="">
+              {p.children}
+            </a>
+          )}
+        />
       </UiKitProvider>,
     );
     expect(screen.getByRole("link", { name: "Units" })).toHaveAttribute("data-own");

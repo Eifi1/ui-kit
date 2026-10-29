@@ -4,12 +4,7 @@ import * as ReactRouter from "react-router";
 import { useLocation, useSearchParams } from "react-router";
 import { useKitTableStorageKeyPrefix } from "../i18n/kit-labels";
 import { readStored, writeStored } from "../lib/safe-storage";
-import {
-  decodeFilterValue,
-  encodeFilterValue,
-  isFilterActive,
-  resolveFilter,
-} from "./data-table-filters";
+import { decodeFilterValue, encodeFilterValue, isFilterActive, resolveFilter } from "./data-table-filters";
 import { decodeSorts, encodeSorts, normalizeSorts, type SortState } from "./data-table-sort";
 import type { DataTableColumn, FilterState, ServerPagination } from "./data-table";
 
@@ -254,9 +249,7 @@ function urlSignature<T>(
   }
   parts.push(`${keys.sort}=${encodeSorts(sorts)}`);
   parts.push(
-    `${keys.pageSize}=${
-      pageSize === Infinity ? "all" : pageSize === defaultPageSize ? "" : String(pageSize)
-    }`,
+    `${keys.pageSize}=${pageSize === Infinity ? "all" : pageSize === defaultPageSize ? "" : String(pageSize)}`,
   );
   parts.push(`${keys.page}=${page > 0 ? String(page + 1) : ""}`);
   return parts.join("&");
@@ -360,10 +353,7 @@ export function useTableState<T>({
   const [urlInitial] = useState<TableUrlState>(() =>
     urlSync ? readTableUrlState(searchParams, columns, urlPrefix) : {},
   );
-  const initial = useMemo(
-    () => loadPersisted(storageKey, storageKeyPrefix),
-    [storageKey, storageKeyPrefix],
-  );
+  const initial = useMemo(() => loadPersisted(storageKey, storageKeyPrefix), [storageKey, storageKeyPrefix]);
   const [internalSorts, setInternalSorts] = useState<SortState[]>(() =>
     urlInitial.sorts !== undefined ? urlInitial.sorts : normalizeSorts(initial.sort),
   );
@@ -482,9 +472,7 @@ export function useTableState<T>({
   }, [storageKey, storageKeyPrefix, persisted]);
 
   const lastUrl = useRef<string | null>(null);
-  const urlSig = urlSync
-    ? urlSignature(columns, sorts, filters, pageSize, page, defaultPageSize, keys)
-    : "";
+  const urlSig = urlSync ? urlSignature(columns, sorts, filters, pageSize, page, defaultPageSize, keys) : "";
   useEffect(() => {
     if (!urlSync) return;
     if (lastUrl.current === urlSig) return;
@@ -492,7 +480,18 @@ export function useTableState<T>({
     // `columns` is deliberately not a dependency and does not need to be: the
     // signature above is computed from it, so a column set that would produce a
     // different address produces a different signature first.
-    writeUrlState(setSearchParams, columns, sorts, filters, pageSize, page, defaultPageSize, undefined, locationState, keys);
+    writeUrlState(
+      setSearchParams,
+      columns,
+      sorts,
+      filters,
+      pageSize,
+      page,
+      defaultPageSize,
+      undefined,
+      locationState,
+      keys,
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlSync, urlSig]);
 

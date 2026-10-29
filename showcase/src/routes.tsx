@@ -160,7 +160,10 @@ const ActionCardDemo = lazySection(() => import("./sections/action-card-demo"), 
 const NavPillsDemo = lazySection(() => import("./sections/nav-pills-demo"), "NavPillsDemo");
 const SectionNavDemo = lazySection(() => import("./sections/nav-pills-demo"), "SectionNavDemo");
 const ProgressSegmentsDemo = lazySection(() => import("./sections/progress-segments-demo"), "ProgressSegmentsDemo");
-const ProgressLegendTone018Demo = lazySection(() => import("./sections/progress-018-demo"), "ProgressLegendTone018Demo");
+const ProgressLegendTone018Demo = lazySection(
+  () => import("./sections/progress-018-demo"),
+  "ProgressLegendTone018Demo",
+);
 const FieldDemo = lazySection(() => import("./sections/field-demo"), "FieldDemo");
 const RhfWizardDemo = lazySection(() => import("./sections/rhf-wizard-demo"), "RhfWizardDemo");
 const ListDragDemo = lazySection(() => import("./sections/list-drag-demo"), "ListDragDemo");
@@ -168,7 +171,10 @@ const List016Demo = lazySection(() => import("./sections/list-016-demo"), "List0
 const AlertBannerBlockDemo = lazySection(() => import("./sections/feedback-more-demo"), "AlertBannerBlockDemo");
 const BulkActionBarPanelDemo = lazySection(() => import("./sections/lists-menus"), "BulkActionBarPanelDemo");
 const EmptyStateSmallDemo = lazySection(() => import("./sections/feedback-more-demo"), "EmptyStateSmallDemo");
-const IconButtonDisabledReasonDemo = lazySection(() => import("./sections/buttons-more-demo"), "IconButtonDisabledReasonDemo");
+const IconButtonDisabledReasonDemo = lazySection(
+  () => import("./sections/buttons-more-demo"),
+  "IconButtonDisabledReasonDemo",
+);
 const DisabledReasonLineDemo = lazySection(() => import("./sections/buttons-more-demo"), "DisabledReasonLineDemo");
 const MenuItemBadgeDemo = lazySection(() => import("./sections/lists-menus"), "MenuItemBadgeDemo");
 const MinBarLengthDemo = lazySection(() => import("./sections/series-chart-marks"), "MinBarLengthDemo");
@@ -259,8 +265,14 @@ const Guards022Demo = lazySection(() => import("./sections/signature-password-de
 const FileLock022Demo = lazySection(() => import("./sections/file-inputs"), "FileLock022Demo");
 const InlineEdit022Demo = lazySection(() => import("./sections/measured-grid-demo"), "InlineEdit022Demo");
 const OneTimeCode022Demo = lazySection(() => import("./sections/account-fields-022-demo"), "OneTimeCode022Demo");
-const OneTimeCodeUnlabelled022Demo = lazySection(() => import("./sections/account-fields-022-demo"), "OneTimeCodeUnlabelled022Demo");
-const PasswordStrength022Demo = lazySection(() => import("./sections/account-fields-022-demo"), "PasswordStrength022Demo");
+const OneTimeCodeUnlabelled022Demo = lazySection(
+  () => import("./sections/account-fields-022-demo"),
+  "OneTimeCodeUnlabelled022Demo",
+);
+const PasswordStrength022Demo = lazySection(
+  () => import("./sections/account-fields-022-demo"),
+  "PasswordStrength022Demo",
+);
 const LanguageSelect022Demo = lazySection(() => import("./sections/account-fields-022-demo"), "LanguageSelect022Demo");
 const DateFormatDemo = lazySection(() => import("./sections/date-format"), "DateFormatDemo");
 const TileRadioGroup022Demo = lazySection(() => import("./sections/account-fields-022-demo"), "TileRadioGroup022Demo");
@@ -270,7 +282,10 @@ const Choices022Demo = lazySection(() => import("./sections/choices"), "Choices0
 const Dates022Demo = lazySection(() => import("./sections/dates"), "Dates022Demo");
 const Month022Demo = lazySection(() => import("./sections/month-picker-demo"), "Month022Demo");
 const Numbers022Demo = lazySection(() => import("./sections/numbers-022-demo"), "Numbers022Demo");
-const FeedbackAttachmentRefs022Demo = lazySection(() => import("./sections/feedback-compose"), "FeedbackAttachmentRefs022Demo");
+const FeedbackAttachmentRefs022Demo = lazySection(
+  () => import("./sections/feedback-compose"),
+  "FeedbackAttachmentRefs022Demo",
+);
 const TourStaleSpotlight022Demo = lazySection(() => import("./sections/tour"), "TourStaleSpotlight022Demo");
 const TourCatalogueDemo = lazySection(() => import("./sections/tour"), "TourCatalogueDemo");
 const GuidedFormTourDemo = lazySection(() => import("./sections/tour-guided-form"), "GuidedFormTourDemo");
@@ -296,9 +311,15 @@ const Textarea024Demo = lazySection(() => import("./sections/textarea-024-demo")
 const RhfInlineEntity024Demo = lazySection(() => import("./sections/combobox"), "RhfInlineEntity024Demo");
 // 0.25.0: the feedback run and the polish list.
 const SearchParams025Demo = lazySection(() => import("./sections/search-params-025-demo"), "SearchParams025Demo");
-const TranslationReview025Demo = lazySection(() => import("./sections/translation-review-025-demo"), "TranslationReview025Demo");
+const TranslationReview025Demo = lazySection(
+  () => import("./sections/translation-review-025-demo"),
+  "TranslationReview025Demo",
+);
 const TextareaEdge025Demo = lazySection(() => import("./sections/fields"), "TextareaEdge025Demo");
-const FeedbackDialogButtons025Demo = lazySection(() => import("./sections/feedback-compose"), "FeedbackDialogButtons025Demo");
+const FeedbackDialogButtons025Demo = lazySection(
+  () => import("./sections/feedback-compose"),
+  "FeedbackDialogButtons025Demo",
+);
 const FeedbackRecordDemo = lazySection(() => import("./sections/feedback-inbox/record"), "FeedbackRecordDemo");
 const TableEdgeFadeDemo = lazySection(() => import("./sections/table-edge-fade"), "TableEdgeFadeDemo");
 const DataTableEdgeFadeDemo = lazySection(() => import("./sections/table-edge-fade"), "DataTableEdgeFadeDemo");
@@ -308,16 +329,40 @@ const FeedbackTable027Demo = lazySection(() => import("./sections/feedback-inbox
 const FeedbackSubjectDemo = lazySection(() => import("./sections/feedback-inbox/table"), "FeedbackSubjectDemo");
 const FeedbackDetail027Demo = lazySection(() => import("./sections/feedback-inbox/detail"), "FeedbackDetail027Demo");
 // 0.38.0: public feedback — the pages every user reads, the switch, the menu row, the notice, the types.
-const FeedbackPublic038Demo = lazySection(() => import("./sections/feedback-inbox/public-038"), "FeedbackPublic038Demo");
-const FeedbackPublicSwitch038Demo = lazySection(() => import("./sections/feedback-inbox/public-038"), "FeedbackPublicSwitch038Demo");
-const FeedbackPublicCompose038Demo = lazySection(() => import("./sections/feedback-inbox/public-038"), "FeedbackPublicCompose038Demo");
-const FeedbackNotificationTypes038Demo = lazySection(() => import("./sections/feedback-inbox/public-038"), "FeedbackNotificationTypes038Demo");
+const FeedbackPublic038Demo = lazySection(
+  () => import("./sections/feedback-inbox/public-038"),
+  "FeedbackPublic038Demo",
+);
+const FeedbackPublicSwitch038Demo = lazySection(
+  () => import("./sections/feedback-inbox/public-038"),
+  "FeedbackPublicSwitch038Demo",
+);
+const FeedbackPublicCompose038Demo = lazySection(
+  () => import("./sections/feedback-inbox/public-038"),
+  "FeedbackPublicCompose038Demo",
+);
+const FeedbackNotificationTypes038Demo = lazySection(
+  () => import("./sections/feedback-inbox/public-038"),
+  "FeedbackNotificationTypes038Demo",
+);
 // 0.38.0: public feedback — the vote, the replies, the comment thread.
-const FeedbackThread038Demo = lazySection(() => import("./sections/feedback-inbox/thread-038"), "FeedbackThread038Demo");
-const FeedbackReplies038Demo = lazySection(() => import("./sections/feedback-inbox/thread-038"), "FeedbackReplies038Demo");
-const FeedbackRework040Demo = lazySection(() => import("./sections/feedback-inbox/rework-040"), "FeedbackRework040Demo");
+const FeedbackThread038Demo = lazySection(
+  () => import("./sections/feedback-inbox/thread-038"),
+  "FeedbackThread038Demo",
+);
+const FeedbackReplies038Demo = lazySection(
+  () => import("./sections/feedback-inbox/thread-038"),
+  "FeedbackReplies038Demo",
+);
+const FeedbackRework040Demo = lazySection(
+  () => import("./sections/feedback-inbox/rework-040"),
+  "FeedbackRework040Demo",
+);
 const FeedbackMenu040Demo = lazySection(() => import("./sections/feedback-inbox/rework-040"), "FeedbackMenu040Demo");
-const FeedbackAttachments047Demo = lazySection(() => import("./sections/feedback-inbox/attachments-047"), "FeedbackAttachments047Demo");
+const FeedbackAttachments047Demo = lazySection(
+  () => import("./sections/feedback-inbox/attachments-047"),
+  "FeedbackAttachments047Demo",
+);
 // 0.32.0: text size and contrast, and billing.
 const TextSize032Demo = lazySection(() => import("./sections/text-size-032-demo"), "TextSize032Demo");
 const TextSizeComponents032Demo = lazySection(
@@ -436,8 +481,7 @@ export const GROUPS: ShowcaseGroup[] = [
         slug: "overview",
         title: "Overview",
         short: "Overview",
-        blurb:
-          "What @eifi1/ui-kit is, the eight layers it is built in, and how to read a page of this showcase.",
+        blurb: "What @eifi1/ui-kit is, the eight layers it is built in, and how to read a page of this showcase.",
         icon: Compass,
         Body: GettingStarted,
       },
@@ -471,7 +515,16 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The semantic layer over the palette: which tone a status takes, every fill with the foreground it names, each tone as text, wash and line, the strong lines, the well on a card, the hover rule, the role utilities that replace text-[var(--…)], and the test that catches a variable nothing declares.",
         icon: Contrast,
-        components: ["statusTone", "STATUS_KINDS", "StatusKind", "undeclaredCssVariables", "KIT_CSS_VARIABLES", "declaredCustomProperties", "Card", "contrast"],
+        components: [
+          "statusTone",
+          "STATUS_KINDS",
+          "StatusKind",
+          "undeclaredCssVariables",
+          "KIT_CSS_VARIABLES",
+          "declaredCustomProperties",
+          "Card",
+          "contrast",
+        ],
         Body: ColourRoles033Demo,
       },
       {
@@ -483,7 +536,23 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Normal, Large and Extra large on one root scale, with the breakpoints that move with it, the More contrast step, the account rule that carries both between devices — and what the components do at Large.",
         icon: ALargeSmall,
-        components: ["TextSizeSetting", "ContrastSetting", "useTextSize", "useBreakpoint", "usePhoneLayout", "useAccountAppearance", "RowActions", "rowActionsColumn", "RowActionsHead", "IconButton", "CompactControls", "AppShell", "DataTable", "Input", "FieldHint"],
+        components: [
+          "TextSizeSetting",
+          "ContrastSetting",
+          "useTextSize",
+          "useBreakpoint",
+          "usePhoneLayout",
+          "useAccountAppearance",
+          "RowActions",
+          "rowActionsColumn",
+          "RowActionsHead",
+          "IconButton",
+          "CompactControls",
+          "AppShell",
+          "DataTable",
+          "Input",
+          "FieldHint",
+        ],
         Body: () => (
           <>
             <TextSize032Demo />
@@ -510,7 +579,23 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Every string the kit renders, as one typed tree — and the provider that hands a translation to every component at once.",
         icon: Languages,
-        components: ["UiKitProvider", "UiKitLabels", "TranslationProgress", "TranslationReviewEditor", "DEFAULT_UI_KIT_LABELS", "missingKitLabels", "UI_KIT_LABELS_DE_CH", "uiKitLabelsDeCh", "KIT_LANGUAGES", "resolveLanguage", "loadUiKitLabels", "kitLabelStrings", "TranslationReviewPanel", "ReviewStatusChip", "TranslationExportButton"],
+        components: [
+          "UiKitProvider",
+          "UiKitLabels",
+          "TranslationProgress",
+          "TranslationReviewEditor",
+          "DEFAULT_UI_KIT_LABELS",
+          "missingKitLabels",
+          "UI_KIT_LABELS_DE_CH",
+          "uiKitLabelsDeCh",
+          "KIT_LANGUAGES",
+          "resolveLanguage",
+          "loadUiKitLabels",
+          "kitLabelStrings",
+          "TranslationReviewPanel",
+          "ReviewStatusChip",
+          "TranslationExportButton",
+        ],
         Body: () => (
           <>
             <Localisation />
@@ -543,7 +628,13 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The kit's own words in every language the configured app ships, reviewed against that app's review database: the same kit. rows and verdicts as its Translations page, opened from there with a review token.",
         icon: ListChecks,
-        components: ["TranslationReviewPanel", "TranslationLocaleTabs", "ServerWakeNotice", "createServerWake", "useServerWakeStage"],
+        components: [
+          "TranslationReviewPanel",
+          "TranslationLocaleTabs",
+          "ServerWakeNotice",
+          "createServerWake",
+          "useServerWakeStage",
+        ],
         Body: KitReviewPage,
       },
     ],
@@ -562,7 +653,22 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Text",
         blurb: "Inputs, and the class constants an app composes its own fields from.",
         icon: TextCursorInput,
-        components: ["Input", "Select", "Textarea", "Label", "SearchField", "FloatingField", "FieldHint", "FieldLabel", "FieldChevron", "HelpPopover", "Field", "IbanInput", "PhoneInput", "FieldStrip"],
+        components: [
+          "Input",
+          "Select",
+          "Textarea",
+          "Label",
+          "SearchField",
+          "FloatingField",
+          "FieldHint",
+          "FieldLabel",
+          "FieldChevron",
+          "HelpPopover",
+          "Field",
+          "IbanInput",
+          "PhoneInput",
+          "FieldStrip",
+        ],
         Body: () => (
           <>
             <Fields />
@@ -583,7 +689,36 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The react-hook-form adapter at @eifi1/ui-kit/rhf: a field's label, control, description and message wired to each other and to the form's state, with the messages only where the user can see them.",
         icon: ClipboardCheck,
-        components: ["Form", "useRhfWizardStep", "Field", "RhfField", "RhfTextField", "RhfNumberField", "RhfIntegerField", "RhfMoneyField", "RhfDateField", "RhfTextarea", "RhfSelect", "RhfCheckbox", "RhfCombobox", "RhfTextCombobox", "RhfLineItems", "FormActions", "LineItems", "WriteLockProvider", "RhfTimeInput", "RhfDateRangePicker", "RhfToggleGroup", "RhfIbanInput", "RhfPhoneInput", "RhfCountrySelect", "RhfMonthPicker", "RhfInlineEntityCombobox", "MoneyField", "IntegerField"],
+        components: [
+          "Form",
+          "useRhfWizardStep",
+          "Field",
+          "RhfField",
+          "RhfTextField",
+          "RhfNumberField",
+          "RhfIntegerField",
+          "RhfMoneyField",
+          "RhfDateField",
+          "RhfTextarea",
+          "RhfSelect",
+          "RhfCheckbox",
+          "RhfCombobox",
+          "RhfTextCombobox",
+          "RhfLineItems",
+          "FormActions",
+          "LineItems",
+          "WriteLockProvider",
+          "RhfTimeInput",
+          "RhfDateRangePicker",
+          "RhfToggleGroup",
+          "RhfIbanInput",
+          "RhfPhoneInput",
+          "RhfCountrySelect",
+          "RhfMonthPicker",
+          "RhfInlineEntityCombobox",
+          "MoneyField",
+          "IntegerField",
+        ],
         Body: () => (
           <>
             <FormsRhf />
@@ -607,7 +742,18 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Choices",
         blurb: "On or off, one of a few, a value on a scale — and picking a colour, an icon or a card.",
         icon: ToggleRight,
-        components: ["Checkbox", "Switch", "Slider", "SwatchPicker", "IconPicker", "ChoiceCard", "ChoiceCardGroup", "ActionCard", "TileRadioGroup", "CheckboxGroup"],
+        components: [
+          "Checkbox",
+          "Switch",
+          "Slider",
+          "SwatchPicker",
+          "IconPicker",
+          "ChoiceCard",
+          "ChoiceCardGroup",
+          "ActionCard",
+          "TileRadioGroup",
+          "CheckboxGroup",
+        ],
         Body: () => (
           <>
             <Choices />
@@ -627,7 +773,16 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The numeric stack: a calculator-backed number field, a field whose value is a number, the money field and its tones, and the currency picker.",
         icon: Sigma,
-        components: ["NumberInput", "NumberField", "AmountInput", "CalculatorButton", "CurrencySelect", "CurrencyFlag", "NumberPadSheet", "SignChip"],
+        components: [
+          "NumberInput",
+          "NumberField",
+          "AmountInput",
+          "CalculatorButton",
+          "CurrencySelect",
+          "CurrencyFlag",
+          "NumberPadSheet",
+          "SignChip",
+        ],
         Body: () => (
           <>
             <Numbers />
@@ -645,7 +800,15 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Picking a day or a range of days: the calendar itself, the date and range pickers built on it, their presets and bounds, and the first day of the week.",
         icon: CalendarDays,
-        components: ["MiniCalendar", "DatePicker", "DateRangePicker", "DateMark", "calendarMonthPresets", "UiKitProvider", "useKitDateFormatter"],
+        components: [
+          "MiniCalendar",
+          "DatePicker",
+          "DateRangePicker",
+          "DateMark",
+          "calendarMonthPresets",
+          "UiKitProvider",
+          "useKitDateFormatter",
+        ],
         Body: () => (
           <>
             <Dates />
@@ -762,7 +925,15 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Multi-select, the grouped picker and the phone sheet — and the hooks and panel every dropdown in the kit is built from.",
         icon: Puzzle,
-        components: ["MultiSelect", "GroupedPicker", "PickerSheet", "useDropdown", "useDropdownSearch", "DropdownPanel", "DropdownSearchHeader"],
+        components: [
+          "MultiSelect",
+          "GroupedPicker",
+          "PickerSheet",
+          "useDropdown",
+          "useDropdownSearch",
+          "DropdownPanel",
+          "DropdownSearchHeader",
+        ],
         Body: () => (
           <>
             <DropdownParts />
@@ -777,7 +948,17 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Typing a table of measurements: a keyboard grid of cells, a block pasted from a spreadsheet, and the same table as text — thousands of rows, only the visible ones mounted.",
         icon: Grid3x3,
-        components: ["MeasuredGrid", "useMeasuredRows", "useWindowedRows", "parseTable", "parseRows", "InlineEditField", "ColumnMapper", "ColumnRoleTable", "parseTextTable"],
+        components: [
+          "MeasuredGrid",
+          "useMeasuredRows",
+          "useWindowedRows",
+          "parseTable",
+          "parseRows",
+          "InlineEditField",
+          "ColumnMapper",
+          "ColumnRoleTable",
+          "parseTextTable",
+        ],
         Body: () => (
           <>
             <MeasuredGridDemo />
@@ -804,7 +985,14 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Capturing a signature — and showing a saved one — telling a user how strong their password is, and confirming a destructive action.",
         icon: PenLine,
-        components: ["SignaturePad", "SignatureView", "PasswordStrengthMeter", "DangerConfirm", "TypedConfirmField", "CurrentPasswordInput"],
+        components: [
+          "SignaturePad",
+          "SignatureView",
+          "PasswordStrengthMeter",
+          "DangerConfirm",
+          "TypedConfirmField",
+          "CurrentPasswordInput",
+        ],
         Body: () => (
           <>
             <SignaturePasswordDemo />
@@ -822,7 +1010,16 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Wizard",
         blurb: "The multi-step engine, its chrome and its review step.",
         icon: Wand2,
-        components: ["useWizard", "WizardContextProvider", "StepperNav", "WizardStepper", "WizardSummary", "WizardStep", "useWizardStepValidate", "useWizardNextGate"],
+        components: [
+          "useWizard",
+          "WizardContextProvider",
+          "StepperNav",
+          "WizardStepper",
+          "WizardSummary",
+          "WizardStep",
+          "useWizardStepValidate",
+          "useWizardNextGate",
+        ],
         Body: () => (
           <>
             <Wizard />
@@ -848,7 +1045,17 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Buttons, button groups, icon buttons, cards, spinners and avatars — the pieces everything else is built from.",
         icon: Blocks,
-        components: ["Button", "ButtonGroup", "ButtonGroupLink", "IconButton", "Card", "Spinner", "UserAvatar", "buttonClasses", "DisabledReasonLine"],
+        components: [
+          "Button",
+          "ButtonGroup",
+          "ButtonGroupLink",
+          "IconButton",
+          "Card",
+          "Spinner",
+          "UserAvatar",
+          "buttonClasses",
+          "DisabledReasonLine",
+        ],
         Body: () => (
           <>
             <ButtonsSurfaces />
@@ -889,7 +1096,20 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "How far a job has got, that content is on its way, that there is nothing here, and that something needs reading: progress bars and meters, skeletons, empty states and banners.",
         icon: Loader,
-        components: ["ProgressBar", "Skeleton", "TableSkeleton", "EmptyState", "AlertBanner", "alertFrameClass", "toneFrameClass", "toast", "Toaster", "LoadingState", "ErrorBoundary", "ServerWakeNotice"],
+        components: [
+          "ProgressBar",
+          "Skeleton",
+          "TableSkeleton",
+          "EmptyState",
+          "AlertBanner",
+          "alertFrameClass",
+          "toneFrameClass",
+          "toast",
+          "Toaster",
+          "LoadingState",
+          "ErrorBoundary",
+          "ServerWakeNotice",
+        ],
         Body: () => (
           <>
             <FeedbackProgress />
@@ -915,7 +1135,18 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Facts laid out without any machinery: a list of terms and details, a plain static table, and the separator and scroll area that sit between them.",
         icon: ListIcon,
-        components: ["DescriptionList", "DescriptionItem", "Table", "TableBody", "TableEmpty", "TableCaption", "TableFoot", "NUMERIC_CELL_CLASS", "Separator", "ScrollArea"],
+        components: [
+          "DescriptionList",
+          "DescriptionItem",
+          "Table",
+          "TableBody",
+          "TableEmpty",
+          "TableCaption",
+          "TableFoot",
+          "NUMERIC_CELL_CLASS",
+          "Separator",
+          "ScrollArea",
+        ],
         Body: () => (
           <>
             <DescriptionTable />
@@ -1028,7 +1259,15 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The themed chart shell over Recharts — container, tooltip and legend — and the colour system every chart in the kit draws from.",
         icon: ChartColumn,
-        components: ["ChartContainer", "ChartTooltip", "ChartTooltipContent", "ChartLegend", "ChartLegendContent", "useChart", "paletteFor"],
+        components: [
+          "ChartContainer",
+          "ChartTooltip",
+          "ChartTooltipContent",
+          "ChartLegend",
+          "ChartLegendContent",
+          "useChart",
+          "paletteFor",
+        ],
         Body: Charts,
       },
       {
@@ -1063,7 +1302,15 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The zoomable series chart the apps share: an axis per unit, a legend of switches, one zoom for a stack of charts, a row budget for long tables, and the helpers underneath.",
         icon: ChartLine,
-        components: ["SeriesChart", "StaticSeriesChart", "SharedXZoom", "ToggleLegend", "LegendColumn", "LegendGroup", "facingAxes"],
+        components: [
+          "SeriesChart",
+          "StaticSeriesChart",
+          "SharedXZoom",
+          "ToggleLegend",
+          "LegendColumn",
+          "LegendGroup",
+          "facingAxes",
+        ],
         Body: () => (
           <>
             <SeriesChartDemo />
@@ -1122,8 +1369,7 @@ export const GROUPS: ShowcaseGroup[] = [
     // and "Overlays" at 11px is 46.
     shortLabel: "Popups",
     icon: MousePointerClick,
-    blurb:
-      "Everything that floats above the page, and the one timing they all share on the way out.",
+    blurb: "Everything that floats above the page, and the one timing they all share on the way out.",
     pages: [
       {
         slug: "dialogs",
@@ -1132,7 +1378,15 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Modal and full-bleed dialog, the backdrop press that closes them, and the close-transition timing every overlay shares.",
         icon: AppWindow,
-        components: ["Modal", "ModalCloseContext", "FullBleedDialog", "useBackdropClose", "OVERLAY_EXIT_MS", "useCloseTransition", "useDialogParam"],
+        components: [
+          "Modal",
+          "ModalCloseContext",
+          "FullBleedDialog",
+          "useBackdropClose",
+          "OVERLAY_EXIT_MS",
+          "useCloseTransition",
+          "useDialogParam",
+        ],
         Body: () => (
           <>
             <Dialogs />
@@ -1251,8 +1505,7 @@ export const GROUPS: ShowcaseGroup[] = [
     label: "App chrome",
     shortLabel: "Chrome",
     icon: PanelsTopLeft,
-    blurb:
-      "The frame an app lives in and the flows every app repeats: settings, accounts, subscriptions, feedback.",
+    blurb: "The frame an app lives in and the flows every app repeats: settings, accounts, subscriptions, feedback.",
     pages: [
       {
         slug: "shell",
@@ -1260,7 +1513,33 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Shell",
         blurb: "The app frame you are looking at, taken apart.",
         icon: Layout,
-        components: ["AppShell", "TopBar", "TopBarBrand", "PageContents", "PageContentsLayout", "ThemeToggle", "PaletteMenu", "LanguageMenu", "OptionSwitcherMenu", "RoleSwitcher", "TopBarActionMenu", "UserAvatar", "CompanySwitcher", "TopBarActions", "TOP_BAR_ACTION_ORDER", "AccountMenuLanguage", "AccountMenuTextSize", "TourMenu", "SyncStatusIndicator", "syncState", "SyncStatus", "DevMenu", "DevMenuSection", "DevSwitchers", "DEV_ORIGINAL_ROLE_KEY"],
+        components: [
+          "AppShell",
+          "TopBar",
+          "TopBarBrand",
+          "PageContents",
+          "PageContentsLayout",
+          "ThemeToggle",
+          "PaletteMenu",
+          "LanguageMenu",
+          "OptionSwitcherMenu",
+          "RoleSwitcher",
+          "TopBarActionMenu",
+          "UserAvatar",
+          "CompanySwitcher",
+          "TopBarActions",
+          "TOP_BAR_ACTION_ORDER",
+          "AccountMenuLanguage",
+          "AccountMenuTextSize",
+          "TourMenu",
+          "SyncStatusIndicator",
+          "syncState",
+          "SyncStatus",
+          "DevMenu",
+          "DevMenuSection",
+          "DevSwitchers",
+          "DEV_ORIGINAL_ROLE_KEY",
+        ],
         Body: () => (
           <>
             <ShellSection />
@@ -1280,7 +1559,19 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The parts of a page that are not its content: the header with its trail and actions, the breadcrumbs on their own, and the section label, caption and status dot.",
         icon: PanelTop,
-        components: ["PageHeader", "Breadcrumbs", "useDocumentTitle", "formatDocumentTitle", "SectionLabel", "Caption", "StatusDot", "NavPills", "SectionNav", "SECTION_LABEL_CLASS", "CAPTION_CLASS"],
+        components: [
+          "PageHeader",
+          "Breadcrumbs",
+          "useDocumentTitle",
+          "formatDocumentTitle",
+          "SectionLabel",
+          "Caption",
+          "StatusDot",
+          "NavPills",
+          "SectionNav",
+          "SECTION_LABEL_CLASS",
+          "CAPTION_CLASS",
+        ],
         Body: () => (
           <>
             <PageStructure />
@@ -1302,7 +1593,29 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The settings page and the admin page on one shell — the sidebar on a desktop, the drill-down list on a phone, a group per path, search, the card a link rings — and the account-settings rows that go on it: theme, language, profile, password and two-factor.",
         icon: SettingsIcon,
-        components: ["SettingsLayout", "SettingsSection", "useSettingsRoute", "useSettingsFocus", "useSettingsLayout", "SettingsHeadingLevel", "settingsSearchEntries", "useAccountLanguage", "ThemeSetting", "LanguageSetting", "ProfileSetting", "PasswordSetting", "TwoFactorSetting", "LanguageSelect", "DeviceResetSetting", "registerDeviceSetting", "deviceSettings", "resetDeviceSettings", "DateFormatSetting", "dateFormatterFor", "formatDateWithPreference"],
+        components: [
+          "SettingsLayout",
+          "SettingsSection",
+          "useSettingsRoute",
+          "useSettingsFocus",
+          "useSettingsLayout",
+          "SettingsHeadingLevel",
+          "settingsSearchEntries",
+          "useAccountLanguage",
+          "ThemeSetting",
+          "LanguageSetting",
+          "ProfileSetting",
+          "PasswordSetting",
+          "TwoFactorSetting",
+          "LanguageSelect",
+          "DeviceResetSetting",
+          "registerDeviceSetting",
+          "deviceSettings",
+          "resetDeviceSettings",
+          "DateFormatSetting",
+          "dateFormatterFor",
+          "formatDateWithPreference",
+        ],
         Body: () => (
           <>
             <SettingsDesktop031Demo />
@@ -1325,7 +1638,28 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The notification settings every app shares: the types the server answers with a switch per channel (in the app, push, e-mail), quiet hours and the account's time zone, the inbox and the top bar's bell, push on this device and the list of devices with the types each one mutes, and the page an e-mail's unsubscribe link opens.",
         icon: Bell,
-        components: ["NotificationTypesSetting", "QuietHoursSetting", "deviceTimeZone", "usePushDevice", "PushDeviceSetting", "PushDevicesSetting", "describeUserAgent", "PUSH_SUBSCRIPTION_CHANGED", "notifyPushSubscriptionChanged", "pushSupported", "PushDeviceError", "UnsubscribePanel", "unsubscribeTokenType", "DEFAULT_NOTIFICATIONS_LABELS", "useFeedbackNotificationTypes", "DEFAULT_FEEDBACK_NOTIFICATION_TYPES_LABELS", "NotificationInbox", "NotificationBell", "INBOX_BADGE_INTERVAL", "useDeviceZoneReport"],
+        components: [
+          "NotificationTypesSetting",
+          "QuietHoursSetting",
+          "deviceTimeZone",
+          "usePushDevice",
+          "PushDeviceSetting",
+          "PushDevicesSetting",
+          "describeUserAgent",
+          "PUSH_SUBSCRIPTION_CHANGED",
+          "notifyPushSubscriptionChanged",
+          "pushSupported",
+          "PushDeviceError",
+          "UnsubscribePanel",
+          "unsubscribeTokenType",
+          "DEFAULT_NOTIFICATIONS_LABELS",
+          "useFeedbackNotificationTypes",
+          "DEFAULT_FEEDBACK_NOTIFICATION_TYPES_LABELS",
+          "NotificationInbox",
+          "NotificationBell",
+          "INBOX_BADGE_INTERVAL",
+          "useDeviceZoneReport",
+        ],
         Body: () => (
           <>
             <NotificationsPage />
@@ -1340,7 +1674,31 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The public start page and the try-it demo: the header in its three states, the landing's sections, the SEO checks, the resume, and the demo's start, countdown and end.",
         icon: LayoutTemplate,
-        components: ["PublicHeader", "Hero", "FeatureRows", "FeatureRow", "TrustStrip", "CtaBand", "PublicFooter", "PublicPage", "LandingActions", "accessAction", "usePageSeo", "seoCopyProblems", "metaContent", "RootEntry", "RedirectIfAuthed", "useLastVisitedPage", "readLastVisitedPage", "safeNextPath", "DemoStart", "DemoBanner", "useDemoCountdown", "DemoEnded", "isDemoSession"],
+        components: [
+          "PublicHeader",
+          "Hero",
+          "FeatureRows",
+          "FeatureRow",
+          "TrustStrip",
+          "CtaBand",
+          "PublicFooter",
+          "PublicPage",
+          "LandingActions",
+          "accessAction",
+          "usePageSeo",
+          "seoCopyProblems",
+          "metaContent",
+          "RootEntry",
+          "RedirectIfAuthed",
+          "useLastVisitedPage",
+          "readLastVisitedPage",
+          "safeNextPath",
+          "DemoStart",
+          "DemoBanner",
+          "useDemoCountdown",
+          "DemoEnded",
+          "isDemoSession",
+        ],
         Body: () => (
           <>
             <SampleLanding031Demo />
@@ -1359,7 +1717,48 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The pages before the app — a narrow sign-in and a wide legal page — and the account's security: two-factor set up from a QR code, and passkeys added, renamed and removed.",
         icon: KeyRound,
-        components: ["AuthLayout", "TwoFactorSetting", "QrCode", "PasskeysSetting", "DEFAULT_ACCOUNT_SETTINGS_LABELS", "ShareCard", "ShareDialog", "SharePanel", "RoleChip", "AccountStateChip", "dateColumn", "LegalLayout", "LegalSection", "LegalLinks", "LegalPage", "LegalKitSection", "LegalFooter", "LegalAcceptCheckbox", "LEGAL_SKELETON", "useNoIndex", "OneTimeCodeInput", "SignInForm", "RegisterForm", "CompleteNameDialog", "taggedEmail", "isAuthError", "ForgotPasswordForm", "ResetPasswordForm", "VerifyEmailStatus", "EmailVerificationBanner", "NotFoundPage", "AcceptInvitation", "formatPersonName", "personInitials", "EmailChangeSetting", "SessionsSetting", "DeleteAccountSetting", "DataExportSetting", "isRateLimited", "retryAfterSeconds"],
+        components: [
+          "AuthLayout",
+          "TwoFactorSetting",
+          "QrCode",
+          "PasskeysSetting",
+          "DEFAULT_ACCOUNT_SETTINGS_LABELS",
+          "ShareCard",
+          "ShareDialog",
+          "SharePanel",
+          "RoleChip",
+          "AccountStateChip",
+          "dateColumn",
+          "LegalLayout",
+          "LegalSection",
+          "LegalLinks",
+          "LegalPage",
+          "LegalKitSection",
+          "LegalFooter",
+          "LegalAcceptCheckbox",
+          "LEGAL_SKELETON",
+          "useNoIndex",
+          "OneTimeCodeInput",
+          "SignInForm",
+          "RegisterForm",
+          "CompleteNameDialog",
+          "taggedEmail",
+          "isAuthError",
+          "ForgotPasswordForm",
+          "ResetPasswordForm",
+          "VerifyEmailStatus",
+          "EmailVerificationBanner",
+          "NotFoundPage",
+          "AcceptInvitation",
+          "formatPersonName",
+          "personInitials",
+          "EmailChangeSetting",
+          "SessionsSetting",
+          "DeleteAccountSetting",
+          "DataExportSetting",
+          "isRateLimited",
+          "retryAfterSeconds",
+        ],
         Body: () => (
           <>
             <AuthAccountDemo />
@@ -1384,7 +1783,40 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The admin side of accounts: the user list with its roles and states, the four admin actions with the server's confirmation, the audit log with its group actions, invitations, handing work on, and the operator's plan column and plan change.",
         icon: UserCog,
-        components: ["userRosterColumns", "useUserRosterColumns", "UserIdentityCell", "UserRowActions", "adminUserStates", "userRosterSort", "RoleSelect", "RolesEditor", "ReviewerScopeEditor", "AdminActionConfirm", "AdminActionLog", "TransferOwnershipDialog", "InvitationsPanel", "AccountStateChip", "planColumn", "usePlanColumn", "PlanChangeConfirm", "usePlanChangeResult", "AccountRoleChip", "adminMenuEntry", "AdminMenuRow", "ADMIN_SECTIONS", "adminSections", "AdminOverview", "AttentionTile", "adminWaitingCount", "AdminToolLinks", "AdminForbidden", "adminSectionOrder", "useAdminMenuEntry", "AdminWaitingBadge", "MailTestCard"],
+        components: [
+          "userRosterColumns",
+          "useUserRosterColumns",
+          "UserIdentityCell",
+          "UserRowActions",
+          "adminUserStates",
+          "userRosterSort",
+          "RoleSelect",
+          "RolesEditor",
+          "ReviewerScopeEditor",
+          "AdminActionConfirm",
+          "AdminActionLog",
+          "TransferOwnershipDialog",
+          "InvitationsPanel",
+          "AccountStateChip",
+          "planColumn",
+          "usePlanColumn",
+          "PlanChangeConfirm",
+          "usePlanChangeResult",
+          "AccountRoleChip",
+          "adminMenuEntry",
+          "AdminMenuRow",
+          "ADMIN_SECTIONS",
+          "adminSections",
+          "AdminOverview",
+          "AttentionTile",
+          "adminWaitingCount",
+          "AdminToolLinks",
+          "AdminForbidden",
+          "adminSectionOrder",
+          "useAdminMenuEntry",
+          "AdminWaitingBadge",
+          "MailTestCard",
+        ],
         Body: () => (
           <>
             <AdminWayIn042Demo />
@@ -1407,7 +1839,38 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Paying for an app: the plan picker in two currencies and two intervals, the subscription's status, the banners from trial to lapse, the plan-limit notice and toast, the read-only lock and the kinds of lock, the provider's portal, the way back from the checkout, the pay page, and the imprint's commercial disclaimer.",
         icon: CreditCard,
-        components: ["PlanPicker", "PlanCard", "SubscriptionStatusChip", "BillingBanner", "PlanLimitNotice", "SubscriptionActions", "isPlanLimit", "combineWriteLocks", "useCheckoutProcessing", "noteCheckoutStarted", "isCheckoutReturn", "withoutCheckoutReturn", "checkoutReturnUrl", "checkoutFingerprint", "usePlanLimitToast", "payPageUrl", "paddleLocale", "useBillingWriteLock", "useWriteLock", "writeLockFor", "COMMIT_EXCEPT_BILLING", "WriteLockProvider", "ShareCard", "PlanSwitchConfirm", "PAY_PAGE_APPS", "CancelSubscriptionConfirm", "isPermanentGrant", "GrantWarningConfirm", "openProviderPage", "useCancelRequest"],
+        components: [
+          "PlanPicker",
+          "PlanCard",
+          "SubscriptionStatusChip",
+          "BillingBanner",
+          "PlanLimitNotice",
+          "SubscriptionActions",
+          "isPlanLimit",
+          "combineWriteLocks",
+          "useCheckoutProcessing",
+          "noteCheckoutStarted",
+          "isCheckoutReturn",
+          "withoutCheckoutReturn",
+          "checkoutReturnUrl",
+          "checkoutFingerprint",
+          "usePlanLimitToast",
+          "payPageUrl",
+          "paddleLocale",
+          "useBillingWriteLock",
+          "useWriteLock",
+          "writeLockFor",
+          "COMMIT_EXCEPT_BILLING",
+          "WriteLockProvider",
+          "ShareCard",
+          "PlanSwitchConfirm",
+          "PAY_PAGE_APPS",
+          "CancelSubscriptionConfirm",
+          "isPermanentGrant",
+          "GrantWarningConfirm",
+          "openProviderPage",
+          "useCancelRequest",
+        ],
         Body: () => (
           <>
             <Billing032Demo />
@@ -1422,7 +1885,15 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Compose",
         blurb: "The report form and its attachment field.",
         icon: MessageSquarePlus,
-        components: ["FeedbackDialog", "FeedbackAttachmentField", "FeedbackMenu", "useFeedbackSubmit", "FeedbackContextBox", "captureAppScreenshot", "createCrashReporter"],
+        components: [
+          "FeedbackDialog",
+          "FeedbackAttachmentField",
+          "FeedbackMenu",
+          "useFeedbackSubmit",
+          "FeedbackContextBox",
+          "captureAppScreenshot",
+          "createCrashReporter",
+        ],
         Body: () => (
           <>
             <FeedbackCompose />
@@ -1441,7 +1912,38 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Inbox",
         blurb: "The shared status vocabulary, the transition policy, and the parts an inbox is built from.",
         icon: Inbox,
-        components: ["FeedbackSubject", "FeedbackDetail", "FeedbackDetailSection", "FeedbackProse", "FeedbackStatusBadge", "FeedbackCategoryBadge", "FeedbackStatusTransitions", "FeedbackNoteEditor", "FeedbackThread", "ChatComposer", "useFeedbackColumns", "FeedbackAwaitingToggle", "FeedbackEmptyState", "FeedbackMobileCard", "FeedbackRowDetail", "FeedbackReworkSection", "useFeedbackStatusUndo", "feedbackSwipePlan", "FeedbackVoteButton", "FeedbackCommentThread", "FeedbackReplyTimeline", "FeedbackReplyComposer", "FeedbackEntryFile", "useFeedbackEntryUpload", "FeedbackPublicList", "FeedbackPublicDetail", "FeedbackPublicSwitch", "feedbackPublicSwitchAllowed", "useFeedbackPublicLabels", "DEFAULT_FEEDBACK_PUBLIC_LABELS"],
+        components: [
+          "FeedbackSubject",
+          "FeedbackDetail",
+          "FeedbackDetailSection",
+          "FeedbackProse",
+          "FeedbackStatusBadge",
+          "FeedbackCategoryBadge",
+          "FeedbackStatusTransitions",
+          "FeedbackNoteEditor",
+          "FeedbackThread",
+          "ChatComposer",
+          "useFeedbackColumns",
+          "FeedbackAwaitingToggle",
+          "FeedbackEmptyState",
+          "FeedbackMobileCard",
+          "FeedbackRowDetail",
+          "FeedbackReworkSection",
+          "useFeedbackStatusUndo",
+          "feedbackSwipePlan",
+          "FeedbackVoteButton",
+          "FeedbackCommentThread",
+          "FeedbackReplyTimeline",
+          "FeedbackReplyComposer",
+          "FeedbackEntryFile",
+          "useFeedbackEntryUpload",
+          "FeedbackPublicList",
+          "FeedbackPublicDetail",
+          "FeedbackPublicSwitch",
+          "feedbackPublicSwitchAllowed",
+          "useFeedbackPublicLabels",
+          "DEFAULT_FEEDBACK_PUBLIC_LABELS",
+        ],
         Body: () => (
           <>
             <FeedbackInbox />
@@ -1475,7 +1977,15 @@ export const GROUPS: ShowcaseGroup[] = [
         short: "Hooks",
         blurb: "The non-visual exports: hooks read live, and the pure helpers as input → output.",
         icon: FileText,
-        components: ["useMediaQuery", "useAnchoredPanel", "useOverlayHistory", "cn", "useHotkey", "saveBlob", "filenameFromDisposition"],
+        components: [
+          "useMediaQuery",
+          "useAnchoredPanel",
+          "useOverlayHistory",
+          "cn",
+          "useHotkey",
+          "saveBlob",
+          "filenameFromDisposition",
+        ],
         Body: () => (
           <>
             <HooksLib />
@@ -1500,7 +2010,15 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The functions and data behind the inputs, shown as input → output: date arithmetic at @eifi1/ui-kit/dates, the calculator's evaluator, the currency table, and the class constants a custom field is composed from.",
         icon: FunctionSquare,
-        components: ["todayIso", "dateRangePresets", "calendarMonthPresets", "lastFullMonthsRange", "evaluateExpression", "CURRENCIES", "FIELD_BASE"],
+        components: [
+          "todayIso",
+          "dateRangePresets",
+          "calendarMonthPresets",
+          "lastFullMonthsRange",
+          "evaluateExpression",
+          "CURRENCIES",
+          "FIELD_BASE",
+        ],
         Body: Helpers,
       },
       {
@@ -1510,7 +2028,18 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Numbers, money, percentages, dates and relative times in the reader's locale — as input → output in several languages — and the signed amount and change that colour themselves.",
         icon: Percent,
-        components: ["formatNumber", "formatMoney", "formatPercent", "formatDate", "formatRelativeTime", "useKitFormat", "SignedAmount", "Delta", "Tone", "toneTextClass"],
+        components: [
+          "formatNumber",
+          "formatMoney",
+          "formatPercent",
+          "formatDate",
+          "formatRelativeTime",
+          "useKitFormat",
+          "SignedAmount",
+          "Delta",
+          "Tone",
+          "toneTextClass",
+        ],
         Body: () => (
           <>
             <FormattingDemo />
@@ -1543,7 +2072,15 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Working without a connection: the persisted query cache with its scrub list, the question before signing out while changes still wait, the update prompt that waits for a tour, and the shared-computer choice.",
         icon: CloudOff,
-        components: ["createQueryPersistence", "DEFAULT_SCRUB_FIELDS", "SignOutPendingDialog", "PwaUpdatePrompt", "SharedComputerChoice", "isSharedComputer", "setSharedComputer"],
+        components: [
+          "createQueryPersistence",
+          "DEFAULT_SCRUB_FIELDS",
+          "SignOutPendingDialog",
+          "PwaUpdatePrompt",
+          "SharedComputerChoice",
+          "isSharedComputer",
+          "setSharedComputer",
+        ],
         Body: () => <OfflineDemo />,
       },
       {
@@ -1554,7 +2091,17 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Working on the device's copy: the sync engine with its queue, one request per scope, refused changes kept, the waits after an error and the guarded sign-out; its worker, its status for the indicator and the live read of the copy.",
         icon: RefreshCw,
-        components: ["createSyncDb", "createSyncEngine", "useSyncWorker", "useSyncStatus", "useSyncQuery", "stampAfter", "isOfflineError", "readLocalFirst", "writeLocalFirst"],
+        components: [
+          "createSyncDb",
+          "createSyncEngine",
+          "useSyncWorker",
+          "useSyncStatus",
+          "useSyncQuery",
+          "stampAfter",
+          "isOfflineError",
+          "readLocalFirst",
+          "writeLocalFirst",
+        ],
         Body: () => <SyncDemo />,
       },
     ],
@@ -1714,9 +2261,7 @@ function overviewPage(group: ShowcaseGroup): ShowcasePage {
 
 /** Flat list, in reading order — each overview before its pages. For routing,
  *  prev/next, and the render test. */
-export const PAGES: ShowcasePage[] = GROUPS.flatMap((g) =>
-  hasOverview(g) ? [overviewPage(g), ...g.pages] : g.pages,
-);
+export const PAGES: ShowcasePage[] = GROUPS.flatMap((g) => (hasOverview(g) ? [overviewPage(g), ...g.pages] : g.pages));
 
 export const HOME_SLUG = PAGES[0].slug;
 
@@ -1743,7 +2288,5 @@ export const NAV: AppShellNavItem[] = GROUPS.map((group) => ({
   // the sub-items itself — so `end` only has to cover the overview route.
   end: true,
   dataTour: group.slug === "data-display" ? "nav" : undefined,
-  items: hasOverview(group)
-    ? group.pages.map((p) => ({ to: `/${p.slug}`, label: p.title, icon: p.icon }))
-    : undefined,
+  items: hasOverview(group) ? group.pages.map((p) => ({ to: `/${p.slug}`, label: p.title, icon: p.icon })) : undefined,
 }));

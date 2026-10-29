@@ -105,7 +105,11 @@ describe("disabledReason in the layout (§4 'No fact only in a tooltip')", () =>
 
   it("is a line on a touch screen at Normal too — a finger cannot hover", () => {
     media({ coarse: true });
-    render(<IconButton label="Delete" disabledReason={reason}><Trash2 /></IconButton>);
+    render(
+      <IconButton label="Delete" disabledReason={reason}>
+        <Trash2 />
+      </IconButton>,
+    );
     expect(screen.getByText(reason)).toBeVisible();
     expect(screen.getByRole("button", { name: "Delete" })).toHaveAccessibleDescription(reason);
   });
@@ -115,9 +119,13 @@ describe("disabledReason in the layout (§4 'No fact only in a tooltip')", () =>
     size("large");
     render(
       <>
-        <Button disabledReason="A" disabledReasonDisplay="tooltip">One</Button>
+        <Button disabledReason="A" disabledReasonDisplay="tooltip">
+          One
+        </Button>
         <CompactControls>
-          <IconButton label="Two" disabledReason="B"><Trash2 /></IconButton>
+          <IconButton label="Two" disabledReason="B">
+            <Trash2 />
+          </IconButton>
         </CompactControls>
       </>,
     );
@@ -128,7 +136,11 @@ describe("disabledReason in the layout (§4 'No fact only in a tooltip')", () =>
 
   it("`line` shows it at Normal with a mouse", () => {
     media();
-    render(<Button disabledReason="Locked" disabledReasonDisplay="line">Save</Button>);
+    render(
+      <Button disabledReason="Locked" disabledReasonDisplay="line">
+        Save
+      </Button>,
+    );
     expect(screen.getByText("Locked")).toBeVisible();
   });
 
@@ -175,7 +187,11 @@ describe("disabledReason in the layout (§4 'No fact only in a tooltip')", () =>
 
 describe("IconButton's label at Large (§4, §10.8)", () => {
   it("is only the name and the tooltip at Normal", () => {
-    render(<IconButton label="Delete"><Trash2 /></IconButton>);
+    render(
+      <IconButton label="Delete">
+        <Trash2 />
+      </IconButton>,
+    );
     const button = screen.getByRole("button", { name: "Delete" });
     expect(button.querySelector("[data-slot=icon-button-label]")).toBeNull();
     fireEvent.mouseEnter(button.parentElement!);
@@ -184,7 +200,11 @@ describe("IconButton's label at Large (§4, §10.8)", () => {
 
   it("shows as text beside the icon at Large and Extra large, with no bubble repeating it", () => {
     size("large");
-    const { rerender } = render(<IconButton label="Delete"><Trash2 /></IconButton>);
+    const { rerender } = render(
+      <IconButton label="Delete">
+        <Trash2 />
+      </IconButton>,
+    );
     const button = screen.getByRole("button", { name: "Delete" });
     expect(within(button).getByText("Delete")).toHaveAttribute("data-slot", "icon-button-label");
     expect(button.className).toContain("h-9");
@@ -193,12 +213,20 @@ describe("IconButton's label at Large (§4, §10.8)", () => {
     fireEvent.mouseEnter(button);
     expect(screen.queryByRole("tooltip")).toBeNull();
     size("xlarge");
-    rerender(<IconButton label="Delete"><Trash2 /></IconButton>);
+    rerender(
+      <IconButton label="Delete">
+        <Trash2 />
+      </IconButton>,
+    );
     expect(within(screen.getByRole("button")).getByText("Delete")).toBeInTheDocument();
   });
 
   it("follows the text size as it changes", () => {
-    render(<IconButton label="Edit"><Trash2 /></IconButton>);
+    render(
+      <IconButton label="Edit">
+        <Trash2 />
+      </IconButton>,
+    );
     expect(screen.queryByText("Edit")).toBeNull();
     size("large");
     expect(screen.getByText("Edit")).toBeInTheDocument();
@@ -210,12 +238,22 @@ describe("IconButton's label at Large (§4, §10.8)", () => {
     size("large");
     render(
       <>
-        <IconButton label="Zoom in" labelVisible={false}><Trash2 /></IconButton>
-        <IconButton label="Next photo" variant="overlay"><Trash2 /></IconButton>
-        <IconButton label="Take photo" variant="shutter" size="2xl"><Trash2 /></IconButton>
-        <IconButton label="Close" tooltip={false}><Trash2 /></IconButton>
+        <IconButton label="Zoom in" labelVisible={false}>
+          <Trash2 />
+        </IconButton>
+        <IconButton label="Next photo" variant="overlay">
+          <Trash2 />
+        </IconButton>
+        <IconButton label="Take photo" variant="shutter" size="2xl">
+          <Trash2 />
+        </IconButton>
+        <IconButton label="Close" tooltip={false}>
+          <Trash2 />
+        </IconButton>
         <CompactControls>
-          <IconButton label="Notifications"><Trash2 /></IconButton>
+          <IconButton label="Notifications">
+            <Trash2 />
+          </IconButton>
         </CompactControls>
       </>,
     );
@@ -226,16 +264,26 @@ describe("IconButton's label at Large (§4, §10.8)", () => {
 
   it("shows on the link form as well", () => {
     size("large");
-    render(<IconButton href="https://example.com/help" label="Help"><Trash2 /></IconButton>);
+    render(
+      <IconButton href="https://example.com/help" label="Help">
+        <Trash2 />
+      </IconButton>,
+    );
     expect(within(screen.getByRole("link", { name: "Help" })).getByText("Help")).toBeInTheDocument();
   });
 
   it("grows the small squares to the 48 px target; the chip-sized 2xs gets a hit area instead", () => {
     render(
       <>
-        <IconButton aria-label="xs" size="xs"><Trash2 /></IconButton>
-        <IconButton aria-label="2xs" size="2xs"><Trash2 /></IconButton>
-        <IconButton aria-label="lg" size="lg"><Trash2 /></IconButton>
+        <IconButton aria-label="xs" size="xs">
+          <Trash2 />
+        </IconButton>
+        <IconButton aria-label="2xs" size="2xs">
+          <Trash2 />
+        </IconButton>
+        <IconButton aria-label="lg" size="lg">
+          <Trash2 />
+        </IconButton>
       </>,
     );
     expect(screen.getByRole("button", { name: "xs" }).className).toContain("large:min-h-[48px]");
@@ -447,7 +495,9 @@ describe("StatTile at Large: the one big number (§4)", () => {
       />,
     );
     const figures = container.querySelector("[data-slot=stat-tile-figures]") as HTMLElement;
-    const terms = within(figures).getAllByRole("term").map((t) => t.textContent);
+    const terms = within(figures)
+      .getAllByRole("term")
+      .map((t) => t.textContent);
     expect(terms).toEqual(["Committed", "Projected", "August"]);
     expect(within(figures).getByText("Committed").parentElement!.className).toContain("flex-col");
   });
@@ -464,7 +514,12 @@ describe("Words that lived in a tooltip (§4)", () => {
     const now = new Date("2026-10-02T12:00:00Z");
     render(
       <>
-        <DateMark value="2026-09-29T12:00:00Z" display="relative" relative={{ now, numeric: "always" }} locale="en-GB" />
+        <DateMark
+          value="2026-09-29T12:00:00Z"
+          display="relative"
+          relative={{ now, numeric: "always" }}
+          locale="en-GB"
+        />
         <DateMark
           value="2026-09-29T12:00:00Z"
           display="relative"
@@ -498,7 +553,11 @@ describe("Words that lived in a tooltip (§4)", () => {
     const { container, rerender } = render(<FieldSyncIndicator state="synced" />);
     const status = () => within(container.querySelector("[role=status]") as HTMLElement);
     // At Normal the word is for the live region only (and the tooltip).
-    expect(status().getAllByText("Saved").some((el) => el.className.includes("sr-only"))).toBe(true);
+    expect(
+      status()
+        .getAllByText("Saved")
+        .some((el) => el.className.includes("sr-only")),
+    ).toBe(true);
     size("large");
     rerender(<FieldSyncIndicator state="synced" />);
     expect(status().getByText("Saved").className).not.toContain("sr-only");

@@ -116,7 +116,11 @@ describe("Table edgeFade", () => {
     wrapper.scrollBy = scrollBy as unknown as typeof wrapper.scrollBy;
     vi.spyOn(wrapper, "getBoundingClientRect").mockReturnValue({ left: 0, right: 300, width: 300 } as DOMRect);
     const button = screen.getByRole("button", { name: "Open" });
-    vi.spyOn(button.closest("td")!, "getBoundingClientRect").mockReturnValue({ left: 260, right: 340, width: 80 } as DOMRect);
+    vi.spyOn(button.closest("td")!, "getBoundingClientRect").mockReturnValue({
+      left: 260,
+      right: 340,
+      width: 80,
+    } as DOMRect);
     fireEvent.focus(button);
     expect(scrollBy).toHaveBeenCalledWith({ left: 64 });
   });
@@ -217,7 +221,11 @@ describe("DataTable edgeFade", () => {
     scroller.scrollBy = scrollBy as unknown as typeof scroller.scrollBy;
     vi.spyOn(scroller, "getBoundingClientRect").mockReturnValue({ left: 0, right: 400, width: 400 } as DOMRect);
     const edit = screen.getAllByRole("button", { name: "Edit" })[0];
-    vi.spyOn(edit.closest("td")!, "getBoundingClientRect").mockReturnValue({ left: 380, right: 440, width: 60 } as DOMRect);
+    vi.spyOn(edit.closest("td")!, "getBoundingClientRect").mockReturnValue({
+      left: 380,
+      right: 440,
+      width: 60,
+    } as DOMRect);
     fireEvent.focus(edit);
     expect(scrollBy).toHaveBeenCalledWith({ left: 64 });
   });

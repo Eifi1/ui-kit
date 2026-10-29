@@ -72,7 +72,12 @@ function GroupsOverContent() {
             `labelVisible={false}` (§10.8): at Large the three labels made the bar 461 px,
             cut off by the map on a 360 px phone at Extra large (0.32.1). */}
         <ButtonGroup aria-label="Map tools" elevated className="absolute start-3 top-3">
-          <IconButton variant="ghost" label="Rotate" labelVisible={false} onClick={() => setRotation((r) => (r + 45) % 360)}>
+          <IconButton
+            variant="ghost"
+            label="Rotate"
+            labelVisible={false}
+            onClick={() => setRotation((r) => (r + 45) % 360)}
+          >
             <RotateCw />
           </IconButton>
           <IconButton variant="ghost" label="Centre on me" labelVisible={false} onClick={() => setRotation(0)}>
@@ -120,10 +125,10 @@ function GroupsOverContent() {
           Top start: a JOINED group with <code className="font-mono">elevated</code> — its frame is filled with the
           surface (ghost members would otherwise show the picture through them) and carries the shadow of a control
           lifted over the page. Bottom end: <code className="font-mono">variant=&quot;gapped&quot;</code> +{" "}
-          <code className="font-mono">elevated</code>, <code className="font-mono">orientation=&quot;vertical&quot;</code>:
-          nothing is stripped from the members, so the overlay discs keep their round shape, sit a gap apart and each
-          takes the shadow. Bottom start: gapped WITHOUT <code className="font-mono">elevated</code>, for comparison —
-          flat discs.
+          <code className="font-mono">elevated</code>,{" "}
+          <code className="font-mono">orientation=&quot;vertical&quot;</code>: nothing is stripped from the members, so
+          the overlay discs keep their round shape, sit a gap apart and each takes the shadow. Bottom start: gapped
+          WITHOUT <code className="font-mono">elevated</code>, for comparison — flat discs.
         </Note>
       </div>
     </Example>
@@ -178,11 +183,12 @@ function GroupLinks() {
       </div>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">current</code> sets <code className="font-mono">aria-current=&quot;page&quot;</code>{" "}
-          and the pressed member&apos;s &ldquo;on&rdquo; look — &ldquo;Buttons&rdquo; is this page — so a row of links
-          reads as a segmented switch between pages. <code className="font-mono">renderLink</code> hands the member to
-          the router&apos;s <code className="font-mono">Link</code> (no reload; middle-click opens a tab, because it is
-          an <code className="font-mono">&lt;a href&gt;</code>). Without it the member is a plain{" "}
+          <code className="font-mono">current</code> sets{" "}
+          <code className="font-mono">aria-current=&quot;page&quot;</code> and the pressed member&apos;s
+          &ldquo;on&rdquo; look — &ldquo;Buttons&rdquo; is this page — so a row of links reads as a segmented switch
+          between pages. <code className="font-mono">renderLink</code> hands the member to the router&apos;s{" "}
+          <code className="font-mono">Link</code> (no reload; middle-click opens a tab, because it is an{" "}
+          <code className="font-mono">&lt;a href&gt;</code>). Without it the member is a plain{" "}
           <code className="font-mono">&lt;a&gt;</code>, as &ldquo;Open report&rdquo; is. The group rounds the outer
           corners of a link exactly as of a button.
         </Note>
@@ -236,7 +242,13 @@ function IconButtonMore() {
             <div className="min-w-0 flex-1">
               <Input label="Split amount" defaultValue="42.00" inputMode="decimal" />
             </div>
-            <IconButton stretch variant="secondary" tone="danger" label="Delete this split" onClick={() => setDeleted((n) => n + 1)}>
+            <IconButton
+              stretch
+              variant="secondary"
+              tone="danger"
+              label="Delete this split"
+              onClick={() => setDeleted((n) => n + 1)}
+            >
               <Trash2 />
             </IconButton>
           </div>
@@ -304,11 +316,12 @@ function IconButtonMore() {
           <code className="font-mono">xl</code> is 48px with a 24px glyph — the one primary action of a phone screen.{" "}
           <code className="font-mono">shape=&quot;round&quot;</code> makes any size a circle.{" "}
           <code className="font-mono">stretch</code> keeps the width and takes the HEIGHT of the flex row, so the delete
-          is level with the labelled field beside it (compare the second row). <code className="font-mono">tone=&quot;success&quot;</code>{" "}
-          is toned at rest, like <code className="font-mono">warning</code> and <code className="font-mono">info</code>.{" "}
+          is level with the labelled field beside it (compare the second row).{" "}
+          <code className="font-mono">tone=&quot;success&quot;</code> is toned at rest, like{" "}
+          <code className="font-mono">warning</code> and <code className="font-mono">info</code>.{" "}
           <code className="font-mono">toneColor</code> sets <code className="font-mono">--icon-button-tone</code> (and
-          implies <code className="font-mono">tone=&quot;custom&quot;</code>), so one variable re-colours the glyph,
-          the hover wash and the focus ring together — pick a state and hover or Tab to the chip.
+          implies <code className="font-mono">tone=&quot;custom&quot;</code>), so one variable re-colours the glyph, the
+          hover wash and the focus ring together — pick a state and hover or Tab to the chip.
         </Note>
       </div>
     </Example>
@@ -320,7 +333,10 @@ const TONES: StatusDotTone[] = ["danger", "warning", "success", "info", "brand",
 function AvatarBadges() {
   const [unread, setUnread] = useState(3);
   return (
-    <Example label="UserAvatar — badge, every tone and right-to-left" hint="a status dot in the top-end corner, with words for a reader">
+    <Example
+      label="UserAvatar — badge, every tone and right-to-left"
+      hint="a status dot in the top-end corner, with words for a reader"
+    >
       <div className="space-y-4">
         <div className="space-y-2">
           <p className={CAPTION}>badge.tone — default danger</p>
@@ -360,7 +376,9 @@ function AvatarBadges() {
           </Row>
         </div>
         <div className="space-y-2" dir="rtl">
-          <p className={CAPTION} dir="ltr">dir=&quot;rtl&quot; — the dot moves to the top-left</p>
+          <p className={CAPTION} dir="ltr">
+            dir=&quot;rtl&quot; — the dot moves to the top-left
+          </p>
           <Row>
             <UserAvatar name="ليلى حسن" badge={{ label: "٣ غير مقروءة" }} />
             <UserAvatar size="lg" name="ليلى حسن" badge={{ label: "متصل", tone: "success" }} />
@@ -369,11 +387,12 @@ function AvatarBadges() {
       </div>
       <div className="mt-3">
         <Note>
-          The dot sits in the top-END corner, ringed in the surface colour, and its <code className="font-mono">label</code>{" "}
-          is read as text where it sits (the initials stay hidden) — so inside a button named by its content, such as the
-          account menu&apos;s trigger on the Shell page, the button&apos;s name becomes &ldquo;Account menu 3
-          unread&rdquo; (the initials are hidden, so the person&apos;s name is not part of it). <code className="font-mono">label</code> is required: a coloured circle says nothing to
-          someone who cannot see it. <code className="font-mono">null</code> draws no badge and no wrapper.
+          The dot sits in the top-END corner, ringed in the surface colour, and its{" "}
+          <code className="font-mono">label</code> is read as text where it sits (the initials stay hidden) — so inside
+          a button named by its content, such as the account menu&apos;s trigger on the Shell page, the button&apos;s
+          name becomes &ldquo;Account menu 3 unread&rdquo; (the initials are hidden, so the person&apos;s name is not
+          part of it). <code className="font-mono">label</code> is required: a coloured circle says nothing to someone
+          who cannot see it. <code className="font-mono">null</code> draws no badge and no wrapper.
         </Note>
       </div>
     </Example>
@@ -424,11 +443,11 @@ export function IconButtonDisabledReasonDemo() {
       </Row>
       <div className="mt-3">
         <Note>
-          Hover or Tab to either button. The first has a {code("label")}: its name stays &ldquo;Hide
-          account&rdquo;, and while it is locked the bubble shows the reason instead of the label — clear
-          the balance and it becomes an ordinary button with its usual tooltip. The second has only an{" "}
-          {code("aria-label")}, and still gets the bubble: a reason nobody can see is not one. Both are
-          described by the reason ({code("aria-describedby")}), and a click or Enter does nothing.
+          Hover or Tab to either button. The first has a {code("label")}: its name stays &ldquo;Hide account&rdquo;, and
+          while it is locked the bubble shows the reason instead of the label — clear the balance and it becomes an
+          ordinary button with its usual tooltip. The second has only an {code("aria-label")}, and still gets the
+          bubble: a reason nobody can see is not one. Both are described by the reason ({code("aria-describedby")}), and
+          a click or Enter does nothing.
         </Note>
       </div>
     </Example>

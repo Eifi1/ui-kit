@@ -52,8 +52,7 @@ export interface MailTestAnswer {
 /** The card's default DOM id: its catalogue entry's `anchor`, the `?focus=` target. */
 export const MAIL_TEST_ANCHOR = "admin-mail-test";
 
-export interface MailTestCardProps
-  extends Omit<SettingsSectionProps, "anchor" | "title" | "description" | "children"> {
+export interface MailTestCardProps extends Omit<SettingsSectionProps, "anchor" | "title" | "description" | "children"> {
   /** The installation's transport, as the admin page has it (`mail_backend`): the chip
    *  before a send. After one, the answer's. Optional (0.46): without it the chip shows
    *  from the first answer on, and an app needs no query only for the chip. */

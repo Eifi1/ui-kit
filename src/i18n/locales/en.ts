@@ -24,8 +24,7 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
   const n = (value: number) => num.format(value);
   const d = DEFAULT_UI_KIT_LABELS;
   // As `inDays` in src/billing/billing-labels.ts: 0 (or less) is today, 1 tomorrow.
-  const inDays = (days: number) =>
-    days <= 0 ? "today" : days === 1 ? "tomorrow" : `in ${n(days)} days`;
+  const inDays = (days: number) => (days <= 0 ? "today" : days === 1 ? "tomorrow" : `in ${n(days)} days`);
 
   return {
     ...d,
@@ -59,10 +58,7 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
     measuredGrid: {
       ...d.measuredGrid,
       points: (count) => (count === 1 ? "1 point" : `${n(count)} points`),
-      problems: (count) =>
-        count === 1
-          ? "1 cell is not a number"
-          : `${n(count)} cells are not numbers`,
+      problems: (count) => (count === 1 ? "1 cell is not a number" : `${n(count)} cells are not numbers`),
     },
     dataTable: {
       ...d.dataTable,
@@ -80,12 +76,8 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
     combobox: {
       ...d.combobox,
       selectedCount: (count) => `${n(count)} selected`,
-      resultCount: (count) =>
-        count === 1 ? "1 result" : `${n(count)} results`,
-      minChars: (count) =>
-        count === 1
-          ? "Type at least 1 character"
-          : `Type at least ${n(count)} characters`,
+      resultCount: (count) => (count === 1 ? "1 result" : `${n(count)} results`),
+      minChars: (count) => (count === 1 ? "Type at least 1 character" : `Type at least ${n(count)} characters`),
     },
     multiSelect: {
       ...d.multiSelect,
@@ -116,12 +108,8 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
       rejectedCount: (name, maxFiles) =>
         `“${name}” was not added: at most ${n(maxFiles)} ${maxFiles === 1 ? "file" : "files"}`,
       rejectedMany: (count) => `${n(count)} files were not added`,
-      rejectedPick: (count) =>
-        count === 1
-          ? "The file was not added"
-          : `None of the ${n(count)} files were added`,
-      selected: (count, firstName) =>
-        count === 1 ? `“${firstName}” selected` : `${n(count)} files selected`,
+      rejectedPick: (count) => (count === 1 ? "The file was not added" : `None of the ${n(count)} files were added`),
+      selected: (count, firstName) => (count === 1 ? `“${firstName}” selected` : `${n(count)} files selected`),
     },
     wizard: {
       ...d.wizard,
@@ -134,8 +122,7 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
     passwordStrength: {
       ...d.passwordStrength,
       ruleLength: (minLength) => `At least ${n(minLength)} characters`,
-      tooLong: (maxBytes) =>
-        `At most ${n(maxBytes)} characters (accents and emoji count for more than one).`,
+      tooLong: (maxBytes) => `At most ${n(maxBytes)} characters (accents and emoji count for more than one).`,
     },
     floatingPanel: {
       ...d.floatingPanel,
@@ -169,8 +156,7 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
     characterCount: {
       ...d.characterCount,
       count: (used, max) => `${n(used)} of ${n(max)} characters`,
-      remaining: (left) =>
-        left === 1 ? "1 character left" : `${n(left)} characters left`,
+      remaining: (left) => (left === 1 ? "1 character left" : `${n(left)} characters left`),
     },
     ibanInput: {
       ...d.ibanInput,
@@ -181,15 +167,10 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
       ...d.columnMapper,
       summary: (columns, rows) =>
         `${n(columns)} ${columns === 1 ? "column" : "columns"}, ${n(rows)} ${rows === 1 ? "row" : "rows"}`,
-      unreadCount: (count) =>
-        count === 1
-          ? "1 line could not be read"
-          : `${n(count)} lines could not be read`,
+      unreadCount: (count) => (count === 1 ? "1 line could not be read" : `${n(count)} lines could not be read`),
       unreadMore: (count) => `…and ${n(count)} more`,
       previewOf: (shown, total) =>
-        shown === 1
-          ? `The first of ${n(total)} rows`
-          : `The first ${n(shown)} of ${n(total)} rows`,
+        shown === 1 ? `The first of ${n(total)} rows` : `The first ${n(shown)} of ${n(total)} rows`,
     },
     signIn: {
       ...d.signIn,
@@ -213,8 +194,7 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
     notifications: {
       ...d.notifications,
       testSent: (count) => (count === 1 ? "Test sent to 1 device" : `Test sent to ${n(count)} devices`),
-      failures: (count) =>
-        count === 1 ? "1 failed delivery in a row" : `${n(count)} failed deliveries in a row`,
+      failures: (count) => (count === 1 ? "1 failed delivery in a row" : `${n(count)} failed deliveries in a row`),
       bellUnread: (count) => `${n(count)} unread`,
     },
     settings: {

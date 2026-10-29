@@ -1,11 +1,6 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  ErrorBoundary,
-  crashFingerprint,
-  formatCrashReport,
-  isChunkLoadError,
-} from "../error-boundary";
+import { ErrorBoundary, crashFingerprint, formatCrashReport, isChunkLoadError } from "../error-boundary";
 import type { CrashReport } from "../error-boundary";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
@@ -29,9 +24,10 @@ function Boom({ error }: { error: unknown }): React.ReactNode {
 const crashScreen = () => document.querySelector('[role="alert"]:not(:empty)');
 
 /** Let the `onReport` promise chain settle and its setState land. */
-const settle = () => act(async () => {
-  await new Promise((r) => setTimeout(r, 0));
-});
+const settle = () =>
+  act(async () => {
+    await new Promise((r) => setTimeout(r, 0));
+  });
 
 describe("ErrorBoundary crash screen", () => {
   let consoleSpy: ReturnType<typeof vi.spyOn>;
@@ -88,11 +84,7 @@ describe("ErrorBoundary crash screen", () => {
   it("files through onReport once, shows the reference and drops the copy button", async () => {
     const onReport = vi.fn(async (_report: CrashReport) => ({ reference: "#123" }));
     render(
-      <ErrorBoundary
-        onReport={onReport}
-        appVersion="9.9.9"
-        reportExtras={() => ({ tenant: "t-1" })}
-      >
+      <ErrorBoundary onReport={onReport} appVersion="9.9.9" reportExtras={() => ({ tenant: "t-1" })}>
         <Boom error={new Error("filed")} />
       </ErrorBoundary>,
     );

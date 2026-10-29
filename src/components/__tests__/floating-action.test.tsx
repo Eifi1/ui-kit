@@ -137,12 +137,7 @@ function Toolbar({ pending = 0, onAdd = () => {} }: { pending?: number; onAdd?: 
   const [pendingOnly, setPendingOnly] = useState(false);
   return (
     <FloatingActionGroup aria-label="Register" offset="1rem">
-      <FloatingAction
-        label="Pending only"
-        icon="◌"
-        pressed={pendingOnly}
-        onClick={() => setPendingOnly((on) => !on)}
-      />
+      <FloatingAction label="Pending only" icon="◌" pressed={pendingOnly} onClick={() => setPendingOnly((on) => !on)} />
       <FloatingAction label="Invoices" icon="▤" href="/invoices" badge={pending} />
       <FloatingAction label="Add" icon="+" variant="accent" onClick={onAdd} />
     </FloatingActionGroup>
@@ -317,7 +312,11 @@ describe("FloatingAction — the provider's router link and pressedStyle", () =>
             icon="▤"
             href="/own"
             tooltip={false}
-            renderLink={(p: FloatingActionLinkProps) => <a {...p} data-own="">{p.children}</a>}
+            renderLink={(p: FloatingActionLinkProps) => (
+              <a {...p} data-own="">
+                {p.children}
+              </a>
+            )}
           />
         </FloatingActionGroup>
       </UiKitProvider>,

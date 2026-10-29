@@ -165,7 +165,11 @@ describe("DataTable rowActions", () => {
       expect(screen.queryByRole("table")).toBeNull();
       const group = screen.getByRole("group", { name: "Row actions" });
       // Drag-right (LTR end) first, then drag-left (LTR start).
-      expect(within(group).getAllByRole("button").map((b) => b.textContent)).toEqual(["Edit", "Delete"]);
+      expect(
+        within(group)
+          .getAllByRole("button")
+          .map((b) => b.textContent),
+      ).toEqual(["Edit", "Delete"]);
       fireEvent.click(within(group).getByRole("button", { name: "Delete" }));
       await flush();
       expect(confirm).toHaveBeenCalledWith(ROWS[0]);
@@ -192,7 +196,11 @@ describe("DataTable rowActions", () => {
         }),
       });
       const group = screen.getByRole("group", { name: "Row actions" });
-      expect(within(group).getAllByRole("button").map((b) => b.textContent)).toEqual(["Own"]);
+      expect(
+        within(group)
+          .getAllByRole("button")
+          .map((b) => b.textContent),
+      ).toEqual(["Own"]);
     });
   });
 });
@@ -404,13 +412,9 @@ describe("filter builders and filterHref", () => {
     expect(filterHref("/units", "name", "Rewe Markt")).toBe("/units?f.name=Rewe+Markt");
     expect(filterHref("/units?tab=a#top", "status", ["a,b", "c"])).toBe("/units?tab=a&f.status=a%252Cb%2Cc#top");
     expect(filterHref("/units", "status", [])).toBe("/units");
-    expect(filterHref("/tx", "date", { type: "date", from: "2026-01-01", to: "" })).toBe(
-      "/tx?f.date=2026-01-01..",
-    );
+    expect(filterHref("/tx", "date", { type: "date", from: "2026-01-01", to: "" })).toBe("/tx?f.date=2026-01-01..");
     // What the table reads back.
-    const cols: DataTableColumn<Row>[] = [
-      { key: "status", header: "S", cell: () => null, filter: selectFilter(get) },
-    ];
+    const cols: DataTableColumn<Row>[] = [{ key: "status", header: "S", cell: () => null, filter: selectFilter(get) }];
     const href = filterHref("/units", "status", ["a,b", "c"]);
     const state = readTableUrlState(new URLSearchParams(href.split("?")[1]), cols);
     expect(state.filters).toEqual({ status: { type: "select", values: ["a,b", "c"] } });

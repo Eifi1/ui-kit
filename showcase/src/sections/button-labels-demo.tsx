@@ -60,13 +60,13 @@ function IconButtonLabel() {
       <div className="mt-3">
         <Note>
           Hover or Tab onto each: the bubble is the kit&apos;s, shown on focus and on touch as well, which the
-          browser&apos;s <code className="font-mono">title</code> never is. It is visual only — the name is
-          already the <code className="font-mono">aria-label</code>, so a screen reader does not hear it twice.{" "}
+          browser&apos;s <code className="font-mono">title</code> never is. It is visual only — the name is already the{" "}
+          <code className="font-mono">aria-label</code>, so a screen reader does not hear it twice.{" "}
           <code className="font-mono">tooltip={"{false}"}</code> keeps the name and drops the bubble, for a glyph
           everyone reads (the ✕). <code className="font-mono">tooltipSide</code> is Tooltip&apos;s{" "}
           <code className="font-mono">side</code>; <code className="font-mono">tooltipPortal</code> is its{" "}
-          <code className="font-mono">portal</code> — left out, Tooltip decides (it portals inside a clipping
-          box on its own); the two boxes force each answer, and only the portalled bubble gets out.
+          <code className="font-mono">portal</code> — left out, Tooltip decides (it portals inside a clipping box on its
+          own); the two boxes force each answer, and only the portalled bubble gets out.
         </Note>
       </div>
     </Example>
@@ -115,9 +115,9 @@ function ButtonTones() {
         <Note>
           A tone rather than a <code className="font-mono">link-muted</code> variant, because it is the axis{" "}
           <code className="font-mono">IconButton</code> already has, and the same two looks are wanted on{" "}
-          <code className="font-mono">ghost</code>. The boxed variants carry their meaning in the box, so a tone
-          on them does nothing. Hover the last row: the brand link is the action, the muted one is findable
-          without competing, and the danger one turns red only under the pointer.
+          <code className="font-mono">ghost</code>. The boxed variants carry their meaning in the box, so a tone on them
+          does nothing. Hover the last row: the brand link is the action, the muted one is findable without competing,
+          and the danger one turns red only under the pointer.
         </Note>
       </div>
     </Example>
@@ -128,7 +128,10 @@ function ButtonPressed() {
   const [allSpeeds, setAllSpeeds] = useState(false);
   const [bold, setBold] = useState(true);
   return (
-    <Example label="Button — pressed" hint="a toggle button: aria-pressed and the “on” look, on a link or a boxed variant">
+    <Example
+      label="Button — pressed"
+      hint="a toggle button: aria-pressed and the “on” look, on a link or a boxed variant"
+    >
       <Row>
         <Button variant="link" tone="muted" pressed={allSpeeds} onClick={() => setAllSpeeds((v) => !v)}>
           All speeds
@@ -143,12 +146,12 @@ function ButtonPressed() {
       </Row>
       <div className="mt-3">
         <Note>
-          On a <code className="font-mono">link</code>, pressed is the brand colour and a medium weight —
-          after the tone, so a pressed muted link is brand and an unpressed one quiet grey. On a boxed
-          variant it is the quiet brand fill <code className="font-mono">IconButton</code>&apos;s{" "}
-          <code className="font-mono">pressed</code> draws. <code className="font-mono">false</code> is{" "}
-          <code className="font-mono">aria-pressed=&quot;false&quot;</code> (a toggle that is off); leaving it out
-          means the button is not a toggle at all.
+          On a <code className="font-mono">link</code>, pressed is the brand colour and a medium weight — after the
+          tone, so a pressed muted link is brand and an unpressed one quiet grey. On a boxed variant it is the quiet
+          brand fill <code className="font-mono">IconButton</code>&apos;s <code className="font-mono">pressed</code>{" "}
+          draws. <code className="font-mono">false</code> is{" "}
+          <code className="font-mono">aria-pressed=&quot;false&quot;</code> (a toggle that is off); leaving it out means
+          the button is not a toggle at all.
         </Note>
       </div>
     </Example>
@@ -191,12 +194,12 @@ function ButtonDisabledReason() {
       </p>
       <div className="mt-3">
         <Note>
-          Tab to &ldquo;Edit handover&rdquo;: it takes focus (the plain disabled one never does), the reason
-          shows in the kit tooltip and is the button&apos;s <code className="font-mono">aria-describedby</code>, so
-          a screen reader hears why on focus. Clicking it — or pressing Enter on the submit — does nothing:
-          the counters stay put, and the form is not submitted. <code className="font-mono">disabledReason</code>{" "}
-          wins over <code className="font-mono">disabled</code>, because a reason nobody can reach is no
-          reason. Sign it off and both work.
+          Tab to &ldquo;Edit handover&rdquo;: it takes focus (the plain disabled one never does), the reason shows in
+          the kit tooltip and is the button&apos;s <code className="font-mono">aria-describedby</code>, so a screen
+          reader hears why on focus. Clicking it — or pressing Enter on the submit — does nothing: the counters stay
+          put, and the form is not submitted. <code className="font-mono">disabledReason</code> wins over{" "}
+          <code className="font-mono">disabled</code>, because a reason nobody can reach is no reason. Sign it off and
+          both work.
         </Note>
       </div>
     </Example>

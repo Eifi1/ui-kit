@@ -125,13 +125,10 @@ describe("selectionFromDrag", () => {
       position: (pixel) => 310 - pixel,
       jerk: (pixel) => (310 - pixel) * 1000,
     };
-    const sel = selectionFromDrag(
-      { fromX: 300, fromY: 60, toX: 310, toY: 260 },
-      PLOT,
-      xInverse,
-      (id) => scales[id],
-      ["position", "jerk"],
-    );
+    const sel = selectionFromDrag({ fromX: 300, fromY: 60, toX: 310, toY: 260 }, PLOT, xInverse, (id) => scales[id], [
+      "position",
+      "jerk",
+    ]);
     expect(sel?.y).toEqual({ position: [50, 250], jerk: [50000, 250000] });
   });
 
@@ -147,7 +144,9 @@ describe("selectionFromDrag", () => {
   });
 
   it("selects nothing for a click, or when no axis can be read", () => {
-    expect(selectionFromDrag({ fromX: 300, fromY: 100, toX: 302, toY: 101 }, PLOT, xInverse, yInverse, ["y"])).toBeNull();
+    expect(
+      selectionFromDrag({ fromX: 300, fromY: 100, toX: 302, toY: 101 }, PLOT, xInverse, yInverse, ["y"]),
+    ).toBeNull();
     expect(
       selectionFromDrag({ fromX: 160, fromY: 100, toX: 760, toY: 110 }, PLOT, undefined, yInverse, ["y"]),
     ).toBeNull();
@@ -329,7 +328,9 @@ function StubChart({
     <svg data-testid="chart">
       <text>{JSON.stringify({ x: zoom?.xDomain ?? null, y: zoom?.yDomains ?? {} })}</text>
       {zoom?.layer}
-      {axes?.map((axis) => <g key={axis.id} />)}
+      {axes?.map((axis) => (
+        <g key={axis.id} />
+      ))}
     </svg>
   );
 }
@@ -402,7 +403,13 @@ describe("withChartZoom", () => {
   });
 
   it("refits y from the chart's own data when an x band names only x", () => {
-    render(<Zoomable axes={[{ id: "y" }]} rows={Array.from({ length: 901 }, (_, x) => ({ x, v: x }))} series={[{ key: "v" }]} />);
+    render(
+      <Zoomable
+        axes={[{ id: "y" }]}
+        rows={Array.from({ length: 901 }, (_, x) => ({ x, v: x }))}
+        series={[{ key: "v" }]}
+      />,
+    );
     drag([160, 100], [760, 110]);
     const { x, y } = bindings()[0];
     expect(x).toEqual([100, 700]);
@@ -426,7 +433,12 @@ describe("withChartZoom", () => {
     render(<Zoomable axes={[{ id: "y" }]} />);
     drag([300, 100], [304, 102]);
     const rect = overlay();
-    fireEvent(rect, Object.assign(new MouseEvent("pointerdown", { bubbles: true, button: 2, clientX: 160, clientY: 60 }), { pointerId: 1 }));
+    fireEvent(
+      rect,
+      Object.assign(new MouseEvent("pointerdown", { bubbles: true, button: 2, clientX: 160, clientY: 60 }), {
+        pointerId: 1,
+      }),
+    );
     pointer(rect, "pointermove", 610, 210);
     pointer(rect, "pointerup", 610, 210);
     expect(bindings()[0]).toEqual({ x: null, y: {} });
@@ -541,7 +553,15 @@ describe("axisExtent", () => {
   it("is the plain extent of loose series and of lines, stack or not", () => {
     expect(axisExtent(source([{ key: "a" }, { key: "c" }]), "y")).toEqual([-60, 200]);
     // recharts cannot stack a line, so its `stack` is not summed.
-    expect(axisExtent(source([{ key: "a", stack: "s", type: "line" }, { key: "b", stack: "s", type: "line" }]), "y")).toEqual([30, 200]);
+    expect(
+      axisExtent(
+        source([
+          { key: "a", stack: "s", type: "line" },
+          { key: "b", stack: "s", type: "line" },
+        ]),
+        "y",
+      ),
+    ).toEqual([30, 200]);
   });
 
   it("sums a stack, positives up and negatives down, from zero", () => {

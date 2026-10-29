@@ -17,8 +17,7 @@ const cellOn = (iso: string) => {
   if (!el) throw new Error(`no cell for ${iso}`);
   return el;
 };
-const press = (key: string) =>
-  fireEvent.keyDown(document.activeElement ?? document.body, { key, bubbles: true });
+const press = (key: string) => fireEvent.keyDown(document.activeElement ?? document.body, { key, bubbles: true });
 
 const DATA = [
   { date: "2026-09-02", value: 10 },
@@ -91,7 +90,14 @@ describe("CalendarHeatmap", () => {
   it("selects a day on click, and marks the selected one", () => {
     const onSelect = vi.fn();
     render(
-      <CalendarHeatmap data={DATA} from="2026-09-01" to="2026-09-30" locale={LOCALE} selected="2026-09-02" onSelect={onSelect} />,
+      <CalendarHeatmap
+        data={DATA}
+        from="2026-09-01"
+        to="2026-09-30"
+        locale={LOCALE}
+        selected="2026-09-02"
+        onSelect={onSelect}
+      />,
     );
     const cell = cellOn("2026-09-03");
     expect(cell.tagName).toBe("BUTTON");
@@ -105,11 +111,24 @@ describe("CalendarHeatmap", () => {
     render(<CalendarHeatmap data={DATA} from="2026-09-01" to="2026-09-30" locale={LOCALE} />);
     expect(cellOn("2026-09-03").tagName).toBe("DIV");
     expect(cellOn("2026-09-03")).not.toHaveAttribute("aria-selected");
-    expect(cells().filter((c) => c.tabIndex === 0).map((c) => c.dataset.day)).toEqual(["2026-09-30"]);
+    expect(
+      cells()
+        .filter((c) => c.tabIndex === 0)
+        .map((c) => c.dataset.day),
+    ).toEqual(["2026-09-30"]);
   });
 
   it("roves by week sideways and by day up/down in the weeks layout", () => {
-    render(<CalendarHeatmap data={DATA} from="2026-08-01" to="2026-09-30" locale={LOCALE} selected="2026-09-14" onSelect={() => {}} />);
+    render(
+      <CalendarHeatmap
+        data={DATA}
+        from="2026-08-01"
+        to="2026-09-30"
+        locale={LOCALE}
+        selected="2026-09-14"
+        onSelect={() => {}}
+      />,
+    );
     cellOn("2026-09-14").focus();
     press("ArrowRight");
     expect(document.activeElement).toBe(cellOn("2026-09-21"));
@@ -129,7 +148,14 @@ describe("CalendarHeatmap", () => {
   it("mirrors the arrows in RTL", () => {
     render(
       <div dir="rtl">
-        <CalendarHeatmap data={DATA} from="2026-09-01" to="2026-09-30" locale={LOCALE} layout="month" selected="2026-09-14" />
+        <CalendarHeatmap
+          data={DATA}
+          from="2026-09-01"
+          to="2026-09-30"
+          locale={LOCALE}
+          layout="month"
+          selected="2026-09-14"
+        />
       </div>,
     );
     cellOn("2026-09-14").focus();
@@ -143,7 +169,13 @@ describe("CalendarHeatmap", () => {
     render(<CalendarHeatmap data={DATA} from="2026-09-01" to="2026-10-31" locale={LOCALE} weekStartsOn={1} />);
     const heads = screen.getAllByRole("rowheader");
     expect(heads.map((h) => h.getAttribute("aria-label"))).toEqual([
-      "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday",
     ]);
     // 1 September 2026 is a Tuesday: the first row's first column is a blank cell.
     expect(screen.getAllByRole("row")[0].querySelectorAll('[role="gridcell"]')[0]).not.toHaveAttribute("data-day");
@@ -153,7 +185,9 @@ describe("CalendarHeatmap", () => {
   });
 
   it("draws a 7-column month with day numbers in the month layout", () => {
-    render(<CalendarHeatmap data={DATA} from="2026-09-01" to="2026-09-30" locale={LOCALE} layout="month" weekStartsOn={1} />);
+    render(
+      <CalendarHeatmap data={DATA} from="2026-09-01" to="2026-09-30" locale={LOCALE} layout="month" weekStartsOn={1} />,
+    );
     expect(screen.getAllByRole("columnheader")).toHaveLength(7);
     expect(cellOn("2026-09-14")).toHaveTextContent("14");
     // 1 blank + 30 days + 4 blanks, in 5 week rows.
@@ -164,7 +198,11 @@ describe("CalendarHeatmap", () => {
     render(<CalendarHeatmap data={DATA} from="2026-01-01" to="2026-09-30" locale={LOCALE} maxDays={30} />);
     expect(cells()).toHaveLength(30);
     // DOM order is by weekday row in this layout, hence the sort.
-    expect(cells().map((c) => c.dataset.day!).sort()[0]).toBe("2026-09-01");
+    expect(
+      cells()
+        .map((c) => c.dataset.day!)
+        .sort()[0],
+    ).toBe("2026-09-01");
     expect(screen.getByText(/243 earlier days are not shown/)).toBeTruthy();
   });
 
@@ -318,16 +356,21 @@ describe("CalendarHeatmap anchor (0.12)", () => {
 
   it("ends on `to` by default", () => {
     render(<CalendarHeatmap data={[]} from="2026-09-01" to="2026-12-31" locale={LOCALE} />);
-    expect(cells().map((c) => c.dataset.day).sort().at(-1)).toBe("2026-12-31");
+    expect(
+      cells()
+        .map((c) => c.dataset.day)
+        .sort()
+        .at(-1),
+    ).toBe("2026-12-31");
   });
 
   it("ends on today with anchor='today', and maxDays counts back from there", () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date(2026, 8, 20, 12));
-    render(
-      <CalendarHeatmap data={[]} from="2026-01-01" to="2027-09-20" anchor="today" maxDays={10} locale={LOCALE} />,
-    );
-    const days = cells().map((c) => c.dataset.day).sort();
+    render(<CalendarHeatmap data={[]} from="2026-01-01" to="2027-09-20" anchor="today" maxDays={10} locale={LOCALE} />);
+    const days = cells()
+      .map((c) => c.dataset.day)
+      .sort();
     expect(days).toHaveLength(10);
     expect(days[0]).toBe("2026-09-11");
     expect(days.at(-1)).toBe("2026-09-20");
@@ -345,13 +388,29 @@ describe("CalendarHeatmap anchor (0.12)", () => {
         locale={LOCALE}
       />,
     );
-    expect(cells().map((c) => c.dataset.day).sort().at(-1)).toBe("2026-10-05");
+    expect(
+      cells()
+        .map((c) => c.dataset.day)
+        .sort()
+        .at(-1),
+    ).toBe("2026-10-05");
     unmount();
     // A past last entry: today still ends the window.
     render(
-      <CalendarHeatmap data={[{ date: "2026-09-03", value: 3 }]} from="2026-09-01" to="2027-09-20" anchor="latest" locale={LOCALE} />,
+      <CalendarHeatmap
+        data={[{ date: "2026-09-03", value: 3 }]}
+        from="2026-09-01"
+        to="2027-09-20"
+        anchor="latest"
+        locale={LOCALE}
+      />,
     );
-    expect(cells().map((c) => c.dataset.day).sort().at(-1)).toBe("2026-09-20");
+    expect(
+      cells()
+        .map((c) => c.dataset.day)
+        .sort()
+        .at(-1),
+    ).toBe("2026-09-20");
   });
 
   it("ends on an ISO date, kept inside the window", () => {
@@ -390,7 +449,10 @@ describe("CalendarHeatmap weekday labels", () => {
     const thursday = new Date(2024, 0, 11);
     expect(thursday.toLocaleDateString("ar-EG", { weekday: "short" }).length).toBeGreaterThan(4);
     render(<CalendarHeatmap data={DATA} from="2026-09-01" to="2026-09-30" locale="ar-EG" />);
-    const printed = screen.getAllByRole("rowheader").map((h) => h.textContent ?? "").filter(Boolean);
+    const printed = screen
+      .getAllByRole("rowheader")
+      .map((h) => h.textContent ?? "")
+      .filter(Boolean);
     expect(printed.length).toBeGreaterThan(0);
     for (const text of printed) expect([...text].length).toBeLessThanOrEqual(4);
     // The full name is still each row's accessible name.

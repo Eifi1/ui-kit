@@ -2,13 +2,7 @@ import { useEffect, useId, useMemo, useRef } from "react";
 import type { KeyboardEvent, ReactNode, Ref } from "react";
 import { CalculatorButton, type CalculatorButtonLabels } from "./calculator";
 import { NumberPadSheet, type NumberPadSheetLabels } from "./numpad-sheet";
-import {
-  FIELD_BASE,
-  FIELD_DISPLAY,
-  FIELD_INVALID,
-  FLOATING_INPUT_CLASS,
-  FloatingField,
-} from "./field-base";
+import { FIELD_BASE, FIELD_DISPLAY, FIELD_INVALID, FLOATING_INPUT_CLASS, FloatingField } from "./field-base";
 // The data alone (0.35): not the picker, which this field does not render.
 import { CURRENCIES } from "../currencies";
 import { FieldCaption, LockedReason, mergeRefs, type DisabledReasonDisplay, type FieldHelpProps } from "./field-parts";
@@ -205,13 +199,7 @@ function decimalsOf(n: number): number {
  * binary noise goes: `0.1 × 3` is 0.30000000000000004, and `toFixed(1)` of it is
  * "0.3". Summing steps would accumulate that noise press by press instead.
  */
-export function stepNumber(
-  current: number | null,
-  count: number,
-  step: number,
-  min?: number,
-  max?: number,
-): number {
+export function stepNumber(current: number | null, count: number, step: number, min?: number, max?: number): number {
   const clamp = (n: number) => Math.min(max ?? Infinity, Math.max(min ?? -Infinity, n));
   // Nothing to step from: land on the value nearest zero the bounds allow, rather
   // than on ±step — a room count with `min={1}` goes to 1, a rate to 0.
@@ -221,11 +209,7 @@ export function stepNumber(
   const nearest = Math.round(raw);
   // "On the grid" within float tolerance: (0.3 - 0) / 0.1 is 2.9999999999999996.
   const onGrid = Math.abs(raw - nearest) < 1e-9;
-  const k = onGrid
-    ? nearest + count
-    : count > 0
-      ? Math.ceil(raw) + count - 1
-      : Math.floor(raw) + count + 1;
+  const k = onGrid ? nearest + count : count > 0 ? Math.ceil(raw) + count - 1 : Math.floor(raw) + count + 1;
   const places = Math.min(Math.max(decimalsOf(step), decimalsOf(origin)), 20);
   return clamp(Number((origin + k * step).toFixed(places)));
 }

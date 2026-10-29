@@ -80,7 +80,15 @@ describe("the other top-bar icon triggers name themselves the same way (R13)", (
   ];
 
   it("OptionSwitcherMenu shows its name without a title, and does not describe the trigger by it", () => {
-    render(<OptionSwitcherMenu icon={<svg aria-hidden />} aria-label="Text size" options={options} value="a" onSelect={() => {}} />);
+    render(
+      <OptionSwitcherMenu
+        icon={<svg aria-hidden />}
+        aria-label="Text size"
+        options={options}
+        value="a"
+        onSelect={() => {}}
+      />,
+    );
     const trigger = screen.getByRole("button", { name: "Text size" });
     fireEvent.mouseEnter(hoverTarget(trigger));
     expect(screen.getByRole("tooltip")).toHaveTextContent("Text size");
@@ -89,13 +97,29 @@ describe("the other top-bar icon triggers name themselves the same way (R13)", (
 
   it("OptionSwitcherMenu: a title equal to the name is not a description either; a different one is", () => {
     const { unmount } = render(
-      <OptionSwitcherMenu icon={<svg aria-hidden />} aria-label="Text size" title="Text size" options={options} value="a" onSelect={() => {}} />,
+      <OptionSwitcherMenu
+        icon={<svg aria-hidden />}
+        aria-label="Text size"
+        title="Text size"
+        options={options}
+        value="a"
+        onSelect={() => {}}
+      />,
     );
     let trigger = screen.getByRole("button", { name: "Text size" });
     fireEvent.mouseEnter(hoverTarget(trigger));
     expect(trigger).not.toHaveAttribute("aria-describedby");
     unmount();
-    render(<OptionSwitcherMenu icon={<svg aria-hidden />} aria-label="Role" title="Role: admin" options={options} value="a" onSelect={() => {}} />);
+    render(
+      <OptionSwitcherMenu
+        icon={<svg aria-hidden />}
+        aria-label="Role"
+        title="Role: admin"
+        options={options}
+        value="a"
+        onSelect={() => {}}
+      />,
+    );
     trigger = screen.getByRole("button", { name: "Role" });
     fireEvent.mouseEnter(hoverTarget(trigger));
     expect(trigger).toHaveAccessibleDescription("Role: admin");

@@ -156,7 +156,10 @@ describe("useFeedbackSubmit — the dialog", () => {
     render(<Host upload={upload} create={create} capture={async () => shot} />);
     await open("BUG");
     await act(async () => fireEvent.click(screen.getByRole("button", { name: /Capture screenshot/ })));
-    pick([new File(["%PDF"], "log.pdf", { type: "application/pdf" }), new File(["t"], "trace.txt", { type: "text/plain" })]);
+    pick([
+      new File(["%PDF"], "log.pdf", { type: "application/pdf" }),
+      new File(["t"], "trace.txt", { type: "text/plain" }),
+    ]);
     fireEvent.paste(document, clipboard(png("image.png")));
     subject("Broken");
     await send();
@@ -185,8 +188,8 @@ describe("useFeedbackSubmit — the dialog", () => {
   it("creates nothing when an upload fails, toasts the server's words, and keeps the draft", async () => {
     const create = vi.fn(async (_p: FeedbackCreatePayload) => ({ id: 1 }));
     const failure = { response: { data: { detail: "File too large" } } };
-    const errorMessage = vi.fn((error: unknown, fallback: string) =>
-      (error as typeof failure).response?.data?.detail ?? fallback,
+    const errorMessage = vi.fn(
+      (error: unknown, fallback: string) => (error as typeof failure).response?.data?.detail ?? fallback,
     );
     render(<Host upload={() => Promise.reject(failure)} create={create} errorMessage={errorMessage} />);
     await open("BUG");
@@ -277,7 +280,12 @@ describe("useFeedbackSubmit — files and capture", () => {
 
   it("speaks the provider's language: dialog, categories, context box and toasts", async () => {
     const labels = {
-      feedbackDialog: { title: "Feedback senden", subject: "Betreff", bodyOptional: "Was ist passiert? (optional)", save: "Senden" },
+      feedbackDialog: {
+        title: "Feedback senden",
+        subject: "Betreff",
+        bodyOptional: "Was ist passiert? (optional)",
+        save: "Senden",
+      },
       feedbackCategory: { CRASH: "Absturz", BUG: "Fehler", IDEA: "Idee", QUESTION: "Frage", OTHER: "Sonstiges" },
       feedbackContext: { user: "Nutzer", attachUrl: "Aktuelle Seiten-URL anhängen" },
       feedbackToast: { submitted: "Danke für Ihr Feedback!" },
@@ -316,7 +324,9 @@ describe("useFeedbackSubmit — publicNotice", () => {
 
   it("in the provider's language", async () => {
     render(
-      <UiKitProvider labels={{ feedbackDialog: { publicNotice: "Andere Personen sehen Titel und Text." } } as UiKitLabelOverrides}>
+      <UiKitProvider
+        labels={{ feedbackDialog: { publicNotice: "Andere Personen sehen Titel und Text." } } as UiKitLabelOverrides}
+      >
         <Host publicNotice />
       </UiKitProvider>,
     );

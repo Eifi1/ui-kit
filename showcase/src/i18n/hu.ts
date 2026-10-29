@@ -220,8 +220,7 @@ export const hu: Dictionary = {
     fields: {
       title: "Szövegmezők",
       short: "Szöveg",
-      blurb:
-        "Beviteli mezők, és azok az osztálykonstansok, amelyekből egy alkalmazás a saját mezőit összeállítja.",
+      blurb: "Beviteli mezők, és azok az osztálykonstansok, amelyekből egy alkalmazás a saját mezőit összeállítja.",
     },
     forms: {
       title: "Űrlapok (react-hook-form)",
@@ -232,8 +231,7 @@ export const hu: Dictionary = {
     choices: {
       title: "Választás",
       short: "Választás",
-      blurb:
-        "Be vagy ki, egy a néhány közül, egy érték egy skálán — valamint szín, ikon vagy kártya kiválasztása.",
+      blurb: "Be vagy ki, egy a néhány közül, egy érték egy skálán — valamint szín, ikon vagy kártya kiválasztása.",
     },
     numbers: {
       title: "Számok és összegek",
@@ -414,8 +412,7 @@ export const hu: Dictionary = {
     },
     overlays: {
       title: "Felugró elemek",
-      blurb:
-        "Minden, ami az oldal fölött lebeg, és az az egy időzítés, amelyen bezáráskor mind osztoznak.",
+      blurb: "Minden, ami az oldal fölött lebeg, és az az egy időzítés, amelyen bezáráskor mind osztoznak.",
     },
     dialogs: {
       title: "Párbeszédablakok",
@@ -511,8 +508,7 @@ export const hu: Dictionary = {
     "hooks-lib": {
       title: "Hookok és lib",
       short: "Hookok",
-      blurb:
-        "A nem vizuális exportok: a hookok élőben, a tiszta segédfüggvények pedig bemenet → kimenet formában.",
+      blurb: "A nem vizuális exportok: a hookok élőben, a tiszta segédfüggvények pedig bemenet → kimenet formában.",
     },
     "clipboard-timing": {
       title: "Vágólap és időzítés",
@@ -593,7 +589,6 @@ export const hu: Dictionary = {
         "A fordításellenőrzés átviteli formátumai, hogy ki mely kulcsokat és nyelveket ellenőrizheti, és az ellenőrzési tokenek, amelyekkel egy ellenőr megnyitja a csomag ellenőrző oldalát.",
     },
   },
-
 
   // The top-bar search's "What do you need?" rows, phrased as typed into a search box.
   // Formal register throughout, but these are noun phrases, so no "Ön" appears.
@@ -1347,7 +1342,6 @@ export const hu: Dictionary = {
       "a csomag fordítási kulcsai",
     ],
   },
-
 
   // The kit's own words ship with the package — the same import an app writes.
   kit: UI_KIT_LABELS_HU,

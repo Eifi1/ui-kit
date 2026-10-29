@@ -26,12 +26,7 @@
 // types, and until 0.35 the deprecated arithmetic and HOC, which no app imports.
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import type { ComponentType, Dispatch, ReactNode, SetStateAction } from "react";
-import {
-  usePlotArea,
-  useXAxisInverseScale,
-  useYAxisInverseScale,
-  type InverseScaleFunction,
-} from "recharts";
+import { usePlotArea, useXAxisInverseScale, useYAxisInverseScale, type InverseScaleFunction } from "recharts";
 import { X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { FOCUS_RING } from "./focus-ring";
@@ -202,9 +197,7 @@ function widen(span: Span, value: unknown): Span {
 
 /** Which series are measured on an axis. */
 function keysOn(source: ZoomFitSource, axisId: string): string[] {
-  return source.series
-    .filter((entry) => (entry.axis ?? DEFAULT_Y_AXIS) === axisId)
-    .map((entry) => entry.key);
+  return source.series.filter((entry) => (entry.axis ?? DEFAULT_Y_AXIS) === axisId).map((entry) => entry.key);
 }
 
 /** A row's value as a sample, or 0 for a stack's missing layer — a stacked bar with no
@@ -274,10 +267,7 @@ export function axisExtent(
  * An axis with nothing inside the window is left OUT rather than collapsed: a window
  * between two samples is one where the chart should keep drawing the line across.
  */
-export function fitYToX(
-  source: ZoomFitSource,
-  window: readonly [number, number],
-): Record<string, [number, number]> {
+export function fitYToX(source: ZoomFitSource, window: readonly [number, number]): Record<string, [number, number]> {
   const fitted: Record<string, [number, number]> = {};
   for (const axis of source.axes) {
     const span = axisExtent(source, axis.id, window);
@@ -328,11 +318,7 @@ export const NO_ZOOM: ZoomState = { x: undefined, y: null };
  * the first: a band down y keeps the x window when the band holds no samples, and
  * otherwise pulls x in to where they are.
  */
-export function zoomAfter(
-  state: ZoomState,
-  selection: ZoomSelection,
-  source: ZoomFitSource,
-): ZoomState {
+export function zoomAfter(state: ZoomState, selection: ZoomSelection, source: ZoomFitSource): ZoomState {
   if (selection.which === "both") return { x: selection.x, y: selection.y };
   // Leave y derived, so it fits itself to what is inside the new window.
   if (selection.which === "x") return { x: selection.x, y: null };
@@ -566,14 +552,7 @@ function ZoomLayer({
   // What the drag would do, shown while it is being made: a band paints the full width
   // or height, so the reader sees it is about to let the other axis refit.
   const which = drag
-    ? zoomAxesFor(
-        drag.toX - drag.fromX,
-        drag.toY - drag.fromY,
-        plot.width,
-        plot.height,
-        ZOOM_SQUARE_ENOUGH,
-        only,
-      )
+    ? zoomAxesFor(drag.toX - drag.fromX, drag.toY - drag.fromY, plot.width, plot.height, ZOOM_SQUARE_ENOUGH, only)
     : null;
 
   return (
@@ -635,13 +614,7 @@ function ZoomLayer({
 }
 
 /** One axis's pixel→value function, parked where the pointer handler can reach it. */
-function AxisProbe({
-  axisId,
-  scales,
-}: {
-  axisId: string;
-  scales: Map<string, InverseScaleFunction | undefined>;
-}) {
+function AxisProbe({ axisId, scales }: { axisId: string; scales: Map<string, InverseScaleFunction | undefined> }) {
   const inverse = useYAxisInverseScale(axisId);
   useEffect(() => {
     scales.set(axisId, inverse);

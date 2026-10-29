@@ -188,14 +188,13 @@ export function CheckoutReturn033Demo() {
         </ul>
       </div>
       <Note>
-        The webhook may land after the buyer is back — a cold start can outlast the provider&apos;s redirect — so
-        the page says &ldquo;processing&rdquo; and asks the overview again (here every 2 s) until it has MOVED
-        since the departure: a payer who buys under a grant keeps `comped`, and only the period&apos;s end
-        changes, so &ldquo;is it active yet&rdquo; would wait for ever. With no departure on record (another
-        device) it waits for `active`. Bounded (10 minutes by default), remembered across the whole-page return
-        per payer in the kit&apos;s safe storage, and one state for every mounted instance — the banner app-wide
-        and the subscription page share one poll and one `onLanded`. Press &ldquo;Buy&rdquo;, let it poll, then
-        let the webhook land.
+        The webhook may land after the buyer is back — a cold start can outlast the provider&apos;s redirect — so the
+        page says &ldquo;processing&rdquo; and asks the overview again (here every 2 s) until it has MOVED since the
+        departure: a payer who buys under a grant keeps `comped`, and only the period&apos;s end changes, so &ldquo;is
+        it active yet&rdquo; would wait for ever. With no departure on record (another device) it waits for `active`.
+        Bounded (10 minutes by default), remembered across the whole-page return per payer in the kit&apos;s safe
+        storage, and one state for every mounted instance — the banner app-wide and the subscription page share one poll
+        and one `onLanded`. Press &ldquo;Buy&rdquo;, let it poll, then let the webhook land.
       </Note>
     </Example>
   );
@@ -240,13 +239,12 @@ export function PortalTargets033Demo() {
         </p>
       </div>
       <Note>
-        Before a provider customer exists — a trial without a card, a beta, an operator&apos;s grant — there is
-        no portal to open, and the two buttons could only end in `409 billing_not_at_provider`: the part says
-        &ldquo;nothing yet&rdquo; instead. Once it exists, both show whatever the status or source, so a payer
-        who bought under a grant keeps the way to the invoices and to &ldquo;Cancel&rdquo;. One call says where
-        to: &ldquo;Payment and invoices&rdquo; is `overview`, &ldquo;Cancel subscription&rdquo; `cancel` (the
-        portal&apos;s cancel link, never the overview), and the payment-failed banner&apos;s action
-        `payment_method`.
+        Before a provider customer exists — a trial without a card, a beta, an operator&apos;s grant — there is no
+        portal to open, and the two buttons could only end in `409 billing_not_at_provider`: the part says
+        &ldquo;nothing yet&rdquo; instead. Once it exists, both show whatever the status or source, so a payer who
+        bought under a grant keeps the way to the invoices and to &ldquo;Cancel&rdquo;. One call says where to:
+        &ldquo;Payment and invoices&rdquo; is `overview`, &ldquo;Cancel subscription&rdquo; `cancel` (the portal&apos;s
+        cancel link, never the overview), and the payment-failed banner&apos;s action `payment_method`.
       </Note>
     </Example>
   );
@@ -269,11 +267,16 @@ export function PlanLimitToast033Demo() {
     formatValue: formatLimit,
   });
   return (
-    <Example label="usePlanLimitToast — the limit where a notice has no room" hint="402 plan_limit from a row's button; one toast per dimension">
+    <Example
+      label="usePlanLimitToast — the limit where a notice has no room"
+      hint="402 plan_limit from a row's button; one toast per dimension"
+    >
       <div className="flex flex-wrap gap-2">
         <Button
           variant="secondary"
-          onClick={() => setLast(`toast id: ${String(upgrade({ dimension: "beds", plan: "seedling", limit: 3, used: 3 }))}`)}
+          onClick={() =>
+            setLast(`toast id: ${String(upgrade({ dimension: "beds", plan: "seedling", limit: 3, used: 3 }))}`)
+          }
         >
           <Plus aria-hidden className="size-4" />
           Add a bed (3 of 3)
@@ -298,12 +301,12 @@ export function PlanLimitToast033Demo() {
         {last}
       </p>
       <Note>
-        {code("const hit = isPlanLimit(err); if (hit) showLimit(hit);")} — PlanLimitNotice&apos;s words where a
-        refused create has no room for the notice (a row&apos;s button, a share target): &ldquo;Plan limit
-        reached&rdquo;, what to do, the figure when the refusal has one (`billing.limitUsageLine`, a key because
-        French puts a space before the colon), and the mode&apos;s action — `upgrade` calls the app&apos;s
-        navigation, `contact` opens the mail to support. Its id is {code("plan-limit:<dimension>")}, so pressing
-        &ldquo;Add a bed&rdquo; again replaces the toast instead of stacking a second.
+        {code("const hit = isPlanLimit(err); if (hit) showLimit(hit);")} — PlanLimitNotice&apos;s words where a refused
+        create has no room for the notice (a row&apos;s button, a share target): &ldquo;Plan limit reached&rdquo;, what
+        to do, the figure when the refusal has one (`billing.limitUsageLine`, a key because French puts a space before
+        the colon), and the mode&apos;s action — `upgrade` calls the app&apos;s navigation, `contact` opens the mail to
+        support. Its id is {code("plan-limit:<dimension>")}, so pressing &ldquo;Add a bed&rdquo; again replaces the
+        toast instead of stacking a second.
       </Note>
     </Example>
   );
@@ -353,7 +356,10 @@ export function PayPage033Demo() {
   const link = "https://pay.my-app.example/?_ptxn=txn_01j9example";
   const hosted = "https://sandbox-checkout.paddle.com/checkout/custom/abc";
   return (
-    <Example label="The pay page — dist/pay on pay.<app>" hint="a static page the kit ships; each app serves it on its own pay host. Paddle.js runs only there">
+    <Example
+      label="The pay page — dist/pay on pay.<app>"
+      hint="a static page the kit ships; each app serves it on its own pay host. Paddle.js runs only there"
+    >
       <div className="space-y-3">
         <pre className={PRE}>{APP_CALL}</pre>
         <OutTable
@@ -363,8 +369,14 @@ export function PayPage033Demo() {
             ['paddleLocale("de-CH")', paddleLocale("de-CH")],
             ['paddleLocale("zh")', paddleLocale("zh")],
             ['paddleLocale("hu")', paddleLocale("hu")],
-            ['checkoutReturnUrl("https://my-app.example/settings/subscription")', checkoutReturnUrl("https://my-app.example/settings/subscription")],
-            ['checkoutReturnUrl("https://other-app.example/admin/billing?tab=plans#invoices")', checkoutReturnUrl("https://other-app.example/admin/billing?tab=plans#invoices")],
+            [
+              'checkoutReturnUrl("https://my-app.example/settings/subscription")',
+              checkoutReturnUrl("https://my-app.example/settings/subscription"),
+            ],
+            [
+              'checkoutReturnUrl("https://other-app.example/admin/billing?tab=plans#invoices")',
+              checkoutReturnUrl("https://other-app.example/admin/billing?tab=plans#invoices"),
+            ],
           ]}
         />
         <pre className={PRE}>{BUILD}</pre>
@@ -383,18 +395,17 @@ export function PayPage033Demo() {
       </div>
       <Note>
         Paddle.js is a third-party script, always the latest from Paddle&apos;s CDN. On an app&apos;s own origin it
-        would run beside what one injected script could take — session tokens in localStorage, an app&apos;s data
-        key in IndexedDB — and a CSP relaxed for a `/pay` route cannot help: storage is per origin, not per path.
-        So the kit ships `dist/pay/` (an `index.html` with no inline script or style, `pay.js`, `pay.css`, and
-        Paddle&apos;s Apple Pay file), with no React, no sign-in, no storage and no request to the app, and each
-        app serves it at {code("pay.<app domain>")} from its web container. The `eifi1-pay-page` bin copies it and writes
-        `pay-config.json` at the web build; it refuses a token whose prefix disagrees with the environment
-        (`test_` sandbox, `live_` live) and a URL that is not https, so a wrong pairing fails the build,
-        not a buyer. Without a token it writes `null` and the page says there is nothing to pay. The language is
-        the one thing per visit (`?lang=`, mapped to Paddle&apos;s locale; Hungarian gets English). The
-        page names the app from the transaction, not from its host, and once paid goes to that
-        app&apos;s {code("checkoutReturnUrl(returnUrl)")}, which brings the buyer back to the way-back specimen
-        above. This showcase loads no Paddle.js.
+        would run beside what one injected script could take — session tokens in localStorage, an app&apos;s data key in
+        IndexedDB — and a CSP relaxed for a `/pay` route cannot help: storage is per origin, not per path. So the kit
+        ships `dist/pay/` (an `index.html` with no inline script or style, `pay.js`, `pay.css`, and Paddle&apos;s Apple
+        Pay file), with no React, no sign-in, no storage and no request to the app, and each app serves it at{" "}
+        {code("pay.<app domain>")} from its web container. The `eifi1-pay-page` bin copies it and writes
+        `pay-config.json` at the web build; it refuses a token whose prefix disagrees with the environment (`test_`
+        sandbox, `live_` live) and a URL that is not https, so a wrong pairing fails the build, not a buyer. Without a
+        token it writes `null` and the page says there is nothing to pay. The language is the one thing per visit
+        (`?lang=`, mapped to Paddle&apos;s locale; Hungarian gets English). The page names the app from the transaction,
+        not from its host, and once paid goes to that app&apos;s {code("checkoutReturnUrl(returnUrl)")}, which brings
+        the buyer back to the way-back specimen above. This showcase loads no Paddle.js.
       </Note>
     </Example>
   );
@@ -436,7 +447,10 @@ export function WriteLockKinds033Demo() {
     { locked: access, reason: "Shared with you to read.", kind: "access" },
   ]);
   return (
-    <Example label="A lock says its source — kinds, holds and commit scopes" hint="commit, or commit={{ except: [kinds] }}; the parts a lapsed plan allows stay live">
+    <Example
+      label="A lock says its source — kinds, holds and commit scopes"
+      hint="commit, or commit={{ except: [kinds] }}; the parts a lapsed plan allows stay live"
+    >
       <div className="mb-3 flex flex-wrap gap-x-6 gap-y-2">
         <Switch size="sm" label="Demo (kind: demo)" checked={demo} onCheckedChange={setDemo} />
         <Switch size="sm" label="Billing lapsed (useBillingWriteLock)" checked={billing} onCheckedChange={setBilling} />
@@ -472,11 +486,11 @@ export function WriteLockKinds033Demo() {
         {code("combineWriteLocks")}). {code("commit")} takes a scope: {code("true")} sees every lock,{" "}
         {code('{ except: ["billing"] }')} ({code("COMMIT_EXCEPT_BILLING")}) every lock but billing&apos;s. So under
         billing alone &ldquo;Remove a helper&rdquo; and &ldquo;Sign out everywhere&rdquo; stay live — a lapsed plan
-        locks creating and changing, never removing access or the account&apos;s own settings — and under the demo
-        and billing together they are refused with the demo&apos;s reason. A source without a kind is never
-        exempted. The kit&apos;s parts follow by themselves: ShareCard&apos;s remove, withdraw and lowering,
-        InvitationsPanel&apos;s revoke, Sessions, DeleteAccount, EmailChange, Profile, CompleteNameDialog, the
-        translation verdicts and PlanChangeConfirm. {code("useWriteLock(scope)")} answers a hand-rolled toggle;{" "}
+        locks creating and changing, never removing access or the account&apos;s own settings — and under the demo and
+        billing together they are refused with the demo&apos;s reason. A source without a kind is never exempted. The
+        kit&apos;s parts follow by themselves: ShareCard&apos;s remove, withdraw and lowering, InvitationsPanel&apos;s
+        revoke, Sessions, DeleteAccount, EmailChange, Profile, CompleteNameDialog, the translation verdicts and
+        PlanChangeConfirm. {code("useWriteLock(scope)")} answers a hand-rolled toggle;{" "}
         {code("writeLockFor(lock, scope)")} is the same answer, pure, for {code("confirm({ commit })")}.
       </Note>
     </Example>
@@ -509,7 +523,10 @@ export function ShareCardBillingLock033Demo() {
   const billingLock = useBillingWriteLock(billing, { guest: false });
   const lock = combineWriteLocks([{ locked: demo, reason: demoLabels.writeLocked, kind: "demo" }, billingLock]);
   return (
-    <Example label="ShareCard under a billing lock — removing stays, adding does not" hint="remove, withdraw and lowering a role live; add and raising locked, with the billing reason">
+    <Example
+      label="ShareCard under a billing lock — removing stays, adding does not"
+      hint="remove, withdraw and lowering a role live; add and raising locked, with the billing reason"
+    >
       <div className="mb-3 flex flex-wrap gap-x-6 gap-y-2">
         <Switch size="sm" label="Billing lapsed" checked={billing} onCheckedChange={setBilling} />
         <Switch size="sm" label="Demo as well" checked={demo} onCheckedChange={setDemo} />
@@ -545,11 +562,11 @@ export function ShareCardBillingLock033Demo() {
       <p className={`mt-2 ${READOUT_WRAP}`}>last callback: {last}</p>
       <Note>
         A lapsed plan allows what removes access and refuses what grants it (§12.13). So under billing: removing a
-        grantee and withdrawing an invitation stay live; the add form is locked with the billing reason; and the
-        role choice reads `roles` narrowest first — Ben, a viewer, has only raises (locked); Cleo, an editor, can be
-        lowered to viewer while manager is dimmed and refused; Dan, a manager, can only be lowered (live). Under the
-        demo&apos;s lock nothing moves. A server following the contract refuses exactly that: a widening while lapsed,
-        not a narrowing. Pass `roles` in that order — the doc of `SharePanelProps.roles` now says so.
+        grantee and withdrawing an invitation stay live; the add form is locked with the billing reason; and the role
+        choice reads `roles` narrowest first — Ben, a viewer, has only raises (locked); Cleo, an editor, can be lowered
+        to viewer while manager is dimmed and refused; Dan, a manager, can only be lowered (live). Under the demo&apos;s
+        lock nothing moves. A server following the contract refuses exactly that: a widening while lapsed, not a
+        narrowing. Pass `roles` in that order — the doc of `SharePanelProps.roles` now says so.
       </Note>
     </Example>
   );

@@ -31,7 +31,18 @@ beforeEach(() => {
   ro = stubResizeObserver();
   headHeight = 40;
   HTMLElement.prototype.getBoundingClientRect = function (this: HTMLElement) {
-    if (this.tagName === "THEAD") return { height: headHeight, width: 500, top: 0, left: 0, bottom: headHeight, right: 500, x: 0, y: 0, toJSON: () => ({}) } as DOMRect;
+    if (this.tagName === "THEAD")
+      return {
+        height: headHeight,
+        width: 500,
+        top: 0,
+        left: 0,
+        bottom: headHeight,
+        right: 500,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      } as DOMRect;
     return realRect.call(this);
   };
 });

@@ -68,14 +68,10 @@ export function WizardSummary({
             <dl className="grid gap-2 text-sm">
               {section.items.map((item, iIdx) => (
                 <div key={iIdx}>
-                  {iIdx > 0 && (
-                    <div className="mb-2 border-t border-subtle" role="presentation" />
-                  )}
+                  {iIdx > 0 && <div className="mb-2 border-t border-subtle" role="presentation" />}
                   <div className="flex items-start justify-between gap-4">
                     <dt className="text-muted">{item.label}</dt>
-                    <dd className="text-end font-medium text-primary">
-                      {item.value}
-                    </dd>
+                    <dd className="text-end font-medium text-primary">{item.value}</dd>
                   </div>
                 </div>
               ))}

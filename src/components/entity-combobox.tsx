@@ -34,8 +34,7 @@ export type { ComboClearValue, ComboOption } from "./combobox-core";
 /** `onChange` is the kit's — "a selection was made", carrying values — rather
  *  than the div's form event, so the DOM's spelling of it is omitted. */
 export interface EntityComboboxProps<V extends string | number, C extends ComboClearValue = null>
-  extends Omit<ComponentPropsWithoutRef<"div">, "onChange">,
-    FieldHelpProps {
+  extends Omit<ComponentPropsWithoutRef<"div">, "onChange">, FieldHelpProps {
   /** Selected id; `null`, `undefined` or `clearValue` when nothing is selected. */
   value: V | C | null | undefined;
   /** Selecting an option emits its value; the clear button emits `clearValue`. */
@@ -311,10 +310,7 @@ export function EntityCombobox<V extends string | number, C extends ComboClearVa
             // A caller's own name wins over the composition: two fields labelled
             // "Account" on a transfer form are the from and the to, and only the
             // caller knows which is which.
-            aria-label={
-              ariaLabel ??
-              (typeof label === "string" ? common.fieldValue(label, triggerText) : undefined)
-            }
+            aria-label={ariaLabel ?? (typeof label === "string" ? common.fieldValue(label, triggerText) : undefined)}
             // The focusable kind of disabled while locked (Button's rule): a native
             // `disabled` would take the field out of the tab order, and the reason with it.
             disabled={lock.locked ? undefined : disabled}

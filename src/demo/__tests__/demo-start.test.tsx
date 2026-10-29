@@ -31,10 +31,26 @@ describe("DemoStart — §5.2", () => {
   });
 
   it.each([
-    ["demo_rate_limited with Retry-After", refusal(429, "demo_rate_limited", undefined, { "retry-after": "1200" }), "Too many demos from this network. Try again in 20 min."],
-    ["demo_rate_limited, a part minute rounded up", refusal(429, "demo_rate_limited", undefined, { "Retry-After": "61" }), "Too many demos from this network. Try again in 2 min."],
-    ["demo_rate_limited without Retry-After", refusal(429, "demo_rate_limited"), "Too many demos from this network. Try again later."],
-    ["a bare 429", refusal(429, undefined, undefined, { "retry-after": "30" }), "Too many demos from this network. Try again in 1 min."],
+    [
+      "demo_rate_limited with Retry-After",
+      refusal(429, "demo_rate_limited", undefined, { "retry-after": "1200" }),
+      "Too many demos from this network. Try again in 20 min.",
+    ],
+    [
+      "demo_rate_limited, a part minute rounded up",
+      refusal(429, "demo_rate_limited", undefined, { "Retry-After": "61" }),
+      "Too many demos from this network. Try again in 2 min.",
+    ],
+    [
+      "demo_rate_limited without Retry-After",
+      refusal(429, "demo_rate_limited"),
+      "Too many demos from this network. Try again later.",
+    ],
+    [
+      "a bare 429",
+      refusal(429, undefined, undefined, { "retry-after": "30" }),
+      "Too many demos from this network. Try again in 1 min.",
+    ],
     ["demo_capacity", refusal(429, "demo_capacity"), "The demo is full right now. Try again later."],
     ["demo_disabled", refusal(404, "demo_disabled"), "The demo isn’t available right now."],
     ["demo_not_ready", refusal(503, "demo_not_ready"), "The demo isn’t available right now."],
@@ -46,7 +62,9 @@ describe("DemoStart — §5.2", () => {
     expect(screen.getByRole("status")).toHaveTextContent(message);
     expect(spy).toHaveBeenCalledTimes(1);
     expect(onStarted).not.toHaveBeenCalled();
-    expect(screen.getByRole("link", { name: "Request access" }).getAttribute("href")).toMatch(/^mailto:support@example\.com\?/);
+    expect(screen.getByRole("link", { name: "Request access" }).getAttribute("href")).toMatch(
+      /^mailto:support@example\.com\?/,
+    );
     expect(screen.getByRole("link", { name: "Back to the start page" })).toHaveAttribute("href", "/welcome");
   });
 

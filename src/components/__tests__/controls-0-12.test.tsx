@@ -44,9 +44,7 @@ describe("Field labelVisibility", () => {
   });
 
   it("hands a group the label's id as the render-prop's second argument", () => {
-    render(
-      <Field label="Cap">{(ids, { labelId }) => <div role="group" {...ids} aria-labelledby={labelId} />}</Field>,
-    );
+    render(<Field label="Cap">{(ids, { labelId }) => <div role="group" {...ids} aria-labelledby={labelId} />}</Field>);
     expect(screen.getByRole("group", { name: "Cap" })).toBeInTheDocument();
   });
 });
@@ -187,7 +185,11 @@ describe("Button tone='danger' on the boxed variants", () => {
 
 describe("Card variant='outline'", () => {
   it("is bordered, shadowless and padded p-4 by default", () => {
-    render(<Card variant="outline" data-testid="c">x</Card>);
+    render(
+      <Card variant="outline" data-testid="c">
+        x
+      </Card>,
+    );
     const cls = screen.getByTestId("c").className;
     expect(cls).toContain("border-subtle");
     expect(cls).not.toContain("shadow");
@@ -216,7 +218,11 @@ describe("Card variant='outline'", () => {
   it("leaves the default card padding-less unless asked", () => {
     const { rerender } = render(<Card data-testid="c">x</Card>);
     expect(screen.getByTestId("c").className).not.toMatch(/(^|\s)p-\d/);
-    rerender(<Card padding="md" data-testid="c">x</Card>);
+    rerender(
+      <Card padding="md" data-testid="c">
+        x
+      </Card>,
+    );
     expect(screen.getByTestId("c").className).toContain("p-4");
   });
 });

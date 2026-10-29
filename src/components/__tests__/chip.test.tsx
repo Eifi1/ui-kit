@@ -348,8 +348,12 @@ describe("Chip — the combined link/button + dismiss shape (0.7.0)", () => {
 
   it("types an href chip's onClick for the anchor, and refuses a button's handler there", () => {
     const onButton = (e: MouseEvent<HTMLButtonElement>) => e;
-    // @ts-expect-error — a link chip's click is the anchor's, never a button's.
-    const both = <Chip href="#x" onClick={onButton}>x</Chip>;
+    const both = (
+      // @ts-expect-error — a link chip's click is the anchor's, never a button's.
+      <Chip href="#x" onClick={onButton}>
+        x
+      </Chip>
+    );
     expect(both).toBeTruthy();
   });
 });
@@ -460,7 +464,11 @@ describe("Chip link onClick (0.8.x)", () => {
         href="/admin"
         renderLink={(p) => {
           seen("onClick" in p && p.onClick !== undefined);
-          return <a href={p.href} className={p.className}>{p.children}</a>;
+          return (
+            <a href={p.href} className={p.className}>
+              {p.children}
+            </a>
+          );
         }}
       >
         Admin
@@ -504,10 +512,18 @@ describe("Chip 0.10.0", () => {
   it("paints the categorical hues from their own token triple, in every variant", () => {
     render(
       <>
-        <Chip tone="purple" data-testid="soft">Assigned</Chip>
-        <Chip tone="teal" variant="outline" data-testid="outline">Invoiced</Chip>
-        <Chip tone="orange" variant="solid" data-testid="solid">3</Chip>
-        <Chip tone="indigo" selected onClick={() => {}} data-testid="on">Scheduled</Chip>
+        <Chip tone="purple" data-testid="soft">
+          Assigned
+        </Chip>
+        <Chip tone="teal" variant="outline" data-testid="outline">
+          Invoiced
+        </Chip>
+        <Chip tone="orange" variant="solid" data-testid="solid">
+          3
+        </Chip>
+        <Chip tone="indigo" selected onClick={() => {}} data-testid="on">
+          Scheduled
+        </Chip>
       </>,
     );
     const soft = screen.getByTestId("soft").className;
@@ -523,7 +539,11 @@ describe("Chip 0.10.0", () => {
   });
 
   it("size=xs is 11px type at px-1.5", () => {
-    render(<Chip size="xs" data-testid="xs">Goal</Chip>);
+    render(
+      <Chip size="xs" data-testid="xs">
+        Goal
+      </Chip>,
+    );
     const cls = screen.getByTestId("xs").className;
     expect(cls).toContain("text-caption");
     expect(cls).toContain("px-1.5");
@@ -587,7 +607,14 @@ describe("Chip — the provider's router link", () => {
       <UiKitProvider linkComponent={routerLink}>
         <Chip href="/admin">Admin</Chip>
         <Chip href="mailto:a@b.c">Mail</Chip>
-        <Chip href="/own" renderLink={(p) => <a {...p} data-own="">{p.children}</a>}>
+        <Chip
+          href="/own"
+          renderLink={(p) => (
+            <a {...p} data-own="">
+              {p.children}
+            </a>
+          )}
+        >
           Own
         </Chip>
       </UiKitProvider>,
@@ -603,11 +630,21 @@ describe("Chip data-tone (0.34, refactor audit 2026-10, TST-9)", () => {
   it("carries its tone on the visible pill, whatever its shape, and a caller's own wins", () => {
     render(
       <>
-        <Chip tone="warning" data-testid="inert">Due</Chip>
-        <Chip tone="teal" href="#t">Link</Chip>
-        <Chip tone="danger" onClick={() => {}}>Toggle</Chip>
-        <Chip tone="info" href="#s" onRemove={() => {}}>Split</Chip>
-        <Chip tone="success" data-tone="mine" data-testid="own">Own</Chip>
+        <Chip tone="warning" data-testid="inert">
+          Due
+        </Chip>
+        <Chip tone="teal" href="#t">
+          Link
+        </Chip>
+        <Chip tone="danger" onClick={() => {}}>
+          Toggle
+        </Chip>
+        <Chip tone="info" href="#s" onRemove={() => {}}>
+          Split
+        </Chip>
+        <Chip tone="success" data-tone="mine" data-testid="own">
+          Own
+        </Chip>
       </>,
     );
     expect(screen.getByTestId("inert")).toHaveAttribute("data-tone", "warning");

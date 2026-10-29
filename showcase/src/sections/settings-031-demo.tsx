@@ -78,13 +78,55 @@ const ENTRIES: (SettingsEntry<Group> & { demo?: boolean })[] = [
   { id: "theme", group: "appearance", anchor: "look-card", title: "Theme", keywords: "dark light night colour scheme" },
   { id: "language", group: "appearance", anchor: "look-card", title: "Language", keywords: "locale translation" },
   { id: "profile", group: "account", anchor: "profile-card", title: "Profile", keywords: "name first last" },
-  { id: "email", group: "account", anchor: "email-card", title: "Email address", keywords: "mail address change", demo: true },
+  {
+    id: "email",
+    group: "account",
+    anchor: "email-card",
+    title: "Email address",
+    keywords: "mail address change",
+    demo: true,
+  },
   { id: "password", group: "security", anchor: "password-card", title: "Password", keywords: "passphrase", demo: true },
-  { id: "twofactor", group: "security", anchor: "twofactor-card", title: "Two-factor authentication", keywords: "2fa totp authenticator code", demo: true },
-  { id: "passkeys", group: "security", anchor: "passkeys-card", title: "Passkeys", keywords: "fingerprint face webauthn", demo: true },
-  { id: "sessions", group: "security", anchor: "sessions-card", title: "Signed-in devices", keywords: "sessions sign out everywhere", demo: true },
-  { id: "export", group: "data", anchor: "export-card", title: "Export your data", keywords: "download json copy", demo: true },
-  { id: "delete", group: "data", anchor: "delete-card", title: "Delete account", keywords: "close remove erase", demo: true },
+  {
+    id: "twofactor",
+    group: "security",
+    anchor: "twofactor-card",
+    title: "Two-factor authentication",
+    keywords: "2fa totp authenticator code",
+    demo: true,
+  },
+  {
+    id: "passkeys",
+    group: "security",
+    anchor: "passkeys-card",
+    title: "Passkeys",
+    keywords: "fingerprint face webauthn",
+    demo: true,
+  },
+  {
+    id: "sessions",
+    group: "security",
+    anchor: "sessions-card",
+    title: "Signed-in devices",
+    keywords: "sessions sign out everywhere",
+    demo: true,
+  },
+  {
+    id: "export",
+    group: "data",
+    anchor: "export-card",
+    title: "Export your data",
+    keywords: "download json copy",
+    demo: true,
+  },
+  {
+    id: "delete",
+    group: "data",
+    anchor: "delete-card",
+    title: "Delete account",
+    keywords: "close remove erase",
+    demo: true,
+  },
 ];
 
 const OFFERED = [
@@ -159,13 +201,20 @@ function useGardenAccount() {
     { id: "s2", device: "Safari on iPhone", ip: "198.51.100.7", lastActiveAt: "2026-10-04T08:00:00Z" },
   ]);
   return {
-    theme, setTheme,
-    deviceLang, setDeviceLang,
-    accountLang, setAccountLang,
-    names, setNames,
-    twoFactor, setTwoFactor,
-    passkeys, setPasskeys,
-    sessions, setSessions,
+    theme,
+    setTheme,
+    deviceLang,
+    setDeviceLang,
+    accountLang,
+    setAccountLang,
+    names,
+    setNames,
+    twoFactor,
+    setTwoFactor,
+    passkeys,
+    setPasskeys,
+    sessions,
+    setSessions,
   };
 }
 
@@ -317,7 +366,15 @@ const SETTINGS_LINKS: [string, string][] = [
   ["Unknown group", "/settings/compost"],
 ];
 
-function GardenSettings({ layout, demo, account }: { layout: "desktop" | "phone"; demo: boolean; account: GardenAccount }) {
+function GardenSettings({
+  layout,
+  demo,
+  account,
+}: {
+  layout: "desktop" | "phone";
+  demo: boolean;
+  account: GardenAccount;
+}) {
   const entries = useMemo(() => ENTRIES.map((e) => (demo && e.demo ? { ...e, visible: false } : e)), [demo]);
   return (
     <SettingsLayout<Group>
@@ -328,7 +385,14 @@ function GardenSettings({ layout, demo, account }: { layout: "desktop" | "phone"
       entries={entries}
       basePath="/settings"
       renderGroup={(group) => <GardenGroup group={group} account={account} demo={demo} />}
-      phoneFooter={<ListItem href="/admin" title="Administration" subtitle="Leaves settings" leading={<Users className="size-4 text-muted" aria-hidden />} />}
+      phoneFooter={
+        <ListItem
+          href="/admin"
+          title="Administration"
+          subtitle="Leaves settings"
+          leading={<Users className="size-4 text-muted" aria-hidden />}
+        />
+      }
       // The window's title (0.34, §3.1): the desktop specimen writes it, the other two
       // pass `false`, so three specimens on one page do not take turns at one tab.
       appName="Garden Planner"
@@ -356,13 +420,13 @@ export function SettingsDesktop031Demo() {
       </Frame>
       <Note>
         {code("/settings")} is replaced by the first group. Switching groups in the sidebar REPLACES, so back leaves
-        settings. Ten entries are over the threshold of eight, so the search shows: try “dark”, “2fa” or “sécurité”
-        — accents fold, and a group&rsquo;s name finds its settings. “Legacy link” is an old
+        settings. Ten entries are over the threshold of eight, so the search shows: try “dark”, “2fa” or “sécurité” —
+        accents fold, and a group&rsquo;s name finds its settings. “Legacy link” is an old
         {code("#security")} URL, converted with the whole query while the page stays mounted. “Mail link” rings the
-        passkeys card, focuses its heading and removes only {code("focus")}. The browser tab follows the
-        open group — “Security · Garden Planner settings · Garden Planner”, from {code("appName")} — and gets its
-        old title back when the layout unmounts; {code("documentTitle")} takes a function for another order, or{" "}
-        {code("false")}, which the phone and admin specimens pass.
+        passkeys card, focuses its heading and removes only {code("focus")}. The browser tab follows the open group —
+        “Security · Garden Planner settings · Garden Planner”, from {code("appName")} — and gets its old title back when
+        the layout unmounts; {code("documentTitle")} takes a function for another order, or {code("false")}, which the
+        phone and admin specimens pass.
       </Note>
     </Example>
   );
@@ -376,9 +440,9 @@ export function SettingsPhone031Demo() {
         <GardenSettings layout="phone" demo={false} account={account} />
       </Frame>
       <Note>
-        The list of groups, then a page per group. Opening a group PUSHES and marks the list as the entry before it,
-        so “‹ Settings” is a real back; after a deep link (“Mail link”) it replaces with the list instead of leaving
-        the app. The cards&rsquo; titles are {code("h2")} under the group&rsquo;s {code("h1")} here, {code("h3")} on a
+        The list of groups, then a page per group. Opening a group PUSHES and marks the list as the entry before it, so
+        “‹ Settings” is a real back; after a deep link (“Mail link”) it replaces with the list instead of leaving the
+        app. The cards&rsquo; titles are {code("h2")} under the group&rsquo;s {code("h1")} here, {code("h3")} on a
         desktop. The “Administration” row is {code("phoneFooter")}: it leaves settings and is never a group.
       </Note>
     </Example>
@@ -448,7 +512,9 @@ export function SettingsAdmin031Demo() {
           search={false}
           documentTitle={false}
           aliases={{ overview: "metrics" }}
-          phoneFooter={<ListItem href="/import" title="Import" leading={<Upload className="size-4 text-muted" aria-hidden />} />}
+          phoneFooter={
+            <ListItem href="/import" title="Import" leading={<Upload className="size-4 text-muted" aria-hidden />} />
+          }
           renderGroup={(section) => {
             switch (section) {
               case "metrics":
@@ -499,13 +565,16 @@ export function SettingsSearchEntries031Demo() {
   const entries = settingsSearchEntries(GROUPS, ENTRIES, { basePath: "/settings" });
   const pick = (id: string) => entries.find((e) => e.id === id)!;
   return (
-    <Example label="settingsSearchEntries — the catalogue for ⌘K" hint="the GlobalSearch entries, from the same catalogue">
+    <Example
+      label="settingsSearchEntries — the catalogue for ⌘K"
+      hint="the GlobalSearch entries, from the same catalogue"
+    >
       <OutTable
         rows={[
           ["entries.length", String(entries.length)],
-          ["pick(\"settings:passkeys\").href", pick("settings:passkeys").href ?? ""],
-          ["pick(\"settings:passkeys\").group", pick("settings:passkeys").group ?? ""],
-          ["pick(\"settings:theme\").keywords", (pick("settings:theme").keywords ?? []).join(", ")],
+          ['pick("settings:passkeys").href', pick("settings:passkeys").href ?? ""],
+          ['pick("settings:passkeys").group', pick("settings:passkeys").group ?? ""],
+          ['pick("settings:theme").keywords', (pick("settings:theme").keywords ?? []).join(", ")],
         ]}
       />
     </Example>

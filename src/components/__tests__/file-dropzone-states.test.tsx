@@ -131,7 +131,9 @@ describe("FileDropzone disabledReason / commit (0.22)", () => {
     expect(root()).toHaveAttribute("aria-disabled", "true");
     expect(root()).toHaveAccessibleDescription("Shared with you to read.");
     // The reason takes the hint's place in the body.
-    expect(within(root()).getByText("Shared with you to read.", { selector: "[data-slot='file-dropzone-reason']" })).toBeVisible();
+    expect(
+      within(root()).getByText("Shared with you to read.", { selector: "[data-slot='file-dropzone-reason']" }),
+    ).toBeVisible();
     const browse = screen.getByRole("button", { name: "Browse" });
     expect(browse).toHaveAttribute("aria-disabled", "true");
     expect(browse).not.toBeDisabled();

@@ -37,8 +37,7 @@ export { DEFAULT_CHIP_INPUT_LABELS };
  * div's `onChange` is omitted rather than shadowed. `placeholder` is likewise this
  * component's, forwarded to the inner `<input>`; the div has none of its own.
  */
-export interface ChipInputProps
-  extends Omit<ComponentPropsWithoutRef<"div">, "onChange" | "placeholder" | "children"> {
+export interface ChipInputProps extends Omit<ComponentPropsWithoutRef<"div">, "onChange" | "placeholder" | "children"> {
   value: string[];
   onChange: (next: string[]) => void;
   placeholder?: string;
@@ -127,9 +126,7 @@ export function ChipInput({
   const errorId = `${id}-error`;
   const rejectedId = `${id}-rejected`;
   const isInvalid = invalid || !!error;
-  const describedBy = [error ? errorId : null, rejected ? rejectedId : null]
-    .filter(Boolean)
-    .join(" ");
+  const describedBy = [error ? errorId : null, rejected ? rejectedId : null].filter(Boolean).join(" ");
 
   const focusChip = (index: number | null) => {
     setFocusedChip(index);
@@ -344,7 +341,10 @@ export function ChipInput({
           // `w-0` with flex-1: without a width the browser's default input size (20
           // characters) became the field's minimum width and pushed it past a 240 px
           // phone at 150 % (0.32's screenshot run).
-          className={cn("w-0 min-w-[6rem] flex-1 bg-transparent py-0.5 text-sm text-primary outline-none placeholder:text-placeholder disabled:cursor-default", FIELD_TOUCH_TEXT)}
+          className={cn(
+            "w-0 min-w-[6rem] flex-1 bg-transparent py-0.5 text-sm text-primary outline-none placeholder:text-placeholder disabled:cursor-default",
+            FIELD_TOUCH_TEXT,
+          )}
         />
         {/* Additions, removals and rejections move no focus, so nothing would announce
             them. `sr-only-fixed` rather than `sr-only`: this sits inside a consumer's

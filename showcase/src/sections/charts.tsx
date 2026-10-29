@@ -1,16 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Line,
-  LineChart,
-  Pie,
-  PieChart,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, XAxis, YAxis } from "recharts";
 import {
   CHART_COLORS,
   CHART_ROLES,
@@ -106,10 +95,7 @@ function longMonth(period: string | number): string {
  */
 function configFor(series: readonly { key: string; label: string }[]): ChartConfig {
   return Object.fromEntries(
-    series.map((s, i): [string, ChartSeriesConfig] => [
-      s.key,
-      { label: s.label, color: paletteFor(i) },
-    ]),
+    series.map((s, i): [string, ChartSeriesConfig] => [s.key, { label: s.label, color: paletteFor(i) }]),
   );
 }
 
@@ -232,11 +218,7 @@ function ConfigLegend() {
     <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 pt-3 text-xs">
       {Object.entries(config).map(([key, series]) => (
         <span key={key} className="inline-flex items-center gap-1.5">
-          <span
-            aria-hidden
-            className="size-2.5 shrink-0 rounded-[3px]"
-            style={{ backgroundColor: series.color }}
-          />
+          <span aria-hidden className="size-2.5 shrink-0 rounded-[3px]" style={{ backgroundColor: series.color }} />
           <span className="text-primary">{series.label}</span>
           <code className="font-mono text-muted">{key}</code>
         </span>
@@ -268,13 +250,13 @@ export function Charts() {
   return (
     <>
       <Note>
-        <strong>Every <code className="font-mono">ChartContainer</code> needs an explicit
-        height.</strong>{" "}
+        <strong>
+          Every <code className="font-mono">ChartContainer</code> needs an explicit height.
+        </strong>{" "}
         It renders <code className="font-mono">ResponsiveContainer</code> at{" "}
-        <code className="font-mono">height=&quot;100%&quot;</code> inside a div that sets width
-        but no height, so a container without <code className="font-mono">h-64</code> (or an
-        equivalent) resolves to 0px tall and paints nothing at all — no error, no warning in
-        the page, just a gap. Every specimen below carries one.
+        <code className="font-mono">height=&quot;100%&quot;</code> inside a div that sets width but no height, so a
+        container without <code className="font-mono">h-64</code> (or an equivalent) resolves to 0px tall and paints
+        nothing at all — no error, no warning in the page, just a gap. Every specimen below carries one.
       </Note>
 
       <Example
@@ -286,13 +268,7 @@ export function Charts() {
             {/* Horizontal rules only: vertical gridlines on a categorical axis add ink
                 without adding a reading the eye could not already take from the ticks. */}
             <CartesianGrid vertical={false} strokeDasharray="3 3" />
-            <XAxis
-              dataKey="period"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-              tickFormatter={shortMonth}
-            />
+            <XAxis dataKey="period" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={shortMonth} />
             <YAxis
               tickLine={false}
               axisLine={false}
@@ -307,12 +283,7 @@ export function Charts() {
               // No `cursor` prop: the default highlight rectangle is what the container's
               // own `[&_.recharts-rectangle.recharts-tooltip-cursor]` rule restyles, and
               // turning it off would hide half of what the shell does.
-              content={
-                <ChartTooltipContent
-                  labelFormatter={longMonth}
-                  valueFormatter={(v) => MONEY.format(v)}
-                />
-              }
+              content={<ChartTooltipContent labelFormatter={longMonth} valueFormatter={(v) => MONEY.format(v)} />}
             />
             <ChartLegend
               content={
@@ -338,17 +309,16 @@ export function Charts() {
         </ChartContainer>
         <div className="mt-3">
           <Note>
-            <code className="font-mono">ChartLegendContent hiddenKeys</code> draws a switched-off
-            entry faded and struck through, and makes every entry a toggle button
-            (<code className="font-mono">aria-pressed</code> = shown). Hiding the series itself is
-            the chart&apos;s job (<code className="font-mono">hide</code>), and{" "}
-            <code className="font-mono">toggleHidden(set, key)</code> is the one-line state update.
-            The Y axis is pinned to every series, so a toggle never re-scales what remains, and a
-            series drawn with <code className="font-mono">hide</code> leaves the tooltip too
-            (<code className="font-mono">ChartTooltipContent includeHidden</code> keeps it). The
-            legend resolves a series by <code className="font-mono">dataKey</code> first and falls
-            back to the payload <code className="font-mono">value</code>, which is what lets the
-            same component serve a bar chart (keyed by dataKey) and a pie (keyed by name).
+            <code className="font-mono">ChartLegendContent hiddenKeys</code> draws a switched-off entry faded and struck
+            through, and makes every entry a toggle button (<code className="font-mono">aria-pressed</code> = shown).
+            Hiding the series itself is the chart&apos;s job (<code className="font-mono">hide</code>), and{" "}
+            <code className="font-mono">toggleHidden(set, key)</code> is the one-line state update. The Y axis is pinned
+            to every series, so a toggle never re-scales what remains, and a series drawn with{" "}
+            <code className="font-mono">hide</code> leaves the tooltip too (
+            <code className="font-mono">ChartTooltipContent includeHidden</code> keeps it). The legend resolves a series
+            by <code className="font-mono">dataKey</code> first and falls back to the payload{" "}
+            <code className="font-mono">value</code>, which is what lets the same component serve a bar chart (keyed by
+            dataKey) and a pie (keyed by name).
           </Note>
         </div>
       </Example>
@@ -360,19 +330,8 @@ export function Charts() {
         <ChartContainer config={CASHFLOW_CONFIG} className="h-64">
           <LineChart data={CASHFLOW_DATA} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
             <CartesianGrid vertical={false} strokeDasharray="3 3" />
-            <XAxis
-              dataKey="period"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-              tickFormatter={shortMonth}
-            />
-            <YAxis
-              tickLine={false}
-              axisLine={false}
-              width={44}
-              tickFormatter={(v: number) => COMPACT.format(v)}
-            />
+            <XAxis dataKey="period" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={shortMonth} />
+            <YAxis tickLine={false} axisLine={false} width={44} tickFormatter={(v: number) => COMPACT.format(v)} />
             <ChartTooltip
               content={
                 <ChartTooltipContent
@@ -402,11 +361,10 @@ export function Charts() {
         </ChartContainer>
         <div className="mt-3">
           <Note>
-            Colour is never the only signal in this kit&apos;s money charts — teal/amber/violet
-            are CVD-safe against each other, but the sign and the label still have to carry the
-            meaning. The eight <code className="font-mono">--chart-N</code> tokens behind{" "}
-            <code className="font-mono">paletteFor</code> are anyplot&apos;s &ldquo;Imprint&rdquo;
-            hues (the default; Paul Tol&apos;s &ldquo;Muted&rdquo; is in the
+            Colour is never the only signal in this kit&apos;s money charts — teal/amber/violet are CVD-safe against
+            each other, but the sign and the label still have to carry the meaning. The eight{" "}
+            <code className="font-mono">--chart-N</code> tokens behind <code className="font-mono">paletteFor</code> are
+            anyplot&apos;s &ldquo;Imprint&rdquo; hues (the default; Paul Tol&apos;s &ldquo;Muted&rdquo; is in the
             palette menu), chosen to survive protanopia, deuteranopia and tritanopia.
           </Note>
         </div>
@@ -426,9 +384,7 @@ export function Charts() {
                   hideLabel
                   // Share of what is SHOWN: with slices off, the percentages still add
                   // up to the circle the reader is looking at.
-                  valueFormatter={(v) =>
-                    `${MONEY.format(v)} · ${Math.round((v / (pieTotal || 1)) * 100)}%`
-                  }
+                  valueFormatter={(v) => `${MONEY.format(v)} · ${Math.round((v / (pieTotal || 1)) * 100)}%`}
                 />
               }
             />
@@ -462,10 +418,7 @@ export function Charts() {
         </ChartContainer>
       </Example>
 
-      <Example
-        label="Wide chart — edge-aware tooltip"
-        hint="scroll the chart sideways and hover the rightmost bars"
-      >
+      <Example label="Wide chart — edge-aware tooltip" hint="scroll the chart sideways and hover the rightmost bars">
         {/* `boundaryRef` wants the element that actually SCROLLS, not the chart. Recharts
             anchors the tooltip at a coordinate inside the full chart width; the shell
             subtracts this element's scrollLeft to get the on-screen x and flips the
@@ -475,19 +428,8 @@ export function Charts() {
           <ChartContainer config={WIDE_CONFIG} className="h-56 min-w-[46rem]">
             <BarChart data={WIDE_DATA} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
               <CartesianGrid vertical={false} strokeDasharray="3 3" />
-              <XAxis
-                dataKey="period"
-                tickLine={false}
-                axisLine={false}
-                tickMargin={8}
-                tickFormatter={shortMonth}
-              />
-              <YAxis
-                tickLine={false}
-                axisLine={false}
-                width={44}
-                tickFormatter={(v: number) => COMPACT.format(v)}
-              />
+              <XAxis dataKey="period" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={shortMonth} />
+              <YAxis tickLine={false} axisLine={false} width={44} tickFormatter={(v: number) => COMPACT.format(v)} />
               <ChartTooltip
                 content={
                   <ChartTooltipContent
@@ -503,10 +445,9 @@ export function Charts() {
         </div>
         <div className="mt-3">
           <Note>
-            The flip measures the tooltip&apos;s own width on the render BEFORE it moves, so
-            the first hover of a session uses a 160px guess. It is right from the second
-            hover on, which is why the effect is invisible in practice and worth knowing
-            about if you ever see one tooltip land half a centimetre wrong.
+            The flip measures the tooltip&apos;s own width on the render BEFORE it moves, so the first hover of a
+            session uses a 160px guess. It is right from the second hover on, which is why the effect is invisible in
+            practice and worth knowing about if you ever see one tooltip land half a centimetre wrong.
           </Note>
         </div>
       </Example>
@@ -524,13 +465,7 @@ export function Charts() {
               <ChartContainer config={FORECAST_CONFIG} className="h-56">
                 <LineChart data={FORECAST_DATA} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                   <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                  <XAxis
-                    dataKey="period"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                    tickFormatter={shortMonth}
-                  />
+                  <XAxis dataKey="period" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={shortMonth} />
                   <YAxis
                     tickLine={false}
                     axisLine={false}
@@ -578,16 +513,16 @@ export function Charts() {
         </div>
         <div className="mt-3">
           <Note>
-            A series with no value at a point prints <code className="font-mono">—</code>, never a
-            made-up <code className="font-mono">0</code>; <code className="font-mono">valueFormatter</code>{" "}
-            is not called for it. <code className="font-mono">formatValue</code> is handed the{" "}
+            A series with no value at a point prints <code className="font-mono">—</code>, never a made-up{" "}
+            <code className="font-mono">0</code>; <code className="font-mono">valueFormatter</code> is not called for
+            it. <code className="font-mono">formatValue</code> is handed the{" "}
             <code className="font-mono">undefined</code> and decides the wording itself. The kit&apos;s{" "}
             <code className="font-mono">ChartTooltip</code> defaults to{" "}
-            <code className="font-mono">filterNull=&#123;false&#125;</code>, so the empty item reaches
-            the content without any prop; series switched off with <code className="font-mono">hide</code>{" "}
-            are still dropped by the content (pass <code className="font-mono">includeHidden</code> to
-            keep them). Pass <code className="font-mono">filterNull</code> to get recharts&apos; old
-            behaviour back. Side by side from <code className="font-mono">md</code> up, stacked on a phone.
+            <code className="font-mono">filterNull=&#123;false&#125;</code>, so the empty item reaches the content
+            without any prop; series switched off with <code className="font-mono">hide</code> are still dropped by the
+            content (pass <code className="font-mono">includeHidden</code> to keep them). Pass{" "}
+            <code className="font-mono">filterNull</code> to get recharts&apos; old behaviour back. Side by side from{" "}
+            <code className="font-mono">md</code> up, stacked on a phone.
           </Note>
         </div>
       </Example>
@@ -620,12 +555,11 @@ export function Charts() {
         </div>
         <div className="mt-3">
           <Note>
-            The plot is <em>not</em> mirrored: a time axis runs left-to-right in Arabic and Hebrew
-            charts too, and the SVG is pinned to <code className="font-mono">direction: ltr</code> so
-            the y-axis labels stay beside the axis instead of being drawn into the plot. The HTML
-            around it follows the page: the tooltip&apos;s value column sits at the logical end
-            (<code className="font-mono">ms-auto</code>) and the legend reads from the right. Its
-            edge-flip also measures an RTL scroller correctly. Want a mirrored category axis? Pass{" "}
+            The plot is <em>not</em> mirrored: a time axis runs left-to-right in Arabic and Hebrew charts too, and the
+            SVG is pinned to <code className="font-mono">direction: ltr</code> so the y-axis labels stay beside the axis
+            instead of being drawn into the plot. The HTML around it follows the page: the tooltip&apos;s value column
+            sits at the logical end (<code className="font-mono">ms-auto</code>) and the legend reads from the right.
+            Its edge-flip also measures an RTL scroller correctly. Want a mirrored category axis? Pass{" "}
             <code className="font-mono">reversed</code> on your own <code className="font-mono">XAxis</code>.
           </Note>
         </div>
@@ -638,19 +572,8 @@ export function Charts() {
         <ChartContainer config={CASHFLOW_CONFIG} className="h-60">
           <LineChart data={CASHFLOW_DATA} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
             <CartesianGrid vertical={false} strokeDasharray="3 3" />
-            <XAxis
-              dataKey="period"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-              tickFormatter={shortMonth}
-            />
-            <YAxis
-              tickLine={false}
-              axisLine={false}
-              width={44}
-              tickFormatter={(v: number) => COMPACT.format(v)}
-            />
+            <XAxis dataKey="period" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={shortMonth} />
+            <YAxis tickLine={false} axisLine={false} width={44} tickFormatter={(v: number) => COMPACT.format(v)} />
             <ChartTooltip
               content={
                 <ChartTooltipContent
@@ -683,18 +606,16 @@ export function Charts() {
             ))}
           </LineChart>
         </ChartContainer>
-        <p className="mt-2 font-mono text-xs text-muted">
-          activeKey: {isolated ?? "null"}
-        </p>
+        <p className="mt-2 font-mono text-xs text-muted">activeKey: {isolated ?? "null"}</p>
         <div className="mt-3">
           <Note>
-            Isolate mode is kept for the charts built on it; a legend whose entries switch their own
-            series (<code className="font-mono">hiddenKeys</code>, above) is what readers expect.
-            Here <code className="font-mono">aria-pressed</code> marks the isolated entry. A legend
-            with neither <code className="font-mono">hiddenKeys</code> nor{" "}
-            <code className="font-mono">activeKey</code> leaves <code className="font-mono">aria-pressed</code>{" "}
-            off, and one with no <code className="font-mono">onItemClick</code> is a plain key of
-            spans rather than buttons (see the bar chart drilldown below).
+            Isolate mode is kept for the charts built on it; a legend whose entries switch their own series (
+            <code className="font-mono">hiddenKeys</code>, above) is what readers expect. Here{" "}
+            <code className="font-mono">aria-pressed</code> marks the isolated entry. A legend with neither{" "}
+            <code className="font-mono">hiddenKeys</code> nor <code className="font-mono">activeKey</code> leaves{" "}
+            <code className="font-mono">aria-pressed</code> off, and one with no{" "}
+            <code className="font-mono">onItemClick</code> is a plain key of spans rather than buttons (see the bar
+            chart drilldown below).
           </Note>
         </div>
       </Example>
@@ -707,13 +628,7 @@ export function Charts() {
           <ChartContainer id="Q2 sales #2" config={REFUSED_CONFIG} className="h-48">
             <BarChart data={REFUSED_DATA} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
               <CartesianGrid vertical={false} strokeDasharray="3 3" />
-              <XAxis
-                dataKey="period"
-                tickLine={false}
-                axisLine={false}
-                tickMargin={8}
-                tickFormatter={shortMonth}
-              />
+              <XAxis dataKey="period" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={shortMonth} />
               <YAxis tickLine={false} axisLine={false} width={32} />
               <ChartTooltip content={<ChartTooltipContent labelFormatter={longMonth} />} />
               <ChartLegend content={<ChartLegendContent />} />
@@ -732,15 +647,15 @@ export function Charts() {
         />
         <div className="mt-3">
           <Note>
-            The config is written into a <code className="font-mono">&lt;style&gt;</code> unescaped,
-            and a config can be built from user data, so each key must be a CSS identifier and each
-            colour hex, <code className="font-mono">rgb/hsl()</code> or a bare{" "}
-            <code className="font-mono">var(--token)</code>. A refused entry costs that one series its
-            colour and nothing else — and the legend and tooltip swatches go through the same gate, the
-            two refused entries show no colour in the key, exactly like their bars, instead of the
-            colour the config asked for and the series was never painted in. The <code className="font-mono">id</code> (default:{" "}
-            <code className="font-mono">useId()</code>) is stripped to a CSS identifier for the same
-            reason. Build keys out of data with <code className="font-mono">seriesKey()</code>.
+            The config is written into a <code className="font-mono">&lt;style&gt;</code> unescaped, and a config can be
+            built from user data, so each key must be a CSS identifier and each colour hex,{" "}
+            <code className="font-mono">rgb/hsl()</code> or a bare <code className="font-mono">var(--token)</code>. A
+            refused entry costs that one series its colour and nothing else — and the legend and tooltip swatches go
+            through the same gate, the two refused entries show no colour in the key, exactly like their bars, instead
+            of the colour the config asked for and the series was never painted in. The{" "}
+            <code className="font-mono">id</code> (default: <code className="font-mono">useId()</code>) is stripped to a
+            CSS identifier for the same reason. Build keys out of data with{" "}
+            <code className="font-mono">seriesKey()</code>.
           </Note>
         </div>
       </Example>
@@ -757,19 +672,15 @@ export function Charts() {
           valueFormat={(v) => COMPACT.format(v)}
         />
         <div className="mt-3">
-          <Treemap
-            data={IMPRINT_TILES}
-            height="12rem"
-            valueFormatter={(v) => MONEY.format(v)}
-          />
+          <Treemap data={IMPRINT_TILES} height="12rem" valueFormatter={(v) => MONEY.format(v)} />
         </div>
         <div className="mt-3">
           <Note>
-            Series 1 is always the green. The hues are the same in light and dark; what changes is
-            which of them sit under 3:1 against the ground (WCAG 1.4.11) — on cream the green,
-            lavender, ochre, cyan and lime, on the dark ground the red and rose — and only those
-            get the edge. The &ldquo;Rest&rdquo; tile is <code className="font-mono">CHART_ROLES.other</code>,
-            the muted ink, so it does not wrap round to a hue a reader would match to a real group.
+            Series 1 is always the green. The hues are the same in light and dark; what changes is which of them sit
+            under 3:1 against the ground (WCAG 1.4.11) — on cream the green, lavender, ochre, cyan and lime, on the dark
+            ground the red and rose — and only those get the edge. The &ldquo;Rest&rdquo; tile is{" "}
+            <code className="font-mono">CHART_ROLES.other</code>, the muted ink, so it does not wrap round to a hue a
+            reader would match to a real group.
           </Note>
         </div>
       </Example>
@@ -809,21 +720,19 @@ export function Charts() {
         </div>
         <div className="mt-3">
           <Note>
-            Both helpers return CSS <em>vars</em>, never hex. That is what makes a series
-            theme-aware for nothing: the SVG fill resolves{" "}
-            <code className="font-mono">--chart-4</code> against whichever token set is live,
-            so switching the palette in the top bar recolours every chart on this page without
-            React re-rendering a single mark. Code that needs real hex — a heatmap
-            interpolating between stops — has to use{" "}
+            Both helpers return CSS <em>vars</em>, never hex. That is what makes a series theme-aware for nothing: the
+            SVG fill resolves <code className="font-mono">--chart-4</code> against whichever token set is live, so
+            switching the palette in the top bar recolours every chart on this page without React re-rendering a single
+            mark. Code that needs real hex — a heatmap interpolating between stops — has to use{" "}
             <code className="font-mono">PALETTE_HEX</code> instead, and loses that for free.
           </Note>
         </div>
       </Example>
 
       <Note>
-        The tooltip and legend bodies are painted with <code className="font-mono">--bg-surface</code>{" "}
-        and <code className="font-mono">--border</code> like every other surface, so they follow
-        the chosen palette as well as light/dark — switch it in the top bar while a tooltip is open.
+        The tooltip and legend bodies are painted with <code className="font-mono">--bg-surface</code> and{" "}
+        <code className="font-mono">--border</code> like every other surface, so they follow the chosen palette as well
+        as light/dark — switch it in the top bar while a tooltip is open.
       </Note>
     </>
   );

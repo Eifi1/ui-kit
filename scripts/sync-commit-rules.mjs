@@ -30,9 +30,16 @@ if (!/^v\d+\.\d+\.\d+$/.test(tag)) {
   console.error(`✖ name the tag to take (the pin says "${pin.tag}"): npm run sync:commit-rules -- vX.Y.Z`);
   process.exit(1);
 }
-const refs = execFileSync("git", ["ls-remote", "--tags", `https://github.com/${pin.repo}.git`, `refs/tags/${tag}`, `refs/tags/${tag}^{}`], {
-  encoding: "utf8",
-}).trim().split("\n").filter(Boolean);
+const refs = execFileSync(
+  "git",
+  ["ls-remote", "--tags", `https://github.com/${pin.repo}.git`, `refs/tags/${tag}`, `refs/tags/${tag}^{}`],
+  {
+    encoding: "utf8",
+  },
+)
+  .trim()
+  .split("\n")
+  .filter(Boolean);
 if (!refs.length) {
   console.error(`✖ no tag ${tag} in ${pin.repo}`);
   process.exit(1);

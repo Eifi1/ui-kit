@@ -28,7 +28,10 @@ function root(session: RoutingSession, resumePath: string | null) {
   render(
     <MemoryRouter initialEntries={["/"]}>
       <Routes>
-        <Route path="/" element={<RootEntry session={session} resumePath={resumePath} landing={<h1>Landing</h1>} home="/beds" />} />
+        <Route
+          path="/"
+          element={<RootEntry session={session} resumePath={resumePath} landing={<h1>Landing</h1>} home="/beds" />}
+        />
         <Route path="*" element={<Where />} />
       </Routes>
     </MemoryRouter>,
@@ -214,12 +217,18 @@ describe("safeNextPath", () => {
     expect(safeNextPath(raw)).toBe(expected);
   });
 
-  it.each([null, undefined, "", "//evil.example", "/\\evil.example", "/\t/evil.example", "https://evil.example/", "javascript:alert(1)"])(
-    "refuses %s",
-    (raw) => {
-      expect(safeNextPath(raw)).toBeNull();
-    },
-  );
+  it.each([
+    null,
+    undefined,
+    "",
+    "//evil.example",
+    "/\\evil.example",
+    "/\t/evil.example",
+    "https://evil.example/",
+    "javascript:alert(1)",
+  ])("refuses %s", (raw) => {
+    expect(safeNextPath(raw)).toBeNull();
+  });
 });
 
 describe("a session still being restored (0.31.1)", () => {

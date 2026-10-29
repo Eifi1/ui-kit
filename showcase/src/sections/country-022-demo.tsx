@@ -42,7 +42,9 @@ export function Country022Demo() {
               preferred={NEIGHBOURS_PREFERRED}
               locale={locale}
               flags
-              hint={<FieldHint label="Where the customer lives. The six countries most customers live in come first." />}
+              hint={
+                <FieldHint label="Where the customer lives. The six countries most customers live in come first." />
+              }
             />
             <CountrySelect
               label="Country (no flags)"
@@ -52,9 +54,7 @@ export function Country022Demo() {
               hint="All 249 countries, sorted by name"
             />
           </div>
-          <p className="text-xs text-muted">
-            Stored value: {code(address ?? "null")}
-          </p>
+          <p className="text-xs text-muted">Stored value: {code(address ?? "null")}</p>
         </div>
       </Example>
 
@@ -105,11 +105,11 @@ export function Country022Demo() {
       <Note>
         {code("CountrySelect")} is the entity pickers&apos; combobox (a searchable panel on a pointer device, the
         full-screen sheet on a phone) with a trigger of its own. {code("countries")} restricts the list,{" "}
-        {code("preferred")} puts a short group above the alphabetical rest, {code("flags")} draws{" "}
-        {code("fi fi-xx")} spans — the host imports {code("flag-icons")}, as for {code("LanguageMenu")}. Under a
-        locked {code("WriteLockProvider")} only a select with {code("commit")} locks: a country inside a form with
-        its own Save stays editable. {code("COUNTRY_CODES")} and {code("countryName(code, locale)")} are exported for
-        showing a stored code elsewhere.
+        {code("preferred")} puts a short group above the alphabetical rest, {code("flags")} draws {code("fi fi-xx")}{" "}
+        spans — the host imports {code("flag-icons")}, as for {code("LanguageMenu")}. Under a locked{" "}
+        {code("WriteLockProvider")} only a select with {code("commit")} locks: a country inside a form with its own Save
+        stays editable. {code("COUNTRY_CODES")} and {code("countryName(code, locale)")} are exported for showing a
+        stored code elsewhere.
       </Note>
     </div>
   );

@@ -45,13 +45,12 @@ const FIELDS: Array<[string, (hint: string | undefined) => ReactElement]> = [
   ["Combobox", (hint) => <Combobox label="Payee" value="" onChange={noop} options={["A", "B"]} hint={hint} />],
   [
     "MultiSelect",
-    (hint) => <MultiSelect label="Markets" options={[{ value: 1, label: "EU" }]} value={[1]} onChange={noop} hint={hint} />,
+    (hint) => (
+      <MultiSelect label="Markets" options={[{ value: 1, label: "EU" }]} value={[1]} onChange={noop} hint={hint} />
+    ),
   ],
   ["DatePicker", (hint) => <DatePicker label="Due" value="2026-09-06" onChange={noop} locale="en-GB" hint={hint} />],
-  [
-    "MonthPicker",
-    (hint) => <MonthPicker label="Month" value="2026-09" onChange={noop} locale="en-GB" hint={hint} />,
-  ],
+  ["MonthPicker", (hint) => <MonthPicker label="Month" value="2026-09" onChange={noop} locale="en-GB" hint={hint} />],
   ["OneTimeCodeInput", (hint) => <OneTimeCodeInput label="Code" value="" onChange={noop} hint={hint} />],
   ["CountrySelect", (hint) => <CountrySelect label="Country" value={null} onChange={noop} hint={hint} />],
   ["IbanInput", (hint) => <IbanInput label="IBAN" value="" hint={hint} />],

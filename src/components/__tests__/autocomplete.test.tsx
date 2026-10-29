@@ -103,14 +103,7 @@ describe("Autocomplete", () => {
 
   it("keeps the typed text when a row is an action (fillOnSelect={false})", async () => {
     const onSelect = vi.fn();
-    render(
-      <Harness
-        options={ADDRESSES}
-        filter={false}
-        onSelect={onSelect}
-        fillOnSelect={false}
-      />,
-    );
+    render(<Harness options={ADDRESSES} filter={false} onSelect={onSelect} fillOnSelect={false} />);
     fireEvent.focus(field());
     fireEvent.change(field(), { target: { value: "zzz" } });
     // `filter={false}`: a server-ranked list is shown as given, even when no label
@@ -125,9 +118,7 @@ describe("Autocomplete", () => {
     render(<Harness options={ADDRESSES} />);
     fireEvent.focus(field());
     fireEvent.change(field(), { target: { value: "genève" } });
-    expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual([
-      "Rue de Lausanne 12, 1201 Genève",
-    ]);
+    expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual(["Rue de Lausanne 12, 1201 Genève"]);
   });
 
   it("says a lookup failed, and drops the previous rows with it", async () => {
@@ -153,9 +144,7 @@ describe("Autocomplete", () => {
 
   it("ignores a slow response to a superseded query", async () => {
     const resolvers: Array<(r: ComboOption<string>[]) => void> = [];
-    const load = vi.fn(
-      () => new Promise<ComboOption<string>[]>((resolve) => resolvers.push(resolve)),
-    );
+    const load = vi.fn(() => new Promise<ComboOption<string>[]>((resolve) => resolvers.push(resolve)));
     render(<Harness loadOptions={load} />);
     fireEvent.focus(field());
     fireEvent.change(field(), { target: { value: "Rue" } });
@@ -167,9 +156,7 @@ describe("Autocomplete", () => {
 
     await act(async () => resolvers[1]([ADDRESSES[0]]));
     await act(async () => resolvers[0]([ADDRESSES[2]]));
-    expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual([
-      "Bahnhofstrasse 1, 8001 Zürich",
-    ]);
+    expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual(["Bahnhofstrasse 1, 8001 Zürich"]);
   });
 
   it("looks a seeded query up on focus, and never resets it", async () => {

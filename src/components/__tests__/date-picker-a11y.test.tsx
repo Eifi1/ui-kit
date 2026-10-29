@@ -58,9 +58,7 @@ describe("the date trigger says what it holds", () => {
   });
 
   it("reports both ends of a range", () => {
-    render(
-      <DateRangePicker from="2026-09-10" to="2026-09-12" onChange={noop} locale={LOCALE} label="Period" />,
-    );
+    render(<DateRangePicker from="2026-09-10" to="2026-09-12" onChange={noop} locale={LOCALE} label="Period" />);
     expect(screen.getByRole("combobox", { name: "Period 10/09/2026 – 12/09/2026" })).toBeTruthy();
   });
 
@@ -89,9 +87,7 @@ describe("opening the calendar takes the keyboard with it", () => {
   });
 
   it("lands on the start of a range", () => {
-    render(
-      <DateRangePicker from="2026-09-10" to="2026-09-12" onChange={noop} locale={LOCALE} label="Period" />,
-    );
+    render(<DateRangePicker from="2026-09-10" to="2026-09-12" onChange={noop} locale={LOCALE} label="Period" />);
     fireEvent.click(screen.getByRole("combobox", { name: /^Period/ }));
     expect(day("2026-09-10")).toHaveFocus();
   });

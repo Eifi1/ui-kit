@@ -234,8 +234,7 @@ export function feedbackPageUrl(context: FeedbackContext | null | undefined): st
  * keyed by URL, a React key clash keksdose had).
  */
 export function feedbackAttachmentUrls(
-  row: Pick<FeedbackRecord, "screenshot_url" | "attachment_urls" | "body"> &
-    Partial<Pick<FeedbackRecord, "replies">>,
+  row: Pick<FeedbackRecord, "screenshot_url" | "attachment_urls" | "body"> & Partial<Pick<FeedbackRecord, "replies">>,
 ): string[] {
   const urls = [
     ...(row.screenshot_url ? [row.screenshot_url] : []),
@@ -695,9 +694,7 @@ export function FeedbackRowDetail({
         <FeedbackDetailSection title={labels.subject}>
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm" data-feedback-subject="">
             <FeedbackCategoryBadge category={row.category} />
-            <span className="min-w-0 font-medium text-primary [overflow-wrap:anywhere]">
-              {row.title}
-            </span>
+            <span className="min-w-0 font-medium text-primary [overflow-wrap:anywhere]">{row.title}</span>
           </p>
         </FeedbackDetailSection>
       )}

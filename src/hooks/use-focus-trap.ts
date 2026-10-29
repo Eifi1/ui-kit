@@ -56,8 +56,7 @@ const FOCUSABLE =
  * reaches, so no correct order changes. `visibility: hidden` and closed `<details>` are
  * still not walked — they need layout, which this list has never read.
  */
-const isTabStop = (el: HTMLElement): boolean =>
-  el.tabIndex >= 0 && !el.closest("[hidden],[inert]");
+const isTabStop = (el: HTMLElement): boolean => el.tabIndex >= 0 && !el.closest("[hidden],[inert]");
 
 /**
  * Marks a container whose trap is currently active.

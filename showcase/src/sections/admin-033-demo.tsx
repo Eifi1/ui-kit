@@ -83,7 +83,11 @@ export function PlanChange033Demo() {
   const status = useCallback((a: Account) => a.status, []);
   // The word's plural forms (0.33.1): the tooltip takes the limit's — "1 of 1 bed" on a plan of one.
   const usage = useCallback(
-    (a: Account) => ({ used: a.beds, limit: limitOf(a.plan?.toLowerCase() ?? null), label: { one: "bed", other: "beds" } }),
+    (a: Account) => ({
+      used: a.beds,
+      limit: limitOf(a.plan?.toLowerCase() ?? null),
+      label: { one: "bed", other: "beds" },
+    }),
     [],
   );
   const planColumn = usePlanColumn<Account>({
@@ -137,7 +141,10 @@ export function PlanChange033Demo() {
   };
 
   return (
-    <Example label="The plan column and the operator's plan change — planColumn, PlanChangeConfirm" hint="the roster's plan with its standing and usage; the grant at acknowledge; the answer as toasts">
+    <Example
+      label="The plan column and the operator's plan change — planColumn, PlanChangeConfirm"
+      hint="the roster's plan with its standing and usage; the grant at acknowledge; the answer as toasts"
+    >
       <div className="mb-3 flex flex-wrap gap-x-6 gap-y-2">
         <Switch size="sm" label="Billing is on" checked={billingOn} onCheckedChange={setBillingOn} />
         <Switch size="sm" label="Your own plan has lapsed" checked={ownLapsed} onCheckedChange={setOwnLapsed} />
@@ -146,7 +153,12 @@ export function PlanChange033Demo() {
         <DataTable rows={accounts} columns={columns} rowKey={(a) => a.id} rowName={(a) => a.name} paginated={false} />
         {changing && (
           <PlanChangeConfirm
-            target={{ id: changing.id, first: changing.name.split(" ")[0], last: changing.name.split(" ")[1], email: changing.email }}
+            target={{
+              id: changing.id,
+              first: changing.name.split(" ")[0],
+              last: changing.name.split(" ")[1],
+              email: changing.email,
+            }}
             plans={PLANS}
             current={changing.plan}
             // The column's shape (0.34): the same sentence as its tooltip, "1 of 1 bed" on a plan of one.
@@ -175,19 +187,18 @@ export function PlanChange033Demo() {
       </ul>
       <Note>
         `planColumn` is the plan&apos;s display name, the standing chip beside it while billing is on (left out, no
-        chip) and the usage under it — &ldquo;12/30&rdquo;, with &ldquo;12 of 30 beds&rdquo; in its tooltip. It
-        reads the code without case (Dan&apos;s legacy `SEEDLING`), sorts by code unless `sortBy` says otherwise
-        — on the client only: a server-mode DataTable (`serverPagination`) reports the column&apos;s `key` through
-        `onSortsChange` and the server sorts — and filters over `filterPlans`. The usage&apos;s `label` may give
-        the word&apos;s plural forms (`one` &ldquo;bed&rdquo;, `other` &ldquo;beds&rdquo;), and the tooltip
-        takes the limit&apos;s. `PlanChangeConfirm` is `AdminActionConfirm` at `acknowledge`: the current
-        plan and the usage — the column&apos;s `used`, `limit` and `label` in the column&apos;s sentence,
-        or the app&apos;s own — a plan select, and — with `grantEnd`, only while billing is on —
-        &ldquo;Free until&rdquo;, sent as the END of the picked day in the operator&apos;s time zone. The confirm
-        is held while nothing would change, and it stays live under your own lapsed plan (`COMMIT_EXCEPT_BILLING`,
-        built in); a demo lock still holds it. `usePlanChangeResult` turns the answer into lines with a tone each —
-        the change (success), a kept beta (info), and over the new limit the warning with one figure line per
-        dimension — echoing the server&apos;s before and after, not what was picked.
+        chip) and the usage under it — &ldquo;12/30&rdquo;, with &ldquo;12 of 30 beds&rdquo; in its tooltip. It reads
+        the code without case (Dan&apos;s legacy `SEEDLING`), sorts by code unless `sortBy` says otherwise — on the
+        client only: a server-mode DataTable (`serverPagination`) reports the column&apos;s `key` through
+        `onSortsChange` and the server sorts — and filters over `filterPlans`. The usage&apos;s `label` may give the
+        word&apos;s plural forms (`one` &ldquo;bed&rdquo;, `other` &ldquo;beds&rdquo;), and the tooltip takes the
+        limit&apos;s. `PlanChangeConfirm` is `AdminActionConfirm` at `acknowledge`: the current plan and the usage — the
+        column&apos;s `used`, `limit` and `label` in the column&apos;s sentence, or the app&apos;s own — a plan select,
+        and — with `grantEnd`, only while billing is on — &ldquo;Free until&rdquo;, sent as the END of the picked day in
+        the operator&apos;s time zone. The confirm is held while nothing would change, and it stays live under your own
+        lapsed plan (`COMMIT_EXCEPT_BILLING`, built in); a demo lock still holds it. `usePlanChangeResult` turns the
+        answer into lines with a tone each — the change (success), a kept beta (info), and over the new limit the
+        warning with one figure line per dimension — echoing the server&apos;s before and after, not what was picked.
       </Note>
     </Example>
   );

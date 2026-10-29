@@ -190,13 +190,7 @@ describe("a component's own prop beats the provider", () => {
   it("EntityCombobox clearLabel", () => {
     render(
       <German>
-        <EntityCombobox
-          value={1}
-          onChange={() => {}}
-          options={OPTIONS}
-          clearable
-          clearLabel="Auswahl entfernen"
-        />
+        <EntityCombobox value={1} onChange={() => {}} options={OPTIONS} clearable clearLabel="Auswahl entfernen" />
       </German>,
     );
     expect(screen.getByRole("button", { name: "Auswahl entfernen" })).toBeInTheDocument();
@@ -206,14 +200,7 @@ describe("a component's own prop beats the provider", () => {
   it("MultiSelect labels.selectAll, while the unset clear still comes from the provider", () => {
     function Picker() {
       const [values, setValues] = useState<(string | number)[]>([]);
-      return (
-        <MultiSelect
-          options={OPTIONS}
-          value={values}
-          onChange={setValues}
-          labels={{ selectAll: "Alle" }}
-        />
-      );
+      return <MultiSelect options={OPTIONS} value={values} onChange={setValues} labels={{ selectAll: "Alle" }} />;
     }
     render(
       <German>
@@ -227,7 +214,12 @@ describe("a component's own prop beats the provider", () => {
 
   it("StepperNav labels", () => {
     function Wizard() {
-      const wizard = useWizard({ steps: [{ id: "a", label: "Eins" }, { id: "b", label: "Zwei" }] });
+      const wizard = useWizard({
+        steps: [
+          { id: "a", label: "Eins" },
+          { id: "b", label: "Zwei" },
+        ],
+      });
       return (
         <StepperNav wizard={wizard} labels={{ next: "Nächster Schritt" }}>
           <div />

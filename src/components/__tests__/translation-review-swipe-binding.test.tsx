@@ -104,7 +104,11 @@ const card = (text: string) => screen.getAllByText(text)[0].closest("li") as HTM
  *  (the END in left-to-right), each nearest threshold first. */
 const swipeButtons = (text: string) => {
   const group = within(card(text)).queryByRole("group", { name: "Row actions" });
-  return group ? within(group).getAllByRole("button").map((b) => b.textContent) : [];
+  return group
+    ? within(group)
+        .getAllByRole("button")
+        .map((b) => b.textContent)
+    : [];
 };
 const slider = (text: string) => screen.getAllByText(text)[0].closest<HTMLElement>('[style*="pan-y"]')!;
 
@@ -288,7 +292,11 @@ describe("TranslationReviewPanel desktop actions from the swipe binding (dev#598
   const desktopRow = (text: string) => screen.getAllByText(text)[0].closest("tr") as HTMLElement;
   const actionsOf = (text: string) => {
     const box = desktopRow(text).querySelector<HTMLElement>('[data-slot="row-actions"]');
-    return box ? within(box).getAllByRole("button").map((b) => b.getAttribute("aria-label")) : [];
+    return box
+      ? within(box)
+          .getAllByRole("button")
+          .map((b) => b.getAttribute("aria-label"))
+      : [];
   };
 
   it("draws approve, then the binding's actions, each once and only where the row can take it", () => {

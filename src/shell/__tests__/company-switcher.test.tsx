@@ -64,9 +64,7 @@ describe("CompanySwitcher", () => {
   it("is disabled while the switch runs, says so, and is back once it settles — rejected too", async () => {
     const user = userEvent.setup();
     let settle!: { resolve: () => void; reject: (e: unknown) => void };
-    const onSwitch = vi.fn(
-      () => new Promise<void>((resolve, reject) => (settle = { resolve, reject })),
-    );
+    const onSwitch = vi.fn(() => new Promise<void>((resolve, reject) => (settle = { resolve, reject })));
     const { container } = render(<CompanySwitcher companies={COMPANIES} currentId={1} onSwitch={onSwitch} />);
     await openMenu(user);
     await user.click(screen.getByRole("menuitem", { name: "Sample Estates AG" }));

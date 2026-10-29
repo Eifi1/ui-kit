@@ -31,7 +31,10 @@ export interface NavPillLinkProps {
 /** The `aria-current` token the current pill carries. */
 export type NavPillsCurrent = "page" | "step" | "location" | "true";
 
-export interface NavPillsProps<T extends string> extends Omit<ComponentPropsWithoutRef<"nav">, "children" | "onSelect"> {
+export interface NavPillsProps<T extends string> extends Omit<
+  ComponentPropsWithoutRef<"nav">,
+  "children" | "onSelect"
+> {
   items: NavPillItem<T>[];
   /** The pill that is current. `null` or a value not in `items`: none is. */
   current: T | null;
@@ -161,7 +164,12 @@ export function NavPills<T extends string>({
             ) : kit ? (
               <RenderedKitLink render={kit} props={props} />
             ) : (
-              <a href={props.href} className={props.className} aria-current={props["aria-current"]} onClick={props.onClick}>
+              <a
+                href={props.href}
+                className={props.className}
+                aria-current={props["aria-current"]}
+                onClick={props.onClick}
+              >
                 {props.children}
               </a>
             );

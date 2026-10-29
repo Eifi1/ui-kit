@@ -13,7 +13,14 @@ import { splitTriggerAria } from "./trigger-aria";
 import type { TriggerAria } from "./trigger-aria";
 import { useKitDateFormatter, useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { hasContent } from "../lib/presence";
-import { FieldBox, FieldLabelLine, LABEL_ABOVE_BOX, mergeRefs, useFieldMessages, type FieldHelpProps } from "./field-parts";
+import {
+  FieldBox,
+  FieldLabelLine,
+  LABEL_ABOVE_BOX,
+  mergeRefs,
+  useFieldMessages,
+  type FieldHelpProps,
+} from "./field-parts";
 import { DEFAULT_MONTH_PICKER_LABELS } from "./month-picker-labels";
 
 /**
@@ -381,10 +388,7 @@ function MonthFieldTrigger({
           "Septiembre De 2026". It wraps from Large up, as DatePicker's value does
           (`truncate-until-large`, text size §10.17; round 0.34 T1: the sweep read
           "Choose a mo…" at 360 px / Extra large). */}
-      <span
-        id={valueId}
-        className={cn("truncate-until-large", !hasValue && "text-placeholder")}
-      >
+      <span id={valueId} className={cn("truncate-until-large", !hasValue && "text-placeholder")}>
         {triggerText || " "}
       </span>
     </button>
@@ -425,8 +429,7 @@ function MonthGrid({
   currentKey: string;
   labels: MonthPickerLabels;
 }) {
-  const outOfBounds = (key: string) =>
-    Boolean((minKey && key < minKey) || (maxKey && key > maxKey));
+  const outOfBounds = (key: string) => Boolean((minKey && key < minKey) || (maxKey && key > maxKey));
 
   // The month holding the tab order, and with it the year on screen — one piece of
   // state, as in MiniCalendar, so the two cannot disagree. Opens on the value, or on
@@ -448,9 +451,7 @@ function MonthGrid({
     return Array.from({ length: 12 }, (_, i) => fmt.format(new Date(2000, i, 1)));
   }, [locale]);
   const longName = useMemo(() => new Intl.DateTimeFormat(locale, MONTH_NAME_FORMAT), [locale]);
-  const yearCaption = new Intl.DateTimeFormat(locale, { year: "numeric" }).format(
-    firstOf({ year, month: 1 }),
-  );
+  const yearCaption = new Intl.DateTimeFormat(locale, { year: "numeric" }).format(firstOf({ year, month: 1 }));
 
   // A month whose cell must take focus after the next commit. Arrowing across a year
   // boundary re-labels the same twelve buttons, so the one to focus is a DIFFERENT
@@ -536,11 +537,7 @@ function MonthGrid({
         </button>
         {/* Names the grid, and `aria-live` so stepping a year says which one you are
             on — the user pressing the arrow is not inside the grid to hear it change. */}
-        <div
-          id={captionId}
-          aria-live="polite"
-          className="text-sm font-semibold tabular-nums text-primary"
-        >
+        <div id={captionId} aria-live="polite" className="text-sm font-semibold tabular-nums text-primary">
           {yearCaption}
         </div>
         <button
@@ -585,9 +582,7 @@ function MonthGrid({
                     FOCUS_RING_WIDTH,
                     "focus-visible:outline-none focus-visible:ring-inset",
                     // A --brand ring on a --brand fill exists only in the DOM.
-                    selected && !disabled
-                      ? "focus-visible:ring-brand-contrast"
-                      : "focus-visible:ring-brand",
+                    selected && !disabled ? "focus-visible:ring-brand-contrast" : "focus-visible:ring-brand",
                     disabled
                       ? "cursor-not-allowed text-placeholder"
                       : selected
@@ -776,9 +771,7 @@ function YearGrid({
                     "rounded px-2 py-1.5 text-sm tabular-nums transition-colors",
                     FOCUS_RING_WIDTH,
                     "focus-visible:outline-none focus-visible:ring-inset",
-                    selected && !disabled
-                      ? "focus-visible:ring-brand-contrast"
-                      : "focus-visible:ring-brand",
+                    selected && !disabled ? "focus-visible:ring-brand-contrast" : "focus-visible:ring-brand",
                     disabled
                       ? "cursor-not-allowed text-placeholder"
                       : selected

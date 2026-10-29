@@ -64,7 +64,8 @@ describe("paletteFor", () => {
   });
 
   it("names the roles: other/rest/disabled and bands in muted ink, totals/baseline/outline in ink", () => {
-    for (const role of ["other", "rest", "disabled", "band"] as const) expect(CHART_ROLES[role]).toBe("var(--chart-muted)");
+    for (const role of ["other", "rest", "disabled", "band"] as const)
+      expect(CHART_ROLES[role]).toBe("var(--chart-muted)");
     for (const role of ["total", "baseline", "outline"] as const) expect(CHART_ROLES[role]).toBe("var(--chart-ink)");
     expect(CHART_INK_HEX).toEqual({ light: "#1a1a17", dark: "#f0efe8" });
     expect(CHART_MUTED_HEX).toEqual({ light: "#6b6a63", dark: "#a8a79f" });
@@ -209,7 +210,10 @@ describe("chartEdge — the WCAG 1.4.11 ink edge", () => {
 
   it("edges exactly the hues under 3:1 against the surface, and no others", () => {
     expect(EDGE_MIN_CONTRAST).toBe(3);
-    for (const [surfaces, mode] of [[LIGHT, "light"], [DARK, "dark"]] as const) {
+    for (const [surfaces, mode] of [
+      [LIGHT, "light"],
+      [DARK, "dark"],
+    ] as const) {
       for (const hex of PALETTE_HEX[mode]) {
         const worst = Math.min(...surfaces.map((s) => contrast(hex, s)));
         expect(chartEdge(hex, surfaces), `${mode} ${hex} at ${worst.toFixed(2)}:1`).toBe(

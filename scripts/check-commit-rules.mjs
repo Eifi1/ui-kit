@@ -40,7 +40,9 @@ try {
 
 if (differ.length) {
   console.error(
-    differ.map((f) => `✖ ${f.vendoredAs} differs from ${pin.repo}@${pin.tag} (${pin.commit.slice(0, 8)}) ${f.path}.`).join("\n") +
+    differ
+      .map((f) => `✖ ${f.vendoredAs} differs from ${pin.repo}@${pin.tag} (${pin.commit.slice(0, 8)}) ${f.path}.`)
+      .join("\n") +
       "\n  The commit rules are shared: change them in shared-workflows, then run\n" +
       "  npm run sync:commit-rules -- <tag>",
   );

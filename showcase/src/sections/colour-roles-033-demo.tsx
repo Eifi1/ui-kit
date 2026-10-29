@@ -184,7 +184,13 @@ const FILLS: Fill[] = [
   { name: "money-income", fill: "bg-money-pos", fg: "text-money-income-contrast", added: true },
   { name: "money-expense", fill: "bg-money-neg", fg: "text-money-expense-contrast", added: true },
   // No `.bg-money-net`: the money statics are the three tokens.css always had (§7.2).
-  { name: "money-net", fill: "var(--money-net)", style: { backgroundColor: "var(--money-net)" }, fg: "text-money-net-contrast", added: true },
+  {
+    name: "money-net",
+    fill: "var(--money-net)",
+    style: { backgroundColor: "var(--money-net)" },
+    fg: "text-money-net-contrast",
+    added: true,
+  },
   { name: "money-neutral", fill: "bg-money-neutral", fg: "text-money-neutral-contrast", added: true },
   { name: "hue-blue", fill: "bg-hue-blue", fg: "text-hue-blue-contrast", added: true },
   { name: "hue-indigo", fill: "bg-hue-indigo", fg: "text-hue-indigo-contrast", added: true },
@@ -195,7 +201,10 @@ const FILLS: Fill[] = [
 
 function FillsDemo() {
   return (
-    <Example label="Every fill and its foreground" hint="`bg-<fill> text-<fill>-contrast` — the label's ratio, measured on screen">
+    <Example
+      label="Every fill and its foreground"
+      hint="`bg-<fill> text-<fill>-contrast` — the label's ratio, measured on screen"
+    >
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {FILLS.map((f) => (
           <Specimen
@@ -216,10 +225,10 @@ function FillsDemo() {
       <Note>
         Every fill names its foreground, {code("--<fill>-contrast")}, so a label on a fill is never `text-white`: in
         dark the fills are pastel and the foreground is the tone&apos;s 950 ink, or for money the page colour (the
-        brand&apos;s contrast would fall to 3.3:1 on the derived dark presets). `--neutral` is `--text-muted` as a fill under `--text-inverse` — the translation review&apos;s
-        reset swipe made official; it steps with More contrast. Chip `solid` and the FloatingAction badge read
-        these pairs. `bg-money-net` does not exist: the money fills stay the three plain classes tokens.css always
-        had, so the net tile is painted by its variable.
+        brand&apos;s contrast would fall to 3.3:1 on the derived dark presets). `--neutral` is `--text-muted` as a fill
+        under `--text-inverse` — the translation review&apos;s reset swipe made official; it steps with More contrast.
+        Chip `solid` and the FloatingAction badge read these pairs. `bg-money-net` does not exist: the money fills stay
+        the three plain classes tokens.css always had, so the net tile is painted by its variable.
       </Note>
     </Example>
   );
@@ -257,7 +266,10 @@ const CELL = "rounded-md px-2 py-1.5 text-sm font-medium";
 
 function TonesDemo() {
   return (
-    <Example label="Each tone as text, wash and line" hint="status text clears 4.5:1 on the page, the card, the well and its own wash">
+    <Example
+      label="Each tone as text, wash and line"
+      hint="status text clears 4.5:1 on the page, the card, the well and its own wash"
+    >
       <div className="overflow-x-auto">
         <table className="w-full min-w-[34rem] border-separate border-spacing-1 text-start text-xs">
           <thead>
@@ -295,9 +307,10 @@ function TonesDemo() {
         </table>
       </div>
       <Note>
-        The light `--warning`, `--success`, `--hue-orange` and `--hue-teal` (#a34800, #007152, #b43800, #006f68)
-        keep their hue and chroma with the lightness solved for text at 4.5:1. Dark sits at 8–13:1. A tone&apos;s wash is {code("bg-<tone>-soft")} (Chip&apos;s word), its line{" "}
-        {code("border-<tone>")}; brand&apos;s text is `text-brand-muted`, which the deriver now holds at 4.5:1 too.
+        The light `--warning`, `--success`, `--hue-orange` and `--hue-teal` (#a34800, #007152, #b43800, #006f68) keep
+        their hue and chroma with the lightness solved for text at 4.5:1. Dark sits at 8–13:1. A tone&apos;s wash is{" "}
+        {code("bg-<tone>-soft")} (Chip&apos;s word), its line {code("border-<tone>")}; brand&apos;s text is
+        `text-brand-muted`, which the deriver now holds at 4.5:1 too.
       </Note>
     </Example>
   );
@@ -339,7 +352,10 @@ function LinesDemo() {
                   </th>
                   {GROUNDS.map((g) => (
                     <td key={g.name} className="align-top">
-                      <Specimen measure="line" className={cn("rounded-md border-2 px-2 py-1.5 text-primary", g.className, line.name)} />
+                      <Specimen
+                        measure="line"
+                        className={cn("rounded-md border-2 px-2 py-1.5 text-primary", g.className, line.name)}
+                      />
                     </td>
                   ))}
                 </tr>
@@ -359,12 +375,12 @@ function LinesDemo() {
         </div>
       </div>
       <Note>
-        The two status lines clear 3:1 on every surface. `--warning-border-strong` is the warning text colour in
-        light (amber-600 would be 2.5:1) and amber-600 in dark, where `--warning` stood 13:1 off the card and
-        shouted; IconButton&apos;s warning focus ring and Card&apos;s strong warning frame use it. The light danger
-        line is rose-600. `border-strong` is the neutral
-        strong line — the selected row&apos;s outline — and `border-subtle` the hairline, decorative at standard
-        contrast; More contrast steps both. Every ratio is the line against the ground it is drawn on.
+        The two status lines clear 3:1 on every surface. `--warning-border-strong` is the warning text colour in light
+        (amber-600 would be 2.5:1) and amber-600 in dark, where `--warning` stood 13:1 off the card and shouted;
+        IconButton&apos;s warning focus ring and Card&apos;s strong warning frame use it. The light danger line is
+        rose-600. `border-strong` is the neutral strong line — the selected row&apos;s outline — and `border-subtle` the
+        hairline, decorative at standard contrast; More contrast steps both. Every ratio is the line against the ground
+        it is drawn on.
       </Note>
     </Example>
   );
@@ -472,15 +488,15 @@ function WellDemo() {
         </Card>
       </div>
       <Note>
-        The light well is the page colour, so the kit&apos;s zebra rows, DataTable&apos;s header bands and an
-        app&apos;s selected rows stand out from the card exactly as much as the card does from the page; dark keeps its 1.11–1.13. Every
-        text role is audited against the page. The price is on the right — a well straight on the page
-        vanishes in light, so `Card variant="inset"` and a {code("DataTable frame={false}")} belong inside a card.
+        The light well is the page colour, so the kit&apos;s zebra rows, DataTable&apos;s header bands and an app&apos;s
+        selected rows stand out from the card exactly as much as the card does from the page; dark keeps its 1.11–1.13.
+        Every text role is audited against the page. The price is on the right — a well straight on the page vanishes in
+        light, so `Card variant="inset"` and a {code("DataTable frame={false}")} belong inside a card.
       </Note>
       <Note>
-        Under More contrast, in light, the well darkens to 10 % ink into the card, 1.19–1.24:1 from it, and
-        what reads on it steps with it: money is solved onto the well per preset, the status colours, teal, orange
-        and {code("--status-edited")} deepen, and {code("--bg-active")} mixes at 16 %. A link button reads{" "}
+        Under More contrast, in light, the well darkens to 10 % ink into the card, 1.19–1.24:1 from it, and what reads
+        on it steps with it: money is solved onto the well per preset, the status colours, teal, orange and{" "}
+        {code("--status-edited")} deepen, and {code("--bg-active")} mixes at 16 %. A link button reads{" "}
         {code("--brand-muted")} there, in both modes. Dark keeps its well. Flip More contrast in the top bar.
       </Note>
     </Example>
@@ -549,14 +565,14 @@ function HoverDemo() {
         </div>
       </div>
       <Note>
-        The rule: a hover differs from its rest by at least 1.08:1, and every text role on it keeps 4.5:1. On a
-        well that left one fill, the card — every fill darker than the light well fails the text half, because the
-        page is already the darkest surface the text roles are solved against. A row whose well marks a STATE
-        (selected rows, say) keeps its fill and draws a 1px inside outline in `--border-strong`
-        ({code("hover:outline-strong")}), an outline because a shadow on a {code("<tr>")} is not painted by every
-        engine. Button `secondary` and `ghost` and IconButton&apos;s muted tone hover with a translucent ink,{" "}
-        {code("color-mix(in srgb, var(--text-primary) 7%, transparent)")} ({code("bg-inverse/7")} here), which
-        reads on any ground: the on-page `--bg-hover` was only 1.04.
+        The rule: a hover differs from its rest by at least 1.08:1, and every text role on it keeps 4.5:1. On a well
+        that left one fill, the card — every fill darker than the light well fails the text half, because the page is
+        already the darkest surface the text roles are solved against. A row whose well marks a STATE (selected rows,
+        say) keeps its fill and draws a 1px inside outline in `--border-strong` ({code("hover:outline-strong")}), an
+        outline because a shadow on a {code("<tr>")} is not painted by every engine. Button `secondary` and `ghost` and
+        IconButton&apos;s muted tone hover with a translucent ink,{" "}
+        {code("color-mix(in srgb, var(--text-primary) 7%, transparent)")} ({code("bg-inverse/7")} here), which reads on
+        any ground: the on-page `--bg-hover` was only 1.04.
       </Note>
     </Example>
   );
@@ -566,20 +582,32 @@ function HoverDemo() {
 
 function UtilitiesDemo() {
   return (
-    <Example label="Role utilities instead of text-[var(--…)]" hint="one name per role, for its own property only — `text-muted` exists, `bg-muted` does not">
+    <Example
+      label="Role utilities instead of text-[var(--…)]"
+      hint="one name per role, for its own property only — `text-muted` exists, `bg-muted` does not"
+    >
       <OutTable
         rows={[
           ["text-[var(--text-muted)]", "text-muted — and primary, secondary, placeholder, inverse"],
           ["text-[var(--danger)]", "text-danger — warning, success, info, brand, brand-muted, hue-*"],
           ["text-[var(--danger-contrast)]", "text-danger-contrast — every <fill>-contrast"],
           ["bg-[var(--bg-surface)]", "bg-surface — page, surface-2, hover, active, inverse"],
-          ["bg-[var(--danger)]", "bg-danger — brand, brand-hover, danger-hover, warning, success, info, neutral, hue-*"],
+          [
+            "bg-[var(--danger)]",
+            "bg-danger — brand, brand-hover, danger-hover, warning, success, info, neutral, hue-*",
+          ],
           ["bg-[var(--danger-bg)]", "bg-danger-soft — each tone's wash; bg-brand-soft, bg-hue-*-soft"],
           ["border-[var(--border)]", "border-subtle (and divide-subtle)"],
           ["border-[var(--border-strong)]", "border-strong"],
           ["border-[var(--danger-border)]", "border-danger — border-danger-strong, border-warning-strong"],
-          ["ring-[var(--brand)] · outline-[var(--brand)]", "ring-brand · outline-brand — subtle, strong, danger-strong, warning-strong"],
-          ["fill-[var(--bg-surface)] · stroke-[var(--border)]", "fill-surface · stroke-subtle — primary, secondary, muted, surface, subtle, strong"],
+          [
+            "ring-[var(--brand)] · outline-[var(--brand)]",
+            "ring-brand · outline-brand — subtle, strong, danger-strong, warning-strong",
+          ],
+          [
+            "fill-[var(--bg-surface)] · stroke-[var(--border)]",
+            "fill-surface · stroke-subtle — primary, secondary, muted, surface, subtle, strong",
+          ],
           ["text-[var(--media-ink)] · bg-[var(--media-scrim)]", "text-media-ink · bg-media-scrim"],
           ["text-[var(--money-income)]", "text-money-pos — a plain class: no hover:, no dark:"],
         ]}
@@ -588,7 +616,9 @@ function UtilitiesDemo() {
         <span className="text-primary">text-primary</span>
         <span className="text-secondary">text-secondary</span>
         <span className="text-muted">text-muted</span>
-        <span className="rounded-md bg-surface-2 px-2 py-0.5 text-secondary hover:bg-surface">bg-surface-2, hover:bg-surface</span>
+        <span className="rounded-md bg-surface-2 px-2 py-0.5 text-secondary hover:bg-surface">
+          bg-surface-2, hover:bg-surface
+        </span>
         <span className="rounded-md border border-strong px-2 py-0.5 text-primary">border-strong</span>
         <span className="rounded-md bg-danger-soft px-2 py-0.5 text-danger">bg-danger-soft text-danger</span>
         <svg viewBox="0 0 48 20" className="h-5 w-12" aria-hidden>
@@ -597,13 +627,13 @@ function UtilitiesDemo() {
         </svg>
       </div>
       <Note>
-        They come from one `@theme inline` block in tokens.css. `inline` makes each read its role at the element,
-        so a local override still works, and an unused name costs nothing. `hover:`, `md:`, `dark:` and `/60` work
-        on every one — `hover:bg-brand` generated nothing while `.bg-brand` was a plain class. The money classes
-        stay plain (`.text-money-pos`, `.bg-money-neg` …): a site that needs a variant keeps the `[var()]` form.
-        The kit&apos;s own markup uses the names too: no `[var(--role)]` class where a name of the same role and
-        property exists, and a ratchet keeps the count at zero (`npm run check:tokens`). In an app that came from shadcn,
-        `text-primary` is the ink, not shadcn&apos;s brand.
+        They come from one `@theme inline` block in tokens.css. `inline` makes each read its role at the element, so a
+        local override still works, and an unused name costs nothing. `hover:`, `md:`, `dark:` and `/60` work on every
+        one — `hover:bg-brand` generated nothing while `.bg-brand` was a plain class. The money classes stay plain
+        (`.text-money-pos`, `.bg-money-neg` …): a site that needs a variant keeps the `[var()]` form. The kit&apos;s own
+        markup uses the names too: no `[var(--role)]` class where a name of the same role and property exists, and a
+        ratchet keeps the count at zero (`npm run check:tokens`). In an app that came from shadcn, `text-primary` is the
+        ink, not shadcn&apos;s brand.
       </Note>
     </Example>
   );
@@ -618,34 +648,34 @@ function UtilitiesDemo() {
  */
 const APP_SOURCES: Record<string, string> = {
   "/src/app.css": [
-    "@import \"tailwindcss\";",
-    "@import \"@eifi1/ui-kit/tokens.css\";",
+    '@import "tailwindcss";',
+    '@import "@eifi1/ui-kit/tokens.css";',
     ":root { --app-accent: #0f766e; }",
     ".hb-figure { color: var(--app-accent); }",
   ].join("\n"),
   "/src/features/control/control-basics.tsx": [
     "export function Box() {",
-    "  return <rect className=\"fill-[var(--surface)] stroke-[var(--text-primary)]\" />;",
+    '  return <rect className="fill-[var(--surface)] stroke-[var(--text-primary)]" />;',
     "}",
   ].join("\n"),
-  "/src/features/sync/sync-status.tsx": "const late = \"text-[var(--color-rose-500)]\";",
+  "/src/features/sync/sync-status.tsx": 'const late = "text-[var(--color-rose-500)]";',
   "/src/features/charts/totals-chart.tsx": [
-    "const config = { total: { label: \"Total\", color: \"var(--chart-1)\" } };",
-    "const line = \"stroke-[var(--color-total)]\";",
+    'const config = { total: { label: "Total", color: "var(--chart-1)" } };',
+    'const line = "stroke-[var(--color-total)]";',
   ].join("\n"),
   "/src/features/budget/impact-toast.tsx": [
-    "el.style.setProperty(\"--tone-from\", from);",
-    "const fade = \"bg-[linear-gradient(var(--tone-from),transparent)]\";",
+    'el.style.setProperty("--tone-from", from);',
+    'const fade = "bg-[linear-gradient(var(--tone-from),transparent)]";',
   ].join("\n"),
   "/src/layout/sticky-bar.tsx": [
     "// bottom-[var(--app-nav-h)] would read nothing on the sign-in page",
-    "const bar = \"bottom-[var(--app-nav-h,0px)]\";",
-    "const sheet = \"pb-[var(--app-nav-h)]\";",
+    'const bar = "bottom-[var(--app-nav-h,0px)]";',
+    'const sheet = "pb-[var(--app-nav-h)]";',
   ].join("\n"),
-  "/src/features/accounts/row.tsx": "const muted = \"text-[var(--text-muted)] text-[var(--text-color-muted)]\";",
-  "/src/features/landing/hero.tsx": "const accent = \"text-[var(--app-accent)] bg-[var(--brand-bg,#eef)]\";",
-  "/src/features/collapsible.tsx": "const h = \"h-[var(--radix-collapsible-content-height)]\";",
-  "/src/main.tsx": "createRoot(document.getElementById(\"root\")!).render(<App />);",
+  "/src/features/accounts/row.tsx": 'const muted = "text-[var(--text-muted)] text-[var(--text-color-muted)]";',
+  "/src/features/landing/hero.tsx": 'const accent = "text-[var(--app-accent)] bg-[var(--brand-bg,#eef)]";',
+  "/src/features/collapsible.tsx": 'const h = "h-[var(--radix-collapsible-content-height)]";',
+  "/src/main.tsx": 'createRoot(document.getElementById("root")!).render(<App />);',
 };
 
 /** The output of a run, or the guard's refusal. */
@@ -682,7 +712,10 @@ function GuardDemo() {
   const found = run(APP_SOURCES, { refusePalette, checkFallbacks, runtime });
   const three = Object.fromEntries(Object.entries(APP_SOURCES).slice(0, 3));
   return (
-    <Example label="undeclaredCssVariables — @eifi1/ui-kit/testing" hint="the guard an app runs from its own suite: every var(--x) without a fallback must be declared">
+    <Example
+      label="undeclaredCssVariables — @eifi1/ui-kit/testing"
+      hint="the guard an app runs from its own suite: every var(--x) without a fallback must be declared"
+    >
       <pre className="overflow-x-auto rounded-md border border-subtle bg-surface-2 p-3 font-mono text-xs text-secondary">
         {WIRING}
       </pre>
@@ -691,15 +724,26 @@ function GuardDemo() {
           A live run over a pretend app of ten files (the fewest it accepts), in this page:
         </p>
         <div className="flex flex-wrap gap-x-6 gap-y-2">
-          <Checkbox label="refusePalette" checked={refusePalette} onChange={(e) => setRefusePalette(e.target.checked)} />
-          <Checkbox label="checkFallbacks" checked={checkFallbacks} onChange={(e) => setCheckFallbacks(e.target.checked)} />
+          <Checkbox
+            label="refusePalette"
+            checked={refusePalette}
+            onChange={(e) => setRefusePalette(e.target.checked)}
+          />
+          <Checkbox
+            label="checkFallbacks"
+            checked={checkFallbacks}
+            onChange={(e) => setCheckFallbacks(e.target.checked)}
+          />
           <Checkbox
             label={'runtime: ["--radix-collapsible-content-height"]'}
             checked={listRadix}
             onChange={(e) => setListRadix(e.target.checked)}
           />
         </div>
-        <ul aria-label="undeclaredCssVariables(sources)" className="space-y-0.5 rounded-md bg-surface-2 p-3 font-mono text-xs text-primary [overflow-wrap:anywhere]">
+        <ul
+          aria-label="undeclaredCssVariables(sources)"
+          className="space-y-0.5 rounded-md bg-surface-2 p-3 font-mono text-xs text-primary [overflow-wrap:anywhere]"
+        >
           {found.map((line) => (
             <li key={line}>{line}</li>
           ))}
@@ -708,7 +752,10 @@ function GuardDemo() {
           rows={[
             ["undeclaredCssVariables(threeFiles)", run(three, {})[0]],
             ['KIT_CSS_VARIABLES.has("--text-muted")', String(KIT_CSS_VARIABLES.has("--text-muted"))],
-            ['KIT_CSS_VARIABLES.has("--warning-border-strong")', String(KIT_CSS_VARIABLES.has("--warning-border-strong"))],
+            [
+              'KIT_CSS_VARIABLES.has("--warning-border-strong")',
+              String(KIT_CSS_VARIABLES.has("--warning-border-strong")),
+            ],
             ['KIT_CSS_VARIABLES.has("--text-color-muted")', String(KIT_CSS_VARIABLES.has("--text-color-muted"))],
             ['KIT_CSS_VARIABLES.has("--app-nav-h")', String(KIT_CSS_VARIABLES.has("--app-nav-h"))],
             ["KIT_CSS_VARIABLES.size", String(KIT_CSS_VARIABLES.size)],
@@ -716,15 +763,15 @@ function GuardDemo() {
         />
       </div>
       <Note>
-        A `var(--x)` that nothing declares, read without a fallback, invalidates its whole declaration: `fill`
-        inherits, and a diagram draws black boxes. The class compiled, the build passed, the
-        type checker had no opinion. Declared means: the kit&apos;s tokens (`KIT_CSS_VARIABLES`, generated from
-        the installed tokens.css — without the `@theme inline` names, which Tailwind never emits, and without
-        AppShell&apos;s `--app-nav-h`, set only while a shell is mounted), the app&apos;s own stylesheets and
-        runtime writes (`setProperty`, a style key, `[--x:…]`), Tailwind&apos;s theme, a chart key in the same
-        file, and the `runtime` list for a library. Comments do not count. It throws on fewer than ten files or an
-        empty stylesheet, so a glob that found nothing cannot pass. `refusePalette` reports Tailwind&apos;s
-        palette colours although they resolve; `checkFallbacks` checks `var(--x, …)` too.
+        A `var(--x)` that nothing declares, read without a fallback, invalidates its whole declaration: `fill` inherits,
+        and a diagram draws black boxes. The class compiled, the build passed, the type checker had no opinion. Declared
+        means: the kit&apos;s tokens (`KIT_CSS_VARIABLES`, generated from the installed tokens.css — without the `@theme
+        inline` names, which Tailwind never emits, and without AppShell&apos;s `--app-nav-h`, set only while a shell is
+        mounted), the app&apos;s own stylesheets and runtime writes (`setProperty`, a style key, `[--x:…]`),
+        Tailwind&apos;s theme, a chart key in the same file, and the `runtime` list for a library. Comments do not
+        count. It throws on fewer than ten files or an empty stylesheet, so a glob that found nothing cannot pass.
+        `refusePalette` reports Tailwind&apos;s palette colours although they resolve; `checkFallbacks` checks `var(--x,
+        …)` too.
       </Note>
     </Example>
   );
@@ -751,9 +798,15 @@ function StatusTonesDemo() {
         <table className="w-full min-w-[18rem] border-collapse text-sm">
           <thead>
             <tr className="border-b border-subtle text-start text-xs text-muted">
-              <th scope="col" className="py-2 pe-3 text-start font-medium">Status</th>
-              <th scope="col" className="py-2 pe-3 text-start font-medium">Kind → tone</th>
-              <th scope="col" className="py-2 text-start font-medium">When</th>
+              <th scope="col" className="py-2 pe-3 text-start font-medium">
+                Status
+              </th>
+              <th scope="col" className="py-2 pe-3 text-start font-medium">
+                Kind → tone
+              </th>
+              <th scope="col" className="py-2 text-start font-medium">
+                When
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -777,10 +830,10 @@ function StatusTonesDemo() {
         </table>
       </div>
       <Note>
-        Map each of your statuses to one of the five kinds once — {code('<Chip status="problem">Overdue</Chip>')},
-        or {code("statusTone(kind)")} where a tone is wanted — and the same meaning has the same colour in every
-        table. {code("brand")} is the app&apos;s own colour, not a state; {code("income")} and {code("expense")} say
-        which way money flows, not how a record stands. An explicit {code("tone")} still wins over {code("status")}.
+        Map each of your statuses to one of the five kinds once — {code('<Chip status="problem">Overdue</Chip>')}, or{" "}
+        {code("statusTone(kind)")} where a tone is wanted — and the same meaning has the same colour in every table.{" "}
+        {code("brand")} is the app&apos;s own colour, not a state; {code("income")} and {code("expense")} say which way
+        money flows, not how a record stands. An explicit {code("tone")} still wins over {code("status")}.
       </Note>
     </Example>
   );

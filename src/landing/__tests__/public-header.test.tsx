@@ -69,7 +69,9 @@ describe("PublicHeader — the actions per state (§4.1)", () => {
   });
 
   it("takes the provider's landing words", () => {
-    const labels = { landing: { signIn: "Anmelden", requestAccess: "Zugang anfragen" } } as unknown as UiKitLabelOverrides;
+    const labels = {
+      landing: { signIn: "Anmelden", requestAccess: "Zugang anfragen" },
+    } as unknown as UiKitLabelOverrides;
     render(
       <MemoryRouter>
         <UiKitProvider labels={labels}>

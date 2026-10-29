@@ -41,8 +41,14 @@ describe("FieldStrip (keksdose G8)", () => {
   // strip put it across the content's top border. Since 0.34 there is one strip, and since
   // 0.35 no `pad` to ask for another (round 0.35 R1).
   it("is one 20px strip, with no `pad` to choose another; a className merges after it", () => {
-    // @ts-expect-error — `pad` is gone: both values were the one 20px strip since 0.34.
-    void (<FieldStrip label="Status" pad="field"><span /></FieldStrip>);
+    void (
+      (
+        // @ts-expect-error — `pad` is gone: both values were the one 20px strip since 0.34.
+        <FieldStrip label="Status" pad="field">
+          <span />
+        </FieldStrip>
+      )
+    );
     const { rerender } = render(
       <FieldStrip label="Status">
         <span>Done</span>
@@ -81,10 +87,20 @@ describe("FieldStrip (keksdose G8)", () => {
       </FieldStrip>,
     );
     const { container: swatch } = render(
-      <SwatchPicker label="Flag" value={null} onChange={vi.fn()} options={[{ value: "red", label: "Red", color: "#f00" }]} />,
+      <SwatchPicker
+        label="Flag"
+        value={null}
+        onChange={vi.fn()}
+        options={[{ value: "red", label: "Red", color: "#f00" }]}
+      />,
     );
     const { container: icon } = render(
-      <IconPicker label="Symbol" value={null} onChange={vi.fn()} options={[{ value: "star", label: "Star", icon: Star }]} />,
+      <IconPicker
+        label="Symbol"
+        value={null}
+        onChange={vi.fn()}
+        options={[{ value: "star", label: "Star", icon: Star }]}
+      />,
     );
     const { container: clear } = render(
       <FieldStrip label="Flag">
@@ -130,7 +146,12 @@ describe("FieldStrip (keksdose G8)", () => {
     render(
       <>
         <p id="own">Optional.</p>
-        <FieldStrip label="Location" aria-describedby="own" hint="Stays on this device." error="The position could not be read.">
+        <FieldStrip
+          label="Location"
+          aria-describedby="own"
+          hint="Stays on this device."
+          error="The position could not be read."
+        >
           <span />
         </FieldStrip>
       </>,

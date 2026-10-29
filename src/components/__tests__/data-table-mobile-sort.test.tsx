@@ -69,7 +69,10 @@ function renderTable(extra: Partial<DataTableProps<Row>> = {}) {
 }
 
 const sortSelect = () => screen.getByRole("combobox", { name: "Sort by" }) as HTMLSelectElement;
-const optionTexts = () => within(sortSelect()).getAllByRole("option").map((o) => o.textContent);
+const optionTexts = () =>
+  within(sortSelect())
+    .getAllByRole("option")
+    .map((o) => o.textContent);
 /** The card list's names, top to bottom. */
 const cardNames = () =>
   screen

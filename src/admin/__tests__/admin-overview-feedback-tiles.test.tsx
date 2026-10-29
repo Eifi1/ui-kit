@@ -79,24 +79,38 @@ describe("AdminOverview — the feedback tiles' default words", () => {
     expect(own.key).toBe("beds");
   });
 
-  it.each([UI_KIT_LABELS_DE_CH, UI_KIT_LABELS_ES, UI_KIT_LABELS_FR, UI_KIT_LABELS_HU, UI_KIT_LABELS_IT, UI_KIT_LABELS_ZH])(
-    "every language has its own words (%#)",
-    (catalogue) => {
-      render(
-        <UiKitProvider labels={catalogue}>
-          <AdminOverview attention={ATTENTION} extraTiles={[{ key: "awaiting_verdict", count: 3 }, { key: "released_for_work", count: 4 }]} />
-        </UiKitProvider>,
+  it.each([
+    UI_KIT_LABELS_DE_CH,
+    UI_KIT_LABELS_ES,
+    UI_KIT_LABELS_FR,
+    UI_KIT_LABELS_HU,
+    UI_KIT_LABELS_IT,
+    UI_KIT_LABELS_ZH,
+  ])("every language has its own words (%#)", (catalogue) => {
+    render(
+      <UiKitProvider labels={catalogue}>
+        <AdminOverview
+          attention={ATTENTION}
+          extraTiles={[
+            { key: "awaiting_verdict", count: 3 },
+            { key: "released_for_work", count: 4 },
+          ]}
+        />
+      </UiKitProvider>,
+    );
+    const t = catalogue.adminArea.tiles;
+    for (const [key, label, hint] of [
+      ["awaiting_verdict", t.awaitingVerdict, t.awaitingVerdictHint],
+      ["released_for_work", t.releasedForWork, t.releasedForWorkHint],
+    ] as const) {
+      expect(tile(key)).toHaveTextContent(label);
+      expect(tile(key)).toHaveTextContent(hint);
+      expect(label).not.toBe(
+        (DEFAULT_ADMIN_AREA_LABELS.tiles as unknown as Record<string, string>)[
+          key === "awaiting_verdict" ? "awaitingVerdict" : "releasedForWork"
+        ],
       );
-      const t = catalogue.adminArea.tiles;
-      for (const [key, label, hint] of [
-        ["awaiting_verdict", t.awaitingVerdict, t.awaitingVerdictHint],
-        ["released_for_work", t.releasedForWork, t.releasedForWorkHint],
-      ] as const) {
-        expect(tile(key)).toHaveTextContent(label);
-        expect(tile(key)).toHaveTextContent(hint);
-        expect(label).not.toBe((DEFAULT_ADMIN_AREA_LABELS.tiles as unknown as Record<string, string>)[key === "awaiting_verdict" ? "awaitingVerdict" : "releasedForWork"]);
-        expect(label + hint).not.toContain("ß");
-      }
-    },
-  );
+      expect(label + hint).not.toContain("ß");
+    }
+  });
 });

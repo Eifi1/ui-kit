@@ -67,7 +67,14 @@ describe("useStripFade", () => {
   }
 
   it("spares the scrollbars only when asked", () => {
-    const el = strip({ scrollWidth: 600, clientWidth: 285, offsetWidth: 300, clientHeight: 185, offsetHeight: 200, clientLeft: 0 });
+    const el = strip({
+      scrollWidth: 600,
+      clientWidth: 285,
+      offsetWidth: 300,
+      clientHeight: 185,
+      offsetHeight: 200,
+      clientLeft: 0,
+    });
     const ref = { current: el };
     const plain = renderHook(() => useStripFade(ref));
     expect(plain.result.current).toEqual({
@@ -89,12 +96,21 @@ describe("useStripFade", () => {
     const { result } = renderHook(() => useStripFade({ current: el }, { spareScrollbars: true }));
     // RTL at its start: the hidden columns are on the LEFT, where the scrollbar is.
     expect(result.current.overflow).toBe("end");
-    expect(result.current.mask).toBe("linear-gradient(to right, #000 0px, #000 15px, transparent 15px, #000 39px, #000)");
+    expect(result.current.mask).toBe(
+      "linear-gradient(to right, #000 0px, #000 15px, transparent 15px, #000 39px, #000)",
+    );
     el.remove();
   });
 
   it("takes sub-pixel rounding for no scrollbar", () => {
-    const el = strip({ scrollWidth: 600, clientWidth: 299, offsetWidth: 300, clientHeight: 199, offsetHeight: 200, clientLeft: 0 });
+    const el = strip({
+      scrollWidth: 600,
+      clientWidth: 299,
+      offsetWidth: 300,
+      clientHeight: 199,
+      offsetHeight: 200,
+      clientLeft: 0,
+    });
     const { result } = renderHook(() => useStripFade({ current: el }, { spareScrollbars: true }));
     expect(result.current.mask).toBe("linear-gradient(to right, #000, #000 calc(100% - 24px), transparent)");
     el.remove();

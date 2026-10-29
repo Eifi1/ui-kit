@@ -58,8 +58,7 @@ export function usePlanLimitToast(options: PlanLimitToastOptions): (hit?: PlanLi
     (hit?: PlanLimitRefusal) => {
       const dimension = hit?.dimension ?? "";
       const name = dimensionLabels?.[dimension] ?? dimension;
-      const figure = (value: number) =>
-        formatValue ? formatValue(dimension, value) : formatNumber(value, { locale });
+      const figure = (value: number) => (formatValue ? formatValue(dimension, value) : formatNumber(value, { locale }));
       // A body without `used` was refused for being AT the limit (PlanLimitNotice's rule).
       const usage =
         hit?.limit !== undefined

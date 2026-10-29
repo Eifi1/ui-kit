@@ -51,7 +51,13 @@ describe("UiKitProvider joins the device reset with its tables' prefix", () => {
         <UiKitProvider tableStorageKeyPrefix="admin-table:">x</UiKitProvider>
       </UiKitProvider>,
     );
-    await waitFor(() => expect(tablePrefixes().map((e) => e.key).sort()).toEqual(["admin-table:", "app-table:"]));
+    await waitFor(() =>
+      expect(
+        tablePrefixes()
+          .map((e) => e.key)
+          .sort(),
+      ).toEqual(["admin-table:", "app-table:"]),
+    );
   });
 
   it("never joins when it unmounts before the join lands", async () => {

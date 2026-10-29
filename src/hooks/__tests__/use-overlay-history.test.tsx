@@ -83,7 +83,12 @@ function Overlay({ onClose }: { onClose?: () => void }) {
 
 // The real composition: the sheet is a CHILD of the dialog, so both unmount in the
 // same commit and React runs the dialog's cleanup first.
-function Nested({ outer, inner, onCloseOuter, onCloseInner }: {
+function Nested({
+  outer,
+  inner,
+  onCloseOuter,
+  onCloseInner,
+}: {
   outer: boolean;
   inner: boolean;
   onCloseOuter?: () => void;

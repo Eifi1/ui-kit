@@ -307,8 +307,11 @@ export const DEFAULT_BILLING_LABELS: BillingLabels = {
   paymentFailed: "Your last payment didn’t go through. Update your payment method to keep your plan.",
   planEnded: "Your plan has ended. You can still view and export everything; choose a plan to make changes again.",
   guestReadOnly: (item) =>
-    item ? `“${item}” is read-only for now; its owner can lift that.` : "This is read-only for now; its owner can lift that.",
-  processing: "Your payment is being processed. Your plan starts as soon as it’s confirmed; this page updates by itself.",
+    item
+      ? `“${item}” is read-only for now; its owner can lift that.`
+      : "This is read-only for now; its owner can lift that.",
+  processing:
+    "Your payment is being processed. Your plan starts as soon as it’s confirmed; this page updates by itself.",
   choosePlan: "Choose a plan",
   updatePayment: "Update payment method",
   paymentFailedAskBuyer: (buyer) =>
@@ -359,8 +362,7 @@ export const DEFAULT_BILLING_LABELS: BillingLabels = {
     "You have free access with no end date. A purchase won’t change your plan while the free access runs: you would pay for a plan that doesn’t apply.",
   grantWarningAction: "Buy anyway",
 
-  waitingChanges: (count) =>
-    count === 1 ? "1 change waiting for a plan" : `${count} changes waiting for a plan`,
+  waitingChanges: (count) => (count === 1 ? "1 change waiting for a plan" : `${count} changes waiting for a plan`),
   discardWaiting: "Discard waiting changes",
 
   notConfigured: "Payments aren't set up yet. Please try again later.",

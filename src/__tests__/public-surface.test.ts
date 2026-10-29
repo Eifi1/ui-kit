@@ -454,9 +454,7 @@ const STANDALONE = new Set([
 describe("public surface", () => {
   it.each(ENTRIES)("%s exports exactly %#", (name, mod, count) => {
     const names = Object.keys(mod).sort();
-    expect(names, `${name} gained or lost an export:\n  ${names.join("\n  ")}`).toHaveLength(
-      count,
-    );
+    expect(names, `${name} gained or lost an export:\n  ${names.join("\n  ")}`).toHaveLength(count);
   });
 
   it("exports no name twice under a different spelling of the same thing", () => {
@@ -472,9 +470,7 @@ describe("public surface", () => {
     const inBarrel = new Set(Object.keys(barrel));
     for (const [name, mod] of ENTRIES.slice(1).filter(([n]) => !STANDALONE.has(n))) {
       const extra = Object.keys(mod).filter((k) => !inBarrel.has(k));
-      expect(extra, `${name} exports names the barrel does not: ${extra.join(", ")}`).toEqual(
-        [],
-      );
+      expect(extra, `${name} exports names the barrel does not: ${extra.join(", ")}`).toEqual([]);
     }
   });
 });

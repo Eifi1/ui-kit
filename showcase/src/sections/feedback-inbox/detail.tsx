@@ -1,11 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import {
-  FeedbackRowDetail,
-  ToggleGroup,
-  UiKitProvider,
-  appendRework,
-  useFeedbackStatusUndo,
-} from "@eifi1/ui-kit";
+import { FeedbackRowDetail, ToggleGroup, UiKitProvider, appendRework, useFeedbackStatusUndo } from "@eifi1/ui-kit";
 import type { AuthedFetcher, FeedbackDetailUpdate, FeedbackRecord, UiKitLabelOverrides } from "@eifi1/ui-kit";
 import { Example, Note, code } from "../../lib/section";
 
@@ -181,11 +175,7 @@ function Detail({ viewer }: { viewer: Viewer }) {
         onUpload={onUpload}
         fetcher={fetcher}
       />
-      <button
-        type="button"
-        className="text-xs text-muted underline"
-        onClick={() => setRow(seedRow())}
-      >
+      <button type="button" className="text-xs text-muted underline" onClick={() => setRow(seedRow())}>
         Reset the row
       </button>
     </div>
@@ -228,12 +218,12 @@ export function FeedbackDetail027Demo() {
         </UiKitProvider>
       </div>
       <Note>
-        {code("FeedbackRowDetail")} is what {code("DataTable")}'s {code("expandedRow")} renders: the row, {code("canEdit")}{" "}
-        (admin on {code("/feedback")}), {code("viewerId")}, the page's {code("update.mutate")} as {code("onUpdate")}, the
-        upload, the authed {code("fetcher")} and {code("useFeedbackStatusUndo")}'s change. The author's Edit holds the
-        original text only — the rework rounds and file lines go back unchanged. Rework needs a note, takes one file
-        (uploaded first) and PATCHes the body alone; the server reopens the row. Send a rework as the author: the row goes
-        back to Open, and the Edit button appears.
+        {code("FeedbackRowDetail")} is what {code("DataTable")}'s {code("expandedRow")} renders: the row,{" "}
+        {code("canEdit")} (admin on {code("/feedback")}), {code("viewerId")}, the page's {code("update.mutate")} as{" "}
+        {code("onUpdate")}, the upload, the authed {code("fetcher")} and {code("useFeedbackStatusUndo")}'s change. The
+        author's Edit holds the original text only — the rework rounds and file lines go back unchanged. Rework needs a
+        note, takes one file (uploaded first) and PATCHes the body alone; the server reopens the row. Send a rework as
+        the author: the row goes back to Open, and the Edit button appears.
       </Note>
     </Example>
   );

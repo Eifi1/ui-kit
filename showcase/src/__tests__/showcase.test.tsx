@@ -54,23 +54,31 @@ describe("navigation", () => {
     );
   });
 
-  it("changes the rendered page when a nav link is followed", () => {
-    renderAt("/tokens");
-    expect(screen.getByRole("heading", { name: "Tokens", level: 1 })).toBeInTheDocument();
+  it(
+    "changes the rendered page when a nav link is followed",
+    () => {
+      renderAt("/tokens");
+      expect(screen.getByRole("heading", { name: "Tokens", level: 1 })).toBeInTheDocument();
 
-    const sidebar = document.querySelector("aside");
-    // A group with several pages links to its OVERVIEW, whose slug is the group's own.
-    const link = within(sidebar as HTMLElement).getAllByRole("link", { name: /^Inputs$/ })[0];
-    fireEvent.click(link);
+      const sidebar = document.querySelector("aside");
+      // A group with several pages links to its OVERVIEW, whose slug is the group's own.
+      const link = within(sidebar as HTMLElement).getAllByRole("link", { name: /^Inputs$/ })[0];
+      fireEvent.click(link);
 
-    expect(screen.queryByRole("heading", { name: "Tokens", level: 1 })).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Inputs", level: 1 })).toBeInTheDocument();
-  }, MOUNT_TIMEOUT_MS);
+      expect(screen.queryByRole("heading", { name: "Tokens", level: 1 })).not.toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Inputs", level: 1 })).toBeInTheDocument();
+    },
+    MOUNT_TIMEOUT_MS,
+  );
 
-  it("redirects / to the first page rather than rendering nothing", () => {
-    renderAt("/");
-    expect(screen.getByRole("heading", { name: PAGES[0].title, level: 1 })).toBeInTheDocument();
-  }, MOUNT_TIMEOUT_MS);
+  it(
+    "redirects / to the first page rather than rendering nothing",
+    () => {
+      renderAt("/");
+      expect(screen.getByRole("heading", { name: PAGES[0].title, level: 1 })).toBeInTheDocument();
+    },
+    MOUNT_TIMEOUT_MS,
+  );
 
   it("shows a not-found page for an unknown slug instead of a blank screen", () => {
     renderAt("/no-such-component");
@@ -104,35 +112,43 @@ describe("navigation", () => {
     }
   });
 
-  it("offers previous/next between adjacent pages", () => {
-    const second = PAGES[1];
-    renderAt(`/${second.slug}`);
-    const pager = screen.getByRole("navigation", { name: "Pagination" });
-    expect(within(pager).getByText(PAGES[0].title)).toBeInTheDocument();
-    expect(within(pager).getByText(PAGES[2].title)).toBeInTheDocument();
-  }, MOUNT_TIMEOUT_MS);
+  it(
+    "offers previous/next between adjacent pages",
+    () => {
+      const second = PAGES[1];
+      renderAt(`/${second.slug}`);
+      const pager = screen.getByRole("navigation", { name: "Pagination" });
+      expect(within(pager).getByText(PAGES[0].title)).toBeInTheDocument();
+      expect(within(pager).getByText(PAGES[2].title)).toBeInTheDocument();
+    },
+    MOUNT_TIMEOUT_MS,
+  );
 });
 
 describe("on-this-page contents", () => {
-  it("links only to headings that exist on the page", async () => {
-    renderAt("/buttons");
-    // Built from the DOM after paint, so wait for it rather than asserting immediately.
-    // Two copies: the rail (xl and up) and the disclosure under the title (below xl).
-    // jsdom applies no CSS, so both are present here; in a browser one is display:none.
-    // A generous wait: the Buttons page is one of the largest, and under the coverage
-    // run of `npm run check` its contents rail took longer than findBy's 1s default.
-    const navs = await screen.findAllByRole("navigation", { name: "On this page" }, { timeout: 15_000 });
-    expect(navs).toHaveLength(2);
-    const hrefs = navs
-      .flatMap((nav) => within(nav).getAllByRole("link"))
-      // The router builds the href (`#/buttons#id` under HashRouter, `/buttons#id`
-      // in a MemoryRouter), so the heading id is whatever follows the LAST `#`.
-      .map((a) => a.getAttribute("href")!.split("#").pop()!);
-    expect(hrefs.length).toBeGreaterThan(1);
-    for (const id of hrefs) {
-      expect(document.getElementById(id), `#${id} has no heading`).not.toBeNull();
-    }
-  }, MOUNT_TIMEOUT_MS);
+  it(
+    "links only to headings that exist on the page",
+    async () => {
+      renderAt("/buttons");
+      // Built from the DOM after paint, so wait for it rather than asserting immediately.
+      // Two copies: the rail (xl and up) and the disclosure under the title (below xl).
+      // jsdom applies no CSS, so both are present here; in a browser one is display:none.
+      // A generous wait: the Buttons page is one of the largest, and under the coverage
+      // run of `npm run check` its contents rail took longer than findBy's 1s default.
+      const navs = await screen.findAllByRole("navigation", { name: "On this page" }, { timeout: 15_000 });
+      expect(navs).toHaveLength(2);
+      const hrefs = navs
+        .flatMap((nav) => within(nav).getAllByRole("link"))
+        // The router builds the href (`#/buttons#id` under HashRouter, `/buttons#id`
+        // in a MemoryRouter), so the heading id is whatever follows the LAST `#`.
+        .map((a) => a.getAttribute("href")!.split("#").pop()!);
+      expect(hrefs.length).toBeGreaterThan(1);
+      for (const id of hrefs) {
+        expect(document.getElementById(id), `#${id} has no heading`).not.toBeNull();
+      }
+    },
+    MOUNT_TIMEOUT_MS,
+  );
 });
 
 /**
@@ -144,12 +160,9 @@ describe("dictionaries", () => {
   // `kit` is typed as the full `UiKitLabels`, but a few keys in it are OPTIONAL (so a
   // consumer's annotated translation keeps compiling when the kit adds one) — and tsc is
   // silent about an optional key left out. This is the check that is not.
-  it.each(LOCALES.map((d) => [d.name, d] as const))(
-    "%s supplies every kit label",
-    (_name, dict) => {
-      expect(missingKitLabels(dict.kit, DEFAULT_UI_KIT_LABELS)).toEqual([]);
-    },
-  );
+  it.each(LOCALES.map((d) => [d.name, d] as const))("%s supplies every kit label", (_name, dict) => {
+    expect(missingKitLabels(dict.kit, DEFAULT_UI_KIT_LABELS)).toEqual([]);
+  });
 
   it("names every page and every group in every language", () => {
     const slugs = Object.keys(en.pages).sort();
@@ -212,114 +225,138 @@ describe("language menu", () => {
     fireEvent.click(within(openMenu()).getByRole("menuitem", { name: endonym }));
   }
 
-  it("lists all seven locales, each named in its own language", () => {
-    renderAt("/tokens");
-    const menu = openMenu();
+  it(
+    "lists all seven locales, each named in its own language",
+    () => {
+      renderAt("/tokens");
+      const menu = openMenu();
 
-    // The endonym, not the English name: a reader looking for Hungarian is looking for
-    // Magyar. Asserting on LOCALES rather than on a literal list is what makes this
-    // fail when a dictionary is written but never registered.
-    expect(LOCALES.map((d) => d.name)).toEqual([
-      "English",
-      "Deutsch",
-      "Français",
-      "Italiano",
-      "Español",
-      "Magyar",
-      "中文",
-    ]);
-    for (const dict of LOCALES) {
+      // The endonym, not the English name: a reader looking for Hungarian is looking for
+      // Magyar. Asserting on LOCALES rather than on a literal list is what makes this
+      // fail when a dictionary is written but never registered.
+      expect(LOCALES.map((d) => d.name)).toEqual([
+        "English",
+        "Deutsch",
+        "Français",
+        "Italiano",
+        "Español",
+        "Magyar",
+        "中文",
+      ]);
+      for (const dict of LOCALES) {
+        expect(
+          within(menu).getByRole("menuitem", { name: dict.name }),
+          `${dict.tag} is missing from the menu`,
+        ).toBeInTheDocument();
+      }
+    },
+    MOUNT_TIMEOUT_MS,
+  );
+
+  it(
+    "translates the chrome when a locale is chosen",
+    () => {
+      renderAt("/tokens");
+      // Both the visible group name and the landmark's accessible name — the second is the
+      // half that is only ever read aloud, and so the half that silently stays English.
+      const before = screen.getByRole("navigation", { name: en.chrome.breadcrumb });
+      expect(within(before).getByText(en.groups.Foundations)).toBeInTheDocument();
+
+      choose(fr.name);
+
+      const after = screen.getByRole("navigation", { name: fr.chrome.breadcrumb });
+      expect(within(after).getByText(fr.groups.Foundations)).toBeInTheDocument();
       expect(
-        within(menu).getByRole("menuitem", { name: dict.name }),
-        `${dict.tag} is missing from the menu`,
-      ).toBeInTheDocument();
-    }
-  }, MOUNT_TIMEOUT_MS);
+        screen.queryByRole("navigation", { name: en.chrome.breadcrumb }),
+        "the breadcrumb landmark kept its English accessible name",
+      ).not.toBeInTheDocument();
+    },
+    MOUNT_TIMEOUT_MS,
+  );
 
-  it("translates the chrome when a locale is chosen", () => {
-    renderAt("/tokens");
-    // Both the visible group name and the landmark's accessible name — the second is the
-    // half that is only ever read aloud, and so the half that silently stays English.
-    const before = screen.getByRole("navigation", { name: en.chrome.breadcrumb });
-    expect(within(before).getByText(en.groups.Foundations)).toBeInTheDocument();
+  it(
+    "translates the sidebar groups and the pager",
+    () => {
+      renderAt(`/${PAGES[1].slug}`);
+      choose(fr.name);
 
-    choose(fr.name);
+      const sidebar = document.querySelector("aside") as HTMLElement;
+      expect(within(sidebar).getAllByRole("link", { name: fr.groups.Foundations })[0]).toBeInTheDocument();
 
-    const after = screen.getByRole("navigation", { name: fr.chrome.breadcrumb });
-    expect(within(after).getByText(fr.groups.Foundations)).toBeInTheDocument();
-    expect(
-      screen.queryByRole("navigation", { name: en.chrome.breadcrumb }),
-      "the breadcrumb landmark kept its English accessible name",
-    ).not.toBeInTheDocument();
-  }, MOUNT_TIMEOUT_MS);
+      const pager = screen.getByRole("navigation", { name: fr.chrome.pagination });
+      expect(within(pager).getByText(fr.chrome.previous)).toBeInTheDocument();
+      expect(within(pager).getByText(fr.chrome.next)).toBeInTheDocument();
+    },
+    MOUNT_TIMEOUT_MS,
+  );
 
-  it("translates the sidebar groups and the pager", () => {
-    renderAt(`/${PAGES[1].slug}`);
-    choose(fr.name);
+  it(
+    "sets <html lang> to the chosen locale's full tag, and back again",
+    () => {
+      renderAt("/tokens");
+      expect(document.documentElement.dir).toBe("ltr");
 
-    const sidebar = document.querySelector("aside") as HTMLElement;
-    expect(within(sidebar).getAllByRole("link", { name: fr.groups.Foundations })[0]).toBeInTheDocument();
+      choose(hu.name);
+      // `lang` is what a screen reader takes its voice from: a Hungarian page still
+      // announced as English is only half switched. The FULL tag, region included.
+      expect(document.documentElement.lang).toBe("hu-HU");
+      expect(document.documentElement.dir).toBe("ltr");
 
-    const pager = screen.getByRole("navigation", { name: fr.chrome.pagination });
-    expect(within(pager).getByText(fr.chrome.previous)).toBeInTheDocument();
-    expect(within(pager).getByText(fr.chrome.next)).toBeInTheDocument();
-  }, MOUNT_TIMEOUT_MS);
+      choose(en.name);
+      expect(document.documentElement.lang).toBe(en.tag);
+      expect(document.documentElement.dir).toBe("ltr");
+    },
+    MOUNT_TIMEOUT_MS,
+  );
 
-  it("sets <html lang> to the chosen locale's full tag, and back again", () => {
-    renderAt("/tokens");
-    expect(document.documentElement.dir).toBe("ltr");
+  it(
+    "hands the dictionary's kit labels to the kit's own components",
+    () => {
+      // The chrome above is the showcase's own text. This is the kit's: AppShell's
+      // collapse button reads `appShell.collapse` from <UiKitProvider>, with no prop at
+      // the call site — so it only changes language if the provider is wired.
+      renderAt("/tokens");
+      expect(screen.getByRole("button", { name: en.kit.appShell.collapse })).toBeInTheDocument();
 
-    choose(hu.name);
-    // `lang` is what a screen reader takes its voice from: a Hungarian page still
-    // announced as English is only half switched. The FULL tag, region included.
-    expect(document.documentElement.lang).toBe("hu-HU");
-    expect(document.documentElement.dir).toBe("ltr");
+      choose(de.name);
 
-    choose(en.name);
-    expect(document.documentElement.lang).toBe(en.tag);
-    expect(document.documentElement.dir).toBe("ltr");
-  }, MOUNT_TIMEOUT_MS);
+      expect(screen.getByRole("button", { name: de.kit.appShell.collapse })).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: en.kit.appShell.collapse }),
+        "the sidebar's collapse button stayed English",
+      ).not.toBeInTheDocument();
+    },
+    MOUNT_TIMEOUT_MS,
+  );
 
-  it("hands the dictionary's kit labels to the kit's own components", () => {
-    // The chrome above is the showcase's own text. This is the kit's: AppShell's
-    // collapse button reads `appShell.collapse` from <UiKitProvider>, with no prop at
-    // the call site — so it only changes language if the provider is wired.
-    renderAt("/tokens");
-    expect(
-      screen.getByRole("button", { name: en.kit.appShell.collapse }),
-    ).toBeInTheDocument();
+  it(
+    "keeps the choice across a remount",
+    () => {
+      const view = renderAt("/tokens");
+      choose(es.name);
+      expect(localStorage.getItem(LOCALE_STORAGE_KEY)).toBe("es");
 
-    choose(de.name);
+      // A remount is a reload: the provider re-reads the stored preference in its lazy
+      // initialiser, so the second mount must come up in Spanish without being told.
+      view.unmount();
+      renderAt("/tokens");
 
-    expect(
-      screen.getByRole("button", { name: de.kit.appShell.collapse }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: en.kit.appShell.collapse }),
-      "the sidebar's collapse button stayed English",
-    ).not.toBeInTheDocument();
-  }, MOUNT_TIMEOUT_MS);
+      const crumb = screen.getByRole("navigation", { name: es.chrome.breadcrumb });
+      expect(within(crumb).getByText(es.groups.Foundations)).toBeInTheDocument();
+    },
+    MOUNT_TIMEOUT_MS,
+  );
 
-  it("keeps the choice across a remount", () => {
-    const view = renderAt("/tokens");
-    choose(es.name);
-    expect(localStorage.getItem(LOCALE_STORAGE_KEY)).toBe("es");
-
-    // A remount is a reload: the provider re-reads the stored preference in its lazy
-    // initialiser, so the second mount must come up in Spanish without being told.
-    view.unmount();
-    renderAt("/tokens");
-
-    const crumb = screen.getByRole("navigation", { name: es.chrome.breadcrumb });
-    expect(within(crumb).getByText(es.groups.Foundations)).toBeInTheDocument();
-  }, MOUNT_TIMEOUT_MS);
-
-  it("falls back to English for a stored code that no longer resolves", () => {
-    // The preference survives a release that removes a locale, so it has to be read
-    // defensively: a dictionary that is gone must not leave the page undefined.
-    localStorage.setItem(LOCALE_STORAGE_KEY, "kl");
-    renderAt("/tokens");
-    expect(screen.getByRole("navigation", { name: en.chrome.breadcrumb })).toBeInTheDocument();
-    expect(document.documentElement.dir).toBe("ltr");
-  }, MOUNT_TIMEOUT_MS);
+  it(
+    "falls back to English for a stored code that no longer resolves",
+    () => {
+      // The preference survives a release that removes a locale, so it has to be read
+      // defensively: a dictionary that is gone must not leave the page undefined.
+      localStorage.setItem(LOCALE_STORAGE_KEY, "kl");
+      renderAt("/tokens");
+      expect(screen.getByRole("navigation", { name: en.chrome.breadcrumb })).toBeInTheDocument();
+      expect(document.documentElement.dir).toBe("ltr");
+    },
+    MOUNT_TIMEOUT_MS,
+  );
 });

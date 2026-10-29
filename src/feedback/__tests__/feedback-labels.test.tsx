@@ -183,7 +183,9 @@ describe("feedbackToast: the public pages' failures (0.38.1, Kurvenschmiede)", (
 
 /** 0.40 (docs/feedback-harmonization.md §10.6): the five keys in seven languages. */
 describe("the 0.40 words in every catalogue", () => {
-  const WORDS: Array<[string, { feedbackMenu: object; feedbackPublic: object; feedbackPage: object; feedbackStatus: object }, string[]]> = [
+  const WORDS: Array<
+    [string, { feedbackMenu: object; feedbackPublic: object; feedbackPage: object; feedbackStatus: object }, string[]]
+  > = [
     ["en", uiKitLabelsEn(), ["Feedback discussion", "Feedback inbox", "Rework requested"]],
     ["de-CH", UI_KIT_LABELS_DE_CH, ["Feedback-Diskussion", "Feedback-Eingang", "Nacharbeit angefordert"]],
     ["fr", UI_KIT_LABELS_FR, ["Discussion des retours", "Retours reçus", "Reprise demandée"]],

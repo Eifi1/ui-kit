@@ -100,7 +100,7 @@ describe("DataTable's desktop column from mobileSwipeActions (dev#598)", () => {
     expect(within(rowOf("Alpha")).getByRole("button", { name: "Approve" })).toBeTruthy();
   });
 
-  it("collapses into the \"⋯\" menu named after the row when asked", () => {
+  it('collapses into the "⋯" menu named after the row when asked', () => {
     renderTable({ desktopSwipeActions: { collapse: "menu", name: (r) => r.name } });
     expect(within(rowOf("Alpha")).getByRole("button", { name: "Actions for Alpha" })).toBeTruthy();
   });

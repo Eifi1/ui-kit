@@ -134,9 +134,15 @@ describe("a composing Enter neither picks nor submits (BUG-9)", () => {
   it("Autocomplete", async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
-    render(<Autocomplete<string> label="Address" value="Example" onChange={() => {}} onSelect={onSelect} options={[
-      { value: "1", label: "Example Street 1" },
-    ]} />);
+    render(
+      <Autocomplete<string>
+        label="Address"
+        value="Example"
+        onChange={() => {}}
+        onSelect={onSelect}
+        options={[{ value: "1", label: "Example Street 1" }]}
+      />,
+    );
     const field = screen.getByRole("combobox", { name: "Address" });
     await user.click(field);
     await waitFor(() => expect(screen.getByRole("listbox")).toBeInTheDocument());

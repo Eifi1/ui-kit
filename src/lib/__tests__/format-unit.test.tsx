@@ -22,9 +22,7 @@ describe("formatNumber unit", () => {
   });
 
   it("works through the provider-bound formatter", () => {
-    const wrapper = ({ children }: { children: ReactNode }) => (
-      <UiKitProvider locale="de-DE">{children}</UiKitProvider>
-    );
+    const wrapper = ({ children }: { children: ReactNode }) => <UiKitProvider locale="de-DE">{children}</UiKitProvider>;
     const { result } = renderHook(() => useKitFormat(), { wrapper });
     expect(result.current.formatNumber(3400, { unit: "N" })).toBe("3.400 N");
     expect(result.current.formatNumber(undefined, { unit: "N" })).toBe("—");

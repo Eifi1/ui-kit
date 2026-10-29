@@ -267,7 +267,9 @@ describe("InlineEditField — the write lock (keksdose dev#496)", () => {
   });
 
   it("takes its own disabledReason without a provider, and ignores a lock without `commit`", () => {
-    const { rerender } = render(<InlineEditField label="Total" value="9" disabledReason="Period closed" onCommit={() => {}} />);
+    const { rerender } = render(
+      <InlineEditField label="Total" value="9" disabledReason="Period closed" onCommit={() => {}} />,
+    );
     expect(screen.getByRole("button", { name: "9" })).toHaveAccessibleDescription("Period closed");
     rerender(
       <WriteLockProvider locked reason="Locked">
@@ -313,9 +315,17 @@ describe("InlineEditField — editors", () => {
   it("can be opened from outside (controlled), seeded from the value", async () => {
     const onEditingChange = vi.fn();
     const { rerender } = render(
-      <InlineEditField label="Assigned" value="50" editing={false} onEditingChange={onEditingChange} onCommit={() => {}} />,
+      <InlineEditField
+        label="Assigned"
+        value="50"
+        editing={false}
+        onEditingChange={onEditingChange}
+        onCommit={() => {}}
+      />,
     );
-    rerender(<InlineEditField label="Assigned" value="50" editing onEditingChange={onEditingChange} onCommit={() => {}} />);
+    rerender(
+      <InlineEditField label="Assigned" value="50" editing onEditingChange={onEditingChange} onCommit={() => {}} />,
+    );
     const field = screen.getByRole("textbox", { name: "Assigned" });
     expect(field).toHaveValue("50");
     await waitFor(() => expect(field).toHaveFocus());
@@ -325,7 +335,9 @@ describe("InlineEditField — editors", () => {
 
   it("passes the default editor's inputProps through", async () => {
     const user = userEvent.setup();
-    render(<InlineEditField label="Budget name" value="Household" inputProps={{ maxLength: 120 }} onCommit={() => {}} />);
+    render(
+      <InlineEditField label="Budget name" value="Household" inputProps={{ maxLength: 120 }} onCommit={() => {}} />,
+    );
     await user.click(screen.getByRole("button", { name: "Household" }));
     expect(screen.getByRole("textbox")).toHaveAttribute("maxlength", "120");
   });

@@ -1,4 +1,14 @@
-import { contrast, hexToOklch, luminance, oklchToHex, oklchToRgb, parseHex, rgbToOklch, solveLightness, toHex } from "./color";
+import {
+  contrast,
+  hexToOklch,
+  luminance,
+  oklchToHex,
+  oklchToRgb,
+  parseHex,
+  rgbToOklch,
+  solveLightness,
+  toHex,
+} from "./color";
 import type { TokenSet } from "./palette-presets";
 
 /**
@@ -218,7 +228,8 @@ function steppedBorder(t: TokenSet, well: WellStep | null): string {
   // light well (§13.4), which is the darkest surface under More contrast.
   const surface2 = well?.bgSurface2 ?? t.bgSurface2;
   let lo = BORDER_STRONG_SHARE;
-  if (worstContrast(mix(t.border, t.textPrimary, 1 - lo), t, surface2) >= BORDER_TARGET) return mix(t.border, t.textPrimary, 1 - lo);
+  if (worstContrast(mix(t.border, t.textPrimary, 1 - lo), t, surface2) >= BORDER_TARGET)
+    return mix(t.border, t.textPrimary, 1 - lo);
   let hi = 1;
   for (let i = 0; i < 16; i++) {
     const mid = (lo + hi) / 2;

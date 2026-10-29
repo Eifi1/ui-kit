@@ -55,7 +55,10 @@ export interface PasswordScoreOptions {
 const DEFAULT_MIN_LENGTH = 8;
 
 /** The checklist's rules, evaluated. Pure; the order is the order they are shown in. */
-export function passwordRules(value: string, { minLength = DEFAULT_MIN_LENGTH }: PasswordScoreOptions = {}): PasswordRule[] {
+export function passwordRules(
+  value: string,
+  { minLength = DEFAULT_MIN_LENGTH }: PasswordScoreOptions = {},
+): PasswordRule[] {
   return [
     // Code points, not UTF-16 units: an emoji is one character to the person typing it.
     { id: "length", met: [...value].length >= minLength, required: true },
@@ -208,10 +211,7 @@ export function PasswordStrengthMeter({
               {[1, 2, 3, 4].map((step) => (
                 <div
                   key={step}
-                  className={cn(
-                    "h-1 flex-1 rounded-full",
-                    step <= score ? FILL[score] : "bg-[var(--border)]",
-                  )}
+                  className={cn("h-1 flex-1 rounded-full", step <= score ? FILL[score] : "bg-[var(--border)]")}
                 />
               ))}
             </div>
@@ -223,10 +223,7 @@ export function PasswordStrengthMeter({
                 <li
                   key={r.id}
                   // `relative`: the sr-only state needs a local containing block.
-                  className={cn(
-                    "relative",
-                    r.met ? "text-success" : "text-muted",
-                  )}
+                  className={cn("relative", r.met ? "text-success" : "text-muted")}
                   data-met={r.met}
                 >
                   <span className="sr-only">{r.met ? labels.met : labels.notMet} </span>

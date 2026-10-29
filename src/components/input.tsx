@@ -299,7 +299,13 @@ export function Input(props: InputProps) {
                 aria-describedby={describedBy}
                 onClick={handleClick}
                 onChange={onChange}
-                className={cn(FIELD_BASE, ownClass, inputClassName, isInvalid && FIELD_INVALID, locked && "cursor-not-allowed")}
+                className={cn(
+                  FIELD_BASE,
+                  ownClass,
+                  inputClassName,
+                  isInvalid && FIELD_INVALID,
+                  locked && "cursor-not-allowed",
+                )}
               />
             </EndHintRow>,
           )}
@@ -321,7 +327,13 @@ export function Input(props: InputProps) {
                 aria-invalid={isInvalid || rest["aria-invalid"] || undefined}
                 aria-describedby={describedBy}
                 onChange={onChange}
-                className={cn(FIELD_BASE, "pe-9", inputClassName, isInvalid && FIELD_INVALID, locked && "cursor-not-allowed")}
+                className={cn(
+                  FIELD_BASE,
+                  "pe-9",
+                  inputClassName,
+                  isInvalid && FIELD_INVALID,
+                  locked && "cursor-not-allowed",
+                )}
               />
               {revealToggle}
             </div>

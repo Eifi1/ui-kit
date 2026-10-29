@@ -12,7 +12,9 @@ describe("filenameFromDisposition", () => {
   it("reads server-kit's header: the original name from filename*, not the ASCII stand-in", () => {
     // What `content_disposition("Grün – Bericht.pdf")` writes from server-kit 0.8.
     expect(
-      filenameFromDisposition(`attachment; filename="Grun - Bericht.pdf"; filename*=UTF-8''Gr%C3%BCn%20%E2%80%93%20Bericht.pdf`),
+      filenameFromDisposition(
+        `attachment; filename="Grun - Bericht.pdf"; filename*=UTF-8''Gr%C3%BCn%20%E2%80%93%20Bericht.pdf`,
+      ),
     ).toBe("Grün – Bericht.pdf");
     expect(filenameFromDisposition(`attachment; filename="__.pdf"; filename*=UTF-8''%E6%8A%A5%E5%91%8A.pdf`)).toBe(
       "报告.pdf",
@@ -39,9 +41,7 @@ describe("filenameFromDisposition", () => {
     expect(filenameFromDisposition(`attachment; filename*=UTF-8''bad%E2%80.txt; filename="plain.txt"`)).toBe(
       "plain.txt",
     );
-    expect(filenameFromDisposition(`attachment; filename*=x-unknown''abc.txt; filename="plain.txt"`)).toBe(
-      "plain.txt",
-    );
+    expect(filenameFromDisposition(`attachment; filename*=x-unknown''abc.txt; filename="plain.txt"`)).toBe("plain.txt");
     expect(filenameFromDisposition(`attachment; filename*=no-quotes.txt; filename="plain.txt"`)).toBe("plain.txt");
   });
 

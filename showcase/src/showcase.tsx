@@ -89,12 +89,9 @@ function useTranslatedNav(): AppShellNavItem[] {
       NAV.map((item, i) => {
         // `NAV` is `GROUPS.map(...)`, so the index is exact; the `to` match is what keeps
         // it exact if that ever stops being true.
-        const group =
-          GROUPS.find((g) => `/${hasOverview(g) ? g.slug : g.pages[0].slug}` === item.to) ??
-          GROUPS[i];
+        const group = GROUPS.find((g) => `/${hasOverview(g) ? g.slug : g.pages[0].slug}` === item.to) ?? GROUPS[i];
         const title = (slug: string) => t.pages[slug]?.title ?? en.pages[slug]?.title ?? slug;
-        const short = (slug: string) =>
-          t.pages[slug]?.short ?? en.pages[slug]?.short ?? title(slug);
+        const short = (slug: string) => t.pages[slug]?.short ?? en.pages[slug]?.short ?? title(slug);
         return {
           ...item,
           label: t.groups[group.label] ?? en.groups[group.label] ?? group.label,
@@ -314,111 +311,123 @@ export function Showcase() {
     // button — reads its words and its locale from here, so the sections do not thread
     // label props by hand. This one line is what a consuming app writes.
     <UiKitProvider labels={t.kit} locale={tag} linkComponent={RouterLink}>
-    {/* Below the provider, so the tour card speaks the page's language. */}
-    <TourProvider>
-    {/* The one confirm host for every `useConfirm()` on every page — inside the
+      {/* Below the provider, so the tour card speaks the page's language. */}
+      <TourProvider>
+        {/* The one confirm host for every `useConfirm()` on every page — inside the
         UiKitProvider, so its Confirm/Cancel fallbacks follow the language menu. */}
-    <ConfirmProvider>
-    <AppShell
-      nav={nav}
-      subNav={sidebarStyle}
-      // One scrolling row of section chips on a phone: the wrapped bar took ~130px of a
-      // 390px screen on the long groups (showcase audit, decided 2026-09-27).
-      mobileSubNavLayout="scroll"
-      footer={
-        <footer className="border-t border-subtle px-6 py-3 text-xs text-muted">
-          {/* One translated sentence, not three fragments with markup between them. The
+        <ConfirmProvider>
+          <AppShell
+            nav={nav}
+            subNav={sidebarStyle}
+            // One scrolling row of section chips on a phone: the wrapped bar took ~130px of a
+            // 390px screen on the long groups (showcase audit, decided 2026-09-27).
+            mobileSubNavLayout="scroll"
+            footer={
+              <footer className="border-t border-subtle px-6 py-3 text-xs text-muted">
+                {/* One translated sentence, not three fragments with markup between them. The
               paths used to be wrapped in <code>; word order is the first thing that moves
               between these seven languages, and a sentence interrupted by two elements is a
               sentence no translator can reorder. Losing the monospace is the cheaper half
               of that trade. */}
-          {t.chrome.renderedFrom}
-        </footer>
-      }
-      topBar={
-        <TopBar
-          brand={
-            <Link
-              to={`/${HOME_SLUG}`}
-              className="truncate font-semibold text-primary hover:underline"
-            >
-              {/* `dir="ltr"` is load-bearing, not decoration. The brand is a Latin
+                {t.chrome.renderedFrom}
+              </footer>
+            }
+            topBar={
+              <TopBar
+                brand={
+                  <Link to={`/${HOME_SLUG}`} className="truncate font-semibold text-primary hover:underline">
+                    {/* `dir="ltr"` is load-bearing, not decoration. The brand is a Latin
                   package name inside a paragraph that is right-to-left on Arabic, and
                   the Unicode bidi algorithm treats the leading "@" as NEUTRAL: with no
                   strong left-to-right character before it, it adopts the paragraph's
                   direction and is reordered to the far end. Observed, not theorised —
                   it rendered "eifi1/ui-kit@". An identifier has a direction of its own
                   and has to declare it. */}
-              <span dir="ltr">{t.chrome.brand}</span>
-            </Link>
-          }
-          actions={
-            <>
-              {/* ⌘K / Ctrl K from anywhere: components, examples, and what a reader
+                    <span dir="ltr">{t.chrome.brand}</span>
+                  </Link>
+                }
+                actions={
+                  <>
+                    {/* ⌘K / Ctrl K from anywhere: components, examples, and what a reader
                   needs in their own words — the kit's GlobalSearch, fed like an app feeds
                   it (see search/showcase-search.tsx). */}
-              <ShowcaseSearch />
-              <ThemeToggle
-                mode={mode}
-                onToggle={toggle}
-                aria-label={t.chrome.toggleTheme}
-                // Was "Dark"/"Light" — the current mode, which the sun/moon glyph already
-                // says. The tooltip now names the ACTION, which is the half a translator
-                // has words for and the half a screen-reader user needs.
-                title={t.chrome.toggleTheme}
-              />
-              <TopBarAppearance />
-              <SidebarStyleToggle style={sidebarStyle} onChange={setSidebarStyle} />
-              {/* Never inside a preview frame (it would nest), and only from `md`: on a
+                    <ShowcaseSearch />
+                    <ThemeToggle
+                      mode={mode}
+                      onToggle={toggle}
+                      aria-label={t.chrome.toggleTheme}
+                      // Was "Dark"/"Light" — the current mode, which the sun/moon glyph already
+                      // says. The tooltip now names the ACTION, which is the half a translator
+                      // has words for and the half a screen-reader user needs.
+                      title={t.chrome.toggleTheme}
+                    />
+                    <TopBarAppearance />
+                    <SidebarStyleToggle style={sidebarStyle} onChange={setSidebarStyle} />
+                    {/* Never inside a preview frame (it would nest), and only from `md`: on a
                   phone the reader already sees the phone layout. A labelled button, not
                   a bare icon — readers who never resize a window are who this is for. */}
-              {!embedded && (
-                <Tooltip label={t.chrome.devicePreview} side="bottom" portal className="hidden md:block">
-                  <Button variant={preview ? "default" : "ghost"} size="sm" aria-pressed={preview} onClick={() => setPreview((v) => !v)}>
-                    <MonitorSmartphone aria-hidden className="size-4" />
-                    <span className="max-lg:sr-only">{t.chrome.previewShort}</span>
-                  </Button>
-                </Tooltip>
-              )}
-              {/* Desktop-wide only, like the rail it moves. */}
-              <span className="hidden xl:contents">
-                <OptionSwitcherMenu
-                  icon={contentsPosition === "start" ? <PanelLeft className="size-4" /> : <PanelRight className="size-4" />}
-                  aria-label={t.chrome.contentsPosition}
-                  title={t.chrome.contentsPosition}
-                  heading={t.chrome.contentsPosition}
-                  options={[
-                    { value: "start", label: t.chrome.positionStart },
-                    { value: "end", label: t.chrome.positionEnd },
-                  ]}
-                  value={contentsPosition}
-                  onSelect={setContentsPosition}
-                />
-              </span>
-            </>
-          }
-        />
-      }
-    >
-      <Routes>
-        <Route path="/" element={<Navigate to={`/${HOME_SLUG}`} replace />} />
-        <Route
-          path="/:slug"
-          element={
-            <RetiredSlugRedirect>
-              {preview ? <PreviewRoute onExit={() => setPreview(false)} /> : <PageRoute contentsPosition={contentsPosition} />}
-            </RetiredSlugRedirect>
-          }
-        />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-      {/* The kit's toaster: its placement (bottom above the nav on a phone, top on
+                    {!embedded && (
+                      <Tooltip label={t.chrome.devicePreview} side="bottom" portal className="hidden md:block">
+                        <Button
+                          variant={preview ? "default" : "ghost"}
+                          size="sm"
+                          aria-pressed={preview}
+                          onClick={() => setPreview((v) => !v)}
+                        >
+                          <MonitorSmartphone aria-hidden className="size-4" />
+                          <span className="max-lg:sr-only">{t.chrome.previewShort}</span>
+                        </Button>
+                      </Tooltip>
+                    )}
+                    {/* Desktop-wide only, like the rail it moves. */}
+                    <span className="hidden xl:contents">
+                      <OptionSwitcherMenu
+                        icon={
+                          contentsPosition === "start" ? (
+                            <PanelLeft className="size-4" />
+                          ) : (
+                            <PanelRight className="size-4" />
+                          )
+                        }
+                        aria-label={t.chrome.contentsPosition}
+                        title={t.chrome.contentsPosition}
+                        heading={t.chrome.contentsPosition}
+                        options={[
+                          { value: "start", label: t.chrome.positionStart },
+                          { value: "end", label: t.chrome.positionEnd },
+                        ]}
+                        value={contentsPosition}
+                        onSelect={setContentsPosition}
+                      />
+                    </span>
+                  </>
+                }
+              />
+            }
+          >
+            <Routes>
+              <Route path="/" element={<Navigate to={`/${HOME_SLUG}`} replace />} />
+              <Route
+                path="/:slug"
+                element={
+                  <RetiredSlugRedirect>
+                    {preview ? (
+                      <PreviewRoute onExit={() => setPreview(false)} />
+                    ) : (
+                      <PageRoute contentsPosition={contentsPosition} />
+                    )}
+                  </RetiredSlugRedirect>
+                }
+              />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            {/* The kit's toaster: its placement (bottom above the nav on a phone, top on
           desktop), z-index, tones and labels, and the theme read off <html> — inside
           UiKitProvider so the close button and the undo action speak the page's language. */}
-      <Toaster />
-    </AppShell>
-    </ConfirmProvider>
-    </TourProvider>
+            <Toaster />
+          </AppShell>
+        </ConfirmProvider>
+      </TourProvider>
     </UiKitProvider>
   );
 }
@@ -755,13 +764,7 @@ function PageContentsMenu() {
   const hrefFor = useSectionHref();
   if (items.length < 2) return null;
   return (
-    <PageContents
-      variant="disclosure"
-      items={items}
-      activeId={current}
-      hrefFor={hrefFor}
-      className="mt-5 xl:hidden"
-    />
+    <PageContents variant="disclosure" items={items} activeId={current} hrefFor={hrefFor} className="mt-5 xl:hidden" />
   );
 }
 

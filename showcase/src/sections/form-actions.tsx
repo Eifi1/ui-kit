@@ -98,8 +98,8 @@ function FormActionsPlacements() {
             }
           >
             <p className="text-sm text-secondary">
-              Save is disabled with a reason — hover or Tab to it. Delete sits at the start, so the row
-              aligns <code className="font-mono">between</code>.
+              Save is disabled with a reason — hover or Tab to it. Delete sits at the start, so the row aligns{" "}
+              <code className="font-mono">between</code>.
             </p>
           </DialogFrame>
         </div>
@@ -163,10 +163,10 @@ function FormActions016Demo() {
           />
         </div>
         <Note>
-          {code("start")} is a neutral slot at the row's start — a caption or a link — after a{" "}
-          {code("destructive")} action when both are given. {code("submitIcon")} draws a Lucide icon before the label, and
-          while {code("pending")} the spinner replaces it, so no {code("pendingLabel")} copy is needed just to drop the
-          glyph. {code("submitProps")} reaches the save button: {code("id")}, {code("data-*")}, {code("aria-*")}.
+          {code("start")} is a neutral slot at the row's start — a caption or a link — after a {code("destructive")}{" "}
+          action when both are given. {code("submitIcon")} draws a Lucide icon before the label, and while{" "}
+          {code("pending")} the spinner replaces it, so no {code("pendingLabel")} copy is needed just to drop the glyph.{" "}
+          {code("submitProps")} reaches the save button: {code("id")}, {code("data-*")}, {code("aria-*")}.
         </Note>
       </Example>
       <Example label="FormActions — sticky inside a scroll container" hint='stickyWithin="container"'>
@@ -309,8 +309,8 @@ function FormActions023Demo() {
         {code('size="sm"')} sizes every button the row draws — Save, Cancel and a {code("{ label, onClick }")}{" "}
         {code("destructive")} — with the spinner and {code("submitIcon")} shrinking along. {code("children")} and an
         element you pass are yours to size. {code("cancelVariant")} defaults to {code("secondary")}, the outline it
-        always had; {code("ghost")} steps Cancel back in a row that should read as one quiet line. Both default to
-        what they were, so no row changes on the bump.
+        always had; {code("ghost")} steps Cancel back in a row that should read as one quiet line. Both default to what
+        they were, so no row changes on the bump.
       </Note>
     </Example>
   );

@@ -1,13 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
-import {
-  PUSH_SUBSCRIPTION_CHANGED,
-  handlePushSubscriptionChange,
-  resubscribeAfterChange,
-} from "../push-worker";
+import { PUSH_SUBSCRIPTION_CHANGED, handlePushSubscriptionChange, resubscribeAfterChange } from "../push-worker";
 import type { PushReplaceInput, PushSubscriptionChangeEventLike, PushWorkerScope } from "../push-worker";
 
 /** A subscription as the worker sees it; `key` is its applicationServerKey. */
-function subscription(endpoint: string, { auth = `auth-${endpoint}`, key = null as ArrayBuffer | null, keys = true } = {}) {
+function subscription(
+  endpoint: string,
+  { auth = `auth-${endpoint}`, key = null as ArrayBuffer | null, keys = true } = {},
+) {
   return {
     endpoint,
     options: { applicationServerKey: key, userVisibleOnly: true },
@@ -96,7 +95,10 @@ describe("resubscribeAfterChange (0.46, pushsubscriptionchange)", () => {
     ).toBe("push_off");
     expect(
       await resubscribeAfterChange(
-        { oldSubscription: subscription(OLD), newSubscription: subscription("https://push.example/n", { keys: false }) },
+        {
+          oldSubscription: subscription(OLD),
+          newSubscription: subscription("https://push.example/n", { keys: false }),
+        },
         pushManager(),
         { replace, pushKey: vi.fn() },
       ),

@@ -14,7 +14,14 @@ const noop = vi.fn();
 describe("AmountInput inputClassName", () => {
   it("lands on the <input>, and className stays on the wrapper", () => {
     const { container } = render(
-      <AmountInput aria-label="Gross" value="12.50" onChange={noop} className="max-w-40" inputClassName="text-end" calculator={false} />,
+      <AmountInput
+        aria-label="Gross"
+        value="12.50"
+        onChange={noop}
+        className="max-w-40"
+        inputClassName="text-end"
+        calculator={false}
+      />,
     );
     const input = screen.getByRole("textbox", { name: "Gross" });
     expect(input).toHaveClass("text-end");
@@ -56,7 +63,15 @@ describe("AmountInput inputClassName", () => {
  */
 describe("AmountInput inputClassName wins over the field's own looks (0.24)", () => {
   it("a symmetric px-2 when nothing trails — the budget's assigned cell", () => {
-    render(<AmountInput aria-label="Assigned" value="1" onChange={noop} calculator={false} inputClassName="px-2 py-1 text-end" />);
+    render(
+      <AmountInput
+        aria-label="Assigned"
+        value="1"
+        onChange={noop}
+        calculator={false}
+        inputClassName="px-2 py-1 text-end"
+      />,
+    );
     const input = screen.getByRole("textbox", { name: "Assigned" });
     expect(input).toHaveClass("px-2", "py-1", "text-end");
     // Not `px-2 pe-3`, which left the end edge wider than the start.

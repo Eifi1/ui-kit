@@ -52,7 +52,11 @@ describe("AppShell sidebarFooterItems", () => {
     const version = within(aside()).getByRole("link", { name: "Kastlan v1.4.0" });
     expect(version).toHaveAttribute("href", "/changelog");
     const legal = within(aside()).getByRole("navigation", { name: "Legal" });
-    expect(within(legal).getAllByRole("link").map((a) => [a.textContent, a.getAttribute("href")])).toEqual([
+    expect(
+      within(legal)
+        .getAllByRole("link")
+        .map((a) => [a.textContent, a.getAttribute("href")]),
+    ).toEqual([
       ["Imprint", "/impressum"],
       ["Privacy", "/privacy"],
       ["Terms", "/terms"],

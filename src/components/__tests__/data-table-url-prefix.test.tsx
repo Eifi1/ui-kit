@@ -85,7 +85,10 @@ describe("URL state prefix", () => {
         <Where />
       </MemoryRouter>,
     );
-    const names = screen.getAllByRole("row").slice(1).map((r) => r.textContent);
+    const names = screen
+      .getAllByRole("row")
+      .slice(1)
+      .map((r) => r.textContent);
     expect(names[0]).toContain("Charlie");
     const sp = new URLSearchParams(search);
     expect(sp.get("t.sort")).toBe("name.desc");

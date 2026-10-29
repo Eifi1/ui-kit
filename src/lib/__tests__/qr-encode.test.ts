@@ -51,9 +51,7 @@ describe("encodeQr", () => {
   });
 
   it("matches the reference for an otpauth URI (version 5, alignment pattern, mask 4)", () => {
-    const qr = encodeQr(
-      "otpauth://totp/Kastlan:marcel%40example.com?secret=JBSWY3DPEHPK3PXP&issuer=Kastlan",
-    );
+    const qr = encodeQr("otpauth://totp/Kastlan:marcel%40example.com?secret=JBSWY3DPEHPK3PXP&issuer=Kastlan");
     expect(qr.version).toBe(5);
     expect(qr.size).toBe(37);
     expect(qr.errorCorrection).toBe("M");

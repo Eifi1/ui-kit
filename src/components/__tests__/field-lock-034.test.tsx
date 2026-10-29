@@ -147,7 +147,9 @@ describe("Input under a write lock (KS U10)", () => {
   });
 
   it("an unlabelled one moves `className` the same way", () => {
-    const { container } = render(locked(<Input aria-label="Name" value="A" onChange={() => {}} commit className="w-40" />));
+    const { container } = render(
+      locked(<Input aria-label="Name" value="A" onChange={() => {}} commit className="w-40" />),
+    );
     const input = screen.getByRole("textbox", { name: "Name" });
     expect(input).not.toHaveClass("w-40");
     const sized = container.querySelector(".w-40");

@@ -64,7 +64,13 @@ describe("AlertBanner 0.10.0", () => {
 
   it("gives a strip's message a real basis, so a crowded row wraps the action instead of crushing the text", () => {
     render(
-      <AlertBanner tone="warning" variant="strip" data-testid="strip" action={<button>Update</button>} onDismiss={() => {}}>
+      <AlertBanner
+        tone="warning"
+        variant="strip"
+        data-testid="strip"
+        action={<button>Update</button>}
+        onDismiss={() => {}}
+      >
         Your trial ends in 3 days.
       </AlertBanner>,
     );
@@ -205,8 +211,12 @@ describe("AlertBanner data-tone (0.34, refactor audit 2026-10, TST-9)", () => {
   it("carries its tone on the frame in every shape: plain, a whole-row link, and split", () => {
     render(
       <>
-        <AlertBanner tone="warning" data-testid="plain">Check the dates</AlertBanner>
-        <AlertBanner tone="info" href="#more">Read more</AlertBanner>
+        <AlertBanner tone="warning" data-testid="plain">
+          Check the dates
+        </AlertBanner>
+        <AlertBanner tone="info" href="#more">
+          Read more
+        </AlertBanner>
         <AlertBanner tone="success" onClick={() => {}} onDismiss={() => {}} data-testid="split">
           Saved
         </AlertBanner>

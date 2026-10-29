@@ -52,11 +52,7 @@ describe("the kit's one link rule", () => {
         <Button href="#top">B anchor</Button>
         <Button href="#/units">B route</Button>
         <Breadcrumbs
-          items={[
-            { label: "BC anchor", href: "#top" },
-            { label: "BC route", href: "#/units" },
-            { label: "Here" },
-          ]}
+          items={[{ label: "BC anchor", href: "#top" }, { label: "BC route", href: "#/units" }, { label: "Here" }]}
         />
         <NavPills
           current={null}
@@ -67,8 +63,10 @@ describe("the kit's one link rule", () => {
         />
       </UiKitProvider>,
     );
-    for (const name of ["TL anchor", "B anchor", "BC anchor", "NP anchor"]) expect([name, viaRouter(name)]).toEqual([name, false]);
-    for (const name of ["TL route", "B route", "BC route", "NP route"]) expect([name, viaRouter(name)]).toEqual([name, true]);
+    for (const name of ["TL anchor", "B anchor", "BC anchor", "NP anchor"])
+      expect([name, viaRouter(name)]).toEqual([name, false]);
+    for (const name of ["TL route", "B route", "BC route", "NP route"])
+      expect([name, viaRouter(name)]).toEqual([name, true]);
   });
 
   it("TopBarBrand: an external or #anchor `to` is a plain <a>, even with no router around", () => {

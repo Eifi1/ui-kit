@@ -201,7 +201,9 @@ export function AdminOverview({
       key: "users_total",
       label: labels.tiles.users,
       description:
-        attention && typeof attention.users_new_7d === "number" ? labels.tiles.usersNew(attention.users_new_7d) : undefined,
+        attention && typeof attention.users_new_7d === "number"
+          ? labels.tiles.usersNew(attention.users_new_7d)
+          : undefined,
     },
   ];
   const feedbackWords: Record<AdminFeedbackTileKey, { label: string; description: string }> = {
@@ -227,7 +229,11 @@ export function AdminOverview({
   ].filter((t) => loading || (t.count !== null && t.count !== undefined));
   if (!loading && tiles.length === 0) return error ? errorBox(true) : null;
   const grid = (
-    <StatTileGrid data-slot={error ? undefined : "admin-overview"} loading={loading} className={error ? undefined : className}>
+    <StatTileGrid
+      data-slot={error ? undefined : "admin-overview"}
+      loading={loading}
+      className={error ? undefined : className}
+    >
       {tiles.map((t) => (
         <AttentionTile
           key={t.key}

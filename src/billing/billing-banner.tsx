@@ -26,12 +26,7 @@ import { ExternalMark } from "./subscription-actions";
  * - `processing` — back from checkout before the webhook landed (§12.21).
  */
 export type BillingBannerKind =
-  | "trial-ending"
-  | "grant-ending"
-  | "payment-failed"
-  | "plan-ended"
-  | "guest"
-  | "processing";
+  "trial-ending" | "grant-ending" | "payment-failed" | "plan-ended" | "guest" | "processing";
 
 /** A `div`'s props, `ref` included since 0.35 (round 0.35 R4, the follow-up to API-2): they
  *  go on to the {@link AlertBanner}, so the ref is the banner's `<div>` — with an × too,
@@ -223,7 +218,8 @@ export function BillingBanner(props: BillingBannerProps) {
   const words = actionLabel ?? ownAction;
   const newTab = actionNewTab ?? (kind === "payment-failed" && actionHref === undefined && onAction !== undefined);
   const action =
-    askBuyer || words === undefined || (actionHref === undefined && onAction === undefined) ? undefined : actionHref !== undefined ? (
+    askBuyer || words === undefined || (actionHref === undefined && onAction === undefined) ? undefined : actionHref !==
+      undefined ? (
       <Button href={actionHref} variant="secondary" size="sm" external={newTab || undefined}>
         {words}
         {newTab && <ExternalMark />}

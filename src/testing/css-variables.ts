@@ -158,8 +158,7 @@ export function undeclaredCssVariables(
     if (isCssPath(path)) for (const name of declaredCustomProperties(text)) declared.add(name);
     for (const name of runtimeWrites(text)) declared.add(name);
   }
-  const listed = (name: string) =>
-    runtime.some((r) => (typeof r === "string" ? r === name : r.test(name)));
+  const listed = (name: string) => runtime.some((r) => (typeof r === "string" ? r === name : r.test(name)));
 
   const out: string[] = [];
   for (const [path, text] of code) {

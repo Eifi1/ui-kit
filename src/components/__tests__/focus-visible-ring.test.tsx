@@ -28,7 +28,8 @@ import type { DataTableColumn } from "../data-table";
 // `ring-focus` width utility since 0.34 (DOC-7).
 const RING = "focus-visible:ring-focus";
 // A token: a role utility (`ring-brand`, 0.34) or a `[var(--…)]` where none exists.
-const TOKEN_RING = /^focus-visible:ring-(?:\[var\(--[a-z-]+\)\]|brand|brand-contrast|subtle|strong|danger-strong|warning-strong|media-ink)$/;
+const TOKEN_RING =
+  /^focus-visible:ring-(?:\[var\(--[a-z-]+\)\]|brand|brand-contrast|subtle|strong|danger-strong|warning-strong|media-ink)$/;
 const hasTokenRing = (el: Element) => el.className.split(/\s+/).some((c) => TOKEN_RING.test(c));
 const noop = () => {};
 
@@ -77,7 +78,10 @@ describe("the calculator's keys and the nav pills draw the kit's one focus frame
     render(
       <NavPills
         aria-label="Surface"
-        items={[{ value: "a", label: "A" }, { value: "b", label: "B" }]}
+        items={[
+          { value: "a", label: "A" },
+          { value: "b", label: "B" },
+        ]}
         current="a"
         onSelect={noop}
       />,
@@ -91,14 +95,7 @@ describe("the calculator's keys and the nav pills draw the kit's one focus frame
 
 describe("the dropdown search box shows where the keyboard is", () => {
   it("rings the input every searchable dropdown shares", () => {
-    render(
-      <DropdownSearchHeader
-        query=""
-        onQueryChange={noop}
-        inputRef={{ current: null }}
-        placeholder="Search"
-      />,
-    );
+    render(<DropdownSearchHeader query="" onQueryChange={noop} inputRef={{ current: null }} placeholder="Search" />);
     const input = screen.getByRole("textbox");
     expect(input).toHaveClass(RING);
     expect(hasTokenRing(input)).toBe(true);

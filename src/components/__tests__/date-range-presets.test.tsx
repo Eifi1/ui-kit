@@ -70,7 +70,7 @@ describe("DateRangePicker preset identity", () => {
     expect(presetButton("Last month")).toHaveAttribute("aria-pressed", "false");
   });
 
-  it("controlled `preset`: an id no preset has (\"custom\") marks nothing, even on matching days", () => {
+  it('controlled `preset`: an id no preset has ("custom") marks nothing, even on matching days', () => {
     render(
       <DateRangePicker
         label="Period"
@@ -105,7 +105,9 @@ describe("DateRangePicker preset identity", () => {
 
   it("keeps the 0.7 two-argument call for a range picked by hand", () => {
     const onChange = vi.fn();
-    render(<DateRangePicker label="Period" locale="en" from="2026-09-01" to="2026-09-05" clearable onChange={onChange} />);
+    render(
+      <DateRangePicker label="Period" locale="en" from="2026-09-01" to="2026-09-05" clearable onChange={onChange} />,
+    );
     fireEvent.click(screen.getByRole("button", { name: "Clear" }));
     expect(onChange).toHaveBeenCalledWith("", "");
     expect(onChange.mock.calls[0]).toHaveLength(2);

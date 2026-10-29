@@ -95,12 +95,11 @@ import { de } from "./i18n/kit-de"; // a UiKitLabels (or any part of one)
       <Note>
         Before the provider, every component took its strings through a prop of its own —{" "}
         <code className="font-mono">labels</code>, <code className="font-mono">calendarLabels</code>,{" "}
-        <code className="font-mono">clearLabel</code>, <code className="font-mono">ariaLabel</code> — at
-        every call site. One forgotten prop was one English word in a German UI, and a component
-        nested inside another (the calendar inside the data table&rsquo;s date filter) could not be
-        reached at all. The showcase itself is the proof it now works: it mounts one provider with
-        the active dictionary, and switching the language in the top bar re-labels every kit
-        component on every page.
+        <code className="font-mono">clearLabel</code>, <code className="font-mono">ariaLabel</code> — at every call
+        site. One forgotten prop was one English word in a German UI, and a component nested inside another (the
+        calendar inside the data table&rsquo;s date filter) could not be reached at all. The showcase itself is the
+        proof it now works: it mounts one provider with the active dictionary, and switching the language in the top bar
+        re-labels every kit component on every page.
       </Note>
     </Example>
   );
@@ -126,7 +125,12 @@ function ShippedTranslationsExample() {
   const [page, setPage] = useState(0);
   const variants: { title: string; code: string; labels: UiKitLabels; locale: string }[] = [
     { title: "de-CH", code: "UI_KIT_LABELS_DE_CH", labels: UI_KIT_LABELS_DE_CH, locale: "de-CH" },
-    { title: "de-CH, German digits", code: 'uiKitLabelsDeCh("de-DE")', labels: DE_CH_WITH_GERMAN_DIGITS, locale: "de-DE" },
+    {
+      title: "de-CH, German digits",
+      code: 'uiKitLabelsDeCh("de-DE")',
+      labels: DE_CH_WITH_GERMAN_DIGITS,
+      locale: "de-DE",
+    },
     { title: "fr", code: "UI_KIT_LABELS_FR", labels: UI_KIT_LABELS_FR, locale: "fr-FR" },
   ];
   return (
@@ -176,21 +180,19 @@ function ShippedTranslationsExample() {
         ])}
       />
       <Note>
-        The kit ships its own words in German, French, Italian, Spanish, Hungarian and Chinese, one
-        subpath each, so an app bundles only the language it imports. Each is a full{" "}
-        <code className="font-mono">UiKitLabels</code> (the table above is the live check), and each
-        comes with a factory — <code className="font-mono">uiKitLabelsDeCh(numberLocale)</code>,{" "}
-        <code className="font-mono">uiKitLabelsFr(…)</code> — that keeps the words and changes only
-        how counts and sizes are written: the middle column is the Swiss text with German digits,{" "}
-        <code className="font-mono">12.345</code> instead of <code className="font-mono">12’345</code>.
-        The kit has ONE German: Swiss Standard German, formal (&ldquo;Sie&rdquo;). Every{" "}
-        <code className="font-mono">ß</code> is written <code className="font-mono">ss</code> —{" "}
-        &ldquo;Gross- und Kleinbuchstaben&rdquo;, &ldquo;Schliessen&rdquo; — including the result of
-        every message function, so a name the app passes in is respelled too. An app that addresses
-        its users with &ldquo;du&rdquo; overrides the handful of sentences that address the reader
-        (the wizard&apos;s, the tour&apos;s, the signature pad&apos;s, the typed confirmations, the
-        calendar&apos;s range announcements) in its own provider. The page-number strip is
-        formatted with the provider&apos;s <code className="font-mono">locale</code>; the range
+        The kit ships its own words in German, French, Italian, Spanish, Hungarian and Chinese, one subpath each, so an
+        app bundles only the language it imports. Each is a full <code className="font-mono">UiKitLabels</code> (the
+        table above is the live check), and each comes with a factory —{" "}
+        <code className="font-mono">uiKitLabelsDeCh(numberLocale)</code>,{" "}
+        <code className="font-mono">uiKitLabelsFr(…)</code> — that keeps the words and changes only how counts and sizes
+        are written: the middle column is the Swiss text with German digits, <code className="font-mono">12.345</code>{" "}
+        instead of <code className="font-mono">12’345</code>. The kit has ONE German: Swiss Standard German, formal
+        (&ldquo;Sie&rdquo;). Every <code className="font-mono">ß</code> is written <code className="font-mono">ss</code>{" "}
+        — &ldquo;Gross- und Kleinbuchstaben&rdquo;, &ldquo;Schliessen&rdquo; — including the result of every message
+        function, so a name the app passes in is respelled too. An app that addresses its users with &ldquo;du&rdquo;
+        overrides the handful of sentences that address the reader (the wizard&apos;s, the tour&apos;s, the signature
+        pad&apos;s, the typed confirmations, the calendar&apos;s range announcements) in its own provider. The
+        page-number strip is formatted with the provider&apos;s <code className="font-mono">locale</code>; the range
         summary by the labels themselves.
       </Note>
     </Example>
@@ -220,9 +222,7 @@ function CompletenessExample() {
                 className="border-b border-subtle last:border-b-0"
                 aria-current={active ? "true" : undefined}
               >
-                <td className={`py-1.5 pe-4 ${active ? "font-medium text-primary" : "text-secondary"}`}>
-                  {dict.name}
-                </td>
+                <td className={`py-1.5 pe-4 ${active ? "font-medium text-primary" : "text-secondary"}`}>{dict.name}</td>
                 <td className="py-1.5 pe-4 font-mono text-xs text-muted">{dict.tag}</td>
                 <td className="py-1.5 text-end font-mono text-xs tabular-nums text-primary">
                   {total - missing} / {total}
@@ -234,10 +234,10 @@ function CompletenessExample() {
       </table>
       <Note>
         The dictionaries are typed as the full <code className="font-mono">UiKitLabels</code>, so{" "}
-        <code className="font-mono">tsc</code> already refuses one with a key missing; this table is
-        the same check an app should run in its own test —{" "}
-        <code className="font-mono">expect(missingKitLabels(de, DEFAULT_UI_KIT_LABELS)).toEqual([])</code>{" "}
-        — for a translation that is built at runtime or loaded from JSON.
+        <code className="font-mono">tsc</code> already refuses one with a key missing; this table is the same check an
+        app should run in its own test —{" "}
+        <code className="font-mono">expect(missingKitLabels(de, DEFAULT_UI_KIT_LABELS)).toEqual([])</code> — for a
+        translation that is built at runtime or loaded from JSON.
       </Note>
     </Example>
   );
@@ -297,8 +297,12 @@ function TreeExample() {
                       >
                         {key}
                       </td>
-                      <td className="w-3/8 py-1 pe-3 align-top text-secondary max-sm:w-auto max-sm:pb-0">{sample(en[key], `${ns}.${key}`)}</td>
-                      <td className="w-3/8 py-1 align-top text-primary max-sm:w-auto max-sm:pb-0">{sample(here?.[key], `${ns}.${key}`)}</td>
+                      <td className="w-3/8 py-1 pe-3 align-top text-secondary max-sm:w-auto max-sm:pb-0">
+                        {sample(en[key], `${ns}.${key}`)}
+                      </td>
+                      <td className="w-3/8 py-1 align-top text-primary max-sm:w-auto max-sm:pb-0">
+                        {sample(here?.[key], `${ns}.${key}`)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -331,10 +335,7 @@ function HookProbe({ prop }: { prop?: string }) {
       rows={[
         ["useKitLocale()", show(locale)],
         ["useKitWeekStart()", show(weekStart)],
-        [
-          `useKitLabels("common", DEFAULT_COMMON_LABELS${prop ? `, { clear: "${prop}" }` : ""}).clear`,
-          common.clear,
-        ],
+        [`useKitLabels("common", DEFAULT_COMMON_LABELS${prop ? `, { clear: "${prop}" }` : ""}).clear`, common.clear],
         ['useKitLabelOverrides("common")?.clear', show(overrides?.clear)],
         ["useKitFileLabels().size(1_234_567)", file.size(1_234_567)],
         ['common.fieldValue("Status", "open")', common.fieldValue("Status", "open")],
@@ -391,24 +392,17 @@ function NestingExample() {
             <HookProbe />
           </div>
           <div className="min-w-0 space-y-2">
-            <h4 className="text-xs font-semibold text-primary">
-              …plus a component prop
-            </h4>
+            <h4 className="text-xs font-semibold text-primary">…plus a component prop</h4>
             <HookProbe prop="Reset (prop)" />
           </div>
           <div className="lg:col-span-3">
             <div className="max-w-xs">
-              <MiniCalendar
-                from={day}
-                to={day}
-                onSelect={(from) => setDay(from)}
-              />
+              <MiniCalendar from={day} to={day} onSelect={(from) => setDay(from)} />
             </div>
             <p className="mt-2 text-xs text-secondary">
-              A real component under the inner provider: month and weekday names follow its
-              locale, the first column follows <code className="font-mono">weekStartsOn</code>,
-              and every label the inner provider did not name still comes from the page&apos;s
-              language.
+              A real component under the inner provider: month and weekday names follow its locale, the first column
+              follows <code className="font-mono">weekStartsOn</code>, and every label the inner provider did not name
+              still comes from the page&apos;s language.
             </p>
           </div>
         </UiKitProvider>
@@ -421,7 +415,10 @@ function FileSizeExample() {
   const sizes = [512, 12_345, 3_400_000, 7_800_000_000];
   const locales = [undefined, "de-DE", "fr-FR", "ja-JP"];
   return (
-    <Example label="formatFileSize(bytes, locale)" hint="Intl unit formatting — digits, decimal mark and unit spelling follow the locale">
+    <Example
+      label="formatFileSize(bytes, locale)"
+      hint="Intl unit formatting — digits, decimal mark and unit spelling follow the locale"
+    >
       <OutTable
         rows={sizes.flatMap((bytes) =>
           locales.map((locale): [string, string] => [
@@ -431,9 +428,9 @@ function FileSizeExample() {
         )}
       />
       <Note>
-        <code className="font-mono">DEFAULT_FILE_LABELS.size</code> calls it with no locale (the
-        runtime&apos;s); <code className="font-mono">useKitFileLabels()</code> — what the file
-        pickers and the attachment field use — passes the provider&apos;s.
+        <code className="font-mono">DEFAULT_FILE_LABELS.size</code> calls it with no locale (the runtime&apos;s);{" "}
+        <code className="font-mono">useKitFileLabels()</code> — what the file pickers and the attachment field use —
+        passes the provider&apos;s.
       </Note>
     </Example>
   );
@@ -496,10 +493,9 @@ function NamespaceConstantsExample() {
       />
       <Note>
         The English default under its own name is the per-component half of the precedence:{" "}
-        <code className="font-mono">useKitLabels(ns, DEFAULT_X_LABELS, labels)</code> merges a
-        component&apos;s partial <code className="font-mono">labels</code> over the provider over
-        it — the one merge, with no per-component resolver beside it;{" "}
-        <code className="font-mono">missingKitLabels</code> checks every namespace at once.
+        <code className="font-mono">useKitLabels(ns, DEFAULT_X_LABELS, labels)</code> merges a component&apos;s partial{" "}
+        <code className="font-mono">labels</code> over the provider over it — the one merge, with no per-component
+        resolver beside it; <code className="font-mono">missingKitLabels</code> checks every namespace at once.
       </Note>
     </Example>
   );

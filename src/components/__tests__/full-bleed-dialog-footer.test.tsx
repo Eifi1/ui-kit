@@ -35,7 +35,13 @@ function tap(el: Element) {
 describe("FullBleedDialog footer", () => {
   it("renders the footer outside the scrolling body", () => {
     render(
-      <FullBleedDialog open onClose={vi.fn()} closeLabel="Close" header="Range" footer={<button type="button">Apply</button>}>
+      <FullBleedDialog
+        open
+        onClose={vi.fn()}
+        closeLabel="Close"
+        header="Range"
+        footer={<button type="button">Apply</button>}
+      >
         <p>calendar</p>
       </FullBleedDialog>,
     );

@@ -5,8 +5,22 @@
 // `/offline`'s TanStack and idb-keyval peers: the leaf utilities both entries export live in
 // one module of their own (src/offline/local-first.ts). NOT re-exported from the main barrel.
 export { createSyncDb, rowByPk, SYNC_DB_PK_INDEX, SYNC_DB_STORES } from "./sync/db";
-export type { CreateSyncDbOptions, OutboxChange, OutboxStatus, SyncDb, SyncDbUpgrade, SyncedRow, SyncMetaEntry } from "./sync/db";
-export { createSyncEngine, DEFAULT_HOLD_CODES, DEFAULT_SYNC_BACKOFF_MS, releaseSyncEngine, syncEngineFor } from "./sync/engine";
+export type {
+  CreateSyncDbOptions,
+  OutboxChange,
+  OutboxStatus,
+  SyncDb,
+  SyncDbUpgrade,
+  SyncedRow,
+  SyncMetaEntry,
+} from "./sync/db";
+export {
+  createSyncEngine,
+  DEFAULT_HOLD_CODES,
+  DEFAULT_SYNC_BACKOFF_MS,
+  releaseSyncEngine,
+  syncEngineFor,
+} from "./sync/engine";
 export type {
   SyncCounts,
   SyncEngine,

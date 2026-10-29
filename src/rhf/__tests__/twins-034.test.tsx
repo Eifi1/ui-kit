@@ -148,7 +148,14 @@ describe("the twins take what their field takes", () => {
     const formRef = { current: null as UseFormReturn<Values> | null };
     render(
       <Harness formRef={formRef}>
-        <RhfToggleGroup<Values> name="kind" label="Kind" options={[{ value: "a", label: "A" }, { value: "b", label: "B" }]} />
+        <RhfToggleGroup<Values>
+          name="kind"
+          label="Kind"
+          options={[
+            { value: "a", label: "A" },
+            { value: "b", label: "B" },
+          ]}
+        />
         <RhfCombobox<Values> name="kind" label="Pick" options={[{ value: "a", label: "Alpha" }]} />
         <RhfTextCombobox<Values> name="kind" label="Text" options={["a", "b"]} />
       </Harness>,

@@ -64,7 +64,9 @@ describe("AdminActionConfirm", () => {
   it("acknowledge: the tick holds the confirm, and says so", async () => {
     const user = userEvent.setup();
     const onConfirm = vi.fn(async () => undefined);
-    render(<Harness level="acknowledge" confirmLabel="Require" title="Require a new password?" onConfirm={onConfirm} />);
+    render(
+      <Harness level="acknowledge" confirmLabel="Require" title="Require a new password?" onConfirm={onConfirm} />,
+    );
     const dialog = await screen.findByRole("alertdialog", { name: "Require a new password?" });
     expect(dialog).toHaveAccessibleDescription(/Ada Example · ada@example\.com/);
     expect(dialog).toHaveTextContent("They are signed out everywhere at once.");
@@ -74,7 +76,9 @@ describe("AdminActionConfirm", () => {
     expect(confirm).toHaveAccessibleDescription("Tick the box to confirm");
     await user.click(confirm);
     expect(onConfirm).not.toHaveBeenCalled();
-    await user.click(within(dialog).getByRole("checkbox", { name: "I have read what this does and want to continue." }));
+    await user.click(
+      within(dialog).getByRole("checkbox", { name: "I have read what this does and want to continue." }),
+    );
     // Queried again: a held button sits in its reason's tooltip, a free one does not.
     await user.click(within(dialog).getByRole("button", { name: "Require" }));
     expect(onConfirm).toHaveBeenCalledWith({ acknowledged: true });
@@ -208,7 +212,9 @@ describe("AdminActionConfirm", () => {
     expect(within(dialog).getByRole("button", { name: "Delete team" })).toHaveAccessibleDescription(
       "Tick the box to confirm",
     );
-    await user.click(within(dialog).getByRole("checkbox", { name: "I have read what this does and want to continue." }));
+    await user.click(
+      within(dialog).getByRole("checkbox", { name: "I have read what this does and want to continue." }),
+    );
     await user.click(within(dialog).getByRole("button", { name: "Delete team" }));
     // `acknowledged` alone: no address can match a group (server-kit's require_confirmation).
     expect(onConfirm).toHaveBeenCalledWith({ acknowledged: true });
@@ -218,7 +224,13 @@ describe("AdminActionConfirm", () => {
   it("none: a group's action runs at once, and a refusal names the group", async () => {
     const onConfirm = vi.fn(async () => Promise.reject(new Error("network")));
     render(
-      <AdminActionConfirm level="none" target={WORKSHOP} title="Rename the team" onConfirm={onConfirm} onClose={() => {}} />,
+      <AdminActionConfirm
+        level="none"
+        target={WORKSHOP}
+        title="Rename the team"
+        onConfirm={onConfirm}
+        onClose={() => {}}
+      />,
     );
     const dialog = await screen.findByRole("alertdialog", { name: "Rename the team" });
     expect(onConfirm).toHaveBeenCalledWith({});
@@ -228,9 +240,24 @@ describe("AdminActionConfirm", () => {
   it("asks nothing typed of a group, even at a level the types refuse it", async () => {
     // Type tests — checked by `tsc --noEmit`: a group has no address to type.
     // @ts-expect-error — a group only at `none` and `acknowledge`
-    const typed: AdminActionConfirmProps = { level: "type_email", target: WORKSHOP, onConfirm: () => {}, onClose: () => {} };
-    const ticked: AdminActionConfirmProps = { level: "acknowledge", target: WORKSHOP, onConfirm: () => {}, onClose: () => {} };
-    const person: AdminActionConfirmProps = { level: "type_email", target: ADA, onConfirm: () => {}, onClose: () => {} };
+    const typed: AdminActionConfirmProps = {
+      level: "type_email",
+      target: WORKSHOP,
+      onConfirm: () => {},
+      onClose: () => {},
+    };
+    const ticked: AdminActionConfirmProps = {
+      level: "acknowledge",
+      target: WORKSHOP,
+      onConfirm: () => {},
+      onClose: () => {},
+    };
+    const person: AdminActionConfirmProps = {
+      level: "type_email",
+      target: ADA,
+      onConfirm: () => {},
+      onClose: () => {},
+    };
     expect([ticked, person]).toHaveLength(2);
     // At run time (plain JS, a cast) it falls back to the tick; the server refuses it.
     render(<AdminActionConfirm {...typed} title="Delete the team?" />);

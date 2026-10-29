@@ -86,7 +86,7 @@ describe("serverPagination.isLoading", () => {
     expect(screen.getByText("Loading…")).toBeInTheDocument();
   });
 
-  it("isolates the loading label, so an English one in an RTL table keeps its \"…\" at the end", () => {
+  it('isolates the loading label, so an English one in an RTL table keeps its "…" at the end', () => {
     renderTable({ rows: [], serverPagination: server(true) });
     expect(screen.getByText("Loading…").tagName).toBe("BDI");
   });
@@ -120,11 +120,7 @@ describe("Shift-click on a row checkbox", () => {
     fireEvent.click(boxes()[3], { shiftKey: true });
 
     expect(onToggleMany).toHaveBeenCalledTimes(1);
-    expect(onToggleMany.mock.calls[0][0].map((r: Row) => r.name)).toEqual([
-      "Alpha",
-      "Echo",
-      "Bravo",
-    ]);
+    expect(onToggleMany.mock.calls[0][0].map((r: Row) => r.name)).toEqual(["Alpha", "Echo", "Bravo"]);
     // Was called once more, for Bravo: React's `onChange` fires from the click
     // itself, and `preventDefault` does not stop it.
     expect(onToggle).not.toHaveBeenCalled();
@@ -377,13 +373,7 @@ describe("paginated={false} on a phone", () => {
   it("renders every row, with no reveal sentinel", () => {
     render(
       <MemoryRouter>
-        <DataTable
-          rows={many}
-          columns={COLUMNS}
-          rowKey={(r) => r.id}
-          defaultPageSize={10}
-          paginated={false}
-        />
+        <DataTable rows={many} columns={COLUMNS} rowKey={(r) => r.id} defaultPageSize={10} paginated={false} />
       </MemoryRouter>,
     );
     expect(screen.getByText("Row 30")).toBeInTheDocument();

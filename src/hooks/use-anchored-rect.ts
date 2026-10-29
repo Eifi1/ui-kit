@@ -36,10 +36,7 @@ export function sameRect<R extends { top: number; left: number; width: number; h
  * Measured in a layout effect so the position is ready before paint (no flicker
  * on open).
  */
-export function useAnchoredRect<T extends HTMLElement>(
-  ref: RefObject<T | null>,
-  open: boolean,
-): AnchorRect | null {
+export function useAnchoredRect<T extends HTMLElement>(ref: RefObject<T | null>, open: boolean): AnchorRect | null {
   const [rect, setRect] = useState<AnchorRect | null>(null);
 
   useLayoutEffect(() => {

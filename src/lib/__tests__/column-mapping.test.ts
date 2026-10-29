@@ -73,7 +73,9 @@ describe("guessMapping", () => {
 
 describe("readMappedTable", () => {
   it("moves a row a numeric role cannot read to the unread lines, in line order", () => {
-    const table = parseTextTable(["t;soll;ist;note", "0;1,5;1,4;ok", "1;2,5;x;bad", "end of record", "2;3,5;3,4;"].join("\n"));
+    const table = parseTextTable(
+      ["t;soll;ist;note", "0;1,5;1,4;ok", "1;2,5;x;bad", "end of record", "2;3,5;3,4;"].join("\n"),
+    );
     const result = readMappedTable(table, CURVE, guessMapping(CURVE, table.header, table.width));
     expect(result.rows).toEqual([
       ["0", "1,5", "1,4", "ok"],

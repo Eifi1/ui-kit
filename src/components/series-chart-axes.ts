@@ -59,7 +59,10 @@ export function tiltedTickBand(labels: readonly string[], angle: number, scale =
   const rad = (Math.abs(angle) * Math.PI) / 180;
   const longest = Math.max(0, ...labels.map((label) => label.length)) * TICK_CHAR_WIDTH * scale;
   const band = Math.sin(rad) * longest + Math.cos(rad) * TICK_LINE_HEIGHT * scale + TICK_GAP;
-  return Math.min(Math.round(MAX_TILTED_TICK_BAND * scale), Math.max(Math.ceil(LEVEL_TICK_BAND * scale), Math.ceil(band)));
+  return Math.min(
+    Math.round(MAX_TILTED_TICK_BAND * scale),
+    Math.max(Math.ceil(LEVEL_TICK_BAND * scale), Math.ceil(band)),
+  );
 }
 
 /** The width the ticks of a y axis get when a caller does not say, in px at Normal. */
@@ -201,10 +204,7 @@ export function anchoredBand(extent: readonly [number, number] | undefined): [nu
  * it in its neighbour's colour on each click. Resolving the colours on the full list
  * and filtering after keeps each series in the colour its legend entry shows.
  */
-export function visibleSeries(
-  series: readonly SeriesChartSeries[],
-  hidden: ReadonlySet<string>,
-): SeriesChartSeries[] {
+export function visibleSeries(series: readonly SeriesChartSeries[], hidden: ReadonlySet<string>): SeriesChartSeries[] {
   return series
     .map((entry, index) => ({ ...entry, color: entry.color ?? paletteFor(index) }))
     .filter((entry) => !hidden.has(entry.key));

@@ -53,11 +53,7 @@ describe("WizardSummary", () => {
     unmount();
 
     render(
-      <WizardSummary
-        sections={SECTIONS}
-        onEditStep={vi.fn()}
-        labels={{ reviewTitle: "Prüfen", edit: "Ändern" }}
-      />,
+      <WizardSummary sections={SECTIONS} onEditStep={vi.fn()} labels={{ reviewTitle: "Prüfen", edit: "Ändern" }} />,
     );
     expect(screen.getByText("Prüfen")).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: "Ändern" })).toHaveLength(2);
@@ -102,12 +98,7 @@ describe("WizardSummary (0.8.0)", () => {
 
 describe("WizardSummary edit button has no native title (keksdose dev#523)", () => {
   it("is named by aria-label and has no title attribute", () => {
-    render(
-      <WizardSummary
-        sections={[{ label: "Tenant", stepIndex: 0, items: [] }]}
-        onEditStep={() => {}}
-      />,
-    );
+    render(<WizardSummary sections={[{ label: "Tenant", stepIndex: 0, items: [] }]} onEditStep={() => {}} />);
     const edit = screen.getByRole("button", { name: /edit/i });
     expect(edit).not.toHaveAttribute("title");
   });

@@ -3,15 +3,7 @@ import { createRef, type ComponentProps, type ReactElement } from "react";
 import { MemoryRouter } from "react-router";
 import { Home } from "lucide-react";
 import { describe, expect, it, vi } from "vitest";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "../card";
+import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../card";
 import { EmptyState } from "../empty-state";
 import { FloatingField, Label } from "../field-base";
 import { Spinner } from "../spinner";
@@ -95,9 +87,23 @@ function refTarget(element: (ref: (el: Element | null) => void) => ReactElement)
 
 describe("the root element's ref (API-2)", () => {
   it.each<[string, (ref: (el: Element | null) => void) => ReactElement]>([
-    ["Card", (ref) => <Card ref={ref} data-testid="root">x</Card>],
+    [
+      "Card",
+      (ref) => (
+        <Card ref={ref} data-testid="root">
+          x
+        </Card>
+      ),
+    ],
     ["CardHeader", (ref) => <CardHeader ref={ref} data-testid="root" />],
-    ["CardTitle", (ref) => <CardTitle ref={ref} data-testid="root" as="h2">Title</CardTitle>],
+    [
+      "CardTitle",
+      (ref) => (
+        <CardTitle ref={ref} data-testid="root" as="h2">
+          Title
+        </CardTitle>
+      ),
+    ],
     ["CardDescription", (ref) => <CardDescription ref={ref} data-testid="root" />],
     ["CardAction", (ref) => <CardAction ref={ref} data-testid="root" />],
     ["CardContent", (ref) => <CardContent ref={ref} data-testid="root" />],
@@ -106,30 +112,93 @@ describe("the root element's ref (API-2)", () => {
     ["Spinner, labelled", (ref) => <Spinner ref={ref} data-testid="root" showLabel />],
     ["EmptyState", (ref) => <EmptyState ref={ref} data-testid="root" title="Nothing yet" />],
     ["EmptyState, inline", (ref) => <EmptyState ref={ref} data-testid="root" title="Nothing" variant="inline" />],
-    ["Label", (ref) => <Label ref={ref} data-testid="root">Name</Label>],
-    ["FloatingField", (ref) => <FloatingField ref={ref} data-testid="root"><input /></FloatingField>],
+    [
+      "Label",
+      (ref) => (
+        <Label ref={ref} data-testid="root">
+          Name
+        </Label>
+      ),
+    ],
+    [
+      "FloatingField",
+      (ref) => (
+        <FloatingField ref={ref} data-testid="root">
+          <input />
+        </FloatingField>
+      ),
+    ],
     ["LoadingState", (ref) => <LoadingState ref={ref} data-testid="root" />],
     ["DescriptionList", (ref) => <DescriptionList ref={ref} data-testid="root" />],
-    ["DescriptionItem", (ref) => <DescriptionList><DescriptionItem ref={ref} data-testid="root" term="Rent">1200</DescriptionItem></DescriptionList>],
+    [
+      "DescriptionItem",
+      (ref) => (
+        <DescriptionList>
+          <DescriptionItem ref={ref} data-testid="root" term="Rent">
+            1200
+          </DescriptionItem>
+        </DescriptionList>
+      ),
+    ],
     ["PageHeader", (ref) => <PageHeader ref={ref} data-testid="root" title="Budget" />],
-    ["Disclosure", (ref) => <Disclosure ref={ref} data-testid="root" title="More">Body</Disclosure>],
-    ["Collapse", (ref) => <Collapse ref={ref} data-testid="root" open>Body</Collapse>],
+    [
+      "Disclosure",
+      (ref) => (
+        <Disclosure ref={ref} data-testid="root" title="More">
+          Body
+        </Disclosure>
+      ),
+    ],
+    [
+      "Collapse",
+      (ref) => (
+        <Collapse ref={ref} data-testid="root" open>
+          Body
+        </Collapse>
+      ),
+    ],
     ["StatTileGrid", (ref) => <StatTileGrid ref={ref} data-testid="root" />],
     ["Separator", (ref) => <Separator ref={ref} data-testid="root" />],
     ["ButtonGroup", (ref) => <ButtonGroup ref={ref} data-testid="root" />],
     ["StatusDot", (ref) => <StatusDot ref={ref} data-testid="root" />],
-    ["Breadcrumbs", (ref) => <Breadcrumbs ref={ref} data-testid="root" items={[{ label: "Home", href: "/" }, { label: "Budget" }]} />],
-    ["SectionLabel", (ref) => <SectionLabel ref={ref} data-testid="root" as="h2">Rent</SectionLabel>],
-    ["Caption", (ref) => <Caption ref={ref} data-testid="root" as="span">Note</Caption>],
+    [
+      "Breadcrumbs",
+      (ref) => <Breadcrumbs ref={ref} data-testid="root" items={[{ label: "Home", href: "/" }, { label: "Budget" }]} />,
+    ],
+    [
+      "SectionLabel",
+      (ref) => (
+        <SectionLabel ref={ref} data-testid="root" as="h2">
+          Rent
+        </SectionLabel>
+      ),
+    ],
+    [
+      "Caption",
+      (ref) => (
+        <Caption ref={ref} data-testid="root" as="span">
+          Note
+        </Caption>
+      ),
+    ],
     ["ProgressBar", (ref) => <ProgressBar ref={ref} data-testid="root" value={3} max={10} label="Used" />],
     ["NavPills", (ref) => <NavPills ref={ref} data-testid="root" items={[{ value: "a", label: "A" }]} current="a" />],
-    ["AuthLayout", (ref) => <AuthLayout ref={ref} data-testid="root">Form</AuthLayout>],
+    [
+      "AuthLayout",
+      (ref) => (
+        <AuthLayout ref={ref} data-testid="root">
+          Form
+        </AuthLayout>
+      ),
+    ],
     ["TopBar", (ref) => <TopBar ref={ref} data-testid="root" brand="Acme" />],
     ["SignedAmount", (ref) => <SignedAmount ref={ref} data-testid="root" value={-12} />],
     ["UserAvatar", (ref) => <UserAvatar ref={ref} data-testid="root" name="Ada Lovelace" />],
     [
       "DropdownSearchHeader",
-      (ref) => <DropdownSearchHeader ref={ref} data-testid="root" query="" onQueryChange={noop} inputRef={createRef()} />,
+      (ref) => (
+        <DropdownSearchHeader ref={ref} data-testid="root" query="" onQueryChange={noop} inputRef={createRef()} />
+      ),
     ],
   ])("%s hands its ref to the element its props land on", (_, element) => {
     const target = refTarget(element);
@@ -144,10 +213,18 @@ describe("the root element's ref (API-2)", () => {
     const split = createRef<HTMLElement>();
     render(
       <>
-        <AlertBanner ref={box} data-testid="box">Saved</AlertBanner>
-        <AlertBanner ref={link} data-testid="link" href="/budget">Over budget</AlertBanner>
-        <AlertBanner ref={button} data-testid="button" onClick={noop}>Retry</AlertBanner>
-        <AlertBanner ref={split} data-testid="split" onClick={noop} onDismiss={noop}>Trial ends</AlertBanner>
+        <AlertBanner ref={box} data-testid="box">
+          Saved
+        </AlertBanner>
+        <AlertBanner ref={link} data-testid="link" href="/budget">
+          Over budget
+        </AlertBanner>
+        <AlertBanner ref={button} data-testid="button" onClick={noop}>
+          Retry
+        </AlertBanner>
+        <AlertBanner ref={split} data-testid="split" onClick={noop} onDismiss={noop}>
+          Trial ends
+        </AlertBanner>
       </>,
     );
     expect(box.current).toBe(screen.getByTestId("box"));
@@ -196,7 +273,15 @@ describe("a caller's ref beside the component's own (API-2, merged)", () => {
   it("Popover: the panel, and a click inside it is still inside", () => {
     const ref = createRef<HTMLDivElement>();
     render(
-      <Popover ref={ref} data-testid="panel" trigger={({ toggle, ref: t }) => <button type="button" ref={t} onClick={toggle}>Open</button>}>
+      <Popover
+        ref={ref}
+        data-testid="panel"
+        trigger={({ toggle, ref: t }) => (
+          <button type="button" ref={t} onClick={toggle}>
+            Open
+          </button>
+        )}
+      >
         {() => <button type="button">Inside</button>}
       </Popover>,
     );

@@ -212,10 +212,7 @@ export function CheckboxGroup<T extends string = string>({
       )}
       <RequiredStarOnLegend.Provider value={true}>
         <div
-          className={cn(
-            layout === "horizontal" ? "flex flex-wrap gap-x-4 gap-y-2" : COLUMNS[columns],
-            listClassName,
-          )}
+          className={cn(layout === "horizontal" ? "flex flex-wrap gap-x-4 gap-y-2" : COLUMNS[columns], listClassName)}
         >
           {options.map((o) => (
             <Checkbox

@@ -1,4 +1,14 @@
-import { createContext, useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
 import { createPortal } from "react-dom";
 import { Link, NavLink, matchPath, useHref, useLocation } from "react-router";
@@ -401,9 +411,7 @@ function useNavHeightVar(
     // the OUTERMOST shell, for what it portals to <body> (a sheet docking on the bar).
     // The DOM check backs up the context for a shell mounted in a separate React root.
     const global = !embedded && !shell?.parentElement?.closest("[data-app-shell]");
-    const targets = [shell, global ? document.documentElement : null].filter(
-      (el): el is HTMLElement => el !== null,
-    );
+    const targets = [shell, global ? document.documentElement : null].filter((el): el is HTMLElement => el !== null);
     // `getBoundingClientRect().height`, rounded DOWN — not `offsetHeight`, and not
     // ceil. Measured on the running app at 406x816: the bar is **55.5px** tall, and
     // both `offsetHeight` and `Math.ceil` answer 56. That is why live #314 round four
@@ -484,8 +492,7 @@ export function AppShell({
   useNavDevWarnings(nav);
   // An embedded shell sharing the default key would overwrite the outer app's sidebar
   // preference with its own — so it persists only when given a key of its own.
-  const collapseStorageKey =
-    collapseStorageKeyProp ?? (embedded ? null : "appLayout.sidebarCollapsed");
+  const collapseStorageKey = collapseStorageKeyProp ?? (embedded ? null : "appLayout.sidebarCollapsed");
   // The three props are per-shell overrides of the provider's `appShell`; one left
   // undefined falls through to the provider rather than to English.
   const labels = useKitLabels("appShell", DEFAULT_APP_SHELL_LABELS, {
@@ -692,10 +699,7 @@ export function AppShell({
             group's `items` were simply unreachable below `md`. ONE measured box, so
             `--app-nav-h` covers both rows and whatever docks on the bar sits on the
             whole of it. */}
-        <div
-          ref={navRef}
-          className="md:hidden fixed bottom-0 inset-x-0 z-30 border-t border-subtle bg-surface"
-        >
+        <div ref={navRef} className="md:hidden fixed bottom-0 inset-x-0 z-30 border-t border-subtle bg-surface">
           {mobileSubNav && <MobileSubNav nav={nav} layout={mobileSubNavLayout} />}
           <nav
             data-tour="nav"
@@ -854,9 +858,7 @@ const mobileCellClass = (active: boolean) =>
     // label on two lines never leaves its neighbours a different shape.
     "relative flex h-full w-full flex-col items-center justify-start py-2 text-caption gap-0.5 transition-colors",
     "before:absolute before:content-[''] before:inset-x-4 before:top-0 before:h-0.5 before:rounded-full before:transition-colors",
-    active
-      ? "font-semibold text-brand before:bg-brand"
-      : "text-muted before:bg-transparent",
+    active ? "font-semibold text-brand before:bg-brand" : "text-muted before:bg-transparent",
   );
 
 /**
@@ -939,7 +941,11 @@ function SheetLink({
           level === "entry"
             ? "flex min-h-11 items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors"
             : "flex min-h-11 items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors",
-          isActive ? "bg-inverse text-inverse" : level === "entry" ? "text-primary hover:bg-hover" : "text-secondary hover:bg-hover",
+          isActive
+            ? "bg-inverse text-inverse"
+            : level === "entry"
+              ? "text-primary hover:bg-hover"
+              : "text-secondary hover:bg-hover",
         )
       }
     >
@@ -1001,7 +1007,14 @@ function MobileGroupCell({
         <ul className="space-y-1">
           {!ownPageListed && (
             <li>
-              <SheetLink to={item.to} end={item.end} icon={item.icon} label={labels.overview} onClick={close} level="entry" />
+              <SheetLink
+                to={item.to}
+                end={item.end}
+                icon={item.icon}
+                label={labels.overview}
+                onClick={close}
+                level="entry"
+              />
             </li>
           )}
           {pages.map((sub) => (
@@ -1090,12 +1103,26 @@ function MobileMoreCell({
         <ul className="space-y-1">
           {hidden.map((item) => (
             <li key={item.to}>
-              <SheetLink to={item.to} end={item.end} icon={item.icon} label={item.label} onClick={close} level="entry" />
+              <SheetLink
+                to={item.to}
+                end={item.end}
+                icon={item.icon}
+                label={item.label}
+                onClick={close}
+                level="entry"
+              />
               {!!item.items?.length && (
                 <ul aria-label={item.label} className="ms-[1.3rem] mt-0.5 space-y-0.5 border-s border-subtle ps-2">
                   {item.items.map((sub) => (
                     <li key={sub.to}>
-                      <SheetLink to={sub.to} end={sub.end} icon={sub.icon} label={sub.label} onClick={close} level="page" />
+                      <SheetLink
+                        to={sub.to}
+                        end={sub.end}
+                        icon={sub.icon}
+                        label={sub.label}
+                        onClick={close}
+                        level="page"
+                      />
                     </li>
                   ))}
                 </ul>
@@ -1182,7 +1209,8 @@ function MobileSubNav({ nav, layout }: { nav: AppShellNavItem[]; layout: "wrap" 
 
 /** `strong` is the current page; `trail` is the group that CONTAINS the current page
  *  while the page itself is shown elsewhere (the inline list below it). */
-const navLinkClass = (collapsed: boolean, forceActive: boolean, trail = false) =>
+const navLinkClass =
+  (collapsed: boolean, forceActive: boolean, trail = false) =>
   ({ isActive }: { isActive: boolean }) =>
     `flex items-center gap-3 min-h-9 ${collapsed ? "justify-center px-2" : "px-3"} py-2 rounded-md text-sm transition-colors duration-150 ${
       isActive || (forceActive && !trail)
@@ -1390,9 +1418,7 @@ function SidebarGroup({
                   className={({ isActive }) =>
                     cn(
                       "flex min-h-8 items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors",
-                      isActive
-                        ? "bg-inverse text-inverse"
-                        : "text-secondary hover:bg-hover",
+                      isActive ? "bg-inverse text-inverse" : "text-secondary hover:bg-hover",
                     )
                   }
                 >
@@ -1528,9 +1554,7 @@ function SidebarFlyout({ item, children }: { item: AppShellNavItem; children: Re
                       className={({ isActive }) =>
                         cn(
                           "flex items-center gap-2.5 px-3 py-2 text-sm",
-                          isActive
-                            ? "bg-active font-medium text-primary"
-                            : "text-secondary hover:bg-hover",
+                          isActive ? "bg-active font-medium text-primary" : "text-secondary hover:bg-hover",
                         )
                       }
                     >

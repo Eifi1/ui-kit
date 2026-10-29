@@ -27,7 +27,12 @@ import {
   translationRows,
   unreviewedRows,
 } from "../translation-review";
-import type { ApiTranslationReview, ApiTranslationReviewsResponse, TranslationReview, TranslationReviewSwipeAction } from "../translation-review";
+import type {
+  ApiTranslationReview,
+  ApiTranslationReviewsResponse,
+  TranslationReview,
+  TranslationReviewSwipeAction,
+} from "../translation-review";
 
 /**
  * The pure half of the translation review, ported from keksdose's and kastlan's
@@ -407,7 +412,16 @@ describe("translationCorrections", () => {
         ["common.save", review({ verdict: "NEEDS_CHANGE", suggestion: "Sauvegarder", note: "plus courant" })],
         ["common.cancel", review({ key: "common.cancel", text: "Annuler", referenceText: "Cancel" })],
         // A missing string's suggested translation is a correction too: the string to add.
-        ["common.close", review({ key: "common.close", text: "", referenceText: "Close", verdict: "NEEDS_CHANGE", suggestion: "Fermer" })],
+        [
+          "common.close",
+          review({
+            key: "common.close",
+            text: "",
+            referenceText: "Close",
+            verdict: "NEEDS_CHANGE",
+            suggestion: "Fermer",
+          }),
+        ],
       ]),
     });
     expect(translationCorrections(rows)).toEqual([
@@ -430,7 +444,12 @@ describe("translationCorrections", () => {
 describe("0.25: groups and Undo (keksdose live #377)", () => {
   const rows = translationRows({
     locale: "fr",
-    strings: { "budget.rta": "À attribuer", "common.save": "Enregistrer", "budget.hint": "Astuce", "legal.terms": "Conditions" },
+    strings: {
+      "budget.rta": "À attribuer",
+      "common.save": "Enregistrer",
+      "budget.hint": "Astuce",
+      "legal.terms": "Conditions",
+    },
     reference: {
       "budget.rta": "Ready to Assign",
       "common.save": "Save",
@@ -440,7 +459,13 @@ describe("0.25: groups and Undo (keksdose live #377)", () => {
     },
     reviews: [
       review({}),
-      review({ key: "budget.rta", text: "A attribuer", referenceText: "Ready to Assign", verdict: "NEEDS_CHANGE", note: "accent" }),
+      review({
+        key: "budget.rta",
+        text: "A attribuer",
+        referenceText: "Ready to Assign",
+        verdict: "NEEDS_CHANGE",
+        note: "accent",
+      }),
     ],
   });
 
@@ -451,7 +476,14 @@ describe("0.25: groups and Undo (keksdose live #377)", () => {
       ["common", ["common.save"]],
       ["legal", ["legal.terms"]],
     ]);
-    expect(groups[0].summary).toEqual({ missing: 1, unreviewed: 1, changed: 1, needs_change: 0, approved: 0, total: 3 });
+    expect(groups[0].summary).toEqual({
+      missing: 1,
+      unreviewed: 1,
+      changed: 1,
+      needs_change: 0,
+      approved: 0,
+      total: 3,
+    });
     expect(groupTranslationRows([], (r) => r.namespace)).toEqual([]);
   });
 

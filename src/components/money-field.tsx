@@ -4,8 +4,10 @@ import { useMoneyDraft } from "./money-draft";
 
 type AmountInputProps = ComponentProps<typeof AmountInput>;
 
-export interface MoneyFieldProps
-  extends Omit<AmountInputProps, "value" | "onChange" | "onCommit" | "negative" | "onNegativeChange" | "ref"> {
+export interface MoneyFieldProps extends Omit<
+  AmountInputProps,
+  "value" | "onChange" | "onCommit" | "negative" | "onNegativeChange" | "ref"
+> {
   /** The amount, or `null` for an empty field. */
   value: number | null;
   /**

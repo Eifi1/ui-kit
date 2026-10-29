@@ -463,7 +463,9 @@ function slotSections(
     const number = numbered ? count : undefined;
     if (section.key !== undefined) {
       if (targets.has(section.key)) {
-        warnLegalOnce(`two sections of the ${page} page share the key "${section.key}"; {ref:${section.key}} names the first.`);
+        warnLegalOnce(
+          `two sections of the ${page} page share the key "${section.key}"; {ref:${section.key}} names the first.`,
+        );
       } else {
         targets.set(section.key, { number, heading: section.heading });
       }
@@ -538,8 +540,7 @@ export function LegalPage({
     targets,
   };
   const Main = landmark ? "main" : "div";
-  const shownNotice =
-    notice !== undefined ? notice : page === "privacy" ? labels.notice.privacy : labels.notice.beta;
+  const shownNotice = notice !== undefined ? notice : page === "privacy" ? labels.notice.privacy : labels.notice.beta;
   // 0.28.1 (Marcel): one language is binding and the lawyer reviews that one; a page read
   // in any other says so, with a way to the binding version.
   const translated =
@@ -550,7 +551,13 @@ export function LegalPage({
       {onShowBindingLanguage && (
         <>
           {" "}
-          <Button type="button" variant="link" size="sm" className="h-auto p-0 align-baseline" onClick={onShowBindingLanguage}>
+          <Button
+            type="button"
+            variant="link"
+            size="sm"
+            className="h-auto p-0 align-baseline"
+            onClick={onShowBindingLanguage}
+          >
             {labels.translation.show(operatorText)}
           </Button>
         </>
@@ -574,7 +581,9 @@ export function LegalPage({
   const summaryBox =
     summary !== undefined && summary.length > 0 ? (
       <section id="summary" className="rounded-lg border border-subtle bg-surface p-4 sm:p-5">
-        <SummaryHeading className="text-lg font-semibold break-words text-primary">{summaryLabels.title}</SummaryHeading>
+        <SummaryHeading className="text-lg font-semibold break-words text-primary">
+          {summaryLabels.title}
+        </SummaryHeading>
         <ul className="mt-3 space-y-2">
           {summary.map((point, i) => (
             <li key={i} className="flex gap-2.5 text-sm leading-relaxed text-secondary">
@@ -620,8 +629,10 @@ export function LegalPage({
 
 // ── Terms acceptance (§3.4) ───────────────────────────────────────────────────
 
-export interface LegalAcceptCheckboxProps
-  extends Omit<CheckboxProps, "label" | "checked" | "onCheckedChange" | "required"> {
+export interface LegalAcceptCheckboxProps extends Omit<
+  CheckboxProps,
+  "label" | "checked" | "onCheckedChange" | "required"
+> {
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
   /** Default `/terms`. */

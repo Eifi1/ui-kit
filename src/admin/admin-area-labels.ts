@@ -82,7 +82,10 @@ export const DEFAULT_ADMIN_AREA_LABELS: AdminAreaLabels = {
   sections: {
     overview: { title: "Overview", help: "What is waiting, at a glance." },
     users: { title: "Users", help: "Who has an account, and what each may do." },
-    invitations: { title: "Invitations", help: "Invite people by e-mail in their language; resend or revoke what’s still open." },
+    invitations: {
+      title: "Invitations",
+      help: "Invite people by e-mail in their language; resend or revoke what’s still open.",
+    },
     billing: { title: "Billing", help: "The plan, the payment and the invoices." },
     activity: { title: "Activity", help: "What the admins did, newest first." },
   },

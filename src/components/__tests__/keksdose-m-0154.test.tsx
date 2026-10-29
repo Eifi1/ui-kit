@@ -74,9 +74,17 @@ describe("NumberInput reserves the unit's own width (M4)", () => {
         disconnect() {}
       },
     );
-    const rect = vi
-      .spyOn(HTMLElement.prototype, "getBoundingClientRect")
-      .mockReturnValue({ width: 19.4, height: 20, top: 0, left: 0, right: 19.4, bottom: 20, x: 0, y: 0, toJSON() {} } as DOMRect);
+    const rect = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({
+      width: 19.4,
+      height: 20,
+      top: 0,
+      left: 0,
+      right: 19.4,
+      bottom: 20,
+      x: 0,
+      y: 0,
+      toJSON() {},
+    } as DOMRect);
     render(<NumberInput label="Rate" value="5" onChange={() => {}} suffix="%" calculator={false} />);
     expect(screen.getByRole("textbox", { name: /Rate/ }).style.paddingInlineEnd).toBe("24px");
     rect.mockRestore();

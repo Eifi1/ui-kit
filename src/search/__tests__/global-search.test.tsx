@@ -66,8 +66,7 @@ const pressCmdK = (init: KeyboardEventInit = { metaKey: true }) =>
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", bubbles: true, ...init }));
   });
 
-const type = (text: string) =>
-  fireEvent.change(screen.getByRole("combobox"), { target: { value: text } });
+const type = (text: string) => fireEvent.change(screen.getByRole("combobox"), { target: { value: text } });
 
 describe("GlobalSearch: opening", () => {
   it("opens on ⌘K and on Ctrl K", async () => {
@@ -207,7 +206,12 @@ describe("GlobalSearch: results", () => {
     type("account");
     await screen.findByRole("option", { name: "Accounts" });
     const groups = within(screen.getByRole("listbox")).getAllByRole("group");
-    expect(groups.map((g) => g.getAttribute("aria-labelledby") && document.getElementById(g.getAttribute("aria-labelledby")!)!.textContent)).toEqual(["Actions", "Pages"]);
+    expect(
+      groups.map(
+        (g) =>
+          g.getAttribute("aria-labelledby") && document.getElementById(g.getAttribute("aria-labelledby")!)!.textContent,
+      ),
+    ).toEqual(["Actions", "Pages"]);
   });
 
   it("re-runs the open search when the entries change — no revision needed", async () => {

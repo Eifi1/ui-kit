@@ -224,9 +224,7 @@ export function MenuItem({
       // dimmed") rather than greyed to the point some browsers stop exposing it.
       aria-disabled={disabled || undefined}
       onClick={
-        disabled
-          ? (e) => e.preventDefault()
-          : (onClick as ((event: MouseEvent<HTMLButtonElement>) => void) | undefined)
+        disabled ? (e) => e.preventDefault() : (onClick as ((event: MouseEvent<HTMLButtonElement>) => void) | undefined)
       }
       className={look}
     >

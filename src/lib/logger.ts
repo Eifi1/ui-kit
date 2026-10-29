@@ -60,11 +60,7 @@ const loggerImpl: LoggerImpl = (f, name) => (set, get, store) => {
     const prev = get();
     (set as (...a: unknown[]) => void)(...args);
     if (storeLog) {
-      console.debug(
-        `%c[store${name ? `:${name}` : ""}]`,
-        "color:#0d9488",
-        { prev, next: get() },
-      );
+      console.debug(`%c[store${name ? `:${name}` : ""}]`, "color:#0d9488", { prev, next: get() });
     }
   }) as typeof set;
   return f(loggedSet, get, store);

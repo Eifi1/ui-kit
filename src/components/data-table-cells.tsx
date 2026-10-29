@@ -34,8 +34,7 @@ export interface BooleanMarkProps {
 export function BooleanMark({ value, falseAs = "cross", labels: labelsProp, className }: BooleanMarkProps) {
   const labels = useKitLabels("dataTable", DEFAULT_DATA_TABLE_LABELS, labelsProp);
   const state = value === true ? "true" : value === false ? "false" : "unset";
-  const text =
-    state === "true" ? labels.booleanTrue : state === "false" ? labels.booleanFalse : labels.booleanUnset;
+  const text = state === "true" ? labels.booleanTrue : state === "false" ? labels.booleanFalse : labels.booleanUnset;
   const Icon = state === "true" ? Check : state === "false" && falseAs === "cross" ? X : Minus;
   return (
     <span data-value={state} className={cn("inline-flex items-center align-middle", className)}>

@@ -25,15 +25,7 @@ export { DEFAULT_PROGRESS_BAR_LABELS };
  * "careful" about a figure that is neither. keksdose's report meters (food-group-card,
  * drilldown-modal) sit beside amounts that are already in the money colours.
  */
-export type ProgressBarTone =
-  | "brand"
-  | "neutral"
-  | "success"
-  | "warning"
-  | "danger"
-  | "info"
-  | "income"
-  | "expense";
+export type ProgressBarTone = "brand" | "neutral" | "success" | "warning" | "danger" | "info" | "income" | "expense";
 /**
  * Track heights: `sm` 4px, `slim` 6px, `md` 8px, `lg` 12px. `slim` is a word and not a
  * letter because the letters are taken in order — an `xs` at 6px would be THICKER than
@@ -340,8 +332,7 @@ export function ProgressBar({
           : text;
       })
     : [];
-  const current =
-    partTotal ?? (value === undefined || !Number.isFinite(value) ? (meter ? min : undefined) : value);
+  const current = partTotal ?? (value === undefined || !Number.isFinite(value) ? (meter ? min : undefined) : value);
   const indeterminate = current === undefined;
   const clamped = indeterminate ? undefined : Math.min(max, Math.max(min, current));
   const fraction = clamped === undefined || span <= 0 ? 0 : (clamped - min) / span;
@@ -352,14 +343,11 @@ export function ProgressBar({
       ? new Intl.ListFormat(kitLocale, { style: "short", type: "unit" }).format(partTexts)
       : valueText;
 
-  const over =
-    overage && !stacked && value !== undefined && Number.isFinite(value) && value > max ? value - max : 0;
+  const over = overage && !stacked && value !== undefined && Number.isFinite(value) && value > max ? value - max : 0;
   const overageNode =
     over > 0 ? (
       <p id={`${hintId}-over`} data-part="overage" data-private={priv} className="mt-1 text-xs text-danger">
-        {typeof overage === "function"
-          ? overage(over)
-          : text.overLimit(new Intl.NumberFormat(kitLocale).format(over))}
+        {typeof overage === "function" ? overage(over) : text.overLimit(new Intl.NumberFormat(kitLocale).format(over))}
       </p>
     ) : null;
   const describedBy =
@@ -380,7 +368,12 @@ export function ProgressBar({
           {showValue && valueText !== undefined && (
             // Hidden: the same words are the bar's aria-valuetext, and reading them
             // twice in a row is noise.
-            <span aria-hidden data-part="value" data-private={priv} className="ms-auto shrink-0 tabular-nums text-muted">
+            <span
+              aria-hidden
+              data-part="value"
+              data-private={priv}
+              className="ms-auto shrink-0 tabular-nums text-muted"
+            >
               {valueText}
             </span>
           )}
@@ -443,7 +436,10 @@ export function ProgressBar({
             data-part="fill"
             // Block flow starts at the inline start, so a plain width fills from the
             // right under `dir="rtl"` with nothing extra.
-            className={cn("h-full rounded-full transition-[width] duration-300 motion-reduce:transition-none", FILL[tone])}
+            className={cn(
+              "h-full rounded-full transition-[width] duration-300 motion-reduce:transition-none",
+              FILL[tone],
+            )}
             style={{ width: `${fraction * 100}%` }}
           />
         )}
@@ -454,10 +450,7 @@ export function ProgressBar({
             <li key={seg.key ?? i} className="flex items-center gap-2">
               <span
                 aria-hidden
-                className={cn(
-                  "size-2.5 shrink-0 rounded-sm",
-                  fills[i],
-                )}
+                className={cn("size-2.5 shrink-0 rounded-sm", fills[i])}
                 style={{ backgroundColor: seg.className ? undefined : seg.color }}
               />
               {seg.label != null && (
@@ -470,9 +463,7 @@ export function ProgressBar({
                 data-private={priv}
                 className={cn(
                   "ms-auto shrink-0 text-xs tabular-nums",
-                  toneTextClass(
-                    (typeof legendTone === "function" ? legendTone(seg, i) : legendTone) ?? "muted",
-                  ),
+                  toneTextClass((typeof legendTone === "function" ? legendTone(seg, i) : legendTone) ?? "muted"),
                 )}
               >
                 {legendValue ? legendValue(seg, formatPart(seg.value), i) : formatPart(seg.value)}

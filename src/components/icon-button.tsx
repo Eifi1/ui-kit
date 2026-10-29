@@ -139,25 +139,21 @@ type ColouredTone = "danger" | "warning" | "info" | "success" | "custom";
 
 const ICON_BUTTON_TONES: Record<ColouredTone, { quiet: string; toned: string }> = {
   danger: {
-    quiet:
-      "text-placeholder hover:bg-danger-soft hover:text-danger focus-visible:ring-danger-strong",
+    quiet: "text-placeholder hover:bg-danger-soft hover:text-danger focus-visible:ring-danger-strong",
     toned: "text-danger hover:bg-danger-soft focus-visible:ring-danger-strong",
   },
   warning: {
-    quiet:
-      "text-placeholder hover:bg-warning-soft hover:text-warning focus-visible:ring-warning-strong",
+    quiet: "text-placeholder hover:bg-warning-soft hover:text-warning focus-visible:ring-warning-strong",
     // The ring is warning's loud line (0.33, k27): `--warning-border`, amber-300, was a
     // focus ring at 1.1:1 on the light surfaces.
     toned: "text-warning hover:bg-warning-soft focus-visible:ring-warning-strong",
   },
   info: {
-    quiet:
-      "text-placeholder hover:bg-info-soft hover:text-info focus-visible:ring-[var(--info-border)]",
+    quiet: "text-placeholder hover:bg-info-soft hover:text-info focus-visible:ring-[var(--info-border)]",
     toned: "text-info hover:bg-info-soft focus-visible:ring-[var(--info-border)]",
   },
   success: {
-    quiet:
-      "text-placeholder hover:bg-success-soft hover:text-success focus-visible:ring-[var(--success-border)]",
+    quiet: "text-placeholder hover:bg-success-soft hover:text-success focus-visible:ring-[var(--success-border)]",
     toned: "text-success hover:bg-success-soft focus-visible:ring-[var(--success-border)]",
   },
   // The hover fill and the ring are MIXED from the one colour, since a custom tone
@@ -520,7 +516,8 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
  * that explains why it cannot be followed is a job for a disabled BUTTON.
  */
 export interface IconButtonLinkProps
-  extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "type" | "href">,
+  extends
+    Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "type" | "href">,
     Pick<
       IconButtonProps,
       | "variant"
@@ -636,7 +633,10 @@ function iconButtonLook({
   return cn(
     ICON_BUTTON_BASE,
     withText
-      ? cn("font-medium whitespace-nowrap", stretch ? ICON_BUTTON_TEXT_STRETCH_SIZES[size] : ICON_BUTTON_TEXT_SIZES[size])
+      ? cn(
+          "font-medium whitespace-nowrap",
+          stretch ? ICON_BUTTON_TEXT_STRETCH_SIZES[size] : ICON_BUTTON_TEXT_SIZES[size],
+        )
       : stretch
         ? ICON_BUTTON_STRETCH_SIZES[size]
         : ICON_BUTTON_SIZES[size],
@@ -822,44 +822,42 @@ function IconButtonLink({
   );
 }
 
-function IconButtonElement(
-  {
-    variant = "ghost",
-    size = "md",
-    tone: toneProp,
-    quiet,
-    pressed,
-    stopPropagation,
-    stretch,
-    shape = "square",
-    toneColor,
-    label,
-    labelVisible,
-    tooltip = true,
-    tooltipSide,
-    tooltipPortal,
-    tooltipLazy = true,
-    disabledReason: ownDisabledReason,
-    disabledReasonDisplay,
-    commit,
-    pending,
-    glyphSize,
-    badge,
-    disabledStyle = "dim",
-    className,
-    style,
-    onClick,
-    onKeyDown,
-    children,
-    href: _href,
-    renderLink: _renderLink,
-    external: _external,
-    replace: _replace,
-    reloadDocument: _reloadDocument,
-    ref,
-    ...rest
-  }: IconButtonProps,
-) {
+function IconButtonElement({
+  variant = "ghost",
+  size = "md",
+  tone: toneProp,
+  quiet,
+  pressed,
+  stopPropagation,
+  stretch,
+  shape = "square",
+  toneColor,
+  label,
+  labelVisible,
+  tooltip = true,
+  tooltipSide,
+  tooltipPortal,
+  tooltipLazy = true,
+  disabledReason: ownDisabledReason,
+  disabledReasonDisplay,
+  commit,
+  pending,
+  glyphSize,
+  badge,
+  disabledStyle = "dim",
+  className,
+  style,
+  onClick,
+  onKeyDown,
+  children,
+  href: _href,
+  renderLink: _renderLink,
+  external: _external,
+  replace: _replace,
+  reloadDocument: _reloadDocument,
+  ref,
+  ...rest
+}: IconButtonProps) {
   const tone = toneProp ?? (toneColor !== undefined ? "custom" : "default");
   const keep = disabledStyle === "keep";
   const withText = useIconButtonText(label, labelVisible, variant, tooltip);

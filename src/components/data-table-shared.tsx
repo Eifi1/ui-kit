@@ -17,9 +17,11 @@ import type { LabelOverride } from "../i18n/kit-labels";
  * owns. `role` and `data-col` are dropped outright (see `cellProps`); `className` and
  * `style` come back separately so the kit can merge rather than replace them.
  */
-export function splitCellProps(
-  props: DataTableCellProps | DataTableHeadProps | undefined,
-): { attrs: Record<string, unknown>; className?: string; style?: CSSProperties } {
+export function splitCellProps(props: DataTableCellProps | DataTableHeadProps | undefined): {
+  attrs: Record<string, unknown>;
+  className?: string;
+  style?: CSSProperties;
+} {
   if (!props) return { attrs: {} };
   const {
     className,
@@ -47,22 +49,16 @@ const PHYSICAL_ALIGN = /(^|\s)((?:[\w-]+:)*)text-(left|right)(?=\s|$)/g;
  * too can say `ltr:text-right rtl:text-right`, which this leaves alone.
  */
 export function logicalAlign(className: string | undefined): string | undefined {
-  return className?.replace(
-    PHYSICAL_ALIGN,
-    (token: string, lead: string, variants: string, side: string) =>
-      // Already scoped to one direction: that is a caller choosing the physical side.
-      /(^|:)(ltr|rtl):/.test(variants)
-        ? token
-        : `${lead}${variants}text-${side === "right" ? "end" : "start"}`,
+  return className?.replace(PHYSICAL_ALIGN, (token: string, lead: string, variants: string, side: string) =>
+    // Already scoped to one direction: that is a caller choosing the physical side.
+    /(^|:)(ltr|rtl):/.test(variants) ? token : `${lead}${variants}text-${side === "right" ? "end" : "start"}`,
   );
 }
 
 /** Drop the undefined entries of a {@link DataTableProps.rowAttributes} map, so a
  *  caller can write `{ "data-x": cond ? "y" : undefined }` and get no attribute
  *  at all rather than the string "undefined" in the DOM. */
-export function cleanAttrs(
-  attrs: Record<string, string | undefined> | undefined,
-): Record<string, string> | undefined {
+export function cleanAttrs(attrs: Record<string, string | undefined> | undefined): Record<string, string> | undefined {
   if (!attrs) return undefined;
   const out: Record<string, string> = {};
   for (const [k, v] of Object.entries(attrs)) if (v !== undefined) out[k] = v;
@@ -97,9 +93,7 @@ export function columnLabel<T>(col: DataTableColumn<T>, labels?: DataTableLabels
  * finds out what fell back to English from `missingKitLabels(labels,
  * DEFAULT_UI_KIT_LABELS)` in its own test, where the answer is actionable.
  */
-export function resolveDataTableLabels(
-  ...layers: (LabelOverride<DataTableLabels> | undefined)[]
-): DataTableLabels {
+export function resolveDataTableLabels(...layers: (LabelOverride<DataTableLabels> | undefined)[]): DataTableLabels {
   if (!layers.some(Boolean)) return DEFAULT_DATA_TABLE_LABELS;
   // The layers in order, the provider's then the prop's, later winning key by key. An
   // `undefined` key is skipped, as `useKitLabels` skips it, rather than blanking the word

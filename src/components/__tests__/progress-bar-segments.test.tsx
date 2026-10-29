@@ -55,7 +55,10 @@ describe("ProgressBar segments (keksdose cut-card:133)", () => {
   it("uses formatValue for each part and for the total shown", () => {
     render(
       <ProgressBar
-        segments={[{ value: 3, label: "Done" }, { value: 2, label: "Failed" }]}
+        segments={[
+          { value: 3, label: "Done" },
+          { value: 2, label: "Failed" },
+        ]}
         max={10}
         label="Files"
         showValue
@@ -123,7 +126,7 @@ describe("ProgressBar legend: a part's own signed value", () => {
   });
 });
 
-describe("ProgressBar as=\"span\" (valid inside a button, keksdose P2)", () => {
+describe('ProgressBar as="span" (valid inside a button, keksdose P2)', () => {
   it("builds the bar from spans only", () => {
     const { container } = render(
       <button type="button">

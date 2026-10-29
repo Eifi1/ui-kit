@@ -17,16 +17,7 @@ import { PHONE_WIDTH, stubViewportWidth } from "../../test/viewport";
  * Nothing shows today because `matches` de-duplicates — but that is a property of the
  * memo, not of the row being drawn, and the sheet had no business depending on it.
  */
-const OPTIONS = [
-  "Migros",
-  "Coop",
-  "Denner",
-  "SBB",
-  "BLS",
-  "Postauto",
-  "Swisscom",
-  "Salt",
-];
+const OPTIONS = ["Migros", "Coop", "Denner", "SBB", "BLS", "Postauto", "Swisscom", "Salt"];
 
 const GROUPS: Record<string, string> = {
   Migros: "Groceries",
@@ -47,15 +38,7 @@ function asPhone() {
 
 function Host({ groupBy }: { groupBy: (o: string) => string }) {
   const [value, setValue] = useState("");
-  return (
-    <Combobox
-      label="Payee"
-      value={value}
-      onChange={setValue}
-      options={OPTIONS}
-      groupBy={groupBy}
-    />
-  );
+  return <Combobox label="Payee" value={value} onChange={setValue} options={OPTIONS} groupBy={groupBy} />;
 }
 
 /** The listbox as a reader walks it: headings and options in document order. */

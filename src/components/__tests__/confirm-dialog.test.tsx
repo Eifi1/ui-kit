@@ -44,7 +44,11 @@ async function ask(confirm: ConfirmFn, options: Parameters<ConfirmFn>[0]) {
 describe("useConfirm", () => {
   it("resolves true from the confirm button, and names and describes the dialog", async () => {
     const { confirm } = setup();
-    const { answer } = await ask(confirm(), { title: "Delete budget?", body: "This cannot be undone.", confirmLabel: "Delete" });
+    const { answer } = await ask(confirm(), {
+      title: "Delete budget?",
+      body: "This cannot be undone.",
+      confirmLabel: "Delete",
+    });
     const dialog = await screen.findByRole("alertdialog", { name: "Delete budget?" });
     expect(dialog).toHaveAccessibleDescription("This cannot be undone.");
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));
@@ -234,7 +238,7 @@ describe("useConfirm — requireTyped (0.18)", () => {
     expect(await answer).toBe(true);
   });
 
-  it("typedMatch=\"exact\" and a per-call label", async () => {
+  it('typedMatch="exact" and a per-call label', async () => {
     const { confirm } = setup();
     const { answer } = await ask(confirm(), {
       title: "Wipe?",

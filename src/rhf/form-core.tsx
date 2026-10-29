@@ -164,10 +164,7 @@ export function useFormField() {
   const state = getFieldState(field.name, formState);
   const formDescriptionId = `${item.id}-description`;
   const formMessageId = `${item.id}-message`;
-  const describedBy = [
-    item.mounted.description && formDescriptionId,
-    item.mounted.message && formMessageId,
-  ]
+  const describedBy = [item.mounted.description && formDescriptionId, item.mounted.message && formMessageId]
     .filter(Boolean)
     .join(" ");
   return {
@@ -195,8 +192,7 @@ export function FormItem({ className, ...rest }: FormItemProps) {
     message: false,
   });
   const mark = useCallback(
-    (slot: Described, on: boolean) =>
-      setMounted((prev) => (prev[slot] === on ? prev : { ...prev, [slot]: on })),
+    (slot: Described, on: boolean) => setMounted((prev) => (prev[slot] === on ? prev : { ...prev, [slot]: on })),
     [],
   );
   const value = useMemo(() => ({ id, mounted, mark }), [id, mounted, mark]);

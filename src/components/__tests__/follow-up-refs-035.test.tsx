@@ -70,7 +70,9 @@ describe("each hands its ref to the element its props land on (round 0.35 R4)", 
 
   it("PlanLimitNotice: the notice's <div>, not its action link", () => {
     const ref = createRef<HTMLDivElement>();
-    render(<PlanLimitNotice ref={ref} mode="upgrade" href="/settings/subscription" dimension="beds" used={3} limit={3} />);
+    render(
+      <PlanLimitNotice ref={ref} mode="upgrade" href="/settings/subscription" dimension="beds" used={3} limit={3} />,
+    );
     expect(ref.current).toHaveAttribute("data-plan-limit-mode", "upgrade");
     expect(ref.current?.tagName).toBe("DIV");
     expect(ref.current).toContainElement(screen.getByRole("link"));
@@ -151,7 +153,14 @@ describe("each hands its ref to the element its props land on (round 0.35 R4)", 
     const contrast = createRef<HTMLDivElement>();
     render(
       <>
-        <ThemeSetting ref={theme} variant="toggle" aria-label="Theme" value="dark" onChange={noop} optionLabels={THEMES} />
+        <ThemeSetting
+          ref={theme}
+          variant="toggle"
+          aria-label="Theme"
+          value="dark"
+          onChange={noop}
+          optionLabels={THEMES}
+        />
         <TextSizeSetting ref={textSize} value="large" onChange={noop} />
         <ContrastSetting ref={contrast} value="more" onChange={noop} />
       </>,

@@ -24,7 +24,7 @@ describe("ToggleGroup overflow (L4)", () => {
     expect(group).toContain("large:flex-wrap");
   });
 
-  it("wraps with overflow=\"wrap\" and never truncates a label", () => {
+  it('wraps with overflow="wrap" and never truncates a label', () => {
     render(<ToggleGroup aria-label="Signal" options={options} value="Sinus" onChange={() => {}} overflow="wrap" />);
     expect(screen.getByRole("radiogroup").className).toContain("flex-wrap");
     const option = screen.getByRole("radio", { name: "Bewegung" });

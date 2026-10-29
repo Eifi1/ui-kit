@@ -90,7 +90,6 @@ export interface ConfirmOptions {
 
 export type ConfirmFn = (options: ConfirmOptions) => Promise<boolean>;
 
-
 /**
  * `const confirm = useConfirm()` → `if (!(await confirm({ title }))) return`.
  *
@@ -279,8 +278,7 @@ function ConfirmDialogView({
   const typedLabel =
     target === undefined
       ? ""
-      : (request.typedLabel ??
-        (typeof labels.typed === "string" ? labels.typed : labels.typed(target)));
+      : (request.typedLabel ?? (typeof labels.typed === "string" ? labels.typed : labels.typed(target)));
 
   return (
     <DialogFrame

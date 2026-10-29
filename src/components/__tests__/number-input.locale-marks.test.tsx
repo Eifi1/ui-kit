@@ -332,7 +332,14 @@ describe("AmountInput and MoneyField calculator={false} (keksdose K6)", () => {
     function Cell() {
       const [value, setValue] = useState("");
       return (
-        <AmountInput aria-label="Assigned" currency="EUR" calculator={false} value={value} onChange={setValue} onCommit={onCommit} />
+        <AmountInput
+          aria-label="Assigned"
+          currency="EUR"
+          calculator={false}
+          value={value}
+          onChange={setValue}
+          onCommit={onCommit}
+        />
       );
     }
     render(<Cell />);
@@ -470,7 +477,13 @@ describe("SignChip (keksdose K15)", () => {
     const [negative, setNegative] = useState(true);
     return (
       <>
-        <AmountInput aria-label="Amount" value="42.5" onChange={vi.fn()} negative={negative} onNegativeChange={setNegative} />
+        <AmountInput
+          aria-label="Amount"
+          value="42.5"
+          onChange={vi.fn()}
+          negative={negative}
+          onNegativeChange={setNegative}
+        />
         <SignChip negative={negative} onNegativeChange={setNegative} />
       </>
     );

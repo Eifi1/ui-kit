@@ -107,7 +107,11 @@ describe("WizardStep title / description", () => {
   });
 
   it("takes another heading level", () => {
-    render(<WizardStep title="Lines" headingLevel={2}>x</WizardStep>);
+    render(
+      <WizardStep title="Lines" headingLevel={2}>
+        x
+      </WizardStep>,
+    );
     expect(screen.getByRole("heading", { level: 2, name: "Lines" })).toBeInTheDocument();
   });
 

@@ -15,7 +15,12 @@ const TOURS: TourMenuTour[] = [
   { id: "rules", title: "Rules", route: "/rules", isNew: true, since: "2026-07-01" },
 ];
 
-function App({ tours = TOURS, href, path = "/reports/overview", onLaunch = () => {} }: {
+function App({
+  tours = TOURS,
+  href,
+  path = "/reports/overview",
+  onLaunch = () => {},
+}: {
   tours?: TourMenuTour[];
   href?: string;
   path?: string;
@@ -51,21 +56,24 @@ describe("TourMenu", () => {
     expect(link).toHaveAttribute("href", "/tours");
     const menu = open(link);
     const groups = within(menu).getAllByRole("group");
-    expect(groups.map((g) => g.getAttribute("aria-labelledby") && document.getElementById(g.getAttribute("aria-labelledby")!)?.textContent)).toEqual([
-      "On this page",
-      "New tours",
-    ]);
+    expect(
+      groups.map(
+        (g) =>
+          g.getAttribute("aria-labelledby") && document.getElementById(g.getAttribute("aria-labelledby")!)?.textContent,
+      ),
+    ).toEqual(["On this page", "New tours"]);
     // This page: the tours whose route's first segment is /reports.
-    expect(within(groups[0]).getAllByRole("menuitem").map((r) => r.textContent)).toEqual([
-      expect.stringContaining("Understand reports"),
-      expect.stringContaining("Spending tab"),
-    ]);
+    expect(
+      within(groups[0])
+        .getAllByRole("menuitem")
+        .map((r) => r.textContent),
+    ).toEqual([expect.stringContaining("Understand reports"), expect.stringContaining("Spending tab")]);
     // New: at most three, newest first.
-    expect(within(groups[1]).getAllByRole("menuitem").map((r) => r.textContent?.replace(/New$/, ""))).toEqual([
-      "Sharing",
-      "Bank import",
-      "Goals",
-    ]);
+    expect(
+      within(groups[1])
+        .getAllByRole("menuitem")
+        .map((r) => r.textContent?.replace(/New$/, "")),
+    ).toEqual(["Sharing", "Bank import", "Goals"]);
     expect(menu.querySelector("li.border-t")).not.toBeNull();
     const items = within(menu).getAllByRole("menuitem");
     expect(items.at(-1)).toHaveTextContent("All tours…");
@@ -104,11 +112,11 @@ describe("TourMenu", () => {
     fireEvent.click(trigger);
     const menu = screen.getByRole("menu");
     expect(within(menu).queryByText("All tours…")).toBeNull();
-    expect(within(menu).getAllByRole("menuitem").map((r) => r.textContent?.replace("Completed", ""))).toEqual([
-      "Budgets basics",
-      "Understand reports",
-      "Spending tab",
-    ]);
+    expect(
+      within(menu)
+        .getAllByRole("menuitem")
+        .map((r) => r.textContent?.replace("Completed", "")),
+    ).toEqual(["Budgets basics", "Understand reports", "Spending tab"]);
     expect(menu.querySelector("li.border-t")).not.toBeNull();
   });
 
@@ -120,7 +128,11 @@ describe("TourMenu", () => {
   it("with no tour on this page and none new, offers All tours… alone", () => {
     render(<App href="/tours" path="/elsewhere" tours={TOURS.slice(0, 3)} />);
     const menu = open(screen.getByRole("link", { name: "Guided tours" }));
-    expect(within(menu).getAllByRole("menuitem").map((r) => r.textContent)).toEqual(["All tours…"]);
+    expect(
+      within(menu)
+        .getAllByRole("menuitem")
+        .map((r) => r.textContent),
+    ).toEqual(["All tours…"]);
     expect(menu.querySelector("li.border-t")).toBeNull();
   });
 
@@ -152,11 +164,11 @@ describe("TourMenu", () => {
       </MemoryRouter>,
     );
     const menu = open(screen.getByRole("link", { name: "Guided tours" }));
-    expect(within(menu).getAllByRole("menuitem").map((r) => r.textContent)).toEqual([
-      "First steps",
-      "Handovers",
-      "All tours…",
-    ]);
+    expect(
+      within(menu)
+        .getAllByRole("menuitem")
+        .map((r) => r.textContent),
+    ).toEqual(["First steps", "Handovers", "All tours…"]);
   });
 });
 
@@ -192,12 +204,11 @@ describe("TourMenu — the catalogue's tours, with completed and joined (0.43, t
     const menu = open(link);
     // On this page: welcome (✓). New and updated: goals (updated 10-10) before budget (05).
     expect(within(menu).getByText("New and updated")).toBeInTheDocument();
-    expect(within(menu).getAllByRole("menuitem").map((r) => r.textContent)).toEqual([
-      "WelcomeCompleted",
-      "GoalsUpdated",
-      "Your budgetNew",
-      "All tours…",
-    ]);
+    expect(
+      within(menu)
+        .getAllByRole("menuitem")
+        .map((r) => r.textContent),
+    ).toEqual(["WelcomeCompleted", "GoalsUpdated", "Your budgetNew", "All tours…"]);
   });
 
   it("only updated tours: the dot says so", () => {
@@ -238,11 +249,10 @@ describe("TourMenu — the catalogue's tours, with completed and joined (0.43, t
       </MemoryRouter>,
     );
     const menu = open(screen.getByRole("link", { name: /Guided tours/ }));
-    expect(within(menu).getAllByRole("menuitem").map((r) => r.textContent)).toEqual([
-      "WelcomeCompleted",
-      "GoalsUpdated",
-      "Your budgetNew",
-      "All tours…",
-    ]);
+    expect(
+      within(menu)
+        .getAllByRole("menuitem")
+        .map((r) => r.textContent),
+    ).toEqual(["WelcomeCompleted", "GoalsUpdated", "Your budgetNew", "All tours…"]);
   });
 });

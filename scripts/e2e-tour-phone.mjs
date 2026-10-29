@@ -114,7 +114,10 @@ async function runVariant(browser, base, variant) {
           padAfterTour:
             !!pad &&
             !!document.querySelector("[data-tour-layer]") &&
-            !!(document.querySelector("[data-tour-layer]").compareDocumentPosition(pad) & Node.DOCUMENT_POSITION_FOLLOWING),
+            !!(
+              document.querySelector("[data-tour-layer]").compareDocumentPosition(pad) &
+              Node.DOCUMENT_POSITION_FOLLOWING
+            ),
           field: r(document.querySelector('[data-tour="gt-amount"]')),
           memo: r(document.querySelector('[data-tour="gt-memo"]')),
           ring: r(ring),
@@ -125,15 +128,24 @@ async function runVariant(browser, base, variant) {
           scrollY: window.scrollY,
         };
       });
-    const overlap = (a, b) => !!a && !!b && a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+    const overlap = (a, b) =>
+      !!a && !!b && a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
 
     // 1. Arrival on the amount gate step, over the full-screen sheet.
     await guide();
     let g = await geometry();
     check("1 starts at the amount step (Guide me, at)", (await index()) === "2", await status.textContent());
     check("1 card visible over the sheet (elementFromPoint)", g.cardSeen);
-    check("1 ring drawn, no scrim, no shields", g.bare && g.shields === 0 && g.ringShadow && !g.ringShadow.includes("9999"), `bare=${g.bare} shields=${g.shields}`);
-    check("1 card docked and inside the viewport", g.docked && g.card.left >= 0 && g.card.right <= 390 && g.card.top >= 0 && g.card.bottom <= 844, `${g.docked} ${JSON.stringify(g.card)}`);
+    check(
+      "1 ring drawn, no scrim, no shields",
+      g.bare && g.shields === 0 && g.ringShadow && !g.ringShadow.includes("9999"),
+      `bare=${g.bare} shields=${g.shields}`,
+    );
+    check(
+      "1 card docked and inside the viewport",
+      g.docked && g.card.left >= 0 && g.card.right <= 390 && g.card.top >= 0 && g.card.bottom <= 844,
+      `${g.docked} ${JSON.stringify(g.card)}`,
+    );
     check("1 card text does not overflow", g.cardOverflow <= 0, `overflow ${g.cardOverflow}px`);
     check("1 card takes the page's direction", g.dir === dir, `dir=${g.dir}`);
 
@@ -148,7 +160,11 @@ async function runVariant(browser, base, variant) {
     g = await geometry();
     check("2 pad paints above the card", g.padOnTop && g.padAfterTour);
     check("2 typing unlocks Next", g.next === null, `aria-disabled=${g.next}`);
-    check("2 card clear of the pad and the field", !overlap(g.card, g.pad) && !overlap(g.card, g.field), JSON.stringify({ card: g.card, pad: g.pad, field: g.field }));
+    check(
+      "2 card clear of the pad and the field",
+      !overlap(g.card, g.pad) && !overlap(g.card, g.field),
+      JSON.stringify({ card: g.card, pad: g.pad, field: g.field }),
+    );
     check("2 card text does not overflow (pad up)", g.cardOverflow <= 0, `overflow ${g.cardOverflow}px`);
 
     // 3. The pad's Done advances.
@@ -168,7 +184,9 @@ async function runVariant(browser, base, variant) {
     const after = await index();
     check(
       "5 Escape in the pad closes only the pad",
-      padGone && (after === "2" || after === "3") && (await page.locator('[role="dialog"][data-kit-layer]').count()) === 1,
+      padGone &&
+        (after === "2" || after === "3") &&
+        (await page.locator('[role="dialog"][data-kit-layer]').count()) === 1,
       `pad gone=${padGone} index=${after}`,
     );
     if (after === "2") {
@@ -181,7 +199,12 @@ async function runVariant(browser, base, variant) {
     await sleep(400);
     g = await geometry();
     const inside = (outer, inner) =>
-      !!outer && !!inner && outer.top <= inner.top && outer.bottom >= inner.bottom && outer.left <= inner.left && outer.right >= inner.right;
+      !!outer &&
+      !!inner &&
+      outer.top <= inner.top &&
+      outer.bottom >= inner.bottom &&
+      outer.left <= inner.left &&
+      outer.right >= inner.right;
     check(
       "4 the ring frames the category field and its own line",
       inside(g.ring, g.category) && inside(g.ring, g.categoryNote),
@@ -197,7 +220,12 @@ async function runVariant(browser, base, variant) {
     check("4 the picker opens above the card", !g.cardSeen);
     await page.keyboard.press("Escape");
     await sleep(300);
-    check("5 Escape in the picker closes only the picker", (await sheet.count()) === 0 && (await index()) === "3" && (await page.locator('[role="dialog"][data-kit-layer]').count()) === 1);
+    check(
+      "5 Escape in the picker closes only the picker",
+      (await sheet.count()) === 0 &&
+        (await index()) === "3" &&
+        (await page.locator('[role="dialog"][data-kit-layer]').count()) === 1,
+    );
     await page.locator('[data-tour="gt-category"] input').first().tap();
     await sheet.waitFor({ timeout: 5000 });
     await sheet.getByRole("option", { name: "Rent" }).tap();
@@ -206,12 +234,20 @@ async function runVariant(browser, base, variant) {
     check("4 a pick unlocks Next", g.next === null && (await sheet.count()) === 0, `aria-disabled=${g.next}`);
     await page.locator("[data-tour-card]").getByRole("button", { name: "Next" }).tap();
     await sleep(500);
-    check("4 Next is pressable and moves on (transfer step skipped)", (await index()) === "5", await status.textContent());
+    check(
+      "4 Next is pressable and moves on (transfer step skipped)",
+      (await index()) === "5",
+      await status.textContent(),
+    );
 
     // 7. The note, low in the sheet, scrolled into view by the sheet body.
     await sleep(300);
     g = await geometry();
-    check("7 the note is in view, clear of the card", g.memo && g.memo.top >= 0 && g.memo.bottom <= 844 && !overlap(g.card, g.memo), JSON.stringify({ memo: g.memo, card: g.card }));
+    check(
+      "7 the note is in view, clear of the card",
+      g.memo && g.memo.top >= 0 && g.memo.bottom <= 844 && !overlap(g.card, g.memo),
+      JSON.stringify({ memo: g.memo, card: g.card }),
+    );
     check("7 window.scrollY unchanged", g.scrollY === scrollY0, `${scrollY0} → ${g.scrollY}`);
 
     // 6. Save: a click does not advance; the release does.
@@ -222,7 +258,11 @@ async function runVariant(browser, base, variant) {
     await page.locator('[data-tour="gt-save"]').tap();
     const right = await index();
     await sleep(900);
-    check("6 Save step: no Next, the click alone does not advance, the release does", nextOnSave === 0 && right === "6" && (await index()) === "7", `${right} → ${await index()}`);
+    check(
+      "6 Save step: no Next, the click alone does not advance, the release does",
+      nextOnSave === 0 && right === "6" && (await index()) === "7",
+      `${right} → ${await index()}`,
+    );
     await page.locator("[data-tour-card]").getByRole("button", { name: "Done" }).tap();
     await sleep(300);
     check("6 Done finishes the run", /finished/.test((await status.textContent()) ?? ""), await status.textContent());
@@ -232,7 +272,12 @@ async function runVariant(browser, base, variant) {
     await page.locator("[data-tour-card]").focus();
     await page.keyboard.press("Escape");
     await sleep(300);
-    check("5 Escape from the card skips, the sheet stays open", /skipped/.test((await status.textContent()) ?? "") && (await page.locator('[role="dialog"][data-kit-layer]').count()) === 1, await status.textContent());
+    check(
+      "5 Escape from the card skips, the sheet stays open",
+      /skipped/.test((await status.textContent()) ?? "") &&
+        (await page.locator('[role="dialog"][data-kit-layer]').count()) === 1,
+      await status.textContent(),
+    );
     check("no page errors", errors.length === 0, errors.join(" | "));
   } catch (error) {
     check("ran to the end", false, String(error).split("\n")[0]);

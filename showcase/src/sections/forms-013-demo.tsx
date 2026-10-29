@@ -36,8 +36,8 @@ function AmountLocaleDemo() {
         </UiKitProvider>
         <p className={READOUT_PRE}>onChange: {JSON.stringify(value)}</p>
         <Note>
-          The display follows {code("Intl")}: de-CH and it-CH write a point, fr-CH and de-DE a
-          comma. No digit grouping while editing, so the caret never jumps.
+          The display follows {code("Intl")}: de-CH and it-CH write a point, fr-CH and de-DE a comma. No digit grouping
+          while editing, so the caret never jumps.
         </Note>
       </div>
     </Example>
@@ -101,9 +101,12 @@ function WizardStepActionsDemo() {
 
 function FormatUnitDemo() {
   const rows: Array<[string, string]> = [
-    ["formatNumber(3400, { locale: \"de-DE\", unit: \"N\" })", formatNumber(3400, { locale: "de-DE", unit: "N" })],
-    ["formatNumber(4.5, { locale: \"fr-CH\", digits: 1, unit: \"m²\" })", formatNumber(4.5, { locale: "fr-CH", digits: 1, unit: "m²" })],
-    ["formatNumber(null, { unit: \"N\" })", formatNumber(null, { unit: "N" })],
+    ['formatNumber(3400, { locale: "de-DE", unit: "N" })', formatNumber(3400, { locale: "de-DE", unit: "N" })],
+    [
+      'formatNumber(4.5, { locale: "fr-CH", digits: 1, unit: "m²" })',
+      formatNumber(4.5, { locale: "fr-CH", digits: 1, unit: "m²" }),
+    ],
+    ['formatNumber(null, { unit: "N" })', formatNumber(null, { unit: "N" })],
   ];
   return (
     <Example label="formatNumber unit — a narrow no-break space before the unit">

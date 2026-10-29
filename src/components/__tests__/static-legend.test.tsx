@@ -19,12 +19,11 @@ describe("StaticLegend", () => {
   it("is a named list of items, with nothing to press and no tab stops", () => {
     const { container } = render(<StaticLegend entries={ENTRIES} />);
     const list = screen.getByRole("list", { name: "Series" });
-    expect(within(list).getAllByRole("listitem").map((li) => li.textContent)).toEqual([
-      "Active",
-      "Projection",
-      "Depletion",
-      "Today",
-    ]);
+    expect(
+      within(list)
+        .getAllByRole("listitem")
+        .map((li) => li.textContent),
+    ).toEqual(["Active", "Projection", "Depletion", "Today"]);
     expect(screen.queryByRole("button")).toBeNull();
     expect(container.querySelectorAll("[tabindex]")).toHaveLength(0);
   });

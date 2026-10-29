@@ -89,17 +89,43 @@ const REPORTS: FeedbackPublicRecord[] = [
     resolved_at: "2026-10-09T07:00:00Z",
     body: "“Privacy” is spelt “Privasy”.",
     // A migrated outcome: no author, no status change (§9.7).
-    replies: [{ id: 2, author_name: null, body: "Fixed in 0.4.27.", status_to: "DONE", created_at: "2026-10-09T07:00:00Z" }],
+    replies: [
+      { id: 2, author_name: null, body: "Fixed in 0.4.27.", status_to: "DONE", created_at: "2026-10-09T07:00:00Z" },
+    ],
   },
 ];
 
 const COMMENTS: Record<number, FeedbackComment[]> = {
   52: [
-    { id: 11, author_name: "Ben", mine: false, staff: false, body: "Same on the iPad.", hidden: false, created_at: "2026-10-12T11:00:00Z" },
-    { id: 12, author_name: null, mine: false, staff: false, body: null, hidden: true, created_at: "2026-10-12T12:00:00Z" },
+    {
+      id: 11,
+      author_name: "Ben",
+      mine: false,
+      staff: false,
+      body: "Same on the iPad.",
+      hidden: false,
+      created_at: "2026-10-12T11:00:00Z",
+    },
+    {
+      id: 12,
+      author_name: null,
+      mine: false,
+      staff: false,
+      body: null,
+      hidden: true,
+      created_at: "2026-10-12T12:00:00Z",
+    },
   ],
   51: [
-    { id: 13, author_name: "Ada", mine: true, staff: false, body: "Totals per account would help too.", hidden: false, created_at: "2026-10-12T08:00:00Z" },
+    {
+      id: 13,
+      author_name: "Ada",
+      mine: true,
+      staff: false,
+      body: "Totals per account would help too.",
+      hidden: false,
+      created_at: "2026-10-12T08:00:00Z",
+    },
   ],
   49: [],
 };
@@ -123,9 +149,7 @@ export function FeedbackPublic038Demo() {
   // played here (the real list item has no body and no replies; the list reads neither).
   const rows = useMemo<FeedbackPublicListItem[]>(() => {
     const q = titles === "plain" ? search.trim().toLowerCase() : "";
-    return reports
-      .filter((r) => !q || r.title.toLowerCase().includes(q))
-      .sort(SORTERS[sort]);
+    return reports.filter((r) => !q || r.title.toLowerCase().includes(q)).sort(SORTERS[sort]);
   }, [reports, search, sort, titles]);
 
   const vote = useCallback(async (id: number, next: boolean): Promise<FeedbackVoteState> => {
@@ -147,7 +171,15 @@ export function FeedbackPublic038Demo() {
       ...all,
       [id]: [
         ...(all[id] ?? []),
-        { id: Date.now(), author_name: "Ada", mine: true, staff: false, body, hidden: false, created_at: new Date().toISOString() },
+        {
+          id: Date.now(),
+          author_name: "Ada",
+          mine: true,
+          staff: false,
+          body,
+          hidden: false,
+          created_at: new Date().toISOString(),
+        },
       ],
     }));
   };
@@ -209,11 +241,11 @@ export function FeedbackPublic038Demo() {
           }}
         />
         <Note>
-          {code("GET /feedback/public")} carries titles only — no body, no submitter, no file (§9.10) — and the
-          server sorts: {code("newest")}, {code("votes")} (most, then newest) or {code("updated")}. The search box is
-          drawn only with {code("onSearchChange")}; an app that seals its titles passes none. The
-          viewer&apos;s own report counts as their vote and is locked. The detail names people by first name, or
-          &quot;A user&quot;, and merges the admin&apos;s replies with the comments, oldest first.
+          {code("GET /feedback/public")} carries titles only — no body, no submitter, no file (§9.10) — and the server
+          sorts: {code("newest")}, {code("votes")} (most, then newest) or {code("updated")}. The search box is drawn
+          only with {code("onSearchChange")}; an app that seals its titles passes none. The viewer&apos;s own report
+          counts as their vote and is locked. The detail names people by first name, or &quot;A user&quot;, and merges
+          the admin&apos;s replies with the comments, oldest first.
         </Note>
       </div>
     </Example>
@@ -235,7 +267,10 @@ export function FeedbackPublicSwitch038Demo() {
   const [viewer, setViewer] = useState<"author" | "admin">("author");
   const [pending, setPending] = useState(false);
   return (
-    <Example label="FeedbackPublicSwitch — Visible to others" hint="the author while the report is open; the admin always">
+    <Example
+      label="FeedbackPublicSwitch — Visible to others"
+      hint="the author while the report is open; the admin always"
+    >
       <div className="flex max-w-md flex-col gap-3">
         <div className="flex flex-wrap gap-2">
           <ToggleGroup
@@ -279,11 +314,10 @@ export function FeedbackPublicSwitch038Demo() {
           }}
         />
         <Note>
-          {code("PATCH /feedback/{id} {public}")}. The author flips it while the report is OPEN, READY or
-          IN_PROGRESS, and at any status on a report the migration made public ({code("filed_private")}, the
-          opt-out the notice offers); past that it is locked with the reason. Never drawn on a CRASH, nor for anyone
-          but the author and an admin. {code("feedbackPublicSwitchAllowed(row, {isAdmin, viewerId})")} is the rule
-          on its own.
+          {code("PATCH /feedback/{id} {public}")}. The author flips it while the report is OPEN, READY or IN_PROGRESS,
+          and at any status on a report the migration made public ({code("filed_private")}, the opt-out the notice
+          offers); past that it is locked with the reason. Never drawn on a CRASH, nor for anyone but the author and an
+          admin. {code("feedbackPublicSwitchAllowed(row, {isAdmin, viewerId})")} is the rule on its own.
         </Note>
       </div>
     </Example>
@@ -329,10 +363,10 @@ export function FeedbackPublicCompose038Demo() {
           </pre>
         )}
         <Note>
-          {code('<FeedbackMenu publicHref="/all-feedback" />')} adds <strong>All feedback</strong> above the list
-          link, for everyone; &quot;My feedback&quot; stays. {code("useFeedbackSubmit({ publicNotice: true })")}{" "}
-          writes &quot;Other users will see the title and text (never your screenshots or files)&quot; under the
-          body. Leave both out where the app has no public parts or the viewer may not read them.
+          {code('<FeedbackMenu publicHref="/all-feedback" />')} adds <strong>All feedback</strong> above the list link,
+          for everyone; &quot;My feedback&quot; stays. {code("useFeedbackSubmit({ publicNotice: true })")} writes
+          &quot;Other users will see the title and text (never your screenshots or files)&quot; under the body. Leave
+          both out where the app has no public parts or the viewer may not read them.
         </Note>
       </div>
     </Example>
@@ -361,7 +395,8 @@ export function FeedbackNotificationTypes038Demo() {
             setValue((current) => {
               const next = { ...current };
               for (const [id, change] of Object.entries(patch.types ?? {})) {
-                if (change && next[id]) next[id] = { app: change.app ?? next[id].app, email: change.email ?? next[id].email };
+                if (change && next[id])
+                  next[id] = { app: change.app ?? next[id].app, email: change.email ?? next[id].email };
               }
               return next;
             });
@@ -369,9 +404,9 @@ export function FeedbackNotificationTypes038Demo() {
         />
       </div>
       <Note>
-        {code("feedback_answered")} fires on a reply, {code("feedback_comment")} on a visible comment, to the author
-        and the earlier commenters, never the writer; no content in the mail or the push. Spread the entries into
-        the app&apos;s own {code("types")}: the card draws only what the server answered, so an app that declares{" "}
+        {code("feedback_answered")} fires on a reply, {code("feedback_comment")} on a visible comment, to the author and
+        the earlier commenters, never the writer; no content in the mail or the push. Spread the entries into the
+        app&apos;s own {code("types")}: the card draws only what the server answered, so an app that declares{" "}
         {code("feedback_answered")} alone shows one.
       </Note>
     </Example>

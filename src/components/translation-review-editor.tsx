@@ -147,9 +147,7 @@ export function TranslationReviewEditor({
     const trimmedNote = note.trim() || null;
     // Approving says the text is right as it stands: there is no wording to suggest.
     const sent = verdict === "APPROVED" ? null : suggestion.trim() || null;
-    void run(verdict === "APPROVED" ? "approve" : "flag", () =>
-      onSave(reviewWrite(row, verdict, trimmedNote, sent)),
-    );
+    void run(verdict === "APPROVED" ? "approve" : "flag", () => onSave(reviewWrite(row, verdict, trimmedNote, sent)));
   };
 
   return (
@@ -212,7 +210,9 @@ export function TranslationReviewEditor({
       {/* Read-only: what the reviewer said, as text — the fields are for saying it. */}
       {!editable && review?.verdict === "NEEDS_CHANGE" && (review.suggestion || review.note) && (
         <div className="space-y-2">
-          {review.suggestion && <Then label={missing ? labels.translation : labels.suggestion} text={review.suggestion} />}
+          {review.suggestion && (
+            <Then label={missing ? labels.translation : labels.suggestion} text={review.suggestion} />
+          )}
           {review.note && <Then label={labels.note} text={review.note} />}
         </div>
       )}

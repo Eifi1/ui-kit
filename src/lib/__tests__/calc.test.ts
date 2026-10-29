@@ -98,9 +98,7 @@ describe("formatResult", () => {
     // exponent notation below 1e-6 and at/above 1e21, and neither `tokenize` nor
     // `sanitizeLive` accepts the letter `e` — so before the fix "1e-7" was recommitted
     // as "17" and 9.99e+23 as "9.9999999999823".
-    for (const n of [
-      1e-7, 3.3333333333e-10, 9.99999999998e23, 1e21, 5e-9, -1e-7, -9.99e23, 1e-6, 1e20,
-    ]) {
+    for (const n of [1e-7, 3.3333333333e-10, 9.99999999998e23, 1e21, 5e-9, -1e-7, -9.99e23, 1e-6, 1e20]) {
       const rendered = formatResult(n);
       expect(rendered).not.toMatch(/e/i);
       expect(commitExpression(rendered)).toBe(rendered);

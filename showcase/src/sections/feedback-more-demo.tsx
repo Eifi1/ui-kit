@@ -19,15 +19,11 @@ function EmptyStateInlineTones() {
     >
       <div className="grid gap-4 md:grid-cols-2">
         <div className="rounded-md border border-subtle">
-          <p className="border-b border-subtle px-3 py-2 text-sm font-medium text-primary">
-            Notifications
-          </p>
+          <p className="border-b border-subtle px-3 py-2 text-sm font-medium text-primary">Notifications</p>
           <EmptyState variant="inline" icon={<BellOff />} title="No notifications" hint="You are all caught up." />
         </div>
         <div className="rounded-md border border-subtle">
-          <p className="border-b border-subtle px-3 py-2 text-sm font-medium text-primary">
-            Support thread
-          </p>
+          <p className="border-b border-subtle px-3 py-2 text-sm font-medium text-primary">Support thread</p>
           <EmptyState
             variant="inline"
             tone="danger"
@@ -69,12 +65,12 @@ function EmptyStateInlineTones() {
       </div>
       <div className="mt-3">
         <Note>
-          The inline variant has no box: the icon shrinks to the text&apos;s size and sits before the title,
-          the hint follows on the same line, and the row wraps only when it must — centred like the box,
-          or <code className="font-mono">className=&quot;justify-start&quot;</code> for a list that reads from the
-          start edge (the second frame). <code className="font-mono">tone=&quot;danger&quot;</code> is an error
-          standing where the content should be; <code className="font-mono">tone=&quot;success&quot;</code> an empty
-          state that is good news. Press <strong>Try again</strong> to swap the one for the other.
+          The inline variant has no box: the icon shrinks to the text&apos;s size and sits before the title, the hint
+          follows on the same line, and the row wraps only when it must — centred like the box, or{" "}
+          <code className="font-mono">className=&quot;justify-start&quot;</code> for a list that reads from the start
+          edge (the second frame). <code className="font-mono">tone=&quot;danger&quot;</code> is an error standing where
+          the content should be; <code className="font-mono">tone=&quot;success&quot;</code> an empty state that is good
+          news. Press <strong>Try again</strong> to swap the one for the other.
         </Note>
       </div>
     </Example>
@@ -155,9 +151,9 @@ function AlertBannerMore() {
             Payment past due — a small strip, no action.
           </AlertBanner>
           <AlertBanner tone="neutral" variant="strip" clampMobile data-testid="clamp-strip">
-            clampMobile: during the closed beta the app runs on modest hardware, so a page can take a
-            moment longer to load now and then. On a phone this note keeps to one line, with More for the
-            rest; from md up it reads in full, as without the prop.
+            clampMobile: during the closed beta the app runs on modest hardware, so a page can take a moment longer to
+            load now and then. On a phone this note keeps to one line, with More for the rest; from md up it reads in
+            full, as without the prop.
           </AlertBanner>
           <div className="p-3 text-sm text-secondary">
             The page under the strips — the trial strip&apos;s action pressed {paid}×.{" "}
@@ -176,9 +172,8 @@ function AlertBannerMore() {
           </label>
           <div className="relative h-32 overflow-hidden rounded-md border border-subtle p-3">
             <p className="text-sm leading-6 text-secondary">
-              Page text under a floating notice. Page text under a floating notice. Page text under a
-              floating notice. Page text under a floating notice. Page text under a floating notice. Page
-              text under a floating notice.
+              Page text under a floating notice. Page text under a floating notice. Page text under a floating notice.
+              Page text under a floating notice. Page text under a floating notice. Page text under a floating notice.
             </p>
             <div className="absolute inset-x-3 top-6">
               <AlertBanner tone="info" elevated={elevated}>
@@ -190,12 +185,12 @@ function AlertBannerMore() {
       </div>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">strip</code> is edge to edge, no radius, a bottom border only and one
-          centred line; <code className="font-mono">action</code> is a trailing control that never shrinks, and
-          it sits BESIDE a whole-row banner&apos;s own button or link (interactive content may not nest).{" "}
-          <code className="font-mono">elevated</code> puts the tone&apos;s wash on an opaque surface with a
-          shadow — switch it off in the dark theme and the page text shows through the translucent tint,
-          which is what it is for. The success glyph is the check in a circle.
+          <code className="font-mono">strip</code> is edge to edge, no radius, a bottom border only and one centred
+          line; <code className="font-mono">action</code> is a trailing control that never shrinks, and it sits BESIDE a
+          whole-row banner&apos;s own button or link (interactive content may not nest).{" "}
+          <code className="font-mono">elevated</code> puts the tone&apos;s wash on an opaque surface with a shadow —
+          switch it off in the dark theme and the page text shows through the translucent tint, which is what it is for.
+          The success glyph is the check in a circle.
         </Note>
       </div>
     </Example>
@@ -246,11 +241,11 @@ export function AlertBannerBlockDemo() {
       </div>
       <div className="mt-3">
         <Note>
-          {code("block")} lays an inline banner out as a full-width row with the glyph on the text&apos;s first
-          line, instead of the inline, centred line it is by default (which a toolbar or a run of content
-          needs). {code("live={false}")} drops {code('role="alert"')} / {code('role="status"')} for a message that
-          is part of the page, like a review step&apos;s standing warning, so a screen reader does not interrupt
-          with it on every mount. A {code("role")} you pass still wins.
+          {code("block")} lays an inline banner out as a full-width row with the glyph on the text&apos;s first line,
+          instead of the inline, centred line it is by default (which a toolbar or a run of content needs).{" "}
+          {code("live={false}")} drops {code('role="alert"')} / {code('role="status"')} for a message that is part of
+          the page, like a review step&apos;s standing warning, so a screen reader does not interrupt with it on every
+          mount. A {code("role")} you pass still wins.
         </Note>
       </div>
     </Example>
@@ -281,9 +276,8 @@ export function EmptyStateSmallDemo() {
       </div>
       <div className="mt-3">
         <Note>
-          {code('size="sm"')} fits among {code("text-xs")} rows under a panel heading; the default{" "}
-          {code("md")} (right) is a centred 14px line with room above and below, which reads as a section of
-          its own there.
+          {code('size="sm"')} fits among {code("text-xs")} rows under a panel heading; the default {code("md")} (right)
+          is a centred 14px line with room above and below, which reads as a section of its own there.
         </Note>
       </div>
     </Example>
@@ -312,7 +306,8 @@ export function LoadingState016Demo() {
         </div>
       </div>
       <Note>
-        {code("label={null}")} hides the words, and the status region keeps announcing {code("common.loading")}. {code("compact")} is the step between {code("sm")} and {code("md")}.
+        {code("label={null}")} hides the words, and the status region keeps announcing {code("common.loading")}.{" "}
+        {code("compact")} is the step between {code("sm")} and {code("md")}.
       </Note>
     </Example>
   );

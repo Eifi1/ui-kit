@@ -116,10 +116,14 @@ export function DemoStart<T>({
   const accessLink = useAccessAction(access, landingLabels);
   const [refusal, setRefusal] = useState<Refusal | null>(null);
   useNoIndex(noIndex);
-  useOncePerKey<T>(ONCE, () => start(), (_key, result) => {
-    if (result.ok) onStarted(result.value);
-    else setRefusal(refusalOf(result.error));
-  });
+  useOncePerKey<T>(
+    ONCE,
+    () => start(),
+    (_key, result) => {
+      if (result.ok) onStarted(result.value);
+      else setRefusal(refusalOf(result.error));
+    },
+  );
 
   return (
     <div {...rest} className={cn("flex flex-col items-center gap-4 py-4 text-center", className)}>

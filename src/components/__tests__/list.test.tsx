@@ -215,11 +215,7 @@ describe("ListItem targetProps and bordered (lenkbank segment list, profile bar)
     const onClick = vi.fn();
     render(
       <List>
-        <ListItem
-          title="Segment 1"
-          onClick={onClick}
-          targetProps={{ draggable: true, onDragStart, role: "tab" }}
-        />
+        <ListItem title="Segment 1" onClick={onClick} targetProps={{ draggable: true, onDragStart, role: "tab" }} />
       </List>,
     );
     const row = screen.getByRole("button", { name: /Segment 1/ });
@@ -252,7 +248,15 @@ describe("ListItem — the provider's router link", () => {
       <UiKitProvider linkComponent={routerLink}>
         <List>
           <ListItem title="Units" href="/units" />
-          <ListItem title="Own" href="/own" renderLink={(p) => <a {...p} data-own="">{p.children}</a>} />
+          <ListItem
+            title="Own"
+            href="/own"
+            renderLink={(p) => (
+              <a {...p} data-own="">
+                {p.children}
+              </a>
+            )}
+          />
           <ListItem title="Docs" href="https://example.com" external />
         </List>
       </UiKitProvider>,
@@ -271,11 +275,7 @@ describe("ListItem 0.16 slots (keksdose P2)", () => {
     const onClick = vi.fn();
     render(
       <List>
-        <ListItem
-          title="Groceries"
-          onClick={onClick}
-          content={<span data-testid="bar" aria-hidden />}
-        >
+        <ListItem title="Groceries" onClick={onClick} content={<span data-testid="bar" aria-hidden />}>
           <button type="button">Edit budget</button>
         </ListItem>
       </List>,
@@ -302,7 +302,16 @@ describe("ListItem 0.16 slots (keksdose P2)", () => {
     render(
       <List>
         <ListItem title="A" meta="one line" />
-        <ListItem title="B" metaWrap meta={<><span>tag 1</span><span>tag 2</span></>} />
+        <ListItem
+          title="B"
+          metaWrap
+          meta={
+            <>
+              <span>tag 1</span>
+              <span>tag 2</span>
+            </>
+          }
+        />
       </List>,
     );
     expect(screen.getByText("one line").className).toContain("truncate");
@@ -441,7 +450,14 @@ describe("ListItem docs guards (keksdose 0.17 Q5)", () => {
   });
 
   it("puts content in the text column, beside the trailing figure rather than under it", () => {
-    render(<ListItem title="Food" trailing={<span>CHF 40</span>} content={<span data-testid="meter" />} onClick={() => {}} />);
+    render(
+      <ListItem
+        title="Food"
+        trailing={<span>CHF 40</span>}
+        content={<span data-testid="meter" />}
+        onClick={() => {}}
+      />,
+    );
     const column = screen.getByTestId("meter").parentElement!.parentElement!;
     expect(column).toHaveTextContent("Food");
     expect(column).not.toHaveTextContent("CHF 40");
@@ -449,8 +465,7 @@ describe("ListItem docs guards (keksdose 0.17 Q5)", () => {
 });
 
 describe("List limit (0.51.4, keksdose run 89)", () => {
-  const rows = (count: number) =>
-    Array.from({ length: count }, (_, i) => <ListItem key={i} title={`Row ${i + 1}`} />);
+  const rows = (count: number) => Array.from({ length: count }, (_, i) => <ListItem key={i} title={`Row ${i + 1}`} />);
 
   it("opens on the first rows, a Show all (n) row opens the rest and folds them again", () => {
     render(<List limit={3}>{rows(5)}</List>);
@@ -482,7 +497,9 @@ describe("List limit (0.51.4, keksdose run 89)", () => {
 
   it("speaks the provider's language", () => {
     render(
-      <UiKitProvider labels={{ list: { showAll: (n: number) => `Alle anzeigen (${n})`, showFewer: "Weniger anzeigen" } }}>
+      <UiKitProvider
+        labels={{ list: { showAll: (n: number) => `Alle anzeigen (${n})`, showFewer: "Weniger anzeigen" } }}
+      >
         <List limit={1}>{rows(3)}</List>
       </UiKitProvider>,
     );

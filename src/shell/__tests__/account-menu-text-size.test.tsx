@@ -16,7 +16,12 @@ function Menu({ value, onPick = () => {} }: { value?: TextSize; onPick?: (size: 
       <TopBarActionMenu aria-label="Account" icon={<span>A</span>} entries={[]}>
         {(close) => (
           <>
-            <AccountMenuLanguage languages={[{ code: "en", label: "English" }]} value="en" onPick={() => {}} close={close} />
+            <AccountMenuLanguage
+              languages={[{ code: "en", label: "English" }]}
+              value="en"
+              onPick={() => {}}
+              close={close}
+            />
             <AccountMenuTextSize value={value} onPick={onPick} />
           </>
         )}

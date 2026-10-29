@@ -52,16 +52,7 @@ export { DEFAULT_STAT_TILE_LABELS };
  *    below 30°"). Say it in the hint or description as well; colour alone is not one.
  */
 export type StatTileTone =
-  | "neutral"
-  | "brand"
-  | "income"
-  | "expense"
-  | "net"
-  | "signed"
-  | "success"
-  | "warning"
-  | "danger"
-  | "info";
+  "neutral" | "brand" | "income" | "expense" | "net" | "signed" | "success" | "warning" | "danger" | "info";
 
 const TONE_CLASS: Record<Exclude<StatTileTone, "signed">, string> = {
   neutral: "text-primary",
@@ -124,8 +115,7 @@ export interface StatTileLinkProps {
  * one to scroll into view or measure. `ComponentPropsWithoutRef` only kept it out of the
  * type; at runtime `{...rest}` already carried it there.
  */
-export interface StatTileProps
-  extends Omit<ComponentPropsWithRef<"div">, "children" | "onClick"> {
+export interface StatTileProps extends Omit<ComponentPropsWithRef<"div">, "children" | "onClick"> {
   /** What is measured. Also the tile's accessible name when it is a link/button. */
   label: ReactNode;
   /**
@@ -435,7 +425,11 @@ export function StatTile({
       // `relative`: the containing block for the sr-only sentence (see the
       // sr-only-containment test for what an escaped one does to the page).
       <div className="relative mt-1 flex flex-wrap items-center gap-x-1.5 text-xs tabular-nums">
-        <span id={deltaId} data-private={priv} className={cn("inline-flex items-center gap-0.5 font-medium", deltaTone)}>
+        <span
+          id={deltaId}
+          data-private={priv}
+          className={cn("inline-flex items-center gap-0.5 font-medium", deltaTone)}
+        >
           <Icon className="size-3 shrink-0" aria-hidden />
           {/* The figure at zero too, like Delta (kastlan 48): "0 %" says the change was
               measured; a bare dash reads like a missing value. */}
@@ -448,11 +442,7 @@ export function StatTile({
   }
 
   // ── Headline ──
-  const valueClass = cn(
-    "whitespace-nowrap font-semibold tabular-nums",
-    VALUE_TEXT[size],
-    toneClass(tone, value),
-  );
+  const valueClass = cn("whitespace-nowrap font-semibold tabular-nums", VALUE_TEXT[size], toneClass(tone, value));
   const headline = loading ? (
     <span id={valueId} className="relative block py-0.5">
       <span aria-hidden className={cn(SKELETON_CLASS, "block h-6 w-24 max-w-full")} />
@@ -461,9 +451,7 @@ export function StatTile({
   ) : hasValue ? (
     <span id={valueId} data-private={priv} className={cn(valueClass, valueLabel != null && !large && "ms-auto")}>
       {show(value)}
-      {unit != null && (
-        <span className="ms-1 text-[0.7em] font-medium text-muted">{unit}</span>
-      )}
+      {unit != null && <span className="ms-1 text-[0.7em] font-medium text-muted">{unit}</span>}
     </span>
   ) : (
     <span id={valueId} className={cn("relative", valueClass, "text-muted")}>
@@ -472,8 +460,9 @@ export function StatTile({
     </span>
   );
 
-  const graphic =
-    loading ? null : sparkline ??
+  const graphic = loading
+    ? null
+    : (sparkline ??
       (trend && (
         <Sparkline
           data={trend}
@@ -485,7 +474,7 @@ export function StatTile({
           tone={tone === "signed" ? "signed" : tone === "neutral" ? "chart" : tone}
           data-private={priv}
         />
-      ));
+      )));
 
   return (
     <Card

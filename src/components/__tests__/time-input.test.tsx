@@ -19,9 +19,7 @@ describe("TimeInput", () => {
   it("reports the normalised value, and the raw event to onChange", () => {
     const onValueChange = vi.fn();
     const onChange = vi.fn();
-    const { container } = render(
-      <TimeInput value="" onValueChange={onValueChange} onChange={onChange} />,
-    );
+    const { container } = render(<TimeInput value="" onValueChange={onValueChange} onChange={onChange} />);
     const input = container.querySelector("input")!;
     fireEvent.change(input, { target: { value: "08:05:00" } });
     expect(onValueChange).toHaveBeenLastCalledWith("08:05");
@@ -59,9 +57,7 @@ describe("TimeInput", () => {
   });
 
   it("paints an out-of-range value as invalid, and passes min/max on", () => {
-    const { container, rerender } = render(
-      <TimeInput value="07:00" min="08:00" max="18:00" onValueChange={vi.fn()} />,
-    );
+    const { container, rerender } = render(<TimeInput value="07:00" min="08:00" max="18:00" onValueChange={vi.fn()} />);
     const input = container.querySelector("input")!;
     expect(input).toHaveAttribute("min", "08:00");
     expect(input).toHaveAttribute("max", "18:00");

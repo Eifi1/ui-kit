@@ -67,16 +67,16 @@ describe("FeedbackPublicSwitch", () => {
     const onChange = vi.fn();
     render(<FeedbackPublicSwitch row={row()} isAdmin={false} viewerId={AUTHOR} onChange={onChange} />);
     expect(sw()).toBeChecked();
-    expect(sw()).toHaveAccessibleDescription(
-      "Other users see the title and text, never your screenshots or files.",
-    );
+    expect(sw()).toHaveAccessibleDescription("Other users see the title and text, never your screenshots or files.");
     fireEvent.click(sw());
     expect(onChange).toHaveBeenCalledWith(false);
   });
 
   it("is locked with the reason for the author past the open window", () => {
     const onChange = vi.fn();
-    render(<FeedbackPublicSwitch row={row({ status: "DONE" })} isAdmin={false} viewerId={AUTHOR} onChange={onChange} />);
+    render(
+      <FeedbackPublicSwitch row={row({ status: "DONE" })} isAdmin={false} viewerId={AUTHOR} onChange={onChange} />,
+    );
     expect(sw()).toHaveAttribute("aria-disabled", "true");
     expect(sw()).toHaveAccessibleDescription(expect.stringContaining("Only while the report is still open."));
     fireEvent.click(sw());

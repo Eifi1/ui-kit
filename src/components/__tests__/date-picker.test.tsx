@@ -34,13 +34,7 @@ describe("DatePicker formatValue", () => {
 
   it("applies to both ends of a range, and never to an empty end", () => {
     render(
-      <DateRangePicker
-        from="2026-09-01"
-        to=""
-        onChange={() => {}}
-        locale="en"
-        formatValue={(iso) => `host:${iso}`}
-      />,
+      <DateRangePicker from="2026-09-01" to="" onChange={() => {}} locale="en" formatValue={(iso) => `host:${iso}`} />,
     );
     // `to` is empty: the separator and ellipsis, not `host:` of nothing.
     expect(screen.getByText("host:2026-09-01 – …")).toBeTruthy();

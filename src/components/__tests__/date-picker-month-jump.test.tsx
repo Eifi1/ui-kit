@@ -291,14 +291,7 @@ describe("DateRangePicker monthJump (kastlan's July–June period)", () => {
 
   it("marks the selected range's months: both ends and the band between", () => {
     render(
-      <DateRangePicker
-        label="Period"
-        locale={LOCALE}
-        monthJump
-        from="2026-07-01"
-        to="2027-06-30"
-        onChange={noop}
-      />,
+      <DateRangePicker label="Period" locale={LOCALE} monthJump from="2026-07-01" to="2027-06-30" onChange={noop} />,
     );
     fireEvent.click(screen.getByRole("combobox", { name: /^Period/ }));
     fireEvent.click(caption());
@@ -360,13 +353,7 @@ describe("RhfDateRangePicker monthJump — kastlan's period_start / period_end",
     return (
       <Form {...form}>
         <form>
-          <RhfDateRangePicker
-            fromName="period_start"
-            toName="period_end"
-            label="Period"
-            required
-            monthJump
-          />
+          <RhfDateRangePicker fromName="period_start" toName="period_end" label="Period" required monthJump />
         </form>
       </Form>
     );

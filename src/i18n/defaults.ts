@@ -33,10 +33,7 @@ import { DEFAULT_CONFIRM_DIALOG_LABELS } from "../components/confirm-dialog-labe
 import { DEFAULT_FLOATING_PANEL_LABELS } from "../components/floating-panel-labels";
 import { DEFAULT_FEEDBACK_ATTACHMENT_LABELS } from "../feedback/feedback-attachment-labels";
 import { DEFAULT_FEEDBACK_DIALOG_LABELS } from "../feedback/feedback-dialog-labels";
-import {
-  DEFAULT_FEEDBACK_COMPOSER_LABELS,
-  DEFAULT_FEEDBACK_THREAD_LABELS,
-} from "../feedback/feedback-thread-labels";
+import { DEFAULT_FEEDBACK_COMPOSER_LABELS, DEFAULT_FEEDBACK_THREAD_LABELS } from "../feedback/feedback-thread-labels";
 import {
   DEFAULT_FEEDBACK_CATEGORY_LABELS,
   DEFAULT_FEEDBACK_STATUS_LABELS,

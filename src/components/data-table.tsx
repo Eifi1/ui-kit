@@ -29,7 +29,13 @@ import {
   type RowGroup,
 } from "./data-table-groups";
 export type { DataTableGroupBy, DataTableLoadMore } from "./data-table-groups";
-import { VIRTUAL_SELECT_COL, rowNavTarget, useRowWindow, type DataTableVirtualize, type VirtualGroup } from "./data-table-virtual";
+import {
+  VIRTUAL_SELECT_COL,
+  rowNavTarget,
+  useRowWindow,
+  type DataTableVirtualize,
+  type VirtualGroup,
+} from "./data-table-virtual";
 export type { DataTableVirtualize } from "./data-table-virtual";
 import { ColumnSettingsPanel } from "./data-table-column-settings";
 import { useLargeText } from "../hooks/use-large-text";
@@ -46,7 +52,12 @@ import { FullBleedDialog } from "./full-bleed-dialog";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { useAnnounce } from "../hooks/use-announce";
 import { DEFAULT_DATA_TABLE_LABELS, type DataTableLabels } from "./data-table-labels";
-import { useKitLabelOverrides, useKitLocale, useKitTableStorageKeyPrefix, type LabelOverride } from "../i18n/kit-labels";
+import {
+  useKitLabelOverrides,
+  useKitLocale,
+  useKitTableStorageKeyPrefix,
+  type LabelOverride,
+} from "../i18n/kit-labels";
 import { useEdgeFade } from "../lib/strip-fade";
 import { dirOf, type Direction } from "../lib/direction";
 
@@ -909,8 +920,7 @@ export interface DataTableDesktopSwipeActions<T> {
  * its borders, and a collapsed border belongs to the TABLE, not the cell, so it stays
  * behind at the bottom of the rows while the sticky cell rides over them.
  */
-const FOOTER_CELL =
-  "sticky bottom-0 z-10 bg-surface-2 shadow-[inset_0_2px_0_var(--border-strong)]";
+const FOOTER_CELL = "sticky bottom-0 z-10 bg-surface-2 shadow-[inset_0_2px_0_var(--border-strong)]";
 
 // ---------- Phone sort control (keksdose K10) ----------
 
@@ -953,8 +963,6 @@ const NO_VIRTUAL_OPTIONS: DataTableVirtualize = {};
 // `moveRowFocus` (the roving rows' Arrow/Home/End) lives with the row in data-table-row.tsx.
 
 // ---------- Main DataTable ----------
-
-
 
 import { DEFAULT_PERSIST_PREFIX, useTableState, type TableUrlSync } from "./use-table-state";
 import { useMobileReveal } from "./use-mobile-reveal";
@@ -1285,7 +1293,7 @@ export function DataTable<T>({
   // "clear all"). Only touches keys the table actually exposes as filters.
   const clearAllFilters = () => {
     const keys = columns
-      .filter((col) => ((!serverRows || onFiltersChange) ? resolveFilter(col) : null))
+      .filter((col) => (!serverRows || onFiltersChange ? resolveFilter(col) : null))
       .map((col) => col.key);
     if (!keys.length) return;
     if (onFiltersChange) {
@@ -1548,8 +1556,7 @@ export function DataTable<T>({
   // and screen reader's way — enters the mode: every card shows its box and a tap
   // toggles it. The mode lasts while anything is selected, so emptying the selection
   // (the bulk bar's Clear, the last box unticked, Cancel) leaves it, as kk's does.
-  const anySelected =
-    !!selection && (selection.someSelected || (selection.allSelected && slice.length > 0));
+  const anySelected = !!selection && (selection.someSelected || (selection.allSelected && slice.length > 0));
   const [phoneSelectMode, setPhoneSelectMode] = useState(false);
   const [hadSelection, setHadSelection] = useState(anySelected);
   if (anySelected !== hadSelection) {
@@ -1708,7 +1715,12 @@ export function DataTable<T>({
           continue;
         }
         g1.children.forEach((g2, j) => {
-          virtualGroups.push({ start: g2.start, end: g2.start + g2.rows.length, bands: j === 0 ? BAND_1_2 : BAND_2, first });
+          virtualGroups.push({
+            start: g2.start,
+            end: g2.start + g2.rows.length,
+            bands: j === 0 ? BAND_1_2 : BAND_2,
+            first,
+          });
           virtualBands.push({ g1, g2 });
         });
       }
@@ -1799,266 +1811,247 @@ export function DataTable<T>({
           data-table-toolbar=""
           className={cn(
             "flex flex-wrap items-center gap-2",
-            frame
-              ? cn("border-b border-subtle", compact ? "px-2 py-1.5" : "px-3 py-2")
-              : "pb-3",
+            frame ? cn("border-b border-subtle", compact ? "px-2 py-1.5" : "px-3 py-2") : "pb-3",
           )}
         >
           {toolbar}
         </div>
       )}
       {!isMdUp && (
-      <div ref={mobileRootRef} className={cn(fillHeight && "flex min-h-0 flex-1 flex-col")}>
-        {/* Mobile filter access (feedback #299): the per-column filter popovers
+        <div ref={mobileRootRef} className={cn(fillHeight && "flex min-h-0 flex-1 flex-col")}>
+          {/* Mobile filter access (feedback #299): the per-column filter popovers
             live in the desktop header, which the card list doesn't render — so
             expose the same filters through a bottom sheet here. */}
-        {(!serverRows || onFiltersChange) && (
-          <MobileFilters
-            columns={columns}
-            filters={filters}
-            selectOptionsByKey={selectOptionsByKey}
-            isServer={serverRows}
-            hasFilterCallback={!!onFiltersChange}
-            onSetFilter={setFilterValue}
-            onClearFilter={clearFilter}
-            onClearAll={clearAllFilters}
-            labels={labels}
-            locale={locale}
-          />
-        )}
-        {mobileSort && (
-          <MobileSort
-            columns={visibleColumns.filter((c) => (!serverRows || !!onSortsChange) && !!c.sortBy)}
-            sorts={sorts}
-            sortCycle={sortCycle}
-            compact={compact}
-            labels={labels}
-            onPick={(key) => {
-              if (key === null) {
-                if (sorts.length > 0) commitSorts([], sorts[0].key);
-                return;
-              }
-              if (sorts[0]?.key === key) return;
-              // A newly picked column starts where its header's first click would.
-              const col = columns.find((c) => c.key === key);
-              commitSorts([{ key, dir: col?.firstSort ?? "asc" }], key);
-            }}
-            onFlip={() => {
-              if (sorts.length === 0) return;
-              commitSorts(
-                sorts.map((s, i) => (i === 0 ? { ...s, dir: flipDir(s.dir) } : s)),
-                sorts[0].key,
-              );
-            }}
-          />
-        )}
-        {selection && (
-          <MobileSelectBar
-            active={phoneSelecting}
-            allSelected={selection.allSelected}
-            someSelected={selection.someSelected}
-            compact={compact}
-            labels={labels}
-            onEnter={() => setPhoneSelectMode(true)}
-            onToggleAll={selection.onToggleAll}
-            onCancel={() => {
-              setPhoneSelectMode(false);
-              if (anySelected) selection.onToggleAll(false);
-            }}
-          />
-        )}
-        <ul
-          ref={phoneListRef}
-          className={cn(
-            "divide-y divide-subtle",
-            // Under `fillHeight` the list takes the room its parent gives it, and in a
-            // BOUNDED parent it is the scroller, as the table body is on a wide screen:
-            // the filter button stays above it and a server pager below. Only then —
-            // see `phoneListScrolls` (live #420). The endless-scroll sentinel still
-            // fires in here — an IntersectionObserver on the viewport sees through the
-            // clipping ancestor.
-            fillHeight && "min-h-0 flex-1",
-            fillHeight && phoneListScrolls && "overflow-y-auto overscroll-contain",
-            // Same busy treatment as the desktop body; see `isLoading` below.
-            isLoading && mobileSlice.length > 0 && "opacity-60 transition-opacity",
-          )}
-          aria-busy={isLoading || undefined}
-        >
-          {mobileGroups
-            ? mobileGroups.map((g) => (
-                <Fragment key={`hb-group:${g.key}`}>
-                  <li className="sticky top-0 z-10 flex flex-wrap items-baseline justify-between gap-x-3 bg-surface-2 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted backdrop-blur">
-                    <span className="min-w-0">
-                      {mobileGroupLabel
-                        ? mobileGroupLabel(g.key)
-                        : mobileLevel?.label
-                          ? mobileLevel.label(g.key, g.rows)
-                          : g.key}
-                    </span>
-                    {mobileLevel?.end && <span className="ms-auto tabular-nums">{mobileLevel.end(g.key, g.rows)}</span>}
-                  </li>
-                  {g.rows.map(renderMobileRow)}
-                </Fragment>
-              ))
-            : mobileSlice.map(renderMobileRow)}
-          {mobileSlice.length === 0 && (
-            <li
-              className={cn(
-                "text-center text-muted",
-                compact ? "px-3 py-3 text-xs" : "px-4 py-6 text-sm",
-              )}
-            >
-              {isLoading ? <LoadingText label={labels.loading} /> : (empty ?? labels.empty)}
-            </li>
-          )}
-          {/* Endless-scroll sentinel: observed by IntersectionObserver to pull in
-              the next chunk as it nears the viewport (feedback #232). */}
-          {canRevealMoreMobile && (
-            <li
-              ref={loadMoreRef}
-              className="px-4 py-4 text-center text-xs text-placeholder"
-            >
-              {/* Isolated for the reason spelled out on LoadingText. */}
-              <bdi>{labels.loading}</bdi>
-            </li>
-          )}
-          {/* The owner's next slice (0.48), once every row held is revealed. */}
-          {loadMore && !canRevealMoreMobile && (
-            <DataTableLoadMoreFooter
-              as="li"
-              loadMore={loadMore}
-              rowCount={sorted.length}
+          {(!serverRows || onFiltersChange) && (
+            <MobileFilters
+              columns={columns}
+              filters={filters}
+              selectOptionsByKey={selectOptionsByKey}
+              isServer={serverRows}
+              hasFilterCallback={!!onFiltersChange}
+              onSetFilter={setFilterValue}
+              onClearFilter={clearFilter}
+              onClearAll={clearAllFilters}
               labels={labels}
-              compact={compact}
+              locale={locale}
             />
           )}
-        </ul>
-        {/* The phone's totals: a summary card after the list rather than one more
+          {mobileSort && (
+            <MobileSort
+              columns={visibleColumns.filter((c) => (!serverRows || !!onSortsChange) && !!c.sortBy)}
+              sorts={sorts}
+              sortCycle={sortCycle}
+              compact={compact}
+              labels={labels}
+              onPick={(key) => {
+                if (key === null) {
+                  if (sorts.length > 0) commitSorts([], sorts[0].key);
+                  return;
+                }
+                if (sorts[0]?.key === key) return;
+                // A newly picked column starts where its header's first click would.
+                const col = columns.find((c) => c.key === key);
+                commitSorts([{ key, dir: col?.firstSort ?? "asc" }], key);
+              }}
+              onFlip={() => {
+                if (sorts.length === 0) return;
+                commitSorts(
+                  sorts.map((s, i) => (i === 0 ? { ...s, dir: flipDir(s.dir) } : s)),
+                  sorts[0].key,
+                );
+              }}
+            />
+          )}
+          {selection && (
+            <MobileSelectBar
+              active={phoneSelecting}
+              allSelected={selection.allSelected}
+              someSelected={selection.someSelected}
+              compact={compact}
+              labels={labels}
+              onEnter={() => setPhoneSelectMode(true)}
+              onToggleAll={selection.onToggleAll}
+              onCancel={() => {
+                setPhoneSelectMode(false);
+                if (anySelected) selection.onToggleAll(false);
+              }}
+            />
+          )}
+          <ul
+            ref={phoneListRef}
+            className={cn(
+              "divide-y divide-subtle",
+              // Under `fillHeight` the list takes the room its parent gives it, and in a
+              // BOUNDED parent it is the scroller, as the table body is on a wide screen:
+              // the filter button stays above it and a server pager below. Only then —
+              // see `phoneListScrolls` (live #420). The endless-scroll sentinel still
+              // fires in here — an IntersectionObserver on the viewport sees through the
+              // clipping ancestor.
+              fillHeight && "min-h-0 flex-1",
+              fillHeight && phoneListScrolls && "overflow-y-auto overscroll-contain",
+              // Same busy treatment as the desktop body; see `isLoading` below.
+              isLoading && mobileSlice.length > 0 && "opacity-60 transition-opacity",
+            )}
+            aria-busy={isLoading || undefined}
+          >
+            {mobileGroups
+              ? mobileGroups.map((g) => (
+                  <Fragment key={`hb-group:${g.key}`}>
+                    <li className="sticky top-0 z-10 flex flex-wrap items-baseline justify-between gap-x-3 bg-surface-2 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted backdrop-blur">
+                      <span className="min-w-0">
+                        {mobileGroupLabel
+                          ? mobileGroupLabel(g.key)
+                          : mobileLevel?.label
+                            ? mobileLevel.label(g.key, g.rows)
+                            : g.key}
+                      </span>
+                      {mobileLevel?.end && (
+                        <span className="ms-auto tabular-nums">{mobileLevel.end(g.key, g.rows)}</span>
+                      )}
+                    </li>
+                    {g.rows.map(renderMobileRow)}
+                  </Fragment>
+                ))
+              : mobileSlice.map(renderMobileRow)}
+            {mobileSlice.length === 0 && (
+              <li className={cn("text-center text-muted", compact ? "px-3 py-3 text-xs" : "px-4 py-6 text-sm")}>
+                {isLoading ? <LoadingText label={labels.loading} /> : (empty ?? labels.empty)}
+              </li>
+            )}
+            {/* Endless-scroll sentinel: observed by IntersectionObserver to pull in
+              the next chunk as it nears the viewport (feedback #232). */}
+            {canRevealMoreMobile && (
+              <li ref={loadMoreRef} className="px-4 py-4 text-center text-xs text-placeholder">
+                {/* Isolated for the reason spelled out on LoadingText. */}
+                <bdi>{labels.loading}</bdi>
+              </li>
+            )}
+            {/* The owner's next slice (0.48), once every row held is revealed. */}
+            {loadMore && !canRevealMoreMobile && (
+              <DataTableLoadMoreFooter
+                as="li"
+                loadMore={loadMore}
+                rowCount={sorted.length}
+                labels={labels}
+                compact={compact}
+              />
+            )}
+          </ul>
+          {/* The phone's totals: a summary card after the list rather than one more
             `<li>` in it. The list reveals rows in chunks as it is scrolled, so a last
             item would sit mid-list until the end was reached; outside it, and under
             `fillHeight` outside the scroller too, the totals stay in view the way the
             sticky `<tfoot>` keeps them in view on a wide screen. Named by
             `footerLabel` so it is announced as what it is, not as a stray list of
             numbers; `mobileHidden` columns stay hidden here as on the cards. */}
-        {showFooter && mobileColumns.some((c) => c.footer) && (
-          <section
-            data-table-footer=""
-            aria-labelledby={footerLabel != null ? footerHeadingId : undefined}
-            className={cn(
-              "border-t-2 border-strong bg-surface-2",
-              compact ? "px-3 py-2" : "px-4 py-3",
-              isLoading && "opacity-60 transition-opacity",
-            )}
-          >
-            {footerLabel != null && (
-              <div id={footerHeadingId} className={cn("font-semibold", compact ? "mb-1 text-sm" : "mb-2")}>
-                {footerLabel}
-              </div>
-            )}
-            <dl
+          {showFooter && mobileColumns.some((c) => c.footer) && (
+            <section
+              data-table-footer=""
+              aria-labelledby={footerLabel != null ? footerHeadingId : undefined}
               className={cn(
-                "grid grid-cols-[auto_1fr] gap-x-3",
-                compact ? "gap-y-0.5 text-xs" : "gap-y-1 text-sm",
+                "border-t-2 border-strong bg-surface-2",
+                compact ? "px-3 py-2" : "px-4 py-3",
+                isLoading && "opacity-60 transition-opacity",
               )}
             >
-              {mobileColumns
-                .filter((c) => c.footer)
-                .map((col) => (
-                  <Fragment key={col.key}>
-                    <dt className="self-center text-xs uppercase tracking-wide text-muted">
-                      {col.header}
-                    </dt>
-                    <dd className="min-w-0 self-center font-semibold text-primary">
-                      {footerValue(col)}
-                    </dd>
-                  </Fragment>
-                ))}
-            </dl>
-          </section>
-        )}
-        {/* Client-side mobile lists scroll endlessly (sentinel above); only
+              {footerLabel != null && (
+                <div id={footerHeadingId} className={cn("font-semibold", compact ? "mb-1 text-sm" : "mb-2")}>
+                  {footerLabel}
+                </div>
+              )}
+              <dl
+                className={cn("grid grid-cols-[auto_1fr] gap-x-3", compact ? "gap-y-0.5 text-xs" : "gap-y-1 text-sm")}
+              >
+                {mobileColumns
+                  .filter((c) => c.footer)
+                  .map((col) => (
+                    <Fragment key={col.key}>
+                      <dt className="self-center text-xs uppercase tracking-wide text-muted">{col.header}</dt>
+                      <dd className="min-w-0 self-center font-semibold text-primary">{footerValue(col)}</dd>
+                    </Fragment>
+                  ))}
+              </dl>
+            </section>
+          )}
+          {/* Client-side mobile lists scroll endlessly (sentinel above); only
             server-paginated tables keep the pager here. */}
-        {isServer && !loadMore && (
-          <Pagination
-            page={safePage}
-            totalPages={totalPages}
-            pageSize={paginationPageSize}
-            total={paginationTotal}
-            onPage={goToPage}
-            onPageSize={serverPagination!.onPageSizeChange}
-            labels={labels}
-            locale={locale}
-            density={density}
-          />
-        )}
-        {/* The row's own first column is this dialog's title — the same cell the card
+          {isServer && !loadMore && (
+            <Pagination
+              page={safePage}
+              totalPages={totalPages}
+              pageSize={paginationPageSize}
+              total={paginationTotal}
+              onPage={goToPage}
+              onPageSize={serverPagination!.onPageSizeChange}
+              labels={labels}
+              locale={locale}
+              density={density}
+            />
+          )}
+          {/* The row's own first column is this dialog's title — the same cell the card
             behind it shows, so the panel names the row it opened from. */}
-        <FullBleedDialog
-          open={dialogOpen}
-          onClose={closeDialog}
-          closeLabel={labels.close}
-          header={mobileDialogRow ? mobilePrimaryCol?.cell(mobileDialogRow) : null}
-          backCloses={mobileDialogBackCloses}
-        >
-          {mobileDialogContent}
-        </FullBleedDialog>
-      </div>
+          <FullBleedDialog
+            open={dialogOpen}
+            onClose={closeDialog}
+            closeLabel={labels.close}
+            header={mobileDialogRow ? mobilePrimaryCol?.cell(mobileDialogRow) : null}
+            backCloses={mobileDialogBackCloses}
+          >
+            {mobileDialogContent}
+          </FullBleedDialog>
+        </div>
       )}
       {isMdUp && (
-      <div className={cn("flex", fillHeight && "flex-1")}>
-        {/* Under `fillHeight` neither wrapper is `min-h-0`: a flex item's automatic
+        <div className={cn("flex", fillHeight && "flex-1")}>
+          {/* Under `fillHeight` neither wrapper is `min-h-0`: a flex item's automatic
             minimum is its content's, and the content's height counts the body at its
             basis (`basis-48`, below), not at its rows — so the floor carries up. */}
-        <div className={cn("relative min-w-0 flex-1", fillHeight && "flex flex-col")}>
-          {/* scrollbar-gutter:stable reserves the vertical-scrollbar space up
+          <div className={cn("relative min-w-0 flex-1", fillHeight && "flex flex-col")}>
+            {/* scrollbar-gutter:stable reserves the vertical-scrollbar space up
               front. Expanding a row adds height, which can bring the scrollbar
               in, which narrows the content box — and in an `auto` table layout
               that re-computes every column width. Reserving the gutter is the
               other half of the `w-0 min-w-full` fix on the expansion cell below
               (feedback #104: "expanding an item resizes the columns"). */}
-          <div
-            ref={desktopScroller}
-            // The scroller: marked for the Tooltip's auto-portal (see the root above).
-            data-clips=""
-            // Under `fillHeight` the body grows into the room from a 12rem basis (0.40,
-            // §1.3): about five rows is its floor. A window too short for the page's
-            // header and that much body scrolls `<main>` instead (keksdose's review).
-            className={cn("overflow-auto [scrollbar-gutter:stable]", fillHeight && "min-h-0 grow basis-48")}
-            // `edgeFade`: the mask, `data-overflow` and the focus handling; nothing
-            // while off. The height bound is merged over the mask, not replaced by it.
-            {...edgeFadeProps}
-            style={
-              fillHeight
-                ? edgeFadeProps.style
-                : { ...edgeFadeProps.style, maxHeight: maxBodyHeight }
-            }
-          >
-        {/* A table with no name is "table" in a screen reader's list of tables, and
+            <div
+              ref={desktopScroller}
+              // The scroller: marked for the Tooltip's auto-portal (see the root above).
+              data-clips=""
+              // Under `fillHeight` the body grows into the room from a 12rem basis (0.40,
+              // §1.3): about five rows is its floor. A window too short for the page's
+              // header and that much body scrolls `<main>` instead (keksdose's review).
+              className={cn("overflow-auto [scrollbar-gutter:stable]", fillHeight && "min-h-0 grow basis-48")}
+              // `edgeFade`: the mask, `data-overflow` and the focus handling; nothing
+              // while off. The height bound is merged over the mask, not replaced by it.
+              {...edgeFadeProps}
+              style={fillHeight ? edgeFadeProps.style : { ...edgeFadeProps.style, maxHeight: maxBodyHeight }}
+            >
+              {/* A table with no name is "table" in a screen reader's list of tables, and
             an app renders several. `labels.table` is how a call site says which. */}
-        {/* `aria-busy` while a server page is in flight: a reader holds off announcing
+              {/* `aria-busy` while a server page is in flight: a reader holds off announcing
             the rows that are about to be replaced, and the dimmed body says the same
             to the eye. The pager stays live — see `ServerPagination.isLoading`. */}
-        <table
-          ref={tableRef}
-          className={cn("w-full", compact ? "text-xs" : "text-sm")}
-          data-fit-grow={growDrawn ? "" : undefined}
-          aria-label={labels.table}
-          aria-busy={isLoading || undefined}
-          // `virtualize` (0.48.2): every row counted, rendered or not.
-          aria-rowcount={rowWindow?.rowCount}
-          data-virtualized={rowWindow ? "" : undefined}
-        >
-          {/* The locked column widths (0.48.2, `virtualize`): rows coming and going no
+              <table
+                ref={tableRef}
+                className={cn("w-full", compact ? "text-xs" : "text-sm")}
+                data-fit-grow={growDrawn ? "" : undefined}
+                aria-label={labels.table}
+                aria-busy={isLoading || undefined}
+                // `virtualize` (0.48.2): every row counted, rendered or not.
+                aria-rowcount={rowWindow?.rowCount}
+                data-virtualized={rowWindow ? "" : undefined}
+              >
+                {/* The locked column widths (0.48.2, `virtualize`): rows coming and going no
               longer move the columns. */}
-          {rowWindow && (
-            <colgroup>
-              {virtualColKeys.map((key) => {
-                const w = rowWindow.colWidths?.[key];
-                return <col key={key} style={w !== undefined ? { width: w } : undefined} />;
-              })}
-            </colgroup>
-          )}
-          {/* Sticky header. position:sticky pins to the nearest scroll-container
+                {rowWindow && (
+                  <colgroup>
+                    {virtualColKeys.map((key) => {
+                      const w = rowWindow.colWidths?.[key];
+                      return <col key={key} style={w !== undefined ? { width: w } : undefined} />;
+                    })}
+                  </colgroup>
+                )}
+                {/* Sticky header. position:sticky pins to the nearest scroll-container
               ancestor — so the header can only stick to THIS wrapper, never the
               page. For that to actually hold the header in place, the wrapper
               must be the thing that scrolls vertically: hence overflow-auto +
@@ -2067,288 +2060,283 @@ export function DataTable<T>({
               header then stays put as you scroll the rows. position:sticky on
               <thead> isn't reliable across browsers, so we put it on each <th>
               (see DataTableHead, data-table-head.tsx). */}
-          <DataTableHead
-            visibleColumns={visibleColumns}
-            selection={selection}
-            compact={compact}
-            labels={labels}
-            locale={locale}
-            isServer={serverRows}
-            hasSortCallback={!!onSortsChange}
-            hasFilterCallback={!!onFiltersChange}
-            sorts={sorts}
-            filters={filters}
-            selectOptionsByKey={selectOptionsByKey}
-            multiSort={multiSort}
-            resizable={resizable}
-            widths={widths}
-            setWidths={setWidths}
-            headRefs={headRefs}
-            toggleSort={toggleSort}
-            setFilterValue={setFilterValue}
-            clearFilter={clearFilter}
-            startResize={startResize}
-            moveResize={moveResize}
-            finishResize={finishResize}
-            ariaRowIndex={rowWindow ? 1 : undefined}
-            lockedWidths={rowWindow?.colWidths}
-            selectionLockKey={VIRTUAL_SELECT_COL}
-          />
-          {(() => {
-            const bodyClass = cn(isLoading && slice.length > 0 && "opacity-60 transition-opacity");
-            const leading = leadingRow ? (
-              <DataTableLeadingRow
-                colSpan={totalColSpan}
-                sticky={leadingRowSticky}
-                ariaRowIndex={rowWindow ? 2 : undefined}
-              >
-                {leadingRow}
-              </DataTableLeadingRow>
-            ) : null;
-            // One memoised row each (0.48.2, K-052-2; data-table-row.tsx): the table
-            // derives each row's own inputs here, as primitives, so a tick re-renders
-            // only the rows whose inputs changed.
-            const renderRow = (row: T, rowIndex: number) => {
-              const expanded = isExpanded?.(row) ?? false;
-              const key = rowKey(row);
-              return (
-                <DataTableRow<T>
-                  key={key}
-                  row={row}
-                  rowIndex={rowIndex}
-                  rowKey={key}
-                  ctx={rowCtx}
-                  columns={visibleColumns}
-                  widths={widths}
-                  growDrawn={growDrawn}
-                  linkColumn={linkColumn}
-                  href={rowHref?.(row)}
-                  selectionColumn={!!selection}
-                  selectable={canSelect(row)}
-                  selected={!!selection && selection.isSelected(row)}
-                  expanded={expanded}
-                  expansion={expanded ? expandedRow?.(row) : null}
-                  disclosure={rowsFocusable && !!expandedRow}
-                  detailId={`${detailIdBase}-${rowIndex}`}
-                  rowsFocusable={rowsFocusable}
-                  rowInteractive={!!onRowClick || !!selection}
-                  tabbable={key === tabRowKey}
-                  className={rowClassName?.(row)}
-                  attrs={rowAttributes?.(row)}
+                <DataTableHead
+                  visibleColumns={visibleColumns}
+                  selection={selection}
                   compact={compact}
-                  totalColSpan={totalColSpan}
-                  rowDetailsLabel={labels.rowDetails}
-                  selectRowLabel={labels.selectRow}
-                  ariaRowIndex={rowWindow?.ariaRow(rowIndex)}
+                  labels={labels}
+                  locale={locale}
+                  isServer={serverRows}
+                  hasSortCallback={!!onSortsChange}
+                  hasFilterCallback={!!onFiltersChange}
+                  sorts={sorts}
+                  filters={filters}
+                  selectOptionsByKey={selectOptionsByKey}
+                  multiSort={multiSort}
+                  resizable={resizable}
+                  widths={widths}
+                  setWidths={setWidths}
+                  headRefs={headRefs}
+                  toggleSort={toggleSort}
+                  setFilterValue={setFilterValue}
+                  clearFilter={clearFilter}
+                  startResize={startResize}
+                  moveResize={moveResize}
+                  finishResize={finishResize}
+                  ariaRowIndex={rowWindow ? 1 : undefined}
+                  lockedWidths={rowWindow?.colWidths}
+                  selectionLockKey={VIRTUAL_SELECT_COL}
                 />
-              );
-            };
-            const emptyRow =
-              slice.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={totalColSpan}
-                    className={cn("text-center text-muted", compact ? "px-2 py-2" : "px-3 py-4")}
-                  >
-                    {/* Nothing is not the same as not-yet: "no results" while the first
-                        page is still in flight is a claim the table cannot make. */}
-                    {isLoading ? <LoadingText label={labels.loading} /> : (empty ?? labels.empty)}
-                  </td>
-                </tr>
-              ) : null;
-            const band = (
-              level: 1 | 2,
-              def: DataTableGroupBy<T>,
-              g: { key: string; rows: T[] },
-              ariaRowIndex?: number,
-            ) => (
-              <DataTableGroupBand
-                level={level}
-                colSpan={totalColSpan}
-                top={level === 1 ? bandTops[0] : bandTops[1]}
-                compact={compact}
-                label={def.label ? def.label(g.key, g.rows) : g.key}
-                end={def.end?.(g.key, g.rows)}
-                ariaRowIndex={ariaRowIndex}
-              />
-            );
-            if (rowWindow) {
-              // Windowed (0.48.2): each group's own `<tbody>` with its bands and the
-              // rendered rows, spacer rows between; one spacer `<tbody>` per run of groups
-              // with nothing rendered. Spacers are hidden from the accessibility tree.
-              const spacer = (key: string, height: number) => (
-                <tr key={key} aria-hidden="true" data-vt-spacer="">
-                  <td colSpan={totalColSpan} style={{ height, padding: 0, border: 0 }} />
-                </tr>
-              );
-              return (
-                <>
-                  {leading && <tbody className={bodyClass}>{leading}</tbody>}
-                  {rowWindow.bodies.map((b) => {
-                    if (b.kind === "spacer")
-                      return (
-                        <tbody key={b.key} data-vt-body="" aria-hidden="true">
-                          {spacer("s", b.height)}
-                        </tbody>
-                      );
-                    const g = virtualGroups[b.group];
-                    const vb = virtualBands[b.group];
+                {(() => {
+                  const bodyClass = cn(isLoading && slice.length > 0 && "opacity-60 transition-opacity");
+                  const leading = leadingRow ? (
+                    <DataTableLeadingRow
+                      colSpan={totalColSpan}
+                      sticky={leadingRowSticky}
+                      ariaRowIndex={rowWindow ? 2 : undefined}
+                    >
+                      {leadingRow}
+                    </DataTableLeadingRow>
+                  ) : null;
+                  // One memoised row each (0.48.2, K-052-2; data-table-row.tsx): the table
+                  // derives each row's own inputs here, as primitives, so a tick re-renders
+                  // only the rows whose inputs changed.
+                  const renderRow = (row: T, rowIndex: number) => {
+                    const expanded = isExpanded?.(row) ?? false;
+                    const key = rowKey(row);
                     return (
-                      <tbody
-                        key={vb ? `vg:${vb.g1.key}:${vb.g2?.key ?? ""}:${g.start}` : "vg"}
-                        data-vt-body=""
-                        className={bodyClass}
-                      >
-                        {vb && g.bands.includes(1) && band(1, levels[0], vb.g1, rowWindow.ariaBand(b.group, 1))}
-                        {vb?.g2 && band(2, levels[1], vb.g2, rowWindow.ariaBand(b.group, 2))}
-                        {b.items.map((it) =>
-                          it.kind === "gap" ? spacer(it.key, it.height) : renderRow(slice[it.index], it.index),
-                        )}
+                      <DataTableRow<T>
+                        key={key}
+                        row={row}
+                        rowIndex={rowIndex}
+                        rowKey={key}
+                        ctx={rowCtx}
+                        columns={visibleColumns}
+                        widths={widths}
+                        growDrawn={growDrawn}
+                        linkColumn={linkColumn}
+                        href={rowHref?.(row)}
+                        selectionColumn={!!selection}
+                        selectable={canSelect(row)}
+                        selected={!!selection && selection.isSelected(row)}
+                        expanded={expanded}
+                        expansion={expanded ? expandedRow?.(row) : null}
+                        disclosure={rowsFocusable && !!expandedRow}
+                        detailId={`${detailIdBase}-${rowIndex}`}
+                        rowsFocusable={rowsFocusable}
+                        rowInteractive={!!onRowClick || !!selection}
+                        tabbable={key === tabRowKey}
+                        className={rowClassName?.(row)}
+                        attrs={rowAttributes?.(row)}
+                        compact={compact}
+                        totalColSpan={totalColSpan}
+                        rowDetailsLabel={labels.rowDetails}
+                        selectRowLabel={labels.selectRow}
+                        ariaRowIndex={rowWindow?.ariaRow(rowIndex)}
+                      />
+                    );
+                  };
+                  const emptyRow =
+                    slice.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={totalColSpan}
+                          className={cn("text-center text-muted", compact ? "px-2 py-2" : "px-3 py-4")}
+                        >
+                          {/* Nothing is not the same as not-yet: "no results" while the first
+                        page is still in flight is a claim the table cannot make. */}
+                          {isLoading ? <LoadingText label={labels.loading} /> : (empty ?? labels.empty)}
+                        </td>
+                      </tr>
+                    ) : null;
+                  const band = (
+                    level: 1 | 2,
+                    def: DataTableGroupBy<T>,
+                    g: { key: string; rows: T[] },
+                    ariaRowIndex?: number,
+                  ) => (
+                    <DataTableGroupBand
+                      level={level}
+                      colSpan={totalColSpan}
+                      top={level === 1 ? bandTops[0] : bandTops[1]}
+                      compact={compact}
+                      label={def.label ? def.label(g.key, g.rows) : g.key}
+                      end={def.end?.(g.key, g.rows)}
+                      ariaRowIndex={ariaRowIndex}
+                    />
+                  );
+                  if (rowWindow) {
+                    // Windowed (0.48.2): each group's own `<tbody>` with its bands and the
+                    // rendered rows, spacer rows between; one spacer `<tbody>` per run of groups
+                    // with nothing rendered. Spacers are hidden from the accessibility tree.
+                    const spacer = (key: string, height: number) => (
+                      <tr key={key} aria-hidden="true" data-vt-spacer="">
+                        <td colSpan={totalColSpan} style={{ height, padding: 0, border: 0 }} />
+                      </tr>
+                    );
+                    return (
+                      <>
+                        {leading && <tbody className={bodyClass}>{leading}</tbody>}
+                        {rowWindow.bodies.map((b) => {
+                          if (b.kind === "spacer")
+                            return (
+                              <tbody key={b.key} data-vt-body="" aria-hidden="true">
+                                {spacer("s", b.height)}
+                              </tbody>
+                            );
+                          const g = virtualGroups[b.group];
+                          const vb = virtualBands[b.group];
+                          return (
+                            <tbody
+                              key={vb ? `vg:${vb.g1.key}:${vb.g2?.key ?? ""}:${g.start}` : "vg"}
+                              data-vt-body=""
+                              className={bodyClass}
+                            >
+                              {vb && g.bands.includes(1) && band(1, levels[0], vb.g1, rowWindow.ariaBand(b.group, 1))}
+                              {vb?.g2 && band(2, levels[1], vb.g2, rowWindow.ariaBand(b.group, 2))}
+                              {b.items.map((it) =>
+                                it.kind === "gap" ? spacer(it.key, it.height) : renderRow(slice[it.index], it.index),
+                              )}
+                            </tbody>
+                          );
+                        })}
+                      </>
+                    );
+                  }
+                  if (!desktopGroups) {
+                    return (
+                      <tbody className={bodyClass}>
+                        {leading}
+                        {slice.map(renderRow)}
+                        {emptyRow}
                       </tbody>
                     );
-                  })}
-                </>
-              );
-            }
-            if (!desktopGroups) {
-              return (
-                <tbody className={bodyClass}>
-                  {leading}
-                  {slice.map(renderRow)}
-                  {emptyRow}
-                </tbody>
-              );
-            }
-            // Grouped (0.48, keksdose dev #605): one `<tbody>` per innermost group, its
-            // band the row header; the leading row (and the empty state) in their own
-            // before the first group.
-            const rowsOf = (g: { rows: T[]; start: number }) => g.rows.map((r, i) => renderRow(r, g.start + i));
-            return (
-              <>
-                {(leading || emptyRow) && (
-                  <tbody className={bodyClass}>
-                    {leading}
-                    {emptyRow}
-                  </tbody>
-                )}
-                {desktopGroups.map((g1) =>
-                  g1.children ? (
-                    g1.children.map((g2, j) => (
-                      <tbody key={`g:${g1.key}:${g2.key}:${g2.start}`} className={bodyClass}>
-                        {j === 0 && band(1, levels[0], g1)}
-                        {band(2, levels[1], g2)}
-                        {rowsOf(g2)}
-                      </tbody>
-                    ))
-                  ) : (
-                    <tbody key={`g:${g1.key}:${g1.start}`} className={bodyClass}>
-                      {band(1, levels[0], g1)}
-                      {rowsOf(g1)}
-                    </tbody>
-                  ),
-                )}
-              </>
-            );
-          })()}
-          {showFooter && (
-            // Sticky to the scroller's bottom edge for the same reason the header is
-            // sticky to its top: the body scrolls inside a bounded wrapper, and a
-            // total that scrolls away with the last row is a total nobody sees on a
-            // 25-row page. Each cell carries its own background and its own `sticky`,
-            // as the header's do — `position: sticky` on a `<tfoot>` is not reliable.
-            <tfoot
-              data-table-footer=""
-              className={cn(
-                "font-semibold text-primary",
-                isLoading && "opacity-60 transition-opacity",
-              )}
-            >
-              <tr aria-rowindex={rowWindow?.rowCount}>
-                {/* The selection column has nothing to total: an empty cell keeps the
-                    values under their own headers. */}
-                {selection && (
-                  <td
-                    className={cn(
-                      FOOTER_CELL,
-                      compact ? "w-8 px-2 py-1" : "w-10 px-3 py-2",
-                    )}
-                  />
-                )}
-                {visibleColumns.map((col) => {
-                  const width = widths[col.key];
-                  const pinned = width ? { width, minWidth: width, maxWidth: width } : undefined;
-                  const isLabel = col === footerLabelCol;
-                  const Cell = isLabel ? "th" : "td";
+                  }
+                  // Grouped (0.48, keksdose dev #605): one `<tbody>` per innermost group, its
+                  // band the row header; the leading row (and the empty state) in their own
+                  // before the first group.
+                  const rowsOf = (g: { rows: T[]; start: number }) => g.rows.map((r, i) => renderRow(r, g.start + i));
                   return (
-                    <Cell
-                      key={col.key}
-                      data-col={col.key}
-                      scope={isLabel ? "row" : undefined}
-                      style={pinned}
-                      className={cn(
-                        FOOTER_CELL,
-                        "align-top",
-                        compact ? "px-2 py-1" : "px-3 py-2",
-                        width && "overflow-hidden text-ellipsis",
-                        // A `<th>` centres by default; the label reads from the start
-                        // like the cells above it, unless the column says otherwise.
-                        isLabel && "text-start",
-                        col.grow ? GROW_CELL_CLASS : growDrawn && GROW_PEER_CELL_CLASS,
-                        logicalAlign(col.className),
+                    <>
+                      {(leading || emptyRow) && (
+                        <tbody className={bodyClass}>
+                          {leading}
+                          {emptyRow}
+                        </tbody>
                       )}
-                    >
-                      {col.footer ? footerValue(col) : isLabel ? footerLabel : null}
-                    </Cell>
+                      {desktopGroups.map((g1) =>
+                        g1.children ? (
+                          g1.children.map((g2, j) => (
+                            <tbody key={`g:${g1.key}:${g2.key}:${g2.start}`} className={bodyClass}>
+                              {j === 0 && band(1, levels[0], g1)}
+                              {band(2, levels[1], g2)}
+                              {rowsOf(g2)}
+                            </tbody>
+                          ))
+                        ) : (
+                          <tbody key={`g:${g1.key}:${g1.start}`} className={bodyClass}>
+                            {band(1, levels[0], g1)}
+                            {rowsOf(g1)}
+                          </tbody>
+                        ),
+                      )}
+                    </>
                   );
-                })}
-              </tr>
-            </tfoot>
-          )}
-        </table>
-        {/* In the scroller, after the rows (0.48): it comes into view as the last row
+                })()}
+                {showFooter && (
+                  // Sticky to the scroller's bottom edge for the same reason the header is
+                  // sticky to its top: the body scrolls inside a bounded wrapper, and a
+                  // total that scrolls away with the last row is a total nobody sees on a
+                  // 25-row page. Each cell carries its own background and its own `sticky`,
+                  // as the header's do — `position: sticky` on a `<tfoot>` is not reliable.
+                  <tfoot
+                    data-table-footer=""
+                    className={cn("font-semibold text-primary", isLoading && "opacity-60 transition-opacity")}
+                  >
+                    <tr aria-rowindex={rowWindow?.rowCount}>
+                      {/* The selection column has nothing to total: an empty cell keeps the
+                    values under their own headers. */}
+                      {selection && <td className={cn(FOOTER_CELL, compact ? "w-8 px-2 py-1" : "w-10 px-3 py-2")} />}
+                      {visibleColumns.map((col) => {
+                        const width = widths[col.key];
+                        const pinned = width ? { width, minWidth: width, maxWidth: width } : undefined;
+                        const isLabel = col === footerLabelCol;
+                        const Cell = isLabel ? "th" : "td";
+                        return (
+                          <Cell
+                            key={col.key}
+                            data-col={col.key}
+                            scope={isLabel ? "row" : undefined}
+                            style={pinned}
+                            className={cn(
+                              FOOTER_CELL,
+                              "align-top",
+                              compact ? "px-2 py-1" : "px-3 py-2",
+                              width && "overflow-hidden text-ellipsis",
+                              // A `<th>` centres by default; the label reads from the start
+                              // like the cells above it, unless the column says otherwise.
+                              isLabel && "text-start",
+                              col.grow ? GROW_CELL_CLASS : growDrawn && GROW_PEER_CELL_CLASS,
+                              logicalAlign(col.className),
+                            )}
+                          >
+                            {col.footer ? footerValue(col) : isLabel ? footerLabel : null}
+                          </Cell>
+                        );
+                      })}
+                    </tr>
+                  </tfoot>
+                )}
+              </table>
+              {/* In the scroller, after the rows (0.48): it comes into view as the last row
             does, under `fillHeight` too, where the body is the scroller. */}
-        {loadMore && (
-          <DataTableLoadMoreFooter loadMore={loadMore} rowCount={sorted.length} labels={labels} compact={compact} />
-        )}
-      </div>
-          {!unpaged && !loadMore && (
-            <Pagination
-              page={safePage}
-              totalPages={totalPages}
-              pageSize={paginationPageSize}
-              total={paginationTotal}
-              onPage={goToPage}
-              onPageSize={
-                isServer
-                  ? serverPagination!.onPageSizeChange
-                  : (n) => {
-                      // To the owner when it holds the page size, as `commitSorts` does.
-                      if (onPageSizeChange) onPageSizeChange(n);
-                      else setPageSize(n);
-                      setPage(0);
-                    }
-              }
+              {loadMore && (
+                <DataTableLoadMoreFooter
+                  loadMore={loadMore}
+                  rowCount={sorted.length}
+                  labels={labels}
+                  compact={compact}
+                />
+              )}
+            </div>
+            {!unpaged && !loadMore && (
+              <Pagination
+                page={safePage}
+                totalPages={totalPages}
+                pageSize={paginationPageSize}
+                total={paginationTotal}
+                onPage={goToPage}
+                onPageSize={
+                  isServer
+                    ? serverPagination!.onPageSizeChange
+                    : (n) => {
+                        // To the owner when it holds the page size, as `commitSorts` does.
+                        if (onPageSizeChange) onPageSizeChange(n);
+                        else setPageSize(n);
+                        setPage(0);
+                      }
+                }
+                labels={labels}
+                locale={locale}
+                density={density}
+              />
+            )}
+          </div>
+          {columnSettings && (
+            <ColumnSettingsPanel
+              columns={columns}
+              hiddenCols={hiddenCols}
+              setHiddenCols={setHiddenCols}
+              autoHidden={autoHidden}
+              keepColumn={keepColumn}
+              showSettings={showSettings}
+              setShowSettings={setShowSettings}
+              columnsCountLabel={columnsCountLabel}
               labels={labels}
-              locale={locale}
-              density={density}
+              autoSizeAll={autoSizeAll}
             />
           )}
         </div>
-        {columnSettings && (
-          <ColumnSettingsPanel
-            columns={columns}
-            hiddenCols={hiddenCols}
-            setHiddenCols={setHiddenCols}
-            autoHidden={autoHidden}
-            keepColumn={keepColumn}
-            showSettings={showSettings}
-            setShowSettings={setShowSettings}
-            columnsCountLabel={columnsCountLabel}
-            labels={labels}
-            autoSizeAll={autoSizeAll}
-          />
-        )}
-      </div>
       )}
     </Root>
   );

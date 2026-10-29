@@ -76,8 +76,11 @@ export function dictionaryFor(code: string): Dictionary {
 
 /** Ready to hand to the kit's `LanguageMenu`, which takes `{ code, label, country }`
  *  and keys its flag off the ISO-3166 country — deliberately not the language code. */
-export const LOCALE_OPTIONS: Array<{ code: LocaleCode; label: string; country: string }> =
-  LOCALES.map((dict) => ({ code: localeCode(dict), label: dict.name, country: dict.country }));
+export const LOCALE_OPTIONS: Array<{ code: LocaleCode; label: string; country: string }> = LOCALES.map((dict) => ({
+  code: localeCode(dict),
+  label: dict.name,
+  country: dict.country,
+}));
 
 /* ── Persistence ───────────────────────────────────────────────────────────── */
 
@@ -199,10 +202,7 @@ export interface LocaleHandle {
 /** The active locale and the way to change it, for the menu and for `Intl`. */
 export function useLocale(): LocaleHandle {
   const { dict, code, setCode } = useContext(LocaleContext);
-  return useMemo(
-    () => ({ code, setCode, dir: dict.dir, tag: dict.tag }),
-    [code, setCode, dict.dir, dict.tag],
-  );
+  return useMemo(() => ({ code, setCode, dir: dict.dir, tag: dict.tag }), [code, setCode, dict.dir, dict.tag]);
 }
 
 /**

@@ -17,8 +17,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
   // 0.30.0 — a throttled request (HTTP 429), as `englishRateLimited` in
   // src/auth/auth-errors.ts: no wait → "un momento", under a minute → seconds, else
   // minutes rounded up.
-  const wait = (seconds: number) =>
-    seconds < 60 ? `${n(Math.ceil(seconds))} s` : `${n(Math.ceil(seconds / 60))} min`;
+  const wait = (seconds: number) => (seconds < 60 ? `${n(Math.ceil(seconds))} s` : `${n(Math.ceil(seconds / 60))} min`);
   const rateLimited = (seconds?: number) =>
     !seconds || seconds <= 0
       ? "Demasiados intentos. Espere un momento e inténtelo de nuevo."
@@ -272,7 +271,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       passkeys: {
         title: "Llaves de acceso",
         description: "Inicie sesión con su huella, su cara o el PIN del dispositivo en lugar de una contraseña.",
-        descriptionAlongside: "Inicie sesión con su huella, su cara o el PIN del dispositivo. Su contraseña sigue funcionando.",
+        descriptionAlongside:
+          "Inicie sesión con su huella, su cara o el PIN del dispositivo. Su contraseña sigue funcionando.",
         empty: "Aún no hay llaves de acceso",
         loading: "Cargando llaves de acceso…",
         list: "Sus llaves de acceso",
@@ -309,8 +309,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         "Las flechas mueven entre celdas. Escriba para reemplazar una celda, F2 para editarla, Escape para deshacer la edición. Intro baja y añade una fila al final.",
       lineError: (line) => `No se pudo leer la línea ${line}`,
       points: (count) => (count === 1 ? "1 punto" : `${n(count)} puntos`),
-      problems: (count) =>
-        count === 1 ? "1 celda no es un número" : `${n(count)} celdas no son números`,
+      problems: (count) => (count === 1 ? "1 celda no es un número" : `${n(count)} celdas no son números`),
     },
     pageContents: { title: "En esta página" },
     common: {
@@ -377,8 +376,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         last_year: "Año pasado",
       },
       table: "Tabla de datos",
-      filterResults: (shown, total) =>
-        `${n(shown)} de ${n(total)} ${plural(total, "fila", "filas")}`,
+      filterResults: (shown, total) => `${n(shown)} de ${n(total)} ${plural(total, "fila", "filas")}`,
       sortedAscending: (column) => `Ordenado por ${column}, ascendente`,
       sortedDescending: (column) => `Ordenado por ${column}, descendente`,
       sortCleared: (column) => `Orden por ${column} eliminado`,
@@ -458,8 +456,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       selectedCount: (count) => `${n(count)} ${plural(count, "seleccionado", "seleccionados")}`,
       loadError: "No se han podido cargar los resultados",
       resultCount: (count) => `${n(count)} ${plural(count, "resultado", "resultados")}`,
-      minChars: (count) =>
-        `Escriba al menos ${n(count)} ${plural(count, "carácter", "caracteres")}`,
+      minChars: (count) => `Escriba al menos ${n(count)} ${plural(count, "carácter", "caracteres")}`,
     },
     multiSelect: {
       search: "Buscar",
@@ -581,8 +578,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       rejectedCount: (name, maxFiles) =>
         `«${name}» no se ha añadido: como máximo ${n(maxFiles)} ${plural(maxFiles, "archivo", "archivos")}`,
       rejectedInvalid: (name) => `«${name}» no se puede usar aquí`,
-      rejectedMany: (count) =>
-        count === 1 ? "1 archivo no se ha añadido" : `${n(count)} archivos no se han añadido`,
+      rejectedMany: (count) => (count === 1 ? "1 archivo no se ha añadido" : `${n(count)} archivos no se han añadido`),
       selected: (count, firstName) =>
         count === 1 ? `«${firstName}» seleccionado` : `${n(count)} archivos seleccionados`,
       remove: (name) => `Quitar «${name}»`,
@@ -720,8 +716,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       strong: "Fuerte",
       announcement: (level) => `Seguridad de la contraseña: ${level}`,
       // Unformatted, as in the English default.
-      ruleLength: (minLength) =>
-        `Al menos ${n(minLength)} ${plural(minLength, "carácter", "caracteres")}`,
+      ruleLength: (minLength) => `Al menos ${n(minLength)} ${plural(minLength, "carácter", "caracteres")}`,
       ruleCase: "Mayúsculas y minúsculas",
       ruleDigit: "Un número",
       ruleSymbol: "Un símbolo",
@@ -809,7 +804,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       details: "Detalles del error",
       reload: "Recargar",
       updateTitle: "Hay una nueva versión disponible",
-      updateMessage: "Una parte de la aplicación ha cambiado desde que se cargó esta página. Recárguela para obtener la nueva versión.",
+      updateMessage:
+        "Una parte de la aplicación ha cambiado desde que se cargó esta página. Recárguela para obtener la nueva versión.",
       offlineTitle: "Sin conexión",
       offlineMessage: "No se pudo cargar esta página sin conexión. Vuelva a conectarse y recargue la página.",
       copyReport: "Copiar informe de error",
@@ -1031,10 +1027,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       useRecoveryCode: "Usar un código de respaldo",
       useAuthenticatorCode: "Usar su app de autenticación",
       recoveryCode: "Código de respaldo",
-      recoveryIntro:
-        "Introduzca uno de los códigos de respaldo que guardó al activar la verificación en dos pasos.",
-      recoveryCodeHint: (length) =>
-        `${n(length)} letras y dígitos. Los guiones y los espacios no importan.`,
+      recoveryIntro: "Introduzca uno de los códigos de respaldo que guardó al activar la verificación en dos pasos.",
+      recoveryCodeHint: (length) => `${n(length)} letras y dígitos. Los guiones y los espacios no importan.`,
       recoveryCodeInvalid: "Este código de respaldo no es válido o ya se ha usado.",
       rateLimited,
       // 0.31.0: the same words as `landing.requestAccess`.
@@ -1101,8 +1095,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       invalidHint: "Los enlaces son válidos durante una hora y funcionan una sola vez. Solicite uno nuevo.",
       requestNew: "Solicitar un enlace nuevo",
       success: "Su contraseña se ha cambiado. Ya puede iniciar sesión con ella.",
-      sessionsEnded:
-        "Se ha cerrado la sesión en los dispositivos conectados; tendrá que volver a iniciarla en ellos.",
+      sessionsEnded: "Se ha cerrado la sesión en los dispositivos conectados; tendrá que volver a iniciarla en ellos.",
       signIn: "Ir a iniciar sesión",
       rateLimited,
     },
@@ -1235,8 +1228,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       disable: "Desactivar",
       sendTest: "Enviar una prueba",
       enableFailed: "No se pudieron activar las notificaciones.",
-      noServiceWorker:
-        "No se pudo contactar con el service worker de la app. Recargue la página e inténtelo de nuevo.",
+      noServiceWorker: "No se pudo contactar con el service worker de la app. Recargue la página e inténtelo de nuevo.",
       pushTimeout: "El servicio push del navegador no respondió. Compruebe su conexión e inténtelo de nuevo.",
       testSent: (count) => `Prueba enviada a ${n(count)} ${plural(count, "dispositivo", "dispositivos")}`,
       testNone: "Ningún dispositivo aceptó la prueba. Active primero las notificaciones en este dispositivo.",
@@ -1324,8 +1316,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       done: "Su cuenta está desactivada. Se está cerrando su sesión.",
       wrongPassword: "La contraseña no es correcta.",
       confirmationMismatch: "Esta no es la dirección de su cuenta.",
-      lastAdmin:
-        "Su cuenta es la última con rol de administrador. Primero haga administrador a otra persona.",
+      lastAdmin: "Su cuenta es la última con rol de administrador. Primero haga administrador a otra persona.",
       lastAdminOf: (companies) =>
         `Su cuenta es la última con rol de administrador en ${companies}. Primero haga administrador allí a otra persona.`,
       householdHasMembers:
@@ -1381,11 +1372,9 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       confirm: "Confirmar",
       cancel: "Cancelar",
       close: "Cerrar",
-      lastAdmin:
-        "Esta es la última cuenta de administrador activa. Primero haga administrador a otra persona.",
+      lastAdmin: "Esta es la última cuenta de administrador activa. Primero haga administrador a otra persona.",
       self: "No puede hacer esto con su propia cuenta.",
-      confirmationMismatch:
-        "La dirección no coincide con esta cuenta. Compruebe en qué cuenta está.",
+      confirmationMismatch: "La dirección no coincide con esta cuenta. Compruebe en qué cuenta está.",
       otherCompanies:
         "Esta cuenta también pertenece a otras empresas, así que solo el operador de la plataforma puede hacer esto. En su lugar, puede quitarla de esta empresa.",
       removeFromCompany: "Quitar de la empresa",
@@ -1513,8 +1502,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     },
     characterCount: {
       count: (used, max) => `${n(used)} de ${n(max)} ${plural(max, "carácter", "caracteres")}`,
-      remaining: (left) =>
-        left === 1 ? "Queda 1 carácter" : `Quedan ${n(left)} caracteres`,
+      remaining: (left) => (left === 1 ? "Queda 1 carácter" : `Quedan ${n(left)} caracteres`),
       limitReached: "Límite de caracteres alcanzado",
     },
     countrySelect: {
@@ -1530,12 +1518,10 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     ibanInput: {
       format: "Un IBAN empieza por un código de país de dos letras y dos dígitos de control.",
       country: (code) => `«${code}» no es el código de país de un IBAN.`,
-      length: (actual, expected) =>
-        `Un IBAN de este país tiene ${n(expected)} caracteres; este tiene ${n(actual)}.`,
+      length: (actual, expected) => `Un IBAN de este país tiene ${n(expected)} caracteres; este tiene ${n(actual)}.`,
       checksum: "Los dígitos de control no coinciden: probablemente hay un carácter mal escrito.",
       qrRequired: "Este es un IBAN normal. Una factura QR requiere el QR-IBAN de la cuenta.",
-      qrNotAllowed:
-        "Este es un QR-IBAN, que solo recibe pagos de facturas QR. Introduzca el IBAN normal de la cuenta.",
+      qrNotAllowed: "Este es un QR-IBAN, que solo recibe pagos de facturas QR. Introduzca el IBAN normal de la cuenta.",
     },
     phoneInput: {
       countryCode: "Prefijo del país",
@@ -1549,8 +1535,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     },
     columnMapper: {
       paste: "Pegar una tabla",
-      pasteHint:
-        "Copie las filas de una hoja de cálculo y péguelas aquí, o suelte un archivo CSV o de texto.",
+      pasteHint: "Copie las filas de una hoja de cálculo y péguelas aquí, o suelte un archivo CSV o de texto.",
       chooseFile: "Elegir un archivo",
       readError: (name) => `No se ha podido leer «${name}»`,
       headerRow: "La primera línea contiene los nombres de las columnas",
@@ -1577,9 +1562,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       requiredRole: (role) => `${role} (obligatorio)`,
       requiredRoleShort: (role) => `${role} *`,
       previewOf: (shown, total) =>
-        shown === 1
-          ? `La primera de ${n(total)} filas`
-          : `Las primeras ${n(shown)} de ${n(total)} filas`,
+        shown === 1 ? `La primera de ${n(total)} filas` : `Las primeras ${n(shown)} de ${n(total)} filas`,
       // `roles` arrives joined with "o" ("Debe o Haber").
       oneOf: (roles) => `${roles} (a elegir)`,
       // "Falta" + infinitive: no verb to agree with however many roles follow.
@@ -1635,7 +1618,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       exportCorrections: (count) => `Exportar correcciones (${n(count)})`,
       failed: "No ha funcionado. Inténtelo de nuevo.",
       approvedToast: (count) => (count === 1 ? "Texto aprobado" : `${n(count)} textos aprobados`),
-      clearedToast: (count) => (count === 1 ? "Texto marcado como sin revisar" : `${n(count)} textos marcados como sin revisar`),
+      clearedToast: (count) =>
+        count === 1 ? "Texto marcado como sin revisar" : `${n(count)} textos marcados como sin revisar`,
       // "sin revisar" does not agree with the count, so one form serves both.
       groupCount: (unreviewed, total) => `${n(unreviewed)} sin revisar / ${n(total)}`,
       approveGroup: (count) => `Aprobar los sin revisar (${n(count)})`,
@@ -1717,8 +1701,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       writeLocked: "No es posible en la demo.",
       endedTitle: "La demo ha terminado",
       endedReadOnly: "Los datos de ejemplo se restablecen con regularidad.",
-      endedSandbox:
-        "Los datos de ejemplo se restablecen con regularidad; su propio trabajo en la demo se elimina.",
+      endedSandbox: "Los datos de ejemplo se restablecen con regularidad; su propio trabajo en la demo se elimina.",
       restart: "Iniciar una nueva demo",
     },
     // 0.32.0 — docs/billing-harmonization.md §7, §10 and §12.24: "plan" is what is bought
@@ -1767,8 +1750,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         item
           ? `«${item}» es de solo lectura por ahora; su propietario puede levantar esa restricción.`
           : "Esto es de solo lectura por ahora; su propietario puede levantar esa restricción.",
-      processing:
-        "Su pago se está procesando. Su plan empieza en cuanto se confirme; esta página se actualiza sola.",
+      processing: "Su pago se está procesando. Su plan empieza en cuanto se confirme; esta página se actualiza sola.",
       choosePlan: "Elegir un plan",
       updatePayment: "Actualizar el método de pago",
       // 0.42 (§16.7 A): for an admin who isn't the buyer.
@@ -1827,7 +1809,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       notConfigured: "Los pagos aún no están configurados. Inténtelo de nuevo más tarde.",
       disabled: "Las suscripciones no están disponibles aquí.",
       // §14.2: server-kit 0.7's refusals. "Pagos y facturas", as `manage`. "Usted".
-      providerUnavailable: "El proveedor de pagos no está disponible en este momento. Inténtelo de nuevo en un momento.",
+      providerUnavailable:
+        "El proveedor de pagos no está disponible en este momento. Inténtelo de nuevo en un momento.",
       alreadySubscribed: "Ya tiene una suscripción. Cambie de plan más arriba.",
       planNotSold: "Este plan no está disponible para ese periodo de facturación o esa moneda. Elija otro.",
       // 0.39 (§15.2.10): the plan switch's refusals.
@@ -1904,7 +1887,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     // as the rest of the catalogue.
     mailTestCard: {
       title: "Correo de prueba",
-      description: "Envía un correo a su propia dirección, por el mismo transporte con el que esta instalación envía todo su correo.",
+      description:
+        "Envía un correo a su propia dirección, por el mismo transporte con el que esta instalación envía todo su correo.",
       transport: (backend) => `Transporte: ${backend}`,
       action: "Enviarme un correo de prueba",
       sent: (address) => `Enviado a ${address}. Revise la bandeja de entrada.`,
@@ -1925,7 +1909,10 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       sections: {
         overview: { title: "Resumen", help: "Lo que está pendiente, de un vistazo." },
         users: { title: "Usuarios", help: "Quién tiene una cuenta y qué puede hacer cada uno." },
-        invitations: { title: "Invitaciones", help: "Invite a personas por correo electrónico en su idioma; reenvíe o revoque las invitaciones aún pendientes." },
+        invitations: {
+          title: "Invitaciones",
+          help: "Invite a personas por correo electrónico en su idioma; reenvíe o revoque las invitaciones aún pendientes.",
+        },
         billing: { title: "Facturación", help: "El plan, el pago y las facturas." },
         activity: { title: "Actividad", help: "Lo que hicieron los administradores, lo más reciente primero." },
       },
@@ -1965,8 +1952,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         offline: "Sin conexión: los cambios se guardan en este dispositivo y se sincronizarán al volver a conectarse",
         refused: "El servidor rechazó la última sincronización",
         syncing: "Sincronizando…",
-        pending: (count) =>
-          `${n(count)} ${plural(count, "cambio", "cambios")} a la espera de sincronizarse`,
+        pending: (count) => `${n(count)} ${plural(count, "cambio", "cambios")} a la espera de sincronizarse`,
         syncedAt: (time) => `Sincronizado a las ${time}`,
         idle: "Al día",
         syncHint: "Toque para sincronizar ahora",

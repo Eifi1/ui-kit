@@ -194,7 +194,8 @@ export function Popover({
   return (
     <>
       {trigger({ open, toggle, ref: triggerRef })}
-      {open && pos &&
+      {open &&
+        pos &&
         createPortal(
           /* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- the
              dialog container, per the APG dialog pattern: `onKeyDown` is Escape-to-close for

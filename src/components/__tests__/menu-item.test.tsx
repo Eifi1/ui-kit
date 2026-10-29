@@ -188,7 +188,14 @@ describe("MenuItem — the provider's router link", () => {
     render(
       <UiKitProvider linkComponent={routerLink}>
         <MenuItem href="/budgets">Manage budgets</MenuItem>
-        <MenuItem href="/own" renderLink={(p) => <a {...p} data-own="">{p.children}</a>}>
+        <MenuItem
+          href="/own"
+          renderLink={(p) => (
+            <a {...p} data-own="">
+              {p.children}
+            </a>
+          )}
+        >
           Own
         </MenuItem>
       </UiKitProvider>,

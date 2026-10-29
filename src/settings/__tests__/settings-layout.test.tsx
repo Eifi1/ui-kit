@@ -36,7 +36,13 @@ const ENTRIES: SettingsEntry<G>[] = [
   { id: "profile", group: "account", anchor: "profile-card", title: "Profile" },
   { id: "email", group: "account", anchor: "email-card", title: "Email address" },
   { id: "password", group: "security", anchor: "password-card", title: "Password", keywords: "passphrase" },
-  { id: "twofactor", group: "security", anchor: "twofactor-card", title: "Two-factor authentication", keywords: "2fa totp" },
+  {
+    id: "twofactor",
+    group: "security",
+    anchor: "twofactor-card",
+    title: "Two-factor authentication",
+    keywords: "2fa totp",
+  },
   { id: "export", group: "data", anchor: "export-card", title: "Export" },
   { id: "delete", group: "data", anchor: "delete-card", title: "Delete account" },
 ];
@@ -70,7 +76,14 @@ function renderGroup(group: G) {
       return (
         <>
           <PasswordSetting id="password-card" onSubmit={() => {}} />
-          <TwoFactorSetting id="twofactor-card" enabled={false} setup={null} onStartSetup={() => {}} onEnable={() => {}} onDisable={() => {}} />
+          <TwoFactorSetting
+            id="twofactor-card"
+            enabled={false}
+            setup={null}
+            onStartSetup={() => {}}
+            onEnable={() => {}}
+            onDisable={() => {}}
+          />
           <SubPicker />
         </>
       );
@@ -247,9 +260,11 @@ describe("SettingsLayout — search on a desktop (§3.4)", () => {
     mount("/settings/appearance");
     fireEvent.change(screen.getByRole("searchbox"), { target: { value: "sécurity" } });
     const results = screen.getByRole("list", { name: "Matching settings" });
-    expect(within(results).getAllByRole("link").map((a) => a.textContent)).toEqual(
-      expect.arrayContaining([expect.stringContaining("Password"), expect.stringContaining("Two-factor")]),
-    );
+    expect(
+      within(results)
+        .getAllByRole("link")
+        .map((a) => a.textContent),
+    ).toEqual(expect.arrayContaining([expect.stringContaining("Password"), expect.stringContaining("Two-factor")]));
   });
 
   it("opens a hit: the group, the ring, focus on the card's heading, and `focus` gone again", () => {

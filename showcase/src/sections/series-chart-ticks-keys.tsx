@@ -80,12 +80,11 @@ export function IntegerTicksDemo() {
       <div className="mt-3">
         <Note>
           Left: every value is a whole count, so the axis ticks 0 1 2 on its own — switch it to{" "}
-          <code className="font-mono">false</code> and the halves come back (0, 0.5, 1 …), values no sample can
-          have. Right: the runway is computed (2.7 days), so the automatic rule leaves it alone and a rounding
-          formatter would print &ldquo;1&rdquo; twice; <code className="font-mono">true</code> ticks it in whole days.
-          On a span wider than about eight the ticks are whole steps already and nothing changes; a zoom window
-          holding no whole number falls back to the ordinary ticks. <code className="font-mono">tickValues</code>{" "}
-          wins over either.
+          <code className="font-mono">false</code> and the halves come back (0, 0.5, 1 …), values no sample can have.
+          Right: the runway is computed (2.7 days), so the automatic rule leaves it alone and a rounding formatter would
+          print &ldquo;1&rdquo; twice; <code className="font-mono">true</code> ticks it in whole days. On a span wider
+          than about eight the ticks are whole steps already and nothing changes; a zoom window holding no whole number
+          falls back to the ordinary ticks. <code className="font-mono">tickValues</code> wins over either.
         </Note>
       </div>
     </Example>
@@ -143,13 +142,13 @@ export function KeyboardPointsDemo() {
       <div className="mt-3">
         <Note>
           <strong>Try it: Tab into the chart and use the arrow keys.</strong> The chart is ONE Tab stop; ←/→ step
-          through the stops in order, ↑/↓ move between the bars of one day, Home/End jump to the ends, and ↵ or
-          Space report the stop exactly as a click would — with the series for a bar, without one for a day. The
-          focused bar is outlined at its own geometry and the tooltip follows the keyboard. Each stop is a{" "}
+          through the stops in order, ↑/↓ move between the bars of one day, Home/End jump to the ends, and ↵ or Space
+          report the stop exactly as a click would — with the series for a bar, without one for a day. The focused bar
+          is outlined at its own geometry and the tooltip follows the keyboard. Each stop is a{" "}
           <code className="font-mono">role=&quot;button&quot;</code> named &ldquo;Sat — Card: €120&rdquo;, in a group
           named <code className="font-mono">seriesChart.points</code> (&ldquo;Chart values&rdquo;). The stops take no
-          pointer events, so hovering and clicking behave exactly as before; Tab leaves the chart rather than
-          walking 14 bars.
+          pointer events, so hovering and clicking behave exactly as before; Tab leaves the chart rather than walking 14
+          bars.
         </Note>
       </div>
     </Example>

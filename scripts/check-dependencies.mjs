@@ -45,7 +45,9 @@ function alerts() {
     const dep = alert.dependency?.package ?? {};
     const adv = alert.security_advisory ?? {};
     const fix = alert.security_vulnerability?.first_patched_version?.identifier ?? "?";
-    console.log(`  - ${dep.ecosystem} ${dep.name}: ${adv.severity} — ${adv.summary} (fixed in ${fix}) ${alert.html_url ?? ""}`);
+    console.log(
+      `  - ${dep.ecosystem} ${dep.name}: ${adv.severity} — ${adv.summary} (fixed in ${fix}) ${alert.html_url ?? ""}`,
+    );
   }
   return 1;
 }

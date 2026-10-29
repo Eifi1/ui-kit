@@ -64,11 +64,16 @@ describe("VerifyEmailStatus", () => {
 
   it("says the link is not valid by default when the redeem is refused", async () => {
     render(
-      <VerifyEmailStatus token="tok" onVerify={() => Promise.reject({ response: { data: { code: "token_invalid" } } })} />,
+      <VerifyEmailStatus
+        token="tok"
+        onVerify={() => Promise.reject({ response: { data: { code: "token_invalid" } } })}
+      />,
     );
     expect(await screen.findByText("This confirmation link is not valid")).toBeInTheDocument();
     expect(
-      screen.getByText("The link may have expired or already been used. You can request a new one from inside the app."),
+      screen.getByText(
+        "The link may have expired or already been used. You can request a new one from inside the app.",
+      ),
     ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Send again" })).toBeNull();
   });
@@ -114,9 +119,7 @@ describe("VerifyEmailStatus", () => {
   it("says a failed resend failed, and frees the button at once", async () => {
     const user = userEvent.setup();
     const onResend = vi.fn(() => Promise.reject(new Error("429")));
-    render(
-      <VerifyEmailStatus token="" onVerify={vi.fn()} onResend={onResend} signedIn />,
-    );
+    render(<VerifyEmailStatus token="" onVerify={vi.fn()} onResend={onResend} signedIn />);
     await user.click(screen.getByRole("button", { name: "Send again" }));
     expect(await screen.findByText("Could not send the confirmation email")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Send again" })).not.toHaveAttribute("aria-disabled");

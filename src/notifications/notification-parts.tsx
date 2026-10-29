@@ -68,8 +68,7 @@ export function useWriteOverlay<V>(source: unknown): WriteOverlay<V> {
     has: (key: string) => entries.has(key),
     get: (key: string) => entries.get(key)?.value,
     pending: (key: string) => entries.get(key)?.running === true,
-    set: (key: string, value: V) =>
-      setEntries((current) => new Map(current).set(key, { value, running: true })),
+    set: (key: string, value: V) => setEntries((current) => new Map(current).set(key, { value, running: true })),
     settle: (key: string, ok: boolean) =>
       setEntries((current) => {
         const entry = current.get(key);

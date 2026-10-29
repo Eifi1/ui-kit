@@ -22,8 +22,7 @@ export interface AuthedImageLabels {
 // Defined in ./authed-image-labels, which holds no component code (0.34, KS U8).
 export { DEFAULT_AUTHED_IMAGE_LABELS };
 
-export interface AuthedImageProps
-  extends Omit<ImgHTMLAttributes<HTMLImageElement>, "src" | "alt" | "children"> {
+export interface AuthedImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, "src" | "alt" | "children"> {
   /** The image's URL — an API path when a {@link fetcher} is given. */
   src: string | null | undefined;
   /** Required: an image without a text alternative is a gap a reader falls into.
@@ -188,7 +187,9 @@ export function ImageStates({
         ))}
       {failed &&
         // `=== undefined`, not `??`: `null` is the caller asking for nothing at all.
-        (errorFallback !== undefined ? errorFallback : (
+        (errorFallback !== undefined ? (
+          errorFallback
+        ) : (
           <span
             // `role="img"` with the alt as its name: the picture that failed still
             // occupies its place in the reading order, and "couldn't be loaded" is
@@ -198,7 +199,9 @@ export function ImageStates({
             className="flex h-full min-h-16 w-full flex-col items-center justify-center gap-1 bg-hover p-2 text-center text-xs text-muted"
           >
             <ImageOff aria-hidden className="size-5 shrink-0" />
-            <span aria-hidden className="line-clamp-2">{labels.loadError}</span>
+            <span aria-hidden className="line-clamp-2">
+              {labels.loadError}
+            </span>
           </span>
         ))}
     </span>

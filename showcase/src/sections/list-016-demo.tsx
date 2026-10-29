@@ -32,11 +32,7 @@ function InsideTarget() {
             onClick={() => setOpened(f.name)}
             trailingTone="inherit"
             trailing={
-              <SignedAmount
-                value={f.budget - f.spent}
-                currency="EUR"
-                className="text-sm font-medium tabular-nums"
-              />
+              <SignedAmount value={f.budget - f.spent} currency="EUR" className="text-sm font-medium tabular-nums" />
             }
             content={
               // The figure is already the row's trailing amount: the bar only repeats it.
@@ -54,9 +50,10 @@ function InsideTarget() {
       </List>
       <OutTable rows={[["last opened (onClick)", opened]]} />
       <Note>
-        `content` renders inside the target under the text, so the bar is part of what the row&apos;s click does and
-        its hover fill covers it — `children` still renders outside the target, for controls. `trailingTone=&quot;inherit&quot;`
-        drops the slot&apos;s muted colour so the amount&apos;s own sign colour stands; the default stays `muted`.
+        `content` renders inside the target under the text, so the bar is part of what the row&apos;s click does and its
+        hover fill covers it — `children` still renders outside the target, for controls.
+        `trailingTone=&quot;inherit&quot;` drops the slot&apos;s muted colour so the amount&apos;s own sign colour
+        stands; the default stays `muted`.
       </Note>
     </Example>
   );
@@ -109,7 +106,8 @@ function WrappedRow() {
       </List>
       <Note>
         The wrapper goes round the visible row, inside the `&lt;li&gt;` — so the list still counts three items and the
-        divider under &quot;Savings&quot; stays. The row is stretched to the full width even in the tooltip&apos;s inline span.
+        divider under &quot;Savings&quot; stays. The row is stretched to the full width even in the tooltip&apos;s
+        inline span.
       </Note>
     </Example>
   );
@@ -169,8 +167,18 @@ function ExpandableGroups() {
       </List>
       <OutTable
         rows={[
-          ["expanded", Object.keys(open).filter((k) => open[k]).join(", ") || "—"],
-          ["selected", Object.keys(checked).filter((k) => checked[k]).join(", ") || "—"],
+          [
+            "expanded",
+            Object.keys(open)
+              .filter((k) => open[k])
+              .join(", ") || "—",
+          ],
+          [
+            "selected",
+            Object.keys(checked)
+              .filter((k) => checked[k])
+              .join(", ") || "—",
+          ],
         ]}
       />
     </Example>

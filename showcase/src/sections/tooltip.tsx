@@ -1,14 +1,5 @@
 import { useId, useState, useEffect, useRef } from "react";
-import {
-  Info,
-  Keyboard,
-  ArrowLeftRight,
-  Terminal,
-  CircleHelp,
-  RefreshCw,
-  Search,
-  Settings,
-} from "lucide-react";
+import { Info, Keyboard, ArrowLeftRight, Terminal, CircleHelp, RefreshCw, Search, Settings } from "lucide-react";
 import {
   IconButton,
   Tooltip,
@@ -71,11 +62,7 @@ function TooltipSides() {
     <Row>
       {TOOLTIP_SIDES.map((side) => (
         <Tooltip key={side} side={side} label={`side="${side}"`}>
-          <button
-            type="button"
-            onClick={() => setPressed(side)}
-            className={buttonClasses("secondary")}
-          >
+          <button type="button" onClick={() => setPressed(side)} className={buttonClasses("secondary")}>
             {side}
           </button>
         </Tooltip>
@@ -103,17 +90,12 @@ function TooltipPortal() {
       </Tooltip>
       <span className="text-xs text-secondary">
         <code className="font-mono">redact={String(redact)}</code> — the bubble carries{" "}
-        <code className="font-mono">data-private</code>. The blur rule itself lives in the
-        consuming app (a <code className="font-mono">demo-mode</code> class on{" "}
-        <code className="font-mono">&lt;html&gt;</code>), so here it only tags; inspect the
-        element to see it.
+        <code className="font-mono">data-private</code>. The blur rule itself lives in the consuming app (a{" "}
+        <code className="font-mono">demo-mode</code> class on <code className="font-mono">&lt;html&gt;</code>), so here
+        it only tags; inspect the element to see it.
       </span>
       <Tooltip label="">
-        <button
-          type="button"
-          onClick={() => setPressed("empty label")}
-          className={buttonClasses("ghost")}
-        >
+        <button type="button" onClick={() => setPressed("empty label")} className={buttonClasses("ghost")}>
           label=&quot;&quot; — no bubble and no wrapper
         </button>
       </Tooltip>
@@ -201,22 +183,10 @@ function show(p: TooltipPlacement): string {
 // Computed at module scope by calling the real export, so the table cannot go stale the
 // way a transcribed one would.
 const PLACEMENT_ROWS: Array<[string, string]> = [
-  [
-    'placeTooltip(nearTop, "top", bubble, screen)',
-    show(placeTooltip(NEAR_TOP, "top", BUBBLE, SCREEN)),
-  ],
-  [
-    'placeTooltip(nearLeft, "top", bubble, screen)',
-    show(placeTooltip(NEAR_LEFT, "top", BUBBLE, SCREEN)),
-  ],
-  [
-    'placeTooltip(nearLeft, "left", bubble, screen)',
-    show(placeTooltip(NEAR_LEFT, "left", BUBBLE, SCREEN)),
-  ],
-  [
-    'placeTooltip(nearLeft, "left", bubble, narrow)',
-    show(placeTooltip(NEAR_LEFT, "left", BUBBLE, NARROW)),
-  ],
+  ['placeTooltip(nearTop, "top", bubble, screen)', show(placeTooltip(NEAR_TOP, "top", BUBBLE, SCREEN))],
+  ['placeTooltip(nearLeft, "top", bubble, screen)', show(placeTooltip(NEAR_LEFT, "top", BUBBLE, SCREEN))],
+  ['placeTooltip(nearLeft, "left", bubble, screen)', show(placeTooltip(NEAR_LEFT, "left", BUBBLE, SCREEN))],
+  ['placeTooltip(nearLeft, "left", bubble, narrow)', show(placeTooltip(NEAR_LEFT, "left", BUBBLE, NARROW))],
 ];
 
 /* ── since 0.10 ─────────────────────────────────────────────────────────── */
@@ -282,15 +252,15 @@ function TooltipAutoPortal() {
       </div>
       <div className="mt-3">
         <Note>
-          Both boxes are <code className="font-mono">overflow-auto</code> and each row ends in an info button
-          whose bubble opens to the end side. Left, with <code className="font-mono">portal</code> left out: the
-          tooltip found the scrolling box when it mounted, so the bubble exists only while it is up, as a{" "}
-          <code className="font-mono">position: fixed</code> node on <code className="font-mono">&lt;body&gt;</code>{" "}
-          — no sideways scroll, and hovering shows it whole over the box&apos;s edge. Right, forced in place: the
-          invisible bubbles still count towards the box&apos;s scrollable width (the readout), and a hovered
-          one is cut off by the edge. That is the phantom scroll, and no tooltip in a table needs{" "}
-          <code className="font-mono">portal</code> to avoid it. Outside any such box the cheaper
-          in-place bubble is still used.
+          Both boxes are <code className="font-mono">overflow-auto</code> and each row ends in an info button whose
+          bubble opens to the end side. Left, with <code className="font-mono">portal</code> left out: the tooltip found
+          the scrolling box when it mounted, so the bubble exists only while it is up, as a{" "}
+          <code className="font-mono">position: fixed</code> node on <code className="font-mono">&lt;body&gt;</code> —
+          no sideways scroll, and hovering shows it whole over the box&apos;s edge. Right, forced in place: the
+          invisible bubbles still count towards the box&apos;s scrollable width (the readout), and a hovered one is cut
+          off by the edge. That is the phantom scroll, and no tooltip in a table needs{" "}
+          <code className="font-mono">portal</code> to avoid it. Outside any such box the cheaper in-place bubble is
+          still used.
         </Note>
       </div>
     </Example>
@@ -317,9 +287,7 @@ function ClipsMarkerDemo() {
       <div className="grid gap-4 sm:grid-cols-2">
         {/* space-y-2, not 1: at 4px the readout under the box read as touching it. */}
         <div className="min-w-0 space-y-2">
-          <p className={READOUT}>
-            &lt;div {CLIPS_ATTRIBUTE} className=&quot;overflow-auto&quot;&gt;
-          </p>
+          <p className={READOUT}>&lt;div {CLIPS_ATTRIBUTE} className=&quot;overflow-auto&quot;&gt;</p>
           <div
             {...{ [CLIPS_ATTRIBUTE]: "" }}
             className="h-40 w-full max-w-64 overflow-auto rounded-md border border-subtle"
@@ -345,12 +313,12 @@ function ClipsMarkerDemo() {
       </div>
       <div className="mt-3">
         <Note>
-          The auto-portal looks for an ancestor whose computed {code("overflow")} clips, and jsdom computes no
-          Tailwind: under test every scroller reads {code("visible")}, the bubble stays in place, and its text
-          joins the row&apos;s. Marked with {code("data-clips")} (or {code("{ [CLIPS_ATTRIBUTE]: \"\" }")}), the
-          scroller counts as clipping in both, so the tooltip portals in the browser (hover a row: the bubble
-          is not cut by the box&apos;s edge) and in the test alike, and the row reads &ldquo;Checking&rdquo; in both.
-          DataTable&apos;s body and Table&apos;s wrapper carry it already.
+          The auto-portal looks for an ancestor whose computed {code("overflow")} clips, and jsdom computes no Tailwind:
+          under test every scroller reads {code("visible")}, the bubble stays in place, and its text joins the
+          row&apos;s. Marked with {code("data-clips")} (or {code('{ [CLIPS_ATTRIBUTE]: "" }')}), the scroller counts as
+          clipping in both, so the tooltip portals in the browser (hover a row: the bubble is not cut by the box&apos;s
+          edge) and in the test alike, and the row reads &ldquo;Checking&rdquo; in both. DataTable&apos;s body and
+          Table&apos;s wrapper carry it already.
         </Note>
       </div>
     </Example>
@@ -413,13 +381,13 @@ function TooltipLazyDemo() {
       <div className="mt-3">
         <Note>
           Both buttons look and behave the same under the pointer. Click each to read its{" "}
-          <code className="font-mono">textContent</code> while the bubble is closed: the default one carries
-          the bubble&apos;s sentence (it is always mounted, so it is in the button&apos;s accessible name and in
-          every <code className="font-mono">getAllByRole(&quot;tooltip&quot;)</code> too); the{" "}
+          <code className="font-mono">textContent</code> while the bubble is closed: the default one carries the
+          bubble&apos;s sentence (it is always mounted, so it is in the button&apos;s accessible name and in every{" "}
+          <code className="font-mono">getAllByRole(&quot;tooltip&quot;)</code> too); the{" "}
           <code className="font-mono">lazy</code> one reads only its own label. Rather than pin{" "}
-          <code className="font-mono">portal</code> on header tooltips, toggles, rows, badges and toasts for that
-          alone, <code className="font-mono">lazy</code> keeps the cheaper in-place bubble. It is opt-in because existing tests find the default bubble
-          without a hover.
+          <code className="font-mono">portal</code> on header tooltips, toggles, rows, badges and toasts for that alone,{" "}
+          <code className="font-mono">lazy</code> keeps the cheaper in-place bubble. It is opt-in because existing tests
+          find the default bubble without a hover.
         </Note>
       </div>
     </Example>
@@ -458,9 +426,9 @@ function TooltipClampDemo() {
       <div className="mt-3">
         <Note>
           Narrow the window and hover either button: the bubble is still in place (no{" "}
-          <code className="font-mono">portal</code>), still capped at 20rem or the viewport less a margin so
-          the command wraps, and slid along its cross axis only as far as it takes to stay on the screen. A
-          bubble that already fits is not touched. Works the same in RTL.
+          <code className="font-mono">portal</code>), still capped at 20rem or the viewport less a margin so the command
+          wraps, and slid along its cross axis only as far as it takes to stay on the screen. A bubble that already fits
+          is not touched. Works the same in RTL.
         </Note>
       </div>
     </Example>
@@ -524,19 +492,19 @@ function TooltipTapDemo() {
 
       <div className="mt-3 space-y-2">
         <Note>
-          On a phone, tap the three icons: each does its job and leaves no label behind over whatever the tap
-          opened. With a keyboard, Tab onto them: the label shows, as it does on a
-          desktop hover. A desktop click lets the label go once the pointer leaves.
+          On a phone, tap the three icons: each does its job and leaves no label behind over whatever the tap opened.
+          With a keyboard, Tab onto them: the label shows, as it does on a desktop hover. A desktop click lets the label
+          go once the pointer leaves.
         </Note>
         <Note>
-          The sync label is a sentence under an icon near the end edge: it slides back onto the screen, and
-          the page never gets wider than the screen — measured against the screen itself now, not against a
-          window that had already grown with it.
+          The sync label is a sentence under an icon near the end edge: it slides back onto the screen, and the page
+          never gets wider than the screen — measured against the screen itself now, not against a window that had
+          already grown with it.
         </Note>
         <Note>
-          A tap that activates nothing shows the bubble as its answer, until the next tap anywhere: the locked
-          Save gives its reason, the truncated address its full text. The &quot;?&quot; explains only, so it
-          says <code className="font-mono">tap=&quot;toggle&quot;</code>.
+          A tap that activates nothing shows the bubble as its answer, until the next tap anywhere: the locked Save
+          gives its reason, the truncated address its full text. The &quot;?&quot; explains only, so it says{" "}
+          <code className="font-mono">tap=&quot;toggle&quot;</code>.
         </Note>
       </div>
     </Example>

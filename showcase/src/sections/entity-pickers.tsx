@@ -57,10 +57,7 @@ export function EntityPickers() {
 
   return (
     <>
-      <Example
-        label="InlineEntityCombobox"
-        hint="id-keyed, but shaped like a text input so it can sit beside one"
-      >
+      <Example label="InlineEntityCombobox" hint="id-keyed, but shaped like a text input so it can sit beside one">
         <Stage>
           <InlineEntityCombobox
             label="Account"
@@ -80,23 +77,19 @@ export function EntityPickers() {
         </Stage>
         <Current label="value" value={account === null ? "null" : `"${account}"`} />
         <p className="mt-2 text-xs text-secondary">
-          The text is transient: picking a row commits it, typing an exact label that names exactly
-          one account commits it, emptying the field commits <code className="font-mono">null</code>
-          , and anything else reverts to the selected label on blur or Escape. “Old savings” is a{" "}
-          <code className="font-mono">disabled</code> option: listed and dimmed, skipped by the
-          arrows, and typing its name in full reverts rather than commits.
+          The text is transient: picking a row commits it, typing an exact label that names exactly one account commits
+          it, emptying the field commits <code className="font-mono">null</code>, and anything else reverts to the
+          selected label on blur or Escape. “Old savings” is a <code className="font-mono">disabled</code> option:
+          listed and dimmed, skipped by the arrows, and typing its name in full reverts rather than commits.
         </p>
         <p className="mt-2 text-xs text-secondary">
-          The floating label — here and on <code className="font-mono">Combobox</code> — is a
-          real <code className="font-mono">{"<label for>"}</code>, so{" "}
+          The floating label — here and on <code className="font-mono">Combobox</code> — is a real{" "}
+          <code className="font-mono">{"<label for>"}</code>, so{" "}
           <code className="font-mono">getByLabelText(&quot;Account&quot;)</code> finds the input.
         </p>
       </Example>
 
-      <Example
-        label="EntityCombobox — static options"
-        hint="a trigger button, not an input; filtered in the browser"
-      >
+      <Example label="EntityCombobox — static options" hint="a trigger button, not an input; filtered in the browser">
         <Stage>
           <EntityCombobox
             label="Category"
@@ -125,10 +118,9 @@ export function EntityPickers() {
         <Current label="value" value={category === null ? "null" : `"${category}"`} />
         <p className="mt-2 text-xs text-secondary">
           This is the one family that draws <code className="font-mono">ComboOption.icon</code> —{" "}
-          <code className="font-mono">InlineEntityCombobox</code> above carries the same option type
-          but renders label and sublabel only. “Bank fees” is{" "}
-          <code className="font-mono">disabled</code>: listed, never chosen, and Home/End and the
-          arrows pass it over.
+          <code className="font-mono">InlineEntityCombobox</code> above carries the same option type but renders label
+          and sublabel only. “Bank fees” is <code className="font-mono">disabled</code>: listed, never chosen, and
+          Home/End and the arrows pass it over.
         </p>
       </Example>
 
@@ -155,9 +147,9 @@ export function EntityPickers() {
         </Stage>
         <Current label="value" value={customer === null ? "null" : `"${customer}"`} />
         <p className="mt-2 text-xs text-secondary">
-          Open it and type quickly: only the last query's answer lands. Clear the query and the list
-          is re-fetched immediately (the debounce is skipped for an empty query, because an empty
-          query is the open itself, not typing).
+          Open it and type quickly: only the last query's answer lands. Clear the query and the list is re-fetched
+          immediately (the debounce is skipped for an empty query, because an empty query is the open itself, not
+          typing).
         </p>
       </Example>
 
@@ -234,14 +226,12 @@ export function EntityPickers() {
         </div>
         <Current label="value" value={rankedPick === null ? "null" : `"${rankedPick}"`} />
         <p className="mt-2 text-xs text-secondary">
-          Open it and type anything: with <code className="font-mono">filter={"{false}"}</code> the
-          three rows stay, in their order. Press &quot;rows cleared&quot; and open it: while the
-          caller&apos;s <code className="font-mono">loading</code> is up and there are no rows, the
-          panel says it is loading instead of &quot;no results&quot; — the flag is OR-ed with the
-          component&apos;s own async state. Press &quot;rows kept&quot; and open it: the old rows
-          stay listed with a spinner and &quot;Loading…&quot; line under them, and the list is{" "}
-          <code className="font-mono">aria-busy</code> — a refetch no longer looks like a finished
-          list.
+          Open it and type anything: with <code className="font-mono">filter={"{false}"}</code> the three rows stay, in
+          their order. Press &quot;rows cleared&quot; and open it: while the caller&apos;s{" "}
+          <code className="font-mono">loading</code> is up and there are no rows, the panel says it is loading instead
+          of &quot;no results&quot; — the flag is OR-ed with the component&apos;s own async state. Press &quot;rows
+          kept&quot; and open it: the old rows stay listed with a spinner and &quot;Loading…&quot; line under them, and
+          the list is <code className="font-mono">aria-busy</code> — a refetch no longer looks like a finished list.
         </p>
       </Example>
 
@@ -319,22 +309,19 @@ export function EntityPickers() {
           />
         </Stage>
         <p className="mt-2 text-xs text-secondary">
-          Answer each field and its mark goes away. <code className="font-mono">error</code> is
-          rendered under the field and tied to it with{" "}
-          <code className="font-mono">aria-describedby</code>;{" "}
-          <code className="font-mono">invalid</code> carries no text. A disabled picker drops its
-          clear button — a settled field offers no action, and it is dimmed as a whole, label
-          included, so it never looks filled-in.{" "}
-          <code className="font-mono">MultiSelect</code> takes the same{" "}
-          <code className="font-mono">error</code> (implies <code className="font-mono">invalid</code>,
-          described on the trigger) and <code className="font-mono">disabled</code> (no chevron, no
-          panel, dimmed label).
+          Answer each field and its mark goes away. <code className="font-mono">error</code> is rendered under the field
+          and tied to it with <code className="font-mono">aria-describedby</code>;{" "}
+          <code className="font-mono">invalid</code> carries no text. A disabled picker drops its clear button — a
+          settled field offers no action, and it is dimmed as a whole, label included, so it never looks filled-in.{" "}
+          <code className="font-mono">MultiSelect</code> takes the same <code className="font-mono">error</code>{" "}
+          (implies <code className="font-mono">invalid</code>, described on the trigger) and{" "}
+          <code className="font-mono">disabled</code> (no chevron, no panel, dimmed label).
         </p>
       </Example>
 
       <Example
         label='clearValue="" — a schema that spells "no choice" as an empty string'
-        hint="the × emits what clearValue says; onChange is typed V | &quot;&quot; instead of V | null"
+        hint='the × emits what clearValue says; onChange is typed V | "" instead of V | null'
       >
         <Stage>
           <EntityCombobox
@@ -366,11 +353,10 @@ export function EntityPickers() {
           <code className="font-mono">null</code>. The state here is a plain{" "}
           <code className="font-mono">useState&lt;string&gt;</code> — no mapping in{" "}
           <code className="font-mono">onChange</code>, and TypeScript would refuse it without{" "}
-          <code className="font-mono">clearValue</code>. <code className="font-mono">&quot;&quot;</code> is
-          also read back as empty: placeholder, no ×. It is a closed choice (
-          <code className="font-mono">null | &quot;&quot;</code>) because only those can never be a
-          real option id. For react-hook-form + zod, pass it on{" "}
-          <code className="font-mono">RhfCombobox</code> /{" "}
+          <code className="font-mono">clearValue</code>. <code className="font-mono">&quot;&quot;</code> is also read
+          back as empty: placeholder, no ×. It is a closed choice (
+          <code className="font-mono">null | &quot;&quot;</code>) because only those can never be a real option id. For
+          react-hook-form + zod, pass it on <code className="font-mono">RhfCombobox</code> /{" "}
           <code className="font-mono">RhfInlineEntityCombobox</code>, or on the picker inside{" "}
           <code className="font-mono">RhfField</code>; the adapter does not coerce.
         </p>
@@ -392,17 +378,13 @@ export function EntityPickers() {
         </Stage>
         <Current label="value" value={rtlCategory === null ? "null" : `"${rtlCategory}"`} />
         <p className="mt-2 text-xs text-secondary">
-          The × and the chevron sit at the logical end (the left), the text starts at the right,
-          and the panel — portalled to <code className="font-mono">&lt;body&gt;</code> — reads the
-          trigger&apos;s direction, carries it, and hangs from the trigger&apos;s start (right) edge
-          even when it is wider than the trigger.
+          The × and the chevron sit at the logical end (the left), the text starts at the right, and the panel —
+          portalled to <code className="font-mono">&lt;body&gt;</code> — reads the trigger&apos;s direction, carries it,
+          and hangs from the trigger&apos;s start (right) edge even when it is wider than the trigger.
         </p>
       </Example>
 
-      <Example
-        label="MultiEntityCombobox"
-        hint="rows toggle and the panel stays open — picking several is the point"
-      >
+      <Example label="MultiEntityCombobox" hint="rows toggle and the panel stays open — picking several is the point">
         <Stage>
           <MultiEntityCombobox
             label="Tags"
@@ -437,9 +419,7 @@ export function EntityPickers() {
             onCreate={(q) => {
               const value = `new-${q.toLowerCase().replace(/\s+/g, "-")}`;
               setNewPeople((prev) =>
-                prev.some((p) => p.value === value)
-                  ? prev
-                  : [...prev, { value, label: q, sublabel: "invited" }],
+                prev.some((p) => p.value === value) ? prev : [...prev, { value, label: q, sublabel: "invited" }],
               );
               setPeople((prev) => (prev.includes(value) ? prev : [...prev, value]));
             }}
@@ -448,16 +428,13 @@ export function EntityPickers() {
         <Current label="tags" value={tags.length ? JSON.stringify(tags) : "[]"} />
         <Current label="recipients" value={people.length ? JSON.stringify(people) : "[]"} />
         <p className="mt-2 text-xs text-secondary">
-          The second field has no <code className="font-mono">itemLabel</code>, so its trigger
-          lists the picked names, joined the locale&apos;s way (<code className="font-mono">
-            Intl.ListFormat
-          </code>
-          ). Its rows come from <code className="font-mono">loadOptions</code>; type a name that is
-          not there and <code className="font-mono">onCreate</code> adds it — the panel stays open,
-          and selecting the new row is the caller&apos;s job, done here in the same handler.
+          The second field has no <code className="font-mono">itemLabel</code>, so its trigger lists the picked names,
+          joined the locale&apos;s way (<code className="font-mono">Intl.ListFormat</code>
+          ). Its rows come from <code className="font-mono">loadOptions</code>; type a name that is not there and{" "}
+          <code className="font-mono">onCreate</code> adds it — the panel stays open, and selecting the new row is the
+          caller&apos;s job, done here in the same handler.
         </p>
       </Example>
-
     </>
   );
 }

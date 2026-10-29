@@ -42,7 +42,10 @@ const LINKS = [
 function Legal019Demo() {
   const [notice, setNotice] = useState<"draft" | "none">("draft");
   return (
-    <Example label="LegalLayout — Imprint, Privacy Policy, Terms" hint="a content column inside the app's own chrome; the texts stay the app's">
+    <Example
+      label="LegalLayout — Imprint, Privacy Policy, Terms"
+      hint="a content column inside the app's own chrome; the texts stay the app's"
+    >
       <div className="flex flex-col gap-3">
         <ToggleGroup
           aria-label="Notice"
@@ -63,11 +66,17 @@ function Legal019Demo() {
                 Back to the start page
               </TextLink>
             }
-            notice={notice === "draft" ? "Closed beta: these texts are a draft and await a lawyer's review." : undefined}
+            notice={
+              notice === "draft" ? "Closed beta: these texts are a draft and await a lawyer's review." : undefined
+            }
             links={LINKS}
             currentHref={HERE}
           >
-            <LegalSection headingAs="h3" heading="Provider" body={"Acme Books GmbH\nExample Street 1\n8000 Zurich, Switzerland"} />
+            <LegalSection
+              headingAs="h3"
+              heading="Provider"
+              body={"Acme Books GmbH\nExample Street 1\n8000 Zurich, Switzerland"}
+            />
             <LegalSection headingAs="h3" heading="Contact" body={"hello@acme-books.example\n+41 00 000 00 00"} />
             <LegalSection headingAs="h3" id="legal-demo-responsible" heading="Responsible for content">
               Erika Muster, address as above. See also the{" "}
@@ -76,8 +85,8 @@ function Legal019Demo() {
           </LegalLayout>
         </div>
         <Note>
-          {code("LegalLayout")} is a column, not a page: one app puts it inside its landing header and footer,
-          another inside {code('<AuthLayout width="wide" card={false}>')} — whose footer then takes{" "}
+          {code("LegalLayout")} is a column, not a page: one app puts it inside its landing header and footer, another
+          inside {code('<AuthLayout width="wide" card={false}>')} — whose footer then takes{" "}
           {code("<LegalLinks links currentHref nav={false} />")}, since AuthLayout names its own {code("<nav>")}.{" "}
           {code("notice")} is per page (a {code('role="note"')} banner, not an alert); {code("LegalSection")} keeps a
           translation&apos;s line breaks in {code("body")} and takes children for links. Review the texts under the{" "}
@@ -192,7 +201,11 @@ const IMPRESSUM = (
     <LegalKitSection section="operator" />
     <LegalKitSection section="contact" />
     <LegalKitSection section="disclaimer" />
-    <LegalSection key="credits" heading="Credits" body="The chart palette is anyplot's “Imprint” scheme (anyplot.ai)." />
+    <LegalSection
+      key="credits"
+      heading="Credits"
+      body="The chart palette is anyplot's “Imprint” scheme (anyplot.ai)."
+    />
   </>
 );
 
@@ -202,7 +215,9 @@ const PRIVACY = (
     <LegalSection
       key="data"
       heading="What data we process"
-      body={"Account: email address, display name, hashed password.\n\nReceipts you upload, for as long as section {ref:retention} says."}
+      body={
+        "Account: email address, display name, hashed password.\n\nReceipts you upload, for as long as section {ref:retention} says."
+      }
     />
     <LegalKitSection section="legal_basis">There is no tracking, no analytics and no advertising.</LegalKitSection>
     <LegalSection
@@ -223,7 +238,9 @@ const PRIVACY = (
       body="Your data stays for as long as your account exists. To delete the account, write to the address in section {ref:contact}."
     />
     <LegalKitSection section="rights">
-      {"Export your data at any time under Settings ▸ Export. For everything else, a message to the address below is enough."}
+      {
+        "Export your data at any time under Settings ▸ Export. For everything else, a message to the address below is enough."
+      }
     </LegalKitSection>
     <LegalKitSection section="contact" />
   </>
@@ -313,9 +330,9 @@ function Legal028Demo() {
           section in the page&apos;s language, filled in with the operator (the country named by {code("Intl")}); its
           children are the app&apos;s paragraph where the contract gives it one. The privacy and terms sections are
           numbered in render order and each section&apos;s id is its key ({code("/privacy#rights")}).{" "}
-          {code("{ref:retention}")} in an app text becomes that section&apos;s number, linked — section 2 points
-          forward to section 7. Sections must be direct children of the page, or inside fragments or arrays: the page
-          reads the order before anything renders. The page also calls {code("useNoIndex()")}; this preview passes{" "}
+          {code("{ref:retention}")} in an app text becomes that section&apos;s number, linked — section 2 points forward
+          to section 7. Sections must be direct children of the page, or inside fragments or arrays: the page reads the
+          order before anything renders. The page also calls {code("useNoIndex()")}; this preview passes{" "}
           {code("noIndex={false}")}.
         </Note>
       </div>
@@ -336,11 +353,7 @@ function LegalAccept028Demo() {
         <div className="flex max-w-sm flex-col gap-4">
           <LegalAcceptCheckbox checked={accepted} onCheckedChange={setAccepted} />
           <Button disabled={!accepted}>Create account</Button>
-          {page !== null && (
-            <p className="text-xs text-muted">
-              In an app, that link opens {code(`/${page}`)}.
-            </p>
-          )}
+          {page !== null && <p className="text-xs text-muted">In an app, that link opens {code(`/${page}`)}.</p>}
           <div className="rounded-md border border-subtle p-3">
             <p className="mb-2 text-xs text-muted">An account menu&apos;s footer:</p>
             <LegalLinks nav={false} />

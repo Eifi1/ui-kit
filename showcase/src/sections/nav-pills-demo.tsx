@@ -97,9 +97,9 @@ export function NavPillsDemo() {
             <code className="font-mono">&lt;div role=&quot;group&quot;&gt;</code> instead of a{" "}
             <code className="font-mono">&lt;nav&gt;</code> — this picker is not the page&apos;s navigation. An{" "}
             <code className="font-mono">icon</code> sits before each label; the last is{" "}
-            <code className="font-mono">disabled</code>. The strip is capped at <code className="font-mono">max-w-md</code>{" "}
-            and WRAPS onto a second row rather than scrolling sideways; <code className="font-mono">size=&quot;sm&quot;</code>{" "}
-            is the compact ToggleGroup size.
+            <code className="font-mono">disabled</code>. The strip is capped at{" "}
+            <code className="font-mono">max-w-md</code> and WRAPS onto a second row rather than scrolling sideways;{" "}
+            <code className="font-mono">size=&quot;sm&quot;</code> is the compact ToggleGroup size.
           </Note>
         </div>
       </Example>
@@ -138,11 +138,11 @@ export function SectionNavDemo() {
       <div className="mt-3">
         <Note>
           <code className="font-mono">SectionNav</code> is <code className="font-mono">NavPills</code> with{" "}
-          <code className="font-mono">layout=&quot;scroll&quot;</code>: one line, faded where it is cut, every pill a link
-          and its own tab stop, the open one <code className="font-mono">aria-current=&quot;page&quot;</code>. By default it
-          shows below <code className="font-mono">md</code> only (<code className="font-mono">phoneOnly</code>), where the
-          sidebar that lists the same pages is gone; this frame passes{" "}
-          <code className="font-mono">phoneOnly={"{false}"}</code> so it shows at every width.
+          <code className="font-mono">layout=&quot;scroll&quot;</code>: one line, faded where it is cut, every pill a
+          link and its own tab stop, the open one <code className="font-mono">aria-current=&quot;page&quot;</code>. By
+          default it shows below <code className="font-mono">md</code> only (
+          <code className="font-mono">phoneOnly</code>), where the sidebar that lists the same pages is gone; this frame
+          passes <code className="font-mono">phoneOnly={"{false}"}</code> so it shows at every width.
         </Note>
       </div>
     </Example>

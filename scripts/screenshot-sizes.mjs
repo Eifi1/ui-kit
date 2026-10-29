@@ -286,7 +286,12 @@ function installSweepHelpers() {
    *  `visibility: hidden`. */
   const invisible = (el) => {
     const box = el.getBoundingClientRect();
-    return el.getClientRects().length === 0 || box.width === 0 || box.height === 0 || getComputedStyle(el).visibility === "hidden";
+    return (
+      el.getClientRects().length === 0 ||
+      box.width === 0 ||
+      box.height === 0 ||
+      getComputedStyle(el).visibility === "hidden"
+    );
   };
   /** Out of the reading: an `aria-hidden` overlay, and the showcase's device-preview
    *  frames (another document, measured on its own pages). */
@@ -325,7 +330,8 @@ function measureTruncation() {
   const findings = [];
   for (const el of document.body.querySelectorAll("*")) {
     const s = getComputedStyle(el);
-    const oneLine = s.textOverflow === "ellipsis" && /hidden|clip/.test(s.overflowX) && s.whiteSpace.startsWith("nowrap");
+    const oneLine =
+      s.textOverflow === "ellipsis" && /hidden|clip/.test(s.overflowX) && s.whiteSpace.startsWith("nowrap");
     const clamped = s.webkitLineClamp && s.webkitLineClamp !== "none";
     const cut = oneLine ? el.scrollWidth > el.clientWidth + 1 : clamped ? el.scrollHeight > el.clientHeight + 1 : false;
     if (!cut) continue;
@@ -501,7 +507,19 @@ async function main() {
           if (truncated.length) truncatedShot = await shoot('[data-truncation-offender="0"]', "truncated");
           if (pinned.length) pinnedShot = await shoot('[data-pinned-offender="0"]', "pinned");
         }
-        perVariant[index].push({ name, applied, variant, ...result, truncated, pinned, shot, full, offender, truncatedShot, pinnedShot });
+        perVariant[index].push({
+          name,
+          applied,
+          variant,
+          ...result,
+          truncated,
+          pinned,
+          shot,
+          full,
+          offender,
+          truncatedShot,
+          pinnedShot,
+        });
         const verdict = [
           overflows && `OVERFLOW document +${result.document}px, main +${result.main}px`,
           truncated.length && `${truncated.length} truncated`,
@@ -512,7 +530,8 @@ async function main() {
         log(`${name.padEnd(36)} ${applied === variant.size ? "" : `(size ${applied}!) `}${verdict || "ok"}`);
         for (const offender of result.offenders) log(`    ${offender}`);
         for (const f of truncated) log(findingLine("TRUNCATED", f, `${f.width}px ${f.kind} ${f.box}: "${f.text}"`));
-        for (const f of pinned) log(findingLine("PINNED", f, `${f.how} ${f.height}px (${f.share} % of the viewport) ${f.box}: "${f.text}"`));
+        for (const f of pinned)
+          log(findingLine("PINNED", f, `${f.how} ${f.height}px (${f.share} % of the viewport) ${f.box}: "${f.text}"`));
       }
     } finally {
       await context.close();
@@ -544,7 +563,8 @@ async function main() {
   for (const f of bad) console.log(`  ${f.name}: ${f.offender ?? f.full ?? "(no screens)"}`);
   if (checkTruncation) {
     console.log(`TRUNCATED: ${count(cut, "truncated")} in ${cut.length} runs${gate ? "" : " (report-only)"}.`);
-    for (const f of cut) console.log(`  ${f.name}: ${f.truncated.length}${f.truncatedShot ? ` — ${f.truncatedShot}` : ""}`);
+    for (const f of cut)
+      console.log(`  ${f.name}: ${f.truncated.length}${f.truncatedShot ? ` — ${f.truncatedShot}` : ""}`);
   }
   if (checkPinned) {
     console.log(`PINNED: ${count(tall, "pinned")} in ${tall.length} runs${gate ? "" : " (report-only)"}.`);

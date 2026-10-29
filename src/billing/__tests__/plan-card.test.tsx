@@ -35,7 +35,9 @@ const DIMENSIONS = { beds: "Beds", helpers: "Helpers" };
 
 const card = (name: RegExp | string) => screen.getByRole("radio", { name });
 const priceOf = (code: string) =>
-  plain(document.querySelector(`[data-plan="${code}"]`)?.closest("label")?.querySelector("[data-part=price]")?.textContent);
+  plain(
+    document.querySelector(`[data-plan="${code}"]`)?.closest("label")?.querySelector("[data-part=price]")?.textContent,
+  );
 
 describe("PlanCard — one plan on a ChoiceCard radio", () => {
   it("shows the gross price per currency and period, and says it includes VAT", () => {
@@ -75,19 +77,22 @@ describe("PlanCard — one plan on a ChoiceCard radio", () => {
       </>,
     );
     const limits = screen.getAllByRole("list", { name: "Limits" });
-    expect(within(limits[0]).getAllByRole("listitem").map((li) => li.textContent?.trim())).toEqual([
-      "Beds: 20",
-      "Helpers: 3",
-    ]);
-    expect(within(limits[1]).getAllByRole("listitem").map((li) => li.textContent?.trim())).toEqual([
-      "Beds: Unlimited",
-      "Helpers: Unlimited",
-    ]);
+    expect(
+      within(limits[0])
+        .getAllByRole("listitem")
+        .map((li) => li.textContent?.trim()),
+    ).toEqual(["Beds: 20", "Helpers: 3"]);
+    expect(
+      within(limits[1])
+        .getAllByRole("listitem")
+        .map((li) => li.textContent?.trim()),
+    ).toEqual(["Beds: Unlimited", "Helpers: Unlimited"]);
     const features = screen.getByRole("list", { name: "Included" });
-    expect(within(features).getAllByRole("listitem").map((li) => li.textContent?.trim())).toEqual([
-      "Planting calendar",
-      "Harvest log",
-    ]);
+    expect(
+      within(features)
+        .getAllByRole("listitem")
+        .map((li) => li.textContent?.trim()),
+    ).toEqual(["Planting calendar", "Harvest log"]);
   });
 
   it("calls a plan without prices Free, and a priced plan without this period not offered", () => {
@@ -193,7 +198,9 @@ describe("PlanPicker — the period, the currency, the cards and one Choose", ()
         <PlanPicker plans={PLANS} onChoose={() => {}} />
       </UiKitProvider>,
     );
-    expect(within(screen.getByRole("radiogroup", { name: "Currency" })).getByRole("radio", { name: "CHF" })).toBeChecked();
+    expect(
+      within(screen.getByRole("radiogroup", { name: "Currency" })).getByRole("radio", { name: "CHF" }),
+    ).toBeChecked();
   });
 
   it("never takes the write lock: a read-only payer must be able to pay (§3.3)", () => {

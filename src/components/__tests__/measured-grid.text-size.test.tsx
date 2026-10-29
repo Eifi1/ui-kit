@@ -28,8 +28,7 @@ function grid() {
 }
 
 /** The body rows (aria-rowindex 2…), in order. */
-const rows = () =>
-  screen.getAllByRole("row").filter((row) => Number(row.getAttribute("aria-rowindex")) >= 2);
+const rows = () => screen.getAllByRole("row").filter((row) => Number(row.getAttribute("aria-rowindex")) >= 2);
 
 describe("MeasuredGrid rows (§10.9)", () => {
   it("are 28 px at Normal, as a minimum rather than a fixed height", () => {

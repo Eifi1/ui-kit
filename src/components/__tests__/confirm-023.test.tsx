@@ -32,7 +32,7 @@ describe("FormActions — cancelVariant and size (keksdose G3)", () => {
     }
   });
 
-  it("cancelVariant=\"ghost\" draws Cancel without an outline, leaving Save alone", () => {
+  it('cancelVariant="ghost" draws Cancel without an outline, leaving Save alone', () => {
     render(<FormActions onCancel={() => {}} cancelVariant="ghost" />);
     const cancel = screen.getByRole("button", { name: "Cancel" });
     expect(cancel.className).toContain("bg-transparent");
@@ -40,7 +40,7 @@ describe("FormActions — cancelVariant and size (keksdose G3)", () => {
     expect(screen.getByRole("button", { name: "Save" })).toHaveClass("bg-brand");
   });
 
-  it("size=\"sm\" shrinks every button the row draws — Save, Cancel and the destructive data form", () => {
+  it('size="sm" shrinks every button the row draws — Save, Cancel and the destructive data form', () => {
     render(<FormActions size="sm" onCancel={() => {}} destructive={{ label: "Delete", onClick: () => {} }} />);
     for (const name of ["Cancel", "Save", "Delete"]) {
       const cls = screen.getByRole("button", { name }).className;
@@ -181,9 +181,13 @@ describe("DangerConfirm — a held confirm says which guard is open (keksdose G4
     );
     expect(confirmButton()).toHaveAccessibleDescription("„weg“ eintippen");
     // A finished string, per instance.
-    rerender(<DangerConfirm armed phrase="DELETE" onConfirm={() => {}} labels={{ needsPhrase: "Type DELETE first" }} />);
+    rerender(
+      <DangerConfirm armed phrase="DELETE" onConfirm={() => {}} labels={{ needsPhrase: "Type DELETE first" }} />,
+    );
     expect(confirmButton()).toHaveAccessibleDescription("Type DELETE first");
-    rerender(<DangerConfirm armed requirePassword onConfirm={() => {}} labels={{ needsPassword: "Your password, please" }} />);
+    rerender(
+      <DangerConfirm armed requirePassword onConfirm={() => {}} labels={{ needsPassword: "Your password, please" }} />,
+    );
     expect(confirmButton()).toHaveAccessibleDescription("Your password, please");
   });
 
@@ -337,14 +341,7 @@ describe("ReauthDialog — built from CurrentPasswordInput (later list)", () => 
   it("keeps its error under the field and read-only while busy", async () => {
     function Harness() {
       const [busy, setBusy] = useState(false);
-      return (
-        <ReauthDialog
-          busy={busy}
-          error="Wrong password"
-          onSubmit={() => setBusy(true)}
-          onClose={() => {}}
-        />
-      );
+      return <ReauthDialog busy={busy} error="Wrong password" onSubmit={() => setBusy(true)} onClose={() => {}} />;
     }
     const user = userEvent.setup();
     render(<Harness />);

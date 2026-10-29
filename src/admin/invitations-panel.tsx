@@ -241,9 +241,7 @@ export function InvitationsPanel<R extends string = string>({
   const [invalid, setInvalid] = useState(false);
   const [role, setRole] = useState<R | undefined>(defaultRole ?? offered[0]);
   const [scope, setScope] = useState("");
-  const [locale, setLocale] = useState<KitLanguageCode>(() =>
-    resolveLanguage([defaultLocale, kitLocale], languages),
-  );
+  const [locale, setLocale] = useState<KitLanguageCode>(() => resolveLanguage([defaultLocale, kitLocale], languages));
   const [note, setNote] = useState("");
   // One request at a time, for the whole panel; the key says which control spins.
   const [busy, setBusy] = useState<string | null>(null);
@@ -341,13 +339,7 @@ export function InvitationsPanel<R extends string = string>({
               }}
             />
             {choosesRole && (
-              <RoleSelect<R>
-                label={labels.role}
-                value={role}
-                roles={roles}
-                offered={offered}
-                onChange={setRole}
-              />
+              <RoleSelect<R> label={labels.role} value={role} roles={roles} offered={offered} onChange={setRole} />
             )}
             {scopes && scopes.length > 0 && (
               <Select
@@ -433,7 +425,9 @@ export function InvitationsPanel<R extends string = string>({
                 typeof invitation.invited_by === "string" ? invitation.invited_by : nameOf(invitation.invited_by);
               const facts = [
                 dayText(invitation.created_at) && labels.sent(dayText(invitation.created_at)),
-                open && dayText(invitation.expires_at ?? null) && labels.expires(dayText(invitation.expires_at ?? null)),
+                open &&
+                  dayText(invitation.expires_at ?? null) &&
+                  labels.expires(dayText(invitation.expires_at ?? null)),
                 by && labels.invitedBy(by),
               ].filter(Boolean);
               return (

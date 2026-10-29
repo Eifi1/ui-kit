@@ -12,8 +12,7 @@ import { Checkbox } from "../checkbox";
  * it is wrong (`invalid`/`error`), say why, and show "some" (`indeterminate`).
  */
 
-const described = (el: Element) =>
-  (el.getAttribute("aria-describedby") ?? "").split(/\s+/).filter(Boolean);
+const described = (el: Element) => (el.getAttribute("aria-describedby") ?? "").split(/\s+/).filter(Boolean);
 const descriptions = (el: Element) =>
   described(el).map((id) => document.getElementById(id)?.textContent ?? `#${id} MISSING`);
 
@@ -214,7 +213,9 @@ describe("Checkbox", () => {
     // The kit's focus frame (0.32, §5): `--focus-ring-width` wide — `ring-focus` (0.34, DOC-7).
     expect(screen.getByRole("checkbox")).toHaveClass("focus-visible:ring-focus", "focus-visible:ring-offset-surface");
     // A token: a role utility (0.34) or a `[var(--…)]`.
-    expect(cls).toMatch(/focus-visible:ring-(?:\[var\(--[a-z-]+\)\]|brand|subtle|strong|danger-strong|warning-strong|media-ink)(?![\w-])/);
+    expect(cls).toMatch(
+      /focus-visible:ring-(?:\[var\(--[a-z-]+\)\]|brand|subtle|strong|danger-strong|warning-strong|media-ink)(?![\w-])/,
+    );
   });
 
   it("uses logical spacing only, so the row mirrors in a right-to-left form", () => {

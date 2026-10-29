@@ -34,7 +34,8 @@ const PX: Record<string, number> = {
 /** The one token of `cls` that is `prefix` + a known size, without a variant. */
 function px(el: Element, ...prefixes: string[]): number {
   const tokens = el.className.split(/\s+/).filter((t) => prefixes.some((p) => t.startsWith(p)) && t in PX);
-  if (tokens.length !== 1) throw new Error(`expected one of ${prefixes.join("/")} in "${el.className}", got ${tokens.join(",")}`);
+  if (tokens.length !== 1)
+    throw new Error(`expected one of ${prefixes.join("/")} in "${el.className}", got ${tokens.join(",")}`);
   return PX[tokens[0]];
 }
 
@@ -97,7 +98,9 @@ describe("ToggleGroup field chrome geometry (keksdose K1, feedback #117 rework)"
   });
 
   it("ignores chromeClassName without the chrome", () => {
-    render(<ToggleGroup aria-label="Group by" chromeClassName="x-chrome" value="a" onChange={vi.fn()} options={OPTIONS} />);
+    render(
+      <ToggleGroup aria-label="Group by" chromeClassName="x-chrome" value="a" onChange={vi.fn()} options={OPTIONS} />,
+    );
     expect(document.querySelector(".x-chrome")).toBeNull();
   });
 });
@@ -137,7 +140,9 @@ describe('ToggleGroup labelPlacement="strip" (keksdose K2, live #288 / #431)', (
   });
 
   it("keeps sm at 22px: 12px type in the same 16px line", () => {
-    render(<ToggleGroup label="Status" labelPlacement="strip" size="sm" value="a" onChange={vi.fn()} options={OPTIONS} />);
+    render(
+      <ToggleGroup label="Status" labelPlacement="strip" size="sm" value="a" onChange={vi.fn()} options={OPTIONS} />,
+    );
     const active = screen.getByRole("radio", { name: "Any" });
     expect(active.className).toContain("text-xs");
     expect(1 + 2 + px(active, "py-") * 2 + px(active, "leading-") + 2 + 1).toBe(22);
@@ -205,7 +210,9 @@ describe('ToggleGroup labelPlacement="strip" (keksdose K2, live #288 / #431)', (
   });
 
   it("dims the label with a disabled group", () => {
-    render(<ToggleGroup label="Status" labelPlacement="strip" disabled value="a" onChange={vi.fn()} options={OPTIONS} />);
+    render(
+      <ToggleGroup label="Status" labelPlacement="strip" disabled value="a" onChange={vi.fn()} options={OPTIONS} />,
+    );
     expect(screen.getByText("Status").className).toContain("opacity-50");
   });
 });
@@ -214,7 +221,13 @@ describe("ToggleGroup commit / disabledReason (keksdose K3, dev#496)", () => {
   it("disabledReason: reachable, refusing, and says why", () => {
     const onChange = vi.fn();
     render(
-      <ToggleGroup aria-label="Status" disabledReason="Reconciled rows are final." value="a" onChange={onChange} options={OPTIONS} />,
+      <ToggleGroup
+        aria-label="Status"
+        disabledReason="Reconciled rows are final."
+        value="a"
+        onChange={onChange}
+        options={OPTIONS}
+      />,
     );
     const any = screen.getByRole("radio", { name: "Any" });
     const all = screen.getByRole("radio", { name: "All" });
@@ -236,7 +249,14 @@ describe("ToggleGroup commit / disabledReason (keksdose K3, dev#496)", () => {
 
   it("wins over disabled, as on Button", () => {
     render(
-      <ToggleGroup aria-label="Status" disabled disabledReason="Locked." value="a" onChange={vi.fn()} options={OPTIONS} />,
+      <ToggleGroup
+        aria-label="Status"
+        disabled
+        disabledReason="Locked."
+        value="a"
+        onChange={vi.fn()}
+        options={OPTIONS}
+      />,
     );
     expect(screen.getByRole("radio", { name: "Any" })).not.toBeDisabled();
   });
@@ -245,7 +265,14 @@ describe("ToggleGroup commit / disabledReason (keksdose K3, dev#496)", () => {
     const onChange = vi.fn();
     const { rerender } = render(
       <WriteLockProvider locked reason="Read-only demo.">
-        <ToggleGroup aria-label="Status" commit disabledReason="Own reason" value="a" onChange={onChange} options={OPTIONS} />
+        <ToggleGroup
+          aria-label="Status"
+          commit
+          disabledReason="Own reason"
+          value="a"
+          onChange={onChange}
+          options={OPTIONS}
+        />
       </WriteLockProvider>,
     );
     expect(screen.getByRole("radio", { name: "Any" })).toHaveAccessibleDescription("Read-only demo.");
@@ -264,7 +291,14 @@ describe("ToggleGroup commit / disabledReason (keksdose K3, dev#496)", () => {
   it("a locked pressed group swallows the press too", () => {
     const onChange = vi.fn();
     render(
-      <ToggleGroup allowEmpty aria-label="Filter" disabledReason="No." value="a" onChange={onChange} options={OPTIONS} />,
+      <ToggleGroup
+        allowEmpty
+        aria-label="Filter"
+        disabledReason="No."
+        value="a"
+        onChange={onChange}
+        options={OPTIONS}
+      />,
     );
     fireEvent.click(screen.getByRole("button", { name: "Any" }));
     expect(onChange).not.toHaveBeenCalled();

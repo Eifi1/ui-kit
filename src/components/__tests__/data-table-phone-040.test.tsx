@@ -38,7 +38,8 @@ afterEach(() => {
 });
 
 /** The card a row's text sits in — the element that carries the card's handlers. */
-const card = (name: string) => screen.getByText(name).closest("[role=button], a, li > div, [data-card-selecting]") as HTMLElement;
+const card = (name: string) =>
+  screen.getByText(name).closest("[role=button], a, li > div, [data-card-selecting]") as HTMLElement;
 
 describe("fillHeight on a phone (live #420)", () => {
   const renderFill = () =>

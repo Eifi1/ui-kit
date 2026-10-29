@@ -15,7 +15,15 @@ const ROLES = ["ADMIN", "MEMBER", "REVIEWER"] as const;
 const PLANS = ["free", "pro"] as const;
 type Role = (typeof ROLES)[number];
 
-function App({ billingOff = false, originalRole, enabled = true }: { billingOff?: boolean; originalRole?: Role; enabled?: boolean }) {
+function App({
+  billingOff = false,
+  originalRole,
+  enabled = true,
+}: {
+  billingOff?: boolean;
+  originalRole?: Role;
+  enabled?: boolean;
+}) {
   const [role, setRole] = useState<Role>("ADMIN");
   const [plan, setPlan] = useState<(typeof PLANS)[number]>("free");
   return (

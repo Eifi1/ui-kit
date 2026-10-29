@@ -173,7 +173,13 @@ export interface TranslationLocaleTabsProps {
  * strip's caret saying it goes on (`overflowCue`). Nothing for a single locale:
  * a strip with one tab is a heading that looks clickable.
  */
-export function TranslationLocaleTabs({ locales, active, onChange, className, labels: labelsProp }: TranslationLocaleTabsProps) {
+export function TranslationLocaleTabs({
+  locales,
+  active,
+  onChange,
+  className,
+  labels: labelsProp,
+}: TranslationLocaleTabsProps) {
   const labels = useKitLabels("translationReview", DEFAULT_TRANSLATION_REVIEW_LABELS, labelsProp);
   if (locales.length < 2) return null;
   return (

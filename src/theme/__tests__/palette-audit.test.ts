@@ -53,27 +53,24 @@ const SPECS = [
 ] as const;
 
 describe("derived presets", () => {
-  it.each(SPECS.map((s) => [s.id, s] as const))(
-    "%s is exactly what the deriver produces today",
-    (id, spec) => {
-      // Committed rather than derived at import (deriving eight token sets costs ~34ms).
-      // This is what stops the two drifting: change the deriver and this fails, naming
-      // the preset to regenerate.
-      const preset = DERIVED_PRESETS.find((p) => p.id === id);
-      expect(preset, `no preset "${id}"`).toBeDefined();
-      for (const mode of ["light", "dark"] as const) {
-        const fresh = derivePalette({
-          anchors: { brand: spec.brand },
-          mode,
-          surfaceTint: spec.tint,
-          textContrast: "text" in spec ? spec.text : undefined,
-        });
-        const committed = { ...preset![mode] };
-        const derived = { ...fresh.tokens, chart: committed.chart };
-        expect(derived, `${id}/${mode} has drifted — regenerate it`).toEqual(committed);
-      }
-    },
-  );
+  it.each(SPECS.map((s) => [s.id, s] as const))("%s is exactly what the deriver produces today", (id, spec) => {
+    // Committed rather than derived at import (deriving eight token sets costs ~34ms).
+    // This is what stops the two drifting: change the deriver and this fails, naming
+    // the preset to regenerate.
+    const preset = DERIVED_PRESETS.find((p) => p.id === id);
+    expect(preset, `no preset "${id}"`).toBeDefined();
+    for (const mode of ["light", "dark"] as const) {
+      const fresh = derivePalette({
+        anchors: { brand: spec.brand },
+        mode,
+        surfaceTint: spec.tint,
+        textContrast: "text" in spec ? spec.text : undefined,
+      });
+      const committed = { ...preset![mode] };
+      const derived = { ...fresh.tokens, chart: committed.chart };
+      expect(derived, `${id}/${mode} has drifted — regenerate it`).toEqual(committed);
+    }
+  });
 });
 
 describe("every shipped preset survives its own audit", () => {
@@ -82,33 +79,32 @@ describe("every shipped preset survives its own audit", () => {
       // With tokens.css's semantic layer (0.33): the status colours as text on the
       // preset's card and on a hovered row, on their washes, and danger's fill pair.
       const report = auditPalette(preset[mode], semanticOf(preset, mode));
-      const failures = report.failures.map(
-        (f) => `${f.pair} ${f.ratio.toFixed(2)}:1 < ${f.required}:1 (${f.rule})`,
-      );
+      const failures = report.failures.map((f) => `${f.pair} ${f.ratio.toFixed(2)}:1 < ${f.required}:1 (${f.rule})`);
       expect(failures, `${id}/${mode}`).toEqual([]);
     }
   });
 
-  it.each(PALETTES.map((p) => [p.id, p] as const))("%s passes under More contrast on both themes (§13.5)", (id, preset) => {
-    for (const mode of ["light", "dark"] as const) {
-      // The set as More contrast paints it, with tokens.css's More literals in light.
-      const report = auditPalette(preset[mode], semanticOf(preset, mode, true), { level: "more" });
-      const failures = report.failures.map(
-        (f) => `${f.pair} ${f.ratio.toFixed(2)}:1 < ${f.required}:1 (${f.rule})`,
-      );
-      expect(failures, `${id}/${mode} +more`).toEqual([]);
-      // Not vacuous: the stepped pairs are there, named for the level.
-      const pairs = report.checks.map((c) => c.pair);
-      expect(pairs).toContain("moneyExpense on bgSurface2 (More contrast)");
-      expect(pairs).toContain("border on bgSurface2 (More contrast)");
-      if (mode === "light") {
-        expect(pairs).toContain("bgSurface2 on bgSurface (More contrast)");
-        expect(pairs).toContain("danger on bgSurface2 (More contrast)");
-      } else {
-        expect(pairs).not.toContain("bgSurface2 on bgSurface (More contrast)");
+  it.each(PALETTES.map((p) => [p.id, p] as const))(
+    "%s passes under More contrast on both themes (§13.5)",
+    (id, preset) => {
+      for (const mode of ["light", "dark"] as const) {
+        // The set as More contrast paints it, with tokens.css's More literals in light.
+        const report = auditPalette(preset[mode], semanticOf(preset, mode, true), { level: "more" });
+        const failures = report.failures.map((f) => `${f.pair} ${f.ratio.toFixed(2)}:1 < ${f.required}:1 (${f.rule})`);
+        expect(failures, `${id}/${mode} +more`).toEqual([]);
+        // Not vacuous: the stepped pairs are there, named for the level.
+        const pairs = report.checks.map((c) => c.pair);
+        expect(pairs).toContain("moneyExpense on bgSurface2 (More contrast)");
+        expect(pairs).toContain("border on bgSurface2 (More contrast)");
+        if (mode === "light") {
+          expect(pairs).toContain("bgSurface2 on bgSurface (More contrast)");
+          expect(pairs).toContain("danger on bgSurface2 (More contrast)");
+        } else {
+          expect(pairs).not.toContain("bgSurface2 on bgSurface (More contrast)");
+        }
       }
-    }
-  });
+    },
+  );
 });
 
 describe("auditPalette({ level: 'more' }) (0.36, colour-roles §13.5)", () => {
@@ -138,8 +134,9 @@ describe("auditPalette({ level: 'more' }) (0.36, colour-roles §13.5)", () => {
 
   it("fails what it measures: today's light literals on the stepped well", () => {
     // tokens.css's STANDARD light status colours, audited on More contrast's well.
-    const failing = auditPalette(DEFAULT_PRESET.light, semanticOf(DEFAULT_PRESET, "light", false), { level: "more" })
-      .failures.map((f) => f.pair);
+    const failing = auditPalette(DEFAULT_PRESET.light, semanticOf(DEFAULT_PRESET, "light", false), {
+      level: "more",
+    }).failures.map((f) => f.pair);
     expect(failing).toContain("info on bgSurface2 (More contrast)");
     expect(failing).toContain("warning on bgSurface2 (More contrast)");
   });
@@ -237,8 +234,18 @@ describe("derivePalette", () => {
     }
     // Real sweep: a saturated colour at each of twelve hues.
     const brands = [
-      "#d92b2b", "#d9662b", "#d9a62b", "#b9d92b", "#5fd92b", "#2bd95f",
-      "#2bd9b9", "#2ba6d9", "#2b5fd9", "#5f2bd9", "#a62bd9", "#d92bb9",
+      "#d92b2b",
+      "#d9662b",
+      "#d9a62b",
+      "#b9d92b",
+      "#5fd92b",
+      "#2bd95f",
+      "#2bd9b9",
+      "#2ba6d9",
+      "#2b5fd9",
+      "#5f2bd9",
+      "#a62bd9",
+      "#d92bb9",
     ];
     for (const brand of brands) {
       for (const mode of ["light", "dark"] as const) {
@@ -280,12 +287,22 @@ describe("derivePalette", () => {
     // the brand's tint only as far as the brand has chroma: #808080 painted #eddde1.
     for (const mode of ["light", "dark"] as const) {
       const t = derivePalette({ anchors: { brand: "#808080" }, mode }).tokens;
-      for (const role of ["bgPage", "bgSurface", "bgSurface2", "border", "textPrimary", "textMuted", "moneyNeutral"] as const) {
+      for (const role of [
+        "bgPage",
+        "bgSurface",
+        "bgSurface2",
+        "border",
+        "textPrimary",
+        "textMuted",
+        "moneyNeutral",
+      ] as const) {
         expect(hexToOklch(t[role])!.c, `${mode} ${role} ${t[role]}`).toBeLessThan(0.002);
       }
     }
     // A coloured brand keeps its warmth.
-    expect(hexToOklch(derivePalette({ anchors: { brand: "#2f5fd0" }, mode: "light" }).tokens.bgPage)!.c).toBeGreaterThan(0.01);
+    expect(
+      hexToOklch(derivePalette({ anchors: { brand: "#2f5fd0" }, mode: "light" }).tokens.bgPage)!.c,
+    ).toBeGreaterThan(0.01);
   });
 
   it("honours a pinned hue exactly instead of moving it", () => {
@@ -310,9 +327,7 @@ describe("derivePalette", () => {
   });
 
   it("refuses a non-hex brand with a message that says what to pass", () => {
-    expect(() => derivePalette({ anchors: { brand: "rebeccapurple" }, mode: "light" })).toThrow(
-      /hex/i,
-    );
+    expect(() => derivePalette({ anchors: { brand: "rebeccapurple" }, mode: "light" })).toThrow(/hex/i);
   });
 
   it("adds accent tokens only when an accent is pinned", () => {
@@ -322,4 +337,3 @@ describe("derivePalette", () => {
     ).toBeTruthy();
   });
 });
-

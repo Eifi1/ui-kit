@@ -67,7 +67,11 @@ const ROWS: FeedbackRecord[] = [
     category: "IDEA",
     status: "IN_EVALUATION",
     body: REWORKED,
-    context: { environment: "dev", user_display_name: "Example Admin", url: "https://dev.example.test/accounts?p=2#top" },
+    context: {
+      environment: "dev",
+      user_display_name: "Example Admin",
+      url: "https://dev.example.test/accounts?p=2#top",
+    },
     created_at: "2026-10-04T09:12:00Z",
   }),
   row({
@@ -170,9 +174,9 @@ describe("reading a row", () => {
   });
 
   it("prefers the joined email, falls back to the snapshot, and names nobody erased", () => {
-    expect(feedbackSubmitterEmail(row({ user_email: "a@example.test", context: { user_email: "b@example.test" } }))).toBe(
-      "a@example.test",
-    );
+    expect(
+      feedbackSubmitterEmail(row({ user_email: "a@example.test", context: { user_email: "b@example.test" } })),
+    ).toBe("a@example.test");
     expect(feedbackSubmitterEmail(row({ context: { user_email: "b@example.test" } }))).toBe("b@example.test");
     expect(feedbackSubmitterEmail(row({ user_id: null, user_email: "a@example.test" }))).toBe("");
   });
@@ -282,7 +286,12 @@ describe("feedbackColumns", () => {
     expect(own).toHaveLength(9);
     // keksdose's generated `FeedbackResponse` types the context as a loose record.
     type GeneratedFeedback = Omit<FeedbackRecord, "context"> & { context: { [key: string]: unknown } | null };
-    const generated = feedbackColumns<GeneratedFeedback>({ canEdit: false, onStatus: () => {}, renderDate: isoDay, ...resolved });
+    const generated = feedbackColumns<GeneratedFeedback>({
+      canEdit: false,
+      onStatus: () => {},
+      renderDate: isoDay,
+      ...resolved,
+    });
     expect(generated).toHaveLength(9);
   });
 });
@@ -368,7 +377,10 @@ describe("the desktop table", () => {
 
   it("reads its words from the provider", () => {
     const labels = {
-      feedbackPage: { columnSubject: "Betreff", reworkChip: (n: number) => (n === 1 ? "Nacharbeit" : `Nacharbeit ×${n}`) },
+      feedbackPage: {
+        columnSubject: "Betreff",
+        reworkChip: (n: number) => (n === 1 ? "Nacharbeit" : `Nacharbeit ×${n}`),
+      },
       feedbackStatus: { IN_EVALUATION: "Zur Prüfung" },
     } as unknown as UiKitLabelOverrides;
     renderTable({}, undefined, (node) => <UiKitProvider labels={labels}>{node}</UiKitProvider>);
@@ -531,10 +543,11 @@ describe("FeedbackAwaitingToggle", () => {
       </FeedbackAwaitingToggle>,
     );
     const group = screen.getByRole("group", { name: "Feedback actions" });
-    expect(within(group).getAllByRole("button").map((b) => b.textContent || b.getAttribute("aria-label"))).toEqual([
-      "Only what is waiting for you",
-      "Another",
-    ]);
+    expect(
+      within(group)
+        .getAllByRole("button")
+        .map((b) => b.textContent || b.getAttribute("aria-label")),
+    ).toEqual(["Only what is waiting for you", "Another"]);
   });
 });
 
@@ -584,7 +597,11 @@ describe("the Votes column (0.38 §9.6)", () => {
   it("takes its header from feedbackPublic.columnVotes through the hook", () => {
     const { result } = renderHook(
       () => useFeedbackColumns<FeedbackRecord>({ canEdit: true, onStatus: () => {}, votes: true }),
-      { wrapper: ({ children }: { children: ReactNode }) => <UiKitProvider labels={UI_KIT_LABELS_DE_CH}>{children}</UiKitProvider> },
+      {
+        wrapper: ({ children }: { children: ReactNode }) => (
+          <UiKitProvider labels={UI_KIT_LABELS_DE_CH}>{children}</UiKitProvider>
+        ),
+      },
     );
     expect(result.current.find((c) => c.key === "votes")?.header).toBe("Stimmen");
   });
@@ -612,14 +629,21 @@ describe("FeedbackSubject's Rework chip (0.40)", () => {
   it("counts the entries of kind rework", () => {
     render(
       <FeedbackSubject
-        row={{ title: "T", body: "B", context: null, replies: [entry(1, "rework"), entry(2, "reply"), entry(3, "rework"), entry(4, "rework")] }}
+        row={{
+          title: "T",
+          body: "B",
+          context: null,
+          replies: [entry(1, "rework"), entry(2, "reply"), entry(3, "rework"), entry(4, "rework")],
+        }}
       />,
     );
     expect(chip()).toHaveTextContent("Rework ×3");
   });
 
   it("reads the body's blocks without replies", () => {
-    render(<FeedbackSubject row={{ title: "T", body: "B\n\n--- REWORK 2026-10-04 09:12 ---\nAgain.", context: null }} />);
+    render(
+      <FeedbackSubject row={{ title: "T", body: "B\n\n--- REWORK 2026-10-04 09:12 ---\nAgain.", context: null }} />,
+    );
     expect(chip()).toHaveTextContent("Rework");
     expect(chip()).toHaveAttribute("data-feedback-rework", "1");
   });

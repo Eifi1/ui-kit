@@ -97,10 +97,20 @@ describe("Slider — log scale", () => {
   });
 
   it("does not announce its 0–1 position as the value (Lenkbank's shipped defect)", () => {
-    const { rerender } = render(<Slider aria-label="Kp" scale="log" value={12.5} min={0.5} max={200} onChange={noop} />);
+    const { rerender } = render(
+      <Slider aria-label="Kp" scale="log" value={12.5} min={0.5} max={200} onChange={noop} />,
+    );
     expect(screen.getByRole("slider")).toHaveAttribute("aria-valuetext", "12.5");
     rerender(
-      <Slider aria-label="Kp" scale="log" value={12.5} min={0.5} max={200} onChange={noop} formatValue={(v) => `${v} Nm/rad`} />,
+      <Slider
+        aria-label="Kp"
+        scale="log"
+        value={12.5}
+        min={0.5}
+        max={200}
+        onChange={noop}
+        formatValue={(v) => `${v} Nm/rad`}
+      />,
     );
     expect(screen.getByRole("slider")).toHaveAttribute("aria-valuetext", "12.5 Nm/rad");
   });
@@ -145,7 +155,11 @@ describe("Slider — label line and marks", () => {
     render(
       <Slider
         label="Proportional gain"
-        hint={<button type="button" aria-label="What is this?">?</button>}
+        hint={
+          <button type="button" aria-label="What is this?">
+            ?
+          </button>
+        }
         readout="12.5"
         value={12.5}
         min={0}
@@ -159,9 +173,7 @@ describe("Slider — label line and marks", () => {
   });
 
   it("does not make an interactive readout unselectable", () => {
-    render(
-      <Slider aria-label="S" readout={<input aria-label="Typed" />} value={1} min={0} max={10} onChange={noop} />,
-    );
+    render(<Slider aria-label="S" readout={<input aria-label="Typed" />} value={1} min={0} max={10} onChange={noop} />);
     expect(screen.getByLabelText("Typed").parentElement).not.toHaveClass("select-none");
   });
 
@@ -217,7 +229,17 @@ describe("Slider — the element", () => {
     const ref = createRef<HTMLInputElement>();
     const onPointerUp = vi.fn();
     render(
-      <Slider ref={ref} aria-label="S" data-tour="anchor" name="gain" value={1} min={0} max={10} onChange={noop} onPointerUp={onPointerUp} />,
+      <Slider
+        ref={ref}
+        aria-label="S"
+        data-tour="anchor"
+        name="gain"
+        value={1}
+        min={0}
+        max={10}
+        onChange={noop}
+        onPointerUp={onPointerUp}
+      />,
     );
     const slider = screen.getByRole("slider");
     expect(ref.current).toBe(slider);

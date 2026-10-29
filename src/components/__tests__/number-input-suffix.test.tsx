@@ -32,9 +32,7 @@ describe("NumberInput suffix", () => {
   it("reserves room for the unit AND the calculator together", () => {
     // Both trailing controls can be on at once. A field that reserved only whichever
     // happened to render would let the digits run under the other one.
-    const { container, rerender } = render(
-      <NumberInput label="Rate" value="1" suffix="%" onChange={vi.fn()} />,
-    );
+    const { container, rerender } = render(<NumberInput label="Rate" value="1" suffix="%" onChange={vi.fn()} />);
     const field = () => container.querySelector("input")!;
     // `pe-*`, not the `pr-*` this pinned before 0.7.0: the reservation sits at the
     // inline END so a right-to-left form keeps its digits clear of the unit too.

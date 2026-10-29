@@ -37,15 +37,7 @@ import type { LucideIcon } from "lucide-react";
  *  implementation", and nobody works an OPEN row. `REWORK` joined in 0.40 (§10.2
  *  decisions 2, 4): "sent back, released for work again" — a READY that came back. */
 export type FeedbackStatus =
-  | "OPEN"
-  | "READY"
-  | "REWORK"
-  | "IN_PROGRESS"
-  | "IN_EVALUATION"
-  | "NEEDS_LIVE_TEST"
-  | "POSTPONED"
-  | "DONE"
-  | "WONT_DO";
+  "OPEN" | "READY" | "REWORK" | "IN_PROGRESS" | "IN_EVALUATION" | "NEEDS_LIVE_TEST" | "POSTPONED" | "DONE" | "WONT_DO";
 
 /** What a report is about. `CRASH` is filed by an error boundary and never
  *  chosen, which is exactly why it is loud below and absent from every picker. */
@@ -61,79 +53,77 @@ export type FeedbackCategory = "CRASH" | "BUG" | "IDEA" | "QUESTION" | "OTHER";
  * a restated list cannot be checked for exhaustiveness: an eighth status would
  * break the build here and leave a literal eight long (as READY did in 0.31).
  */
-export const FEEDBACK_STATUS_META: Record<
-  FeedbackStatus,
-  { icon: LucideIcon; activeBg: string; activeText: string }
-> = {
-  OPEN: {
-    icon: Inbox,
-    activeBg: "bg-active",
-    activeText: "text-primary",
-  },
-  // Triaged and released for implementation (feedback contract §8.2, keksdose live
-  // #396): OPEN is "filed, nobody has looked yet", READY is "go". The brand tint at full
-  // strength, so it reads as the go-ahead beside OPEN's neutral fill and
-  // NEEDS_LIVE_TEST's muted brand.
-  READY: {
-    icon: ClipboardCheck,
-    activeBg: "bg-brand-soft",
-    activeText: "text-brand",
-  },
-  // Sent back by its author or an admin and released for work again (0.40, feedback
-  // contract §10.2 decision 4): the Rework button's `RotateCcw`, in the danger tint so the
-  // queue shows reworks apart from new reports. Not IN_PROGRESS's warning tint — that is
-  // where a REWORK row moves next — and WONT_DO, the only other red, sits at the far end
-  // with `Ban`.
-  REWORK: {
-    icon: RotateCcw,
-    activeBg: "bg-danger-soft",
-    activeText: "text-danger",
-  },
-  IN_PROGRESS: {
-    icon: Wrench,
-    activeBg: "bg-warning-soft",
-    activeText: "text-warning",
-  },
-  // Where solved work is parked, waiting on the person who reported it. Its own
-  // colour, because "somebody has to check this" is a state you want to find by
-  // scanning rather than by reading.
-  IN_EVALUATION: {
-    icon: Eye,
-    activeBg: "bg-info-soft",
-    activeText: "text-info",
-  },
-  // Resolved but only checkable on a deployed build — the SOFT brand tint, so it
-  // reads as "waiting on something" rather than as a done or a refusal, and it
-  // follows whatever the consumer's brand is instead of pinning an indigo island
-  // beside it.
-  NEEDS_LIVE_TEST: {
-    icon: CloudUpload,
-    activeBg: "bg-brand-soft",
-    activeText: "text-brand-muted",
-  },
-  // Parked on purpose. Muted, not `--danger`: it is not a refusal.
-  POSTPONED: {
-    icon: PauseCircle,
-    activeBg: "bg-active",
-    activeText: "text-secondary",
-  },
-  // The one status with nowhere to move to: the vocabulary has a brand, an info, a
-  // warning and a danger, and nothing that means "succeeded". Deliberately NOT
-  // borrowed from a family that means something else — `--status-synced` is a
-  // FIELD's trip to the database rather than an outcome, and tokens.css says so in
-  // as many words. Green beside WONT_DO's red is the classic CVD-unsafe pair, which
-  // is why both carry a glyph and neither leans on colour alone.
-  DONE: {
-    icon: CheckCircle2,
-    activeBg: "bg-success-soft",
-    activeText: "text-success",
-  },
-  WONT_DO: {
-    icon: Ban,
-    activeBg: "bg-danger-soft",
-    activeText: "text-danger",
-  },
-};
+export const FEEDBACK_STATUS_META: Record<FeedbackStatus, { icon: LucideIcon; activeBg: string; activeText: string }> =
+  {
+    OPEN: {
+      icon: Inbox,
+      activeBg: "bg-active",
+      activeText: "text-primary",
+    },
+    // Triaged and released for implementation (feedback contract §8.2, keksdose live
+    // #396): OPEN is "filed, nobody has looked yet", READY is "go". The brand tint at full
+    // strength, so it reads as the go-ahead beside OPEN's neutral fill and
+    // NEEDS_LIVE_TEST's muted brand.
+    READY: {
+      icon: ClipboardCheck,
+      activeBg: "bg-brand-soft",
+      activeText: "text-brand",
+    },
+    // Sent back by its author or an admin and released for work again (0.40, feedback
+    // contract §10.2 decision 4): the Rework button's `RotateCcw`, in the danger tint so the
+    // queue shows reworks apart from new reports. Not IN_PROGRESS's warning tint — that is
+    // where a REWORK row moves next — and WONT_DO, the only other red, sits at the far end
+    // with `Ban`.
+    REWORK: {
+      icon: RotateCcw,
+      activeBg: "bg-danger-soft",
+      activeText: "text-danger",
+    },
+    IN_PROGRESS: {
+      icon: Wrench,
+      activeBg: "bg-warning-soft",
+      activeText: "text-warning",
+    },
+    // Where solved work is parked, waiting on the person who reported it. Its own
+    // colour, because "somebody has to check this" is a state you want to find by
+    // scanning rather than by reading.
+    IN_EVALUATION: {
+      icon: Eye,
+      activeBg: "bg-info-soft",
+      activeText: "text-info",
+    },
+    // Resolved but only checkable on a deployed build — the SOFT brand tint, so it
+    // reads as "waiting on something" rather than as a done or a refusal, and it
+    // follows whatever the consumer's brand is instead of pinning an indigo island
+    // beside it.
+    NEEDS_LIVE_TEST: {
+      icon: CloudUpload,
+      activeBg: "bg-brand-soft",
+      activeText: "text-brand-muted",
+    },
+    // Parked on purpose. Muted, not `--danger`: it is not a refusal.
+    POSTPONED: {
+      icon: PauseCircle,
+      activeBg: "bg-active",
+      activeText: "text-secondary",
+    },
+    // The one status with nowhere to move to: the vocabulary has a brand, an info, a
+    // warning and a danger, and nothing that means "succeeded". Deliberately NOT
+    // borrowed from a family that means something else — `--status-synced` is a
+    // FIELD's trip to the database rather than an outcome, and tokens.css says so in
+    // as many words. Green beside WONT_DO's red is the classic CVD-unsafe pair, which
+    // is why both carry a glyph and neither leans on colour alone.
+    DONE: {
+      icon: CheckCircle2,
+      activeBg: "bg-success-soft",
+      activeText: "text-success",
+    },
+    WONT_DO: {
+      icon: Ban,
+      activeBg: "bg-danger-soft",
+      activeText: "text-danger",
+    },
+  };
 
 /** Chain order, then the three off it. The order a picker offers, and the rank a
  *  status column sorts by — so a list sorted by status reads as a queue rather

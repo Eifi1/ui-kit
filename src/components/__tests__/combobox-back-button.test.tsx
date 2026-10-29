@@ -67,12 +67,7 @@ function Dialog({ onCloseDialog }: { onCloseDialog: () => void }) {
   return (
     <div>
       <span>dialog</span>
-      <InlineEntityCombobox<string>
-        label="From account"
-        value={value}
-        onChange={setValue}
-        options={options}
-      />
+      <InlineEntityCombobox<string> label="From account" value={value} onChange={setValue} options={options} />
     </div>
   );
 }

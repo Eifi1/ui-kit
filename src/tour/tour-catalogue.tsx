@@ -220,14 +220,16 @@ export function TourCatalogue({
   const done = (tour: TourInfo) => isTourDone(tour, completed[tour.id]);
   const needle = foldForSearch(query.trim(), locale);
   const matchesQuery = (tour: TourInfo) =>
-    !needle || [tour.title, tour.description, tour.about].some((text) => !!text && foldForSearch(text, locale).includes(needle));
+    !needle ||
+    [tour.title, tour.description, tour.about].some((text) => !!text && foldForSearch(text, locale).includes(needle));
   const inState = (tour: TourInfo) => (state === "all" ? true : state === "done" ? done(tour) : !done(tour));
   const inGroup = (tour: TourInfo, id: string | null = group) => id === null || tour.group === id;
 
   const found = listed.filter((t) => matchesQuery(t) && inGroup(t));
   const foundDone = found.filter(done).length;
   const visible = found.filter(inState);
-  const groupCount = (id: string | null) => listed.filter((t) => matchesQuery(t) && inState(t) && inGroup(t, id)).length;
+  const groupCount = (id: string | null) =>
+    listed.filter((t) => matchesQuery(t) && inState(t) && inGroup(t, id)).length;
   const filtering = needle.length > 0 || state !== "all" || group !== null;
   const sections = groups
     .map((g) => ({ ...g, tours: visible.filter((t) => t.group === g.id) }))

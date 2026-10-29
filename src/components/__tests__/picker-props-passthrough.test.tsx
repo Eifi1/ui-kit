@@ -46,22 +46,12 @@ const tourAnchor = () => document.querySelector("[data-tour='payee']");
 
 describe("Combobox passes DOM props through", () => {
   it("puts an arbitrary data-* attribute on its root", () => {
-    render(
-      <Combobox value="" onChange={vi.fn()} options={["Rewe"]} label="Payee" data-tour="payee" />,
-    );
+    render(<Combobox value="" onChange={vi.fn()} options={["Rewe"]} label="Payee" data-tour="payee" />);
     expect(tourAnchor()).not.toBeNull();
   });
 
   it("names the field from aria-label, over the floating label", () => {
-    render(
-      <Combobox
-        value=""
-        onChange={vi.fn()}
-        options={["Rewe"]}
-        label="Payee"
-        aria-label="Payee, free text"
-      />,
-    );
+    render(<Combobox value="" onChange={vi.fn()} options={["Rewe"]} label="Payee" aria-label="Payee, free text" />);
     expect(screen.getByRole("combobox", { name: "Payee, free text" })).toBeInTheDocument();
   });
 });
@@ -140,13 +130,7 @@ describe("ComboboxPanel passes DOM props through", () => {
 describe("EntityCombobox passes DOM props through", () => {
   it("puts an arbitrary data-* attribute on its root", () => {
     render(
-      <EntityCombobox<string>
-        value={null}
-        onChange={vi.fn()}
-        options={OPTIONS}
-        label="Account"
-        data-tour="payee"
-      />,
+      <EntityCombobox<string> value={null} onChange={vi.fn()} options={OPTIONS} label="Account" data-tour="payee" />,
     );
     expect(tourAnchor()).not.toBeNull();
   });
@@ -225,27 +209,13 @@ const GROUPS = [{ key: "food", label: "Food", items: [{ key: "rewe", label: "Rew
 
 describe("GroupedPicker passes DOM props through", () => {
   it("puts an arbitrary data-* attribute on its root", () => {
-    render(
-      <GroupedPicker
-        groups={GROUPS}
-        buttonLabel="Pick"
-        selected={null}
-        onSelect={vi.fn()}
-        data-tour="payee"
-      />,
-    );
+    render(<GroupedPicker groups={GROUPS} buttonLabel="Pick" selected={null} onSelect={vi.fn()} data-tour="payee" />);
     expect(tourAnchor()).not.toBeNull();
   });
 
   it("names its trigger from aria-label", () => {
     render(
-      <GroupedPicker
-        groups={GROUPS}
-        buttonLabel="Pick"
-        selected={null}
-        onSelect={vi.fn()}
-        aria-label="Category"
-      />,
+      <GroupedPicker groups={GROUPS} buttonLabel="Pick" selected={null} onSelect={vi.fn()} aria-label="Category" />,
     );
     // A combobox over its listbox since round 0.34 Wave 2 (BUG-12); the name is the same.
     expect(screen.getByRole("combobox", { name: "Category" })).toBeInTheDocument();
@@ -260,14 +230,7 @@ describe("GroupedPicker passes DOM props through", () => {
 describe("PickerSheet passes DOM props through", () => {
   it("puts an arbitrary data-* attribute on the sheet", () => {
     render(
-      <PickerSheet
-        open
-        onClose={vi.fn()}
-        title="Account"
-        query=""
-        onQueryChange={vi.fn()}
-        data-tour="payee"
-      >
+      <PickerSheet open onClose={vi.fn()} title="Account" query="" onQueryChange={vi.fn()} data-tour="payee">
         <button type="button">Wallet</button>
       </PickerSheet>,
     );
@@ -292,14 +255,7 @@ describe("PickerSheet passes DOM props through", () => {
 
   it("keeps the visual-viewport correction when a caller also passes a style", () => {
     render(
-      <PickerSheet
-        open
-        onClose={vi.fn()}
-        title="Account"
-        query=""
-        onQueryChange={vi.fn()}
-        style={{ zIndex: 99 }}
-      >
+      <PickerSheet open onClose={vi.fn()} title="Account" query="" onQueryChange={vi.fn()} style={{ zIndex: 99 }}>
         <button type="button">Wallet</button>
       </PickerSheet>,
     );

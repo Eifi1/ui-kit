@@ -1,4 +1,14 @@
-import { Children, createContext, useCallback, useContext, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  Children,
+  createContext,
+  useCallback,
+  useContext,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { ComponentPropsWithRef, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
 import { useEdgeFade } from "../lib/strip-fade";
@@ -633,11 +643,5 @@ export type TableCaptionProps = ComponentPropsWithRef<"caption">;
 export function TableCaption({ className, id, ...rest }: TableCaptionProps) {
   const { captionId, registerCaption } = useContext(TableContext);
   useLayoutEffect(() => (id ? undefined : registerCaption()), [id, registerCaption]);
-  return (
-    <caption
-      {...rest}
-      id={id ?? captionId}
-      className={cn("mt-2 text-start text-sm text-muted", className)}
-    />
-  );
+  return <caption {...rest} id={id ?? captionId} className={cn("mt-2 text-start text-sm text-muted", className)} />;
 }

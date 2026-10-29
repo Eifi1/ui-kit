@@ -597,7 +597,8 @@ export function TourProvider({
       }
       // The step awaiting it, or the first later one: the record is saved, so the fields
       // between are passed over.
-      const awaiting = s[i]?.awaitGate === signal.key ? i : s.findIndex((st, k) => k > i && st.awaitGate === signal.key);
+      const awaiting =
+        s[i]?.awaitGate === signal.key ? i : s.findIndex((st, k) => k > i && st.awaitGate === signal.key);
       if (awaiting < 0) return;
       const to = forward(s, awaiting + 1, "next");
       if (to < 0) finish();
@@ -681,7 +682,8 @@ function resolveAt(steps: TourStep[], at: TourAt): number {
   const anchor = `data-tour="${at}"`;
   const found = steps.findIndex((step) => step.target?.includes(anchor));
   if (found >= 0) return found;
-  if (devWarnings()) console.warn(`[ui-kit] A tour was started at "${at}", but no step targets [${anchor}]: it starts at 0.`);
+  if (devWarnings())
+    console.warn(`[ui-kit] A tour was started at "${at}", but no step targets [${anchor}]: it starts at 0.`);
   return 0;
 }
 
@@ -778,7 +780,7 @@ function spotRectOf(el: Element, step: TourStep): Rect {
   let bottom = own.top + own.height;
   const reach = (step.padding ?? 8) + RING_BAND;
   // Grow until nothing more is in reach: a hint under the field, then an error under it.
-  for (let grew = true; grew; ) {
+  for (let grew = true; grew;) {
     grew = false;
     for (let i = lines.length - 1; i >= 0; i--) {
       const r = lines[i];
@@ -1119,7 +1121,7 @@ function TourOverlay({
     if (!ready || !step.optional || step.gate || !devWarnings()) return;
     console.warn(
       `[ui-kit] Tour step "${step.title}" is \`optional\` without a \`gate\`: it shows the Optional chip ` +
-        "and a plain Next. \"Leave empty\" needs a gate to compare.",
+        'and a plain Next. "Leave empty" needs a gate to compare.',
     );
   }, [ready, step]);
 
@@ -1302,7 +1304,12 @@ function TourOverlay({
       // On an interactive step a key pressed in the target, or in a layer it opened (the
       // number pad's Escape, a menu's arrows), is the page's. The card's and the bare
       // page's (focus on <body>) stay the tour's.
-      if (interactive && e.target instanceof Node && e.target !== document.body && !rootRef.current?.contains(e.target)) {
+      if (
+        interactive &&
+        e.target instanceof Node &&
+        e.target !== document.body &&
+        !rootRef.current?.contains(e.target)
+      ) {
         return;
       }
       // Escape is the tour's Escape layer's (above) once the step is shown; while it is
@@ -1479,7 +1486,11 @@ function SpotlightShields({ spot }: { spot: Rect }) {
   const bottom = spot.top + spot.height;
   return (
     <>
-      <div data-tour-shield="" className={shield} style={{ top: 0, left: 0, right: 0, height: Math.max(0, spot.top) }} />
+      <div
+        data-tour-shield=""
+        className={shield}
+        style={{ top: 0, left: 0, right: 0, height: Math.max(0, spot.top) }}
+      />
       <div data-tour-shield="" className={shield} style={{ top: bottom, left: 0, right: 0, bottom: 0 }} />
       <div
         data-tour-shield=""
@@ -1688,7 +1699,16 @@ function TourCard({
     }
     setEdge(null);
     setStyle(
-      placeCard(rect, card.offsetWidth, card.offsetHeight, window.innerWidth, window.innerHeight, 12, step.placement, dir),
+      placeCard(
+        rect,
+        card.offsetWidth,
+        card.offsetHeight,
+        window.innerWidth,
+        window.innerHeight,
+        12,
+        step.placement,
+        dir,
+      ),
     );
   }, [ref, rect, index, step.placement, step.target, dir, docked, bandTick]);
 
@@ -1728,11 +1748,7 @@ function TourCard({
       {step.action && <div className="mt-3">{step.action}</div>}
       <div className="mt-4 space-y-2">
         <div className="flex items-center justify-between gap-2">
-          <button
-            type="button"
-            onClick={onSkip}
-            className="text-xs text-placeholder hover:text-secondary"
-          >
+          <button type="button" onClick={onSkip} className="text-xs text-placeholder hover:text-secondary">
             {labels.skip}
           </button>
           <div className="flex items-center gap-2">

@@ -25,8 +25,7 @@ vi.mock("recharts", async (importOriginal) => {
       captured.props = props;
       return null;
     },
-    ResponsiveContainer: ({ children }: { children?: ReactNode }) =>
-      createElement("div", null, children),
+    ResponsiveContainer: ({ children }: { children?: ReactNode }) => createElement("div", null, children),
   };
 });
 
@@ -65,8 +64,7 @@ function tooltipContent(): ReactElement {
   const child = (captured.props as { children: ReactElement }).children;
   return (child.props as { content: ReactElement }).content;
 }
-const formatter = () =>
-  (tooltipContent().props as { valueFormatter: (v: number) => ReactNode }).valueFormatter;
+const formatter = () => (tooltipContent().props as { valueFormatter: (v: number) => ReactNode }).valueFormatter;
 
 /** Mount the tooltip the way recharts does — cloned with an active payload — inside
  *  a chart context, which is where `ChartTooltipContent` reads its config from. */
@@ -415,7 +413,13 @@ describe("Treemap passes labelColor through to its cells (0.8.1)", () => {
     render(
       <Treemap
         data={[
-          { id: "a", name: "Newest", value: 10, fill: "color-mix(in srgb, var(--chart-1) 100%, transparent)", labelColor: "#ffffff" },
+          {
+            id: "a",
+            name: "Newest",
+            value: 10,
+            fill: "color-mix(in srgb, var(--chart-1) 100%, transparent)",
+            labelColor: "#ffffff",
+          },
           { id: "b", name: "Oldest", value: 5 },
         ]}
       />,

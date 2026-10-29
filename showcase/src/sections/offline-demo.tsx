@@ -1,11 +1,6 @@
 import { useState } from "react";
 import { Button, Switch, ToggleGroup } from "@eifi1/ui-kit";
-import {
-  PwaUpdatePrompt,
-  SharedComputerChoice,
-  SignOutPendingDialog,
-  isSharedComputer,
-} from "@eifi1/ui-kit/offline";
+import { PwaUpdatePrompt, SharedComputerChoice, SignOutPendingDialog, isSharedComputer } from "@eifi1/ui-kit/offline";
 import { Example, Note, Row, StateLine, beat, code, READOUT_PRE } from "../lib/section";
 
 /**
@@ -48,10 +43,7 @@ function SignOutPendingDemo() {
         <Switch checked={plan} onCheckedChange={setPlan} label="Some wait for a plan" />
       </Row>
       <Row className="mt-3">
-        <Button
-          variant="secondary"
-          onClick={() => (queued > 0 ? setOpen(true) : signOut())}
-        >
+        <Button variant="secondary" onClick={() => (queued > 0 ? setOpen(true) : signOut())}>
           Log out
         </Button>
         <Button variant="ghost" onClick={() => setQueued(3)}>
@@ -78,8 +70,8 @@ function SignOutPendingDemo() {
         onClose={() => setOpen(false)}
       />
       <Note>
-        {code("queued")} is pending + blocked; the tour {code(":pending")} record is not counted. "Sync now"
-        closes when the round settles, and the caller decides again on the new count.
+        {code("queued")} is pending + blocked; the tour {code(":pending")} record is not counted. "Sync now" closes when
+        the round settles, and the caller decides again on the new count.
       </Note>
     </Example>
   );
@@ -90,7 +82,10 @@ function PwaUpdateDemo() {
   const [hold, setHold] = useState(false);
   const [last, setLast] = useState("—");
   return (
-    <Example label="PwaUpdatePrompt — “A new version is available”" hint="a toast; waits while `hold` (a handover, a tour) (D8)">
+    <Example
+      label="PwaUpdatePrompt — “A new version is available”"
+      hint="a toast; waits while `hold` (a handover, a tour) (D8)"
+    >
       <Row>
         <Button variant="secondary" onClick={() => setNeedRefresh(true)}>
           Pretend a new version waits
@@ -118,7 +113,10 @@ function PwaUpdateDemo() {
 function SharedComputerDemo() {
   const [on, setOn] = useState(isSharedComputer);
   return (
-    <Example label="SharedComputerChoice — on the sign-in form" hint="held in sessionStorage: the choice outlives no tab (D6)">
+    <Example
+      label="SharedComputerChoice — on the sign-in form"
+      hint="held in sessionStorage: the choice outlives no tab (D6)"
+    >
       <SharedComputerChoice onCheckedChange={setOn} />
       <StateLine label="isSharedComputer()">{String(on)}</StateLine>
     </Example>
@@ -159,9 +157,9 @@ function QueryPersistenceRecipe() {
       <pre className={READOUT_PRE}>{RECIPE}</pre>
       <Note>
         Before a query is written, {code("iban")}, {code("qr_iban")}, {code("default_qr_iban")} and{" "}
-        {code("signature_*")} are removed at any depth ({code("DEFAULT_SCRUB_FIELDS")}); data that is not plain
-        JSON is skipped and reported through {code("onUnsafe")}. On restore, a denied or unsafe entry an older
-        build wrote is dropped, and paused mutations are kept.
+        {code("signature_*")} are removed at any depth ({code("DEFAULT_SCRUB_FIELDS")}); data that is not plain JSON is
+        skipped and reported through {code("onUnsafe")}. On restore, a denied or unsafe entry an older build wrote is
+        dropped, and paused mutations are kept.
       </Note>
     </Example>
   );

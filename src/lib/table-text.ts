@@ -198,8 +198,7 @@ export const cellNumber = (cell: string) => Number(cell.replace(",", "."));
 
 /** Whether one cell holds a number yet. An empty cell is not one — it is a hole
  *  in the measurement, which is a different thing from a zero. */
-export const isCellNumber = (cell: string) =>
-  cell.trim() !== "" && !Number.isNaN(cellNumber(cell));
+export const isCellNumber = (cell: string) => cell.trim() !== "" && !Number.isNaN(cellNumber(cell));
 
 /**
  * The one separator and the one decimal mark a whole file is read with.
@@ -368,7 +367,15 @@ export interface TextTable {
 export function parseTextTable(text: string, options: ParseTextTableOptions = {}): TextTable {
   const content = textLines(text);
   if (!content.length) {
-    return { header: null, rows: [], lines: [], width: 0, separator: options.separator ?? ",", decimalComma: false, unread: [] };
+    return {
+      header: null,
+      rows: [],
+      lines: [],
+      width: 0,
+      separator: options.separator ?? ",",
+      decimalComma: false,
+      unread: [],
+    };
   }
   const separator = options.separator ?? votedSeparator(content);
   const decimalComma =
@@ -389,7 +396,12 @@ export function parseTextTable(text: string, options: ParseTextTableOptions = {}
   const unread: TableLine[] = split.slice(0, first).map(({ entry }) => entry);
   const body = split.slice(first);
   const fitting = body.filter(({ cells }) => cells.length === width);
-  const header = options.header ?? looksLikeHeader(fitting[0].cells, fitting.slice(1, 21).map(({ cells }) => cells));
+  const header =
+    options.header ??
+    looksLikeHeader(
+      fitting[0].cells,
+      fitting.slice(1, 21).map(({ cells }) => cells),
+    );
 
   const rows: string[][] = [];
   const lines: TableLine[] = [];
@@ -464,7 +476,11 @@ const withoutQuoted = (line: string) => line.replace(/"(?:[^"]|"")*"/g, '""');
  * A run of whitespace is one separator and makes no empty cells.
  */
 function cellsOf(line: string, separator: TableSeparator): string[] {
-  if (separator === " ") return line.split(/\s+/).filter((field) => field !== "").map(unquote);
+  if (separator === " ")
+    return line
+      .split(/\s+/)
+      .filter((field) => field !== "")
+      .map(unquote);
   const cells: string[] = [];
   let cell = "";
   let quoted = false;
@@ -499,7 +515,9 @@ function cellsOf(line: string, separator: TableSeparator): string[] {
 
 /** A whitespace-separated field with its quotes off. */
 function unquote(field: string): string {
-  return field.length >= 2 && field.startsWith('"') && field.endsWith('"') ? field.slice(1, -1).replace(/""/g, '"') : field;
+  return field.length >= 2 && field.startsWith('"') && field.endsWith('"')
+    ? field.slice(1, -1).replace(/""/g, '"')
+    : field;
 }
 
 /** The column count most lines share; a tie goes to the wider table. */

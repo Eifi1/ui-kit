@@ -125,12 +125,7 @@ export function AuthLayout({
           <div className="mb-2">{logo}</div>
         ))}
       {title != null && (
-        <Heading
-          className={cn(
-            "font-semibold leading-tight text-primary",
-            wide ? "text-2xl md:text-3xl" : "text-2xl",
-          )}
-        >
+        <Heading className={cn("font-semibold leading-tight text-primary", wide ? "text-2xl md:text-3xl" : "text-2xl")}>
           {title}
         </Heading>
       )}

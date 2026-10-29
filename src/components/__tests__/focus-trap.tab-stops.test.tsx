@@ -23,11 +23,8 @@ import { PHONE_WIDTH, stubViewportWidth } from "../../test/viewport";
 
 /** What a browser's Tab walks inside `root`: focusable, `tabIndex` ≥ 0, not hidden. */
 function tabStops(root: HTMLElement): HTMLElement[] {
-  return Array.from(
-    root.querySelectorAll<HTMLElement>("a[href],button,input,select,textarea,[tabindex]"),
-  ).filter(
-    (el) =>
-      !(el as HTMLButtonElement).disabled && el.tabIndex >= 0 && !el.closest("[hidden],[inert]"),
+  return Array.from(root.querySelectorAll<HTMLElement>("a[href],button,input,select,textarea,[tabindex]")).filter(
+    (el) => !(el as HTMLButtonElement).disabled && el.tabIndex >= 0 && !el.closest("[hidden],[inert]"),
   );
 }
 

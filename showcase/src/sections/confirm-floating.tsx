@@ -64,18 +64,16 @@ function ConfirmTones() {
       <p className={`mt-3 ${READOUT}`}>{log.length ? log.join(" · ") : "answers appear here"}</p>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">tone: &quot;danger&quot;</code> paints the confirm as the
-          destructive button and starts focus on <strong>Cancel</strong>, because a confirm is often
-          answered by a reflexive Enter; <code className="font-mono">warning</code> and{" "}
-          <code className="font-mono">neutral</code> (the default — the third call passes no tone)
-          start on the confirm. The first two pass their own <code className="font-mono">confirmLabel</code>{" "}
-          / <code className="font-mono">cancelLabel</code>; the third falls back to{" "}
-          <code className="font-mono">confirmDialog.confirm</code> and{" "}
-          <code className="font-mono">.cancel</code> from the provider — switch the language and it
-          says &ldquo;Bestätigen&rdquo;. Escape, the backdrop, Back and Cancel all answer{" "}
+          <code className="font-mono">tone: &quot;danger&quot;</code> paints the confirm as the destructive button and
+          starts focus on <strong>Cancel</strong>, because a confirm is often answered by a reflexive Enter;{" "}
+          <code className="font-mono">warning</code> and <code className="font-mono">neutral</code> (the default — the
+          third call passes no tone) start on the confirm. The first two pass their own{" "}
+          <code className="font-mono">confirmLabel</code> / <code className="font-mono">cancelLabel</code>; the third
+          falls back to <code className="font-mono">confirmDialog.confirm</code> and{" "}
+          <code className="font-mono">.cancel</code> from the provider — switch the language and it says
+          &ldquo;Bestätigen&rdquo;. Escape, the backdrop, Back and Cancel all answer{" "}
           <code className="font-mono">false</code>. The panel is{" "}
-          <code className="font-mono">role=&quot;alertdialog&quot;</code>, named by the title and
-          described by the body.
+          <code className="font-mono">role=&quot;alertdialog&quot;</code>, named by the title and described by the body.
         </Note>
       </div>
     </Example>
@@ -101,14 +99,18 @@ function ConfirmQueue() {
   const askLater = () => {
     // A background prompt arriving while the user is reading another dialog.
     setTimeout(() => {
-      void confirm({ title: "Your session expires in 2 minutes. Stay signed in?", confirmLabel: "Stay signed in" }).then(
-        (ok) => add(`session → ${ok}`),
-      );
+      void confirm({
+        title: "Your session expires in 2 minutes. Stay signed in?",
+        confirmLabel: "Stay signed in",
+      }).then((ok) => add(`session → ${ok}`));
     }, 1500);
     void confirm({ title: "Rename the account to “Household”?" }).then((ok) => add(`rename → ${ok}`));
   };
   return (
-    <Example label="useConfirm — a second call queues" hint="shown when the first is answered; each call keeps its own answer">
+    <Example
+      label="useConfirm — a second call queues"
+      hint="shown when the first is answered; each call keeps its own answer"
+    >
       <Row>
         <Button variant="secondary" onClick={askTwice}>
           Ask two questions at once
@@ -120,11 +122,10 @@ function ConfirmQueue() {
       <p className={`mt-3 ${READOUT}`}>{log.length ? log.join(" · ") : "answers appear here"}</p>
       <div className="mt-3">
         <Note>
-          The alternative — answering the open dialog <code className="font-mono">false</code> to
-          make room — would answer a question the user never answered: the session prompt would
-          cancel the rename they were reading. With the second button, leave the rename open: the
-          session question waits behind it, then appears. Unmounting the provider answers
-          everything still pending <code className="font-mono">false</code>, so no{" "}
+          The alternative — answering the open dialog <code className="font-mono">false</code> to make room — would
+          answer a question the user never answered: the session prompt would cancel the rename they were reading. With
+          the second button, leave the rename open: the session question waits behind it, then appears. Unmounting the
+          provider answers everything still pending <code className="font-mono">false</code>, so no{" "}
           <code className="font-mono">await</code> hangs.
         </Note>
       </div>
@@ -208,8 +209,8 @@ function FloatingPanels() {
             bodyClassName="space-y-3"
           >
             <p className="text-sm text-secondary">
-              Non-modal: the page stays usable, Tab walks out into it, and a click on the page does
-              not close this. Escape does, while focus is in here.
+              Non-modal: the page stays usable, Tab walks out into it, and a click on the page does not close this.
+              Escape does, while focus is in here.
             </p>
             <textarea
               ref={fieldRef}
@@ -236,9 +237,9 @@ function FloatingPanels() {
             className="md:w-[20rem]"
           >
             <p className="text-sm text-secondary">
-              Controlled: <code className="font-mono">open</code> is the page&apos;s state, and the
-              FAB, the × (named by <code className="font-mono">closeLabel</code>) and Escape each ask
-              through <code className="font-mono">onOpenChange</code>.
+              Controlled: <code className="font-mono">open</code> is the page&apos;s state, and the FAB, the × (named by{" "}
+              <code className="font-mono">closeLabel</code>) and Escape each ask through{" "}
+              <code className="font-mono">onOpenChange</code>.
             </p>
           </FloatingPanel>
           {/* A standalone FAB at the default offset, under the assistant's raised one. */}
@@ -264,29 +265,27 @@ function FloatingPanels() {
       )}
       <div className="mt-3">
         <Note>
-          Four things float once the box is ticked: a standalone{" "}
-          <code className="font-mono">FloatingActionButton</code> at the default offset and, stacked
-          above it with <code className="font-mono">offset=&quot;calc(1rem + 4rem)&quot;</code>, the
-          assistant (uncontrolled) in one corner — its card rises with it — and
-          the controlled feedback panel in the other. A panel mounted open through{" "}
-          <code className="font-mono">defaultOpen</code> does not take the page&apos;s focus by existing;
-          only an open or close transition moves it. <code className="font-mono">corner</code> is
-          logical — <code className="font-mono">bottom-end</code> is bottom-right here and
-          bottom-left in RTL — and the bottom distance starts from the phone nav
-          (<code className="font-mono">--app-nav-h</code>) and the home indicator, so on a phone the
-          buttons sit above the bottom bar and the panel docks on it as a sheet. From{" "}
+          Four things float once the box is ticked: a standalone <code className="font-mono">FloatingActionButton</code>{" "}
+          at the default offset and, stacked above it with{" "}
+          <code className="font-mono">offset=&quot;calc(1rem + 4rem)&quot;</code>, the assistant (uncontrolled) in one
+          corner — its card rises with it — and the controlled feedback panel in the other. A panel mounted open through{" "}
+          <code className="font-mono">defaultOpen</code> does not take the page&apos;s focus by existing; only an open
+          or close transition moves it. <code className="font-mono">corner</code> is logical —{" "}
+          <code className="font-mono">bottom-end</code> is bottom-right here and bottom-left in RTL — and the bottom
+          distance starts from the phone nav (<code className="font-mono">--app-nav-h</code>) and the home indicator, so
+          on a phone the buttons sit above the bottom bar and the panel docks on it as a sheet. From{" "}
           <code className="font-mono">md</code> up the panel is a card above its FAB;{" "}
           <code className="font-mono">className=&quot;md:w-[20rem]&quot;</code> narrows the feedback one.
         </Note>
         <Note>
-          Above the feedback FAB sits a TOGGLE: <code className="font-mono">pressed</code> ({String(awaitingOnly)}{" "}
-          now) sets <code className="font-mono">aria-pressed</code> and swaps the solid brand disc for a
-          surface disc — secondary glyph when off, brand glyph on the brand wash when on. Untick
-          &ldquo;native title&rdquo; and the FABs render no <code className="font-mono">title</code> at
-          all (hover one: no browser tooltip) — <code className="font-mono">nativeTitle=&#123;false&#125;</code> on
-          the standalone and toggle buttons, <code className="font-mono">fabNativeTitle=&#123;false&#125;</code> on
-          the assistant&apos;s panel — for an app whose one tooltip is the kit&apos;s{" "}
-          <code className="font-mono">Tooltip</code>. The <code className="font-mono">aria-label</code> stays.
+          Above the feedback FAB sits a TOGGLE: <code className="font-mono">pressed</code> ({String(awaitingOnly)} now)
+          sets <code className="font-mono">aria-pressed</code> and swaps the solid brand disc for a surface disc —
+          secondary glyph when off, brand glyph on the brand wash when on. Untick &ldquo;native title&rdquo; and the
+          FABs render no <code className="font-mono">title</code> at all (hover one: no browser tooltip) —{" "}
+          <code className="font-mono">nativeTitle=&#123;false&#125;</code> on the standalone and toggle buttons,{" "}
+          <code className="font-mono">fabNativeTitle=&#123;false&#125;</code> on the assistant&apos;s panel — for an app
+          whose one tooltip is the kit&apos;s <code className="font-mono">Tooltip</code>. The{" "}
+          <code className="font-mono">aria-label</code> stays.
         </Note>
       </div>
     </Example>

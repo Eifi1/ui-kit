@@ -116,7 +116,11 @@ describe("userRosterColumns", () => {
   });
 
   it("draws its actions in the phone card's actions row, never one of the three fields (0.49)", () => {
-    const columns = userRosterColumns<Row, Role>({ roles: ROLES, extra: [{ ...OWNED, mobile: "secondary" }], actions: () => [] });
+    const columns = userRosterColumns<Row, Role>({
+      roles: ROLES,
+      extra: [{ ...OWNED, mobile: "secondary" }],
+      actions: () => [],
+    });
     const { fields, actions } = mobileCardColumns(columns.filter((c) => !c.mobileHidden && c.mobile !== "hidden"));
     expect(actions.map((c) => c.key)).toEqual(["actions"]);
     expect(fields.map((c) => c.key)).toEqual(["role", "last_login", "owned"]);
@@ -164,13 +168,20 @@ describe("userRosterColumns", () => {
     expect(role.className).not.toMatch(/flex-nowrap/);
     expect(screen.getByRole("table")).toHaveAttribute("data-fit-grow");
     // last_login / created: one line from the cell's own nowrap.
-    expect(within(ben).getAllByRole("cell").find((c) => c.dataset.col === "last_login")).toHaveClass(
-      GROW_PEER_CELL_CLASS,
-    );
+    expect(
+      within(ben)
+        .getAllByRole("cell")
+        .find((c) => c.dataset.col === "last_login"),
+    ).toHaveClass(GROW_PEER_CELL_CLASS);
   });
 
   it("fits by default: Name grows, Created then Last login leave a narrow table (0.50, kastlan K2)", () => {
-    const columns = userRosterColumns<Row, Role>({ roles: ROLES, extra: [OWNED], actions: () => [], emailColumn: true });
+    const columns = userRosterColumns<Row, Role>({
+      roles: ROLES,
+      extra: [OWNED],
+      actions: () => [],
+      emailColumn: true,
+    });
     const fit = Object.fromEntries(columns.map((c) => [c.key, [c.grow ?? null, c.fitPriority ?? null]]));
     expect(fit).toEqual({
       name: [true, null],
@@ -208,7 +219,11 @@ describe("userRosterColumns", () => {
       expect(row.className).not.toMatch(/flex-nowrap/);
     }
     // The 0.49 layout, for an app that wants it back: no grow, nothing classed.
-    const plain = userRosterColumns<Row, Role>({ roles: ROLES }).map((c) => ({ ...c, grow: undefined, fitPriority: undefined }));
+    const plain = userRosterColumns<Row, Role>({ roles: ROLES }).map((c) => ({
+      ...c,
+      grow: undefined,
+      fitPriority: undefined,
+    }));
     expect(plain.some((c) => c.grow || c.fitPriority != null)).toBe(false);
   });
 
@@ -265,13 +280,19 @@ describe("userRosterColumns", () => {
         onRoleChange={() => {}}
         editableRole={(row) =>
           row.id === 2
-            ? { offered: ["ADMIN", "MEMBER"], optionDisabledReason: (role) => (role === "ADMIN" ? "owns work" : undefined) }
+            ? {
+                offered: ["ADMIN", "MEMBER"],
+                optionDisabledReason: (role) => (role === "ADMIN" ? "owns work" : undefined),
+              }
             : row.id !== 3
         }
       />,
     );
     const floorOf = (name: string) =>
-      screen.getByRole("combobox", { name: `Role of ${name}` }).closest("td")!.querySelector("[data-select-floor]");
+      screen
+        .getByRole("combobox", { name: `Role of ${name}` })
+        .closest("td")!
+        .querySelector("[data-select-floor]");
     const words = (floor: Element | null) => [...(floor?.children ?? [])].map((c) => c.getAttribute("data-value"));
 
     // Every word of the vocabulary, whatever the row offers, and never an option's reason.
@@ -330,7 +351,11 @@ describe("userRosterColumns", () => {
     // Ben is inactive: no deactivate entry at all.
     await user.click(screen.getByRole("button", { name: "Actions for Ben Sample" }));
     const other = await screen.findByRole("dialog", { name: "Actions for Ben Sample" });
-    expect(within(other).getAllByRole("button").map((b) => b.textContent)).toEqual(["Resend verification"]);
+    expect(
+      within(other)
+        .getAllByRole("button")
+        .map((b) => b.textContent),
+    ).toEqual(["Resend verification"]);
   });
 
   it("makes phone cards from the same columns: the identity heads the card, the actions stay on it, created is left off", () => {
@@ -384,7 +409,12 @@ describe("adminUserStates", () => {
 describe("userRosterSort", () => {
   it("sends the first key the server knows, in the DataTable's encoding", () => {
     expect(userRosterSort([{ key: "last_login", dir: "desc" }])).toBe("last_login.desc");
-    expect(userRosterSort([{ key: "owned", dir: "asc" }, { key: "name", dir: "asc" }])).toBe("name");
+    expect(
+      userRosterSort([
+        { key: "owned", dir: "asc" },
+        { key: "name", dir: "asc" },
+      ]),
+    ).toBe("name");
     expect(userRosterSort([])).toBeUndefined();
   });
 });
@@ -398,7 +428,7 @@ describe("UserIdentityCell", () => {
     expect(screen.getAllByText("ada@example.com")).toHaveLength(1);
   });
 
-  it("ends the name and the address in \"…\" at Normal only: truncate-until-large (0.33, §10.17)", () => {
+  it('ends the name and the address in "…" at Normal only: truncate-until-large (0.33, §10.17)', () => {
     render(<UserIdentityCell name="Ada Example" email="ada@example.com" />);
     for (const text of ["Ada Example", "ada@example.com"]) {
       const own = screen.getByText(text).className.split(" ");

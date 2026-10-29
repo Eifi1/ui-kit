@@ -66,10 +66,7 @@ export function Choices() {
 
   return (
     <>
-      <Example
-        label="Checkbox — states"
-        hint="the header box goes mixed while some rows are picked"
-      >
+      <Example label="Checkbox — states" hint="the header box goes mixed while some rows are picked">
         <Stage>
           <div className="space-y-2">
             <Checkbox
@@ -90,11 +87,7 @@ export function Choices() {
             </div>
           </div>
           <div data-stage="wide" className="flex flex-wrap items-center justify-center gap-3">
-            <Checkbox
-              label="Stop processing further rules"
-              checked={stop}
-              onCheckedChange={setStop}
-            />
+            <Checkbox label="Stop processing further rules" checked={stop} onCheckedChange={setStop} />
             <Checkbox label="Disabled" disabled />
             <Checkbox label="Disabled, checked" disabled checked readOnly />
             <Checkbox label="Disabled, mixed" disabled indeterminate readOnly />
@@ -153,20 +146,12 @@ export function Choices() {
         <Stage>
           <div data-stage="wide" className="mx-auto grid max-w-2xl grid-cols-2 gap-3">
             <Input label="Steps" defaultValue="12" />
-            <Checkbox
-              className="self-end pb-2"
-              label="Mirror the steps"
-              checked={mirror}
-              onCheckedChange={setMirror}
-            />
+            <Checkbox className="self-end pb-2" label="Mirror the steps" checked={mirror} onCheckedChange={setMirror} />
           </div>
         </Stage>
       </Example>
 
-      <Example
-        label="Switch — settings list"
-        hint="the switch at the far end; takes effect when flipped"
-      >
+      <Example label="Switch — settings list" hint="the switch at the far end; takes effect when flipped">
         <Stage>
           <div data-stage="wide" className="divide-y divide-subtle">
             <Switch
@@ -210,33 +195,17 @@ export function Choices() {
         <Stage>
           <Switch aria-label="Medium" defaultChecked />
           <Switch aria-label="Small" size="sm" defaultChecked />
-          <Switch
-            label="Compact rows"
-            switchPosition="start"
-            checked={compact}
-            onCheckedChange={setCompact}
-          />
+          <Switch label="Compact rows" switchPosition="start" checked={compact} onCheckedChange={setCompact} />
           <Switch label="Small, before the words" size="sm" switchPosition="start" defaultChecked />
-          <div
-            data-stage="wide"
-            className="flex items-center justify-center gap-3 text-sm text-primary"
-          >
+          <div data-stage="wide" className="flex items-center justify-center gap-3 text-sm text-primary">
             <span>Row in a table:</span>
-            <Switch
-              size="sm"
-              aria-label="Active"
-              checked={rowActive}
-              onCheckedChange={setRowActive}
-            />
+            <Switch size="sm" aria-label="Active" checked={rowActive} onCheckedChange={setRowActive} />
             <span className="text-muted">{rowActive ? "Active" : "Inactive"}</span>
           </div>
         </Stage>
       </Example>
 
-      <Example
-        label="Slider — linear, with marks"
-        hint="the measured speeds are the labelled ticks"
-      >
+      <Example label="Slider — linear, with marks" hint="the measured speeds are the labelled ticks">
         <Stage>
           <div className="space-y-6">
             <Slider
@@ -246,9 +215,7 @@ export function Choices() {
               min={0}
               max={130}
               step={1}
-              formatValue={(v) =>
-                `${v} km/h, ${MEASURED.includes(v) ? "measured" : "interpolated"}`
-              }
+              formatValue={(v) => `${v} km/h, ${MEASURED.includes(v) ? "measured" : "interpolated"}`}
               marks={MEASURED.map((v) => ({ value: v, label: `${v}` }))}
               onChange={setSpeed}
             />
@@ -307,10 +274,7 @@ export function Choices() {
         </Stage>
       </Example>
 
-      <Example
-        label="Slider — log scale"
-        hint="the far-left stop is exactly zero; the next one is min"
-      >
+      <Example label="Slider — log scale" hint="the far-left stop is exactly zero; the next one is min">
         <Stage>
           <div className="space-y-6">
             <Slider
@@ -371,8 +335,8 @@ export function Choices() {
           </div>
         </Stage>
         <Note>
-          From “Off”, one arrow key lands on the minimum rather than rounding back to zero — try it
-          on the integral gain with the keyboard.
+          From “Off”, one arrow key lands on the minimum rather than rounding back to zero — try it on the integral gain
+          with the keyboard.
         </Note>
       </Example>
 
@@ -492,9 +456,9 @@ export function Choices022Demo() {
           </div>
         </WriteLockProvider>
         <Note>
-          The label sits on the line of the field labels beside it; the tiles start 20px down, below its whole
-          line, because a selected tile&apos;s frame is its border. Locked, the swatches stay reachable — the arrow
-          keys still walk them — and the reason shows under the row.
+          The label sits on the line of the field labels beside it; the tiles start 20px down, below its whole line,
+          because a selected tile&apos;s frame is its border. Locked, the swatches stay reachable — the arrow keys still
+          walk them — and the reason shows under the row.
         </Note>
       </div>
     </Example>

@@ -85,15 +85,7 @@ describe("useComboboxCore's async source", () => {
   });
 
   it("filter={false} shows static options as given", () => {
-    render(
-      <EntityCombobox
-        label="Account"
-        value={null}
-        onChange={() => {}}
-        options={OPTIONS}
-        filter={false}
-      />,
-    );
+    render(<EntityCombobox label="Account" value={null} onChange={() => {}} options={OPTIONS} filter={false} />);
     fireEvent.click(trigger());
     fireEvent.change(search(), { target: { value: "zzz" } });
     expect(screen.getAllByRole("option")).toHaveLength(3);
@@ -104,13 +96,7 @@ describe("error and disabled across the family", () => {
   it("EntityCombobox and MultiEntityCombobox describe the trigger by the error", () => {
     render(
       <>
-        <EntityCombobox
-          label="Account"
-          value={null}
-          onChange={() => {}}
-          options={OPTIONS}
-          error="Pick an account"
-        />
+        <EntityCombobox label="Account" value={null} onChange={() => {}} options={OPTIONS} error="Pick an account" />
         <MultiEntityCombobox
           label="Accounts"
           value={[]}
@@ -128,14 +114,7 @@ describe("error and disabled across the family", () => {
 
   it("Combobox takes error and disabled like Input", () => {
     render(
-      <Combobox
-        label="Customer"
-        value=""
-        onChange={() => {}}
-        options={["ACME", "Globex"]}
-        error="Required"
-        disabled
-      />,
+      <Combobox label="Customer" value="" onChange={() => {}} options={["ACME", "Globex"]} error="Required" disabled />,
     );
     const input = screen.getByRole("combobox", { name: "Customer" });
     expect(input).toBeDisabled();
@@ -163,8 +142,6 @@ describe("error and disabled across the family", () => {
         error="Pick a category"
       />,
     );
-    expect(screen.getByRole("combobox", { name: "Category" })).toHaveAccessibleDescription(
-      "Pick a category",
-    );
+    expect(screen.getByRole("combobox", { name: "Category" })).toHaveAccessibleDescription("Pick a category");
   });
 });

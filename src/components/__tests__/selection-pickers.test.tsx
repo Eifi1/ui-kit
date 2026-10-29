@@ -54,9 +54,7 @@ describe("SwatchPicker", () => {
 
   it("puts the tab stop on the first swatch while nothing is checked", () => {
     render(<Swatches />);
-    expect(tabbable(screen.getByRole("radiogroup"))).toEqual([
-      screen.getByRole("radio", { name: "Red" }),
-    ]);
+    expect(tabbable(screen.getByRole("radiogroup"))).toEqual([screen.getByRole("radio", { name: "Red" })]);
   });
 
   it("moves and chooses with the arrow keys, wrapping at the ends", () => {
@@ -111,16 +109,12 @@ describe("SwatchPicker", () => {
   });
 
   it("in the mixed state checks nothing, not even 'none', and says why", () => {
-    render(
-      <SwatchPicker aria-label="Flag" options={FLAGS} value={null} onChange={vi.fn()} allowNone mixed />,
-    );
+    render(<SwatchPicker aria-label="Flag" options={FLAGS} value={null} onChange={vi.fn()} allowNone mixed />);
     const group = screen.getByRole("radiogroup");
     for (const r of within(group).getAllByRole("radio")) {
       expect(r).toHaveAttribute("aria-checked", "false");
     }
-    expect(group).toHaveAccessibleDescription(
-      "Mixed: the selected items have different colours",
-    );
+    expect(group).toHaveAccessibleDescription("Mixed: the selected items have different colours");
   });
 
   it("describes a tile by its note, and shows name and note in the bubble", () => {
@@ -159,10 +153,7 @@ describe("IconPicker", () => {
   it("filters by label and keywords, ignoring case and accents, and keeps 'none'", () => {
     render(<IconPicker aria-label="Symbol" options={ICONS} value={null} onChange={vi.fn()} searchable allowNone />);
     fireEvent.change(screen.getByRole("searchbox"), { target: { value: "CAFE" } });
-    expect(screen.getAllByRole("radio").map((r) => r.getAttribute("aria-label"))).toEqual([
-      "No icon",
-      "Café",
-    ]);
+    expect(screen.getAllByRole("radio").map((r) => r.getAttribute("aria-label"))).toEqual(["No icon", "Café"]);
     fireEvent.change(screen.getByRole("searchbox"), { target: { value: "drink" } });
     expect(screen.getByRole("radio", { name: "Café" })).toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("1 icon");
@@ -183,7 +174,14 @@ describe("IconPicker", () => {
 describe("tileClassName (keksdose: tiles that follow a container query)", () => {
   it("lands on every swatch tile after the size's own class, so it wins", () => {
     render(
-      <SwatchPicker aria-label="Flag" options={FLAGS} value="red" onChange={vi.fn()} allowNone tileClassName="size-10" />,
+      <SwatchPicker
+        aria-label="Flag"
+        options={FLAGS}
+        value="red"
+        onChange={vi.fn()}
+        allowNone
+        tileClassName="size-10"
+      />,
     );
     for (const tile of screen.getAllByRole("radio")) {
       expect(tile.className.split(/\s+/)).toContain("size-10");

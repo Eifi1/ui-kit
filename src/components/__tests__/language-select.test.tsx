@@ -7,7 +7,9 @@ import { languageOptions, type KitLanguageCode } from "../../i18n/languages";
 
 describe("LanguageSelect", () => {
   it("lists the offered codes by their own names, in the order given, each in its language", () => {
-    render(<LanguageSelect label="Invitation language" codes={["fr", "de-CH", "zh"]} value="de-CH" onChange={() => {}} />);
+    render(
+      <LanguageSelect label="Invitation language" codes={["fr", "de-CH", "zh"]} value="de-CH" onChange={() => {}} />,
+    );
     const select = screen.getByLabelText("Invitation language");
     const options = Array.from(select.querySelectorAll("option"));
     expect(options.map((o) => [o.value, o.textContent, o.getAttribute("lang")])).toEqual([
@@ -131,14 +133,16 @@ describe("LanguageSetting, built on LanguageSelect (refactor audit 2026-10, API-
 
   it("shows the row a stored tag resolves to, as LanguageSelect does, and hands back the picked code", async () => {
     const onChange = vi.fn();
-    render(<LanguageSetting label="Language" value="de-AT" onChange={onChange} options={languageOptions(["en", "de-CH"])} />);
+    render(
+      <LanguageSetting label="Language" value="de-AT" onChange={onChange} options={languageOptions(["en", "de-CH"])} />,
+    );
     const select = screen.getByLabelText("Language");
     expect(select).toHaveValue("de-CH");
     await userEvent.selectOptions(select, "English");
     expect(onChange).toHaveBeenCalledWith("en");
   });
 
-  it("LanguageSelect: optionLang=\"own\" marks an app's own names that are still in each language", () => {
+  it('LanguageSelect: optionLang="own" marks an app\'s own names that are still in each language', () => {
     render(
       <LanguageSelect
         label="Language"

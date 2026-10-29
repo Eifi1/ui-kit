@@ -18,13 +18,7 @@ import { Modal } from "../modal";
  * So the assertion here is about teardown, not about what the panel looks like: after an
  * unmount there is nothing of the drag left on `window`, however the drag is wired.
  */
-const POINTER_EVENTS = new Set([
-  "pointermove",
-  "pointerup",
-  "pointercancel",
-  "mousemove",
-  "mouseup",
-]);
+const POINTER_EVENTS = new Set(["pointermove", "pointerup", "pointercancel", "mousemove", "mouseup"]);
 
 /**
  * Records the drag-shaped listeners that reach `window` and forgets them again when
@@ -47,12 +41,7 @@ function trackWindowListeners() {
     return realAdd.call(this, type, listener, options);
   } as typeof window.addEventListener;
 
-  window.removeEventListener = function (
-    this: Window,
-    type: string,
-    listener: never,
-    options: never,
-  ) {
+  window.removeEventListener = function (this: Window, type: string, listener: never, options: never) {
     live = live.filter(([t, l]) => !(t === type && l === listener));
     return realRemove.call(this, type, listener, options);
   } as typeof window.removeEventListener;

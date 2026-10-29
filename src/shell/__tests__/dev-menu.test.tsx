@@ -53,7 +53,11 @@ function App({
         { key: "slow", label: "Slow server", checkable: "checkbox", checked: slow, onSelect: () => setSlow((s) => !s) },
       ],
     },
-    { key: "resets", title: "Resets", entries: [{ key: "reset", label: "Reset tours", onSelect: () => onReset("tours") }] },
+    {
+      key: "resets",
+      title: "Resets",
+      entries: [{ key: "reset", label: "Reset tours", onSelect: () => onReset("tours") }],
+    },
   ];
   return (
     <MemoryRouter>
@@ -80,7 +84,9 @@ const open = () => {
 };
 /** The groups' names in the order drawn: each group is `aria-labelledby` its heading. */
 const groupNames = () =>
-  screen.getAllByRole("group").map((g) => document.getElementById(g.getAttribute("aria-labelledby") ?? "")?.textContent);
+  screen
+    .getAllByRole("group")
+    .map((g) => document.getElementById(g.getAttribute("aria-labelledby") ?? "")?.textContent);
 const group = (name: string | RegExp) => screen.getByRole("group", { name });
 
 afterEach(() => sessionStorage.clear());
@@ -99,7 +105,10 @@ describe("DevMenu", () => {
     open();
     const role = group("Dev · role");
     expect(within(role).getByRole("menuitemradio", { name: "ADMIN" })).toHaveAttribute("aria-checked", "true");
-    expect(within(group("Dev · plan")).getByRole("menuitemradio", { name: "free" })).toHaveAttribute("aria-checked", "true");
+    expect(within(group("Dev · plan")).getByRole("menuitemradio", { name: "free" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
     expect(screen.queryByText(/Back to/)).toBeNull();
 
     fireEvent.click(within(role).getByRole("menuitemradio", { name: "MEMBER" }));
@@ -127,13 +136,23 @@ describe("DevMenu", () => {
     expect(groupNames()).toEqual(["Dev · role", "Dev · plan", "Budget", "Time", "Resets"]);
 
     const budget = group("Budget");
-    expect(within(budget).getAllByRole("menuitemradio").map((r) => r.textContent)).toEqual([...BUDGET]);
+    expect(
+      within(budget)
+        .getAllByRole("menuitemradio")
+        .map((r) => r.textContent),
+    ).toEqual([...BUDGET]);
     expect(within(budget).getByRole("menuitemradio", { name: "owner" })).toHaveAttribute("aria-checked", "true");
     fireEvent.click(within(budget).getByRole("menuitemradio", { name: "guest" }));
     open();
-    expect(within(group("Budget")).getByRole("menuitemradio", { name: "guest" })).toHaveAttribute("aria-checked", "true");
+    expect(within(group("Budget")).getByRole("menuitemradio", { name: "guest" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
 
-    expect(within(group("Time")).getByRole("menuitemcheckbox", { name: "Slow server" })).toHaveAttribute("aria-checked", "false");
+    expect(within(group("Time")).getByRole("menuitemcheckbox", { name: "Slow server" })).toHaveAttribute(
+      "aria-checked",
+      "false",
+    );
     fireEvent.click(within(group("Resets")).getByRole("menuitem", { name: "Reset tours" }));
     expect(onReset).toHaveBeenCalledWith("tours");
   });
@@ -143,7 +162,11 @@ describe("DevMenu", () => {
     const rows = (prefix: string): DevMenuSection => ({
       key: prefix,
       title: prefix,
-      entries: [{ key: "reset", label: `${prefix} reset`, onSelect: () => {} }, { kind: "divider", key: "sep" }, { key: "x", label: `${prefix} x`, onSelect: () => {} }],
+      entries: [
+        { key: "reset", label: `${prefix} reset`, onSelect: () => {} },
+        { kind: "divider", key: "sep" },
+        { key: "x", label: `${prefix} x`, onSelect: () => {} },
+      ],
     });
     render(
       <MemoryRouter>

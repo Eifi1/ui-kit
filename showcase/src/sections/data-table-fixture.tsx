@@ -120,9 +120,7 @@ export function Amount({ value }: { value: number }) {
   // The kit's signed-number pair, not a red/green of our own: the same two tokens
   // the money field uses, so a palette that retunes one retunes both.
   return (
-    <span
-      className={value < 0 ? "text-[var(--money-expense)]" : "text-[var(--money-income)]"}
-    >
+    <span className={value < 0 ? "text-[var(--money-expense)]" : "text-[var(--money-income)]"}>
       {/* <bdi dir="ltr">: a figure reads left to right in every script. Inside the RTL
           table the bidi algorithm otherwise moved the minus to the far end — "320.50-". */}
       <bdi dir="ltr">{AMOUNT_FMT.format(value)}</bdi>
@@ -214,13 +212,7 @@ export const AMOUNT_COL: DataTableColumn<TableRow> = {
   headClassName: "text-end",
 };
 
-export const COLUMNS: DataTableColumn<TableRow>[] = [
-  ID_COL,
-  NAME_COL,
-  OPENED_COL,
-  STATUS_COL,
-  AMOUNT_COL,
-];
+export const COLUMNS: DataTableColumn<TableRow>[] = [ID_COL, NAME_COL, OPENED_COL, STATUS_COL, AMOUNT_COL];
 
 /** A row that is locked against bulk actions — `selection.isSelectable` renders no
  *  checkbox for it and select-all skips it. */

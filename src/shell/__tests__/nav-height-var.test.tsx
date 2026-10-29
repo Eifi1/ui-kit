@@ -132,6 +132,8 @@ describe("a shell inside a shell (0.7.0)", () => {
       </MemoryRouter>,
     );
     expect(navHeight()).toBe("");
-    expect(document.querySelector<HTMLElement>("[data-testid=solo]")!.style.getPropertyValue("--app-nav-h")).toBe("0px");
+    expect(document.querySelector<HTMLElement>("[data-testid=solo]")!.style.getPropertyValue("--app-nav-h")).toBe(
+      "0px",
+    );
   });
 });

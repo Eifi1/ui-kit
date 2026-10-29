@@ -25,7 +25,10 @@ const CAPTION = "text-xs text-muted";
 
 function LoadingStateDemo() {
   return (
-    <Example label="LoadingState — sizes, inline and a label of its own" hint='role="status" on the wrapper; the spinner is decorative'>
+    <Example
+      label="LoadingState — sizes, inline and a label of its own"
+      hint='role="status" on the wrapper; the spinner is decorative'
+    >
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-md border border-subtle">
           <p className={`${CAPTION} px-2 pt-2`}>size=&quot;sm&quot;</p>
@@ -45,9 +48,9 @@ function LoadingStateDemo() {
       </div>
       <div className="mt-3">
         <Note>
-          The default words are {code("common.loading")} from the provider, so they follow the language menu. The
-          words are visible text inside the status region and the spinner has {code("label={null}")}, so a reader
-          hears &ldquo;Loading…&rdquo; once, not twice.
+          The default words are {code("common.loading")} from the provider, so they follow the language menu. The words
+          are visible text inside the status region and the spinner has {code("label={null}")}, so a reader hears
+          &ldquo;Loading…&rdquo; once, not twice.
         </Note>
       </div>
     </Example>
@@ -128,7 +131,13 @@ function ErrorBoundaryDemo() {
         <div className="min-w-0 space-y-2">
           <p className={CAPTION}>fallback as a render function, and resetKeys</p>
           <Row>
-            <Button variant="secondary" size="sm" tone="danger" onClick={() => setBrokenCustom(true)} disabled={brokenCustom}>
+            <Button
+              variant="secondary"
+              size="sm"
+              tone="danger"
+              onClick={() => setBrokenCustom(true)}
+              disabled={brokenCustom}
+            >
               Break this one
             </Button>
             <Button
@@ -167,9 +176,9 @@ function ErrorBoundaryDemo() {
         <Note>
           The default fallback is {code('EmptyState tone="danger"')} with {code('role="alert"')}, its words from{" "}
           {code("errorBoundary.*")}. {code("showDetails")} is the disclosure with the full report (on by default — see
-          the crash-screen examples below). A change in {code("resetKeys")} clears a shown error
-          (pass the route path so a broken page does not carry its fallback to the next). The browser console logs
-          the throw too — that is React, not a second failure.
+          the crash-screen examples below). A change in {code("resetKeys")} clears a shown error (pass the route path so
+          a broken page does not carry its fallback to the next). The browser console logs the throw too — that is
+          React, not a second failure.
         </Note>
       </div>
     </Example>
@@ -246,11 +255,11 @@ function ProgressBarExtrasDemo() {
       </div>
       <div className="mt-3">
         <Note>
-          {code("overage")}: {code("true")} prints {code("progressBar.overLimit")} with the excess; a function renders the
-          line itself. The bar stays full at {code("max")} either way — the tone above switches to danger by hand.{" "}
-          {code("hint")} is a muted line the bar is described by. {code("legendValue")} replaces each legend
-          row&rsquo;s figure (here the share AND an amount); a {code("legendOnly")} segment is listed but leaves the bar,
-          the sum and the {code("aria-valuetext")}.
+          {code("overage")}: {code("true")} prints {code("progressBar.overLimit")} with the excess; a function renders
+          the line itself. The bar stays full at {code("max")} either way — the tone above switches to danger by hand.{" "}
+          {code("hint")} is a muted line the bar is described by. {code("legendValue")} replaces each legend row&rsquo;s
+          figure (here the share AND an amount); a {code("legendOnly")} segment is listed but leaves the bar, the sum
+          and the {code("aria-valuetext")}.
         </Note>
       </div>
     </Example>
@@ -289,22 +298,15 @@ export function HotkeyDemo() {
   useHotkey("g", fire("g"), { enabled, allowInInputs });
   useHotkey("?", fire("?"), { enabled, allowInInputs });
   return (
-    <Example
-      label="useHotkey(combo, handler, options)"
-      hint="Mod is ⌘ on Apple platforms and Ctrl elsewhere"
-    >
+    <Example label="useHotkey(combo, handler, options)" hint="Mod is ⌘ on Apple platforms and Ctrl elsewhere">
       <Row className="mb-3">
         <Checkbox label="enabled" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
-        <Checkbox
-          label="allowInInputs"
-          checked={allowInInputs}
-          onChange={(e) => setAllowInInputs(e.target.checked)}
-        />
+        <Checkbox label="allowInInputs" checked={allowInInputs} onChange={(e) => setAllowInInputs(e.target.checked)} />
       </Row>
       <p className="mb-2 text-sm text-secondary">
         Press <kbd className="font-mono">Mod+Shift+L</kbd>, <kbd className="font-mono">Alt+↑</kbd> /{" "}
-        <kbd className="font-mono">Alt+↓</kbd>, <kbd className="font-mono">g</kbd> or{" "}
-        <kbd className="font-mono">?</kbd> anywhere on the page — then again while typing in the field.
+        <kbd className="font-mono">Alt+↓</kbd>, <kbd className="font-mono">g</kbd> or <kbd className="font-mono">?</kbd>{" "}
+        anywhere on the page — then again while typing in the field.
       </p>
       <div className="mb-3 max-w-xs">
         <Input label="Type here" placeholder="g and ? are ignored while typing" />
@@ -314,10 +316,10 @@ export function HotkeyDemo() {
       </p>
       <div className="mt-3">
         <Note>
-          Modifiers match exactly — {code("Mod+Shift+L")} does not fire on Mod+L. In a text field a plain key
-          ({code("g")}, {code("?")}) is left alone so it does not steal letters, while a combo with Ctrl / Meta / Alt
-          still fires; tick {code("allowInInputs")} to take the plain keys too. A held key fires once, and the
-          handler can change without re-attaching the listener. The ⌘K palette keeps {code("useCommandKey")}.
+          Modifiers match exactly — {code("Mod+Shift+L")} does not fire on Mod+L. In a text field a plain key (
+          {code("g")}, {code("?")}) is left alone so it does not steal letters, while a combo with Ctrl / Meta / Alt
+          still fires; tick {code("allowInInputs")} to take the plain keys too. A held key fires once, and the handler
+          can change without re-attaching the listener. The ⌘K palette keeps {code("useCommandKey")}.
         </Note>
       </div>
     </Example>

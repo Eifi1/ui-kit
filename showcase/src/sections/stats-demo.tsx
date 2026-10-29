@@ -1,12 +1,6 @@
 import { useState } from "react";
 import { Activity, Users } from "lucide-react";
-import {
-  DEFAULT_SPARKLINE_LABELS,
-  Sparkline,
-  StatTile,
-  StatTileGrid,
-  sparklineSummary,
-} from "@eifi1/ui-kit";
+import { DEFAULT_SPARKLINE_LABELS, Sparkline, StatTile, StatTileGrid, sparklineSummary } from "@eifi1/ui-kit";
 import type { SparklineTone, StatTileLinkProps, StatTileSubValue } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row } from "../lib/section";
 import { numberFormat } from "../lib/number-format";
@@ -50,10 +44,9 @@ export function StatsDemo() {
         {/* Inside the card: as a sibling of the Example it took the page's 40px
             section gap and floated away from the sparklines it explains. */}
         <Note>
-          The scale is tight by default — the price above moved from 9.75 to 12.40 and the
-          line uses the whole box. Bars include zero; pass <code>min</code>/<code>max</code>{" "}
-          to pin the scale, and <code>referenceValue</code> for a zero or target line. A gap
-          (<code>null</code>) breaks the line rather than bridging it.
+          The scale is tight by default — the price above moved from 9.75 to 12.40 and the line uses the whole box. Bars
+          include zero; pass <code>min</code>/<code>max</code> to pin the scale, and <code>referenceValue</code> for a
+          zero or target line. A gap (<code>null</code>) breaks the line rather than bridging it.
         </Note>
       </Example>
 
@@ -93,7 +86,12 @@ export function StatsDemo() {
             hint="Mean of the last twelve closed months"
             size="sm"
           />
-          <StatTile label="Savings rate" value="18.4%" delta={{ value: 0.021, unit: "percent", label: "vs AUG" }} goodDirection="up" />
+          <StatTile
+            label="Savings rate"
+            value="18.4%"
+            delta={{ value: 0.021, unit: "percent", label: "vs AUG" }}
+            goodDirection="up"
+          />
         </StatTileGrid>
       </Example>
 
@@ -116,7 +114,13 @@ export function StatsDemo() {
             trend={[4.4, 4.1, 4.0, 3.8, 3.42]}
           />
           <StatTile label="Transactions" value={52310} compact delta={0} trend={[5, 5, 5]} />
-          <StatTile label="Push failures" value={7} delta={3} icon={<Activity />} description="Unjudged: no goodDirection" />
+          <StatTile
+            label="Push failures"
+            value={7}
+            delta={3}
+            icon={<Activity />}
+            description="Unjudged: no goodDirection"
+          />
         </StatTileGrid>
       </Example>
 
@@ -171,15 +175,14 @@ export function StatsDemo() {
           />
         </StatTileGrid>
         <Note>
-          <code className="font-mono">projection</code> is drawn directly under the value, before the
-          delta and the history rows, with only a hair of space — a &ldquo;Projected
-          €1,850&rdquo; under a to-date €420, not smuggled into{" "}
-          <code className="font-mono">description</code>. A sub-value&apos;s{" "}
-          <code className="font-mono">tone: &quot;none&quot;</code> leaves the figure in the row&apos;s own
-          muted text even on a toned tile (the Net tile: August follows <code className="font-mono">signed</code>,
-          July does not). The third tile&apos;s label is an icon plus a word; <code className="font-mono">name</code>{" "}
-          gives the sparkline its accessible name, &ldquo;Active users&rdquo;, where the label&apos;s text
-          would only say &ldquo;Active&rdquo;.
+          <code className="font-mono">projection</code> is drawn directly under the value, before the delta and the
+          history rows, with only a hair of space — a &ldquo;Projected €1,850&rdquo; under a to-date €420, not smuggled
+          into <code className="font-mono">description</code>. A sub-value&apos;s{" "}
+          <code className="font-mono">tone: &quot;none&quot;</code> leaves the figure in the row&apos;s own muted text
+          even on a toned tile (the Net tile: August follows <code className="font-mono">signed</code>, July does not).
+          The third tile&apos;s label is an icon plus a word; <code className="font-mono">name</code> gives the
+          sparkline its accessible name, &ldquo;Active users&rdquo;, where the label&apos;s text would only say
+          &ldquo;Active&rdquo;.
         </Note>
       </Example>
 
@@ -209,12 +212,11 @@ export function StatsDemo() {
           />
         </StatTileGrid>
         <Note>
-          <code className="font-mono">projection</code> takes one row or several, drawn in order under the
-          headline. keksdose&apos;s tiles show &ldquo;Committed&rdquo; (today plus what is scheduled) and
-          &ldquo;Projected&rdquo; (that plus the usual variable money), on every tile: the second has
-          nothing scheduled, so Committed equals today&apos;s figure, and it is shown all the same
-          (keksdose live #455). Which rows to give is the app&apos;s choice; the tile draws the rows it
-          is given.
+          <code className="font-mono">projection</code> takes one row or several, drawn in order under the headline.
+          keksdose&apos;s tiles show &ldquo;Committed&rdquo; (today plus what is scheduled) and &ldquo;Projected&rdquo;
+          (that plus the usual variable money), on every tile: the second has nothing scheduled, so Committed equals
+          today&apos;s figure, and it is shown all the same (keksdose live #455). Which rows to give is the app&apos;s
+          choice; the tile draws the rows it is given.
         </Note>
       </Example>
 
@@ -229,11 +231,10 @@ export function StatsDemo() {
           <StatTile size="sm" label="Kündigungen im laufenden Quartal (wraps)" value={12} tone="warning" />
         </StatTileGrid>
         <Note>
-          An admin wall: German labels wrapped onto two or three lines and put each
-          tile&apos;s figure at a different height. With <code className="font-mono">truncateLabel</code>{" "}
-          the first and third are cut and show the whole label on hover and focus; &ldquo;Neue
-          Konten&rdquo; fits and gets no bubble repeating itself. The last tile is the default, which
-          wraps. The label element keeps the full text — the ellipsis is paint — so it is still the
+          An admin wall: German labels wrapped onto two or three lines and put each tile&apos;s figure at a different
+          height. With <code className="font-mono">truncateLabel</code> the first and third are cut and show the whole
+          label on hover and focus; &ldquo;Neue Konten&rdquo; fits and gets no bubble repeating itself. The last tile is
+          the default, which wraps. The label element keeps the full text — the ellipsis is paint — so it is still the
           tile&apos;s accessible name. Re-measured on resize: widen the window and the tooltips go.
         </Note>
       </Example>
@@ -324,7 +325,14 @@ function SparklineOptions() {
             strokeWidth={3}
             label="Price vs target 11"
           />
-          <Sparkline data={NET} variant="bar" width={120} height={36} highlightLast={false} label="Net, all bars equal" />
+          <Sparkline
+            data={NET}
+            variant="bar"
+            width={120}
+            height={36}
+            highlightLast={false}
+            label="Net, all bars equal"
+          />
           <Sparkline data={[]} label="Nothing yet" />
         </Row>
         <OutTable
@@ -347,14 +355,14 @@ function SparklineOptions() {
         </Row>
       </div>
       <Note>
-        The table is the exported <code className="font-mono">sparklineSummary()</code> — the
-        same sentence the two sparklines in the last row carry as their accessible name
-        (inspect them, or hover in a screen reader). <code className="font-mono">formatValue</code>{" "}
-        decides how a figure is spoken, <code className="font-mono">locale</code> the default
-        formatter&apos;s digits, and <code className="font-mono">labels</code> the sentence
-        itself. <code className="font-mono">highlightLast={"{false}"}</code> drops the end dot
-        on a line and stops dimming every bar but the last. <code className="font-mono">width</code>{" "}
-        and <code className="font-mono">height</code> default to 72×24.
+        The table is the exported <code className="font-mono">sparklineSummary()</code> — the same sentence the two
+        sparklines in the last row carry as their accessible name (inspect them, or hover in a screen reader).{" "}
+        <code className="font-mono">formatValue</code> decides how a figure is spoken,{" "}
+        <code className="font-mono">locale</code> the default formatter&apos;s digits, and{" "}
+        <code className="font-mono">labels</code> the sentence itself.{" "}
+        <code className="font-mono">highlightLast={"{false}"}</code> drops the end dot on a line and stops dimming every
+        bar but the last. <code className="font-mono">width</code> and <code className="font-mono">height</code> default
+        to 72×24.
       </Note>
     </Example>
   );
@@ -397,13 +405,12 @@ function StatTileFormatting() {
         <StatTile label="Rating" value="" description='value="" shows the dash, like null' />
       </StatTileGrid>
       <Note>
-        <code className="font-mono">format</code> formats <em>every</em> number on the tile —
-        the uptime&apos;s delta reads &ldquo;0 d 1 h&rdquo;, not &ldquo;3,600&rdquo;. A sub-value
-        takes its own <code className="font-mono">tone</code> (the info-coloured budget) or
-        inherits the tile&apos;s, always at the muted weight; a string sub-value is rendered as
-        given. Headline sizes key on the TILE&apos;s width (a container query), not the
-        viewport — try the phone preview in the top bar: the grid drops to two columns and the
-        figures step down with the tiles.
+        <code className="font-mono">format</code> formats <em>every</em> number on the tile — the uptime&apos;s delta
+        reads &ldquo;0 d 1 h&rdquo;, not &ldquo;3,600&rdquo;. A sub-value takes its own{" "}
+        <code className="font-mono">tone</code> (the info-coloured budget) or inherits the tile&apos;s, always at the
+        muted weight; a string sub-value is rendered as given. Headline sizes key on the TILE&apos;s width (a container
+        query), not the viewport — try the phone preview in the top bar: the grid drops to two columns and the figures
+        step down with the tiles.
       </Note>
     </Example>
   );
@@ -438,7 +445,9 @@ function StatTileLinksAndLabels() {
           label="Throughput"
           value={1840}
           unit="req/s"
-          sparkline={<Sparkline data={NET} variant="bar" tone="signed" referenceValue={0} fluid height={28} label="Net change" />}
+          sparkline={
+            <Sparkline data={NET} variant="bar" tone="signed" referenceValue={0} fluid height={28} label="Net change" />
+          }
           description="sparkline wins over trend"
           trend={VISITS}
         />
@@ -457,16 +466,15 @@ function StatTileLinksAndLabels() {
           }}
           description="labels: German spoken delta"
         />
-        <StatTile label="Leerstand" value={null} labels={{ noValue: "Keine Daten" }} description='labels.noValue' />
+        <StatTile label="Leerstand" value={null} labels={{ noValue: "Keine Daten" }} description="labels.noValue" />
       </StatTileGrid>
       <Note>
         <code className="font-mono">renderLink</code> is how an app hands in its router&apos;s{" "}
-        <code className="font-mono">&lt;Link&gt;</code>: spread the props it receives — the class
-        is what stretches the link over the whole tile. The German tile&apos;s delta is spoken
-        as &ldquo;Plus 8 % (besser)&rdquo;; the words are screen-reader text, so inspect the
-        tile or use a reader to hear them. Without <code className="font-mono">labels</code>, the
-        tile takes the <code className="font-mono">statTile</code> bundle from the provider —
-        switch the page language to see the whole page follow.
+        <code className="font-mono">&lt;Link&gt;</code>: spread the props it receives — the class is what stretches the
+        link over the whole tile. The German tile&apos;s delta is spoken as &ldquo;Plus 8 % (besser)&rdquo;; the words
+        are screen-reader text, so inspect the tile or use a reader to hear them. Without{" "}
+        <code className="font-mono">labels</code>, the tile takes the <code className="font-mono">statTile</code> bundle
+        from the provider — switch the page language to see the whole page follow.
       </Note>
     </Example>
   );
@@ -495,9 +503,9 @@ function StatTileRtl() {
       </div>
       <Note>
         The tile lays out with logical properties (<code className="font-mono">ms-auto</code>,{" "}
-        <code className="font-mono">text-start</code>): the period sits at the start, the figure
-        and sub-values at the end, the icon at the top end — all mirrored. The sparkline is not
-        mirrored, on purpose: time runs left to right in a chart in both directions.
+        <code className="font-mono">text-start</code>): the period sits at the start, the figure and sub-values at the
+        end, the icon at the top end — all mirrored. The sparkline is not mirrored, on purpose: time runs left to right
+        in a chart in both directions.
       </Note>
     </Example>
   );

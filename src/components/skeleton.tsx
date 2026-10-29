@@ -71,21 +71,10 @@ function SkeletonFill({ shape = "line", lines, className, ...rest }: Omit<Skelet
     return (
       <div {...rest} aria-hidden className={cn("flex flex-col gap-2", className)} data-skeleton="lines">
         {Array.from({ length: lines }, (_, i) => (
-          <div
-            key={i}
-            className={cn(SKELETON_CLASS, SHAPE.line, i === lines - 1 && "w-2/3")}
-            data-skeleton="line"
-          />
+          <div key={i} className={cn(SKELETON_CLASS, SHAPE.line, i === lines - 1 && "w-2/3")} data-skeleton="line" />
         ))}
       </div>
     );
   }
-  return (
-    <div
-      {...rest}
-      aria-hidden
-      data-skeleton={shape}
-      className={cn(SKELETON_CLASS, SHAPE[shape], className)}
-    />
-  );
+  return <div {...rest} aria-hidden data-skeleton={shape} className={cn(SKELETON_CLASS, SHAPE[shape], className)} />;
 }

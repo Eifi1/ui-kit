@@ -129,11 +129,7 @@ export function parseIsoDate(s: string): Date | null {
  *  override (e.g. `{ dateStyle: "medium" }`). `locale` may be `undefined` since 0.34 —
  *  the runtime's default, as `Intl` reads it and as every other kit formatter takes it
  *  (DUP-11: DatePicker re-wrapped this function only to pass none). */
-export function formatIsoDate(
-  iso: string,
-  locale: string | undefined,
-  options?: Intl.DateTimeFormatOptions,
-): string {
+export function formatIsoDate(iso: string, locale: string | undefined, options?: Intl.DateTimeFormatOptions): string {
   const d = parseIsoDate(iso);
   return d ? d.toLocaleDateString(locale, options) : "";
 }
@@ -190,11 +186,7 @@ export function localeWeekStart(locale: string | undefined): 0 | 1 | 2 | 3 | 4 |
 
 /** Whether two Dates fall on the same local calendar day. */
 export function sameYmd(a: Date, b: Date): boolean {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
 export interface DateRangePreset {

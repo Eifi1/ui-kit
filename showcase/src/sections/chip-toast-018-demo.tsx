@@ -32,14 +32,7 @@ function Column({ snap }: { snap: boolean }) {
         return (
           <div key={o} className="flex items-center">
             <span aria-hidden className="inline-block h-px shrink-0" style={{ width: `${12 + o}px` }} />
-            <Chip
-              snapEdges={snap}
-              tone={s.tone}
-              size="sm"
-              shape="square"
-              caps
-              data-probe={snap ? "on" : "off"}
-            >
+            <Chip snapEdges={snap} tone={s.tone} size="sm" shape="square" caps data-probe={snap ? "on" : "off"}>
               {s.label}
             </Chip>
           </div>
@@ -93,11 +86,11 @@ export function ChipSnapEdges018Demo() {
         </div>
       )}
       <Note>
-        At a device-pixel ratio of 1.25 Chrome draws a chip's two 1px side borders on different sub-pixel phases:
-        one crisp, one a half-strength two-pixel smear that reads as a thinner line (worst on the 60 %-alpha
-        danger border). `snapEdges` widens the chip by under 4px, from where it sits, so both edges rasterise as
-        mirror images, and centres the label. Opt-in: it reads the chip's position. At 100 %, 150 % and 200 % it
-        writes nothing. After moving snapped chips some other way, call `refreshChipEdges()`.
+        At a device-pixel ratio of 1.25 Chrome draws a chip's two 1px side borders on different sub-pixel phases: one
+        crisp, one a half-strength two-pixel smear that reads as a thinner line (worst on the 60 %-alpha danger border).
+        `snapEdges` widens the chip by under 4px, from where it sits, so both edges rasterise as mirror images, and
+        centres the label. Opt-in: it reads the chip's position. At 100 %, 150 % and 200 % it writes nothing. After
+        moving snapped chips some other way, call `refreshChipEdges()`.
       </Note>
     </Example>
   );
@@ -105,10 +98,7 @@ export function ChipSnapEdges018Demo() {
 
 export function ToastMiddleClick018Demo() {
   return (
-    <Example
-      label="Toaster — dismissOnMiddleClick"
-      hint="middle-click a toast to close it; on by default"
-    >
+    <Example label="Toaster — dismissOnMiddleClick" hint="middle-click a toast to close it; on by default">
       <Row>
         <Button
           variant="secondary"
@@ -139,10 +129,9 @@ export function ToastMiddleClick018Demo() {
         </Button>
       </Row>
       <Note>
-        A middle click anywhere on a toast dismisses it by id, close button or not, and runs its `onDismiss`. A
-        middle click on a link inside still opens the link in a new tab; buttons inside the toast and
-        `dismissible: false` toasts are left alone. Pass `dismissOnMiddleClick={false}` to the Toaster to turn it
-        off.
+        A middle click anywhere on a toast dismisses it by id, close button or not, and runs its `onDismiss`. A middle
+        click on a link inside still opens the link in a new tab; buttons inside the toast and `dismissible: false`
+        toasts are left alone. Pass `dismissOnMiddleClick={false}` to the Toaster to turn it off.
       </Note>
     </Example>
   );

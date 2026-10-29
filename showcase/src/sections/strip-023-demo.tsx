@@ -58,7 +58,10 @@ export function FieldStrip023Demo() {
   const [pattern, setPattern] = useState<Pattern>("dots");
   return (
     <>
-      <Example label="FieldStrip — the strip label for content of your own" hint="a map and buttons on the label line of the fields beside it">
+      <Example
+        label="FieldStrip — the strip label for content of your own"
+        hint="a map and buttons on the label line of the fields beside it"
+      >
         <div className="flex flex-col gap-3">
           <Switch
             checked={readOnly}
@@ -99,12 +102,12 @@ export function FieldStrip023Demo() {
           </div>
         </div>
         <Note>
-          The four labels share one line. The location cell is a {code("role=\"group\"")} named by its label, so a
-          screen reader entering &ldquo;Locate me&rdquo; hears &ldquo;Location, group&rdquo; first. Its content
-          starts 20px down like the swatches and the status group: the label and its &ldquo;?&rdquo; end 18px down, so
-          the content&apos;s border stays clear of them. For a row of 42px fields, make the content 22px tall, as the
-          status group is (20 + 22 = 42; one strip for all, with no {code("pad")}). A text{" "}
-          {code("hint")} becomes a caption under the content, an {code("error")} a message, both describing the group.
+          The four labels share one line. The location cell is a {code('role="group"')} named by its label, so a screen
+          reader entering &ldquo;Locate me&rdquo; hears &ldquo;Location, group&rdquo; first. Its content starts 20px
+          down like the swatches and the status group: the label and its &ldquo;?&rdquo; end 18px down, so the
+          content&apos;s border stays clear of them. For a row of 42px fields, make the content 22px tall, as the status
+          group is (20 + 22 = 42; one strip for all, with no {code("pad")}). A text {code("hint")} becomes a caption
+          under the content, an {code("error")} a message, both describing the group.
         </Note>
       </Example>
       <Example label="FieldStrip group={false}" hint="content that is a labelled group itself takes the label's id">
@@ -129,9 +132,9 @@ export function FieldStrip023Demo() {
           </FieldStrip>
         </div>
         <Note>
-          A {code("radiogroup")} inside a group of the same name would be read twice, so {code("group={false}")}{" "}
-          leaves the wrapper a plain box and the render prop hands the content {code("labelId")} and{" "}
-          {code("describedBy")} (the caption&apos;s and the error&apos;s ids).
+          A {code("radiogroup")} inside a group of the same name would be read twice, so {code("group={false}")} leaves
+          the wrapper a plain box and the render prop hands the content {code("labelId")} and {code("describedBy")} (the
+          caption&apos;s and the error&apos;s ids).
         </Note>
       </Example>
     </>
@@ -142,13 +145,29 @@ export function FieldStrip023Demo() {
 
 const CATEGORY_COLOURS = [
   { value: "teal", label: "Teal", color: "var(--hue-teal)" },
-  { value: "indigo", label: "Indigo", color: "var(--hue-indigo)", disabledReason: "Used by Groceries — each category has its own colour." },
+  {
+    value: "indigo",
+    label: "Indigo",
+    color: "var(--hue-indigo)",
+    disabledReason: "Used by Groceries — each category has its own colour.",
+  },
   { value: "orange", label: "Orange", color: "var(--hue-orange)" },
-  { value: "purple", label: "Purple", color: "var(--hue-purple)", disabled: true, disabledReason: "Reserved for overdue bills." },
+  {
+    value: "purple",
+    label: "Purple",
+    color: "var(--hue-purple)",
+    disabled: true,
+    disabledReason: "Reserved for overdue bills.",
+  },
 ];
 const SYMBOLS = [
   { value: "home", label: "Home", icon: Home },
-  { value: "cart", label: "Shopping", icon: ShoppingCart, disabledReason: "Only the household owner can use this symbol." },
+  {
+    value: "cart",
+    label: "Shopping",
+    icon: ShoppingCart,
+    disabledReason: "Only the household owner can use this symbol.",
+  },
   { value: "coffee", label: "Coffee", icon: Coffee },
   { value: "star", label: "Favourite", icon: Star },
 ];
@@ -157,17 +176,20 @@ export function TileLock023Demo() {
   const [colour, setColour] = useState<string | null>("teal");
   const [symbol, setSymbol] = useState<string | null>("home");
   return (
-    <Example label="SwatchPicker / IconPicker: one option locked, with its reason" hint="disabledReason on an option: reachable, aria-disabled, says why">
+    <Example
+      label="SwatchPicker / IconPicker: one option locked, with its reason"
+      hint="disabledReason on an option: reachable, aria-disabled, says why"
+    >
       <div className="grid items-start gap-3 md:grid-cols-2">
         <SwatchPicker label="Colour" value={colour} onChange={setColour} options={CATEGORY_COLOURS} />
         <IconPicker label="Symbol" value={symbol} onChange={setSymbol} options={SYMBOLS} />
       </div>
       <Note>
         Indigo, Purple and Shopping are locked. Hover one, or walk onto it with the arrow keys: its bubble says why
-        under its name, and a screen reader reads the reason as its description. Choosing it does nothing — the
-        focus moves, the checked tile stays. A plain {code("disabled")} tile is skipped by the keyboard and cannot
-        say why; with a {code("disabledReason")} it stays reachable ({code("disabled")} + a reason, as on Purple,
-        is still reachable).
+        under its name, and a screen reader reads the reason as its description. Choosing it does nothing — the focus
+        moves, the checked tile stays. A plain {code("disabled")} tile is skipped by the keyboard and cannot say why;
+        with a {code("disabledReason")} it stays reachable ({code("disabled")} + a reason, as on Purple, is still
+        reachable).
       </Note>
     </Example>
   );

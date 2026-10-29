@@ -12,7 +12,15 @@ const CH_E164 = "+41210000001";
 
 describe("parsePhone — the six countries with rules", () => {
   it("reads a Swiss number with or without its trunk 0, and with its own +", () => {
-    for (const typed of ["021 000 00 01", "21 000 00 01", "+41 21 000 00 01", "0041 21 000 00 01", "+41 (0)21 000 00 01", "+41 021 000 00 01", "021/000.00-01"]) {
+    for (const typed of [
+      "021 000 00 01",
+      "21 000 00 01",
+      "+41 21 000 00 01",
+      "0041 21 000 00 01",
+      "+41 (0)21 000 00 01",
+      "+41 021 000 00 01",
+      "021/000.00-01",
+    ]) {
       expect(parsePhone(typed, "CH")?.e164, typed).toBe(CH_E164);
     }
     expect(parsePhone("021 000 00 01")).toEqual({ e164: CH_E164, country: "CH", national: "210000001" });
@@ -46,7 +54,11 @@ describe("parsePhone — the six countries with rules", () => {
 
 describe("parsePhone — any other country, with its own +", () => {
   it("takes 8 to 15 digits as E.164", () => {
-    expect(parsePhone("+1 202 555 0101", "CH")).toEqual({ e164: "+12025550101", country: null, national: "12025550101" });
+    expect(parsePhone("+1 202 555 0101", "CH")).toEqual({
+      e164: "+12025550101",
+      country: null,
+      national: "12025550101",
+    });
     expect(parsePhone("+1 555 010", "CH")).toBeNull();
     expect(parsePhone("+1 202 555 0101 0000", "CH")?.e164).toBe("+120255501010000");
     expect(parsePhone("+1 202 555 0101 00000", "CH")).toBeNull();

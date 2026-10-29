@@ -7,10 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ca
  * classes, set once) and `toneFill` (the tone's wash, opt-in, on top of the frame).
  */
 
-const slot = (container: HTMLElement, name: string) =>
-  container.querySelector<HTMLElement>(`[data-slot="${name}"]`)!;
+const slot = (container: HTMLElement, name: string) => container.querySelector<HTMLElement>(`[data-slot="${name}"]`)!;
 
-function card(props: Partial<Parameters<typeof Card>[0]>, parts?: { title?: string; description?: string; header?: string }) {
+function card(
+  props: Partial<Parameters<typeof Card>[0]>,
+  parts?: { title?: string; description?: string; header?: string },
+) {
   return render(
     <Card {...props}>
       <CardHeader className={parts?.header}>

@@ -60,9 +60,7 @@ describe("<Toaster> — the provider's labels", () => {
     });
     const action = await screen.findByRole("button", { name: "Rückgängig" });
     expect(screen.getByRole("button", { name: "Benachrichtigung schließen" })).toBeInTheDocument();
-    expect(document.querySelector("section[aria-live]")?.getAttribute("aria-label")).toMatch(
-      /^Benachrichtigungen/,
-    );
+    expect(document.querySelector("section[aria-live]")?.getAttribute("aria-label")).toMatch(/^Benachrichtigungen/);
     fireEvent.click(action);
     expect(onUndo).toHaveBeenCalledOnce();
   });

@@ -16,11 +16,7 @@ function Swatches({ tokens }: { tokens: string[] }) {
   return (
     <>
       {tokens.map((token) => (
-        <span
-          key={token}
-          className="size-2 shrink-0 rounded-[2px]"
-          style={{ backgroundColor: `var(${token})` }}
-        />
+        <span key={token} className="size-2 shrink-0 rounded-[2px]" style={{ backgroundColor: `var(${token})` }} />
       ))}
     </>
   );
@@ -62,9 +58,7 @@ function SheetStrip({ removeOn, overflowCue }: { removeOn?: "every" | "active"; 
         }}
         addLabel="Add loop"
       />
-      <p className="text-sm text-secondary">
-        {sheets.length === 0 ? "No loops." : `Sheet ${active} km/h is open.`}
-      </p>
+      <p className="text-sm text-secondary">{sheets.length === 0 ? "No loops." : `Sheet ${active} km/h is open.`}</p>
     </div>
   );
 }
@@ -85,12 +79,7 @@ function RowActions() {
             {name}
           </button>
           <div className="absolute inset-y-0 end-2 flex items-center gap-0.5">
-            <IconButton
-              size="xs"
-              tone="muted"
-              aria-label={`Copy ${name}`}
-              onClick={() => setLog(`Copied ${name}`)}
-            >
+            <IconButton size="xs" tone="muted" aria-label={`Copy ${name}`} onClick={() => setLog(`Copied ${name}`)}>
               <Copy />
             </IconButton>
             {/* Delete in the row's menu, asking first (KIT-12): never a bin in every row. */}
@@ -136,25 +125,17 @@ export function FieldAnatomyDemo() {
       </Example>
 
       <Note>
-        <code>required</code> on the label draws the star only; set <code>required</code> on the
-        control too — that is what a screen reader announces. The floating labels of{" "}
-        <code>Input</code>/<code>Select</code> and <code>FieldLabel</code> are unchanged.
+        <code>required</code> on the label draws the star only; set <code>required</code> on the control too — that is
+        what a screen reader announces. The floating labels of <code>Input</code>/<code>Select</code> and{" "}
+        <code>FieldLabel</code> are unchanged.
       </Note>
 
-      <Example
-        label="Toolbar select"
-        hint='size="sm": 28px, 12px type; selectClassName reaches the <select>'
-      >
+      <Example label="Toolbar select" hint='size="sm": 28px, 12px type; selectClassName reaches the <select>'>
         <Row>
           <Label htmlFor="fa-period" size="sm">
             Period
           </Label>
-          <Select
-            id="fa-period"
-            size="sm"
-            value={period}
-            onChange={(e) => setPeriod(e.target.value)}
-          >
+          <Select id="fa-period" size="sm" value={period} onChange={(e) => setPeriod(e.target.value)}>
             <option value="month">Month</option>
             <option value="quarter">Quarter</option>
             <option value="year">Year</option>
@@ -180,12 +161,7 @@ export function FieldAnatomyDemo() {
               className="min-w-0 flex-1"
             />
           </div>
-          <SearchField
-            value={query}
-            onChange={setQuery}
-            aria-label="Filter settings"
-            clearLabel="Clear filter"
-          />
+          <SearchField value={query} onChange={setQuery} aria-label="Filter settings" clearLabel="Clear filter" />
         </Stage>
       </Example>
     </>
@@ -223,21 +199,17 @@ export function IconButtonControls() {
         </Row>
       </Example>
 
-      <Example
-        label="Actions on a clickable row"
-        hint="siblings over the row, not buttons inside a button"
-      >
+      <Example label="Actions on a clickable row" hint="siblings over the row, not buttons inside a button">
         <Stage>
           <RowActions />
         </Stage>
       </Example>
 
       <Note>
-        A button inside a button is invalid HTML, and so is the{" "}
-        <code>span role=&quot;button&quot;</code> workaround — a reader flattens it into the outer
-        button&apos;s name. Make the row&apos;s main action fill the row and lay the icon buttons
-        over its end. Inside a clickable table row or card (not a button),{" "}
-        <code>stopPropagation</code> keeps the click and its Enter from reaching the row.
+        A button inside a button is invalid HTML, and so is the <code>span role=&quot;button&quot;</code> workaround — a
+        reader flattens it into the outer button&apos;s name. Make the row&apos;s main action fill the row and lay the
+        icon buttons over its end. Inside a clickable table row or card (not a button), <code>stopPropagation</code>{" "}
+        keeps the click and its Enter from reaching the row.
       </Note>
     </>
   );
@@ -264,10 +236,10 @@ export function TabControls() {
       </Example>
 
       <Note>
-        For a remove that happens at once, with nothing to confirm it (deleting a
-        measurement sheet, say), <code>removeOn=&quot;active&quot;</code> narrows the Delete key to the
-        tab you are looking at — the same one that wears the ×. Arrow onto a closed tab and press
-        Delete: nothing goes. The ×&apos;s room stays reserved on every tab either way.
+        For a remove that happens at once, with nothing to confirm it (deleting a measurement sheet, say),{" "}
+        <code>removeOn=&quot;active&quot;</code> narrows the Delete key to the tab you are looking at — the same one
+        that wears the ×. Arrow onto a closed tab and press Delete: nothing goes. The ×&apos;s room stays reserved on
+        every tab either way.
       </Note>
     </>
   );

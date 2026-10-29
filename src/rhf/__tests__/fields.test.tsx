@@ -92,11 +92,7 @@ async function submit() {
 
 describe("RhfTextField", () => {
   it("labels the input, describes it with the hint and marks it required", () => {
-    render(
-      <Harness>
-        {() => <RhfTextField name="name" label="Name" hint="As on the lease" required />}
-      </Harness>,
-    );
+    render(<Harness>{() => <RhfTextField name="name" label="Name" hint="As on the lease" required />}</Harness>);
     const input = screen.getByRole("textbox", { name: "Name" });
     expect(input).toHaveAttribute("aria-required", "true");
     expect(input).toHaveAccessibleDescription("As on the lease");
@@ -268,10 +264,7 @@ describe("RhfMoneyField", () => {
     expect(rent).toHaveValue("33.33");
     expect(release).toHaveValue("500");
     await submit();
-    expect(onSubmit).toHaveBeenCalledWith(
-      expect.objectContaining({ rent: 33.33, count: 500 }),
-      expect.anything(),
-    );
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ rent: 33.33, count: 500 }), expect.anything());
   });
 
   it("stores a number while typing and keeps a half-typed decimal in the field", async () => {
@@ -478,7 +471,13 @@ describe("hint and required on the controls that now take them as props", () => 
             <RhfNumberField name="count" label="Count" hint="Count hint" required />
             <RhfMoneyField name="rent" label="Rent" hint="Rent hint" required />
             <RhfDateField name="start" label="Start" hint="Start hint" required />
-            <RhfCombobox name="tenant" label="Tenant" hint="Tenant hint" required options={[{ value: 1, label: "Anna" }]} />
+            <RhfCombobox
+              name="tenant"
+              label="Tenant"
+              hint="Tenant hint"
+              required
+              options={[{ value: 1, label: "Anna" }]}
+            />
             <RhfTextCombobox name="city" label="City" hint="City hint" required options={["Bern"]} />
           </>
         )}

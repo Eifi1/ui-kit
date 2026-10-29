@@ -52,7 +52,14 @@ describe("NumberField under a write lock (0.33.1)", () => {
     const onValueChange = vi.fn();
     render(
       locked(
-        <NumberField label="Wheelbase" value={2700} step={10} onCommit={onCommit} onValueChange={onValueChange} commit />,
+        <NumberField
+          label="Wheelbase"
+          value={2700}
+          step={10}
+          onCommit={onCommit}
+          onValueChange={onValueChange}
+          commit
+        />,
       ),
     );
     const input = screen.getByRole("textbox", { name: "Wheelbase" });
@@ -98,7 +105,9 @@ describe("NumberField under a write lock (0.33.1)", () => {
   });
 
   it("takes a `disabledReason` of its own, which wins over `disabled`", () => {
-    render(<NumberField label="Year" value={1984} onCommit={() => {}} disabled disabledReason="Signed; it cannot change." />);
+    render(
+      <NumberField label="Year" value={1984} onCommit={() => {}} disabled disabledReason="Signed; it cannot change." />,
+    );
     const input = screen.getByRole("textbox", { name: "Year" });
     expect(input).not.toBeDisabled();
     expect(input).toHaveAttribute("readonly");

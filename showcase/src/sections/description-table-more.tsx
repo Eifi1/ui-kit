@@ -66,17 +66,17 @@ function StackedList() {
           Consumer price index, reviewed every 12 months (span 2)
         </DescriptionItem>
         <DescriptionItem term="Notes" span="full" prose>
-          The tenant asked for the heating costs to be split by metered consumption from next year on; the
-          meters were fitted in spring. (span &quot;full&quot;, prose)
+          The tenant asked for the heating costs to be split by metered consumption from next year on; the meters were
+          fitted in spring. (span &quot;full&quot;, prose)
         </DescriptionItem>
       </DescriptionList>
       <div className="mt-3">
         <Note>
-          One column on a phone-narrow pane, two from 20rem, then one more each time every column would still
-          get about 12rem — up to <code className="font-mono">columns</code>. Narrow the window to watch it drop.{" "}
-          <code className="font-mono">span</code> is clamped to the columns there are, so it can never open an
-          implicit column and push the grid off its pane; <code className="font-mono">&quot;full&quot;</code> is the
-          whole row. A stacked figure keeps its term&apos;s start edge.
+          One column on a phone-narrow pane, two from 20rem, then one more each time every column would still get about
+          12rem — up to <code className="font-mono">columns</code>. Narrow the window to watch it drop.{" "}
+          <code className="font-mono">span</code> is clamped to the columns there are, so it can never open an implicit
+          column and push the grid off its pane; <code className="font-mono">&quot;full&quot;</code> is the whole row. A
+          stacked figure keeps its term&apos;s start edge.
         </Note>
       </div>
     </Example>
@@ -128,13 +128,13 @@ function TightCardsProse() {
       </div>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">tight</code> is 11px on a 2px rhythm with no rules between the rows — a block
-          of small print, not a list to scan. <code className="font-mono">columns</code> on a card grid is the MOST
-          cards a row; the grid still drops columns below <code className="font-mono">minCardWidth</code>, and{" "}
+          <code className="font-mono">tight</code> is 11px on a 2px rhythm with no rules between the rows — a block of
+          small print, not a list to scan. <code className="font-mono">columns</code> on a card grid is the MOST cards a
+          row; the grid still drops columns below <code className="font-mono">minCardWidth</code>, and{" "}
           <code className="font-mono">columns={"{2}"} minCardWidth=&quot;0&quot;</code> is &ldquo;two side by
-          side&rdquo; without knowing the gap. <code className="font-mono">prose</code> sets the details in the
-          regular weight and secondary ink, so a grid of paragraphs does not read as a wall of headings; per
-          item it overrides the list either way.
+          side&rdquo; without knowing the gap. <code className="font-mono">prose</code> sets the details in the regular
+          weight and secondary ink, so a grid of paragraphs does not read as a wall of headings; per item it overrides
+          the list either way.
         </Note>
       </div>
     </Example>
@@ -210,20 +210,32 @@ function TableEmptyDensityLayout() {
             <TableHead>
               <TableRow>
                 <TableHeaderCell>Rate</TableHeaderCell>
-                <TableHeaderCell numeric className="ps-2">Net</TableHeaderCell>
-                <TableHeaderCell numeric className="ps-2">VAT</TableHeaderCell>
+                <TableHeaderCell numeric className="ps-2">
+                  Net
+                </TableHeaderCell>
+                <TableHeaderCell numeric className="ps-2">
+                  VAT
+                </TableHeaderCell>
               </TableRow>
             </TableHead>
             <TableBody>
               <TableRow>
                 <TableCell>19 %</TableCell>
-                <TableCell numeric className="ps-2">{EUR.format(252.74)}</TableCell>
-                <TableCell numeric className="ps-2">{EUR.format(48.02)}</TableCell>
+                <TableCell numeric className="ps-2">
+                  {EUR.format(252.74)}
+                </TableCell>
+                <TableCell numeric className="ps-2">
+                  {EUR.format(48.02)}
+                </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>0 %</TableCell>
-                <TableCell numeric className="ps-2">{EUR.format(1180)}</TableCell>
-                <TableCell numeric className="ps-2">{EUR.format(0)}</TableCell>
+                <TableCell numeric className="ps-2">
+                  {EUR.format(1180)}
+                </TableCell>
+                <TableCell numeric className="ps-2">
+                  {EUR.format(0)}
+                </TableCell>
               </TableRow>
             </TableBody>
           </Table>
@@ -248,13 +260,13 @@ function TableEmptyDensityLayout() {
       </div>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">TableBody empty</code> renders ONE full-width row when the body has no rows —
-          an empty map, a <code className="font-mono">false</code>, a <code className="font-mono">null</code>. Filter
+          <code className="font-mono">TableBody empty</code> renders ONE full-width row when the body has no rows — an
+          empty map, a <code className="font-mono">false</code>, a <code className="font-mono">null</code>. Filter
           everything away, then add a column: the row still spans the table, because its{" "}
-          <code className="font-mono">colSpan</code> is counted from the table after mount rather than written by
-          hand. <code className="font-mono">TableEmpty</code> is that row on its own, for a body whose rows are not
-          its direct children. <code className="font-mono">density=&quot;none&quot;</code> takes every cell&apos;s
-          padding away for a table spaced by hand inside a card (the empty row keeps a little air).{" "}
+          <code className="font-mono">colSpan</code> is counted from the table after mount rather than written by hand.{" "}
+          <code className="font-mono">TableEmpty</code> is that row on its own, for a body whose rows are not its direct
+          children. <code className="font-mono">density=&quot;none&quot;</code> takes every cell&apos;s padding away for
+          a table spaced by hand inside a card (the empty row keeps a little air).{" "}
           <code className="font-mono">layout=&quot;fixed&quot;</code> takes the widths from the first row — the text
           column holds its half however long the lines get.
         </Note>
@@ -279,7 +291,6 @@ const VAT_RATES = [
   { rate: "19\u00a0%", net: 1200 },
   { rate: "7\u00a0%", net: 310.5 },
 ];
-
 
 export function TableHeaderValignDemo() {
   const [size, setSize] = useState<TableHeaderCellSize>("sm");
@@ -368,10 +379,10 @@ export function TableHeaderValignDemo() {
       </Table>
       <div className="mt-3">
         <Note>
-          {code("TableHeaderCell")}&apos;s {code("size")} and {code("weight")} say &ldquo;a quiet header at the
-          body size&rdquo; without overriding classes. {code("TableRow valign")} reaches every cell of the row
-          that does not set its own (each cell states its default — top in the body, bottom in the head — so a
-          class on the row could not): at {code("top")} the figures sit above the middle of the field beside them.
+          {code("TableHeaderCell")}&apos;s {code("size")} and {code("weight")} say &ldquo;a quiet header at the body
+          size&rdquo; without overriding classes. {code("TableRow valign")} reaches every cell of the row that does not
+          set its own (each cell states its default — top in the body, bottom in the head — so a class on the row could
+          not): at {code("top")} the figures sit above the middle of the field beside them.
         </Note>
       </div>
     </Example>
@@ -425,9 +436,8 @@ export function TableRefs016Demo() {
         </Table>
       </div>
       <Note>
-        Every Table part forwards {code("ref")} to its element (React 19's ref-as-a-prop),
-        so a row can be scrolled into view without {code("useId")} +{" "}
-        {code("getElementById")}.
+        Every Table part forwards {code("ref")} to its element (React 19's ref-as-a-prop), so a row can be scrolled into
+        view without {code("useId")} + {code("getElementById")}.
       </Note>
     </Example>
   );

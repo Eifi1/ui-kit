@@ -182,9 +182,12 @@ export function DevMenu<R extends string, P extends string>({
     roles && roles.length > 0 && role !== undefined && onRole
       ? [
           { kind: "heading", key: "head-role", label: words.roleHeading },
-          ...roles.map(
-            (r): TopBarMenuEntry => ({ key: `role-${r}`, label: roleLabel(r), checked: r === role, onSelect: () => pickRole(r) }),
-          ),
+          ...roles.map((r): TopBarMenuEntry => ({
+            key: `role-${r}`,
+            label: roleLabel(r),
+            checked: r === role,
+            onSelect: () => pickRole(r),
+          })),
           // Behind a rule, which ends the role group: "Back to" is a way out, not a role.
           ...(original !== undefined && original !== role
             ? ([
@@ -225,9 +228,12 @@ export function DevMenu<R extends string, P extends string>({
               words.planHeading
             ),
           },
-          ...plans.map(
-            (p): TopBarMenuEntry => ({ key: `plan-${p}`, label: planLabel(p), checked: p === plan, onSelect: () => onPlan(p) }),
-          ),
+          ...plans.map((p): TopBarMenuEntry => ({
+            key: `plan-${p}`,
+            label: planLabel(p),
+            checked: p === plan,
+            onSelect: () => onPlan(p),
+          })),
         ]
       : [];
 

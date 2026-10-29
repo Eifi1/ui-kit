@@ -110,7 +110,9 @@ describe("RowAction tones", () => {
     expect(within(menu).getByRole("button", { name: "Open" }).className).toBe(
       within(menu).getByRole("button", { name: "Edit" }).className,
     );
-    expect(within(menu).getByRole("button", { name: "Delete" }).className).toMatch(/hover:text-(danger|\[var\(--danger\)\])/);
+    expect(within(menu).getByRole("button", { name: "Delete" }).className).toMatch(
+      /hover:text-(danger|\[var\(--danger\)\])/,
+    );
   });
 });
 
@@ -224,7 +226,10 @@ describe("RowAction commit: COMMIT_EXCEPT_BILLING (billing §12.36)", () => {
     const remove = vi.fn();
     const { unmount } = render(
       <WriteLockProvider locked kind="billing" reason={PLAN}>
-        <RowActions name="Ada" actions={[{ label: "Remove", icon: Trash2, onSelect: remove, commit: COMMIT_EXCEPT_BILLING }]} />
+        <RowActions
+          name="Ada"
+          actions={[{ label: "Remove", icon: Trash2, onSelect: remove, commit: COMMIT_EXCEPT_BILLING }]}
+        />
       </WriteLockProvider>,
     );
     fireEvent.click(screen.getByRole("button", { name: "Remove" }));
@@ -256,7 +261,10 @@ describe("RowAction commit: COMMIT_EXCEPT_BILLING (billing §12.36)", () => {
           { kind: "billing", reason: PLAN },
         ]}
       >
-        <RowActions name="Ada" actions={[{ label: "Remove", icon: Trash2, onSelect: remove, commit: COMMIT_EXCEPT_BILLING }]} />
+        <RowActions
+          name="Ada"
+          actions={[{ label: "Remove", icon: Trash2, onSelect: remove, commit: COMMIT_EXCEPT_BILLING }]}
+        />
       </WriteLockProvider>,
     );
     const button = screen.getByRole("button", { name: "Remove" });

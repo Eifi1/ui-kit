@@ -139,7 +139,9 @@ function PageBody({ page, answer, onRestart }: { page: PageKey; answer: string; 
           token="demo-invite"
           signedIn={answer !== "signedOut"}
           onAccept={() =>
-            answer === "expired" ? refuse("invitation_expired") : beat(900).then(() => ({ name: "Example Property Ltd" }))
+            answer === "expired"
+              ? refuse("invitation_expired")
+              : beat(900).then(() => ({ name: "Example Property Ltd" }))
           }
           continueHref={HERE}
           signInHref={HERE}
@@ -249,11 +251,7 @@ export function EmailVerificationBanner029Demo() {
             </EmailVerificationBanner>
           ) : (
             <Row className="p-3">
-              <button
-                type="button"
-                className="text-sm text-brand underline"
-                onClick={() => setShown(true)}
-              >
+              <button type="button" className="text-sm text-brand underline" onClick={() => setShown(true)}>
                 Show the banner again
               </button>
             </Row>
@@ -315,10 +313,10 @@ export function PersonNames029Demo() {
       </div>
       <Note>
         &ldquo;First Last&rdquo; in de-CH, en, fr, it and es; &ldquo;Last First&rdquo; in hu; in zh a name in CJK
-        characters runs together family-first (&ldquo;李小龙&rdquo;, initial &ldquo;李&rdquo;) and a Latin name stays
-        as written. The order is the READER&apos;s — the UI locale. A migrated user (the whole old display name as the
-        first name) keeps their name and initials. {code("<UserAvatar person={{ first, last }} />")} prefers the
-        person over {code("name")}.
+        characters runs together family-first (&ldquo;李小龙&rdquo;, initial &ldquo;李&rdquo;) and a Latin name stays as
+        written. The order is the READER&apos;s — the UI locale. A migrated user (the whole old display name as the
+        first name) keeps their name and initials. {code("<UserAvatar person={{ first, last }} />")} prefers the person
+        over {code("name")}.
       </Note>
     </Example>
   );
@@ -352,9 +350,7 @@ export function CompanySwitcher029Demo() {
             onSwitch={(id) => beat(1200).then(() => setCurrent(id))}
           />
         </TopBarStrip>
-        <p className="text-xs text-muted">
-          current: {COMPANIES.find((c) => c.id === current)?.name}
-        </p>
+        <p className="text-xs text-muted">current: {COMPANIES.find((c) => c.id === current)?.name}</p>
         <p className="text-xs text-muted">One company — the switcher renders nothing:</p>
         <TopBarStrip>
           <CompanySwitcher companies={[COMPANIES[0]!]} currentId={1} onSwitch={() => {}} />

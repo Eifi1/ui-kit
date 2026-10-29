@@ -13,7 +13,12 @@ describe("normalizeSearchText", () => {
 describe("createSearchIndex", () => {
   const entries: SearchEntry[] = [
     { id: "tooltip", title: "Tooltip", group: "Components" },
-    { id: "tooltip-page", title: "Popovers, menus & tooltips", group: "Pages", description: "Overlays anchored to a trigger" },
+    {
+      id: "tooltip-page",
+      title: "Popovers, menus & tooltips",
+      group: "Pages",
+      description: "Overlays anchored to a trigger",
+    },
     { id: "drp", title: "DateRangePicker", group: "Components" },
     { id: "dp", title: "DatePicker", group: "Components" },
     { id: "cal", title: "Calendars & date pickers", group: "Pages", keywords: ["pick a date range"] },
@@ -53,7 +58,10 @@ describe("createSearchIndex", () => {
   });
 
   it("is accent- and case-insensitive on both sides", () => {
-    const idx = createSearchIndex([{ id: "u", title: "Überweisung" }, { id: "c", title: "Café" }]);
+    const idx = createSearchIndex([
+      { id: "u", title: "Überweisung" },
+      { id: "c", title: "Café" },
+    ]);
     expect(titles(idx.search("uberweisung"))).toEqual(["Überweisung"]);
     expect(titles(idx.search("CAFE"))).toEqual(["Café"]);
   });
@@ -97,7 +105,11 @@ describe("matchEntries", () => {
    */
   it("finds a localised entry by its localised name only", () => {
     const localise = (lang: "de" | "en") => [
-      { id: "c1", title: lang === "de" ? "Gehalt" : "Salary", keywords: lang === "de" ? ["Lohn", "Einkommen"] : ["income"] },
+      {
+        id: "c1",
+        title: lang === "de" ? "Gehalt" : "Salary",
+        keywords: lang === "de" ? ["Lohn", "Einkommen"] : ["income"],
+      },
     ];
     expect(matchEntries(localise("de"), "Gehalt").map((e) => e.title)).toEqual(["Gehalt"]);
     expect(matchEntries(localise("de"), "Salary")).toEqual([]);

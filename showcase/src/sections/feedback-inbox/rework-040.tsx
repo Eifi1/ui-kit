@@ -113,7 +113,12 @@ function Rework({ viewer }: { viewer: Viewer }) {
       onUpdate={update}
       fetcher={noFetch}
       onReply={async (body, status?: FeedbackStatus) =>
-        entry({ author_name: "Marcel Example", body, status_to: status ?? null, status_from: status ? row.status : null })
+        entry({
+          author_name: "Marcel Example",
+          body,
+          status_to: status ?? null,
+          status_from: status ? row.status : null,
+        })
       }
       // The author's rework lands OPEN (§10.2 decision 5): the triager releases it to REWORK.
       onRework={async (note) =>
@@ -164,12 +169,12 @@ export function FeedbackRework040Demo() {
         </UiKitProvider>
       </div>
       <Note>
-        {code("REWORK")} — "Rework requested", {code("RotateCcw")} in the danger tint — sits after READY; its next
-        step is IN_PROGRESS. The author sends a report back with {code("onRework")} ({code("POST /feedback/{id}/rework")}
+        {code("REWORK")} — "Rework requested", {code("RotateCcw")} in the danger tint — sits after READY; its next step
+        is IN_PROGRESS. The author sends a report back with {code("onRework")} ({code("POST /feedback/{id}/rework")}
         ): an entry of its own, drawn as theirs with the Rework chip and "→ status"; a rework migrated out of the body
-        has no status and no arrow. The admin has no Rework button where the reply composer stands: the composer
-        offers Rework requested like every status. The thread below draws the same entries for the author
-        ({code("isAuthor")}): at the reading end, with the file.
+        has no status and no arrow. The admin has no Rework button where the reply composer stands: the composer offers
+        Rework requested like every status. The thread below draws the same entries for the author ({code("isAuthor")}):
+        at the reading end, with the file.
       </Note>
     </Example>
   );
@@ -182,7 +187,10 @@ export function FeedbackMenu040Demo() {
   const [publicParts, setPublicParts] = useState<"on" | "off">("on");
   const showsPublic = publicParts === "on" && role !== "customer";
   return (
-    <Example label="FeedbackMenu by role" hint="open the menu: admin 3 list links, member 2; with public parts off, 2 and 1">
+    <Example
+      label="FeedbackMenu by role"
+      hint="open the menu: admin 3 list links, member 2; with public parts off, 2 and 1"
+    >
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap gap-2">
           <ToggleGroup

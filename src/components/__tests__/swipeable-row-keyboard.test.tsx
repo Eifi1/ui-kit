@@ -121,9 +121,7 @@ describe("the revealed buttons stay out of the document's way", () => {
         if (POSITIONED.test(node.className)) contained = true;
         node = node.parentElement;
       }
-      expect(contained, `<button class="${el.className}"> escapes its containing block`).toBe(
-        true,
-      );
+      expect(contained, `<button class="${el.className}"> escapes its containing block`).toBe(true);
     }
   });
 

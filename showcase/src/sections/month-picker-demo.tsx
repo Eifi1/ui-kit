@@ -53,9 +53,9 @@ export function MonthPickerDemo() {
     <>
       <Note>
         <strong>Keyboard:</strong> the grid is one tab stop. Arrow keys walk the months (left/right, in reading order,
-        by one, up/down by a row of three) and walk straight into the neighbouring year at either
-        end; Home/End go to the ends of the row; PageUp/PageDown step a whole year. Out-of-bounds
-        months stay focusable and refuse the pick, so the roving tab stop never falls into a hole.
+        by one, up/down by a row of three) and walk straight into the neighbouring year at either end; Home/End go to
+        the ends of the row; PageUp/PageDown step a whole year. Out-of-bounds months stay focusable and refuse the pick,
+        so the roving tab stop never falls into a hole.
       </Note>
 
       <Example label="MonthPicker — labelled field" hint="floating label, like DatePicker">
@@ -120,15 +120,12 @@ export function MonthPickerDemo() {
         </Stage>
         <StateLine label="value">{`"${toolbar}"`}</StateLine>
         <p className="mt-2 text-xs text-secondary">
-          Step a few months with the buttons, then open the picker: it lands on the year the value
-          is in now, not the one it was last opened on.
+          Step a few months with the buttons, then open the picker: it lands on the year the value is in now, not the
+          one it was last opened on.
         </p>
       </Example>
 
-      <Example
-        label="MonthPicker — empty, required"
-        hint='value="" shows the placeholder; invalid paints the field'
-      >
+      <Example label="MonthPicker — empty, required" hint='value="" shows the placeholder; invalid paints the field'>
         <Stage>
           <MonthPicker
             label="Period"
@@ -163,13 +160,7 @@ export function MonthPickerDemo() {
             // wall clock's. The grid rings this month instead of the real one.
             currentMonth={openBooks}
           />
-          <MonthPicker
-            label="Closed period"
-            value={shiftKey(now, -1)}
-            onChange={() => {}}
-            locale={LOCALE}
-            disabled
-          />
+          <MonthPicker label="Closed period" value={shiftKey(now, -1)} onChange={() => {}} locale={LOCALE} disabled />
         </Stage>
         <StateLine label="value">{`"${short}" · "${fiscal}" (currentMonth ${openBooks})`}</StateLine>
       </Example>
@@ -178,12 +169,7 @@ export function MonthPickerDemo() {
         label="MonthPicker — localised"
         hint="month and year names come from Intl; the four strings Intl cannot say come from labels"
       >
-        <ToggleGroup
-          value={loc}
-          onChange={(v) => setLoc(v as Loc)}
-          options={LOCALES}
-          aria-label="Locale"
-        />
+        <ToggleGroup value={loc} onChange={(v) => setLoc(v as Loc)} options={LOCALES} aria-label="Locale" />
         <Stage className="mt-3">
           <div className="max-w-xs">
             <MonthPicker
@@ -206,10 +192,7 @@ export function MonthPickerDemo() {
         <StateLine label="value">{`"${localised}"`}</StateLine>
       </Example>
 
-      <Example
-        label="MonthPicker — right-to-left"
-        hint={<code className="font-mono">dir=&quot;rtl&quot;</code>}
-      >
+      <Example label="MonthPicker — right-to-left" hint={<code className="font-mono">dir=&quot;rtl&quot;</code>}>
         <Stage>
           <div dir="rtl" className="max-w-xs">
             <MonthPicker
@@ -223,9 +206,9 @@ export function MonthPickerDemo() {
         </Stage>
         <StateLine label="value">{`"${rtlMonth}"`}</StateLine>
         <p className="mt-2 text-xs text-secondary">
-          The panel is portalled out of this <code className="font-mono">dir</code> but reads it off
-          the field when it opens and carries it: the months run from the right, the year chevrons
-          are mirrored, and ← moves to the NEXT month (the one to its left).
+          The panel is portalled out of this <code className="font-mono">dir</code> but reads it off the field when it
+          opens and carries it: the months run from the right, the year chevrons are mirrored, and ← moves to the NEXT
+          month (the one to its left).
         </p>
       </Example>
     </>
@@ -279,9 +262,9 @@ export function Month022Demo() {
           />
         </div>
         <Note>
-          A tax tab (this year and four before) opens on five years and no paging; a
-          fiscal year pages twelve at a time from {code("min")}. The stepper steps a year; its Today reads
-          &ldquo;This year&rdquo;. Values are strings: {code("String(year)")} in, {code("Number(key)")} out.
+          A tax tab (this year and four before) opens on five years and no paging; a fiscal year pages twelve at a time
+          from {code("min")}. The stepper steps a year; its Today reads &ldquo;This year&rdquo;. Values are strings:{" "}
+          {code("String(year)")} in, {code("Number(key)")} out.
         </Note>
       </Example>
       <Example label='MonthPicker size="sm" and error' hint="the 36px toolbar trigger between two icon buttons">
@@ -316,8 +299,9 @@ export function Month022Demo() {
           </div>
         </div>
         <Note>
-          {code('size="sm"')} is an {code("IconButton")}&apos;s 36px and only as wide as the month (no {code("h-9 w-auto py-0")} by hand). Unlabelled only, as on {code("Select")}. Step past October
-          to see the error.
+          {code('size="sm"')} is an {code("IconButton")}&apos;s 36px and only as wide as the month (no{" "}
+          {code("h-9 w-auto py-0")} by hand). Unlabelled only, as on {code("Select")}. Step past October to see the
+          error.
         </Note>
       </Example>
     </>

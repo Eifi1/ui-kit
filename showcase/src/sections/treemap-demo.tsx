@@ -123,12 +123,13 @@ export function TreemapDemo() {
   return (
     <>
       <Note>
-        <strong>Needs <code className="font-mono">recharts</code></strong>, like everything behind{" "}
-        <code className="font-mono">@eifi1/ui-kit/chart</code>, and an explicit{" "}
-        <code className="font-mono">height</code> (default 320px). A node whose{" "}
-        <code className="font-mono">value</code> is not positive is left off — an area cannot be
-        negative — and saying so is the caller&apos;s job; when nothing is drawable the component
-        renders nothing at all.
+        <strong>
+          Needs <code className="font-mono">recharts</code>
+        </strong>
+        , like everything behind <code className="font-mono">@eifi1/ui-kit/chart</code>, and an explicit{" "}
+        <code className="font-mono">height</code> (default 320px). A node whose <code className="font-mono">value</code>{" "}
+        is not positive is left off — an area cannot be negative — and saying so is the caller&apos;s job; when nothing
+        is drawable the component renders nothing at all.
       </Note>
 
       <Example
@@ -137,9 +138,9 @@ export function TreemapDemo() {
       >
         <Treemap data={SPEND} valueFormatter={moneyAndShare} height={320} />
         <p className="mt-2 text-xs text-secondary">
-          Hover a tile for its amount and share. The two smallest tiles have no label: under ~44×20px
-          there is no room for a word, and a one-letter stub bleeding over the edge reads worse than
-          none. The name is still in the tooltip.
+          Hover a tile for its amount and share. The two smallest tiles have no label: under ~44×20px there is no room
+          for a word, and a one-letter stub bleeding over the edge reads worse than none. The name is still in the
+          tooltip.
         </p>
       </Example>
 
@@ -176,14 +177,12 @@ export function TreemapDemo() {
             onNodeClick={(id, name) => (CHILDREN[id] ? setGroup(id) : setClicked(name))}
           />
         )}
-        <p className="mt-2 font-mono text-xs text-muted">
-          last clicked: {clicked ?? "—"}
-        </p>
+        <p className="mt-2 font-mono text-xs text-muted">last clicked: {clicked ?? "—"}</p>
         <p className="mt-2 text-xs text-secondary">
           The drilled map paints every child in its parent&apos;s colour with the node&apos;s own{" "}
           <code className="font-mono">fill</code>. That is a CSS var here, so the label takes{" "}
-          <code className="font-mono">currentColor</code> ink — pass a concrete hex when the ink has
-          to be measured against the tile.
+          <code className="font-mono">currentColor</code> ink — pass a concrete hex when the ink has to be measured
+          against the tile.
         </p>
       </Example>
 
@@ -191,24 +190,18 @@ export function TreemapDemo() {
         label="Treemap — a second line per tile"
         hint="nodeNote: one extra figure the name cannot carry; drawn only where it fits"
       >
-        <Treemap
-          data={SPEND}
-          valueFormatter={moneyAndShare}
-          height={320}
-          nodeNote={(id) => DELTAS[id]}
-        />
+        <Treemap data={SPEND} valueFormatter={moneyAndShare} height={320} nodeNote={(id) => DELTAS[id]} />
       </Example>
 
       <Example
         label="Treemap — names that are the user's own data"
-        hint='redactNames: tile labels and the tooltip bubble carry data-private'
+        hint="redactNames: tile labels and the tooltip bubble carry data-private"
       >
         <Treemap data={PAYEES} valueFormatter={moneyAndShare} height={240} redactNames />
         <p className="mt-2 text-xs text-secondary">
-          The kit only sets the attribute; the host&apos;s own{" "}
-          <code className="font-mono">[data-private]</code> rule decides what it looks like — the same
-          contract as <code className="font-mono">Tooltip redact</code>. A category is a label of the
-          app and stays readable; a payee is the user&apos;s and does not.
+          The kit only sets the attribute; the host&apos;s own <code className="font-mono">[data-private]</code> rule
+          decides what it looks like — the same contract as <code className="font-mono">Tooltip redact</code>. A
+          category is a label of the app and stays readable; a payee is the user&apos;s and does not.
         </p>
       </Example>
 
@@ -216,15 +209,9 @@ export function TreemapDemo() {
         label="Treemap — a series that is not money"
         hint="counts, capped: maxTiles draws the first N drawable nodes in the order given; the cap matters most on a phone, where small tiles lose their labels first"
       >
-        <Treemap
-          data={COUNTS}
-          height={200}
-          maxTiles={3}
-          valueFormatter={(v) => `${v} transactions`}
-        />
+        <Treemap data={COUNTS} height={200} maxTiles={3} valueFormatter={(v) => `${v} transactions`} />
         <p className="mt-2 text-xs text-muted">
-          {COUNTS.length - 3} more not shown — the caller&apos;s line, since only it knows how many it
-          passed.
+          {COUNTS.length - 3} more not shown — the caller&apos;s line, since only it knows how many it passed.
         </p>
       </Example>
 
@@ -259,19 +246,15 @@ export function TreemapDemo() {
         </div>
         <div className="mt-3">
           <Note>
-            <code className="font-mono">fitLabel</code> and <code className="font-mono">TreemapCell</code>{" "}
-            are exported so a caller drawing its own recharts <code className="font-mono">&lt;Treemap&gt;</code>{" "}
-            gets the same label rules. The colours are still by index into{" "}
-            <code className="font-mono">data</code> as given, dropped nodes included — so Transport keeps
-            the colour it would have with Refunds present.
+            <code className="font-mono">fitLabel</code> and <code className="font-mono">TreemapCell</code> are exported
+            so a caller drawing its own recharts <code className="font-mono">&lt;Treemap&gt;</code> gets the same label
+            rules. The colours are still by index into <code className="font-mono">data</code> as given, dropped nodes
+            included — so Transport keeps the colour it would have with Refunds present.
           </Note>
         </div>
       </Example>
 
-      <Example
-        label="Treemap — labelColor"
-        hint="the ink for a fill the kit cannot measure: a var() or a color-mix()"
-      >
+      <Example label="Treemap — labelColor" hint="the ink for a fill the kit cannot measure: a var() or a color-mix()">
         <LabelColorTreemaps />
       </Example>
 
@@ -308,11 +291,11 @@ function LabelColorTreemaps() {
       </Row>
       <Treemap data={data} valueFormatter={moneyAndShare} height={260} />
       <p className="mt-2 text-xs text-secondary">
-        Every tile is <code className="font-mono">color-mix(in srgb, var(--chart-1) N%, transparent)</code>.
-        The kit measures a hex fill and picks black or white ink itself; a mix it cannot measure, so it
-        falls back to <code className="font-mono">currentColor</code> — untick the box and the page&apos;s
-        dark text sits on full-strength colour (~1.5:1 in the light theme). <code className="font-mono">labelColor</code>{" "}
-        wins over the measured ink whenever it is given.
+        Every tile is <code className="font-mono">color-mix(in srgb, var(--chart-1) N%, transparent)</code>. The kit
+        measures a hex fill and picks black or white ink itself; a mix it cannot measure, so it falls back to{" "}
+        <code className="font-mono">currentColor</code> — untick the box and the page&apos;s dark text sits on
+        full-strength colour (~1.5:1 in the light theme). <code className="font-mono">labelColor</code> wins over the
+        measured ink whenever it is given.
       </p>
     </>
   );
@@ -329,9 +312,7 @@ function RtlTreemaps() {
         </div>
         <div className="min-w-0">
           <Row className="mb-1 text-xs">
-            <span className="font-mono text-caption text-muted">
-              &lt;TreemapCell dir=&quot;{cellDir}&quot; /&gt;
-            </span>
+            <span className="font-mono text-caption text-muted">&lt;TreemapCell dir=&quot;{cellDir}&quot; /&gt;</span>
             <button
               type="button"
               onClick={() => setCellDir((d) => (d === "rtl" ? "ltr" : "rtl"))}
@@ -341,20 +322,24 @@ function RtlTreemaps() {
             </button>
           </Row>
           <ChartContainer config={{}} style={{ height: 220 }}>
-            <RechartsTreemap data={HAND_BUILT} dataKey="size" isAnimationActive={false} content={<TreemapCell dir={cellDir} />} />
+            <RechartsTreemap
+              data={HAND_BUILT}
+              dataKey="size"
+              isAnimationActive={false}
+              content={<TreemapCell dir={cellDir} />}
+            />
           </ChartContainer>
         </div>
       </div>
       <div className="mt-3">
         <Note>
-          The tiles are not mirrored — the plot keeps its physical layout, as every chart in the kit
-          does — but each label stands at the tile&apos;s <em>start</em> edge: the top right corner in
-          RTL, shaped right-to-left, so a clipped name ends in its ellipsis on the reading end.{" "}
-          <code className="font-mono">Treemap</code> reads the direction off its own root after mount;
-          a caller drawing its own recharts map passes <code className="font-mono">dir</code> to{" "}
-          <code className="font-mono">TreemapCell</code> (default <code className="font-mono">ltr</code>).
-          Switch the right-hand map to <code className="font-mono">ltr</code> and the Arabic labels jump
-          to the left corner and clip at the wrong end.
+          The tiles are not mirrored — the plot keeps its physical layout, as every chart in the kit does — but each
+          label stands at the tile&apos;s <em>start</em> edge: the top right corner in RTL, shaped right-to-left, so a
+          clipped name ends in its ellipsis on the reading end. <code className="font-mono">Treemap</code> reads the
+          direction off its own root after mount; a caller drawing its own recharts map passes{" "}
+          <code className="font-mono">dir</code> to <code className="font-mono">TreemapCell</code> (default{" "}
+          <code className="font-mono">ltr</code>). Switch the right-hand map to <code className="font-mono">ltr</code>{" "}
+          and the Arabic labels jump to the left corner and clip at the wrong end.
         </Note>
       </div>
     </>

@@ -15,7 +15,15 @@ import { MOUNT_TIMEOUT_MS, renderShowcase, useShowcaseEnvironment } from "./show
 // two kit pages are there for the frame's "Server side" line (TST-8: this file loaded all
 // 250-odd sections for them).
 useShowcaseEnvironment({
-  pages: ["server-settings", "server-auth", "server-mail", "server-feedback", "server-notifications", "settings", "tokens"],
+  pages: [
+    "server-settings",
+    "server-auth",
+    "server-mail",
+    "server-feedback",
+    "server-notifications",
+    "settings",
+    "tokens",
+  ],
 });
 
 const api = SERVER_KIT_API;
@@ -85,9 +93,12 @@ describe("a module page", () => {
       const table = within(article).getByRole("table", { name: `${withFields.name} fields` });
       expect(within(table).getByText(withFields.fields![0].name)).toBeInTheDocument();
       const withValues = mod.members.find((m) => m.values?.length)!;
-      const values = within(document.getElementById(`auth.${withValues.name}`)!.closest("article")!).getByRole("table", {
-        name: `${withValues.name} values`,
-      });
+      const values = within(document.getElementById(`auth.${withValues.name}`)!.closest("article")!).getByRole(
+        "table",
+        {
+          name: `${withValues.name} values`,
+        },
+      );
       expect(within(values).getByText(JSON.stringify(withValues.values![0].value))).toBeInTheDocument();
       expectLinksLand("server-auth");
     },
@@ -128,8 +139,14 @@ describe("a module page", () => {
       expect(screen.getByRole("heading", { name: mod.name, level: 2 })).toHaveAttribute("id", "notifications");
       const [shapes, kitPart] = mod.contract!.links;
       expect([shapes.section, kitPart.section]).toEqual(["§3", "§4.1"]);
-      expect(screen.getByRole("link", { name: /notifications-harmonization\.md §3\b/ })).toHaveAttribute("href", shapes.url);
-      expect(screen.getByRole("link", { name: /notifications-harmonization\.md §4\.1/ })).toHaveAttribute("href", kitPart.url);
+      expect(screen.getByRole("link", { name: /notifications-harmonization\.md §3\b/ })).toHaveAttribute(
+        "href",
+        shapes.url,
+      );
+      expect(screen.getByRole("link", { name: /notifications-harmonization\.md §4\.1/ })).toHaveAttribute(
+        "href",
+        kitPart.url,
+      );
       const main = document.querySelector("main")!;
       // The module and its router (0.16) each link the kit page that uses them.
       const kitLinks = within(main).getAllByRole("link", { name: "Notifications" });
@@ -162,7 +179,10 @@ describe("the mail previews", () => {
     const german = variants.find((v) => v.locale === "de-CH")!;
     render(<MailPreview variants={variants} />);
     // The subject line carries the mail's language; the caption above it is the sample's name.
-    expect(screen.getByText(variants[0].subject, { selector: "span[lang]" })).toHaveAttribute("lang", variants[0].locale);
+    expect(screen.getByText(variants[0].subject, { selector: "span[lang]" })).toHaveAttribute(
+      "lang",
+      variants[0].locale,
+    );
     fireEvent.click(screen.getByRole("radio", { name: "de-CH" }));
     expect(screen.getByText(german.subject, { selector: "span[lang]" })).toHaveAttribute("lang", "de-CH");
     expect(document.querySelector("iframe")!.getAttribute("srcdoc")).toBe(german.html);

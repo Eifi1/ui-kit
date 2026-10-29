@@ -55,8 +55,7 @@ function renderTable(extra: Partial<DataTableProps<Row>> = {}) {
 
 const bodyRows = () => screen.getAllByRole("row").slice(1);
 const rowOf = (name: string) => screen.getByRole("cell", { name }).closest("tr")!;
-const header = (name: string) =>
-  screen.getAllByRole("columnheader").find((th) => th.textContent?.startsWith(name))!;
+const header = (name: string) => screen.getAllByRole("columnheader").find((th) => th.textContent?.startsWith(name))!;
 const names = () => bodyRows().map((r) => within(r).getAllByRole("cell")[0].textContent);
 
 describe("keyboard-activatable rows", () => {

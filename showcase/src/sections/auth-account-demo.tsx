@@ -31,17 +31,15 @@ function LegalText() {
   return (
     <div className="space-y-3 text-sm leading-relaxed text-secondary">
       <p>
-        Acme Books GmbH, Musterstraße 1, 10115 Berlin. Managing director: Erika Mustermann. Registered at
-        Amtsgericht Charlottenburg, HRB 000000.
+        Acme Books GmbH, Musterstraße 1, 10115 Berlin. Managing director: Erika Mustermann. Registered at Amtsgericht
+        Charlottenburg, HRB 000000.
       </p>
       <p>
-        Running text reads badly centred, which is why the legal pages take {code('width="wide"')}: a
-        {" "}{code("max-w-3xl")} column from the top of the page with a start-aligned header, and — with{" "}
+        Running text reads badly centred, which is why the legal pages take {code('width="wide"')}: a{" "}
+        {code("max-w-3xl")} column from the top of the page with a start-aligned header, and — with{" "}
         {code("card={false}")} — no card surface either.
       </p>
-      <p>
-        VAT ID DE000000000. Responsible for content under § 18 (2) MStV: Erika Mustermann, address as above.
-      </p>
+      <p>VAT ID DE000000000. Responsible for content under § 18 (2) MStV: Erika Mustermann, address as above.</p>
     </div>
   );
 }
@@ -83,8 +81,8 @@ function AuthLayoutSpecimen() {
             value={screen}
             onChange={setScreen}
             options={[
-              { value: "sign-in", label: 'narrow · sign-in' },
-              { value: "imprint", label: 'wide · imprint' },
+              { value: "sign-in", label: "narrow · sign-in" },
+              { value: "imprint", label: "wide · imprint" },
             ]}
           />
         </div>
@@ -94,8 +92,18 @@ function AuthLayoutSpecimen() {
           checked={card}
           onCheckedChange={setCard}
         />
-        <Switch label="logoTile" description="Off: the logo as it is" checked={logoTile} onCheckedChange={setLogoTile} />
-        <Switch label="themeToggle · languageMenu" description="The top-end corner" checked={corner} onCheckedChange={setCorner} />
+        <Switch
+          label="logoTile"
+          description="Off: the logo as it is"
+          checked={logoTile}
+          onCheckedChange={setLogoTile}
+        />
+        <Switch
+          label="themeToggle · languageMenu"
+          description="The top-end corner"
+          checked={corner}
+          onCheckedChange={setCorner}
+        />
       </div>
 
       {/* The frame: a fixed height and its own scroll. `min-h-full` replaces the layout's
@@ -165,18 +173,19 @@ function AuthLayoutSpecimen() {
         </AuthLayout>
       </div>
       <p className={`mt-3 ${READOUT}`}>
-        width: {wide ? "wide" : "narrow"} · theme toggle: {dark ? "dark" : "light"} (simulated) · language: {lang} · form: {log}
+        width: {wide ? "wide" : "narrow"} · theme toggle: {dark ? "dark" : "light"} (simulated) · language: {lang} ·
+        form: {log}
       </p>
       <div className="mt-3 space-y-2">
         <Note>
-          The corner, the content column and the footer are rows of one column that grows with its content —
-          shrink the box or open the imprint and the page scrolls instead of the footer landing on the card, which
-          is what the absolutely placed footers it replaces did on a short phone screen. The footer&apos;s links
-          are a {code("<nav>")} named by {code("footerLabel")}. Padding follows the safe-area insets.
+          The corner, the content column and the footer are rows of one column that grows with its content — shrink the
+          box or open the imprint and the page scrolls instead of the footer landing on the card, which is what the
+          absolutely placed footers it replaces did on a short phone screen. The footer&apos;s links are a{" "}
+          {code("<nav>")} named by {code("footerLabel")}. Padding follows the safe-area insets.
         </Note>
         <Note>
-          On its own route it draws {code("<main>")}, {code("<footer>")} and an {code("<h1>")}. Embedded here, in
-          the showcase&apos;s own page, it takes {code("landmark={false}")} (plain {code("<div>")}s) and{" "}
+          On its own route it draws {code("<main>")}, {code("<footer>")} and an {code("<h1>")}. Embedded here, in the
+          showcase&apos;s own page, it takes {code("landmark={false}")} (plain {code("<div>")}s) and{" "}
           {code('headingAs="h4"')}, so nothing nests inside the page&apos;s own landmarks and headings.
         </Note>
       </div>
@@ -220,7 +229,12 @@ function TwoFactorOtpauthSpecimen() {
           checked={explicitSecret}
           onCheckedChange={setExplicitSecret}
         />
-        <Switch label="renderQr" description="Draw the code yourself" checked={customQr} onCheckedChange={setCustomQr} />
+        <Switch
+          label="renderQr"
+          description="Draw the code yourself"
+          checked={customQr}
+          onCheckedChange={setCustomQr}
+        />
       </div>
       <div className="mt-4 max-w-md">
         <TwoFactorSetting
@@ -273,10 +287,10 @@ function TwoFactorOtpauthSpecimen() {
       <div className="mt-3 space-y-2">
         <Note>
           {code("setup={{ otpauthUri }}")}: the QR is the kit&apos;s own {code("QrCode")} (an encoder with no
-          dependency), drawn with its white quiet zone inside the SVG so it scans on the dark theme. The key under
-          it is the URI&apos;s {code("secret")} parameter, grouped in fours, {code('dir="ltr"')} and with a copy
-          button — the fallback for a phone that cannot scan the screen it is on. Both carry{" "}
-          {code("data-private")}. The older {code("{ qrSvg, secret }")} shape still works (Settings page).
+          dependency), drawn with its white quiet zone inside the SVG so it scans on the dark theme. The key under it is
+          the URI&apos;s {code("secret")} parameter, grouped in fours, {code('dir="ltr"')} and with a copy button — the
+          fallback for a phone that cannot scan the screen it is on. Both carry {code("data-private")}. The older{" "}
+          {code("{ qrSvg, secret }")} shape still works (Settings page).
         </Note>
         <Note>Any six digits are accepted here — the check is the app&apos;s verify call.</Note>
       </div>
@@ -334,7 +348,9 @@ function PasskeysSpecimen() {
           busyId={busyId}
           nameField={nameField}
           unavailable={
-            state === "unavailable" ? "Passkeys need a secure (https) page and a browser that supports them." : undefined
+            state === "unavailable"
+              ? "Passkeys need a secure (https) page and a browser that supports them."
+              : undefined
           }
           onAdd={async (name) => {
             setAdding(true);
@@ -345,7 +361,12 @@ function PasskeysSpecimen() {
               setLog(`onAdd("${name}") → rejected (the user cancelled the OS prompt); the name stays`);
               throw new Error("NotAllowedError");
             }
-            const created: PasskeyItem = { id: Date.now(), name: name || "Passkey", createdAt: Date.now(), lastUsedAt: null };
+            const created: PasskeyItem = {
+              id: Date.now(),
+              name: name || "Passkey",
+              createdAt: Date.now(),
+              lastUsedAt: null,
+            };
             setItems((all) => [...all, created]);
             if (state === "empty") setState("list");
             setLog(`onAdd("${name}") → registered “${created.name}”`);
@@ -376,9 +397,9 @@ function PasskeysSpecimen() {
         <Note>
           Delete asks inline, in the row, with focus on Cancel — the card must work in an app without a{" "}
           {code("ConfirmProvider")}. Rename is an inline field; Enter saves, Escape cancels. A row whose rename or
-          delete is in flight ({code("busyId")}) has its buttons disabled. The dates are the provider&apos;s locale
-          ({code("formatDate")} and {code("locale")} override it); a null {code("lastUsedAt")} reads
-          &ldquo;Never used&rdquo;.
+          delete is in flight ({code("busyId")}) has its buttons disabled. The dates are the provider&apos;s locale (
+          {code("formatDate")} and {code("locale")} override it); a null {code("lastUsedAt")} reads &ldquo;Never
+          used&rdquo;.
         </Note>
         <Note>
           {code("unavailable")} replaces the list and the add button, and its wording is the app&apos;s: only the app
@@ -440,14 +461,20 @@ function AccountLabelsSpecimen() {
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <Scoped source={source}>
           <PasskeysSetting passkeys={[]} onAdd={() => beat(600)} />
-          <TwoFactorSetting enabled={false} setup={null} onStartSetup={() => {}} onEnable={() => {}} onDisable={() => {}} />
+          <TwoFactorSetting
+            enabled={false}
+            setup={null}
+            onStartSetup={() => {}}
+            onEnable={() => {}}
+            onDisable={() => {}}
+          />
         </Scoped>
       </div>
       <div className="mt-4">
         <OutTable
           rows={[
             ["DEFAULT_ACCOUNT_SETTINGS_LABELS.passkeys.title", d.passkeys.title],
-            ["….passkeys.deleteConfirm(\"Pixel 8\")", d.passkeys.deleteConfirm("Pixel 8")],
+            ['….passkeys.deleteConfirm("Pixel 8")', d.passkeys.deleteConfirm("Pixel 8")],
             ["….twoFactor.secretHint", d.twoFactor.secretHint],
             ["….twoFactor.copySecret", d.twoFactor.copySecret],
             ["….password.mismatch", d.password.mismatch],
@@ -460,8 +487,8 @@ function AccountLabelsSpecimen() {
           One namespace, {code("accountSettings")}, with a section per card: {code("profile")}, {code("password")},{" "}
           {code("twoFactor")} and {code("passkeys")}. &ldquo;the page&apos;s language&rdquo; is the showcase&apos;s own
           provider — switch the language in the top bar and both cards follow. The other two are a nested{" "}
-          {code("<UiKitProvider labels>")} that overrides only what it names: the house wording changes three
-          strings and leaves the rest in the page&apos;s language.
+          {code("<UiKitProvider labels>")} that overrides only what it names: the house wording changes three strings
+          and leaves the rest in the page&apos;s language.
         </Note>
       </div>
     </Example>

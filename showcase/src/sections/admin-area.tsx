@@ -1,14 +1,7 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { MemoryRouter, UNSAFE_LocationContext } from "react-router";
-import {
-  Languages,
-  Mail,
-  Settings,
-  ShieldCheck,
-  Sprout,
-  Upload,
-} from "lucide-react";
+import { Languages, Mail, Settings, ShieldCheck, Sprout, Upload } from "lucide-react";
 import {
   ADMIN_SECTIONS,
   AccountRoleChip,
@@ -30,12 +23,7 @@ import {
   useAdminAreaLabels,
   useAdminMenuEntry,
 } from "@eifi1/ui-kit";
-import type {
-  AdminAttention,
-  AdminSharedSection,
-  AdminToolLink,
-  RoleVocabulary,
-} from "@eifi1/ui-kit";
+import type { AdminAttention, AdminSharedSection, AdminToolLink, RoleVocabulary } from "@eifi1/ui-kit";
 import { Example, Note, code, NO_ROUTER } from "../lib/section";
 
 /**
@@ -59,10 +47,7 @@ const ATTENTION: AdminAttention = {
 };
 
 /** The badge: only work that waits on this admin (§6.3). */
-const WAITING = adminWaitingCount(ATTENTION, [
-  "feedback_waiting",
-  "seeds_waiting",
-]);
+const WAITING = adminWaitingCount(ATTENTION, ["feedback_waiting", "seeds_waiting"]);
 
 type Role = "ADMIN" | "REVIEWER" | "MEMBER";
 const ROLES: RoleVocabulary<Role> = {
@@ -87,19 +72,9 @@ const TOOLS: AdminToolLink[] = [
 ];
 
 /** A router of its own, so the frame's links stay in the frame. */
-function Frame({
-  initial,
-  className,
-  children,
-}: {
-  initial: string;
-  className?: string;
-  children: ReactNode;
-}) {
+function Frame({ initial, className, children }: { initial: string; className?: string; children: ReactNode }) {
   return (
-    <div
-      className={`overflow-hidden rounded-md border border-subtle bg-page ${className ?? ""}`}
-    >
+    <div className={`overflow-hidden rounded-md border border-subtle bg-page ${className ?? ""}`}>
       <UNSAFE_LocationContext.Provider value={NO_ROUTER}>
         <MemoryRouter initialEntries={[initial]}>{children}</MemoryRouter>
       </UNSAFE_LocationContext.Provider>
@@ -115,68 +90,62 @@ export function AdminWayIn042Demo() {
   const admin = useAdminMenuEntry({ badge: WAITING });
   return (
     <>
-    <Example
-      label="The way in — useAdminMenuEntry, AccountRoleChip"
-      hint="the Administration row with its waiting count; the role chip as a shortcut"
-    >
-      <ToggleGroup<Role>
-        aria-label="Signed in as"
-        value={role}
-        onChange={setRole}
-        options={[
-          { value: "ADMIN", label: "Admin" },
-          { value: "REVIEWER", label: "Reviewer" },
-          { value: "MEMBER", label: "Member" },
-        ]}
-      />
-      <Frame initial="/" className="mt-3 flex justify-end p-2">
-        <TopBarActionMenu
-          icon={<Settings className="size-5" aria-hidden />}
-          aria-label="Account menu"
-          header={{
-            title: "Ada Example",
-            subtitle: "ada@example.com",
-            extra: (close) => (
-              <AccountRoleChip value={role} roles={ROLES} onNavigate={close} />
-            ),
-          }}
-          entries={[
-            {
-              kind: "link",
-              key: "settings",
-              to: "/settings",
-              icon: <Settings className="size-4" aria-hidden />,
-              label: "Settings",
-            },
-            ...(role === "ADMIN" ? [admin] : []),
-            ...(role !== "MEMBER"
-              ? [
-                  {
-                    kind: "link" as const,
-                    key: "translations",
-                    to: "/translations",
-                    icon: <Languages className="size-4" aria-hidden />,
-                    label: "Translations",
-                  },
-                ]
-              : []),
+      <Example
+        label="The way in — useAdminMenuEntry, AccountRoleChip"
+        hint="the Administration row with its waiting count; the role chip as a shortcut"
+      >
+        <ToggleGroup<Role>
+          aria-label="Signed in as"
+          value={role}
+          onChange={setRole}
+          options={[
+            { value: "ADMIN", label: "Admin" },
+            { value: "REVIEWER", label: "Reviewer" },
+            { value: "MEMBER", label: "Member" },
           ]}
         />
-      </Frame>
-      <Note>
-        Every account shows its role; a role whose vocabulary names an{" "}
-        {code("href")} links there and closes the menu on the way. The row is
-        for an admin only, and its badge is {code("adminWaitingCount")} over the
-        counts that wait on this admin — here To triage and the app's own seeds,
-        never invitations or users. A menu built from {code("HoverMenu")}{" "}
-        children takes {code("AdminMenuRow")}, the same row.{" "}
-        {code("useAdminMenuEntry")} is{" "}
-        {code("adminMenuEntry({ labels: useAdminAreaLabels() })")}: the plain
-        function reads no provider, so without {code("labels")} it is English in
-        every language.
-      </Note>
-    </Example>
-    <AdminFollowUps045 />
+        <Frame initial="/" className="mt-3 flex justify-end p-2">
+          <TopBarActionMenu
+            icon={<Settings className="size-5" aria-hidden />}
+            aria-label="Account menu"
+            header={{
+              title: "Ada Example",
+              subtitle: "ada@example.com",
+              extra: (close) => <AccountRoleChip value={role} roles={ROLES} onNavigate={close} />,
+            }}
+            entries={[
+              {
+                kind: "link",
+                key: "settings",
+                to: "/settings",
+                icon: <Settings className="size-4" aria-hidden />,
+                label: "Settings",
+              },
+              ...(role === "ADMIN" ? [admin] : []),
+              ...(role !== "MEMBER"
+                ? [
+                    {
+                      kind: "link" as const,
+                      key: "translations",
+                      to: "/translations",
+                      icon: <Languages className="size-4" aria-hidden />,
+                      label: "Translations",
+                    },
+                  ]
+                : []),
+            ]}
+          />
+        </Frame>
+        <Note>
+          Every account shows its role; a role whose vocabulary names an {code("href")} links there and closes the menu
+          on the way. The row is for an admin only, and its badge is {code("adminWaitingCount")} over the counts that
+          wait on this admin — here To triage and the app's own seeds, never invitations or users. A menu built from{" "}
+          {code("HoverMenu")} children takes {code("AdminMenuRow")}, the same row. {code("useAdminMenuEntry")} is{" "}
+          {code("adminMenuEntry({ labels: useAdminAreaLabels() })")}: the plain function reads no provider, so without{" "}
+          {code("labels")} it is English in every language.
+        </Note>
+      </Example>
+      <AdminFollowUps045 />
     </>
   );
 }
@@ -192,7 +161,8 @@ function AdminFollowUps045() {
   // A pretend `POST /admin/mail/test`: the app awaits its own send and answers its bool.
   const send = async () => {
     await new Promise((resolve) => setTimeout(resolve, 600));
-    if (outcome === "limited") throw Object.assign(new Error("Too Many Requests"), { status: 429, headers: { "retry-after": "420" } });
+    if (outcome === "limited")
+      throw Object.assign(new Error("Too Many Requests"), { status: 429, headers: { "retry-after": "420" } });
     if (outcome === "failed") return { sent: false, mail_backend: "resend" };
     // A console answers `true`: the card still says nothing was sent.
     return { sent: true, mail_backend: outcome };
@@ -222,9 +192,9 @@ function AdminFollowUps045() {
           </IconButton>
         </div>
         <Note>
-          The row&apos;s pill on its own: nothing for 0, &ldquo;99+&rdquo; past 99. On an{" "}
-          {code("IconButton")} the badge is decorative, so the button&apos;s name carries the
-          count: {code("adminArea.waitingLabel(\"Platform\", n)")} reads &ldquo;
+          The row&apos;s pill on its own: nothing for 0, &ldquo;99+&rdquo; past 99. On an {code("IconButton")} the badge
+          is decorative, so the button&apos;s name carries the count: {code('adminArea.waitingLabel("Platform", n)')}{" "}
+          reads &ldquo;
           {area.waitingLabel("Platform", 2)}&rdquo;.
         </Note>
       </Example>
@@ -251,10 +221,10 @@ function AdminFollowUps045() {
           />
         </div>
         <Note>
-          The result line reads {code("mail_backend")} first: with {code("console")} it says
-          nothing was sent whatever {code("sent")} is, since every console path answers{" "}
-          {code("true")}. The address is masked; a 429 is the limiter&apos;s line (server-kit&apos;s{" "}
-          {code("MAIL_TEST_LIMIT")}, 3 per 10 minutes). Nothing is sent from this page.
+          The result line reads {code("mail_backend")} first: with {code("console")} it says nothing was sent whatever{" "}
+          {code("sent")} is, since every console path answers {code("true")}. The address is masked; a 429 is the
+          limiter&apos;s line (server-kit&apos;s {code("MAIL_TEST_LIMIT")}, 3 per 10 minutes). Nothing is sent from this
+          page.
         </Note>
       </Example>
     </>
@@ -320,11 +290,7 @@ export function AdminArea042Demo() {
         checked={failed}
         onCheckedChange={setFailed}
       />
-      <Frame
-        key={layout}
-        initial="/admin"
-        className={layout === "phone" ? "mx-auto mt-3 max-w-[390px]" : "mt-3"}
-      >
+      <Frame key={layout} initial="/admin" className={layout === "phone" ? "mx-auto mt-3 max-w-[390px]" : "mt-3"}>
         <div className="h-[36rem] overflow-y-auto">
           <SettingsLayout<AdminSharedSection | Own>
             layout={layout}
@@ -367,9 +333,7 @@ export function AdminArea042Demo() {
                   title={groups.find((g) => g.id === section)?.title ?? section}
                   titleVisible={false}
                 >
-                  <p className="text-sm text-secondary">
-                    The {section} section's cards.
-                  </p>
+                  <p className="text-sm text-secondary">The {section} section's cards.</p>
                 </SettingsSection>
               )
             }
@@ -377,21 +341,16 @@ export function AdminArea042Demo() {
         </div>
       </Frame>
       <Note>
-        {code("adminSections(labels, own, { leaveOut })")} builds the groups:
-        the shared sections with the kit's icons (
-        {ADMIN_SECTIONS.map((s) => s.id).join(", ")}) and words, an app's own
-        after Invitations unless its {code("after")} names another place. The
-        overview leaves out every {code("null")} count — this app has no
-        deletion requests to act on — and each tile is a link to where the work
-        is. The Tools list sits under the sidebar ({code("sidebarFooter")}) and
-        in the phone footer; the feedback inbox is not in it, the top bar
-        reaches it. The Overview shows with no entry, an extra tile
-        without {code("href")} is a quiet count, a failed answer shows{" "}
-        {code("error")} with &ldquo;Try again&rdquo;, and{" "}
-        {code("adminSectionOrder(own, { leaveOut })")} gives the ids alone:{" "}
-        {order.join(", ")}. A group&apos;s {code("badge")} sits on its row in the
-        sidebar and the phone list — here {code("badges: { overview: <AdminWaitingBadge /> }")},
-        so the account menu&apos;s count leads to the section that holds the work.
+        {code("adminSections(labels, own, { leaveOut })")} builds the groups: the shared sections with the kit's icons (
+        {ADMIN_SECTIONS.map((s) => s.id).join(", ")}) and words, an app's own after Invitations unless its{" "}
+        {code("after")} names another place. The overview leaves out every {code("null")} count — this app has no
+        deletion requests to act on — and each tile is a link to where the work is. The Tools list sits under the
+        sidebar ({code("sidebarFooter")}) and in the phone footer; the feedback inbox is not in it, the top bar reaches
+        it. The Overview shows with no entry, an extra tile without {code("href")} is a quiet count, a failed answer
+        shows {code("error")} with &ldquo;Try again&rdquo;, and {code("adminSectionOrder(own, { leaveOut })")} gives the
+        ids alone: {order.join(", ")}. A group&apos;s {code("badge")} sits on its row in the sidebar and the phone list
+        — here {code("badges: { overview: <AdminWaitingBadge /> }")}, so the account menu&apos;s count leads to the
+        section that holds the work.
       </Note>
     </Example>
   );
@@ -402,10 +361,7 @@ export function AdminArea042Demo() {
 export function AdminForbidden042Demo() {
   return (
     <>
-      <Example
-        label="One tile — AttentionTile"
-        hint="a StatTile that is a link, its count the headline"
-      >
+      <Example label="One tile — AttentionTile" hint="a StatTile that is a link, its count the headline">
         <Frame initial="/" className="max-w-xs p-3">
           <AttentionTile
             label="Pending invitations"
@@ -415,10 +371,7 @@ export function AdminForbidden042Demo() {
           />
         </Frame>
       </Example>
-      <Example
-        label="The 403 page — AdminForbidden"
-        hint="renders in place of the admin page; no redirect"
-      >
+      <Example label="The 403 page — AdminForbidden" hint="renders in place of the admin page; no redirect">
         <Frame initial="/admin">
           <AdminForbidden
             appName="Ada's Garden Planner"
@@ -429,11 +382,9 @@ export function AdminForbidden042Demo() {
           />
         </Frame>
         <Note>
-          The app's client gate shows it on the same admin check the menu uses,
-          inside the lazy route, so a bookmark keeps its address. The words say
-          only that this area is closed to this account — never that the person
-          runs nothing anywhere. A reviewer gets the translations as a second
-          way out.
+          The app's client gate shows it on the same admin check the menu uses, inside the lazy route, so a bookmark
+          keeps its address. The words say only that this area is closed to this account — never that the person runs
+          nothing anywhere. A reviewer gets the translations as a second way out.
         </Note>
       </Example>
     </>

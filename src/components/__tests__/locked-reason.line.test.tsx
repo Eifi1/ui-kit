@@ -54,9 +54,24 @@ const FIELDS: Array<[string, (lock: Lock) => ReactElement, string, string]> = [
   ],
   ["NumberInput", (l) => <NumberInput label="Rooms" value="3" onChange={noop} {...l} />, "textbox", "Rooms"],
   ["NumberField", (l) => <NumberField label="Rooms" value={3} onCommit={noop} {...l} />, "textbox", "Rooms"],
-  ["AmountInput", (l) => <AmountInput label="Rent" currency="CHF" value="1200" onChange={noop} {...l} />, "textbox", "Rent"],
-  ["MoneyField", (l) => <MoneyField label="Rent" currency="CHF" value={1200} onCommit={noop} {...l} />, "textbox", "Rent"],
-  ["Combobox", (l) => <Combobox label="Payee" value="Example Ltd" onChange={noop} options={["Example Ltd"]} {...l} />, "combobox", "Payee"],
+  [
+    "AmountInput",
+    (l) => <AmountInput label="Rent" currency="CHF" value="1200" onChange={noop} {...l} />,
+    "textbox",
+    "Rent",
+  ],
+  [
+    "MoneyField",
+    (l) => <MoneyField label="Rent" currency="CHF" value={1200} onCommit={noop} {...l} />,
+    "textbox",
+    "Rent",
+  ],
+  [
+    "Combobox",
+    (l) => <Combobox label="Payee" value="Example Ltd" onChange={noop} options={["Example Ltd"]} {...l} />,
+    "combobox",
+    "Payee",
+  ],
   [
     "InlineEntityCombobox",
     (l) => <InlineEntityCombobox<string> label="Account" value="a1" onChange={noop} options={OPTIONS} {...l} />,
@@ -82,7 +97,12 @@ const FIELDS: Array<[string, (lock: Lock) => ReactElement, string, string]> = [
     "Address",
   ],
   ["CountrySelect", (l) => <CountrySelect label="Country" value="CH" onChange={noop} {...l} />, "combobox", "Country"],
-  ["CurrencySelect", (l) => <CurrencySelect label="Currency" value="CHF" onChange={noop} {...l} />, "combobox", "Currency"],
+  [
+    "CurrencySelect",
+    (l) => <CurrencySelect label="Currency" value="CHF" onChange={noop} {...l} />,
+    "combobox",
+    "Currency",
+  ],
   [
     "ListItem",
     (l) => (

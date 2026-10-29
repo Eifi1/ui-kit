@@ -13,7 +13,26 @@ import { roundHalfAway } from "../round";
 
 // Finite values across the whole double range, both signs, the audit's rows among them.
 const SAMPLES: number[] = (() => {
-  const named = [0, -0, 0.1 + 0.2 - 0.3, 5.55e-17, 4e-7, 9e-7, 1e-6, 0.004, 0.005, 1.005, 2.5, 93.4213, 1e15, 1e21, 1.5e22, 2 ** 53, Number.MAX_VALUE, Number.MIN_VALUE];
+  const named = [
+    0,
+    -0,
+    0.1 + 0.2 - 0.3,
+    5.55e-17,
+    4e-7,
+    9e-7,
+    1e-6,
+    0.004,
+    0.005,
+    1.005,
+    2.5,
+    93.4213,
+    1e15,
+    1e21,
+    1.5e22,
+    2 ** 53,
+    Number.MAX_VALUE,
+    Number.MIN_VALUE,
+  ];
   const sweep: number[] = [];
   for (let exponent = -320; exponent <= 308; exponent += 7) {
     for (const mantissa of [1, 1.005, 4.5, 5, 9.999]) sweep.push(Number(`${mantissa}e${exponent}`));

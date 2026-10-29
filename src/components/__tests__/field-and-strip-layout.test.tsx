@@ -22,14 +22,25 @@ describe("FIELD_TRIGGER holds a line box open", () => {
   });
 
   it("reaches an EntityCombobox with no value and no placeholder — the trigger that collapsed", () => {
-    render(<EntityCombobox<number> aria-label="Tenant" options={[{ value: 1, label: "Ada" }]} value={null} onChange={() => {}} />);
+    render(
+      <EntityCombobox<number>
+        aria-label="Tenant"
+        options={[{ value: 1, label: "Ada" }]}
+        value={null}
+        onChange={() => {}}
+      />,
+    );
     expect(screen.getByRole("combobox", { name: /Tenant/ }).className).toContain("[&>:first-child]:min-h-[1lh]");
   });
 });
 
 describe("Select hint: text goes under the field, a FieldHint stays on the label line", () => {
   it("a string hint is a caption below the field, describing the select", () => {
-    render(<Select label="Theme" hint="Managed by your organisation" disabled defaultValue="dark"><option value="dark">Dark</option></Select>);
+    render(
+      <Select label="Theme" hint="Managed by your organisation" disabled defaultValue="dark">
+        <option value="dark">Dark</option>
+      </Select>,
+    );
     const select = screen.getByRole("combobox", { name: "Theme" });
     const caption = screen.getByText("Managed by your organisation");
     expect(caption.tagName).toBe("P");

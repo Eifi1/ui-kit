@@ -114,7 +114,10 @@ export interface LineItemsColumn<T> {
  * class, handlers. A `data-*` attribute is typed so `{ "data-tour": "rule-condition" }`
  * needs no cast.
  */
-export type LineItemsRowProps = Omit<HTMLAttributes<HTMLDivElement>, "children" | "dangerouslySetInnerHTML" | "role"> & {
+export type LineItemsRowProps = Omit<
+  HTMLAttributes<HTMLDivElement>,
+  "children" | "dangerouslySetInnerHTML" | "role"
+> & {
   [key: `data-${string}`]: string | number | boolean | undefined;
 };
 
@@ -289,7 +292,6 @@ export function LineItems<T>({
   const canRemove = Boolean(onRemove) && !disabled && items.length > minItems;
   const hasError = hasContent(error);
 
-
   // Focus after the list has re-rendered with the new rows — a layout effect, so the
   // caret is where it belongs before paint.
   useLayoutEffect(() => {
@@ -351,10 +353,7 @@ export function LineItems<T>({
   const headerCell = (column: LineItemsColumn<T>) => (
     <span
       key={column.key}
-      className={cn(
-        "min-w-0 truncate text-xs font-medium text-muted",
-        column.align === "end" && "text-end",
-      )}
+      className={cn("min-w-0 truncate text-xs font-medium text-muted", column.align === "end" && "text-end")}
     >
       {floats(column) ? null : column.header}
     </span>
@@ -548,10 +547,7 @@ export function LineItems<T>({
       )}
 
       {summary && (
-        <div
-          data-line-items-summary=""
-          className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-primary"
-        >
+        <div data-line-items-summary="" className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-primary">
           {/* With no value the line is a state of its own, and the label takes the
               tone — the only place left to carry it. */}
           <span
@@ -586,11 +582,7 @@ export function LineItems<T>({
         </div>
       )}
 
-      {hasError && (
-        <p className="text-caption leading-tight text-danger">
-          {error}
-        </p>
-      )}
+      {hasError && <p className="text-caption leading-tight text-danger">{error}</p>}
 
       {onAdd && (
         <Button

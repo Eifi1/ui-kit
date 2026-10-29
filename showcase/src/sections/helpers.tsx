@@ -107,12 +107,12 @@ function OtherInputHelpers() {
           ]}
         />
         <p className="mt-3 text-xs text-secondary">
-          A range whose <code className="font-mono">min</code> is after its{" "}
-          <code className="font-mono">max</code> wraps midnight — a night shift.
+          A range whose <code className="font-mono">min</code> is after its <code className="font-mono">max</code> wraps
+          midnight — a night shift.
         </p>
       </Example>
 
-      <Example label="toLogPosition · fromLogPosition" hint="Slider's scale=&quot;log&quot;, with the zero stop">
+      <Example label="toLogPosition · fromLogPosition" hint='Slider&apos;s scale="log", with the zero stop'>
         <OutTable
           rows={[
             ["toLogPosition(0, 1, 1000)", toLogPosition(0, 1, 1000).toFixed(3)],
@@ -126,8 +126,8 @@ function OtherInputHelpers() {
           ]}
         />
         <p className="mt-3 text-xs text-secondary">
-          A log scale cannot reach 0, so the first stretch of the track is reserved for it
-          (<code className="font-mono">zeroStop</code>, default on).
+          A log scale cannot reach 0, so the first stretch of the track is reserved for it (
+          <code className="font-mono">zeroStop</code>, default on).
         </p>
       </Example>
 
@@ -143,12 +143,14 @@ function OtherInputHelpers() {
           ]}
         />
         <p className="mt-3 text-xs text-secondary">
-          Bytes, not characters: bcrypt reads only the first 72 bytes, and an umlaut or an
-          emoji is more than one.
+          Bytes, not characters: bcrypt reads only the first 72 bytes, and an umlaut or an emoji is more than one.
         </p>
       </Example>
 
-      <Example label="matchesAccept(file, accept)" hint="FileButton's check, the same grammar as the input's accept attribute">
+      <Example
+        label="matchesAccept(file, accept)"
+        hint="FileButton's check, the same grammar as the input's accept attribute"
+      >
         <OutTable
           rows={[
             ['matchesAccept(scan.PNG, "image/*")', q(matchesAccept(png, "image/*"))],

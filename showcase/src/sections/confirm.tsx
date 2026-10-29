@@ -65,16 +65,13 @@ function DangerSpecimens() {
       </Stage>
       <StateLine>{`last = ${log}`}</StateLine>
       <Note>
-        A promise from <code>onConfirm</code> keeps the tile busy, collapses it when it resolves and
-        leaves it armed (fields kept) when it rejects. <code>lockedReason</code> replaces an
-        app&rsquo;s write-lock hook: the arm button stays focusable and says why it is off — in
-        the line under it and in a tooltip on the button itself (hover or focus
-        &ldquo;Reset budget…&rdquo;), where the pointer that tried it is. The bubble is visual
-        only: the button is already described by the line, so a screen reader hears the reason
-        once.
-        The phrase ignores surrounding spaces unless <code>phraseMatch=&quot;exact&quot;</code>;{" "}
-        <code>labels.phrase</code> takes a function of the phrase or a finished string, and{" "}
-        <code>labels.phrasePlaceholder</code> moves the label above the field.
+        A promise from <code>onConfirm</code> keeps the tile busy, collapses it when it resolves and leaves it armed
+        (fields kept) when it rejects. <code>lockedReason</code> replaces an app&rsquo;s write-lock hook: the arm button
+        stays focusable and says why it is off — in the line under it and in a tooltip on the button itself (hover or
+        focus &ldquo;Reset budget…&rdquo;), where the pointer that tried it is. The bubble is visual only: the button is
+        already described by the line, so a screen reader hears the reason once. The phrase ignores surrounding spaces
+        unless <code>phraseMatch=&quot;exact&quot;</code>; <code>labels.phrase</code> takes a function of the phrase or
+        a finished string, and <code>labels.phrasePlaceholder</code> moves the label above the field.
       </Note>
     </Example>
   );
@@ -145,11 +142,10 @@ function DangerStates() {
       </Stage>
       <StateLine>{`armed = ${armed} · busy = ${busy} · last = ${log}`}</StateLine>
       <Note>
-        <code>busy</code> from the parent shows the same state a pending promise does, for a
-        mutation the app tracks itself. <code>disabled</code> turns the arm button off without a
-        reason — prefer <code>lockedReason</code> when the user can do something about it. The
-        third tile takes every word from <code>labels</code>; <code>armLabel</code> and{" "}
-        <code>confirmLabel</code> would win over them.
+        <code>busy</code> from the parent shows the same state a pending promise does, for a mutation the app tracks
+        itself. <code>disabled</code> turns the arm button off without a reason — prefer <code>lockedReason</code> when
+        the user can do something about it. The third tile takes every word from <code>labels</code>;{" "}
+        <code>armLabel</code> and <code>confirmLabel</code> would win over them.
       </Note>
     </Example>
   );
@@ -215,9 +211,9 @@ function TypedConfirm018Demo() {
         </Row>
         <p className={`mt-3 ${READOUT}`}>{log.length ? log.join(" · ") : "answers appear here"}</p>
         <Note>
-          For the action whose risk is the wrong ROW, not the wrong intent: the admin has already proven who they
-          are; typing the address proves which account they are on. The field takes focus (a reflexive Enter cannot
-          confirm a field that does not match), and Enter confirms once it does. <code>typedMatch</code>:{" "}
+          For the action whose risk is the wrong ROW, not the wrong intent: the admin has already proven who they are;
+          typing the address proves which account they are on. The field takes focus (a reflexive Enter cannot confirm a
+          field that does not match), and Enter confirms once it does. <code>typedMatch</code>:{" "}
           <code>&quot;caseless&quot;</code> (default) · <code>&quot;trim&quot;</code> · <code>&quot;exact&quot;</code>.
         </Note>
       </Example>
@@ -277,10 +273,10 @@ function Reauth018Demo() {
       </Row>
       <p className={`mt-3 ${READOUT}`}>{log.length ? log.join(" · ") : "answers appear here"}</p>
       <Note>
-        <code>onSubmit(password)</code> returns the app&apos;s verify call: busy while it runs (field read-only,
-        Cancel and Escape held), <code>onClose(true)</code> when it resolves, open with the password selected when
-        it rejects. <code>error</code> is the app&apos;s wording (a 400 is a wrong password, a 500 is not); the field
-        turns invalid and the message goes as soon as the user edits.
+        <code>onSubmit(password)</code> returns the app&apos;s verify call: busy while it runs (field read-only, Cancel
+        and Escape held), <code>onClose(true)</code> when it resolves, open with the password selected when it rejects.{" "}
+        <code>error</code> is the app&apos;s wording (a 400 is a wrong password, a 500 is not); the field turns invalid
+        and the message goes as soon as the user edits.
       </Note>
       <ReauthDialog
         open={open}
@@ -324,10 +320,7 @@ function AcknowledgeAndConsequences() {
           armLabel="Reset password…"
           confirmLabel="Send reset link"
           prompt="Anna’s password is reset by e-mail."
-          consequences={[
-            "Her sessions end when she sets the new password.",
-            "Her 2 personal API tokens keep working.",
-          ]}
+          consequences={["Her sessions end when she sets the new password.", "Her 2 personal API tokens keep working."]}
           requireAcknowledge
           onConfirm={() => beat(600).then(() => setLog("reset sent (ticked)"))}
         />
@@ -348,8 +341,8 @@ function AcknowledgeAndConsequences() {
       <Note>
         {code("consequences")} is a list under the prompt, shown once armed — strings, or{" "}
         {code("{ key, text, severe }")} for the one line that loses something for good. {code("requireAcknowledge")}{" "}
-        adds an &ldquo;I have read what this does&rdquo; tick ({code("true")} for the namespace&rsquo;s words, or a
-        node of your own); with {code("phrase")} and {code("requirePassword")}, every guard given must be met.
+        adds an &ldquo;I have read what this does&rdquo; tick ({code("true")} for the namespace&rsquo;s words, or a node
+        of your own); with {code("phrase")} and {code("requirePassword")}, every guard given must be met.
       </Note>
     </Example>
   );
@@ -371,8 +364,8 @@ function LockedTile() {
       </Stage>
       <Note>
         {code("commit")} reads the nearest {code("WriteLockProvider")}: no more{" "}
-        {code("lockedReason={lock.locked ? lock.reason : undefined}")} per tile. Arm it, then switch the lock on:
-        the tile keeps what was ticked, and its confirm says why it is off instead of confirming.
+        {code("lockedReason={lock.locked ? lock.reason : undefined}")} per tile. Arm it, then switch the lock on: the
+        tile keeps what was ticked, and its confirm says why it is off instead of confirming.
       </Note>
     </Example>
   );
@@ -385,9 +378,7 @@ function TypedField() {
     <Example label="TypedConfirmField" hint="the typed confirmation on its own — the next step appears once it matches">
       <Stage>
         <div className="flex flex-col gap-3">
-          <p className="text-sm text-secondary">
-            End-to-end encryption cannot be undone by turning it off again.
-          </p>
+          <p className="text-sm text-secondary">End-to-end encryption cannot be undone by turning it off again.</p>
           <TypedConfirmField target="ENCRYPT" match="caseless" onMatchedChange={setMatched} />
           {matched && (
             <>
@@ -442,11 +433,11 @@ function DangerConfirm023Demo() {
         </Stage>
         <StateLine>{`last = ${log}`}</StateLine>
         <Note>
-          Arm it and hover or Tab to {code("Wipe now")}: while a guard is open the confirm is{" "}
-          {code("aria-disabled")}, not {code("disabled")} — still focusable, with the first open guard named in its
-          tooltip and description: the tick, then the phrase, then the password ({code("labels.needsAcknowledge")},{" "}
-          {code("needsPhrase")}, {code("needsPassword")}). Pressing it, or Enter in a field, does nothing. A write
-          lock&rsquo;s reason wins over a guard&rsquo;s; while the action runs it is plainly disabled.
+          Arm it and hover or Tab to {code("Wipe now")}: while a guard is open the confirm is {code("aria-disabled")},
+          not {code("disabled")} — still focusable, with the first open guard named in its tooltip and description: the
+          tick, then the phrase, then the password ({code("labels.needsAcknowledge")}, {code("needsPhrase")},{" "}
+          {code("needsPassword")}). Pressing it, or Enter in a field, does nothing. A write lock&rsquo;s reason wins
+          over a guard&rsquo;s; while the action runs it is plainly disabled.
         </Note>
       </Example>
       <Example
@@ -551,9 +542,7 @@ function PlanEditorExample() {
                 setLog(`PATCH { plan: "${plan}" } → 200`);
               }}
             >
-              <p className="text-xs text-muted">
-                {current} today — 2 budgets owned.
-              </p>
+              <p className="text-xs text-muted">{current} today — 2 budgets owned.</p>
               <Select
                 label="Plan"
                 hint="A smaller plan only stops new budgets; none are removed."
@@ -572,23 +561,23 @@ function PlanEditorExample() {
       </Stage>
       <StateLine>{`account = ${current} · picked = ${plan} · last = ${log}`}</StateLine>
       <Note>
-        {code("children")} are drawn inside the armed tile, after the prompt and the consequences and before the
-        tick, the phrase and the password — so the prompt is the panel&rsquo;s title again, not a line under a picker
-        that sat outside. Arming focuses their first form field; Tab goes on to the tick, Cancel and the confirm.
-        Without children the tile is laid out as before.
+        {code("children")} are drawn inside the armed tile, after the prompt and the consequences and before the tick,
+        the phrase and the password — so the prompt is the panel&rsquo;s title again, not a line under a picker that sat
+        outside. Arming focuses their first form field; Tab goes on to the tick, Cancel and the confirm. Without
+        children the tile is laid out as before.
       </Note>
       <Note>
         {code("confirmDisabledReason")} holds the armed confirm like the built-in guards — {code("aria-disabled")},
         focusable, the reason in its tooltip, a press or Enter swallowed — without {code("lockedReason")}&rsquo;s line
-        under the buttons, and without holding the arm button. The confirm names a write lock first, then this
-        reason, then the first open built-in guard: the caller&rsquo;s field is drawn above them, and which plan has to be
+        under the buttons, and without holding the arm button. The confirm names a write lock first, then this reason,
+        then the first open built-in guard: the caller&rsquo;s field is drawn above them, and which plan has to be
         settled before ticking that you mean it.
       </Note>
       <Note>
         While {code("Set plan")} runs, Cancel is disabled on purpose: the request has left, and a Cancel that only
-        collapsed the tile would say the change was called off while it lands. Turn on &ldquo;The request
-        fails&rdquo; and confirm with the pointer or Space: the tile stays armed, the fields as they were, and the focus
-        comes back to {code("Set plan")} for the retry.
+        collapsed the tile would say the change was called off while it lands. Turn on &ldquo;The request fails&rdquo;
+        and confirm with the pointer or Space: the tile stays armed, the fields as they were, and the focus comes back
+        to {code("Set plan")} for the retry.
       </Note>
     </Example>
   );

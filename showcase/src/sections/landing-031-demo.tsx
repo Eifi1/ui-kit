@@ -4,7 +4,14 @@ import { MemoryRouter, UNSAFE_LocationContext, useLocation } from "react-router"
 import { CalendarDays, Droplets, Leaf, Server, ShieldCheck, Sprout, Users } from "lucide-react";
 import { AuthLayout, Button, ProgressBar, StatTile, StatTileGrid, ToggleGroup } from "@eifi1/ui-kit";
 import { PublicHeader } from "../../../src/landing/public-header";
-import { CtaBand, FeatureRow, FeatureRows, Hero, PublicFooter, TrustStrip } from "../../../src/landing/landing-sections";
+import {
+  CtaBand,
+  FeatureRow,
+  FeatureRows,
+  Hero,
+  PublicFooter,
+  TrustStrip,
+} from "../../../src/landing/landing-sections";
 import { PublicPage } from "../../../src/landing/public-page";
 import type { LandingSession } from "../../../src/landing/landing-actions";
 import type { AccessChoice } from "../../../src/landing/access";
@@ -166,7 +173,11 @@ export function SampleLanding031Demo() {
               eyebrow="Plan"
               title="A season on one page"
               description="Beds on a grid, crops in rotation, and the sowing dates that follow from them."
-              bullets={["Rotation warnings before you plant", "Sowing dates per crop", "Shared with the whole household"]}
+              bullets={[
+                "Rotation warnings before you plant",
+                "Sowing dates per crop",
+                "Shared with the whole household",
+              ]}
               visual={<BedPlanMock />}
             />
             <FeatureRow
@@ -191,7 +202,11 @@ export function SampleLanding031Demo() {
           <TrustStrip
             headingAs="h6"
             items={[
-              { icon: <Server />, title: "Hosted in Switzerland", description: "One server, one country, no third parties." },
+              {
+                icon: <Server />,
+                title: "Hosted in Switzerland",
+                description: "One server, one country, no third parties.",
+              },
               { icon: <ShieldCheck />, title: "Passkeys", description: "Sign in without a password to leak." },
               { icon: <Sprout />, title: "Your data", description: "Export everything, any time." },
               { icon: <Users />, title: "Shared plots", description: "Invite the household to the same garden." },
@@ -210,9 +225,9 @@ export function SampleLanding031Demo() {
       </Sandbox>
       <Note>
         The visuals are slots: {code("aria-hidden")} and {code("inert")}, drawn with kit tokens. Without a session the
-        pair is &ldquo;Request access&rdquo; and &ldquo;Try the demo&rdquo;; a demo gets &ldquo;Continue the demo&rdquo;,
-        a signed-in visitor one &ldquo;Open app&rdquo;. &ldquo;Request access&rdquo; is a {code("mailto:")} with the
-        subject and body in the page&apos;s language; with {code('{kind: "register"}')} it becomes &ldquo;Get
+        pair is &ldquo;Request access&rdquo; and &ldquo;Try the demo&rdquo;; a demo gets &ldquo;Continue the
+        demo&rdquo;, a signed-in visitor one &ldquo;Open app&rdquo;. &ldquo;Request access&rdquo; is a {code("mailto:")}{" "}
+        with the subject and body in the page&apos;s language; with {code('{kind: "register"}')} it becomes &ldquo;Get
         started&rdquo; → {code("/register")}. The feature rows alternate by position, from {code("lg")} up.
       </Note>
     </Example>
@@ -250,7 +265,13 @@ export function PublicPage051Demo() {
             landmark={false}
           >
             <StatTileGrid>
-              <StatTile label="Tomatoes per bed" value={north ? 6.2 : 8.9} unit="kg" description="from 10+ gardens" subValues={[{ label: "AUG", value: north ? 7.1 : 9.4 }]} />
+              <StatTile
+                label="Tomatoes per bed"
+                value={north ? 6.2 : 8.9}
+                unit="kg"
+                description="from 10+ gardens"
+                subValues={[{ label: "AUG", value: north ? 7.1 : 9.4 }]}
+              />
               <StatTile label="Beds in rotation" value={north ? "64 %" : "71 %"} description="from 10+ gardens" />
               <StatTile label="Gardens sharing" value="10+" description="this month" />
             </StatTileGrid>
@@ -260,10 +281,9 @@ export function PublicPage051Demo() {
       <Note>
         {code("PublicPage")} is the frame {code("LegalPage")} draws, without the legal parts: the app&apos;s public
         header, a column as wide as the landing&apos;s sections ({code('width="prose"')} for the legal pages&apos;
-        reading column), the title with an optional description, back link and actions, and the public footer
-        (the three legal links by default). {code("seo")} has no default: a page to be found names its canonical
-        path ({code("usePageSeo")}), a page to keep out says {code('"noindex"')}, and only a preview passes{" "}
-        {code("null")}.
+        reading column), the title with an optional description, back link and actions, and the public footer (the three
+        legal links by default). {code("seo")} has no default: a page to be found names its canonical path (
+        {code("usePageSeo")}), a page to keep out says {code('"noindex"')}, and only a preview passes {code("null")}.
       </Note>
     </Example>
   );
@@ -280,7 +300,13 @@ export function PublicHeaderStates031Demo() {
             </p>
             <Sandbox>
               <div className="overflow-hidden rounded-md border border-subtle">
-                <PublicHeader brand={BRAND} session={value} access={ACCESS_REQUEST} openAppHref="/beds" className="static" />
+                <PublicHeader
+                  brand={BRAND}
+                  session={value}
+                  access={ACCESS_REQUEST}
+                  openAppHref="/beds"
+                  className="static"
+                />
               </div>
             </Sandbox>
           </div>
@@ -357,8 +383,8 @@ export function DemoStart031Demo() {
       </pre>
       <Note>
         {code("demo_rate_limited")} reads its wait from {code("Retry-After")} (here 1200 s: &ldquo;20 min&rdquo;);{" "}
-        {code("demo_capacity")} has none. {code("demo_disabled")} and {code("demo_not_ready")} say the same thing.
-        Every refusal offers &ldquo;Request access&rdquo; and &ldquo;Back to the start page&rdquo; — no fallback to{" "}
+        {code("demo_capacity")} has none. {code("demo_disabled")} and {code("demo_not_ready")} say the same thing. Every
+        refusal offers &ldquo;Request access&rdquo; and &ldquo;Back to the start page&rdquo; — no fallback to{" "}
         {code("/register")}: registration is invitation-only.
       </Note>
     </Example>
@@ -438,7 +464,7 @@ export function DemoBanner031Demo() {
       <Note>
         The chevron collapses a banner to its countdown for the tab&apos;s session ({code("sessionStorage")}) — never
         hidden for good. At zero it calls {code("onEnded")}: the app clears the session and replaces to{" "}
-        {code("/demo/ended")}. Model R pairs it with {code('<WriteLockProvider locked reason={demo.writeLocked}>')} —
+        {code("/demo/ended")}. Model R pairs it with {code("<WriteLockProvider locked reason={demo.writeLocked}>")} —
         &ldquo;Not possible in the demo.&rdquo;
       </Note>
     </Example>

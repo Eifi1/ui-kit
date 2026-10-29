@@ -27,7 +27,14 @@ const ATTENTION: AdminAttention = {
   extra: { beds: 12 },
 };
 
-const OTHERS = [UI_KIT_LABELS_DE_CH, UI_KIT_LABELS_ES, UI_KIT_LABELS_FR, UI_KIT_LABELS_HU, UI_KIT_LABELS_IT, UI_KIT_LABELS_ZH];
+const OTHERS = [
+  UI_KIT_LABELS_DE_CH,
+  UI_KIT_LABELS_ES,
+  UI_KIT_LABELS_FR,
+  UI_KIT_LABELS_HU,
+  UI_KIT_LABELS_IT,
+  UI_KIT_LABELS_ZH,
+];
 
 describe("adminSections and adminSectionOrder (keksdose 3)", () => {
   it("narrows the result's ids by leaveOut", () => {
@@ -41,7 +48,9 @@ describe("adminSections and adminSectionOrder (keksdose 3)", () => {
     expect(groups.map((g) => g.id)).toEqual(["overview", "users", "invitations", "activity"]);
     // Written-out type arguments keep compiling as in 0.42, and narrow when told.
     const beds = [{ id: "beds" as const, icon: null, title: "Beds", help: "" }];
-    expectTypeOf(adminSections<"beds">(undefined, beds, { leaveOut: ["billing"] })[0].id).toEqualTypeOf<AdminSharedSection | "beds">();
+    expectTypeOf(adminSections<"beds">(undefined, beds, { leaveOut: ["billing"] })[0].id).toEqualTypeOf<
+      AdminSharedSection | "beds"
+    >();
     expectTypeOf(adminSections<"beds", "billing">(undefined, beds, { leaveOut: ["billing"] })[0].id).toEqualTypeOf<
       Exclude<AdminSharedSection, "billing"> | "beds"
     >();
@@ -128,7 +137,9 @@ describe("AdminOverview: the error state (keksdose 4) and quiet tiles (Kurvensch
 
 describe("the words (keksdose 6)", () => {
   it("says what invitations are for, in every language", () => {
-    expect(DEFAULT_ADMIN_AREA_LABELS.sections.invitations.help).toBe("Invite people by e-mail in their language; resend or revoke what’s still open.");
+    expect(DEFAULT_ADMIN_AREA_LABELS.sections.invitations.help).toBe(
+      "Invite people by e-mail in their language; resend or revoke what’s still open.",
+    );
     for (const c of OTHERS) {
       expect(c.adminArea.sections.invitations.help).not.toBe(DEFAULT_ADMIN_AREA_LABELS.sections.invitations.help);
       expect(c.adminArea.overviewError).not.toBe(DEFAULT_ADMIN_AREA_LABELS.overviewError);

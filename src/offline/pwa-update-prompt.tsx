@@ -39,7 +39,13 @@ export interface PwaUpdatePromptProps {
 /** The toast's id: one prompt at a time, replaced in place. */
 const PWA_UPDATE_TOAST_ID = "pwa-update";
 
-export function PwaUpdatePrompt({ needRefresh, onReload, onDismiss, hold = false, labels: labelsProp }: PwaUpdatePromptProps) {
+export function PwaUpdatePrompt({
+  needRefresh,
+  onReload,
+  onDismiss,
+  hold = false,
+  labels: labelsProp,
+}: PwaUpdatePromptProps) {
   const labels = useKitLabels("pwaUpdate", DEFAULT_PWA_UPDATE_PROMPT_LABELS, labelsProp);
   // The callbacks are read at click time, so a new function each render does not
   // re-raise the toast.

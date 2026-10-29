@@ -6,11 +6,7 @@ import { cn } from "../lib/cn";
 import { FOCUS_RING } from "./focus-ring";
 import { useDismissLayer } from "../hooks/use-dismiss";
 import { evaluateExpression, formatResult, sanitizeLive } from "../lib/calc";
-import {
-  DEFAULT_CALCULATOR_LABELS,
-  useKitLabels,
-  type CalculatorLabels,
-} from "../i18n/kit-labels";
+import { DEFAULT_CALCULATOR_LABELS, useKitLabels, type CalculatorLabels } from "../i18n/kit-labels";
 
 /**
  * A full calculator keypad rendered as a bottom sheet — the mobile counterpart to
@@ -45,9 +41,7 @@ export interface NumberPadSheetLabels extends Partial<CalculatorLabels> {
   done?: string;
 }
 
-type PadKey =
-  | { kind: "ins"; label: string; ins: string; accent?: boolean; name?: PadKeyName }
-  | { kind: "back" };
+type PadKey = { kind: "ins"; label: string; ins: string; accent?: boolean; name?: PadKeyName } | { kind: "back" };
 
 /** The {@link CalculatorLabels} key naming a non-digit key; digits are their glyph. */
 type PadKeyName = "plus" | "minus" | "times" | "divide" | "decimal";
@@ -222,14 +216,16 @@ export function NumberPadSheet({
       {/* Header display: which field + the running expression and live result, so
           the value stays visible even when the sheet covers the field. */}
       <div className="flex items-end justify-between gap-3 px-2 pb-2">
-        {label != null && (
-          <span className="truncate pb-1 text-xs font-medium text-money-neutral">{label}</span>
-        )}
+        {label != null && <span className="truncate pb-1 text-xs font-medium text-money-neutral">{label}</span>}
         {/* At the logical end, opposite the label; the figures themselves stay
             left-to-right and right-aligned, like the desktop calculator's. */}
         <div className="ms-auto min-w-0">
-          <div dir="ltr" className="truncate text-right font-mono text-lg leading-tight text-primary">{value || "0"}</div>
-          <div dir="ltr" className="h-4 text-right font-mono text-xs text-money-neutral">{preview}</div>
+          <div dir="ltr" className="truncate text-right font-mono text-lg leading-tight text-primary">
+            {value || "0"}
+          </div>
+          <div dir="ltr" className="h-4 text-right font-mono text-xs text-money-neutral">
+            {preview}
+          </div>
         </div>
       </div>
 

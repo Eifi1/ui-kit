@@ -4,13 +4,7 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_UI_KIT_LABELS } from "../defaults";
 import { missingKitLabels } from "../kit-labels";
 import type { UiKitLabels } from "../kit-labels";
-import {
-  KIT_LANGUAGES,
-  formatLocaleOf,
-  languageOptions,
-  loadUiKitLabels,
-  resolveLanguage,
-} from "../languages";
+import { KIT_LANGUAGES, formatLocaleOf, languageOptions, loadUiKitLabels, resolveLanguage } from "../languages";
 import type { KitLanguageCode } from "../languages";
 import { uiKitLabelsDeCh } from "../locales/de-CH";
 import { uiKitLabelsEn } from "../locales/en";
@@ -254,9 +248,7 @@ describe("loadUiKitLabels", () => {
 describe("languageOptions", () => {
   it("gives LanguageMenu every language with its own name and flag", () => {
     const options: LanguageOption[] = languageOptions();
-    expect(options).toEqual(
-      KIT_LANGUAGES.map((l) => ({ code: l.code, label: l.nativeName, country: l.flag })),
-    );
+    expect(options).toEqual(KIT_LANGUAGES.map((l) => ({ code: l.code, label: l.nativeName, country: l.flag })));
   });
 
   it("keeps the app's subset in the app's order", () => {

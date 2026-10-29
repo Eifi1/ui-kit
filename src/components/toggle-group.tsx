@@ -37,8 +37,7 @@ export interface ToggleOption<T extends string> {
  * worse than one that does not compile.
  */
 export interface ToggleGroupBaseProps<T extends string>
-  extends Omit<ComponentPropsWithoutRef<"div">, "onChange" | "children">,
-    FieldHelpProps {
+  extends Omit<ComponentPropsWithoutRef<"div">, "onChange" | "children">, FieldHelpProps {
   options: ToggleOption<T>[];
   className?: string;
   /** Applied to every option button (e.g. to tune height/rounding to match
@@ -354,9 +353,7 @@ export interface ToggleGroupClearableProps<T extends string> extends ToggleGroup
 
 /** `allowEmpty` picks the shape, so `onChange` is typed `(T) => void` unless the group
  *  can actually emit `null` — no existing caller has a `null` to handle. */
-export type ToggleGroupProps<T extends string> =
-  | ToggleGroupRequiredProps<T>
-  | ToggleGroupClearableProps<T>;
+export type ToggleGroupProps<T extends string> = ToggleGroupRequiredProps<T> | ToggleGroupClearableProps<T>;
 
 /**
  * Overloaded rather than typed by the union alone (keksdose, "Gaps found adopting
@@ -542,9 +539,7 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
           field && CHROME_SEGMENT[size],
           // In the strip placement: a 22px group under a 20px strip — STRIP_SEGMENT.
           strip && STRIP_SEGMENT[size],
-          active
-            ? "bg-inverse text-inverse"
-            : "text-secondary hover:bg-hover",
+          active ? "bg-inverse text-inverse" : "text-secondary hover:bg-hover",
           // No hover fill on a group that cannot be changed — a segment that
           // lights up under the pointer is an offer, and there is none here. Not on
           // the chosen segment: its fill IS its state, and its inverse text would
@@ -578,7 +573,12 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
       aria-labelledby={labelled && ariaLabelAttr === undefined ? labelId : rest["aria-labelledby"]}
       aria-invalid={hasError || rest["aria-invalid"] || undefined}
       aria-describedby={
-        [rest["aria-describedby"], hintAsCaption !== undefined && hintCaptionId, hasCaption && captionId, hasError && errorId]
+        [
+          rest["aria-describedby"],
+          hintAsCaption !== undefined && hintCaptionId,
+          hasCaption && captionId,
+          hasError && errorId,
+        ]
           .filter(Boolean)
           .join(" ") || undefined
       }

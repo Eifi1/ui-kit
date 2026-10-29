@@ -15,7 +15,11 @@ let next = 0;
 const blank = (): Line => ({ id: `l${++next}`, account: "", amount: "" });
 
 const COLUMNS: LineItemsColumn<Line>[] = [
-  { key: "account", header: "Account", render: ({ item, label }) => <Input aria-label={label} defaultValue={item.account} /> },
+  {
+    key: "account",
+    header: "Account",
+    render: ({ item, label }) => <Input aria-label={label} defaultValue={item.account} />,
+  },
   {
     key: "amount",
     header: "Amount",
@@ -122,9 +126,7 @@ describe("LineItems", () => {
   });
 
   it("shows the empty state, the list error, and no buttons it was not given", () => {
-    render(
-      <LineItems items={[] as Line[]} columns={COLUMNS} empty="No lines yet" error="Add at least two lines" />,
-    );
+    render(<LineItems items={[] as Line[]} columns={COLUMNS} empty="No lines yet" error="Add at least two lines" />);
     expect(screen.getByText("No lines yet")).toBeInTheDocument();
     expect(screen.getByText("Add at least two lines")).toBeInTheDocument();
     expect(screen.queryByRole("button")).toBeNull();
@@ -218,7 +220,11 @@ describe("LineItems", () => {
     });
 
     it("narrowColumns=2 pairs the stacked fields; narrowSpan=2 and the remove button take a whole row", () => {
-      const cols: LineItemsColumn<Line>[] = [{ ...COLUMNS[0], narrowSpan: 2 }, COLUMNS[1], { ...COLUMNS[1], key: "tax" }];
+      const cols: LineItemsColumn<Line>[] = [
+        { ...COLUMNS[0], narrowSpan: 2 },
+        COLUMNS[1],
+        { ...COLUMNS[1], key: "tax" },
+      ];
       render(<LineItems items={[blank()]} columns={cols} narrowColumns={2} onRemove={() => {}} />);
       const row = rows()[0];
       expect(row.className).toContain("@2xs:grid-cols-2");
@@ -297,7 +303,9 @@ describe("LineItems", () => {
 
     it("removePlacement=inline: the remove button shares the last field's cell; wide, the wrapper dissolves", () => {
       const cols: LineItemsColumn<Line>[] = [COLUMNS[0], COLUMNS[1], { ...COLUMNS[0], key: "memo", header: "Memo" }];
-      render(<LineItems items={[blank()]} columns={cols} narrowColumns={2} removePlacement="inline" onRemove={() => {}} />);
+      render(
+        <LineItems items={[blank()]} columns={cols} narrowColumns={2} removePlacement="inline" onRemove={() => {}} />,
+      );
       const row = rows()[0];
       const cells = Array.from(row.children) as HTMLElement[];
       // Three children: two cells and the wrapper — no remove cell of its own.
@@ -338,13 +346,21 @@ describe("LineItems", () => {
 
     it("removeAlign: start by default, center when fields float, and as asked", () => {
       const cell = () =>
-        within(rows()[0]).getByRole("button", { name: "Remove row 1" }).closest("[data-line-items-remove-cell]") as HTMLElement;
+        within(rows()[0])
+          .getByRole("button", { name: "Remove row 1" })
+          .closest("[data-line-items-remove-cell]") as HTMLElement;
       const { rerender } = render(<LineItems items={[blank()]} columns={COLUMNS} onRemove={() => {}} />);
       expect(cell().className).toContain("@lg:self-start");
       rerender(<LineItems items={[blank()]} columns={COLUMNS} fieldLabels="floating" onRemove={() => {}} />);
       expect(cell().className).toContain("@lg:self-center");
       rerender(
-        <LineItems items={[blank()]} columns={COLUMNS} fieldLabels="floating" removeAlign="start" onRemove={() => {}} />,
+        <LineItems
+          items={[blank()]}
+          columns={COLUMNS}
+          fieldLabels="floating"
+          removeAlign="start"
+          onRemove={() => {}}
+        />,
       );
       expect(cell().className).toContain("@lg:self-start");
       rerender(<LineItems items={[blank()]} columns={COLUMNS} removeAlign="end" onRemove={() => {}} />);

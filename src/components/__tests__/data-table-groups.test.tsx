@@ -130,7 +130,12 @@ describe("DataTable groupBy (0.48, keksdose dev #605)", () => {
   it("follows hidden columns in the band's span", () => {
     const { container } = render(
       <MemoryRouter>
-        <DataTable rows={TXS} columns={COLUMNS.map((c) => ({ ...c, defaultHidden: false }))} rowKey={(r) => r.id} groupBy={PERIOD} />
+        <DataTable
+          rows={TXS}
+          columns={COLUMNS.map((c) => ({ ...c, defaultHidden: false }))}
+          rowKey={(r) => r.id}
+          groupBy={PERIOD}
+        />
       </MemoryRouter>,
     );
     expect(bands(container)[0]).toHaveAttribute("colspan", "3");
@@ -260,7 +265,14 @@ function stubIntersectionObserver(): IOStub {
 function LoadMoreTable({ rows, loadMore }: { rows: Tx[]; loadMore: DataTableLoadMore }) {
   return (
     <MemoryRouter>
-      <DataTable rows={rows} columns={COLUMNS} rowKey={(r) => r.id} paginated={false} loadMore={loadMore} groupBy={PERIOD} />
+      <DataTable
+        rows={rows}
+        columns={COLUMNS}
+        rowKey={(r) => r.id}
+        paginated={false}
+        loadMore={loadMore}
+        groupBy={PERIOD}
+      />
     </MemoryRouter>
   );
 }
@@ -315,7 +327,9 @@ describe("DataTable loadMore (0.48, keksdose dev #605)", () => {
   it("says it is loading, keeps the button focusable, and ignores presses meanwhile", () => {
     stubIntersectionObserver();
     const onLoadMore = vi.fn();
-    render(<LoadMoreTable rows={TXS} loadMore={{ hasMore: true, onLoadMore, loading: true, label: "Load July 2026" }} />);
+    render(
+      <LoadMoreTable rows={TXS} loadMore={{ hasMore: true, onLoadMore, loading: true, label: "Load July 2026" }} />,
+    );
     const button = screen.getByRole("button", { name: /Loading/ });
     expect(button).not.toBeDisabled();
     expect(button).toHaveAttribute("aria-busy", "true");
@@ -328,7 +342,9 @@ describe("DataTable loadMore (0.48, keksdose dev #605)", () => {
   it("ends with the kit's words, or the app's, and moves a focused button's focus there", () => {
     stubIntersectionObserver();
     const onLoadMore = vi.fn();
-    const { rerender } = render(<LoadMoreTable rows={TXS} loadMore={{ hasMore: true, onLoadMore, label: "Load July 2026" }} />);
+    const { rerender } = render(
+      <LoadMoreTable rows={TXS} loadMore={{ hasMore: true, onLoadMore, label: "Load July 2026" }} />,
+    );
     screen.getByRole("button", { name: "Load July 2026" }).focus();
     rerender(<LoadMoreTable rows={TXS} loadMore={{ hasMore: false, onLoadMore }} />);
     const end = screen.getByText("All rows loaded");

@@ -48,11 +48,11 @@ function ChipHues() {
       </div>
       <div className="mt-3">
         <Note>
-          Use a semantic tone when the value HAS a meaning (overdue is <code className="font-mono">danger</code>),
-          a hue when it only needs telling apart — sent vs accepted vs invoiced. The hues are the{" "}
-          <code className="font-mono">info</code> recipe on their own <code className="font-mono">--hue-*</code>{" "}
-          tokens, so a hue chip and a status chip in one row carry the same weight. Flip the theme: each has a
-          dark value of its own.
+          Use a semantic tone when the value HAS a meaning (overdue is <code className="font-mono">danger</code>), a hue
+          when it only needs telling apart — sent vs accepted vs invoiced. The hues are the{" "}
+          <code className="font-mono">info</code> recipe on their own <code className="font-mono">--hue-*</code> tokens,
+          so a hue chip and a status chip in one row carry the same weight. Flip the theme: each has a dark value of its
+          own.
         </Note>
       </div>
     </Example>
@@ -138,14 +138,14 @@ function ChipXsCheckboxDot() {
       </div>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">xs</code> is 11px type at <code className="font-mono">px-1.5</code>: a
-          badge that sits in a figure&apos;s line without making it taller. <code className="font-mono">checkbox</code>{" "}
-          on a toggle chip (<code className="font-mono">onClick</code> + <code className="font-mono">selected</code>)
-          draws a box that ticks and reports <code className="font-mono">role=&quot;checkbox&quot;</code> +{" "}
+          <code className="font-mono">xs</code> is 11px type at <code className="font-mono">px-1.5</code>: a badge that
+          sits in a figure&apos;s line without making it taller. <code className="font-mono">checkbox</code> on a toggle
+          chip (<code className="font-mono">onClick</code> + <code className="font-mono">selected</code>) draws a box
+          that ticks and reports <code className="font-mono">role=&quot;checkbox&quot;</code> +{" "}
           <code className="font-mono">aria-checked</code> instead of <code className="font-mono">aria-pressed</code>;
           the box is drawn in both states, so ticking never shifts the label. <code className="font-mono">dot</code>{" "}
-          drops the pill for a dot before plain text — an inert one has no inset, so it lines up with its column
-          header; selected, the text turns primary and medium.
+          drops the pill for a dot before plain text — an inert one has no inset, so it lines up with its column header;
+          selected, the text turns primary and medium.
         </Note>
       </div>
     </Example>
@@ -222,14 +222,14 @@ function ToggleGroupSmallAndField() {
       </div>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">size=&quot;sm&quot;</code> is 12px options at <code className="font-mono">px-2 py-1</code>,
-          for a group beside a small caption. With a <code className="font-mono">label</code> the group stands in a
-          form row AS a field: the border, the surface and the small static label strip of a labelled{" "}
-          <code className="font-mono">Select</code>, stretched to its row so it levels with the select whatever the
-          browser makes of that. The label names the group (<code className="font-mono">aria-labelledby</code>);{" "}
-          <code className="font-mono">hint</code> is the ? on the label line; <code className="font-mono">error</code>{" "}
-          paints the frame, marks the group <code className="font-mono">aria-invalid</code> and describes it with the
-          message.
+          <code className="font-mono">size=&quot;sm&quot;</code> is 12px options at{" "}
+          <code className="font-mono">px-2 py-1</code>, for a group beside a small caption. With a{" "}
+          <code className="font-mono">label</code> the group stands in a form row AS a field: the border, the surface
+          and the small static label strip of a labelled <code className="font-mono">Select</code>, stretched to its row
+          so it levels with the select whatever the browser makes of that. The label names the group (
+          <code className="font-mono">aria-labelledby</code>); <code className="font-mono">hint</code> is the ? on the
+          label line; <code className="font-mono">error</code> paints the frame, marks the group{" "}
+          <code className="font-mono">aria-invalid</code> and describes it with the message.
         </Note>
       </div>
     </Example>

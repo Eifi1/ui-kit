@@ -34,10 +34,7 @@ export type PlanPrices = Partial<Record<BillingCurrency, PlanIntervalPrices>>;
  * - `free` — a plan with no prices at all (keksdose's free plan), or a price of 0;
  * - `not-offered` — a plan with prices, but none for this currency and period.
  */
-export type PlanPriceAnswer =
-  | { kind: "price"; minor: number }
-  | { kind: "free" }
-  | { kind: "not-offered" };
+export type PlanPriceAnswer = { kind: "price"; minor: number } | { kind: "free" } | { kind: "not-offered" };
 
 /** Whether a price table holds any figure at all. */
 function hasAnyPrice(prices: PlanPrices | null | undefined): boolean {

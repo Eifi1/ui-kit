@@ -262,8 +262,7 @@ export function RegisterForm({
   const working = busy !== null;
   const suggestion = emailTag ? taggedEmail(email, emailTag) : null;
   // The invitee took the tagged address: offer the way back to the invited one.
-  const backToInvited =
-    invitedEmail !== undefined && email.trim() !== invitedEmail.trim() ? invitedEmail.trim() : null;
+  const backToInvited = invitedEmail !== undefined && email.trim() !== invitedEmail.trim() ? invitedEmail.trim() : null;
   const canSubmit =
     personNameOk(firstName) &&
     personNameOk(lastName) &&
@@ -311,12 +310,12 @@ export function RegisterForm({
             : isRateLimited(error)
               ? (labels.rateLimited ?? DEFAULT_REGISTER_LABELS.rateLimited)(retryAfterSeconds(error))
               : code === "registration_closed"
-              ? labels.registrationClosed
-              : code === "invitation_invalid"
-                ? labels.invitationInvalid
-                : code === "invitation_expired"
-                  ? labels.invitationExpired
-                  : labels.failed,
+                ? labels.registrationClosed
+                : code === "invitation_invalid"
+                  ? labels.invitationInvalid
+                  : code === "invitation_expired"
+                    ? labels.invitationExpired
+                    : labels.failed,
         );
       },
     );

@@ -47,13 +47,25 @@ describe("EmptyState — headingAs and node slots", () => {
 
 describe("IconButton quiet", () => {
   it("keeps each tone's resting look by default", () => {
-    const { rerender } = render(<IconButton tone="danger" aria-label="x">x</IconButton>);
+    const { rerender } = render(
+      <IconButton tone="danger" aria-label="x">
+        x
+      </IconButton>,
+    );
     expect(screen.getByRole("button").className).toContain("text-placeholder");
     expect(screen.getByRole("button")).toHaveClass("hover:text-danger");
-    rerender(<IconButton tone="warning" aria-label="x">x</IconButton>);
+    rerender(
+      <IconButton tone="warning" aria-label="x">
+        x
+      </IconButton>,
+    );
     expect(screen.getByRole("button")).toHaveClass("text-warning");
     expect(screen.getByRole("button").className).not.toContain("text-placeholder");
-    rerender(<IconButton tone="info" aria-label="x">x</IconButton>);
+    rerender(
+      <IconButton tone="info" aria-label="x">
+        x
+      </IconButton>,
+    );
     expect(screen.getByRole("button")).toHaveClass("text-info");
   });
 
@@ -87,9 +99,17 @@ describe("IconButton quiet", () => {
   });
 
   it("ignores quiet on muted and default", () => {
-    const { rerender } = render(<IconButton tone="muted" quiet={false} aria-label="x">x</IconButton>);
+    const { rerender } = render(
+      <IconButton tone="muted" quiet={false} aria-label="x">
+        x
+      </IconButton>,
+    );
     expect(screen.getByRole("button").className).toContain("text-placeholder");
-    rerender(<IconButton quiet aria-label="x">x</IconButton>);
+    rerender(
+      <IconButton quiet aria-label="x">
+        x
+      </IconButton>,
+    );
     expect(screen.getByRole("button").className).not.toContain("text-placeholder");
   });
 });

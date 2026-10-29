@@ -82,7 +82,10 @@ const sorted = (values: readonly string[]) => [...values].sort();
 
 /** `expected ⊆ actual`, naming what is missing. */
 function expectSubset(of: readonly string[], within: readonly string[], what: string) {
-  expect(of.filter((key) => !within.includes(key)), `${what}: not in server-kit's shape`).toEqual([]);
+  expect(
+    of.filter((key) => !within.includes(key)),
+    `${what}: not in server-kit's shape`,
+  ).toEqual([]);
 }
 
 describe("server-kit's vocabularies, as this package writes them", () => {
@@ -109,7 +112,11 @@ describe("server-kit's vocabularies, as this package writes them", () => {
     // Listed so a new DemoSessionUser field has to be placed here; neither is compared.
     keysOf<DemoSessionUser>({ is_demo: true, isDemo: true });
     type PatchKey = AccountAppearancePatch extends infer P ? (P extends unknown ? keyof P : never) : never;
-    expectSubset(membersOf<PatchKey>({ text_size: true, contrast: true }), fieldNames("auth", "ProfileUpdate"), "AccountAppearancePatch");
+    expectSubset(
+      membersOf<PatchKey>({ text_size: true, contrast: true }),
+      fieldNames("auth", "ProfileUpdate"),
+      "AccountAppearancePatch",
+    );
   });
 
   // 4. src/auth/auth-errors.ts AccountErrorCode ↔ user_admin/errors.py
@@ -163,7 +170,9 @@ describe("server-kit's vocabularies, as this package writes them", () => {
     expect(sorted(FEEDBACK_STATUS_ORDER)).toEqual(sorted(enumValues("feedback", "FeedbackStatus")));
     expect(sorted(FEEDBACK_CATEGORY_ORDER)).toEqual(sorted(enumValues("feedback", "FeedbackCategory")));
     // QUEUE_STATUSES is a frozenset of FeedbackStatus members: compare by member name.
-    const queue = [...member("feedback", "QUEUE_STATUSES").signature.matchAll(/FeedbackStatus\.(\w+)/g)].map((m) => m[1]);
+    const queue = [...member("feedback", "QUEUE_STATUSES").signature.matchAll(/FeedbackStatus\.(\w+)/g)].map(
+      (m) => m[1],
+    );
     expect(sorted(FEEDBACK_QUEUE_STATUSES)).toEqual(sorted(queue));
   });
 
@@ -313,9 +322,9 @@ describe("server-kit's vocabularies, as this package writes them", () => {
 
   // 13. src/sync/wire.ts ↔ sync/schemas.py
   it("sync: the request, a change, the cursor and a refusal", () => {
-    expect(
-      sorted(keysOf<SyncPageCursor>({ entity: true, knowledge: true, id: true, window_end: true })),
-    ).toEqual(sorted(fieldNames("sync", "SyncPageCursor")));
+    expect(sorted(keysOf<SyncPageCursor>({ entity: true, knowledge: true, id: true, window_end: true }))).toEqual(
+      sorted(fieldNames("sync", "SyncPageCursor")),
+    );
     expect(
       sorted(
         keysOf<SyncRequestBody>({

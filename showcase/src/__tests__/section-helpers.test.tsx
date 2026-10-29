@@ -20,9 +20,7 @@ describe("OutTable / ConstList soft breaks", () => {
   });
 
   it("breaks a long identifier before dots and after underscores and brackets", () => {
-    expect(cellHtml("DEFAULT_ACCOUNT_SETTINGS_LABELS")).toBe(
-      "DEFAULT_<wbr>ACCOUNT_<wbr>SETTINGS_<wbr>LABELS",
-    );
+    expect(cellHtml("DEFAULT_ACCOUNT_SETTINGS_LABELS")).toBe("DEFAULT_<wbr>ACCOUNT_<wbr>SETTINGS_<wbr>LABELS");
     expect(cellHtml("panel.rect.width.value")).toBe("panel<wbr>.rect<wbr>.width<wbr>.value");
     expect(cellHtml("filterHref(column)")).toBe("filterHref(<wbr>column)");
   });

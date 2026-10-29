@@ -78,11 +78,11 @@ function ProgressDeterminate() {
       </Row>
       <div className="mt-3">
         <Note>
-          The default value text is the fraction as a percentage in the kit&apos;s locale — switch
-          the language in the top bar and &ldquo;35%&rdquo; becomes &ldquo;35 %&rdquo; in French and
-          German. The second bar is 0–212 rows, so a bare <code className="font-mono">aria-valuenow</code>{" "}
-          would be read as &ldquo;76&rdquo; or &ldquo;76 percent&rdquo;, both wrong;{" "}
-          <code className="font-mono">formatValue</code> gives it the words, visible and spoken.
+          The default value text is the fraction as a percentage in the kit&apos;s locale — switch the language in the
+          top bar and &ldquo;35%&rdquo; becomes &ldquo;35 %&rdquo; in French and German. The second bar is 0–212 rows,
+          so a bare <code className="font-mono">aria-valuenow</code> would be read as &ldquo;76&rdquo; or &ldquo;76
+          percent&rdquo;, both wrong; <code className="font-mono">formatValue</code> gives it the words, visible and
+          spoken.
         </Note>
       </div>
     </Example>
@@ -120,10 +120,9 @@ function ProgressIndeterminate() {
       </Stage>
       <Note>
         The third has neither a <code className="font-mono">label</code> nor an{" "}
-        <code className="font-mono">aria-label</code>, so it is named{" "}
-        <code className="font-mono">common.loading</code> from the provider — in the page&apos;s
-        language. Under <code className="font-mono">prefers-reduced-motion</code> the sweep stops
-        and the bar becomes a still, half-strength fill across the track.
+        <code className="font-mono">aria-label</code>, so it is named <code className="font-mono">common.loading</code>{" "}
+        from the provider — in the page&apos;s language. Under <code className="font-mono">prefers-reduced-motion</code>{" "}
+        the sweep stops and the bar becomes a still, half-strength fill across the track.
       </Note>
     </Example>
   );
@@ -167,11 +166,10 @@ function ProgressMeter() {
       </Row>
       <div className="mt-3">
         <Note>
-          A value past <code className="font-mono">max</code> is clamped for the fill and the
-          value text, so an overspent budget draws a full red bar rather than one that pokes out of
-          its track. The second meter passes <code className="font-mono">locale=&quot;de-DE&quot;</code>{" "}
-          and prints &ldquo;71 %&rdquo; whatever the top bar says. A meter is never indeterminate: a
-          missing value reads as <code className="font-mono">min</code>.
+          A value past <code className="font-mono">max</code> is clamped for the fill and the value text, so an
+          overspent budget draws a full red bar rather than one that pokes out of its track. The second meter passes{" "}
+          <code className="font-mono">locale=&quot;de-DE&quot;</code> and prints &ldquo;71 %&rdquo; whatever the top bar
+          says. A meter is never indeterminate: a missing value reads as <code className="font-mono">min</code>.
         </Note>
       </div>
     </Example>
@@ -220,9 +218,10 @@ function ProgressTonesSizes() {
       </div>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">tone=&quot;income&quot;</code> / <code className="font-mono">&quot;expense&quot;</code>{" "}
-          fill with <code className="font-mono">--money-income</code> / <code className="font-mono">--money-expense</code>,
-          the pair Chip, StatTile and Sparkline use — a share of money is neither &ldquo;good&rdquo; nor
+          <code className="font-mono">tone=&quot;income&quot;</code> /{" "}
+          <code className="font-mono">&quot;expense&quot;</code> fill with{" "}
+          <code className="font-mono">--money-income</code> / <code className="font-mono">--money-expense</code>, the
+          pair Chip, StatTile and Sparkline use — a share of money is neither &ldquo;good&rdquo; nor
           &ldquo;careful&rdquo;. <code className="font-mono">size=&quot;slim&quot;</code> is the 6px track (the
           Slider&apos;s) for a bar under a line of text, where <code className="font-mono">md</code>&apos;s 8px
           outweighs it.
@@ -257,8 +256,10 @@ function SkeletonDemo() {
             </span>
             <div className="text-sm text-secondary">
               <p className="font-medium text-primary">Ada Lovelace</p>
-              <p>Notes on the Analytical Engine, with a table of the Bernoulli numbers and the
-                first published algorithm meant for a machine.</p>
+              <p>
+                Notes on the Analytical Engine, with a table of the Bernoulli numbers and the first published algorithm
+                meant for a machine.
+              </p>
             </div>
           </div>
         ) : (
@@ -275,10 +276,10 @@ function SkeletonDemo() {
       </Row>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">lines={"{3}"}</code> draws three bars with the last cut to
-          two thirds, so the block reads as a paragraph rather than a table. The pulse stops under
-          reduced motion. The same look is the loading state inside{" "}
-          <code className="font-mono">StatTile</code>, so a tile wall and a list beside it pulse alike.
+          <code className="font-mono">lines={"{3}"}</code> draws three bars with the last cut to two thirds, so the
+          block reads as a paragraph rather than a table. The pulse stops under reduced motion. The same look is the
+          loading state inside <code className="font-mono">StatTile</code>, so a tile wall and a list beside it pulse
+          alike.
         </Note>
       </div>
     </Example>
@@ -299,9 +300,9 @@ function TableSkeletonDemo() {
       <div className="mt-3">
         <Note>
           <code className="font-mono">rows</code> × <code className="font-mono">columns</code>, with{" "}
-          <code className="font-mono">tiles</code> above, <code className="font-mono">groups</code> of rows under
-          header bars, or <code className="font-mono">variant=&quot;grid&quot;</code> for a heatmap. Reduced motion
-          keeps the shapes and drops the pulse.
+          <code className="font-mono">tiles</code> above, <code className="font-mono">groups</code> of rows under header
+          bars, or <code className="font-mono">variant=&quot;grid&quot;</code> for a heatmap. Reduced motion keeps the
+          shapes and drops the pulse.
         </Note>
       </div>
     </Example>
@@ -315,7 +316,10 @@ function EmptyStateDemo() {
   const [offline, setOffline] = useState(true);
   const [retries, setRetries] = useState(0);
   return (
-    <Example label="EmptyState — icon and action" hint="title is required; hint, icon (above) and action (below) are optional">
+    <Example
+      label="EmptyState — icon and action"
+      hint="title is required; hint, icon (above) and action (below) are optional"
+    >
       <div className="grid gap-4 md:grid-cols-2">
         <div>
           {rows.length === 0 ? (
@@ -368,9 +372,9 @@ function EmptyStateDemo() {
       </div>
       <div className="mt-3">
         <Note>
-          The icon is sized and muted by the box (<code className="font-mono">[&amp;_svg]:size-8</code>)
-          and hidden from assistive tech — the title already says what it shows. The action is
-          yours: several buttons in a fragment wrap and centre as one row, as in the offline card.
+          The icon is sized and muted by the box (<code className="font-mono">[&amp;_svg]:size-8</code>) and hidden from
+          assistive tech — the title already says what it shows. The action is yours: several buttons in a fragment wrap
+          and centre as one row, as in the offline card.
         </Note>
       </div>
     </Example>
@@ -411,14 +415,13 @@ function EmptyStateRich() {
       <div className="mt-3">
         <Note>
           <code className="font-mono">headingAs=&quot;h4&quot;</code> renders the title as an{" "}
-          <code className="font-mono">&lt;h4&gt;</code> — under this page&apos;s h2 section and h3 example —
-          so an error boundary that IS the page keeps the line that says what happened in the heading
-          outline. Only the element changes: it is still <code className="font-mono">text-sm</code>, the
-          box&apos;s look. Left out, the title is a <code className="font-mono">&lt;div&gt;</code>, as in the
-          cards above. <code className="font-mono">title</code> carries a{" "}
-          <code className="font-mono">&lt;code&gt;</code> here and <code className="font-mono">hint</code> a
-          link; an empty hint (<code className="font-mono">&quot;&quot;</code>,{" "}
-          <code className="font-mono">false</code>, <code className="font-mono">null</code>) renders no line.
+          <code className="font-mono">&lt;h4&gt;</code> — under this page&apos;s h2 section and h3 example — so an error
+          boundary that IS the page keeps the line that says what happened in the heading outline. Only the element
+          changes: it is still <code className="font-mono">text-sm</code>, the box&apos;s look. Left out, the title is a{" "}
+          <code className="font-mono">&lt;div&gt;</code>, as in the cards above.{" "}
+          <code className="font-mono">title</code> carries a <code className="font-mono">&lt;code&gt;</code> here and{" "}
+          <code className="font-mono">hint</code> a link; an empty hint (<code className="font-mono">&quot;&quot;</code>
+          , <code className="font-mono">false</code>, <code className="font-mono">null</code>) renders no line.
         </Note>
       </div>
     </Example>
@@ -429,7 +432,10 @@ const BANNER_TONES: AlertTone[] = ["danger", "warning", "info", "neutral"];
 
 function AlertTonesDemo() {
   return (
-    <Example label="AlertBanner — four tones" hint="danger (default) and warning draw the triangle; info and neutral the ⓘ">
+    <Example
+      label="AlertBanner — four tones"
+      hint="danger (default) and warning draw the triangle; info and neutral the ⓘ"
+    >
       <div className="space-y-3">
         <AlertBanner tone="danger">
           This import would overwrite 14 reconciled payments. Nothing has been written yet.
@@ -441,12 +447,12 @@ function AlertTonesDemo() {
       </div>
       <div className="mt-3">
         <Note>
-          A triangle with no colour would be a warning that looks like a note, so the glyph
-          follows the tone — the triangle for the two that mean &ldquo;something is wrong&rdquo;,
-          the ⓘ for <code className="font-mono">info</code> and <code className="font-mono">neutral</code>{" "}
-          — so a neutral banner is simply a note. The colours are the semantic{" "}
-          <code className="font-mono">--danger-*</code>, <code className="font-mono">--warning-*</code>{" "}
-          and <code className="font-mono">--info-*</code> families, which a palette preset does not move.
+          A triangle with no colour would be a warning that looks like a note, so the glyph follows the tone — the
+          triangle for the two that mean &ldquo;something is wrong&rdquo;, the ⓘ for{" "}
+          <code className="font-mono">info</code> and <code className="font-mono">neutral</code> — so a neutral banner
+          is simply a note. The colours are the semantic <code className="font-mono">--danger-*</code>,{" "}
+          <code className="font-mono">--warning-*</code> and <code className="font-mono">--info-*</code> families, which
+          a palette preset does not move.
         </Note>
       </div>
     </Example>
@@ -486,14 +492,13 @@ function AlertInteractiveDemo() {
       <div className="mt-3">
         <Note>
           <code className="font-mono">onClick</code> makes the banner ONE{" "}
-          <code className="font-mono">&lt;button&gt;</code> and <code className="font-mono">href</code>{" "}
-          one <code className="font-mono">&lt;a&gt;</code>, each with a trailing chevron that says
-          so; the two are exclusive in the types. With <code className="font-mono">onDismiss</code>{" "}
-          as well the × cannot sit inside the row element, so the frame becomes a wrapper holding
-          two siblings — the third banner: Tab reaches the link, then the ×, whose name here is{" "}
-          <code className="font-mono">dismissLabel</code> (default{" "}
-          <code className="font-mono">common.dismiss</code>). <code className="font-mono">icon</code>{" "}
-          replaces the tone&apos;s glyph; it stays decorative.
+          <code className="font-mono">&lt;button&gt;</code> and <code className="font-mono">href</code> one{" "}
+          <code className="font-mono">&lt;a&gt;</code>, each with a trailing chevron that says so; the two are exclusive
+          in the types. With <code className="font-mono">onDismiss</code> as well the × cannot sit inside the row
+          element, so the frame becomes a wrapper holding two siblings — the third banner: Tab reaches the link, then
+          the ×, whose name here is <code className="font-mono">dismissLabel</code> (default{" "}
+          <code className="font-mono">common.dismiss</code>). <code className="font-mono">icon</code> replaces the
+          tone&apos;s glyph; it stays decorative.
         </Note>
       </div>
     </Example>
@@ -541,12 +546,11 @@ function AlertInlineDemo() {
         <Note>
           Set the radius under 3 for the danger line, press Solve for the neutral one with a{" "}
           <code className="font-mono">Spinner</code> as its <code className="font-mono">icon</code>;
-          &ldquo;Ready.&rdquo; passes <code className="font-mono">icon={"{null}"}</code> and draws no
-          glyph. Inline, a <code className="font-mono">danger</code> banner is{" "}
-          <code className="font-mono">role=&quot;alert&quot;</code> and the rest{" "}
-          <code className="font-mono">role=&quot;status&quot;</code>, because a message that appears
-          in a toolbar in answer to what the user just did is exactly the one a reader otherwise never
-          hears. The box stays role-less; a <code className="font-mono">role</code> you pass wins either way.
+          &ldquo;Ready.&rdquo; passes <code className="font-mono">icon={"{null}"}</code> and draws no glyph. Inline, a{" "}
+          <code className="font-mono">danger</code> banner is <code className="font-mono">role=&quot;alert&quot;</code>{" "}
+          and the rest <code className="font-mono">role=&quot;status&quot;</code>, because a message that appears in a
+          toolbar in answer to what the user just did is exactly the one a reader otherwise never hears. The box stays
+          role-less; a <code className="font-mono">role</code> you pass wins either way.
         </Note>
       </div>
     </Example>
@@ -562,32 +566,25 @@ function ToneFrames() {
       <div className="space-y-3">
         {BANNER_TONES.map((tone) => (
           <div key={tone} className={`${alertFrameClass(tone)} text-sm text-primary`}>
-            <code className="font-mono">alertFrameClass(&quot;{tone}&quot;)</code> — radius and
-            padding included.
+            <code className="font-mono">alertFrameClass(&quot;{tone}&quot;)</code> — radius and padding included.
           </div>
         ))}
-        <div
-          className={`${toneFrameClass("warning")} rounded-xl px-5 py-4 text-sm text-primary`}
-        >
-          <code className="font-mono">toneFrameClass(&quot;warning&quot;)</code> on a box that
-          brought its own <code className="font-mono">rounded-xl px-5 py-4</code>.
+        <div className={`${toneFrameClass("warning")} rounded-xl px-5 py-4 text-sm text-primary`}>
+          <code className="font-mono">toneFrameClass(&quot;warning&quot;)</code> on a box that brought its own{" "}
+          <code className="font-mono">rounded-xl px-5 py-4</code>.
         </div>
       </div>
       <div className="mt-4">
-        <ConstList
-          items={BANNER_TONES.map((tone) => [`alertFrameClass("${tone}")`, alertFrameClass(tone)])}
-        />
+        <ConstList items={BANNER_TONES.map((tone) => [`alertFrameClass("${tone}")`, alertFrameClass(tone)])} />
       </div>
       <div className="mt-3">
         <Note>
-          The coloured tones carry a <strong>2px</strong> border and{" "}
-          <code className="font-mono">p-[11px]</code>; neutral carries 1px and{" "}
-          <code className="font-mono">p-3</code>. That odd 11 is the point: a 1px border is 1.25
-          device pixels at the usual 125% Windows scaling, so it renders solid on one edge and
-          half-lit on the other depending on where the box lands. 2px always covers two whole
-          pixels, and the pixel is taken back out of the padding so switching tones never shifts
-          the layout. If you use <code className="font-mono">toneFrameClass</code> you owe that
-          compensation yourself.
+          The coloured tones carry a <strong>2px</strong> border and <code className="font-mono">p-[11px]</code>;
+          neutral carries 1px and <code className="font-mono">p-3</code>. That odd 11 is the point: a 1px border is 1.25
+          device pixels at the usual 125% Windows scaling, so it renders solid on one edge and half-lit on the other
+          depending on where the box lands. 2px always covers two whole pixels, and the pixel is taken back out of the
+          padding so switching tones never shifts the layout. If you use{" "}
+          <code className="font-mono">toneFrameClass</code> you owe that compensation yourself.
         </Note>
       </div>
     </Example>

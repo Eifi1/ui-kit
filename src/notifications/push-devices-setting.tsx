@@ -55,8 +55,10 @@ export function describeUserAgent(ua: string | null): string | null {
   return [browser, os].filter(Boolean).join(" · ");
 }
 
-export interface PushDevicesSettingProps<Id extends string | number = string>
-  extends Omit<ComponentPropsWithRef<"div">, "children"> {
+export interface PushDevicesSettingProps<Id extends string | number = string> extends Omit<
+  ComponentPropsWithRef<"div">,
+  "children"
+> {
   /** `GET /notifications/devices`, oldest first; `undefined` while the first load runs. */
   devices: readonly PushDeviceItem<Id>[] | undefined;
   loading?: boolean;
@@ -371,7 +373,9 @@ function DeviceRow<Id extends string | number>({
             {" · "}
             {lastDelivery ? labels.lastDelivery(lastDelivery) : labels.noDelivery}
           </div>
-          {device.failure_count > 0 && <div className="text-xs text-warning">{labels.failures(device.failure_count)}</div>}
+          {device.failure_count > 0 && (
+            <div className="text-xs text-warning">{labels.failures(device.failure_count)}</div>
+          )}
         </div>
         <Button
           ref={removeRef}

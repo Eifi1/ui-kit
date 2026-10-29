@@ -101,7 +101,9 @@ describe("EmailChangeSetting — refusals", () => {
     const { user } = setup({ onRequest: async () => Promise.reject(refusal(409, "email_taken")) });
     await request(user);
     const field = screen.getByLabelText("New email address");
-    await waitFor(() => expect(field).toHaveAccessibleDescription("An account with this email address already exists."));
+    await waitFor(() =>
+      expect(field).toHaveAccessibleDescription("An account with this email address already exists."),
+    );
     await waitFor(() => expect(field).toHaveFocus());
     await user.type(field, "m");
     expect(field).not.toHaveAttribute("aria-invalid");
@@ -210,7 +212,9 @@ describe("EmailChangeSetting — pending", () => {
     expect(onRequest).toHaveBeenCalled();
     // The app has not refreshed its state yet: still the form.
     expect(screen.getByLabelText("New email address")).toBeInTheDocument();
-    rerender(<EmailChangeSetting currentEmail="ada@example.com" onRequest={onRequest} pendingEmail="ada.new@example.com" />);
+    rerender(
+      <EmailChangeSetting currentEmail="ada@example.com" onRequest={onRequest} pendingEmail="ada.new@example.com" />,
+    );
     expect(screen.getByText("Confirm the link we sent to ada.new@example.com.")).toBeInTheDocument();
   });
 });

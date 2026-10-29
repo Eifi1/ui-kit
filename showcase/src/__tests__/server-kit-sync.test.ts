@@ -64,7 +64,12 @@ type Api = {
     name: string;
     summary: string;
     doc: string;
-    contract?: { doc: string; section: string; url?: string; links?: Array<{ section: string; heading: string; url: string }> };
+    contract?: {
+      doc: string;
+      section: string;
+      url?: string;
+      links?: Array<{ section: string; heading: string; url: string }>;
+    };
     members: Array<Record<string, unknown>>;
   }>;
   mails: Array<Record<string, unknown>>;
@@ -147,7 +152,12 @@ describe("validation", () => {
     // server-kit 0.9: the FastAPI-only router is a module of its own inside a package.
     api.modules.push({ name: "eifi1_server_kit.feedback.router", summary: "", doc: "", members: [] });
     expect(validate(api)).toEqual([]);
-    for (const name of ["eifi1_server_kit", "eifi1_server_kit.Feedback", "eifi1_server_kit.feedback.", "other.feedback"]) {
+    for (const name of [
+      "eifi1_server_kit",
+      "eifi1_server_kit.Feedback",
+      "eifi1_server_kit.feedback.",
+      "other.feedback",
+    ]) {
       const bad = exportOf();
       bad.modules[0].name = name;
       expect(validate(bad), name).toEqual([`${name}: name ${JSON.stringify(name)} is not an eifi1_server_kit module`]);
@@ -227,7 +237,10 @@ describe("the script", () => {
       // A real doc of this repository, so the CLI resolves it from its own docs/.
       api.modules[0].contract = { doc: "docs/settings-harmonization.md", section: "§6" };
       writeFileSync(source, JSON.stringify(api));
-      execFileSync("node", ["scripts/sync-server-kit.mjs", "--from", source, "--out", out], { cwd: ROOT, stdio: "pipe" });
+      execFileSync("node", ["scripts/sync-server-kit.mjs", "--from", source, "--out", out], {
+        cwd: ROOT,
+        stdio: "pipe",
+      });
       const written = JSON.parse(readFileSync(out, "utf8")) as Api;
       expect(written.modules[0].contract?.url).toBe(`${DOCS_BASE}docs/settings-harmonization.md#6-the-backend`);
       execFileSync("node", ["scripts/sync-server-kit.mjs", "--check", "--from", source, "--out", out], {

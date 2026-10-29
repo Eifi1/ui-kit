@@ -13,7 +13,7 @@
   // translation review, notifications next) is usually changed on both sides at once.
   "folders": [
     { "name": "@eifi1/ui-kit — design system", "path": "." },
-    { "name": "eifi1-server-kit — shared backend", "path": "../server-kit" }
+    { "name": "eifi1-server-kit — shared backend", "path": "../server-kit" },
   ],
 
   "settings": {
@@ -28,15 +28,15 @@
       "**/.venv/**": true,
       "**/node_modules/**": true,
       "**/dist/**": true,
-      "**/showcase/dist/**": true
+      "**/showcase/dist/**": true,
     },
     "search.exclude": {
       "**/.venv": true,
       "**/dist": true,
       "**/node_modules": true,
       "**/.mypy_cache": true,
-      "**/.coverage": true
-    }
+      "**/.coverage": true,
+    },
     // No Python interpreter here on purpose: a workspace-level
     // `python.defaultInterpreterPath` applies to every root. The server kit's `.venv`
     // sits at its top (`uv sync`), where the Python extension finds it per folder.
@@ -44,6 +44,6 @@
 
   "extensions": {
     // The server kit's checks run ruff and mypy --strict (scripts/check.sh).
-    "recommendations": ["ms-python.python", "charliermarsh.ruff", "ms-python.mypy-type-checker"]
-  }
+    "recommendations": ["ms-python.python", "charliermarsh.ruff", "ms-python.mypy-type-checker"],
+  },
 }

@@ -56,8 +56,8 @@ function LocaleMarks() {
           de-DE, "3.5" for de-CH and en-US, as {code("Intl")} has it. What it reports stays dot-decimal, so{" "}
           {code("Number(value)")} keeps working. Typing reads grouping the way {code("AmountInput")} does: both marks
           present, the one that is not the locale's is grouping; a lone "." in thousands shape is grouping in a comma
-          locale; a lone "," stays a decimal in a dot locale. While you type, the field keeps your own text (the caret never jumps); it is re-spelt
-          without grouping when it settles.
+          locale; a lone "," stays a decimal in a dot locale. While you type, the field keeps your own text (the caret
+          never jumps); it is re-spelt without grouping when it settles.
         </Note>
       </div>
     </Example>
@@ -82,12 +82,12 @@ function MoneyNotNumber() {
         </div>
       </div>
       <Note>
-        Type {code("12.345")} or {code("100/3")} into both and leave the field. NumberInput never rounds, so a
-        3-decimal amount reaches a 2-decimal Money column (a 422 from the server, possibly in a wizard whose first
-        record was already saved). AmountInput (a string value) and MoneyField (a number) settle to the currency's minor unit. In a
-        development build a NumberInput with a currency as its unit, or in the label of a field with no unit, warns
-        once on the console — never in production, never under vitest, and never for a unit of measure ("mm", "N·m",
-        "%") at any number of decimals.
+        Type {code("12.345")} or {code("100/3")} into both and leave the field. NumberInput never rounds, so a 3-decimal
+        amount reaches a 2-decimal Money column (a 422 from the server, possibly in a wizard whose first record was
+        already saved). AmountInput (a string value) and MoneyField (a number) settle to the currency's minor unit. In a
+        development build a NumberInput with a currency as its unit, or in the label of a field with no unit, warns once
+        on the console — never in production, never under vitest, and never for a unit of measure ("mm", "N·m", "%") at
+        any number of decimals.
       </Note>
     </Example>
   );
@@ -104,7 +104,13 @@ function InlineCell() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <span className="min-w-0 truncate-until-large text-sm text-secondary">Groceries — assigned</span>
           <div className="w-36 shrink-0">
-            <MoneyField aria-label="Assigned" currency="EUR" calculator={false} value={assigned} onCommit={setAssigned} />
+            <MoneyField
+              aria-label="Assigned"
+              currency="EUR"
+              calculator={false}
+              value={assigned}
+              onCommit={setAssigned}
+            />
           </div>
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -134,7 +140,10 @@ function Anatomy() {
   const paymentError = Number(payment) > 800 ? "Exceeds the outstanding 800.00" : undefined;
   const currencyError = currency === "CHF" ? undefined : "The account is in CHF";
   return (
-    <Example label="error on NumberInput, AmountInput, MoneyField, CurrencySelect; hint on CurrencySelect" hint="the same anatomy as Input and Select">
+    <Example
+      label="error on NumberInput, AmountInput, MoneyField, CurrencySelect; hint on CurrencySelect"
+      hint="the same anatomy as Input and Select"
+    >
       <div className="grid gap-3 sm:grid-cols-3">
         <NumberInput label="Goal target" value={target} onChange={setTarget} hint="Per month" error={targetError} />
         <AmountInput label="Payment" currency="CHF" value={payment} onChange={setPayment} error={paymentError} />
@@ -149,8 +158,8 @@ function Anatomy() {
       <Note>
         {code("error")} is {code("Input")}'s: the message under the field, after a text {code("hint")}, merged into{" "}
         {code("aria-describedby")} after the caller's own ids, and it implies {code("invalid")}. {code("null")},{" "}
-        {code("false")} and {code('""')} are no message. A field that passes {code("error")} keeps one steady box, so the
-        message coming and going never remounts the input mid-keystroke. CurrencySelect's {code("hint")} follows{" "}
+        {code("false")} and {code('""')} are no message. A field that passes {code("error")} keeps one steady box, so
+        the message coming and going never remounts the input mid-keystroke. CurrencySelect's {code("hint")} follows{" "}
         {code("Select")}: a {code("FieldHint")} rides the label line, plain text is a caption under the field.
       </Note>
     </Example>
@@ -179,10 +188,10 @@ function Sign() {
         <SignChip negative={negative} onNegativeChange={setNegative} />
       </div>
       <Note>
-        The direction chip as a kit piece. It takes the same {code("negative")} /{" "}
-        {code("onNegativeChange")} pair as AmountInput, so one state feeds both, and wears the same money tones as the
-        figure. The word IS the state, so it is an action button with no {code("aria-pressed")}; its name says the state
-        and what a press does. Words from the {code("signChip")} labels namespace.
+        The direction chip as a kit piece. It takes the same {code("negative")} / {code("onNegativeChange")} pair as
+        AmountInput, so one state feeds both, and wears the same money tones as the figure. The word IS the state, so it
+        is an action button with no {code("aria-pressed")}; its name says the state and what a press does. Words from
+        the {code("signChip")} labels namespace.
       </Note>
     </Example>
   );

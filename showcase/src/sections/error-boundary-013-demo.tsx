@@ -50,12 +50,12 @@ function DefaultScreenDemo() {
       </div>
       <div className="mt-3">
         <Note>
-          A whole boundary can be this: {code("<ErrorBoundary resetKeys={[pathname]} appVersion={__VERSION__} />")}.
-          The error&rsquo;s own words are quoted, because three sentences that are true of every crash identify none
-          of them. Try again resets the boundary; Reload reloads the page — a deterministic crash survives Try again,
-          so there is always a way forward. The copy button puts the plain-text report on the clipboard (error line,
-          page, time, user agent, app version, extras, stack, component stack), and the disclosure shows the same
-          text. The screen reads no router, query client or auth store — a crash is when those may be what broke.
+          A whole boundary can be this: {code("<ErrorBoundary resetKeys={[pathname]} appVersion={__VERSION__} />")}. The
+          error&rsquo;s own words are quoted, because three sentences that are true of every crash identify none of
+          them. Try again resets the boundary; Reload reloads the page — a deterministic crash survives Try again, so
+          there is always a way forward. The copy button puts the plain-text report on the clipboard (error line, page,
+          time, user agent, app version, extras, stack, component stack), and the disclosure shows the same text. The
+          screen reads no router, query client or auth store — a crash is when those may be what broke.
         </Note>
       </div>
     </Example>
@@ -67,7 +67,7 @@ function DefaultScreenDemo() {
 type Outcome = "reference" | "void" | "refused" | "reject" | "throw";
 
 const OUTCOMES: Array<[Outcome, string]> = [
-  ["reference", "{ reference: \"#4711\" }"],
+  ["reference", '{ reference: "#4711" }'],
   ["void", "nothing"],
   ["refused", "{ filed: false }"],
   ["reject", "rejects"],
@@ -150,13 +150,12 @@ function OnReportDemo() {
       <p className={`${READOUT} mt-3 whitespace-pre-wrap`}>{log.length ? log.join("\n") : "onReport: —"}</p>
       <div className="mt-3">
         <Note>
-          Break, Try again, break again: the same crash is filed once per page load
-          ({code("crashFingerprint")}: name, message, first stack frames), and the second screen shows the first
-          filing&rsquo;s reference. A throw or a rejection from {code("onReport")} never reaches the boundary; the
-          screen claims nothing and keeps the copy button. {code("{ filed: false }")} is the app saying it chose not to
-          file (a demo session, a buffered offline report). What the report may carry is the app&rsquo;s call: rewrite
-          it in {code("redact")} (an allow-list of query params, say) and the
-          screen, the clipboard and {code("onReport")} all get the redacted one.
+          Break, Try again, break again: the same crash is filed once per page load ({code("crashFingerprint")}: name,
+          message, first stack frames), and the second screen shows the first filing&rsquo;s reference. A throw or a
+          rejection from {code("onReport")} never reaches the boundary; the screen claims nothing and keeps the copy
+          button. {code("{ filed: false }")} is the app saying it chose not to file (a demo session, a buffered offline
+          report). What the report may carry is the app&rsquo;s call: rewrite it in {code("redact")} (an allow-list of
+          query params, say) and the screen, the clipboard and {code("onReport")} all get the redacted one.
         </Note>
       </div>
     </Example>
@@ -205,10 +204,10 @@ function ChunkLoadDemo() {
       <pre className={`${READOUT} mt-1 whitespace-pre-wrap`}>{formatCrashReport(sample)}</pre>
       <div className="mt-3">
         <Note>
-          {code("isChunkLoadError")} (the patterns of Vite, webpack, a service worker&rsquo;s failed fetch)
-          turns the screen into &ldquo;A new version is available&rdquo;; with {code("navigator.onLine === false")} any
-          crash reads &ldquo;You&rsquo;re offline&rdquo;. Either way Reload is the primary action, and a chunk failure
-          is never handed to {code("onReport")} — it is a deploy or a dropped connection, not a defect.
+          {code("isChunkLoadError")} (the patterns of Vite, webpack, a service worker&rsquo;s failed fetch) turns the
+          screen into &ldquo;A new version is available&rdquo;; with {code("navigator.onLine === false")} any crash
+          reads &ldquo;You&rsquo;re offline&rdquo;. Either way Reload is the primary action, and a chunk failure is
+          never handed to {code("onReport")} — it is a deploy or a dropped connection, not a defect.
         </Note>
       </div>
     </Example>

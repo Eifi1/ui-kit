@@ -79,12 +79,13 @@ function YearOfWeeks() {
       <div className="mt-3">
         <Note>
           <code className="font-mono">onSelect</code> makes every day a button (click, Enter or Space) and{" "}
-          <code className="font-mono">selected</code> rings the chosen one — the drill-down into a day&apos;s rows.
-          The grid is ONE tab stop: ↑/↓ are the previous/next day, ←/→ a week, PageUp/PageDown a month, Home/End the
-          window&apos;s ends. <code className="font-mono">formatValue</code> writes each amount as euros, in the
-          tooltip and in the day&apos;s accessible name. The 1st of each month is rent, so the scale&apos;s top (the
-          default <code className="font-mono">max</code>: the largest value on screen) is far above an ordinary day.
-          Every tooltip is <code className="font-mono">data-private</code> by default (<code className="font-mono">sensitive</code>).
+          <code className="font-mono">selected</code> rings the chosen one — the drill-down into a day&apos;s rows. The
+          grid is ONE tab stop: ↑/↓ are the previous/next day, ←/→ a week, PageUp/PageDown a month, Home/End the
+          window&apos;s ends. <code className="font-mono">formatValue</code> writes each amount as euros, in the tooltip
+          and in the day&apos;s accessible name. The 1st of each month is rent, so the scale&apos;s top (the default{" "}
+          <code className="font-mono">max</code>: the largest value on screen) is far above an ordinary day. Every
+          tooltip is <code className="font-mono">data-private</code> by default (
+          <code className="font-mono">sensitive</code>).
         </Note>
       </div>
     </Example>
@@ -113,11 +114,21 @@ function OneMonth() {
     >
       <div className="max-w-sm">
         <Row className="mb-2 justify-between">
-          <Button size="sm" variant="secondary" disabled={month <= "2025-10"} onClick={() => setMonth((m) => shiftMonth(m, -1))}>
+          <Button
+            size="sm"
+            variant="secondary"
+            disabled={month <= "2025-10"}
+            onClick={() => setMonth((m) => shiftMonth(m, -1))}
+          >
             Previous
           </Button>
           <span className="text-sm font-medium text-primary">{title}</span>
-          <Button size="sm" variant="secondary" disabled={month >= "2026-09"} onClick={() => setMonth((m) => shiftMonth(m, 1))}>
+          <Button
+            size="sm"
+            variant="secondary"
+            disabled={month >= "2026-09"}
+            onClick={() => setMonth((m) => shiftMonth(m, 1))}
+          >
             Next
           </Button>
         </Row>
@@ -171,7 +182,10 @@ function ScaleControls() {
   const [colour, setColour] = useState<Colour>("brand");
   const from = "2026-04-01";
   return (
-    <Example label="CalendarHeatmap — levels, max and color" hint="the scale: how many steps, where it tops out, in what colour">
+    <Example
+      label="CalendarHeatmap — levels, max and color"
+      hint="the scale: how many steps, where it tops out, in what colour"
+    >
       <Row className="mb-3">
         <span className="text-xs text-muted">levels</span>
         <ToggleGroup<string>
@@ -217,12 +231,11 @@ function ScaleControls() {
       />
       <div className="mt-3">
         <Note>
-          <code className="font-mono">levels</code> is the number of non-empty steps (the legend grows with it).
-          Left alone, <code className="font-mono">max</code> is the largest value in the window — here the rent, so
-          most days sit on the first step; <code className="font-mono">max=&#123;100&#125;</code> puts an ordinary
-          weekend at the top and lets the rent clip to it. <code className="font-mono">color</code> is any CSS colour,
-          each step mixed into <code className="font-mono">--bg-surface</code>, so the ramp follows the theme — flip
-          it in the top bar.
+          <code className="font-mono">levels</code> is the number of non-empty steps (the legend grows with it). Left
+          alone, <code className="font-mono">max</code> is the largest value in the window — here the rent, so most days
+          sit on the first step; <code className="font-mono">max=&#123;100&#125;</code> puts an ordinary weekend at the
+          top and lets the rent clip to it. <code className="font-mono">color</code> is any CSS colour, each step mixed
+          into <code className="font-mono">--bg-surface</code>, so the ramp follows the theme — flip it in the top bar.
         </Note>
       </div>
     </Example>
@@ -235,7 +248,10 @@ function Truncated() {
   const [sensitive, setSensitive] = useState(true);
   const counts = useMemo(() => spending(FROM, TO, 21).map((p) => ({ ...p, value: Math.round(p.value / 20) })), []);
   return (
-    <Example label="CalendarHeatmap — maxDays, legend and sensitive" hint="a long window cut to its latest days, and says so">
+    <Example
+      label="CalendarHeatmap — maxDays, legend and sensitive"
+      hint="a long window cut to its latest days, and says so"
+    >
       <Row className="mb-3">
         <label className="flex items-center gap-2 text-sm text-secondary">
           <input type="checkbox" checked={capped} onChange={(e) => setCapped(e.target.checked)} />
@@ -262,13 +278,13 @@ function Truncated() {
       />
       <div className="mt-3">
         <Note>
-          The window is a whole year; <code className="font-mono">maxDays</code> keeps the LATEST 90 days and prints
-          how many earlier ones it left out (<code className="font-mono">calendarHeatmap.truncated</code>) rather than
+          The window is a whole year; <code className="font-mono">maxDays</code> keeps the LATEST 90 days and prints how
+          many earlier ones it left out (<code className="font-mono">calendarHeatmap.truncated</code>) rather than
           silently starting in July. Untick <code className="font-mono">legend</code> (default on) and the Less … More
-          scale goes. Untick <code className="font-mono">sensitive</code> and hover a day: the
-          bubble loses <code className="font-mono">data-private</code>, so a host&apos;s demo-mode blur no longer
-          covers it — right for receipt COUNTS, wrong for amounts. <code className="font-mono">labels.day</code> words
-          each day&apos;s name and tooltip for this data.
+          scale goes. Untick <code className="font-mono">sensitive</code> and hover a day: the bubble loses{" "}
+          <code className="font-mono">data-private</code>, so a host&apos;s demo-mode blur no longer covers it — right
+          for receipt COUNTS, wrong for amounts. <code className="font-mono">labels.day</code> words each day&apos;s
+          name and tooltip for this data.
         </Note>
       </div>
     </Example>
@@ -284,10 +300,19 @@ const WEEK_STARTS: { value: string; label: string }[] = [
 function RtlWeekStart() {
   const [start, setStart] = useState("6");
   return (
-    <Example label="CalendarHeatmap — right-to-left and weekStartsOn" hint={<code className="font-mono">dir=&quot;rtl&quot; locale=&quot;ar-EG&quot;</code>}>
+    <Example
+      label="CalendarHeatmap — right-to-left and weekStartsOn"
+      hint={<code className="font-mono">dir=&quot;rtl&quot; locale=&quot;ar-EG&quot;</code>}
+    >
       <Row className="mb-3">
         <span className="text-xs text-muted">weekStartsOn</span>
-        <ToggleGroup<string> aria-label="Week starts on" size="sm" value={start} onChange={setStart} options={WEEK_STARTS} />
+        <ToggleGroup<string>
+          aria-label="Week starts on"
+          size="sm"
+          value={start}
+          onChange={setStart}
+          options={WEEK_STARTS}
+        />
       </Row>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <div dir="rtl">
@@ -316,10 +341,10 @@ function RtlWeekStart() {
       <div className="mt-3">
         <Note>
           Under <code className="font-mono">dir=&quot;rtl&quot;</code> the weeks run right to left, the sideways
-          scroller starts at the newest week on the LEFT, and ←/→ are mirrored. <code className="font-mono">locale</code>{" "}
-          writes the month and weekday names, day numbers and values in Arabic-Indic digits.{" "}
-          <code className="font-mono">weekStartsOn</code> overrides the provider&apos;s and the locale&apos;s first day —
-          the rows of the weeks layout and the columns of the month layout both move with it.
+          scroller starts at the newest week on the LEFT, and ←/→ are mirrored.{" "}
+          <code className="font-mono">locale</code> writes the month and weekday names, day numbers and values in
+          Arabic-Indic digits. <code className="font-mono">weekStartsOn</code> overrides the provider&apos;s and the
+          locale&apos;s first day — the rows of the weeks layout and the columns of the month layout both move with it.
         </Note>
       </div>
     </Example>

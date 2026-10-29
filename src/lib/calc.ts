@@ -231,7 +231,10 @@ export function commitExpression(raw: string): string {
   // not appear to state it differently. (The `[^0-9.-]` strip on the same line
   // already ate whatever commas a non-global replace missed, so this changes no
   // behaviour — it removes the need for the next reader to run it to find that out.)
-  const cleaned = s.replace(/,/g, ".").replace(/[^0-9.-]/g, "").replace(/(?!^)-/g, "");
+  const cleaned = s
+    .replace(/,/g, ".")
+    .replace(/[^0-9.-]/g, "")
+    .replace(/(?!^)-/g, "");
   return cleaned.replace(/^(-?\d*\.?\d*).*$/, "$1");
 }
 

@@ -41,7 +41,12 @@ describe("defaultFilterState", () => {
     expect(defaultFilterState({ type: "text", getValue: () => "" })).toEqual({ type: "text", q: "" });
     expect(defaultFilterState({ type: "select", getValue: () => "" })).toEqual({ type: "select", values: [] });
     expect(defaultFilterState({ type: "date", getValue: () => "" })).toEqual({ type: "date", from: "", to: "" });
-    expect(defaultFilterState({ type: "number", getValue: () => 0 })).toEqual({ type: "number", min: "", max: "", abs: false });
+    expect(defaultFilterState({ type: "number", getValue: () => 0 })).toEqual({
+      type: "number",
+      min: "",
+      max: "",
+      abs: false,
+    });
   });
 });
 

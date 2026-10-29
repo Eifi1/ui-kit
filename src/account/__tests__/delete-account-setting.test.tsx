@@ -51,7 +51,9 @@ describe("DeleteAccountSetting — what it says before anything is pressed", () 
     second.unmount();
 
     setup({ days: 1 });
-    expect(screen.getByText("Your account is deactivated at once and erased for good 1 day later.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Your account is deactivated at once and erased for good 1 day later."),
+    ).toBeInTheDocument();
   });
 
   it("operator: an operator will erase it (kastlan)", () => {
@@ -178,7 +180,10 @@ describe("DeleteAccountSetting — refusals", () => {
     const { user } = setup({
       onRequest: () =>
         Promise.reject({
-          response: { status: 409, data: { detail: "x", code: "last_admin", companies: ["Example AG", "Sample GmbH"] } },
+          response: {
+            status: 409,
+            data: { detail: "x", code: "last_admin", companies: ["Example AG", "Sample GmbH"] },
+          },
         }),
     });
     await arm(user);

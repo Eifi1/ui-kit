@@ -53,13 +53,7 @@ async function back() {
   });
 }
 
-function Editor({
-  onCloseEditor,
-  onSheetClosed,
-}: {
-  onCloseEditor: () => void;
-  onSheetClosed?: () => void;
-}) {
+function Editor({ onCloseEditor, onSheetClosed }: { onCloseEditor: () => void; onSheetClosed?: () => void }) {
   // What the mobile row editor does, which is why Back reached it at all.
   useOverlayHistory(true, onCloseEditor);
   const [sheetOpen, setSheetOpen] = useState(false);

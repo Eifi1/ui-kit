@@ -12,9 +12,7 @@ import { UiKitProvider } from "../../i18n/kit-labels";
 
 function setup(props: Partial<Parameters<typeof NumberField>[0]> = {}) {
   const onCommit = vi.fn();
-  const view = render(
-    <NumberField label="Wheelbase" value={2700} digits={0} onCommit={onCommit} {...props} />,
-  );
+  const view = render(<NumberField label="Wheelbase" value={2700} digits={0} onCommit={onCommit} {...props} />);
   return { onCommit, view, input: screen.getByRole("textbox") as HTMLInputElement };
 }
 
@@ -201,7 +199,7 @@ describe("NumberField", () => {
       expect(screen.getByText("mm")).toHaveAttribute("aria-hidden");
     });
 
-    it("puts the unit in the label with unitPlacement=\"label\"", () => {
+    it('puts the unit in the label with unitPlacement="label"', () => {
       setup({ unit: "mm", unitPlacement: "label" });
       expect(screen.getByLabelText("Wheelbase (mm)")).toBeInTheDocument();
       expect(screen.queryByText("mm")).not.toBeInTheDocument();
@@ -240,9 +238,7 @@ describe("NumberField", () => {
     it("takes `invalid` and a slot-injected aria-invalid", () => {
       const { view } = setup({ invalid: true });
       expect(screen.getByRole("textbox")).toHaveAttribute("aria-invalid", "true");
-      view.rerender(
-        <NumberField label="Wheelbase" value={1} aria-invalid="true" onCommit={vi.fn()} />,
-      );
+      view.rerender(<NumberField label="Wheelbase" value={1} aria-invalid="true" onCommit={vi.fn()} />);
       expect(screen.getByRole("textbox")).toHaveAttribute("aria-invalid", "true");
     });
 

@@ -13,7 +13,8 @@ vi.mock("modern-screenshot", () => ({ domToBlob: (el: Element, o: Record<string,
 const { captureAppScreenshot } = await import("../feedback-capture");
 
 type Filter = (node: Node) => boolean;
-const passed = () => domToBlob.mock.calls[0][1] as { filter: Filter; includeStyleProperties: string[] } & Record<string, unknown>;
+const passed = () =>
+  domToBlob.mock.calls[0][1] as { filter: Filter; includeStyleProperties: string[] } & Record<string, unknown>;
 
 beforeEach(() => {
   domToBlob.mockReset();
@@ -68,7 +69,8 @@ describe("captureAppScreenshot", () => {
 });
 
 describe("the capture filter", () => {
-  const rect = (r: Partial<DOMRect>) => ({ x: 0, y: 0, width: 10, height: 10, top: 0, left: 0, right: 10, bottom: 10, ...r }) as DOMRect;
+  const rect = (r: Partial<DOMRect>) =>
+    ({ x: 0, y: 0, width: 10, height: 10, top: 0, left: 0, right: 10, bottom: 10, ...r }) as DOMRect;
 
   async function filter(): Promise<Filter> {
     domToBlob.mockResolvedValue(new Blob(["x"], { type: "image/webp" }));

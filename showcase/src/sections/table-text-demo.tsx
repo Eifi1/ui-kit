@@ -48,11 +48,7 @@ function TableTextHelpers() {
                 </Button>
               ))}
             </div>
-            <Select
-              label="decimal"
-              value={rule}
-              onChange={(e) => setRule(e.target.value as "whole-text" | "per-line")}
-            >
+            <Select label="decimal" value={rule} onChange={(e) => setRule(e.target.value as "whole-text" | "per-line")}>
               <option value="whole-text">&quot;whole-text&quot; — the file door</option>
               <option value="per-line">&quot;per-line&quot; — the paste door</option>
             </Select>
@@ -76,7 +72,10 @@ function TableTextHelpers() {
             [`splitRow(${q("0,5 1,25 2,75")})`, q(splitRow("0,5 1,25 2,75"))],
             [`splitRow(${q("0.5\t12.25")})`, q(splitRow("0.5\t12.25"))],
             [`splitRow(${q(HAND_TYPED)})`, q(splitRow(HAND_TYPED))],
-            [`parseTable(${q("0,5;1\n1,5;2")}, { decimal: "per-line", columns: 1 }).rows`, q(parseTable("0,5;1\n1,5;2", { decimal: "per-line", columns: 1 }).rows)],
+            [
+              `parseTable(${q("0,5;1\n1,5;2")}, { decimal: "per-line", columns: 1 }).rows`,
+              q(parseTable("0,5;1\n1,5;2", { decimal: "per-line", columns: 1 }).rows),
+            ],
             [`parseRows(${q("a;b\n1;x")}, 2)`, q(parseRows("a;b\n1;x", 2))],
             [`cellNumber(${q("12,5")})`, q(cellNumber("12,5"))],
             [`isCellNumber(${q("12,5")})`, q(isCellNumber("12,5"))],
@@ -85,10 +84,10 @@ function TableTextHelpers() {
           ]}
         />
         <Note>
-          A comma between digits in a cell is always a decimal mark; in a line it depends on
-          what else separates the columns. <code className="font-mono">columns</code> slices a
-          wider line; <code className="font-mono">parseRows</code> answers with the first line
-          it could not read rather than an empty table.
+          A comma between digits in a cell is always a decimal mark; in a line it depends on what else separates the
+          columns. <code className="font-mono">columns</code> slices a wider line;{" "}
+          <code className="font-mono">parseRows</code> answers with the first line it could not read rather than an
+          empty table.
         </Note>
       </Example>
     </>

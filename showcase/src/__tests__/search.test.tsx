@@ -130,30 +130,34 @@ describe("the top-bar search", () => {
     return <output data-testid="where">{pathname + hash}</output>;
   }
 
-  it("opens on Ctrl K, suggests needs, and jumps to an example's anchor", async () => {
-    renderShowcase("/overview", <Where />);
-    act(() => {
-      document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }));
-    });
-    // The empty query shows the "Try" list. The palette is lazy: under a loaded full run its chunk
-    // can take longer than findBy's 1 s default to arrive.
-    expect(await screen.findByRole("group", { name: "Try" }, { timeout: 10_000 })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: /ask before deleting/ })).toBeInTheDocument();
+  it(
+    "opens on Ctrl K, suggests needs, and jumps to an example's anchor",
+    async () => {
+      renderShowcase("/overview", <Where />);
+      act(() => {
+        document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }));
+      });
+      // The empty query shows the "Try" list. The palette is lazy: under a loaded full run its chunk
+      // can take longer than findBy's 1 s default to arrive.
+      expect(await screen.findByRole("group", { name: "Try" }, { timeout: 10_000 })).toBeInTheDocument();
+      expect(screen.getByRole("option", { name: /ask before deleting/ })).toBeInTheDocument();
 
-    const [slug, labels] = Object.entries(PAGE_EXAMPLE_LABELS).find(([s]) => s === "popovers")!;
-    const label = labels[0];
-    fireEvent.change(screen.getByRole("combobox"), { target: { value: label } });
-    const anchor = `/${slug}#${slugify(label)}`;
-    // The row is a real link, built by the router: `/popovers#popover` here, `#/popovers#popover` under the HashRouter.
-    const option = await waitFor(() => {
-      const found = screen.getAllByRole("option").find((o) => o.getAttribute("href") === anchor);
-      if (!found) throw new Error(`no row links to ${anchor}`);
-      return found;
-    });
-    fireEvent.click(option);
-    await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent(`/${slug}#${slugify(label)}`));
-    expect(document.getElementById(slugify(label))).not.toBeNull();
-  }, MOUNT_TIMEOUT_MS);
+      const [slug, labels] = Object.entries(PAGE_EXAMPLE_LABELS).find(([s]) => s === "popovers")!;
+      const label = labels[0];
+      fireEvent.change(screen.getByRole("combobox"), { target: { value: label } });
+      const anchor = `/${slug}#${slugify(label)}`;
+      // The row is a real link, built by the router: `/popovers#popover` here, `#/popovers#popover` under the HashRouter.
+      const option = await waitFor(() => {
+        const found = screen.getAllByRole("option").find((o) => o.getAttribute("href") === anchor);
+        if (!found) throw new Error(`no row links to ${anchor}`);
+        return found;
+      });
+      fireEvent.click(option);
+      await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent(`/${slug}#${slugify(label)}`));
+      expect(document.getElementById(slugify(label))).not.toBeNull();
+    },
+    MOUNT_TIMEOUT_MS,
+  );
 
   it("covers every group of the sidebar", () => {
     const hrefs = new Set(buildSearchEntries(en).map((e) => e.href));

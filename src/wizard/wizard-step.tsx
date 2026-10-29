@@ -34,14 +34,7 @@ const HEADING = { 2: "h2", 3: "h3", 4: "h4" } as const;
 /** The vertical rhythm one wizard step's content sits on. A component rather
  *  than a class string so every step in every app spaces its fields the same —
  *  and, with `title` / `description`, heads them the same. */
-export function WizardStep({
-  children,
-  className,
-  title,
-  description,
-  headingLevel = 3,
-  actions,
-}: WizardStepProps) {
+export function WizardStep({ children, className, title, description, headingLevel = 3, actions }: WizardStepProps) {
   const hasTitle = title !== undefined && title !== null && title !== false && title !== "";
   const hasDescription =
     description !== undefined && description !== null && description !== false && description !== "";

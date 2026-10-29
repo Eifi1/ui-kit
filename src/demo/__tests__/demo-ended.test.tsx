@@ -8,7 +8,10 @@ import { isDemoSession } from "../demo-session";
 describe("DemoEnded — §5.5", () => {
   it("says the demo has ended, with Start a new demo, Request access and Sign in", () => {
     render(
-      <DemoEnded model="read-only" access={{ kind: "request", email: "support@example.com", app: "Ada's Garden Planner" }} />,
+      <DemoEnded
+        model="read-only"
+        access={{ kind: "request", email: "support@example.com", app: "Ada's Garden Planner" }}
+      />,
     );
     expect(screen.getByRole("heading", { level: 2, name: "The demo has ended" })).toBeInTheDocument();
     expect(screen.getByText("Sample data is reset regularly.")).toBeInTheDocument();
@@ -30,7 +33,9 @@ describe("DemoEnded — §5.5", () => {
       />,
     );
     expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
-    expect(screen.getByText("Sample data is reset regularly; your own work from the demo is deleted.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Sample data is reset regularly; your own work from the demo is deleted."),
+    ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Start a new demo" })).toHaveAttribute("href", "/try");
     expect(screen.getByRole("link", { name: "Get started" })).toHaveAttribute("href", "/register");
     expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/signin");
@@ -58,13 +63,17 @@ describe("isDemoSession", () => {
 });
 
 describe("DemoErrorCode — §6.2", () => {
-  it.each(["demo_disabled", "demo_rate_limited", "demo_capacity", "demo_not_ready", "demo_read_only", "demo_refused"] as const)(
-    "authErrorCode and isAuthError know %s",
-    (code) => {
-      const err = { response: { status: 403, data: { detail: "no", code } } };
-      expect(authErrorCode(err)).toBe(code);
-      expect(isAuthError(err, code)).toBe(true);
-      expect(isAuthError(err, "invalid_credentials")).toBe(false);
-    },
-  );
+  it.each([
+    "demo_disabled",
+    "demo_rate_limited",
+    "demo_capacity",
+    "demo_not_ready",
+    "demo_read_only",
+    "demo_refused",
+  ] as const)("authErrorCode and isAuthError know %s", (code) => {
+    const err = { response: { status: 403, data: { detail: "no", code } } };
+    expect(authErrorCode(err)).toBe(code);
+    expect(isAuthError(err, code)).toBe(true);
+    expect(isAuthError(err, "invalid_credentials")).toBe(false);
+  });
 });

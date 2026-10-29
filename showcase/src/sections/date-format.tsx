@@ -1,5 +1,11 @@
 import { useMemo, useState } from "react";
-import { DateFormatSetting, DatePicker, UiKitProvider, dateFormatterFor, formatDateWithPreference } from "@eifi1/ui-kit";
+import {
+  DateFormatSetting,
+  DatePicker,
+  UiKitProvider,
+  dateFormatterFor,
+  formatDateWithPreference,
+} from "@eifi1/ui-kit";
 import type { DateFormatPreference } from "@eifi1/ui-kit";
 import { useLocale } from "../i18n";
 import { Example, Note, Row, code, READOUT } from "../lib/section";
@@ -24,9 +30,13 @@ export function DateFormatDemo() {
           <DatePicker label="A day in a kit field" value={day} onChange={setDay} />
         </UiKitProvider>
         <Row>
-          <span className={READOUT}>column: {formatDateWithPreference(day, preference, locale, { weekday: true })}</span>
+          <span className={READOUT}>
+            column: {formatDateWithPreference(day, preference, locale, { weekday: true })}
+          </span>
           <span className={READOUT}>sentence: {formatDateWithPreference(day, preference, locale)}</span>
-          <span className={READOUT}>timestamp: {formatDateWithPreference("2026-09-06T23:30:00Z", preference, locale)}</span>
+          <span className={READOUT}>
+            timestamp: {formatDateWithPreference("2026-09-06T23:30:00Z", preference, locale)}
+          </span>
         </Row>
       </div>
       <Note>

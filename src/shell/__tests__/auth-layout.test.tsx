@@ -41,7 +41,11 @@ describe("AuthLayout", () => {
     expect(main.querySelector("[data-slot=auth-layout-header]")!.className).toContain("text-center");
 
     const legal = screen.getByRole("navigation", { name: "Legal" });
-    expect(within(legal).getAllByRole("link").map((a) => a.textContent)).toEqual(["Imprint", "Privacy"]);
+    expect(
+      within(legal)
+        .getAllByRole("link")
+        .map((a) => a.textContent),
+    ).toEqual(["Imprint", "Privacy"]);
     expect(legal.closest("footer")).not.toBeNull();
 
     // Reading order: corner controls (theme, then language), the page, the footer.

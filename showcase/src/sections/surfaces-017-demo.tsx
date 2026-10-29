@@ -1,5 +1,14 @@
 import { Trash2 } from "lucide-react";
-import { Button, Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle, IconButton } from "@eifi1/ui-kit";
+import {
+  Button,
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  IconButton,
+} from "@eifi1/ui-kit";
 import { Example, Note, code } from "../lib/section";
 
 /**
@@ -48,17 +57,15 @@ export function Surfaces017Demo() {
               </IconButton>
             </CardAction>
           </CardHeader>
-          <CardContent className="pt-3 text-sm text-secondary">
-            Your password was changed 3 months ago.
-          </CardContent>
+          <CardContent className="pt-3 text-sm text-secondary">Your password was changed 3 months ago.</CardContent>
         </Card>
       </div>
       <div className="mt-3">
         <Note>
           {code('density="compact"')} replaces {code('CardTitle className="text-sm font-medium"')},{" "}
-          {code('CardDescription className="text-xs"')} and {code("CardHeader gap-0.5")}; a class on a
-          part still wins. A toned card is a frame and a title colour; {code("toneFill")} adds the
-          tone's {code("-bg")} wash, layered over the card surface so the dark theme stays opaque.
+          {code('CardDescription className="text-xs"')} and {code("CardHeader gap-0.5")}; a class on a part still wins.
+          A toned card is a frame and a title colour; {code("toneFill")} adds the tone's {code("-bg")} wash, layered
+          over the card surface so the dark theme stays opaque.
         </Note>
       </div>
     </Example>

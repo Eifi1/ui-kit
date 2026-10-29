@@ -71,7 +71,11 @@ function DescriptionRows() {
           </DescriptionItem>
           <DescriptionItem term="Opened">12 March 2019</DescriptionItem>
           {closed && <DescriptionItem term="Closed">25 September 2026</DescriptionItem>}
-          <DescriptionItem term="Balance" numeric hint="Booked transactions only; pending card payments are not included.">
+          <DescriptionItem
+            term="Balance"
+            numeric
+            hint="Booked transactions only; pending card payments are not included."
+          >
             {EUR.format(4213.07)}
           </DescriptionItem>
           <DescriptionItem term="Overdraft" numeric>
@@ -81,14 +85,13 @@ function DescriptionRows() {
       </div>
       <div className="mt-3">
         <Note>
-          Composed from <code className="font-mono">DescriptionItem</code> children, so a
-          conditional fact is <code className="font-mono">{"{closed && <DescriptionItem …>}"}</code>{" "}
-          — press the ghost button. The two figures are <code className="font-mono">numeric</code>{" "}
-          per item (tabular digits, end-aligned); the IBAN&apos;s <code className="font-mono">detailClassName</code>{" "}
-          sets it in mono. The ? beside Balance is <code className="font-mono">hint</code>, the same{" "}
-          <code className="font-mono">FieldHint</code> the fields and StatTile use.{" "}
-          <code className="font-mono">minCardWidth</code> is the narrowest a card gets before the
-          grid drops a column.
+          Composed from <code className="font-mono">DescriptionItem</code> children, so a conditional fact is{" "}
+          <code className="font-mono">{"{closed && <DescriptionItem …>}"}</code> — press the ghost button. The two
+          figures are <code className="font-mono">numeric</code> per item (tabular digits, end-aligned); the IBAN&apos;s{" "}
+          <code className="font-mono">detailClassName</code> sets it in mono. The ? beside Balance is{" "}
+          <code className="font-mono">hint</code>, the same <code className="font-mono">FieldHint</code> the fields and
+          StatTile use. <code className="font-mono">minCardWidth</code> is the narrowest a card gets before the grid
+          drops a column.
         </Note>
       </div>
     </Example>
@@ -123,10 +126,9 @@ function DescriptionNumeric() {
       </div>
       <div className="mt-3">
         <Note>
-          The panels are well under 24rem: the right-hand list stacks each term over its detail,
-          the numeric one keeps figure beside term — stacking a figure would double the list&apos;s
-          height for no width. <code className="font-mono">numeric={"{false}"}</code> on one item
-          overrides the list for a textual detail.
+          The panels are well under 24rem: the right-hand list stacks each term over its detail, the numeric one keeps
+          figure beside term — stacking a figure would double the list&apos;s height for no width.{" "}
+          <code className="font-mono">numeric={"{false}"}</code> on one item overrides the list for a textual detail.
         </Note>
       </div>
     </Example>
@@ -202,15 +204,13 @@ function StaticTable() {
       </Table>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">TableHeaderCell</code>&apos;s <code className="font-mono">scope</code>{" "}
-          defaults to <code className="font-mono">col</code> in the head and{" "}
-          <code className="font-mono">row</code> elsewhere, so the foot&apos;s &ldquo;Net for the
-          month&rdquo; heads its row. <code className="font-mono">numeric</code> is end-aligned
-          tabular digits — the same string as the exported{" "}
-          <code className="font-mono">NUMERIC_CELL_CLASS</code> (
-          <code className="font-mono">{NUMERIC_CELL_CLASS}</code>), for a cell the kit did not render.{" "}
-          <code className="font-mono">hover</code> is off by default: a static table whose rows light
-          up promises a click that does nothing.
+          <code className="font-mono">TableHeaderCell</code>&apos;s <code className="font-mono">scope</code> defaults to{" "}
+          <code className="font-mono">col</code> in the head and <code className="font-mono">row</code> elsewhere, so
+          the foot&apos;s &ldquo;Net for the month&rdquo; heads its row. <code className="font-mono">numeric</code> is
+          end-aligned tabular digits — the same string as the exported{" "}
+          <code className="font-mono">NUMERIC_CELL_CLASS</code> (<code className="font-mono">{NUMERIC_CELL_CLASS}</code>
+          ), for a cell the kit did not render. <code className="font-mono">hover</code> is off by default: a static
+          table whose rows light up promises a click that does nothing.
         </Note>
       </div>
     </Example>
@@ -231,7 +231,11 @@ function OverflowTable() {
       label="Table — overflow"
       hint="a table cannot shrink below its content; the wrapper scrolls, and while it does it is a named, focusable region"
     >
-      <Table density="compact" aria-label="Monthly budget by category" wrapperClassName="max-h-44 rounded-md border border-subtle">
+      <Table
+        density="compact"
+        aria-label="Monthly budget by category"
+        wrapperClassName="max-h-44 rounded-md border border-subtle"
+      >
         <TableHead>
           <TableRow>
             <TableHeaderCell className="sticky start-0 bg-surface-2">Category</TableHeaderCell>
@@ -248,7 +252,7 @@ function OverflowTable() {
               <TableHeaderCell className="sticky start-0 bg-surface font-normal">{name}</TableHeaderCell>
               {WIDE_COLUMNS.map((m, j) => (
                 <TableCell key={m} numeric>
-                  {EUR.format(base + ((i + 1) * (j + 3)) % 40)}
+                  {EUR.format(base + (((i + 1) * (j + 3)) % 40))}
                 </TableCell>
               ))}
             </TableRow>
@@ -258,9 +262,9 @@ function OverflowTable() {
       <div className="mt-3">
         <Note>
           Twelve months do not fit a phone (or this card): the overflow wrapper scrolls sideways, and
-          <code className="font-mono"> wrapperClassName</code> gives it a max height and a border here.
-          While it overflows it becomes a tab stop with <code className="font-mono">role=&quot;region&quot;</code>,
-          named by the <code className="font-mono">TableCaption</code> or, as here, the table&apos;s{" "}
+          <code className="font-mono"> wrapperClassName</code> gives it a max height and a border here. While it
+          overflows it becomes a tab stop with <code className="font-mono">role=&quot;region&quot;</code>, named by the{" "}
+          <code className="font-mono">TableCaption</code> or, as here, the table&apos;s{" "}
           <code className="font-mono">aria-label</code> — Tab to it and the arrow keys scroll it.
         </Note>
       </div>
@@ -270,7 +274,10 @@ function OverflowTable() {
 
 function Separators() {
   return (
-    <Example label="Separator" hint='role="separator" by default; decorative={true} is role="none" — a line for the eye only'>
+    <Example
+      label="Separator"
+      hint='role="separator" by default; decorative={true} is role="none" — a line for the eye only'
+    >
       <div className="space-y-4 text-sm text-secondary">
         <div>
           <p>Account settings</p>
@@ -290,19 +297,34 @@ function Separators() {
       </div>
       <div className="mt-3">
         <Note>
-          The first two are real separators a reader announces — between two sections, between a
-          toolbar&apos;s halves (the vertical one carries <code className="font-mono">aria-orientation</code>;
-          horizontal is the role&apos;s default and is not stated). The last one only separates the
-          toolbar from a status line the structure already separates, so it is{" "}
-          <code className="font-mono">decorative</code>.
+          The first two are real separators a reader announces — between two sections, between a toolbar&apos;s halves
+          (the vertical one carries <code className="font-mono">aria-orientation</code>; horizontal is the role&apos;s
+          default and is not stated). The last one only separates the toolbar from a status line the structure already
+          separates, so it is <code className="font-mono">decorative</code>.
         </Note>
       </div>
     </Example>
   );
 }
 
-const ACTIVITY = Array.from({ length: 24 }, (_, i) => `${String(8 + Math.floor(i / 2)).padStart(2, "0")}:${i % 2 ? "30" : "00"} — sync step ${i + 1} finished`);
-const TAGS = ["groceries", "rent", "energy", "insurance", "travel", "gifts", "health", "fees", "savings", "salary", "refunds", "tax"];
+const ACTIVITY = Array.from(
+  { length: 24 },
+  (_, i) => `${String(8 + Math.floor(i / 2)).padStart(2, "0")}:${i % 2 ? "30" : "00"} — sync step ${i + 1} finished`,
+);
+const TAGS = [
+  "groceries",
+  "rent",
+  "energy",
+  "insurance",
+  "travel",
+  "gifts",
+  "health",
+  "fees",
+  "savings",
+  "salary",
+  "refunds",
+  "tax",
+];
 
 function ScrollAreas() {
   const [short, setShort] = useState(false);
@@ -352,11 +374,10 @@ function ScrollAreas() {
       </div>
       <div className="mt-3">
         <Note>
-          A container that scrolls but holds nothing focusable cannot be scrolled from the keyboard
-          at all — Tab jumps past it. So while it overflows, the box itself is{" "}
-          <code className="font-mono">tabIndex=0</code> and the arrow keys and Page Up/Down scroll it
-          natively; shorten the log and it leaves the tab order. The scrollbar is the platform&apos;s
-          own, thinned and coloured: native momentum and dragging, no script.
+          A container that scrolls but holds nothing focusable cannot be scrolled from the keyboard at all — Tab jumps
+          past it. So while it overflows, the box itself is <code className="font-mono">tabIndex=0</code> and the arrow
+          keys and Page Up/Down scroll it natively; shorten the log and it leaves the tab order. The scrollbar is the
+          platform&apos;s own, thinned and coloured: native momentum and dragging, no script.
         </Note>
       </div>
     </Example>

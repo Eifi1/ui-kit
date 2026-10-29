@@ -82,12 +82,11 @@ export function ActionCardDemo() {
           A <code className="font-mono">&lt;button&gt;</code>, named by its <code className="font-mono">title</code>{" "}
           alone and described by the <code className="font-mono">description</code> and then the{" "}
           <code className="font-mono">meta</code> line — so a reader hears &ldquo;Keep the key yourself, button&rdquo;
-          and then the explanation, not one long name. <code className="font-mono">meta</code> is what it costs, said
-          as prose; <code className="font-mono">metaTone</code> colours it —{" "}
-          <code className="font-mono">muted</code> (default), <code className="font-mono">warning</code>,{" "}
-          <code className="font-mono">danger</code>, <code className="font-mono">info</code>,{" "}
-          <code className="font-mono">success</code>. The seventh card is <code className="font-mono">disabled</code>;
-          the last has no icon, description or meta.
+          and then the explanation, not one long name. <code className="font-mono">meta</code> is what it costs, said as
+          prose; <code className="font-mono">metaTone</code> colours it — <code className="font-mono">muted</code>{" "}
+          (default), <code className="font-mono">warning</code>, <code className="font-mono">danger</code>,{" "}
+          <code className="font-mono">info</code>, <code className="font-mono">success</code>. The seventh card is{" "}
+          <code className="font-mono">disabled</code>; the last has no icon, description or meta.
         </Note>
       </div>
     </Example>

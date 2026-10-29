@@ -161,12 +161,17 @@ describe("pay-config.json's rules (§14.4, §15.2.6)", () => {
   });
 
   it("wants https:// URLs, http:// for localhost only, and each app's name", () => {
-    const keksdose = (app: Partial<typeof KEKSDOSE>) => ({ ...CONFIG, apps: { ...CONFIG.apps, keksdose: { ...KEKSDOSE, ...app } } });
+    const keksdose = (app: Partial<typeof KEKSDOSE>) => ({
+      ...CONFIG,
+      apps: { ...CONFIG.apps, keksdose: { ...KEKSDOSE, ...app } },
+    });
     expect(payPageConfigProblems(keksdose({ returnUrl: "http://keksdose.app/settings/subscription" }))).toEqual([
       "apps.keksdose.returnUrl must be an https:// URL (http:// for localhost only)",
     ]);
     expect(payPageConfigProblems(keksdose({ returnUrl: "http://localhost:5173/settings/subscription" }))).toEqual([]);
-    expect(payPageConfigProblems(keksdose({ termsUrl: "javascript:alert(1)", privacyUrl: "/privacy" }))).toHaveLength(2);
+    expect(payPageConfigProblems(keksdose({ termsUrl: "javascript:alert(1)", privacyUrl: "/privacy" }))).toHaveLength(
+      2,
+    );
     expect(payPageConfigProblems(keksdose({ name: " " }))).toEqual(["apps.keksdose.name is missing"]);
     expect(payPageConfigProblems(null)).toEqual(["the configuration is not an object"]);
   });
@@ -394,7 +399,12 @@ describe("the pay page (dist/pay/)", () => {
   });
 
   it("names no app and offers no way back for an unknown tag or none, keeps the host's Terms, and says payDone", async () => {
-    for (const data of [{ custom_data: { app: "lenkbank" } }, { custom_data: null }, {}, { custom_data: { app: "__proto__" } }]) {
+    for (const data of [
+      { custom_data: { app: "lenkbank" } },
+      { custom_data: null },
+      {},
+      { custom_data: { app: "__proto__" } },
+    ]) {
       mountPage();
       document.title = "Checkout";
       const { paddle, calls } = fakePaddle();

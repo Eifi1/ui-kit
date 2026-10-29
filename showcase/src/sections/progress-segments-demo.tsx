@@ -86,17 +86,18 @@ export function ProgressSegmentsDemo() {
       </div>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">segments</code> forces <code className="font-mono">variant=&quot;meter&quot;</code>{" "}
-          and draws the parts side by side with a 2px gap. Each part is coloured by its{" "}
-          <code className="font-mono">className</code> (the one-hue step ramp), else its{" "}
+          <code className="font-mono">segments</code> forces{" "}
+          <code className="font-mono">variant=&quot;meter&quot;</code> and draws the parts side by side with a 2px gap.
+          Each part is coloured by its <code className="font-mono">className</code> (the one-hue step ramp), else its{" "}
           <code className="font-mono">color</code> (any CSS colour — &ldquo;Photos&rdquo;), else its{" "}
           <code className="font-mono">tone</code>, else the next <code className="font-mono">--chart-N</code> colour
-          (&ldquo;Documents&rdquo; onward, and every part of the last bar). <code className="font-mono">aria-valuenow</code>{" "}
-          is the sum and <code className="font-mono">aria-valuetext</code> names every part — &ldquo;Rent: 40%, Food:
-          25%, Savings: 15%&rdquo; — through <code className="font-mono">formatValue</code> when given (euros, on the
-          second). <code className="font-mono">legend</code> lists the parts under the bar with a swatch and the value;
-          push Food past 45% and the sum passes 100%: it is clamped to <code className="font-mono">max</code> and the
-          last part is cut off at the track&apos;s end.
+          (&ldquo;Documents&rdquo; onward, and every part of the last bar).{" "}
+          <code className="font-mono">aria-valuenow</code> is the sum and{" "}
+          <code className="font-mono">aria-valuetext</code> names every part — &ldquo;Rent: 40%, Food: 25%, Savings:
+          15%&rdquo; — through <code className="font-mono">formatValue</code> when given (euros, on the second).{" "}
+          <code className="font-mono">legend</code> lists the parts under the bar with a swatch and the value; push Food
+          past 45% and the sum passes 100%: it is clamped to <code className="font-mono">max</code> and the last part is
+          cut off at the track&apos;s end.
         </Note>
       </div>
     </Example>

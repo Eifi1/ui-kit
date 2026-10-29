@@ -20,7 +20,10 @@
  *     i18n.addResourceBundle(lng, "translation", withAllPlurals(catalogue, lng));
  *     // i18next-http-backend: { parse: (data, lng) => withAllPlurals(JSON.parse(data), lng) }
  */
-export function withAllPlurals<T extends Record<string, unknown>>(catalogue: T, locale: string): T & Record<string, unknown> {
+export function withAllPlurals<T extends Record<string, unknown>>(
+  catalogue: T,
+  locale: string,
+): T & Record<string, unknown> {
   const cardinal = pluralCategories(locale, "cardinal");
   const ordinal = pluralCategories(locale, "ordinal");
   const fill = (tree: Record<string, unknown>): Record<string, unknown> => {

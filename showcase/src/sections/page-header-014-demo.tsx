@@ -29,8 +29,8 @@ function PageHeaderTruncate() {
           <PageHeader as="h2" size="compact" mobileLayout="inline" truncateTitle title={title} actions={add} />
         </div>
         <Note>
-          The whole title stays the heading&apos;s text, so a screen reader reads all of it. No native{" "}
-          {code("title")} tooltip: the kit does not use them.
+          The whole title stays the heading&apos;s text, so a screen reader reads all of it. No native {code("title")}{" "}
+          tooltip: the kit does not use them.
         </Note>
       </div>
     </Example>
@@ -69,9 +69,8 @@ function PageHeaderSecondaryActions() {
           }
         />
         <Note>
-          On a phone: title and {code("actions")} on row 1, {code("secondaryActions")} on row 2. From{" "}
-          {code("sm")}: one row, title | secondary | actions. The reading and Tab order is title, actions,
-          secondary at every width.
+          On a phone: title and {code("actions")} on row 1, {code("secondaryActions")} on row 2. From {code("sm")}: one
+          row, title | secondary | actions. The reading and Tab order is title, actions, secondary at every width.
         </Note>
       </div>
     </Example>

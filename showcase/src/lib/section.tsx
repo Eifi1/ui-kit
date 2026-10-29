@@ -72,14 +72,7 @@ export function Example({
         </h3>
         {hint && <span className="text-xs text-muted">{inlineCode(hint)}</span>}
       </div>
-      <div
-        className={cn(
-          "rounded-lg border border-subtle bg-surface p-4",
-          className,
-        )}
-      >
-        {children}
-      </div>
+      <div className={cn("rounded-lg border border-subtle bg-surface p-4", className)}>{children}</div>
     </div>
   );
 }
@@ -199,11 +192,7 @@ export const NO_ROUTER = null as unknown as ContextType<typeof UNSAFE_LocationCo
 export function Swatch({ name, value }: { name: string; value: string }) {
   return (
     <div className="flex min-w-0 items-center gap-2">
-      <span
-        aria-hidden
-        className="size-8 shrink-0 rounded-md border border-subtle"
-        style={{ background: value }}
-      />
+      <span aria-hidden className="size-8 shrink-0 rounded-md border border-subtle" style={{ background: value }} />
       {/* `truncate-until-large` (0.33): one line at Normal; at Large a token's name wraps
           instead of losing its end ("moneyNeutral · --money-n…"), which the size sweep
           reports as a finding. */}
@@ -282,10 +271,7 @@ export function OutTable({ rows }: { rows: Array<[expression: string, result: Re
       <table className="w-full text-left text-xs max-md:@max-sm:block">
         <tbody className="max-md:@max-sm:block">
           {rows.map(([expr, result], i) => (
-            <tr
-              key={i}
-              className="border-b border-subtle last:border-b-0 max-md:@max-sm:block max-md:@max-sm:py-1.5"
-            >
+            <tr key={i} className="border-b border-subtle last:border-b-0 max-md:@max-sm:block max-md:@max-sm:py-1.5">
               <td className="py-1.5 pr-4 align-top font-mono break-words text-secondary max-md:@max-sm:block max-md:@max-sm:p-0">
                 {breakable(expr)}
               </td>
@@ -309,12 +295,8 @@ export function ConstList({ items }: { items: Array<[name: string, value: string
     <dl className="space-y-2">
       {items.map(([name, value]) => (
         <div key={name}>
-          <dt className="font-mono text-xs font-medium break-words text-primary">
-            {softBreaks(name)}
-          </dt>
-          <dd className="break-words font-mono text-caption leading-relaxed text-muted">
-            {softBreaks(value)}
-          </dd>
+          <dt className="font-mono text-xs font-medium break-words text-primary">{softBreaks(name)}</dt>
+          <dd className="break-words font-mono text-caption leading-relaxed text-muted">{softBreaks(value)}</dd>
         </div>
       ))}
     </dl>

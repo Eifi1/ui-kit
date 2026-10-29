@@ -96,7 +96,14 @@ describe("Checkbox commit / disabledReason", () => {
     const onCheckedChange = vi.fn();
     render(
       <WriteLockProvider locked reason={REASON}>
-        <Checkbox label="Reviewer" description="May approve" checked onChange={onChange} onCheckedChange={onCheckedChange} commit />
+        <Checkbox
+          label="Reviewer"
+          description="May approve"
+          checked
+          onChange={onChange}
+          onCheckedChange={onCheckedChange}
+          commit
+        />
       </WriteLockProvider>,
     );
     const box = screen.getByRole("checkbox", { name: "Reviewer" });

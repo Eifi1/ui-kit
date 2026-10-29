@@ -74,10 +74,9 @@ describe("the Administration row's words (kastlan 2)", () => {
       </UiKitProvider>,
     );
     fireEvent.click(screen.getByRole("button", { name: "Account" }));
-    expect(screen.getByRole("menuitem", { name: new RegExp(`^${UI_KIT_LABELS_DE_CH.adminArea.title}`) })).toHaveAttribute(
-      "href",
-      "/admin",
-    );
+    expect(
+      screen.getByRole("menuitem", { name: new RegExp(`^${UI_KIT_LABELS_DE_CH.adminArea.title}`) }),
+    ).toHaveAttribute("href", "/admin");
   });
 
   it("AdminMenuRow reads them too", () => {

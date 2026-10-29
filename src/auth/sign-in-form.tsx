@@ -431,9 +431,7 @@ export function SignInForm({
   const [recovery, setRecovery] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [challenge, setChallenge] = useState<{ token: string; extra?: Readonly<Record<string, unknown>> } | null>(
-    null,
-  );
+  const [challenge, setChallenge] = useState<{ token: string; extra?: Readonly<Record<string, unknown>> } | null>(null);
   // What is running: one call at a time. "done" after `signed-in` — the app has the
   // session and is leaving; the buttons stay busy so nothing is sent twice meanwhile.
   const [busy, setBusy] = useState<SignInAction | "done" | null>(null);
@@ -494,7 +492,8 @@ export function SignInForm({
     // After the app's words, before the kit's generic ones (0.30.0): a throttle is
     // neither a wrong password nor a wrong code, and saying so sends the person to try
     // another one — which the limiter counts too.
-    if (isRateLimited(error)) return (labels.rateLimited ?? DEFAULT_SIGN_IN_LABELS.rateLimited)(retryAfterSeconds(error));
+    if (isRateLimited(error))
+      return (labels.rateLimited ?? DEFAULT_SIGN_IN_LABELS.rateLimited)(retryAfterSeconds(error));
     if (action === "password") return code === "invalid_credentials" ? labels.invalidCredentials : labels.failed;
     if (action === "passkey") return labels.passkeyFailed;
     if (action === "code") {
@@ -642,8 +641,7 @@ export function SignInForm({
       setUseRecovery((on) => !on);
     };
     const codeError = failure?.action === "code" ? failure.message : undefined;
-    const content =
-      typeof twoFactorContent === "function" ? twoFactorContent(challenge.token) : twoFactorContent;
+    const content = typeof twoFactorContent === "function" ? twoFactorContent(challenge.token) : twoFactorContent;
     return (
       <div {...rest} data-step="2fa" className={rootClass}>
         <form className="space-y-3" aria-labelledby={headingId} onSubmit={submitCode}>
@@ -731,9 +729,7 @@ export function SignInForm({
           {content}
           {/* Which account the new password is for, for the password manager: it files
               the new password under this username instead of guessing. */}
-          {email !== "" && (
-            <input type="email" name="username" autoComplete="username" value={email} readOnly hidden />
-          )}
+          {email !== "" && <input type="email" name="username" autoComplete="username" value={email} readOnly hidden />}
           <NewPasswordFields
             password={newPassword}
             confirm={confirm}
@@ -767,7 +763,9 @@ export function SignInForm({
 
   const refused = failure?.code === "invalid_credentials";
   const tagged =
-    refused && failure?.action === "password" && emailTag && failure.email ? taggedEmail(failure.email, emailTag) : null;
+    refused && failure?.action === "password" && emailTag && failure.email
+      ? taggedEmail(failure.email, emailTag)
+      : null;
   const showDeactivated = refused && hasContent(deactivatedContact);
 
   return (
@@ -802,13 +800,16 @@ export function SignInForm({
             <AlertBanner tone="danger" size="sm">
               {failure.message}
             </AlertBanner>
-            {showDeactivated && (
-              <p className={HINT_CLASS}>{withContact(labels.deactivatedHint, deactivatedContact)}</p>
-            )}
+            {showDeactivated && <p className={HINT_CLASS}>{withContact(labels.deactivatedHint, deactivatedContact)}</p>}
             {tagged && <p className={HINT_CLASS}>{labels.tagHint(tagged)}</p>}
           </div>
         )}
-        <Button type="submit" className="w-full" pending={busy === "password" || busy === "done"} disabled={busy === "passkey"}>
+        <Button
+          type="submit"
+          className="w-full"
+          pending={busy === "password" || busy === "done"}
+          disabled={busy === "passkey"}
+        >
           {labels.submit}
         </Button>
         {onPasskey && (

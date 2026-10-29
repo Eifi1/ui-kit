@@ -85,13 +85,13 @@ const deferred = () => {
 
 describe("NotificationTypesSetting — what it draws", () => {
   it("draws the server's types under the app's headings, in the groups' order", () => {
-    render(
-      <NotificationTypesSetting types={KK_TYPES} groups={KK_GROUPS} value={KK_VALUE} onChange={vi.fn()} />,
-    );
+    render(<NotificationTypesSetting types={KK_TYPES} groups={KK_GROUPS} value={KK_VALUE} onChange={vi.fn()} />);
     expect(screen.getByText("Notify me about")).toBeInTheDocument();
     const budget = screen.getByRole("group", { name: "Budget" });
     expect(within(budget).getAllByRole("switch")).toHaveLength(4);
-    const names = screen.getAllByRole("switch").map((s) => s.closest("[data-notification-type]")?.getAttribute("data-notification-type"));
+    const names = screen
+      .getAllByRole("switch")
+      .map((s) => s.closest("[data-notification-type]")?.getAttribute("data-notification-type"));
     expect(names).toEqual([
       "recurring_posted",
       "scheduled_due",
@@ -269,9 +269,7 @@ describe("NotificationTypesSetting — saving", () => {
   it("puts a rejected switch back and says so under the card, in the app's words if it has them", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn(() => Promise.reject(new Error("offline")));
-    const { rerender } = render(
-      <NotificationTypesSetting types={KS_TYPES} value={KS_VALUE} onChange={onChange} />,
-    );
+    const { rerender } = render(<NotificationTypesSetting types={KS_TYPES} value={KS_VALUE} onChange={onChange} />);
     await user.click(screen.getByRole("switch", { name: "Answers to your reports" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("That didn’t work. Please try again.");
     expect(screen.getByRole("switch", { name: "Answers to your reports" })).toBeChecked();
@@ -361,17 +359,18 @@ describe("NotificationTypesSetting — a switch per channel (0.46, §10.2)", () 
     render(<NotificationTypesSetting types={KK3_TYPES} value={KK3_VALUE} onChange={vi.fn()} />);
     expect(document.querySelector("[data-channel-headings]")).toHaveTextContent(/^In the appPushE-mail$/);
     const received = screen.getByRole("group", { name: "New feedback and reworks" });
-    expect(within(received).getAllByRole("switch").map((el) => el.getAttribute("aria-label"))).toEqual([
-      "In the app",
-      "Push",
-      "E-mail",
-    ]);
+    expect(
+      within(received)
+        .getAllByRole("switch")
+        .map((el) => el.getAttribute("aria-label")),
+    ).toEqual(["In the app", "Push", "E-mail"]);
     expect(within(received).getByRole("switch", { name: "Push" })).not.toBeChecked();
     const scans = screen.getByRole("group", { name: "Finished scans" });
-    expect(within(scans).getAllByRole("switch").map((el) => el.getAttribute("aria-label"))).toEqual([
-      "In the app",
-      "Push",
-    ]);
+    expect(
+      within(scans)
+        .getAllByRole("switch")
+        .map((el) => el.getAttribute("aria-label")),
+    ).toEqual(["In the app", "Push"]);
   });
 
   it("sends `push` alone, independent of `app`", async () => {
@@ -396,7 +395,10 @@ describe("NotificationTypesSetting — a switch per channel (0.46, §10.2)", () 
     );
     expect(screen.queryByRole("switch", { name: "Push" })).not.toBeInTheDocument();
     expect(screen.getByRole("switch", { name: "Dunnings to send" })).toBeChecked();
-    expect(document.querySelector('[data-notification-type="dunnings_pending"]')).toHaveAttribute("data-channels", "app");
+    expect(document.querySelector('[data-notification-type="dunnings_pending"]')).toHaveAttribute(
+      "data-channels",
+      "app",
+    );
   });
 
   it("on a phone the switches stack under the type's label, each with its channel's name in view", () => {
@@ -430,7 +432,9 @@ describe("NotificationTypesSetting — a switch per channel (0.46, §10.2)", () 
     expect(await axeViolations(container)).toEqual([]);
     unmount();
     stubViewportWidth(PHONE_WIDTH);
-    const phone = render(<NotificationTypesSetting types={KK3_TYPES} value={KK3_VALUE} emailUnverified onChange={vi.fn()} />);
+    const phone = render(
+      <NotificationTypesSetting types={KK3_TYPES} value={KK3_VALUE} emailUnverified onChange={vi.fn()} />,
+    );
     expect(await axeViolations(phone.container)).toEqual([]);
   });
 });
@@ -453,7 +457,12 @@ describe("NotificationTypesSetting — words and access", () => {
 
   it("spreads `id` on the card, the app's anchor", () => {
     render(
-      <NotificationTypesSetting id="settings-notifications-card" types={KS_TYPES} value={KS_VALUE} onChange={vi.fn()} />,
+      <NotificationTypesSetting
+        id="settings-notifications-card"
+        types={KS_TYPES}
+        value={KS_VALUE}
+        onChange={vi.fn()}
+      />,
     );
     expect(document.getElementById("settings-notifications-card")).toContainElement(
       screen.getByRole("switch", { name: "Added to a team" }),

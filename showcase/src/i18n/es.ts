@@ -214,8 +214,7 @@ export const es: Dictionary = {
     fields: {
       title: "Campos de texto",
       short: "Texto",
-      blurb:
-        "Los campos de entrada y las constantes de clase con las que una aplicación compone sus propios campos.",
+      blurb: "Los campos de entrada y las constantes de clase con las que una aplicación compone sus propios campos.",
     },
     forms: {
       title: "Formularios (react-hook-form)",
@@ -403,13 +402,11 @@ export const es: Dictionary = {
     layout: {
       title: "Sección plegable y marco de diálogo",
       short: "Plegable",
-      blurb:
-        "Una sección que se pliega y el marco de cabecera, cuerpo y acciones que repite cada diálogo.",
+      blurb: "Una sección que se pliega y el marco de cabecera, cuerpo y acciones que repite cada diálogo.",
     },
     overlays: {
       title: "Superposiciones",
-      blurb:
-        "Todo lo que flota sobre la página, y la única temporización que todos comparten al cerrarse.",
+      blurb: "Todo lo que flota sobre la página, y la única temporización que todos comparten al cerrarse.",
     },
     dialogs: {
       title: "Diálogos",
@@ -587,7 +584,6 @@ export const es: Dictionary = {
         "Los formatos de intercambio de la revisión de traducciones, quién puede revisar qué claves e idiomas, y los tokens de revisión con los que un revisor abre la página de revisión del kit.",
     },
   },
-
 
   // The top-bar search's "¿Qué necesitas?" rows: a task in the reader's words, and the
   // page that does it. Phrased as typed into a search box — lower case, no full stop.
@@ -1218,13 +1214,7 @@ export const es: Dictionary = {
       "bandeja de soporte",
       "cambiar el estado de un informe",
     ],
-    api: [
-      "hooks y utilidades",
-      "funciones sin interfaz",
-      "funciones auxiliares",
-      "constantes",
-      "utilidades de fechas",
-    ],
+    api: ["hooks y utilidades", "funciones sin interfaz", "funciones auxiliares", "constantes", "utilidades de fechas"],
     "hooks-lib": [
       "reaccionar al tamaño de pantalla",
       "hook de media query",
@@ -1341,7 +1331,6 @@ export const es: Dictionary = {
       "claves de traducción del kit",
     ],
   },
-
 
   // The kit's own words ship with the package — the same import an app writes.
   kit: UI_KIT_LABELS_ES,

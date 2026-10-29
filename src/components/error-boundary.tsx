@@ -107,9 +107,7 @@ export function describeThrown(error: unknown): ErrorBoundaryDetails {
  * Never throws: it runs inside the fallback's own render, where a throw is a white
  * screen. An error it cannot read is not a chunk failure.
  */
-export function isChunkLoadError(
-  error: { name?: string | null; message?: string | null } | null | undefined,
-): boolean {
+export function isChunkLoadError(error: { name?: string | null; message?: string | null } | null | undefined): boolean {
   try {
     const s = `${error?.name ?? ""} ${error?.message ?? ""}`;
     return /ChunkLoadError|dynamically imported module|module script failed|Loading chunk|Failed to fetch/i.test(s);
@@ -405,7 +403,11 @@ function currentPage(): { page: string; path: string } {
   }
 }
 
-function buildReport(details: ErrorBoundaryDetails, componentStack: string | undefined, props: ErrorBoundaryProps): CrashReport {
+function buildReport(
+  details: ErrorBoundaryDetails,
+  componentStack: string | undefined,
+  props: ErrorBoundaryProps,
+): CrashReport {
   const { page, path } = currentPage();
   const extras: Record<string, string> = {};
   try {
@@ -638,9 +640,7 @@ function ErrorFallback({
             </p>
           )}
           {filing === "filed" && (
-            <p className="-mt-1 mb-1 basis-full text-xs">
-              {reference ? text.reportedAs(reference) : text.reported}
-            </p>
+            <p className="-mt-1 mb-1 basis-full text-xs">{reference ? text.reportedAs(reference) : text.reported}</p>
           )}
           {mode === "error" ? [retryButton, reloadButton] : [reloadButton, retryButton]}
           {copyReport && reportText !== null && filing !== "filed" && (

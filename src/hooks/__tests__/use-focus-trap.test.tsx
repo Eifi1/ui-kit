@@ -296,9 +296,7 @@ describe("useFocusTrap", () => {
     }
     render(<Host />);
     fireEvent.click(screen.getByRole("button", { name: "open" }));
-    expect(() =>
-      fireEvent.click(screen.getByRole("button", { name: "close" })),
-    ).not.toThrow();
+    expect(() => fireEvent.click(screen.getByRole("button", { name: "close" }))).not.toThrow();
   });
 
   it("does nothing while inactive", () => {

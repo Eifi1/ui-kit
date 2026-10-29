@@ -414,37 +414,37 @@ export function AdminActionLog({
             const to = (entry.renamed?.to ?? "").trim();
             const renamed = entry.action === "group_rename" && from !== "" && to !== "";
             return (
-            <li key={entry.id} data-action={entry.action} className="space-y-0.5 py-2 first:pt-0 last:pb-0">
-              <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-                <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm">
-                  <span className="font-medium text-primary">{actionText(entry.action)}</span>
-                  {renamed ? (
-                    <span data-private data-renamed className="min-w-0 break-words text-primary">
-                      {labels.renamedFromTo(from, to)}
-                    </span>
-                  ) : (
-                    entry.target !== undefined && <span className="min-w-0 break-words">{targetNode(entry)}</span>
-                  )}
-                  {entry.group && (
-                    <span data-group className="min-w-0 break-words text-xs text-muted">
-                      {groupText(entry.group)}
-                    </span>
+              <li key={entry.id} data-action={entry.action} className="space-y-0.5 py-2 first:pt-0 last:pb-0">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+                  <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm">
+                    <span className="font-medium text-primary">{actionText(entry.action)}</span>
+                    {renamed ? (
+                      <span data-private data-renamed className="min-w-0 break-words text-primary">
+                        {labels.renamedFromTo(from, to)}
+                      </span>
+                    ) : (
+                      entry.target !== undefined && <span className="min-w-0 break-words">{targetNode(entry)}</span>
+                    )}
+                    {entry.group && (
+                      <span data-group className="min-w-0 break-words text-xs text-muted">
+                        {groupText(entry.group)}
+                      </span>
+                    )}
+                  </div>
+                  <DateMark value={entry.at} display="relative" className="text-xs text-muted" />
+                </div>
+                <div className="text-xs text-muted">
+                  <span data-private={entry.actor !== null && entry.actor !== "self" ? true : undefined}>
+                    {actorText(entry)}
+                  </span>
+                  {entry.detail !== undefined && entry.detail !== null && entry.detail !== "" && (
+                    <>
+                      {" · "}
+                      <span className="text-secondary">{entry.detail}</span>
+                    </>
                   )}
                 </div>
-                <DateMark value={entry.at} display="relative" className="text-xs text-muted" />
-              </div>
-              <div className="text-xs text-muted">
-                <span data-private={entry.actor !== null && entry.actor !== "self" ? true : undefined}>
-                  {actorText(entry)}
-                </span>
-                {entry.detail !== undefined && entry.detail !== null && entry.detail !== "" && (
-                  <>
-                    {" · "}
-                    <span className="text-secondary">{entry.detail}</span>
-                  </>
-                )}
-              </div>
-            </li>
+              </li>
             );
           })}
         </ol>

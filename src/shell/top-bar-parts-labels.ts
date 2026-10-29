@@ -115,9 +115,7 @@ export const DEFAULT_TOP_BAR_PARTS_LABELS: TopBarPartsLabels = {
   },
   sync: {
     blocked: (count) =>
-      count === 1
-        ? "1 change cannot be sent from this device"
-        : `${count} changes cannot be sent from this device`,
+      count === 1 ? "1 change cannot be sent from this device" : `${count} changes cannot be sent from this device`,
     offline: "Offline — changes are saved on this device and will sync when you reconnect",
     refused: "The server refused the last sync",
     syncing: "Syncing…",

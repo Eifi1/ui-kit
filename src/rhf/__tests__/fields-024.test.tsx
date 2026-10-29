@@ -204,7 +204,9 @@ describe("RhfInlineEntityCombobox (kastlan)", () => {
     const input = screen.getByRole("combobox", { name: "Account for line 1" });
     // No end-hint row beside the <input>: the "?" is the form's description.
     expect(input.closest("[data-slot='form-description']")).toBeNull();
-    expect(screen.getByRole("button", { name: "Postable accounts only" }).closest("[data-slot='form-description']")).not.toBeNull();
+    expect(
+      screen.getByRole("button", { name: "Postable accounts only" }).closest("[data-slot='form-description']"),
+    ).not.toBeNull();
   });
 });
 
@@ -213,7 +215,12 @@ describe("RhfCombobox / RhfTextCombobox: field.ref through the picker's own ref 
     render(
       <Harness defaults={{ a: null, b: 1 }}>
         <RhfCombobox name="a" label="Tenant" options={[{ value: 1, label: "Example Ltd" }]} rules={REQUIRED} />
-        <RhfCombobox name="b" label="Locked" options={[{ value: 1, label: "Example Ltd" }]} disabledReason="Read-only demo" />
+        <RhfCombobox
+          name="b"
+          label="Locked"
+          options={[{ value: 1, label: "Example Ltd" }]}
+          disabledReason="Read-only demo"
+        />
       </Harness>,
     );
     await submit();

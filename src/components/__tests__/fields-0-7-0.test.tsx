@@ -84,7 +84,13 @@ describe("RTL: no physical sides in the field chrome", () => {
   it("the dropdown pickers — MultiSelect, CurrencySelect", () => {
     const { container } = rtl(
       <>
-        <MultiSelect label="Tags" options={[{ value: 1, label: "One" }]} value={[]} onChange={() => {}} error="Pick one" />
+        <MultiSelect
+          label="Tags"
+          options={[{ value: 1, label: "One" }]}
+          value={[]}
+          onChange={() => {}}
+          error="Pick one"
+        />
         <CurrencySelect label="Currency" value="EUR" onChange={() => {}} />
       </>,
     );
@@ -176,7 +182,15 @@ describe("DropdownPanel alignment follows the trigger's direction", () => {
   }
   beforeEach(() => {
     vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({
-      left: 600, right: 700, width: 100, top: 10, bottom: 40, height: 30, x: 600, y: 10, toJSON: () => ({}),
+      left: 600,
+      right: 700,
+      width: 100,
+      top: 10,
+      bottom: 40,
+      height: 30,
+      x: 600,
+      y: 10,
+      toJSON: () => ({}),
     } as DOMRect);
   });
   afterEach(() => vi.restoreAllMocks());
@@ -346,7 +360,14 @@ describe("MultiSelect error and disabled", () => {
     render(
       <>
         <p id="hint">Pick any</p>
-        <MultiSelect label="Tags" options={opts} value={[]} onChange={() => {}} error="Pick at least one" aria-describedby="hint" />
+        <MultiSelect
+          label="Tags"
+          options={opts}
+          value={[]}
+          onChange={() => {}}
+          error="Pick at least one"
+          aria-describedby="hint"
+        />
       </>,
     );
     const trigger = screen.getByRole("combobox", { name: /Tags/ });
@@ -363,9 +384,7 @@ describe("MultiSelect error and disabled", () => {
   });
 
   it("disabled: no panel, no chevron, dimmed label", () => {
-    const { container } = render(
-      <MultiSelect label="Tags" options={opts} value={[]} onChange={() => {}} disabled />,
-    );
+    const { container } = render(<MultiSelect label="Tags" options={opts} value={[]} onChange={() => {}} disabled />);
     const trigger = screen.getByRole("combobox", { name: /Tags/ });
     expect(trigger).toBeDisabled();
     fireEvent.click(trigger);

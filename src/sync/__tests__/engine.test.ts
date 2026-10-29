@@ -2,7 +2,15 @@ import "fake-indexeddb/auto";
 import Dexie, { type Table } from "dexie";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createSyncDb, rowByPk, SYNC_DB_PK_INDEX, type SyncDb } from "../db";
-import { createSyncEngine, releaseSyncEngine, syncEngineFor, type SyncEngine, type SyncEngineOptions, type SyncEngineState, type SyncStep } from "../engine";
+import {
+  createSyncEngine,
+  releaseSyncEngine,
+  syncEngineFor,
+  type SyncEngine,
+  type SyncEngineOptions,
+  type SyncEngineState,
+  type SyncStep,
+} from "../engine";
 import { createFakeSyncTransport } from "../testing";
 import type { SyncRequestBody, SyncResponseBody } from "../wire";
 
@@ -65,7 +73,11 @@ describe("write: into the copy at once and into the queue (ka's repo.write)", ()
     await engine.write("handover", "protocols", "p1", "upsert", { signature_tenant: "Anna" });
     const queued = await db.outbox.toArray();
     expect(queued).toHaveLength(1);
-    expect(queued[0]).toMatchObject({ scope: "handover", status: "pending", data: { notes: "first", signature_tenant: "Anna" } });
+    expect(queued[0]).toMatchObject({
+      scope: "handover",
+      status: "pending",
+      data: { notes: "first", signature_tenant: "Anna" },
+    });
     expect((await db.rows.get(["protocols", "p1"]))?.data).toEqual({ notes: "first", signature_tenant: "Anna" });
     expect(transport.requests).toHaveLength(0);
   });
@@ -132,7 +144,12 @@ describe("a round", () => {
     const round = await engine.syncNow();
     expect(round).toMatchObject({ outcome: "synced", waiting: 0, blocked: 0, rejected: 0 });
     expect(transport.requests[0]).toMatchObject({ scope: "handover", last_knowledge: 0, refusals: true });
-    expect(transport.requests[0].changes[0]).toMatchObject({ entity: "protocols", id: "p1", op: "upsert", data: { notes: "a" } });
+    expect(transport.requests[0].changes[0]).toMatchObject({
+      entity: "protocols",
+      id: "p1",
+      op: "upsert",
+      data: { notes: "a" },
+    });
     expect(transport.requests[0].client_now).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(transport.requests[0]).not.toHaveProperty("paged");
     expect(await db.outbox.count()).toBe(0);
@@ -146,7 +163,9 @@ describe("a round", () => {
     const { db, engine, transport } = setup();
     await engine.write("handover", "defects", "d1", "upsert", { description: "x" });
     transport.answer((body) =>
-      echoOf({ ...body, changes: [] }, 7, { refused: { code: "billing_read_only", detail: "Read-only for now", change_ids: ["d1"] } }),
+      echoOf({ ...body, changes: [] }, 7, {
+        refused: { code: "billing_read_only", detail: "Read-only for now", change_ids: ["d1"] },
+      }),
     );
     expect(await engine.syncNow()).toMatchObject({ outcome: "synced", waiting: 1 });
     expect(await db.outbox.toArray()).toEqual([
@@ -162,7 +181,9 @@ describe("a round", () => {
   it("blocks a change refused with another code; sends it again only on retryBlocked", async () => {
     const { db, engine, transport } = setup();
     await engine.write("handover", "defects", "d1", "upsert", { description: "x" });
-    transport.answer((body) => echoOf({ ...body, changes: [] }, 7, { refused: { code: "demo_read_only", detail: "Demo", change_ids: ["d1"] } }));
+    transport.answer((body) =>
+      echoOf({ ...body, changes: [] }, 7, { refused: { code: "demo_read_only", detail: "Demo", change_ids: ["d1"] } }),
+    );
     expect(await engine.syncNow()).toMatchObject({ blocked: 1 });
     expect((await db.outbox.toArray())[0]).toMatchObject({ status: "blocked", code: "demo_read_only" });
     await engine.syncNow();
@@ -191,13 +212,19 @@ describe("a round", () => {
 
     await engine.write("handover", "defects", "d1", "upsert", { description: "short" });
     const queued = await db.outbox.toArray();
-    expect(queued).toEqual([expect.objectContaining({ status: "pending", data: { description: "short", severity: "minor" } })]);
+    expect(queued).toEqual([
+      expect.objectContaining({ status: "pending", data: { description: "short", severity: "minor" } }),
+    ]);
   });
 
   it("discardRejected drops the change and its local row, and pulls the scope afresh", async () => {
     const { db, engine, transport } = setup();
     await engine.write("handover", "defects", "d1", "upsert", { description: "x" });
-    transport.answer({ server_knowledge: 4, changes: [], rejections: [{ change_id: "d1", code: "rejected", detail: "no" }] });
+    transport.answer({
+      server_knowledge: 4,
+      changes: [],
+      rejections: [{ change_id: "d1", code: "rejected", detail: "no" }],
+    });
     await engine.syncNow();
     await engine.discardRejected("handover");
     expect(await db.outbox.count()).toBe(0);
@@ -230,7 +257,15 @@ describe("a round", () => {
 
   it("sends a change left `sending` by a closed tab", async () => {
     const { db, engine, transport } = setup();
-    await db.outbox.add({ scope: "handover", entity: "protocols", id: "p1", op: "upsert", data: { a: 1 }, updated_at: new Date().toISOString(), status: "sending" });
+    await db.outbox.add({
+      scope: "handover",
+      entity: "protocols",
+      id: "p1",
+      op: "upsert",
+      data: { a: 1 },
+      updated_at: new Date().toISOString(),
+      status: "sending",
+    });
     await engine.syncNow();
     expect(transport.requests[0].changes.map((c) => c.id)).toEqual(["p1"]);
     expect(await db.outbox.count()).toBe(0);
@@ -332,7 +367,11 @@ describe("paging (D12)", () => {
       (body) => echoOf(body, 50, { page_cursor: cursor }),
       async () => {
         cursorDuringWalk = (await db.meta.get("lastKnowledge:handover"))?.value;
-        return { server_knowledge: 50, changes: [{ entity: "rooms", id: "r10", op: "upsert", pk: 10, data: {} }], page_cursor: null };
+        return {
+          server_knowledge: 50,
+          changes: [{ entity: "rooms", id: "r10", op: "upsert", pk: 10, data: {} }],
+          page_cursor: null,
+        };
       },
     );
     await engine.syncNow();
@@ -400,7 +439,12 @@ describe("the generation (D15)", () => {
     await db.table("photos").put({ id: "ph1" });
     await db.meta.put({ key: "lastKnowledge:handover", value: 5 });
     await engine.forget({ keepQueue: true });
-    expect([await db.rows.count(), await db.meta.count(), await db.outbox.count(), await db.table("photos").count()]).toEqual([0, 0, 1, 1]);
+    expect([
+      await db.rows.count(),
+      await db.meta.count(),
+      await db.outbox.count(),
+      await db.table("photos").count(),
+    ]).toEqual([0, 0, 1, 1]);
     await engine.forget({ keepQueue: false });
     expect([await db.outbox.count(), await db.table("photos").count()]).toEqual([0, 0]);
     expect(engine.getState().counts.pending).toBe(0);
@@ -410,7 +454,9 @@ describe("the generation (D15)", () => {
 describe("steps", () => {
   it("run after the push/pull, add their counts, and a change runs one more pass", async () => {
     const { engine, transport } = setup({
-      steps: [{ name: "photos", run: async () => ({ changed: transport.requests.length === 1, counts: { pending: 2 } }) }],
+      steps: [
+        { name: "photos", run: async () => ({ changed: transport.requests.length === 1, counts: { pending: 2 } }) },
+      ],
     });
     await engine.syncNow();
     expect(transport.requests).toHaveLength(2);
@@ -434,7 +480,12 @@ describe("the worker: start, poll, backoff (D13)", () => {
 
   it("starting a second engine on the same database stops the first", async () => {
     const first = setup();
-    const second = createSyncEngine({ db: first.db, scopes: () => ["handover"], send: vi.fn(async () => ({ server_knowledge: 1, changes: [] })), sharedComputer: () => false });
+    const second = createSyncEngine({
+      db: first.db,
+      scopes: () => ["handover"],
+      send: vi.fn(async () => ({ server_knowledge: 1, changes: [] })),
+      sharedComputer: () => false,
+    });
     open.push({ db: first.db, engine: second });
     first.engine.start();
     await until(first.engine, (s) => s.phase === "idle" && first.transport.requests.length === 1);
@@ -468,7 +519,12 @@ describe("the worker: start, poll, backoff (D13)", () => {
     first.engine.stop();
     expect(seen?.aborted).toBe(true);
     const sent = vi.fn(async (body: SyncRequestBody) => echoOf(body, 2));
-    const second = createSyncEngine({ db: first.db, scopes: () => ["handover"], send: sent, sharedComputer: () => false });
+    const second = createSyncEngine({
+      db: first.db,
+      scopes: () => ["handover"],
+      send: sent,
+      sharedComputer: () => false,
+    });
     open.push({ db: first.db, engine: second });
     second.start();
     await new Promise((r) => setTimeout(r, 20));
@@ -500,7 +556,12 @@ describe("the worker: start, poll, backoff (D13)", () => {
       ...echoOf(body, 99),
       changes: [{ entity: "protocols", id: "of-company-b", op: "upsert" as const, pk: 1, data: {} }],
     }));
-    const second = createSyncEngine({ db: first.db, scopes: () => ["handover"], send: sent, sharedComputer: () => false });
+    const second = createSyncEngine({
+      db: first.db,
+      scopes: () => ["handover"],
+      send: sent,
+      sharedComputer: () => false,
+    });
     open.push({ db: first.db, engine: second });
     second.start();
     await new Promise((r) => setTimeout(r, 20));
@@ -548,7 +609,10 @@ describe("the worker: start, poll, backoff (D13)", () => {
     engine.start();
     const waits: number[] = [];
     for (let i = 0; i < 5; i++) {
-      const s = await until(engine, (st) => st.phase === "error" && st.nextRetryAt !== null && transport.requests.length === i + 1);
+      const s = await until(
+        engine,
+        (st) => st.phase === "error" && st.nextRetryAt !== null && transport.requests.length === i + 1,
+      );
       waits.push(s.nextRetryAt! - Date.now());
       await vi.advanceTimersByTimeAsync(s.nextRetryAt! - Date.now());
     }
@@ -603,13 +667,28 @@ describe("createSyncDb", () => {
     n += 1;
     const name = `sync-engine-legacy-${n}`;
     const legacy = new Dexie(name);
-    legacy.version(1).stores({ rows: "[entity+id], entity", outbox: "++seq, [entity+id], status", photos: "id, roomId, status", meta: "key" });
+    legacy.version(1).stores({
+      rows: "[entity+id], entity",
+      outbox: "++seq, [entity+id], status",
+      photos: "id, roomId, status",
+      meta: "key",
+    });
     await legacy.table("outbox").add({ entity: "protocols", id: "p1", op: "upsert", data: {}, status: "pending" });
     legacy.close();
 
     const db = createSyncDb(name, {
       extraStores: { photos: "id, roomId, status" },
-      upgrades: [{ version: 2, upgrade: (tx) => tx.table("outbox").toCollection().modify({ scope: "handover" }).then(() => undefined) }],
+      upgrades: [
+        {
+          version: 2,
+          upgrade: (tx) =>
+            tx
+              .table("outbox")
+              .toCollection()
+              .modify({ scope: "handover" })
+              .then(() => undefined),
+        },
+      ],
     });
     open.push({ db });
     expect(await db.outbox.where("scope").equals("handover").count()).toBe(1);
@@ -632,7 +711,13 @@ describe("SyncStep<D> (0.46.1)", () => {
       counts: async (copy) => ({ pending: await copy.photos.where("status").equals("pending").count() }),
     };
     const transport = createFakeSyncTransport();
-    const engine = createSyncEngine({ db, scopes: () => ["handover"], send: transport.send, steps: [step], sharedComputer: () => false });
+    const engine = createSyncEngine({
+      db,
+      scopes: () => ["handover"],
+      send: transport.send,
+      steps: [step],
+      sharedComputer: () => false,
+    });
     open.push({ db, engine });
     expect((await engine.syncNow()).outcome).toBe("synced");
     expect((await db.photos.get("ph1"))?.status).toBe("uploaded");

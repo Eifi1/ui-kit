@@ -86,12 +86,11 @@ describe("ColumnMapper", () => {
     render(<ColumnMapper roles={CURVE} onChange={vi.fn()} />);
     paste(RECORDING);
     const select = screen.getByRole("combobox", { name: "What does column “t” hold?" });
-    expect(within(select).getAllByRole("option").map((option) => option.textContent)).toEqual([
-      "Ignore",
-      "Time",
-      "Setpoint",
-      "Actual",
-    ]);
+    expect(
+      within(select)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual(["Ignore", "Time", "Setpoint", "Actual"]);
     expect(screen.queryByText(/\(required\)/)).not.toBeInTheDocument();
   });
 
@@ -135,10 +134,7 @@ describe("ColumnMapper", () => {
   it("reads a chosen file, as Windows-1252 when it is not UTF-8", async () => {
     const onChange = vi.fn();
     const { container } = render(
-      <ColumnMapper
-        roles={[{ value: "payee", label: "Empfänger", required: true }]}
-        onChange={onChange}
-      />,
+      <ColumnMapper roles={[{ value: "payee", label: "Empfänger", required: true }]} onChange={onChange} />,
     );
     // "Empfänger;Betrag\nExample Ltd;-12,50" with the ä as the byte 0xE4.
     const bytes = new Uint8Array([
@@ -284,9 +280,7 @@ describe("ColumnRoleTable", () => {
   });
 
   it("names columns without a header by their position", () => {
-    render(
-      <ColumnRoleTable header={null} rows={[["1", "2"]]} roles={CURVE} mapping={{}} onMappingChange={vi.fn()} />,
-    );
+    render(<ColumnRoleTable header={null} rows={[["1", "2"]]} roles={CURVE} mapping={{}} onMappingChange={vi.fn()} />);
     expect(screen.getByRole("combobox", { name: "What does column “Column 2” hold?" })).toBeInTheDocument();
     expect(screen.getByText("Still needed: Time, Setpoint, and Actual.")).toBeInTheDocument();
   });
@@ -295,14 +289,11 @@ describe("ColumnRoleTable", () => {
     render(<Bank />);
     const select = screen.getByRole("combobox", { name: "What does column “Soll” hold?" });
     // Shown with the short mark (0.25), named with the word — see column-mapper.required-mark.test.tsx.
-    expect(within(select).getAllByRole("option").map((option) => option.textContent)).toEqual([
-      "Ignore",
-      "Booking date *",
-      "Amount",
-      "Debit",
-      "Credit",
-      "Payee",
-    ]);
+    expect(
+      within(select)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual(["Ignore", "Booking date *", "Amount", "Debit", "Credit", "Payee"]);
     expect(within(select).getByRole("option", { name: "Booking date (required)" })).toBeInTheDocument();
   });
 
@@ -380,7 +371,9 @@ describe("ColumnRoleTable", () => {
       scroller.scrollLeft = 300;
       fireEvent.scroll(scroller);
       expect(scrollerOf()).toHaveAttribute("data-overflow", "start");
-      expect(scrollerOf().style.maskImage).toMatch(/^linear-gradient\(to right, transparent, (#000|rgb\(0, 0, 0\)) 24px, /);
+      expect(scrollerOf().style.maskImage).toMatch(
+        /^linear-gradient\(to right, transparent, (#000|rgb\(0, 0, 0\)) 24px, /,
+      );
     });
 
     it("in RTL the hidden columns are at the end, which is the left", () => {

@@ -54,9 +54,7 @@ describe("NavPills (keksdose swipe-settings-card:152)", () => {
   });
 
   it("currentType, size and landmark=false", () => {
-    render(
-      <NavPills landmark={false} aria-label="Steps" size="sm" currentType="step" items={SURFACES} current="tx" />,
-    );
+    render(<NavPills landmark={false} aria-label="Steps" size="sm" currentType="step" items={SURFACES} current="tx" />);
     expect(screen.queryByRole("navigation")).toBeNull();
     expect(screen.getByRole("group", { name: "Steps" })).toBeInTheDocument();
     const current = screen.getByRole("button", { name: "Transactions" });
@@ -89,7 +87,16 @@ describe("NavPills — the provider's router link", () => {
     unmount();
     render(
       <UiKitProvider linkComponent={routerLink}>
-        <NavPills aria-label="Pages" items={items} current="a" renderLink={(p) => <a {...p} data-own="">{p.children}</a>} />
+        <NavPills
+          aria-label="Pages"
+          items={items}
+          current="a"
+          renderLink={(p) => (
+            <a {...p} data-own="">
+              {p.children}
+            </a>
+          )}
+        />
       </UiKitProvider>,
     );
     expect(screen.getByRole("link", { name: "Alpha" })).toHaveAttribute("data-own");

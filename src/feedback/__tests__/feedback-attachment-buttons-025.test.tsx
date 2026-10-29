@@ -62,12 +62,7 @@ describe("FeedbackDialog attachment buttons (0.25)", () => {
 
   it("take attachmentButtonVariant and attachmentButtonSize — single mode", () => {
     render(
-      <FeedbackDialog
-        {...dialog}
-        onSubmit={() => {}}
-        attachmentButtonVariant="ghost"
-        attachmentButtonSize="sm"
-      />,
+      <FeedbackDialog {...dialog} onSubmit={() => {}} attachmentButtonVariant="ghost" attachmentButtonSize="sm" />,
     );
     expectGhostSmall();
   });
@@ -95,12 +90,7 @@ describe("FeedbackDialog attachment buttons (0.25)", () => {
 
   it("leave the dialog's own Cancel / Send alone", () => {
     render(
-      <FeedbackDialog
-        {...dialog}
-        onSubmit={() => {}}
-        attachmentButtonVariant="ghost"
-        attachmentButtonSize="sm"
-      />,
+      <FeedbackDialog {...dialog} onSubmit={() => {}} attachmentButtonVariant="ghost" attachmentButtonSize="sm" />,
     );
     expect(screen.getByRole("button", { name: "Send" })).toHaveClass("px-3", "py-2", "text-sm");
   });

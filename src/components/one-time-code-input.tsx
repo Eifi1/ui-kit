@@ -2,13 +2,7 @@ import { useId, useState } from "react";
 import type { ChangeEvent, ClipboardEvent, FocusEvent, InputHTMLAttributes, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
 import { EndHintRow, FieldCaption, useFieldError, useFieldHint, type FieldHelpProps } from "./field-parts";
-import {
-  FIELD_BASE,
-  FIELD_INVALID,
-  FIELD_WRITABLE_LOOK,
-  FLOATING_INPUT_CLASS,
-  FloatingField,
-} from "./field-base";
+import { FIELD_BASE, FIELD_INVALID, FIELD_WRITABLE_LOOK, FLOATING_INPUT_CLASS, FloatingField } from "./field-base";
 
 /**
  * The field for a verification code — the six digits an authenticator app shows, or the
@@ -57,10 +51,11 @@ import {
  * the error under that, both attached through `aria-describedby` after the caller's own.
  */
 export interface OneTimeCodeInputProps
-  extends Omit<
-    InputHTMLAttributes<HTMLInputElement>,
-    "value" | "defaultValue" | "onChange" | "type" | "inputMode" | "autoComplete" | "maxLength" | "pattern"
-  >,
+  extends
+    Omit<
+      InputHTMLAttributes<HTMLInputElement>,
+      "value" | "defaultValue" | "onChange" | "type" | "inputMode" | "autoComplete" | "maxLength" | "pattern"
+    >,
     FieldHelpProps {
   /** The digits so far — a string, so leading zeros survive. */
   value: string;

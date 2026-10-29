@@ -26,11 +26,7 @@ export function requiredFieldsValidator<T extends Record<string, unknown>>(
   const errors: FieldErrors = {};
   for (const f of fields) {
     const v = data[f.key];
-    const ok = f.valid
-      ? f.valid(v, data)
-      : typeof v === "string"
-        ? v.trim() !== ""
-        : v != null;
+    const ok = f.valid ? f.valid(v, data) : typeof v === "string" ? v.trim() !== "" : v != null;
     if (!ok) errors[String(f.key)] = f.message ?? defaultMessage;
   }
   return { ok: Object.keys(errors).length === 0, errors };

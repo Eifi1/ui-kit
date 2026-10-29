@@ -10,7 +10,11 @@ import { UiKitProvider } from "../../i18n/kit-labels";
  * `aria-labelledby` reaching the trigger (a form's own label names it).
  */
 
-function Clearable({ initial = "AT", onChange = () => {}, ...props }: {
+function Clearable({
+  initial = "AT",
+  onChange = () => {},
+  ...props
+}: {
   initial?: string | null;
   onChange?: (code: string | null) => void;
   disabled?: boolean;
@@ -56,9 +60,7 @@ describe("CountrySelect ref (kastlan)", () => {
 
   it("points at the trigger under a lock too, where it stays focusable", () => {
     const ref = createRef<HTMLButtonElement>();
-    render(
-      <CountrySelect ref={ref} label="Country" value="CH" onChange={() => {}} disabledReason="Owner only" />,
-    );
+    render(<CountrySelect ref={ref} label="Country" value="CH" onChange={() => {}} disabledReason="Owner only" />);
     expect(ref.current).toHaveAttribute("aria-disabled", "true");
     ref.current!.focus();
     expect(ref.current).toHaveFocus();

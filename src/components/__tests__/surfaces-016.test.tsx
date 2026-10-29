@@ -1,14 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "../card";
+import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../card";
 import { FieldHint } from "../field-parts";
 import { IconButton } from "../icon-button";
 import { Select } from "../select";
@@ -21,8 +13,7 @@ import { StatTile, StatTileGrid } from "../stat-tile";
  * `stretch` / `loading` (P9).
  */
 
-const slot = (container: HTMLElement, name: string) =>
-  container.querySelector<HTMLElement>(`[data-slot="${name}"]`)!;
+const slot = (container: HTMLElement, name: string) => container.querySelector<HTMLElement>(`[data-slot="${name}"]`)!;
 
 describe("Card parts follow the card's padding (P4)", () => {
   function parts(card: Partial<Parameters<typeof Card>[0]>) {
@@ -149,7 +140,12 @@ describe("IconButton pending (P6)", () => {
   it("swaps the glyph for a spinner, is busy, keeps its name and swallows clicks", () => {
     const onClick = vi.fn();
     render(
-      <form onSubmit={(e) => { e.preventDefault(); onClick("submit"); }}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          onClick("submit");
+        }}
+      >
         <IconButton type="submit" label="Save" pending onClick={onClick}>
           <svg data-testid="glyph" />
         </IconButton>

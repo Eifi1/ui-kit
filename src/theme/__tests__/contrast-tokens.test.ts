@@ -104,7 +104,11 @@ describe("applyTokenSet writes the stepped well and money (§13.4 item 2)", () =
 
   it("the set's own in dark under More contrast, and at Standard in both", () => {
     for (const preset of PALETTES) {
-      for (const [mode, more] of [["dark", true], ["dark", false], ["light", false]] as const) {
+      for (const [mode, more] of [
+        ["dark", true],
+        ["dark", false],
+        ["light", false],
+      ] as const) {
         const el = document.createElement("div");
         applyTokenSet(el, preset[mode], more);
         for (const key of ["bgSurface2", ...MONEY] as const) {

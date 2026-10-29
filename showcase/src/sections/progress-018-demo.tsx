@@ -16,8 +16,18 @@ const chf = numberFormat("en-CH", { style: "currency", currency: "CHF", maximumF
 /** One hue at three strengths: the same money, less and less certain. */
 const CERTAINTY: ProgressBarSegment[] = [
   { key: "booked", label: "Booked", value: 0, className: "bg-[var(--chart-1)]" },
-  { key: "committed", label: "Committed", value: 0, className: "bg-[color-mix(in_oklab,var(--chart-1)_60%,var(--bg-surface))]" },
-  { key: "extrapolated", label: "Extrapolated", value: 0, className: "bg-[color-mix(in_oklab,var(--chart-1)_30%,var(--bg-surface))]" },
+  {
+    key: "committed",
+    label: "Committed",
+    value: 0,
+    className: "bg-[color-mix(in_oklab,var(--chart-1)_60%,var(--bg-surface))]",
+  },
+  {
+    key: "extrapolated",
+    label: "Extrapolated",
+    value: 0,
+    className: "bg-[color-mix(in_oklab,var(--chart-1)_30%,var(--bg-surface))]",
+  },
 ];
 
 function bucket(values: [number, number, number]): ProgressBarSegment[] {
@@ -66,7 +76,11 @@ export function ProgressLegendTone018Demo() {
           />
         </div>
       </div>
-      <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-secondary" role="group" aria-label="legendTone">
+      <div
+        className="mt-3 flex flex-wrap items-center gap-2 text-sm text-secondary"
+        role="group"
+        aria-label="legendTone"
+      >
         <code className="font-mono text-xs">legendTone</code>
         {TONES.map((t) => (
           <label key={t} className="flex items-center gap-1">
@@ -76,7 +90,8 @@ export function ProgressLegendTone018Demo() {
         ))}
       </div>
       <Note>
-        Default `muted`: no change for a bar that sets nothing. The swatches and names keep their colours; `sensitive` still tags each toned figure `data-private`. A `legendValue` node inherits the tone unless it sets its own.
+        Default `muted`: no change for a bar that sets nothing. The swatches and names keep their colours; `sensitive`
+        still tags each toned figure `data-private`. A `legendValue` node inherits the tone unless it sets its own.
       </Note>
     </Example>
   );

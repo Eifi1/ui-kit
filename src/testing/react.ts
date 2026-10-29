@@ -49,8 +49,7 @@ export async function rowMenuAction(
   // Any row's name: the words around the name, whatever the language puts first.
   const [before, after] = actionsFor("\u0000").split("\u0000");
   const anyRow = (name: string) =>
-    name === actions ||
-    (name.length > before.length + after.length && name.startsWith(before) && name.endsWith(after));
+    name === actions || (name.length > before.length + after.length && name.startsWith(before) && name.endsWith(after));
   const trigger = (await screen.findAllByRole("button", { name: row === undefined ? anyRow : actionsFor(row) }))[0];
   fireEvent.click(trigger);
   const title = trigger.getAttribute("aria-label") ?? trigger.textContent ?? "";

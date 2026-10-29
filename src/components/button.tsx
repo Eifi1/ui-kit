@@ -319,10 +319,7 @@ function ButtonElement({
               keeps an icon + text spaced as the button spaces them. */}
           <span className="inline-flex items-center justify-center gap-[inherit] opacity-0">{children}</span>
           {/* Decorative: `aria-busy` says it, as on FileButton. */}
-          <Spinner
-            label={null}
-            className="absolute inset-0 m-auto size-4 border-current/30 border-t-current"
-          />
+          <Spinner label={null} className="absolute inset-0 m-auto size-4 border-current/30 border-t-current" />
         </>
       ) : (
         children

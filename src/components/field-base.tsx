@@ -78,8 +78,7 @@ export const FIELD_BASE =
  *  reason other than "you may not edit this". Attribute-scoped for the same reason
  *  FIELD_BASE is — the two have to cancel on the identical selector or twMerge
  *  cannot make the later one win. */
-export const FIELD_WRITABLE_LOOK =
-  "[&[readonly]]:bg-surface [&[readonly]]:text-primary";
+export const FIELD_WRITABLE_LOOK = "[&[readonly]]:bg-surface [&[readonly]]:text-primary";
 
 // Extra top padding leaves room for a label that floats INSIDE the field (the
 // "filled" pattern) — the label sits in the top strip, the value below it. Used by
@@ -190,10 +189,7 @@ export function FieldChevron({ className, ...rest }: FieldChevronProps) {
       // a name, and an `aria-hidden` a caller could switch off by accident is a second
       // announcement of the same field.
       aria-hidden
-      className={cn(
-        "pointer-events-none absolute end-2.5 top-1/2 size-4 -translate-y-1/2 text-placeholder",
-        className,
-      )}
+      className={cn("pointer-events-none absolute end-2.5 top-1/2 size-4 -translate-y-1/2 text-placeholder", className)}
     />
   );
 }
@@ -256,8 +252,7 @@ export function SelectWidthFloor({ values, size = "md" }: { values: readonly str
 // At Large it is a static label ABOVE the field instead (0.33, §10.17): in flow, so it
 // wraps; always in its floated look, since there is no strip to float into and no
 // placeholder to stand in for; no transition, since it never moves.
-const LABEL_FLOATED_AT_LARGE =
-  "large:text-caption large:leading-tight large:text-secondary large:transition-none";
+const LABEL_FLOATED_AT_LARGE = "large:text-caption large:leading-tight large:text-secondary large:transition-none";
 
 export const FLOATING_LABEL_CLASS = cn(
   "pointer-events-none absolute start-3 top-2.5 text-sm text-placeholder transition-all",
@@ -294,7 +289,10 @@ const FLOATING_ROW_CLASS = cn(
 
 /** The static label's row with its "?" at the field's end, in the top strip — and at
  *  Large above the field (LABEL_ABOVE_AT_LARGE). */
-const STATIC_ROW_CLASS = cn("pointer-events-none absolute inset-x-3 top-1 flex items-center gap-1", LABEL_ABOVE_AT_LARGE);
+const STATIC_ROW_CLASS = cn(
+  "pointer-events-none absolute inset-x-3 top-1 flex items-center gap-1",
+  LABEL_ABOVE_AT_LARGE,
+);
 
 /**
  * The one place that assembles a labelled field: a `relative` wrapper around the
@@ -602,11 +600,7 @@ export function CharacterCount({
         aria-hidden
         className={cn(
           "shrink-0 text-caption leading-tight tabular-nums",
-          zone === "limit"
-            ? "text-danger"
-            : zone === "near"
-              ? "text-warning"
-              : "text-muted",
+          zone === "limit" ? "text-danger" : zone === "near" ? "text-warning" : "text-muted",
         )}
       >
         {used}/{max}

@@ -230,7 +230,17 @@ const THEMES = { system: "System", light: "Light", dark: "Dark" };
 /** A bound field in a form of its own. */
 function InForm({ children }: { children: ReactNode }) {
   const form = useForm({
-    defaultValues: { text: "", count: 1, date: "", from: "", to: "", month: "", choice: "a", flag: false, country: "CH" },
+    defaultValues: {
+      text: "",
+      count: 1,
+      date: "",
+      from: "",
+      to: "",
+      month: "",
+      choice: "a",
+      flag: false,
+      country: "CH",
+    },
   });
   return (
     <Form {...form}>
@@ -269,7 +279,13 @@ const SWEEP: Record<SweptField, (hint: ReactNode) => ReactElement> = {
     <ThemeSetting label="Status" value="system" onChange={noop} optionLabels={THEMES} hint={hint} />
   ),
   LanguageSetting: (hint) => (
-    <LanguageSetting label="Status" value="en" onChange={noop} options={[{ code: "en", label: "English" }]} hint={hint} />
+    <LanguageSetting
+      label="Status"
+      value="en"
+      onChange={noop}
+      options={[{ code: "en", label: "English" }]}
+      hint={hint}
+    />
   ),
   DateFormatSetting: (hint) => <DateFormatSetting label="Status" value="auto" onChange={noop} hint={hint} />,
   TextSizeSetting: (hint) => <TextSizeSetting label="Status" value="normal" onChange={noop} hint={hint} />,
@@ -292,45 +308,129 @@ const SWEEP: Record<SweptField, (hint: ReactNode) => ReactElement> = {
   ToggleGroup: (hint) => <ToggleGroup label="Status" hint={hint} value="a" onChange={noop} options={OPTIONS} />,
   CheckboxGroup: (hint) => <CheckboxGroup legend="Status" options={OPTIONS} value={[]} onChange={noop} hint={hint} />,
   SwatchPicker: (hint) => (
-    <SwatchPicker label="Status" options={[{ value: "red", label: "Red", color: "#f00" }]} value={null} onChange={noop} hint={hint} />
+    <SwatchPicker
+      label="Status"
+      options={[{ value: "red", label: "Red", color: "#f00" }]}
+      value={null}
+      onChange={noop}
+      hint={hint}
+    />
   ),
   IconPicker: (hint) => (
-    <IconPicker label="Status" options={[{ value: "ok", label: "Done", icon: Check }]} value={null} onChange={noop} hint={hint} />
+    <IconPicker
+      label="Status"
+      options={[{ value: "ok", label: "Done", icon: Check }]}
+      value={null}
+      onChange={noop}
+      hint={hint}
+    />
   ),
   FieldStrip: (hint) => (
     <FieldStrip label="Status" hint={hint}>
       <span>Bern</span>
     </FieldStrip>
   ),
-  Field: (hint) => <Field label="Status" hint={hint}>{(ids) => <input {...ids} />}</Field>,
+  Field: (hint) => (
+    <Field label="Status" hint={hint}>
+      {(ids) => <input {...ids} />}
+    </Field>
+  ),
   // The bound twins: label above (FormLabel), hint under the field (FormDescription).
   RhfField: (hint) => (
     <InForm>
       <RhfField name="text" label="Status" hint={hint} render={({ field }) => <input {...field} />} />
     </InForm>
   ),
-  RhfTextField: (hint) => <InForm><RhfTextField name="text" label="Status" hint={hint} /></InForm>,
-  RhfTextarea: (hint) => <InForm><RhfTextarea name="text" label="Status" hint={hint} /></InForm>,
-  RhfNumberField: (hint) => <InForm><RhfNumberField name="count" label="Status" hint={hint} /></InForm>,
-  RhfIntegerField: (hint) => <InForm><RhfIntegerField name="count" label="Status" hint={hint} /></InForm>,
-  RhfMoneyField: (hint) => <InForm><RhfMoneyField name="count" label="Status" currency="CHF" hint={hint} /></InForm>,
-  RhfDateField: (hint) => <InForm><RhfDateField name="date" label="Status" hint={hint} /></InForm>,
+  RhfTextField: (hint) => (
+    <InForm>
+      <RhfTextField name="text" label="Status" hint={hint} />
+    </InForm>
+  ),
+  RhfTextarea: (hint) => (
+    <InForm>
+      <RhfTextarea name="text" label="Status" hint={hint} />
+    </InForm>
+  ),
+  RhfNumberField: (hint) => (
+    <InForm>
+      <RhfNumberField name="count" label="Status" hint={hint} />
+    </InForm>
+  ),
+  RhfIntegerField: (hint) => (
+    <InForm>
+      <RhfIntegerField name="count" label="Status" hint={hint} />
+    </InForm>
+  ),
+  RhfMoneyField: (hint) => (
+    <InForm>
+      <RhfMoneyField name="count" label="Status" currency="CHF" hint={hint} />
+    </InForm>
+  ),
+  RhfDateField: (hint) => (
+    <InForm>
+      <RhfDateField name="date" label="Status" hint={hint} />
+    </InForm>
+  ),
   RhfDateRangePicker: (hint) => (
-    <InForm><RhfDateRangePicker fromName="from" toName="to" label="Status" hint={hint} /></InForm>
+    <InForm>
+      <RhfDateRangePicker fromName="from" toName="to" label="Status" hint={hint} />
+    </InForm>
   ),
-  RhfTimeInput: (hint) => <InForm><RhfTimeInput name="text" label="Status" hint={hint} /></InForm>,
-  RhfIbanInput: (hint) => <InForm><RhfIbanInput name="text" label="Status" hint={hint} /></InForm>,
-  RhfPhoneInput: (hint) => <InForm><RhfPhoneInput name="text" label="Status" hint={hint} /></InForm>,
-  RhfCountrySelect: (hint) => <InForm><RhfCountrySelect name="country" label="Status" hint={hint} /></InForm>,
-  RhfMonthPicker: (hint) => <InForm><RhfMonthPicker name="month" label="Status" hint={hint} /></InForm>,
-  RhfSelect: (hint) => <InForm><RhfSelect name="choice" label="Status" options={OPTIONS} hint={hint} /></InForm>,
-  RhfCheckbox: (hint) => <InForm><RhfCheckbox name="flag" label="Status" hint={hint} /></InForm>,
-  RhfToggleGroup: (hint) => <InForm><RhfToggleGroup name="choice" label="Status" options={OPTIONS} hint={hint} /></InForm>,
-  RhfCombobox: (hint) => <InForm><RhfCombobox name="choice" label="Status" options={OPTIONS} hint={hint} /></InForm>,
+  RhfTimeInput: (hint) => (
+    <InForm>
+      <RhfTimeInput name="text" label="Status" hint={hint} />
+    </InForm>
+  ),
+  RhfIbanInput: (hint) => (
+    <InForm>
+      <RhfIbanInput name="text" label="Status" hint={hint} />
+    </InForm>
+  ),
+  RhfPhoneInput: (hint) => (
+    <InForm>
+      <RhfPhoneInput name="text" label="Status" hint={hint} />
+    </InForm>
+  ),
+  RhfCountrySelect: (hint) => (
+    <InForm>
+      <RhfCountrySelect name="country" label="Status" hint={hint} />
+    </InForm>
+  ),
+  RhfMonthPicker: (hint) => (
+    <InForm>
+      <RhfMonthPicker name="month" label="Status" hint={hint} />
+    </InForm>
+  ),
+  RhfSelect: (hint) => (
+    <InForm>
+      <RhfSelect name="choice" label="Status" options={OPTIONS} hint={hint} />
+    </InForm>
+  ),
+  RhfCheckbox: (hint) => (
+    <InForm>
+      <RhfCheckbox name="flag" label="Status" hint={hint} />
+    </InForm>
+  ),
+  RhfToggleGroup: (hint) => (
+    <InForm>
+      <RhfToggleGroup name="choice" label="Status" options={OPTIONS} hint={hint} />
+    </InForm>
+  ),
+  RhfCombobox: (hint) => (
+    <InForm>
+      <RhfCombobox name="choice" label="Status" options={OPTIONS} hint={hint} />
+    </InForm>
+  ),
   RhfInlineEntityCombobox: (hint) => (
-    <InForm><RhfInlineEntityCombobox name="choice" label="Status" options={OPTIONS} hint={hint} /></InForm>
+    <InForm>
+      <RhfInlineEntityCombobox name="choice" label="Status" options={OPTIONS} hint={hint} />
+    </InForm>
   ),
-  RhfTextCombobox: (hint) => <InForm><RhfTextCombobox name="text" label="Status" options={["Bern"]} hint={hint} /></InForm>,
+  RhfTextCombobox: (hint) => (
+    <InForm>
+      <RhfTextCombobox name="text" label="Status" options={["Bern"]} hint={hint} />
+    </InForm>
+  ),
 };
 
 describe("a HelpPopover stays on the label line where a FieldHint becomes a caption (§10.23)", () => {

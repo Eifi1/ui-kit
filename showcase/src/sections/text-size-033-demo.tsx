@@ -40,7 +40,12 @@ function PageSize() {
   const { size } = useTextSize();
   return (
     <div className="grid gap-1">
-      <TextSizeSetting label="This page's text size" labelPlacement="above" value={resolveTextSize(device)} onChange={setSize} />
+      <TextSizeSetting
+        label="This page's text size"
+        labelPlacement="above"
+        value={resolveTextSize(device)}
+        onChange={setSize}
+      />
       <p className="text-xs text-muted">In force: {code(size)}.</p>
     </div>
   );
@@ -63,10 +68,28 @@ export function RowActions033Demo() {
 
   const actions: RowActionList = [
     { label: "Watch the bed", icon: Eye, pressed: watched, onSelect: () => setWatched((on) => !on) },
-    { label: "Share the bed", icon: Share2, expanded: shareOpen, controls: shareId, onSelect: () => setShareOpen((open) => !open) },
+    {
+      label: "Share the bed",
+      icon: Share2,
+      expanded: shareOpen,
+      controls: shareId,
+      onSelect: () => setShareOpen((open) => !open),
+    },
     { label: "Open the planting log", icon: BookOpen, tone: "muted", onSelect: () => setLog("Open the planting log") },
-    { label: "Check the soil", icon: FlaskConical, tone: "info", dataTour: TOUR, onSelect: () => setLog("Check the soil") },
-    { label: "Flag for the committee", icon: Flag, tone: "warning", pressed: flagged, onSelect: () => setFlagged((on) => !on) },
+    {
+      label: "Check the soil",
+      icon: FlaskConical,
+      tone: "info",
+      dataTour: TOUR,
+      onSelect: () => setLog("Check the soil"),
+    },
+    {
+      label: "Flag for the committee",
+      icon: Flag,
+      tone: "warning",
+      pressed: flagged,
+      onSelect: () => setFlagged((on) => !on),
+    },
     { label: "Delete the bed", icon: Trash2, tone: "danger", commit: true, onSelect: () => setLog("Delete the bed") },
   ];
 
@@ -84,7 +107,10 @@ export function RowActions033Demo() {
   };
 
   return (
-    <Example label="RowActions — pressed, expanded, tones and a tour anchor" hint="a row action carries its state at every size; at Large two or more fold into “⋯”">
+    <Example
+      label="RowActions — pressed, expanded, tones and a tour anchor"
+      hint="a row action carries its state at every size; at Large two or more fold into “⋯”"
+    >
       <div className="space-y-4">
         <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
           <ToggleGroup
@@ -107,7 +133,11 @@ export function RowActions033Demo() {
             <span className="min-w-0 flex-1 text-primary">North bed by the greenhouse door</span>
             <RowActions name="North bed" actions={actions} collapse={collapse} tooltipSide="start" />
           </div>
-          <div id={shareId} hidden={!shareOpen} className="border-t border-subtle bg-surface-2 px-3 py-2 text-sm text-secondary">
+          <div
+            id={shareId}
+            hidden={!shareOpen}
+            className="border-t border-subtle bg-surface-2 px-3 py-2 text-sm text-secondary"
+          >
             The share card opens here, under the row — the action says so with aria-expanded.
           </div>
         </div>
@@ -122,8 +152,20 @@ export function RowActions033Demo() {
               glyphSize={14}
               collapse={collapse}
               actions={[
-                { label: "Add a category", icon: Plus, expanded: addOpen, controls: addId, onSelect: () => setAddOpen((open) => !open) },
-                { label: "Rename the group", icon: Pencil, tone: "muted", commit: true, onSelect: () => setLog("Rename the group") },
+                {
+                  label: "Add a category",
+                  icon: Plus,
+                  expanded: addOpen,
+                  controls: addId,
+                  onSelect: () => setAddOpen((open) => !open),
+                },
+                {
+                  label: "Rename the group",
+                  icon: Pencil,
+                  tone: "muted",
+                  commit: true,
+                  onSelect: () => setLog("Rename the group"),
+                },
               ]}
             />
           </div>
@@ -156,8 +198,18 @@ export function RowActions033Demo() {
                     collapse={collapse}
                     tooltipSide="start"
                     actions={[
-                      { label: "Rename the bed", icon: Pencil, tone: "muted", onSelect: () => setLog(`Rename ${bed.name}`) },
-                      { label: "Delete the bed", icon: Trash2, tone: "danger", onSelect: () => setLog(`Delete ${bed.name}`) },
+                      {
+                        label: "Rename the bed",
+                        icon: Pencil,
+                        tone: "muted",
+                        onSelect: () => setLog(`Rename ${bed.name}`),
+                      },
+                      {
+                        label: "Delete the bed",
+                        icon: Trash2,
+                        tone: "danger",
+                        onSelect: () => setLog(`Delete ${bed.name}`),
+                      },
                     ]}
                   />
                 </TableCell>
@@ -174,20 +226,19 @@ export function RowActions033Demo() {
         </ul>
       </div>
       <Note>
-        A toggle is `pressed` — `aria-pressed` and IconButton&apos;s &ldquo;on&rdquo; look inline, `aria-pressed` on
-        the menu entry — and keeps its label in both states. Something the action opens in the page is
-        `expanded` with `controls` (`aria-expanded`, `aria-controls`), never with `pressed`. The tones `muted`,
-        `info` and `warning` join `danger`: inline they are IconButton&apos;s, in the menu the glyph takes the tone
-        and the words keep the text colour (danger keeps its red words). `dataTour` lands on ONE element per
-        action at a time: inline on the action&apos;s own control; collapsed on an `aria-hidden` overlay in the
-        &ldquo;⋯&rdquo;&apos;s `data-slot="row-actions"` box, so the selector resolves to a box the size of the
-        button and a tap still reaches it; never on the entry in the open menu, which is portalled after the row
-        and would only make the selector match twice. `glyphSize` and `tooltipSide` (&ldquo;start&rdquo; in a
-        table&apos;s last column) are the row&apos;s; `rowActionsColumn` passes both through. Its column is
-        `role: "actions"`: DataTable&apos;s phone card draws it after the card&apos;s three fields, at the
-        card&apos;s end, and never counts it as one of them. A hand-built
-        table gets the column&apos;s visible, end-aligned &ldquo;Actions&rdquo; heading from `RowActionsHead` and
-        its cell from `ROW_ACTIONS_CELL_CLASS`.
+        A toggle is `pressed` — `aria-pressed` and IconButton&apos;s &ldquo;on&rdquo; look inline, `aria-pressed` on the
+        menu entry — and keeps its label in both states. Something the action opens in the page is `expanded` with
+        `controls` (`aria-expanded`, `aria-controls`), never with `pressed`. The tones `muted`, `info` and `warning`
+        join `danger`: inline they are IconButton&apos;s, in the menu the glyph takes the tone and the words keep the
+        text colour (danger keeps its red words). `dataTour` lands on ONE element per action at a time: inline on the
+        action&apos;s own control; collapsed on an `aria-hidden` overlay in the &ldquo;⋯&rdquo;&apos;s
+        `data-slot="row-actions"` box, so the selector resolves to a box the size of the button and a tap still reaches
+        it; never on the entry in the open menu, which is portalled after the row and would only make the selector match
+        twice. `glyphSize` and `tooltipSide` (&ldquo;start&rdquo; in a table&apos;s last column) are the row&apos;s;
+        `rowActionsColumn` passes both through. Its column is `role: "actions"`: DataTable&apos;s phone card draws it
+        after the card&apos;s three fields, at the card&apos;s end, and never counts it as one of them. A hand-built
+        table gets the column&apos;s visible, end-aligned &ldquo;Actions&rdquo; heading from `RowActionsHead` and its
+        cell from `ROW_ACTIONS_CELL_CLASS`.
       </Note>
     </Example>
   );
@@ -198,7 +249,10 @@ export function RowActions033Demo() {
 export function LabelAbove033Demo() {
   const [date, setDate] = useState("2026-10-09");
   return (
-    <Example label="Fields at Large — the label above the field" hint="pick Large or Extra large: every floating label stands above its field and wraps">
+    <Example
+      label="Fields at Large — the label above the field"
+      hint="pick Large or Extra large: every floating label stands above its field and wraps"
+    >
       <div className="space-y-4">
         <PageSize />
         {/* `grid-cols-1`, not the implicit column: an implicit track is sized to its
@@ -219,7 +273,10 @@ export function LabelAbove033Demo() {
           {/* The case the size sweep found (fields.tsx): a w-64 field whose floating
               label read "Payment r…" at Extra large. Above the field it wraps. */}
           <div className="w-64 max-w-full">
-            <Input label="Payment reference of the standing order" hint={<FieldHint label="From the bank's letter" />} />
+            <Input
+              label="Payment reference of the standing order"
+              hint={<FieldHint label="From the bank's letter" />}
+            />
           </div>
         </div>
         <div className="space-y-1.5">
@@ -230,8 +287,7 @@ export function LabelAbove033Demo() {
           {/* 0.33.1: a figure in a narrow cell. The first breaks the amount
               mid-number at Large; the second wraps at the space only. */}
           <p className="pt-1 text-xs text-muted">
-            The same amount with {code("truncate-until-large")} and {code("truncate-until-large-words")}, in 6rem
-            boxes:
+            The same amount with {code("truncate-until-large")} and {code("truncate-until-large-words")}, in 6rem boxes:
           </p>
           <div className="flex flex-wrap gap-2">
             <p className="w-24 max-w-full truncate-until-large rounded-md border border-subtle px-2 py-1 text-end text-sm tabular-nums text-primary">
@@ -244,16 +300,16 @@ export function LabelAbove033Demo() {
         </div>
       </div>
       <Note>
-        At Normal the label floats in the field&apos;s top strip, as it always has. At Large and Extra large it
-        is a static label above the field — the phone card&apos;s &ldquo;label above value&rdquo; — so it wraps
-        like any text and the field no longer reserves its height. Every floating-label field in every app shows
-        it at Large without a change (a Skeleton placed from the strip needs re-anchoring).
-        `truncate-until-large` is the one name for &ldquo;truncate at Normal, wrap at Large&rdquo; (`overflow-wrap:
-        anywhere`), and it follows the attribute in CSS, so an app&apos;s{" "}
-        {code('!large && "truncate"')} can go. For a FIGURE — an amount, a date, a count with its unit — use
-        `truncate-until-large-words`: it wraps at spaces only, so a number never splits; give its cell
-        the room for the widest one. The size sweep (`scripts/screenshot-sizes.mjs`) fails on a
-        one-line ellipsis that cuts at Large, and on a pinned box taller than half the screen; `data-truncate-ok` marks a deliberate one, never on a name or an email.
+        At Normal the label floats in the field&apos;s top strip, as it always has. At Large and Extra large it is a
+        static label above the field — the phone card&apos;s &ldquo;label above value&rdquo; — so it wraps like any text
+        and the field no longer reserves its height. Every floating-label field in every app shows it at Large without a
+        change (a Skeleton placed from the strip needs re-anchoring). `truncate-until-large` is the one name for
+        &ldquo;truncate at Normal, wrap at Large&rdquo; (`overflow-wrap: anywhere`), and it follows the attribute in
+        CSS, so an app&apos;s {code('!large && "truncate"')} can go. For a FIGURE — an amount, a date, a count with its
+        unit — use `truncate-until-large-words`: it wraps at spaces only, so a number never splits; give its cell the
+        room for the widest one. The size sweep (`scripts/screenshot-sizes.mjs`) fails on a one-line ellipsis that cuts
+        at Large, and on a pinned box taller than half the screen; `data-truncate-ok` marks a deliberate one, never on a
+        name or an email.
       </Note>
     </Example>
   );

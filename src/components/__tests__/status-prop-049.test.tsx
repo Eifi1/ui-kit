@@ -23,7 +23,11 @@ describe("Chip and StatusDot status", () => {
   });
 
   it("an explicit tone wins over status", () => {
-    const { container } = render(<Chip status="good" tone="info">Sent</Chip>);
+    const { container } = render(
+      <Chip status="good" tone="info">
+        Sent
+      </Chip>,
+    );
     expect(container.querySelector("[data-tone]")).toHaveAttribute("data-tone", "info");
   });
 

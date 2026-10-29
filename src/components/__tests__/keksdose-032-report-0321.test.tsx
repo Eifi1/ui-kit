@@ -190,9 +190,7 @@ describe("16: labels wrap at Large instead of truncating", () => {
 describe("18: SwipeableRow's hidden keyboard buttons take no room until they show", () => {
   it("puts the padding and the border behind `focus:`, beside `focus:not-sr-only`", () => {
     render(
-      <SwipeableRow
-        left={[{ onCommit: vi.fn(), label: "Delete", tone: "danger" }]}
-      >
+      <SwipeableRow left={[{ onCommit: vi.fn(), label: "Delete", tone: "danger" }]}>
         <span>Ada Example</span>
       </SwipeableRow>,
     );

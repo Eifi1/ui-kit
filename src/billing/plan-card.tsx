@@ -80,7 +80,8 @@ interface PlanDisplayProps {
 }
 
 export interface PlanCardProps
-  extends Omit<ChoiceCardProps, "type" | "title" | "description" | "icon" | "indeterminate" | "value" | "labels">,
+  extends
+    Omit<ChoiceCardProps, "type" | "title" | "description" | "icon" | "indeterminate" | "value" | "labels">,
     PlanDisplayProps {
   plan: BillingPlan;
   /** See {@link PlanRelation}. `current` draws the "Current plan" chip — a word in the
@@ -170,9 +171,7 @@ export function PlanCard({
           data-part="price"
           className={cn(
             "tabular-nums",
-            price.kind === "not-offered"
-              ? "text-xs text-muted"
-              : "text-lg font-semibold leading-tight text-primary",
+            price.kind === "not-offered" ? "text-xs text-muted" : "text-lg font-semibold leading-tight text-primary",
           )}
         >
           {figure}
@@ -371,9 +370,7 @@ export function PlanPicker({
 
   const [ownValue, setOwnValue] = useState<string | null>(() => defaultValue ?? current ?? null);
   const [ownInterval, setOwnInterval] = useState<BillingInterval>(defaultInterval);
-  const [ownCurrency, setOwnCurrency] = useState<BillingCurrency>(
-    () => defaultCurrency ?? billingCurrencyFor(locale),
-  );
+  const [ownCurrency, setOwnCurrency] = useState<BillingCurrency>(() => defaultCurrency ?? billingCurrencyFor(locale));
   const value = valueProp !== undefined ? valueProp : ownValue;
   const interval = intervalProp ?? ownInterval;
   const currency = currencyProp ?? ownCurrency;
@@ -413,7 +410,11 @@ export function PlanPicker({
         : undefined;
 
   return (
-    <div className={cn("min-w-0 space-y-3", className)} data-billing-interval={interval} data-billing-currency={currency}>
+    <div
+      className={cn("min-w-0 space-y-3", className)}
+      data-billing-interval={interval}
+      data-billing-currency={currency}
+    >
       {(intervals.length > 1 || currencies.length > 1) && (
         <div className="flex flex-wrap items-center gap-2">
           {intervals.length > 1 && (

@@ -222,7 +222,14 @@ describe("NotificationInbox — acting", () => {
     expect(screen.queryByRole("button", { name: "Show more" })).not.toBeInTheDocument();
     rerender(
       <MemoryRouter>
-        <NotificationInbox items={ITEMS} unreadCount={2} onMarkRead={vi.fn()} onClear={vi.fn()} hasMore onLoadMore={onLoadMore} />
+        <NotificationInbox
+          items={ITEMS}
+          unreadCount={2}
+          onMarkRead={vi.fn()}
+          onClear={vi.fn()}
+          hasMore
+          onLoadMore={onLoadMore}
+        />
       </MemoryRouter>,
     );
     await user.click(screen.getByRole("button", { name: "Show more" }));
@@ -235,7 +242,13 @@ describe("NotificationInbox — words and access", () => {
     render(
       <MemoryRouter>
         <UiKitProvider labels={{ notifications: { inboxTitle: "Posteingang", markAllRead: "Alle gelesen" } }}>
-          <NotificationInbox items={[]} unreadCount={0} onMarkRead={vi.fn()} onClear={vi.fn()} labels={{ inboxEmpty: "Nichts" }} />
+          <NotificationInbox
+            items={[]}
+            unreadCount={0}
+            onMarkRead={vi.fn()}
+            onClear={vi.fn()}
+            labels={{ inboxEmpty: "Nichts" }}
+          />
         </UiKitProvider>
       </MemoryRouter>,
     );

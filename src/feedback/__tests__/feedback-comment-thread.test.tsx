@@ -194,11 +194,20 @@ describe("FeedbackCommentThread — rework entries (0.40)", () => {
     expect(row).toHaveTextContent("You");
     expect(row.closest("[data-own]")).not.toBeNull();
     // 0.47 (§12): the file drawn inline, through the thread's fetcher.
-    expect(row.querySelector('[data-feedback-entry-file="/api/v1/feedback/attachments/0123456789ab.png"]')).not.toBeNull();
+    expect(
+      row.querySelector('[data-feedback-entry-file="/api/v1/feedback/attachments/0123456789ab.png"]'),
+    ).not.toBeNull();
   });
 
   it("draws a migrated one without the arrow, and a null author as A user", () => {
-    wrap(<FeedbackCommentThread now={NOW} isAdmin={false} replies={[rework({ author_name: null, status_to: null })]} comments={[]} />);
+    wrap(
+      <FeedbackCommentThread
+        now={NOW}
+        isAdmin={false}
+        replies={[rework({ author_name: null, status_to: null })]}
+        comments={[]}
+      />,
+    );
     const [row] = rows();
     expect(row.querySelector("[data-feedback-reply-status]")).toBeNull();
     expect(row).toHaveTextContent("A user");

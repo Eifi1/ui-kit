@@ -79,7 +79,9 @@ describe("InvitationsPanel", () => {
     await user.type(email, " nina@example.com ");
     await user.selectOptions(screen.getByRole("combobox", { name: "Role" }), "CUSTOMER");
     await user.selectOptions(screen.getByRole("combobox", { name: "Scope" }), "t1");
-    expect((screen.getByRole("combobox", { name: "Language of the invitation" }) as HTMLSelectElement).value).toBe("fr");
+    expect((screen.getByRole("combobox", { name: "Language of the invitation" }) as HTMLSelectElement).value).toBe(
+      "fr",
+    );
     await user.selectOptions(screen.getByRole("combobox", { name: "Language of the invitation" }), "de-CH");
     await user.type(screen.getByLabelText("Note"), "Workshop lead");
     await user.click(screen.getByRole("button", { name: "Invite" }));
@@ -141,7 +143,16 @@ describe("InvitationsPanel", () => {
     const onResend = vi.fn(async () => ({ link: "https://app.example.com/register?invite=fresh", sent: true }));
     render(
       <InvitationsPanel<Role>
-        invitations={[ROWS[0], { ...ROWS[1], id: 7, status: "open", email: "max@example.com", link: "https://app.example.com/register?invite=given" }]}
+        invitations={[
+          ROWS[0],
+          {
+            ...ROWS[1],
+            id: 7,
+            status: "open",
+            email: "max@example.com",
+            link: "https://app.example.com/register?invite=given",
+          },
+        ]}
         roles={ROLES}
         mailBackend="console"
         onResend={onResend}
@@ -151,7 +162,9 @@ describe("InvitationsPanel", () => {
     // The link the app handed in with the row.
     expect(within(rowOf("max@example.com")).getByRole("button", { name: "Copy invitation link" })).toBeInTheDocument();
     // None yet for Nina; the resend's answer brings one.
-    expect(within(rowOf("nina@example.com")).queryByRole("button", { name: "Copy invitation link" })).not.toBeInTheDocument();
+    expect(
+      within(rowOf("nina@example.com")).queryByRole("button", { name: "Copy invitation link" }),
+    ).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Send nina@example.com a new link" }));
     expect(
       await within(rowOf("nina@example.com")).findByRole("button", { name: "Copy invitation link" }),
@@ -177,7 +190,9 @@ describe("InvitationsPanel", () => {
     await user.type(screen.getByLabelText("Email address"), "pat@example.com");
     await user.click(screen.getByRole("button", { name: "Invite" }));
     expect(onInvite).toHaveBeenCalledWith(expect.not.objectContaining({ role: expect.anything() }));
-    expect(await screen.findByText("pat@example.com is invited, but the mail couldn’t be sent. Resend it.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("pat@example.com is invited, but the mail couldn’t be sent. Resend it."),
+    ).toBeInTheDocument();
     await revoke(user, "nina@example.com");
     expect(await screen.findByText("The invitation is gone already.")).toBeInTheDocument();
   });

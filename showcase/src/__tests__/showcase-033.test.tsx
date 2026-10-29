@@ -33,7 +33,10 @@ describe("the colour roles page", () => {
   it("reports the pretend app's undeclared variables, and the palette one only with refusePalette", () => {
     render(<ColourRoles033Demo />);
     const list = screen.getByRole("list", { name: "undeclaredCssVariables(sources)" });
-    const lines = () => within(list).getAllByRole("listitem").map((li) => li.textContent);
+    const lines = () =>
+      within(list)
+        .getAllByRole("listitem")
+        .map((li) => li.textContent);
     // An app's `--surface`, a bare `--app-nav-h`, and an `@theme inline` name that
     // Tailwind never emits — not the chart key, the runtime write, the comment, the
     // fallback or the listed Radix variable.
@@ -82,6 +85,8 @@ describe("the text-size page's row actions", () => {
 
     fireEvent.click(screen.getByRole("radio", { name: "menu" }));
     fireEvent.click(find);
-    expect(screen.getByText(/anchor: 1 match · an overlay <span aria-hidden>.*holds the button: true/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/anchor: 1 match · an overlay <span aria-hidden>.*holds the button: true/),
+    ).toBeInTheDocument();
   });
 });

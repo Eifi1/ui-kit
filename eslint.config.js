@@ -60,10 +60,7 @@ export default tseslint.config(
 
       // `any` silently disables the checking the rest of the file pays for.
       "@typescript-eslint/no-explicit-any": "error",
-      "@typescript-eslint/no-unused-vars": [
-        "error",
-        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
-      ],
+      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
       // The kit deliberately uses `{}` and non-null assertions in a few measured places;
       // `tsc --noEmit` with `strict` already covers what matters here.
       "@typescript-eslint/no-non-null-assertion": "off",

@@ -28,9 +28,7 @@ describe("PageHeader mobileLayout (keksdose F4, live #263)", () => {
   });
 
   it("keeps the actions beside the title on a phone with inline", () => {
-    render(
-      <PageHeader title="Transactions" mobileLayout="inline" actions={<button type="button">Search</button>} />,
-    );
+    render(<PageHeader title="Transactions" mobileLayout="inline" actions={<button type="button">Search</button>} />);
     const el = row();
     expect(el).toHaveClass("flex-row", "items-center", "justify-between");
     expect(el).not.toHaveClass("flex-col");
@@ -45,7 +43,15 @@ describe("SectionLabel variant=band (keksdose F5)", () => {
       </SectionLabel>,
     );
     const el = screen.getByText("Today");
-    expect(el).toHaveClass("bg-surface-2", "border-b", "border-subtle", "font-medium", "uppercase", "text-xs", "text-secondary");
+    expect(el).toHaveClass(
+      "bg-surface-2",
+      "border-b",
+      "border-subtle",
+      "font-medium",
+      "uppercase",
+      "text-xs",
+      "text-secondary",
+    );
     expect(el).not.toHaveClass("font-semibold");
     expect(el).not.toHaveClass("text-muted");
   });

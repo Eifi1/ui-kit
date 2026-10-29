@@ -21,7 +21,11 @@ const isStrip = (el: Element) => el.getAttribute("role") === "tablist";
 const saved: [string, PropertyDescriptor | undefined][] = [];
 
 function stub(name: string, get: (el: HTMLElement) => number, fallback: (el: HTMLElement) => number) {
-  saved.push([name, Object.getOwnPropertyDescriptor(HTMLElement.prototype, name) ?? Object.getOwnPropertyDescriptor(Element.prototype, name)]);
+  saved.push([
+    name,
+    Object.getOwnPropertyDescriptor(HTMLElement.prototype, name) ??
+      Object.getOwnPropertyDescriptor(Element.prototype, name),
+  ]);
   Object.defineProperty(HTMLElement.prototype, name, {
     configurable: true,
     get(this: HTMLElement) {
@@ -36,9 +40,21 @@ beforeEach(() => {
   geo.left = 0;
   scrollBy.mockReset();
   scrollTo.mockReset();
-  stub("scrollWidth", () => geo.scrollWidth, () => 0);
-  stub("clientWidth", () => geo.clientWidth, () => 0);
-  stub("scrollLeft", () => geo.left, () => 0);
+  stub(
+    "scrollWidth",
+    () => geo.scrollWidth,
+    () => 0,
+  );
+  stub(
+    "clientWidth",
+    () => geo.clientWidth,
+    () => 0,
+  );
+  stub(
+    "scrollLeft",
+    () => geo.left,
+    () => 0,
+  );
   Object.assign(HTMLElement.prototype, { scrollBy, scrollTo });
 });
 
@@ -184,7 +200,14 @@ describe("Tabs overflowCue", () => {
     // to an invisible ::after over the strip's faded edge, as IconButton's `2xs` does.
     render(strip());
     const button = more()!;
-    expect(button).toHaveClass("w-[24px]", "large:min-w-0", "relative", "large:after:absolute", "large:after:content-['']", "large:after:z-[1]");
+    expect(button).toHaveClass(
+      "w-[24px]",
+      "large:min-w-0",
+      "relative",
+      "large:after:absolute",
+      "large:after:content-['']",
+      "large:after:z-[1]",
+    );
     expect(button).not.toHaveClass("large:min-w-[48px]");
   });
 

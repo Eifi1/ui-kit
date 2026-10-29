@@ -68,7 +68,7 @@ describe("ChatComposer `commit` (0.33.1)", () => {
     expect(onSend).toHaveBeenCalledWith("Still here", null);
   });
 
-  it("follows its scope: `{ except: [\"demo\"] }` sends under the demo, not under billing", () => {
+  it('follows its scope: `{ except: ["demo"] }` sends under the demo, not under billing', () => {
     const onSend = vi.fn();
     const { rerender } = render(
       <WriteLockProvider locked kind="demo" reason="Read-only demo">

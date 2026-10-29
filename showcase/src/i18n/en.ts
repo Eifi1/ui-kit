@@ -173,8 +173,7 @@ export const en: Dictionary = {
     overview: {
       title: "Overview",
       short: "Overview",
-      blurb:
-        "What @eifi1/ui-kit is, the eight layers it is built in, and how to read a page of this showcase.",
+      blurb: "What @eifi1/ui-kit is, the eight layers it is built in, and how to read a page of this showcase.",
     },
     foundations: {
       title: "Foundations",
@@ -462,8 +461,7 @@ export const en: Dictionary = {
     },
     "app-chrome": {
       title: "App chrome",
-      blurb:
-        "The frame an app lives in and the flows every app repeats: settings, accounts, subscriptions, feedback.",
+      blurb: "The frame an app lives in and the flows every app repeats: settings, accounts, subscriptions, feedback.",
     },
     "page-structure": {
       title: "Page header & breadcrumbs",
@@ -501,8 +499,7 @@ export const en: Dictionary = {
     "feedback-inbox": {
       title: "Feedback — inbox",
       short: "Inbox",
-      blurb:
-        "The shared status vocabulary, the transition policy, and the parts an inbox is built from.",
+      blurb: "The shared status vocabulary, the transition policy, and the parts an inbox is built from.",
     },
     api: {
       title: "API",
@@ -593,7 +590,6 @@ export const en: Dictionary = {
         "The translation review's wire shapes, who may review which keys and languages, and the review tokens a reviewer opens the kit's review page with.",
     },
   },
-
 
   // The top-bar search's "What do you need?" rows: a task in the reader's words, and the
   // page that does it. Phrased as typed into a search box — lower case, no full stop.
@@ -906,13 +902,7 @@ export const en: Dictionary = {
       "type the name to confirm a deletion",
       "confirm a dangerous action",
     ],
-    "data-display": [
-      "show data",
-      "display values",
-      "tables and lists",
-      "progress and feedback",
-      "buttons and cards",
-    ],
+    "data-display": ["show data", "display values", "tables and lists", "progress and feedback", "buttons and cards"],
     buttons: [
       "a button",
       "primary and secondary buttons",
@@ -1017,13 +1007,7 @@ export const en: Dictionary = {
       "expandable panel",
       "animate height",
     ],
-    charts: [
-      "draw a chart",
-      "visualise data",
-      "chart colours",
-      "dashboard with KPIs",
-      "line or bar chart",
-    ],
+    charts: ["draw a chart", "visualise data", "chart colours", "dashboard with KPIs", "line or bar chart"],
     "chart-shell": [
       "themed chart",
       "chart tooltip",
@@ -1075,13 +1059,7 @@ export const en: Dictionary = {
       "shade days by value",
       "year at a glance",
     ],
-    overlays: [
-      "show something on top of the page",
-      "open a dialog",
-      "popup or menu",
-      "tooltip",
-      "command palette",
-    ],
+    overlays: ["show something on top of the page", "open a dialog", "popup or menu", "tooltip", "command palette"],
     dialogs: [
       "open a modal dialog",
       "full-screen dialog",
@@ -1224,13 +1202,7 @@ export const en: Dictionary = {
       "support inbox",
       "change a report's status",
     ],
-    api: [
-      "hooks and helpers",
-      "functions without UI",
-      "utility functions",
-      "constants",
-      "date helpers",
-    ],
+    api: ["hooks and helpers", "functions without UI", "utility functions", "constants", "date helpers"],
     "hooks-lib": [
       "react to screen size",
       "media query hook",
@@ -1346,7 +1318,6 @@ export const en: Dictionary = {
       "kit translation keys",
     ],
   },
-
 
   /**
    * The kit's own English, verbatim. English is the language the defaults are written

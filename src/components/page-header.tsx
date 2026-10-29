@@ -39,8 +39,7 @@ export type PageHeaderMobileLayout = "stacked" | "inline";
  * their label onto three lines. `large:max-sm:`, the scaled phone width, so Normal and
  * every wider screen keep their row; `inline` is for actions known to fit, and stays.
  */
-const STACK_ACTIONS_AT_LARGE =
-  "large:max-sm:flex-col large:max-sm:items-stretch large:max-sm:[&>*]:w-full";
+const STACK_ACTIONS_AT_LARGE = "large:max-sm:flex-col large:max-sm:items-stretch large:max-sm:[&>*]:w-full";
 
 const ROW: Record<PageHeaderMobileLayout, string> = {
   stacked: "flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4",
@@ -247,7 +246,9 @@ export function PageHeader({
   return (
     <div {...rest} className={cn("flex min-w-0 flex-col gap-2", className)}>
       {breadcrumbs != null && (
-        <PageHeaderTrailContext.Provider value={titled ? TITLED : UNTITLED}>{breadcrumbs}</PageHeaderTrailContext.Provider>
+        <PageHeaderTrailContext.Provider value={titled ? TITLED : UNTITLED}>
+          {breadcrumbs}
+        </PageHeaderTrailContext.Provider>
       )}
       {/* With a second group, `inline` wraps so that group's full-width basis puts it
           on a row of its own on a phone (`stacked` is a column there already, and a
@@ -264,13 +265,7 @@ export function PageHeader({
       >
         <div ref={titleRef} className={cn("flex-1", keepsWords ? "min-w-min" : "min-w-0")}>
           {eyebrow != null && <p className={cn(SECTION_LABEL_CLASS.xs, "mb-1")}>{eyebrow}</p>}
-          <Heading
-            className={cn(
-              truncateTitle ? "truncate-until-large" : "break-words",
-              "text-primary",
-              TITLE[size],
-            )}
-          >
+          <Heading className={cn(truncateTitle ? "truncate-until-large" : "break-words", "text-primary", TITLE[size])}>
             {title}
           </Heading>
           {description != null && <p className="mt-1 text-sm text-muted">{description}</p>}

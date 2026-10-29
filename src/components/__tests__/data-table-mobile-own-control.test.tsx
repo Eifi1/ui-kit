@@ -171,7 +171,9 @@ describe("a native form field inside a linked phone card (rowHref)", () => {
     {
       key: "done",
       header: "Done",
-      cell: (r) => <input type="checkbox" aria-label={`Done ${r.name}`} onChange={(e) => done(r.id, e.target.checked)} />,
+      cell: (r) => (
+        <input type="checkbox" aria-label={`Done ${r.name}`} onChange={(e) => done(r.id, e.target.checked)} />
+      ),
     },
     {
       key: "flag",

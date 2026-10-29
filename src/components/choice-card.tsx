@@ -163,10 +163,7 @@ export function ChoiceCard({
   });
 
   return (
-    <label
-      htmlFor={inputId}
-      className={cn(CARD, disabled && CARD_DISABLED, isInvalid && CARD_INVALID, className)}
-    >
+    <label htmlFor={inputId} className={cn(CARD, disabled && CARD_DISABLED, isInvalid && CARD_INVALID, className)}>
       {/* A 20px cell, so the box centres on the title's first line (text-sm). */}
       <span className="relative flex h-5 shrink-0 items-center">
         <input
@@ -187,12 +184,7 @@ export function ChoiceCard({
             onChange?.(e);
             onCheckedChange?.(e.target.checked);
           }}
-          className={cn(
-            BOX,
-            type === "radio" ? RADIO : CHECKBOX,
-            mixed && "border-brand bg-brand",
-            inputClassName,
-          )}
+          className={cn(BOX, type === "radio" ? RADIO : CHECKBOX, mixed && "border-brand bg-brand", inputClassName)}
         />
         {type === "checkbox" &&
           (mixed ? (
@@ -356,11 +348,7 @@ export function ActionCard({
     className,
   );
   const labelledBy = rest["aria-labelledby"] ?? titleId;
-  const describedBy = mergeDescribedBy(
-    rest["aria-describedby"],
-    showDescription && descriptionId,
-    showMeta && metaId,
-  );
+  const describedBy = mergeDescribedBy(rest["aria-describedby"], showDescription && descriptionId, showMeta && metaId);
   const body = (
     <>
       {Icon && <Icon aria-hidden className={cn("mt-0.5 size-5 shrink-0", ICON_TONE[iconTone], iconClassName)} />}
@@ -486,9 +474,7 @@ export interface ChoiceCardMultipleProps<T extends string> extends ChoiceCardGro
   onChange: (value: T[]) => void;
 }
 
-export type ChoiceCardGroupProps<T extends string> =
-  | ChoiceCardSingleProps<T>
-  | ChoiceCardMultipleProps<T>;
+export type ChoiceCardGroupProps<T extends string> = ChoiceCardSingleProps<T> | ChoiceCardMultipleProps<T>;
 
 /**
  * A set of {@link ChoiceCard}s answering one question, in a `<fieldset>`.

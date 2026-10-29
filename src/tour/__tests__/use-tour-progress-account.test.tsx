@@ -84,7 +84,11 @@ describe("useTourProgress with an account", () => {
     const { result, unmount } = renderHook(() => useTourProgress({ storageKey, account }));
     await settle();
     expect(saves).toEqual([{ completed: { budget: "2026-09-01T10:00:00.000Z", old: "" } }]);
-    expect(result.current.completed).toEqual({ budget: "2026-09-01T10:00:00.000Z", old: null, import: "2026-10-01T10:00:00.000Z" });
+    expect(result.current.completed).toEqual({
+      budget: "2026-09-01T10:00:00.000Z",
+      old: null,
+      import: "2026-10-01T10:00:00.000Z",
+    });
     expect(pendingOf(storageKey)).toEqual({ synced: true, completed: {}, forget: [] });
     unmount();
     // Synced now: a later page sends nothing, it loads.
@@ -110,8 +114,14 @@ describe("useTourProgress with an account", () => {
     });
     // `awarded` is the device's answer against the cache (§10.2.4).
     expect(awarded).toBe(true);
-    expect(result.current.completed).toEqual({ budget: "2026-10-19T09:00:00.000Z", import: "2026-10-19T09:00:00.000Z" });
-    expect(pendingOf(storageKey).completed).toEqual({ budget: "2026-10-19T09:00:00.000Z", import: "2026-10-19T09:00:00.000Z" });
+    expect(result.current.completed).toEqual({
+      budget: "2026-10-19T09:00:00.000Z",
+      import: "2026-10-19T09:00:00.000Z",
+    });
+    expect(pendingOf(storageKey).completed).toEqual({
+      budget: "2026-10-19T09:00:00.000Z",
+      import: "2026-10-19T09:00:00.000Z",
+    });
     await settle();
     expect(saves).toEqual([{ completed: { budget: "2026-10-19T09:00:00.000Z", import: "2026-10-19T09:00:00.000Z" } }]);
     expect(pendingOf(storageKey)).toEqual({ synced: true, completed: {}, forget: [] });
@@ -204,7 +214,8 @@ describe("adopt (§10.2.5)", () => {
   it("migrate: the old record goes to the FIRST account once, then the key is removed", async () => {
     const old = freshKey();
     localStorage.setItem(old, JSON.stringify(["budget"]));
-    const fromIds = (raw: unknown) => (Array.isArray(raw) ? Object.fromEntries(raw.map((id) => [String(id), null])) : undefined);
+    const fromIds = (raw: unknown) =>
+      Array.isArray(raw) ? Object.fromEntries(raw.map((id) => [String(id), null])) : undefined;
     const first = fakeAccount({}, { adopt: { storageKey: old, migrate: fromIds } });
     const { result } = renderHook(() => useTourProgress({ storageKey: `${old}:1`, account: first.account }));
     await settle();
@@ -221,9 +232,13 @@ describe("adopt (§10.2.5)", () => {
   it("warns in development when the account key is the key adopt takes over (both forms)", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const a = freshKey();
-    renderHook(() => useTourProgress({ storageKey: a, account: fakeAccount({}, { adopt: { storageKey: a, discard: true } }).account }));
+    renderHook(() =>
+      useTourProgress({ storageKey: a, account: fakeAccount({}, { adopt: { storageKey: a, discard: true } }).account }),
+    );
     const b = freshKey();
-    renderHook(() => useTourProgress({ storageKey: b, account: fakeAccount({}, { adopt: { storageKey: b } }).account }));
+    renderHook(() =>
+      useTourProgress({ storageKey: b, account: fakeAccount({}, { adopt: { storageKey: b } }).account }),
+    );
     expect(warn).toHaveBeenCalledTimes(2);
     expect(warn.mock.calls[0][0]).toContain(`"${a}"`);
   });
@@ -240,12 +255,17 @@ describe("signOutTourProgress (§10.2.6)", () => {
       result.current.complete("budget");
     });
     await settle();
-    const calls = (account.load as ReturnType<typeof vi.fn>).mock.calls.length + (account.save as ReturnType<typeof vi.fn>).mock.calls.length;
+    const calls =
+      (account.load as ReturnType<typeof vi.fn>).mock.calls.length +
+      (account.save as ReturnType<typeof vi.fn>).mock.calls.length;
     act(() => signOutTourProgress(storageKey));
     expect(localStorage.getItem(storageKey)).toBeNull();
     expect(result.current.completed).toEqual({});
     expect(Object.keys(pendingOf(storageKey).completed)).toEqual(["budget"]);
-    expect((account.load as ReturnType<typeof vi.fn>).mock.calls.length + (account.save as ReturnType<typeof vi.fn>).mock.calls.length).toBe(calls);
+    expect(
+      (account.load as ReturnType<typeof vi.fn>).mock.calls.length +
+        (account.save as ReturnType<typeof vi.fn>).mock.calls.length,
+    ).toBe(calls);
     // Another account on the PC: its own key, nothing of the first.
     Object.defineProperty(navigator, "onLine", { configurable: true, value: true });
     const next = fakeAccount();

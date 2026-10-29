@@ -1,12 +1,4 @@
-import {
-  Delta,
-  ProgressBar,
-  SignedAmount,
-  StaticLegend,
-  StatusDot,
-  SwatchPicker,
-  statusDotColor,
-} from "@eifi1/ui-kit";
+import { Delta, ProgressBar, SignedAmount, StaticLegend, StatusDot, SwatchPicker, statusDotColor } from "@eifi1/ui-kit";
 import type { StatusDotTone } from "@eifi1/ui-kit";
 import { useState } from "react";
 import { Example, Note, Row } from "../lib/section";
@@ -32,7 +24,9 @@ export function Signals016Demo() {
     <>
       <Example
         label="A price change in the money colours"
-        hint={"`palette=\"money\"` with `goodDirection=\"down\"`: a rise is an expense, a fall is income. `flatWithin={0.005}` makes a sub-cent move a no-change."}
+        hint={
+          '`palette="money"` with `goodDirection="down"`: a rise is an expense, a fall is income. `flatWithin={0.005}` makes a sub-cent move a no-change.'
+        }
       >
         <div className="space-y-2 text-sm">
           {PRICES.map((p) => (
@@ -47,7 +41,14 @@ export function Signals016Demo() {
                   flatWithin={0.005}
                   arrow
                 />
-                <Delta value={p.change / 2.5} unit="percent" digits={1} goodDirection="down" palette="money" flatWithin={0.0005} />
+                <Delta
+                  value={p.change / 2.5}
+                  unit="percent"
+                  digits={1}
+                  goodDirection="down"
+                  palette="money"
+                  flatWithin={0.0005}
+                />
               </Row>
             </div>
           ))}
@@ -88,7 +89,7 @@ export function Signals016Demo() {
 
       <Example
         label="A legend that is not a list"
-        hint={"`as=\"div\"`: a named group of entries, for a key inside a list or a table row."}
+        hint={'`as="div"`: a named group of entries, for a key inside a list or a table row.'}
       >
         <StaticLegend
           as="div"

@@ -47,7 +47,7 @@ const VIEWS: readonly View[] = ["list", "grid", "map"];
 function SearchParamStateDemo() {
   // `replace`: a view toggle is not a step anyone wants Back to walk through.
   const [view, setView] = useSearchParamState<View>("view", "list", {
-    parse: (raw) => (VIEWS as readonly string[]).includes(raw) ? (raw as View) : undefined,
+    parse: (raw) => ((VIEWS as readonly string[]).includes(raw) ? (raw as View) : undefined),
     replace: true,
   });
   // Push (the default): each zoom step is a history entry, so Back undoes it.
@@ -90,10 +90,9 @@ function SearchParamStateDemo() {
         <QueryReadout extra={[["view · zoom", `${view} · ${zoom}`]]} />
         <Note>
           {code('useSearchParamState("view", "list", { parse, replace: true })')} rewrites the entry;{" "}
-          {code('useSearchParamState("zoom", 100, { parse })')} pushes one per step, so the browser&apos;s
-          Back steps the zoom back down. Pick <em>List</em> or reset to 100% and the param leaves the URL
-          — the default is always the clean address. Edit the hash by hand to{" "}
-          {code("?zoom=banana")} and it reads as 100.
+          {code('useSearchParamState("zoom", 100, { parse })')} pushes one per step, so the browser&apos;s Back steps
+          the zoom back down. Pick <em>List</em> or reset to 100% and the param leaves the URL — the default is always
+          the clean address. Edit the hash by hand to {code("?zoom=banana")} and it reads as 100.
         </Note>
       </div>
     </Example>
@@ -140,8 +139,8 @@ function TabParamDemo() {
         <QueryReadout />
         <Note>
           Pick a tab and reload: the page opens on it. {code("tabs")} validates the param, so a link to{" "}
-          {code("?tab=invoices")} — a tab since renamed — opens on Overview rather than on a blank panel.
-          Switching tabs replaces the entry: Back leaves the page, it does not walk the tabs.
+          {code("?tab=invoices")} — a tab since renamed — opens on Overview rather than on a blank panel. Switching tabs
+          replaces the entry: Back leaves the page, it does not walk the tabs.
         </Note>
       </div>
     </Example>
@@ -160,7 +159,11 @@ function EditDialogDemo() {
   return (
     <Example
       label="Modal urlParam — an edit dialog that survives reload"
-      hint={<>{code('urlParam="edit"')} · opened with {code('useDialogParam("edit")')}</>}
+      hint={
+        <>
+          {code('urlParam="edit"')} · opened with {code('useDialogParam("edit")')}
+        </>
+      }
     >
       <Row>
         <Button
@@ -202,16 +205,14 @@ function EditDialogDemo() {
       <div className="mt-3 space-y-2">
         <QueryReadout />
         <Note>
-          Open it and reload — it is still open, because {code("?edit=1")} is the only state it has (
-          {code("open")} is ignored under {code("urlParam")}). Press the browser&apos;s Back: the dialog
-          closes by leaving the entry its opener pushed, and Forward opens it again. Escape, the backdrop or
-          Cancel go <em>back</em> over that entry rather than adding a second one, so closing leaves the
-          history as it was.
+          Open it and reload — it is still open, because {code("?edit=1")} is the only state it has ({code("open")} is
+          ignored under {code("urlParam")}). Press the browser&apos;s Back: the dialog closes by leaving the entry its
+          opener pushed, and Forward opens it again. Escape, the backdrop or Cancel go <em>back</em> over that entry
+          rather than adding a second one, so closing leaves the history as it was.
         </Note>
         <Note>
-          The plain link (or a reload, or a shared link) arrives with the dialog already open: there is no
-          entry of ours to go back over, so its close removes the param in place, and Back from there leaves
-          the page as it should.
+          The plain link (or a reload, or a shared link) arrives with the dialog already open: there is no entry of ours
+          to go back over, so its close removes the param in place, and Back from there leaves the page as it should.
         </Note>
       </div>
     </Example>
@@ -279,8 +280,8 @@ function SharedDialogParamDemo() {
         <QueryReadout />
         <Note>
           A page with several dialogs spends one param on all of them — {code("?dialog=invite")} or{" "}
-          {code("?dialog=archive")}, never both — which is also a readable deep link to each. The setters
-          work without a Modal too: anything that opens and closes can hold its state here.
+          {code("?dialog=archive")}, never both — which is also a readable deep link to each. The setters work without a
+          Modal too: anything that opens and closes can hold its state here.
         </Note>
       </div>
     </Example>

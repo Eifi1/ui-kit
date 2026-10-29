@@ -14,8 +14,7 @@ import { DESKTOP_WIDTH, stubViewportWidth } from "../../test/viewport";
  * dialog's own throwaway history entry (useOverlayHistory) stays off.
  */
 
-const motion = (reduced: boolean) =>
-  stubViewportWidth(DESKTOP_WIDTH, { reducedMotion: reduced });
+const motion = (reduced: boolean) => stubViewportWidth(DESKTOP_WIDTH, { reducedMotion: reduced });
 
 let loc: ReturnType<typeof useLocation> | null = null;
 let nav: ReturnType<typeof useNavigate> | null = null;
@@ -54,8 +53,7 @@ function renderAt(url: string, props: Parameters<typeof Page>[0] = {}) {
   );
 }
 
-const sentinel = () =>
-  (window.history.state as Record<string, unknown> | null)?.["__hbUiOverlayHistory"] ?? null;
+const sentinel = () => (window.history.state as Record<string, unknown> | null)?.["__hbUiOverlayHistory"] ?? null;
 
 beforeEach(() => {
   motion(true);

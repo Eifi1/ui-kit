@@ -158,7 +158,11 @@ function withinDistance(a: string, b: string, max: number): boolean {
 
 type WordKind = keyof typeof WORD_SCORE;
 
-function matchWord(q: string, word: string, opts: Required<Pick<SearchIndexOptions, "typoMinLength" | "infixMinLength">>): WordKind | null {
+function matchWord(
+  q: string,
+  word: string,
+  opts: Required<Pick<SearchIndexOptions, "typoMinLength" | "infixMinLength">>,
+): WordKind | null {
   if (word === q) return "exact";
   if (word.startsWith(q)) return "prefix";
   if (q.length >= opts.infixMinLength && word.includes(q)) return "infix";

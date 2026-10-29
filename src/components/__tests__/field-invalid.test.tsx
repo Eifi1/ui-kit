@@ -75,9 +75,7 @@ const CONTROLS: { name: string; render: (invalid: boolean) => ReactElement }[] =
   },
   {
     name: "Combobox",
-    render: (invalid) => (
-      <Combobox label="F" value="" onChange={vi.fn()} options={["a"]} invalid={invalid} />
-    ),
+    render: (invalid) => <Combobox label="F" value="" onChange={vi.fn()} options={["a"]} invalid={invalid} />,
   },
   {
     name: "InlineEntityCombobox",
@@ -118,13 +116,7 @@ const CONTROLS: { name: string; render: (invalid: boolean) => ReactElement }[] =
   {
     name: "MultiSelect",
     render: (invalid) => (
-      <MultiSelect
-        label="F"
-        value={[]}
-        onChange={vi.fn()}
-        options={[{ value: "a", label: "A" }]}
-        invalid={invalid}
-      />
+      <MultiSelect label="F" value={[]} onChange={vi.fn()} options={[{ value: "a", label: "A" }]} invalid={invalid} />
     ),
   },
   {
@@ -133,9 +125,7 @@ const CONTROLS: { name: string; render: (invalid: boolean) => ReactElement }[] =
   },
   {
     name: "DatePicker",
-    render: (invalid) => (
-      <DatePicker label="F" value="" onChange={vi.fn()} locale="en" invalid={invalid} />
-    ),
+    render: (invalid) => <DatePicker label="F" value="" onChange={vi.fn()} locale="en" invalid={invalid} />,
   },
 ];
 
@@ -181,9 +171,7 @@ describe("the required-and-empty highlight, on every field control", () => {
    * sweep is supposed to stop doing.
    */
   const SOURCES = Object.fromEntries(
-    Object.entries(
-      import.meta.glob<string>("../../**/*.tsx", { query: "?raw", import: "default", eager: true }),
-    )
+    Object.entries(import.meta.glob<string>("../../**/*.tsx", { query: "?raw", import: "default", eager: true }))
       // Vite keys a glob RELATIVE to the importing file, so the sweep's own
       // neighbours — every test in this directory — come back as `./x.test.tsx`,
       // with the `__tests__` segment nowhere in the string. Excluding on the
@@ -243,7 +231,7 @@ describe("the required-and-empty highlight, on every field control", () => {
 });
 
 describe("an unset invalid leaves the attribute off entirely", () => {
-  it("does not write aria-invalid=\"false\"", () => {
+  it('does not write aria-invalid="false"', () => {
     // `aria-invalid="false"` is a claim ("checked, and fine") where absence is
     // silence. Every control above writes `invalid || undefined` for that reason;
     // this pins it on the one a form has most of.

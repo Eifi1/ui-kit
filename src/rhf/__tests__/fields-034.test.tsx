@@ -23,13 +23,7 @@ interface Values {
   count: number | null;
 }
 
-function Harness({
-  children,
-  formRef,
-}: {
-  children: ReactNode;
-  formRef: { current: UseFormReturn<Values> | null };
-}) {
+function Harness({ children, formRef }: { children: ReactNode; formRef: { current: UseFormReturn<Values> | null } }) {
   const form = useForm<Values>({ defaultValues: { name: "Ramp up", rent: 1200, count: 3 } });
   useEffect(() => {
     formRef.current = form;

@@ -44,10 +44,11 @@ import type { CommitScope } from "./write-lock";
  * are omitted. Everything else reaches the `<input>`, the way it does on {@link Input}.
  */
 export interface AutocompleteProps<V extends string | number = string>
-  extends Omit<
-    ComponentPropsWithoutRef<"input">,
-    "value" | "defaultValue" | "onChange" | "onSelect" | "children" | "type" | "size"
-  >,
+  extends
+    Omit<
+      ComponentPropsWithoutRef<"input">,
+      "value" | "defaultValue" | "onChange" | "onSelect" | "children" | "type" | "size"
+    >,
     FieldHelpProps {
   /** What is in the field. Controlled, and never reset by the component: opening,
    *  closing and a failed lookup all leave it exactly as typed. */
@@ -334,8 +335,7 @@ export function Autocomplete<V extends string | number = string>(props: Autocomp
   const nativeSize = typeof size === "number" ? size : undefined;
   // The caller's name wins; else the floating label, by reference so a non-string
   // label still names the field.
-  const labelledBy =
-    ariaLabel === undefined ? (ariaLabelledBy ?? (hasLabel ? labelId : undefined)) : undefined;
+  const labelledBy = ariaLabel === undefined ? (ariaLabelledBy ?? (hasLabel ? labelId : undefined)) : undefined;
   // While locked the field sits in the reason's Tooltip — in a fragment with a hidden
   // copy of the reason, Button's anatomy; `block` so a full-width field stays full width.
   const withLock = (box: ReactNode) =>
@@ -611,9 +611,7 @@ export function Autocomplete<V extends string | number = string>(props: Autocomp
                             </span>
                           )}
                           <span className="min-w-0 flex-1">
-                            <span className="block truncate-until-large text-primary">
-                              {o.label}
-                            </span>
+                            <span className="block truncate-until-large text-primary">{o.label}</span>
                             {o.sublabel && (
                               <span
                                 className={cn(

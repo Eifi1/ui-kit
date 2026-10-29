@@ -32,7 +32,10 @@ describe("feedbackSwipePlan", () => {
   it("offers keksdose's default: advance then done toward the end, won't do toward the start", () => {
     expect(FEEDBACK_SWIPE_ACTIONS).toEqual(["advance", "done", "wont_do"]);
     expect(DEFAULT_FEEDBACK_SWIPE).toEqual({ start: ["wont_do"], end: ["advance", "done"] });
-    expect(labelsOf(DEFAULT_FEEDBACK_SWIPE, "OPEN")).toEqual({ start: ["Won't do"], end: ["Ready to implement", "Done"] });
+    expect(labelsOf(DEFAULT_FEEDBACK_SWIPE, "OPEN")).toEqual({
+      start: ["Won't do"],
+      end: ["Ready to implement", "Done"],
+    });
   });
 
   it("commits through the undoable change, with the target status", () => {
@@ -61,7 +64,7 @@ describe("feedbackSwipePlan", () => {
     expect(labelsOf({ end: ["done", "done"] }, "OPEN")).toEqual({ start: [], end: ["Done"] });
   });
 
-  it("drops keksdose's \"none\" fillers and ids it does not know", () => {
+  it('drops keksdose\'s "none" fillers and ids it does not know', () => {
     // keksdose's stored physical ladders, handed as { end: right, start: left }.
     const stored = { right: ["none", "wont_do"], left: ["approve", "advance"] };
     expect(labelsOf({ end: stored.right, start: stored.left }, "IN_PROGRESS")).toEqual({

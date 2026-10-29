@@ -200,12 +200,7 @@ export function PageContents({
 
   if (variant === "disclosure") {
     return (
-      <details
-        className={cn(
-          "group rounded-md border border-subtle bg-surface",
-          className,
-        )}
-      >
+      <details className={cn("group rounded-md border border-subtle bg-surface", className)}>
         <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2 text-sm font-medium text-secondary [&::-webkit-details-marker]:hidden">
           {l.title}
           <ChevronDown
@@ -222,9 +217,7 @@ export function PageContents({
 
   return (
     <nav {...rest} aria-label={l.title} className={className}>
-      <p className="mb-2 text-caption font-semibold uppercase tracking-wide text-muted">
-        {l.title}
-      </p>
+      <p className="mb-2 text-caption font-semibold uppercase tracking-wide text-muted">{l.title}</p>
       {list}
     </nav>
   );

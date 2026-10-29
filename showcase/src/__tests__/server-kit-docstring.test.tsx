@@ -10,7 +10,12 @@ import { Docstring, cleandoc, parseDocstring, parseInline } from "../server-kit/
 
 describe("blocks", () => {
   it("dedents like inspect.cleandoc and joins a paragraph's lines", () => {
-    expect(cleandoc("First line.\n\n    Second\n      indented\n")).toEqual(["First line.", "", "Second", "  indented"]);
+    expect(cleandoc("First line.\n\n    Second\n      indented\n")).toEqual([
+      "First line.",
+      "",
+      "Second",
+      "  indented",
+    ]);
     expect(parseDocstring("One sentence\nover two lines.\n\nAnother.")).toEqual([
       { kind: "paragraph", text: "One sentence over two lines." },
       { kind: "paragraph", text: "Another." },
@@ -25,7 +30,10 @@ describe("blocks", () => {
         kind: "list",
         ordered: false,
         start: 1,
-        items: [[{ kind: "paragraph", text: "**One** clears a field;" }], [{ kind: "paragraph", text: "two keeps it." }]],
+        items: [
+          [{ kind: "paragraph", text: "**One** clears a field;" }],
+          [{ kind: "paragraph", text: "two keeps it." }],
+        ],
       },
       { kind: "paragraph", text: "After." },
     ]);
@@ -105,7 +113,13 @@ describe("inline", () => {
       { kind: "text", text: " " },
       { kind: "em", children: [{ kind: "text", text: "is" }] },
       { kind: "text", text: " " },
-      { kind: "strong", children: [{ kind: "text", text: "not " }, { kind: "code", text: "None" }] },
+      {
+        kind: "strong",
+        children: [
+          { kind: "text", text: "not " },
+          { kind: "code", text: "None" },
+        ],
+      },
     ]);
   });
 
@@ -136,13 +150,18 @@ describe("inline", () => {
       display: "eifi1_server_kit.auth.AuthError",
     });
     expect(parseInline(":data:`the limits <LIMITS>`")[0]).toMatchObject({ target: "LIMITS", display: "the limits" });
-    expect(parseInline(":py:meth:`!Mailer.send`")[0]).toMatchObject({ role: "meth", link: false, display: "Mailer.send()" });
+    expect(parseInline(":py:meth:`!Mailer.send`")[0]).toMatchObject({
+      role: "meth",
+      link: false,
+      display: "Mailer.send()",
+    });
   });
 });
 
 describe("<Docstring>", () => {
   it("links a role the caller resolves, and shows any other as code", () => {
-    const resolve = (target: string) => (target === "apply_patch" ? "/server-settings#settings.apply_patch" : undefined);
+    const resolve = (target: string) =>
+      target === "apply_patch" ? "/server-settings#settings.apply_patch" : undefined;
     render(
       <MemoryRouter>
         <Docstring

@@ -6,11 +6,7 @@ import type { OneTimeCodeInputProps } from "../one-time-code-input";
 import { FieldHint } from "../field-parts";
 
 /** A controlled field, as an app holds it; `onChange` / `onComplete` spies optional. */
-function Harness({
-  initial = "",
-  onChange,
-  ...props
-}: Partial<OneTimeCodeInputProps> & { initial?: string }) {
+function Harness({ initial = "", onChange, ...props }: Partial<OneTimeCodeInputProps> & { initial?: string }) {
   const [value, setValue] = useState(initial);
   return (
     <OneTimeCodeInput

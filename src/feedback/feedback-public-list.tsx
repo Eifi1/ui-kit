@@ -12,7 +12,13 @@ import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import { FILL_HEIGHT_CLASS } from "../shell/fill-height";
 import { EMPTY_FORMATTED_VALUE } from "../lib/format";
-import { FeedbackCategoryBadge, FeedbackDetail, FeedbackDetailSection, FeedbackProse, FeedbackStatusBadge } from "./feedback-inbox";
+import {
+  FeedbackCategoryBadge,
+  FeedbackDetail,
+  FeedbackDetailSection,
+  FeedbackProse,
+  FeedbackStatusBadge,
+} from "./feedback-inbox";
 import { useFeedbackCategoryLabels } from "./feedback-labels";
 import { FeedbackCommentThread, type FeedbackCommentsLabels } from "./feedback-comment-thread";
 import type { FeedbackEntryUploadOptions } from "./feedback-entry-file";

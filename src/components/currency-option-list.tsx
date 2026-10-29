@@ -26,7 +26,11 @@ export function CurrencyFlag({ country, className, ...rest }: CurrencyFlagProps)
       // code printed next to it, and a reader that met both would hear the currency
       // twice.
       aria-hidden
-      className={cn("fi inline-block w-5 h-[0.9375rem] rounded-sm shadow-[0_0_0_1px_rgba(0,0,0,0.08)] shrink-0", `fi-${country}`, className)}
+      className={cn(
+        "fi inline-block w-5 h-[0.9375rem] rounded-sm shadow-[0_0_0_1px_rgba(0,0,0,0.08)] shrink-0",
+        `fi-${country}`,
+        className,
+      )}
     />
   );
 }
@@ -45,11 +49,7 @@ export function getCurrency(code: string | null | undefined): CurrencyOption | u
  *  `Intl` only when a locale was actually GIVEN (by prop or `<UiKitProvider>`): an
  *  app that never set one keeps the shipped English names it has always shown,
  *  rather than whatever language the test runner or the browser happens to be in. */
-export function currencyName(
-  c: CurrencyOption,
-  names?: Record<string, string>,
-  locale?: string,
-): string {
+export function currencyName(c: CurrencyOption, names?: Record<string, string>, locale?: string): string {
   const own = names?.[c.code];
   if (own !== undefined) return own;
   if (locale) {
@@ -138,14 +138,13 @@ export function CurrencyOptionList({
   const results = useMemo(() => {
     // Every word of the query, in the code, the name or the symbol (0.51.4).
     const words = searchWords(query, locale);
-    const hits = words.length > 0 ? named.filter(({ c, name }) => matchesSearch(words, [c.code, name, c.symbol], locale)) : named;
-    return hits.map(
-      ({ c, name }): ComboOption<string> => ({
-        value: c.code,
-        label: name,
-        icon: <CurrencyFlag country={c.country} />,
-      }),
-    );
+    const hits =
+      words.length > 0 ? named.filter(({ c, name }) => matchesSearch(words, [c.code, name, c.symbol], locale)) : named;
+    return hits.map(({ c, name }): ComboOption<string> => ({
+      value: c.code,
+      label: name,
+      icon: <CurrencyFlag country={c.country} />,
+    }));
   }, [named, query, locale]);
 
   const chosen = getCurrency(value)?.code;

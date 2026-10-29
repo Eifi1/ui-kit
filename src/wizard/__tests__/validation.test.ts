@@ -17,17 +17,11 @@ describe("requiredFieldsValidator", () => {
   const MSG = "required";
 
   it("passes when every required field is present", () => {
-    expect(
-      check({ name: "Giro", currency: "EUR" }, [{ key: "name" }], MSG),
-    ).toEqual({ ok: true, errors: {} });
+    expect(check({ name: "Giro", currency: "EUR" }, [{ key: "name" }], MSG)).toEqual({ ok: true, errors: {} });
   });
 
   it("names every missing field, not just the first", () => {
-    const r = check(
-      { name: "", currency: null },
-      [{ key: "name" }, { key: "currency" }],
-      MSG,
-    );
+    const r = check({ name: "", currency: null }, [{ key: "name" }, { key: "currency" }], MSG);
     expect(r.ok).toBe(false);
     expect(r.errors).toEqual({ name: MSG, currency: MSG });
   });
@@ -46,9 +40,7 @@ describe("requiredFieldsValidator", () => {
   });
 
   it("runs a custom predicate instead, with the whole record in hand", () => {
-    const fields = [
-      { key: "amount" as const, valid: (v: unknown) => Number(v) > 0, message: "must be positive" },
-    ];
+    const fields = [{ key: "amount" as const, valid: (v: unknown) => Number(v) > 0, message: "must be positive" }];
     expect(check({ amount: 0 }, fields, MSG)).toEqual({
       ok: false,
       errors: { amount: "must be positive" },
@@ -69,11 +61,7 @@ describe("requiredFieldsValidator", () => {
   });
 
   it("falls back to the shared message when a field carries none", () => {
-    const r = check(
-      { a: "", b: "" },
-      [{ key: "a" }, { key: "b", message: "b is special" }],
-      MSG,
-    );
+    const r = check({ a: "", b: "" }, [{ key: "a" }, { key: "b", message: "b is special" }], MSG);
     expect(r.errors).toEqual({ a: MSG, b: "b is special" });
   });
 });

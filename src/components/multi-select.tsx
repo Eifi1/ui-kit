@@ -47,8 +47,7 @@ export interface MultiSelectOption<V extends string | number = string | number> 
  *  inferred from `options` and `value`, so `onChange` hands back `number[]` for number
  *  ids and `string[]` for string ones, and no call site casts. */
 export interface MultiSelectProps<V extends string | number = string | number>
-  extends Omit<ComponentPropsWithoutRef<"div">, "onChange">,
-    FieldHelpProps {
+  extends Omit<ComponentPropsWithoutRef<"div">, "onChange">, FieldHelpProps {
   options: MultiSelectOption<V>[];
   /** The chosen values — the select family's `value` (API-4). */
   value?: V[];
@@ -162,7 +161,8 @@ export function MultiSelect<V extends string | number = string | number>(props: 
   const value = useMemo<V[]>(() => valueProp ?? [], [valueProp]);
   // The rows as the family's options — the hint is the sublabel, searched like the label.
   const comboOptions = useMemo(
-    () => options.map((o): ComboOption<V> => ({ value: o.value, label: o.label, sublabel: o.hint, disabled: o.disabled })),
+    () =>
+      options.map((o): ComboOption<V> => ({ value: o.value, label: o.label, sublabel: o.hint, disabled: o.disabled })),
     [options],
   );
   // Back closes the open list, as it did on `useDropdown` (keksdose live #309).
@@ -213,9 +213,7 @@ export function MultiSelect<V extends string | number = string | number>(props: 
   const valueSet = useMemo(() => new Set<V>(value), [value]);
   const allChecked = options.length > 0 && options.every((o) => valueSet.has(o.value));
   const selectedSummary =
-    value.length === 0 || allChecked
-      ? (labelsProp?.all ?? placeholder ?? text.all)
-      : text.selectedCount(value.length);
+    value.length === 0 || allChecked ? (labelsProp?.all ?? placeholder ?? text.all) : text.selectedCount(value.length);
 
   const toggle = (o: ComboOption<V>) => {
     if (lock.locked) return;
@@ -256,9 +254,7 @@ export function MultiSelect<V extends string | number = string | number>(props: 
       // siblings use, so a form row of pickers reads the same way throughout.
       // A caller's own name wins: two filters labelled "Accounts" on one screen have
       // to be told apart, and only the caller knows by what.
-      aria-label={
-        ariaLabel ?? (typeof label === "string" ? common.fieldValue(label, selectedSummary) : undefined)
-      }
+      aria-label={ariaLabel ?? (typeof label === "string" ? common.fieldValue(label, selectedSummary) : undefined)}
       onClick={() => {
         if (!inert) setOpen((v) => !v);
       }}

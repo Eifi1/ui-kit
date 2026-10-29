@@ -137,7 +137,8 @@ export function resetDeviceSettings(): string[] {
       entry.reset();
       keys.push(...covered);
     } catch (error) {
-      if (devBuild()) console.error(`resetDeviceSettings: the reset of "${entry.key}" threw; its key is removed instead.`, error);
+      if (devBuild())
+        console.error(`resetDeviceSettings: the reset of "${entry.key}" threw; its key is removed instead.`, error);
       remove.push(entry);
     }
   }

@@ -32,13 +32,7 @@ describe("FullBleedDialog title", () => {
 
   it("keeps the free header slot beside the title, outside the name", () => {
     render(
-      <FullBleedDialog
-        open
-        onClose={() => {}}
-        closeLabel="Close"
-        title="Groceries"
-        header={<span>€ 120.00</span>}
-      >
+      <FullBleedDialog open onClose={() => {}} closeLabel="Close" title="Groceries" header={<span>€ 120.00</span>}>
         <p>body</p>
       </FullBleedDialog>,
     );

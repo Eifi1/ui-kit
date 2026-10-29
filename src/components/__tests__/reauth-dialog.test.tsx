@@ -100,7 +100,11 @@ describe("ReauthDialog", () => {
     let resolve!: () => void;
     const onClose = vi.fn();
     render(
-      <ReauthDialog onSubmit={() => new Promise<void>((r) => (resolve = r))} onClose={onClose} submitLabel="Add passkey" />,
+      <ReauthDialog
+        onSubmit={() => new Promise<void>((r) => (resolve = r))}
+        onClose={onClose}
+        submitLabel="Add passkey"
+      />,
     );
     const field = await screen.findByLabelText("Current password");
     await user.type(field, "pw{Enter}");

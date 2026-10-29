@@ -176,10 +176,23 @@ describe("RegisterForm — slots and language", () => {
     setup({
       aboveForm: <p>Closed beta.</p>,
       underEmail: <p>Use your work address.</p>,
-      appFields: <label>Company <input /></label>,
+      appFields: (
+        <label>
+          Company <input />
+        </label>
+      ),
       afterFields: <p>Your data is stored unencrypted by default.</p>,
     });
-    const order = ["Closed beta.", "Email", "Use your work address.", "Password", "Language", "Company", "Your data is stored unencrypted by default.", "Create account"];
+    const order = [
+      "Closed beta.",
+      "Email",
+      "Use your work address.",
+      "Password",
+      "Language",
+      "Company",
+      "Your data is stored unencrypted by default.",
+      "Create account",
+    ];
     const nodes = order.map((text) =>
       text === "Email" || text === "Password" || text === "Language" || text === "Company"
         ? screen.getByLabelText(text, { selector: "input, select" })
@@ -199,7 +212,12 @@ describe("RegisterForm — slots and language", () => {
       return (
         <>
           <p data-testid="app-language">{lang}</p>
-          <RegisterForm onSubmit={async () => undefined} locale={lang} onLocaleChange={setLang} languages={["de-CH", "en", "fr"]} />
+          <RegisterForm
+            onSubmit={async () => undefined}
+            locale={lang}
+            onLocaleChange={setLang}
+            languages={["de-CH", "en", "fr"]}
+          />
         </>
       );
     }
@@ -236,7 +254,9 @@ describe("RegisterForm — refusals", () => {
   it("email_taken: under the email field, which takes the focus; another address clears it", async () => {
     const { user } = await submitRejected(refusal(409, "email_taken"));
     const email = screen.getByLabelText("Email");
-    await waitFor(() => expect(email).toHaveAccessibleDescription("An account with this email address already exists."));
+    await waitFor(() =>
+      expect(email).toHaveAccessibleDescription("An account with this email address already exists."),
+    );
     expect(email).toHaveAttribute("aria-invalid", "true");
     await waitFor(() => expect(email).toHaveFocus());
     expect(submitButton()).toBeEnabled();
@@ -245,7 +265,10 @@ describe("RegisterForm — refusals", () => {
   });
 
   it.each([
-    [refusal(403, "registration_closed"), "New accounts are by invitation only. Ask the operator to invite your email address."],
+    [
+      refusal(403, "registration_closed"),
+      "New accounts are by invitation only. Ask the operator to invite your email address.",
+    ],
     [refusal(400, "invitation_invalid"), "This invitation link is not valid."],
     [refusal(410, "invitation_expired"), "This invitation has expired. Ask for a new one."],
     [new Error("Network Error"), "Registration failed. Please try again."],

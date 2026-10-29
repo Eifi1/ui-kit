@@ -382,14 +382,7 @@ export function Tooltip({
   if (isEmptyLabel(label)) return <>{children}</>;
   if (portal === true) {
     return (
-      <PortalTooltip
-        label={label}
-        side={side}
-        className={className}
-        redact={redact}
-        tap={tap}
-        {...rest}
-      >
+      <PortalTooltip label={label} side={side} className={className} redact={redact} tap={tap} {...rest}>
         {children}
       </PortalTooltip>
     );
@@ -412,7 +405,6 @@ export function Tooltip({
     </InPlaceTooltip>
   );
 }
-
 
 /** The pointer handlers a caller may hand {@link Tooltip} that the trigger also needs:
  *  both run, the trigger's first. (The mouse and focus handlers are the trigger's alone,
@@ -731,9 +723,7 @@ function InPlaceTooltip({
       {/* In place the bubble is always there to point at; portalled or lazy, only while up. */}
       {describedBy(children, clipped || lazy ? (open ? id : undefined) : dismissed ? undefined : id)}
       {clipped ? (
-        open && (
-          <PortalBubble triggerRef={triggerRef} id={id} label={label} side={side} dir={dir} redact={redact} />
-        )
+        open && <PortalBubble triggerRef={triggerRef} id={id} label={label} side={side} dir={dir} redact={redact} />
       ) : lazy ? (
         // keksdose F6: the in-place slot and classes, the portalled lifetime. Mounted only
         // while up, so it is visible whenever it exists.
@@ -795,11 +785,7 @@ function describedBy(children: ReactNode, id: string | undefined): ReactNode {
  *  it has nothing to say — `""`, `null`, `undefined`, `false` from a `&&` guard. A
  *  numeric `0` is a real label and stays one. */
 function isEmptyLabel(label: ReactNode): boolean {
-  return (
-    label == null ||
-    label === false ||
-    (typeof label === "string" && label.trim() === "")
-  );
+  return label == null || label === false || (typeof label === "string" && label.trim() === "");
 }
 
 const TOOLTIP_GAP = 4;
@@ -878,10 +864,7 @@ function useViewportClamp(
   // new label, side or direction — is not measured yet, and renders clipped until it is.
   const [placement, setPlacement] = useState<Placement>(UNPLACED);
   const measured =
-    placement.for !== null &&
-    placement.for.side === side &&
-    placement.for.label === label &&
-    placement.for.dir === dir;
+    placement.for !== null && placement.for.side === side && placement.for.label === label && placement.for.dir === dir;
   useLayoutEffect(() => {
     const el = bubbleRef.current;
     if (!active || !el) {
@@ -939,10 +922,7 @@ const portalTransformBySide: Record<PhysicalSide, string> = {
 
 /** Anchor point (viewport px) for the tooltip on the given side of `r`. Paired
  *  with {@link portalTransformBySide}, which shifts the box onto that point. */
-function tooltipAnchor(
-  r: AnchorRect,
-  side: PhysicalSide,
-): { left: number; top: number } {
+function tooltipAnchor(r: AnchorRect, side: PhysicalSide): { left: number; top: number } {
   switch (side) {
     case "right":
       return { left: r.right + TOOLTIP_GAP, top: r.top + r.height / 2 };
@@ -980,12 +960,7 @@ const opposite: Record<PhysicalSide, PhysicalSide> = {
 };
 
 /** Whether the bubble clears the viewport edge on `side` of the trigger. */
-function roomOn(
-  r: AnchorRect,
-  side: PhysicalSide,
-  size: TooltipSize,
-  viewport: TooltipViewport,
-): boolean {
+function roomOn(r: AnchorRect, side: PhysicalSide, size: TooltipSize, viewport: TooltipViewport): boolean {
   switch (side) {
     case "left":
       return r.left - TOOLTIP_GAP - size.width >= TOOLTIP_MARGIN;
@@ -1045,10 +1020,7 @@ export function placeTooltip(
   size: TooltipSize,
   viewport: TooltipViewport,
 ): TooltipPlacement {
-  const chosen =
-    roomOn(r, side, size, viewport) || !roomOn(r, opposite[side], size, viewport)
-      ? side
-      : opposite[side];
+  const chosen = roomOn(r, side, size, viewport) || !roomOn(r, opposite[side], size, viewport) ? side : opposite[side];
   const point = tooltipAnchor(r, chosen);
   const box =
     chosen === "left"
@@ -1065,16 +1037,7 @@ export function placeTooltip(
   };
 }
 
-function PortalTooltip({
-  label,
-  side,
-  className,
-  redact,
-  tap,
-  children,
-  ref,
-  ...rest
-}: TooltipVariantProps) {
+function PortalTooltip({ label, side, className, redact, tap, children, ref, ...rest }: TooltipVariantProps) {
   const { triggerRef, setTrigger } = useTriggerRef(ref);
   // The trigger's reading direction, read when the bubble is asked for (an event, not a
   // render): it resolves `start` / `end`, and the portalled bubble — which has left the
@@ -1103,9 +1066,7 @@ function PortalTooltip({
       >
         {describedBy(children, open ? id : undefined)}
       </span>
-      {open && (
-        <PortalBubble triggerRef={triggerRef} id={id} label={label} side={side} dir={dir} redact={redact} />
-      )}
+      {open && <PortalBubble triggerRef={triggerRef} id={id} label={label} side={side} dir={dir} redact={redact} />}
     </>
   );
 }

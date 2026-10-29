@@ -157,25 +157,23 @@ function RhfExample() {
           </div>
         </form>
       </Form>
-      <p className="mt-3 font-mono text-xs text-secondary">
-        onSubmit: {submitted ? q(submitted) : "not called yet"}
-      </p>
+      <p className="mt-3 font-mono text-xs text-secondary">onSubmit: {submitted ? q(submitted) : "not called yet"}</p>
       <Note>
-        The words come from the <code className="font-mono">rules</code> (or a schema); the kit
-        ships none here. The message under a field is not{" "}
-        <code className="font-mono">role=&quot;alert&quot;</code> on purpose — it is read when
-        focus reaches the control. The adapter never coerces a value: an entity picker clears
-        to <code className="font-mono">null</code> unless it is given{" "}
-        <code className="font-mono">clearValue=&quot;&quot;</code>, as Payee is — the fix for a
-        zod <code className="font-mono">z.string()</code> field lives on the picker, not here. The only entry in the package that needs{" "}
-        <code className="font-mono">react-hook-form</code>, an optional peer.
+        The words come from the <code className="font-mono">rules</code> (or a schema); the kit ships none here. The
+        message under a field is not <code className="font-mono">role=&quot;alert&quot;</code> on purpose — it is read
+        when focus reaches the control. The adapter never coerces a value: an entity picker clears to{" "}
+        <code className="font-mono">null</code> unless it is given{" "}
+        <code className="font-mono">clearValue=&quot;&quot;</code>, as Payee is — the fix for a zod{" "}
+        <code className="font-mono">z.string()</code> field lives on the picker, not here. The only entry in the package
+        that needs <code className="font-mono">react-hook-form</code>, an optional peer.
       </Note>
       <Note>
         There is no shadcn scaffold — no <code className="font-mono">FormField</code>,{" "}
         <code className="font-mono">FormItem</code>, <code className="font-mono">FormLabel</code>,{" "}
         <code className="font-mono">FormControl</code>, <code className="font-mono">FormDescription</code>,{" "}
-        <code className="font-mono">FormMessage</code> or <code className="font-mono">useFormField</code>: each
-        bound field is those parts in one element; <code className="font-mono">RhfField</code> wraps a control of your own the same way.
+        <code className="font-mono">FormMessage</code> or <code className="font-mono">useFormField</code>: each bound
+        field is those parts in one element; <code className="font-mono">RhfField</code> wraps a control of your own the
+        same way.
       </Note>
     </Example>
   );
@@ -227,13 +225,13 @@ export function CommitControls022Demo() {
         </WriteLockProvider>
       </div>
       <Note>
-        Under a lock each control is {code("aria-disabled")} but stays focusable, says why in the kit tooltip — a
-        line under it at Large and on a touch screen, as on Button ({code("disabledReasonDisplay")}) — and in its
+        Under a lock each control is {code("aria-disabled")} but stays focusable, says why in the kit tooltip — a line
+        under it at Large and on a touch screen, as on Button ({code("disabledReasonDisplay")}) — and in its
         description, and fires no change. Without a provider (or unlocked) {code("commit")} does nothing;{" "}
         {code("disabledReason")} does the same for a reason of the control&apos;s own. A field that saves itself is{" "}
-        {code("readOnly")} besides — it shows its value, and reports no change, no blur and no Enter; the amount
-        fields offer no calculator, numpad or currency picker. A field that only reaches the server through the
-        form&apos;s Save leaves {code("commit")} off and stays editable.
+        {code("readOnly")} besides — it shows its value, and reports no change, no blur and no Enter; the amount fields
+        offer no calculator, numpad or currency picker. A field that only reaches the server through the form&apos;s
+        Save leaves {code("commit")} off and stays editable.
       </Note>
     </Example>
   );
@@ -354,12 +352,7 @@ export function RhfFieldsDemo() {
               validate: (v) => (typeof v === "number" && v > 0) || "Enter the monthly rent.",
             }}
           />
-          <RhfDateField<Lease>
-            name="start"
-            label="Start"
-            required
-            rules={{ required: "When does the lease start?" }}
-          />
+          <RhfDateField<Lease> name="start" label="Start" required rules={{ required: "When does the lease start?" }} />
           <RhfCombobox<Lease, "tenantId", number>
             name="tenantId"
             label="Tenant"
@@ -416,8 +409,7 @@ export function RhfFieldsDemo() {
             <RhfLineItems<Lease, "lines">
               name="lines"
               rules={{
-                validate: (v) =>
-                  (v as Line[]).length >= 2 || "A lease needs at least two cost lines.",
+                validate: (v) => (v as Line[]).length >= 2 || "A lease needs at least two cost lines.",
               }}
               newItem={() => ({ description: "", amount: null })}
               addLabel="Add cost line"
@@ -466,12 +458,11 @@ export function RhfFieldsDemo() {
         <Note>
           One line per field: {code("RhfTextField")}, {code("RhfSelect")}, {code("RhfNumberField")},{" "}
           {code("RhfMoneyField")}, {code("RhfDateField")}, {code("RhfCombobox")} (an entity id),{" "}
-          {code("RhfTextCombobox")} (free text), {code("RhfTextarea")}, {code("RhfCheckbox")}, and{" "}
-          {code("RhfField")} — the shell they are built on — round a {code("ToggleGroup")}. None is given{" "}
-          {code("control")}: under {code("<Form {...form}>")} they find the form through context. The
-          cost lines are {code("RhfLineItems")} over {code("useFieldArray")}: its {code("rules")} message
-          (fewer than two lines) is the list&apos;s error, each cell binds to {code("`${name}.amount`")},
-          and the totals row sums the watched values.
+          {code("RhfTextCombobox")} (free text), {code("RhfTextarea")}, {code("RhfCheckbox")}, and {code("RhfField")} —
+          the shell they are built on — round a {code("ToggleGroup")}. None is given {code("control")}: under{" "}
+          {code("<Form {...form}>")} they find the form through context. The cost lines are {code("RhfLineItems")} over{" "}
+          {code("useFieldArray")}: its {code("rules")} message (fewer than two lines) is the list&apos;s error, each
+          cell binds to {code("`${name}.amount`")}, and the totals row sums the watched values.
         </Note>
       </div>
     </Example>

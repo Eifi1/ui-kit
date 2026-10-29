@@ -64,8 +64,7 @@ export const DEFAULT_COMBOBOX_LABELS: ComboboxLabels = {
   selectedCount: (count) => `${count} selected`,
   loadError: "Couldn’t load results",
   resultCount: (count) => (count === 1 ? "1 result" : `${count} results`),
-  minChars: (count) =>
-    count === 1 ? "Type at least 1 character" : `Type at least ${count} characters`,
+  minChars: (count) => (count === 1 ? "Type at least 1 character" : `Type at least ${count} characters`),
 };
 
 export const DEFAULT_MULTI_SELECT_LABELS: MultiSelectLabels = {

@@ -55,6 +55,7 @@ describe("TopBarActionMenu scrollable", () => {
     fireEvent.keyDown(document.activeElement!, { key: "ArrowDown" });
     expect(screen.getByRole("menuitem", { name: "Row 1" })).toHaveFocus();
     expect(focus.mock.calls.length).toBeGreaterThanOrEqual(3);
-    for (const [options] of focus.mock.calls) expect((options as FocusOptions | undefined)?.preventScroll).not.toBe(true);
+    for (const [options] of focus.mock.calls)
+      expect((options as FocusOptions | undefined)?.preventScroll).not.toBe(true);
   });
 });

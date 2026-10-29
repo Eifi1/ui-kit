@@ -11,7 +11,7 @@ import { UiKitProvider } from "../../i18n/kit-labels";
 
 const OPTIONS = { system: "System", light: "Light", dark: "Dark" };
 
-describe("ThemeSetting variant=\"toggle\"", () => {
+describe('ThemeSetting variant="toggle"', () => {
   it("is one segmented control of system, light and dark, bound to the preference", () => {
     const onChange = vi.fn();
     render(<ThemeSetting variant="toggle" label="Theme" value="system" onChange={onChange} optionLabels={OPTIONS} />);
@@ -31,7 +31,14 @@ describe("ThemeSetting variant=\"toggle\"", () => {
 
 describe("TwoFactorSetting's title", () => {
   const card = (labels?: Parameters<typeof TwoFactorSetting>[0]["labels"]) => (
-    <TwoFactorSetting enabled={false} setup={null} onStartSetup={() => {}} onEnable={() => {}} onDisable={() => {}} labels={labels} />
+    <TwoFactorSetting
+      enabled={false}
+      setup={null}
+      onStartSetup={() => {}}
+      onEnable={() => {}}
+      onDisable={() => {}}
+      labels={labels}
+    />
   );
 
   it("names the setting, with the state beside it", () => {
@@ -49,7 +56,9 @@ describe("TwoFactorSetting's title", () => {
 
   it("takes the provider's title over a prop's status, and a prop's title over both", () => {
     const { unmount } = render(
-      <UiKitProvider labels={{ accountSettings: { twoFactor: { title: "Zwei-Faktor" } } }}>{card({ status: "2FA" })}</UiKitProvider>,
+      <UiKitProvider labels={{ accountSettings: { twoFactor: { title: "Zwei-Faktor" } } }}>
+        {card({ status: "2FA" })}
+      </UiKitProvider>,
     );
     expect(screen.getByText("Zwei-Faktor")).toBeInTheDocument();
     unmount();

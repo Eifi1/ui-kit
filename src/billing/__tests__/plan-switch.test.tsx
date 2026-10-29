@@ -100,10 +100,11 @@ describe("PlanSwitchConfirm (§15.2.10)", () => {
     const over = d.querySelector("[data-plan-switch-over-limit]")!;
     expect(over).toHaveTextContent("Above the new plan’s limit");
     // A heading's word in limitUsageLine, plural forms in usageOf; an unlimited one none.
-    expect(within(over as HTMLElement).getAllByRole("listitem").map((li) => li.textContent)).toEqual([
-      "Budgets: 7 of 1",
-      "5 of 2 members",
-    ]);
+    expect(
+      within(over as HTMLElement)
+        .getAllByRole("listitem")
+        .map((li) => li.textContent),
+    ).toEqual(["Budgets: 7 of 1", "5 of 2 members"]);
   });
 
   it("formats the figures as the app says, and names a dimension by its key without a word", async () => {

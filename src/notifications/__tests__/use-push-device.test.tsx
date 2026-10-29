@@ -87,7 +87,9 @@ describe("usePushDevice — what it reads", () => {
     uninstall = installFakePush().uninstall;
     const ua = vi
       .spyOn(navigator, "userAgent", "get")
-      .mockReturnValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 14_6) AppleWebKit/605.1.15 Version/18.0 Safari/605.1.15");
+      .mockReturnValue(
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_6) AppleWebKit/605.1.15 Version/18.0 Safari/605.1.15",
+      );
     // jsdom has no `maxTouchPoints`.
     Object.defineProperty(navigator, "maxTouchPoints", { configurable: true, value: 5 });
     const { result } = renderHook(() => usePushDevice(api()));
@@ -99,9 +101,9 @@ describe("usePushDevice — what it reads", () => {
 
   it("reads installed and iOS", () => {
     uninstall = installFakePush().uninstall;
-    const ua = vi.spyOn(navigator, "userAgent", "get").mockReturnValue(
-      "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Safari/604.1",
-    );
+    const ua = vi
+      .spyOn(navigator, "userAgent", "get")
+      .mockReturnValue("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Safari/604.1");
     Object.defineProperty(navigator, "standalone", { configurable: true, value: true });
     const { result } = renderHook(() => usePushDevice(api()));
     expect(result.current.ios).toBe(true);

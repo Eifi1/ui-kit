@@ -268,8 +268,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       },
       passkeys: {
         title: "Hozzáférési kulcsok",
-        description:
-          "Jelentkezzen be ujjlenyomattal, arcfelismeréssel vagy az eszköz PIN-kódjával jelszó helyett.",
+        description: "Jelentkezzen be ujjlenyomattal, arcfelismeréssel vagy az eszköz PIN-kódjával jelszó helyett.",
         descriptionAlongside:
           "Jelentkezzen be ujjlenyomattal, arcfelismeréssel vagy az eszköz PIN-kódjával. A jelszava továbbra is működik.",
         empty: "Még nincs hozzáférési kulcs",
@@ -407,8 +406,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       chooseStart: "Válassza ki a kezdő dátumot",
       chooseEnd: "Válassza ki a záró dátumot",
       startSelected: (date) => `Kezdő dátum: ${date}. Válassza ki a záró dátumot.`,
-      rangeSelected: (from, to) =>
-        `Kiválasztott időszak: ${from} – ${to}. Az újrakezdéshez válasszon kezdő dátumot.`,
+      rangeSelected: (from, to) => `Kiválasztott időszak: ${from} – ${to}. Az újrakezdéshez válasszon kezdő dátumot.`,
     },
     monthPicker: {
       previousYear: "Előző év",
@@ -428,8 +426,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       day: (date, value) => `${date}: ${value}`,
       less: "Kevesebb",
       more: "Több",
-      truncated: (count) =>
-        `A legutóbbi napok láthatók; ${n(count)} korábbi nap nem látható.`,
+      truncated: (count) => `A legutóbbi napok láthatók; ${n(count)} korábbi nap nem látható.`,
     },
     datePicker: {
       apply: "Alkalmaz",
@@ -572,20 +569,16 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       hint: (accept) => (accept ? `Elfogadott: ${accept}` : "Bármilyen fájltípus"),
       busy: "Feltöltés…",
       rejectedPick: (count) =>
-        count === 1
-          ? "A fájl nem lett hozzáadva"
-          : `A(z) ${n(count)} fájl közül egy sem lett hozzáadva`,
+        count === 1 ? "A fájl nem lett hozzáadva" : `A(z) ${n(count)} fájl közül egy sem lett hozzáadva`,
       // Each message opens with the quoted name, so no a/az has to agree with it, and
       // keeps numerals and the formatted size bare (convention 3).
       rejectedType: (name) => `„${name}”: nem támogatott fájltípus`,
       rejectedTypeOnly: (accept) => `Csak ${accept} fájl engedélyezett`,
       rejectedSize: (name, maxSize) => `„${name}”: a fájl mérete legfeljebb ${maxSize} lehet`,
-      rejectedCount: (name, maxFiles) =>
-        `„${name}” nem lett hozzáadva: legfeljebb ${n(maxFiles)} fájl adható meg`,
+      rejectedCount: (name, maxFiles) => `„${name}” nem lett hozzáadva: legfeljebb ${n(maxFiles)} fájl adható meg`,
       rejectedInvalid: (name) => `„${name}” itt nem használható`,
       rejectedMany: (count) => `${n(count)} fájl nem lett hozzáadva`,
-      selected: (count, firstName) =>
-        count === 1 ? `„${firstName}” kiválasztva` : `${n(count)} fájl kiválasztva`,
+      selected: (count, firstName) => (count === 1 ? `„${firstName}” kiválasztva` : `${n(count)} fájl kiválasztva`),
       remove: (name) => `„${name}” eltávolítása`,
       clearAll: "Összes fájl eltávolítása",
       removed: (name) => `„${name}” eltávolítva`,
@@ -810,9 +803,11 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       details: "Hiba részletei",
       reload: "Újratöltés",
       updateTitle: "Új verzió érhető el",
-      updateMessage: "Az alkalmazás egy része megváltozott az oldal betöltése óta. Az új verzióhoz töltse be újra az oldalt.",
+      updateMessage:
+        "Az alkalmazás egy része megváltozott az oldal betöltése óta. Az új verzióhoz töltse be újra az oldalt.",
       offlineTitle: "Nincs internetkapcsolat",
-      offlineMessage: "Az oldal kapcsolat nélkül nem tölthető be. A kapcsolat helyreállása után töltse be újra az oldalt.",
+      offlineMessage:
+        "Az oldal kapcsolat nélkül nem tölthető be. A kapcsolat helyreállása után töltse be újra az oldalt.",
       copyReport: "Hibajelentés másolása",
       reported: "A hibát automatikusan jelentettük.",
       reportedAs: (reference) => `Bejelentés azonosítója: ${reference}`,
@@ -922,8 +917,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
           "Zárt béta. Az alábbi jogi szövegezést ügyvéd még nem ellenőrizte; erre a nyilvános indulás előtt sor kerül. A műszaki leírások – mit tárolunk, hol és ki olvashatja – azt írják le, amit a szoftver ma ténylegesen tesz, és arra valók, hogy a szoftverrel össze lehessen vetni őket.",
       },
       translation: {
-        note: (o) =>
-          `Ez a szöveg tájékoztató jellegű fordítás; az irányadó változat nyelve: ${o.bindingLanguage}.`,
+        note: (o) => `Ez a szöveg tájékoztató jellegű fordítás; az irányadó változat nyelve: ${o.bindingLanguage}.`,
         show: (o) => `Az irányadó változat megjelenítése (${o.bindingLanguage})`,
       },
       updated: (date) => `Utolsó frissítés: ${date}`,
@@ -1020,16 +1014,14 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       failed: "A bejelentkezés sikertelen. Kérjük, próbálja újra.",
       passkeyFailed: "A bejelentkezés hozzáférési kulccsal sikertelen.",
       deactivatedHint: "Letiltották a fiókját? Írjon ide: {contact}.",
-      tagHint: (taggedAddress) =>
-        `Ezzel a címmel regisztrált (${taggedAddress})? Akkor azt használja.`,
+      tagHint: (taggedAddress) => `Ezzel a címmel regisztrált (${taggedAddress})? Akkor azt használja.`,
       twoFactorTitle: "Kétlépcsős azonosítás",
       twoFactorIntro: "Adja meg a hitelesítő alkalmazásban megjelenő kódot.",
       code: "Ellenőrző kód",
       verify: "Ellenőrzés",
       codeInvalid: "Érvénytelen ellenőrző kód.",
       setPasswordTitle: "Új jelszó választása",
-      setPasswordIntro:
-        "Ehhez a fiókhoz új jelszót kértek. Válasszon egyet, és máris folytathatja.",
+      setPasswordIntro: "Ehhez a fiókhoz új jelszót kértek. Válasszon egyet, és máris folytathatja.",
       newPassword: "Új jelszó",
       confirmPassword: "Új jelszó ismét",
       passwordMismatch: "A jelszavak nem egyeznek.",
@@ -1040,10 +1032,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       useRecoveryCode: "Tartalékkód használata",
       useAuthenticatorCode: "Hitelesítő alkalmazás használata",
       recoveryCode: "Tartalékkód",
-      recoveryIntro:
-        "Adja meg az egyik tartalékkódot, amelyet a kétlépcsős azonosítás bekapcsolásakor mentett el.",
-      recoveryCodeHint: (length) =>
-        `${n(length)} betű és számjegy. A kötőjelek és a szóközök nem számítanak.`,
+      recoveryIntro: "Adja meg az egyik tartalékkódot, amelyet a kétlépcsős azonosítás bekapcsolásakor mentett el.",
+      recoveryCodeHint: (length) => `${n(length)} betű és számjegy. A kötőjelek és a szóközök nem számítanak.`,
       recoveryCodeInvalid: "Ez a tartalékkód érvénytelen, vagy már felhasználták.",
       rateLimited,
       // 0.31.0: the same words as `landing.requestAccess`.
@@ -1086,8 +1076,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     },
     forgotPassword: {
       title: "Jelszó visszaállítása",
-      intro:
-        "Adja meg a fiókjához tartozó e-mail-címet. Küldünk egy hivatkozást, amellyel új jelszót választhat.",
+      intro: "Adja meg a fiókjához tartozó e-mail-címet. Küldünk egy hivatkozást, amellyel új jelszót választhat.",
       email: "E-mail",
       submit: "Hivatkozás küldése",
       sent: (email) => `Ha létezik fiók ezzel a címmel (${email}), a hivatkozás úton van.`,
@@ -1108,8 +1097,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       failed: "A jelszót nem sikerült módosítani.",
       noToken: "Ez a hivatkozás hiányos.",
       invalid: "Ez a hivatkozás érvénytelen vagy lejárt.",
-      invalidHint:
-        "A hivatkozások egy órán át érvényesek, és csak egyszer használhatók. Egyszerűen kérjen újat.",
+      invalidHint: "A hivatkozások egy órán át érvényesek, és csak egyszer használhatók. Egyszerűen kérjen újat.",
       requestNew: "Új hivatkozás kérése",
       success: "A jelszava megváltozott. Most már bejelentkezhet vele.",
       sessionsEnded: "A bejelentkezett eszközök ki lettek jelentkeztetve – ott újra be kell jelentkeznie.",
@@ -1319,8 +1307,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     },
     deleteAccount: {
       title: "Fiók törlése",
-      afterDays: (days) =>
-        `A fiókját azonnal inaktiváljuk, majd ${n(days)} nap múlva véglegesen töröljük.`,
+      afterDays: (days) => `A fiókját azonnal inaktiváljuk, majd ${n(days)} nap múlva véglegesen töröljük.`,
       operator: "A fiókját azonnal inaktiváljuk, a végleges törlést pedig az üzemeltető végzi el.",
       arm: "Fiók törlése…",
       prompt: "Minden eszközön kijelentkezik, és a fiókja többé nem használható.",
@@ -1632,7 +1619,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       failed: "Ez nem sikerült. Kérjük, próbálja újra.",
       // No plural after a numeral (convention 2).
       approvedToast: (count) => (count === 1 ? "Szöveg jóváhagyva" : `${n(count)} szöveg jóváhagyva`),
-      clearedToast: (count) => (count === 1 ? "Szöveg ellenőrizetlenként megjelölve" : `${n(count)} szöveg ellenőrizetlenként megjelölve`),
+      clearedToast: (count) =>
+        count === 1 ? "Szöveg ellenőrizetlenként megjelölve" : `${n(count)} szöveg ellenőrizetlenként megjelölve`,
       groupCount: (unreviewed, total) => `${n(unreviewed)} ellenőrizetlen / ${n(total)}`,
       approveGroup: (count) => `Ellenőrizetlenek jóváhagyása (${n(count)})`,
       // Opens with the quoted name, as `filePicker`'s refusals: no case ending ("-ban/-ben")
@@ -1716,8 +1704,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       writeLocked: "A demóban ez nem lehetséges.",
       endedTitle: "A demó véget ért",
       endedReadOnly: "A mintaadatokat rendszeresen visszaállítjuk.",
-      endedSandbox:
-        "A mintaadatokat rendszeresen visszaállítjuk, a demóban létrehozott saját munkáját pedig töröljük.",
+      endedSandbox: "A mintaadatokat rendszeresen visszaállítjuk, a demóban létrehozott saját munkáját pedig töröljük.",
       restart: "Új demó indítása",
     },
     // 0.32.0 — docs/billing-harmonization.md §7, §10 and §12.24: "csomag" is what is bought
@@ -1759,8 +1746,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         `A próbaidőszaka ${inDays(days)} ér véget. Utána is mindent megtekinthet, de a módosításokhoz csomagra lesz szüksége.`,
       grantEnding: (days) =>
         `Az ingyenes hozzáférése ${inDays(days)} ér véget. Utána is mindent megtekinthet, de a módosításokhoz csomagra lesz szüksége.`,
-      paymentFailed:
-        "A legutóbbi fizetése nem sikerült. A csomagja megtartásához frissítse a fizetési módját.",
+      paymentFailed: "A legutóbbi fizetése nem sikerült. A csomagja megtartásához frissítse a fizetési módját.",
       planEnded:
         "A csomagja lejárt. Továbbra is mindent megtekinthet és exportálhat; ha ismét módosítani szeretne, válasszon csomagot.",
       // Never why: the owner's payment status is the owner's personal data (§12.6).
@@ -1931,7 +1917,10 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       sections: {
         overview: { title: "Áttekintés", help: "Ami most várakozik, egy pillantásra." },
         users: { title: "Felhasználók", help: "Kinek van fiókja, és ki mit tehet." },
-        invitations: { title: "Meghívások", help: "Hívjon meg embereket e-mailben a saját nyelvükön; küldje újra vagy vonja vissza a még nyitott meghívókat." },
+        invitations: {
+          title: "Meghívások",
+          help: "Hívjon meg embereket e-mailben a saját nyelvükön; küldje újra vagy vonja vissza a még nyitott meghívókat.",
+        },
         billing: { title: "Számlázás", help: "A csomag, a fizetés és a számlák." },
         activity: { title: "Tevékenység", help: "Mit tettek az adminisztrátorok, a legújabb elöl." },
       },

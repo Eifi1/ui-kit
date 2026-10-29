@@ -130,9 +130,7 @@ export function EmptyState({
       {/* `text-sm`: a heading keeps the box's size, not whatever a stylesheet gives h2. */}
       <Title className={cn("text-sm font-medium text-secondary", toneClass)}>{title}</Title>
       {hasHint && <div className="mt-1 text-xs">{hint}</div>}
-      {action != null && (
-        <div className="mt-4 flex flex-wrap items-center justify-center gap-2">{action}</div>
-      )}
+      {action != null && <div className="mt-4 flex flex-wrap items-center justify-center gap-2">{action}</div>}
     </div>
   );
 }

@@ -157,7 +157,14 @@ describe("RhfMonthPicker (kastlan)", () => {
     const formRef: FormRef = { current: null };
     render(
       <Harness defaults={{ month: "" }} formRef={formRef}>
-        <RhfMonthPicker name="month" label="Month" hint="The billing month" locale="en-GB" currentMonth="2026-09" rules={REQUIRED} />
+        <RhfMonthPicker
+          name="month"
+          label="Month"
+          hint="The billing month"
+          locale="en-GB"
+          currentMonth="2026-09"
+          rules={REQUIRED}
+        />
       </Harness>,
     );
     await submit();
@@ -180,7 +187,15 @@ describe("RhfMonthPicker (kastlan)", () => {
     render(
       <Harness defaults={{ year: "", fiscal: 2025 }} formRef={formRef}>
         <RhfMonthPicker name="year" label="Tax year" mode="year" min="2022" max="2026" locale="en-GB" required />
-        <RhfMonthPicker name="fiscal" label="Fiscal year" mode="year" valueAsNumber min="2022" max="2026" locale="en-GB" />
+        <RhfMonthPicker
+          name="fiscal"
+          label="Fiscal year"
+          mode="year"
+          valueAsNumber
+          min="2022"
+          max="2026"
+          locale="en-GB"
+        />
       </Harness>,
     );
     const fiscal = screen.getByRole("combobox", { name: "Fiscal year 2025" });
@@ -219,32 +234,90 @@ describe("RhfDateField / RhfDateRangePicker: required reaches the trigger", () =
 /** A field per binding, each required and empty, and the element focus-on-error must
  *  reach: the one a keyboard user would type or choose in. */
 const BINDINGS: Array<[string, Values, ReactElement, () => HTMLElement]> = [
-  ["RhfTextField", { f: "" }, <RhfTextField name="f" label="Field" rules={REQUIRED} />, () => screen.getByRole("textbox", { name: "Field" })],
-  ["RhfTextarea", { f: "" }, <RhfTextarea name="f" label="Field" rules={REQUIRED} />, () => screen.getByRole("textbox", { name: "Field" })],
-  ["RhfNumberField", { f: null }, <RhfNumberField name="f" label="Field" rules={REQUIRED} />, () => screen.getByRole("textbox", { name: "Field" })],
-  ["RhfIntegerField", { f: "" }, <RhfIntegerField name="f" label="Field" rules={REQUIRED} />, () => screen.getByRole("textbox", { name: "Field" })],
-  ["RhfMoneyField", { f: null }, <RhfMoneyField name="f" label="Field" currency="CHF" rules={REQUIRED} />, () => screen.getByRole("textbox", { name: "Field" })],
-  ["RhfDateField", { f: "" }, <RhfDateField name="f" label="Field" rules={REQUIRED} />, () => screen.getByRole("combobox", { name: /Field/ })],
+  [
+    "RhfTextField",
+    { f: "" },
+    <RhfTextField name="f" label="Field" rules={REQUIRED} />,
+    () => screen.getByRole("textbox", { name: "Field" }),
+  ],
+  [
+    "RhfTextarea",
+    { f: "" },
+    <RhfTextarea name="f" label="Field" rules={REQUIRED} />,
+    () => screen.getByRole("textbox", { name: "Field" }),
+  ],
+  [
+    "RhfNumberField",
+    { f: null },
+    <RhfNumberField name="f" label="Field" rules={REQUIRED} />,
+    () => screen.getByRole("textbox", { name: "Field" }),
+  ],
+  [
+    "RhfIntegerField",
+    { f: "" },
+    <RhfIntegerField name="f" label="Field" rules={REQUIRED} />,
+    () => screen.getByRole("textbox", { name: "Field" }),
+  ],
+  [
+    "RhfMoneyField",
+    { f: null },
+    <RhfMoneyField name="f" label="Field" currency="CHF" rules={REQUIRED} />,
+    () => screen.getByRole("textbox", { name: "Field" }),
+  ],
+  [
+    "RhfDateField",
+    { f: "" },
+    <RhfDateField name="f" label="Field" rules={REQUIRED} />,
+    () => screen.getByRole("combobox", { name: /Field/ }),
+  ],
   [
     "RhfDateRangePicker",
     { from: "", to: "" },
     <RhfDateRangePicker fromName="from" toName="to" label="Field" fromRules={REQUIRED} />,
     () => screen.getByRole("combobox", { name: /Field/ }),
   ],
-  ["RhfTimeInput", { f: "" }, <RhfTimeInput name="f" label="Field" rules={REQUIRED} />, () => screen.getByLabelText("Field")],
-  ["RhfIbanInput", { f: "" }, <RhfIbanInput name="f" label="Field" rules={REQUIRED} />, () => screen.getByRole("textbox", { name: /Field/ })],
-  ["RhfPhoneInput", { f: "" }, <RhfPhoneInput name="f" label="Field" rules={REQUIRED} />, () => screen.getByRole("textbox", { name: /Field/ })],
+  [
+    "RhfTimeInput",
+    { f: "" },
+    <RhfTimeInput name="f" label="Field" rules={REQUIRED} />,
+    () => screen.getByLabelText("Field"),
+  ],
+  [
+    "RhfIbanInput",
+    { f: "" },
+    <RhfIbanInput name="f" label="Field" rules={REQUIRED} />,
+    () => screen.getByRole("textbox", { name: /Field/ }),
+  ],
+  [
+    "RhfPhoneInput",
+    { f: "" },
+    <RhfPhoneInput name="f" label="Field" rules={REQUIRED} />,
+    () => screen.getByRole("textbox", { name: /Field/ }),
+  ],
   [
     "RhfSelect",
     { f: "" },
     <RhfSelect name="f" label="Field" placeholder="Choose" options={[{ value: "a", label: "A" }]} rules={REQUIRED} />,
     () => screen.getByRole("combobox", { name: "Field" }),
   ],
-  ["RhfCheckbox", { f: false }, <RhfCheckbox name="f" label="Field" rules={REQUIRED} />, () => screen.getByRole("checkbox", { name: "Field" })],
+  [
+    "RhfCheckbox",
+    { f: false },
+    <RhfCheckbox name="f" label="Field" rules={REQUIRED} />,
+    () => screen.getByRole("checkbox", { name: "Field" }),
+  ],
   [
     "RhfToggleGroup",
     { f: "" },
-    <RhfToggleGroup name="f" label="Field" options={[{ value: "a", label: "A" }, { value: "b", label: "B" }]} rules={REQUIRED} />,
+    <RhfToggleGroup
+      name="f"
+      label="Field"
+      options={[
+        { value: "a", label: "A" },
+        { value: "b", label: "B" },
+      ]}
+      rules={REQUIRED}
+    />,
     () => screen.getByRole("radio", { name: "A" }),
   ],
   [
@@ -266,8 +339,18 @@ const BINDINGS: Array<[string, Values, ReactElement, () => HTMLElement]> = [
     <RhfTextCombobox name="f" label="Field" options={["Example"]} rules={REQUIRED} />,
     () => screen.getByRole("combobox", { name: "Field" }),
   ],
-  ["RhfCountrySelect", { f: null }, <RhfCountrySelect name="f" label="Field" rules={REQUIRED} />, () => screen.getByRole("combobox", { name: "Field" })],
-  ["RhfMonthPicker", { f: "" }, <RhfMonthPicker name="f" label="Field" rules={REQUIRED} />, () => screen.getByRole("combobox", { name: /Field/ })],
+  [
+    "RhfCountrySelect",
+    { f: null },
+    <RhfCountrySelect name="f" label="Field" rules={REQUIRED} />,
+    () => screen.getByRole("combobox", { name: "Field" }),
+  ],
+  [
+    "RhfMonthPicker",
+    { f: "" },
+    <RhfMonthPicker name="f" label="Field" rules={REQUIRED} />,
+    () => screen.getByRole("combobox", { name: /Field/ }),
+  ],
   [
     "RhfMonthPicker year",
     { f: null },

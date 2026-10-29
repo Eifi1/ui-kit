@@ -34,8 +34,8 @@ function PressedToggleGroup() {
         />
         <p className={READOUT}>onChange: {log.length ? log.join(", ") : "—"} (never null)</p>
         <Note>
-          Pressing the pressed option re-sends its value rather than clearing it; {code("allowEmpty")} is still
-          the way to a group that can be emptied. The default {code("semantics=\"radio\"")} is unchanged.
+          Pressing the pressed option re-sends its value rather than clearing it; {code("allowEmpty")} is still the way
+          to a group that can be emptied. The default {code('semantics="radio"')} is unchanged.
         </Note>
       </div>
     </Example>
@@ -79,7 +79,10 @@ function LegendEnd() {
 function BarWithLink() {
   const [log, setLog] = useState("—");
   return (
-    <Example label="BulkActionBar — a link among the actions" hint="Tab once into the bar, then ←/→: the link is a stop like the buttons">
+    <Example
+      label="BulkActionBar — a link among the actions"
+      hint="Tab once into the bar, then ←/→: the link is a stop like the buttons"
+    >
       <div className="grid gap-2">
         <BulkActionBar variant="inline" count={3} onClear={() => setLog("cleared")}>
           <Button type="button" size="sm" variant="secondary" onClick={() => setLog("edit")}>
@@ -112,15 +115,18 @@ const SIGNALS = ["Sprung", "Rampe", "Sinus", "Sweep", "Bewegung"].map((v) => ({ 
 function ToggleGroupOverflow() {
   const [signal, setSignal] = useState("Bewegung");
   return (
-    <Example label="ToggleGroup — overflow, when the options do not fit" hint={'`overflow="truncate"` (default) or `"wrap"`'}>
+    <Example
+      label="ToggleGroup — overflow, when the options do not fit"
+      hint={'`overflow="truncate"` (default) or `"wrap"`'}
+    >
       <div className="max-w-xs space-y-3">
         <ToggleGroup aria-label="Signal (truncate)" options={SIGNALS} value={signal} onChange={setSignal} />
         <ToggleGroup aria-label="Signal (wrap)" options={SIGNALS} value={signal} onChange={setSignal} overflow="wrap" />
       </div>
       <Note>
         In a narrow column the default keeps one row and ends the labels that do not fit in an ellipsis
-        (&ldquo;Beweg…&rdquo;); <code>overflow=&quot;wrap&quot;</code> lets the segments flow onto a second row
-        and every label stays whole. Where the options fit, the two look the same.
+        (&ldquo;Beweg…&rdquo;); <code>overflow=&quot;wrap&quot;</code> lets the segments flow onto a second row and
+        every label stays whole. Where the options fit, the two look the same.
       </Note>
     </Example>
   );

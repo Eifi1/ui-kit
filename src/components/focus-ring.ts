@@ -9,8 +9,7 @@
  * card — write `focus-visible:after:ring-focus` or `has-[:focus-visible]:outline-focus`
  * rather than spelling the width out.
  */
-export const FOCUS_RING =
-  "focus-visible:outline-none focus-visible:ring-focus focus-visible:ring-brand";
+export const FOCUS_RING = "focus-visible:outline-none focus-visible:ring-focus focus-visible:ring-brand";
 
 /** Just the width of {@link FOCUS_RING}, for a ring in another colour (a danger control's,
  *  `--brand-contrast` on a filled button): `cn(FOCUS_RING_WIDTH, "focus-visible:ring-brand-contrast")`. */

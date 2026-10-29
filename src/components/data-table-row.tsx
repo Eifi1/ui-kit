@@ -397,23 +397,22 @@ export const DataTableRow = memo(DataTableRowImpl, sameProps) as <T>(
 
 // ---------- Phone card ----------
 
-export interface DataTableMobileRowProps<T>
-  extends Pick<
-    MobileRowProps<T>,
-    | "row"
-    | "opensRow"
-    | "mobileDir"
-    | "mobileCardLinkable"
-    | "mobileCardStretched"
-    | "mobileCard"
-    | "mobilePrimaryCol"
-    | "mobileStatusColumns"
-    | "mobileSecondaryColumns"
-    | "mobileActionColumns"
-    | "mobileExpandAsDialog"
-    | "compact"
-    | "large"
-  > {
+export interface DataTableMobileRowProps<T> extends Pick<
+  MobileRowProps<T>,
+  | "row"
+  | "opensRow"
+  | "mobileDir"
+  | "mobileCardLinkable"
+  | "mobileCardStretched"
+  | "mobileCard"
+  | "mobilePrimaryCol"
+  | "mobileStatusColumns"
+  | "mobileSecondaryColumns"
+  | "mobileActionColumns"
+  | "mobileExpandAsDialog"
+  | "compact"
+  | "large"
+> {
   ctx: RefObject<DataTableRowCtx<T>>;
   rowKey: string | number;
   expanded: boolean;

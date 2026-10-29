@@ -34,7 +34,9 @@ export function DateRange023Demo() {
               monthJump={jump}
               clearable
               hint="1 July to 30 June."
-              error={period.from && period.to && period.to <= period.from ? "The end must be after the start." : undefined}
+              error={
+                period.from && period.to && period.to <= period.from ? "The end must be after the start." : undefined
+              }
               from={period.from}
               to={period.to}
               onChange={(from, to) => setPeriod({ from, to })}
@@ -71,8 +73,8 @@ export function DateRange023Demo() {
         <Note>
           No two-month panel ({code("months={2}")}): for a twelve-month period it still pages six times where the jump
           takes two steps, and two calendars side by side each follow the value on their own — picking the end in the
-          right-hand month pulls the left one onto it — which the calendar would have to learn first. For a range
-          across one month boundary the single month and one arrow press stay as quick.
+          right-hand month pulls the left one onto it — which the calendar would have to learn first. For a range across
+          one month boundary the single month and one arrow press stay as quick.
         </Note>
       </Example>
     </>

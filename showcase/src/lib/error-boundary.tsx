@@ -11,10 +11,7 @@ import type { ErrorInfo, ReactNode } from "react";
  * prints the message is strictly more informative — and in the render test it is
  * the difference between "Combobox is broken" and "the page is broken".
  */
-export class SectionBoundary extends Component<
-  { title: string; children: ReactNode },
-  { error: Error | null }
-> {
+export class SectionBoundary extends Component<{ title: string; children: ReactNode }, { error: Error | null }> {
   state: { error: Error | null } = { error: null };
 
   static getDerivedStateFromError(error: Error) {
@@ -39,12 +36,8 @@ export class SectionBoundary extends Component<
           data-section-error={this.props.title}
           className="rounded-lg border border-[var(--money-expense)] bg-surface-2 p-4"
         >
-          <p className="text-sm font-semibold text-primary">
-            {this.props.title} failed to render
-          </p>
-          <pre className="mt-2 overflow-x-auto font-mono text-xs text-secondary">
-            {this.state.error.message}
-          </pre>
+          <p className="text-sm font-semibold text-primary">{this.props.title} failed to render</p>
+          <pre className="mt-2 overflow-x-auto font-mono text-xs text-secondary">{this.state.error.message}</pre>
         </div>
       );
     }

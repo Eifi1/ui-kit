@@ -30,8 +30,7 @@ const AVATAR_SIZES = {
   lg: "size-12 text-base",
 } as const;
 
-const CHIP =
-  "inline-flex shrink-0 items-center justify-center rounded-full bg-inverse font-semibold text-inverse";
+const CHIP = "inline-flex shrink-0 items-center justify-center rounded-full bg-inverse font-semibold text-inverse";
 
 /** The dot grows with the avatar: 8px on `sm`, 10px on `md` (keksdose's), 12px on `lg`. */
 const BADGE_SIZES: Record<keyof typeof AVATAR_SIZES, StatusDotSize> = { sm: "sm", md: "md", lg: "lg" };
@@ -90,22 +89,10 @@ export function UserAvatar({ name, email, person, size = "md", badge, className,
     // also contains the sr-only text.
     return (
       <span {...rest} className="relative inline-flex shrink-0">
-        <span
-          aria-hidden
-          className={cn(
-            CHIP,
-            AVATAR_SIZES[size],
-            className,
-          )}
-        >
+        <span aria-hidden className={cn(CHIP, AVATAR_SIZES[size], className)}>
           {initials}
         </span>
-        <StatusDot
-          ring
-          tone={badge.tone ?? "danger"}
-          size={BADGE_SIZES[size]}
-          className="absolute -end-0.5 -top-0.5"
-        />
+        <StatusDot ring tone={badge.tone ?? "danger"} size={BADGE_SIZES[size]} className="absolute -end-0.5 -top-0.5" />
         <span className="sr-only">{badge.label}</span>
       </span>
     );
@@ -121,11 +108,7 @@ export function UserAvatar({ name, email, person, size = "md", badge, className,
       // `aria-label` arrives through `...rest` and wins.
       aria-hidden
       {...rest}
-      className={cn(
-        CHIP,
-        AVATAR_SIZES[size],
-        className,
-      )}
+      className={cn(CHIP, AVATAR_SIZES[size], className)}
     >
       {initials}
     </span>

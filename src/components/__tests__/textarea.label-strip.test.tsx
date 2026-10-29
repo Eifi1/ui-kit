@@ -64,11 +64,7 @@ describe("Textarea label strip (Kurvenschmiede, 0.24)", () => {
     // so a change to the field's surface cannot leave the strip on the old one.
     const surfaces = [...field.classList].filter((k) => /^(?:[^:]+:)?bg-/.test(k));
     expect(surfaces).toEqual(
-      expect.arrayContaining([
-        "bg-surface",
-        "disabled:bg-surface-2",
-        "[&[readonly]]:bg-surface-2",
-      ]),
+      expect.arrayContaining(["bg-surface", "disabled:bg-surface-2", "[&[readonly]]:bg-surface-2"]),
     );
     const twin = (k: string) =>
       k.startsWith("disabled:")
@@ -91,7 +87,9 @@ describe("Textarea label strip (Kurvenschmiede, 0.24)", () => {
   });
 
   it("keeps the hint '?' on the label line, painted over the strip", () => {
-    render(<Textarea label="Paste a table" hint={<FieldHint label="Semicolon or tab separated." />} defaultValue="x" />);
+    render(
+      <Textarea label="Paste a table" hint={<FieldHint label="Semicolon or tab separated." />} defaultValue="x" />,
+    );
     const field = screen.getByRole("textbox", { name: "Paste a table" });
     const hint = screen.getByRole("button", { name: "Semicolon or tab separated." });
     expect(field.nextElementSibling).toBe(strip());
@@ -116,9 +114,7 @@ describe("Textarea label strip (Kurvenschmiede, 0.24)", () => {
   });
 
   it("keeps showCount, rows and the caller's class where they were", () => {
-    render(
-      <Textarea label="Notes" rows={7} maxLength={80} showCount className="font-mono" defaultValue="abc" />,
-    );
+    render(<Textarea label="Notes" rows={7} maxLength={80} showCount className="font-mono" defaultValue="abc" />);
     const field = screen.getByRole("textbox", { name: "Notes" });
     expect(field).toHaveAttribute("rows", "7");
     // className on the wrapper (as before), which is the strip's containing block.

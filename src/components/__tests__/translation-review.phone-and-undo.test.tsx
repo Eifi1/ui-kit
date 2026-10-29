@@ -96,7 +96,11 @@ const card = (text: string) => screen.getAllByText(text)[0].closest("li") as HTM
 /** The card's keyboard path: SwipeableRow's buttons, one per swipe. */
 const swipeButtons = (text: string) => {
   const group = within(card(text)).queryByRole("group", { name: "Row actions" });
-  return group ? within(group).getAllByRole("button").map((b) => b.textContent) : [];
+  return group
+    ? within(group)
+        .getAllByRole("button")
+        .map((b) => b.textContent)
+    : [];
 };
 /** The sliding part of a card — the one that takes the pointer. */
 const slider = (text: string) => screen.getAllByText(text)[0].closest<HTMLElement>('[style*="pan-y"]')!;
@@ -162,7 +166,10 @@ describe("TranslationReviewPanel swipe (phone)", () => {
     expect(options.description).toBe("common.cancel");
     act(() => options.onUndo());
     await waitFor(() =>
-      expect(onClear).toHaveBeenCalledWith([{ locale: "fr", key: "common.cancel" }], { origin: "undo", toasted: false }),
+      expect(onClear).toHaveBeenCalledWith([{ locale: "fr", key: "common.cancel" }], {
+        origin: "undo",
+        toasted: false,
+      }),
     );
   });
 
@@ -294,7 +301,9 @@ describe("TranslationReviewPanel swipe (phone)", () => {
   it("reports an approval it cannot take back, without an Undo, when the app has no onClear", async () => {
     setup({ swipe: true, onClear: undefined });
     drag("Annuler", 150);
-    await waitFor(() => expect(successMock()).toHaveBeenCalledWith("String approved", { description: "common.cancel" }));
+    await waitFor(() =>
+      expect(successMock()).toHaveBeenCalledWith("String approved", { description: "common.cancel" }),
+    );
     expect(undoMock()).not.toHaveBeenCalled();
   });
 });
@@ -336,7 +345,9 @@ describe("TranslationReviewPanel groupBy", () => {
     ]);
     // One table per area, named by it.
     expect(screen.getByRole("table", { name: "common" })).toBeInTheDocument();
-    expect(within(screen.getByRole("table", { name: "legal" })).getByText("Conditions d’utilisation")).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("table", { name: "legal" })).getByText("Conditions d’utilisation"),
+    ).toBeInTheDocument();
   });
 
   it("approves an area's unreviewed rows in one write, with one Undo for the batch", async () => {
@@ -426,9 +437,17 @@ describe("TranslationReviewPanel groupBy", () => {
   it("pages each area on its own", () => {
     setup({ groupBy: "namespace", pageSize: 2 });
     const common = screen.getByRole("table", { name: "common" });
-    expect(within(common).getAllByRole("row").filter((r) => r.closest("tbody"))).toHaveLength(2);
+    expect(
+      within(common)
+        .getAllByRole("row")
+        .filter((r) => r.closest("tbody")),
+    ).toHaveLength(2);
     const legal = screen.getByRole("table", { name: "legal" });
-    expect(within(legal).getAllByRole("row").filter((r) => r.closest("tbody"))).toHaveLength(1);
+    expect(
+      within(legal)
+        .getAllByRole("row")
+        .filter((r) => r.closest("tbody")),
+    ).toHaveLength(1);
   });
 
   it("names a source group by sourceLabels, or by groupLabel", () => {

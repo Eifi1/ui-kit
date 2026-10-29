@@ -106,7 +106,9 @@ describe("FeedbackReplyTimeline — an admin reply's file (§12)", () => {
   });
 
   it("still takes the app's own renderAttachment", () => {
-    render(<FeedbackReplyTimeline replies={[reply({ attachment_url: PNG })]} renderAttachment={(url) => <i>{url}</i>} />);
+    render(
+      <FeedbackReplyTimeline replies={[reply({ attachment_url: PNG })]} renderAttachment={(url) => <i>{url}</i>} />,
+    );
     expect(screen.getByText(PNG)).toBeInTheDocument();
   });
 });
@@ -121,7 +123,12 @@ describe("FeedbackReplyComposer — one file, as the rework note (§12)", () => 
     const onUpload = vi.fn(async () => PNG);
     const onReply = vi.fn(async () => {});
     const { container } = render(
-      <FeedbackReplyComposer status="DONE" onReply={onReply} onUpload={onUpload} onCaptureScreenshot={async () => null} />,
+      <FeedbackReplyComposer
+        status="DONE"
+        onReply={onReply}
+        onUpload={onUpload}
+        onCaptureScreenshot={async () => null}
+      />,
     );
     const input = container.querySelector('input[type="file"]') as HTMLInputElement;
     expect(input).not.toHaveAttribute("multiple");
@@ -189,7 +196,13 @@ describe("FeedbackCommentThread — a comment's file (§12)", () => {
 
   it("draws an admin reply's file in the conversation", () => {
     const { container } = wrap(
-      <FeedbackCommentThread now={NOW} isAdmin={false} fetcher={blobFetcher()} replies={[reply({ attachment_url: PDF })]} comments={[]} />,
+      <FeedbackCommentThread
+        now={NOW}
+        isAdmin={false}
+        fetcher={blobFetcher()}
+        replies={[reply({ attachment_url: PDF })]}
+        comments={[]}
+      />,
     );
     expect(container.querySelector(`[data-feedback-entry-file="${PDF}"]`)).not.toBeNull();
   });
@@ -232,7 +245,10 @@ describe("FeedbackRowDetail and FeedbackPublicDetail (§12)", () => {
     resolved_at: null,
     created_at: "2026-10-21T09:00:00Z",
     updated_at: "2026-10-21T09:00:00Z",
-    replies: [reply({ attachment_url: PDF }), reply({ id: 2, kind: "rework", author_name: "Ada", attachment_url: PNG })],
+    replies: [
+      reply({ attachment_url: PDF }),
+      reply({ id: 2, kind: "rework", author_name: "Ada", attachment_url: PNG }),
+    ],
     ...over,
   });
   const landing = () =>

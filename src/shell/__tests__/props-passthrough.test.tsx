@@ -31,8 +31,7 @@ function anchored(): HTMLElement {
 }
 
 describe("TopBar", () => {
-  const bar = () =>
-    render(<TopBar brand={<span>Brand</span>} data-tour={ANCHOR} aria-label={NAME} />);
+  const bar = () => render(<TopBar brand={<span>Brand</span>} data-tour={ANCHOR} aria-label={NAME} />);
 
   it("passes an unknown data-* attribute through to its root element", () => {
     bar();

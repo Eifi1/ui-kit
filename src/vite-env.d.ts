@@ -19,8 +19,5 @@ interface ImportMeta {
    * prop, which is the kind of guard the consumer app writes with `readFileSync`
    * and cannot be written that way here.
    */
-  glob<T = unknown>(
-    pattern: string,
-    options?: { query?: string; import?: string; eager?: boolean },
-  ): Record<string, T>;
+  glob<T = unknown>(pattern: string, options?: { query?: string; import?: string; eager?: boolean }): Record<string, T>;
 }

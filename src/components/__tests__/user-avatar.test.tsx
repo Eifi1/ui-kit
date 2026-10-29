@@ -73,7 +73,13 @@ describe("UserAvatar badge", () => {
 
   it("keeps className on the circle and the other attributes on the wrapper", () => {
     const { container } = render(
-      <UserAvatar name="Marcel Eifert" size="lg" className="size-10" data-testid="av" badge={{ label: "Online", tone: "success" }} />,
+      <UserAvatar
+        name="Marcel Eifert"
+        size="lg"
+        className="size-10"
+        data-testid="av"
+        badge={{ label: "Online", tone: "success" }}
+      />,
     );
     const wrapper = screen.getByTestId("av");
     expect(wrapper).toBe(container.firstChild);

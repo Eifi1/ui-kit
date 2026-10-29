@@ -26,7 +26,10 @@ export function foldForSearch(text: string, locale?: string): string {
   } catch {
     lower = text.toLocaleLowerCase();
   }
-  return lower.normalize("NFD").replace(/\p{M}+/gu, "").replace(/ß/g, "ss");
+  return lower
+    .normalize("NFD")
+    .replace(/\p{M}+/gu, "")
+    .replace(/ß/g, "ss");
 }
 
 /**
@@ -34,7 +37,9 @@ export function foldForSearch(text: string, locale?: string): string {
  * "Migros  Zürich" → `["migros", "zurich"]`. An empty or blank query has no words.
  */
 export function searchWords(query: string, locale?: string): string[] {
-  return foldForSearch(query, locale).split(/\s+/).filter((word) => word !== "");
+  return foldForSearch(query, locale)
+    .split(/\s+/)
+    .filter((word) => word !== "");
 }
 
 /**
@@ -55,7 +60,10 @@ export function matchesSearch(
   if (words.length === 0) return true;
   // One haystack per row; a word holds no whitespace, so it cannot match across the
   // newline between two texts.
-  const hay = texts.filter((t): t is string => t !== undefined).map((t) => foldForSearch(t, locale)).join("\n");
+  const hay = texts
+    .filter((t): t is string => t !== undefined)
+    .map((t) => foldForSearch(t, locale))
+    .join("\n");
   return words.every((word) => hay.includes(word));
 }
 

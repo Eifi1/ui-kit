@@ -226,14 +226,8 @@ export function StepperNav<TData extends Record<string, unknown>>({
     <div className={cn("flex flex-col gap-6", className)}>
       {(title || description) && (
         <div>
-          {title && (
-            <h1 className="text-2xl font-bold tracking-tight text-primary">
-              {title}
-            </h1>
-          )}
-          {description && (
-            <p className="mt-1 text-sm text-muted">{description}</p>
-          )}
+          {title && <h1 className="text-2xl font-bold tracking-tight text-primary">{title}</h1>}
+          {description && <p className="mt-1 text-sm text-muted">{description}</p>}
         </div>
       )}
 
@@ -262,14 +256,10 @@ export function StepperNav<TData extends Record<string, unknown>>({
                   <span
                     className={cn(
                       "flex size-8 shrink-0 items-center justify-center rounded-full border-2 text-xs font-semibold transition-colors",
-                      status === "completed" &&
-                        "border-brand bg-brand text-brand-contrast",
-                      status === "active" &&
-                        "border-brand bg-surface text-brand",
-                      status === "upcoming" &&
-                        "border-subtle bg-surface text-placeholder",
-                      status === "skipped" &&
-                        "border-subtle bg-surface-2 text-muted",
+                      status === "completed" && "border-brand bg-brand text-brand-contrast",
+                      status === "active" && "border-brand bg-surface text-brand",
+                      status === "upcoming" && "border-subtle bg-surface text-placeholder",
+                      status === "skipped" && "border-subtle bg-surface-2 text-muted",
                     )}
                   >
                     {status === "completed" ? <Check className="size-4" /> : index + 1}
@@ -278,9 +268,7 @@ export function StepperNav<TData extends Record<string, unknown>>({
                   <span
                     className={cn(
                       "hidden text-xs font-medium md:block",
-                      status === "active" || status === "completed"
-                        ? "text-primary"
-                        : "text-muted",
+                      status === "active" || status === "completed" ? "text-primary" : "text-muted",
                     )}
                   >
                     {step.label}
@@ -290,10 +278,7 @@ export function StepperNav<TData extends Record<string, unknown>>({
                 {/* Connector line */}
                 {!isLast && (
                   <div
-                    className={cn(
-                      "mx-2 h-0.5 flex-1",
-                      status === "completed" ? "bg-brand" : "bg-[var(--border)]",
-                    )}
+                    className={cn("mx-2 h-0.5 flex-1", status === "completed" ? "bg-brand" : "bg-[var(--border)]")}
                   />
                 )}
               </li>
@@ -317,13 +302,7 @@ export function StepperNav<TData extends Record<string, unknown>>({
 
       {/* Submit error */}
       {wizard.error && (
-        <div
-          role="alert"
-          className={cn(
-            "text-sm text-danger",
-            alertFrameClass("danger"),
-          )}
-        >
+        <div role="alert" className={cn("text-sm text-danger", alertFrameClass("danger"))}>
           {wizard.error}
         </div>
       )}
@@ -347,11 +326,7 @@ export function StepperNav<TData extends Record<string, unknown>>({
             </Button>
           )}
           {wizard.currentStep.optional && !wizard.isLastStep && !wizard.isCommitStep && (
-            <Button
-              variant="ghost"
-              onClick={wizard.skip}
-              disabled={wizard.nextBlocked || wizard.isValidating}
-            >
+            <Button variant="ghost" onClick={wizard.skip} disabled={wizard.nextBlocked || wizard.isValidating}>
               {l.skip}
             </Button>
           )}

@@ -37,7 +37,11 @@ describe("syncState — keksdose's ranking", () => {
 describe("SyncStatusIndicator", () => {
   it("in sync: the ✓ badge, the success role and the last time", () => {
     const { container } = render(
-      <SyncStatusIndicator status={{ ...IDLE, lastSyncedAt: new Date(2026, 9, 17, 14, 5) }} onSync={() => {}} locale="de-CH" />,
+      <SyncStatusIndicator
+        status={{ ...IDLE, lastSyncedAt: new Date(2026, 9, 17, 14, 5) }}
+        onSync={() => {}}
+        locale="de-CH"
+      />,
     );
     const button = screen.getByRole("button");
     expect(button).toHaveAccessibleName("Synced at 14:05 — Tap to sync now");
@@ -64,7 +68,12 @@ describe("SyncStatusIndicator", () => {
   });
 
   it("uses the kit's tokens, never a raw palette colour", () => {
-    for (const status of [{ ...IDLE, blocked: 1 }, { ...IDLE, pending: 1 }, { ...IDLE, phase: "syncing" as const }, IDLE]) {
+    for (const status of [
+      { ...IDLE, blocked: 1 },
+      { ...IDLE, pending: 1 },
+      { ...IDLE, phase: "syncing" as const },
+      IDLE,
+    ]) {
       const { container, unmount } = render(<SyncStatusIndicator status={status} onSync={() => {}} />);
       expect(container.innerHTML).not.toMatch(/rose-|amber-|sky-|emerald-/);
       unmount();
@@ -176,14 +185,19 @@ describe('SyncStatusIndicator storage="none" — an online-only app (KS B1)', ()
   });
 
   it("a round reads Saving…, in the name and beside the cloud", () => {
-    const { container } = render(<SyncStatusIndicator status={{ ...IDLE, phase: "syncing" }} storage="none" showLabel />);
+    const { container } = render(
+      <SyncStatusIndicator status={{ ...IDLE, phase: "syncing" }} storage="none" showLabel />,
+    );
     expect(screen.getByRole("status")).toHaveTextContent("Saving…");
     expect(container.querySelector('span[aria-hidden="true"].text-xs')).toHaveTextContent("Saving…");
   });
 
   it("pending, blocked and waitingForPlan don't apply", () => {
     render(
-      <SyncStatusIndicator status={{ ...IDLE, pending: 3, blocked: 1, waitingForPlan: 2, lastSyncedAt: Date.now() }} storage="none" />,
+      <SyncStatusIndicator
+        status={{ ...IDLE, pending: 3, blocked: 1, waitingForPlan: 2, lastSyncedAt: Date.now() }}
+        storage="none"
+      />,
     );
     expect(state()).toBe("synced");
     expect(screen.getByRole("status")).toHaveTextContent("Up to date");

@@ -19,8 +19,7 @@ import type { LabelOverride } from "../i18n/kit-labels";
  * the switch is one line when it comes.
  */
 export type AccessChoice =
-  | { kind: "request"; email: string; app?: string; askCompany?: boolean }
-  | { kind: "register"; href: string };
+  { kind: "request"; email: string; app?: string; askCompany?: boolean } | { kind: "register"; href: string };
 
 /** What {@link accessAction} answers: where the access action goes and what it says. */
 export interface AccessLink {
@@ -88,11 +87,7 @@ export function useAccessAction(access: AccessChoice, labels?: LabelOverride<Lan
   const app = access.kind === "request" ? access.app : undefined;
   const askCompany = access.kind === "request" ? access.askCompany === true : false;
   return useMemo(
-    () =>
-      accessAction(
-        kind === "register" ? { kind, href: target } : { kind, email: target, app, askCompany },
-        words,
-      ),
+    () => accessAction(kind === "register" ? { kind, href: target } : { kind, email: target, app, askCompany }, words),
     [kind, target, app, askCompany, words],
   );
 }

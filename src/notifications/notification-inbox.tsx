@@ -47,8 +47,10 @@ export interface NotificationInboxItem<Id extends string | number = string | num
  *  "Mark all as read", or "Clear all". */
 export type NotificationInboxAction = "read" | "readAll" | "clear";
 
-export interface NotificationInboxProps<Id extends string | number = string | number>
-  extends Omit<ComponentPropsWithRef<"div">, "children" | "title"> {
+export interface NotificationInboxProps<Id extends string | number = string | number> extends Omit<
+  ComponentPropsWithRef<"div">,
+  "children" | "title"
+> {
   /** The rows, newest first; `undefined` while the first page loads. */
   items: readonly NotificationInboxItem<Id>[] | undefined;
   /** Every unread row of the account (`unread_count`), not only this page's. */
@@ -242,7 +244,11 @@ export function NotificationInbox<Id extends string | number = string | number>(
   } else {
     body = (
       // Named by the heading — except while "Clear all" asks, when the heading is away.
-      <List className="p-1" aria-labelledby={asking ? undefined : headingId} aria-label={asking ? labels.inboxTitle : undefined}>
+      <List
+        className="p-1"
+        aria-labelledby={asking ? undefined : headingId}
+        aria-label={asking ? labels.inboxTitle : undefined}
+      >
         {items.map((item) => {
           const row = {
             title: item.title,
@@ -288,7 +294,14 @@ export function NotificationInbox<Id extends string | number = string | number>(
         })}
         {hasMore && onLoadMore && (
           <li className="px-2 py-1">
-            <Button type="button" size="sm" variant="ghost" pending={loadingMore} onClick={onLoadMore} className="w-full">
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              pending={loadingMore}
+              onClick={onLoadMore}
+              className="w-full"
+            >
               {labels.showMore}
             </Button>
           </li>

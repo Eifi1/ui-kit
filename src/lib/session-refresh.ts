@@ -110,10 +110,7 @@ export interface SessionRefreshOptions<R extends SessionRenewal> {
  * | `"changed"` | the session changed while it ran | nothing; read the app's own state |
  */
 export type SessionRefreshOutcome<R extends SessionRenewal = SessionRenewal> =
-  | { result: "renewed"; renewal: R }
-  | { result: "ended" }
-  | { result: "transient" }
-  | { result: "changed" };
+  { result: "renewed"; renewal: R } | { result: "ended" } | { result: "transient" } | { result: "changed" };
 
 /** The flight {@link createSessionRefresh} makes; {@link attachSessionRefresh} hooks it
  *  to an axios instance. */
@@ -339,8 +336,10 @@ interface SessionRefreshAxiosConfig extends ServerWakeAxiosConfig {
  *  the replay. `axios.create()`'s result fits it as is. `NoInfer`, because axios's
  *  `request` takes the WIDER `AxiosRequestConfig`: inferred from there, the config type
  *  no longer fits the interceptors, which hand out `InternalAxiosRequestConfig`. */
-interface SessionRefreshInstance<C extends SessionRefreshAxiosConfig, R extends { config: C }>
-  extends AxiosLikeInstance<C, R> {
+interface SessionRefreshInstance<
+  C extends SessionRefreshAxiosConfig,
+  R extends { config: C },
+> extends AxiosLikeInstance<C, R> {
   request(config: NoInfer<C>): Promise<unknown>;
 }
 

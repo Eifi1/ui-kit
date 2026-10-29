@@ -43,7 +43,11 @@ const sourceModules = (dir, out = []) => {
     if (entry.isDirectory()) {
       if (entry.name !== "__tests__" && path !== join("src", "test")) sourceModules(path, out);
     } else if (/\.tsx?$/.test(entry.name) && !entry.name.endsWith(".d.ts") && !/\.test\./.test(entry.name)) {
-      out.push(relative("src", path).replace(/\\/g, "/").replace(/\.tsx?$/, ""));
+      out.push(
+        relative("src", path)
+          .replace(/\\/g, "/")
+          .replace(/\.tsx?$/, ""),
+      );
     }
   }
   return out;
@@ -51,7 +55,9 @@ const sourceModules = (dir, out = []) => {
 const sources = sourceModules("src");
 const unbuilt = sources.filter((id) => !existsSync(join("dist", `${id}.js`)));
 if (unbuilt.length) {
-  fail(`${unbuilt.length} of ${sources.length} source modules have no dist/ module of their own: ${unbuilt.slice(0, 5).join(", ")}`);
+  fail(
+    `${unbuilt.length} of ${sources.length} source modules have no dist/ module of their own: ${unbuilt.slice(0, 5).join(", ")}`,
+  );
 }
 const files = sources.length;
 
@@ -92,14 +98,18 @@ for (const name of catalogues) {
   const walk = (file) => {
     if (reached.has(file)) return;
     reached.add(file);
-    const bare = [...readFileSync(file, "utf8").matchAll(/(?:\bfrom\s*|\bimport\s*\(?\s*)"([^".][^"]*)"/g)].map((m) => m[1]);
-    if (bare.length) fail(`${PUSH_WORKER} reaches ${file}, which imports ${bare.join(", ")} — a worker entry imports no package`);
+    const bare = [...readFileSync(file, "utf8").matchAll(/(?:\bfrom\s*|\bimport\s*\(?\s*)"([^".][^"]*)"/g)].map(
+      (m) => m[1],
+    );
+    if (bare.length)
+      fail(`${PUSH_WORKER} reaches ${file}, which imports ${bare.join(", ")} — a worker entry imports no package`);
     for (const next of staticImports(file)) walk(next);
   };
   walk(PUSH_WORKER);
   const allowed = new Set([PUSH_WORKER, join("dist", "notifications", "push-worker.js")]);
   const extra = [...reached].filter((file) => !allowed.has(file));
-  if (extra.length) fail(`${PUSH_WORKER} reaches ${extra.join(", ")} — only notifications/push-worker.js may come with it`);
+  if (extra.length)
+    fail(`${PUSH_WORKER} reaches ${extra.join(", ")} — only notifications/push-worker.js may come with it`);
 }
 
 // No runtime import cycle among the modules: static imports only, since a type import is
@@ -199,7 +209,13 @@ async function importCost(names) {
   const source = `export { ${names.join(", ")} } from ${JSON.stringify(resolve("dist/index.js"))};`;
   const bundle = await rollup({
     input: ENTRY,
-    plugins: [{ name: "import-cost", resolveId: (id) => (id === ENTRY ? id : null), load: (id) => (id === ENTRY ? source : null) }],
+    plugins: [
+      {
+        name: "import-cost",
+        resolveId: (id) => (id === ENTRY ? id : null),
+        load: (id) => (id === ENTRY ? source : null),
+      },
+    ],
     external: (id) => id !== ENTRY && !id.startsWith(".") && !isAbsolute(id),
     treeshake: { moduleSideEffects: false },
     // The per-module "use client" banners, which Rollup reports as it drops them.
@@ -236,7 +252,8 @@ const size = (bytes) => (bytes < 1000 ? `${bytes} B` : `${(bytes / 1000).toFixed
 const costs = [];
 for (const { label, names, max } of BUDGETS) {
   const { min, gzip, packages } = await importCost(names);
-  if (packages.includes("recharts")) fail(`${label} reaches recharts — only the chart kit may (packaging-contract.test.ts)`);
+  if (packages.includes("recharts"))
+    fail(`${label} reaches recharts — only the chart kit may (packaging-contract.test.ts)`);
   if (min > max) {
     fail(
       `${label} costs ${min} B minified (${gzip} B gzip), over its ceiling of ${max} B. Something it ` +

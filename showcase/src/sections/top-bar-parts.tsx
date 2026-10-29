@@ -119,7 +119,9 @@ function Bar({ signedIn }: { signedIn: boolean }) {
             theme={<ThemeToggle mode={theme} onChange={setTheme} />}
             feedback={signedIn ? icon("Send feedback", <MessageSquare className="size-5" />) : undefined}
             tours={<TourMenu tours={TOURS} href="/tours" onLaunch={(id) => setLog(`launch → ${id}`)} />}
-            sync={signedIn ? <SyncStatusIndicator status={SYNC_STATES.pending} onSync={() => setLog("sync now")} /> : null}
+            sync={
+              signedIn ? <SyncStatusIndicator status={SYNC_STATES.pending} onSync={() => setLog("sync now")} /> : null
+            }
             dev={
               signedIn ? (
                 <DevMenu
@@ -208,15 +210,12 @@ export function TopBar042Demo() {
             <Bar key={String(signedIn)} signedIn={signedIn} />
           </Frame>
           <Note>
-            The slots are named, so the order cannot drift between apps (§2.1). A slot left
-            empty draws nothing, so it leaves no gap. Without {code("account")} the bar
-            draws {code("language")} and {code("signIn")} where the account menu would be
-            (§6.6). Signed in, the language is the first row of the account menu, and
-            {" "}{code("AccountMenuTextSize")}'s A− / A+ beside it step the text size without
-            closing the menu (here the demo's own, an app passes its
-            {" "}{code("pickTextSize")}).
-            {" "}{code("ThemeToggle")}'s {code("onChange")} hands over the opposite of the
-            mode on screen, for the app to store as its preference.
+            The slots are named, so the order cannot drift between apps (§2.1). A slot left empty draws nothing, so it
+            leaves no gap. Without {code("account")} the bar draws {code("language")} and {code("signIn")} where the
+            account menu would be (§6.6). Signed in, the language is the first row of the account menu, and{" "}
+            {code("AccountMenuTextSize")}'s A− / A+ beside it step the text size without closing the menu (here the
+            demo's own, an app passes its {code("pickTextSize")}). {code("ThemeToggle")}'s {code("onChange")} hands over
+            the opposite of the mode on screen, for the app to store as its preference.
           </Note>
         </div>
       </Example>
@@ -261,7 +260,12 @@ function DevTools() {
       entries: [
         ...TODAY_PRESETS.map((t) => ({ key: t, label: t, checked: t === today, onSelect: () => setToday(t) })),
         // A free day is a row that opens the app's own dialog: a menu holds no fields.
-        { key: "custom", label: custom ? `Custom… (${today})` : "Custom…", checked: custom, onSelect: () => setPicking(true) },
+        {
+          key: "custom",
+          label: custom ? `Custom… (${today})` : "Custom…",
+          checked: custom,
+          onSelect: () => setPicking(true),
+        },
       ],
     },
     {
@@ -322,16 +326,14 @@ function DevTools() {
           </Row>
         </Modal>
         <Note>
-          One flask. First the kit's Account section: the role, with "Back to …" once it
-          differs from the session's first, and the plan, which says so while billing is off
-          ({code("billingOff")}). Then the app's {code("sections")}, each a group under its
-          title, in the order given. Their rows are the menu's own: a choice is radio rows, a
-          toggle a {code('checkable: "checkbox"')} row, an action a plain row. A free day is
-          the "Custom…" row, which opens the app's dialog — a menu holds no fields. Pick a day
-          other than "Real today" and {code("active")} puts a dot on the flask; its words,
-          "Overrides on", join the trigger's name. The panel scrolls when its rows outgrow
-          the screen. In an app it renders only in a dev build whose server answers the dev
-          route, and the sections are defined in a module only a dev build imports.
+          One flask. First the kit's Account section: the role, with "Back to …" once it differs from the session's
+          first, and the plan, which says so while billing is off ({code("billingOff")}). Then the app's{" "}
+          {code("sections")}, each a group under its title, in the order given. Their rows are the menu's own: a choice
+          is radio rows, a toggle a {code('checkable: "checkbox"')} row, an action a plain row. A free day is the
+          "Custom…" row, which opens the app's dialog — a menu holds no fields. Pick a day other than "Real today" and{" "}
+          {code("active")} puts a dot on the flask; its words, "Overrides on", join the trigger's name. The panel
+          scrolls when its rows outgrow the screen. In an app it renders only in a dev build whose server answers the
+          dev route, and the sections are defined in a module only a dev build imports.
         </Note>
       </div>
     </Example>
@@ -343,7 +345,10 @@ function DevTools() {
 function SyncStates() {
   const [taps, setTaps] = useState(0);
   return (
-    <Example label="SyncStatusIndicator — the seven states" hint="ranked: blocked, plan, offline, error, syncing, pending, synced">
+    <Example
+      label="SyncStatusIndicator — the seven states"
+      hint="ranked: blocked, plan, offline, error, syncing, pending, synced"
+    >
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-4">
           {Object.entries(SYNC_STATES).map(([name, status]) => (
@@ -368,11 +373,9 @@ function SyncStates() {
           <span className={READOUT}>taps: {taps}</span>
         </div>
         <Note>
-          With {code("onSync")} it is a "sync now" button, disabled offline and mid-round but
-          keeping its colour; without it, a status (§6.9). The second row is a
-          status only, {code("hideWhenIdle")} (the third one, in sync, draws nothing), the
-          short words beside the cloud, and the {code("scope")} words in the tooltip
-          (§6.10).
+          With {code("onSync")} it is a "sync now" button, disabled offline and mid-round but keeping its colour;
+          without it, a status (§6.9). The second row is a status only, {code("hideWhenIdle")} (the third one, in sync,
+          draws nothing), the short words beside the cloud, and the {code("scope")} words in the tooltip (§6.10).
         </Note>
       </div>
     </Example>
@@ -399,10 +402,9 @@ function Tours() {
         </Frame>
         <p className={READOUT}>{log}</p>
         <Note>
-          The tours are data — id, title, route, new, taken — and {code("onLaunch")} starts
-          one with the kit's {code("TourProvider")}, so the menu needs no registry. The list:
-          the tours that start on this page, up to three new ones, a rule and "All tours…".
-          Without {code("href")} (§6.7) the compass opens the menu and the
+          The tours are data — id, title, route, new, taken — and {code("onLaunch")} starts one with the kit's{" "}
+          {code("TourProvider")}, so the menu needs no registry. The list: the tours that start on this page, up to
+          three new ones, a rule and "All tours…". Without {code("href")} (§6.7) the compass opens the menu and the
           remaining tours follow the rule.
         </Note>
       </div>

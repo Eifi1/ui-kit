@@ -238,7 +238,7 @@ describe("useTourProgress", () => {
     expect(menu.result.current.completed).toEqual({});
   });
 
-  it("one written form: a completion without a date is stored as \"\" and read as null (§9.6.6)", () => {
+  it('one written form: a completion without a date is stored as "" and read as null (§9.6.6)', () => {
     const storageKey = freshKey();
     localStorage.setItem(storageKey, JSON.stringify({ a: null }));
     const { result } = renderHook(() => useTourProgress({ storageKey }));

@@ -88,11 +88,11 @@ export function swipePlanRowActions<T>(
     out.push({
       key,
       label: action.label,
-      icon: isValidElement(action.icon)
-        ? action.icon
-        : action.icon != null && action.icon !== false
-          ? <>{action.icon}</>
-          : undefined,
+      icon: isValidElement(action.icon) ? (
+        action.icon
+      ) : action.icon != null && action.icon !== false ? (
+        <>{action.icon}</>
+      ) : undefined,
       tone: swipeTone(action),
       commit,
       // A swipe commits without the kit asking (the plan's `onCommit` asks, as keksdose's
@@ -123,9 +123,7 @@ function resolveRowAction<T>(
   return {
     key: action.kind ?? `${index}:${action.label ?? ""}`,
     label: action.label ?? (action.kind === "edit" ? labels.edit : action.kind === "delete" ? labels.delete : ""),
-    icon:
-      action.icon ??
-      (action.kind === "edit" ? <Pencil /> : action.kind === "delete" ? <Trash2 /> : null),
+    icon: action.icon ?? (action.kind === "edit" ? <Pencil /> : action.kind === "delete" ? <Trash2 /> : null),
     tone,
     swipe: action.swipe ?? (tone === "danger" ? "start" : "end"),
     action,
@@ -281,21 +279,24 @@ export function useRowActionColumn<T>({
     [actionColumns, swipeColumn],
   );
   // A stable function (0.48.2): the phone cards compare it by identity.
-  const swipesFromActions = useCallback((row: T): MobileSwipeActions | null => {
-    const swipes = rowActionsFor(row).filter((a) => a.swipe && !a.action.disabledReason?.(row));
-    if (!swipes.length) return null;
-    const toSwipe = (a: ResolvedRowAction<T>): SwipeAction => ({
-      label: a.label,
-      icon: a.icon,
-      onCommit: () => void runRowAction(a.action, row),
-      // The row action's tone, painted by SwipeableRow: its soft wash idle, its fill
-      // and that fill's foreground armed (0.33).
-      tone: a.tone === "danger" ? "danger" : "brand",
-    });
-    return {
-      start: swipes.filter((a) => a.swipe === "start").map(toSwipe),
-      end: swipes.filter((a) => a.swipe === "end").map(toSwipe),
-    };
-  }, [rowActionsFor]);
+  const swipesFromActions = useCallback(
+    (row: T): MobileSwipeActions | null => {
+      const swipes = rowActionsFor(row).filter((a) => a.swipe && !a.action.disabledReason?.(row));
+      if (!swipes.length) return null;
+      const toSwipe = (a: ResolvedRowAction<T>): SwipeAction => ({
+        label: a.label,
+        icon: a.icon,
+        onCommit: () => void runRowAction(a.action, row),
+        // The row action's tone, painted by SwipeableRow: its soft wash idle, its fill
+        // and that fill's foreground armed (0.33).
+        tone: a.tone === "danger" ? "danger" : "brand",
+      });
+      return {
+        start: swipes.filter((a) => a.swipe === "start").map(toSwipe),
+        end: swipes.filter((a) => a.swipe === "end").map(toSwipe),
+      };
+    },
+    [rowActionsFor],
+  );
   return { columns, swipesFromActions };
 }

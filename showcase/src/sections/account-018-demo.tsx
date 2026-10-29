@@ -33,10 +33,50 @@ interface Account {
 }
 
 const ACCOUNTS: Account[] = [
-  { id: 1, name: "Marta Keller", email: "marta@example.com", role: "ADMIN", active: true, verified: true, mustChange: false, created: ago(400), lastLogin: ago(0.1) },
-  { id: 2, name: "Jonas Brandt", email: "jonas@example.com", role: "MEMBER", active: true, verified: false, mustChange: false, created: ago(30), lastLogin: ago(3) },
-  { id: 3, name: "Lea Vogt", email: "lea@example.com", role: "CUSTOMER", active: true, verified: true, mustChange: true, created: ago(12), lastLogin: null },
-  { id: 4, name: "Tim Roth", email: "tim@example.com", role: "MEMBER", active: false, verified: true, mustChange: false, created: ago(700), lastLogin: ago(210) },
+  {
+    id: 1,
+    name: "Marta Keller",
+    email: "marta@example.com",
+    role: "ADMIN",
+    active: true,
+    verified: true,
+    mustChange: false,
+    created: ago(400),
+    lastLogin: ago(0.1),
+  },
+  {
+    id: 2,
+    name: "Jonas Brandt",
+    email: "jonas@example.com",
+    role: "MEMBER",
+    active: true,
+    verified: false,
+    mustChange: false,
+    created: ago(30),
+    lastLogin: ago(3),
+  },
+  {
+    id: 3,
+    name: "Lea Vogt",
+    email: "lea@example.com",
+    role: "CUSTOMER",
+    active: true,
+    verified: true,
+    mustChange: true,
+    created: ago(12),
+    lastLogin: null,
+  },
+  {
+    id: 4,
+    name: "Tim Roth",
+    email: "tim@example.com",
+    role: "MEMBER",
+    active: false,
+    verified: true,
+    mustChange: false,
+    created: ago(700),
+    lastLogin: ago(210),
+  },
 ];
 
 const COLUMNS: DataTableColumn<Account>[] = [
@@ -83,7 +123,10 @@ const INVITES = [
 
 export function AccountRoster018Demo() {
   return (
-    <Example label="Admin roster parts — RoleChip, AccountStateChip, dateColumn" hint="the roster stays the app's DataTable">
+    <Example
+      label="Admin roster parts — RoleChip, AccountStateChip, dateColumn"
+      hint="the roster stays the app's DataTable"
+    >
       <DataTable rows={ACCOUNTS} columns={COLUMNS} rowKey={(r) => r.id} />
       <ul className="mt-4 divide-y divide-subtle rounded-md border border-subtle" aria-label="Allowlist">
         {INVITES.map((entry) => (
@@ -100,11 +143,10 @@ export function AccountRoster018Demo() {
       </ul>
       <Note>
         Only the vocabulary is the kit's: {code("RoleChip")} looks the API's role key up in the app's{" "}
-        {code("RoleVocabulary")} (label, tone, icon); {code("AccountStateChip")} says active, inactive,
-        invited, registered, unverified or "must change password" in the kit's words and tones;{" "}
-        {code("dateColumn")} is a sortable date column — {code('display: "relative"')} with the exact
-        time in a tooltip and {code("empty")} for "Never". Columns, actions and who may do what stay
-        the app's.
+        {code("RoleVocabulary")} (label, tone, icon); {code("AccountStateChip")} says active, inactive, invited,
+        registered, unverified or "must change password" in the kit's words and tones; {code("dateColumn")} is a
+        sortable date column — {code('display: "relative"')} with the exact time in a tooltip and {code("empty")} for
+        "Never". Columns, actions and who may do what stay the app's.
       </Note>
     </Example>
   );

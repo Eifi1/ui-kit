@@ -28,13 +28,7 @@ import type { KitLinkComponent, KitLinkProps } from "../i18n/kit-labels";
  *   same look; a development build warns once per name). They are removed in 0.51, and
  *   `primary` will not come back with another meaning.
  */
-export type ButtonVariant =
-  | "default"
-  | "accent"
-  | "secondary"
-  | "ghost"
-  | "danger"
-  | "link";
+export type ButtonVariant = "default" | "accent" | "secondary" | "ghost" | "danger" | "link";
 
 // Shared base ring for every button-styled element. Kept as a named const so the
 // <Button> component and the {@link buttonClasses} helper draw from one source and
@@ -116,10 +110,8 @@ export const buttonVariantClasses: Record<ButtonVariant, string> = {
     "border border-subtle bg-surface-2 text-primary hover:bg-active focus-visible:ring-brand",
   secondary: `border border-subtle bg-transparent text-primary ${HOVER_INK} focus-visible:ring-brand`,
   ghost: `bg-transparent text-primary ${HOVER_INK} focus-visible:ring-brand`,
-  danger:
-    "bg-danger text-danger-contrast hover:bg-danger-hover focus-visible:ring-danger-strong",
-  accent:
-    "bg-brand text-brand-contrast hover:bg-brand-hover focus-visible:ring-brand",
+  danger: "bg-danger text-danger-contrast hover:bg-danger-hover focus-visible:ring-danger-strong",
+  accent: "bg-brand text-brand-contrast hover:bg-brand-hover focus-visible:ring-brand",
   // A text link that is still a `<button>` — keksdose's six hand-rolled
   // `<button className="text-brand underline">` sites ("Resend code", "Show all",
   // "Undo" in a toast…), which act rather than navigate and so must not be anchors.
@@ -132,8 +124,7 @@ export const buttonVariantClasses: Record<ButtonVariant, string> = {
   // colour-roles §13.3 decision 8): `--brand` is solved as a mark (3:1), and on More
   // contrast's darker light well Moss's read 3.68:1; the derived dark brands sit at 3.0
   // as text too. Both modes, since `contrast:` does not split them.
-  link:
-    "rounded-sm p-0 bg-transparent text-brand underline-offset-4 hover:underline focus-visible:ring-brand contrast:text-brand-muted",
+  link: "rounded-sm p-0 bg-transparent text-brand underline-offset-4 hover:underline focus-visible:ring-brand contrast:text-brand-muted",
 };
 
 /**
@@ -168,8 +159,7 @@ export type ButtonTone = "default" | "muted" | "danger";
 // so tailwind-merge drops the link's `contrast:text-brand-muted` (0.36): a quiet link
 // stays quiet under More contrast. On `ghost` it reads the same either way.
 const BUTTON_TONES: Record<Exclude<ButtonTone, "default">, string> = {
-  muted:
-    "text-secondary hover:text-primary disabled:hover:text-secondary contrast:text-secondary",
+  muted: "text-secondary hover:text-primary disabled:hover:text-secondary contrast:text-secondary",
   danger:
     "text-secondary hover:text-danger focus-visible:ring-danger-strong disabled:hover:text-secondary contrast:text-secondary",
 };
@@ -185,8 +175,7 @@ const BUTTON_BOXED_DANGER: Partial<Record<ButtonVariant, string>> = {
   // IconButton's danger tone (0.33). On B′'s translucent ink `--danger` fell to 4.2:1
   // over a light page.
   ghost: "hover:bg-danger-soft",
-  secondary:
-    "border-danger bg-transparent text-danger hover:bg-danger-soft focus-visible:ring-danger-strong",
+  secondary: "border-danger bg-transparent text-danger hover:bg-danger-soft focus-visible:ring-danger-strong",
   default:
     "border-danger bg-danger-soft text-danger hover:border-[var(--danger)] hover:bg-danger hover:text-danger-contrast focus-visible:ring-danger-strong disabled:hover:border-danger disabled:hover:bg-danger-soft disabled:hover:text-danger",
 };

@@ -87,16 +87,15 @@ export function GettingStarted() {
       <Example label="What this is">
         <div className="space-y-3 text-sm text-secondary">
           <p>
-            <strong className="text-primary">@eifi1/ui-kit</strong> is the one
-            component library behind keksdose, kastlan and Kurvenschmiede. It is{" "}
-            <em>domain-free</em>: a component takes its data as props and hands events back as
-            callbacks, and it never fetches, never routes on its own and never picks the
-            language — it renders only labels, ships them in seven languages, and the app
-            decides which. That is why every page here works without a backend.
+            <strong className="text-primary">@eifi1/ui-kit</strong> is the one component library behind keksdose,
+            kastlan and Kurvenschmiede. It is <em>domain-free</em>: a component takes its data as props and hands events
+            back as callbacks, and it never fetches, never routes on its own and never picks the language — it renders
+            only labels, ships them in seven languages, and the app decides which. That is why every page here works
+            without a backend.
           </p>
           <p>
-            This showcase renders the repository&rsquo;s <code className="font-mono">src/</code>{" "}
-            directly, so what you see is the working tree, not the last release.
+            This showcase renders the repository&rsquo;s <code className="font-mono">src/</code> directly, so what you
+            see is the working tree, not the last release.
           </p>
         </div>
       </Example>
@@ -111,10 +110,10 @@ export function GettingStarted() {
           ))}
         </ol>
         <Note>
-          Read top to bottom and each layer only uses the ones above it. Tokens are what every
-          pixel is painted with; inputs, pickers, displays and charts are built from primitives in
-          those tokens; overlays float them above the page; the app chrome composes all of it into
-          a frame; the API layer is what remains when you take the pixels away.
+          Read top to bottom and each layer only uses the ones above it. Tokens are what every pixel is painted with;
+          inputs, pickers, displays and charts are built from primitives in those tokens; overlays float them above the
+          page; the app chrome composes all of it into a frame; the API layer is what remains when you take the pixels
+          away.
         </Note>
       </Example>
 
@@ -132,22 +131,21 @@ export function GettingStarted() {
       <Example label="How to read a page">
         <ul className="list-disc space-y-1.5 ps-5 text-sm text-secondary">
           <li>
-            The <strong>chips</strong> under the title jump to each specimen on the page; Back
-            returns to where you were.
+            The <strong>chips</strong> under the title jump to each specimen on the page; Back returns to where you
+            were.
           </li>
           <li>
-            Each <strong>card</strong> is one specimen. The grey text beside its heading is the
-            constraint you need before deciding it is broken — &ldquo;needs a Router&rdquo;,
-            &ldquo;phone only&rdquo;.
+            Each <strong>card</strong> is one specimen. The grey text beside its heading is the constraint you need
+            before deciding it is broken — &ldquo;needs a Router&rdquo;, &ldquo;phone only&rdquo;.
           </li>
           <li>
-            A <strong>note</strong> below a card explains a decision that looks wrong and is not.
-            Those notes are developer documentation and stay in English; everything a user of an
-            app would read is translated — switch the language in the top bar.
+            A <strong>note</strong> below a card explains a decision that looks wrong and is not. Those notes are
+            developer documentation and stay in English; everything a user of an app would read is translated — switch
+            the language in the top bar.
           </li>
           <li>
-            The <strong>top bar</strong> changes the theme, the palette preset and the language
-            for the whole page, and the sidebar style (flyout or inline).
+            The <strong>top bar</strong> changes the theme, the palette preset and the language for the whole page, and
+            the sidebar style (flyout or inline).
           </li>
         </ul>
       </Example>
@@ -180,7 +178,10 @@ function LayerCard({ group, index }: { group: ShowcaseGroup; index: number }) {
   const { blurb } = usePageText(target);
   return (
     <li>
-      <Link to={`/${target}`} className="block h-full rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand">
+      <Link
+        to={`/${target}`}
+        className="block h-full rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+      >
         <Card className="h-full p-4 transition-colors hover:bg-hover">
           <div className="flex items-center gap-2.5">
             <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-inverse text-xs font-semibold text-inverse">
@@ -224,12 +225,27 @@ const CONVENTIONS: Array<[string, string]> = [
 ];
 
 const MUI_MAP: Array<[string, string]> = [
-  ["Inputs", "Inputs — text, forms, choices, numbers, dates, files; Pickers & entry — comboboxes, entity pickers, table entry, sync state"],
-  ["Data display", "Data display — buttons, chips, description lists and tables, tree view, data table; Charts — chart shell, tile and series charts, stats"],
-  ["Feedback (Dialog, Snackbar, Alert, Progress, Skeleton)", "Overlays — dialogs, confirm dialog, popovers; Feedback & progress under Data display"],
+  [
+    "Inputs",
+    "Inputs — text, forms, choices, numbers, dates, files; Pickers & entry — comboboxes, entity pickers, table entry, sync state",
+  ],
+  [
+    "Data display",
+    "Data display — buttons, chips, description lists and tables, tree view, data table; Charts — chart shell, tile and series charts, stats",
+  ],
+  [
+    "Feedback (Dialog, Snackbar, Alert, Progress, Skeleton)",
+    "Overlays — dialogs, confirm dialog, popovers; Feedback & progress under Data display",
+  ],
   ["Surfaces (Card, Accordion)", "Buttons & surfaces; Disclosure under Data display"],
-  ["Navigation (Drawer, Tabs, Stepper)", "App chrome — shell, page header; the wizard under Pickers & entry; Tabs under Chips & toggles"],
-  ["Layout / Utils", "API — hooks, clipboard & timing, helpers; Separator and ScrollArea under Description list & table"],
+  [
+    "Navigation (Drawer, Tabs, Stepper)",
+    "App chrome — shell, page header; the wizard under Pickers & entry; Tabs under Chips & toggles",
+  ],
+  [
+    "Layout / Utils",
+    "API — hooks, clipboard & timing, helpers; Separator and ScrollArea under Description list & table",
+  ],
   ["Customization (Theming)", "Foundations — tokens, palettes, text size and contrast, localisation"],
   ["MUI X (Data Grid, Date Pickers, Charts, Tree View)", "Data table, Calendars & date pickers, Charts, Tree view"],
 ];

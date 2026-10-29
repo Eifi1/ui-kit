@@ -7,13 +7,7 @@ import { splitTriggerAria } from "./trigger-aria";
 import { FIELD_BASE } from "./field-base";
 import { FieldBox, useFieldMessages } from "./field-parts";
 import { Tooltip } from "./tooltip";
-import {
-  DateField,
-  useDatePickerLabels,
-  useTriggerFormat,
-  withEndHint,
-  type DatePickerBaseProps,
-} from "./date-field";
+import { DateField, useDatePickerLabels, useTriggerFormat, withEndHint, type DatePickerBaseProps } from "./date-field";
 import { PanelCalendar } from "./jump-calendar";
 // The shared field, the month-jump calendar and the range picker live in date-field.tsx,
 // jump-calendar.tsx and date-range-picker.tsx (MOD-9); their public names are still this

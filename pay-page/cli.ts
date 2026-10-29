@@ -92,7 +92,12 @@ function mergedApps(over: PayPageBuildOptions["apps"]): Record<string, PayPageAp
     // Defined, not assigned: a "__proto__" key in the file stays a key (and is refused
     // as a tag), never the map's prototype.
     const base = Object.prototype.hasOwnProperty.call(apps, tag) ? apps[tag] : {};
-    Object.defineProperty(apps, tag, { value: { ...base, ...app }, enumerable: true, writable: true, configurable: true });
+    Object.defineProperty(apps, tag, {
+      value: { ...base, ...app },
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    });
   }
   return apps;
 }

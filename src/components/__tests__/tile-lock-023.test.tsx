@@ -226,7 +226,13 @@ describe("SwatchPicker option disabledReason", () => {
 
   it("sits beside the whole-picker lock: the group says the picker's reason, the tile its own", () => {
     render(
-      <SwatchPicker aria-label="Flag" disabledReason="Read-only demo." value="red" onChange={vi.fn()} options={SWATCHES} />,
+      <SwatchPicker
+        aria-label="Flag"
+        disabledReason="Read-only demo."
+        value="red"
+        onChange={vi.fn()}
+        options={SWATCHES}
+      />,
     );
     expect(screen.getByRole("radiogroup")).toHaveAccessibleDescription("Read-only demo.");
     expect(screen.getByRole("radio", { name: "Green" })).toHaveAccessibleDescription("Used by Groceries.");

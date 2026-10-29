@@ -67,7 +67,7 @@ describe("resetDeviceSettings — what goes", () => {
     expect(localStorage.getItem("budget.collapsedGroups")).toBe("[]");
   });
 
-  it("removes from sessionStorage for `storage: \"session\"`, and leaves localStorage's key of the same name", () => {
+  it('removes from sessionStorage for `storage: "session"`, and leaves localStorage\'s key of the same name', () => {
     sessionStorage.setItem("folded", "1");
     localStorage.setItem("folded", "1");
     join({ key: "folded", storage: "session", kind: "view" });

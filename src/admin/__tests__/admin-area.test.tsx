@@ -139,7 +139,9 @@ describe("AdminForbidden", () => {
       </UiKitProvider>,
     );
     expect(screen.getByRole("heading", { name: "Nur mit Administratorrechten" })).toBeInTheDocument();
-    expect(screen.getByText("Hier wird Kastlan verwaltet. Ihr Konto kann diese Seite nicht öffnen.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Hier wird Kastlan verwaltet. Ihr Konto kann diese Seite nicht öffnen."),
+    ).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(/ß/);
   });
 });
@@ -176,8 +178,18 @@ describe("AdminOverview", () => {
       <AdminOverview
         attention={{ ...ATTENTION, deletion_requests: null, users_new_7d: null }}
         extraTiles={[
-          { key: "support_waiting", label: "Support waiting", count: ATTENTION.extra.support_waiting, href: "/admin/messaging" },
-          { key: "awaiting_verdict", label: "Awaiting your verdict", count: ATTENTION.extra.awaiting_verdict, href: "/feedback" },
+          {
+            key: "support_waiting",
+            label: "Support waiting",
+            count: ATTENTION.extra.support_waiting,
+            href: "/admin/messaging",
+          },
+          {
+            key: "awaiting_verdict",
+            label: "Awaiting your verdict",
+            count: ATTENTION.extra.awaiting_verdict,
+            href: "/feedback",
+          },
         ]}
       />,
     );
@@ -248,7 +260,11 @@ describe("AdminToolLinks", () => {
     render(<AdminToolLinks links={TOOLS} />);
     const nav = screen.getByRole("navigation", { name: DEFAULT_ADMIN_AREA_LABELS.tools });
     expect(within(nav).getByText("Tools")).toBeInTheDocument();
-    expect(within(nav).getAllByRole("link").map((a) => [a.textContent, a.getAttribute("href")])).toEqual([
+    expect(
+      within(nav)
+        .getAllByRole("link")
+        .map((a) => [a.textContent, a.getAttribute("href")]),
+    ).toEqual([
       ["Translations", "/translations"],
       ["Data import", "/import"],
     ]);

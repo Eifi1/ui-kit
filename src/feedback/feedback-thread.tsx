@@ -18,10 +18,7 @@ import { FeedbackAttachmentField } from "./feedback-attachment";
 import type { FeedbackAttachmentFieldSingleProps } from "./feedback-attachment";
 import type { FeedbackNoteAttachment } from "./feedback-inbox";
 import type { FeedbackAttachmentLabels } from "./feedback-dialog";
-import {
-  DEFAULT_FEEDBACK_COMPOSER_LABELS,
-  DEFAULT_FEEDBACK_THREAD_LABELS,
-} from "./feedback-thread-labels";
+import { DEFAULT_FEEDBACK_COMPOSER_LABELS, DEFAULT_FEEDBACK_THREAD_LABELS } from "./feedback-thread-labels";
 
 /**
  * The conversation under a report: who said what, when, with what attached — and the
@@ -217,12 +214,7 @@ export function FeedbackThread({
   }
   if (messages.length === 0) {
     return (
-      <EmptyState
-        variant="inline"
-        size="sm"
-        title={empty ?? labels.empty}
-        className={cn("justify-start", className)}
-      />
+      <EmptyState variant="inline" size="sm" title={empty ?? labels.empty} className={cn("justify-start", className)} />
     );
   }
 
@@ -288,9 +280,7 @@ export function FeedbackThread({
             <article
               className={cn(
                 "max-w-[85%] min-w-0 rounded-lg px-3 py-2 text-sm",
-                message.own
-                  ? "rounded-ee-sm bg-brand-soft"
-                  : "rounded-es-sm bg-surface-2",
+                message.own ? "rounded-ee-sm bg-brand-soft" : "rounded-es-sm bg-surface-2",
               )}
             >
               <header className="mb-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-caption text-muted">
@@ -361,9 +351,7 @@ function DefaultAttachment({
       {/* A file name wraps from Large up, as the attachments of the composer do (text
           size §10.17; round 0.34 T1: the sweep read "export-20…"). */}
       <span className="min-w-0 truncate-until-large">{name}</span>
-      {attachment.size !== undefined && (
-        <span className="shrink-0 text-muted">{size(attachment.size)}</span>
-      )}
+      {attachment.size !== undefined && <span className="shrink-0 text-muted">{size(attachment.size)}</span>}
     </>
   );
   const chip =

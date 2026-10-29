@@ -117,11 +117,11 @@ describe("PieChart", () => {
     const { container } = render(<PieChart data={DATA} onHiddenSlicesChange={onHidden} locale="en-US" />);
     const legend = screen.getByRole("group", { name: "Categories" });
     // Only what can be drawn is in the key: the missing value has no slice to switch.
-    expect(within(legend).getAllByRole("button").map((b) => b.textContent)).toEqual([
-      "Occupied",
-      "Vacant",
-      "Reserved",
-    ]);
+    expect(
+      within(legend)
+        .getAllByRole("button")
+        .map((b) => b.textContent),
+    ).toEqual(["Occupied", "Vacant", "Reserved"]);
     fireEvent.click(within(legend).getByRole("button", { name: "Occupied" }));
     expect(onHidden).toHaveBeenCalledWith(new Set(["occupied"]));
     expect(slices(container).map((s) => s.getAttribute("aria-label"))).toEqual([
@@ -172,7 +172,12 @@ describe("PieChart", () => {
         locale="de-DE"
         labels={{ pieChart: { slice: (l, v, p) => `${l} – ${v} (${p})`, total: "Gesamt" } }}
       >
-        <PieChart data={[{ key: "a", label: "A", value: 1500 }, { key: "b", label: "B", value: 500 }]} />
+        <PieChart
+          data={[
+            { key: "a", label: "A", value: 1500 },
+            { key: "b", label: "B", value: 500 },
+          ]}
+        />
       </UiKitProvider>,
     );
     expect(slices(container)[0]).toHaveAttribute("aria-label", "A – 1.500 (75 %)");
@@ -181,7 +186,13 @@ describe("PieChart", () => {
 
   it("gives a small share a decimal rather than rounding it to 0%", () => {
     const { container } = render(
-      <PieChart data={[{ key: "a", label: "A", value: 996 }, { key: "b", label: "B", value: 4 }]} locale="en-US" />,
+      <PieChart
+        data={[
+          { key: "a", label: "A", value: 996 },
+          { key: "b", label: "B", value: 4 },
+        ]}
+        locale="en-US"
+      />,
     );
     expect(slices(container)[1]).toHaveAttribute("aria-label", "B: 4 (0.4%)");
   });

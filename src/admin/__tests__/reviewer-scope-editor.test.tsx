@@ -13,7 +13,13 @@ describe("ReviewerScopeEditor", () => {
   it("saves the languages in the list's order and the area, or null for every area", async () => {
     const user = userEvent.setup();
     const onSave = vi.fn(async () => undefined);
-    render(<ReviewerScopeEditor value={{ locales: ["fr"], areas: null }} languages={["de-CH", "fr", "it"]} onSave={onSave} />);
+    render(
+      <ReviewerScopeEditor
+        value={{ locales: ["fr"], areas: null }}
+        languages={["de-CH", "fr", "it"]}
+        onSave={onSave}
+      />,
+    );
     const save = screen.getByRole("button", { name: "Save" });
     expect(save).toBeDisabled();
 
@@ -30,7 +36,9 @@ describe("ReviewerScopeEditor", () => {
   it("takes the role away with no language, and waits for one before an area", async () => {
     const user = userEvent.setup();
     const onSave = vi.fn();
-    render(<ReviewerScopeEditor value={{ locales: ["fr"], areas: ["legal"] }} languages={["fr", "it"]} onSave={onSave} />);
+    render(
+      <ReviewerScopeEditor value={{ locales: ["fr"], areas: ["legal"] }} languages={["fr", "it"]} onSave={onSave} />,
+    );
     expect(screen.getByRole("checkbox", { name: "Only the legal pages" })).toBeChecked();
     await user.click(screen.getByRole("checkbox", { name: "Français" }));
     expect(screen.getByText("No language: saving takes the reviewer role away.")).toBeInTheDocument();

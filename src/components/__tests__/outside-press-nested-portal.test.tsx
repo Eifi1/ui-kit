@@ -110,7 +110,14 @@ describe("an outside press ignores panels opened from inside (R12)", () => {
   it("a HoverMenu stays open for a press in a popover opened from a row", async () => {
     const user = userEvent.setup();
     render(
-      <HoverMenu aria-label="Account" trigger={({ toggle }) => <button type="button" onClick={toggle}>Me</button>}>
+      <HoverMenu
+        aria-label="Account"
+        trigger={({ toggle }) => (
+          <button type="button" onClick={toggle}>
+            Me
+          </button>
+        )}
+      >
         {() => (
           <Popover aria-label="Pick" trigger={opener("Currency settings")}>
             {() => <Currency />}

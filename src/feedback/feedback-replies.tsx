@@ -102,7 +102,10 @@ export interface FeedbackReplyTimelineProps {
 function EntryStatus({ reply, statusChanged }: { reply: FeedbackReply; statusChanged: string }) {
   if (!reply.status_to) return null;
   return (
-    <span className="inline-flex min-w-0 max-w-full flex-wrap items-center gap-1" data-feedback-reply-status={reply.status_to}>
+    <span
+      className="inline-flex min-w-0 max-w-full flex-wrap items-center gap-1"
+      data-feedback-reply-status={reply.status_to}
+    >
       <span className="sr-only">{statusChanged}</span>
       {reply.status_from && reply.status_from !== reply.status_to && (
         <>
@@ -167,7 +170,11 @@ export function FeedbackReplyTimeline({
               </time>
               <EntryStatus reply={reply} statusChanged={labels.statusChanged} />
             </div>
-            <p data-private={priv} dir="auto" className="mt-0.5 whitespace-pre-wrap break-words text-start text-primary">
+            <p
+              data-private={priv}
+              dir="auto"
+              className="mt-0.5 whitespace-pre-wrap break-words text-start text-primary"
+            >
               {reply.body}
             </p>
             {reply.attachment_url && (
@@ -312,9 +319,7 @@ export function FeedbackReplyComposer({
             aria-label={labels.status}
             value={picked}
             disabled={pending || uploading}
-            onChange={(event) =>
-              setPick({ under: suggestedStatus, value: event.target.value as FeedbackStatus | "" })
-            }
+            onChange={(event) => setPick({ under: suggestedStatus, value: event.target.value as FeedbackStatus | "" })}
             data-feedback-reply-status-pick=""
           >
             <option value="">{labels.noChange}</option>

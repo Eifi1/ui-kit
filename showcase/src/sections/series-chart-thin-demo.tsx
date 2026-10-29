@@ -60,15 +60,13 @@ export function RowBudgetDemo() {
       />
       <div className="mt-3">
         <Note>
-          <code className="font-mono">maxRows</code> is opt-in: without it every row is drawn, as
-          before. With it, the table is cut into buckets and each keeps the row where every drawn
-          series is lowest and the one where it is highest, plus the first and last ones — so the
-          160 Hz tone fills its band and the spike at 6.28 s is there. <em>Every 6th row</em> is the
-          stride an app would write: the tone comes out as a slow 6.7 Hz wave at full height, and
-          the spike is gone. Drag to zoom: the window on show is thinned again, so a zoom draws
-          more of the samples there, all of them once fewer than the budget are in view. The axes
-          are fitted on every row either way, and a dot or a click still reports the row&apos;s
-          index in <code className="font-mono">rows</code>.
+          <code className="font-mono">maxRows</code> is opt-in: without it every row is drawn, as before. With it, the
+          table is cut into buckets and each keeps the row where every drawn series is lowest and the one where it is
+          highest, plus the first and last ones — so the 160 Hz tone fills its band and the spike at 6.28 s is there.{" "}
+          <em>Every 6th row</em> is the stride an app would write: the tone comes out as a slow 6.7 Hz wave at full
+          height, and the spike is gone. Drag to zoom: the window on show is thinned again, so a zoom draws more of the
+          samples there, all of them once fewer than the budget are in view. The axes are fitted on every row either
+          way, and a dot or a click still reports the row&apos;s index in <code className="font-mono">rows</code>.
         </Note>
       </div>
     </Example>

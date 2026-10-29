@@ -175,7 +175,14 @@ describe("Chip's disabledReason in the layout (§4 'No fact only in a tooltip')"
 describe("NumberInput's FieldHint becomes its caption at Large and on touch (§4)", () => {
   const hint = "Excludes transfers between your own accounts";
   const field = (props: { hint?: ReactElement | string } = {}) => (
-    <NumberInput label="Total" value="" onChange={() => {}} calculator={false} hint={<FieldHint label={hint} />} {...props} />
+    <NumberInput
+      label="Total"
+      value=""
+      onChange={() => {}}
+      calculator={false}
+      hint={<FieldHint label={hint} />}
+      {...props}
+    />
   );
 
   it("is the '?' on the label line at Normal with a mouse", () => {
@@ -263,7 +270,13 @@ describe("The kit's IconButtons at Large (§10.8)", () => {
     });
     render(
       <MemoryRouter>
-        <TranslationReviewPanel rows={rows} localeLabel="Français" referenceLabel="English" onSave={vi.fn()} onClear={vi.fn()} />
+        <TranslationReviewPanel
+          rows={rows}
+          localeLabel="Français"
+          referenceLabel="English"
+          onSave={vi.fn()}
+          onClear={vi.fn()}
+        />
       </MemoryRouter>,
     );
     const row = within(screen.getByRole("table")).getByText("Enregistrer").closest("tr")!;
@@ -289,7 +302,13 @@ describe("The kit's IconButtons at Large (§10.8)", () => {
   describe("InvitationsPanel: resend and revoke are the row's actions", () => {
     type Role = "MEMBER";
     const rows: InvitationRow<Role>[] = [
-      { id: 1, email: "ada@example.com", created_at: "2026-10-06T10:00:00Z", status: "open", link: "https://example.com/i/1" },
+      {
+        id: 1,
+        email: "ada@example.com",
+        created_at: "2026-10-06T10:00:00Z",
+        status: "open",
+        link: "https://example.com/i/1",
+      },
       { id: 2, email: "grace@example.com", created_at: "2026-09-01T10:00:00Z", status: "accepted" },
     ];
     const rowOf = (email: string) => screen.getByText(email).closest("li")!;
@@ -303,9 +322,11 @@ describe("The kit's IconButtons at Large (§10.8)", () => {
       expect(row.queryByRole("button", { name: "Revoke the invitation for ada@example.com" })).toBeNull();
       await user.click(row.getByRole("button", { name: "Actions for ada@example.com" }));
       const menu = await screen.findByRole("dialog", { name: "Actions for ada@example.com" });
-      expect(within(menu).getAllByRole("button").map((b) => b.textContent)).toEqual([
-        "Revoke the invitation for ada@example.com",
-      ]);
+      expect(
+        within(menu)
+          .getAllByRole("button")
+          .map((b) => b.textContent),
+      ).toEqual(["Revoke the invitation for ada@example.com"]);
       // An accepted invitation has nothing to resend or revoke.
       expect(within(rowOf("grace@example.com")).queryAllByRole("button")).toHaveLength(0);
     });
@@ -322,10 +343,11 @@ describe("The kit's IconButtons at Large (§10.8)", () => {
       const more = row.getByRole("button", { name: "Actions for ada@example.com" });
       await user.click(more);
       const menu = await screen.findByRole("dialog", { name: "Actions for ada@example.com" });
-      expect(within(menu).getAllByRole("button").map((b) => b.textContent)).toEqual([
-        "Send ada@example.com a new link",
-        "Revoke the invitation for ada@example.com",
-      ]);
+      expect(
+        within(menu)
+          .getAllByRole("button")
+          .map((b) => b.textContent),
+      ).toEqual(["Send ada@example.com a new link", "Revoke the invitation for ada@example.com"]);
       await user.click(within(menu).getByRole("button", { name: "Revoke the invitation for ada@example.com" }));
       // Level `none` (user admin §4.2): no KIT-12 question in between.
       expect(onRevoke).toHaveBeenCalledWith(rows[0]);

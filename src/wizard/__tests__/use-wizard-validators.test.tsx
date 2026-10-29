@@ -25,7 +25,15 @@ describe("useWizard, when a step validator throws", () => {
     const { result } = renderHook(
       () =>
         useWizard({
-          steps: [{ ...STEPS[0], validate: async () => { throw new Error("boom"); } }, STEPS[1]],
+          steps: [
+            {
+              ...STEPS[0],
+              validate: async () => {
+                throw new Error("boom");
+              },
+            },
+            STEPS[1],
+          ],
           onValidationFailed,
         }),
       // `useWizard` mirrors its step into the URL, so it needs a router above it.
@@ -43,10 +51,9 @@ describe("useWizard, when a step validator throws", () => {
   });
 
   it("still advances when every validator passes", async () => {
-    const { result } = renderHook(
-      () => useWizard({ steps: [{ ...STEPS[0], validate: async () => true }, STEPS[1]] }),
-      { wrapper: MemoryRouter },
-    );
+    const { result } = renderHook(() => useWizard({ steps: [{ ...STEPS[0], validate: async () => true }, STEPS[1]] }), {
+      wrapper: MemoryRouter,
+    });
     await act(async () => {
       await result.current.goNext();
     });

@@ -34,9 +34,7 @@ import { TabControls } from "./field-anatomy-demo";
  *  opinion about what a badge looks like, so the showcase has to bring its own. */
 function CountPill({ children }: { children: number }) {
   return (
-    <span className="rounded-full bg-surface-2 px-1.5 py-0.5 text-caption font-medium text-secondary">
-      {children}
-    </span>
+    <span className="rounded-full bg-surface-2 px-1.5 py-0.5 text-caption font-medium text-secondary">{children}</span>
   );
 }
 
@@ -69,14 +67,13 @@ function TabStrip() {
       </div>
       <div className="mt-3">
         <Note>
-          Arrow keys, Home and End move <em>focus</em> along the strip — ← → along the reading
-          direction, so in RTL ← reaches the next tab; activation stays on
-          click, Enter and Space, because a tab can be a real route and arrowing across one
-          must not navigate. <code className="font-mono">label</code> names the{" "}
-          <code className="font-mono">role=&quot;tablist&quot;</code> group — leave it unset
-          where a visible heading directly above already does that job. The kit renders no{" "}
-          <code className="font-mono">role=&quot;tabpanel&quot;</code>: the panel is yours, and
-          so is wiring <code className="font-mono">aria-controls</code> to it.
+          Arrow keys, Home and End move <em>focus</em> along the strip — ← → along the reading direction, so in RTL ←
+          reaches the next tab; activation stays on click, Enter and Space, because a tab can be a real route and
+          arrowing across one must not navigate. <code className="font-mono">label</code> names the{" "}
+          <code className="font-mono">role=&quot;tablist&quot;</code> group — leave it unset where a visible heading
+          directly above already does that job. The kit renders no{" "}
+          <code className="font-mono">role=&quot;tabpanel&quot;</code>: the panel is yours, and so is wiring{" "}
+          <code className="font-mono">aria-controls</code> to it.
         </Note>
       </div>
     </Example>
@@ -121,12 +118,11 @@ function OverflowTabStrip() {
       </div>
       <div className="mt-3">
         <Note>
-          A strip wider than its room scrolls sideways, and its edge fade alone can end exactly
-          on a tab&apos;s end and read as &quot;no more&quot;. With{" "}
-          <code className="font-mono">overflowCue</code> a › follows the strip while tabs lie past
-          its end and a ‹ precedes it while tabs lie before its start; each steps three quarters
-          of the width toward its own side and never turns round. They are bare
-          glyphs in the row, centred on the labels, muted until hovered — no frame over the tabs.
+          A strip wider than its room scrolls sideways, and its edge fade alone can end exactly on a tab&apos;s end and
+          read as &quot;no more&quot;. With <code className="font-mono">overflowCue</code> a › follows the strip while
+          tabs lie past its end and a ‹ precedes it while tabs lie before its start; each steps three quarters of the
+          width toward its own side and never turns round. They are bare glyphs in the row, centred on the labels, muted
+          until hovered — no frame over the tabs.
         </Note>
       </div>
     </Example>
@@ -139,7 +135,10 @@ function ToggleGroups() {
   const [view, setView] = useState<ViewMode>("board");
   const [locked, setLocked] = useState(false);
   return (
-    <Example label="ToggleGroup — controlled" hint="role=radiogroup; value and onChange are required; aria-label names it">
+    <Example
+      label="ToggleGroup — controlled"
+      hint="role=radiogroup; value and onChange are required; aria-label names it"
+    >
       <div className="max-w-sm">
         <ToggleGroup<ViewMode>
           aria-label="View mode"
@@ -167,16 +166,14 @@ function ToggleGroups() {
       </div>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">disabled</code> is on the whole group, never per option —
-          a segmented control with some live segments and some dead ones is a menu with holes
-          in it. Lock it and the pressed segment <em>keeps its fill</em> while everything fades:
-          a reader who can no longer see which option is chosen has been told less than before
-          you disabled it. As a radio group it is ONE tab stop (the pressed segment) and the
-          arrows move the choice, mirrored in RTL — tab in and press →. The 2px moat between segments is deliberate too — flush segments made
-          a hovered neighbour and the selected chip read as one smeared shape. So is the mixed
-          casing: <code className="font-mono">optionClassName=&quot;uppercase&quot;</code> dresses every
-          segment, and &ldquo;Calendar&rdquo;&apos;s own <code className="font-mono">className</code> is merged
-          after it and wins.
+          <code className="font-mono">disabled</code> is on the whole group, never per option — a segmented control with
+          some live segments and some dead ones is a menu with holes in it. Lock it and the pressed segment{" "}
+          <em>keeps its fill</em> while everything fades: a reader who can no longer see which option is chosen has been
+          told less than before you disabled it. As a radio group it is ONE tab stop (the pressed segment) and the
+          arrows move the choice, mirrored in RTL — tab in and press →. The 2px moat between segments is deliberate too
+          — flush segments made a hovered neighbour and the selected chip read as one smeared shape. So is the mixed
+          casing: <code className="font-mono">optionClassName=&quot;uppercase&quot;</code> dresses every segment, and
+          &ldquo;Calendar&rdquo;&apos;s own <code className="font-mono">className</code> is merged after it and wins.
         </Note>
       </div>
     </Example>
@@ -213,13 +210,12 @@ function ToggleGroupUnset() {
       </div>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">value</code> is required, so the unset state is expressed
-          by widening the union rather than by omitting the prop — a row whose status does not
-          exist yet is a real case, and this is the shape it takes. Once chosen, a
-          required group cannot be emptied from the keyboard or the pointer — only the caller
+          <code className="font-mono">value</code> is required, so the unset state is expressed by widening the union
+          rather than by omitting the prop — a row whose status does not exist yet is a real case, and this is the shape
+          it takes. Once chosen, a required group cannot be emptied from the keyboard or the pointer — only the caller
           can reset it, as the button does. For a group the USER may empty, see{" "}
-          <code className="font-mono">allowEmpty</code> below. Hold options in a typed
-          constant with the exported <code className="font-mono">ToggleOption&lt;T&gt;</code>.
+          <code className="font-mono">allowEmpty</code> below. Hold options in a typed constant with the exported{" "}
+          <code className="font-mono">ToggleOption&lt;T&gt;</code>.
         </Note>
       </div>
     </Example>
@@ -238,10 +234,7 @@ function ToggleGroupClearable() {
   const [filter, setFilter] = useState<Queue | null>("open");
   const [log, setLog] = useState<string[]>([]);
   return (
-    <Example
-      label="ToggleGroup — allowEmpty"
-      hint="click the pressed option again to clear it; onChange receives null"
-    >
+    <Example label="ToggleGroup — allowEmpty" hint="click the pressed option again to clear it; onChange receives null">
       <div className="max-w-sm">
         <ToggleGroup
           allowEmpty
@@ -258,20 +251,19 @@ function ToggleGroupClearable() {
         filter: <span className="font-mono text-secondary">{String(filter)}</span>
         {log.length > 0 && (
           <>
-            {" "}· onChange calls, newest first:{" "}
-            <span className="font-mono text-secondary">{log.join(", ")}</span>
+            {" "}
+            · onChange calls, newest first: <span className="font-mono text-secondary">{log.join(", ")}</span>
           </>
         )}
       </p>
       <div className="mt-3">
         <Note>
-          With <code className="font-mono">allowEmpty</code> the segments stop being radios:
-          the group is <code className="font-mono">role=&quot;group&quot;</code> and each
-          option a toggle button with <code className="font-mono">aria-pressed</code>, because
-          a radio cannot be unchecked by pressing it again and nobody expects it to. The prop
-          also changes the type — <code className="font-mono">value</code> may be{" "}
-          <code className="font-mono">null</code> and <code className="font-mono">onChange</code>{" "}
-          receives it — so a group that cannot emit null never makes its caller handle one.
+          With <code className="font-mono">allowEmpty</code> the segments stop being radios: the group is{" "}
+          <code className="font-mono">role=&quot;group&quot;</code> and each option a toggle button with{" "}
+          <code className="font-mono">aria-pressed</code>, because a radio cannot be unchecked by pressing it again and
+          nobody expects it to. The prop also changes the type — <code className="font-mono">value</code> may be{" "}
+          <code className="font-mono">null</code> and <code className="font-mono">onChange</code> receives it — so a
+          group that cannot emit null never makes its caller handle one.
         </Note>
       </div>
     </Example>
@@ -298,7 +290,6 @@ export function ChipsToggles() {
     </>
   );
 }
-
 
 /* ── 0.8.0: variant, shape, caps, renderLink, removeDisabled ──────────────── */
 
@@ -350,7 +341,14 @@ function ChipVariants() {
         <Row>
           <span className="w-16 font-mono text-caption text-muted">square</span>
           {["Rent", "EUR", "Q3"].map((v) => (
-            <Chip key={v} shape="square" tone="brand" variant="outline" selected={on.includes(v)} onClick={() => toggle(v)}>
+            <Chip
+              key={v}
+              shape="square"
+              tone="brand"
+              variant="outline"
+              selected={on.includes(v)}
+              onClick={() => toggle(v)}
+            >
               {v}
             </Chip>
           ))}
@@ -375,14 +373,13 @@ function ChipVariants() {
         </Row>
       </div>
       <Note>
-        <code className="font-mono">outline</code> is the tone&apos;s border and text on no surface —
-        for a badge on a row that is already coloured. <code className="font-mono">solid</code> is the
-        tone as a fill under contrasting ink and centres a tabular figure, so a one-digit count is a
-        round dot and 9 → 10 does not jiggle the row; a selected solid chip gets a ring instead. An
-        outline toggle takes the tone&apos;s selected look when on, or it would have no visible state.{" "}
-        <code className="font-mono">caps</code> is TYPE, not surface — a size step down, heavier and
-        tracked — so it combines with any variant; write the text in normal case, as a reader reads it
-        as written.
+        <code className="font-mono">outline</code> is the tone&apos;s border and text on no surface — for a badge on a
+        row that is already coloured. <code className="font-mono">solid</code> is the tone as a fill under contrasting
+        ink and centres a tabular figure, so a one-digit count is a round dot and 9 → 10 does not jiggle the row; a
+        selected solid chip gets a ring instead. An outline toggle takes the tone&apos;s selected look when on, or it
+        would have no visible state. <code className="font-mono">caps</code> is TYPE, not surface — a size step down,
+        heavier and tracked — so it combines with any variant; write the text in normal case, as a reader reads it as
+        written.
       </Note>
     </Example>
   );
@@ -438,8 +435,8 @@ function ChipLinkOnClick() {
         Open the menu and press &ldquo;Admin&rdquo;: the chip is still a link (a router{" "}
         <code className="font-mono">Link</code> to this page, so nothing reloads), and its{" "}
         <code className="font-mono">onClick</code> runs first and closes the menu. The chip passes{" "}
-        <code className="font-mono">onClick</code> into <code className="font-mono">renderLink</code> with
-        the rest of its props, so the renderer stays the one-liner{" "}
+        <code className="font-mono">onClick</code> into <code className="font-mono">renderLink</code> with the rest of
+        its props, so the renderer stays the one-liner{" "}
         <code className="font-mono">{"({ href, ...p }) => <Link to={href} {...p} />"}</code>. No{" "}
         <code className="font-mono">aria-pressed</code>, no button — the handler rides on the anchor.
       </Note>
@@ -493,14 +490,14 @@ function ChipLinksAndRemove() {
         )}
       </Row>
       <Note>
-        <code className="font-mono">renderLink</code> is handed everything the chip would have put on
-        its own <code className="font-mono">&lt;a&gt;</code> — <code className="font-mono">href</code>, the
-        whole <code className="font-mono">className</code>, the children, the ref — and here maps{" "}
+        <code className="font-mono">renderLink</code> is handed everything the chip would have put on its own{" "}
+        <code className="font-mono">&lt;a&gt;</code> — <code className="font-mono">href</code>, the whole{" "}
+        <code className="font-mono">className</code>, the children, the ref — and here maps{" "}
         <code className="font-mono">href</code> to react-router&apos;s <code className="font-mono">to</code>:{" "}
-        <code className="font-mono">{"({ href, ...p }) => <Link to={href} {...p} />"}</code>. The first two
-        chips navigate inside the app; the third is a plain anchor. <code className="font-mono">removeDisabled</code>{" "}
-        dims and disables only the × — the first filter is still a working link to the data table —
-        where <code className="font-mono">disabled</code> would also kill the chip&apos;s own action.
+        <code className="font-mono">{"({ href, ...p }) => <Link to={href} {...p} />"}</code>. The first two chips
+        navigate inside the app; the third is a plain anchor. <code className="font-mono">removeDisabled</code> dims and
+        disables only the × — the first filter is still a working link to the data table — where{" "}
+        <code className="font-mono">disabled</code> would also kill the chip&apos;s own action.
       </Note>
     </Example>
   );
@@ -528,14 +525,40 @@ function VerticalTabs() {
           active={active}
           onChange={setActive}
           tabs={[
-            { id: "profile", label: <span className="inline-flex items-center gap-2"><User className="size-4" aria-hidden /> Profile</span> },
-            { id: "billing", label: <span className="inline-flex items-center gap-2"><CreditCard className="size-4" aria-hidden /> Billing</span> },
+            {
+              id: "profile",
+              label: (
+                <span className="inline-flex items-center gap-2">
+                  <User className="size-4" aria-hidden /> Profile
+                </span>
+              ),
+            },
+            {
+              id: "billing",
+              label: (
+                <span className="inline-flex items-center gap-2">
+                  <CreditCard className="size-4" aria-hidden /> Billing
+                </span>
+              ),
+            },
             {
               id: "notifications",
-              label: <span className="inline-flex items-center gap-2"><Bell className="size-4" aria-hidden /> Notifications</span>,
+              label: (
+                <span className="inline-flex items-center gap-2">
+                  <Bell className="size-4" aria-hidden /> Notifications
+                </span>
+              ),
               badge: <CountPill>{4}</CountPill>,
             },
-            { id: "advanced", label: <span className="inline-flex items-center gap-2"><Settings2 className="size-4" aria-hidden /> Advanced</span>, href: "#/chips-toggles" },
+            {
+              id: "advanced",
+              label: (
+                <span className="inline-flex items-center gap-2">
+                  <Settings2 className="size-4" aria-hidden /> Advanced
+                </span>
+              ),
+              href: "#/chips-toggles",
+            },
           ]}
         />
         <div className="rounded-md border border-subtle p-4 text-sm text-secondary">
@@ -544,11 +567,11 @@ function VerticalTabs() {
       </div>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">aria-orientation=&quot;vertical&quot;</code> on the tablist and ↑/↓
-          instead of ←/→; the open row is filled and a badge moves to the row&apos;s end. Below{" "}
-          <code className="font-mono">md</code> the orientation is switched in JavaScript, not with
-          classes, so the arrow keys a reader is told about always match the layout — try the
-          screen-size preview. The caller&apos;s two-column grid stacks at the same breakpoint.
+          <code className="font-mono">aria-orientation=&quot;vertical&quot;</code> on the tablist and ↑/↓ instead of
+          ←/→; the open row is filled and a badge moves to the row&apos;s end. Below{" "}
+          <code className="font-mono">md</code> the orientation is switched in JavaScript, not with classes, so the
+          arrow keys a reader is told about always match the layout — try the screen-size preview. The caller&apos;s
+          two-column grid stacks at the same breakpoint.
         </Note>
       </div>
     </Example>
@@ -557,22 +580,12 @@ function VerticalTabs() {
 
 /* ── Chip ─────────────────────────────────────────────────────────────────── */
 
-const CHIP_TONES = [
-  "neutral",
-  "brand",
-  "danger",
-  "warning",
-  "success",
-  "info",
-  "income",
-  "expense",
-] as const;
+const CHIP_TONES = ["neutral", "brand", "danger", "warning", "success", "info", "income", "expense"] as const;
 
 function Chips() {
   const [pressed, setPressed] = useState<string[]>(["Unpaid"]);
   const [removable, setRemovable] = useState(["invoices", "2026", "draft"]);
-  const toggle = (v: string) =>
-    setPressed((p) => (p.includes(v) ? p.filter((x) => x !== v) : [...p, v]));
+  const toggle = (v: string) => setPressed((p) => (p.includes(v) ? p.filter((x) => x !== v) : [...p, v]));
 
   return (
     <>
@@ -583,22 +596,26 @@ function Chips() {
             a link
           </Chip>
           {(["Unpaid", "Overdue"] as const).map((v) => (
-            <Chip key={v} onClick={() => toggle(v)} selected={pressed.includes(v)} status={v === "Unpaid" ? "attention" : "problem"}>
+            <Chip
+              key={v}
+              onClick={() => toggle(v)}
+              selected={pressed.includes(v)}
+              status={v === "Unpaid" ? "attention" : "problem"}
+            >
               {v}
             </Chip>
           ))}
         </Row>
         <Note>
-          One component, not three. A chip that is inert, a link and a toggle are the same
-          object wearing different props — the shape <code className="font-mono">Button</code>{" "}
-          already uses when it is given an <code className="font-mono">href</code>. Keeping
-          them together is what stops an app growing three near-identical pills that drift.
-          A chip is deliberately <em>not</em> a Button: a row of buttons reads as
+          One component, not three. A chip that is inert, a link and a toggle are the same object wearing different
+          props — the shape <code className="font-mono">Button</code> already uses when it is given an{" "}
+          <code className="font-mono">href</code>. Keeping them together is what stops an app growing three
+          near-identical pills that drift. A chip is deliberately <em>not</em> a Button: a row of buttons reads as
           &ldquo;choose an action&rdquo;, a row of chips as &ldquo;here are the things&rdquo;.{" "}
-          <code className="font-mono">href</code> and <code className="font-mono">onClick</code>{" "}
-          do not collide: a bare <code className="font-mono">onClick</code> is a toggle or an action
-          button, and <code className="font-mono">{"<Chip href=\"…\" onClick={…}>"}</code> is a LINK that
-          runs code on its way — see &ldquo;Chip — a link with onClick&rdquo; below.
+          <code className="font-mono">href</code> and <code className="font-mono">onClick</code> do not collide: a bare{" "}
+          <code className="font-mono">onClick</code> is a toggle or an action button, and{" "}
+          <code className="font-mono">{'<Chip href="…" onClick={…}>'}</code> is a LINK that runs code on its way — see
+          &ldquo;Chip — a link with onClick&rdquo; below.
         </Note>
       </Example>
 
@@ -628,10 +645,9 @@ function Chips() {
           </Row>
         </div>
         <Note>
-          <code className="font-mono">income</code> and <code className="font-mono">expense</code>{" "}
-          are the money pair: only the text and border carry the tint, on the neutral
-          chip&apos;s surfaces, so the chip does not smear into the amber or teal figure beside
-          it. <code className="font-mono">lg</code> is the phone size — a{" "}
+          <code className="font-mono">income</code> and <code className="font-mono">expense</code> are the money pair:
+          only the text and border carry the tint, on the neutral chip&apos;s surfaces, so the chip does not smear into
+          the amber or teal figure beside it. <code className="font-mono">lg</code> is the phone size — a{" "}
           <code className="font-mono">min-h-11</code> target for a filter row a thumb has to hit.
         </Note>
       </Example>
@@ -652,12 +668,10 @@ function Chips() {
           )}
         </Row>
         <Note>
-          Each dismiss button is labelled <em>Remove: invoices</em>, not
-          &ldquo;Remove&rdquo;. A row of eight otherwise gives a screen-reader user eight
-          buttons with the same name and no way to tell which one they are on. When a chip
-          is also a link, the × is a SIBLING rather than a nested button — a button inside
-          an anchor is invalid HTML and browsers disagree about what it does — drawn inside the
-          same pill (see the combinations below).
+          Each dismiss button is labelled <em>Remove: invoices</em>, not &ldquo;Remove&rdquo;. A row of eight otherwise
+          gives a screen-reader user eight buttons with the same name and no way to tell which one they are on. When a
+          chip is also a link, the × is a SIBLING rather than a nested button — a button inside an anchor is invalid
+          HTML and browsers disagree about what it does — drawn inside the same pill (see the combinations below).
         </Note>
       </Example>
     </>
@@ -714,7 +728,11 @@ function ChipStates() {
               {f}
             </Chip>
           ))}
-          <Chip href="#/chips-toggles#chip-states-and-combinations" icon={Hash} onRemove={() => setLog("remove the pinned link")}>
+          <Chip
+            href="#/chips-toggles#chip-states-and-combinations"
+            icon={Hash}
+            onRemove={() => setLog("remove the pinned link")}
+          >
             pinned link
           </Chip>
           <Chip icon={Pin} onRemove={() => setLog("remove, custom label")} removeLabel="Unpin">
@@ -748,18 +766,16 @@ function ChipStates() {
         last event: <span className="font-mono text-secondary">{log}</span>
       </p>
       <Note>
-        The first chip is the <em>action</em> shape: with <code className="font-mono">onClick</code>{" "}
-        and no <code className="font-mono">selected</code> it reports no pressed state at all,
-        so its label may follow the state. The two links mark the current one with{" "}
-        <code className="font-mono">aria-current</code>. A remove beside a link or a toggle is a
-        sibling button, not a nested one, and removing never follows the link — but both sit in
-        ONE pill: the wrapper carries the border, the tone and your{" "}
-        <code className="font-mono">className</code>, so &ldquo;Rent ×&rdquo; reads as a single
-        chip, and the link or toggle part gets its own focus ring and a hover wash inside it. A chip whose
-        content is not plain text has no value to name its × after, so it falls back to{" "}
-        <code className="font-mono">removeLabel</code> (here &ldquo;Unpin&rdquo;) — otherwise the
-        provider&apos;s <code className="font-mono">common.remove</code>. A disabled link renders
-        as an inert span, so it cannot be followed at all.
+        The first chip is the <em>action</em> shape: with <code className="font-mono">onClick</code> and no{" "}
+        <code className="font-mono">selected</code> it reports no pressed state at all, so its label may follow the
+        state. The two links mark the current one with <code className="font-mono">aria-current</code>. A remove beside
+        a link or a toggle is a sibling button, not a nested one, and removing never follows the link — but both sit in
+        ONE pill: the wrapper carries the border, the tone and your <code className="font-mono">className</code>, so
+        &ldquo;Rent ×&rdquo; reads as a single chip, and the link or toggle part gets its own focus ring and a hover
+        wash inside it. A chip whose content is not plain text has no value to name its × after, so it falls back to{" "}
+        <code className="font-mono">removeLabel</code> (here &ldquo;Unpin&rdquo;) — otherwise the provider&apos;s{" "}
+        <code className="font-mono">common.remove</code>. A disabled link renders as an inert span, so it cannot be
+        followed at all.
       </Note>
     </Example>
   );
@@ -795,24 +811,17 @@ function ChipInputDemo() {
           validate={(v) => (v.includes("@") ? null : "That is not an email address")}
           labels={t.kit.chipInput}
         />
-        <ChipInput
-          label="At most three"
-          value={capped}
-          onChange={setCapped}
-          max={3}
-          labels={t.kit.chipInput}
-        />
+        <ChipInput label="At most three" value={capped} onChange={setCapped} max={3} labels={t.kit.chipInput} />
         <ChipInput label="Disabled" value={["locked"]} onChange={() => {}} disabled />
       </div>
       <Note>
-        <strong>Backspace on an empty field moves to the last chip; it does not delete it.</strong>{" "}
-        Deleting straight away is the commoner choice and it is a trap: a destructive action
-        on a key people hit by reflex, with no feedback, on a value that may have taken a
-        while to type. Moving focus first makes the second Backspace a deliberate one — and
-        it is what lets a keyboard user reach a chip at all. Arrows move between chips,
-        Escape clears the draft without touching the committed values, blur commits (losing
-        what you typed because you clicked away is the usual complaint about this pattern),
-        and a pasted list splits on the separators as ONE change rather than one per item.
+        <strong>Backspace on an empty field moves to the last chip; it does not delete it.</strong> Deleting straight
+        away is the commoner choice and it is a trap: a destructive action on a key people hit by reflex, with no
+        feedback, on a value that may have taken a while to type. Moving focus first makes the second Backspace a
+        deliberate one — and it is what lets a keyboard user reach a chip at all. Arrows move between chips, Escape
+        clears the draft without touching the committed values, blur commits (losing what you typed because you clicked
+        away is the usual complaint about this pattern), and a pasted list splits on the separators as ONE change rather
+        than one per item.
       </Note>
     </Example>
   );
@@ -860,24 +869,19 @@ function ChipInputOptions() {
         />
       </div>
       <p className="mt-3 text-xs text-muted">
-        values:{" "}
-        <span className="font-mono text-secondary">
-          {JSON.stringify({ keywords, codes, cc })}
-        </span>
+        values: <span className="font-mono text-secondary">{JSON.stringify({ keywords, codes, cc })}</span>
       </p>
       <Note>
         <code className="font-mono">separators</code> replaces the default comma — here both{" "}
-        <code className="font-mono">;</code> and a space commit, and a pasted{" "}
-        <code className="font-mono">a;b c</code> splits into three chips.{" "}
-        <code className="font-mono">allowDuplicates</code> keeps the second &ldquo;tax&rdquo;;
-        without it a repeat is refused. <code className="font-mono">invalid</code> paints the
-        frame only (clear the codes to see it); <code className="font-mono">error</code> implies
-        it and adds the text below, wired to the input with{" "}
-        <code className="font-mono">aria-describedby</code>. A rejection from{" "}
-        <code className="font-mono">validate</code>, <code className="font-mono">max</code> or a
-        duplicate is now <em>shown</em> as well as announced: type <code className="font-mono">de</code>{" "}
-        into the codes and press Enter — the draft stays, the frame turns invalid and the reason
-        appears under the field (described by it) until the next edit.
+        <code className="font-mono">;</code> and a space commit, and a pasted <code className="font-mono">a;b c</code>{" "}
+        splits into three chips. <code className="font-mono">allowDuplicates</code> keeps the second &ldquo;tax&rdquo;;
+        without it a repeat is refused. <code className="font-mono">invalid</code> paints the frame only (clear the
+        codes to see it); <code className="font-mono">error</code> implies it and adds the text below, wired to the
+        input with <code className="font-mono">aria-describedby</code>. A rejection from{" "}
+        <code className="font-mono">validate</code>, <code className="font-mono">max</code> or a duplicate is now{" "}
+        <em>shown</em> as well as announced: type <code className="font-mono">de</code> into the codes and press Enter —
+        the draft stays, the frame turns invalid and the reason appears under the field (described by it) until the next
+        edit.
       </Note>
     </Example>
   );
@@ -900,12 +904,11 @@ function ChipsRtl() {
         <ChipInput label="الوسوم" value={tags} onChange={setTags} placeholder="اكتب ثم Enter" />
       </div>
       <Note>
-        The icon leads and the × trails in the reading direction, because the chip is a flex
-        row, and the ×&apos;s margins and the pill&apos;s end inset are logical (
-        <code className="font-mono">ms</code>/<code className="font-mono">me</code>/
-        <code className="font-mono">pe</code>), so the × sits snug at the left end here. In the
-        field the arrows follow the reading direction: focus a chip and press → to reach the
-        previous one (to its right), ← to move on towards the input.
+        The icon leads and the × trails in the reading direction, because the chip is a flex row, and the ×&apos;s
+        margins and the pill&apos;s end inset are logical (<code className="font-mono">ms</code>/
+        <code className="font-mono">me</code>/<code className="font-mono">pe</code>), so the × sits snug at the left end
+        here. In the field the arrows follow the reading direction: focus a chip and press → to reach the previous one
+        (to its right), ← to move on towards the input.
       </Note>
     </Example>
   );
@@ -985,12 +988,15 @@ export function ToggleGroup022Demo() {
           />
         </div>
         <Note>
-          The active fill starts 21px down, 3.25px below the 11px label&apos;s line, clear of it. {code('size="sm"')} keeps its 12px type inside the chrome. The joined pair
-          squares the shared edge from {code("md")} up with {code('chromeClassName="md:rounded-s-none"')} and{" "}
-          {code('className="md:-ms-px"')}; on a phone the two stack.
+          The active fill starts 21px down, 3.25px below the 11px label&apos;s line, clear of it. {code('size="sm"')}{" "}
+          keeps its 12px type inside the chrome. The joined pair squares the shared edge from {code("md")} up with{" "}
+          {code('chromeClassName="md:rounded-s-none"')} and {code('className="md:-ms-px"')}; on a phone the two stack.
         </Note>
       </Example>
-      <Example label='ToggleGroup labelPlacement="strip"' hint="a group that is not a field, on its neighbours' label line">
+      <Example
+        label='ToggleGroup labelPlacement="strip"'
+        hint="a group that is not a field, on its neighbours' label line"
+      >
         <div className="grid grid-cols-1 items-start gap-3 md:grid-cols-3">
           <Input label="Memo" defaultValue="Rent September" />
           <ToggleGroup
@@ -1004,11 +1010,14 @@ export function ToggleGroup022Demo() {
           <Input label="Amount" defaultValue="1,250.00" />
         </div>
         <Note>
-          20px of strip plus a 22px group: exactly the 42px of the inputs beside it, the label on their line, and the label and its
-          &ldquo;?&rdquo; clear of the group&apos;s border.
+          20px of strip plus a 22px group: exactly the 42px of the inputs beside it, the label on their line, and the
+          label and its &ldquo;?&rdquo; clear of the group&apos;s border.
         </Note>
       </Example>
-      <Example label="commit / disabledReason on a group and a chip" hint="under a WriteLockProvider: reachable, refusing, saying why">
+      <Example
+        label="commit / disabledReason on a group and a chip"
+        hint="under a WriteLockProvider: reachable, refusing, saying why"
+      >
         <div className="flex flex-col gap-3">
           <Switch checked={locked} onCheckedChange={setLocked} label="Read-only (WriteLockProvider locked)" />
           <WriteLockProvider locked={locked} reason="This is a shared budget: you can look, not change.">
@@ -1024,8 +1033,8 @@ export function ToggleGroup022Demo() {
         </div>
         <Note>
           Hover or Tab onto a segment or the chip: the lock&apos;s reason shows and is read out; a press changes
-          nothing. Without the lock (or the {code("commit")} prop) both behave as before. {code("disabledReason")}{" "}
-          is the same refusal with a reason of the control&apos;s own.
+          nothing. Without the lock (or the {code("commit")} prop) both behave as before. {code("disabledReason")} is
+          the same refusal with a reason of the control&apos;s own.
         </Note>
       </Example>
     </>

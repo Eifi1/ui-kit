@@ -222,10 +222,7 @@ describe("Tabs — add, remove, adornments", () => {
 
   it("announces Delete as the tab's shortcut", () => {
     render(<Workbook />);
-    expect(screen.getByRole("tab", { name: "40 km/h" })).toHaveAttribute(
-      "aria-keyshortcuts",
-      "Delete",
-    );
+    expect(screen.getByRole("tab", { name: "40 km/h" })).toHaveAttribute("aria-keyshortcuts", "Delete");
   });
 
   describe('removeOn="active" (lenkbank: a remove deletes a sheet at once)', () => {
@@ -253,10 +250,7 @@ describe("Tabs — add, remove, adornments", () => {
 
     it("announces the shortcut on the open tab only, and keeps every tab's gutter", () => {
       render(<Workbook removeOn="active" />);
-      expect(screen.getByRole("tab", { name: /80 km\/h/ })).toHaveAttribute(
-        "aria-keyshortcuts",
-        "Delete",
-      );
+      expect(screen.getByRole("tab", { name: /80 km\/h/ })).toHaveAttribute("aria-keyshortcuts", "Delete");
       expect(screen.getByRole("tab", { name: "40 km/h" })).not.toHaveAttribute("aria-keyshortcuts");
       for (const t of screen.getAllByRole("tab")) expect(t).toHaveClass("pe-8");
       expect(screen.getAllByRole("button", { name: /^Remove / })).toHaveLength(1);
@@ -332,12 +326,7 @@ describe("Tabs — add, remove, adornments", () => {
 
   it("keeps a tab marked removable={false}", () => {
     render(
-      <Tabs
-        tabs={[{ id: "x", label: "Base", removable: false }]}
-        active="x"
-        onChange={vi.fn()}
-        onRemove={vi.fn()}
-      />,
+      <Tabs tabs={[{ id: "x", label: "Base", removable: false }]} active="x" onChange={vi.fn()} onRemove={vi.fn()} />,
     );
     expect(screen.queryByRole("button")).toBeNull();
     expect(screen.getByRole("tab", { name: "Base" })).not.toHaveAttribute("aria-keyshortcuts");
@@ -382,13 +371,7 @@ describe("SearchField — inline variant", () => {
 
   it("puts inputClassName on the input, className on the wrapper", () => {
     render(
-      <SearchField
-        value=""
-        onChange={vi.fn()}
-        aria-label="Search"
-        className="flex-1"
-        inputClassName="text-base"
-      />,
+      <SearchField value="" onChange={vi.fn()} aria-label="Search" className="flex-1" inputClassName="text-base" />,
     );
     const box = screen.getByRole("searchbox", { name: "Search" });
     expect(box).toHaveClass("text-base");
@@ -398,9 +381,7 @@ describe("SearchField — inline variant", () => {
 
   it("keeps its clear button in the inline form", () => {
     const onChange = vi.fn();
-    render(
-      <SearchField variant="inline" value="rent" onChange={onChange} aria-label="Search" clearLabel="Clear" />,
-    );
+    render(<SearchField variant="inline" value="rent" onChange={onChange} aria-label="Search" clearLabel="Clear" />);
     fireEvent.click(screen.getByRole("button", { name: "Clear" }));
     expect(onChange).toHaveBeenCalledWith("");
   });

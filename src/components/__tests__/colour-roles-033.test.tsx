@@ -35,7 +35,9 @@ describe("B′: a control that can sit on any surface hovers with the translucen
   it("IconButton muted, and the ghost IconButton", () => {
     render(
       <>
-        <IconButton tone="muted" aria-label="More">x</IconButton>
+        <IconButton tone="muted" aria-label="More">
+          x
+        </IconButton>
         <IconButton aria-label="Edit">x</IconButton>
       </>,
     );
@@ -44,7 +46,11 @@ describe("B′: a control that can sit on any surface hovers with the translucen
   });
 
   it("a danger ghost hovers onto the danger wash, where its red text keeps 4.5:1", () => {
-    render(<Button variant="ghost" tone="danger">Remove</Button>);
+    render(
+      <Button variant="ghost" tone="danger">
+        Remove
+      </Button>,
+    );
     const el = screen.getByRole("button");
     expect(el).toHaveClass("hover:bg-danger-soft");
     expect(el).not.toHaveClass(HOVER_INK);
@@ -85,9 +91,15 @@ describe("every fill under its own foreground (§5.1)", () => {
   it("Chip solid takes the fill's -contrast, not the surface colour", () => {
     render(
       <>
-        <Chip tone="warning" variant="solid" data-testid="warning">3</Chip>
-        <Chip tone="income" variant="solid" data-testid="income">+</Chip>
-        <Chip tone="neutral" variant="solid" data-testid="neutral">9</Chip>
+        <Chip tone="warning" variant="solid" data-testid="warning">
+          3
+        </Chip>
+        <Chip tone="income" variant="solid" data-testid="income">
+          +
+        </Chip>
+        <Chip tone="neutral" variant="solid" data-testid="neutral">
+          9
+        </Chip>
       </>,
     );
     expect(screen.getByTestId("warning")).toHaveClass("bg-warning", "text-warning-contrast");
@@ -97,7 +109,11 @@ describe("every fill under its own foreground (§5.1)", () => {
   });
 
   it("Chip outline brand writes the brand as text: --brand-muted", () => {
-    render(<Chip tone="brand" variant="outline" data-testid="brand">New</Chip>);
+    render(
+      <Chip tone="brand" variant="outline" data-testid="brand">
+        New
+      </Chip>,
+    );
     const el = screen.getByTestId("brand");
     expect(el).toHaveClass("text-brand-muted");
     expect(el).not.toHaveClass("text-brand");
@@ -133,7 +149,13 @@ describe("DataTable", () => {
     const selected = "bg-surface-2 hover:bg-surface-2 hover:outline hover:-outline-offset-1 hover:outline-strong";
     render(
       <MemoryRouter>
-        <DataTable rows={ROWS} columns={COLUMNS} rowKey={(r) => r.id} onRowClick={() => {}} rowClassName={() => selected} />
+        <DataTable
+          rows={ROWS}
+          columns={COLUMNS}
+          rowKey={(r) => r.id}
+          onRowClick={() => {}}
+          rowClassName={() => selected}
+        />
       </MemoryRouter>,
     );
     const row = screen.getAllByRole("row")[1];

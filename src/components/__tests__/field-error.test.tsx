@@ -22,8 +22,7 @@ import { Textarea } from "../textarea";
  * what it typed by looking.
  */
 
-const described = (el: Element) =>
-  (el.getAttribute("aria-describedby") ?? "").split(/\s+/).filter(Boolean);
+const described = (el: Element) => (el.getAttribute("aria-describedby") ?? "").split(/\s+/).filter(Boolean);
 
 /** The text of every element `el` points at with aria-describedby. */
 const descriptions = (el: Element) =>

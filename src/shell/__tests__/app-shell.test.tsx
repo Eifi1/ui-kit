@@ -89,8 +89,7 @@ function renderGrouped(path: string, subNav?: "flyout" | "inline") {
 }
 
 /** The sidebar's copy of a link — the mobile bottom bar renders the same entries. */
-const sidebarLink = (name: string) =>
-  screen.getAllByRole("link", { name }).find((a) => a.closest("aside"))!;
+const sidebarLink = (name: string) => screen.getAllByRole("link", { name }).find((a) => a.closest("aside"))!;
 
 describe("AppShell — the group that holds the current page", () => {
   it("highlights a flyout group while one of its sub-pages is open", () => {

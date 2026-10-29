@@ -139,7 +139,10 @@ export function SignInForm029Demo() {
               registerHref="/register"
               onStepChange={(step) => setTitle(step === "credentials" ? "Sign in" : "Almost there")}
               onSubmit={({ email, password }) =>
-                answered(`onSubmit({ email: "${email}", password: "${masked(password)}" })`, pretendLogin(email, password))
+                answered(
+                  `onSubmit({ email: "${email}", password: "${masked(password)}" })`,
+                  pretendLogin(email, password),
+                )
               }
               onCode={({ challengeToken, code: digits }) =>
                 answered(
@@ -158,7 +161,10 @@ export function SignInForm029Demo() {
                 )
               }
               onPasskey={() =>
-                answered("onPasskey()", beat(700).then((): SignInAnswer => ({ kind: "2fa", challengeToken: "challenge-passkey" })))
+                answered(
+                  "onPasskey()",
+                  beat(700).then((): SignInAnswer => ({ kind: "2fa", challengeToken: "challenge-passkey" })),
+                )
               }
               passwordChangeContent={(extra) =>
                 extra?.encrypted ? (
@@ -287,8 +293,8 @@ export function RegisterForm029Demo() {
         Type an address and the form offers {code("you+exampleapp@…")} as one click — never applied on its own (§4.5).
         {code("taken@example.com")} answers {code("email_taken")} under the field; {code("closed@example.com")} answers{" "}
         {code("registration_closed")} above the button. With an invitation the address is fixed, the invitee may still
-        take its tagged form and go back, and the app&apos;s Company field disappears: the invitation names the company. The
-        language field is controlled by the app ({code("locale")} + {code("onLocaleChange")}), so it can be the
+        take its tagged form and go back, and the app&apos;s Company field disappears: the invitation names the company.
+        The language field is controlled by the app ({code("locale")} + {code("onLocaleChange")}), so it can be the
         app&apos;s own language switch; {code("languageField")} replaces it with the app&apos;s control.
       </Note>
     </Example>
@@ -326,9 +332,9 @@ export function CompleteName029Demo() {
       )}
       <Readout lines={lines} />
       <Note>
-        An account&apos;s old display name moved whole into the first name (§3.3); the app
-        shows this while {code("/auth/me")} answers {code("name_incomplete: true")}, never for a demo user. A last name
-        of {code("Fail")} plays a failed save: the dialog stays open with the names.
+        An account&apos;s old display name moved whole into the first name (§3.3); the app shows this while{" "}
+        {code("/auth/me")} answers {code("name_incomplete: true")}, never for a demo user. A last name of {code("Fail")}{" "}
+        plays a failed save: the dialog stays open with the names.
       </Note>
     </Example>
   );

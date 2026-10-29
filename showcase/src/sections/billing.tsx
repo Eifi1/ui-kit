@@ -132,13 +132,13 @@ export function PlanSwitch039Demo() {
         ]}
       />
       <Note>
-        While a provider subscription runs, the app sends a PlanPicker pick to {code("POST /billing/plan/preview")}{" "}
-        and opens the confirm with the answer; Confirm is {code("POST /billing/plan")}. The switch is immediate and
-        prorated: an upgrade charges the difference now, a downgrade credits the unused part towards the next
-        charges, and the dimensions over the new limit are said before the payer agrees (a limit gates creation
-        only). The confirm is `COMMIT_EXCEPT_BILLING`: a lapsed payer may change plan, as they may pay. The row
-        follows by webhook; {code("checkoutFingerprint")} reads `paid`, so the "processing" wait after a switch
-        lands even under a grant, under the checkout&apos;s own storage key.
+        While a provider subscription runs, the app sends a PlanPicker pick to {code("POST /billing/plan/preview")} and
+        opens the confirm with the answer; Confirm is {code("POST /billing/plan")}. The switch is immediate and
+        prorated: an upgrade charges the difference now, a downgrade credits the unused part towards the next charges,
+        and the dimensions over the new limit are said before the payer agrees (a limit gates creation only). The
+        confirm is `COMMIT_EXCEPT_BILLING`: a lapsed payer may change plan, as they may pay. The row follows by webhook;{" "}
+        {code("checkoutFingerprint")} reads `paid`, so the "processing" wait after a switch lands even under a grant,
+        under the checkout&apos;s own storage key.
       </Note>
     </Example>
   );
@@ -157,7 +157,9 @@ export function PayPageApps039Demo() {
           `${app.name} · ${app.returnUrl} · ${app.termsUrl} · ${app.privacyUrl}`,
         ])}
       />
-      <p className="mt-3 text-sm text-secondary">The words the switch and the pay page add, in this page&apos;s language:</p>
+      <p className="mt-3 text-sm text-secondary">
+        The words the switch and the pay page add, in this page&apos;s language:
+      </p>
       <OutTable
         rows={[
           ["billing.payDone — paid, for a transaction that names no app", labels.payDone],
@@ -173,7 +175,7 @@ export function PayPageApps039Demo() {
         {code("checkout.loaded")}, frames that app from the map in its {code("pay-config.json")}, and on{" "}
         {code("checkout.completed")} goes to that app&apos;s {code("checkoutReturnUrl(returnUrl)")}. A tag the map
         doesn&apos;t know gets no name and no Back, keeps the host&apos;s Terms and Privacy, and says `payDone` once
-        paid. The bin writes the map: {code("eifi1-pay-page --out /srv-pay --app my-app --app-url \"$PAY_APP_URL\"")}.
+        paid. The bin writes the map: {code('eifi1-pay-page --out /srv-pay --app my-app --app-url "$PAY_APP_URL"')}.
       </Note>
     </Example>
   );
@@ -221,7 +223,12 @@ export function BuyerOnly042Demo() {
     >
       <div className="space-y-3">
         <div className="flex flex-wrap gap-x-6 gap-y-2">
-          <Switch size="sm" label="The viewer is the buyer" checked={viewerIsBuyer} onCheckedChange={setViewerIsBuyer} />
+          <Switch
+            size="sm"
+            label="The viewer is the buyer"
+            checked={viewerIsBuyer}
+            onCheckedChange={setViewerIsBuyer}
+          />
           <Switch size="sm" label="The buyer has left the company" checked={buyerLeft} onCheckedChange={setBuyerLeft} />
         </div>
         <SubscriptionActions
@@ -252,13 +259,13 @@ export function BuyerOnly042Demo() {
         />
       </div>
       <Note>
-        Where the company stores a buyer ({code("provider_payer_user_id")}), the provider&apos;s portal
-        opens for that admin only: for any other admin {code("portal")} is {code('"buyer_only"')}, &ldquo;Payment
-        and invoices&rdquo; becomes a caption that names the buyer, and &ldquo;Cancel subscription&rdquo; opens the
-        in-app confirm, whose button is {code("POST /billing/cancel")}. The subscription ends at its period&apos;s
-        end; while that is scheduled, &ldquo;Keep subscription&rdquo; ({code("POST /billing/resume")}) stands in the
-        cancel&apos;s place, for the buyer too. The payment-failed banner says who can change the card, with no
-        button. Neither confirm takes the billing lock.
+        Where the company stores a buyer ({code("provider_payer_user_id")}), the provider&apos;s portal opens for that
+        admin only: for any other admin {code("portal")} is {code('"buyer_only"')}, &ldquo;Payment and invoices&rdquo;
+        becomes a caption that names the buyer, and &ldquo;Cancel subscription&rdquo; opens the in-app confirm, whose
+        button is {code("POST /billing/cancel")}. The subscription ends at its period&apos;s end; while that is
+        scheduled, &ldquo;Keep subscription&rdquo; ({code("POST /billing/resume")}) stands in the cancel&apos;s place,
+        for the buyer too. The payment-failed banner says who can change the card, with no button. Neither confirm takes
+        the billing lock.
       </Note>
     </Example>
   );
@@ -335,12 +342,12 @@ export function GrantWarning042Demo() {
         )}
       </div>
       <Note>
-        Under an operator&apos;s grant without an end ({code("status: comped")},{" "}
-        {code("source: manual")}, {code("comped_until: null")}) a purchase leaves the plan on the grant&apos;s: the
-        payer would pay for a plan that never applies. The kit warns, it doesn&apos;t refuse. On the way to the
-        checkout PlanPicker asks first (&ldquo;Buy anyway&rdquo;, &ldquo;Back&rdquo;); told {code("switching")}, it
-        hands the pick on and PlanSwitchConfirm shows the same words above its figures, so the payer reads them
-        once. {code("source")} is checked explicitly: a pre-launch beta row has no end date either.
+        Under an operator&apos;s grant without an end ({code("status: comped")}, {code("source: manual")},{" "}
+        {code("comped_until: null")}) a purchase leaves the plan on the grant&apos;s: the payer would pay for a plan
+        that never applies. The kit warns, it doesn&apos;t refuse. On the way to the checkout PlanPicker asks first
+        (&ldquo;Buy anyway&rdquo;, &ldquo;Back&rdquo;); told {code("switching")}, it hands the pick on and
+        PlanSwitchConfirm shows the same words above its figures, so the payer reads them once. {code("source")} is
+        checked explicitly: a pre-launch beta row has no end date either.
       </Note>
     </Example>
   );
@@ -435,12 +442,12 @@ export function Portal043Demo() {
         </p>
       </div>
       <Note>
-        §17: the app&apos;s portal handler calls {code("openProviderPage(fetchUrl)")}: it opens{" "}
-        {code("about:blank")} inside the click with {code("opener = null")}, awaits {code("POST /billing/portal")},
-        and points the tab at the answer; a refusal closes the tab and rethrows, a blocked pop-up sends this page
-        instead. The portal&apos;s actions carry the external-link mark and the note names the provider and the
-        app; the checkout stays in the same tab. After the in-app cancel, {code("useCancelRequest")} shows
-        &ldquo;Cancels on&rdquo; and &ldquo;Keep subscription&rdquo; at once, until the webhook moves the row.
+        §17: the app&apos;s portal handler calls {code("openProviderPage(fetchUrl)")}: it opens {code("about:blank")}{" "}
+        inside the click with {code("opener = null")}, awaits {code("POST /billing/portal")}, and points the tab at the
+        answer; a refusal closes the tab and rethrows, a blocked pop-up sends this page instead. The portal&apos;s
+        actions carry the external-link mark and the note names the provider and the app; the checkout stays in the same
+        tab. After the in-app cancel, {code("useCancelRequest")} shows &ldquo;Cancels on&rdquo; and &ldquo;Keep
+        subscription&rdquo; at once, until the webhook moves the row.
       </Note>
     </Example>
   );

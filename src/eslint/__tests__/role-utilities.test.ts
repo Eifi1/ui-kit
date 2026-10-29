@@ -66,14 +66,49 @@ describe("parseThemeInline", () => {
   it("reads the declarations in block order, comments stripped, a width named like its colour", () => {
     const block = parseThemeInline(css)!;
     expect(block.declarations).toEqual([
-      { variable: "text-color-muted", property: "text", name: "muted", utility: "text-muted", token: "--text-muted", value: "var(--text-muted)" },
-      { variable: "ring-width-focus", property: "ring-width", name: "focus", utility: "ring-focus", token: "--focus-ring-width", value: "var(--focus-ring-width)" },
-      { variable: "ring-offset-color-surface", property: "ring-offset", name: "surface", utility: "ring-offset-surface", token: "--bg-surface", value: "var(--bg-surface)" },
-      { variable: "background-color-hover", property: "bg", name: "hover", utility: "bg-hover", token: "--bg-hover", value: "var(--bg-hover)" },
+      {
+        variable: "text-color-muted",
+        property: "text",
+        name: "muted",
+        utility: "text-muted",
+        token: "--text-muted",
+        value: "var(--text-muted)",
+      },
+      {
+        variable: "ring-width-focus",
+        property: "ring-width",
+        name: "focus",
+        utility: "ring-focus",
+        token: "--focus-ring-width",
+        value: "var(--focus-ring-width)",
+      },
+      {
+        variable: "ring-offset-color-surface",
+        property: "ring-offset",
+        name: "surface",
+        utility: "ring-offset-surface",
+        token: "--bg-surface",
+        value: "var(--bg-surface)",
+      },
+      {
+        variable: "background-color-hover",
+        property: "bg",
+        name: "hover",
+        utility: "bg-hover",
+        token: "--bg-hover",
+        value: "var(--bg-hover)",
+      },
       // A namespace no property reads: reported, so the README's table can refuse it.
       { variable: "color-ink", property: null, name: null, utility: null, token: "--ink", value: "var(--ink)" },
       // Not a bare var(): no token, the value as written.
-      { variable: "fill-muted", property: "fill", name: "muted", utility: "fill-muted", token: null, value: "var(--text-muted, #666)" },
+      {
+        variable: "fill-muted",
+        property: "fill",
+        name: "muted",
+        utility: "fill-muted",
+        token: null,
+        value: "var(--text-muted, #666)",
+      },
     ]);
   });
 
@@ -221,8 +256,9 @@ new RuleTester({
   valid: [`const tone: Record<Tone, string> = { chart: "bg-[var(--chart-2)]" };`],
   invalid: [
     {
-      code: "export const Row = ({ on }: { on: boolean }) => <tr className={`${on ? \"bg-[var(--bg-active)]\" : \"\"} border-b-[var(--border)]`} />;",
-      output: "export const Row = ({ on }: { on: boolean }) => <tr className={`${on ? \"bg-active\" : \"\"} border-b-subtle`} />;",
+      code: 'export const Row = ({ on }: { on: boolean }) => <tr className={`${on ? "bg-[var(--bg-active)]" : ""} border-b-[var(--border)]`} />;',
+      output:
+        'export const Row = ({ on }: { on: boolean }) => <tr className={`${on ? "bg-active" : ""} border-b-subtle`} />;',
       errors: [error("bg-[var(--bg-active)]", "bg-active"), error("border-b-[var(--border)]", "border-b-subtle")],
     },
   ],

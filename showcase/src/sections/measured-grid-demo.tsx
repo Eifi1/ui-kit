@@ -39,12 +39,9 @@ const SWEEP_COLUMNS = [
 
 /** What to copy for the paste specimen: a header line, a German tab-separated line and
  *  an English CSV line, with a trailing column the grid has no room for. */
-const SAMPLE = [
-  "time\tx\ty\tz",
-  "0,5\t1,25\t2,75\t12:00:01",
-  "1.5,2.25,3.75,12:00:02",
-  "2;3,5;4,5;12:00:03",
-].join("\n");
+const SAMPLE = ["time\tx\ty\tz", "0,5\t1,25\t2,75\t12:00:01", "1.5,2.25,3.75,12:00:02", "2;3,5;4,5;12:00:03"].join(
+  "\n",
+);
 
 /** What the hook answers, under a specimen. */
 function GridStateLine({ ready, points, problems }: { ready: boolean; points: number; problems: number }) {
@@ -58,19 +55,28 @@ function GridStateLine({ ready, points, problems }: { ready: boolean; points: nu
 export function MeasuredGridDemo() {
   const sweep = useMeasuredRows(SWEEP, { digits: 3 });
   const pasted = useMeasuredRows([]);
-  const german = useMeasuredRows([[0.5, 1.25], [1, 2.5]], { locale: "de-DE" });
+  const german = useMeasuredRows(
+    [
+      [0.5, 1.25],
+      [1, 2.5],
+    ],
+    { locale: "de-DE" },
+  );
   const generated = useMeasuredRows([], { digits: 2, locale: "fr-FR" });
-  const rtl = useMeasuredRows([[1, 10], [2, 20], [3, 30]]);
+  const rtl = useMeasuredRows([
+    [1, 10],
+    [2, 20],
+    [3, 30],
+  ]);
 
   return (
     <>
       <Note>
-        <strong>Keyboard:</strong> the grid is one tab stop. Arrows move between cells (Left/Right
-        flip in a right-to-left page), Home/End go to the ends of the row and with Ctrl to the ends
-        of the table, PageUp/PageDown move a screenful. Typing replaces a cell; F2 edits it in place,
-        where Left/Right move the caret and leave the cell only at the edge of its text; Escape puts
-        back what the cell held. Enter and ArrowDown move down a column and add a row past the last
-        one.
+        <strong>Keyboard:</strong> the grid is one tab stop. Arrows move between cells (Left/Right flip in a
+        right-to-left page), Home/End go to the ends of the row and with Ctrl to the ends of the table, PageUp/PageDown
+        move a screenful. Typing replaces a cell; F2 edits it in place, where Left/Right move the caret and leave the
+        cell only at the edge of its text; Escape puts back what the cell held. Enter and ArrowDown move down a column
+        and add a row past the last one.
       </Note>
 
       <Example label="MeasuredGrid — 400 measured rows" hint="windowed: only the rows on screen are mounted">
@@ -99,9 +105,7 @@ export function MeasuredGridDemo() {
               <GridStateLine ready={pasted.ready} points={pasted.rows.length} problems={pasted.problems} />
             </div>
             <div>
-              <p className="mb-1 text-caption font-medium text-muted">
-                Copy this, click a cell, paste
-              </p>
+              <p className="mb-1 text-caption font-medium text-muted">Copy this, click a cell, paste</p>
               <pre className="overflow-x-auto rounded-md border border-subtle bg-surface-2 p-3 font-mono text-xs text-primary">
                 {SAMPLE}
               </pre>
@@ -109,11 +113,10 @@ export function MeasuredGridDemo() {
           </div>
         </Stage>
         <Note>
-          Each pasted line is read on its own evidence (<code>@eifi1/ui-kit/table-text</code>, the
-          per-line rule): the tab and semicolon lines read their commas as decimal marks, the comma
-          line separates on them. The first line is not numbers, so it is a header and is skipped;
-          the fourth field of each line has no column to land in and is dropped. Text with no tab,
-          newline or semicolon in it is an ordinary paste into one cell.
+          Each pasted line is read on its own evidence (<code>@eifi1/ui-kit/table-text</code>, the per-line rule): the
+          tab and semicolon lines read their commas as decimal marks, the comma line separates on them. The first line
+          is not numbers, so it is a header and is skipped; the fourth field of each line has no column to land in and
+          is dropped. Text with no tab, newline or semicolon in it is an ordinary paste into one cell.
         </Note>
       </Example>
 
@@ -124,7 +127,10 @@ export function MeasuredGridDemo() {
               <div>
                 <MeasuredGrid
                   label="Typed in German"
-                  columns={[{ label: "Weg", unit: "mm" }, { label: "Kraft", unit: "N" }]}
+                  columns={[
+                    { label: "Weg", unit: "mm" },
+                    { label: "Kraft", unit: "N" },
+                  ]}
                   views={["text", "cells"]}
                   {...german.props}
                 />
@@ -133,7 +139,10 @@ export function MeasuredGridDemo() {
             </UiKitProvider>
             <MeasuredGrid
               label="Read-only"
-              columns={[{ label: "Weg", unit: "mm" }, { label: "Kraft", unit: "N" }]}
+              columns={[
+                { label: "Weg", unit: "mm" },
+                { label: "Kraft", unit: "N" },
+              ]}
               views={["cells"]}
               disabled
               cells={german.cells}
@@ -142,9 +151,8 @@ export function MeasuredGridDemo() {
           </div>
         </Stage>
         <Note>
-          The text view commits on blur and names the first line it cannot read rather than
-          dropping it — try a line with a word in it. A read-only grid can still be walked with the
-          arrows; nothing in it can be changed.
+          The text view commits on blur and names the first line it cannot read rather than dropping it — try a line
+          with a word in it. A read-only grid can still be walked with the arrows; nothing in it can be changed.
         </Note>
       </Example>
 
@@ -158,9 +166,7 @@ export function MeasuredGridDemo() {
               <Button
                 variant="secondary"
                 onClick={() =>
-                  generated.setRows(
-                    Array.from({ length: 24 }, (_, i) => [i * 15, Math.sin((i * 15 * Math.PI) / 180)]),
-                  )
+                  generated.setRows(Array.from({ length: 24 }, (_, i) => [i * 15, Math.sin((i * 15 * Math.PI) / 180)]))
                 }
               >
                 Generate a sine (setRows)
@@ -191,13 +197,16 @@ export function MeasuredGridDemo() {
           </div>
         </Stage>
         <Note>
-          <code>setRows</code> takes numbers and writes them as cells in the hook&apos;s locale
-          (<code>fr-FR</code>, so a comma) rounded to its <code>digits</code> (2);{" "}
-          <code>rows</code> reads them back as numbers once the table is whole.
+          <code>setRows</code> takes numbers and writes them as cells in the hook&apos;s locale (<code>fr-FR</code>, so
+          a comma) rounded to its <code>digits</code> (2); <code>rows</code> reads them back as numbers once the table
+          is whole.
         </Note>
       </Example>
 
-      <Example label="MeasuredGrid — right-to-left" hint='dir="rtl": the columns run from the right, and so do the arrows'>
+      <Example
+        label="MeasuredGrid — right-to-left"
+        hint='dir="rtl": the columns run from the right, and so do the arrows'
+      >
         <Stage>
           <div data-stage="wide" dir="rtl">
             <MeasuredGrid
@@ -214,13 +223,15 @@ export function MeasuredGridDemo() {
           </div>
         </Stage>
         <Note>
-          Click the first cell (on the right) and press ←: the caret moves to the next column, which
-          is further left. Left and Right are visual directions, not &quot;previous&quot; and
-          &quot;next&quot;.
+          Click the first cell (on the right) and press ←: the caret moves to the next column, which is further left.
+          Left and Right are visual directions, not &quot;previous&quot; and &quot;next&quot;.
         </Note>
       </Example>
 
-      <Example label="useWindowedRows — a list of your own" hint="10,000 rows; only the visible ones and a few either side are mounted, each measured as it renders">
+      <Example
+        label="useWindowedRows — a list of your own"
+        hint="10,000 rows; only the visible ones and a few either side are mounted, each measured as it renders"
+      >
         <Stage>
           <div data-stage="wide">
             <WindowedList />
@@ -246,10 +257,7 @@ function WindowedList() {
   const { first, last, totalHeight, offsetOf, estimate, measureRef } = useWindowedRows(COUNT, ROW, scrollRef);
   return (
     <div className="space-y-2">
-      <div
-        ref={scrollRef}
-        className="h-64 overflow-y-auto rounded-md border border-subtle bg-surface"
-      >
+      <div ref={scrollRef} className="h-64 overflow-y-auto rounded-md border border-subtle bg-surface">
         <div style={{ height: totalHeight, position: "relative" }}>
           {Array.from({ length: last - first }, (_, i) => {
             const index = first + i;
@@ -262,17 +270,15 @@ function WindowedList() {
                 className="flex flex-wrap items-center justify-between gap-x-3 border-b border-subtle px-3 py-1 text-sm text-primary"
               >
                 <span>Reading {index + 1}</span>
-                <span className="font-mono text-xs text-muted">
-                  {(Math.sin(index / 50) * 100).toFixed(2)}
-                </span>
+                <span className="font-mono text-xs text-muted">{(Math.sin(index / 50) * 100).toFixed(2)}</span>
               </div>
             );
           })}
         </div>
       </div>
       <p className="font-mono text-xs text-muted [overflow-wrap:anywhere]">
-        first = {first} · last = {last} · mounted = {last - first} of {COUNT} · estimate = {estimate}px ·
-        totalHeight = {Math.round(totalHeight)}px
+        first = {first} · last = {last} · mounted = {last - first} of {COUNT} · estimate = {estimate}px · totalHeight ={" "}
+        {Math.round(totalHeight)}px
       </p>
     </div>
   );
@@ -366,8 +372,8 @@ function EnvelopeTable() {
         <StateLine>{`last = ${log}`}</StateLine>
       </div>
       <Note>
-        The value is a quiet button named by the value — the action (&ldquo;Edit Assigned&rdquo;) is its description,
-        so a screen reader does not hear a column of &ldquo;edit, edit, edit&rdquo;. A text value needs no editor; any
+        The value is a quiet button named by the value — the action (&ldquo;Edit Assigned&rdquo;) is its description, so
+        a screen reader does not hear a column of &ldquo;edit, edit, edit&rdquo;. A text value needs no editor; any
         other takes one through {code("editor")} (here {code("NumberInput calculator={false}")}, whose own{" "}
         {code("onCommit")} hands over the evaluated &ldquo;1100-50&rdquo;). Unchanged by {code("isEqual")} is not a
         write. A returned promise keeps the editor read-only with a spinner; a rejection (or a throw — empty the name)
@@ -381,7 +387,10 @@ function EnvelopeTable() {
 function Rename() {
   const [name, setName] = useState("Household");
   return (
-    <Example label="InlineEditField — a rename that can fail" hint="the save rejects for “Taken”; the typed name stays for a retry">
+    <Example
+      label="InlineEditField — a rename that can fail"
+      hint="the save rejects for “Taken”; the typed name stays for a retry"
+    >
       <Stage>
         <div className="flex items-center gap-2 text-sm font-medium">
           <InlineEditField
@@ -399,9 +408,9 @@ function Rename() {
         </div>
       </Stage>
       <Note>
-        A rename field with Save and Cancel needs Escape too. The failure is shown
-        under the field, described and spoken; the next keystroke clears it. Focus returns to the value after Enter or
-        Escape, and stays where you went after a save that came from leaving the field.
+        A rename field with Save and Cancel needs Escape too. The failure is shown under the field, described and
+        spoken; the next keystroke clears it. Focus returns to the value after Enter or Escape, and stays where you went
+        after a save that came from leaving the field.
       </Note>
     </Example>
   );

@@ -66,7 +66,9 @@ describe('LegalKitSection section="disclaimer" variant', () => {
     );
     expect(section()).toHaveTextContent("Kommerziell.");
     rerender(
-      <UiKitProvider labels={{ legal: { sections: { impressum: { disclaimer: { title: "Haftung", body: "Privat." } } } } }}>
+      <UiKitProvider
+        labels={{ legal: { sections: { impressum: { disclaimer: { title: "Haftung", body: "Privat." } } } } }}
+      >
         <LegalKitSection page="impressum" section="disclaimer" variant="commercial" />
       </UiKitProvider>,
     );

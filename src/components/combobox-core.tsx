@@ -73,8 +73,7 @@ export interface ComboOption<V extends string | number> {
 }
 
 /** A row the user may take — present and not {@link ComboOption.disabled}. */
-export const isOptionEnabled = (o: { disabled?: boolean } | undefined): boolean =>
-  o !== undefined && !o.disabled;
+export const isOptionEnabled = (o: { disabled?: boolean } | undefined): boolean => o !== undefined && !o.disabled;
 
 /**
  * The next takeable row from `from`, stepping `dir` — what the arrow keys use so a
@@ -82,11 +81,7 @@ export const isOptionEnabled = (o: { disabled?: boolean } | undefined): boolean 
  * list (the family's arrows clamp rather than wrap) and answers `-1` when `from` is
  * not a row and there is nothing to step to.
  */
-export function stepEnabled(
-  rows: readonly { disabled?: boolean }[],
-  from: number,
-  dir: 1 | -1,
-): number {
+export function stepEnabled(rows: readonly { disabled?: boolean }[], from: number, dir: 1 | -1): number {
   for (let i = from + dir; i >= 0 && i < rows.length; i += dir) {
     if (!rows[i].disabled) return i;
   }
@@ -535,8 +530,7 @@ export interface ComboboxPanelWidth {
   maxRem?: number;
 }
 
-export interface ComboboxPanelProps<V extends string | number>
-  extends ComponentPropsWithoutRef<"div"> {
+export interface ComboboxPanelProps<V extends string | number> extends ComponentPropsWithoutRef<"div"> {
   core: ComboboxCore<V>;
   /** What the trigger's `aria-controls` names. Owned by the component that renders
    *  the trigger, not by the core: one id has to reach both, and only one of them
@@ -663,9 +657,7 @@ export function ComboboxPanel<V extends string | number>({
   const isPhone = usePhoneLayout();
   // Every row the keyboard can land on, the create row included — passed over, like a
   // disabled option, while a write lock holds it.
-  const rows: readonly { disabled?: boolean }[] = showCreate
-    ? [...results, { disabled: createLocked }]
-    : results;
+  const rows: readonly { disabled?: boolean }[] = showCreate ? [...results, { disabled: createLocked }] : results;
   const rowCount = rows.length;
   const optionId = (index: number) => `${listboxId}-option-${index}`;
   // The core opens on row 0 and knows nothing of `disabled`; the highlight is settled
@@ -788,10 +780,7 @@ export function ComboboxPanel<V extends string | number>({
         failed ? "text-danger" : "text-muted",
       )}
     >
-      {message ??
-        (results.length > 0 && (
-          <span className="sr-only">{labels.resultCount(results.length)}</span>
-        ))}
+      {message ?? (results.length > 0 && <span className="sr-only">{labels.resultCount(results.length)}</span>)}
     </div>
   );
 
@@ -825,11 +814,7 @@ export function ComboboxPanel<V extends string | number>({
                 : "flex w-full items-center gap-2 px-3 py-1.5 text-start text-sm",
             // The row the arrows are on shows it on a phone too: the sheet takes
             // the keyboard (BUG-5), and a tablet or a desktop at Large has one.
-            o.disabled
-              ? DISABLED_ROW_CLASS
-              : i === current
-                ? "bg-active"
-                : !isPhone && "hover:bg-hover",
+            o.disabled ? DISABLED_ROW_CLASS : i === current ? "bg-active" : !isPhone && "hover:bg-hover",
             // After SHEET_ROW_CLASS, so its hover is the one cancelled.
             o.disabled && isPhone && DISABLED_ROW_CLASS,
           )}
@@ -841,9 +826,7 @@ export function ComboboxPanel<V extends string | number>({
               aria-hidden
               className={cn(
                 "flex size-4 shrink-0 items-center justify-center rounded border",
-                selected
-                  ? "border-[var(--bg-inverse)] bg-inverse text-inverse"
-                  : "border-strong bg-surface",
+                selected ? "border-[var(--bg-inverse)] bg-inverse text-inverse" : "border-strong bg-surface",
               )}
             >
               {selected && <Check className="size-3" />}
@@ -858,9 +841,7 @@ export function ComboboxPanel<V extends string | number>({
               <span className={cn("block truncate-until-large text-primary", columns && selected && "font-medium")}>
                 {o.label}
               </span>
-              {o.sublabel && (
-                <span className="block truncate-until-large text-xs text-placeholder">{o.sublabel}</span>
-              )}
+              {o.sublabel && <span className="block truncate-until-large text-xs text-placeholder">{o.sublabel}</span>}
             </span>
           )}
           {!multi && selected && <Check className="size-4 shrink-0 text-brand" />}
@@ -889,15 +870,9 @@ export function ComboboxPanel<V extends string | number>({
           if (!createLocked) setActive(results.length);
         }}
         className={cn(
-          isPhone
-            ? SHEET_ROW_CLASS
-            : "flex w-full items-center gap-2 px-3 py-1.5 text-start text-sm",
+          isPhone ? SHEET_ROW_CLASS : "flex w-full items-center gap-2 px-3 py-1.5 text-start text-sm",
           "text-secondary",
-          createLocked
-            ? DISABLED_ROW_CLASS
-            : current === results.length
-              ? "bg-active"
-              : !isPhone && "hover:bg-hover",
+          createLocked ? DISABLED_ROW_CLASS : current === results.length ? "bg-active" : !isPhone && "hover:bg-hover",
           // After SHEET_ROW_CLASS, so its hover is the one cancelled.
           createLocked && isPhone && DISABLED_ROW_CLASS,
         )}
@@ -906,9 +881,7 @@ export function ComboboxPanel<V extends string | number>({
         <span className="min-w-0 flex-1">
           <span className="block truncate-until-large">{createContent}</span>
           {createLocked && (
-            <span className="block truncate-until-large text-xs text-placeholder">
-              {createDisabledReason}
-            </span>
+            <span className="block truncate-until-large text-xs text-placeholder">{createDisabledReason}</span>
           )}
         </span>
       </button>
@@ -1090,10 +1063,7 @@ export function ComboboxPanel<V extends string | number>({
         ...(fit ? { width: "max-content", minWidth: least, maxWidth: most } : { width: panelWidth }),
         maxHeight: placement.maxHeight,
       }}
-      className={cn(
-        "z-50 flex flex-col rounded-md border border-subtle bg-surface shadow-lg",
-        className,
-      )}
+      className={cn("z-50 flex flex-col rounded-md border border-subtle bg-surface shadow-lg", className)}
     >
       <DropdownSearchHeader
         query={query}

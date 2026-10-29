@@ -65,7 +65,7 @@ describe("SharedComputerChoice", () => {
 describe("the choice beside a persistent session (B3)", () => {
   afterEach(() => window.localStorage.clear());
 
-  it("lives in localStorage with storage: \"local\", outliving the tab, until set false", () => {
+  it('lives in localStorage with storage: "local", outliving the tab, until set false', () => {
     setSharedComputer(true, { storage: "local" });
     expect(window.localStorage.length).toBe(1);
     window.sessionStorage.clear(); // the tab closed

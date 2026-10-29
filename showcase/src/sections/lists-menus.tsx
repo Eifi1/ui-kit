@@ -133,14 +133,13 @@ function RowKinds() {
           The types allow one target per row: <code className="font-mono">onClick</code> makes it a{" "}
           <code className="font-mono">&lt;button&gt;</code>, <code className="font-mono">href</code> an{" "}
           <code className="font-mono">&lt;a&gt;</code> (through <code className="font-mono">renderLink</code> when
-          given, so a router link keeps the single-page app), <code className="font-mono">external</code> a
-          new-tab anchor that says so to a screen reader, and neither a static block.{" "}
-          <code className="font-mono">actions</code> are SIBLINGS of that target in one bordered box — Tab
-          reaches the row, then Copy, then Delete — so pressing Copy never selects the row, which the
-          readout shows. Middle-click the router row: a real link opens a background tab, and{" "}
-          <code className="font-mono">onAuxClick</code> reports it. <code className="font-mono">trailing</code>{" "}
-          sits inside the target (it is part of the name); <code className="font-mono">meta</code> is the
-          third, caption-sized line.
+          given, so a router link keeps the single-page app), <code className="font-mono">external</code> a new-tab
+          anchor that says so to a screen reader, and neither a static block. <code className="font-mono">actions</code>{" "}
+          are SIBLINGS of that target in one bordered box — Tab reaches the row, then Copy, then Delete — so pressing
+          Copy never selects the row, which the readout shows. Middle-click the router row: a real link opens a
+          background tab, and <code className="font-mono">onAuxClick</code> reports it.{" "}
+          <code className="font-mono">trailing</code> sits inside the target (it is part of the name);{" "}
+          <code className="font-mono">meta</code> is the third, caption-sized line.
         </Note>
       </div>
     </Example>
@@ -221,16 +220,15 @@ function RowStates() {
       </Row>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">unread</code> is three things at once: the brand dot at the end,
-          the title in semibold, and &ldquo;(Unread)&rdquo; read after the title (
-          <code className="font-mono">list.unread</code> from the provider) — the dot alone says nothing
-          to a screen reader. <code className="font-mono">selected</code> is the brand border and{" "}
-          <code className="font-mono">aria-current=&quot;true&quot;</code>: the current one of a set, not a
-          pressed toggle. <code className="font-mono">status</code> puts another mark in the dot&apos;s
+          <code className="font-mono">unread</code> is three things at once: the brand dot at the end, the title in
+          semibold, and &ldquo;(Unread)&rdquo; read after the title (<code className="font-mono">list.unread</code> from
+          the provider) — the dot alone says nothing to a screen reader. <code className="font-mono">selected</code> is
+          the brand border and <code className="font-mono">aria-current=&quot;true&quot;</code>: the current one of a
+          set, not a pressed toggle. <code className="font-mono">status</code> puts another mark in the dot&apos;s
           place. A <code className="font-mono">loading</code> row keeps its focus (
           <code className="font-mono">aria-disabled</code>, not <code className="font-mono">disabled</code>) so a
-          keyboard user is not thrown to the top of the page mid-download; a{" "}
-          <code className="font-mono">disabled</code> one has nothing to do and is skipped.
+          keyboard user is not thrown to the top of the page mid-download; a <code className="font-mono">disabled</code>{" "}
+          one has nothing to do and is skipped.
         </Note>
       </div>
     </Example>
@@ -290,10 +288,11 @@ function RowText() {
       </List>
       <div className="mt-3">
         <Note>
-          Title and a one-line subtitle truncate; <code className="font-mono">subtitleLines={"{2}"}</code>{" "}
-          clamps at two, for a notification whose text is its body. With two lines, <code className="font-mono">align=&quot;start&quot;</code>{" "}
-          keeps the icon, the avatar (<code className="font-mono">leading</code>) and the unread dot beside
-          the title instead of floating in the middle of the paragraph.
+          Title and a one-line subtitle truncate; <code className="font-mono">subtitleLines={"{2}"}</code> clamps at
+          two, for a notification whose text is its body. With two lines,{" "}
+          <code className="font-mono">align=&quot;start&quot;</code> keeps the icon, the avatar (
+          <code className="font-mono">leading</code>) and the unread dot beside the title instead of floating in the
+          middle of the paragraph.
         </Note>
       </div>
     </Example>
@@ -373,12 +372,13 @@ function ListLayout() {
       <p className={`mt-3 ${READOUT}`}>picked: {picked}</p>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">List</code> is a <code className="font-mono">&lt;ul role=&quot;list&quot;&gt;</code>{" "}
-          (<code className="font-mono">&lt;ol&gt;</code> with <code className="font-mono">as=&quot;ol&quot;</code>) —
-          the explicit role because Safari drops a list&apos;s semantics once its bullets are styled
-          away. <code className="font-mono">density</code> is the rows&apos; padding (compact ~36px,
-          default ~44px, comfortable for a list that is the page); <code className="font-mono">separator</code>{" "}
-          is a rule, a small gap, or nothing.
+          <code className="font-mono">List</code> is a{" "}
+          <code className="font-mono">&lt;ul role=&quot;list&quot;&gt;</code> (
+          <code className="font-mono">&lt;ol&gt;</code> with <code className="font-mono">as=&quot;ol&quot;</code>) — the
+          explicit role because Safari drops a list&apos;s semantics once its bullets are styled away.{" "}
+          <code className="font-mono">density</code> is the rows&apos; padding (compact ~36px, default ~44px,
+          comfortable for a list that is the page); <code className="font-mono">separator</code> is a rule, a small gap,
+          or nothing.
         </Note>
       </div>
     </Example>
@@ -426,17 +426,19 @@ function MenuItemChoices() {
                 </li>
               ))}
               <li>
-                <MenuItem
-                  checkable="checkbox"
-                  checked={archived}
-                  icon={Archive}
-                  onClick={() => setArchived((v) => !v)}
-                >
+                <MenuItem checkable="checkbox" checked={archived} icon={Archive} onClick={() => setArchived((v) => !v)}>
                   Show archived budgets
                 </MenuItem>
               </li>
               <li>
-                <MenuItem icon={Pencil} trailing={<kbd className="font-mono text-caption">E</kbd>} onClick={() => { setLog("rename"); close(); }}>
+                <MenuItem
+                  icon={Pencil}
+                  trailing={<kbd className="font-mono text-caption">E</kbd>}
+                  onClick={() => {
+                    setLog("rename");
+                    close();
+                  }}
+                >
                   Rename…
                 </MenuItem>
               </li>
@@ -446,7 +448,14 @@ function MenuItemChoices() {
                 </MenuItem>
               </li>
               <li>
-                <MenuItem icon={Trash2} tone="danger" onClick={() => { setLog("delete budget"); close(); }}>
+                <MenuItem
+                  icon={Trash2}
+                  tone="danger"
+                  onClick={() => {
+                    setLog("delete budget");
+                    close();
+                  }}
+                >
                   Delete budget
                 </MenuItem>
               </li>
@@ -459,15 +468,15 @@ function MenuItemChoices() {
       </Row>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">checked</code> makes a row a CHOICE: <code className="font-mono">menuitemradio</code>{" "}
-          by default (one of a set — the budgets) or <code className="font-mono">menuitemcheckbox</code> with{" "}
-          <code className="font-mono">checkable=&quot;checkbox&quot;</code> (an independent on/off — it stays
-          open so you can see the tick come and go), each with <code className="font-mono">aria-checked</code>{" "}
-          and a ✓ at the end. Left undefined the row is a plain command. <code className="font-mono">tone=&quot;danger&quot;</code>{" "}
-          is the row that destroys; <code className="font-mono">disabled</code> is{" "}
-          <code className="font-mono">aria-disabled</code>, so the row stays perceivable
-          (&ldquo;Import, dimmed&rdquo;) and its click does nothing. <code className="font-mono">trailing</code> holds
-          a shortcut, a count or a badge.
+          <code className="font-mono">checked</code> makes a row a CHOICE:{" "}
+          <code className="font-mono">menuitemradio</code> by default (one of a set — the budgets) or{" "}
+          <code className="font-mono">menuitemcheckbox</code> with{" "}
+          <code className="font-mono">checkable=&quot;checkbox&quot;</code> (an independent on/off — it stays open so
+          you can see the tick come and go), each with <code className="font-mono">aria-checked</code> and a ✓ at the
+          end. Left undefined the row is a plain command. <code className="font-mono">tone=&quot;danger&quot;</code> is
+          the row that destroys; <code className="font-mono">disabled</code> is{" "}
+          <code className="font-mono">aria-disabled</code>, so the row stays perceivable (&ldquo;Import, dimmed&rdquo;)
+          and its click does nothing. <code className="font-mono">trailing</code> holds a shortcut, a count or a badge.
         </Note>
       </div>
     </Example>
@@ -524,7 +533,14 @@ function MenuItemLinks() {
                 </MenuItem>
               </li>
               <li>
-                <MenuItem icon={LogOut} tone="danger" onClick={() => { setWent("signed out"); close(); }}>
+                <MenuItem
+                  icon={LogOut}
+                  tone="danger"
+                  onClick={() => {
+                    setWent("signed out");
+                    close();
+                  }}
+                >
                   Sign out
                 </MenuItem>
               </li>
@@ -536,12 +552,12 @@ function MenuItemLinks() {
       <div className="mt-3">
         <Note>
           <code className="font-mono">href</code> makes the row a link — through{" "}
-          <code className="font-mono">renderLink</code> (your router&apos;s <code className="font-mono">&lt;Link&gt;</code>,
-          the API <code className="font-mono">Chip</code>, <code className="font-mono">StatTile</code> and{" "}
-          <code className="font-mono">ListItem</code> share) or a plain anchor. <code className="font-mono">current</code>{" "}
-          marks the page already open with <code className="font-mono">aria-current=&quot;page&quot;</code> and a
-          ✓ — a checked link would be a link to where you already are. A disabled link has nowhere to go,
-          so it renders as a dimmed button.
+          <code className="font-mono">renderLink</code> (your router&apos;s{" "}
+          <code className="font-mono">&lt;Link&gt;</code>, the API <code className="font-mono">Chip</code>,{" "}
+          <code className="font-mono">StatTile</code> and <code className="font-mono">ListItem</code> share) or a plain
+          anchor. <code className="font-mono">current</code> marks the page already open with{" "}
+          <code className="font-mono">aria-current=&quot;page&quot;</code> and a ✓ — a checked link would be a link to
+          where you already are. A disabled link has nowhere to go, so it renders as a dimmed button.
         </Note>
       </div>
     </Example>
@@ -563,13 +579,7 @@ const FILES = [
 
 /** The selectable file list the three bar specimens share: static rows with a checkbox
  *  in `leading` (a static row's target is a div, so a checkbox may sit in it). */
-function SelectableFiles({
-  selected,
-  onToggle,
-}: {
-  selected: string[];
-  onToggle: (name: string) => void;
-}) {
+function SelectableFiles({ selected, onToggle }: { selected: string[]; onToggle: (name: string) => void }) {
   return (
     <List density="compact" separator="divider">
       {FILES.map((f) => (
@@ -586,8 +596,7 @@ function SelectableFiles({
 
 function useSelection(initial: string[] = []) {
   const [selected, setSelected] = useState<string[]>(initial);
-  const toggle = (name: string) =>
-    setSelected((s) => (s.includes(name) ? s.filter((x) => x !== name) : [...s, name]));
+  const toggle = (name: string) => setSelected((s) => (s.includes(name) ? s.filter((x) => x !== name) : [...s, name]));
   return { selected, setSelected, toggle };
 }
 
@@ -632,11 +641,7 @@ function BulkInlineSticky() {
         <span className={READOUT}>last action: {log}</span>
       </Row>
       <div className="max-h-64 overflow-auto rounded-md border border-subtle">
-        <BulkActionBar
-          variant={variant}
-          count={selected.length}
-          onClear={() => setSelected([])}
-        >
+        <BulkActionBar variant={variant} count={selected.length} onClear={() => setSelected([])}>
           <BarActions count={selected.length} onDone={setLog} />
         </BulkActionBar>
         <div className="p-1">
@@ -645,11 +650,11 @@ function BulkInlineSticky() {
       </div>
       <div className="mt-3">
         <Note>
-          Tick rows and the bar comes in; untick the last (or press <strong>Clear selection</strong>) and it
-          plays its exit and goes. It is rendered unconditionally — <code className="font-mono">count</code>{" "}
-          decides — because at zero it still renders its live region, which has to be in the DOM before
-          the first &ldquo;2 selected&rdquo; can be heard. Scroll the box with the bar showing: the sticky
-          one stays over the rows. The count is spoken on every change and names the toolbar.
+          Tick rows and the bar comes in; untick the last (or press <strong>Clear selection</strong>) and it plays its
+          exit and goes. It is rendered unconditionally — <code className="font-mono">count</code> decides — because at
+          zero it still renders its live region, which has to be in the DOM before the first &ldquo;2 selected&rdquo;
+          can be heard. Scroll the box with the bar showing: the sticky one stays over the rows. The count is spoken on
+          every change and names the toolbar.
         </Note>
       </div>
     </Example>
@@ -685,13 +690,24 @@ function BulkFloating() {
             onClear={() => setSelected([])}
             labels={{ selected: (n) => `${n} file${n === 1 ? "" : "s"} selected` }}
           >
-            <IconButton size="lg" label="Download" tooltipSide="top" onClick={() => setLog(`downloaded ${selected.length}`)}>
+            <IconButton
+              size="lg"
+              label="Download"
+              tooltipSide="top"
+              onClick={() => setLog(`downloaded ${selected.length}`)}
+            >
               <Download />
             </IconButton>
             <IconButton size="lg" label="Move" tooltipSide="top" onClick={() => setLog(`moved ${selected.length}`)}>
               <FolderInput />
             </IconButton>
-            <IconButton size="lg" tone="danger" label="Delete" tooltipSide="top" onClick={() => setLog(`deleted ${selected.length}`)}>
+            <IconButton
+              size="lg"
+              tone="danger"
+              label="Delete"
+              tooltipSide="top"
+              onClick={() => setLog(`deleted ${selected.length}`)}
+            >
               <Trash2 />
             </IconButton>
           </BulkActionBar>
@@ -699,10 +715,21 @@ function BulkFloating() {
       </div>
       {overPage && (
         <BulkActionBar count={selected.length} onClear={() => setSelected([])}>
-          <IconButton size="lg" label="Download" tooltipSide="top" onClick={() => setLog(`downloaded ${selected.length}`)}>
+          <IconButton
+            size="lg"
+            label="Download"
+            tooltipSide="top"
+            onClick={() => setLog(`downloaded ${selected.length}`)}
+          >
             <Download />
           </IconButton>
-          <IconButton size="lg" tone="danger" label="Delete" tooltipSide="top" onClick={() => setLog(`deleted ${selected.length}`)}>
+          <IconButton
+            size="lg"
+            tone="danger"
+            label="Delete"
+            tooltipSide="top"
+            onClick={() => setLog(`deleted ${selected.length}`)}
+          >
             <Trash2 />
           </IconButton>
         </BulkActionBar>
@@ -715,14 +742,14 @@ function BulkFloating() {
       </Row>
       <div className="mt-3">
         <Note>
-          <strong>Keyboard:</strong> the bar is a <code className="font-mono">role=&quot;toolbar&quot;</code> with
-          ONE Tab stop — Tab into it, then ←/→ (mirrored right-to-left), Home and End move between the ×
-          and the actions, and Tab leaves. The stop remembers the control last used. It is not a dialog:
-          no focus trap, no scroll lock, the rows behind stay live, because ticking more rows is how a
-          selection grows. The × is the clear action (<code className="font-mono">bulkActionBar.clear</code>);{" "}
-          <code className="font-mono">labels.selected</code> is a function of the count — this one says
-          &ldquo;files&rdquo;. On a phone it sits above <code className="font-mono">AppShell</code>&apos;s bottom
-          nav (<code className="font-mono">--app-nav-h</code>) and the home indicator, whichever is higher.
+          <strong>Keyboard:</strong> the bar is a <code className="font-mono">role=&quot;toolbar&quot;</code> with ONE
+          Tab stop — Tab into it, then ←/→ (mirrored right-to-left), Home and End move between the × and the actions,
+          and Tab leaves. The stop remembers the control last used. It is not a dialog: no focus trap, no scroll lock,
+          the rows behind stay live, because ticking more rows is how a selection grows. The × is the clear action (
+          <code className="font-mono">bulkActionBar.clear</code>); <code className="font-mono">labels.selected</code> is
+          a function of the count — this one says &ldquo;files&rdquo;. On a phone it sits above{" "}
+          <code className="font-mono">AppShell</code>&apos;s bottom nav (<code className="font-mono">--app-nav-h</code>)
+          and the home indicator, whichever is higher.
         </Note>
       </div>
     </Example>
@@ -742,9 +769,7 @@ function FocusReadout() {
     document.addEventListener("focusin", onFocus);
     return () => document.removeEventListener("focusin", onFocus);
   }, []);
-  return (
-    <span className={READOUT}>focus in a bar: {name}</span>
-  );
+  return <span className={READOUT}>focus in a bar: {name}</span>;
 }
 
 export function ListsMenus() {
@@ -766,8 +791,22 @@ export function ListsMenus() {
 
 const LONG_BUDGETS: Array<{ name: string; badge?: ReactNode }> = [
   { name: "Household" },
-  { name: "Holiday house on the coast, shared with the Lindqvist family", badge: <Chip size="xs" tone="teal">Shared</Chip> },
-  { name: "Parents' care costs, managed on behalf of Margarethe", badge: <Chip size="xs" tone="purple">Guest</Chip> },
+  {
+    name: "Holiday house on the coast, shared with the Lindqvist family",
+    badge: (
+      <Chip size="xs" tone="teal">
+        Shared
+      </Chip>
+    ),
+  },
+  {
+    name: "Parents' care costs, managed on behalf of Margarethe",
+    badge: (
+      <Chip size="xs" tone="purple">
+        Guest
+      </Chip>
+    ),
+  },
 ];
 
 export function MenuItemBadgeDemo() {
@@ -819,10 +858,10 @@ export function MenuItemBadgeDemo() {
       </Row>
       <div className="mt-3">
         <Note>
-          {code("badge")} sits right after the label text, before the gap that pushes {code("trailing")} (and
-          the check mark) to the end. Hand-placed inside the label it was truncated with the name — here the
-          name gives way and &ldquo;Shared&rdquo; stays. The row is named &ldquo;Holiday house on the coast, shared
-          with the Lindqvist family Shared&rdquo;, so keep a badge text.
+          {code("badge")} sits right after the label text, before the gap that pushes {code("trailing")} (and the check
+          mark) to the end. Hand-placed inside the label it was truncated with the name — here the name gives way and
+          &ldquo;Shared&rdquo; stays. The row is named &ldquo;Holiday house on the coast, shared with the Lindqvist
+          family Shared&rdquo;, so keep a badge text.
         </Note>
       </div>
     </Example>
@@ -837,8 +876,7 @@ export function BulkActionBarPanelDemo() {
   const [category, setCategory] = useState("groceries");
   const [exclude, setExclude] = useState(false);
   const [log, setLog] = useState("—");
-  const toggle = (name: string) =>
-    setSelected((s) => (s.includes(name) ? s.filter((x) => x !== name) : [...s, name]));
+  const toggle = (name: string) => setSelected((s) => (s.includes(name) ? s.filter((x) => x !== name) : [...s, name]));
   const done = () => {
     setSelected([]);
     setSelecting(false);
@@ -886,7 +924,11 @@ export function BulkActionBarPanelDemo() {
                       <option value="gifts">Gifts</option>
                     </Select>
                   </div>
-                  <Checkbox label="Exclude from reports" checked={exclude} onChange={(e) => setExclude(e.target.checked)} />
+                  <Checkbox
+                    label="Exclude from reports"
+                    checked={exclude}
+                    onChange={(e) => setExclude(e.target.checked)}
+                  />
                   <Button type="submit" size="sm">
                     Apply
                   </Button>
@@ -910,7 +952,11 @@ export function BulkActionBarPanelDemo() {
                   selected={selected.includes(line)}
                   leading={
                     selecting || selected.length > 0 ? (
-                      <Checkbox aria-label={`Select ${line}`} checked={selected.includes(line)} onChange={() => toggle(line)} />
+                      <Checkbox
+                        aria-label={`Select ${line}`}
+                        checked={selected.includes(line)}
+                        onChange={() => toggle(line)}
+                      />
                     ) : undefined
                   }
                 />
@@ -921,13 +967,12 @@ export function BulkActionBarPanelDemo() {
       </div>
       <div className="mt-3">
         <Note>
-          Press <strong>Select</strong>: {code("open")} brings the bar in at &ldquo;0 lines selected&rdquo; with
-          its way out (<strong>Done</strong>, and the clear) and a <strong>Select all</strong>, where a bar gated on
-          the count would have shown nothing until the first tick. Tick a line and the {code("panel")} appears
-          under the toolbar, in the same surface: its fields keep their own Tab stops, and the toolbar&apos;s
-          arrow keys never walk into them. Narrow the window below 768px and the same bar is the phone&apos;s
-          floating card — the variant is resolved per breakpoint, mobile first — with the panel scrolling inside
-          60% of the viewport&apos;s height.
+          Press <strong>Select</strong>: {code("open")} brings the bar in at &ldquo;0 lines selected&rdquo; with its way
+          out (<strong>Done</strong>, and the clear) and a <strong>Select all</strong>, where a bar gated on the count
+          would have shown nothing until the first tick. Tick a line and the {code("panel")} appears under the toolbar,
+          in the same surface: its fields keep their own Tab stops, and the toolbar&apos;s arrow keys never walk into
+          them. Narrow the window below 768px and the same bar is the phone&apos;s floating card — the variant is
+          resolved per breakpoint, mobile first — with the panel scrolling inside 60% of the viewport&apos;s height.
         </Note>
       </div>
     </Example>

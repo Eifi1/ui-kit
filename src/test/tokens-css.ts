@@ -75,7 +75,11 @@ export function tokensCssDeclarations(css: string, mode: ThemeMode, more = false
   const moreLight = new Map<string, string>();
   for (const { selector, body } of topLevelBlocks(stripComments(css))) {
     const sel = selector.replace(/\s+/g, " ");
-    const into = SELECTORS[mode].includes(sel) ? out : mode === "light" && more && sel === MORE_LIGHT ? moreLight : null;
+    const into = SELECTORS[mode].includes(sel)
+      ? out
+      : mode === "light" && more && sel === MORE_LIGHT
+        ? moreLight
+        : null;
     if (!into) continue;
     for (const [, name, value] of body.matchAll(/(--[a-zA-Z0-9-]+)\s*:\s*([^;]+);/g)) {
       into.set(name, value.trim());
@@ -114,7 +118,12 @@ function hexToRgba(hex: string): Rgba | null {
   const h = hex.replace(/^#/, "");
   const full = h.length === 3 ? [...h].map((c) => c + c).join("") : h;
   if (!/^[0-9a-fA-F]{6}$/.test(full)) return null;
-  return { r: parseInt(full.slice(0, 2), 16), g: parseInt(full.slice(2, 4), 16), b: parseInt(full.slice(4, 6), 16), a: 1 };
+  return {
+    r: parseInt(full.slice(0, 2), 16),
+    g: parseInt(full.slice(2, 4), 16),
+    b: parseInt(full.slice(4, 6), 16),
+    a: 1,
+  };
 }
 
 /** Split on commas that are not inside parentheses. */
@@ -202,7 +211,10 @@ export class ResolvedTokens {
     if (m) return this.get(m[1]) ?? (m[2] != null ? this.evaluate(m[2]) : null);
     m = /^rgba?\(([^)]*)\)$/.exec(v);
     if (m) {
-      const parts = m[1].split(/[\s,/]+/).filter(Boolean).map(Number);
+      const parts = m[1]
+        .split(/[\s,/]+/)
+        .filter(Boolean)
+        .map(Number);
       if (parts.length < 3 || parts.some(Number.isNaN)) return null;
       return { r: parts[0], g: parts[1], b: parts[2], a: parts[3] ?? 1 };
     }
@@ -237,5 +249,11 @@ export function resolveTokens(css: string, t: TokenSet, mode: ThemeMode, more: b
 
 /** `#rrggbb` of an opaque colour, for messages. */
 export function hexOf({ r, g, b }: Rgb): string {
-  return `#${[r, g, b].map((v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0")).join("")}`;
+  return `#${[r, g, b]
+    .map((v) =>
+      Math.max(0, Math.min(255, Math.round(v)))
+        .toString(16)
+        .padStart(2, "0"),
+    )
+    .join("")}`;
 }

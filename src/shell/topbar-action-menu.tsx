@@ -83,7 +83,8 @@ type DividerEntry = Extract<TopBarMenuEntry, { kind: "divider" }>;
 type RowEntry = Exclude<TopBarMenuEntry, HeadingEntry | DividerEntry>;
 
 /** What the panel draws from `entries`: loose rows and rules, and headed groups. */
-type Block = { kind: "loose"; entry: RowEntry | DividerEntry } | { kind: "group"; heading: HeadingEntry; rows: RowEntry[] };
+type Block =
+  { kind: "loose"; entry: RowEntry | DividerEntry } | { kind: "group"; heading: HeadingEntry; rows: RowEntry[] };
 
 /**
  * Cut `entries` into blocks: a heading opens a group that takes the rows after it until
@@ -167,7 +168,8 @@ export interface TopBarMenuHeader {
 /** What a control is, as far as `HoverMenu` is concerned, when it lives in the header
  *  or the footer: not a menu row. */
 const SECTION_CONTROLS = "a[href]:not([role]),button:not([role])";
-const TABBABLE = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]';
+const TABBABLE =
+  "a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]";
 
 /**
  * `scrollable`'s cap (0.51, DevMenu): the glass under the bar. Under `TopBar` the panel
@@ -402,8 +404,7 @@ export function TopBarActionMenu({
             <>
               <span className="sr-only">{ariaLabel}</span>
               {/* The space keeps the name from running into the face's text ("Account
-                  menu3 unread"); as a flex item it takes no room. */}
-              {" "}
+                  menu3 unread"); as a flex item it takes no room. */}{" "}
               {trigger({ open })}
             </>,
           );
@@ -500,15 +501,15 @@ export function TopBarActionMenu({
           // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- a Tab bubbling up from a row or footer link, see keepTabInsidePanel
           <ul
             className={cn("py-1", scrollable && SCROLLABLE_PANEL, laidOut && COLUMNS_PANEL, panelClassName)}
-            style={laidOut ? ({ "--menu-columns-width": `${laidOut.columns.length * 14}rem` } as CSSProperties) : undefined}
+            style={
+              laidOut ? ({ "--menu-columns-width": `${laidOut.columns.length * 14}rem` } as CSSProperties) : undefined
+            }
             onKeyDown={keepTabInsidePanel}
           >
             {header && (
               <MenuSection className={cn("mb-1 border-b border-subtle px-3 py-2", laidOut && SPAN_ALL)}>
                 <div className="truncate text-sm font-medium text-primary">{header.title}</div>
-                {header.subtitle != null && (
-                  <div className="truncate text-xs text-muted">{header.subtitle}</div>
-                )}
+                {header.subtitle != null && <div className="truncate text-xs text-muted">{header.subtitle}</div>}
                 {headerExtra != null && headerExtra !== false && <div className="mt-1">{headerExtra}</div>}
               </MenuSection>
             )}

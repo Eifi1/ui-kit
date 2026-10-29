@@ -66,9 +66,7 @@ describe("ToggleLegend", () => {
   });
 
   it("keeps a hidden entry in place, dimmed, with its mark outlined rather than gone", () => {
-    const { container } = render(
-      <ToggleLegend entries={ENTRIES} hidden={new Set(["x"])} onToggle={() => {}} />,
-    );
+    const { container } = render(<ToggleLegend entries={ENTRIES} hidden={new Set(["x"])} onToggle={() => {}} />);
     expect(screen.getAllByRole("button").map((b) => b.textContent)).toEqual(["X", "Y", "Z"]);
     expect(button("X")).toHaveClass("opacity-35");
     const swatch = button("X").querySelector("span[aria-hidden]") as HTMLElement;
@@ -110,7 +108,15 @@ describe("ToggleLegend", () => {
   });
 
   it("stacks vertically when it stands beside the charts", () => {
-    render(<ToggleLegend entries={ENTRIES} hidden={new Set()} onToggle={() => {}} orientation="vertical" className="extra" />);
+    render(
+      <ToggleLegend
+        entries={ENTRIES}
+        hidden={new Set()}
+        onToggle={() => {}}
+        orientation="vertical"
+        className="extra"
+      />,
+    );
     expect(screen.getByRole("group")).toHaveClass("flex-col", "extra");
     expect(screen.getByRole("group")).not.toHaveClass("mt-2");
   });

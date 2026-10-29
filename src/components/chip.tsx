@@ -34,16 +34,7 @@ export type { ChipInputLabels, ChipInputProps } from "./chip-input";
  * things". Using `Button` for both is the mistake this exists to prevent.
  */
 
-export type ChipTone =
-  | "neutral"
-  | "brand"
-  | "danger"
-  | "warning"
-  | "success"
-  | "info"
-  | "income"
-  | "expense"
-  | ChipHue;
+export type ChipTone = "neutral" | "brand" | "danger" | "warning" | "success" | "info" | "income" | "expense" | ChipHue;
 /**
  * Categorical hues (0.10.0): colour that says "a different value" and nothing more —
  * kastlan's status-badge.tsx paints ~15 enums in 9 Tailwind hues by hand. Four of those
@@ -263,10 +254,7 @@ export interface ChipLinkProps {
  * {@link Chip}): `split` is then the interactive part's own padding — the full start
  * inset, a short end one before the ×; `tail` is the wrapper's end inset after the ×.
  */
-const SIZE: Record<
-  ChipSize,
-  { body: string; split: string; tail: string; icon: string; remove: string }
-> = {
+const SIZE: Record<ChipSize, { body: string; split: string; tail: string; icon: string; remove: string }> = {
   xs: {
     body: "gap-1 px-1.5 py-0 text-caption leading-4",
     split: "gap-1 ps-1.5 pe-0.5 py-0 text-caption leading-4",
@@ -582,8 +570,7 @@ export function Chip({
   const interactive = !!href || !!onClick;
   // One radius for every rounded piece — the pill, the body inside a split pill, the ×
   // — so a square chip has no round focus ring inside it.
-  const radius =
-    shape === "square" ? (size === "sm" || size === "xs" ? "rounded" : "rounded-md") : "rounded-full";
+  const radius = shape === "square" ? (size === "sm" || size === "xs" ? "rounded" : "rounded-md") : "rounded-full";
   const dot = variant === "dot";
   const type = cn(caps && CAPS[size], variant === "solid" && "justify-center tabular-nums");
   const surface = cn(
@@ -682,11 +669,7 @@ export function Chip({
       // Composed through `common.fieldValue` because the punctuation between the two
       // halves is the language's, not ours. A chip whose content is not plain text
       // has no value to name, and gets the bare verb rather than a dangling colon.
-      aria-label={
-        typeof children === "string" && children
-          ? common.fieldValue(common.remove, children)
-          : common.remove
-      }
+      aria-label={typeof children === "string" && children ? common.fieldValue(common.remove, children) : common.remove}
       onClick={(e) => {
         // The chip may itself be a link; removing it must not also follow it.
         e.preventDefault();
@@ -723,7 +706,15 @@ export function Chip({
       ref={snap ? snapRef : undefined}
       data-tone={tone}
       // The pill is the target's box here (§4): the body inside stretches to its height.
-      className={cn(CHIP_PILL, s.tail, radius, surface, target && CHIP_TOUCH_LARGE, snap && "justify-center", className)}
+      className={cn(
+        CHIP_PILL,
+        s.tail,
+        radius,
+        surface,
+        target && CHIP_TOUCH_LARGE,
+        snap && "justify-center",
+        className,
+      )}
     >
       {inner}
       {remove}
@@ -847,9 +838,6 @@ export function Chip({
 }
 
 /** Calls a chip's `renderLink` with the props it was given — see its call site. */
-function RenderedLink({
-  render,
-  ...props
-}: ChipLinkProps & { render: (props: ChipLinkProps) => ReactElement }) {
+function RenderedLink({ render, ...props }: ChipLinkProps & { render: (props: ChipLinkProps) => ReactElement }) {
   return render(props);
 }

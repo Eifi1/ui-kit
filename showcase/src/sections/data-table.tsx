@@ -64,12 +64,10 @@ function DataTableSection() {
         <strong>
           A Router is needed only with <code className="font-mono">urlSync</code>.
         </strong>{" "}
-        Without it a <code className="font-mono">DataTable</code> keeps its sort, filters and
-        page in local state and mounts anywhere — no{" "}
-        <code className="font-mono">MemoryRouter</code> wrapper for an app with no routing.
-        With <code className="font-mono">urlSync</code> and no Router, a development build
-        throws &ldquo;DataTable urlSync requires a Router&rdquo;; a production build falls
-        back to local state rather than crash the page.
+        Without it a <code className="font-mono">DataTable</code> keeps its sort, filters and page in local state and
+        mounts anywhere — no <code className="font-mono">MemoryRouter</code> wrapper for an app with no routing. With{" "}
+        <code className="font-mono">urlSync</code> and no Router, a development build throws &ldquo;DataTable urlSync
+        requires a Router&rdquo;; a production build falls back to local state rather than crash the page.
       </Note>
       <MainTable />
       <ControlledTable />
@@ -92,10 +90,7 @@ function MainTable() {
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
   const [hideArchived, setHideArchived] = useState(false);
 
-  const rows = useMemo(
-    () => (hideArchived ? ROWS.filter((r) => r.status !== "archived") : ROWS),
-    [hideArchived],
-  );
+  const rows = useMemo(() => (hideArchived ? ROWS.filter((r) => r.status !== "archived") : ROWS), [hideArchived]);
   // Select-all is measured against the rows the table was GIVEN, not the page on
   // screen: the table owns the paging, so the header checkbox is the only place
   // that could claim "all" while 15 rows sit on page two. The kit deliberately
@@ -175,9 +170,7 @@ function MainTable() {
             ) : (
               <ChevronDown aria-hidden className="size-3.5" />
             )}
-            {hideArchived
-              ? `Show ${ARCHIVED_COUNT} archived rows`
-              : `Hide ${ARCHIVED_COUNT} archived rows`}
+            {hideArchived ? `Show ${ARCHIVED_COUNT} archived rows` : `Hide ${ARCHIVED_COUNT} archived rows`}
           </button>
         }
         // 0.48: the toggle stays under the header while the rows scroll beneath it.
@@ -194,64 +187,49 @@ function MainTable() {
             }),
           allSelected: selectable.length > 0 && selectedCount === selectable.length,
           someSelected: selectedCount > 0,
-          onToggleAll: (checked) =>
-            setSelected(checked ? new Set(selectable.map((r) => r.id)) : new Set()),
+          onToggleAll: (checked) => setSelected(checked ? new Set(selectable.map((r) => r.id)) : new Set()),
         }}
         // Phones open the detail in a full-screen dialog instead of unfolding it
         // under the row; desktop always unfolds. Nothing to see above 768px.
         mobileExpandAsDialog
-        empty={
-          <span className="text-secondary">
-            No rows match the current filters.
-          </span>
-        }
+        empty={<span className="text-secondary">No rows match the current filters.</span>}
       />
 
       <div className="mt-3 space-y-2">
         <Note>
-          The column panel is the vertical <em>Columns (n/m)</em> strip on the end edge (the
-          right in this left-to-right table):
-          it hides columns, and <em>Auto-size columns</em> freezes every visible column to
-          its measured width except the last, which is left elastic to absorb the slack.
-          Drag the hairline at a header&apos;s trailing edge to resize by hand (in a
-          right-to-left table it sits on the left and a drag to the left widens); double-click it to
-          give that one column its width back.
+          The column panel is the vertical <em>Columns (n/m)</em> strip on the end edge (the right in this left-to-right
+          table): it hides columns, and <em>Auto-size columns</em> freezes every visible column to its measured width
+          except the last, which is left elastic to absorb the slack. Drag the hairline at a header&apos;s trailing edge
+          to resize by hand (in a right-to-left table it sits on the left and a drag to the left widens); double-click
+          it to give that one column its width back.
         </Note>
         <Note>
-          This table passes <code className="font-mono">storageKey</code>, so sort, filters,
-          page size, column widths and hidden columns are written to{" "}
-          <code className="font-mono">uikit-showcase:showcase-data-table</code> and survive a
-          reload. If you return to this page and a column is missing, that is the feature —
-          re-tick it in the panel. The default prefix is{" "}
-          <code className="font-mono">hbui-table:</code>; it is a prop so several apps can
-          share one localStorage origin without colliding. An app sets its prefix
-          once, on <code className="font-mono">{"<UiKitProvider tableStorageKeyPrefix>"}</code>,
-          and every kit table below takes it — <code className="font-mono">TranslationReviewPanel</code>
-          too — while a table&apos;s own prop still wins. The stored key is the
-          prefix plus <code className="font-mono">storageKey</code>, so an app that wrapped
-          DataTable to pass its prefix keeps every reader&apos;s saved view when it moves the
-          prefix to the provider.
+          This table passes <code className="font-mono">storageKey</code>, so sort, filters, page size, column widths
+          and hidden columns are written to <code className="font-mono">uikit-showcase:showcase-data-table</code> and
+          survive a reload. If you return to this page and a column is missing, that is the feature — re-tick it in the
+          panel. The default prefix is <code className="font-mono">hbui-table:</code>; it is a prop so several apps can
+          share one localStorage origin without colliding. An app sets its prefix once, on{" "}
+          <code className="font-mono">{"<UiKitProvider tableStorageKeyPrefix>"}</code>, and every kit table below takes
+          it — <code className="font-mono">TranslationReviewPanel</code>
+          too — while a table&apos;s own prop still wins. The stored key is the prefix plus{" "}
+          <code className="font-mono">storageKey</code>, so an app that wrapped DataTable to pass its prefix keeps every
+          reader&apos;s saved view when it moves the prefix to the provider.
         </Note>
         <Note>
           Selection and the row link share the modifier keys, and the link wins:{" "}
-          <code className="font-mono">rowHref</code> wraps the{" "}
-          <code className="font-mono">mobilePrimary</code> cell (Name) in a real anchor, so
-          ⌘/Ctrl-clicking <em>that cell</em> opens a tab instead of selecting the row — the
-          anchor stops the click rather than letting the row change under a navigation.
-          ⌘/Ctrl-click anywhere else in the row still selects. A cell that renders its own
-          link must set <code className="font-mono">noRowLink</code> so the anchor skips it;
-          nesting two anchors disables the inner one outright.
+          <code className="font-mono">rowHref</code> wraps the <code className="font-mono">mobilePrimary</code> cell
+          (Name) in a real anchor, so ⌘/Ctrl-clicking <em>that cell</em> opens a tab instead of selecting the row — the
+          anchor stops the click rather than letting the row change under a navigation. ⌘/Ctrl-click anywhere else in
+          the row still selects. A cell that renders its own link must set <code className="font-mono">noRowLink</code>{" "}
+          so the anchor skips it; nesting two anchors disables the inner one outright.
         </Note>
         <Note>
           What this table leaves to the examples below: controlled filters and{" "}
-          <code className="font-mono">onToggleMany</code>,{" "}
-          <code className="font-mono">serverPagination</code>,{" "}
+          <code className="font-mono">onToggleMany</code>, <code className="font-mono">serverPagination</code>,{" "}
           <code className="font-mono">paginated=&#123;false&#125;</code> with the{" "}
-          <code className="font-mono">labels</code> prop and{" "}
-          <code className="font-mono">noRowLink</code>,{" "}
+          <code className="font-mono">labels</code> prop and <code className="font-mono">noRowLink</code>,{" "}
           <code className="font-mono">fillHeight</code>, and the phone-only props (
-          <code className="font-mono">mobileCard</code>,{" "}
-          <code className="font-mono">mobileGroupBy</code>,{" "}
+          <code className="font-mono">mobileCard</code>, <code className="font-mono">mobileGroupBy</code>,{" "}
           <code className="font-mono">mobileSwipeActions</code>).
         </Note>
       </div>
@@ -260,7 +238,6 @@ function MainTable() {
 }
 
 /* ── controlled filters, selection callbacks ─────────────────────────────── */
-
 
 const statusValues = (f: FilterState): string[] => {
   const v = f.status;
@@ -369,22 +346,18 @@ function ControlledTable() {
         <CallbackLog log={log} />
         <Note>
           Shift-click a second checkbox and the log shows exactly one line,{" "}
-          <code className="font-mono">onToggleMany([…], true)</code>, for the whole range — the
-          clicked row is not reported a second time through{" "}
-          <code className="font-mono">onToggle</code>.
+          <code className="font-mono">onToggleMany([…], true)</code>, for the whole range — the clicked row is not
+          reported a second time through <code className="font-mono">onToggle</code>.
         </Note>
         <Note>
-          With <code className="font-mono">onFiltersChange</code> set the table stops owning
-          the filters: it renders <code className="font-mono">filters</code> as given and
-          reports every edit. The page still resets: whenever the <em>value</em> of{" "}
-          <code className="font-mono">filters</code> or <code className="font-mono">sorts</code>{" "}
-          changes — from the funnel, a header click, or a chip above the table — a client-side
-          table goes back to page 1. Tick every chip, move to page 2, then drop a chip: the
-          table lands on page 1 rather than being clamped to the last page. A fresh but equal
-          object on every render resets nothing, because the comparison is by value. (In{" "}
-          <code className="font-mono">serverPagination</code> mode the owner&apos;s{" "}
-          <code className="font-mono">page</code> is the page, and resetting it stays the
-          owner&apos;s job.)
+          With <code className="font-mono">onFiltersChange</code> set the table stops owning the filters: it renders{" "}
+          <code className="font-mono">filters</code> as given and reports every edit. The page still resets: whenever
+          the <em>value</em> of <code className="font-mono">filters</code> or <code className="font-mono">sorts</code>{" "}
+          changes — from the funnel, a header click, or a chip above the table — a client-side table goes back to page
+          1. Tick every chip, move to page 2, then drop a chip: the table lands on page 1 rather than being clamped to
+          the last page. A fresh but equal object on every render resets nothing, because the comparison is by value.
+          (In <code className="font-mono">serverPagination</code> mode the owner&apos;s{" "}
+          <code className="font-mono">page</code> is the page, and resetting it stays the owner&apos;s job.)
         </Note>
       </div>
     </Example>
@@ -495,20 +468,18 @@ function ShortTable() {
           ]}
         />
         <Note>
-          <code className="font-mono">rowHref</code> puts the row&apos;s anchor on the first
-          column that does not set <code className="font-mono">noRowLink</code> — here Item,
-          because Spec sheet renders its own link. On a phone the whole card would be the
-          anchor, which a card with a linked cell cannot be, so it falls back to a
+          <code className="font-mono">rowHref</code> puts the row&apos;s anchor on the first column that does not set{" "}
+          <code className="font-mono">noRowLink</code> — here Item, because Spec sheet renders its own link. On a phone
+          the whole card would be the anchor, which a card with a linked cell cannot be, so it falls back to a
           role=&quot;button&quot; card and the spec link keeps working.
         </Note>
         <Note>
-          <code className="font-mono">paginated=&#123;false&#125;</code> holds on a phone too:
-          every line is a card, with no endless-scroll chunking and no “Loading…” sentinel for
-          rows that are already in memory. Qty and Line total say a physical{" "}
-          <code className="font-mono">text-right</code>; the table rewrites a bare{" "}
-          <code className="font-mono">text-right</code> / <code className="font-mono">text-left</code>{" "}
-          to <code className="font-mono">text-end</code> / <code className="font-mono">text-start</code>,
-          so old column definitions are right in both directions (write{" "}
+          <code className="font-mono">paginated=&#123;false&#125;</code> holds on a phone too: every line is a card,
+          with no endless-scroll chunking and no “Loading…” sentinel for rows that are already in memory. Qty and Line
+          total say a physical <code className="font-mono">text-right</code>; the table rewrites a bare{" "}
+          <code className="font-mono">text-right</code> / <code className="font-mono">text-left</code> to{" "}
+          <code className="font-mono">text-end</code> / <code className="font-mono">text-start</code>, so old column
+          definitions are right in both directions (write{" "}
           <code className="font-mono">ltr:text-right rtl:text-right</code> for a truly physical side).
         </Note>
       </div>
@@ -571,19 +542,17 @@ function DensityTable() {
       </div>
       <div className="mt-3">
         <Note>
-          In-card tables were hand-rolled <code className="font-mono">&lt;table&gt;</code>s
-          because at the default padding a table inside a card came out twice its height and pushed
-          the card&apos;s own content below the fold. <code className="font-mono">density=&quot;compact&quot;</code>{" "}
-          is <code className="font-mono">text-xs</code> with <code className="font-mono">px-2 py-1</code>{" "}
-          cells, and it reaches the pager under the table too — the standalone{" "}
-          <code className="font-mono">Pagination</code> below takes the same prop. Narrow the window to
-          see the phone cards tighten with it.
+          In-card tables were hand-rolled <code className="font-mono">&lt;table&gt;</code>s because at the default
+          padding a table inside a card came out twice its height and pushed the card&apos;s own content below the fold.{" "}
+          <code className="font-mono">density=&quot;compact&quot;</code> is <code className="font-mono">text-xs</code>{" "}
+          with <code className="font-mono">px-2 py-1</code> cells, and it reaches the pager under the table too — the
+          standalone <code className="font-mono">Pagination</code> below takes the same prop. Narrow the window to see
+          the phone cards tighten with it.
         </Note>
       </div>
     </Example>
   );
 }
-
 
 /* ── a report table: firstSort, sortCycle, chrome, frame ─────────────────── */
 
@@ -725,21 +694,21 @@ function ReportTable() {
       <p className="mt-2 font-mono text-xs text-secondary">onRowClick → {opened}</p>
       <div className="mt-3">
         <Note>
-          Bookings and Total are <code className="font-mono">firstSort: &quot;desc&quot;</code>: the first
-          click ranks the big ones on top. With <code className="font-mono">sortCycle=&quot;toggle&quot;</code>{" "}
-          the next click flips it and the table is never unsorted again; <code className="font-mono">tri</code>{" "}
-          is the old desc → asc → off. <code className="font-mono">aria-sort</code> and the spoken &ldquo;Sorted
-          by …&rdquo; follow either way. <code className="font-mono">chrome=&quot;minimal&quot;</code> drops the
-          columns rail, the resize handles and multi-sort (and its Shift-click tooltip); each has its own
-          switch, and an explicit on/off wins over the preset. <code className="font-mono">frame={"{false}"}</code>{" "}
-          removes the table&apos;s own card, so it sits in the app&apos;s without a frame inside a frame, and{" "}
-          <code className="font-mono">className</code> reaches the root — here a plain border instead.
+          Bookings and Total are <code className="font-mono">firstSort: &quot;desc&quot;</code>: the first click ranks
+          the big ones on top. With <code className="font-mono">sortCycle=&quot;toggle&quot;</code> the next click flips
+          it and the table is never unsorted again; <code className="font-mono">tri</code> is the old desc → asc → off.{" "}
+          <code className="font-mono">aria-sort</code> and the spoken &ldquo;Sorted by …&rdquo; follow either way.{" "}
+          <code className="font-mono">chrome=&quot;minimal&quot;</code> drops the columns rail, the resize handles and
+          multi-sort (and its Shift-click tooltip); each has its own switch, and an explicit on/off wins over the
+          preset. <code className="font-mono">frame={"{false}"}</code> removes the table&apos;s own card, so it sits in
+          the app&apos;s without a frame inside a frame, and <code className="font-mono">className</code> reaches the
+          root — here a plain border instead.
         </Note>
         <Note>
-          <strong>Clickable rows take the keyboard.</strong> With <code className="font-mono">onRowClick</code>{" "}
-          the body is one roving tab stop: Tab into it, ↑/↓ and Home/End move between rows, Enter or
-          Space opens one — and the rows keep their <code className="font-mono">row</code> role. A click on a
-          control inside a row no longer opens the row as well.
+          <strong>Clickable rows take the keyboard.</strong> With <code className="font-mono">onRowClick</code> the body
+          is one roving tab stop: Tab into it, ↑/↓ and Home/End move between rows, Enter or Space opens one — and the
+          rows keep their <code className="font-mono">row</code> role. A click on a control inside a row no longer opens
+          the row as well.
         </Note>
       </div>
     </Example>
@@ -831,18 +800,18 @@ function PrivateCellsTable() {
       </p>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">{"cellProps: (row) => ({ \"data-private\": \"\" })"}</code> puts the marker on
-          the <code className="font-mono">&lt;td&gt;</code>, so the blur covers the cell rather than a span
-          inside it, and no <code className="font-mono">cell</code> renderer has to remember it. The IBAN
-          cells also get a per-row <code className="font-mono">title</code> (hover one); the balance column
-          marks only the negative row and adds a class, merged under the column&apos;s own{" "}
-          <code className="font-mono">text-end</code>. <code className="font-mono">headProps</code> gives the IBAN
-          header a <code className="font-mono">title</code> and a <code className="font-mono">data-col-kind</code>{" "}
-          hook, and the balance header an <code className="font-mono">aria-description</code>. The table keeps{" "}
+          <code className="font-mono">{'cellProps: (row) => ({ "data-private": "" })'}</code> puts the marker on the{" "}
+          <code className="font-mono">&lt;td&gt;</code>, so the blur covers the cell rather than a span inside it, and
+          no <code className="font-mono">cell</code> renderer has to remember it. The IBAN cells also get a per-row{" "}
+          <code className="font-mono">title</code> (hover one); the balance column marks only the negative row and adds
+          a class, merged under the column&apos;s own <code className="font-mono">text-end</code>.{" "}
+          <code className="font-mono">headProps</code> gives the IBAN header a <code className="font-mono">title</code>{" "}
+          and a <code className="font-mono">data-col-kind</code> hook, and the balance header an{" "}
+          <code className="font-mono">aria-description</code>. The table keeps{" "}
           <code className="font-mono">data-col</code>, <code className="font-mono">role</code>,{" "}
           <code className="font-mono">scope</code> and <code className="font-mono">aria-sort</code> for itself. On a
-          phone the card fields get the <code className="font-mono">data-*</code> half only — narrow the window
-          and the names and IBANs are still blurred.
+          phone the card fields get the <code className="font-mono">data-*</code> half only — narrow the window and the
+          names and IBANs are still blurred.
         </Note>
       </div>
     </Example>
@@ -874,23 +843,20 @@ function FillHeightTable() {
       </div>
       <div className="mt-3">
         <Note>
-          The pager stays pinned to the bottom of the pane and the header to the top. On a
-          phone a client-side table has no pager — it reveals more cards as the list scrolls —
-          so there the card list fills the pane under the toolbar and scrolls inside it. And
-          <code className="font-mono"> maxBodyHeight</code> is ignored. Without a bounded
-          flex parent (a viewport-locked app shell, a split pane) there is nothing to fill
-          and the prop does nothing — which is why the main table above uses{" "}
-          <code className="font-mono">maxBodyHeight</code> instead. From{" "}
-          <code className="font-mono">md</code> the body never shrinks below 12rem:
-          a pane shorter than the header, that floor and the pager lets the table run past it.
+          The pager stays pinned to the bottom of the pane and the header to the top. On a phone a client-side table has
+          no pager — it reveals more cards as the list scrolls — so there the card list fills the pane under the toolbar
+          and scrolls inside it. And
+          <code className="font-mono"> maxBodyHeight</code> is ignored. Without a bounded flex parent (a viewport-locked
+          app shell, a split pane) there is nothing to fill and the prop does nothing — which is why the main table
+          above uses <code className="font-mono">maxBodyHeight</code> instead. From{" "}
+          <code className="font-mono">md</code> the body never shrinks below 12rem: a pane shorter than the header, that
+          floor and the pager lets the table run past it.
         </Note>
         <Note>
-          <strong>Two scrollbars</strong>: the default{" "}
-          <code className="font-mono">maxBodyHeight</code>,{" "}
-          <code className="font-mono">calc(100dvh - 12rem)</code>, scrolls the body inside a
-          page that scrolls itself, so a long table under a page header shows two scrollbars
-          side by side. A list page whose table is the point fills the window from{" "}
-          <code className="font-mono">md</code> up instead — the next example.
+          <strong>Two scrollbars</strong>: the default <code className="font-mono">maxBodyHeight</code>,{" "}
+          <code className="font-mono">calc(100dvh - 12rem)</code>, scrolls the body inside a page that scrolls itself,
+          so a long table under a page header shows two scrollbars side by side. A list page whose table is the point
+          fills the window from <code className="font-mono">md</code> up instead — the next example.
         </Note>
       </div>
     </Example>
@@ -916,12 +882,7 @@ function ListPageTable() {
         <Switch label="A banner above the page" checked={banner} onCheckedChange={setBanner} />
         <Switch label="A short window (20rem)" checked={short} onCheckedChange={setShort} />
       </Row>
-      <div
-        className={
-          (short ? "h-80" : "h-[32rem]") +
-          " mt-3 overflow-hidden rounded-md border border-subtle bg-page"
-        }
-      >
+      <div className={(short ? "h-80" : "h-[32rem]") + " mt-3 overflow-hidden rounded-md border border-subtle bg-page"}>
         <UNSAFE_LocationContext.Provider value={NO_ROUTER}>
           <MemoryRouter initialEntries={["/payees"]}>
             <AppShell nav={LIST_PAGE_NAV} embedded topBar={<span className="font-semibold">Acme Books</span>}>
@@ -948,21 +909,18 @@ function ListPageTable() {
       <div className="mt-3">
         <Note>
           docs/page-layout-harmonization.md §1. The table marks itself under{" "}
-          <code className="font-mono">fillHeight</code> (<code className="font-mono">data-fill-height</code>);
-          while one is inside, AppShell&apos;s <code className="font-mono">&lt;main&gt;</code> becomes a
-          flex column from <code className="font-mono">md</code>, so the banner keeps its own row
-          and the page takes the rest — <code className="font-mono">&lt;main&gt;</code> no longer
-          overflows by the banner&apos;s height. Every element between{" "}
-          <code className="font-mono">&lt;main&gt;</code> and the table is a{" "}
-          <code className="font-mono">FillHeight</code>, or merges{" "}
-          <code className="font-mono">FILL_HEIGHT_CLASS</code>; both do nothing below{" "}
-          <code className="font-mono">md</code> or around any other page.
+          <code className="font-mono">fillHeight</code> (<code className="font-mono">data-fill-height</code>); while one
+          is inside, AppShell&apos;s <code className="font-mono">&lt;main&gt;</code> becomes a flex column from{" "}
+          <code className="font-mono">md</code>, so the banner keeps its own row and the page takes the rest —{" "}
+          <code className="font-mono">&lt;main&gt;</code> no longer overflows by the banner&apos;s height. Every element
+          between <code className="font-mono">&lt;main&gt;</code> and the table is a{" "}
+          <code className="font-mono">FillHeight</code>, or merges <code className="font-mono">FILL_HEIGHT_CLASS</code>;
+          both do nothing below <code className="font-mono">md</code> or around any other page.
         </Note>
         <Note>
-          The floor: the body keeps at least 12rem, about five rows. Switch on the short
-          window — the page keeps the header and that much body, and{" "}
-          <code className="font-mono">&lt;main&gt;</code> scrolls instead of leaving a slit of
-          rows. On a phone nothing fills: the page scrolls as one, the card list in its flow.
+          The floor: the body keeps at least 12rem, about five rows. Switch on the short window — the page keeps the
+          header and that much body, and <code className="font-mono">&lt;main&gt;</code> scrolls instead of leaving a
+          slit of rows. On a phone nothing fills: the page scrolls as one, the card list in its flow.
         </Note>
       </div>
     </Example>
@@ -990,7 +948,11 @@ const LEDGER_PAYEES: Array<[payee: string, category: string, min: number, max: n
   ["Refund", "Income", 12, 140],
 ];
 const LEDGER_MONTHS = ["2026-09", "2026-08", "2026-07"] as const;
-const MONTH_NAME: Record<string, string> = { "2026-09": "September 2026", "2026-08": "August 2026", "2026-07": "July 2026" };
+const MONTH_NAME: Record<string, string> = {
+  "2026-09": "September 2026",
+  "2026-08": "August 2026",
+  "2026-07": "July 2026",
+};
 
 /** ~200 rows over three months, newest first, the same every load (a seeded walk). */
 const LEDGER: LedgerRow[] = (() => {
@@ -1004,7 +966,13 @@ const LEDGER: LedgerRow[] = (() => {
       const n = 1 + Math.floor(rand() * 3.4);
       for (let i = 0; i < n; i++) {
         const [payee, category, min, max] = LEDGER_PAYEES[Math.floor(rand() * LEDGER_PAYEES.length)];
-        rows.push({ id: rows.length + 1, date, payee, category, amount: Math.round((min + rand() * (max - min)) * 20) / 20 });
+        rows.push({
+          id: rows.length + 1,
+          date,
+          payee,
+          category,
+          amount: Math.round((min + rand() * (max - min)) * 20) / 20,
+        });
       }
       if (d === 25) rows.push({ id: rows.length + 1, date, payee: "Employer AG", category: "Salary", amount: 8200 });
     }
@@ -1059,7 +1027,13 @@ function bigLedger(n: number): LedgerRow[] {
     const count = 1 + Math.floor(rand() * 5);
     for (let i = 0; i < count && rows.length < n; i++) {
       const [payee, category, min, max] = LEDGER_PAYEES[Math.floor(rand() * LEDGER_PAYEES.length)];
-      rows.push({ id: rows.length + 1, date, payee, category, amount: Math.round((min + rand() * (max - min)) * 20) / 20 });
+      rows.push({
+        id: rows.length + 1,
+        date,
+        payee,
+        category,
+        amount: Math.round((min + rand() * (max - min)) * 20) / 20,
+      });
     }
     day.setUTCDate(day.getUTCDate() - 1);
   }
@@ -1099,9 +1073,9 @@ function PeriodGroupsTable() {
       label="Period groups and load more — groupBy, loadMore"
       hint={
         <>
-          {code("groupBy")} in two levels (month → day) with sticky, stacked bands and their end
-          slots; {code("loadMore")} in place of the pager, loading the next month as the footer
-          scrolls into view — or by its button. Inside {code("fillHeight")}.
+          {code("groupBy")} in two levels (month → day) with sticky, stacked bands and their end slots;{" "}
+          {code("loadMore")} in place of the pager, loading the next month as the footer scrolls into view — or by its
+          button. Inside {code("fillHeight")}.
         </>
       }
     >
@@ -1135,7 +1109,10 @@ function PeriodGroupsTable() {
           Start over
         </Button>
       </Row>
-      <div className="mt-3 flex h-[32rem] flex-col rounded-md border border-dashed border-subtle p-2" data-demo="period-groups">
+      <div
+        className="mt-3 flex h-[32rem] flex-col rounded-md border border-dashed border-subtle p-2"
+        data-demo="period-groups"
+      >
         <DataTable
           rows={rows}
           columns={LEDGER_COLUMNS}
@@ -1169,8 +1146,9 @@ function PeriodGroupsTable() {
                   onToggleMany: (rs, on) =>
                     setPicked((s) => {
                       const n = new Set(s);
-                      for (const r of rs) if (on) n.add(r.id);
-                      else n.delete(r.id);
+                      for (const r of rs)
+                        if (on) n.add(r.id);
+                        else n.delete(r.id);
                       return n;
                     }),
                   allSelected: picked.size === rows.length,
@@ -1207,27 +1185,23 @@ function PeriodGroupsTable() {
       </p>
       <div className="mt-3">
         <Note>
-          Each band is a row header
-          ({code("<th scope=\"rowgroup\">")}) opening its own {code("<tbody>")}, spanning the
-          visible columns; the month band sticks under the header (and under a sticky leading
-          row), the day band under the month, and a new month covers the day still pinned
-          above it. The month&apos;s end slot is the app&apos;s total over the whole month; the
-          day&apos;s is over its rows. The same level drives the phone&apos;s sections:{" "}
+          Each band is a row header ({code('<th scope="rowgroup">')}) opening its own {code("<tbody>")}, spanning the
+          visible columns; the month band sticks under the header (and under a sticky leading row), the day band under
+          the month, and a new month covers the day still pinned above it. The month&apos;s end slot is the app&apos;s
+          total over the whole month; the day&apos;s is over its rows. The same level drives the phone&apos;s sections:{" "}
           {code("mobileGroupBy={period}")}.
         </Note>
         <Note>
-          The footer is observed: it calls {code("onLoadMore")} once as it nears the view, not
-          again while {code("loading")} or until the rows arrive. The button is there for the
-          keyboard — Tab reaches it after the rows — and says what it loads; at the end the
-          app&apos;s {code("endLabel")} (default “All rows loaded”).
+          The footer is observed: it calls {code("onLoadMore")} once as it nears the view, not again while{" "}
+          {code("loading")} or until the rows arrive. The button is there for the keyboard — Tab reaches it after the
+          rows — and says what it loads; at the end the app&apos;s {code("endLabel")} (default “All rows loaded”).
         </Note>
         <Note>
-          0.48.2: {code("virtualize")} renders only the rows near the view (and 12 more each
-          side), spacer rows standing in for the rest inside each day&apos;s{" "}
-          {code("<tbody>")} — the bands stay sticky and stacked. Switch to 1000 or 3000 rows
-          and compare: the columns hold still while the rows come and go, End on a focused
-          row reaches the last one, a Shift+click range covers the rows not drawn, and an
-          open row stays. Find-in-page only sees the rows drawn.
+          0.48.2: {code("virtualize")} renders only the rows near the view (and 12 more each side), spacer rows standing
+          in for the rest inside each day&apos;s {code("<tbody>")} — the bands stay sticky and stacked. Switch to 1000
+          or 3000 rows and compare: the columns hold still while the rows come and go, End on a focused row reaches the
+          last one, a Shift+click range covers the rows not drawn, and an open row stays. Find-in-page only sees the
+          rows drawn.
         </Note>
       </div>
     </Example>
@@ -1238,7 +1212,10 @@ function PeriodGroupsTable() {
 
 function RtlTable() {
   return (
-    <Example label="Right-to-left" hint={<code className="font-mono">dir=&quot;rtl&quot; · locale=&quot;ar-EG&quot;</code>}>
+    <Example
+      label="Right-to-left"
+      hint={<code className="font-mono">dir=&quot;rtl&quot; · locale=&quot;ar-EG&quot;</code>}
+    >
       <div dir="rtl">
         <DataTable
           rows={SMALL_ROWS}
@@ -1251,13 +1228,11 @@ function RtlTable() {
       </div>
       <div className="mt-3">
         <Note>
-          Everything follows the direction. The header row is{" "}
-          <code className="font-mono">text-start</code>, so Name and Status read from the
-          right. Amount is <code className="font-mono">text-end</code>: its cells and its
-          header hug the logical end — the left edge here — with the sort arrow and funnel
-          beside the numbers. The pager&apos;s previous / next chevrons flip to point back
-          and forward along the line, the column-resize hairline sits on each header&apos;s
-          left edge, the Columns strip is on the left, and the page numbers follow{" "}
+          Everything follows the direction. The header row is <code className="font-mono">text-start</code>, so Name and
+          Status read from the right. Amount is <code className="font-mono">text-end</code>: its cells and its header
+          hug the logical end — the left edge here — with the sort arrow and funnel beside the numbers. The pager&apos;s
+          previous / next chevrons flip to point back and forward along the line, the column-resize hairline sits on
+          each header&apos;s left edge, the Columns strip is on the left, and the page numbers follow{" "}
           <code className="font-mono">locale</code>. On a phone the filter sheet keeps{" "}
           <code className="font-mono">dir</code> even though it is portalled.
         </Note>
@@ -1373,7 +1348,11 @@ function DataTableActionsDemo() {
   return (
     <Example
       label="rowActions, toolbar and the empty label"
-      hint={<>{code("rowActions")} · {code("toolbar")} · {code("booleanColumn")} · a {code("CopyButton")} in a cell</>}
+      hint={
+        <>
+          {code("rowActions")} · {code("toolbar")} · {code("booleanColumn")} · a {code("CopyButton")} in a cell
+        </>
+      }
     >
       <DataTable
         rows={visible}
@@ -1416,18 +1395,18 @@ function DataTableActionsDemo() {
           ]}
         />
         <Note>
-          The pencil and the bin are the {code('kind: "edit"')} / {code('"delete"')} presets — icon, translated
-          label and tone included; <em>Archive</em> states its own label and icon, and is locked with a{" "}
-          {code("disabledReason")} for Kemal, who owes rent. The delete runs only after{" "}
-          {code("useConfirm()")} says yes. A press on an action never opens the row. On a phone the column
-          disappears and the same actions become the card&apos;s swipes.
+          The pencil and the bin are the {code('kind: "edit"')} / {code('"delete"')} presets — icon, translated label
+          and tone included; <em>Archive</em> states its own label and icon, and is locked with a{" "}
+          {code("disabledReason")} for Kemal, who owes rent. The delete runs only after {code("useConfirm()")} says yes.
+          A press on an action never opens the row. On a phone the column disappears and the same actions become the
+          card&apos;s swipes.
         </Note>
         <Note>
-          The search lives in the {code("toolbar")}, inside the table&apos;s frame. Type{" "}
-          {code("nobody")} — the empty body now says {code("labels.empty")} (&ldquo;No entries&rdquo;, in the
-          page&apos;s language) instead of a bare dash. {code("booleanColumn")} gives each yes/no column a
-          check-first sort and a Yes/No filter; the screen reader hears the word, not a glyph. Hover a copy
-          button: its tooltip leaves the scroller rather than being clipped by it.
+          The search lives in the {code("toolbar")}, inside the table&apos;s frame. Type {code("nobody")} — the empty
+          body now says {code("labels.empty")} (&ldquo;No entries&rdquo;, in the page&apos;s language) instead of a bare
+          dash. {code("booleanColumn")} gives each yes/no column a check-first sort and a Yes/No filter; the screen
+          reader hears the word, not a glyph. Hover a copy button: its tooltip leaves the scroller rather than being
+          clipped by it.
         </Note>
       </div>
     </Example>
@@ -1515,8 +1494,8 @@ function DataTableTotalsDemo() {
       label="Totals row: a trial balance"
       hint={
         <>
-          {code("footer")} per column, {code("footerLabel")} for the row. Totals are of every
-          filtered row, not the page; on a phone they are a summary card under the list.
+          {code("footer")} per column, {code("footerLabel")} for the row. Totals are of every filtered row, not the
+          page; on a phone they are a summary card under the list.
         </>
       }
     >
@@ -1533,10 +1512,9 @@ function DataTableTotalsDemo() {
         labels={{ table: "Trial balance" }}
       />
       <Note>
-        Page through it: the totals stay those of all twelve accounts and still balance to
-        zero. Filter the debit column and they follow the filter. Hide the Account column from
-        the column panel and the &quot;Total&quot; row header moves into Name. A server-paged
-        table returns its totals with the page and ignores the {code("rows")} argument:{" "}
+        Page through it: the totals stay those of all twelve accounts and still balance to zero. Filter the debit column
+        and they follow the filter. Hide the Account column from the column panel and the &quot;Total&quot; row header
+        moves into Name. A server-paged table returns its totals with the page and ignores the {code("rows")} argument:{" "}
         {code("footer: () => fmt(page.totalDebit)")}.
       </Note>
     </Example>
@@ -1599,9 +1577,9 @@ function DataTableMobileSort022Demo() {
         labels={{ table: "Payees" }}
       />
       <Note>
-        Narrow the window below 768px: the cards get a &ldquo;Sort by&rdquo; select and a direction button above
-        them. They drive the table&apos;s own sort, so the header shows what the phone chose and the other way round,
-        a picked column starts in its {code("firstSort")} like a header click, and under {code('sortCycle="toggle"')}
+        Narrow the window below 768px: the cards get a &ldquo;Sort by&rdquo; select and a direction button above them.
+        They drive the table&apos;s own sort, so the header shows what the phone chose and the other way round, a picked
+        column starts in its {code("firstSort")} like a header click, and under {code('sortCycle="toggle"')}
         &ldquo;Default order&rdquo; is offered only until the table is ranked. A column whose header is not text names
         its option with {code("headerText")}. Off by default.
       </Note>

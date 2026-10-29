@@ -56,23 +56,17 @@ function Comboboxes() {
     <>
       <Note>
         <strong>Every combobox and entity picker changes shape in the phone layout.</strong>{" "}
-        <code className="font-mono">Combobox</code>,{" "}
-        <code className="font-mono">InlineEntityCombobox</code>,{" "}
-        <code className="font-mono">EntityCombobox</code> and{" "}
-        <code className="font-mono">MultiEntityCombobox</code> drop their anchored panel and open a
-        full-screen <code className="font-mono">PickerSheet</code> instead — the shape a native{" "}
-        <code className="font-mono">&lt;select&gt;</code> already has on a phone. Only{" "}
-        <code className="font-mono">MultiSelect</code> and{" "}
-        <code className="font-mono">GroupedPicker</code> keep one presentation at every width. This
-        window currently reports{" "}
-        <strong>{isPhone ? "phone — sheets" : "pointer — anchored panels"}</strong>; drag the edge
-        past 767px to watch them swap.
+        <code className="font-mono">Combobox</code>, <code className="font-mono">InlineEntityCombobox</code>,{" "}
+        <code className="font-mono">EntityCombobox</code> and <code className="font-mono">MultiEntityCombobox</code>{" "}
+        drop their anchored panel and open a full-screen <code className="font-mono">PickerSheet</code> instead — the
+        shape a native <code className="font-mono">&lt;select&gt;</code> already has on a phone. Only{" "}
+        <code className="font-mono">MultiSelect</code> and <code className="font-mono">GroupedPicker</code> keep one
+        presentation at every width. This window currently reports{" "}
+        <strong>{isPhone ? "phone — sheets" : "pointer — anchored panels"}</strong>; drag the edge past 767px to watch
+        them swap.
       </Note>
 
-      <Example
-        label="Combobox"
-        hint="free text — the typed value is the value, whether or not it is in the pool"
-      >
+      <Example label="Combobox" hint="free text — the typed value is the value, whether or not it is in the pool">
         <Stage>
           <Combobox
             label="Payee"
@@ -101,9 +95,8 @@ function Comboboxes() {
         </Stage>
         <Current label="value" value={payee ? `"${payee}"` : "(empty)"} />
         <Note>
-          Type a few letters, then clear them and click the field again: the list comes back WHOLE.
-          The text filters only while it is being typed, so a field holding “Rewe” does not reopen
-          as a one-row filter of its own answer.
+          Type a few letters, then clear them and click the field again: the list comes back WHOLE. The text filters
+          only while it is being typed, so a field holding “Rewe” does not reopen as a one-row filter of its own answer.
         </Note>
       </Example>
 
@@ -160,10 +153,9 @@ function Comboboxes() {
         </Stage>
         <Current label="last" value={editLog} />
         <Note>
-          Click a cell: it becomes the field, focused, with its list open. In the payee cell, type
-          and press Enter (<code className="font-mono">onSubmit</code>) or click elsewhere (
-          <code className="font-mono">onBlur</code>); picking a row keeps the editor, because the
-          rows never take focus from the input.
+          Click a cell: it becomes the field, focused, with its list open. In the payee cell, type and press Enter (
+          <code className="font-mono">onSubmit</code>) or click elsewhere (<code className="font-mono">onBlur</code>);
+          picking a row keeps the editor, because the rows never take focus from the input.
         </Note>
       </Example>
     </>
@@ -203,9 +195,7 @@ function fakeGeocode(query: string, outage: boolean): Promise<ComboOption<string
         return;
       }
       const q = query.trim().toLowerCase();
-      resolve(
-        ADDRESSES.filter((a) => a.toLowerCase().includes(q)).map((a) => ({ value: a, label: a })),
-      );
+      resolve(ADDRESSES.filter((a) => a.toLowerCase().includes(q)).map((a) => ({ value: a, label: a })));
     }, 450);
   });
 }
@@ -270,12 +260,11 @@ function AutocompleteDemo() {
   return (
     <>
       <Note>
-        <strong>Keyboard:</strong> focus stays in the field. ↓/↑ walk the suggestions, passing over a
-        disabled one (named by
-        <code> aria-activedescendant</code>), Enter takes the highlighted one — with none
-        highlighted, Enter is left to the form — Escape closes the list, Tab closes it and moves on.
-        A polite live region says what the list now holds: loading, how many results, none, or a
-        failed lookup.
+        <strong>Keyboard:</strong> focus stays in the field. ↓/↑ walk the suggestions, passing over a disabled one
+        (named by
+        <code> aria-activedescendant</code>), Enter takes the highlighted one — with none highlighted, Enter is left to
+        the form — Escape closes the list, Tab closes it and moves on. A polite live region says what the list now
+        holds: loading, how many results, none, or a failed lookup.
       </Note>
 
       <Example
@@ -297,11 +286,7 @@ function AutocompleteDemo() {
           />
         </Stage>
         <div className="flex flex-wrap items-center gap-4">
-          <Checkbox
-            label="Simulate an outage"
-            checked={outage}
-            onChange={(e) => setOutage(e.target.checked)}
-          />
+          <Checkbox label="Simulate an outage" checked={outage} onChange={(e) => setOutage(e.target.checked)} />
         </div>
         <StateLine>{`value = "${address}"   onSelect → ${picked ?? "—"}`}</StateLine>
         <Note>
@@ -314,8 +299,8 @@ function AutocompleteDemo() {
         label="Autocomplete — the caller's own options"
         hint={
           <>
-            <code>options</code> instead of <code>loadOptions</code>: filtered here, or given
-            ranked with <code>filter={"{false}"}</code> and <code>loading</code>
+            <code>options</code> instead of <code>loadOptions</code>: filtered here, or given ranked with{" "}
+            <code>filter={"{false}"}</code> and <code>loading</code>
           </>
         }
       >
@@ -348,11 +333,10 @@ function AutocompleteDemo() {
         />
         <StateLine>{`town = "${town}"   street = "${street}"   loading = ${streetLoading}`}</StateLine>
         <Note>
-          The town list is narrowed by the text (label or sublabel). The street list is fetched by
-          the page itself — 500&nbsp;ms per keystroke — and shown exactly as the pretend server
-          ranked it, so &quot;Rue&quot; still lists two Bahnhofstrasse rows the server thought
-          close enough. While the page&apos;s fetch is out, <code>loading</code> puts a
-          spinner in the field — and the loading line in the list while it has no rows yet.
+          The town list is narrowed by the text (label or sublabel). The street list is fetched by the page itself —
+          500&nbsp;ms per keystroke — and shown exactly as the pretend server ranked it, so &quot;Rue&quot; still lists
+          two Bahnhofstrasse rows the server thought close enough. While the page&apos;s fetch is out,{" "}
+          <code>loading</code> puts a spinner in the field — and the loading line in the list while it has no rows yet.
         </Note>
       </Example>
 
@@ -360,9 +344,8 @@ function AutocompleteDemo() {
         label="Autocomplete — search, then act"
         hint={
           <>
-            <code>fillOnSelect={"{false}"}</code>, <code>size=&quot;sm&quot;</code>,{" "}
-            <code>disabled</code> rows and <code>open</code> held shut while a pick is confirmed
-            (an address search)
+            <code>fillOnSelect={"{false}"}</code>, <code>size=&quot;sm&quot;</code>, <code>disabled</code> rows and{" "}
+            <code>open</code> held shut while a pick is confirmed (an address search)
           </>
         }
       >
@@ -389,9 +372,7 @@ function AutocompleteDemo() {
               // hands it back to the field. No lookup runs while it is held shut.
               open={confirming ? false : undefined}
               onOpenChange={setLastOpen}
-              status={
-                search.trim().length < 3 ? "Type at least 3 characters to search." : undefined
-              }
+              status={search.trim().length < 3 ? "Type at least 3 characters to search." : undefined}
             />
             {confirming && (
               <div className="space-y-2 rounded-md border border-subtle p-2 text-xs">
@@ -406,11 +387,7 @@ function AutocompleteDemo() {
                   >
                     Use this address
                   </Button>
-                  <Button
-                    variant="ghost"
-                    className="px-2.5 py-1.5 text-xs"
-                    onClick={() => setConfirming(null)}
-                  >
+                  <Button variant="ghost" className="px-2.5 py-1.5 text-xs" onClick={() => setConfirming(null)}>
                     Back to the list
                   </Button>
                 </div>
@@ -421,10 +398,9 @@ function AutocompleteDemo() {
         <StateLine>{`query = "${search}"   onOpenChange → ${lastOpen ?? "—"}   pinned → ${pinned ?? "—"}`}</StateLine>
         <Note>
           Seeded with a query: focusing the field looks it up (no request on mount, none below
-          <code> minChars</code>, one per pause in typing), and the text is never reset. Rows in
-          Bern are <code>disabled</code>: listed with their reason, skipped by ↑/↓, and a click
-          takes nothing. Taking a row opens a confirm step, and <code>open={"{false}"}</code> keeps
-          the list shut under it even while the field has focus.
+          <code> minChars</code>, one per pause in typing), and the text is never reset. Rows in Bern are{" "}
+          <code>disabled</code>: listed with their reason, skipped by ↑/↓, and a click takes nothing. Taking a row opens
+          a confirm step, and <code>open={"{false}"}</code> keeps the list shut under it even while the field has focus.
         </Note>
       </Example>
 
@@ -437,12 +413,7 @@ function AutocompleteDemo() {
             loadOptions={(q) => fakeGeocode(q, false)}
             error={required.trim() ? undefined : "An address is required"}
           />
-          <Autocomplete
-            label="Billing address"
-            value="Via Nassa 5, 6900 Lugano"
-            onChange={() => {}}
-            disabled
-          />
+          <Autocomplete label="Billing address" value="Via Nassa 5, 6900 Lugano" onChange={() => {}} disabled />
         </Stage>
       </Example>
 
@@ -458,13 +429,7 @@ function AutocompleteDemo() {
             options={["ACME AG", "Globex GmbH", "Initech SA"]}
             error={customer.trim() ? undefined : "Name the customer"}
           />
-          <Combobox
-            label="Project"
-            value="Rollout 2026"
-            onChange={() => {}}
-            options={["Rollout 2026"]}
-            disabled
-          />
+          <Combobox label="Project" value="Rollout 2026" onChange={() => {}} options={["Rollout 2026"]} disabled />
           <Combobox
             label="Cost centre"
             value={costCentre}
@@ -475,9 +440,8 @@ function AutocompleteDemo() {
           />
         </Stage>
         <p className="mt-2 text-xs text-secondary">
-          The disabled Project field is dimmed as a whole, label and chevron included, the way a
-          disabled <code className="font-mono">EntityCombobox</code> is, so it never reads like a
-          filled-in one beside it. Its
+          The disabled Project field is dimmed as a whole, label and chevron included, the way a disabled{" "}
+          <code className="font-mono">EntityCombobox</code> is, so it never reads like a filled-in one beside it. Its
           suggestion list, like every portalled combobox list, carries the field&apos;s{" "}
           <code className="font-mono">dir</code>.
         </p>
@@ -507,9 +471,7 @@ function Badge({ option }: { option: string }) {
       <span
         className={cn(
           "shrink-0 rounded border px-1 text-micro uppercase tracking-wide",
-          translated
-            ? "border-brand text-brand"
-            : "border-subtle text-muted",
+          translated ? "border-brand text-brand" : "border-subtle text-muted",
         )}
       >
         {translated ? "built-in" : "custom"}
@@ -540,13 +502,13 @@ function ComboboxClipsDemo() {
       <Current label="value" value={category ? `"${category}"` : "(empty)"} />
       <div className="mt-3">
         <Note>
-          The list is a scroll container ({code("max-height")} + {code("overflow-y: auto")}), and a
-          bubble drawn inside it is cut off at its edge. The listbox carries {code("data-clips")}
-          (the kit's {code("CLIPS_ATTRIBUTE")}), which the Tooltip's auto-portal reads as well as the
-          computed overflow — so the bubble goes to {code("document.body")}, above the panel. The marker
-          matters most under jsdom, which computes no overflow: there a bubble left in the row became
-          part of the option's accessible name (&ldquo;Rent A built-in category…&rdquo;). On a phone the
-          same list is a {code("PickerSheet")}, whose scroller carries the marker too.
+          The list is a scroll container ({code("max-height")} + {code("overflow-y: auto")}), and a bubble drawn inside
+          it is cut off at its edge. The listbox carries {code("data-clips")}
+          (the kit's {code("CLIPS_ATTRIBUTE")}), which the Tooltip's auto-portal reads as well as the computed overflow
+          — so the bubble goes to {code("document.body")}, above the panel. The marker matters most under jsdom, which
+          computes no overflow: there a bubble left in the row became part of the option's accessible name (&ldquo;Rent
+          A built-in category…&rdquo;). On a phone the same list is a {code("PickerSheet")}, whose scroller carries the
+          marker too.
         </Note>
       </div>
     </Example>
@@ -672,13 +634,7 @@ function ComboboxFamilyLock023Demo() {
               clearable
               hint={<FieldHint label="Only these accounts are summed" />}
             />
-            <Combobox
-              commit
-              label="Default payee"
-              value={payee}
-              onChange={setPayee}
-              options={PAYEES_023}
-            />
+            <Combobox commit label="Default payee" value={payee} onChange={setPayee} options={PAYEES_023} />
             <Autocomplete<string>
               commit
               label="Delivery address"
@@ -692,10 +648,9 @@ function ComboboxFamilyLock023Demo() {
         <Note>
           Locked, each picker is still a tab stop — {code("aria-disabled")}, never {code("disabled")} — with the
           lock&apos;s sentence in the kit Tooltip and on {code("aria-describedby")}; no list opens, the clear
-          &quot;×&quot; is gone and nothing reaches {code("onChange")}. The three typed fields are{" "}
-          {code("readOnly")} and swallow Enter. A picker inside a form with its own Save leaves {code("commit")}{" "}
-          off and stays live: the Save is the commit. {code("MultiEntityCombobox")} also takes {code("hint")},
-          like the rest of the family.
+          &quot;×&quot; is gone and nothing reaches {code("onChange")}. The three typed fields are {code("readOnly")}{" "}
+          and swallow Enter. A picker inside a form with its own Save leaves {code("commit")} off and stays live: the
+          Save is the commit. {code("MultiEntityCombobox")} also takes {code("hint")}, like the rest of the family.
         </Note>
       </div>
     </Example>
@@ -736,11 +691,11 @@ function InlineCreateRow023Demo() {
           />
         </WriteLockProvider>
         <Note>
-          Type a name that is not in the list and the last row reads {code("Create “…”")}; with nothing typed it
-          reads the {code("createEmptyLabel")} and {code("onCreate")} gets {code('""')} — the app supplies the
-          default name. The arrows reach the row like an option; Enter or a click creates and closes. With{" "}
-          {code("createCommit")} a lock disables only the row (with its reason under it): picking is draft state
-          and stays live, minting a record is the write.
+          Type a name that is not in the list and the last row reads {code("Create “…”")}; with nothing typed it reads
+          the {code("createEmptyLabel")} and {code("onCreate")} gets {code('""')} — the app supplies the default name.
+          The arrows reach the row like an option; Enter or a click creates and closes. With {code("createCommit")} a
+          lock disables only the row (with its reason under it): picking is draft state and stays live, minting a record
+          is the write.
         </Note>
       </div>
     </Example>
@@ -831,11 +786,11 @@ export function RhfInlineEntity024Demo() {
       <p className={READOUT_PRE}>submitted: {submitted}</p>
       <Note>
         Bound the way {code("RhfCountrySelect")} is: {code("field.ref")} reaches the picker&apos;s {code("<input>")}{" "}
-        through its new {code("ref")}, so a failed submit focuses it; the form&apos;s error paints the input and is
-        the message under it; the hint is the form&apos;s description, so the picker&apos;s box never changes. The
-        form&apos;s label names the input and titles the phone sheet. {code("commit")}, {code("disabledReason")} and
-        the create row ({code("onCreate")}, {code("createEmptyLabel")}, {code("createCommit")}) pass through — type
-        a name nothing matches to see it. Every Combobox-family member takes a {code("ref")} to its focusable control.
+        through its new {code("ref")}, so a failed submit focuses it; the form&apos;s error paints the input and is the
+        message under it; the hint is the form&apos;s description, so the picker&apos;s box never changes. The
+        form&apos;s label names the input and titles the phone sheet. {code("commit")}, {code("disabledReason")} and the
+        create row ({code("onCreate")}, {code("createEmptyLabel")}, {code("createCommit")}) pass through — type a name
+        nothing matches to see it. Every Combobox-family member takes a {code("ref")} to its focusable control.
       </Note>
     </Example>
   );

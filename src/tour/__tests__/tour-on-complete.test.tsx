@@ -42,7 +42,10 @@ function Reader({ storageKey }: { storageKey: string }) {
   return <p data-testid="reader">{Object.keys(completed).join(",")}</p>;
 }
 
-function setup(props: { progress?: UseTourProgressOptions; onComplete?: Parameters<typeof TourProvider>[0]["onComplete"] }, extra?: ReactNode) {
+function setup(
+  props: { progress?: UseTourProgressOptions; onComplete?: Parameters<typeof TourProvider>[0]["onComplete"] },
+  extra?: ReactNode,
+) {
   const engine: { current: Engine | null } = { current: null };
   const tree = (p: typeof props) => (
     <TourProvider {...p}>

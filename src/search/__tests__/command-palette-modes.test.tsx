@@ -120,7 +120,14 @@ describe("CommandPalette clear", () => {
   it("commits the empty query in submit mode", () => {
     const onQueryChange = vi.fn();
     render(
-      <CommandPalette open onClose={vi.fn()} search={search} searchOn="submit" query="acc" onQueryChange={onQueryChange} />,
+      <CommandPalette
+        open
+        onClose={vi.fn()}
+        search={search}
+        searchOn="submit"
+        query="acc"
+        onQueryChange={onQueryChange}
+      />,
     );
     fireEvent.click(screen.getByRole("button", { name: "Clear search" }));
     expect(onQueryChange).toHaveBeenCalledWith("");

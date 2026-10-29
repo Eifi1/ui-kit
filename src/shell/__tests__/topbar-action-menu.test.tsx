@@ -33,9 +33,7 @@ function AccountMenu({
         <TopBarActionMenu
           aria-label="Marcel Eifert"
           triggerClassName="rounded-full"
-          trigger={() => (
-            <UserAvatar name="Marcel Eifert" badge={unread ? { label: `${unread} unread` } : null} />
-          )}
+          trigger={() => <UserAvatar name="Marcel Eifert" badge={unread ? { label: `${unread} unread` } : null} />}
           header={{ title: "Marcel Eifert", subtitle: "marcel@x.com" }}
           entries={entries}
           footerLabel="Legal"

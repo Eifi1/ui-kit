@@ -22,7 +22,8 @@ import type { FeedbackAttachmentFieldLabels } from "./feedback-attachment";
 export const DEFAULT_FEEDBACK_ATTACHMENT_LABELS: FeedbackAttachmentFieldLabels = {
   attachmentAdd: "Add attachment",
   attachmentCapture: "Capture screenshot",
-  attachmentPaste: "…or paste a screenshot straight from the clipboard, so you can show one corner rather than the whole page.",
+  attachmentPaste:
+    "…or paste a screenshot straight from the clipboard, so you can show one corner rather than the whole page.",
   attachmentRemove: "Remove attachment",
   attachmentList: "Attachments",
   attachmentScreenshot: "Screenshot",

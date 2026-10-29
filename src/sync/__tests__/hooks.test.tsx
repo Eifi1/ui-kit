@@ -31,7 +31,12 @@ function fakeEngine(state: Partial<SyncEngineState> = {}) {
       listeners.forEach((l) => l());
     },
   };
-  return engine as unknown as SyncEngine & { start: ReturnType<typeof vi.fn>; stop: ReturnType<typeof vi.fn>; syncNow: ReturnType<typeof vi.fn>; emit(next: Partial<SyncEngineState>): void };
+  return engine as unknown as SyncEngine & {
+    start: ReturnType<typeof vi.fn>;
+    stop: ReturnType<typeof vi.fn>;
+    syncNow: ReturnType<typeof vi.fn>;
+    emit(next: Partial<SyncEngineState>): void;
+  };
 }
 
 describe("useSyncWorker", () => {
@@ -43,7 +48,9 @@ describe("useSyncWorker", () => {
   it("starts the engine, and stops the old one when the engine changes (a company switch)", () => {
     const a = fakeEngine();
     const b = fakeEngine();
-    const { rerender, unmount } = renderHook(({ engine }) => useSyncWorker(engine), { initialProps: { engine: a as SyncEngine | null } });
+    const { rerender, unmount } = renderHook(({ engine }) => useSyncWorker(engine), {
+      initialProps: { engine: a as SyncEngine | null },
+    });
     expect(a.start).toHaveBeenCalledTimes(1);
     rerender({ engine: b });
     expect(a.stop).toHaveBeenCalledTimes(1);
@@ -109,7 +116,9 @@ describe("useSyncQuery", () => {
     db = createSyncDb(`sync-hooks-test-${Date.now()}`);
     engine = createSyncEngine({ db, scopes: () => [], send: vi.fn(), sharedComputer: () => false });
     const copy = db;
-    const { result } = renderHook(() => useSyncQuery(copy, (d) => d.rows.where("entity").equals("protocols").count(), []));
+    const { result } = renderHook(() =>
+      useSyncQuery(copy, (d) => d.rows.where("entity").equals("protocols").count(), []),
+    );
     await waitFor(() => expect(result.current).toEqual({ data: 0, isLoading: false }));
     await act(() => engine!.write("handover", "protocols", "p1", "upsert", { notes: "x" }));
     await waitFor(() => expect(result.current.data).toBe(1));

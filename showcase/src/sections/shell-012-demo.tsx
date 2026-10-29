@@ -75,13 +75,15 @@ function TopBarBrandSpecimen() {
           actions={<span className={READOUT}>actions</span>}
         />
       </div>
-      <p className={`mt-3 ${READOUT}`}>{own ? `last click: ${log}` : "links through the provider's linkComponent (this page's router) to /shell"}</p>
+      <p className={`mt-3 ${READOUT}`}>
+        {own ? `last click: ${log}` : "links through the provider's linkComponent (this page's router) to /shell"}
+      </p>
       <div className="mt-3">
         <Note>
-          Below the breakpoint the name is {code("sr-only")}, not removed: the logo is the whole visible link and
-          the link is still called &ldquo;Acme Books&rdquo; — narrow the window (or open the phone preview) to see it
-          go. The logo is {code("aria-hidden")} and sized {code("h-6 w-auto")}. Without {code("renderLink")} it
-          uses the provider&apos;s {code("linkComponent")}, else react-router&apos;s {code("Link")}.
+          Below the breakpoint the name is {code("sr-only")}, not removed: the logo is the whole visible link and the
+          link is still called &ldquo;Acme Books&rdquo; — narrow the window (or open the phone preview) to see it go.
+          The logo is {code("aria-hidden")} and sized {code("h-6 w-auto")}. Without {code("renderLink")} it uses the
+          provider&apos;s {code("linkComponent")}, else react-router&apos;s {code("Link")}.
         </Note>
       </div>
     </Example>
@@ -119,10 +121,7 @@ function IconBadgeSpecimen() {
   ];
 
   return (
-    <Example
-      label="TopBarActionMenu — iconBadge"
-      hint="a dot on the icon trigger, with words for a screen reader"
-    >
+    <Example label="TopBarActionMenu — iconBadge" hint="a dot on the icon trigger, with words for a screen reader">
       <Row>
         <TopBarActionMenu
           icon={<Bell className="size-5" />}
@@ -169,9 +168,9 @@ function IconBadgeSpecimen() {
       <div className="mt-3">
         <Note>
           With a badge the trigger is named by its content — {code("aria-label")} and the badge&apos;s {code("label")}{" "}
-          as {code("sr-only")} text — so it is read &ldquo;Feedback 2 unread&rdquo;; an {code("aria-label")} would
-          have hidden the count. {code("tone")} defaults to {code("danger")}. {code("null")} or {code("undefined")}{" "}
-          draws the plain trigger. Choose the menu&apos;s row to clear each dot.
+          as {code("sr-only")} text — so it is read &ldquo;Feedback 2 unread&rdquo;; an {code("aria-label")} would have
+          hidden the count. {code("tone")} defaults to {code("danger")}. {code("null")} or {code("undefined")} draws the
+          plain trigger. Choose the menu&apos;s row to clear each dot.
         </Note>
       </div>
     </Example>

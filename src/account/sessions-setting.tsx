@@ -83,8 +83,10 @@ export interface SessionItem<Id extends SessionId = SessionId> {
 /** Which request failed — {@link SessionsSettingProps.describeError}'s second argument. */
 export type SessionsAction = "sign-out-everywhere" | "revoke";
 
-export interface SessionsSettingProps<Id extends SessionId = SessionId>
-  extends Omit<ComponentPropsWithRef<"div">, "children"> {
+export interface SessionsSettingProps<Id extends SessionId = SessionId> extends Omit<
+  ComponentPropsWithRef<"div">,
+  "children"
+> {
   /**
    * End every session (`POST /auth/logout`, auth §6.3) — this one included. Asked
    * first; resolve once the server answered, then sign this page out: the card says

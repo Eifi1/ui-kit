@@ -55,8 +55,7 @@ export { assignRef, mergeRefs } from "../lib/refs";
 // laid out by one flex row instead of by two absolute offsets guessing at the
 // same baseline — which is what put dev#468's "?" three pixels above the word it
 // belongs to.
-export const STATIC_LABEL_TYPE =
-  "text-caption leading-tight text-muted peer-disabled:opacity-50";
+export const STATIC_LABEL_TYPE = "text-caption leading-tight text-muted peer-disabled:opacity-50";
 
 /**
  * A field's label at Large and Extra large (0.33, docs/text-size-harmonization.md
@@ -150,13 +149,7 @@ export interface FieldHintProps extends Omit<ComponentPropsWithRef<"button">, "c
   side?: TooltipSide;
 }
 
-export function FieldHint({
-  label,
-  side = "start",
-  className,
-  "aria-label": ariaLabel,
-  ...rest
-}: FieldHintProps) {
+export function FieldHint({ label, side = "start", className, "aria-label": ariaLabel, ...rest }: FieldHintProps) {
   return (
     // `tap="toggle"` (0.25): the "?" exists only to explain, so a tap on a phone shows
     // the bubble and the next tap hides it — the touch rule (no bubble left behind by a
@@ -280,7 +273,6 @@ export interface FieldHelpSource {
   /** What names its "?": the field's label, else its `aria-label`. */
   name?: ReactNode;
 }
-
 
 /**
  * Whether a `hint` is a CAPTION (plain text: a non-empty string or a number) or
@@ -434,7 +426,10 @@ export function StaticLabelRow({ hint, children }: { hint: ReactNode; children: 
   return (
     <div
       data-field-label=""
-      className={cn("pointer-events-none absolute start-3 end-9 top-1 z-10 flex items-center gap-1", LABEL_ABOVE_AT_LARGE)}
+      className={cn(
+        "pointer-events-none absolute start-3 end-9 top-1 z-10 flex items-center gap-1",
+        LABEL_ABOVE_AT_LARGE,
+      )}
     >
       {children}
       <span className="pointer-events-auto flex shrink-0 items-center">{hint}</span>
@@ -606,8 +601,7 @@ export function useDisabledReasonLine(display: DisabledReasonDisplay = "auto"): 
 /** The reason line's type: a field caption's ({@link FIELD_CAPTION_CLASS}), so a locked
  *  control's "why" reads like a field's standing advice. Capped, so a long reason under
  *  a small control wraps rather than widening its row without end. */
-export const DISABLED_REASON_LINE_CLASS =
-  "mt-1 block max-w-[20rem] text-caption leading-tight text-muted";
+export const DISABLED_REASON_LINE_CLASS = "mt-1 block max-w-[20rem] text-caption leading-tight text-muted";
 
 /**
  * A control and its `disabledReason` as a line under it — the `"line"` form of
@@ -713,15 +707,7 @@ export function useFieldMessages({
  * once `error` is passed the box is kept even with no message, so the trigger is never
  * reparented — and remounted, losing focus — as the message comes and goes.
  */
-export function FieldBox({
-  below,
-  reserve,
-  children,
-}: {
-  below: ReactNode;
-  reserve: boolean;
-  children: ReactNode;
-}) {
+export function FieldBox({ below, reserve, children }: { below: ReactNode; reserve: boolean; children: ReactNode }) {
   if (below === null && !reserve) return <>{children}</>;
   return (
     <div>
@@ -746,7 +732,10 @@ export function FieldLabelLine({ label, hint }: { label: ReactNode; hint?: React
     // over the row (and take the "?"'s hover) otherwise. Above the field at Large.
     <div
       data-field-label=""
-      className={cn("pointer-events-none absolute start-3 end-9 top-1 z-10 flex items-center gap-1", LABEL_ABOVE_AT_LARGE)}
+      className={cn(
+        "pointer-events-none absolute start-3 end-9 top-1 z-10 flex items-center gap-1",
+        LABEL_ABOVE_AT_LARGE,
+      )}
     >
       <FieldLabel className={cn(LABEL_IN_ROW, "max-w-full")}>{label}</FieldLabel>
       <span className="pointer-events-auto flex shrink-0 items-center">{hint}</span>

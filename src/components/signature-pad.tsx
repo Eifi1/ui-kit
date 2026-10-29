@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useId, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, ComponentPropsWithRef, PointerEvent as ReactPointerEvent, ReactNode, Ref } from "react";
+import type {
+  ComponentPropsWithoutRef,
+  ComponentPropsWithRef,
+  PointerEvent as ReactPointerEvent,
+  ReactNode,
+  Ref,
+} from "react";
 import { Eraser, Keyboard, PenLine, Undo2 } from "lucide-react";
 import { cn } from "../lib/cn";
 import { hasContent } from "../lib/presence";
@@ -430,7 +436,10 @@ export function SignaturePad({
 
   /* ── Pointer ── */
 
-  const toPoint = (e: { clientX: number; clientY: number; pressure: number; pointerType: string }, rect: DOMRect): Point => {
+  const toPoint = (
+    e: { clientX: number; clientY: number; pressure: number; pointerType: string },
+    rect: DOMRect,
+  ): Point => {
     const scale = refWidth.current > 0 && rect.width > 0 ? rect.width / refWidth.current : 1;
     return {
       x: (e.clientX - rect.left) / scale,
@@ -605,13 +614,12 @@ export function SignaturePad({
           {labels.clear}
         </Button>
         {allowTypedName && (
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={switchMode}
-            disabled={disabled}
-          >
-            {typed ? <PenLine aria-hidden="true" className="size-4" /> : <Keyboard aria-hidden="true" className="size-4" />}
+          <Button type="button" variant="secondary" onClick={switchMode} disabled={disabled}>
+            {typed ? (
+              <PenLine aria-hidden="true" className="size-4" />
+            ) : (
+              <Keyboard aria-hidden="true" className="size-4" />
+            )}
             {typed ? labels.useDrawn : labels.useTyped}
           </Button>
         )}
@@ -696,7 +704,9 @@ export function SignatureView({
       data-empty={kind === "empty" || undefined}
     >
       {captioned && (
-        <figcaption id={captionId} className="block text-sm font-medium text-primary">{caption}</figcaption>
+        <figcaption id={captionId} className="block text-sm font-medium text-primary">
+          {caption}
+        </figcaption>
       )}
       <div
         className={cn(
@@ -725,9 +735,7 @@ export function SignatureView({
             {name}
           </span>
         )}
-        {kind === "empty" && (
-          <span className="relative text-xs text-muted">{labels.viewEmpty}</span>
-        )}
+        {kind === "empty" && <span className="relative text-xs text-muted">{labels.viewEmpty}</span>}
         {/* The signing line, as on the pad. Decoration only. */}
         <div
           aria-hidden="true"

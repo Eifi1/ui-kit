@@ -153,9 +153,7 @@ export function TreeRow({
       style={{ paddingInlineStart: ROW_PAD + depth * indent, ...style }}
       className={cn(
         "relative flex min-h-8 items-center gap-1.5 rounded pe-2 text-sm",
-        selected
-          ? "bg-active font-medium text-primary"
-          : "text-secondary",
+        selected ? "bg-active font-medium text-primary" : "text-secondary",
         className,
       )}
     >
@@ -183,12 +181,18 @@ export function TreeRow({
             e.stopPropagation();
             onToggle();
           }}
-          className={cn("flex size-4 shrink-0 items-center justify-center rounded text-muted outline-none hover:text-primary", FOCUS_RING)}
+          className={cn(
+            "flex size-4 shrink-0 items-center justify-center rounded text-muted outline-none hover:text-primary",
+            FOCUS_RING,
+          )}
         >
           {chevron}
         </button>
       ) : expandable ? (
-        <span data-tree-toggle="" className="flex size-4 shrink-0 cursor-pointer items-center justify-center text-muted">
+        <span
+          data-tree-toggle=""
+          className="flex size-4 shrink-0 cursor-pointer items-center justify-center text-muted"
+        >
           {chevron}
         </span>
       ) : (
@@ -203,9 +207,7 @@ export function TreeRow({
             {label}
           </span>
           {trailing !== undefined && trailing !== null && (
-            <span className="ms-auto flex shrink-0 items-center gap-1 text-xs tabular-nums text-muted">
-              {trailing}
-            </span>
+            <span className="ms-auto flex shrink-0 items-center gap-1 text-xs tabular-nums text-muted">{trailing}</span>
           )}
         </>
       )}
@@ -215,8 +217,10 @@ export function TreeRow({
 
 /* ── TreeView ────────────────────────────────────────────────────────────── */
 
-export interface TreeViewProps<T = unknown>
-  extends Omit<ComponentPropsWithRef<"ul">, "onSelect" | "children" | "defaultValue"> {
+export interface TreeViewProps<T = unknown> extends Omit<
+  ComponentPropsWithRef<"ul">,
+  "onSelect" | "children" | "defaultValue"
+> {
   items: readonly TreeNode<T>[];
   /** Open nodes, controlled. */
   expanded?: readonly string[];
@@ -285,14 +289,8 @@ export function TreeView<T = unknown>({
   onClick,
   ...rest
 }: TreeViewProps<T>) {
-  const [expandedList, setExpandedOwn] = useControllable<readonly string[]>(
-    expandedProp,
-    defaultExpanded ?? [],
-  );
-  const [selected, setSelectedOwn] = useControllable<string | null>(
-    selectedProp,
-    defaultSelected ?? null,
-  );
+  const [expandedList, setExpandedOwn] = useControllable<readonly string[]>(expandedProp, defaultExpanded ?? []);
+  const [selected, setSelectedOwn] = useControllable<string | null>(selectedProp, defaultSelected ?? null);
   const expandedSet = useMemo(() => new Set(expandedList), [expandedList]);
   const [loading, setLoading] = useState<ReadonlySet<string>>(() => new Set());
   const [focusedId, setFocusedId] = useState<string | null>(null);
@@ -327,8 +325,7 @@ export function TreeView<T = unknown>({
     while (cur && !visibleIds.has(cur)) cur = byId.get(cur)?.parentId ?? null;
     return cur;
   };
-  const tabbable =
-    nearestVisible(focusedId) ?? nearestVisible(selected) ?? visible[0]?.node.id ?? null;
+  const tabbable = nearestVisible(focusedId) ?? nearestVisible(selected) ?? visible[0]?.node.id ?? null;
 
   useEffect(() => {
     const id = pendingFocus.current;

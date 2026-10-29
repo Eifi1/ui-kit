@@ -3,7 +3,14 @@ import { contrast, hexToOklch } from "../color";
 import { BRAND_BG_HOVER_SHARE, BRAND_BG_SHARE, BRAND_MUTED_SHARE, HOVER_INK, WELL_STEP_MIN } from "../contrast-tokens";
 import { PALETTES } from "../palette-presets";
 import { SWIPE_TONE } from "../../components/swipeable-row";
-import { mixSrgb, over, resolveTokens, tokensCssDeclarations, type ResolvedTokens, type Rgba } from "../../test/tokens-css";
+import {
+  mixSrgb,
+  over,
+  resolveTokens,
+  tokensCssDeclarations,
+  type ResolvedTokens,
+  type Rgba,
+} from "../../test/tokens-css";
 
 /**
  * Every colour pair `tokens.css` sets up, measured in every shipped preset × light/dark ×
@@ -164,8 +171,16 @@ describe("tokens.css, measured in every shipped preset", () => {
     // The set §5.1 promises: brand, the four statuses, neutral, money ×4, the hues ×5.
     expect(contrasts.sort()).toEqual(
       [
-        "brand", "danger", "warning", "info", "success", "neutral",
-        "money-income", "money-expense", "money-net", "money-neutral",
+        "brand",
+        "danger",
+        "warning",
+        "info",
+        "success",
+        "neutral",
+        "money-income",
+        "money-expense",
+        "money-net",
+        "money-neutral",
         ...HUES.map((h) => `hue-${h}`),
       ]
         .map((f) => `--${f}-contrast`)
@@ -188,11 +203,21 @@ describe("tokens.css, measured in every shipped preset", () => {
 
   it("draws the strong lines and the field-sync marks at 3:1 against every surface", () => {
     // 0.49: the chart inks — an edge, a baseline, an "other" slice — are lines too.
-    const lines = ["--danger-border-strong", "--warning-border-strong", "--status-synced", "--status-pending", "--status-edited", "--status-error", "--chart-ink", "--chart-muted"];
+    const lines = [
+      "--danger-border-strong",
+      "--warning-border-strong",
+      "--status-synced",
+      "--status-pending",
+      "--status-edited",
+      "--status-error",
+      "--chart-ink",
+      "--chart-muted",
+    ];
     expect(
       audit((t, fail) => {
         for (const line of lines) {
-          for (const bg of ["--bg-page", "--bg-surface", "--bg-surface-2"]) pair(fail, t.color(line), t.color(bg), 3, `${line} on ${bg}`);
+          for (const bg of ["--bg-page", "--bg-surface", "--bg-surface-2"])
+            pair(fail, t.color(line), t.color(bg), 3, `${line} on ${bg}`);
         }
       }),
     ).toEqual([]);
@@ -203,8 +228,15 @@ describe("tokens.css, measured in every shipped preset", () => {
     // which More contrast steps to a 3:1 LINE — 2.2–3.3:1 under their labels.
     expect(
       audit((t, fail) => {
-        for (const fg of ["--text-primary", "--text-secondary"]) pair(fail, t.color(fg), t.color("--bg-active"), 4.5, `${fg} on --bg-active`);
-        pair(fail, t.color("--bg-active"), t.color("--bg-surface-2"), 1.08 + SLACK, "--bg-active against the well (a key's step)");
+        for (const fg of ["--text-primary", "--text-secondary"])
+          pair(fail, t.color(fg), t.color("--bg-active"), 4.5, `${fg} on --bg-active`);
+        pair(
+          fail,
+          t.color("--bg-active"),
+          t.color("--bg-surface-2"),
+          1.08 + SLACK,
+          "--bg-active against the well (a key's step)",
+        );
       }),
     ).toEqual([]);
   });
@@ -260,7 +292,15 @@ describe("More contrast's light well (0.36, colour-roles §13)", () => {
   const DARK_MORE = VARIANTS.filter((v) => v.mode === "dark" && v.more);
 
   /** The literals the `:root[data-contrast="more"]:not(.dark)` block steps (§13.3). */
-  const MORE_LITERALS = ["--danger", "--warning", "--success", "--info", "--hue-teal", "--hue-orange", "--status-edited"];
+  const MORE_LITERALS = [
+    "--danger",
+    "--warning",
+    "--success",
+    "--info",
+    "--hue-teal",
+    "--hue-orange",
+    "--status-edited",
+  ];
 
   it("steps the light well to stand 1.17:1 from the card, in every preset", () => {
     expect(LIGHT_MORE).toHaveLength(PALETTES.length);
@@ -276,7 +316,15 @@ describe("More contrast's light well (0.36, colour-roles §13)", () => {
 
   it("leaves dark alone: the well, the money and the literals are the standard ones", () => {
     for (const { label, tokens, standard } of DARK_MORE) {
-      for (const name of ["--bg-surface-2", "--money-income", "--money-expense", "--money-net", "--money-neutral", "--bg-active", ...MORE_LITERALS]) {
+      for (const name of [
+        "--bg-surface-2",
+        "--money-income",
+        "--money-expense",
+        "--money-net",
+        "--money-neutral",
+        "--bg-active",
+        ...MORE_LITERALS,
+      ]) {
         expect(tokens.color(name), `${label} ${name}`).toEqual(standard.color(name));
       }
     }
@@ -333,7 +381,9 @@ describe("the soft brand (§12.11)", () => {
   it("mixes --brand-muted, --brand-bg and --brand-bg-hover at the shares the deriver solves with", () => {
     const css = CSS.replace(/\/\*[\s\S]*?\*\//g, "");
     const share = (token: string, into: string) => {
-      const value = new RegExp(`${token}:\\s*color-mix\\(in oklab, var\\(--brand\\) ([\\d.]+)%, var\\(${into}\\)\\)`).exec(css);
+      const value = new RegExp(
+        `${token}:\\s*color-mix\\(in oklab, var\\(--brand\\) ([\\d.]+)%, var\\(${into}\\)\\)`,
+      ).exec(css);
       expect(value, `${token}'s formula`).not.toBeNull();
       return Number(value![1]) / 100;
     };
@@ -347,7 +397,13 @@ describe("the soft brand (§12.11)", () => {
     // from the chip it hovers, so `--brand-muted` moved toward the ink instead.
     expect(
       audit((t, fail) => {
-        pair(fail, onCard(t, "--brand-bg-hover"), onCard(t, "--brand-bg"), 1.08 + SLACK, "--brand-bg-hover against --brand-bg");
+        pair(
+          fail,
+          onCard(t, "--brand-bg-hover"),
+          onCard(t, "--brand-bg"),
+          1.08 + SLACK,
+          "--brand-bg-hover against --brand-bg",
+        );
       }),
     ).toEqual([]);
   });

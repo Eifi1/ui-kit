@@ -17,7 +17,13 @@ describe("AmountInput hint", () => {
 
   it("a FieldHint rides the label line, not a caption", () => {
     const { container } = render(
-      <AmountInput label="Deposit" currency="EUR" value="1" onChange={vi.fn()} hint={<FieldHint label="Held back" />} />,
+      <AmountInput
+        label="Deposit"
+        currency="EUR"
+        value="1"
+        onChange={vi.fn()}
+        hint={<FieldHint label="Held back" />}
+      />,
     );
     expect(container.querySelector("p")).toBeNull();
     const label = container.querySelector("label")!;

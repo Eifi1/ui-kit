@@ -329,9 +329,7 @@ export function BulkActionBar({
           no room, so it was the item squeezed to nothing instead of a line breaking.
           Its own width is its basis now; `truncate` is left for a label too long for a
           line on its own. */}
-      <span className="min-w-0 flex-auto truncate text-sm font-medium text-primary">
-        {labels.selected(shownCount)}
-      </span>
+      <span className="min-w-0 flex-auto truncate text-sm font-medium text-primary">{labels.selected(shownCount)}</span>
       {/* `contents`, so the caller's controls are flex items of the bar itself. */}
       <div className="contents">{children}</div>
       {!floating && clear}
@@ -352,10 +350,7 @@ export function BulkActionBar({
           {toolbar}
           <div
             data-bulk-action-bar-panel=""
-            className={cn(
-              "border-t border-subtle px-3 py-3",
-              floating && "max-h-[60dvh] overflow-y-auto",
-            )}
+            className={cn("border-t border-subtle px-3 py-3", floating && "max-h-[60dvh] overflow-y-auto")}
           >
             {panel}
           </div>

@@ -49,7 +49,11 @@ describe("AdminActionLog", () => {
     expect(deactivated).toHaveTextContent("by Ada Example");
     // 0.32: DateMark shows the exact date beside the relative words, both inside one
     // <time>, so the words are a span within it.
-    expect(within(deactivated).getByText(/ago|yesterday|today/i).closest("time")).not.toBeNull();
+    expect(
+      within(deactivated)
+        .getByText(/ago|yesterday|today/i)
+        .closest("time"),
+    ).not.toBeNull();
 
     expect(requested).toHaveTextContent("Deletion requested");
     expect(requested).toHaveTextContent("by the user themselves");
@@ -123,7 +127,13 @@ describe("AdminActionLog — groups (§11)", () => {
         entries={[
           { id: 6, at: null, actor: ADMIN, action: "deactivate", target: BEN },
           { id: 5, at: null, actor: ADMIN, action: "group_create", target: WORKSHOP },
-          { id: 4, at: null, actor: ADMIN, action: "reseed_demo", target: { kind: "other", label: "The demo dataset" } },
+          {
+            id: 4,
+            at: null,
+            actor: ADMIN,
+            action: "reseed_demo",
+            target: { kind: "other", label: "The demo dataset" },
+          },
           { id: 3, at: null, actor: null, action: "erase", target: null },
           { id: 2, at: null, actor: ADMIN, action: "mystery" },
         ]}
@@ -149,9 +159,22 @@ describe("AdminActionLog — groups (§11)", () => {
         groupNoun="team"
         entries={[
           // The group_delete row's own stamp (`target_group_name`, decision 6).
-          { id: 3, at: null, actor: ADMIN, action: "group_delete", target: { kind: "group", id: 9, name: "Paint shop" } },
+          {
+            id: 3,
+            at: null,
+            actor: ADMIN,
+            action: "group_delete",
+            target: { kind: "group", id: 9, name: "Paint shop" },
+          },
           { id: 2, at: null, actor: ADMIN, action: "group_rename", target: { kind: "group", id: 8, name: null } },
-          { id: 1, at: null, actor: ADMIN, action: "membership_add", target: BEN, group: { kind: "group", id: 8, name: " " } },
+          {
+            id: 1,
+            at: null,
+            actor: ADMIN,
+            action: "membership_add",
+            target: BEN,
+            group: { kind: "group", id: 8, name: " " },
+          },
         ]}
       />,
     );
@@ -170,7 +193,15 @@ describe("AdminActionLog — groups (§11)", () => {
       <AdminActionLog
         groupNoun="team"
         entries={[
-          { id: 2, at: null, actor: ADMIN, action: "membership_role", target: BEN, group: WORKSHOP, detail: "Member → Manager" },
+          {
+            id: 2,
+            at: null,
+            actor: ADMIN,
+            action: "membership_role",
+            target: BEN,
+            group: WORKSHOP,
+            detail: "Member → Manager",
+          },
           { id: 1, at: null, actor: ADMIN, action: "invite", target: { email: "cy@example.com" }, group: WORKSHOP },
         ]}
       />,
@@ -231,14 +262,22 @@ describe("AdminActionLog — groups (§11)", () => {
     // `labels.actions` outranks the noun's set, from the provider and from the prop.
     rerender(
       <UiKitProvider labels={{ adminActionLog: { actions: { group_create: "Crew founded" } } }}>
-        <AdminActionLog entries={entries} groupNoun="team" labels={{ actions: { membership_remove: "Left the crew" } }} />
+        <AdminActionLog
+          entries={entries}
+          groupNoun="team"
+          labels={{ actions: { membership_remove: "Left the crew" } }}
+        />
       </UiKitProvider>,
     );
     expect(rows()[0]).toHaveTextContent("Crew founded");
     expect(rows()[1]).toHaveTextContent("Left the crew");
     // A deep override of one phrase keeps the set's others.
     rerender(
-      <AdminActionLog entries={entries} groupNoun="team" labels={{ groupActions: { team: { group_create: "Crew founded" } } }} />,
+      <AdminActionLog
+        entries={entries}
+        groupNoun="team"
+        labels={{ groupActions: { team: { group_create: "Crew founded" } } }}
+      />,
     );
     expect(rows()[0]).toHaveTextContent("Crew founded");
     expect(rows()[1]).toHaveTextContent("Removed from the team");
@@ -250,20 +289,44 @@ describe("AdminActionLogEntry — the wider target (§11.6)", () => {
     // Type tests — checked by `tsc --noEmit`: each app's code as it is today.
     // keksdose `admin-actions-panel.tsx`: a person or the invitee's address, then the
     // filtered person found by `target.id` over the union (AdminOtherTarget's `id`).
-    const row = { id: 1, at: "2026-10-12T09:00:00Z", action: "deactivate", actor: null, target: null, target_email: "a@example.com" };
+    const row = {
+      id: 1,
+      at: "2026-10-12T09:00:00Z",
+      action: "deactivate",
+      actor: null,
+      target: null,
+      target_email: "a@example.com",
+    };
     const kk: AdminActionLogEntry[] = [
-      { id: row.id, at: row.at, action: row.action, actor: row.actor ?? null, target: row.target ?? (row.target_email ? { email: row.target_email } : null) },
+      {
+        id: row.id,
+        at: row.at,
+        action: row.action,
+        actor: row.actor ?? null,
+        target: row.target ?? (row.target_email ? { email: row.target_email } : null),
+      },
     ];
     const wanted = 2 as number | undefined;
     const filtered: AdminPerson | null =
       wanted === undefined
         ? null
-        : (kk.find((e) => e.target && typeof e.target === "object" && e.target.id === wanted)?.target ?? { id: wanted, name: `#${wanted}` });
+        : (kk.find((e) => e.target && typeof e.target === "object" && e.target.id === wanted)?.target ?? {
+            id: wanted,
+            name: `#${wanted}`,
+          });
     // kastlan `admin-actions-card.tsx`: an id and an address, or null.
-    const ka: AdminActionLogEntry = { id: 1, at: null, actor: null, action: "plan", target: { id: undefined, email: undefined } };
+    const ka: AdminActionLogEntry = {
+      id: 1,
+      at: null,
+      actor: null,
+      action: "plan",
+      target: { id: undefined, email: undefined },
+    };
     // Code that reads a person's address narrows first.
-    const address = (target: AdminActionLogEntry["target"]) => (target && !("kind" in target) ? target.email : undefined);
-    const groupName = (target: AdminActionLogEntry["target"]) => (target && "kind" in target && target.kind === "group" ? target.name : undefined);
+    const address = (target: AdminActionLogEntry["target"]) =>
+      target && !("kind" in target) ? target.email : undefined;
+    const groupName = (target: AdminActionLogEntry["target"]) =>
+      target && "kind" in target && target.kind === "group" ? target.name : undefined;
     expect([filtered, ka.target, address(BEN), groupName({ kind: "group", name: "Workshop" })]).toEqual([
       { id: 2, name: "#2" },
       { id: undefined, email: undefined },
@@ -299,7 +362,13 @@ const GROUP_KINDS = [
 
 describe("AdminActionLog — the group words in every language (§11.5)", () => {
   it("lists the five words in ADMIN_ACTION_KINDS", () => {
-    expect(ADMIN_ACTION_KINDS.slice(-7, -2)).toEqual(["group_create", "group_rename", "group_delete", "membership_add", "membership_role"]);
+    expect(ADMIN_ACTION_KINDS.slice(-7, -2)).toEqual([
+      "group_create",
+      "group_rename",
+      "group_delete",
+      "membership_add",
+      "membership_role",
+    ]);
     expect(new Set(ADMIN_ACTION_KINDS).size).toBe(ADMIN_ACTION_KINDS.length);
   });
 
@@ -314,8 +383,20 @@ describe("AdminActionLog — the group words in every language (§11.5)", () => 
       <AdminActionLog
         groupNoun="company"
         entries={[
-          { id: 2, at: null, actor: ADMIN, action: "group_reactivate", target: { kind: "group", id: 3, name: "Muster AG" } },
-          { id: 1, at: null, actor: ADMIN, action: "group_deactivate", target: { kind: "group", id: 3, name: "Muster AG" } },
+          {
+            id: 2,
+            at: null,
+            actor: ADMIN,
+            action: "group_reactivate",
+            target: { kind: "group", id: 3, name: "Muster AG" },
+          },
+          {
+            id: 1,
+            at: null,
+            actor: ADMIN,
+            action: "group_deactivate",
+            target: { kind: "group", id: 3, name: "Muster AG" },
+          },
         ]}
       />,
     );
@@ -339,7 +420,14 @@ describe("AdminActionLog — the group words in every language (§11.5)", () => 
             target: { kind: "group", id: 3, name: "Muster Treuhand AG" },
             renamed: { from: "Muster AG", to: "Muster Treuhand AG" },
           },
-          { id: 1, at: null, actor: ADMIN, action: "group_rename", target: { kind: "group", id: 4, name: "Beispiel GmbH" }, renamed: { from: "", to: "Beispiel GmbH" } },
+          {
+            id: 1,
+            at: null,
+            actor: ADMIN,
+            action: "group_rename",
+            target: { kind: "group", id: 4, name: "Beispiel GmbH" },
+            renamed: { from: "", to: "Beispiel GmbH" },
+          },
         ]}
       />,
     );
@@ -352,7 +440,20 @@ describe("AdminActionLog — the group words in every language (§11.5)", () => 
   });
 
   it("a team rename logs {} and reads “Team renamed” with the team", () => {
-    render(<AdminActionLog groupNoun="team" entries={[{ id: 1, at: null, actor: ADMIN, action: "group_rename", target: { kind: "group", id: 8, name: "Paint shop" } }]} />);
+    render(
+      <AdminActionLog
+        groupNoun="team"
+        entries={[
+          {
+            id: 1,
+            at: null,
+            actor: ADMIN,
+            action: "group_rename",
+            target: { kind: "group", id: 8, name: "Paint shop" },
+          },
+        ]}
+      />,
+    );
     expect(rows()[0]).toHaveTextContent("Team renamed");
     expect(rows()[0]).toHaveTextContent("Paint shop");
     expect(rows()[0]).not.toHaveTextContent(/from/);
@@ -365,40 +466,49 @@ describe("AdminActionLog — the group words in every language (§11.5)", () => 
     if (code !== "en") expect(phrase).not.toBe(DEFAULT_UI_KIT_LABELS.adminActionLog.renamedFromTo("A1", "B2"));
   });
 
-  it.each(Object.entries(CATALOGUES))("%s: every group word renders in every noun's set, none falling back", (_code, catalogue) => {
-    const english = DEFAULT_UI_KIT_LABELS.adminActionLog.groupActions;
-    const entries: AdminActionLogEntry[] = [
-      ...GROUP_KINDS.map((action, index) => ({ id: index, at: null, actor: ADMIN, action, target: { kind: "group", id: 1, name: "X" } as const })),
-      { id: 99, at: null, actor: ADMIN, action: "group_delete", target: { kind: "group", id: 2 } },
-    ];
-    const seen = new Map<string, Set<string>>();
-    for (const noun of NOUNS) {
-      const words = catalogue.adminActionLog.groupActions[noun];
-      const { unmount } = render(
-        <UiKitProvider labels={catalogue}>
-          <AdminActionLog entries={entries} groupNoun={noun} />
-        </UiKitProvider>,
-      );
-      const list = within(screen.getByRole("list")).getAllByRole("listitem");
-      GROUP_KINDS.forEach((kind, index) => {
-        const phrase = words[kind];
-        expect(phrase.trim(), `${noun}.${kind}`).not.toBe("");
-        expect(phrase).not.toBe(kind);
-        // Its own words, not the English set's under another language's name.
-        if (catalogue !== DEFAULT_UI_KIT_LABELS) expect(phrase, `${noun}.${kind}`).not.toBe(english[noun][kind]);
-        expect(within(list[index]).getByText(phrase)).toBeInTheDocument();
-        seen.set(kind, (seen.get(kind) ?? new Set()).add(phrase));
-      });
-      expect(within(list[GROUP_KINDS.length]).getByText(words.deleted)).toBeInTheDocument();
-      if (catalogue !== DEFAULT_UI_KIT_LABELS) expect(words.deleted).not.toBe(english[noun].deleted);
-      seen.set("deleted", (seen.get("deleted") ?? new Set()).add(words.deleted));
-      unmount();
-    }
-    // Four nouns, four phrases for each word: the noun is in the phrase.
-    for (const [kind, phrases] of seen) expect(phrases.size, kind).toBe(NOUNS.length);
-    // No catalogue keeps a group kind in `actions`, where it would outrank the noun's set.
-    for (const kind of GROUP_KINDS) expect(catalogue.adminActionLog.actions[kind], kind).toBeUndefined();
-  });
+  it.each(Object.entries(CATALOGUES))(
+    "%s: every group word renders in every noun's set, none falling back",
+    (_code, catalogue) => {
+      const english = DEFAULT_UI_KIT_LABELS.adminActionLog.groupActions;
+      const entries: AdminActionLogEntry[] = [
+        ...GROUP_KINDS.map((action, index) => ({
+          id: index,
+          at: null,
+          actor: ADMIN,
+          action,
+          target: { kind: "group", id: 1, name: "X" } as const,
+        })),
+        { id: 99, at: null, actor: ADMIN, action: "group_delete", target: { kind: "group", id: 2 } },
+      ];
+      const seen = new Map<string, Set<string>>();
+      for (const noun of NOUNS) {
+        const words = catalogue.adminActionLog.groupActions[noun];
+        const { unmount } = render(
+          <UiKitProvider labels={catalogue}>
+            <AdminActionLog entries={entries} groupNoun={noun} />
+          </UiKitProvider>,
+        );
+        const list = within(screen.getByRole("list")).getAllByRole("listitem");
+        GROUP_KINDS.forEach((kind, index) => {
+          const phrase = words[kind];
+          expect(phrase.trim(), `${noun}.${kind}`).not.toBe("");
+          expect(phrase).not.toBe(kind);
+          // Its own words, not the English set's under another language's name.
+          if (catalogue !== DEFAULT_UI_KIT_LABELS) expect(phrase, `${noun}.${kind}`).not.toBe(english[noun][kind]);
+          expect(within(list[index]).getByText(phrase)).toBeInTheDocument();
+          seen.set(kind, (seen.get(kind) ?? new Set()).add(phrase));
+        });
+        expect(within(list[GROUP_KINDS.length]).getByText(words.deleted)).toBeInTheDocument();
+        if (catalogue !== DEFAULT_UI_KIT_LABELS) expect(words.deleted).not.toBe(english[noun].deleted);
+        seen.set("deleted", (seen.get("deleted") ?? new Set()).add(words.deleted));
+        unmount();
+      }
+      // Four nouns, four phrases for each word: the noun is in the phrase.
+      for (const [kind, phrases] of seen) expect(phrases.size, kind).toBe(NOUNS.length);
+      // No catalogue keeps a group kind in `actions`, where it would outrank the noun's set.
+      for (const kind of GROUP_KINDS) expect(catalogue.adminActionLog.actions[kind], kind).toBeUndefined();
+    },
+  );
 
   it("keeps kastlan's “Removed from the company” exactly, in all seven languages", () => {
     const TODAY = {
@@ -413,10 +523,15 @@ describe("AdminActionLog — the group words in every language (§11.5)", () => 
     for (const [code, catalogue] of Object.entries(CATALOGUES)) {
       const { unmount } = render(
         <UiKitProvider labels={catalogue}>
-          <AdminActionLog groupNoun="company" entries={[{ id: 1, at: null, actor: ADMIN, action: "membership_remove", target: BEN }]} />
+          <AdminActionLog
+            groupNoun="company"
+            entries={[{ id: 1, at: null, actor: ADMIN, action: "membership_remove", target: BEN }]}
+          />
         </UiKitProvider>,
       );
-      expect(catalogue.adminActionLog.groupActions.company.membership_remove, code).toBe(TODAY[code as keyof typeof TODAY]);
+      expect(catalogue.adminActionLog.groupActions.company.membership_remove, code).toBe(
+        TODAY[code as keyof typeof TODAY],
+      );
       // The list's name is the catalogue's, so the row is found by its role alone.
       expect(screen.getByRole("listitem")).toHaveTextContent(TODAY[code as keyof typeof TODAY]);
       unmount();

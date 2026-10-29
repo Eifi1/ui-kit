@@ -13,8 +13,7 @@ vi.mock("sonner", () => ({ toast: { error: vi.fn() } }));
  * `onInvalid` switching it off — is pinned in `optional-peer-imports.test.tsx`.
  */
 
-const pdf = (name = "lease.pdf", bytes = 10) =>
-  new File([new Uint8Array(bytes)], name, { type: "application/pdf" });
+const pdf = (name = "lease.pdf", bytes = 10) => new File([new Uint8Array(bytes)], name, { type: "application/pdf" });
 const png = (name = "plan.png") => new File(["x"], name, { type: "image/png" });
 
 const LABELS = {
@@ -104,7 +103,9 @@ describe("FileDropzone 0.6", () => {
   it("removes the chosen file from inside the zone, without opening the picker", async () => {
     function Host() {
       const [file, setFile] = useState<File | null>(pdf());
-      return <FileDropzone accept=".pdf" {...LABELS} file={file} onFileSelected={setFile} onClear={() => setFile(null)} />;
+      return (
+        <FileDropzone accept=".pdf" {...LABELS} file={file} onFileSelected={setFile} onClear={() => setFile(null)} />
+      );
     }
     const { container } = render(<Host />);
     const click = vi.spyOn(input(container), "click");
@@ -137,9 +138,7 @@ describe("FileDropzone 0.6", () => {
       drop(screen.getByRole("group", { name: LABELS.dropLabel }), a, b, c);
       expect(onFilesSelected).toHaveBeenCalledWith([a, b]);
       expect(onReject.mock.calls[0][0].map((r: { file: File }) => r.file)).toEqual([c]);
-      rerender(
-        <FileDropzone accept=".pdf" {...LABELS} multiple files={[a, b]} onRemove={vi.fn()} onClear={vi.fn()} />,
-      );
+      rerender(<FileDropzone accept=".pdf" {...LABELS} multiple files={[a, b]} onRemove={vi.fn()} onClear={vi.fn()} />);
       expect(screen.getAllByRole("listitem")).toHaveLength(2);
       expect(screen.getByRole("button", { name: "Remove “b.pdf”" })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Remove all files" })).toBeInTheDocument();
@@ -183,9 +182,7 @@ describe("FileDropzone onPick", () => {
     pick(input(container), pdf("a.pdf"), png());
     expect(onFilesSelected).not.toHaveBeenCalled();
     expect(onReject).toHaveBeenCalledTimes(1);
-    await waitFor(() =>
-      expect(screen.getAllByText("None of the 2 files were added").length).toBeGreaterThan(0),
-    );
+    await waitFor(() => expect(screen.getAllByText("None of the 2 files were added").length).toBeGreaterThan(0));
   });
 
   it("delivers as usual when onPick has no objection", () => {

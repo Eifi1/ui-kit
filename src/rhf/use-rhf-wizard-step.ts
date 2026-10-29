@@ -45,10 +45,7 @@ import { useCallback, useEffect, useRef } from "react";
 import type { FieldPath, FieldValues, UseFormReturn } from "react-hook-form";
 import { useOptionalWizardContext } from "../wizard/wizard-context";
 
-export type RhfWizardStepOptions<
-  TFieldValues extends FieldValues,
-  TTransformed = TFieldValues,
-> =
+export type RhfWizardStepOptions<TFieldValues extends FieldValues, TTransformed = TFieldValues> =
   | {
       /** Validate only these fields — the step's share of a form that spans steps. */
       fields: readonly FieldPath<TFieldValues>[];
@@ -68,15 +65,9 @@ export type RhfWizardStepOptions<
  * Connects `form` to the wizard's step validation and returns the step's validator.
  * See the module note for the two modes.
  */
-export function useRhfWizardStep<
-  TFieldValues extends FieldValues,
-  TContext = unknown,
-  TTransformed = TFieldValues,
->(
+export function useRhfWizardStep<TFieldValues extends FieldValues, TContext = unknown, TTransformed = TFieldValues>(
   form: UseFormReturn<TFieldValues, TContext, TTransformed>,
-  options?:
-    | RhfWizardStepOptions<TFieldValues, TTransformed>
-    | ((values: TTransformed) => void),
+  options?: RhfWizardStepOptions<TFieldValues, TTransformed> | ((values: TTransformed) => void),
 ): () => Promise<boolean> {
   const opts = typeof options === "function" ? { onValid: options } : (options ?? {});
   const optsRef = useRef(opts);

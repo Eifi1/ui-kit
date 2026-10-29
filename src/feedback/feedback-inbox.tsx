@@ -239,9 +239,7 @@ export function FeedbackStatusTransitions({
               variant === "icon"
                 ? cn(
                     "flex size-7 items-center justify-center rounded",
-                    active
-                      ? cn(meta.activeBg, meta.activeText)
-                      : "text-placeholder hover:text-secondary",
+                    active ? cn(meta.activeBg, meta.activeText) : "text-placeholder hover:text-secondary",
                   )
                 : cn(
                     "inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium",
@@ -529,9 +527,7 @@ export function FeedbackDetailSection({
   return (
     <div>
       <div className="mb-1 flex items-center justify-between gap-2">
-        <div className="text-xs font-medium uppercase tracking-wide text-muted">
-          {title}
-        </div>
+        <div className="text-xs font-medium uppercase tracking-wide text-muted">{title}</div>
         {action}
       </div>
       {children}
@@ -552,7 +548,5 @@ export function FeedbackDetail({ children, className }: { children: ReactNode; c
  *  carry the entire "this arrived after the answer" reading. */
 export function FeedbackProse({ children, empty }: { children?: string; empty?: ReactNode }) {
   if (!children) return <p className="text-placeholder">{empty ?? "—"}</p>;
-  return (
-    <p className="whitespace-pre-wrap text-secondary">{children}</p>
-  );
+  return <p className="whitespace-pre-wrap text-secondary">{children}</p>;
 }

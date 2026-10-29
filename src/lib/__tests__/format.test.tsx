@@ -41,9 +41,7 @@ describe("formatMoney / formatPercent", () => {
   it("reads a ratio by default and a percentage with ratio: false", () => {
     expect(formatPercent(0.12, { locale: "en-US" })).toBe("12%");
     expect(formatPercent(0.1234, { locale: "en-US" })).toBe("12.3%");
-    expect(formatPercent(1.25, { locale: "en-US", ratio: false, digits: 2, signDisplay: "exceptZero" })).toBe(
-      "+1.25%",
-    );
+    expect(formatPercent(1.25, { locale: "en-US", ratio: false, digits: 2, signDisplay: "exceptZero" })).toBe("+1.25%");
   });
 });
 
@@ -58,7 +56,9 @@ describe("formatDate", () => {
     // (a tour's `updated.date`, the reset line), east of it not the day after.
     for (const timeZone of ["America/Los_Angeles", "Pacific/Honolulu", "UTC", "Asia/Tokyo", "Pacific/Kiritimati"]) {
       expect(formatDate("2026-10-10", "medium", { locale: "en-GB", timeZone })).toBe("10 Oct 2026");
-      expect(formatDate("2026-10-10", { day: "numeric", month: "long", timeZone }, { locale: "en-GB" })).toBe("10 October");
+      expect(formatDate("2026-10-10", { day: "numeric", month: "long", timeZone }, { locale: "en-GB" })).toBe(
+        "10 October",
+      );
     }
   });
 
@@ -88,9 +88,7 @@ describe("formatRelativeTime", () => {
     expect(formatRelativeTime(ago(3 * 3_600_000), { now, locale: "de" })).toBe("vor 3 Stunden");
     expect(formatRelativeTime(ago(86_400_000), { now, locale: "en" })).toBe("yesterday");
     expect(formatRelativeTime(ago(2 * 86_400_000), { now, locale: "en", numeric: "always" })).toBe("2 days ago");
-    expect(formatRelativeTime(new Date(now.getTime() + 2 * 86_400_000), { now, locale: "en" })).toBe(
-      "in 2 days",
-    );
+    expect(formatRelativeTime(new Date(now.getTime() + 2 * 86_400_000), { now, locale: "en" })).toBe("in 2 days");
     expect(formatRelativeTime(ago(400 * 86_400_000), { now, locale: "en" })).toBe("last year");
   });
 
@@ -104,9 +102,7 @@ describe("formatRelativeTime", () => {
 
 describe("useKitFormat", () => {
   it("binds the provider's locale, and an explicit locale still wins", () => {
-    const wrapper = ({ children }: { children: ReactNode }) => (
-      <UiKitProvider locale="de-DE">{children}</UiKitProvider>
-    );
+    const wrapper = ({ children }: { children: ReactNode }) => <UiKitProvider locale="de-DE">{children}</UiKitProvider>;
     const { result } = renderHook(() => useKitFormat(), { wrapper });
     expect(result.current.locale).toBe("de-DE");
     expect(result.current.formatNumber(1234.5, { digits: 2 })).toBe("1.234,50");
@@ -129,7 +125,11 @@ describe("useKitFormat — the provider's timeZone (0.46, notifications §10.3)"
     expect(result.current.formatDate(ts, "dateTime")).toBe("9 Jul 2026, 07:30");
     expect(result.current.formatDate(ts, "dateTime", { timeZone: "UTC" })).toBe("8 Jul 2026, 22:30");
     expect(
-      result.current.formatRelativeTime(ts, { now: "2026-08-30T00:00:00Z", absoluteAfterDays: 7, absoluteStyle: "dateTime" }),
+      result.current.formatRelativeTime(ts, {
+        now: "2026-08-30T00:00:00Z",
+        absoluteAfterDays: 7,
+        absoluteStyle: "dateTime",
+      }),
     ).toBe("9 Jul 2026, 07:30");
   });
 

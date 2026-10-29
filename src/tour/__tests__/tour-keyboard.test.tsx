@@ -31,7 +31,10 @@ function Launcher({ steps, startIndex, onSkip }: { steps: TourStep[]; startIndex
   );
 }
 
-function renderTour(steps: TourStep[], { dir, startIndex, onSkip }: { dir?: "rtl"; startIndex?: number; onSkip?: () => void } = {}) {
+function renderTour(
+  steps: TourStep[],
+  { dir, startIndex, onSkip }: { dir?: "rtl"; startIndex?: number; onSkip?: () => void } = {},
+) {
   return render(
     <div dir={dir}>
       <TourProvider>
@@ -178,7 +181,9 @@ describe("Tour with a spotlighted target", () => {
   });
 
   it("keeps `right` physical in RTL", async () => {
-    renderTour([{ title: "Target", body: "Here.", target: '[data-tour="target"]', placement: "right" }], { dir: "rtl" });
+    renderTour([{ title: "Target", body: "Here.", target: '[data-tour="target"]', placement: "right" }], {
+      dir: "rtl",
+    });
     await start();
     expect(cardOf().style.left).toBe("520px");
   });

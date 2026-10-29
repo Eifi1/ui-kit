@@ -84,7 +84,10 @@ describe("BillingBanner — the presets (§3.3, §12.6, §12.21)", () => {
     const trial = banner("trial-ending");
     expect(trial).toHaveTextContent("Your trial ends in 5 days.");
     expect(trial.className).toContain("bg-info-soft");
-    expect(within(trial).getByRole("link", { name: "Choose a plan" })).toHaveAttribute("href", "/settings/subscription");
+    expect(within(trial).getByRole("link", { name: "Choose a plan" })).toHaveAttribute(
+      "href",
+      "/settings/subscription",
+    );
 
     const grant = banner("grant-ending");
     expect(grant).toHaveTextContent("Your free access ends tomorrow.");
@@ -189,7 +192,14 @@ describe("PlanLimitNotice — both modes (§3.4)", () => {
 
   it("contact: a mail to support naming the dimension, and the real figures past the limit", () => {
     render(
-      <PlanLimitNotice mode="contact" email="support@example.com" dimension="beds" dimensionLabel="Beds" used={5} limit={2} />,
+      <PlanLimitNotice
+        mode="contact"
+        email="support@example.com"
+        dimension="beds"
+        dimensionLabel="Beds"
+        used={5}
+        limit={2}
+      />,
     );
     const notice = document.querySelector('[data-plan-limit-mode="contact"]') as HTMLElement;
     expect(notice).toHaveTextContent("To add more, ask us for a higher limit.");
@@ -214,7 +224,10 @@ describe("SubscriptionActions — the portal and a visible cancel (§12.26)", ()
     const { container, rerender } = render(<SubscriptionActions onManage={manage} cancelHref="/portal/cancel" />);
     await user.click(screen.getByRole("button", { name: portalName("Payment and invoices") }));
     expect(manage).toHaveBeenCalled();
-    expect(screen.getByRole("link", { name: portalName("Cancel subscription") })).toHaveAttribute("href", "/portal/cancel");
+    expect(screen.getByRole("link", { name: portalName("Cancel subscription") })).toHaveAttribute(
+      "href",
+      "/portal/cancel",
+    );
     rerender(<SubscriptionActions />);
     expect(container).toBeEmptyDOMElement();
   });

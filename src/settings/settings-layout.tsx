@@ -16,12 +16,7 @@ import { cn } from "../lib/cn";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { createSearchIndex } from "../search/search-index";
 import type { SearchEntry } from "../search/search-index";
-import {
-  normalizeSettingsBase,
-  settingsHref,
-  settingsKeywords,
-  visibleSettingsEntries,
-} from "./settings-catalogue";
+import { normalizeSettingsBase, settingsHref, settingsKeywords, visibleSettingsEntries } from "./settings-catalogue";
 import type { SettingsEntry, SettingsGroup } from "./settings-catalogue";
 import { SettingsLayoutContext } from "./settings-context";
 import type { SettingsLayoutContextValue } from "./settings-context";
@@ -337,7 +332,10 @@ export function SettingsLayout<G extends string>({
                 e.preventDefault();
                 route.back();
               }}
-              className={cn("-ms-1 inline-flex items-center gap-0.5 self-start rounded-md pe-1 text-sm font-medium text-muted hover:text-primary", FOCUS_RING)}
+              className={cn(
+                "-ms-1 inline-flex items-center gap-0.5 self-start rounded-md pe-1 text-sm font-medium text-muted hover:text-primary",
+                FOCUS_RING,
+              )}
             >
               <ChevronLeft aria-hidden className="size-4 rtl:-scale-x-100" />
               {pageTitle}
@@ -458,12 +456,7 @@ export function SettingsLayout<G extends string>({
             {searching ? (
               results
             ) : open ? (
-              <div
-                id={panelId}
-                role="tabpanel"
-                aria-labelledby={`${panelId}-tab`}
-                className="space-y-4"
-              >
+              <div id={panelId} role="tabpanel" aria-labelledby={`${panelId}-tab`} className="space-y-4">
                 <PageHeader as="h2" size="sm" title={open.title} description={open.help} />
                 {cards(open.id)}
               </div>

@@ -172,7 +172,8 @@ describe("a label that already says its unit (lenkbank, 0.15.1)", () => {
 });
 
 describe("SeriesChart — maxVisibleAxes", () => {
-  const titles = () => ["Velocity (mm/s)", "Position (mm)", "Acceleration", "Load (N)"].filter((t) => screen.queryByText(t));
+  const titles = () =>
+    ["Velocity (mm/s)", "Position (mm)", "Acceleration", "Load (N)"].filter((t) => screen.queryByText(t));
 
   it("draws every axis without a budget (and without layout, no automatic one)", () => {
     const report = vi.fn();
@@ -184,7 +185,13 @@ describe("SeriesChart — maxVisibleAxes", () => {
   it("draws the first axis of each side, still plotting every line, and reports the rest", () => {
     const report = vi.fn();
     const { container } = render(
-      <SeriesChart rows={ROWS} series={SERIES} axes={AXES} maxVisibleAxes={{ left: 1, right: 1 }} onAxisBudget={report} />,
+      <SeriesChart
+        rows={ROWS}
+        series={SERIES}
+        axes={AXES}
+        maxVisibleAxes={{ left: 1, right: 1 }}
+        onAxisBudget={report}
+      />,
     );
     expect(titles()).toEqual(["Velocity (mm/s)", "Load (N)"]);
     expect(container.querySelectorAll("path.recharts-line-curve")).toHaveLength(4);
@@ -206,7 +213,7 @@ describe("SeriesChart — maxVisibleAxes", () => {
     expect(xs.every((x) => x > 0)).toBe(true);
   });
 
-  it("ignores the automatic rule with axisBudget=\"off\", and reports nothing", () => {
+  it('ignores the automatic rule with axisBudget="off", and reports nothing', () => {
     const report = vi.fn();
     render(<SeriesChart rows={ROWS} series={SERIES} axes={AXES} axisBudget="off" onAxisBudget={report} />);
     expect(titles()).toHaveLength(4);
@@ -247,7 +254,7 @@ describe("SeriesChart — the automatic budget, with a measured width", () => {
     expect(screen.getByText("Acceleration")).toBeInTheDocument();
   });
 
-  it("stays off with axisBudget=\"off\"", () => {
+  it('stays off with axisBudget="off"', () => {
     measuredAt(324);
     render(<SeriesChart rows={ROWS} series={SERIES} axes={AXES} axisBudget="off" />);
     expect(screen.getByText("Position (mm)")).toBeInTheDocument();

@@ -30,7 +30,9 @@ const ROWS: Row[] = [
   { id: 2, name: "Bravo" },
 ];
 const COLUMNS: DataTableColumn<Row>[] = [{ key: "name", header: "Name", cell: (r) => r.name }];
-const plan = (): MobileSwipeActions => ({ end: [{ id: "approve", label: "Approve", tone: "success", onCommit: vi.fn() }] });
+const plan = (): MobileSwipeActions => ({
+  end: [{ id: "approve", label: "Approve", tone: "success", onCommit: vi.fn() }],
+});
 
 const wrap = (ui: ReactElement) => render(<MemoryRouter>{ui}</MemoryRouter>);
 const table = (props: Partial<DataTableProps<Row>>) =>

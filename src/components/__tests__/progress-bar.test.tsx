@@ -15,9 +15,7 @@ describe("ProgressBar", () => {
   });
 
   it("valuetext comes from the label function, and showValue shows the same words once", () => {
-    render(
-      <ProgressBar value={3} max={12} label="Files" showValue formatValue={(v, max) => `${v} of ${max} files`} />,
-    );
+    render(<ProgressBar value={3} max={12} label="Files" showValue formatValue={(v, max) => `${v} of ${max} files`} />);
     const bar = screen.getByRole("progressbar", { name: "Files" });
     expect(bar).toHaveAttribute("aria-valuetext", "3 of 12 files");
     const visible = screen.getByText("3 of 12 files");

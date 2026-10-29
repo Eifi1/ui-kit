@@ -66,8 +66,7 @@ export { DEFAULT_TABS_LABELS };
  * `children` because the strip renders `tabs` — a caller who wants a PANEL wires it up
  * through `panelId`, which is the whole point of that prop.
  */
-export interface TabsProps<T extends string>
-  extends Omit<ComponentPropsWithoutRef<"div">, "onChange" | "children"> {
+export interface TabsProps<T extends string> extends Omit<ComponentPropsWithoutRef<"div">, "onChange" | "children"> {
   /** `label` is a ReactNode so tabs can pair an icon with text; `badge` is an
    *  optional trailing node (e.g. a count pill). `href` marks a tab that IS a route:
    *  it renders as an anchor so it can be middle-/⌘-clicked into a new tab (Keksdose
@@ -200,8 +199,7 @@ export interface TabsProps<T extends string>
   ref?: Ref<HTMLDivElement>;
 }
 
-const TABLIST_CLASSES =
-  "flex gap-1 overflow-x-auto overflow-y-hidden border-b border-subtle";
+const TABLIST_CLASSES = "flex gap-1 overflow-x-auto overflow-y-hidden border-b border-subtle";
 // The side nav. A column of full-width rows with the open one FILLED rather than
 // underlined: an underline under one row of a list reads as a separator, not as a
 // selection. `--bg-active` is the kit's own selected-row fill (the sidebar's), so the
@@ -211,8 +209,7 @@ const TAB_VERTICAL_CLASSES =
   FOCUS_RING_WIDTH +
   " flex w-full items-center rounded-md px-3 py-2 text-start text-sm font-medium transition-colors focus:outline-none focus-visible:ring-strong";
 const TAB_VERTICAL_ACTIVE_CLASSES = "bg-active text-primary";
-const TAB_VERTICAL_INACTIVE_CLASSES =
-  "text-muted hover:bg-hover hover:text-primary";
+const TAB_VERTICAL_INACTIVE_CLASSES = "text-muted hover:bg-hover hover:text-primary";
 
 // `max-w-full`: no tab outgrows its strip. A sheet's `detail` line ("Spurstangenkraft
 // links · … · 31 Punkte") made one tab 448px wide in a 390px strip, and a tab wider
@@ -222,8 +219,7 @@ const TAB_CLASSES =
   FOCUS_RING_WIDTH +
   " max-w-full whitespace-nowrap px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-px focus:outline-none focus-visible:ring-strong";
 const TAB_ACTIVE_CLASSES = "border-[var(--text-primary)] text-primary";
-const TAB_INACTIVE_CLASSES =
-  "border-transparent text-muted hover:text-secondary hover:border-strong";
+const TAB_INACTIVE_CLASSES = "border-transparent text-muted hover:text-secondary hover:border-strong";
 
 // The add/remove chrome. The × reserves its gutter on every removable tab (see
 // `onRemove`).
@@ -321,7 +317,11 @@ export function Tabs<T extends string>({
             labelVisible={false}
             onClick={() => onCue(side)}
           >
-            {side === "start" ? <ChevronLeft className="rtl:-scale-x-100" /> : <ChevronRight className="rtl:-scale-x-100" />}
+            {side === "start" ? (
+              <ChevronLeft className="rtl:-scale-x-100" />
+            ) : (
+              <ChevronRight className="rtl:-scale-x-100" />
+            )}
           </IconButton>
         </div>
       )}
@@ -340,10 +340,8 @@ export function Tabs<T extends string>({
   }, [active]);
   const isRemovable = (tab: TabItem<T>) => onRemove !== undefined && tab.removable !== false;
   // Whether Delete reaches this tab: every removable tab, or only the open one.
-  const deletesOnKey = (tab: TabItem<T>) =>
-    isRemovable(tab) && (removeOn === "every" || tab.id === active);
-  const nameOf = (tab: TabItem<T>) =>
-    tab.name ?? (typeof tab.label === "string" ? tab.label : tab.id);
+  const deletesOnKey = (tab: TabItem<T>) => isRemovable(tab) && (removeOn === "every" || tab.id === active);
+  const nameOf = (tab: TabItem<T>) => tab.name ?? (typeof tab.label === "string" ? tab.label : tab.id);
 
   // Where focus goes once a removal the strip asked for has happened. The caller
   // owns `tabs` and may take its time (a confirmation, a request), so this waits
@@ -372,10 +370,7 @@ export function Tabs<T extends string>({
     if (focused && focused !== document.body && !strip.contains(focused) && focused !== removeRef.current) return;
     // The removed tab was open: focus follows the caller's new selection, which is
     // also the strip's tab stop. It was not: its neighbour, as the ARIA pattern has it.
-    const target =
-      !pending.wasActive && tabs.some((t) => t.id === pending.neighbour)
-        ? pending.neighbour
-        : active;
+    const target = !pending.wasActive && tabs.some((t) => t.id === pending.neighbour) ? pending.neighbour : active;
     const index = tabs.findIndex((t) => t.id === target);
     strip.querySelectorAll<HTMLElement>('[role="tab"]')[index]?.focus();
   }, [tabs, active]);
@@ -419,12 +414,7 @@ export function Tabs<T extends string>({
     const from = items.indexOf(e.currentTarget);
     if (from === -1) return;
     e.preventDefault();
-    const to =
-      e.key === "Home"
-        ? 0
-        : e.key === "End"
-          ? items.length - 1
-          : (from + step + items.length) % items.length;
+    const to = e.key === "Home" ? 0 : e.key === "End" ? items.length - 1 : (from + step + items.length) % items.length;
     items[to]?.focus();
   };
   const tablist = (
@@ -485,18 +475,16 @@ export function Tabs<T extends string>({
                 isActive ? TAB_VERTICAL_ACTIVE_CLASSES : TAB_VERTICAL_INACTIVE_CLASSES,
                 removable && "pe-8",
               )
-            : cn(
-                TAB_CLASSES,
-                isActive ? TAB_ACTIVE_CLASSES : TAB_INACTIVE_CLASSES,
-                removable && TAB_REMOVABLE_CLASSES,
-              ),
+            : cn(TAB_CLASSES, isActive ? TAB_ACTIVE_CLASSES : TAB_INACTIVE_CLASSES, removable && TAB_REMOVABLE_CLASSES),
         };
         const inner = (
           <span
             className={cn(
               // In a side nav the row is the full width, so the label takes it and a
               // badge lands at the row's end, where a column of counts lines up.
-              vertical ? "flex min-w-0 flex-1 items-center gap-1.5" : "inline-flex max-w-full min-w-0 items-center gap-1.5",
+              vertical
+                ? "flex min-w-0 flex-1 items-center gap-1.5"
+                : "inline-flex max-w-full min-w-0 items-center gap-1.5",
               tab.empty && TAB_EMPTY_CLASSES,
             )}
           >
@@ -523,7 +511,11 @@ export function Tabs<T extends string>({
               tab.label
             )}
             {tab.badge != null ? (
-              vertical ? <span className="ms-auto flex shrink-0 items-center">{tab.badge}</span> : tab.badge
+              vertical ? (
+                <span className="ms-auto flex shrink-0 items-center">{tab.badge}</span>
+              ) : (
+                tab.badge
+              )
             ) : null}
           </span>
         );
@@ -671,15 +663,8 @@ export function Tabs<T extends string>({
       {removeButton}
       {/* Outside the tablist: an action, not a tab — and a tablist may own only
           tabs. The rule under the strip carries on beneath it. */}
-      <div
-        className="flex flex-1 items-center self-stretch border-b border-subtle"
-      >
-        <button
-          type="button"
-          onClick={onAdd}
-          disabled={busy}
-          className={cn(TAB_ADD_CLASSES, TAB_ADD_PHONE_CLASSES)}
-        >
+      <div className="flex flex-1 items-center self-stretch border-b border-subtle">
+        <button type="button" onClick={onAdd} disabled={busy} className={cn(TAB_ADD_CLASSES, TAB_ADD_PHONE_CLASSES)}>
           <Plus aria-hidden />
           {/* Below md a scrolling strip keeps the room for tabs: the label is visually
               hidden and the "+" carries it as its name. Beside "+ Add loop" a 390px strip

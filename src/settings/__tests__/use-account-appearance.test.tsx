@@ -24,7 +24,9 @@ describe("resolveAccountAppearance — the order", () => {
   });
 
   it("then the account's", () => {
-    expect(resolveAccountAppearance({ textSize: null, contrast: null }, { text_size: "xlarge", contrast: "more" })).toEqual({
+    expect(
+      resolveAccountAppearance({ textSize: null, contrast: null }, { text_size: "xlarge", contrast: "more" }),
+    ).toEqual({
       textSize: "xlarge",
       contrast: "more",
       sources: { textSize: "account", contrast: "account" },
@@ -56,7 +58,9 @@ function setup(overrides: Partial<UseAccountAppearanceOptions> = {}) {
     save,
     ...overrides,
   };
-  const hook = renderHook((props: UseAccountAppearanceOptions) => useAccountAppearance(props), { initialProps: options });
+  const hook = renderHook((props: UseAccountAppearanceOptions) => useAccountAppearance(props), {
+    initialProps: options,
+  });
   return { ...hook, setDevice, save, options };
 }
 

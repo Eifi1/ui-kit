@@ -59,10 +59,7 @@ const sideOf = (axis: BudgetAxis) => axis.orientation ?? "left";
  * stays), then the rest in declaration order, until the cap. Per side, that is simply the
  * first `left` left-hand axes and the first `right` right-hand ones.
  */
-export function budgetedAxes(
-  axes: readonly BudgetAxis[],
-  budget: SeriesChartAxisBudget | undefined,
-): string[] {
+export function budgetedAxes(axes: readonly BudgetAxis[], budget: SeriesChartAxisBudget | undefined): string[] {
   if (budget === undefined) return [];
   const visible = axes.filter((axis) => !axis.hide);
   if (typeof budget === "number") {

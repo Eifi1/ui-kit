@@ -210,8 +210,9 @@ export function PieChart({
   const { drawable, drawn, total, pieData } = useMemo(() => {
     const drawable = data
       .map((slice, i) => ({ slice, value: slice.value, color: slice.color ?? paletteFor(i) }))
-      .filter((d): d is { slice: PieChartSlice; value: number; color: string } =>
-        typeof d.value === "number" && Number.isFinite(d.value) && d.value > 0,
+      .filter(
+        (d): d is { slice: PieChartSlice; value: number; color: string } =>
+          typeof d.value === "number" && Number.isFinite(d.value) && d.value > 0,
       );
     const shown = drawable.filter((d) => !hidden.has(d.slice.key));
     const total = shown.reduce((acc, d) => acc + d.value, 0);
@@ -404,10 +405,7 @@ export function PieChart({
   }));
 
   const emptyBox = (
-    <div
-      className={cn("flex items-center justify-center text-sm text-muted", box.className)}
-      style={box.style}
-    >
+    <div className={cn("flex items-center justify-center text-sm text-muted", box.className)} style={box.style}>
       {empty ?? labels.empty}
     </div>
   );
@@ -439,9 +437,7 @@ export function PieChart({
                 content={
                   <Content
                     hideLabel
-                    valueFormatter={(v) =>
-                      `${formatValue(v)} (${formatShare(total > 0 ? v / total : 0)})`
-                    }
+                    valueFormatter={(v) => `${formatValue(v)} (${formatShare(total > 0 ? v / total : 0)})`}
                   />
                 }
               />
@@ -466,9 +462,7 @@ export function PieChart({
                 {focusedSlice ? formatValue(focusedSlice.value) : (centerValue ?? formatValue(total))}
               </span>
               {focusedSlice && (
-                <span className="text-xs tabular-nums text-muted">
-                  {formatShare(focusedSlice.share)}
-                </span>
+                <span className="text-xs tabular-nums text-muted">{formatShare(focusedSlice.share)}</span>
               )}
             </div>
           )}

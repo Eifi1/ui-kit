@@ -59,7 +59,15 @@ describe("ActionCard — link card and icon tone", () => {
     const { unmount } = render(
       <UiKitProvider linkComponent={routerLink}>
         <ActionCard href="/units" title="Units" />
-        <ActionCard href="/own" title="Own" renderLink={(p) => <a {...p} data-own="">{p.children}</a>} />
+        <ActionCard
+          href="/own"
+          title="Own"
+          renderLink={(p) => (
+            <a {...p} data-own="">
+              {p.children}
+            </a>
+          )}
+        />
         <ActionCard href="/off" title="Off" disabled />
       </UiKitProvider>,
     );

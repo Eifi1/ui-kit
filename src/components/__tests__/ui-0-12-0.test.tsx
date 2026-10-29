@@ -98,10 +98,18 @@ describe("Button href", () => {
   });
 
   it("does not type `type` or `form` together with href", () => {
-    // @ts-expect-error — a link never submits
-    const a = <Button href="/x" type="submit">x</Button>;
-    // @ts-expect-error — nor belongs to a form
-    const b = <Button href="/x" form="f">x</Button>;
+    const a = (
+      // @ts-expect-error — a link never submits
+      <Button href="/x" type="submit">
+        x
+      </Button>
+    );
+    const b = (
+      // @ts-expect-error — nor belongs to a form
+      <Button href="/x" form="f">
+        x
+      </Button>
+    );
     expect([a, b]).toHaveLength(2);
   });
 });
@@ -168,7 +176,11 @@ describe("Card tone", () => {
   });
 
   it("an inset panel takes the tone's fill instead of a border", () => {
-    const { container } = render(<Card variant="inset" tone="danger">x</Card>);
+    const { container } = render(
+      <Card variant="inset" tone="danger">
+        x
+      </Card>,
+    );
     const cls = container.firstElementChild!.className.split(" ");
     expect(cls).toContain("bg-danger-soft");
     expect(cls).not.toContain("bg-surface-2");
@@ -232,7 +244,11 @@ describe("IconButton (keksdose E1)", () => {
   });
 
   it("no badge, no wrapper", () => {
-    const { container } = render(<IconButton aria-label="x"><Cloud /></IconButton>);
+    const { container } = render(
+      <IconButton aria-label="x">
+        <Cloud />
+      </IconButton>,
+    );
     expect(container.firstElementChild!.tagName).toBe("BUTTON");
   });
 
@@ -260,7 +276,11 @@ describe("IconButton (keksdose E1)", () => {
   });
 
   it("the default disabled look still dims", () => {
-    render(<IconButton disabled aria-label="x"><Cloud /></IconButton>);
+    render(
+      <IconButton disabled aria-label="x">
+        <Cloud />
+      </IconButton>,
+    );
     expect(screen.getByRole("button").className.split(" ")).not.toContain("disabled:opacity-100");
   });
 

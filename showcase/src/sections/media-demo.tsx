@@ -1,15 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { RotateCcw, Star, Trash2 } from "lucide-react";
-import {
-  AuthedImage,
-  Button,
-  IconButton,
-  ImageGrid,
-  Lightbox,
-  Switch,
-  ToggleGroup,
-  useAuthedSrc,
-} from "@eifi1/ui-kit";
+import { AuthedImage, Button, IconButton, ImageGrid, Lightbox, Switch, ToggleGroup, useAuthedSrc } from "@eifi1/ui-kit";
 import type { AuthedFetcher, ImageItem } from "@eifi1/ui-kit";
 import { Example, Note, Row, code, READOUT } from "../lib/section";
 
@@ -197,14 +188,14 @@ function ImageGridSpecimen() {
       </Row>
       <div className="mt-3 space-y-2">
         <Note>
-          The PDF is known to be a file from its {code("mimeType")} (or a {code(".pdf")} in the URL, or —
-          fetched — the type the server sent), so its tile is an icon and a name, and in the viewer it is a
-          card with &ldquo;Open in new tab&rdquo; and the download. Delete the picture that is open behind the
-          viewer and the viewer clamps to the set that is left.
+          The PDF is known to be a file from its {code("mimeType")} (or a {code(".pdf")} in the URL, or — fetched — the
+          type the server sent), so its tile is an icon and a name, and in the viewer it is a card with &ldquo;Open in
+          new tab&rdquo; and the download. Delete the picture that is open behind the viewer and the viewer clamps to
+          the set that is left.
         </Note>
         <Note>
-          Responsive by default: {code("repeat(auto-fill, minmax(min(96px, 100%), 1fr))")} — three across
-          on a phone, as many as fit on a desktop, no breakpoint chosen. {code("columns")} fixes the count instead.
+          Responsive by default: {code("repeat(auto-fill, minmax(min(96px, 100%), 1fr))")} — three across on a phone, as
+          many as fit on a desktop, no breakpoint chosen. {code("columns")} fixes the count instead.
         </Note>
       </div>
     </Example>
@@ -262,15 +253,14 @@ function LightboxSpecimen() {
       </p>
       <div className="mt-3 space-y-2">
         <Note>
-          ← / → page (swapped when the viewer was rendered in a right-to-left subtree — flip the switch and
-          try it), Home and End jump to the ends, Escape and Back close. On a touch screen a horizontal swipe
-          of 50px or more pages; a mostly vertical drag is left to scroll. Double-click the picture, or press
-          the zoom button, to see it at its natural size and pan by scrolling — the tall cellar photo shows
-          it best. Paging resets the zoom.
+          ← / → page (swapped when the viewer was rendered in a right-to-left subtree — flip the switch and try it),
+          Home and End jump to the ends, Escape and Back close. On a touch screen a horizontal swipe of 50px or more
+          pages; a mostly vertical drag is left to scroll. Double-click the picture, or press the zoom button, to see it
+          at its natural size and pan by scrolling — the tall cellar photo shows it best. Paging resets the zoom.
         </Note>
         <Note>
-          Built on {code("FullBleedDialog")}: the focus trap, the scroll lock and the history entry that makes
-          Back close it are that component&apos;s, not re-implemented here.
+          Built on {code("FullBleedDialog")}: the focus trap, the scroll lock and the history entry that makes Back
+          close it are that component&apos;s, not re-implemented here.
         </Note>
       </div>
     </Example>
@@ -315,7 +305,9 @@ function useFakeFetcher(delay: number, onLog: (entry: FetchLog) => void) {
                 return;
               }
               logRef.current({ url, outcome: "200 image/svg+xml" });
-              resolve(new Blob([sceneSvg("Second time lucky", "#2563eb", "#bfdbfe", "#1e3a8a")], { type: "image/svg+xml" }));
+              resolve(
+                new Blob([sceneSvg("Second time lucky", "#2563eb", "#bfdbfe", "#1e3a8a")], { type: "image/svg+xml" }),
+              );
               return;
             }
             if (url === "/api/files/plan.pdf") {
@@ -365,7 +357,14 @@ function AuthedImageSpecimen() {
     { key: "a", src: "/api/photos/1", alt: "Meter reading" },
     { key: "b", src: "/api/photos/2", thumbnailSrc: "/api/photos/2/thumb", alt: "Boiler", caption: "thumbnailSrc" },
     { key: "c", src: "/api/photos/404", alt: "Deleted photo", caption: "404" },
-    { key: "d", src: "/api/files/plan.pdf", mimeType: "application/pdf", alt: "Plan", fileName: "plan.pdf", caption: "PDF, fetched" },
+    {
+      key: "d",
+      src: "/api/files/plan.pdf",
+      mimeType: "application/pdf",
+      alt: "Plan",
+      fileName: "plan.pdf",
+      caption: "PDF, fetched",
+    },
   ];
 
   return (
@@ -383,15 +382,34 @@ function AuthedImageSpecimen() {
       <div key={round} className="mt-4 space-y-4">
         <div className="grid max-w-3xl grid-cols-2 gap-3 sm:grid-cols-4">
           <figure className="space-y-1">
-            <AuthedImage src="/api/photos/1" alt="Meter" fetcher={fetcher} wrapperClassName="aspect-[4/3] w-full" className="h-full w-full rounded-md object-cover" />
+            <AuthedImage
+              src="/api/photos/1"
+              alt="Meter"
+              fetcher={fetcher}
+              wrapperClassName="aspect-[4/3] w-full"
+              className="h-full w-full rounded-md object-cover"
+            />
             <figcaption className={READOUT}>200</figcaption>
           </figure>
           <figure className="space-y-1">
-            <AuthedImage src="/api/photos/2" alt="Boiler" fetcher={fetcher} link wrapperClassName="aspect-[4/3] w-full" className="h-full w-full rounded-md object-cover" />
+            <AuthedImage
+              src="/api/photos/2"
+              alt="Boiler"
+              fetcher={fetcher}
+              link
+              wrapperClassName="aspect-[4/3] w-full"
+              className="h-full w-full rounded-md object-cover"
+            />
             <figcaption className={READOUT}>200 · link</figcaption>
           </figure>
           <figure className="space-y-1">
-            <AuthedImage src="/api/photos/404" alt="Deleted photo" fetcher={fetcher} wrapperClassName="aspect-[4/3] w-full" className="h-full w-full rounded-md object-cover" />
+            <AuthedImage
+              src="/api/photos/404"
+              alt="Deleted photo"
+              fetcher={fetcher}
+              wrapperClassName="aspect-[4/3] w-full"
+              className="h-full w-full rounded-md object-cover"
+            />
             <figcaption className={READOUT}>404</figcaption>
           </figure>
           <figure className="space-y-1">
@@ -413,16 +431,23 @@ function AuthedImageSpecimen() {
         <ImageGrid items={gridItems} fetcher={fetcher} minTileSize={96} />
       </div>
       <ol className={`mt-3 space-y-0.5 ${READOUT}`} aria-label="Fetch log">
-        {log.length === 0 ? <li>no fetch finished yet</li> : log.map((e, i) => <li key={i}>{e.url} → {e.outcome}</li>)}
+        {log.length === 0 ? (
+          <li>no fetch finished yet</li>
+        ) : (
+          log.map((e, i) => (
+            <li key={i}>
+              {e.url} → {e.outcome}
+            </li>
+          ))
+        )}
       </ol>
       <div className="mt-3 space-y-2">
         <Note>
-          {code("fetcher(url, { signal })")} resolves to a {code("Blob")} (axios with{" "}
-          {code('responseType: "blob"')}) or a {code("Response")} (plain fetch, whose {code("ok")} is
-          checked). The object URL is made when the bytes arrive and revoked when the URL changes or the
-          image unmounts. {code("link")} wraps the picture in a link to its {code("blob:")} URL — the only
-          address of a protected image a new tab can open. The same fetcher drives the grid below it and its
-          lightbox, where the PDF opens as a file card.
+          {code("fetcher(url, { signal })")} resolves to a {code("Blob")} (axios with {code('responseType: "blob"')}) or
+          a {code("Response")} (plain fetch, whose {code("ok")} is checked). The object URL is made when the bytes
+          arrive and revoked when the URL changes or the image unmounts. {code("link")} wraps the picture in a link to
+          its {code("blob:")} URL — the only address of a protected image a new tab can open. The same fetcher drives
+          the grid below it and its lightbox, where the PDF opens as a file card.
         </Note>
       </div>
     </Example>
@@ -480,10 +505,10 @@ function UseAuthedSrcSpecimen() {
       </div>
       <div className="mt-3">
         <Note>
-          &ldquo;flaky&rdquo; answers 503 on every other call: it fails first, and {code("retry()")} fetches the
-          same URL again and succeeds. {code("type")} is the blob&apos;s MIME type, which is how a caller that
-          does not know whether a path is a picture or a PDF finds out. {code("enabled: false")} holds the fetch
-          (a lightbox slide off screen); a {code("null")} URL is {code('"idle"')}.
+          &ldquo;flaky&rdquo; answers 503 on every other call: it fails first, and {code("retry()")} fetches the same
+          URL again and succeeds. {code("type")} is the blob&apos;s MIME type, which is how a caller that does not know
+          whether a path is a picture or a PDF finds out. {code("enabled: false")} holds the fetch (a lightbox slide off
+          screen); a {code("null")} URL is {code('"idle"')}.
         </Note>
       </div>
     </Example>
@@ -521,7 +546,10 @@ export function Media016Demo() {
           <figcaption className={READOUT}>404 · errorFallback=&#123;null&#125; renders nothing</figcaption>
         </figure>
         {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- a stand-in for a clickable table row */}
-        <div className="cursor-pointer space-y-1 rounded-md p-1 hover:bg-hover" onClick={() => setRowClicks((n) => n + 1)}>
+        <div
+          className="cursor-pointer space-y-1 rounded-md p-1 hover:bg-hover"
+          onClick={() => setRowClicks((n) => n + 1)}
+        >
           <AuthedImage
             src={PICTURE}
             alt="Meter reading"

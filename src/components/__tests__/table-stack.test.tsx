@@ -27,7 +27,7 @@ function Terms({ stack }: { stack?: "phone" }) {
   );
 }
 
-describe("Table stack=\"phone\"", () => {
+describe('Table stack="phone"', () => {
   it("labels each further cell with its column header and keeps the table roles", () => {
     render(<Terms stack="phone" />);
     expect(screen.getByText("P")).not.toHaveAttribute("data-label");

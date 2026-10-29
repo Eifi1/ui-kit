@@ -17,8 +17,7 @@ import { DESKTOP_WIDTH, stubViewportWidth } from "../../test/viewport";
  * changes — the rest of the modal suites are that half.
  */
 
-const motion = (reduced: boolean) =>
-  stubViewportWidth(DESKTOP_WIDTH, { reducedMotion: reduced });
+const motion = (reduced: boolean) => stubViewportWidth(DESKTOP_WIDTH, { reducedMotion: reduced });
 
 function liveSentinel(): string | null {
   const state = window.history.state as Record<string, unknown> | null;

@@ -12,11 +12,12 @@ const pickers = [
   ["DatePicker", (p: object) => <DatePicker value="2026-09-23" onChange={() => {}} locale="en-GB" {...p} />],
   [
     "DatePicker with step buttons",
-    (p: object) => (
-      <DatePicker value="2026-09-23" onChange={() => {}} locale="en-GB" step today="2026-09-23" {...p} />
-    ),
+    (p: object) => <DatePicker value="2026-09-23" onChange={() => {}} locale="en-GB" step today="2026-09-23" {...p} />,
   ],
-  ["DateRangePicker", (p: object) => <DateRangePicker from="2026-09-01" to="2026-09-23" onChange={() => {}} locale="en-GB" {...p} />],
+  [
+    "DateRangePicker",
+    (p: object) => <DateRangePicker from="2026-09-01" to="2026-09-23" onChange={() => {}} locale="en-GB" {...p} />,
+  ],
   ["MonthPicker", (p: object) => <MonthPicker value="2026-09" onChange={() => {}} locale="en-GB" {...p} />],
 ] as const;
 

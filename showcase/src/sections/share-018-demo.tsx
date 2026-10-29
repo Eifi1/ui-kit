@@ -64,7 +64,12 @@ function useFakeShares(initialGrantees: ShareGrantee[], initialPending: SharePen
     } else {
       setPending((all) => [
         ...all,
-        { id: ++next.current, email: request.email, role: request.role, link: `https://example.com/invite/${next.current}` },
+        {
+          id: ++next.current,
+          email: request.email,
+          role: request.role,
+          link: `https://example.com/invite/${next.current}`,
+        },
       ]);
     }
   };
@@ -182,7 +187,10 @@ function LockedExample() {
     [{ id: 6, email: "new.colleague@example.com", role: "editor", link: "https://example.com/i/6" }],
   );
   return (
-    <Example label="ShareCard — under a write lock" hint="WriteLockProvider locked: commits off with the reason, fields live">
+    <Example
+      label="ShareCard — under a write lock"
+      hint="WriteLockProvider locked: commits off with the reason, fields live"
+    >
       <WriteLockProvider locked reason="Shared with you to read — only the owner can share it.">
         <ShareCard roles={ROLES.slice(0, 2)} candidates={CANDIDATES} {...shares} />
       </WriteLockProvider>
@@ -200,8 +208,8 @@ function PanelExample() {
         <SharePanel roles={ROLES.slice(0, 2)} candidates={CANDIDATES} {...shares} />
       </section>
       <Note>
-        For a settings section or a sheet that brings its own heading and frame: the add form, then the list, with
-        the same callbacks and labels as the card.
+        For a settings section or a sheet that brings its own heading and frame: the add form, then the list, with the
+        same callbacks and labels as the card.
       </Note>
     </Example>
   );
@@ -217,9 +225,9 @@ export function Share018Demo() {
       <ReadOnlyExample />
       <LockedExample />
       <Note>
-        The kit checks only that an address is shaped like one. Whether it has an account (which makes a grant
-        pending), who may share, and every request belong to the app — each callback may return a promise; while
-        it runs the panel is busy, and a rejection keeps the field and shows the error box.
+        The kit checks only that an address is shaped like one. Whether it has an account (which makes a grant pending),
+        who may share, and every request belong to the app — each callback may return a promise; while it runs the panel
+        is busy, and a rejection keeps the field and shows the error box.
       </Note>
     </>
   );

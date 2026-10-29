@@ -55,9 +55,7 @@ describe("ResetPasswordForm — the check", () => {
   });
 
   it("shows 'invalid or expired' with the way to a new link when the check fails", async () => {
-    render(
-      <ResetPasswordForm token={TOKEN} onCheck={dead()} onSubmit={vi.fn()} forgotHref="/password/forgot" />,
-    );
+    render(<ResetPasswordForm token={TOKEN} onCheck={dead()} onSubmit={vi.fn()} forgotHref="/password/forgot" />);
     expect(await screen.findByText("This link is invalid or has expired.")).toBeInTheDocument();
     expect(
       screen.getByText("Links are valid for one hour and work only once. Just request a new one."),
@@ -231,12 +229,7 @@ describe("ResetPasswordForm — the form", () => {
     unmount();
 
     render(
-      <ResetPasswordForm
-        token={TOKEN}
-        onCheck={live()}
-        onSubmit={onSubmit}
-        describeError={() => "You are offline."}
-      />,
+      <ResetPasswordForm token={TOKEN} onCheck={live()} onSubmit={onSubmit} describeError={() => "You are offline."} />,
     );
     await fillPassword(user);
     await user.click(screen.getByRole("button", { name: "Save password" }));

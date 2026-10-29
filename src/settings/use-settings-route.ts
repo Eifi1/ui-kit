@@ -70,7 +70,9 @@ export function settingsFromListState(): Record<string, true> {
 }
 
 function isFromList(state: unknown): boolean {
-  return typeof state === "object" && state !== null && (state as Record<string, unknown>)[SETTINGS_FROM_LIST_STATE] === true;
+  return (
+    typeof state === "object" && state !== null && (state as Record<string, unknown>)[SETTINGS_FROM_LIST_STATE] === true
+  );
 }
 
 export interface SettingsLocation {
@@ -197,8 +199,7 @@ export function useSettingsRoute<G extends string>(options: UseSettingsRouteOpti
     return map;
   }, [entries]);
   const ids = visible.map((g) => g.id);
-  const fallback =
-    defaultGroup !== undefined && ids.includes(defaultGroup) ? defaultGroup : (ids[0] ?? null);
+  const fallback = defaultGroup !== undefined && ids.includes(defaultGroup) ? defaultGroup : (ids[0] ?? null);
 
   const { group, sub, redirect } = resolveSettingsLocation(location, {
     basePath: base,

@@ -137,21 +137,16 @@ export function Numbers() {
   return (
     <>
       <Note>
-        Several affordances in this section are phone-only, gated on{" "}
-        <code className="font-mono">usePhoneLayout()</code> (below{" "}
-        <code className="font-mono">md</code> at the text size in force): the <strong>number pad sheet</strong>{" "}
-        that replaces the OS keyboard, and <code className="font-mono">variant="display"</code> on
-        both fields. Above that width they are deliberately inert — the desktop calculator popover
-        appears instead, and the display variant renders as an ordinary bordered field. Narrow the
-        window below 768px (or use the device toolbar) before concluding a control is broken. You
-        are currently <strong>{isPhone ? "below" : "at or above"}</strong> the breakpoint, so the
-        phone shapes are <strong>{isPhone ? "active" : "inactive"}</strong>.
+        Several affordances in this section are phone-only, gated on <code className="font-mono">usePhoneLayout()</code>{" "}
+        (below <code className="font-mono">md</code> at the text size in force): the <strong>number pad sheet</strong>{" "}
+        that replaces the OS keyboard, and <code className="font-mono">variant="display"</code> on both fields. Above
+        that width they are deliberately inert — the desktop calculator popover appears instead, and the display variant
+        renders as an ordinary bordered field. Narrow the window below 768px (or use the device toolbar) before
+        concluding a control is broken. You are currently <strong>{isPhone ? "below" : "at or above"}</strong> the
+        breakpoint, so the phone shapes are <strong>{isPhone ? "active" : "inactive"}</strong>.
       </Note>
 
-      <Example
-        label="NumberInput — the string contract"
-        hint="type 200+50, then press Enter or click away"
-      >
+      <Example label="NumberInput — the string contract" hint="type 200+50, then press Enter or click away">
         <Stage>
           <div className="space-y-3">
             {/* `onChange` fires per keystroke with the raw text (operators kept, so a
@@ -193,13 +188,7 @@ export function Numbers() {
               <FieldHint label="Nominal annual rate. The unit is a property of the field, never part of the value." />
             }
           />
-          <NumberInput
-            className="w-56 max-w-full"
-            label="Weight"
-            value={weight}
-            onChange={setWeight}
-            suffix="kg"
-          />
+          <NumberInput className="w-56 max-w-full" label="Weight" value={weight} onChange={setWeight} suffix="kg" />
           <NumberInput
             className="w-56 max-w-full"
             label="Units (required)"
@@ -215,12 +204,7 @@ export function Numbers() {
         hint="the trailing trigger is hidden below 768px and when disabled; typing arithmetic still works everywhere"
       >
         <Stage>
-          <NumberInput
-            className="w-56 max-w-full"
-            label="With calculator"
-            value={inline}
-            onChange={setInline}
-          />
+          <NumberInput className="w-56 max-w-full" label="With calculator" value={inline} onChange={setInline} />
           {/* `calculator={false}` is for close-on-blur inline editors: clicking the
               icon blurs the field, which tears the editor down before the popover
               can open. Typed arithmetic is unaffected. */}
@@ -231,13 +215,7 @@ export function Numbers() {
             onChange={setNoCalc}
             calculator={false}
           />
-          <NumberInput
-            className="w-56 max-w-full"
-            label="Disabled"
-            value="1000"
-            onChange={() => {}}
-            disabled
-          />
+          <NumberInput className="w-56 max-w-full" label="Disabled" value="1000" onChange={() => {}} disabled />
         </Stage>
       </Example>
 
@@ -248,20 +226,9 @@ export function Numbers() {
         <Stage>
           {/* The goal-target shape: one number a dialog is about, at display size
               with the chrome dropped — in the phone layout only. */}
-          <NumberInput
-            label="Savings goal"
-            value={goal}
-            onChange={setGoal}
-            variant="display"
-            suffix="€"
-          />
+          <NumberInput label="Savings goal" value={goal} onChange={setGoal} variant="display" suffix="€" />
           {/* No label: `aria-label` names it, for a table cell or an inline editor. */}
-          <NumberInput
-            aria-label="Quantity"
-            value={bare}
-            onChange={setBare}
-            calculator={false}
-          />
+          <NumberInput aria-label="Quantity" value={bare} onChange={setBare} calculator={false} />
           <NumberInput
             label="Amount (tabular, end-aligned)"
             inputClassName="text-right font-mono tabular-nums"
@@ -285,9 +252,7 @@ export function Numbers() {
         <Stage>
           <div className="space-y-3">
             <div className="relative inline-flex items-center gap-3 rounded-md border border-subtle bg-surface-2 px-3 py-2">
-              <span className="font-mono text-sm text-primary">
-                {calcValue || "—"}
-              </span>
+              <span className="font-mono text-sm text-primary">{calcValue || "—"}</span>
               {/* The second argument is the EXPRESSION the result came out of. A host
                   that keeps the sign outside the text (AmountInput's `negative`) needs
                   it to tell "-42+50" resolving to 8 from a freshly typed 8. */}
@@ -310,9 +275,9 @@ export function Numbers() {
       </Example>
 
       <Note>
-        Both floating surfaces in this section — the calculator popover above and the currency list
-        below — are painted with the palette tokens like the fields they open from; switch the
-        palette in the top bar with one open and it re-skins with the page.
+        Both floating surfaces in this section — the calculator popover above and the currency list below — are painted
+        with the palette tokens like the fields they open from; switch the palette in the top bar with one open and it
+        re-skins with the page.
       </Note>
 
       <NumberFieldDemo />
@@ -328,20 +293,10 @@ export function Numbers() {
                   surface-2 fill, which on this stage's surface-2 is no difference at all —
                   the chosen direction was invisible. `pressed` sets aria-pressed AND
                   draws the quiet brand "on" fill. */}
-              <Button
-                type="button"
-                variant="secondary"
-                pressed={outflow}
-                onClick={() => setDirection("outflow")}
-              >
+              <Button type="button" variant="secondary" pressed={outflow} onClick={() => setDirection("outflow")}>
                 Outflow
               </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                pressed={!outflow}
-                onClick={() => setDirection("inflow")}
-              >
+              <Button type="button" variant="secondary" pressed={!outflow} onClick={() => setDirection("inflow")}>
                 Inflow
               </Button>
             </Row>
@@ -407,13 +362,7 @@ export function Numbers() {
       >
         <Stage>
           <div className="w-48 max-w-full">
-            <AmountInput
-              label="Locked"
-              value={locked}
-              onChange={setLocked}
-              currency="EUR"
-              disabled
-            />
+            <AmountInput label="Locked" value={locked} onChange={setLocked} currency="EUR" disabled />
           </div>
           <div className="w-48 max-w-full">
             <AmountInput
@@ -547,7 +496,12 @@ export function Numbers() {
               }}
               currencyNames={{ CHF: "Schweizer Franken", EUR: "Euro", GBP: "Britisches Pfund" }}
             />
-            <State rows={[["value", deAmount], ["currency", deCurrency]]} />
+            <State
+              rows={[
+                ["value", deAmount],
+                ["currency", deCurrency],
+              ]}
+            />
           </div>
           <div className="space-y-2">
             <CurrencySelect
@@ -594,11 +548,11 @@ export function Numbers() {
           </div>
         </Stage>
         <Note>
-          Open the currency list on the first two and search &quot;Franken&quot;: the filter matches
-          the <em>shown</em>, translated name. The calculator names are screen-reader names — inspect
-          the trigger&apos;s <code className="font-mono">aria-label</code>, or open the popover. The
-          last field is unlabelled: <code className="font-mono">aria-label</code> names it and{" "}
-          <code className="font-mono">placeholder</code> fills it while empty.
+          Open the currency list on the first two and search &quot;Franken&quot;: the filter matches the <em>shown</em>,
+          translated name. The calculator names are screen-reader names — inspect the trigger&apos;s{" "}
+          <code className="font-mono">aria-label</code>, or open the popover. The last field is unlabelled:{" "}
+          <code className="font-mono">aria-label</code> names it and <code className="font-mono">placeholder</code>{" "}
+          fills it while empty.
         </Note>
       </Example>
 
@@ -626,34 +580,34 @@ export function Numbers() {
             />
           </div>
         </Stage>
-        <State rows={[["amount", rtlAmount], ["currency", rtlCurrency], ["units", rtlUnits]]} />
+        <State
+          rows={[
+            ["amount", rtlAmount],
+            ["currency", rtlCurrency],
+            ["units", rtlUnits],
+          ]}
+        />
         <Note>
-          The currency chip, the calculator trigger and the unit suffix are the figure&apos;s
-          trailing controls, so they sit at the logical END — the left here — with the padding
-          reserved on that side; the currency list opens from the end edge too. The figures
-          themselves and the calculator stay left-to-right (<code className="font-mono">dir=&quot;ltr&quot;</code>{" "}
-          on its display and on the phone number pad&apos;s): arithmetic reads the same way in
-          every script.
+          The currency chip, the calculator trigger and the unit suffix are the figure&apos;s trailing controls, so they
+          sit at the logical END — the left here — with the padding reserved on that side; the currency list opens from
+          the end edge too. The figures themselves and the calculator stay left-to-right (
+          <code className="font-mono">dir=&quot;ltr&quot;</code> on its display and on the phone number pad&apos;s):
+          arithmetic reads the same way in every script.
         </Note>
       </Example>
 
-      <Example
-        label="NumberPadSheet"
-        hint="mounted directly here; in a field it opens by FOCUS, below 768px only"
-      >
+      <Example label="NumberPadSheet" hint="mounted directly here; in a field it opens by FOCUS, below 768px only">
         <Stage>
           <div className="space-y-3">
             <Note>
-              In an app this sheet is never rendered by hand: focusing a{" "}
-              <code className="font-mono">NumberInput</code> or{" "}
-              <code className="font-mono">AmountInput</code> in the phone layout{" "}
-              (<code className="font-mono">usePhoneLayout()</code>) opens it, with the field's
-              <code className="font-mono"> inputMode="none"</code> suppressing the OS keyboard in
-              its place. The button below mounts it explicitly so a desktop reader can see it at
-              all. It portals to <code className="font-mono">document.body</code> and is fixed to
-              the bottom of the viewport, so look down there rather than inside this card — and note
-              that it deliberately does NOT lock the page behind it: it is a keyboard, not a dialog,
-              and you have to be able to scroll to the figure it is covering.
+              In an app this sheet is never rendered by hand: focusing a <code className="font-mono">NumberInput</code>{" "}
+              or <code className="font-mono">AmountInput</code> in the phone layout (
+              <code className="font-mono">usePhoneLayout()</code>) opens it, with the field's
+              <code className="font-mono"> inputMode="none"</code> suppressing the OS keyboard in its place. The button
+              below mounts it explicitly so a desktop reader can see it at all. It portals to{" "}
+              <code className="font-mono">document.body</code> and is fixed to the bottom of the viewport, so look down
+              there rather than inside this card — and note that it deliberately does NOT lock the page behind it: it is
+              a keyboard, not a dialog, and you have to be able to scroll to the figure it is covering.
             </Note>
             <Row>
               <Button type="button" variant="default" onClick={() => setPadOpen(true)}>
@@ -662,9 +616,7 @@ export function Numbers() {
               <Button type="button" variant="secondary" onClick={() => setDePadOpen(true)}>
                 Open it with labels (German)
               </Button>
-              <span className="font-mono text-sm text-primary">
-                {padValue || "0"}
-              </span>
+              <span className="font-mono text-sm text-primary">{padValue || "0"}</span>
             </Row>
             {/* Stateless by design — the host's text is the single source of truth, and
                 "Done" in a real field simply blurs the input, whose existing blur
@@ -823,7 +775,13 @@ export function Numbers016Demo() {
           onChange={setAmount}
           hint={<FieldHint label="Held until the lease ends." />}
         />
-        <AmountInput label="Monthly rent" currency="EUR" value={amount} onChange={setAmount} hint="Cold rent, without utilities" />
+        <AmountInput
+          label="Monthly rent"
+          currency="EUR"
+          value={amount}
+          onChange={setAmount}
+          hint="Cold rent, without utilities"
+        />
       </div>
       <Row>
         <div className="w-24">
@@ -840,7 +798,10 @@ export function Numbers016Demo() {
           roundToCurrency(0.1 + 0.2, &quot;&quot;, &#123; fallbackDigits: 2 &#125;) →{" "}
           {String(roundToCurrency(0.1 + 0.2, "", { fallbackDigits: 2 }))}
         </li>
-        <li>roundToCurrency(1.005, &quot;EUR&quot;, &#123; fallbackDigits: 0 &#125;) → {String(roundToCurrency(1.005, "EUR", { fallbackDigits: 0 }))}</li>
+        <li>
+          roundToCurrency(1.005, &quot;EUR&quot;, &#123; fallbackDigits: 0 &#125;) →{" "}
+          {String(roundToCurrency(1.005, "EUR", { fallbackDigits: 0 }))}
+        </li>
       </ul>
     </Example>
   );

@@ -16,8 +16,24 @@ const GROUPS: TourGroup[] = [
 ];
 
 const TOURS: TourInfo[] = [
-  { id: "welcome", title: "Welcome", description: "The tour of tours.", group: "start", points: 20, steps: 5, duration: 2 },
-  { id: "budget", title: "Your budget", description: "Plan a month.", about: "Visits the budget page.", group: "budgeting", points: 30, since: "2026-10-05" },
+  {
+    id: "welcome",
+    title: "Welcome",
+    description: "The tour of tours.",
+    group: "start",
+    points: 20,
+    steps: 5,
+    duration: 2,
+  },
+  {
+    id: "budget",
+    title: "Your budget",
+    description: "Plan a month.",
+    about: "Visits the budget page.",
+    group: "budgeting",
+    points: 30,
+    since: "2026-10-05",
+  },
   {
     id: "goals",
     title: "Goals",
@@ -51,7 +67,8 @@ function Harness(props: Partial<TourCatalogueProps> & { initial?: Partial<TourCa
   );
 }
 
-const card = (title: string) => screen.getByRole("heading", { level: 3, name: title }).closest("div.flex.h-full")! as HTMLElement;
+const card = (title: string) =>
+  screen.getByRole("heading", { level: 3, name: title }).closest("div.flex.h-full")! as HTMLElement;
 
 describe("TourCatalogue", () => {
   it("draws a section per group with tours, in the app's order — an h2 with its icon and help line", () => {
@@ -71,19 +88,17 @@ describe("TourCatalogue", () => {
     expect(screen.getByRole("radio", { name: "Not taken (2)" })).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "Completed (1)" })).toBeInTheDocument();
     const select = screen.getByRole("combobox", { name: "Topic" });
-    expect(within(select).getAllByRole("option").map((o) => o.textContent)).toEqual([
-      "All topics (3)",
-      "Getting started (1)",
-      "Everyday budgeting (2)",
-      "Nothing here (0)",
-    ]);
+    expect(
+      within(select)
+        .getAllByRole("option")
+        .map((o) => o.textContent),
+    ).toEqual(["All topics (3)", "Getting started (1)", "Everyday budgeting (2)", "Nothing here (0)"]);
     fireEvent.click(screen.getByRole("radio", { name: "Not taken (2)" }));
-    expect(within(select).getAllByRole("option").map((o) => o.textContent)).toEqual([
-      "All topics (2)",
-      "Getting started (0)",
-      "Everyday budgeting (2)",
-      "Nothing here (0)",
-    ]);
+    expect(
+      within(select)
+        .getAllByRole("option")
+        .map((o) => o.textContent),
+    ).toEqual(["All topics (2)", "Getting started (0)", "Everyday budgeting (2)", "Nothing here (0)"]);
     // The section the filter emptied is hidden.
     expect(screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual(["Everyday budgeting"]);
     expect(screen.getByRole("status")).toHaveTextContent("Showing 2 of 3 tours");
@@ -148,7 +163,13 @@ describe("TourCatalogueCard", () => {
   const base: TourInfo = { id: "t", title: "Tour", description: "One line.", about: "The long account.", group: "g" };
 
   it("an untaken tour: the empty state icon, Start, no completion line, no Mark undone", () => {
-    render(<TourCatalogueCard tour={{ ...base, icon: <svg data-testid="tour-icon" /> }} onLaunch={() => {}} onReset={() => {}} />);
+    render(
+      <TourCatalogueCard
+        tour={{ ...base, icon: <svg data-testid="tour-icon" /> }}
+        onLaunch={() => {}}
+        onReset={() => {}}
+      />,
+    );
     expect(screen.getByText("Not completed")).toBeInTheDocument();
     expect(screen.getByTestId("tour-icon")).toBeInTheDocument();
     expect(screen.getByText("One line.")).toBeInTheDocument();
@@ -158,7 +179,9 @@ describe("TourCatalogueCard", () => {
   });
 
   it("the points chip, the step count and the duration, each only when given", () => {
-    const { rerender } = render(<TourCatalogueCard tour={{ ...base, points: 30, steps: 1, duration: 3 }} onLaunch={() => {}} />);
+    const { rerender } = render(
+      <TourCatalogueCard tour={{ ...base, points: 30, steps: 1, duration: 3 }} onLaunch={() => {}} />,
+    );
     expect(screen.getByText("+30 pts")).toBeInTheDocument();
     expect(screen.getByText("1 step")).toBeInTheDocument();
     expect(screen.getByText("About 3 min")).toBeInTheDocument();
@@ -168,7 +191,13 @@ describe("TourCatalogueCard", () => {
 
   it("completed: the date, Replay and Mark undone; without a date just Completed", () => {
     const { rerender } = render(
-      <TourCatalogueCard tour={base} completedAt="2026-09-01T10:00:00Z" formatDate={(iso) => `[${iso.slice(0, 10)}]`} onLaunch={() => {}} onReset={() => {}} />,
+      <TourCatalogueCard
+        tour={base}
+        completedAt="2026-09-01T10:00:00Z"
+        formatDate={(iso) => `[${iso.slice(0, 10)}]`}
+        onLaunch={() => {}}
+        onReset={() => {}}
+      />,
     );
     expect(screen.getByText("Completed on [2026-09-01]")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Replay" })).toBeInTheDocument();
@@ -187,7 +216,14 @@ describe("TourCatalogueCard", () => {
   it("reset by an update: the Updated pill, the reason, Start, to do (§8)", () => {
     const tour = { ...base, updated: { date: "2026-10-10", reason: "The screen moved." } };
     render(
-      <TourCatalogueCard tour={tour} completedAt="2026-09-01T10:00:00Z" isNew formatDate={(iso) => iso.slice(0, 10)} onLaunch={() => {}} onReset={() => {}} />,
+      <TourCatalogueCard
+        tour={tour}
+        completedAt="2026-09-01T10:00:00Z"
+        isNew
+        formatDate={(iso) => iso.slice(0, 10)}
+        onLaunch={() => {}}
+        onReset={() => {}}
+      />,
     );
     expect(screen.getByText("Updated")).toBeInTheDocument();
     expect(screen.queryByText("New")).toBeNull();
@@ -201,7 +237,14 @@ describe("TourCatalogueCard", () => {
     const { rerender } = render(<TourCatalogueCard tour={tour} onLaunch={() => {}} />);
     expect(screen.queryByText(/Reset on/)).toBeNull();
     expect(screen.queryByText("Updated")).toBeNull();
-    rerender(<TourCatalogueCard tour={tour} completedAt="2026-10-12T08:00:00Z" formatDate={(i) => i.slice(0, 10)} onLaunch={() => {}} />);
+    rerender(
+      <TourCatalogueCard
+        tour={tour}
+        completedAt="2026-10-12T08:00:00Z"
+        formatDate={(i) => i.slice(0, 10)}
+        onLaunch={() => {}}
+      />,
+    );
     expect(screen.getByText("Completed on 2026-10-12")).toBeInTheDocument();
   });
   it("the default format shows the update's own day, a calendar day (round 0.45, N9)", () => {
@@ -211,7 +254,14 @@ describe("TourCatalogueCard", () => {
   });
   it("an update without a reason shows the day alone (keksdose K-S3)", () => {
     const tour = { ...base, updated: { date: "2026-10-10" } };
-    render(<TourCatalogueCard tour={tour} completedAt="2026-09-01T10:00:00Z" formatDate={(iso) => iso.slice(0, 10)} onLaunch={() => {}} />);
+    render(
+      <TourCatalogueCard
+        tour={tour}
+        completedAt="2026-09-01T10:00:00Z"
+        formatDate={(iso) => iso.slice(0, 10)}
+        onLaunch={() => {}}
+      />,
+    );
     expect(screen.getByText("Reset on 2026-10-10")).toBeInTheDocument();
   });
 });

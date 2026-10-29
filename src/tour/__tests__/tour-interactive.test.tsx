@@ -173,8 +173,6 @@ describe("Tour awaitInput step", () => {
   it("names the hint in the provider's language", async () => {
     renderTour([{ ...STEP, awaitInput: true }, END], true);
     await start();
-    expect(
-      screen.getByText("Geben Sie im hervorgehobenen Feld einen Wert ein, um fortzufahren"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Geben Sie im hervorgehobenen Feld einen Wert ein, um fortzufahren")).toBeInTheDocument();
   });
 });

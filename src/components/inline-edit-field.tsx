@@ -423,11 +423,7 @@ export function InlineEditField<T = string>(props: InlineEditFieldProps<T>) {
 
   const private_ = redact ? { "data-private": true } : undefined;
   const shown = display ? display(value) : value === null || value === undefined ? "" : String(value);
-  const content = hasContent(shown) ? (
-    shown
-  ) : (
-    <span className="text-muted">{placeholder ?? labels.empty}</span>
-  );
+  const content = hasContent(shown) ? shown : <span className="text-muted">{placeholder ?? labels.empty}</span>;
   const alignClass = align === "end" ? "text-end" : "text-start";
 
   let body: ReactNode;

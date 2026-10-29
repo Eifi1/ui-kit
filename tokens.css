@@ -109,65 +109,209 @@ html[data-text-size="xlarge"] {
  * same numbers (hooks/use-breakpoint.ts). */
 
 @custom-variant sm {
-  @media (width >= 40rem) { &:where(:not([data-text-size$=large] *)) { @slot; } }
-  @media (width >= 50rem) { &:where([data-text-size=large] *) { @slot; } }
-  @media (width >= 60rem) { &:where([data-text-size=xlarge] *) { @slot; } }
+  @media (width >= 40rem) {
+    &:where(:not([data-text-size$="large"] *)) {
+      @slot;
+    }
+  }
+  @media (width >= 50rem) {
+    &:where([data-text-size="large"] *) {
+      @slot;
+    }
+  }
+  @media (width >= 60rem) {
+    &:where([data-text-size="xlarge"] *) {
+      @slot;
+    }
+  }
 }
 @custom-variant md {
-  @media (width >= 48rem) { &:where(:not([data-text-size$=large] *)) { @slot; } }
-  @media (width >= 60rem) { &:where([data-text-size=large] *) { @slot; } }
-  @media (width >= 72rem) { &:where([data-text-size=xlarge] *) { @slot; } }
+  @media (width >= 48rem) {
+    &:where(:not([data-text-size$="large"] *)) {
+      @slot;
+    }
+  }
+  @media (width >= 60rem) {
+    &:where([data-text-size="large"] *) {
+      @slot;
+    }
+  }
+  @media (width >= 72rem) {
+    &:where([data-text-size="xlarge"] *) {
+      @slot;
+    }
+  }
 }
 @custom-variant lg {
-  @media (width >= 64rem) { &:where(:not([data-text-size$=large] *)) { @slot; } }
-  @media (width >= 80rem) { &:where([data-text-size=large] *) { @slot; } }
-  @media (width >= 96rem) { &:where([data-text-size=xlarge] *) { @slot; } }
+  @media (width >= 64rem) {
+    &:where(:not([data-text-size$="large"] *)) {
+      @slot;
+    }
+  }
+  @media (width >= 80rem) {
+    &:where([data-text-size="large"] *) {
+      @slot;
+    }
+  }
+  @media (width >= 96rem) {
+    &:where([data-text-size="xlarge"] *) {
+      @slot;
+    }
+  }
 }
 @custom-variant xl {
-  @media (width >= 80rem) { &:where(:not([data-text-size$=large] *)) { @slot; } }
-  @media (width >= 100rem) { &:where([data-text-size=large] *) { @slot; } }
-  @media (width >= 120rem) { &:where([data-text-size=xlarge] *) { @slot; } }
+  @media (width >= 80rem) {
+    &:where(:not([data-text-size$="large"] *)) {
+      @slot;
+    }
+  }
+  @media (width >= 100rem) {
+    &:where([data-text-size="large"] *) {
+      @slot;
+    }
+  }
+  @media (width >= 120rem) {
+    &:where([data-text-size="xlarge"] *) {
+      @slot;
+    }
+  }
 }
 @custom-variant 2xl {
-  @media (width >= 96rem) { &:where(:not([data-text-size$=large] *)) { @slot; } }
-  @media (width >= 120rem) { &:where([data-text-size=large] *) { @slot; } }
-  @media (width >= 144rem) { &:where([data-text-size=xlarge] *) { @slot; } }
+  @media (width >= 96rem) {
+    &:where(:not([data-text-size$="large"] *)) {
+      @slot;
+    }
+  }
+  @media (width >= 120rem) {
+    &:where([data-text-size="large"] *) {
+      @slot;
+    }
+  }
+  @media (width >= 144rem) {
+    &:where([data-text-size="xlarge"] *) {
+      @slot;
+    }
+  }
 }
 @custom-variant 3xl {
-  @media (width >= 150rem) { &:where(:not([data-text-size$=large] *)) { @slot; } }
-  @media (width >= 187.5rem) { &:where([data-text-size=large] *) { @slot; } }
-  @media (width >= 225rem) { &:where([data-text-size=xlarge] *) { @slot; } }
+  @media (width >= 150rem) {
+    &:where(:not([data-text-size$="large"] *)) {
+      @slot;
+    }
+  }
+  @media (width >= 187.5rem) {
+    &:where([data-text-size="large"] *) {
+      @slot;
+    }
+  }
+  @media (width >= 225rem) {
+    &:where([data-text-size="xlarge"] *) {
+      @slot;
+    }
+  }
 }
 
 @custom-variant max-3xl {
-  @media (width < 150rem) { &:where(:not([data-text-size$=large] *)) { @slot; } }
-  @media (width < 187.5rem) { &:where([data-text-size=large] *) { @slot; } }
-  @media (width < 225rem) { &:where([data-text-size=xlarge] *) { @slot; } }
+  @media (width < 150rem) {
+    &:where(:not([data-text-size$="large"] *)) {
+      @slot;
+    }
+  }
+  @media (width < 187.5rem) {
+    &:where([data-text-size="large"] *) {
+      @slot;
+    }
+  }
+  @media (width < 225rem) {
+    &:where([data-text-size="xlarge"] *) {
+      @slot;
+    }
+  }
 }
 @custom-variant max-2xl {
-  @media (width < 96rem) { &:where(:not([data-text-size$=large] *)) { @slot; } }
-  @media (width < 120rem) { &:where([data-text-size=large] *) { @slot; } }
-  @media (width < 144rem) { &:where([data-text-size=xlarge] *) { @slot; } }
+  @media (width < 96rem) {
+    &:where(:not([data-text-size$="large"] *)) {
+      @slot;
+    }
+  }
+  @media (width < 120rem) {
+    &:where([data-text-size="large"] *) {
+      @slot;
+    }
+  }
+  @media (width < 144rem) {
+    &:where([data-text-size="xlarge"] *) {
+      @slot;
+    }
+  }
 }
 @custom-variant max-xl {
-  @media (width < 80rem) { &:where(:not([data-text-size$=large] *)) { @slot; } }
-  @media (width < 100rem) { &:where([data-text-size=large] *) { @slot; } }
-  @media (width < 120rem) { &:where([data-text-size=xlarge] *) { @slot; } }
+  @media (width < 80rem) {
+    &:where(:not([data-text-size$="large"] *)) {
+      @slot;
+    }
+  }
+  @media (width < 100rem) {
+    &:where([data-text-size="large"] *) {
+      @slot;
+    }
+  }
+  @media (width < 120rem) {
+    &:where([data-text-size="xlarge"] *) {
+      @slot;
+    }
+  }
 }
 @custom-variant max-lg {
-  @media (width < 64rem) { &:where(:not([data-text-size$=large] *)) { @slot; } }
-  @media (width < 80rem) { &:where([data-text-size=large] *) { @slot; } }
-  @media (width < 96rem) { &:where([data-text-size=xlarge] *) { @slot; } }
+  @media (width < 64rem) {
+    &:where(:not([data-text-size$="large"] *)) {
+      @slot;
+    }
+  }
+  @media (width < 80rem) {
+    &:where([data-text-size="large"] *) {
+      @slot;
+    }
+  }
+  @media (width < 96rem) {
+    &:where([data-text-size="xlarge"] *) {
+      @slot;
+    }
+  }
 }
 @custom-variant max-md {
-  @media (width < 48rem) { &:where(:not([data-text-size$=large] *)) { @slot; } }
-  @media (width < 60rem) { &:where([data-text-size=large] *) { @slot; } }
-  @media (width < 72rem) { &:where([data-text-size=xlarge] *) { @slot; } }
+  @media (width < 48rem) {
+    &:where(:not([data-text-size$="large"] *)) {
+      @slot;
+    }
+  }
+  @media (width < 60rem) {
+    &:where([data-text-size="large"] *) {
+      @slot;
+    }
+  }
+  @media (width < 72rem) {
+    &:where([data-text-size="xlarge"] *) {
+      @slot;
+    }
+  }
 }
 @custom-variant max-sm {
-  @media (width < 40rem) { &:where(:not([data-text-size$=large] *)) { @slot; } }
-  @media (width < 50rem) { &:where([data-text-size=large] *) { @slot; } }
-  @media (width < 60rem) { &:where([data-text-size=xlarge] *) { @slot; } }
+  @media (width < 40rem) {
+    &:where(:not([data-text-size$="large"] *)) {
+      @slot;
+    }
+  }
+  @media (width < 50rem) {
+    &:where([data-text-size="large"] *) {
+      @slot;
+    }
+  }
+  @media (width < 60rem) {
+    &:where([data-text-size="xlarge"] *) {
+      @slot;
+    }
+  }
 }
 
 /* `large:` is Large AND Extra large; `xlarge:` only Extra large; `contrast:` is More
@@ -216,27 +360,27 @@ html[data-text-size="xlarge"] {
 }
 
 :root {
-  --bg-page: #ede3cf;          /* warm dim sand — low-glare light page */
-  --bg-surface: #f6ecd9;       /* warm off-white card/panel (not pure white) */
-  --bg-surface-2: #ede3cf;     /* inset/well surface: the page itself in light (0.33) */
-  --border: #e2d6bd;           /* warm hairline border */
-  --text-primary: #463f33;     /* warm dark grey — not pure black */
+  --bg-page: #ede3cf; /* warm dim sand — low-glare light page */
+  --bg-surface: #f6ecd9; /* warm off-white card/panel (not pure white) */
+  --bg-surface-2: #ede3cf; /* inset/well surface: the page itself in light (0.33) */
+  --border: #e2d6bd; /* warm hairline border */
+  --text-primary: #463f33; /* warm dark grey — not pure black */
   /* The two quieter text roles. Contrast against the WORST of the three surfaces
      above: 7.0:1 and 4.8:1, so both clear WCAG AA for normal text on all of them —
      which is the reason they are tokens and not `text-slate-500`, a cool grey that
      ignores the palette and sat at 4.4:1 on this ground. */
   --text-secondary: #50493c;
   --text-muted: #696153;
-  --brand: #4f46e5;            /* indigo-600 */
-  --brand-hover: #4338ca;      /* indigo-700 */
+  --brand: #4f46e5; /* indigo-600 */
+  --brand-hover: #4338ca; /* indigo-700 */
   --brand-contrast: #ffffff;
-  --money-income: #0b6650;     /* deep teal — the preset's own, darker than
+  --money-income: #0b6650; /* deep teal — the preset's own, darker than
                                   teal-700 so it clears AA as TEXT on --bg-page */
-  --money-expense: #905902;    /* solved: amber-700 (#b45309) reached only 3.88:1 as
+  --money-expense: #905902; /* solved: amber-700 (#b45309) reached only 3.88:1 as
                                   TEXT on --bg-page, below WCAG AA. See the preset
                                   audit in theme/__tests__/palette-audit.test.ts. */
-  --money-net: #7a4fa3;        /* muted violet, warmed to this palette */
-  --money-neutral: #6b6453;    /* warm slate */
+  --money-net: #7a4fa3; /* muted violet, warmed to this palette */
+  --money-neutral: #6b6453; /* warm slate */
 
   /* ── Field sync status ─────────────────────────────────────────────────────
      The four states a database-backed field can be in. Deliberately NOT part of
@@ -260,10 +404,10 @@ html[data-text-size="xlarge"] {
      reason. They are used here because the states were specified in these colours, so
      `FieldSyncIndicator` gives every state its own ICON as well and colour is never
      the only signal. Do not drop the icons.  */
-  --status-synced: #166534;    /* green-800  — persisted */
-  --status-pending: #1d4ed8;   /* blue-700   — in flight */
-  --status-edited: #bf6800;    /* solved     — dirty, not yet saved */
-  --status-error: #b91c1c;     /* red-700    — the save failed */
+  --status-synced: #166534; /* green-800  — persisted */
+  --status-pending: #1d4ed8; /* blue-700   — in flight */
+  --status-edited: #bf6800; /* solved     — dirty, not yet saved */
+  --status-error: #b91c1c; /* red-700    — the save failed */
   /* Chart ramp: anyplot's eight "Imprint" hues (0.49, https://anyplot.ai/palette), the
      SAME in both themes — a hue under 3:1 on the ground gets a 1px ink edge
      (`chartEdge`) rather than a different colour. `--chart-9` repeats slot 1, where
@@ -284,20 +428,20 @@ html[data-text-size="xlarge"] {
 }
 
 .dark {
-  --bg-page: #0e0f1c;          /* indigo near-black */
+  --bg-page: #0e0f1c; /* indigo near-black */
   --bg-surface: #181a2c;
-  --bg-surface-2: #21243a;     /* inset/well surface */
+  --bg-surface-2: #21243a; /* inset/well surface */
   --border: #2e3252;
   --text-primary: #e6e8f4;
   /* As in `:root` — 7.0:1 and 4.8:1 against the worst of the three dark surfaces. */
   --text-secondary: #adafbe;
   --text-muted: #8d90a0;
-  --brand: #8b93f8;            /* indigo, lifted off the Tailwind scale to sit at
+  --brand: #8b93f8; /* indigo, lifted off the Tailwind scale to sit at
                                   the same OKLab lightness as the other dark tokens */
   --brand-hover: #aab1fb;
-  --brand-contrast: #16182b;   /* the dark page, not indigo-950: a filled brand
+  --brand-contrast: #16182b; /* the dark page, not indigo-950: a filled brand
                                   button reads as a hole in the surface it sits on */
-  --money-income: #22c3b6;     /* teal, pulled down to the dark set's lightness */
+  --money-income: #22c3b6; /* teal, pulled down to the dark set's lightness */
   /* Deliberately NOT amber-400 (#fbbf24). Every other colour on a dark surface
      sits around OKLab L 0.68–0.74 (brand 0.68, net 0.70, neutral 0.71, income
      0.74); amber-400 lands at 0.84, so outflows — most rows in a register — shouted
@@ -306,14 +450,14 @@ html[data-text-size="xlarge"] {
      surface, still far from income in CVD space (Keksdose dev#434). */
   --money-expense: #e4b035;
   --money-net: #b39aef;
-  --money-neutral: #9aa1bd;    /* the palette's own cool grey, not zinc-400 */
+  --money-neutral: #9aa1bd; /* the palette's own cool grey, not zinc-400 */
 
   /* Field sync status — see the note in `:root`. Against the worst of the three dark
      surfaces these run 8.7 / 9.1 / 6.7 / 8.0:1. */
-  --status-synced: #4ade80;    /* green-400 */
-  --status-pending: #7dd3fc;   /* sky-300 */
-  --status-edited: #fbbf24;    /* amber-400 */
-  --status-error: #fca5a5;     /* red-300 */
+  --status-synced: #4ade80; /* green-400 */
+  --status-pending: #7dd3fc; /* sky-300 */
+  --status-edited: #fbbf24; /* amber-400 */
+  --status-error: #fca5a5; /* red-300 */
   --chart-1: #009e73;
   --chart-2: #c475fd;
   --chart-3: #4467a3;
@@ -453,55 +597,55 @@ html[data-text-size="xlarge"] {
    4.22. `--money-expense` went the same way earlier. tokens-css-audit.test.ts holds
    every pair here to its ratio. */
 :root {
-  --danger: #be123c;              /* rose-700 */
-  --danger-hover: #9f1239;        /* rose-800 */
+  --danger: #be123c; /* rose-700 */
+  --danger-hover: #9f1239; /* rose-800 */
   --danger-contrast: #ffffff;
-  --danger-border: #fb7185;       /* rose-400 */
+  --danger-border: #fb7185; /* rose-400 */
   /* The error LINE: an invalid field, a failed upload, a danger banner's frame, a focus
      ring on a destructive control — loud, WCAG 1.4.11's 3:1 against every surface.
      Rose-600 in both modes since 0.33: light was rose-400, the soft border's value,
      which reached only 2.07:1 while this note claimed 3:1. */
   --danger-border-strong: #e11d48; /* rose-600 */
-  --danger-bg: #fff1f2;           /* rose-50 */
+  --danger-bg: #fff1f2; /* rose-50 */
 
-  --warning: #a34800;             /* amber-700's hue, solved (was #b45309, 3.86:1) */
+  --warning: #a34800; /* amber-700's hue, solved (was #b45309, 3.86:1) */
   /* Text on a `--warning` fill (0.33, k24): a solid warning chip, a badge, an armed
      swipe. White here, amber-950 on the dark theme's pastel. */
   --warning-contrast: #ffffff;
-  --warning-border: #fcd34d;      /* amber-300 */
+  --warning-border: #fcd34d; /* amber-300 */
   /* Warning's loud line (0.33, k27), as `--danger-border-strong` is danger's: Card
      `toneStrength="strong"`, IconButton's warning focus ring. In light the warning
      colour itself — amber-600 would be only 2.5:1 on the cream page; in dark amber-600,
      the step danger's line takes, 4.8:1 and up without shouting. */
   --warning-border-strong: var(--warning);
-  --warning-bg: #fffbeb;          /* amber-50 */
+  --warning-bg: #fffbeb; /* amber-50 */
 
   /* Informational, and deliberately NOT the brand: a count of active filters is
      not a call to action, and painting it `--brand` would make every table look
      like it had a primary button in the toolbar. */
-  --info: #0369a1;                /* sky-700 */
+  --info: #0369a1; /* sky-700 */
   /* Text on an `--info` fill (0.27: the feedback inbox's "advance" swipe) — white here,
      the darkest sky in dark mode, where the fill is a pastel. */
   --info-contrast: #ffffff;
-  --info-border: #7dd3fc;         /* sky-300 */
-  --info-bg: #e0f2fe;             /* sky-100 */
+  --info-border: #7dd3fc; /* sky-300 */
+  --info-bg: #e0f2fe; /* sky-100 */
 
   /* Done, resolved, accepted. Distinct from `--status-synced` for the same reason
      `--danger` is distinct from `--status-error`: that family describes a FIELD's
      journey to the database, this one an ACTION's outcome. Emerald rather than the
      money teal, so a "resolved" chip cannot be misread as an inflow. */
-  --success: #007152;             /* emerald-700's hue, solved (was #047857, 4.22:1) */
+  --success: #007152; /* emerald-700's hue, solved (was #047857, 4.22:1) */
   /* Text on a `--success` fill (0.26: a swipe's approve panel) — white here, the
      darkest emerald in dark mode, where the fill is a pastel and white text failed. */
   --success-contrast: #ffffff;
-  --success-border: #6ee7b7;      /* emerald-300 */
-  --success-bg: #d1fae5;          /* emerald-100 */
+  --success-border: #6ee7b7; /* emerald-300 */
+  --success-bg: #d1fae5; /* emerald-100 */
 }
 
 .dark {
-  --danger: #fda4af;              /* rose-300 */
-  --danger-hover: #fecdd3;        /* rose-200 */
-  --danger-contrast: #4c0519;     /* rose-950 */
+  --danger: #fda4af; /* rose-300 */
+  --danger-hover: #fecdd3; /* rose-200 */
+  --danger-contrast: #4c0519; /* rose-950 */
   /* The tone family's recipe — hue at 0.6 alpha, as warning/info/success below — so a
      soft danger Chip sits in the same weight of frame as its siblings (keksdose dev
      #576: FAILED was visibly louder than READY and NEEDS REVIEW in dark mode). */
@@ -509,19 +653,19 @@ html[data-text-size="xlarge"] {
   --danger-border-strong: #e11d48; /* rose-600 */
   --danger-bg: rgba(136, 19, 55, 0.2);
 
-  --warning: #fcd34d;             /* amber-300 */
-  --warning-contrast: #451a03;    /* amber-950 */
+  --warning: #fcd34d; /* amber-300 */
+  --warning-contrast: #451a03; /* amber-950 */
   --warning-border: rgba(180, 83, 9, 0.6);
   --warning-border-strong: #d97706; /* amber-600 */
   --warning-bg: rgba(120, 53, 15, 0.2);
 
-  --info: #7dd3fc;                /* sky-300 */
-  --info-contrast: #082f49;       /* sky-950 */
+  --info: #7dd3fc; /* sky-300 */
+  --info-contrast: #082f49; /* sky-950 */
   --info-border: rgba(3, 105, 161, 0.6);
   --info-bg: rgba(12, 74, 110, 0.25);
 
-  --success: #6ee7b7;             /* emerald-300 */
-  --success-contrast: #022c22;    /* emerald-950 */
+  --success: #6ee7b7; /* emerald-300 */
+  --success-contrast: #022c22; /* emerald-950 */
   --success-border: rgba(4, 120, 87, 0.6);
   --success-bg: rgba(6, 78, 59, 0.25);
 }
@@ -566,7 +710,14 @@ html[data-text-size="xlarge"] {
 
 /* The description of an untoned toast in the secondary text colour (sonner hard-codes
    #3f3f3f, unreadable in the dark theme); a toned toast's inherits its tone. */
-.kit-toaster [data-sonner-toast][data-styled="true"]:not([data-type="success"], [data-type="info"], [data-type="warning"], [data-type="error"]) [data-description] {
+.kit-toaster
+  [data-sonner-toast][data-styled="true"]:not(
+    [data-type="success"],
+    [data-type="info"],
+    [data-type="warning"],
+    [data-type="error"]
+  )
+  [data-description] {
   color: var(--text-secondary);
 }
 /* The action button in the tone's own colour rather than sonner's black pill, under
@@ -575,10 +726,22 @@ html[data-text-size="xlarge"] {
   background: var(--toast-action-bg, var(--text-primary));
   color: var(--toast-action-fg, var(--bg-surface));
 }
-.kit-toaster [data-sonner-toast][data-type="success"] { --toast-action-bg: var(--success); --toast-action-fg: var(--success-contrast); }
-.kit-toaster [data-sonner-toast][data-type="info"] { --toast-action-bg: var(--info); --toast-action-fg: var(--info-contrast); }
-.kit-toaster [data-sonner-toast][data-type="warning"] { --toast-action-bg: var(--warning); --toast-action-fg: var(--warning-contrast); }
-.kit-toaster [data-sonner-toast][data-type="error"] { --toast-action-bg: var(--danger); --toast-action-fg: var(--danger-contrast); }
+.kit-toaster [data-sonner-toast][data-type="success"] {
+  --toast-action-bg: var(--success);
+  --toast-action-fg: var(--success-contrast);
+}
+.kit-toaster [data-sonner-toast][data-type="info"] {
+  --toast-action-bg: var(--info);
+  --toast-action-fg: var(--info-contrast);
+}
+.kit-toaster [data-sonner-toast][data-type="warning"] {
+  --toast-action-bg: var(--warning);
+  --toast-action-fg: var(--warning-contrast);
+}
+.kit-toaster [data-sonner-toast][data-type="error"] {
+  --toast-action-bg: var(--danger);
+  --toast-action-fg: var(--danger-contrast);
+}
 /* The kit's focus ring on the toast's buttons — sonner's is a black shadow that
    vanishes on the dark theme. */
 .kit-toaster [data-sonner-toast][data-styled="true"] :is([data-button], [data-close-button]):focus-visible {
@@ -605,46 +768,46 @@ html[data-text-size="xlarge"] {
    the hue's 950 on the dark pastel. Teal and orange are SOLVED in light, as warning
    and success are (§5.5): their 700s reached 4.21 and 3.98:1 on the cream page. */
 :root {
-  --hue-blue: #1d4ed8;            /* blue-700 */
+  --hue-blue: #1d4ed8; /* blue-700 */
   --hue-blue-contrast: #ffffff;
-  --hue-blue-border: #93c5fd;     /* blue-300 */
-  --hue-blue-bg: #dbeafe;         /* blue-100 */
-  --hue-indigo: #4338ca;          /* indigo-700 */
+  --hue-blue-border: #93c5fd; /* blue-300 */
+  --hue-blue-bg: #dbeafe; /* blue-100 */
+  --hue-indigo: #4338ca; /* indigo-700 */
   --hue-indigo-contrast: #ffffff;
-  --hue-indigo-border: #a5b4fc;   /* indigo-300 */
-  --hue-indigo-bg: #e0e7ff;       /* indigo-100 */
-  --hue-purple: #7e22ce;          /* purple-700 */
+  --hue-indigo-border: #a5b4fc; /* indigo-300 */
+  --hue-indigo-bg: #e0e7ff; /* indigo-100 */
+  --hue-purple: #7e22ce; /* purple-700 */
   --hue-purple-contrast: #ffffff;
-  --hue-purple-border: #d8b4fe;   /* purple-300 */
-  --hue-purple-bg: #f3e8ff;       /* purple-100 */
-  --hue-teal: #006f68;            /* teal-700's hue, solved */
+  --hue-purple-border: #d8b4fe; /* purple-300 */
+  --hue-purple-bg: #f3e8ff; /* purple-100 */
+  --hue-teal: #006f68; /* teal-700's hue, solved */
   --hue-teal-contrast: #ffffff;
-  --hue-teal-border: #5eead4;     /* teal-300 */
-  --hue-teal-bg: #ccfbf1;         /* teal-100 */
-  --hue-orange: #b43800;          /* orange-700's hue, solved */
+  --hue-teal-border: #5eead4; /* teal-300 */
+  --hue-teal-bg: #ccfbf1; /* teal-100 */
+  --hue-orange: #b43800; /* orange-700's hue, solved */
   --hue-orange-contrast: #ffffff;
-  --hue-orange-border: #fdba74;   /* orange-300 */
-  --hue-orange-bg: #ffedd5;       /* orange-100 */
+  --hue-orange-border: #fdba74; /* orange-300 */
+  --hue-orange-bg: #ffedd5; /* orange-100 */
 }
 
 .dark {
-  --hue-blue: #93c5fd;            /* blue-300 */
-  --hue-blue-contrast: #172554;   /* blue-950 */
+  --hue-blue: #93c5fd; /* blue-300 */
+  --hue-blue-contrast: #172554; /* blue-950 */
   --hue-blue-border: rgba(29, 78, 216, 0.6);
   --hue-blue-bg: rgba(30, 58, 138, 0.25);
-  --hue-indigo: #a5b4fc;          /* indigo-300 */
+  --hue-indigo: #a5b4fc; /* indigo-300 */
   --hue-indigo-contrast: #1e1b4b; /* indigo-950 */
   --hue-indigo-border: rgba(67, 56, 202, 0.6);
   --hue-indigo-bg: rgba(49, 46, 129, 0.25);
-  --hue-purple: #d8b4fe;          /* purple-300 */
+  --hue-purple: #d8b4fe; /* purple-300 */
   --hue-purple-contrast: #3b0764; /* purple-950 */
   --hue-purple-border: rgba(126, 34, 206, 0.6);
   --hue-purple-bg: rgba(88, 28, 135, 0.25);
-  --hue-teal: #5eead4;            /* teal-300 */
-  --hue-teal-contrast: #042f2e;   /* teal-950 */
+  --hue-teal: #5eead4; /* teal-300 */
+  --hue-teal-contrast: #042f2e; /* teal-950 */
   --hue-teal-border: rgba(15, 118, 110, 0.6);
   --hue-teal-bg: rgba(19, 78, 74, 0.25);
-  --hue-orange: #fdba74;          /* orange-300 */
+  --hue-orange: #fdba74; /* orange-300 */
   --hue-orange-contrast: #431407; /* orange-950 */
   --hue-orange-border: rgba(194, 65, 12, 0.6);
   --hue-orange-bg: rgba(124, 45, 18, 0.25);
@@ -669,13 +832,13 @@ html[data-text-size="xlarge"] {
    <html> leaves it out: dark does not step (§13.3, decision 4).
    tokens-css-audit.test.ts measures every pair here. */
 :root[data-contrast="more"]:not(.dark) {
-  --danger: #ba0739;              /* solved: 4.53:1 on the worst stepped well (was 4.31) */
-  --warning: #9a4300;             /* solved: 4.53:1 (was 4.13) */
-  --success: #006a4d;             /* solved: 4.54:1 (was 4.13) */
-  --info: #006197;                /* solved: 4.56:1 (was 4.07) */
-  --hue-teal: #006862;            /* solved: 4.56:1 (was 4.15) */
-  --hue-orange: #a93400;          /* solved: 4.53:1 (was 4.11) */
-  --status-edited: #b66200;       /* solved, a mark: 3.04:1 (was 2.77) */
+  --danger: #ba0739; /* solved: 4.53:1 on the worst stepped well (was 4.31) */
+  --warning: #9a4300; /* solved: 4.53:1 (was 4.13) */
+  --success: #006a4d; /* solved: 4.54:1 (was 4.13) */
+  --info: #006197; /* solved: 4.56:1 (was 4.07) */
+  --hue-teal: #006862; /* solved: 4.56:1 (was 4.15) */
+  --hue-orange: #a93400; /* solved: 4.53:1 (was 4.11) */
+  --status-edited: #b66200; /* solved, a mark: 3.04:1 (was 2.77) */
   --bg-active: color-mix(in oklab, var(--text-primary) 16%, var(--bg-surface));
 }
 
@@ -864,12 +1027,26 @@ html[data-text-size="xlarge"] {
    theme now makes those very names with the same colour, layered. A second, unlayered
    rule of the same name would beat the layered one, so `text-money-net` would no longer
    be the `text-[var(--money-net)]` it replaced in the kit. */
-.text-money-pos { color: var(--money-income); }
-.text-money-neg { color: var(--money-expense); }
-.text-money-pos-muted { color: var(--money-income); opacity: 0.72; }
-.text-money-neg-muted { color: var(--money-expense); opacity: 0.72; }
-.bg-money-pos { background-color: var(--money-income); }
-.bg-money-neg { background-color: var(--money-expense); }
+.text-money-pos {
+  color: var(--money-income);
+}
+.text-money-neg {
+  color: var(--money-expense);
+}
+.text-money-pos-muted {
+  color: var(--money-income);
+  opacity: 0.72;
+}
+.text-money-neg-muted {
+  color: var(--money-expense);
+  opacity: 0.72;
+}
+.bg-money-pos {
+  background-color: var(--money-income);
+}
+.bg-money-neg {
+  background-color: var(--money-expense);
+}
 
 /* Visually hidden, like Tailwind's `sr-only`, but POSITION: FIXED rather than absolute.
  *
@@ -898,7 +1075,9 @@ html[data-text-size="xlarge"] {
   border-width: 0;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
 }
 
@@ -942,8 +1121,12 @@ body {
 /* Indeterminate progress bar (e.g. long imports, feedback #270): a third-width
    segment sweeping the track. */
 @keyframes indeterminate-sweep {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(300%); }
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
 }
 .animate-indeterminate {
   animation: indeterminate-sweep 1.4s ease-in-out infinite;
@@ -975,36 +1158,64 @@ body {
  * get the slower, more cinematic curve a first attempt reaches for.
  */
 @keyframes overlay-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 @keyframes sheet-rise-in {
-  from { transform: translateY(100%); }
-  to { transform: none; }
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
 }
 @keyframes overlay-fade-out {
-  from { opacity: 1; }
-  to { opacity: 0; }
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
 @keyframes sheet-lower-out {
-  from { transform: none; }
-  to { transform: translateY(100%); }
+  from {
+    transform: none;
+  }
+  to {
+    transform: translateY(100%);
+  }
 }
-.animate-overlay { animation: overlay-fade-in 0.18s ease-out; }
-.animate-sheet { animation: sheet-rise-in 0.22s cubic-bezier(0.32, 0.72, 0, 1); }
+.animate-overlay {
+  animation: overlay-fade-in 0.18s ease-out;
+}
+.animate-sheet {
+  animation: sheet-rise-in 0.22s cubic-bezier(0.32, 0.72, 0, 1);
+}
 /* `forwards` on both: the element is unmounted by a timer, and without a retained end
    state the last painted frame before that timer fires is the panel back at full
    opacity in its opening position — a flash of the thing you just dismissed. */
-.animate-overlay-out { animation: overlay-fade-out 0.18s ease-in forwards; }
-.animate-sheet-out { animation: sheet-lower-out 0.22s cubic-bezier(1, 0, 0.68, 0.28) forwards; }
+.animate-overlay-out {
+  animation: overlay-fade-out 0.18s ease-in forwards;
+}
+.animate-sheet-out {
+  animation: sheet-lower-out 0.22s cubic-bezier(1, 0, 0.68, 0.28) forwards;
+}
 
 /* Motion is the first thing to drop here, not the last. The overlay still fades — a
    backdrop appearing instantly is a flash, not a transition — but nothing travels.
    The EXIT pair is not listed: `useCloseTransition` reads the same media query and
    closes immediately under it, so these classes are never applied at all. */
 @media (prefers-reduced-motion: reduce) {
-  .animate-sheet { animation: none; }
-  .animate-overlay { animation-duration: 0.01ms; }
+  .animate-sheet {
+    animation: none;
+  }
+  .animate-overlay {
+    animation-duration: 0.01ms;
+  }
 }
 
 /* The sidebar's flyout panel: a short fade and a 4px slide out of the sidebar, so it
@@ -1012,30 +1223,58 @@ body {
    slide uses the inline axis, so it runs the right way under `dir="rtl"` too. Under
    reduced motion it only fades — nothing travels. */
 @keyframes flyout-in {
-  from { opacity: 0; translate: var(--flyout-from, -4px) 0; }
-  to { opacity: 1; translate: 0 0; }
+  from {
+    opacity: 0;
+    translate: var(--flyout-from, -4px) 0;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
 }
-[dir="rtl"] .animate-flyout { --flyout-from: 4px; }
-.animate-flyout { animation: flyout-in 0.14s ease-out; }
+[dir="rtl"] .animate-flyout {
+  --flyout-from: 4px;
+}
+.animate-flyout {
+  animation: flyout-in 0.14s ease-out;
+}
 @media (prefers-reduced-motion: reduce) {
-  .animate-flyout { animation-name: overlay-fade-in; }
+  .animate-flyout {
+    animation-name: overlay-fade-in;
+  }
 }
 
 /* The phone's page row (AppShell `mobileSubNav`) rising out of the bottom bar. */
 @keyframes subnav-in {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
-.animate-subnav { animation: subnav-in 0.2s ease-out; }
+.animate-subnav {
+  animation: subnav-in 0.2s ease-out;
+}
 @media (prefers-reduced-motion: reduce) {
-  .animate-subnav { animation-name: overlay-fade-in; }
+  .animate-subnav {
+    animation-name: overlay-fade-in;
+  }
 }
 
 /* Chart drilldown fan-out/-in (feedback #260 rework): the remounted chart eases
    in instead of snapping. */
 @keyframes drill-in {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 .animate-drill {
   animation: drill-in 0.25s ease-out;
@@ -1043,7 +1282,9 @@ body {
 /* A drilldown still has to SAY the level changed, so under reduced motion the chart
    fades in rather than appearing in one frame — but it no longer scales. */
 @media (prefers-reduced-motion: reduce) {
-  .animate-drill { animation-name: overlay-fade-in; }
+  .animate-drill {
+    animation-name: overlay-fade-in;
+  }
 }
 
 /* Scrollbars: keep light defaults; theme to the palette when dark mode is active.

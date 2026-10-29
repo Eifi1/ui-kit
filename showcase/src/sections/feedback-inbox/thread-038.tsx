@@ -145,9 +145,7 @@ function Thread({ viewer }: { viewer: Viewer }) {
           },
         ])
       }
-      onHide={(comment, hidden) =>
-        setComments((prev) => prev.map((c) => (c.id === comment.id ? { ...c, hidden } : c)))
-      }
+      onHide={(comment, hidden) => setComments((prev) => prev.map((c) => (c.id === comment.id ? { ...c, hidden } : c)))}
       onDelete={(comment) => setComments((prev) => prev.filter((c) => c.id !== comment.id))}
     />
   );
@@ -225,7 +223,13 @@ export function FeedbackThread038Demo() {
 /** The two reply parts on their own: the timeline, and the composer with a nudge. */
 export function FeedbackReplies038Demo() {
   const [replies, setReplies] = useState<FeedbackReply[]>([
-    { id: 1, author_name: null, body: "Migrated outcome: fixed in 0.4.27.", status_to: null, created_at: "2026-10-01T10:00:00Z" },
+    {
+      id: 1,
+      author_name: null,
+      body: "Migrated outcome: fixed in 0.4.27.",
+      status_to: null,
+      created_at: "2026-10-01T10:00:00Z",
+    },
   ]);
   const [status, setStatus] = useState<FeedbackStatus>("WONT_DO");
   return (
@@ -238,7 +242,13 @@ export function FeedbackReplies038Demo() {
           onReply={async (body, next) => {
             setReplies((prev) => [
               ...prev,
-              { id: prev.length + 1, author_name: "Marcel", body, status_to: next ?? null, created_at: new Date().toISOString() },
+              {
+                id: prev.length + 1,
+                author_name: "Marcel",
+                body,
+                status_to: next ?? null,
+                created_at: new Date().toISOString(),
+              },
             ]);
             if (next) setStatus(next);
           }}

@@ -211,7 +211,8 @@ export function validate(api, { tag } = {}) {
           if (!isStr(m[key])) errors.push(`${at}: ${key} is not a string`);
         }
         if (isStr(m.name)) {
-          if (!MEMBER_NAME.test(m.name)) errors.push(`${at}: name ${JSON.stringify(m.name)} is not a Python identifier`);
+          if (!MEMBER_NAME.test(m.name))
+            errors.push(`${at}: name ${JSON.stringify(m.name)} is not a Python identifier`);
           if (seen.has(m.name)) errors.push(`${at} is listed twice`);
           seen.add(m.name);
         }
@@ -323,7 +324,9 @@ async function download(tag) {
     });
     return readFileSync(join(dir, ASSET), "utf8");
   } catch (error) {
-    const why = String(error.stderr ?? error.message).trim().split("\n")[0];
+    const why = String(error.stderr ?? error.message)
+      .trim()
+      .split("\n")[0];
     throw new SyncError([`${tag} has no ${ASSET} on github.com/${SERVER_KIT_REPO} (gh: ${why})`]);
   } finally {
     rmSync(dir, { recursive: true, force: true });

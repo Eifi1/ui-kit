@@ -164,7 +164,11 @@ describe("CommandPalette structure", () => {
     expect(groups).toHaveLength(2);
     expect(groups[0]).toHaveAccessibleName("Pages");
     expect(groups[1]).toHaveAccessibleName("Actions");
-    expect(within(groups[0]).getAllByRole("option").map((o) => o.textContent)).toEqual(["Accounts", "Budget"]);
+    expect(
+      within(groups[0])
+        .getAllByRole("option")
+        .map((o) => o.textContent),
+    ).toEqual(["Accounts", "Budget"]);
     // No list/listitem semantics left between the listbox and its options.
     expect(within(listbox).queryAllByRole("listitem")).toHaveLength(0);
     expect(within(listbox).queryAllByRole("list")).toHaveLength(0);

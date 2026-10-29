@@ -31,7 +31,14 @@ const LETTERS = [
 describe("PickerSheet footer and Done", () => {
   it("pins the footer under the scrolling list, outside it", () => {
     render(
-      <PickerSheet open onClose={() => {}} title="Payees" query="" onQueryChange={() => {}} footer={<span>3 picked</span>}>
+      <PickerSheet
+        open
+        onClose={() => {}}
+        title="Payees"
+        query=""
+        onQueryChange={() => {}}
+        footer={<span>3 picked</span>}
+      >
         <ul>
           <li>row</li>
         </ul>
@@ -118,8 +125,7 @@ describe("the multi pickers' sheets carry the Done; single pickers do not", () =
 describe("group headings", () => {
   const headingOf = (text: string) =>
     Array.from(document.querySelectorAll('li[role="presentation"]')).find((li) => li.textContent === text) as
-      | HTMLElement
-      | undefined;
+      HTMLElement | undefined;
 
   it("stick to the top of the sheet's list while it scrolls", () => {
     stubPhone({ coarse: true, reducedMotion: true });

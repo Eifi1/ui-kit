@@ -33,17 +33,14 @@ const COMPARE = ["Hysteresis", "Kinematics", "Transmission"];
 export function LayoutDemo() {
   return (
     <>
-      <Example
-        label="Disclosure — card"
-        hint="Uncontrolled; the body unmounts once the fold has closed"
-      >
+      <Example label="Disclosure — card" hint="Uncontrolled; the body unmounts once the fold has closed">
         <Stage>
           <CardSpecimens />
         </Stage>
         <Note>
           The fold is a <code className="font-mono">grid-template-rows</code> transition from{" "}
-          <code className="font-mono">0fr</code> to <code className="font-mono">1fr</code>, so it
-          needs no measuring. Under reduced motion it snaps, and the body goes at once.
+          <code className="font-mono">0fr</code> to <code className="font-mono">1fr</code>, so it needs no measuring.
+          Under reduced motion it snaps, and the body goes at once.
         </Note>
       </Example>
 
@@ -67,12 +64,11 @@ export function LayoutDemo() {
           <ChevronEndSpecimen />
         </Stage>
         <Note>
-          <code className="font-mono">chevronPosition=&quot;end&quot;</code> draws the bare chevron at the
-          row&apos;s end, pointing down and turning up as the card&apos;s does; with{" "}
-          <code className="font-mono">trailing</code> it follows it — &ldquo;Language 🇩🇪 ⌄&rdquo;. The
-          default <code className="font-mono">start</code> is the leading chevron that turns from the
-          reading direction to down. A <code className="font-mono">card</code> always has it at the end,
-          so the prop is ignored there.
+          <code className="font-mono">chevronPosition=&quot;end&quot;</code> draws the bare chevron at the row&apos;s
+          end, pointing down and turning up as the card&apos;s does; with <code className="font-mono">trailing</code> it
+          follows it — &ldquo;Language 🇩🇪 ⌄&rdquo;. The default <code className="font-mono">start</code> is the leading
+          chevron that turns from the reading direction to down. A <code className="font-mono">card</code> always has it
+          at the end, so the prop is ignored there.
         </Note>
       </Example>
 
@@ -84,14 +80,13 @@ export function LayoutDemo() {
           <MenuVariantSpecimen />
         </Stage>
         <Note>
-          Open the menu: &ldquo;Profile&rdquo;, &ldquo;Settings&rdquo; and &ldquo;Sign out&rdquo; are plain
-          buttons wearing <code className="font-mono">TOPBAR_MENU_ITEM_CLASS</code>;
-          &ldquo;Language&rdquo; is a <code className="font-mono">Disclosure variant=&quot;menu&quot;</code>{" "}
-          and draws the same row — full width, <code className="font-mono">px-3 py-2</code>, regular
-          weight, square, the hover wash — with the chevron at the end (the menu&apos;s default{" "}
-          <code className="font-mono">chevronPosition</code>) after its <code className="font-mono">trailing</code>{" "}
-          value, an inset focus ring the panel&apos;s clipping cannot cut, and a body with no padding
-          of its own, so the language rows sit flush with the rows around them.
+          Open the menu: &ldquo;Profile&rdquo;, &ldquo;Settings&rdquo; and &ldquo;Sign out&rdquo; are plain buttons
+          wearing <code className="font-mono">TOPBAR_MENU_ITEM_CLASS</code>; &ldquo;Language&rdquo; is a{" "}
+          <code className="font-mono">Disclosure variant=&quot;menu&quot;</code> and draws the same row — full width,{" "}
+          <code className="font-mono">px-3 py-2</code>, regular weight, square, the hover wash — with the chevron at the
+          end (the menu&apos;s default <code className="font-mono">chevronPosition</code>) after its{" "}
+          <code className="font-mono">trailing</code> value, an inset focus ring the panel&apos;s clipping cannot cut,
+          and a body with no padding of its own, so the language rows sit flush with the rows around them.
         </Note>
       </Example>
 
@@ -105,12 +100,12 @@ export function LayoutDemo() {
         <Note>
           The visible title is only the group&apos;s name, so each toggle is named{" "}
           <em>&ldquo;Expand group Food&rdquo;</em> / <em>&ldquo;Collapse group Food&rdquo;</em> through{" "}
-          <code className="font-mono">{"triggerProps={(open) => ({ \"aria-label\": … })}"}</code> — the
-          name still contains the title&apos;s words (WCAG 2.5.3). The third passes a plain object, an{" "}
-          <code className="font-mono">id</code> and a <code className="font-mono">data-*</code> hook. The
-          disclosure keeps <code className="font-mono">aria-expanded</code>,{" "}
-          <code className="font-mono">aria-controls</code>, <code className="font-mono">onClick</code> and the
-          content for itself; the outer props still go to the wrapping div.
+          <code className="font-mono">{'triggerProps={(open) => ({ "aria-label": … })}'}</code> — the name still
+          contains the title&apos;s words (WCAG 2.5.3). The third passes a plain object, an{" "}
+          <code className="font-mono">id</code> and a <code className="font-mono">data-*</code> hook. The disclosure
+          keeps <code className="font-mono">aria-expanded</code>, <code className="font-mono">aria-controls</code>,{" "}
+          <code className="font-mono">onClick</code> and the content for itself; the outer props still go to the
+          wrapping div.
         </Note>
       </Example>
 
@@ -119,10 +114,9 @@ export function LayoutDemo() {
           <TrailingSpecimens />
         </Stage>
         <Note>
-          <code className="font-mono">trailing</code> is a sibling of the header button, never
-          inside it: a button cannot hold another button, and a count inside it would be read as
-          part of its name. The header button is stretched under the whole row, so the empty
-          space and the chevron still toggle.
+          <code className="font-mono">trailing</code> is a sibling of the header button, never inside it: a button
+          cannot hold another button, and a count inside it would be read as part of its name. The header button is
+          stretched under the whole row, so the empty space and the chevron still toggle.
         </Note>
       </Example>
 
@@ -131,9 +125,8 @@ export function LayoutDemo() {
           <TriggerOnlySpecimen />
         </Stage>
         <Note>
-          <code className="font-mono">controls</code> takes the id of the caller&apos;s own
-          element; the header&apos;s <code className="font-mono">aria-controls</code> points
-          there and the disclosure renders no body.
+          <code className="font-mono">controls</code> takes the id of the caller&apos;s own element; the header&apos;s{" "}
+          <code className="font-mono">aria-controls</code> points there and the disclosure renders no body.
         </Note>
       </Example>
 
@@ -145,13 +138,12 @@ export function LayoutDemo() {
           <MoreDisclosureSpecimens />
         </Stage>
         <Note>
-          <code className="font-mono">disabled</code> locks the header in whatever state it is
-          in — the open one stays readable. <code className="font-mono">keepMounted</code> keeps
-          the body (hidden and <code className="font-mono">inert</code>) while shut: type in the
-          field, close, reopen, and the text and the mount time are both unchanged.{" "}
-          <code className="font-mono">bodyClassName</code> sets the body&apos;s padding and
-          spacing. In RTL the bare chevron points left while shut — along the reading
-          direction — and the card chevron sits at the left end.
+          <code className="font-mono">disabled</code> locks the header in whatever state it is in — the open one stays
+          readable. <code className="font-mono">keepMounted</code> keeps the body (hidden and{" "}
+          <code className="font-mono">inert</code>) while shut: type in the field, close, reopen, and the text and the
+          mount time are both unchanged. <code className="font-mono">bodyClassName</code> sets the body&apos;s padding
+          and spacing. In RTL the bare chevron points left while shut — along the reading direction — and the card
+          chevron sits at the left end.
         </Note>
       </Example>
 
@@ -164,9 +156,9 @@ export function LayoutDemo() {
       <Example label="DialogFrame" hint="Portals to document.body; covers the page, not this card">
         <DialogSpecimens />
         <Note>
-          The heading&apos;s id is generated and wired to <code className="font-mono">aria-labelledby</code>,
-          the description to <code className="font-mono">aria-describedby</code>. Only the body
-          scrolls, so the heading and the actions stay on screen in a tall dialog.
+          The heading&apos;s id is generated and wired to <code className="font-mono">aria-labelledby</code>, the
+          description to <code className="font-mono">aria-describedby</code>. Only the body scrolls, so the heading and
+          the actions stay on screen in a tall dialog.
         </Note>
       </Example>
     </>
@@ -184,8 +176,7 @@ function CardSpecimens() {
       </Disclosure>
       <Disclosure title="Corner guide" hint="Open by default: this card is the page" defaultOpen headingAs="h4">
         <p className="text-sm text-secondary">
-          Closed is right for detail beside the thing itself; open is right where the card IS the
-          thing.
+          Closed is right for detail beside the thing itself; open is right where the card IS the thing.
         </p>
       </Disclosure>
     </>
@@ -244,7 +235,9 @@ function TriggerPropsSpecimen() {
           title={g.name}
           trailing={<span className="text-xs text-muted">{g.items.length} lines</span>}
           triggerProps={(open) => ({ "aria-label": `${open ? "Collapse" : "Expand"} group ${g.name}` })}
-          onOpenChange={(open) => setNames((n) => ({ ...n, [g.name]: `${open ? "Collapse" : "Expand"} group ${g.name}` }))}
+          onOpenChange={(open) =>
+            setNames((n) => ({ ...n, [g.name]: `${open ? "Collapse" : "Expand"} group ${g.name}` }))
+          }
         >
           <ul className="space-y-1 text-sm text-secondary">
             {g.items.map((i) => (
@@ -341,11 +334,7 @@ function MenuVariantSpecimen() {
             {item("Profile", close)}
             {item("Settings", close)}
             <li>
-              <Disclosure
-                variant="menu"
-                title="Language"
-                trailing={<span className="text-xs text-muted">{lang}</span>}
-              >
+              <Disclosure variant="menu" title="Language" trailing={<span className="text-xs text-muted">{lang}</span>}>
                 <ul>
                   {["Deutsch", "English", "Français"].map((l) => (
                     <li key={l}>
@@ -389,9 +378,7 @@ function TrailingSpecimens() {
         headingAs="h4"
         trailing={
           <>
-            <span className="rounded-full bg-surface-2 px-2 text-xs tabular-nums text-secondary">
-              4
-            </span>
+            <span className="rounded-full bg-surface-2 px-2 text-xs tabular-nums text-secondary">4</span>
             <Button variant="ghost" className="px-2 py-1 text-xs" onClick={() => setEdits((n) => n + 1)}>
               Edit
             </Button>
@@ -432,9 +419,7 @@ function TriggerOnlySpecimen() {
         controls={rowsId}
         open={open}
         onOpenChange={setOpen}
-        trailing={
-          <span className="text-xs text-muted max-sm:hidden">aria-controls → the table&apos;s rows</span>
-        }
+        trailing={<span className="text-xs text-muted max-sm:hidden">aria-controls → the table&apos;s rows</span>}
       />
       {/* On a phone the caption beside the title pushed "Show 3 hidden accounts" onto
           two lines; there it goes under the header instead (only one is ever shown). */}
@@ -566,9 +551,9 @@ function DialogSpecimens() {
         >
           <p className="text-sm text-secondary">
             <code className="font-mono">size</code> is the panel&apos;s max width —{" "}
-            <code className="font-mono">md</code> 28rem (default), <code className="font-mono">lg</code>{" "}
-            32rem, <code className="font-mono">xl</code> 48rem. On a phone all three are the same
-            full-width bottom sheet, and dragging is off.
+            <code className="font-mono">md</code> 28rem (default), <code className="font-mono">lg</code> 32rem,{" "}
+            <code className="font-mono">xl</code> 48rem. On a phone all three are the same full-width bottom sheet, and
+            dragging is off.
           </p>
           <p id="dialogframe-extra-note" className="text-sm text-secondary">
             This paragraph is joined to the description through the caller&apos;s own{" "}
@@ -587,12 +572,7 @@ function DialogSpecimens() {
           closeButton
           // The node form: a link that belongs to the header, not to the actions row.
           headerActions={
-            <a
-              href="#/layout"
-              target="_blank"
-              rel="noreferrer"
-              className={buttonClasses("ghost", "text-xs")}
-            >
+            <a href="#/layout" target="_blank" rel="noreferrer" className={buttonClasses("ghost", "text-xs")}>
               Open in full page ↗
             </a>
           }
@@ -603,9 +583,9 @@ function DialogSpecimens() {
           )}
         >
           <p className="text-sm text-secondary">
-            <code className="font-mono">headerActions</code> render beside the title, before the X.
-            On a phone, where title and controls do not fit on one line, they wrap under the title
-            and the X keeps its corner — try the phone preview.
+            <code className="font-mono">headerActions</code> render beside the title, before the X. On a phone, where
+            title and controls do not fit on one line, they wrap under the title and the X keeps its corner — try the
+            phone preview.
           </p>
         </DialogFrame>
       )}
@@ -669,9 +649,9 @@ function DialogSpecimens() {
           )}
         >
           <p className="text-sm text-secondary">
-            Every change here saves as it is made, so there is no actions row — the X is the way
-            out, and so is the header&apos;s own <strong>Done</strong>: a{" "}
-            <code className="font-mono">headerActions</code> function handed the animated close.
+            Every change here saves as it is made, so there is no actions row — the X is the way out, and so is the
+            header&apos;s own <strong>Done</strong>: a <code className="font-mono">headerActions</code> function handed
+            the animated close.
           </p>
         </DialogFrame>
       )}

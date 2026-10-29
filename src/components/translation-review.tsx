@@ -324,7 +324,6 @@ export interface TranslationReviewPanelProps {
   labels?: LabelOverride<TranslationReviewLabels>;
 }
 
-
 /**
  * How many rows the groups may render at once on a wide screen before they start folded
  * ({@link TranslationReviewPanelProps.defaultGroupsOpen}): two of the default 50-row pages.
@@ -432,7 +431,10 @@ function TextCell({ row, labels, clamp }: { row: TranslationRow; labels: Transla
   return row.text === "" ? (
     <span className="italic text-muted">{labels.missingText}</span>
   ) : (
-    <span lang={row.locale} className={cn("whitespace-pre-line break-words", clamp && "line-clamp-3 large:line-clamp-none")}>
+    <span
+      lang={row.locale}
+      className={cn("whitespace-pre-line break-words", clamp && "line-clamp-3 large:line-clamp-none")}
+    >
       {row.text}
     </span>
   );
@@ -670,7 +672,12 @@ export function TranslationReviewPanel({
   ): Promise<boolean> => {
     if (!onSave || targets.length === 0) return false;
     const save = onSave;
-    const ok = await run(key, () => save(targets.map((r) => reviewWrite(r, "APPROVED")), { origin, toasted: undoOn }));
+    const ok = await run(key, () =>
+      save(
+        targets.map((r) => reviewWrite(r, "APPROVED")),
+        { origin, toasted: undoOn },
+      ),
+    );
     if (ok && undoOn) sayDone(targets, description);
     return ok;
   };
@@ -764,9 +771,7 @@ export function TranslationReviewPanel({
     {
       key: "reference",
       header: referenceLabel,
-      cell: (r) => (
-        <span className="line-clamp-3 whitespace-pre-line break-words text-secondary">{r.reference}</span>
-      ),
+      cell: (r) => <span className="line-clamp-3 whitespace-pre-line break-words text-secondary">{r.reference}</span>,
       mobileHidden: true,
     },
     {
@@ -805,11 +810,9 @@ export function TranslationReviewPanel({
         name: (r) => r.key,
         tooltipSide: "start",
         actions: (r) =>
-          translationReviewSwipePlan(
-            { end: ["approve", ...(binding.end ?? []), ...(binding.start ?? [])] },
-            r,
-            { canClear: onClear !== undefined },
-          ).end.map((id): RowAction => {
+          translationReviewSwipePlan({ end: ["approve", ...(binding.end ?? []), ...(binding.start ?? [])] }, r, {
+            canClear: onClear !== undefined,
+          }).end.map((id): RowAction => {
             const swipe = swipeAction(r, id);
             // `edit` only opens the editor, whose own Save is the commit.
             const writes = id !== "edit";
@@ -1230,11 +1233,7 @@ export function TranslationReviewPanel({
         </BulkActionBar>
       )}
 
-      {groups && groups.length > 0 ? (
-        <div className="space-y-3">{groups.map(groupSection)}</div>
-      ) : (
-        table(visible)
-      )}
+      {groups && groups.length > 0 ? <div className="space-y-3">{groups.map(groupSection)}</div> : table(visible)}
     </div>
   );
 }

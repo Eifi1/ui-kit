@@ -122,11 +122,14 @@ function FilterObjectDemo() {
         </ul>
         <QueryReadout extra={[["filter", `${filter.status} · ${filter.area} · ${filter.sort}`]]} />
         <Note>
-          {code('useSearchParamsState({ status: { default: "all", parse }, area: { … }, sort: { …, history: "replace" } })')}{" "}
+          {code(
+            'useSearchParamsState({ status: { default: "all", parse }, area: { … }, sort: { …, history: "replace" } })',
+          )}{" "}
           returns the object and one setter that takes a partial — or a whole filter object, as{" "}
-          {code("TranslationReviewPanel")}&apos;s {code("onFilterChange")} reports it ({code("filter={filter} onFilterChange={setFilter}")}).{" "}
-          <em>Open legal strings</em> sets two fields in one entry, so Back undoes both; a sort rewrites the entry,
-          and a sort changed together with a filter rides on the filter&apos;s entry. A field at its default leaves the URL.
+          {code("TranslationReviewPanel")}&apos;s {code("onFilterChange")} reports it (
+          {code("filter={filter} onFilterChange={setFilter}")}). <em>Open legal strings</em> sets two fields in one
+          entry, so Back undoes both; a sort rewrites the entry, and a sort changed together with a filter rides on the
+          filter&apos;s entry. A field at its default leaves the URL.
         </Note>
       </div>
     </Example>
@@ -177,9 +180,9 @@ function ChainedSettersDemo() {
         </Row>
         <QueryReadout extra={[["from → to", from || to ? `${from || "…"} → ${to || "…"}` : "any date"]]} />
         <Note>
-          A preset calls {code('setFrom("2026-01-01")')} and then {code('setTo("2026-03-31")')}. The second
-          builds on the first rather than on the URL as it was rendered, so both land, and one Back
-          undoes the preset. Writing what the URL already says navigates nowhere — no dead history entry.
+          A preset calls {code('setFrom("2026-01-01")')} and then {code('setTo("2026-03-31")')}. The second builds on
+          the first rather than on the URL as it was rendered, so both land, and one Back undoes the preset. Writing
+          what the URL already says navigates nowhere — no dead history entry.
         </Note>
       </div>
     </Example>

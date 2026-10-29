@@ -249,9 +249,7 @@ export function PasskeysSetting<Id extends PasskeyId = PasskeyId>({
       <div>
         <SettingsCardTitle>{labels.title}</SettingsCardTitle>
         <div className="text-xs text-muted">
-          {mode === "alongside"
-            ? labels.descriptionAlongside
-            : labels.description}
+          {mode === "alongside" ? labels.descriptionAlongside : labels.description}
         </div>
       </div>
       {body}
