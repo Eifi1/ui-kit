@@ -190,7 +190,9 @@ const BUDGETS = [
   // (keksdose dev #610) — meant growth. 84,949 B in 0.49: AppShell's phone tab bar
   // (KIT-6: mobileMaxItems, mobilePriority, the parent sheet), hideWhenOverlay (KIT-11),
   // LanguageMenu's flag+code trigger (KIT-10) and the status tones (KIT-8) — meant growth.
-  { label: "the shell set", names: SHELL_SET, max: 85_400 },
+  // 86,317 B in 0.51.4: TopBarActionMenu's `columns` (DevMenu, keksdose dev #640) and
+  // LegalLinks' optional Security / Accessibility links — meant growth.
+  { label: "the shell set", names: SHELL_SET, max: 86_800 },
 ];
 const ENTRY = "\0import-cost";
 async function importCost(names) {
