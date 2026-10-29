@@ -228,4 +228,18 @@ describe("DevMenu", () => {
     const list = open().querySelector("ul");
     expect(list).toHaveClass("overflow-y-auto", "max-h-[calc(100dvh-4rem)]");
   });
+
+  it("0.51.4: from md up, one column per group, in order (keksdose dev #640)", () => {
+    render(<App />);
+    const list = open().querySelector("ul")!;
+    expect(list).toHaveClass("md:grid");
+    const columns = [...list.querySelectorAll<HTMLElement>(":scope > [data-menu-column]")];
+    const names = columns.map((c) => within(c).getByRole("group").getAttribute("aria-labelledby"));
+    expect(names.map((id) => document.getElementById(id!)!.textContent)).toEqual(
+      within(list)
+        .getAllByRole("group")
+        .map((g) => document.getElementById(g.getAttribute("aria-labelledby")!)!.textContent),
+    );
+    expect(columns.length).toBeGreaterThanOrEqual(3);
+  });
 });

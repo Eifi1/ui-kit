@@ -419,6 +419,15 @@ only Subject, Status and the row actions are left, and the table can still scrol
 depending on the language: Status has a fixed width and the actions column no
 `fitPriority`.
 
+**`DevMenu`: one column per group on a desktop** (keksdose dev #640, Marcel: "Each group
+gets a column. That way it would be much better visible for desktop users"). From `md` up
+the flask's panel lays its groups side by side: the role group (with "Back to {role}"),
+the plan group, then the app's `sections` in their order, 14rem each. The panel is as
+wide as the columns and never wider than the window; a narrower desktop wraps the columns
+onto a second row. Below `md` it stays the one scrolling column. Nothing to pass: it is
+`TopBarActionMenu`'s new `columns` option, which `DevMenu` turns on and any grouped
+top-bar menu may use.
+
 **Apps:**
 - **keksdose:** `summary` on /terms and /privacy. Pass `securityHref="/security"` and
   `accessibilityHref="/accessibility"` in `SiteFooter`; every page that renders it gets

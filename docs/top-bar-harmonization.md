@@ -158,6 +158,16 @@ behind `RoleSwitcher`'s amber flask.
   panel at `100dvh − 4rem` with `overflow-y-auto`. Every other menu keeps its natural
   height. The arrow keys, Home and End still bring the focused row into view (the roving
   focus is a plain `focus()`).
+- **From `md` up, one column per group** (ui-kit 0.51.4; keksdose dev #640, Marcel: "Each
+  group gets a column"). `TopBarActionMenu` has a second opt-in, `columns`, which
+  `DevMenu` turns on:
+  - The heading groups stand side by side, in their order, each column 14rem, the panel
+    as wide as its columns and never wider than the glass. A desktop too narrow for all of
+    them wraps the columns onto a second row.
+  - A group's trailing rows behind a rule stay in its column, so "Back to {role}" stays
+    under the roles.
+  - The DOM order is the list's, so ↓/↑ walk down a column and on into the next.
+  - Below `md`, the one scrolling column as before.
 - **`DevSwitchers` is deprecated** (removed in 0.52). It is now a `DevMenu` with no
   sections, with the same props and rows, but one flask where it drew two.
 
