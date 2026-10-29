@@ -380,6 +380,9 @@ decision 10).
   `legal.sections.terms.changes.body` are new or changed, so they reopen on keksdose's
   /translations.
 
+**Legal wording:** the terms (`changes`). Move /terms' `updated` to the day you ship this
+bump.
+
 **Apps:**
 - **All three:** bump to `^0.51.3` and pass `updated` on each legal page. The terms' date
   is at least the day this version goes live, since its `changes` text is new.
@@ -418,6 +421,9 @@ while all three were still drawn. Kurvenschmiede measured its inbox beside an op
 only Subject, Status and the row actions are left, and the table can still scroll 0–20px
 depending on the language: Status has a fixed width and the actions column no
 `fitPriority`.
+
+**Legal wording:** none of the kit's existing texts changes, so no page's date has to move
+for the bump alone. A page that adds a `summary` changes, so its date moves with it.
 
 **`DevMenu`: one column per group on a desktop** (keksdose dev #640, Marcel: "Each group
 gets a column. That way it would be much better visible for desktop users"). From `md` up

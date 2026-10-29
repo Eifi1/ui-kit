@@ -352,6 +352,10 @@ export interface LegalPageProps {
    *
    * An app that records which terms someone accepted (keksdose) stores the terms page's
    * date: it is the version the reader saw.
+   *
+   * The kit's sections are part of the page, so the date moves with their words too: a
+   * kit release that changes them says so in its adoption note ("Legal wording"), and
+   * the app sets the page's date to the day it ships that bump (§2, decision 10).
    */
   updated?: string;
   /**

@@ -86,6 +86,13 @@ before the 0.28 round, and how far their wording differed.
     - keksdose stores the accepted terms version (the terms page's `updated` date) and the
       time at registration, in a users column of its own. This reverses decision 4's "no
       stored version" for keksdose only; the kit's checkbox still sends nothing (§3.4).
+    - **A page's date moves with the kit's words too** (Marcel, 2026-10-29). The kit's
+      sections are printed word for word on every app's pages, so a kit release can change
+      a page whose date the app typed. A ui-kit release that changes any kit-owned wording
+      a legal page prints says so in its adoption note, under a "Legal wording" line naming
+      the pages. Each app moves those pages' `updated` to the day it ships that release.
+      Without it, keksdose's stored version would no longer say which text someone
+      accepted.
 11. **The benchmark's optional rows** (Marcel, 2026-10-29: "you can already add the
     optional points"; ui-kit 0.51.4):
     - A plain-language summary at the top of the terms and the privacy policy, the full
