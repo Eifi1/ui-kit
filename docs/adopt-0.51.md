@@ -461,8 +461,11 @@ same function. keksdose's /reports/matching can switch; `useSettingsFocus` stays
 band). A `grow` column keeps at least 10rem before the table scrolls; `growMin` (rem) sets
 that floor per column, for the fit and the header alike. The feedback inbox's Subject
 takes 8. At 768px beside a sidebar only Subject, Status and the row actions are left, and
-they were 0–20px too wide by language; 8rem frees 32px. Computed from Kurvenschmiede's
-measurements, not yet measured in a browser: Kurvenschmiede, please re-measure at 768.
+they were 0–20px too wide by language; 8rem frees 32px. Measured by Kurvenschmiede on
+0.51.4 (headless Chromium, seed reports, sidebar open, seven languages, 768 to 1280): 0px
+overflow at every width. At 768 Subject draws 140px (hu) to 177px (zh) beside Status
+(172px) and the row actions (52–89px). One visible change: at 1100 User now stays, since
+Subject can give up its last 2rem first.
 
 **`DevMenu`: one column per group on a desktop** (keksdose dev #640, Marcel: "Each group
 gets a column. That way it would be much better visible for desktop users"). From `md` up
