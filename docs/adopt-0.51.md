@@ -438,6 +438,32 @@ Sie einer Änderung, können wir Ihr Konto auf den Tag ihres Inkrafttretens schl
 Haben Sie einen Zeitraum bezahlt, der über dieses Datum hinausgeht, erstatten wir den nicht
 genutzten Teil.» No app bills yet, so the refund sentence is for later.
 
+**Pickers find a row by each word of the query** (keksdose's /prices shop picker: "Migros
+Zürich" found nothing). Every word must appear in one of the row's texts, in any order:
+label or sublabel in the combobox family (`EntityCombobox`, `MultiEntityCombobox`,
+`MultiSelect`, `Combobox`, `InlineEntityCombobox`), group name or item label in
+`GroupedPicker` ("Migros 8004": the group Migros, the item "8004 Zürich"), code, name or
+symbol in `CurrencySelect`, label or keyword in `IconPicker`. One word, or a query that
+was already a substring, finds what it found before. The helpers are `searchWords` and
+`matchesSearch` in `lib/text-match`. keksdose can drop its own word filter in the shop
+picker's `loadOptions` and pass `options`.
+
+**`List limit`** (keksdose run 89). `<List limit={5}>` draws the first five rows, then a
+"Show all (n)" row with the whole list's count, which opens the rest and turns into "Show
+fewer". The button has `aria-expanded` and `aria-controls`; its row is `role="none"`, so a
+reader hears the rows it can see. A list of `limit` rows or fewer draws whole. New optional
+labels `list.showAll` / `list.showFewer`, seven languages.
+
+**`useFocusParam`** (keksdose run 89): `useSettingsFocus` under a name for any page, the
+same function. keksdose's /reports/matching can switch; `useSettingsFocus` stays.
+
+**`growMin` on a `grow` column; the inbox's Subject keeps 8rem** (Kurvenschmiede's 768px
+band). A `grow` column keeps at least 10rem before the table scrolls; `growMin` (rem) sets
+that floor per column, for the fit and the header alike. The feedback inbox's Subject
+takes 8. At 768px beside a sidebar only Subject, Status and the row actions are left, and
+they were 0–20px too wide by language; 8rem frees 32px. Computed from Kurvenschmiede's
+measurements, not yet measured in a browser: Kurvenschmiede, please re-measure at 768.
+
 **`DevMenu`: one column per group on a desktop** (keksdose dev #640, Marcel: "Each group
 gets a column. That way it would be much better visible for desktop users"). From `md` up
 the flask's panel lays its groups side by side: the role group (with "Back to {role}"),
@@ -454,6 +480,8 @@ top-bar menu may use.
   renders `LegalLinks` itself (the account menu, `AuthLayout`'s footer).
 - **Kurvenschmiede:** drop the local `fitPriority` map over `useFeedbackColumns` in
   `features/feedback/feedback-page.tsx`; the kit's columns now carry the same numbers.
+- **keksdose:** the shop picker can drop its `loadOptions` word filter; /reports/matching
+  can use `useFocusParam` and give "Placed only roughly" a `limit`.
 - **kastlan, Kurvenschmiede:** otherwise a plain bump. The legal pages don't change until
   they pass a summary or the two hrefs.
 - **All three:** the feedback inbox drops User, Date and # on a narrow table instead of
