@@ -103,17 +103,33 @@ describe("SeriesChart's ink edge", () => {
 });
 
 describe("TreemapCell's ink edge", () => {
-  const cell = (fill: string) =>
+  const cell = (fill: string, edges: "contrast" | "uniform" = "contrast") =>
     render(
       <svg>
-        <TreemapCell depth={1} x={0} y={0} width={200} height={60} name="Tile" fill={fill} />
+        <TreemapCell depth={1} x={0} y={0} width={200} height={60} name="Tile" fill={fill} edges={edges} />
       </svg>,
     ).container.querySelector("rect[data-edge]");
 
-  it("edges a tile in a low-contrast hue only", () => {
+  it('edges a tile in a low-contrast hue only, under `edges="contrast"`', () => {
     paint("light");
     expect(cell(PALETTE_HEX.light[7])?.getAttribute("stroke")).toBe("var(--chart-ink)"); // lime
     expect(cell(PALETTE_HEX.light[4])).toBeNull(); // matte red, 5:1
+  });
+
+  it("0.51.6 `uniform` (the default): no per-tile edge, one page-coloured gutter on every tile", () => {
+    paint("dark");
+    const tiles = PALETTE_HEX.dark.map((hex) => {
+      const { container } = render(
+        <svg>
+          <TreemapCell depth={1} x={0} y={0} width={200} height={60} name="Tile" fill={hex} />
+        </svg>,
+      );
+      return container;
+    });
+    for (const tile of tiles) {
+      expect(tile.querySelector("rect[data-edge]")).toBeNull();
+      expect(tile.querySelector("rect")!.getAttribute("stroke")).toBe("var(--bg-page)");
+    }
   });
 
   it("measures the muted 'rest' colour, so its label ink is measured too", () => {
