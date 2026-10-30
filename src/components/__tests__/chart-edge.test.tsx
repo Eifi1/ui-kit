@@ -116,19 +116,41 @@ describe("TreemapCell's ink edge", () => {
     expect(cell(PALETTE_HEX.light[4])).toBeNull(); // matte red, 5:1
   });
 
-  it("0.51.6 `uniform` (the default): no per-tile edge, one page-coloured gutter on every tile", () => {
+  it("0.51.6 `auto` (the default): one page-coloured gutter at Standard contrast, the ink edges under More", async () => {
     paint("dark");
-    const tiles = PALETTE_HEX.dark.map((hex) => {
-      const { container } = render(
-        <svg>
-          <TreemapCell depth={1} x={0} y={0} width={200} height={60} name="Tile" fill={hex} />
-        </svg>,
-      );
-      return container;
-    });
-    for (const tile of tiles) {
-      expect(tile.querySelector("rect[data-edge]")).toBeNull();
-      expect(tile.querySelector("rect")!.getAttribute("stroke")).toBe("var(--bg-page)");
+    const lime = PALETTE_HEX.dark[7];
+    const { container } = render(
+      <svg>
+        <TreemapCell depth={1} x={0} y={0} width={200} height={60} name="Tile" fill={lime} />
+      </svg>,
+    );
+    // Standard: no per-tile edge, the same gutter as every tile.
+    expect(container.querySelector("rect[data-edge]")).toBeNull();
+    expect(container.querySelector("rect")!.getAttribute("stroke")).toBe("var(--bg-page)");
+    // More contrast switched on (by the reader, or by System on such a device): live.
+    // A MutationObserver reports in a microtask: let it.
+    await act(async () => document.documentElement.setAttribute("data-contrast", "more"));
+    expect(container.querySelector("rect")!.getAttribute("stroke")).toBe("var(--bg-surface)");
+    await act(async () => document.documentElement.setAttribute("data-contrast", "standard"));
+    expect(container.querySelector("rect")!.getAttribute("stroke")).toBe("var(--bg-page)");
+    document.documentElement.removeAttribute("data-contrast");
+  });
+
+  it("0.51.6 `uniform` stays uniform under More contrast", () => {
+    paint("dark");
+    document.documentElement.setAttribute("data-contrast", "more");
+    try {
+      for (const hex of PALETTE_HEX.dark) {
+        const { container } = render(
+          <svg>
+            <TreemapCell depth={1} x={0} y={0} width={200} height={60} name="Tile" fill={hex} edges="uniform" />
+          </svg>,
+        );
+        expect(container.querySelector("rect[data-edge]")).toBeNull();
+        expect(container.querySelector("rect")!.getAttribute("stroke")).toBe("var(--bg-page)");
+      }
+    } finally {
+      document.documentElement.removeAttribute("data-contrast");
     }
   });
 

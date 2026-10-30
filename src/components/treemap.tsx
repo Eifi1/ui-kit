@@ -113,21 +113,43 @@ export interface TreemapProps extends Omit<ComponentPropsWithoutRef<"div">, "chi
   colors?: readonly string[];
   /**
    * How tiles are parted (0.51.6, keksdose dev #642, Marcel: "The borders do not look
-   * nice when changing from tile to tile. Can this be uniform black?").
+   * nice when changing from tile to tile. Can this be uniform black?" — and then, on the
+   * contrast rule that would go with it: follow the contrast setting).
    *
-   * - `"uniform"` (default): one 2px gutter in the page's ground colour (`--bg-page`,
-   *   near-black in the dark theme) round every tile, and nothing else. Tiles always
-   *   abut, so the gutter is what parts them; each tile is named by its label.
+   * - `"auto"` (default): `"uniform"` at Standard contrast, `"contrast"` while More
+   *   contrast is in force (`<html data-contrast="more">`: the reader chose it, or chose
+   *   System on a device that asks for more). Followed live.
+   * - `"uniform"`: one 2px gutter in the page's ground colour (`--bg-page`, near-black
+   *   in the dark theme) round every tile, and nothing else. Tiles always abut, so the
+   *   gutter parts them; each tile is named by its label.
    * - `"contrast"`: the 0.49 rule. The gutter is the card's colour (`--bg-surface`),
    *   and a tile whose hue is under 3:1 against the card gets a 1px ink edge inside it
    *   (WCAG 1.4.11, `useChartEdge`). In the dark theme that ink is light, so some tiles
-   *   carried a white outline and their neighbours none, which read as uneven.
+   *   carry a white outline and their neighbours none — the unevenness #642 saw, and
+   *   the price of the edge for a reader who asked for it.
    */
   edges?: TreemapEdges;
 }
 
 /** {@link TreemapProps.edges}. */
-export type TreemapEdges = "uniform" | "contrast";
+export type TreemapEdges = "auto" | "uniform" | "contrast";
+
+// `<html data-contrast>`, followed live: what `edges="auto"` keys on. Read here rather
+// than through theme/contrast, whose store would come into the chart entry with it.
+function subscribeContrast(onChange: () => void): () => void {
+  if (typeof MutationObserver === "undefined" || typeof document === "undefined") return () => {};
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-contrast"] });
+  return () => observer.disconnect();
+}
+const readMoreContrast = () =>
+  typeof document !== "undefined" && document.documentElement.getAttribute("data-contrast") === "more";
+
+/** The edges a tile draws: `auto` resolved against the contrast in force. */
+function useTileEdges(edges: TreemapEdges): "uniform" | "contrast" {
+  const more = useSyncExternalStore(subscribeContrast, readMoreContrast, () => false);
+  return edges === "auto" ? (more ? "contrast" : "uniform") : edges;
+}
 
 // ── The categorical ramp, as concrete hex ──────────────────────────────────
 //
@@ -234,7 +256,7 @@ export interface TreemapCellProps {
    *  the label stands in the tile's top RIGHT corner and is shaped right-to-left, so a
    *  clipped name ends in its ellipsis on the reading end. Default `ltr`. */
   dir?: Direction;
-  /** See {@link TreemapProps.edges}. Default `uniform`. */
+  /** See {@link TreemapProps.edges}. Default `auto`. */
   edges?: TreemapEdges;
 }
 
@@ -263,12 +285,13 @@ export function TreemapCell({
   redactNames,
   nodeNote,
   dir = "ltr",
-  edges = "uniform",
+  edges: edgesProp = "auto",
 }: TreemapCellProps) {
   // Before the early return: a hook has to run on every render of the cell.
   const tokenHex = useChartTokenHex();
   const { scale } = useTextSize();
   const edgeFor = useChartEdge();
+  const edges = useTileEdges(edgesProp);
   // Depth 0 is recharts' synthetic root, which spans the whole chart.
   if (!depth) return null;
   // Whole pixels: a rect on a half pixel renders its edge across two half-lit
@@ -448,7 +471,7 @@ export function Treemap({
   nodeNote,
   maxTiles,
   colors,
-  edges = "uniform",
+  edges = "auto",
   style,
   ...rest
 }: TreemapProps) {

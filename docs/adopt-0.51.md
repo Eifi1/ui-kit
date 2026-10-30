@@ -515,16 +515,19 @@ bump.
 
 **Legal wording:** none.
 
-**`Treemap` parts its tiles with one uniform gutter** (keksdose dev #642, Marcel: "The
-borders do not look nice when changing from tile to tile. Can this be uniform black?").
-New prop `edges`:
-- `"uniform"` (the new default): every tile gets the same 2px gutter in the page's ground
-  colour (`--bg-page`, near-black in the dark theme), and nothing else. Tiles always abut,
-  so the gutter parts them; each tile is named by its label.
+**`Treemap`'s tile borders follow the contrast setting** (keksdose dev #642, Marcel: "The
+borders do not look nice when changing from tile to tile. Can this be uniform black?",
+then on the accessibility rule that would go with it: make it follow the setting). New
+prop `edges`:
+- `"auto"` (the new default): `"uniform"` at Standard contrast, `"contrast"` while More
+  contrast is in force (`<html data-contrast="more">`: the reader chose it, or chose
+  System on a device that asks for more). Followed live, nothing to pass.
+- `"uniform"`: every tile gets the same 2px gutter in the page's ground colour
+  (`--bg-page`, near-black in the dark theme), and nothing else.
 - `"contrast"`: the 0.49 rule, the card-coloured gutter plus a 1px ink edge on a tile
-  whose hue is under 3:1 against the card. In the dark theme that ink is light, so some
-  tiles had a white outline and their neighbours none.
+  whose hue is under 3:1 against the card (WCAG 1.4.11). In the dark theme that ink is
+  light, so some tiles carry a white outline and their neighbours none.
 
-**Apps:** keksdose: all its treemaps take the uniform gutter on the bump; drop any
-stopgap CSS on `rect[data-edge]`. kastlan and Kurvenschmiede draw no treemap: a plain
+**Apps:** keksdose: all its treemaps follow the contrast setting on the bump, with
+nothing to pass. kastlan and Kurvenschmiede draw no treemap: a plain
 bump.
