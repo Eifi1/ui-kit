@@ -111,6 +111,44 @@ export interface TreemapProps extends Omit<ComponentPropsWithoutRef<"div">, "chi
    * so a caller colouring a legend beside the map is guaranteed the same list.
    */
   colors?: readonly string[];
+  /**
+   * How tiles are parted (0.51.6, keksdose dev #642, Marcel: "The borders do not look
+   * nice when changing from tile to tile. Can this be uniform black?" — and then, on the
+   * contrast rule that would go with it: follow the contrast setting).
+   *
+   * - `"auto"` (default): `"uniform"` at Standard contrast, `"contrast"` while More
+   *   contrast is in force (`<html data-contrast="more">`: the reader chose it, or chose
+   *   System on a device that asks for more). Followed live.
+   * - `"uniform"`: one 2px gutter in the page's ground colour (`--bg-page`, near-black
+   *   in the dark theme) round every tile, and nothing else. Tiles always abut, so the
+   *   gutter parts them; each tile is named by its label.
+   * - `"contrast"`: the 0.49 rule. The gutter is the card's colour (`--bg-surface`),
+   *   and a tile whose hue is under 3:1 against the card gets a 1px ink edge inside it
+   *   (WCAG 1.4.11, `useChartEdge`). In the dark theme that ink is light, so some tiles
+   *   carry a white outline and their neighbours none — the unevenness #642 saw, and
+   *   the price of the edge for a reader who asked for it.
+   */
+  edges?: TreemapEdges;
+}
+
+/** {@link TreemapProps.edges}. */
+export type TreemapEdges = "auto" | "uniform" | "contrast";
+
+// `<html data-contrast>`, followed live: what `edges="auto"` keys on. Read here rather
+// than through theme/contrast, whose store would come into the chart entry with it.
+function subscribeContrast(onChange: () => void): () => void {
+  if (typeof MutationObserver === "undefined" || typeof document === "undefined") return () => {};
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-contrast"] });
+  return () => observer.disconnect();
+}
+const readMoreContrast = () =>
+  typeof document !== "undefined" && document.documentElement.getAttribute("data-contrast") === "more";
+
+/** The edges a tile draws: `auto` resolved against the contrast in force. */
+function useTileEdges(edges: TreemapEdges): "uniform" | "contrast" {
+  const more = useSyncExternalStore(subscribeContrast, readMoreContrast, () => false);
+  return edges === "auto" ? (more ? "contrast" : "uniform") : edges;
 }
 
 // ── The categorical ramp, as concrete hex ──────────────────────────────────
@@ -218,6 +256,8 @@ export interface TreemapCellProps {
    *  the label stands in the tile's top RIGHT corner and is shaped right-to-left, so a
    *  clipped name ends in its ellipsis on the reading end. Default `ltr`. */
   dir?: Direction;
+  /** See {@link TreemapProps.edges}. Default `auto`. */
+  edges?: TreemapEdges;
 }
 
 /**
@@ -245,11 +285,13 @@ export function TreemapCell({
   redactNames,
   nodeNote,
   dir = "ltr",
+  edges: edgesProp = "auto",
 }: TreemapCellProps) {
   // Before the early return: a hook has to run on every render of the cell.
   const tokenHex = useChartTokenHex();
   const { scale } = useTextSize();
   const edgeFor = useChartEdge();
+  const edges = useTileEdges(edgesProp);
   // Depth 0 is recharts' synthetic root, which spans the whole chart.
   if (!depth) return null;
   // Whole pixels: a rect on a half pixel renders its edge across two half-lit
@@ -261,9 +303,10 @@ export function TreemapCell({
   const tileFill = fill ?? "var(--chart-1)";
   const measured = measurableFill(tileFill, tokenHex);
   const ink = labelColor ?? (measured ? textOn(measured) : "currentColor");
-  // A tile in a hue under 3:1 against the card gets a 1px ink edge inside the gutter
-  // (WCAG 1.4.11, anyplot's rule); a hue that clears it stays bare.
-  const edge = measured ? edgeFor(measured) : undefined;
+  // `contrast`: a tile in a hue under 3:1 against the card gets a 1px ink edge inside
+  // the gutter (WCAG 1.4.11, anyplot's rule); a hue that clears it stays bare.
+  // `uniform`: no per-tile edge; every tile is parted by the same gutter.
+  const edge = edges === "contrast" && measured ? edgeFor(measured) : undefined;
   // The halo only on an OPAQUE fill we could measure. A translucent fill (a
   // `color-mix(… transparent)`) composited twice — once as the tile, once as the halo
   // over it — draws a darker ring round every glyph, which read as doubled text on the
@@ -309,9 +352,19 @@ export function TreemapCell({
       // for as long as the tile has keyboard focus.
       className={activate ? "outline-none [&:focus-visible>rect]:stroke-[var(--brand)]" : undefined}
     >
-      {/* The 2px gutter is the card showing through, not a white grid — on a dark
-          surface white lines glare harder than the tiles. */}
-      <rect x={px} y={py} width={pw} height={ph} fill={tileFill} stroke="var(--bg-surface)" strokeWidth={2} rx={3} />
+      {/* The 2px gutter: the page's ground (`uniform`, the same dark line round every
+          tile in the dark theme) or the card showing through (`contrast`). Never a white
+          grid: on a dark surface white lines glare harder than the tiles. */}
+      <rect
+        x={px}
+        y={py}
+        width={pw}
+        height={ph}
+        fill={tileFill}
+        stroke={edges === "contrast" ? "var(--bg-surface)" : "var(--bg-page)"}
+        strokeWidth={2}
+        rx={3}
+      />
       {edge && pw > 3 && ph > 3 && (
         <rect
           data-edge=""
@@ -418,6 +471,7 @@ export function Treemap({
   nodeNote,
   maxTiles,
   colors,
+  edges = "auto",
   style,
   ...rest
 }: TreemapProps) {
@@ -471,7 +525,15 @@ export function Treemap({
         dataKey="size"
         fill="var(--chart-1)"
         isAnimationActive={false}
-        content={<TreemapCell onNodeClick={onNodeClick} redactNames={redactNames} nodeNote={nodeNote} dir={dir} />}
+        content={
+          <TreemapCell
+            onNodeClick={onNodeClick}
+            redactNames={redactNames}
+            nodeNote={nodeNote}
+            dir={dir}
+            edges={edges}
+          />
+        }
       >
         <ChartTooltip content={<Content hideLabel valueFormatter={format} />} />
       </RechartsTreemap>

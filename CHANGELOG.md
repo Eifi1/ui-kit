@@ -21,6 +21,13 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.51.6](https://github.com/Eifi1/ui-kit/compare/v0.51.5...v0.51.6) (2026-10-30)
+
+### Added
+
+* **treemap:** `edges="auto"` by default: uniform at Standard, ink edges under More contrast ([25dfe27](https://github.com/Eifi1/ui-kit/commit/25dfe2736b2dbd1905ef13d602d33dc1eee01ace))
+* **treemap:** one uniform gutter between tiles by default (`edges`) ([dbd1722](https://github.com/Eifi1/ui-kit/commit/dbd1722c60c7dc50ccbf904dbf64e28a9b7baec8))
+
 ## [0.51.5](https://github.com/Eifi1/ui-kit/compare/v0.51.4...v0.51.5) (2026-10-29)
 
 ### Added

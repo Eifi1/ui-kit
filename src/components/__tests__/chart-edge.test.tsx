@@ -103,17 +103,55 @@ describe("SeriesChart's ink edge", () => {
 });
 
 describe("TreemapCell's ink edge", () => {
-  const cell = (fill: string) =>
+  const cell = (fill: string, edges: "contrast" | "uniform" = "contrast") =>
     render(
       <svg>
-        <TreemapCell depth={1} x={0} y={0} width={200} height={60} name="Tile" fill={fill} />
+        <TreemapCell depth={1} x={0} y={0} width={200} height={60} name="Tile" fill={fill} edges={edges} />
       </svg>,
     ).container.querySelector("rect[data-edge]");
 
-  it("edges a tile in a low-contrast hue only", () => {
+  it('edges a tile in a low-contrast hue only, under `edges="contrast"`', () => {
     paint("light");
     expect(cell(PALETTE_HEX.light[7])?.getAttribute("stroke")).toBe("var(--chart-ink)"); // lime
     expect(cell(PALETTE_HEX.light[4])).toBeNull(); // matte red, 5:1
+  });
+
+  it("0.51.6 `auto` (the default): one page-coloured gutter at Standard contrast, the ink edges under More", async () => {
+    paint("dark");
+    const lime = PALETTE_HEX.dark[7];
+    const { container } = render(
+      <svg>
+        <TreemapCell depth={1} x={0} y={0} width={200} height={60} name="Tile" fill={lime} />
+      </svg>,
+    );
+    // Standard: no per-tile edge, the same gutter as every tile.
+    expect(container.querySelector("rect[data-edge]")).toBeNull();
+    expect(container.querySelector("rect")!.getAttribute("stroke")).toBe("var(--bg-page)");
+    // More contrast switched on (by the reader, or by System on such a device): live.
+    // A MutationObserver reports in a microtask: let it.
+    await act(async () => document.documentElement.setAttribute("data-contrast", "more"));
+    expect(container.querySelector("rect")!.getAttribute("stroke")).toBe("var(--bg-surface)");
+    await act(async () => document.documentElement.setAttribute("data-contrast", "standard"));
+    expect(container.querySelector("rect")!.getAttribute("stroke")).toBe("var(--bg-page)");
+    document.documentElement.removeAttribute("data-contrast");
+  });
+
+  it("0.51.6 `uniform` stays uniform under More contrast", () => {
+    paint("dark");
+    document.documentElement.setAttribute("data-contrast", "more");
+    try {
+      for (const hex of PALETTE_HEX.dark) {
+        const { container } = render(
+          <svg>
+            <TreemapCell depth={1} x={0} y={0} width={200} height={60} name="Tile" fill={hex} edges="uniform" />
+          </svg>,
+        );
+        expect(container.querySelector("rect[data-edge]")).toBeNull();
+        expect(container.querySelector("rect")!.getAttribute("stroke")).toBe("var(--bg-page)");
+      }
+    } finally {
+      document.documentElement.removeAttribute("data-contrast");
+    }
   });
 
   it("measures the muted 'rest' colour, so its label ink is measured too", () => {
