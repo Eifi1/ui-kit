@@ -471,9 +471,78 @@ export function useComboboxCore<V extends string | number>({
  * heading is the one thing that says where in the alphabet the thumb is. Opaque — the
  * list's own `bg-surface` — so the rows pass beneath it rather than through it. Shared
  * by every list that heads groups (the panel and the sheet, `Combobox`, `Autocomplete`,
- * `InlineEntityCombobox`).
+ * `InlineEntityCombobox`). Inside its {@link OptionGroup} since 0.52, it sticks while its
+ * own group is in view and the next group's heading pushes it out.
  */
 export const GROUP_HEADING_STICKY = "sticky top-0 z-10 bg-surface";
+
+/** One run of rows that share a group, as {@link groupRuns} finds them: `group` is
+ *  `null` for rows filed under none, which stand bare in the list; `start` is the index
+ *  of the run's first row in the whole list (the option ids and the arrows count by it). */
+export interface GroupRun<T> {
+  group: string | null;
+  start: number;
+  rows: T[];
+}
+
+/**
+ * A list's rows, cut where the group changes — the runs {@link OptionGroup} wraps. The
+ * lists keep their rows group-contiguous (the panel's source order, or the ranked list
+ * regrouped by its best member), so a run is "the rows up to the next change of group".
+ * `groupOf` is asked once per row. An empty group name is no group: a heading of nothing
+ * names nothing.
+ */
+export function groupRuns<T>(rows: readonly T[], groupOf: (row: T) => string | null | undefined): GroupRun<T>[] {
+  const runs: GroupRun<T>[] = [];
+  rows.forEach((row, i) => {
+    const raw = groupOf(row);
+    const group = raw === undefined || raw === null || raw === "" ? null : raw;
+    const last = runs[runs.length - 1];
+    if (last && last.group === group) last.rows.push(row);
+    else runs.push({ group, start: i, rows: [row] });
+  });
+  return runs;
+}
+
+/**
+ * A group of options under its heading, inside a `role="listbox"`: a `role="group"`
+ * NAMED by the heading, so a reader moving through the list hears which group a row is
+ * in (refactor audit 2026-10-30, INP-8). The heading was loose text among the options,
+ * and focus stays in the search box with the row announced through
+ * `aria-activedescendant` — keksdose's "Groceries" under Recent and again under its own
+ * group were two identical names, and an account filed by its type never said the type.
+ * The heading stays a visible first item of the group (sticky within it); the columns of
+ * {@link ComboboxPanel} carry the same `role="group"`.
+ *
+ * `id` must be unique in the document (the list's id plus the run's start); `className`
+ * places the heading's text in its list.
+ */
+export function OptionGroup({
+  id,
+  heading,
+  className,
+  children,
+}: {
+  id: string;
+  heading: ReactNode;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <li role="presentation">
+      <ul role="group" aria-labelledby={id}>
+        <li
+          role="presentation"
+          id={id}
+          className={cn(GROUP_HEADING_STICKY, "font-semibold uppercase tracking-wide text-muted", className)}
+        >
+          {heading}
+        </li>
+        {children}
+      </ul>
+    </li>
+  );
+}
 
 export const SUGGESTION_LIST_CLASS =
   "max-h-64 overflow-y-auto rounded-md border border-subtle bg-surface py-1 shadow-lg";
@@ -511,6 +580,10 @@ const PANEL_MIN_REM = 13.75;
 /** The room the anchored panel keeps from either edge of the glass, in px —
  *  `anchoredInline`'s default. */
 const PANEL_EDGE = 8;
+
+/** What may be a tab stop in a panel's `toolbar`: its buttons (an `aria-disabled` one
+ *  included — it keeps its focus, INP-9) and anything else that takes focus. */
+const TOOLBAR_STOPS = 'button:not([disabled]),a[href],input:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
 /**
  * How wide the anchored panel is. The phone sheet is the screen's width whatever this
@@ -570,7 +643,9 @@ export interface ComboboxPanelProps<V extends string | number> extends Component
    */
   renderOption?: (o: ComboOption<V>) => ReactNode;
   /** Controls between the search box and the list, in the anchored panel and the phone
-   *  sheet alike — MultiSelect's "Select all" and "Clear". */
+   *  sheet alike — MultiSelect's "Select all" and "Clear". In the anchored panel Tab from
+   *  the search box walks them before it leaves (0.52); keep them focusable when they
+   *  have nothing to do (`aria-disabled`), or a press drops their focus to <body>. */
   toolbar?: ReactNode;
   /** See {@link ComboboxPanelWidth}. */
   width?: ComboboxPanelWidth;
@@ -695,6 +770,25 @@ export function ComboboxPanel<V extends string | number>({
     return () => observer.disconnect();
   }, [fit, placed, panelRef]);
 
+  // The toolbar's own box, so the keyboard can tell its buttons from the search box.
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const toolbarStops = () =>
+    Array.from(toolbarRef.current?.querySelectorAll<HTMLElement>(TOOLBAR_STOPS) ?? []).filter((el) => el.tabIndex >= 0);
+  /** Tab on a toolbar button in the anchored panel: Shift+Tab off the first goes back to
+   *  the search box, Tab off the last leaves as the search box's Tab did; between two of
+   *  them the browser's own Tab is right, as they stand next to each other. */
+  const tabInToolbar = (e: ReactKeyboardEvent) => {
+    const stops = toolbarStops();
+    const at = stops.indexOf(e.target as HTMLElement);
+    if (e.shiftKey && at === 0) {
+      e.preventDefault();
+      inputRef.current?.focus();
+    } else if (!e.shiftKey && at === stops.length - 1) {
+      e.preventDefault();
+      closeToTrigger();
+    }
+  };
+
   // The WAI-ARIA APG's listbox keyboard, in full: Up/Down step, Home/End jump, Enter
   // commits, Tab leaves, Escape closes. On the panel's search box — in the anchored
   // panel and, through `onSearchKeyDown`, in the phone sheet's header (BUG-5).
@@ -704,6 +798,14 @@ export function ComboboxPanel<V extends string | number>({
     // panel's events travel up the React tree through that dialog, portal or not, and
     // one press used to close the dialog and throw the form away, list still open.
     if (takeEscape(e)) return;
+    // A key on a toolbar button is the button's — Enter and Space press it — and not the
+    // list's: Enter there toggled the highlighted row instead of pressing "Select all".
+    // Only Tab is the panel's (refactor audit 2026-10-30, INP-9). The phone sheet hands
+    // this handler its search box's keys alone, and its trap keeps Tab.
+    if (toolbarRef.current?.contains(e.target as Node)) {
+      if (e.key === "Tab" && !isPhone) tabInToolbar(e);
+      return;
+    }
     // The Enter that confirms an IME composition is the IME's (BUG-9).
     if (isImeEnter(e)) return;
     // Disabled rows are passed over (`stepEnabled`), and each step starts from the
@@ -731,8 +833,12 @@ export function ComboboxPanel<V extends string | number>({
       // here to whatever follows the portal — i.e. off the end of the document. The
       // trade is one extra Tab (trigger, then onward) against never stranding focus
       // at the bottom of the page. The phone sheet is a dialog, and its trap keeps Tab.
+      // A panel with a toolbar is walked through it first: the rows are not tab stops,
+      // so MultiSelect's "Select all" and "Clear" were out of a keyboard's reach (INP-9).
       e.preventDefault();
-      closeToTrigger();
+      const first = e.shiftKey ? undefined : toolbarStops()[0];
+      if (first) first.focus();
+      else closeToTrigger();
     }
   };
 
@@ -939,31 +1045,29 @@ export function ComboboxPanel<V extends string | number>({
               </ul>
             </li>
           ))
-        : results.map((o, i) => {
-            // One heading per group rather than a grey suffix on every row (#136), and
-            // the thing the native <select>'s <optgroup> used to give the account
-            // picker for free (live #200). `results` keeps its source order, so a
-            // boundary is simply "different from the row above".
-            const startsGroup = o.group != null && o.group !== results[i - 1]?.group;
+        : // One heading per group rather than a grey suffix on every row (#136), and the
+          // thing the native <select>'s <optgroup> used to give the account picker for
+          // free (live #200) — a `role="group"` it names (INP-8). `results` keeps its
+          // source order, so a boundary is simply "different from the row above".
+          groupRuns(results, (o) => o.group).map((run) => {
+            // Keyed by group AND value: an option may deliberately appear twice —
+            // Keksdose repeats recently-used categories in a "Recent" group at the top
+            // (live #203) — and a bare value key would collide.
+            const rows = run.rows.map((o, k) => (
+              <Fragment key={`${o.group ?? ""}|${String(o.value)}`}>{optionRow(o, run.start + k)}</Fragment>
+            ));
+            if (run.group === null) return <Fragment key={`|${run.start}`}>{rows}</Fragment>;
             return (
-              // Keyed by group AND value: an option may deliberately appear twice —
-              // Keksdose repeats recently-used categories in a "Recent" group at the
-              // top (live #203) — and a bare value key would collide.
-              <Fragment key={`${o.group ?? ""}|${String(o.value)}`}>
-                {startsGroup && (
-                  <li
-                    role="presentation"
-                    className={cn(
-                      GROUP_HEADING_STICKY,
-                      "font-semibold uppercase tracking-wide text-muted",
-                      isPhone ? "px-4 pb-1 pt-3 text-xs" : "px-3 pb-0.5 pt-2 text-caption first:pt-1",
-                    )}
-                  >
-                    {o.group}
-                  </li>
-                )}
-                {optionRow(o, i)}
-              </Fragment>
+              <OptionGroup
+                key={`${run.group}|${run.start}`}
+                id={`${listboxId}-group-${run.start}`}
+                heading={run.group}
+                className={
+                  isPhone ? "px-4 pb-1 pt-3 text-xs" : cn("px-3 pb-0.5 text-caption", run.start === 0 ? "pt-1" : "pt-2")
+                }
+              >
+                {rows}
+              </OptionGroup>
             );
           })}
       {createRow}
@@ -986,7 +1090,11 @@ export function ComboboxPanel<V extends string | number>({
         className={className}
         style={style}
         open
-        onClose={() => core.setOpen(false)}
+        // The X, Done, Escape and Back hand focus to the trigger, as taking a row does:
+        // these triggers open on a click, never on focus, so focusing one re-opens
+        // nothing — and the sheet, which cannot know that, leaves focus on <body>
+        // (refactor audit 2026-10-30, INP-7).
+        onClose={closeToTrigger}
         title={sheetTitle}
         query={query}
         onQueryChange={setQuery}
@@ -1005,7 +1113,7 @@ export function ComboboxPanel<V extends string | number>({
         // A single pick closes the sheet itself.
         done={multi}
       >
-        {toolbar}
+        {hasContent(toolbar) && <div ref={toolbarRef}>{toolbar}</div>}
         <div className="relative">
           {list}
           {announcement}
@@ -1079,7 +1187,7 @@ export function ComboboxPanel<V extends string | number>({
         listboxId={listboxId}
         activeId={activeId}
       />
-      {toolbar}
+      {hasContent(toolbar) && <div ref={toolbarRef}>{toolbar}</div>}
       {/* One list, two containers: the desktop panel and the phone sheet render
           the same rows through the same handlers (live #200). */}
       {list}
