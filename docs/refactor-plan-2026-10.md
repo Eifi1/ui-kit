@@ -3,14 +3,14 @@
 ## Status — ALL WAVES DONE in 0.34 (2026-10-13)
 
 Every finding below is built and committed on `feat/0.34.0`; the apps' side is in
-`docs/adopt-0.34.md`. Left on purpose: items each wave named as open (e.g. MOD-10's alias
+`docs/archive/adopt/adopt-0.34.md`. Left on purpose: items each wave named as open (e.g. MOD-10's alias
 entries kept, 0.35's removals of what 0.34 deprecates).
 
 **0.35 (2026-10-13), built on `feat/0.35.0`:** every 0.34 deprecation removed (API-1, API-4,
 API-6a/b/c/d/f, the `align` aliases), and the open ends: the overlays' own `onKeyDown` under the
 Escape stack's top-layer rule (after DUP-1), refs on the components phase C1 left (StatTile,
 the banners, PlanLimitNotice, Modal/DialogFrame, Tooltip, CopyButton, FieldStrip),
-`useKitLabelOverrides` as a deep partial (API-6a's follow-up). `docs/adopt-0.35.md` has the
+`useKitLabelOverrides` as a deep partial (API-6a's follow-up). `docs/archive/adopt/adopt-0.35.md` has the
 apps' side. Still open: `gen-styling-inventory.mjs` keeps its own `@theme` parser beside
 `src/eslint/role-utilities.ts`.
 
@@ -490,7 +490,7 @@ were reworded (`git filter-branch --msg-filter`; no tree changed). That gave eve
 | `67c1bfa` | `f7f37ea` | feat(admin): PlanChangeConfirm's usage takes planColumn's shape, so it… |
 | `d6212d6` | `0b34633` | refactor: the kit's own markup on the role utilities; the role-class b… |
 | `e88f3d4` | `91c64c4` | docs: what round 0.34 changed in the contracts and in CONTRIBUTING |
-| `c013290` | `eebdb30` | docs: adopt-0.34.md, the apps' list for ui-kit 0.34 and server-kit 0.8 |
+| `c013290` | `eebdb30` | docs: docs/archive/adopt/adopt-0.34.md, the apps' list for ui-kit 0.34 and server-kit 0.8 |
 | `efbd207` | `6eb9da4` | docs: the 2026-10 refactor plan, from a six-area audit of feat/0.34.0 |
 | `557bce2` | `a200e06` | fix: a strip's label clears its group's border; the stepper's focus li… |
 | `a580384` | `56e1256` | docs(refactor-plan): Marcel's decisions; the K5 follow-up for every fi… |

@@ -11,18 +11,18 @@
 
 ---
 
-### DOC-1 · sev 3 · structure · M · CONFIRMED · touches: `docs/*-harmonization.md`, `docs/adopt-0.33.md`, `docs/adopt-0.34.md`, `CONTRIBUTING.md`
+### DOC-1 · sev 3 · structure · M · CONFIRMED · touches: `docs/*-harmonization.md`, `docs/archive/adopt/adopt-0.33.md`, `docs/archive/adopt/adopt-0.34.md`, `CONTRIBUTING.md`
 - **What:** a contract is amended in three places and never in its own body.
   - Three contracts say an appended review log "wins over the sections above": billing:3-4/:393, colour-roles:5/:1148, text-size:3-4/:255.
   - Each adopt doc has a "Where the build differs from the contracts — the build wins" list, and nobody folds it back.
   - So the normative text apps and agents implement from is stale wherever a later round touched it. The cost recurs every round: 491 code comments in src/showcase cite these contracts by § (text-size 133, billing 91, auth 48, user-admin 43 …).
 - **Evidence:**
-  - Every deviation in adopt-0.33.md:1067-1094 is missing from its contract, for example `SubscriptionActions onPortal` (src/billing/subscription-actions.tsx:29) and `usePlanColumn` (src/admin/plan-change.tsx:252).
+  - Every deviation in docs/archive/adopt/adopt-0.33.md:1067-1094 is missing from its contract, for example `SubscriptionActions onPortal` (src/billing/subscription-actions.tsx:29) and `usePlanColumn` (src/admin/plan-change.tsx:252).
     - Billing never mentions `onPortal`, `usePlanColumn` or `billing_notices_owed` (0 hits); its §14.5 sketch at :1379-1383 shows only `atProvider`.
     - `declaredCustomProperties` (src/testing/css-variables.ts:91) has 0 hits in colour-roles.
-  - adopt-0.34.md:270-271 records the deviation `AdminOtherTarget.id`, but user-admin:673 still has no `id` (src: admin-action-log.tsx:140-147).
+  - docs/archive/adopt/adopt-0.34.md:270-271 records the deviation `AdminOtherTarget.id`, but user-admin:673 still has no `id` (src: admin-action-log.tsx:140-147).
   - text-size §5 at :164 says "the derived tokens are redefined per attribute in tokens.css". The build steps them in JS (contrast-tokens.ts:5-9; tokens.css:44-47, :75-77 hold only `--focus-ring-width`). Only §10.5 (:282-288) corrects it.
-  - Per-app steps are written twice: billing §14.14 (:1804-2066, 263 lines) against adopt-0.33 §3, and auth §11.5 (:849-947) against adopt-0.34.md:125-140. The guard snippet appears verbatim in colour-roles:899-914 and adopt-0.33.md:410-425.
+  - Per-app steps are written twice: billing §14.14 (:1804-2066, 263 lines) against adopt-0.33 §3, and auth §11.5 (:849-947) against docs/archive/adopt/adopt-0.34.md:125-140. The guard snippet appears verbatim in colour-roles:899-914 and docs/archive/adopt/adopt-0.33.md:410-425.
   - Of the 9,061 contract lines, about 40% is not normative: 1,102 lines per-app to-do, 1,687 review logs, 803 snapshots and method. That rises to text-size 70% and colour-roles 59%.
   - Of the 27 `file:line` refs that also name a symbol, 20 no longer point at it (±5 lines). text-size:473 cites `file-button.tsx:631` in a 620-line file.
   - CONTRIBUTING.md:388 still describes `docs/` as "Audits and refactor plans — dated, and kept as written rather than edited later".
@@ -80,7 +80,7 @@
     - The role utilities, generated from tokens.css's `@theme inline` block (the same marker-block pattern as the export inventory), so a new role appears without hand edits.
     - The `large:`, `xlarge:` and `contrast:` variants, the text-size-aware breakpoints and `truncate-until-large(-words)`.
     - The pre-paint script.
-  - ADOPTING gains steps for the text-size and contrast stores, `UiKitProvider` + `loadUiKitLabels`, and the `undeclaredCssVariables` guard (adopt-0.33.md:410-425 has the snippet).
+  - ADOPTING gains steps for the text-size and contrast stores, `UiKitProvider` + `loadUiKitLabels`, and the `undeclaredCssVariables` guard (docs/archive/adopt/adopt-0.33.md:410-425 has the snippet).
   - Docs plus one generator; no API change. This helps the next consumer and the apps' agents, which read `node_modules/@eifi1/ui-kit/README.md`.
 - **Order:** after DOC-7 if new utilities are added; the generator's `--check` goes into DOC-5's guard.
 

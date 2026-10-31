@@ -519,7 +519,9 @@ just the symptom, because a reader upgrading needs to know whether it could have
 1. On the release branch: `npm run check` — clean.
 2. The README's export and styling inventories are current: `check:build` fails when
    they are not; `npm run build && node scripts/gen-export-inventory.mjs` and
-   `node scripts/gen-styling-inventory.mjs` regenerate them.
+   `node scripts/gen-styling-inventory.mjs` regenerate them. And `docs/README.md` lists
+   this minor's adopt note, with what it was and where the apps stand
+   (`src/__tests__/contracts.test.ts` fails on a note it does not list).
 3. `npm run release:dry` to read the version and the entry; then `npm run release`. It bumps
    `package.json` and the lockfile, writes `CHANGELOG.md` and commits
    `chore(release): X.Y.Z`. It does NOT tag (`skip.tag`). Force a version with
@@ -583,4 +585,7 @@ each app moves those pages' `updated` date to the day it ships the bump
 "Where the build differs from the contracts", and whatever the round settled after the
 reviews, into the sections they amend, and updates each contract's status table. History
 (snapshots, per-app to-dos, review logs) goes to `docs/archive/<topic>-history.md`. Never
-renumber a §: the code cites them.
+renumber a §: the code cites them. A review section the round folded stays as an index,
+each item pointing to its §; no sentence lets it "win over" the body instead.
+`src/__tests__/contracts.test.ts` holds both halves: every contract has a Status table, and
+none says "wins over §".

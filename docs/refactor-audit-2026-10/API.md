@@ -13,7 +13,7 @@ Method: dist import (886 runtime + 1,007 type names), TS-checker inventory of 31
   - kastlan: 23 (NumberField ×4, RhfNumberField ×3, AmountInput ×5, top-bar.tsx:112/114/149, …).
   - Kurvenschmiede: 1 (chrome-controls.tsx:31).
 - Fix: accept `aria-label` on all 16 (additive) and mark `ariaLabel` `@deprecated 0.34`, with removal in 0.35. Then 0.34's adoption note covers all twenty components with one rule ("`ariaLabel` → `aria-label` everywhere"), not 4 now and 16 later. Not breaking in 0.34. 0.35 is breaking for the counts above, as a mechanical rename.
-- Order: before 0.34 is cut, alongside docs/adopt-0.34.md's Q2 lines. API-8's CHANGELOG line should name it.
+- Order: before 0.34 is cut, alongside docs/archive/adopt/adopt-0.34.md's Q2 lines. API-8's CHANGELOG line should name it.
 
 ### API-2 · sev 2 · consistency · M · CONFIRMED · touches: `src/components/ui.tsx`, `src/components/loading-state.tsx`, `src/components/description-list.tsx`, `src/components/page-header.tsx`, `src/components/disclosure.tsx`, `src/components/choice-parts.ts`, +~40 component files
 - What: 0.33.1 gave Skeleton a ref by switching its props to `ComponentPropsWithRef` (skeleton.tsx:17-25), as the Table parts did in 0.16 (table.tsx:155). Under React ≥19 (peer, package.json:109) `ref` is an ordinary prop, so `{...rest}` already forwards it. Only the type blocks it. **79 more components** spread rest onto a DOM node, take no `ref` in their type and are not `forwardRef`.
@@ -134,7 +134,7 @@ Method: dist import (886 runtime + 1,007 type names), TS-checker inventory of 31
 ### API-8 · sev 2 · docs · XS · CONFIRMED · touches: `CONTRIBUTING.md`, `.versionrc.cjs`, `src/__tests__/public-surface.test.ts`
 - What: the rule says a deprecation is "marked `@deprecated` … **listed in the changelog**, then removed in the next minor" (CONTRIBUTING.md:169-170; the CHANGELOG header from .versionrc.cjs repeats it). Since the CHANGELOG became generated (0.7), nothing puts a deprecation there. The generator has no "Deprecated" section, and a deprecation written in a commit body is dropped.
 
-  The `@deprecated` tag half holds, and the adoption docs carry the deprecations (adopt-0.33.md:143, adopt-0.34.md:66-67). The changelog half fails for 3 of the last 4 batches:
+  The `@deprecated` tag half holds, and the adoption docs carry the deprecations (docs/archive/adopt/adopt-0.33.md:143, docs/archive/adopt/adopt-0.34.md:66-67). The changelog half fails for 3 of the last 4 batches:
   - ToggleGroup/ChipInput/GroupedPicker/HoverMenu `ariaLabel` and Tabs/SearchField `label`: deprecated in 0.5.0 (bf8a311), never listed, removed in 0.34.
   - SwipeAction `className`/`armedClassName`: `@deprecated 0.33` (swipeable-row.tsx:78/82, 5c2b64f), absent from the 0.33.0 section (CHANGELOG.md:31-69).
   - ServerWakeNotice `navOffset`: `@deprecated` 0.34 (server-wake.tsx:73), only in cddebdd's body.

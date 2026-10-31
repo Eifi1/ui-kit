@@ -711,7 +711,7 @@ boot. It never calls `onEnded`: the caller decides. It resolves a
 ### 11.5 Per app
 
 Moved to [archive/auth-history.md](archive/auth-history.md): each app's steps, as the
-reviews settled them; `docs/adopt-0.34.md` §2–§3 carries them for the apps. The rule
+reviews settled them; `docs/archive/adopt/adopt-0.34.md` §2–§3 carries them for the apps. The rule
 for every server is decision 7 (§11.2).
 
 ### 11.6 Build
@@ -744,7 +744,7 @@ for every server is decision 7 (§11.2).
   turns its own failure into a 401; and that a signed-in endpoint answers 401 only about
   the session, never for a wrong input (kastlan 2).
 
-Each app's steps are in the archive (§11.5) and `docs/adopt-0.34.md`.
+Each app's steps are in the archive (§11.5) and `docs/archive/adopt/adopt-0.34.md`.
 
 ### 11.7 Settled after the reviews (2026-10-12)
 

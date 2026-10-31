@@ -609,7 +609,7 @@ corrected in place too.
        the key, with primary ≥ 7.15 on it.
      - keksdose: the three headers above (§9).
      - KS: the four `rowClassName` strings (§9).
-     - The kit cannot see an app's own rest colour, so `adopt-0.33.md` states the rule.
+     - The kit cannot see an app's own rest colour, so `docs/archive/adopt/adopt-0.33.md` states the rule.
    - **B′'s on-page hover is under this bar** (1.04–1.05): item 10.
 
 3. **The `:root`/`.dark` mirror is load-bearing (KS 3).** Kurvenschmiede calls no

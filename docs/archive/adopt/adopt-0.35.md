@@ -33,7 +33,7 @@ Escape rule need nothing.
   controlled `pageSize` / `onPageSizeChange` pair, like `sorts` (additive; a new value returns to
   page 1).
 - **The wake notice's French and Italian words** follow keksdose's reviewed ones.
-- **Corrections to `docs/adopt-0.34.md`**, made in place: the `commit` counts (controls that save
+- **Corrections to `docs/archive/adopt/adopt-0.34.md`**, made in place: the `commit` counts (controls that save
   on their own: keksdose one, kastlan five), keksdose's money classes (no `[var()]` left; the
   unlayered statics' precedence) and its missed brand test, the `wrongPassword` key (only an app
   with its own catalogue), and §2's test notes (the "No results" status row, currency row names,
@@ -137,4 +137,4 @@ Comments that still name a removed one (no code): keksdose
 ## 4. Versions
 
 - **`@eifi1/ui-kit` `^0.35.0`.** Bump by hand: a caret below 1.0 locks the minor version.
-- **`eifi1-server-kit` 0.8.0**, unchanged (`docs/adopt-0.34.md` §4 has the lines and the sha256).
+- **`eifi1-server-kit` 0.8.0**, unchanged (`docs/archive/adopt/adopt-0.34.md` §4 has the lines and the sha256).

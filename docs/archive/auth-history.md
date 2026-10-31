@@ -413,7 +413,7 @@ a signed-in endpoint answers 401 only about the session (§11.3).
   turns its own failure into a 401; and that a signed-in endpoint answers 401 only about
   the session, never for a wrong input (kastlan 2).
 
-**For `docs/adopt-0.34.md`**, per app as §11.5. In short:
+**For `docs/archive/adopt/adopt-0.34.md`**, per app as §11.5. In short:
 - kastlan first moves `/auth/2fa/disable` to 400, then `onEnded` is `logout()` and
   `queryClient.clear()`, its `store` keeps the stored refresh token and signs in at boot,
   and its handover sync reads `isTransientRefreshFailure` as offline;
