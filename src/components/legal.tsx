@@ -120,8 +120,10 @@ function languageName(code: string, locale: string): string {
   }
 }
 
-/** @internal The operator as the texts read it: its country named in `locale` (English
- *  without one — `countryName`'s rule, so an app that set no locale reads English). */
+/** The operator as the texts read it: its country named in `locale` (English without one —
+ *  `countryName`'s rule, so an app that set no locale reads English). Public since 0.28.1,
+ *  for an app's own footer label in the kit's words; it carried an `@internal` tag the
+ *  barrel contradicted until 0.52 (API-8, refactor audit 2026-10-30). */
 export function legalOperatorText(operator: LegalOperator, locale: string = "en"): LegalOperatorText {
   return {
     ...operator,
