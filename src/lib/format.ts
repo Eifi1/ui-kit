@@ -335,8 +335,8 @@ export function formatDate(
 }
 
 export interface FormatRelativeTimeOptions extends BaseOptions {
-  /** The zone of the date printed past `absoluteAfterDays` (0.46). Left out: the
-   *  device's. */
+  /** The zone of the date printed past `absoluteAfterDays` (0.46), and (0.51.7) the zone
+   *  whose calendar days "yesterday" and "2 days ago" count. Left out: the device's. */
   timeZone?: string;
   /** The moment it is measured from. Default: now. */
   now?: DateInput;
@@ -370,6 +370,20 @@ const RELATIVE_STEPS: Array<[number, Intl.RelativeTimeFormatUnit, number]> = [
   [Infinity, "year", 365.25 * DAY],
 ];
 
+/**
+ * `d`'s calendar day in `timeZone` (left out: the device's), as a whole number of days:
+ * that day's UTC midnight over a day's length. Two of them subtract to whole calendar
+ * days — a 23- or 25-hour DST day still counts one.
+ */
+function dayNumber(d: Date, timeZone: string | undefined): number {
+  if (!timeZone) return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / DAY;
+  // `en-US`: Gregorian, Latin digits — the parts are read back as numbers.
+  const fields: Intl.DateTimeFormatOptions = { timeZone, year: "numeric", month: "numeric", day: "numeric" };
+  const parts = dateFormatter("en-US", fields).formatToParts(d);
+  const part = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find((p) => p.type === type)?.value);
+  return Date.UTC(part("year"), part("month") - 1, part("day")) / DAY;
+}
+
 const relativeFormatters = new Map<string, Intl.RelativeTimeFormat>();
 function relativeFormatter(
   locale: string | undefined,
@@ -389,7 +403,9 @@ function relativeFormatter(
  * How long ago (or until) `value` is, in `locale`'s words, through
  * `Intl.RelativeTimeFormat`: "3 hours ago", "vor 3 Stunden", "il y a 3 heures",
  * "in 2 days", and under 45 seconds "now". The unit is picked by size — seconds,
- * minutes, hours, days, weeks, months, years — and the count is rounded.
+ * minutes, hours, days, weeks, months, years — and the count is rounded; days are
+ * CALENDAR days (0.51.7), in `timeZone` when given: "yesterday" is the day before today,
+ * however few hours ago that was.
  */
 export function formatRelativeTime(value: DateInput, options: FormatRelativeTimeOptions = {}): string {
   const d = toDate(value);
@@ -402,6 +418,17 @@ export function formatRelativeTime(value: DateInput, options: FormatRelativeTime
   }
   const rtf = relativeFormatter(options.locale, options.numeric ?? "auto", options.style ?? "long");
   const [, unit, size] = RELATIVE_STEPS.find(([limit]) => abs < limit)!;
+  if (unit === "day") {
+    // By the calendar, not in 24-hour units (refactor audit 2026-10-30, DSP-7): rounded
+    // elapsed time made 00:10 seen at 23:50 "yesterday" and 01:00 yesterday seen at 23:30
+    // "2 days ago", beside an exact date (DateMark's second line, the feedback thread's
+    // tooltip) that said otherwise. Counted in `timeZone`, the zone that date is printed
+    // in; a bare "YYYY-MM-DD" is the day it names wherever it is read, as in formatDate.
+    // Still the same day (22 hours and more since just after midnight): in hours.
+    const bareDay = typeof value === "string" && BARE_ISO_DAY.test(value);
+    const days = dayNumber(d, bareDay ? undefined : options.timeZone) - dayNumber(now, options.timeZone);
+    return days === 0 ? rtf.format(Math.round(diff / HOUR), "hour") : rtf.format(days, "day");
+  }
   // Under 45 seconds is "now" rather than "12 seconds ago": a feed that ticks through
   // the seconds is noise, and nothing reads a timestamp to the second.
   const count = unit === "second" ? 0 : Math.round(diff / size);
