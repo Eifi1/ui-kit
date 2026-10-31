@@ -13,6 +13,11 @@ import { TourProvider, useTour, type TourStep } from "../tour";
  * Kurvenschmiede mount it ABOVE their app error boundary, so the whole app unmounted
  * (a white page) because somebody pressed "Take the tour". Before 0.52 a start fetched
  * nothing.
+ *
+ * And the app hears of it (0.52 code review, tour.tsx): the run was ended with `stop()`,
+ * which calls nothing, after the start's `onStart` had run — kastlan's practice mode,
+ * turned on by its launcher and off in `onSkip`/`onFinish`, stayed on with nothing on
+ * screen. `onSkip("unavailable")` now.
  */
 
 const overlay = vi.hoisted(() => ({ fail: true }));
@@ -66,8 +71,9 @@ describe("the tour overlay's chunk fails to load", () => {
     expect(logged).toHaveBeenCalledTimes(1);
     const [[error]] = logged.mock.calls as [[{ cause?: unknown }]];
     expect(String(error.cause ?? error)).toMatch(/Failed to fetch dynamically imported module/);
-    // Not the reader's skip: the run never showed a step.
-    expect(onSkip).not.toHaveBeenCalled();
+    // Not the reader's skip — the run never showed a step — but the run's end all the same.
+    expect(onSkip).toHaveBeenCalledTimes(1);
+    expect(onSkip).toHaveBeenCalledWith("unavailable");
 
     // The deploy's new chunk is there now, or the device is back online.
     overlay.fail = false;

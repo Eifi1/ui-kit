@@ -1,6 +1,5 @@
 import {
   createContext,
-  lazy,
   Suspense,
   useCallback,
   useContext,
@@ -17,8 +16,9 @@ import type { TourInfo } from "./tour-info";
 import { completeStored, rememberAccount, rememberMigrate, type UseTourProgressOptions } from "./use-tour-progress";
 import { createGateRegistry, devWarnings, isShown, stepContext, TourInternalContext } from "./tour-gates";
 import { liveEngine } from "./tour-engine";
+import { lazyWithFallback } from "../lib/lazy-with-fallback";
 // Types only, gone from the built module: the overlay's modules load with the overlay.
-import type { Refusal, TourOverlay } from "./tour-overlay";
+import type { Refusal } from "./tour-overlay";
 
 /**
  * The overlay — the card, the spotlight and its shields, the placement, the dock — loaded
@@ -29,33 +29,46 @@ import type { Refusal, TourOverlay } from "./tour-overlay";
  * path an app's bundler can read is a chunk it can split off.
  *
  * A fetch that fails — a tab left open across a deploy, a local-first app offline — ends
- * the run and leaves the page (0.52 code review, tour.tsx). The dialog and the search
- * palette throw theirs to the app's error boundary, as a lazy route does; the provider
- * cannot: it sits above the routes, in keksdose and Kurvenschmiede above the app's own
- * boundary, and the rejected import unmounted the whole app — for a tour, whose start
- * fetched nothing before 0.52. `React.lazy` keeps what its import settled to, so a
- * failure leaves a fresh one behind and the next start fetches again.
+ * the run and leaves the page (0.52 code review, tour.tsx): the provider sits above the
+ * routes, in keksdose and Kurvenschmiede above the app's own boundary, and the rejected
+ * import unmounted the whole app — for a tour, whose start fetched nothing before 0.52.
+ * `lazyWithFallback` logs it, and the next start fetches again.
  */
-let LazyTourOverlay = lazyTourOverlay();
+const LazyTourOverlay = lazyWithFallback(
+  () => import("./tour-overlay").then((module) => module.TourOverlay),
+  TourOverlayUnavailable,
+);
 
-function lazyTourOverlay() {
-  return lazy<typeof TourOverlay>(() =>
-    import("./tour-overlay").then(
-      (module) => ({ default: module.TourOverlay }),
-      (error: unknown) => {
-        console.error(error);
-        LazyTourOverlay = lazyTourOverlay();
-        return { default: TourOverlayUnavailable };
-      },
-    ),
-  );
+/** The provider's end of a run whose overlay did not load; see {@link TourOverlayUnavailable}. */
+const TourUnavailableContext = createContext<() => void>(() => {});
+
+/**
+ * Stands in for an overlay whose chunk did not arrive: ends the run with the start's
+ * `onSkip("unavailable")` and draws nothing. It ended with `stop()` at first, which calls
+ * nothing — after the start's `onStart` had run, so what the app turned on for the run
+ * stayed on: kastlan's practice mode, which its launcher turns on and its `onSkip` and
+ * `onFinish` turn off (0.52 code review, tour.tsx).
+ */
+function TourOverlayUnavailable() {
+  const unavailable = useContext(TourUnavailableContext);
+  useLayoutEffect(unavailable, [unavailable]);
+  return null;
 }
 
-/** Stands in for an overlay whose chunk did not arrive: ends the run with `stop` — not
- *  a skip, the reader saw no step — and draws nothing. */
-function TourOverlayUnavailable() {
-  const { stop } = useTour();
-  useLayoutEffect(stop, [stop]);
+/**
+ * Hears Escape while the overlay's chunk is on its way, as the overlay does before it has
+ * located its step: the run is skipped. With nothing mounted the tour was `active` and
+ * deaf, and on a slow first start the overlay came up seconds after the person had
+ * pressed Escape and gone back to the page (0.52 code review, tour.tsx).
+ */
+function TourOverlayLoading({ onSkip }: { onSkip: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onSkip();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onSkip]);
   return null;
 }
 
@@ -288,8 +301,18 @@ interface StartOptions {
   onStart?: () => void;
   /** After the last step: runs after the provider's progress write and `onComplete`. */
   onFinish?: () => void;
-  onSkip?: () => void;
+  /**
+   * The run ended before its last step — undo here what `onStart` or the launcher turned
+   * on. `reason` says why: `"skipped"`, the person left (Skip, Escape); `"unavailable"`
+   * (0.52), the overlay's chunk did not load (a tab left open across a deploy, offline),
+   * so no step was shown — the moment to say so, if the app wants to. `stop()` calls
+   * nothing.
+   */
+  onSkip?: (reason?: TourSkipReason) => void;
 }
+
+/** Why a run ended before its last step, as `onSkip` hears it. */
+type TourSkipReason = "skipped" | "unavailable";
 
 /** What `TourProvider`'s `onComplete` learns besides the tour (§9.1, §9.6). */
 export interface TourCompletion {
@@ -585,8 +608,17 @@ export function TourProvider({
     setSteps(null);
     setActiveId(null);
   }, []);
+  // Takes no argument: the card's Skip passes its click event.
   const skip = useCallback(() => {
-    optsRef.current.onSkip?.();
+    optsRef.current.onSkip?.("skipped");
+    setSteps(null);
+    setActiveId(null);
+  }, []);
+  const unavailable = useCallback(() => {
+    // Once per run: the fallback's layout effect runs twice under StrictMode.
+    if (!stepsRef.current) return;
+    stepsRef.current = null;
+    optsRef.current.onSkip?.("unavailable");
     setSteps(null);
     setActiveId(null);
   }, []);
@@ -667,24 +699,27 @@ export function TourProvider({
         {active ? (
           // Its own boundary, so the first start's chunk fetch suspends nothing of the
           // app's; it shows nothing meanwhile, as the overlay itself does until it has
-          // located the step. A failed fetch ends the run (`lazyTourOverlay`).
-          <Suspense fallback={null}>
-            <LazyTourOverlay
-              steps={steps!}
-              index={index}
-              via={nav.via}
-              floor={nav.floor}
-              position={nav.position}
-              count={nav.count}
-              refusal={refusal?.step === steps![index] ? refusal : null}
-              onGoTo={goToStep}
-              labels={merged}
-              gates={gates}
-              dockOnPhones={dockOnPhones}
-              onNext={next}
-              onPrev={prev}
-              onSkip={skip}
-            />
+          // located the step, and hears Escape as it does. A failed fetch ends the run
+          // (`TourOverlayUnavailable`).
+          <Suspense fallback={<TourOverlayLoading onSkip={skip} />}>
+            <TourUnavailableContext.Provider value={unavailable}>
+              <LazyTourOverlay
+                steps={steps!}
+                index={index}
+                via={nav.via}
+                floor={nav.floor}
+                position={nav.position}
+                count={nav.count}
+                refusal={refusal?.step === steps![index] ? refusal : null}
+                onGoTo={goToStep}
+                labels={merged}
+                gates={gates}
+                dockOnPhones={dockOnPhones}
+                onNext={next}
+                onPrev={prev}
+                onSkip={skip}
+              />
+            </TourUnavailableContext.Provider>
           </Suspense>
         ) : null}
       </TourContext.Provider>
