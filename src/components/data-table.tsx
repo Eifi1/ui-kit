@@ -8,6 +8,7 @@ import { useRangeSelection } from "./data-table-selection";
 import { columnLabel, logicalAlign, resolveDataTableLabels } from "./data-table-shared";
 import {
   MobileFilters,
+  MobileLeadingRow,
   MobileSelectBar,
   MobileSort,
   StackedFields,
@@ -622,8 +623,10 @@ export interface DataTableProps<T> {
    */
   desktopSwipeActions?: boolean | DataTableDesktopSwipeActions<T>;
   /**
-   * Renders as a full-width row above the data rows in the desktop table
-   * (mobile has no equivalent list-row slot, so it's desktop-only). For a
+   * Renders as a full-width row above the data rows in the desktop table, and since
+   * 0.51.7 as the first item of the phone's card list (audit 2026-10-30 DSP-2: the card
+   * list dropped it, and kastlan's inline "Add meter" editor never appeared on a phone).
+   * On the phone it is no card: no row link, swipe or selection toggle. For a
    * toggle that shows/hides a slice of rows, style it as an expand/collapse
    * disclosure (chevron + label) so it reads as part of the table rather
    * than a floating control above it. See feedback #10/#11 (transactions'
@@ -633,9 +636,11 @@ export interface DataTableProps<T> {
   /**
    * 0.48 (keksdose dev #603: "it should rather be sticky, so the user can show hide them
    * everywhere on click"): pin the {@link leadingRow} under the sticky header while the
-   * rows scroll beneath both — its `top` is the header's measured height. Desktop only,
-   * as `leadingRow` is; it sticks within the table's own scroller (a bounded body:
-   * `fillHeight` or `maxBodyHeight`). Default: it scrolls with the rows.
+   * rows scroll beneath both — its `top` is the header's measured height. It sticks
+   * within the table's own scroller (a bounded body: `fillHeight` or `maxBodyHeight`).
+   * On a phone (0.51.7) it is pinned at the top of the card list's scroller (the list
+   * under a bounded `fillHeight`, else the page), with `mobileGroupBy`'s section headers
+   * under it. Default: it scrolls with the rows.
    */
   leadingRowSticky?: boolean;
   /**
@@ -1578,6 +1583,9 @@ export function DataTable<T>({
     if (el.parentElement) ro.observe(el.parentElement);
     return () => ro.disconnect();
   }, [phoneFill]);
+  // A sticky `leadingRow`'s height on a phone (audit 2026-10-30 DSP-2): the section
+  // headers stick under it, as the desktop's group bands stick under the desktop row.
+  const [phoneLeadHeight, setPhoneLeadHeight] = useState(0);
 
   const { mobileSlice, canRevealMoreMobile, loadMoreRef } = useMobileReveal({
     rows: sorted,
@@ -1931,10 +1939,20 @@ export function DataTable<T>({
             )}
             aria-busy={isLoading || undefined}
           >
+            {/* The desktop's leading row, as the list's first item (0.51.7, audit
+              2026-10-30 DSP-2; MobileLeadingRow says what it is and is not). */}
+            {leadingRow ? (
+              <MobileLeadingRow sticky={leadingRowSticky} onHeight={setPhoneLeadHeight}>
+                {leadingRow}
+              </MobileLeadingRow>
+            ) : null}
             {mobileGroups
               ? mobileGroups.map((g) => (
                   <Fragment key={`hb-group:${g.key}`}>
-                    <li className="sticky top-0 z-10 flex flex-wrap items-baseline justify-between gap-x-3 bg-surface-2 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted backdrop-blur">
+                    <li
+                      className="sticky top-0 z-10 flex flex-wrap items-baseline justify-between gap-x-3 bg-surface-2 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted backdrop-blur"
+                      style={leadingRow && leadingRowSticky ? { top: phoneLeadHeight } : undefined}
+                    >
                       <span className="min-w-0">
                         {mobileGroupLabel
                           ? mobileGroupLabel(g.key)
