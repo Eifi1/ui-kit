@@ -1,8 +1,10 @@
-import { lazy, Suspense, useRef, useState } from "react";
+import { Suspense, useLayoutEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { toast } from "../components/toast";
+import { lazyWithFallback } from "../lib/lazy-with-fallback";
 // Types only, gone from the built module: the dialog's modules load with the dialog.
 import type { FeedbackSubmitter } from "./feedback-context";
+import type { FeedbackSubmitDialogProps } from "./feedback-submit-dialog";
 import type { FeedbackMultipleSubmission } from "./feedback-dialog";
 import { useFeedbackToastLabels } from "./feedback-labels";
 import { FEEDBACK_PICKABLE_CATEGORIES, type FeedbackContext, type FeedbackEnvironment } from "./feedback-record";
@@ -14,10 +16,21 @@ import type { FeedbackCategory } from "./feedback-vocabulary";
  * LITERAL relative `import()`, as the catalogue loaders are (i18n/languages.ts): the
  * library build keeps the module its own (`bundle: false`), and a path an app's bundler
  * can read is a chunk it can split off.
+ *
+ * A fetch that fails — a tab left open across a deploy, offline — closes the dialog
+ * rather than throwing (0.52 code review, tour.tsx): the hook lives in the top bar, above
+ * the routes' error boundaries, so the rejected import took the whole shell down. The
+ * next open fetches again.
  */
-const LazySubmitDialog = lazy(() =>
-  import("./feedback-submit-dialog").then((module) => ({ default: module.FeedbackSubmitDialog })),
+const LazySubmitDialog = lazyWithFallback(
+  () => import("./feedback-submit-dialog").then((module) => module.FeedbackSubmitDialog),
+  SubmitDialogUnavailable,
 );
+
+function SubmitDialogUnavailable({ onClose }: FeedbackSubmitDialogProps) {
+  useLayoutEffect(onClose, [onClose]);
+  return null;
+}
 
 /**
  * `FeedbackCreate` — the body of `POST /feedback` (keksdose `schemas/feedback.py:25`, §3.4
@@ -197,8 +210,9 @@ export function useFeedbackSubmit<R = unknown>(options: UseFeedbackSubmitOptions
   };
 
   // Nothing is drawn while the dialog's module is on its way — a few milliseconds, once per
-  // page load; a spinner would only flash. A load that fails (a deploy replaced the chunk)
-  // throws a chunk-load error to the app's error boundary, as a lazy route's does.
+  // page load; a spinner would only flash. A load that fails (a deploy replaced the chunk,
+  // offline) closes the dialog (`SubmitDialogUnavailable`): the hook sits in the top bar,
+  // above the routes' error boundaries, where a thrown chunk error took the shell down.
   const dialog = isOpen ? (
     <Suspense fallback={null}>
       <LazySubmitDialog
