@@ -312,11 +312,12 @@ describe("the desktop table", () => {
     const onRowClick = vi.fn();
     renderTable({}, { onRowClick });
     const link = screen.getByRole("link", { name: "Open page /accounts" });
-    expect(link).toHaveAttribute("href", "/accounts?p=2#top");
+    // The path alone (0.52 code review): the query is the reporter's to write.
+    expect(link).toHaveAttribute("href", "/accounts");
     fireEvent.click(link);
     expect(onRowClick).not.toHaveBeenCalled();
     // A path-only value (Kurvenschmiede's backfill) and an erased row's route.
-    expect(screen.getByRole("link", { name: "Open page /settings" })).toHaveAttribute("href", "/settings?tab=profile");
+    expect(screen.getByRole("link", { name: "Open page /settings" })).toHaveAttribute("href", "/settings");
     expect(screen.getByRole("link", { name: "Open page /imports" })).toHaveAttribute("href", "/imports");
   });
 

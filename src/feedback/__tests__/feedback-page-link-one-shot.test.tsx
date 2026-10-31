@@ -102,6 +102,6 @@ describe("the feedback page link: one-shot routes are text, not links (FLW-7)", 
     expect(custom.queryByRole("link")).toBeNull();
     custom.unmount();
     render(<>{url.cell(record({ context: { url: "/accounts?p=2" } }))}</>);
-    expect(screen.getByRole("link", { name: "Open page /accounts" })).toHaveAttribute("href", "/accounts?p=2");
+    expect(screen.getByRole("link", { name: "Open page /accounts" })).toHaveAttribute("href", "/accounts");
   });
 });

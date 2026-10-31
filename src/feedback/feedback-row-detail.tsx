@@ -36,7 +36,7 @@ import {
 } from "./feedback-record";
 import type { FeedbackContext, FeedbackRecord } from "./feedback-record";
 import { runMutation, type FeedbackMutationCall } from "./feedback-mutation";
-import { isOneShotPage } from "./feedback-page-link";
+import { feedbackPage, feedbackPageLinkTarget } from "./feedback-page-link";
 import { useFeedbackStatusUndo } from "./feedback-status-undo";
 import type { FeedbackStatusChange } from "./feedback-status-undo";
 import type { CommitScope } from "../components/write-lock";
@@ -181,47 +181,28 @@ export function useFeedbackDetailLabels(labels?: LabelOverride<FeedbackDetailLab
 
 /* ── The page a report was filed on (§3.2, §4.4.2) ────────────────────────── */
 
-/** `context.url`, else `context.route` — a parsed URL, or null when neither is set or
- *  the value is no http(s) address or path (a `javascript:` value is not a page). */
-function parsePage(context: FeedbackContext | null | undefined): URL | null {
-  const raw = (context?.url || context?.route || "").trim();
-  if (!raw) return null;
-  try {
-    // A base, so a PATH-ONLY value parses too: Kurvenschmiede backfills its old rows
-    // with `url = page_path + search` (§3.2), and keksdose's `new URL(raw)` threw on
-    // those and dropped the section.
-    const url = new URL(raw, "http://localhost");
-    return url.protocol === "http:" || url.protocol === "https:" ? url : null;
-  } catch {
-    return null;
-  }
-}
-
-/** Collapses a leading `//` run: `/\/\/evil.example/` as a path would be a
- *  protocol-relative link off the app. */
-const localPath = (pathname: string) => pathname.replace(/^\/{2,}/, "/");
-
 /**
- * The in-app link to the page a report was filed on — path + query + hash (keksdose
- * `localHref`: the query and hash carry the state worth restoring, `?tab=import`, a
- * drill-down). Read from `context.url`, else `context.route`; a path-only `url` works.
- * `null` when there is nothing to link.
+ * The page a report was filed on as the reporter had it — path + query + hash (keksdose
+ * `localHref`: the query and hash carry the state, `?tab=import`, a drill-down). Read from
+ * `context.url`, else `context.route`; a path-only `url` works. `null` when there is no
+ * page.
  *
  * Always a path on THIS app, never another origin's address — but the path and query
- * are the reporter's to write, so it is not safe to follow blindly: `/join?token=…`
- * acts on load (refactor audit 2026-10-30, FLW-7). The kit's URL cell and section show a
- * one-shot route as text with Copy (`pageLinkExclude`); an app linking it elsewhere
- * should do the same.
+ * are the reporter's to write, so it is TEXT, not a link target: `/join?token=…` acts on
+ * load, and `/login?next=…` forwards a signed-in admin to whatever its query names
+ * (refactor audit 2026-10-30, FLW-7; 0.52 code review). The kit's URL cell and section
+ * link {@link feedbackPagePath} alone, and not even that for a one-shot route
+ * (`pageLinkExclude`) — `FeedbackRowDetail` and `useFeedbackColumns` draw the page that
+ * way; an app's own cell should not link this.
  */
 export function feedbackPageHref(context: FeedbackContext | null | undefined): string | null {
-  const url = parsePage(context);
-  return url ? `${localPath(url.pathname)}${url.search}${url.hash}` : null;
+  return feedbackPage(context)?.href ?? null;
 }
 
-/** The page's path alone — the compact text a URL column shows (§4.3). */
+/** The page's path alone — the compact text a URL column shows (§4.3), and the only part
+ *  of the page the kit links. */
 export function feedbackPagePath(context: FeedbackContext | null | undefined): string | null {
-  const url = parsePage(context);
-  return url ? localPath(url.pathname) : null;
+  return feedbackPage(context)?.path ?? null;
 }
 
 /**
@@ -230,8 +211,7 @@ export function feedbackPagePath(context: FeedbackContext | null | undefined): s
  * (feedback #278) — else `context.route`. `null` when there is no page.
  */
 export function feedbackPageUrl(context: FeedbackContext | null | undefined): string | null {
-  if (!parsePage(context)) return null;
-  return (context?.url || context?.route || "").trim();
+  return feedbackPage(context)?.url ?? null;
 }
 
 /* ── Attachments (§3.5, §4.4.3) ───────────────────────────────────────────── */
@@ -571,8 +551,9 @@ export interface FeedbackRowDetailProps {
    * `/register`, `/verify-email`, `/reset-password` (a string is that path and everything
    * under it, a RegExp is tested on the path, as `useLastVisitedPage`'s `exclude`). The
    * URL section shows such a page as text with Copy, never as a link: it acts on load,
-   * and a report's page is the reporter's to write. keksdose: `["/banks/callback",
-   * "/share-target"]`. Keep it stable (module scope).
+   * and a report's page is the reporter's to write. Any other page links its PATH alone;
+   * the query, where tokens and `?next=` targets travel, is text. keksdose:
+   * `["/banks/callback", "/share-target"]`. Keep it stable (module scope).
    */
   pageLinkExclude?: readonly PathPattern[];
   /**
@@ -698,8 +679,8 @@ export function FeedbackRowDetail({
   // rework rounds stay in the prose: they are what was said after the answer.
   const bodyText = splitBodyAttachments(row.body).text;
   const { description } = splitDescription(row.body);
-  const pageHref = feedbackPageHref(row.context);
-  const pageUrl = feedbackPageUrl(row.context);
+  const page = feedbackPage(row.context);
+  const pageLink = page && feedbackPageLinkTarget(page, pageLinkExclude);
   // 0.47 (§12): with the entries, each entry's file is drawn inline in the Replies
   // timeline, so the Attachment section holds the report's own files.
   const files = feedbackAttachmentUrls(row.replies ? { ...row, replies: undefined } : row);
@@ -777,21 +758,27 @@ export function FeedbackRowDetail({
         )}
       </FeedbackDetailSection>
 
-      {pageHref && pageUrl && (
-        // The page it was filed on, with the full URL a click away (keksdose #278).
+      {page && (
+        // The page it was filed on, with the full URL a click away (keksdose #278). Only
+        // the path is a link; the query and hash, the reporter's to write, are text — and
+        // a one-shot path is text too (FLW-7, 0.52 code review: see feedback-page-link).
         <FeedbackDetailSection title={labels.url}>
           <div className="flex min-w-0 items-center gap-1.5">
-            {isOneShotPage(pageHref, pageLinkExclude) ? (
-              // A route that acts on load: the path to read and copy, no link (FLW-7).
-              <code className="min-w-0 break-all text-xs text-secondary" data-feedback-page-unlinked="">
-                {pageHref}
-              </code>
-            ) : (
-              <TextLink href={pageHref} tone="secondary" underline="hover" stopPropagation className="min-w-0">
-                <code className="break-all text-xs">{pageHref}</code>
-              </TextLink>
-            )}
-            <CopyButton size="xs" className="shrink-0" text={pageUrl} label={labels.copyUrl} stopPropagation />
+            <code
+              className="min-w-0 break-all text-xs text-secondary"
+              data-feedback-page=""
+              data-feedback-page-unlinked={pageLink ? undefined : ""}
+            >
+              {pageLink ? (
+                <TextLink href={pageLink} tone="secondary" underline="hover" stopPropagation>
+                  {page.path}
+                </TextLink>
+              ) : (
+                page.path
+              )}
+              {page.href.slice(page.path.length)}
+            </code>
+            <CopyButton size="xs" className="shrink-0" text={page.url} label={labels.copyUrl} stopPropagation />
           </div>
         </FeedbackDetailSection>
       )}

@@ -170,12 +170,14 @@ describe("FeedbackRowDetail — the author's description editor", () => {
 });
 
 describe("FeedbackRowDetail — the page it was filed on", () => {
-  it("links path + query + hash and copies the FULL url", async () => {
+  it("links the path, shows the query and hash as text, and copies the FULL url", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
     render(<FeedbackRowDetail row={record()} canEdit={false} viewerId={OTHER} onUpdate={landing()} />);
-    const link = screen.getByRole("link", { name: "/accounts?p=2#top" });
-    expect(link).toHaveAttribute("href", "/accounts?p=2#top");
+    // The path alone (0.52 code review): the query is the reporter's to write.
+    const link = screen.getByRole("link", { name: "/accounts" });
+    expect(link).toHaveAttribute("href", "/accounts");
+    expect(link.parentElement).toHaveTextContent("/accounts?p=2#top");
     // The one link to the page (0.46, keksdose live #449): the Replies section's "Open
     // page" button repeated this one, a section above it.
     expect(screen.queryByRole("link", { name: "Open page" })).toBeNull();
@@ -204,7 +206,7 @@ describe("FeedbackRowDetail — the page it was filed on", () => {
         onUpdate={landing()}
       />,
     );
-    expect(screen.getByRole("link", { name: "/accounts?p=2" })).toHaveAttribute("href", "/accounts?p=2");
+    expect(screen.getByRole("link", { name: "/accounts" })).toHaveAttribute("href", "/accounts");
   });
 
   it("never links off the app", () => {

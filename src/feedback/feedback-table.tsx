@@ -38,8 +38,8 @@ import {
   type FeedbackRecord,
 } from "./feedback-record";
 import type { FeedbackStatusChange } from "./feedback-status-undo";
-import { feedbackPageHref, feedbackPagePath, feedbackPageUrl, useFeedbackDetailLabels } from "./feedback-row-detail";
-import { isOneShotPage } from "./feedback-page-link";
+import { feedbackPagePath, useFeedbackDetailLabels } from "./feedback-row-detail";
+import { feedbackPage, feedbackPageLinkTarget } from "./feedback-page-link";
 import type { CommitScope } from "../components/write-lock";
 import { DEFAULT_FEEDBACK_PAGE_LABELS } from "./feedback-table-labels";
 import { DEFAULT_FEEDBACK_PUBLIC_LABELS } from "./feedback-public-labels";
@@ -333,21 +333,22 @@ export function FeedbackSubject({ row, wrap = false, labels: labelsProp, classNa
 
 /**
  * The page a report was filed from, as a link — the cell keksdose's column 7 draws
- * (:850): the path as text, path + query + hash as the `href`, read from `context.url`
- * else `context.route` by the row detail's own readers (`feedbackPagePath` /
- * `feedbackPageHref`, feedback-row-detail.tsx), so the column and the detail link the
- * same page the same way. A real link through the `<UiKitProvider linkComponent>` (the app's router, so it
- * does not reload the app; keksdose's plain `<a>` did), and its click stops at the cell so
- * the row does not open as well.
+ * (:850): the path as text and as the `href`, read from `context.url` else
+ * `context.route` by the row detail's own reader (`feedbackPage`, feedback-page-link.ts),
+ * so the column and the detail link the same page the same way. A real link through the
+ * `<UiKitProvider linkComponent>` (the app's router, so it does not reload the app;
+ * keksdose's plain `<a>` did), and its click stops at the cell so the row does not open
+ * as well.
  *
  * Its name is the path, as on screen, with "Open page" said before it — keksdose's
  * `aria-label="Open page"` replaced the path, so a screen reader heard forty identical
  * links down the column.
  *
- * A one-shot route — `/join`, `/register`, `/verify-email`, `/reset-password` and the
- * app's `pageLinkExclude` — is the path as text with Copy, never a link (0.52, refactor
- * audit 2026-10-30, FLW-7): the path and query are the reporter's to write, and those
- * routes act on load.
+ * The PATH alone (0.52 code review, feedback-page-link.ts): the query is the reporter's to
+ * write, and `/login?next=%2Fjoin%3Ftoken%3D…` forwarded the admin's click to an
+ * invitation. A one-shot route — `/join`, `/register`, `/verify-email`, `/reset-password`
+ * and the app's `pageLinkExclude` — is the path as text with Copy, never a link (0.52,
+ * refactor audit 2026-10-30, FLW-7): those routes act on load.
  */
 function FeedbackPageLinkCell({
   context,
@@ -359,26 +360,17 @@ function FeedbackPageLinkCell({
   exclude: readonly PathPattern[] | undefined;
 }) {
   const kitLink = useKitLink();
-  const { copyUrl } = useFeedbackDetailLabels();
-  const href = feedbackPageHref(context);
-  const path = feedbackPagePath(context);
-  const url = feedbackPageUrl(context);
-  if (!href || !path) return <span className="text-placeholder">{EMPTY_FORMATTED_VALUE}</span>;
-  if (isOneShotPage(href, exclude)) {
-    return (
-      <span className="inline-flex min-w-0 max-w-full items-center gap-1 text-secondary" data-feedback-page-unlinked="">
-        <code className="min-w-0 truncate text-xs">{path}</code>
-        {url && <CopyButton size="xs" className="shrink-0" text={url} label={copyUrl} stopPropagation />}
-      </span>
-    );
-  }
+  const page = feedbackPage(context);
+  if (!page) return <span className="text-placeholder">{EMPTY_FORMATTED_VALUE}</span>;
+  const href = feedbackPageLinkTarget(page, exclude);
+  if (!href) return <FeedbackPageText path={page.path} url={page.url} />;
   const className =
     "inline-flex min-w-0 max-w-full items-center gap-1 text-secondary hover:text-primary hover:underline";
   const children = (
     <>
       {/* The space outside the hidden span: a flex container drops it from the layout,
           and the accessible name keeps it ("Open page /accounts"). */}
-      <span className="sr-only">{openPage}</span> <code className="min-w-0 truncate text-xs">{path}</code>
+      <span className="sr-only">{openPage}</span> <code className="min-w-0 truncate text-xs">{page.path}</code>
       <ExternalLink className="size-3 shrink-0" aria-hidden />
     </>
   );
@@ -392,6 +384,19 @@ function FeedbackPageLinkCell({
     <a href={href} className={className} onClick={onClick}>
       {children}
     </a>
+  );
+}
+
+/** A one-shot page in the URL column: its path to read, and Copy. A component of its own
+ *  so only such a row resolves the `feedbackDetail` words — every cell of a 270-row inbox
+ *  did, for a button only a one-shot row shows (0.52 code review, efficiency). */
+function FeedbackPageText({ path, url }: { path: string; url: string }) {
+  const { copyUrl } = useFeedbackDetailLabels();
+  return (
+    <span className="inline-flex min-w-0 max-w-full items-center gap-1 text-secondary" data-feedback-page-unlinked="">
+      <code className="min-w-0 truncate text-xs">{path}</code>
+      <CopyButton size="xs" className="shrink-0" text={url} label={copyUrl} stopPropagation />
+    </span>
   );
 }
 
@@ -435,8 +440,9 @@ export interface FeedbackColumnsOptions {
    * 0.52 (FLW-7): the app's one-shot routes, ON TOP of the kit's — `/join`, `/register`,
    * `/verify-email`, `/reset-password` (a string is that path and everything under it, a
    * RegExp is tested on the path, as `useLastVisitedPage`'s `exclude`). The URL cell
-   * shows such a page as text with Copy, never as a link. Keep it stable (module scope):
-   * it is a dependency of {@link useFeedbackColumns}' memo.
+   * shows such a page as text with Copy, never as a link; any other page links its path
+   * alone. Keep it stable (module scope): it is a dependency of {@link useFeedbackColumns}'
+   * memo.
    */
   pageLinkExclude?: readonly PathPattern[];
 }
