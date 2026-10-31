@@ -1,7 +1,7 @@
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels } from "../i18n/kit-labels";
 import type { LabelOverride } from "../i18n/kit-labels";
 import { DEFAULT_COMMON_LABELS } from "../i18n/shared-labels";
-import { formatDate } from "../lib/format";
+import { useDayFormatter } from "../lib/day-format";
 import type { DateInput } from "../lib/format";
 import { Button } from "../components/button";
 import { DialogFrame } from "../components/dialog-frame";
@@ -11,11 +11,16 @@ import type { BillingLabels } from "./billing-labels";
 
 export interface CancelSubscriptionConfirmProps {
   open: boolean;
-  /** `false` when the admin dismisses it — Back, Escape, the backdrop. Confirm leaves it
-   *  open: close it once `POST /billing/cancel` answers. */
-  onOpenChange: (open: boolean) => void;
-  /** The overview's `current_period_end`: the day the subscription ends. Formatted with
-   *  the kit's date formatter (`formatDate`, `"medium"`). */
+  /** The admin dismissed it — Back, Escape, the backdrop. Confirm leaves it open: close it
+   *  once `POST /billing/cancel` answers. 0.52: every other kit dialog's `onClose`
+   *  (CONTRIBUTING §4; refactor audit 2026-10-30, API-5). */
+  onClose?: () => void;
+  /** @deprecated 0.52 — `onClose`, as every other kit dialog; removed in 0.53. Called with
+   *  `false` when there is no `onClose`. */
+  onOpenChange?: (open: boolean) => void;
+  /** The overview's `current_period_end`: the day the subscription ends, in a sentence —
+   *  the `<UiKitProvider formatDate>` (the app's date preference) when it set one, else the
+   *  kit's `formatDate`, `"medium"`, in the provider's locale and `timeZone` (0.52). */
   periodEnd: DateInput;
   /** Confirm: the app's `POST /billing/cancel` (server-kit 0.14, §16.3). */
   onConfirm: () => void;
@@ -38,7 +43,7 @@ export interface CancelSubscriptionConfirmProps {
  *
  *     <CancelSubscriptionConfirm
  *       open={asking}
- *       onOpenChange={setAsking}
+ *       onClose={() => setAsking(false)}
  *       periodEnd={overview.current_period_end}
  *       pending={cancel.isPending}
  *       onConfirm={() => cancel.mutate()}
@@ -54,6 +59,7 @@ export interface CancelSubscriptionConfirmProps {
  */
 export function CancelSubscriptionConfirm({
   open,
+  onClose,
   onOpenChange,
   periodEnd,
   onConfirm,
@@ -63,14 +69,14 @@ export function CancelSubscriptionConfirm({
 }: CancelSubscriptionConfirmProps) {
   const labels = useBillingLabels(labelsProp);
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
-  const locale = useKitLocale(localeProp);
+  const day = useDayFormatter(undefined, localeProp);
 
   return (
     <DialogFrame
       open={open}
       title={labels.cancelConfirmTitle}
-      description={labels.cancelConfirmBody(formatDate(periodEnd, "medium", { locale }))}
-      onClose={() => onOpenChange(false)}
+      description={labels.cancelConfirmBody(day(periodEnd))}
+      onClose={() => (onClose ? onClose() : onOpenChange?.(false))}
       busy={pending}
       data-cancel-subscription-confirm=""
       actions={(close) => (

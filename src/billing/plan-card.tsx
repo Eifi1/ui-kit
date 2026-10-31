@@ -489,9 +489,7 @@ export function PlanPicker({
       {permanentGrant && !switching && (
         <GrantWarningConfirm
           open={warned !== null}
-          onOpenChange={(open) => {
-            if (!open) setWarned(null);
-          }}
+          onClose={() => setWarned(null)}
           onConfirm={() => {
             if (warned) onChoose(warned);
           }}
@@ -505,8 +503,12 @@ export function PlanPicker({
 export interface GrantWarningConfirmProps {
   /** Shown, controlled. */
   open: boolean;
-  /** `false` on "Back", Escape, the backdrop — and after "Buy anyway". */
-  onOpenChange: (open: boolean) => void;
+  /** "Back", Escape, the backdrop — and after "Buy anyway". 0.52: every other kit
+   *  dialog's `onClose` (CONTRIBUTING §4; refactor audit 2026-10-30, API-5). */
+  onClose?: () => void;
+  /** @deprecated 0.52 — `onClose`, as every other kit dialog; removed in 0.53. Called with
+   *  `false` when there is no `onClose`. */
+  onOpenChange?: (open: boolean) => void;
   /** "Buy anyway": the app opens its checkout. The dialog closes itself after it. */
   onConfirm: () => void;
   /** Prop > `<UiKitProvider labels={{ billing }}>` > English: `grantWarningTitle`,
@@ -523,15 +525,22 @@ export interface GrantWarningConfirmProps {
  * to a checkout — show this before that checkout, so a permanent-grant holder is still
  * warned. Carries `data-grant-warning`.
  */
-export function GrantWarningConfirm({ open, onOpenChange, onConfirm, labels: labelsProp }: GrantWarningConfirmProps) {
+export function GrantWarningConfirm({
+  open,
+  onClose,
+  onOpenChange,
+  onConfirm,
+  labels: labelsProp,
+}: GrantWarningConfirmProps) {
   const labels = useBillingLabels(labelsProp);
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
+  const close = () => (onClose ? onClose() : onOpenChange?.(false));
   return (
     <DialogFrame
       open={open}
       title={labels.grantWarningTitle}
       description={labels.grantWarningBody}
-      onClose={() => onOpenChange(false)}
+      onClose={close}
       data-grant-warning=""
       actions={(close) => (
         <>
@@ -542,7 +551,7 @@ export function GrantWarningConfirm({ open, onOpenChange, onConfirm, labels: lab
             variant="default"
             onClick={() => {
               onConfirm();
-              onOpenChange(false);
+              close();
             }}
           >
             {labels.grantWarningAction}
