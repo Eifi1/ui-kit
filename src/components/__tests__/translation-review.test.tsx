@@ -387,6 +387,41 @@ describe("TranslationReviewEditor", () => {
   });
 });
 
+describe("TranslationReviewEditor's verdict date (DUP-2)", () => {
+  const row = ROWS.find((r) => r.key === "common.save")!;
+
+  it("follows the provider's formatDate, without a weekday; the editor's own prop wins", () => {
+    const { rerender } = render(
+      <UiKitProvider formatDate={(iso, { weekday }) => `«${iso}${weekday ? " +wd" : ""}»`}>
+        <TranslationReviewEditor row={row} referenceLabel="English" localeLabel="Français" />
+      </UiKitProvider>,
+    );
+    expect(screen.getByText("Approved by Amélie on «2026-10-02»")).toBeInTheDocument();
+    rerender(
+      <UiKitProvider formatDate={(iso) => `«${iso}»`}>
+        <TranslationReviewEditor row={row} referenceLabel="English" localeLabel="Français" formatDate={() => "today"} />
+      </UiKitProvider>,
+    );
+    expect(screen.getByText("Approved by Amélie on today")).toBeInTheDocument();
+  });
+
+  it("is the kit's medium date in the provider's timeZone without a formatter", () => {
+    const late = translationRows({
+      locale: "fr",
+      strings: { "common.save": "Enregistrer" },
+      reference: { "common.save": "Save" },
+      // 03:00 UTC on the 2nd: still the 1st in New York.
+      reviews: [review({ reviewedAt: "2026-10-02T03:00:00Z" })],
+    })[0];
+    render(
+      <UiKitProvider locale="en-GB" timeZone="America/New_York">
+        <TranslationReviewEditor row={late} referenceLabel="English" localeLabel="Français" />
+      </UiKitProvider>,
+    );
+    expect(screen.getByText("Approved by Amélie on 1 Oct 2026")).toBeInTheDocument();
+  });
+});
+
 describe("TranslationReview under a write lock (0.33, billing §12.13, §12.36)", () => {
   const PLAN = "Your plan has ended.";
   const DEMO = "Not possible in the demo.";

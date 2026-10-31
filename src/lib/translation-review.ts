@@ -22,7 +22,7 @@
  * the same contract, so the mapping is written once, here.
  */
 
-import { foldForSearch } from "./text-match";
+import { matchesSearch, searchWords } from "./text-match";
 
 // ── Shapes ──────────────────────────────────────────────────────────────────────
 
@@ -407,7 +407,8 @@ export interface TranslationReviewFilter {
   source: string;
   namespace: string;
   /** Searched in the key, the text and the reference, folded as every kit list's search
-   *  is (`foldForSearch`): no case, no accents — "uberweisung" finds "Überweisung". */
+   *  is (`foldForSearch`): no case, no accents — "uberweisung" finds "Überweisung". Every
+   *  word on its own (0.52): "budget assign" finds `budget.rta`, "Ready to Assign". */
   query: string;
   placeholdersOnly: boolean;
 }
@@ -420,20 +421,27 @@ export const DEFAULT_TRANSLATION_REVIEW_FILTER: TranslationReviewFilter = {
   placeholdersOnly: false,
 };
 
+/**
+ * The rows the filters leave. `locale` (0.52) folds the query and the texts as the kit's
+ * other lists do — the panel passes the provider's; left out, the runtime's default.
+ */
 export function filterTranslationRows(
   rows: readonly TranslationRow[],
   filter: Partial<TranslationReviewFilter>,
+  locale?: string,
 ): TranslationRow[] {
   const f = { ...DEFAULT_TRANSLATION_REVIEW_FILTER, ...filter };
-  // Folded as every kit list's search is (DUP-5, refactor audit 2026-10).
-  const q = foldForSearch(f.query.trim());
+  // Folded as every kit list's search is (DUP-5, refactor audit 2026-10), and since 0.52
+  // word by word, each anywhere in the key, the text or the reference (0.51.4's rule;
+  // refactor audit 2026-10-30, DUP-4: the whole query had to be one substring of one).
+  const words = searchWords(f.query, locale);
   return rows.filter(
     (row) =>
       (f.status === "all" || row.status === f.status) &&
       (f.source === "all" || row.source === f.source) &&
       (f.namespace === "all" || row.namespace === f.namespace) &&
       (!f.placeholdersOnly || row.placeholderMismatch) &&
-      (!q || [row.key, row.text, row.reference].some((s) => foldForSearch(s).includes(q))),
+      matchesSearch(words, [row.key, row.text, row.reference], locale),
   );
 }
 

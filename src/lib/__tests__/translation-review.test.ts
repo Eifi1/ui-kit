@@ -201,6 +201,13 @@ describe("translationRows — keksdose's shape (dotted keys, one source)", () =>
     expect(filterTranslationRows(rows, { query: "  COMMON.SAVE " }).map((r) => r.key)).toEqual(["common.save"]);
   });
 
+  it("searches word by word, each word in the key, the text or the reference (DUP-4)", () => {
+    // "budget" is the key's, "assign" the reference's, "attribuer" the text's: no one
+    // text holds the query as typed.
+    expect(filterTranslationRows(rows, { query: "assign budget" }).map((r) => r.key)).toEqual(["budget.rta"]);
+    expect(filterTranslationRows(rows, { query: "attribuer ready" }).map((r) => r.key)).toEqual(["budget.rta"]);
+  });
+
   it("keeps a key only the translation has instead of dropping it", () => {
     const extra = translationRows({ locale: "it", strings: { only: "Solo" }, reference: {} });
     expect(extra.map((r) => [r.key, r.reference, r.status])).toEqual([["only", "", "unreviewed"]]);

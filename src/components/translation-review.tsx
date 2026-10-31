@@ -181,7 +181,8 @@ export interface TranslationReviewPanelProps {
    * kit's, which an app listing what it stores had to list as its own (KS U4).
    */
   storageKeyPrefix?: string;
-  /** How a verdict's date reads in the editor. */
+  /** How a verdict's date reads in the editor. Default: the editor's — the
+   *  `<UiKitProvider formatDate>`, else the kit's medium date (0.52). */
   formatDate?: (iso: string) => string;
   /** Turns a callback's rejection into words. Default {@link TranslationReviewLabels.failed}. */
   formatError?: (error: unknown) => ReactNode;
@@ -561,8 +562,8 @@ export function TranslationReviewPanel({
   // `filter` is rebuilt every render; its fields are what the list depends on.
   const { status, query, placeholdersOnly } = filter;
   const visible = useMemo(
-    () => filterTranslationRows(rows, { status, source, namespace, query, placeholdersOnly }),
-    [rows, status, source, namespace, query, placeholdersOnly],
+    () => filterTranslationRows(rows, { status, source, namespace, query, placeholdersOnly }, locale),
+    [rows, status, source, namespace, query, placeholdersOnly, locale],
   );
 
   // ── Groups ──

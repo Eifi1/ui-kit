@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
-import { useKitFormat } from "../lib/format";
+import { useDayFormatter } from "../lib/day-format";
 import { placeholderTokens, reviewWrite } from "../lib/translation-review";
 import type {
   TranslationReviewKey,
@@ -48,8 +48,10 @@ export interface TranslationReviewEditorProps {
    * opened by a tap — that one may only be opened to read.
    */
   focusWording?: boolean;
-  /** How the verdict's date reads. Default: the kit's `formatDate`, medium, in the
-   *  provider's locale. */
+  /** How the verdict's date reads. Default (0.52): the `<UiKitProvider formatDate>` when
+   *  the app set one (its date preference; the day sits in a sentence, so no weekday), else
+   *  the kit's `formatDate`, medium, in the provider's locale and `timeZone`. An empty
+   *  answer falls back to the kit's. */
   formatDate?: (iso: string) => string;
   /** Turns a rejection into words. Default {@link TranslationReviewLabels.failed}. */
   formatError?: (error: unknown) => ReactNode;
@@ -106,7 +108,7 @@ export function TranslationReviewEditor({
   labels: labelsProp,
 }: TranslationReviewEditorProps) {
   const labels = useKitLabels("translationReview", DEFAULT_TRANSLATION_REVIEW_LABELS, labelsProp);
-  const { formatDate } = useKitFormat();
+  const date = useDayFormatter(formatDateProp);
   const review = row.review;
   const missing = row.text === "";
   const editable = !readOnly && onSave !== undefined;
@@ -127,7 +129,6 @@ export function TranslationReviewEditor({
 
   const canFlag = note.trim() !== "" || suggestion.trim() !== row.text.trim();
   const changed = row.status === "changed" ? review : null;
-  const date = (iso: string) => (formatDateProp ? formatDateProp(iso) : formatDate(iso, "medium"));
 
   const run = async (kind: "approve" | "flag" | "clear", action: () => MaybePromise) => {
     setBusy(kind);
