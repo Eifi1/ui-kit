@@ -48,7 +48,7 @@ export const GROW_PEER_CELL_CLASS = "not-large:whitespace-nowrap";
 // until kastlan's admin pane scrolled 21px at 1280px (0.48 build review 2, kastlan S1).
 
 /** The auto-hide order: lowest `fitPriority` first, the later column first on a tie. */
-export function fitHideOrder<T>(columns: DataTableColumn<T>[]): DataTableColumn<T>[] {
+export function fitHideOrder<T>(columns: readonly DataTableColumn<T>[]): DataTableColumn<T>[] {
   return columns
     .map((col, index) => ({ col, index }))
     .filter(({ col }) => col.fitPriority != null)
@@ -72,7 +72,7 @@ export function useColumnFit<T>({
   enabled,
   content,
 }: {
-  columns: DataTableColumn<T>[];
+  columns: readonly DataTableColumn<T>[];
   /** The user's hidden columns: never candidates (they are out already). */
   hiddenCols: Set<string>;
   headRefs: Map<string, HTMLTableCellElement>;
@@ -83,8 +83,10 @@ export function useColumnFit<T>({
   /**
    * What can change the columns' widths besides the scroller (0.48.2): the rows on
    * screen, the columns, the stored widths, the text size. Compared item by item after
-   * each render, and the table is measured only when one changed — a selection tick no
-   * longer forces a layout of the whole table. Without it, every render measures.
+   * each render (`Object.is`), and the table is measured only when one changed — a
+   * selection tick no longer forces a layout of the whole table. Without it, every render
+   * measures. So each item must keep its identity while it means the same: the page's
+   * rows memoised, the columns as their keys (DSP-19).
    */
   content?: readonly unknown[];
 }): {
@@ -223,11 +225,16 @@ export function useColumnFit<T>({
   // drawn first. A render that changed none of it (a ticked box, a focused row) skips the
   // measure, which forces a layout of the whole table (0.48.2, keksdose dev #632).
   const lastContent = useRef<readonly unknown[] | null>(null);
+  // The candidates by their keys, not by identity (refactor audit 2026-10-30, DSP-19):
+  // both are memoised on `columns`, which a call site writes inline — a new array, and
+  // so a "change", on every render of the page around the table.
+  const orderSig = order.map((c) => c.key).join("\u0000");
+  const currentSig = current.join("\u0000");
   useLayoutEffect(() => {
     // The table the observer watches is this render's (a table drawn after a loading
     // state, or remounted, is a new element).
     watchTable();
-    const now = content ? [...content, order, current, growKey, active] : null;
+    const now = content ? [...content, orderSig, currentSig, growKey, active] : null;
     const prev = lastContent.current;
     lastContent.current = now;
     if (now && prev && prev.length === now.length && prev.every((v, i) => Object.is(v, now[i]))) return;

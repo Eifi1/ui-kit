@@ -78,14 +78,20 @@ function layout(table: HTMLElement) {
 }
 
 let ro: ResizeObserverStub;
+/** How often the fit laid the whole table out: each read of the table's own width is one. */
+let tableLayouts = 0;
 beforeEach(() => {
   avail = 2000;
+  tableLayouts = 0;
   ro = stubResizeObserver();
   stubGetter(HTMLElement.prototype, "clientWidth", function () {
     return this.hasAttribute("data-clips") ? avail : 0;
   });
   stubGetter(HTMLElement.prototype, "offsetWidth", function () {
-    if (this.tagName === "TABLE") return layout(this).table;
+    if (this.tagName === "TABLE") {
+      tableLayouts++;
+      return layout(this).table;
+    }
     if (this.tagName === "TH" && this.closest("thead")) {
       const l = layout(this.closest("table") as HTMLElement);
       return l.growTh === this ? l.grow : (WIDTH[key(this)] ?? 50);
@@ -392,6 +398,65 @@ describe("DataTable fit (0.48, keksdose live #451)", () => {
       col("d", { fitPriority: 2 }),
     ]).map((c) => c.key);
     expect(order).toEqual(["c", "d", "a"]);
+  });
+});
+
+/**
+ * The fit is meant to measure only when what it fits changed (0.48.2), but its gate
+ * compared the page's rows by identity, and a paginated table cut a fresh
+ * `sorted.slice(…)` on every render; inline `columns={…}` defeated the columns item the
+ * same way. So every render of a table with a `fitPriority` column — a ticked box, a
+ * keystroke in a filter, any parent render — laid the whole table out (refactor audit
+ * 2026-10-30, DSP-19). The slice is memoised now and the columns are compared by key.
+ */
+describe("the fit measures only when what it fits changed (audit 2026-10-30 DSP-19)", () => {
+  const ui = (columns: DataTableColumn<Row>[], selected: boolean) => (
+    <MemoryRouter>
+      <DataTable
+        rows={ROWS}
+        columns={columns}
+        rowKey={(r) => r.id}
+        selection={{
+          isSelected: () => selected,
+          onToggle: () => {},
+          allSelected: selected,
+          someSelected: selected,
+          onToggleAll: () => {},
+        }}
+      />
+    </MemoryRouter>
+  );
+
+  it("a parent's render with the same columns written inline lays nothing out", () => {
+    const { rerender } = render(
+      ui(
+        FIT.map((c) => ({ ...c })),
+        false,
+      ),
+    );
+    expect(tableLayouts).toBeGreaterThan(0);
+    tableLayouts = 0;
+    rerender(
+      ui(
+        FIT.map((c) => ({ ...c })),
+        false,
+      ),
+    );
+    expect(tableLayouts).toBe(0);
+  });
+
+  it("a ticked box lays nothing out", () => {
+    const { rerender } = render(ui(FIT, false));
+    tableLayouts = 0;
+    rerender(ui(FIT, true));
+    expect(tableLayouts).toBe(0);
+  });
+
+  it("a column added (a new key) is measured", () => {
+    const { rerender } = render(ui(FIT, false));
+    tableLayouts = 0;
+    rerender(ui([...FIT, col("extra")], false));
+    expect(tableLayouts).toBeGreaterThan(0);
   });
 });
 

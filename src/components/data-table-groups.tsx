@@ -57,7 +57,7 @@ export interface RowGroup<T> {
 }
 
 /** Consecutive runs by `level.key`, nested once for a second level. */
-export function groupRows<T>(rows: T[], levels: readonly DataTableGroupBy<T>[], offset = 0): RowGroup<T>[] {
+export function groupRows<T>(rows: readonly T[], levels: readonly DataTableGroupBy<T>[], offset = 0): RowGroup<T>[] {
   const [level, ...rest] = levels;
   if (!level) return [];
   const out: RowGroup<T>[] = [];

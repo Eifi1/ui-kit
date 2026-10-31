@@ -16,7 +16,7 @@ import type { DataTableColumn, FilterState, ServerPagination } from "./data-tabl
 interface PersistedState {
   // Multi-sort array; blobs from before the upgrade hold a single {key, dir}
   // object (or null) — read back through normalizeSorts.
-  sort: SortState[] | { key: string; dir: string } | null;
+  sort: readonly SortState[] | { key: string; dir: string } | null;
   filters: FilterState;
   pageSize: number | "all";
   widths?: Record<string, number>;
@@ -190,7 +190,7 @@ export interface TableUrlState {
  */
 export function readTableUrlState<T>(
   sp: URLSearchParams,
-  columns: DataTableColumn<T>[],
+  columns: readonly DataTableColumn<T>[],
   prefix?: string,
 ): TableUrlState {
   const keys = urlKeys(prefix);
@@ -232,8 +232,8 @@ export function readTableUrlState<T>(
  * produces a different one.
  */
 function urlSignature<T>(
-  columns: DataTableColumn<T>[],
-  sorts: SortState[],
+  columns: readonly DataTableColumn<T>[],
+  sorts: readonly SortState[],
   filters: FilterState,
   pageSize: number,
   page: number,
@@ -257,8 +257,8 @@ function urlSignature<T>(
 
 function writeUrlState<T>(
   setSearchParams: ReturnType<typeof useSearchParams>[1],
-  columns: DataTableColumn<T>[],
-  sorts: SortState[],
+  columns: readonly DataTableColumn<T>[],
+  sorts: readonly SortState[],
   filters: FilterState,
   pageSize: number,
   page: number,
@@ -334,12 +334,12 @@ export function useTableState<T>({
   filtersProp,
   pageSizeProp,
 }: {
-  columns: DataTableColumn<T>[];
+  columns: readonly DataTableColumn<T>[];
   storageKey?: string;
   storageKeyPrefix: string;
   urlSync?: TableUrlSync;
   defaultPageSize: number;
-  sortsProp?: SortState[];
+  sortsProp?: readonly SortState[];
   filtersProp?: FilterState;
   pageSizeProp?: number;
 }) {
@@ -574,6 +574,9 @@ export function useSharedTableView({
       pageSize: next.pageSize === Infinity ? "all" : next.pageSize,
       widths: stored.widths,
       hidden: stored.hidden,
+      // The `defaultHidden` columns the single table's user ticked back on (0.48): left
+      // out, a sort changed here hid them again there (refactor audit 2026-10-30, DSP-23 c).
+      ...(stored.shown ? { shown: stored.shown } : {}),
     };
     writeStored(prefix + storageKey, serializePersisted(blob));
   };
@@ -589,7 +592,7 @@ export function useSharedTableView({
 
 export interface UseTableUrlStateOptions<T> {
   /** The table's columns — read for their keys and filter types only. */
-  columns: DataTableColumn<T>[];
+  columns: readonly DataTableColumn<T>[];
   /** Default 25. A page size equal to it is left out of the URL. */
   defaultPageSize?: number;
   /** Mirror the state into the URL and seed it from there on mount. Default true.

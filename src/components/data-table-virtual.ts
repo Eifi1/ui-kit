@@ -199,7 +199,7 @@ export function useRowWindow<T>({
 }: {
   enabled: boolean;
   /** The rows on screen, in order. */
-  rows: T[];
+  rows: readonly T[];
   rowKey: (row: T) => string | number;
   groups: readonly VirtualGroup[];
   /** Indices of the open rows: always rendered, their detail rows counted. */

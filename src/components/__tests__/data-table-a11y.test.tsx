@@ -65,6 +65,15 @@ async function settleAnnouncement() {
   });
 }
 
+/** A filter's count waits for the typing to pause (audit 2026-10-30 DSP-23 d): past that,
+ *  then the region's own tick. */
+async function settleFilterAnnouncement() {
+  await act(async () => {
+    vi.advanceTimersByTime(500);
+  });
+  await settleAnnouncement();
+}
+
 describe("DataTable table semantics", () => {
   it("gives the table an accessible name, which a consumer can translate", () => {
     const { unmount } = renderTable();
@@ -146,8 +155,8 @@ describe("DataTable announcements", () => {
     // the render that produced the new number rather than from the click.
     renderTable();
     fireEvent.click(screen.getByRole("button", { name: "Filter Name" }));
-    fireEvent.change(screen.getByPlaceholderText("Filter…"), { target: { value: "Row 7" } });
-    await settleAnnouncement();
+    fireEvent.change(screen.getByPlaceholderText("Filter…"), { target: { value: "Row 25" } });
+    await settleFilterAnnouncement();
     expect(screen.getByRole("status")).toHaveTextContent("1 of 25 rows");
   });
 
@@ -175,9 +184,25 @@ describe("DataTable announcements", () => {
     expect(screen.getByRole("status")).toBeEmptyDOMElement();
 
     fireEvent.click(screen.getByRole("button", { name: "apply" }));
-    await settleAnnouncement();
+    await settleFilterAnnouncement();
     // "Bern" is in the city column, which carries no filter — so nothing matches.
     expect(screen.getByRole("status")).toHaveTextContent("0 of 25 rows");
+  });
+
+  it("waits for the typing to pause: one count for a word, not one per keystroke (audit 2026-10-30 DSP-23 d)", async () => {
+    renderTable();
+    fireEvent.click(screen.getByRole("button", { name: "Filter Name" }));
+    const field = screen.getByPlaceholderText("Filter…");
+    for (const q of ["R", "Ro", "Row", "Row 25"]) {
+      fireEvent.change(field, { target: { value: q } });
+      await act(async () => {
+        vi.advanceTimersByTime(120);
+      });
+      // Mid-word, nothing is said: a count per keystroke talked over the typing.
+      expect(screen.getByRole("status")).toBeEmptyDOMElement();
+    }
+    await settleFilterAnnouncement();
+    expect(screen.getByRole("status")).toHaveTextContent("1 of 25 rows");
   });
 
   it("announces the page when the user pages", async () => {
@@ -221,6 +246,18 @@ describe("DataTable announcements", () => {
     fireEvent.click(screen.getByRole("button", { name: "2" }));
     await settleAnnouncement();
     expect(screen.getByRole("status")).toHaveTextContent("Seite 2 von 3");
+  });
+});
+
+describe("DataTable plain headers (audit 2026-10-30 DSP-23 a)", () => {
+  it("a column that cannot be sorted is plain text, not a dimmed button", () => {
+    // Every non-sortable header's text sat in a `<button disabled>`, which a screen
+    // reader announces as a dimmed button on each plain column.
+    renderTable();
+    const [name, city] = screen.getAllByRole("columnheader");
+    expect(city).toHaveTextContent("City");
+    expect(city.querySelector("button")).toBeNull();
+    expect(name.querySelector("button")).toHaveTextContent("Name");
   });
 });
 

@@ -1399,7 +1399,9 @@ function DataTableActionsDemo() {
           and tone included; <em>Archive</em> states its own label and icon, and is locked with a{" "}
           {code("disabledReason")} for Kemal, who owes rent. The delete runs only after {code("useConfirm()")} says yes.
           A press on an action never opens the row. On a phone the column disappears and the same actions become the
-          card&apos;s swipes.
+          card&apos;s swipes. Archive or delete a row from the keyboard: the focus moves to the row now in its place
+          (the last row, or the table once none is left) and the remaining count is spoken — it no longer falls to the
+          top of the page (0.52).
         </Note>
         <Note>
           The search lives in the {code("toolbar")}, inside the table&apos;s frame. Type {code("nobody")} — the empty

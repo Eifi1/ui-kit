@@ -3,6 +3,7 @@ import type { MouseEvent as ReactMouseEvent, ReactNode, RefObject } from "react"
 import { RowLink, cleanAttrs, fromOutside, fromOwnControl, logicalAlign, splitCellProps } from "./data-table-shared";
 import { GROW_CELL_CLASS, GROW_PEER_CELL_CLASS } from "./data-table-fit";
 import { MobileRow, type MobileRowProps } from "./data-table-mobile";
+import { Checkbox } from "./checkbox";
 import type { DataTableColumn, MobileSwipeActions } from "./data-table";
 import { cn } from "../lib/cn";
 
@@ -47,6 +48,10 @@ export interface DataTableRowCtx<T> {
   /** Under `virtualize` (0.48.2): Arrow/Home/End over every row, rendered or not. True
    *  when the key was one of them. Without it the roving walks the rendered rows. */
   moveFocus?: (fromIndex: number, key: string) => boolean;
+  /** The focus came into this row — the row, a control in it, its open detail, or a
+   *  portal one of them opened: where the table puts the focus if the row leaves
+   *  (refactor audit 2026-10-30, DSP-4). */
+  noteFocus: (key: string | number) => void;
 }
 
 /** `rowAttributes`' result compared key by key: a call site returns a fresh object (or
@@ -133,7 +138,7 @@ export interface DataTableRowProps<T> {
   rowDetailsLabel: string;
   selectRowLabel: string;
   /** Under `virtualize` (0.48.2): the row's `aria-rowindex` (its open detail row is the
-   *  next), and the row is marked with its index for the window's measuring. */
+   *  next), and its detail row is marked with the row's index for the window's measuring. */
   ariaRowIndex?: number;
 }
 
@@ -191,16 +196,15 @@ function DataTableRowImpl<T>({
       <tr
         {...cleanAttrs(attrs)}
         aria-rowindex={ariaRowIndex}
-        data-row-index={windowed ? rowIndex : undefined}
+        // Every row, windowed or not: the window measures by it (0.48.2), and the table
+        // finds by it the row that takes the focus when a focused one leaves (DSP-4).
+        data-row-index={rowIndex}
         data-row-nav={rowsFocusable ? "" : undefined}
         tabIndex={rowsFocusable ? (tabbable ? 0 : -1) : undefined}
-        onFocus={
-          rowsFocusable
-            ? (e) => {
-                if (e.target === e.currentTarget) ctx.current.setFocusRowKey(key);
-              }
-            : undefined
-        }
+        onFocus={(e) => {
+          if (rowsFocusable && e.target === e.currentTarget) ctx.current.setFocusRowKey(key);
+          ctx.current.noteFocus(key);
+        }}
         onKeyDown={
           rowsFocusable
             ? (e) => {
@@ -278,9 +282,10 @@ function DataTableRowImpl<T>({
             onClick={(e) => e.stopPropagation()}
           >
             {selectable && (
-              <input
-                type="checkbox"
-                className={cn("accent-indigo-600", compact ? "size-3.5" : "size-4")}
+              // The kit's Checkbox, as the phone card's, not an indigo native box (DSP-14;
+              // see the header's).
+              <Checkbox
+                inputClassName={compact ? "size-3.5" : undefined}
                 checked={selected}
                 // Shift+click selects the range from the last toggled
                 // row. `preventDefault` puts the box back, but it does NOT
@@ -334,8 +339,10 @@ function DataTableRowImpl<T>({
               {col === linkColumn && href ? (
                 // No `onActivate`: the click is left to bubble to the
                 // <tr> handler above, which already owns expand-vs-select.
-                // Calling it here as well would toggle the row twice.
-                <RowLink href={href} className="block" data-row-link="">
+                // Calling it here as well would toggle the row twice. Without
+                // `onRowClick` (the row is not focusable then) nothing opens it in
+                // place, and the link is followed (DSP-23 b).
+                <RowLink href={href} navigate={!rowsFocusable} className="block" data-row-link="">
                   {col.cell(row)}
                 </RowLink>
               ) : (
@@ -350,6 +357,8 @@ function DataTableRowImpl<T>({
           id={hasDisclosure ? detailId : undefined}
           aria-rowindex={windowed ? ariaRowIndex + 1 : undefined}
           data-row-detail={windowed ? rowIndex : undefined}
+          // An inline editor's field is the row's focus too (DSP-4).
+          onFocus={() => ctx.current.noteFocus(key)}
           className="bg-surface-2 border-t border-subtle"
         >
           {/* The detail panel spans every column. In an `auto` table
@@ -400,6 +409,7 @@ export const DataTableRow = memo(DataTableRowImpl, sameProps) as <T>(
 export interface DataTableMobileRowProps<T> extends Pick<
   MobileRowProps<T>,
   | "row"
+  | "rowIndex"
   | "opensRow"
   | "mobileDir"
   | "mobileCardLinkable"
@@ -461,6 +471,7 @@ function DataTableMobileRowImpl<T>({
       rowAttributes={() => attrs}
       onRowClick={interactive ? (r) => ctx.current.onRowClick!(r) : undefined}
       rowHref={href !== undefined ? () => href : undefined}
+      onFocusIn={() => ctx.current.noteFocus(key)}
       select={
         selectionOn
           ? {

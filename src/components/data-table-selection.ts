@@ -20,7 +20,7 @@ export function useRangeSelection<T>({
 }: {
   selection: DataTableProps<T>["selection"];
   /** The rows on screen, in the order shown. */
-  slice: T[];
+  slice: readonly T[];
   rowKey: (row: T) => string | number;
 }) {
   // The row whose selection was last toggled, so Shift+click can select the range up

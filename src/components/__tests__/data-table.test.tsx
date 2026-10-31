@@ -101,10 +101,10 @@ describe("DataTable sorting", () => {
 
   it("leaves a column with no sortBy alone", () => {
     renderTable();
-    // The header still renders a button (it carries the label), but it is disabled —
-    // a sort a column cannot perform must not look available.
-    expect(screen.getByRole("button", { name: "City" })).toBeDisabled();
-    fireEvent.click(screen.getByRole("button", { name: "City" }));
+    // Its header is plain text (0.52, audit 2026-10-30 DSP-23 a): a sort a column cannot
+    // perform must not look available — and a `<button disabled>` was read out as one.
+    expect(screen.queryByRole("button", { name: "City" })).toBeNull();
+    fireEvent.click(within(header("City")).getByText("City"));
     expect(namesOnScreen()).toEqual(["Delta", "Alpha", "Echo", "Bravo", "Charlie"]);
   });
 });

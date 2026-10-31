@@ -43,7 +43,7 @@ import { useLargeText } from "../hooks/use-large-text";
 import { cn } from "../lib/cn";
 import { isFilterActive, resolveFilter, rowMatches } from "./data-table-filters";
 import type { ColumnFilter, FilterValue } from "./data-table-filters";
-import { nextSorts } from "./data-table-sort";
+import { compareSortValues, nextSorts } from "./data-table-sort";
 import type { SortCycle, SortDir, SortState } from "./data-table-sort";
 import { Pagination } from "./data-table-pagination";
 import type { SwipeAction } from "./swipeable-row";
@@ -61,6 +61,7 @@ import {
 } from "../i18n/kit-labels";
 import { useEdgeFade } from "../lib/strip-fade";
 import { dirOf, type Direction } from "../lib/direction";
+import { firstTabStop, focusContainer, focusIsLost } from "../lib/focus-left";
 
 // ---------- Types ----------
 
@@ -71,7 +72,8 @@ export interface DataTableColumn<T> {
   /** What a client sort orders the column by. Strings collate in the table's `locale`
    *  (digits as numbers, case and accents left out; 0.51.7, audit 2026-10-30 DSP-3),
    *  numbers compare as numbers and sort before strings, `null` and `undefined` sort
-   *  last in either direction. */
+   *  last in either direction. The order is `compareSortValues`, exported for an app's
+   *  own list beside the table (0.52). */
   sortBy?: (row: T) => string | number | null | undefined;
   filter?: ColumnFilter<T>;
   filterBy?: (row: T) => string;
@@ -266,8 +268,11 @@ export interface ServerPagination {
 }
 
 export interface DataTableProps<T> {
-  rows: T[];
-  columns: DataTableColumn<T>[];
+  /** `readonly` since 0.52 (refactor audit 2026-10-30, API-7): the table never changes the
+   *  arrays it is handed, so a caller's `as const` list or a query's frozen result needs no
+   *  copy. Only widens: a mutable array is still one. The same for `columns` and `sorts`. */
+  rows: readonly T[];
+  columns: readonly DataTableColumn<T>[];
   rowKey: (row: T) => string | number;
   defaultPageSize?: number;
   onRowClick?: (row: T) => void;
@@ -289,6 +294,11 @@ export interface DataTableProps<T> {
    * not wrap table cells, and the absolutely-positioned row overlay that is the
    * usual workaround would sit on top of the per-cell controls these rows carry
    * (status toggles, the selection checkbox, nested links) and swallow them.
+   *
+   * With `onRowClick` a plain click opens the row through it, in place. Without one
+   * (0.52, refactor audit 2026-10-30, DSP-23 b) the click follows the link — through the
+   * provider's `linkComponent` for an in-app path, as every kit link — and the phone
+   * card is that link too; before, the click was cancelled and opened nothing.
    */
   rowHref?: (row: T) => string | undefined;
   expandedRow?: (row: T) => ReactNode | null;
@@ -442,7 +452,7 @@ export interface DataTableProps<T> {
    */
   filters?: FilterState;
   onFiltersChange?: (next: FilterState) => void;
-  sorts?: SortState[];
+  sorts?: readonly SortState[];
   onSortsChange?: (next: SortState[]) => void;
   /**
    * Controlled page size, as `sorts` above: the table pages by it and hands its pager's
@@ -931,6 +941,15 @@ export interface DataTableDesktopSwipeActions<T> {
  */
 const FOOTER_CELL = "sticky bottom-0 z-10 bg-surface-2 shadow-[inset_0_2px_0_var(--border-strong)]";
 
+/** Where focus that leaves a row is still the row's (DSP-4): an overlay — a confirm, a
+ *  menu, a sheet — hands it back or closes with the row it was about. The kit marks its
+ *  own (`data-kit-layer`); an app's dialog says what it is. */
+const OVERLAY_SELECTOR = '[data-kit-layer],[role="dialog"],[role="alertdialog"],[aria-modal="true"],[role="menu"]';
+
+/** How long a filter's "n of m rows" waits for the typing to pause (DSP-23 d): longer than
+ *  the gap between two keystrokes, short enough to answer the word just typed. */
+const FILTER_ANNOUNCE_DELAY_MS = 500;
+
 // ---------- Phone sort control (keksdose K10) ----------
 
 /**
@@ -961,38 +980,6 @@ export const DEFAULT_DATA_TABLE_SORT_LABELS: DataTableSortLabels = {
 };
 
 const flipDir = (d: SortDir): SortDir => (d === "asc" ? "desc" : "asc");
-
-/**
- * The client sort's and the derived select options' string order (audit 2026-10-30
- * DSP-3): the table locale's collation, digits as numbers ("Item 2" before "Item 10"),
- * case and accents left out (two values that differ only by them go to the next sort
- * key, then keep the order given). `<` and `Array.sort()` compared UTF-16 code units —
- * every lower-case initial after every capital, Ä/Ö/Ü after Z — on the payees, names,
- * insurers and titles all three apps sort. Built once per table locale, not per
- * comparison: `localeCompare` with a locale sets one up on every call, n·log n times a
- * sort. An unknown tag (a typo in a provider's `locale`) throws a RangeError, and a
- * sort is no reason for a table to stop rendering: the runtime's own collation then,
- * as CountrySelect falls back.
- */
-function sortCollator(locale: string | undefined): Intl.Collator {
-  const options: Intl.CollatorOptions = { numeric: true, sensitivity: "base" };
-  try {
-    return new Intl.Collator(locale, options);
-  } catch {
-    return new Intl.Collator(undefined, options);
-  }
-}
-
-/** Two present `sortBy` values, ascending. Strings collate; a number sorts before a
- *  string (`<` called that pair equal, so they stayed wherever they were given); any
- *  other pair — numbers, and a `Date` an untyped caller returns — keeps `<` / `>`. */
-function compareSortValues(a: string | number, b: string | number, collator: Intl.Collator): number {
-  const aText = typeof a === "string";
-  const bText = typeof b === "string";
-  if (aText && bText) return collator.compare(a, b);
-  if (aText !== bText) return aText ? 1 : -1;
-  return a < b ? -1 : a > b ? 1 : 0;
-}
 
 // `virtualize`'s constants (0.48.2): the band levels a group's `<tbody>` opens with.
 const NO_BANDS: readonly (1 | 2)[] = [];
@@ -1093,7 +1080,6 @@ export function DataTable<T>({
   const storageKeyPrefix = storageKeyPrefixProp ?? providerStorageKeyPrefix ?? DEFAULT_PERSIST_PREFIX;
   const labels = useMemo(() => resolveDataTableLabels(labelOverrides, labelsProp), [labelOverrides, labelsProp]);
   const locale = useKitLocale(localeProp);
-  const collator = useMemo(() => sortCollator(locale), [locale]);
 
   // ---- Row actions ---- (data-table-row-actions.tsx)
   // The actions column joins the caller's columns; on a phone the same actions are the
@@ -1150,13 +1136,15 @@ export function DataTable<T>({
   // (a drag or "Auto-size columns" before it grew, KS N2) is ignored, and it has no
   // handle, so it can never pin it again. Ignored rather than deleted from storage, as
   // the widths above; the next resize or auto-size writes a blob without it.
+  // Keyed on the `grow` column's key, not the columns array: an inline `columns={…}`
+  // gave every render new widths, and the fit measured the table for it (DSP-19).
+  const growKey = columns.find((c) => c.grow)?.key;
   const widths = useMemo(() => {
     if (!resizable) return {};
-    const grow = columns.find((c) => c.grow)?.key;
-    if (!grow || !(grow in storedWidths)) return storedWidths;
-    const { [grow]: _ignored, ...rest } = storedWidths;
+    if (!growKey || !(growKey in storedWidths)) return storedWidths;
+    const { [growKey]: _ignored, ...rest } = storedWidths;
     return rest;
-  }, [resizable, storedWidths, columns]);
+  }, [resizable, storedWidths, growKey]);
   const hiddenCols = useMemo(
     () => (columnSettings ? storedHiddenCols : new Set<string>()),
     [columnSettings, storedHiddenCols],
@@ -1201,13 +1189,13 @@ export function DataTable<T>({
         if (v && !seen.has(v)) seen.add(v);
       }
       map[col.key] = Array.from(seen)
-        .sort(collator.compare)
+        .sort((a, b) => compareSortValues(a, b, locale))
         .map((v) => ({ value: v, label: v }));
     }
     return map;
     // `columns` by signature — see the note above the signatures.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [columnSig, selectOptionsSig, rows, collator]);
+  }, [columnSig, selectOptionsSig, rows, locale]);
 
   const filtered = useMemo(() => {
     if (serverRows) return rows;
@@ -1240,14 +1228,16 @@ export function DataTable<T>({
         if (av == null && bv == null) continue;
         if (av == null) return 1;
         if (bv == null) return -1;
-        const order = compareSortValues(av, bv, collator);
+        // The order `compareSortValues` exports (0.52): one rule, here and in an app's
+        // own list beside the table. Nulls are last above, in either direction.
+        const order = compareSortValues(av, bv, locale);
         if (order !== 0) return dir === "asc" ? order : -order;
       }
       return 0;
     });
     return copy;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtered, sorts, columnSig, serverRows, collator]);
+  }, [filtered, sorts, columnSig, serverRows, locale]);
 
   // `paginated={false}` is expressed as "page size = everything" rather than as a
   // second code path, so slicing, the page clamp and the range summary all keep
@@ -1266,10 +1256,16 @@ export function DataTable<T>({
   const safePage = isServer
     ? Math.min(Math.max(0, serverPagination!.page), totalPages - 1)
     : Math.min(page, totalPages - 1);
-  const slice =
-    isServer || unpaged || pageSize === Infinity
-      ? sorted
-      : sorted.slice(safePage * effectivePageSize, safePage * effectivePageSize + effectivePageSize);
+  // Memoised (refactor audit 2026-10-30, DSP-19): the fit, the rows' window and the
+  // range selection compare the page's rows by identity, and a fresh `slice(…)` on every
+  // render of a paginated table — the default — had the fit lay the whole table out on a
+  // ticked box, a keystroke, any parent render.
+  const wholeList = isServer || unpaged || pageSize === Infinity;
+  const slice = useMemo(
+    () =>
+      wholeList ? sorted : sorted.slice(safePage * effectivePageSize, safePage * effectivePageSize + effectivePageSize),
+    [wholeList, sorted, safePage, effectivePageSize],
+  );
 
   const toggleSort = (key: string, shiftKey: boolean) => {
     const col = columns.find((c) => c.key === key);
@@ -1362,6 +1358,16 @@ export function DataTable<T>({
   // Seeded with the mount value: a live region that speaks on first paint talks over
   // the page the user has just opened, and every table on that page does it at once.
   const announcedFilterKey = useRef(filterKey);
+  // Spoken once the typing pauses (refactor audit 2026-10-30, DSP-23 d): every keystroke
+  // in a text filter is a new filter, and "12 of 137 rows" on each one — through the live
+  // region's 50 ms reset — talked over the very letters being typed. The count is read
+  // when the sentence goes out, so it is the rows the pause left on screen.
+  const filterSpeech = useRef({ shown: filtered.length, total: rows.length, labels });
+  useLayoutEffect(() => {
+    filterSpeech.current = { shown: filtered.length, total: rows.length, labels };
+  });
+  const filterTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(filterTimer.current), []);
   useEffect(() => {
     if (announcedFilterKey.current === filterKey) return;
     announcedFilterKey.current = filterKey;
@@ -1370,8 +1376,12 @@ export function DataTable<T>({
     // filtered total — so the "n of m" sentence has no second number to give here.
     // Saying nothing is better than announcing the page size as a result count.
     if (serverRows) return;
-    announce(labels.filterResults(filtered.length, rows.length));
-  }, [filterKey, filtered.length, rows.length, serverRows, announce, labels]);
+    clearTimeout(filterTimer.current);
+    filterTimer.current = setTimeout(() => {
+      const { shown, total, labels: words } = filterSpeech.current;
+      announce(words.filterResults(shown, total));
+    }, FILTER_ANNOUNCE_DELAY_MS);
+  }, [filterKey, serverRows, announce]);
 
   // 1-based, because that is what the page strip shows and what a person says.
   const goToPage = (p: number) => {
@@ -1390,8 +1400,9 @@ export function DataTable<T>({
     headRefs,
     scroller: () => desktopScroller.current,
     enabled: !usePhoneLayout(),
-    // Measured only when one of these changed (0.48.2): not on a ticked box.
-    content: [slice, columns, hiddenCols, widths, density, large],
+    // Measured only when one of these changed (0.48.2): not on a ticked box. The columns
+    // by their keys (DSP-19): an inline `columns={…}` is a new array every render.
+    content: [slice, columnSig, hiddenCols, widths, density, large],
   });
   const visibleColumns = useMemo(
     () => columns.filter((c) => !hiddenCols.has(c.key) && !autoHidden.has(c.key)),
@@ -1446,7 +1457,10 @@ export function DataTable<T>({
   const footerLabelCol = showFooter
     ? (visibleColumns.find((c) => !c.footer && !isTableOwnColumn(c.key)) ?? visibleColumns[0])
     : undefined;
-  const footerValue = (col: DataTableColumn<T>) => col.footer?.(sorted, slice);
+  // `footer` keeps its `T[]` parameters: narrowed to `readonly`, a caller's footer typed
+  // `(rows: Row[]) => …` would no longer fit (API-7 only widens). The table hands over the
+  // arrays it holds, as before, and changes neither.
+  const footerValue = (col: DataTableColumn<T>) => col.footer?.(sorted as T[], slice as T[]);
   const footerHeadingId = useId();
   // Each open row's detail row, for its disclosure button's `aria-controls`.
   const detailIdBase = useId();
@@ -1588,8 +1602,9 @@ export function DataTable<T>({
   const [phoneLeadHeight, setPhoneLeadHeight] = useState(0);
 
   const { mobileSlice, canRevealMoreMobile, loadMoreRef } = useMobileReveal({
-    rows: sorted,
-    slice,
+    // Read only there; its `T[]` widens to `readonly T[]` with its owner (API-7).
+    rows: sorted as T[],
+    slice: slice as T[],
     isServer,
     isMdUp,
     unpaged,
@@ -1653,7 +1668,19 @@ export function DataTable<T>({
   // move over every row, rendered or not: the target is rendered, then focused.
   const virtualOn = !!virtualize && isMdUp && slice.length > 0;
   const focusRowRef = useRef<((index: number) => void) | undefined>(undefined);
+  // ---- When the focused row leaves (refactor audit 2026-10-30, DSP-4) ----
+  // The row holding the focus — its key, and where it stood — noted as the focus comes
+  // into it (the rows report it, through React, so a menu or a dialog a row opened in a
+  // portal is the row's too). A delete, a status change that filters the row out, an
+  // approval: the row's DOM goes, the focus with it to <body>, and the commit that took it
+  // puts the focus on the row now in its place (below).
+  const heldRow = useRef<{ key: string | number; index: number } | null>(null);
+  const noteRowFocus = (key: string | number) => {
+    const shown = isMdUp ? slice : mobileSlice;
+    heldRow.current = { key, index: shown.findIndex((r) => rowKey(r) === key) };
+  };
   const latestRowCtx: DataTableRowCtx<T> = {
+    noteFocus: noteRowFocus,
     moveFocus: virtualOn
       ? (from, key) => {
           const target = rowNavTarget(from, key, slice.length);
@@ -1698,7 +1725,7 @@ export function DataTable<T>({
 
   // One mobile card (`MobileRow`, data-table-mobile.tsx). A function so the flat list
   // and the grouped list (below) share identical row markup.
-  const renderMobileRow = (row: T) => {
+  const renderMobileRow = (row: T, index: number) => {
     const key = rowKey(row);
     const expanded = isExpanded?.(row) ?? false;
     return (
@@ -1706,6 +1733,7 @@ export function DataTable<T>({
         key={key}
         ctx={rowCtx}
         rowKey={key}
+        rowIndex={index}
         row={row}
         expanded={expanded}
         expansion={expanded ? openedRowContent(row) : null}
@@ -1801,15 +1829,54 @@ export function DataTable<T>({
     focusRowRef.current = focusRowAt;
   }, [focusRowAt]);
 
+  // The commit that took the focused row (DSP-4): if the focus fell with it — to <body>,
+  // not into a dialog or a field the app chose — it goes to the row now at that index,
+  // else the last row, else the table itself (`tabIndex=-1` while empty, named by
+  // `labels.table`); the card on a phone. A focusable row (`onRowClick`) takes it itself,
+  // any other its first control. The remaining count is said, as a filter's is: the
+  // focus moved without the user moving it. translation-review's `keepFocusAt` is the
+  // kit's earlier copy of the rule, for its groups.
+  //
+  // Every commit while a row is noted, one pass over the rows on screen. A focus the user
+  // took elsewhere drops the note (`onBlur` on the root, below); one that went to nothing
+  // — a click on the page's background — keeps it, and is the one case where a later
+  // removal moves the focus back into the table.
+  useLayoutEffect(() => {
+    const held = heldRow.current;
+    if (!held) return;
+    const shown = isMdUp ? slice : mobileSlice;
+    const now = shown.findIndex((r) => rowKey(r) === held.key);
+    if (now !== -1) {
+      held.index = now;
+      return;
+    }
+    heldRow.current = null;
+    const list = isMdUp ? tableRef.current : phoneListRef.current;
+    if (!list || !focusIsLost()) return;
+    const at = shown.length === 0 ? -1 : Math.min(Math.max(held.index, 0), shown.length - 1);
+    if (at === -1) list.focus();
+    else if (isMdUp && virtualOn && rowsFocusable) focusRowRef.current?.(at);
+    else {
+      const row = list.querySelector<HTMLElement>(
+        isMdUp ? `:scope > tbody > tr[data-row-index="${at}"]` : `:scope > li[data-row-index="${at}"]`,
+      );
+      const target = row && (isMdUp && rowsFocusable ? row : firstTabStop(row));
+      if (target) target.focus();
+      else focusContainer(list);
+    }
+    announce(labels.filterResults(paginationTotal, isServer ? paginationTotal : rows.length));
+  });
+
   // `mobileGroupBy` may be a desktop `groupBy` level (0.48), its label and end slot too.
   const mobileLevel = typeof mobileGroupBy === "function" ? null : (mobileGroupBy ?? null);
   const mobileKey = typeof mobileGroupBy === "function" ? mobileGroupBy : mobileGroupBy?.key;
-  const mobileGroups: { key: string; rows: T[] }[] | null = mobileKey
-    ? mobileSlice.reduce<{ key: string; rows: T[] }[]>((acc, row) => {
+  // `start`: the section's first card's place in the list (its `data-row-index`, DSP-4).
+  const mobileGroups: { key: string; rows: T[]; start: number }[] | null = mobileKey
+    ? mobileSlice.reduce<{ key: string; rows: T[]; start: number }[]>((acc, row, i) => {
         const key = mobileKey(row);
         const last = acc[acc.length - 1];
         if (last && last.key === key) last.rows.push(row);
-        else acc.push({ key, rows: [row] });
+        else acc.push({ key, rows: [row], start: i });
         return acc;
       }, [])
     : null;
@@ -1833,6 +1900,17 @@ export function DataTable<T>({
       // `<main>` and every `FillHeight` between it and this table key off it with
       // `has-[[data-fill-height]]`, so a page asks for the fill by passing the prop.
       data-fill-height={fillHeight ? "" : undefined}
+      // The focused row's note (DSP-4): cleared on the way down to whatever takes the
+      // focus, and set again on the way up by the row that holds it. Focus leaving for
+      // something real outside the table drops it — unless that is an overlay (a confirm,
+      // a menu), which hands the focus back, or closes with the row it asked about.
+      onFocusCapture={() => {
+        heldRow.current = null;
+      }}
+      onBlur={(e) => {
+        const to = e.relatedTarget;
+        if (to instanceof Element && !to.closest(OVERLAY_SELECTOR)) heldRow.current = null;
+      }}
       className={cn(
         "group/table",
         frame ? "overflow-clip" : "min-w-0",
@@ -1924,6 +2002,10 @@ export function DataTable<T>({
           )}
           <ul
             ref={phoneListRef}
+            // Named as the table is, and focusable while empty: where the focus goes when
+            // the last card leaves (DSP-4).
+            aria-label={labels.table}
+            tabIndex={mobileSlice.length === 0 ? -1 : undefined}
             className={cn(
               "divide-y divide-subtle",
               // Under `fillHeight` the list takes the room its parent gives it, and in a
@@ -1964,7 +2046,7 @@ export function DataTable<T>({
                         <span className="ms-auto tabular-nums">{mobileLevel.end(g.key, g.rows)}</span>
                       )}
                     </li>
-                    {g.rows.map(renderMobileRow)}
+                    {g.rows.map((r, i) => renderMobileRow(r, g.start + i))}
                   </Fragment>
                 ))
               : mobileSlice.map(renderMobileRow)}
@@ -2047,6 +2129,11 @@ export function DataTable<T>({
             behind it shows, so the panel names the row it opened from. */}
           <FullBleedDialog
             open={dialogOpen}
+            // The open row's editor is the row's focus too: a Delete in it takes the row,
+            // and the dialog with it (DSP-4).
+            onFocus={() => {
+              if (mobileDialogRow) noteRowFocus(rowKey(mobileDialogRow));
+            }}
             onClose={closeDialog}
             closeLabel={labels.close}
             header={mobileDialogRow ? mobilePrimaryCol?.cell(mobileDialogRow) : null}
@@ -2091,6 +2178,8 @@ export function DataTable<T>({
                 className={cn("w-full", compact ? "text-xs" : "text-sm")}
                 data-fit-grow={growDrawn ? "" : undefined}
                 aria-label={labels.table}
+                // Focusable while empty: where the focus goes when the last row leaves (DSP-4).
+                tabIndex={slice.length === 0 ? -1 : undefined}
                 aria-busy={isLoading || undefined}
                 // `virtualize` (0.48.2): every row counted, rendered or not.
                 aria-rowcount={rowWindow?.rowCount}

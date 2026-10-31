@@ -1,8 +1,9 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties, ReactElement, ReactNode } from "react";
 import { isTableOwnColumn } from "./data-table-row-actions";
 import { DEFAULT_DATA_TABLE_LABELS, type DataTableLabels } from "./data-table-labels";
 import type { DataTableCellProps, DataTableColumn, DataTableHeadProps } from "./data-table";
-import type { LabelOverride } from "../i18n/kit-labels";
+import { useKitLink, type KitLinkProps, type LabelOverride } from "../i18n/kit-labels";
+import { pickLinkRenderer } from "./text-link";
 
 // What DataTable shares with its header (data-table-head.tsx), its column panel and its
 // phone layout (data-table-mobile.tsx): the cell-attribute and alignment rules, a
@@ -195,10 +196,17 @@ const isPlainLeftClick = (e: React.MouseEvent) =>
  * `draggable={false}` because an anchor otherwise hijacks a horizontal mouse drag as
  * a link-drag: that is both drag-to-select-text on the desktop table and the mouse
  * path through SwipeableRow's gesture on the mobile card.
+ *
+ * `navigate` (refactor audit 2026-10-30, DSP-23 b): a table with `rowHref` and no
+ * `onRowClick` has nothing to open the row in place, and the cancelled click opened
+ * nothing at all. There the plain click is the link's: followed through the provider's
+ * `linkComponent` for an in-app path, as every kit link is (`pickLinkRenderer`), else
+ * by the browser.
  */
 export function RowLink({
   href,
   onActivate,
+  navigate = false,
   className,
   children,
   ...rest
@@ -207,12 +215,35 @@ export function RowLink({
   /** Runs on a plain left click. Omit it where an ANCESTOR already handles the
    *  click (the desktop `<tr>`), or the row would toggle twice. */
   onActivate?: () => void;
+  /** The row has no `onRowClick`: a plain click follows the link instead. */
+  navigate?: boolean;
   className?: string;
   children: ReactNode;
 } & Omit<
   React.AnchorHTMLAttributes<HTMLAnchorElement>,
   "href" | "className" | "children" | "onClick" | "onClickCapture"
 >) {
+  const kitLink = useKitLink();
+  if (navigate) {
+    const render = pickLinkRenderer(undefined, kitLink, href);
+    const linkProps = {
+      ...rest,
+      href,
+      draggable: false,
+      className,
+      // A modified click opens a tab; it must not also select the row (see above).
+      onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
+        if (!fromOutside(e.target, e.currentTarget) && !isPlainLeftClick(e)) e.stopPropagation();
+      },
+    };
+    return render ? (
+      <RenderedRowLink render={render} {...linkProps}>
+        {children}
+      </RenderedRowLink>
+    ) : (
+      <a {...linkProps}>{children}</a>
+    );
+  }
   return (
     <a
       {...rest}
@@ -252,4 +283,10 @@ export function RowLink({
       {children}
     </a>
   );
+}
+
+/** Calls the provider's link renderer as a component, so a router link's hooks are its
+ *  own (TextLink's and ListItem's rule). */
+function RenderedRowLink({ render, ...props }: KitLinkProps & { render: (props: KitLinkProps) => ReactElement }) {
+  return render(props);
 }

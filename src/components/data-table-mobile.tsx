@@ -74,7 +74,7 @@ export function StackedFields<T>({
   compact,
   liftOwnClicks = false,
 }: {
-  columns: DataTableColumn<T>[];
+  columns: readonly DataTableColumn<T>[];
   row: T;
   compact: boolean;
   /** On a stretched card (0.50 K4): lift the own-click fields above its title link. */
@@ -137,7 +137,7 @@ export const MOBILE_CARD_FIELDS = 3;
  * fields and the marks leave it on the card; only `mobileHidden` / `mobile: "hidden"`
  * (which keep it out of `columns`) remove it.
  */
-export function mobileCardColumns<T>(columns: DataTableColumn<T>[]): {
+export function mobileCardColumns<T>(columns: readonly DataTableColumn<T>[]): {
   primary: DataTableColumn<T> | null;
   status: DataTableColumn<T>[];
   fields: DataTableColumn<T>[];
@@ -181,7 +181,11 @@ function devWarnings(): boolean {
  * (the table's `storageKey` or `urlSync` prefix) says which table, else its title
  * column does.
  */
-export function useCardColumnWarnings<T>(columns: DataTableColumn<T>[], enabled: boolean, name?: string): void {
+export function useCardColumnWarnings<T>(
+  columns: readonly DataTableColumn<T>[],
+  enabled: boolean,
+  name?: string,
+): void {
   const warned = useRef<Set<string> | null>(null);
   useEffect(() => {
     if (!enabled || !devWarnings()) return;
@@ -220,7 +224,10 @@ export function isEmptyCell(value: ReactNode): boolean {
 }
 
 /** Each column's rendered cell, without the empty ones. */
-function filledFields<T>(columns: DataTableColumn<T>[], row: T): { col: DataTableColumn<T>; value: ReactNode }[] {
+function filledFields<T>(
+  columns: readonly DataTableColumn<T>[],
+  row: T,
+): { col: DataTableColumn<T>; value: ReactNode }[] {
   return columns.map((col) => ({ col, value: col.cell(row) })).filter(({ value }) => !isEmptyCell(value));
 }
 
@@ -261,8 +268,8 @@ export function MobileSort<T>({
   onPick,
   onFlip,
 }: {
-  columns: DataTableColumn<T>[];
-  sorts: SortState[];
+  columns: readonly DataTableColumn<T>[];
+  sorts: readonly SortState[];
   sortCycle: SortCycle;
   compact: boolean;
   labels: DataTableLabels;
@@ -357,6 +364,11 @@ export interface MobileRowProps<T> {
   large: boolean;
   /** Phone selection (0.40, keksdose live #421); null without DataTable's `selection`. */
   select: MobileRowSelect | null;
+  /** The card's place in the list, on its `<li>` — where the table finds the card that
+   *  takes the focus when a focused one leaves (refactor audit 2026-10-30, DSP-4). */
+  rowIndex?: number;
+  /** The focus came into the card, or into anything it opened (a portal included). */
+  onFocusIn?: () => void;
 }
 
 /** A phone card's part in DataTable's `selection` (0.40, keksdose live #421). */
@@ -395,6 +407,8 @@ export function MobileRow<T>({
   compact,
   large,
   select,
+  rowIndex,
+  onFocusIn,
 }: MobileRowProps<T>) {
   const expanded = isExpanded?.(row) ?? false;
   // Selection mode (#421): the whole card is the row's checkbox — a tap toggles it
@@ -411,6 +425,11 @@ export function MobileRow<T>({
   // contain their own interactive controls (status toggles, action
   // icons) don't end up as illegal nested buttons.
   const interactive = !!onRowClick;
+  // `rowHref` without `onRowClick` (refactor audit 2026-10-30, DSP-23 b): nothing opens the
+  // row in place, so the card — or its stretched title — is a link that is followed. It
+  // was neither, and the phone had no way into the row at all.
+  const rowUrl = rowHref?.(row);
+  const linkOnly = !interactive && rowUrl !== undefined;
   // Say that the card OPENS something (Keksdose feedback #163). A phone card had
   // only a cursor and a tap-tint to advertise its editor — on the invoice review
   // screen, whose entire purpose is correcting mis-read lines, that read as "these
@@ -428,8 +447,10 @@ export function MobileRow<T>({
   const swipeEnabled = !!swipe && !selecting;
   // The stretched card (0.50 K4): the title is the control, the card a plain box.
   // Selection mode keeps its own card (the whole card is the toggle there).
-  const stretched = mobileCardStretched && interactive && !selecting && !mobileCard && !!mobilePrimaryCol;
-  const href = mobileCardLinkable || stretched ? rowHref?.(row) : undefined;
+  const stretched = mobileCardStretched && (interactive || linkOnly) && !selecting && !mobileCard && !!mobilePrimaryCol;
+  const href = mobileCardLinkable || stretched ? rowUrl : undefined;
+  // The card opens something on a tap: the row (`onRowClick`), or its link.
+  const opens = interactive || (linkOnly && href !== undefined);
   const cardClass = cn(
     "w-full text-start flex items-center",
     // §4: more room per row at Large — a taller row is a bigger tap target too.
@@ -441,7 +462,7 @@ export function MobileRow<T>({
     // on every row of a long list, so anything larger becomes the list's personality
     // rather than feedback. `transition-transform` alone, so the existing background
     // flip stays instant.
-    interactive &&
+    opens &&
       "cursor-pointer transition-transform duration-100 active:scale-[0.995] active:bg-active motion-reduce:transition-none motion-reduce:active:scale-100",
     // The keyboard's frame drawn INSIDE the card, as the desktop row's is (keksdose live
     // #394): the browser's own ring and tap highlight sit on the card's outer edge, and
@@ -449,7 +470,7 @@ export function MobileRow<T>({
     // AppShell main's `overflow-x-clip` — so the frame went missing on one side. A press
     // keeps the fill and the squeeze above; an outline on every tap of a long list would
     // be louder than the acknowledgement it replaces.
-    (interactive || selecting) &&
+    (opens || selecting) &&
       !stretched &&
       cn("[-webkit-tap-highlight-color:transparent] focus-visible:ring-inset", FOCUS_RING),
     // A stretched card (0.50 K4) draws the same frame, inside the card, while its TITLE
@@ -485,15 +506,20 @@ export function MobileRow<T>({
         href={href}
         data-card-link=""
         data-row-link=""
-        onActivate={() => onRowClick!(row)}
-        aria-expanded={opensRow ? expanded : undefined}
+        navigate={linkOnly}
+        onActivate={interactive ? () => onRowClick!(row) : undefined}
+        aria-expanded={opensRow && interactive ? expanded : undefined}
         className={stretchedClass}
         // Enter follows RowLink's own onClick; Space opens the row too, not the list's scroll.
-        onKeyDown={(e) => {
-          if (e.key !== " ") return;
-          e.preventDefault();
-          onRowClick!(row);
-        }}
+        onKeyDown={
+          interactive
+            ? (e) => {
+                if (e.key !== " ") return;
+                e.preventDefault();
+                onRowClick!(row);
+              }
+            : undefined
+        }
       >
         {title}
       </RowLink>
@@ -686,25 +712,30 @@ export function MobileRow<T>({
     <div {...press} data-card-stretched="" className={cardClass}>
       {cardInner}
     </div>
-  ) : interactive && href ? (
+  ) : opens && href ? (
     // A card with a URL of its own is a LINK, not a div wearing role="button"
     // (feedback #451): the phone's long-press "open in new tab" and a screen
     // reader's link semantics both come free, and the fake role goes away.
     <RowLink
       href={href}
       {...press}
-      onActivate={() => onRowClick!(row)}
-      aria-expanded={opensRow ? expanded : undefined}
+      navigate={linkOnly}
+      onActivate={interactive ? () => onRowClick!(row) : undefined}
+      aria-expanded={opensRow && interactive ? expanded : undefined}
       className={cardClass}
       // Enter already activates a link natively, and that routes through
       // RowLink's own onClick — handling it here too would open the row twice.
       // Space is the only key left, and only so it opens the row instead of
       // scrolling the list.
-      onKeyDown={(e) => {
-        if (e.key !== " ") return;
-        e.preventDefault();
-        onRowClick!(row);
-      }}
+      onKeyDown={
+        interactive
+          ? (e) => {
+              if (e.key !== " ") return;
+              e.preventDefault();
+              onRowClick!(row);
+            }
+          : undefined
+      }
     >
       {cardInner}
     </RowLink>
@@ -746,9 +777,13 @@ export function MobileRow<T>({
     </div>
   );
   return (
+    /* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- `onFocus`
+       only notes that the focus is in this card (DSP-4); the card inside is the control. */
     <li
       className={cn(tint)}
       {...cleanAttrs(rowAttributes?.(row))}
+      data-row-index={rowIndex}
+      onFocus={onFocusIn}
       data-selected={selecting && select!.selected ? "" : undefined}
       onClickCapture={
         select
@@ -946,7 +981,7 @@ export function MobileFilters<T>({
   labels,
   locale,
 }: {
-  columns: DataTableColumn<T>[];
+  columns: readonly DataTableColumn<T>[];
   filters: FilterState;
   selectOptionsByKey: Record<string, { value: string; label: string }[]>;
   isServer: boolean;

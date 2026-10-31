@@ -287,9 +287,13 @@ describe("cards that stay as they were (0.50 K4)", () => {
     expect(cardOf("Ada Example").querySelector("[data-card-link]")).toBeNull();
   });
 
-  it("without onRowClick nothing is stretched", () => {
+  it("without onRowClick the title is the row's link, and a tap follows it (0.52, audit 2026-10-30 DSP-23 b)", () => {
+    // It was no link at all: nothing opened the row in place, and nothing opened it.
     phone();
     renderTable({ rowHref: (r) => `/contacts/${r.id}` });
-    expect(document.querySelector("[data-card-link]")).toBeNull();
+    const link = document.querySelector<HTMLAnchorElement>("[data-card-link]")!;
+    expect(link).toHaveAttribute("href", "/contacts/1");
+    expect(link).not.toHaveAttribute("aria-expanded");
+    expect(fireEvent.click(link)).toBe(true);
   });
 });
