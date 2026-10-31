@@ -36,7 +36,7 @@
  */
 
 import type { AxiosLikeInstance, ServerWakeAxiosConfig } from "./server-wake";
-import { httpStatusOf } from "../auth/auth-errors";
+import { httpStatusOf } from "./http-status";
 
 /** What the app's `refresh` resolves: the new access token, plus whatever its `store`
  *  needs (its refresh token, the user). */

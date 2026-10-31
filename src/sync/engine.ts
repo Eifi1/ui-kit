@@ -1,4 +1,4 @@
-import { httpStatusOf } from "../auth/auth-errors";
+import { httpStatusOf } from "../lib/http-status";
 import { isOfflineError, stampAfter } from "../offline/local-first";
 import { isSharedComputer } from "../offline/shared-computer";
 import type { OutboxChange, OutboxStatus, SyncDb, SyncedRow } from "./db";

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { readStored, removeStored, writeStored } from "../lib/safe-storage";
-import { httpStatusOf } from "../auth/auth-errors";
+import { httpStatusOf } from "../lib/http-status";
 import { isTourDone, type TourCompletions } from "./tour-info";
 
 /**
