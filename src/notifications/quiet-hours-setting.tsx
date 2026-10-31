@@ -1,5 +1,5 @@
-import { useId, useState } from "react";
-import type { ComponentPropsWithRef, ReactNode } from "react";
+import { useId, useRef, useState } from "react";
+import type { ComponentPropsWithRef, KeyboardEvent, ReactNode } from "react";
 
 import type { LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
@@ -8,7 +8,7 @@ import { TimeInput } from "../components/time-input";
 import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
 import { CARD_DESCRIPTION_CLASS } from "../settings/settings-card-classes";
 import { SettingsCardTitle } from "../settings/settings-heading";
-import { settle, useMounted } from "../account/account-parts";
+import { settle, useMounted } from "../hooks/use-mounted";
 import { describeFailure, FailureLine, useNotificationsLabels, useWriteOverlay } from "./notification-parts";
 import type { NotificationRegionLabels, NotificationsLabels } from "./notifications-labels";
 import type { NotificationSettingsPatch } from "./notification-types";
@@ -49,8 +49,9 @@ export interface QuietHoursSettingProps extends Omit<ComponentPropsWithRef<"div"
   held?: boolean;
   /**
    * Save one change — `PATCH /notifications/settings`: a time, or `null` when cleared.
-   * Never a zone. The field shows the new value while the call runs and goes back if it
-   * rejects.
+   * Never a zone. Called when a time is ENTERED — the field left, or Enter — never per
+   * keystroke, and one call per field at a time (0.52). The field shows the new value
+   * while the call runs and goes back if it rejects.
    */
   onChange: (patch: NotificationSettingsPatch) => Promise<unknown> | void;
   /** The zone named while `zone` names none: the one the server
@@ -77,8 +78,13 @@ type QuietField = "quiet_hours_start" | "quiet_hours_end";
  * only** — the zone of the device last used, else `Europe/Zurich`. The card names it
  * read-only and never sends one; there is no picker and no "Use it".
  *
- * - **Two times**, each saved as it is entered; a cleared time sends `null`. While only
- *   one is set the card says so: the window fails open until both are.
+ * - **Two times**, each saved when it is entered — on leaving the field or on Enter — and
+ *   a cleared time sends `null`. While only one is set the card says so: the window fails
+ *   open until both are.
+ * - **One request per field at a time** (0.52): a time entered while that field's save
+ *   runs waits for it, and only the latest waiting one is sent. Each input event used to
+ *   PATCH — typing "30" over 22:00's minutes sent 22:03 and 22:30, and whichever answer
+ *   landed last stayed on the server (refactor audit 2026-10-30, FLW-4).
  * - **The zone** shows while a time is set: `zone`, else `fallbackZone`.
  *
  * Under a write lock the fields are `commit` controls exempt from billing.
@@ -103,32 +109,63 @@ export function QuietHoursSetting({
   const mounted = useMounted();
   const id = useId();
 
-  const shown = (field: QuietField, server: string | null) =>
-    overlay.has(field) ? (overlay.get(field) ?? null) : server;
-  const startShown = shown("quiet_hours_start", start);
-  const endShown = shown("quiet_hours_end", end);
+  // What is typed and not yet entered, per field: the field shows it, nothing is sent.
+  const [drafts, setDrafts] = useState<Partial<Record<QuietField, string>>>({});
+  // Per field: whether a save runs, and the latest time entered while it did (own key =
+  // one is waiting). Refs: a save's answer reads them after renders it did not see.
+  const running = useRef<Partial<Record<QuietField, boolean>>>({});
+  const waiting = useRef<Partial<Record<QuietField, string | null>>>({});
+
+  const server = (field: QuietField) => (field === "quiet_hours_start" ? start : end);
+  const saved = (field: QuietField) => (overlay.has(field) ? (overlay.get(field) ?? null) : server(field));
+  const shown = (field: QuietField) => drafts[field] ?? saved(field) ?? "";
+  const startShown = shown("quiet_hours_start");
+  const endShown = shown("quiet_hours_end");
   const accountZone = zone ?? fallbackZone;
 
-  const save = (patch: NotificationSettingsPatch) => {
-    const fields = Object.keys(patch) as QuietField[];
-    setFailure(null);
-    for (const field of fields) overlay.set(field, patch[field] ?? null);
-    settle(() => onChange(patch)).then(
-      () => {
-        if (mounted.current) for (const field of fields) overlay.settle(field, true);
-      },
-      (error: unknown) => {
-        if (!mounted.current) return;
-        for (const field of fields) overlay.settle(field, false);
-        setFailure(describeFailure(describeError?.(error), labels.failed));
-      },
+  const send = (field: QuietField, value: string | null) => {
+    running.current[field] = true;
+    if (mounted.current) setFailure(null);
+    settle(() => onChange({ [field]: value })).then(
+      () => done(field, true),
+      (error: unknown) => done(field, false, error),
     );
   };
 
-  const saveTime = (field: "quiet_hours_start" | "quiet_hours_end", value: string) => {
-    const next = value || null;
-    if (next === shown(field, field === "quiet_hours_start" ? start : end)) return;
-    save({ [field]: next });
+  /** A save answered: the waiting time goes next — even after an unmount, it is what the
+   *  person entered last — and supersedes this answer, a failure included. */
+  const done = (field: QuietField, ok: boolean, error?: unknown) => {
+    running.current[field] = false;
+    if (Object.prototype.hasOwnProperty.call(waiting.current, field)) {
+      const next = waiting.current[field] ?? null;
+      delete waiting.current[field];
+      send(field, next);
+      return;
+    }
+    if (!mounted.current) return;
+    overlay.settle(field, ok);
+    if (!ok) setFailure(describeFailure(describeError?.(error), labels.failed));
+  };
+
+  /** The typed time, entered: saved unless it is what the field already holds. */
+  const enter = (field: QuietField) => {
+    const draft = drafts[field];
+    if (draft === undefined) return;
+    setDrafts((current) => {
+      const rest = { ...current };
+      delete rest[field];
+      return rest;
+    });
+    const next = draft || null;
+    if (next === saved(field)) return;
+    overlay.set(field, next);
+    if (running.current[field]) waiting.current[field] = next;
+    else send(field, next);
+  };
+
+  const type = (field: QuietField, value: string) => setDrafts((current) => ({ ...current, [field]: value }));
+  const enterOnEnter = (field: QuietField, event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") enter(field);
   };
 
   const anySet = Boolean(startShown || endShown);
@@ -144,19 +181,23 @@ export function QuietHoursSetting({
         <TimeInput
           id={`${id}-start`}
           label={labels.quietFrom}
-          value={startShown ?? ""}
+          value={startShown}
+          onValueChange={(value) => type("quiet_hours_start", value)}
+          onBlur={() => enter("quiet_hours_start")}
+          onKeyDown={(event) => enterOnEnter("quiet_hours_start", event)}
           disabled={disabled}
           commit={COMMIT_EXCEPT_BILLING}
-          onValueChange={(value) => saveTime("quiet_hours_start", value)}
           className="w-36"
         />
         <TimeInput
           id={`${id}-end`}
           label={labels.quietUntil}
-          value={endShown ?? ""}
+          value={endShown}
+          onValueChange={(value) => type("quiet_hours_end", value)}
+          onBlur={() => enter("quiet_hours_end")}
+          onKeyDown={(event) => enterOnEnter("quiet_hours_end", event)}
           disabled={disabled}
           commit={COMMIT_EXCEPT_BILLING}
-          onValueChange={(value) => saveTime("quiet_hours_end", value)}
           className="w-36"
         />
       </div>
