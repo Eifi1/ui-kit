@@ -68,24 +68,61 @@ export function focusIsLost(): boolean {
 }
 
 /**
+ * Calls `then` when a `blur`/`focusout` was the user's own move to nothing — a click on
+ * the page's background, or a click Safari answers by focusing nothing (it focuses no
+ * button or link on a click, and blurs what had the focus) — after which a note of where
+ * the focus was is stale (0.52 code review: DataTable's row, BulkActionBar's and
+ * AlertBanner's notes outlived it, and a removal much later pulled the focus, and the
+ * scroll, back to them).
+ *
+ * No element took the focus, the document holds none, and the node that lost it could
+ * still hold it. Not when it was removed, hidden, made inert or disabled: that is the page
+ * taking the focus away — the very case those notes are kept for. Not a window losing the
+ * focus either, which leaves the node the document's active element. Decided a microtask
+ * later, once the event's own work is done: a browser that blurs a node it is removing
+ * (or hiding) may do it while the node is still in place, and only after it is gone is
+ * that told apart from a click.
+ */
+export function whenFocusLeftForNothing(
+  e: { target: EventTarget | null; relatedTarget: EventTarget | null },
+  then: () => void,
+): void {
+  const el = e.target;
+  if (e.relatedTarget !== null || !(el instanceof Element)) return;
+  queueMicrotask(() => {
+    if (!el.isConnected || el.matches(":disabled") || el.closest("[hidden],[inert]")) return;
+    // `display: none`, where the browser can say (jsdom cannot).
+    if (typeof el.checkVisibility === "function" && !el.checkVisibility()) return;
+    if (focusIsLost()) then();
+  });
+}
+
+/**
  * The tab stops around `frame`, outside it, nearest first on each side — where focus
  * goes once `frame` is gone. Read BEFORE it goes: a removed node has no place in the
  * document to measure from. `limit` per side keeps a long page's stops out of memory.
+ *
+ * Walked outwards from the frame, `limit` stops each way (0.52 code review,
+ * lib/focus-left.ts): read from every stop in the page, a banner under a 2000-row table
+ * read all 2000 to keep the nearest five before it.
  */
 export function tabStopsAround(frame: Element, limit = 5): { after: HTMLElement[]; before: HTMLElement[] } {
+  const doc = frame.ownerDocument;
+  const walker = doc.createTreeWalker(doc.documentElement, NodeFilter.SHOW_ELEMENT);
+  const isStop = (node: Node): node is HTMLElement =>
+    node instanceof HTMLElement && node.matches(TAB_STOP) && isTabStop(node);
+  // After: from the first element past the frame's own subtree, in document order.
   const after: HTMLElement[] = [];
+  walker.currentNode = frame;
+  let node: Node | null = walker.nextSibling();
+  while (!node && walker.parentNode()) node = walker.nextSibling();
+  for (; node && after.length < limit; node = walker.nextNode()) if (isStop(node)) after.push(node);
+  // Before: back from the frame, nearest first (its ancestors among them, as before).
   const before: HTMLElement[] = [];
-  for (const el of frame.ownerDocument.querySelectorAll<HTMLElement>(TAB_STOP)) {
-    if (frame.contains(el) || !isTabStop(el)) continue;
-    if (frame.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING) {
-      after.push(el);
-      if (after.length >= limit) break;
-    } else {
-      before.push(el);
-      if (before.length > limit) before.shift();
-    }
-  }
-  return { after, before: before.reverse() };
+  walker.currentNode = frame;
+  for (node = walker.previousNode(); node && before.length < limit; node = walker.previousNode())
+    if (isStop(node)) before.push(node);
+  return { after, before };
 }
 
 /**

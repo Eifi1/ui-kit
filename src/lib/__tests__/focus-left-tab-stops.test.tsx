@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import * as trap from "../../hooks/use-focus-trap";
 import { firstTabStop, tabStops, tabStopsAround } from "../focus-left";
@@ -60,6 +60,40 @@ describe("the kit's one tab-stop rule", () => {
     const { after, before } = tabStopsAround(screen.getByTestId("field"));
     expect(after).toEqual([screen.getByRole("button", { name: "After" })]);
     expect(before).toEqual([screen.getByRole("button", { name: "Before" })]);
+  });
+
+  it("the stops around a frame are read outwards from it, not from every stop on the page (0.52 code review)", () => {
+    // A banner under a long table: 2000 stops before it. Each was read — its tab index,
+    // its ancestors for `hidden`/`inert` — to keep the last five.
+    const page = document.createElement("div");
+    for (let i = 0; i < 2000; i++) {
+      const b = document.createElement("button");
+      b.textContent = `Row ${i}`;
+      page.append(b);
+    }
+    const frame = document.createElement("div");
+    frame.innerHTML = '<button type="button">Dismiss</button>';
+    const after = document.createElement("a");
+    after.href = "#next";
+    after.textContent = "Next";
+    page.append(frame, after);
+    document.body.append(page);
+    try {
+      const closest = vi.spyOn(Element.prototype, "closest");
+      const around = tabStopsAround(frame);
+      expect(around.after).toEqual([after]);
+      expect(around.before.map((b) => b.textContent)).toEqual([
+        "Row 1999",
+        "Row 1998",
+        "Row 1997",
+        "Row 1996",
+        "Row 1995",
+      ]);
+      expect(closest.mock.calls.length).toBeLessThan(50);
+    } finally {
+      vi.restoreAllMocks();
+      page.remove();
+    }
   });
 
   it("the trap's helpers are this module's, not a copy", () => {
