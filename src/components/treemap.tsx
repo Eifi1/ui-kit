@@ -123,7 +123,8 @@ export interface TreemapProps extends Omit<ComponentPropsWithoutRef<"div">, "chi
    *
    * A tile's accessible name (`labels.tile`, 0.52) says the value too: the formatter is
    * asked again with the share `undefined` — the name says the share itself — and its
-   * text is used; markup is said as the bare number.
+   * text is used; markup is said as the bare number, and so is an answer that throws or
+   * says "NaN" (a formatter that relies on the share being there).
    *
    * Default: the bare number through `Intl.NumberFormat` in the provider's locale (0.52,
    * DOC-10: before, the runtime's). A host with a currency passes this — the kit knows
@@ -969,9 +970,20 @@ export function Treemap({
   const names = useMemo(() => {
     // The caller's text when it gives text, asked with no share — the name says that
     // itself; a value it formats as markup is said as a number.
+    //
+    // Guarded (0.52 code review of treemap.tsx, finding 2): with anything drawn the share
+    // was never `undefined` before DSP-5 asked for it here, so a formatter may lean on it —
+    // `share!` printed "NaN%" into every name, `share.toFixed()` threw inside this memo and
+    // took the whole chart down. Either way the name says the number instead.
     const valueText = (v: number) => {
-      const out = valueFormatter ? valueFormatter(v, undefined) : undefined;
-      return typeof out === "string" || typeof out === "number" ? String(out) : formatWithMinus(numberFormat, v);
+      let out: ReactNode;
+      try {
+        out = valueFormatter?.(v, undefined);
+      } catch {
+        out = undefined;
+      }
+      const text = typeof out === "string" || typeof out === "number" ? String(out) : undefined;
+      return text !== undefined && !text.includes("NaN") ? text : formatWithMinus(numberFormat, v);
     };
     // One decimal under 10 %, as PieChart: a tile of 0.4 % named "0%" says it is not there.
     const shareText = (share: number) => (share < 0.1 ? percentFormats.fine : percentFormats.whole).format(share);
