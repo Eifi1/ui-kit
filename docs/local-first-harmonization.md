@@ -840,20 +840,28 @@ ka's; kk has none and keeps none, D10.)
   in-flight changes back (and an edit merged into them was lost), and a sign-out in one tab
   left the other tab's poll writing the whole scope back into the wiped copy. keksdose's
   mechanism has its cross-tab layer (`MIRROR_GENERATION`, §1.2); the engine now has its own:
-  - **a Web Lock per database round** (`navigator.locks`, `eifi1-sync:<database>`,
-    `ifAvailable`): one tab's round runs at a time. A tab that finds the lock taken gets
-    `paused` for that round, and a started engine runs it once after the other tab's round
-    (ka's rule, across tabs). A closed tab's lock is released, so a `sending` it left is
+  - **a Web Lock per database round** (`navigator.locks`, `eifi1-sync:<database>`, a queued
+    request): one tab's round runs at a time, first come first served; a round asked for
+    meanwhile waits its turn (one per engine; a request meanwhile runs once after it, ka's
+    rule), so `syncNow()` runs its own round after the other tab's and answers its result;
+    `stop()` and `forget()` take a waiting round out of the queue; `paused()` and the
+    connection are read when the lock is granted. A closed tab's lock is released, so a `sending` it left is
     truly orphaned when the next round takes it back. Without Web Locks (outside a secure
     context: plain http) two tabs' rounds may overlap as before; the epoch and the channel
     below still hold;
   - **a persisted epoch**: `forget()` writes a new one into `meta` in the transaction that
     clears the tables, and posts it on the BroadcastChannel `eifi1-sync:<database>`. An
-    engine reads the epoch when it starts; a round reads it at its start and in its apply
-    transaction once more, and drops its answer when it moved. An engine that finds it
+    engine reads the epoch when it starts; a round reads it at its start, when it takes each
+    scope's queue, and in the transaction that keeps an answer (apply, a 402/403 refusal),
+    and drops its answer when it moved. An engine that finds it
     moved by another tab's `forget()`, or hears that `forget()` on the channel (a started
     engine: a step's `isCurrent()` turns false at once, the request in flight is aborted),
-    stops and runs no round until its own `forget()`: the session it ran for has ended;
+    stops and runs no round until its own `forget()`: the session it ran for has ended.
+    Its own `forget()` is decided by the epoch its clear leaves in `meta`: another tab's
+    `forget()` heard while that clear runs and committed before it stops nothing (kastlan's
+    cascade); one committed after ends the engine too. A step's own writes rely on
+    `isCurrent()`, false once the message lands. Either end of a session leaves the state
+    idle: no error, no retry, `lastSyncedAt` null;
   - **the query copy's `clear()` reaches every tab** through a `BroadcastChannel` (§1.6).
 
   App side: kastlan ends the session in every tab when its refresh token is removed (a
@@ -957,7 +965,7 @@ interface SyncEngine {
                                                           // the caller names the scope (D11)
   start(): void; stop(): void;
   requestSync(): void;                     // soon (debounced)
-  syncNow(): Promise<SyncRoundResult>;     // "Sync now"; resets the backoff
+  syncNow(): Promise<SyncRoundResult>;     // "Sync now"; resets the backoff; its own round, after the one under way (another tab's too)
   retryBlocked(): Promise<void>; discardRejected(scope?: string): Promise<void>;
   rejected(): Promise<OutboxChange[]>;     // reasons for the app's banner
   forget(opts: { keepQueue: boolean }): Promise<void>;   // D15
@@ -980,7 +988,7 @@ stampAfter(previous: unknown): string;                    // kk sync-client.ts:6
 
 **The round**, per scope in `scopes()` order:
 1. Unless `paused()`: take the scope's `pending` + `waiting` (+ `blocked` only on `retryBlocked`) in
-   `seq` order, mark them `sending` (a `sending` left by a closed tab goes back first: where the
+   `seq` order, under the round's epoch (D15), mark them `sending` (a `sending` left by a closed tab goes back first: where the
    browser has Web Locks the round holds the database's lock, so no live tab is sending it, D15).
 2. Send `{scope, last_knowledge, changes, refusals: true, client_now, paged?, page_cursor?}`;
    `client_now` = `new Date().toISOString()` as the body is built.
@@ -992,8 +1000,7 @@ stampAfter(previous: unknown): string;                    // kk sync-client.ts:6
 4. Follow `page_cursor` with pull-only requests until it is `null` (D12).
 Then the `steps` (each checks `isCurrent()` before it writes), then one more pass if a step
 `changed`. One round at a time; a request during a round runs once more after it (ka's rule) —
-across tabs too: a round that finds another tab's holding the Web Lock is `paused`, and a
-started engine runs it once after that round (0.52).
+across tabs too: a round waits its turn on the database's Web Lock behind another tab's (0.52).
 `scopes()` is read at the start of every round. `write()` keeps ka's merge (into the last
 `pending` upsert only; a never-synced row's delete forgets its queue; ka's policy, D10) and stamps
 with `stampAfter(previous)`. A `rejected` change is never re-sent (D13).
