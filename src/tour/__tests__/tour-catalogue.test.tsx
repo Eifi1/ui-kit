@@ -111,6 +111,17 @@ describe("TourCatalogue", () => {
     expect(screen.getByRole("radio", { name: "All (1)" })).toBeInTheDocument();
   });
 
+  it("searches word by word, each word anywhere in the title, one-liner or about (DUP-4)", () => {
+    render(<Harness />);
+    const search = screen.getByRole("searchbox", { name: "Search tours" });
+    // Neither phrase stands in any one text as typed: "Plan a month.", "Visits the budget page."
+    fireEvent.change(search, { target: { value: "month plan" } });
+    expect(screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent)).toEqual(["Your budget"]);
+    fireEvent.change(search, { target: { value: "budget visits" } });
+    expect(screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent)).toEqual(["Your budget"]);
+    expect(screen.getByRole("status")).toHaveTextContent("Showing 1 of 3 tours");
+  });
+
   it("picks a group from the select", () => {
     render(<Harness />);
     fireEvent.change(screen.getByRole("combobox", { name: "Topic" }), { target: { value: "start" } });
@@ -205,6 +216,33 @@ describe("TourCatalogueCard", () => {
     rerender(<TourCatalogueCard tour={base} completedAt={null} onLaunch={() => {}} onReset={() => {}} />);
     expect(screen.getAllByText("Completed")).toHaveLength(2); // the icon's words and the line
     expect(screen.queryByText(/Completed on/)).toBeNull();
+  });
+
+  it("the days follow the provider's formatDate, without a weekday; the card's own prop wins (DUP-2)", () => {
+    const tour = { ...base, updated: { date: "2026-10-10", reason: "The screen moved." } };
+    const { rerender } = render(
+      <UiKitProvider formatDate={(iso, { weekday }) => `«${iso}${weekday ? " +wd" : ""}»`}>
+        <TourCatalogueCard tour={base} completedAt="2026-09-01T10:00:00Z" onLaunch={() => {}} />
+      </UiKitProvider>,
+    );
+    expect(screen.getByText("Completed on «2026-09-01»")).toBeInTheDocument();
+    rerender(
+      <UiKitProvider formatDate={(iso) => `«${iso}»`}>
+        <TourCatalogueCard tour={tour} completedAt="2026-09-01T10:00:00Z" onLaunch={() => {}} />
+      </UiKitProvider>,
+    );
+    expect(screen.getByText("Reset on «2026-10-10»: The screen moved.")).toBeInTheDocument();
+    rerender(
+      <UiKitProvider formatDate={(iso) => `«${iso}»`}>
+        <TourCatalogueCard
+          tour={tour}
+          completedAt="2026-09-01T10:00:00Z"
+          formatDate={() => "own"}
+          onLaunch={() => {}}
+        />
+      </UiKitProvider>,
+    );
+    expect(screen.getByText("Reset on own: The screen moved.")).toBeInTheDocument();
   });
 
   it("NEW and the app's badge sit beside the title", () => {
