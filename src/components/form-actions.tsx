@@ -5,7 +5,9 @@ import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
 import { useBreakpoint, usePhoneLayout } from "../hooks/use-breakpoint";
 import { useLargeText } from "../hooks/use-large-text";
-import { isApplePlatform } from "../hooks/use-hotkey";
+import { isApplePlatform, matchesHotkey, type ParsedHotkey } from "../hooks/use-hotkey";
+import { isComposing } from "../lib/ime";
+import { hasContent } from "../lib/presence";
 import { Button, type ButtonProps } from "./button";
 import { Spinner } from "./spinner";
 import type { ButtonSize, ButtonVariant } from "./button-look";
@@ -337,6 +339,17 @@ function shortcutScope(row: HTMLElement | null, formId: string | undefined): Ele
   return row.closest("form") ?? row.closest('[role="dialog"]') ?? row.parentElement;
 }
 
+/**
+ * What {@link FormActionsProps.submitShortcut} answers, on every platform: Ctrl+Enter and
+ * Cmd+Enter with nothing else held, read by `matchesHotkey` as every kit shortcut is
+ * (refactor audit 2026-10-30, DUP-12). Literals, not `parseHotkey` calls: no module-scope
+ * call for a bundler to keep.
+ */
+const SUBMIT_CHORDS: readonly ParsedHotkey[] = [
+  { ctrl: true, meta: false, shift: false, alt: false, key: "Enter" },
+  { ctrl: false, meta: true, shift: false, alt: false, key: "Enter" },
+];
+
 function isDestructiveData(value: unknown): value is FormActionsDestructive {
   return typeof value === "object" && value !== null && !isValidElement(value) && "onClick" in value;
 }
@@ -429,8 +442,9 @@ export function FormActions({
   useEffect(() => {
     if (submitShortcut !== "mod-enter") return;
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== "Enter" || !(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey) return;
-      if (e.repeat || e.isComposing || e.defaultPrevented || !canSaveRef.current) return;
+      if (!SUBMIT_CHORDS.some((chord) => matchesHotkey(e, chord))) return;
+      // `isComposing` is lib/ime's: Safari's composition-ending Enter (keyCode 229) too.
+      if (e.repeat || isComposing(e) || e.defaultPrevented || !canSaveRef.current) return;
       const scope = shortcutScope(rootRef.current, form);
       if (!scope || !(e.target instanceof Node) || !scope.contains(e.target)) return;
       e.preventDefault();
@@ -442,8 +456,9 @@ export function FormActions({
   const apple = submitShortcut ? isApplePlatform() : false;
   const placement = useResolvedPlacement(placementProp);
   const bleedLength = bleed === undefined || bleed === "" ? undefined : cssLength(bleed);
-  const hasDestructive = destructive !== undefined && destructive !== null && destructive !== false;
-  const hasStart = startSlot !== undefined && startSlot !== null && startSlot !== false;
+  // `hasContent` (DUP-14): an empty string is no slot either, not an empty `me-auto` box.
+  const hasDestructive = isDestructiveData(destructive) || hasContent(destructive);
+  const hasStart = hasContent(startSlot);
   const justify = align ?? (hasDestructive || hasStart ? "between" : "end");
   const destructiveNode = !hasDestructive ? null : isDestructiveData(destructive) ? (
     <Button

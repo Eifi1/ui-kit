@@ -21,6 +21,15 @@ describe("FormActions", () => {
     expect(onSubmit).toHaveBeenCalledTimes(1);
   });
 
+  it("draws no start group for an empty-string destructive or start", () => {
+    // `cond && "…"` evaluates to "" when there is nothing to say: no empty `me-auto`
+    // box, and the buttons stay at the end (refactor audit 2026-10-30, DUP-14).
+    const { container } = render(<FormActions destructive="" start="" />);
+    const row = container.querySelector<HTMLElement>('[data-slot="form-actions"]')!;
+    expect(row.children).toHaveLength(1);
+    expect(row.className).toContain("justify-end");
+  });
+
   it("reads its labels from the provider's form namespace", () => {
     render(
       <UiKitProvider labels={{ form: { save: "Speichern", cancel: "Abbrechen" } }}>
@@ -226,6 +235,14 @@ describe("FormActions submitShortcut (keksdose K14)", () => {
     chord(field, { ctrlKey: false });
     chord(field, { repeat: true });
     chord(field, { isComposing: true });
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("leaves Safari's composition-ending Enter (keyCode 229) to the IME", () => {
+    // Its keydown arrives after `compositionend`, `isComposing` already false: lib/ime's
+    // rule, which the shortcut skipped (refactor audit 2026-10-30, DUP-12).
+    const onSubmit = renderForm();
+    chord(screen.getByRole("textbox", { name: "Memo" }), { keyCode: 229 });
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
