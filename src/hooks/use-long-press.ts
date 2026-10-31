@@ -128,6 +128,12 @@ export function useLongPress(
     return true;
   }, []);
 
+  // Turned off mid-press: the armed timer still fired, entering selection mode against the
+  // caller's wish and arming `consumeClick` for the next click (0.52 code review).
+  useEffect(() => {
+    if (!enabled) cancel();
+  }, [enabled, cancel]);
+
   useEffect(() => cancel, [cancel]);
 
   return { handlers: { onPointerDown, onPointerMove, onContextMenu }, consumeClick };
