@@ -1,21 +1,23 @@
-import { useEffect, useId, useRef, useState } from "react";
-import type { ComponentPropsWithRef, KeyboardEvent, ReactNode } from "react";
+import { useId, useRef, useState } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { Bell, CheckCheck, Trash2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { DEFAULT_COMMON_LABELS } from "../i18n/shared-labels";
 import { cn } from "../lib/cn";
-import { useKitFormat } from "../lib/format";
+import { useDayFormatter } from "../lib/day-format";
 import { Button } from "../components/button";
 import { Card } from "../components/card";
 import { EmptyState } from "../components/empty-state";
 import { IconButton } from "../components/icon-button";
+import { InlineConfirm } from "../components/inline-confirm";
 import { List, ListItem } from "../components/list";
 import { Skeleton } from "../components/skeleton";
 import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
 import { SettingsCardTitle } from "../settings/settings-heading";
-import { settle, useMounted } from "../account/account-parts";
+import { safeNextPath } from "../landing/routing";
+import { settle, useMounted } from "../hooks/use-mounted";
 import { describeFailure, FailureLine, useNotificationsLabels } from "./notification-parts";
 import type { NotificationsLabels } from "./notifications-labels";
 
@@ -29,7 +31,8 @@ export interface NotificationInboxItem<Id extends string | number = string | num
   notification_type: string;
   title: string;
   body: string;
-  /** A path in the app, an absolute URL, or `null` (nothing to open). */
+  /** A path in the app, or `null` (nothing to open). Never `//` or a scheme (§3.7): a url
+   *  that does not resolve to this origin is drawn as a row with nothing to open. */
   url: string | null;
   /** ISO date-time. */
   created_at: string;
@@ -62,10 +65,12 @@ export interface NotificationInboxProps<Id extends string | number = string | nu
   onClear: () => Promise<unknown> | void;
   /**
    * Open a row: the kit marks it read first, then calls this, and the app routes to
-   * `item.url` (kastlan switches the acting company, `item.company_id`, first). Every row is a button then.
-   * Left out, a row with a `url` is a real link — an in-app path through the provider's
-   * router link, an absolute URL in a new tab — that marks itself read on a click or a
-   * middle click (keksdose #451), and a row without one marks itself read.
+   * `item.url` (kastlan switches the acting company, `item.company_id`, first) — through
+   * `safeNextPath`, as the kit does. Every row is a button then.
+   * Left out, a row with a `url` is a real link through the provider's router link — the
+   * url as a same-origin path (`safeNextPath`) — that marks itself read on a click or a
+   * middle click (keksdose #451). A row without one, or with one that leaves the origin
+   * (`//host`, a scheme), marks itself read and opens nothing.
    */
   onOpen?: (item: NotificationInboxItem<Id>) => void;
   /** The row's glyph for a type — the app's map (keksdose's `TYPE_ICONS`). `undefined`,
@@ -77,7 +82,8 @@ export interface NotificationInboxProps<Id extends string | number = string | nu
   onLoadMore?: () => void;
   /** The next page is loading. */
   loadingMore?: boolean;
-  /** A row's time. Default: the provider's locale and `timeZone`, date and time. */
+  /** A row's time. Default: the provider's `formatDate` (the app's date preference) with
+   *  the language's clock, else date and time in the provider's locale and `timeZone`. */
   formatDate?: (iso: string) => string;
   /** The heading. Default `labels.inboxTitle` ("Inbox"). */
   title?: ReactNode;
@@ -124,21 +130,18 @@ export function NotificationInbox<Id extends string | number = string | number>(
 }: NotificationInboxProps<Id>) {
   const labels = useNotificationsLabels(labelsProp);
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
-  const { formatDate } = useKitFormat();
+  // The prop, else the provider's `formatDate` with the language's clock, else the kit's
+  // date and time in the provider's locale and `timeZone` (refactor audit 2026-10-30, DUP-2).
+  const day = useDayFormatter(formatDateProp);
   const [asking, setAsking] = useState(false);
   const [busy, setBusy] = useState<"read" | "clear" | null>(null);
   const [failure, setFailure] = useState<ReactNode>(null);
   const mounted = useMounted();
   const headingId = useId();
-  const cancelRef = useRef<HTMLButtonElement>(null);
+  // Back to "Clear all" when the confirm leaves, so focus does not fall to <body>.
   const clearRef = useRef<HTMLButtonElement>(null);
-  const [returning, setReturning] = useState(false);
-  useEffect(() => {
-    if (asking) cancelRef.current?.focus();
-    else if (returning) clearRef.current?.focus();
-  }, [asking, returning]);
 
-  const timeOf = (iso: string) => (formatDateProp ? formatDateProp(iso) : formatDate(iso, "dateTime"));
+  const timeOf = (iso: string) => day(iso, { time: true });
   const iconOf = (type: string): LucideIcon => icon?.(type) ?? Bell;
 
   const run = (which: "read" | "clear", call: () => unknown, after?: () => void) => {
@@ -166,42 +169,21 @@ export function NotificationInbox<Id extends string | number = string | number>(
     });
   };
 
-  const leave = () => {
-    setReturning(true);
-    setAsking(false);
-  };
-  const escapeLeaves = (event: KeyboardEvent<HTMLButtonElement>) => {
-    if (event.key === "Escape") {
-      event.preventDefault();
-      event.stopPropagation();
-      leave();
-    }
-  };
-
   const count = items?.length ?? 0;
 
   const header = asking ? (
-    <div className="space-y-2 border-b border-subtle px-3 py-2" data-inbox-confirm="">
-      <p role="alert" className="text-sm">
-        {labels.clearPrompt}
-      </p>
-      <div className="flex flex-wrap gap-2">
-        <Button
-          type="button"
-          size="sm"
-          variant="danger"
-          commit={COMMIT_EXCEPT_BILLING}
-          pending={busy === "clear"}
-          onClick={() => run("clear", onClear, () => setAsking(false))}
-          onKeyDown={escapeLeaves}
-        >
-          {labels.clearAll}
-        </Button>
-        <Button ref={cancelRef} type="button" size="sm" variant="ghost" onClick={leave} onKeyDown={escapeLeaves}>
-          {common.cancel}
-        </Button>
-      </div>
-    </div>
+    <InlineConfirm
+      className="border-b border-subtle px-3 py-2"
+      data-inbox-confirm=""
+      prompt={labels.clearPrompt}
+      confirmLabel={labels.clearAll}
+      cancelLabel={common.cancel}
+      onConfirm={() => run("clear", onClear, () => setAsking(false))}
+      onLeave={() => setAsking(false)}
+      busy={busy === "clear"}
+      commit={COMMIT_EXCEPT_BILLING}
+      returnFocusRef={clearRef}
+    />
   ) : (
     <div className="flex items-center justify-between gap-2 border-b border-subtle px-3 py-2">
       <SettingsCardTitle id={headingId}>{title ?? labels.inboxTitle}</SettingsCardTitle>
@@ -223,10 +205,7 @@ export function NotificationInbox<Id extends string | number = string | number>(
           size="xs"
           tone="danger"
           commit={COMMIT_EXCEPT_BILLING}
-          onClick={() => {
-            setReturning(false);
-            setAsking(true);
-          }}
+          onClick={() => setAsking(true)}
           disabled={count === 0 || busy !== null}
           label={labels.clearAll}
         >
@@ -273,7 +252,11 @@ export function NotificationInbox<Id extends string | number = string | number>(
               />
             );
           }
-          if (!item.url) {
+          // A same-origin path or nothing (refactor audit 2026-10-30, FLW-8): `//host` starts
+          // with "/" and went through the router link off the origin, and any scheme opened
+          // as an external link. The urls are server-written; this is defence in depth.
+          const path = safeNextPath(item.url);
+          if (!path) {
             return <ListItem key={item.id} {...row} data-inbox-item={String(item.id)} onClick={() => markOne(item)} />;
           }
           // A real link, so a middle click opens a background tab; a middle click fires no
@@ -283,8 +266,7 @@ export function NotificationInbox<Id extends string | number = string | number>(
               key={item.id}
               {...row}
               data-inbox-item={String(item.id)}
-              href={item.url}
-              external={!item.url.startsWith("/")}
+              href={path}
               onClick={() => markOne(item)}
               onAuxClick={(event) => {
                 if (event.button === 1) markOne(item);
