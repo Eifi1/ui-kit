@@ -8,7 +8,7 @@ import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { useAnnounce } from "../hooks/use-announce";
 import { useBreakpoint } from "../hooks/use-breakpoint";
 import { OVERLAY_EXIT_MS, skipsExitAnimation } from "../hooks/use-close-transition";
-import { focusFirst, focusIsLost } from "../lib/focus-left";
+import { focusFirst, focusIsLost, whenFocusLeftForNothing } from "../lib/focus-left";
 import { hasContent } from "../lib/presence";
 import { Button } from "./button";
 import { IconButton } from "./icon-button";
@@ -264,8 +264,11 @@ export function BulkActionBar({
   // phone VoiceOver's cursor jumped to the top of the page (keksdose's register). Noted on
   // the bar's outermost element, so the `panel`'s fields count: where the focus came in
   // from (the first entry since the bar showed, replaced once that control is gone), and
-  // whether it is in the bar. Focus that leaves for nothing — inert, a removal, a click on
-  // the page — still counts as in it; only a real element elsewhere takes it out.
+  // whether it is in the bar. Focus that leaves for nothing because the page took it —
+  // inert, a removal — still counts as in it; a real element elsewhere takes it out, and
+  // so does a click on the page that left it nowhere (0.52 code review,
+  // bulk-action-bar.tsx: the note outlived it, and the bar's hide long after — the last row
+  // unticked with the pointer — pulled the focus and the scroll back to the row's box).
   const cameFrom = useRef<HTMLElement | null>(null);
   const holdsFocus = useRef(false);
   const trackFocus = {
@@ -279,6 +282,9 @@ export function BulkActionBar({
       onBlur?.(e);
       const to = e.relatedTarget;
       if (to instanceof Element && !e.currentTarget.contains(to)) holdsFocus.current = false;
+      whenFocusLeftForNothing(e, () => {
+        holdsFocus.current = false;
+      });
     },
   };
   // The commit that hides the bar: the focus goes back while the control holding it is

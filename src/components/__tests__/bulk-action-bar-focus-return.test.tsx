@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { BulkActionBar } from "../bulk-action-bar";
 import { OVERLAY_EXIT_MS } from "../../hooks/use-close-transition";
+import { flushMicrotasks } from "../../test/tasks";
 import { DESKTOP_WIDTH, stubViewportWidth } from "../../test/viewport";
 
 /**
@@ -85,6 +86,20 @@ describe.each([
     enterAndPress("Row box", "Clear selection");
     act(() => vi.advanceTimersByTime(OVERLAY_EXIT_MS + 10));
     expect(document.activeElement).toBe(button("Select"));
+  });
+
+  it("focus that left the bar for nothing is not the bar's: a later hide moves nothing (0.52 code review)", async () => {
+    render(<Page withReturn />);
+    act(() => button("Row box").focus());
+    act(() => button("Clear selection").focus());
+    // A click on the page's background: no element takes the focus.
+    act(() => button("Clear selection").blur());
+    await flushMicrotasks();
+    // Much later the last row is unticked with the pointer — in Safari a click that
+    // focuses nothing — and the bar leaves with the focus on <body>, not in it.
+    fireEvent.click(button("Clear from outside"));
+    act(() => vi.advanceTimersByTime(OVERLAY_EXIT_MS + 10));
+    expect(document.activeElement).toBe(document.body);
   });
 
   it("a bar that leaves without the focus in it moves nothing", () => {
