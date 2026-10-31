@@ -75,8 +75,8 @@ export interface TreemapNode {
    *  keksdose's recency plot fills with `color-mix(in srgb, var(--chart-1) N%,
    *  transparent)`, where `currentColor` put dark page text on full-strength indigo
    *  (~1.5:1). Wins over the measured ink when given. A tile that takes its group's
-   *  `fill` takes the group's `labelColor` with it; one with a `fill` of its own is
-   *  measured again. */
+   *  `fill` takes the group's `labelColor` with it; one with a `fill` of its own, or one
+   *  that `shade` turns into another colour, is measured again. */
   labelColor?: string;
   /**
    * The tile's colour strength, 0–1 (0.52): its `fill` mixed into the card's colour
@@ -830,7 +830,13 @@ function mapNodes(
       }
       if (!(Number.isFinite(d.value) && d.value > 0) || left <= 0) return [];
       left -= 1;
-      return [{ id: d.id, name: d.name, size: d.value, fill: shaded(fill, shade), labelColor, groups }];
+      const drawn = shaded(fill, shade);
+      // An ink the GROUP chose was chosen for the group's colour: once `shade` makes the
+      // tile another hex, that hex is measured instead (0.52 code review of treemap.tsx,
+      // finding 5 — white ink on a tile shaded almost to the card, ~1.3:1). The tile's
+      // own `labelColor` still wins: the caller set it for this tile.
+      const ink = d.labelColor ?? (drawn === fill ? labelColor : undefined);
+      return [{ id: d.id, name: d.name, size: d.value, fill: drawn, labelColor: ink, groups }];
     });
   return walk(data, [], undefined);
 }
