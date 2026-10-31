@@ -134,6 +134,7 @@ resolve: {
 @import "tailwindcss";
 @import "@eifi1/ui-kit/tokens.css";           /* design tokens, semantic utilities, chrome */
 @source "../../node_modules/@eifi1/ui-kit/dist"; /* keep the class names @eifi1/ui-kit uses */
+@source not "../../node_modules/@eifi1/ui-kit/dist/**/*.{map,d.ts}"; /* …and not its comments */
 ```
 
 **Get this path right, and check it.** Tailwind never scans `node_modules`, so without
@@ -149,10 +150,17 @@ package uses.
 npm run build && grep -c 'pointer-events-auto' dist/assets/*.css   # 0 means the scan missed
 ```
 
-Scanning `dist` is the recommended path: it is published by every version. From
-v0.5.0 the tarball also ships `src`, so `@source ".../@eifi1/ui-kit/src"` works too and
-scans the original TSX rather than transpiled output — but it is not present in
-v0.4.x, and an `@source` pointing at a directory that does not exist fails silently.
+**Keep the `@source not` line.** Beside each built module, `dist` holds its `.d.ts` (the
+JSDoc) and its `.js.map` (whose `sourcesContent` is the commented source), and Tailwind
+turns every class-like word in a comment into a rule: a doc comment that mentions
+`bg-green-500` puts `.bg-green-500` in your stylesheet. Measured on 0.51.7 with Tailwind
+4.3.3: the directory alone gives 3,005 rules and 227,137 B; with the exclusion 2,824 rules
+and 216,056 B (−181 rules, −11 KB), exactly what the `.js` files give on their own, and the
+`.js` holds every class a component renders. **A glob such as `dist/**/*.js` does not
+narrow the scan**: an explicit `@source` into an ignored folder un-ignores the folder, and
+Tailwind's root detection then walks every file in it, so the stylesheet comes out
+byte-identical to the directory line. Exclude with `@source not` instead. Don't scan the
+tarball's `src` either: it is the commented source, with the same extra rules.
 
 ### 3. Appearance stores (own persistence keys)
 
@@ -1119,6 +1127,26 @@ than a guess.
 
 Not handled, on purpose: thousands separators (reported, not guessed), quoted fields,
 empty cells held open as holes.
+
+## Offline and sync
+
+Two standalone entries, each with optional peers of its own, so an online-only app installs
+neither (their names are in the export inventory above):
+
+- **`@eifi1/ui-kit/offline`** — the query cache kept on the device with its scrub list
+  (`createQueryPersistence`), the question at sign-out while changes wait
+  (`SignOutPendingDialog`), the service-worker update prompt (`PwaUpdatePrompt`) and the
+  shared-computer choice. Peers: `@tanstack/react-query`,
+  `@tanstack/react-query-persist-client`, `@tanstack/query-async-storage-persister`,
+  `idb-keyval`.
+- **`@eifi1/ui-kit/sync`** — the sync engine, one per Dexie database (`createSyncDb`,
+  `createSyncEngine`, `useSyncWorker`, `useSyncStatus`, `useSyncQuery`), speaking
+  server-kit's `POST /sync`; `@eifi1/ui-kit/sync/testing` has a fake transport. Peer:
+  `dexie`.
+
+What works offline, the merge rule, sign-out on a shared computer and the engine's round
+are the contract's:
+[docs/local-first-harmonization.md](https://github.com/Eifi1/ui-kit/blob/main/docs/local-first-harmonization.md).
 
 ## i18n
 

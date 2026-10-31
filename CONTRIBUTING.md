@@ -33,8 +33,14 @@ build with (their `.nvmrc` pins the same 24.19.0).
 src/
   index.ts            the main barrel — everything public passes through here
   chart.ts  shell.ts  data-table.ts  wizard.ts  tour.ts  feedback.ts  search.ts
-  table-text.ts  rhf.ts
+  currencies.ts  push-worker.ts
                       subpath barrels: a re-slicing of index.ts, never a second API
+                      (currencies imports nothing; push-worker is safe in a worker)
+  rhf.ts  offline.ts  sync.ts  table-text.ts
+                      standalone entries: an API of their own that shares no name with
+                      index.ts (public-surface.test.ts STANDALONE), mostly to keep an
+                      optional peer out of everyone's install; so are lib/dates.ts,
+                      testing/, eslint/, sync/testing.ts and the seven catalogues
   lib/                pure TypeScript. No React, no DOM. calc, dates, cn, logger
   hooks/              React hooks with no markup of their own
   theme/              tokens, palette presets, colour maths, the appearance stores
@@ -42,6 +48,10 @@ src/
   components/         domain-free rendering components
   shell/              app frame: TopBar, AppShell, the topbar controls
   feedback/ wizard/ tour/ search/    feature areas with their own subpath
+  notifications/      the notification cards, inbox and bell, push devices, the worker's
+                      half of Web Push (@eifi1/ui-kit/push-worker)
+  offline/ sync/      local-first: the persisted query cache (@eifi1/ui-kit/offline) and
+                      the sync engine (@eifi1/ui-kit/sync, dexie an optional peer)
   i18n/               UiKitProvider, the label tree, the language registry; locales/ holds
                       the seven catalogues (one subpath each: @eifi1/ui-kit/i18n/<code>)
   auth/ account/ admin/ settings/ billing/ landing/ demo/
@@ -49,7 +59,8 @@ src/
                       the account's own settings, user admin, the settings page, plans,
                       the public landing page, the demo
   rhf/                the react-hook-form adapter (@eifi1/ui-kit/rhf, optional peer)
-  testing/            helpers for the apps' own tests (@eifi1/ui-kit/testing)
+  testing/            helpers for the apps' own tests (@eifi1/ui-kit/testing, /testing/react)
+  eslint/             the role-utility lint plugin the apps run (@eifi1/ui-kit/eslint)
   test/               the vitest harness (setup only)
   __tests__/          cross-cutting tests; every other directory has its own
 showcase/             a routed Vite site rendering the whole kit, page by page
@@ -58,9 +69,11 @@ tokens.css            the design tokens and role utilities, shipped to npm as-is
 docs/                 the contracts, the adoption notes, audits and plans (index: docs/README.md)
 ```
 
-The `exports` map: the main barrel; eleven subpaths — `/chart`, `/shell`, `/data-table`,
+The `exports` map: the main barrel; eighteen subpaths — `/chart`, `/shell`, `/data-table`,
 `/wizard`, `/tour`, `/feedback`, `/search`, `/dates` (`lib/dates.ts`), `/table-text`,
-`/testing`, `/rhf`; `/i18n/<code>` for each of the seven catalogues; and `/tokens.css`.
+`/currencies`, `/eslint`, `/testing`, `/testing/react`, `/rhf`, `/offline`, `/sync`,
+`/sync/testing`, `/push-worker`; `/i18n/<code>` for each of the seven catalogues; and
+`/tokens.css`.
 
 **Where a new module goes** follows from what it needs, in this order:
 
@@ -160,7 +173,9 @@ Use the role utilities: `text-muted`, `bg-hover`, `text-danger`, `border-subtle`
 (`tokens.css`'s `@theme inline` block lists them; colour roles §7). Not `text-slate-500`, not
 `bg-indigo-600`, and not `text-[var(--text-muted)]` where a utility exists: since 0.34 the
 ratchet in `check:tokens` allows none (`ROLE_BUDGET` 0). `[var(--…)]` stays only for a role
-with no utility (money and chart colours, `--status-*`, ring offsets).
+with no utility (the chart colours, `--status-*`); money (`text-money-income`,
+`bg-money-net`, …) and the ring offsets (`ring-offset-page`, `ring-offset-surface`) have
+had theirs since 0.34.
 
 A consuming app re-skins this kit by changing token values. Every raw palette class is a
 place where that fails and the app has to fork the component instead. The audit counted
@@ -170,8 +185,9 @@ component usages, while `text-slate-500` had 68.
 
 The check is a **ratchet**: it fails when the count goes up. When you legitimately remove
 some, lower `BUDGET` in `scripts/check-token-discipline.mjs` in the same commit — that is
-what makes it a ratchet rather than a ceiling. The two survivors are both deliberate and
-both carry a comment saying why.
+what makes it a ratchet rather than a ceiling. The one survivor (`BUDGET` 1, account
+settings' `bg-white` behind the QR code, which a camera needs at full contrast in either
+theme) is deliberate and carries a comment saying why.
 
 ### 3. `sr-only` needs a positioned ancestor — prefer `.sr-only-fixed`
 

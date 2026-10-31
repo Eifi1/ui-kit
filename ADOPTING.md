@@ -21,9 +21,13 @@ primitives with the shared ones. Keep this app's domain-specific pieces local.
    `react-router` (`>=7`; imported unconditionally, so a Router must be mounted),
    `recharts` (`>=3.8`; the main barrel re-exports the chart kit) and `lucide-react`.
    **Optional:** `sonner` (the kit's `toast` / `<Toaster>`), `react-hook-form` (only for
-   `@eifi1/ui-kit/rhf`) and `modern-screenshot` (the feedback dialog's screenshot
-   capture). `flag-icons` is a stylesheet your app imports if it renders flags. The
-   README's "What you install alongside it" table has the ranges and the reasons.
+   `@eifi1/ui-kit/rhf`), `modern-screenshot` (the feedback dialog's screenshot
+   capture); for `@eifi1/ui-kit/offline`, `@tanstack/react-query`,
+   `@tanstack/react-query-persist-client`, `@tanstack/query-async-storage-persister` and
+   `idb-keyval`; `dexie` for `@eifi1/ui-kit/sync`; and `@testing-library/react` for
+   `@eifi1/ui-kit/testing/react`. Each is needed only by the entry that names it.
+   `flag-icons` is a stylesheet your app imports if it renders flags. The README's "What
+   you install alongside it" table has the ranges and the reasons.
    ```bash
    npm install react-router recharts lucide-react sonner
    ```
@@ -39,15 +43,21 @@ primitives with the shared ones. Keep this app's domain-specific pieces local.
    ```css
    @import "@eifi1/ui-kit/tokens.css";
    @source "../../node_modules/@eifi1/ui-kit/dist";
+   @source not "../../node_modules/@eifi1/ui-kit/dist/**/*.{map,d.ts}";
    ```
    `@source` is required — Tailwind ignores `node_modules`, so without it the class
    names `@eifi1/ui-kit`'s components use won't be generated and every component
    renders unstyled with no error anywhere. **The path is relative to the CSS file
    it is written in**, and a path that points at nothing fails silently — keksdose
-   and Kurvenschmiede (`../../node_modules/@eifi1/ui-kit/dist` from `src/app.css`)
-   and kastlan (`../node_modules/@eifi1/ui-kit/src`) each count from their own file.
-   Verify with `npm run build && grep -c 'pointer-events-auto' dist/assets/*.css` —
-   `0` means the scan missed.
+   and Kurvenschmiede (`../../node_modules/…` from `src/app.css`) and kastlan
+   (`../node_modules/…`) each count from their own file. Verify with
+   `npm run build && grep -c 'pointer-events-auto' dist/assets/*.css` — `0` means the
+   scan missed.
+   `@source not` keeps the scan to the built `.js`: the `.d.ts` files' JSDoc and the
+   source maps' `sourcesContent` are the kit's comments, and Tailwind made a rule of
+   every class-like word in them (181 rules, 11 KB in every app's stylesheet on 0.51.7).
+   Don't write a `dist/**/*.js` glob instead: it un-ignores the whole folder and scans
+   the same files. Don't point at the tarball's `src`: it is the commented source.
 
 4. **Appearance stores: theme, palette, text size, contrast** — the factories let you
    use your own persistence keys:
@@ -117,7 +127,15 @@ primitives with the shared ones. Keep this app's domain-specific pieces local.
    a layout must change at a larger text size or under More contrast,
    `truncate-until-large` (prose) or `truncate-until-large-words` (figures) instead of
    `truncate`, and named breakpoints (they scale with the text size; `min-[…]` does
-   not). README → Styling lists every utility and the token it reads.
+   not). README → Styling lists every utility and the token it reads. Turn on the kit's
+   lint rule, which reports a `[var(--role)]` class where a role utility exists and
+   fixes it (all three apps run it):
+   ```js
+   // eslint.config.js
+   import uiKit from "@eifi1/ui-kit/eslint";
+   export default [/* … */ uiKit.configs.recommended];
+   ```
+   README → "Lint: the role utilities in an app" has the details.
 
 8. **Shell.** Build your app frame by composing `TopBar` + `AppShell` +
    `ThemeToggle`/`PaletteMenu`/`LanguageMenu` with your own nav items and app-owned
@@ -154,8 +172,9 @@ primitives with the shared ones. Keep this app's domain-specific pieces local.
 
 ## Every later bump
 
-Read that release's `docs/adopt-0.NN.md` (the CHANGELOG points to it), and **restart the Vite
-dev server after `npm install`**: Vite pre-bundles dependencies into `node_modules/.vite/deps`
+Read that release's `docs/adopt-0.NN.md` (the CHANGELOG points to it; once all three apps
+have adopted a release its note moves to `docs/archive/adopt/`, and `docs/README.md` lists
+every one), and **restart the Vite dev server after `npm install`**: Vite pre-bundles dependencies into `node_modules/.vite/deps`
 and keeps serving that copy while it runs, so an open dev server goes on running the OLD kit
 with no error. If a change still does not show, start it once with `vite --force` (or delete
 `node_modules/.vite`). Tests and `vite build` are not affected.
