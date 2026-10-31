@@ -397,7 +397,7 @@ All in `@eifi1/ui-kit/shell` (and the barrel). The words are a new namespace,
   `Disclosure variant="menu"` row with the globe, `topBar.language` and the active flag,
   and one checked `MenuItem` per language. Props: `languages` (`{ code, label, flag? }`,
   where the flag is the app's own node, so the kit ships no flag set), `value`,
-  `onPick`, and `close` (a pick shuts the menu). Optional: `label`, `defaultOpen`.
+  `onChange` (`onPick` deprecated 0.52, removed 0.53), and `close` (a pick shuts the menu). Optional: `label`, `defaultOpen`.
 - **`TourMenu`** (§2.4, §6.7): lucide `Compass`, on `TopBarActionMenu`.
   - Props: `tours` as data (`{ id, title, route?, isNew?, completed?, icon?, since? }`),
     `onLaunch(id)`, and an optional `href`. Optional: `pathname`, `maxNew` (3), `labels`.

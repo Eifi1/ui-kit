@@ -2218,7 +2218,7 @@ Beside what `feat/0.39.0` already has. Size **M**.
     `--terms-url`, `--privacy-url` are refused with a line naming the new flags.
   - The line `billing.payDone`, seven languages.
 - **Plan switch** (`src/billing/plan-switch.tsx`): `PlanSwitchConfirm {open,
-  onOpenChange, from: {plan, interval}, to: {plan, interval}, preview?: PlanSwitchPreview,
+  onClose (ui-kit 0.52; `onOpenChange` deprecated, removed in 0.53), from: {plan, interval}, to: {plan, interval}, preview?: PlanSwitchPreview,
   pending?, planName?, dimensionLabels?, formatLimit?, onConfirm, locale?, labels?}`:
   from → to, the preview's figures through `formatMoney` ("Charged now" or "Credited",
   "Next charge on {date}"), the over-limit lines with `planChange.usageOf` and
@@ -2614,7 +2614,7 @@ ui-kit 0.42 ships the following names:
 - **`isPermanentGrant(overview)`**, with `source` explicit (§16.7 E).
 - **`SubscriptionActions`**: `portal`, `buyerName`, `onCancelInApp`, `cancelAtPeriodEnd`,
   `onResume`, and `pending: "resume"`.
-- **`CancelSubscriptionConfirm`** (`open`, `onOpenChange`, `periodEnd`, `onConfirm`,
+- **`CancelSubscriptionConfirm`** (`open`, `onClose` (0.52; `onOpenChange` deprecated), `periodEnd`, `onConfirm`,
   `pending`), which takes no billing lock.
 - **`BillingBanner`**'s payment-failed kind: `portal` and `buyerName`. Under `buyer_only`
   it shows no button.

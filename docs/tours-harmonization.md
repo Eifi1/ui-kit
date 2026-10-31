@@ -908,7 +908,7 @@ target):
 ### 11.7 The docked card on phones
 
 `placement: "dock"`, and by default (Q1) every field step with a target and no `placement`,
-docks below `sm` (640 px): the card is full-width (8 px safe-area gutters) at the top or
+docks below `sm` (640 px at Normal text, 800 at Large; 0.52): the card is full-width (8 px safe-area gutters) at the top or
 bottom edge of the **usable band** — the visual viewport less the keyboard
 (`readKeyboardInset`'s rules), raised above the highest `[data-tour-obstruction]`
 (NumberPadSheet and PickerSheet carry it; an app marks its own bottom layers) — on the edge

@@ -726,7 +726,9 @@ from the card's `PrefKey` to keksdose's own id list beside the types' words (§5
 - `zone?: string | null`: the account's zone, `/auth/me`'s `device_timezone` (the device
   last used); `null` while no device has reported one.
 - `onChange(patch: NotificationSettingsPatch) => Promise<unknown> | void`: one time, or
-  `null` for a cleared one. **Never a zone.**
+  `null` for a cleared one. **Never a zone.** A time is saved when it is entered (blur or
+  Enter), not per keystroke, one request per field at a time; a time entered meanwhile is
+  sent after the running one (ui-kit 0.52; refactor audit 2026-10-30, FLW-4).
 - `fallbackZone?: string`, default `"Europe/Zurich"`: the zone named, and the one the
   server applies, while `zone` names none.
 - `inbox?: boolean`: the app keeps an inbox, and the description says a held push still

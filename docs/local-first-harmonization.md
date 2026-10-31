@@ -552,9 +552,12 @@ as optional peers). Size **S–M**.
   - `isCacheSafe` with a pluggable warn hook (`onUnsafe`, kk :165-191), the guard on write
     (`shouldDehydrateQuery`) and the restore-side sanitizer that keeps paused mutations (kk :264-298);
   - the per-account key (D5); `clear()` = `queryClient.clear()` plus `removeClient` (kk :302),
-    and since ui-kit 0.52 a `clear` posted on a `BroadcastChannel` named after the key, on
-    which every tab's persister retires that key, so no other tab writes its in-memory
-    cache back under the key just deleted (D15; refactor audit 2026-10-30 FLW-1);
+    and since ui-kit 0.52 a `clear` posted on the `BroadcastChannel`
+    `eifi1-query-cache:<key>` (a persistence listens while armed, from its restore to its
+    `leave`/`clear`), on which every other tab retires that key and deletes it once more
+    after any save of its own under way, so no other tab writes its in-memory cache back
+    under the key just deleted; `leave()` posts nothing (D15; refactor audit 2026-10-30
+    FLW-1);
     `removeStale()` drops other keys of the app older than `maxAge` (ka, at sign-in).
 - `SignOutPendingDialog({ open, queued, waitingForPlan, onSyncNow, onSignOutAnyway,
   onDiscardWaiting?, keepsChanges, extra?, labels? })`: `queued` = pending + blocked; `onSyncNow`
@@ -824,7 +827,8 @@ ka's; kk has none and keeps none, D10.)
 
 **D15 Sign-out, company switch and the shared computer, through the engine.**
 - `engine.forget({ keepQueue })` bumps the generation, then clears `rows` and `meta` (and the
-  `outbox` and app tables unless `keepQueue`).
+  `outbox` and app tables unless `keepQueue`); the same transaction writes a new `epoch` into
+  `meta` (0.52), its one entry afterwards.
 - **The generation guards every step**, not only the push/pull: a round's apply transaction and
   every `SyncStep` (ka's photo upload too) check it before they write, and drop their result when
   it changed. A photo upload in flight at sign-out does not mark its row uploaded.
@@ -836,13 +840,20 @@ ka's; kk has none and keeps none, D10.)
   in-flight changes back (and an edit merged into them was lost), and a sign-out in one tab
   left the other tab's poll writing the whole scope back into the wiped copy. keksdose's
   mechanism has its cross-tab layer (`MIRROR_GENERATION`, §1.2); the engine now has its own:
-  - **a Web Lock per database round** (`navigator.locks`): one tab's round runs at a time,
-    and a tab that finds the lock taken leaves the round to the tab that holds it. A closed
-    tab's lock is released, so a `sending` it left is truly orphaned when the next round
-    takes it back. Without Web Locks the engine behaves as before;
+  - **a Web Lock per database round** (`navigator.locks`, `eifi1-sync:<database>`,
+    `ifAvailable`): one tab's round runs at a time. A tab that finds the lock taken gets
+    `paused` for that round, and a started engine runs it once after the other tab's round
+    (ka's rule, across tabs). A closed tab's lock is released, so a `sending` it left is
+    truly orphaned when the next round takes it back. Without Web Locks (outside a secure
+    context: plain http) two tabs' rounds may overlap as before; the epoch and the channel
+    below still hold;
   - **a persisted epoch**: `forget()` writes a new one into `meta` in the transaction that
-    clears the tables; a round reads it at its start, and its apply and every step's
-    `isCurrent()` drop their result once it has moved, in whichever tab they run;
+    clears the tables, and posts it on the BroadcastChannel `eifi1-sync:<database>`. An
+    engine reads the epoch when it starts; a round reads it at its start and in its apply
+    transaction once more, and drops its answer when it moved. An engine that finds it
+    moved by another tab's `forget()`, or hears that `forget()` on the channel (a started
+    engine: a step's `isCurrent()` turns false at once, the request in flight is aborted),
+    stops and runs no round until its own `forget()`: the session it ran for has ended;
   - **the query copy's `clear()` reaches every tab** through a `BroadcastChannel` (§1.6).
 
   App side: kastlan ends the session in every tab when its refresh token is removed (a
@@ -938,7 +949,7 @@ createSyncEngine(opts: {
 interface SyncStep { name: string; run(db: SyncDb, ctx: { signal: AbortSignal; isCurrent(): boolean }): Promise<
   { offline?: boolean; changed?: boolean; counts?: Partial<SyncCounts> }> }
   // changed → one more push/pull in the same round (ka's second pass after photos)
-  // isCurrent() → false once forget() bumped the generation: the step writes nothing more (D15)
+  // isCurrent() → false once forget() bumped the generation, here or (0.52) in another tab: the step writes nothing more (D15)
 
 interface SyncEngine {
   write(scope: string, entity: string, id: string, op: "upsert" | "delete",
@@ -969,8 +980,8 @@ stampAfter(previous: unknown): string;                    // kk sync-client.ts:6
 
 **The round**, per scope in `scopes()` order:
 1. Unless `paused()`: take the scope's `pending` + `waiting` (+ `blocked` only on `retryBlocked`) in
-   `seq` order, mark them `sending` (a `sending` left by a closed tab goes back first: the round
-   holds the database's Web Lock, so no live tab is sending it, D15).
+   `seq` order, mark them `sending` (a `sending` left by a closed tab goes back first: where the
+   browser has Web Locks the round holds the database's lock, so no live tab is sending it, D15).
 2. Send `{scope, last_knowledge, changes, refusals: true, client_now, paged?, page_cursor?}`;
    `client_now` = `new Date().toISOString()` as the body is built.
 3. Apply in one transaction, **if the generation and the persisted epoch are unchanged** (D15):
@@ -980,7 +991,9 @@ stampAfter(previous: unknown): string;                    // kk sync-client.ts:6
    changes back; on the last page write `lastKnowledge:<scope>` and `lastSyncedAt`.
 4. Follow `page_cursor` with pull-only requests until it is `null` (D12).
 Then the `steps` (each checks `isCurrent()` before it writes), then one more pass if a step
-`changed`. One round at a time; a request during a round runs once more after it (ka's rule).
+`changed`. One round at a time; a request during a round runs once more after it (ka's rule) —
+across tabs too: a round that finds another tab's holding the Web Lock is `paused`, and a
+started engine runs it once after that round (0.52).
 `scopes()` is read at the start of every round. `write()` keeps ka's merge (into the last
 `pending` upsert only; a never-synced row's delete forgets its queue; ka's policy, D10) and stamps
 with `stampAfter(previous)`. A `rejected` change is never re-sent (D13).
