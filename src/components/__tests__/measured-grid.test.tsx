@@ -119,6 +119,16 @@ describe("useMeasuredRows", () => {
     ]);
   });
 
+  // Refactor audit 2026-10-30, DUP-14: `toFixed` rounds the binary value, so 1.005 (which
+  // is 1.00499… as a double) came out "1" — a fourth rounding rule beside lib/round's
+  // `roundHalfAway`, which BUG-11 made the kit's one.
+  it("rounds a computed number half away from zero, as the figure is written", () => {
+    const { result } = renderHook(() => useMeasuredRows(() => [[1.005, -2.675, 0.125]], { digits: 2, locale: "en" }));
+    expect(result.current.cells).toEqual([["1.01", "-2.68", "0.13"]]);
+    act(() => result.current.setRows([[-0.001, 1.0049]]));
+    expect(result.current.cells).toEqual([["0", "1"]]);
+  });
+
   it("follows the provider's locale when given none", () => {
     const { result } = renderHook(() => useMeasuredRows([[1.5]]), {
       wrapper: ({ children }) => <UiKitProvider locale="de-DE">{children}</UiKitProvider>,

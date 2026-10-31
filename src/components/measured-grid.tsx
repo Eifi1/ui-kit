@@ -6,6 +6,7 @@ import { horizontalStep } from "../lib/direction";
 // The locale's mark as far as a cell can hold it — the fields' answer, the same reason
 // (DUP-11, refactor audit 2026-10: a verbatim copy lived here).
 import { decimalMark } from "../lib/decimal-marks";
+import { roundHalfAway } from "../lib/round";
 // The cell pair reads ONE cell, where a comma has no columns to separate and so is
 // always a decimal mark; `splitRow` and `parseRows` read a pasted table, where it may
 // be either and the line decides. See the three named rules at the top of table-text.
@@ -105,9 +106,12 @@ const ALL_VIEWS: readonly MeasuredGridView[] = ["cells", "text"];
 const withMark = (cell: string, mark: "," | ".") =>
   mark === "," && isCellNumber(cell) ? cell.replace(".", ",") : cell;
 
-/** A computed number as a draft cell: rounded to `digits`, with no trailing zeros. */
+/** A computed number as a draft cell: rounded to `digits`, half away from zero as the
+ *  figure is written (1.005 → 1.01), with no trailing zeros. `toFixed` rounded the binary
+ *  value (1.00499… → "1"), a fourth rule beside lib/round's, which BUG-11 made the kit's
+ *  one (0.52, refactor audit 2026-10-30, DUP-14). */
 const formatCell = (value: number, digits: number, mark: "," | ".") =>
-  withMark(String(Number(value.toFixed(digits))), mark);
+  withMark(String(roundHalfAway(value, digits)), mark);
 
 const hasContent = (row: readonly string[]) => row.some((cell) => cell.trim() !== "");
 
@@ -187,7 +191,7 @@ export interface MeasuredGridProps extends Omit<ComponentPropsWithRef<"div">, "c
   /** A note under the table (which columns a layout expects, say). Also the grid's
    *  description. */
   hint?: ReactNode;
-  columns: MeasuredGridColumn[];
+  columns: readonly MeasuredGridColumn[];
   /** The draft — typically `useMeasuredRows().props`. */
   cells: string[][];
   onCells: (next: string[][]) => void;
@@ -332,7 +336,7 @@ interface Caret {
 }
 
 interface ViewProps {
-  columns: MeasuredGridColumn[];
+  columns: readonly MeasuredGridColumn[];
   cells: string[][];
   onCells: (next: string[][]) => void;
   disabled?: boolean;
