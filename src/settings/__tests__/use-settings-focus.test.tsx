@@ -118,6 +118,8 @@ describe("useSettingsFocus — a second ring while one is on", () => {
     act(() => void probe!.navigate("/settings?focus=b-card"));
 
     expect(a).not.toHaveClass("ring-2");
+    // The mark goes with the ring: an app's test (keksdose's matching tab) reads it.
+    expect(a).not.toHaveAttribute("data-settings-focus");
     expect(b).toHaveClass(...SETTINGS_FOCUS_RING);
     expect(document.activeElement).toBe(b.querySelector("h3"));
     act(() => vi.advanceTimersByTime(SETTINGS_FOCUS_MS - 1));
