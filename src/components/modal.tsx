@@ -1,4 +1,4 @@
-import { createContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type {
   ComponentPropsWithoutRef,
@@ -231,6 +231,30 @@ export interface ModalProps extends Omit<ComponentPropsWithoutRef<"div">, "role"
    */
   urlParam?: DialogParam;
   /**
+   * A request the dialog started is in flight: it stays until the caller says otherwise
+   * (refactor audit 2026-10-30, DUP-3). A request that has left cannot be called back by
+   * closing the dialog, and the dialog should not pretend it can.
+   *
+   * While true the panel is `aria-busy`, and every dismissal is refused before the exit
+   * starts — the backdrop, Escape, Back, the frame's X and an `actions(close)` button —
+   * so nothing lowers and snaps back. Five dialogs used to hold Escape by hand, in an
+   * `onKeyDown`, and nothing else: a backdrop press or Android's Back closed four of them
+   * mid-request, and CancelSubscriptionConfirm, which guarded its `onClose`, lowered its
+   * panel and popped it back up.
+   *
+   * Escape still goes to whatever is open over the dialog first (a list, a tooltip); the
+   * press that reaches the dialog's own layer is taken and dropped. A refused Back puts
+   * the dialog's history entry back, so the Back after the request closes the dialog
+   * rather than leaving the page.
+   *
+   * Not held: a close the caller decides on (`open={false}`, unmounting), and — with
+   * `urlParam` — Back, which leaves the param's entry like any other navigation. A close
+   * the dialog asks for itself through `ModalCloseContext` while busy is refused too; one
+   * made from an effect that depends on that close (ReauthDialog's on a resolved submit)
+   * runs again once `busy` turns false, because the close changes with it.
+   */
+  busy?: boolean;
+  /**
    * The PANEL — the `role="dialog"` element the rest of the props go on, not the
    * backdrop around it (0.35, round 0.35 R4, the follow-up to API-2; as on
    * `FullBleedDialog`). Merged with the panel's own ref, which the focus
@@ -295,6 +319,8 @@ function ModalPanel({
   style,
   role = "dialog",
   urlParam: _urlParam,
+  busy = false,
+  "aria-busy": ariaBusy,
   ownHistoryEntry = true,
   ref,
   ...rest
@@ -336,10 +362,17 @@ function ModalPanel({
   // dismissal below goes through `requestClose`; `onClose` still does the closing, one
   // animation later. A caller that closes the dialog ITSELF — after a save, say —
   // unmounts with no exit unless it passes `open`, which is what that prop is for.
-  const { closing, requestClose } = useCloseTransition(() => {
+  const { closing, requestClose: lower } = useCloseTransition(() => {
     setDismissed(true);
     onClose();
   });
+  // `busy` (DUP-3) refuses HERE, before `lower` starts the exit: a refusal in the
+  // caller's `onClose` comes 220ms too late, after the panel has already gone down.
+  // A new function when `busy` flips, so a close asked for from an effect while busy
+  // (a resolved action whose caller's `isPending` trails its promise) runs again.
+  const requestClose = useCallback(() => {
+    if (!busy) lower();
+  }, [busy, lower]);
   // A panel on its way out after `open` turned false is already closed: a press on
   // its fading backdrop must not report a second close.
   const backdropClose = useBackdropClose(active ? requestClose : () => {});
@@ -347,7 +380,8 @@ function ModalPanel({
   // this the only way out of a dialog is finding its close button — and Back, the
   // gesture everyone reaches for, navigated the page underneath instead (#172).
   // Held only while open: a closed `open={false}` dialog must not own a history entry.
-  useOverlayHistory(active && ownHistoryEntry, requestClose);
+  // `held`: a Back while busy is refused, and the entry it took is put back.
+  useOverlayHistory(active && ownHistoryEntry, requestClose, { held: busy });
 
   // Through the shared hook and not by hand: this component's own save/restore copy
   // was one half of the pair that left the page permanently unscrollable when a dialog
@@ -423,6 +457,8 @@ function ModalPanel({
         // take the dialog role away (props-passthrough pins that).
         role={role === "alertdialog" ? "alertdialog" : "dialog"}
         aria-modal="true"
+        // A caller's own `aria-busy` (a preview still loading) is kept beside `busy`.
+        aria-busy={busy ? true : ariaBusy}
         aria-labelledby={labelledBy}
         tabIndex={-1}
         onKeyDown={handleKeyDown}

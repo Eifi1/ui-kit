@@ -187,11 +187,19 @@ export function seriesKey(...parts: (string | number)[]): string {
  * padded only on the sides that are not zero — bars standing on a frame's bottom edge,
  * not floating four per cent above it on a band of air nobody asked for.
  * `undefined` when there is nothing to fit.
+ *
+ * All-zero data (a quiet period, a zoom window over empty months) is `[0, 1]`: one unit
+ * on the free side, the unit {@link padBand} pads a zero extent by. d3 maps every value
+ * of a zero-height domain to the range's midpoint, so `[0, 0]` stood the bars on a
+ * baseline in the middle of the plot, the "0" tick beside it (audit 2026-10-30 DSP-10;
+ * keksdose's weekday pattern drew seven 4 px stubs mid-card for a period with no
+ * spending).
  */
 export function anchoredBand(extent: readonly [number, number] | undefined): [number, number] | undefined {
   if (!extent) return undefined;
   const low = Math.min(0, extent[0]);
   const high = Math.max(0, extent[1]);
+  if (low === 0 && high === 0) return [0, 1];
   const pad = (high - low) * AUTO_PAD || 1;
   return [low < 0 ? low - pad : 0, high > 0 ? high + pad : 0];
 }

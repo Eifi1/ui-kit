@@ -11,7 +11,7 @@ import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { PickerSheet, SHEET_ROW_CLASS } from "./picker-sheet";
 import { ComboboxFieldLabel, endHintRowProps, GROUP_HEADING_STICKY, useActiveOptionScroll } from "./combobox-core";
 import { useKitLocale } from "../i18n/kit-labels";
-import { rankMatch } from "../lib/text-match";
+import { rankMatch, sameName } from "../lib/text-match";
 import {
   EndHintRow,
   FieldCaption,
@@ -328,8 +328,9 @@ export function Combobox(props: ComboboxProps) {
     setTyping(false);
   };
 
-  // Offered only when the typed text is genuinely NOT in the pool: an exact
-  // (case-insensitive) match is an existing entry the list is already showing, and a
+  // Offered only when the typed text is genuinely NOT in the pool: an exact match —
+  // folded as the list matches, so "cafe" is Café ({@link sameName}, DUP-5 in the
+  // 2026-10-30 refactor audit) — is an existing entry the list is already showing, and a
   // second way to pick it would be noise. Compared against `options`, not `matches` —
   // `matches` is capped, so a pool of 300 payees would otherwise offer to "add" one
   // that exists but fell off the end of the list.
@@ -352,9 +353,7 @@ export function Combobox(props: ComboboxProps) {
 
   const typed = value.trim();
   const createRow =
-    createLabel && typed.length > 0 && !options.some((o) => o.toLowerCase() === typed.toLowerCase())
-      ? createLabel(typed)
-      : null;
+    createLabel && typed.length > 0 && !options.some((o) => sameName(o, typed, locale)) ? createLabel(typed) : null;
 
   // The list is a layer on the Escape stack while it SHOWS (Wave 2, DUP-1): an Escape
   // over an empty "open" list is the dialog's, as it always was. On a phone the sheet

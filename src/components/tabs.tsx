@@ -2,7 +2,7 @@ import { useLayoutEffect, useMemo, useRef } from "react";
 import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
-import { FOCUS_RING_WIDTH } from "./focus-ring";
+import { FOCUS_RING } from "./focus-ring";
 import { scrollIntoStrip, useStripFade } from "../lib/strip-fade";
 import { horizontalStep } from "../lib/direction";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
@@ -205,9 +205,7 @@ const TABLIST_CLASSES = "flex gap-1 overflow-x-auto overflow-y-hidden border-b b
 // selection. `--bg-active` is the kit's own selected-row fill (the sidebar's), so the
 // admin page's nav and the app's own sidebar mark "you are here" the same way.
 const TABLIST_VERTICAL_CLASSES = "flex flex-col gap-0.5";
-const TAB_VERTICAL_CLASSES =
-  FOCUS_RING_WIDTH +
-  " flex w-full items-center rounded-md px-3 py-2 text-start text-sm font-medium transition-colors focus:outline-none focus-visible:ring-strong";
+const TAB_VERTICAL_CLASSES = `flex w-full items-center rounded-md px-3 py-2 text-start text-sm font-medium transition-colors focus:outline-none ${FOCUS_RING}`;
 const TAB_VERTICAL_ACTIVE_CLASSES = "bg-active text-primary";
 const TAB_VERTICAL_INACTIVE_CLASSES = "text-muted hover:bg-hover hover:text-primary";
 
@@ -215,9 +213,14 @@ const TAB_VERTICAL_INACTIVE_CLASSES = "text-muted hover:bg-hover hover:text-prim
 // links · … · 31 Punkte") made one tab 448px wide in a 390px strip, and a tab wider
 // than the strip cannot be scrolled into view — its end was simply off screen
 // (lenkbank L3). The label and detail truncate inside it instead; see `inner`.
-const TAB_CLASSES =
-  FOCUS_RING_WIDTH +
-  " max-w-full whitespace-nowrap px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-px focus:outline-none focus-visible:ring-strong";
+//
+// Keyboard focus on a tab, a side-nav row and the add button is the kit's one focus frame
+// (text-size §5), in brand. Until 0.51.7 it rang in `ring-strong`: 2.54:1 on the light
+// page and 2.76:1 on a card, under WCAG 1.4.11's 3:1 (refactor audit 2026-10-30, DSP-8;
+// NavPills made the same move in 0.34, DOC-7). INSET on a tab: the strip scrolls
+// (`overflow-x-auto overflow-y-hidden`), so a ring outside the tab is cut off along its
+// top and bottom, and at a cut end.
+const TAB_CLASSES = `max-w-full whitespace-nowrap px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-px focus:outline-none ${FOCUS_RING} focus-visible:ring-inset`;
 const TAB_ACTIVE_CLASSES = "border-[var(--text-primary)] text-primary";
 const TAB_INACTIVE_CLASSES = "border-transparent text-muted hover:text-secondary hover:border-strong";
 
@@ -225,9 +228,7 @@ const TAB_INACTIVE_CLASSES = "border-transparent text-muted hover:text-secondary
 // `onRemove`).
 const TAB_REMOVABLE_CLASSES = "pe-8";
 const TAB_EMPTY_CLASSES = "-mx-1.5 rounded border border-dashed border-strong px-1.5";
-const TAB_ADD_CLASSES =
-  FOCUS_RING_WIDTH +
-  " inline-flex items-center gap-1 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-muted transition-colors hover:text-primary focus:outline-none focus-visible:ring-strong disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:size-4";
+const TAB_ADD_CLASSES = `inline-flex items-center gap-1 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-muted transition-colors hover:text-primary focus:outline-none ${FOCUS_RING} disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:size-4`;
 // `relative`: the phone's visually hidden label needs a positioned ancestor (see the
 // sr-only rule in CONTRIBUTING); `max-md:px-2` squares the lone "+".
 const TAB_ADD_PHONE_CLASSES = "relative max-md:px-2";
@@ -262,6 +263,8 @@ export function Tabs<T extends string>({
   const cue = overflowCue && !vertical;
   const cueStart = cue && (fade.overflow === "start" || fade.overflow === "both");
   const cueEnd = cue && (fade.overflow === "end" || fade.overflow === "both");
+  // The cue gutters (see `stripBox`): there only while the strip overflows at all.
+  const gutters = cue && fade.overflow !== undefined;
   // Three quarters of the visible width toward `side`; an RTL strip runs leftward.
   const onCue = (side: "start" | "end") => {
     const strip = stripRef.current;
@@ -333,15 +336,25 @@ export function Tabs<T extends string>({
   // "80 km," under the add button. Only the strip scrolls (`scrollBy` on it, not
   // `scrollIntoView`, which would scroll the page as well), and only as far as needed
   // to clear the fade.
+  //
+  // And again when the cue gutters appear (refactor audit 2026-10-30, DSP-16). They come a
+  // render after the strip is first measured as overflowing — on mount, or with the very
+  // tab that tipped it over — and take 24px off each end, so a tab scrolled clear before
+  // them ended 24px past the visible end, under the fade and the ›.
   useLayoutEffect(() => {
     const strip = stripRef.current;
     const tab = strip?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]');
     if (strip && tab) scrollIntoStrip(strip, tab);
-  }, [active]);
+  }, [active, gutters]);
   const isRemovable = (tab: TabItem<T>) => onRemove !== undefined && tab.removable !== false;
   // Whether Delete reaches this tab: every removable tab, or only the open one.
   const deletesOnKey = (tab: TabItem<T>) => isRemovable(tab) && (removeOn === "every" || tab.id === active);
   const nameOf = (tab: TabItem<T>) => tab.name ?? (typeof tab.label === "string" ? tab.label : tab.id);
+  // The strip's one tab stop (see `tabIndex` below): the open tab, or the first while
+  // `active` names none. "No sheet open" is a real state — KS's sheet strips pass `""` —
+  // and with the stop on the selection alone every tab was -1, so the keyboard could not
+  // reach the one control that opens a sheet (refactor audit 2026-10-30, DSP-1).
+  const stop = tabs.some((t) => t.id === active) ? active : tabs[0]?.id;
 
   // Where focus goes once a removal the strip asked for has happened. The caller
   // owns `tabs` and may take its time (a confirmation, a request), so this waits
@@ -370,10 +383,14 @@ export function Tabs<T extends string>({
     if (focused && focused !== document.body && !strip.contains(focused) && focused !== removeRef.current) return;
     // The removed tab was open: focus follows the caller's new selection, which is
     // also the strip's tab stop. It was not: its neighbour, as the ARIA pattern has it.
-    const target = !pending.wasActive && tabs.some((t) => t.id === pending.neighbour) ? pending.neighbour : active;
+    // The caller opened nothing in its place (KS drops the sheet and the selection in one
+    // render): the neighbour too, else the stop — not an index of -1 and the page (DSP-1).
+    const present = (id: T | undefined) => tabs.some((t) => t.id === id);
+    const target =
+      pending.wasActive && present(active) ? active : present(pending.neighbour) ? pending.neighbour : stop;
     const index = tabs.findIndex((t) => t.id === target);
     strip.querySelectorAll<HTMLElement>('[role="tab"]')[index]?.focus();
-  }, [tabs, active]);
+  }, [tabs, active, stop]);
 
   // Arrow keys walk the strip in DOM order (ARIA tabs pattern). Home/End jump
   // to the ends. Focus only — activation stays on click/Enter/Space, because a tab
@@ -462,8 +479,8 @@ export function Tabs<T extends string>({
           // strip back on the next visit in a state they never chose. The cost is that
           // Tab out and back returns to the open tab rather than to the last one
           // looked at; the ARIA pattern allows either, and this one needs no second
-          // piece of state shadowing `active`.
-          tabIndex: isActive ? 0 : -1,
+          // piece of state shadowing `active`. With nothing open, the first tab (`stop`).
+          tabIndex: tab.id === stop ? 0 : -1,
           // Only the open tab: see `panelId`.
           "aria-controls": isActive ? panelId : undefined,
           id: isActive && panelId ? `${panelId}-tab` : undefined,
@@ -612,8 +629,7 @@ export function Tabs<T extends string>({
     ) : null;
   // The box the cues sit in, ‹ in the gutter before the strip and › in the one after it
   // (see `gutterAt`). There whether or not the strip overflows right now, so a resize
-  // never re-parents it; the gutters only while it overflows at all.
-  const gutters = cue && fade.overflow !== undefined;
+  // never re-parents it; the gutters only while it overflows at all (`gutters`).
   const stripBox = cue ? (
     <div className={cn("relative flex min-w-0", !onAdd && "flex-1", gutters && "px-[24px]")}>
       {tablist}

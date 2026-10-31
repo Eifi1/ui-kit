@@ -531,3 +531,78 @@ prop `edges`:
 **Apps:** keksdose: all its treemaps follow the contrast setting on the bump, with
 nothing to pass. kastlan and Kurvenschmiede draw no treemap: a plain
 bump.
+
+## 0.51.7
+
+**Legal wording:** none.
+
+Wave 0 of the kit's refactor audit of 2026-10-30: the live defects and the bugs the apps
+can reach, all without a breaking change. Three new optional props (Modal `busy`,
+CalculatorButton `onCommit`, `useCancelRequest({ timeoutMs })`) and one optional hook
+argument (`useOverlayHistory(open, onClose, { held })`).
+
+**The calculator commits once per session.** NumberField / NumberInput never handed a
+calculator result to `onCommit` (the host kept the number from before the calculation);
+MoneyField / AmountInput committed every keystroke that resolved ("100+50" saved 105,
+then 150). Now all four commit once: on "=", on Enter in the pad, or when the pad closes
+on a result not committed yet. A lock or `disabled` arriving mid-session commits nothing.
+
+**Tabs.** A strip whose `active` names no tab keeps one Tab stop, on the first tab, and
+removing the open tab with nothing opened in its place moves focus to its neighbour, not
+the page. Keyboard focus on tabs, side-nav rows and the add button is the brand focus
+ring (3px under More contrast), drawn inside the horizontal tabs; it was the grey
+`ring-strong`, under 3:1. With `overflowCue`, the open tab lands clear of the › on a deep
+link or reload.
+
+**DataTable.**
+- `leadingRow` renders on a phone, as the card list's first item. Under
+  `leadingRowSticky` it is pinned at the top, with `mobileGroupBy`'s section headers
+  under it.
+- String-sorted columns and derived select-filter options collate in the table's locale:
+  case-insensitive, Ä/Ö/Ü in place, "Item 2" before "Item 10". A number sorts before a
+  string ascending; nulls stay last.
+
+**Modal `busy`.** While a dialog's request runs, `busy` holds the backdrop, Escape, the
+X, `actions(close)` and Back (the entry Back took is put back). ReauthDialog,
+AdminActionConfirm, CompleteNameDialog, PlanSwitchConfirm and CancelSubscriptionConfirm
+use it: a backdrop press or Back no longer closes them mid-request. An app dialog that
+holds Escape by hand (`onKeyDown` + `preventDefault` + `aria-busy`) can pass `busy={…}`
+instead and gets the backdrop and Back too.
+
+**Smaller fixes, nothing to change:**
+- A pasted "−12.50" (U+2212, what every kit table prints) keeps its minus, and
+  "1.234,56" pasted into an English or de-CH field reads as 1234.56 (the last of two
+  marks is the decimal).
+- Copying "−US$12", "−CA$", "−JP¥", a narrow "−kr" puts an ASCII minus on the clipboard,
+  so Excel reads a number.
+- `formatRelativeTime` counts days by the calendar (in the provider's `timeZone` when
+  set): 00:10 seen at 23:50 is "24 hours ago", not "yesterday".
+- Pickers with `onCreate` / `createLabel` offer no create row for a name that differs
+  from an existing one only in case or accents; InlineEntityCombobox commits "cafe" as
+  Café on blur.
+- A NaN `value` no longer crashes NumberField / MoneyField / RhfMoneyField, and a stored
+  float leftover (5e-15) no longer commits as 5.12.
+- An all-zero bar or area SeriesChart stands on the bottom edge, not mid-plot.
+- `List limit`: Show all / Show fewer keeps the first rows' state.
+- A tour step whose `beforeStep` throws is shown anyway (the error goes to the console);
+  Enter and the arrows wait for a running `beforeStep`; `?tourStep=2.5` starts at step 2.
+- `useCancelRequest` stops waiting after 10 minutes if the provider's webhook never
+  lands, so its poll stops.
+- `lucide-react`'s peer floor is 0.577.0, the version all three apps run; the kit's
+  package check now installs that version, so the kit cannot use an icon only 1.x has.
+
+**Apps:**
+- keksdose:
+  - Delete the `md:hidden` hidden-accounts Disclosure above the accounts table
+    (features/accounts/accounts-page.tsx:684-693) and its comment at :672-681 that calls
+    `leadingRow` desktop-only, or a phone shows two toggles.
+  - Switch `buildRowComparator` (features/transactions/transaction-order.ts:46-48) to the
+    table's collator (`new Intl.Collator(locale, { numeric: true, sensitivity: "base" })`
+    for string pairs, a number before a string), so scheduled rows still splice in where
+    the table puts them; update its note at :29-33.
+  - Your low-balance threshold saves once per calculator session and keeps the pad open.
+- kastlan: a plain bump. Meters → Add meter now works on a phone. The 3 s billing poll
+  after a cancel stops after 10 minutes.
+- Kurvenschmiede: a plain bump. A calculator result now reaches `onCommit` in every
+  NumberField; a sheet strip with no sheet open is one Tab stop. The `Number.isFinite`
+  guard in shared/ui/number-field.tsx is now redundant and can stay.

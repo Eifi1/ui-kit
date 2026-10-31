@@ -33,6 +33,18 @@ export function foldForSearch(text: string, locale?: string): string {
 }
 
 /**
+ * Whether two names are one name as a picker's search reads them: folded
+ * ({@link foldForSearch}) and trimmed — "cafe" is Café, " MIGROS " is Migros. For "does
+ * the typed text name a record that exists" (a create row, InlineEntityCombobox's blur
+ * commit), which compared with plain `toLowerCase` while the list beside it folded, so
+ * "cafe" listed Café as a hit and offered "Create “cafe”" too — a duplicate payee or shop
+ * chain one Enter away (refactor audit 2026-10-30, DUP-5). Internal: not in the barrel.
+ */
+export function sameName(a: string, b: string, locale?: string): boolean {
+  return foldForSearch(a.trim(), locale) === foldForSearch(b.trim(), locale);
+}
+
+/**
  * A picker's query as its words, each folded (0.51.4, keksdose's /prices shop picker):
  * "Migros  Zürich" → `["migros", "zurich"]`. An empty or blank query has no words.
  */

@@ -1,4 +1,4 @@
-import { Fragment, isValidElement, useEffect, useId, useMemo, useRef, useState } from "react";
+import { Fragment, isValidElement, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent, ReactNode } from "react";
 import { ArrowDownWideNarrow, ArrowUpNarrowWide, ChevronDown, ChevronRight, Filter } from "lucide-react";
 import { FOCUS_RING } from "./focus-ring";
@@ -772,6 +772,54 @@ export function MobileRow<T>({
           {expansion}
         </div>
       )}
+    </li>
+  );
+}
+
+// ---------- The card list's leading row (0.51.7, audit 2026-10-30 DSP-2) ----------
+
+/**
+ * DataTable's `leadingRow` on a phone: the card list's first item. It was desktop-only
+ * and the card list dropped it without a word — kastlan's inline "Add meter" editor
+ * never appeared (the page's button disabled itself, its only create path gone), and
+ * keksdose kept an `md:hidden` copy of its hidden-accounts toggle above the table.
+ *
+ * A plain `<li>`: the list is a `<ul>`, and axe's `list` rule fails an `<li
+ * role="none">` in one (checked against axe 4.13), so it is one more item, as the
+ * section headers, the reveal sentinel and the load-more footer are. It is no card — no
+ * row link, swipe or long press, no toggle in selection mode, no `rowAttributes` — and
+ * selection, the reveal and the row count work on the rows, not on the list's items.
+ *
+ * `sticky`: pinned at the top of whatever scrolls the list (the list itself under a
+ * bounded `fillHeight`, else the page), opaque over the cards passing beneath it, and
+ * over the section headers (`z-10`) — which stand under it, at the height `onHeight`
+ * reports, measured and followed (an inline editor wraps at Large text). The desktop
+ * stacks the same way: its leading row over the group bands.
+ */
+export function MobileLeadingRow({
+  sticky,
+  onHeight,
+  children,
+}: {
+  sticky: boolean;
+  /** Under `sticky`: the row's height, and each change of it. */
+  onHeight?: (height: number) => void;
+  children: ReactNode;
+}) {
+  const ref = useRef<HTMLLIElement>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!sticky || !onHeight || !el) return;
+    const measure = () => onHeight(el.getBoundingClientRect().height);
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [sticky, onHeight]);
+  return (
+    <li ref={ref} data-leading-row={sticky ? "sticky" : ""} className={cn(sticky && "sticky top-0 z-[11] bg-surface")}>
+      {children}
     </li>
   );
 }

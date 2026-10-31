@@ -24,7 +24,7 @@ import {
   type ComboOption,
 } from "./combobox-core";
 import { DEFAULT_COMBOBOX_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-labels";
-import { matchesSearch, rankMatch, searchWords } from "../lib/text-match";
+import { matchesSearch, rankMatch, sameName, searchWords } from "../lib/text-match";
 import {
   EndHintRow,
   FieldCaption,
@@ -353,6 +353,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
     createQuery,
     options.map((o) => o.label),
     createEmptyLabel,
+    locale,
   );
   const createText = createQuery ? labels.create(createQuery) : createEmptyLabel;
   // Every row the keyboard can land on: the options, then the create row — passed over
@@ -410,8 +411,9 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
         if (value != null) onChange(clearValue);
       } else {
         // A disabled option's label typed out in full is not a way round `disabled`:
-        // it is not a hit, so the text reverts like any other non-answer.
-        const hits = options.filter((o) => !o.disabled && o.label.toLowerCase() === q.toLowerCase());
+        // it is not a hit, so the text reverts like any other non-answer. A label is
+        // typed out in full as the list matches it, so "cafe" commits Café (DUP-5).
+        const hits = options.filter((o) => !o.disabled && sameName(o.label, q, locale));
         const ids = new Set(hits.map((h) => h.value));
         if (ids.size === 1 && hits[0].value !== value) onChange(hits[0].value);
       }

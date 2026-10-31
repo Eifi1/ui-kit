@@ -8,6 +8,7 @@ import { useRangeSelection } from "./data-table-selection";
 import { columnLabel, logicalAlign, resolveDataTableLabels } from "./data-table-shared";
 import {
   MobileFilters,
+  MobileLeadingRow,
   MobileSelectBar,
   MobileSort,
   StackedFields,
@@ -67,6 +68,10 @@ export interface DataTableColumn<T> {
   key: string;
   header: ReactNode;
   cell: (row: T) => ReactNode;
+  /** What a client sort orders the column by. Strings collate in the table's `locale`
+   *  (digits as numbers, case and accents left out; 0.51.7, audit 2026-10-30 DSP-3),
+   *  numbers compare as numbers and sort before strings, `null` and `undefined` sort
+   *  last in either direction. */
   sortBy?: (row: T) => string | number | null | undefined;
   filter?: ColumnFilter<T>;
   filterBy?: (row: T) => string;
@@ -618,8 +623,10 @@ export interface DataTableProps<T> {
    */
   desktopSwipeActions?: boolean | DataTableDesktopSwipeActions<T>;
   /**
-   * Renders as a full-width row above the data rows in the desktop table
-   * (mobile has no equivalent list-row slot, so it's desktop-only). For a
+   * Renders as a full-width row above the data rows in the desktop table, and since
+   * 0.51.7 as the first item of the phone's card list (audit 2026-10-30 DSP-2: the card
+   * list dropped it, and kastlan's inline "Add meter" editor never appeared on a phone).
+   * On the phone it is no card: no row link, swipe or selection toggle. For a
    * toggle that shows/hides a slice of rows, style it as an expand/collapse
    * disclosure (chevron + label) so it reads as part of the table rather
    * than a floating control above it. See feedback #10/#11 (transactions'
@@ -629,9 +636,11 @@ export interface DataTableProps<T> {
   /**
    * 0.48 (keksdose dev #603: "it should rather be sticky, so the user can show hide them
    * everywhere on click"): pin the {@link leadingRow} under the sticky header while the
-   * rows scroll beneath both — its `top` is the header's measured height. Desktop only,
-   * as `leadingRow` is; it sticks within the table's own scroller (a bounded body:
-   * `fillHeight` or `maxBodyHeight`). Default: it scrolls with the rows.
+   * rows scroll beneath both — its `top` is the header's measured height. It sticks
+   * within the table's own scroller (a bounded body: `fillHeight` or `maxBodyHeight`).
+   * On a phone (0.51.7) it is pinned at the top of the card list's scroller (the list
+   * under a bounded `fillHeight`, else the page), with `mobileGroupBy`'s section headers
+   * under it. Default: it scrolls with the rows.
    */
   leadingRowSticky?: boolean;
   /**
@@ -953,6 +962,38 @@ export const DEFAULT_DATA_TABLE_SORT_LABELS: DataTableSortLabels = {
 
 const flipDir = (d: SortDir): SortDir => (d === "asc" ? "desc" : "asc");
 
+/**
+ * The client sort's and the derived select options' string order (audit 2026-10-30
+ * DSP-3): the table locale's collation, digits as numbers ("Item 2" before "Item 10"),
+ * case and accents left out (two values that differ only by them go to the next sort
+ * key, then keep the order given). `<` and `Array.sort()` compared UTF-16 code units —
+ * every lower-case initial after every capital, Ä/Ö/Ü after Z — on the payees, names,
+ * insurers and titles all three apps sort. Built once per table locale, not per
+ * comparison: `localeCompare` with a locale sets one up on every call, n·log n times a
+ * sort. An unknown tag (a typo in a provider's `locale`) throws a RangeError, and a
+ * sort is no reason for a table to stop rendering: the runtime's own collation then,
+ * as CountrySelect falls back.
+ */
+function sortCollator(locale: string | undefined): Intl.Collator {
+  const options: Intl.CollatorOptions = { numeric: true, sensitivity: "base" };
+  try {
+    return new Intl.Collator(locale, options);
+  } catch {
+    return new Intl.Collator(undefined, options);
+  }
+}
+
+/** Two present `sortBy` values, ascending. Strings collate; a number sorts before a
+ *  string (`<` called that pair equal, so they stayed wherever they were given); any
+ *  other pair — numbers, and a `Date` an untyped caller returns — keeps `<` / `>`. */
+function compareSortValues(a: string | number, b: string | number, collator: Intl.Collator): number {
+  const aText = typeof a === "string";
+  const bText = typeof b === "string";
+  if (aText && bText) return collator.compare(a, b);
+  if (aText !== bText) return aText ? 1 : -1;
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
 // `virtualize`'s constants (0.48.2): the band levels a group's `<tbody>` opens with.
 const NO_BANDS: readonly (1 | 2)[] = [];
 const BAND_1: readonly (1 | 2)[] = [1];
@@ -1052,6 +1093,7 @@ export function DataTable<T>({
   const storageKeyPrefix = storageKeyPrefixProp ?? providerStorageKeyPrefix ?? DEFAULT_PERSIST_PREFIX;
   const labels = useMemo(() => resolveDataTableLabels(labelOverrides, labelsProp), [labelOverrides, labelsProp]);
   const locale = useKitLocale(localeProp);
+  const collator = useMemo(() => sortCollator(locale), [locale]);
 
   // ---- Row actions ---- (data-table-row-actions.tsx)
   // The actions column joins the caller's columns; on a phone the same actions are the
@@ -1159,13 +1201,13 @@ export function DataTable<T>({
         if (v && !seen.has(v)) seen.add(v);
       }
       map[col.key] = Array.from(seen)
-        .sort()
+        .sort(collator.compare)
         .map((v) => ({ value: v, label: v }));
     }
     return map;
     // `columns` by signature — see the note above the signatures.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [columnSig, selectOptionsSig, rows]);
+  }, [columnSig, selectOptionsSig, rows, collator]);
 
   const filtered = useMemo(() => {
     if (serverRows) return rows;
@@ -1198,14 +1240,14 @@ export function DataTable<T>({
         if (av == null && bv == null) continue;
         if (av == null) return 1;
         if (bv == null) return -1;
-        if (av < bv) return dir === "asc" ? -1 : 1;
-        if (av > bv) return dir === "asc" ? 1 : -1;
+        const order = compareSortValues(av, bv, collator);
+        if (order !== 0) return dir === "asc" ? order : -order;
       }
       return 0;
     });
     return copy;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtered, sorts, columnSig, serverRows]);
+  }, [filtered, sorts, columnSig, serverRows, collator]);
 
   // `paginated={false}` is expressed as "page size = everything" rather than as a
   // second code path, so slicing, the page clamp and the range summary all keep
@@ -1541,6 +1583,9 @@ export function DataTable<T>({
     if (el.parentElement) ro.observe(el.parentElement);
     return () => ro.disconnect();
   }, [phoneFill]);
+  // A sticky `leadingRow`'s height on a phone (audit 2026-10-30 DSP-2): the section
+  // headers stick under it, as the desktop's group bands stick under the desktop row.
+  const [phoneLeadHeight, setPhoneLeadHeight] = useState(0);
 
   const { mobileSlice, canRevealMoreMobile, loadMoreRef } = useMobileReveal({
     rows: sorted,
@@ -1894,10 +1939,20 @@ export function DataTable<T>({
             )}
             aria-busy={isLoading || undefined}
           >
+            {/* The desktop's leading row, as the list's first item (0.51.7, audit
+              2026-10-30 DSP-2; MobileLeadingRow says what it is and is not). */}
+            {leadingRow ? (
+              <MobileLeadingRow sticky={leadingRowSticky} onHeight={setPhoneLeadHeight}>
+                {leadingRow}
+              </MobileLeadingRow>
+            ) : null}
             {mobileGroups
               ? mobileGroups.map((g) => (
                   <Fragment key={`hb-group:${g.key}`}>
-                    <li className="sticky top-0 z-10 flex flex-wrap items-baseline justify-between gap-x-3 bg-surface-2 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted backdrop-blur">
+                    <li
+                      className="sticky top-0 z-10 flex flex-wrap items-baseline justify-between gap-x-3 bg-surface-2 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted backdrop-blur"
+                      style={leadingRow && leadingRowSticky ? { top: phoneLeadHeight } : undefined}
+                    >
                       <span className="min-w-0">
                         {mobileGroupLabel
                           ? mobileGroupLabel(g.key)

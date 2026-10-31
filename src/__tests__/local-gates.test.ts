@@ -272,4 +272,71 @@ describe(".husky/pre-push (TST-2)", () => {
     // `old` is not the checked-out commit, and the check runs on the checked-out tree.
     expect(result.out).toMatch(/is not the checked-out one/);
   });
+
+  // TST-1 (refactor audit 2026-10-30): `npm run release` commits CHANGELOG.md and the
+  // "version" lines on a tree that has just passed, and the hook ran the whole check again
+  // for that: 6–10 minutes per release, 41 releases between 0.34 and 0.51.6.
+  const DEPRECATIONS = "npm exec --no -- vitest run src/__tests__/deprecations.test.ts HEAD_SHA=";
+
+  /** A repo whose manifests' tree passed (unless `stampParent` is false), ready for `bump`. */
+  function released({ stampParent = true } = {}) {
+    const { dir } = repo();
+    const manifest = (version: string, extra = "") =>
+      `{\n  "name": "kit",\n  "version": "${version}",${extra}\n  "type": "module"\n}\n`;
+    const lock = (version: string) =>
+      `{\n  "name": "kit",\n  "version": "${version}",\n  "packages": {\n    "": {\n      "name": "kit",\n      "version": "${version}"\n    }\n  }\n}\n`;
+    writeFileSync(join(dir, "package.json"), manifest("1.0.0"));
+    writeFileSync(join(dir, "package-lock.json"), lock("1.0.0"));
+    writeFileSync(join(dir, "CHANGELOG.md"), "# Changelog\n");
+    git(dir, "add", "-A");
+    git(dir, "commit", "-q", "-m", "chore: manifests");
+    const parent = git(dir, "rev-parse", "HEAD");
+    if (stampParent) {
+      mkdirSync(join(dir, "node_modules/.cache/check"), { recursive: true });
+      writeFileSync(join(dir, "node_modules/.cache/check", git(dir, "rev-parse", "HEAD^{tree}")), "stamp\n");
+    }
+    // As `npm run release` writes them: the two manifests' version lines and the entry.
+    const bump = (extra = "") => {
+      writeFileSync(join(dir, "package.json"), manifest("1.0.1", extra));
+      writeFileSync(join(dir, "package-lock.json"), lock("1.0.1"));
+      writeFileSync(join(dir, "CHANGELOG.md"), "# Changelog\n\n## 1.0.1\n\n- a fix\n");
+    };
+    return { dir, parent, bump, line: (tip: string) => `refs/heads/main ${tip} refs/heads/main ${parent}\n` };
+  }
+
+  // Only the named files: the stamp under node_modules is untracked in a real checkout.
+  function commitRelease(dir: string, ...others: string[]) {
+    git(dir, "add", "CHANGELOG.md", "package.json", "package-lock.json", ...others);
+    git(dir, "commit", "-q", "-m", "chore(release): 1.0.1");
+    return git(dir, "rev-parse", "HEAD");
+  }
+
+  it("runs only the commit messages and the deprecations test for a release commit on a tree that passed", () => {
+    const { dir, bump, line } = released();
+    bump();
+    const result = push(dir, line(commitRelease(dir)));
+    expect(result.status).toBe(0);
+    // The version is what deprecations.test reads: a MINOR bump can make a removal due.
+    expect(result.npm).toEqual([DEPRECATIONS]);
+    expect(result.out).toMatch(/release commit/);
+  });
+
+  it("runs the full check for a release commit whose parent tree never passed", () => {
+    const { dir, bump, line } = released({ stampParent: false });
+    bump();
+    const result = push(dir, line(commitRelease(dir)));
+    expect(result.npm).toEqual(["npm run check HEAD_SHA="]);
+  });
+
+  it("runs the full check when the release commit changes more than CHANGELOG and the version", () => {
+    // A manifest line beside the version (a dependency, a script) …
+    const extra = released();
+    extra.bump(`\n  "private": true,`);
+    expect(push(extra.dir, extra.line(commitRelease(extra.dir))).npm).toEqual(["npm run check HEAD_SHA="]);
+    // … or any other file.
+    const other = released();
+    other.bump();
+    writeFileSync(join(other.dir, "a.txt"), "edited\n");
+    expect(push(other.dir, other.line(commitRelease(other.dir, "a.txt"))).npm).toEqual(["npm run check HEAD_SHA="]);
+  });
 });

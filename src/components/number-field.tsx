@@ -12,12 +12,14 @@ export interface NumberFieldProps extends Omit<
   NumberInputProps,
   "value" | "onChange" | "onCommit" | "suffix" | "invalid" | "error" | "locale"
 > {
-  /** The committed number. `null` is "no value" — shown as an empty field. */
+  /** The committed number. `null` is "no value" — shown as an empty field. So is a
+   *  number that is not finite (NaN, ±Infinity). */
   value: number | null;
   /**
-   * The parsed number, on blur or Enter — never per keystroke — and only when it
-   * differs from the last one committed. Already rounded to `digits` and clamped
-   * into `[min, max]`. `null` only when `nullable` and the field was emptied.
+   * The parsed number, on blur or Enter and once per calculator session (see
+   * {@link NumberInput}'s `onCommit`) — never per keystroke — and only when it differs
+   * from the last one committed. Already rounded to `digits` and clamped into
+   * `[min, max]`. `null` only when `nullable` and the field was emptied.
    */
   onCommit: (value: number | null) => void;
   /**
@@ -160,7 +162,7 @@ function roundTo(n: number, digits: number | undefined): number {
  */
 export function NumberField(props: NumberFieldProps) {
   const {
-    value,
+    value: stored,
     onCommit,
     onValueChange,
     digits,
@@ -179,6 +181,10 @@ export function NumberField(props: NumberFieldProps) {
     "aria-required": ariaRequired,
     ...rest
   } = props;
+  // A number that is not finite is no value. NaN in particular never equals itself, and
+  // the external-change check below re-read it as new on every render until React threw
+  // "Too many re-renders" (refactor audit 2026-10-30, INP-11).
+  const value = stored === null || Number.isFinite(stored) ? stored : null;
   const locale = useKitLocale(localeProp);
   const mark = decimalMark(locale);
   const localize = (text: string) => (mark === "," ? text.replace(/\./g, ",") : text);
@@ -201,8 +207,9 @@ export function NumberField(props: NumberFieldProps) {
 
   // Adjust state during render rather than in an effect: React re-renders at once
   // with the new draft, before anything is painted, so there is no frame showing
-  // the old text.
-  if (seen.value !== value || seen.mark !== mark || seen.digits !== digits) {
+  // the old text. `Object.is`, not `!==`, under which NaN is new on every render: the
+  // value is read above, but a NaN `digits` looped the same way.
+  if (!Object.is(seen.value, value) || seen.mark !== mark || !Object.is(seen.digits, digits)) {
     setSeen({ value, mark, digits });
     // Live mode echoing back what it was just told: the draft already says it, in
     // the typist's own spelling ("1," or "12+5"), and reformatting would fight them.

@@ -25,7 +25,10 @@ export interface NumberInputProps extends FieldHelpProps, DataAttributes {
    *  folded to a dot, operators kept so a typed expression survives. */
   onChange: (value: string) => void;
   /** Fired on blur/Enter with the *evaluated* value — use this for save-on-blur
-   * fields so the save always sees the resolved number, never "10+5". */
+   * fields so the save always sees the resolved number, never "10+5". And once per
+   * calculator session — its "=", or closing it on a result not committed yet — never
+   * per calculator keystroke (refactor audit 2026-10-30, INP-1: a result used to reach
+   * `onChange` only, and the host kept the number from before the calculation). */
   onCommit?: (value: string) => void;
   label?: ReactNode;
   /** Names the field when it has no visible `label` (a table cell, a phone's display
@@ -377,9 +380,11 @@ export function NumberInput(props: NumberInputProps) {
     );
   }, [suffix, label, ariaLabel, placeholder]);
 
-  const commit = () => {
+  // `text`: the calculator commits its session's result (INP-1), which on its "=" can be
+  // newer than this render's `value` — `onChange` was handed it in the same event.
+  const commit = (text: string = value) => {
     setDraft(null);
-    const next = numeric.settle(commitExpression(value));
+    const next = numeric.settle(commitExpression(text));
     if (next !== value) onChange(next);
     onCommit?.(next);
   };
@@ -495,6 +500,7 @@ export function NumberInput(props: NumberInputProps) {
               // grouping: the evaluator reads either mark, but "1.234,5" is two of them.
               value={derived}
               onChange={result}
+              onCommit={commit}
               className="self-stretch px-2.5"
               aria-label={labels?.calculatorTrigger}
               labels={labels?.calculator}

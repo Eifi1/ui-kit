@@ -94,10 +94,11 @@ const NavigationContext: Context<NavigationProbe> = (() => {
   }
 })();
 
-/** The step a link asks for, 0-based: `tourStep` is 1-based (keksdose), an alias 0-based. */
+/** The step a link asks for, 0-based: `tourStep` is 1-based (keksdose), an alias 0-based.
+ *  Floored, as the aliases always were (FLW-9): `?tourStep=2.5` was index 1.5. */
 function stepOf(params: URLSearchParams, aliases: readonly string[]): number {
   const step = Number(params.get("tourStep"));
-  if (params.has("tourStep")) return Number.isFinite(step) && step > 0 ? step - 1 : 0;
+  if (params.has("tourStep")) return Number.isFinite(step) && step >= 1 ? Math.floor(step) - 1 : 0;
   for (const alias of aliases) {
     const value = Number(params.get(alias));
     if (params.has(alias)) return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
@@ -166,7 +167,10 @@ export function useTourUrlSync({ launch, ready = true, stepAliases = [] }: UseTo
     launchingRef.current = true;
     void Promise.resolve()
       .then(() => launchRef.current(pending.id, { startIndex: pending.startIndex }, startRef.current, live.engine))
-      .catch(() => undefined)
+      // Said, as `TourProvider`'s own `launch` path says it (FLW-9): swallowed, a launch
+      // that failed was a tour that silently did not start — in kastlan after its
+      // launcher had already turned practice mode on.
+      .catch((error: unknown) => console.error(error))
       .finally(() => {
         launchingRef.current = false;
         setSettled((n) => n + 1);

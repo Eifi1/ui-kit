@@ -1,5 +1,5 @@
 import { useContext, useEffect, useId, useRef, useState } from "react";
-import type { KeyboardEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
 
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { CurrentPasswordInput, usePromisePending } from "./danger-confirm";
@@ -41,8 +41,7 @@ export interface ReauthDialogProps {
   onSubmit: (password: string) => void | Promise<unknown>;
   /**
    * The dialog has closed: `true` after a resolved `onSubmit`, `false` for Cancel,
-   * Escape, the backdrop and Back. A dismissal while `onSubmit` is still running also
-   * answers `false`, and that call's late result is then ignored.
+   * Escape, the backdrop and Back — none of which closes it while the check runs.
    */
   onClose: (confirmed: boolean) => void;
   /**
@@ -93,9 +92,9 @@ export interface ReauthDialogProps {
  *
  * The field is a `<form>`, so Enter submits once something is typed. Focus starts in
  * the field and returns to the trigger through `Modal`'s trap. While a check runs,
- * the field is read-only, Cancel is disabled and Escape is held: a request that has
- * left cannot be cancelled by closing the dialog, and the dialog should not pretend it
- * can.
+ * the field is read-only, Cancel is disabled and the dialog is `busy` (Escape, the
+ * backdrop and Back are held, DUP-3): a request that has left cannot be cancelled by
+ * closing the dialog, and the dialog should not pretend it can.
  */
 export function ReauthDialog({
   onSubmit,
@@ -173,10 +172,7 @@ export function ReauthDialog({
       title={title ?? labels.title}
       description={description ?? labels.description}
       onClose={() => onClose(confirmed.current)}
-      onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => {
-        if (busy && e.key === "Escape") e.preventDefault();
-      }}
-      aria-busy={busy || undefined}
+      busy={busy}
       actions={
         <ReauthActions
           formId={formId}

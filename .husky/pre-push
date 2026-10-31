@@ -1,7 +1,7 @@
 # The local gate before anything leaves the machine: `npm run check` (scripts/check.mjs).
 #
 # Git hands this hook one line per pushed ref on stdin: "<local ref> <local sha> <remote
-# ref> <remote sha>". Two kinds of push need no check (TST-2, refactor audit 2026-10):
+# ref> <remote sha>". Three kinds of push need no full check (TST-2, refactor audit 2026-10):
 #   - tags and deletes only. A release tag sits on a merge commit whose tree the branch
 #     push already checked and CI already tested, and release.yml refuses to stage a commit
 #     whose CI is not green. Pushing v0.33.1 re-ran the whole check: 355 s for nothing.
@@ -11,6 +11,8 @@
 #     are checked: scripts/check-pushed-commits.cjs, the shared copy from
 #     Eifi1/shared-workflows (scripts/shared-commit-rules.json, as server-kit's hook),
 #     over every commit the push sends (0.46; it was check:commits per pushed tip).
+#   - a release commit on a tree that passed: the commit messages and deprecations.test.ts
+#     (TST-1, refactor audit 2026-10-30; see release_bump below).
 #
 # Otherwise the full check runs, and it checks the WORKING TREE, not the pushed commits:
 # a modified tracked file is what gets tested. That is warned about, not refused.
@@ -39,14 +41,45 @@ fi
 # SKIP_DEPENDENCY_CHECK=1 skips it.
 node scripts/check-dependencies.mjs </dev/null || exit 1
 
+# A release commit (TST-1, refactor audit 2026-10-30): `npm run release` commits CHANGELOG.md
+# and the "version" lines of package.json and package-lock.json on a tree that has just
+# passed (CONTRIBUTING "Cutting a release", step 1), and the full check ran again for that
+# diff: 6–10 minutes per release, 41 releases between 0.34 and 0.51.6. It counts as checked
+# when its parent's tree has a stamp, it is the checked-out commit with nothing modified,
+# and every changed manifest line is a "version" line naming the new version. The one test
+# that reads the version still runs: a MINOR bump can make a deprecation due. CI still runs
+# everything, the sweep included, on the release PR.
+release_bump() {
+  parent=$(git rev-parse -q --verify "$1^") || return 1
+  [ -f "node_modules/.cache/check/$(git rev-parse "$parent^{tree}")" ] || return 1
+  [ "$(git rev-parse HEAD)" = "$(git rev-parse "$1")" ] || return 1
+  [ -z "$(git status --porcelain --untracked-files=no)" ] || return 1
+  for file in $(git diff --name-only "$parent" "$1"); do
+    case "$file" in CHANGELOG.md | package.json | package-lock.json) ;; *) return 1 ;; esac
+  done
+  version=$(git show "$1:package.json" | node -e 'process.stdout.write(JSON.parse(require("fs").readFileSync(0, "utf8")).version)') || return 1
+  version=$(printf '%s' "$version" | sed 's/[.]/\\./g')
+  ! git diff -U0 "$parent" "$1" -- package.json package-lock.json | grep -E '^[-+]' | grep -vE '^(\+\+\+|---) ' |
+    grep -qvE "^-[[:space:]]*\"version\": \"[^\"]*\",?\$|^\+[[:space:]]*\"version\": \"$version\",?\$"
+}
+
 stamped=yes
+bumps=""
 for sha in $tips; do
   tree=$(git rev-parse "$sha^{tree}")
-  [ -f "node_modules/.cache/check/$tree" ] || stamped=no
+  [ -f "node_modules/.cache/check/$tree" ] && continue
+  if release_bump "$sha"; then bumps="$bumps $sha"; else stamped=no; fi
 done
 if [ "$stamped" = yes ]; then
-  echo "pre-push: this tree already passed npm run check; checking the commit messages only."
+  if [ -n "$bumps" ]; then
+    echo "pre-push: a release commit on a tree that already passed npm run check; checking the commit messages and deprecations.test.ts."
+  else
+    echo "pre-push: this tree already passed npm run check; checking the commit messages only."
+  fi
   printf '%s\n' "$input" | node scripts/check-pushed-commits.cjs "${1:-origin}" || exit 1
+  if [ -n "$bumps" ]; then
+    npm exec --no -- vitest run src/__tests__/deprecations.test.ts </dev/null || exit 1
+  fi
   exit 0
 fi
 

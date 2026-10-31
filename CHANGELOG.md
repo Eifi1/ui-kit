@@ -21,6 +21,29 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.51.7](https://github.com/Eifi1/ui-kit/compare/v0.51.6...v0.51.7) (2026-10-31)
+
+### Added
+
+* **calculator:** commit a calculator session once, through `onCommit` on CalculatorButton ([61f8a52](https://github.com/Eifi1/ui-kit/commit/61f8a5281d884eada73144649ebefed706fca199))
+* **modal:** `busy` holds every dismissal while a request runs ([c7e3987](https://github.com/Eifi1/ui-kit/commit/c7e3987b56699ea37b778a616b683ae8c49ca637))
+
+### Fixed
+
+* **billing:** useCancelRequest stops waiting after 10 minutes ([9607389](https://github.com/Eifi1/ui-kit/commit/9607389334f6d742a8b72aa2221143e3bd63cb8e))
+* **calc:** a pasted U+2212 keeps its minus, and the last of two marks is the decimal ([ede97f2](https://github.com/Eifi1/ui-kit/commit/ede97f26ca115cd24512095187e6f7a86fd56350))
+* **clipboard-minus:** an ASCII minus before "US$", "CA$", "JP¥" and a narrow "kr" too ([17faadd](https://github.com/Eifi1/ui-kit/commit/17faaddc6b5b9916a1fd6265936ace12a8a3e869))
+* **combobox:** a name that differs only in case or accents is the existing record ([c4eedf9](https://github.com/Eifi1/ui-kit/commit/c4eedf9b15cda01334e0c9aaf2f1400b5fe87dd3))
+* **data-table:** collate string sorts and derived select options in the table's locale ([193e950](https://github.com/Eifi1/ui-kit/commit/193e950f89154eb0a26fd287db1f7af9e129dbca))
+* **data-table:** render `leadingRow` on a phone, as the card list's first item ([36bca75](https://github.com/Eifi1/ui-kit/commit/36bca75f6ae1e6eb32b738636bf61d0b78ac7262))
+* **format:** formatRelativeTime counts "yesterday" and "2 days ago" in calendar days ([e3a6ade](https://github.com/Eifi1/ui-kit/commit/e3a6adee48b5d80c04f22b2e40cd7ba7cdac4bb2))
+* **list:** keep a `limit`ed list's first rows mounted across Show all / Show fewer ([5fad934](https://github.com/Eifi1/ui-kit/commit/5fad934d7bc06c17ef597ee483c93493dcdd2c56))
+* **number-field:** a NaN value no longer loops, and a stored number never reads as 1e-7 ([2257237](https://github.com/Eifi1/ui-kit/commit/2257237701d59de8e8addb0748a4ea0bdc98fac0))
+* **package:** lucide-react's peer floor is 0.577.0, the version the package check installs ([7c6b3a5](https://github.com/Eifi1/ui-kit/commit/7c6b3a5db44c29f4fc235b4ac574d8589c2c2407))
+* **series-chart:** anchor an all-zero bar or area axis at [0, 1], not [0, 0] ([927dedc](https://github.com/Eifi1/ui-kit/commit/927dedcaa8291c4232d977d85164c7a0d71fff78))
+* **tabs:** a tab stop with nothing open, a brand focus ring, the open tab clear of the cue ([832a0f9](https://github.com/Eifi1/ui-kit/commit/832a0f97efc25cee9017c605fb28610c9f71ed53))
+* **tour:** a failing beforeStep still shows its step; whole step numbers only ([7a65309](https://github.com/Eifi1/ui-kit/commit/7a65309f7e8ac9fd8667ad8b6f5540ce73f2e30c))
+
 ## [0.51.6](https://github.com/Eifi1/ui-kit/compare/v0.51.5...v0.51.6) (2026-10-30)
 
 ### Added

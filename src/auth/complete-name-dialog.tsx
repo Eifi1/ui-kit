@@ -1,5 +1,5 @@
 import { useContext, useEffect, useId, useRef, useState } from "react";
-import type { KeyboardEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
 
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { usePromisePending } from "../components/danger-confirm";
@@ -74,8 +74,9 @@ export interface CompleteNameDialogProps {
  * complete name, no page is blocked, and the app asks again at the next sign-in.
  *
  * The promise handling is `ReauthDialog`'s: busy while `onSave` runs (the fields
- * read-only, "Later" disabled, Escape held — a request that has left cannot be called
- * back by closing the dialog), closed on resolve, kept open on reject. Save is a
+ * read-only, "Later" disabled, Escape, the backdrop and Back held — a request that has
+ * left cannot be called back by closing the dialog), closed on resolve, kept open on
+ * reject. Save is a
  * `commit` control, so a `WriteLockProvider` above it locks it with its reason — every
  * lock but a lapsed plan's (`COMMIT_EXCEPT_BILLING`, 0.33): one's own name is the
  * account's own settings, which billing never locks (docs/billing-harmonization.md §3.3,
@@ -160,10 +161,7 @@ export function CompleteNameDialog({
       title={labels.title}
       description={labels.description}
       onClose={() => onClose(saved.current)}
-      onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => {
-        if (pending && e.key === "Escape") e.preventDefault();
-      }}
-      aria-busy={pending || undefined}
+      busy={pending}
       actions={
         <CompleteNameActions
           formId={formId}

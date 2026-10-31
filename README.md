@@ -68,7 +68,7 @@ when it chooses. To work on the design system and an app together, use
 | `react`, `react-dom` | peer, `>=19.2` | The kit is components and hooks; two copies of React break hooks and context. 19.2 for `useEffectEvent`. |
 | `react-router` | peer, `>=7` | Imported unconditionally by `DataTable`, `useTableState`, `AppShell` and `useWizard`. A Router has to be mounted even with `urlSync` off. |
 | `recharts` | peer, `>=3.8` | The chart kit imports it statically, and the main barrel re-exports the chart kit, so `import { Button } from "@eifi1/ui-kit"` needs it installed too (required since 0.5.0). `@eifi1/ui-kit/chart` is about chunk size, not about avoiding the peer. 3.8 for `useXAxisInverseScale` (the zoom). |
-| `lucide-react` | peer, `>=0.400.0 <2` | Icons, imported by name throughout the kit. **Yours to version.** |
+| `lucide-react` | peer, `>=0.577.0 <2` | Icons, imported by name throughout the kit. **Yours to version.** |
 | `sonner` | peer, `>=2`, **optional** | Under the kit's `toast` and `<Toaster>` (and through them `FileDropzone` and the wizard's "fill in the required fields" toast), reached only through `await import()`. Pass `onValidationFailed` to route the wizard's elsewhere. |
 | `react-hook-form` | peer, `^7.55.0`, **optional** | Only `@eifi1/ui-kit/rhf` imports it; the main barrel does not (see "Forms / refs" below). |
 | `modern-screenshot` | peer, `^4.7.0`, **optional** | The feedback dialog's "Capture screenshot" (`captureAppScreenshot`), reached only through `await import()`. Without it the capture rejects and the dialog toasts `feedbackToast.captureFailed`. |
@@ -83,8 +83,10 @@ when it chooses. To work on the design system and an app together, use
 declared it themselves, so a hard dependency here bought each of them a second copy of the
 icon set — and `^0.511.0` on a 0.x package is a *patch* pin, which held them on 0.511.x
 while the line moved to 1.x. The range is wide on purpose: the kit imports named icon
-components and nothing else, and that has been stable across the whole span. *Migration:*
-none if you already depend on it; otherwise `npm install lucide-react`.
+components and nothing else. Its floor, 0.577.0, is what the three apps run, and the
+package check installs exactly that version, so the kit cannot use an icon that only 1.x
+has without its own gate failing. *Migration:* none if you already depend on it;
+otherwise `npm install lucide-react`.
 
 **`flag-icons` is a host contract, not a dependency.** `CurrencyFlag`, `CurrencySelect`
 (and `AmountInput`'s currency picker, which uses it) and `LanguageMenu` render flags as
