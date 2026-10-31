@@ -12,20 +12,24 @@
  *
  * What it compares, through TypeScript's checker over the two packages' `dist/**\/*.d.ts`
  * (every `exports` entry but the catalogues and the ESLint plugin):
- *   - an export that is gone;
- *   - a function or component: more required arguments, a parameter that no longer takes
- *     what it took, a return type that is no longer what it was;
+ *   - an export that is gone, or no longer a value (`export type`, a function become a
+ *     type alias, a class become an interface) or no longer a type;
+ *   - a function or component, every overload: more required arguments, a parameter that
+ *     no longer takes what it took, a return type that is no longer what it was;
  *   - a constant whose type is no longer the old one's;
  *   - a type, both ways: the old not assignable to the new breaks what an app PASSES (a
  *     prop removed, a member made required), the new not assignable to the old breaks
- *     what an app RECEIVES or CALLS (a union that grew, a callback parameter added).
+ *     what an app RECEIVES or CALLS (a union that grew, a callback parameter added);
+ *   - a generic type that requires more type arguments, or takes fewer.
  *
- * What it leaves out, because it breaks no app: `*Labels` types (an app passes
- * `LabelOverride`, so a new key cannot break it), and a change that is only another
- * flagged type showing through (`ButtonProps` because `ButtonVariant` lost a member) —
- * that one is printed "through ButtonVariant", and only the root needs a word. A generic
- * type is compared as an app writes it, with its defaults (`any` for a parameter without
- * one); a generic function by its required arguments.
+ * What it leaves out, because it breaks no app: a key NEW to a `*Labels` type (an app
+ * passes `LabelOverride`, so a new key cannot break it; a key gone, or a `*Labels` export
+ * gone, does), and a change that is only another flagged type showing through
+ * (`ButtonProps` because `ButtonVariant` lost a member: its member's type is written the
+ * same before and after, and names the flagged type) — that one is printed "through
+ * ButtonVariant", and only the root needs a word. A generic type is compared as an app
+ * writes it, with its defaults (`any` for a parameter without one); a generic function by
+ * its required arguments.
  *
  * Every changed name is printed. Each must be NAMED in the adopt doc of the release being
  * made, in backticks, under a heading or a bold lead that says "must change" (or a
@@ -198,7 +202,8 @@ export function compareApi(oldDir, newDir) {
         (module ? c.getExportsOfModule(module) : []).flatMap((s) => {
           const t = s.flags & ts.SymbolFlags.Alias ? c.getAliasedSymbol(s) : s;
           const d = t.declarations?.[0];
-          if (!(t.flags & ts.SymbolFlags.Type) || t.flags & ts.SymbolFlags.Value || !d) return [];
+          // A class too: `O0.Store<any>` is its instance type (an interface may become one).
+          if (!(t.flags & ts.SymbolFlags.Type) || !d) return [];
           // `any` for each leading parameter without a default; the defaulted rest left out.
           const required = (d.typeParameters ?? []).filter((p) => !p.default).length;
           return [[s.name, { generic: Boolean(d.typeParameters?.length), args: required }]];
@@ -243,6 +248,30 @@ export function compareApi(oldDir, newDir) {
   const decl = (s) => s.declarations?.[0];
   const isLabels = (name) => /Labels$/.test(name);
   const generic = (s) => Boolean(decl(s)?.typeParameters?.length);
+  /** An export an app can use as a value: a value, and not re-exported `export type` on
+   *  the way (`export type { Button }` resolves to the function all the same). */
+  const isValue = (s) => {
+    if (!(target(s).flags & F.Value)) return false;
+    for (let a = s; a && a.flags & F.Alias; a = checker.getImmediateAliasedSymbol(a)) {
+      if (a.declarations?.some((d) => ts.isTypeOnlyImportOrExportDeclaration(d))) return false;
+    }
+    return true;
+  };
+  /** An object type that is neither callable nor an array: a catalogue's nested map. */
+  const isPlainObject = (t) => {
+    const n = checker.getNonNullableType(t);
+    return (
+      Boolean(n.flags & ts.TypeFlags.Object) &&
+      !n.getCallSignatures().length &&
+      !checker.isArrayType(n) &&
+      !checker.isTupleType(n)
+    );
+  };
+  /** How many type arguments an app's `Name<…>` must and may write. */
+  const typeArity = (s) => {
+    const params = decl(s)?.typeParameters ?? [];
+    return { required: params.filter((p) => !p.default).length, total: params.length };
+  };
   const minArgs = (sig) =>
     sig.minArgumentCount ??
     sig.parameters.filter((p) => {
@@ -276,8 +305,18 @@ export function compareApi(oldDir, newDir) {
       const np = ns.parameters;
       for (let i = 0; i < Math.min(op.length, np.length); i++) {
         const [ot, nt] = [paramType(op[i], oldAt), paramType(np[i], newAt)];
-        // A catalogue an app passes whole (`kitLabelStrings(labels)`) grows a key each release.
-        if (LABELS_TYPE.test(str(ot))) continue;
+        // A catalogue an app passes whole (`kitLabelStrings(labels)`) grows a key each
+        // release; only a key gone counts (0.52 code review).
+        if (LABELS_TYPE.test(str(ot))) {
+          const sub = labelDiffs(ot, nt, oldAt, newAt, depth);
+          if (sub.length)
+            diffs.push({
+              detail: `parameter ${i + 1} \`${np[i].name}\`: ${sub.map((d) => d.detail).join("; ")}`,
+              types: [ot, nt],
+              sub,
+            });
+          continue;
+        }
         if (!assignable(ot, nt)) {
           const sub = inner(ot, nt, oldAt, newAt, depth);
           // Props that only gained an index signature (`data-${string}`): see the types below.
@@ -310,8 +349,9 @@ export function compareApi(oldDir, newDir) {
     return diffs;
   }
 
-  /** Where an object type's change shows: per member. */
-  function memberDiffs(ot, nt, oldAt, newAt, depth = 0) {
+  /** Where an object type's change shows: per member. `labels`: a `*Labels` catalogue,
+   *  where a key that is new, or required now, breaks no app (it passes a LabelOverride). */
+  function memberDiffs(ot, nt, oldAt, newAt, depth = 0, { labels = false } = {}) {
     const diffs = [];
     const olds = new Map(checker.getPropertiesOfType(ot).map((p) => [p.name, p]));
     const news = new Map(checker.getPropertiesOfType(nt).map((p) => [p.name, p]));
@@ -322,15 +362,25 @@ export function compareApi(oldDir, newDir) {
         diffs.push({ detail: `\`${name}\` is gone` });
         continue;
       }
-      if (optional(op) && !optional(np)) diffs.push({ detail: `\`${name}\` is required now` });
+      if (!labels && optional(op) && !optional(np)) diffs.push({ detail: `\`${name}\` is required now` });
       const [a, b] = [paramType(op, oldAt), paramType(np, newAt)];
-      // A labels member grows a key each release; an app passes a LabelOverride.
-      if (LABELS_TYPE.test(str(a))) continue;
-      if (!assignable(a, b) || !assignable(b, a)) {
+      // A labels member grows a key each release; an app passes a LabelOverride. A key
+      // gone is an excess property in the app's override (0.52 code review: 0.52 dropped
+      // `TopBarPartsLabels.switchPlan`, and the gate said nothing). Inside a catalogue, a
+      // map of catalogues too (`groupActions: Record<AdminGroupNoun,
+      // AdminGroupActionLabels>`, which grew keys in 0.45).
+      if (LABELS_TYPE.test(str(a)) || (labels && isPlainObject(a))) {
+        const sub = labelDiffs(a, b, oldAt, newAt, depth);
+        if (sub.length)
+          diffs.push({ detail: `\`${name}\`: ${sub.map((d) => d.detail).join("; ")}`, types: [a, b], sub });
+        continue;
+      }
+      // In a catalogue only what an app passes: a key made optional breaks no override.
+      if (labels ? !assignable(a, b) : !assignable(a, b) || !assignable(b, a)) {
         const sa = a.getCallSignatures();
         const sb = b.getCallSignatures();
         if (sa.length && sb.length) {
-          for (const d of signatureDiffs(sa.at(-1), sb.at(-1), oldAt, newAt, { returns: "callback", depth }))
+          for (const d of overloadDiffs(sa, sb, oldAt, newAt, { returns: "callback", depth }))
             diffs.push({ ...d, detail: `\`${name}\` ${d.detail}` });
         } else
           diffs.push({
@@ -341,7 +391,39 @@ export function compareApi(oldDir, newDir) {
       }
     }
     for (const [name, np] of news)
-      if (!olds.has(name) && !optional(np)) diffs.push({ detail: `\`${name}\` is new and required` });
+      if (!labels && !olds.has(name) && !optional(np)) diffs.push({ detail: `\`${name}\` is new and required` });
+    return diffs;
+  }
+
+  /** A `*Labels` catalogue's changes an app sees: a key gone, a key whose type changed.
+   *  Not a key that is new. */
+  function labelDiffs(a, b, oldAt, newAt, depth) {
+    if (depth > 3) return [];
+    const [na, nb] = [checker.getNonNullableType(a), checker.getNonNullableType(b)];
+    if (assignable(na, nb) && assignable(nb, na)) return [];
+    return memberDiffs(na, nb, oldAt, newAt, depth + 1, { labels: true });
+  }
+
+  /**
+   * Every old overload against the new ones: a call that matched one still compiles when
+   * some new overload takes it. Only the last overload was compared (0.52 code review), so
+   * a removed or narrowed earlier one passed. A callback type an app implements must also
+   * answer every new overload.
+   */
+  function overloadDiffs(co, cn, oldAt, newAt, options) {
+    if (co.length === 1 && cn.length === 1) return signatureDiffs(co[0], cn[0], oldAt, newAt, options);
+    const diffs = [];
+    co.forEach((os, i) => {
+      const tries = cn.map((ns) => signatureDiffs(os, ns, oldAt, newAt, options));
+      if (tries.some((t) => t.length === 0)) return;
+      // The closest new overload: the fewest changes, then the nearest position.
+      const [best] = cn
+        .map((_, j) => j)
+        .sort((x, y) => tries[x].length - tries[y].length || Math.abs(x - i) - Math.abs(y - i));
+      for (const d of tries[best]) diffs.push({ ...d, detail: `overload ${i + 1}: ${d.detail}` });
+    });
+    if (options.returns === "callback" && cn.length > co.length)
+      diffs.push({ detail: `has ${cn.length} call signatures, was ${co.length}` });
     return diffs;
   }
 
@@ -358,7 +440,6 @@ export function compareApi(oldDir, newDir) {
     const before = exportsOf(join(oldDir, types));
     const after = exportsOf(join(newDir, newEntry.types));
     for (const [name, so] of before) {
-      if (isLabels(name)) continue;
       const sn = after.get(name);
       if (!sn) {
         raw.push({ kind: "gone", entry, name, diffs: [{ detail: "removed" }] });
@@ -369,7 +450,30 @@ export function compareApi(oldDir, newDir) {
       const [ao, an] = [target(so), target(sn)];
       const [dOld, dNew] = [decl(ao), decl(an)];
       if (!dOld || !dNew) continue;
-      if (ao.flags & F.Value && an.flags & F.Value) {
+      // A `*Labels` catalogue: a key gone counts, a key new does not (an app passes a
+      // LabelOverride). The whole export was skipped before its removal was even looked
+      // at (0.52 code review).
+      if (isLabels(name)) {
+        const diffs = labelDiffs(
+          checker.getDeclaredTypeOfSymbol(ao),
+          checker.getDeclaredTypeOfSymbol(an),
+          dOld,
+          dNew,
+          0,
+        );
+        if (diffs.length) raw.push({ kind: "labels", entry, name, diffs });
+        continue;
+      }
+      // A name whose kind changed: neither branch below compared it (0.52 code review), so
+      // `export type { Button }` (TS1362 at every `<Button/>`) or a function become a type
+      // alias passed as nothing.
+      const [valueOld, valueNew] = [isValue(so), isValue(sn)];
+      const [typeOld, typeNew] = [Boolean(ao.flags & F.Type), Boolean(an.flags & F.Type)];
+      if (valueOld && !valueNew)
+        raw.push({ kind: "value", entry, name, diffs: [{ detail: "is no longer a value: a type only now" }] });
+      if (typeOld && !typeNew)
+        raw.push({ kind: "type", entry, name, diffs: [{ detail: "is no longer a type: a value only now" }] });
+      if (valueOld && valueNew) {
         const [to, tn] = [checker.getTypeOfSymbolAtLocation(ao, dOld), checker.getTypeOfSymbolAtLocation(an, dNew)];
         const [co, cn] = [
           ao.flags & F.Class ? to.getConstructSignatures() : to.getCallSignatures(),
@@ -378,7 +482,7 @@ export function compareApi(oldDir, newDir) {
         let diffs = [];
         if (co.length && cn.length) {
           // A component's return (JSX) is not an app's to read; a helper's is.
-          diffs = signatureDiffs(co.at(-1), cn.at(-1), dOld, dNew, { returns: /^[a-z]/.test(name) });
+          diffs = overloadDiffs(co, cn, dOld, dNew, { returns: /^[a-z]/.test(name) });
         } else if (
           !co.length &&
           !cn.length &&
@@ -391,59 +495,92 @@ export function compareApi(oldDir, newDir) {
         }
         if (diffs.length) raw.push({ kind: "value", entry, name, diffs });
       }
-      if (ao.flags & F.Type && an.flags & F.Type && !(an.flags & F.Value)) {
+      // A class on both sides is compared by its constructor above; an interface that
+      // became a class (or the reverse) by its instance type here.
+      if (typeOld && typeNew && !(valueOld && valueNew)) {
         const index = oldEntries.findIndex((e) => e.entry === entry);
         const instance = (side) => instances.get(`${side}${index}__${name}`);
-        if ((generic(ao) || generic(an)) && !(instance("O") && instance("N"))) continue;
+        // `SyncEngineOptions<D>` become `<D, R>` compared `<any>` with `<any, any>` as equal,
+        // and every app's `SyncEngineOptions<MyDb>` failed with TS2314 (0.52 code review).
+        const [ka, kb] = [typeArity(ao), typeArity(an)];
+        const arity = [
+          ...(kb.required > ka.required
+            ? [{ detail: `requires ${kb.required} type arguments, was ${ka.required}` }]
+            : []),
+          ...(kb.total < ka.total ? [{ detail: `takes ${kb.total} type arguments, was ${ka.total}` }] : []),
+        ];
+        if ((generic(ao) || generic(an)) && !(instance("O") && instance("N"))) {
+          if (arity.length) raw.push({ kind: "type", entry, name, diffs: arity });
+          continue;
+        }
         const [to, tn] =
           generic(ao) || generic(an)
             ? [checker.getDeclaredTypeOfSymbol(instance("O")), checker.getDeclaredTypeOfSymbol(instance("N"))]
             : [checker.getDeclaredTypeOfSymbol(ao), checker.getDeclaredTypeOfSymbol(an)];
         const [fwd, back] = [assignable(to, tn), assignable(tn, to)];
-        if (fwd && back) continue;
         // A component's props are what an app PASSES: a prop that takes more, or became
         // optional, breaks nothing (`EmptyStateProps.headingAs` gaining "h1").
-        if (/Props$/.test(name) && fwd) continue;
-        const [so_, sn_] = [to.getCallSignatures(), tn.getCallSignatures()];
-        let diffs;
-        if (so_.length && sn_.length)
-          diffs = signatureDiffs(so_.at(-1), sn_.at(-1), dOld, dNew, { returns: "callback" });
-        else if (to.isUnion() || tn.isUnion()) {
-          const members = (t) => new Map((t.isUnion() ? t.types : [t]).map((m) => [str(m), m]));
-          const [mo, mn] = [members(to), members(tn)];
-          diffs = [
-            ...[...mo.keys()].filter((m) => !mn.has(m)).map((m) => ({ detail: `no longer takes ${m}` })),
-            ...[...mn.keys()].filter((m) => !mo.has(m)).map((m) => ({ detail: `can be ${m} now` })),
-            // `FeedbackDialogProps` = Single | Multiple, the same names, one of them changed.
-            ...[...mo]
-              .filter(([m, t]) => mn.has(m) && !(assignable(t, mn.get(m)) && assignable(mn.get(m), t)))
-              .map(([m, t]) => ({ detail: `${m} changed`, types: [t, mn.get(m)] })),
-          ];
-        } else {
-          diffs = memberDiffs(to, tn, dOld, dNew);
+        let diffs = [];
+        if (!(fwd && back) && !(/Props$/.test(name) && fwd)) {
+          const [so_, sn_] = [to.getCallSignatures(), tn.getCallSignatures()];
+          if (so_.length && sn_.length) diffs = overloadDiffs(so_, sn_, dOld, dNew, { returns: "callback" });
+          else if (to.isUnion() || tn.isUnion()) {
+            const members = (t) => new Map((t.isUnion() ? t.types : [t]).map((m) => [str(m), m]));
+            const [mo, mn] = [members(to), members(tn)];
+            diffs = [
+              ...[...mo.keys()].filter((m) => !mn.has(m)).map((m) => ({ detail: `no longer takes ${m}` })),
+              ...[...mn.keys()].filter((m) => !mo.has(m)).map((m) => ({ detail: `can be ${m} now` })),
+              // `FeedbackDialogProps` = Single | Multiple, the same names, one of them changed.
+              ...[...mo]
+                .filter(([m, t]) => mn.has(m) && !(assignable(t, mn.get(m)) && assignable(mn.get(m), t)))
+                .map(([m, t]) => ({ detail: `${m} changed`, types: [t, mn.get(m)] })),
+            ];
+          } else diffs = memberDiffs(to, tn, dOld, dNew);
           // Only an index signature added (`[key: \`data-${string}\`]: …`, 0.50's AmountInput):
           // an interface without one is no longer assignable, an app's props literal still is.
-          if (!diffs.length && checker.getIndexInfosOfType(tn).length > checker.getIndexInfosOfType(to).length)
-            continue;
+          const indexOnly =
+            !diffs.length && checker.getIndexInfosOfType(tn).length > checker.getIndexInfosOfType(to).length;
+          if (!diffs.length && !indexOnly) diffs = [{ detail: `${short(tn)}, was ${short(to)}`, types: [to, tn] }];
         }
-        if (!diffs.length) diffs = [{ detail: `${short(tn)}, was ${short(to)}`, types: [to, tn] }];
+        diffs = [...arity, ...diffs];
+        if (!diffs.length) continue;
         const kind =
-          !fwd && !back ? "type" : !fwd ? "type (what an app passes)" : "type (what an app receives or calls)";
+          !fwd && !back
+            ? "type"
+            : !fwd
+              ? "type (what an app passes)"
+              : !back
+                ? "type (what an app receives or calls)"
+                : "type";
         raw.push({ kind, entry, name, diffs });
       }
     }
   }
 
   // A change that only shows another flagged type through is that type's: `ButtonProps`'s
-  // `variant` is `ButtonVariant | undefined`, and `Button`'s props are `ButtonProps`.
+  // `variant` is `ButtonVariant | undefined` before and after, and `Button`'s props are
+  // `ButtonProps`.
   const flagged = new Set(raw.map((r) => r.name));
+  /** A type as written, a trailing `| undefined` (an optional member's) aside. */
+  const written = (t) =>
+    t.isUnion() && t.types.some((m) => m.flags & ts.TypeFlags.Undefined)
+      ? str(t).replace(/ \| undefined$/, "")
+      : str(t);
   const mentions = (types, self) =>
     [...flagged].filter(
       (n) => n !== self && (types ?? []).some((t) => new RegExp(`(?<![\\w$])${n}(?![\\w$])`).test(str(t))),
     );
-  /** The flagged types a diff only shows through; empty for a change of its own. */
+  /**
+   * The flagged types a diff only shows through; empty for a change of its own. Only when
+   * the type is WRITTEN the same before and after is the change the named type's: a type's
+   * own change whose text merely names another changed type (`tone: string` become
+   * `tone: Variant`, or two types that reference each other) was printed "through" it, and
+   * nothing was left to announce (0.52 code review). A member made optional on the way
+   * (`onUpdate?: FeedbackDetailUpdate`, 0.40) is written the same: its `| undefined` aside.
+   */
   const throughOf = (d, self) => {
-    const named = mentions(d.types, self);
+    const [a, b] = d.types ?? [];
+    const named = a && b && written(a) === written(b) ? mentions([a], self) : [];
     if (named.length) return named;
     const sub = (d.sub ?? []).map((s) => throughOf(s, self));
     return sub.length && sub.every((t) => t.length) ? sub.flat() : [];
@@ -471,23 +608,32 @@ export function compareApi(oldDir, newDir) {
  * The names in backticks under a "must change" heading or bold lead (or a "(breaking)"
  * heading) of `markdown`: `TourLauncher`, `TourStep.beforeStep`, `Button` … A heading's
  * block runs to the next heading of its level or above; a bold lead's to the next
- * heading or the next bold lead.
+ * heading or the next bold lead. The two are apart: a lead inside a "(breaking)" heading
+ * replaced the heading's block, and the next lead (`**Why:**`) then ended it, so the
+ * section's table went unread (0.52 code review). A `#` line inside fenced code (a shell
+ * comment) is no heading.
  */
 export function mustChangeNames(markdown) {
   const names = new Set();
-  let block = null;
+  let section = null;
+  let lead = false;
+  let fence = null;
   for (const line of markdown.split("\n")) {
-    const heading = /^(#{1,6})\s+(.*)$/.exec(line);
-    const lead = /^\*\*([^*]+)\*\*/.exec(line);
-    if (heading) {
-      const level = heading[1].length;
-      if (block && (block.lead || level <= block.level)) block = null;
-      if (/must change|\(breaking\)/i.test(heading[2])) block = { level };
-    } else if (lead) {
-      if (block?.lead) block = null;
-      if (/must change/i.test(lead[1])) block = { lead: true };
+    const marker = /^ {0,3}(`{3,}|~{3,})/.exec(line)?.[1];
+    if (fence) {
+      if (marker?.[0] === fence[0] && marker.length >= fence.length) fence = null;
+    } else if (marker) fence = marker;
+    else {
+      const heading = /^(#{1,6})\s+(.*)$/.exec(line);
+      const bold = /^\*\*([^*]+)\*\*/.exec(line);
+      if (heading) {
+        const level = heading[1].length;
+        lead = false;
+        if (section && level <= section.level) section = null;
+        if (!section && /must change|\(breaking\)/i.test(heading[2])) section = { level };
+      } else if (bold) lead = /must change/i.test(bold[1]);
     }
-    if (block) for (const [, name] of line.matchAll(/`([^`]+)`/g)) names.add(name.trim());
+    if (section || lead) for (const [, name] of line.matchAll(/`([^`]+)`/g)) names.add(name.trim());
   }
   return names;
 }
@@ -532,11 +678,15 @@ export function adoptTextSince(previous, docsDir = join(ROOT, "docs")) {
 /**
  * The gate: `newDir` (a package directory: the installed tarball, or the repository with
  * its dist/) against the previous release. `log(line)` for what it finds; resolves to
- * `{ ok, skipped?, changes, unannounced }`.
+ * `{ ok, skipped?, changes, unannounced }`. `root` is the repository whose version, tags
+ * and docs/ it reads; `published` and `pack` stand in for the registry (the tests).
  */
-export function checkApi(newDir, { root = ROOT, log = console.log, env = process.env } = {}) {
+export function checkApi(
+  newDir,
+  { root = ROOT, log = console.log, env = process.env, published: given, pack = packRelease } = {},
+) {
   const { version } = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-  const published = publishedVersions(root);
+  const published = new Set(given ?? publishedVersions(root));
   const scratch = mkdtempSync(join(tmpdir(), "uikit-api-"));
   try {
     // The newest release at or below package.json's that the registry has: a tag pushed
@@ -546,7 +696,7 @@ export function checkApi(newDir, { root = ROOT, log = console.log, env = process
     let oldDir;
     while (previous && !oldDir) {
       try {
-        oldDir = packRelease(previous, join(scratch, previous));
+        oldDir = pack(previous, join(scratch, previous));
       } catch (error) {
         if (isNotFound(error)) {
           log(`  check:api: ${previous} is tagged but not on the registry; the release before it is the last one`);
@@ -571,7 +721,11 @@ export function checkApi(newDir, { root = ROOT, log = console.log, env = process
     }
     const changes = compareApi(oldDir, newDir);
     const roots = changes.filter((c) => c.through.length === 0);
-    const announced = new Set(adoptTextSince(previous).flatMap(({ text }) => [...mustChangeNames(text)]));
+    // The root's docs/, as its version and tags: the repository's own were read whatever
+    // the root (0.52 code review).
+    const announced = new Set(
+      adoptTextSince(previous, join(root, "docs")).flatMap(({ text }) => [...mustChangeNames(text)]),
+    );
     const unannounced = roots.filter((c) => !isNamed(c.name, announced));
     log(
       `  check:api: ${version} against ${previous}: ${roots.length} changed name(s), ${changes.length - roots.length} through them`,
