@@ -34,7 +34,7 @@
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { parseThemeInline, stripCssComments } from "../src/eslint/role-utilities.ts";
+import { parseThemeInline, stripCssComments, themeBlocks } from "../src/eslint/role-utilities.ts";
 
 const ROOT = resolve(import.meta.dirname, "..");
 const TOKENS = join(ROOT, "tokens.css");
@@ -101,7 +101,7 @@ function declaredAt(token) {
   if (!token.startsWith("--")) return Infinity;
   const re = new RegExp(`(?:^|[\\s;{])${token.replace(/[-]/g, "\\-")}\\s*:`, "g");
   for (const m of css.matchAll(re)) {
-    if (m.index < inline.start || m.index >= inline.end) return m.index;
+    if (!inline.ranges.some(({ start, end }) => m.index >= start && m.index < end)) return m.index;
   }
   return Infinity;
 }
@@ -147,8 +147,9 @@ function render() {
   const variants = names(/@custom-variant\s+([a-z0-9-]+)/g);
   const custom = names(/@utility\s+([a-z0-9-]+)/g);
   // The plain `@theme { … }` block (font sizes, breakpoints): values to list, no role
-  // utilities, so role-utilities.ts does not read it.
-  const theme = /@theme\s*\{([^}]*)\}/.exec(css)?.[1];
+  // utilities, so parseThemeInline does not read it; found by the same block finder
+  // (DUP-13, refactor audit 2026-10-30).
+  const theme = themeBlocks(css, { inline: false })[0]?.body;
   const themeValues = theme
     ? [...theme.matchAll(/--([a-z0-9-]+)\s*:\s*([^;]+);/g)].map(([, name, value]) => {
         if (name.startsWith("text-")) return `${code(name)} (font size ${value.trim()})`;

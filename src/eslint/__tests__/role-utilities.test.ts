@@ -10,6 +10,7 @@ import {
   ROLE_NAMESPACES,
   roleUtilitiesFromCss,
   stripCssComments,
+  themeBlocks,
   type RoleUtilityTable,
 } from "../role-utilities";
 import { ROLE_UTILITIES } from "../role-utilities.generated";
@@ -152,6 +153,27 @@ describe("parseThemeInline", () => {
   it("is null without an @theme inline block", () => {
     expect(parseThemeInline("@theme { --text-sm: 0.875rem; }")).toBeNull();
   });
+
+  // DUP-13 (refactor audit 2026-10-30): this read the first block up to its first `}`,
+  // where the testing guard read every inline block brace by brace.
+  it("reads every @theme inline block, past a nested block's braces", () => {
+    const blocks = [
+      "@theme inline {",
+      "  --text-color-muted: var(--text-muted);",
+      "  @keyframes pulse { 50% { opacity: 0.5; } }",
+      "  --fill-muted: var(--text-muted);",
+      "}",
+      "@theme default { --color-ink: #000; }",
+      "@theme inline reference { --border-color-subtle: var(--border); }",
+    ].join("\n");
+    const block = parseThemeInline(blocks)!;
+    expect(block.declarations.map((d) => d.utility)).toEqual(["text-muted", "fill-muted", "border-subtle"]);
+    expect(block.ranges.map(({ start, end }) => stripCssComments(blocks).slice(start, end).split(" {")[0])).toEqual([
+      "@theme inline",
+      "@theme inline reference",
+    ]);
+    expect(themeBlocks(blocks, { inline: false }).map((b) => b.body.trim())).toEqual(["--color-ink: #000;"]);
+  });
 });
 
 describe("findRoleClasses", () => {
@@ -168,6 +190,32 @@ describe("findRoleClasses", () => {
 
   it("needs a class boundary before the property", () => {
     expect(findRoleClasses("context-[var(--text-muted)] xbg-[var(--bg-hover)]", ROLE_UTILITIES)).toEqual([]);
+  });
+
+  // Tailwind v4's own spellings of a `[var(--x)]` class passed the check and every app's
+  // lint (refactor audit 2026-10-30, DOC-1, PROVEN): one case per form.
+  it.each([
+    ["text-(--text-muted)", "text-muted"],
+    ["bg-(--bg-surface-2)", "bg-surface-2"],
+    ["border-t-(--border)", "border-t-subtle"],
+    ["text-(color:--text-muted)", "text-muted"],
+    ["ring-(length:--focus-ring-width)", "ring-focus"],
+    ["text-[color:var(--text-muted)]", "text-muted"],
+    ["[color:var(--text-muted)]", "text-muted"],
+    ["[background-color:var(--bg-hover)]", "bg-hover"],
+  ])("reads v4's %s as %s", (found, utility) => {
+    expect(findRoleClasses(`hover:${found}/50`, ROLE_UTILITIES)).toEqual([
+      { index: "hover:".length, found, utilities: [utility] },
+    ]);
+  });
+
+  it("keeps a width hint off the colours, and v4's forms off tokens with no utility", () => {
+    expect(
+      findRoleClasses(
+        "text-(length:--text-muted) text-(--chart-1) [color:var(--chart-2)] bg-(--border) x[color:var(--text-muted)]",
+        ROLE_UTILITIES,
+      ),
+    ).toEqual([]);
   });
 });
 
@@ -223,6 +271,16 @@ ruleTester.run("role-utilities", rule, {
       errors: [
         error("ring-[length:var(--focus-ring-width)]", "ring-focus"),
         error("ring-offset-[var(--bg-surface)]", "ring-offset-surface"),
+      ],
+    },
+    {
+      // v4's shorthand, a type hint and an arbitrary property (DOC-1): fixed like the rest.
+      code: `const v4 = "md:text-(--text-muted) bg-[color:var(--bg-hover)]/70 [color:var(--text-secondary)]";`,
+      output: `const v4 = "md:text-muted bg-hover/70 text-secondary";`,
+      errors: [
+        error("text-(--text-muted)", "text-muted"),
+        error("bg-[color:var(--bg-hover)]", "bg-hover"),
+        error("[color:var(--text-secondary)]", "text-secondary"),
       ],
     },
     {
