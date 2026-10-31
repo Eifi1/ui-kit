@@ -1,30 +1,33 @@
 // The id-keyed sibling of Combobox. Moved out of combobox.tsx as it was (MOD-9,
 // refactor audit 2026-10); combobox still exports `InlineEntityCombobox` and its props.
-import { Fragment, useId, useMemo, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
+import { useId, useMemo, useRef, useState } from "react";
+import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode, Ref } from "react";
 import { ChevronDown, Plus, X } from "lucide-react";
 import { FIELD_BASE, FIELD_FLOATING_PAD, FIELD_INVALID } from "./field-base";
 import { cn } from "../lib/cn";
 import { useDropdown } from "./dropdown";
-import { takeEscape, useDismissLayer } from "../hooks/use-dismiss";
+import { claimEscape, takeEscape, useDismissLayer } from "../hooks/use-dismiss";
 import { isImeEnter } from "../lib/ime";
 import { isQuietFocus } from "../lib/quiet-focus";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { PickerSheet, SHEET_ROW_CLASS } from "./picker-sheet";
 import {
+  anchoredHeadingClass,
   ComboboxFieldLabel,
   DISABLED_ROW_CLASS,
   endHintRowProps,
-  GROUP_HEADING_STICKY,
+  GroupedOptions,
+  groupRuns,
   isOptionEnabled,
   offersCreate,
+  SHEET_HEADING_CLASS,
   stepEnabled,
-  useActiveOptionScroll,
+  useTypedListStatus,
   type ComboClearValue,
   type ComboOption,
 } from "./combobox-core";
 import { DEFAULT_COMBOBOX_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-labels";
-import { matchesSearch, rankMatch, sameName, searchWords } from "../lib/text-match";
+import { sameName, searchRanked } from "../lib/text-match";
 import {
   EndHintRow,
   FieldCaption,
@@ -65,7 +68,7 @@ export interface InlineEntityComboboxProps<V extends string | number, C extends 
   /** What a clear emits — `null` by default, `""` for a schema that wants an empty
    *  string. See {@link EntityCombobox}'s `clearValue`. */
   clearValue?: C;
-  options: ComboOption<V>[];
+  options: readonly ComboOption<V>[];
   /** The visible label — see {@link Combobox}'s `label` (a ReactNode since 0.34, API-9). */
   label?: ReactNode;
   id?: string;
@@ -81,8 +84,9 @@ export interface InlineEntityComboboxProps<V extends string | number, C extends 
   /** Phone sheet only — the anchored list has the field itself to type in. Falls
    *  back to `placeholder`, then to `combobox.search` from the {@link UiKitProvider}. */
   searchPlaceholder?: string;
-  /** Phone sheet only: a full screen showing nothing has to say why. The anchored
-   *  list simply does not open. Default: `combobox.noResults` from the provider. */
+  /** What a query that finds nothing says: on the phone sheet, where a full screen
+   *  showing nothing has to say why, and in the field's live status (0.52) — the anchored
+   *  list itself simply does not open. Default: `combobox.noResults` from the provider. */
   emptyLabel?: string;
   closeLabel?: string;
   /** The phone sheet's heading (and, as a string, its accessible name) for a field
@@ -310,19 +314,14 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
   const matches = useMemo(() => {
     let ranked = options;
     if (query) {
-      // Every word of the query, in the label or the sublabel (0.51.4).
-      const words = searchWords(query, locale);
-      const hit = (o: ComboOption<V>) => matchesSearch(words, [o.label, o.sublabel], locale);
-      // The label's whole name or its start first (`rankMatch` 0 and 1), then a match
-      // anywhere in the label or the sublabel. Not the group (0.40, kk run 79): with
-      // first-letter groups one typed letter matched its whole group.
-      const leads = (o: ComboOption<V>) => {
-        const rank = rankMatch(o.label, query, { locale });
-        return rank === 0 || rank === 1;
-      };
-      const starts = options.filter(leads);
-      const rest = options.filter((o) => !leads(o) && hit(o));
-      ranked = [...starts, ...rest];
+      // Every word of the query, in the label or the sublabel (0.51.4). The label's whole
+      // name or its start first (rank 0 and 1), then a match anywhere in the label or the
+      // sublabel; a stable sort keeps the options' order within each. Not the group
+      // (0.40, kk run 79): with first-letter groups one typed letter matched its whole
+      // group. Each option folded once (`searchRanked`).
+      ranked = searchRanked(options, query, (o) => [o.label, o.sublabel], { locale })
+        .sort((a, b) => Number(a.rank > 1) - Number(b.rank > 1))
+        .map((x) => x.row);
     }
     if (!ranked.some((o) => o.group)) return ranked;
     // Keep each group contiguous so the headings below appear once instead of
@@ -361,20 +360,27 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
   const rows: readonly { disabled?: boolean }[] = showCreate ? [...matches, { disabled: createLocked }] : matches;
   const createIndex = matches.length;
 
-  // Pointer-device only: the phone's rows live in a {@link PickerSheet} whose own
-  // search box holds focus, so the field behind it must not claim to be pointing at
-  // one of them.
-  // A disabled row is never the keyboard's, even if the list changed under it.
-  const activeId = !isPhone && isOptionEnabled(rows[active]) ? optionId(active) : undefined;
-  useActiveOptionScroll(activeId);
-
   const close = () => {
     setOpen(false);
     setActive(-1);
     setSheetQuery("");
   };
-  // See the twin above: a layer while the list SHOWS, and Escape puts the label back.
-  const showing = !isPhone && open && !inert && (matches.length > 0 || showCreate);
+  // Whether a list shows, the row the keyboard is on — in the anchored list or the phone
+  // sheet, whose search box takes the same keys (INP-6) — and the live status, as
+  // Combobox has them. A disabled row is never the keyboard's, even if the list changed
+  // under it.
+  const { showing, expanded, activeOption, statusRegion } = useTypedListStatus({
+    isPhone,
+    open,
+    inert,
+    rowCount: matches.length,
+    extraRow: showCreate,
+    query,
+    active: isOptionEnabled(rows[active]) ? active : -1,
+    optionId,
+    labels,
+  });
+  // A layer while the list SHOWS, and Escape puts the label back.
   useDismissLayer(showing, () => {
     setText(null);
     close();
@@ -403,6 +409,13 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
     setText(null);
     close();
   };
+  // The ONE option a name typed out in full names, else null. A disabled option's label
+  // is not a hit — typing it is not a way round `disabled` — and a label is typed out in
+  // full as the list matches it, so "cafe" names Café (DUP-5).
+  const exactHit = (q: string): ComboOption<V> | null => {
+    const hits = options.filter((o) => !o.disabled && sameName(o.label, q, locale));
+    return new Set(hits.map((h) => h.value)).size === 1 ? hits[0] : null;
+  };
   const reconcile = () => {
     // Locked, loose text is dropped rather than judged: nothing reaches `onChange`.
     if (text !== null && !locked) {
@@ -410,16 +423,59 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
       if (!q) {
         if (value != null) onChange(clearValue);
       } else {
-        // A disabled option's label typed out in full is not a way round `disabled`:
-        // it is not a hit, so the text reverts like any other non-answer. A label is
-        // typed out in full as the list matches it, so "cafe" commits Café (DUP-5).
-        const hits = options.filter((o) => !o.disabled && sameName(o.label, q, locale));
-        const ids = new Set(hits.map((h) => h.value));
-        if (ids.size === 1 && hits[0].value !== value) onChange(hits[0].value);
+        // Anything but a hit reverts, like any other non-answer.
+        const hit = exactHit(q);
+        if (hit && hit.value !== value) onChange(hit.value);
       }
     }
     setText(null);
     close();
+  };
+  // The phone sheet's way out — the X, Escape, Back — keeps the value and judges nothing.
+  // Not `reconcile`: on a phone `text` is never typed in (the sheet's own box is), so it
+  // only holds what the field showed at focus, and that is "" for a value whose option
+  // has not loaded yet — judged, it read as "the user emptied the field" and the X
+  // cleared the answer (0.52 code review, inline-entity-combobox.tsx).
+  const dismissSheet = () => {
+    setText(null);
+    close();
+  };
+
+  /** The list's keys — in the field and, on a phone, in the sheet's search box (INP-6).
+   *  Disabled rows are passed over; Up from "nothing highlighted" lands on the first
+   *  takeable row, as it always landed on row 0. The create row is the last row the
+   *  arrows reach. */
+  const listKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setOpen(true);
+      setActive((i) => stepEnabled(rows, i, 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActive((i) => (i < 0 ? stepEnabled(rows, -1, 1) : stepEnabled(rows, i, -1)));
+    } else if (e.key === "Enter") {
+      // An IME's Enter takes nothing, and judges no loose text (BUG-9).
+      if (isImeEnter(e)) return;
+      if (open && isOptionEnabled(rows[active])) {
+        e.preventDefault();
+        if (active === createIndex && showCreate) create();
+        else take(matches[active]);
+      } else if (isPhone) {
+        // The sheet's search box: its QUERY is what was typed, and a name typed out in
+        // full is taken, as the desktop field takes it. Anything else leaves the sheet
+        // and its search as they are — the panel pickers' sheet does the same. This was
+        // `reconcile`, which judged the field's text from before the sheet opened and
+        // closed: the search was thrown away and "Groceries" typed out was not taken
+        // (0.52 code review, inline-entity-combobox.tsx).
+        const hit = exactHit(sheetQuery.trim());
+        if (hit) {
+          e.preventDefault();
+          take(hit);
+        }
+      } else {
+        reconcile();
+      }
+    }
   };
 
   // The create row's inside, one for both shells: a "+" (it is an action, not a record),
@@ -446,6 +502,21 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
     ) : (
       box
     );
+
+  /** The rows in their runs, each group a `role="group"` its heading names (INP-8), for
+   *  the sheet or the anchored list — a group heading at each boundary rather than the
+   *  group on every row (feedback #136). `matches` is group-contiguous, so comparing with
+   *  the row above is enough. An option may deliberately appear in two groups (see
+   *  `reconcile`): a value is a row's key within its group. */
+  const groupedRows = (sheet: boolean, row: (o: ComboOption<V>, i: number) => ReactNode) => (
+    <GroupedOptions
+      runs={groupRuns(matches, (o) => o.group)}
+      listboxId={listboxId}
+      rowKey={(o) => String(o.value)}
+      row={row}
+      headingClassName={(run) => (sheet ? SHEET_HEADING_CLASS : anchoredHeadingClass(run))}
+    />
+  );
 
   return (
     // `rest` dresses the outer box — a `data-tour` anchor, a test id. Not the NAME,
@@ -478,12 +549,14 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
               // already exposes its value separately.
               aria-label={ariaLabel}
               role="combobox"
-              aria-expanded={open}
+              aria-expanded={expanded}
               // Required by the role, and the half that was missing: the field said it
               // was expanded and never said what it had expanded (ESLint's
               // `role-has-required-aria-props`, the audit's §a11y).
               aria-controls={listboxId}
-              aria-activedescendant={activeId}
+              // Pointer-device only: on a phone the sheet's own search box holds focus
+              // and names the row; the field behind it must not claim one.
+              aria-activedescendant={isPhone ? undefined : activeOption}
               aria-autocomplete="list"
               aria-invalid={field.isInvalid || undefined}
               aria-describedby={mergeDescribedBy(field.describedBy, locked && lock.reasonId)}
@@ -540,30 +613,17 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
               }}
               onKeyDown={(e) => {
                 if (locked) return lockedKeyDown(e);
-                // Disabled rows are passed over; Up from "nothing highlighted" lands on
-                // the first takeable row, as it always landed on row 0. The create row is
-                // the last row the arrows reach.
-                if (e.key === "ArrowDown") {
-                  e.preventDefault();
-                  setOpen(true);
-                  setActive((i) => stepEnabled(rows, i, 1));
-                } else if (e.key === "ArrowUp") {
-                  e.preventDefault();
-                  setActive((i) => (i < 0 ? stepEnabled(rows, -1, 1) : stepEnabled(rows, i, -1)));
-                } else if (e.key === "Enter") {
-                  // An IME's Enter takes nothing, and judges no loose text (BUG-9).
-                  if (isImeEnter(e)) return;
-                  if (open && isOptionEnabled(rows[active])) {
-                    e.preventDefault();
-                    if (active === createIndex && showCreate) create();
-                    else take(matches[active]);
-                  } else {
-                    reconcile();
-                  }
-                } else if (e.key === "Escape") {
+                listKeyDown(e);
+                if (e.key === "Escape") {
                   // A showing list takes the key and stops it — see the twin in
                   // {@link Combobox} (round 0.34 BUG-1).
                   if (showing && takeEscape(e)) return;
+                  // With no list, putting loose text back is this field's own undo step,
+                  // and the step is all the key does: claimed, so the dialog around the
+                  // field stays — it closed with the form in it (refactor audit
+                  // 2026-10-30, INP-5; ChipInput's draft is the rule). With nothing to
+                  // undo the key goes on, as before.
+                  if (text !== null && text !== (selected?.label ?? "")) claimEscape(e);
                   setText(null);
                   close();
                 } else if (e.key === "Tab") {
@@ -637,12 +697,13 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
       )}
       <FieldCaption parts={hintParts} />
       {field.errorEl}
+      {/* The live status — see `useTypedListStatus` for where it goes and why. */}
+      {!isPhone && statusRegion}
       {isPhone && (
         <PickerSheet
           open={open && !inert}
-          // Closing without choosing keeps the value: `text` was never emptied, so
-          // reconcile has nothing to undo — it just puts the label back.
-          onClose={reconcile}
+          // Closing without choosing keeps the value — see `dismissSheet`.
+          onClose={dismissSheet}
           title={sheetTitle ?? label}
           query={sheetQuery}
           onQueryChange={(v) => {
@@ -652,121 +713,104 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
           searchPlaceholder={searchPlaceholder ?? placeholder ?? labels.search}
           inputRef={sheetInputRef}
           closeLabel={closeLabel}
+          // The field's own keys, in the box focus is in while the sheet is up: arrows
+          // and Enter there did nothing (INP-6, as BUG-5 gave the panel pickers).
+          onSearchKeyDown={listKeyDown}
+          listboxId={listboxId}
+          activeId={activeOption}
         >
           <ul id={listboxId} role="listbox">
-            {matches.map((o, i) => (
-              // Keyed by group AND value, like combobox-core.tsx: an option may
-              // deliberately appear twice (see `reconcile`), and a bare value key
-              // would collide.
-              <Fragment key={`${o.group ?? ""}|${String(o.value)}`}>
-                {o.group && o.group !== matches[i - 1]?.group && (
-                  <li
-                    role="presentation"
-                    className={cn(
-                      GROUP_HEADING_STICKY,
-                      "px-4 pb-0.5 pt-3 text-caption font-semibold uppercase tracking-wide text-muted",
-                    )}
-                  >
-                    {o.group}
-                  </li>
-                )}
-                <li role="presentation">
-                  <button
-                    type="button"
-                    role="option"
-                    aria-selected={o.value === value}
-                    aria-disabled={o.disabled || undefined}
-                    onClick={() => take(o)}
-                    className={cn(
-                      SHEET_ROW_CLASS,
-                      o.value === value && "font-medium",
-                      o.disabled && DISABLED_ROW_CLASS,
-                    )}
-                  >
-                    {o.label}
-                  </button>
-                </li>
-              </Fragment>
+            {groupedRows(true, (o, i) => (
+              <li role="presentation">
+                <button
+                  type="button"
+                  id={optionId(i)}
+                  role="option"
+                  aria-selected={o.value === value}
+                  aria-disabled={o.disabled || undefined}
+                  onClick={() => take(o)}
+                  className={cn(
+                    SHEET_ROW_CLASS,
+                    // The row the sheet's arrows are on.
+                    i === active && !o.disabled && "bg-active",
+                    o.value === value && "font-medium",
+                    o.disabled && DISABLED_ROW_CLASS,
+                  )}
+                >
+                  {o.label}
+                </button>
+              </li>
             ))}
             {showCreate && (
               <li role="presentation">
                 <button
                   type="button"
+                  id={optionId(createIndex)}
                   role="option"
                   // An action, never chosen — see `onCreate`.
                   aria-selected={false}
                   aria-disabled={createLocked || undefined}
                   onClick={create}
-                  className={cn(SHEET_ROW_CLASS, CREATE_ROW_CLASS, createLocked && DISABLED_ROW_CLASS)}
+                  className={cn(
+                    SHEET_ROW_CLASS,
+                    CREATE_ROW_CLASS,
+                    active === createIndex && !createLocked && "bg-active",
+                    createLocked && DISABLED_ROW_CLASS,
+                  )}
                 >
                   {createRowContent}
                 </button>
               </li>
             )}
             {/* "Nothing matched" only when there is nothing to do either: with a create
-                row the list is not empty, it is offering to fill itself. */}
+                row the list is not empty, it is offering to fill itself. A picture: the
+                status below says it to a reader. */}
             {matches.length === 0 && !showCreate && (
-              <li className="px-4 py-3 text-sm text-muted">{labels.noResults}</li>
+              <li aria-hidden className="px-4 py-3 text-sm text-muted">
+                {labels.noResults}
+              </li>
             )}
           </ul>
+          {statusRegion}
         </PickerSheet>
       )}
       {showing && (
         <SuggestionList id={listboxId} anchorRef={fieldRef} panelRef={panelRef}>
-          {matches.map((o, i) => (
-            // A group heading is emitted at each group boundary rather than repeating
-            // the group on every row (feedback #136). `matches` is group-contiguous,
-            // so comparing with the previous row is enough. Fragment key sits here;
-            // the heading and the option carry their own list semantics — keyed by
-            // group AND value, because an option may deliberately appear twice (see
-            // `reconcile`).
-            <Fragment key={`${o.group ?? ""}|${String(o.value)}`}>
-              {o.group && o.group !== matches[i - 1]?.group && (
-                <li
-                  role="presentation"
-                  className={cn(
-                    GROUP_HEADING_STICKY,
-                    "px-3 pb-0.5 pt-2 text-caption font-semibold uppercase tracking-wide text-muted first:pt-1",
-                  )}
-                >
-                  {o.group}
-                </li>
-              )}
-              <li role="presentation">
-                <button
-                  type="button"
-                  id={optionId(i)}
-                  // See {@link Combobox}: the role rides the button, `aria-selected`
-                  // is the CHOSEN row, and the keyboard's row is the field's
-                  // `aria-activedescendant`.
-                  role="option"
-                  aria-selected={o.value === value}
-                  aria-disabled={o.disabled || undefined}
-                  tabIndex={-1}
-                  onMouseDown={(e) => {
-                    // mousedown (not click) so the input's blur can't close the
-                    // list before the selection registers. Prevented on a disabled
-                    // row too, so pressing one leaves the field focused and open.
-                    e.preventDefault();
-                    take(o);
-                  }}
-                  onMouseEnter={() => {
-                    if (!o.disabled) setActive(i);
-                  }}
-                  className={cn(
-                    rowClass(i === active && !o.disabled),
-                    o.disabled && DISABLED_ROW_CLASS,
-                    // Indented under its heading, so the hierarchy is readable at a
-                    // glance instead of inferred from grey trailing text.
-                    o.group && "ps-6",
-                    o.value === value && "font-medium",
-                  )}
-                >
-                  {o.label}
-                  {o.sublabel && <span className="ms-2 text-xs text-placeholder">{o.sublabel}</span>}
-                </button>
-              </li>
-            </Fragment>
+          {groupedRows(false, (o, i) => (
+            <li role="presentation">
+              <button
+                type="button"
+                id={optionId(i)}
+                // See {@link Combobox}: the role rides the button, `aria-selected` is the
+                // CHOSEN row, and the keyboard's row is the field's
+                // `aria-activedescendant`.
+                role="option"
+                aria-selected={o.value === value}
+                aria-disabled={o.disabled || undefined}
+                tabIndex={-1}
+                onMouseDown={(e) => {
+                  // mousedown (not click) so the input's blur can't close the list
+                  // before the selection registers. Prevented on a disabled row too, so
+                  // pressing one leaves the field focused and open.
+                  e.preventDefault();
+                  take(o);
+                }}
+                onMouseEnter={() => {
+                  if (!o.disabled) setActive(i);
+                }}
+                className={cn(
+                  rowClass(i === active && !o.disabled),
+                  o.disabled && DISABLED_ROW_CLASS,
+                  // Indented under its heading, so the hierarchy is readable at a glance
+                  // instead of inferred from grey trailing text.
+                  o.group && "ps-6",
+                  o.value === value && "font-medium",
+                )}
+              >
+                {o.label}
+                {o.sublabel && <span className="ms-2 text-xs text-placeholder">{o.sublabel}</span>}
+              </button>
+            </li>
           ))}
           {showCreate && (
             <li role="presentation">

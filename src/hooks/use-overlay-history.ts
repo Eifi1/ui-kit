@@ -161,6 +161,9 @@ const consumed = new Set<string>();
  *  `history.go(-n)` traversal fires exactly ONE popstate however far it travels. */
 let pendingProgrammatic = 0;
 let listening = false;
+/** Whether the gesture listeners ({@link noteAddress}, {@link noteSeen}) are on — see
+ *  {@link syncGestureListeners}. */
+let noting = false;
 let nextId = 0;
 
 /**
@@ -518,6 +521,7 @@ function closeOnPop() {
     return;
   }
   stack.pop();
+  syncGestureListeners();
   // The browser consumed this entry, so the overlay's own cleanup has nothing left
   // to unwind and nothing to record as owed.
   consumed.add(top.id);
@@ -551,13 +555,36 @@ function putBack(id: string): void {
   if (record) record.href = record.seen = currentHref();
 }
 
+/** `popstate` stays from the first overlay on: a traversal of ours (an unwind, a buried
+ *  run to skip) lands after the overlay that caused it has gone. */
 function ensureListening() {
   if (listening || typeof window === "undefined") return;
   window.addEventListener("popstate", handlePop);
-  window.addEventListener("pointerdown", noteAddress, true);
-  window.addEventListener("keydown", noteAddress, true);
-  for (const type of ["click", "keyup", "change", "input"]) window.addEventListener(type, noteSeenNowAndLater);
   listening = true;
+}
+
+const SEEN_EVENTS = ["click", "keyup", "change", "input"] as const;
+
+/**
+ * The gesture listeners, on while an overlay is open and off when the last one closes.
+ * Both notes return at once with no overlay up, but the four bubbling ones scheduled a
+ * timer for their second look even then — for every click and every keystroke in every
+ * field, for the life of the page after its first dialog (refactor audit 2026-10-30,
+ * INP-14). Called after each change to `stack`.
+ */
+function syncGestureListeners(): void {
+  const want = stack.length > 0;
+  if (want === noting || typeof window === "undefined") return;
+  noting = want;
+  if (want) {
+    window.addEventListener("pointerdown", noteAddress, true);
+    window.addEventListener("keydown", noteAddress, true);
+    for (const type of SEEN_EVENTS) window.addEventListener(type, noteSeenNowAndLater);
+  } else {
+    window.removeEventListener("pointerdown", noteAddress, true);
+    window.removeEventListener("keydown", noteAddress, true);
+    for (const type of SEEN_EVENTS) window.removeEventListener(type, noteSeenNowAndLater);
+  }
 }
 
 /**
@@ -587,6 +614,7 @@ export function useOverlayHistory(open: boolean, onClose: () => void, { held = f
     const id = `overlay-${(nextId += 1)}`;
     const entry: OverlayEntry = { id, close: () => closeRef.current(), held: () => heldRef.current };
     stack.push(entry);
+    syncGestureListeners();
     const prev = window.history.state;
     const marked = { ...(prev && typeof prev === "object" ? prev : {}), [SENTINEL_KEY]: id };
     // An entry that is on its way out and that we are still standing on is ours
@@ -634,6 +662,7 @@ export function useOverlayHistory(open: boolean, onClose: () => void, { held = f
     return () => {
       const at = stack.indexOf(entry);
       if (at >= 0) stack.splice(at, 1);
+      syncGestureListeners();
 
       // A Back press already took this entry; there is nothing to unwind or to owe.
       if (consumed.delete(id)) return;

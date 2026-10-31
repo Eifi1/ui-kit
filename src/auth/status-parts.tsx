@@ -91,12 +91,6 @@ export function useOncePerKey<T>(
   }, [key]);
 }
 
-/** Whether a callback's return is a promise to wait for. A callback that returns
- *  nothing is done when it returns. */
-export function isThenable(value: unknown): value is PromiseLike<unknown> {
-  return typeof (value as PromiseLike<unknown> | null)?.then === "function";
-}
-
 /**
  * Move focus to `ref` when `active` turns true — the outcome a person's own submit led
  * to ("If an account exists … the link is on its way", "Your password has been

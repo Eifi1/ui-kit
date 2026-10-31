@@ -43,6 +43,10 @@ export default defineConfig({
     // against the bug.
     env: { TZ: "Europe/Berlin" },
     clearMocks: true,
+    // A stray `it.only` fails here too, not only in CI. vitest's default is `!isCI`: the
+    // one runner setting where CI blocked and `npm run check` passed, skipping the rest
+    // of the file in silence (refactor audit 2026-10-30, TST-6).
+    allowOnly: false,
     // Each test file runs in its own VM context inside a reused worker thread
     // (`vmThreads`), not in a fresh worker with a fresh jsdom. Measured 2026-09-27 on
     // the whole suite: 181s with the default pool, 69s with this one — two fifths of
@@ -91,8 +95,13 @@ export default defineConfig({
       // Only the shipped modules count. Tests measuring themselves is circular, the
       // showcase is a demo harness rather than product code, and `src/test` is the
       // harness itself.
-      include: ["src/**/*.{ts,tsx}"],
-      exclude: ["src/test/**", "**/__tests__/**", "showcase/**"],
+      //
+      // The pay page ships too (`dist/pay/`, the `eifi1-pay-page` bin; all three apps
+      // deploy it), so `pay.ts` and `cli.ts` count (refactor audit 2026-10-30, TST-4).
+      // Its two entries do not: each is one call that runs on import, so no test can
+      // load it; tsconfig.json type-checks them and check:package runs the bin.
+      include: ["src/**/*.{ts,tsx}", "pay-page/**/*.ts"],
+      exclude: ["src/test/**", "**/__tests__/**", "showcase/**", "pay-page/main.ts", "pay-page/bin.ts"],
       /**
        * A RATCHET, not a target. Measured on 0.33.1's whole-suite run (its
        * coverage/lcov.info and HTML summary, 320 files): lines 96.65%, statements
@@ -111,8 +120,13 @@ export default defineConfig({
        * (refactor audit 2026-10, TST-4). Raised in 0.34 with the tests for the
        * modules the old remainder listed first: theme-store and the DataTable filter
        * popover (TST-12).
+       *
+       * Raised in 0.52 (refactor audit 2026-10-30, TST-5: the floors had not moved since
+       * 0.34, so 2–2.7pp of slack let ~550 lines lose their tests unnoticed). Measured on
+       * 0.52's whole-suite run (coverage/lcov-report, 717 files): lines 97.88%, statements
+       * 96.04%, functions 97.15%, branches 92.29%; the same rule, less 1pp rounded down.
        */
-      thresholds: { lines: 95, statements: 93, functions: 94, branches: 90 },
+      thresholds: { lines: 96, statements: 95, functions: 96, branches: 91 },
     },
   },
 });

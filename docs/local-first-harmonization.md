@@ -7,10 +7,15 @@ phases 3 and 4 follow in round 0.46. **§2 (round 0.46) settled 2026-10-19** (Ma
 kastlan and keksdose reviews in audits/round-047/reviews.md; §2.9): the sync engine (P3) and all five offline
 scopes (P4), for ui-kit 0.46 / server-kit 0.16.
 
-| § | What | Status |
-|---|---|---|
-| 1 | kastlan local-first like keksdose; KS stays online-only; what the kits lift | **SETTLED (round 0.45)**: P1+P2 in ui-kit 0.45 / server-kit 0.15 |
-| 2 | The sync engine in ui-kit (kastlan the user); `SyncScope`/`EntityRule` in server-kit; kastlan's meetings, meters, maintenance and contacts scopes | **SETTLED (round 0.46)**: P3+P4 in ui-kit 0.46 / server-kit 0.16 |
+## Status
+
+The body says what the build does; each round's reviews are folded into its sections
+(§1.9 and §2.9 say where each answer went), and the table names the later amendments.
+
+| § | Section | Shipped in | Amended by |
+|---|---|---|---|
+| 1 | kastlan local-first like keksdose; KS stays online-only; what the kits lift | **SETTLED (round 0.45)**: P1+P2 in ui-kit 0.45 / server-kit 0.15 | §1.8–§1.9 (the reviews); ui-kit 0.46 (kastlan K1–K4, §1.6); ui-kit 0.52 (`clear()` reaches every tab, §1.6, D15) |
+| 2 | The sync engine in ui-kit (kastlan the user); `SyncScope`/`EntityRule` in server-kit; kastlan's meetings, meters, maintenance and contacts scopes | **SETTLED (round 0.46)**: P3+P4 in ui-kit 0.46 / server-kit 0.16 | §2.9 (the reviews); ui-kit 0.52 (D15, §2.3: one engine per database across tabs) |
 
 ## 1. kastlan becomes local-first — SETTLED (round 0.45)
 
@@ -315,7 +320,7 @@ topbar-kurvenschmiede.md §7.
 
 **The online-only preset exists and KS uses it.**
 - ui-kit 0.42 shipped `SyncStatusIndicator storage="none"` (src/shell/sync-status-indicator.tsx:101-108,
-  :161-166; adopt-0.42.md:109).
+  :161-166; docs/archive/adopt/adopt-0.42.md:109).
   - It drops `pending`, `blocked` and `waitingForPlan`.
   - Offline reads "Offline — changes can't be saved until you reconnect".
   - A round reads "Saving…".
@@ -546,7 +551,13 @@ as optional peers). Size **S–M**.
     `default_qr_iban`, `signature_*`), recursively;
   - `isCacheSafe` with a pluggable warn hook (`onUnsafe`, kk :165-191), the guard on write
     (`shouldDehydrateQuery`) and the restore-side sanitizer that keeps paused mutations (kk :264-298);
-  - the per-account key (D5); `clear()` = `queryClient.clear()` plus `removeClient` (kk :302);
+  - the per-account key (D5); `clear()` = `queryClient.clear()` plus `removeClient` (kk :302),
+    and since ui-kit 0.52 a `clear` posted on the `BroadcastChannel`
+    `eifi1-query-cache:<key>` (a persistence listens while armed, from its restore to its
+    `leave`/`clear`), on which every other tab retires that key and deletes it once more
+    after any save of its own under way, so no other tab writes its in-memory cache back
+    under the key just deleted; `leave()` posts nothing (D15; refactor audit 2026-10-30
+    FLW-1);
     `removeStale()` drops other keys of the app older than `maxAge` (ka, at sign-in).
 - `SignOutPendingDialog({ open, queued, waitingForPlan, onSyncNow, onSignOutAnyway,
   onDiscardWaiting?, keepsChanges, extra?, labels? })`: `queued` = pending + blocked; `onSyncNow`
@@ -671,7 +682,7 @@ Nothing here changes the `/sync` wire except new `scope` values in ka and ka opt
 - **The round** (HO/sync.ts): `takeQueue` resets a stale `sending`, takes `pending` + `waiting`
   in `seq` order and marks them `sending` (:152-160). `pushAndPull` posts `{scope: "handover",
   last_knowledge, changes, refusals: true}` (:170-182). It sends **no `client_now`** yet (the
-  0.46 adoption adds it, adopt-0.46.md:126) and **no `paged`**. `applyAnswer` (:107-147) in one
+  0.46 adoption adds it, docs/archive/adopt/adopt-0.46.md:126) and **no `paged`**. `applyAnswer` (:107-147) in one
   transaction: deletes the applied `seq`s, marks `refused.change_ids` `waiting` and each
   `rejections[]` entry `rejected` with its `detail`, puts the pulled rows, lays the unsent changes
   back over them, and writes `meta.lastKnowledge` (:144). The 422 parser and its 20-attempt loop
@@ -816,12 +827,52 @@ ka's; kk has none and keeps none, D10.)
 
 **D15 Sign-out, company switch and the shared computer, through the engine.**
 - `engine.forget({ keepQueue })` bumps the generation, then clears `rows` and `meta` (and the
-  `outbox` and app tables unless `keepQueue`).
+  `outbox` and app tables unless `keepQueue`); the same transaction writes a new `epoch` into
+  `meta` (0.52), its one entry afterwards.
 - **The generation guards every step**, not only the push/pull: a round's apply transaction and
   every `SyncStep` (ka's photo upload too) check it before they write, and drop their result when
   it changed. A photo upload in flight at sign-out does not mark its row uploaded.
 - **One engine per database.** ka's database is per account AND company: a company switch builds
   a new engine on the new database and stops the old one (`useSyncWorker(engine)` keyed on it).
+- **Across tabs too** (ui-kit 0.52; refactor audit 2026-10-30 FLW-1). Each tab runs its own
+  engine on the same database, so "one engine" and "the generation guards every step" held
+  within one tab only: two tabs sent one queue twice, a failed send laid another tab's
+  in-flight changes back (and an edit merged into them was lost), and a sign-out in one tab
+  left the other tab's poll writing the whole scope back into the wiped copy. keksdose's
+  mechanism has its cross-tab layer (`MIRROR_GENERATION`, §1.2); the engine now has its own:
+  - **a Web Lock per database round** (`navigator.locks`, `eifi1-sync:<database>`, a queued
+    request): one tab's round runs at a time, first come first served; a round asked for
+    meanwhile waits its turn (one per engine; a request meanwhile runs once after it, ka's
+    rule), so `syncNow()` runs its own round after the other tab's and answers its result;
+    `stop()` and `forget()` take a waiting round out of the queue; `paused()` and the
+    connection are read when the lock is granted. A closed tab's lock is released, so a `sending` it left is
+    truly orphaned when the next round takes it back. Without Web Locks (outside a secure
+    context: plain http) two tabs' rounds may overlap as before; the epoch and the channel
+    below still hold;
+  - **a persisted epoch**: `forget()` writes a new one into `meta` in the transaction that
+    clears the tables, and posts it on the BroadcastChannel `eifi1-sync:<database>`. An
+    engine reads the epoch when it starts; a round reads it at its start, when it takes each
+    scope's queue, and in the transaction that keeps an answer (apply, a 402/403 refusal),
+    and drops its answer when it moved. An engine that finds it
+    moved by another tab's `forget()`, or hears that `forget()` on the channel (a started
+    engine: a step's `isCurrent()` turns false at once, the request in flight is aborted),
+    stops and runs no round until its own `forget()`: the session it ran for has ended.
+    Its own `forget()` is decided by the epoch its clear leaves in `meta`: another tab's
+    `forget()` heard while that clear runs and committed before it stops nothing (kastlan's
+    cascade); one committed after ends the engine too. A step's own writes rely on
+    `isCurrent()`, false once the message lands. Either end of a session leaves the state
+    idle: no error, no retry, `lastSyncedAt` null;
+  - **a round's deadline** (ui-kit 0.52, `roundTimeoutMs`, default 10 minutes, counted from
+    when the round holds the lock): past it the round is cut. Its requests and steps are
+    aborted, the generation moves so their late answers and writes are dropped, and they lay
+    nothing back (the next round takes their `sending` changes back). The round ends `error`
+    with a `TimeoutError`, not `offline`, so the backoff starts and the lock passes to the
+    next tab even when the app ignores the abort. The apps' own request timeouts come first
+    (kastlan: POST /sync and the photo upload); `0` or `Infinity` turns it off;
+  - **the query copy's `clear()` reaches every tab** through a `BroadcastChannel` (§1.6).
+
+  App side: kastlan ends the session in every tab when its refresh token is removed (a
+  `storage` listener), or another tab stays signed in.
 - ka: `keepQueue: true` (D6: the queue and photos wait for their owner); the dialog keeps
   `keepsChanges`. This is a deliberate difference from kk, which warns and wipes on purpose
   (FE shared/offline/db.ts:339-349), pushes the queue before a budget switch and asks before
@@ -913,7 +964,7 @@ createSyncEngine(opts: {
 interface SyncStep { name: string; run(db: SyncDb, ctx: { signal: AbortSignal; isCurrent(): boolean }): Promise<
   { offline?: boolean; changed?: boolean; counts?: Partial<SyncCounts> }> }
   // changed → one more push/pull in the same round (ka's second pass after photos)
-  // isCurrent() → false once forget() bumped the generation: the step writes nothing more (D15)
+  // isCurrent() → false once forget() bumped the generation, here or (0.52) in another tab: the step writes nothing more (D15)
 
 interface SyncEngine {
   write(scope: string, entity: string, id: string, op: "upsert" | "delete",
@@ -921,7 +972,7 @@ interface SyncEngine {
                                                           // the caller names the scope (D11)
   start(): void; stop(): void;
   requestSync(): void;                     // soon (debounced)
-  syncNow(): Promise<SyncRoundResult>;     // "Sync now"; resets the backoff
+  syncNow(): Promise<SyncRoundResult>;     // "Sync now"; resets the backoff; its own round, after the one under way (another tab's too)
   retryBlocked(): Promise<void>; discardRejected(scope?: string): Promise<void>;
   rejected(): Promise<OutboxChange[]>;     // reasons for the app's banner
   forget(opts: { keepQueue: boolean }): Promise<void>;   // D15
@@ -944,16 +995,19 @@ stampAfter(previous: unknown): string;                    // kk sync-client.ts:6
 
 **The round**, per scope in `scopes()` order:
 1. Unless `paused()`: take the scope's `pending` + `waiting` (+ `blocked` only on `retryBlocked`) in
-   `seq` order, mark them `sending` (a `sending` left by a closed tab goes back first).
+   `seq` order, under the round's epoch (D15), mark them `sending` (a `sending` left by a closed tab goes back first: where the
+   browser has Web Locks the round holds the database's lock, so no live tab is sending it, D15).
 2. Send `{scope, last_knowledge, changes, refusals: true, client_now, paged?, page_cursor?}`;
    `client_now` = `new Date().toISOString()` as the body is built.
-3. Apply in one transaction, **if the generation is unchanged**: delete applied `seq`s;
+3. Apply in one transaction, **if the generation and the persisted epoch are unchanged** (D15):
+   delete applied `seq`s;
    `refused.change_ids` → `waiting` (a `holdCodes` code) or `blocked`, with `code`; each
    `rejections[]` → `rejected` with `detail`; put pulled rows (a delete removes); lay the unsent
    changes back; on the last page write `lastKnowledge:<scope>` and `lastSyncedAt`.
 4. Follow `page_cursor` with pull-only requests until it is `null` (D12).
 Then the `steps` (each checks `isCurrent()` before it writes), then one more pass if a step
-`changed`. One round at a time; a request during a round runs once more after it (ka's rule).
+`changed`. One round at a time; a request during a round runs once more after it (ka's rule) —
+across tabs too: a round waits its turn on the database's Web Lock behind another tab's (0.52).
 `scopes()` is read at the start of every round. `write()` keeps ka's merge (into the last
 `pending` upsert only; a never-synced row's delete forgets its queue; ka's policy, D10) and stamps
 with `stampAfter(previous)`. A `rejected` change is never re-sent (D13).

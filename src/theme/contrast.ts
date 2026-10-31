@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { logger } from "../lib/logger";
-import { readStored } from "../lib/safe-storage";
+import { readStoredJson } from "../lib/safe-storage";
 import { registerDeviceSetting } from "../lib/device-settings";
 import { useMediaQuery } from "../hooks/use-media-query";
 import { CONTRAST_STEPPED_VARS, contrastStep, rememberedTokenSet } from "./contrast-tokens";
@@ -134,15 +134,14 @@ export interface PersistedContrast {
   version?: number;
 }
 
-/** This device's own choice under `storageKey`, or `null` when it never chose. */
+/** The frozen format holding a mode this kit knows — the shape `readStoredJson` admits. */
+const holdsContrast = (blob: unknown): blob is { state: { contrast: ContrastMode } } =>
+  isContrastMode((blob as PersistedContrast | null)?.state?.contrast);
+
+/** This device's own choice under `storageKey`, or `null` when it never chose (or the
+ *  storage is blocked, malformed, or holds a value that is not a mode). */
 export function readPersistedContrast(storageKey: string): ContrastMode | null {
-  try {
-    const blob = JSON.parse(readStored(storageKey) ?? "null") as PersistedContrast | null;
-    const mode = blob?.state?.contrast;
-    return isContrastMode(mode) ? mode : null;
-  } catch {
-    return null;
-  }
+  return readStoredJson(storageKey, holdsContrast)?.state.contrast ?? null;
 }
 
 /**

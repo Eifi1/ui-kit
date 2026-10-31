@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { foldForSearch, matchesSearch, rankMatch, searchWords } from "../text-match";
+import { foldForSearch, matchesSearch, rankMatch, searchRanked, searchWords } from "../text-match";
 import { normalizeSearchText } from "../../search/search-index";
 
 /**
@@ -83,5 +83,47 @@ describe("matchesSearch: every word of a picker's query (0.51.4, keksdose /price
   it("never matches a word across two texts, and skips a missing one", () => {
     expect(matchesSearch(searchWords("grosbern"), ["Migros", "Bern"])).toBe(false);
     expect(matchesSearch(searchWords("bern"), ["Migros", undefined, "Bern"])).toBe(true);
+  });
+});
+
+/**
+ * The ranked lists' one pass (0.52 code review, combobox.tsx): `matchesSearch`'s filter and
+ * `rankMatch`'s rank, each row folded once — what Combobox, CountrySelect and
+ * InlineEntityCombobox asked of the two in turn.
+ */
+describe("searchRanked", () => {
+  const ranks = (rows: string[], q: string) => searchRanked(rows, q, (r) => [r]).map((h) => `${h.row}:${h.rank}`);
+
+  it("keeps the rows matchesSearch keeps, ranked as rankMatch ranks them, words apart last", () => {
+    const rows = ["Migros", "Migros Zürich", "Zürich Migros", "Coop"];
+    expect(ranks(rows, "migros")).toEqual(["Migros:0", "Migros Zürich:1", "Zürich Migros:2"]);
+    expect(ranks(rows, "migros zurich")).toEqual(["Migros Zürich:0", "Zürich Migros:3"]);
+    for (const q of ["migros", "migros zurich", "o", "zz"]) {
+      const kept = searchRanked(rows, q, (r) => [r]).map((h) => h.row);
+      expect(kept).toEqual(rows.filter((r) => matchesSearch(searchWords(q), [r])));
+    }
+  });
+
+  it("finds a word in any text, and ranks by the first", () => {
+    const rows = [{ label: "8004 Zürich", sub: "Migros" }];
+    const hits = searchRanked(rows, "migros", (r) => [r.label, r.sub]);
+    expect(hits.map((h) => h.rank)).toEqual([3]);
+  });
+
+  it("a code answers whole: as a word, and as the whole query at rank 0 — never a letter of it", () => {
+    const countries = [
+      { code: "CH", name: "Switzerland" },
+      { code: "TD", name: "Chad" },
+      { code: "AW", name: "Aruba" },
+    ];
+    const run = (q: string) =>
+      searchRanked(countries, q, (c) => [c.name], { code: (c) => c.code }).map((h) => `${h.row.code}:${h.rank}`);
+    expect(run("ch")).toEqual(["CH:0", "TD:1"]);
+    expect(run("w")).toEqual(["CH:2"]);
+    expect(run("aw aruba")).toEqual(["AW:3"]);
+  });
+
+  it("no words keep every row, at 0", () => {
+    expect(ranks(["b", "a"], "  ")).toEqual(["b:0", "a:0"]);
   });
 });

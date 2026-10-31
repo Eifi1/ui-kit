@@ -10,7 +10,7 @@ import { applyTextSize, type TextSize } from "../../theme/text-size";
 
 /** keksdose live #426 (its `TextSizeRow`, account-menu.tsx): A− / A+ beside the language. */
 
-function Menu({ value, onPick = () => {} }: { value?: TextSize; onPick?: (size: TextSize) => void }) {
+function Menu({ value, onChange = () => {} }: { value?: TextSize; onChange?: (size: TextSize) => void }) {
   return (
     <MemoryRouter>
       <TopBarActionMenu aria-label="Account" icon={<span>A</span>} entries={[]}>
@@ -19,10 +19,10 @@ function Menu({ value, onPick = () => {} }: { value?: TextSize; onPick?: (size: 
             <AccountMenuLanguage
               languages={[{ code: "en", label: "English" }]}
               value="en"
-              onPick={() => {}}
+              onChange={() => {}}
               close={close}
             />
-            <AccountMenuTextSize value={value} onPick={onPick} />
+            <AccountMenuTextSize value={value} onChange={onChange} />
           </>
         )}
       </TopBarActionMenu>
@@ -48,14 +48,25 @@ describe("AccountMenuTextSize", () => {
   });
 
   it("steps one size down or up and keeps the menu open", () => {
-    const onPick = vi.fn();
-    render(<Menu value="large" onPick={onPick} />);
+    const onChange = vi.fn();
+    render(<Menu value="large" onChange={onChange} />);
     openMenu();
     fireEvent.click(larger());
-    expect(onPick).toHaveBeenLastCalledWith("xlarge");
+    expect(onChange).toHaveBeenLastCalledWith("xlarge");
     fireEvent.click(smaller());
-    expect(onPick).toHaveBeenLastCalledWith("normal");
+    expect(onChange).toHaveBeenLastCalledWith("normal");
     expect(screen.getByRole("button", { name: "Account" })).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("still takes the deprecated `onPick` (0.52 → removed in 0.53)", () => {
+    const onPick = vi.fn();
+    render(
+      <ul>
+        <AccountMenuTextSize value="normal" onPick={onPick} />
+      </ul>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Larger text" }));
+    expect(onPick).toHaveBeenCalledWith("large");
   });
 
   it("disables A− at Normal and A+ at Extra large", () => {
@@ -69,15 +80,15 @@ describe("AccountMenuTextSize", () => {
   });
 
   it("without `value`, follows the size on <html>", () => {
-    const onPick = vi.fn();
-    render(<Menu onPick={onPick} />);
+    const onChange = vi.fn();
+    render(<Menu onChange={onChange} />);
     openMenu();
     expect(screen.getByText("Normal")).toBeInTheDocument();
     act(() => applyTextSize("xlarge"));
     expect(screen.getByText("Extra large")).toBeInTheDocument();
     expect(larger()).toBeDisabled();
     fireEvent.click(smaller());
-    expect(onPick).toHaveBeenCalledWith("large");
+    expect(onChange).toHaveBeenCalledWith("large");
   });
 
   it("speaks the provider's language (de-CH: Swiss spelling)", () => {

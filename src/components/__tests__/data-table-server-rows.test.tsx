@@ -85,7 +85,9 @@ describe("DataTable serverRows (0.48.1, keksdose K-052-1)", () => {
   it("hides the sort and filter controls nobody listens to, as serverPagination does", () => {
     const { container } = render(<Table loadMore={loadMore} />);
     const head = container.querySelector("thead") as HTMLElement;
-    expect(within(head).getByRole("button", { name: /Amount/ })).toBeDisabled();
+    // Plain text, not a disabled button (0.52, audit 2026-10-30 DSP-23 a).
+    expect(within(head).queryByRole("button", { name: /Amount/ })).toBeNull();
+    expect(head).toHaveTextContent("Amount");
     expect(within(head).queryByRole("button", { name: /filter/i })).toBeNull();
   });
 

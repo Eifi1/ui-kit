@@ -1,3 +1,5 @@
+import { httpStatusOf } from "../lib/http-status";
+
 /**
  * The coded refusals of sign-in and sign-up (docs/auth-harmonization.md §5.2): every
  * refusal the auth routes answer carries a machine-readable `code`, and the pages
@@ -274,29 +276,13 @@ export function errorBodyWithCode(
   return undefined;
 }
 
-/** An HTTP status as a number, or undefined. */
-function statusOf(value: unknown): number | undefined {
-  return typeof value === "number" && Number.isInteger(value) ? value : undefined;
-}
-
 /**
- * The HTTP status a thrown error carries, wherever the apps' HTTP clients put it —
- * without depending on any of them:
- *
- *  1. `err.response.status` — axios (all three apps' clients);
- *  2. `err.status` — ofetch's `FetchError`, the generated OpenAPI clients' `ApiError`, and
- *     a `Response` thrown as it came;
- *  3. `err.statusCode` — ofetch's alias, and Node-style errors.
- *
- * `undefined` when none is a whole number. Package-private — not re-exported from the
- * barrel; {@link isRateLimited} and the session refresh's classifier read it (DUP-11,
- * refactor audit 2026-10: the refresh carried its own copy of this probe).
+ * The HTTP status a thrown error carries ({@link httpStatusOf}): axios'
+ * `response.status`, then `status`, then `statusCode`. Lives in `lib/http-status.ts`
+ * since 0.52 (refactor audit 2026-10-30, MOD-6); re-exported here for the modules that
+ * import it from auth. Package-private — not re-exported from the barrel.
  */
-export function httpStatusOf(err: unknown): number | undefined {
-  if (!isBag(err)) return undefined;
-  const response = err.response;
-  return (isBag(response) ? statusOf(response.status) : undefined) ?? statusOf(err.status) ?? statusOf(err.statusCode);
-}
+export { httpStatusOf };
 
 /**
  * Whether `err` is a throttled request — HTTP `429 Too Many Requests` (0.30.0, from the
@@ -378,20 +364,7 @@ export function retryAfterSeconds(err: unknown, now: number | Date = Date.now())
   return value === undefined ? undefined : parseRetryAfter(value, at);
 }
 
-/**
- * The English of every `rateLimited` label (0.30.0): "Too many attempts. Try again in
- * 30 s." with a wait under a minute, in whole minutes from one minute up (keksdose's
- * reset throttle answers in hours, and "3600 s" is a number nobody reads), and "Wait a
- * moment and try again." without one — or with a `0`.
- *
- * @internal The namespaces' English; not part of the barrel.
- */
-export function englishRateLimited(seconds?: number): string {
-  if (!seconds || seconds <= 0) return "Too many attempts. Wait a moment and try again.";
-  return `Too many attempts. Try again in ${englishWait(seconds)}.`;
-}
-
-/** "30 s", "2 min" — a wait in English, rounded up. @internal */
-export function englishWait(seconds: number): string {
-  return seconds < 60 ? `${Math.ceil(seconds)} s` : `${Math.ceil(seconds / 60)} min`;
-}
+// The English of the `rateLimited` labels, in auth-errors-labels since 0.52: the English
+// catalogue reached this module for them, and with it `lib/http-status` (refactor audit
+// 2026-10-30, MOD-6). Re-exported for the modules that import them from here.
+export { englishRateLimited, englishWait } from "./auth-errors-labels";

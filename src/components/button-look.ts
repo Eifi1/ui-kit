@@ -9,8 +9,8 @@ import type { KitLinkComponent, KitLinkProps } from "../i18n/kit-labels";
  * and its router link. Both now draw from this module, which renders nothing, so neither
  * imports the other.
  *
- * Public through ./ui by name: `buttonClasses`, `TOUCH_TARGET_LARGE` and the four types.
- * The other exports are the two buttons' shared parts (`@internal`).
+ * Public through the barrel (src/index.ts) by name: `buttonClasses`, `TOUCH_TARGET_LARGE`
+ * and the four types. The other exports are the two buttons' shared parts (`@internal`).
  */
 
 /**
@@ -24,9 +24,9 @@ import type { KitLinkComponent, KitLinkProps } from "../i18n/kit-labels";
  *   (theme/palette-derive.ts), which no button paints.
  * - `secondary`: an outline. `ghost`: text or glyph only. `danger`: solid `--danger`,
  *   for an action that destroys something. `link`: a text link that acts (a `<button>`).
- * - `primary` and `brand` are **deprecated** aliases of `default` and `accent` (0.49,
- *   same look; a development build warns once per name). They are removed in 0.51, and
- *   `primary` will not come back with another meaning.
+ *
+ * 0.49's `primary` and `brand` (aliases of `default` and `accent`) were removed in 0.51;
+ * `primary` will not come back with another meaning.
  */
 export type ButtonVariant = "default" | "accent" | "secondary" | "ghost" | "danger" | "link";
 

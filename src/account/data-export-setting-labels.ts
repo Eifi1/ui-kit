@@ -3,7 +3,7 @@
 // loads as one chunk like the other languages (0.34, KS U8). ./data-export-setting
 // re-exports them.
 
-import { englishWait } from "../auth/auth-errors";
+import { englishWait } from "../auth/auth-errors-labels";
 import type { DataExportLabels } from "./data-export-setting";
 
 export const DEFAULT_DATA_EXPORT_LABELS: DataExportLabels = {

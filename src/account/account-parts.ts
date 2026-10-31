@@ -1,8 +1,6 @@
-import { useEffect, useRef } from "react";
-
 /**
  * What the account's own settings parts share (docs/user-admin-harmonization.md §6):
- * the companies a refusal names, a mounted guard, and the card's type.
+ * the companies a refusal names and the card's type (the mounted guard re-exported).
  *
  * @internal Not part of the barrel; the parts are.
  */
@@ -39,28 +37,10 @@ export function refusalCompanies(err: unknown): string[] | undefined {
   );
 }
 
-/** Whether the component is still mounted — a late answer after the app navigated away
- *  (the deletion signs out) must not set state. */
-export function useMounted(): { readonly current: boolean } {
-  const mounted = useRef(true);
-  useEffect(() => {
-    mounted.current = true;
-    return () => {
-      mounted.current = false;
-    };
-  }, []);
-  return mounted;
-}
-
-/** Call `call` and hand back a promise, a throw included — a callback may return
- *  nothing (done at once), a promise, or throw before it returns one. */
-export function settle(call: () => unknown): Promise<unknown> {
-  try {
-    return Promise.resolve(call());
-  } catch (error) {
-    return Promise.reject(error);
-  }
-}
+/** The mounted guard and the callback-to-promise bridge, in `hooks/use-mounted.ts` since
+ *  0.52: seven notifications modules imported them from here (refactor audit
+ *  2026-10-30, MOD-6). Re-exported for the account parts that still do. */
+export { settle, useMounted } from "../hooks/use-mounted";
 
 /** The settings cards' type scale, PasskeysSetting's: a small title and a muted line.
  *  Defined with the card look in settings/ since 0.34 (MOD-8, refactor audit 2026-10). */

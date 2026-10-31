@@ -12,7 +12,7 @@ import { axeViolations } from "../../test/axe";
  * end slot, sticky under the header and stacked — and a "load more" footer in place of
  * the pager, observed (auto-load) and a button for the keyboard. jsdom lays nothing out,
  * so this pins the wiring and the measured offsets; headless Chromium checked the pixels
- * (docs/adopt-0.48.md).
+ * (docs/archive/adopt/adopt-0.48.md).
  */
 
 interface Tx {

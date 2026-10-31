@@ -9,7 +9,9 @@ import { DEFAULT_SIGN_CHIP_LABELS } from "./sign-chip-labels";
 // ── Labels ────────────────────────────────────────────────────────────────────
 
 /** The words a {@link SignChip} says — the `signChip` namespace of
- *  `<UiKitProvider labels>`, and per chip through its `labels` prop. */
+ *  `<UiKitProvider labels>`, and per chip through its `labels` prop.
+ *
+ * @deprecated 0.52 — a `Chip` of your own, as keksdose's DirectionToggle is (MOD-5); removed in 0.53. */
 export interface SignChipLabels {
   /** The chip's text while the figure is negative — money going out. */
   outflow: string;
@@ -28,6 +30,7 @@ export interface SignChipLabels {
 // Defined in ./sign-chip-labels, which holds no component code (0.34, KS U8).
 export { DEFAULT_SIGN_CHIP_LABELS };
 
+/** @deprecated 0.52 — a `Chip` of your own, as keksdose's DirectionToggle is (MOD-5); removed in 0.53. */
 export interface SignChipProps {
   /** The figure is negative (an outflow) — the same flag {@link AmountInput}'s
    *  `negative` is, so one state feeds both: `<AmountInput negative={neg}
@@ -76,6 +79,12 @@ export interface SignChipProps {
  * to own the row the two share, and every form lays that row out differently (beside
  * the figure on a phone, in a grid column on a desktop). The chip is the part that was
  * being re-written; the row stays the form's.
+ *
+ * Deprecated in 0.52, removed in 0.53 (decision 4 of the refactor audit 2026-10-30,
+ * MOD-5): keksdose, whose chip this was (K15), kept its own `DirectionToggle` on `Chip`
+ * and `Tooltip`, and no other app renders one.
+ *
+ * @deprecated 0.52 — a `Chip` of your own, as keksdose's DirectionToggle is (MOD-5); removed in 0.53.
  */
 export function SignChip({ negative, onNegativeChange, disabled, labels: labelsProp, className }: SignChipProps) {
   const labels = useKitLabels("signChip", DEFAULT_SIGN_CHIP_LABELS, labelsProp);

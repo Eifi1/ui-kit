@@ -2,7 +2,7 @@
 // catalogue (src/i18n/defaults.ts) imports them without the component, so `en` loads as one
 // chunk like the other languages (0.34, KS U8). ./feedback-thread re-exports them.
 
-import type { FeedbackComposerLabels, FeedbackThreadLabels } from "./feedback-thread";
+import type { ChatComposerLabels, FeedbackThreadLabels } from "./feedback-thread";
 
 export const DEFAULT_FEEDBACK_THREAD_LABELS: FeedbackThreadLabels = {
   thread: "Comments",
@@ -13,7 +13,7 @@ export const DEFAULT_FEEDBACK_THREAD_LABELS: FeedbackThreadLabels = {
   attachments: "Attachments",
 };
 
-export const DEFAULT_FEEDBACK_COMPOSER_LABELS: FeedbackComposerLabels = {
+export const DEFAULT_FEEDBACK_COMPOSER_LABELS: ChatComposerLabels = {
   field: "Write a comment",
   placeholder: "Write a comment…",
   send: "Send",

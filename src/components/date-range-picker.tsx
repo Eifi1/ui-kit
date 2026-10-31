@@ -1,12 +1,13 @@
-// The two-date range picker: presets beside the calendar, `commit="apply"` drafts, a
-// custom trigger. Moved out of date-picker.tsx as it was (MOD-9, refactor audit
+// The two-date range picker: presets beside the calendar, `apply` drafts, a custom
+// trigger. Moved out of date-picker.tsx as it was (MOD-9, refactor audit
 // 2026-10); date-picker still exports every public name here.
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { useKitLocale, type DatePickerLabels } from "../i18n/kit-labels";
 import { Button } from "./button";
-import { FieldBox, useFieldMessages } from "./field-parts";
+import { FieldBox, LockedReason, useFieldMessages, useLockReason } from "./field-parts";
+import type { CommitScope } from "./write-lock";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
 import {
   DateField,
@@ -40,19 +41,13 @@ export interface DateRangePickerPreset {
 }
 
 /**
- * When the picker hands its range to `onChange`.
+ * The 0.x values of DateRangePicker's `commit`, when it was the panel's mode:
+ * `"immediate"` is `apply` left out, `"apply"` is `apply`. See
+ * {@link DateRangePickerProps.apply}.
  *
- *  - `"immediate"` (the default, and all of 0.7): a preset click commits and closes,
- *    and each calendar click is reported as it happens — the half-made `(from, "")`
- *    included. The right shape for quick ranges on a filter, where one click is one
- *    answer.
- *  - `"apply"`: the panel works on a DRAFT. A preset ARMS the calendar instead of
- *    committing, days can then be nudged ("last 3 months, but end it last Friday"),
- *    and nothing reaches `onChange` until Apply — which stays disabled until both ends
- *    exist. Cancel, Escape and an outside click discard the draft, and every open
- *    starts again from the committed value. keksdose's report range asked for exactly
- *    this: each commit there re-runs a whole page of charts, so an intermediate state
- *    must never escape the panel.
+ * @deprecated 0.52 — DateRangePicker's `apply` (`commit="apply"` → `apply`, `"immediate"`
+ * → nothing); removed in 0.53. `commit` is the write lock's opt-in on every other kit
+ * control, and since 0.52 on this one too (refactor audit 2026-10-30, API-3).
  */
 export type DateRangeCommit = "immediate" | "apply";
 
@@ -65,8 +60,9 @@ export interface DateRangePickerProps extends DatePickerBaseProps {
   onChange: (from: string, to: string, presetId?: string) => void;
   /** Separator between the two formatted dates in the trigger (default " – "). */
   separator?: string;
-  /** Optional named ranges rendered as a start-side column (last month / YTD / …). */
-  presets?: DateRangePickerPreset[];
+  /** Optional named ranges rendered as a start-side column (last month / YTD / …).
+   *  `readonly` since 0.52 (API-7): the picker never changes the list. */
+  presets?: readonly DateRangePickerPreset[];
   /**
    * The active preset's `id`, controlled — e.g. straight from keksdose's `?preset=`.
    * `null` (or an id no preset has, such as `"custom"`) says "no preset": nothing in
@@ -77,8 +73,39 @@ export interface DateRangePickerProps extends DatePickerBaseProps {
    * itself; with no memory at all it falls back to the first preset whose dates match.
    */
   preset?: string | null;
-  /** See {@link DateRangeCommit}. Default `"immediate"`. */
-  commit?: DateRangeCommit;
+  /**
+   * When the picker hands its range to `onChange`.
+   *
+   *  - Left out (the default, and all of 0.7): a preset click commits and closes, and
+   *    each calendar click is reported as it happens — the half-made `(from, "")`
+   *    included. The right shape for quick ranges on a filter, where one click is one
+   *    answer.
+   *  - `apply`: the panel works on a DRAFT. A preset ARMS the calendar instead of
+   *    committing, days can then be nudged ("last 3 months, but end it last Friday"),
+   *    and nothing reaches `onChange` until Apply — which stays disabled until both ends
+   *    exist. Cancel, Escape and an outside click discard the draft, and every open
+   *    starts again from the committed value. keksdose's report range asked for exactly
+   *    this: each commit there re-runs a whole page of charts, so an intermediate state
+   *    must never escape the panel.
+   *
+   * `commit="apply"` until 0.52 (refactor audit 2026-10-30, API-3): `commit` is the write
+   * lock's prop on every other kit control. The old spelling still works for 0.52 and
+   * goes in 0.53 ({@link DateRangeCommit}); `apply` wins where both are given.
+   */
+  apply?: boolean;
+  /**
+   * This picker COMMITS — picking a range saves it (a report's period kept per user, a
+   * filter persisted as it moves). Under a locked {@link WriteLockProvider} it is locked
+   * the `disabledReason` way, with the lock's reason; a {@link CommitScope}, as on every
+   * kit control since 0.33, and on this one since 0.52 (API-3). A range inside a form with
+   * its own Save stays editable under the lock — leave this off there.
+   *
+   * The strings `"immediate"` and `"apply"` are the panel's mode, the 0.x meaning of this
+   * prop: deprecated, read as `apply` for one minor, removed in 0.53 — see
+   * {@link DateRangeCommit}. They cannot be taken for a scope, which is a boolean or an
+   * object.
+   */
+  commit?: CommitScope | DateRangeCommit;
   /**
    * Draw the trigger yourself. keksdose's report range field
    * (reports/report-range-field.tsx, "Why this is app-level") is why: its trigger
@@ -103,7 +130,7 @@ export interface DateRangePickerProps extends DatePickerBaseProps {
    */
   sheetBackCloses?: boolean;
   /**
-   * With `commit="apply"`: a line above the calendar saying what Apply would commit —
+   * With `apply`: a line above the calendar saying what Apply would commit —
    * keksdose's report range writes "Custom · 1 Mar 2026 – …" there
    * (report-range-field.tsx), the one place a preset armed and then nudged by a day is
    * seen to have become "Custom", and a half-made range to still lack its end. Called
@@ -112,7 +139,7 @@ export interface DateRangePickerProps extends DatePickerBaseProps {
    * `""` until the second click. The line is a polite live region, so a screen reader
    * hears the draft change as the calendar is used.
    *
-   * Ignored in `"immediate"` mode, where there is no draft: every click is the value.
+   * Ignored without `apply`, where there is no draft: every click is the value.
    */
   renderDraftSummary?: (draft: DateRangeDraftSummary) => ReactNode;
 }
@@ -218,8 +245,8 @@ function PresetColumn({
 }
 
 /**
- * The panel's body. A component of its own so `commit="apply"` can keep its draft in
- * state that is born when the panel opens: `Popover` unmounts its children on close,
+ * The panel's body. A component of its own so `apply` can keep its draft in state that
+ * is born when the panel opens: `Popover` unmounts its children on close,
  * so the draft is re-seeded from the committed value on every open, and an abandoned
  * half-selection cannot survive into the next one.
  */
@@ -229,7 +256,7 @@ function RangePanel({
   presets,
   activeId,
   controlled,
-  commit,
+  drafting,
   close,
   frame,
   sheet,
@@ -243,7 +270,8 @@ function RangePanel({
   presets: readonly DateRangePickerPreset[] | undefined;
   activeId: string | null | undefined;
   controlled: boolean;
-  commit: DateRangeCommit;
+  /** `apply`: the panel works on a draft. */
+  drafting: boolean;
   close: () => void;
   /** Where the body and the Apply row go — see `PanelFrame`. */
   frame: PanelFrame;
@@ -253,7 +281,6 @@ function RangePanel({
   labels: DatePickerLabels;
   renderDraftSummary?: DateRangePickerProps["renderDraftSummary"];
 }) {
-  const drafting = commit === "apply";
   const [draft, setDraft] = useState<RangeDraft>({
     from,
     to,
@@ -360,8 +387,8 @@ function RangePanel({
 }
 
 /** Two-date range picker: click a start then an end; closes once both are set.
- *  With `presets`, a column of named ranges is shown beside the calendar; with
- *  `commit="apply"` the panel drafts and commits on Apply (see {@link DateRangeCommit}). */
+ *  With `presets`, a column of named ranges is shown beside the calendar; with `apply`
+ *  the panel drafts and commits on Apply (see {@link DateRangePickerProps.apply}). */
 export function DateRangePicker(props: DateRangePickerProps) {
   const {
     from,
@@ -376,7 +403,8 @@ export function DateRangePicker(props: DateRangePickerProps) {
     separator = " – ",
     presets,
     preset,
-    commit = "immediate",
+    apply,
+    commit,
     renderTrigger,
     sheetBackCloses,
     renderDraftSummary,
@@ -386,10 +414,13 @@ export function DateRangePicker(props: DateRangePickerProps) {
     clearable,
     clearLabel,
     disabled,
+    disabledReason,
+    disabledReasonDisplay,
     invalid,
     hint,
     help,
     error,
+    className,
     // The trigger's (API-3).
     ref,
     ...rest
@@ -397,6 +428,11 @@ export function DateRangePicker(props: DateRangePickerProps) {
   const locale = useKitLocale(localeProp);
   const text = useDatePickerLabels(clearLabel, undefined, undefined);
   const render = useTriggerFormat("dateRangePicker", locale, formatOptions, formatValue);
+  // `commit` is two props until 0.53: a string is the deprecated mode, anything else
+  // the write lock's scope (API-3).
+  const drafting = apply ?? commit === "apply";
+  const lock = useLockReason(typeof commit === "string" ? undefined : commit, disabledReason);
+  const locked = lock.locked;
   const messages = useFieldMessages({
     hint,
     help,
@@ -405,6 +441,8 @@ export function DateRangePicker(props: DateRangePickerProps) {
     invalid,
     describedBy: rest["aria-describedby"],
     ariaInvalid: rest["aria-invalid"],
+    // A lock's reason between the caption and the error, as on Select.
+    reasonId: locked && lock.reasonId,
   });
   // The preset this picker committed itself, for a caller that does not control
   // `preset`. Cleared by a hand-picked range or a clear.
@@ -417,6 +455,7 @@ export function DateRangePicker(props: DateRangePickerProps) {
   const hasPresets = Boolean(presets && presets.length > 0);
   const sheet = usePhoneLayout();
   const commitRange = (f: string, t: string, presetId: string | undefined) => {
+    if (locked) return;
     setOwnPreset(presetId);
     // Two arguments when no preset is involved — exactly the 0.7 call, so a caller's
     // `toHaveBeenCalledWith(from, to)` and a variadic handler see no difference.
@@ -434,6 +473,9 @@ export function DateRangePicker(props: DateRangePickerProps) {
       clearLabel={text.clear}
       panelLabel={text.rangePanel}
       disabled={disabled}
+      locked={locked}
+      // Locked, the caller's classes are the reason's frame's (below).
+      className={locked ? undefined : className}
       invalid={messages.isInvalid}
       // Widen so the preset column sits beside the calendar (default otherwise).
       width={hasPresets ? "27.5rem" : undefined}
@@ -463,7 +505,7 @@ export function DateRangePicker(props: DateRangePickerProps) {
           presets={presets}
           activeId={activeId}
           controlled={controlled}
-          commit={commit}
+          drafting={drafting}
           close={close}
           frame={frame}
           sheet={sheet}
@@ -475,9 +517,18 @@ export function DateRangePicker(props: DateRangePickerProps) {
       )}
     </DateField>
   );
+  const box = withEndHint(field, label === undefined ? messages.labelHint : undefined);
   return (
     <FieldBox below={messages.below} reserve={"error" in props || "hint" in props}>
-      {withEndHint(field, label === undefined ? messages.labelHint : undefined)}
+      {locked ? (
+        // DatePicker's frame: the line under the field, or the Tooltip with a hidden copy
+        // for `aria-describedby`; the outermost box, so it takes the caller's classes.
+        <LockedReason lock={lock} display={disabledReasonDisplay} className={cn("block", className)}>
+          {box}
+        </LockedReason>
+      ) : (
+        box
+      )}
     </FieldBox>
   );
 }

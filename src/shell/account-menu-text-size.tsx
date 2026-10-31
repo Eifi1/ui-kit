@@ -4,22 +4,43 @@ import { useAppearanceLabels, type AppearanceLabels } from "../components/appear
 import type { LabelOverride } from "../i18n/kit-labels";
 import { TEXT_SIZES, useTextSize, type TextSize } from "../theme/text-size";
 
-export interface AccountMenuTextSizeProps {
+/** {@link AccountMenuTextSizeProps} but the handler. */
+interface AccountMenuTextSizeBaseProps {
   /** The size in force. Default: the one on `<html>` ({@link useTextSize}), which is the
    *  size whoever applied it put there. */
   value?: TextSize;
-  /**
-   * A step: the next size down or up. The app applies it and keeps it as its Settings ▸
-   * Appearance does — `useAccountAppearance`'s `pickTextSize` (this device, and the
-   * account when signed in), with `appearance.saveFailed` as the toast when the account
-   * refused. The kit does not apply it itself, so the two places can never disagree.
-   */
-  onPick: (size: TextSize) => void;
   /** The row's name. Default: `appearance.textSize` ("Text size"). */
   label?: string;
   /** The `appearance` words (`textSize`, `textSizes`, `textSmaller`, `textLarger`). */
   labels?: LabelOverride<AppearanceLabels>;
 }
+
+/**
+ * `onChange`, or the deprecated `onPick`, is required: with both optional, a row an app
+ * moved off `onPick` without adding `onChange` — or with it misspelt — compiled, and A− /
+ * A+ stayed enabled and changed nothing (0.52 code review, account-menu-language.tsx).
+ */
+export type AccountMenuTextSizeProps = AccountMenuTextSizeBaseProps &
+  (
+    | {
+        /**
+         * A step: the next size down or up. The app applies it and keeps it as its
+         * Settings ▸ Appearance does — `useAccountAppearance`'s `pickTextSize` (this
+         * device, and the account when signed in), with `appearance.saveFailed` as the
+         * toast when the account refused. The kit does not apply it itself, so the two
+         * places can never disagree. `value` + `onChange`, as every kit control pairs them
+         * (CONTRIBUTING §4; refactor audit 2026-10-30, API-5).
+         */
+        onChange: (size: TextSize) => void;
+        /** @deprecated 0.52 — `onChange` (the same call); removed in 0.53. */
+        onPick?: (size: TextSize) => void;
+      }
+    | {
+        onChange?: undefined;
+        /** @deprecated 0.52 — `onChange` (the same call); removed in 0.53. */
+        onPick: (size: TextSize) => void;
+      }
+  );
 
 /**
  * The text size one tap away, INSIDE the account menu (0.46, keksdose live #426, its
@@ -34,14 +55,15 @@ export interface AccountMenuTextSizeProps {
  * behind it and can step again. The size's name is a polite live region, so a step is
  * announced.
  */
-export function AccountMenuTextSize({ value, onPick, label, labels: labelsProp }: AccountMenuTextSizeProps) {
+export function AccountMenuTextSize({ value, onChange, onPick, label, labels: labelsProp }: AccountMenuTextSizeProps) {
+  const change = onChange ?? onPick;
   const labels = useAppearanceLabels(labelsProp);
   const onHtml = useTextSize().size;
   const size = value ?? onHtml;
   const index = TEXT_SIZES.indexOf(size);
   const step = (by: -1 | 1) => {
     const next = TEXT_SIZES[index + by];
-    if (next) onPick(next);
+    if (next) change?.(next);
   };
   return (
     <li data-account-menu-text-size="" className="flex items-center gap-2 px-3 py-1.5 text-sm">

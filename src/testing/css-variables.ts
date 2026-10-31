@@ -1,3 +1,4 @@
+import { themeBlocks } from "../eslint/role-utilities";
 import { KIT_NAMES, TAILWIND_THEME_NAMES } from "./css-variables.generated";
 
 /**
@@ -68,17 +69,15 @@ function stripComments(text: string, isCss: boolean): string {
   return isCss ? noBlocks : noBlocks.replace(/(^|[^:])(\/\/[^\n]*)/g, (_, pre: string, c: string) => pre + blank(c));
 }
 
-/** The text with every `@theme … inline … { … }` block blanked out, braces and all. */
+/** The text with every `@theme … inline … { … }` block blanked out, braces and all. The
+ *  blocks are the kit's one block finder's, `themeBlocks` (src/eslint/role-utilities.ts,
+ *  which imports nothing): this was a second brace-counting copy of it, kept equal to the
+ *  generator's (scripts/gen-kit-css-variables.mjs, on `themeBlocks` since DUP-13) only by
+ *  token-vars-declared.test.ts (0.52 code review). */
 function withoutInlineTheme(css: string): string {
   let out = css;
-  for (const m of css.matchAll(/@theme\b[^{;]*\binline\b[^{;]*\{/g)) {
-    let depth = 0;
-    let end = m.index + m[0].length - 1;
-    for (; end < css.length; end++) {
-      if (css[end] === "{") depth++;
-      else if (css[end] === "}" && --depth === 0) break;
-    }
-    out = out.slice(0, m.index) + css.slice(m.index, end + 1).replace(/[^\n]/g, " ") + out.slice(end + 1);
+  for (const { start, end } of themeBlocks(css, { inline: true })) {
+    out = out.slice(0, start) + out.slice(start, end).replace(/[^\n]/g, " ") + out.slice(end);
   }
   return out;
 }

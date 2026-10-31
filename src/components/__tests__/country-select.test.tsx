@@ -44,9 +44,12 @@ function optionNames(list: HTMLElement) {
     .map((o) => o.textContent ?? "");
 }
 
-/** Headings and options, as a reader walks the list. */
+/** Headings and options, as a reader walks the list. A heading is the first item of
+ *  the `role="group"` it names (INP-8). */
 function rows(list: HTMLElement) {
-  return Array.from(list.querySelectorAll("li")).map((li) => li.textContent ?? "");
+  return Array.from(list.querySelectorAll('[role="group"] > li:first-child, [role="option"]')).map(
+    (row) => row.textContent ?? "",
+  );
 }
 
 /** The sheet only exists on a phone; jsdom has no matchMedia (the desktop fallback). */

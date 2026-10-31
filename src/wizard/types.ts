@@ -61,7 +61,16 @@ export interface WizardStepConfig {
  */
 export type WizardUrlSync = boolean | { param?: string };
 
-export interface UseWizardOptions<TData extends Record<string, unknown>> {
+// `TData extends object`, not `Record<string, unknown>` (0.52, API-2, refactor audit
+// 2026-10-30): an `interface` has no index signature and failed the old constraint, so
+// kastlan gave 13 wizard data interfaces one — which made every key legal, a misspelt one
+// in `updateData` included. The wizard reads only `keyof TData`.
+// The mapped half constrains nothing (every object type satisfies it): it is there for
+// `Parameters<typeof useWizard>` / `ReturnType<typeof useWizard>`, which read the
+// constraint, and `object` has no keys — a wrapper's `data.amount` stopped type-checking
+// (0.52 code review). With it they read an indexable record, as under 0.51. The same on
+// `UseWizardReturn`, `useWizard`, `StepperNav` and `requiredFieldsValidator`.
+export interface UseWizardOptions<TData extends object & { [K in keyof TData]: unknown }> {
   steps: WizardStepConfig[];
   initialData?: Partial<TData>;
   onComplete?: (data: TData) => void | Promise<void>;
@@ -125,7 +134,7 @@ export interface WizardFinishResult {
   ok: boolean;
   error?: string;
 }
-export interface UseWizardReturn<TData extends Record<string, unknown>> {
+export interface UseWizardReturn<TData extends object & { [K in keyof TData]: unknown }> {
   // Navigation
   currentStepIndex: number;
   currentStep: WizardStepConfig;

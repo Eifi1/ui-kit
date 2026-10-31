@@ -143,8 +143,9 @@ function PublicPager({
 /* ── The list ─────────────────────────────────────────────────────────────── */
 
 export interface FeedbackPublicListProps<T extends FeedbackPublicListItem = FeedbackPublicListItem> {
-  /** `GET /feedback/public?sort=&q=` — the server's page, in the server's order. */
-  rows: T[];
+  /** `GET /feedback/public?sort=&q=` — the server's page, in the server's order.
+   *  `readonly` since 0.52 (refactor audit 2026-10-30, API-7): the list never changes it. */
+  rows: readonly T[];
   /** How many the query has in all — the line beside the sort. Left out, no line. */
   total?: number;
   /** The server sorts (§9.6): the toggle only says which way. */
@@ -169,6 +170,14 @@ export interface FeedbackPublicListProps<T extends FeedbackPublicListItem = Feed
   /** The opened row's id, when the app keeps it (a `?row=` param). Left out, the list
    *  keeps it itself. */
   openId?: number | null;
+  /** 0.52: a row was opened (its id) or closed (`null`) — `openId`'s pair. Named for
+   *  what it carries: every other `onOpenChange` in the kit is a boolean (refactor audit
+   *  2026-10-30, API-5). */
+  onOpenIdChange?: (id: number | null) => void;
+  /**
+   * @deprecated 0.52 — `onOpenIdChange`, the same call: an `onOpenChange` is a boolean
+   * everywhere else in the kit; removed in 0.53
+   */
   onOpenChange?: (id: number | null) => void;
   /**
    * 0.38.1: the opened report when it is NOT on this page — a `?row=` link to an older
@@ -239,6 +248,7 @@ export function FeedbackPublicList<T extends FeedbackPublicListItem = FeedbackPu
   onVote,
   loading = false,
   openId: openIdProp,
+  onOpenIdChange,
   onOpenChange,
   openRow,
   page: pageIndex = 0,
@@ -259,12 +269,14 @@ export function FeedbackPublicList<T extends FeedbackPublicListItem = FeedbackPu
   const openId = openIdProp !== undefined ? openIdProp : ownOpenId;
   const setOpen = (id: number | null) => {
     if (openIdProp === undefined) setOwnOpenId(id);
-    onOpenChange?.(id);
+    (onOpenIdChange ?? onOpenChange)?.(id);
   };
   // A `?row=` report from another page: first, while it is the open one, and only when
   // the page does not have it itself.
-  const shownRows =
-    openRow && openId === openRow.id && !rows.some((row) => row.id === openRow.id) ? [openRow, ...rows] : rows;
+  // `as T[]`: DataTable's `rows` is still mutable in its type (API-7), and never mutated.
+  const shownRows = (
+    openRow && openId === openRow.id && !rows.some((row) => row.id === openRow.id) ? [openRow, ...rows] : rows
+  ) as T[];
 
   const columns = useMemo<DataTableColumn<T>[]>(
     () => [

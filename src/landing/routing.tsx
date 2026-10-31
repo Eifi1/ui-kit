@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { Navigate, Outlet, useLocation } from "react-router";
 
+import { matchesPathPattern, routerPathname } from "../lib/path-pattern";
 import { readStored, removeStored, writeStored } from "../lib/safe-storage";
 import type { LandingSession } from "./landing-actions";
 import { LoadingState } from "../components/loading-state";
@@ -61,7 +62,9 @@ export function safeNextPath(raw: string | null | undefined): string | null {
 /* ── The last visited page (§3.2) ────────────────────────────────────────── */
 
 /** A path to leave out: a string is the path and everything under it (`/demo` is
- *  `/demo` and `/demo/ended`; `/` is only `/`), a RegExp is tested on the pathname. */
+ *  `/demo` and `/demo/ended`; `/` is only `/`), a RegExp is tested on the pathname. Both
+ *  as React Router matches a route: case-insensitive (a RegExp gets the `i` flag) and on
+ *  the percent-decoded path (0.52). */
 export type PathPattern = string | RegExp;
 
 /**
@@ -85,16 +88,17 @@ export const DEFAULT_LAST_VISITED_EXCLUDES: readonly PathPattern[] = Object.free
   "/terms",
 ]);
 
-function matchesPath(pathname: string, pattern: PathPattern): boolean {
-  if (typeof pattern !== "string") return new RegExp(pattern.source, pattern.flags.replace("g", "")).test(pathname);
-  if (pattern === "/") return pathname === "/";
-  const base = pattern.endsWith("/") ? pattern.slice(0, -1) : pattern;
-  return pathname === base || pathname.startsWith(`${base}/`);
-}
-
-/** Whether `pathname` is one of the defaults or the app's `exclude`. */
+/**
+ * Whether `pathname` is one of the defaults or the app's `exclude` — read as the ROUTER
+ * reads it, decoded and case-insensitive (lib/path-pattern). This module's own copy of the
+ * rule compared the raw pathname case-sensitively after the feedback guard's copy had
+ * learnt both, and `exclude: ["/banks/callback"]` recorded `/Banks/Callback?code=…` as the
+ * page the next launch resumes on (0.52 code review, lib/path-pattern.ts). One rule now.
+ */
 function isExcluded(pathname: string, exclude: readonly PathPattern[]): boolean {
-  return [...DEFAULT_LAST_VISITED_EXCLUDES, ...exclude].some((pattern) => matchesPath(pathname, pattern));
+  const path = routerPathname(pathname);
+  const named = (pattern: PathPattern) => matchesPathPattern(path, pattern);
+  return DEFAULT_LAST_VISITED_EXCLUDES.some(named) || exclude.some(named);
 }
 
 export interface LastVisitedPageOptions {

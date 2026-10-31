@@ -36,14 +36,7 @@
  * playwright-core with its headless shell, as scripts/screenshot-sizes.mjs.
  */
 /* global document, getComputedStyle, window, Node -- the measures run in the page, not in Node. */
-import { createRequire } from "node:module";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-import { startDev } from "./e2e-showcase-server.mjs";
-
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const require = createRequire(join(ROOT, "package.json"));
-const { chromium } = require("playwright-core");
+import { launchBrowser, loadPlaywright, SetupError, startDev } from "./e2e-showcase-server.mjs";
 
 const args = process.argv.slice(2);
 const arg = (name) => {
@@ -288,10 +281,20 @@ async function runVariant(browser, base, variant) {
 }
 
 const given = arg("--url");
-const server = given ? { url: given, stop: () => {} } : await startDev(Number(process.env.SHOWCASE_PORT ?? 4182));
 let failed = 0;
-const browser = await chromium.launch();
+// The browser before the dev server, and the server inside the `try` that stops it: a
+// launch that fails leaves no detached Vite holding the port (TST-10).
+let browser;
 try {
+  const { chromium, version } = loadPlaywright();
+  browser = await launchBrowser(chromium, version);
+} catch (error) {
+  console.error(error instanceof SetupError ? `✖ ${error.message}` : error);
+  process.exit(2);
+}
+let server = { url: given, stop: () => {} };
+try {
+  if (!given) server = await startDev(Number(process.env.SHOWCASE_PORT ?? 4182));
   for (const variant of variants) {
     const results = await runVariant(browser, server.url, variant);
     console.log(`\n${variant}`);
@@ -301,8 +304,10 @@ try {
     }
   }
 } finally {
-  await browser.close();
+  // The server first: it cannot throw, and a browser that crashed mid-run rejects its
+  // close(), which left the detached Vite holding the port (0.52 code review).
   server.stop();
+  await browser.close();
 }
 console.log(failed ? `\n${failed} check(s) failed` : "\nall checks passed");
 process.exit(failed ? 1 : 0);

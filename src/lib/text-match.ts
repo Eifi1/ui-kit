@@ -107,8 +107,63 @@ export function rankMatch(
 ): MatchRank {
   const q = foldForSearch(query.trim(), locale);
   if (!q) return 0;
-  const text = foldForSearch(label, locale);
-  if (text === q || (code !== undefined && foldForSearch(code, locale) === q)) return 0;
+  return rankFolded(foldForSearch(label, locale), q, code === undefined ? undefined : foldForSearch(code, locale));
+}
+
+/** {@link rankMatch} on a text, a non-empty query and a code all folded already. */
+function rankFolded(text: string, q: string, code: string | undefined): MatchRank {
+  if (text === q || code === q) return 0;
   if (text.startsWith(q)) return 1;
   return text.includes(q) ? 2 : -1;
+}
+
+/** A row {@link searchRanked} kept, and how well it answers the WHOLE query:
+ *  {@link rankMatch}'s rank, or `3` for a row that holds the query's words apart
+ *  ("Zürich Migros" for "migros zürich"). */
+export interface RankedHit<T> {
+  row: T;
+  rank: Exclude<MatchRank, -1> | 3;
+}
+
+/**
+ * The rows that hold every word of `query`, each ranked for the WHOLE query — for the
+ * lists that FILTER by words ({@link matchesSearch}) and RANK by the whole query
+ * ({@link rankMatch}): Combobox, CountrySelect and InlineEntityCombobox (refactor audit
+ * 2026-10-30, DUP-4). In the order given; sort by `rank` with a stable sort, and the rows
+ * of one rank keep it. No words keep every row, at `0`.
+ *
+ * Each row's texts are folded ONCE, and the query once. The lists asked `matchesSearch`
+ * and then `rankMatch` of each row they kept, which folded the row three times and the
+ * query once per row, per keystroke — InlineEntityCombobox asked `rankMatch` twice of
+ * most rows (0.52 code review, combobox.tsx).
+ *
+ * `texts(row)`: where a word may stand; the FIRST is the label the rank is for.
+ * `code(row)`: a key that answers only WHOLE — a word that IS the code matches the row,
+ * and the code as the whole query ranks `0` ("ch" is Switzerland before it is Chad) —
+ * never a letter of it ("w" is not Aruba, AW: 0.52 code review, country-select.tsx).
+ * Internal: not in the barrel.
+ */
+export function searchRanked<T>(
+  rows: readonly T[],
+  query: string,
+  texts: (row: T) => readonly (string | undefined)[],
+  { code, locale }: { code?: (row: T) => string; locale?: string } = {},
+): RankedHit<T>[] {
+  const q = foldForSearch(query.trim(), locale);
+  const words = q.split(/\s+/).filter((word) => word !== "");
+  if (words.length === 0) return rows.map((row) => ({ row, rank: 0 }));
+  const hits: RankedHit<T>[] = [];
+  for (const row of rows) {
+    const folded = texts(row)
+      .filter((t): t is string => t !== undefined)
+      .map((t) => foldForSearch(t, locale));
+    const key = code === undefined ? undefined : foldForSearch(code(row), locale);
+    // One haystack, as `matchesSearch` has it: a word holds no whitespace, so it cannot
+    // match across the newline between two texts.
+    const hay = folded.join("\n");
+    if (!words.every((word) => word === key || hay.includes(word))) continue;
+    const rank = rankFolded(folded[0] ?? "", q, key);
+    hits.push({ row, rank: rank === -1 ? 3 : rank });
+  }
+  return hits;
 }

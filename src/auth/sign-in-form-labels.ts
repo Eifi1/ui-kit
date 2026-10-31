@@ -2,7 +2,7 @@
 // catalogue (src/i18n/defaults.ts) imports them without the component, so `en` loads as one
 // chunk like the other languages (0.34, KS U8). ./sign-in-form re-exports them.
 
-import { englishRateLimited } from "./auth-errors";
+import { englishRateLimited } from "./auth-errors-labels";
 import type { SignInLabels } from "./sign-in-form";
 
 /** `Required`: every key, the 0.30 ones included, has its English here. */

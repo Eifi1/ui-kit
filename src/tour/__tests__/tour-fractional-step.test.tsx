@@ -1,9 +1,16 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { TourProvider, useTour, type TourStep } from "../tour";
 import { useTourUrlSync, type UseTourUrlSyncOptions } from "../use-tour-url-sync";
+
+// The overlay is its own chunk since 0.52 (refactor audit 2026-10-30, MOD-1): loaded once
+// up front, as an app's bundle has it by the time a tour starts; React.lazy still resolves
+// it a render after the start, which the waits below cover.
+beforeAll(async () => {
+  await import("../tour-overlay");
+});
 
 /**
  * A step number that is not a whole number (refactor audit 2026-10-30, FLW-9).
@@ -56,7 +63,8 @@ describe("Tour step numbers that are not whole", () => {
     fireEvent.click(screen.getByRole("button", { name: "start-at-1.5" }));
     await flush();
     expect(state()).toBe("step 1");
-    expect(screen.getByRole("dialog")).toHaveTextContent("Step 2");
+    // The overlay is a chunk of its own (MOD-1): the card is there a render later.
+    expect(await screen.findByRole("dialog")).toHaveTextContent("Step 2");
   });
 
   it("goToStep(2.5) goes to step 2", async () => {

@@ -59,6 +59,9 @@ export function useSettingsFocus(anchor?: string | null): void {
       if (ring.current) {
         window.clearTimeout(ring.current.timer);
         ring.current.el.classList.remove(...SETTINGS_FOCUS_RING);
+        // The mark goes with the ring, as the timer's own end takes both: left behind, the
+        // first card stayed "focused" for good (keksdose's matching-tab test reads it).
+        ring.current.el.removeAttribute("data-settings-focus");
       }
       el.classList.add(...SETTINGS_FOCUS_RING);
       el.setAttribute("data-settings-focus", "");

@@ -3,10 +3,18 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { StoreApi, UseBoundStore } from "zustand";
 import { logger } from "../lib/logger";
+import { readStoredJson } from "../lib/safe-storage";
 import { registerDeviceSetting } from "../lib/device-settings";
 import type { HeatStops } from "./chart-palette";
 import { applyTokenSet, DEFAULT_PRESET, presetById, type TokenSet } from "./palette-presets";
 import type { ThemeState, ThemeMode } from "./theme-store";
+
+/** zustand's envelope with a preset id in it; anything else (absent, blocked, malformed)
+ *  is the default preset. An unknown id is too — `presetById`'s fallback. */
+const holdsPaletteId = (blob: unknown): blob is { state: { id: string } } => {
+  const id = (blob as { state?: { id?: unknown } } | null)?.state?.id;
+  return typeof id === "string" && id !== "";
+};
 
 /**
  * Pre-hydration counterpart to `applyPersistedTheme`: read the palette id
@@ -16,15 +24,7 @@ import type { ThemeState, ThemeMode } from "./theme-store";
  * state, so an app entrypoint never re-types the persist envelope.
  */
 export function applyPersistedPalette(storageKey: string, mode: ThemeMode): void {
-  let id = DEFAULT_PRESET.id;
-  try {
-    const blob = JSON.parse(localStorage.getItem(storageKey) ?? "{}") as {
-      state?: { id?: string };
-    };
-    if (blob.state?.id) id = blob.state.id;
-  } catch {
-    /* malformed storage → default preset */
-  }
+  const id = readStoredJson(storageKey, holdsPaletteId)?.state.id ?? DEFAULT_PRESET.id;
   applyTokenSet(document.documentElement, presetById(id)[mode]);
 }
 

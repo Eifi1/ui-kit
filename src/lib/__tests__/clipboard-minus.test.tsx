@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { asciiMinusInNumbers, installClipboardMinus } from "../clipboard-minus";
 import { UiKitProvider } from "../../i18n/kit-labels";
+import { flushMicrotasks } from "../../test/tasks";
 
 /** 0.49 KIT-1b: the screen keeps "−", the clipboard gets "-" before a number. */
 
@@ -127,7 +128,11 @@ describe("UiKitProvider installs it (copyAsciiMinus)", () => {
     );
     const q = screen.getByText(`${M}7.00`);
     select(q);
-    await new Promise((r) => setTimeout(r, 20));
+    // Had the provider asked for the handler, its import would have settled with this
+    // one, and its `then` run by the flush: waiting for that promise, not 20 ms of real
+    // time, is what makes "not prevented" mean something (refactor audit 2026-10-30, TST-3).
+    await import("../clipboard-minus");
+    await flushMicrotasks(2);
     expect(copy(q).event.defaultPrevented).toBe(false);
   });
 });

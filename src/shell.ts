@@ -5,6 +5,14 @@
 export * from "./shell/topbar-controls";
 export * from "./shell/top-bar";
 export * from "./shell/app-shell";
+// 0.52: the slice's share of the 55 names no app reads (refactor audit 2026-10-30, API-4,
+// decision 4), tagged on their specifiers as the barrel's are — the modules keep them.
+export {
+  /** @deprecated 0.52 — `AppShell`, which picks its phone bar with it (API-4); removed in 0.53 */
+  pickMobileBar,
+  /** @deprecated 0.52 — `AppShell`, which splits its phone bar with it (API-4); removed in 0.53 */
+  splitMobileBar,
+} from "./shell/app-shell";
 export * from "./shell/option-switcher-menu";
 export * from "./shell/role-switcher";
 export * from "./shell/topbar-action-menu";
@@ -25,12 +33,18 @@ export type { UseAdminMenuEntryOptions } from "./shell/admin-menu";
 export { AdminWaitingBadge } from "./shell/admin-menu";
 export type { AdminWaitingBadgeProps } from "./shell/admin-menu";
 // 0.31.0: the settings and admin pages' shell (docs/settings-harmonization.md §3, §5).
-export { SettingsLayout, SETTINGS_SEARCH_THRESHOLD } from "./settings/settings-layout";
+export {
+  SettingsLayout,
+  /** @deprecated 0.52 — `SettingsLayout`, which shows its search past that many entries (API-4); removed in 0.53 */
+  SETTINGS_SEARCH_THRESHOLD,
+} from "./settings/settings-layout";
 export type { SettingsLayoutProps, SettingsLayoutWidth, SettingsDocumentTitleParts } from "./settings/settings-layout";
 export {
   useSettingsRoute,
+  /** @deprecated 0.52 — `useSettingsRoute`, which resolves the location with it (API-4); removed in 0.53 */
   resolveSettingsLocation,
   settingsFromListState,
+  /** @deprecated 0.52 — `settingsFromListState` and `useSettingsRoute`, which write and read it (API-4); removed in 0.53 */
   SETTINGS_FROM_LIST_STATE,
 } from "./settings/use-settings-route";
 export type {
@@ -41,7 +55,14 @@ export type {
   SettingsLocationRules,
   SettingsLocationResult,
 } from "./settings/use-settings-route";
-export { useSettingsFocus, useFocusParam, SETTINGS_FOCUS_RING, SETTINGS_FOCUS_MS } from "./settings/use-settings-focus";
+export {
+  useSettingsFocus,
+  useFocusParam,
+  /** @deprecated 0.52 — `useSettingsFocus` / `useFocusParam`, which ring the card with it (API-4); removed in 0.53 */
+  SETTINGS_FOCUS_RING,
+  /** @deprecated 0.52 — `useSettingsFocus` / `useFocusParam`, which hold the ring that long (API-4); removed in 0.53 */
+  SETTINGS_FOCUS_MS,
+} from "./settings/use-settings-focus";
 export { SettingsSection } from "./settings/settings-section";
 export type { SettingsSectionProps } from "./settings/settings-section";
 export { useSettingsLayout } from "./settings/settings-context";
@@ -77,8 +98,12 @@ export { PublicHeader } from "./landing/public-header";
 export type { PublicHeaderProps, PublicHeaderBrand } from "./landing/public-header";
 // 0.42.0: the top bar's shared parts (docs/top-bar-harmonization.md §3.1) — the slots in
 // §2.1's order, the account menu's language sub-list, the tours menu, the sync status, the
-// local-dev switchers, and their words.
-export { TopBarActions, TOP_BAR_ACTION_ORDER } from "./shell/top-bar-actions";
+// local-dev menu, and their words.
+export {
+  TopBarActions,
+  /** @deprecated 0.52 — `TopBarActions`, which puts its slots in that order (API-4); removed in 0.53 */
+  TOP_BAR_ACTION_ORDER,
+} from "./shell/top-bar-actions";
 export type { TopBarActionsProps } from "./shell/top-bar-actions";
 export { AccountMenuLanguage } from "./shell/account-menu-language";
 export type { AccountMenuLanguageProps, AccountMenuLanguageOption } from "./shell/account-menu-language";
@@ -87,14 +112,20 @@ export { AccountMenuTextSize } from "./shell/account-menu-text-size";
 export type { AccountMenuTextSizeProps } from "./shell/account-menu-text-size";
 export { TourMenu } from "./shell/tour-menu";
 export type { TourMenuProps, TourMenuTour } from "./shell/tour-menu";
-export { SyncStatusIndicator, syncState } from "./shell/sync-status-indicator";
+export {
+  SyncStatusIndicator,
+  /** @deprecated 0.52 — `SyncStatusIndicator`, which derives its state with it (API-4); removed in 0.53 */
+  syncState,
+} from "./shell/sync-status-indicator";
 export type { SyncStatus, SyncState, SyncStatusScope, SyncStatusIndicatorProps } from "./shell/sync-status-indicator";
 // 0.51 (§2.7.1, keksdose): one flask, the kit's Account section and the app's own dev
-// sections; `DevSwitchers` is a deprecated wrapper over it until 0.52.
-export { DevMenu, DEV_ORIGINAL_ROLE_KEY } from "./shell/dev-menu";
+// sections. 0.42's `DevSwitchers`, a DevMenu with no sections since 0.51, went in 0.52.
+export {
+  DevMenu,
+  /** @deprecated 0.52 — `DevMenu`, which keeps the role there unless `storageKey` names another key (API-4); removed in 0.53 */
+  DEV_ORIGINAL_ROLE_KEY,
+} from "./shell/dev-menu";
 export type { DevMenuProps, DevMenuSection } from "./shell/dev-menu";
-export { DevSwitchers } from "./shell/dev-switchers";
-export type { DevSwitchersProps } from "./shell/dev-switchers";
 export { DEFAULT_TOP_BAR_PARTS_LABELS, useTopBarPartsLabels } from "./shell/top-bar-parts-labels";
 export type {
   TopBarPartsLabels,

@@ -2,13 +2,15 @@ import { useId, useRef, useState } from "react";
 import type { ComponentPropsWithRef, FormEvent, ReactNode } from "react";
 import { MailCheck } from "lucide-react";
 import { cn } from "../lib/cn";
+import { describeFailure } from "../lib/describe-failure";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { AlertBanner } from "../components/alert-banner";
 import { TextLink } from "../components/text-link";
 import { Button } from "../components/button";
 import { Input } from "../components/input";
 import { isRateLimited, retryAfterSeconds } from "./auth-errors";
-import { FORM_HEADING_CLASS, INTRO_CLASS, OutcomeMessage, isThenable, useFocusWhen } from "./status-parts";
+import { isThenable } from "../lib/thenable";
+import { FORM_HEADING_CLASS, INTRO_CLASS, OutcomeMessage, useFocusWhen } from "./status-parts";
 import type { AuthHeadingLevel } from "./status-parts";
 import { DEFAULT_FORGOT_PASSWORD_LABELS } from "./forgot-password-form-labels";
 
@@ -146,12 +148,15 @@ export function ForgotPasswordForm({
     );
   }
 
-  // The app's words first, then the throttle's, then the kit's catch-all.
+  // The app's words first, then the throttle's, then the kit's catch-all — an app's ""
+  // is no words (refactor audit 2026-10-30, DUP-14: `??` drew an empty alert).
   const failureFor = (error: unknown): ReactNode =>
-    describeError?.(error) ??
-    (isRateLimited(error)
-      ? (labels.rateLimited ?? DEFAULT_FORGOT_PASSWORD_LABELS.rateLimited)(retryAfterSeconds(error))
-      : labels.error);
+    describeFailure(
+      describeError?.(error),
+      isRateLimited(error)
+        ? (labels.rateLimited ?? DEFAULT_FORGOT_PASSWORD_LABELS.rateLimited)(retryAfterSeconds(error))
+        : labels.error,
+    );
 
   const submit = (e: FormEvent) => {
     e.preventDefault();

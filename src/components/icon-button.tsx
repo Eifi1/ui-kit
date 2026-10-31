@@ -148,22 +148,27 @@ const ICON_BUTTON_TONES: Record<ColouredTone, { quiet: string; toned: string }> 
     // focus ring at 1.1:1 on the light surfaces.
     toned: "text-warning hover:bg-warning-soft focus-visible:ring-warning-strong",
   },
+  // The ring is the tone's own text colour (0.52, refactor audit 2026-10-30, DSP-6):
+  // `--info-border` and `--success-border` rang at 1.2–1.4:1 on the light grounds and
+  // about 2:1 in dark, and More contrast re-solves neither — while `--info` / `--success`
+  // clear 4.5:1 and are re-solved there. The sync chip wears these two on every page.
   info: {
-    quiet: "text-placeholder hover:bg-info-soft hover:text-info focus-visible:ring-[var(--info-border)]",
-    toned: "text-info hover:bg-info-soft focus-visible:ring-[var(--info-border)]",
+    quiet: "text-placeholder hover:bg-info-soft hover:text-info focus-visible:ring-[var(--info)]",
+    toned: "text-info hover:bg-info-soft focus-visible:ring-[var(--info)]",
   },
   success: {
-    quiet: "text-placeholder hover:bg-success-soft hover:text-success focus-visible:ring-[var(--success-border)]",
-    toned: "text-success hover:bg-success-soft focus-visible:ring-[var(--success-border)]",
+    quiet: "text-placeholder hover:bg-success-soft hover:text-success focus-visible:ring-[var(--success)]",
+    toned: "text-success hover:bg-success-soft focus-visible:ring-[var(--success)]",
   },
-  // The hover fill and the ring are MIXED from the one colour, since a custom tone
-  // brings no `-bg` / `-border` pair of its own. The fallback is the body colour, so a
-  // `custom` tone with no colour set is the default look rather than invisible.
+  // The hover fill is MIXED from the one colour, since a custom tone brings no `-bg` of
+  // its own; the ring is the colour at full strength (0.52, DSP-6: at 40 % it was a ring
+  // nobody could see). The fallback is the body colour, so a `custom` tone with no colour
+  // set is the default look rather than invisible.
   custom: {
     quiet:
-      "text-placeholder hover:bg-[color-mix(in_srgb,var(--icon-button-tone,var(--text-primary))_12%,transparent)] hover:text-[var(--icon-button-tone,var(--text-primary))] focus-visible:ring-[color-mix(in_srgb,var(--icon-button-tone,var(--text-primary))_40%,transparent)]",
+      "text-placeholder hover:bg-[color-mix(in_srgb,var(--icon-button-tone,var(--text-primary))_12%,transparent)] hover:text-[var(--icon-button-tone,var(--text-primary))] focus-visible:ring-[var(--icon-button-tone,var(--text-primary))]",
     toned:
-      "text-[var(--icon-button-tone,var(--text-primary))] hover:bg-[color-mix(in_srgb,var(--icon-button-tone,var(--text-primary))_12%,transparent)] focus-visible:ring-[color-mix(in_srgb,var(--icon-button-tone,var(--text-primary))_40%,transparent)]",
+      "text-[var(--icon-button-tone,var(--text-primary))] hover:bg-[color-mix(in_srgb,var(--icon-button-tone,var(--text-primary))_12%,transparent)] focus-visible:ring-[var(--icon-button-tone,var(--text-primary))]",
   },
 };
 

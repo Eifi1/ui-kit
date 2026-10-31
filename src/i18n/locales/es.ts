@@ -15,7 +15,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
   const n = (value: number) => num.format(value);
   const plural = (count: number, one: string, many: string) => (count === 1 ? one : many);
   // 0.30.0 — a throttled request (HTTP 429), as `englishRateLimited` in
-  // src/auth/auth-errors.ts: no wait → "un momento", under a minute → seconds, else
+  // src/auth/auth-errors-labels.ts: no wait → "un momento", under a minute → seconds, else
   // minutes rounded up.
   const wait = (seconds: number) => (seconds < 60 ? `${n(Math.ceil(seconds))} s` : `${n(Math.ceil(seconds / 60))} min`);
   const rateLimited = (seconds?: number) =>
@@ -737,9 +737,15 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     pieChart: {
       slices: "Sectores del gráfico",
       slice: (label, value, percent) => `${label}: ${value} (${percent})`,
+      sliceShare: (label, percent) => `${label}: ${percent}`,
       total: "Total",
       empty: "Sin datos",
       legend: "Categorías",
+    },
+    treemap: {
+      tile: (name, value, share) => `${name}: ${value} (${share})`,
+      group: (name, value, share) => `${name}, grupo: ${value} (${share})`,
+      inGroup: (name, group) => `${name}, en ${group}`,
     },
     confirmDialog: {
       confirm: "Confirmar",
@@ -1276,6 +1282,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       stoppedAll: (app) => `Hecho. Ya no recibirá correos de notificación de ${app}.`,
       accountMail: "Los correos sobre su cuenta seguirán llegando.",
       turnBackOn: "Puede volver a activarlos en cualquier momento en los ajustes.",
+      stoppedHint: (accountMail, turnBackOn) => `${accountMail} ${turnBackOn}`,
       openSettings: "Abrir los ajustes",
       invalidLink: "Este enlace ya no funciona. Puede desactivar los correos en los ajustes.",
       failed: "No ha funcionado. Inténtelo de nuevo.",
@@ -1970,7 +1977,6 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         menu: "Herramientas de desarrollo",
         overridesOn: "Anulaciones activas",
         roleHeading: "Dev · rol",
-        switchPlan: "Cambiar de plan",
         plan: (value) => `Plan: ${value}`,
         planHeading: "Dev · plan",
         backTo: (role) => `Volver a ${role}`,

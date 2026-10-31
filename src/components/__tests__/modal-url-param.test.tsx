@@ -7,6 +7,7 @@ import { DialogFrame } from "../dialog-frame";
 import { useDialogParam } from "../../hooks/use-search-param-state";
 import { OVERLAY_EXIT_MS } from "../../hooks/use-close-transition";
 import { DESKTOP_WIDTH, stubViewportWidth } from "../../test/viewport";
+import { drainTasks } from "../../test/tasks";
 
 /**
  * `Modal urlParam` (0.12.0): the open state is a search param, the opener pushes an
@@ -123,9 +124,9 @@ describe("Modal urlParam", () => {
     });
     expect(onClose).toHaveBeenCalledTimes(1);
     await waitFor(() => expect(loc!.search).toBe(""));
-    await act(async () => {
-      await new Promise((r) => setTimeout(r, OVERLAY_EXIT_MS));
-    });
+    // A re-open would come from the param's effects, a few turns after the URL cleared:
+    // counted turns, not a timed wait (refactor audit 2026-10-30, TST-3).
+    await act(() => drainTasks());
     expect(document.querySelector("[aria-modal='true']")).toBeNull();
   });
 

@@ -25,8 +25,6 @@ export interface Band {
   bottom: number;
 }
 
-/** Below this the docked layout applies (Tailwind's `sm`). */
-export const DOCK_MAX_WIDTH = 640;
 /** The gutter between the card and the band's edge, and between the card and the field. */
 const GUTTER = 8;
 /** An obstruction whose top is within this of the band's top covers the screen. */

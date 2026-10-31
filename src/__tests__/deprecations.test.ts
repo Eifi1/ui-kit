@@ -14,12 +14,18 @@ import { describe, expect, it } from "vitest";
  *   `@deprecated 0.34 — <the replacement>; removed in 0.35`
  *
  *  - every `@deprecated` in src names the minor it was deprecated in and the one that
- *    removes it;
- *  - it fails once package.json reaches the stated removal, or two minors past the
- *    deprecation, whichever comes first — the release that should have removed it
- *    cannot ship with it;
+ *    removes it, and that is the NEXT minor: one minor's notice, the rule CONTRIBUTING
+ *    states. Until 0.52 this test let a tag run two minors while CONTRIBUTING said one,
+ *    and the 0.49 tags took the longer reading ("removed in 0.51") — one rule written
+ *    two ways (refactor audit 2026-10-30, API-8);
+ *  - it fails once package.json reaches the stated removal — the release that should
+ *    have removed it cannot ship with it;
  *  - it prints the list. That list is what goes into the release's adopt doc and, as
  *    "Deprecated: …" lines, into the commit body (CONTRIBUTING, "Additive API only").
+ *
+ * A tag may sit on a declaration, on a member, or on a specifier in an `export { … }`
+ * list — how an entry point deprecates a name its module keeps for the kit's own use
+ * (0.52's unread names, API-4). TypeScript strikes an import through either way.
  */
 
 interface Deprecation {
@@ -51,6 +57,21 @@ const version = (s: string): [number, number] | undefined => {
 /** A JSDoc tag: `@deprecated` first on a `/**` or ` *` line — not one quoted in prose. */
 const TAG = /^\s*(?:\/\*\*|\*)\s*@deprecated\b(.*)$/;
 
+/**
+ * The type or function an indented tag's member belongs to, read upwards from the tag.
+ * A specifier in an `export { … }` list has none: it is a name of its own, and the lines
+ * above it in the barrel (`type ButtonVariant,`) would otherwise lend it a stranger's. A
+ * key of a labels default (`const DEFAULT_X: XLabels = {`) is its type's (DOC-9).
+ */
+function ownerAbove(above: string[]): string | undefined {
+  for (const line of [...above].reverse()) {
+    if (/^export\s+(?:type\s+)?\{/.test(line)) return undefined;
+    const m = /\b(?:interface|type|function|class)\s+([A-Z][\w$]*)|\bconst\s+[\w$]+\s*:\s*([A-Z][\w$]*)/.exec(line);
+    if (m) return m[1] ?? m[2];
+  }
+  return undefined;
+}
+
 /** The tags in one file's text; `file` is its path under src, for `at`. */
 function scan(file: string, source: string): Deprecation[] {
   const found: Deprecation[] = [];
@@ -79,13 +100,7 @@ function scan(file: string, source: string): Deprecation[] {
         lines[next] ?? "",
       )?.[1] ?? "?";
     // Only a member (an indented declaration) has an owner; a top-level name is its own.
-    const owner = /^\s+/.test(lines[next] ?? "")
-      ? lines
-          .slice(0, i)
-          .reverse()
-          .map((l) => /\b(?:interface|type|function|class)\s+([A-Z][\w$]*)/.exec(l)?.[1])
-          .find(Boolean)
-      : undefined;
+    const owner = /^\s+/.test(lines[next] ?? "") ? ownerAbove(lines.slice(0, i)) : undefined;
     const since = /^(\d+\.\d+)\b/.exec(text)?.[1];
     const removal = /\bremoved in (\d+\.\d+)\b/.exec(text)?.[1];
     found.push({
@@ -131,15 +146,54 @@ describe("deprecations", () => {
     ]);
   });
 
+  it("names a specifier in an export list by itself, and a labels default's key by its type", () => {
+    // 0.52 (API-4, DOC-9): the barrel deprecates a name its module keeps, and a label key
+    // is tagged on its English default. Read upwards for an owner, both used to borrow the
+    // nearest `type X` or none.
+    const barrel = [
+      "export {",
+      "  buttonClasses,",
+      "  type ButtonVariant,",
+      '} from "./components/button-look";',
+      "export {",
+      "  toast,",
+      "  /** @deprecated 0.52 — `toast()` applies it; removed in 0.53 */",
+      "  TOAST_ACTION_DURATION,",
+      '} from "./components/toast";',
+    ].join("\n");
+    expect(scan(join(SRC, "index.ts"), barrel).map((d) => [d.at, d.name])).toEqual([
+      ["src/index.ts:7", "TOAST_ACTION_DURATION"],
+    ]);
+    const labels = [
+      'import type { WidgetLabels } from "./widget";',
+      "export const DEFAULT_WIDGET_LABELS: WidgetLabels = {",
+      '  save: "Save",',
+      "  /** @deprecated 0.52 — nothing reads it; removed in 0.53 */",
+      '  outcomeAdd: "Add outcome",',
+      "};",
+    ].join("\n");
+    expect(scan(join(SRC, "components/widget-labels.ts"), labels).map((d) => d.name)).toEqual([
+      "WidgetLabels.outcomeAdd",
+    ]);
+  });
+
   it('name their schedule: "@deprecated 0.NN — <replacement>; removed in 0.MM"', () => {
     const unscheduled = all.filter((d) => !d.since || !d.removal).map((d) => `${d.at} @deprecated ${d.text}`);
     expect(unscheduled).toEqual([]);
   });
 
+  it("give one minor's notice: removed in the minor after the deprecation (API-8)", () => {
+    const window = all
+      .filter((d) => d.since && d.removal)
+      .filter(({ since, removal }) => removal![0] !== since![0] || removal![1] !== since![1] + 1)
+      .map((d) => `${d.at} ${d.name}: @deprecated ${d.text}`);
+    expect(window).toEqual([]);
+  });
+
   it(`are gone by the release that removes them (package.json ${pkg.version})`, () => {
     const overdue = all
       .filter((d) => d.since && d.removal)
-      .filter((d) => reached(d.removal!) || reached([d.since![0], d.since![1] + 2]))
+      .filter((d) => reached(d.removal!) || reached([d.since![0], d.since![1] + 1]))
       .map((d) => `${d.at} ${d.name}: @deprecated ${d.text}`);
     expect(overdue).toEqual([]);
   });

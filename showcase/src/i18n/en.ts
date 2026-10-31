@@ -1,4 +1,4 @@
-import { DEFAULT_UI_KIT_LABELS } from "@eifi1/ui-kit";
+import { uiKitLabelsEn } from "@eifi1/ui-kit/i18n/en";
 import type { Dictionary } from "./types";
 
 /**
@@ -247,7 +247,7 @@ export const en: Dictionary = {
       title: "Calendars & date pickers",
       short: "Calendars",
       blurb:
-        "Picking a day or a range of days: the calendar itself, the date and range pickers built on it, their presets and bounds, and the first day of the week.",
+        "Picking a day or a range of days: the calendar itself, the date and range pickers built on it, their presets, bounds and read-only lock, and the first day of the week.",
     },
     "month-view": {
       title: "Calendar month view",
@@ -382,7 +382,7 @@ export const en: Dictionary = {
       title: "Tile chart",
       short: "Tiles",
       blurb:
-        "The treemap: a share of a whole as tiles, with labels that fit, tiles you can click — and drilling down, through a bar chart as well as through tiles.",
+        "The treemap: a share of a whole as tiles, with labels that fit, tiles you can click, walk with the keyboard and hear read out, tiles grouped in labelled frames — and drilling down, through a bar chart as well as through tiles.",
     },
     "series-chart": {
       title: "Series chart",
@@ -1024,6 +1024,7 @@ export const en: Dictionary = {
       "clickable tiles",
       "spending by category",
       "fit labels in tiles",
+      "group tiles in frames",
     ],
     "series-chart": [
       "show a chart over time",
@@ -1325,5 +1326,7 @@ export const en: Dictionary = {
    * provider changes nothing on screen, which is the point: if picking English moves
    * anything, something has drifted. The other six dictionaries spell out every key.
    */
-  kit: DEFAULT_UI_KIT_LABELS,
+  // The shipped catalogue as an app's `loadUiKitLabels("en")` gets it: formatted in en-GB,
+  // not the raw defaults (refactor audit 2026-10-30, DOC-12).
+  kit: uiKitLabelsEn("en-GB"),
 };

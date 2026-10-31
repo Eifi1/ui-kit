@@ -4,7 +4,8 @@ import { useCallback, useEffect, useRef, type PointerEvent as ReactPointerEvent 
 // keksdose live #421). Taken over from keksdose's register list
 // (frontend/src/shared/hooks/use-long-press.ts, its feedback #153) so the kit's cards
 // and kk's register answer the same gesture the same way: 500 ms, an 8 px dead zone,
-// cancelled by a scroll, the trailing click swallowed.
+// cancelled by a scroll, the trailing click swallowed. Public since 0.52 (DUP-8, refactor
+// audit 2026-10-30): private, it left keksdose keeping the original beside the copy.
 
 const LONG_PRESS_MS = 500;
 /** The same 8 px dead zone `useRowSwipe` locks its axis at: the press is dead by the
@@ -13,6 +14,13 @@ const SLOP_PX = 8;
 
 const movedBeyondSlop = (from: { x: number; y: number }, x: number, y: number) =>
   Math.hypot(x - from.x, y - from.y) > SLOP_PX;
+
+export interface LongPressOptions {
+  /** Default `true`. Off, a press does nothing and the context menu is the browser's. */
+  enabled?: boolean;
+  /** How long a press is held, in ms. Default 500. */
+  delay?: number;
+}
 
 export interface LongPressResult {
   handlers: {
@@ -40,7 +48,7 @@ export interface LongPressResult {
  */
 export function useLongPress(
   onLongPress: () => void,
-  { enabled = true, delay = LONG_PRESS_MS }: { enabled?: boolean; delay?: number } = {},
+  { enabled = true, delay = LONG_PRESS_MS }: LongPressOptions = {},
 ): LongPressResult {
   const timer = useRef<number | null>(null);
   const start = useRef({ x: 0, y: 0 });
@@ -119,6 +127,12 @@ export function useLongPress(
     fired.current = false;
     return true;
   }, []);
+
+  // Turned off mid-press: the armed timer still fired, entering selection mode against the
+  // caller's wish and arming `consumeClick` for the next click (0.52 code review).
+  useEffect(() => {
+    if (!enabled) cancel();
+  }, [enabled, cancel]);
 
   useEffect(() => cancel, [cancel]);
 

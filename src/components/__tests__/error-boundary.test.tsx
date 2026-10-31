@@ -3,9 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ErrorBoundary, describeThrown } from "../error-boundary";
 import { UiKitProvider } from "../../i18n/kit-labels";
 
-/** The fallback's own alert. The copy button inside it (0.13) carries an empty
- *  assertive live region of its own, also `role="alert"`, so the query is scoped. */
-const crashScreen = () => document.querySelector('[role="alert"]:not(:empty)');
+/** The crash screen: every one of its modes offers Reload. Not the alert — since 0.52
+ *  (DSP-17) that is a live region that speaks a moment after the screen appears. */
+const crashScreen = () => screen.queryByRole("button", { name: "Reload" });
 
 let shouldThrow = true;
 function Boom({ value }: { value?: unknown }): React.ReactNode {
@@ -140,5 +140,48 @@ describe("ErrorBoundary", () => {
     cyclic.self = cyclic;
     expect(describeThrown(cyclic).message).toBe("");
     expect(describeThrown({ blob: "x".repeat(900) }).message).toHaveLength(500);
+  });
+});
+
+/**
+ * Refactor audit 2026-10-30, DSP-17: the fallback's `role="alert"` sat on the whole
+ * EmptyState, actions included, so the second render's "Copy error report" and
+ * "Details", "Reported as …", and the crash report's `<pre>` on opening Details were
+ * each announced as an addition to an assertive region. The title and hint are said
+ * once; nothing the reader opens or the boundary adds later is inside a live region.
+ */
+describe("ErrorBoundary's announcement", () => {
+  let spy: ReturnType<typeof vi.spyOn>;
+  beforeEach(() => {
+    shouldThrow = true;
+    spy = vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+  afterEach(() => spy.mockRestore());
+
+  const live = (el: Element) => el.closest('[role="alert"], [role="status"], [aria-live]:not([aria-live="off"])');
+
+  it("says the title and the hint once, assertively", async () => {
+    render(
+      <ErrorBoundary>
+        <Boom />
+      </ErrorBoundary>,
+    );
+    const said = await screen.findByText(/Something went wrong/, { selector: '[role="alert"]' });
+    expect(said).toHaveTextContent("This part of the page could not be shown");
+    expect(said.querySelector("button")).toBeNull();
+  });
+
+  it("keeps the actions, the quoted error and the opened report out of every live region", () => {
+    render(
+      <ErrorBoundary>
+        <Boom />
+      </ErrorBoundary>,
+    );
+    for (const name of ["Try again", "Reload", "Copy error report"]) {
+      expect(live(screen.getByRole("button", { name }))).toBeNull();
+    }
+    expect(live(screen.getByText("Error: kaputt"))).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /Error details/ }));
+    expect(live(document.querySelector("pre")!)).toBeNull();
   });
 });

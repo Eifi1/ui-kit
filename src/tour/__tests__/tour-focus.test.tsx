@@ -1,7 +1,14 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import { TourProvider, useTour, type TourStep } from "../tour";
+
+// The overlay is its own chunk since 0.52 (refactor audit 2026-10-30, MOD-1): loaded once
+// up front, as an app's bundle has it by the time a tour starts; React.lazy still resolves
+// it a render after the start, which the waits below cover.
+beforeAll(async () => {
+  await import("../tour-overlay");
+});
 
 /**
  * The spotlight overlay declares `role="dialog" aria-modal="true"` and then left focus
@@ -57,18 +64,24 @@ async function started() {
   });
 }
 
+/** The first paint after the start: the overlay is a chunk of its own (MOD-1). */
+async function shown() {
+  await screen.findByRole("dialog");
+  await started();
+}
+
 describe("Tour focus", () => {
   it("moves focus to the step card when the tour starts", async () => {
     renderTour();
     press(screen.getByRole("button", { name: "Take the tour" }));
-    await started();
+    await shown();
     expect(card()).toHaveFocus();
   });
 
   it("keeps Tab inside the card", async () => {
     renderTour();
     press(screen.getByRole("button", { name: "Take the tour" }));
-    await started();
+    await shown();
     const next = screen.getByRole("button", { name: "Next" });
     next.focus();
     fireEvent.keyDown(next, { key: "Tab" });
@@ -82,7 +95,7 @@ describe("Tour focus", () => {
     // overlay has just told assistive technology to ignore.
     renderTour(1);
     press(screen.getByRole("button", { name: "Take the tour" }));
-    await started();
+    await shown();
     const back = screen.getByRole("button", { name: "Back" });
     back.focus();
     fireEvent.click(back);
@@ -95,7 +108,7 @@ describe("Tour focus", () => {
     renderTour();
     const launcher = screen.getByRole("button", { name: "Take the tour" });
     press(launcher);
-    await started();
+    await shown();
     // Both halves: without the first line the second is satisfied by focus never
     // having left the launcher, which is the defect rather than the fix.
     expect(launcher).not.toHaveFocus();

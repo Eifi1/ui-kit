@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode, Ref, RefObject } from "react";
 import { cn } from "../lib/cn";
+import { hasContent } from "../lib/presence";
 import { mergeRefs } from "./field-parts";
 import { CLIPS_ATTRIBUTE } from "../lib/clipping";
 import { DropdownSearchHeader } from "./dropdown";
@@ -119,7 +120,8 @@ export function PickerSheet({
   // one way out of a full-screen sheet speak the app's language without each of
   // them having to (see the prop's note in `EntityCombobox`).
   const labels = useKitLabels("pickerSheet", DEFAULT_PICKER_SHEET_LABELS, { close: closeLabel, done: doneLabel });
-  const hasFooter = (footer !== undefined && footer !== null && footer !== false) || Boolean(done);
+  // `hasContent`, so a `footer` of "" draws no empty bar (refactor audit 2026-10-30, DUP-14).
+  const hasFooter = hasContent(footer) || Boolean(done);
   useBodyScrollLock(open);
   /**
    * Back closes THE SHEET, not the dialog it was opened from (Keksdose live #309:
@@ -169,14 +171,15 @@ export function PickerSheet({
    * sheet knows when its own input exists. Popping the keyboard is the POINT here,
    * where in a form dialog it is the cost.
    *
-   * **`restoreFocus` is off**, which is the uncomfortable half. Every caller in this
-   * kit opens the sheet from the field's own `onFocus` handler, so handing focus back
-   * to that field on close re-opens the sheet the user has just dismissed — a row tap
-   * would select a value and immediately put the list back over it. The field that
-   * opened it is the only thing that knows whether re-focusing it means "open"; a sheet
-   * that cannot tell must not guess. The cost is that focus lands on `<body>` after a
-   * dismissal, which on the phone this shape is for costs nothing, and on a pointer
-   * device is what happened before this change too.
+   * **`restoreFocus` is off**, which is the uncomfortable half. `Combobox` and
+   * `InlineEntityCombobox` open the sheet from the field's own `onFocus` handler, so
+   * handing focus back to that field on close re-opens the sheet the user has just
+   * dismissed — a row tap would select a value and immediately put the list back over
+   * it. The field that opened it is the only thing that knows whether re-focusing it
+   * means "open"; a sheet that cannot tell must not guess. So the caller does it in
+   * `onClose` where it can: `ComboboxPanel`'s triggers open on a click, and its
+   * `onClose` hands focus back to the trigger (0.52, refactor audit 2026-10-30, INP-7) —
+   * a screen-reader user is in exactly this layout, and <body> was where they landed.
    */
   useFocusTrap(sheetRef, {
     active: open,

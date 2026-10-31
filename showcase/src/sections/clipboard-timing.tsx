@@ -108,12 +108,13 @@ function CopyButtons() {
         <Note>
           The icon variant is a square <code className="font-mono">IconButton</code> (
           <code className="font-mono">size</code>, default <code className="font-mono">sm</code>) whose tooltip states
-          the result on <code className="font-mono">tooltipSide</code>; its accessible name stays{" "}
-          <code className="font-mono">label</code> in every state, and the result is spoken through a live region —
-          polite for success, assertive for failure. The label variant&apos;s words change instead.{" "}
-          <code className="font-mono">text</code> as a function is read at click time, so the CSV button copies the
-          current row count. <code className="font-mono">resetAfter</code> is how long the result stays (4 s on the CSV
-          button, 2 s elsewhere). The third row is wired to a browser with no clipboard at all: it says
+          the result on <code className="font-mono">tooltipSide</code> — IconButton&apos;s own bubble, so from Large up
+          the words stand beside the glyph instead, as on every labelled icon button; its accessible name stays{" "}
+          <code className="font-mono">label</code> in every state, with no description repeating it, and the result is
+          spoken through a live region — polite for success, assertive for failure. The label variant&apos;s words
+          change instead. <code className="font-mono">text</code> as a function is read at click time, so the CSV button
+          copies the current row count. <code className="font-mono">resetAfter</code> is how long the result stays (4 s
+          on the CSV button, 2 s elsewhere). The third row is wired to a browser with no clipboard at all: it says
           &ldquo;Couldn&rsquo;t copy&rdquo;, in the page&apos;s language — or, on the last button, in its own{" "}
           <code className="font-mono">labels</code>.
         </Note>

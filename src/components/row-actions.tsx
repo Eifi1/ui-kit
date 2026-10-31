@@ -3,6 +3,7 @@ import type { KeyboardEvent, MouseEvent, ReactElement, ReactNode } from "react";
 import { MoreHorizontal } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
+import { hasContent } from "../lib/presence";
 import { useLargeText } from "../hooks/use-large-text";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { Popover } from "./popover";
@@ -466,7 +467,7 @@ function stopActivationKeys(e: KeyboardEvent) {
  */
 function useActionHref(action: RowAction): string | undefined {
   const reason = useCommitReason(action.commit, action.disabledReason);
-  const refused = reason !== undefined && reason !== null && reason !== false && reason !== "";
+  const refused = hasContent(reason);
   return action.href !== undefined && !action.pending && !refused ? action.href : undefined;
 }
 

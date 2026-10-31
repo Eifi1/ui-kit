@@ -295,7 +295,7 @@ in 0.33.
 
 ### 11.8 Build — the lines for adopt-0.34, as written
 
-**For `docs/adopt-0.34.md`**, beside §11.6's line:
+**For `docs/archive/adopt/adopt-0.34.md`**, beside §11.6's line:
 - Kurvenschmiede: the migration and its backfill, the team list's `{teams, levels}` and
   `grant_count`, `acknowledged` in the delete's body, and no group row before the pin;
 - kastlan: `action_row` fills the group from `company_id`, and `logEntry` maps it;

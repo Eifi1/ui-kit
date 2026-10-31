@@ -1,7 +1,8 @@
-import { Fragment, useId, useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "../lib/cn";
+import { hasContent } from "../lib/presence";
 import { FIELD_BASE, FIELD_FLOATING_PAD, FIELD_INVALID } from "./field-base";
 import { Spinner } from "./spinner";
 import { useAnchoredPanel } from "../hooks/use-anchored-panel";
@@ -10,10 +11,12 @@ import { isImeEnter } from "../lib/ime";
 import { isQuietFocus } from "../lib/quiet-focus";
 import { useAnchorDir } from "./use-anchor-dir";
 import {
+  anchoredHeadingClass,
   ComboboxFieldLabel,
   DISABLED_ROW_CLASS,
   endHintRowProps,
-  GROUP_HEADING_STICKY,
+  GroupedOptions,
+  groupRuns,
   isOptionEnabled,
   stepEnabled,
   SUGGESTION_LIST_CLASS,
@@ -293,7 +296,7 @@ export function Autocomplete<V extends string | number = string>(props: Autocomp
     active: live,
   });
 
-  const hasStatus = status !== undefined && status !== null && status !== false && status !== "";
+  const hasStatus = hasContent(status);
   // The visible line under the rows. Nothing below `minChars` unless the caller has
   // something to say — an empty field opening a box that says "type more" is noise.
   const statusLine: ReactNode = hasStatus
@@ -559,75 +562,66 @@ export function Autocomplete<V extends string | number = string>(props: Autocomp
                 aria-labelledby={labelledBy}
                 className="min-h-0 flex-1 overflow-y-auto py-1"
               >
-                {results.map((o, i) => {
-                  const startsGroup = o.group != null && o.group !== results[i - 1]?.group;
-                  return (
-                    // Keyed by group AND value, as in the core panel: an option may
-                    // appear once per group.
-                    <Fragment key={`${o.group ?? ""}|${String(o.value)}`}>
-                      {startsGroup && (
-                        <li
-                          role="presentation"
-                          className={cn(
-                            GROUP_HEADING_STICKY,
-                            "px-3 pb-0.5 pt-2 text-caption font-semibold uppercase tracking-wide text-muted first:pt-1",
-                          )}
-                        >
-                          {o.group}
-                        </li>
-                      )}
-                      <li role="presentation">
-                        <button
-                          type="button"
-                          id={optionId(i)}
-                          role="option"
-                          // CHOSEN, never "highlighted" — the family's rule. This
-                          // field holds no value, so the only row that can be chosen
-                          // is the one whose label the text already is.
-                          aria-selected={fillOnSelect && o.label === value}
-                          // Listed, announced as unavailable, never taken: `take`
-                          // refuses it and the arrows pass it over.
-                          aria-disabled={o.disabled || undefined}
-                          tabIndex={-1}
-                          onClick={() => take(o)}
-                          onMouseEnter={() => {
-                            if (!o.disabled) setActive(i);
-                          }}
-                          className={cn(
-                            // The family's suggestion row (DUP-4): it hand-rolled its
-                            // own with a plain `truncate`, so a long address was cut at
-                            // Large, where Combobox's rows wrap (text size §10.17, T1).
-                            // A flex row here, for the icon and the two lines.
-                            suggestionRowClass(i === active && !o.disabled),
-                            "flex items-center gap-2",
-                            small && "py-1 text-xs",
-                            o.disabled && DISABLED_ROW_CLASS,
-                            o.group != null && "ps-6",
-                          )}
-                        >
-                          {o.icon && (
-                            <span aria-hidden className="shrink-0 text-muted">
-                              {o.icon}
+                {/* One heading per group, a `role="group"` it names, as in the core panel
+                    (refactor audit 2026-10-30, INP-8), drawn by the same renderer: an
+                    option may appear once per group. */}
+                <GroupedOptions
+                  runs={groupRuns(results, (o) => o.group)}
+                  listboxId={listboxId}
+                  rowKey={(o) => String(o.value)}
+                  headingClassName={(run) => anchoredHeadingClass(run)}
+                  row={(o, i) => (
+                    <li role="presentation">
+                      <button
+                        type="button"
+                        id={optionId(i)}
+                        role="option"
+                        // CHOSEN, never "highlighted" — the family's rule. This
+                        // field holds no value, so the only row that can be chosen
+                        // is the one whose label the text already is.
+                        aria-selected={fillOnSelect && o.label === value}
+                        // Listed, announced as unavailable, never taken: `take`
+                        // refuses it and the arrows pass it over.
+                        aria-disabled={o.disabled || undefined}
+                        tabIndex={-1}
+                        onClick={() => take(o)}
+                        onMouseEnter={() => {
+                          if (!o.disabled) setActive(i);
+                        }}
+                        className={cn(
+                          // The family's suggestion row (DUP-4): it hand-rolled its
+                          // own with a plain `truncate`, so a long address was cut at
+                          // Large, where Combobox's rows wrap (text size §10.17, T1).
+                          // A flex row here, for the icon and the two lines.
+                          suggestionRowClass(i === active && !o.disabled),
+                          "flex items-center gap-2",
+                          small && "py-1 text-xs",
+                          o.disabled && DISABLED_ROW_CLASS,
+                          o.group && "ps-6",
+                        )}
+                      >
+                        {o.icon && (
+                          <span aria-hidden className="shrink-0 text-muted">
+                            {o.icon}
+                          </span>
+                        )}
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate-until-large text-primary">{o.label}</span>
+                          {o.sublabel && (
+                            <span
+                              className={cn(
+                                "block truncate-until-large text-placeholder",
+                                small ? "text-caption" : "text-xs",
+                              )}
+                            >
+                              {o.sublabel}
                             </span>
                           )}
-                          <span className="min-w-0 flex-1">
-                            <span className="block truncate-until-large text-primary">{o.label}</span>
-                            {o.sublabel && (
-                              <span
-                                className={cn(
-                                  "block truncate-until-large text-placeholder",
-                                  small ? "text-caption" : "text-xs",
-                                )}
-                              >
-                                {o.sublabel}
-                              </span>
-                            )}
-                          </span>
-                        </button>
-                      </li>
-                    </Fragment>
-                  );
-                })}
+                        </span>
+                      </button>
+                    </li>
+                  )}
+                />
               </ul>
             )}
             {statusLine !== null && (

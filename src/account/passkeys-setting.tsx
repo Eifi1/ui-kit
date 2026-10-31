@@ -1,13 +1,17 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 import { KeyRound } from "lucide-react";
 import { cn } from "../lib/cn";
-import { useKitLocale, type LabelOverride } from "../i18n/kit-labels";
+import { useDayFormatter } from "../lib/day-format";
+import { toDate } from "../lib/format";
+import type { LabelOverride } from "../i18n/kit-labels";
 import { Button } from "../components/button";
 import { Card } from "../components/card";
 import { EmptyState } from "../components/empty-state";
+import { InlineConfirm } from "../components/inline-confirm";
 import { Input } from "../components/input";
 import { Skeleton } from "../components/skeleton";
+import { COMMIT_EXCEPT_BILLING, useWriteLock } from "../components/write-lock";
 import { useAccountSettingsLabels } from "./account-settings-labels";
 import { SettingsCardTitle } from "../settings/settings-heading";
 import type { PasskeysSettingLabels } from "./account-settings-labels";
@@ -88,7 +92,9 @@ export interface PasskeysSettingProps<Id extends PasskeyId = PasskeyId> extends 
    * app knows which of those it detected.
    */
   unavailable?: ReactNode;
-  /** A date for the "Added …" / "Last used …" lines. Default: the locale's medium date. */
+  /** A date for the "Added …" / "Last used …" lines. Default: the provider's `formatDate`
+   *  (the app's date preference), else a medium date in the provider's locale and
+   *  `timeZone`. */
   formatDate?: (date: Date) => string;
   /** Overrides the provider's locale for the default date format. */
   locale?: string;
@@ -117,6 +123,11 @@ export interface PasskeysSettingProps<Id extends PasskeyId = PasskeyId> extends 
  * must work in an app without a `ConfirmProvider`, and the question belongs next to
  * the passkey it names. Focus moves to Cancel, as in every destructive confirm in the
  * kit, so the Enter that pressed Delete cannot also answer it.
+ *
+ * **Under a write lock** (0.52) Add, Rename, Delete and the confirm are `commit` controls
+ * exempt from billing — a lapsed plan still lets the account manage how it signs in, the
+ * demo does not. Until 0.52 the passkeys' confirm was the one inline confirm without it,
+ * so the demo could delete, rename and add (refactor audit 2026-10-30, DUP-10).
  */
 export function PasskeysSetting<Id extends PasskeyId = PasskeyId>({
   passkeys,
@@ -138,7 +149,21 @@ export function PasskeysSetting<Id extends PasskeyId = PasskeyId>({
   ...rest
 }: PasskeysSettingProps<Id>) {
   const labels = useAccountSettingsLabels("passkeys", labelsProp);
-  const locale = useKitLocale(localeProp);
+  // The prop, else the provider's `formatDate`, else the kit's in the provider's locale and
+  // `timeZone`; a bare "YYYY-MM-DD" is read on its calendar (refactor audit 2026-10-30,
+  // DUP-2: this card parsed with `new Date` and built its own `Intl` formatter).
+  // The raw value goes in, so a bare day keeps its calendar; the prop still gets a Date.
+  const own = useMemo(
+    () =>
+      formatDate &&
+      ((value: PasskeyItem["createdAt"]) => {
+        const date = toDate(value);
+        return date ? formatDate(date) : "";
+      }),
+    [formatDate],
+  );
+  const day = useDayFormatter(own, localeProp);
+  const lock = useWriteLock(COMMIT_EXCEPT_BILLING);
   const [name, setName] = useState("");
   // `beforeAdd` is running. State for the button, and a ref for the guard: two clicks
   // in one frame both read the state from before either set it.
@@ -146,14 +171,12 @@ export function PasskeysSetting<Id extends PasskeyId = PasskeyId>({
   const checkingRef = useRef(false);
 
   const date = (value: PasskeyItem["createdAt"]): string | null => {
-    if (value === null || value === undefined || value === "") return null;
-    const d = value instanceof Date ? value : new Date(value);
-    if (Number.isNaN(d.getTime())) return null;
-    return formatDate ? formatDate(d) : new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(d);
+    return toDate(value) ? day(value) : null;
   };
 
   const add = () => {
-    if (adding || checkingRef.current) return;
+    // The name field's Enter reaches here too, past the locked button.
+    if (adding || checkingRef.current || lock.locked) return;
     const typed = name;
     const value = typed.trim();
     const send = () =>
@@ -211,6 +234,7 @@ export function PasskeysSetting<Id extends PasskeyId = PasskeyId>({
                 lastUsed={date(item.lastUsedAt)}
                 attributes={rowProps?.(item)}
                 busy={busyId !== undefined && busyId !== null && busyId === item.id}
+                locked={lock.locked}
                 onRename={onRename}
                 onDelete={onDelete}
                 labels={labels}
@@ -234,7 +258,7 @@ export function PasskeysSetting<Id extends PasskeyId = PasskeyId>({
               }}
             />
           )}
-          <Button onClick={add} disabled={busy} aria-busy={busy || undefined}>
+          <Button onClick={add} commit={COMMIT_EXCEPT_BILLING} disabled={busy} aria-busy={busy || undefined}>
             <KeyRound className="size-4" aria-hidden />
             {adding ? labels.adding : labels.add}
           </Button>
@@ -265,6 +289,7 @@ function PasskeyRow<Id extends PasskeyId>({
   lastUsed,
   attributes,
   busy,
+  locked,
   onRename,
   onDelete,
   labels,
@@ -274,24 +299,26 @@ function PasskeyRow<Id extends PasskeyId>({
   lastUsed: string | null;
   attributes?: { id?: string } & PasskeyDataAttributes;
   busy: boolean;
+  /** A write lock holds: the rename field's Enter saves nothing. */
+  locked: boolean;
   onRename?: PasskeysSettingProps<Id>["onRename"];
   onDelete?: PasskeysSettingProps<Id>["onDelete"];
   labels: PasskeysSettingLabels;
 }) {
   const [mode, setMode] = useState<RowMode>("view");
   const [draft, setDraft] = useState(item.name);
-  // Which button opened the sub-mode, so leaving it puts focus back there — the
-  // confirm or the field unmounts under the focus, which otherwise falls to <body>.
+  // Which button opened the sub-mode, so leaving it puts focus back there — the field or
+  // the confirm unmounts under the focus, which otherwise falls to <body>. InlineConfirm
+  // returns it on Cancel and Escape; this also covers a delete that succeeded while the
+  // row stayed (the list not refreshed yet) and a rename.
   const [returnTo, setReturnTo] = useState<"rename" | "delete" | null>(null);
-  const cancelDeleteRef = useRef<HTMLButtonElement>(null);
   const renameRef = useRef<HTMLInputElement>(null);
   const renameButtonRef = useRef<HTMLButtonElement>(null);
   const deleteButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    if (mode === "delete") cancelDeleteRef.current?.focus();
-    else if (mode === "rename") renameRef.current?.select();
-    else if (returnTo) (returnTo === "rename" ? renameButtonRef : deleteButtonRef).current?.focus();
+    if (mode === "rename") renameRef.current?.select();
+    else if (mode === "view" && returnTo) (returnTo === "rename" ? renameButtonRef : deleteButtonRef).current?.focus();
   }, [mode, returnTo]);
 
   const open = (next: "rename" | "delete") => {
@@ -300,17 +327,10 @@ function PasskeyRow<Id extends PasskeyId>({
     setMode(next);
   };
   const leave = () => setMode("view");
-  const escapeLeaves = (e: KeyboardEvent<HTMLButtonElement>) => {
-    if (e.key === "Escape") {
-      e.preventDefault();
-      e.stopPropagation();
-      leave();
-    }
-  };
 
   const saveRename = () => {
     const next = draft.trim();
-    if (!onRename || !next || busy) return;
+    if (!onRename || !next || busy || locked) return;
     if (next === item.name) {
       leave();
       return;
@@ -356,7 +376,7 @@ function PasskeyRow<Id extends PasskeyId>({
             }
           }}
         />
-        <Button size="sm" onClick={saveRename} disabled={busy || !draft.trim()}>
+        <Button size="sm" onClick={saveRename} commit={COMMIT_EXCEPT_BILLING} disabled={busy || !draft.trim()}>
           {labels.save}
         </Button>
         <Button size="sm" variant="ghost" onClick={leave}>
@@ -368,19 +388,19 @@ function PasskeyRow<Id extends PasskeyId>({
 
   if (mode === "delete") {
     return (
-      <li {...li} className="space-y-2 py-2">
-        <p role="alert" className="text-sm">
-          {labels.deleteConfirm(item.name)}
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <Button size="sm" variant="danger" onClick={confirmDelete} onKeyDown={escapeLeaves} disabled={busy}>
-            {labels.confirmDelete}
-          </Button>
-          <Button ref={cancelDeleteRef} size="sm" variant="ghost" onClick={leave} onKeyDown={escapeLeaves}>
-            {labels.cancel}
-          </Button>
-        </div>
-      </li>
+      <InlineConfirm
+        as="li"
+        {...li}
+        className="py-2"
+        prompt={labels.deleteConfirm(item.name)}
+        confirmLabel={labels.confirmDelete}
+        cancelLabel={labels.cancel}
+        onConfirm={confirmDelete}
+        onLeave={leave}
+        busy={busy}
+        commit={COMMIT_EXCEPT_BILLING}
+        returnFocusRef={deleteButtonRef}
+      />
     );
   }
 
@@ -398,6 +418,7 @@ function PasskeyRow<Id extends PasskeyId>({
           ref={renameButtonRef}
           size="sm"
           variant="ghost"
+          commit={COMMIT_EXCEPT_BILLING}
           disabled={busy}
           onClick={() => open("rename")}
           aria-label={labels.renameItem(item.name)}
@@ -411,6 +432,7 @@ function PasskeyRow<Id extends PasskeyId>({
           size="sm"
           variant="ghost"
           tone="danger"
+          commit={COMMIT_EXCEPT_BILLING}
           disabled={busy}
           onClick={() => open("delete")}
           aria-label={labels.deleteItem(item.name)}

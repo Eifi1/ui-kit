@@ -498,7 +498,9 @@ function AlertInteractiveDemo() {
           element, so the frame becomes a wrapper holding two siblings — the third banner: Tab reaches the link, then
           the ×, whose name here is <code className="font-mono">dismissLabel</code> (default{" "}
           <code className="font-mono">common.dismiss</code>). <code className="font-mono">icon</code> replaces the
-          tone&apos;s glyph; it stays decorative.
+          tone&apos;s glyph; it stays decorative. Dismiss one from the keyboard: once the banner is gone the focus moves
+          on to the next control, where Tab from the × would have gone, or to{" "}
+          <code className="font-mono">dismissFocusRef</code> (0.52).
         </Note>
       </div>
     </Example>

@@ -159,7 +159,10 @@ export function ShellSection() {
         <Environments />
       </Example>
 
-      <Example label="RoleSwitcher" hint="OptionSwitcherMenu plus the standard flask icon.">
+      <Example
+        label="RoleSwitcher"
+        hint="Deprecated in 0.52, removed in 0.53: every app switches the role in `DevMenu`'s Account section."
+      >
         <Roles />
       </Example>
 

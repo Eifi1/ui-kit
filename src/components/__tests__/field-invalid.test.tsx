@@ -286,3 +286,24 @@ describe("the focus line keeps full strength at fractional display scaling (K5)"
     expect(tokens).toContain("focus:ring-0");
   });
 });
+
+/**
+ * Refactor audit 2026-10-30, DOC-2: More contrast "thickens focus frames"
+ * (`appearance.contrastHelp`), and every `FOCUS_RING` grows from 2px to 3px with
+ * `--focus-ring-width` — but a text field's line stayed the 1px border plus the 1px inset
+ * ring. Under `contrast:` the ring is 2px, so the line is 3px like the buttons', still
+ * inset, so nothing moves.
+ */
+describe("the focus line thickens under More contrast", () => {
+  it("FIELD_BASE: a 2px inset ring under `contrast:`, beside the 1px border", () => {
+    expect(FIELD_BASE.split(/\s+/)).toContain("contrast:focus:ring-2");
+    render(<Input label="Name" />);
+    expect(screen.getByLabelText("Name")).toHaveClass("focus:ring-1", "contrast:focus:ring-2", "focus:ring-inset");
+  });
+
+  it("FIELD_INVALID: the highlight's ring thickens too, and the merge keeps both", () => {
+    expect(FIELD_INVALID.split(/\s+/)).toContain("contrast:ring-2");
+    render(<Input label="Name" invalid />);
+    expect(screen.getByLabelText("Name")).toHaveClass("ring-1", "contrast:ring-2", "contrast:focus:ring-2");
+  });
+});

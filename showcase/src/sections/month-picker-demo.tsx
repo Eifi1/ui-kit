@@ -88,12 +88,17 @@ export function MonthPickerDemo() {
       >
         <Stage>
           <Row className="gap-1">
+            {/* At the floor it refuses rather than turns `disabled`: the press that reaches
+                the floor is made with the focus on it, and a focused button that turns
+                `disabled` drops the focus to <body> (the kit's own arrows, 0.52). */}
             <button
               type="button"
               aria-label="Previous month"
-              disabled={atFloor}
-              onClick={() => setToolbar((k) => shiftKey(k, -1))}
-              className="flex size-9 items-center justify-center rounded-md border border-subtle text-muted hover:bg-hover disabled:opacity-40"
+              aria-disabled={atFloor || undefined}
+              onClick={() => {
+                if (!atFloor) setToolbar((k) => shiftKey(k, -1));
+              }}
+              className="flex size-9 items-center justify-center rounded-md border border-subtle text-muted hover:bg-hover aria-disabled:cursor-not-allowed aria-disabled:opacity-40"
             >
               <span aria-hidden className="rtl:-scale-x-100">
                 ‹

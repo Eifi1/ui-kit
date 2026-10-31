@@ -2,7 +2,7 @@
 // the clear button — and the props, label hook and trigger format the two share.
 // Moved out of date-picker.tsx as it was (MOD-9, refactor audit 2026-10); date-picker
 // still exports the one public name here, `DateTriggerAttributes`.
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, ReactNode, Ref, RefObject } from "react";
 import { Calendar, X } from "lucide-react";
 import { cn } from "../lib/cn";
@@ -19,7 +19,13 @@ import {
 import { splitTriggerAria } from "./trigger-aria";
 import type { TriggerAria } from "./trigger-aria";
 import { FIELD_TRIGGER, FIELD_FLOATING_PAD, FIELD_INVALID } from "./field-base";
-import { assignRef, FieldLabelLine, LABEL_ABOVE_BOX, type FieldHelpProps } from "./field-parts";
+import {
+  assignRef,
+  FieldLabelLine,
+  LABEL_ABOVE_BOX,
+  type DisabledReasonDisplay,
+  type FieldHelpProps,
+} from "./field-parts";
 import { FullBleedDialog } from "./full-bleed-dialog";
 import type { RemLength } from "../hooks/use-breakpoint";
 import type { MiniCalendarProps } from "./mini-calendar";
@@ -50,6 +56,22 @@ export interface DatePickerBaseProps extends Omit<ComponentPropsWithoutRef<"div"
    *  `<UiKitProvider labels>`; kept as a prop because it predates the provider. */
   clearLabel?: string;
   disabled?: boolean;
+  /**
+   * Why the date cannot be changed — {@link Select}'s `disabledReason`, for a picker that
+   * SAVES on change (a report's period kept per user, a filter persisted as it moves).
+   * The trigger stays focusable and `aria-disabled`, the calendar does not open, the ‹ ›
+   * and Today buttons refuse, the clear is not offered, and `onChange` never fires; the
+   * reason is a line under the field at Large and on a touch screen, else in the kit
+   * {@link Tooltip} (`disabledReasonDisplay`), and on the trigger's `aria-describedby`.
+   * Wins over `disabled`.
+   *
+   * 0.52 (refactor audit 2026-10-30, API-3): the date pickers and MonthPicker were the
+   * only value fields with no lock opt-in.
+   */
+  disabledReason?: ReactNode;
+  /** Where the reason shows — {@link Button}'s `disabledReasonDisplay`: a line under the
+   *  field at Large and on a touch screen by default, the tooltip otherwise. */
+  disabledReasonDisplay?: DisabledReasonDisplay;
   /** Required and unanswered — {@link FIELD_INVALID}. See {@link Input}'s `invalid`. */
   invalid?: boolean;
   /**
@@ -185,6 +207,9 @@ export interface DateTriggerAttributes {
   /** The field's required state — `Field required` hands it down with the id pair. */
   "aria-required"?: boolean | "true" | "false";
   disabled?: boolean;
+  /** Locked by the write lock (0.52, `commit` / `disabledReason`): focusable, and the
+   *  click opens nothing. Dress a custom trigger for it as for `disabled`. */
+  "aria-disabled"?: true;
   onClick: () => void;
   className: string;
 }
@@ -235,6 +260,7 @@ function DateFieldTrigger({
   valueId,
   padded,
   disabled,
+  locked,
   invalid,
   required,
   panelId,
@@ -260,6 +286,8 @@ function DateFieldTrigger({
   valueId: string;
   padded: boolean;
   disabled?: boolean;
+  /** The write lock: the focusable kind of disabled (see `disabledReason`). */
+  locked: boolean;
   invalid?: boolean;
   /** `aria-required`, on the trigger with the rest of the field's ARIA. */
   required?: boolean | "true" | "false";
@@ -300,8 +328,15 @@ function DateFieldTrigger({
   const attrs: DateTriggerAttributes = {
     ref: triggerRef,
     type: "button",
-    disabled,
-    onClick: toggle,
+    // The focusable kind of disabled while locked (Button's rule): native `disabled`
+    // would take the field out of the tab order, and the reason with it.
+    disabled: locked ? undefined : disabled,
+    "aria-disabled": locked || undefined,
+    // Locked, the calendar does not open. One open when the lock arrives closes: the
+    // picker moves the field into the reason's frame, which remounts it, as Select's.
+    onClick: () => {
+      if (!locked) toggle();
+    },
     // The name has to carry the VALUE. A bare `aria-label={label}` — which is what
     // this was — replaces the button's text outright, so the one field in the form
     // whose entire job is to show a date announced "Due date" and stopped there,
@@ -335,7 +370,7 @@ function DateFieldTrigger({
       FIELD_TRIGGER,
       "pe-9",
       padded && FIELD_FLOATING_PAD,
-      disabled && "cursor-not-allowed opacity-50",
+      (disabled || locked) && "cursor-not-allowed opacity-50",
       // An `aria-invalid` from a Field spread paints too, as on Input and AmountInput.
       isInvalid && FIELD_INVALID,
     ),
@@ -389,6 +424,7 @@ export function DateField({
   hasValue,
   label,
   disabled,
+  locked = false,
   clearable,
   clearLabel,
   panelLabel,
@@ -416,6 +452,9 @@ export function DateField({
   /** A `FieldHint` for the label line, beside the label. */
   labelHint?: ReactNode;
   disabled?: boolean;
+  /** The write lock is on: the trigger is focusable and opens nothing, no clear. The
+   *  picker draws the reason's frame around the field (or its step row). */
+  locked?: boolean;
   clearable?: boolean;
   /** Already resolved by the picker (prop > provider > English). */
   clearLabel: string;
@@ -435,8 +474,19 @@ export function DateField({
   renderTrigger?: TriggerRenderer;
   children: (close: () => void, frame: PanelFrame) => ReactNode;
 }) {
-  const showClear = Boolean(clearable && hasValue && !disabled);
+  // A clear is a change like any other: not offered while locked.
+  const showClear = Boolean(clearable && hasValue && !disabled && !locked);
   const [aria, wrapperRest] = splitTriggerAria(rest);
+  // The trigger, for the clear to hand the focus to (INP-10, below), beside the picker's
+  // own `ref`.
+  const triggerEl = useRef<HTMLButtonElement | null>(null);
+  const toTrigger = useCallback(
+    (node: HTMLButtonElement | null) => {
+      triggerEl.current = node;
+      assignRef(fieldRef, node);
+    },
+    [fieldRef],
+  );
   // The panel is portalled to <body> and leaves the subtree whose `dir` it inherited,
   // so a calendar in an RTL form opened LTR — the grid's columns, its arrow keys and
   // its chevrons all the wrong way round. Read at the moment of opening (the only way
@@ -524,10 +574,11 @@ export function DateField({
       valueId={valueId}
       padded={label !== undefined}
       disabled={disabled}
+      locked={locked}
       invalid={invalid}
       required={ariaRequired}
       renderTrigger={renderTrigger}
-      fieldRef={fieldRef}
+      fieldRef={toTrigger}
     />
   );
   return (
@@ -573,7 +624,13 @@ export function DateField({
         <button
           type="button"
           aria-label={clearLabel}
-          onClick={onClear}
+          onClick={() => {
+            onClear();
+            // The × goes with the value, so a keyboard clear left the focus on a button
+            // that was about to unmount — and it fell to <body> (refactor audit
+            // 2026-10-30, INP-10). The trigger, as SearchField's clear does.
+            triggerEl.current?.focus();
+          }}
           className="absolute end-1.5 top-1/2 -translate-y-1/2 rounded p-1 text-placeholder hover:text-secondary"
         >
           <X className="size-4" />

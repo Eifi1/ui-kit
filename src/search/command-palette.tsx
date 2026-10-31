@@ -10,6 +10,8 @@ import { useFocusTrap } from "../hooks/use-focus-trap";
 import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
 import { takeEscape, useDismissLayer } from "../hooks/use-dismiss";
 import { isImeEnter } from "../lib/ime";
+// A provider's answer is a promise: the only case with anything to wait for.
+import { isThenable } from "../lib/thenable";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { DEFAULT_COMMAND_PALETTE_LABELS } from "./command-palette-labels";
 
@@ -105,10 +107,6 @@ export { DEFAULT_COMMAND_PALETTE_LABELS };
  * under a thumb picks its neighbour.
  */
 export type CommandPaletteDensity = "compact" | "comfortable";
-
-/** A provider's answer is a promise — the only case with anything to wait for. */
-const isThenable = (value: unknown): value is PromiseLike<unknown> =>
-  typeof (value as PromiseLike<unknown> | null)?.then === "function";
 
 /** The defaults minus `dialog`, so a resolved `dialog` means someone SUPPLIED one —
  *  see the dialog's `aria-label` for why that distinction matters. */

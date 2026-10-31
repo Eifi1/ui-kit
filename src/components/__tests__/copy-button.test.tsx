@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CopyButton } from "../copy-button";
 import { UiKitProvider } from "../../i18n/kit-labels";
+import { applyTextSize } from "../../theme/text-size";
 
 const original = Object.getOwnPropertyDescriptor(navigator, "clipboard");
 function setClipboard(value: unknown) {
@@ -33,9 +34,13 @@ describe("CopyButton", () => {
     expect(writeText).toHaveBeenCalledWith("DE89 3704");
     expect(onCopied).toHaveBeenCalledWith(true);
     expect(button).toHaveAttribute("data-state", "copied");
-    // The name does not change under the focus; the tooltip carries the state.
+    // The name does not change under the focus, and nor does the bubble, which is the
+    // button's visible label (0.52 code review, deep, charts, finding 8): the glyph and its
+    // colour show the result and the live region says it. The bubble is IconButton's own,
+    // mounted while the pointer is on the button (0.52, DSP-21).
     expect(button).toHaveAccessibleName("Copy IBAN");
-    expect(screen.getByRole("tooltip", { hidden: true })).toHaveTextContent("Copied");
+    fireEvent.mouseEnter(button.parentElement!);
+    expect(screen.getByRole("tooltip", { hidden: true })).toHaveTextContent("Copy IBAN");
     act(() => vi.advanceTimersByTime(60));
     expect(screen.getByRole("status")).toHaveTextContent("Copied to clipboard");
     act(() => vi.advanceTimersByTime(2000));
@@ -126,5 +131,60 @@ describe("CopyButton leaves portalling to the Tooltip (keksdose E0)", () => {
       </div>,
     );
     expect(container.querySelector('[role="tooltip"]')).toBeNull();
+  });
+});
+
+// Refactor audit 2026-10-30, DSP-21: the icon variant wrapped IconButton in a Tooltip of
+// its own, which cloned `aria-describedby` onto the button — "Copy, button, Copy" — and
+// never showed its words at Large, as every labelled IconButton does. IconButton names
+// itself now: `label` for the bubble and the Large text, `aria-label` for the name.
+describe("CopyButton's icon variant is a labelled IconButton", () => {
+  afterEach(() => {
+    act(() => applyTextSize("normal"));
+  });
+
+  it("is not described by its own name", async () => {
+    vi.useFakeTimers();
+    setClipboard({ writeText: vi.fn().mockResolvedValue(undefined) });
+    render(<CopyButton text="x" label="Copy IBAN" />);
+    const button = screen.getByRole("button", { name: "Copy IBAN" });
+    expect(button).not.toHaveAttribute("aria-describedby");
+    await click(button);
+    expect(button).toHaveAccessibleName("Copy IBAN");
+    expect(button).not.toHaveAttribute("aria-describedby");
+  });
+
+  // 0.52 code review (deep, charts), finding 8: the words at Large were the STATE —
+  // "Copied", "Couldn't copy" — under a name that stayed "Copy IBAN". The pill changed width
+  // on every copy, and the words on screen were not in the name a voice user says to press
+  // it (WCAG 2.5.3, label in name). The words stay; the glyph, its colour and the live
+  // region carry the result.
+  it("shows its words as text at Large, the same words after a copy", async () => {
+    vi.useFakeTimers();
+    setClipboard({ writeText: vi.fn().mockResolvedValue(undefined) });
+    act(() => applyTextSize("large"));
+    render(<CopyButton text="x" label="Copy IBAN" />);
+    const button = screen.getByRole("button", { name: "Copy IBAN" });
+    const words = () => button.querySelector("[data-slot=icon-button-label]");
+    expect(words()).toHaveTextContent("Copy IBAN");
+    await click(button);
+    expect(button).toHaveAttribute("data-state", "copied");
+    expect(words()).toHaveTextContent("Copy IBAN");
+    expect(button).toHaveAccessibleName("Copy IBAN");
+    act(() => vi.advanceTimersByTime(60));
+    expect(screen.getByRole("status")).toHaveTextContent("Copied to clipboard");
+  });
+
+  it("keeps its words at Large when the copy fails, and says the failure", async () => {
+    vi.useFakeTimers();
+    setClipboard(undefined);
+    act(() => applyTextSize("large"));
+    render(<CopyButton text="x" />);
+    const button = screen.getByRole("button", { name: "Copy" });
+    await click(button);
+    expect(button).toHaveAttribute("data-state", "failed");
+    expect(button.querySelector("[data-slot=icon-button-label]")).toHaveTextContent(/^Copy$/);
+    act(() => vi.advanceTimersByTime(60));
+    expect(screen.getByRole("alert")).toHaveTextContent("Couldn’t copy to the clipboard");
   });
 });

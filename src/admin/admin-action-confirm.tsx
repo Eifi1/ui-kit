@@ -12,6 +12,7 @@ import { authErrorCode } from "../auth/auth-errors";
 import type { KitErrorCode } from "../auth/auth-errors";
 import { usePersonLabel } from "./admin-parts";
 import { hasContent } from "../lib/presence";
+import { isThenable } from "../lib/thenable";
 import type { AdminPerson, MaybePromise } from "./admin-parts";
 import { isGroupTarget } from "./admin-action-log";
 import type { AdminGroupTarget } from "./admin-action-log";
@@ -175,11 +176,6 @@ interface AdminActionConfirmCommonProps {
 /** A type since 0.34 (an interface before): a person at any level, or a group at `none`
  *  and `acknowledge`. */
 export type AdminActionConfirmProps = AdminActionConfirmCommonProps & AdminActionConfirmTarget;
-
-/** Whether a callback answered a promise. */
-function isThenable(value: unknown): value is PromiseLike<unknown> {
-  return typeof value === "object" && value !== null && typeof (value as PromiseLike<unknown>).then === "function";
-}
 
 /** The refusal's words and code. */
 function refusalOf(

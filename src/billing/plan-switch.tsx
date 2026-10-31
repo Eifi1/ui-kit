@@ -3,15 +3,18 @@ import type { LabelOverride } from "../i18n/kit-labels";
 import { DEFAULT_COMMON_LABELS } from "../i18n/shared-labels";
 import { pluralForm } from "../i18n/plurals";
 import type { PluralForms } from "../i18n/plurals";
-import { formatDate, formatMoney, formatNumber } from "../lib/format";
+import { useDayFormatter } from "../lib/day-format";
+import { formatMoney, formatNumber } from "../lib/format";
 import { AlertBanner } from "../components/alert-banner";
 import { Button } from "../components/button";
 import { DialogFrame } from "../components/dialog-frame";
 import { Spinner } from "../components/spinner";
 import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
-import { DEFAULT_PLAN_CHANGE_LABELS } from "../admin/plan-change-labels";
+import { DEFAULT_PLAN_CHANGE_LABELS } from "./plan-change-labels";
 import { useBillingLabels } from "./billing-labels";
 import type { BillingLabels } from "./billing-labels";
+import { dialogClose } from "./dialog-close";
+import type { WithDialogClose } from "./dialog-close";
 import type { PlanSwitchPreview } from "./billing-overview";
 import { minorToMajor } from "./plan-price";
 import type { BillingInterval } from "./plan-price";
@@ -36,11 +39,16 @@ export interface PlanSwitchSide {
   interval: BillingInterval;
 }
 
-export interface PlanSwitchConfirmProps {
+/** {@link PlanSwitchConfirmProps} before one of its two close props is required. */
+interface PlanSwitchConfirmFields {
   open: boolean;
-  /** `false` when the payer dismisses it — Cancel, Escape, the backdrop. Confirm leaves
-   *  it open: close it once the switch answers. */
-  onOpenChange: (open: boolean) => void;
+  /** The payer dismissed it — Cancel, Escape, the backdrop. Confirm leaves it open: close
+   *  it once the switch answers. 0.52: every other kit dialog's `onClose` (CONTRIBUTING
+   *  §4; refactor audit 2026-10-30, API-5). */
+  onClose?: () => void;
+  /** @deprecated 0.52 — `onClose`, as every other kit dialog; removed in 0.53. Called with
+   *  `false` when there is no `onClose`. */
+  onOpenChange?: (open: boolean) => void;
   /** What the payer pays now: the overview's `paid`. */
   from: PlanSwitchSide;
   /** The pick. */
@@ -64,7 +72,8 @@ export interface PlanSwitchConfirmProps {
   formatLimit?: (dimension: string, value: number) => string;
   /** Confirm: the app's `POST /billing/plan` with `{plan, interval}` of `to`. */
   onConfirm: () => void;
-  /** The figures' and the date's locale. Default: the provider's. */
+  /** The figures' and the date's locale. Default: the provider's. The next charge's date
+   *  is written by the `<UiKitProvider formatDate>` when the app set one (0.52). */
   locale?: string;
   /**
    * 0.42 (§16.2 decision 5, §16.8 B): the payer's free grant runs without an end —
@@ -79,6 +88,11 @@ export interface PlanSwitchConfirmProps {
   labels?: LabelOverride<BillingLabels>;
 }
 
+/** What {@link PlanSwitchConfirm} takes: `onClose`, or alone the deprecated
+ *  `onOpenChange`, is required (0.52 code review: with neither it compiled, and nothing
+ *  could dismiss it). */
+export type PlanSwitchConfirmProps = WithDialogClose<PlanSwitchConfirmFields>;
+
 /**
  * The confirm for a plan switch (§15.2.10): from → to, each with its billing period;
  * Paddle's preview — "Charged now" (an upgrade) or "Credited towards your next charges"
@@ -88,7 +102,7 @@ export interface PlanSwitchConfirmProps {
  *     const preview = useMutation({ mutationFn: api.previewPlanSwitch });
  *     <PlanSwitchConfirm
  *       open={pick !== null}
- *       onOpenChange={(open) => !open && setPick(null)}
+ *       onClose={() => setPick(null)}
  *       from={overview.paid}
  *       to={pick}
  *       preview={preview.data}
@@ -103,6 +117,7 @@ export interface PlanSwitchConfirmProps {
  */
 export function PlanSwitchConfirm({
   open,
+  onClose,
   onOpenChange,
   from,
   to,
@@ -120,6 +135,7 @@ export function PlanSwitchConfirm({
   const planChange = useKitLabels("planChange", DEFAULT_PLAN_CHANGE_LABELS);
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
   const locale = useKitLocale(localeProp);
+  const day = useDayFormatter(undefined, localeProp);
 
   const period = (interval: BillingInterval) => (interval === "year" ? labels.yearly : labels.monthly);
   const side = (s: PlanSwitchSide) => `${planName(s.plan.toLowerCase())} (${period(s.interval)})`;
@@ -149,7 +165,7 @@ export function PlanSwitchConfirm({
       open={open}
       title={labels.switchTitle}
       description={labels.switchFromTo(side(from), side(to))}
-      onClose={() => onOpenChange(false)}
+      onClose={dialogClose({ onClose, onOpenChange })}
       busy={pending}
       // A preview that loads is busy too, but holds nothing: Cancel stays a way out.
       aria-busy={preview === undefined || undefined}
@@ -189,9 +205,7 @@ export function PlanSwitchConfirm({
             </dd>
             {preview.next_billed_at && preview.next_minor != null && (
               <>
-                <dt className="text-secondary">
-                  {labels.switchNextCharge(formatDate(preview.next_billed_at, "medium", { locale }))}
-                </dt>
+                <dt className="text-secondary">{labels.switchNextCharge(day(preview.next_billed_at))}</dt>
                 <dd className="text-right tabular-nums">{money(preview.next_minor, preview.currency)}</dd>
               </>
             )}

@@ -128,10 +128,10 @@ describe("NotificationInbox — acting", () => {
     // A row with nothing to open marks itself read.
     await user.click(row(2));
     expect(onMarkRead).toHaveBeenLastCalledWith([2]);
-    // An absolute URL leaves in a new tab; a read row marks nothing.
-    expect(row(1)).toHaveAttribute("target", "_blank");
+    // A url off this origin opens nothing (FLW-8, notification-inbox-urls.test.tsx); a read
+    // row marks nothing.
+    expect(row(1)).not.toHaveAttribute("href");
     onMarkRead.mockClear();
-    row(1).addEventListener("click", (event) => event.preventDefault());
     await user.click(row(1));
     expect(onMarkRead).not.toHaveBeenCalled();
     unmount();

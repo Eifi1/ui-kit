@@ -320,7 +320,12 @@ describe('MonthPicker mode="year" (kastlan 7, keksdose tax-tab.tsx:33)', () => {
     const grid = screen.getByRole("grid");
     expect(within(grid).getAllByRole("gridcell")).toHaveLength(12);
     expect(within(grid).getAllByRole("gridcell")[0]).toHaveTextContent("2020");
-    expect(screen.getByRole("button", { name: "Earlier years" })).toBeDisabled();
+    // Refused focusably (`aria-disabled`, refactor audit 2026-10-30, INP-4): a press keeps
+    // the page where it is.
+    const earlier = screen.getByRole("button", { name: "Earlier years" });
+    expect(earlier).toHaveAttribute("aria-disabled", "true");
+    fireEvent.click(earlier);
+    expect(within(screen.getByRole("grid")).getAllByRole("gridcell")[0]).toHaveTextContent("2020");
     fireEvent.click(screen.getByRole("button", { name: "Later years" }));
     expect(within(screen.getByRole("grid")).getAllByRole("gridcell")[0]).toHaveTextContent("2032");
     // The keyboard: PageUp turns back a page, onto the same column.

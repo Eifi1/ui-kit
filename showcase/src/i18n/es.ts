@@ -238,7 +238,7 @@ export const es: Dictionary = {
       title: "Calendarios y selectores de fecha",
       short: "Calendarios",
       blurb:
-        "Elegir un día o un intervalo de días: el calendario en sí, los selectores de fecha y de intervalo construidos sobre él, sus atajos y sus límites, y el primer día de la semana.",
+        "Elegir un día o un intervalo de días: el calendario en sí, los selectores de fecha y de intervalo construidos sobre él, sus atajos, sus límites y su bloqueo de solo lectura, y el primer día de la semana.",
     },
     "month-view": {
       title: "Vista mensual del calendario",
@@ -373,7 +373,7 @@ export const es: Dictionary = {
       title: "Gráfico de mosaicos",
       short: "Mosaicos",
       blurb:
-        "El treemap: la parte de un todo como mosaicos, con etiquetas que caben y mosaicos en los que se puede hacer clic — y el desglose, con un gráfico de barras igual que con mosaicos.",
+        "El treemap: la parte de un todo como mosaicos, con etiquetas que caben y mosaicos en los que se puede hacer clic, que se recorren con el teclado y que un lector de pantalla lee en voz alta, agrupados si hace falta en marcos con título — y el desglose, con un gráfico de barras igual que con mosaicos.",
     },
     "series-chart": {
       title: "Gráfico de series",
@@ -1030,6 +1030,7 @@ export const es: Dictionary = {
       "mosaicos clicables",
       "gastos por categoría",
       "encajar las etiquetas en los mosaicos",
+      "agrupar mosaicos en marcos",
     ],
     "series-chart": [
       "gráfico a lo largo del tiempo",

@@ -64,7 +64,7 @@ describe("GlobalSearch — loading the palette", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
 
     act(() => {
-      document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }));
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }));
     });
     expect(await screen.findByRole("option", { name: "Budget" }, { timeout: 5000 })).toBeInTheDocument();
     expect(loaded.palette).toBe(1);

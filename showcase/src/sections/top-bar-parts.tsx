@@ -148,8 +148,8 @@ function Bar({ signedIn }: { signedIn: boolean }) {
                 >
                   {(close) => (
                     <>
-                      <AccountMenuLanguage languages={LANGUAGES} value={lang} onPick={setLang} close={close} />
-                      <AccountMenuTextSize value={textSize} onPick={setTextSize} />
+                      <AccountMenuLanguage languages={LANGUAGES} value={lang} onChange={setLang} close={close} />
+                      <AccountMenuTextSize value={textSize} onChange={setTextSize} />
                       <li>
                         <MenuItem icon={Settings} onClick={close}>
                           Settings

@@ -1109,7 +1109,8 @@ body,
    fresh-start checkbox (feedback #264). */
 @layer base {
   :where(input[type="checkbox"], input[type="radio"]) {
-    accent-color: var(--brand); /* unified indigo brand accent (theme-aware) */
+    /* The brand of the active preset or the app (indigo only in the default), theme-aware. */
+    accent-color: var(--brand);
   }
 }
 

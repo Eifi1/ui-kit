@@ -235,7 +235,7 @@ export const it: Dictionary = {
       title: "Calendari e selettori di date",
       short: "Calendari",
       blurb:
-        "Scegliere un giorno o un intervallo di giorni: il calendario stesso, i selettori di data e di intervallo costruiti su di esso, le loro scorciatoie e i loro limiti, e il primo giorno della settimana.",
+        "Scegliere un giorno o un intervallo di giorni: il calendario stesso, i selettori di data e di intervallo costruiti su di esso, le loro scorciatoie, i loro limiti e il loro blocco di sola lettura, e il primo giorno della settimana.",
     },
     "month-view": {
       title: "Vista mensile del calendario",
@@ -370,7 +370,7 @@ export const it: Dictionary = {
       title: "Grafico a riquadri",
       short: "Riquadri",
       blurb:
-        "La treemap: le parti di un tutto come riquadri, con etichette che ci stanno e riquadri cliccabili — e il drill-down, con un grafico a barre come con i riquadri.",
+        "La treemap: le parti di un tutto come riquadri, con etichette che ci stanno e riquadri cliccabili, percorribili da tastiera e letti da uno screen reader, raggruppati all’occorrenza in cornici con titolo — e il drill-down, con un grafico a barre come con i riquadri.",
     },
     "series-chart": {
       title: "Grafico a serie",
@@ -1027,6 +1027,7 @@ export const it: Dictionary = {
       "riquadri cliccabili",
       "spese per categoria",
       "far stare le etichette nei riquadri",
+      "raggruppare i riquadri in cornici",
     ],
     "series-chart": [
       "grafico nel tempo",

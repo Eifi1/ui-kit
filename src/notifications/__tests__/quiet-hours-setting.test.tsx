@@ -18,7 +18,11 @@ afterEach(() => {
 
 const timeField = (name: "From" | "Until") => screen.getByLabelText(name) as HTMLInputElement;
 
-const setTime = (field: HTMLInputElement, value: string) => fireEvent.change(field, { target: { value } });
+/** Type a time and leave the field: it is saved when entered (FLW-4, quiet-hours-saving.test.tsx). */
+const setTime = (field: HTMLInputElement, value: string) => {
+  fireEvent.change(field, { target: { value } });
+  fireEvent.blur(field);
+};
 
 describe("deviceTimeZone", () => {
   it("is the runtime's zone", () => {

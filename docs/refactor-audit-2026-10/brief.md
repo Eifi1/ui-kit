@@ -1,7 +1,7 @@
 # Refactor audit 2026-10 — brief for the six auditors
 
 Target: @eifi1/ui-kit at /home/marcel/ui-kit-034 (branch feat/0.34.0, the newest code: 0.33.1 + round 0.34,
-committed; docs/adopt-0.34.md is in progress — ignore it). Apps (read-only, for usage evidence):
+committed; docs/archive/adopt/adopt-0.34.md is in progress — ignore it). Apps (read-only, for usage evidence):
 /home/marcel/keksdose, /home/marcel/kastlan, /home/marcel/kurvenschmiede.
 
 RULES

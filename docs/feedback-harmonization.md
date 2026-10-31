@@ -23,7 +23,7 @@ names them. The snapshot, the per-repo to-dos and the review records are in
 | 2 | Decisions | — | §7.2, §7.4, §7.7; §8.2 (READY, 0.31) |
 | 3 | The API contract (A) | server-kit 0.1.0 (`feedback`); apps' backends | §7.1, §7.5–§7.9, §7.15, §7.16; §8.2 (server-kit 0.5); round 0.36 (§3.5, §3.6: the limiter is charged before the work, as the three apps do; [server-services §2.11](server-services-harmonization.md)) |
 | 3.8 | What kastlan and Kurvenschmiede change | — (archived) | |
-| 4 | The UI contract (B) | ui-kit 0.27.0 | §7.3, §7.4, §7.10–§7.14; §8.1, §8.2 (ui-kit 0.31) |
+| 4 | The UI contract (B) | ui-kit 0.27.0 | §7.3, §7.4, §7.10–§7.14; §8.1, §8.2 (ui-kit 0.31); ui-kit 0.52 (§4.5: the Undo from the mutation's promise) |
 | 5 | What the kit adds, what stays app-side (C) | ui-kit 0.27.0, server-kit 0.1.0 | §8.1, §8.2 (ui-kit 0.31, server-kit 0.5) |
 | 6 | Per repo (D) | — (archived) | |
 | 7 | Settled points — the final canon | — | index; folded items point to their § |
@@ -440,7 +440,7 @@ Columns, in order (kit `DataTable`, `urlSync`, `storageKey="feedback"`, newest f
 | 4 | Subject / Betreff | title + env chip (non-prod `context.environment`, upper case) + **Rework** / **Rework ×{{count}}** chip (DE Nacharbeit / Nacharbeit ×{{count}}) | text (title + env) | card heading |
 | 5 | User / Nutzer | display name → email → `user #id`; erased → <deleted user> | text | |
 | 6 | Email / E-Mail | `user_email` → `context.user_email` | text | hidden |
-| 7 | URL | link (`noRowLink`): text = pathname, `href` = path + query + hash (kk `localHref`); aria "Open page" / "Seite öffnen" | text | hidden |
+| 7 | URL | link (`noRowLink`): text = pathname, `href` = the path only (ui-kit 0.52: the query is the reporter's to write; a one-shot path shows as text with Copy); aria "Open page" / "Seite öffnen" | text | hidden |
 | 8 | Status | `FeedbackStatusTransitions variant="icon"` with `visibleFeedbackStatuses` | select, chain order | |
 | 9 | Resolved / Erledigt am | `resolved_at` date | date | hidden |
 
@@ -477,9 +477,13 @@ the title beside the detail. Then the sections, in this order:
    and lose the history. The kit keeps the rework (and folded comment) blocks and the
    file lines out of the editable text and re-appends them unchanged on save.
 2. **URL** — when `context.url` is set, else `context.route` (a path-only `url` is
-   accepted — Kurvenschmiede's backfilled rows): the link's text and `href` are path +
-   query + hash (kk `localHref`), and `CopyButton` **Copy URL** / **URL kopieren**
-   copies the full `context.url`. keksdose's label is its shared `more.copy_url` key,
+   accepted — Kurvenschmiede's backfilled rows): the link's text and `href` are the path
+   only (ui-kit 0.52, the code review's bypass through `/login?next=/join?token=…`: a
+   query is the reporter's to write and a forwarding page acts on it), the query and hash
+   shown as text beside it, and `CopyButton` **Copy URL** / **URL kopieren** copies the
+   full `context.url`. A one-shot path (`/join`, `/register`, `/verify-email`,
+   `/reset-password`, an app's `pageLinkExclude`; matched decoded and in any case) shows
+   as text with Copy. keksdose's label is its shared `more.copy_url` key,
    which stays app-side; the kit carries the same words in its own namespace.
 3. **Attachment** / **Anhang** — screenshot, then `attachment_urls`, then rework
    pictures from the body, in that order; images via `AuthedImage`, pdf/txt as a
@@ -494,7 +498,7 @@ the title beside the detail. Then the sections, in this order:
      entschieden oder warum nicht.**; blank saves `null`;
    - admin or author, status reworkable (§3.4): `RotateCcw` **Rework** / **Nacharbeit**;
    - when the URL (or the route fallback above) is set: `ExternalLink` **Open page** /
-     **Seite öffnen** (a real `href`, path + query + hash).
+     **Seite öffnen** (a real `href`, the path only; not on a one-shot path).
 5. **Send for rework** / **Zur Nacharbeit senden** — only while reworking:
    `FeedbackNoteEditor` with a **one-file** attachment field (add, capture or paste;
    same types and size), placeholder **What still needs refinement? Any new
@@ -526,6 +530,15 @@ the PATCH lands, an 8 s success toast
 **Undo** / **Rückgängig**, which PATCHes the previous status and confirms **Back to
 “{{status}}”: {{title}}** / **Zurück auf „{{status}}“: {{title}}**. Fired from the page's
 mutation, so it still arrives when a status filter has already removed the row.
+**From the mutation's promise** (ui-kit 0.52; refactor audit 2026-10-30 FLW-3): the app
+passes `update.mutateAsync`, and the toast follows the promise each change returns, which
+settles whatever else the mutation does meanwhile. A per-call `onSuccess` handed to
+`mutate` (the form before 0.52) is called by TanStack Query v5 only for the latest
+`mutate()` on the observer, so a second change sent before the first PATCH answered
+(another swipe, another pill, the Undo itself) took the first change's toast and its Undo
+with it, and the row left the filtered list with nothing saying what it became. The
+callback form stays accepted, deprecated in 0.52 and removed in 0.53. The row detail's own updates
+(the rework and description editors closing on success) take the promise the same way.
 
 **Swipes** (the kit's `feedbackSwipePlan`, `DEFAULT_FEEDBACK_SWIPE`): actions `advance`
 (to `nextFeedbackStatus`, `ChevronsRight`, tone `info`, label = the next status), `done`
@@ -2280,7 +2293,7 @@ comment's own URL allowed), `check_repository(…, replies=, comments=)` (0.18's
 
 ### 12.5 Per app (migration, routes, the tests that pin the old bodies)
 
-The rows, with file:line, are in [adopt-0.47.md](adopt-0.47.md) ("Attachments on admin
+The rows, with file:line, are in [adopt-0.47.md](archive/adopt/adopt-0.47.md) ("Attachments on admin
 replies and public comments"). In short:
 - **keksdose:** one Alembic step after `0133_notification_queue`: `feedback_comments.attachment_url`
   (Text NULL, as 0130's `feedback_replies.attachment_url`); the comment store's `add` writes
@@ -2307,4 +2320,4 @@ replies and public comments"). In short:
 public detail. (2) The app decides (§12.3 Delete): keksdose keeps it for 0.47, kastlan has no
 comments, Kurvenschmiede purges (cascade). (3) Kurvenschmiede: a new `comment` kind tied to
 its comment (`feedback_attachment.comment_id`), read by whoever reads the comment's body.
-The rows are in adopt-0.47.md.
+The rows are in docs/archive/adopt/adopt-0.47.md.

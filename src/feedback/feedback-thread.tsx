@@ -3,6 +3,7 @@ import type { ReactNode, Ref, RefObject } from "react";
 import { ImageIcon, ImageOff, Paperclip, Send } from "lucide-react";
 import { cn } from "../lib/cn";
 import { formatDate, formatRelativeTime } from "../lib/format";
+import { upperFirst } from "../lib/text-case";
 import { hasContent } from "../lib/presence";
 import { Button } from "../components/button";
 import { EmptyState } from "../components/empty-state";
@@ -74,7 +75,7 @@ export { DEFAULT_FEEDBACK_THREAD_LABELS };
 
 /** The `feedbackComposer` namespace of `<UiKitProvider labels>`. The attach buttons'
  *  words are `feedbackAttachment`'s, shared with the dialog and the note editor. */
-export interface FeedbackComposerLabels {
+export interface ChatComposerLabels {
   /** Accessible name of the text box. */
   field: string;
   placeholder: string;
@@ -436,7 +437,7 @@ function DaySeparator({ date, now, locale }: { date: Date; now: number; locale: 
   let label: string;
   if (days === 0 || days === -1) {
     const word = new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(days + 0, "day");
-    label = word.charAt(0).toLocaleUpperCase(locale) + word.slice(1);
+    label = upperFirst(word, locale);
   } else {
     label = formatDate(
       date,
@@ -482,7 +483,7 @@ export type FeedbackComposerAttachment = Omit<FeedbackNoteAttachment, "labels" |
 } & Pick<FeedbackAttachmentFieldSingleProps, "buttonVariant" | "buttonSize">;
 
 /**
- * What a render-prop {@link FeedbackComposerProps.attachmentSlot} is handed (0.24.0,
+ * What a render-prop {@link ChatComposerProps.attachmentSlot} is handed (0.24.0,
  * keksdose).
  *
  * keksdose's support chat put `<FeedbackAttachmentField refs>` in the slot and a
@@ -492,7 +493,7 @@ export type FeedbackComposerAttachment = Omit<FeedbackNoteAttachment, "labels" |
  * to itself, so keksdose wrapped the whole composer in a ref'd `<div>` of its own just
  * to have an element to hand over.
  */
-export interface FeedbackComposerSlotContext {
+export interface ChatComposerSlotContext {
   /**
    * The composer's root, round the text box and this slot — the field's `pasteFrom`,
    * as it is: `pasteFrom={slot.root}`.
@@ -514,7 +515,7 @@ export interface FeedbackComposerSlotContext {
   pending: boolean;
 }
 
-export interface FeedbackComposerProps {
+export interface ChatComposerProps {
   /**
    * Send the comment. Return the promise: the box clears when it RESOLVES, and only of
    * what was sent — text typed while it was in flight stays. A rejection keeps
@@ -538,7 +539,7 @@ export interface FeedbackComposerProps {
    * refs and clearing them once `onSend` resolves stay with the host. Pair it with
    * `canSend`.
    *
-   * A node, or (0.24.0) a function of {@link FeedbackComposerSlotContext} that returns
+   * A node, or (0.24.0) a function of {@link ChatComposerSlotContext} that returns
    * one — for a field that wants the composer's root as its `pasteFrom`, so a
    * screenshot pasted into the box reaches it, and `pending` for its `disabled`:
    *
@@ -551,7 +552,7 @@ export interface FeedbackComposerProps {
    * Called once per render of the composer, and not at all while `disabledReason`
    * stands in for it.
    */
-  attachmentSlot?: ReactNode | ((slot: FeedbackComposerSlotContext) => ReactNode);
+  attachmentSlot?: ReactNode | ((slot: ChatComposerSlotContext) => ReactNode);
   /**
    * Whether Send is enabled, over the composer's own rule (some text in the box) —
    * for state the composer cannot see, i.e. `attachmentSlot`'s (keksdose G5): `true`
@@ -592,7 +593,7 @@ export interface FeedbackComposerProps {
    * Textarea's `maxLength` + `showCount` since 0.22; the reply box, a composer, could
    * not). The box's own `maxLength`, so typing and pasting stop at it.
    *
-   * {@link FeedbackComposerHandle.insertText} is not stopped by it — the browser limits
+   * {@link ChatComposerHandle.insertText} is not stopped by it — the browser limits
    * typing, not a script — and a canned reply is not cut mid-sentence to fit. A draft
    * past the limit therefore holds Send back (whatever `canSend` says, as `pending`
    * does) until it is trimmed; with `showCount` the counter, red at the limit, says by
@@ -623,13 +624,13 @@ export interface FeedbackComposerProps {
    * is still the one that went out.
    */
   value?: string;
-  /** Every change to the draft — typing, {@link FeedbackComposerHandle.insertText}, the
+  /** Every change to the draft — typing, {@link ChatComposerHandle.insertText}, the
    *  clear after a send. Required to change a controlled `value`. */
   onValueChange?: (value: string) => void;
-  /** {@link FeedbackComposerHandle}: put text into the draft from outside (canned-reply
+  /** {@link ChatComposerHandle}: put text into the draft from outside (canned-reply
    *  chips) or focus the box. */
-  ref?: Ref<FeedbackComposerHandle>;
-  labels?: LabelOverride<FeedbackComposerLabels>;
+  ref?: Ref<ChatComposerHandle>;
+  labels?: LabelOverride<ChatComposerLabels>;
   className?: string;
   /**
    * `"sm"` for a narrow host — keksdose's assistant launcher, a small floating panel
@@ -659,7 +660,7 @@ export interface FeedbackComposerProps {
  * the string, not the caret, so it could only append — so the composer, which owns
  * the textarea, does the splice.
  */
-export interface FeedbackComposerHandle {
+export interface ChatComposerHandle {
   /**
    * Insert `text` at the caret, replacing any selection (the caret the box last had:
    * a click on a chip blurs it, and the selection survives the blur), then focus the
@@ -685,7 +686,8 @@ const isApple = () =>
  * feedback-specific — a textarea, an optional picture or a host's upload slot, Send,
  * `sendOn="enter"` for the chat way — and keksdose's assistant and support chat are
  * chats, not reports. `FeedbackComposer`, its old name, was removed in 0.35 (refactor
- * audit 2026-10, API-6d; deprecated in 0.34); its types keep theirs.
+ * audit 2026-10, API-6d; deprecated in 0.34); its types are `ChatComposer*` too since 0.52
+ * (refactor audit 2026-10-30, API-6), the `FeedbackComposer*` names deprecated aliases.
  */
 export function ChatComposer({
   onSend,
@@ -709,7 +711,7 @@ export function ChatComposer({
   id,
   size = "md",
   ...rest
-}: FeedbackComposerProps) {
+}: ChatComposerProps) {
   const labels = useKitLabels("feedbackComposer", DEFAULT_FEEDBACK_COMPOSER_LABELS, labelsProp);
   // The lock as Send sees it, with its scope (§12.36). Send's Button reads the same
   // through its own `commit`; this holds the keyboard's send back with it.
@@ -797,7 +799,7 @@ export function ChatComposer({
   const config = attachment === true ? {} : attachment || null;
   // The slot is handed the ref OBJECT, for a field's `pasteFrom`, which reads `.current`
   // in an effect once the root is attached — nothing reads it during this render (see
-  // FeedbackComposerSlotContext.root).
+  // ChatComposerSlotContext.root).
   const slot =
     typeof attachmentSlot === "function"
       ? // eslint-disable-next-line react-hooks/refs -- handed on for an effect, not read here
@@ -902,12 +904,12 @@ function dataAttributes(props: object): Record<string, unknown> {
   return out;
 }
 
-/** {@link FeedbackComposerProps}, for {@link ChatComposer}. */
-export type ChatComposerProps = FeedbackComposerProps;
-/** {@link FeedbackComposerHandle}, for {@link ChatComposer}. */
-export type ChatComposerHandle = FeedbackComposerHandle;
-/** {@link FeedbackComposerLabels}, for {@link ChatComposer} — still the `feedbackComposer`
- *  namespace of the provider. */
-export type ChatComposerLabels = FeedbackComposerLabels;
-/** {@link FeedbackComposerSlotContext}, for {@link ChatComposer}'s `attachmentSlot`. */
-export type ChatComposerSlotContext = FeedbackComposerSlotContext;
+/** @deprecated 0.52 — {@link ChatComposerProps}, the same type; removed in 0.53 */
+export type FeedbackComposerProps = ChatComposerProps;
+/** @deprecated 0.52 — {@link ChatComposerHandle}, the same type; removed in 0.53 */
+export type FeedbackComposerHandle = ChatComposerHandle;
+/** @deprecated 0.52 — {@link ChatComposerLabels}, the same type (still the provider's
+ *  `feedbackComposer` namespace); removed in 0.53 */
+export type FeedbackComposerLabels = ChatComposerLabels;
+/** @deprecated 0.52 — {@link ChatComposerSlotContext}, the same type; removed in 0.53 */
+export type FeedbackComposerSlotContext = ChatComposerSlotContext;

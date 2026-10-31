@@ -466,7 +466,6 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
         <ZoomLayer
           axisIds={axes.map((axis) => axis.id)}
           only={only}
-          label={labels.zoomHint}
           onZoom={(selection) => {
             const next = zoomAfter(state, selection, source);
             if (next.x !== xWindow) setXWindow(next.x);
@@ -506,17 +505,20 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
  * A transparent rectangle over the plot area that reads the drag. It does NOT stop the
  * event: recharts drives its tooltip from the same pointer move bubbling up to its own
  * wrapper, so swallowing it here would trade the tooltip for the zoom.
+ *
+ * Nothing to assistive technology (0.52, refactor audit 2026-10-30, DSP-5): it was a
+ * `role="application"` named by the drag hint, which could not take focus — the one name
+ * on an otherwise unnamed chart. The hint is in the chart's description now
+ * (`SeriesChart`'s figure), and `data-zoom-surface` is how a test finds the rect.
  */
 function ZoomLayer({
   axisIds,
   only,
-  label,
   onZoom,
   onReset,
 }: {
   axisIds: string[];
   only?: "x" | "y";
-  label: string;
   onZoom: (selection: ZoomSelection) => void;
   onReset: () => void;
 }) {
@@ -578,8 +580,7 @@ function ZoomLayer({
         height={plot.height}
         // `transparent`, not `none`: an unpainted shape takes no pointer events.
         fill="transparent"
-        role="application"
-        aria-label={label}
+        data-zoom-surface=""
         style={{ cursor: "crosshair" }}
         onPointerDown={(event) => {
           if (event.button !== 0) return;

@@ -241,7 +241,7 @@ export const fr: Dictionary = {
       title: "Calendriers et sélecteurs de date",
       short: "Calendriers",
       blurb:
-        "Choisir un jour ou une période\u00a0: le calendrier lui-même, les sélecteurs de date et de période construits dessus, leurs préréglages et leurs bornes, et le premier jour de la semaine.",
+        "Choisir un jour ou une période\u00a0: le calendrier lui-même, les sélecteurs de date et de période construits dessus, leurs préréglages, leurs bornes et leur verrou de lecture seule, et le premier jour de la semaine.",
     },
     "month-view": {
       title: "Vue mensuelle du calendrier",
@@ -376,7 +376,7 @@ export const fr: Dictionary = {
       title: "Graphique en tuiles",
       short: "Tuiles",
       blurb:
-        "La treemap\u00a0: la part d’un tout en tuiles, avec des libellés qui tiennent et des tuiles cliquables — et l’exploration en profondeur, par un histogramme comme par les tuiles.",
+        "La treemap\u00a0: la part d’un tout en tuiles, avec des libellés qui tiennent et des tuiles cliquables, que l’on parcourt au clavier et qu’un lecteur d’écran énonce, regroupées au besoin dans des cadres titrés — et l’exploration en profondeur, par un histogramme comme par les tuiles.",
     },
     "series-chart": {
       title: "Graphique de séries",
@@ -1033,6 +1033,7 @@ export const fr: Dictionary = {
       "tuiles cliquables",
       "dépenses par catégorie",
       "faire tenir les libellés dans les tuiles",
+      "regrouper des tuiles dans des cadres",
     ],
     "series-chart": [
       "graphique dans le temps",

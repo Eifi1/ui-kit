@@ -6,11 +6,8 @@ import { DEFAULT_PAGE_CONTENTS_LABELS } from "../components/page-contents-labels
 import { DEFAULT_POPOVER_LABELS } from "../components/popover-labels";
 import { DEFAULT_CHIP_INPUT_LABELS } from "../components/chip-labels";
 import { DEFAULT_FIELD_SYNC_LABELS } from "../components/field-sync-labels";
-import {
-  DEFAULT_CHARACTER_COUNT_LABELS,
-  DEFAULT_PASSWORD_REVEAL_LABELS,
-  DEFAULT_TABS_LABELS,
-} from "../components/ui-labels";
+import { DEFAULT_CHARACTER_COUNT_LABELS, DEFAULT_PASSWORD_REVEAL_LABELS } from "../components/field-base-labels";
+import { DEFAULT_TABS_LABELS } from "../components/tabs-labels";
 import { DEFAULT_WIZARD_LABELS } from "../wizard/wizard-labels";
 import { DEFAULT_TOUR_LABELS } from "../tour/tour-labels";
 import { DEFAULT_TOUR_CATALOGUE_LABELS } from "../tour/tour-catalogue-labels";
@@ -19,6 +16,7 @@ import { DEFAULT_COMMAND_PALETTE_LABELS } from "../search/command-palette-labels
 import { DEFAULT_GLOBAL_SEARCH_LABELS } from "../search/global-search-labels";
 import { DEFAULT_SERIES_CHART_LABELS } from "../components/series-chart-labels";
 import { DEFAULT_PIE_CHART_LABELS } from "../components/pie-chart-labels";
+import { DEFAULT_TREEMAP_LABELS } from "../components/treemap-labels";
 import { DEFAULT_SPARKLINE_LABELS } from "../components/sparkline-labels";
 import { DEFAULT_STAT_TILE_LABELS } from "../components/stat-tile-labels";
 import { DEFAULT_SIGNATURE_PAD_LABELS } from "../components/signature-pad-labels";
@@ -176,6 +174,7 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   globalSearch: DEFAULT_GLOBAL_SEARCH_LABELS,
   seriesChart: DEFAULT_SERIES_CHART_LABELS,
   pieChart: DEFAULT_PIE_CHART_LABELS,
+  treemap: DEFAULT_TREEMAP_LABELS,
   sparkline: DEFAULT_SPARKLINE_LABELS,
   statTile: DEFAULT_STAT_TILE_LABELS,
   signaturePad: DEFAULT_SIGNATURE_PAD_LABELS,

@@ -19,10 +19,11 @@ concurrency:
 # pushed: the husky pre-push hook runs the very same scripts. `npm run check` is three
 # independent groups (scripts/check.mjs), and CI runs those same three package.json
 # scripts as three parallel jobs, so the two cannot drift:
-#   check:static  typecheck · lint · check:tokens · check:security · check:commits
+#   check:static  format:check · typecheck · lint · check:tokens · check:security · check:commit-rules · check:commits
+#   check:build   build · check:graph · check:package · export inventory · styling inventory · build:showcase · check:tailwind
 #   check:test    test:coverage (the coverage ratchet in vitest.config.ts)
-#   check:build   build · check:graph · check:package · build:showcase · check:tailwind
-# What each check guards is documented in its script.
+# What each check guards is documented in its script. These lists, scripts/check.mjs's and
+# CONTRIBUTING's are package.json's own, step for step: src/__tests__/local-gates.test.ts.
 #
 # ONE CHECK RUNS HERE FIRST: the truncation sweep (`npm run check:sweep`, Chromium over
 # every showcase page at four text sizes; refactor plan 2026-10, decision 2). It gates a

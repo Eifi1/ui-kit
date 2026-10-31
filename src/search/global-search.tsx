@@ -1,13 +1,15 @@
-import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { ReactNode } from "react";
+import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { useHref, useInRouterContext, useNavigate } from "react-router";
 import { AlertCircle, Loader2, Search } from "lucide-react";
 import { Tooltip } from "../components/tooltip";
 import { TOPBAR_TRIGGER_CLASS } from "../shell/topbar-controls";
 import { cn } from "../lib/cn";
+import { lazyWithFallback, type LazyFallbackProps } from "../lib/lazy-with-fallback";
+import { isApplePlatform } from "../hooks/use-hotkey";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 // Types only from ./command-palette, gone from the built module: the palette loads late.
-import type { CommandItem, CommandPaletteDensity, CommandPaletteLabels } from "./command-palette";
+import type { CommandItem, CommandPalette, CommandPaletteDensity, CommandPaletteLabels } from "./command-palette";
 import { DEFAULT_COMMAND_PALETTE_LABELS } from "./command-palette-labels";
 import { useCommandKey } from "./use-command-key";
 import { createSearchIndex } from "./search-index";
@@ -20,10 +22,31 @@ import { DEFAULT_GLOBAL_SEARCH_LABELS } from "./global-search-labels";
  * entry chunks, for a dialog drawn only once somebody searches. A LITERAL relative
  * `import()`, as the catalogue loaders are (i18n/languages.ts), so the library build keeps
  * the module its own and an app's bundler splits it off.
+ *
+ * A fetch that fails — a tab left open across a deploy, offline — closes the search rather
+ * than throwing (0.52 code review, tour.tsx): the top bar sits above the routes' error
+ * boundaries in these apps, so the rejected import took the whole shell down on ⌘K.
  */
-const LazyCommandPalette = lazy(() =>
-  import("./command-palette").then((module) => ({ default: module.CommandPalette })),
+const LazyCommandPalette = lazyWithFallback(
+  () => import("./command-palette").then((module) => module.CommandPalette),
+  PaletteUnavailable,
 );
+
+/**
+ * Stands in for a palette whose chunk did not arrive. Mounted open — this attempt's fetch
+ * failed — it closes the search, so the trigger and ⌘K work again; opened after that, it
+ * fetches again, and the palette appears if it comes. Never both in one open: offline, a
+ * retry on the open it closes would fetch in a loop.
+ */
+function PaletteUnavailable({ open, onClose, retry }: ComponentProps<typeof CommandPalette> & LazyFallbackProps) {
+  const failedOpen = useRef(open);
+  useLayoutEffect(() => {
+    if (!open) failedOpen.current = false;
+    else if (failedOpen.current) onClose();
+    else retry();
+  }, [open, onClose, retry]);
+  return null;
+}
 
 export interface GlobalSearchLabels {
   /** The trigger's accessible name, and the dialog's. */
@@ -193,12 +216,6 @@ export interface GlobalSearchProps {
   [key: `data-${string}`]: string | number | boolean | undefined;
 }
 
-function isApplePlatform(): boolean {
-  if (typeof navigator === "undefined") return false;
-  const nav = navigator as Navigator & { userAgentData?: { platform?: string } };
-  return /mac|iphone|ipad|ipod/i.test(nav.userAgentData?.platform || nav.platform || nav.userAgent);
-}
-
 const pageLoad = (href: string) => window.location.assign(href);
 const identity = (href: string) => href;
 
@@ -347,7 +364,8 @@ function GlobalSearchImpl({
 
   const openSearch = useCallback(() => setOpen(true), [setOpen]);
   const noop = useCallback(() => {}, []);
-  useCommandKey(shortcut ? openSearch : noop);
+  // Off, not a no-op: a no-op still cancelled every Mod+K (0.52 code review, global-search.tsx).
+  useCommandKey(openSearch, { enabled: shortcut });
 
   /* ── the static index ─────────────────────────────────────────────────── */
 
@@ -572,6 +590,7 @@ function GlobalSearchImpl({
     [l.trigger, l.placeholder, paletteLabels],
   );
 
+  // `useHotkey`'s own platform check, so the label and the chord it answers never disagree.
   const apple = useMemo(() => isApplePlatform(), []);
   const keys = apple ? "⌘K" : "Ctrl K";
   const triggerLabel = triggerName === "withShortcut" ? l.shortcut(keys) : l.trigger;
@@ -580,7 +599,10 @@ function GlobalSearchImpl({
     label: triggerLabel,
     tooltip: l.shortcut(keys),
     keys,
-    ariaKeyShortcuts: "Meta+K Control+K",
+    // The one chord that opens it here: Mod+K since 0.52 (DUP-12). Both were announced,
+    // and on every platform one of them did nothing — Control+K is a Mac text field's
+    // kill-line (0.52 code review, global-search.tsx).
+    ariaKeyShortcuts: apple ? "Meta+K" : "Control+K",
   };
 
   return (
@@ -613,8 +635,7 @@ function GlobalSearchImpl({
             </Tooltip>
           )}
       {/* Nothing is drawn while the palette's module is on its way (a few milliseconds,
-          once per page load). A failed load is a chunk-load error for the app's error
-          boundary, as a lazy route's is. */}
+          once per page load). A failed load closes the search (`PaletteUnavailable`). */}
       {paletteMounted && (
         <Suspense fallback={null}>
           <LazyCommandPalette

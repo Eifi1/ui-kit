@@ -1,4 +1,4 @@
-import { decodeSorts, encodeSorts, nextSorts, normalizeSorts } from "../data-table-sort";
+import { compareSortValues, decodeSorts, encodeSorts, nextSorts, normalizeSorts } from "../data-table-sort";
 import type { SortState } from "../data-table-sort";
 
 /**
@@ -158,5 +158,45 @@ describe("nextSorts cycle options", () => {
     const b = nextSorts(a, "amount", true, o);
     expect(b[1]).toEqual({ key: "amount", dir: "asc" });
     expect(nextSorts(b, "amount", true, o)).toEqual([{ key: "date", dir: "asc" }]);
+  });
+});
+
+/**
+ * The client sort's order, exported (0.52): keksdose weaves its scheduled rows into a
+ * kit-sorted register and kept a copy of the table's private comparator, which drifts the
+ * day the table's changes. One rule now, the table's own (DataTable sorts through it).
+ */
+describe("compareSortValues", () => {
+  const sorted = (values: (string | number | null | undefined)[], locale?: string) =>
+    [...values].sort((a, b) => compareSortValues(a, b, locale));
+
+  it("collates strings: lower case beside upper, umlauts beside their letter, digits as numbers", () => {
+    expect(sorted(["beta", "Zulu", "Äpfel", "alpha", "Bravo"], "de")).toEqual([
+      "alpha",
+      "Äpfel",
+      "beta",
+      "Bravo",
+      "Zulu",
+    ]);
+    expect(sorted(["Item 10", "Item 2", "Item 1"], "en")).toEqual(["Item 1", "Item 2", "Item 10"]);
+    // Case and accents alone are no difference: the next sort key decides.
+    expect(compareSortValues("Zürich", "zurich", "de")).toBe(0);
+  });
+
+  it("in the locale given", () => {
+    // Swedish puts ä after z; German beside a.
+    expect(compareSortValues("ä", "z", "sv")).toBeGreaterThan(0);
+    expect(compareSortValues("ä", "z", "de")).toBeLessThan(0);
+  });
+
+  it("numbers as numbers, before strings; null and undefined last, equal to each other", () => {
+    expect(sorted([10, "b", null, 2, undefined, "a", -1], "en")).toEqual([-1, 2, 10, "a", "b", null, undefined]);
+    expect(compareSortValues(null, undefined)).toBe(0);
+    expect(compareSortValues(undefined, 0)).toBeGreaterThan(0);
+  });
+
+  it("an unknown locale tag falls back to the runtime's collation instead of throwing", () => {
+    expect(() => compareSortValues("a", "b", "not a tag!")).not.toThrow();
+    expect(compareSortValues("a", "b", "not a tag!")).toBeLessThan(0);
   });
 });

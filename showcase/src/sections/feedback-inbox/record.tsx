@@ -13,7 +13,7 @@ import {
   splitDescription,
   useFeedbackStatusUndo,
 } from "@eifi1/ui-kit";
-import type { FeedbackStatus, FeedbackStatusMutate, UiKitLabelOverrides } from "@eifi1/ui-kit";
+import type { FeedbackStatus, FeedbackStatusMutateAsync, UiKitLabelOverrides } from "@eifi1/ui-kit";
 import { Example, Note, code } from "../../lib/section";
 import { LOOKS, LookToggle, capture } from "../feedback-compose";
 import type { Look } from "../feedback-compose";
@@ -95,10 +95,9 @@ const DE_CH = {
 
 function Pills() {
   const [row, setRow] = useState({ id: 1, title: "Chart jumps on save", status: "IN_EVALUATION" as FeedbackStatus });
-  // Stands in for the page's TanStack mutation: the PATCH "lands" at once.
-  const mutate = useCallback<FeedbackStatusMutate>((patch, { onSuccess }) => {
+  // Stands in for the page's TanStack `mutateAsync`: the PATCH "lands" at once.
+  const mutate = useCallback<FeedbackStatusMutateAsync>(async (patch) => {
     setRow((prev) => ({ ...prev, status: patch.status }));
-    onSuccess();
   }, []);
   const changeStatus = useFeedbackStatusUndo(mutate);
   return (
@@ -153,7 +152,7 @@ function FeedbackRecord027Demo() {
         <Note>
           {code("FeedbackStatusBadge")}, {code("FeedbackCategoryBadge")} and {code("FeedbackStatusTransitions")} read
           the {code("feedbackStatus")} / {code("feedbackCategory")} namespaces when no {code("label")} is passed, so an
-          app drops its {code("STATUS_LABEL")} map. {code("useFeedbackStatusUndo(update.mutate)")} wraps one status
+          app drops its {code("STATUS_LABEL")} map. {code("useFeedbackStatusUndo(update.mutateAsync)")} wraps one status
           PATCH in the toast trio; the table, the row detail and the phone swipes all go through it.
         </Note>
       </Example>

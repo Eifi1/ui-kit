@@ -6,7 +6,7 @@ import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
 import { FeedbackMenu } from "../../feedback/feedback-menu";
 import { GlobalSearch } from "../../search/global-search";
 import { AdminMenuRow, useAdminMenuEntry } from "../admin-menu";
-import { DevSwitchers, DEV_ORIGINAL_ROLE_KEY } from "../dev-switchers";
+import { DevMenu, DEV_ORIGINAL_ROLE_KEY } from "../dev-menu";
 import { TopBarActionMenu } from "../topbar-action-menu";
 
 /** 0.43: the fixes from the 0.42 adoptions (keksdose 1, 2; kastlan 2). */
@@ -15,23 +15,23 @@ afterEach(() => sessionStorage.clear());
 
 const ROLES = ["ADMIN", "MEMBER"] as const;
 
-describe("DevSwitchers reads the kept role when it turns on (keksdose 1)", () => {
+describe("the dev menu reads the kept role when it turns on (keksdose 1)", () => {
   it("keeps 'Back to' after a reload whose probe enables it late", () => {
     sessionStorage.setItem(DEV_ORIGINAL_ROLE_KEY, "ADMIN");
     const props = { roles: ROLES, currentRole: "MEMBER" as const, onRole: vi.fn() };
     const { rerender } = render(
       <MemoryRouter>
-        <DevSwitchers enabled={false} {...props} />
+        <DevMenu enabled={false} {...props} />
       </MemoryRouter>,
     );
     expect(screen.queryByRole("button", { name: /^Dev tools/ })).toBeNull();
     // The GET probe answered: the switchers turn on.
     rerender(
       <MemoryRouter>
-        <DevSwitchers enabled {...props} />
+        <DevMenu enabled {...props} />
       </MemoryRouter>,
     );
-    // One flask since 0.51 (DevMenu), named "Dev tools · Role: …".
+    // One flask since 0.51 (DevMenu; 0.43 fixed it in DevSwitchers, gone in 0.52).
     fireEvent.click(screen.getByRole("button", { name: /^Dev tools/ }));
     expect(screen.getByRole("menuitem", { name: /Back to ADMIN/ })).toBeInTheDocument();
   });

@@ -3,7 +3,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import { ChatComposer } from "../feedback-thread";
-import type { FeedbackComposerHandle } from "../feedback-thread";
+import type { ChatComposerHandle } from "../feedback-thread";
 
 /**
  * keksdose G6 (0.23.0): the support reply box is capped at the server's 4,000 and
@@ -65,7 +65,7 @@ describe("ChatComposer maxLength / showCount", () => {
   });
 
   it("a canned reply that runs past the limit is kept whole, and holds Send back until trimmed", () => {
-    const ref = createRef<FeedbackComposerHandle>();
+    const ref = createRef<ChatComposerHandle>();
     const onSend = vi.fn();
     render(<ChatComposer ref={ref} onSend={onSend} maxLength={10} showCount canSend />);
     act(() => ref.current!.insertText("Thanks, fixed in the next release"));

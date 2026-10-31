@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Treemap as RechartsTreemap } from "recharts";
-import { ChartContainer, Treemap, TreemapCell, fitLabel, paletteFor } from "@eifi1/ui-kit";
-import type { TreemapNode } from "@eifi1/ui-kit";
+import { CHART_ROLES, ChartContainer, Treemap, TreemapCell, fitLabel, paletteFor } from "@eifi1/ui-kit";
+import type { TreemapLabels, TreemapNode } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row } from "../lib/section";
 import { numberFormat } from "../lib/number-format";
 
@@ -29,6 +29,14 @@ const PERCENT = numberFormat("en-GB", { style: "percent", maximumFractionDigits:
 function moneyAndShare(value: number, share: number | undefined): string {
   return share == null ? MONEY.format(value) : `${MONEY.format(value)} · ${PERCENT.format(share)}`;
 }
+
+/** The names' words beside `moneyAndShare`. A tile's name asks the formatter as the
+ *  tooltip does, share and all, so the formatter's text already says it: these leave the
+ *  name's own `(57%)` out — "Housing: £1,240 · 57%", not "… · 57% (57%)". */
+const SHARE_IN_VALUE: Partial<TreemapLabels> = {
+  tile: (name, value) => `${name}: ${value}`,
+  group: (name, value) => `${name}, group: ${value}`,
+};
 
 const SPEND: TreemapNode[] = [
   { id: "housing", name: "Housing", value: 1240 },
@@ -111,6 +119,71 @@ const HAND_BUILT = SPEND_AR.map((n, i) => ({ name: n.name, size: n.value, fill: 
 
 const DROPPED = MIXED.filter((n) => !(Number.isFinite(n.value) && n.value > 0));
 
+// Shops by chain — keksdose's "purchases without a receipt" (dev #642: "Is there already
+// a distinction between shop and chain?"). A chain is a group, its shops its tiles. A
+// group's own `value` is not read; pass its tiles' sum, as `chain` does.
+const sumOf = (nodes: readonly TreemapNode[]) => nodes.reduce((acc, n) => acc + n.value, 0);
+function chain(id: string, name: string, shops: TreemapNode[], fill?: string): TreemapNode {
+  return { id, name, value: sumOf(shops), fill, children: shops };
+}
+const SHOPS_BY_CHAIN: TreemapNode[] = [
+  chain("greenway", "Greenway", [
+    { id: "gw-centre", name: "Greenway Centre", value: 412 },
+    { id: "gw-station", name: "Greenway Station", value: 188 },
+    { id: "gw-north", name: "Greenway North", value: 64 },
+  ]),
+  chain("corner", "Corner Market", [
+    { id: "cm-high", name: "High Street", value: 236 },
+    { id: "cm-park", name: "Parkside", value: 97 },
+  ]),
+  chain("riverside", "Riverside", [
+    { id: "rs-quay", name: "The Quay", value: 154 },
+    { id: "rs-mill", name: "Mill Lane", value: 58 },
+    { id: "rs-bridge", name: "Bridge Road", value: 31 },
+  ]),
+  // A shop of no chain is a tile at the top, beside the chains.
+  { id: "bakery", name: "Village Bakery", value: 72 },
+  // The rest bucket in the muted role, not a ninth hue a reader would match to a chain.
+  chain(
+    "other",
+    "Other shops",
+    [
+      { id: "o-farm", name: "Farm shop", value: 41 },
+      { id: "o-kiosk", name: "Kiosk", value: 22 },
+    ],
+    CHART_ROLES.other,
+  ),
+];
+// Names by id, for the clicked path: a callback is handed ids.
+const SHOP_NAMES = new Map<string, string>();
+(function collect(nodes: readonly TreemapNode[]) {
+  for (const n of nodes) {
+    SHOP_NAMES.set(n.id, n.name);
+    if (n.children) collect(n.children);
+  }
+})(SHOPS_BY_CHAIN);
+// When each shop was last seen, in keksdose's three steps: this month, this quarter, older.
+const STEPS = { recent: 1, quarter: 0.78, older: 0.55 } as const;
+const SEEN: Record<string, { step: keyof typeof STEPS; note: string }> = {
+  "gw-centre": { step: "recent", note: "this week" },
+  "gw-station": { step: "quarter", note: "2 months ago" },
+  "gw-north": { step: "older", note: "last year" },
+  "cm-high": { step: "recent", note: "yesterday" },
+  "cm-park": { step: "older", note: "8 months ago" },
+  "rs-quay": { step: "quarter", note: "6 weeks ago" },
+  "rs-mill": { step: "recent", note: "this week" },
+  "rs-bridge": { step: "older", note: "last year" },
+  bakery: { step: "recent", note: "today" },
+  "o-farm": { step: "quarter", note: "3 months ago" },
+  "o-kiosk": { step: "older", note: "last year" },
+};
+const withRecency = (nodes: readonly TreemapNode[]): TreemapNode[] =>
+  nodes.map((n) =>
+    n.children ? { ...n, children: withRecency(n.children) } : { ...n, shade: STEPS[SEEN[n.id]?.step ?? "recent"] },
+  );
+const SHOPS_BY_RECENCY = withRecency(SHOPS_BY_CHAIN);
+const recencyNote = (id: string) => SEEN[id]?.note;
+
 export function TreemapDemo() {
   const [allZero, setAllZero] = useState(false);
   const [group, setGroup] = useState<string | null>(null);
@@ -136,17 +209,34 @@ export function TreemapDemo() {
         label="Treemap — values and share"
         hint="the formatter is handed each tile's share of what is drawn as a second argument"
       >
-        <Treemap data={SPEND} valueFormatter={moneyAndShare} height={320} />
+        <Treemap
+          data={SPEND}
+          valueFormatter={moneyAndShare}
+          labels={SHARE_IN_VALUE}
+          height={320}
+          aria-label="Spending by group, last month"
+          description="Housing is more than half of the month; groceries a fifth."
+        />
         <p className="mt-2 text-xs text-secondary">
           Hover a tile for its amount and share. The two smallest tiles have no label: under ~44×20px there is no room
           for a word, and a one-letter stub bleeding over the edge reads worse than none. The name is still in the
           tooltip.
         </p>
+        <p className="mt-2 text-xs text-secondary">
+          Or Tab to the map: it is ONE tab stop, a <code className="font-mono">figure</code> named by{" "}
+          <code className="font-mono">aria-label</code> and described by <code className="font-mono">description</code>,
+          and the arrow keys, Home and End walk the tiles in the order given — → to the next in a right-to-left page
+          too, since the map is not mirrored. Each tile is named by <code className="font-mono">treemap.tile</code> —
+          &ldquo;Housing: £1,240 (57%)&rdquo; by default — its value asked of the formatter as the tooltip asks it,
+          share included. This formatter says the share itself, so this map&apos;s{" "}
+          <code className="font-mono">labels</code> leave the name&apos;s own out: &ldquo;Housing: £1,240 · 57%&rdquo;.
+          Nobody clicks these tiles, so each is an image to read.
+        </p>
       </Example>
 
       <Example
         label="Treemap — clickable tiles, drilling down"
-        hint="onNodeClick makes each tile a focusable button: Tab to it, Enter or Space to open"
+        hint="onNodeClick makes each tile a button: Tab to the map, the arrows between tiles, Enter or Space to open"
       >
         <Row className="mb-2 text-xs text-secondary">
           {group ? (
@@ -166,6 +256,7 @@ export function TreemapDemo() {
             key={group}
             data={drilled.map((n) => ({ ...n, fill: `var(--chart-${(parentIndex % 9) + 1})` }))}
             valueFormatter={moneyAndShare}
+            labels={SHARE_IN_VALUE}
             height={280}
             onNodeClick={(_, name) => setClicked(name)}
           />
@@ -173,6 +264,7 @@ export function TreemapDemo() {
           <Treemap
             data={SPEND}
             valueFormatter={moneyAndShare}
+            labels={SHARE_IN_VALUE}
             height={280}
             onNodeClick={(id, name) => (CHILDREN[id] ? setGroup(id) : setClicked(name))}
           />
@@ -180,24 +272,37 @@ export function TreemapDemo() {
         <p className="mt-2 font-mono text-xs text-muted">last clicked: {clicked ?? "—"}</p>
         <p className="mt-2 text-xs text-secondary">
           The drilled map paints every child in its parent&apos;s colour with the node&apos;s own{" "}
-          <code className="font-mono">fill</code>. That is a CSS var here, so the label takes{" "}
-          <code className="font-mono">currentColor</code> ink — pass a concrete hex when the ink has to be measured
-          against the tile.
+          <code className="font-mono">fill</code>, a bare <code className="font-mono">var(--chart-N)</code> here: the
+          kit reads that token off the page and measures the label ink against it, as it does a hex. To see both levels
+          at once instead of one after the other, give the groups <code className="font-mono">children</code> — next.
         </p>
+      </Example>
+
+      <Example
+        label="Treemap — groups: shops by chain"
+        hint="children makes a node a group: a labelled frame, its tiles inside in its colour; Tab to the map, then the arrows walk each frame and its tiles"
+      >
+        <GroupedTreemap />
       </Example>
 
       <Example
         label="Treemap — a second line per tile"
         hint="nodeNote: one extra figure the name cannot carry; drawn only where it fits"
       >
-        <Treemap data={SPEND} valueFormatter={moneyAndShare} height={320} nodeNote={(id) => DELTAS[id]} />
+        <Treemap
+          data={SPEND}
+          valueFormatter={moneyAndShare}
+          labels={SHARE_IN_VALUE}
+          height={320}
+          nodeNote={(id) => DELTAS[id]}
+        />
       </Example>
 
       <Example
         label="Treemap — names that are the user's own data"
         hint="redactNames: tile labels and the tooltip bubble carry data-private"
       >
-        <Treemap data={PAYEES} valueFormatter={moneyAndShare} height={240} redactNames />
+        <Treemap data={PAYEES} valueFormatter={moneyAndShare} labels={SHARE_IN_VALUE} height={240} redactNames />
         <p className="mt-2 text-xs text-secondary">
           The kit only sets the attribute; the host&apos;s own <code className="font-mono">[data-private]</code> rule
           decides what it looks like — the same contract as <code className="font-mono">Tooltip redact</code>. A
@@ -217,7 +322,7 @@ export function TreemapDemo() {
 
       <Example
         label="Treemap — default format, dropped nodes, nothing drawable"
-        hint="no valueFormatter: the bare number in the runtime locale; zero, negative and NaN nodes are left off"
+        hint="no valueFormatter: the bare number in the provider's locale; zero, negative and NaN nodes are left off"
       >
         <Row className="mb-2 text-xs">
           <button
@@ -289,13 +394,68 @@ function LabelColorTreemaps() {
           </span>
         </label>
       </Row>
-      <Treemap data={data} valueFormatter={moneyAndShare} height={260} />
+      <Treemap data={data} valueFormatter={moneyAndShare} labels={SHARE_IN_VALUE} height={260} />
       <p className="mt-2 text-xs text-secondary">
         Every tile is <code className="font-mono">color-mix(in srgb, var(--chart-1) N%, transparent)</code>. The kit
         measures a hex fill and picks black or white ink itself; a mix it cannot measure, so it falls back to{" "}
         <code className="font-mono">currentColor</code> — untick the box and the page&apos;s dark text sits on
         full-strength colour (~1.5:1 in the light theme). <code className="font-mono">labelColor</code> wins over the
-        measured ink whenever it is given.
+        measured ink whenever it is given. For a strength on one hue, <code className="font-mono">shade</code> needs
+        neither: the kit mixes the hue into the card as a hex and measures that (the groups example above).
+      </p>
+    </>
+  );
+}
+
+/** keksdose's #642 map: each chain a group in its own hue, each shop shaded by how
+ *  recently it was seen, and the path of the last click. */
+function GroupedTreemap() {
+  const [recency, setRecency] = useState(true);
+  const [clicked, setClicked] = useState<string | null>(null);
+  const path = (id: string, groups: readonly string[] = []) =>
+    [...groups, id].map((g) => SHOP_NAMES.get(g) ?? g).join(" › ");
+  return (
+    <>
+      <Row className="mb-2">
+        <label className="flex items-center gap-2 text-xs text-secondary">
+          <input type="checkbox" checked={recency} onChange={(e) => setRecency(e.target.checked)} />
+          <span>
+            <code className="font-mono">shade</code> by how recently each shop was seen
+          </span>
+        </label>
+      </Row>
+      <Treemap
+        data={recency ? SHOPS_BY_RECENCY : SHOPS_BY_CHAIN}
+        valueFormatter={moneyAndShare}
+        labels={SHARE_IN_VALUE}
+        height={340}
+        nodeNote={recency ? recencyNote : undefined}
+        onNodeClick={(id, _name, groups) => setClicked(path(id, groups))}
+        onGroupClick={(id, _name, groups) => setClicked(`${path(id, groups)} (the chain)`)}
+        aria-label="Spending without a receipt, by shop and chain"
+        description="Greenway is nearly half of it, most of that at its Centre."
+      />
+      <p className="mt-2 font-mono text-xs text-muted">last clicked: {clicked ?? "—"}</p>
+      <p className="mt-2 text-xs text-secondary">
+        A node with <code className="font-mono">children</code> is a group: a frame in the page&apos;s own colours with
+        its name in a band along the top, and its tiles laid out inside it, squarified as recharts does. The frame is
+        given its own area on top of its tiles&apos;, so a tile&apos;s area is its share of the picture in whichever
+        group it sits — £100 is drawn the same size in Greenway as in Riverside. The band is drawn only where the group
+        has the room, 61px tall at Normal; a smaller group keeps a 3px margin and is named in its tiles. Groups nest.
+      </p>
+      <p className="mt-2 text-xs text-secondary">
+        A group&apos;s <code className="font-mono">fill</code> is its tiles&apos; default — the chain&apos;s hue; one
+        left without takes the ramp by its index, as a tile does, and a tile&apos;s own{" "}
+        <code className="font-mono">fill</code> wins. <code className="font-mono">shade</code> (here 1, 0.78 and 0.55)
+        mixes the hue into the card as a hex, so the ink is still measured; untick it and every shop is its chain&apos;s
+        full hue.
+      </p>
+      <p className="mt-2 text-xs text-secondary">
+        From the keyboard the frame comes first, named as a group with its total — &ldquo;Greenway, group: £664
+        (48%)&rdquo; (<code className="font-mono">treemap.group</code>) — then its tiles, each named in its group:
+        &ldquo;Greenway Centre: £412 (30%), in Greenway&rdquo; (<code className="font-mono">treemap.inGroup</code>).{" "}
+        <code className="font-mono">onNodeClick</code> is handed a tile&apos;s groups as a third argument;{" "}
+        <code className="font-mono">onGroupClick</code> makes the frames buttons.
       </p>
     </>
   );

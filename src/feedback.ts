@@ -31,3 +31,45 @@ export * from "./feedback/feedback-vote-button";
 export * from "./feedback/feedback-comment-thread";
 export * from "./feedback/feedback-replies";
 export * from "./feedback/feedback-entry-file";
+// 0.52: the slice's share of the 55 names no app reads (refactor audit 2026-10-30, API-4,
+// decision 4), tagged on their specifiers as the barrel's are — the modules keep them.
+export {
+  /** @deprecated 0.52 — `appendRework`, which writes the line (API-4); removed in 0.53 */
+  feedbackAttachmentLine,
+} from "./feedback/feedback-record";
+export {
+  /** @deprecated 0.52 — `useFeedbackStatusUndo`, which keeps its Undo that long (API-4); removed in 0.53 */
+  FEEDBACK_UNDO_DURATION,
+} from "./feedback/feedback-status-undo";
+export {
+  /** @deprecated 0.52 — `DEFAULT_FEEDBACK_SWIPE` and `feedbackSwipePlan`, which name the actions (API-4); removed in 0.53 */
+  FEEDBACK_SWIPE_ACTIONS,
+} from "./feedback/feedback-swipe";
+export {
+  /** @deprecated 0.52 — `useFeedbackColumns`, the same columns in the provider's words (API-4); removed in 0.53 */
+  feedbackColumns,
+  /** @deprecated 0.52 — `useFeedbackColumns`, whose submitter cell reads it (API-4); removed in 0.53 */
+  feedbackSubmitter,
+  /** @deprecated 0.52 — `useFeedbackColumns`, whose submitter cell reads it (API-4); removed in 0.53 */
+  feedbackSubmitterEmail,
+  /** @deprecated 0.52 — `useFeedbackColumns`, whose environment cell reads it (API-4); removed in 0.53 */
+  feedbackEnvironment,
+} from "./feedback/feedback-table";
+export {
+  /** @deprecated 0.52 — `FeedbackRowDetail`, which links the page itself (API-4); removed in 0.53 */
+  feedbackPageUrl,
+  /** @deprecated 0.52 — `FeedbackRowDetail` and the table's URL cell, which link only a page's path and keep one-shot pages as text (the 0.52 code review's guard, which an app has no helper for); removed in 0.53 */
+  feedbackPageHref,
+  /** @deprecated 0.52 — `FeedbackRowDetail` and the table's URL cell, which show the page themselves; removed in 0.53 */
+  feedbackPagePath,
+  /** @deprecated 0.52 — `FeedbackRowDetail`, which lists the attachments itself (API-4); removed in 0.53 */
+  feedbackAttachmentUrls,
+  /** @deprecated 0.52 — `FeedbackRowDetail`, which decides who may edit what (API-4); removed in 0.53 */
+  feedbackRowAccess,
+  /** @deprecated 0.52 — `FeedbackRowDetail`, which resolves its words itself (API-4); removed in 0.53 */
+  useFeedbackDetailLabels,
+} from "./feedback/feedback-row-detail";
+export {
+  /** @deprecated 0.52 — `FeedbackPublicSwitch`, which asks it (API-4); removed in 0.53 */
+  feedbackPublicSwitchAllowed,
+} from "./feedback/feedback-public-switch";

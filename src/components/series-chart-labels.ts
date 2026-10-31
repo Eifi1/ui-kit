@@ -8,15 +8,18 @@
 export interface SeriesChartLabels {
   /** The button that puts a zoomed chart back to its full extent. Visible text. */
   resetZoom: string;
-  /** Accessible name of the drag surface laid over the plot. It is the only place the
-   *  gesture is explained, so it says how the drag is read and how to undo it. */
+  /** The drag-to-zoom gesture, said at the end of a zoomable chart's description (the
+   *  figure's `aria-describedby`; until 0.52 the name of the drag surface, an
+   *  `application` nothing could focus). It is the only place the gesture is explained,
+   *  so it says how the drag is read and how to undo it. */
   zoomHint: string;
   /** What a chart with nothing to draw says, when the caller passes no `empty`. */
   empty: string;
   /** Accessible name of a `ToggleLegend` — a group of switches, one per series. */
   legend: string;
-  /** Accessible name of the group of keyboard stops a clickable chart (`onPointClick`)
-   *  lays over its bars or periods — one tab stop, arrow keys between them. */
+  /** Accessible name of the group of keyboard stops a chart lays over its bars or
+   *  periods — one tab stop, arrow keys between them; buttons with `onPointClick`, and
+   *  since 0.52 images to read without. */
   points: string;
 }
 

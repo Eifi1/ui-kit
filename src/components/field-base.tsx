@@ -11,7 +11,7 @@ import {
   STATIC_LABEL_TYPE,
   type FieldHintParts,
 } from "./field-parts";
-import { DEFAULT_CHARACTER_COUNT_LABELS, DEFAULT_PASSWORD_REVEAL_LABELS } from "./ui-labels";
+import { DEFAULT_CHARACTER_COUNT_LABELS, DEFAULT_PASSWORD_REVEAL_LABELS } from "./field-base-labels";
 
 /**
  * The field base: what Input, Select and Textarea — and every kit field built on the same
@@ -20,7 +20,8 @@ import { DEFAULT_CHARACTER_COUNT_LABELS, DEFAULT_PASSWORD_REVEAL_LABELS } from "
  * reveal and the character counter. The message under a wrong field is field-parts'
  * `useFieldError`, every field's.
  *
- * Public through ./ui by name. `FieldGroup`, the counter and the placeholder helpers are
+ * Public through the barrel (src/index.ts) by name. `FieldGroup`, the counter and the
+ * placeholder helpers are
  * the three fields' shared parts (`@internal`), as are the Select's own classes and its
  * `SelectWidthFloor` (0.51).
  */
@@ -47,7 +48,12 @@ export const FIELD_BASE =
   // doubles the line inward — FIELD_INVALID's border-plus-ring (live #295), and the
   // DatePicker stepper's fix (0.34) — so every side keeps one fully covered device
   // pixel. Inset: nothing outside the field moves or is covered.
-  "focus:ring-1 focus:ring-inset focus:ring-brand " +
+  //
+  // Under More contrast the ring is 2px, so the line is 3px — what `--focus-ring-width`
+  // gives every `FOCUS_RING` there, and what `appearance.contrastHelp` promises ("thickens
+  // focus frames"); before 0.52 a text field kept its 2px (refactor audit 2026-10-30,
+  // DOC-2). Still inset, so nothing moves.
+  "focus:ring-1 contrast:focus:ring-2 focus:ring-inset focus:ring-brand " +
   // §10.1: at least 16 px on a touch screen, or iOS zooms the page on focus.
   FIELD_TOUCH_TEXT +
   " " +
@@ -106,9 +112,9 @@ export const FIELD_FLOATING_PAD = "pt-4 pb-1 large:py-2";
 //
 // A ring rather than `border-2`: a box-shadow adds no layout, so an invalid field
 // stays exactly the size of a valid one and nothing beside it moves when the value
-// arrives.
+// arrives. Under More contrast the ring is 2px, as FIELD_BASE's focus line (0.52, DOC-2).
 export const FIELD_INVALID =
-  "border-danger-strong ring-1 ring-danger-strong focus:border-[var(--danger)] focus:ring-[var(--danger)]";
+  "border-danger-strong ring-1 contrast:ring-2 ring-danger-strong focus:border-[var(--danger)] focus:ring-[var(--danger)]";
 
 export const FLOATING_INPUT_CLASS = cn(FIELD_BASE, FIELD_FLOATING_PAD, "peer placeholder:text-transparent");
 
@@ -504,7 +510,7 @@ export interface PasswordRevealLabels {
   hide: string;
 }
 
-// Defined in ./ui-labels, which holds no component code (0.34, KS U8).
+// Defined in ./field-base-labels, which holds no component code (0.34, KS U8).
 export { DEFAULT_PASSWORD_REVEAL_LABELS };
 
 /**
@@ -523,7 +529,7 @@ export interface CharacterCountLabels {
   limitReached: string;
 }
 
-// Defined in ./ui-labels, which holds no component code (0.34, KS U8).
+// Defined in ./field-base-labels, which holds no component code (0.34, KS U8).
 export { DEFAULT_CHARACTER_COUNT_LABELS };
 
 /** The length the browser's own `maxLength` counts — UTF-16 code units — so the counter

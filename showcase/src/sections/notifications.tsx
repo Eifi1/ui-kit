@@ -308,7 +308,8 @@ export function QuietHoursDemo() {
         {code("device_timezone")}, reported by {code("useDeviceZoneReport")} when it differs, never for a demo), else
         Zurich. The card names it read-only and a time sends no zone; screens keep showing device time. {code("held")}{" "}
         says a held push arrives when the window ends — an app that runs the notifications tick. Switch the report off
-        for the fallback.
+        for the fallback. A time is saved when it is entered — leaving the field, or Enter — never per keystroke, and
+        one request per field runs at a time: a time entered meanwhile is sent after it (0.52).
       </Note>
     </Example>
   );
@@ -506,7 +507,9 @@ export function PushDeviceDemo() {
       <Note>
         In an app {code("usePushDevice({pushKey, register, unregister, devices, test})")} answers this object. Turning
         on while the browser has not asked yet opens the explainer first; the browser&apos;s own prompt comes after
-        Continue. A test that reached no device says so.
+        Continue. A test that reached no device says so. An explicit sign-out calls{" "}
+        {code("releaseThisDevicePush(unregister)")} before it clears the session (0.52): the device stops showing the
+        account&apos;s notifications to whoever uses it next.
       </Note>
     </Example>
   );

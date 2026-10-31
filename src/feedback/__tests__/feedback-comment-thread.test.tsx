@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { drainTasks } from "../../test/tasks";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { ConfirmProvider } from "../../components/confirm-dialog";
@@ -106,7 +107,9 @@ describe("FeedbackCommentThread", () => {
       };
       wrap(<FeedbackCommentThread now={NOW} isAdmin onHide={onHide} replies={[]} comments={[comment()]} />);
       await act(async () => fireEvent.click(screen.getByRole("button", { name: "Hide" })));
-      await act(() => new Promise((resolve) => setTimeout(resolve, 50)));
+      // Node reports an unhandled rejection after the turn it settled in: counted turns,
+      // not a timed wait (refactor audit 2026-10-30, TST-3).
+      await act(() => drainTasks());
       expect(calls).toBe(1);
       expect(unhandled).not.toHaveBeenCalled();
     } finally {

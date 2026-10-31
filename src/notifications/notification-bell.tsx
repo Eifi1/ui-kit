@@ -2,7 +2,7 @@ import { Bell } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
-import { useKitFormat } from "../lib/format";
+import { useDayFormatter } from "../lib/day-format";
 import { DEFAULT_LIST_LABELS } from "../components/list-labels";
 import { StatusDot } from "../components/status-dot";
 import { TopBarActionMenu } from "../shell/topbar-action-menu";
@@ -26,7 +26,8 @@ export interface NotificationBellProps<Id extends string | number = string | num
   href: string;
   /** The row's glyph for a type, as {@link NotificationInbox}'s; `Bell` by default. */
   icon?: (type: string) => LucideIcon | undefined;
-  /** A row's time. Default: the provider's locale and `timeZone`, date and time. */
+  /** A row's time. Default: the provider's `formatDate` (the app's date preference) with
+   *  the language's clock, else date and time in the provider's locale and `timeZone`. */
   formatDate?: (iso: string) => string;
   labels?: LabelOverride<NotificationsLabels>;
 }
@@ -57,8 +58,10 @@ export function NotificationBell<Id extends string | number = string | number>({
 }: NotificationBellProps<Id>) {
   const labels = useNotificationsLabels(labelsProp);
   const list = useKitLabels("list", DEFAULT_LIST_LABELS);
-  const { formatDate } = useKitFormat();
-  const timeOf = (iso: string) => (formatDateProp ? formatDateProp(iso) : formatDate(iso, "dateTime"));
+  // As the inbox's rows: the prop, else the provider's `formatDate` with the language's
+  // clock, else the kit's in the provider's locale and `timeZone` (refactor audit 2026-10-30, DUP-2).
+  const day = useDayFormatter(formatDateProp);
+  const timeOf = (iso: string) => day(iso, { time: true });
   const unread = unreadCount > 0;
   const shown = (items ?? []).slice(0, BELL_ROWS);
 

@@ -15,7 +15,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
   const n = (value: number) => num.format(value);
   const plural = (count: number, one: string, many: string) => (count === 1 ? one : many);
   // 0.30.0 — a throttled request (HTTP 429), as `englishRateLimited` in
-  // src/auth/auth-errors.ts: no wait → "un momento", under a minute → seconds, else
+  // src/auth/auth-errors-labels.ts: no wait → "un momento", under a minute → seconds, else
   // minutes rounded up. kastlan's reviewed "auth.throttled" is the sentence without one.
   const wait = (seconds: number) => (seconds < 60 ? `${n(Math.ceil(seconds))} s` : `${n(Math.ceil(seconds / 60))} min`);
   const rateLimited = (seconds?: number) =>
@@ -739,9 +739,15 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     pieChart: {
       slices: "Settori del grafico",
       slice: (label, value, percent) => `${label}: ${value} (${percent})`,
+      sliceShare: (label, percent) => `${label}: ${percent}`,
       total: "Totale",
       empty: "Nessun dato",
       legend: "Categorie",
+    },
+    treemap: {
+      tile: (name, value, share) => `${name}: ${value} (${share})`,
+      group: (name, value, share) => `${name}, gruppo: ${value} (${share})`,
+      inGroup: (name, group) => `${name}, in ${group}`,
     },
     confirmDialog: {
       confirm: "Conferma",
@@ -1284,6 +1290,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       stoppedAll: (app) => `Fatto. Non riceverà più e-mail di notifica da ${app}.`,
       accountMail: "Le e-mail sul Suo account continuano ad arrivare.",
       turnBackOn: "Può riattivarle in qualsiasi momento nelle impostazioni.",
+      stoppedHint: (accountMail, turnBackOn) => `${accountMail} ${turnBackOn}`,
       openSettings: "Apri le impostazioni",
       invalidLink: "Questo link non funziona più. Può disattivare le e-mail nelle impostazioni.",
       failed: "Non ha funzionato. Riprovi.",
@@ -1986,7 +1993,6 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         menu: "Strumenti di sviluppo",
         overridesOn: "Override attivi",
         roleHeading: "Dev · ruolo",
-        switchPlan: "Cambia piano",
         plan: (value) => `Piano: ${value}`,
         planHeading: "Dev · piano",
         backTo: (role) => `Torna a ${role}`,

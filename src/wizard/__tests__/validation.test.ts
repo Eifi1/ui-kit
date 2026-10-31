@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { requiredFieldsValidator } from "../validation";
+import { requiredFieldsValidator, type RequiredFieldSpec } from "../validation";
 import type { FieldErrors } from "../types";
 
 /** `ValidateResult` is `boolean | {ok, errors}`; this helper always returns the object
- *  form, so the tests read it as one rather than narrowing at every call. */
-const check = (...args: Parameters<typeof requiredFieldsValidator>) =>
-  requiredFieldsValidator(...args) as { ok: boolean; errors?: FieldErrors };
+ *  form, so the tests read it as one rather than narrowing at every call. Generic, as the
+ *  validator is: `Parameters<typeof …>` reads the constraint, and `keyof object` (0.52's,
+ *  API-2) is `never`. */
+const check = <T extends object>(data: T, fields: readonly RequiredFieldSpec<T>[], message: string) =>
+  requiredFieldsValidator(data, fields, message) as { ok: boolean; errors?: FieldErrors };
 
 /**
  * The fold of the `const errors = {}; if (!data.x) errors.x = required; …` block that

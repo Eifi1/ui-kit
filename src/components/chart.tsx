@@ -13,6 +13,7 @@ import type { ComponentProps, CSSProperties, ReactNode, RefObject } from "react"
 import { Legend as RechartsLegend, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts";
 import { cn } from "../lib/cn";
 import { isRtl } from "../lib/direction";
+import { useFigureDescription } from "./chart-figure";
 import { TYPOGRAPHIC_MINUS } from "../lib/minus";
 
 export interface ChartSeriesConfig {
@@ -33,6 +34,13 @@ export function useChart(): ChartConfig {
 interface ChartContainerProps extends ComponentProps<"div"> {
   config: ChartConfig;
   children: ComponentProps<typeof ResponsiveContainer>["children"];
+  /**
+   * What the chart SHOWS, in a sentence, as its accessible description (0.52): read through
+   * `aria-describedby`, after a caller's own ids, and drawn nowhere. Inside the root, so
+   * the chart stays the one element its parent lays out. Pair it with `role="figure"` and
+   * an `aria-label`, as `Treemap` and `SeriesChart` do.
+   */
+  description?: string;
 }
 
 /**
@@ -49,8 +57,9 @@ interface ChartContainerProps extends ComponentProps<"div"> {
  * page's direction like any other markup. A consumer who does want a mirrored
  * category axis passes `reversed` on its own `XAxis`.
  */
-export function ChartContainer({ id, className, children, config, ...props }: ChartContainerProps) {
+export function ChartContainer({ id, className, children, config, description, ...props }: ChartContainerProps) {
   const uid = useId();
+  const about = useFigureDescription(description, props["aria-describedby"]);
   // The id is pasted into an UNQUOTED `[data-chart=…]` selector below, so it has to be
   // a CSS identifier: one stray space or `#` and the browser discards the whole rule,
   // taking every series colour with it — silently, because an invalid rule is not an
@@ -81,11 +90,13 @@ export function ChartContainer({ id, className, children, config, ...props }: Ch
           className,
         )}
         {...props}
+        aria-describedby={about.describedBy}
       >
         <ChartStyle id={chartId} config={config} />
         <ResponsiveContainer width="100%" height="100%">
           {children}
         </ResponsiveContainer>
+        {about.node}
       </div>
     </ChartContext.Provider>
   );
@@ -489,15 +500,22 @@ export function ChartLegendContent({ payload, onItemClick, hiddenKeys, activeKey
         const label = series?.label ?? vv ?? cfgKey;
         const off = hidden?.has(cfgKey) ?? false;
         const dimmed = off || (activeKey != null && activeKey !== cfgKey);
+        // The label's cue, in a key and on a button alike: a hidden series struck through,
+        // and an entry an isolate legend dims in the muted ink — drawn still, so not struck.
+        // Only a toggle button had one, and a key or an isolate legend told an entry off by
+        // its 10px swatch at 40 % alone (0.52 code review, deep, charts, finding 9).
+        const cue = off ? "line-through" : dimmed ? "text-muted" : undefined;
         const className = cn(
           "flex items-center gap-1.5 text-secondary transition-opacity",
           onItemClick ? "cursor-pointer hover:opacity-80" : "cursor-default",
-          dimmed && "opacity-40",
         );
+        // Only the swatch fades; the label keeps an ink of AA contrast (0.52, refactor audit
+        // 2026-10-30, DSP-9). The whole entry at 40 % put a switched-off label under 2:1,
+        // on a button that brings its series back and is named by nothing else.
         const swatch = (
           <span
             aria-hidden
-            className="h-2.5 w-2.5 shrink-0 rounded-[3px]"
+            className={cn("h-2.5 w-2.5 shrink-0 rounded-[3px]", dimmed && "opacity-40")}
             style={{ backgroundColor: color } as CSSProperties}
           />
         );
@@ -519,10 +537,13 @@ export function ChartLegendContent({ payload, onItemClick, hiddenKeys, activeKey
             className={className}
           >
             {swatch}
-            <span className={cn(off && "line-through")}>{label}</span>
+            <span className={cue}>{label}</span>
           </button>
         ) : (
-          <span key={`${cfgKey}-${i}`} className={className}>
+          // On the entry, not round the label: the text is its own, so the key's DOM is the
+          // same with a cue as without. A line-through reaches the text only (the swatch
+          // holds none), and the ink colours no swatch.
+          <span key={`${cfgKey}-${i}`} className={cn(className, cue)}>
             {swatch}
             {label}
           </span>

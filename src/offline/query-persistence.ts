@@ -2,6 +2,7 @@ import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persi
 import type { QueryClient } from "@tanstack/react-query";
 import type { PersistedClient, PersistQueryClientOptions } from "@tanstack/react-query-persist-client";
 import { del, get, keys, set } from "idb-keyval";
+import { listenOn, postOnce } from "../lib/broadcast";
 
 /**
  * The persisted TanStack Query cache, keksdose's policy as a kit helper
@@ -101,7 +102,9 @@ export interface QueryPersistence {
   /** Everything `<PersistQueryClientProvider persistOptions>` needs. */
   persistOptions: Omit<PersistQueryClientOptions, "queryClient">;
   /** Sign-out: stops writing under this key, empties the in-memory cache and deletes this
-   *  key's persisted copy. Best-effort; never throws. */
+   *  key's persisted copy. In every tab (0.52): the persistences of this key in the other tabs
+   *  stop writing too, and delete the key once more after any save of theirs under way.
+   *  Best-effort; never throws. */
   clear: (queryClient: QueryClient) => Promise<void>;
   /** The company switch (or any change of key without a sign-out): stops writing under this
    *  key — a save already scheduled is dropped too — and empties the in-memory cache, so
@@ -223,6 +226,31 @@ export function createQueryPersistence({
   // throttled save of the emptied cache) is dropped. A restore re-arms it.
   let retired = false;
 
+  // 0.52 (refactor audit 2026-10-30, FLW-1): `retired` lived in this tab alone, so a sign-out
+  // in one tab deleted the key and another tab's persister wrote its in-memory cache straight
+  // back under it. While armed, a persistence listens on a channel named after its key; a
+  // `clear` there retires it, and it deletes the key once more — IndexedDB runs a save of its
+  // own already under way first. A `leave` posts nothing: another tab may still be on that
+  // company. Without BroadcastChannel, as before 0.52.
+  const across = `eifi1-query-cache:${key}`;
+  let unlisten: (() => void) | null = null;
+
+  const retire = () => {
+    retired = true;
+    unlisten?.();
+    unlisten = null;
+  };
+
+  const listen = () => {
+    unlisten ??= listenOn(across, (data) => {
+      if (data !== "clear") return;
+      retire();
+      Promise.resolve()
+        .then(() => storage.removeItem(key))
+        .catch(() => undefined);
+    });
+  };
+
   const keyAllowed = (queryKey: readonly unknown[]) =>
     !denied.has(String(queryKey[0])) && (shouldPersistKey ? shouldPersistKey(queryKey) : true);
 
@@ -313,6 +341,7 @@ export function createQueryPersistence({
       // Only the provider's restore reads: mounting this persistence again re-arms it.
       getItem: async (k) => {
         retired = false;
+        listen();
         return (await storage.getItem(k)) ?? null;
       },
       setItem: async (k, v) => {
@@ -329,7 +358,7 @@ export function createQueryPersistence({
   });
 
   const leave = async (queryClient: QueryClient) => {
-    retired = true;
+    retire();
     try {
       queryClient.clear();
     } catch {
@@ -338,7 +367,10 @@ export function createQueryPersistence({
   };
 
   const clear = async (queryClient: QueryClient) => {
-    retired = true;
+    // Retired first, so this tab's own channel is closed and does not hear its `clear`.
+    retire();
+    // Before this tab's delete: the other tabs stop writing as early as they can.
+    postOnce(across, "clear");
     try {
       queryClient.clear();
       await persister.removeClient();

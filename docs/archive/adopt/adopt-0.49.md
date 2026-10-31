@@ -40,7 +40,7 @@ MeasuredGrid drafts) keep the typable "-".
 **Found on adoption (0.50):** an app's OWN `Intl.NumberFormat` wrapper still writes the hyphen
 (keksdose's `formatCurrency`: "-€150.00 (−13.0%)" in one cell). Route such wrappers through
 `formatMoney` / `formatNumber`, or call `formatWithMinus(formatter, value)` — exported from 0.50
-(docs/adopt-0.50.md).
+(docs/archive/adopt/adopt-0.50.md).
 
 ## KIT-2: numeric strings format; invalid values warn in development
 

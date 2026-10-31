@@ -31,7 +31,7 @@ export function normalizeSorts(raw: unknown): SortState[] {
   return single ? [single] : [];
 }
 
-export function encodeSorts(sorts: SortState[]): string | null {
+export function encodeSorts(sorts: readonly SortState[]): string | null {
   if (!sorts.length) return null;
   return sorts.map((s) => (s.dir === "desc" ? `${s.key}.desc` : s.key)).join(",");
 }
@@ -75,6 +75,61 @@ export interface SortStepOptions {
 
 const flip = (d: SortDir): SortDir => (d === "asc" ? "desc" : "asc");
 
+// ---------- The client sort's order ----------
+
+/** One collator per locale, built once: `localeCompare` with a locale sets one up on
+ *  every call, n·log n times a sort. */
+const collators = new Map<string, Intl.Collator>();
+
+function sortCollator(locale: string | undefined): Intl.Collator {
+  const key = locale ?? "";
+  let collator = collators.get(key);
+  if (!collator) {
+    const options: Intl.CollatorOptions = { numeric: true, sensitivity: "base" };
+    try {
+      collator = new Intl.Collator(locale, options);
+    } catch {
+      // An unknown tag (a typo in a provider's `locale`) throws a RangeError, and a sort
+      // is no reason for a table to stop rendering: the runtime's own collation then, as
+      // CountrySelect falls back.
+      collator = new Intl.Collator(undefined, options);
+    }
+    collators.set(key, collator);
+  }
+  return collator;
+}
+
+/**
+ * Two `sortBy` values in the order DataTable's client sort puts them, ascending — the
+ * table's own comparator, exported (0.52) for a list an app sorts beside or into a
+ * kit-sorted table: keksdose weaves its scheduled rows into the register and had to copy
+ * the rule, a copy that drifts the day the table's changes. Negative when `a` comes first.
+ *
+ * - Strings collate in `locale` (audit 2026-10-30 DSP-3, 0.51.7; `<` compared UTF-16 code
+ *   units — every lower-case initial after every capital, Ä/Ö/Ü after Z): digits as
+ *   numbers ("Item 2" before "Item 10"), case and accents left out, so two values that
+ *   differ only by them compare equal and the next sort key decides. One collator per
+ *   locale, cached; an unknown tag falls back to the runtime's collation, not a throw.
+ * - Numbers compare as numbers, and a number comes before a string.
+ * - `null` and `undefined` come last, and equal each other. The table puts them last in
+ *   either direction; turn only the two present values round for a descending order.
+ * - Any other pair (a `Date` an untyped caller returns) keeps `<` / `>`.
+ *
+ *     rows.sort((a, b) => compareSortValues(a.payee, b.payee, locale));
+ */
+export function compareSortValues(
+  a: string | number | null | undefined,
+  b: string | number | null | undefined,
+  locale?: string,
+): number {
+  if (a == null || b == null) return a == null ? (b == null ? 0 : 1) : -1;
+  const aText = typeof a === "string";
+  const bText = typeof b === "string";
+  if (aText && bText) return sortCollator(locale).compare(a, b);
+  if (aText !== bText) return aText ? 1 : -1;
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
 /** Header-click semantics. Plain click: make `key` the only sort — cycling
  *  first → other → none (`"tri"`) or first ⇄ other (`"toggle"`) when it already is
  *  the sole criterion. Shift-click (`additive`): append `key` as the next-priority
@@ -82,7 +137,7 @@ const flip = (d: SortDir): SortDir => (d === "asc" ? "desc" : "asc");
  *  a plain flip under `"toggle"`). `firstDir` defaults to `"asc"`, `cycle` to
  *  `"tri"` — the cycle every table had before the options existed. */
 export function nextSorts(
-  prev: SortState[],
+  prev: readonly SortState[],
   key: string,
   additive: boolean,
   options: SortStepOptions = {},

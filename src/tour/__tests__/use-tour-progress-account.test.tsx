@@ -1,6 +1,6 @@
 import { act, render, renderHook } from "@testing-library/react";
 import { useEffect } from "react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { TourProvider, useTour, type TourStep } from "../tour";
 import type { TourInfo } from "../tour-info";
@@ -12,6 +12,13 @@ import {
   type TourProgressAccount,
   type TourProgressBody,
 } from "../use-tour-progress";
+
+// The overlay is its own chunk since 0.52 (refactor audit 2026-10-30, MOD-1): loaded once
+// up front, as an app's bundle has it by the time a tour starts; React.lazy still resolves
+// it a render after the start, which the waits below cover.
+beforeAll(async () => {
+  await import("../tour-overlay");
+});
 
 /**
  * docs/tours-harmonization.md §10.2.4–§10.2.8, §10.3: the device key as the account's

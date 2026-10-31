@@ -148,7 +148,8 @@ export function KeyboardPointsDemo() {
           <code className="font-mono">role=&quot;button&quot;</code> named &ldquo;Sat — Card: €120&rdquo;, in a group
           named <code className="font-mono">seriesChart.points</code> (&ldquo;Chart values&rdquo;). The stops take no
           pointer events, so hovering and clicking behave exactly as before; Tab leaves the chart rather than walking 14
-          bars.
+          bars. A chart without <code className="font-mono">onPointClick</code> has the same stops since 0.52, as{" "}
+          <code className="font-mono">role=&quot;img&quot;</code> to read: ↵ does nothing there.
         </Note>
       </div>
     </Example>

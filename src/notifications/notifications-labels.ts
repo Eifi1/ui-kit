@@ -162,6 +162,12 @@ export interface NotificationsLabels {
   /** Account mail is not a notification, and keeps coming. */
   accountMail: string;
   turnBackOn: string;
+  /**
+   * 0.52: the line under the outcome, {@link accountMail} and {@link turnBackOn} as one
+   * text — joined by the catalogue, not by the panel: the panel glued them with an ASCII
+   * space, which Chinese does not put between sentences (refactor audit 2026-10-30, DOC-11).
+   */
+  stoppedHint: (accountMail: string, turnBackOn: string) => string;
   openSettings: string;
   /** A token the server refused, or one that does not parse. */
   invalidLink: string;
@@ -273,6 +279,7 @@ export const DEFAULT_NOTIFICATIONS_LABELS: NotificationsLabels = {
   stoppedAll: (app) => `Done. You won’t get notification e-mails from ${app} any more.`,
   accountMail: "E-mails about your account still come.",
   turnBackOn: "You can turn them back on at any time in Settings.",
+  stoppedHint: (accountMail, turnBackOn) => `${accountMail} ${turnBackOn}`,
   openSettings: "Open Settings",
   invalidLink: "This link doesn’t work any more. You can turn e-mails off in Settings instead.",
 

@@ -7,7 +7,7 @@ import type { LabelOverride, UiKitLabelOverrides } from "../i18n/kit-labels";
 import { useNoIndex } from "../hooks/use-noindex";
 import { cn } from "../lib/cn";
 import { parseIsoDate } from "../lib/dates";
-import { formatDate } from "../lib/format";
+import { useDayFormatter } from "../lib/day-format";
 import { Checkbox } from "./checkbox";
 import type { CheckboxProps } from "./checkbox";
 import {
@@ -347,7 +347,9 @@ export interface LegalPageProps {
    * 2026-10-29, gap 8). Shown under the title as `legal.updated` — "Last updated:
    * 29 October 2026", "Stand: 29. Oktober 2026" — with the date written out in `locale`,
    * so it follows the page's language like every other kit word, the switch to the
-   * binding version included. Left out, no line. One date per page: the imprint, the
+   * binding version included. Since 0.52 the `<UiKitProvider formatDate>` writes it when
+   * the app set one (its date preference, asked for the day without a weekday), as every
+   * other day the kit prints. Left out, no line. One date per page: the imprint, the
    * privacy policy and the terms change on their own days.
    *
    * An app that records which terms someone accepted (keksdose) stores the terms page's
@@ -524,6 +526,7 @@ export function LegalPage({
   useNoIndex(noIndex);
   const labels = useLegalLabels(labelsProp);
   const locale = useKitLocale(localeProp) ?? "en";
+  const day = useDayFormatter(undefined, locale);
   // Not memoised: `countryName` keeps one `Intl.DisplayNames` per locale, so naming the
   // country again is a lookup, and the context is rebuilt with the children anyway.
   const operatorText = legalOperatorText(operator, locale);
@@ -564,17 +567,17 @@ export function LegalPage({
       )}
     </p>
   ) : undefined;
-  // A calendar day, written out in the page's language; `formatDate` reads a bare
-  // "YYYY-MM-DD" as that day in every zone. A malformed date shows no line rather than a
+  // A calendar day, in the page's language — under the app's date preference when the
+  // provider has one (0.52, refactor audit 2026-10-30, DUP-2: "a label that identifies a
+  // day follows the preference"), else written out ("29 October 2026"); a bare
+  // "YYYY-MM-DD" is that day in every zone. A malformed date shows no line rather than a
   // made-up one ("2026-02-30" would roll over into March).
   const updatedValid = updated !== undefined && parseIsoDate(updated) !== null;
   if (updated !== undefined && !updatedValid) {
     warnLegalOnce(`LegalPage: updated="${updated}" is not a "YYYY-MM-DD" date; no "Last updated" line is shown.`);
   }
   const updatedLine = updatedValid ? (
-    <time dateTime={updated}>
-      {(labels.updated ?? DEFAULT_LEGAL_LABELS.updated!)(formatDate(updated, "long", { locale }))}
-    </time>
+    <time dateTime={updated}>{(labels.updated ?? DEFAULT_LEGAL_LABELS.updated!)(day(updated, { style: "long" }))}</time>
   ) : undefined;
   const summaryLabels = labels.summary ?? DEFAULT_LEGAL_LABELS.summary!;
   const SummaryHeading = context.sectionHeading;

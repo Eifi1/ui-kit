@@ -44,7 +44,7 @@ export function DateRange023Demo() {
             <DateRangePicker
               label="Settlement period"
               monthJump={jump}
-              commit="apply"
+              apply
               presets={PERIODS}
               from={drafted.from}
               to={drafted.to}

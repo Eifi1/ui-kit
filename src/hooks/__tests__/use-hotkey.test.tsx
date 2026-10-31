@@ -97,3 +97,67 @@ describe("useHotkey", () => {
     expect(scoped).toHaveBeenCalledTimes(1);
   });
 });
+
+/**
+ * 0.52 code review, use-hotkey.ts: `useHotkey` became the kit's one shortcut reader in
+ * 0.52 (refactor audit 2026-10-30, DUP-12), ⌘K included, and three of its readings were
+ * found wrong there.
+ */
+describe("useHotkey — a held key, Space, and a non-Latin layout", () => {
+  afterEach(() => {
+    document.body.innerHTML = "";
+  });
+
+  it("cancels a held chord's repeats as it cancelled the first press, and calls the handler once", () => {
+    // The browser acts on every keydown it is left: a held Ctrl+K's repeats reached its
+    // own Ctrl+K (the omnibox, the search bar) and took the focus out of the palette.
+    const handler = vi.fn();
+    renderHook(() => useHotkey("Ctrl+K", handler));
+    expect(press({ key: "k", ctrlKey: true })).toBe(false);
+    expect(press({ key: "k", ctrlKey: true, repeat: true })).toBe(false);
+    expect(press({ key: "k", ctrlKey: true, repeat: true })).toBe(false);
+    expect(handler).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves a repeat alone where it left the first press: preventDefault off, typing in a field", () => {
+    const loose = vi.fn();
+    const plain = vi.fn();
+    renderHook(() => {
+      useHotkey("Ctrl+J", loose, { preventDefault: false });
+      useHotkey("/", plain);
+    });
+    expect(press({ key: "j", ctrlKey: true, repeat: true })).toBe(true);
+    const field = document.body.appendChild(document.createElement("input"));
+    expect(press({ key: "/", repeat: true }, field)).toBe(true);
+    expect(loose).not.toHaveBeenCalled();
+    expect(plain).not.toHaveBeenCalled();
+  });
+
+  it("matches Shift exactly for Space, a named key: Shift+Space is the browser's page-up", () => {
+    const ev = (init: KeyboardEventInit) => new KeyboardEvent("keydown", init);
+    const space = parseHotkey("Space", false);
+    const shiftSpace = parseHotkey("Shift+Space", false);
+    expect(matchesHotkey(ev({ key: " ", code: "Space" }), space)).toBe(true);
+    expect(matchesHotkey(ev({ key: " ", code: "Space", shiftKey: true }), space)).toBe(false);
+    expect(matchesHotkey(ev({ key: " ", code: "Space", shiftKey: true }), shiftSpace)).toBe(true);
+    expect(matchesHotkey(ev({ key: " ", code: "Space" }), shiftSpace)).toBe(false);
+  });
+
+  it("matches a letter chord by its physical key on a non-Latin layout, and by the letter on a Latin one", () => {
+    const ev = (init: KeyboardEventInit) => new KeyboardEvent("keydown", init);
+    const ctrlK = parseHotkey("Ctrl+K", false);
+    // Russian, Greek, Hebrew: the key under K types its own letter.
+    expect(matchesHotkey(ev({ key: "л", code: "KeyK", ctrlKey: true }), ctrlK)).toBe(true);
+    expect(matchesHotkey(ev({ key: "κ", code: "KeyK", ctrlKey: true }), ctrlK)).toBe(true);
+    expect(matchesHotkey(ev({ key: "ל", code: "KeyK", ctrlKey: true }), ctrlK)).toBe(true);
+    // Still a letter's rule: Shift exactly, and only the key under that letter.
+    expect(matchesHotkey(ev({ key: "Л", code: "KeyK", ctrlKey: true, shiftKey: true }), ctrlK)).toBe(false);
+    expect(matchesHotkey(ev({ key: "о", code: "KeyJ", ctrlKey: true }), ctrlK)).toBe(false);
+    // A Latin layout's letter is where it types (Dvorak's K is on the key QWERTY calls V),
+    // and its key under QWERTY's K types another letter, which is not this chord.
+    expect(matchesHotkey(ev({ key: "k", code: "KeyV", ctrlKey: true }), ctrlK)).toBe(true);
+    expect(matchesHotkey(ev({ key: "t", code: "KeyK", ctrlKey: true }), ctrlK)).toBe(false);
+    // Turkish "ı" is a Latin letter: no stand-in.
+    expect(matchesHotkey(ev({ key: "ı", code: "KeyK", ctrlKey: true }), ctrlK)).toBe(false);
+  });
+});

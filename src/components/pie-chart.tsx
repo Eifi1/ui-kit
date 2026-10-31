@@ -12,7 +12,8 @@ import type { ComponentProps, ComponentPropsWithRef, KeyboardEvent, ReactNode } 
 import { Pie, PieChart as RechartsPieChart, Sector } from "recharts";
 import type { PieLabelRenderProps, PieSectorShapeProps } from "recharts";
 import { cn } from "../lib/cn";
-import { horizontalStep } from "../lib/direction";
+import { dirOf, rovingTarget } from "../lib/direction";
+import { shareFormat } from "../lib/share-format";
 import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { paletteFor } from "../theme/chart-palette";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "./chart";
@@ -93,7 +94,8 @@ export interface PieChartProps extends Omit<ComponentPropsWithRef<"div">, "child
    * Tag every figure ON SCREEN `data-private` — the tooltip bubble, the centre and
    * `"value"` slice labels — so the host's demo-mode rule blurs it. A percentage alone
    * reveals no amount, so `"percent"` labels stay readable, and the slices themselves
-   * are not tagged: a blurred ring is no picture at all.
+   * are not tagged: a blurred ring is no picture at all. So a slice's NAME says no
+   * amount either (0.52): "Occupied: 60%" (`labels.sliceShare`), not `labels.slice`.
    */
   redact?: boolean;
   /** What to show with nothing to draw. Default: `labels.empty`. */
@@ -138,8 +140,9 @@ function RedactedTooltipContent(props: ComponentProps<typeof ChartTooltipContent
  * clockwise from twelve o'clock, the order of the legend — with ←/→ following the
  * reading direction in RTL; Home/End go to the first and last. Each slice is named
  * "Label: value (xx%)" (`labels.slice`), because a colour and an angle are nothing a
- * screen reader can say, and focusing one reads it out in the donut's centre. With
- * `onSliceClick`, Enter and Space activate it as a click does.
+ * screen reader can say — under `redact` "Label: xx%" (`labels.sliceShare`) — and
+ * focusing one reads it out in the donut's centre. With `onSliceClick`, Enter and Space
+ * activate it as a click does.
  *
  * The legend switches slices off (`legend="toggle"`); the percentages are always of
  * what is drawn. The plot is not mirrored in RTL (see `ChartContainer`); the legend
@@ -177,25 +180,14 @@ export function PieChart({
   const { scale } = useTextSize();
   const box = chartHeightProps(height);
   const numberFormat = useMemo(() => new Intl.NumberFormat(locale), [locale]);
-  const percentFormats = useMemo(
-    () => ({
-      whole: new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 0 }),
-      fine: new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 1 }),
-    }),
-    [locale],
-  );
   // Memoised, like everything the sectors are drawn from: they must not be rebuilt on
   // this component's own re-renders (see `pie` below).
   const formatValue = useCallback(
     (v: number) => (formatValueProp ? formatValueProp(v) : formatWithMinus(numberFormat, v)),
     [formatValueProp, numberFormat],
   );
-  // One decimal under 10 %, where rounding to whole percents starts to lie — a slice
-  // of 0.4 % labelled "0%" says it is not there.
-  const formatShare = useCallback(
-    (share: number) => (share < 0.1 ? percentFormats.fine : percentFormats.whole).format(share),
-    [percentFormats],
-  );
+  // One decimal under 10 %, the rule Treemap says its shares by too (lib/share-format).
+  const formatShare = useMemo(() => shareFormat(locale), [locale]);
 
   const [ownHidden, setOwnHidden] = useState<ReadonlySet<string>>(() => new Set());
   const hidden = hiddenProp ?? ownHidden;
@@ -273,17 +265,11 @@ export function PieChart({
       const d = drawn[index];
       if (!d) return <Sector key={key ?? undefined} {...sector} />;
       const onKeyDown = (event: KeyboardEvent<SVGGElement>) => {
-        const step = horizontalStep(event.key, event.currentTarget);
-        let target: number | undefined;
-        if (step) target = index + step;
-        else if (event.key === "ArrowDown") target = index + 1;
-        else if (event.key === "ArrowUp") target = index - 1;
-        else if (event.key === "Home") target = 0;
-        else if (event.key === "End") target = drawn.length - 1;
+        // Round the circle: past the last slice is the first, as the eye goes.
+        const target = rovingTarget(event.key, dirOf(event.currentTarget), index, drawn.length, true);
         if (target !== undefined) {
           event.preventDefault();
-          // Round the circle: past the last slice is the first, as the eye goes.
-          refs.current[((target % drawn.length) + drawn.length) % drawn.length]?.focus();
+          refs.current[target]?.focus();
         } else if (clickable && (event.key === "Enter" || event.key === " ")) {
           event.preventDefault();
           clickRef.current?.(d.slice.key, d.slice);
@@ -297,7 +283,15 @@ export function PieChart({
           role={clickable ? "button" : "img"}
           // The first slice until the effect below moves the stop.
           tabIndex={index === 0 ? 0 : -1}
-          aria-label={labels.slice(d.slice.label, formatValue(d.value), formatShare(d.share))}
+          // Under `redact` with no amount: the ring is left untagged so it stays a picture,
+          // and its names are attributes a session replay or a redaction keyed on
+          // `[data-private]` reads as they are — "Occupied: €6.00 (60%)" told the amount the
+          // blurred centre and tooltip hid (0.52 code review; Marcel's decision).
+          aria-label={
+            redact
+              ? labels.sliceShare(d.slice.label, formatShare(d.share))
+              : labels.slice(d.slice.label, formatValue(d.value), formatShare(d.share))
+          }
           data-slice={d.slice.key}
           onKeyDown={onKeyDown}
           onFocus={() => {
@@ -313,7 +307,7 @@ export function PieChart({
         </g>
       );
     },
-    [drawn, labels, formatValue, formatShare, clickable],
+    [drawn, labels, formatValue, formatShare, clickable, redact],
   );
 
   const label = useCallback(

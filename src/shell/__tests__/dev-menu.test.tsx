@@ -266,3 +266,67 @@ describe("DevMenu", () => {
     expect(columns.length).toBeGreaterThanOrEqual(3);
   });
 });
+
+/**
+ * 0.42's `DevSwitchers` cases, which went with it in 0.52: it was a DevMenu with no
+ * sections, so they are DevMenu's — the Account section alone, as an app without dev
+ * sections of its own draws it.
+ */
+describe("DevMenu's Account section alone (0.42's DevSwitchers)", () => {
+  function Account({ originalRole }: { originalRole?: Role }) {
+    const [role, setRole] = useState<Role>("ADMIN");
+    return (
+      <MemoryRouter>
+        <DevMenu enabled roles={ROLES} currentRole={role} onRole={setRole} originalRole={originalRole} />
+      </MemoryRouter>
+    );
+  }
+
+  it("reads the kept role back after a reload", () => {
+    sessionStorage.setItem(DEV_ORIGINAL_ROLE_KEY, "REVIEWER");
+    render(<Account />);
+    expect(within(open()).getByRole("menuitem", { name: "Back to REVIEWER" })).toBeInTheDocument();
+  });
+
+  it("originalRole from the app wins over the kept one", () => {
+    sessionStorage.setItem(DEV_ORIGINAL_ROLE_KEY, "REVIEWER");
+    render(<Account originalRole="MEMBER" />);
+    expect(within(open()).getByRole("menuitem", { name: "Back to MEMBER" })).toBeInTheDocument();
+  });
+
+  it("survives a browser that refuses storage: Back to lasts as long as the page", () => {
+    const get = vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new Error("blocked");
+    });
+    const set = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("blocked");
+    });
+    render(<Account />);
+    fireEvent.click(within(open()).getByRole("menuitemradio", { name: "MEMBER" }));
+    expect(within(open()).getByRole("menuitem", { name: "Back to ADMIN" })).toBeInTheDocument();
+    get.mockRestore();
+    set.mockRestore();
+  });
+
+  it("draws only the group it has a list and a handler for", () => {
+    render(<Account />);
+    expect(screen.getAllByRole("button")).toHaveLength(1);
+    open();
+    expect(groupNames()).toEqual(["Dev · role"]);
+  });
+
+  it("draws the plan group before the current plan is known, with no row checked (kastlan B4)", () => {
+    const onPlan = vi.fn();
+    render(
+      <MemoryRouter>
+        <DevMenu enabled plans={PLANS} onPlan={onPlan} billingOff />
+      </MemoryRouter>,
+    );
+    expect(flask()).toHaveAccessibleName("Dev tools");
+    open();
+    const rows = screen.getAllByRole("menuitemradio");
+    expect(rows.every((r) => r.getAttribute("aria-checked") === "false")).toBe(true);
+    fireEvent.click(screen.getByRole("menuitemradio", { name: "pro" }));
+    expect(onPlan).toHaveBeenCalledWith("pro");
+  });
+});

@@ -94,18 +94,28 @@ const KEY_ALIASES: Record<string, string> = {
   right: "arrowright",
 };
 
+/** One letter of a script other than Latin: what a Russian, Greek or Hebrew layout's letter keys type. */
+const NON_LATIN_LETTER = /^(?!\p{Script=Latin})\p{L}$/u;
+
 /** Whether `e` is `combo` — every modifier as named (no more, no fewer), and the key. */
 export function matchesHotkey(e: KeyboardEvent, combo: ParsedHotkey): boolean {
   if (e.ctrlKey !== combo.ctrl || e.metaKey !== combo.meta || e.altKey !== combo.alt) return false;
   const want = KEY_ALIASES[combo.key.toLowerCase()] ?? combo.key.toLowerCase();
   const key = (e.key ?? "").toLowerCase();
   const code = (e.code ?? "").toLowerCase();
-  const keyMatches = key === want || code === want;
-  if (!keyMatches) return false;
+  // On a non-Latin layout `key` is the local letter — Ctrl+K types "л" on a Russian one —
+  // so a letter chord never fired there, ⌘K included (0.52 code review, use-hotkey.ts; the
+  // hand-written ⌘K listener before 0.52 compared `key` alone and missed it too). The
+  // physical key stands in for the letter there, and only there: a Latin layout's letter
+  // is wherever it types (Dvorak's K is on QWERTY's V).
+  const physical = /^[a-z]$/.test(want) && NON_LATIN_LETTER.test(e.key ?? "") && code === `key${want}`;
+  if (key !== want && code !== want && !physical) return false;
   // Shift must match exactly for a letter or a named key; for a symbol it is how the
   // symbol is typed ("?" is Shift+/ on a US layout, a plain key on others), so an
-  // unnamed Shift is not held against it.
-  const symbol = want.length === 1 && !/[a-z0-9]/.test(want);
+  // unnamed Shift is not held against it. Space is a named key, not a symbol, though its
+  // alias is one character: "Space" fired on Shift+Space, the browser's page-up, and
+  // cancelled it (0.52 code review, use-hotkey.ts).
+  const symbol = want.length === 1 && !/[a-z0-9 ]/.test(want);
   return symbol && !combo.shift ? true : e.shiftKey === combo.shift;
 }
 
@@ -128,10 +138,13 @@ function isTypingTarget(target: EventTarget | null): boolean {
  * - Modifiers match EXACTLY: `"Ctrl+K"` does not fire on Ctrl+Shift+K.
  * - Typing in a field is left alone unless `allowInInputs`, except for a combo with
  *   Ctrl / Meta / Alt, which no one types as text.
- * - A key held down fires once, not on every repeat.
+ * - A key held down fires once, not on every repeat — and its repeats are cancelled as
+ *   the first press was, or the browser acts on them.
  * - The newest `handler` is always called; changing it does not re-attach the listener.
  *
- * `useCommandKey` (the ⌘K palette hook) is unchanged; this is its general form.
+ * `useCommandKey` (the ⌘K palette hook) is this with `"Mod+K"` and `allowInInputs`
+ * since 0.52, and FormActions' Ctrl/Cmd+Enter is {@link matchesHotkey} (refactor audit
+ * 2026-10-30, DUP-12): one reading of a chord.
  */
 export function useHotkey(
   combo: Hotkey | ReadonlyArray<Hotkey>,
@@ -156,7 +169,6 @@ export function useHotkey(
     const parsed = key.split("\u0000").map((c) => parseHotkey(c, apple));
     const listener = (raw: Event) => {
       const e = raw as KeyboardEvent;
-      if (e.repeat) return;
       const hit = parsed.find((p) => matchesHotkey(e, p));
       if (!hit) return;
       if (allowInInputs !== true && isTypingTarget(e.target)) {
@@ -164,6 +176,11 @@ export function useHotkey(
         if (allowInInputs === "never" || !chorded) return;
       }
       if (preventDefault) e.preventDefault();
+      // A held key's repeats are cancelled like its first press, and call nothing. They
+      // returned before the `preventDefault` once, so a held Ctrl+K's repeats reached the
+      // browser's own Ctrl+K and took the focus out of the palette ⌘K had just opened
+      // (0.52 code review, use-hotkey.ts; the hand-written ⌘K listener cancelled them).
+      if (e.repeat) return;
       handlerRef.current(e);
     };
     node.addEventListener(event, listener);

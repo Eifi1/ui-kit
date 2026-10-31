@@ -25,8 +25,8 @@ import type { ButtonSize, ButtonTone, ButtonVariant } from "./button-look";
  */
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   /** `default` (the quiet action, what a Button without `variant` draws), `accent` (the
-   *  strong call to action, solid brand), `secondary`, `ghost`, `danger` or `link`.
-   *  `primary` / `brand` are deprecated aliases of `default` / `accent`. See {@link ButtonVariant}. */
+   *  strong call to action, solid brand), `secondary`, `ghost`, `danger` or `link`. See
+   *  {@link ButtonVariant}. */
   variant?: ButtonVariant;
   /** `md` (default) is the page's action button. `sm` is the compact one — 12px text
    *  and `px-2 py-1` — for the secondary actions in a toolbar, a card header or a

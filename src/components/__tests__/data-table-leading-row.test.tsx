@@ -10,7 +10,7 @@ import { stubResizeObserver, type ResizeObserverStub } from "../../test/viewport
  * everywhere on click"): `leadingRowSticky` pins the `leadingRow` under the sticky header
  * while the rows scroll — `top` is the header's measured height, followed as it resizes
  * (a header that wraps at Large text). jsdom lays nothing out, so this pins the wiring;
- * headless Chromium checked the pixels (docs/adopt-0.48.md).
+ * headless Chromium checked the pixels (docs/archive/adopt/adopt-0.48.md).
  */
 
 interface Row {

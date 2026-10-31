@@ -127,7 +127,36 @@ describe("IconButton tone=info", () => {
     const cls = screen.getByRole("button").className;
     expect(screen.getByRole("button")).toHaveClass("text-info");
     expect(cls).toContain("hover:bg-info-soft");
-    expect(cls).toContain("focus-visible:ring-[var(--info-border)]");
+    expect(cls).toContain("focus-visible:ring-[var(--info)]");
+  });
+});
+
+// Refactor audit 2026-10-30, DSP-6: `--info-border` and `--success-border` rang at
+// 1.2–1.4:1 on the light grounds (1.8–2.0:1 in dark), and `custom` mixed its colour to
+// 40 %. The ring is each tone's own text colour now — ≥ 4.5:1, re-solved under More
+// contrast — as warning's has been since 0.33 (k27).
+describe("IconButton tone focus rings", () => {
+  const ring = (tone: "info" | "success" | "custom", quiet: boolean) => {
+    const { unmount } = render(<IconButton tone={tone} quiet={quiet} aria-label="Sync" />);
+    const cls = screen.getByRole("button").className;
+    unmount();
+    return cls.split(/\s+/).filter((c) => c.startsWith("focus-visible:ring-"));
+  };
+
+  it("rings info and success in the tone's own colour, quiet or toned", () => {
+    for (const quiet of [false, true]) {
+      expect(ring("info", quiet)).toContain("focus-visible:ring-[var(--info)]");
+      expect(ring("success", quiet)).toContain("focus-visible:ring-[var(--success)]");
+      expect(ring("info", quiet).join(" ")).not.toMatch(/-border\)/);
+      expect(ring("success", quiet).join(" ")).not.toMatch(/-border\)/);
+    }
+  });
+
+  it("rings custom in its colour at full strength, not mixed to 40 %", () => {
+    for (const quiet of [false, true]) {
+      expect(ring("custom", quiet)).toContain("focus-visible:ring-[var(--icon-button-tone,var(--text-primary))]");
+      expect(ring("custom", quiet).join(" ")).not.toContain("color-mix");
+    }
   });
 });
 

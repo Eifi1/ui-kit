@@ -68,7 +68,8 @@ function dragOver(target: Element, from: [number, number], to: [number, number])
     fireEvent(target, event);
   }
 }
-const hint = /drag to zoom/i;
+/** The drag surface, by attribute: since 0.52 (DSP-5) it has no name. */
+const surface = () => document.querySelector("rect[data-zoom-surface]") as HTMLElement | null;
 
 describe("per-point dots", () => {
   it("rings every measured point with `dot: true`, and skips the holes", () => {
@@ -296,7 +297,7 @@ describe("a category abscissa", () => {
     const { container } = render(
       <SeriesChart rows={rows} x={{ type: "category", key: "m" }} series={[{ key: "v", label: "V" }]} />,
     );
-    const rect = screen.getByLabelText(hint);
+    const rect = surface()!;
     const left = Number(rect.getAttribute("x"));
     const width = Number(rect.getAttribute("width"));
     dragOver(rect, [left + width * 0.25, 100], [left + width * 0.6, 104]);
@@ -395,10 +396,10 @@ describe("bars and areas", () => {
 
   it("does not zoom a bar chart unless asked, and then only along x", () => {
     const { unmount } = money();
-    expect(screen.queryByLabelText(hint)).toBeNull();
+    expect(surface()).toBeNull();
     unmount();
     const { container } = money({ zoomAxes: "x" });
-    const rect = screen.getByLabelText(hint);
+    const rect = surface()!;
     const before = yTicks(container);
     // A tall, narrow drag names no stretch of the abscissa: nothing happens.
     dragOver(rect, [300, 20], [302, 250]);
@@ -418,7 +419,7 @@ describe("bars and areas", () => {
     expect(areas).toHaveLength(3);
     expect(areas[0].getAttribute("fill-opacity")).toBe("0.55");
     expect(areas[2].getAttribute("fill-opacity")).toBe("0.2");
-    const rect = screen.getByLabelText(hint);
+    const rect = surface()!;
     // A box drag on an area chart is read as a band along x.
     const left = Number(rect.getAttribute("x"));
     const width = Number(rect.getAttribute("width"));
@@ -460,7 +461,7 @@ describe("bars and areas", () => {
       />,
     );
     expect(container.querySelectorAll("path.recharts-area-area")).toHaveLength(1);
-    expect(screen.queryByLabelText(hint)).toBeNull();
+    expect(surface()).toBeNull();
   });
 });
 

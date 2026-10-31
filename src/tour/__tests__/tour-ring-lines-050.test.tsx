@@ -1,8 +1,15 @@
 import { useEffect } from "react";
-import { act, cleanup, render } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, waitFor } from "@testing-library/react";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TourProvider, useTour, type TourStep } from "../tour";
+
+// The overlay is its own chunk since 0.52 (refactor audit 2026-10-30, MOD-1): loaded once
+// up front, as an app's bundle has it by the time a tour starts; React.lazy still resolves
+// it a render after the start, which the waits below cover.
+beforeAll(async () => {
+  await import("../tour-overlay");
+});
 
 /**
  * keksdose S1 (build review 0.50): the ring's 8px padding put its frame on a field's own
@@ -89,11 +96,13 @@ async function ring(step: TourStep, describedBy: string) {
       <Run step={step} />
     </TourProvider>,
   );
-  await act(async () => {
-    await new Promise((r) => setTimeout(r, 20));
+  // The decision point, not 20 ms of real time (refactor audit 2026-10-30, TST-3): the
+  // ring is drawn once the step is located, a chunk load after the start (MOD-1).
+  const el = await waitFor(() => {
+    const spot = document.querySelector<HTMLElement>("[data-tour-overlay] .rounded-lg");
+    expect(spot).not.toBeNull();
+    return spot;
   });
-  const el = document.querySelector<HTMLElement>("[data-tour-overlay] .rounded-lg");
-  expect(el).not.toBeNull();
   const { top, left, width, height } = el!.style;
   return { top: parseFloat(top), left: parseFloat(left), width: parseFloat(width), height: parseFloat(height) };
 }

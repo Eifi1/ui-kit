@@ -9,6 +9,7 @@ import { Modal } from "../components/modal";
 import { isApplePlatform } from "../hooks/use-hotkey";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
+import { hasContent } from "../lib/presence";
 import {
   DEFAULT_ATTACHMENT_ACCEPT,
   DEFAULT_FEEDBACK_ATTACHMENT_LABELS,
@@ -19,8 +20,10 @@ import {
 } from "./feedback-attachment";
 import { DEFAULT_FEEDBACK_DIALOG_LABELS } from "./feedback-dialog-labels";
 
-export interface FeedbackCategoryOption {
-  value: string;
+/** One category the dialog offers. `C` (0.52): the app's category type — the kit's
+ *  `FeedbackCategory`, or `string` (the default) for a vocabulary of the app's own. */
+export interface FeedbackCategoryOption<C extends string = string> {
+  value: C;
   label: string;
 }
 
@@ -103,10 +106,10 @@ export interface FeedbackDialogTextLabels {
 // Defined in ./feedback-dialog-labels, which holds no component code (0.34, KS U8).
 export { DEFAULT_FEEDBACK_DIALOG_LABELS };
 
-export interface FeedbackSubmission {
+export interface FeedbackSubmission<C extends string = string> {
   title: string;
   body: string;
-  category: string;
+  category: C;
   attachment: File | null;
 }
 
@@ -116,22 +119,29 @@ export interface FeedbackSubmission {
  * attaches the screenshot to the report and the photos as its evidence list. No
  * `attachment`: there is no one file it could name.
  */
-export interface FeedbackMultipleSubmission {
+export interface FeedbackMultipleSubmission<C extends string = string> {
   title: string;
   body: string;
-  category: string;
+  category: C;
   /** What `onCaptureScreenshot` returned, or `null` — at most one. */
   screenshot: File | null;
   /** Picked and pasted files, in the order they were added; at most `maxAttachments`. */
   attachments: File[];
 }
 
-interface FeedbackDialogBaseProps {
+/**
+ * `C` (0.52, refactor audit 2026-10-30, API-7): the category type, inferred from
+ * `categories` and `category` — `FeedbackCategory` hands `onCategoryChange` and
+ * `onSubmit` a `FeedbackCategory` back, where a plain `string` had to be cast (the kit's
+ * own `useFeedbackSubmit` did). `string` by default, so an app's own vocabulary fits.
+ */
+interface FeedbackDialogBaseProps<C extends string = string> {
   open: boolean;
   onClose: () => void;
-  categories: FeedbackCategoryOption[];
-  category: string;
-  onCategoryChange: (value: string) => void;
+  /** `readonly` since 0.52: the dialog never changes it. */
+  categories: readonly FeedbackCategoryOption<C>[];
+  category: C;
+  onCategoryChange: (value: C) => void;
   /** Prop > `<UiKitProvider labels={{ feedbackDialog, feedbackAttachment }}>` >
    *  English. Optional since 0.12.0; a whole `FeedbackDialogLabels` still fits. */
   labels?: LabelOverride<FeedbackDialogLabels>;
@@ -178,9 +188,9 @@ interface FeedbackDialogBaseProps {
 
 /** One attachment — a screenshot, a picked or a pasted image; a second replaces
  *  nothing, it has to wait for the first to be removed. The default. */
-export interface FeedbackDialogSingleProps extends FeedbackDialogBaseProps {
+export interface FeedbackDialogSingleProps<C extends string = string> extends FeedbackDialogBaseProps<C> {
   attachments?: "single";
-  onSubmit: (data: FeedbackSubmission) => void | Promise<void>;
+  onSubmit: (data: FeedbackSubmission<C>) => void | Promise<void>;
   /** `info` (0.23.0) names the refused file and the limit — see
    *  {@link FeedbackAttachmentErrorInfo}. */
   onAttachmentError?: (kind: "type" | "size", info: FeedbackAttachmentErrorInfo) => void;
@@ -193,17 +203,18 @@ export interface FeedbackDialogSingleProps extends FeedbackDialogBaseProps {
  * dev#578: "pasted two photos, the second overwrote the first"). The capture button is
  * offered while there is no screenshot yet; the add button while there is room.
  */
-export interface FeedbackDialogMultipleProps extends FeedbackDialogBaseProps {
+export interface FeedbackDialogMultipleProps<C extends string = string> extends FeedbackDialogBaseProps<C> {
   attachments: "multiple";
   /** Default `DEFAULT_MAX_ATTACHMENTS` (5). The screenshot does not count. */
   maxAttachments?: number;
-  onSubmit: (data: FeedbackMultipleSubmission) => void | Promise<void>;
+  onSubmit: (data: FeedbackMultipleSubmission<C>) => void | Promise<void>;
   /** `"count"`: more files arrived at once than there was room for; the surplus was
    *  dropped. `info` (0.23.0) names the refused file(s) and the limit. */
   onAttachmentError?: (kind: FeedbackAttachmentError, info: FeedbackAttachmentErrorInfo) => void;
 }
 
-export type FeedbackDialogProps = FeedbackDialogSingleProps | FeedbackDialogMultipleProps;
+export type FeedbackDialogProps<C extends string = string> =
+  FeedbackDialogSingleProps<C> | FeedbackDialogMultipleProps<C>;
 
 /**
  * The generic feedback form dialog: category + subject + body + an optional image
@@ -225,7 +236,7 @@ export type FeedbackDialogProps = FeedbackDialogSingleProps | FeedbackDialogMult
  * FeedbackMultipleSubmission}) instead of `attachment`. Opt-in, so a caller typed
  * against the one-file submission keeps compiling and behaving as before.
  */
-export function FeedbackDialog(props: FeedbackDialogProps) {
+export function FeedbackDialog<C extends string = string>(props: FeedbackDialogProps<C>) {
   const {
     open,
     onClose,
@@ -251,8 +262,7 @@ export function FeedbackDialog(props: FeedbackDialogProps) {
   const [files, setFiles] = useState<File[]>([]);
   const isMobile = usePhoneLayout();
   const noticeId = useId();
-  const hasNotice =
-    publicNotice !== undefined && publicNotice !== null && publicNotice !== false && publicNotice !== "";
+  const hasNotice = hasContent(publicNotice);
   const labels = useKitLabels("feedbackDialog", DEFAULT_FEEDBACK_DIALOG_LABELS, labelsProp);
   const attachmentText = useKitLabels("feedbackAttachment", DEFAULT_FEEDBACK_ATTACHMENT_LABELS, labelsProp);
   // Under `multiple` the heading is `attachmentList` — a screenshot AND photos — which
@@ -296,7 +306,8 @@ export function FeedbackDialog(props: FeedbackDialogProps) {
   if (!open) return null;
 
   const categoryField = (
-    <Select label={labels.category} value={category} onChange={(e) => onCategoryChange(e.target.value)}>
+    // The select offers exactly `categories`' values, so what it answers is one of them.
+    <Select label={labels.category} value={category} onChange={(e) => onCategoryChange(e.target.value as C)}>
       {categories.map((c) => (
         <option key={c.value} value={c.value}>
           {c.label}

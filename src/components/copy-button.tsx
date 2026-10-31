@@ -9,7 +9,6 @@ import { Button } from "./button";
 import { IconButton } from "./icon-button";
 import type { ButtonSize, ButtonTone, ButtonVariant } from "./button-look";
 import type { IconButtonSize, IconButtonTone } from "./icon-button";
-import { Tooltip } from "./tooltip";
 import type { TooltipSide } from "./tooltip";
 import { DEFAULT_COPY_BUTTON_LABELS } from "./copy-button-labels";
 
@@ -31,8 +30,9 @@ export interface CopyButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonEle
   /** What to copy. A function is read at click time — for a value that is expensive
    *  to build (a CSV of the table) or that changes under the button. */
   text: string | (() => string);
-  /** `icon` (default): a square icon button whose tooltip states the result.
-   *  `label`: a text button whose words change to the result. */
+  /** `icon` (default): a square icon button whose glyph and colour show the result — its
+   *  words in a bubble, and from Large up beside the glyph, as every labelled IconButton
+   *  shows them. `label`: a text button whose words change to the result. */
   variant?: "icon" | "label";
   /** The idle accessible name — and, in the `label` variant, the visible text:
    *  "Copy IBAN" says WHAT is copied, which a row of three copy icons needs. Default
@@ -82,9 +82,9 @@ const ICONS: Record<CopyState, typeof Copy> = { idle: Copy, copied: Check, faile
  * failure goes through an ASSERTIVE region and a success through a polite one — the
  * failure is the news that changes what they do next.
  *
- * The icon variant keeps the SAME accessible name in every state. A button renaming
- * itself under the focus is announced inconsistently across readers; the live region
- * is the channel that is actually heard.
+ * The icon variant keeps the SAME accessible name in every state, and the same words on
+ * screen. A button renaming itself under the focus is announced inconsistently across
+ * readers; the live region is the channel that is actually heard.
  */
 export function CopyButton({
   text,
@@ -156,25 +156,36 @@ export function CopyButton({
     );
   }
 
+  // IconButton names itself (0.52, refactor audit 2026-10-30, DSP-21): `label` is the
+  // bubble — and the text beside the glyph at Large, as on every labelled IconButton —
+  // and `aria-label` keeps the name steady. A Tooltip of our own round it cloned
+  // `aria-describedby` onto the button, which then read "Copy, button, Copy".
+  //
+  // The idle words, in every state (0.52 code review, deep, charts, finding 8). As the
+  // state, "Copied" stood at Large beside the glyph of a button named "Copy IBAN": the pill
+  // changed width on every copy, and the words on screen were not in the name a voice
+  // user says to press it (WCAG 2.5.3, label in name). The glyph and its colour show the
+  // result, and the live regions say it.
   return (
     <>
-      <Tooltip label={stateText} side={tooltipSide} portal={tooltipPortal}>
-        <IconButton
-          type="button"
-          {...rest}
-          disabled={disabled}
-          aria-label={idleText}
-          variant={buttonVariant ?? "ghost"}
-          size={(size ?? "sm") as IconButtonSize}
-          tone={tone as IconButtonTone | undefined}
-          stopPropagation={stopPropagation}
-          data-state={state}
-          onClick={() => void onClick()}
-          className={cn(iconTone, className)}
-        >
-          <Icon aria-hidden />
-        </IconButton>
-      </Tooltip>
+      <IconButton
+        type="button"
+        {...rest}
+        disabled={disabled}
+        label={idleText}
+        aria-label={idleText}
+        tooltipSide={tooltipSide}
+        tooltipPortal={tooltipPortal}
+        variant={buttonVariant ?? "ghost"}
+        size={(size ?? "sm") as IconButtonSize}
+        tone={tone as IconButtonTone | undefined}
+        stopPropagation={stopPropagation}
+        data-state={state}
+        onClick={() => void onClick()}
+        className={cn(iconTone, className)}
+      >
+        <Icon aria-hidden />
+      </IconButton>
       {regions}
     </>
   );

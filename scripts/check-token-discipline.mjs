@@ -33,7 +33,9 @@
  * Run: `npm run check:tokens`
  */
 import { readFileSync, readdirSync, statSync } from "node:fs";
+import { createRequire } from "node:module";
 import { join, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { findRoleClasses, roleUtilitiesFromCss } from "../src/eslint/role-utilities.ts";
 import { ROLE_UTILITIES } from "../src/eslint/role-utilities.generated.ts";
 
@@ -59,23 +61,50 @@ const BUDGET = Number(process.env.TOKEN_BUDGET ?? "1");
  */
 const ROLE_BUDGET = Number(process.env.ROLE_CLASS_BUDGET ?? "0");
 
-const SRC = resolve(import.meta.dirname, "..", "src");
+const ROOT = resolve(import.meta.dirname, "..");
+const SRC = join(ROOT, "src");
 
-// Palette-scale colour utilities, with any variant prefix (dark:, hover:, md:, …).
-// Both families: the NEUTRALS a component reaches for instead of a surface/text token,
-// and the COLOURS it reaches for instead of --brand / --danger / --warning / --info /
-// --money-* / the --chart-N ramp.
+// Palette-scale colour utilities, with any variant prefix (dark:, hover:, md:, …): the
+// NEUTRALS a component reaches for instead of a surface/text token, and the COLOURS it
+// reaches for instead of --brand / --danger / --warning / --info / --money-* / the
+// --chart-N ramp.
+//
+// The families are read from the Tailwind the kit builds with (`--color-<family>-50` in
+// tailwindcss/theme.css), not kept by hand: the hand list stopped at slate…stone and
+// missed the four palettes 4.3 added, so `text-mauve-500`, `bg-olive-100` and
+// `border-mist-300` passed (refactor audit 2026-10-30, DOC-1, PROVEN). The next palette
+// counts on the day Tailwind ships it.
 //
 // `neutral` is the one family that needs its shade (0.33, §7.3): `bg-neutral` and
 // `text-neutral-contrast` are the kit's own role utilities now, and Tailwind's
 // `neutral` palette is only ever used with a number.
-const NEUTRAL = "slate|gray|zinc|neutral-\\d{2,3}|stone|white|black";
-const COLOURED = "indigo|sky|blue|emerald|green|teal|amber|yellow|orange|rose|red|violet|purple|fuchsia|pink|cyan|lime";
-const PROP = "bg|text|border|ring|fill|stroke|placeholder|divide|outline|decoration|from|to|via|accent|caret|shadow";
+const THEME = readFileSync(createRequire(import.meta.url).resolve("tailwindcss/theme.css", { paths: [ROOT] }), "utf8");
+const FAMILIES = [...new Set([...THEME.matchAll(/--color-([a-z]+)-50\s*:/g)].map((m) => m[1]))];
+if (FAMILIES.length < 22 || !FAMILIES.includes("slate") || !FAMILIES.includes("red")) {
+  console.error(
+    `✖ tailwindcss/theme.css names ${FAMILIES.length} colour families (${FAMILIES.join(", ")}): its parser broke`,
+  );
+  process.exit(1);
+}
+const PALETTE = ["white", "black", "neutral-\\d{2,3}", ...FAMILIES.filter((f) => f !== "neutral")].join("|");
+// The side borders (`border-t-slate-200`) and the ring offsets (`ring-offset-white`)
+// were missed too (DOC-1).
+const PROP =
+  "bg|text|border(?:-[xytrblse])?|ring-offset|ring|fill|stroke|placeholder|divide|outline|decoration|from|to|via|accent|caret|shadow";
 const HARDCODED = new RegExp(
-  `\\b(?:[a-z][a-z0-9-]*:)*(?:${PROP})-(?:${NEUTRAL}|${COLOURED})(?:-\\d{2,3})?(?:\\/\\d{1,3})?\\b`,
+  `\\b(?:[a-z][a-z0-9-]*:)*(?:${PROP})-(?:${PALETTE})(?:-\\d{2,3})?(?:\\/\\d{1,3})?\\b`,
   "g",
 );
+
+/**
+ * An arbitrary value that IS a colour, not a token's: `bg-[#64748b]`, `[color:#fff]`,
+ * `text-[rgb(…)]`, `shadow-[0_1px_rgb(…)]`, `bg-[color-mix(in_oklab,#fff_10%,…)]`, and
+ * `hsl(`, `oklch(`, `oklab(`, `lab(`, `lch(`, `hwb(`, `color(`. A `var()` or a
+ * `color-mix()` of tokens is not one (DOC-1: hex and `rgb()` values passed). Counted with
+ * the palette classes, under the same budget.
+ */
+const ARBITRARY_COLOUR =
+  /(?<=^|[\s"'`:])(?:[a-z][a-z0-9-]*:)*(?:[a-z][a-z0-9-]*-)?\[(?:[a-z-]+:)?[^\]\s"'`]*?(?:#[0-9a-fA-F]{3,8}(?![0-9a-zA-Z])|(?<![a-zA-Z0-9-])(?:rgba?|hsla?|oklch|oklab|lab|lch|hwb|color)\()[^\]\s"'`]*\]/g;
 
 /**
  * Strip comments before counting.
@@ -103,6 +132,13 @@ const ALLOWED = [
   // tokens.css sets `accent-color: var(--brand)` in @layer base, and its comment records
   // that an explicit `accent-*` utility is MEANT to win over it (feedback #264).
   /^accent-/,
+  // A mask reads only alpha: `#000` in a mask gradient is "opaque", not a colour (DOC-1;
+  // textarea's label strip).
+  /^\[mask(?:-image)?:/,
+  // A shadow in black at an alpha is the scrim's decision for an edge (DOC-1; the popover
+  // hairlines and the numpad sheet): `shadow-[0_0_0_1px_rgba(0,0,0,0.08)]`, nothing else
+  // coloured in it.
+  /^shadow-\[(?:[0-9a-z._%-]|rgba?\(0[,_ ]+0[,_ ]+0[,_ /]+[0-9.]+%?\))*\]$/,
 ];
 
 function walk(dir) {
@@ -119,98 +155,110 @@ function walk(dir) {
   return out;
 }
 
-const perFile = [];
-let total = 0;
-for (const file of walk(SRC)) {
-  const hits = (stripComments(readFileSync(file, "utf8")).match(HARDCODED) ?? []).filter(
+/** The hardcoded colours in `code` (comments already stripped): palette classes and
+ *  arbitrary colour values, less the allowed ones. Exported for its test
+ *  (src/eslint/__tests__/token-discipline.test.ts). */
+export function hardcodedColours(code) {
+  return [...(code.match(HARDCODED) ?? []), ...(code.match(ARBITRARY_COLOUR) ?? [])].filter(
     // Match the allowlist against the BARE utility: `dark:ring-white/10` is the same
     // decision as `ring-white/10` and should not need its own entry.
     (h) => !ALLOWED.some((re) => re.test(h.replace(/^(?:[a-z][a-z0-9-]*:)+/, ""))),
   );
-  if (hits.length) {
-    perFile.push([file.slice(SRC.length + 1), hits.length]);
-    total += hits.length;
+}
+
+function main() {
+  const perFile = [];
+  let total = 0;
+  for (const file of walk(SRC)) {
+    const hits = hardcodedColours(stripComments(readFileSync(file, "utf8")));
+    if (hits.length) {
+      perFile.push([file.slice(SRC.length + 1), hits.length]);
+      total += hits.length;
+    }
   }
-}
 
-perFile.sort((a, b) => b[1] - a[1]);
+  perFile.sort((a, b) => b[1] - a[1]);
 
-/* ── The role-class ratchet (0.33) ────────────────────────────────────────────────── */
+  /* ── The role-class ratchet (0.33) ────────────────────────────────────────────────── */
 
-/**
- * Which tokens have a utility, per property, as tokens.css's `@theme inline` block declares
- * them — so a role that gains a utility starts counting the day it does. The table both
- * this and `@eifi1/ui-kit/eslint` read is that block re-rendered; a stale one fails here,
- * before it can let an app's lint miss the new role. `divide-*` and the side borders
- * (`border-t-*`, `border-x-*` …) read `--border-color-*`, as Tailwind does. The money
- * colours are theme names since 0.34 (`text-money-income`, with variants), so
- * `text-[var(--money-income)]` counts like any role. A width typed `length:` —
- * `ring-[length:var(--focus-ring-width)]` — is read against the WIDTH namespaces, where
- * `ring-focus` lives. The matcher (src/eslint/role-utilities.ts) reads `text-[var(--text-muted)]`,
- * `hover:bg-[var(--bg-hover)]`, `border-t-[var(--border)]`, `focus-visible:ring-[var(--brand)]/40`,
- * `ring-offset-[var(--bg-surface)]` and `focus-visible:ring-[length:var(--focus-ring-width)]`,
- * preceded by a start, a space, a quote or a variant's colon.
- */
-const declared = roleUtilitiesFromCss(readFileSync(resolve(import.meta.dirname, "..", "tokens.css"), "utf8"));
-if (!declared) {
-  console.error("✖ tokens.css has no @theme inline block — the role utilities are gone, or this parser is");
-  process.exit(1);
-}
-if (JSON.stringify(declared) !== JSON.stringify(ROLE_UTILITIES)) {
-  console.error(
-    "✖ src/eslint/role-utilities.generated.ts is not tokens.css's @theme inline block — run:\n" +
-      "    node scripts/gen-role-utilities.mjs\n" +
-      "  (this check and @eifi1/ui-kit/eslint both read that table)",
-  );
-  process.exit(1);
-}
-
-const rolePerFile = [];
-let roleTotal = 0;
-for (const file of walk(SRC)) {
-  const n = findRoleClasses(stripComments(readFileSync(file, "utf8")), ROLE_UTILITIES).length;
-  if (n) {
-    rolePerFile.push([file.slice(SRC.length + 1), n]);
-    roleTotal += n;
+  /**
+   * Which tokens have a utility, per property, as tokens.css's `@theme inline` block declares
+   * them — so a role that gains a utility starts counting the day it does. The table both
+   * this and `@eifi1/ui-kit/eslint` read is that block re-rendered; a stale one fails here,
+   * before it can let an app's lint miss the new role. `divide-*` and the side borders
+   * (`border-t-*`, `border-x-*` …) read `--border-color-*`, as Tailwind does. The money
+   * colours are theme names since 0.34 (`text-money-income`, with variants), so
+   * `text-[var(--money-income)]` counts like any role. A width typed `length:` —
+   * `ring-[length:var(--focus-ring-width)]` — is read against the WIDTH namespaces, where
+   * `ring-focus` lives. The matcher (src/eslint/role-utilities.ts) reads `text-[var(--text-muted)]`,
+   * `hover:bg-[var(--bg-hover)]`, `border-t-[var(--border)]`, `focus-visible:ring-[var(--brand)]/40`,
+   * `ring-offset-[var(--bg-surface)]` and `focus-visible:ring-[length:var(--focus-ring-width)]`,
+   * preceded by a start, a space, a quote or a variant's colon.
+   */
+  const declared = roleUtilitiesFromCss(readFileSync(join(ROOT, "tokens.css"), "utf8"));
+  if (!declared) {
+    console.error("✖ tokens.css has no @theme inline block — the role utilities are gone, or this parser is");
+    process.exit(1);
   }
-}
-rolePerFile.sort((a, b) => b[1] - a[1]);
-
-let failed = false;
-if (total > BUDGET) {
-  // The per-file tally is the lead for a failure; a passing run is one line.
-  for (const [file, n] of perFile) console.error(`  ${String(n).padStart(4)}  ${file}`);
-  console.error(`\nhardcoded colour utilities in src/: ${total}  (budget ${BUDGET})`);
-  console.error(
-    `\n::error::${total - BUDGET} new hardcoded colour utilit${total - BUDGET === 1 ? "y" : "ies"}.\n` +
-      `Use a token from tokens.css instead — --text-muted, --bg-hover, --border, --danger, …\n` +
-      `If the colour genuinely has no token, add one rather than raising this budget.`,
-  );
-  failed = true;
-} else {
-  console.log(`✓ hardcoded colour utilities in src/: ${total}  (budget ${BUDGET})`);
-  if (total < BUDGET) {
-    console.log(`  Budget is ${BUDGET - total} above the real count — lower TOKEN_BUDGET to ${total}.`);
-  }
-}
-
-if (roleTotal > ROLE_BUDGET) {
-  for (const [file, n] of rolePerFile.slice(0, 30)) console.error(`  ${String(n).padStart(4)}  ${file}`);
-  console.error(`\n[var(--role)] classes with a role utility in src/: ${roleTotal}  (budget ${ROLE_BUDGET})`);
-  console.error(
-    `\n::error::${roleTotal - ROLE_BUDGET} new [var(--role)] class${roleTotal - ROLE_BUDGET === 1 ? "" : "es"}.\n` +
-      `Use the role utility instead: text-[var(--text-muted)] → text-muted, bg-[var(--bg-surface-2)] →\n` +
-      `bg-surface-2, border-[var(--border)] → border-subtle, bg-[var(--danger-bg)] → bg-danger-soft,\n` +
-      `ring-offset-[var(--bg-surface)] → ring-offset-surface, ring-[length:var(--focus-ring-width)] → ring-focus …\n` +
-      `(tokens.css, the @theme inline block). Never raise this budget.`,
-  );
-  failed = true;
-} else {
-  console.log(`✓ [var(--role)] classes with a role utility in src/: ${roleTotal}  (budget ${ROLE_BUDGET})`);
-  if (roleTotal < ROLE_BUDGET) {
-    console.log(
-      `  Budget is ${ROLE_BUDGET - roleTotal} above the real count — lower ROLE_CLASS_BUDGET to ${roleTotal}.`,
+  if (JSON.stringify(declared) !== JSON.stringify(ROLE_UTILITIES)) {
+    console.error(
+      "✖ src/eslint/role-utilities.generated.ts is not tokens.css's @theme inline block — run:\n" +
+        "    node scripts/gen-role-utilities.mjs\n" +
+        "  (this check and @eifi1/ui-kit/eslint both read that table)",
     );
+    process.exit(1);
   }
+
+  const rolePerFile = [];
+  let roleTotal = 0;
+  for (const file of walk(SRC)) {
+    const n = findRoleClasses(stripComments(readFileSync(file, "utf8")), ROLE_UTILITIES).length;
+    if (n) {
+      rolePerFile.push([file.slice(SRC.length + 1), n]);
+      roleTotal += n;
+    }
+  }
+  rolePerFile.sort((a, b) => b[1] - a[1]);
+
+  let failed = false;
+  if (total > BUDGET) {
+    // The per-file tally is the lead for a failure; a passing run is one line.
+    for (const [file, n] of perFile) console.error(`  ${String(n).padStart(4)}  ${file}`);
+    console.error(`\nhardcoded colour utilities in src/: ${total}  (budget ${BUDGET})`);
+    console.error(
+      `\n::error::${total - BUDGET} new hardcoded colour utilit${total - BUDGET === 1 ? "y" : "ies"}.\n` +
+        `Use a token from tokens.css instead — --text-muted, --bg-hover, --border, --danger, …\n` +
+        `If the colour genuinely has no token, add one rather than raising this budget.`,
+    );
+    failed = true;
+  } else {
+    console.log(`✓ hardcoded colour utilities in src/: ${total}  (budget ${BUDGET})`);
+    if (total < BUDGET) {
+      console.log(`  Budget is ${BUDGET - total} above the real count — lower TOKEN_BUDGET to ${total}.`);
+    }
+  }
+
+  if (roleTotal > ROLE_BUDGET) {
+    for (const [file, n] of rolePerFile.slice(0, 30)) console.error(`  ${String(n).padStart(4)}  ${file}`);
+    console.error(`\n[var(--role)] classes with a role utility in src/: ${roleTotal}  (budget ${ROLE_BUDGET})`);
+    console.error(
+      `\n::error::${roleTotal - ROLE_BUDGET} new [var(--role)] class${roleTotal - ROLE_BUDGET === 1 ? "" : "es"}.\n` +
+        `Use the role utility instead: text-[var(--text-muted)] → text-muted, bg-[var(--bg-surface-2)] →\n` +
+        `bg-surface-2, border-[var(--border)] → border-subtle, bg-[var(--danger-bg)] → bg-danger-soft,\n` +
+        `ring-offset-[var(--bg-surface)] → ring-offset-surface, ring-[length:var(--focus-ring-width)] → ring-focus …\n` +
+        `(tokens.css, the @theme inline block). Never raise this budget.`,
+    );
+    failed = true;
+  } else {
+    console.log(`✓ [var(--role)] classes with a role utility in src/: ${roleTotal}  (budget ${ROLE_BUDGET})`);
+    if (roleTotal < ROLE_BUDGET) {
+      console.log(
+        `  Budget is ${ROLE_BUDGET - roleTotal} above the real count — lower ROLE_CLASS_BUDGET to ${roleTotal}.`,
+      );
+    }
+  }
+  if (failed) process.exit(1);
 }
-if (failed) process.exit(1);
+
+// Run as a script; imported (by its test), it only offers hardcodedColours.
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) main();

@@ -1,12 +1,19 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { act, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TourProvider, useTour, useTourGate, type TourStep } from "../tour";
 import { FullBleedDialog } from "../../components/full-bleed-dialog";
 import { Modal } from "../../components/modal";
 import { useDismissLayer } from "../../hooks/use-dismiss";
+
+// The overlay is its own chunk since 0.52 (refactor audit 2026-10-30, MOD-1): loaded once
+// up front, as an app's bundle has it by the time a tour starts; React.lazy still resolves
+// it a render after the start, which the waits below cover.
+beforeAll(async () => {
+  await import("../tour-overlay");
+});
 
 /**
  * Layer order (docs/tours-harmonization.md §11.6, contract round 054 §6A, keksdose B1): a
@@ -116,6 +123,8 @@ async function startIn(fullScreen = true, steps: TourStep[] = [STEP, END]) {
     </TourProvider>,
   );
   fireEvent.click(screen.getByRole("button", { name: "Take the tour" }));
+  // The overlay is a chunk of its own (MOD-1): the card is there a render later.
+  await waitFor(() => expect(document.querySelector("[data-tour-overlay]")).not.toBeNull());
   await flush();
   return { onDialogClose };
 }

@@ -48,9 +48,9 @@ export interface MultiSelectOption<V extends string | number = string | number> 
  *  ids and `string[]` for string ones, and no call site casts. */
 export interface MultiSelectProps<V extends string | number = string | number>
   extends Omit<ComponentPropsWithoutRef<"div">, "onChange">, FieldHelpProps {
-  options: MultiSelectOption<V>[];
+  options: readonly MultiSelectOption<V>[];
   /** The chosen values — the select family's `value` (API-4). */
-  value?: V[];
+  value?: readonly V[];
   onChange: (next: V[]) => void;
   /** Singular/plural countable label, used when 1+ items are selected. Default:
    *  `labels.selectedCount`, else `multiSelect.selectedCount` from the provider — the
@@ -116,6 +116,10 @@ export interface MultiSelectProps<V extends string | number = string | number>
   ref?: Ref<HTMLButtonElement>;
 }
 
+/** "Select all" and "Clear": dimmed, with no hover, while there is nothing for them to do. */
+const TOOLBAR_BUTTON =
+  "rounded px-2 py-0.5 text-secondary hover:bg-hover aria-disabled:cursor-not-allowed aria-disabled:opacity-40 aria-disabled:hover:bg-transparent";
+
 /**
  * Pick several of a fixed list — a filter's accounts, a comparison's data sets — with a
  * search box, "Select all" and "Clear"; nothing picked reads as "all".
@@ -158,7 +162,7 @@ export function MultiSelect<V extends string | number = string | number>(props: 
     "aria-required": ariaRequired,
     ...rest
   } = props;
-  const value = useMemo<V[]>(() => valueProp ?? [], [valueProp]);
+  const value = useMemo<readonly V[]>(() => valueProp ?? [], [valueProp]);
   // The rows as the family's options — the hint is the sublabel, searched like the label.
   const comboOptions = useMemo(
     () =>
@@ -338,21 +342,29 @@ export function MultiSelect<V extends string | number = string | number>(props: 
         // hints are why it was widened at all (keksdose #147).
         width={{ minRem: 16, fit: true, maxRem: 32 }}
         className={panelClassName}
+        // Reached by Tab from the search box (the panel's rows are not tab stops), and
+        // `aria-disabled` with a guarded click rather than `disabled`: a pressed "Clear"
+        // with nothing left to clear disabled itself under the focus, which dropped it to
+        // <body> — JumpCalendar's arrows are the rule (refactor audit 2026-10-30, INP-9).
         toolbar={
           <div className="flex items-center justify-between gap-2 px-2 py-1.5 text-xs">
             <button
               type="button"
-              onClick={selectAll}
-              disabled={!canSelectAll}
-              className="rounded px-2 py-0.5 text-secondary hover:bg-hover disabled:opacity-40"
+              onClick={() => {
+                if (canSelectAll) selectAll();
+              }}
+              aria-disabled={!canSelectAll || undefined}
+              className={TOOLBAR_BUTTON}
             >
               {text.selectAll}
             </button>
             <button
               type="button"
-              onClick={clearAll}
-              disabled={!canClear}
-              className="rounded px-2 py-0.5 text-secondary hover:bg-hover disabled:opacity-40"
+              onClick={() => {
+                if (canClear) clearAll();
+              }}
+              aria-disabled={!canClear || undefined}
+              className={TOOLBAR_BUTTON}
             >
               {text.clear}
             </button>

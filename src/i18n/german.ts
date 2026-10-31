@@ -18,7 +18,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
   const num = new Intl.NumberFormat(numberLocale);
   const n = (value: number) => num.format(value);
   // 0.30.0 — a throttled request (HTTP 429), as `englishRateLimited` in
-  // src/auth/auth-errors.ts: no wait → "einen Moment", under a minute → seconds, else
+  // src/auth/auth-errors-labels.ts: no wait → "einen Moment", under a minute → seconds, else
   // minutes rounded up. kastlan's reviewed "auth.throttled" is the sentence without one.
   const wait = (seconds: number) => (seconds < 60 ? `${n(Math.ceil(seconds))} s` : `${n(Math.ceil(seconds / 60))} min`);
   const rateLimited = (seconds?: number) =>
@@ -749,9 +749,15 @@ export function germanLabels(numberLocale: string): UiKitLabels {
     pieChart: {
       slices: "Diagrammsegmente",
       slice: (label, value, percent) => `${label}: ${value} (${percent})`,
+      sliceShare: (label, percent) => `${label}: ${percent}`,
       total: "Gesamt",
       empty: "Keine Daten",
       legend: "Kategorien",
+    },
+    treemap: {
+      tile: (name, value, share) => `${name}: ${value} (${share})`,
+      group: (name, value, share) => `${name}, Gruppe: ${value} (${share})`,
+      inGroup: (name, group) => `${name}, in ${group}`,
     },
     confirmDialog: {
       confirm: "Bestätigen",
@@ -1303,6 +1309,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       stoppedAll: (app) => `Erledigt. Sie erhalten keine Benachrichtigungs-E-Mails von ${app} mehr.`,
       accountMail: "E-Mails zu Ihrem Konto erhalten Sie weiterhin.",
       turnBackOn: "Sie können sie jederzeit in den Einstellungen wieder einschalten.",
+      stoppedHint: (accountMail, turnBackOn) => `${accountMail} ${turnBackOn}`,
       openSettings: "Einstellungen öffnen",
       invalidLink:
         "Dieser Link funktioniert nicht mehr. Sie können E-Mails stattdessen in den Einstellungen abbestellen.",
@@ -2032,7 +2039,6 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         menu: "Dev-Werkzeuge",
         overridesOn: "Überschreibungen aktiv",
         roleHeading: "Dev · Rolle",
-        switchPlan: "Tarif wechseln",
         plan: (value) => `Tarif: ${value}`,
         planHeading: "Dev · Tarif",
         backTo: (role) => `Zurück zu ${role}`,

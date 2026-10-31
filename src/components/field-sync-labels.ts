@@ -4,6 +4,7 @@
 
 import type { FieldSyncLabels } from "./field-sync";
 
+/** @deprecated 0.52 — none: no app uses the FieldSync family (MOD-5); removed in 0.53. */
 export const DEFAULT_FIELD_SYNC_LABELS: FieldSyncLabels = {
   synced: "Saved",
   edited: "Unsaved changes",

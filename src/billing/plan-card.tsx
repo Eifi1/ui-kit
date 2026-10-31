@@ -14,6 +14,8 @@ import { Button } from "../components/button";
 import { DialogFrame } from "../components/dialog-frame";
 import { useBillingLabels } from "./billing-labels";
 import type { BillingLabels } from "./billing-labels";
+import { dialogClose } from "./dialog-close";
+import type { WithDialogClose } from "./dialog-close";
 import { BILLING_INTERVALS, billingCurrencyFor, formatPlanPrice, planPrice } from "./plan-price";
 import type { BillingCurrency, BillingInterval, PlanPrices } from "./plan-price";
 
@@ -489,9 +491,7 @@ export function PlanPicker({
       {permanentGrant && !switching && (
         <GrantWarningConfirm
           open={warned !== null}
-          onOpenChange={(open) => {
-            if (!open) setWarned(null);
-          }}
+          onClose={() => setWarned(null)}
           onConfirm={() => {
             if (warned) onChoose(warned);
           }}
@@ -502,17 +502,27 @@ export function PlanPicker({
   );
 }
 
-export interface GrantWarningConfirmProps {
+/** {@link GrantWarningConfirmProps} before one of its two close props is required. */
+interface GrantWarningConfirmFields {
   /** Shown, controlled. */
   open: boolean;
-  /** `false` on "Back", Escape, the backdrop — and after "Buy anyway". */
-  onOpenChange: (open: boolean) => void;
+  /** "Back", Escape, the backdrop — and after "Buy anyway". 0.52: every other kit
+   *  dialog's `onClose` (CONTRIBUTING §4; refactor audit 2026-10-30, API-5). */
+  onClose?: () => void;
+  /** @deprecated 0.52 — `onClose`, as every other kit dialog; removed in 0.53. Called with
+   *  `false` when there is no `onClose`. */
+  onOpenChange?: (open: boolean) => void;
   /** "Buy anyway": the app opens its checkout. The dialog closes itself after it. */
   onConfirm: () => void;
   /** Prop > `<UiKitProvider labels={{ billing }}>` > English: `grantWarningTitle`,
    *  `grantWarningBody`, `grantWarningAction`. "Back" is `common.back`. */
   labels?: LabelOverride<BillingLabels>;
 }
+
+/** What {@link GrantWarningConfirm} takes: `onClose`, or alone the deprecated
+ *  `onOpenChange`, is required (0.52 code review: with neither it compiled, and nothing
+ *  could dismiss it). */
+export type GrantWarningConfirmProps = WithDialogClose<GrantWarningConfirmFields>;
 
 /**
  * 0.42 (§16.8 B): the permanent-grant warning before a checkout — `grantWarningTitle`,
@@ -523,26 +533,41 @@ export interface GrantWarningConfirmProps {
  * to a checkout — show this before that checkout, so a permanent-grant holder is still
  * warned. Carries `data-grant-warning`.
  */
-export function GrantWarningConfirm({ open, onOpenChange, onConfirm, labels: labelsProp }: GrantWarningConfirmProps) {
+export function GrantWarningConfirm({
+  open,
+  onClose,
+  onOpenChange,
+  onConfirm,
+  labels: labelsProp,
+}: GrantWarningConfirmProps) {
   const labels = useBillingLabels(labelsProp);
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
+  const close = dialogClose({ onClose, onOpenChange });
   return (
     <DialogFrame
       open={open}
       title={labels.grantWarningTitle}
       description={labels.grantWarningBody}
-      onClose={() => onOpenChange(false)}
+      onClose={close}
       data-grant-warning=""
-      actions={(close) => (
+      actions={(lower) => (
         <>
-          <Button variant="secondary" onClick={close}>
+          <Button variant="secondary" onClick={lower}>
             {common.back}
           </Button>
           <Button
             variant="default"
             onClick={() => {
+              // Already closed, and lowering: a second press is no second checkout, for an
+              // app that shows this dialog itself as much as for PlanPicker.
+              if (!open) return;
               onConfirm();
-              onOpenChange(false);
+              // The caller's close, at once — not `lower`, the panel's animated one, which
+              // reports the close 220 ms later. PlanPicker clears the warned choice in it,
+              // and the lowering panel is not inert: a double click on "Buy anyway" opened
+              // the checkout twice (0.52 code review, plan-card.tsx). The caller's `open`
+              // turning false still plays the exit.
+              close();
             }}
           >
             {labels.grantWarningAction}

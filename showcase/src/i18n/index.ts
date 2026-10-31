@@ -1,5 +1,6 @@
 import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
+import { readStored, writeStored } from "@eifi1/ui-kit";
 
 import { de } from "./de";
 import { en } from "./en";
@@ -85,9 +86,9 @@ export const LOCALE_OPTIONS: Array<{ code: LocaleCode; label: string; country: s
 /* ── Persistence ───────────────────────────────────────────────────────────── */
 
 /**
- * `localStorage`, guarded — the same guard as the kit's `src/lib/safe-storage.ts`,
- * repeated here because that module is internal to the package and the showcase imports
- * `@eifi1/ui-kit` exactly as a consumer does.
+ * `localStorage`, through the kit's guard (`readStored` / `writeStored`), as a consumer
+ * uses it. Until 0.52 this file wrote the guard again, saying the kit's was internal — it
+ * had been public since 0.12 (DUP-8, refactor audit 2026-10-30).
  *
  * Reading `window.localStorage` THROWS rather than returning null where site data is
  * blocked: Safari private browsing, a partitioned webview, Chrome with third-party site
@@ -96,24 +97,8 @@ export const LOCALE_OPTIONS: Array<{ code: LocaleCode; label: string; country: s
  * first render of everything. A preference that cannot be read is indistinguishable
  * from one that was never set, and the right answer for both is the default.
  */
-function readStoredCode(): string | null {
-  if (typeof window === "undefined") return null;
-  try {
-    return window.localStorage.getItem(LOCALE_STORAGE_KEY);
-  } catch {
-    // blocked, partitioned, or disabled — fall back to the default locale
-    return null;
-  }
-}
-
-function writeStoredCode(code: string): void {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(LOCALE_STORAGE_KEY, code);
-  } catch {
-    // ignore (private mode, quota, partitioned storage)
-  }
-}
+const readStoredCode = (): string | null => readStored(LOCALE_STORAGE_KEY);
+const writeStoredCode = (code: string): void => writeStored(LOCALE_STORAGE_KEY, code);
 
 /* ── Context ───────────────────────────────────────────────────────────────── */
 

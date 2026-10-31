@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { Modal } from "../modal";
+import { viewportMatchMedia } from "../../test/viewport";
 
 /**
  * The draggable panel (dev#460) must not outlive the dialog.
@@ -111,6 +112,49 @@ describe("Modal — draggable panel", () => {
     fireEvent.pointerDown(screen.getByLabelText("note"), { button: 0, clientX: 100, clientY: 100 });
     fireEvent.pointerMove(panel, { clientX: 130, clientY: 90 });
     expect(panel.style.transform).toBe("");
+  });
+
+  it("does not drag at Large text between 768 and 960 px, where the panel is a bottom sheet", () => {
+    // `md:` is 60rem at Large: 960 px. The gate read `innerWidth >= 768`, so an 800 px
+    // window dragged a panel that its own CSS lays out as the phone's bottom sheet
+    // (refactor audit 2026-10-30, DUP-9).
+    document.documentElement.setAttribute("data-text-size", "large");
+    vi.stubGlobal("innerWidth", 800);
+    vi.stubGlobal("matchMedia", viewportMatchMedia(800));
+    try {
+      render(
+        <Modal onClose={vi.fn()} draggable>
+          <p>drag me</p>
+        </Modal>,
+      );
+      const panel = screen.getByRole("dialog");
+      fireEvent.pointerDown(panel, { button: 0, clientX: 100, clientY: 100 });
+      fireEvent.pointerMove(panel, { clientX: 130, clientY: 90 });
+      expect(panel.style.transform).toBe("");
+    } finally {
+      document.documentElement.removeAttribute("data-text-size");
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("drags at Large text from 960 px up", () => {
+    document.documentElement.setAttribute("data-text-size", "large");
+    vi.stubGlobal("innerWidth", 1000);
+    vi.stubGlobal("matchMedia", viewportMatchMedia(1000));
+    try {
+      render(
+        <Modal onClose={vi.fn()} draggable>
+          <p>drag me</p>
+        </Modal>,
+      );
+      const panel = screen.getByRole("dialog");
+      fireEvent.pointerDown(panel, { button: 0, clientX: 100, clientY: 100 });
+      fireEvent.pointerMove(panel, { clientX: 130, clientY: 90 });
+      expect(panel.style.transform).toBe("translate(30px, -10px)");
+    } finally {
+      document.documentElement.removeAttribute("data-text-size");
+      vi.unstubAllGlobals();
+    }
   });
 
   it("adds no drag handling at all unless `draggable` is set", () => {

@@ -1,8 +1,15 @@
 import { act, render, screen } from "@testing-library/react";
 import { MemoryRouter, RouterProvider, createMemoryRouter, useLocation, useNavigate } from "react-router";
-import { describe, expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { TourProvider, useTour, type TourLauncher, type TourStep } from "../tour";
 import { useTourCatalogueUrlState, useTourUrlSync, type UseTourUrlSyncOptions } from "../use-tour-url-sync";
+
+// The overlay is its own chunk since 0.52 (refactor audit 2026-10-30, MOD-1): loaded once
+// up front, as an app's bundle has it by the time a tour starts; React.lazy still resolves
+// it a render after the start, which the waits below cover.
+beforeAll(async () => {
+  await import("../tour-overlay");
+});
 
 /** docs/tours-harmonization.md §2.7, §2.8, §6.4: keksdose's tour-url-sync on the kit's engine. */
 
@@ -90,7 +97,8 @@ describe("useTourUrlSync", () => {
     render(<App path="/budget?tour=budget&tourStep=3&q=keep#part" spy={spy} />);
     await flush();
     expect(spy).toHaveBeenCalledWith("budget", { startIndex: 2 });
-    expect(screen.getByRole("dialog")).toHaveTextContent("Step 3");
+    // The overlay is a chunk of its own (MOD-1): the card is there a render later.
+    expect(await screen.findByRole("dialog")).toHaveTextContent("Step 3");
     expect(url()).toBe("/budget?tour=budget&tourStep=3&q=keep#part");
     act(() => screen.getByText("engine-next").click());
     await flush();
@@ -194,7 +202,8 @@ describe("useTourUrlSync", () => {
       expect.any(Function),
       expect.objectContaining({ stop: expect.any(Function) }),
     );
-    expect(screen.getByRole("dialog")).toHaveTextContent("Step 2");
+    // The overlay is a chunk of its own (MOD-1): the card is there a render later.
+    expect(await screen.findByRole("dialog")).toHaveTextContent("Step 2");
   });
 
   it("hands the launcher the provider's whole engine, read live (keksdose N1)", async () => {

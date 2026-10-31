@@ -1,9 +1,9 @@
 import { useId, type ReactNode } from "react";
 import { Circle, CircleCheck, Clock, Play } from "lucide-react";
 import { cn } from "../lib/cn";
-import { useKitFormat } from "../lib/format";
-import { foldForSearch } from "../lib/text-match";
-import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
+import { useDayFormatter } from "../lib/day-format";
+import { matchesSearch, searchWords } from "../lib/text-match";
+import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { Button } from "../components/button";
 import { Card } from "../components/card";
 import { Chip } from "../components/chip";
@@ -31,10 +31,13 @@ export interface TourCatalogueCardProps {
   /** "Mark as not done". Without it, the link is not drawn. */
   onReset?: (id: string) => void;
   /**
-   * Formats the completion and update days. Default: the kit's medium date in the provider's locale.
-   * It gets the completion's ISO instant and the update's bare `"YYYY-MM-DD"` (`updated.date`): read
-   * the bare day on its calendar (the kit's `formatDate`, `parseIsoDate`), never `new Date(day)`,
-   * which is UTC midnight and the day before west of UTC (round 0.45, N9).
+   * Formats the completion and update days. Default (0.52): the `<UiKitProvider formatDate>`
+   * when the app set one — its date preference, no weekday: the day sits in a sentence —
+   * else the kit's medium date in the provider's locale and `timeZone`. It gets the
+   * completion's ISO instant and the update's bare `"YYYY-MM-DD"` (`updated.date`): read the
+   * bare day on its calendar (the kit's `formatDate`, `parseIsoDate`), never `new Date(day)`,
+   * which is UTC midnight and the day before west of UTC (round 0.45, N9). An empty answer
+   * falls back to the kit's.
    */
   formatDate?: (iso: string) => string;
   labels?: LabelOverride<TourCatalogueLabels>;
@@ -61,8 +64,7 @@ export function TourCatalogueCard({
   className,
 }: TourCatalogueCardProps) {
   const words = useKitLabels("tourCatalogue", DEFAULT_TOUR_CATALOGUE_LABELS, labelsProp);
-  const { formatDate } = useKitFormat();
-  const day = formatDateProp ?? ((iso: string) => formatDate(iso, "medium"));
+  const day = useDayFormatter(formatDateProp);
   const titleId = useId();
   const done = isTourDone(tour, completedAt);
   const reset = isTourReset(tour, completedAt);
@@ -210,18 +212,27 @@ export function TourCatalogue({
 }: TourCatalogueProps) {
   const words = useKitLabels("tourCatalogue", DEFAULT_TOUR_CATALOGUE_LABELS, labelsProp);
   const uid = useId();
-  const { locale: kitLocale } = useKitFormat();
-  const locale = localeProp ?? kitLocale;
+  const locale = useKitLocale(localeProp);
   // A group or state the list does not have is no filter at all (an old link).
   const group = groups.some((g) => g.id === groupProp) ? groupProp : null;
   const state = STATE_FILTERS.includes(stateProp) ? stateProp : "all";
 
   const listed = tours.filter((t) => groups.some((g) => g.id === t.group));
   const done = (tour: TourInfo) => isTourDone(tour, completed[tour.id]);
-  const needle = foldForSearch(query.trim(), locale);
+  // Every word somewhere in the title, the one-liner or the about — "budget visits" finds
+  // "Your budget" whose about says "Visits the budget page" — as every kit list searches
+  // since 0.51.4 (refactor audit 2026-10-30, DUP-4: the whole query had to be one
+  // substring of one text).
+  // `|| undefined`: an app's JSON says `null` where TourInfo says absent, and
+  // `matchesSearch` leaves out only `undefined` — `"about": null` threw on the first letter
+  // typed, as the old matcher's `!!text` never did (0.52 code review, tour-catalogue.tsx).
+  const queryWords = searchWords(query, locale);
   const matchesQuery = (tour: TourInfo) =>
-    !needle ||
-    [tour.title, tour.description, tour.about].some((text) => !!text && foldForSearch(text, locale).includes(needle));
+    matchesSearch(
+      queryWords,
+      [tour.title || undefined, tour.description || undefined, tour.about || undefined],
+      locale,
+    );
   const inState = (tour: TourInfo) => (state === "all" ? true : state === "done" ? done(tour) : !done(tour));
   const inGroup = (tour: TourInfo, id: string | null = group) => id === null || tour.group === id;
 
@@ -230,7 +241,7 @@ export function TourCatalogue({
   const visible = found.filter(inState);
   const groupCount = (id: string | null) =>
     listed.filter((t) => matchesQuery(t) && inState(t) && inGroup(t, id)).length;
-  const filtering = needle.length > 0 || state !== "all" || group !== null;
+  const filtering = queryWords.length > 0 || state !== "all" || group !== null;
   const sections = groups
     .map((g) => ({ ...g, tours: visible.filter((t) => t.group === g.id) }))
     .filter((g) => g.tours.length > 0);

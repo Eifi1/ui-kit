@@ -6,7 +6,9 @@ import {
   createTextSizeStore,
   createThemeStore,
   isTextSize,
+  readStored,
   resolveTextSize,
+  writeStored,
   type TextSize,
 } from "@eifi1/ui-kit";
 
@@ -70,14 +72,9 @@ export const SIDEBAR_STYLE_KEY = "uikit-showcase-sidebar-style";
 
 export type SidebarStyle = "flyout" | "inline";
 
-function readSidebarStyle(): SidebarStyle {
-  try {
-    return window.localStorage.getItem(SIDEBAR_STYLE_KEY) === "inline" ? "inline" : "flyout";
-  } catch {
-    // blocked storage (private mode, partitioned webview) — the default it is
-    return "flyout";
-  }
-}
+// Blocked storage (private mode, a partitioned webview) reads as the default and keeps
+// the choice for this visit only: the kit's guard, as an app uses it (DUP-8).
+const readSidebarStyle = (): SidebarStyle => (readStored(SIDEBAR_STYLE_KEY) === "inline" ? "inline" : "flyout");
 
 /**
  * How the sidebar shows a group's pages — AppShell's `subNav`. A showcase setting
@@ -88,11 +85,7 @@ export function useSidebarStyle(): [SidebarStyle, (next: SidebarStyle) => void] 
   const [style, setStyle] = useState<SidebarStyle>(readSidebarStyle);
   const set = useCallback((next: SidebarStyle) => {
     setStyle(next);
-    try {
-      window.localStorage.setItem(SIDEBAR_STYLE_KEY, next);
-    } catch {
-      // ignore — the choice still holds for this visit
-    }
+    writeStored(SIDEBAR_STYLE_KEY, next);
   }, []);
   return [style, set];
 }
@@ -105,20 +98,12 @@ export type ContentsPosition = "start" | "end";
  *  `position`. Start (the left here) by default: next to the sidebar, so both
  *  navigations are in one place. */
 export function useContentsPosition(): [ContentsPosition, (next: ContentsPosition) => void] {
-  const [position, setPosition] = useState<ContentsPosition>(() => {
-    try {
-      return window.localStorage.getItem(CONTENTS_POSITION_KEY) === "end" ? "end" : "start";
-    } catch {
-      return "start";
-    }
-  });
+  const [position, setPosition] = useState<ContentsPosition>(() =>
+    readStored(CONTENTS_POSITION_KEY) === "end" ? "end" : "start",
+  );
   const set = useCallback((next: ContentsPosition) => {
     setPosition(next);
-    try {
-      window.localStorage.setItem(CONTENTS_POSITION_KEY, next);
-    } catch {
-      // ignore — the choice still holds for this visit
-    }
+    writeStored(CONTENTS_POSITION_KEY, next);
   }, []);
   return [position, set];
 }

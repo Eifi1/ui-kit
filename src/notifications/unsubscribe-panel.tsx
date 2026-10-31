@@ -4,12 +4,13 @@ import { CheckCircle2, Link2Off } from "lucide-react";
 
 import type { LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
-import { errorBodyWithCode, httpStatusOf } from "../auth/auth-errors";
+import { errorBodyWithCode } from "../auth/auth-errors";
+import { httpStatusOf } from "../lib/http-status";
 import { INTRO_CLASS, OUTCOME_CLASS, STATUS_HEADING_CLASS, useFocusWhen } from "../auth/status-parts";
 import type { AuthHeadingLevel } from "../auth/status-parts";
 import { Button } from "../components/button";
 import { EmptyState } from "../components/empty-state";
-import { useMounted } from "../account/account-parts";
+import { useMounted } from "../hooks/use-mounted";
 import { FailureLine, useNotificationsLabels } from "./notification-parts";
 import type { NotificationsLabels } from "./notifications-labels";
 
@@ -154,11 +155,7 @@ export function UnsubscribePanel({
           tone="success"
           icon={<CheckCircle2 />}
           title={shown === "stopped-these" ? labels.stoppedThese : labels.stoppedAll(appName)}
-          hint={
-            <>
-              {labels.accountMail} {labels.turnBackOn}
-            </>
-          }
+          hint={labels.stoppedHint(labels.accountMail, labels.turnBackOn)}
           action={settingsLink}
           className={OUTCOME_CLASS}
         />

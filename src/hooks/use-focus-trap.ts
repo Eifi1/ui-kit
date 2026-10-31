@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { tabStops } from "../lib/focus-left";
 
 /**
  * Keep keyboard focus inside an open overlay, and give it back when it closes.
@@ -35,28 +36,11 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
  *     button; this is the focus half of it.
  */
 
-/**
- * Candidate tab stops, in DOM order — narrowed by {@link isTabStop} to the ones a Tab
- * really reaches.
- *
- * The selector is the one `Modal` used. On its own it was not enough (round 0.34
- * BUG-4): only the bare `[tabindex]` clause excluded `-1`, so a `button`, an `input` or
- * a link taken out of the tab order still counted. A panel that ends in a roving grid —
- * the calendar's days, the month grid, the picker sheet's rows, every one of them `-1`
- * but the active cell — then had a "last" stop no Tab ever reaches: Tab from the real
- * last stop was not wrapped and walked out of the open panel, and Shift+Tab from the
- * first landed on a cell that is not a stop at all.
- */
-const FOCUSABLE =
-  'a[href],button:not([disabled]),textarea:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])';
-
-/**
- * A stop the browser's own Tab would land on: in the tab order (`tabIndex` ≥ 0) and not
- * inside something `hidden` or `inert`. Removes only elements a native Tab never
- * reaches, so no correct order changes. `visibility: hidden` and closed `<details>` are
- * still not walked — they need layout, which this list has never read.
- */
-const isTabStop = (el: HTMLElement): boolean => el.tabIndex >= 0 && !el.closest("[hidden],[inert]");
+// The trap's reading of "a Tab lands here" is lib/focus-left's `tabStops` — the kit's one
+// copy of the rule since the 0.52 code review (round 0.34 BUG-4's history is there).
+// Re-exported where refactor audit 2026-10-30, DUP-9 put them, for a part that walks Tab
+// over something that is not a trap (the tour's field + card ring).
+export { firstTabStop, tabStops } from "../lib/focus-left";
 
 /**
  * Marks a container whose trap is currently active.
@@ -146,11 +130,11 @@ export function useFocusTrap(
     };
 
     const tabbables = () =>
-      Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
+      tabStops(container, { includeSelf: false }).filter(
         // A tabbable inside a NESTED open overlay belongs to that overlay's trap, not
         // to this one — otherwise the outer list spans both panels and Tab from the
         // inner panel's last control wraps to the OUTER panel's first.
-        (el) => isTabStop(el) && !inNestedTrap(el),
+        (el) => !inNestedTrap(el),
       );
 
     const { initialFocus: how } = optsRef.current;

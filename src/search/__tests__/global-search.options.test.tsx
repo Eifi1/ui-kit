@@ -43,7 +43,7 @@ const draw = (props: Partial<GlobalSearchProps> = {}) =>
 
 const open = () =>
   act(() => {
-    document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }));
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }));
   });
 
 const groups = async () => {
@@ -129,6 +129,6 @@ describe("GlobalSearch triggerName (keksdose C25)", () => {
   it("includes the platform's shortcut in the name with withShortcut", () => {
     draw({ triggerName: "withShortcut" });
     const button = screen.getByRole("button", { name: /^Search \((⌘K|Ctrl K)\)$/ });
-    expect(button).toHaveAttribute("aria-keyshortcuts", "Meta+K Control+K");
+    expect(button).toHaveAttribute("aria-keyshortcuts", "Control+K");
   });
 });

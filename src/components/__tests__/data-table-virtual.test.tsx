@@ -13,7 +13,7 @@ import { planBodies } from "../data-table-virtual";
  * for the rest. jsdom lays nothing out, so the geometry is a model: the scroller shows
  * 400px, the header is 40px, and every row counts as `estimateRowHeight` (40) — a row
  * measured at 0 is "not laid out" and keeps the estimate. Headless Chromium checked the
- * pixels (docs/adopt-0.48.md, "ui-kit 0.48.2").
+ * pixels (docs/archive/adopt/adopt-0.48.md, "ui-kit 0.48.2").
  */
 
 interface Row {

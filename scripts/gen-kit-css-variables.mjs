@@ -14,6 +14,12 @@
  * is mounted. `src/__tests__/token-vars-declared.test.ts` re-derives both lists with the
  * TypeScript implementation and fails, naming this script, when this file is stale.
  *
+ * The blocks come from the kit's one `@theme` block finder, `themeBlocks` in
+ * src/eslint/role-utilities.ts, imported from source (refactor audit 2026-10-30, DUP-13;
+ * this was a hand mirror of css-variables.ts's). Not `declaredCustomProperties` itself:
+ * css-variables.ts imports this script's output without an extension, which Node cannot
+ * load, and a generator must not need its own output to run.
+ *
  * Usage:
  *   node scripts/gen-kit-css-variables.mjs           rewrite the generated file
  *   node scripts/gen-kit-css-variables.mjs --check    exit 1 if it is stale
@@ -21,6 +27,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join, resolve } from "node:path";
+import { stripCssComments, themeBlocks } from "../src/eslint/role-utilities.ts";
 
 const ROOT = resolve(import.meta.dirname, "..");
 const OUT = join(ROOT, "src/testing/css-variables.generated.ts");
@@ -30,18 +37,12 @@ const TAILWIND_VERSION = JSON.parse(
   readFileSync(require.resolve("tailwindcss/package.json", { paths: [ROOT] }), "utf8"),
 ).version;
 
-/** Mirrors `declaredCustomProperties` in src/testing/css-variables.ts. */
+/** `declaredCustomProperties`' rule (src/testing/css-variables.ts): every `--name:` outside
+ *  the `@theme inline` blocks, comments skipped. */
 function declared(css) {
-  const blank = (m) => m.replace(/[^\n]/g, " ");
-  let code = css.replace(/\/\*[\s\S]*?\*\//g, blank);
-  for (const m of code.matchAll(/@theme\b[^{;]*\binline\b[^{;]*\{/g)) {
-    let depth = 0;
-    let end = m.index + m[0].length - 1;
-    for (; end < code.length; end++) {
-      if (code[end] === "{") depth++;
-      else if (code[end] === "}" && --depth === 0) break;
-    }
-    code = code.slice(0, m.index) + blank(code.slice(m.index, end + 1)) + code.slice(end + 1);
+  let code = stripCssComments(css);
+  for (const { start, end } of themeBlocks(code, { inline: true }).reverse()) {
+    code = code.slice(0, start) + code.slice(end);
   }
   return new Set([...code.matchAll(/(--[a-zA-Z0-9_-]+)\s*:/g)].map((m) => m[1]));
 }

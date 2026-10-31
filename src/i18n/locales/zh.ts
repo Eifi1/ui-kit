@@ -14,7 +14,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
   const num = new Intl.NumberFormat(numberLocale);
   const n = (value: number) => num.format(value);
   // 0.30.0 — a throttled request (HTTP 429), as `englishRateLimited` in
-  // src/auth/auth-errors.ts: no wait → "稍候", under a minute → seconds, else minutes
+  // src/auth/auth-errors-labels.ts: no wait → "稍候", under a minute → seconds, else minutes
   // rounded up. The numeral has a space either side, as everywhere in this catalogue.
   const wait = (seconds: number) =>
     seconds < 60 ? `${n(Math.ceil(seconds))} 秒` : `${n(Math.ceil(seconds / 60))} 分钟`;
@@ -720,9 +720,15 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     pieChart: {
       slices: "图表扇区",
       slice: (label, value, percent) => `${label}：${value}（${percent}）`,
+      sliceShare: (label, percent) => `${label}：${percent}`,
       total: "合计",
       empty: "无数据",
       legend: "类别",
+    },
+    treemap: {
+      tile: (name, value, share) => `${name}：${value}（${share}）`,
+      group: (name, value, share) => `${name}（组）：${value}（${share}）`,
+      inGroup: (name, group) => `${name}，属于${group}`,
     },
     confirmDialog: {
       confirm: "确认",
@@ -1244,6 +1250,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       stoppedAll: (app) => `已完成。您将不再收到来自 ${app} 的通知邮件。`,
       accountMail: "有关您账户的邮件仍会照常发送。",
       turnBackOn: "您可以随时在“设置”中重新开启。",
+      // Chinese puts no space between sentences (refactor audit 2026-10-30, DOC-11).
+      stoppedHint: (accountMail, turnBackOn) => `${accountMail}${turnBackOn}`,
       openSettings: "打开设置",
       invalidLink: "此链接已失效。您可以改为在“设置”中关闭这些邮件。",
       failed: "操作未成功，请重试。",
@@ -1888,7 +1896,6 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         menu: "开发工具",
         overridesOn: "覆盖已开启",
         roleHeading: "开发 · 角色",
-        switchPlan: "切换套餐",
         plan: (value) => `套餐：${value}`,
         planHeading: "开发 · 套餐",
         backTo: (role) => `返回 ${role}`,

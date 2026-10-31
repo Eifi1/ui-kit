@@ -2,6 +2,7 @@ import { useContext, useEffect, useId, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
+import { describeFailure } from "../lib/describe-failure";
 import { usePromisePending } from "../components/danger-confirm";
 import { DialogFrame } from "../components/dialog-frame";
 import { ModalCloseContext } from "../components/modal";
@@ -153,7 +154,9 @@ export function CompleteNameDialog({
     setFailed(false);
   };
 
-  const message = failed ? (error ?? labels.failed) : undefined;
+  // An app's `failed && words` before it has words is `false`, which `??` kept (refactor
+  // audit 2026-10-30, DUP-14): the kit's sentence unless the app's says something.
+  const message = failed ? describeFailure(error, labels.failed) : undefined;
 
   return (
     <DialogFrame

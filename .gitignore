@@ -25,3 +25,9 @@ coverage/
 # Pages build of the showcase, made in CI only (base /ui-kit/)
 showcase/dist-pages
 ci-artifacts
+
+# Claude Code's per-checkout state, and the agent worktrees it checks out under
+# .claude/worktrees/. Ignored here, not only in .git/info/exclude: Prettier reads
+# this file and not that one, and a worktree's ~1,500 files failed the static group
+# (refactor audit 2026-10-30, TST-8; ESLint's ignores in eslint.config.js say the same).
+.claude/

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useMediaQuery } from "../hooks/use-media-query";
-import { httpStatusOf } from "../auth/auth-errors";
+import { httpStatusOf } from "../lib/http-status";
 import { PUSH_SUBSCRIPTION_CHANGED, keyBytes, pushSubscriptionInput as inputOf } from "./push-worker";
 import type { PushSubscriptionInput } from "./push-worker";
 
@@ -85,7 +85,8 @@ export interface PushDevice {
    *  the permission was not granted or push is off on the server; rejects with a
    *  {@link PushDeviceError} or the app's request's error. */
   enable: () => Promise<boolean>;
-  /** Tell the server first, then the browser, so a dropped device stops at once. */
+  /** Tell the server first, then the browser, so a dropped device stops at once. At a
+   *  sign-out, with no card mounted: {@link releaseThisDevicePush}. */
   disable: () => Promise<void>;
   sendTest: () => Promise<{ sent: number }>;
 }
@@ -151,6 +152,78 @@ async function activeRegistration(): Promise<ServiceWorkerRegistration> {
 }
 
 const defaultEndpointTaken = (error: unknown) => httpStatusOf(error) === 409;
+
+/**
+ * Drop this browser's subscription when the person turns push off: the server first, so a
+ * dropped device stops receiving even if the browser's unsubscribe fails, then the
+ * browser, cut at 15 s. Whether there was one. A refused server keeps the browser's
+ * subscription: the card says the turn-off failed, still reads on, and the person tries
+ * again. {@link usePushDevice}'s `disable`; a sign-out has its own
+ * ({@link releaseThisDevicePush}).
+ */
+async function releaseSubscription(unregister: (endpoint: string) => Promise<unknown>): Promise<boolean> {
+  const registration = await activeRegistration();
+  const subscription = await registration.pushManager.getSubscription();
+  if (!subscription) return false;
+  await unregister(subscription.endpoint);
+  await within(subscription.unsubscribe(), PUSH_TIMEOUT_MS, "push_timeout");
+  return true;
+}
+
+/**
+ * Release this browser's push at an EXPLICIT sign-out (0.52, docs/notifications-
+ * harmonization.md §10.6; refactor audit 2026-10-30, FLW-2) — without the settings card
+ * mounted, which `usePushDevice().disable` needs.
+ *
+ * A sign-out left the subscription registered to the account, so the device went on
+ * showing that account's notifications, title and body (keksdose: invoices, bookings,
+ * shares), to whoever used it next — while the same sign-out wiped the mirror, the outbox
+ * and the query cache "for the next person on this device".
+ *
+ * Call it with the app's `unregister` (`POST /notifications/devices/unregister
+ * {endpoint}`) BEFORE the session is cleared, while the token is still valid:
+ *
+ *     async function logOut() {
+ *       await releaseThisDevicePush(api.unregisterDevice).catch(() => undefined);
+ *       clear();
+ *     }
+ *
+ * The server first, then the browser — and the browser EVEN WHEN THE SERVER REFUSED (0.52
+ * code review, this file): `disable`'s order left a sign-out on a flaky network, or one
+ * that met a 5xx, with the device still subscribed. Unsubscribed, the push service answers
+ * the server's next send with 410 and the server prunes the row. The browser's unsubscribe
+ * is cut at 15 s (`PushDeviceError("push_timeout")`). Then it tells every mounted
+ * {@link usePushDevice} ({@link PUSH_SUBSCRIPTION_CHANGED}).
+ *
+ * Resolves whether this browser held a subscription; `false` at once where push is
+ * unsupported or was never set up — no service worker registration, or none ever active
+ * (0.52 code review: most devices, which used to reject with `no_service_worker`, after
+ * 10 s for a worker stuck installing). It asks the registration, not `ready`: a
+ * subscription belongs to the registration, and a sign-out waits for no worker. Rejects
+ * as the app's request did — once the browser has let go — or with `push_timeout`. Best
+ * effort at a sign-out: catch it, a sign-out must not stop on push.
+ *
+ * Only an explicit sign-out (Marcel's decision 2 of the 2026-10-30 audit): a session that
+ * merely expired keeps its device, and whoever signs back in turns push on again.
+ */
+export async function releaseThisDevicePush(unregister: (endpoint: string) => Promise<unknown>): Promise<boolean> {
+  if (!pushSupported()) return false;
+  try {
+    const registration = await navigator.serviceWorker.getRegistration();
+    // A worker never active holds no subscription: `subscribe` needs an active one.
+    if (!registration?.active) return false;
+    const subscription = await registration.pushManager.getSubscription();
+    if (!subscription) return false;
+    try {
+      await unregister(subscription.endpoint);
+    } finally {
+      await within(subscription.unsubscribe(), PUSH_TIMEOUT_MS, "push_timeout");
+    }
+    return true;
+  } finally {
+    notifyPushSubscriptionChanged();
+  }
+}
 
 /**
  * This browser's push for the signed-in account. Hand it one function per endpoint
@@ -344,14 +417,7 @@ export function usePushDevice(options: UsePushDeviceOptions): PushDevice {
     if (!supported) return;
     setBusy(true);
     try {
-      const registration = await activeRegistration();
-      const subscription = await registration.pushManager.getSubscription();
-      if (subscription) {
-        // The server first: a dropped device stops receiving even if the browser's
-        // unsubscribe below fails.
-        await latest.current.unregister(subscription.endpoint);
-        await within(subscription.unsubscribe(), PUSH_TIMEOUT_MS, "push_timeout");
-      }
+      await releaseSubscription((endpoint) => latest.current.unregister(endpoint));
       if (mounted.current) {
         setSubscribed(false);
         setForeignSubscription(false);

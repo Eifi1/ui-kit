@@ -3,8 +3,8 @@
  * `npm run check`: the three groups of checks, one after another, stopping at the first
  * that fails.
  *
- *   check:static  typecheck · lint · check:tokens · check:security · check:commits
- *   check:build   build · check:graph · check:package · inventory · build:showcase · check:tailwind
+ *   check:static  format:check · typecheck · lint · check:tokens · check:security · check:commit-rules · check:commits
+ *   check:build   build · check:graph · check:package · export inventory · styling inventory · build:showcase · check:tailwind
  *   check:test    test:coverage
  *
  * CI runs the same three scripts as three jobs, so the local gate and CI cannot drift:
@@ -18,9 +18,10 @@
  * 6 to 10 minutes. `CHECK_PARALLEL=1` still runs the three side by side, on a machine
  * with the memory for it. `CHECK_SERIAL`, the old opt-in, is accepted and changes nothing.
  *
- * Serial runs the quickest to fail first — static (~20 s), build (~1 min), test (~4 min)
- * — and stops at the first failure, naming the groups it did not run: a type error should
- * not cost five minutes of tests before it is reported.
+ * Serial runs the quickest to fail first — static (~1 min), build (~1–1½ min), test
+ * (~8–9 min; 0.51.3: 66 s, 91 s, 455 s; 0.51.7: 49 s, 45 s, 524 s) — and stops at the
+ * first failure, naming the groups it did not run: a type error should not cost eight
+ * minutes of tests before it is reported.
  *
  * The test group runs on at most 6 workers here (VITEST_MAX_WORKERS, unless you set it):
  * measured on this suite, 6 workers took 169 s at a 4.7 GB peak against 160 s at 5.1 GB

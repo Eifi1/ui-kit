@@ -15,7 +15,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
   const n = (value: number) => num.format(value);
   const plural = (count: number, one: string, many: string) => (count < 2 ? one : many);
   // 0.30.0 — a throttled request (HTTP 429), as `englishRateLimited` in
-  // src/auth/auth-errors.ts: no wait → "un instant", under a minute → seconds, else
+  // src/auth/auth-errors-labels.ts: no wait → "un instant", under a minute → seconds, else
   // minutes rounded up. kastlan's reviewed "auth.throttled" is the sentence without one.
   const wait = (seconds: number) =>
     seconds < 60 ? `${n(Math.ceil(seconds))}\u00a0s` : `${n(Math.ceil(seconds / 60))}\u00a0min`;
@@ -39,9 +39,11 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       attachmentScreenshot: "Capture d’écran",
       attachmentRemoveFile: (name) => `Retirer ${name}`,
       attachmentLimit: (max) =>
-        max === 1
-          ? `${n(max)} pièce jointe au maximum — retirez-la pour en ajouter une autre.`
-          : `${n(max)} pièces jointes au maximum — retirez-en une pour en ajouter une autre.`,
+        plural(
+          max,
+          `${n(max)} pièce jointe au maximum — retirez-la pour en ajouter une autre.`,
+          `${n(max)} pièces jointes au maximum — retirez-en une pour en ajouter une autre.`,
+        ),
       attachmentUploading: "Envoi en cours…",
       attachmentUploadFailed: (name) => `«\u202f${name}\u202f» n’a pas pu être envoyé`,
     },
@@ -123,9 +125,9 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       sortUpdated: "Mis à jour récemment",
       search: "Rechercher dans les titres",
       columnVotes: "Votes",
-      total: (count) => (count === 1 ? "1 retour" : `${n(count)} retours`),
-      comments: (count) => (count === 1 ? "1 commentaire" : `${n(count)} commentaires`),
-      votes: (count) => (count === 1 ? "1 vote" : `${n(count)} votes`),
+      total: (count) => `${n(count)} ${plural(count, "retour", "retours")}`,
+      comments: (count) => `${n(count)} ${plural(count, "commentaire", "commentaires")}`,
+      votes: (count) => `${n(count)} ${plural(count, "vote", "votes")}`,
       anonymous: "Une personne",
       filedBy: (name) => `De ${name}`,
       body: "Description",
@@ -168,7 +170,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       // An id, not a count: printed as it is, like the "#" column.
       userFallback: (id) => `utilisateur #${id}`,
       environment: (environment) => String(environment ?? "").toUpperCase(),
-      reworkChip: (count) => (count === 1 ? "Reprise" : `Reprise ×${n(count)}`),
+      reworkChip: (count) => plural(count, "Reprise", `Reprise ×${n(count)}`),
       awaitingFilter: "Seulement ce qui vous attend",
       phoneActions: "Actions sur les retours",
     },
@@ -420,7 +422,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       less: "Moins",
       more: "Plus",
       truncated: (count) =>
-        `Affichage des jours les plus récents ; ${n(count)} ${count === 1 ? "jour antérieur n’est pas affiché" : "jours antérieurs ne sont pas affichés"}.`,
+        `Affichage des jours les plus récents ; ${n(count)} ${plural(count, "jour antérieur n’est pas affiché", "jours antérieurs ne sont pas affichés")}.`,
     },
     datePicker: {
       apply: "Appliquer",
@@ -556,7 +558,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       close: "Fermer",
     },
     bulkActionBar: {
-      selected: (count) => `${n(count)} ${count === 1 ? "sélectionné" : "sélectionnés"}`,
+      selected: (count) => `${n(count)} ${plural(count, "sélectionné", "sélectionnés")}`,
       clear: "Effacer la sélection",
       cleared: "Sélection effacée",
     },
@@ -654,7 +656,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       badgeUpdated: "Mise à jour",
       resetOn: (date, reason) => (reason ? `Réinitialisée le ${date}\u202f: ${reason}` : `Réinitialisée le ${date}`),
       points: (count) => `+${n(count)} pts`,
-      steps: (count) => (count === 1 ? `${n(count)} étape` : `${n(count)} étapes`),
+      steps: (count) => `${n(count)} ${plural(count, "étape", "étapes")}`,
       duration: (minutes) => `Environ ${n(minutes)} min`,
       completedOn: (date) => `Terminée le ${date}`,
       completed: "Terminée",
@@ -746,9 +748,15 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     pieChart: {
       slices: "Secteurs du graphique",
       slice: (label, value, percent) => `${label}\u00a0: ${value} (${percent})`,
+      sliceShare: (label, percent) => `${label}\u00a0: ${percent}`,
       total: "Total",
       empty: "Aucune donnée",
       legend: "Catégories",
+    },
+    treemap: {
+      tile: (name, value, share) => `${name}\u00a0: ${value} (${share})`,
+      group: (name, value, share) => `${name}, groupe\u00a0: ${value} (${share})`,
+      inGroup: (name, group) => `${name}, dans ${group}`,
     },
     confirmDialog: {
       confirm: "Confirmer",
@@ -1286,7 +1294,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       clearPrompt: "Supprimer toutes les notifications de votre boîte de réception\u202f?",
       showMore: "Afficher plus",
       bellLabel: "Notifications",
-      bellUnread: (count) => (count === 1 ? `${n(count)} non lue` : `${n(count)} non lues`),
+      bellUnread: (count) => `${n(count)} ${plural(count, "non lue", "non lues")}`,
       allNotifications: "Toutes les notifications",
       unsubscribeTitle: "Notifications par e-mail",
       unsubscribeAbout: (type) => `Vous recevez des e-mails concernant\u00a0: ${type}.`,
@@ -1297,6 +1305,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       stoppedAll: (app) => `C’est fait. Vous ne recevrez plus d’e-mails de notification de ${app}.`,
       accountMail: "Les e-mails concernant votre compte continuent d’arriver.",
       turnBackOn: "Vous pouvez les réactiver à tout moment dans les paramètres.",
+      stoppedHint: (accountMail, turnBackOn) => `${accountMail} ${turnBackOn}`,
       openSettings: "Ouvrir les paramètres",
       invalidLink: "Ce lien ne fonctionne plus. Vous pouvez désactiver les e-mails dans les paramètres.",
       failed: "Cela n’a pas fonctionné. Veuillez réessayer.",
@@ -2006,7 +2015,6 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         menu: "Outils de dev",
         overridesOn: "Forçages actifs",
         roleHeading: "Dev · rôle",
-        switchPlan: "Changer de formule",
         plan: (value) => `Formule\u00a0: ${value}`,
         planHeading: "Dev · formule",
         backTo: (role) => `Revenir à ${role}`,

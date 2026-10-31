@@ -1,21 +1,23 @@
-import { useEffect, useRef, useState } from "react";
-import type { ComponentPropsWithRef, KeyboardEvent, ReactNode } from "react";
+import { useRef, useState } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { MonitorSmartphone } from "lucide-react";
 
-import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { DEFAULT_COMMON_LABELS } from "../i18n/shared-labels";
 import { cn } from "../lib/cn";
-import { formatDate } from "../lib/format";
+import { useDayFormatter } from "../lib/day-format";
+import { toDate } from "../lib/format";
 import { Button } from "../components/button";
 import { Card } from "../components/card";
 import { Chip } from "../components/chip";
 import { Disclosure } from "../components/disclosure";
+import { InlineConfirm } from "../components/inline-confirm";
 import { Skeleton } from "../components/skeleton";
 import { Switch } from "../components/switch";
 import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
 import { CARD_DESCRIPTION_CLASS } from "../settings/settings-card-classes";
 import { SettingsCardTitle } from "../settings/settings-heading";
-import { settle, useMounted } from "../account/account-parts";
+import { settle, useMounted } from "../hooks/use-mounted";
 import { describeFailure, FailureLine, useNotificationsLabels, useWriteOverlay } from "./notification-parts";
 import type { NotificationsLabels } from "./notifications-labels";
 import type { NotificationTypeEntry, NotificationTypesValue, PushDeviceItem } from "./notification-types";
@@ -68,7 +70,8 @@ export interface PushDevicesSettingProps<Id extends string | number = string> ex
   /** `DELETE /notifications/devices/{id}`. Asked first; refresh `devices` once it
    *  resolves. */
   onRemove: (id: Id) => Promise<unknown> | void;
-  /** The dates' text. Default: the provider's locale, medium date. */
+  /** The dates' text. Default: the provider's `formatDate` (the app's date preference),
+   *  else a medium date in the provider's locale and `timeZone`. */
   formatDate?: (date: Date) => string;
   /** Overrides the provider's locale for the default format. */
   locale?: string;
@@ -140,16 +143,17 @@ export function PushDevicesSetting<Id extends string | number = string>({
   const labels = useNotificationsLabels(labelsProp);
   const mutedOverlay = useWriteOverlay<string[]>(devices);
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
-  const locale = useKitLocale(localeProp);
+  // The prop, else the provider's `formatDate` (the app's date preference), else the kit's
+  // in the provider's locale and `timeZone` (refactor audit 2026-10-30, DUP-2).
+  const day = useDayFormatter(formatDateProp, localeProp);
   const [asking, setAsking] = useState<Id | null>(null);
   const [busyId, setBusyId] = useState<Id | null>(null);
   const [failure, setFailure] = useState<ReactNode>(null);
   const mounted = useMounted();
 
   const dateText = (iso: string): string => {
-    const date = new Date(iso);
-    if (Number.isNaN(date.getTime())) return iso;
-    return formatDateProp ? formatDateProp(date) : formatDate(date, "medium", { locale });
+    const date = toDate(iso);
+    return date ? day(date) : iso;
   };
 
   const remove = (device: PushDeviceItem<Id>) => {
@@ -305,53 +309,27 @@ function DeviceRow<Id extends string | number>({
   /** "Types on this device", under the row (0.46). */
   types: ReactNode;
 }) {
-  const cancelRef = useRef<HTMLButtonElement>(null);
+  // Back to Remove when the confirm leaves, so focus does not fall to <body>.
   const removeRef = useRef<HTMLButtonElement>(null);
-  // Which way the confirm closed: back to Remove, so focus does not fall to <body>.
-  const [returning, setReturning] = useState(false);
-  useEffect(() => {
-    if (asking) cancelRef.current?.focus();
-    else if (returning) removeRef.current?.focus();
-  }, [asking, returning]);
-
-  const leave = () => {
-    setReturning(true);
-    onCancel();
-  };
-  const escapeLeaves = (event: KeyboardEvent<HTMLButtonElement>) => {
-    if (event.key === "Escape") {
-      event.preventDefault();
-      event.stopPropagation();
-      leave();
-    }
-  };
 
   const row = { "data-push-device-id": String(device.id), "data-current": current || undefined };
 
   if (asking) {
     return (
-      <li {...row} className="space-y-2 py-2">
-        <p role="alert" className="text-sm">
-          {labels.removePrompt}
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            size="sm"
-            variant="danger"
-            commit={COMMIT_EXCEPT_BILLING}
-            pending={busy}
-            aria-label={labels.removeItem(name)}
-            onClick={onConfirm}
-            onKeyDown={escapeLeaves}
-          >
-            {labels.remove}
-          </Button>
-          <Button ref={cancelRef} type="button" size="sm" variant="ghost" onClick={leave} onKeyDown={escapeLeaves}>
-            {cancelLabel}
-          </Button>
-        </div>
-      </li>
+      <InlineConfirm
+        as="li"
+        {...row}
+        className="py-2"
+        prompt={labels.removePrompt}
+        confirmLabel={labels.remove}
+        confirmName={labels.removeItem(name)}
+        cancelLabel={cancelLabel}
+        onConfirm={onConfirm}
+        onLeave={onCancel}
+        busy={busy}
+        commit={COMMIT_EXCEPT_BILLING}
+        returnFocusRef={removeRef}
+      />
     );
   }
 
@@ -385,10 +363,7 @@ function DeviceRow<Id extends string | number>({
           commit={COMMIT_EXCEPT_BILLING}
           disabled={blocked}
           aria-label={labels.removeItem(name)}
-          onClick={() => {
-            setReturning(false);
-            onAsk();
-          }}
+          onClick={onAsk}
         >
           {labels.remove}
         </Button>

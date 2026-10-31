@@ -53,6 +53,17 @@ const PAGE_WINDOW_LARGE_PHONE = 1;
 const PAGE_STRIP = "flex min-w-0 max-w-full items-center gap-1";
 const PAGE_NUMBERS = "flex min-w-0 flex-wrap items-center justify-center gap-1";
 
+/**
+ * The arrows at the ends of the strip are `aria-disabled`, not `disabled` (refactor audit
+ * 2026-10-30, DSP-12): Next pressed onto the last page — or Previous onto the first —
+ * is still the focused button, and a button that turns `disabled` drops the focus it
+ * holds to `<body>`. JumpCalendar's arrows keep the same rule, and the table's
+ * `isLoading` pager the same reason (`ServerPagination.isLoading`). Dimmed as before; a
+ * press there does nothing.
+ */
+const ARROW =
+  "rounded hover:bg-hover aria-disabled:cursor-not-allowed aria-disabled:opacity-40 aria-disabled:hover:bg-transparent";
+
 /** Footer for {@link DataTable}: range summary, page-size select, and a
  *  windowed page-number strip (first/last + ±2 around the current page, ±1 on a phone
  *  at Large — see {@link PAGE_WINDOW}). */
@@ -137,9 +148,11 @@ export function Pagination({
         <div data-slot="page-strip" className={PAGE_STRIP}>
           <button
             type="button"
-            onClick={() => onPage(Math.max(0, page - 1))}
-            disabled={page === 0}
-            className={cn("rounded hover:bg-hover disabled:opacity-40", compact ? "p-0.5" : "p-1")}
+            onClick={() => {
+              if (page > 0) onPage(page - 1);
+            }}
+            aria-disabled={page === 0 || undefined}
+            className={cn(ARROW, compact ? "p-0.5" : "p-1")}
             aria-label={labels.prevPage}
           >
             {/* "Previous" points back along the line — left in LTR, right in RTL. */}
@@ -173,9 +186,11 @@ export function Pagination({
           </div>
           <button
             type="button"
-            onClick={() => onPage(Math.min(totalPages - 1, page + 1))}
-            disabled={page >= totalPages - 1}
-            className={cn("rounded hover:bg-hover disabled:opacity-40", compact ? "p-0.5" : "p-1")}
+            onClick={() => {
+              if (page < totalPages - 1) onPage(page + 1);
+            }}
+            aria-disabled={page >= totalPages - 1 || undefined}
+            className={cn(ARROW, compact ? "p-0.5" : "p-1")}
             aria-label={labels.nextPage}
           >
             <ChevronRight className={cn("rtl:-scale-x-100", compact ? "size-3.5" : "size-4")} />

@@ -172,7 +172,10 @@ function Sign() {
   const [amount, setAmount] = useState("42.50");
   const [negative, setNegative] = useState(true);
   return (
-    <Example label="SignChip — the amount's direction, beside the figure" hint="one chip that shows the state it is in">
+    <Example
+      label="SignChip — the amount's direction, beside the figure"
+      hint="deprecated in 0.52, removed in 0.53 — no app renders it; keksdose keeps its own chip on `Chip`"
+    >
       <div className="flex max-w-sm items-end gap-2">
         <div className="min-w-0 flex-1">
           <AmountInput

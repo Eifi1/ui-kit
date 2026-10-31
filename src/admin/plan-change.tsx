@@ -18,7 +18,8 @@ import { AdminActionConfirm } from "./admin-action-confirm";
 import type { AdminActionConfirmValues } from "./admin-action-confirm";
 import { personLabel, useDayText } from "./admin-parts";
 import type { AdminPerson, MaybePromise } from "./admin-parts";
-import { DEFAULT_PLAN_CHANGE_LABELS } from "./plan-change-labels";
+import { DEFAULT_PLAN_CHANGE_LABELS } from "../billing/plan-change-labels";
+import type { PlanChangeLabels } from "../billing/plan-change-labels";
 
 /**
  * The operator's plan parts (docs/billing-harmonization.md §14.12, decision 27):
@@ -34,49 +35,11 @@ import { DEFAULT_PLAN_CHANGE_LABELS } from "./plan-change-labels";
  * whatever the billing switch says.
  */
 
-/** The `planChange` namespace: the column, the grant dialog and the result's lines. */
-export interface PlanChangeLabels {
-  /** The column's header: "Plan". */
-  column: string;
-  /** The dialog's title: "Change plan". */
-  title: string;
-  /** Its confirm button: "Change plan". */
-  confirm: string;
-  /** The plan select's label: "Plan". */
-  plan: string;
-  /** The line over the select: "Current plan: Free". */
-  current: (plan: string) => string;
-  /** Under the select — the fact that is not on the button. */
-  keepsItems: string;
-  /** The end of a free grant's field: "Free until". */
-  until: string;
-  /** Under it. */
-  untilHint: string;
-  /** Why the confirm is held while nothing would change. */
-  needsChange: string;
-  /** The result: the plan moved from one to another. */
-  changed: (from: string, to: string) => string;
-  /** The result: an account with no plan before, or the same plan again. */
-  set: (to: string) => string;
-  /** The result: a running beta kept its own end (§12.34); only the plan moved. */
-  keptBeta: string;
-  /** The result: the grant runs until `date` (formatted). */
-  untilDone: (date: string) => string;
-  /** The result: the account owns more than the new plan allows. */
-  overLimit: string;
-  /**
-   * The column's usage, spelled out (its tooltip): "1 of 5 budgets". Figures arrive
-   * formatted; `dimension` is the app's word, as `usage.label` gives it — since 0.33.1
-   * in the form the LIMIT takes when the label gives its plural forms ("1 of 1 budget",
-   * "1 of 5 budgets"): in every shipped language the word follows the limit, or heads
-   * the line in German, whose `von` would want a dative plural no app form carries
-   * ("Budgets: 1 von 5"). An override of yours gets the same word. Since 0.34 the grant
-   * dialog's usage line too, when `usage` comes as the column's shape.
-   */
-  usageOf: (used: string, limit: string, dimension: string) => string;
-}
-
-// Defined in ./plan-change-labels, which holds no component code (0.34, KS U8).
+// The words and their type live in billing/plan-change-labels, which holds no component
+// code (0.34, KS U8): PlanSwitchConfirm reads them too, and billing importing admin while
+// this module imports billing made the two folders import each other (refactor audit
+// 2026-10-30, MOD-6).
+export type { PlanChangeLabels };
 export { DEFAULT_PLAN_CHANGE_LABELS };
 
 /** A plan code as the parts compare it: lowercase (§12.16 — an older row's "FREE" is

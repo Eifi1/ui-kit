@@ -1,7 +1,9 @@
 # Guided tours — harmonisation plan
 
 **Settled 2026-10-17** (Marcel, in the ui-kit session, after the three app reviews in
-audits/round-044/tours-reviews.md; §6 wins over §2–§4). Built for ui-kit 0.43. §9 (round 0.44) settled 2026-10-17 with §9.6. §10 (round 0.45) settled 2026-10-19 with §10.6. §11 (round 0.50, guided form tours) settled 2026-10-23.
+audits/round-044/tours-reviews.md; §6). Built for ui-kit 0.43. §9 (round 0.44) settled
+2026-10-17 after its reviews (§9.6). §10 (round 0.45) settled 2026-10-19 with §10.6. §11
+(round 0.50, guided form tours) settled 2026-10-23.
 
 Marcel, in kastlan's session, 2026-10-17, relayed by kastlan-d1: "Massively increase the
 number of tours and also have them grouped and similar filtering as in keksdose. Is that
@@ -10,6 +12,27 @@ similar." It answers kastlan's prod feedback #12, "Harmonize the tours with Keks
 appear vastly different in template", /help/tours). The top bar's `TourMenu` (top-bar §2.4)
 is the way in; this is the page behind it. **kk** = keksdose, **ka** = kastlan, **KS** =
 Kurvenschmiede.
+
+## Status
+
+The body says what the build does. The reviews of round 0.43 (§6) and of round 0.44
+(§9.6) are folded into the sections they amend (ui-kit 0.52, refactor audit 2026-10-30
+DOC-3), and the table names them; §6 and §9.6 are now indexes whose items keep the
+numbers the code cites.
+
+| § | Section | Shipped in | Amended by |
+|---|---|---|---|
+| 1 | Where each one stands | — (a snapshot, 2026-10-17) | |
+| 2 | Decisions | ui-kit 0.43 | §6.1–§6.5; §8 (`updated`); §10 (progress on the account, decision 6) |
+| 3 | What the kit adds | ui-kit 0.43 | §6.3, §6.5; §7 lists the names |
+| 4 | Per app | — | §6.6 |
+| 5 | Questions for the reviews | — | answered in §6 |
+| 6 | The reviews and Marcel's settle | — | an index: each item points to its § |
+| 7 | What shipped (ui-kit 0.43) | ui-kit 0.43 | ui-kit 0.44 (§9.7), 0.45 (`account`, §10.3), 0.50 (`start` to the launcher, §11.5) |
+| 8 | A tour that is updated or fixed | ui-kit 0.43 | the build review (instants compared, K-S2) |
+| 9 | Round 0.44: completion in one place, a writer outside a page | ui-kit 0.44 | §9.6 (folded into §9.1–§9.3); §9.8 (the 0.44 adoptions' recipes, ui-kit 0.45) |
+| 10 | Tour progress on the account | ui-kit 0.45, server-kit 0.15 | §10.6 (folded into §10.1–§10.4); ui-kit 0.46 (a demo's key, decision 6) |
+| 11 | Guided form tours | ui-kit 0.50 | ui-kit 0.50.1 (`engine` to the launcher, quiet focus); §11.11 (Marcel's answers); §11.12 (where the build differs) |
 
 ## 1. Where each one stands (2026-10-17)
 
@@ -48,23 +71,45 @@ Kurvenschmiede.
    card, with the same look and behaviour in every app. Each app keeps its route
    (`/tours`, kastlan's `/help/tours`) and its page header.
 2. **Tours come in as data**: `{id, title, description, about?, icon?, group, route?,
-   since?, steps?, points?, duration?}`. Progress comes in as `completed: Record<id,
-   ISO date>`. The engine's step lists stay the app's own.
+   since?, steps?, points?, duration?, badge?}`, finished strings, never i18n keys (kk
+   K-1). `duration` is in minutes, worded by the kit ("About {n} min"; kastlan maps its
+   `durationKey`, ka F5); `badge` is an optional chip beside NEW, for kastlan's practice
+   mode ("Practice: nothing is saved", in the app's words, ka F1). Progress comes in as
+   `completed: Record<id, ISO date>`. The engine's step lists and `prepare()` stay the
+   app's own, and the kit awaits `prepare()` (kk Q4, ka Q4, KS Q4). **Role- and
+   data-gated tours are filtered by the app**, and the counts and "showing X of Y" count
+   the filtered list (kk K-2, ka F6).
 3. **Groups are per app, in one shape**: `{id, title, help?, icon?}[]`, in the app's
    order. An empty group is hidden. The words are the app's own: a finance app's topics
-   aren't a property manager's.
+   aren't a property manager's. The group Select stays for ten groups or more (ka F8).
 4. **The NEW rule is shared**: `isTourNew({since, joined, completed})`. A tour is NEW
    when it shipped after the account was opened, compared by calendar day, and isn't
-   taken yet. The same rule feeds `TourMenu`'s dot and pill.
-5. **Points are shared and optional**: the card shows the chip, and the header shows a
-   points tile, when tours carry `points`. keksdose has them; kastlan and KS may add
-   them (review question 1).
-6. **Progress stays on the device**, as both apps keep it today. The kit ships a small
-   `useTourProgress(storageKey)`: completed tours with their date, "mark undone", and
-   wrapped storage access. Syncing it to the account is a later round (review
-   question 2).
+   taken yet; no `since`, or no `joined` date, is never NEW (KS, ka F7). The same rule
+   feeds `TourMenu`'s dot and pill.
+5. **Points everywhere** (Marcel, after kastlan and KS had asked for none), so the tours
+   look the same in all three apps: every tour carries `points`, the card shows the chip,
+   and each app shows a points tile in its page header and a toast on completion. The
+   tile and the toast stay app-side (kk Q4, KS Q4): the moment is a completion that
+   counts anew (§9.1's `onComplete`, `awarded`), and the tile sums `earnedPoints(tours,
+   completed)`, by `isTourDone`. The kit still draws no gap and no "0 points" for a tour
+   passed without points (KS).
+6. **Progress stays on the device** (kk Q2, ka Q2, KS Q2), as both apps keep it today;
+   §10 adds an optional account record behind the same hook. The kit ships
+   `useTourProgress({storageKey, migrate?})`: completed tours with their date, "mark
+   undone", and wrapped storage access.
+   - The key is always the app's argument, so an app can scope it per account (KS:
+     shared bench PCs).
+   - `migrate(raw)` reads an existing store, so nobody loses their done marks at
+     adoption: keksdose's zustand `keksdose-tour-progress` (version 1), and kastlan's id
+     array under `kastlan.tours.completions` (kk, ka F2). A completion may have no date:
+     the card then says "Completed" without "on {date}".
+   - The store notifies, through the `storage` event across tabs and an in-tab emitter,
+     so the page and `TourMenu` agree without a reload (ka F3).
 7. **URL resume is a kit hook with keksdose's names**: `useTourUrlSync` reads and writes
-   `?tour=<id>&tourStep=<n>`. kastlan's `?ts=` keeps working as an alias for one minor.
+   `?tour=<id>&tourStep=<n>`. It starts a tour whenever `?tour=` appears, in-app
+   navigation included (ka F4: kastlan's assistant links to it); while a tour runs it
+   mirrors the step (`&tourStep=`), and at the end it strips only its own parameters
+   (kk K-3). kastlan's `?ts=` keeps working as an alias for one minor.
 8. **The filter state is controlled** (`query`, `group`, `state`, `onChange`), so the app
    keeps it in its URL as keksdose does (`?q`, `?topic`, `?state`). The kit offers a
    `useTourCatalogueUrlState()` for apps on React Router.
@@ -76,8 +121,8 @@ Kurvenschmiede.
 
 - `TourCatalogue`: the page body (decisions 1, 3, 8), with a `header` slot for the points
   tile.
-- `TourCatalogueCard`: keksdose's card. Points, the step count and the duration are
-  optional.
+- `TourCatalogueCard`: keksdose's card. Points, the step count, the duration and the
+  `badge` are each drawn only when given.
 - `isTourNew`, `useTourProgress`, `useTourUrlSync` and `useTourCatalogueUrlState`.
 - Labels in seven languages: the filter bar, the states, "showing X of Y", "Clear
   filters", Start / Replay / "Mark undone", "Completed on {date}", "{n} steps", "{n}
@@ -91,10 +136,14 @@ Kurvenschmiede.
   kit's hooks. The words stay keksdose's own where they are domain words.
 - **kastlan:** `tour-catalog-page.tsx` becomes `TourCatalogue` with its own groups;
   `?ts=` becomes `?tourStep=`; many more tours, on its own data.
-- **Kurvenschmiede:** a `/tours` page with the catalogue once there is more than one
-  tour (review question 3). `TourMenu` then gets an `href`.
+- **Kurvenschmiede:** a `/tours` page with the catalogue once there are three or more
+  tours (KS Q3); until then `TourMenu` without an `href` stays supported. `TourMenu`
+  then gets an `href`.
+- **Every app:** points on every tour, a points tile and a toast (decision 5).
 
 ## 5. Questions for the reviews
+
+Answered by the reviews and Marcel (§6); the answers are in §2–§4.
 
 1. Points in your app, yes or no?
 2. Progress on the device (the draft), or on the account now?
@@ -103,56 +152,32 @@ Kurvenschmiede.
 
 ## 6. The reviews and Marcel's settle (2026-10-17)
 
+The reviews are in audits/round-044/tours-reviews.md. Every answer is folded into the
+section it amends. The items keep their numbers, which the code cites, and point there.
+
 ### 6.1 Points everywhere (Marcel)
 
-kastlan and Kurvenschmiede had asked for no points. Marcel: **"Points everywhere"**, so the
-tours look the same in all three apps. Every tour carries `points`, the card shows the
-chip, and each app shows a points tile in its page header and a toast on completion. The
-tile and the toast stay app-side (kk Q4, KS Q4): the moment is `complete(tour)` returning
-`true` in the tour's `onFinish` (the engine has no completion hook of its own), and the
-tile sums `earnedPoints(tours, completed)`, by `isTourDone`. The kit still draws no gap and
-no "0 points" for a tour passed without points (KS).
+→ §2 decision 5.
 
 ### 6.2 Progress on the device, the key the app's own
 
-- Progress stays on the device (kk Q2, ka Q2, KS Q2). `useTourProgress({storageKey,
-  migrate?})` always takes the key as an argument, so an app can scope it per account
-  (KS: shared bench PCs).
-- `migrate(raw)` reads an existing store, so nobody loses their done marks at adoption:
-  keksdose's zustand `keksdose-tour-progress` (version 1), and kastlan's id array under
-  `kastlan.tours.completions` (kk, ka F2). A completion may have no date: the card then
-  says "Completed" without "on {date}".
-- The store notifies: through the `storage` event across tabs and an in-tab emitter, so
-  the page and `TourMenu` agree without a reload (ka F3).
+→ §2 decision 6 (`storageKey` an argument, `migrate`, the store's notifications).
 
 ### 6.3 What the kit takes, and what stays with the app
 
-- The kit takes finished strings, never i18n keys (kk K-1).
-- Role- and data-gated tours are filtered by the app. The counts and "showing X of Y"
-  count the filtered list (kk K-2, ka F6).
-- `prepare()` stays app-side, and the kit awaits it. The step lists, the topic words, the
-  page header and the points tile are the app's own (kk Q4, ka Q4, KS Q4).
+→ §2 decision 2 (finished strings, the app's filtering, `prepare()`), §7 "Left to the app".
 
 ### 6.4 The URL and the NEW rule
 
-- `useTourUrlSync` starts a tour whenever `?tour=` appears, in-app navigation included
-  (ka F4: kastlan's assistant links to it). While a tour runs it mirrors the step
-  (`&tourStep=`), and at the end it strips only its own parameters (kk K-3).
-- `isTourNew`: no `since`, or no `joined` date, is never NEW (KS, ka F7).
+→ §2 decisions 4 and 7.
 
 ### 6.5 The card
 
-- **Duration:** `duration?: number` in minutes, worded by the kit ("About {n} min").
-  kastlan maps its `durationKey` to minutes (ka F5).
-- **Badge:** an optional `badge?: ReactNode` chip beside NEW, for kastlan's practice mode
-  ("Practice: nothing is saved", in the app's words) (ka F1).
-- **Groups:** the Select stays for up to ten or more groups (ka F8).
+→ §2 decisions 2 (`duration`, `badge`) and 3 (the group Select), §3.
 
 ### 6.6 Kurvenschmiede
 
-A `/tours` page comes once there are three or more tours. Until then, `TourMenu` without
-an `href` stays supported (KS Q3).
-
+→ §4.
 
 ## 7. What shipped (ui-kit 0.43)
 
@@ -245,25 +270,42 @@ rule:
 
 ## 9. Round 0.44: completion in one place, and a writer outside a page
 
-**Settled 2026-10-17** (Marcel: "Settle and build", after the three app reviews in audits/round-045/reviews.md;
-§9.6 wins over §9.1–§9.3). Marcel: "0.44 with everything", the 0.43 adoptions' notes (audits/round-045/candidates.md) and these two features.
+**Settled 2026-10-17** (Marcel: "Settle and build", after the three app reviews in
+audits/round-045/reviews.md; §9.6 says where each answer went). Marcel: "0.44 with
+everything", the 0.43 adoptions' notes (audits/round-045/candidates.md) and these two
+features.
 
-1. **The engine reports a completion** (kk 2). `TourProvider` takes `onComplete(tour,
+1. **The engine reports a completion** (kk 2). `TourProvider` takes `onComplete?(tour,
    {awarded})`, called once when a tour's last step is finished. `awarded` is `true` when
    the completion counts anew: the first time, or the first time after an update (§8). The
    app shows its points toast there; no app wires `onFinish` and `complete()` by hand.
-   - The provider needs the progress to know `awarded`, so it takes the same
-     `{storageKey, migrate?}` as `useTourProgress`, plus the app's `TourInfo` list.
-   - Without these, `onComplete` still fires, with `awarded: undefined`.
+   - **The finished tour travels with its start** (keksdose: the provider sits above the
+     layout, where no tour list exists): `start(steps, {tour, …})` carries the one
+     `TourInfo`. The provider never takes the list.
+   - **The progress stays the app's** (all three). The provider takes `progress?:
+     {storageKey, migrate?}` and reads and writes through it as `useTourProgress` does,
+     so there is one shared snapshot and never a second copy. The options type
+     `UseTourProgressOptions` is exported, so an app declares the options once. A
+     `storageKey` change is followed without a remount (KS: an account switch on a shared
+     PC).
+   - **`onComplete` comes in addition to the start's own callbacks** (kastlan). It fires
+     after the progress write and before `start()`'s `onFinish`. Exactly one write per
+     completion, so `awarded` equals what `complete(tour)` answered before. **The app
+     removes its own `complete()` call** from `onFinish`, or the second write answers
+     `false`.
+   - Both props are optional (keksdose's test render mounts the provider bare). Without
+     `progress` or the start's `tour`, `onComplete` still fires, with `awarded:
+     undefined`.
    - **A skip (Skip, Esc) or `stop()` records nothing**: a skipped tour is not finished, so
      no write, no `onComplete`, no points (KS 3).
 2. **A writer outside a page** (kk 1): `completeTour(storageKey, tour, at?)` beside
-   `resetTourProgress`. It writes the kit's shape and notifies every reader in the tab, for
-   tests, seeds and scripts.
-3. **The stored shape is documented** (KS 4): `{[id]: ISO instant | ""}` under the app's key.
-   An empty string is a completion without a date (a migrated record); the hooks and
-   callbacks give `null` for it (§9.6.6). So `completeTour(…, null)` stores `""`, and every
-   reader gets `null` for it (KS 4).
+   `resetTourProgress`. It writes the kit's shape and notifies every reader in the same
+   tab directly (the `storage` event reaches only other tabs), for tests, seeds and
+   scripts.
+3. **One written form** (KS 4): `{[id]: ISO instant | ""}` under the app's key. An empty
+   string is a completion without a date (a migrated record); the hooks and callbacks give
+   `null` for it. So `completeTour(…, null)` stores `""`, and every reader gets `null` for
+   it. The code's comments and `completeTour` agree.
 4. **keksdose's reviewed words** are the kit's defaults where they differ (kk 5), taken from
    keksdose's locale files: `noMatchesHint` with the singular filter in en, fr and it ("clear
    the filter", "effacez le filtre", "cancelli il filtro"), `stateTodo` "Not taken" / "Non
@@ -279,40 +321,29 @@ rule:
    - `migrate` is defined once at module level, because all readers share one snapshot
      (kk 3).
 
-Questions for the reviews: does `onComplete` on the provider fit your tour setup (keksdose's
-`useTours`, kastlan's `ToursRoot` and mock mode, KS's single tour)? And should the provider
-own the progress, or keep taking it from the app?
+The questions for the reviews (does `onComplete` on the provider fit your tour setup;
+should the provider own the progress?) are answered in §9.1.
 
 ### 9.6 The reviews (2026-10-17) and what they change
 
-All three are in audits/round-045/reviews.md. Where they differ from §9.1–§9.3, these win:
+All three are in audits/round-045/reviews.md. Every answer is folded into §9.1–§9.3. The
+items keep their numbers, which the code cites, and point there.
 
-1. **The finished tour travels with its start** (keksdose: the provider sits above the
-   layout where no tour list exists). `start(steps, {tour, …})` carries the one `TourInfo`.
-   The provider takes `progress?: {storageKey, migrate?}` and `onComplete?(tour,
-   {awarded})`, never the list. That also removes kastlan's full-list concern.
-2. **`onComplete` comes in addition to the start's own callbacks** (kastlan). It fires
-   after the progress write, before `start()`'s `onFinish`, and never on a skip or
-   `stop()`. Exactly one write per completion, so `awarded` equals what `complete(tour)`
-   answered before. **The app removes its own `complete()` call** from `onFinish`, or the
-   second write answers `false`. The adopt guide names the lines.
-3. **The progress stays the app's** (all three). The provider reads and writes through the
-   same `{storageKey, migrate}` as `useTourProgress`, so there is one shared snapshot and
-   never a second copy. The options type `UseTourProgressOptions` is exported, so an app
-   declares the options once.
-4. **The provider follows a `storageKey` change without a remount** (KS: an account switch
-   on a shared PC), tested.
-5. **`completeTour` notifies the readers in the same tab directly** (keksdose: the
-   `storage` event reaches only other tabs).
-6. **One written form** (KS): stored `{[id]: ISO instant | ""}`, where `""` is a
-   completion without a date. Hooks and callbacks give `null` for it. The code's comments,
-   §9.3 and `completeTour` agree.
-7. **Both new provider props are optional** (keksdose's test render mounts it bare).
+1. **The finished tour travels with its start**; the provider never takes the list
+   (keksdose) → §9.1.
+2. **`onComplete` comes in addition to the start's own callbacks**, after the write and
+   before `onFinish`; the app removes its own `complete()` (kastlan) → §9.1.
+3. **The progress stays the app's**, one shared snapshot, `UseTourProgressOptions`
+   exported (all three) → §9.1.
+4. **The provider follows a `storageKey` change without a remount** (KS) → §9.1.
+5. **`completeTour` notifies the readers in the same tab directly** (keksdose) → §9.2.
+6. **One written form**, `{[id]: ISO instant | ""}` (KS) → §9.3.
+7. **Both new provider props are optional** (keksdose) → §9.1.
 
 ### 9.7 What shipped (ui-kit 0.44)
 
-Built 2026-10-17 on feat/0.44.0, as §9.1–§9.5 with §9.6 winning. The adoption is
-docs/adopt-0.44.md.
+Built 2026-10-17 on feat/0.44.0, as §9.1–§9.5 (the reviews folded in). The adoption is
+docs/archive/adopt/adopt-0.44.md.
 
 1. **`TourProvider`** takes `progress?: UseTourProgressOptions` and
    `onComplete?(tour, {awarded})` (`TourCompletion`); both optional, so a bare test render
@@ -877,7 +908,7 @@ target):
 ### 11.7 The docked card on phones
 
 `placement: "dock"`, and by default (Q1) every field step with a target and no `placement`,
-docks below `sm` (640 px): the card is full-width (8 px safe-area gutters) at the top or
+docks below `sm` (640 px at Normal text, 800 at Large; 0.52): the card is full-width (8 px safe-area gutters) at the top or
 bottom edge of the **usable band** — the visual viewport less the keyboard
 (`readKeyboardInset`'s rules), raised above the highest `[data-tour-obstruction]`
 (NumberPadSheet and PickerSheet carry it; an app marks its own bottom layers) — on the edge

@@ -22,7 +22,7 @@ checks (billing §14.15) come after Marcel's sandbox run, in a later round.
 ## 0.34.1 → 0.35.0
 
 The fixes from the three apps' 0.34 adoptions were built as a 0.34.1 patch and ship in
-0.35.0 instead (Marcel, 2026-10-13); `docs/adopt-0.35.md` §1 lists them. The corrections to
+0.35.0 instead (Marcel, 2026-10-13); `docs/archive/adopt/adopt-0.35.md` §1 lists them. The corrections to
 this guide stay in place below.
 
 ## 1. What's new

@@ -9,8 +9,12 @@
  * on disk, and CI runs those same npm scripts (see CONTRIBUTING → The gates).
  *
  * This check fails when a copy no longer matches the pinned upstream file (someone
- * edited it here, or the pin moved without a sync). Offline it says so and passes: the
- * pre-push hook must not need a network, and CI — which always has one — enforces it.
+ * edited it here, or the pin moved without a sync). Offline — a network error, no answer
+ * at all — it says so and passes: the pre-push hook must not need a network. Never under
+ * CI, which always has one and is where it is enforced. An HTTP answer that is not 200 is
+ * a failure everywhere: a 404 is a wrong pin or a moved upstream file, and a 429 or 5xx
+ * verified nothing (refactor audit 2026-10-30, TST-7; until then any failure passed as
+ * "offline", in CI too).
  * While the pin waits for its tag ("v1.3.1 (pending tag)", no commit yet) it says so and
  * passes too. A newer shared tag is reported, not failed: taking it is a decision, made
  * with `npm run sync:commit-rules -- <tag>`.
@@ -24,18 +28,38 @@ if (!/^[0-9a-f]{40}$/.test(pin.commit)) {
   process.exit(0);
 }
 
+/** No answer at all: fetch's own network failure, or the timeout below. */
+const isNetworkError = (error) =>
+  error instanceof TypeError || error?.name === "AbortError" || error?.name === "TimeoutError";
+
 const differ = [];
-try {
-  for (const file of pin.files) {
-    const url = `https://raw.githubusercontent.com/${pin.repo}/${pin.commit}/${file.path}`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const local = readFileSync(new URL("../" + file.vendoredAs, import.meta.url), "utf8");
-    if ((await res.text()) !== local) differ.push(file);
+for (const file of pin.files) {
+  const url = `https://raw.githubusercontent.com/${pin.repo}/${pin.commit}/${file.path}`;
+  let res;
+  let text;
+  try {
+    res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    // The body read too: the timeout bounds it, and a connection can drop after the
+    // headers. Outside the try, it crashed the script with an unhandled TimeoutError
+    // (0.52 code review).
+    if (res.ok) text = await res.text();
+  } catch (error) {
+    if (!isNetworkError(error) || process.env.CI) {
+      console.error(`✖ shared commit rules not verified: ${url}: ${error.message}`);
+      process.exit(1);
+    }
+    console.log(`• shared commit rules not verified (offline: ${error.message}); CI verifies them`);
+    process.exit(0);
   }
-} catch (error) {
-  console.log(`• shared commit rules not verified (offline: ${error.message}); CI verifies them`);
-  process.exit(0);
+  if (!res.ok) {
+    console.error(
+      `✖ shared commit rules not verified: HTTP ${res.status} for ${url}.\n` +
+        "  Is the pin in scripts/shared-commit-rules.json right, and the file still at that path?",
+    );
+    process.exit(1);
+  }
+  const local = readFileSync(new URL("../" + file.vendoredAs, import.meta.url), "utf8");
+  if (text !== local) differ.push(file);
 }
 
 if (differ.length) {

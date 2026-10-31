@@ -287,7 +287,7 @@ const CALLERS: [name: string, role: "dialog" | "alertdialog", mount: (close: () 
       render(
         <PlanSwitchConfirm
           open
-          onOpenChange={close}
+          onClose={close}
           from={{ plan: "pro", interval: "month" }}
           to={{ plan: "business", interval: "year" }}
           preview={{
@@ -309,9 +309,7 @@ const CALLERS: [name: string, role: "dialog" | "alertdialog", mount: (close: () 
     "CancelSubscriptionConfirm",
     "dialog",
     async (close) => {
-      render(
-        <CancelSubscriptionConfirm open onOpenChange={close} periodEnd="2026-11-09" onConfirm={() => {}} pending />,
-      );
+      render(<CancelSubscriptionConfirm open onClose={close} periodEnd="2026-11-09" onConfirm={() => {}} pending />);
     },
   ],
 ];
@@ -340,7 +338,7 @@ describe("the five dialogs that hold while their request runs", () => {
     render(
       <PlanSwitchConfirm
         open
-        onOpenChange={close}
+        onClose={close}
         from={{ plan: "pro", interval: "month" }}
         to={{ plan: "business", interval: "year" }}
         onConfirm={() => {}}
@@ -349,7 +347,7 @@ describe("the five dialogs that hold while their request runs", () => {
     const panel = screen.getByRole("dialog");
     expect(panel).toHaveAttribute("aria-busy", "true");
     pressBackdrop(panel);
-    expect(close).toHaveBeenCalledWith(false);
+    expect(close).toHaveBeenCalledOnce();
   });
 
   it("CancelSubscriptionConfirm closes on the backdrop once the cancel has answered", async () => {
@@ -357,7 +355,12 @@ describe("the five dialogs that hold while their request runs", () => {
     function Page() {
       const [open, setOpen] = useState(true);
       return (
-        <CancelSubscriptionConfirm open={open} onOpenChange={setOpen} periodEnd="2026-11-09" onConfirm={() => {}} />
+        <CancelSubscriptionConfirm
+          open={open}
+          onClose={() => setOpen(false)}
+          periodEnd="2026-11-09"
+          onConfirm={() => {}}
+        />
       );
     }
     render(<Page />);

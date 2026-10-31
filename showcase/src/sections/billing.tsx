@@ -114,7 +114,7 @@ export function PlanSwitch039Demo() {
         {pick && (
           <PlanSwitchConfirm
             open
-            onOpenChange={(next) => !next && !pending && setPick(null)}
+            onClose={() => !pending && setPick(null)}
             from={paid}
             to={pick}
             preview={preview}
@@ -252,7 +252,7 @@ export function BuyerOnly042Demo() {
         </p>
         <CancelSubscriptionConfirm
           open={asking}
-          onOpenChange={(open) => !open && pending === null && setAsking(false)}
+          onClose={() => pending === null && setAsking(false)}
           periodEnd={PERIOD_END}
           pending={pending === "cancel"}
           onConfirm={() => void cancel()}
@@ -328,7 +328,7 @@ export function GrantWarning042Demo() {
         {pick && (
           <PlanSwitchConfirm
             open
-            onOpenChange={(next) => !next && setPick(null)}
+            onClose={() => setPick(null)}
             from={{ plan: "pro", interval: "year" }}
             to={pick}
             preview={previewFor(pick)}

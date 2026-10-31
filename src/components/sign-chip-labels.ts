@@ -4,6 +4,7 @@
 
 import type { SignChipLabels } from "./sign-chip";
 
+/** @deprecated 0.52 — a `Chip` of your own, as keksdose's DirectionToggle is (MOD-5); removed in 0.53. */
 export const DEFAULT_SIGN_CHIP_LABELS: SignChipLabels = {
   outflow: "Outflow",
   inflow: "Inflow",

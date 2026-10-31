@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { ComponentPropsWithRef, CSSProperties, KeyboardEvent, ReactNode } from "react";
+import type { ComponentPropsWithRef, CSSProperties, FocusEvent, KeyboardEvent, ReactNode, RefObject } from "react";
 import { X } from "lucide-react";
 
 import { cn } from "../lib/cn";
@@ -8,6 +8,8 @@ import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { useAnnounce } from "../hooks/use-announce";
 import { useBreakpoint } from "../hooks/use-breakpoint";
 import { OVERLAY_EXIT_MS, skipsExitAnimation } from "../hooks/use-close-transition";
+import { focusFirst, focusIsLost, whenFocusLeftForNothing } from "../lib/focus-left";
+import { hasContent } from "../lib/presence";
 import { Button } from "./button";
 import { IconButton } from "./icon-button";
 import { DEFAULT_BULK_ACTION_BAR_LABELS } from "./bulk-action-bar-labels";
@@ -124,6 +126,16 @@ export interface BulkActionBarProps extends Omit<ComponentPropsWithRef<"div">, "
   panel?: ReactNode;
   /** Default: `bulkActionBar` from the {@link UiKitProvider}, else English. */
   labels?: LabelOverride<BulkActionBarLabels>;
+  /**
+   * Where the focus goes when the bar leaves while it holds it — after Clear, or an action
+   * that empties the selection (0.52, refactor audit 2026-10-30, DSP-15). Without it, the
+   * control the focus came into the bar from (the row's box, say), if that is still on the
+   * page; with it, this first. Pass one where the selection takes that control with it — a
+   * bulk delete removes the rows whose boxes were ticked: the table, the list's heading,
+   * the "Select" button that entered selection mode. A bar that leaves without the focus
+   * in it moves nothing.
+   */
+  returnFocusRef?: RefObject<HTMLElement | null>;
 }
 
 /** Where the floating bar sits: clear of the phone nav and of the home indicator,
@@ -192,10 +204,12 @@ export function BulkActionBar({
   open,
   panel,
   labels: labelsProp,
+  returnFocusRef,
   className,
   style,
   onKeyDown,
   onFocus,
+  onBlur,
   ...rest
 }: BulkActionBarProps) {
   const labels = useKitLabels("bulkActionBar", DEFAULT_BULK_ACTION_BAR_LABELS, labelsProp);
@@ -245,6 +259,51 @@ export function BulkActionBar({
     rove(barRef.current, active);
   });
 
+  // Leaving with the focus in it (refactor audit 2026-10-30, DSP-15): the bar goes `inert`,
+  // which blurs the control it holds, then unmounts — and the focus fell to <body>; on a
+  // phone VoiceOver's cursor jumped to the top of the page (keksdose's register). Noted on
+  // the bar's outermost element, so the `panel`'s fields count: where the focus came in
+  // from (the first entry since the bar showed, replaced once that control is gone), and
+  // whether it is in the bar. Focus that leaves for nothing because the page took it —
+  // inert, a removal — still counts as in it; a real element elsewhere takes it out, and
+  // so does a click on the page that left it nowhere (0.52 code review,
+  // bulk-action-bar.tsx: the note outlived it, and the bar's hide long after — the last row
+  // unticked with the pointer — pulled the focus and the scroll back to the row's box).
+  const cameFrom = useRef<HTMLElement | null>(null);
+  const holdsFocus = useRef(false);
+  const trackFocus = {
+    onFocus: (e: FocusEvent<HTMLDivElement>) => {
+      holdsFocus.current = true;
+      const from = e.relatedTarget;
+      if (from instanceof HTMLElement && !e.currentTarget.contains(from) && !cameFrom.current?.isConnected)
+        cameFrom.current = from;
+    },
+    onBlur: (e: FocusEvent<HTMLDivElement>) => {
+      onBlur?.(e);
+      const to = e.relatedTarget;
+      if (to instanceof Element && !e.currentTarget.contains(to)) holdsFocus.current = false;
+      whenFocusLeftForNothing(e, () => {
+        holdsFocus.current = false;
+      });
+    },
+  };
+  // The commit that hides the bar: the focus goes back while the control holding it is
+  // still in place — before `inert` takes it, or, with no exit to play, before <body> does.
+  const wasShown = useRef(shown);
+  useLayoutEffect(() => {
+    if (wasShown.current === shown) return;
+    wasShown.current = shown;
+    const from = cameFrom.current;
+    const held = holdsFocus.current;
+    cameFrom.current = null;
+    holdsFocus.current = false;
+    if (shown) return;
+    // The outermost element: the toolbar, or with a `panel` the surface round both.
+    const surface = barRef.current?.closest("[data-bulk-action-bar]");
+    const inBar = !!surface && surface.contains(document.activeElement);
+    if (inBar || (held && focusIsLost())) focusFirst([returnFocusRef?.current, from]);
+  }, [shown, returnFocusRef]);
+
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     onKeyDown?.(e);
     if (e.defaultPrevented || ownsArrows(e.target as Element)) return;
@@ -279,7 +338,9 @@ export function BulkActionBar({
     </Button>
   );
 
-  const hasPanel = panel !== undefined && panel !== null && panel !== false;
+  // `hasContent` (refactor audit 2026-10-30, DUP-14): an empty-string panel drew an empty
+  // bordered strip under the bar.
+  const hasPanel = hasContent(panel);
   // The surface — where the bar sits and what it looks like — and the toolbar row's
   // own layout. Without a panel they are one element, exactly as before 0.11.0; with
   // one the surface wraps the row and the panel, so both share its tint and position.
@@ -314,6 +375,7 @@ export function BulkActionBar({
       onKeyDown={handleKeyDown}
       onFocus={(e) => {
         onFocus?.(e);
+        if (!hasPanel) trackFocus.onFocus(e);
         // Clicking a control is using it: the stop follows the pointer too.
         const hit = itemsOf(barRef.current).find((el) => el === e.target);
         if (hit) {
@@ -321,6 +383,7 @@ export function BulkActionBar({
           rove(barRef.current, active);
         }
       }}
+      onBlur={hasPanel ? undefined : trackFocus.onBlur}
       style={hasPanel ? undefined : surfaceStyle}
       className={hasPanel ? rowClass : cn(rowClass, surfaceClass, className)}
     >
@@ -340,8 +403,13 @@ export function BulkActionBar({
     <>
       <span {...regionProps} />
       {hasPanel ? (
+        /* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- the focus is
+           only noted here (DSP-15): where it came from, whether it is in the bar; the
+           controls are the toolbar's and the panel's own. */
         <div
           {...rest}
+          onFocus={trackFocus.onFocus}
+          onBlur={trackFocus.onBlur}
           data-bulk-action-bar={variant}
           inert={!shown || undefined}
           style={surfaceStyle}

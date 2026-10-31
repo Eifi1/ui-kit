@@ -26,7 +26,7 @@ function Harness(props: Partial<DateRangePickerProps>) {
       label="Period"
       locale="en"
       presets={PRESETS}
-      commit="apply"
+      apply
       preset="last_month"
       renderDraftSummary={summary}
       {...props}
@@ -84,7 +84,7 @@ describe("DateRangePicker renderDraftSummary", () => {
 
   it("is not drawn in immediate mode, where there is no draft", () => {
     const render$ = vi.fn(summary);
-    render(<Harness commit="immediate" renderDraftSummary={render$} />);
+    render(<Harness apply={false} renderDraftSummary={render$} />);
     fireEvent.click(screen.getByRole("combobox"));
     expect(line()).toBeNull();
     expect(render$).not.toHaveBeenCalled();

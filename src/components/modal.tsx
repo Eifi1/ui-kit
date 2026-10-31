@@ -11,6 +11,7 @@ import type {
 import { cn } from "../lib/cn";
 import { mergeRefs } from "./field-parts";
 import { useFocusTrap } from "../hooks/use-focus-trap";
+import { useBreakpoint } from "../hooks/use-breakpoint";
 import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { useDialogParam, type DialogParam } from "../hooks/use-search-param-state";
@@ -38,6 +39,10 @@ import { runOwnKeyDown, takeEscape, useDismissLayer } from "../hooks/use-dismiss
 function useDragOffset(enabled: boolean) {
   const [offset, setOffset] = useState<{ x: number; y: number } | null>(null);
   const from = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null);
+  // `md:` as the panel's own CSS reads it, at the text size in force: 768 px at Normal,
+  // 960 at Large. `innerWidth >= 768` dragged the bottom sheet of an 800 px window at
+  // Large (refactor audit 2026-10-30, DUP-9). Without `matchMedia` (jsdom), the desktop.
+  const wide = useBreakpoint("md", true);
 
   const endDrag = () => {
     from.current = null;
@@ -52,7 +57,7 @@ function useDragOffset(enabled: boolean) {
       ? undefined
       : {
           onPointerDown: (e: ReactPointerEvent<HTMLDivElement>) => {
-            if (e.button !== 0 || window.innerWidth < 768) return;
+            if (e.button !== 0 || !wide) return;
             const target = e.target as HTMLElement;
             // Only the panel itself and its non-interactive chrome start a drag; a
             // press inside any control belongs to that control.

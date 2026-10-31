@@ -7,6 +7,7 @@ import type { SortState } from "./data-table-sort";
 import { FilterPopover } from "./data-table-filter-popover";
 import { Popover } from "./popover";
 import { Tooltip } from "./tooltip";
+import { Checkbox } from "./checkbox";
 import type { DataTableLabels } from "./data-table-labels";
 import { isTableOwnColumn } from "./data-table-row-actions";
 import { columnLabel, logicalAlign, splitCellProps } from "./data-table-shared";
@@ -59,7 +60,7 @@ export function DataTableHead<T>({
   hasSortCallback: boolean;
   /** The caller owns the filters (`onFiltersChange`), likewise. */
   hasFilterCallback: boolean;
-  sorts: SortState[];
+  sorts: readonly SortState[];
   filters: FilterState;
   selectOptionsByKey: Record<string, { value: string; label: string }[]>;
   multiSort: boolean;
@@ -98,13 +99,16 @@ export function DataTableHead<T>({
               compact ? "w-8 px-2 py-1" : "w-10 px-3 py-2",
             )}
           >
-            <input
-              type="checkbox"
-              className={cn("align-middle accent-indigo-600", compact ? "size-3.5" : "size-4")}
+            {/* The kit's Checkbox, as the phone card's (refactor audit 2026-10-30, DSP-14): the
+                native box wore `accent-indigo-600` over the kit's `--brand` accent, indigo on
+                every palette and, in dark mode, a checked box that read as unchecked. "Some"
+                is its `indeterminate` dash, set on the element after every render as the
+                ref here did. */}
+            <Checkbox
+              className="align-middle"
+              inputClassName={compact ? "size-3.5" : undefined}
               checked={selection.allSelected}
-              ref={(el) => {
-                if (el) el.indeterminate = selection.someSelected && !selection.allSelected;
-              }}
+              indeterminate={selection.someSelected && !selection.allSelected}
               onChange={(e) => selection.onToggleAll(e.target.checked)}
               aria-label={labels.selectAllRows}
             />
@@ -175,21 +179,27 @@ export function DataTableHead<T>({
               )}
             >
               <div className={cn("flex items-center gap-1", isEndAligned && "flex-row-reverse")}>
-                <Tooltip label={sortable && multiSort ? labels.sortHint : undefined} portal>
-                  <button
-                    type="button"
-                    onClick={(e) => sortable && toggleSort(col.key, e.shiftKey)}
-                    disabled={!sortable}
-                    className={cn("flex items-center gap-1 text-start", sortable && "hover:text-primary")}
-                  >
-                    <span>{col.header}</span>
-                    {sortable && <Icon className={cn("size-3", active ? "opacity-100" : "opacity-40")} />}
-                    {/* Priority badge, only meaningful with 2+ sort keys */}
-                    {active && sorts.length > 1 && (
-                      <span className="text-micro font-semibold leading-none text-brand">{sortIdx + 1}</span>
-                    )}
-                  </button>
-                </Tooltip>
+                {sortable ? (
+                  <Tooltip label={multiSort ? labels.sortHint : undefined} portal>
+                    <button
+                      type="button"
+                      onClick={(e) => toggleSort(col.key, e.shiftKey)}
+                      className="flex items-center gap-1 text-start hover:text-primary"
+                    >
+                      <span>{col.header}</span>
+                      <Icon className={cn("size-3", active ? "opacity-100" : "opacity-40")} />
+                      {/* Priority badge, only meaningful with 2+ sort keys */}
+                      {active && sorts.length > 1 && (
+                        <span className="text-micro font-semibold leading-none text-brand">{sortIdx + 1}</span>
+                      )}
+                    </button>
+                  </Tooltip>
+                ) : (
+                  // Plain text (refactor audit 2026-10-30, DSP-23 a): a `<button disabled>`
+                  // round it was read out as a dimmed button on every column that cannot
+                  // be sorted — a control that is not there.
+                  <span className="text-start">{col.header}</span>
+                )}
                 {filter && (
                   <Popover
                     // 420 px at Normal, in rem so the calendar grows with its

@@ -24,6 +24,8 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, rmSync, writeFileSync, readFileSync, readdirSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { checkApi } from "./check-api-compat.mjs";
+import { closure, importsOf } from "./lib/imports.mjs";
 
 const root = resolve(import.meta.dirname, "..");
 const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
@@ -218,20 +220,8 @@ try {
   // so its static closure may hold no bare import at all — React or a component's package
   // would land in the worker. Walked in the INSTALLED package, as a bundler sees it.
   {
-    const seen = new Set();
-    const packages = new Set();
-    const walk = (file) => {
-      if (seen.has(file)) return;
-      seen.add(file);
-      for (const [, specifier] of readFileSync(file, "utf8").matchAll(
-        /(?:\bfrom\s*|\bimport\s*\(?\s*)["']([^"']+)["']/g,
-      )) {
-        if (specifier.startsWith(".")) walk(join(file, "..", specifier));
-        else packages.add(specifier);
-      }
-    };
-    walk(join(installed, "dist", "push-worker.js"));
-    if (packages.size === 0) ok(`dist/push-worker.js reaches ${seen.size} module(s) and no package`);
+    const { files, packages } = closure(join(installed, "dist", "push-worker.js"));
+    if (packages.size === 0) ok(`dist/push-worker.js reaches ${files.size} module(s) and no package`);
     else fail(`dist/push-worker.js reaches ${[...packages].join(", ")}`);
     const [outcome] = runProbe(
       `import { handlePushSubscriptionChange } from ${JSON.stringify(specifierOf("./push-worker"))};\n` +
@@ -244,10 +234,10 @@ try {
   }
 
   log("• table-text is pure and reads what it promises");
-  const tableText = join(scratch, "node_modules", pkg.name, "dist", "lib", "table-text.js");
-  const bare = [...readFileSync(tableText, "utf8").matchAll(/\bfrom\s*["']([^."'][^"']*)["']/g)].map((m) => m[1]);
-  if (bare.length === 0) ok("dist/lib/table-text.js imports no package");
-  else fail(`dist/lib/table-text.js imports ${bare.join(", ")}`);
+  // Every module the entry reaches, by every import form (scripts/lib/imports.mjs, DUP-13).
+  const tableText = closure(join(installed, "dist", "table-text.js"));
+  if (tableText.packages.size === 0) ok(`dist/table-text.js reaches ${tableText.files.size} module(s) and no package`);
+  else fail(`dist/table-text.js reaches ${[...tableText.packages].join(", ")}`);
   const [parsed] = runProbe(
     `import { parseTable } from ${JSON.stringify(specifierOf("./table-text"))};\n` +
       `console.log(JSON.stringify(parseTable("s;F\\n0,5;1,25", { decimal: "whole-text" })));`,
@@ -261,10 +251,7 @@ try {
   // nothing but the module itself. It imports nothing at all, relative or bare: a kit
   // module behind it could reach React or a stylesheet later (packaging-contract.test.ts
   // holds the same rule on src/).
-  const currencies = join(installed, "dist", "currencies.js");
-  const currencyImports = [
-    ...readFileSync(currencies, "utf8").matchAll(/(?:\bfrom\s*|\bimport\s*\(?\s*)["']([^"']+)["']/g),
-  ].map((m) => m[1]);
+  const currencyImports = importsOf(join(installed, "dist", "currencies.js"));
   if (currencyImports.length === 0) ok("dist/currencies.js imports nothing");
   else fail(`dist/currencies.js imports ${currencyImports.join(", ")}`);
   const [countries] = runProbe(
@@ -281,14 +268,13 @@ try {
   // (ESLint's cache keys on it) and its role table: the rule is driven here without
   // ESLint, through the context it reads, on a class with a variant and an opacity.
   const eslintDir = join(installed, "dist", "eslint");
-  const eslintImports = readdirSync(eslintDir)
-    .filter((f) => f.endsWith(".js"))
-    .flatMap((f) => [
-      ...readFileSync(join(eslintDir, f), "utf8").matchAll(/(?:\bfrom\s*|\bimport\s*\(?\s*)["']([^."'][^"']*)["']/g),
-    ])
-    .map((m) => m[1]);
-  if (eslintImports.length === 0) ok("dist/eslint imports no package");
-  else fail(`dist/eslint imports ${eslintImports.join(", ")}`);
+  const eslintImports = new Set(
+    readdirSync(eslintDir)
+      .filter((f) => f.endsWith(".js"))
+      .flatMap((f) => [...closure(join(eslintDir, f)).packages]),
+  );
+  if (eslintImports.size === 0) ok("dist/eslint reaches no package");
+  else fail(`dist/eslint reaches ${[...eslintImports].join(", ")}`);
   const [lint] = runProbe(
     `import plugin from ${JSON.stringify(specifierOf("./eslint"))};\n` +
       `const text = '"p-2 hover:text-[var(--text-muted)]/70 bg-[var(--chart-1)]"', fixed = [];\n` +
@@ -363,17 +349,18 @@ try {
   const testingDir = join(scratch, "node_modules", pkg.name, "dist", "testing");
   // `react.js` is the sibling entry `@eifi1/ui-kit/testing/react` (0.50), which needs Testing
   // Library by design; checked on its own below.
-  const testingImports = readdirSync(testingDir)
-    .filter((f) => f.endsWith(".js") && f !== "react.js")
-    .flatMap((f) => [...readFileSync(join(testingDir, f), "utf8").matchAll(/\bfrom\s*["']([^."'][^"']*)["']/g)])
-    .map((m) => m[1]);
-  if (testingImports.length === 0) ok("dist/testing imports no package");
-  else fail(`dist/testing imports ${testingImports.join(", ")}`);
-  const testingReactImports = [
-    ...readFileSync(join(testingDir, "react.js"), "utf8").matchAll(/\bfrom\s*["']([^."'][^"']*)["']/g),
-  ].map((m) => m[1]);
-  if (testingReactImports.join() === "@testing-library/react") ok("dist/testing/react.js imports Testing Library only");
-  else fail(`dist/testing/react.js imports ${testingReactImports.join(", ") || "nothing"}`);
+  // Walked, not read file by file: a `testing/*.js` importing `../lib/x.js` that reaches
+  // React passed the old per-file scan (DUP-13).
+  const testingImports = new Set(
+    readdirSync(testingDir)
+      .filter((f) => f.endsWith(".js") && f !== "react.js")
+      .flatMap((f) => [...closure(join(testingDir, f)).packages]),
+  );
+  if (testingImports.size === 0) ok("dist/testing reaches no package");
+  else fail(`dist/testing reaches ${[...testingImports].join(", ")}`);
+  const testingReactImports = [...closure(join(testingDir, "react.js")).packages];
+  if (testingReactImports.join() === "@testing-library/react") ok("dist/testing/react.js reaches Testing Library only");
+  else fail(`dist/testing/react.js reaches ${testingReactImports.join(", ") || "nothing"}`);
   const [guard] = runProbe(
     `import { KIT_CSS_VARIABLES, undeclaredCssVariables } from ${JSON.stringify(specifierOf("./testing"))};\n` +
       `const files = Object.fromEntries(Array.from({ length: 10 }, (_, i) => ["f" + i + ".tsx", i ? "" : 'const a = "fill-[var(--surface)] bg-[var(--bg-surface)]";']));\n` +
@@ -382,6 +369,23 @@ try {
   if (guard === JSON.stringify([true, false, false, ["f0.tsx:1 --surface"]]))
     ok("undeclaredCssVariables finds an undeclared token by package name");
   else fail(`the testing entry by package name answered ${guard}`);
+
+  log("• the public types against the last release's (check:api)");
+  // API-1, refactor audit 2026-10-30: the installed tarball's .d.ts against the previous
+  // release packed from npm's cache. Every changed name is listed; each must be named in
+  // this release's adopt doc under "must change" (scripts/check-api-compat.mjs).
+  try {
+    const api = checkApi(installed, { log });
+    if (api.skipped) ok("check:api skipped (see above)");
+    else if (api.ok) ok(`check:api: every changed public name since ${api.previous} is in the adopt doc`);
+    else
+      fail(
+        `check:api: ${api.unannounced.map((c) => c.name).join(", ")} changed since ${api.previous} and no adopt doc ` +
+          'names it under a **Must change:** lead (or a "(breaking)" heading)',
+      );
+  } catch (error) {
+    fail(`check:api could not run: ${error.message}`);
+  }
 
   log("• the CSS entry is reachable as a file");
   const css = join(scratch, "node_modules", pkg.name, "tokens.css");

@@ -171,7 +171,7 @@ export function useRowActionColumn<T>({
   mobileSwipeActions,
   desktopSwipeActions,
 }: {
-  columns: DataTableColumn<T>[];
+  columns: readonly DataTableColumn<T>[];
   rowActions: DataTableProps<T>["rowActions"];
   rowActionsHeader?: DataTableProps<T>["rowActionsHeader"];
   rowName: DataTableProps<T>["rowName"];
@@ -180,7 +180,7 @@ export function useRowActionColumn<T>({
   mobileSwipeActions?: DataTableProps<T>["mobileSwipeActions"];
   desktopSwipeActions?: DataTableProps<T>["desktopSwipeActions"];
 }): {
-  columns: DataTableColumn<T>[];
+  columns: readonly DataTableColumn<T>[];
   swipesFromActions: (row: T) => MobileSwipeActions | null;
 } {
   const rowActionsFor = useCallback(
@@ -242,7 +242,7 @@ export function useRowActionColumn<T>({
       labels.actions,
     ],
   );
-  const actionColumns = useMemo<DataTableColumn<T>[]>(
+  const actionColumns = useMemo<readonly DataTableColumn<T>[]>(
     () =>
       rowActions
         ? [

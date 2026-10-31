@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import { DataTable } from "../data-table";
 import type { DataTableColumn, DataTableProps } from "../data-table";
+import { compareSortValues } from "../data-table-sort";
 import { UiKitProvider } from "../../i18n/kit-labels";
 
 /**
@@ -109,5 +110,13 @@ describe("DataTable client sort collates strings (audit 2026-10-30 DSP-3)", () =
         .getAllByRole("listitem")
         .map((li) => li.textContent),
     ).toEqual(["Abgelehnt", "bezahlt", "Offen", "Überfällig"]);
+  });
+
+  it("is the order `compareSortValues` exports (0.52): an app's own list beside the table matches it", () => {
+    const names = [...NAMES, 10, null, 9];
+    renderTable(rowsOf(names));
+    sortByName();
+    const own = [...names].sort((a, b) => compareSortValues(a, b, "de-CH")).map((n) => String(n ?? "—"));
+    expect(namesOnScreen()).toEqual(own);
   });
 });

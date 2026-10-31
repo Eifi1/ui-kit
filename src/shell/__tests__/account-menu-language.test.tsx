@@ -13,11 +13,11 @@ const LANGS = [
   { code: "fr", label: "Français" },
 ];
 
-function Menu({ onPick = () => {}, value = "en" }: { onPick?: (code: string) => void; value?: string }) {
+function Menu({ onChange = () => {}, value = "en" }: { onChange?: (code: string) => void; value?: string }) {
   return (
     <MemoryRouter>
       <TopBarActionMenu aria-label="Account" icon={<span>A</span>} entries={[]}>
-        {(close) => <AccountMenuLanguage languages={LANGS} value={value} onPick={onPick} close={close} />}
+        {(close) => <AccountMenuLanguage languages={LANGS} value={value} onChange={onChange} close={close} />}
       </TopBarActionMenu>
     </MemoryRouter>
   );
@@ -47,18 +47,31 @@ describe("AccountMenuLanguage", () => {
     expect(rows[0].querySelector('[data-flag="ch"]')).not.toBeNull();
   });
 
-  it("a pick calls onPick and closes the menu", () => {
-    const onPick = vi.fn();
-    render(<Menu onPick={onPick} />);
+  it("a pick calls onChange and closes the menu", () => {
+    const onChange = vi.fn();
+    render(<Menu onChange={onChange} />);
     openMenu();
     fireEvent.click(languageRow());
     fireEvent.click(screen.getByRole("menuitemradio", { name: "Deutsch" }));
-    expect(onPick).toHaveBeenCalledWith("de-CH");
+    expect(onChange).toHaveBeenCalledWith("de-CH");
     expect(screen.queryByRole("menuitemradio", { name: "Deutsch" })).toBeNull();
     expect(screen.getByRole("button", { name: "Account" })).toHaveAttribute("aria-expanded", "false");
   });
 
   it("works without close: the sub-list folds, the pick still lands", () => {
+    const onChange = vi.fn();
+    render(
+      <ul>
+        <AccountMenuLanguage languages={LANGS} value="fr" onChange={onChange} />
+      </ul>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /Language/ }));
+    fireEvent.click(screen.getByText("English"));
+    expect(onChange).toHaveBeenCalledWith("en");
+    expect(screen.getByRole("button", { name: /Language/ })).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("still takes the deprecated `onPick` (0.52 → removed in 0.53)", () => {
     const onPick = vi.fn();
     render(
       <ul>
@@ -68,21 +81,20 @@ describe("AccountMenuLanguage", () => {
     fireEvent.click(screen.getByRole("button", { name: /Language/ }));
     fireEvent.click(screen.getByText("English"));
     expect(onPick).toHaveBeenCalledWith("en");
-    expect(screen.getByRole("button", { name: /Language/ })).toHaveAttribute("aria-expanded", "false");
   });
 
   it("names itself with topBar.language from the provider; `label` wins", () => {
     const { rerender } = render(
       <UiKitProvider labels={{ topBar: { language: "Sprache" } }}>
         <ul>
-          <AccountMenuLanguage languages={LANGS} value="en" onPick={() => {}} />
+          <AccountMenuLanguage languages={LANGS} value="en" onChange={() => {}} />
         </ul>
       </UiKitProvider>,
     );
     expect(screen.getByRole("button", { name: /Sprache/ })).toBeInTheDocument();
     rerender(
       <ul>
-        <AccountMenuLanguage languages={LANGS} value="en" onPick={() => {}} label="Lingua" />
+        <AccountMenuLanguage languages={LANGS} value="en" onChange={() => {}} label="Lingua" />
       </ul>,
     );
     expect(screen.getByRole("button", { name: /Lingua/ })).toBeInTheDocument();
@@ -100,7 +112,7 @@ describe("AccountMenuLanguage", () => {
                 { code: "fr", label: "Français", country: "fr" },
               ]}
               value="de-CH"
-              onPick={() => {}}
+              onChange={() => {}}
               close={close}
             />
           )}
@@ -128,7 +140,7 @@ describe("AccountMenuLanguage", () => {
             { key: "settings", label: "Settings", onSelect: () => {} },
             { key: "logout", label: "Log out", onSelect: () => {} },
           ]}
-          leading={(close) => <AccountMenuLanguage languages={LANGS} value="en" onPick={() => {}} close={close} />}
+          leading={(close) => <AccountMenuLanguage languages={LANGS} value="en" onChange={() => {}} close={close} />}
         />
       </MemoryRouter>,
     );

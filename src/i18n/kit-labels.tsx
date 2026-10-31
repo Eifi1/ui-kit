@@ -33,6 +33,7 @@ import type { MonthPickerLabels } from "../components/month-picker";
 import type { PageContentsLabels } from "../components/page-contents";
 import type { SeriesChartLabels } from "../components/series-chart-labels";
 import type { PieChartLabels } from "../components/pie-chart-labels";
+import type { TreemapLabels } from "../components/treemap-labels";
 import type { SparklineLabels } from "../components/sparkline";
 import type { StatTileLabels } from "../components/stat-tile";
 import type { SignaturePadLabels } from "../components/signature-pad";
@@ -203,7 +204,7 @@ export interface DatePickerLabels {
   previousDay: string;
   nextDay: string;
   today: string;
-  /** `DateRangePicker commit="apply"`: the button that commits the drafted range. */
+  /** `DateRangePicker apply`: the button that commits the drafted range. */
   apply: string;
   /** …and the one that discards it. */
   cancel: string;
@@ -283,6 +284,8 @@ export interface TopBarLabels {
   /** 0.49 KIT-10: the language menu's trigger, given the current language's name —
    *  "Choose language, current: Deutsch". */
   languageCurrent: (name: string) => string;
+  /** RoleSwitcher's name, and nothing else reads it (DevMenu's flask is `topBarParts.dev`).
+   *  @deprecated 0.52 — none: it goes with RoleSwitcher (MOD-5); removed in 0.53. */
   switchRole: string;
   /** The role switcher's tooltip, given the active role's name. */
   role: (value: string) => string;
@@ -319,6 +322,7 @@ export interface UiKitLabels {
   calculator: CalculatorLabels;
   currency: CurrencyLabels;
   chipInput: ChipInputLabels;
+  /** @deprecated 0.52 — none: it goes with the FieldSync family (MOD-5); removed in 0.53. */
   fieldSync: FieldSyncLabels;
   passwordReveal: PasswordRevealLabels;
   tabs: TabsLabels;
@@ -338,6 +342,8 @@ export interface UiKitLabels {
   globalSearch: GlobalSearchLabels;
   seriesChart: SeriesChartLabels;
   pieChart: PieChartLabels;
+  /** 0.52: a tile's accessible name (refactor audit 2026-10-30, DSP-5). */
+  treemap: TreemapLabels;
   sparkline: SparklineLabels;
   statTile: StatTileLabels;
   signaturePad: SignaturePadLabels;
@@ -481,7 +487,8 @@ export interface UiKitLabels {
   ibanInput: IbanInputLabels;
   /** 0.22.0: `PhoneInput`'s country-code select. */
   phoneInput: PhoneInputLabels;
-  /** 0.22.0: `SignChip` — the outflow / inflow toggle beside an amount. */
+  /** 0.22.0: `SignChip` — the outflow / inflow toggle beside an amount.
+   *  @deprecated 0.52 — none: it goes with SignChip (MOD-5); removed in 0.53. */
   signChip: SignChipLabels;
   /** 0.23.0: `ColumnMapper` / `ColumnRoleTable` — a pasted or dropped table, a role per
    *  column. */

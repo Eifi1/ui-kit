@@ -37,7 +37,7 @@ export interface FeedbackSubmitDialogProps {
   onCategoryChange: (category: FeedbackCategory) => void;
   submitting: boolean;
   /** The form, and the `context` built from the same values the box showed. */
-  onSubmit: (data: FeedbackMultipleSubmission, context: FeedbackContext) => void | Promise<void>;
+  onSubmit: (data: FeedbackMultipleSubmission<FeedbackCategory>, context: FeedbackContext) => void | Promise<void>;
   user?: FeedbackSubmitter | null;
   /** `location.href` when the dialog opened. */
   url: string;
@@ -89,7 +89,7 @@ export function FeedbackSubmitDialog({
       onClose={onClose}
       categories={FEEDBACK_PICKABLE_CATEGORIES.map((value) => ({ value, label: categoryLabels[value] }))}
       category={category}
-      onCategoryChange={(value) => onCategoryChange(value as FeedbackCategory)}
+      onCategoryChange={onCategoryChange}
       submitting={submitting}
       attachments="multiple"
       maxAttachments={DEFAULT_MAX_ATTACHMENTS}

@@ -9,7 +9,7 @@ import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { prefersReducedMotion } from "../lib/reduced-motion";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { mergeRefs } from "./field-parts";
-import { DEFAULT_TABS_LABELS } from "./ui-labels";
+import { DEFAULT_TABS_LABELS } from "./tabs-labels";
 import { IconButton } from "./icon-button";
 import { HIT_AREA_LARGE } from "./button-look";
 
@@ -55,7 +55,7 @@ export interface TabsLabels {
   previous: string;
 }
 
-// Defined in ./ui-labels, which holds no component code (0.34, KS U8).
+// Defined in ./tabs-labels, which holds no component code (0.34, KS U8).
 export { DEFAULT_TABS_LABELS };
 
 /**

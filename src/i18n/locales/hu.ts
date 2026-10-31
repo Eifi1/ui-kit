@@ -14,7 +14,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
   const num = new Intl.NumberFormat(numberLocale);
   const n = (value: number) => num.format(value);
   // 0.30.0 — a throttled request (HTTP 429), as `englishRateLimited` in
-  // src/auth/auth-errors.ts: no wait → "egy kicsit", under a minute → seconds, else
+  // src/auth/auth-errors-labels.ts: no wait → "egy kicsit", under a minute → seconds, else
   // minutes rounded up. The numeral stays bare before its unit ("30 mp múlva").
   const wait = (seconds: number) =>
     seconds < 60 ? `${n(Math.ceil(seconds))} mp` : `${n(Math.ceil(seconds / 60))} perc`;
@@ -736,9 +736,17 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     pieChart: {
       slices: "Diagramszeletek",
       slice: (label, value, percent) => `${label}: ${value} (${percent})`,
+      sliceShare: (label, percent) => `${label}: ${percent}`,
       total: "Összesen",
       empty: "Nincs adat",
       legend: "Kategóriák",
+    },
+    treemap: {
+      tile: (name, value, share) => `${name}: ${value} (${share})`,
+      // Appositive, not a case ending: "-ban/-ben" and the article follow the name's own
+      // sounds, which a template cannot know.
+      group: (name, value, share) => `${name} csoport: ${value} (${share})`,
+      inGroup: (name, group) => `${name}, ${group} csoport`,
     },
     confirmDialog: {
       confirm: "Megerősítés",
@@ -1281,6 +1289,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       stoppedAll: (app) => `Kész. A(z) ${app} értesítő e-mailjeit többé nem kapja meg.`,
       accountMail: "A fiókjával kapcsolatos e-maileket továbbra is megkapja.",
       turnBackOn: "A beállításokban bármikor újra bekapcsolhatja őket.",
+      stoppedHint: (accountMail, turnBackOn) => `${accountMail} ${turnBackOn}`,
       openSettings: "Beállítások megnyitása",
       invalidLink: "Ez a link már nem működik. Az e-maileket a beállításokban is kikapcsolhatja.",
       failed: "Ez nem sikerült. Kérjük, próbálja újra.",
@@ -1977,7 +1986,6 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         menu: "Fejlesztői eszközök",
         overridesOn: "Felülbírálások bekapcsolva",
         roleHeading: "Dev · szerepkör",
-        switchPlan: "Csomag váltása",
         plan: (value) => `Csomag: ${value}`,
         planHeading: "Dev · csomag",
         backTo: (role) => `Vissza: ${role}`,

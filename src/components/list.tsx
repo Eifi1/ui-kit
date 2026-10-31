@@ -3,6 +3,7 @@ import type { ComponentPropsWithoutRef, HTMLAttributes, MouseEvent, ReactElement
 import { ChevronDown, ExternalLink } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
+import { hasContent } from "../lib/presence";
 import { FOCUS_RING } from "./focus-ring";
 import { Spinner } from "./spinner";
 import { StatusDot } from "./status-dot";
@@ -67,8 +68,12 @@ export interface ListProps extends Omit<ComponentPropsWithoutRef<"ul">, "role"> 
    * A list of `limit` rows or fewer draws them all, with no such row. Rows are counted as
    * `Children` counts them: one per `ListItem`, a fragment as one.
    *
-   * The row is a button with `aria-expanded`, controlling the list; it sits in the list
-   * as `role="none"`, so a reader still hears "list, 5 items" for five rows.
+   * The row is a button with `aria-expanded`, controlling the list, in the list's last
+   * item: a reader hears "list, 6 items" for five rows and the Show all. Until 0.52 that
+   * item was `role="none"`, which left the button standing in the list itself — axe 4.13
+   * fails `aria-required-children` on it, and a `<ul>` may hold nothing but items (refactor
+   * audit 2026-10-30, found building 0.51.7; DataTable's phone list made the same call for
+   * its leading row).
    */
   limit?: number;
 }
@@ -122,7 +127,7 @@ export function List({
             dropped their state — an opened row, a typed input (audit 2026-10-30 DSP-20). */}
         {folds && !open ? rows.slice(0, Math.max(0, limit!)) : (rows ?? children)}
         {folds && (
-          <li role="none" className={MORE_PAD[density]}>
+          <li className={MORE_PAD[density]}>
             <Button
               type="button"
               variant="link"
@@ -584,7 +589,8 @@ export function ListItem({
   const lock = useLockReason(commit, disabledReason);
   const locked = lock.locked && isButton && !expandable;
   const inert = disabled || loading || locked;
-  const hasBody = children !== undefined && children !== null && children !== false;
+  // `hasContent` (refactor audit 2026-10-30, DUP-14): a `""` body opened an empty line.
+  const hasBody = hasContent(children);
   // Anything under the row's own line: the box turns into a column, and the target
   // takes its own corners and hover fill (see `children`).
   const stacked = hasBody || expandable;

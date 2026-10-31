@@ -11,7 +11,7 @@ import { DialogFrame } from "../components/dialog-frame";
 import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
 import { CARD_DESCRIPTION_CLASS } from "../settings/settings-card-classes";
 import { SettingsCardTitle } from "../settings/settings-heading";
-import { useMounted } from "../account/account-parts";
+import { useMounted } from "../hooks/use-mounted";
 import { describeFailure, FailureLine, useNotificationsLabels } from "./notification-parts";
 import type { NotificationsLabels } from "./notifications-labels";
 import { PushDeviceError } from "./use-push-device";

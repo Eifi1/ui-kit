@@ -65,7 +65,7 @@ export function useColumnResize<T>({
   /** The widths React renders the columns at. */
   widths: Record<string, number>;
   setWidths: Dispatch<SetStateAction<Record<string, number>>>;
-  columns: DataTableColumn<T>[];
+  columns: readonly DataTableColumn<T>[];
   hiddenCols: Set<string>;
 }) {
   const resizing = useRef<Resize | null>(null);

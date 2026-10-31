@@ -9,6 +9,10 @@
  * with every letter expanded to two digits (A = 10 … Z = 35) — which is all that is
  * checked here. Whether the prefix is an assigned code, and whether the security
  * exists, is a lookup, not a checksum.
+ *
+ * Deprecated in 0.52, removed in 0.53 (decision 4 of the refactor audit 2026-10-30,
+ * MOD-5): keksdose, which they were written for, never imported them, and no other app
+ * does.
  */
 
 /** Letters to their two-digit numbers (A = 10 … Z = 35), digits as they are. */
@@ -36,6 +40,8 @@ function luhnSum(digits: string, doubleRightmost: boolean): number {
 /**
  * The ISIN as it is printed: upper case, unbroken (ISO 6166 has no grouping), with
  * the spaces and hyphens a paste from a broker's statement carries dropped.
+ *
+ * @deprecated 0.52 — none: no app checks an ISIN with it; copy lib/isin.ts (MOD-5); removed in 0.53.
  */
 export function formatIsin(value: string): string {
   return value.replace(/[\s-]/g, "").toUpperCase();
@@ -44,6 +50,8 @@ export function formatIsin(value: string): string {
 /**
  * The check digit for the first eleven characters of an ISIN (prefix and national
  * number). For BUILDING one — a test fixture, a demo — rather than checking it.
+ *
+ * @deprecated 0.52 — none: no app checks an ISIN with it; copy lib/isin.ts (MOD-5); removed in 0.53.
  */
 export function isinCheckDigit(body: string): string {
   const sum = luhnSum(expandLetters(formatIsin(body)), true);
@@ -54,6 +62,8 @@ export function isinCheckDigit(body: string): string {
  * Whether `value` is a valid ISIN: two letters, nine letters or digits, one digit,
  * and a matching Luhn check digit over the letter-expanded form. Spaces, hyphens and
  * lower case are fine (see {@link formatIsin}).
+ *
+ * @deprecated 0.52 — none: no app checks an ISIN with it; copy lib/isin.ts (MOD-5); removed in 0.53.
  */
 export function isValidIsin(value: string): boolean {
   const isin = formatIsin(value);

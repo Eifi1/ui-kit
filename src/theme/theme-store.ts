@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { logger } from "../lib/logger";
+import { readStoredJson } from "../lib/safe-storage";
 import { registerDeviceSetting } from "../lib/device-settings";
 
 export type ThemeMode = "light" | "dark";
@@ -60,6 +61,10 @@ function applyThemeClass(mode: ThemeMode): void {
   root.style.colorScheme = mode;
 }
 
+/** zustand's envelope, any object; `preferenceFromState` reads only the two names it knows. */
+const isEnvelope = (blob: unknown): blob is { state?: { mode?: string; preference?: string } } =>
+  typeof blob === "object" && blob !== null;
+
 /**
  * Pre-hydration: read the theme PREFERENCE persisted under `storageKey` straight
  * from localStorage, resolve it to a concrete light/dark mode, and toggle the
@@ -70,15 +75,8 @@ function applyThemeClass(mode: ThemeMode): void {
  * storage shape in their entrypoint.
  */
 export function applyPersistedTheme(storageKey: string): ThemeMode {
-  let preference: ThemePreference = "system";
-  try {
-    const blob = JSON.parse(localStorage.getItem(storageKey) ?? "{}") as {
-      state?: { mode?: string; preference?: string };
-    };
-    preference = preferenceFromState(blob.state);
-  } catch {
-    /* malformed storage → system */
-  }
+  // Absent, blocked or malformed storage → "system", through `preferenceFromState`.
+  const preference = preferenceFromState(readStoredJson(storageKey, isEnvelope)?.state);
   const mode = resolve(preference);
   applyThemeClass(mode);
   return mode;

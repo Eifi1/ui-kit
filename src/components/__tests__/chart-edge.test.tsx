@@ -43,7 +43,7 @@ const ROWS = [
   { m: "Feb", a: 4, b: 2, c: 6 },
 ];
 
-function bars(series: { key: string; color?: string }[], type: "bar" | "area" = "bar") {
+function bars(series: { key: string; color?: string; strokeWidth?: number }[], type: "bar" | "area" = "bar") {
   return render(
     <SeriesChart
       rows={ROWS}
@@ -58,9 +58,18 @@ const barStrokes = (container: HTMLElement) =>
     (g) => g.querySelector(".recharts-bar-rectangle path")?.getAttribute("stroke") ?? null,
   );
 
-describe("SeriesChart's ink edge", () => {
+/** More contrast, as the setting (or System on such a device) puts it on <html>. */
+function moreContrast(on: boolean) {
+  if (on) root.setAttribute("data-contrast", "more");
+  else root.removeAttribute("data-contrast");
+}
+
+describe("SeriesChart's ink edge (under More contrast)", () => {
+  afterEach(() => moreContrast(false));
+
   it("edges a bar in a low-contrast hue and leaves a high-contrast one bare (light)", () => {
     paint("light");
+    moreContrast(true);
     // Slot 1 green (2.69:1 on the page), slot 3 blue (4.4:1), slot 6 cyan (1.8:1).
     const { container } = bars([
       { key: "a", color: paletteFor(0) },
@@ -72,6 +81,7 @@ describe("SeriesChart's ink edge", () => {
 
   it("follows the ground: on the dark theme red is edged and cyan is not", () => {
     paint("dark");
+    moreContrast(true);
     const { container } = bars([
       { key: "a", color: paletteFor(4) },
       { key: "b", color: paletteFor(5) },
@@ -81,23 +91,66 @@ describe("SeriesChart's ink edge", () => {
 
   it("re-measures when the theme flips under a mounted chart", async () => {
     paint("light");
+    moreContrast(true);
     const { container } = bars([{ key: "a", color: paletteFor(4) }]);
     expect(barStrokes(container)).toEqual([null]);
     await act(async () => paint("dark"));
     expect(barStrokes(container)).toEqual(["var(--chart-ink)"]);
   });
 
-  it("draws an area's outline in ink, keeping the hue on its fill", () => {
+  // Refactor audit 2026-10-30, DSP-18: the edge swapped the area's 2px outline in its own
+  // hue for 1px of ink, and ignored the series' `strokeWidth`.
+  it("draws an area's outline in ink at the area's own width, keeping the hue on its fill", () => {
     paint("light");
+    moreContrast(true);
     const { container } = bars([{ key: "a", color: paletteFor(5) }], "area");
     const curve = container.querySelector(".recharts-area-curve")!;
     expect(curve.getAttribute("stroke")).toBe("var(--chart-ink)");
-    expect(curve.getAttribute("stroke-width")).toBe("1");
+    expect(curve.getAttribute("stroke-width")).toBe("2");
     expect(container.querySelector(".recharts-area-area")!.getAttribute("fill")).toBe("var(--color-a)");
+    cleanup();
+    const wide = bars([{ key: "a", color: paletteFor(5), strokeWidth: 3 }], "area");
+    expect(wide.container.querySelector(".recharts-area-curve")!.getAttribute("stroke-width")).toBe("3");
   });
 
   it("leaves a mark alone when nothing is measurable (no tokens on the page)", () => {
+    moreContrast(true);
     const { container } = bars([{ key: "a" }]);
+    expect(barStrokes(container)).toEqual([null]);
+  });
+});
+
+// Refactor audit 2026-10-30, DSP-18 (Marcel's decision 3): the bars and areas follow the
+// tiles' `edges="auto"` rule of 0.51.6 (#642) — at Standard contrast no mark gets the ink
+// edge, which in light fell on 5 of 8 hues and in dark on chart-5 and chart-7 alone.
+describe("SeriesChart's marks at Standard contrast", () => {
+  afterEach(() => moreContrast(false));
+
+  it("draws no ink edge on any bar, in either theme", () => {
+    for (const mode of ["light", "dark"] as const) {
+      paint(mode);
+      const { container, unmount } = bars(PALETTE_HEX[mode].map((_, i) => ({ key: `s${i}`, color: paletteFor(i) })));
+      expect(barStrokes(container).every((stroke) => stroke === null)).toBe(true);
+      unmount();
+    }
+  });
+
+  it("keeps an area's outline in its own hue", () => {
+    paint("light");
+    const { container } = bars([{ key: "a", color: paletteFor(5) }], "area");
+    const curve = container.querySelector(".recharts-area-curve")!;
+    expect(curve.getAttribute("stroke")).toBe("var(--color-a)");
+    expect(curve.getAttribute("stroke-width")).toBe("2");
+  });
+
+  it("follows the contrast setting live", async () => {
+    paint("light");
+    const { container } = bars([{ key: "a", color: paletteFor(5) }]);
+    expect(barStrokes(container)).toEqual([null]);
+    // A MutationObserver reports in a microtask: let it.
+    await act(async () => moreContrast(true));
+    expect(barStrokes(container)).toEqual(["var(--chart-ink)"]);
+    await act(async () => moreContrast(false));
     expect(barStrokes(container)).toEqual([null]);
   });
 });

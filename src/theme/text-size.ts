@@ -2,7 +2,7 @@ import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { logger } from "../lib/logger";
-import { readStored } from "../lib/safe-storage";
+import { readStoredJson } from "../lib/safe-storage";
 import { registerDeviceSetting } from "../lib/device-settings";
 
 /**
@@ -131,16 +131,14 @@ export interface PersistedTextSize {
   version?: number;
 }
 
+/** The frozen format holding a size this kit knows — the shape `readStoredJson` admits. */
+const holdsTextSize = (blob: unknown): blob is { state: { size: TextSize } } =>
+  isTextSize((blob as PersistedTextSize | null)?.state?.size);
+
 /** This device's own choice under `storageKey`, or `null` when it never chose (or the
  *  storage is blocked, malformed, or holds a value that is not a size). */
 export function readPersistedTextSize(storageKey: string): TextSize | null {
-  try {
-    const blob = JSON.parse(readStored(storageKey) ?? "null") as PersistedTextSize | null;
-    const size = blob?.state?.size;
-    return isTextSize(size) ? size : null;
-  } catch {
-    return null;
-  }
+  return readStoredJson(storageKey, holdsTextSize)?.state.size ?? null;
 }
 
 export interface PersistedAppearanceOptions {

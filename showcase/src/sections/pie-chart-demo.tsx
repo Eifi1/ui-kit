@@ -143,7 +143,7 @@ function RedactEmptyRtl() {
   return (
     <Example
       label="PieChart — redact, empty and right-to-left"
-      hint="redact tags the figures data-private; an empty chart says so"
+      hint="redact tags the figures data-private and names each slice by its share alone; an empty chart says so"
     >
       <Row className="mb-3">
         <ToggleGroup<"on" | "off">

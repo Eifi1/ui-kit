@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { DEFAULT_MONTH_PICKER_LABELS, MonthPicker, type MonthPickerProps } from "../month-picker";
 import { FIELD_INVALID } from "../field-base";
+import { upperFirst } from "../../lib/text-case";
 
 /**
  * The month picker that replaces keksdose's budget-header popover and kastlan's
@@ -139,15 +140,15 @@ describe("MonthPicker bounds", () => {
     expect(cell("March 2026")).not.toHaveAttribute("aria-disabled");
     fireEvent.click(cell("February 2026"));
     expect(onChange).not.toHaveBeenCalled();
-    // The whole previous year is out, so the arrow toward it is dead.
-    expect(screen.getByRole("button", { name: "Previous year" })).toBeDisabled();
+    // The whole previous year is out, so the arrow toward it refuses — focusably (INP-4).
+    expect(screen.getByRole("button", { name: "Previous year" })).toHaveAttribute("aria-disabled", "true");
   });
 
   it("refuses months after max and disables the arrow past it", () => {
     renderPicker({ max: "2026-10" });
     open();
     expect(cell("November 2026")).toHaveAttribute("aria-disabled", "true");
-    expect(screen.getByRole("button", { name: "Next year" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Next year" })).toHaveAttribute("aria-disabled", "true");
   });
 
   it("opens inside the bounds when the value is outside them", () => {
@@ -268,5 +269,26 @@ describe("MonthPicker as a controlled field", () => {
     open();
     expect(screen.getByRole("grid")).toHaveAccessibleName("2031");
     expect(cell("February 2031")).toHaveFocus();
+  });
+});
+
+/**
+ * MonthPicker's grid is the month jump's (refactor audit 2026-10-30, DUP-11): one
+ * internal MonthGrid, so its rows are the 44px touch target JumpCalendar's were, and the
+ * short names are upper-cased the one way (`upperFirst`), not by CSS `capitalize`.
+ */
+describe("MonthPicker's month grid", () => {
+  it("draws 44px rows, as the month jump's grid does, with the same upper-cased words", () => {
+    render(<MonthPicker aria-label="Mes" value="2026-09" onChange={() => {}} locale="es" />);
+    fireEvent.click(screen.getByRole("combobox"));
+    const cells = screen.getAllByRole("gridcell");
+    expect(cells).toHaveLength(12);
+    for (const month of cells) {
+      expect(month).toHaveClass("h-11");
+      expect(month).not.toHaveClass("capitalize");
+    }
+    expect(cells[8]).toHaveTextContent(
+      upperFirst(new Intl.DateTimeFormat("es", { month: "short" }).format(new Date(2000, 8, 1)), "es"),
+    );
   });
 });

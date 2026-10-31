@@ -1,11 +1,18 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useWizard } from "../use-wizard";
 import { StepperNav } from "../stepper-nav";
 import type { WizardStepConfig } from "../types";
 import { TourProvider, useTour, type TourStep } from "../../tour/tour";
+
+// The tour's overlay is its own chunk since 0.52 (refactor audit 2026-10-30, MOD-1): loaded
+// once up front, as an app's bundle has it by the time a tour starts, so the refusal it
+// draws is there when the step is.
+beforeAll(async () => {
+  await import("../../tour/tour-overlay");
+});
 
 /**
  * StepperNav's tour signals (docs/tours-harmonization.md §11.9, contract round 054 §7): Next
@@ -99,7 +106,7 @@ describe("StepperNav tour signals", () => {
     await settle();
     expect(screen.getByTestId("step")).toHaveTextContent("a");
     expect(tour()).toBe("step 0");
-    expect(screen.getByText(/That wasn’t saved yet/)).toBeInTheDocument();
+    expect(await screen.findByText(/That wasn’t saved yet/)).toBeInTheDocument();
     makeValid();
     fireEvent.click(document.querySelector('[data-tour="wizard-next"]')!);
     await settle();

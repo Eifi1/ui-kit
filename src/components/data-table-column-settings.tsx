@@ -1,7 +1,9 @@
-import { useRef } from "react";
+import { useId, useLayoutEffect, useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { X } from "lucide-react";
 import { cn } from "../lib/cn";
+import { claimEscape } from "../hooks/use-dismiss";
+import { firstTabStop } from "../lib/focus-left";
 import { Tooltip } from "./tooltip";
 import type { DataTableLabels } from "./data-table-labels";
 import { isTableOwnColumn } from "./data-table-row-actions";
@@ -26,7 +28,7 @@ export function ColumnSettingsPanel<T>({
   autoSizeAll,
 }: {
   /** Every column, hidden ones included; the actions column is left out here. */
-  columns: DataTableColumn<T>[];
+  columns: readonly DataTableColumn<T>[];
   hiddenCols: Set<string>;
   setHiddenCols: Dispatch<SetStateAction<Set<string>>>;
   /** The columns the table's width leaves out (`fitPriority`, 0.48): unticked, and
@@ -43,15 +45,45 @@ export function ColumnSettingsPanel<T>({
 }) {
   // The "Columns" rail button — where the drawer's X hands focus back (BUG-7a).
   const columnsRail = useRef<HTMLButtonElement | null>(null);
+  const drawerRef = useRef<HTMLDivElement | null>(null);
+  const drawerId = useId();
+  // The opening half (refactor audit 2026-10-30, DSP-13). Opened from the rail, the focus
+  // goes into the drawer: the rail it was on turns zero wide and leaves the tab order in
+  // the same render, and the focus sat in a control nobody could see. To the first column
+  // box — what the drawer is opened for — or, with none, its first control. Only when the
+  // rail opened it: a drawer that starts open (its state is the table's) takes nothing.
+  const focusOnOpen = useRef(false);
+  useLayoutEffect(() => {
+    if (!showSettings || !focusOnOpen.current) return;
+    focusOnOpen.current = false;
+    const drawer = drawerRef.current;
+    if (!drawer) return;
+    (
+      drawer.querySelector<HTMLElement>('input[type="checkbox"]') ?? firstTabStop(drawer, { includeSelf: false })
+    )?.focus();
+  }, [showSettings]);
+  const close = () => {
+    setShowSettings(false);
+    // Back to the rail that opened it: the drawer is about to go inert, and focus would
+    // fall to <body> with it (BUG-7a).
+    columnsRail.current?.focus();
+  };
   return (
     <>
       <Tooltip label={columnsCountLabel} portal>
         <button
           ref={columnsRail}
           type="button"
-          onClick={() => setShowSettings(true)}
+          onClick={() => {
+            focusOnOpen.current = true;
+            setShowSettings(true);
+          }}
           aria-label={columnsCountLabel}
-          aria-hidden={showSettings}
+          // A disclosure: it says whether the drawer is open, and never hides itself from
+          // a screen reader — `aria-hidden` on it while it held the focus left the reader
+          // with nothing to say (DSP-13). Zero wide and out of the tab order while open.
+          aria-expanded={showSettings}
+          aria-controls={drawerId}
           tabIndex={showSettings ? -1 : 0}
           className={cn(
             "group flex shrink-0 items-start justify-center overflow-hidden pt-3 transition-[width] duration-200 ease-out",
@@ -68,11 +100,26 @@ export function ColumnSettingsPanel<T>({
           </span>
         </button>
       </Tooltip>
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Escape
+          for whatever control in the drawer holds the focus; the group itself is no control. */}
       <div
+        ref={drawerRef}
+        id={drawerId}
+        // Named by its own heading's words, so a reader entering it hears "Columns (4/9),
+        // group" before the first box (DSP-13).
+        role="group"
+        aria-label={columnsCountLabel}
         // Closed, the drawer is only `w-0`: without `inert` its X, Auto-size and one
         // checkbox per column stayed tab stops and in the accessibility tree, and Tab
         // after the last cell walked into controls nobody could see (BUG-7a).
         inert={!showSettings || undefined}
+        // Escape closes it onto the rail, as its X does. Claimed, not handed to the Escape
+        // stack: inside a dialog the drawer is what the key closes, not the dialog.
+        onKeyDown={(e) => {
+          if (e.key !== "Escape" || !showSettings) return;
+          claimEscape(e);
+          close();
+        }}
         className={cn(
           "shrink-0 overflow-hidden transition-[width] duration-200 ease-out",
           showSettings ? "w-56" : "w-0",
@@ -84,12 +131,7 @@ export function ColumnSettingsPanel<T>({
             <Tooltip label={labels.close} portal>
               <button
                 type="button"
-                onClick={() => {
-                  setShowSettings(false);
-                  // Back to the rail that opened it: the X is about to go inert, and
-                  // focus would fall to <body> with it (BUG-7a).
-                  columnsRail.current?.focus();
-                }}
+                onClick={close}
                 aria-label={labels.close}
                 className="rounded p-0.5 text-placeholder hover:bg-hover hover:text-secondary"
               >

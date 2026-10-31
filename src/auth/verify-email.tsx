@@ -2,13 +2,15 @@ import { useEffect, useState } from "react";
 import type { ComponentPropsWithRef, ReactNode } from "react";
 import { CheckCircle2, MailWarning, TimerOff, XCircle } from "lucide-react";
 import { cn } from "../lib/cn";
+import { describeFailure } from "../lib/describe-failure";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { useAnnounce } from "../hooks/use-announce";
 import { AlertBanner } from "../components/alert-banner";
 import { LoadingState } from "../components/loading-state";
 import { Button } from "../components/button";
 import { EmptyState } from "../components/empty-state";
-import { OUTCOME_CLASS, STATUS_HEADING_CLASS, isThenable, useOncePerKey } from "./status-parts";
+import { isThenable } from "../lib/thenable";
+import { OUTCOME_CLASS, STATUS_HEADING_CLASS, useOncePerKey } from "./status-parts";
 import { authErrorCode, englishRateLimited, isRateLimited, retryAfterSeconds } from "./auth-errors";
 import type { AuthHeadingLevel } from "./status-parts";
 import { DEFAULT_VERIFY_EMAIL_LABELS } from "./verify-email-labels";
@@ -150,13 +152,16 @@ function ResendStatus({
   labels: VerifyEmailLabels;
   className?: string;
 }) {
-  // The app's words first, then the throttle's, then the kit's catch-all.
+  // The app's words first, then the throttle's, then the kit's catch-all — an app's ""
+  // is no words (refactor audit 2026-10-30, DUP-14: `??` printed an empty status).
   const failed =
     phase === "failed"
-      ? (describeError?.(error) ??
-        (isRateLimited(error)
-          ? (labels.rateLimited ?? englishRateLimited)(retryAfterSeconds(error))
-          : labels.resendError))
+      ? describeFailure(
+          describeError?.(error),
+          isRateLimited(error)
+            ? (labels.rateLimited ?? englishRateLimited)(retryAfterSeconds(error))
+            : labels.resendError,
+        )
       : "";
   return (
     <span role="status" className={cn(phase === "failed" ? "text-danger" : "text-success", className)}>

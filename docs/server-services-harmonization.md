@@ -1525,7 +1525,7 @@ own grant (kk's token tests stay whole).
 1. Pin server-kit 0.10.0 with the `fastapi` extra (`backend/pyproject.toml:57`, `:121`).
    The 0.36 adoption pins 0.9.0 with it; if that adoption has not shipped, kk jumps 0.8 →
    0.10, adds the extra and takes 0.9's feedback layer in the same step
-   ([adopt-0.36.md](adopt-0.36.md)).
+   ([adopt-0.36.md](archive/adopt/adopt-0.36.md)).
 2. The store, in `adapters/persistence/`: `verdicts` is `list_reviews`' query with
    `area_like_patterns` for `:149-165`, paired with the reviewer's `ReviewerName`; `put`
    is `save_reviews`' lookup and assignment (`:203-231`); `clear` is `:239-249`;

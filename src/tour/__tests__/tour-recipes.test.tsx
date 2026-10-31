@@ -1,11 +1,18 @@
 import { act, render } from "@testing-library/react";
 import { useEffect, type ReactNode } from "react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { toast } from "../../components/toast";
 import { TourProvider, useTour, type TourStep } from "../tour";
 import type { TourInfo } from "../tour-info";
 import { completeTour, resetTourProgress, type UseTourProgressOptions } from "../use-tour-progress";
+
+// The overlay is its own chunk since 0.52 (refactor audit 2026-10-30, MOD-1): loaded once
+// up front, as an app's bundle has it by the time a tour starts; React.lazy still resolves
+// it a render after the start, which the waits below cover.
+beforeAll(async () => {
+  await import("../tour-overlay");
+});
 
 /**
  * docs/tours-harmonization.md §9.8 (round 0.45): the recipes from the 0.44 adoptions, run

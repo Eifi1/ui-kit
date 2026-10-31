@@ -243,7 +243,9 @@ describe("SeriesChart — the empty state", () => {
 });
 
 describe("SeriesChart — zoom, through real recharts scales", () => {
-  const hint = /drag to zoom/i;
+  /** The drag surfaces. Found by attribute: since 0.52 (DSP-5) the rect has no name — the
+   *  gesture is said in the chart figure's description. */
+  const surfaces = () => [...document.querySelectorAll("rect[data-zoom-surface]")];
 
   function dragOver(target: Element, from: [number, number], to: [number, number]) {
     // The overlay's box starts at the chart origin, so client coordinates are chart ones.
@@ -262,17 +264,18 @@ describe("SeriesChart — zoom, through real recharts scales", () => {
   const xTicks = (container: HTMLElement) =>
     [...container.querySelectorAll(".recharts-xAxis-tick-labels tspan")].map((t) => Number(t.textContent));
 
-  it("lays a drag surface over the plot, named by the zoom hint", () => {
+  it("lays a drag surface over the plot, and says the gesture in the figure's description", () => {
     draw();
-    const rect = screen.getByLabelText(hint);
-    expect(rect.tagName.toLowerCase()).toBe("rect");
+    const [rect] = surfaces();
     expect(Number(rect.getAttribute("width"))).toBeGreaterThan(0);
+    expect(rect).not.toHaveAttribute("role");
+    expect(screen.getByRole("figure")).toHaveAccessibleDescription(/drag to zoom/i);
   });
 
   it("narrows the abscissa to a wide flat drag, and the reset button puts it back", () => {
     const { container } = draw();
     const before = xTicks(container);
-    const rect = screen.getByLabelText(hint);
+    const [rect] = surfaces();
     const left = Number(rect.getAttribute("x"));
     const width = Number(rect.getAttribute("width"));
     dragOver(rect, [left + width * 0.4, 100], [left + width * 0.6, 104]);
@@ -292,7 +295,7 @@ describe("SeriesChart — zoom, through real recharts scales", () => {
         <SeriesChart rows={ROWS} series={[{ key: "b", label: "B" }]} axes={oneAxis(undefined, "B")} />
       </SharedXZoom>,
     );
-    const [first] = screen.getAllByLabelText(hint);
+    const [first] = surfaces();
     const left = Number(first.getAttribute("x"));
     const width = Number(first.getAttribute("width"));
     dragOver(first, [left + width * 0.2, 100], [left + width * 0.8, 104]);
@@ -301,7 +304,7 @@ describe("SeriesChart — zoom, through real recharts scales", () => {
 
   it("has no drag layer and no reset in StaticSeriesChart", () => {
     render(<StaticSeriesChart rows={ROWS} series={[{ key: "a", label: "A" }]} />);
-    expect(screen.queryByLabelText(hint)).toBeNull();
+    expect(surfaces()).toEqual([]);
   });
 });
 
