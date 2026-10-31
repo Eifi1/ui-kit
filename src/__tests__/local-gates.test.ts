@@ -97,6 +97,49 @@ afterEach(() => {
   for (const dir of temps.splice(0)) rmSync(dir, { recursive: true, force: true });
 });
 
+/**
+ * TST-9 (refactor audit 2026-10-30): the lists that NAME the gates had drifted from the
+ * package.json scripts that ARE the gates — `format:check` ran first in check:static
+ * for a release before any list said so, and ci.yml's lacked check:commit-rules and the
+ * two inventories. Each list is read here and compared with the script, step for step.
+ */
+describe("the gate lists say what package.json runs (TST-9)", () => {
+  /** A group's steps, as the lists name them. */
+  const steps = (group: string) =>
+    scripts[group].split(" && ").map((step) => {
+      const npm = /^npm run (\S+)$/.exec(step);
+      if (npm) return npm[1];
+      const inventory = /^node scripts\/gen-(export|styling)-inventory\.mjs --check$/.exec(step);
+      if (inventory) return `${inventory[1]} inventory`;
+      return step;
+    });
+  /** The list on the line the group's name starts: `#   check:static  a · b`, `- \`check:static\`: a · b`. */
+  const listed = (text: string, group: string) => {
+    const line = new RegExp(`^(?:\\s*[#*-])?\\s*\`?${group}\`?:?\\s+(.+)$`, "m").exec(text)?.[1] ?? "";
+    return line
+      .replace(/\s*\(.*$/, "")
+      .split(" · ")
+      .map((s) => s.trim());
+  };
+  const docs = {
+    "scripts/check.mjs": readFileSync(join(ROOT, "scripts/check.mjs"), "utf8"),
+    ".github/workflows/ci.yml": readFileSync(join(ROOT, ".github/workflows/ci.yml"), "utf8"),
+    "CONTRIBUTING.md": readFileSync(join(ROOT, "CONTRIBUTING.md"), "utf8"),
+  };
+
+  it.each(GROUPS)("%s", (group) => {
+    for (const [file, text] of Object.entries(docs)) expect(listed(text, group), file).toEqual(steps(group));
+  });
+
+  it("`npm run dev` rebuilds what `npm run build` builds, after tsup", () => {
+    // It skipped flatten-en and the pay page: a dev build's en.js imported ~90 label modules.
+    const after = scripts.build.split(" && ").slice(1);
+    const onSuccess = /--onSuccess "([^"]+)"/.exec(scripts.dev.replace(/\\"/g, '"'))?.[1];
+    expect(onSuccess?.split(" && ")).toEqual(after);
+    expect(scripts.build.split(" && ")[0]).toMatch(/tsup/);
+  });
+});
+
 describe("the check's tree stamp (TST-2)", () => {
   it("is a file named by the tree, and only the newest 20 are kept", () => {
     const dir = temp("uikit-stamps-");
@@ -338,5 +381,46 @@ describe(".husky/pre-push (TST-2)", () => {
     other.bump();
     writeFileSync(join(other.dir, "a.txt"), "edited\n");
     expect(push(other.dir, other.line(commitRelease(other.dir, "a.txt"))).npm).toEqual(["npm run check HEAD_SHA="]);
+  });
+});
+
+/**
+ * TST-7 (refactor audit 2026-10-30): `check:commit-rules` passed on ANY failure as
+ * "offline", in CI too — an HTTP 404 from a wrong pin or a moved upstream path included —
+ * although it is the only guard of the vendored copies the pre-push hook runs. `fetch` is
+ * replaced before the script loads; nothing here reaches the network.
+ */
+describe("check:commit-rules (TST-7)", () => {
+  const SCRIPT = join(ROOT, "scripts/check-commit-rules.mjs");
+  const LOCAL = Object.fromEntries(Object.entries(process.env).filter(([k]) => k !== "CI" && k !== "GITHUB_ACTIONS"));
+  /** Runs the script with `fetch` answering `body` (a function body; `url` in scope). */
+  const rules = (body: string, env: Record<string, string | undefined> = LOCAL) => {
+    const stub = `globalThis.fetch = async (url) => { ${body} };`;
+    const r = spawnSync(process.execPath, ["--import", `data:text/javascript,${encodeURIComponent(stub)}`, SCRIPT], {
+      cwd: ROOT,
+      encoding: "utf8",
+      env,
+    });
+    return { status: r.status, out: r.stdout + r.stderr };
+  };
+
+  it("fails on an HTTP answer: a 404 is a wrong pin or a moved file, not a missing network", () => {
+    const answer = rules('return new Response("Not Found", { status: 404 });');
+    expect(answer.status, answer.out).toBe(1);
+    expect(answer.out).toMatch(/HTTP 404/);
+    expect(rules('return new Response("", { status: 503 });').status).toBe(1);
+  });
+
+  it("passes offline only on a network error, and says so", () => {
+    for (const thrown of ['new TypeError("fetch failed")', 'new DOMException("timed out", "TimeoutError")']) {
+      const offline = rules(`throw ${thrown};`);
+      expect(offline.status, offline.out).toBe(0);
+      expect(offline.out).toMatch(/not verified \(offline/);
+    }
+  });
+
+  it("never passes offline under CI, which always has a network", () => {
+    const ci = rules('throw new TypeError("fetch failed");', { ...LOCAL, CI: "true" });
+    expect(ci.status, ci.out).toBe(1);
   });
 });

@@ -16,7 +16,8 @@
  * So the build inlines them: this bundles `src/i18n/locales/en.ts` with everything it
  * reaches EXCEPT `kit-labels` — the provider module, which holds the React context and
  * must stay one instance — over the per-module `en.js` tsup emitted. The words are the
- * same source, copied at build time, never by hand; the `.d.ts` is tsup's, unchanged.
+ * same source, copied at build time, never by hand; the `.d.ts` is tsc's
+ * (scripts/build-dts.mjs, since 0.34), unchanged.
  *
  * Fails loudly when the catalogue would reach anything but words: a module that is not a
  * label module (`*-labels.ts`, the registry, `auth-errors`' two English helpers,

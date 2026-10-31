@@ -207,6 +207,21 @@ renders inside consumer markup**, where there is no wrapper you can make `relati
 Adding an optional prop is fine. Renaming or removing one is not, and neither is changing
 what an existing prop means.
 
+**A parameter added to a function type an app may call or forward is optional**, or the
+adopt doc lists the callers that must change (refactor audit 2026-10-30, API-1). A function
+with fewer parameters still fits the type, so a launcher an app *writes* keeps compiling;
+code that *calls* one, or forwards it, does not. 0.50.1, a patch whose note said "nothing
+has to change", gave `TourLauncher` a required fourth parameter, and keksdose's forwarder
+stopped compiling. The types this covers include `TourLauncher`, `TourStart`, a step's
+`beforeStep` / `when`, and `FeedbackStatusMutate`: every callback type the kit exports.
+
+`check:api` (`scripts/check-api-compat.mjs`, run inside `check:package`) compares the packed
+tarball's public types with the last release's, both ways, and prints each changed name. Each
+one must be named, in backticks, in the release's adopt doc under a **Must change:** lead (or
+a "(breaking)" heading, like a minor's removal table), with the app sites that change. A change
+that only shows another changed type through (`ButtonProps` when `ButtonVariant` lost a
+member) is printed "through" it and needs no line of its own.
+
 **A new component follows the kit's prop conventions**, so the next one does not decide
 them again (refactor audit 2026-10, API-5). The checklist:
 
@@ -313,6 +328,10 @@ helpers: highest return per line, no DOM needed.
 npm run format        # prettier --write .
 npm run format:check  # prettier --check . — first in check:static, so CI runs it too
 ```
+
+Both keep a cache in `node_modules/.cache/prettier/`, keyed on each file's content
+(`--cache-strategy content`: a worktree checkout resets every mtime), so a repeat run formats
+only what changed (refactor audit 2026-10-30, TST-9). CI starts without one.
 
 `.prettierrc.json` sets `printWidth` 120 and leaves the rest at Prettier's defaults, the
 same file as in keksdose, kastlan and Kurvenschmiede (Marcel, 2026-10-29). Markdown is
@@ -426,13 +445,14 @@ for one maintainer. Revisit it if a second maintainer appears.
 `npm run check` runs these in three groups, one after another (`scripts/check.mjs`), and
 every one blocks:
 
-- `check:static`: typecheck · lint · check:tokens · check:security · check:commit-rules · check:commits
-- `check:build`: build · check:graph · check:package · the export and styling inventories (`--check`) · build:showcase · check:tailwind
+- `check:static`: format:check · typecheck · lint · check:tokens · check:security · check:commit-rules · check:commits
+- `check:build`: build · check:graph · check:package · export inventory · styling inventory · build:showcase · check:tailwind
 - `check:test`: test:coverage
 
 **Serial, and it stops at the first failing group** (since 0.34, TST-1), naming the groups it
-did not run: static takes ~20 s, build ~1 min, test ~4 min, so a type error is reported in
-seconds. Side by side was the default until then, and on this 15 GB machine shared with three
+did not run: static takes ~1 min, build ~1–1½ min, test ~8–9 min (0.51.7: 49 s, 45 s,
+524 s), so a type error is reported in a minute. Side by side was the default until then,
+and on this 15 GB machine shared with three
 apps' sessions it was the one mode that failed: the 0.33.1 push ran 30 minutes, lost its
 build to the OOM killer and timed out 25 tests, while the serial runs that day passed in 6 to
 10 minutes. `CHECK_PARALLEL=1 npm run check` runs the three side by side on a machine with the
@@ -474,20 +494,20 @@ by hand:
 
 | Script | What it is actually defending |
 |---|---|
-| `typecheck` | Two programs: `tsconfig.json` (the package, the showcase, the tests) and `tsconfig.node.json` (the vite, vitest and tsup configs, which Node loads natively and so import with a `.ts` extension — a flag the package tsconfig must not carry, since the declaration build's `tsconfig.build.json` extends it). |
+| `typecheck` | Two programs: `tsconfig.json` (the package, the showcase, the tests, and the pay page's `pay-page/` — its esbuild build strips types without checking them, TST-4) and `tsconfig.node.json` (the vite, vitest and tsup configs, which Node loads natively and so import with a `.ts` extension — a flag the package tsconfig must not carry, since the declaration build's `tsconfig.build.json` extends it). |
 | `lint` | Zero warnings (see above): every rule is an error. |
 | `check:tokens` | Raw colours outside the token set (budget in `scripts/check-token-discipline.mjs`). |
 | `test:coverage` | The suite, once, with the coverage floors in `vitest.config.ts`: a change that deletes a test's subject along with the test cannot come out even. Each file runs in its own VM context in a reused worker (`pool: "vmThreads"`), ~2.5× faster than a fresh jsdom per file; stub full-page navigation through `lib/document-navigation.ts`, since `window.location` cannot be redefined there. |
 | `build` | tsup emits one `.js` per module; `tsc` then emits one `.d.ts` per module (`scripts/build-dts.mjs`, `tsconfig.build.json`, incremental in `node_modules/.cache/dts/`, type-checking as it goes). Until 0.34 tsup's own declaration build did that through rollup-plugin-dts: hashed chunks, 72 s and a 5.5 GB peak, the process the OOM killer took. Now ~27 s cold, ~9 s incremental, 0.8 GB (TST-3). `npm run dev` is the same build in watch mode. |
 | `check:graph` | That the build stayed unbundled. A bundling build fuses the modules into one chunk and `sideEffects` can no longer let a consumer drop what it does not use — the regression that dragged ~433 KB of recharts into a consumer's entry chunk. It asserts the graph, not a string: every source module has its own `dist/` module, and no runtime import cycle. And what that regression would cost (MOD-6): Rollup bundles `{ Button }`, `{ Spinner }`, `{ cn }` and the apps' shell set from `dist/`, prints the minified size and fails above a ceiling (the `BUDGETS` in `scripts/check-module-graph.mjs`). When a change makes one smaller, lower its ceiling in the same commit. Which modules may import recharts at all is `packaging-contract.test.ts`'s rule. |
-| `check:package` | The **publish artifact**, not the working tree. It packs the real tarball, installs it with only the declared required peers, and imports every entry point *by package name* — the only way the `exports` map is ever exercised. Both defects that reached consumers in 0.4.x were invisible to every other check, because every other check ran against `src/` or against `dist/` by relative path. It also checks that every module ships its own `.d.ts`. |
+| `check:package` | The **publish artifact**, not the working tree. It packs the real tarball, installs it with only the declared required peers, and imports every entry point *by package name* — the only way the `exports` map is ever exercised. Both defects that reached consumers in 0.4.x were invisible to every other check, because every other check ran against `src/` or against `dist/` by relative path. It also checks that every module ships its own `.d.ts`, that the entries meant to import no package reach none (every import form, relative imports followed: `scripts/lib/imports.mjs`), and runs `check:api` on the installed tarball (rule 4). |
 | export inventory | `node scripts/gen-export-inventory.mjs --check`: the README's export inventory is what `dist/index.d.ts` exports, read through TypeScript's checker. Stale, it names the exports the README misses; rewrite it with the same script without `--check`. |
 | styling inventory | `node scripts/gen-styling-inventory.mjs --check`: the README's role-utility list is what `tokens.css`'s `@theme inline` block defines. Stale, it names what is missing; rewrite it without `--check`. |
 | `build:showcase` | The only place the kit is *rendered* outside jsdom. |
-| `check:tailwind` | That the documented Tailwind `@source` step works. A wrong `@source` is **silent**: the app builds, runs, and renders unstyled. |
+| `check:tailwind` | That the documented Tailwind `@source` step works. A wrong `@source` is **silent**: the app builds, runs, and renders unstyled. README's and ADOPTING's `@source` lines are compiled as an app runs them, over this build's `dist/`: they must reach the kit's classes and scan no `.d.ts` or `.map`, whose comments become utilities (MOD-3). |
 | `check:security` | `npm audit --audit-level=high`. |
 | `check:commits` | Conventional Commits over the range: locally every commit not yet on `origin/main`, in CI the pushed or PR range. The release tool derives the version and the changelog from these messages. |
-| `check:commit-rules` | The commit rules are the apps' SHARED ones: every file in `scripts/shared-commit-rules.json`'s `files[]` (`scripts/check-commit-msg.cjs`, and the pre-push hook's `scripts/check-pushed-commits.cjs`) is a byte-for-byte copy of `Eifi1/shared-workflows`' commit check, pinned to one commit. It fails when a copy drifts from the pin; offline, or while the pin waits for its tag ("(pending tag)", no commit yet), it says so and passes (CI always verifies). `npm run sync:commit-rules -- --from ../shared-workflows` copies a local checkout and leaves the pin alone. A newer shared tag is reported; take it with `npm run sync:commit-rules -- <tag>`. A copy, not the shared action, because the husky hook and `npm run check` need the rules locally. |
+| `check:commit-rules` | The commit rules are the apps' SHARED ones: every file in `scripts/shared-commit-rules.json`'s `files[]` (`scripts/check-commit-msg.cjs`, and the pre-push hook's `scripts/check-pushed-commits.cjs`) is a byte-for-byte copy of `Eifi1/shared-workflows`' commit check, pinned to one commit. It fails when a copy drifts from the pin, and on any HTTP answer but 200 (a 404 is a wrong pin or a moved file). Offline (a network error, no answer at all), or while the pin waits for its tag ("(pending tag)", no commit yet), it says so and passes, except under CI, which always verifies (TST-7). `npm run sync:commit-rules -- --from ../shared-workflows` copies a local checkout and leaves the pin alone. A newer shared tag is reported; take it with `npm run sync:commit-rules -- <tag>`. A copy, not the shared action, because the husky hook and `npm run check` need the rules locally. |
 
 A passing group prints one line with its time; a failing one prints its whole output.
 Inside a group, a passing check prints a line, not an inventory: `build` drops tsup's per-file listing

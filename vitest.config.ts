@@ -43,6 +43,10 @@ export default defineConfig({
     // against the bug.
     env: { TZ: "Europe/Berlin" },
     clearMocks: true,
+    // A stray `it.only` fails here too, not only in CI. vitest's default is `!isCI`: the
+    // one runner setting where CI blocked and `npm run check` passed, skipping the rest
+    // of the file in silence (refactor audit 2026-10-30, TST-6).
+    allowOnly: false,
     // Each test file runs in its own VM context inside a reused worker thread
     // (`vmThreads`), not in a fresh worker with a fresh jsdom. Measured 2026-09-27 on
     // the whole suite: 181s with the default pool, 69s with this one — two fifths of
@@ -91,8 +95,13 @@ export default defineConfig({
       // Only the shipped modules count. Tests measuring themselves is circular, the
       // showcase is a demo harness rather than product code, and `src/test` is the
       // harness itself.
-      include: ["src/**/*.{ts,tsx}"],
-      exclude: ["src/test/**", "**/__tests__/**", "showcase/**"],
+      //
+      // The pay page ships too (`dist/pay/`, the `eifi1-pay-page` bin; all three apps
+      // deploy it), so `pay.ts` and `cli.ts` count (refactor audit 2026-10-30, TST-4).
+      // Its two entries do not: each is one call that runs on import, so no test can
+      // load it; tsconfig.json type-checks them and check:package runs the bin.
+      include: ["src/**/*.{ts,tsx}", "pay-page/**/*.ts"],
+      exclude: ["src/test/**", "**/__tests__/**", "showcase/**", "pay-page/main.ts", "pay-page/bin.ts"],
       /**
        * A RATCHET, not a target. Measured on 0.33.1's whole-suite run (its
        * coverage/lcov.info and HTML summary, 320 files): lines 96.65%, statements

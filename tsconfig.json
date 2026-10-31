@@ -47,5 +47,11 @@
   // loads them natively, so they import with a `.ts` extension, which needs
   // `allowImportingTsExtensions` — a flag this file must not carry, because the declaration
   // build reads it (`tsconfig.build.json` extends this file). They are typechecked by tsconfig.node.json instead.
-  "include": ["src", "showcase/src"]
+  //
+  // The pay page IS here (refactor audit 2026-10-30, TST-4): its build is esbuild's, which
+  // strips types without checking them, and nothing imports `main.ts` (the browser's
+  // `startPayPage({...})` call) or `bin.ts` (`eifi1-pay-page`), so a field added to
+  // `PayPageEnvironment` would have compiled there and failed only on the deployed page.
+  // The declaration build sets its own `include`, so nothing here is emitted.
+  "include": ["src", "showcase/src", "pay-page"]
 }
