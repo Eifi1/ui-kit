@@ -4,6 +4,7 @@ import { toLocalIso } from "./dates";
 import { clockTime } from "./date-format";
 import { EMPTY_FORMATTED_VALUE, formatDate, toDate, type DateInput, type FormatDateStyle } from "./format";
 import { dateFormatter } from "./intl-cache";
+import { isBareIsoDay } from "./iso-day";
 
 /**
  * How a kit component prints a day — ONE ladder (refactor audit 2026-10-30, DUP-2):
@@ -23,9 +24,6 @@ import { dateFormatter } from "./intl-cache";
  *
  * @internal Not part of the barrel: the components' props are the public way in.
  */
-
-/** A bare ISO calendar day, `"YYYY-MM-DD"`: the day it names in every zone. */
-const BARE_ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
 
 /** What a {@link DayFormatter} call may ask for. */
 export interface DayTextOptions {
@@ -85,7 +83,7 @@ export function useDayFormatter<V extends DateInput = DateInput>(
       if (value === null || value === undefined || value === "") return options.empty ?? EMPTY_FORMATTED_VALUE;
       const date = toDate(value);
       if (!date) return String(value);
-      const bareDay = typeof value === "string" && BARE_ISO_DAY.test(value);
+      const bareDay = isBareIsoDay(value);
       if (fromProvider && options.preference !== false) {
         const iso = bareDay ? value : isoDayIn(date, timeZone);
         const day = fromProvider(iso, { unit: "day", source: "dateMark", locale, weekday: options.weekday ?? false });

@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useKitLocale, useKitTimeZone } from "../i18n/kit-labels";
 import { parseIsoDate } from "./dates";
 import { dateFormatter } from "./intl-cache";
+import { isBareIsoDay } from "./iso-day";
 import { formatWithMinus, type MinusStyle } from "./minus";
 import { roundHalfAway } from "./round";
 
@@ -279,9 +280,6 @@ export interface FormatDateOptions extends BaseOptions {
   timeZone?: string;
 }
 
-/** A bare ISO calendar day, `"YYYY-MM-DD"`. */
-const BARE_ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
-
 /** What {@link formatDate} and {@link formatRelativeTime} accept. */
 export type DateInput = string | number | Date | null | undefined;
 
@@ -293,7 +291,7 @@ export type DateInput = string | number | Date | null | undefined;
  */
 export function toDate(value: DateInput): Date | null {
   if (value === null || value === undefined || value === "") return null;
-  if (typeof value === "string" && BARE_ISO_DAY.test(value)) return parseIsoDate(value);
+  if (isBareIsoDay(value)) return parseIsoDate(value);
   const d = value instanceof Date ? value : new Date(value);
   return Number.isNaN(d.getTime()) ? null : d;
 }
@@ -317,7 +315,7 @@ export function formatDate(
   // A bare "YYYY-MM-DD" is a calendar day, which has no zone: it is the day it names
   // wherever it is read, so a `timeZone` (in `options` or the style) never moves it — the
   // device's local midnight shown in a zone west of it was the day before (round 0.45, N9).
-  if (typeof value === "string" && BARE_ISO_DAY.test(value)) {
+  if (isBareIsoDay(value)) {
     const day = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
     return dateFormatter(options.locale, { ...base, timeZone: "UTC" }).format(day);
   }
@@ -415,7 +413,7 @@ export function formatRelativeTime(value: DateInput, options: FormatRelativeTime
     // tooltip) that said otherwise. Counted in `timeZone`, the zone that date is printed
     // in; a bare "YYYY-MM-DD" is the day it names wherever it is read, as in formatDate.
     // Still the same day (22 hours and more since just after midnight): in hours.
-    const bareDay = typeof value === "string" && BARE_ISO_DAY.test(value);
+    const bareDay = isBareIsoDay(value);
     const days = dayNumber(d, bareDay ? undefined : options.timeZone) - dayNumber(now, options.timeZone);
     return days === 0 ? rtf.format(Math.round(diff / HOUR), "hour") : rtf.format(days, "day");
   }

@@ -1,6 +1,8 @@
 import { formatLocaleOf } from "../i18n/languages";
 import type { KitDateFormatter } from "../i18n/kit-labels";
+import { pad, toLocalIso } from "./dates";
 import { dateFormatter } from "./intl-cache";
+import { isBareIsoDay } from "./iso-day";
 
 /**
  * The date-format preference (0.46, lifted from keksdose's `date-format-store.ts`,
@@ -57,6 +59,15 @@ export interface DateFormatOptions {
   /** Name the day of the week too, in the interface language ("Mo., 01.08.2026"). A date
    *  in a COLUMN carries it; a date in a SENTENCE does not (keksdose dev#546). */
   weekday?: boolean;
+  /**
+   * 0.52: the IANA zone a TIMESTAMP's day and clock are read in ("Europe/Zurich") — pass
+   * the `<UiKitProvider timeZone>` (`useKitTimeZone()`), so an app's own column says what
+   * the kit's components say for the same instant. Left out: the device's. A bare
+   * "YYYY-MM-DD" ignores it: a calendar day is the day it names in every zone. A zone
+   * `Intl` refuses reads as the device's. The renderers read it; {@link resolveDateFormat}
+   * does not.
+   */
+  timeZone?: string;
 }
 
 /**
@@ -80,9 +91,6 @@ export function resolveDateFormat(
   }
   return { locale: preference, options: { year: "numeric", month: "2-digit", day: "2-digit" }, ...weekday };
 }
-
-/** A bare calendar day: no time, no zone. */
-const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
  * `dateText`, already rendered under the preference, with the day's NAME around it in
@@ -109,8 +117,9 @@ function withWeekday(date: Date, dateText: string, locale: string | undefined, o
  * A date under the preference: `""` for no value, the input itself when it does not
  * parse. A bare "YYYY-MM-DD" is the calendar day it names in every zone (formatted in
  * UTC, undoing `new Date`'s UTC-midnight parse — west of Greenwich it read a day early);
- * a timestamp is an instant and stays in the reader's zone. The weekday, when asked for,
- * is rendered in the same zone, so a Sunday is never captioned Saturday.
+ * a timestamp is an instant, read in `options.timeZone`, else the reader's zone. The
+ * weekday, when asked for, is rendered in the same zone, so a Sunday is never captioned
+ * Saturday.
  */
 export function formatDateWithPreference(
   value: string | Date | null | undefined,
@@ -120,20 +129,36 @@ export function formatDateWithPreference(
 ): string {
   if (!value) return "";
   const resolved = resolveDateFormat(preference, language, options);
-  const dateOnly = typeof value === "string" && DATE_ONLY.test(value);
+  const dateOnly = isBareIsoDay(value);
   const date = typeof value === "string" ? new Date(value) : value;
   if (Number.isNaN(date.getTime())) return String(value);
-  const intl: Intl.DateTimeFormatOptions = dateOnly ? { ...resolved.options, timeZone: "UTC" } : resolved.options;
-  try {
+  const render = (timeZone: string | undefined) => {
+    const intl: Intl.DateTimeFormatOptions = timeZone ? { ...resolved.options, timeZone } : resolved.options;
     // Through the shared cache (refactor audit 2026-10-30, DUP-2): a `toLocaleDateString`
     // builds a formatter per call, which is why keksdose kept its own copy of this
     // renderer — 392 ms per click on a 270-row register (dev#632).
     const text = dateFormatter(resolved.locale, intl).format(date);
     return resolved.weekday ? withWeekday(date, text, resolved.weekday.locale, intl) : text;
-  } catch {
-    // A language tag `Intl` refuses: the ISO day rather than nothing (keksdose's fallback).
-    return date.toISOString().slice(0, 10);
+  };
+  if (dateOnly) return firstAccepted([() => render("UTC")], () => value);
+  // A zone `Intl` refuses: the reader's own day, as `clockTime` reads the reader's own
+  // clock — never the UTC day `toISOString` gave, a day off around midnight (0.52 code
+  // review, this file).
+  return firstAccepted([() => render(options.timeZone), () => render(undefined)], () => toLocalIso(date));
+}
+
+/** The first of `renders` that `Intl` accepts — a language tag or a zone it refuses
+ *  throws — else `last()`: the ISO day or the clock rather than nothing (keksdose's
+ *  fallback). */
+function firstAccepted(renders: readonly (() => string)[], last: () => string): string {
+  for (const render of renders) {
+    try {
+      return render();
+    } catch {
+      // Refused: the next.
+    }
   }
+  return last();
 }
 
 /**
@@ -146,14 +171,14 @@ export function formatDateWithPreference(
  * @internal Shared with the kit's own day formatter; not part of the barrel.
  */
 export function clockTime(date: Date, language: string | undefined, timeZone?: string): string {
-  try {
-    const locale = language ? formatLocaleOf(language) : undefined;
-    return dateFormatter(locale, { hour: "2-digit", minute: "2-digit", ...(timeZone ? { timeZone } : null) }).format(
-      date,
-    );
-  } catch {
-    return date.toISOString().slice(11, 16);
-  }
+  const locale = language ? formatLocaleOf(language) : undefined;
+  const clock = (zone: string | undefined) =>
+    dateFormatter(locale, { hour: "2-digit", minute: "2-digit", ...(zone ? { timeZone: zone } : null) }).format(date);
+  // A zone `Intl` refuses: the reader's own clock, as `isoDayIn` reads the reader's own
+  // day — the UTC clock `toISOString` gave printed 13:05 for 14:05 in Zurich, an hour or
+  // more off with no error (0.52 code review, this file).
+  const reader = () => `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  return firstAccepted([() => clock(timeZone), () => clock(undefined)], reader);
 }
 
 /**
@@ -164,6 +189,11 @@ export function clockTime(date: Date, language: string | undefined, timeZone?: s
  * were where an explicit ISO choice did nothing until it wrote this. `""` for no value,
  * the input itself when it does not parse; a bare "YYYY-MM-DD" names no moment, so it
  * prints as the date alone.
+ *
+ * Day and clock in `options.timeZone` — pass the provider's (`useKitTimeZone()`): without
+ * it they were the device's, and an app on Zurich time read from New York printed 09:05
+ * in its own column where the kit's inbox printed 14:05 for the same instant (0.52 code
+ * review, this file).
  */
 export function formatDateTimeWithPreference(
   value: string | Date | null | undefined,
@@ -172,12 +202,10 @@ export function formatDateTimeWithPreference(
   options: DateFormatOptions = {},
 ): string {
   if (!value) return "";
-  if (typeof value === "string" && DATE_ONLY.test(value)) {
-    return formatDateWithPreference(value, preference, language, options);
-  }
+  if (isBareIsoDay(value)) return formatDateWithPreference(value, preference, language, options);
   const date = typeof value === "string" ? new Date(value) : value;
   if (Number.isNaN(date.getTime())) return String(value);
-  return `${formatDateWithPreference(date, preference, language, options)}, ${clockTime(date, language)}`;
+  return `${formatDateWithPreference(date, preference, language, options)}, ${clockTime(date, language, options.timeZone)}`;
 }
 
 /** The sample an option is labelled with — 1 August 2026 in its shape, the shape being
