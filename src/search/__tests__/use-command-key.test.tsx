@@ -51,3 +51,37 @@ describe("useCommandKey", () => {
     expect(onOpen).not.toHaveBeenCalled();
   });
 });
+
+/** 0.52 code review, use-hotkey.ts and global-search.tsx: what moving ⌘K onto `useHotkey` lost. */
+describe("useCommandKey — a held key, a Russian layout, and the shortcut turned off", () => {
+  it("cancels a held Ctrl+K's repeats, as the hand-written listener did, and opens once", () => {
+    onPlatform("Win32");
+    const onOpen = vi.fn();
+    renderHook(() => useCommandKey(onOpen));
+    expect(press({ key: "k", ctrlKey: true })).toBe(false);
+    // Left to the browser, a repeat is ITS Ctrl+K: the focus goes to the omnibox.
+    expect(press({ key: "k", ctrlKey: true, repeat: true })).toBe(false);
+    expect(onOpen).toHaveBeenCalledTimes(1);
+  });
+
+  it("opens on Ctrl+K on a Russian layout, where the key types л", () => {
+    onPlatform("Win32");
+    const onOpen = vi.fn();
+    renderHook(() => useCommandKey(onOpen));
+    press({ key: "л", code: "KeyK", ctrlKey: true });
+    expect(onOpen).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves Mod+K to the browser and to other handlers while turned off", () => {
+    onPlatform("Win32");
+    const onOpen = vi.fn();
+    const { rerender } = renderHook(({ on }) => useCommandKey(onOpen, { enabled: on }), {
+      initialProps: { on: false },
+    });
+    expect(press({ key: "k", ctrlKey: true })).toBe(true);
+    expect(onOpen).not.toHaveBeenCalled();
+    rerender({ on: true });
+    expect(press({ key: "k", ctrlKey: true })).toBe(false);
+    expect(onOpen).toHaveBeenCalledTimes(1);
+  });
+});

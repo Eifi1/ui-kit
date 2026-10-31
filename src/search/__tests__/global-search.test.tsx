@@ -90,7 +90,7 @@ describe("GlobalSearch: opening", () => {
   it("opens from its trigger, which names itself and its shortcut", async () => {
     renderInRouter();
     const trigger = screen.getByRole("button", { name: "Search" });
-    expect(trigger).toHaveAttribute("aria-keyshortcuts", "Meta+K Control+K");
+    expect(trigger).toHaveAttribute("aria-keyshortcuts", "Control+K");
     fireEvent.click(trigger);
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
   });

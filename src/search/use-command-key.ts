@@ -1,4 +1,4 @@
-import { useHotkey } from "../hooks/use-hotkey";
+import { useHotkey, type UseHotkeyOptions } from "../hooks/use-hotkey";
 
 /**
  * Registers a global ⌘K / Ctrl-K shortcut that calls `onOpen`.
@@ -13,7 +13,11 @@ import { useHotkey } from "../hooks/use-hotkey";
  * on a Mac as well — a text field's kill-line there — and Ctrl+Shift+K, Cmd+Alt+K and
  * every repeat of a held key. It still fires from inside a text field: the palette is
  * where a search starts, whatever has focus.
+ *
+ * `enabled: false` lets Mod+K go (0.52 code review, global-search.tsx): `GlobalSearch
+ * shortcut={false}` passed a no-op, and the listener still cancelled every Mod+K — the
+ * browser's own Ctrl+K and any other handler on the page that checks `defaultPrevented`.
  */
-export function useCommandKey(onOpen: () => void): void {
-  useHotkey("Mod+K", () => onOpen(), { allowInInputs: true });
+export function useCommandKey(onOpen: () => void, options: Pick<UseHotkeyOptions, "enabled"> = {}): void {
+  useHotkey("Mod+K", () => onOpen(), { allowInInputs: true, enabled: options.enabled });
 }
