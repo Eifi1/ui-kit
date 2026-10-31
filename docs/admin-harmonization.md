@@ -2,7 +2,6 @@
 
 **Settled 2026-10-17** (Marcel, in the ui-kit session, after the three app reviews; §6, §7).
 Planned as round 0.43; built in the same release as billing §16: **ui-kit 0.42, server-kit 0.14**.
-§6 wins over §2–§4 where they differ.
 **§9 (round 0.45) settled 2026-10-19** (Marcel: "As reviewed", after the three app reviews in
 audits/round-046/reviews.md; §9.7), for ui-kit 0.45 / server-kit 0.15.
 
@@ -17,6 +16,24 @@ grant).
 **kk** = keksdose, **ka** = kastlan, **KS** = Kurvenschmiede. The inventories, with
 file:line, are in audits/round-043/inventory-{keksdose,kastlan,kurvenschmiede}.md; the
 reviews of settings §12 are in audits/round-043/way-in-reviews.md.
+
+## Status
+
+The body says what the build does. The three reviews (§6) and Marcel's settle (§7) are
+folded into the sections they amend (ui-kit 0.52, refactor audit 2026-10-30 DOC-3), and
+the table names them; §6 is now an index whose items keep the numbers the code cites.
+
+| § | Section | Shipped in | Amended by |
+|---|---|---|---|
+| 1 | Where each one stands | — (a snapshot, 2026-10-17) | |
+| 2 | Decisions | ui-kit 0.42, server-kit 0.14 | §6.1–§6.5, §6.7–§6.13; §7 (the member's chip) |
+| 3 | What the kits add | ui-kit 0.42, server-kit 0.14 | §6.4, §6.6, §6.8, §6.9, §6.11; ui-kit 0.45 (`AdminWaitingBadge`, §9.3.4) |
+| 4 | Per app | — | §6.5, §6.10, §6.12, §6.13 |
+| 5 | Questions for the reviews | — | answered in §6 and §7 |
+| 6 | The reviews and what they change | — | an index: each item points to its § |
+| 7 | Settled (Marcel, 2026-10-17) | — | folded into §2.1 |
+| 8 | What shipped (ui-kit 0.42) | ui-kit 0.42 | |
+| 9 | The follow-ups (round 0.45) | ui-kit 0.45, server-kit 0.15 | §9.7 (the reviews, folded into §9.1–§9.5); ui-kit 0.46 (`MailTestCard`'s optional `mailBackend`, the feedback tiles' words, a new write route's touch points) |
 
 ## 1. Where each one stands (2026-10-17)
 
@@ -50,7 +67,10 @@ the admin area. Every inventory asks for a start page that counts what is waitin
    links to the role's main tool: an admin's to `/admin`, a reviewer's to
    `/translations`. A role without a tool has a plain chip. The menu closes on the way.
    The look is keksdose's (`solid`, `sm`, `square`, `caps`, the role's icon and tone).
-   It replaces kastlan's raw role code in the header.
+   **Every account shows its role there, "always a badge"** (Marcel, §7): plain unless
+   the role links to a tool, in the role's tone from the app's `RoleVocabulary`. KS shows
+   "Member"; kastlan shows the highest of the active company's roles, in place of its
+   raw role code.
 3. **A second tool keeps its own row.** An admin who also reviews translations reaches
    `/translations` through its "Translations" row (KS's §12 review, ka F4). One chip links one
    place.
@@ -60,8 +80,12 @@ the admin area. Every inventory asks for a start page that counts what is waitin
 5. **kastlan also has a sidebar entry, in the sidebar's footer**, apart from the work
    pages. Its admins are customers' company admins who manage people routinely, and
    Marcel wants it "visible for other admins". keksdose and KS have one admin, the
-   operator, and no sidebar entry. kastlan's `nav.ts` "Admin" group keeps Data Import
-   (review question 4).
+   operator, and no sidebar entry. The entry is AppShell's `sidebarFooterItems`, whose
+   link kind takes a `badge` for the waiting count; the app filters it by role. The
+   footer is desktop-only, so the account-menu row ships in the same release (ka F1).
+   kastlan's `nav.ts` "Admin" group and `/overview/admin` go: Administration and Data
+   import both move to the sidebar footer, and Data import is in the Tools list too
+   (ka Q4).
 6. **Platform tools stay their own**: kastlan's superuser button to `/platform/*` stays
    a top-bar button. It is a different scope, and the company-role chip keeps its
    `/admin` link.
@@ -74,7 +98,12 @@ the admin area. Every inventory asks for a start page that counts what is waitin
 8. **One 403 page, the kit's `AdminForbidden`**, behind a client-side role gate in every
    app; the server's gate stays the rule. It reads "Only for administrators" / "This is
    where administrators run {app}. Your account cannot open this page." with a button
-   back to the app's start. A reviewer gets a link to `/translations` as well.
+   back to the app's start. A reviewer gets a link to `/translations` as well. The gate
+   is a rendering choice on the same admin check the menu uses, inside the lazy route,
+   with no redirect, so a bookmark keeps its address (ka F4, KS 4). kastlan shows
+   `AdminForbidden` on its admin tools (`/admin`, `/import`, `/feedback`); its work pages
+   keep the generic 403. The wording never implies that the person can administer
+   nothing: a kastlan superuser who isn't ADMIN in the acting company gets it.
 9. **One card idiom:** each card is a `SettingsSection`. A card alone in its section
    hides its title (`titleVisible={false}`, the sidebar names it); a section with several
    shows each title (kastlan's untitled Users card gets one).
@@ -88,15 +117,16 @@ the admin area. Every inventory asks for a start page that counts what is waitin
     |---|---|---|---|---|
     | 1 | **Overview** | `overview` | every app (new) | the default section (§2.4) |
     | 2 | **Users** | `users` | every app | the kit's roster (user-admin §3); KS renames "Accounts" to "Users" |
-    | 3 | **Invitations** | `invitations` | every app | the kit's `InvitationsPanel`; keksdose's `access` and kastlan's card inside users move here (old paths kept as aliases) |
-    | 4… | the app's own | — | kk metrics, messaging; ka company; KS teams | in the app's order |
+    | 3 | **Invitations** | `invitations` | every app | the kit's `InvitationsPanel`; keksdose's `access` and kastlan's card inside users move here (old paths kept as aliases: kastlan's `/admin/users?focus=invitations`); the invitations endpoint answers `mail_backend` itself (ka Q1, F8) |
+    | 4… | the app's own | — | kk metrics, messaging; ka company; KS teams | in the app's order, each after Invitations or `after` the section it names: KS's Teams sits between Invitations and Activity (KS 7) |
     | … | **Billing** | `billing` | kastlan (the payer); kk and KS when an operator view comes | visible while billing is on |
     | … | the app's operations | — | kk health, scheduler, system | |
     | last | **Activity** | `activity` | every app | the kit's `AdminActionLog` (settings §5) |
 
 11. **Shared section names in the kit**, in seven languages: Overview, Users, Invitations,
     Billing, Activity, with their icons (`LayoutDashboard`, `Users`, `Mail`, `Receipt`,
-    `History`) and help lines. An app's own sections keep their words.
+    `History`; KS swaps its `Ticket` and `ScrollText` for them, KS 7) and help lines. An
+    app's own sections keep their words.
 12. **Help lines say what is there now**: keksdose's `messaging` and `access` lines are
     stale (kk 5.2.4).
 
@@ -104,21 +134,35 @@ the admin area. Every inventory asks for a start page that counts what is waitin
 
 13. **The overview is the admin's start page**: a grid of tiles, each a count and a link
     to where the work is. The shared tiles, each shown only when the app has it:
-    - **Feedback waiting**: open reports not yet triaged → `/feedback`.
-    - **Deletion requests** → `/admin/users?state=deletion_requested`.
+    - **To triage** (kk K-2, ka F3, KS 8): `OPEN` reports, crash reports included, demo
+      accounts never counted, within the company in kastlan → `/feedback` filtered to
+      OPEN. The developer's lanes (READY, REWORK, IN_PROGRESS) are not the admin's.
+    - **Deletion requests** → `/admin/users?state=deletion_requested`, only where the
+      viewer can act on them (ka F2, kk K-3): KS has it; keksdose runs its own, and
+      kastlan's `/admin` answers `null` (its platform console counts them, §9.3).
     - **Pending invitations** → `/admin/invitations`.
     - **Users**: the total, and new in the last 7 days → `/admin/users`.
 
-    An app adds its own, such as keksdose's "Support waiting" → `/admin/messaging`.
-    keksdose's metrics stays its own section after the overview (review question 2).
+    An app adds its own: keksdose's "Support waiting" → `/admin/messaging` and "Awaiting
+    your verdict" (IN_EVALUATION + NEEDS_LIVE_TEST), KS's "Released for work" (the loop's
+    queue, so the overview and the CLI agree). keksdose's metrics stays its own section
+    after the overview, which links to it with at most two tiles; keksdose's `overview →
+    metrics` alias goes, because `overview` is now a section (kk K-1, Q2).
 14. **One server answer for it**: `GET /admin/attention` → `{feedback_waiting,
     deletion_requests, invitations_pending, users_total, users_new_7d, extra: {key:
-    count}}`, each count `null` where the app has no such thing. server-kit ships the
-    schema and the shared counts it can make (feedback through its feedback store,
-    invitations through the invitations service); the app adds the rest.
-15. **The account menu's "Administration" row carries the waiting count** as a badge
-    (feedback + deletion requests + the app's waiting extras; not invitations or users).
-    KS's deletion-requests banner stays: it is the one with a deadline.
+    count}}`, each count `null` where the app has no such thing (KS 8, ka F6):
+    - the builder takes every count as an argument, and server-kit's helpers for the
+      shared counts stay optional (KS's invitations are its own service);
+    - **demo accounts never count**, and a demo session gets `null` counts (kastlan's
+      demo user is a company admin);
+    - `extra` holds the app's own tiles: keksdose's support waiting and jobs failing
+      (→ health), KS's released for work and demo accounts live.
+15. **The account menu's "Administration" row carries the waiting count** as a badge.
+    The rule: only work that waits on this admin, so the counts are each app's (kk K-3,
+    Q3; ka Q3; KS Q3): keksdose To triage, verdicts and support waiting (its server
+    counts it already); kastlan To triage; KS To triage and deletion requests. Never
+    invitations or users. KS's deletion-requests banner stays: it is the one with a
+    deadline.
 
 ### 2.5 Links to the admin tools outside /admin
 
@@ -126,9 +170,12 @@ the admin area. Every inventory asks for a start page that counts what is waitin
     their own** (the inbox is the kit's full-height page, feedback §10). The admin area
     links to the ones the top bar doesn't already reach in one place: a **"Tools" list** at
     the foot of the section sidebar on a desktop and in the phone footer
-    (`SettingsLayout`'s `phoneFooter`): Translations, and the app's own (kastlan: Data
-    import). The feedback inbox keeps its way in through the top bar's feedback menu, so
-    it is not listed (kastlan's correction). The overview's tiles link to the inbox too.
+    (`SettingsLayout`'s `phoneFooter`): Translations, each link with its own visibility
+    (ka F7), and the app's task pages (kastlan: Data import). The feedback inbox keeps
+    its way in through the top bar's feedback menu, so it is not listed (kastlan's
+    correction, from Marcel: "The feedback inbox is in the top bar."), and neither is
+    KS's Feedback discussion (`/all-feedback`), which the same menu reaches. The
+    overview's tiles link to the inbox too.
 
 ## 3. What the kits add
 
@@ -136,45 +183,54 @@ the admin area. Every inventory asks for a start page that counts what is waitin
 
 - `AccountRoleChip` and `RoleDefinition.href` (as settings §12.3 drafted).
 - `adminMenuEntry({href?, badge?})`: the "Administration" `TopBarMenuEntry` with the
-  kit's words, icon and badge.
+  kit's words, icon and badge, for `TopBarActionMenu`; and `AdminMenuRow`, the same row
+  for a menu built from `HoverMenu` children (KS 1).
 - `AdminForbidden` (decision 8), with `homeHref`, `appName` and an optional
   `reviewerHref`.
 - `ADMIN_SECTIONS`: the shared sections' ids, icons, words and order (decision 11), and
-  `adminSections(t, own)`, which builds an app's catalogue in the template's order.
+  `adminSections(t, own)`, which builds an app's catalogue in the template's order and
+  places an own section at the position it names (decision 10).
 - `AdminOverview` and `AttentionTile` (on `StatTile`, a link), fed by
   `AdminAttention` (decision 14).
-- `AdminToolLinks` for the sidebar foot and the phone footer (decision 16).
-- `SettingsLayout` gains a `sidebarFooter` slot, if it has none.
+- `AdminToolLinks` for the sidebar foot and the phone footer, a visibility per link
+  (decision 16).
+- `SettingsLayout` gains a `sidebarFooter` slot, and AppShell's `sidebarFooterItems` link
+  kind a `badge` (decision 5).
 - Labels in seven languages.
 
 ### 3.2 server-kit
 
-- `AdminAttention` (the schema) and the shared counts (decision 14).
+- `AdminAttention` (the schema) and the shared counts (decision 14), as optional helpers.
 
-## 4. Per app (the reviews refine it)
+## 4. Per app
 
 - **keksdose**: an "Administration" row in the account menu; the overview section first
-  (metrics second); `access` → `invitations` (alias kept); `AdminForbidden` from the
-  kit; one card idiom; stale help lines fixed; Tools links; the admin push for a support
-  message opens `/admin/messaging?support=<id>` (kk 5.2.3).
+  (metrics second, its `overview → metrics` alias gone); `access` → `invitations` (alias
+  kept); `AdminForbidden` from the kit; one card idiom; stale help lines fixed; Tools
+  links; the admin push for a support message opens `/admin/messaging?support=<id>`
+  (kk 5.2.3).
 - **kastlan**:
   - the account-menu row and the chip, replacing the raw role code;
-  - the sidebar footer entry, in place of `nav.ts:149`;
+  - the sidebar footer entry for Administration and Data import, in place of the
+    `nav.ts:149` "Admin" group;
   - the /settings phone-footer link goes, since the account menu reaches /admin on a
     phone;
   - width 7xl;
-  - the invitations card becomes its own section;
-  - `AdminForbidden` in place of the inline 403;
-  - the overview's feedback tiles move from /overview/admin and become links;
+  - the invitations card becomes its own section (`/admin/users?focus=invitations` kept
+    as an alias);
+  - `AdminForbidden` in place of the inline 403 on its admin tools;
+  - `/overview/admin` goes: its feedback tiles move to the overview and become links;
   - the Users card gets its title.
 - **Kurvenschmiede**:
-  - the chip as a link;
-  - "Accounts" → "Users";
-  - the overview;
+  - the chip as a link, and "Member" for a member;
+  - "Accounts" → "Users", the icons `Mail` and `History`, Teams after Invitations;
+  - the overview, with the deletion-requests and "Released for work" tiles;
   - a client gate with `AdminForbidden`;
   - Tools links.
 
 ## 5. Questions for the reviews
+
+Answered by the reviews and Marcel (§6, §7); the answers are in §2–§4.
 
 1. **Invitations as its own section** (decision 10): kastlan, is it fine to move the card
    out of Users?
@@ -191,75 +247,39 @@ the admin area. Every inventory asks for a start page that counts what is waitin
 ## 6. The reviews and what they change (2026-10-17)
 
 All three are in audits/round-043/reviews.md (keksdose at `77e9bdfd`, kastlan at
-feat/kit-0.40, KS at `3a0f2ba`). The proposals below win over §2–§4 where they differ.
+feat/kit-0.40, KS at `3a0f2ba`). Every proposal is folded into the section it amends. The
+items keep their numbers, which the code cites, and point there.
 
-1. **The feedback count** (kk K-2, ka F3, KS 8). The shared tile is **"To triage"**: `OPEN`,
-   crash reports included, demo accounts never counted, within the company in kastlan. It
-   links to `/feedback` filtered to OPEN. The developer's lanes (READY, REWORK,
-   IN_PROGRESS) are not the admin's. An app adds its own feedback tiles: keksdose's
-   "Awaiting your verdict" (IN_EVALUATION + NEEDS_LIVE_TEST), and KS's "Released for work"
-   (the loop's queue), so the overview and the CLI agree.
-2. **The deletion-requests tile** only where the viewer can act on them (ka F2; kk K-3:
-   keksdose's run on their own). KS has it. In keksdose and in kastlan's `/admin` it is
-   `null`; kastlan's platform console can count them later.
-3. **The badge's counts are each app's** (kk K-3, Q3; ka Q3; KS Q3):
-   - keksdose: To triage, verdicts and support waiting (its server counts it already,
-     `admin_router.py:1295-1316`);
-   - kastlan: To triage;
-   - KS: To triage and deletion requests.
-
-   The rule: only work that waits on this admin.
-4. **`GET /admin/attention`** (KS 8, ka F6):
-   - the builder takes every count as an argument, and the kit's helpers stay optional
-     (KS's invitations are its own service);
-   - it answers `null` counts in a demo (kastlan's demo user is a company admin);
-   - **demo accounts never count**;
-   - `extra` holds the app's own tiles: kk support waiting and jobs failing → health,
-     KS released for work and demo accounts live.
-5. **The overview vs keksdose's metrics** (kk K-1, Q2): metrics stays its own section after
-   the overview, and the overview links to it with at most two tiles. keksdose's
-   `overview → metrics` alias goes, because `overview` is now a section.
-6. **`adminMenuEntry`** (KS 1) comes as both an entry object for `TopBarActionMenu` and an
-   `AdminMenuRow` component for a menu built from `HoverMenu` children (KS).
-7. **The client gate** (ka F4, KS 4) is a rendering choice on the same admin check the menu
-   uses, inside the lazy route, with no redirect, so a bookmark keeps its address.
-   kastlan shows `AdminForbidden` on its admin tools (`/admin`, `/import`, `/feedback`);
-   its work pages keep the generic 403. The wording doesn't imply that the person can't
-   administer anything: a kastlan superuser who isn't ADMIN in the acting company gets it.
-8. **`adminSections(t, own)`** places an app's own section at a position it names, so
-   KS's Teams sits between Invitations and Activity (KS 7).
-9. **The kastlan sidebar footer** is AppShell's `sidebarFooterItems`, which gains `badge?`
-   on its link kind (ka F1). The app filters by role. The footer is desktop-only, so the
-   account-menu row ships in the same release.
-10. **kastlan's nav group** (ka Q4): the "Admin" group and `/overview/admin` go.
-    Administration and Data import move to the sidebar footer, and Data import is in the
-    Tools list too.
-11. **The Tools list** has no Feedback inbox link (kastlan's correction, from Marcel in its
-    session: "The feedback inbox is in the top bar."). It holds Translations, with a
-    per-link visibility (ka F7), and the app's task pages. KS asks for Feedback
-    discussion (`/all-feedback`) as well. Proposed: no, because the feedback menu reaches
-    it the same way as the inbox.
-12. **Invitations as its own section** (ka Q1): yes. kastlan keeps
-    `/admin/users?focus=invitations` as an alias, and the invitations endpoint answers
-    `mail_backend` itself (ka F8).
-13. **Icons:** KS swaps Invitations `Ticket` → `Mail` and Activity `ScrollText` →
-    `History` (KS 7). The menu row's icon becomes `ShieldCheck`.
-14. **Left for later** (Q6):
-    - kastlan's platform console Activity (`GET /platform/actions`, the same
-      `AdminActionLog`);
-    - KS's test mail;
-    - a superuser badge (deletion requests, new sign-ups).
+1. **The feedback count is "To triage"**, and an app adds its own feedback tiles (kk K-2,
+   ka F3, KS 8) → §2.4 decision 13.
+2. **The deletion-requests tile only where the viewer can act on them** (ka F2, kk K-3) →
+   §2.4 decision 13.
+3. **The badge's counts are each app's**: only work that waits on this admin (kk K-3, Q3;
+   ka Q3; KS Q3) → §2.4 decision 15.
+4. **`GET /admin/attention`**: every count an argument, demo accounts never counted,
+   `extra` for the app's tiles (KS 8, ka F6) → §2.4 decision 14.
+5. **The overview vs keksdose's metrics** (kk K-1, Q2) → §2.4 decision 13, §4.
+6. **`adminMenuEntry` and `AdminMenuRow`** (KS 1) → §3.1.
+7. **The client gate** (ka F4, KS 4) → §2.2 decision 8.
+8. **`adminSections(t, own)` places an own section where it names** (KS 7) → §2.3
+   decision 10, §3.1.
+9. **The kastlan sidebar footer**, `sidebarFooterItems` with a `badge` (ka F1) → §2.1
+   decision 5, §3.1.
+10. **kastlan's nav group** goes (ka Q4) → §2.1 decision 5, §4.
+11. **The Tools list**: no Feedback inbox link, a visibility per link (ka F7) → §2.5
+    decision 16.
+12. **Invitations as its own section** (ka Q1, F8) → §2.3 decision 10, §4.
+13. **Icons** (KS 7) → §2.3 decision 11; the menu row's `ShieldCheck` → §2.1 decision 1.
+14. **Left for later** (Q6): kastlan's platform console Activity, KS's test mail, a
+    superuser badge → taken up in round 0.45, §9.1–§9.3.
 
 ## 7. Settled (Marcel, 2026-10-17)
 
 - **The way in, "As proposed"**: an "Administration" row in the account menu in every
-  app, with the waiting count as its badge. The role chip is a shortcut. kastlan also has
-  the sidebar footer entry, next to Data import (§2.1, §6.3, §6.9, §6.10).
-- **The member's chip, "Always a badge"**: every account shows its role in the
-  account-menu header. It is plain unless the role links to a tool, and in the role's tone
-  from the app's `RoleVocabulary`. KS shows "Member" from now on. kastlan shows the
-  highest of the active company's roles, in place of the raw code.
-- §6's other proposals, which the three reviews agreed on, stand as written.
+  app, with the waiting count as its badge; the role chip a shortcut; kastlan's sidebar
+  footer entry next to Data import → §2.1, §2.4 decision 15.
+- **The member's chip, "Always a badge"** → §2.1 decision 2.
+- §6's other proposals, which the three reviews agreed on, are folded as §6 lists.
 
 ## 8. What shipped (ui-kit 0.42)
 

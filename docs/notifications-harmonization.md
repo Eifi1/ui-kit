@@ -36,6 +36,26 @@ a queue that is **opt-in per app** (one 15-minute tick; KS runs none). §10.6 am
 push rotation route (`POST /notifications/devices/replace`, server-kit 0.16.0); §10.7 says
 where each review point went. It amends decisions 2, 3, 4 and 6, §3.1–§3.5 and §3.8.
 
+**Folded in ui-kit 0.52** (refactor audit 2026-10-30 DOC-3): §4.2's quiet-hours card and
+its words follow §10.3 as amended on 2026-10-20 (the zone automatic only, no picker), and
+§10.6 rule 1 gains the explicit sign-out's push release (FLW-2, Marcel's decision 2 of
+2026-10-31).
+
+| § | Section | Shipped in | Amended by |
+|---|---|---|---|
+| 1 | Where each one stands | — (a snapshot, 2026-10-13) | |
+| 2 | Decisions | — | §8 (the reviews); §10 (decisions 2, 3, 4; decision 6 reversed by §10.3) |
+| 3 | The shapes | server-kit 0.9, ui-kit 0.36 | §9 (§3.4, §3.6); §10.1–§10.4 (§3.1–§3.5, §3.8: a switch per channel, the zone on the account, the queue) |
+| 4.1 | server-kit 0.9 | server-kit 0.9 | §9.5 (server-kit 0.10); §10 (server-kit 0.16) |
+| 4.2 | ui-kit 0.36: the notification cards | ui-kit 0.36 | §9.5 (ui-kit 0.37); §10.1–§10.3 (ui-kit 0.46: the inbox and bell, a switch per channel, the zone read-only; 0.47: `TimeZoneSelect` and the zone props removed); §10.6 (ui-kit 0.46: `@eifi1/ui-kit/push-worker`; 0.52: `releaseThisDevicePush`) |
+| 4.3 | App-side | — | |
+| 5 | Per app | — | §9.6; §10's per-app parts |
+| 6 | For the reviews | — | answered, §8 |
+| 7 | Left for later | — | taken up by §9 and §10 |
+| 8 | Settled after the reviews | — | an index: each point names its § |
+| 9 | Round 0.37 amendment | server-kit 0.10, ui-kit 0.37 | §9.7 (the reviews) |
+| 10 | Round 0.46 | ui-kit 0.46, server-kit 0.16 | §10.3 amended 2026-10-20 (automatic only); §10.6 (the replace route, server-kit 0.16.0; the sign-out's push release, ui-kit 0.52); §10.7 (the reviews and the settle) |
+
 ## 1. Where each one stands
 
 Read at kk `79b2949c` (`feat/kit-0.34`), ka `f2b9574` (`feat/kit-0.35`), KS `c687637`
@@ -340,6 +360,9 @@ catalogue (§4.2).
 - `quiet_hours_start`, `quiet_hours_end` (`^([01]\d|2[0-3]):[0-5]\d$`) and `timezone`
   where the app has push; `digest_cadence` where it has a digest type. An app adds its own
   knobs beside them (keksdose's `low_balance_threshold`).
+- **Amended in round 0.46:** a type's switches gain `push` (§10.2), and the zone leaves
+  this resource for the account's `device_timezone` (§10.3, amended 2026-10-20: a
+  `timezone` here is ignored by server-kit 0.16–0.17 and refused from 0.18).
 
 `PATCH /notifications/settings` under settings §6.1:
 
@@ -655,16 +678,16 @@ words if `describeError` has them; nothing toasts. Every part takes `labels`.
 
 ```ts
 type DigestCadence = "weekly" | "monthly";
-interface NotificationSwitches { app: boolean | null; email: boolean | null } // one type, §3.2
+interface NotificationSwitches { app: boolean | null; push?: boolean | null; email: boolean | null } // one type, §3.2; `push` §10.2
 type NotificationTypesValue = Readonly<Record<string, NotificationSwitches>>; // the GET's `types`
 interface NotificationTypeEntry<Id extends string = string> { id: Id; label: string; description?: ReactNode }
 interface NotificationTypeGroup<Id extends string = string> { id: string; label: ReactNode; types: readonly Id[] }
 interface NotificationSettingsPatch<Id extends string = string> { // the parts of §3.2's PATCH the cards send
-  types?: Partial<Record<Id, { app?: boolean; email?: boolean } | null>>;
+  types?: Partial<Record<Id, { app?: boolean; push?: boolean; email?: boolean } | null>>;
   digest_cadence?: DigestCadence;
   quiet_hours_start?: string | null;
   quiet_hours_end?: string | null;
-  timezone?: string;
+  // no zone: the account's, automatic only (§10.3); `timezone` removed in 0.47
 }
 interface PushDeviceItem<Id extends string | number = string> {
   id: Id; endpoint: string; user_agent: string | null;
@@ -697,27 +720,29 @@ from the card's `PrefKey` to keksdose's own id list beside the types' words (§5
   `email` isn't `null`. Where `app` is `null` (KS), the e-mail switch is the row's, with
   the type's label and description. No types: `typesEmpty`.
 
-**`QuietHoursSetting`** (`quiet-hours-setting.tsx`):
-- `start`, `end`, `timezone`: `string | null`, the `GET`'s fields.
-- `onChange(patch: NotificationSettingsPatch) => Promise<unknown> | void`: a cleared time
-  sends `null`; the first time entered while `timezone` is `null` sends the device's zone
-  with it (keksdose `notifications-card.tsx:288-292`).
-- `fallbackZone?: string`, default `"Europe/Zurich"`: the zone shown, and the one the
-  server applies, while `timezone` is `null` (§2.6).
+**`QuietHoursSetting`** (`quiet-hours-setting.tsx`), as of ui-kit 0.47 (§10.3, amended
+2026-10-20: the zone is the account's, automatic only):
+- `start`, `end`: `string | null`, the `GET`'s `quiet_hours_start` and `quiet_hours_end`.
+- `zone?: string | null`: the account's zone, `/auth/me`'s `device_timezone` (the device
+  last used); `null` while no device has reported one.
+- `onChange(patch: NotificationSettingsPatch) => Promise<unknown> | void`: one time, or
+  `null` for a cleared one. **Never a zone.**
+- `fallbackZone?: string`, default `"Europe/Zurich"`: the zone named, and the one the
+  server applies, while `zone` names none.
 - `inbox?: boolean`: the app keeps an inbox, and the description says a held push still
-  reaches it.
+  reaches it. `held?: boolean` (§10.4): the app queues a held push and sends it when the
+  window ends, and the description says so.
 - `disabled?`, `describeError?(error)`, `labels?`.
-- Two `TimeInput`s; `quietIncomplete` while half set; the `TimeZoneSelect` while a time is
-  set; `deviceZone` with "Use it" when the device's zone differs from the effective one.
+- Two `TimeInput`s; `quietIncomplete` while half set; while a time is set, the zone
+  **read-only**, `quietZone`: "In your time zone (Europe / Zurich), which follows the
+  device you last used.", the region in the kit's words (`regions`). There is no picker
+  and no "Use it": the zone is never chosen.
 
-**`TimeZoneSelect`** (`time-zone-select.tsx`): `{value: string; onChange(zone: string);
-label?; disabled?; id?; className?; labels?}`, on the kit's `InlineEntityCombobox`. Every
-zone `Intl.supportedValuesOf("timeZone")` lists, as its city ("Argentina / Buenos Aires")
-under its region in the kit's words; a zone with no region ("UTC") first; a region the
-labels don't know keeps its IANA name; a stored zone the runtime doesn't list is kept;
-not clearable (keksdose `notifications-card.tsx:131-146`). Also exports
-`timeZoneOptions(current, regionLabel)` and `deviceTimeZone()` (0.46.1: `deviceTimeZone` lives in
-`device-zone-report.ts` beside `useDeviceZoneReport`; this module keeps a deprecated alias, removed in 0.47).
+**`TimeZoneSelect`** and `timeZoneOptions` were removed in 0.47 (deprecated in 0.46), with
+the card's `timezone` prop, `NotificationSettingsPatch.timezone` and the labels
+`timeZone`, `deviceZone` and `useDeviceZone`: since §10.3's amendment no zone is picked
+anywhere. `deviceTimeZone()` lives in `device-zone-report.ts` beside
+`useDeviceZoneReport`, which reports this device's zone to the account (§10.3).
 
 **`usePushDevice(options) → PushDevice`** (`use-push-device.ts`), keksdose's
 `shared/push/use-push.ts`:
@@ -739,6 +764,11 @@ not clearable (keksdose `notifications-card.tsx:131-146`). Also exports
   ready in 10 s; the browser's subscribe and unsubscribe are cut at 15 s,
   `PushDeviceError("push_timeout")`. A 409 from `register` unsubscribes and registers a
   fresh endpoint, once. `disable` tells the server first, then the browser.
+- **`releaseThisDevicePush(unregister)`** (ui-kit 0.52, §10.6 rule 1; refactor audit
+  2026-10-30 FLW-2): the same release without the hook, for the app's sign-out, where no
+  settings card is mounted. It finds this browser's subscription, tells the server
+  (`unregister(endpoint)`), then unsubscribes the browser, with the hook's 10 s and 15 s
+  cuts, and fires `PUSH_SUBSCRIPTION_CHANGED`; `disable` goes through it.
 - **`PUSH_SUBSCRIPTION_CHANGED`** (`"eifi1:push-subscription-changed"`) and
   `notifyPushSubscriptionChanged()`: fired by every enable and disable and by
   `PushDevicesSetting`'s removal of this device; every mounted hook re-reads its state on
@@ -788,12 +818,15 @@ alone); `UiKitLabels.notifications`; the namespace in de-CH, es, fr, hu, it and 
   notifications for this account."
 - quiet hours: `quietTitle` "Quiet hours"; `quietDescription(inbox)` "No push
   notifications during this window." and, with an inbox, "No push notifications during
-  this window. They still reach your inbox."; `quietFrom` "From"; `quietUntil` "Until"; `quietIncomplete` "Set both a start
-  and an end time. Quiet hours take effect once both are set."; `timeZone` "Time zone";
-  `deviceZone(zone)` "This device is in {zone}."; `useDeviceZone` "Use it".
-- `regions`: `Africa` "Africa", `America` "Americas", `Antarctica` "Antarctica", `Arctic`
-  "Arctic", `Asia` "Asia", `Atlantic` "Atlantic", `Australia` "Australia", `Europe`
-  "Europe", `Indian` "Indian Ocean", `Pacific` "Pacific" (keksdose's ten).
+  this window. They still reach your inbox."; with `held` (§10.4), "Push notifications
+  wait during this window and arrive when it ends." (and "They reach your inbox at once."
+  with an inbox); `quietZone(zone)` "In your time zone ({zone}), which follows the device
+  you last used."; `quietFrom` "From"; `quietUntil` "Until"; `quietIncomplete` "Set both a
+  start and an end time. Quiet hours take effect once both are set."
+- `regions`, for the zone's name in `quietZone`: `Africa` "Africa", `America` "Americas",
+  `Antarctica` "Antarctica", `Arctic` "Arctic", `Asia` "Asia", `Atlantic` "Atlantic",
+  `Australia` "Australia", `Europe` "Europe", `Indian` "Indian Ocean", `Pacific`
+  "Pacific" (keksdose's ten).
 - this device: `pushTitle` "Push notifications"; `pushDescription` "Notifications on this
   device, also while the app is closed."; `unsupported` "This browser doesn’t support push
   notifications."; `iosInstall(app)` "On iPhone or iPad, add {app} to your Home Screen
@@ -835,10 +868,9 @@ alone); `UiKitLabels.notifications`; the namespace in de-CH, es, fr, hu, it and 
 **Tests** (`src/notifications/__tests__/`): the types card (the server's order and groups,
 e-mail only where offered, KS's e-mail-only rows, one PATCH body per switch, the cadence
 and `renderExtra` only while on, `emailUnverified`, both development throws, a type the
-server didn't answer left out, a rejected save put back); quiet hours (half set, the
-device's zone sent with the first entry, `fallbackZone` shown for `null`, "Use it", a
-cleared time as `null`); the zone list (regions, region-less first, an unlisted stored
-zone kept); `usePushDevice` (unsupported, this account against this browser and the
+server didn't answer left out, a rejected save put back); quiet hours (half set, never a
+zone sent, a time alone and `null` for a cleared one, the zone named read-only from
+`zone`, else `fallbackZone`, `held`); `deviceTimeZone`; `usePushDevice` (unsupported, this account against this browser and the
 offline fallback, the 409 recovery once, both timeouts, the event fired and heard);
 `PushDeviceSetting` in each state, the explainer only on `"default"`, `testNone`;
 `PushDevicesSetting` ("This device", failures, the confirm, removing this device
@@ -850,7 +882,7 @@ languages (the catalogue tests).
 (`showcase/src/sections/notifications.tsx`, a family file: no new `*-0NN-demo.tsx`, the
 showcase's ratchet; `routes.tsx`): keksdose's nine types
 in three groups with the threshold and the digest; KS's three e-mail-only types with an
-unverified address; quiet hours with a device in another zone; the push card's states
+unverified address; quiet hours with the account's zone named; the push card's states
 from a switcher over a fake `PushDevice`; the device list; the panel's states. App
 chrome holds ten pages at most, so "Links" moves to Foundations beside "Localisation"
 (both are set once on the provider; the slug is unchanged).
@@ -2057,6 +2089,16 @@ docstring and the adopt row take:
    push rows on "sign out everywhere", on deactivation (kastlan's deletion request
    deactivates, `account_service.py:191-192`) and on erasure**, and the route **refuses
    an inactive or a demo account** with the same 404 (and deletes the row).
+   **An explicit sign-out releases this device's push** (ui-kit 0.52; Marcel, 2026-10-31,
+   on the refactor audit's FLW-2). Without it the device kept showing the signed-out
+   account's notifications, title and body included, to whoever used it next. When the
+   person signs out ("Log out"), the app calls `releaseThisDevicePush(unregister)` (§4.2)
+   **before** it clears the session, while the token is still valid: the server first
+   (`POST /notifications/devices/unregister`), then the browser's `unsubscribe()`. It is
+   best effort: a failure or a timeout never blocks the sign-out. A session that merely
+   expires or is refused does not release (there is no token to tell the server with).
+   The cost, accepted: whoever signs back in on that device turns push on again.
+   keksdose (the one app with push) calls it in `logOut`.
 2. **No RLS on device rows.** A device row is account-scoped (kastlan: no RLS, like
    `notification_type_settings`, `domain/models/notification.py:18-19`; the role is
    checked per company at send time). A `company_id` row under forced RLS would answer

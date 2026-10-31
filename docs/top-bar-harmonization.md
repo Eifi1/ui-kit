@@ -1,7 +1,7 @@
 # The top bar — harmonisation plan
 
 **Settled 2026-10-17** (Marcel, in the ui-kit session: "As proposed", after the three app reviews in
-audits/round-043/topbar-reviews.md; §6 wins over §2–§4). It
+audits/round-043/topbar-reviews.md; §6). It
 ships in the same release as billing §16 and the admin area: **ui-kit 0.42, server-kit
 0.14**.
 
@@ -17,6 +17,28 @@ Marcel, in the ui-kit session, 2026-10-17:
 
 The inventories, with file:line, are in audits/round-043/topbar-{keksdose,kastlan,
 kurvenschmiede}.md. **kk** = keksdose, **ka** = kastlan, **KS** = Kurvenschmiede.
+
+## Status
+
+The body says what the build does. The three reviews (§6) are folded into the sections
+they amend (ui-kit 0.52, refactor audit 2026-10-30 DOC-3), and the table names them; §6
+is now an index whose items keep the numbers the code cites.
+
+| § | Section | Shipped in | Amended by |
+|---|---|---|---|
+| 1 | Where each one stands | — (a snapshot, 2026-10-17) | |
+| 2.1 | The order | ui-kit 0.42 | |
+| 2.2 | Theme in the bar | ui-kit 0.42 | §6.4 |
+| 2.3 | The language select in the account menu | ui-kit 0.42 | §6.5 |
+| 2.4 | Tours: keksdose's trigger | ui-kit 0.42 | §6.7 |
+| 2.5 | Search | ui-kit 0.42 (the apps) | §6.8, §6.11 |
+| 2.6 | Sync | ui-kit 0.42 | §6.9, §6.10; the `storage: "none"` preset (adopt-0.42, local-first §1.4) |
+| 2.7 | Dev switchers, role and plan | ui-kit 0.42, server-kit 0.14 | §6.1–§6.3; §2.7.1 (ui-kit 0.51: one `DevMenu`; 0.51.4: a column per group); ui-kit 0.52 (`DevSwitchers` removed) |
+| 3 | What the kits add | ui-kit 0.42, server-kit 0.14 | §6.6, §6.7, §6.9 |
+| 4 | Per app | — | §6.5–§6.7, §6.10, §6.11 |
+| 5 | Questions for the reviews | — | answered in §6 |
+| 6 | The reviews and what they change | — | an index: each item points to its § |
+| 7 | What shipped (ui-kit 0.42) | ui-kit 0.42 | |
 
 ## 1. Where each one stands (2026-10-17)
 
@@ -47,12 +69,19 @@ gap.
 
 In every app: keksdose gets the kit's `ThemeToggle` back.
 Settings → Appearance keeps the three-way choice (light, dark, system).
+- **The toggle writes the app's theme preference** through its `onChange`, never a key
+  of its own (kk K-4). From "system", a tap goes to the opposite of what is shown;
+  Settings keeps "system".
 
 ### 2.3 The language select is inside the account menu when signed in
 
 As keksdose has it:
 a sub-list, one row per offered language with its flag, the active one checked. It is
 first after the app's context rows (keksdose's budgets).
+- **One account-menu order** (kk Q1, ka Q1): the app's context rows (keksdose's budgets)
+  · Language · the account's own pages (Notifications, Settings) · the role tools
+  (Administration, Translations) · What's new · toggles (keksdose's presentation mode) ·
+  divider · Log out; the `LegalLinks` footer.
 - **Signed out, the language button stays in the bar** (the public pages, sign-in,
   sign-up, the landing), because there is no account menu there (KS F100).
 - **Where the choice is kept** (Marcel: "Can it as fallback be stored in the local
@@ -68,14 +97,17 @@ Lucide `Compass`. The kit's `TourMenu` is a
 `TopBarActionMenu` that is also a link to the app's tours page, with a NEW dot. Its
 list: "This page", up to three "New", a divider, and "All tours…". kastlan swaps
 `LifeBuoy`.
-- KS has no tours yet: KS adds the kit's tour engine and a first tour (the review
-  names which), and the trigger comes with it.
+- KS has no tours yet: KS adds the kit's tour engine and a first tour, "Your first
+  curve" on `/curves`, and the trigger comes with it (KS 2). Without a tours page the
+  trigger has no `href`: it is a button over the list.
 
 ### 2.5 Search
 
 In every app (the kit's `GlobalSearch`, ⌘K). In KS it finds pages,
-settings sections and admin sections; content stays out, because it is sealed. The
-trigger shows on a phone too (keksdose's choice; kastlan drops `hideTriggerOnPhone`).
+settings sections and admin sections; content stays out, because it is sealed. Search
+filters by role (KS 3): admin sections for admins only, public pages when signed out,
+and never content. The trigger shows on a phone too (keksdose's choice; kastlan drops
+`hideTriggerOnPhone`, ka F5).
 
 ### 2.6 Sync, "Show what's real"
 
@@ -86,12 +118,17 @@ trigger shows on a phone too (keksdose's choice; kastlan drops `hideTriggerOnPho
   syncing.
 - It is fed by a small contract, `SyncStatus {phase, online, pending, blocked?,
   waitingForPlan?, lastSyncedAt?}`, plus `onSync`. It has `hideWhenIdle`, and optional
-  `scope` words.
+  `scope` words. `onSync` is optional: without it the indicator is a status, not a
+  button (KS 4).
 - **keksdose:** unchanged in behaviour, now on the kit part.
 - **kastlan:** the handover copy's state, from its sync controller and the legacy
   photo outbox. It uses `hideWhenIdle`, so it shows only while offline, syncing or with
-  changes waiting, held or refused. The words name handovers, because only they work
-  offline. The floating pill goes. A "last synced at" needs kastlan to store a time
+  changes waiting, held or refused. The short labels are "Offline", "Syncing…", "3
+  waiting", and "handovers" goes in the tooltip, because only they work offline
+  ("Handovers on this device: 3 changes waiting to sync"; "Offline: handovers keep
+  working on this device; everything else needs a connection") (ka F7, Q4). The
+  floating pill (`offline-indicator.tsx`) goes; `HandoverSyncBanner` stays above the
+  handover pages for the refusals. A "last synced at" needs kastlan to store a time
   after a good round (`sync.ts:122`).
 - **Kurvenschmiede:** offline and saving only, from the online state and
   `useIsMutating`, with `hideWhenIdle`. There is no pending count, since KS keeps
@@ -103,17 +140,40 @@ trigger shows on a phone too (keksdose's choice; kastlan drops `hideTriggerOnPho
 (Marcel): in every app, in local dev
 only, both switchers change what the server enforces, so the app behaves as that role
 and plan.
-- **The kit's `DevSwitchers`**: role and plan, both on `RoleSwitcher` with the flask
-  icon. They render only when the app says it is local dev (`import.meta.env.DEV`).
-- **server-kit's dev-only route** `POST /dev/switch {role?, plan?}`. It is gated as
-  §6.1 says (an explicit flag plus the app's proof of a local run, never an
-  environment name), and otherwise `404`, never mounted in a deployment. The app applies it its own way: kastlan mints tokens with
-  the picked role (as `/auth/switch-role` does, but any role); a plan switch writes
-  the row's plan as an operator grant would. Then the client re-reads `/auth/me` and
-  the overview.
+- **The kit's switchers**: role and plan, behind the amber flask icon. They render only
+  when the app says it is local dev (`import.meta.env.DEV`). 0.42 shipped them as
+  `DevSwitchers`, two flasks; **since ui-kit 0.51 they are one menu, `DevMenu`**
+  (§2.7.1), and `DevSwitchers` is removed in 0.52.
+- **server-kit's dev-only route** `POST /dev/switch {role?, plan?}`, otherwise `404`,
+  never mounted in a deployment.
+- **The gate, a safety rule** (kk K-1, ka F3, KS 5). All three apps default to
+  "development" or have a hosted dev deployment, so an environment name is never the
+  gate. server-kit's gate is a predicate that needs **both**:
+  - an explicit setting that is off by default and set only in the local `.env`
+    (`<APP>_DEV_SWITCH_ENABLED`);
+  - the app's own proof of a local run (KS: the local-database / shipped-keys test,
+    `feedback_loop.py:266`; kastlan: a loopback database host and no `K_SERVICE`;
+    keksdose: a local database and no Cloud SQL socket). Never `environment !=
+    "production"` (the build reviews, kastlan B3).
+
+  The app refuses to start when the flag is set in production. The route is mounted only
+  when the predicate holds; otherwise it is absent (404).
+- **What the role switch writes** (kk K-2, ka F1, KS Q2). In all three apps the server
+  reads the role from the database on every request, so the switch **writes the role in
+  the local database**: keksdose `users.role`, kastlan the acting company's
+  `user_role_assignments` and then `issue_session`, KS `users.role` (it skips
+  `set_role`'s self and last-admin refusals, and still refuses CUSTOMER for an account
+  that owns work). The route needs only a signed-in user, so a lesser role can switch
+  back, and the menu offers "Back to {original role}", which the kit keeps in session
+  storage. A switch never writes the admin action log, nor tags itself `dev_switch`
+  there (kk K-3).
+- **The plan switch** goes through the operator's grant, permanent (keksdose `set_plan`,
+  kastlan `BillingService.set_plan(…, comped_until=None)`, KS `change_plan` on the
+  caller's own row). While billing is off nothing is enforced, so the plan group says
+  "Billing is off locally: plans change nothing" and stays usable (ka F2, KS Q2).
+- Then the client re-reads `/auth/me` and the overview.
 - keksdose's screen-only switchers become server-backed. kastlan's real
   `/auth/switch-role` (a held role, a feature) stays as it is.
-- **Since ui-kit 0.51 the two switchers are one menu, `DevMenu`** (§2.7.1).
 
 #### 2.7.1 Addendum (ui-kit 0.51): one flask, `DevMenu`, and the app's own dev sections
 
@@ -124,7 +184,7 @@ in it.
 
 **The shape.** `DevMenu` (`@eifi1/ui-kit/shell` and the barrel) is one `TopBarActionMenu`
 behind `RoleSwitcher`'s amber flask.
-- **Props:** every one `DevSwitchers` takes (`enabled`, `roles`, `currentRole`, `onRole`,
+- **Props:** every one 0.42's `DevSwitchers` took (`enabled`, `roles`, `currentRole`, `onRole`,
   `plans`, `currentPlan`, `onPlan`, `originalRole`, `storageKey`, `billingOff`,
   `roleLabel`, `planLabel`, `labels`), plus two:
   - `sections?: readonly DevMenuSection[]`, where `DevMenuSection` is `{ key: string;
@@ -140,9 +200,9 @@ behind `RoleSwitcher`'s amber flask.
 - **The Account section** is the kit's, and it comes first. It has two groups:
   - The role group ("Dev · role"). Once the role differs from the session's first, it
     ends in "Back to {role}" behind a rule. That role is kept in `sessionStorage` as
-    §6.2 says, and read again when `enabled` turns true (0.43).
+    §2.7 says, and read again when `enabled` turns true (0.43).
   - The plan group ("Dev · plan"). With `billingOff` the group's name carries the note
-    that plans change nothing (§6.3), so a screen reader hears it on the way into the
+    that plans change nothing (§2.7), so a screen reader hears it on the way into the
     plans. 0.42's trailing note was a row the arrow keys passed over.
 
   Each group is drawn only with its list and handler. With no role, no plan and no
@@ -168,8 +228,9 @@ behind `RoleSwitcher`'s amber flask.
     under the roles.
   - The DOM order is the list's, so ↓/↑ walk down a column and on into the next.
   - Below `md`, the one scrolling column as before.
-- **`DevSwitchers` is deprecated** (removed in 0.52). It is now a `DevMenu` with no
-  sections, with the same props and rows, but one flask where it drew two.
+- **`DevSwitchers` was deprecated in 0.51 and is removed in 0.52.** In 0.51 it was a
+  `DevMenu` with no sections, with the same props and rows, but one flask where it drew
+  two; a `DevMenu` without `sections` is its replacement.
 
 **Dev-only, in the bundle as well as on the screen.** These are rules for the app; the
 kit cannot enforce them.
@@ -198,7 +259,7 @@ kit cannot enforce them.
        sections={[budgetSection, timeSection, resetsSection]} active={timeOverridden} />;
    }
    ```
-3. **Every server-backed dev item goes through a route behind the same gate (§6.1):** an
+3. **Every server-backed dev item goes through a route behind the same gate (§2.7):** an
    explicit local flag AND the app's proof of a local run, otherwise absent (404).
 4. **No form fields inside a `role="menu"`.** In a menu the arrow keys, Home and End
    belong to the roving focus and Tab closes it, so a field inside one loses its own
@@ -217,40 +278,50 @@ kit cannot enforce them.
 
 - `TopBarActions`: draws the items in §2.1's order from named slots (`companySwitcher`,
   `search`, `theme`, `feedback`, `tours`, `assistant`, `sync`, `dev`, `platform`,
-  `account`), so the order can't drift. An app may still compose by hand in that order.
+  `account`), so the order can't drift, plus two signed-out slots, `language` and
+  `signIn`, used when no account is set, as on KS's public pages (KS 1). An app may
+  still compose by hand in that order.
 - `AccountMenuLanguage`: the account-menu sub-list (§2.3), on `Disclosure` and
   `MenuItem`, with flags. `LanguageMenu` stays the signed-out bar button.
-- `TourMenu` (§2.4), with lucide `Compass`.
-- `SyncStatusIndicator` and the `SyncStatus` type (§2.6), labels in seven languages.
+- `TourMenu` (§2.4), with lucide `Compass`; its `href` is optional.
+- `SyncStatusIndicator` and the `SyncStatus` type (§2.6), `onSync` optional, labels in
+  seven languages.
+- `ThemeToggle`'s `onChange(next)` (§2.2).
 - `DevSwitchers` (§2.7). Since 0.51 `DevMenu`, one flask with the app's own sections
-  (§2.7.1); `DevSwitchers` is deprecated.
+  (§2.7.1); `DevSwitchers` is removed in 0.52.
 
 ### 3.2 server-kit 0.14
 
 - `dev_switch_router` or a recipe, the `DevSwitchRequest` schema, and the
   `local_development` check it is gated by (§2.7).
 
-## 4. Per app (the reviews refine it)
+## 4. Per app
+
+Every app: the account menu in §2.3's order; the dev route behind §2.7's gate.
 
 - **keksdose:**
   - the order: Feedback before Tours, Sync after Tours, and the dev switchers after Sync;
-  - `ThemeToggle` back in the bar;
+  - `ThemeToggle` back in the bar, writing the app's theme preference;
   - the kit's `AccountMenuLanguage`, `TourMenu`, `SyncStatusIndicator` and `DevSwitchers`;
   - the dev route.
 - **kastlan:**
   - the language moves into the account menu (and stays in the bar when signed out);
   - Tours → Compass;
-  - the sync pill → the bar indicator, `hideWhenIdle`;
+  - the sync pill → the bar indicator, `hideWhenIdle`, "handovers" in the tooltip;
   - the dev plan switcher and the dev route;
-  - the order: dev switchers before the platform button.
+  - the order: dev switchers before the platform button;
+  - the Search trigger on a phone (`hideTriggerOnPhone` goes).
 - **Kurvenschmiede:**
-  - Search, a first tour and the `TourMenu`;
+  - Search (by role, never content), "Your first curve" and a `TourMenu` without `href`;
   - the sync indicator (offline and saving);
   - the dev switchers and the dev route;
-  - the language in the account menu when signed in, in the bar when signed out;
+  - the language in the account menu when signed in, in the bar when signed out
+    (`TopBarActions`' signed-out slots);
   - the order: Theme before Feedback.
 
 ## 5. Questions for the reviews
+
+Answered by the reviews (§6); the answers are in §2–§4.
 
 1. Where exactly the language sub-list sits in your account menu, and whether your menu's
    rows need a shared order beyond it.
@@ -262,91 +333,55 @@ kit cannot enforce them.
 
 ## 6. The reviews and what they change (2026-10-17)
 
-All three are in audits/round-043/topbar-reviews.md. The proposals below win over §2–§4
-where they differ.
+All three are in audits/round-043/topbar-reviews.md. Every proposal is folded into the
+section it amends. The items keep their numbers, which the code cites, and point there.
 
 ### 6.1 The dev switch's gate, a safety rule
 
-(kk K-1, ka F3, KS 5). All three apps
-default to "development" or have a hosted dev deployment, so an environment name is
-never the gate. server-kit's gate is a predicate that needs **both**:
-- an explicit setting that is off by default and set only in the local `.env`
-  (`<APP>_DEV_SWITCH_ENABLED`);
-- the app's own proof of a local run (KS: the local-database / shipped-keys test,
-  `feedback_loop.py:266`; kastlan: a loopback database host and no `K_SERVICE`;
-  keksdose: a local database and no Cloud SQL socket). Never `environment != "production"`
-  (the build reviews, kastlan B3).
-
-The app refuses to start when the flag is set in production. The route is mounted only
-when the predicate holds; otherwise it is absent (404).
+(kk K-1, ka F3, KS 5) → §2.7: an explicit local flag AND the app's proof of a local run,
+never an environment name; otherwise the route is absent (404).
 
 ### 6.2 What the switch writes
 
-(kk K-2, ka F1, KS Q2). In all three apps the server reads
-the role from the database on every request, so the dev switch **writes the role in
-the local database**: keksdose `users.role`, kastlan the acting company's
-`user_role_assignments` and then `issue_session`, KS `users.role` (it skips
-`set_role`'s self and last-admin refusals, and still refuses CUSTOMER for an account
-that owns work).
-- The route needs only a signed-in user, so a lesser role can switch back.
-- `DevSwitchers` offers "Back to {original role}", which the kit keeps in session
-  storage.
-- A switch never writes the admin action log, or tags itself `dev_switch` there
-  (kk K-3).
+(kk K-2, ka F1, KS Q2) → §2.7: the role in the local database; "Back to {original role}"
+kept in session storage; never the admin action log.
 
 ### 6.3 The plan switch
 
-Goes through the operator's grant, permanent (keksdose `set_plan`,
-kastlan `BillingService.set_plan(…, comped_until=None)`, KS `change_plan` on the
-caller's own row). While billing is off nothing is enforced, so the plan menu says
-"Billing is off locally: plans change nothing" and stays usable (ka F2, KS Q2).
+(ka F2, KS Q2) → §2.7: the operator's grant, permanent; with billing off the plan group
+says so and stays usable.
 
 ### 6.4 `ThemeToggle` writes the app's theme preference
 
-Through its `onChange`, never a
-key of its own. From "system", a tap goes to the opposite of what is shown. Settings
-keeps "system" (kk K-4).
+(kk K-4) → §2.2.
 
 ### 6.5 One account-menu order
 
-(kk Q1, ka Q1): the app's context rows (keksdose's budgets)
-· Language · the account's own pages (Notifications, Settings) · the role tools
-(Administration, Translations) · What's new · toggles (keksdose's presentation mode) ·
-divider · Log out; the `LegalLinks` footer.
+(kk Q1, ka Q1) → §2.3.
 
 ### 6.6 `TopBarActions` has signed-out slots
 
-(KS 1): `language` and `signIn`. They are used
-when no account is set, as on KS's public pages.
+(KS 1) → §3.1.
 
 ### 6.7 `TourMenu` works without a tours page
 
-(KS 2): its `href` is optional. KS's first
-tour is "Your first curve" on `/curves`.
+(KS 2) → §2.4, §3.1.
 
 ### 6.8 Search filters by role
 
-(KS 3): admin sections for admins only, public pages when
-signed out, and never content.
+(KS 3) → §2.5.
 
 ### 6.9 `SyncStatusIndicator`'s `onSync` is optional
 
-(KS 4): without it the indicator is a
-status, not a button.
+(KS 4) → §2.6, §3.1.
 
 ### 6.10 kastlan's sync
 
-(ka F7, Q4):
-- the short labels are "Offline", "Syncing…", "3 waiting";
-- "handovers" goes in the tooltip ("Handovers on this device: 3 changes waiting to
-   sync"; "Offline: handovers keep working on this device; everything else needs a
-   connection");
-- the pill (`offline-indicator.tsx`) goes, and `HandoverSyncBanner` stays above the
-   handover pages for the refusals.
+(ka F7, Q4) → §2.6.
 
 ### 6.11 Search on a phone
 
-Kastlan drops `hideTriggerOnPhone` (ka F5).
+(ka F5) → §2.5.
 
 ## 7. What shipped (ui-kit 0.42)
 
@@ -387,7 +422,7 @@ All in `@eifi1/ui-kit/shell` (and the barrel). The words are a new namespace,
     and `locale`.
   - `storage` (`"device"`, the default, or `"none"`): `"none"` is the online-only preset
     (KS). It ignores `pending`, `blocked` and `waitingForPlan`. Offline then reads "changes
-    can't be saved until you reconnect", and a round reads "Saving…" (adopt-0.42.md:109;
+    can't be saved until you reconnect", and a round reads "Saving…" (docs/archive/adopt/adopt-0.42.md:109;
     local-first §1.4).
   - "Waiting for a plan" reuses `billing.waitingChanges`.
 - **`DevSwitchers`** (§2.7, §6.2, §6.3): role, then plan, each a `TopBarActionMenu` behind

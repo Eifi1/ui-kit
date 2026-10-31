@@ -20,8 +20,9 @@ colour code against the shipped presets. **kk** = keksdose, **ka** = kastlan,
 
 ## Status
 
-The body says what the build does as of ui-kit 0.34.0; the reviews and adoptions that
-amended a section are folded into it, and the table names them. The 0.32.2 snapshot and
+The body says what the build does as of ui-kit 0.34.0, and §5.9 (the chart colours) as
+of 0.52.0; the reviews and adoptions that amended a section are folded into it, and the
+table names them. The 0.32.2 snapshot and
 measurements, the per-app to-dos, the risks, the review log and the method are in
 [archive/colour-roles-history.md](archive/colour-roles-history.md).
 
@@ -31,7 +32,7 @@ measurements, the per-app to-dos, the risks, the review log and the method are i
 | 2 | Decisions | — | §12.1; round 0.34 Q1 (decision 5); round 0.36 (decision 15 reversed, §13.3) |
 | 3 | The roles today | ui-kit 0.33.0 | §12.3, §12.9, §12.10; adopt-0.33 (`--bg-hover` 5.5 %) |
 | 4 | Measured | — (archived) | |
-| 5 | The new roles | ui-kit 0.33.0 | §12.1, §12.2, §12.9–§12.12; adopt-0.33 (`--bg-hover` 5.5 %, B′'s translucent ink) |
+| 5 | The new roles | ui-kit 0.33.0 | §12.1, §12.2, §12.9–§12.12; adopt-0.33 (`--bg-hover` 5.5 %, B′'s translucent ink); §5.9 (ui-kit 0.49: the chart hues and inks; 0.51.6 and 0.52: `edges="auto"`) |
 | 6 | SwipeAction `tone` | ui-kit 0.33.0 | §12.6 (`paint`) |
 | 7 | Utility classes | ui-kit 0.33.0; the kit's own markup on them in 0.34.0 | §12.4; round 0.34 Q1 (`ROLE_BUDGET` 0) |
 | 8 | Undeclared custom properties | ui-kit 0.33.0 (`@eifi1/ui-kit/testing`) | §12.5; adopt-0.33 (`declaredCustomProperties`) |
@@ -87,7 +88,7 @@ All as recommended.
    tests, and kk has 22 test files that name `[var(--…)]` class strings, some of them
    on kit-rendered markup. *Superseded in 0.34 (round 0.34 Q1):* the kit's markup
    moved to the utilities in one codemod (3,290 classes, the same rules), the ratchet's
-   budget is 0, and `docs/adopt-0.34.md` lists the app tests that name kit classes.
+   budget is 0, and `docs/archive/adopt/adopt-0.34.md` lists the app tests that name kit classes.
 6. **SwipeAction: a soft wash when idle, the solid fill and its `-contrast` when armed**
    (§6). Idle is the tone's wash under the tone's text (≥ 4.52:1; brand was the exception
    at 4.43–4.49 in three derived dark presets until `--brand-muted` moved to 62 %, §5.8).
@@ -214,7 +215,7 @@ Settled by the kit, and kept by the reviews:
 | Categorical | `--hue-{blue,indigo,purple,teal,orange}` `-contrast` `-border` `-bg` | literals per mode | no | light teal and orange deepened (§13) |
 | Media | `--media-ink` `--media-scrim` `--media-scrim-hover` | literals, the same in both modes | no | — |
 | Toast | `--toast-*-bg/-border` (aliases), `--z-toast` | aliases | — | — |
-| Chart | `--chart-1…9` (+ heat stops in JS) | TokenSet | yes | — |
+| Chart | `--chart-1…9` (+ heat stops in JS); since 0.49 the inks `--chart-ink` `--chart-muted` (§5.9) | TokenSet | yes | — |
 | Focus | `--focus-ring-width` 2 px / 3 px | CSS | — | 3 px |
 
 ### 3.3 Gaps per tone
@@ -557,6 +558,43 @@ read as two surfaces. Text wins over the hover's step.
   × mode × contrast level, hold the three shares equal to the stylesheet's, and hold the
   hover's 1.08 step from the chip.
 
+### 5.9 Chart colours: the hues, the two inks, the edge (ui-kit 0.49; 0.51.6, 0.52)
+
+Added in ui-kit 0.52 (refactor audit 2026-10-30 DOC-3); until then only the README's
+Colour table and adopt-0.49 said it.
+
+- **Eight categorical hues, the same in both themes**: anyplot's "Imprint" set
+  (`--chart-1` … `--chart-8`; `--chart-9` repeats slot 1, where `paletteFor(8)` lands).
+  A categorical hue has no meaning and no order: it only has to stay separable from the
+  other seven, CVD-safe across protan, deutan and tritan. Paul Tol's "Muted" is the
+  `paul-tol` preset. `paletteFor(i)` returns the CSS variable, so a series follows a
+  preset switch. Chart money keeps the money tokens.
+- **Two inks are the only chart colours that change with the theme.** `--chart-ink`
+  (`#1a1a17` light, `#f0efe8` dark) for totals, baselines, outlines and edges;
+  `--chart-muted` (`#6b6a63`, `#a8a79f`) for an "other", rest or disabled slice and for
+  confidence bands. `CHART_ROLES` names them by role (`other`, `rest`, `disabled`, `band`
+  → `var(--chart-muted)`; `total`, `baseline`, `outline` → `var(--chart-ink)`), so an app
+  picks a chart colour by meaning, never by slot.
+- **A hue under 3:1 gets an ink edge, not another colour** (WCAG 1.4.11,
+  `EDGE_MIN_CONTRAST` 3). `chartEdge(fill, surfaces)` answers the outline ink for a filled
+  mark (a bar, an area, a treemap tile) whose hue is under 3:1 on its worst ground; the
+  fill keeps its hue. In light that is cyan, lime, lavender, ochre and green on cream; in
+  dark, matte red and rose. Its live side, `useChartEdge` (`chart-edge.ts`), reads the
+  resolved colours off `<html>`, so the edge follows a theme toggle and a palette switch.
+- **When the edge is drawn: `edges="auto"`, one rule for tiles and series.** Per-hue edges
+  at Standard contrast looked uneven from mark to mark: five of the eight hues outlined in
+  light, two in dark, a light outline beside neighbours with none (keksdose dev #642). So
+  the edge follows the contrast setting, live:
+  - **Standard contrast:** no per-hue edge. Treemap draws every tile with the same 2px
+    gutter in `--bg-page`; a SeriesChart bar or area keeps its own fill and stroke.
+  - **More contrast** (`<html data-contrast="more">`: chosen, or System on a device that
+    asks for more): the rule above, the ink edge on every hue under 3:1 (Treemap: on the
+    card-coloured gutter).
+
+  Treemap since ui-kit 0.51.6, with `edges="uniform"` or `"contrast"` to pin one rule;
+  SeriesChart's bars and areas since ui-kit 0.52 (Marcel, 2026-10-31, on the refactor
+  audit's DSP-18: the same rule, rather than recording that it is for tiles only).
+
 ## 6. SwipeAction `tone` (k24, §2.6, §2.12)
 
 ```ts
@@ -877,7 +915,7 @@ source.
 
 Moved to [archive/colour-roles-history.md](archive/colour-roles-history.md): each app's
 0.33 to-dos — the class rewrite, the swipe plans, the money fills, the loud warning
-frames, the hovers and the guard's wiring. `docs/adopt-0.33.md` carried them as
+frames, the hovers and the guard's wiring. `docs/archive/adopt/adopt-0.33.md` carried them as
 checklists.
 
 ## 10. What the kit adds (ui-kit 0.33)
@@ -943,7 +981,7 @@ stands here (none does: all twelve are folded). The reviews' wording is in
 4. **The utility set, completed** → §7.2.
 5. **The guard** → §8.2, §8.3.
 6. **Swipes: `paint` for a documented exception** → §6.
-7. **The adopt-0.33 migration for tests** → archive (`docs/adopt-0.33.md` carried it).
+7. **The adopt-0.33 migration for tests** → archive (`docs/archive/adopt/adopt-0.33.md` carried it).
 8. **Comments and optional work** → archive.
 9. **`--border` is not a fill under text** → §5.2.
 10. **Two hover points: B′'s translucent ink, `--bg-hover` at 5.5 %** → §5.7, §5.5.
