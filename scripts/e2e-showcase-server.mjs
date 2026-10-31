@@ -8,7 +8,8 @@
  * Launch the browser FIRST, then start the server inside the `try` whose `finally` stops
  * it. The server runs detached, in its own process group; a launch that throws after it
  * started (no headless shell, no libasound) left it holding the port, and Vite's
- * `strictPort` failed the next run with "port in use".
+ * `strictPort` failed the next run with "port in use". In that `finally`, stop the server
+ * BEFORE `browser.close()`: a crashed browser rejects its close (0.52 code review).
  */
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";

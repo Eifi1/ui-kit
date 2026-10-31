@@ -181,8 +181,10 @@ try {
     for (const note of notes) console.log(`  NOTE  ${note}`);
   }
 } finally {
-  await browser.close();
+  // The server first: it cannot throw, and a browser that crashed mid-run rejects its
+  // close(), which left the detached Vite holding the port (0.52 code review).
   server.stop();
+  await browser.close();
 }
 console.log(failed ? `\n${failed} check(s) failed` : "\nall checks passed");
 process.exit(failed ? 1 : 0);

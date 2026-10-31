@@ -472,8 +472,10 @@ async function main() {
       await Promise.all(VARIANTS.map(sweepVariant));
     }
   } finally {
-    await browser.close();
+    // The preview first: it cannot throw, and a browser that crashed mid-run rejects its
+    // close(), which left the detached `vite preview` holding the port (0.52 code review).
     preview?.stop();
+    await browser.close();
   }
 
   const findings = perVariant.flat();
