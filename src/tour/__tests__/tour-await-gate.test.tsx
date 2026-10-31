@@ -1,8 +1,15 @@
 import { useState } from "react";
-import { act, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TourProvider, useTour, useTourGate, useTourGateRelease, type TourStep } from "../tour";
+
+// The overlay is its own chunk since 0.52 (refactor audit 2026-10-30, MOD-1): loaded once
+// up front, as an app's bundle has it by the time a tour starts; React.lazy still resolves
+// it a render after the start, which the waits below cover.
+beforeAll(async () => {
+  await import("../tour-overlay");
+});
 
 /**
  * Finish on save success (docs/tours-harmonization.md §11.4, contract round 054 §4): an
@@ -80,6 +87,12 @@ async function press(name: string | RegExp) {
   fireEvent.click(screen.getByRole("button", { name }));
   await flush();
 }
+/** Start: the overlay is a chunk of its own (MOD-1), so the card is there a render later. */
+async function begin() {
+  fireEvent.click(screen.getByRole("button", { name: "Take the tour" }));
+  await waitFor(() => expect(document.querySelector("[data-tour-overlay]")).not.toBeNull());
+  await flush();
+}
 const state = () => screen.getByTestId("state").textContent;
 
 beforeEach(() => {
@@ -99,7 +112,7 @@ afterEach(() => {
 });
 
 async function toSave() {
-  await press("Take the tour");
+  await begin();
   await press("Next");
   fireEvent.change(screen.getByRole("textbox", { name: "Amount" }), { target: { value: "12" } });
   await flush();
@@ -141,7 +154,7 @@ describe("Tour awaitGate", () => {
 
   it("a release on an earlier step jumps past the step that awaits it (Enter in the memo saved)", async () => {
     renderTour();
-    await press("Take the tour");
+    await begin();
     await press("Next");
     expect(state()).toBe("step 1");
     await press("Server ok");
@@ -150,7 +163,7 @@ describe("Tour awaitGate", () => {
 
   it("a release nobody awaits does nothing", async () => {
     renderTour([STEPS[0], STEPS[3]]);
-    await press("Take the tour");
+    await begin();
     await press("Server ok");
     expect(state()).toBe("step 0");
   });
@@ -180,7 +193,7 @@ describe("Tour awaitGate", () => {
 
   it("refuse on another step is ignored", async () => {
     renderTour();
-    await press("Take the tour");
+    await begin();
     await press("Server error");
     expect(screen.queryByText("The server said no.")).toBeNull();
   });
@@ -196,7 +209,7 @@ describe("Tour awaitGate", () => {
 
   it("without its target (a viewer's missing Save) the step keeps a plain Next", async () => {
     renderTour([STEPS[0], { ...STEPS[2], target: '[data-tour="nope"]' }, STEPS[3]]);
-    await press("Take the tour");
+    await begin();
     await press("Next");
     // The finder gives up after 45 frames and centres the card.
     expect(await screen.findByRole("button", { name: "Next" }, { timeout: 3000 })).toBeInTheDocument();

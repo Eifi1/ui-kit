@@ -1,9 +1,17 @@
 import { useState } from "react";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TourProvider, useTour, useTourGate, type TourStep } from "../tour";
 import { dockEdge, dockStyle, readBand, scrollIntoFreeHalf } from "../tour-dock";
+import { viewportMatchMedia } from "../../test/viewport";
+
+// The overlay is its own chunk since 0.52 (refactor audit 2026-10-30, MOD-1): loaded once
+// up front, as an app's bundle has it by the time a tour starts; React.lazy still resolves
+// it a render after the start, which the waits below cover.
+beforeAll(async () => {
+  await import("../tour-overlay");
+});
 
 /**
  * The docked card on phones (docs/tours-harmonization.md §11.7, contract round 054 §6): the
@@ -34,6 +42,8 @@ beforeEach(() => {
   Element.prototype.scrollIntoView = vi.fn();
   vi.stubGlobal("innerWidth", VIEW.width);
   vi.stubGlobal("innerHeight", VIEW.height);
+  // Below `sm` is a media query since 0.52 (DUP-9), as `max-sm:` asks it.
+  vi.stubGlobal("matchMedia", viewportMatchMedia(VIEW.width));
 });
 afterEach(() => {
   vi.restoreAllMocks();
@@ -167,6 +177,8 @@ async function run(steps: TourStep[], dockOnPhones?: boolean) {
     </TourProvider>,
   );
   fireEvent.click(screen.getByRole("button", { name: "Take the tour" }));
+  // The overlay is a chunk of its own (MOD-1): the card is there a render later.
+  await screen.findByRole("dialog");
   await act(async () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
   });
@@ -184,6 +196,7 @@ describe("where it applies", () => {
 
   it("not from sm up", async () => {
     vi.stubGlobal("innerWidth", 1024);
+    vi.stubGlobal("matchMedia", viewportMatchMedia(1024));
     await run([GATE, END]);
     expect(card()).not.toHaveAttribute("data-tour-docked");
   });

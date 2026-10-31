@@ -1,10 +1,17 @@
 import { useState } from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TourProvider, useTour, type TourStep } from "../tour";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
+
+// The overlay is its own chunk since 0.52 (refactor audit 2026-10-30, MOD-1): loaded once
+// up front, as an app's bundle has it by the time a tour starts; React.lazy still resolves
+// it a render after the start, which the waits below cover.
+beforeAll(async () => {
+  await import("../tour-overlay");
+});
 
 /**
  * keksdose live #436: a step that spotlights an AmountInput left the field unusable on a
@@ -61,6 +68,8 @@ async function settle() {
 
 async function start() {
   fireEvent.click(screen.getByRole("button", { name: "Take the tour" }));
+  // The overlay is a chunk of its own (MOD-1): the card is there a render later.
+  await screen.findByRole("dialog");
   await flush();
 }
 

@@ -1,11 +1,18 @@
 import { useState } from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TourProvider, useTour, useTourGate, type TourStep } from "../tour";
 import { Combobox, InlineEntityCombobox } from "../../components/combobox";
 import { Autocomplete } from "../../components/autocomplete";
 import { focusQuietly } from "../../lib/quiet-focus";
+
+// The overlay is its own chunk since 0.52 (refactor audit 2026-10-30, MOD-1): loaded once
+// up front, as an app's bundle has it by the time a tour starts; React.lazy still resolves
+// it a render after the start, which the waits below cover.
+beforeAll(async () => {
+  await import("../tour-overlay");
+});
 
 /**
  * 0.50.1 (keksdose B1): on a fine pointer the tour focuses a field step's first control on
@@ -82,6 +89,8 @@ describe("Tour arrival on a picker field (0.50.1)", () => {
       </TourProvider>,
     );
     fireEvent.click(screen.getByRole("button", { name: "Take the tour" }));
+    // The overlay is a chunk of its own (MOD-1): the card is there a render later.
+    await screen.findByRole("dialog");
     await act(async () => {
       await Promise.resolve();
     });
@@ -107,6 +116,8 @@ describe("Tour arrival on a picker field (0.50.1)", () => {
       </TourProvider>,
     );
     fireEvent.click(screen.getByRole("button", { name: "Take the tour" }));
+    // The overlay is a chunk of its own (MOD-1): the card is there a render later.
+    await screen.findByRole("dialog");
     await act(async () => {
       await Promise.resolve();
     });

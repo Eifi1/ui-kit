@@ -1,4 +1,5 @@
 import { createContext, useContext, useLayoutEffect, useMemo, useRef } from "react";
+import type { TourStep, TourStepContext } from "./tour";
 
 /*
  * # Value gates (docs/tours-harmonization.md §11.1)
@@ -115,6 +116,28 @@ export function createGateRegistry(): GateRegistry {
       for (const listener of signals) listener(signal);
     },
   };
+}
+
+/*
+ * The step context and `when` (§11.3), asked by the provider on each arrival and by the
+ * overlay (a `beforeStep`, the "Back to …" link). Here rather than in tour.tsx, whose
+ * names reach the barrel through `export *`, and rather than in the overlay, which loads
+ * only once a tour starts (refactor audit 2026-10-30, MOD-1).
+ */
+
+export function stepContext(gates: GateRegistry, via: TourStepContext["via"]): TourStepContext {
+  return { gate: (key) => gates.get(key), via };
+}
+
+/** A step's `when`, asked now; a throw is a skip, and the error goes to the console. */
+export function isShown(step: TourStep, ctx: TourStepContext): boolean {
+  if (!step.when) return true;
+  try {
+    return step.when(ctx) === true;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
 }
 
 /** What the provider shares with the gate hooks and `TourGuideButton` — internal. */

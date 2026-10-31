@@ -58,6 +58,31 @@ const FOCUSABLE =
  */
 const isTabStop = (el: HTMLElement): boolean => el.tabIndex >= 0 && !el.closest("[hidden],[inert]");
 
+/** The tab stops strictly inside `el`, in DOM order. */
+const stopsWithin = (el: Element): HTMLElement[] =>
+  Array.from(el.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(isTabStop);
+
+/**
+ * The tab stops at or inside `el`, in DOM order: `el` itself first when it is one. The
+ * trap's own list, for a part that walks Tab over something that is not a trap — the
+ * tour's field + card ring (refactor audit 2026-10-30, DUP-9: it had its own copy of the
+ * selector).
+ */
+export function tabStops(el: Element): HTMLElement[] {
+  const own = el instanceof HTMLElement && el.matches(FOCUSABLE) && isTabStop(el);
+  return own ? [el, ...stopsWithin(el)] : stopsWithin(el);
+}
+
+/**
+ * The first control in `el` (or `el` itself) a Tab would land on — the one a person
+ * types into or presses. A guided tour step focuses it (§11.8). Its own copy took the
+ * selector alone, so a roving cell (`tabindex="-1"`) or a hidden button before the
+ * field took the focus instead: round 0.34's BUG-4, which {@link isTabStop} fixed here.
+ */
+export function firstTabStop(el: Element): HTMLElement | null {
+  return tabStops(el)[0] ?? null;
+}
+
 /**
  * Marks a container whose trap is currently active.
  *
@@ -146,11 +171,11 @@ export function useFocusTrap(
     };
 
     const tabbables = () =>
-      Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
+      stopsWithin(container).filter(
         // A tabbable inside a NESTED open overlay belongs to that overlay's trap, not
         // to this one — otherwise the outer list spans both panels and Tab from the
         // inner panel's last control wraps to the OUTER panel's first.
-        (el) => isTabStop(el) && !inNestedTrap(el),
+        (el) => !inNestedTrap(el),
       );
 
     const { initialFocus: how } = optsRef.current;

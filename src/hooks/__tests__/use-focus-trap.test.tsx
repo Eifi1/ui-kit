@@ -1,6 +1,6 @@
 import { StrictMode, useRef, useState } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { useFocusTrap } from "../use-focus-trap";
+import { firstTabStop, tabStops, useFocusTrap } from "../use-focus-trap";
 import type { FocusTrapOptions } from "../use-focus-trap";
 
 /**
@@ -331,5 +331,41 @@ describe("useFocusTrap", () => {
     screen.getByRole("button", { name: "inner-two" }).focus();
     fireEvent.keyDown(inner, { key: "Tab" });
     expect(screen.getByRole("button", { name: "inner-one" })).toHaveFocus();
+  });
+});
+
+describe("tabStops / firstTabStop", () => {
+  // The trap's reading of "a Tab lands here", for a part that walks Tab without a trap —
+  // the tour's field + card ring (refactor audit 2026-10-30, DUP-9).
+  it("lists what a Tab reaches, the element itself first, and nothing taken out of the order", () => {
+    const { container } = render(
+      <div>
+        <div data-testid="field">
+          <button type="button" tabIndex={-1}>
+            Cell
+          </button>
+          <div hidden>
+            <button type="button">Hidden</button>
+          </div>
+          <div inert>
+            <button type="button">Inert</button>
+          </div>
+          <button type="button" disabled>
+            Disabled
+          </button>
+          <input aria-label="Amount" />
+          <a href="#more">More</a>
+        </div>
+      </div>,
+    );
+    const field = screen.getByTestId("field");
+    // A focusable container (a roving widget's root): itself first.
+    field.tabIndex = 0;
+    const amount = screen.getByRole("textbox", { name: "Amount" });
+    const more = screen.getByRole("link", { name: "More" });
+    expect(tabStops(field)).toEqual([field, amount, more]);
+    expect(firstTabStop(container.querySelector("[hidden]")!)).toBeNull();
+    field.removeAttribute("tabindex");
+    expect(firstTabStop(field)).toBe(amount);
   });
 });

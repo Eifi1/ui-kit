@@ -1,11 +1,18 @@
 import { act, render, screen } from "@testing-library/react";
 import { useEffect } from "react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 
 import { TourProvider, useTour, type TourStep } from "../tour";
 import type { TourInfo } from "../tour-info";
 import { useTourProgress, type UseTourProgressOptions } from "../use-tour-progress";
+
+// The overlay is its own chunk since 0.52 (refactor audit 2026-10-30, MOD-1): loaded once
+// up front, as an app's bundle has it by the time a tour starts; React.lazy still resolves
+// it a render after the start, which the waits below cover.
+beforeAll(async () => {
+  await import("../tour-overlay");
+});
 
 /**
  * docs/tours-harmonization.md §9.6: the provider records a finished tour once, through the
@@ -120,7 +127,7 @@ describe("TourProvider onComplete", () => {
     expect(typeof stored.budget).toBe("string");
   });
 
-  it("never on a skip or stop(): no write, no onComplete, no onFinish", () => {
+  it("never on a skip or stop(): no write, no onComplete, no onFinish", async () => {
     const storageKey = freshKey();
     const onComplete = vi.fn();
     const onFinish = vi.fn();
@@ -131,6 +138,8 @@ describe("TourProvider onComplete", () => {
 
     const onSkip = vi.fn();
     act(() => engine().start(STEPS, { tour: BUDGET, onFinish, onSkip }));
+    // Esc is heard by the overlay, a chunk of its own (MOD-1): there a render later.
+    await screen.findByRole("dialog");
     act(() => engine().next());
     // Esc is the overlay's skip.
     act(() => {

@@ -1,7 +1,14 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { TourProvider, useTour, type TourStep } from "../tour";
+
+// The overlay is its own chunk since 0.52 (refactor audit 2026-10-30, MOD-1): loaded once
+// up front, as an app's bundle has it by the time a tour starts; React.lazy still resolves
+// it a render after the start, which the waits below cover.
+beforeAll(async () => {
+  await import("../tour-overlay");
+});
 
 /**
  * A step's `beforeStep` that rejects, or has not settled yet (refactor audit 2026-10-30,
@@ -61,7 +68,7 @@ describe("Tour beforeStep that fails or is still running", () => {
       { title: "Rows", body: "Second." },
     ]);
     fireEvent.click(screen.getByRole("button", { name: "Take the tour" }));
-    expect(await screen.findByRole("dialog", {}, { timeout: 1000 })).toHaveTextContent("Welcome");
+    expect(await screen.findByRole("dialog")).toHaveTextContent("Welcome");
     expect(error).toHaveBeenCalledWith(failure);
     // Shown, so its keys are the shown step's: Enter goes on to the next.
     await press("Enter");
@@ -81,7 +88,9 @@ describe("Tour beforeStep that fails or is still running", () => {
       },
     ]);
     fireEvent.click(screen.getByRole("button", { name: "Take the tour" }));
-    expect(await screen.findByRole("dialog", {}, { timeout: 1000 })).toHaveTextContent("Filters");
+    // The target measures 0×0 in jsdom: the finder gives up after its 45 frames and
+    // centres the card. The suite's 5 s, not 1 s: 45 real frames under the loaded check.
+    expect(await screen.findByRole("dialog")).toHaveTextContent("Filters");
   });
 
   it("Enter and the arrows wait for a beforeStep still running", async () => {
@@ -92,8 +101,8 @@ describe("Tour beforeStep that fails or is still running", () => {
       { title: "Rows", body: "Third." },
     ]);
     fireEvent.click(screen.getByRole("button", { name: "Take the tour" }));
-    await flush();
-    expect(screen.getByRole("dialog")).toHaveTextContent("Welcome");
+    // The overlay is a chunk of its own (MOD-1): the card is there a render later.
+    expect(await screen.findByRole("dialog")).toHaveTextContent("Welcome");
 
     await press("Enter");
     expect(state()).toBe("step 1");
@@ -118,7 +127,8 @@ describe("Tour beforeStep that fails or is still running", () => {
       onSkip,
     );
     fireEvent.click(screen.getByRole("button", { name: "Take the tour" }));
-    await flush();
+    // The overlay is a chunk of its own (MOD-1): the card is there a render later.
+    await screen.findByRole("dialog");
     await press("Enter");
     expect(state()).toBe("step 1");
     await press("Escape");

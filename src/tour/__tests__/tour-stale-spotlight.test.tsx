@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TourProvider, useTour, type TourStep } from "../tour";
 
@@ -19,7 +19,11 @@ import { TourProvider, useTour, type TourStep } from "../tour";
  * state is still queued: the "follow the target" interval queues exactly such an update
  * every 250 ms (eagerly bailed out because the rect had not moved, but queued all the
  * same), so the next render re-based on the old rect and the reset was gone. These
- * tests need that interval to have fired before the step changes, hence the waits.
+ * tests need that interval to have fired before the step changes.
+ *
+ * On fake time (refactor audit 2026-10-30, TST-3): the interval and the finder's frames
+ * are advanced by hand. They waited 300 and 1,200 ms of real time, 3.6 s a run, betting
+ * that a loaded machine had fired a 250 ms interval by then.
  */
 
 const box = { top: 300, left: 400, width: 100, height: 40, right: 500, bottom: 340, x: 400, y: 300 };
@@ -53,12 +57,23 @@ async function flush() {
   });
 }
 
-/** Real time passing, so the overlay's follow interval (250 ms) runs at least once. */
-async function wait(ms: number) {
-  await act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, ms));
+/** Fake time passing: the overlay's follow interval (250 ms) runs, and the finder's frames. */
+function tick(ms: number) {
+  act(() => {
+    vi.advanceTimersByTime(ms);
   });
 }
+
+/** Start the tour; the overlay is its own chunk (MOD-1), so the card is a render later. */
+async function startTour() {
+  fireEvent.click(screen.getByRole("button", { name: "Take the tour" }));
+  await screen.findByRole("dialog");
+}
+
+// The overlay's chunk, loaded once up front; React.lazy still resolves it a render later.
+beforeAll(async () => {
+  await import("../tour-overlay");
+});
 
 const shields = () => document.querySelectorAll("[data-tour-shield]");
 const cardOf = () => screen.getByRole("button", { name: "Skip" }).closest('[tabindex="-1"]') as HTMLElement;
@@ -81,8 +96,12 @@ describe("Tour: no stale spotlight on the step after a spotlighted one", () => {
     Element.prototype.scrollIntoView = vi.fn();
     vi.spyOn(window, "innerWidth", "get").mockReturnValue(1024);
     vi.spyOn(window, "innerHeight", "get").mockReturnValue(768);
+    // Only the interval and the frames: the overlay's `beforeStep` wait and React's own
+    // scheduling stay on real time.
+    vi.useFakeTimers({ toFake: ["setInterval", "clearInterval", "requestAnimationFrame", "cancelAnimationFrame"] });
   });
   afterEach(() => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
@@ -93,24 +112,22 @@ describe("Tour: no stale spotlight on the step after a spotlighted one", () => {
 
   it("a targeted step followed by an untargeted step leaves no hole and centres the card", async () => {
     renderTour(SPOT_THEN_CENTRED);
-    fireEvent.click(screen.getByRole("button", { name: "Take the tour" }));
-    await flush();
+    await startTour();
     expect(shields()).toHaveLength(4);
-    await wait(300);
+    tick(300);
 
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     await flush();
     expect(screen.getByRole("dialog")).toHaveAccessibleName("All set");
     expectCentredWithoutSpotlight();
     // …and it stays that way: nothing re-lights the old target later.
-    await wait(300);
+    tick(300);
     expectCentredWithoutSpotlight();
   });
 
   it("Back then Next onto the untargeted step is centred too", async () => {
     renderTour(SPOT_THEN_CENTRED, 1);
-    fireEvent.click(screen.getByRole("button", { name: "Take the tour" }));
-    await flush();
+    await startTour();
     // The deep-link case was always fine.
     expectCentredWithoutSpotlight();
 
@@ -118,21 +135,20 @@ describe("Tour: no stale spotlight on the step after a spotlighted one", () => {
     await flush();
     expect(state()).toBe("step 0");
     expect(shields()).toHaveLength(4);
-    await wait(300);
+    tick(300);
 
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     await flush();
     expect(state()).toBe("step 1");
     expectCentredWithoutSpotlight();
-    await wait(300);
+    tick(300);
     expectCentredWithoutSpotlight();
   });
 
   it("advancing with the keyboard behaves the same", async () => {
     renderTour(SPOT_THEN_CENTRED);
-    fireEvent.click(screen.getByRole("button", { name: "Take the tour" }));
-    await flush();
-    await wait(300);
+    await startTour();
+    tick(300);
     fireEvent.keyDown(document.body, { key: "ArrowRight" });
     await flush();
     expect(state()).toBe("step 1");
@@ -144,21 +160,20 @@ describe("Tour: no stale spotlight on the step after a spotlighted one", () => {
       { title: "Target", body: "Here.", target: '[data-tour="target"]' },
       { title: "Gone", body: "Its anchor is not on this page.", target: '[data-tour="nowhere"]' },
     ]);
-    fireEvent.click(screen.getByRole("button", { name: "Take the tour" }));
-    await flush();
-    await wait(300);
+    await startTour();
+    tick(300);
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    await flush();
     // The finder retries for 45 frames before it gives up and centres the card.
-    await wait(1200);
+    tick(1200);
     expect(screen.getByRole("dialog")).toHaveAccessibleName("Gone");
     expectCentredWithoutSpotlight();
   });
 
   it("going back from the untargeted step spotlights the target again", async () => {
     renderTour(SPOT_THEN_CENTRED);
-    fireEvent.click(screen.getByRole("button", { name: "Take the tour" }));
-    await flush();
-    await wait(300);
+    await startTour();
+    tick(300);
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     await flush();
     expectCentredWithoutSpotlight();
