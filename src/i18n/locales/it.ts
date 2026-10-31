@@ -1287,6 +1287,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       stoppedAll: (app) => `Fatto. Non riceverà più e-mail di notifica da ${app}.`,
       accountMail: "Le e-mail sul Suo account continuano ad arrivare.",
       turnBackOn: "Può riattivarle in qualsiasi momento nelle impostazioni.",
+      stoppedHint: (accountMail, turnBackOn) => `${accountMail} ${turnBackOn}`,
       openSettings: "Apri le impostazioni",
       invalidLink: "Questo link non funziona più. Può disattivare le e-mail nelle impostazioni.",
       failed: "Non ha funzionato. Riprovi.",

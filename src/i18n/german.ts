@@ -1306,6 +1306,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       stoppedAll: (app) => `Erledigt. Sie erhalten keine Benachrichtigungs-E-Mails von ${app} mehr.`,
       accountMail: "E-Mails zu Ihrem Konto erhalten Sie weiterhin.",
       turnBackOn: "Sie können sie jederzeit in den Einstellungen wieder einschalten.",
+      stoppedHint: (accountMail, turnBackOn) => `${accountMail} ${turnBackOn}`,
       openSettings: "Einstellungen öffnen",
       invalidLink:
         "Dieser Link funktioniert nicht mehr. Sie können E-Mails stattdessen in den Einstellungen abbestellen.",

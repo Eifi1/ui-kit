@@ -1302,6 +1302,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       stoppedAll: (app) => `C’est fait. Vous ne recevrez plus d’e-mails de notification de ${app}.`,
       accountMail: "Les e-mails concernant votre compte continuent d’arriver.",
       turnBackOn: "Vous pouvez les réactiver à tout moment dans les paramètres.",
+      stoppedHint: (accountMail, turnBackOn) => `${accountMail} ${turnBackOn}`,
       openSettings: "Ouvrir les paramètres",
       invalidLink: "Ce lien ne fonctionne plus. Vous pouvez désactiver les e-mails dans les paramètres.",
       failed: "Cela n’a pas fonctionné. Veuillez réessayer.",

@@ -1247,6 +1247,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       stoppedAll: (app) => `已完成。您将不再收到来自 ${app} 的通知邮件。`,
       accountMail: "有关您账户的邮件仍会照常发送。",
       turnBackOn: "您可以随时在“设置”中重新开启。",
+      // Chinese puts no space between sentences (refactor audit 2026-10-30, DOC-11).
+      stoppedHint: (accountMail, turnBackOn) => `${accountMail}${turnBackOn}`,
       openSettings: "打开设置",
       invalidLink: "此链接已失效。您可以改为在“设置”中关闭这些邮件。",
       failed: "操作未成功，请重试。",

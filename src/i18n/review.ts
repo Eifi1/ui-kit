@@ -353,6 +353,7 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "notifications.unsubscribeAbout": [["{{type}}"]],
   "notifications.stopAll": [["{{app}}"]],
   "notifications.stoppedAll": [["{{app}}"]],
+  "notifications.stoppedHint": [["{{accountMail}}", "{{turnBackOn}}"]],
   "deleteAccount.afterDays": [[1], [30]],
   "deleteAccount.handOver": [[1], [3]],
   "deleteAccount.lastAdminOf": [["{{companies}}"]],

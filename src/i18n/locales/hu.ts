@@ -1284,6 +1284,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       stoppedAll: (app) => `Kész. A(z) ${app} értesítő e-mailjeit többé nem kapja meg.`,
       accountMail: "A fiókjával kapcsolatos e-maileket továbbra is megkapja.",
       turnBackOn: "A beállításokban bármikor újra bekapcsolhatja őket.",
+      stoppedHint: (accountMail, turnBackOn) => `${accountMail} ${turnBackOn}`,
       openSettings: "Beállítások megnyitása",
       invalidLink: "Ez a link már nem működik. Az e-maileket a beállításokban is kikapcsolhatja.",
       failed: "Ez nem sikerült. Kérjük, próbálja újra.",
