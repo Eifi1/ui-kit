@@ -1,13 +1,28 @@
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { act, cleanup, render } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createQueryPersistence } from "../query-persistence";
 import type { QueryPersistence } from "../query-persistence";
 
 const DAY = 24 * 60 * 60 * 1000;
 
-afterEach(cleanup);
+/** The persister's throttle, in fake time. */
+const THROTTLE = 30;
+
+// Fake `setTimeout` and `Date`: the 30 ms throttle and TanStack's batched cache notifications
+// run when the test moves the clock, not when a loaded machine gets round to them. A real
+// sleep before "A's key holds no B" passed whether or not a late save was coming (it flaked
+// under load twice; refactor audit 2026-10-30, TST-3). `vi.waitFor` moves the fake clock by
+// its interval on every try.
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"] });
+});
+
+afterEach(() => {
+  cleanup();
+  vi.useRealTimers();
+});
 
 function memoryStorage() {
   const map = new Map<string, string>();
@@ -24,7 +39,9 @@ function memoryStorage() {
   };
 }
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+/** Every save already throttled, past its wait — run in fake time, so none is still to come
+ *  when the test then asserts that a key does NOT hold something. */
+const pastEveryThrottledSave = () => vi.advanceTimersByTimeAsync(THROTTLE * 2);
 
 /** A restore and a throttled save under a loaded full run can pass waitFor's 1 s default. */
 const WAIT = { timeout: 5000 };
@@ -33,7 +50,15 @@ const WAIT = { timeout: 5000 };
 function setup() {
   const storage = memoryStorage();
   const forCompany = (company: number) =>
-    createQueryPersistence({ app: "kastlan", user: 7, company, buster: "1", maxAge: DAY, storage, throttleTime: 30 });
+    createQueryPersistence({
+      app: "kastlan",
+      user: 7,
+      company,
+      buster: "1",
+      maxAge: DAY,
+      storage,
+      throttleTime: THROTTLE,
+    });
   const queryClient = new QueryClient({ defaultOptions: { queries: { gcTime: DAY } } });
   // The provider subscribes in an effect after its restore is done, so a test awaits the
   // restore inside act (which also runs that effect), not a fixed sleep: under a loaded full
@@ -72,7 +97,7 @@ describe("createQueryPersistence — a remount per key (the company switch)", ()
     await act(() => done1); // the restore, then the effect that subscribes
     queryClient.setQueryData(["estates"], "B's estates");
     await vi.waitFor(() => expect(storage.map.get(b.key)).toContain("B's estates"), WAIT);
-    await sleep(80); // past every throttled write A's subscription had pending
+    await pastEveryThrottledSave(); // any A's subscription had pending
 
     expect(storage.map.get(a.key)).toContain("A's estates");
     expect(storage.map.get(a.key)).not.toContain("B's estates");
@@ -93,8 +118,12 @@ describe("createQueryPersistence — a remount per key (the company switch)", ()
     view.rerender(mount(b));
     await act(() => done3); // the restore, then the effect that subscribes
     await b.leave(queryClient);
+    const doneAgain = restore();
     view.rerender(mount(a)); // the same object again: its restore re-arms it
-    await vi.waitFor(() => expect(queryClient.getQueryData(["estates"])).toBe("A's estates"), WAIT);
+    // The restore, then the effect that subscribes: the data alone shows before that effect
+    // has run, and an edit made in between is never saved.
+    await act(() => doneAgain);
+    expect(queryClient.getQueryData(["estates"])).toBe("A's estates");
     queryClient.setQueryData(["estates"], "A's edit");
     await vi.waitFor(() => expect(storage.map.get(a.key)).toContain("A's edit"), WAIT);
   });
@@ -108,7 +137,7 @@ describe("createQueryPersistence — a remount per key (the company switch)", ()
     queryClient.setQueryData(["estates"], "A's estates");
     await vi.waitFor(() => expect(storage.map.has(a.key)).toBe(true), WAIT);
     await a.clear(queryClient);
-    await sleep(80);
+    await pastEveryThrottledSave(); // the save the clear's emptied cache scheduled
     expect(storage.map.has(a.key)).toBe(false);
   });
 });
