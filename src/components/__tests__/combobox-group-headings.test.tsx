@@ -41,10 +41,13 @@ function Host({ groupBy }: { groupBy: (o: string) => string }) {
   return <Combobox label="Payee" value={value} onChange={setValue} options={OPTIONS} groupBy={groupBy} />;
 }
 
-/** The listbox as a reader walks it: headings and options in document order. */
+/** The listbox as a reader walks it: headings and options in document order. A
+ *  heading is the first item of the `role="group"` it names (INP-8). */
 function rows() {
   const list = screen.getByRole("listbox");
-  return Array.from(list.querySelectorAll("li")).map((li) => li.textContent ?? "");
+  return Array.from(list.querySelectorAll('[role="group"] > li:first-child, [role="option"]')).map(
+    (row) => row.textContent ?? "",
+  );
 }
 
 describe("Combobox group headings", () => {

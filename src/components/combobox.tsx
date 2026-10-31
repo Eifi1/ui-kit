@@ -1,5 +1,5 @@
 import { Fragment, useId, useMemo, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
+import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode, Ref } from "react";
 import { ChevronDown } from "lucide-react";
 import { FIELD_BASE, FIELD_FLOATING_PAD, FIELD_INVALID } from "./field-base";
 import { cn } from "../lib/cn";
@@ -9,9 +9,16 @@ import { isImeEnter } from "../lib/ime";
 import { isQuietFocus } from "../lib/quiet-focus";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { PickerSheet, SHEET_ROW_CLASS } from "./picker-sheet";
-import { ComboboxFieldLabel, endHintRowProps, GROUP_HEADING_STICKY, useActiveOptionScroll } from "./combobox-core";
-import { useKitLocale } from "../i18n/kit-labels";
-import { rankMatch, sameName } from "../lib/text-match";
+import {
+  ComboboxFieldLabel,
+  endHintRowProps,
+  groupRuns,
+  OptionGroup,
+  useActiveOptionScroll,
+  type GroupRun,
+} from "./combobox-core";
+import { DEFAULT_COMBOBOX_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { matchesSearch, rankHit, sameName, searchWords } from "../lib/text-match";
 import {
   EndHintRow,
   FieldCaption,
@@ -44,7 +51,7 @@ export interface ComboboxProps
   value: string;
   onChange: (v: string) => void;
   /** Suggestion pool (e.g. existing payee names). */
-  options: string[];
+  options: readonly string[];
   /** The visible label, a `<label for>` above the field: a ReactNode, as on every kit
    *  field (a string until 0.34, refactor audit 2026-10, API-9). Without one, name the
    *  field with `aria-label`. */
@@ -264,6 +271,9 @@ export function Combobox(props: ComboboxProps) {
   const query = typing ? value.trim() : "";
   // Folded as every kit list folds (DUP-5): "zurich" finds Zürich, by the locale's case.
   const locale = useKitLocale();
+  // The live status's words (INP-6): the result count and "No results", as the panel
+  // pickers say them.
+  const labels = useKitLabels("combobox", DEFAULT_COMBOBOX_LABELS);
   const matches = useMemo(() => {
     const seen = new Set<string>();
     const uniq = options.filter((o) => o && !seen.has(o) && seen.add(o));
@@ -272,11 +282,15 @@ export function Combobox(props: ComboboxProps) {
     if (!query) {
       ranked = uniq.slice(0, cap);
     } else {
-      // The whole name, then prefix matches, then substring matches — most relevant on
-      // top (`rankMatch`; a stable sort keeps the pool's order within a rank).
+      // Every word of the query somewhere in the name (0.51.4's rule, which this list
+      // was said to have and did not: refactor audit 2026-10-30, DUP-4), ranked by the
+      // WHOLE query — the whole name, then prefix matches, then substring matches, then
+      // the names that hold the words apart (`rankHit`). A stable sort keeps the
+      // pool's order within a rank.
+      const words = searchWords(query, locale);
       ranked = uniq
-        .map((o) => ({ o, rank: rankMatch(o, query, { locale }) }))
-        .filter((x) => x.rank >= 0)
+        .filter((o) => matchesSearch(words, [o], locale))
+        .map((o) => ({ o, rank: rankHit(o, query, { locale }) }))
         .sort((a, b) => a.rank - b.rank)
         .map((x) => x.o)
         .slice(0, cap);
@@ -296,27 +310,22 @@ export function Combobox(props: ComboboxProps) {
   }, [options, query, groupBy, maxSuggestions, isPhone, locale]);
 
   /**
-   * Which rows OPEN a group, and with what heading — computed once for both lists.
+   * The rows cut into their groups — computed once for both lists, each run a
+   * `role="group"` its heading names (INP-8). Without `groupBy`, one bare run.
    *
-   * The desktop list had this as `matches[i - 1]`, which is free; the sheet had it as
-   * `matches[matches.indexOf(o) - 1]`, which is a scan of the list per row and another
-   * per heading test. That is quadratic in the sheet's own cap of 50, on the branch
-   * that runs on the slowest hardware we ship to — and it answers the wrong question
-   * besides: `indexOf` finds the FIRST row with that string, so a duplicated option
-   * would have compared against a neighbour it is not next to. (`matches` de-duplicates
-   * today; that is a property of the memo above, not of the row being rendered.)
+   * The desktop list had the boundaries as `matches[i - 1]`, which is free; the sheet had
+   * them as `matches[matches.indexOf(o) - 1]`, which is a scan of the list per row and
+   * another per heading test. That is quadratic in the sheet's own cap of 50, on the
+   * branch that runs on the slowest hardware we ship to — and it answers the wrong
+   * question besides: `indexOf` finds the FIRST row with that string, so a duplicated
+   * option would have compared against a neighbour it is not next to. (`matches`
+   * de-duplicates today; that is a property of the memo above, not of the row being
+   * rendered.)
    */
-  const groupHeadings = useMemo(() => {
-    if (!groupBy) return null;
-    const heads = new Map<number, string>();
-    let prev: string | undefined;
-    matches.forEach((o, i) => {
-      const group = groupBy(o);
-      if (group != null && group !== prev) heads.set(i, group);
-      prev = group;
-    });
-    return heads;
-  }, [matches, groupBy]);
+  const runs = useMemo<GroupRun<string>[]>(
+    () => (groupBy ? groupRuns(matches, groupBy) : [{ group: null, start: 0, rows: matches }]),
+    [matches, groupBy],
+  );
 
   const take = (v: string) => {
     if (locked) return;
@@ -327,18 +336,6 @@ export function Combobox(props: ComboboxProps) {
     // whole pool again rather than a one-row filter of the value just chosen.
     setTyping(false);
   };
-
-  // Offered only when the typed text is genuinely NOT in the pool: an exact match —
-  // folded as the list matches, so "cafe" is Café ({@link sameName}, DUP-5 in the
-  // 2026-10-30 refactor audit) — is an existing entry the list is already showing, and a
-  // second way to pick it would be noise. Compared against `options`, not `matches` —
-  // `matches` is capped, so a pool of 300 payees would otherwise offer to "add" one
-  // that exists but fell off the end of the list.
-  // What the field claims the keyboard is on. Only on a pointer device: the phone
-  // renders its rows in a {@link PickerSheet} whose own search box owns focus, and a
-  // field pointing at an id that is not there is worse than one pointing nowhere.
-  const activeId = !isPhone && active >= 0 && active < matches.length ? optionId(active) : undefined;
-  useActiveOptionScroll(activeId);
 
   // While locked the field sits in the reason's Tooltip — in a fragment with a hidden
   // copy of the reason, Button's anatomy; `block` so a full-width field stays full width.
@@ -351,6 +348,12 @@ export function Combobox(props: ComboboxProps) {
       box
     );
 
+  // Offered only when the typed text is genuinely NOT in the pool: an exact match —
+  // folded as the list matches, so "cafe" is Café ({@link sameName}, DUP-5 in the
+  // 2026-10-30 refactor audit) — is an existing entry the list is already showing, and a
+  // second way to pick it would be noise. Compared against `options`, not `matches` —
+  // `matches` is capped, so a pool of 300 payees would otherwise offer to "add" one
+  // that exists but fell off the end of the list.
   const typed = value.trim();
   const createRow =
     createLabel && typed.length > 0 && !options.some((o) => sameName(o, typed, locale)) ? createLabel(typed) : null;
@@ -359,10 +362,90 @@ export function Combobox(props: ComboboxProps) {
   // over an empty "open" list is the dialog's, as it always was. On a phone the sheet
   // is the layer.
   const showing = !isPhone && open && !inert && (matches.length > 0 || Boolean(createRow));
+  // Whether a list is on screen — what the field's `aria-expanded` says: an open list
+  // with nothing to show said "expanded" with no listbox in the document (INP-6).
+  const expanded = isPhone ? open && !inert : showing;
   useDismissLayer(showing, () => {
     setOpen(false);
     setActive(-1);
   });
+
+  // The row the keyboard is on, in whichever list shows: the anchored one, named by the
+  // field, or the phone sheet's, named by the sheet's own search box, which takes the
+  // same keys (INP-6, 0.34's BUG-5 for this field).
+  const activeOption = expanded && active >= 0 && active < matches.length ? optionId(active) : undefined;
+  useActiveOptionScroll(activeOption);
+
+  // What the list holds, said in a live region kept mounted (INP-6): focus stays in the
+  // field, or in the sheet's search box, so a list changing under it was silent. The
+  // count while rows show; "No results" only for a query that left none — a field
+  // opened on an empty pool asked nothing.
+  const status =
+    !open || inert
+      ? null
+      : matches.length > 0
+        ? labels.resultCount(matches.length)
+        : query && !createRow
+          ? labels.noResults
+          : null;
+  const statusRegion = (
+    <div role="status" aria-live="polite" className="sr-only">
+      {status}
+    </div>
+  );
+
+  /** The list's keys — in the field and, on a phone, in the sheet's search box. Enter
+   *  with no row highlighted is "I mean what I typed" in both. */
+  const listKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setOpen(true);
+      setActive((i) => Math.min(i + 1, matches.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActive((i) => Math.max(i - 1, 0));
+    } else if (e.key === "Enter") {
+      // The Enter that confirms an IME composition is the IME's: it picks no row and
+      // submits nothing (BUG-9).
+      if (isImeEnter(e)) return;
+      if (open && active >= 0 && active < matches.length) {
+        e.preventDefault();
+        take(matches[active]);
+      } else {
+        // No row highlighted: the typed text is the answer. `preventDefault` only when a
+        // caller is taking Enter, so a plain form submit is otherwise left alone.
+        if (onSubmit) e.preventDefault();
+        setOpen(false);
+        onSubmit?.();
+      }
+    }
+  };
+
+  /** The rows in their runs — each group a `role="group"` its heading names (INP-8) —
+   *  for the sheet or the anchored list; `row` draws one option, `grouped` when it
+   *  stands under a heading. `matches` is group-contiguous, so the boundaries are a
+   *  property of the list rather than of the branch drawing it (see `runs`). */
+  const groupedRows = (sheet: boolean, row: (o: string, i: number, grouped: boolean) => ReactNode) =>
+    runs.map((run) => {
+      const rows = run.rows.map((o, k) => <Fragment key={o}>{row(o, run.start + k, run.group !== null)}</Fragment>);
+      if (run.group === null) return <Fragment key={`|${run.start}`}>{rows}</Fragment>;
+      return (
+        <OptionGroup
+          key={`${run.group}|${run.start}`}
+          id={`${listboxId}-group-${run.start}`}
+          heading={run.group}
+          className={
+            sheet
+              ? "px-4 pb-0.5 pt-3 text-caption"
+              : // The list's first item sits closer to its top edge; the create row
+                // comes first when there is one.
+                cn("px-3 pb-0.5 text-caption", run.start === 0 && !createRow ? "pt-1" : "pt-2")
+          }
+        >
+          {rows}
+        </OptionGroup>
+      );
+    });
 
   return (
     // `rest` dresses the outer box — a `data-tour` anchor, a test id. Not the NAME,
@@ -400,13 +483,15 @@ export function Combobox(props: ComboboxProps) {
               // field otherwise (dev#477: a field with neither announces only its text).
               aria-label={ariaLabel}
               role="combobox"
-              aria-expanded={open}
+              aria-expanded={expanded}
               // The list this field is the mouth of. Required by the role, and the half
               // that was missing: the field said it was expanded and never said what it
               // had expanded, so a reader had no way from the box to the options
               // (ESLint's `role-has-required-aria-props`, the audit's §a11y).
               aria-controls={listboxId}
-              aria-activedescendant={activeId}
+              // Only on a pointer device: on a phone the sheet's own search box holds
+              // focus and names the row, and the field behind it says nothing.
+              aria-activedescendant={isPhone ? undefined : activeOption}
               aria-autocomplete="list"
               aria-invalid={field.isInvalid || undefined}
               aria-describedby={mergeDescribedBy(field.describedBy, locked && lock.reasonId)}
@@ -458,29 +543,8 @@ export function Combobox(props: ComboboxProps) {
               }}
               onKeyDown={(e) => {
                 if (locked) return lockedKeyDown(e);
-                if (e.key === "ArrowDown") {
-                  e.preventDefault();
-                  setOpen(true);
-                  setActive((i) => Math.min(i + 1, matches.length - 1));
-                } else if (e.key === "ArrowUp") {
-                  e.preventDefault();
-                  setActive((i) => Math.max(i - 1, 0));
-                } else if (e.key === "Enter") {
-                  // The Enter that confirms an IME composition is the IME's: it picks no
-                  // row and submits nothing (BUG-9).
-                  if (isImeEnter(e)) return;
-                  if (open && active >= 0 && active < matches.length) {
-                    e.preventDefault();
-                    take(matches[active]);
-                  } else {
-                    // No row highlighted: the typed text is the answer. `preventDefault`
-                    // only when a caller is taking Enter, so a plain form submit is
-                    // otherwise left alone.
-                    if (onSubmit) e.preventDefault();
-                    setOpen(false);
-                    onSubmit?.();
-                  }
-                } else if (e.key === "Escape") {
+                listKeyDown(e);
+                if (e.key === "Escape") {
                   // A list that is SHOWING is the top of the Escape stack, and the key
                   // closes it and stops here: a Modal or FullBleedDialog around the field
                   // otherwise closed with it, form and all (round 0.34 BUG-1). With no
@@ -535,6 +599,9 @@ export function Combobox(props: ComboboxProps) {
       )}
       <FieldCaption parts={hintParts} />
       {field.errorEl}
+      {/* Kept mounted, so a change is an announcement. On a phone it is in the sheet,
+          which hides from a reader what lies outside it. */}
+      {!isPhone && statusRegion}
       {isPhone && (
         <PickerSheet
           open={open && !inert}
@@ -546,11 +613,17 @@ export function Combobox(props: ComboboxProps) {
           query={value}
           onQueryChange={(v) => {
             onChange(v);
+            setActive(-1);
             setTyping(true);
           }}
           searchPlaceholder={searchPlaceholder ?? placeholder}
           inputRef={sheetInputRef}
           closeLabel={closeLabel}
+          // The field's own keys, in the box focus is in while the sheet is up: arrows
+          // and Enter there did nothing (INP-6, as BUG-5 gave the panel pickers).
+          onSearchKeyDown={listKeyDown}
+          listboxId={listboxId}
+          activeId={activeOption}
         >
           <ul id={listboxId} role="listbox">
             {createRow && (
@@ -569,37 +642,28 @@ export function Combobox(props: ComboboxProps) {
                 </button>
               </li>
             )}
-            {matches.map((o, i) => {
-              const group = groupHeadings?.get(i);
-              return (
-                <Fragment key={o}>
-                  {group !== undefined && (
-                    <li
-                      role="presentation"
-                      className={cn(
-                        GROUP_HEADING_STICKY,
-                        "px-4 pb-0.5 pt-3 text-caption font-semibold uppercase tracking-wide text-muted",
-                      )}
-                    >
-                      {group}
-                    </li>
+            {groupedRows(true, (o, i) => (
+              <li role="presentation">
+                <button
+                  type="button"
+                  id={optionId(i)}
+                  role="option"
+                  aria-selected={o === value}
+                  onClick={() => take(o)}
+                  className={cn(
+                    SHEET_ROW_CLASS,
+                    // The row the sheet's arrows are on.
+                    i === active && "bg-active",
+                    optionAdornment && "flex items-center justify-between gap-2",
                   )}
-                  <li role="presentation">
-                    <button
-                      type="button"
-                      role="option"
-                      aria-selected={o === value}
-                      onClick={() => take(o)}
-                      className={cn(SHEET_ROW_CLASS, optionAdornment && "flex items-center justify-between gap-2")}
-                    >
-                      {optionAdornment ? <span className="truncate-until-large">{o}</span> : o}
-                      {optionAdornment?.(o)}
-                    </button>
-                  </li>
-                </Fragment>
-              );
-            })}
+                >
+                  {optionAdornment ? <span className="truncate-until-large">{o}</span> : o}
+                  {optionAdornment?.(o)}
+                </button>
+              </li>
+            ))}
           </ul>
+          {statusRegion}
         </PickerSheet>
       )}
       {showing && (
@@ -623,62 +687,44 @@ export function Combobox(props: ComboboxProps) {
               </button>
             </li>
           )}
-          {matches.map((o, i) => {
-            // Heading at each group boundary only — `matches` is group-contiguous, so
-            // the boundaries are a property of the list rather than of the branch
-            // drawing it. See `groupHeadings`.
-            const group = groupHeadings?.get(i);
-            return (
-              <Fragment key={o}>
-                {group !== undefined && (
-                  <li
-                    role="presentation"
-                    className={cn(
-                      GROUP_HEADING_STICKY,
-                      "px-3 pb-0.5 pt-2 text-caption font-semibold uppercase tracking-wide text-muted first:pt-1",
-                    )}
-                  >
-                    {group}
-                  </li>
+          {groupedRows(false, (o, i, grouped) => (
+            <li role="presentation">
+              <button
+                type="button"
+                id={optionId(i)}
+                role="option"
+                // CHOSEN, not highlighted. The row the arrows are on is named by the
+                // field's `aria-activedescendant`; saying "selected" for it would tell a
+                // reader that the row they are passing over is already the answer.
+                aria-selected={o === value}
+                // Focus stays in the field — that is what `aria-activedescendant` is
+                // for — so the rows are not tab stops.
+                tabIndex={-1}
+                onMouseDown={(e) => {
+                  // mousedown (not click) so the blur from the input firing first
+                  // doesn't close the list before the selection registers.
+                  e.preventDefault();
+                  take(o);
+                }}
+                onMouseEnter={() => setActive(i)}
+                className={cn(
+                  rowClass(i === active),
+                  // Every row of a group indented under its heading — it was the first
+                  // row of each group only.
+                  grouped && "ps-6",
+                  // A row with a badge is a flex row so the label truncates and the
+                  // badge keeps its width; without one it stays the plain block the
+                  // other lists render, so nothing shifts for callers that pass none.
+                  // From Large up the label wraps instead (`truncate-until-large`,
+                  // text size §10.17, round 0.34 T1), as the badge-less row does.
+                  optionAdornment && "flex items-center justify-between gap-2",
                 )}
-                <li role="presentation">
-                  <button
-                    type="button"
-                    id={optionId(i)}
-                    role="option"
-                    // CHOSEN, not highlighted. The row the arrows are on is named by
-                    // the field's `aria-activedescendant`; saying "selected" for it
-                    // would tell a reader that the row they are passing over is
-                    // already the answer.
-                    aria-selected={o === value}
-                    // Focus stays in the field — that is what
-                    // `aria-activedescendant` is for — so the rows are not tab stops.
-                    tabIndex={-1}
-                    onMouseDown={(e) => {
-                      // mousedown (not click) so the blur from the input firing first
-                      // doesn't close the list before the selection registers.
-                      e.preventDefault();
-                      take(o);
-                    }}
-                    onMouseEnter={() => setActive(i)}
-                    className={cn(
-                      rowClass(i === active),
-                      group != null && "ps-6",
-                      // A row with a badge is a flex row so the label truncates and the
-                      // badge keeps its width; without one it stays the plain block the
-                      // other lists render, so nothing shifts for callers that pass none.
-                      // From Large up the label wraps instead (`truncate-until-large`,
-                      // text size §10.17, round 0.34 T1), as the badge-less row does.
-                      optionAdornment && "flex items-center justify-between gap-2",
-                    )}
-                  >
-                    {optionAdornment ? <span className="truncate-until-large">{o}</span> : o}
-                    {optionAdornment?.(o)}
-                  </button>
-                </li>
-              </Fragment>
-            );
-          })}
+              >
+                {optionAdornment ? <span className="truncate-until-large">{o}</span> : o}
+                {optionAdornment?.(o)}
+              </button>
+            </li>
+          ))}
         </SuggestionList>
       )}
     </div>

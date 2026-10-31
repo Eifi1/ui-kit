@@ -112,3 +112,19 @@ export function rankMatch(
   if (text.startsWith(q)) return 1;
   return text.includes(q) ? 2 : -1;
 }
+
+/**
+ * {@link rankMatch} for a row {@link matchesSearch} has already kept: the whole query's
+ * ranks first, then — `3`, where `rankMatch` says `-1` — a row that holds the query's
+ * words apart ("Zürich Migros" for "migros zürich"). For the lists that FILTER by words
+ * and RANK by the whole query (Combobox, CountrySelect: refactor audit 2026-10-30,
+ * DUP-4). Internal: not in the barrel.
+ */
+export function rankHit(
+  label: string,
+  query: string,
+  options: { code?: string; locale?: string } = {},
+): Exclude<MatchRank, -1> | 3 {
+  const rank = rankMatch(label, query, options);
+  return rank === -1 ? 3 : rank;
+}

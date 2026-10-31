@@ -3,7 +3,7 @@ import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
 import { X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { COUNTRY_CODES, countryName, normalizeCountryCode } from "../lib/countries";
-import { rankMatch } from "../lib/text-match";
+import { matchesSearch, rankHit, searchWords } from "../lib/text-match";
 import { FieldChevron, FIELD_FLOATING_PAD, FIELD_INVALID, FIELD_TRIGGER, FloatingField } from "./field-base";
 import {
   assignRef,
@@ -178,15 +178,18 @@ interface Entry {
   name: string;
 }
 
-/** Best rank first; a stable sort, so equal ranks keep the collated (or preferred)
- *  order they came in. The rank is the kit's one (`rankMatch`, DUP-5 — written here
- *  first): the code itself (a two-letter query "ch" means Switzerland before it means
- *  Chad), then the start of the name, then anywhere in it, with accents and case folded
- *  — "osterreich" finds Österreich, "cote" Côte d'Ivoire. */
+/** Every word of the query in the name or the code (0.51.4's rule: "kinshasa congo"
+ *  finds Congo - Kinshasa; refactor audit 2026-10-30, DUP-4), best rank first; a stable
+ *  sort, so equal ranks keep the collated (or preferred) order they came in. The rank is
+ *  the kit's one, for the WHOLE query (`rankMatch`, DUP-5 — written here first): the code
+ *  itself (a two-letter query "ch" means Switzerland before it means Chad), then the
+ *  start of the name, then anywhere in it, then the words apart (`rankHit`), with accents
+ *  and case folded — "osterreich" finds Österreich, "cote" Côte d'Ivoire. */
 function search(entries: Entry[], q: string, locale: string): Entry[] {
+  const words = searchWords(q, locale);
   return entries
-    .map((e) => ({ e, r: rankMatch(e.name, q, { code: e.code, locale }) }))
-    .filter((x) => x.r >= 0)
+    .filter((e) => matchesSearch(words, [e.name, e.code], locale))
+    .map((e) => ({ e, r: rankHit(e.name, q, { code: e.code, locale }) }))
     .sort((a, b) => a.r - b.r)
     .map((x) => x.e);
 }
