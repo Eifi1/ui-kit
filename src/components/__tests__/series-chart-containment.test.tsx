@@ -58,7 +58,8 @@ async function hover(container: HTMLElement, clientX: number) {
     ({ left: 0, top: 0, width: 800, height: 300, right: 800, bottom: 300, x: 0, y: 0 }) as DOMRect;
   await act(async () => {
     fireEvent.mouseMove(wrapper, { clientX, clientY: 150 });
-    // recharts throttles pointer moves to an animation frame.
+    // recharts throttles pointer moves to an animation frame, a real timer in jsdom.
+    // eslint-disable-next-line no-restricted-syntax -- the throttle is recharts', not ours to fake
     await new Promise((resolve) => setTimeout(resolve, 20));
   });
 }
