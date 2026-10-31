@@ -798,7 +798,7 @@ export const GROUPS: ShowcaseGroup[] = [
         title: "Calendars & date pickers",
         short: "Calendars",
         blurb:
-          "Picking a day or a range of days: the calendar itself, the date and range pickers built on it, their presets and bounds, and the first day of the week.",
+          "Picking a day or a range of days: the calendar itself, the date and range pickers built on it, their presets, bounds and read-only lock, and the first day of the week.",
         icon: CalendarDays,
         components: [
           "MiniCalendar",
@@ -1275,7 +1275,7 @@ export const GROUPS: ShowcaseGroup[] = [
         title: "Tile chart",
         short: "Tiles",
         blurb:
-          "The treemap: a share of a whole as tiles, with labels that fit, tiles you can click — and drilling down, through a bar chart as well as through tiles.",
+          "The treemap: a share of a whole as tiles, with labels that fit, tiles you can click, walk with the keyboard and hear read out — and drilling down, through a bar chart as well as through tiles.",
         icon: LayoutPanelLeft,
         components: ["Treemap", "TreemapCell", "fitLabel"],
         Body: () => (
