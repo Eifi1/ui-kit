@@ -131,7 +131,9 @@ function isTypingTarget(target: EventTarget | null): boolean {
  * - A key held down fires once, not on every repeat.
  * - The newest `handler` is always called; changing it does not re-attach the listener.
  *
- * `useCommandKey` (the ⌘K palette hook) is unchanged; this is its general form.
+ * `useCommandKey` (the ⌘K palette hook) is this with `"Mod+K"` and `allowInInputs`
+ * since 0.52, and FormActions' Ctrl/Cmd+Enter is {@link matchesHotkey} (refactor audit
+ * 2026-10-30, DUP-12): one reading of a chord.
  */
 export function useHotkey(
   combo: Hotkey | ReadonlyArray<Hotkey>,

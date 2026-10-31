@@ -319,7 +319,8 @@ export function HotkeyDemo() {
           Modifiers match exactly — {code("Mod+Shift+L")} does not fire on Mod+L. In a text field a plain key (
           {code("g")}, {code("?")}) is left alone so it does not steal letters, while a combo with Ctrl / Meta / Alt
           still fires; tick {code("allowInInputs")} to take the plain keys too. A held key fires once, and the handler
-          can change without re-attaching the listener. The ⌘K palette keeps {code("useCommandKey")}.
+          can change without re-attaching the listener. The ⌘K palette's {code("useCommandKey")} is{" "}
+          {code('useHotkey("Mod+K")')} with {code("allowInInputs")}.
         </Note>
       </div>
     </Example>

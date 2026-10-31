@@ -61,7 +61,9 @@ function renderInRouter(props: Partial<GlobalSearchProps> = {}) {
   );
 }
 
-const pressCmdK = (init: KeyboardEventInit = { metaKey: true }) =>
+// Ctrl K: jsdom is not a Mac, and `Mod` is Cmd only there (0.52, DUP-12; the Mac half is
+// use-command-key.test).
+const pressCmdK = (init: KeyboardEventInit = { ctrlKey: true }) =>
   act(() => {
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", bubbles: true, ...init }));
   });
@@ -69,13 +71,13 @@ const pressCmdK = (init: KeyboardEventInit = { metaKey: true }) =>
 const type = (text: string) => fireEvent.change(screen.getByRole("combobox"), { target: { value: text } });
 
 describe("GlobalSearch: opening", () => {
-  it("opens on ⌘K and on Ctrl K", async () => {
+  it("opens on Ctrl K, and again after Escape", async () => {
     renderInRouter();
     pressCmdK();
     expect(await screen.findByRole("dialog", { name: "Search" })).toBeInTheDocument();
     fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-    pressCmdK({ ctrlKey: true });
+    pressCmdK();
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
   });
 

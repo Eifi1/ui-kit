@@ -40,7 +40,7 @@ function renderSearch(props: Partial<GlobalSearchProps>) {
  *  MOD-1), so it is found with `findBy…`. */
 const open = async () => {
   act(() => {
-    document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }));
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }));
   });
   await screen.findByRole("combobox");
 };

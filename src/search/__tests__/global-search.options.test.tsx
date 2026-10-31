@@ -43,7 +43,7 @@ const draw = (props: Partial<GlobalSearchProps> = {}) =>
 
 const open = () =>
   act(() => {
-    document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }));
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }));
   });
 
 const groups = async () => {
