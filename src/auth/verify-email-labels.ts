@@ -2,7 +2,7 @@
 // catalogue (src/i18n/defaults.ts) imports them without the component, so `en` loads as one
 // chunk like the other languages (0.34, KS U8). ./verify-email re-exports them.
 
-import { englishRateLimited } from "./auth-errors";
+import { englishRateLimited } from "./auth-errors-labels";
 import type { VerifyEmailLabels } from "./verify-email";
 
 export const DEFAULT_VERIFY_EMAIL_LABELS: VerifyEmailLabels = {

@@ -3,7 +3,7 @@
 // loads as one chunk like the other languages (0.34, KS U8). ./forgot-password-form
 // re-exports them.
 
-import { englishRateLimited } from "./auth-errors";
+import { englishRateLimited } from "./auth-errors-labels";
 import type { ForgotPasswordLabels } from "./forgot-password-form";
 
 /** `Required`: every key, the 0.30 one included, has its English here. */

@@ -19,10 +19,9 @@ export function useNotificationsLabels(prop?: LabelOverride<NotificationsLabels>
   return useKitLabels("notifications", DEFAULT_NOTIFICATIONS_LABELS, prop);
 }
 
-/** The app's words for a failure, else `fallback`. */
-export function describeFailure(own: ReactNode | undefined, fallback: ReactNode): ReactNode {
-  return hasContent(own) ? own : fallback;
-}
+/** The app's words for a failure, else `fallback` — in lib/ since 0.52, for the auth forms
+ *  too (refactor audit 2026-10-30, DUP-14). */
+export { describeFailure } from "../lib/describe-failure";
 
 /** A failure, said under the card's controls — nothing toasts (§4.2). */
 export function FailureLine({ children }: { children: ReactNode }) {

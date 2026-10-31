@@ -13,7 +13,7 @@ import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { CARD_DESCRIPTION_CLASS } from "../settings/settings-card-classes";
 import { SettingsCardTitle } from "../settings/settings-heading";
-import { settle, useMounted } from "../account/account-parts";
+import { settle, useMounted } from "../hooks/use-mounted";
 import { describeFailure, FailureLine, useNotificationsLabels, useWriteOverlay } from "./notification-parts";
 import type { WriteOverlay } from "./notification-parts";
 import type { NotificationsLabels } from "./notifications-labels";

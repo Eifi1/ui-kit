@@ -14,7 +14,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
   const num = new Intl.NumberFormat(numberLocale);
   const n = (value: number) => num.format(value);
   // 0.30.0 — a throttled request (HTTP 429), as `englishRateLimited` in
-  // src/auth/auth-errors.ts: no wait → "egy kicsit", under a minute → seconds, else
+  // src/auth/auth-errors-labels.ts: no wait → "egy kicsit", under a minute → seconds, else
   // minutes rounded up. The numeral stays bare before its unit ("30 mp múlva").
   const wait = (seconds: number) =>
     seconds < 60 ? `${n(Math.ceil(seconds))} mp` : `${n(Math.ceil(seconds / 60))} perc`;

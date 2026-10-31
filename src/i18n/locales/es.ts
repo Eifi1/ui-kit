@@ -15,7 +15,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
   const n = (value: number) => num.format(value);
   const plural = (count: number, one: string, many: string) => (count === 1 ? one : many);
   // 0.30.0 — a throttled request (HTTP 429), as `englishRateLimited` in
-  // src/auth/auth-errors.ts: no wait → "un momento", under a minute → seconds, else
+  // src/auth/auth-errors-labels.ts: no wait → "un momento", under a minute → seconds, else
   // minutes rounded up.
   const wait = (seconds: number) => (seconds < 60 ? `${n(Math.ceil(seconds))} s` : `${n(Math.ceil(seconds / 60))} min`);
   const rateLimited = (seconds?: number) =>

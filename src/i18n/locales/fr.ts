@@ -15,7 +15,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
   const n = (value: number) => num.format(value);
   const plural = (count: number, one: string, many: string) => (count < 2 ? one : many);
   // 0.30.0 — a throttled request (HTTP 429), as `englishRateLimited` in
-  // src/auth/auth-errors.ts: no wait → "un instant", under a minute → seconds, else
+  // src/auth/auth-errors-labels.ts: no wait → "un instant", under a minute → seconds, else
   // minutes rounded up. kastlan's reviewed "auth.throttled" is the sentence without one.
   const wait = (seconds: number) =>
     seconds < 60 ? `${n(Math.ceil(seconds))}\u00a0s` : `${n(Math.ceil(seconds / 60))}\u00a0min`;

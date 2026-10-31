@@ -3,7 +3,7 @@
 // loads as one chunk like the other languages (0.34, KS U8). ./delete-account-setting
 // re-exports them.
 
-import { englishRateLimited } from "../auth/auth-errors";
+import { englishRateLimited } from "../auth/auth-errors-labels";
 import type { DeleteAccountLabels } from "./delete-account-setting";
 
 export const DEFAULT_DELETE_ACCOUNT_LABELS: DeleteAccountLabels = {

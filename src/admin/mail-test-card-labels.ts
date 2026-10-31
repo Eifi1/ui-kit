@@ -2,7 +2,7 @@
 // catalogue (src/i18n/defaults.ts) imports them without the component, so `en` loads as one
 // chunk like the other languages (0.34, KS U8). ./mail-test-card re-exports them.
 
-import { englishRateLimited } from "../auth/auth-errors";
+import { englishRateLimited } from "../auth/auth-errors-labels";
 import type { MailTestCardLabels } from "./mail-test-card";
 
 /** docs/admin-harmonization.md §9.2.4, word for word. */

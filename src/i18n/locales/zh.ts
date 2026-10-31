@@ -14,7 +14,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
   const num = new Intl.NumberFormat(numberLocale);
   const n = (value: number) => num.format(value);
   // 0.30.0 — a throttled request (HTTP 429), as `englishRateLimited` in
-  // src/auth/auth-errors.ts: no wait → "稍候", under a minute → seconds, else minutes
+  // src/auth/auth-errors-labels.ts: no wait → "稍候", under a minute → seconds, else minutes
   // rounded up. The numeral has a space either side, as everywhere in this catalogue.
   const wait = (seconds: number) =>
     seconds < 60 ? `${n(Math.ceil(seconds))} 秒` : `${n(Math.ceil(seconds / 60))} 分钟`;

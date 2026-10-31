@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-import { settle } from "../account/account-parts";
+import { settle } from "../hooks/use-mounted";
 
 export interface DeviceZoneReportOptions {
   /** The account's `device_timezone` from `/auth/me`; `undefined` while it loads (no

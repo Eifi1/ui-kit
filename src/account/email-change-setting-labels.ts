@@ -3,7 +3,7 @@
 // loads as one chunk like the other languages (0.34, KS U8). ./email-change-setting
 // re-exports them.
 
-import { englishRateLimited } from "../auth/auth-errors";
+import { englishRateLimited } from "../auth/auth-errors-labels";
 import type { EmailChangeLabels } from "./email-change-setting";
 
 export const DEFAULT_EMAIL_CHANGE_LABELS: EmailChangeLabels = {
