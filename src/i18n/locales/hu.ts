@@ -740,6 +740,9 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       empty: "Nincs adat",
       legend: "Kategóriák",
     },
+    treemap: {
+      tile: (name, value, share) => `${name}: ${value} (${share})`,
+    },
     confirmDialog: {
       confirm: "Megerősítés",
       cancel: "Mégse",

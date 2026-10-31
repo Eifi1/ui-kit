@@ -136,17 +136,30 @@ export function TreemapDemo() {
         label="Treemap — values and share"
         hint="the formatter is handed each tile's share of what is drawn as a second argument"
       >
-        <Treemap data={SPEND} valueFormatter={moneyAndShare} height={320} />
+        <Treemap
+          data={SPEND}
+          valueFormatter={moneyAndShare}
+          height={320}
+          aria-label="Spending by group, last month"
+          description="Housing is more than half of the month; groceries a fifth."
+        />
         <p className="mt-2 text-xs text-secondary">
           Hover a tile for its amount and share. The two smallest tiles have no label: under ~44×20px there is no room
           for a word, and a one-letter stub bleeding over the edge reads worse than none. The name is still in the
           tooltip.
         </p>
+        <p className="mt-2 text-xs text-secondary">
+          Or Tab to the map: it is ONE tab stop, a <code className="font-mono">figure</code> named by{" "}
+          <code className="font-mono">aria-label</code> and described by <code className="font-mono">description</code>,
+          and the arrow keys, Home and End walk the tiles in the order given. Each tile is named &ldquo;Housing: £1,240
+          (57%)&rdquo; (<code className="font-mono">treemap.tile</code>) — the formatter is asked once more without the
+          share, since the name says it. Nobody clicks these tiles, so each is an image to read.
+        </p>
       </Example>
 
       <Example
         label="Treemap — clickable tiles, drilling down"
-        hint="onNodeClick makes each tile a focusable button: Tab to it, Enter or Space to open"
+        hint="onNodeClick makes each tile a button: Tab to the map, the arrows between tiles, Enter or Space to open"
       >
         <Row className="mb-2 text-xs text-secondary">
           {group ? (
@@ -217,7 +230,7 @@ export function TreemapDemo() {
 
       <Example
         label="Treemap — default format, dropped nodes, nothing drawable"
-        hint="no valueFormatter: the bare number in the runtime locale; zero, negative and NaN nodes are left off"
+        hint="no valueFormatter: the bare number in the provider's locale; zero, negative and NaN nodes are left off"
       >
         <Row className="mb-2 text-xs">
           <button

@@ -376,7 +376,7 @@ export const fr: Dictionary = {
       title: "Graphique en tuiles",
       short: "Tuiles",
       blurb:
-        "La treemap\u00a0: la part d’un tout en tuiles, avec des libellés qui tiennent et des tuiles cliquables — et l’exploration en profondeur, par un histogramme comme par les tuiles.",
+        "La treemap\u00a0: la part d’un tout en tuiles, avec des libellés qui tiennent et des tuiles cliquables, que l’on parcourt au clavier et qu’un lecteur d’écran énonce — et l’exploration en profondeur, par un histogramme comme par les tuiles.",
     },
     "series-chart": {
       title: "Graphique de séries",

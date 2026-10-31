@@ -378,7 +378,7 @@ export const hu: Dictionary = {
       title: "Csempés diagram",
       short: "Csempék",
       blurb:
-        "A treemap: egy egész részei csempékként, elférő feliratokkal és kattintható csempékkel — és a lefúrás, oszlopdiagramon éppúgy, mint csempéken át.",
+        "A treemap: egy egész részei csempékként, elférő feliratokkal és kattintható csempékkel, amelyeken billentyűzettel is végig lehet menni, és amelyeket a képernyőolvasó felolvas — és a lefúrás, oszlopdiagramon éppúgy, mint csempéken át.",
     },
     "series-chart": {
       title: "Adatsor-diagram",

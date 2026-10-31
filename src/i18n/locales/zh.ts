@@ -724,6 +724,9 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       empty: "无数据",
       legend: "类别",
     },
+    treemap: {
+      tile: (name, value, share) => `${name}：${value}（${share}）`,
+    },
     confirmDialog: {
       confirm: "确认",
       cancel: "取消",

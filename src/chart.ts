@@ -12,8 +12,9 @@ export * from "./components/chart";
 export * from "./theme/chart-palette";
 
 // The tile chart (treemap) the apps share — moved here from keksdose so every consumer
-// derives it from the package rather than from a copy.
+// derives it from the package rather than from a copy. 0.52: its `treemap` label namespace.
 export * from "./components/treemap";
+export * from "./components/treemap-labels";
 
 // lenkbank's zoomable series chart, its synced x-zoom, the toggle legend and the
 // mirrored-pair axis geometry — moved here so the apps derive them from the package.

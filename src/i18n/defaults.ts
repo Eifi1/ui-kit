@@ -19,6 +19,7 @@ import { DEFAULT_COMMAND_PALETTE_LABELS } from "../search/command-palette-labels
 import { DEFAULT_GLOBAL_SEARCH_LABELS } from "../search/global-search-labels";
 import { DEFAULT_SERIES_CHART_LABELS } from "../components/series-chart-labels";
 import { DEFAULT_PIE_CHART_LABELS } from "../components/pie-chart-labels";
+import { DEFAULT_TREEMAP_LABELS } from "../components/treemap-labels";
 import { DEFAULT_SPARKLINE_LABELS } from "../components/sparkline-labels";
 import { DEFAULT_STAT_TILE_LABELS } from "../components/stat-tile-labels";
 import { DEFAULT_SIGNATURE_PAD_LABELS } from "../components/signature-pad-labels";
@@ -176,6 +177,7 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   globalSearch: DEFAULT_GLOBAL_SEARCH_LABELS,
   seriesChart: DEFAULT_SERIES_CHART_LABELS,
   pieChart: DEFAULT_PIE_CHART_LABELS,
+  treemap: DEFAULT_TREEMAP_LABELS,
   sparkline: DEFAULT_SPARKLINE_LABELS,
   statTile: DEFAULT_STAT_TILE_LABELS,
   signaturePad: DEFAULT_SIGNATURE_PAD_LABELS,

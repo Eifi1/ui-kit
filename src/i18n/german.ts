@@ -753,6 +753,9 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       empty: "Keine Daten",
       legend: "Kategorien",
     },
+    treemap: {
+      tile: (name, value, share) => `${name}: ${value} (${share})`,
+    },
     confirmDialog: {
       confirm: "Bestätigen",
       cancel: "Abbrechen",

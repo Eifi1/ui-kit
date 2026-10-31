@@ -33,6 +33,7 @@ import type { MonthPickerLabels } from "../components/month-picker";
 import type { PageContentsLabels } from "../components/page-contents";
 import type { SeriesChartLabels } from "../components/series-chart-labels";
 import type { PieChartLabels } from "../components/pie-chart-labels";
+import type { TreemapLabels } from "../components/treemap-labels";
 import type { SparklineLabels } from "../components/sparkline";
 import type { StatTileLabels } from "../components/stat-tile";
 import type { SignaturePadLabels } from "../components/signature-pad";
@@ -338,6 +339,8 @@ export interface UiKitLabels {
   globalSearch: GlobalSearchLabels;
   seriesChart: SeriesChartLabels;
   pieChart: PieChartLabels;
+  /** 0.52: a tile's accessible name (refactor audit 2026-10-30, DSP-5). */
+  treemap: TreemapLabels;
   sparkline: SparklineLabels;
   statTile: StatTileLabels;
   signaturePad: SignaturePadLabels;

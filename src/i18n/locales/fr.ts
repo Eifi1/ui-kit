@@ -752,6 +752,9 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       empty: "Aucune donnée",
       legend: "Catégories",
     },
+    treemap: {
+      tile: (name, value, share) => `${name}\u00a0: ${value} (${share})`,
+    },
     confirmDialog: {
       confirm: "Confirmer",
       cancel: "Annuler",

@@ -743,6 +743,9 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       empty: "Nessun dato",
       legend: "Categorie",
     },
+    treemap: {
+      tile: (name, value, share) => `${name}: ${value} (${share})`,
+    },
     confirmDialog: {
       confirm: "Conferma",
       cancel: "Annulla",

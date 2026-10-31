@@ -373,7 +373,7 @@ export const es: Dictionary = {
       title: "Gráfico de mosaicos",
       short: "Mosaicos",
       blurb:
-        "El treemap: la parte de un todo como mosaicos, con etiquetas que caben y mosaicos en los que se puede hacer clic — y el desglose, con un gráfico de barras igual que con mosaicos.",
+        "El treemap: la parte de un todo como mosaicos, con etiquetas que caben y mosaicos en los que se puede hacer clic, que se recorren con el teclado y que un lector de pantalla lee en voz alta — y el desglose, con un gráfico de barras igual que con mosaicos.",
     },
     "series-chart": {
       title: "Gráfico de series",

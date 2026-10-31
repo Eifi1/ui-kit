@@ -8,18 +8,30 @@
 // chart. The one thing it cannot take from a CSS var is the tile colour: the label ink
 // is MEASURED against the fill, and a `var(--chart-3)` string measures as nothing — see
 // `useChartTokenHex` below for how the concrete hex is found instead.
-import { useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import type { ComponentProps, ComponentPropsWithoutRef, KeyboardEvent, ReactNode } from "react";
 import { Treemap as RechartsTreemap } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "./chart";
 import { PALETTE_HEX, PALETTE_SIZE, textOn } from "../theme/chart-palette";
-import { resolveChartColor, useChartEdge } from "./chart-edge";
+import { resolveChartColor, useChartEdge, useEdgesInForce, type ChartEdges } from "./chart-edge";
 import { parseHex } from "../theme/color";
-import { dirOf, type Direction } from "../lib/direction";
+import { dirOf, horizontalStep, type Direction } from "../lib/direction";
 import { cn } from "../lib/cn";
 import { useTextSize } from "../theme/text-size";
 import { chartHeightProps, type ChartHeight } from "./chart-height";
 import { formatWithMinus } from "../lib/minus";
+import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
+import { DEFAULT_TREEMAP_LABELS, type TreemapLabels } from "./treemap-labels";
 
 /**
  * One tile.
@@ -57,25 +69,50 @@ export interface TreemapNode {
 /**
  * Everything a `<div>` takes reaches the chart's root (`ChartContainer`), so a test id
  * or a `data-tour` anchor can find it. `children` is the chart's own.
+ *
+ * The root is a `role="figure"` (0.52, refactor audit 2026-10-30, DSP-5): name it with
+ * `aria-label` ("Spending by category"), and say what it shows with {@link
+ * TreemapProps.description}.
  */
 export interface TreemapProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
-  data: TreemapNode[];
+  data: readonly TreemapNode[];
   /**
    * Formats a node's value in the tooltip. Handed the node's SHARE of what is drawn
    * (0–1) as a second argument, because a tile is read for how big it is relative to
    * the rest, and "€412.30" alone makes the reader estimate that ratio off the areas.
    * The share is `undefined` when the drawn total is not positive.
    *
-   * Default: the bare number through `Intl.NumberFormat` in the runtime's locale. A
-   * host that has a currency or a locale passes this — the kit knows neither.
+   * A tile's accessible name (`labels.tile`, 0.52) says the value too: the formatter is
+   * asked again with the share `undefined` — the name says the share itself — and its
+   * text is used; markup is said as the bare number.
+   *
+   * Default: the bare number through `Intl.NumberFormat` in the provider's locale (0.52,
+   * DOC-10: before, the runtime's). A host with a currency passes this — the kit knows
+   * none.
    */
   valueFormatter?: (value: number, share: number | undefined) => ReactNode;
+  /**
+   * What the map SHOWS, in a sentence — "Rent is three fifths of the month." — the
+   * figure's accessible description (0.52, DSP-5). Not drawn; a caption the eye should
+   * read too belongs in the page.
+   */
+  description?: string;
+  /** Per-map strings over `<UiKitProvider labels={{ treemap }}>`. */
+  labels?: LabelOverride<TreemapLabels>;
   /** Chart height: a CSS length (`"20rem"`, `"min(20rem, 50dvh)"`), a Tailwind class,
    *  or px. Default `"20rem"` — 320 px at Normal, growing with the text size like the
    *  labels in the tiles (0.32, docs/text-size-harmonization.md §10.10). */
   height?: ChartHeight;
-  /** A tile was activated — by click, or by Enter/Space on a focused tile. Setting
-   *  this makes every tile a focusable `role="button"` named by its node name. */
+  /**
+   * A tile was activated — by click, or by Enter/Space on a focused tile. Setting this
+   * makes every tile a `role="button"`.
+   *
+   * Either way every tile is reachable (0.52, DSP-5): ONE tab stop for the map, the
+   * arrows (←/→ along the reading direction, ↓/↑), Home and End between tiles in the
+   * order given, each named "name: value (share)" (`labels.tile`) — a `role="img"` to read
+   * when nothing listens, as PieChart's slices. Before, a map nobody clicked was nothing
+   * to a screen reader, and a clickable tile said its name alone, one tab stop each.
+   */
   onNodeClick?: (id: string, name: string) => void;
   /**
    * The node names are the user's own data (payees, not categories): the tile labels
@@ -131,25 +168,9 @@ export interface TreemapProps extends Omit<ComponentPropsWithoutRef<"div">, "chi
   edges?: TreemapEdges;
 }
 
-/** {@link TreemapProps.edges}. */
-export type TreemapEdges = "auto" | "uniform" | "contrast";
-
-// `<html data-contrast>`, followed live: what `edges="auto"` keys on. Read here rather
-// than through theme/contrast, whose store would come into the chart entry with it.
-function subscribeContrast(onChange: () => void): () => void {
-  if (typeof MutationObserver === "undefined" || typeof document === "undefined") return () => {};
-  const observer = new MutationObserver(onChange);
-  observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-contrast"] });
-  return () => observer.disconnect();
-}
-const readMoreContrast = () =>
-  typeof document !== "undefined" && document.documentElement.getAttribute("data-contrast") === "more";
-
-/** The edges a tile draws: `auto` resolved against the contrast in force. */
-function useTileEdges(edges: TreemapEdges): "uniform" | "contrast" {
-  const more = useSyncExternalStore(subscribeContrast, readMoreContrast, () => false);
-  return edges === "auto" ? (more ? "contrast" : "uniform") : edges;
-}
+/** {@link TreemapProps.edges}. The switch itself is chart-edge's `useEdgesInForce`,
+ *  which SeriesChart's bars and areas follow too since 0.52 (DSP-18). */
+export type TreemapEdges = ChartEdges;
 
 // ── The categorical ramp, as concrete hex ──────────────────────────────────
 //
@@ -190,9 +211,10 @@ function subscribeChartTokens(onChange: () => void): () => void {
 
 const SERVER_TOKENS = PALETTE_HEX.light.join(",");
 
-function useChartTokenHex(): string[] {
+function useChartTokenHex(): readonly string[] {
   const joined = useSyncExternalStore(subscribeChartTokens, readChartTokens, () => SERVER_TOKENS);
-  return joined.split(",");
+  // One array per ramp, not per render: the map's nodes are memoised on it.
+  return useMemo(() => joined.split(","), [joined]);
 }
 
 const CHART_TOKEN_REF = /^var\(\s*--chart-(\d+)\s*\)$/;
@@ -213,6 +235,35 @@ function measurableFill(fill: string, tokens: readonly string[]): string | null 
   if (typeof document === "undefined") return null;
   return resolveChartColor(fill, getComputedStyle(document.documentElement));
 }
+
+// ── What a tile reads from its map ───────────────────────────────────────
+//
+// 0.52 (refactor audit 2026-10-30, DSP-22): every tile resolved the token ramp, the ink
+// edge and the edge rule itself — three stores, each with a MutationObserver on <html>, so
+// 72 on keksdose's 24-tile maps, and up to 29 custom properties re-read on every render of
+// every tile. `Treemap` resolves them once and hands them down here; a TreemapCell drawn
+// in a caller's own recharts `<Treemap>` has no map above it and resolves its own.
+
+interface TileContext {
+  tokens: readonly string[];
+  edgeFor: (fill: string | undefined) => string | undefined;
+  edges: "uniform" | "contrast";
+  /** The map's keyboard (DSP-5): absent for a standalone cell. */
+  keys?: TileKeys;
+}
+
+interface TileKeys {
+  /** A tile's accessible name, by node id (`labels.tile`). */
+  name: (id: string) => string | undefined;
+  /** The id holding the map's one tab stop. */
+  stop: string | undefined;
+  onFocus: (id: string) => void;
+  register: (id: string, element: SVGGElement | null) => void;
+  /** Moves focus for an arrow, Home or End pressed on tile `id`; `false` for any other key. */
+  move: (id: string, event: KeyboardEvent<SVGGElement>) => boolean;
+}
+
+const TreemapTiles = createContext<TileContext | null>(null);
 
 // ── Tile ──────────────────────────────────────────────────────────────────
 
@@ -256,7 +307,8 @@ export interface TreemapCellProps {
    *  the label stands in the tile's top RIGHT corner and is shaped right-to-left, so a
    *  clipped name ends in its ellipsis on the reading end. Default `ltr`. */
   dir?: Direction;
-  /** See {@link TreemapProps.edges}. Default `auto`. */
+  /** See {@link TreemapProps.edges}. Default `auto`. Read by a cell drawn on its own; a
+   *  `Treemap` hands its tiles its own `edges`. */
   edges?: TreemapEdges;
 }
 
@@ -270,8 +322,26 @@ export interface TreemapCellProps {
  * draws its own label with a halo in the TILE colour painted BEHIND the fill
  * (`paint-order: stroke`), which defeats any inherited stroke and keeps the text solid
  * where it overlaps a lighter or darker part of its own tile.
+ *
+ * Inside a `Treemap` it is one stop of the map's keyboard, named with its value and
+ * share (0.52); drawn on its own it is a stop only as a button (`onNodeClick`), named by
+ * `name`.
  */
-export function TreemapCell({
+export function TreemapCell(props: TreemapCellProps) {
+  const map = useContext(TreemapTiles);
+  return map ? <Tile {...props} map={map} /> : <StandaloneTile {...props} />;
+}
+
+/** A cell with no `Treemap` above it: it resolves what the map would have handed it. */
+function StandaloneTile(props: TreemapCellProps) {
+  const tokens = useChartTokenHex();
+  const edgeFor = useChartEdge();
+  const edges = useEdgesInForce(props.edges ?? "auto");
+  const map = useMemo(() => ({ tokens, edgeFor, edges }), [tokens, edgeFor, edges]);
+  return <Tile {...props} map={map} />;
+}
+
+function Tile({
   depth,
   x = 0,
   y = 0,
@@ -285,13 +355,11 @@ export function TreemapCell({
   redactNames,
   nodeNote,
   dir = "ltr",
-  edges: edgesProp = "auto",
-}: TreemapCellProps) {
+  map,
+}: TreemapCellProps & { map: TileContext }) {
   // Before the early return: a hook has to run on every render of the cell.
-  const tokenHex = useChartTokenHex();
   const { scale } = useTextSize();
-  const edgeFor = useChartEdge();
-  const edges = useTileEdges(edgesProp);
+  const { tokens: tokenHex, edgeFor, edges, keys } = map;
   // Depth 0 is recharts' synthetic root, which spans the whole chart.
   if (!depth) return null;
   // Whole pixels: a rect on a half pixel renders its edge across two half-lit
@@ -329,28 +397,38 @@ export function TreemapCell({
   // the right end in RTL, and the label grows leftwards from the tile's right edge.
   const textX = dir === "rtl" ? px + pw - 6 : px + 6;
   const activate = id != null && onNodeClick ? () => onNodeClick(id, name ?? "") : undefined;
-  const onKeyDown = activate
+  // Inside a Treemap every tile is a stop of the map's one roving tab stop, named with its
+  // value and share; a standalone cell is a stop of its own only when it is a button.
+  const roving = id != null && keys ? keys : undefined;
+  const focusable = roving !== undefined || activate !== undefined;
+  const onKeyDown = focusable
     ? (e: KeyboardEvent<SVGGElement>) => {
-        if (e.key !== "Enter" && e.key !== " ") return;
+        if (roving?.move(id!, e)) {
+          e.preventDefault();
+          return;
+        }
+        if (!activate || (e.key !== "Enter" && e.key !== " ")) return;
         e.preventDefault();
         activate();
       }
     : undefined;
   return (
     <g
+      ref={roving ? (element) => roving.register(id!, element) : undefined}
       onClick={activate}
       onKeyDown={onKeyDown}
+      onFocus={roving ? () => roving.onFocus(id!) : undefined}
       // A clickable tile is a button to a keyboard and a screen reader too; the
-      // drilldown it opens was mouse-only in the app this came from. Named by the node
-      // name, which is also why the group carries `data-private` under `redactNames`.
-      role={activate ? "button" : undefined}
-      tabIndex={activate ? 0 : undefined}
-      aria-label={activate ? name : undefined}
+      // drilldown it opens was mouse-only in the app this came from. Under `redactNames`
+      // the group carries `data-private`, since its name is the node's.
+      role={activate ? "button" : roving ? "img" : undefined}
+      tabIndex={roving ? (roving.stop === id ? 0 : -1) : activate ? 0 : undefined}
+      aria-label={focusable ? (roving?.name(id!) ?? name) : undefined}
       data-private={activate && redactNames ? "" : undefined}
       cursor={activate ? "pointer" : undefined}
       // CSS beats a presentation attribute, so this recolours the rect's own stroke
       // for as long as the tile has keyboard focus.
-      className={activate ? "outline-none [&:focus-visible>rect]:stroke-[var(--brand)]" : undefined}
+      className={focusable ? "outline-none [&:focus-visible>rect]:stroke-[var(--brand)]" : undefined}
     >
       {/* The 2px gutter: the page's ground (`uniform`, the same dark line round every
           tile in the dark theme) or the card showing through (`contrast`). Never a white
@@ -449,13 +527,12 @@ function RedactedTooltipContent(props: ComponentProps<typeof ChartTooltipContent
   );
 }
 
-const DEFAULT_NUMBER = new Intl.NumberFormat();
-
 /**
  * Tile chart: one rectangle per {@link TreemapNode}, sized by `value`, coloured by
  * index from the chart ramp (or by the node's own `fill`), labelled in whichever of the
  * kit's two inks measures better against it. Hover shows the name and the formatted
- * value; `onNodeClick` turns the tiles into buttons.
+ * value; every tile is a keyboard stop named with its value and share (see
+ * `onNodeClick`), and `onNodeClick` turns the tiles into buttons.
  *
  * Renders nothing when no node has a positive value — an empty box is a hole in the
  * card, and the caller's own sentence is the better answer there.
@@ -472,10 +549,27 @@ export function Treemap({
   maxTiles,
   colors,
   edges = "auto",
+  description,
+  labels: labelsProp,
   style,
   ...rest
 }: TreemapProps) {
+  // Resolved once for every tile, which reads them from `TreemapTiles` (DSP-22).
   const tokenHex = useChartTokenHex();
+  const edgeFor = useChartEdge();
+  const edgesInForce = useEdgesInForce(edges);
+  const labels = useKitLabels("treemap", DEFAULT_TREEMAP_LABELS, labelsProp);
+  // The provider's locale (0.52, refactor audit 2026-10-30, DOC-10): this was the one
+  // formatter default in the kit that took the runtime's.
+  const locale = useKitLocale();
+  const numberFormat = useMemo(() => new Intl.NumberFormat(locale), [locale]);
+  const percentFormats = useMemo(
+    () => ({
+      whole: new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 0 }),
+      fine: new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 1 }),
+    }),
+    [locale],
+  );
   // Read off the DOM after mount: the `dir` a treemap sits under is an ancestor's
   // attribute, and SVG text anchoring cannot follow it by CSS (see TreemapCell). Again
   // on new data, because a map that had nothing to draw rendered no root to read.
@@ -484,59 +578,119 @@ export function Treemap({
   useLayoutEffect(() => {
     setDir(dirOf(rootRef.current));
   }, [data]);
+  const describedBy = useId();
   const ramp = colors && colors.length > 0 ? colors : tokenHex;
   // Coloured by index into `data` AS GIVEN, before anything is dropped: a caller
   // painting a legend or a second map from the same list must land on the same hue
   // for the same row, and filtering first would shift every colour after a gap.
-  const nodes = data
-    .map((d, idx) => ({
-      id: d.id,
-      name: d.name,
-      size: d.value,
-      fill: d.fill ?? ramp[idx % ramp.length],
-      // recharts hands each node's fields to its cell; a field left out of this map
-      // never reaches `TreemapCell` (0.8.0 shipped `labelColor` without it — keksdose).
-      labelColor: d.labelColor,
-    }))
-    .filter((n) => Number.isFinite(n.size) && n.size > 0)
-    .slice(0, maxTiles ?? undefined);
-  if (nodes.length === 0) return null;
-  const box = chartHeightProps(height);
+  // Memoised: moving the tab stop re-renders the map, and fresh nodes would re-lay it.
+  const nodes = useMemo(
+    () =>
+      data
+        .map((d, idx) => ({
+          id: d.id,
+          name: d.name,
+          size: d.value,
+          fill: d.fill ?? ramp[idx % ramp.length],
+          // recharts hands each node's fields to its cell; a field left out of this map
+          // never reaches `TreemapCell` (0.8.0 shipped `labelColor` without it — keksdose).
+          labelColor: d.labelColor,
+        }))
+        .filter((n) => Number.isFinite(n.size) && n.size > 0)
+        .slice(0, maxTiles ?? undefined),
+    [data, ramp, maxTiles],
+  );
+
+  // The keyboard (DSP-5): one tab stop for the map, moved between tiles in `nodes` order
+  // as PieChart's is between slices. The tiles are drawn by recharts, so they register
+  // their element here rather than being looked up.
+  const [stop, setStop] = useState<string | undefined>(undefined);
+  const tiles = useRef(new Map<string, SVGGElement>());
+  const stopId = nodes.some((n) => n.id === stop) ? stop : nodes[0]?.id;
+  const register = useCallback((id: string, element: SVGGElement | null) => {
+    if (element) tiles.current.set(id, element);
+    else tiles.current.delete(id);
+  }, []);
+  const move = useCallback(
+    (id: string, event: KeyboardEvent<SVGGElement>) => {
+      const at = nodes.findIndex((n) => n.id === id);
+      const step = horizontalStep(event.key, event.currentTarget);
+      const to = step
+        ? at + step
+        : event.key === "ArrowDown"
+          ? at + 1
+          : event.key === "ArrowUp"
+            ? at - 1
+            : event.key === "Home"
+              ? 0
+              : event.key === "End"
+                ? nodes.length - 1
+                : undefined;
+      if (at < 0 || to === undefined) return false;
+      const target = nodes[Math.max(0, Math.min(nodes.length - 1, to))];
+      if (target) tiles.current.get(target.id)?.focus();
+      return true;
+    },
+    [nodes],
+  );
 
   // The share is of what is DRAWN, so it always reads as "of this picture".
   const total = nodes.reduce((acc, n) => acc + n.size, 0);
-  const format = (v: number): ReactNode => {
-    const share = total > 0 ? v / total : undefined;
-    return valueFormatter ? valueFormatter(v, share) : formatWithMinus(DEFAULT_NUMBER, v);
+  const shareOf = (v: number) => (total > 0 ? v / total : undefined);
+  const format = (v: number): ReactNode =>
+    valueFormatter ? valueFormatter(v, shareOf(v)) : formatWithMinus(numberFormat, v);
+  // The caller's text when it gives text, asked with no share — the name says that
+  // itself; a value it formats as markup is said as a number.
+  const valueText = (v: number) => {
+    const out = valueFormatter ? valueFormatter(v, undefined) : undefined;
+    return typeof out === "string" || typeof out === "number" ? String(out) : formatWithMinus(numberFormat, v);
   };
+  // One decimal under 10 %, as PieChart: a tile of 0.4 % named "0%" says it is not there.
+  const shareText = (share: number) => (share < 0.1 ? percentFormats.fine : percentFormats.whole).format(share);
+  const names = new Map(
+    nodes.map((n) => [n.id, labels.tile(n.name, valueText(n.size), shareText(shareOf(n.size) ?? 0))]),
+  );
+  const context: TileContext = {
+    tokens: tokenHex,
+    edgeFor,
+    edges: edgesInForce,
+    keys: { name: (id) => names.get(id), stop: stopId, onFocus: setStop, register, move },
+  };
+
+  if (nodes.length === 0) return null;
+  const box = chartHeightProps(height);
   const Content = redactNames ? RedactedTooltipContent : ChartTooltipContent;
+  const describedByProp = rest["aria-describedby"];
   return (
-    <ChartContainer
-      {...rest}
-      ref={rootRef}
-      config={TREEMAP_CONFIG}
-      className={cn(box.className, rest.className)}
-      style={{ ...style, ...box.style }}
-    >
-      {/* No chart-level `stroke`: recharts spreads it onto the <svg> root, from where
-          it inherits into every label (see TreemapCell). Each cell strokes its own rect. */}
-      <RechartsTreemap
-        data={nodes}
-        dataKey="size"
-        fill="var(--chart-1)"
-        isAnimationActive={false}
-        content={
-          <TreemapCell
-            onNodeClick={onNodeClick}
-            redactNames={redactNames}
-            nodeNote={nodeNote}
-            dir={dir}
-            edges={edges}
-          />
-        }
+    // Round the container, not inside it: ResponsiveContainer sizes its ONE child, the chart.
+    <TreemapTiles.Provider value={context}>
+      <ChartContainer
+        role="figure"
+        {...rest}
+        aria-describedby={description ? [describedByProp, describedBy].filter(Boolean).join(" ") : describedByProp}
+        ref={rootRef}
+        config={TREEMAP_CONFIG}
+        className={cn(box.className, rest.className)}
+        style={{ ...style, ...box.style }}
       >
-        <ChartTooltip content={<Content hideLabel valueFormatter={format} />} />
-      </RechartsTreemap>
-    </ChartContainer>
+        {/* No chart-level `stroke`: recharts spreads it onto the <svg> root, from where
+            it inherits into every label (see TreemapCell). Each cell strokes its own rect. */}
+        <RechartsTreemap
+          data={nodes}
+          dataKey="size"
+          fill="var(--chart-1)"
+          isAnimationActive={false}
+          content={<TreemapCell onNodeClick={onNodeClick} redactNames={redactNames} nodeNote={nodeNote} dir={dir} />}
+        >
+          <ChartTooltip content={<Content hideLabel valueFormatter={format} />} />
+        </RechartsTreemap>
+      </ChartContainer>
+      {description && (
+        // Read through `aria-describedby`; `hidden`, so browse mode does not read it twice.
+        <span id={describedBy} hidden>
+          {description}
+        </span>
+      )}
+    </TreemapTiles.Provider>
   );
 }
