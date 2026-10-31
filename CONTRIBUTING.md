@@ -242,16 +242,24 @@ rename costs the apps more than it returns.
 
 An export is **deprecated for one minor before removal**, then removed in the next minor:
 
-- marked in TSDoc as `@deprecated 0.NN — <the replacement>; removed in 0.MM`;
+- marked in TSDoc as `@deprecated 0.NN — <the replacement>; removed in 0.NN+1` (0.52 →
+  0.53: one minor, never two);
 - listed in the release's adopt doc (`docs/adopt-0.NN.md`);
 - carried in the commit body as a `Deprecated: …` line. The generated changelog has no
   section for it, so the commit and the adopt doc are where it is listed.
 
+A name an entry point stops exporting while its module keeps it (a helper the kit's own
+code still reads) is tagged on its specifier in that entry's `export { … }` list, not on
+its declaration. A label key kept for compatibility carries `@deprecated` too, on its
+English default or in its `*Labels` interface: a key nothing reads is still in every
+catalogue, and only a tag puts it on the removal list (refactor audit 2026-10-30, DOC-9:
+three `feedbackDetail` keys outlived their "kept for one release" by 13 minors).
+
 `src/__tests__/deprecations.test.ts` reads the tags. It fails on a tag without that
-schedule, and once package.json reaches the stated removal (or two minors past the
-deprecation), so the release that should remove a name cannot ship with it. It also
+schedule, on one whose removal is not the next minor, and once package.json reaches the
+stated removal, so the release that should remove a name cannot ship with it. It also
 prints the list, `Deprecated: …` lines ready for the adopt doc and the commit body
-(refactor audit 2026-10, DOC-11).
+(refactor audit 2026-10, DOC-11; one window since 0.52, API-8).
 
 ### 5. Comment the *why*
 
