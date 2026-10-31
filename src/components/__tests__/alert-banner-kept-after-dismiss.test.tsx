@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { AlertBanner } from "../alert-banner";
+import { flushMicrotasks } from "../../test/tasks";
 
 /**
  * 0.52 code review, alert-banner.tsx: the × notes the tab stops around the banner, so the
@@ -40,6 +41,16 @@ describe("a banner kept after its × forgets where the focus would have gone", (
     pressDismissAndKeep();
     // The reader moves on: into the page, then away from it (the link starts a navigation).
     act(() => screen.getByRole("link", { name: "Next page" }).focus());
+    rerender(<App page={false} />);
+    expect(document.activeElement).toBe(document.body);
+  });
+
+  it("once the focus left the banner for nothing (a click on the page), a later unmount leaves it alone", async () => {
+    // No element took the focus, so no `focusin` said it left (0.52 code review).
+    const { rerender } = render(<App />);
+    pressDismissAndKeep();
+    act(() => screen.getByRole("button", { name: "Dismiss" }).blur());
+    await flushMicrotasks();
     rerender(<App page={false} />);
     expect(document.activeElement).toBe(document.body);
   });

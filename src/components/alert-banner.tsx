@@ -4,7 +4,7 @@ import { AlertTriangle, CheckCircle2, ChevronRight, Info, X } from "lucide-react
 import { cn } from "../lib/cn";
 import { FOCUS_RING } from "./focus-ring";
 import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
-import { focusFirst, focusIsLost, tabStopsAround } from "../lib/focus-left";
+import { focusFirst, focusIsLost, tabStopsAround, whenFocusLeftForNothing } from "../lib/focus-left";
 
 /** `info` (0.8.0) is the sky family, for news that is neither good nor bad: keksdose's
  *  preview and beta-performance banners, which borrowed `warning` for want of it and
@@ -346,6 +346,10 @@ export function AlertBanner({
   // the focus on <body>, sent the focus to a stop noted at the press, over the app's own
   // handling of a new page. A `focusin` on the document, not a `focusout` on the banner:
   // a browser that blurs a removed node would drop the note at the very removal it is for.
+  // The one `focusout` heard is a move to nothing — a click on the page — and only once a
+  // microtask has shown the × still in place (`whenFocusLeftForNothing`). A focus that
+  // stays on the × keeps the note, however late the removal: that is DSP-15's own case,
+  // an async dismiss whose request resolves.
   const unwatchFocus = useRef<(() => void) | null>(null);
   useEffect(
     () => () => {
@@ -488,21 +492,37 @@ export function AlertBanner({
         e.preventDefault();
         e.stopPropagation();
         const frame = e.currentTarget.parentElement;
-        if (frame) {
+        // Only a × that holds the focus has one to lose (0.52 code review, alert-banner.tsx):
+        // Safari focuses no button on a click, nor on an iOS tap, and with the focus on
+        // <body> already the removal sent it on — a ring, on a form field the on-screen
+        // keyboard, on a page the user was reading with the pointer.
+        if (frame && e.currentTarget.ownerDocument.activeElement === e.currentTarget) {
           const { after, before } = tabStopsAround(frame);
           dismissedFrom.current = [...after, ...before];
           unwatchFocus.current?.();
           const doc = frame.ownerDocument;
-          const onFocusIn = (event: FocusEvent) => {
-            if (event.target instanceof Node && frame.contains(event.target)) return;
+          const forget = () => {
             dismissedFrom.current = null;
             unwatch();
           };
+          const onFocusIn = (event: FocusEvent) => {
+            if (event.target instanceof Node && frame.contains(event.target)) return;
+            forget();
+          };
+          // Focus that left for nothing — a click on the page — took no `focusin` with it
+          // (0.52 code review): the user moved on all the same.
+          const onFocusOut = (event: FocusEvent) => {
+            whenFocusLeftForNothing(event, () => {
+              if (unwatchFocus.current === unwatch) forget();
+            });
+          };
           const unwatch = () => {
             doc.removeEventListener("focusin", onFocusIn, true);
+            frame.removeEventListener("focusout", onFocusOut);
             unwatchFocus.current = null;
           };
           doc.addEventListener("focusin", onFocusIn, true);
+          frame.addEventListener("focusout", onFocusOut);
           unwatchFocus.current = unwatch;
         }
         onDismiss();

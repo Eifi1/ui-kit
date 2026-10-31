@@ -60,6 +60,16 @@ describe("AlertBanner's × keeps the focus on the page (audit 2026-10-30 DSP-15)
     expect(document.activeElement).toBe(screen.getByRole("button", { name: "Before" }));
   });
 
+  it("a click that does not focus the × (Safari, an iOS tap) moves nothing (0.52 code review)", () => {
+    // Safari focuses no button on a click: the focus is on <body> already. Moving it on
+    // after the removal put a ring — on a form field, the on-screen keyboard — on a page
+    // the user was reading with the pointer.
+    render(<Page />);
+    fireEvent.click(screen.getByRole("button", { name: "Dismiss" }));
+    expect(screen.queryByText("Beta build")).toBeNull();
+    expect(document.activeElement).toBe(document.body);
+  });
+
   it("a banner the caller keeps keeps its ×'s focus", () => {
     render(<Page keep />);
     dismiss();
