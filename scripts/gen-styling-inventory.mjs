@@ -146,10 +146,15 @@ function render() {
   const plain = plainClasses();
   const variants = names(/@custom-variant\s+([a-z0-9-]+)/g);
   const custom = names(/@utility\s+([a-z0-9-]+)/g);
-  // The plain `@theme { … }` block (font sizes, breakpoints): values to list, no role
-  // utilities, so parseThemeInline does not read it; found by the same block finder
-  // (DUP-13, refactor audit 2026-10-30).
-  const theme = themeBlocks(css, { inline: false })[0]?.body;
+  // The plain `@theme { … }` blocks (font sizes, breakpoints): values to list, no role
+  // utilities, so parseThemeInline does not read them; found by the same block finder
+  // (DUP-13, refactor audit 2026-10-30). Every plain one, and only those: "the first block
+  // without `inline`" took a `@theme static` / `reference` / `default` block above the real
+  // one for it, and dropped any later one (0.52 code review).
+  const theme = themeBlocks(css, { inline: false })
+    .filter(({ start }) => /^@theme\s*\{/.test(css.slice(start, start + 64)))
+    .map((block) => block.body)
+    .join("\n");
   const themeValues = theme
     ? [...theme.matchAll(/--([a-z0-9-]+)\s*:\s*([^;]+);/g)].map(([, name, value]) => {
         if (name.startsWith("text-")) return `${code(name)} (font size ${value.trim()})`;
