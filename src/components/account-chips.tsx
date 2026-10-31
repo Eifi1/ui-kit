@@ -1,9 +1,10 @@
 import type { ReactElement, ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
-import { formatDate, formatRelativeTime, toDate, EMPTY_FORMATTED_VALUE } from "../lib/format";
+import { toDate, useKitFormat, EMPTY_FORMATTED_VALUE } from "../lib/format";
 import type { DateInput, FormatDateStyle, FormatRelativeTimeOptions } from "../lib/format";
-import { useKitDateFormatter, useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
+import { useDayFormatter } from "../lib/day-format";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { toLocalIso } from "../lib/dates";
 import { Chip } from "./chip";
 import type { ChipLinkProps, ChipShape, ChipSize, ChipTone, ChipVariant } from "./chip";
@@ -292,17 +293,15 @@ export function AccountStateChip({
   // An `undefined` in the prop is skipped (the provider's merge does that), so an
   // optional value cannot blank a default.
   const labels = useKitLabels("accountState", DEFAULT_ACCOUNT_STATE_LABELS, labelsProp);
-  const locale = useKitLocale(localeProp);
-  const fromProvider = useKitDateFormatter();
+  // The kit's one day ladder: the provider's `formatDate`, else `Intl` in the provider's
+  // locale and `timeZone` (refactor audit 2026-10-30, DUP-2).
+  const day = useDayFormatter(null, localeProp);
   const when = state === "deletion" ? toDate(date ?? null) : null;
   let text: ReactNode;
   if (state !== "deletion") text = labels[state];
   else if (when) {
     // A date in a SENTENCE, so no weekday (keksdose's rule, KitDateFormatContext).
-    const day =
-      (fromProvider && fromProvider(toLocalIso(when), { unit: "day", source: "dateMark", locale, weekday: false })) ||
-      formatDate(when, "medium", { locale });
-    text = (labels.deletionOn ?? DEFAULT_ACCOUNT_STATE_LABELS.deletionOn)(day);
+    text = (labels.deletionOn ?? DEFAULT_ACCOUNT_STATE_LABELS.deletionOn)(day(date));
   } else text = labels.deletion ?? DEFAULT_ACCOUNT_STATE_LABELS.deletion;
   return (
     <Chip
@@ -355,14 +354,14 @@ export interface DateMarkProps {
 
 /**
  * A date in a table cell: a `<time>` with a machine-readable `dateTime`, nowrap and
- * tabular figures, in the provider's locale — or `empty` when there is none.
+ * tabular figures, in the provider's locale and `timeZone` — or `empty` when there is none.
  *
  * `display="date"` without a `dateStyle` is written by `<UiKitProvider formatDate>` when
  * the app set one (keksdose K12: its `DateCell` exists to put every column's date in the
- * app's date-format preference, weekday and all — dev#546), called with the LOCAL
- * calendar day of the value as `"YYYY-MM-DD"` and `weekday: true`. Without one, or for
- * an empty answer, it is `Intl`'s `medium` date as before. The relative display is not
- * a calendar day and keeps `formatRelativeTime`.
+ * app's date-format preference, weekday and all — dev#546), called with the calendar day
+ * of the value as `"YYYY-MM-DD"` (in the provider's `timeZone`, else the device's) and
+ * `weekday: true`. Without one, or for an empty answer, it is `Intl`'s `medium` date as
+ * before. The relative display is not a calendar day and keeps `formatRelativeTime`.
  */
 export function DateMark({
   value,
@@ -374,27 +373,25 @@ export function DateMark({
   locale: localeProp,
   className,
 }: DateMarkProps) {
-  const locale = useKitLocale(localeProp);
-  const fromProvider = useKitDateFormatter();
+  // The provider's `timeZone` (0.46) as well as its locale, also for the relative words
+  // and the exact line (refactor audit 2026-10-30, DUP-2: the raw formatters ignored it).
+  const { formatDate, formatRelativeTime } = useKitFormat(localeProp);
+  const day = useDayFormatter(null, localeProp);
   const date = toDate(value);
   const cls = cn("whitespace-nowrap tabular-nums", className);
   if (!date) return <span className={cn(cls, "text-muted")}>{empty}</span>;
   if (display === "date") {
-    const own =
-      dateStyle === undefined && fromProvider
-        ? fromProvider(toLocalIso(date), { unit: "day", source: "dateMark", locale, weekday: true })
-        : "";
     return (
       <time dateTime={date.toISOString()} className={cls}>
-        {own || formatDate(date, dateStyle ?? "medium", { locale })}
+        {day(value, { weekday: true, style: dateStyle ?? "medium", preference: dateStyle === undefined })}
       </time>
     );
   }
-  const text = formatRelativeTime(date, { ...relative, locale, absoluteStyle: dateStyle ?? "medium" });
-  const exact = formatDate(date, dateStyle ?? "dateTime", { locale });
+  const text = formatRelativeTime(date, { ...relative, absoluteStyle: dateStyle ?? "medium" });
+  const exact = formatDate(date, dateStyle ?? "dateTime");
   // Past `absoluteAfterDays` the relative words already ARE the date; then the exact
   // line alone, rather than the same day twice.
-  const sameDay = text === formatDate(date, dateStyle ?? "medium", { locale });
+  const sameDay = text === formatDate(date, dateStyle ?? "medium");
   const iso = date.toISOString();
   if (sameDay) {
     return (

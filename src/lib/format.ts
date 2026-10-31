@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useKitLocale, useKitTimeZone } from "../i18n/kit-labels";
 import { parseIsoDate } from "./dates";
+import { dateFormatter } from "./intl-cache";
 import { formatWithMinus, type MinusStyle } from "./minus";
 import { roundHalfAway } from "./round";
 
@@ -295,17 +296,6 @@ export function toDate(value: DateInput): Date | null {
   if (typeof value === "string" && BARE_ISO_DAY.test(value)) return parseIsoDate(value);
   const d = value instanceof Date ? value : new Date(value);
   return Number.isNaN(d.getTime()) ? null : d;
-}
-
-const dateFormatters = new Map<string, Intl.DateTimeFormat>();
-function dateFormatter(locale: string | undefined, options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
-  const key = `${locale ?? ""}|${JSON.stringify(options)}`;
-  let f = dateFormatters.get(key);
-  if (!f) {
-    f = new Intl.DateTimeFormat(locale, options);
-    dateFormatters.set(key, f);
-  }
-  return f;
 }
 
 /**

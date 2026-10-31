@@ -4,6 +4,7 @@ import {
   DatePicker,
   UiKitProvider,
   dateFormatterFor,
+  formatDateTimeWithPreference,
   formatDateWithPreference,
 } from "@eifi1/ui-kit";
 import type { DateFormatPreference } from "@eifi1/ui-kit";
@@ -37,6 +38,9 @@ export function DateFormatDemo() {
           <span className={READOUT}>
             timestamp: {formatDateWithPreference("2026-09-06T23:30:00Z", preference, locale)}
           </span>
+          <span className={READOUT}>
+            with its clock: {formatDateTimeWithPreference("2026-09-06T23:30:00Z", preference, locale)}
+          </span>
         </Row>
       </div>
       <Note>
@@ -44,7 +48,10 @@ export function DateFormatDemo() {
         {code("formatDateWithPreference(value, preference, language)")}, and {code("<UiKitProvider formatDate>")} takes{" "}
         {code("dateFormatterFor(preference, language)")}, so a DatePicker, a DateRangePicker&apos;s ends and a DateMark
         write the day the same way. A month or a year, a weekday&apos;s name and a clock time stay the language&apos;s:
-        they have no day, month and year to order.
+        they have no day, month and year to order — {code("formatDateTimeWithPreference")} (0.52) writes the
+        preference&apos;s day and the language&apos;s clock. Since 0.52 every kit card that prints a day asks the
+        provider&apos;s {code("formatDate")} too (the inbox, push devices, passkeys, sessions, feedback, billing,
+        tours).
       </Note>
     </Example>
   );

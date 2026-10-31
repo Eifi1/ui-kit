@@ -1,5 +1,6 @@
 import { formatLocaleOf } from "../i18n/languages";
 import type { KitDateFormatter } from "../i18n/kit-labels";
+import { dateFormatter } from "./intl-cache";
 
 /**
  * The date-format preference (0.46, lifted from keksdose's `date-format-store.ts`,
@@ -93,7 +94,7 @@ const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
  */
 function withWeekday(date: Date, dateText: string, locale: string | undefined, options: Intl.DateTimeFormatOptions) {
   const isDatePart = (p: Intl.DateTimeFormatPart) => p.type === "day" || p.type === "month" || p.type === "year";
-  const parts = new Intl.DateTimeFormat(locale, { weekday: "short", ...options }).formatToParts(date);
+  const parts = dateFormatter(locale, { weekday: "short", ...options }).formatToParts(date);
   const first = parts.findIndex(isDatePart);
   if (first === -1) return dateText;
   let last = first;
@@ -124,12 +125,59 @@ export function formatDateWithPreference(
   if (Number.isNaN(date.getTime())) return String(value);
   const intl: Intl.DateTimeFormatOptions = dateOnly ? { ...resolved.options, timeZone: "UTC" } : resolved.options;
   try {
-    const text = date.toLocaleDateString(resolved.locale, intl);
+    // Through the shared cache (refactor audit 2026-10-30, DUP-2): a `toLocaleDateString`
+    // builds a formatter per call, which is why keksdose kept its own copy of this
+    // renderer — 392 ms per click on a 270-row register (dev#632).
+    const text = dateFormatter(resolved.locale, intl).format(date);
     return resolved.weekday ? withWeekday(date, text, resolved.weekday.locale, intl) : text;
   } catch {
     // A language tag `Intl` refuses: the ISO day rather than nothing (keksdose's fallback).
     return date.toISOString().slice(0, 10);
   }
+}
+
+/**
+ * The clock time of `date` as the language writes it ("14:05"), two digits each: rule 3,
+ * a clock follows the language, never the preference — `sv-SE` is a statement about the
+ * order of a date's digits, not about a 12- or 24-hour clock. `language` is read through
+ * `formatLocaleOf`, so English is the British 24-hour clock, not "02:05 PM" in a
+ * German household's app. In `timeZone` when given, else the reader's.
+ *
+ * @internal Shared with the kit's own day formatter; not part of the barrel.
+ */
+export function clockTime(date: Date, language: string | undefined, timeZone?: string): string {
+  try {
+    const locale = language ? formatLocaleOf(language) : undefined;
+    return dateFormatter(locale, { hour: "2-digit", minute: "2-digit", ...(timeZone ? { timeZone } : null) }).format(
+      date,
+    );
+  } catch {
+    return date.toISOString().slice(11, 16);
+  }
+}
+
+/**
+ * A timestamp under the preference (0.52, keksdose's `formatDateTimeFor`, refactor audit
+ * 2026-10-30, DUP-2): the date as {@link formatDateWithPreference} writes it, weekday
+ * when asked for, then the clock time in the LANGUAGE ({@link clockTime}): "01.08.2026,
+ * 14:05", "Sa., 01.08.2026, 14:05". keksdose's notification inbox and admin scheduler
+ * were where an explicit ISO choice did nothing until it wrote this. `""` for no value,
+ * the input itself when it does not parse; a bare "YYYY-MM-DD" names no moment, so it
+ * prints as the date alone.
+ */
+export function formatDateTimeWithPreference(
+  value: string | Date | null | undefined,
+  preference: DateFormatPreference,
+  language: string | undefined,
+  options: DateFormatOptions = {},
+): string {
+  if (!value) return "";
+  if (typeof value === "string" && DATE_ONLY.test(value)) {
+    return formatDateWithPreference(value, preference, language, options);
+  }
+  const date = typeof value === "string" ? new Date(value) : value;
+  if (Number.isNaN(date.getTime())) return String(value);
+  return `${formatDateWithPreference(date, preference, language, options)}, ${clockTime(date, language)}`;
 }
 
 /** The sample an option is labelled with — 1 August 2026 in its shape, the shape being

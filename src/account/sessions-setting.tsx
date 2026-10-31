@@ -2,9 +2,11 @@ import { useState } from "react";
 import type { ComponentPropsWithRef, ReactNode } from "react";
 import { MonitorSmartphone } from "lucide-react";
 
-import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
-import { formatRelativeTime, toDate } from "../lib/format";
+import { useDayFormatter } from "../lib/day-format";
+import { describeFailure } from "../lib/describe-failure";
+import { toDate, useKitFormat } from "../lib/format";
 import type { DateInput } from "../lib/format";
 import { AlertBanner } from "../components/alert-banner";
 import { Chip } from "../components/chip";
@@ -107,8 +109,9 @@ export interface SessionsSettingProps<Id extends SessionId = SessionId> extends 
   onRevoke?: (id: Id) => Promise<unknown> | void;
   /** The app's own words for a failure, or `undefined` for the kit's `failed`. */
   describeError?: (error: unknown, action: SessionsAction) => ReactNode | undefined;
-  /** The "Last active" text. Default: how long ago, in the provider's locale, and the
-   *  date once it is more than a week back. */
+  /** The "Last active" text. Default: how long ago, in the provider's locale and
+   *  `timeZone`, and the date once it is more than a week back — through the provider's
+   *  `formatDate` (the app's date preference) when it has one. */
   formatLastActive?: (date: Date) => string;
   /** Overrides the provider's locale for the default format. */
   locale?: string;
@@ -152,22 +155,25 @@ export function SessionsSetting<Id extends SessionId = SessionId>({
   ...rest
 }: SessionsSettingProps<Id>) {
   const labels = useKitLabels("sessions", DEFAULT_SESSIONS_LABELS, labelsProp);
-  const locale = useKitLocale(localeProp);
+  // The provider's locale and `timeZone`; past a week the words are a date, and a date
+  // that names a day follows the app's preference (refactor audit 2026-10-30, DUP-2).
+  const { formatDate, formatRelativeTime } = useKitFormat(localeProp);
+  const day = useDayFormatter(null, localeProp);
   const [busyId, setBusyId] = useState<Id | null>(null);
   const [failure, setFailure] = useState<ReactNode>(null);
   const mounted = useMounted();
 
-  const describe = (error: unknown, action: SessionsAction): ReactNode => {
-    const own = describeError?.(error, action);
-    return hasContent(own) ? own : labels.failed;
-  };
+  const describe = (error: unknown, action: SessionsAction): ReactNode =>
+    describeFailure(describeError?.(error, action), labels.failed);
 
   const lastActive = (value: DateInput): string | null => {
     const date = toDate(value);
     if (!date) return null;
-    return formatLastActive
-      ? formatLastActive(date)
-      : formatRelativeTime(date, { locale, absoluteAfterDays: 7, absoluteStyle: "medium" });
+    if (formatLastActive) return formatLastActive(date);
+    const words = formatRelativeTime(date, { absoluteAfterDays: 7, absoluteStyle: "medium" });
+    // Past a week the words ARE the medium date ("5 weeks ago" makes a reader do sums);
+    // then the day as the app's preference writes it.
+    return words === formatDate(date, "medium") ? day(date) : words;
   };
 
   const signOutEverywhere = () => {

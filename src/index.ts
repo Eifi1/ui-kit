@@ -626,6 +626,8 @@ export {
   isDateFormatPreference,
   resolveDateFormat,
   formatDateWithPreference,
+  // 0.52 (refactor audit 2026-10-30, DUP-2): a timestamp, the preference's date and the language's clock.
+  formatDateTimeWithPreference,
   dateFormatSample,
   dateFormatterFor,
 } from "./lib/date-format";
