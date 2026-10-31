@@ -165,7 +165,7 @@ export function useFeedbackSubmit<R = unknown>(options: UseFeedbackSubmitOptions
   const close = () => setIsOpen(false);
 
   // `context` comes from the dialog, built off the values its context box shows.
-  const submit = async (data: FeedbackMultipleSubmission, context: FeedbackContext) => {
+  const submit = async (data: FeedbackMultipleSubmission<FeedbackCategory>, context: FeedbackContext) => {
     if (inFlight.current) return;
     inFlight.current = true;
     setSubmitting(true);
@@ -179,7 +179,7 @@ export function useFeedbackSubmit<R = unknown>(options: UseFeedbackSubmitOptions
       result = await create({
         title: data.title.trim(),
         body: data.body.trim() ? data.body : "",
-        category: data.category as FeedbackCategory,
+        category: data.category,
         context,
         screenshot_url,
         attachment_urls,
