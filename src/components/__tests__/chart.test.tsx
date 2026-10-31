@@ -286,6 +286,32 @@ describe("ChartLegendContent", () => {
     expect(other.querySelector("span[aria-hidden]")).not.toHaveClass("opacity-40");
   });
 
+  // 0.52 code review (deep, charts), finding 9: DSP-9 left the label its ink and faded the
+  // swatch alone, but struck the label through only on a toggle BUTTON. A key (no
+  // `onItemClick`) told of a hidden series, and an isolate legend's other entries, by a
+  // 10px square at 40 % and nothing else.
+  it("strikes a hidden series through in a key too, not only on a toggle", () => {
+    render(
+      <ChartContainer id="leg6" config={CONFIG}>
+        <ChartLegendContent payload={payload} hiddenKeys={["revenue"]} />
+      </ChartContainer>,
+    );
+    expect(screen.getByText("Revenue").closest(".line-through")).not.toBeNull();
+    expect(screen.getByText("cost").closest(".line-through")).toBeNull();
+  });
+
+  it("writes the entries an isolate legend dims in the muted ink, not struck through", () => {
+    render(
+      <ChartContainer id="leg7" config={CONFIG}>
+        <ChartLegendContent payload={payload} onItemClick={() => {}} activeKey="cost" />
+      </ChartContainer>,
+    );
+    const [revenue, cost] = screen.getAllByRole("button");
+    expect(revenue.querySelector(".text-muted")).toHaveTextContent("Revenue");
+    expect(revenue.querySelector(".line-through")).toBeNull();
+    expect(cost.querySelector(".text-muted")).toBeNull();
+  });
+
   it("claims no pressed state it does not know", () => {
     render(
       <ChartContainer id="leg4" config={CONFIG}>
