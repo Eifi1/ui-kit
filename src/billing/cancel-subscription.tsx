@@ -8,8 +8,11 @@ import { DialogFrame } from "../components/dialog-frame";
 import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
 import { useBillingLabels } from "./billing-labels";
 import type { BillingLabels } from "./billing-labels";
+import { dialogClose } from "./dialog-close";
+import type { WithDialogClose } from "./dialog-close";
 
-export interface CancelSubscriptionConfirmProps {
+/** {@link CancelSubscriptionConfirmProps} before one of its two close props is required. */
+interface CancelSubscriptionConfirmFields {
   open: boolean;
   /** The admin dismissed it — Back, Escape, the backdrop. Confirm leaves it open: close it
    *  once `POST /billing/cancel` answers. 0.52: every other kit dialog's `onClose`
@@ -32,6 +35,11 @@ export interface CancelSubscriptionConfirmProps {
   /** Prop > `<UiKitProvider labels={{ billing }}>` > English. */
   labels?: LabelOverride<BillingLabels>;
 }
+
+/** What {@link CancelSubscriptionConfirm} takes: `onClose`, or alone the deprecated
+ *  `onOpenChange`, is required (0.52 code review: with neither it compiled, and nothing
+ *  could dismiss it). */
+export type CancelSubscriptionConfirmProps = WithDialogClose<CancelSubscriptionConfirmFields>;
 
 /**
  * The in-app cancel's confirm (docs/billing-harmonization.md §16.2 decision 2, §16.4,
@@ -76,7 +84,7 @@ export function CancelSubscriptionConfirm({
       open={open}
       title={labels.cancelConfirmTitle}
       description={labels.cancelConfirmBody(day(periodEnd))}
-      onClose={() => (onClose ? onClose() : onOpenChange?.(false))}
+      onClose={dialogClose({ onClose, onOpenChange })}
       busy={pending}
       data-cancel-subscription-confirm=""
       actions={(close) => (

@@ -13,6 +13,8 @@ import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
 import { DEFAULT_PLAN_CHANGE_LABELS } from "./plan-change-labels";
 import { useBillingLabels } from "./billing-labels";
 import type { BillingLabels } from "./billing-labels";
+import { dialogClose } from "./dialog-close";
+import type { WithDialogClose } from "./dialog-close";
 import type { PlanSwitchPreview } from "./billing-overview";
 import { minorToMajor } from "./plan-price";
 import type { BillingInterval } from "./plan-price";
@@ -37,7 +39,8 @@ export interface PlanSwitchSide {
   interval: BillingInterval;
 }
 
-export interface PlanSwitchConfirmProps {
+/** {@link PlanSwitchConfirmProps} before one of its two close props is required. */
+interface PlanSwitchConfirmFields {
   open: boolean;
   /** The payer dismissed it — Cancel, Escape, the backdrop. Confirm leaves it open: close
    *  it once the switch answers. 0.52: every other kit dialog's `onClose` (CONTRIBUTING
@@ -84,6 +87,11 @@ export interface PlanSwitchConfirmProps {
   /** Prop > `<UiKitProvider labels={{ billing }}>` > English. */
   labels?: LabelOverride<BillingLabels>;
 }
+
+/** What {@link PlanSwitchConfirm} takes: `onClose`, or alone the deprecated
+ *  `onOpenChange`, is required (0.52 code review: with neither it compiled, and nothing
+ *  could dismiss it). */
+export type PlanSwitchConfirmProps = WithDialogClose<PlanSwitchConfirmFields>;
 
 /**
  * The confirm for a plan switch (§15.2.10): from → to, each with its billing period;
@@ -157,7 +165,7 @@ export function PlanSwitchConfirm({
       open={open}
       title={labels.switchTitle}
       description={labels.switchFromTo(side(from), side(to))}
-      onClose={() => (onClose ? onClose() : onOpenChange?.(false))}
+      onClose={dialogClose({ onClose, onOpenChange })}
       busy={pending}
       // A preview that loads is busy too, but holds nothing: Cancel stays a way out.
       aria-busy={preview === undefined || undefined}

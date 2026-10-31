@@ -26,18 +26,20 @@ const PREVIEW: PlanSwitchPreview = {
   usage: {},
 };
 
+/** One of the two close props, as the dialogs require since the 0.52 code review. */
+type Close =
+  { onClose: () => void; onOpenChange?: (open: boolean) => void } | { onOpenChange: (open: boolean) => void };
+
 const cases = [
   {
     name: "CancelSubscriptionConfirm",
     back: "Back",
-    render: (close: { onClose?: () => void; onOpenChange?: (open: boolean) => void }) => (
-      <CancelSubscriptionConfirm open periodEnd="2026-11-09" onConfirm={() => {}} {...close} />
-    ),
+    render: (close: Close) => <CancelSubscriptionConfirm open periodEnd="2026-11-09" onConfirm={() => {}} {...close} />,
   },
   {
     name: "PlanSwitchConfirm",
     back: "Cancel",
-    render: (close: { onClose?: () => void; onOpenChange?: (open: boolean) => void }) => (
+    render: (close: Close) => (
       <PlanSwitchConfirm
         open
         from={{ plan: "pro", interval: "month" }}
@@ -51,9 +53,7 @@ const cases = [
   {
     name: "GrantWarningConfirm",
     back: "Back",
-    render: (close: { onClose?: () => void; onOpenChange?: (open: boolean) => void }) => (
-      <GrantWarningConfirm open onConfirm={() => {}} {...close} />
-    ),
+    render: (close: Close) => <GrantWarningConfirm open onConfirm={() => {}} {...close} />,
   },
 ];
 
