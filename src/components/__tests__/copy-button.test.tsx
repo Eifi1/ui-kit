@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CopyButton } from "../copy-button";
 import { UiKitProvider } from "../../i18n/kit-labels";
+import { applyTextSize } from "../../theme/text-size";
 
 const original = Object.getOwnPropertyDescriptor(navigator, "clipboard");
 function setClipboard(value: unknown) {
@@ -33,8 +34,10 @@ describe("CopyButton", () => {
     expect(writeText).toHaveBeenCalledWith("DE89 3704");
     expect(onCopied).toHaveBeenCalledWith(true);
     expect(button).toHaveAttribute("data-state", "copied");
-    // The name does not change under the focus; the tooltip carries the state.
+    // The name does not change under the focus; the tooltip carries the state. It is
+    // IconButton's own, mounted while the pointer is on the button (0.52, DSP-21).
     expect(button).toHaveAccessibleName("Copy IBAN");
+    fireEvent.mouseEnter(button.parentElement!);
     expect(screen.getByRole("tooltip", { hidden: true })).toHaveTextContent("Copied");
     act(() => vi.advanceTimersByTime(60));
     expect(screen.getByRole("status")).toHaveTextContent("Copied to clipboard");
@@ -126,5 +129,38 @@ describe("CopyButton leaves portalling to the Tooltip (keksdose E0)", () => {
       </div>,
     );
     expect(container.querySelector('[role="tooltip"]')).toBeNull();
+  });
+});
+
+// Refactor audit 2026-10-30, DSP-21: the icon variant wrapped IconButton in a Tooltip of
+// its own, which cloned `aria-describedby` onto the button — "Copy, button, Copy" — and
+// never showed its words at Large, as every labelled IconButton does. IconButton names
+// itself now: `label` for the bubble and the Large text, `aria-label` for the name.
+describe("CopyButton's icon variant is a labelled IconButton", () => {
+  afterEach(() => {
+    act(() => applyTextSize("normal"));
+  });
+
+  it("is not described by its own name", async () => {
+    vi.useFakeTimers();
+    setClipboard({ writeText: vi.fn().mockResolvedValue(undefined) });
+    render(<CopyButton text="x" label="Copy IBAN" />);
+    const button = screen.getByRole("button", { name: "Copy IBAN" });
+    expect(button).not.toHaveAttribute("aria-describedby");
+    await click(button);
+    expect(button).toHaveAccessibleName("Copy IBAN");
+    expect(button).not.toHaveAttribute("aria-describedby");
+  });
+
+  it("shows its words as text at Large, the result included", async () => {
+    vi.useFakeTimers();
+    setClipboard({ writeText: vi.fn().mockResolvedValue(undefined) });
+    act(() => applyTextSize("large"));
+    render(<CopyButton text="x" label="Copy IBAN" />);
+    const button = screen.getByRole("button", { name: "Copy IBAN" });
+    expect(button.querySelector("[data-slot=icon-button-label]")).toHaveTextContent("Copy IBAN");
+    await click(button);
+    expect(button.querySelector("[data-slot=icon-button-label]")).toHaveTextContent("Copied");
+    expect(button).toHaveAccessibleName("Copy IBAN");
   });
 });
