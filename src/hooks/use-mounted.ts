@@ -7,7 +7,8 @@ import { useEffect, useRef } from "react";
  * Written for the account settings parts (0.34) and then imported by seven notifications
  * modules out of `account/account-parts.ts`: a generic helper living in a feature folder
  * that the folder beside it reached into sideways (refactor audit 2026-10-30, MOD-6).
- * `account-parts.ts` re-exports both, so nothing that imported them there moved.
+ * `account-parts.ts` re-exports both, so nothing that imported them there moved, and
+ * `admin/admin-parts.ts` re-exports `settle` in place of its own copy (0.52 code review).
  *
  * @internal Not part of the barrel.
  */
@@ -26,8 +27,10 @@ export function useMounted(): { readonly current: boolean } {
 }
 
 /** Call `call` and hand back a promise, a throw included — a callback may return
- *  nothing (done at once), a promise, or throw before it returns one. */
-export function settle(call: () => unknown): Promise<unknown> {
+ *  nothing (done at once), a promise, or throw before it returns one. Typed by what it
+ *  answers, so the admin parts' copy, which kept the type, could go (0.52 code review,
+ *  admin/admin-parts.ts). */
+export function settle<R>(call: () => R): Promise<Awaited<R>> {
   try {
     return Promise.resolve(call());
   } catch (error) {

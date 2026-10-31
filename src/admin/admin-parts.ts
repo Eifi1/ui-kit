@@ -63,11 +63,6 @@ export function useDayText(localeProp?: string): (value: DateInput) => string {
   return useCallback((value) => (toDate(value) ? day(value) : ""), [day]);
 }
 
-/** Call a callback that may throw or answer a promise, as a promise. */
-export function settle<T>(call: () => MaybePromise<T>): Promise<T | void> {
-  try {
-    return Promise.resolve(call());
-  } catch (error) {
-    return Promise.reject(error);
-  }
-}
+/** Call a callback that may throw or answer a promise, as a promise — the kit's one
+ *  (hooks/use-mounted), not a copy of it (0.52 code review, this file). */
+export { settle } from "../hooks/use-mounted";
