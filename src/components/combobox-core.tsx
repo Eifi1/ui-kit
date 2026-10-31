@@ -22,7 +22,7 @@ import { anchoredInline, useAnchoredPanel, viewportSize, type AnchoredPanel } fr
 import { pressInside, takeEscape, useDismissLayer, useOutsideClick } from "../hooks/use-dismiss";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { isImeEnter } from "../lib/ime";
-import { matchesSearch, searchWords } from "../lib/text-match";
+import { matchesSearch, sameName, searchWords } from "../lib/text-match";
 import { DEFAULT_COMBOBOX_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import { hasContent } from "../lib/presence";
 
@@ -108,25 +108,28 @@ export const DISABLED_ROW_CLASS = "cursor-not-allowed opacity-50 hover:bg-transp
  * Whether an entity picker offers its create row — one rule for
  * {@link EntityCombobox}, {@link MultiEntityCombobox} and {@link InlineEntityCombobox}.
  *
- * With a query: while the trimmed query names no option exactly (case-insensitive) —
- * an exact hit is a record the list is already showing, and a second way to "make" it
- * would mint a duplicate. With NO query: only when the caller named the row for that
+ * With a query: while the trimmed query names no option exactly — an exact hit is a
+ * record the list is already showing, and a second way to "make" it would mint a
+ * duplicate. "Exactly" as the list matches, folded by `locale` ({@link sameName}): with
+ * plain `toLowerCase`, "cafe" listed Café and offered "Create “cafe”" beside it (refactor
+ * audit 2026-10-30, DUP-5). With NO query: only when the caller named the row for that
  * case (`createEmptyLabel`) — a row reading `Create “”` says nothing, and the kit cannot
  * know the noun ("Create cash account") that would make it say something (keksdose G9).
  *
  * `names` is what the query is compared against: the loaded rows for a panel picker
- * (its async list is all it knows), every option for the inline one.
+ * (its async list is all it knows), every option for the inline one. `locale`: the
+ * provider's, which the list's match folds by; left out, the runtime's.
  */
 export function offersCreate(
   onCreate: unknown,
   query: string,
   names: readonly string[],
   createEmptyLabel: string | undefined,
+  locale?: string,
 ): boolean {
   if (!onCreate) return false;
   if (!query) return Boolean(createEmptyLabel);
-  const q = query.toLowerCase();
-  return !names.some((n) => n.toLowerCase() === q);
+  return !names.some((n) => sameName(n, query, locale));
 }
 
 /**

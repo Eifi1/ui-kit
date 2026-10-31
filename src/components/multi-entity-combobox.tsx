@@ -222,6 +222,7 @@ export function MultiEntityCombobox<V extends string | number>(props: MultiEntit
     q,
     results.map((o) => o.label),
     createEmptyLabel,
+    locale,
   );
   const showClear = Boolean(clearable && value.length > 0 && !inert);
 

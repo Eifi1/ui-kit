@@ -12,7 +12,7 @@ import {
   type ComboClearValue,
   type ComboOption,
 } from "./combobox-core";
-import { DEFAULT_COMBOBOX_LABELS, DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
+import { DEFAULT_COMBOBOX_LABELS, DEFAULT_COMMON_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import {
   assignRef,
   EndHintRow,
@@ -248,11 +248,14 @@ export function EntityCombobox<V extends string | number, C extends ComboClearVa
   const chosen: V | null = value == null || value === clearValue ? null : (value as V);
   const selectedOption = chosen == null ? null : resolve(chosen);
   const q = query.trim();
+  // The create row's "is this name already listed" folds as the list's match does (DUP-5).
+  const locale = useKitLocale();
   const showCreate = offersCreate(
     onCreate,
     q,
     results.map((o) => o.label),
     createEmptyLabel,
+    locale,
   );
   const showClear = Boolean(clearable && chosen != null && !inert);
   /** What the closed control is showing — the second half of its accessible name. */
