@@ -246,6 +246,10 @@ export function useRowWindow<T>({
   const naturalOverflow = useRef(false);
 
   const expandedSig = expanded.join(",");
+  // The groups by what they say, not by identity (0.52 code review, data-table.tsx): the
+  // table builds them afresh on every render, and the model — `rowKey` on every row, and
+  // its arrays — was rebuilt with them: 3000 rows, ~6000 `rowKey` calls per arrow step.
+  const groupsSig = groups.map((g) => `${g.start}:${g.end}:${g.bands.join(".")}:${g.first}`).join(",");
   const model = useMemo<Model | null>(() => {
     if (!enabled) return null;
     const keys = rows.map(rowKey);
@@ -277,9 +281,9 @@ export function useRowWindow<T>({
     gTop[groups.length] = y;
     tops[n] = y;
     return { n, keys, tops, h, gTop, total: y, ariaRows, ariaBands, rowCount: aria - 1 + rowsAfter };
-    // `expanded` by its signature.
+    // `expanded` and `groups` by their signatures.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, rows, rowKey, groups, expandedSig, measured, estimate, n, rowsBefore, rowsAfter]);
+  }, [enabled, rows, rowKey, groupsSig, expandedSig, measured, estimate, n, rowsBefore, rowsAfter]);
 
   // The rows outside the range that stay: open rows, the tab stop, the focused row and
   // the keyboard's target.
@@ -301,7 +305,7 @@ export function useRowWindow<T>({
   const bodies = useMemo(
     () => (model ? planBodies(model, groups, start, end, pinned) : []),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [model, groups, start, end, pinnedSig],
+    [model, groupsSig, start, end, pinnedSig],
   );
 
   const lockSig = `${resetKey}|${scrollerWidth}|${colKeys.join(",")}`;
@@ -321,7 +325,7 @@ export function useRowWindow<T>({
     const sc = scrollerRef.current;
     const table = tableRef.current;
     if (!m || !sc || !table) return;
-    const origin = table.querySelector<HTMLElement>("tbody[data-vt-body]");
+    const origin = table.querySelector<HTMLElement>(":scope > tbody[data-vt-body]");
     if (!origin) return;
     const sr = sc.getBoundingClientRect();
     const top = Math.max(sr.top, 0);
@@ -479,7 +483,7 @@ export function useRowWindow<T>({
     const table = tableRef.current;
     if (!enabled || !table) return;
     const onIn = (e: FocusEvent) => {
-      const tr = (e.target as Element | null)?.closest?.<HTMLElement>("tr[data-row-index], tr[data-row-detail]");
+      const tr = ownRowOf(table, e.target as Element | null);
       const index = tr ? Number(tr.dataset.rowIndex ?? tr.dataset.rowDetail) : NaN;
       const key = Number.isNaN(index) ? undefined : latest.current.model?.keys[index];
       setFocusKey(key ?? null);
@@ -518,12 +522,14 @@ export function useRowWindow<T>({
     if (focusTarget === null) return;
     // Released by the focus it receives (the `focusin` above), which pins it as the
     // focused row from then on.
-    tableRef.current?.querySelector<HTMLElement>(`tr[data-row-index="${focusTarget}"]`)?.focus();
+    const table = tableRef.current;
+    if (table) ownRowAt(table, focusTarget)?.focus();
   }, [focusTarget, bodies, tableRef]);
 
   const focusRow = useCallback(
     (i: number) => {
-      const el = tableRef.current?.querySelector<HTMLElement>(`tr[data-row-index="${i}"]`);
+      const table = tableRef.current;
+      const el = table && ownRowAt(table, i);
       if (el) el.focus();
       else setFocusTarget(i);
     },
@@ -539,6 +545,24 @@ export function useRowWindow<T>({
     colWidths,
     focusRow,
   };
+}
+
+// The window's rows are the table's OWN (0.52 code review, data-table-row.tsx): every
+// desktop row carries `data-row-index` since DSP-4, a nested DataTable's in an open row
+// too, and a lookup over the whole subtree answered for the outer table with the nested
+// one's rows — ArrowDown from row 0 went to the nested row 1, the first in document order.
+
+/** This table's row at `index`, if it is drawn. */
+function ownRowAt(table: HTMLTableElement, index: number): HTMLElement | null {
+  return table.querySelector<HTMLElement>(`:scope > tbody > tr[data-row-index="${index}"]`);
+}
+
+/** This table's row (or open detail row) that holds `node` — past a nested table's own. */
+function ownRowOf(table: HTMLTableElement, node: Element | null): HTMLElement | null {
+  const ROW = "tr[data-row-index], tr[data-row-detail]";
+  for (let tr = node?.closest?.<HTMLElement>(ROW) ?? null; tr; tr = tr.parentElement?.closest<HTMLElement>(ROW) ?? null)
+    if (tr.parentElement?.parentElement === table) return tr;
+  return null;
 }
 
 /** The roving rows' Arrow/Home/End target over ALL the rows, rendered or not. */
