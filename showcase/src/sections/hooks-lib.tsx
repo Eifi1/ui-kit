@@ -996,12 +996,16 @@ export const useTx = create<TxState>()(
         <code className="font-mono">useRowSwipe</code> is exported and is shown with{" "}
         <code className="font-mono">SwipeableRow</code> under &ldquo;Swipeable row&rdquo;; the{" "}
         <code className="font-mono">lib/calc</code> helpers are exported and shown under &ldquo;Numbers &amp;
-        money&rdquo;, where the fields that parse with them are. Two things a reader may go looking for are NOT exported
-        from the barrel at all: <code className="font-mono">useMobileReveal</code> (src/components/use-mobile-reveal.ts,
-        imported only by DataTable) and <code className="font-mono">readStored</code>/
-        <code className="font-mono">writeStored</code> (src/lib/safe-storage.ts, the localStorage guard the logger and
-        AppShell read through). They cannot be demonstrated from a consumer&rsquo;s import, so they are not demonstrated
-        here.
+        money&rdquo;, where the fields that parse with them are. The storage guards are exported (0.52 added all but the
+        first pair): <code className="font-mono">readStored</code>, <code className="font-mono">writeStored</code>,{" "}
+        <code className="font-mono">removeStored</code>, <code className="font-mono">readSessionStored</code>,{" "}
+        <code className="font-mono">writeSessionStored</code>, and <code className="font-mono">readStoredJson</code>/
+        <code className="font-mono">writeStoredJson</code> with a shape check: storage that is absent, blocked or
+        malformed reads as nothing instead of throwing. So are <code className="font-mono">prefersReducedMotion</code>,
+        asked at the moment of a motion, and <code className="font-mono">useLongPress</code>, DataTable&rsquo;s
+        press-and-hold. One thing a reader may go looking for is NOT exported:{" "}
+        <code className="font-mono">useMobileReveal</code> (src/components/use-mobile-reveal.ts, imported only by
+        DataTable), so it is not demonstrated here.
       </Note>
     </>
   );

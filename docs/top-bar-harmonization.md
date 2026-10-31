@@ -210,8 +210,8 @@ behind `RoleSwitcher`'s amber flask.
 - **The name** says the menu, then the role and the plan: "Dev tools · Role: ADMIN ·
   Plan: free" (`topBarParts.dev.menu`, then `topBar.role` and `dev.plan`). The tooltip
   shows it too. The new words are `dev.menu` and `dev.overridesOn`, in all seven
-  catalogues. `dev.switchPlan`, the old plan trigger's name, is deprecated (removed in
-  0.52).
+  catalogues. `dev.switchPlan`, the old plan trigger's name, was deprecated in 0.51 and
+  is removed in 0.52.
 - **The panel scrolls.** Some 25 dev rows ran off a 390×844 phone: `HoverMenu` clamps a
   panel sideways only, and the panel hangs from the sticky bar, so the page cannot
   scroll it into view. `TopBarActionMenu` has a new opt-in, `scrollable`, which caps the
@@ -437,8 +437,8 @@ All in `@eifi1/ui-kit/shell` (and the barrel). The words are a new namespace,
   - With `billingOff`, the plan menu shows "Billing is off locally: plans change nothing"
     and stays usable.
   - **Since 0.51 one menu, `DevMenu`** (§2.7.1): the role and the plan are groups of one
-    flask, with the app's own sections after them. `DevSwitchers` is deprecated, a
-    `DevMenu` with no sections, and removed in 0.52.
+    flask, with the app's own sections after them. `DevSwitchers`, a `DevMenu` with no
+    sections, was deprecated in 0.51 and is removed in 0.52.
 - **`ThemeToggle`** (§6.4): it now has `onChange(next)`, and `next` is always the
   opposite of `mode`, the resolved theme shown. So from "system" a tap goes to the other
   theme. The toggle never had a storage key, and it still has none. `onToggle` is now
