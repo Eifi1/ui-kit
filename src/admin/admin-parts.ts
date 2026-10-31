@@ -1,8 +1,8 @@
 import { useCallback } from "react";
-import { useKitDateFormatter, useKitLocale } from "../i18n/kit-labels";
-import { formatDate, toDate } from "../lib/format";
+import { useKitLocale } from "../i18n/kit-labels";
+import { useDayFormatter } from "../lib/day-format";
+import { toDate } from "../lib/format";
 import type { DateInput } from "../lib/format";
-import { toLocalIso } from "../lib/dates";
 import { formatPersonName } from "../lib/person-name";
 
 /**
@@ -54,22 +54,13 @@ export function usePersonLabel(localeProp?: string): (person: AdminPerson | null
 /**
  * A day as words in a sentence ("6 Nov 2026"): the provider's `formatDate` when the app
  * set one (keksdose K12), asked for no weekday — a date in a sentence carries none — else
- * `Intl`'s medium date. `""` for no date.
+ * `Intl`'s medium date, in the provider's locale and `timeZone` (0.52: the kit's one day
+ * ladder, `useDayFormatter` — refactor audit 2026-10-30, DUP-2). `""` for no date or one
+ * that does not parse: the caller leaves the sentence out.
  */
 export function useDayText(localeProp?: string): (value: DateInput) => string {
-  const locale = useKitLocale(localeProp);
-  const fromProvider = useKitDateFormatter();
-  return useCallback(
-    (value) => {
-      const date = toDate(value);
-      if (!date) return "";
-      const own = fromProvider
-        ? fromProvider(toLocalIso(date), { unit: "day", source: "dateMark", locale, weekday: false })
-        : "";
-      return own || formatDate(date, "medium", { locale });
-    },
-    [fromProvider, locale],
-  );
+  const day = useDayFormatter(undefined, localeProp);
+  return useCallback((value) => (toDate(value) ? day(value) : ""), [day]);
 }
 
 /** Call a callback that may throw or answer a promise, as a promise. */

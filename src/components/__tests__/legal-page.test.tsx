@@ -191,6 +191,24 @@ describe("LegalPage — the frame (§3.2)", () => {
     expect(screen.queryByText(/Last updated/)).toBeNull();
   });
 
+  it("the date follows the provider's formatDate — the app's date preference — in the page's locale", () => {
+    const formatDate = vi.fn((iso: string) => `«${iso}»`);
+    render(
+      <UiKitProvider locale="de-CH" formatDate={formatDate}>
+        <LegalPage page="terms" operator={OPERATOR} updated="2026-10-29">
+          <LegalKitSection section="changes" />
+        </LegalPage>
+      </UiKitProvider>,
+    );
+    expect(screen.getByText("Last updated: «2026-10-29»")).toHaveAttribute("datetime", "2026-10-29");
+    expect(formatDate).toHaveBeenCalledWith("2026-10-29", {
+      unit: "day",
+      source: "dateMark",
+      locale: "de-CH",
+      weekday: false,
+    });
+  });
+
   it("0.51.4: a plain-language summary before section 1, unnumbered, its refs resolved", () => {
     const { container, rerender } = render(
       <LegalPage
