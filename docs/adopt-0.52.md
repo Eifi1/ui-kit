@@ -84,6 +84,7 @@ A `dist/**/*.js` glob alone does not narrow it.
 | `RoleSwitcher`, `SectionNav`, the FieldSync family, `SignChip`, `lib/isin` | none: no app uses them |
 | 55 runtime names no app, test or showcase page reads (tuning constants, single-component helpers) | the component that uses them; each tag names it |
 | label keys `feedbackDetail.outcomeAdd` / `outcomeUpdate` / `outcomePlaceholder` | none (dead since 0.38) |
+| `feedbackPageHref`, `feedbackPagePath` | `FeedbackRowDetail` and the table's URL cell, which link a page by its path and keep one-shot pages as text |
 
 All have 0 sites in the three apps except the rows that "Must change" names above.
 `deprecations.test.ts` prints the full list.

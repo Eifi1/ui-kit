@@ -58,6 +58,10 @@ export {
 export {
   /** @deprecated 0.52 — `FeedbackRowDetail`, which links the page itself (API-4); removed in 0.53 */
   feedbackPageUrl,
+  /** @deprecated 0.52 — `FeedbackRowDetail` and the table's URL cell, which link only a page's path and keep one-shot pages as text (the 0.52 code review's guard, which an app has no helper for); removed in 0.53 */
+  feedbackPageHref,
+  /** @deprecated 0.52 — `FeedbackRowDetail` and the table's URL cell, which show the page themselves; removed in 0.53 */
+  feedbackPagePath,
   /** @deprecated 0.52 — `FeedbackRowDetail`, which lists the attachments itself (API-4); removed in 0.53 */
   feedbackAttachmentUrls,
   /** @deprecated 0.52 — `FeedbackRowDetail`, which decides who may edit what (API-4); removed in 0.53 */
