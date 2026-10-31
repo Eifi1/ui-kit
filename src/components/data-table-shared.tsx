@@ -1,9 +1,9 @@
-import type { CSSProperties, ReactElement, ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { isTableOwnColumn } from "./data-table-row-actions";
 import { DEFAULT_DATA_TABLE_LABELS, type DataTableLabels } from "./data-table-labels";
 import type { DataTableCellProps, DataTableColumn, DataTableHeadProps } from "./data-table";
-import { useKitLink, type KitLinkProps, type LabelOverride } from "../i18n/kit-labels";
-import { pickLinkRenderer } from "./text-link";
+import { useKitLink, type LabelOverride } from "../i18n/kit-labels";
+import { pickLinkRenderer, RenderedKitLink } from "./text-link";
 
 // What DataTable shares with its header (data-table-head.tsx), its column panel and its
 // phone layout (data-table-mobile.tsx): the cell-attribute and alignment rules, a
@@ -236,10 +236,11 @@ export function RowLink({
         if (!fromOutside(e.target, e.currentTarget) && !isPlainLeftClick(e)) e.stopPropagation();
       },
     };
+    // Drawn as a component of its own, so a router link's hooks are its own: text-link's
+    // RenderedKitLink, every kit link's (0.52 code review, data-table-shared.tsx — this
+    // module had a copy).
     return render ? (
-      <RenderedRowLink render={render} {...linkProps}>
-        {children}
-      </RenderedRowLink>
+      <RenderedKitLink render={render} props={{ ...linkProps, children }} />
     ) : (
       <a {...linkProps}>{children}</a>
     );
@@ -283,10 +284,4 @@ export function RowLink({
       {children}
     </a>
   );
-}
-
-/** Calls the provider's link renderer as a component, so a router link's hooks are its
- *  own (TextLink's and ListItem's rule). */
-function RenderedRowLink({ render, ...props }: KitLinkProps & { render: (props: KitLinkProps) => ReactElement }) {
-  return render(props);
 }

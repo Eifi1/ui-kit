@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router";
+import { MemoryRouter, useLocation } from "react-router";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { DataTable } from "../data-table";
@@ -52,6 +52,33 @@ describe("DataTable rowHref without onRowClick navigates (audit 2026-10-30 DSP-2
     const link = renderTable({}, true);
     expect(link).toHaveAttribute("data-router-link");
     expect(fireEvent.click(link)).toBe(true);
+  });
+
+  it("the provider's link is drawn as a component of its own, with the row link's props (0.52 code review)", () => {
+    // Through text-link's RenderedKitLink, as every kit link: a router link's hooks are
+    // its own, not the row's.
+    const seen: KitLinkProps[] = [];
+    const HookedLink = (props: KitLinkProps) => {
+      const location = useLocation();
+      seen.push(props);
+      const { children, ...rest } = props;
+      return (
+        <a data-from={location.pathname} {...rest}>
+          {children}
+        </a>
+      );
+    };
+    render(
+      <UiKitProvider linkComponent={HookedLink}>
+        <MemoryRouter initialEntries={["/people"]}>
+          <DataTable rows={ROWS} columns={COLUMNS} rowKey={(r) => r.id} rowHref={(r) => `/people/${r.id}`} />
+        </MemoryRouter>
+      </UiKitProvider>,
+    );
+    const link = screen.getByRole("link", { name: "Ada" });
+    expect(link).toHaveAttribute("data-from", "/people");
+    expect(link).toHaveAttribute("draggable", "false");
+    expect(seen.at(-1)).toMatchObject({ href: "/people/1", className: "block", children: "Ada" });
   });
 
   it("with onRowClick the row opens in place, as before", () => {
