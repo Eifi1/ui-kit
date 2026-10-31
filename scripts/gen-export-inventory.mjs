@@ -19,13 +19,22 @@
  * rollup-plugin-dts chunks with content-hashed names, which this script had to trace back
  * by regex; reading them through the checker does not care about the layout.
  *
+ * The STANDALONE entries follow the barrel, one table each from the entry's own `.d.ts`
+ * (0.52, refactor audit 2026-10-30 DOC-4). They share no name with the barrel
+ * (public-surface.test.ts holds that), so until 0.52 the inventory — which apps' agents read
+ * from node_modules — counted `/sync`, `/offline`, `/rhf` and `/dates` and named none of
+ * their members, and said everything was reachable from the barrel: kastlan imports
+ * `/sync` in 19 files and could not find `createSyncEngine` in it. An entry is standalone
+ * when it exports a name the barrel does not; a re-slicing exports only barrel names (the
+ * same test refuses anything else), so nothing here keeps a list that could drift.
+ *
  * Usage:
  *   node scripts/gen-export-inventory.mjs           rewrite the block in README.md
  *   node scripts/gen-export-inventory.mjs --check    exit 1 if the block is stale
  *
  * Both need `npm run build` to have run: this reads `dist/`, which is gitignored.
  */
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import ts from "typescript";
 
@@ -58,13 +67,30 @@ const moduleId = (fileName) =>
     .replace(/\\/g, "/")
     .replace(/\.d\.ts$/, "");
 
-/** The entry points with a declaration file of their own, in `exports` order (patterns left out). */
+const entryName = (subpath) => (subpath === "." ? "@eifi1/ui-kit" : `@eifi1/ui-kit/${subpath.slice(2)}`);
+
+/**
+ * The entry points with a declaration file of their own, in `exports` order. A pattern
+ * (`./i18n/*` → `./dist/i18n/locales/*.d.ts`) is one entry per declaration file it
+ * matches, in name order, each carrying the pattern's name as its `family`.
+ */
 function entryPoints() {
   const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
   return Object.entries(pkg.exports).flatMap(([subpath, target]) => {
     const dts = typeof target === "object" ? target.types : null;
-    if (!dts || dts.includes("*") || !existsSync(join(ROOT, dts))) return [];
-    return [{ name: subpath === "." ? "@eifi1/ui-kit" : `@eifi1/ui-kit/${subpath.slice(2)}`, file: join(ROOT, dts) }];
+    if (!dts) return [];
+    if (!dts.includes("*"))
+      return existsSync(join(ROOT, dts)) ? [{ name: entryName(subpath), file: join(ROOT, dts) }] : [];
+    const [dir, suffix] = dts.split("*");
+    if (!dir.endsWith("/") || suffix.includes("/") || !existsSync(join(ROOT, dir))) return [];
+    return readdirSync(join(ROOT, dir))
+      .filter((file) => file.endsWith(suffix))
+      .sort()
+      .map((file) => ({
+        name: entryName(subpath.replace("*", file.slice(0, -suffix.length))),
+        file: join(ROOT, dir, file),
+        family: entryName(subpath),
+      }));
   });
 }
 
@@ -107,7 +133,7 @@ const isEntryPoint = (id) => !id.includes("/");
  * it from. `export type` (or `import type`) anywhere on the way makes X a type for the
  * importer, whatever X is.
  */
-function describe(checker, symbol) {
+function describe(checker, symbol, entry = "dist/index.d.ts") {
   let current = symbol;
   let typeOnly = false;
   let owner = null;
@@ -126,7 +152,7 @@ function describe(checker, symbol) {
   if (!declaration || current.flags & ts.SymbolFlags.Alias) {
     // A re-export of something that is not there: the declarations are broken, and a
     // README listing it would only hide that.
-    console.error(`✖ dist/index.d.ts exports \`${symbol.name}\`, which resolves to no declaration.`);
+    console.error(`✖ ${entry} exports \`${symbol.name}\`, which resolves to no declaration.`);
     process.exit(2);
   }
   return {
@@ -163,6 +189,41 @@ function inventory({ program, checker, exportsOf }) {
   return [...modules].filter(([, names]) => names.length > 0).map(([id, names]) => ({ id, names }));
 }
 
+/**
+ * The standalone entries, as `[{ title, label, rows: [{ key, names }] }]`, in `exports`
+ * order. A plain entry is one table, a row per module that declares its names, in the
+ * order the entry first reaches them. A pattern's entries share one table, a row each.
+ */
+function standaloneInventory({ checker, entries, exportsOf }) {
+  const barrel = new Set(exportsOf(entries[0].file).map((symbol) => symbol.name));
+  const sections = new Map();
+  for (const entry of entries.slice(1)) {
+    const symbols = exportsOf(entry.file);
+    if (!symbols.some((symbol) => !barrel.has(symbol.name))) continue;
+    const named = symbols.map((symbol) => ({ symbol, ...describe(checker, symbol, entry.name) }));
+    if (entry.family) {
+      if (!sections.has(entry.family))
+        sections.set(entry.family, { title: entry.family, label: "Entry point", rows: [] });
+      sections.get(entry.family).rows.push({
+        key: entry.name,
+        names: named.map(({ symbol, isType }) => ({ name: symbol.name, isType })),
+      });
+      continue;
+    }
+    const modules = new Map();
+    for (const { symbol, id, isType } of named) {
+      if (!modules.has(id)) modules.set(id, []);
+      modules.get(id).push({ name: symbol.name, isType });
+    }
+    sections.set(entry.name, {
+      title: entry.name,
+      label: "Module",
+      rows: [...modules].map(([key, names]) => ({ key, names })),
+    });
+  }
+  return [...sections.values()];
+}
+
 /* ── Rendering ────────────────────────────────────────────────────────────── */
 
 const byName = (a, b) => a.name.localeCompare(b.name, "en");
@@ -182,6 +243,9 @@ function render(build) {
   const groups = inventory(build);
   const total = groups.reduce((n, g) => n + g.names.length, 0);
   const typeCount = groups.reduce((n, g) => n + g.names.filter((x) => x.isType).length, 0);
+  const standalone = standaloneInventory(build);
+  const standaloneEntries = standalone.reduce((n, s) => n + (s.label === "Module" ? 1 : s.rows.length), 0);
+  const standaloneTotal = standalone.reduce((n, s) => n + s.rows.reduce((m, r) => m + r.names.length, 0), 0);
 
   const areas = new Map();
   for (const group of groups) {
@@ -193,16 +257,18 @@ function render(build) {
   const out = [
     BEGIN,
     "",
-    `**${total} names from ${groups.length} modules** — ${total - typeCount} values and ` +
-      `${typeCount} types. _Italic_ is a type-only export.`,
+    `**${total} names from ${groups.length} modules** in the main barrel — ${total - typeCount} values and ` +
+      `${typeCount} types — and ${standaloneTotal} more in ${standaloneEntries} standalone entries. ` +
+      "_Italic_ is a type-only export.",
     "",
-    "Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count",
-    "is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.",
+    "Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by",
+    "`node scripts/gen-export-inventory.mjs`; the counts are pinned by",
+    "`src/__tests__/public-surface.test.ts`. Do not edit between the markers.",
     "",
     renderEntryPoints(build),
     "",
-    "Everything below is reachable from the main `@eifi1/ui-kit` barrel. The subpaths are a",
-    "re-slicing of it, never a second API.",
+    "The main barrel's names first; the standalone entries follow and share no name with it.",
+    "Every other subpath is a re-slicing of the barrel, never a second API.",
     "",
   ];
 
@@ -211,6 +277,12 @@ function render(build) {
     for (const group of members) {
       out.push(`| \`${group.id}\` | ${renderNames(group.names)} |`);
     }
+    out.push("");
+  }
+
+  for (const section of standalone) {
+    out.push(`### ${section.title} (standalone)`, "", `| ${section.label} | Exports |`, "|---|---|");
+    for (const row of section.rows) out.push(`| \`${row.key}\` | ${renderNames(row.names)} |`);
     out.push("");
   }
 
@@ -241,8 +313,11 @@ if (process.argv.includes("--check")) {
   // Naming what is missing, not just "differs": the failure this guards against is an
   // export the README never mentions, and that is the sentence worth printing.
   const documented = new Set([...current.matchAll(/`([A-Za-z0-9_$]+)`/g)].map((m) => m[1]));
-  const missing = inventory(build)
-    .flatMap((g) => g.names.map((n) => n.name))
+  const missing = [
+    ...inventory(build).flatMap((g) => g.names),
+    ...standaloneInventory(build).flatMap((s) => s.rows.flatMap((r) => r.names)),
+  ]
+    .map((n) => n.name)
     .filter((name) => !documented.has(name));
   console.error("README export inventory is stale — run `node scripts/gen-export-inventory.mjs`.");
   if (missing.length) {
