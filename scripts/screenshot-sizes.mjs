@@ -88,12 +88,11 @@
  * 2 when the script itself fails.
  */
 /* global document, getComputedStyle, window, Node -- the measures run in the page, not in Node. */
-import { spawn } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync } from "node:fs";
-import { createRequire } from "node:module";
-import { homedir, tmpdir } from "node:os";
+import { mkdirSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { launchBrowser, loadPlaywright, SetupError, startPreview } from "./e2e-showcase-server.mjs";
 
 const ROOT = resolve(fileURLToPath(new URL(".", import.meta.url)), "..");
 
@@ -151,81 +150,6 @@ function on(name) {
 function allSlugs() {
   const source = readFileSync(join(ROOT, "showcase/src/routes.tsx"), "utf8");
   return [...new Set([...source.matchAll(/\bslug: "([a-z0-9-]+)"/g)].map((m) => m[1]))];
-}
-
-/** The repository's own playwright-core (a devDependency), and its version. */
-function loadPlaywright() {
-  const require = createRequire(join(ROOT, "package.json"));
-  try {
-    return { chromium: require("playwright-core").chromium, version: require("playwright-core/package.json").version };
-  } catch (error) {
-    if (error?.code !== "MODULE_NOT_FOUND") throw error;
-    throw new SetupError("playwright-core is not installed: it is a devDependency, so run `npm ci`", { cause: error });
-  }
-}
-
-/** The machine is not set up for the sweep. Printed as its message alone, which says
- *  what to run; the stack and playwright's own banner would only bury it. */
-class SetupError extends Error {}
-
-/** Playwright's own headless shell, unless CHROMIUM names another browser. A missing
- *  browser ends the run with the command that installs it, not playwright's banner,
- *  which says `npx playwright install` — a package this repository does not have. */
-async function launchBrowser(chromium, version) {
-  try {
-    return await chromium.launch({ executablePath: process.env.CHROMIUM || undefined, env: browserEnv() });
-  } catch (error) {
-    if (process.env.CHROMIUM || !/Executable doesn't exist/.test(error?.message ?? "")) throw error;
-    const path = /Executable doesn't exist at (\S+)/.exec(error.message)?.[1] ?? "its cache";
-    throw new SetupError(
-      `playwright-core ${version} expects its Chromium headless shell at ${path}, and it is not there.\n` +
-        "Install it once with:  npx playwright-core install chromium-headless-shell\n" +
-        "(or set CHROMIUM to a browser executable; a revision the client does not pin is unsupported)",
-      { cause: error },
-    );
-  }
-}
-
-/** The browser's environment: ours, with ~/.local/lib on the library path when it exists —
- *  where a machine without root keeps the libasound the headless shell links against. */
-function browserEnv() {
-  const local = join(homedir(), ".local/lib");
-  const path = process.env.LD_LIBRARY_PATH ?? "";
-  if (!existsSync(local) || path.split(":").includes(local)) return { ...process.env };
-  return { ...process.env, LD_LIBRARY_PATH: path ? `${path}:${local}` : local };
-}
-
-/** Starts `vite preview` on `port` and resolves once it answers. */
-async function startPreview(port) {
-  const child = spawn("npx", ["vite", "preview", "--config", "showcase/vite.config.ts"], {
-    cwd: ROOT,
-    env: { ...process.env, SHOWCASE_PREVIEW_PORT: String(port) },
-    stdio: ["ignore", "pipe", "pipe"],
-    // Its own process group, so stopping it stops vite and not only the npx above it.
-    detached: true,
-  });
-  const stop = () => {
-    try {
-      process.kill(-child.pid, "SIGTERM");
-    } catch {
-      /* already gone */
-    }
-  };
-  let log = "";
-  child.stdout.on("data", (chunk) => (log += chunk));
-  child.stderr.on("data", (chunk) => (log += chunk));
-  const url = `http://localhost:${port}/`;
-  for (let i = 0; i < 100; i++) {
-    if (child.exitCode !== null) throw new Error(`vite preview exited:\n${log}`);
-    try {
-      if ((await fetch(url)).ok) return { stop, url };
-    } catch {
-      /* not up yet */
-    }
-    await new Promise((done) => setTimeout(done, 200));
-  }
-  stop();
-  throw new Error(`vite preview did not answer on ${url}:\n${log}`);
 }
 
 /** Runs in the page: how far it overflows, and what reaches past the viewport. */
