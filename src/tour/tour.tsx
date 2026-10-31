@@ -18,7 +18,7 @@ import { completeStored, rememberAccount, rememberMigrate, type UseTourProgressO
 import { createGateRegistry, devWarnings, isShown, stepContext, TourInternalContext } from "./tour-gates";
 import { liveEngine } from "./tour-engine";
 // Types only, gone from the built module: the overlay's modules load with the overlay.
-import type { Refusal } from "./tour-overlay";
+import type { Refusal, TourOverlay } from "./tour-overlay";
 
 /**
  * The overlay — the card, the spotlight and its shields, the placement, the dock — loaded
@@ -27,8 +27,37 @@ import type { Refusal } from "./tour-overlay";
  * first load at 0.51.6). A LITERAL relative `import()`, as feedback-submit.tsx's dialog
  * is (0.34, MOD-1): the library build keeps the module its own (`bundle: false`), and a
  * path an app's bundler can read is a chunk it can split off.
+ *
+ * A fetch that fails — a tab left open across a deploy, a local-first app offline — ends
+ * the run and leaves the page (0.52 code review, tour.tsx). The dialog and the search
+ * palette throw theirs to the app's error boundary, as a lazy route does; the provider
+ * cannot: it sits above the routes, in keksdose and Kurvenschmiede above the app's own
+ * boundary, and the rejected import unmounted the whole app — for a tour, whose start
+ * fetched nothing before 0.52. `React.lazy` keeps what its import settled to, so a
+ * failure leaves a fresh one behind and the next start fetches again.
  */
-const LazyTourOverlay = lazy(() => import("./tour-overlay").then((module) => ({ default: module.TourOverlay })));
+let LazyTourOverlay = lazyTourOverlay();
+
+function lazyTourOverlay() {
+  return lazy<typeof TourOverlay>(() =>
+    import("./tour-overlay").then(
+      (module) => ({ default: module.TourOverlay }),
+      (error: unknown) => {
+        console.error(error);
+        LazyTourOverlay = lazyTourOverlay();
+        return { default: TourOverlayUnavailable };
+      },
+    ),
+  );
+}
+
+/** Stands in for an overlay whose chunk did not arrive: ends the run with `stop` — not
+ *  a skip, the reader saw no step — and draws nothing. */
+function TourOverlayUnavailable() {
+  const { stop } = useTour();
+  useLayoutEffect(stop, [stop]);
+  return null;
+}
 
 export { useTourGate, useTourGateRelease } from "./tour-gates";
 export type { TourGateRelease } from "./tour-gates";
@@ -638,7 +667,7 @@ export function TourProvider({
         {active ? (
           // Its own boundary, so the first start's chunk fetch suspends nothing of the
           // app's; it shows nothing meanwhile, as the overlay itself does until it has
-          // located the step.
+          // located the step. A failed fetch ends the run (`lazyTourOverlay`).
           <Suspense fallback={null}>
             <LazyTourOverlay
               steps={steps!}
