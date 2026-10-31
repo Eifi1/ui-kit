@@ -23,6 +23,7 @@ import { gzipSync } from "node:zlib";
 // Both come with tsup (Rollup was its declaration bundler; esbuild its compiler).
 import { transform } from "esbuild";
 import { rollup } from "rollup";
+import { closure } from "./lib/imports.mjs";
 
 const fail = (msg) => {
   console.error(`✖ ${msg}`);
@@ -94,18 +95,11 @@ for (const name of catalogues) {
 // only the handler's own module, which is dependency-free.
 {
   const PUSH_WORKER = "dist/push-worker.js";
-  const reached = new Set();
-  const walk = (file) => {
-    if (reached.has(file)) return;
-    reached.add(file);
-    const bare = [...readFileSync(file, "utf8").matchAll(/(?:\bfrom\s*|\bimport\s*\(?\s*)"([^".][^"]*)"/g)].map(
-      (m) => m[1],
-    );
-    if (bare.length)
-      fail(`${PUSH_WORKER} reaches ${file}, which imports ${bare.join(", ")} — a worker entry imports no package`);
-    for (const next of staticImports(file)) walk(next);
-  };
-  walk(PUSH_WORKER);
+  // The one import scanner verify-package's checks use (scripts/lib/imports.mjs; refactor
+  // audit 2026-10-30, DUP-13): every form, either quote, relative imports followed. This
+  // walk read double quotes only and repeated the rule with its own regex.
+  const { files: reached, packages } = closure(PUSH_WORKER);
+  if (packages.size) fail(`${PUSH_WORKER} reaches ${[...packages].join(", ")} — a worker entry imports no package`);
   const allowed = new Set([PUSH_WORKER, join("dist", "notifications", "push-worker.js")]);
   const extra = [...reached].filter((file) => !allowed.has(file));
   if (extra.length)
@@ -228,7 +222,13 @@ const BUDGETS = [
   // LegalLinks' optional Security / Accessibility links — meant growth. 86,942 B in
   // 0.51.7: Modal's `busy` and useOverlayHistory's `held` put-back (refactor audit
   // 2026-10-30, DUP-3) — meant growth.
-  { label: "the shell set", names: SHELL_SET, max: 87_400 },
+  //
+  // 0.52 re-seeded the set from what the apps mount (MOD-4: 24 names, the providers and
+  // TourProvider among them; the old 12 measured about half of a first load), so the figures
+  // above are a different measure. 154,030 B (52,928 gzip) at 0.52, with the tour's overlay
+  // already split off (MOD-1). From here a ratchet: raised only for meant growth, lowered in
+  // the commit that shrinks it.
+  { label: "the shell set", names: SHELL_SET, max: 154_500 },
 ];
 const ENTRY = "\0import-cost";
 async function importCost(names) {
