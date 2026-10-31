@@ -243,7 +243,7 @@ export const hu: Dictionary = {
       title: "Naptárak és dátumválasztók",
       short: "Naptárak",
       blurb:
-        "Egy nap vagy időszak kiválasztása: maga a naptár, a rá épülő dátum- és időszakválasztók, azok előbeállításai és határai, valamint a hét első napja.",
+        "Egy nap vagy időszak kiválasztása: maga a naptár, a rá épülő dátum- és időszakválasztók, azok előbeállításai, határai és csak olvasható zára, valamint a hét első napja.",
     },
     "month-view": {
       title: "Naptár havi nézet",

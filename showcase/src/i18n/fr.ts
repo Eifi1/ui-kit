@@ -241,7 +241,7 @@ export const fr: Dictionary = {
       title: "Calendriers et sélecteurs de date",
       short: "Calendriers",
       blurb:
-        "Choisir un jour ou une période\u00a0: le calendrier lui-même, les sélecteurs de date et de période construits dessus, leurs préréglages et leurs bornes, et le premier jour de la semaine.",
+        "Choisir un jour ou une période\u00a0: le calendrier lui-même, les sélecteurs de date et de période construits dessus, leurs préréglages, leurs bornes et leur verrou de lecture seule, et le premier jour de la semaine.",
     },
     "month-view": {
       title: "Vue mensuelle du calendrier",

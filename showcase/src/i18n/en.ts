@@ -247,7 +247,7 @@ export const en: Dictionary = {
       title: "Calendars & date pickers",
       short: "Calendars",
       blurb:
-        "Picking a day or a range of days: the calendar itself, the date and range pickers built on it, their presets and bounds, and the first day of the week.",
+        "Picking a day or a range of days: the calendar itself, the date and range pickers built on it, their presets, bounds and read-only lock, and the first day of the week.",
     },
     "month-view": {
       title: "Calendar month view",

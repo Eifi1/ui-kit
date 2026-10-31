@@ -4,6 +4,7 @@ import { Calendar, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../lib/cn";
 import { dirOf, horizontalStep, type Direction } from "../lib/direction";
 import { monthKey, pad } from "../lib/dates";
+import { upperFirst } from "../lib/text-case";
 import { Button } from "./button";
 import { FIELD_FLOATING_PAD, FIELD_INVALID, FIELD_TRIGGER } from "./field-base";
 import { IconButton } from "./icon-button";
@@ -17,11 +18,17 @@ import {
   FieldBox,
   FieldLabelLine,
   LABEL_ABOVE_BOX,
+  LockedReason,
+  mergeDescribedBy,
   mergeRefs,
   useFieldMessages,
+  useLockReason,
+  type DisabledReasonDisplay,
   type FieldHelpProps,
 } from "./field-parts";
+import { MonthGrid, clampKey, shiftKey, yearArrowsBlocked } from "./month-grid";
 import { DEFAULT_MONTH_PICKER_LABELS } from "./month-picker-labels";
+import type { CommitScope } from "./write-lock";
 
 /**
  * Every string the month picker can speak. The month and year names are NOT here —
@@ -89,8 +96,9 @@ export interface MonthPickerProps extends Omit<ComponentPropsWithoutRef<"div">, 
   /**
    * Inclusive bounds, as `"YYYY-MM"`. A full ISO date (`"YYYY-MM-DD"`) is accepted and
    * read as its month, so a host holding "the first day we have data for" can pass it
-   * straight in. Months outside are shown but refuse selection; a year arrow is
-   * disabled once the whole year beyond it is out of bounds.
+   * straight in. Months outside are shown but refuse selection; a year arrow refuses
+   * once the whole year beyond it is out of bounds (`aria-disabled`, so the focus stays
+   * on the arrow just pressed — 0.52).
    */
   min?: string;
   max?: string;
@@ -99,6 +107,26 @@ export interface MonthPickerProps extends Omit<ComponentPropsWithoutRef<"div">, 
   /** Trigger text when `value` is `""`. */
   placeholder?: string;
   disabled?: boolean;
+  /**
+   * Why the month cannot be changed — {@link Select}'s `disabledReason`, for a picker
+   * that SAVES on change (a budget page's month, a calendar view kept per user). The
+   * trigger stays focusable and `aria-disabled`, the grid does not open, the stepper's
+   * Today and ‹ › refuse, and `onChange` never fires; the reason is a line under the
+   * field (or the stepper) at Large and on a touch screen, else in the kit
+   * {@link Tooltip} (`disabledReasonDisplay`), and on the trigger's `aria-describedby`.
+   * Wins over `disabled`. 0.52 (refactor audit 2026-10-30, API-3).
+   */
+  disabledReason?: ReactNode;
+  /** Where the reason shows — {@link Button}'s `disabledReasonDisplay`: a line under the
+   *  field at Large and on a touch screen by default, the tooltip otherwise. */
+  disabledReasonDisplay?: DisabledReasonDisplay;
+  /**
+   * This picker COMMITS — picking saves. Under a locked {@link WriteLockProvider} it is
+   * locked the `disabledReason` way, with the lock's reason; a {@link CommitScope}, as on
+   * every kit control. A month field inside a form with its own Save stays editable
+   * under the lock — leave this off there, and put `commit` on the Save. 0.52 (API-3).
+   */
+  commit?: CommitScope;
   /** Required and unanswered — {@link FIELD_INVALID}. See {@link Input}'s `invalid`. */
   invalid?: boolean;
   /**
@@ -217,7 +245,6 @@ function firstOf({ year, month }: YearMonth): Date {
 }
 
 const DEFAULT_TRIGGER_FORMAT: Intl.DateTimeFormatOptions = { month: "long", year: "numeric" };
-const MONTH_NAME_FORMAT: Intl.DateTimeFormatOptions = { month: "long", year: "numeric" };
 const YEAR_FORMAT: Intl.DateTimeFormatOptions = { year: "numeric" };
 
 // ── Year keys ─────────────────────────────────────────────────────────────
@@ -268,6 +295,7 @@ function MonthHeadingTrigger({
   text,
   panelId,
   disabled,
+  locked,
   aria,
 }: {
   open: boolean;
@@ -277,6 +305,8 @@ function MonthHeadingTrigger({
   text: string;
   panelId: string;
   disabled?: boolean;
+  /** The write lock: the focusable kind of disabled. */
+  locked: boolean;
   aria: TriggerAria;
 }) {
   useFocusBackOnClose(open, triggerRef);
@@ -285,8 +315,11 @@ function MonthHeadingTrigger({
     <button
       ref={setTrigger}
       type="button"
-      disabled={disabled}
-      onClick={toggle}
+      disabled={locked ? undefined : disabled}
+      aria-disabled={locked || undefined}
+      onClick={() => {
+        if (!locked) toggle();
+      }}
       aria-haspopup="dialog"
       aria-controls={panelId}
       aria-expanded={open}
@@ -298,7 +331,7 @@ function MonthHeadingTrigger({
         "-ms-1.5 inline-flex h-9 min-w-0 items-center gap-1 rounded-md px-1.5 text-lg font-semibold text-primary transition-colors",
         "hover:bg-hover",
         FOCUS_RING,
-        disabled && "cursor-not-allowed opacity-50",
+        (disabled || locked) && "cursor-not-allowed opacity-50",
       )}
     >
       <span aria-live="polite" className="truncate">
@@ -328,6 +361,7 @@ function MonthFieldTrigger({
   padded,
   small,
   disabled,
+  locked,
   invalid,
   className,
   aria,
@@ -347,6 +381,9 @@ function MonthFieldTrigger({
   /** `size="sm"`: the 36px, content-wide toolbar trigger. */
   small: boolean;
   disabled?: boolean;
+  /** The write lock: the focusable kind of disabled (Button's rule — native `disabled`
+   *  would take the field out of the tab order, and the reason with it). */
+  locked: boolean;
   invalid?: boolean;
   className?: string;
 }) {
@@ -357,8 +394,13 @@ function MonthFieldTrigger({
     <button
       ref={setTrigger}
       type="button"
-      disabled={disabled}
-      onClick={toggle}
+      disabled={locked ? undefined : disabled}
+      aria-disabled={locked || undefined}
+      onClick={() => {
+        // Locked, the grid does not open. One open when the lock arrives closes: the
+        // field moves into the reason's frame, which remounts it, as Select's does.
+        if (!locked) toggle();
+      }}
       role="combobox"
       aria-haspopup="dialog"
       aria-controls={panelId}
@@ -377,7 +419,7 @@ function MonthFieldTrigger({
         // month — `py-0` with a fixed height so the box is 36px whatever the type's
         // line height. `pe-9` stays: the calendar glyph still sits at the end.
         small && "h-9 w-auto py-0",
-        disabled && "cursor-not-allowed opacity-50",
+        (disabled || locked) && "cursor-not-allowed opacity-50",
         invalid && FIELD_INVALID,
         className,
       )}
@@ -400,19 +442,32 @@ function MonthFieldTrigger({
 const COLUMNS = 3;
 
 /**
- * The panel: a year caption between ‹ › arrows, over a 4×3 grid of months.
+ * A year arrow over a grid (the month grid's ‹ › years, the year grid's pages). At a
+ * bound it refuses rather than turning `disabled`, JumpCalendar's rule (refactor audit
+ * 2026-10-30, INP-4): the press that reaches the bound is made with the focus ON the
+ * arrow, and a focused button that turns `disabled` drops the focus to <body>, mid-panel
+ * (keksdose's budget MonthPicker passes `min`). `aria-disabled`, a click that does
+ * nothing, and the look through `aria-disabled:`.
+ */
+const PANEL_ARROW =
+  "flex size-7 items-center justify-center rounded text-muted hover:bg-hover aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-disabled:hover:bg-transparent";
+
+/** The stepper's Today and ‹ › while refused: Button's look for its focusable kind of
+ *  disabled — the kit's `disabled:` classes cannot match an `aria-disabled` button. The
+ *  arrows, ghost IconButtons, also pin their resting fill under hover, as
+ *  `disabled:hover:` does for them. */
+const STEPPER_REFUSED = "aria-disabled:cursor-not-allowed aria-disabled:opacity-50";
+const STEPPER_ARROW_REFUSED = `${STEPPER_REFUSED} aria-disabled:hover:bg-transparent`;
+
+/**
+ * The panel: a year caption between ‹ › arrows, over the year's {@link MonthGrid} (4×3,
+ * its keys and its bounds — one with JumpCalendar's since 0.52, DUP-11).
  *
  * Mounted only while the popover is open, so every opening starts from the current
  * value's year — a value moved from outside (a prev/next-month button beside the
  * field) is where the grid lands, with no effect needed to snap it back.
- *
- * A grid in the APG sense, like `MiniCalendar`: one tab stop (the roving tabindex),
- * the arrows walk the months — left/right by one, up/down by a row of three — and
- * walking off either end of the year MOVES the year rather than stopping. PageUp /
- * PageDown step a whole year. Out-of-bounds months are `aria-disabled`, not
- * `disabled`, so the roving tab stop never falls into a hole.
  */
-function MonthGrid({
+function MonthPanel({
   value,
   onPick,
   locale,
@@ -429,97 +484,15 @@ function MonthGrid({
   currentKey: string;
   labels: MonthPickerLabels;
 }) {
-  const outOfBounds = (key: string) => Boolean((minKey && key < minKey) || (maxKey && key > maxKey));
-
+  const selectedKey = value ? toKey(value) : null;
   // The month holding the tab order, and with it the year on screen — one piece of
   // state, as in MiniCalendar, so the two cannot disagree. Opens on the value, or on
   // the current month, pulled inside the bounds.
-  const [active, setActive] = useState<YearMonth>(() => {
-    const start = value ? toKey(value) : currentKey;
-    if (minKey && start < minKey) return parseMonth(minKey)!;
-    if (maxKey && start > maxKey) return parseMonth(maxKey)!;
-    return parseMonth(start)!;
-  });
-  const year = active.year;
-
-  const gridRef = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState(() => clampKey(selectedKey ?? currentKey, minKey, maxKey));
+  const year = Number(active.slice(0, 4));
   const captionId = `${useId()}-year`;
-
-  // Short names for the cells, long "Month YYYY" for their accessible names.
-  const shortNames = useMemo(() => {
-    const fmt = new Intl.DateTimeFormat(locale, { month: "short" });
-    return Array.from({ length: 12 }, (_, i) => fmt.format(new Date(2000, i, 1)));
-  }, [locale]);
-  const longName = useMemo(() => new Intl.DateTimeFormat(locale, MONTH_NAME_FORMAT), [locale]);
-  const yearCaption = new Intl.DateTimeFormat(locale, { year: "numeric" }).format(firstOf({ year, month: 1 }));
-
-  // A month whose cell must take focus after the next commit. Arrowing across a year
-  // boundary re-labels the same twelve buttons, so the one to focus is a DIFFERENT
-  // button from the one the key landed on.
-  const pendingFocus = useRef<string | null>(null);
-  useEffect(() => {
-    const key = pendingFocus.current;
-    if (!key) return;
-    pendingFocus.current = null;
-    gridRef.current?.querySelector<HTMLElement>(`[data-month="${key}"]`)?.focus();
-  });
-
-  // Opened because the user asked to pick a month: land them on it. Runs before the
-  // popover's focus trap (a child's effect fires first), which then keeps this focus.
-  useEffect(() => {
-    gridRef.current?.querySelector<HTMLElement>('[tabindex="0"]')?.focus();
-  }, []);
-
-  const moveTo = (next: YearMonth, focus: boolean) => {
-    if (focus) pendingFocus.current = toKey(next);
-    setActive(next);
-  };
-
-  const onCellKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
-    // Left and right are VISUAL directions: in a right-to-left page the grid runs the
-    // other way, so "right" is the previous month there. The panel is portalled, but
-    // it carries the field's `dir` (see MonthPicker), so the nearest `dir` is right.
-    const step = horizontalStep(e.key, e.currentTarget);
-    const col = (active.month - 1) % COLUMNS;
-    let delta: number;
-    switch (step ? "horizontal" : e.key) {
-      case "horizontal":
-        delta = step;
-        break;
-      case "ArrowUp":
-        delta = -COLUMNS;
-        break;
-      case "ArrowDown":
-        delta = COLUMNS;
-        break;
-      case "Home":
-        delta = -col;
-        break;
-      case "End":
-        delta = COLUMNS - 1 - col;
-        break;
-      case "PageUp":
-        delta = -12;
-        break;
-      case "PageDown":
-        delta = 12;
-        break;
-      default:
-        return;
-    }
-    // Before any no-op check: these keys also scroll the panel, and a month that
-    // cannot move still must not move the page.
-    e.preventDefault();
-    if (delta !== 0) moveTo(shiftMonth(active, delta), true);
-  };
-
-  // An arrow is dead once EVERY month of the year it leads to is out of bounds.
-  const prevBlocked = Boolean(minKey && toKey({ year: year - 1, month: 12 }) < minKey);
-  const nextBlocked = Boolean(maxKey && toKey({ year: year + 1, month: 1 }) > maxKey);
-  const selectedKey = value ? toKey(value) : null;
-
-  const arrow =
-    "flex size-7 items-center justify-center rounded text-muted hover:bg-hover disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent";
+  const yearCaption = new Intl.DateTimeFormat(locale, YEAR_FORMAT).format(new Date(year, 0, 1));
+  const blocked = yearArrowsBlocked(active, minKey, maxKey);
 
   return (
     <div className="select-none">
@@ -527,10 +500,12 @@ function MonthGrid({
         <button
           type="button"
           aria-label={labels.previousYear}
-          disabled={prevBlocked}
+          aria-disabled={blocked.previous || undefined}
           // Focus stays on the arrow being pressed — only the grid moves.
-          onClick={() => moveTo(shiftMonth(active, -12), false)}
-          className={arrow}
+          onClick={() => {
+            if (!blocked.previous) setActive(shiftKey(active, -12));
+          }}
+          className={PANEL_ARROW}
         >
           {/* Mirrored in RTL, where "previous" points the other way. */}
           <ChevronLeft className="size-4 rtl:-scale-x-100" />
@@ -543,61 +518,28 @@ function MonthGrid({
         <button
           type="button"
           aria-label={labels.nextYear}
-          disabled={nextBlocked}
-          onClick={() => moveTo(shiftMonth(active, 12), false)}
-          className={arrow}
+          aria-disabled={blocked.next || undefined}
+          onClick={() => {
+            if (!blocked.next) setActive(shiftKey(active, 12));
+          }}
+          className={PANEL_ARROW}
         >
           <ChevronRight className="size-4 rtl:-scale-x-100" />
         </button>
       </div>
-      <div ref={gridRef} role="grid" aria-labelledby={captionId} className="grid gap-1">
-        {Array.from({ length: 12 / COLUMNS }, (_, row) => (
-          <div key={row} role="row" className="grid grid-cols-3 gap-1">
-            {Array.from({ length: COLUMNS }, (_, c) => {
-              const ym = { year, month: row * COLUMNS + c + 1 };
-              const key = toKey(ym);
-              const disabled = outOfBounds(key);
-              const selected = key === selectedKey;
-              const current = key === currentKey;
-              return (
-                <button
-                  key={c}
-                  type="button"
-                  role="gridcell"
-                  data-month={key}
-                  tabIndex={ym.month === active.month ? 0 : -1}
-                  aria-label={labels.month(longName.format(firstOf(ym)))}
-                  aria-selected={selected}
-                  aria-disabled={disabled || undefined}
-                  aria-current={current ? "date" : undefined}
-                  onClick={() => {
-                    // The guard `disabled` would have been; see the component note.
-                    if (disabled) return;
-                    setActive(ym);
-                    onPick(key);
-                  }}
-                  onKeyDown={onCellKeyDown}
-                  className={cn(
-                    "rounded px-2 py-1.5 text-sm capitalize transition-colors",
-                    FOCUS_RING_WIDTH,
-                    "focus-visible:outline-none focus-visible:ring-inset",
-                    // A --brand ring on a --brand fill exists only in the DOM.
-                    selected && !disabled ? "focus-visible:ring-brand-contrast" : "focus-visible:ring-brand",
-                    disabled
-                      ? "cursor-not-allowed text-placeholder"
-                      : selected
-                        ? "bg-brand text-brand-contrast hover:bg-brand-hover"
-                        : "text-primary hover:bg-hover",
-                    current && !selected && !disabled && "ring-1 ring-inset ring-strong",
-                  )}
-                >
-                  {shortNames[ym.month - 1]}
-                </button>
-              );
-            })}
-          </div>
-        ))}
-      </div>
+      <MonthGrid
+        active={active}
+        onActiveChange={setActive}
+        onPick={onPick}
+        from={selectedKey}
+        to={selectedKey}
+        minKey={minKey}
+        maxKey={maxKey}
+        currentKey={currentKey}
+        locale={locale}
+        cellName={labels.month}
+        labelledBy={captionId}
+      />
     </div>
   );
 }
@@ -645,7 +587,7 @@ function YearGrid({
       ? { first: minYear, count: maxYear - minYear + 1 }
       : null;
   // The year holding the tab order, and with it the page on screen — one piece of
-  // state, as in MonthGrid. Opens on the value, or on this year, inside the bounds.
+  // state, as in MonthPanel. Opens on the value, or on this year, inside the bounds.
   const [active, setActive] = useState(() => clamp(value ?? currentYear));
   const anchor = minYear ?? (maxYear !== null ? maxYear - (YEAR_PAGE - 1) : 0);
   const first = whole ? whole.first : anchor + Math.floor((active - anchor) / YEAR_PAGE) * YEAR_PAGE;
@@ -712,8 +654,6 @@ function YearGrid({
 
   const prevBlocked = minYear !== null && first - 1 < minYear;
   const nextBlocked = maxYear !== null && first + count > maxYear;
-  const arrow =
-    "flex size-7 items-center justify-center rounded text-muted hover:bg-hover disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent";
 
   return (
     <div className="select-none">
@@ -722,9 +662,11 @@ function YearGrid({
           <button
             type="button"
             aria-label={labels.earlierYears}
-            disabled={prevBlocked}
-            onClick={() => moveTo(active - YEAR_PAGE, false)}
-            className={arrow}
+            aria-disabled={prevBlocked || undefined}
+            onClick={() => {
+              if (!prevBlocked) moveTo(active - YEAR_PAGE, false);
+            }}
+            className={PANEL_ARROW}
           >
             <ChevronLeft className="size-4 rtl:-scale-x-100" />
           </button>
@@ -736,9 +678,11 @@ function YearGrid({
           <button
             type="button"
             aria-label={labels.laterYears}
-            disabled={nextBlocked}
-            onClick={() => moveTo(active + YEAR_PAGE, false)}
-            className={arrow}
+            aria-disabled={nextBlocked || undefined}
+            onClick={() => {
+              if (!nextBlocked) moveTo(active + YEAR_PAGE, false);
+            }}
+            className={PANEL_ARROW}
           >
             <ChevronRight className="size-4 rtl:-scale-x-100" />
           </button>
@@ -768,7 +712,8 @@ function YearGrid({
                   }}
                   onKeyDown={onCellKeyDown}
                   className={cn(
-                    "rounded px-2 py-1.5 text-sm tabular-nums transition-colors",
+                    // The month grid's 44px rows (DUP-11): one picker, one row height.
+                    "h-11 rounded px-1 text-sm tabular-nums transition-colors",
                     FOCUS_RING_WIDTH,
                     "focus-visible:outline-none focus-visible:ring-inset",
                     selected && !disabled ? "focus-visible:ring-brand-contrast" : "focus-visible:ring-brand",
@@ -803,14 +748,6 @@ function YearGrid({
  * and a year list in two popovers). The grid does both jobs — the year arrows and
  * PageUp/PageDown cover what the year list did, without a fixed ±5-year window.
  */
-/** Upper-case the first letter only, in `locale`. Several locales (fr, es, it, pt, …)
- *  write month names in lower case, which at the start of a field reads as a typo —
- *  but only the FIRST letter is the field's business: "septiembre de 2026" becomes
- *  "Septiembre de 2026", not "Septiembre De 2026". */
-function upperFirst(text: string, locale: string | undefined): string {
-  return text.charAt(0).toLocaleUpperCase(locale) + text.slice(1);
-}
-
 export function MonthPicker(props: MonthPickerProps) {
   const {
     value,
@@ -821,6 +758,9 @@ export function MonthPicker(props: MonthPickerProps) {
     label,
     placeholder,
     disabled,
+    disabledReason,
+    disabledReasonDisplay,
+    commit,
     invalid,
     error,
     hint,
@@ -868,20 +808,44 @@ export function MonthPicker(props: MonthPickerProps) {
     : (placeholder ?? "");
 
   const id = useId();
+  // The write lock (API-3): Select's — the trigger stays reachable and says why.
+  const lock = useLockReason(commit, disabledReason);
+  const locked = lock.locked;
+  const reasonId = locked ? lock.reasonId : undefined;
+  const change = (key: string) => {
+    if (!locked) onChange(key);
+  };
   // keksdose K4: the caption and the error, on the trigger after the caller's own
-  // description. Painted for `invalid` and a message — not for a bare `aria-invalid`,
-  // which this field has never painted for.
+  // description; a lock's reason between the two, as on Select. Painted for `invalid`
+  // and a message — not for a bare `aria-invalid`, which this field has never painted for.
   const messages = useFieldMessages({
     hint,
     help,
     name: label ?? rest["aria-label"],
     error,
     describedBy: rest["aria-describedby"],
+    reasonId,
   });
   const [ownAria, wrapperRest] = splitTriggerAria(rest);
   // The field's trigger is described by the caption and the error too; the stepper
-  // draws neither, so its heading keeps the caller's own description.
+  // draws neither, so its heading keeps the caller's own description — and a lock's.
   const aria: TriggerAria = { ...ownAria, "aria-describedby": messages.describedBy };
+  const headingAria: TriggerAria = {
+    ...ownAria,
+    "aria-describedby": mergeDescribedBy(ownAria["aria-describedby"], reasonId),
+  };
+  // Locked, the field (or the stepper) sits in the reason's frame — the line, or the
+  // Tooltip — which becomes the outermost box and takes the caller's classes, as on
+  // Select, so a lock does not reflow the page.
+  const rootClass = locked ? undefined : className;
+  const withReason = (box: ReactNode) =>
+    locked ? (
+      <LockedReason lock={lock} display={disabledReasonDisplay} className={cn("block", className)}>
+        {box}
+      </LockedReason>
+    ) : (
+      box
+    );
   const labelId = `${id}-label`;
   const valueId = `${id}-value`;
   const panelId = `${id}-panel`;
@@ -906,12 +870,12 @@ export function MonthPicker(props: MonthPickerProps) {
         currentYear={currentYear}
         labels={labels}
         onPick={(key) => {
-          onChange(key);
+          change(key);
           close();
         }}
       />
     ) : (
-      <MonthGrid
+      <MonthPanel
         value={selected}
         locale={locale}
         minKey={minKey}
@@ -919,7 +883,7 @@ export function MonthPicker(props: MonthPickerProps) {
         currentKey={currentKey}
         labels={labels}
         onPick={(key) => {
-          onChange(key);
+          change(key);
           close();
         }}
       />
@@ -967,51 +931,76 @@ export function MonthPicker(props: MonthPickerProps) {
             text={triggerText}
             panelId={panelId}
             disabled={disabled}
-            aria={ownAria}
+            locked={locked}
+            aria={headingAria}
           />
         )}
       >
         {grid}
       </Popover>
     );
-    return (
+    // ‹ › at a bound refuse rather than turn `disabled` (refactor audit 2026-10-30,
+    // INP-4): the press that reaches the bound is made with the focus on the arrow, and
+    // a focused button that turns `disabled` drops the focus to <body>. A lock refuses
+    // them, and Today, the same focusable way — its reason is the frame's, so no name
+    // bubble of their own beside it. `disabled` (a lock's reason wins over it) and
+    // Today's "now is out of bounds", which no press here changes, stay native.
+    const off = Boolean(disabled) && !locked;
+    const prevRefused = locked || outside(prevKey);
+    const nextRefused = locked || outside(nextKey);
+    return withReason(
       // `flex-wrap`: where the heading and the buttons do not fit one row, the buttons
       // take the next line, at the end (0.32.1, the 360 px Extra-large sweep;
       // docs/text-size-harmonization.md §4). In one row at 150 % "Today ‹ ›" left the
       // heading 30 px on a 360 px phone, and "October 2026" was drawn under "Today".
       // Where they fit, nothing changes.
-      <div {...wrapperRest} ref={rootRef} className={cn("flex min-w-0 flex-wrap items-center gap-2", className)}>
+      <div {...wrapperRest} ref={rootRef} className={cn("flex min-w-0 flex-wrap items-center gap-2", rootClass)}>
         {Heading ? <Heading className="m-0 min-w-0 text-lg font-semibold">{trigger}</Heading> : trigger}
         <div className="ms-auto flex shrink-0 items-center gap-1">
           {showToday && (
             <Button
               variant="secondary"
               size="sm"
-              disabled={disabled || outside(nowKey)}
+              disabled={!locked && (disabled || outside(nowKey))}
+              aria-disabled={locked || undefined}
+              aria-describedby={reasonId}
               onClick={() => {
-                if (nowKey !== shownKey) onChange(nowKey);
+                if (nowKey !== shownKey) change(nowKey);
               }}
+              className={STEPPER_REFUSED}
             >
               {years ? labels.thisYear : labels.today}
             </Button>
           )}
           <IconButton
             aria-label={years ? labels.previousYear : labels.previousMonth}
-            disabled={disabled || outside(prevKey)}
-            onClick={() => onChange(prevKey)}
+            disabled={off}
+            aria-disabled={(!off && prevRefused) || undefined}
+            aria-describedby={reasonId}
+            tooltip={!locked}
+            onClick={() => {
+              if (!prevRefused) change(prevKey);
+            }}
+            className={STEPPER_ARROW_REFUSED}
           >
             {/* Mirrored in RTL, where "previous" points the other way. */}
             <ChevronLeft className="rtl:-scale-x-100" />
           </IconButton>
           <IconButton
             aria-label={years ? labels.nextYear : labels.nextMonth}
-            disabled={disabled || outside(nextKey)}
-            onClick={() => onChange(nextKey)}
+            disabled={off}
+            aria-disabled={(!off && nextRefused) || undefined}
+            aria-describedby={reasonId}
+            tooltip={!locked}
+            onClick={() => {
+              if (!nextRefused) change(nextKey);
+            }}
+            className={STEPPER_ARROW_REFUSED}
           >
             <ChevronRight className="rtl:-scale-x-100" />
           </IconButton>
         </div>
-      </div>
+      </div>,
     );
   }
 
@@ -1023,7 +1012,7 @@ export function MonthPicker(props: MonthPickerProps) {
     <div
       {...wrapperRest}
       ref={rootRef}
-      className={cn("relative", small && "w-fit max-w-full", label !== undefined && LABEL_ABOVE_BOX, className)}
+      className={cn("relative", small && "w-fit max-w-full", label !== undefined && LABEL_ABOVE_BOX, rootClass)}
     >
       {label !== undefined && <FieldLabelLine label={label} hint={messages.labelHint} />}
       {/* The hidden twin the trigger is named by — see DateField. `sr-only-fixed`,
@@ -1064,6 +1053,7 @@ export function MonthPicker(props: MonthPickerProps) {
             padded={label !== undefined}
             small={small}
             disabled={disabled}
+            locked={locked}
             invalid={invalid || hasContent(error)}
             className={triggerClassName}
           />
@@ -1082,13 +1072,15 @@ export function MonthPicker(props: MonthPickerProps) {
   const endHint = label === undefined ? messages.labelHint : undefined;
   return (
     <FieldBox below={messages.below} reserve={"error" in props || "hint" in props}>
-      {endHint === undefined ? (
-        field
-      ) : (
-        <div className="flex items-center gap-1.5">
-          <div className={cn("min-w-0", !small && "flex-1")}>{field}</div>
-          <span className="flex shrink-0 items-center">{endHint}</span>
-        </div>
+      {withReason(
+        endHint === undefined ? (
+          field
+        ) : (
+          <div className="flex items-center gap-1.5">
+            <div className={cn("min-w-0", !small && "flex-1")}>{field}</div>
+            <span className="flex shrink-0 items-center">{endHint}</span>
+          </div>
+        ),
       )}
     </FieldBox>
   );

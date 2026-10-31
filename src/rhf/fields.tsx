@@ -791,7 +791,11 @@ function DateControl({
   );
 }
 
-/** The kit's {@link DatePicker}, holding an ISO `"YYYY-MM-DD"` string. */
+/**
+ * The kit's {@link DatePicker}, holding an ISO `"YYYY-MM-DD"` string. `commit` and
+ * `disabledReason` are the picker's own (0.52, refactor audit 2026-10-30, API-3): a date
+ * that saves itself stays focusable under a lock and says why.
+ */
 export function RhfDateField<
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
@@ -893,9 +897,11 @@ export type RhfDateRangePickerProps<
  *    pick, which would mark (and, with `mode: "onTouched"`, validate) an end the user
  *    is still choosing.
  *
- * In `commit="immediate"` mode (the picker's default) the first calendar click is
- * reported on its own, so the form holds `(from, emptyValue)` until the second; with
- * `commit="apply"` nothing reaches the form until Apply.
+ * Without `apply` (the picker's default) the first calendar click is reported on its
+ * own, so the form holds `(from, emptyValue)` until the second; with `apply` nothing
+ * reaches the form until Apply. `apply` was `commit="apply"` until 0.52 (deprecated, gone
+ * in 0.53): `commit` is now the write lock's, as on every other binding — with
+ * `disabledReason`, the picker's own (refactor audit 2026-10-30, API-3).
  *
  * The common props (`label`, `hint`, `required`, `disabled`, `excludeWhenDisabled`,
  * `control`, `className`) apply to the pair; `rules` are per field.
@@ -1460,6 +1466,7 @@ function MonthControl({
  * lookup until 0.34, API-3), so focus-on-error lands there; the form's error paints the
  * trigger and is the shell's message; the hint is the shell's description; neither is
  * handed to the picker, so its box never changes. Picking marks the field touched.
+ * `commit` and `disabledReason` are the picker's own (0.52, API-3).
  *
  * ```tsx
  * <RhfMonthPicker name="fiscalYear" label="Fiscal year" mode="year" valueAsNumber

@@ -246,7 +246,7 @@ export const de: Dictionary = {
       title: "Kalender & Datumsauswahl",
       short: "Kalender",
       blurb:
-        "Einen Tag oder einen Zeitraum wählen: der Kalender selbst, die darauf gebauten Datums- und Zeitraum-Picker, ihre Vorgaben und Grenzen sowie der erste Tag der Woche.",
+        "Einen Tag oder einen Zeitraum wählen: der Kalender selbst, die darauf gebauten Datums- und Zeitraum-Picker, ihre Vorgaben, Grenzen und Nur-Lesen-Sperre sowie der erste Tag der Woche.",
     },
     "month-view": {
       title: "Kalender-Monatsansicht",

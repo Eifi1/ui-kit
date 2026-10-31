@@ -114,10 +114,10 @@ describe("DateRangePicker preset identity", () => {
   });
 });
 
-describe('DateRangePicker commit="apply"', () => {
+describe("DateRangePicker apply", () => {
   it("a preset arms the calendar instead of committing; Apply commits it with its id", () => {
     const onCommit = vi.fn();
-    render(<Harness commit="apply" onCommit={onCommit} />);
+    render(<Harness apply onCommit={onCommit} />);
     openPanel();
     fireEvent.click(presetButton("Last month"));
     expect(onCommit).not.toHaveBeenCalled();
@@ -131,7 +131,7 @@ describe('DateRangePicker commit="apply"', () => {
 
   it("never lets a half-made range out: Apply is disabled until both ends exist", () => {
     const onCommit = vi.fn();
-    render(<Harness commit="apply" onCommit={onCommit} />);
+    render(<Harness apply onCommit={onCommit} />);
     openPanel();
     const grid = screen.getByRole("grid");
     fireEvent.click(within(grid).getByText("3"));
@@ -149,7 +149,7 @@ describe('DateRangePicker commit="apply"', () => {
 
   it("Cancel discards the draft, and the next open starts from the committed value", () => {
     const onCommit = vi.fn();
-    render(<Harness commit="apply" onCommit={onCommit} />);
+    render(<Harness apply onCommit={onCommit} />);
     openPanel();
     fireEvent.click(presetButton("Last month"));
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));

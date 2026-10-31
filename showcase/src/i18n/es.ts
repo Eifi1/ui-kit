@@ -238,7 +238,7 @@ export const es: Dictionary = {
       title: "Calendarios y selectores de fecha",
       short: "Calendarios",
       blurb:
-        "Elegir un día o un intervalo de días: el calendario en sí, los selectores de fecha y de intervalo construidos sobre él, sus atajos y sus límites, y el primer día de la semana.",
+        "Elegir un día o un intervalo de días: el calendario en sí, los selectores de fecha y de intervalo construidos sobre él, sus atajos, sus límites y su bloqueo de solo lectura, y el primer día de la semana.",
     },
     "month-view": {
       title: "Vista mensual del calendario",

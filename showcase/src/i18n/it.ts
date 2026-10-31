@@ -235,7 +235,7 @@ export const it: Dictionary = {
       title: "Calendari e selettori di date",
       short: "Calendari",
       blurb:
-        "Scegliere un giorno o un intervallo di giorni: il calendario stesso, i selettori di data e di intervallo costruiti su di esso, le loro scorciatoie e i loro limiti, e il primo giorno della settimana.",
+        "Scegliere un giorno o un intervallo di giorni: il calendario stesso, i selettori di data e di intervallo costruiti su di esso, le loro scorciatoie, i loro limiti e il loro blocco di sola lettura, e il primo giorno della settimana.",
     },
     "month-view": {
       title: "Vista mensile del calendario",

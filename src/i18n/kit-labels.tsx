@@ -204,7 +204,7 @@ export interface DatePickerLabels {
   previousDay: string;
   nextDay: string;
   today: string;
-  /** `DateRangePicker commit="apply"`: the button that commits the drafted range. */
+  /** `DateRangePicker apply`: the button that commits the drafted range. */
   apply: string;
   /** …and the one that discards it. */
   cancel: string;

@@ -5,12 +5,14 @@ import {
   DatePicker,
   DateRangePicker,
   MiniCalendar,
+  MonthPicker,
   ToggleGroup,
   cn,
   DateMark,
   FieldHint,
   Select,
   UiKitProvider,
+  WriteLockProvider,
 } from "@eifi1/ui-kit";
 import type { DateRangeDraftSummary, DateRangePickerPreset } from "@eifi1/ui-kit";
 import {
@@ -360,10 +362,12 @@ export function Dates() {
         </StateLine>
         <p className="mt-2 text-xs text-secondary">
           Walk the arrows to either edge and they go flat rather than disappearing — a control that comes and goes with
-          the value reflows whatever sits beside it, which is the complaint the behaviour exists to answer. The today
-          button starts flat because the value already is today. Note what <code className="font-mono">today</code> is:
-          the day is passed IN, so this field can be tested at a fixed date and so the host keeps a single definition of
-          &quot;today&quot; across its pages.
+          the value reflows whatever sits beside it, which is the complaint the behaviour exists to answer. Flat, not{" "}
+          <code className="font-mono">disabled</code>: since 0.52 an arrow at its edge is{" "}
+          <code className="font-mono">aria-disabled</code> and refuses the click, so the key press that took it there
+          leaves the focus on it rather than on the page. The today button starts flat because the value already is
+          today. Note what <code className="font-mono">today</code> is: the day is passed IN, so this field can be
+          tested at a fixed date and so the host keeps a single definition of &quot;today&quot; across its pages.
         </p>
       </Example>
 
@@ -435,9 +439,12 @@ export function Dates() {
           <code className="font-mono">invalid</code> paints and sets <code className="font-mono">aria-invalid</code>; it
           carries no message, so the error text is yours to render. <code className="font-mono">disabled</code> also
           suppresses the clear button, which is why the frozen field shows the calendar glyph despite being{" "}
-          <code className="font-mono">clearable</code>.
+          <code className="font-mono">clearable</code>. A keyboard clear hands the focus to the field, as the × goes
+          with the value.
         </p>
       </Example>
+
+      <WriteLockExample />
 
       <Example
         label="DateRangePicker"
@@ -639,6 +646,71 @@ export function Dates() {
 }
 
 /**
+ * The three pickers under the write lock (0.52, refactor audit 2026-10-30, API-3): a
+ * picker that SAVES on change opts in with `commit`; one with its own reason takes
+ * `disabledReason`. A component of its own so its state sits beside it.
+ */
+function WriteLockExample() {
+  const [locked, setLocked] = useState(true);
+  const [day, setDay] = useState(todayIso());
+  const [range, setRange] = useState({ from: startOfMonthIso(0), to: todayIso() });
+  const [month, setMonth] = useState(monthKey(new Date()));
+  return (
+    <Example
+      label="Date pickers — the write lock (commit, disabledReason)"
+      hint="a picker that saves on change opts in with commit; locked, it stays focusable and says why"
+    >
+      <label className="mb-3 flex items-center gap-2 text-xs text-secondary">
+        <input type="checkbox" checked={locked} onChange={(e) => setLocked(e.target.checked)} />
+        <code className="font-mono">WriteLockProvider locked</code>
+      </label>
+      <WriteLockProvider locked={locked} reason="Shared with you to read">
+        <Stage>
+          <DatePicker
+            value={day}
+            onChange={setDay}
+            locale={LOCALE}
+            label="Booked on"
+            commit
+            step
+            today={todayIso()}
+            clearable
+          />
+          <DateRangePicker
+            from={range.from}
+            to={range.to}
+            onChange={(from, to) => setRange({ from, to })}
+            locale={LOCALE}
+            label="Report period"
+            commit
+          />
+          <MonthPicker value={month} onChange={setMonth} locale={LOCALE} label="Budget month" commit />
+          <DatePicker
+            value={day}
+            onChange={setDay}
+            locale={LOCALE}
+            label="Own reason"
+            disabledReason="Closed for this year"
+          />
+        </Stage>
+      </WriteLockProvider>
+      <StateLine>
+        day={iso(day)} · from={iso(range.from)} to={iso(range.to)} · month={month}
+      </StateLine>
+      <p className="mt-2 text-xs text-secondary">
+        Select&apos;s lock, on the three date pickers and their <code className="font-mono">/rhf</code> twins since
+        0.52: under a locked <code className="font-mono">WriteLockProvider</code> a picker with{" "}
+        <code className="font-mono">commit</code> keeps its trigger focusable and{" "}
+        <code className="font-mono">aria-disabled</code>, opens nothing, offers no clear, and its ‹ › and Today refuse;
+        the reason is a line under it at Large and on a touch screen, else a tooltip, and its description either way.
+        The last one locks with its own <code className="font-mono">disabledReason</code>, lock or no lock. A date field
+        in a form with its own Save leaves <code className="font-mono">commit</code> off and stays editable.
+      </p>
+    </Example>
+  );
+}
+
+/**
  * A report range: month-aligned presets with ids, drafted and committed on
  * Apply. A component of its own so its state sits beside it.
  */
@@ -660,7 +732,7 @@ function ReportRangeExample() {
   const [commits, setCommits] = useState(0);
   return (
     <Example
-      label='DateRangePicker — preset ids and commit="apply"'
+      label="DateRangePicker — preset ids and apply"
       hint="a preset arms the calendar instead of committing; nothing reaches onChange until Apply"
     >
       <Stage>
@@ -671,7 +743,7 @@ function ReportRangeExample() {
           label="Report period"
           presets={monthPresets}
           preset={range.preset}
-          commit="apply"
+          apply
           formatOptions={{ dateStyle: "medium" }}
           onChange={(from, to, presetId) => {
             setRange({ from, to, preset: presetId ?? null });
@@ -693,7 +765,10 @@ function ReportRangeExample() {
         the draft away. The presets are <code className="font-mono">calendarMonthPresets()</code>: WHOLE calendar months
         and years, never the rolling 90 days up to this morning. Apply and Cancel are{" "}
         <code className="font-mono">datePicker.apply</code> / <code className="font-mono">.cancel</code> and the
-        column&apos;s name <code className="font-mono">datePicker.presets</code>, from the provider.
+        column&apos;s name <code className="font-mono">datePicker.presets</code>, from the provider.{" "}
+        <code className="font-mono">apply</code> was <code className="font-mono">commit=&quot;apply&quot;</code> until
+        0.52, which still works until 0.53: <code className="font-mono">commit</code> is the write lock&apos;s prop, as
+        on every other control.
       </p>
     </Example>
   );
@@ -727,7 +802,7 @@ function RangeDraftSummaryExample() {
   return (
     <Example
       label="DateRangePicker — renderDraftSummary"
-      hint='commit="apply" only: a line above the calendar saying what Apply would commit, as the draft changes'
+      hint="apply only: a line above the calendar saying what Apply would commit, as the draft changes"
     >
       <Stage>
         <DateRangePicker
@@ -737,7 +812,7 @@ function RangeDraftSummaryExample() {
           label="Report period"
           presets={monthPresets}
           preset={range.preset}
-          commit="apply"
+          apply
           formatOptions={{ dateStyle: "medium" }}
           renderDraftSummary={summary}
           onChange={(from, to, presetId) => setRange({ from, to, preset: presetId ?? null })}
@@ -754,8 +829,7 @@ function RangeDraftSummaryExample() {
         <code className="font-mono">&quot;&quot;</code> until the second click — and the marked{" "}
         <code className="font-mono">preset</code>), in the popover and the phone sheet alike. The line is a polite live
         region, so a screen reader hears the draft change. Returning <code className="font-mono">null</code> hides it
-        for that draft; in <code className="font-mono">commit=&quot;immediate&quot;</code> there is no draft and it is
-        ignored.
+        for that draft; without <code className="font-mono">apply</code> there is no draft and it is ignored.
       </p>
     </Example>
   );
@@ -793,7 +867,7 @@ function RangeSheetExample() {
           locale={LOCALE}
           label="Report period"
           presets={monthPresets}
-          commit="apply"
+          apply
           sheetBackCloses={backCloses}
           formatOptions={{ dateStyle: "medium" }}
           onChange={(from, to) => setRange({ from, to })}
@@ -855,7 +929,7 @@ function RangeTriggerExample() {
             label="Report period"
             presets={monthPresets}
             preset={range.preset}
-            commit="apply"
+            apply
             formatOptions={{ dateStyle: "medium" }}
             onChange={(from, to, presetId) => setRange({ from, to, preset: presetId ?? null })}
             renderTrigger={({ triggerProps, valueProps, preset, text }) => (

@@ -49,7 +49,7 @@ describe("DateRangePicker on a phone", () => {
   it("opens a full-screen sheet with Apply in its footer, and commits from there", () => {
     mockPhone();
     const onCommit = vi.fn();
-    render(<Harness commit="apply" onCommit={onCommit} />);
+    render(<Harness apply onCommit={onCommit} />);
     const trigger = screen.getByRole("combobox");
     expect(trigger).toHaveAttribute("aria-expanded", "false");
     fireEvent.click(trigger);
@@ -74,7 +74,7 @@ describe("DateRangePicker on a phone", () => {
   it("closes from its X without committing, and re-seeds the draft on the next open", () => {
     mockPhone();
     const onCommit = vi.fn();
-    render(<Harness commit="apply" preset="last_month" onCommit={onCommit} />);
+    render(<Harness apply preset="last_month" onCommit={onCommit} />);
     fireEvent.click(screen.getByRole("combobox"));
     fireEvent.click(screen.getByRole("button", { name: "This month" }));
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
@@ -98,7 +98,7 @@ describe("DateRangePicker on a phone", () => {
   });
 
   it("stays a popover on desktop", () => {
-    render(<Harness commit="apply" />);
+    render(<Harness apply />);
     fireEvent.click(screen.getByRole("combobox"));
     const panel = screen.getByRole("dialog", { name: "Choose a date range" });
     expect(panel).not.toHaveAttribute("aria-modal");
@@ -115,7 +115,7 @@ describe("DateRangePicker renderTrigger", () => {
   );
 
   it("keeps the kit's aria and names the active preset", () => {
-    render(<Harness commit="apply" preset="last_month" renderTrigger={renderTrigger} />);
+    render(<Harness apply preset="last_month" renderTrigger={renderTrigger} />);
     const trigger = screen.getByRole("combobox", { name: "Period Last month" });
     expect(trigger).toHaveAttribute("aria-haspopup", "dialog");
     expect(trigger).toHaveAttribute("aria-expanded", "false");

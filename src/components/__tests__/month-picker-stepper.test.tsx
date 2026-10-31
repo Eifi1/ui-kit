@@ -76,11 +76,14 @@ describe("MonthPicker variant='stepper'", () => {
     expect(text).toHaveAttribute("aria-live", "polite");
   });
 
-  it("disables what leads out of bounds", () => {
-    renderStepper({ value: "2026-08", min: "2026-08", max: "2026-08-20" });
-    expect(screen.getByRole("button", { name: "Previous month" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Next month" })).toBeDisabled();
-    // "Now" (September) is past `max`.
+  it("refuses what leads out of bounds", () => {
+    const { onChange } = renderStepper({ value: "2026-08", min: "2026-08", max: "2026-08-20" });
+    // Focusably, as a press onto the bound leaves them (INP-4).
+    expect(screen.getByRole("button", { name: "Previous month" })).toHaveAttribute("aria-disabled", "true");
+    expect(screen.getByRole("button", { name: "Next month" })).toHaveAttribute("aria-disabled", "true");
+    fireEvent.click(screen.getByRole("button", { name: "Next month" }));
+    expect(onChange).not.toHaveBeenCalled();
+    // "Now" (September) is past `max` — which no press here changes.
     expect(screen.getByRole("button", { name: "Today" })).toBeDisabled();
   });
 

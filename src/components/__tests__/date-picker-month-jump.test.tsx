@@ -303,13 +303,13 @@ describe("DateRangePicker monthJump (kastlan's July–June period)", () => {
     expect(monthCell("July 2027")).toHaveAttribute("aria-selected", "false");
   });
 
-  it('commit="apply": a preset picked while the months are open goes back to its days', () => {
+  it("apply: a preset picked while the months are open goes back to its days", () => {
     const presets: DateRangePickerPreset[] = [
       { id: "fy25", label: "2025/26", from: "2025-07-01", to: "2026-06-30" },
       { id: "fy26", label: "2026/27", from: "2026-07-01", to: "2027-06-30" },
     ];
     const onCommit = vi.fn();
-    render(<Range onCommit={onCommit} commit="apply" presets={presets} />);
+    render(<Range onCommit={onCommit} apply presets={presets} />);
     fireEvent.click(screen.getByRole("combobox", { name: /^Service-charge period/ }));
     fireEvent.click(caption());
     fireEvent.click(within(panel()).getByRole("button", { name: "2025/26" }));

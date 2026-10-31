@@ -193,3 +193,22 @@ describe("the step row's focus frame (keksdose live #394)", () => {
     expect(hint.className).not.toContain("ring-inset");
   });
 });
+
+/**
+ * `today` without `step` still makes a row (refactor audit 2026-10-30, INP-13): the
+ * caller's `className` belongs on that row, once, and the field inside it takes the
+ * row's `min-w-0 flex-1`. The field was dressed on `step` alone, so a today-only picker
+ * put a `w-48` on the row AND on the field, and the field did not fill the row.
+ */
+describe("a DatePicker with `today` and no `step`", () => {
+  it("puts the caller's className on the row only, and stretches the field", () => {
+    const { container } = render(
+      <DatePicker value="2026-10-20" onChange={() => {}} today="2026-10-31" className="w-48 caller-class" />,
+    );
+    expect(container.querySelectorAll(".caller-class")).toHaveLength(1);
+    const field = container.querySelector<HTMLElement>('[data-slot="date-step-field"]')!;
+    expect(field).not.toHaveClass("caller-class");
+    expect(field).toHaveClass("min-w-0", "flex-1");
+    expect(field.parentElement).toHaveClass("caller-class");
+  });
+});
