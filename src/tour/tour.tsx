@@ -140,7 +140,9 @@ export interface TourStep {
   /** Runs before the step is shown — e.g. navigate to a route, open a panel.
    *  May be async; the step waits for it, then locates the target. Receives the
    *  {@link TourStepContext} (0.50); a step entered by "Guide me" sees `via: "at"` and
-   *  should leave an open form alone. */
+   *  should leave an open form alone. One that throws or rejects is logged to the
+   *  console, and the step is located and shown anyway. Enter and the arrows wait for
+   *  it; Escape does not. */
   beforeStep?: (ctx: TourStepContext) => void | Promise<void>;
 }
 
@@ -481,7 +483,10 @@ export function TourProvider({
       const last = Math.max(0, s.length - 1);
       floorRef.current = opts?.at === undefined ? 0 : resolveAt(s, opts.at);
       const via: TourStepContext["via"] = opts?.at === undefined ? "start" : "at";
-      const wanted = Math.min(Math.max(floorRef.current, opts?.startIndex ?? floorRef.current), last);
+      // Floored, as `at` is (FLW-9): `steps[1.5]` is undefined, and `forward` threw on
+      // its `when` — an edited `?tourStep=2.5` was enough.
+      const asked = opts?.startIndex === undefined ? floorRef.current : Math.floor(opts.startIndex);
+      const wanted = Math.min(Math.max(floorRef.current, asked), last);
       let to = forward(s, wanted, via);
       if (to < 0) to = backward(s, wanted, via);
       // Not one step of the run is shown: there is nothing to tour.
@@ -561,7 +566,7 @@ export function TourProvider({
     (i: number) => {
       const s = stepsRef.current;
       if (!s || s.length === 0) return;
-      const wanted = Math.min(Math.max(floorRef.current, i), s.length - 1);
+      const wanted = Math.min(Math.max(floorRef.current, Math.floor(i)), s.length - 1);
       let to = forward(s, wanted, "goto");
       if (to < 0) to = backward(s, wanted, "goto");
       if (to >= 0) arrive(s, to, "goto");
@@ -990,7 +995,15 @@ function TourOverlay({
       setLocated({ index, step, rect: el ? spotRectOf(el, step) : null, dir: dirOf(el), layer, fullScreen });
     };
     void (async () => {
-      await step.beforeStep?.(stepContext(gates, via));
+      try {
+        await step.beforeStep?.(stepContext(gates, via));
+      } catch (error) {
+        // The step is shown anyway (FLW-5): left unlocated, the tour stayed `active`
+        // with no card, no scrim and no Escape layer, and everything keyed on "a tour
+        // runs" (the `?tour=` mirror, the apps' PWA-update hold) stayed on with it. The
+        // target may well be there regardless; if not, the finder gives up and centres.
+        console.error(error);
+      }
       if (cancelled) return;
       if (!step.target) {
         settle(null);
@@ -1318,6 +1331,10 @@ function TourOverlay({
         if (!ready) onSkip();
         return;
       }
+      // Nothing on screen to move on from: a step whose `beforeStep` is still running
+      // (a route loading) is not passed over by an Enter or a → pressed on the bare
+      // page (FLW-5). Escape, above, still leaves.
+      if (!ready) return;
       if (e.key === "Enter") {
         if (step.awaitClick || step.awaitInput || ownsKey(e.target, "Enter")) return;
         e.preventDefault();
