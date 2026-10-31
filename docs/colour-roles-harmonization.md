@@ -600,7 +600,9 @@ Colour table and adopt-0.49 said it.
   presets). The well is only 1.09–1.24:1 from the card, so under More contrast every frame
   gets the `--chart-ink` edge whatever `edges` says. A group's `fill` is its tiles' default
   (a tile's own wins). A node's `shade` mixes its hue into `--bg-surface` as a hex the map
-  measures, so the label ink stays automatic: an app no longer lerps colours by hand.
+  measures, so the label ink stays automatic: an app no longer lerps colours by hand. A
+  frame is given area of its own on top of its tiles', so a tile's area stays its share
+  of the whole in any group (the map encodes value as area).
 
 ## 6. SwipeAction `tone` (k24, §2.6, §2.12)
 

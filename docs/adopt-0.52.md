@@ -134,7 +134,10 @@ an optional third argument. The keyboard walks frames and tiles depth-first; a t
 - CategoryTreemap must pass `children` and `shade` through (its `Node` mapping drops them);
 - the all-categories map (dev#533) can nest categories under their groups.
 Under `redactNames` whole tiles and the frames' names now blur in demo mode (they carry
-names in their accessible labels).
+names in their accessible labels). A group and a tile may share an id (keys are paths).
+`maxTiles` counts whole tiles (2.5 → 2; NaN or a negative cap → none). A tile's accessible
+name asks `valueFormatter` with the share `undefined`; a formatter that throws or answers
+"NaN" there falls back to the kit's number.
 
 **Search.** Combobox, CountrySelect, the DataTable text filter, TourCatalogue, translation
 review and ShareCard match every word of a query in any order. DataTable exports
