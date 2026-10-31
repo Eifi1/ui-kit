@@ -230,46 +230,58 @@ if (JSON.stringify(readme) !== JSON.stringify(adopting)) {
   );
   process.exit(1);
 }
-const app = mkdtempSync(join(tmpdir(), "uikit-tailwind-app-"));
-try {
-  mkdirSync(join(app, "src"));
-  mkdirSync(join(app, "node_modules", "@eifi1"), { recursive: true });
-  symlinkSync(ROOT, join(app, "node_modules", "@eifi1", "ui-kit"), "dir");
-  writeFileSync(join(app, ".gitignore"), "node_modules\n");
-  // Each documented path, from its `@eifi1/ui-kit/` on, under the scratch app's package.
-  const installed = join(app, "node_modules", "@eifi1", "ui-kit");
-  const lines = readme.map((line) =>
-    line.replace(/"[^"]*@eifi1\/ui-kit\/([^"]*)"/, (_, rest) => `"${join(installed, rest)}"`),
-  );
-  const appCompiler = await compile(
-    `@import "tailwindcss";\n@import "${join(ROOT, "tokens.css")}";\n${lines.join("\n")}\n`,
-    {
-      base: join(app, "src"),
-      loadStylesheet,
-    },
-  );
-  const root =
-    appCompiler.root === "none" ? [] : [{ ...(appCompiler.root ?? { base: app, pattern: "**/*" }), negated: false }];
-  const scanner = new Scanner({ sources: [...root, ...appCompiler.sources] });
-  const appCss = appCompiler.build(scanner.scan());
-  const commented = scanner.files.filter((f) => /\.d\.ts$|\.map$/.test(f));
-  if (commented.length > 0) {
-    console.error(
-      `✖ the documented @source lines scan ${commented.length} .d.ts / .map file(s) of the kit (${commented[0]}, …):\n` +
-        "  their comments become utilities in every app's CSS. Document\n" +
-        '  @source not "../../node_modules/@eifi1/ui-kit/dist/**/*.{map,d.ts}"; beside the @source line (MOD-3).',
+/**
+ * The scan in a scratch app: what is wrong with it as a message, or null. A function, so
+ * the `finally` that deletes the app runs on a failure too: `process.exit` inside the
+ * `try` skipped it, and every failing run left a `uikit-tailwind-app-*` in the temp dir
+ * with a symlink to this repository inside (0.52 code review).
+ */
+async function scanAsAnApp() {
+  const app = mkdtempSync(join(tmpdir(), "uikit-tailwind-app-"));
+  try {
+    mkdirSync(join(app, "src"));
+    mkdirSync(join(app, "node_modules", "@eifi1"), { recursive: true });
+    symlinkSync(ROOT, join(app, "node_modules", "@eifi1", "ui-kit"), "dir");
+    writeFileSync(join(app, ".gitignore"), "node_modules\n");
+    // Each documented path, from its `@eifi1/ui-kit/` on, under the scratch app's package.
+    const installed = join(app, "node_modules", "@eifi1", "ui-kit");
+    const lines = readme.map((line) =>
+      line.replace(/"[^"]*@eifi1\/ui-kit\/([^"]*)"/, (_, rest) => `"${join(installed, rest)}"`),
     );
-    process.exit(1);
-  }
-  for (const cls of ["pointer-events-auto", "sr-only"]) {
-    if (!appCss.includes(`.${cls}`)) {
-      console.error(`✖ ${cls} is missing from an app's CSS under the documented @source lines — the scan misses dist/`);
-      process.exit(1);
+    const appCompiler = await compile(
+      `@import "tailwindcss";\n@import "${join(ROOT, "tokens.css")}";\n${lines.join("\n")}\n`,
+      {
+        base: join(app, "src"),
+        loadStylesheet,
+      },
+    );
+    const root =
+      appCompiler.root === "none" ? [] : [{ ...(appCompiler.root ?? { base: app, pattern: "**/*" }), negated: false }];
+    const scanner = new Scanner({ sources: [...root, ...appCompiler.sources] });
+    const appCss = appCompiler.build(scanner.scan());
+    const commented = scanner.files.filter((f) => /\.d\.ts$|\.map$/.test(f));
+    if (commented.length > 0) {
+      return (
+        `✖ the documented @source lines scan ${commented.length} .d.ts / .map file(s) of the kit (${commented[0]}, …):\n` +
+        "  their comments become utilities in every app's CSS. Document\n" +
+        '  @source not "../../node_modules/@eifi1/ui-kit/dist/**/*.{map,d.ts}"; beside the @source line (MOD-3).'
+      );
     }
+    for (const cls of ["pointer-events-auto", "sr-only"]) {
+      if (!appCss.includes(`.${cls}`)) {
+        return `✖ ${cls} is missing from an app's CSS under the documented @source lines — the scan misses dist/`;
+      }
+    }
+    console.log(
+      `✓ the documented @source lines reach the kit's classes and scan ${scanner.files.length} files, no .d.ts or .map`,
+    );
+    return null;
+  } finally {
+    rmSync(app, { recursive: true, force: true });
   }
-  console.log(
-    `✓ the documented @source lines reach the kit's classes and scan ${scanner.files.length} files, no .d.ts or .map`,
-  );
-} finally {
-  rmSync(app, { recursive: true, force: true });
+}
+const failure = await scanAsAnApp();
+if (failure) {
+  console.error(failure);
+  process.exit(1);
 }

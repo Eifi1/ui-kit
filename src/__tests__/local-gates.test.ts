@@ -19,6 +19,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import ts from "typescript";
 import { afterEach, describe, expect, it } from "vitest";
 import { GROUPS, isParallel, runGroups, testWorkers, writeStamp } from "../../scripts/check.mjs";
 
@@ -422,5 +423,55 @@ describe("check:commit-rules (TST-7)", () => {
   it("never passes offline under CI, which always has a network", () => {
     const ci = rules('throw new TypeError("fetch failed");', { ...LOCAL, CI: "true" });
     expect(ci.status, ci.out).toBe(1);
+  });
+
+  // 0.52 code review (scripts/check-commit-rules.mjs): only `fetch()` was inside the try,
+  // and the body read is bound by the same 8 s timeout. Headers in time and a body that
+  // was not crashed the script with an unhandled TimeoutError: the pre-push hook blocked,
+  // and CI printed a stack instead of the line that names the URL.
+  const SLOW_BODY =
+    'return new Response(new ReadableStream({ start(c) { c.error(new DOMException("The operation was aborted due to timeout", "TimeoutError")); } }), { status: 200 });';
+
+  it("passes offline when the body times out after the headers, as for no answer at all", () => {
+    const slow = rules(SLOW_BODY);
+    expect(slow.status, slow.out).toBe(0);
+    expect(slow.out).toMatch(/not verified \(offline/);
+  });
+
+  it("fails under CI on a body that times out, naming the URL rather than a stack", () => {
+    const ci = rules(SLOW_BODY, { ...LOCAL, CI: "true" });
+    expect(ci.status, ci.out).toBe(1);
+    expect(ci.out).toMatch(/✖ shared commit rules not verified: https:\/\/raw\.githubusercontent\.com\//);
+  });
+});
+
+/**
+ * 0.52 code review (scripts/check-tailwind-scan.mjs): `process.exit` does not run a
+ * `finally`. The scan exited inside the `try` whose `finally` deletes its scratch app, so
+ * every failing run left a `uikit-tailwind-app-*` in the temp dir with a symlink to the
+ * repository inside. No script may exit from inside a `try` that has a `finally`.
+ */
+describe("the scripts' cleanup", () => {
+  it("never calls process.exit inside a try whose finally would clean up", () => {
+    const dir = join(ROOT, "scripts");
+    const found: string[] = [];
+    for (const file of readdirSync(dir).filter((f) => /\.(?:mjs|cjs|js)$/.test(f))) {
+      const source = ts.createSourceFile(file, readFileSync(join(dir, file), "utf8"), ts.ScriptTarget.Latest, true);
+      const visit = (node: ts.Node, inTry: boolean): void => {
+        if (ts.isTryStatement(node) && node.finallyBlock) {
+          visit(node.tryBlock, true);
+          if (node.catchClause) visit(node.catchClause, true);
+          visit(node.finallyBlock, inTry);
+          return;
+        }
+        // A function declared in the try runs on its own terms (a callback, a handler).
+        const inside = inTry && !ts.isFunctionLike(node);
+        if (inside && ts.isCallExpression(node) && node.expression.getText(source) === "process.exit")
+          found.push(`${file}:${source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1}`);
+        ts.forEachChild(node, (child) => visit(child, inside));
+      };
+      visit(source, false);
+    }
+    expect(found).toEqual([]);
   });
 });

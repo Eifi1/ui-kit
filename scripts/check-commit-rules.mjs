@@ -36,8 +36,13 @@ const differ = [];
 for (const file of pin.files) {
   const url = `https://raw.githubusercontent.com/${pin.repo}/${pin.commit}/${file.path}`;
   let res;
+  let text;
   try {
     res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    // The body read too: the timeout bounds it, and a connection can drop after the
+    // headers. Outside the try, it crashed the script with an unhandled TimeoutError
+    // (0.52 code review).
+    if (res.ok) text = await res.text();
   } catch (error) {
     if (!isNetworkError(error) || process.env.CI) {
       console.error(`✖ shared commit rules not verified: ${url}: ${error.message}`);
@@ -54,7 +59,7 @@ for (const file of pin.files) {
     process.exit(1);
   }
   const local = readFileSync(new URL("../" + file.vendoredAs, import.meta.url), "utf8");
-  if ((await res.text()) !== local) differ.push(file);
+  if (text !== local) differ.push(file);
 }
 
 if (differ.length) {
