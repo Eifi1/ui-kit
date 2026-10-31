@@ -1092,6 +1092,8 @@ export {
   notifyPushSubscriptionChanged,
   pushSupported,
   PushDeviceError,
+  // 0.52 (§10.6, refactor audit 2026-10-30 FLW-2): an explicit sign-out releases this device's push.
+  releaseThisDevicePush,
 } from "./notifications/use-push-device";
 export type {
   PushDevice,
