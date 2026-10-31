@@ -98,4 +98,13 @@ describe("roundHalfAway", () => {
     expect(roundHalfAway(Infinity, 2)).toBe(Infinity);
     expect(roundHalfAway(Number.NaN, 2)).toBeNaN();
   });
+
+  // 0.52 code review (deep, charts), finding 5: "1.2345e2.5" is NaN, so a fractional
+  // `digits` rounded every figure to 0. MeasuredGrid's `digits` came from `toFixed`, which
+  // takes the whole part of it (and NaN as 0).
+  it("takes the whole part of `digits`, as toFixed does", () => {
+    expect(roundHalfAway(1.2345, 2.5)).toBe(1.23);
+    expect(roundHalfAway(-1.2355, 2.9)).toBe(-1.24);
+    expect(roundHalfAway(1.5, Number.NaN)).toBe(2);
+  });
 });

@@ -129,6 +129,14 @@ describe("useMeasuredRows", () => {
     expect(result.current.cells).toEqual([["0", "1"]]);
   });
 
+  // 0.52 code review (deep, charts), finding 5: `toFixed(2.5)` wrote two decimals —
+  // "1.23" — and `roundHalfAway` glued "e2.5" onto the figure, which is NaN, so every
+  // computed cell of a table with a fractional `digits` came out "0".
+  it("takes a fractional `digits` as its whole decimals, as toFixed did", () => {
+    const { result } = renderHook(() => useMeasuredRows(() => [[1.2345, -6.789]], { digits: 2.5, locale: "en" }));
+    expect(result.current.cells).toEqual([["1.23", "-6.79"]]);
+  });
+
   it("follows the provider's locale when given none", () => {
     const { result } = renderHook(() => useMeasuredRows([[1.5]]), {
       wrapper: ({ children }) => <UiKitProvider locale="de-DE">{children}</UiKitProvider>,
