@@ -18,6 +18,9 @@ export interface HoverMenuProps extends Omit<ComponentPropsWithoutRef<"div">, "c
   /** The trigger. `toggle` for a button's click; `close` for a trigger that is a LINK —
    *  following it should shut a panel hover opened (TopBarActionMenu `href`). */
   trigger: (state: { open: boolean; toggle: () => void; close: () => void }) => ReactNode;
+  /** The menu's rows. `close` shuts the menu and, when focus is in it, puts focus on the
+   *  trigger before returning — so a dialog the same handler opens gives it back there
+   *  (0.52). */
   children: (close: () => void) => ReactNode;
   /**
    * Which edge of the trigger the panel lines up with, by the reading direction: `end`
@@ -177,16 +180,20 @@ export function HoverMenu({
     ) ?? null;
   const items = () => (menuRef.current ? applyMenuSemantics(menuRef.current) : []);
 
-  // Escape closes, from anywhere — it did nothing at all before — as a layer on the kit's
-  // Escape stack, so inside a dialog it closes the menu and not the dialog (Wave 2,
-  // DUP-1). Focus goes back to the trigger only when it was inside the menu: a panel
-  // opened by hover while the user is typing elsewhere must not yank the caret over
-  // here on the way out.
-  const layer = useDismissLayer(open, () => {
+  // Focus goes back to the trigger only when it was inside the menu: a panel opened by
+  // hover while the user is typing elsewhere must not yank the caret over here on the
+  // way out. At once, not after the commit: a row that closes the menu and opens a dialog
+  // in one handler has the dialog record its restore target during that commit's render,
+  // and the row it would record is about to go (refactor audit 2026-10-30, INP-2).
+  const closeToTrigger = () => {
     const hadFocus = wrapperRef.current?.contains(document.activeElement) ?? false;
     close();
     if (hadFocus) triggerEl()?.focus();
-  });
+  };
+  // Escape closes, from anywhere — it did nothing at all before — as a layer on the kit's
+  // Escape stack, so inside a dialog it closes the menu and not the dialog (Wave 2,
+  // DUP-1).
+  const layer = useDismissLayer(open, closeToTrigger);
 
   // Upgrade the markup every render while open (the caller's rows can change), then
   // honour a pending keyboard open.
@@ -324,7 +331,10 @@ export function HoverMenu({
               panelClassName,
             )}
           >
-            {children(close)}
+            {
+              // eslint-disable-next-line react-hooks/refs -- handed to the items' handlers: it reads the trigger and the focus when an item is chosen, never while rendering
+              children(closeToTrigger)
+            }
           </div>
         </div>
       )}

@@ -37,6 +37,9 @@ export { DEFAULT_POPOVER_LABELS };
  */
 export interface PopoverProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
   trigger: (state: { open: boolean; toggle: () => void; ref: RefObject<HTMLButtonElement | null> }) => ReactNode;
+  /** The panel's content. `close` shuts the panel and, when focus is in it, puts focus
+   *  on the trigger before returning — so a dialog the same handler opens gives it back
+   *  there (0.52). */
   children: (close: () => void) => ReactNode;
   /**
    * The panel's width: `"18rem"` (the default) grows with the text size — the panel
@@ -125,6 +128,17 @@ export function Popover({
   // across a right-to-left calendar or filter rendered left-to-right.
   const [dir, setDir] = useState<Direction>("ltr");
   const close = () => setOpen(false);
+  // The `close` the children get also hands focus to the trigger, AT ONCE, when it is
+  // inside the panel. The trap restores it too, but only after the commit — and a dialog
+  // opened in the same handler records its own restore target during that commit's
+  // render: the menu item that is about to go. RowActions' "Delete" asks first, and the
+  // answered confirm dropped focus on <body>, mid-table (refactor audit 2026-10-30,
+  // INP-2). Escape and an outside press keep the plain close: nothing opens after them.
+  const closeFromPanel = () => {
+    const focusInside = panelRef.current?.contains(document.activeElement) ?? false;
+    setOpen(false);
+    if (focusInside) triggerRef.current?.focus();
+  };
   const toggle = () => {
     setDir(dirOf(triggerRef.current));
     setOpen((v) => !v);
@@ -242,7 +256,10 @@ export function Popover({
               className,
             )}
           >
-            {children(close)}
+            {
+              // eslint-disable-next-line react-hooks/refs -- handed to the items' handlers: it reads the trigger and the focus when an item is chosen, never while rendering
+              children(closeFromPanel)
+            }
           </div>,
           document.body,
         )}
