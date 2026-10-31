@@ -4,7 +4,7 @@ import { Trash2, UserPlus, UsersRound } from "lucide-react";
 
 import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
-import { foldForSearch } from "../lib/text-match";
+import { matchesSearch, searchWords } from "../lib/text-match";
 import { AlertBanner } from "./alert-banner";
 import { Autocomplete } from "./autocomplete";
 import type { ComboOption } from "./combobox-core";
@@ -368,11 +368,11 @@ export function SharePanel({
   // The completion is a convenience, not a search: an address that matches nobody is
   // the ordinary case (somebody new), so no "No results" box opens over the field —
   // and over its error. The same narrowing Autocomplete applies, asked first — folded as
-  // every kit list folds (DUP-5).
-  const needle = foldForSearch((target ? "" : email).trim(), locale);
-  const offers =
-    needle !== "" &&
-    options.some((o) => [o.label, o.sublabel ?? ""].some((s) => foldForSearch(s, locale).includes(needle)));
+  // every kit list folds (DUP-5), and word by word as its list matches since 0.51.4
+  // (refactor audit 2026-10-30, DUP-4): "weber jonas" kept the list shut over a
+  // candidate the list itself would have shown.
+  const words = searchWords(target ? "" : email, locale);
+  const offers = words.length > 0 && options.some((o) => matchesSearch(words, [o.label, o.sublabel], locale));
 
   const captionNode = typeof caption === "function" ? caption(target) : caption;
   const shownError = error ?? failure;

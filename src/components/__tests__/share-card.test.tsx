@@ -126,6 +126,16 @@ describe("ShareCard", () => {
     expect((field() as HTMLInputElement).value).toBe("jonas@example.com");
   });
 
+  it("offers a candidate for words apart, as the list under it finds it (audit 2026-10-30 DUP-4)", async () => {
+    // The card asked "does anything match?" with the whole query as one substring, while
+    // the Autocomplete under it matches word by word (0.51.4): "weber jonas" kept the
+    // list shut over a candidate the list would have shown.
+    setup({ onAdd: vi.fn(), candidates: CANDIDATES });
+    fireEvent.focus(field());
+    fireEvent.change(field(), { target: { value: "weber jonas" } });
+    expect(await screen.findByRole("option", { name: /Jonas Weber/ })).toBeTruthy();
+  });
+
   it("opens no 'No results' list for an address that matches no candidate", () => {
     setup({ onAdd: vi.fn(), candidates: CANDIDATES });
     fireEvent.focus(field());

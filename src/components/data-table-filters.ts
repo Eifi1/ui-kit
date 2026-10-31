@@ -1,6 +1,6 @@
 import type { DataTableColumn } from "./data-table";
 import { toLocalIso } from "../lib/dates";
-import { foldForSearch } from "../lib/text-match";
+import { matchesSearch, searchWords } from "../lib/text-match";
 
 /** How a column is filtered. `text`/`select`/`date`/`number` each read a value
  *  off the row and compare it against the user's {@link FilterValue}. */
@@ -76,8 +76,10 @@ function localDay(raw: string): string {
  * `locale` is for the text filter's case folding. Plain `toLowerCase` folds by the
  * root rules, under which a Turkish user typing "ırmak" does not find "IRMAK";
  * `toLocaleLowerCase(locale)` does. Optional, and `undefined` is the runtime's default.
- * The text filter folds as every kit list does ({@link foldForSearch}, DUP-5): accents
- * off too, so "zurich" finds Zürich.
+ * The text filter folds as every kit list does (`foldForSearch`, DUP-5): accents off
+ * too, so "zurich" finds Zürich. And it matches as the pickers do since 0.51.4 (refactor
+ * audit 2026-10-30, DUP-4): every word of the query, anywhere in the value, in any order —
+ * "zurich migros" finds "Migros · 8004 Zürich". One word matches as before.
  */
 export function rowMatches<T>(col: DataTableColumn<T>, row: T, state: FilterValue, locale?: string): boolean {
   const filter = resolveFilter(col);
@@ -85,7 +87,7 @@ export function rowMatches<T>(col: DataTableColumn<T>, row: T, state: FilterValu
   switch (filter.type) {
     case "text": {
       if (state.type !== "text" || !state.q.trim()) return true;
-      return foldForSearch(filter.getValue(row), locale).includes(foldForSearch(state.q.trim(), locale));
+      return matchesSearch(searchWords(state.q, locale), [filter.getValue(row)], locale);
     }
     case "select": {
       if (state.type !== "select" || state.values.length === 0) return true;

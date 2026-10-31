@@ -235,3 +235,29 @@ describe("rowMatches on a text column folds for search (DUP-5)", () => {
     expect(rowMatches(city, { city: "İSTANBUL" }, { type: "text", q: "istanbul" }, "tr")).toBe(true);
   });
 });
+
+/**
+ * 0.51.4 made the pickers' search multi-word (`searchWords` / `matchesSearch`); the text
+ * filter still wanted the whole query as one substring, so "migros zurich" found nothing
+ * in "Migros · 8004 Zürich" — keksdose's 11 `filterBy` columns among them (refactor audit
+ * 2026-10-30, DUP-4). Every word now has to appear, in any order.
+ */
+describe("rowMatches on a text column matches every word, in any order (DUP-4)", () => {
+  const payee: DataTableColumn<{ payee: string }> = {
+    key: "payee",
+    header: "Payee",
+    cell: (r) => r.payee,
+    filterBy: (r) => r.payee,
+  };
+  const row = { payee: "Migros · 8004 Zürich" };
+
+  it("words apart, out of order, folded", () => {
+    expect(rowMatches(payee, row, { type: "text", q: "zurich migros" })).toBe(true);
+    expect(rowMatches(payee, row, { type: "text", q: "  migros   8004 " })).toBe(true);
+  });
+
+  it("one word missing is no match; one word matches as before", () => {
+    expect(rowMatches(payee, row, { type: "text", q: "migros bern" })).toBe(false);
+    expect(rowMatches(payee, row, { type: "text", q: "gros" })).toBe(true);
+  });
+});
