@@ -22,12 +22,11 @@ export const DEFAULT_FEEDBACK_DETAIL_LABELS: FeedbackDetailLabels = {
   resolvedAt: (date) => `Resolved: ${date}`,
   // The outcome editor's three words, read by nothing since 0.38 and "kept for one
   // release" for 13 minors: no tag, so the deprecations test never listed them (refactor
-  // audit 2026-10-30, DOC-9). The keys leave the type and all seven catalogues in 0.53.
-  /** @deprecated 0.52 — a reply: the outcome is frozen since 0.38 (§9.7); removed in 0.53. */
+  // audit 2026-10-30, DOC-9). Deprecated on `FeedbackDetailLabels`, the type an app reads
+  // them through — a tag on these keys reached no reader (0.52 code review). The keys
+  // leave the type and all seven catalogues in 0.53.
   outcomeAdd: "Add outcome",
-  /** @deprecated 0.52 — a reply: the outcome is frozen since 0.38 (§9.7); removed in 0.53. */
   outcomeUpdate: "Update",
-  /** @deprecated 0.52 — a reply: the outcome is frozen since 0.38 (§9.7); removed in 0.53. */
   outcomePlaceholder: "What was done, decided, or why this won't be addressed.",
   rework: "Rework",
   reworkTitle: "Send for rework",

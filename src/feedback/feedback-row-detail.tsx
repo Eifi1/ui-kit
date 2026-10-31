@@ -133,15 +133,21 @@ export interface FeedbackDetailLabels {
   /** On section 4's heading line once the row is settled, given the formatted
    *  `resolved_at` date. de-CH: "Erledigt am: {{date}}" */
   resolvedAt: (date: string) => string;
-  /** The admin's button while there is no outcome. **Unused since 0.38** (the outcome is
-   *  frozen, §9.7; a reply is written instead); kept for one release.
-   *  de-CH: "Ergebnis hinzufügen" */
+  // Deprecated on these members, the ones an app's code reads and overrides through: the
+  // tags sat on the English default's keys, and reached nothing — the default is typed by
+  // this interface (0.52 code review, feedback-row-detail-labels.ts; refactor audit
+  // 2026-10-30, DOC-9).
+  /** The admin's button while there is no outcome — read by nothing since 0.38 (the
+   *  outcome is frozen, §9.7; a reply is written instead). de-CH: "Ergebnis hinzufügen"
+   *  @deprecated 0.52 — a reply: the outcome is frozen since 0.38 (§9.7); removed in 0.53. */
   outcomeAdd: string;
   /** The same button once there is one. Unused since 0.38, as `outcomeAdd`.
-   *  de-CH: "Aktualisieren" */
+   *  de-CH: "Aktualisieren"
+   *  @deprecated 0.52 — a reply: the outcome is frozen since 0.38 (§9.7); removed in 0.53. */
   outcomeUpdate: string;
-  /** The line above the outcome editor. Unused since 0.38, as `outcomeAdd`. de-CH: "Was wurde umgesetzt, entschieden oder
-   *  warum nicht." */
+  /** The line above the outcome editor. Unused since 0.38, as `outcomeAdd`.
+   *  de-CH: "Was wurde umgesetzt, entschieden oder warum nicht."
+   *  @deprecated 0.52 — a reply: the outcome is frozen since 0.38 (§9.7); removed in 0.53. */
   outcomePlaceholder: string;
   /** The button that opens section 5 on an answered row. de-CH: "Nacharbeit" */
   rework: string;
