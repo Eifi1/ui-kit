@@ -1,3 +1,4 @@
+import { postOnce } from "../lib/broadcast";
 import { httpStatusOf } from "../lib/http-status";
 import { isOfflineError, stampAfter } from "../offline/local-first";
 import { isSharedComputer } from "../offline/shared-computer";
@@ -329,22 +330,6 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
       const epoch = (data as { epoch?: unknown } | null)?.epoch;
       if (typeof epoch === "string" && !epochs.has(epoch)) forgetHere();
     };
-  }
-
-  /** Tell the other tabs' engines on this database. Through this engine's own channel when
-   *  it has one: a channel never hears what it posted itself. */
-  function announce(epoch: string) {
-    if (typeof BroadcastChannel === "undefined") return;
-    try {
-      if (channel) channel.postMessage({ epoch });
-      else {
-        const out = new BroadcastChannel(across);
-        out.postMessage({ epoch });
-        out.close();
-      }
-    } catch {
-      /* best-effort: the epoch in `meta` still stops the other tab's next round */
-    }
   }
 
   /** `forget()` ran in another tab: the session this engine ran for has ended there. Its
@@ -866,7 +851,9 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
         for (const table of tables) await table.clear();
         await db.meta.put({ key: EPOCH, value: epoch });
       });
-      announce(epoch);
+      // Best-effort: the epoch in `meta` still stops another tab's next round. This engine's
+      // own channel hears it too, and keeps running: the epoch is already one of its own.
+      postOnce(across, { epoch });
       stepCounts = {};
       set({ lastSyncedAt: null });
       await refreshCounts();

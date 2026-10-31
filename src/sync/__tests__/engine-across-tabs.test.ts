@@ -55,6 +55,7 @@ const open: { db: SyncDb; engine: SyncEngine }[] = [];
 beforeEach(() => installLocks(fakeLocks()));
 
 afterEach(async () => {
+  vi.unstubAllGlobals();
   delete (navigator as { locks?: unknown }).locks;
   const names = new Set<string>();
   for (const { db, engine } of open.splice(0)) {
@@ -247,6 +248,34 @@ describe("forget() reaches every tab through the copy's epoch (FLW-1)", () => {
     a.transport.answer(serverRow);
     expect(await a.engine.syncNow()).toMatchObject({ outcome: "synced" });
     expect(await a.db.rows.count()).toBe(1);
+  });
+
+  it("its own forget(), heard on its own channel too, keeps a started engine running", async () => {
+    // The epoch goes out on a channel of its own (0.52 code review: one `postOnce` for the
+    // engine and the query copy), so the engine's listening channel hears it as well.
+    const Native = BroadcastChannel;
+    const opened: BroadcastChannel[] = [];
+    vi.stubGlobal(
+      "BroadcastChannel",
+      class extends Native {
+        constructor(name: string) {
+          super(name);
+          opened.push(this);
+        }
+      },
+    );
+    const a = tab(createSyncEngine, fresh());
+    a.engine.start();
+    await a.engine.syncNow();
+    const [own] = opened;
+    // Added after the engine's `onmessage`, so it runs after it.
+    const heard = new Promise<void>((resolve) => own.addEventListener("message", () => resolve(), { once: true }));
+
+    await a.engine.forget({ keepQueue: true });
+    await heard;
+
+    a.transport.answer(serverRow);
+    expect(await a.engine.syncNow()).toMatchObject({ outcome: "synced" });
   });
 
   it("is a new epoch in `meta` with every forget(), written with the clear", async () => {

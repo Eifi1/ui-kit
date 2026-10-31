@@ -2,6 +2,7 @@ import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persi
 import type { QueryClient } from "@tanstack/react-query";
 import type { PersistedClient, PersistQueryClientOptions } from "@tanstack/react-query-persist-client";
 import { del, get, keys, set } from "idb-keyval";
+import { postOnce } from "../lib/broadcast";
 
 /**
  * The persisted TanStack Query cache, keksdose's policy as a kit helper
@@ -259,17 +260,6 @@ export function createQueryPersistence({
     };
   };
 
-  const tellOtherTabs = () => {
-    if (typeof BroadcastChannel === "undefined") return;
-    try {
-      const out = new BroadcastChannel(across);
-      out.postMessage("clear");
-      out.close();
-    } catch {
-      /* best-effort */
-    }
-  };
-
   const keyAllowed = (queryKey: readonly unknown[]) =>
     !denied.has(String(queryKey[0])) && (shouldPersistKey ? shouldPersistKey(queryKey) : true);
 
@@ -386,9 +376,10 @@ export function createQueryPersistence({
   };
 
   const clear = async (queryClient: QueryClient) => {
+    // Retired first, so this tab's own channel is closed and does not hear its `clear`.
     retire();
     // Before this tab's delete: the other tabs stop writing as early as they can.
-    tellOtherTabs();
+    postOnce(across, "clear");
     try {
       queryClient.clear();
       await persister.removeClient();
