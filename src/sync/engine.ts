@@ -110,6 +110,18 @@ export interface SyncEngineOptions<D extends SyncDb = SyncDb> {
   backoffMs?: readonly number[];
   /** Default `isSharedComputer`: on a computer marked shared the engine does not start (D15). */
   sharedComputer?: () => boolean;
+  /**
+   * 0.52: the backstop on one round, counted from the moment it holds the database's lock
+   * (a tab waiting behind a stuck round is not cut with it). Past it the round is cut: its
+   * requests and steps are aborted, anything they answer or write later is dropped, and the
+   * round ends `error` with a `TimeoutError` (`DOMException`), not `offline`, so the backoff
+   * starts and the lock goes to the next tab even when a request or a step ignores its
+   * signal. The app's own request timeouts come first; this only bounds what they miss.
+   * Default 10 minutes, long on purpose: kastlan's photo backlog can take minutes, and a cut
+   * round has still made progress (each photo uploaded before the cut is off the queue).
+   * `0` or `Infinity`: none.
+   */
+  roundTimeoutMs?: number;
 }
 
 export interface SyncEngine {
@@ -157,6 +169,10 @@ export interface SyncEngine {
 
 export const DEFAULT_SYNC_BACKOFF_MS: readonly number[] = [5_000, 15_000, 60_000, 300_000];
 export const DEFAULT_HOLD_CODES: readonly string[] = ["billing_read_only"];
+/** `roundTimeoutMs`'s default (see there). */
+const ROUND_TIMEOUT_MS = 10 * 60_000;
+/** The longest delay `setTimeout` keeps (2^31 - 1 ms, ~24.8 days); a longer one fires at once. */
+const MAX_TIMEOUT_MS = 2_147_483_647;
 
 const LAST_SYNCED_AT = "lastSyncedAt";
 /** The copy's epoch in `meta` (0.52): a new one with every `forget()`, in its clear. */
@@ -246,6 +262,9 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
   const soonMs = options.soonMs ?? 800;
   const backoffMs = options.backoffMs?.length ? options.backoffMs : DEFAULT_SYNC_BACKOFF_MS;
   const sharedComputer = options.sharedComputer ?? isSharedComputer;
+  const roundTimeoutMs = options.roundTimeoutMs ?? ROUND_TIMEOUT_MS;
+  /** The rounds the deadline cut, by their signal: their late work lays nothing back. */
+  const cut = new WeakSet<AbortSignal>();
 
   let generation = 0;
   let state: SyncEngineState = {
@@ -406,8 +425,14 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
     });
   }
 
-  /** The request failed: each change back to the status it had. */
-  function restore(sent: OutboxChange[]) {
+  /** The request failed or its answer was dropped: each change back to the status it had.
+   *  Not by a round the deadline cut: its late work ends after the next round — this tab's
+   *  or another's — may have taken these changes `sending` again, and laid back `pending`
+   *  under that round an edit would merge into a change already out and be deleted with it
+   *  (FLW-1's lost edit). The next round's `takeQueue` takes them back instead, as a closed
+   *  tab's. */
+  function layBack(sent: OutboxChange[], signal: AbortSignal) {
+    if (cut.has(signal)) return;
     return db.outbox.bulkUpdate(sent.map((c) => ({ key: c.seq!, changes: { status: c.status } })));
   }
 
@@ -527,7 +552,7 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
     try {
       answer = await options.send(body(sent.map(toWire), null), signal);
     } catch (err) {
-      await restore(sent);
+      await layBack(sent, signal);
       if (gen !== generation) throw new Dropped();
       if (isOffline(err)) return { offline: true };
       const plan = planCode(err);
@@ -550,7 +575,7 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
     try {
       tally = { offline: false, ...(await apply(scope, answer, sent, gen, epoch, cursor == null)) };
     } catch (err) {
-      if (err instanceof Dropped) await restore(sent);
+      if (err instanceof Dropped) await layBack(sent, signal);
       throw err;
     }
     // The rest of a paged pull: pull-only; the cursor is written with the last page alone,
@@ -580,7 +605,7 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
     controller = own;
     try {
       const locks = webLocks();
-      if (!locks) return await begin(result, withBlocked, gen, own.signal);
+      if (!locks) return await begin(result, withBlocked, gen, own);
       let granted = false;
       try {
         // Queued, first come first served: the rounds of every tab on this database take
@@ -593,14 +618,14 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
         // is released with it.
         return await locks.request(across, { signal: own.signal }, () => {
           granted = true;
-          return begin(result, withBlocked, gen, own.signal);
+          return begin(result, withBlocked, gen, own);
         });
       } catch (err) {
         // `begin` throws only what the app's `paused()` throws. A wait aborted by stop() or
         // forget() is dropped there; a lock manager that refuses (an opaque origin, a
         // document no longer active) runs the round as before 0.52.
         if (granted) return { ...result, outcome: "error", error: err };
-        return await begin(result, withBlocked, gen, own.signal);
+        return await begin(result, withBlocked, gen, own);
       }
     } finally {
       if (controller === own) controller = null;
@@ -608,17 +633,47 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
   }
 
   /** The round begins — under the lock, where there is one, after however long it waited:
-   *  the decision point. */
+   *  the decision point, and the start of its deadline. */
   async function begin(
     result: SyncRoundResult,
     withBlocked: boolean,
     gen: number,
-    signal: AbortSignal,
+    own: AbortController,
   ): Promise<SyncRoundResult> {
     if (gen !== generation || forgotten) return { ...result, outcome: "dropped" };
     if (options.paused?.()) return { ...result, outcome: "paused" };
     if (!browserOnline()) return { ...result, outcome: "offline" };
-    return locked(result, withBlocked, gen, signal);
+    return withDeadline(locked(result, withBlocked, gen, own.signal), result, gen, own);
+  }
+
+  /** The round, or its cut at `roundTimeoutMs`, whichever comes first. 0.52 code review,
+   *  finding 3 (Marcel: "kit backstop + app timeouts"): a round holds the lock of every tab
+   *  on its database, and one whose request never settles (axios has no default timeout) or
+   *  whose step never does stopped sync in all of them until that tab was closed. The cut
+   *  settles the round by the race, so the lock is released even when the app ignores the
+   *  abort; the generation moves, so what the cut work answers or writes later is dropped. */
+  function withDeadline(
+    round: Promise<SyncRoundResult>,
+    result: SyncRoundResult,
+    gen: number,
+    own: AbortController,
+  ): Promise<SyncRoundResult> {
+    if (!(roundTimeoutMs > 0 && Number.isFinite(roundTimeoutMs))) return round;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const deadline = new Promise<SyncRoundResult>((resolve) => {
+      timer = setTimeout(
+        () => {
+          const error = new DOMException(`The sync round ran past ${roundTimeoutMs} ms`, "TimeoutError");
+          // Settled first: the race ends on the cut, whatever the abort below sets off.
+          resolve({ ...result, outcome: "error", error });
+          cut.add(own.signal);
+          if (gen === generation) generation += 1;
+          own.abort(error);
+        },
+        Math.min(roundTimeoutMs, MAX_TIMEOUT_MS),
+      );
+    });
+    return Promise.race([round, deadline]).finally(() => clearTimeout(timer));
   }
 
   /** The round itself. Never throws. */

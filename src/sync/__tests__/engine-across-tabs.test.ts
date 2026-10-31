@@ -2,7 +2,14 @@ import "fake-indexeddb/auto";
 import Dexie from "dexie";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createSyncDb, type SyncDb } from "../db";
-import { createSyncEngine, type SyncEngine, type SyncEngineOptions, type SyncStepContext } from "../engine";
+import {
+  createSyncEngine,
+  type SyncEngine,
+  type SyncEngineOptions,
+  type SyncRoundResult,
+  type SyncStepContext,
+} from "../engine";
+import { drainTasks } from "../../test/tasks";
 import { createFakeSyncTransport, type FakeSyncTransport } from "../testing";
 import type { SyncRequestBody, SyncResponseBody } from "../wire";
 
@@ -122,6 +129,7 @@ beforeEach(() => {
 });
 
 afterEach(async () => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
   delete (navigator as { locks?: unknown }).locks;
   const names = new Set<string>();
@@ -558,5 +566,153 @@ describe("forget() across tabs, decided by the copy's epoch (0.52 code review, s
     await a.engine.forget({ keepQueue: true });
 
     expect(a.engine.getState()).toMatchObject({ phase: "idle", nextRetryAt: null, lastSyncedAt: null });
+  });
+});
+
+describe("a round's deadline, from the moment it holds the lock (0.52 code review, finding 3)", () => {
+  // Fake timeouts only: fake-indexeddb runs on `setImmediate`, which stays real.
+  const fakeClock = () => vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"] });
+
+  /** The transport's next request never settles, whatever its signal says. */
+  function stuck(transport: FakeSyncTransport) {
+    let out!: () => void;
+    const sent = new Promise<void>((resolve) => (out = resolve));
+    let signal: AbortSignal | undefined;
+    const send = transport.send;
+    transport.send = (body, s) => {
+      signal = s;
+      return send(body, s);
+    };
+    transport.answer(() => {
+      out();
+      return new Promise<SyncResponseBody>(() => undefined);
+    });
+    return { sent, signal: () => signal };
+  }
+
+  it("cuts a round whose request never settles: the lock goes to the next tab's round", async () => {
+    fakeClock();
+    const name = fresh();
+    const a = tab(createSyncEngine, name, { roundTimeoutMs: 60_000, backoffMs: [3_600_000] });
+    const b = tab(await otherTab(), name);
+    await a.engine.write("handover", "protocols", "p1", "upsert", { notes: "a" });
+    const request = stuck(a.transport);
+    let endA: SyncRoundResult | undefined;
+    void a.engine.syncNow().then((r) => (endA = r));
+    await request.sent;
+    await b.engine.write("handover", "protocols", "p2", "upsert", { notes: "b" });
+    const roundB = b.engine.syncNow();
+    await vi.waitFor(() => expect(locks.state(lockOf(name)).queued).toBe(1));
+
+    await vi.advanceTimersByTimeAsync(60_000);
+    await vi.waitFor(() => expect(endA?.outcome).toBe("error"));
+    // Not offline: the app can tell the backstop from a lost connection.
+    expect((endA!.error as DOMException).name).toBe("TimeoutError");
+    expect(request.signal()?.aborted).toBe(true);
+    expect(a.engine.getState().phase).toBe("error");
+
+    // B's round ran: it took A's `sending` change back, as a closed tab's, and sent it.
+    expect(await roundB).toMatchObject({ outcome: "synced" });
+    expect(b.transport.requests.map((r) => r.changes.map((c) => c.id))).toEqual([["p1", "p2"]]);
+    expect(await b.db.outbox.count()).toBe(0);
+  });
+
+  it("lays nothing back when the cut request fails late: an edit is not merged into the next round's change", async () => {
+    fakeClock();
+    const name = fresh();
+    const a = tab(createSyncEngine, name, { roundTimeoutMs: 60_000, backoffMs: [3_600_000] });
+    const b = tab(await otherTab(), name);
+    await a.engine.write("handover", "protocols", "p1", "upsert", { notes: "a" });
+    let fail!: (err: unknown) => void;
+    let out!: () => void;
+    const sent = new Promise<void>((resolve) => (out = resolve));
+    a.transport.answer(() => {
+      out();
+      return new Promise<SyncResponseBody>((_, reject) => (fail = reject));
+    });
+    void a.engine.syncNow();
+    await sent;
+    const releaseB = hold(b.transport);
+    const roundB = b.engine.syncNow();
+    await vi.waitFor(() => expect(locks.state(lockOf(name)).queued).toBe(1));
+    await vi.advanceTimersByTimeAsync(60_000);
+    vi.useRealTimers();
+    await vi.waitFor(() => expect(b.transport.requests).toHaveLength(1));
+
+    // A's request fails only now, while B's round has p1 out: a client that ignored the abort.
+    fail(Object.assign(new Error("Network Error"), { isAxiosError: true }));
+    await drainTasks();
+    expect((await a.db.outbox.toArray()).map((c) => [c.id, c.status])).toEqual([["p1", "sending"]]);
+    // Laid back `pending`, p1 would take this edit, and B's answer would delete both.
+    await a.engine.write("handover", "protocols", "p1", "upsert", { notes: "a's edit" });
+    releaseB();
+    expect(await roundB).toMatchObject({ outcome: "synced" });
+    expect((await a.db.outbox.toArray()).map((c) => [c.status, c.data])).toEqual([["pending", { notes: "a's edit" }]]);
+  });
+
+  it("cuts a step that never settles; its late write is dropped", async () => {
+    fakeClock();
+    let runs = 0;
+    let ctx: SyncStepContext | undefined;
+    let finish!: () => void;
+    const held = new Promise<void>((resolve) => (finish = resolve));
+    const name = fresh();
+    const a = tab(createSyncEngine, name, {
+      roundTimeoutMs: 60_000,
+      backoffMs: [3_600_000],
+      steps: [
+        {
+          name: "photos",
+          async run(stepDb, context) {
+            runs += 1;
+            if (runs > 1) return {};
+            ctx = context;
+            await held;
+            if (context.isCurrent()) await stepDb.table("photos").put({ id: "uploaded late" });
+            return {};
+          },
+        },
+      ],
+    });
+    let end: SyncRoundResult | undefined;
+    void a.engine.syncNow().then((r) => (end = r));
+    await vi.waitFor(() => expect(ctx).toBeDefined());
+
+    await vi.advanceTimersByTimeAsync(60_000);
+    await vi.waitFor(() => expect(end?.outcome).toBe("error"));
+    expect(ctx!.isCurrent()).toBe(false);
+    expect(ctx!.signal.aborted).toBe(true);
+    expect(locks.state(lockOf(name))).toEqual({ held: false, queued: 0 });
+
+    finish();
+    expect(await a.engine.syncNow()).toMatchObject({ outcome: "synced" });
+    expect(await a.db.table("photos").count()).toBe(0);
+  });
+
+  it("is 10 minutes by default", async () => {
+    fakeClock();
+    const a = tab(createSyncEngine, fresh(), { backoffMs: [3_600_000] });
+    const request = stuck(a.transport);
+    let end: SyncRoundResult | undefined;
+    void a.engine.syncNow().then((r) => (end = r));
+    await request.sent;
+
+    await vi.advanceTimersByTimeAsync(10 * 60_000 - 1);
+    expect(end).toBeUndefined();
+    await vi.advanceTimersByTimeAsync(1);
+    await vi.waitFor(() => expect(end?.outcome).toBe("error"));
+  });
+
+  it.each([0, Infinity])("sets no deadline with roundTimeoutMs %s", async (off) => {
+    fakeClock();
+    const a = tab(createSyncEngine, fresh(), { roundTimeoutMs: off, backoffMs: [3_600_000] });
+    const request = stuck(a.transport);
+    let end: SyncRoundResult | undefined;
+    void a.engine.syncNow().then((r) => (end = r));
+    await request.sent;
+
+    await vi.advanceTimersByTimeAsync(24 * 60 * 60_000);
+    expect(end).toBeUndefined();
+    expect(request.signal()?.aborted).toBe(false);
   });
 });
