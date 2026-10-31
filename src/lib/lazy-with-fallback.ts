@@ -36,9 +36,11 @@ const RetryContext = createContext<() => void>(() => {});
  * `let`, made shared here).
  *
  * A failure is logged and the next mount (or the fallback's `retry`) fetches again; a
- * re-render of a mounted fallback does not. `load` resolves to the component itself —
- * `() => import("./x").then((m) => m.X)` — a LITERAL relative `import()`, so an app's
- * bundler can split it off. Render the result under a `Suspense`, as a lazy component.
+ * re-render of a mounted fallback does not. `load` resolves to the component itself,
+ * through a LITERAL relative dynamic import of its module (as feedback-submit's), so an
+ * app's bundler can split it off. Render the result under a `Suspense`, as a lazy
+ * component. (No import call is spelled out here: the build's fix-esm-extensions step
+ * reads specifiers in the .d.ts comments too, and would try to resolve an example.)
  */
 export function lazyWithFallback<P extends object>(
   load: () => Promise<ComponentType<P>>,

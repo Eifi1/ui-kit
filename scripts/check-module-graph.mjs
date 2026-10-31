@@ -228,7 +228,10 @@ const BUDGETS = [
   // above are a different measure. 154,030 B (52,928 gzip) at 0.52, with the tour's overlay
   // already split off (MOD-1). From here a ratchet: raised only for meant growth, lowered in
   // the commit that shrinks it.
-  { label: "the shell set", names: SHELL_SET, max: 154_500 },
+  // 155,155 B (53,319 gzip) after the 0.52 code review's fixes: lazyWithFallback (the
+  // feedback dialog's and the palette's failed chunk no longer takes the shell down), the
+  // tour's chunk-failure and Escape-while-loading paths, the hotkey fixes — meant growth.
+  { label: "the shell set", names: SHELL_SET, max: 155_600 },
 ];
 const ENTRY = "\0import-cost";
 async function importCost(names) {
