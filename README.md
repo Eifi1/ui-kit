@@ -578,20 +578,21 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2198 names from 363 modules** — 1017 values and 1181 types. _Italic_ is a type-only export.
+**2213 names from 365 modules** in the main barrel — 1028 values and 1185 types — and 189 more in 16 standalone entries. _Italic_ is a type-only export.
 
-Generated from `dist/index.d.ts` by `node scripts/gen-export-inventory.mjs`; the count
-is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the markers.
+Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
+`node scripts/gen-export-inventory.mjs`; the counts are pinned by
+`src/__tests__/public-surface.test.ts`. Do not edit between the markers.
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2198 |
-| `@eifi1/ui-kit/chart` | 101 |
-| `@eifi1/ui-kit/shell` | 120 |
-| `@eifi1/ui-kit/data-table` | 56 |
+| `@eifi1/ui-kit` | 2213 |
+| `@eifi1/ui-kit/chart` | 103 |
+| `@eifi1/ui-kit/shell` | 118 |
+| `@eifi1/ui-kit/data-table` | 57 |
 | `@eifi1/ui-kit/wizard` | 25 |
 | `@eifi1/ui-kit/tour` | 49 |
-| `@eifi1/ui-kit/feedback` | 212 |
+| `@eifi1/ui-kit/feedback` | 214 |
 | `@eifi1/ui-kit/search` | 23 |
 | `@eifi1/ui-kit/dates` | 22 |
 | `@eifi1/ui-kit/table-text` | 14 |
@@ -604,9 +605,16 @@ is pinned by `src/__tests__/public-surface.test.ts`. Do not edit between the mar
 | `@eifi1/ui-kit/sync` | 38 |
 | `@eifi1/ui-kit/sync/testing` | 3 |
 | `@eifi1/ui-kit/push-worker` | 10 |
+| `@eifi1/ui-kit/i18n/de-CH` | 2 |
+| `@eifi1/ui-kit/i18n/en` | 1 |
+| `@eifi1/ui-kit/i18n/es` | 2 |
+| `@eifi1/ui-kit/i18n/fr` | 2 |
+| `@eifi1/ui-kit/i18n/hu` | 2 |
+| `@eifi1/ui-kit/i18n/it` | 2 |
+| `@eifi1/ui-kit/i18n/zh` | 2 |
 
-Everything below is reachable from the main `@eifi1/ui-kit` barrel. The subpaths are a
-re-slicing of it, never a second API.
+The main barrel's names first; the standalone entries follow and share no name with it.
+Every other subpath is a re-slicing of the barrel, never a second API.
 
 ### lib — pure helpers
 
@@ -616,7 +624,8 @@ re-slicing of it, never a second API.
 | `lib/cn` | `cn` |
 | `lib/logger` | `logger`, `setStoreLog` |
 | `lib/format` | `currencyMinorDigits`, `EMPTY_FORMATTED_VALUE`, `formatDate`, `formatMoney`, `formatNumber`, `formatPercent`, `formatRelativeTime`, `roundToCurrency`, `toDate`, `useKitFormat`, _`DateInput`_, _`FormatDateOptions`_, _`FormatDateStyle`_, _`FormatDigits`_, _`FormatMoneyOptions`_, _`FormatNumberBaseOptions`_, _`FormatNumberOptions`_, _`FormatPercentOptions`_, _`FormatRelativeTimeOptions`_, _`FormattableNumber`_, _`KitFormat`_, _`RoundToCurrencyOptions`_ |
-| `lib/safe-storage` | `readStored`, `writeStored` |
+| `lib/safe-storage` | `readSessionStored`, `readStored`, `readStoredJson`, `removeStored`, `writeSessionStored`, `writeStored`, `writeStoredJson` |
+| `lib/reduced-motion` | `prefersReducedMotion` |
 | `lib/download` | `filenameFromDisposition`, `saveBlob` |
 | `lib/text-match` | `foldForSearch`, `matchesSearch`, `rankMatch`, `searchWords`, _`MatchRank`_ |
 | `lib/qr-encode` | `encodeQr`, _`QrEncodeOptions`_, _`QrErrorCorrection`_, _`QrMatrix`_ |
@@ -632,7 +641,7 @@ re-slicing of it, never a second API.
 | `lib/clipboard-minus` | `asciiMinusInNumbers` |
 | `lib/document-title` | `DEFAULT_DOCUMENT_TITLE_FORMAT`, `formatDocumentTitle`, _`DocumentTitleParts`_ |
 | `lib/status-tone` | `STATUS_KINDS`, `statusTone`, _`StatusKind`_, _`StatusTone`_ |
-| `lib/date-format` | `DATE_FORMAT_PREFERENCES`, `dateFormatSample`, `dateFormatterFor`, `formatDateWithPreference`, `isDateFormatPreference`, `resolveDateFormat`, _`DateFormatOptions`_, _`DateFormatPreference`_, _`ResolvedDateFormat`_ |
+| `lib/date-format` | `DATE_FORMAT_PREFERENCES`, `dateFormatSample`, `dateFormatterFor`, `formatDateTimeWithPreference`, `formatDateWithPreference`, `isDateFormatPreference`, `resolveDateFormat`, _`DateFormatOptions`_, _`DateFormatPreference`_, _`ResolvedDateFormat`_ |
 | `lib/device-settings` | `deviceSettings`, `registerDeviceSetting`, `resetDeviceSettings`, _`DeviceSetting`_, _`DeviceSettingKind`_ |
 | `lib/minus` | `formatWithMinus`, _`MinusStyle`_ |
 | `lib/clipping` | `CLIPS_ATTRIBUTE` |
@@ -652,6 +661,7 @@ re-slicing of it, never a second API.
 | `hooks/use-overlay-history` | `useOverlayHistory` |
 | `hooks/use-close-transition` | `OVERLAY_EXIT_MS`, `useCloseTransition` |
 | `hooks/use-row-swipe` | `useRowSwipe`, _`RowSwipeOptions`_, _`RowSwipeReturn`_, _`SwipeStage`_ |
+| `hooks/use-long-press` | `useLongPress`, _`LongPressOptions`_, _`LongPressResult`_ |
 | `hooks/use-noindex` | `useNoIndex` |
 | `hooks/use-document-title` | `useDocumentTitle` |
 | `hooks/use-file-drop` | `dragHasFiles`, `useFileDrop`, _`FileDropProps`_, _`UseFileDropOptions`_, _`UseFileDropReturn`_ |
@@ -715,7 +725,7 @@ re-slicing of it, never a second API.
 | `components/numpad-sheet` | `NumberPadSheet`, _`NumberPadSheetLabels`_ |
 | `components/number-input` | `NumberInput`, `stepNumber`, _`NumberInputProps`_ |
 | `components/currency-select` | `CURRENCIES`, `CurrencyFlag`, `currencyName`, `CurrencySelect`, `getCurrency`, _`CurrencyFlagProps`_, _`CurrencyOption`_, _`CurrencySelectProps`_ |
-| `components/amount-input` | `AmountInput`, _`AmountInputProps`_ |
+| `components/amount-input` | `AMOUNT_TONE_CLASS`, `AmountInput`, _`AmountInputProps`_ |
 | `components/money-field` | `MoneyField`, _`MoneyFieldProps`_ |
 | `components/combobox` | `Combobox`, _`ComboboxProps`_ |
 | `components/picker-sheet` | `PickerSheet`, `SHEET_ROW_CLASS`, _`PickerSheetProps`_ |
@@ -752,6 +762,7 @@ re-slicing of it, never a second API.
 | `components/file-button` | `DEFAULT_FILE_PICKER_LABELS`, `FileButton`, _`FileButtonProps`_ |
 | `components/chart` | `ChartContainer`, `ChartLegend`, `ChartLegendContent`, `ChartTooltip`, `ChartTooltipContent`, `useChart`, _`ChartConfig`_, _`ChartSeriesConfig`_ |
 | `components/treemap` | `fitLabel`, `Treemap`, `TreemapCell`, _`TreemapCellProps`_, _`TreemapEdges`_, _`TreemapNode`_, _`TreemapProps`_ |
+| `components/treemap-labels` | `DEFAULT_TREEMAP_LABELS`, _`TreemapLabels`_ |
 | `components/series-chart` | `resolveTooltipPlacement`, `SeriesChart`, `seriesLegendEntries`, `StaticSeriesChart`, _`SeriesChartAxis`_, _`SeriesChartHit`_, _`SeriesChartMarker`_, _`SeriesChartPoint`_, _`SeriesChartProps`_, _`SeriesChartReference`_, _`SeriesChartRow`_, _`SeriesChartSeries`_, _`SeriesChartSpan`_, _`SeriesChartTickValues`_, _`SeriesChartTone`_, _`SeriesChartTooltip`_, _`SeriesChartTooltipPlacement`_, _`SeriesChartType`_, _`SeriesChartX`_, _`SeriesChartXTick`_, _`SeriesChartXValue`_, _`SeriesLegendAxes`_ |
 | `components/chart-height` | _`ChartHeight`_ |
 | `components/chart-zoom-core` | `SharedXZoom`, _`ZoomAxes`_, _`ZoomAxesSetting`_, _`ZoomBinding`_, _`ZoomDrag`_, _`ZoomFitSeries`_, _`ZoomFitSource`_, _`ZoomRow`_, _`ZoomSelection`_, _`ZoomState`_, _`ZoomTarget`_ |
@@ -824,7 +835,7 @@ re-slicing of it, never a second API.
 | `components/field-strip` | `FieldStrip`, _`FieldStripIds`_, _`FieldStripProps`_ |
 | `components/column-mapper` | `ColumnMapper`, `ColumnRoleTable`, `DEFAULT_COLUMN_MAPPER_LABELS`, _`ColumnMapperLabels`_, _`ColumnMapperProps`_, _`ColumnRoleTableBodyProps`_, _`ColumnRoleTableProps`_, _`ColumnRoleTableRowProps`_ |
 | `components/data-table-labels` | `DEFAULT_DATA_TABLE_LABELS`, _`DataTableLabels`_ |
-| `components/data-table-sort` | `decodeSorts`, `encodeSorts`, `nextSorts`, `normalizeSorts`, _`SortCycle`_, _`SortDir`_, _`SortState`_, _`SortStepOptions`_ |
+| `components/data-table-sort` | `compareSortValues`, `decodeSorts`, `encodeSorts`, `nextSorts`, `normalizeSorts`, _`SortCycle`_, _`SortDir`_, _`SortState`_, _`SortStepOptions`_ |
 | `components/data-table-filters` | `dateFilter`, `decodeFilterValue`, `decodeFilterValueOfType`, `defaultFilterState`, `encodeFilterValue`, `filterHref`, `isFilterActive`, `numberFilter`, `resolveFilter`, `rowMatches`, `selectFilter`, `textFilter`, _`ColumnFilter`_, _`FilterValue`_ |
 | `components/data-table-pagination` | `PAGE_SIZE_OPTIONS`, `Pagination` |
 | `components/data-table-filter-popover` | `FilterPopover` |
@@ -865,7 +876,6 @@ re-slicing of it, never a second API.
 | `shell/tour-menu` | `TourMenu`, _`TourMenuProps`_, _`TourMenuTour`_ |
 | `shell/sync-status-indicator` | `syncState`, `SyncStatusIndicator`, _`SyncState`_, _`SyncStatus`_, _`SyncStatusIndicatorProps`_, _`SyncStatusScope`_ |
 | `shell/dev-menu` | `DEV_ORIGINAL_ROLE_KEY`, `DevMenu`, _`DevMenuProps`_, _`DevMenuSection`_ |
-| `shell/dev-switchers` | `DevSwitchers`, _`DevSwitchersProps`_ |
 | `shell/top-bar-parts-labels` | `DEFAULT_TOP_BAR_PARTS_LABELS`, `useTopBarPartsLabels`, _`DevSwitchersLabels`_, _`SyncStatusLabels`_, _`TopBarPartsLabels`_, _`TourMenuLabels`_ |
 | `shell/company-switcher` | `CompanySwitcher`, `DEFAULT_COMPANY_SWITCHER_LABELS`, _`CompanySwitcherCompany`_, _`CompanySwitcherLabels`_, _`CompanySwitcherProps`_ |
 
@@ -908,14 +918,14 @@ re-slicing of it, never a second API.
 | `feedback/feedback-thread` | `ChatComposer`, `DEFAULT_FEEDBACK_COMPOSER_LABELS`, `DEFAULT_FEEDBACK_THREAD_LABELS`, `FeedbackThread`, _`ChatComposerHandle`_, _`ChatComposerLabels`_, _`ChatComposerProps`_, _`ChatComposerSlotContext`_, _`FeedbackComposerAttachment`_, _`FeedbackComposerHandle`_, _`FeedbackComposerLabels`_, _`FeedbackComposerProps`_, _`FeedbackComposerSlotContext`_, _`FeedbackThreadAttachment`_, _`FeedbackThreadEvent`_, _`FeedbackThreadItem`_, _`FeedbackThreadLabels`_, _`FeedbackThreadMessage`_, _`FeedbackThreadProps`_ |
 | `feedback/feedback-record` | `appendRework`, `attachmentName`, `FEEDBACK_ATTACHMENT_ACCEPT`, `FEEDBACK_AUTHOR_EDITABLE_STATUSES`, `FEEDBACK_AWAITING_STATUSES`, `FEEDBACK_COMMENT_MAX`, `FEEDBACK_DECIDED_STATUSES`, `FEEDBACK_PICKABLE_CATEGORIES`, `FEEDBACK_QUEUE_STATUSES`, `FEEDBACK_REPLY_MAX`, `FEEDBACK_REWORKABLE_STATUSES`, `feedbackAttachmentLine`, `feedbackReworkCount`, `isImageAttachment`, `replaceDescription`, `reworkCount`, `splitBodyAttachments`, `splitDescription`, _`FeedbackContext`_, _`FeedbackEnvironment`_, _`FeedbackRecord`_ |
 | `feedback/feedback-labels` | `DEFAULT_FEEDBACK_CATEGORY_LABELS`, `DEFAULT_FEEDBACK_STATUS_LABELS`, `DEFAULT_FEEDBACK_TOAST_LABELS`, `useFeedbackCategoryLabels`, `useFeedbackStatusLabels`, `useFeedbackToastLabels`, _`FeedbackCategoryLabels`_, _`FeedbackStatusLabels`_, _`FeedbackToastLabels`_ |
-| `feedback/feedback-status-undo` | `FEEDBACK_UNDO_DURATION`, `useFeedbackStatusUndo`, _`FeedbackStatusChange`_, _`FeedbackStatusMutate`_, _`FeedbackStatusPatch`_, _`FeedbackStatusRow`_, _`FeedbackStatusUndoOptions`_ |
+| `feedback/feedback-status-undo` | `FEEDBACK_UNDO_DURATION`, `useFeedbackStatusUndo`, _`FeedbackStatusChange`_, _`FeedbackStatusMutate`_, _`FeedbackStatusMutateAsync`_, _`FeedbackStatusPatch`_, _`FeedbackStatusRow`_, _`FeedbackStatusUndoOptions`_ |
 | `feedback/feedback-swipe` | `DEFAULT_FEEDBACK_SWIPE`, `FEEDBACK_SWIPE_ACTIONS`, `feedbackSwipeOmitShown`, `feedbackSwipePlan`, _`FeedbackSwipeAction`_, _`FeedbackSwipeBinding`_, _`FeedbackSwipeOptions`_ |
 | `feedback/feedback-menu` | `DEFAULT_FEEDBACK_MENU_LABELS`, `FeedbackMenu`, _`FeedbackMenuLabels`_, _`FeedbackMenuProps`_ |
 | `feedback/feedback-context` | `DEFAULT_FEEDBACK_CONTEXT_LABELS`, `feedbackContext`, `FeedbackContextBox`, _`FeedbackContextBoxProps`_, _`FeedbackContextInput`_, _`FeedbackContextLabels`_, _`FeedbackSubmitter`_ |
 | `feedback/feedback-capture` | `captureAppScreenshot`, _`CaptureAppScreenshotOptions`_ |
 | `feedback/feedback-submit` | `useFeedbackSubmit`, _`FeedbackCreatePayload`_, _`FeedbackSubmit`_, _`UseFeedbackSubmitOptions`_ |
 | `feedback/feedback-table` | `DEFAULT_FEEDBACK_PAGE_LABELS`, `FeedbackAwaitingToggle`, `feedbackColumns`, `FeedbackEmptyState`, `feedbackEnvironment`, `FeedbackMobileCard`, `feedbackMobileGroupBy`, `FeedbackSubject`, `feedbackSubmitter`, `feedbackSubmitterEmail`, `isFeedbackAwaiting`, `useFeedbackColumns`, `useFeedbackPageLabels`, `useFeedbackRenderDate`, _`FeedbackAwaitingToggleProps`_, _`FeedbackColumnsOptions`_, _`FeedbackEmptyStateProps`_, _`FeedbackMobileCardProps`_, _`FeedbackPageLabels`_, _`FeedbackRenderDate`_, _`FeedbackSubjectProps`_, _`FeedbackTableRow`_, _`UseFeedbackColumnsOptions`_ |
-| `feedback/feedback-row-detail` | `DEFAULT_FEEDBACK_DETAIL_LABELS`, `feedbackAttachmentUrls`, `feedbackPageHref`, `feedbackPagePath`, `feedbackPageUrl`, `FeedbackReworkSection`, `feedbackRowAccess`, `FeedbackRowDetail`, `useFeedbackDetailLabels`, _`FeedbackDetailLabels`_, _`FeedbackDetailPatch`_, _`FeedbackDetailUpdate`_, _`FeedbackReworkSectionProps`_, _`FeedbackReworkSend`_, _`FeedbackRowAccess`_, _`FeedbackRowDetailProps`_, _`FeedbackUpload`_ |
+| `feedback/feedback-row-detail` | `DEFAULT_FEEDBACK_DETAIL_LABELS`, `feedbackAttachmentUrls`, `feedbackPageHref`, `feedbackPagePath`, `feedbackPageUrl`, `FeedbackReworkSection`, `feedbackRowAccess`, `FeedbackRowDetail`, `useFeedbackDetailLabels`, _`FeedbackDetailLabels`_, _`FeedbackDetailPatch`_, _`FeedbackDetailUpdate`_, _`FeedbackDetailUpdateAsync`_, _`FeedbackReworkSectionProps`_, _`FeedbackReworkSend`_, _`FeedbackRowAccess`_, _`FeedbackRowDetailProps`_, _`FeedbackUpload`_ |
 | `feedback/feedback-crash` | `createCrashReporter`, _`CrashFiling`_, _`CrashReportCreate`_, _`CrashReporter`_, _`CrashReporterOptions`_, _`CrashReportResponse`_ |
 | `feedback/feedback-public-switch` | `FeedbackPublicSwitch`, `feedbackPublicSwitchAllowed`, _`FeedbackPublicSwitchProps`_, _`FeedbackPublicSwitchRow`_, _`FeedbackPublicSwitchViewer`_ |
 | `feedback/feedback-public-list` | `DEFAULT_FEEDBACK_PUBLIC_LABELS`, `FeedbackPublicDetail`, `FeedbackPublicList`, `useFeedbackPublicLabels`, _`FeedbackPublicDetailProps`_, _`FeedbackPublicLabels`_, _`FeedbackPublicListProps`_ |
@@ -1042,7 +1052,7 @@ re-slicing of it, never a second API.
 | `notifications/notification-inbox` | `INBOX_BADGE_INTERVAL`, `NotificationInbox`, _`NotificationInboxAction`_, _`NotificationInboxItem`_, _`NotificationInboxProps`_ |
 | `notifications/notification-bell` | `NotificationBell`, _`NotificationBellProps`_ |
 | `notifications/device-zone-report` | `deviceTimeZone`, `useDeviceZoneReport`, _`DeviceZoneReportOptions`_ |
-| `notifications/use-push-device` | `notifyPushSubscriptionChanged`, `PUSH_SUBSCRIPTION_CHANGED`, `PushDeviceError`, `pushSupported`, `usePushDevice`, _`PushDevice`_, _`PushDeviceErrorCode`_, _`PushPermission`_, _`PushSubscriptionInput`_, _`UsePushDeviceOptions`_ |
+| `notifications/use-push-device` | `notifyPushSubscriptionChanged`, `PUSH_SUBSCRIPTION_CHANGED`, `PushDeviceError`, `pushSupported`, `releaseThisDevicePush`, `usePushDevice`, _`PushDevice`_, _`PushDeviceErrorCode`_, _`PushPermission`_, _`PushSubscriptionInput`_, _`UsePushDeviceOptions`_ |
 | `notifications/push-worker` | `handlePushSubscriptionChange`, `pushSubscriptionInput`, `resubscribeAfterChange`, _`PushReplaceInput`_, _`PushResubscribeOutcome`_, _`PushSubscriptionChangeEventLike`_, _`PushSubscriptionChangeOptions`_, _`PushWorkerScope`_ |
 | `notifications/push-device-setting` | `PushDeviceSetting`, _`PushDeviceAction`_, _`PushDeviceSettingProps`_ |
 | `notifications/push-devices-setting` | `describeUserAgent`, `PushDevicesSetting`, _`PushDevicesSettingProps`_ |
@@ -1065,6 +1075,86 @@ re-slicing of it, never a second API.
 | Module | Exports |
 |---|---|
 | `currencies` | `CURRENCY_COUNTRIES` |
+
+### @eifi1/ui-kit/dates (standalone)
+
+| Module | Exports |
+|---|---|
+| `lib/dates` | `addDaysIso`, `addMonthsClamped`, `calendarMonthPresets`, `dateRangePresets`, `endOfMonthIso`, `endOfYearIso`, `formatIsoDate`, `lastFullMonthsRange`, `lastFullYearsRange`, `localeWeekStart`, `monthKey`, `pad`, `parseIsoDate`, `sameYmd`, `shiftIso`, `startOfMonthIso`, `startOfWeekIso`, `startOfYearIso`, `todayIso`, `toLocalIso`, _`CalendarMonthPresetOptions`_, _`DateRangePreset`_ |
+
+### @eifi1/ui-kit/table-text (standalone)
+
+| Module | Exports |
+|---|---|
+| `lib/table-text` | `cellNumber`, `isCellNumber`, `parseRows`, `parseTable`, `parseTextTable`, `splitRow`, `tableNumber`, _`DecimalRule`_, _`ParsedTable`_, _`ParseTableOptions`_, _`ParseTextTableOptions`_, _`TableLine`_, _`TableSeparator`_, _`TextTable`_ |
+
+### @eifi1/ui-kit/eslint (standalone)
+
+| Module | Exports |
+|---|---|
+| `eslint/index` | `default` |
+
+### @eifi1/ui-kit/testing (standalone)
+
+| Module | Exports |
+|---|---|
+| `testing/css-variables` | `declaredCustomProperties`, `KIT_CSS_VARIABLES`, `undeclaredCssVariables`, _`UndeclaredCssVariablesOptions`_ |
+| `testing/viewport` | `setViewportWidth`, `stubResizeObserver`, `stubViewportWidth`, `viewportMatchMedia`, _`ResizeObserverStub`_, _`StubbedBoxSize`_, _`ViewportOptions`_ |
+| `testing/tour` | `tourStepContext`, _`TestTourStepContext`_, _`TourStepContextOptions`_, _`TourStepVia`_ |
+
+### @eifi1/ui-kit/testing/react (standalone)
+
+| Module | Exports |
+|---|---|
+| `testing/react` | `rowMenuAction`, _`RowMenuLabels`_ |
+
+### @eifi1/ui-kit/rhf (standalone)
+
+| Module | Exports |
+|---|---|
+| `rhf/form-core` | `Form` |
+| `rhf/use-rhf-wizard-step` | `useRhfWizardStep`, _`RhfWizardStepOptions`_ |
+| `rhf/fields` | `RhfCheckbox`, `RhfCombobox`, `RhfCountrySelect`, `RhfDateField`, `RhfDateRangePicker`, `RhfField`, `RhfIbanInput`, `RhfInlineEntityCombobox`, `RhfIntegerField`, `RhfMoneyField`, `RhfMonthPicker`, `RhfNumberField`, `RhfPhoneInput`, `RhfSelect`, `RhfTextarea`, `RhfTextCombobox`, `RhfTextField`, `RhfTimeInput`, `RhfToggleGroup`, _`RhfCheckboxProps`_, _`RhfComboboxProps`_, _`RhfCountrySelectProps`_, _`RhfDateFieldProps`_, _`RhfDateRangePickerProps`_, _`RhfFieldBaseProps`_, _`RhfFieldProps`_, _`RhfFieldRenderContext`_, _`RhfIbanInputProps`_, _`RhfInlineEntityComboboxProps`_, _`RhfIntegerFieldProps`_, _`RhfMoneyFieldProps`_, _`RhfMonthPickerProps`_, _`RhfNumberFieldProps`_, _`RhfPhoneInputProps`_, _`RhfSelectOption`_, _`RhfSelectProps`_, _`RhfTextareaProps`_, _`RhfTextComboboxProps`_, _`RhfTextFieldProps`_, _`RhfTimeInputProps`_, _`RhfToggleGroupProps`_ |
+| `rhf/line-items` | `RhfLineItems`, _`RhfLineItemCellContext`_, _`RhfLineItemsColumn`_, _`RhfLineItemsProps`_ |
+
+### @eifi1/ui-kit/offline (standalone)
+
+| Module | Exports |
+|---|---|
+| `offline/query-persistence` | `createQueryPersistence`, `DEFAULT_SCRUB_FIELDS`, `isCacheSafe`, `removeStaleQueryCopies`, _`QueryPersistence`_, _`QueryPersistenceOptions`_, _`QueryPersistenceStorage`_, _`RemoveStaleQueryCopiesOptions`_, _`ScrubField`_ |
+| `offline/sign-out-pending-dialog` | `DEFAULT_SIGN_OUT_PENDING_DIALOG_LABELS`, `SignOutPendingDialog`, _`SignOutPendingDialogLabels`_, _`SignOutPendingDialogProps`_ |
+| `offline/pwa-update-prompt` | `DEFAULT_PWA_UPDATE_PROMPT_LABELS`, `PwaUpdatePrompt`, _`PwaUpdatePromptLabels`_, _`PwaUpdatePromptProps`_ |
+| `offline/service-worker-updates` | `createServiceWorkerUpdates`, `useServiceWorkerUpdate`, _`RegisterServiceWorker`_, _`ServiceWorkerUpdates`_ |
+| `offline/shared-computer` | `DEFAULT_SHARED_COMPUTER_LABELS`, `isSharedComputer`, `setSharedComputer`, `SharedComputerChoice`, _`SharedComputerChoiceProps`_, _`SharedComputerLabels`_, _`SharedComputerStorage`_ |
+| `offline/local-first` | `isOfflineError`, `readLocalFirst`, `stampAfter`, `uuid5`, `writeLocalFirst` |
+
+### @eifi1/ui-kit/sync (standalone)
+
+| Module | Exports |
+|---|---|
+| `sync/db` | `createSyncDb`, `rowByPk`, `SYNC_DB_PK_INDEX`, `SYNC_DB_STORES`, _`CreateSyncDbOptions`_, _`OutboxChange`_, _`OutboxStatus`_, _`SyncDb`_, _`SyncDbUpgrade`_, _`SyncedRow`_, _`SyncMetaEntry`_ |
+| `sync/engine` | `createSyncEngine`, `DEFAULT_HOLD_CODES`, `DEFAULT_SYNC_BACKOFF_MS`, `releaseSyncEngine`, `syncEngineFor`, _`SyncCounts`_, _`SyncEngine`_, _`SyncEngineOptions`_, _`SyncEngineState`_, _`SyncRoundResult`_, _`SyncStep`_, _`SyncStepContext`_, _`SyncStepResult`_ |
+| `sync/hooks` | `useSyncQuery`, `useSyncStatus`, `useSyncWorker` |
+| `sync/wire` | _`SyncPageCursor`_, _`SyncRefusalBody`_, _`SyncRejectionBody`_, _`SyncRequestBody`_, _`SyncResponseBody`_, _`SyncWireChange`_ |
+| `offline/local-first` | `isOfflineError`, `readLocalFirst`, `stampAfter`, `uuid5`, `writeLocalFirst` |
+
+### @eifi1/ui-kit/sync/testing (standalone)
+
+| Module | Exports |
+|---|---|
+| `sync/testing` | `createFakeSyncTransport`, _`FakeSyncAnswer`_, _`FakeSyncTransport`_ |
+
+### @eifi1/ui-kit/i18n/* (standalone)
+
+| Entry point | Exports |
+|---|---|
+| `@eifi1/ui-kit/i18n/de-CH` | `UI_KIT_LABELS_DE_CH`, `uiKitLabelsDeCh` |
+| `@eifi1/ui-kit/i18n/en` | `uiKitLabelsEn` |
+| `@eifi1/ui-kit/i18n/es` | `UI_KIT_LABELS_ES`, `uiKitLabelsEs` |
+| `@eifi1/ui-kit/i18n/fr` | `UI_KIT_LABELS_FR`, `uiKitLabelsFr` |
+| `@eifi1/ui-kit/i18n/hu` | `UI_KIT_LABELS_HU`, `uiKitLabelsHu` |
+| `@eifi1/ui-kit/i18n/it` | `UI_KIT_LABELS_IT`, `uiKitLabelsIt` |
+| `@eifi1/ui-kit/i18n/zh` | `UI_KIT_LABELS_ZH`, `uiKitLabelsZh` |
 
 <!-- END GENERATED: exports -->
 
