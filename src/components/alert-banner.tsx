@@ -1,9 +1,10 @@
-import { useId, useLayoutEffect, useRef, useState } from "react";
-import type { ComponentPropsWithoutRef, MouseEvent, ReactNode, Ref } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import type { ComponentPropsWithoutRef, MouseEvent, ReactNode, Ref, RefObject } from "react";
 import { AlertTriangle, CheckCircle2, ChevronRight, Info, X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { FOCUS_RING } from "./focus-ring";
 import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
+import { focusFirst, focusIsLost, tabStopsAround } from "../lib/focus-left";
 
 /** `info` (0.8.0) is the sky family, for news that is neither good nor bad: keksdose's
  *  preview and beta-performance banners, which borrowed `warning` for want of it and
@@ -185,10 +186,21 @@ interface AlertBannerBaseProps extends Omit<ComponentPropsWithoutRef<"div">, "on
   /** Replaces the tone's glyph — a `<Spinner label={null} />` for "Solving…", say.
    *  `null` draws none. Always decorative; the text carries the message. */
   icon?: ReactNode;
-  /** Renders an × at the end that calls this. The banner does not hide itself — the
-   *  caller removes it (and remembers that it did), as with every other kit control
-   *  whose state is app state. */
+  /**
+   * Renders an × at the end that calls this. The banner does not hide itself — the
+   * caller removes it (and remembers that it did), as with every other kit control
+   * whose state is app state.
+   *
+   * The focus (0.52, refactor audit 2026-10-30, DSP-15): the × that held it goes with the
+   * banner, and it fell to `<body>`. When the banner unmounts after its × was pressed and
+   * the focus has nowhere else, it moves on to the next control after the banner — where
+   * Tab from the × would have gone — or, at the end of the page, the one before it; to
+   * {@link dismissFocusRef} when given. A banner the caller keeps keeps its ×'s focus.
+   */
   onDismiss?: () => void;
+  /** Where the focus goes once the × has removed the banner (DSP-15) — a heading, the
+   *  control the banner was about. Default: the next control after the banner. */
+  dismissFocusRef?: RefObject<HTMLElement | null>;
   /** Accessible name of the ×. Default: `common.dismiss` from the
    *  {@link UiKitProvider}, else "Dismiss". */
   dismissLabel?: string;
@@ -278,6 +290,7 @@ export function AlertBanner({
   action,
   icon,
   onDismiss,
+  dismissFocusRef,
   dismissLabel,
   clampMobile = false,
   actionPlacement = "own-line",
@@ -317,6 +330,24 @@ export function AlertBanner({
     ro?.observe(el);
     return () => ro?.disconnect();
   }, [clamp, expanded, children]);
+
+  // The ×'s focus, once the caller has removed the banner (DSP-15). Where it can go is read
+  // at the press, while the banner still has a place in the page to measure from; whether
+  // it must is decided at the unmount, in the cleanup of a passive effect — after React has
+  // taken the banner's DOM away, when a focus that fell with it is on <body>.
+  const dismissedFrom = useRef<HTMLElement[] | null>(null);
+  const dismissTarget = useRef(dismissFocusRef);
+  useLayoutEffect(() => {
+    dismissTarget.current = dismissFocusRef;
+  });
+  useEffect(
+    () => () => {
+      const around = dismissedFrom.current;
+      if (!around || !focusIsLost()) return;
+      focusFirst([dismissTarget.current?.current, ...around]);
+    },
+    [],
+  );
 
   const Glyph = TONE_GLYPH[tone];
   // Onto the first line of a box's text: 2px at 14px/20px, 1px at 12px/16px.
@@ -448,6 +479,11 @@ export function AlertBanner({
         // A dismiss inside a whole-row banner must not also follow the row.
         e.preventDefault();
         e.stopPropagation();
+        const frame = e.currentTarget.parentElement;
+        if (frame) {
+          const { after, before } = tabStopsAround(frame);
+          dismissedFrom.current = [...after, ...before];
+        }
         onDismiss();
       }}
       className={cn(

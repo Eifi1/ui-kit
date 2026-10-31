@@ -654,7 +654,9 @@ function BulkInlineSticky() {
           exit and goes. It is rendered unconditionally — <code className="font-mono">count</code> decides — because at
           zero it still renders its live region, which has to be in the DOM before the first &ldquo;2 selected&rdquo;
           can be heard. Scroll the box with the bar showing: the sticky one stays over the rows. The count is spoken on
-          every change and names the toolbar.
+          every change and names the toolbar. Clear from the keyboard: the focus goes back to the box it came into the
+          bar from, or to <code className="font-mono">returnFocusRef</code> when the selection takes that box with it
+          (0.52).
         </Note>
       </div>
     </Example>
