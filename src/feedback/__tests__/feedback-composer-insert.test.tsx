@@ -2,7 +2,7 @@ import { createRef, useState } from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ChatComposer } from "../feedback-thread";
-import type { FeedbackComposerHandle } from "../feedback-thread";
+import type { ChatComposerHandle } from "../feedback-thread";
 
 /**
  * keksdose F9: canned-reply chips above the support composer drop their text in at the
@@ -14,7 +14,7 @@ const box = () => screen.getByRole("textbox", { name: "Write a comment" }) as HT
 
 describe("ChatComposer insertText", () => {
   it("inserts at the caret, replacing the selection, and leaves the caret after it, focused", () => {
-    const ref = createRef<FeedbackComposerHandle>();
+    const ref = createRef<ChatComposerHandle>();
     render(<ChatComposer ref={ref} onSend={vi.fn()} />);
     fireEvent.change(box(), { target: { value: "Hello , bye" } });
     box().setSelectionRange(6, 6);
@@ -30,7 +30,7 @@ describe("ChatComposer insertText", () => {
   });
 
   it("two inserts in one tick land in order", () => {
-    const ref = createRef<FeedbackComposerHandle>();
+    const ref = createRef<ChatComposerHandle>();
     render(<ChatComposer ref={ref} onSend={vi.fn()} />);
     box().setSelectionRange(0, 0);
     act(() => {
@@ -41,7 +41,7 @@ describe("ChatComposer insertText", () => {
   });
 
   it("is a no-op while disabledReason replaces the box", () => {
-    const ref = createRef<FeedbackComposerHandle>();
+    const ref = createRef<ChatComposerHandle>();
     render(<ChatComposer ref={ref} onSend={vi.fn()} disabledReason="Closed." />);
     expect(() => act(() => ref.current!.insertText("x"))).not.toThrow();
   });
@@ -88,7 +88,7 @@ describe("ChatComposer controlled draft", () => {
   });
 
   it("inserts into a controlled draft too", () => {
-    const ref = createRef<FeedbackComposerHandle>();
+    const ref = createRef<ChatComposerHandle>();
     function Controlled() {
       const [value, setValue] = useState("Hi ");
       return <ChatComposer ref={ref} onSend={vi.fn()} value={value} onValueChange={setValue} />;

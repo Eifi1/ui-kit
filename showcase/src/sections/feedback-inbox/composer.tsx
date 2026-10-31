@@ -12,7 +12,7 @@ import {
 import type {
   FeedbackThreadAttachment,
   FeedbackThreadMessage,
-  FeedbackComposerHandle,
+  ChatComposerHandle,
   FeedbackThreadItem,
   FeedbackAttachmentRef,
 } from "@eifi1/ui-kit";
@@ -226,7 +226,7 @@ const CANNED = [
 
 /** Canned replies for the support admin, and a hint naming the member. */
 function ComposerCannedRepliesDemo() {
-  const composer = useRef<FeedbackComposerHandle>(null);
+  const composer = useRef<ChatComposerHandle>(null);
   const [draft, setDraft] = useState("");
   const [sent, setSent] = useState<string[]>([]);
   return (
