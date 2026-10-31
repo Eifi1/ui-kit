@@ -38,7 +38,7 @@
 // of every drawn series — never by stride, which aliases a fast tone into a slow wave.
 // A zoom thins the window on show, so it draws more detail, not the same rows larger.
 // The rule is `series-chart-thin.ts`.
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode, RefObject } from "react";
 import {
   Area,
@@ -123,7 +123,7 @@ import {
 import { useBreakpoint } from "../hooks/use-breakpoint";
 import { useTextSize } from "../theme/text-size";
 import { chartHeightProps, type ChartHeight } from "./chart-height";
-import { useChartEdge } from "./chart-edge";
+import { useChartEdge, useEdgesInForce } from "./chart-edge";
 import { cn } from "../lib/cn";
 import { formatWithMinus } from "../lib/minus";
 
@@ -562,11 +562,18 @@ export interface SeriesChartHit {
 }
 
 export interface SeriesChartProps {
-  /** One row per abscissa value. A missing key is a hole (see `connectNulls`). */
-  rows: readonly SeriesChartRow[];
-  series: SeriesChartSeries[];
+  /**
+   * One row per abscissa value. A missing key is a hole (see `connectNulls`).
+   *
+   * Any object (0.52, refactor audit 2026-10-30, API-2): an `interface` has no index
+   * signature, so a typed sweep did not fit `SeriesChartRow` and Kurvenschmiede cast its
+   * Ackermann rows `as unknown as Record<string, number>[]`. The chart reads the keys
+   * `series` and `x` name, and hands the row back as {@link SeriesChartRow}.
+   */
+  rows: readonly object[];
+  series: readonly SeriesChartSeries[];
   /** Default: one untitled axis, `"y"`. */
-  axes?: SeriesChartAxis[];
+  axes?: readonly SeriesChartAxis[];
   x?: SeriesChartX;
   /** A value in the tooltip, where a number stands on its own and needs its unit.
    *  Default: `Intl.NumberFormat` in the kit's locale. */
@@ -598,11 +605,11 @@ export interface SeriesChartProps {
    * as the curve twitching. Turn it on where series come and go by choice.
    */
   animationMs?: number;
-  spans?: SeriesChartSpan[];
+  spans?: readonly SeriesChartSpan[];
   /** Lines across the plot at one value. */
-  references?: SeriesChartReference[];
+  references?: readonly SeriesChartReference[];
   /** Single labelled points. */
-  markers?: SeriesChartMarker[];
+  markers?: readonly SeriesChartMarker[];
   /**
    * Which axes a drag may zoom: `"both"`, `"x"`, `"y"` or `"none"`. Default: read off
    * the marks — see `defaultZoomAxes` (lines both, areas x, bars none). An axis carrying
@@ -614,6 +621,10 @@ export interface SeriesChartProps {
    * A click on the plot: the slot under the pointer, and the series when it landed on a
    * bar. keksdose's drilldowns — a payee's month, a budget line, a spending category.
    * A drag that zoomed is not a click.
+   *
+   * The keyboard's stops are there either way (0.52, DSP-5): one per bar, or per slot of
+   * a chart without bars, named "period — series: value", behind ONE tab stop. With this
+   * they are buttons that Enter and Space activate; without, images to read.
    */
   onPointClick?: (hit: SeriesChartHit) => void;
   /** Where the tooltip may go: for a chart inside a scroll wrapper. See
@@ -662,6 +673,19 @@ export interface SeriesChartProps {
   labels?: LabelOverride<SeriesChartLabels>;
   /** BCP 47 tag for the default number formats. Default: the provider's. */
   locale?: string;
+  /**
+   * The chart's name. The chart is a `role="figure"` (0.52, refactor audit 2026-10-30,
+   * DSP-5), and a figure is found and told apart by its name — "Net worth", "Load over
+   * travel". Its values are read stop by stop (see {@link SeriesChartProps.onPointClick}).
+   */
+  "aria-label"?: string;
+  /**
+   * What the picture SHOWS, in a sentence — "Spending rose 12 % in May, led by rent." —
+   * the figure's accessible description: a line, an area and a ruler are nothing a screen
+   * reader can say. Followed, on a zoomable chart, by the drag gesture (`zoomHint`). Not
+   * drawn; a caption the eye should read too belongs in the page.
+   */
+  description?: string;
   /** Onto the chart's root (`ChartContainer`) — e.g. an app's own grid ink. */
   className?: string;
   /** The shortest bar drawn, in px, for every bar series that does not set its own
@@ -778,9 +802,9 @@ const STEP_WIDTH = 1.5;
 const BAR_RADIUS: [number, number, number, number] = [3, 3, 0, 0];
 
 /**
- * One keyboard stop of a clickable chart: a bar, or (a chart with no bars) a whole slot.
- * `from`/`to` bound its slot on the plotted number line — half way to each neighbour,
- * or to the edge of the window on show.
+ * One keyboard stop: a bar, or (a chart with no bars) a whole slot. `from`/`to` bound its
+ * slot on the plotted number line — half way to each neighbour, or to the edge of the
+ * window on show.
  */
 interface PointStop {
   index: number;
@@ -788,9 +812,20 @@ interface PointStop {
   key?: string;
   from: number;
   to: number;
-  /** The accessible name: where it is and what it says. */
-  name: string;
+  /** The accessible name: where it is and what it says. Asked only of a stop that is
+   *  drawn — see {@link ALL_STOPS_UP_TO}. */
+  name: () => string;
 }
+
+/**
+ * Up to this many stops, every one is drawn; past it, only the roving one, its two
+ * neighbours and the two ends (0.52, DSP-5) — every stop is still reached, by the arrows,
+ * Home and End. Since every chart has stops, a measurement chart has one per row:
+ * Kurvenschmiede draws 2000-row profiles (`maxRows`), and 2000 named `<rect>`s, each
+ * named through `Intl` on every render, are a DOM and an accessibility tree nobody walks
+ * one by one. A year of months, or of weeks, stays whole for browse mode.
+ */
+const ALL_STOPS_UP_TO = 100;
 
 /**
  * The shape of a series whose bar has keyboard focus: recharts' own rectangle, with an
@@ -853,17 +888,20 @@ function MarkerLabel({ viewBox, value }: { viewBox?: { x?: number; y?: number; w
 }
 
 /**
- * The keyboard's way onto a clickable chart (`onPointClick`): one focusable `<rect>` per
- * bar, or per slot when there are no bars, laid over the plot INSIDE the recharts chart,
- * where the x scale answers.
+ * The keyboard's way onto a chart: one focusable `<rect>` per bar, or per slot when there
+ * are no bars, laid over the plot INSIDE the recharts chart, where the x scale answers.
  *
  * keksdose drew its weekday pattern as seven real `<button>`s (spending-tab.tsx) because
  * a recharts bar is reachable by nothing but the pointer. This is that, for every chart:
  *
  * - ONE tab stop (roving `tabIndex`): Tab moves past the chart, not through 30 bars.
  * - ←/→ step through the stops in order, ↑/↓ between the bars of one slot, Home/End.
- * - ↵ and Space report the stop as a click would — with the series for a bar.
- * - Each is a `role="button"` named "period — series: value".
+ * - Each is named "period — series: value".
+ * - With `onPointClick` (`onPick`) each is a `role="button"`, and ↵ and Space report the
+ *   stop as a click would — with the series for a bar. Without (0.52, refactor audit
+ *   2026-10-30, DSP-5) each is a `role="img"` to read, as PieChart's slices are: before,
+ *   such a chart was recharts' unnamed `role="application"` stop, whose arrows moved a
+ *   tooltip nothing announced.
  *
  * The stops take NO pointer events, so the drag-to-zoom layer, the tooltip and the
  * pointer's own clicks underneath behave exactly as they did. Focus is shown by the
@@ -884,7 +922,7 @@ function PointKeys({
   label: string;
   onFocusStop: (at: number) => void;
   onBlurStops: () => void;
-  onPick: (stop: PointStop) => void;
+  onPick?: (stop: PointStop) => void;
 }) {
   const plot = usePlotArea();
   const scale = useXAxisScale();
@@ -917,7 +955,7 @@ function PointKeys({
     if (target !== undefined) {
       event.preventDefault();
       move(target);
-    } else if (event.key === "Enter" || event.key === " ") {
+    } else if (onPick && (event.key === "Enter" || event.key === " ")) {
       event.preventDefault();
       onPick(stop);
     }
@@ -925,9 +963,13 @@ function PointKeys({
 
   const left = plot.x;
   const right = plot.x + plot.width;
+  // Every target an arrow, Home or End can name from the roving stop — see ALL_STOPS_UP_TO.
+  const drawn =
+    stops.length <= ALL_STOPS_UP_TO ? undefined : new Set([0, current - 1, current, current + 1, stops.length - 1]);
   return (
     <g role="group" aria-label={label}>
       {stops.map((stop, at) => {
+        if (drawn && !drawn.has(at)) return null;
         // An edge with no neighbour runs to the plot's edge.
         const a = finite(scale(stop.from)) ?? left;
         const b = finite(scale(stop.to)) ?? right;
@@ -939,9 +981,9 @@ function PointKeys({
             ref={(node) => {
               refs.current[at] = node;
             }}
-            role="button"
+            role={onPick ? "button" : "img"}
             tabIndex={at === current ? 0 : -1}
-            aria-label={stop.name}
+            aria-label={stop.name()}
             data-point-key={stop.key}
             x={x0}
             y={plot.y}
@@ -1000,6 +1042,8 @@ function SeriesPlot({
   axisBudget = "auto",
   onAxisBudget,
   maxRows,
+  "aria-label": ariaLabel,
+  description,
 }: PlotProps) {
   const labels = useKitLabels("seriesChart", DEFAULT_SERIES_CHART_LABELS, labelsProp);
   const locale = useKitLocale(localeProp);
@@ -1010,6 +1054,10 @@ function SeriesPlot({
   // Strokes, dashes and the grid stay px.
   const { scale } = useTextSize();
   const edgeFor = useChartEdge();
+  // The tiles' rule (0.52, DSP-18, Marcel's decision 3): the ink edge under More contrast
+  // only — at Standard it fell on 5 of 8 hues in light and on 2 in dark, the unevenness
+  // #642 took off the tiles.
+  const edges = useEdgesInForce("auto");
   const ticksAim = tickTarget(scale);
   const grow = (px: number) => (scale === 1 ? px : Math.round(px * scale));
   // The keyboard stops' roving tab stop, and the one that has focus (see `PointKeys`).
@@ -1023,6 +1071,7 @@ function SeriesPlot({
   const phone = useBreakpoint("max-sm", false);
   const placement = resolveTooltipPlacement(tooltip?.placement, useKitChartTooltipPlacement(), phone);
   const [readout, setReadout] = useState<HTMLDivElement | null>(null);
+  const describedBy = useId();
 
   // The chart's own width, for the automatic axis budget. Its box, not the plot's: the
   // box does not change when an axis is hidden, so the rule cannot oscillate. Nothing
@@ -1085,14 +1134,40 @@ function SeriesPlot({
   // one value sizes both the chart and its empty state.
   const { className: heightClass, style: heightStyle } = chartHeightProps(height);
 
+  // A named figure, described by the caller's sentence and — where a drag zooms — the
+  // gesture (0.52, refactor audit 2026-10-30, DSP-5). The hint used to be the name of the
+  // zoom layer's rect, a `role="application"` that could not take focus. The description
+  // is `hidden`: read through `aria-describedby`, never twice in browse mode.
+  const drawable = model.source.length > 0 && series.length > 0;
+  const spoken = [description, drawable && zoom?.layer ? labels.zoomHint : undefined].filter(Boolean).join(" ");
+  const figure = {
+    role: "figure",
+    "aria-label": ariaLabel,
+    "aria-describedby": spoken ? describedBy : undefined,
+  } as const;
+  const describe = (root: ReactNode) => (
+    <>
+      {root}
+      {spoken && (
+        <span id={describedBy} hidden>
+          {spoken}
+        </span>
+      )}
+    </>
+  );
+
   // The empty state takes the chart's own height and is centred in it: a chart that
   // shrank to its "nothing to draw" sentence moved everything under it up the page
   // the moment a legend entry was switched off.
-  if (!model.source.length || !series.length) {
-    return (
-      <div className={cn("flex w-full items-center justify-center px-2 text-center", heightClass)} style={heightStyle}>
+  if (!drawable) {
+    return describe(
+      <div
+        {...figure}
+        className={cn("flex w-full items-center justify-center px-2 text-center", heightClass)}
+        style={heightStyle}
+      >
         {empty !== undefined ? empty : <p className="text-xs text-muted">{labels.empty}</p>}
-      </div>
+      </div>,
     );
   }
 
@@ -1268,14 +1343,15 @@ function SeriesPlot({
     return row ? { index: origin(index), row, x: xOf(index), key } : undefined;
   };
 
-  // The keyboard stops of a clickable chart — every bar with a value, slot by slot; or,
-  // with no bars, every slot with any value. Only what is inside the window on show.
+  // The keyboard stops — every bar with a value, slot by slot; or, with no bars, every
+  // slot with any value. Only what is inside the window on show. Named on demand: past
+  // ALL_STOPS_UP_TO only five are drawn, and naming is a date and a number format each.
   const stops: PointStop[] = [];
-  if (onPointClick) {
+  {
     const valueText = valueFormat ?? number;
     const nameOf = (entry: SeriesChartSeries) =>
       typeof entry.label === "string" || typeof entry.label === "number" ? String(entry.label) : entry.key;
-    const said = (entry: SeriesChartSeries, value: number) => {
+    const cellText = (entry: SeriesChartSeries, value: number) => {
       const name = nameOf(entry);
       return name ? `${name}: ${valueText(value)}` : valueText(value);
     };
@@ -1291,21 +1367,23 @@ function SeriesPlot({
       const from = k > 0 ? (placed[k - 1].at + at) / 2 : low;
       const to = k < placed.length - 1 ? (placed[k + 1].at + at) / 2 : high;
       // The heading the tooltip would give it, when that is text; else the tick.
-      const heading = xLabel(at);
-      const where = typeof heading === "string" && heading ? heading : xFormat(at);
+      const where = () => {
+        const heading = xLabel(at);
+        return typeof heading === "string" && heading ? heading : xFormat(at);
+      };
       const valued = (bars.length ? bars : series)
         .map((entry) => ({ entry, value: finite(rows[index]?.[entry.key]) }))
         .filter((cell): cell is { entry: SeriesChartSeries; value: number } => cell.value !== undefined);
       if (bars.length) {
         for (const { entry, value } of valued) {
-          stops.push({ index, key: entry.key, from, to, name: `${where} — ${said(entry, value)}` });
+          stops.push({ index, key: entry.key, from, to, name: () => `${where()} — ${cellText(entry, value)}` });
         }
       } else if (valued.length) {
         stops.push({
           index,
           from,
           to,
-          name: `${where} — ${valued.map(({ entry, value }) => said(entry, value)).join(", ")}`,
+          name: () => `${where()} — ${valued.map(({ entry, value }) => cellText(entry, value)).join(", ")}`,
         });
       }
     });
@@ -1359,6 +1437,7 @@ function SeriesPlot({
   const inRow = placement !== "cursor";
   const chart = (
     <ChartContainer
+      {...(inRow ? {} : figure)}
       ref={setBox}
       data-axis-budget={budgeted.length ? budgetKey.replace(/\n/g, " ") : undefined}
       // "drawn/all" while `maxRows` thins: what a reader of the DOM (a test, a bug
@@ -1381,9 +1460,10 @@ function SeriesPlot({
         // Positive and negative layers stacked apart, as `axisExtent` fits them — a
         // month's expenses hang below the axis instead of eating into its income.
         stackOffset="sign"
-        // recharts' own keyboard layer makes the whole surface a tab stop whose arrows
-        // move the tooltip — a second stop beside `PointKeys`, and one ↵ does nothing on.
-        accessibilityLayer={!onPointClick}
+        // recharts' own keyboard layer makes the whole surface an unnamed
+        // `role="application"` tab stop whose arrows move a tooltip nothing announces —
+        // a second stop beside `PointKeys`, which every chart has since 0.52 (DSP-5).
+        accessibilityLayer={false}
         onClick={
           onPointClick
             ? (state) => {
@@ -1515,9 +1595,10 @@ function SeriesPlot({
           const type = entry.type ?? "line";
           const yAxisId = entry.axis ?? DEFAULT_Y_AXIS;
           const color = `var(--color-${entry.key})`;
-          // A filled mark in a hue under 3:1 against the ground gets a 1px ink edge
-          // (WCAG 1.4.11, anyplot's rule) — measured on the colour the config paints.
-          const edge = edgeFor(config[entry.key]?.color);
+          // Under More contrast, a filled mark in a hue under 3:1 against the ground gets
+          // a 1px ink edge (WCAG 1.4.11, anyplot's rule) — measured on the colour the
+          // config paints. At Standard none does (see `edges`).
+          const edge = edges === "contrast" ? edgeFor(config[entry.key]?.color) : undefined;
           const own = entry.dash ?? (entry.dashed ? 1 : 0);
           const dash = entry.step ? strokeDash(STEP_DASH) : typeof own === "string" ? own : strokeDash(own);
           const curve = entry.step ? "stepAfter" : (entry.curve ?? "monotone");
@@ -1568,9 +1649,11 @@ function SeriesPlot({
                 type={curve}
                 dataKey={entry.key}
                 stackId={entry.stack}
-                // The edge replaces the hue on the area's outline only; the fill keeps it.
+                // The edge replaces the hue on the area's outline only; the fill keeps it,
+                // and the outline its width (0.52, DSP-18: it was 1px, whatever
+                // `strokeWidth` said).
                 stroke={edge ?? color}
-                strokeWidth={edge ? 1 : width}
+                strokeWidth={width}
                 strokeDasharray={dash}
                 fill={color}
                 fillOpacity={entry.fillOpacity ?? (entry.stack !== undefined ? 0.55 : 0.2)}
@@ -1670,17 +1753,21 @@ function SeriesPlot({
               setKeyFocus(at);
             }}
             onBlurStops={() => setKeyFocus(undefined)}
-            onPick={(stop) => {
-              const hit = hitAt(stop.index, stop.key);
-              if (hit) onPointClick?.(hit);
-            }}
+            onPick={
+              onPointClick
+                ? (stop) => {
+                    const hit = hitAt(stop.index, stop.key);
+                    if (hit) onPointClick(hit);
+                  }
+                : undefined
+            }
           />
         )}
         {zoom?.layer}
       </ComposedChart>
     </ChartContainer>
   );
-  if (!inRow) return chart;
+  if (!inRow) return describe(chart);
   // The row's own box, reserved from the first render: its idle state has the cells the
   // active one will, so the first tap fills it in rather than pushing the plot down.
   const row = (
@@ -1694,12 +1781,12 @@ function SeriesPlot({
       )}
     />
   );
-  return (
-    <div className={cn("flex w-full flex-col", heightClass)} style={heightStyle}>
+  return describe(
+    <div {...figure} className={cn("flex w-full flex-col", heightClass)} style={heightStyle}>
       {placement === "above" && row}
       {chart}
       {placement === "below" && row}
-    </div>
+    </div>,
   );
 }
 
@@ -1715,7 +1802,8 @@ function usePlotProps(props: SeriesChartProps): PlotProps {
   const x = props.x ?? {};
   const { rows } = props;
   const { type, key } = x;
-  const model = useMemo(() => xModel(rows, { type, key }), [rows, type, key]);
+  // Read by key, so any object is a row (API-2); `SeriesChartRow` is how the plot reads it.
+  const model = useMemo(() => xModel(rows as readonly SeriesChartRow[], { type, key }), [rows, type, key]);
   return { ...props, rows: model.rows, x: { key: model.plotKey }, model, xAxis: x };
 }
 

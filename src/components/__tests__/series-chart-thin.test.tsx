@@ -230,7 +230,7 @@ describe("SeriesChart `maxRows`", () => {
   it("draws the zoomed window's own samples rather than the same rows larger", () => {
     const rows = flat(5000).map((row, i) => ({ ...row, v: Math.sin(i / 3) }));
     const { container, rerender } = draw({ rows, maxRows: 400 });
-    const surface = screen.getByLabelText(/drag to zoom/i);
+    const surface = container.querySelector<SVGRectElement>("rect[data-zoom-surface]")! as unknown as HTMLElement;
     surface.getBoundingClientRect = () => ({ left: 0, top: 0 }) as DOMRect;
     const left = Number(surface.getAttribute("x"));
     const width = Number(surface.getAttribute("width"));

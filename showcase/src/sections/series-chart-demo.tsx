@@ -220,6 +220,8 @@ export function SeriesChartDemo() {
           valueFormat={(v) => ONE.format(v)}
           animationMs={180}
           empty={<p className="text-xs text-muted">Every channel is switched off.</p>}
+          aria-label="Motion over one sweep"
+          description="Position swings ±60 mm; velocity and acceleration lead it by a quarter and a half turn."
         />
         <ToggleLegend entries={legend} hidden={hidden} onToggle={(key) => setHidden(toggleHidden(hidden, key))} />
         <div className="mt-3">
@@ -228,8 +230,16 @@ export function SeriesChartDemo() {
             fitted domain — not the equal fractions of it recharts would print (−11, 189, 389 …). The domain keeps its
             air, so the frame edge simply has no number of its own; drag to zoom and the ticks stay round, just finer.
             Switch every channel off while zoomed and <em>Reset zoom</em> goes away with the plot (the zoom is kept for
-            when a line comes back). A switched-off stroke in the legend dims with its button, once — it no longer fades
-            twice to near-invisible.
+            when a line comes back). A switched-off entry in the legend fades its mark, once, and keeps its label at
+            full ink, struck through — the label is what says which series the button brings back.
+          </Note>
+          <Note>
+            The chart is a <code className="font-mono">figure</code>: <code className="font-mono">aria-label</code>{" "}
+            names it and <code className="font-mono">description</code> says what it shows, followed by the drag gesture
+            (<code className="font-mono">seriesChart.zoomHint</code>). Tab into the plot and the arrows read the sweep a
+            sample at a time — &ldquo;1.5 — Velocity: 4.2, Position: 59.8, …&rdquo; — with the tooltip following; past
+            100 samples only the stops round the one in focus are drawn. Nobody clicks these, so they are images to
+            read; recharts&apos; own unnamed <code className="font-mono">application</code> stop is gone.
           </Note>
         </div>
       </Example>
@@ -517,7 +527,7 @@ export function SeriesChartDemo() {
           <Note>
             <code className="font-mono">labels</code> overrides the <code className="font-mono">seriesChart</code>{" "}
             namespace per chart: <code className="font-mono">resetZoom</code> is the button,{" "}
-            <code className="font-mono">zoomHint</code> the drag surface&apos;s accessible name,{" "}
+            <code className="font-mono">zoomHint</code> the drag gesture at the end of the chart&apos;s description,{" "}
             <code className="font-mono">empty</code> what shows when you switch the one series off, and{" "}
             <code className="font-mono">legend</code> the legend group&apos;s accessible name. The plot itself stays
             left-to-right — an abscissa is a number line, not text. The rows are keyed{" "}

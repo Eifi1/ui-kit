@@ -336,10 +336,12 @@ function StubChart({
 }
 
 const Zoomable = withChartZoom(StubChart);
-const HINT = /drag to zoom/i;
+/** The drag surface. Not by its name: since 0.52 (DSP-5) it has none — the gesture is in
+ *  the chart's description, and the rect is nothing to assistive technology. */
+const surfaces = () => [...document.querySelectorAll<SVGRectElement>("rect[data-zoom-surface]")];
 
 function overlay(index = 0) {
-  const rect = screen.getAllByLabelText(HINT)[index];
+  const rect = surfaces()[index] as unknown as HTMLElement;
   // jsdom has no layout: the overlay's screen box starts where the plot does, which is
   // what the layer adds back to turn a client position into a chart one.
   rect.getBoundingClientRect = () => ({ left: PLOT.x, top: PLOT.y }) as DOMRect;
@@ -502,14 +504,11 @@ describe("withChartZoom", () => {
 
   it("speaks the provider's language, and a chart's own labels over that", () => {
     const wrap = (children: ReactNode) => (
-      <UiKitProvider labels={{ seriesChart: { resetZoom: "Zoom zurücksetzen", zoomHint: "Ziehen" } }}>
-        {children}
-      </UiKitProvider>
+      <UiKitProvider labels={{ seriesChart: { resetZoom: "Zoom zurücksetzen" } }}>{children}</UiKitProvider>
     );
     render(wrap(<Zoomable axes={[{ id: "y" }]} labels={{ resetZoom: "Alles zeigen" }} />));
-    // The hint comes from the provider; the reset text from the chart's own prop.
-    const rect = screen.getByLabelText("Ziehen");
-    rect.getBoundingClientRect = () => ({ left: PLOT.x, top: PLOT.y }) as DOMRect;
+    // The reset text from the chart's own prop, over the provider's.
+    const rect = overlay();
     pointer(rect, "pointerdown", 160, 60);
     pointer(rect, "pointermove", 610, 210);
     pointer(rect, "pointerup", 610, 210);
@@ -587,13 +586,13 @@ describe("axisExtent", () => {
 describe("withChartZoom — one axis, or none", () => {
   it("draws no layer and no reset for `none`, and still hands the chart a binding", () => {
     render(<Zoomable axes={[{ id: "y" }]} zoomAxes="none" />);
-    expect(screen.queryByLabelText(HINT)).toBeNull();
+    expect(surfaces()).toEqual([]);
     expect(bindings()[0]).toEqual({ x: null, y: {} });
   });
 
   it("switches off by default for a chart with bars", () => {
     render(<Zoomable axes={[{ id: "y" }]} series={[{ key: "a", type: "bar" }]} rows={[{ x: 0, a: 1 }]} />);
-    expect(screen.queryByLabelText(HINT)).toBeNull();
+    expect(surfaces()).toEqual([]);
   });
 
   it("turns a box drag into an x band on an x-only chart", () => {

@@ -143,8 +143,8 @@ export function oneAxis(
 
 /** One source's samples: an abscissa and the channels measured against it. */
 export interface SeriesSource {
-  x: number[];
-  channels: Record<string, number[]>;
+  x: readonly number[];
+  channels: Readonly<Record<string, readonly number[]>>;
 }
 
 /**
@@ -155,7 +155,7 @@ export interface SeriesSource {
  * has no sample the key is absent, and `connectNulls` bridges the hole with the same
  * straight segment an interpolation would have drawn — without claiming a measurement.
  */
-export function mergeSeries(sources: SeriesSource[]): Record<string, number>[] {
+export function mergeSeries(sources: readonly SeriesSource[]): Record<string, number>[] {
   const byAbscissa = new Map<number, Record<string, number>>();
   for (const source of sources) {
     source.x.forEach((value, index) => {
