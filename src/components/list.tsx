@@ -117,7 +117,10 @@ export function List({
           className,
         )}
       >
-        {folds && !open ? rows.slice(0, Math.max(0, limit!)) : children}
+        {/* The same array folded and open: `Children.toArray` re-keys every row (`.$a`),
+            so the raw `children` on one side remounted the first rows at each toggle and
+            dropped their state — an opened row, a typed input (audit 2026-10-30 DSP-20). */}
+        {folds && !open ? rows.slice(0, Math.max(0, limit!)) : (rows ?? children)}
         {folds && (
           <li role="none" className={MORE_PAD[density]}>
             <Button
