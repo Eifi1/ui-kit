@@ -736,6 +736,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     pieChart: {
       slices: "Diagramszeletek",
       slice: (label, value, percent) => `${label}: ${value} (${percent})`,
+      sliceShare: (label, percent) => `${label}: ${percent}`,
       total: "Összesen",
       empty: "Nincs adat",
       legend: "Kategóriák",

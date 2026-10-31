@@ -749,6 +749,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
     pieChart: {
       slices: "Diagrammsegmente",
       slice: (label, value, percent) => `${label}: ${value} (${percent})`,
+      sliceShare: (label, percent) => `${label}: ${percent}`,
       total: "Gesamt",
       empty: "Keine Daten",
       legend: "Kategorien",

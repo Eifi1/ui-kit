@@ -739,6 +739,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     pieChart: {
       slices: "Settori del grafico",
       slice: (label, value, percent) => `${label}: ${value} (${percent})`,
+      sliceShare: (label, percent) => `${label}: ${percent}`,
       total: "Totale",
       empty: "Nessun dato",
       legend: "Categorie",

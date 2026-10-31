@@ -94,7 +94,8 @@ export interface PieChartProps extends Omit<ComponentPropsWithRef<"div">, "child
    * Tag every figure ON SCREEN `data-private` — the tooltip bubble, the centre and
    * `"value"` slice labels — so the host's demo-mode rule blurs it. A percentage alone
    * reveals no amount, so `"percent"` labels stay readable, and the slices themselves
-   * are not tagged: a blurred ring is no picture at all.
+   * are not tagged: a blurred ring is no picture at all. So a slice's NAME says no
+   * amount either (0.52): "Occupied: 60%" (`labels.sliceShare`), not `labels.slice`.
    */
   redact?: boolean;
   /** What to show with nothing to draw. Default: `labels.empty`. */
@@ -139,8 +140,9 @@ function RedactedTooltipContent(props: ComponentProps<typeof ChartTooltipContent
  * clockwise from twelve o'clock, the order of the legend — with ←/→ following the
  * reading direction in RTL; Home/End go to the first and last. Each slice is named
  * "Label: value (xx%)" (`labels.slice`), because a colour and an angle are nothing a
- * screen reader can say, and focusing one reads it out in the donut's centre. With
- * `onSliceClick`, Enter and Space activate it as a click does.
+ * screen reader can say — under `redact` "Label: xx%" (`labels.sliceShare`) — and
+ * focusing one reads it out in the donut's centre. With `onSliceClick`, Enter and Space
+ * activate it as a click does.
  *
  * The legend switches slices off (`legend="toggle"`); the percentages are always of
  * what is drawn. The plot is not mirrored in RTL (see `ChartContainer`); the legend
@@ -281,7 +283,15 @@ export function PieChart({
           role={clickable ? "button" : "img"}
           // The first slice until the effect below moves the stop.
           tabIndex={index === 0 ? 0 : -1}
-          aria-label={labels.slice(d.slice.label, formatValue(d.value), formatShare(d.share))}
+          // Under `redact` with no amount: the ring is left untagged so it stays a picture,
+          // and its names are attributes a session replay or a redaction keyed on
+          // `[data-private]` reads as they are — "Occupied: €6.00 (60%)" told the amount the
+          // blurred centre and tooltip hid (0.52 code review; Marcel's decision).
+          aria-label={
+            redact
+              ? labels.sliceShare(d.slice.label, formatShare(d.share))
+              : labels.slice(d.slice.label, formatValue(d.value), formatShare(d.share))
+          }
           data-slice={d.slice.key}
           onKeyDown={onKeyDown}
           onFocus={() => {
@@ -297,7 +307,7 @@ export function PieChart({
         </g>
       );
     },
-    [drawn, labels, formatValue, formatShare, clickable],
+    [drawn, labels, formatValue, formatShare, clickable, redact],
   );
 
   const label = useCallback(

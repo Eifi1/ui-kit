@@ -720,6 +720,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     pieChart: {
       slices: "图表扇区",
       slice: (label, value, percent) => `${label}：${value}（${percent}）`,
+      sliceShare: (label, percent) => `${label}：${percent}`,
       total: "合计",
       empty: "无数据",
       legend: "类别",

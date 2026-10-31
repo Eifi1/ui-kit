@@ -15,6 +15,13 @@ export interface PieChartLabels {
    * German, "42%" in English) — the function only arranges them.
    */
   slice: (label: string, value: string, percent: string) => string;
+  /**
+   * One slice's accessible name under `redact` (0.52): the label and the share, with no
+   * amount. `redact` blurs every figure on screen but not the ring, and the ring's names
+   * are attributes on untagged elements, which a session replay or a redaction keyed on
+   * `[data-private]` reads as they are. `percent` as for {@link PieChartLabels.slice}.
+   */
+  sliceShare: (label: string, percent: string) => string;
   /** The caption over the donut's centre figure. */
   total: string;
   /** What a chart with nothing to draw says, when the caller passes no `empty`. */
@@ -26,6 +33,7 @@ export interface PieChartLabels {
 export const DEFAULT_PIE_CHART_LABELS: PieChartLabels = {
   slices: "Chart slices",
   slice: (label, value, percent) => `${label}: ${value} (${percent})`,
+  sliceShare: (label, percent) => `${label}: ${percent}`,
   total: "Total",
   empty: "No data",
   legend: "Categories",

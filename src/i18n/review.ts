@@ -162,6 +162,7 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "tour.backToStep": [["{{title}}"]],
   "globalSearch.shortcut": [["{{keys}}"]],
   "pieChart.slice": [["{{label}}", "{{value}}", "{{percent}}"]],
+  "pieChart.sliceShare": [["{{label}}", "{{percent}}"]],
   "treemap.tile": [["{{name}}", "{{value}}", "{{share}}"]],
   "treemap.group": [["{{name}}", "{{value}}", "{{share}}"]],
   "treemap.inGroup": [["{{name}}", "{{group}}"]],
