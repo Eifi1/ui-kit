@@ -123,6 +123,12 @@ export interface SyncEngine {
     op: "upsert" | "delete",
     data?: Record<string, unknown>,
   ): Promise<void>;
+  /** Starts the poll and the round on `online` (nothing on a computer marked shared).
+   *  An engine another tab's `forget()` stopped stays stopped through `start()`: only its
+   *  own `forget()` (the app's session end) or a new engine (`releaseSyncEngine`) re-arms
+   *  it. A start cannot tell a new sign-in from a remount in a tab whose session never
+   *  ended, and the latter would pull the signed-out account back into the wiped copy
+   *  (D15; the 0.52 code review asked, and the contract stands). */
   start(): void;
   /** Stops the poll and the timers, aborts the round in flight and drops its answer (the
    *  queue is laid back). A new engine's round on the same database waits for it. */
