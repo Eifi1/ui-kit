@@ -17,22 +17,43 @@ import type { SyncRequestBody, SyncResponseBody } from "../wire";
  * rounds in flight, which a tab does not share) on a connection of its own to the same database.
  */
 
-/** The browser's Web Locks for one origin, as far as the engine uses them: exclusive locks,
- *  `ifAvailable`, and a queue that hands a released lock to the next request. */
-function fakeLocks(): LockManager {
+/** The browser's Web Locks for one origin, as far as the engine uses them: exclusive locks
+ *  granted first come first served, `ifAvailable` and `signal`. As the spec has it (Web Locks
+ *  §2.5 "grantable"), a request is not granted while the lock is held OR another request for
+ *  it is queued, `ifAvailable` included; an aborted `signal` takes a request out of the queue
+ *  and rejects it (§4.3). 0.52 code review (src/sync/engine.ts): the first fake checked only
+ *  `held`. */
+function fakeLocks() {
   const held = new Set<string>();
-  const waiting = new Map<string, (() => void)[]>();
+  const queues = new Map<string, (() => void)[]>();
+  const queue = (name: string) => queues.get(name) ?? [];
   const release = (name: string) => {
-    const next = waiting.get(name)?.shift();
+    const [next, ...rest] = queue(name);
+    queues.set(name, rest);
     if (next) next();
     else held.delete(name);
   };
   async function request(name: string, ...rest: unknown[]): Promise<unknown> {
     const callback = rest.at(-1) as (lock: Lock | null) => unknown;
     const options = (rest.length > 1 ? rest[0] : {}) as LockOptions;
-    if (held.has(name)) {
+    if (options.signal?.aborted) throw options.signal.reason;
+    if (held.has(name) || queue(name).length > 0) {
       if (options.ifAvailable) return callback(null);
-      await new Promise<void>((resolve) => waiting.set(name, [...(waiting.get(name) ?? []), resolve]));
+      await new Promise<void>((resolve, reject) => {
+        const grant = () => {
+          options.signal?.removeEventListener("abort", abort);
+          resolve();
+        };
+        const abort = () => {
+          queues.set(
+            name,
+            queue(name).filter((g) => g !== grant),
+          );
+          reject(options.signal!.reason);
+        };
+        options.signal?.addEventListener("abort", abort, { once: true });
+        queues.set(name, [...queue(name), grant]);
+      });
     } else {
       held.add(name);
     }
@@ -42,17 +63,63 @@ function fakeLocks(): LockManager {
       release(name);
     }
   }
-  return { request } as unknown as LockManager;
+  const manager = { request } as unknown as LockManager;
+  return Object.assign(manager, {
+    /** Whether the lock `name` is held, and how many requests wait for it. */
+    state: (name: string) => ({ held: held.has(name), queued: queue(name).length }),
+  });
 }
 
-function installLocks(locks: unknown) {
-  Object.defineProperty(navigator, "locks", { value: locks, configurable: true });
+let locks = fakeLocks();
+
+function installLocks(manager: unknown) {
+  Object.defineProperty(navigator, "locks", { value: manager, configurable: true });
 }
+
+/** BroadcastChannel in the test's hand: a post is kept, and reaches the channels of its name
+ *  still open only on `deliver()` — the moment another tab's message lands, which a browser
+ *  does not promise to be at once. */
+function heldChannels() {
+  const listening = new Set<{ name: string; onmessage: ((event: MessageEvent<unknown>) => void) | null }>();
+  const posts: { name: string; data: unknown }[] = [];
+  class Held {
+    onmessage: ((event: MessageEvent<unknown>) => void) | null = null;
+    constructor(readonly name: string) {
+      listening.add(this);
+    }
+    postMessage(data: unknown) {
+      posts.push({ name: this.name, data });
+    }
+    close() {
+      listening.delete(this);
+    }
+  }
+  vi.stubGlobal("BroadcastChannel", Held);
+  return {
+    deliver() {
+      for (const { name, data } of posts.splice(0)) {
+        for (const channel of [...listening]) {
+          if (channel.name === name) channel.onmessage?.({ data } as MessageEvent<unknown>);
+        }
+      }
+    },
+  };
+}
+
+/** The axios-like error of a refused request. */
+const refusedWith = (status: number) =>
+  Object.assign(new Error(`Request failed with status code ${status}`), {
+    isAxiosError: true,
+    response: { status, data: {} },
+  });
 
 let n = 0;
 const open: { db: SyncDb; engine: SyncEngine }[] = [];
 
-beforeEach(() => installLocks(fakeLocks()));
+beforeEach(() => {
+  locks = fakeLocks();
+  installLocks(locks);
+});
 
 afterEach(async () => {
   vi.unstubAllGlobals();
@@ -91,6 +158,8 @@ async function otherTab(): Promise<Create> {
 }
 
 const fresh = () => `sync-tabs-test-${(n += 1)}`;
+/** The Web Lock a database's rounds take. */
+const lockOf = (name: string) => `eifi1-sync:${name}`;
 
 /** The transport's next answer waits for `release()`. */
 function hold(transport: FakeSyncTransport, answer?: (body: SyncRequestBody) => SyncResponseBody) {
@@ -109,7 +178,7 @@ const serverRow: SyncResponseBody = {
 };
 
 describe("a round runs under a Web Lock per database (FLW-1)", () => {
-  it("while another tab's round holds the queue, this tab's round is paused and never sends it again", async () => {
+  it("syncNow() during another tab's round waits its turn, then sends this tab's changes, never that round's", async () => {
     const name = fresh();
     const a = tab(createSyncEngine, name);
     const b = tab(await otherTab(), name);
@@ -118,13 +187,17 @@ describe("a round runs under a Web Lock per database (FLW-1)", () => {
     const roundA = a.engine.syncNow();
     await vi.waitFor(() => expect(a.transport.requests).toHaveLength(1));
 
-    expect(await b.engine.syncNow()).toMatchObject({ outcome: "paused" });
+    // 0.52 code review (src/sync/engine.ts): B's "Sync now" (kastlan's sign-out dialog)
+    // answered `paused` at once, and the dialog closed as if it had synced.
+    await b.engine.write("handover", "protocols", "p2", "upsert", { notes: "b" });
+    const roundB = b.engine.syncNow();
+    await vi.waitFor(() => expect(locks.state(lockOf(name)).queued).toBe(1));
     expect(b.transport.requests).toHaveLength(0);
 
     release();
     expect(await roundA).toMatchObject({ outcome: "synced" });
-    expect(await b.engine.syncNow()).toMatchObject({ outcome: "synced" });
-    expect(b.transport.requests.map((r) => r.changes.map((c) => c.id))).toEqual([[]]);
+    expect(await roundB).toMatchObject({ outcome: "synced" });
+    expect(b.transport.requests.map((r) => r.changes.map((c) => c.id))).toEqual([["p2"]]);
     expect(await a.db.outbox.count()).toBe(0);
   });
 
@@ -140,15 +213,17 @@ describe("a round runs under a Web Lock per database (FLW-1)", () => {
     // Before 0.52 tab B took A's change too, met no connection and laid it back as `pending`,
     // so the edit below merged into it — and A's answer then deleted it with A's change.
     b.transport.failOffline();
-    await b.engine.syncNow();
+    const roundB = b.engine.syncNow();
+    await vi.waitFor(() => expect(locks.state(lockOf(name)).queued).toBe(1));
     await b.engine.write("handover", "protocols", "p1", "upsert", { notes: "b's edit" });
     release();
     await roundA;
+    expect(await roundB).toMatchObject({ outcome: "offline" });
 
     expect((await a.db.outbox.toArray()).map((c) => [c.status, c.data])).toEqual([["pending", { notes: "b's edit" }]]);
   });
 
-  it("runs a request made during the other tab's round once after it", async () => {
+  it("a started engine's round waits for the other tab's, then sends what was written meanwhile", async () => {
     const name = fresh();
     const a = tab(createSyncEngine, name);
     const b = tab(await otherTab(), name, { soonMs: 0 });
@@ -158,14 +233,33 @@ describe("a round runs under a Web Lock per database (FLW-1)", () => {
     await vi.waitFor(() => expect(a.transport.requests).toHaveLength(1));
 
     b.engine.start();
+    await vi.waitFor(() => expect(locks.state(lockOf(name)).queued).toBe(1));
     await b.engine.write("handover", "protocols", "p2", "upsert", { notes: "b" });
     release();
     await roundA;
 
-    await vi.waitFor(() => expect(b.transport.requests.map((r) => r.changes.map((c) => c.id))).toEqual([["p2"]]), {
-      timeout: 5000,
-    });
+    await vi.waitFor(async () => expect(await b.db.outbox.count()).toBe(0));
+    expect(b.transport.requests[0].changes.map((c) => c.id)).toEqual(["p2"]);
     expect(a.transport.requests.map((r) => r.changes.map((c) => c.id))).toEqual([["p1"]]);
+  });
+
+  it("a started engine stopped while it waits leaves the queue at once, and its round is dropped", async () => {
+    const name = fresh();
+    const a = tab(createSyncEngine, name);
+    const b = tab(await otherTab(), name);
+    const release = hold(a.transport);
+    const roundA = a.engine.syncNow();
+    await vi.waitFor(() => expect(a.transport.requests).toHaveLength(1));
+    b.engine.start();
+    await vi.waitFor(() => expect(locks.state(lockOf(name)).queued).toBe(1));
+
+    b.engine.stop(); // a company switch in tab B
+    expect(locks.state(lockOf(name)).queued).toBe(0);
+    release();
+    await roundA;
+    // The decision point: a round of B's own, after the dropped one — the only one sent.
+    expect(await b.engine.syncNow()).toMatchObject({ outcome: "synced" });
+    expect(b.transport.requests).toHaveLength(1);
   });
 
   it("runs the round as before 0.52 when the lock manager refuses (an opaque origin)", async () => {
@@ -288,5 +382,181 @@ describe("forget() reaches every tab through the copy's epoch (FLW-1)", () => {
     const second = await a.db.meta.toArray();
     expect(second).toEqual([{ key: "epoch", value: expect.any(String) }]);
     expect(second[0].value).not.toBe(first[0].value);
+  });
+});
+
+describe("a round waits its turn for the lock (0.52 code review, src/sync/engine.ts)", () => {
+  it("two tabs waiting behind a third's round each run theirs once, in turn", async () => {
+    const name = fresh();
+    const a = tab(createSyncEngine, name);
+    // A round asks `paused()` as it begins: one call per round begun.
+    const begunB = vi.fn(() => false);
+    const begunC = vi.fn(() => false);
+    const b = tab(await otherTab(), name, { paused: begunB });
+    const c = tab(await otherTab(), name, { paused: begunC });
+    await a.engine.write("handover", "protocols", "p1", "upsert", { notes: "a" });
+    const release = hold(a.transport);
+    const roundA = a.engine.syncNow();
+    await vi.waitFor(() => expect(a.transport.requests).toHaveLength(1));
+
+    b.engine.start();
+    c.engine.start();
+    await vi.waitFor(() => expect(locks.state(lockOf(name)).queued).toBe(2));
+    release();
+    await roundA;
+
+    await vi.waitFor(() => {
+      expect(b.transport.requests).toHaveLength(1);
+      expect(c.transport.requests).toHaveLength(1);
+      expect(locks.state(lockOf(name))).toEqual({ held: false, queued: 0 });
+    });
+    expect(await b.engine.syncNow()).toMatchObject({ outcome: "synced" });
+    expect(await c.engine.syncNow()).toMatchObject({ outcome: "synced" });
+    // Each start's round began once, plus the one syncNow() above: no round bounced off
+    // the other's wait.
+    expect([begunB.mock.calls.length, begunC.mock.calls.length]).toEqual([2, 2]);
+  });
+
+  it("retryBlocked() during another tab's round sends the blocked changes once that round ends", async () => {
+    const name = fresh();
+    const a = tab(createSyncEngine, name);
+    let countsHeld: Promise<void> | null = null;
+    const b = tab(await otherTab(), name, {
+      steps: [
+        {
+          name: "photos",
+          run: async () => ({}),
+          // Holds this tab's flight open after its round, while the test says so.
+          counts: async () => {
+            await countsHeld;
+            return {};
+          },
+        },
+      ],
+    });
+    await b.engine.write("handover", "defects", "d1", "upsert", { description: "x" });
+    b.transport.answer({
+      server_knowledge: 1,
+      changes: [],
+      refused: { code: "demo_read_only", detail: "Demo", change_ids: ["d1"] },
+    });
+    expect(await b.engine.syncNow()).toMatchObject({ blocked: 1 });
+    b.engine.start();
+    await b.engine.syncNow();
+    const before = b.transport.requests.length;
+
+    await a.engine.write("handover", "protocols", "p1", "upsert", { notes: "a" });
+    const release = hold(a.transport);
+    const roundA = a.engine.syncNow();
+    await vi.waitFor(() => expect(a.transport.requests).toHaveLength(1));
+    let releaseCounts!: () => void;
+    countsHeld = new Promise<void>((resolve) => (releaseCounts = resolve));
+    const retried = b.engine.retryBlocked();
+    await vi.waitFor(() => expect(locks.state(lockOf(name)).queued).toBe(1));
+    release();
+    await roundA;
+    releaseCounts();
+    await retried;
+
+    await vi.waitFor(() =>
+      expect(b.transport.requests.slice(before).some((r) => r.changes.some((c) => c.id === "d1"))).toBe(true),
+    );
+  });
+});
+
+describe("forget() across tabs, decided by the copy's epoch (0.52 code review, src/sync/engine.ts)", () => {
+  it("its own forget() re-arms the engine though another tab's, committed first, is heard while its own runs", async () => {
+    // kastlan's sign-out cascade: tab A signs out (its forget() commits and posts), tab B's
+    // storage listener runs B's forget() — and A's epoch lands in B while B's clear waits.
+    const channels = heldChannels();
+    const name = fresh();
+    const a = tab(createSyncEngine, name);
+    const b = tab(await otherTab(), name);
+    b.engine.start();
+    await b.engine.syncNow();
+
+    await a.engine.forget({ keepQueue: true });
+    const forgetB = b.engine.forget({ keepQueue: true });
+    channels.deliver();
+    await forgetB;
+
+    b.transport.answer(serverRow);
+    expect(await b.engine.syncNow()).toMatchObject({ outcome: "synced" });
+    expect(await b.db.rows.count()).toBe(1);
+  });
+
+  it("a refusal answered after another tab's forget() marks nothing in the kept queue", async () => {
+    heldChannels(); // the epoch has not reached tab B yet
+    const name = fresh();
+    const a = tab(createSyncEngine, name);
+    const b = tab(await otherTab(), name, { backoffMs: [3_600_000] });
+    b.engine.start();
+    await b.engine.syncNow();
+    await b.engine.write("handover", "protocols", "p1", "upsert", { notes: "b" });
+    b.transport.answer(async () => {
+      await a.engine.forget({ keepQueue: true });
+      throw refusedWith(403);
+    });
+
+    expect(await b.engine.syncNow()).toMatchObject({ outcome: "dropped" });
+    // Not `rejected` (never sent again) for a session that has ended: it waits for its owner.
+    expect((await a.db.outbox.toArray()).map((c) => c.status)).toEqual(["pending"]);
+  });
+
+  it("a round sends nothing more once another tab's forget() has landed mid-round", async () => {
+    heldChannels(); // the epoch has not reached tab B yet
+    const name = fresh();
+    const a = tab(createSyncEngine, name);
+    let passes = 0;
+    const b = tab(await otherTab(), name, {
+      steps: [
+        {
+          name: "photos",
+          async run() {
+            passes += 1;
+            if (passes > 1) return {};
+            // An edit in tab B during its round, then tab A's sign-out; the step asks for the
+            // second pass (kastlan's, after its photos).
+            await b.engine.write("handover", "protocols", "p2", "upsert", { notes: "b" });
+            await a.engine.forget({ keepQueue: true });
+            return { changed: true };
+          },
+        },
+      ],
+    });
+
+    expect(await b.engine.syncNow()).toMatchObject({ outcome: "dropped" });
+    // Before the fix the second pass posted the kept queue and pulled the scope from 0.
+    expect(b.transport.requests.map((r) => [r.changes.map((c) => c.id), r.last_knowledge])).toEqual([[[], 0]]);
+    expect((await a.db.outbox.toArray()).map((c) => [c.id, c.status])).toEqual([["p2", "pending"]]);
+  });
+
+  it("an engine another tab's forget() stopped shows no error and no retry of its last round", async () => {
+    const channels = heldChannels();
+    const name = fresh();
+    const a = tab(createSyncEngine, name);
+    const b = tab(await otherTab(), name, { backoffMs: [3_600_000] });
+    b.engine.start();
+    await b.engine.syncNow();
+    b.transport.failStatus(500);
+    expect(await b.engine.syncNow()).toMatchObject({ outcome: "error" });
+    expect(b.engine.getState()).toMatchObject({ phase: "error", nextRetryAt: expect.any(Number) });
+
+    await a.engine.forget({ keepQueue: true });
+    channels.deliver();
+
+    expect(b.engine.getState()).toMatchObject({ phase: "idle", nextRetryAt: null, lastSyncedAt: null });
+  });
+
+  it("its own forget() ends the session's state too: no error, no retry", async () => {
+    const a = tab(createSyncEngine, fresh(), { backoffMs: [3_600_000] });
+    a.engine.start();
+    await a.engine.syncNow();
+    a.transport.failStatus(500);
+    expect(await a.engine.syncNow()).toMatchObject({ outcome: "error" });
+
+    await a.engine.forget({ keepQueue: true });
+
+    expect(a.engine.getState()).toMatchObject({ phase: "idle", nextRetryAt: null, lastSyncedAt: null });
   });
 });

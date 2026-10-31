@@ -1,4 +1,4 @@
-import { postOnce } from "../lib/broadcast";
+import { listenOn, postOnce } from "../lib/broadcast";
 import { httpStatusOf } from "../lib/http-status";
 import { isOfflineError, stampAfter } from "../offline/local-first";
 import { isSharedComputer } from "../offline/shared-computer";
@@ -23,9 +23,9 @@ import type { SyncRequestBody, SyncResponseBody, SyncWireChange } from "./wire";
  * `sending` changes as a closed tab's and sent them again, its failure laid them back so an edit
  * merged into a change already out and was deleted with it, and a sign-out in one tab was pulled
  * straight back from 0 by the other's poll. Now a round runs under a Web Lock named after the
- * database, so the rounds of all tabs take turns; and `forget()` writes a new epoch into `meta`
- * with the clear, which every round reads, so another tab's round drops its answer and that
- * tab's engine stops.
+ * database, so the rounds of all tabs take turns, first come first served; and `forget()`
+ * writes a new epoch into `meta` with the clear, which every round reads, so another tab's
+ * round drops its answer and that tab's engine stops.
  */
 
 export interface SyncCounts {
@@ -71,9 +71,9 @@ export interface SyncEngineState {
 }
 
 export interface SyncRoundResult {
-  /** `paused`: `paused()` held the round, or (0.52) another tab's round on the same database
-   *  did — a started engine then runs it once after that round. `dropped`: `forget()` ran
-   *  during it, here or in another tab, its answer unused. */
+  /** `paused`: `paused()` held the round. (A round asked for while another tab's round holds
+   *  the database waits its turn, 0.52.) `dropped`: `forget()` ran during it, here or in
+   *  another tab, its answer unused. */
   outcome: "synced" | "offline" | "error" | "paused" | "dropped";
   /** Changes this round set `waiting`, `blocked` or `rejected`. */
   waiting: number;
@@ -135,7 +135,8 @@ export interface SyncEngine {
   stop(): void;
   /** Sync soon (debounced): after a write. */
   requestSync(): void;
-  /** "Sync now": resets the backoff, runs a round (after the one under way). */
+  /** "Sync now": resets the backoff, runs a round of its own after the one under way — another
+   *  tab's too (0.52) — and answers its result. */
   syncNow(): Promise<SyncRoundResult>;
   /** A round that sends the `blocked` changes too. */
   retryBlocked(): Promise<void>;
@@ -146,7 +147,9 @@ export interface SyncEngine {
   /** Sign-out: bump the generation (a round in flight writes nothing more), then clear the
    *  rows and `meta` — and the outbox and the app's tables unless `keepQueue` (D15). In every
    *  tab (0.52): the clear writes a new epoch into `meta`, so a round of another tab's engine on
-   *  this database drops its answer, and that engine stops — the session it ran for has ended. */
+   *  this database drops its answer, and that engine stops — the session it ran for has ended.
+   *  Another tab's `forget()` heard while this clear runs is decided by the epoch the copy is
+   *  left with: one that committed first was undone by this clear and stops nothing. */
   forget(opts: { keepQueue: boolean }): Promise<void>;
   getState(): SyncEngineState;
   subscribe(listener: () => void): () => void;
@@ -175,8 +178,9 @@ const kept = new Map<string, { db: SyncDb; engine: SyncEngine }>();
 /** The generation changed under a round: its answer is dropped. */
 class Dropped extends Error {}
 
-/** The copy's epoch moved since this engine started: `forget()` ran in another tab. */
-class ForgottenElsewhere extends Error {}
+/** The copy's epoch moved since this engine started: `forget()` ran in another tab. The
+ *  round's answer is dropped as well. */
+class ForgottenElsewhere extends Dropped {}
 
 /** The browser's Web Locks: a secure context (https, localhost), Safari 15.4+. */
 function webLocks(): LockManager | undefined {
@@ -272,9 +276,9 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
   let epochRead: Promise<void> | null = null;
   /** `forget()` ran in another tab: this engine runs no round until its own `forget()`. */
   let forgotten = false;
-  let channel: BroadcastChannel | null = null;
-  /** A wait for another tab's round is queued for the lock; with `blocked` if one asked. */
-  let afterOther: { blocked: boolean } | null = null;
+  /** This engine's own `forget()`s whose clear is under way. */
+  let forgetting = 0;
+  let unlisten: (() => void) | null = null;
 
   function set(next: Partial<SyncEngineState>) {
     state = { ...state, ...next };
@@ -326,31 +330,53 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
    *  `isCurrent()` turn false, the request in flight is aborted, and the poll stops. Without
    *  BroadcastChannel the next round's read of the epoch stops it instead. */
   function listen() {
-    if (channel || typeof BroadcastChannel === "undefined") return;
-    try {
-      channel = new BroadcastChannel(across);
-    } catch {
-      return;
-    }
-    channel.onmessage = ({ data }: MessageEvent<unknown>) => {
+    unlisten ??= listenOn(across, (data) => {
       const epoch = (data as { epoch?: unknown } | null)?.epoch;
-      if (typeof epoch === "string" && !epochs.has(epoch)) forgetHere();
-    };
+      if (typeof epoch === "string" && !epochs.has(epoch)) void forgetHere();
+    });
   }
 
   /** `forget()` ran in another tab: the session this engine ran for has ended there. Its
-   *  round in flight writes nothing more, and it runs none of its own any more. */
-  function forgetHere() {
-    if (forgotten) return;
+   *  round in flight writes nothing more, and it runs none of its own any more.
+   *
+   *  Not while its own `forget()` clears the copy: that clear decides, by the epoch it leaves
+   *  in `meta`. 0.52 code review (src/sync/engine.ts): in kastlan's sign-out cascade tab A's
+   *  epoch reached tab B while B's own clear waited behind A's, so B's `forget()` resolved
+   *  with B stopped and forgotten — the forget that re-arms an engine left it dead. */
+  function forgetHere(): Promise<void> {
+    if (forgotten || forgetting > 0) return Promise.resolve();
     forgotten = true;
     if (started) halt();
-    else {
-      generation += 1;
-      controller?.abort();
-    }
+    else drop();
+    return endSession();
+  }
+
+  /** The round in flight, or waiting for the lock, writes nothing more: its wait and its
+   *  request are aborted, its answer dropped, the queue laid back. */
+  function drop() {
+    generation += 1;
+    controller?.abort();
+  }
+
+  /** What the engine shows of a session that ended — by its own `forget()` or another tab's —
+   *  goes with it: the steps' counts, the last sync, an error and its retry. 0.52 code review
+   *  (src/sync/engine.ts): the two paths each reset part of it, and an engine another tab
+   *  stopped showed "error" for a retry that never came. */
+  function endSession(): Promise<void> {
     stepCounts = {};
-    set({ lastSyncedAt: null });
-    void refreshCounts();
+    failures = 0;
+    clearRetry();
+    set({ phase: "idle", lastSyncedAt: null, nextRetryAt: null });
+    return refreshCounts();
+  }
+
+  /** The round's epoch still stands in `meta`, read in the caller's transaction, so another
+   *  tab's `forget()` commits wholly before it or after it. Else `forget()` ran: in this tab
+   *  (the generation moved too) or in another — then the engine stops. */
+  async function standing(gen: number, epoch: string | null): Promise<void> {
+    const now = await readEpoch();
+    if (gen !== generation) throw new Dropped();
+    if (now !== epoch) throw epochs.has(now) ? new Dropped() : new ForgottenElsewhere();
   }
 
   // ── The queue ──────────────────────────────────────────────────────────────
@@ -358,9 +384,14 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
   /** Mark the scope's queue as in the request (a `sending` left by a closed tab goes back
    *  first); answers it with the statuses it had. Under the Web Lock (0.52) a `sending` here
    *  is a closed tab's, as this assumes: no other tab's round is out. Without Web Locks
-   *  (plain http) it may be another open tab's, as before 0.52. */
-  function takeQueue(scope: string, withBlocked: boolean): Promise<OutboxChange[]> {
-    return db.transaction("rw", db.outbox, async () => {
+   *  (plain http) it may be another open tab's, as before 0.52.
+   *
+   *  Only under the round's epoch. 0.52 code review (src/sync/engine.ts): after another tab's
+   *  `forget()` had landed mid-round, every scope left still posted the kept queue under the
+   *  session that had ended and pulled itself from 0, only for `apply` to drop the answer. */
+  function takeQueue(scope: string, withBlocked: boolean, gen: number, epoch: string | null): Promise<OutboxChange[]> {
+    return db.transaction("rw", db.outbox, db.meta, async () => {
+      await standing(gen, epoch);
       await db.outbox
         .where("scope")
         .equals(scope)
@@ -396,7 +427,7 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
     lastPage: boolean,
   ) {
     return db.transaction("rw", db.rows, db.outbox, db.meta, async () => {
-      if (gen !== generation || (await readEpoch()) !== epoch) throw new Dropped();
+      await standing(gen, epoch);
       const refused = answer.refused ?? null;
       const refusedIds = new Set(refused?.change_ids ?? []);
       const rejections = new Map((answer.rejections ?? []).map((r) => [r.change_id, r]));
@@ -482,7 +513,7 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
     signal: AbortSignal,
     withBlocked: boolean,
   ): Promise<ScopeResult> {
-    const sent = await takeQueue(scope, withBlocked);
+    const sent = await takeQueue(scope, withBlocked, gen, epoch);
     const last = Number((await db.meta.get(lastKnowledgeKey(scope)))?.value ?? 0) || 0;
     const body = (changes: SyncWireChange[], page_cursor: SyncRequestBody["page_cursor"]): SyncRequestBody => ({
       scope,
@@ -500,14 +531,19 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
       if (gen !== generation) throw new Dropped();
       if (isOffline(err)) return { offline: true };
       const plan = planCode(err);
-      if (plan) {
-        // The whole request refused for the plan: every change waits for it.
-        await mark(sent, { status: "waiting", code: plan, reason: plan });
-        return { offline: false, waiting: sent.length, blocked: 0, rejected: 0 };
-      }
-      if (httpStatusOf(err) === 403)
+      if (!plan && httpStatusOf(err) !== 403) throw err;
+      // A refusal is the answer, kept only under the round's epoch as `apply` keeps one. 0.52
+      // code review (src/sync/engine.ts): a 403 heard after another tab's `forget()` marked
+      // the kept queue `rejected`, never sent again, for a session that had ended.
+      return db.transaction("rw", db.outbox, db.meta, async (): Promise<ScopeResult> => {
+        await standing(gen, epoch);
+        if (plan) {
+          // The whole request refused for the plan: every change waits for it.
+          await mark(sent, { status: "waiting", code: plan, reason: plan });
+          return { offline: false, waiting: sent.length, blocked: 0, rejected: 0 };
+        }
         return { offline: false, waiting: 0, blocked: 0, rejected: await loseScope(scope, err) };
-      throw err;
+      });
     }
     let cursor = options.paged ? (answer.page_cursor ?? null) : null;
     let tally: ScopeResult;
@@ -539,60 +575,69 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
   async function round(withBlocked: boolean, gen: number): Promise<SyncRoundResult> {
     const result: SyncRoundResult = { outcome: "synced", waiting: 0, blocked: 0, rejected: 0 };
     if (gen !== generation || forgotten) return { ...result, outcome: "dropped" };
-    if (options.paused?.()) return { ...result, outcome: "paused" };
-    if (!browserOnline()) return { ...result, outcome: "offline" };
-    const locks = webLocks();
-    if (!locks) return locked(result, withBlocked, gen);
-    let granted = false;
-    try {
-      // `ifAvailable`: a tab never queues a round behind another's — it is paused, and a
-      // started engine runs it once after that round (`waitForOtherTab`). A closed tab's lock
-      // is released with it.
-      return await locks.request(across, { ifAvailable: true }, async (lock) => {
-        if (!lock) {
-          waitForOtherTab(locks, withBlocked);
-          return { ...result, outcome: "paused" };
-        }
-        granted = true;
-        return locked(result, withBlocked, gen);
-      });
-    } catch (err) {
-      // A lock manager that refuses (an opaque origin, a document no longer active): the
-      // round runs as before 0.52. `locked` itself never throws.
-      return granted ? { ...result, outcome: "error", error: err } : locked(result, withBlocked, gen);
-    }
-  }
-
-  /** Another tab's round holds this database: a request made meanwhile runs once after it,
-   *  as one made during this tab's own round does (ka's rule), not only at the next poll. One
-   *  wait at a time: it takes the lock in turn and lets go of it at once. */
-  function waitForOtherTab(locks: LockManager, withBlocked: boolean) {
-    if (afterOther) {
-      afterOther.blocked ||= withBlocked;
-      return;
-    }
-    const wait = { blocked: withBlocked };
-    afterOther = wait;
-    const then = () => {
-      afterOther = null;
-      if (started && !inBackoff()) void run(wait.blocked);
-    };
-    locks.request(across, () => undefined).then(then, then);
-  }
-
-  /** The round itself: under the database's Web Lock where the browser has them. */
-  async function locked(result: SyncRoundResult, withBlocked: boolean, gen: number): Promise<SyncRoundResult> {
+    // Aborted by stop() and forget(): the wait for the lock, then the round's requests.
     const own = new AbortController();
     controller = own;
     try {
+      const locks = webLocks();
+      if (!locks) return await begin(result, withBlocked, gen, own.signal);
+      let granted = false;
+      try {
+        // Queued, first come first served: the rounds of every tab on this database take
+        // turns, and one asked for meanwhile waits for its turn (`current` and `again` keep
+        // one per engine). 0.52 code review (src/sync/engine.ts): an `ifAvailable` round
+        // that found the lock taken answered `paused` at once, so the sign-out dialog's
+        // "Sync now" closed as if it had synced; its one deferred round lost a
+        // `retryBlocked()`'s `blocked`; and two tabs' waits refused each other's next try —
+        // the spec refuses `ifAvailable` while any request is queued. A closed tab's lock
+        // is released with it.
+        return await locks.request(across, { signal: own.signal }, () => {
+          granted = true;
+          return begin(result, withBlocked, gen, own.signal);
+        });
+      } catch (err) {
+        // `begin` throws only what the app's `paused()` throws. A wait aborted by stop() or
+        // forget() is dropped there; a lock manager that refuses (an opaque origin, a
+        // document no longer active) runs the round as before 0.52.
+        if (granted) return { ...result, outcome: "error", error: err };
+        return await begin(result, withBlocked, gen, own.signal);
+      }
+    } finally {
+      if (controller === own) controller = null;
+    }
+  }
+
+  /** The round begins — under the lock, where there is one, after however long it waited:
+   *  the decision point. */
+  async function begin(
+    result: SyncRoundResult,
+    withBlocked: boolean,
+    gen: number,
+    signal: AbortSignal,
+  ): Promise<SyncRoundResult> {
+    if (gen !== generation || forgotten) return { ...result, outcome: "dropped" };
+    if (options.paused?.()) return { ...result, outcome: "paused" };
+    if (!browserOnline()) return { ...result, outcome: "offline" };
+    return locked(result, withBlocked, gen, signal);
+  }
+
+  /** The round itself. Never throws. */
+  async function locked(
+    result: SyncRoundResult,
+    withBlocked: boolean,
+    gen: number,
+    signal: AbortSignal,
+  ): Promise<SyncRoundResult> {
+    try {
       await captureEpoch();
       const epoch = await readEpoch();
+      if (gen !== generation) throw new Dropped();
       if (!epochs.has(epoch)) throw new ForgottenElsewhere();
       set({ phase: "syncing" });
       for (let pass = 0; ; pass++) {
         for (const scope of options.scopes()) {
           if (gen !== generation) throw new Dropped();
-          const r = await syncScope(scope, gen, epoch, own.signal, withBlocked);
+          const r = await syncScope(scope, gen, epoch, signal, withBlocked);
           if (r.offline) return { ...result, outcome: "offline" };
           result.waiting += r.waiting;
           result.blocked += r.blocked;
@@ -602,7 +647,7 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
         let changed = false;
         for (const step of steps) {
           if (gen !== generation) throw new Dropped();
-          const ran = await step.run(db, { signal: own.signal, isCurrent: () => gen === generation });
+          const ran = await step.run(db, { signal, isCurrent: () => gen === generation });
           if (gen !== generation) throw new Dropped();
           if (ran.counts) stepCounts = { ...stepCounts, [step.name]: ran.counts };
           if (ran.offline) return { ...result, outcome: "offline" };
@@ -612,12 +657,9 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
       }
       return result;
     } catch (err) {
-      if (err instanceof ForgottenElsewhere) forgetHere();
-      if (err instanceof Dropped || err instanceof ForgottenElsewhere || gen !== generation)
-        return { ...result, outcome: "dropped" };
+      if (err instanceof ForgottenElsewhere) void forgetHere();
+      if (err instanceof Dropped || gen !== generation) return { ...result, outcome: "dropped" };
       return { ...result, outcome: "error", error: err };
-    } finally {
-      if (controller === own) controller = null;
     }
   }
 
@@ -706,9 +748,12 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
     if (started && !inBackoff()) void run(false);
   }
 
+  /** A round of its own, begun after the one under way — and after one that a request made
+   *  meanwhile started as that one ended — so `retryBlocked()` never joins a round that
+   *  leaves `blocked` out (0.52 code review, src/sync/engine.ts). */
   async function runFresh(withBlocked: boolean): Promise<SyncRoundResult> {
     resetBackoff();
-    if (current) {
+    while (current) {
       again = false;
       await current.catch(() => undefined);
     }
@@ -726,10 +771,8 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
   function halt() {
     if (!started) return;
     started = false;
-    // The round in flight writes nothing more: its request is aborted and its answer
-    // dropped, the queue laid back; the next engine's round waits for it to settle.
-    generation += 1;
-    controller?.abort();
+    // The next engine's round waits for the dropped one to settle.
+    drop();
     if (running.get(db.name) === engine) running.delete(db.name);
     if (poll) clearInterval(poll);
     poll = null;
@@ -740,8 +783,8 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
       window.removeEventListener("online", onOnline);
       window.removeEventListener("offline", onOffline);
     }
-    channel?.close();
-    channel = null;
+    unlisten?.();
+    unlisten = null;
   }
 
   const engine: SyncEngine = {
@@ -845,24 +888,30 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
     },
 
     async forget({ keepQueue }) {
-      generation += 1;
-      controller?.abort();
+      drop();
       // Its own forget() starts this engine's next session: it runs again where another
       // tab's forget() had ended it.
       forgotten = false;
       const epoch = freshEpoch();
       epochs.add(epoch);
       const tables = keepQueue ? [db.rows, db.meta] : db.tables;
-      await db.transaction("rw", tables, async () => {
-        for (const table of tables) await table.clear();
-        await db.meta.put({ key: EPOCH, value: epoch });
-      });
+      forgetting += 1;
+      try {
+        await db.transaction("rw", tables, async () => {
+          for (const table of tables) await table.clear();
+          await db.meta.put({ key: EPOCH, value: epoch });
+        });
+      } finally {
+        forgetting -= 1;
+      }
       // Best-effort: the epoch in `meta` still stops another tab's next round. This engine's
       // own channel hears it too, and keeps running: the epoch is already one of its own.
       postOnce(across, { epoch });
-      stepCounts = {};
-      set({ lastSyncedAt: null });
-      await refreshCounts();
+      // Another tab's forget() met while this clear ran was left to the copy: one committed
+      // before this clear was undone by it; one committed after it ended this session too.
+      // (Its message is posted after its commit, so that commit is in the epoch read here.)
+      const now = await readEpoch().catch(() => epoch);
+      await (epochs.has(now) ? endSession() : forgetHere());
     },
 
     getState: () => state,
