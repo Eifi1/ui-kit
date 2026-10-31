@@ -13,8 +13,12 @@ export interface AccountMenuTextSizeProps {
    * Appearance does — `useAccountAppearance`'s `pickTextSize` (this device, and the
    * account when signed in), with `appearance.saveFailed` as the toast when the account
    * refused. The kit does not apply it itself, so the two places can never disagree.
+   * `value` + `onChange`, as every kit control pairs them (CONTRIBUTING §4; refactor audit
+   * 2026-10-30, API-5).
    */
-  onPick: (size: TextSize) => void;
+  onChange?: (size: TextSize) => void;
+  /** @deprecated 0.52 — `onChange` (the same call); removed in 0.53. */
+  onPick?: (size: TextSize) => void;
   /** The row's name. Default: `appearance.textSize` ("Text size"). */
   label?: string;
   /** The `appearance` words (`textSize`, `textSizes`, `textSmaller`, `textLarger`). */
@@ -34,14 +38,15 @@ export interface AccountMenuTextSizeProps {
  * behind it and can step again. The size's name is a polite live region, so a step is
  * announced.
  */
-export function AccountMenuTextSize({ value, onPick, label, labels: labelsProp }: AccountMenuTextSizeProps) {
+export function AccountMenuTextSize({ value, onChange, onPick, label, labels: labelsProp }: AccountMenuTextSizeProps) {
+  const change = onChange ?? onPick;
   const labels = useAppearanceLabels(labelsProp);
   const onHtml = useTextSize().size;
   const size = value ?? onHtml;
   const index = TEXT_SIZES.indexOf(size);
   const step = (by: -1 | 1) => {
     const next = TEXT_SIZES[index + by];
-    if (next) onPick(next);
+    if (next) change?.(next);
   };
   return (
     <li data-account-menu-text-size="" className="flex items-center gap-2 px-3 py-1.5 text-sm">

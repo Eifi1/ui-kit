@@ -44,8 +44,11 @@ export interface AccountMenuLanguageProps {
   /** The active language's code. */
   value: string | undefined;
   /** A pick: the app sets the device's language and, signed in, the account's
-   *  (settings §6.2). */
-  onPick: (code: string) => void;
+   *  (settings §6.2). `value` + `onChange`, as every kit control pairs them (CONTRIBUTING
+   *  §4; refactor audit 2026-10-30, API-5). */
+  onChange?: (code: string) => void;
+  /** @deprecated 0.52 — `onChange` (the same call); removed in 0.53. */
+  onPick?: (code: string) => void;
   /** The account menu's `close` (from `TopBarActionMenu`'s `children`): a pick shuts it. */
   close?: () => void;
   /** The row's name. Default: `topBar.language` ("Language"). */
@@ -68,11 +71,13 @@ export interface AccountMenuLanguageProps {
 export function AccountMenuLanguage({
   languages,
   value,
+  onChange,
   onPick,
   close,
   label,
   defaultOpen = false,
 }: AccountMenuLanguageProps) {
+  const change = onChange ?? onPick;
   const words = useKitLabels("topBar", DEFAULT_TOP_BAR_LABELS);
   const [open, setOpen] = useState(defaultOpen);
   const active = languages.find((l) => l.code === value);
@@ -109,7 +114,7 @@ export function AccountMenuLanguage({
               <MenuItem
                 checked={lang.code === value}
                 onClick={() => {
-                  onPick(lang.code);
+                  change?.(lang.code);
                   setOpen(false);
                   close?.();
                 }}
