@@ -15,8 +15,25 @@ export interface TreemapLabels {
    * ("60 %" in German, "60%" in English) — the function only arranges them.
    */
   tile: (name: string, value: string, share: string) => string;
+  /**
+   * A group's accessible name (0.52, `TreemapNode.children`): its frame is a stop of the
+   * map's keyboard before its tiles, so a reader hears the group and its total once, on the
+   * way in. `value` and `share` as for {@link TreemapLabels.tile}, of the group's tiles
+   * together; the word "group" tells it from a tile of the same shape.
+   */
+  group: (name: string, value: string, share: string) => string;
+  /**
+   * A name inside a group: `name` is the tile's (or a nested group's) own, from
+   * {@link TreemapLabels.tile} or {@link TreemapLabels.group}, and `group` the name of the
+   * group round it — applied once per group, the innermost first, so a tile two levels deep
+   * reads "Rent: 1,050 (40%), in Housing, in Fixed costs". In the name rather than said once
+   * by the frame, because Home, End and a click land on a tile without passing its frame.
+   */
+  inGroup: (name: string, group: string) => string;
 }
 
 export const DEFAULT_TREEMAP_LABELS: TreemapLabels = {
   tile: (name, value, share) => `${name}: ${value} (${share})`,
+  group: (name, value, share) => `${name}, group: ${value} (${share})`,
+  inGroup: (name, group) => `${name}, in ${group}`,
 };

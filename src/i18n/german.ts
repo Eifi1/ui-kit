@@ -755,6 +755,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
     },
     treemap: {
       tile: (name, value, share) => `${name}: ${value} (${share})`,
+      group: (name, value, share) => `${name}, Gruppe: ${value} (${share})`,
+      inGroup: (name, group) => `${name}, in ${group}`,
     },
     confirmDialog: {
       confirm: "Bestätigen",

@@ -726,6 +726,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     },
     treemap: {
       tile: (name, value, share) => `${name}：${value}（${share}）`,
+      group: (name, value, share) => `${name}（组）：${value}（${share}）`,
+      inGroup: (name, group) => `${name}，属于${group}`,
     },
     confirmDialog: {
       confirm: "确认",

@@ -743,6 +743,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     },
     treemap: {
       tile: (name, value, share) => `${name}: ${value} (${share})`,
+      group: (name, value, share) => `${name}, grupo: ${value} (${share})`,
+      inGroup: (name, group) => `${name}, en ${group}`,
     },
     confirmDialog: {
       confirm: "Confirmar",

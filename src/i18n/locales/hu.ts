@@ -742,6 +742,10 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     },
     treemap: {
       tile: (name, value, share) => `${name}: ${value} (${share})`,
+      // Appositive, not a case ending: "-ban/-ben" and the article follow the name's own
+      // sounds, which a template cannot know.
+      group: (name, value, share) => `${name} csoport: ${value} (${share})`,
+      inGroup: (name, group) => `${name}, ${group} csoport`,
     },
     confirmDialog: {
       confirm: "Megerősítés",

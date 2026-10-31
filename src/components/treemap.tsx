@@ -8,6 +8,9 @@
 // chart. The one thing it cannot take from a CSS var is the tile colour: the label ink
 // is MEASURED against the fill, and a `var(--chart-3)` string measures as nothing — see
 // `useChartTokenHex` below for how the concrete hex is found instead.
+//
+// Since 0.52 a node can hold `children`: a group, drawn as a labelled frame round its
+// tiles (keksdose dev #642, shops by chain) — see "Groups: a frame round their tiles".
 import {
   createContext,
   useCallback,
@@ -22,7 +25,7 @@ import {
 import type { ComponentProps, ComponentPropsWithoutRef, KeyboardEvent, ReactNode } from "react";
 import { Treemap as RechartsTreemap } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "./chart";
-import { PALETTE_HEX, PALETTE_SIZE, textOn } from "../theme/chart-palette";
+import { CHART_ROLES, PALETTE_HEX, PALETTE_SIZE, lerpHex, textOn } from "../theme/chart-palette";
 import { resolveChartColor, useChartEdge, useEdgesInForce, type ChartEdges } from "./chart-edge";
 import { parseHex } from "../theme/color";
 import { dirOf, horizontalStep, type Direction } from "../lib/direction";
@@ -49,7 +52,11 @@ export interface TreemapNode {
   /** The tile's area. A node whose value is not a positive finite number is NOT
    *  drawn — an area cannot be negative, and recharts lays a negative size out as
    *  nonsense rather than refusing it. Saying so is the caller's job: a group that
-   *  vanishes silently between two views of the same data is a bug report. */
+   *  vanishes silently between two views of the same data is a bug report.
+   *
+   *  A GROUP's own `value` is not read: its area is its drawn children's together. Pass
+   *  that sum — the field stays required so that every reader of a `TreemapNode[]` keeps
+   *  a `number`. */
   value: number;
   /** Overrides the by-index palette colour for this tile — e.g. to paint every child
    *  in its parent group's colour, so the groups stay legible in one picture. A
@@ -57,13 +64,45 @@ export interface TreemapNode {
    *  does `CHART_ROLES.other` (`var(--chart-muted)`), the colour for a "rest" bucket,
    *  which should not wrap round to a hue the reader matches to a real node;
    *  anything else (another var, a `color-mix()`) gets `currentColor` ink, because
-   *  there is nothing to measure — set `labelColor` then. */
+   *  there is nothing to measure — set `labelColor` then.
+   *
+   *  On a group, the colour of every tile inside it that sets none (0.52): keksdose's
+   *  "hue = chain" is a `fill` per chain. A group left without one takes the ramp by its
+   *  index, as a tile does, and hands that down; its frame is drawn in the page's own
+   *  colours whatever it is. */
   fill?: string;
   /** The label's ink, for a `fill` the kit cannot measure (a `var()` or `color-mix()`):
    *  keksdose's recency plot fills with `color-mix(in srgb, var(--chart-1) N%,
    *  transparent)`, where `currentColor` put dark page text on full-strength indigo
-   *  (~1.5:1). Wins over the measured ink when given. */
+   *  (~1.5:1). Wins over the measured ink when given. A tile that takes its group's
+   *  `fill` takes the group's `labelColor` with it; one with a `fill` of its own is
+   *  measured again. */
   labelColor?: string;
+  /**
+   * The tile's colour strength, 0–1 (0.52): its `fill` mixed into the card's colour
+   * (`--bg-surface`) as a concrete hex, `1` the full hue. For a second, ordered quantity
+   * on top of the hue — keksdose's recency steps (1, 0.78, 0.55) over the chain's hue —
+   * without a `color-mix()`: the result is measured like any hex, so the label ink stays
+   * automatic and no `labelColor` is needed. keksdose found a tile under ~0.55 stops
+   * reading as its hue and passes for the muted "other" (#642).
+   *
+   * Only a fill the kit can measure is shaded (a hex, a bare `var(--chart-N)` or another
+   * bare token), and only on a page that declares `--bg-surface` as a hex; anything else
+   * keeps its full hue. On a group, the default for its tiles, as `fill` is.
+   */
+  shade?: number;
+  /**
+   * Makes this node a GROUP (0.52, keksdose dev #642: "Is there already a distinction
+   * between shop and chain?"): a labelled frame, its name in a band along the top, its
+   * tiles laid out inside it by recharts' own nested layout. Groups nest. A group with
+   * nothing drawable inside is not drawn; an empty array is a tile.
+   *
+   * The frame is in the page's colours (the well, `--bg-surface-2`, under
+   * `--text-primary`, at least 7.4:1 in every preset and contrast), and under More
+   * contrast it is outlined in `--chart-ink` as a pale tile is. Its band is drawn only
+   * where the group has the room for it — see `TreemapCell`.
+   */
+  children?: readonly TreemapNode[];
 }
 
 /**
@@ -112,8 +151,25 @@ export interface TreemapProps extends Omit<ComponentPropsWithoutRef<"div">, "chi
    * order given, each named "name: value (share)" (`labels.tile`) — a `role="img"` to read
    * when nothing listens, as PieChart's slices. Before, a map nobody clicked was nothing
    * to a screen reader, and a clickable tile said its name alone, one tab stop each.
+   *
+   * In a map with groups (`TreemapNode.children`, 0.52) the walk is the data's own order,
+   * depth first: a group's frame, then its tiles, then the next group. A frame is named
+   * by `labels.group` ("Interspar, group: €1,240 (40%)"), a tile inside one by
+   * `labels.inGroup` round its own name ("Rankweil: €412 (12%), in Interspar"). Only
+   * tiles reach this callback (a frame reaches `onGroupClick`); a tile inside a group is
+   * handed a third argument, the ids of its groups, outermost first. Optional in the type,
+   * so a forwarder calling this with two arguments still type-checks — and absent for a
+   * tile at the top, so a flat map calls it exactly as before.
    */
-  onNodeClick?: (id: string, name: string) => void;
+  onNodeClick?: (id: string, name: string, groups?: readonly string[]) => void;
+  /**
+   * A group's frame was activated — by click on its band or margin, or by Enter/Space on
+   * the focused frame (0.52). Setting this makes every frame a `role="button"`; without it
+   * a frame is a `role="img"`, still a stop of the map's keyboard so its total is heard.
+   * `groups` as for {@link TreemapProps.onNodeClick}: the groups round this one, passed
+   * only for a group inside another.
+   */
+  onGroupClick?: (id: string, name: string, groups?: readonly string[]) => void;
   /**
    * The node names are the user's own data (payees, not categories): the tile labels
    * and the whole tooltip bubble get `data-private`, the same attribute the kit's
@@ -134,6 +190,8 @@ export interface TreemapProps extends Omit<ComponentPropsWithoutRef<"div">, "chi
    * node by name or by raw value, so a per-node note would be keyed on an amount (two
    * nodes of equal size would swap notes). And a tooltip is a pointer affordance: a
    * phone never hovers, so a figure that only exists on hover does not exist there.
+   *
+   * Asked for tiles only: a group's band holds its name and nothing else.
    */
   nodeNote?: (id: string) => string | undefined;
   /**
@@ -142,6 +200,9 @@ export interface TreemapProps extends Omit<ComponentPropsWithoutRef<"div">, "chi
    * and a map made of unlabelled rectangles answers nothing; around 24 is where the
    * smallest tile of a skewed series reaches that floor on a phone-width card. The
    * caller owns the "N more not shown" line, since it knows how many it passed.
+   *
+   * With groups, the tiles are counted across them in the order given, depth first; a
+   * group left with none is not drawn, and a group's frame is not a tile.
    */
   maxTiles?: number;
   /**
@@ -189,19 +250,23 @@ export type TreemapEdges = ChartEdges;
 
 const CHART_TOKENS = PALETTE_SIZE;
 
-/** The resolved ramp, joined into ONE string so `useSyncExternalStore` compares a
- *  primitive: a fresh array per read would never be `Object.is`-equal to the last and
- *  would re-render forever. */
+/** The resolved ramp, and after a `|` the card's colour, joined into ONE string so
+ *  `useSyncExternalStore` compares a primitive: a fresh array per read would never be
+ *  `Object.is`-equal to the last and would re-render forever. */
 function readChartTokens(): string {
   const root = document.documentElement;
   const fallback = root.classList.contains("dark") ? PALETTE_HEX.dark : PALETTE_HEX.light;
   const style = getComputedStyle(root);
-  return Array.from({ length: CHART_TOKENS }, (_, i) => {
+  const ramp = Array.from({ length: CHART_TOKENS }, (_, i) => {
     const v = style.getPropertyValue(`--chart-${i + 1}`).trim();
     // An unresolved token (a host that never loaded tokens.css, a test DOM) falls
     // back to the built-in ramp for the current theme rather than to no colour.
     return parseHex(v) ? v : fallback[i];
   }).join(",");
+  // The card, which `TreemapNode.shade` mixes a hue into (0.52). No fallback: a page that
+  // declares no `--bg-surface` hex leaves nothing to mix into, and the tile keeps its hue.
+  const card = style.getPropertyValue("--bg-surface").trim();
+  return `${ramp}|${parseHex(card) ? card : ""}`;
 }
 
 function subscribeChartTokens(onChange: () => void): () => void {
@@ -213,12 +278,21 @@ function subscribeChartTokens(onChange: () => void): () => void {
   return () => observer.disconnect();
 }
 
-const SERVER_TOKENS = PALETTE_HEX.light.join(",");
+const SERVER_TOKENS = `${PALETTE_HEX.light.join(",")}|`;
 
-function useChartTokenHex(): readonly string[] {
+interface ChartTokens {
+  ramp: readonly string[];
+  /** `--bg-surface` as hex, or null when the page declares none. */
+  card: string | null;
+}
+
+function useChartTokenHex(): ChartTokens {
   const joined = useSyncExternalStore(subscribeChartTokens, readChartTokens, () => SERVER_TOKENS);
-  // One array per ramp, not per render: the map's nodes are memoised on it.
-  return useMemo(() => joined.split(","), [joined]);
+  // One object per reading, not per render: the map's nodes are memoised on it.
+  return useMemo(() => {
+    const [ramp = "", card = ""] = joined.split("|");
+    return { ramp: ramp.split(","), card: card || null };
+  }, [joined]);
 }
 
 const CHART_TOKEN_REF = /^var\(\s*--chart-(\d+)\s*\)$/;
@@ -257,7 +331,7 @@ interface TileContext {
 }
 
 interface TileKeys {
-  /** A tile's accessible name, by node id (`labels.tile`). */
+  /** A tile's or a group's accessible name, by node id (`labels.tile`, `labels.group`). */
   name: (id: string) => string | undefined;
   /** The id holding the map's one tab stop. */
   stop: string | undefined;
@@ -268,6 +342,102 @@ interface TileKeys {
 }
 
 const TreemapTiles = createContext<TileContext | null>(null);
+
+// ── Groups: a frame round their tiles ─────────────────────────────────────
+//
+// 0.52 (keksdose dev #642). recharts lays nested `data` out itself — a group's children
+// squarified inside the group's rectangle — but edge to edge, leaving no room for the
+// group's name. The room is made here: a group's cell draws its frame and works out its
+// BODY (the frame less its band and margin), and each child's cell maps the rectangle
+// recharts gave it, out of the group's rectangle, into that body. A cell cannot ask for
+// this: recharts hands it its parent's node (`root`) and nothing above that. So a group's
+// cell leaves its frame in `FRAMES` under recharts' own object for the group, which is the
+// `root` its children's cells hold, and a nested group's frame is placed by its own
+// parent's in turn. recharts renders a group's cell before its children's (its
+// `renderNode` draws the node, then the node's children), so the frame is there when a
+// child reads it. A WeakMap: the objects are recharts' layout, and go with it.
+
+interface Box {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+interface Frame {
+  /** Where recharts laid the group out: what its children's rectangles are relative to. */
+  laid: Box;
+  /** Where its children are drawn. */
+  body: Box;
+}
+
+const FRAMES = new WeakMap<object, Frame>();
+
+/** recharts' node objects, as far as a cell needs them: a group's `root` lists its children. */
+type LaidNode = { children?: readonly object[] | null };
+
+/**
+ * A group's band, in px at Normal, × the text size's scale: the 20px floor a tile keeps
+ * for its own name (see `Tile`), so the group's name sits in it as a tile's does in a tile.
+ */
+const BAND = 20;
+/**
+ * The frame's margin round its body, in px. Each tile keeps its 2px gutter, half of it
+ * inside the tile, so 3 leaves one pixel of the frame's own colour between the group's
+ * gutter and its tiles' — the frame reads as one outline round the group, not as a gutter
+ * that happens to be wider.
+ */
+const FRAME_MARGIN = 3;
+/**
+ * The least of a group's height its tiles keep under the band: 1/φ. recharts squarifies
+ * to an aspect ratio of φ (its default), so its tiles come out up to φ:1; a band that
+ * squeezed them by more than one more golden step would leave the widest worse than
+ * φ²:1. At Normal that is a group of 61px (20 band + 3 margin = 0.382 of it), whose body
+ * of 38px still holds a tile's name and its second line (the note's 36px floor) — so a
+ * single row of tiles under the band keeps both. A smaller group draws no band: its
+ * tiles keep its whole height less the margin, and its name is in their accessible names
+ * and its tooltip, rather than over their area.
+ */
+const BODY_SHARE = 2 / (1 + Math.sqrt(5));
+
+/** `laid`, a rectangle recharts placed inside the group whose cell is `root`, as drawn:
+ *  mapped into that group's body, on whole-pixel EDGES so neighbours meet without a seam. */
+function placeInGroup(laid: Box, root: LaidNode | undefined): Box {
+  const frame = root ? FRAMES.get(root) : undefined;
+  if (!frame) return laid;
+  const sx = frame.laid.width > 0 ? frame.body.width / frame.laid.width : 0;
+  const sy = frame.laid.height > 0 ? frame.body.height / frame.laid.height : 0;
+  const left = Math.round(frame.body.x + (laid.x - frame.laid.x) * sx);
+  const top = Math.round(frame.body.y + (laid.y - frame.laid.y) * sy);
+  const right = Math.round(frame.body.x + (laid.x + laid.width - frame.laid.x) * sx);
+  const bottom = Math.round(frame.body.y + (laid.y + laid.height - frame.laid.y) * sy);
+  return { x: left, y: top, width: right - left, height: bottom - top };
+}
+
+/** A group drawn at `box`: whether it has the room for its band (see {@link BODY_SHARE};
+ *  and 44px across, the floor of a word), and the body its children are drawn into. */
+function groupBody(box: Box, scale: number): { banded: boolean; body: Box } {
+  const band = BAND * scale;
+  const margin = Math.min(FRAME_MARGIN, Math.floor(box.width / 4), Math.floor(box.height / 4));
+  const banded = box.width >= 44 * scale && box.height - band - margin >= box.height * BODY_SHARE;
+  const top = banded ? band : margin;
+  return {
+    banded,
+    body: {
+      x: box.x + margin,
+      y: box.y + top,
+      width: Math.max(0, box.width - 2 * margin),
+      height: Math.max(0, box.height - top - margin),
+    },
+  };
+}
+
+/** Leaves a group's frame for its children's cells (see `FRAMES`): `root.children[index]`
+ *  is recharts' object for the group itself. */
+function rememberFrame(root: LaidNode | undefined, index: number | undefined, frame: Frame): void {
+  const self = index === undefined ? undefined : root?.children?.[index];
+  if (self) FRAMES.set(self, frame);
+}
 
 // ── Tile ──────────────────────────────────────────────────────────────────
 
@@ -304,7 +474,21 @@ export interface TreemapCellProps {
   /** See {@link TreemapNode.labelColor}; recharts hands each node's fields to its cell. */
   labelColor?: string;
   id?: string;
-  onNodeClick?: (id: string, name: string) => void;
+  /** Called with `groups` as its third argument when the cell has any; see
+   *  {@link TreemapProps.onNodeClick}. */
+  onNodeClick?: (id: string, name: string, groups?: readonly string[]) => void;
+  /** A group's cell's click; see {@link TreemapProps.onGroupClick}. */
+  onGroupClick?: (id: string, name: string, groups?: readonly string[]) => void;
+  /** The ids of the groups round the node, outermost first. `Treemap` puts it on every
+   *  node it hands recharts; a cell drawn in a caller's own map has it if the data does. */
+  groups?: readonly string[];
+  /** Filled in by recharts for a GROUP: the nodes laid out inside it. A cell with
+   *  children draws a frame, not a tile (0.52). */
+  children?: readonly object[] | null;
+  /** Filled in by recharts: the node this one was laid out in, and this one's index among
+   *  its children — how a cell finds the frame of the group round it. */
+  root?: { children?: readonly object[] | null };
+  index?: number;
   redactNames?: boolean;
   nodeNote?: (id: string) => string | undefined;
   /** The page's reading direction, which `Treemap` reads off its own root. In `rtl`
@@ -330,6 +514,12 @@ export interface TreemapCellProps {
  * Inside a `Treemap` it is one stop of the map's keyboard, named with its value and
  * share (0.52); drawn on its own it is a stop only as a button (`onNodeClick`), named by
  * `name`.
+ *
+ * A node with `children` is a GROUP (0.52): the cell draws a frame in the well's colour
+ * (`--bg-surface-2`), with the group's name in a band along its top where the group has
+ * the room (61px at Normal, see `BODY_SHARE`), and its children's cells draw themselves
+ * inside it, below the band and a 3px margin. That works in a caller's own nested recharts
+ * `<Treemap>` too, with nothing but this cell as its `content`.
  */
 export function TreemapCell(props: TreemapCellProps) {
   const map = useContext(TreemapTiles);
@@ -338,7 +528,7 @@ export function TreemapCell(props: TreemapCellProps) {
 
 /** A cell with no `Treemap` above it: it resolves what the map would have handed it. */
 function StandaloneTile(props: TreemapCellProps) {
-  const tokens = useChartTokenHex();
+  const tokens = useChartTokenHex().ramp;
   const edgeFor = useChartEdge();
   const edges = useEdgesInForce(props.edges ?? "auto");
   const map = useMemo(() => ({ tokens, edgeFor, edges }), [tokens, edgeFor, edges]);
@@ -356,6 +546,11 @@ function Tile({
   labelColor,
   id,
   onNodeClick,
+  onGroupClick,
+  groups,
+  children,
+  root,
+  index,
   redactNames,
   nodeNote,
   dir = "ltr",
@@ -366,43 +561,65 @@ function Tile({
   const { tokens: tokenHex, edgeFor, edges, keys } = map;
   // Depth 0 is recharts' synthetic root, which spans the whole chart.
   if (!depth) return null;
+  // Inside a group, where recharts laid the node out is moved into the group's body.
+  const box = placeInGroup({ x, y, width, height }, root);
   // Whole pixels: a rect on a half pixel renders its edge across two half-lit
   // columns, and the text baseline inherits that blur.
-  const px = Math.round(x);
-  const py = Math.round(y);
-  const pw = Math.round(width);
-  const ph = Math.round(height);
+  const px = Math.round(box.x);
+  const py = Math.round(box.y);
+  const pw = Math.round(box.width);
+  const ph = Math.round(box.height);
+  const isGroup = children != null && children.length > 0;
+  const group = isGroup ? groupBody({ x: px, y: py, width: pw, height: ph }, scale) : undefined;
+  // Left for the children's cells, which recharts renders after this one.
+  if (group) rememberFrame(root, index, { laid: { x, y, width, height }, body: group.body });
   const tileFill = fill ?? "var(--chart-1)";
   const measured = measurableFill(tileFill, tokenHex);
   const ink = labelColor ?? (measured ? textOn(measured) : "currentColor");
   // `contrast`: a tile in a hue under 3:1 against the card gets a 1px ink edge inside
   // the gutter (WCAG 1.4.11, anyplot's rule); a hue that clears it stays bare.
   // `uniform`: no per-tile edge; every tile is parted by the same gutter.
-  const edge = edges === "contrast" && measured ? edgeFor(measured) : undefined;
+  // A group's frame is the well, 1.09–1.24:1 from the card in every preset and contrast
+  // (measured 0.52): under `contrast` it always takes the edge.
+  const edge =
+    edges !== "contrast" ? undefined : group ? CHART_ROLES.outline : measured ? edgeFor(measured) : undefined;
   // The halo only on an OPAQUE fill we could measure. A translucent fill (a
   // `color-mix(… transparent)`) composited twice — once as the tile, once as the halo
   // over it — draws a darker ring round every glyph, which read as doubled text on the
   // faded tiles. `none` still overrides the inherited chart `stroke`.
   const halo = measured ? tileFill : "none";
   // Below ~44x20 there is no room for a readable word, so no label at all rather than
-  // a one-letter stub bleeding over the tile edge.
+  // a one-letter stub bleeding over the tile edge. A group's name only in its band.
   const labelSize = LABEL_FONT_SIZE * scale;
   const noteSize = NOTE_FONT_SIZE * scale;
-  const label = pw >= 44 * scale && ph >= 20 * scale ? fitLabel(name ?? "", pw, labelSize) : null;
+  const label = group
+    ? group.banded
+      ? fitLabel(name ?? "", pw, labelSize)
+      : null
+    : pw >= 44 * scale && ph >= 20 * scale
+      ? fitLabel(name ?? "", pw, labelSize)
+      : null;
   // Only under a label that is itself drawn — a stray "+12%" on an unnamed rectangle
   // names nothing — and only where a second baseline fits: the note's baseline sits
   // 29px down and an 11px glyph hangs ~2px below it, so 36 leaves the same ~5px under
-  // the note that the label keeps under itself at the 20px floor.
-  const rawNote = id != null && nodeNote ? nodeNote(id) : undefined;
+  // the note that the label keeps under itself at the 20px floor. Never in a band.
+  const rawNote = !group && id != null && nodeNote ? nodeNote(id) : undefined;
   const note = label != null && rawNote != null && ph >= 36 * scale ? fitLabel(rawNote, pw, noteSize) : null;
   // The label's START edge, 6px in from the tile's. The tiles themselves are laid out
   // physically (the plot is not mirrored, see `ChartContainer`) and the chart's SVG is
   // pinned `ltr`, so the direction is set on each <text> explicitly: `start` is then
   // the right end in RTL, and the label grows leftwards from the tile's right edge.
   const textX = dir === "rtl" ? px + pw - 6 : px + 6;
-  const activate = id != null && onNodeClick ? () => onNodeClick(id, name ?? "") : undefined;
-  // Inside a Treemap every tile is a stop of the map's one roving tab stop, named with its
-  // value and share; a standalone cell is a stop of its own only when it is a button.
+  // A tile's click is `onNodeClick`, a frame's `onGroupClick`. The groups go along only
+  // when there are any, so a flat map calls back exactly as it did before 0.52.
+  const click = group ? onGroupClick : onNodeClick;
+  const activate =
+    id != null && click
+      ? () => (groups && groups.length > 0 ? click(id, name ?? "", groups) : click(id, name ?? ""))
+      : undefined;
+  // Inside a Treemap every tile and frame is a stop of the map's one roving tab stop,
+  // named with its value and share; a standalone cell is a stop of its own only when it
+  // is a button.
   const roving = id != null && keys ? keys : undefined;
   const focusable = roving !== undefined || activate !== undefined;
   const onKeyDown = focusable
@@ -432,6 +649,7 @@ function Tile({
       tabIndex={roving ? (roving.stop === id ? 0 : -1) : activate ? 0 : undefined}
       aria-label={focusable ? (roving?.name(id!) ?? name) : undefined}
       data-private={focusable && redactNames ? "" : undefined}
+      data-group={group ? "" : undefined}
       cursor={activate ? "pointer" : undefined}
       // CSS beats a presentation attribute, so this recolours the rect's own stroke
       // for as long as the tile has keyboard focus.
@@ -439,13 +657,15 @@ function Tile({
     >
       {/* The 2px gutter: the page's ground (`uniform`, the same dark line round every
           tile in the dark theme) or the card showing through (`contrast`). Never a white
-          grid: on a dark surface white lines glare harder than the tiles. */}
+          grid: on a dark surface white lines glare harder than the tiles. A group's frame
+          is the well, the inset surface: the page's own colour in light, a step up from
+          it in dark, and never one of the hues its tiles are told apart by. */}
       <rect
         x={px}
         y={py}
         width={pw}
         height={ph}
-        fill={tileFill}
+        fill={group ? "var(--bg-surface-2)" : tileFill}
         stroke={edges === "contrast" ? "var(--bg-surface)" : "var(--bg-page)"}
         strokeWidth={2}
         rx={3}
@@ -464,26 +684,44 @@ function Tile({
           style={{ pointerEvents: "none" }}
         />
       )}
-      {label != null && (
-        <text
-          // A plain attribute, so the host's `[data-private]` rule reaches an SVG
-          // <text> exactly as it reaches a table cell.
-          data-private={redactNames ? "" : undefined}
-          x={textX}
-          y={py + 15 * scale}
-          direction={dir}
-          fill={ink}
-          stroke={halo}
-          strokeWidth={2.5}
-          strokeLinejoin="round"
-          paintOrder="stroke"
-          fontSize={labelSize}
-          fontWeight={600}
-          style={{ pointerEvents: "none" }}
-        >
-          {label}
-        </text>
-      )}
+      {label != null &&
+        (group ? (
+          // The band's name: the page's text on the well, 8.2:1 at the least in every
+          // preset, 7.4:1 under More contrast (measured 0.52) — no halo, nothing to
+          // stand out from. `stroke="none"` against the inherited chart stroke.
+          <text
+            data-private={redactNames ? "" : undefined}
+            x={textX}
+            y={py + 14 * scale}
+            direction={dir}
+            fill="var(--text-primary)"
+            stroke="none"
+            fontSize={labelSize}
+            fontWeight={600}
+            style={{ pointerEvents: "none" }}
+          >
+            {label}
+          </text>
+        ) : (
+          <text
+            // A plain attribute, so the host's `[data-private]` rule reaches an SVG
+            // <text> exactly as it reaches a table cell.
+            data-private={redactNames ? "" : undefined}
+            x={textX}
+            y={py + 15 * scale}
+            direction={dir}
+            fill={ink}
+            stroke={halo}
+            strokeWidth={2.5}
+            strokeLinejoin="round"
+            paintOrder="stroke"
+            fontSize={labelSize}
+            fontWeight={600}
+            style={{ pointerEvents: "none" }}
+          >
+            {label}
+          </text>
+        ))}
       {note != null && (
         <text
           x={textX}
@@ -534,12 +772,81 @@ function RedactedTooltipContent(props: ComponentProps<typeof ChartTooltipContent
   );
 }
 
+/** What `Treemap` hands recharts per node: a tile, or a group with `children`. recharts
+ *  hands each node's fields to its cell; a field left out of this never reaches
+ *  `TreemapCell` (0.8.0 shipped `labelColor` without it — keksdose). A type, not an
+ *  interface: recharts' `data` wants an index signature, which only an alias meets. */
+type MapNode = {
+  id: string;
+  name: string;
+  /** A tile's value; a group's, its drawn tiles' together. recharts sums a group again
+   *  for its layout, and its tooltip reads this field. */
+  size: number;
+  fill: string;
+  labelColor?: string;
+  /** The ids of the groups round the node, outermost first. */
+  groups: readonly string[];
+  children?: MapNode[];
+};
+
+/** What a group hands down to the tiles inside it that set none of their own. */
+interface Paint {
+  fill: string;
+  labelColor?: string;
+  shade?: number;
+}
+
+/**
+ * `data` as drawn: tiles with a positive value, at most `maxTiles` of them in the order
+ * given (depth first), and the groups that still hold any. `shaded` turns a fill and a
+ * `shade` into the fill drawn.
+ *
+ * Coloured by index into `data` AS GIVEN, before anything is dropped: a caller painting a
+ * legend or a second map from the same list must land on the same hue for the same row,
+ * and filtering first would shift every colour after a gap. Below the top a node takes
+ * its group's colour, so a group's tiles share one hue unless they set their own.
+ */
+function mapNodes(
+  data: readonly TreemapNode[],
+  ramp: readonly string[],
+  maxTiles: number | undefined,
+  shaded: (fill: string, shade: number | undefined) => string,
+): MapNode[] {
+  let left = maxTiles ?? Infinity;
+  const walk = (list: readonly TreemapNode[], groups: readonly string[], paint: Paint | undefined): MapNode[] =>
+    list.flatMap((d, idx): MapNode[] => {
+      const fill = d.fill ?? paint?.fill ?? ramp[idx % ramp.length]!;
+      // An inherited fill brings its ink along (a `color-mix()` group needs its
+      // `labelColor`); a fill of the tile's own is measured again.
+      const labelColor = d.labelColor ?? (d.fill === undefined ? paint?.labelColor : undefined);
+      const shade = d.shade ?? paint?.shade;
+      if (d.children && d.children.length > 0) {
+        const children = walk(d.children, [...groups, d.id], { fill, labelColor, shade });
+        if (children.length === 0) return [];
+        const size = children.reduce((acc, c) => acc + c.size, 0);
+        return [{ id: d.id, name: d.name, size, fill, groups, children }];
+      }
+      if (!(Number.isFinite(d.value) && d.value > 0) || left <= 0) return [];
+      left -= 1;
+      return [{ id: d.id, name: d.name, size: d.value, fill: shaded(fill, shade), labelColor, groups }];
+    });
+  return walk(data, [], undefined);
+}
+
+/** `nodes` in the order the keyboard walks them: each group, then what is inside it. */
+function depthFirst(nodes: readonly MapNode[]): MapNode[] {
+  return nodes.flatMap((n) => [n, ...(n.children ? depthFirst(n.children) : [])]);
+}
+
 /**
  * Tile chart: one rectangle per {@link TreemapNode}, sized by `value`, coloured by
  * index from the chart ramp (or by the node's own `fill`), labelled in whichever of the
  * kit's two inks measures better against it. Hover shows the name and the formatted
  * value; every tile is a keyboard stop named with its value and share (see
  * `onNodeClick`), and `onNodeClick` turns the tiles into buttons.
+ *
+ * A node with `children` is a group (0.52): a labelled frame with its tiles inside, in
+ * its colour unless they set their own — see {@link TreemapNode.children}.
  *
  * Renders nothing when no node has a positive value — an empty box is a hole in the
  * card, and the caller's own sentence is the better answer there.
@@ -551,6 +858,7 @@ export function Treemap({
   valueFormatter,
   height = "20rem",
   onNodeClick,
+  onGroupClick,
   redactNames = false,
   nodeNote,
   maxTiles,
@@ -562,7 +870,7 @@ export function Treemap({
   ...rest
 }: TreemapProps) {
   // Resolved once for every tile, which reads them from `TreemapTiles` (DSP-22).
-  const tokenHex = useChartTokenHex();
+  const { ramp: tokenHex, card } = useChartTokenHex();
   const edgeFor = useChartEdge();
   const edgesInForce = useEdgesInForce(edges);
   const labels = useKitLabels("treemap", DEFAULT_TREEMAP_LABELS, labelsProp);
@@ -587,40 +895,34 @@ export function Treemap({
   }, [data]);
   const describedBy = useId();
   const ramp = colors && colors.length > 0 ? colors : tokenHex;
-  // Coloured by index into `data` AS GIVEN, before anything is dropped: a caller
-  // painting a legend or a second map from the same list must land on the same hue
-  // for the same row, and filtering first would shift every colour after a gap.
   // Memoised: moving the tab stop re-renders the map, and fresh nodes would re-lay it.
   const nodes = useMemo(
     () =>
-      data
-        .map((d, idx) => ({
-          id: d.id,
-          name: d.name,
-          size: d.value,
-          fill: d.fill ?? ramp[idx % ramp.length],
-          // recharts hands each node's fields to its cell; a field left out of this map
-          // never reaches `TreemapCell` (0.8.0 shipped `labelColor` without it — keksdose).
-          labelColor: d.labelColor,
-        }))
-        .filter((n) => Number.isFinite(n.size) && n.size > 0)
-        .slice(0, maxTiles ?? undefined),
-    [data, ramp, maxTiles],
+      mapNodes(data, ramp, maxTiles, (fill, shade) => {
+        // `shade` (0.52): the hue mixed into the card as a hex, so it is measured like
+        // any other. A fill or a card it cannot read keeps the full hue.
+        if (shade === undefined || !Number.isFinite(shade) || shade >= 1 || !card) return fill;
+        const hex = measurableFill(fill, tokenHex);
+        return hex ? lerpHex(card, hex, shade) : fill;
+      }),
+    [data, ramp, maxTiles, tokenHex, card],
   );
+  // The keyboard walks groups and tiles alike, in the data's order (see `onNodeClick`).
+  const order = useMemo(() => depthFirst(nodes), [nodes]);
 
-  // The keyboard (DSP-5): one tab stop for the map, moved between tiles in `nodes` order
-  // as PieChart's is between slices. The tiles are drawn by recharts, so they register
+  // The keyboard (DSP-5): one tab stop for the map, moved between tiles in `order` as
+  // PieChart's is between slices. The tiles are drawn by recharts, so they register
   // their element here rather than being looked up.
   const [stop, setStop] = useState<string | undefined>(undefined);
   const tiles = useRef(new Map<string, SVGGElement>());
-  const stopId = nodes.some((n) => n.id === stop) ? stop : nodes[0]?.id;
+  const stopId = order.some((n) => n.id === stop) ? stop : order[0]?.id;
   const register = useCallback((id: string, element: SVGGElement | null) => {
     if (element) tiles.current.set(id, element);
     else tiles.current.delete(id);
   }, []);
   const move = useCallback(
     (id: string, event: KeyboardEvent<SVGGElement>) => {
-      const at = nodes.findIndex((n) => n.id === id);
+      const at = order.findIndex((n) => n.id === id);
       const step = horizontalStep(event.key, event.currentTarget);
       const to = step
         ? at + step
@@ -631,14 +933,14 @@ export function Treemap({
             : event.key === "Home"
               ? 0
               : event.key === "End"
-                ? nodes.length - 1
+                ? order.length - 1
                 : undefined;
       if (at < 0 || to === undefined) return false;
-      const target = nodes[Math.max(0, Math.min(nodes.length - 1, to))];
+      const target = order[Math.max(0, Math.min(order.length - 1, to))];
       if (target) tiles.current.get(target.id)?.focus();
       return true;
     },
-    [nodes],
+    [order],
   );
 
   // Everything below is memoised over what it reads (0.52, code review of feat/0.52.0). A
@@ -648,7 +950,8 @@ export function Treemap({
   // arrow-key step redrew every tile and ran `labels.tile` and two `Intl` formats per node
   // again — the cost DSP-22 had just taken out of the tiles.
   //
-  // The share is of what is DRAWN, so it always reads as "of this picture".
+  // The share is of what is DRAWN, so it always reads as "of this picture" — a group's
+  // and a tile's inside it alike.
   const total = useMemo(() => nodes.reduce((acc, n) => acc + n.size, 0), [nodes]);
   const format = useCallback(
     (v: number): ReactNode =>
@@ -664,10 +967,17 @@ export function Treemap({
     };
     // One decimal under 10 %, as PieChart: a tile of 0.4 % named "0%" says it is not there.
     const shareText = (share: number) => (share < 0.1 ? percentFormats.fine : percentFormats.whole).format(share);
+    const groupName = new Map(order.filter((n) => n.children).map((n) => [n.id, n.name]));
     return new Map(
-      nodes.map((n) => [n.id, labels.tile(n.name, valueText(n.size), shareText(total > 0 ? n.size / total : 0))]),
+      order.map((n) => {
+        const say = n.children ? labels.group : labels.tile;
+        const own = say(n.name, valueText(n.size), shareText(total > 0 ? n.size / total : 0));
+        // The innermost group first: "Rent: …, in Housing, in Fixed costs".
+        const named = n.groups.reduceRight((acc, g) => labels.inGroup(acc, groupName.get(g) ?? g), own);
+        return [n.id, named] as const;
+      }),
     );
-  }, [nodes, labels, valueFormatter, numberFormat, percentFormats, total]);
+  }, [order, labels, valueFormatter, numberFormat, percentFormats, total]);
   const keys = useMemo<TileKeys>(
     () => ({ name: (id) => names.get(id), stop: stopId, onFocus: setStop, register, move }),
     [names, stopId, register, move],
@@ -678,8 +988,16 @@ export function Treemap({
   );
   const Content = redactNames ? RedactedTooltipContent : ChartTooltipContent;
   const cell = useMemo(
-    () => <TreemapCell onNodeClick={onNodeClick} redactNames={redactNames} nodeNote={nodeNote} dir={dir} />,
-    [onNodeClick, redactNames, nodeNote, dir],
+    () => (
+      <TreemapCell
+        onNodeClick={onNodeClick}
+        onGroupClick={onGroupClick}
+        redactNames={redactNames}
+        nodeNote={nodeNote}
+        dir={dir}
+      />
+    ),
+    [onNodeClick, onGroupClick, redactNames, nodeNote, dir],
   );
   const tooltip = useMemo(
     () => <ChartTooltip content={<Content hideLabel valueFormatter={format} />} />,

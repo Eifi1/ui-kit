@@ -163,6 +163,8 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "globalSearch.shortcut": [["{{keys}}"]],
   "pieChart.slice": [["{{label}}", "{{value}}", "{{percent}}"]],
   "treemap.tile": [["{{name}}", "{{value}}", "{{share}}"]],
+  "treemap.group": [["{{name}}", "{{value}}", "{{share}}"]],
+  "treemap.inGroup": [["{{name}}", "{{group}}"]],
   "sparkline.rising": [["{{first}}", "{{last}}"]],
   "sparkline.falling": [["{{first}}", "{{last}}"]],
   "sparkline.flat": [["{{value}}"]],
