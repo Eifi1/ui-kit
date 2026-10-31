@@ -397,7 +397,7 @@ describe("paging (D12)", () => {
 });
 
 describe("the generation (D15)", () => {
-  it("drops the answer of a round in flight at forget(): rows and meta stay empty", async () => {
+  it("drops the answer of a round in flight at forget(): rows stay empty, meta holds only the epoch", async () => {
     const { db, engine, transport } = setup();
     await engine.write("handover", "protocols", "p1", "upsert", { a: 1 });
     transport.answer(async (body) => {
@@ -406,7 +406,7 @@ describe("the generation (D15)", () => {
     });
     expect(await engine.syncNow()).toMatchObject({ outcome: "dropped" });
     expect(await db.rows.count()).toBe(0);
-    expect(await db.meta.count()).toBe(0);
+    expect((await db.meta.toArray()).map((m) => m.key)).toEqual(["epoch"]);
     // The queue waits for its owner, back to the status it had.
     expect(await db.outbox.toArray()).toEqual([expect.objectContaining({ id: "p1", status: "pending" })]);
   });
@@ -439,12 +439,13 @@ describe("the generation (D15)", () => {
     await db.table("photos").put({ id: "ph1" });
     await db.meta.put({ key: "lastKnowledge:handover", value: 5 });
     await engine.forget({ keepQueue: true });
+    // `meta` keeps one entry: the epoch the clear wrote (0.52, for the other tabs).
     expect([
       await db.rows.count(),
       await db.meta.count(),
       await db.outbox.count(),
       await db.table("photos").count(),
-    ]).toEqual([0, 0, 1, 1]);
+    ]).toEqual([0, 1, 1, 1]);
     await engine.forget({ keepQueue: false });
     expect([await db.outbox.count(), await db.table("photos").count()]).toEqual([0, 0]);
     expect(engine.getState().counts.pending).toBe(0);
@@ -470,11 +471,18 @@ describe("steps", () => {
 });
 
 describe("the worker: start, poll, backoff (D13)", () => {
-  it("does not start on a computer marked shared", async () => {
+  it("does not start on a computer marked shared: no poll, no listener, no round", () => {
+    // Decided inside start(), synchronously: a started engine sets its poll there, and answers
+    // the `online` event at once (its state, then its listeners). No wait, so nothing to
+    // outlast under load (refactor audit 2026-10-30, TST-3).
+    vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
     const { engine, transport } = setup({ sharedComputer: () => true });
+    const heard = vi.fn();
+    engine.subscribe(heard);
     engine.start();
+    expect(vi.getTimerCount()).toBe(0);
     window.dispatchEvent(new Event("online"));
-    await new Promise((r) => setTimeout(r, 20));
+    expect(heard).not.toHaveBeenCalled();
     expect(transport.requests).toHaveLength(0);
   });
 
@@ -519,19 +527,26 @@ describe("the worker: start, poll, backoff (D13)", () => {
     first.engine.stop();
     expect(seen?.aborted).toBe(true);
     const sent = vi.fn(async (body: SyncRequestBody) => echoOf(body, 2));
+    // A round asks `paused()` first, synchronously as it begins: the decision point of the
+    // wait (TST-3). Not asked = parked behind the first round.
+    const paused = vi.fn(() => false);
     const second = createSyncEngine({
       db: first.db,
       scopes: () => ["handover"],
       send: sent,
       sharedComputer: () => false,
+      paused,
     });
     open.push({ db: first.db, engine: second });
     second.start();
-    await new Promise((r) => setTimeout(r, 20));
-    expect(sent).not.toHaveBeenCalled(); // the first round still owns the queue
+    // The second engine is live: its start-time counts read the device (the `sending` change).
+    await until(second, (s) => s.counts.pending === 1);
+    expect(paused).not.toHaveBeenCalled(); // the first round still owns the queue
+    expect(sent).not.toHaveBeenCalled();
     expect((await first.db.outbox.toArray()).map((c) => c.status)).toEqual(["sending"]);
     release();
     await until(second, (s) => s.lastSyncedAt !== null);
+    expect(paused).toHaveBeenCalledTimes(1);
     expect(sent).toHaveBeenCalledTimes(1);
     // The first round's answer was dropped and its change laid back; the second sent it.
     expect(sent.mock.calls[0][0].changes.map((c) => c.id)).toEqual(["p1"]);
@@ -556,19 +571,30 @@ describe("the worker: start, poll, backoff (D13)", () => {
       ...echoOf(body, 99),
       changes: [{ entity: "protocols", id: "of-company-b", op: "upsert" as const, pk: 1, data: {} }],
     }));
+    const paused = vi.fn(() => false);
     const second = createSyncEngine({
       db: first.db,
       scopes: () => ["handover"],
       send: sent,
       sharedComputer: () => false,
+      paused,
     });
     open.push({ db: first.db, engine: second });
-    second.start();
-    await new Promise((r) => setTimeout(r, 20));
+    second.start(); // parks its round behind the first one's, synchronously
     second.stop(); // the switch to company B
     release();
-    await until(second, (s) => s.phase === "idle");
-    await new Promise((r) => setTimeout(r, 20));
+    // The decision point (TST-3): an engine parked behind A2's round, so its own round
+    // begins only once A2's has ended; paused, it then ends at once and writes nothing.
+    const after = createSyncEngine({
+      db: first.db,
+      scopes: () => ["handover"],
+      send: sent,
+      sharedComputer: () => false,
+      paused: () => true,
+    });
+    open.push({ db: first.db, engine: after });
+    expect(await after.syncNow()).toMatchObject({ outcome: "paused" });
+    expect(paused).not.toHaveBeenCalled(); // A2's round never began: dropped before it asked
     expect(sent).not.toHaveBeenCalled();
     expect(await first.db.rows.get(["protocols", "of-company-b"])).toBeUndefined();
     expect((await first.db.meta.get("lastKnowledge:handover"))?.value).toBe(7);
