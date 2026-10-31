@@ -38,7 +38,7 @@
 // of every drawn series — never by stride, which aliases a fast tone into a slow wave.
 // A zoom thins the window on show, so it draws more detail, not the same rows larger.
 // The rule is `series-chart-thin.ts`.
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode, RefObject } from "react";
 import {
   Area,
@@ -57,6 +57,8 @@ import {
   type BarShapeProps,
 } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "./chart";
+import { useFigureDescription } from "./chart-figure";
+import { rovingTarget } from "../lib/direction";
 import {
   DEFAULT_Y_AXIS,
   axisExtent,
@@ -906,8 +908,7 @@ function MarkerLabel({ viewBox, value }: { viewBox?: { x?: number; y?: number; w
  * The stops take NO pointer events, so the drag-to-zoom layer, the tooltip and the
  * pointer's own clicks underneath behave exactly as they did. Focus is shown by the
  * slot tinted and, for a bar, its own outline (`focusedBarShape`) — and by the tooltip,
- * moved to the stop through `defaultIndex`, which recharts honours until a pointer has
- * hovered the chart.
+ * which recharts' own pointer is stood on the stop for (`pointAt`).
  */
 function PointKeys({
   stops,
@@ -929,32 +930,22 @@ function PointKeys({
   const refs = useRef<(SVGRectElement | null)[]>([]);
   if (!plot || !scale || plot.width <= 0 || plot.height <= 0) return null;
 
-  const move = (at: number) => {
-    const next = Math.max(0, Math.min(stops.length - 1, at));
-    refs.current[next]?.focus();
-  };
   const onKeyDown = (at: number) => (event: KeyboardEvent<SVGRectElement>) => {
     const stop = stops[at];
     // ↑/↓ stay in the slot: the next or previous bar of the same period. The stops are
-    // in slot order, so a slot's bars are neighbours.
+    // in slot order, so a slot's bars are neighbours. ←/→, Home and End as Treemap's tiles
+    // take them (0.52 code review, deep, charts, finding 14): → is the next stop in any
+    // page, since the plot runs left to right in an RTL one too (see `ChartContainer`).
     const inSlot = (step: 1 | -1) => (stops[at + step]?.index === stop.index ? at + step : at);
     const target =
-      event.key === "ArrowRight"
-        ? at + 1
-        : event.key === "ArrowLeft"
-          ? at - 1
-          : event.key === "ArrowDown"
-            ? inSlot(1)
-            : event.key === "ArrowUp"
-              ? inSlot(-1)
-              : event.key === "Home"
-                ? 0
-                : event.key === "End"
-                  ? stops.length - 1
-                  : undefined;
+      event.key === "ArrowDown"
+        ? inSlot(1)
+        : event.key === "ArrowUp"
+          ? inSlot(-1)
+          : rovingTarget(event.key, "ltr", at, stops.length, false);
     if (target !== undefined) {
       event.preventDefault();
-      move(target);
+      refs.current[target]?.focus();
     } else if (onPick && (event.key === "Enter" || event.key === " ")) {
       event.preventDefault();
       onPick(stop);
@@ -963,6 +954,7 @@ function PointKeys({
 
   const left = plot.x;
   const right = plot.x + plot.width;
+  const middle = plot.y + plot.height / 2;
   // Every target an arrow, Home or End can name from the roving stop — see ALL_STOPS_UP_TO.
   const drawn =
     stops.length <= ALL_STOPS_UP_TO ? undefined : new Set([0, current - 1, current, current + 1, stops.length - 1]);
@@ -998,13 +990,50 @@ function PointKeys({
               // A bar outlines ITSELF (see `FOCUSED_BAR`); a slot has nothing else to.
               stop.key === undefined && "focus-visible:stroke-[var(--brand)]",
             )}
-            onFocus={() => onFocusStop(at)}
-            onBlur={onBlurStops}
+            onFocus={(event) => {
+              onFocusStop(at);
+              pointAt(event.currentTarget, (x0 + x1) / 2, middle);
+            }}
+            onBlur={(event) => {
+              onBlurStops();
+              // On to another stop: that one stands the pointer on itself. (`refs` holds a
+              // null for every stop not drawn, so a blur to nowhere is no stop.)
+              const next = event.relatedTarget as SVGRectElement | null;
+              if (!next || !refs.current.includes(next)) {
+                pointAt(event.currentTarget, left - 1, middle);
+              }
+            }}
             onKeyDown={onKeyDown(at)}
           />
         );
       })}
     </g>
+  );
+}
+
+/**
+ * Stands recharts' pointer at (`x`, `y`) in the chart's own px, as a mouse moved there
+ * would — what the keyboard's stops show their tooltip by (0.52 code review, deep, charts,
+ * finding 4). Their `defaultIndex` alone moved it only until a pointer had hovered the
+ * chart: recharts reads it no more once a hover has an index, and a mouse that has left
+ * keeps its index. After one hover the arrows moved the tint, and the tooltip, the one
+ * place the value is drawn, stayed where the mouse had left it. recharts' own keyboard
+ * layer, which these stops replaced (DSP-5), drove the tooltip through its own state.
+ *
+ * A point off the plot (`x` left of it) takes the pointer off the chart: recharts hides
+ * its tooltip there, through the same frame-throttled path a pending move takes, so a
+ * blur right after a focus is never overtaken by it. recharts reads the pointer against
+ * its wrapper's box, scaled as the box is drawn (`getRelativeCoordinate`); the point is
+ * put back into that box.
+ */
+function pointAt(within: Element, x: number, y: number) {
+  const wrapper = within.closest<HTMLElement>(".recharts-wrapper");
+  if (!wrapper) return;
+  const box = wrapper.getBoundingClientRect();
+  const scaleX = wrapper.offsetWidth > 0 ? box.width / wrapper.offsetWidth : 1;
+  const scaleY = wrapper.offsetHeight > 0 ? box.height / wrapper.offsetHeight : 1;
+  wrapper.dispatchEvent(
+    new MouseEvent("mousemove", { bubbles: true, clientX: box.left + x * scaleX, clientY: box.top + y * scaleY }),
   );
 }
 
@@ -1071,7 +1100,6 @@ function SeriesPlot({
   const phone = useBreakpoint("max-sm", false);
   const placement = resolveTooltipPlacement(tooltip?.placement, useKitChartTooltipPlacement(), phone);
   const [readout, setReadout] = useState<HTMLDivElement | null>(null);
-  const describedBy = useId();
 
   // The chart's own width, for the automatic axis budget. Its box, not the plot's: the
   // box does not change when an axis is hidden, so the rule cannot oscillate. Nothing
@@ -1140,34 +1168,26 @@ function SeriesPlot({
   // is `hidden`: read through `aria-describedby`, never twice in browse mode.
   const drawable = model.source.length > 0 && series.length > 0;
   const spoken = [description, drawable && zoom?.layer ? labels.zoomHint : undefined].filter(Boolean).join(" ");
-  const figure = {
-    role: "figure",
-    "aria-label": ariaLabel,
-    "aria-describedby": spoken ? describedBy : undefined,
-  } as const;
-  const describe = (root: ReactNode) => (
-    <>
-      {root}
-      {spoken && (
-        <span id={describedBy} hidden>
-          {spoken}
-        </span>
-      )}
-    </>
-  );
+  // Inside the root, not after it as a sibling: a StaticSeriesChart then stopped being its
+  // parent's last child, and a stack's `space-y-*` / `divide-y` gave it a margin or a rule
+  // it never had (0.52 code review, deep, charts, findings 7 and 14 — Treemap's copy of this
+  // went the same way). The plot's root is `ChartContainer`, which takes the sentence itself.
+  const about = useFigureDescription(spoken || undefined);
+  const figure = { role: "figure", "aria-label": ariaLabel, "aria-describedby": about.describedBy } as const;
 
   // The empty state takes the chart's own height and is centred in it: a chart that
   // shrank to its "nothing to draw" sentence moved everything under it up the page
   // the moment a legend entry was switched off.
   if (!drawable) {
-    return describe(
+    return (
       <div
         {...figure}
         className={cn("flex w-full items-center justify-center px-2 text-center", heightClass)}
         style={heightStyle}
       >
         {empty !== undefined ? empty : <p className="text-xs text-muted">{labels.empty}</p>}
-      </div>,
+        {about.node}
+      </div>
     );
   }
 
@@ -1437,7 +1457,7 @@ function SeriesPlot({
   const inRow = placement !== "cursor";
   const chart = (
     <ChartContainer
-      {...(inRow ? {} : figure)}
+      {...(inRow ? {} : { role: "figure", "aria-label": ariaLabel, description: spoken || undefined })}
       ref={setBox}
       data-axis-budget={budgeted.length ? budgetKey.replace(/\n/g, " ") : undefined}
       // "drawn/all" while `maxRows` thins: what a reader of the DOM (a test, a bug
@@ -1767,7 +1787,7 @@ function SeriesPlot({
       </ComposedChart>
     </ChartContainer>
   );
-  if (!inRow) return describe(chart);
+  if (!inRow) return chart;
   // The row's own box, reserved from the first render: its idle state has the cells the
   // active one will, so the first tap fills it in rather than pushing the plot down.
   const row = (
@@ -1781,12 +1801,13 @@ function SeriesPlot({
       )}
     />
   );
-  return describe(
+  return (
     <div {...figure} className={cn("flex w-full flex-col", heightClass)} style={heightStyle}>
       {placement === "above" && row}
       {chart}
       {placement === "below" && row}
-    </div>,
+      {about.node}
+    </div>
   );
 }
 

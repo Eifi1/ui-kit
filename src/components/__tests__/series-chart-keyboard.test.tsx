@@ -169,6 +169,33 @@ describe("keyboard stops of a clickable chart", () => {
     expect(document.activeElement).toBe(all[0]);
   });
 
+  // The plot is not mirrored in RTL (see `ChartContainer`), so → is the next stop there
+  // too — as on Treemap's tiles, whose arrows read the page's direction until the 0.52
+  // code review (deep, charts, findings 1 and 14). One key map for both now.
+  it("steps along the plot in a right-to-left page too", () => {
+    render(
+      <div dir="rtl">
+        <SeriesChart
+          rows={MONTHS}
+          x={{ type: "category", key: "period" }}
+          series={[
+            { key: "income", label: "Income", type: "bar" },
+            { key: "expense", label: "Expense", type: "bar" },
+          ]}
+          onPointClick={vi.fn()}
+        />
+      </div>,
+    );
+    const all = stops();
+    act(() => all[0].focus());
+    fireEvent.keyDown(all[0], { key: "ArrowRight" });
+    expect(document.activeElement).toBe(all[1]);
+    fireEvent.keyDown(all[1], { key: "ArrowLeft" });
+    expect(document.activeElement).toBe(all[0]);
+    fireEvent.keyDown(all[0], { key: "End" });
+    expect(document.activeElement).toBe(all[4]);
+  });
+
   it("keeps ↑/↓ inside one slot's bars", () => {
     money({ onPointClick: vi.fn() });
     const all = stops();

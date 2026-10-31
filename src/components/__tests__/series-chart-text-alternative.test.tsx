@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import { cloneElement } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { SeriesChart, StaticSeriesChart } from "../series-chart";
 import { UiKitProvider } from "../../i18n/kit-labels";
 
@@ -84,6 +84,34 @@ describe("SeriesChart as a figure", () => {
     );
   });
 
+  // 0.52 code review (deep, charts), finding 7: the description was a `hidden` sibling
+  // AFTER the figure, so a StaticSeriesChart stopped being its parent's last child and a
+  // stack's `space-y-*` / `divide-y` put a margin or a rule under it that it never had.
+  // (SeriesChart's zoom wraps both in a box of its own.)
+  it.each([
+    ["the plot", {}],
+    ["the plot and its readout row", { tooltip: { placement: "below" as const } }],
+    ["the empty state", { rows: [] }],
+  ])("holds its description inside %s, and stays its parent's last child", (_, props) => {
+    const { container } = render(
+      <div>
+        <p>Above</p>
+        <StaticSeriesChart
+          rows={MONTHS}
+          x={{ type: "category", key: "period" }}
+          series={BARS}
+          aria-label="Income and expense"
+          description="Income ahead every month."
+          {...props}
+        />
+      </div>,
+    );
+    const figure = screen.getByRole("figure", { name: "Income and expense" });
+    expect(container.firstElementChild!.lastElementChild).toBe(figure);
+    expect(figure).toHaveAccessibleDescription(/^Income ahead every month\./);
+    expect(figure.querySelector(`[id="${figure.getAttribute("aria-describedby")}"]`)).not.toBeNull();
+  });
+
   it("names the empty state too, so the reader knows which chart has nothing", () => {
     render(<SeriesChart rows={[]} series={BARS} aria-label="Income and expense" />);
     expect(screen.getByRole("figure", { name: "Income and expense" })).toHaveTextContent("No data");
@@ -135,6 +163,31 @@ describe("SeriesChart's read-only stops (no `onPointClick`)", () => {
     const enter = fireEvent.keyDown(all[4], { key: "Enter" });
     // Not claimed: a key with nothing to do is left to the page.
     expect(enter).toBe(true);
+  });
+
+  // 0.52 code review (deep, charts), finding 4: these stops replaced recharts' keyboard
+  // layer, whose arrows moved the tooltip through recharts' own state. A stop moves it
+  // through `defaultIndex`, which recharts stops reading once a pointer has hovered the
+  // chart: after one hover the arrows moved the tint, and the tooltip — the one place the
+  // value is drawn — stayed where the pointer had left it.
+  it("moves the tooltip to the focused stop after a pointer has been over the chart", async () => {
+    const { container } = draw();
+    const wrapper = container.querySelector<HTMLElement>(".recharts-wrapper")!;
+    // jsdom lays nothing out: the wrapper's box is the chart's.
+    wrapper.getBoundingClientRect = () =>
+      ({ left: 0, top: 0, width: 800, height: 300, right: 800, bottom: 300, x: 0, y: 0 }) as DOMRect;
+    const tooltip = () => container.querySelector(".recharts-tooltip-wrapper")?.textContent ?? "";
+    const jan = stops()[0];
+    const janX = Number(jan.getAttribute("x")) + Number(jan.getAttribute("width")) / 2;
+    fireEvent.mouseMove(wrapper, { clientX: janX, clientY: 150 });
+    await waitFor(() => expect(tooltip()).toContain("€300"));
+    fireEvent.mouseLeave(wrapper);
+    await waitFor(() => expect(tooltip()).not.toContain("€300"));
+    act(() => stops()[3].focus());
+    await waitFor(() => expect(tooltip()).toContain("€800"));
+    expect(tooltip()).toContain("Mar");
+    act(() => (document.activeElement as HTMLElement).blur());
+    await waitFor(() => expect(tooltip()).not.toContain("€800"));
   });
 
   it("names a line chart's slots with every value in them", () => {
