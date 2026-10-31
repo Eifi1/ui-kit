@@ -1,8 +1,9 @@
 /**
  * Whether a pathname is one a `PathPattern` names — the rule `useLastVisitedPage`'s
- * `exclude` reads (landing/routing.tsx), here without the router: the feedback parts
- * need it too (refactor audit 2026-10-30, FLW-7), and `landing/routing` imports
- * react-router, which `/feedback` must not drag in.
+ * `exclude` reads (landing/routing.tsx) and the feedback guard's one-shot routes
+ * (refactor audit 2026-10-30, FLW-7), here without the router: `landing/routing` imports
+ * react-router, which `/feedback` must not drag in. The one copy: routing kept a private
+ * one, and the two had drifted within the round (0.52 code review, this file).
  *
  * A string is that path and everything under it (`/join` is `/join` and `/join/abc`, not
  * `/joined`; `/` is only `/`); a RegExp is tested on the pathname (a `g` flag dropped, so
@@ -12,7 +13,8 @@
  * code review, feedback/feedback-page-link.ts): the FLW-7 guard compared case-sensitively,
  * and `/Join?token=` went out as a link the router still rendered as `/join`. A RegExp
  * gets the `i` flag for the same reason. Matching more than a case-sensitive route would
- * only turns a link into text, the guard's safe side.
+ * only turns a link into text, or leaves a page unrecorded as a resume target: both
+ * callers' safe side.
  *
  * @internal Package-private — not re-exported from the barrel.
  */
