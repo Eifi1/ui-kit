@@ -349,9 +349,9 @@ interface TileContext {
 interface TileKeys {
   /** A tile's or a group's accessible name (`labels.tile`, `labels.group`). */
   name: (path: string) => string | undefined;
-  /** The path holding the map's one tab stop. */
-  stop: string | undefined;
   onFocus: (path: string) => void;
+  /** A node's element as it mounts (and `null` as it goes): the map sets its `tabindex` and
+   *  gives it back the focus its previous element held (see the map's keyboard). */
   register: (path: string, element: SVGGElement | null) => void;
   /** Moves focus for an arrow, Home or End pressed on node `path`; `false` for any other key. */
   move: (path: string, event: KeyboardEvent<SVGGElement>) => boolean;
@@ -582,7 +582,7 @@ function Tile({
     : undefined;
   return (
     <g
-      ref={roving ? (element) => roving.register(path!, element) : undefined}
+      ref={roving ? refFor(roving.register, path!) : undefined}
       onClick={activate}
       onKeyDown={onKeyDown}
       onFocus={roving ? () => roving.onFocus(path!) : undefined}
@@ -594,7 +594,8 @@ function Tile({
       // session replay or a redaction keyed on `[data-private]` (0.52, code review of
       // feat/0.52.0 — DSP-5 named every tile, and this tagged only the buttons).
       role={activate ? "button" : roving ? "img" : undefined}
-      tabIndex={roving ? (roving.stop === path ? 0 : -1) : activate ? 0 : undefined}
+      // In a map, -1 as drawn: the map moves its one stop on the elements in place.
+      tabIndex={roving ? -1 : activate ? 0 : undefined}
       aria-label={focusable ? (roving?.name(path!) ?? name) : undefined}
       data-private={focusable && redactNames ? "" : undefined}
       data-group={group ? "" : undefined}
@@ -858,6 +859,24 @@ function layoutFor(nodes: readonly MapNode[], width: number, height: number, sca
   return placed;
 }
 
+/** One ref callback per map and path, the same on every render: a new function each time
+ *  makes React detach and attach the element on every render of the tile. */
+const REFS = new WeakMap<TileKeys["register"], Map<string, (element: SVGGElement | null) => void>>();
+
+function refFor(register: TileKeys["register"], path: string) {
+  let byPath = REFS.get(register);
+  if (!byPath) {
+    byPath = new Map();
+    REFS.set(register, byPath);
+  }
+  let ref = byPath.get(path);
+  if (!ref) {
+    ref = (element) => register(path, element);
+    byPath.set(path, ref);
+  }
+  return ref;
+}
+
 /** A node's path: its groups' ids and its own, as JSON so that no id can fake a separator. */
 const pathOf = (groups: readonly string[], id: string) => JSON.stringify([...groups, id]);
 
@@ -949,35 +968,81 @@ export function Treemap({
   // The keyboard (DSP-5): one tab stop for the map, moved between tiles in `order` as
   // PieChart's is between slices. The tiles are drawn by recharts, so they register
   // their element here rather than being looked up.
-  const [stop, setStop] = useState<string | undefined>(undefined);
+  //
+  // The stop is moved on the elements IN PLACE, as PieChart moves its own, and never
+  // reaches the tiles' context: kept there, every arrow-key step was a new context and
+  // every tile drew again — layout, fitted labels, notes (0.52 code review of treemap.tsx,
+  // finding 6). And recharts keys a node by where IT lays it out (`x-y-name`), so new data
+  // or a resize remounts the focused node: its element leaves holding the focus, which
+  // fell to <body> (finding 7). The path it held is kept, and its new element takes the
+  // focus back as it mounts — or, if the node is gone, the stop does.
   const tiles = useRef(new Map<string, SVGGElement>());
-  const stopPath = order.some((n) => n.path === stop) ? stop : order[0]?.path;
-  const register = useCallback((path: string, element: SVGGElement | null) => {
-    if (element) tiles.current.set(path, element);
-    else tiles.current.delete(path);
+  const orderRef = useRef(order);
+  const stopRef = useRef<string | undefined>(undefined);
+  const restoreRef = useRef<string | null>(null);
+  /** The path holding the stop: the last one focused while it is drawn, else the first. */
+  const stopOf = useCallback(() => {
+    const drawn = orderRef.current;
+    return drawn.some((n) => n.path === stopRef.current) ? stopRef.current : drawn[0]?.path;
   }, []);
-  const move = useCallback(
-    (path: string, event: KeyboardEvent<SVGGElement>) => {
-      const at = order.findIndex((n) => n.path === path);
-      const step = horizontalStep(event.key, event.currentTarget);
-      const to = step
-        ? at + step
-        : event.key === "ArrowDown"
-          ? at + 1
-          : event.key === "ArrowUp"
-            ? at - 1
-            : event.key === "Home"
-              ? 0
-              : event.key === "End"
-                ? order.length - 1
-                : undefined;
-      if (at < 0 || to === undefined) return false;
-      const target = order[Math.max(0, Math.min(order.length - 1, to))];
-      if (target) tiles.current.get(target.path)?.focus();
-      return true;
+  const applyStop = useCallback(() => {
+    const at = stopOf();
+    tiles.current.forEach((el, path) => el.setAttribute("tabindex", path === at ? "0" : "-1"));
+    return at;
+  }, [stopOf]);
+  const register = useCallback(
+    (path: string, element: SVGGElement | null) => {
+      if (element) {
+        tiles.current.set(path, element);
+        element.setAttribute("tabindex", path === stopOf() ? "0" : "-1");
+        if (restoreRef.current === path) {
+          restoreRef.current = null;
+          element.focus();
+        }
+        return;
+      }
+      // Detached before it is removed: still the focused element if it held the focus.
+      if (tiles.current.get(path) === document.activeElement) restoreRef.current = path;
+      tiles.current.delete(path);
     },
-    [order],
+    [stopOf],
   );
+  const onFocus = useCallback(
+    (path: string) => {
+      stopRef.current = path;
+      applyStop();
+    },
+    [applyStop],
+  );
+  // New data: the order the stop is read against, the stop set again on what is drawn now,
+  // and the focus of a node that is gone handed to the stop.
+  useLayoutEffect(() => {
+    orderRef.current = order;
+    const at = applyStop();
+    if (restoreRef.current === null) return;
+    restoreRef.current = null;
+    if (at) tiles.current.get(at)?.focus();
+  }, [order, applyStop]);
+  const move = useCallback((path: string, event: KeyboardEvent<SVGGElement>) => {
+    const drawn = orderRef.current;
+    const at = drawn.findIndex((n) => n.path === path);
+    const step = horizontalStep(event.key, event.currentTarget);
+    const to = step
+      ? at + step
+      : event.key === "ArrowDown"
+        ? at + 1
+        : event.key === "ArrowUp"
+          ? at - 1
+          : event.key === "Home"
+            ? 0
+            : event.key === "End"
+              ? drawn.length - 1
+              : undefined;
+    if (at < 0 || to === undefined) return false;
+    const target = drawn[Math.max(0, Math.min(drawn.length - 1, to))];
+    if (target) tiles.current.get(target.path)?.focus();
+    return true;
+  }, []);
 
   // Everything below is memoised over what it reads (0.52, code review of feat/0.52.0). A
   // tile re-renders when its context or its recharts element changes, and recharts' map is
@@ -1029,8 +1094,8 @@ export function Treemap({
     );
   }, [order, labels, valueFormatter, numberFormat, percentFormats, total]);
   const keys = useMemo<TileKeys>(
-    () => ({ name: (path) => names.get(path), stop: stopPath, onFocus: setStop, register, move }),
-    [names, stopPath, register, move],
+    () => ({ name: (path) => names.get(path), onFocus, register, move }),
+    [names, onFocus, register, move],
   );
   const context = useMemo<TileContext>(
     () => ({ tokens: tokenHex, edgeFor, edges: edgesInForce, keys, layout, hover: anchor.set }),
