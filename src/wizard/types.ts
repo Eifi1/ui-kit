@@ -61,7 +61,11 @@ export interface WizardStepConfig {
  */
 export type WizardUrlSync = boolean | { param?: string };
 
-export interface UseWizardOptions<TData extends Record<string, unknown>> {
+// `TData extends object`, not `Record<string, unknown>` (0.52, API-2, refactor audit
+// 2026-10-30): an `interface` has no index signature and failed the old constraint, so
+// kastlan gave 13 wizard data interfaces one — which made every key legal, a misspelt one
+// in `updateData` included. The wizard reads only `keyof TData`.
+export interface UseWizardOptions<TData extends object> {
   steps: WizardStepConfig[];
   initialData?: Partial<TData>;
   onComplete?: (data: TData) => void | Promise<void>;
@@ -125,7 +129,7 @@ export interface WizardFinishResult {
   ok: boolean;
   error?: string;
 }
-export interface UseWizardReturn<TData extends Record<string, unknown>> {
+export interface UseWizardReturn<TData extends object> {
   // Navigation
   currentStepIndex: number;
   currentStep: WizardStepConfig;

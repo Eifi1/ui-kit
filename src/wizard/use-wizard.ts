@@ -142,9 +142,7 @@ function createReducer<TData>(stepCount: number) {
   };
 }
 
-export function useWizard<TData extends Record<string, unknown>>(
-  options: UseWizardOptions<TData>,
-): UseWizardReturn<TData> {
+export function useWizard<TData extends object>(options: UseWizardOptions<TData>): UseWizardReturn<TData> {
   const {
     steps,
     initialData,

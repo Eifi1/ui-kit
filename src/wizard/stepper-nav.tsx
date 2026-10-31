@@ -36,7 +36,7 @@ import { useTourGateRelease } from "../tour/tour-gates";
  * looks and what wraps it, because that is presentation and usually depends on
  * state the app holds (a "replace everything" toggle, a write lock — `finishCommit`).
  */
-export function StepperNav<TData extends Record<string, unknown>>({
+export function StepperNav<TData extends object>({
   wizard,
   children,
   title,

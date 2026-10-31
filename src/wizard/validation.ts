@@ -18,9 +18,10 @@ export interface RequiredFieldSpec<T> {
  * rate in range) pass a `valid` predicate. The message is caller-supplied so
  * each page keeps its own namespace (e.g. `t("common:validation.required")`).
  */
-export function requiredFieldsValidator<T extends Record<string, unknown>>(
+export function requiredFieldsValidator<T extends object>(
   data: T,
-  fields: RequiredFieldSpec<T>[],
+  // `readonly` (0.52, API-7): a field list held `as const` passes without a copy.
+  fields: readonly RequiredFieldSpec<T>[],
   defaultMessage: string,
 ): ValidateResult {
   const errors: FieldErrors = {};
