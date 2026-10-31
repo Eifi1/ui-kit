@@ -812,7 +812,9 @@ function mapNodes(
   maxTiles: number | undefined,
   shaded: (fill: string, shade: number | undefined) => string,
 ): MapNode[] {
-  let left = maxTiles ?? Infinity;
+  // Whole tiles, as `slice(0, maxTiles)` counted them up to 0.51: 2.5 draws 2 and NaN none
+  // (0.52 code review of treemap.tsx, finding 4 — a bare counter drew 3, and every tile).
+  let left = maxTiles === undefined ? Infinity : Number.isNaN(maxTiles) ? 0 : Math.floor(maxTiles);
   const walk = (list: readonly TreemapNode[], groups: readonly string[], paint: Paint | undefined): MapNode[] =>
     list.flatMap((d, idx): MapNode[] => {
       const fill = d.fill ?? paint?.fill ?? ramp[idx % ramp.length]!;
