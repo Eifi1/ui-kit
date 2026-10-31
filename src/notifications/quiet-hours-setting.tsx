@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { ComponentPropsWithRef, KeyboardEvent, ReactNode } from "react";
 
 import type { LabelOverride } from "../i18n/kit-labels";
@@ -49,9 +49,10 @@ export interface QuietHoursSettingProps extends Omit<ComponentPropsWithRef<"div"
   held?: boolean;
   /**
    * Save one change — `PATCH /notifications/settings`: a time, or `null` when cleared.
-   * Never a zone. Called when a time is ENTERED — the field left, or Enter — never per
-   * keystroke, and one call per field at a time (0.52). The field shows the new value
-   * while the call runs and goes back if it rejects.
+   * Never a zone. Called when a time is ENTERED — the field left, or Enter, or the card
+   * unmounted with a time still typed — never per keystroke, and one call per field at a
+   * time (0.52). The field shows the new value while the call runs and goes back if it
+   * rejects.
    */
   onChange: (patch: NotificationSettingsPatch) => Promise<unknown> | void;
   /** The zone named while `zone` names none: the one the server
@@ -78,9 +79,9 @@ type QuietField = "quiet_hours_start" | "quiet_hours_end";
  * only** — the zone of the device last used, else `Europe/Zurich`. The card names it
  * read-only and never sends one; there is no picker and no "Use it".
  *
- * - **Two times**, each saved when it is entered — on leaving the field or on Enter — and
- *   a cleared time sends `null`. While only one is set the card says so: the window fails
- *   open until both are.
+ * - **Two times**, each saved when it is entered — on leaving the field or on Enter, or
+ *   when the card goes while it is still typed — and a cleared time sends `null`. While
+ *   only one is set the card says so: the window fails open until both are.
  * - **One request per field at a time** (0.52): a time entered while that field's save
  *   runs waits for it, and only the latest waiting one is sent. Each input event used to
  *   PATCH — typing "30" over 22:00's minutes sent 22:03 and 22:30, and whichever answer
@@ -147,6 +148,16 @@ export function QuietHoursSetting({
     if (!ok) setFailure(describeFailure(describeError?.(error), labels.failed));
   };
 
+  /** `draft` entered: the time it names, or `undefined` when that is what the field
+   *  already holds and nothing is to be sent. Queued behind the field's running save. */
+  const save = (field: QuietField, draft: string): string | null | undefined => {
+    const next = draft || null;
+    if (next === saved(field)) return undefined;
+    if (running.current[field]) waiting.current[field] = next;
+    else send(field, next);
+    return next;
+  };
+
   /** The typed time, entered: saved unless it is what the field already holds. */
   const enter = (field: QuietField) => {
     const draft = drafts[field];
@@ -156,12 +167,22 @@ export function QuietHoursSetting({
       delete rest[field];
       return rest;
     });
-    const next = draft || null;
-    if (next === saved(field)) return;
-    overlay.set(field, next);
-    if (running.current[field]) waiting.current[field] = next;
-    else send(field, next);
+    const next = save(field, draft);
+    if (next !== undefined) overlay.set(field, next);
   };
+
+  // Leaving the card is leaving the field. A focused input removed with its card fires no
+  // blur — Escape on the settings sheet, a shortcut that navigates — and the time it showed
+  // as typed was dropped (0.52 code review, quiet-hours-setting.tsx; save-on-blur is FLW-4's
+  // decision). So whatever is still typed is entered as the card goes. A ref to this
+  // render's drafts and saved values, assigned in an effect, never during render.
+  const leave = useRef<() => void>(() => {});
+  useEffect(() => {
+    leave.current = () => {
+      for (const [field, draft] of Object.entries(drafts) as [QuietField, string][]) save(field, draft);
+    };
+  });
+  useEffect(() => () => leave.current(), []);
 
   const type = (field: QuietField, value: string) => setDrafts((current) => ({ ...current, [field]: value }));
   const enterOnEnter = (field: QuietField, event: KeyboardEvent<HTMLInputElement>) => {
