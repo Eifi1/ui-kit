@@ -309,44 +309,22 @@ describe("Treemap with groups: keyboard and screen reader", () => {
   });
 });
 
-describe("TreemapCell as a group's cell", () => {
-  /** A group cell and one child cell, wired as recharts wires them: the child's `root` is
-   *  recharts' object for the group, which is its own parent's `children[index]`. */
-  function group(height: number) {
-    const child = {};
-    const groupNode = { children: [child] };
-    const top = { children: [groupNode] };
-    return render(
-      <svg>
-        <TreemapCell depth={1} x={0} y={0} width={200} height={height} name="Chain" root={top} index={0}>
-          {[child]}
-        </TreemapCell>
-        <TreemapCell
-          depth={2}
-          x={0}
-          y={0}
-          width={200}
-          height={height}
-          name="Shop"
-          fill="#332288"
-          root={groupNode}
-          index={0}
-        />
-      </svg>,
-    );
-  }
-
-  it("draws the band from 61px at Normal, and moves its child below it", () => {
-    const { container } = group(61);
-    const [frame, tile] = [...container.querySelectorAll("svg > g")];
-    expect(frame!.querySelector("text")!.textContent).toBe("Chain");
-    expect(rectOf(tile!)).toEqual({ x: 3, y: 20, width: 194, height: 38 });
-  });
-
-  it("keeps a group under 61px whole for its tiles: no band, the margin only", () => {
-    const { container } = group(60);
-    const [frame, tile] = [...container.querySelectorAll("svg > g")];
-    expect(frame!.querySelector("text")).toBeNull();
-    expect(rectOf(tile!)).toEqual({ x: 3, y: 3, width: 194, height: 54 });
+describe("TreemapCell as a group's cell on its own", () => {
+  // In a caller's own recharts map there is no `Treemap` to lay the group out: the cell
+  // draws its frame and band where recharts put it, and recharts draws the tiles over it
+  // (the room is the map's layout, treemap-layout.test.ts). Before the 0.52 code review a
+  // group's cell made the room itself, through a cache its children's cells read.
+  it("draws the frame, with its band from 61px at Normal", () => {
+    const frame = (height: number) =>
+      render(
+        <svg>
+          <TreemapCell depth={1} x={0} y={0} width={200} height={height} name="Chain">
+            {[{}]}
+          </TreemapCell>
+        </svg>,
+      ).container.querySelector("g")!;
+    expect(frame(61).querySelector("rect")!.getAttribute("fill")).toBe("var(--bg-surface-2)");
+    expect(frame(61).querySelector("text")!.textContent).toBe("Chain");
+    expect(frame(60).querySelector("text")).toBeNull();
   });
 });

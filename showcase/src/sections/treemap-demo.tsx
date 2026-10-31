@@ -417,9 +417,10 @@ function GroupedTreemap() {
       <p className="mt-2 font-mono text-xs text-muted">last clicked: {clicked ?? "—"}</p>
       <p className="mt-2 text-xs text-secondary">
         A node with <code className="font-mono">children</code> is a group: a frame in the page&apos;s own colours with
-        its name in a band along the top, and its tiles laid out inside it by recharts&apos; nested layout. The band is
-        drawn only where the group has the room — 61px tall at Normal, where the tiles under it keep at least 1/φ of its
-        height; a smaller group keeps its whole height for its tiles and is named in theirs. Groups nest.
+        its name in a band along the top, and its tiles laid out inside it, squarified as recharts does. The frame is
+        given its own area on top of its tiles&apos;, so a tile&apos;s area is its share of the picture in whichever
+        group it sits — £100 is drawn the same size in Greenway as in Riverside. The band is drawn only where the group
+        has the room, 61px tall at Normal; a smaller group keeps a 3px margin and is named in its tiles. Groups nest.
       </p>
       <p className="mt-2 text-xs text-secondary">
         A group&apos;s <code className="font-mono">fill</code> is its tiles&apos; default — the chain&apos;s hue; one
