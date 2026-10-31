@@ -1,3 +1,5 @@
+import { isThenable } from "../lib/thenable";
+
 /**
  * A page's mutation in either of the forms the feedback parts take, run once (refactor
  * audit 2026-10-30, FLW-3).
@@ -25,14 +27,6 @@
  * union of the two leaves `async (patch) => …` an implicit `any`).
  */
 export type FeedbackMutationCall<P> = (patch: P, callbacks: { onSuccess: () => void }) => void | Promise<unknown>;
-
-function isThenable(value: unknown): value is PromiseLike<unknown> {
-  return (
-    (typeof value === "object" || typeof value === "function") &&
-    value !== null &&
-    typeof (value as { then?: unknown }).then === "function"
-  );
-}
 
 /** Send `patch` through `call`, and run `landed` once when it has landed. */
 export function runMutation<P>(call: FeedbackMutationCall<P>, patch: P, landed: () => void): void {

@@ -9,7 +9,8 @@ import { TextLink } from "../components/text-link";
 import { Button } from "../components/button";
 import { Input } from "../components/input";
 import { isRateLimited, retryAfterSeconds } from "./auth-errors";
-import { FORM_HEADING_CLASS, INTRO_CLASS, OutcomeMessage, isThenable, useFocusWhen } from "./status-parts";
+import { isThenable } from "../lib/thenable";
+import { FORM_HEADING_CLASS, INTRO_CLASS, OutcomeMessage, useFocusWhen } from "./status-parts";
 import type { AuthHeadingLevel } from "./status-parts";
 import { DEFAULT_FORGOT_PASSWORD_LABELS } from "./forgot-password-form-labels";
 
