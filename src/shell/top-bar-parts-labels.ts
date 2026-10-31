@@ -82,8 +82,6 @@ export interface DevSwitchersLabels {
   overridesOn: string;
   /** The heading of the role group. */
   roleHeading: string;
-  /** @deprecated 0.51 — DevMenu's one flask is named by `menu`; removed in 0.52. */
-  switchPlan: string;
   /** The plan in the flask's name, given the active plan. */
   plan: (value: string) => string;
   /** The heading of the plan group. */
@@ -137,7 +135,6 @@ export const DEFAULT_TOP_BAR_PARTS_LABELS: TopBarPartsLabels = {
     menu: "Dev tools",
     overridesOn: "Overrides on",
     roleHeading: "Dev · role",
-    switchPlan: "Switch plan",
     plan: (value) => `Plan: ${value}`,
     planHeading: "Dev · plan",
     backTo: (role) => `Back to ${role}`,

@@ -1981,7 +1981,6 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         menu: "Fejlesztői eszközök",
         overridesOn: "Felülbírálások bekapcsolva",
         roleHeading: "Dev · szerepkör",
-        switchPlan: "Csomag váltása",
         plan: (value) => `Csomag: ${value}`,
         planHeading: "Dev · csomag",
         backTo: (role) => `Vissza: ${role}`,

@@ -1537,7 +1537,6 @@ export const GROUPS: ShowcaseGroup[] = [
           "SyncStatus",
           "DevMenu",
           "DevMenuSection",
-          "DevSwitchers",
           "DEV_ORIGINAL_ROLE_KEY",
         ],
         Body: () => (

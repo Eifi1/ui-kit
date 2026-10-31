@@ -1893,7 +1893,6 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         menu: "开发工具",
         overridesOn: "覆盖已开启",
         roleHeading: "开发 · 角色",
-        switchPlan: "切换套餐",
         plan: (value) => `套餐：${value}`,
         planHeading: "开发 · 套餐",
         backTo: (role) => `返回 ${role}`,

@@ -1990,7 +1990,6 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         menu: "Strumenti di sviluppo",
         overridesOn: "Override attivi",
         roleHeading: "Dev · ruolo",
-        switchPlan: "Cambia piano",
         plan: (value) => `Piano: ${value}`,
         planHeading: "Dev · piano",
         backTo: (role) => `Torna a ${role}`,
