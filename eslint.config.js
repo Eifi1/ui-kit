@@ -28,9 +28,30 @@ const ARBITRARY_PX_MEDIA_MESSAGE =
 const PX_FONT_SIZE = String.raw`/(^|[\s:!])text-\[(length:)?[0-9.]+px\]/`;
 const PX_FONT_SIZE_MESSAGE =
   "A px font size does not follow the text size (§3.2). Use text-micro (0.625rem), text-caption (0.6875rem) or Tailwind's text-xs … sizes; a size between them in rem.";
+/** `new Promise((r) => setTimeout(r, 20))` — a promise that is only a timer with a delay. */
+const SLEEP =
+  "NewExpression[callee.name='Promise'] > :function > CallExpression.body[callee.name='setTimeout'][arguments.1]:not([arguments.1.value=0])";
+/** The same with a block body: `new Promise((r) => { setTimeout(r, 20); })`. */
+const SLEEP_STATEMENT =
+  "NewExpression[callee.name='Promise'] > :function > BlockStatement > ExpressionStatement > CallExpression.expression[callee.name='setTimeout'][arguments.1]:not([arguments.1.value=0])";
+const SLEEP_MESSAGE =
+  "A fixed sleep passes under load whether or not the bug is there (TST-3). Wait for the decision point (waitFor, the promise, a spy), use fake timers, or src/test/tasks.ts (drainTasks, settleMacrotask, flushMicrotasks). Where real time is the point, disable this line with the reason.";
 
 export default tseslint.config(
-  { ignores: ["dist/**", "node_modules/**", "showcase/dist/**", "coverage/**"] },
+  // ESLint's flat config reads no ignore file, so this repeats .gitignore's build output,
+  // reports and agent worktrees (`.claude/worktrees/`: one there failed the static group
+  // with 778 errors) — refactor audit 2026-10-30, TST-8.
+  {
+    ignores: [
+      "dist/**",
+      "node_modules/**",
+      "showcase/dist/**",
+      "showcase/dist-pages/**",
+      "ci-artifacts/**",
+      "coverage/**",
+      ".claude/**",
+    ],
+  },
 
   js.configs.recommended,
   ...tseslint.configs.recommended,
@@ -129,10 +150,20 @@ export default tseslint.config(
       "react-hooks/rules-of-hooks": "off",
       // The media rule only: a test may name a px font size to assert it is GONE
       // (`not.toContain("text-[11px]")`), which is the px rule's own regression test.
+      //
+      // And no fixed sleep (refactor audit 2026-10-30, TST-3; 2026-10, TST-11). A test that
+      // slept 20 ms and then asserted that something did NOT happen passed under the loaded
+      // check whether or not the bug was there: the deferred work had simply not run yet.
+      // The pattern came back in new code after TST-11 removed it, so it is a rule now.
+      // Matched: an executor that is only a timer with a delay, `new Promise((r) =>
+      // setTimeout(r, 20))`, inline or as a `sleep(ms)` helper. Not matched: a wait for an
+      // event with a timer as its cap, which ends on the event.
       "no-restricted-syntax": [
         "error",
         { selector: `Literal[value=${ARBITRARY_PX_MEDIA}]`, message: ARBITRARY_PX_MEDIA_MESSAGE },
         { selector: `TemplateElement[value.raw=${ARBITRARY_PX_MEDIA}]`, message: ARBITRARY_PX_MEDIA_MESSAGE },
+        { selector: SLEEP, message: SLEEP_MESSAGE },
+        { selector: SLEEP_STATEMENT, message: SLEEP_MESSAGE },
       ],
     },
   },
