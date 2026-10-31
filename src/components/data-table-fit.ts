@@ -234,7 +234,14 @@ export function useColumnFit<T>({
     // The table the observer watches is this render's (a table drawn after a loading
     // state, or remounted, is a new element).
     watchTable();
-    const now = content ? [...content, orderSig, currentSig, growKey, active] : null;
+    // And what the fit measures under the same keys (0.52 code review, data-table.tsx):
+    // the headers' text as drawn — a locale switch keeps every key and changes every
+    // header, and German → English left out the columns German had no room for, on a
+    // table with room to spare (narrower, a `w-full` table keeps the scroller's width,
+    // which the observer below watches) — and the grow column's floor. Text is read
+    // without a layout.
+    const headText = active ? (scroller()?.querySelector("thead")?.textContent ?? "") : "";
+    const now = content ? [...content, orderSig, currentSig, growKey, growMin, active, headText] : null;
     const prev = lastContent.current;
     lastContent.current = now;
     if (now && prev && prev.length === now.length && prev.every((v, i) => Object.is(v, now[i]))) return;

@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { DataTable } from "../data-table";
 import type { DataTableColumn } from "../data-table";
+import { flushMicrotasks } from "../../test/tasks";
 import { stubPhone } from "../../test/viewport";
 
 /**
@@ -29,11 +30,20 @@ function Host({
   initial = ABC,
   focusable = true,
   confirmFirst = false,
+  optimistic = false,
+  ownClose = false,
+  unfocusableFirst = false,
 }: {
   initial?: Row[];
   focusable?: boolean;
   /** A confirm dialog outside the table asks first, as `useConfirm` does. */
   confirmFirst?: boolean;
+  /** Yes removes the row at once and the dialog stays, "Deleting…", until Done. */
+  optimistic?: boolean;
+  /** …and Done closes it through the dialog's own state: the table does not render. */
+  ownClose?: boolean;
+  /** Each row's first control cannot take the focus (`display: none`). */
+  unfocusableFirst?: boolean;
 }) {
   const [rows, setRows] = useState(initial);
   const [asking, setAsking] = useState<number | null>(null);
@@ -46,26 +56,36 @@ function Host({
         header: "Delete",
         noRowLink: true,
         cell: (r) => (
-          <button type="button" onClick={() => (confirmFirst ? setAsking(r.id) : remove(r.id))}>
-            Delete {r.name}
-          </button>
+          <>
+            {unfocusableFirst && (
+              <button type="button" style={{ display: "none" }}>
+                Undo {r.name}
+              </button>
+            )}
+            <button type="button" onClick={() => (confirmFirst ? setAsking(r.id) : remove(r.id))}>
+              Delete {r.name}
+            </button>
+          </>
         ),
       },
     ],
-    [confirmFirst],
+    [confirmFirst, unfocusableFirst],
   );
   return (
     <MemoryRouter>
       <button type="button">Outside</button>
       <DataTable rows={rows} columns={columns} rowKey={(r) => r.id} onRowClick={focusable ? () => {} : undefined} />
-      {asking !== null && (
-        <ConfirmBox
-          onYes={() => {
-            remove(asking);
-            setAsking(null);
-          }}
-        />
-      )}
+      {asking !== null &&
+        (optimistic ? (
+          <PendingBox key={asking} onYes={() => remove(asking)} onDone={ownClose ? undefined : () => setAsking(null)} />
+        ) : (
+          <ConfirmBox
+            onYes={() => {
+              remove(asking);
+              setAsking(null);
+            }}
+          />
+        ))}
       <button type="button" onClick={() => remove(2)}>
         Remove B from outside
       </button>
@@ -80,6 +100,26 @@ function ConfirmBox({ onYes }: { onYes: () => void }) {
     <div role="alertdialog" aria-label="Delete?">
       <button type="button" ref={yes} onClick={onYes}>
         Yes
+      </button>
+    </div>
+  );
+}
+
+/** Yes removes the row and keeps the dialog — an optimistic delete, its request in flight —
+ *  until Done; without `onDone` the dialog closes itself (`useConfirm`'s provider, a
+ *  Modal's exit), and the table does not render with it. */
+function PendingBox({ onYes, onDone }: { onYes: () => void; onDone?: () => void }) {
+  const [open, setOpen] = useState(true);
+  const yes = useRef<HTMLButtonElement>(null);
+  useEffect(() => yes.current?.focus(), []);
+  if (!open) return null;
+  return (
+    <div role="alertdialog" aria-label="Delete?">
+      <button type="button" ref={yes} onClick={onYes}>
+        Yes
+      </button>
+      <button type="button" onClick={onDone ?? (() => setOpen(false))}>
+        Done
       </button>
     </div>
   );
@@ -139,6 +179,48 @@ describe("DataTable keeps the focus when its row leaves (audit 2026-10-30 DSP-4)
     press(screen.getByRole("button", { name: "Yes" }));
     expect(screen.queryByRole("alertdialog")).toBeNull();
     expect(document.activeElement).toBe(rowOf("C"));
+  });
+
+  it("an overlay that held the focus while the row went, closed later: back into the table (0.52 code review)", () => {
+    // An optimistic delete: the row goes while the confirm still says "Deleting…"; the
+    // confirm closes once the request is done, and hands the focus to its opener — the
+    // removed row's button — so it fell to <body>.
+    render(<Host confirmFirst optimistic />);
+    press(deleteButton("B"));
+    press(screen.getByRole("button", { name: "Yes" }));
+    expect(screen.queryByRole("cell", { name: "B" })).toBeNull();
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Yes" }));
+    press(screen.getByRole("button", { name: "Done" }));
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(document.activeElement).toBe(rowOf("C"));
+  });
+
+  it("…and when the overlay closes without the table rendering (0.52 code review)", async () => {
+    render(<Host confirmFirst optimistic ownClose />);
+    press(deleteButton("B"));
+    press(screen.getByRole("button", { name: "Yes" }));
+    press(screen.getByRole("button", { name: "Done" }));
+    await flushMicrotasks();
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(document.activeElement).toBe(rowOf("C"));
+  });
+
+  it("a click on the page's background, the focus left nowhere: a later removal leaves it alone (0.52 code review)", async () => {
+    // A background refetch, a sync from another tab: no user action, and the focus — and
+    // the scroll, and a screen reader's announcement — went back into the table.
+    render(<Host />);
+    act(() => deleteButton("B").focus());
+    act(() => deleteButton("B").blur());
+    await flushMicrotasks();
+    fireEvent.click(screen.getByRole("button", { name: "Remove B from outside" }));
+    expect(screen.queryByRole("cell", { name: "B" })).toBeNull();
+    expect(document.activeElement).toBe(document.body);
+  });
+
+  it("a next row whose first control cannot take the focus: its next one does (0.52 code review)", () => {
+    render(<Host focusable={false} unfocusableFirst />);
+    press(deleteButton("B"));
+    expect(document.activeElement).toBe(deleteButton("C"));
   });
 
   it("leaves alone a focus the user has taken elsewhere", () => {

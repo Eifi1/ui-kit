@@ -460,6 +460,74 @@ describe("the fit measures only when what it fits changed (audit 2026-10-30 DSP-
   });
 });
 
+/**
+ * 0.52 code review, data-table.tsx: DSP-19 keyed the fit on the columns' KEYS, so what it
+ * measures could change under the same keys and nothing re-measured. A locale switch,
+ * German to English, shortened the headers, and the `fitPriority` columns German had no
+ * room for stayed out on a table with room to spare (a narrower table changes no width
+ * the fit watches: a `w-full` table is the scroller's width either way). The drawn
+ * headers' text, a column's `growMin` and the locale are what it fits now, besides.
+ */
+describe("the fit measures again when what it fits changed under the same keys (0.52 code review)", () => {
+  const STATUS: Record<string, string> = { de: "Bearbeitungsstatus", en: "status" };
+  const columnsIn = (lang: string, growMin?: number) =>
+    FIT.map((c) =>
+      c.key === "status" ? { ...c, header: STATUS[lang] } : c.key === "title" && growMin ? { ...c, growMin } : c,
+    );
+  const ui = (columns: DataTableColumn<Row>[], locale: string) => (
+    <MemoryRouter>
+      <DataTable rows={ROWS} columns={columns} rowKey={(r) => r.id} locale={locale} />
+    </MemoryRouter>
+  );
+  beforeEach(() => {
+    WIDTH[STATUS.de] = 420;
+  });
+  afterEach(() => {
+    delete WIDTH[STATUS.de];
+  });
+
+  it("German → English: the shorter headers bring back the column German left out", () => {
+    // 1000: German needs 980 + 160 = 1140 → URL (200) goes; English needs 780 + 160 = 940.
+    avail = 1000;
+    const { rerender } = render(ui(columnsIn("de"), "de-DE"));
+    const table = screen.getByRole("table");
+    expect(heads(table)).toEqual(["id", "title", "email", STATUS.de, "resolved"]);
+    rerender(ui(columnsIn("en"), "en-US"));
+    expect(heads(table)).toEqual(["id", "title", "url", "email", "status", "resolved"]);
+  });
+
+  it("a header's text alone (an app's own translation, the kit's locale kept)", () => {
+    avail = 1000;
+    const { rerender } = render(ui(columnsIn("de"), "de-DE"));
+    rerender(ui(columnsIn("en"), "de-DE"));
+    expect(heads(screen.getByRole("table"))).toContain("url");
+  });
+
+  it("a column's `growMin` alone", () => {
+    // 920: 10rem needs 780 + 160 = 940 → URL goes; 8rem needs 908.
+    avail = 920;
+    const { rerender } = render(ui(columnsIn("en"), "en-US"));
+    const table = screen.getByRole("table");
+    expect(heads(table)).not.toContain("url");
+    rerender(ui(columnsIn("en", 8), "en-US"));
+    expect(heads(table)).toContain("url");
+  });
+
+  it("the locale alone: the cells' dates and numbers follow it", () => {
+    const { rerender } = render(ui(columnsIn("en"), "en-US"));
+    tableLayouts = 0;
+    rerender(ui(columnsIn("en"), "en-GB"));
+    expect(tableLayouts).toBeGreaterThan(0);
+  });
+
+  it("an inline columns array with the same headers still lays nothing out (DSP-19)", () => {
+    const { rerender } = render(ui(columnsIn("en"), "en-US"));
+    tableLayouts = 0;
+    rerender(ui(columnsIn("en"), "en-US"));
+    expect(tableLayouts).toBe(0);
+  });
+});
+
 describe("the kit's feedback columns adopt it (0.48)", () => {
   it("Subject grows; URL, Email, Resolved go first, in that order", () => {
     const cols = feedbackColumns({

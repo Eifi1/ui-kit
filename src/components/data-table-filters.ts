@@ -116,6 +116,20 @@ export function rowMatches<T>(col: DataTableColumn<T>, row: T, state: FilterValu
   }
 }
 
+/**
+ * {@link rowMatches} for one column's filter state, the text filter's query folded once
+ * (0.52 code review, data-table-filters.ts): folded again for every row it tested, a
+ * 5000-row table folded the same query 5000 times per keystroke.
+ */
+export function rowMatcher<T>(col: DataTableColumn<T>, state: FilterValue, locale?: string): (row: T) => boolean {
+  const filter = resolveFilter(col);
+  if (filter?.type === "text" && state.type === "text" && state.q.trim()) {
+    const words = searchWords(state.q, locale);
+    return (row) => matchesSearch(words, [filter.getValue(row)], locale);
+  }
+  return (row) => rowMatches(col, row, state, locale);
+}
+
 /** The empty filter state for a column's filter type. */
 export function defaultFilterState<T>(filter: ColumnFilter<T>): FilterValue {
   switch (filter.type) {
