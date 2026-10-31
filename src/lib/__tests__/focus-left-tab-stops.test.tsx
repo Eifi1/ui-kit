@@ -96,6 +96,18 @@ describe("the kit's one tab-stop rule", () => {
     }
   });
 
+  it("a hidden input is no stop: a Tab never lands on it, and focus() on it does nothing (0.52 code review)", () => {
+    const root = document.createElement("div");
+    root.innerHTML = `<input type="hidden" name="csrf" value="x"><button>First</button><button>Last</button><input type="hidden" name="id">`;
+    document.body.append(root);
+    try {
+      const names = tabStops(root, { includeSelf: false }).map((el) => el.textContent || el.getAttribute("name"));
+      expect(names).toEqual(["First", "Last"]);
+    } finally {
+      root.remove();
+    }
+  });
+
   it("the trap's helpers are this module's, not a copy", () => {
     expect(trap.firstTabStop).toBe(firstTabStop);
     expect(trap.tabStops).toBe(tabStops);

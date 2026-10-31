@@ -22,8 +22,11 @@
  * last stop was not wrapped and walked out of the open panel, and Shift+Tab from the
  * first landed on a cell that is not a stop at all.
  */
+// `input[type=hidden]` is no stop: a Tab never lands on it and focus() on it does nothing,
+// but its tabIndex reads 0, so a trap could take a form's hidden field for its first or last
+// stop and Shift+Tab left the dialog (0.52 code review).
 const TAB_STOP =
-  'a[href],button:not([disabled]),textarea:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])';
+  'a[href],button:not([disabled]),textarea:not([disabled]),input:not([disabled]):not([type="hidden"]),select:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
 /**
  * A stop the browser's own Tab would land on: in the tab order (`tabIndex` ≥ 0) and not
