@@ -176,3 +176,56 @@ are `readonly` (a `[...LIST]` copy can go).
 **Docs.** The README inventory names every standalone entry (`/sync`, `/offline`, `/rhf`,
 `/dates`, `/testing`, `/table-text`, `/eslint`, the catalogues). adopt-0.32…0.50 moved to
 docs/archive/adopt/.
+
+## After the code review (also in 0.52.0)
+
+A line-by-line review of the round found and fixed some 70 more defects before release,
+most of them in this round's own code. What an app sees:
+
+**Must change (tests only):** `GlobalSearch`'s trigger now says `aria-keyshortcuts="Meta+K"`
+on Apple platforms and `"Control+K"` elsewhere (not both); a test asserting `"Meta+K
+Control+K"` updates. Tests that assert `toBeDisabled()` on a DatePicker or MonthPicker arrow,
+the pager's Next/Previous or MultiSelect's Select all switch to `aria-disabled` (as above).
+
+- **Feedback:** a report's "page" link goes to the path only (`/accounts?p=2` opens
+  `/accounts`); the query shows as text and Copy copies the full URL. A query is the
+  reporter's to write, and a forwarding page (`/login?next=…`) could act on it.
+- **Push (keksdose):** `releaseThisDevicePush` resolves `false` on a device without push and
+  unsubscribes the browser even when the server's unregister fails (it still rejects); the
+  `.catch(() => undefined)` stays right.
+- **Quiet hours (keksdose):** a time still typed when the card closes is saved.
+- **Dates (keksdose):** when replacing `formatDateTimeFor` with `formatDateTimeWithPreference`,
+  pass `{ timeZone: useKitTimeZone() }` (new option).
+- **Tours:** if the overlay chunk fails to load, `onSkip("unavailable")` runs (kastlan's
+  `endTour(true)` turns practice mode off); a normal skip passes `"skipped"`. Escape skips
+  while the overlay loads.
+- **Shortcuts:** a held ⌘K/Ctrl+K no longer reaches the browser; `shortcut={false}` lets
+  Mod+K go; letter shortcuts work on Russian, Greek and Hebrew layouts; "Space" no longer
+  fires on Shift+Space.
+- **Failed chunks:** a feedback dialog or search palette whose chunk fails to load closes,
+  instead of taking the top bar down.
+- **Billing:** a confirm with neither `onClose` nor `onOpenChange` no longer compiles (all
+  three apps pass one); "Buy anyway" confirms once. `AccountMenuLanguage` /
+  `AccountMenuTextSize` likewise require `onChange` or `onPick`.
+- **Sync (kastlan):** "Sync now" (the dialog, the indicator) and a protocol's `syncNow()`
+  wait for a round another tab runs on the same copy, then run their own, instead of
+  answering at once with nothing sent.
+- **DataTable:** a row removed while an app's confirm or drawer is open gets its focus back
+  when that closes; a click on the page background drops the note, so a background refetch
+  no longer pulls the focus into the table; a locale or header-text change re-runs the
+  `fitPriority` fit; a DataTable nested in a virtualized table's `expandedRow` no longer
+  takes the outer table's keys.
+- **Pickers:** in a phone sheet, Enter takes a name typed out in full and otherwise leaves
+  the sheet and its search alone; closing the sheet no longer clears a value whose option
+  had not loaded; a reopened Combobox highlights nothing, so Enter keeps what was typed;
+  CountrySelect matches a code only whole again.
+- **Charts:** Treemap's tile names ask `valueFormatter` with the real share (keksdose's
+  CategoryTreemap prints its own share: pass `labels={{ tile: (name, value) => `${name}:
+  ${value}` }}` to avoid saying it twice); `maxTiles={null}` draws every tile again; the
+  arrows follow the picture in RTL. CopyButton's icon variant keeps its idle words in every
+  state. SeriesChart's keyboard moves the tooltip after a hover too.
+- **AlertBanner / BulkActionBar:** a Safari or iOS tap on the × no longer moves the focus;
+  a background click no longer pulls it back later.
+- **useLongPress:** a press already held when `enabled` turns false no longer fires.
+- **Focus:** a hidden input is no longer a tab stop (Shift+Tab could leave a dialog that
+  held a form's hidden field).
