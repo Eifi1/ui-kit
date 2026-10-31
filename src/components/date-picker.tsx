@@ -159,7 +159,8 @@ export interface DatePickerProps extends DatePickerBaseProps {
   /**
    * Today's date as ISO "YYYY-MM-DD". Adds a jump-to-today button beside the field,
    * refused once the value already is that day — `aria-disabled`, so the focus stays on
-   * the button that was just pressed (0.52).
+   * the button that was just pressed (0.52) — and disabled while that day is outside
+   * `min` / `max`.
    *
    * Passed in rather than read from a clock here: a component that decides what "today"
    * is cannot be tested at a fixed date, and the consumer already has one definition of
@@ -378,12 +379,15 @@ export function DatePicker(props: DatePickerProps) {
       )}
       {today && (
         // Refused once the value is today: pressable as a no-op would keep the focus too
-        // (INP-4), and this also says there is nothing to jump to.
+        // (INP-4), and this also says there is nothing to jump to. Today outside the
+        // bounds is `off`: no press here gets there, as MonthPicker's stepper has it — it
+        // was refused, a tab stop that could never do anything (0.52 code review,
+        // date-picker.tsx). A lock wins, focusable, to say why.
         <StepButton
           icon={CalendarClock}
           label={text.today}
-          off={fieldOff}
-          refused={locked || value === today || outOfBounds(today)}
+          off={fieldOff || (!locked && outOfBounds(today))}
+          refused={locked || value === today}
           reasonId={reasonId}
           onClick={() => change(today)}
           className="rounded-s-none"
