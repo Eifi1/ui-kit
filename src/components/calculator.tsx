@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
+import type { RefObject } from "react";
 import { Calculator as CalculatorIcon, Delete } from "lucide-react";
 import { Popover } from "./popover";
 import { cn } from "../lib/cn";
@@ -30,6 +31,24 @@ interface CalculatorButtonProps {
    * the one argument and ignore this.
    */
   onChange: (value: string, expression?: string) => void;
+  /**
+   * Called ONCE per calculator session, with the result the host should keep: on "="
+   * (the key, or Enter in the display), and when the panel closes — Escape, a press
+   * outside, the trigger — on a result `onChange` reported after the last commit. Never
+   * per keystroke: `onChange` is the live channel, this is the one to save on.
+   *
+   * Not called when the button goes away with its panel open (a lock or `disabled`
+   * arriving, the field unmounting): those say the value must not move, and the result
+   * stays where `onChange` put it.
+   *
+   * Refactor audit 2026-10-30, INP-1: the pad had no commit point of its own, and the
+   * two field engines guessed in opposite directions. NumberInput never committed a
+   * result, so Kurvenschmiede's dialogs saved the number from before the calculation;
+   * AmountInput committed every keystroke that resolved, so "100+50" saved 105 on its way
+   * to 150, and keksdose's threshold field, `disabled` while it saves, lost its pad to the
+   * first of them.
+   */
+  onCommit?: (value: string) => void;
   className?: string;
   /** The trigger's accessible name; wins over `calculator.open` from the provider. */
   "aria-label"?: string;
@@ -89,10 +108,13 @@ function seed(initial: string): string {
 function CalculatorPanel({
   initial,
   onChange,
+  onEquals,
   labels,
 }: {
   initial: string;
   onChange: (value: string, expression?: string) => void;
+  /** "=" was pressed on a result: the session's commit point. */
+  onEquals: () => void;
   labels: CalculatorLabels;
 }) {
   const [expr, setExpr] = useState(() => seed(initial));
@@ -132,6 +154,7 @@ function CalculatorPanel({
     const out = formatResult(result);
     setExpr(out);
     onChange(out, text);
+    onEquals();
   };
 
   return (
@@ -214,14 +237,65 @@ function CalculatorPanel({
 }
 
 /**
+ * The trigger, and the place a session ends. The render in which `open` turns false is
+ * the panel closing, however it closed — Escape, a press outside, this button — and
+ * that is when a result the pad left unsettled is committed. A component of its own
+ * because `open` lives in Popover and reaches only the trigger.
+ *
+ * Not the panel's unmount: the panel also goes when a lock or `disabled` takes the
+ * calculator away, and nothing may commit then. Those unmount this button with it, so no
+ * render ever sees `open` turn false.
+ */
+function CalculatorTrigger({
+  open,
+  onToggle,
+  onClosed,
+  buttonRef,
+  label,
+  className,
+}: {
+  open: boolean;
+  onToggle: () => void;
+  onClosed: () => void;
+  buttonRef: RefObject<HTMLButtonElement | null>;
+  label: string;
+  className?: string;
+}) {
+  const closed = useEffectEvent(onClosed);
+  const wasOpen = useRef(open);
+  useEffect(() => {
+    if (wasOpen.current && !open) closed();
+    wasOpen.current = open;
+  }, [open]);
+  return (
+    <button
+      ref={buttonRef}
+      type="button"
+      tabIndex={-1}
+      onClick={onToggle}
+      aria-label={label}
+      aria-expanded={open}
+      className={cn(
+        "flex items-center justify-center text-placeholder transition-colors hover:text-secondary",
+        className,
+      )}
+    >
+      <CalculatorIcon className="size-4" />
+    </button>
+  );
+}
+
+/**
  * A calculator icon that opens a small keypad popover anchored to its host
  * field. Designed as a trailing-edge adornment: render it inside the field's
  * `relative` wrapper, positioned absolutely. The keypad seeds from the current
- * field value and writes evaluated results straight back through `onChange`.
+ * field value and writes evaluated results straight back through `onChange`, and
+ * commits the session once through `onCommit`.
  */
 export function CalculatorButton({
   value,
   onChange,
+  onCommit,
   className,
   "aria-label": ariaLabel,
   labels: labelsProp,
@@ -233,28 +307,35 @@ export function CalculatorButton({
     [ariaLabel, labelsProp],
   );
   const labels = useKitLabels("calculator", DEFAULT_CALCULATOR_LABELS, fromProps);
+  // The last result `onChange` reported that no commit has covered yet — what closing
+  // the panel commits. Written by the pad's handlers and read when it closes; never
+  // rendered, so a ref.
+  const unsettled = useRef<string | null>(null);
+  const change = (next: string, expression?: string) => {
+    unsettled.current = next;
+    onChange(next, expression);
+  };
+  const settle = () => {
+    const next = unsettled.current;
+    unsettled.current = null;
+    if (next !== null) onCommit?.(next);
+  };
   return (
     <Popover
       width="14rem"
       labels={{ panel: labels.panel }}
       trigger={({ open, toggle, ref }) => (
-        <button
-          ref={ref}
-          type="button"
-          tabIndex={-1}
-          onClick={toggle}
-          aria-label={labels.open}
-          aria-expanded={open}
-          className={cn(
-            "flex items-center justify-center text-placeholder transition-colors hover:text-secondary",
-            className,
-          )}
-        >
-          <CalculatorIcon className="size-4" />
-        </button>
+        <CalculatorTrigger
+          open={open}
+          onToggle={toggle}
+          onClosed={settle}
+          buttonRef={ref}
+          label={labels.open}
+          className={className}
+        />
       )}
     >
-      {() => <CalculatorPanel initial={value} onChange={onChange} labels={labels} />}
+      {() => <CalculatorPanel initial={value} onChange={change} onEquals={settle} labels={labels} />}
     </Popover>
   );
 }

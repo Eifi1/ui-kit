@@ -267,10 +267,15 @@ export interface AmountInputProps extends FieldHelpProps, DataAttributes {
   max?: number;
   /**
    * The SETTLED figure, dot-decimal, sign included — fired on blur, on Enter, on the
-   * numpad's "=" and on every result the calculator writes back, never on a keystroke
-   * ("1200+" is not a figure yet). `onChange` still reports every keystroke; this is
-   * for a host that stores a number and must not see drafts (kastlan 52; see
-   * {@link MoneyField}, which is built on it).
+   * numpad's "=" and once per calculator session (its "=" or Enter in its display, or
+   * the pad closing on a result not committed yet), never on a keystroke ("1200+" is
+   * not a figure yet). `onChange` still reports every keystroke and every result the
+   * calculator writes back; this is for a host that stores a number and must not see
+   * drafts (kastlan 52; see {@link MoneyField}, which is built on it).
+   *
+   * Refactor audit 2026-10-30, INP-1: every calculator keystroke that resolved used to
+   * commit, so "100+50" committed 105 on its way to 150 — keksdose saved both, and its
+   * threshold field, `disabled` while it saves, lost the calculator to the first.
    */
   onCommit?: (value: string) => void;
   /**
@@ -681,12 +686,14 @@ export function AmountInput(props: AmountInputProps) {
                 // reads either mark, and "1.234,5" is two of them. The result comes back
                 // dot-decimal.
                 value={derived}
+                // Live: every result, settled, so the field never shows more decimals than
+                // it will keep. The commit is the session's one (INP-1): its "=", or the pad
+                // closing on a newer result — not each figure on the way to the result.
                 onChange={(result, expression) => {
                   setDraft(null);
-                  const settled = settle(result);
-                  handleText(settled, expression);
-                  onCommit?.(settled);
+                  handleText(settle(result), expression);
                 }}
+                onCommit={(result) => onCommit?.(settle(result))}
                 className="px-1.5"
                 aria-label={labels?.calculatorTrigger}
                 labels={labels?.calculator}

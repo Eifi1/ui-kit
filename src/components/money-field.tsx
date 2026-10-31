@@ -11,8 +11,8 @@ export interface MoneyFieldProps extends Omit<
   /** The amount, or `null` for an empty field. */
   value: number | null;
   /**
-   * The settled amount — on blur, on Enter, on the numpad's "=" and on a calculator
-   * result; never a half-typed "1200+". Rounded to the currency's minor unit (or
+   * The settled amount — on blur, on Enter, on the numpad's "=" and once per calculator
+   * session (its "=", or the pad closing on a newer result); never a half-typed "1200+". Rounded to the currency's minor unit (or
    * `digits`) and clamped to `min` / `max`, like {@link AmountInput}. `null` when the
    * field was emptied. Not fired when the settled amount equals `value`, so an
    * Enter-then-blur saves once.
