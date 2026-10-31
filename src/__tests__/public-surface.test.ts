@@ -310,16 +310,30 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // (keksdose run 89).
   // 0.51.5 (+2): `searchWords`, `matchesSearch`, the pickers' every-word match, for an app's
   // own async source (keksdose's shop picker past its first hundred shops).
-  ["@eifi1/ui-kit", barrel, 1017],
+  // 0.52 (+2, refactor audit 2026-10-30): `releaseThisDevicePush` (FLW-2, an explicit
+  // sign-out releases this device's push) and `formatDateTimeWithPreference` (DUP-2).
+  // 0.52 (+8, DUP-8, MOD-8): `removeStored`, `readSessionStored`, `writeSessionStored`,
+  // `readStoredJson`, `writeStoredJson`, `prefersReducedMotion` and `useLongPress` — the
+  // helpers the kit kept private while its showcase and the apps wrote them again — and
+  // `AMOUNT_TONE_CLASS`, the tone map keksdose's tests read out of dist/.
+  // 0.52 (±0, API-4, MOD-5, decision 4): 55 names no app reads, and RoleSwitcher,
+  // SectionNav, the FieldSync family, SignChip and lib/isin, deprecated for 0.53.
+  // 0.52 (+1, DSP-5): `DEFAULT_TREEMAP_LABELS`, the `treemap` namespace — a tile's name.
+  // 0.52 (−1, breaking): `DevSwitchers`, deprecated in 0.51 — `DevMenu`.
+  // 0.52 (+1, here and in /data-table): `compareSortValues`, the client sort's own order
+  // (keksdose weaves its scheduled rows into a kit-sorted register).
+  ["@eifi1/ui-kit", barrel, 1028],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
   // 0.35.0 (−13): the zoom maths and `withChartZoom` are the kit's own (API-6b).
-  ["@eifi1/ui-kit/chart", chart, 53],
+  // 0.52 (+1 here and in the barrel): `DEFAULT_TREEMAP_LABELS` (DSP-5).
+  ["@eifi1/ui-kit/chart", chart, 54],
   // 0.22.0: DEFAULT_DATA_TABLE_SORT_LABELS, the phone sort control's words (+1).
   // 0.35.0: `resolveDataTableLabels` and `missingDataTableLabels` removed (R1, API-6a) (−2).
   // 0.46.1: `swipePlanRowActions`, the desktop swipe column's derivation (keksdose N3) (+1).
-  ["@eifi1/ui-kit/data-table", dataTable, 27],
+  // 0.52: `compareSortValues`, the client sort's order (+1).
+  ["@eifi1/ui-kit/data-table", dataTable, 28],
   // 0.12.0: `FeedbackThread`, `FeedbackComposer` and the `DEFAULT_*_LABELS` of their two
   // namespaces and of `feedbackDialog` (+5 here and in the barrel).
   // 0.15.5: `DEFAULT_MAX_ATTACHMENTS` (+1 here and in the barrel).
@@ -343,7 +357,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.51.0 (−1): `DEFAULT_MOBILE_BAR_MAX` removed (deprecated in 0.49).
   // 0.51.0 (+1): `DevMenu` (§2.7.1, see the barrel).
   // 0.51.4 (+1): `useFocusParam` (see the barrel).
-  ["@eifi1/ui-kit/shell", shell, 61],
+  // 0.52 (−1): `DevSwitchers` removed (see the barrel).
+  ["@eifi1/ui-kit/shell", shell, 60],
   // 0.43.0 (+9): the tours page (see the barrel).
   // 0.43.0 (+3): `resetTourProgress`, `doneCount`, `earnedPoints` (build review, see the barrel).
   // 0.44.0 (+1): `completeTour` (§9.2, see the barrel).
