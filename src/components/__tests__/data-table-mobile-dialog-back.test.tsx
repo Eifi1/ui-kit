@@ -4,6 +4,7 @@ import { BrowserRouter, MemoryRouter, Route, Routes } from "react-router";
 import { DataTable } from "../data-table";
 import type { DataTableColumn, DataTableProps } from "../data-table";
 import { useSearchParamState } from "../../hooks/use-search-param-state";
+import { drainTasks } from "../../test/tasks";
 import { stubPhone } from "../../test/viewport";
 
 /**
@@ -28,18 +29,12 @@ const COLUMNS: DataTableColumn<Row>[] = [{ key: "name", header: "Name", cell: (r
 const SENTINEL_KEY = "__hbUiOverlayHistory";
 const hasSentinel = () => typeof (window.history.state as Record<string, unknown> | null)?.[SENTINEL_KEY] === "string";
 
-async function settle() {
-  await act(async () => {
-    for (let turn = 0; turn < 10; turn += 1) await new Promise((r) => setTimeout(r, 0));
-  });
-}
-
 beforeEach(() => {
   stubPhone();
 });
 afterEach(async () => {
   vi.unstubAllGlobals();
-  await settle();
+  await drainTasks();
 });
 
 function LocalTable(extra: Partial<DataTableProps<Row>>) {
@@ -123,15 +118,17 @@ describe("DataTable mobileDialogBackCloses", () => {
       const go = vi.spyOn(window.history, "go");
       const view = renderPage();
       fireEvent.click(screen.getByText("Alpha"));
-      await settle();
+      await drainTasks();
       expect(window.location.search).toBe("?row=a");
       expect(screen.getByRole("dialog")).toHaveTextContent("editor Alpha");
 
       fireEvent.pointerDown(screen.getByText("Cancel"));
       fireEvent.click(screen.getByText("Cancel"));
-      await settle();
-      await new Promise((r) => setTimeout(r, 30));
-      await settle();
+      // A `go(-n)` the overlay history might owe is scheduled on a 0 ms timer and lands a
+      // task later (use-overlay-history.ts): counted turns let it, however loaded the
+      // machine, where a fixed 30 ms sleep passed whether or not the bug was there
+      // (refactor audit 2026-10-30, TST-3).
+      await drainTasks(20);
 
       expect(go).not.toHaveBeenCalled();
       expect(window.location.search).toBe("");
@@ -144,7 +141,7 @@ describe("DataTable mobileDialogBackCloses", () => {
       window.history.replaceState(null, "", "/register");
       const view = renderPage();
       fireEvent.click(screen.getByText("Alpha"));
-      await settle();
+      await drainTasks();
       expect(screen.getByRole("dialog")).toBeInTheDocument();
 
       await act(async () => {
@@ -152,7 +149,7 @@ describe("DataTable mobileDialogBackCloses", () => {
         window.history.back();
         await landed;
       });
-      await settle();
+      await drainTasks();
       expect(window.location.pathname).toBe("/register");
       expect(window.location.search).toBe("");
       expect(screen.queryByRole("dialog")).toBeNull();
