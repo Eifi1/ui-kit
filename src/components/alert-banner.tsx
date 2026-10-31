@@ -340,8 +340,16 @@ export function AlertBanner({
   useLayoutEffect(() => {
     dismissTarget.current = dismissFocusRef;
   });
+  // The note lives until the focus lands outside the banner (0.52 code review,
+  // alert-banner.tsx). A caller that keeps the banner — an async dismiss that failed, a
+  // snooze — left it standing, and the banner's unmount long after, a route change with
+  // the focus on <body>, sent the focus to a stop noted at the press, over the app's own
+  // handling of a new page. A `focusin` on the document, not a `focusout` on the banner:
+  // a browser that blurs a removed node would drop the note at the very removal it is for.
+  const unwatchFocus = useRef<(() => void) | null>(null);
   useEffect(
     () => () => {
+      unwatchFocus.current?.();
       const around = dismissedFrom.current;
       if (!around || !focusIsLost()) return;
       focusFirst([dismissTarget.current?.current, ...around]);
@@ -483,6 +491,19 @@ export function AlertBanner({
         if (frame) {
           const { after, before } = tabStopsAround(frame);
           dismissedFrom.current = [...after, ...before];
+          unwatchFocus.current?.();
+          const doc = frame.ownerDocument;
+          const onFocusIn = (event: FocusEvent) => {
+            if (event.target instanceof Node && frame.contains(event.target)) return;
+            dismissedFrom.current = null;
+            unwatch();
+          };
+          const unwatch = () => {
+            doc.removeEventListener("focusin", onFocusIn, true);
+            unwatchFocus.current = null;
+          };
+          doc.addEventListener("focusin", onFocusIn, true);
+          unwatchFocus.current = unwatch;
         }
         onDismiss();
       }}
