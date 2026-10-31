@@ -23,9 +23,17 @@ import { DEFAULT_FIELD_SYNC_LABELS } from "./field-sync-labels";
  * because the state is useful without the dot — a form can disable its submit
  * button while any field is `pending`, and a router can block navigation while
  * any field is `edited`.
+ *
+ * Deprecated in 0.52 as a whole, removed in 0.53 (decision 4 of the refactor audit
+ * 2026-10-30, MOD-5): no app renders it or calls the hook — 483 lines and a namespace in
+ * seven catalogues that only this package's tests and showcase read. An app that wants
+ * it keeps a copy of this file.
+ *
+ * @deprecated 0.52 — none: no app uses the FieldSync family (MOD-5); removed in 0.53.
  */
 export type FieldSyncState = "synced" | "edited" | "pending" | "error";
 
+/** @deprecated 0.52 — none: no app uses the FieldSync family (MOD-5); removed in 0.53. */
 export interface FieldSyncLabels {
   synced: string;
   edited: string;
@@ -38,6 +46,7 @@ export interface FieldSyncLabels {
 // Defined in ./field-sync-labels, which holds no component code (0.34, KS U8).
 export { DEFAULT_FIELD_SYNC_LABELS };
 
+/** @deprecated 0.52 — none: no app uses the FieldSync family (MOD-5); removed in 0.53. */
 export interface UseFieldSyncOptions<T> {
   /** What the database currently holds. Changing it re-seeds a CLEAN field. */
   value: T;
@@ -57,6 +66,7 @@ export interface UseFieldSyncOptions<T> {
   onError?: (error: Error) => void;
 }
 
+/** @deprecated 0.52 — none: no app uses the FieldSync family (MOD-5); removed in 0.53. */
 export interface UseFieldSyncReturn<T> {
   /** The draft — bind this to the input, not the `value` option. */
   value: T;
@@ -101,6 +111,8 @@ function toError(cause: unknown): Error {
  *      may be gone — a row scrolled out of a virtualised table, a closed dialog.
  *   4. **`onSave` is read through a ref**, so an inline arrow — which every call
  *      site will pass — does not restart the debounce on every render.
+ *
+ * @deprecated 0.52 — none: no app uses the FieldSync family (MOD-5); removed in 0.53.
  */
 export function useFieldSync<T>({
   value,
@@ -240,6 +252,7 @@ const STATE_STYLE: Record<FieldSyncState, { color: string; Icon: typeof Check }>
   error: { color: "var(--status-error)", Icon: AlertCircle },
 };
 
+/** @deprecated 0.52 — none: no app uses the FieldSync family (MOD-5); removed in 0.53. */
 export interface FieldSyncIndicatorProps {
   state: FieldSyncState;
   /** The failure. Its message becomes the tooltip when `state === "error"`. */
@@ -269,6 +282,8 @@ export interface FieldSyncIndicatorProps {
  * The state is also announced: the wrapper is a polite live region, so a screen
  * reader hears "Saving…" then "Saved" without the user going looking. `error` is
  * assertive instead — a failed write is worth interrupting for.
+ *
+ * @deprecated 0.52 — none: no app uses the FieldSync family (MOD-5); removed in 0.53.
  */
 export function FieldSyncIndicator({
   state,
@@ -340,6 +355,8 @@ export function FieldSyncIndicator({
  * colour does not.
  *
  * Every class is a literal so Tailwind's scanner can see it.
+ *
+ * @deprecated 0.52 — none: no app uses the FieldSync family (MOD-5); removed in 0.53.
  */
 export const FIELD_SYNC_FRAME: Record<FieldSyncState, string> = {
   synced:
@@ -352,9 +369,12 @@ export const FIELD_SYNC_FRAME: Record<FieldSyncState, string> = {
     "[&_:is(input,select,textarea)]:border-[var(--status-error)] [&_:is(input,select,textarea)]:ring-1 [&_:is(input,select,textarea)]:ring-[var(--status-error)] [&_:is(input,select,textarea):focus]:border-[var(--status-error)] [&_:is(input,select,textarea):focus]:ring-[var(--status-error)]",
 };
 
-/** How long the green "saved" frame and check stay after a save lands, in ms. */
+/** How long the green "saved" frame and check stay after a save lands, in ms.
+ *
+ * @deprecated 0.52 — none: no app uses the FieldSync family (MOD-5); removed in 0.53. */
 export const FIELD_SYNC_SAVED_MS = 1500;
 
+/** @deprecated 0.52 — none: no app uses the FieldSync family (MOD-5); removed in 0.53. */
 export interface FieldSyncRowProps<T> extends Omit<FieldSyncIndicatorProps, "state" | "error" | "showLabel"> {
   sync: UseFieldSyncReturn<T>;
   children: ReactNode;
@@ -386,6 +406,8 @@ export interface FieldSyncRowProps<T> extends Omit<FieldSyncIndicatorProps, "sta
  * always in the DOM as a live region — polite for the ordinary states, assertive for
  * a failure. The input gets end padding for the icon whether or not one is showing,
  * so the text never reflows when the state changes.
+ *
+ * @deprecated 0.52 — none: no app uses the FieldSync family (MOD-5); removed in 0.53.
  */
 export function FieldSyncRow<T>({
   sync,

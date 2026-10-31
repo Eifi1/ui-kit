@@ -284,6 +284,8 @@ export interface TopBarLabels {
   /** 0.49 KIT-10: the language menu's trigger, given the current language's name —
    *  "Choose language, current: Deutsch". */
   languageCurrent: (name: string) => string;
+  /** RoleSwitcher's name, and nothing else reads it (DevMenu's flask is `topBarParts.dev`).
+   *  @deprecated 0.52 — none: it goes with RoleSwitcher (MOD-5); removed in 0.53. */
   switchRole: string;
   /** The role switcher's tooltip, given the active role's name. */
   role: (value: string) => string;
@@ -320,6 +322,7 @@ export interface UiKitLabels {
   calculator: CalculatorLabels;
   currency: CurrencyLabels;
   chipInput: ChipInputLabels;
+  /** @deprecated 0.52 — none: it goes with the FieldSync family (MOD-5); removed in 0.53. */
   fieldSync: FieldSyncLabels;
   passwordReveal: PasswordRevealLabels;
   tabs: TabsLabels;
@@ -484,7 +487,8 @@ export interface UiKitLabels {
   ibanInput: IbanInputLabels;
   /** 0.22.0: `PhoneInput`'s country-code select. */
   phoneInput: PhoneInputLabels;
-  /** 0.22.0: `SignChip` — the outflow / inflow toggle beside an amount. */
+  /** 0.22.0: `SignChip` — the outflow / inflow toggle beside an amount.
+   *  @deprecated 0.52 — none: it goes with SignChip (MOD-5); removed in 0.53. */
   signChip: SignChipLabels;
   /** 0.23.0: `ColumnMapper` / `ColumnRoleTable` — a pasted or dropped table, a role per
    *  column. */

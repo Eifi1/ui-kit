@@ -29,13 +29,20 @@ export type {
 } from "./components/data-table";
 // 0.46.1 (keksdose N3): a swipe plan as `RowActions`' actions — the desktop column's own
 // derivation, for an app's hand-built actions column.
-export { swipePlanRowActions } from "./components/data-table-row-actions";
+export {
+  /** @deprecated 0.52 — `DataTable`'s `desktopSwipeActions`, which builds its column with it (API-4); removed in 0.53 */
+  swipePlanRowActions,
+} from "./components/data-table-row-actions";
 // 0.48 (keksdose dev #605): a `groupBy` level (also `mobileGroupBy`'s) and the `loadMore` footer.
 export type { DataTableGroupBy, DataTableLoadMore } from "./components/data-table-groups";
 // 0.48.2 (keksdose dev #632): `virtualize`'s options.
 export type { DataTableVirtualize } from "./components/data-table-virtual";
 export * from "./components/data-table-cells";
-export { useTableUrlState, readTableUrlState } from "./components/use-table-state";
+export {
+  useTableUrlState,
+  /** @deprecated 0.52 — `useTableUrlState`, which reads the URL with it (API-4); removed in 0.53 */
+  readTableUrlState,
+} from "./components/use-table-state";
 export type {
   TableUrlState,
   TableUrlSync,

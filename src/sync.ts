@@ -4,7 +4,13 @@
 // The only entry point that imports `dexie` — an optional peer for that reason. It never loads
 // `/offline`'s TanStack and idb-keyval peers: the leaf utilities both entries export live in
 // one module of their own (src/offline/local-first.ts). NOT re-exported from the main barrel.
-export { createSyncDb, rowByPk, SYNC_DB_PK_INDEX, SYNC_DB_STORES } from "./sync/db";
+export {
+  createSyncDb,
+  rowByPk,
+  SYNC_DB_PK_INDEX,
+  /** @deprecated 0.52 — `createSyncDb`, which declares them (`extraStores` for an app's own) (API-4); removed in 0.53 */
+  SYNC_DB_STORES,
+} from "./sync/db";
 export type {
   CreateSyncDbOptions,
   OutboxChange,
@@ -17,6 +23,7 @@ export type {
 export {
   createSyncEngine,
   DEFAULT_HOLD_CODES,
+  /** @deprecated 0.52 — `createSyncEngine`, whose `backoffMs` defaults to it (API-4); removed in 0.53 */
   DEFAULT_SYNC_BACKOFF_MS,
   releaseSyncEngine,
   syncEngineFor,

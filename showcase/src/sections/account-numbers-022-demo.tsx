@@ -93,7 +93,7 @@ function IsinDemo() {
   return (
     <Example
       label="ISIN helpers — isValidIsin, formatIsin"
-      hint="Luhn over the letter-expanded form; ISINs print unbroken"
+      hint="deprecated in 0.52, removed in 0.53 — no app imports them"
     >
       <div className="flex flex-col gap-3">
         <Input

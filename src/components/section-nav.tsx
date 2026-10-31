@@ -3,6 +3,8 @@ import { NavPills } from "./nav-pills";
 import type { NavPillItem, NavPillLinkProps } from "./nav-pills";
 import type { ReactElement, Ref } from "react";
 
+/** @deprecated 0.52 — `NavPillsProps` with `layout="scroll"`, what SectionNav wraps; removed in
+ *  0.53 (no app renders SectionNav: refactor audit 2026-10-30, MOD-5). */
 export interface SectionNavProps<T extends string> {
   /** The section's pages, each with its `href` (a pill without one is a button that
    *  calls `onSelect`). Labels short: the row is one line. */
@@ -37,6 +39,11 @@ export interface SectionNavProps<T extends string> {
  * Place it right under the page's title (`PageHeader`); the AppShell's own row of a
  * group's pages above the bar (`mobileSubNav`) is the shell-wide alternative — use one,
  * not both, for the same pages.
+ *
+ * @deprecated 0.52 — `<NavPills layout="scroll" itemClassName="min-h-11 focus-visible:ring-inset"
+ * className="md:hidden">`, the same row; removed in 0.53. kastlan, whose section pills it
+ * was made for (0.49 KIT-6), never adopted it: no app renders it (refactor audit
+ * 2026-10-30, MOD-5).
  */
 export function SectionNav<T extends string>({
   items,

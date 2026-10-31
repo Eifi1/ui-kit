@@ -44,6 +44,10 @@ export function FieldSync() {
   return (
     <>
       <Note>
+        Deprecated in 0.52, removed in 0.53: no app saves a field through `useFieldSync`, so the family leaves the kit
+        (refactor audit 2026-10-30, MOD-5). An app that wants it keeps a copy.
+      </Note>
+      <Note>
         Nothing on this page reaches a network. &ldquo;The server&rdquo; below is a promise on a timer, which is the
         whole point of a design-system showcase: the kit is domain-free, so there is no API to mock — a component takes
         its data as props and hands events back as callbacks.

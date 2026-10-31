@@ -122,7 +122,7 @@ export function SectionNavDemo() {
   return (
     <Example
       label="SectionNav — a section's pages on the phone"
-      hint="one row that scrolls sideways under the title, the open page scrolled into view; 44 px pills, 48 px tall"
+      hint={'deprecated in 0.52, removed in 0.53 — no app renders it; `<NavPills layout="scroll">` is the same row'}
     >
       <div className="max-w-sm overflow-hidden rounded-md border border-subtle bg-page p-3">
         <PageHeader as="h2" title="Page header" description="App chrome" />
