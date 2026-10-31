@@ -41,7 +41,8 @@ export type { DataTableVirtualize } from "./data-table-virtual";
 import { ColumnSettingsPanel } from "./data-table-column-settings";
 import { useLargeText } from "../hooks/use-large-text";
 import { cn } from "../lib/cn";
-import { isFilterActive, resolveFilter, rowMatcher } from "./data-table-filters";
+import { isFilterActive, resolveFilter, rowMatches } from "./data-table-filters";
+import { matchesSearch, searchWords } from "../lib/text-match";
 import type { ColumnFilter, FilterValue } from "./data-table-filters";
 import { compareSortValues, nextSorts } from "./data-table-sort";
 import type { SortCycle, SortDir, SortState } from "./data-table-sort";
@@ -1008,6 +1009,21 @@ const NO_VIRTUAL_OPTIONS: DataTableVirtualize = {};
 import { DEFAULT_PERSIST_PREFIX, useTableState, type TableUrlSync } from "./use-table-state";
 import { useMobileReveal } from "./use-mobile-reveal";
 import { GROW_CELL_CLASS, GROW_PEER_CELL_CLASS, useColumnFit } from "./data-table-fit";
+
+/**
+ * rowMatches for one column's filter state, the text filter's query folded once (0.52
+ * code review, data-table-filters.ts): folded again for every row it tested, a 5000-row
+ * table folded the same query 5000 times per keystroke. Module-private: data-table-filters
+ * is re-exported whole by @eifi1/ui-kit/data-table, and this is no public API.
+ */
+function rowMatcher<T>(col: DataTableColumn<T>, state: FilterValue, locale?: string): (row: T) => boolean {
+  const filter = resolveFilter(col);
+  if (filter?.type === "text" && state.type === "text" && state.q.trim()) {
+    const words = searchWords(state.q, locale);
+    return (row) => matchesSearch(words, [filter.getValue(row)], locale);
+  }
+  return (row) => rowMatches(col, row, state, locale);
+}
 
 export function DataTable<T>({
   rows,
