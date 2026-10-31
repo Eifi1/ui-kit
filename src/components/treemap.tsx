@@ -394,6 +394,19 @@ export function fitLabel(name: string, boxWidth: number, fontSize: number): stri
   return name.length <= max ? name : `${name.slice(0, max - 1).trimEnd()}…`;
 }
 
+/** A tile's text, painted over a halo in its tile's colour (see `TreemapCell`). */
+const haloOf = (halo: string) => ({
+  stroke: halo,
+  strokeWidth: 2.5,
+  strokeLinejoin: "round" as const,
+  paintOrder: "stroke",
+});
+
+/** A band's name: the page's text on the well, 8.2:1 at the least in every preset, 7.4:1
+ *  under More contrast (measured 0.52) — no halo, nothing to stand out from; `none`
+ *  against the inherited chart stroke. */
+const BAND_INK = { fill: "var(--text-primary)", stroke: "none" };
+
 /** What recharts hands a `content` element for each node, plus the three options the
  *  chart forwards. Everything optional because recharts clones the element it was
  *  given and fills the geometry in — the element as written carries only the options. */
@@ -539,13 +552,8 @@ function Tile({
   // a one-letter stub bleeding over the tile edge. A group's name only in its band.
   const labelSize = LABEL_FONT_SIZE * scale;
   const noteSize = NOTE_FONT_SIZE * scale;
-  const label = group
-    ? group.banded
-      ? fitLabel(name ?? "", pw, labelSize)
-      : null
-    : pw >= 44 * scale && ph >= 20 * scale
-      ? fitLabel(name ?? "", pw, labelSize)
-      : null;
+  const roomForName = group ? group.banded : pw >= 44 * scale && ph >= 20 * scale;
+  const label = roomForName ? fitLabel(name ?? "", pw, labelSize) : null;
   // Only under a label that is itself drawn — a stray "+12%" on an unnamed rectangle
   // names nothing — and only where a second baseline fits: the note's baseline sits
   // 29px down and an 11px glyph hangs ~2px below it, so 36 leaves the same ~5px under
@@ -633,44 +641,23 @@ function Tile({
           style={{ pointerEvents: "none" }}
         />
       )}
-      {label != null &&
-        (group ? (
-          // The band's name: the page's text on the well, 8.2:1 at the least in every
-          // preset, 7.4:1 under More contrast (measured 0.52) — no halo, nothing to
-          // stand out from. `stroke="none"` against the inherited chart stroke.
-          <text
-            data-private={redactNames ? "" : undefined}
-            x={textX}
-            y={py + 14 * scale}
-            direction={dir}
-            fill="var(--text-primary)"
-            stroke="none"
-            fontSize={labelSize}
-            fontWeight={600}
-            style={{ pointerEvents: "none" }}
-          >
-            {label}
-          </text>
-        ) : (
-          <text
-            // A plain attribute, so the host's `[data-private]` rule reaches an SVG
-            // <text> exactly as it reaches a table cell.
-            data-private={redactNames ? "" : undefined}
-            x={textX}
-            y={py + 15 * scale}
-            direction={dir}
-            fill={ink}
-            stroke={halo}
-            strokeWidth={2.5}
-            strokeLinejoin="round"
-            paintOrder="stroke"
-            fontSize={labelSize}
-            fontWeight={600}
-            style={{ pointerEvents: "none" }}
-          >
-            {label}
-          </text>
-        ))}
+      {label != null && (
+        <text
+          // A plain attribute, so the host's `[data-private]` rule reaches an SVG
+          // <text> exactly as it reaches a table cell.
+          data-private={redactNames ? "" : undefined}
+          x={textX}
+          // A band's name centred in its 20px; a tile's where its floor leaves room below.
+          y={py + (group ? 14 : 15) * scale}
+          direction={dir}
+          {...(group ? BAND_INK : { fill: ink, ...haloOf(halo) })}
+          fontSize={labelSize}
+          fontWeight={600}
+          style={{ pointerEvents: "none" }}
+        >
+          {label}
+        </text>
+      )}
       {note != null && (
         <text
           x={textX}
@@ -678,10 +665,7 @@ function Tile({
           direction={dir}
           fill={ink}
           fillOpacity={0.85}
-          stroke={halo}
-          strokeWidth={2.5}
-          strokeLinejoin="round"
-          paintOrder="stroke"
+          {...haloOf(halo)}
           fontSize={noteSize}
           fontWeight={500}
           style={{ pointerEvents: "none" }}
