@@ -146,23 +146,47 @@ for (const file of graph.keys()) {
 
 // What an import costs, measured as an app's build sees the package: Rollup over dist/,
 // every module free of side effects (package.json `sideEffects`), packages external, so
-// the number is the kit's own code, minified. The shell set is what the three apps' layout
-// and top bar import (2026-10). Each ceiling is the size last measured plus ~10 %. The cost
-// is what an app's first load carries: chunks a dynamic `import()` splits off (the feedback
-// dialog, MOD-1) load when first used and are not counted.
+// the number is the kit's own code, minified. The cost is what an app's first load
+// carries: chunks a dynamic `import()` splits off (the feedback dialog, the palette, the
+// tour's overlay) load when first used and are not counted.
+//
+// The ceilings are a RATCHET, not a budget with headroom: each sits just above the last
+// measured size, so any growth fails here and is either taken back or meant — and a meant
+// one raises the ceiling in the same commit, with a line below saying what grew and why.
+//
+// The shell set is what the apps mount at once (re-seeded 0.52 from their `src/app/` and
+// `main.tsx`; refactor audit 2026-10-30, MOD-4): the names all three import there, plus
+// `TourProvider`, which all three mount above their routes from a feature module, and the
+// top bar's names only some of them mount (`TopBarActionMenu`, `useFeedbackSubmit`,
+// `UiKitProvider`, `CompanySwitcher`, `LanguageMenu`). Until 0.52 it was the top bar's 2026-10 imports: half of
+// what the apps load, `RoleSwitcher` (no app imports it) in, the providers and chrome out.
 const SHELL_SET = [
+  // All three apps.
   "AppShell",
   "TopBar",
   "TopBarBrand",
-  "TopBarActionMenu",
+  "TopBarActions",
   "ThemeToggle",
-  "LanguageMenu",
-  "CompanySwitcher",
-  "RoleSwitcher",
   "FeedbackMenu",
-  "useFeedbackSubmit",
+  "AccountMenuLanguage",
+  "AccountRoleChip",
+  "UserAvatar",
+  "SyncStatusIndicator",
   "LegalLinks",
+  "ErrorBoundary",
+  "LoadingState",
+  "NotFoundPage",
+  "Toaster",
+  "adminWaitingCount",
+  "applyPersistedTheme",
+  "formatPersonName",
+  "TourProvider",
+  // Some of them.
+  "TopBarActionMenu",
+  "useFeedbackSubmit",
   "UiKitProvider",
+  "CompanySwitcher",
+  "LanguageMenu",
 ];
 // Measured 2026-10-12, minified (gzip), after MOD-4 (round 0.34 Wave 3: the 25 module-scope
 // `forwardRef(...)` calls and 23 `X.displayName = …` lines became ref-as-prop function
