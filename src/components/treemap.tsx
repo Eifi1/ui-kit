@@ -641,32 +641,53 @@ export function Treemap({
     [nodes],
   );
 
+  // Everything below is memoised over what it reads (0.52, code review of feat/0.52.0). A
+  // tile re-renders when its context or its recharts element changes, and recharts' map is
+  // a PureComponent that redraws every node when `content` or its tooltip child is a new
+  // element: built afresh per render, as they were, a page re-rendering the card or one
+  // arrow-key step redrew every tile and ran `labels.tile` and two `Intl` formats per node
+  // again — the cost DSP-22 had just taken out of the tiles.
+  //
   // The share is of what is DRAWN, so it always reads as "of this picture".
-  const total = nodes.reduce((acc, n) => acc + n.size, 0);
-  const shareOf = (v: number) => (total > 0 ? v / total : undefined);
-  const format = (v: number): ReactNode =>
-    valueFormatter ? valueFormatter(v, shareOf(v)) : formatWithMinus(numberFormat, v);
-  // The caller's text when it gives text, asked with no share — the name says that
-  // itself; a value it formats as markup is said as a number.
-  const valueText = (v: number) => {
-    const out = valueFormatter ? valueFormatter(v, undefined) : undefined;
-    return typeof out === "string" || typeof out === "number" ? String(out) : formatWithMinus(numberFormat, v);
-  };
-  // One decimal under 10 %, as PieChart: a tile of 0.4 % named "0%" says it is not there.
-  const shareText = (share: number) => (share < 0.1 ? percentFormats.fine : percentFormats.whole).format(share);
-  const names = new Map(
-    nodes.map((n) => [n.id, labels.tile(n.name, valueText(n.size), shareText(shareOf(n.size) ?? 0))]),
+  const total = useMemo(() => nodes.reduce((acc, n) => acc + n.size, 0), [nodes]);
+  const format = useCallback(
+    (v: number): ReactNode =>
+      valueFormatter ? valueFormatter(v, total > 0 ? v / total : undefined) : formatWithMinus(numberFormat, v),
+    [valueFormatter, total, numberFormat],
   );
-  const context: TileContext = {
-    tokens: tokenHex,
-    edgeFor,
-    edges: edgesInForce,
-    keys: { name: (id) => names.get(id), stop: stopId, onFocus: setStop, register, move },
-  };
+  const names = useMemo(() => {
+    // The caller's text when it gives text, asked with no share — the name says that
+    // itself; a value it formats as markup is said as a number.
+    const valueText = (v: number) => {
+      const out = valueFormatter ? valueFormatter(v, undefined) : undefined;
+      return typeof out === "string" || typeof out === "number" ? String(out) : formatWithMinus(numberFormat, v);
+    };
+    // One decimal under 10 %, as PieChart: a tile of 0.4 % named "0%" says it is not there.
+    const shareText = (share: number) => (share < 0.1 ? percentFormats.fine : percentFormats.whole).format(share);
+    return new Map(
+      nodes.map((n) => [n.id, labels.tile(n.name, valueText(n.size), shareText(total > 0 ? n.size / total : 0))]),
+    );
+  }, [nodes, labels, valueFormatter, numberFormat, percentFormats, total]);
+  const keys = useMemo<TileKeys>(
+    () => ({ name: (id) => names.get(id), stop: stopId, onFocus: setStop, register, move }),
+    [names, stopId, register, move],
+  );
+  const context = useMemo<TileContext>(
+    () => ({ tokens: tokenHex, edgeFor, edges: edgesInForce, keys }),
+    [tokenHex, edgeFor, edgesInForce, keys],
+  );
+  const Content = redactNames ? RedactedTooltipContent : ChartTooltipContent;
+  const cell = useMemo(
+    () => <TreemapCell onNodeClick={onNodeClick} redactNames={redactNames} nodeNote={nodeNote} dir={dir} />,
+    [onNodeClick, redactNames, nodeNote, dir],
+  );
+  const tooltip = useMemo(
+    () => <ChartTooltip content={<Content hideLabel valueFormatter={format} />} />,
+    [Content, format],
+  );
 
   if (nodes.length === 0) return null;
   const box = chartHeightProps(height);
-  const Content = redactNames ? RedactedTooltipContent : ChartTooltipContent;
   const describedByProp = rest["aria-describedby"];
   return (
     // Round the container, not inside it: ResponsiveContainer sizes its ONE child, the chart.
@@ -682,14 +703,8 @@ export function Treemap({
       >
         {/* No chart-level `stroke`: recharts spreads it onto the <svg> root, from where
             it inherits into every label (see TreemapCell). Each cell strokes its own rect. */}
-        <RechartsTreemap
-          data={nodes}
-          dataKey="size"
-          fill="var(--chart-1)"
-          isAnimationActive={false}
-          content={<TreemapCell onNodeClick={onNodeClick} redactNames={redactNames} nodeNote={nodeNote} dir={dir} />}
-        >
-          <ChartTooltip content={<Content hideLabel valueFormatter={format} />} />
+        <RechartsTreemap data={nodes} dataKey="size" fill="var(--chart-1)" isAnimationActive={false} content={cell}>
+          {tooltip}
         </RechartsTreemap>
       </ChartContainer>
       {description && (
