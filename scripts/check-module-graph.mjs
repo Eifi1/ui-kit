@@ -201,8 +201,10 @@ const BUDGETS = [
   // (KIT-6: mobileMaxItems, mobilePriority, the parent sheet), hideWhenOverlay (KIT-11),
   // LanguageMenu's flag+code trigger (KIT-10) and the status tones (KIT-8) — meant growth.
   // 86,317 B in 0.51.4: TopBarActionMenu's `columns` (DevMenu, keksdose dev #640) and
-  // LegalLinks' optional Security / Accessibility links — meant growth.
-  { label: "the shell set", names: SHELL_SET, max: 86_800 },
+  // LegalLinks' optional Security / Accessibility links — meant growth. 86,942 B in
+  // 0.51.7: Modal's `busy` and useOverlayHistory's `held` put-back (refactor audit
+  // 2026-10-30, DUP-3) — meant growth.
+  { label: "the shell set", names: SHELL_SET, max: 87_400 },
 ];
 const ENTRY = "\0import-cost";
 async function importCost(names) {
