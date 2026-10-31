@@ -1,5 +1,5 @@
 import type { PathPattern } from "../landing/routing";
-import { matchesPathPattern } from "../lib/path-pattern";
+import { matchesPathPattern, routerPathname } from "../lib/path-pattern";
 
 /**
  * Which filed-on pages the feedback parts show as text rather than a link (refactor audit
@@ -24,8 +24,10 @@ export const FEEDBACK_ONE_SHOT_PAGES: readonly PathPattern[] = Object.freeze([
 ]);
 
 /** Whether `href` (a path with its query, as `feedbackPageHref` answers) names a one-shot
- *  route — the kit's, or one of the app's `exclude` on top. */
+ *  route — the kit's, or one of the app's `exclude` on top. Read as the ROUTER reads it,
+ *  decoded and case-insensitive: `/Join?token=` and `/j%6Fin?token=` render `/join` too
+ *  (0.52 code review, this file). The detail and the table's URL cell both ask here. */
 export function isOneShotPage(href: string, exclude: readonly PathPattern[] = []): boolean {
-  const pathname = href.replace(/[?#].*$/, "");
+  const pathname = routerPathname(href);
   return [...FEEDBACK_ONE_SHOT_PAGES, ...exclude].some((pattern) => matchesPathPattern(pathname, pattern));
 }
