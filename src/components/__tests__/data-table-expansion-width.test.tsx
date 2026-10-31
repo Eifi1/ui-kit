@@ -11,7 +11,7 @@ import { stubResizeObserver, type ResizeObserverStub } from "../../test/viewport
  * scroller 1073px, buttons at x 1577-1633). The expansion's content is pinned to the
  * scroller's visible width — `sticky start-0` (logical: the right edge in RTL) and a
  * width from a ResizeObserver on the scroller's `clientWidth`. jsdom lays nothing out, so
- * this pins the wiring; headless Chromium checked the pixels (docs/adopt-0.47.md).
+ * this pins the wiring; headless Chromium checked the pixels (docs/archive/adopt/adopt-0.47.md).
  */
 
 interface Row {

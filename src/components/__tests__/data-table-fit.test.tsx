@@ -14,7 +14,7 @@ import { stubResizeObserver, type ResizeObserverStub } from "../../test/viewport
  * scroller is too narrow, lowest first, and come back in reverse; the Columns panel counts
  * what is drawn and marks those "hidden for width". jsdom lays nothing out, so the widths
  * below are a model of the auto layout (a `grow` column takes what the others leave);
- * headless Chromium checked the pixels (docs/adopt-0.48.md).
+ * headless Chromium checked the pixels (docs/archive/adopt/adopt-0.48.md).
  */
 
 interface Row {

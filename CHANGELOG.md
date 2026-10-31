@@ -248,7 +248,7 @@ the rows it touches (memoised rows; keep `columns`, `rowActions`, `mobileSwipeAc
 an anchored panel no longer forces a layout while closed, `<main>`'s fill-height rule no longer
 re-evaluates `:has` on every insertion, and opt-in `virtualize` renders only the rows near the view
 (sticky bands kept). At 3000 rows: table DOM nodes 31,176 → 476, checkbox INP 416 → 40 ms. Nothing
-changes for an app until it opts in (docs/adopt-0.48.md, 0.48.2).
+changes for an app until it opts in (docs/archive/adopt/adopt-0.48.md, 0.48.2).
 
 ### Added
 
@@ -263,7 +263,7 @@ changes for an app until it opts in (docs/adopt-0.48.md, 0.48.2).
 
 From keksdose's 0.48 adoption (K-052-1): a `loadMore` table no longer filters, sorts or pages
 the server's rows on the client; `serverRows={false}` keeps the old behaviour. keksdose drops its
-dummy `serverPagination`; kastlan and Kurvenschmiede need nothing (docs/adopt-0.48.md, 0.48.1).
+dummy `serverPagination`; kastlan and Kurvenschmiede need nothing (docs/archive/adopt/adopt-0.48.md, 0.48.1).
 
 ### Fixed
 
@@ -290,7 +290,7 @@ Opt-in: a column's `grow` and `fitPriority`, `SettingsGroup.badge` with `adminSe
 badges, and `DataTable`'s `leadingRowSticky`.
 
 The server half ships as server-kit 0.19.0, which breaks only a test helper:
-`check_comment_store` requires the app's `attachment_url`. Per-app steps: `docs/adopt-0.48.md`.
+`check_comment_store` requires the app's `attachment_url`. Per-app steps: `docs/archive/adopt/adopt-0.48.md`.
 
 ### ⚠ BREAKING CHANGES
 
@@ -344,7 +344,7 @@ Round 0.47, the three 0.46 build reviews plus keksdose live #447 (feedback §12)
 The server half ships as server-kit 0.18.0, which breaks a stale sender: a `timezone` sent to
 the notification settings, the push settings shim or `PATCH /auth/me` is a 422, as announced;
 an app with public comments adds a nullable `attachment_url` column. Per-app steps:
-`docs/adopt-0.47.md`.
+`docs/archive/adopt/adopt-0.47.md`.
 
 ### ⚠ BREAKING CHANGES
 
@@ -375,7 +375,7 @@ an app's workaround), and `swipePlanRowActions` is public. The server half ships
 0.17.0, a minor only because it adds names (nothing breaking): the validation 422s no longer
 echo what was sent, push bodies are parsed without echoing secrets, and `PATCH /auth/me` drops
 an unknown device zone (200, was 422); a stale `timezone` is still ignored, refused from 0.18.
-Per-app steps: `docs/adopt-0.46.md`, its 0.46.1 sections.
+Per-app steps: `docs/archive/adopt/adopt-0.46.md`, its 0.46.1 sections.
 
 ### Fixed
 
@@ -412,7 +412,7 @@ release, and `QuietHoursSetting`'s `timezone`, `NotificationSettingsPatch.timezo
 removed in 0.47. The rest replaces the apps' 0.45 workarounds (`MailTestCard` without
 `mailBackend`, the kit's words for the feedback tiles). The server half ships as server-kit
 0.16.0, which breaks (the sync clock-skew correction, the notifications inbox, queue and channels,
-feedback alerts, a company rename's names logged). Per-app steps: docs/adopt-0.46.md.
+feedback alerts, a company rename's names logged). Per-app steps: docs/archive/adopt/adopt-0.46.md.
 
 ### Added
 
@@ -440,7 +440,7 @@ tour progress on the account (tours §10: `useTourProgress` takes an `account`, 
 becomes its cache), the admin follow-ups (admin §9: `MailTestCard`, `AdminWaitingBadge`, a
 company's rename and switch in the log), and local-first phase 1 as the new
 `@eifi1/ui-kit/offline` subpath (local-first §1.6). The server halves ship as server-kit 0.15.0.
-Per-app steps: docs/adopt-0.45.md.
+Per-app steps: docs/archive/adopt/adopt-0.45.md.
 
 ### Added
 
@@ -459,7 +459,7 @@ The three 0.43 adoptions' notes, settled by Marcel on 2026-10-17 ("0.44 with eve
 reviewed against all three apps before release (docs/tours-harmonization.md §9): the tour engine
 reports a completion once (`TourProvider` `progress` + `onComplete(tour, {awarded})`, the tour
 carried by `start`), `completeTour` for tests and seeds, keksdose's reviewed tour words as the
-defaults, and no silent loss of an app's stored progress. Per-app steps: docs/adopt-0.44.md.
+defaults, and no silent loss of an app's stored progress. Per-app steps: docs/archive/adopt/adopt-0.44.md.
 
 ### Added
 
@@ -475,7 +475,7 @@ Settled by Marcel on 2026-10-17 and reviewed against all three apps before relea
 tours page as the kit's catalogue (docs/tours-harmonization.md: groups, filters, the card, points
 everywhere, progress that carries over, and a reset with its reason when a tour is updated), the
 provider's portal in a new tab (billing §17; the checkout stays), and the findings from the three
-0.42 adoptions. Nothing is removed; the per-app steps are in docs/adopt-0.43.md.
+0.42 adoptions. Nothing is removed; the per-app steps are in docs/archive/adopt/adopt-0.43.md.
 
 ### Added
 
@@ -495,7 +495,7 @@ before paying under a free grant without an end), the admin area
 (docs/admin-harmonization.md: one way in, one shell, one section order, an Overview of what
 waits on the admin) and the top bar (docs/top-bar-harmonization.md: one order, the
 language in the account menu, keksdose's tours menu and sync indicator, server-backed dev
-switchers). Nothing is removed; the per-app steps are in docs/adopt-0.42.md.
+switchers). Nothing is removed; the per-app steps are in docs/archive/adopt/adopt-0.42.md.
 
 ### Added
 
@@ -509,7 +509,7 @@ switchers). Nothing is removed; the per-app steps are in docs/adopt-0.42.md.
 ## [0.41.0](https://github.com/Eifi1/ui-kit/compare/v0.40.1...v0.41.0) (2026-10-17)
 
 Round 0.41: the names deprecated in 0.40 are removed. No app used any of them, so the migration is a
-bump (`docs/adopt-0.41.md`); server-kit stays 0.13.1.
+bump (`docs/archive/adopt/adopt-0.41.md`); server-kit stays 0.13.1.
 
 ### ⚠ BREAKING CHANGES
 
@@ -523,7 +523,7 @@ bump (`docs/adopt-0.41.md`); server-kit stays 0.13.1.
 ## [0.40.1](https://github.com/Eifi1/ui-kit/compare/v0.40.0...v0.40.1) (2026-10-16)
 
 The apps' 0.40 adoption findings, released as one batch once all three had reported (server-kit
-0.13.1 beside it): `docs/adopt-0.40.md` §5. Also Dependabot's npm half moves into the pre-push
+0.13.1 beside it): `docs/archive/adopt/adopt-0.40.md` §5. Also Dependabot's npm half moves into the pre-push
 hook, as keksdose's. Nothing is removed.
 
 ### Fixed
@@ -536,7 +536,7 @@ Round 0.40: every open point — feedback §10 (a rework is the author's entry w
 the menu by role) and page layout §1 (the list page fills the window, the same in every app), both
 settled after the three apps' reviews; keksdose's phone-table and picker findings; the Paddle
 sandbox run's results (server-kit 0.13.0 ships beside it). The migration per app is
-`docs/adopt-0.40.md`. Nothing is removed; Tabs `wrap` and two FeedbackMenu labels are deprecated.
+`docs/archive/adopt/adopt-0.40.md`. Nothing is removed; Tabs `wrap` and two FeedbackMenu labels are deprecated.
 
 ### Added
 
@@ -553,7 +553,7 @@ sandbox run's results (server-kit 0.13.0 ships beside it). The migration per app
 ## [0.39.1](https://github.com/Eifi1/ui-kit/compare/v0.39.0...v0.39.1) (2026-10-15)
 
 keksdose's and kastlan's 0.39 adoption findings, released on Marcel's word (2026-10-15) before
-Kurvenschmiede's report; `docs/adopt-0.39.md` §5. Nothing is removed.
+Kurvenschmiede's report; `docs/archive/adopt/adopt-0.39.md` §5. Nothing is removed.
 
 ### Fixed
 
@@ -565,7 +565,7 @@ Kurvenschmiede's report; `docs/adopt-0.39.md` §5. Nothing is removed.
 Round 0.39: the Paddle billing amendment (billing §15) — every app's pay page serves any app's
 checkout, the payer's plan switch, one Paddle customer per e-mail address (server-kit 0.12.0
 ships beside it) — plus `ApiTranslationReviewsResponse`. Billing stays off until the sandbox
-run. The migration per app is `docs/adopt-0.39.md`; the pay page's old flags and
+run. The migration per app is `docs/archive/adopt/adopt-0.39.md`; the pay page's old flags and
 `paySuccessUrl` are gone (below).
 
 ### ⚠ BREAKING CHANGES
@@ -586,7 +586,7 @@ run. The migration per app is `docs/adopt-0.39.md`; the pay page's old flags and
 ## [0.38.1](https://github.com/Eifi1/ui-kit/compare/v0.38.0...v0.38.1) (2026-10-14)
 
 The apps' 0.38 adoption findings, released as one batch once all three had reported (server-kit
-0.11.1 beside it). The steps per app are `docs/adopt-0.38.md` §5. Nothing is removed.
+0.11.1 beside it). The steps per app are `docs/archive/adopt/adopt-0.38.md` §5. Nothing is removed.
 
 ### Fixed
 
@@ -599,7 +599,7 @@ Round 0.38: Marcel's public feedback, settled as feedback §9 after the three ap
 the public list and detail, upvotes, comments by others as rows, and the admin's answers as
 a timeline of replies (server-kit 0.11.0 ships beside it). `FeedbackRowDetail`'s Outcome
 editor gives way to the reply composer; bump server-kit 0.11 with it, which refuses a PATCH
-naming `outcome`. The migration per app is `docs/adopt-0.38.md`. Nothing is removed.
+naming `outcome`. The migration per app is `docs/archive/adopt/adopt-0.38.md`. Nothing is removed.
 
 ### Added
 
@@ -610,7 +610,7 @@ naming `outcome`. The migration per app is `docs/adopt-0.38.md`. Nothing is remo
 Round 0.37: two contract sections settled after the three apps' reviews — the translation review
 as server-kit layer 2 (server services §6; server-kit 0.10.0 ships beside it) and notifications
 §9 (Kurvenschmiede's `work_transferred`, a job's mail owed until it went) — plus what the apps'
-0.36 adoptions found. The migration per app is `docs/adopt-0.37.md`. Nothing is removed.
+0.36 adoptions found. The migration per app is `docs/archive/adopt/adopt-0.37.md`. Nothing is removed.
 
 ### Fixed
 
@@ -626,7 +626,7 @@ Round 0.36: Kurvenschmiede's Select hints and every queued round, four contracts
 the three apps' reviews — notifications (new), server-kit layer 2 (new; server-kit 0.9.0 ships
 beside it), reset this device's settings (settings §11) and the More-contrast light well
 (colour-roles §13) — plus a field's `help` beside its `hint` (text-size §4). The migration per
-app is `docs/adopt-0.36.md`. Nothing is removed.
+app is `docs/archive/adopt/adopt-0.36.md`. Nothing is removed.
 
 **What app tests may notice:** under More contrast in light, the well is darker and money,
 status and hue text on it deeper (colour decision 15 reversed); a link Button's and TextLink's
@@ -645,7 +645,7 @@ registry a microtask after mounting; an app that writes a whole `UiKitLabels` ob
 
 Removes what 0.34 deprecated and finishes the refactor plan's open ends; carries the fixes
 from the three apps' 0.34 adoptions, built as 0.34.1 and shipped here instead. The migration
-per app is `docs/adopt-0.35.md`; no app has a call site of a removed name left. server-kit
+per app is `docs/archive/adopt/adopt-0.35.md`; no app has a call site of a removed name left. server-kit
 stays 0.8.0.
 
 ### ⚠ BREAKING CHANGES
@@ -692,7 +692,7 @@ Hand-collected, like 0.34.0's list (each was deprecated in 0.34, SwipeAction's i
 Round 0.34 (the apps' 0.33 reports, keksdose's feedback runs 77–78, Kurvenschmiede's asks;
 two contracts settled after the apps' reviews: session refresh, groups in the audit) and the
 whole 2026-10 refactor plan (`docs/refactor-plan-2026-10.md`, 69 findings in six waves). The
-migration per app is `docs/adopt-0.34.md`; server-kit 0.8.0 ships beside it.
+migration per app is `docs/archive/adopt/adopt-0.34.md`; server-kit 0.8.0 ships beside it.
 
 ### ⚠ BREAKING CHANGES
 
@@ -791,7 +791,7 @@ DropdownPanel, HoverMenu, TopBarActionMenu, FeedbackMenu; /rhf's `FormField`, `F
 ### ⚠ BREAKING CHANGES
 
 Changed token values, emitted classes and types that apps see on the bump; the migration
-is `docs/adopt-0.33.md` (§2 "Breaking and must-change, every app").
+is `docs/archive/adopt/adopt-0.33.md` (§2 "Breaking and must-change, every app").
 
 * **Light `--bg-surface-2` is the page colour**, so a well on a card reads (1.02 → 1.09);
   a well painted straight on the page no longer stands out.
@@ -854,7 +854,7 @@ is `docs/adopt-0.33.md` (§2 "Breaking and must-change, every app").
 ### ⚠ BREAKING CHANGES
 
 Changed emitted classes and behaviour that apps can see without picking a text size;
-the migration is `docs/adopt-0.32.md` ("Everyone, on the bump").
+the migration is `docs/archive/adopt/adopt-0.32.md` ("Everyone, on the bump").
 
 * **The kit's 10 and 11 px text** is `text-micro` / `text-caption` (rem) instead of
   `text-[10px]` / `text-[11px]`; the sizes are unchanged at Normal. `cn()` knows the two
