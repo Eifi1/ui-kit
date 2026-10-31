@@ -440,7 +440,7 @@ Columns, in order (kit `DataTable`, `urlSync`, `storageKey="feedback"`, newest f
 | 4 | Subject / Betreff | title + env chip (non-prod `context.environment`, upper case) + **Rework** / **Rework ×{{count}}** chip (DE Nacharbeit / Nacharbeit ×{{count}}) | text (title + env) | card heading |
 | 5 | User / Nutzer | display name → email → `user #id`; erased → <deleted user> | text | |
 | 6 | Email / E-Mail | `user_email` → `context.user_email` | text | hidden |
-| 7 | URL | link (`noRowLink`): text = pathname, `href` = path + query + hash (kk `localHref`); aria "Open page" / "Seite öffnen" | text | hidden |
+| 7 | URL | link (`noRowLink`): text = pathname, `href` = the path only (ui-kit 0.52: the query is the reporter's to write; a one-shot path shows as text with Copy); aria "Open page" / "Seite öffnen" | text | hidden |
 | 8 | Status | `FeedbackStatusTransitions variant="icon"` with `visibleFeedbackStatuses` | select, chain order | |
 | 9 | Resolved / Erledigt am | `resolved_at` date | date | hidden |
 
@@ -477,9 +477,13 @@ the title beside the detail. Then the sections, in this order:
    and lose the history. The kit keeps the rework (and folded comment) blocks and the
    file lines out of the editable text and re-appends them unchanged on save.
 2. **URL** — when `context.url` is set, else `context.route` (a path-only `url` is
-   accepted — Kurvenschmiede's backfilled rows): the link's text and `href` are path +
-   query + hash (kk `localHref`), and `CopyButton` **Copy URL** / **URL kopieren**
-   copies the full `context.url`. keksdose's label is its shared `more.copy_url` key,
+   accepted — Kurvenschmiede's backfilled rows): the link's text and `href` are the path
+   only (ui-kit 0.52, the code review's bypass through `/login?next=/join?token=…`: a
+   query is the reporter's to write and a forwarding page acts on it), the query and hash
+   shown as text beside it, and `CopyButton` **Copy URL** / **URL kopieren** copies the
+   full `context.url`. A one-shot path (`/join`, `/register`, `/verify-email`,
+   `/reset-password`, an app's `pageLinkExclude`; matched decoded and in any case) shows
+   as text with Copy. keksdose's label is its shared `more.copy_url` key,
    which stays app-side; the kit carries the same words in its own namespace.
 3. **Attachment** / **Anhang** — screenshot, then `attachment_urls`, then rework
    pictures from the body, in that order; images via `AuthedImage`, pdf/txt as a
@@ -494,7 +498,7 @@ the title beside the detail. Then the sections, in this order:
      entschieden oder warum nicht.**; blank saves `null`;
    - admin or author, status reworkable (§3.4): `RotateCcw` **Rework** / **Nacharbeit**;
    - when the URL (or the route fallback above) is set: `ExternalLink` **Open page** /
-     **Seite öffnen** (a real `href`, path + query + hash).
+     **Seite öffnen** (a real `href`, the path only; not on a one-shot path).
 5. **Send for rework** / **Zur Nacharbeit senden** — only while reworking:
    `FeedbackNoteEditor` with a **one-file** attachment field (add, capture or paste;
    same types and size), placeholder **What still needs refinement? Any new

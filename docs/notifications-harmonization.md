@@ -768,9 +768,12 @@ anywhere. `deviceTimeZone()` lives in `device-zone-report.ts` beside
   fresh endpoint, once. `disable` tells the server first, then the browser.
 - **`releaseThisDevicePush(unregister)`** (ui-kit 0.52, §10.6 rule 1; refactor audit
   2026-10-30 FLW-2): the same release without the hook, for the app's sign-out, where no
-  settings card is mounted. It finds this browser's subscription, tells the server
-  (`unregister(endpoint)`), then unsubscribes the browser, with the hook's 10 s and 15 s
-  cuts, and fires `PUSH_SUBSCRIPTION_CHANGED`; `disable` goes through it.
+  settings card is mounted. It asks `getRegistration()` (no `ready` wait): with no
+  registration or no active worker it resolves `false` at once, nothing to release. Else it
+  tells the server (`unregister(endpoint)`) and unsubscribes the browser (15 s cut) in a
+  `finally`, so the browser lets go even when the server refuses; it still rejects with the
+  server's error, and fires `PUSH_SUBSCRIPTION_CHANGED` in every case. The settings card's
+  `disable` shares its core but keeps its error on screen for a retry.
 - **`PUSH_SUBSCRIPTION_CHANGED`** (`"eifi1:push-subscription-changed"`) and
   `notifyPushSubscriptionChanged()`: fired by every enable and disable and by
   `PushDevicesSetting`'s removal of this device; every mounted hook re-reads its state on
@@ -2095,9 +2098,11 @@ docstring and the adopt row take:
    on the refactor audit's FLW-2). Without it the device kept showing the signed-out
    account's notifications, title and body included, to whoever used it next. When the
    person signs out ("Log out"), the app calls `releaseThisDevicePush(unregister)` (§4.2)
-   **before** it clears the session, while the token is still valid: the server first
-   (`POST /notifications/devices/unregister`), then the browser's `unsubscribe()`. It is
-   best effort: a failure or a timeout never blocks the sign-out. A session that merely
+   **before** it clears the session, while the token is still valid: the server
+   (`POST /notifications/devices/unregister`) and the browser's `unsubscribe()`, the latter
+   even when the server refuses (the push service then answers 410 and the server prunes
+   the device). It is best effort: a failure or a timeout never blocks the sign-out, and a
+   device with no push answers `false`. A session that merely
    expires or is refused does not release (there is no token to tell the server with).
    The cost, accepted: whoever signs back in on that device turns push on again.
    keksdose (the one app with push) calls it in `logOut`.
