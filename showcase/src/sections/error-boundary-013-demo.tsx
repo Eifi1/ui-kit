@@ -55,7 +55,9 @@ function DefaultScreenDemo() {
           them. Try again resets the boundary; Reload reloads the page — a deterministic crash survives Try again, so
           there is always a way forward. The copy button puts the plain-text report on the clipboard (error line, page,
           time, user agent, app version, extras, stack, component stack), and the disclosure shows the same text. The
-          screen reads no router, query client or auth store — a crash is when those may be what broke.
+          screen reads no router, query client or auth store — a crash is when those may be what broke. A screen reader
+          hears the title and the hint once, assertively; the buttons, the report and &ldquo;Reported as …&rdquo; sit
+          outside that live region, so opening Details reads out no stack.
         </Note>
       </div>
     </Example>

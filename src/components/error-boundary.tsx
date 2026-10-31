@@ -1,4 +1,4 @@
-import { Component } from "react";
+import { Component, useEffect } from "react";
 import type { ErrorInfo, ReactNode } from "react";
 import { AlertTriangle, RefreshCw, WifiOff } from "lucide-react";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
@@ -7,6 +7,7 @@ import { EmptyState } from "./empty-state";
 import { CopyButton } from "./copy-button";
 import { Disclosure } from "./disclosure";
 import { documentNavigation } from "../lib/document-navigation";
+import { useAnnounce } from "../hooks/use-announce";
 import { DEFAULT_ERROR_BOUNDARY_LABELS } from "./error-boundary-labels";
 
 /** The words of the default fallback. */
@@ -605,6 +606,17 @@ function ErrorFallback({
   const reportText = report ? formatCrashReport(report) : null;
   const errorLine = details.message ? `${details.name}: ${details.message}` : details.name;
 
+  // The title and the hint, said once through an assertive region of their own (0.52,
+  // refactor audit 2026-10-30, DSP-17). `role="alert"` on the whole box put the actions
+  // in it, so each later insertion was read out as news: "Copy error report" and
+  // "Details" on `componentDidCatch`'s second render, "Reported as …", and on opening
+  // Details both stacks of the crash report. EmptyState has no wrapper for title and
+  // hint alone, and a region mounted with its message is often missed anyway.
+  const alert = useAnnounce({ politeness: "assertive" });
+  const { announce } = alert;
+  const spoken = `${title}. ${hint}`;
+  useEffect(() => announce(spoken), [announce, spoken]);
+
   const reloadButton = (
     <Button key="reload" variant={mode === "error" ? "secondary" : "default"} onClick={reloadPage}>
       {text.reload}
@@ -619,43 +631,45 @@ function ErrorFallback({
   );
 
   return (
-    <EmptyState
-      role="alert"
-      tone={mode === "error" ? "danger" : undefined}
-      headingAs={headingAs}
-      className={className}
-      icon={<Icon />}
-      title={title}
-      hint={hint}
-      action={
-        <>
-          {showMessage && mode === "error" && (
-            // A quotation, not prose: left-aligned and monospaced, so it reads as the
-            // program's words and can be read out or screenshotted verbatim.
-            <p
-              data-error-message=""
-              className="-mt-1 mb-1 basis-full whitespace-pre-wrap break-words rounded-md border border-danger-strong bg-danger-soft px-3 py-2 text-start font-mono text-xs text-primary"
-            >
-              {errorLine}
-            </p>
-          )}
-          {filing === "filed" && (
-            <p className="-mt-1 mb-1 basis-full text-xs">{reference ? text.reportedAs(reference) : text.reported}</p>
-          )}
-          {mode === "error" ? [retryButton, reloadButton] : [reloadButton, retryButton]}
-          {copyReport && reportText !== null && filing !== "filed" && (
-            <CopyButton variant="label" buttonVariant="ghost" label={text.copyReport} text={reportText} />
-          )}
-          {actions}
-          {showDetails && reportText !== null && (
-            <Disclosure variant="bare" title={text.details} className="basis-full text-start">
-              <pre className="max-h-60 overflow-auto whitespace-pre-wrap break-words text-xs text-secondary">
-                {reportText}
-              </pre>
-            </Disclosure>
-          )}
-        </>
-      }
-    />
+    <>
+      <span {...alert.regionProps} />
+      <EmptyState
+        tone={mode === "error" ? "danger" : undefined}
+        headingAs={headingAs}
+        className={className}
+        icon={<Icon />}
+        title={title}
+        hint={hint}
+        action={
+          <>
+            {showMessage && mode === "error" && (
+              // A quotation, not prose: left-aligned and monospaced, so it reads as the
+              // program's words and can be read out or screenshotted verbatim.
+              <p
+                data-error-message=""
+                className="-mt-1 mb-1 basis-full whitespace-pre-wrap break-words rounded-md border border-danger-strong bg-danger-soft px-3 py-2 text-start font-mono text-xs text-primary"
+              >
+                {errorLine}
+              </p>
+            )}
+            {filing === "filed" && (
+              <p className="-mt-1 mb-1 basis-full text-xs">{reference ? text.reportedAs(reference) : text.reported}</p>
+            )}
+            {mode === "error" ? [retryButton, reloadButton] : [reloadButton, retryButton]}
+            {copyReport && reportText !== null && filing !== "filed" && (
+              <CopyButton variant="label" buttonVariant="ghost" label={text.copyReport} text={reportText} />
+            )}
+            {actions}
+            {showDetails && reportText !== null && (
+              <Disclosure variant="bare" title={text.details} className="basis-full text-start">
+                <pre className="max-h-60 overflow-auto whitespace-pre-wrap break-words text-xs text-secondary">
+                  {reportText}
+                </pre>
+              </Disclosure>
+            )}
+          </>
+        }
+      />
+    </>
   );
 }

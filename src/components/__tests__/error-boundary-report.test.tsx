@@ -19,9 +19,9 @@ function Boom({ error }: { error: unknown }): React.ReactNode {
   return <p>fine</p>;
 }
 
-/** The fallback's own alert. The CopyButton inside it carries an (empty) assertive
- *  live region of its own, which is also `role="alert"`, so the query is scoped. */
-const crashScreen = () => document.querySelector('[role="alert"]:not(:empty)');
+/** The crash screen: every one of its modes offers Reload. Not the alert — since 0.52
+ *  (DSP-17) that is a live region that speaks a moment after the screen appears. */
+const crashScreen = () => screen.queryByRole("button", { name: "Reload" });
 
 /** Let the `onReport` promise chain settle and its setState land. */
 const settle = () =>
