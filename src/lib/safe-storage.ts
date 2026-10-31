@@ -42,9 +42,13 @@ export function readStored(key: string): string | null {
 }
 
 /** Store `value` under `key`, silently doing nothing when storage is unavailable
- *  or full. A preference that cannot be persisted is not worth an exception. */
-export function writeStored(key: string, value: string): void {
-  guarded("localStorage", undefined, (storage) => storage.setItem(key, value));
+ *  or full. A preference that cannot be persisted is not worth an exception. `null`
+ *  removes the key, as {@link writeSessionStored}'s does (0.52; the two pairs wrote
+ *  differently, and `null` past the types stored the string "null" — 0.52 code review). */
+export function writeStored(key: string, value: string | null): void {
+  guarded("localStorage", undefined, (storage) =>
+    value === null ? storage.removeItem(key) : storage.setItem(key, value),
+  );
 }
 
 /** Forget `key`, silently doing nothing when storage is blocked — there is nothing to
@@ -70,7 +74,8 @@ export function writeSessionStored(key: string, value: string | null): void {
  * blocked, malformed and another shape all read as "never set" — the caller's default —
  * which is what the six hand-written `JSON.parse(readStored(key))` reads in the kit each
  * answered in their own try/catch (DUP-8). `isShape` gets the parsed value as `unknown`:
- * the shape check is the one part that is the caller's.
+ * the shape check is the one part that is the caller's. A shape check that throws reads
+ * as another shape: null.
  */
 export function readStoredJson<T>(key: string, isShape: (value: unknown) => value is T): T | null {
   const text = readStored(key);

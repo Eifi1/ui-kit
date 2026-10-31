@@ -48,6 +48,16 @@ describe("removeStored and the sessionStorage pair (safe-storage, 0.34)", () => 
     expect(readStored("k")).toBeNull();
   });
 
+  // 0.52 code review (src/index.ts): the two pairs wrote differently — `writeSessionStored(k,
+  // null)` removed the key, `writeStored(k, null)` (past the types) stored the string "null".
+  // Both take `null` now, so `writeStored(key, on ? "1" : null)` reads like the session one.
+  it('removes the key on `null`, as writeSessionStored does — never the string "null"', () => {
+    writeStored("k", "v");
+    writeStored("k", null);
+    expect(window.localStorage.getItem("k")).toBeNull();
+    expect(readStored("k")).toBeNull();
+  });
+
   it("round-trips this tab's value, and `null` removes it — never in localStorage", () => {
     writeSessionStored("k", "v");
     expect(readSessionStored("k")).toBe("v");
