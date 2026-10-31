@@ -120,8 +120,13 @@ export default defineConfig({
        * (refactor audit 2026-10, TST-4). Raised in 0.34 with the tests for the
        * modules the old remainder listed first: theme-store and the DataTable filter
        * popover (TST-12).
+       *
+       * Raised in 0.52 (refactor audit 2026-10-30, TST-5: the floors had not moved since
+       * 0.34, so 2–2.7pp of slack let ~550 lines lose their tests unnoticed). Measured on
+       * 0.52's whole-suite run (coverage/lcov-report, 717 files): lines 97.88%, statements
+       * 96.04%, functions 97.15%, branches 92.29%; the same rule, less 1pp rounded down.
        */
-      thresholds: { lines: 95, statements: 93, functions: 94, branches: 90 },
+      thresholds: { lines: 96, statements: 95, functions: 96, branches: 91 },
     },
   },
 });
