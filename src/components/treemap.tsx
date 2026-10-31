@@ -46,7 +46,9 @@ import { DEFAULT_TREEMAP_LABELS, type TreemapLabels } from "./treemap-labels";
  */
 export interface TreemapNode {
   /** Stable key, handed back by {@link TreemapProps.onNodeClick} and
-   *  {@link TreemapProps.nodeNote}. Names can collide; ids must not. */
+   *  {@link TreemapProps.nodeNote}. Names can collide; ids must not among a group's own
+   *  nodes (or the top's). A group and a tile inside it may share one — chain 12 and shop
+   *  12 from two tables — and `onNodeClick`'s `groups` tells them apart (0.52). */
   id: string;
   name: string;
   /** The tile's area. A node whose value is not a positive finite number is NOT
@@ -331,15 +333,21 @@ interface TileContext {
   keys?: TileKeys;
 }
 
+/**
+ * Keyed by a node's PATH (`MapNode.path`), not its id: a group and a tile may share an id
+ * — chain 12 and shop 12 come from two tables — and keyed by id the map had two tab stops,
+ * the frame said the tile's name and the arrows stuck (0.52 code review of treemap.tsx,
+ * finding 3).
+ */
 interface TileKeys {
-  /** A tile's or a group's accessible name, by node id (`labels.tile`, `labels.group`). */
-  name: (id: string) => string | undefined;
-  /** The id holding the map's one tab stop. */
+  /** A tile's or a group's accessible name (`labels.tile`, `labels.group`). */
+  name: (path: string) => string | undefined;
+  /** The path holding the map's one tab stop. */
   stop: string | undefined;
-  onFocus: (id: string) => void;
-  register: (id: string, element: SVGGElement | null) => void;
-  /** Moves focus for an arrow, Home or End pressed on tile `id`; `false` for any other key. */
-  move: (id: string, event: KeyboardEvent<SVGGElement>) => boolean;
+  onFocus: (path: string) => void;
+  register: (path: string, element: SVGGElement | null) => void;
+  /** Moves focus for an arrow, Home or End pressed on node `path`; `false` for any other key. */
+  move: (path: string, event: KeyboardEvent<SVGGElement>) => boolean;
 }
 
 const TreemapTiles = createContext<TileContext | null>(null);
@@ -483,6 +491,9 @@ export interface TreemapCellProps {
   /** The ids of the groups round the node, outermost first. `Treemap` puts it on every
    *  node it hands recharts; a cell drawn in a caller's own map has it if the data does. */
   groups?: readonly string[];
+  /** The node's place in the tree, which `Treemap` puts on every node it hands recharts:
+   *  its key in the map's keyboard, where an id may repeat between a group and a tile. */
+  path?: string;
   /** Filled in by recharts for a GROUP: the nodes laid out inside it. A cell with
    *  children draws a frame, not a tile (0.52). */
   children?: readonly object[] | null;
@@ -549,6 +560,7 @@ function Tile({
   onNodeClick,
   onGroupClick,
   groups,
+  path,
   children,
   root,
   index,
@@ -621,11 +633,11 @@ function Tile({
   // Inside a Treemap every tile and frame is a stop of the map's one roving tab stop,
   // named with its value and share; a standalone cell is a stop of its own only when it
   // is a button.
-  const roving = id != null && keys ? keys : undefined;
+  const roving = path != null && keys ? keys : undefined;
   const focusable = roving !== undefined || activate !== undefined;
   const onKeyDown = focusable
     ? (e: KeyboardEvent<SVGGElement>) => {
-        if (roving?.move(id!, e)) {
+        if (roving?.move(path!, e)) {
           e.preventDefault();
           return;
         }
@@ -636,10 +648,10 @@ function Tile({
     : undefined;
   return (
     <g
-      ref={roving ? (element) => roving.register(id!, element) : undefined}
+      ref={roving ? (element) => roving.register(path!, element) : undefined}
       onClick={activate}
       onKeyDown={onKeyDown}
-      onFocus={roving ? () => roving.onFocus(id!) : undefined}
+      onFocus={roving ? () => roving.onFocus(path!) : undefined}
       // A clickable tile is a button to a keyboard and a screen reader too; the
       // drilldown it opens was mouse-only in the app this came from. Under `redactNames`
       // the group carries `data-private` whenever it carries a name, button or not: the
@@ -647,8 +659,8 @@ function Tile({
       // session replay or a redaction keyed on `[data-private]` (0.52, code review of
       // feat/0.52.0 — DSP-5 named every tile, and this tagged only the buttons).
       role={activate ? "button" : roving ? "img" : undefined}
-      tabIndex={roving ? (roving.stop === id ? 0 : -1) : activate ? 0 : undefined}
-      aria-label={focusable ? (roving?.name(id!) ?? name) : undefined}
+      tabIndex={roving ? (roving.stop === path ? 0 : -1) : activate ? 0 : undefined}
+      aria-label={focusable ? (roving?.name(path!) ?? name) : undefined}
       data-private={focusable && redactNames ? "" : undefined}
       data-group={group ? "" : undefined}
       cursor={activate ? "pointer" : undefined}
@@ -787,6 +799,8 @@ type MapNode = {
   labelColor?: string;
   /** The ids of the groups round the node, outermost first. */
   groups: readonly string[];
+  /** The node's key in the map's keyboard and names: its id and its groups' (see TileKeys). */
+  path: string;
   children?: MapNode[];
 };
 
@@ -827,7 +841,7 @@ function mapNodes(
         const children = walk(d.children, [...groups, d.id], { fill, labelColor, shade });
         if (children.length === 0) return [];
         const size = children.reduce((acc, c) => acc + c.size, 0);
-        return [{ id: d.id, name: d.name, size, fill, groups, children }];
+        return [{ id: d.id, name: d.name, size, fill, groups, path: pathOf(groups, d.id), children }];
       }
       if (!(Number.isFinite(d.value) && d.value > 0) || left <= 0) return [];
       left -= 1;
@@ -837,10 +851,15 @@ function mapNodes(
       // finding 5 — white ink on a tile shaded almost to the card, ~1.3:1). The tile's
       // own `labelColor` still wins: the caller set it for this tile.
       const ink = d.labelColor ?? (drawn === fill ? labelColor : undefined);
-      return [{ id: d.id, name: d.name, size: d.value, fill: drawn, labelColor: ink, groups }];
+      return [
+        { id: d.id, name: d.name, size: d.value, fill: drawn, labelColor: ink, groups, path: pathOf(groups, d.id) },
+      ];
     });
   return walk(data, [], undefined);
 }
+
+/** A node's path: its groups' ids and its own, as JSON so that no id can fake a separator. */
+const pathOf = (groups: readonly string[], id: string) => JSON.stringify([...groups, id]);
 
 /** `nodes` in the order the keyboard walks them: each group, then what is inside it. */
 function depthFirst(nodes: readonly MapNode[]): MapNode[] {
@@ -924,14 +943,14 @@ export function Treemap({
   // their element here rather than being looked up.
   const [stop, setStop] = useState<string | undefined>(undefined);
   const tiles = useRef(new Map<string, SVGGElement>());
-  const stopId = order.some((n) => n.id === stop) ? stop : order[0]?.id;
-  const register = useCallback((id: string, element: SVGGElement | null) => {
-    if (element) tiles.current.set(id, element);
-    else tiles.current.delete(id);
+  const stopPath = order.some((n) => n.path === stop) ? stop : order[0]?.path;
+  const register = useCallback((path: string, element: SVGGElement | null) => {
+    if (element) tiles.current.set(path, element);
+    else tiles.current.delete(path);
   }, []);
   const move = useCallback(
-    (id: string, event: KeyboardEvent<SVGGElement>) => {
-      const at = order.findIndex((n) => n.id === id);
+    (path: string, event: KeyboardEvent<SVGGElement>) => {
+      const at = order.findIndex((n) => n.path === path);
       const step = horizontalStep(event.key, event.currentTarget);
       const to = step
         ? at + step
@@ -946,7 +965,7 @@ export function Treemap({
                 : undefined;
       if (at < 0 || to === undefined) return false;
       const target = order[Math.max(0, Math.min(order.length - 1, to))];
-      if (target) tiles.current.get(target.id)?.focus();
+      if (target) tiles.current.get(target.path)?.focus();
       return true;
     },
     [order],
@@ -987,20 +1006,23 @@ export function Treemap({
     };
     // One decimal under 10 %, as PieChart: a tile of 0.4 % named "0%" says it is not there.
     const shareText = (share: number) => (share < 0.1 ? percentFormats.fine : percentFormats.whole).format(share);
-    const groupName = new Map(order.filter((n) => n.children).map((n) => [n.id, n.name]));
+    // A group's name by its path; a node's groups by theirs, its own path's prefixes.
+    const groupName = new Map(order.filter((n) => n.children).map((n) => [n.path, n.name]));
     return new Map(
       order.map((n) => {
         const say = n.children ? labels.group : labels.tile;
         const own = say(n.name, valueText(n.size), shareText(total > 0 ? n.size / total : 0));
         // The innermost group first: "Rent: …, in Housing, in Fixed costs".
-        const named = n.groups.reduceRight((acc, g) => labels.inGroup(acc, groupName.get(g) ?? g), own);
-        return [n.id, named] as const;
+        const named = n.groups
+          .map((g, i) => groupName.get(pathOf(n.groups.slice(0, i), g)) ?? g)
+          .reduceRight((acc, group) => labels.inGroup(acc, group), own);
+        return [n.path, named] as const;
       }),
     );
   }, [order, labels, valueFormatter, numberFormat, percentFormats, total]);
   const keys = useMemo<TileKeys>(
-    () => ({ name: (id) => names.get(id), stop: stopId, onFocus: setStop, register, move }),
-    [names, stopId, register, move],
+    () => ({ name: (path) => names.get(path), stop: stopPath, onFocus: setStop, register, move }),
+    [names, stopPath, register, move],
   );
   const context = useMemo<TileContext>(
     () => ({ tokens: tokenHex, edgeFor, edges: edgesInForce, keys }),
