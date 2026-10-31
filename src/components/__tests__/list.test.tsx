@@ -4,6 +4,7 @@ import { Copy, Home } from "lucide-react";
 import { List, ListItem } from "../list";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import type { KitLinkComponent } from "../../i18n/kit-labels";
+import { axeViolations } from "../../test/axe";
 
 describe("List", () => {
   it("is a list of listitems, even with the bullets styled away", () => {
@@ -464,22 +465,45 @@ describe("ListItem docs guards (keksdose 0.17 Q5)", () => {
   });
 });
 
+describe("ListItem's body is content or nothing (audit 2026-10-30 DUP-14)", () => {
+  it("an empty-string body draws no empty group under the row", () => {
+    render(
+      <List>
+        <ListItem title="Rent">{""}</ListItem>
+      </List>,
+    );
+    expect(screen.queryByRole("group", { name: "Rent" })).toBeNull();
+  });
+});
+
 describe("List limit (0.51.4, keksdose run 89)", () => {
   const rows = (count: number) => Array.from({ length: count }, (_, i) => <ListItem key={i} title={`Row ${i + 1}`} />);
 
   it("opens on the first rows, a Show all (n) row opens the rest and folds them again", () => {
     render(<List limit={3}>{rows(5)}</List>);
     const list = screen.getByRole("list");
-    // The control is no item of the list: a reader hears three rows.
-    expect(within(list).getAllByRole("listitem")).toHaveLength(3);
+    // Three rows, and the Show all as the list's last item (0.52: a `role="none"` item
+    // left the button standing in the list itself, which axe fails).
+    const items = () => within(list).getAllByRole("listitem");
+    expect(items()).toHaveLength(4);
     const more = screen.getByRole("button", { name: "Show all (5)" });
+    expect(items()[3]).toContainElement(more);
     expect(more).toHaveAttribute("aria-expanded", "false");
     expect(more).toHaveAttribute("aria-controls", list.id);
     fireEvent.click(more);
-    expect(within(list).getAllByRole("listitem")).toHaveLength(5);
+    expect(items()).toHaveLength(6);
     expect(screen.getByRole("button", { name: "Show fewer" })).toHaveAttribute("aria-expanded", "true");
     fireEvent.click(screen.getByRole("button", { name: "Show fewer" }));
-    expect(within(list).getAllByRole("listitem")).toHaveLength(3);
+    expect(items()).toHaveLength(4);
+  });
+
+  it("is a list of list items only: axe's structure rules pass (found building 0.51.7)", async () => {
+    // The row was an `<li role="none">` holding a button: the button then stood in the
+    // list itself, and axe 4.13 failed `aria-required-children` on the `role="list"`.
+    const { container } = render(<List limit={3}>{rows(5)}</List>);
+    expect(await axeViolations(container)).toEqual([]);
+    fireEvent.click(screen.getByRole("button", { name: "Show all (5)" }));
+    expect(await axeViolations(container)).toEqual([]);
   });
 
   it("draws a list that fits its limit whole, with no such row, and keeps the caller's id", () => {
