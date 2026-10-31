@@ -2,35 +2,19 @@
 // under a ‹ caption › whose caption opens a month grid. Moved out of date-picker.tsx as
 // it was (MOD-9, refactor audit 2026-10); internal, both pickers reach it through
 // `PanelCalendar`.
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useId, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../lib/cn";
-import { horizontalStep } from "../lib/direction";
-import { monthKey, pad, parseIsoDate } from "../lib/dates";
+import { monthKey, parseIsoDate } from "../lib/dates";
+import { upperFirst } from "../lib/text-case";
 import { useKitLabels } from "../i18n/kit-labels";
-import { FOCUS_RING_WIDTH } from "./focus-ring";
 import { DEFAULT_MINI_CALENDAR_LABELS, MiniCalendar, type MiniCalendarProps } from "./mini-calendar";
-import { DEFAULT_MONTH_PICKER_LABELS } from "./month-picker";
+import { DEFAULT_MONTH_PICKER_LABELS } from "./month-picker-labels";
+import { MonthGrid, clampKey, firstOfKey, shiftKey, yearArrowsBlocked } from "./month-grid";
 import { claimEscape } from "../hooks/use-dismiss";
 
 // ── Month jump (`monthJump`, kastlan) ─────────────────────────────────────
-
-/** A "YYYY-MM" key as a count of months, and back: month arithmetic with no `Date`
- *  rollover to step around. */
-const monthIndex = (key: string) => Number(key.slice(0, 4)) * 12 + Number(key.slice(5, 7)) - 1;
-const keyOfIndex = (index: number) => `${String(Math.floor(index / 12)).padStart(4, "0")}-${pad((index % 12) + 1)}`;
-const shiftKey = (key: string, delta: number) => keyOfIndex(monthIndex(key) + delta);
-/** The 1st of a "YYYY-MM" month, for `Intl` to name. */
-const firstOfKey = (key: string) => new Date(Number(key.slice(0, 4)), Number(key.slice(5, 7)) - 1, 1);
-
-/** Upper-case the first letter only, as `MonthPicker` does: "julio de 2026" heads a
- *  panel as "Julio de 2026" — not "Julio De 2026", which CSS `capitalize` would write. */
-const upperFirst = (text: string, locale: string | undefined) =>
-  text.charAt(0).toLocaleUpperCase(locale) + text.slice(1);
-
-/** Months per row of the month grid — `MonthPicker`'s 4×3. */
-const MONTH_COLUMNS = 3;
 
 /**
  * The month `MiniCalendar` opens on — the selection, or today, pulled inside the
@@ -76,14 +60,14 @@ interface DayGridMount {
  * calendar's. What this keeps is `shown`, the month on screen, for the caption — fed by
  * the arrows here, by the calendar's `onMonthChange` (PageUp, arrowing off the edge),
  * and by the value, whose changes the calendar follows WITHOUT reporting them (a preset
- * in `commit="apply"` moves the grid to its start). That last one is mirrored below with
+ * under `apply` moves the grid to its start). That last one is mirrored below with
  * the calendar's own rule, and when it lands in another month the day grid is remounted
  * there rather than steered by `month`: a `month` that changes in the same render as the
  * value would win over the value's day, and the grid's tab stop would land on the
  * month's same-numbered day instead of the preset's start.
  *
- * The month grid is `MonthPicker`'s, redrawn here because that one is internal to its
- * file; same roles, keys and words (`monthPicker` labels).
+ * The month grid is `MonthPicker`'s own {@link MonthGrid} (month-grid.tsx, one since
+ * 0.52 — refactor audit 2026-10-30, DUP-11), with its words (`monthPicker` labels).
  */
 function JumpCalendar({
   from = "",
@@ -104,14 +88,11 @@ function JumpCalendar({
   const captionId = `${id}-caption`;
   const hintId = `${id}-hint`;
   const captionRef = useRef<HTMLButtonElement>(null);
-  const monthsRef = useRef<HTMLDivElement>(null);
 
   const lo = min ? parseIsoDate(min) : null;
   const hi = max ? parseIsoDate(max) : null;
   const minKey = lo ? monthKey(lo) : null;
   const maxKey = hi ? monthKey(hi) : null;
-  const outOfBounds = (key: string) => Boolean((minKey && key < minKey) || (maxKey && key > maxKey));
-  const clampKey = (key: string) => (minKey && key < minKey ? minKey : maxKey && key > maxKey ? maxKey : key);
 
   const [view, setView] = useState<"days" | "months">("days");
   const [shown, setShown] = useState(() => openingMonth(from, to, lo, hi));
@@ -135,16 +116,6 @@ function JumpCalendar({
     }
   }
 
-  // A month cell that has to take focus once it exists: opening the grid, and arrowing
-  // across a year's edge, which relabels the same twelve buttons.
-  const pendingFocus = useRef<string | null>(null);
-  useEffect(() => {
-    const key = pendingFocus.current;
-    if (!key) return;
-    pendingFocus.current = null;
-    monthsRef.current?.querySelector<HTMLElement>(`[data-month="${key}"]`)?.focus();
-  });
-
   const showMonth = (key: string) => {
     setShown(key);
     // Follows by `month`: the calendar keeps the day of the month (clamped), and the
@@ -152,9 +123,8 @@ function JumpCalendar({
     setDayGrid((d) => ({ ...d, month: key }));
   };
   const openMonths = () => {
-    const start = clampKey(shown);
-    pendingFocus.current = start;
-    setActive(start);
+    // The grid takes the focus onto this month as it mounts.
+    setActive(clampKey(shown, minKey, maxKey));
     setView("months");
   };
   const closeMonths = (focusCaption: boolean) => {
@@ -167,10 +137,6 @@ function JumpCalendar({
     setView("days");
     // Picked to go there: the focus goes with it, onto the days.
     setDayGrid((d) => ({ key: d.key + 1, month: key, focus: true }));
-  };
-  const moveActive = (key: string, focus: boolean) => {
-    if (focus) pendingFocus.current = key;
-    setActive(key);
   };
 
   const inDays = view === "days";
@@ -185,54 +151,12 @@ function JumpCalendar({
     closeMonths(true);
   };
 
-  const onMonthKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
-    if (e.key === "Escape") return escapeToDays(e);
-    // Left and right are visual: the grid runs the other way in a right-to-left panel.
-    const step = horizontalStep(e.key, e.currentTarget);
-    const col = (monthIndex(active) % 12) % MONTH_COLUMNS;
-    let delta: number;
-    switch (step ? "horizontal" : e.key) {
-      case "horizontal":
-        delta = step;
-        break;
-      case "ArrowUp":
-        delta = -MONTH_COLUMNS;
-        break;
-      case "ArrowDown":
-        delta = MONTH_COLUMNS;
-        break;
-      case "Home":
-        delta = -col;
-        break;
-      case "End":
-        delta = MONTH_COLUMNS - 1 - col;
-        break;
-      case "PageUp":
-        delta = -12;
-        break;
-      case "PageDown":
-        delta = 12;
-        break;
-      default:
-        return;
-    }
-    // Before the no-op check: these keys also scroll the panel.
-    e.preventDefault();
-    if (delta !== 0) moveActive(shiftKey(active, delta), true);
-  };
-
   const year = Number(active.slice(0, 4));
-  // A year arrow is dead once every month of the year it leads to is out of bounds.
-  const prevYearBlocked = Boolean(minKey && year - 1 < Number(minKey.slice(0, 4)));
-  const nextYearBlocked = Boolean(maxKey && year + 1 > Number(maxKey.slice(0, 4)));
-  const prevBlocked = !inDays && prevYearBlocked;
-  const nextBlocked = !inDays && nextYearBlocked;
+  const yearBlocked = yearArrowsBlocked(active, minKey, maxKey);
+  const prevBlocked = !inDays && yearBlocked.previous;
+  const nextBlocked = !inDays && yearBlocked.next;
 
   const longName = useMemo(() => new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }), [locale]);
-  const shortNames = useMemo(() => {
-    const fmt = new Intl.DateTimeFormat(locale, { month: "short" });
-    return Array.from({ length: 12 }, (_, i) => upperFirst(fmt.format(new Date(2000, i, 1)), locale));
-  }, [locale]);
   const caption = inDays
     ? upperFirst(longName.format(firstOfKey(shown)), locale)
     : new Intl.DateTimeFormat(locale, { year: "numeric" }).format(new Date(year, 0, 1));
@@ -242,9 +166,6 @@ function JumpCalendar({
   const toDate = parseIsoDate(to);
   const fromKey = fromDate ? monthKey(fromDate) : null;
   const toKey = toDate ? monthKey(toDate) : null;
-  const low = fromKey ?? toKey;
-  const high = toKey ?? fromKey;
-  const currentKey = monthKey(new Date());
 
   // Aria-disabled rather than disabled, like the day cells: a focused button that
   // turns `disabled` drops the focus to <body>, mid-panel.
@@ -262,8 +183,9 @@ function JumpCalendar({
           aria-label={inDays ? calendarText.previousMonth : monthText.previousYear}
           aria-disabled={prevBlocked || undefined}
           onClick={() => {
+            // Focus stays on the arrow being pressed — only the grid moves.
             if (inDays) showMonth(shiftKey(shown, -1));
-            else if (!prevBlocked) moveActive(shiftKey(active, -12), false);
+            else if (!prevBlocked) setActive(shiftKey(active, -12));
           }}
           onKeyDown={escapeToDays}
           className={arrow}
@@ -294,7 +216,7 @@ function JumpCalendar({
           aria-disabled={nextBlocked || undefined}
           onClick={() => {
             if (inDays) showMonth(shiftKey(shown, 1));
-            else if (!nextBlocked) moveActive(shiftKey(active, 12), false);
+            else if (!nextBlocked) setActive(shiftKey(active, 12));
           }}
           onKeyDown={escapeToDays}
           className={arrow}
@@ -323,58 +245,20 @@ function JumpCalendar({
           onMonthChange={showMonth}
         />
       ) : (
-        <div ref={monthsRef} role="grid" aria-labelledby={captionId} className="grid gap-1">
-          {Array.from({ length: 12 / MONTH_COLUMNS }, (_, row) => (
-            <div key={row} role="row" className="grid grid-cols-3 gap-1">
-              {Array.from({ length: MONTH_COLUMNS }, (_, c) => {
-                const index = row * MONTH_COLUMNS + c;
-                const key = keyOfIndex(year * 12 + index);
-                const disabled = outOfBounds(key);
-                const selected = low !== null && high !== null && key >= low && key <= high;
-                const end = key === fromKey || key === toKey;
-                const current = key === currentKey;
-                return (
-                  <button
-                    key={c}
-                    type="button"
-                    role="gridcell"
-                    data-month={key}
-                    tabIndex={key === active ? 0 : -1}
-                    aria-label={monthText.month(longName.format(firstOfKey(key)))}
-                    aria-selected={selected}
-                    aria-disabled={disabled || undefined}
-                    aria-current={current ? "date" : undefined}
-                    onClick={() => {
-                      // The guard `disabled` would have been: out-of-bounds months stay
-                      // focusable, so the roving tab stop never falls into a hole.
-                      if (!disabled) pick(key);
-                    }}
-                    onKeyDown={onMonthKeyDown}
-                    className={cn(
-                      // 44px rows: the touch-target size, and four of them stand as tall
-                      // as a month of days, so the panel does not jump as the views swap.
-                      "h-11 rounded px-1 text-sm tabular-nums transition-colors",
-                      FOCUS_RING_WIDTH,
-                      "focus-visible:outline-none focus-visible:ring-inset",
-                      // A --brand ring on a --brand fill exists only in the DOM.
-                      end && !disabled ? "focus-visible:ring-brand-contrast" : "focus-visible:ring-brand",
-                      disabled
-                        ? "cursor-not-allowed text-placeholder"
-                        : end
-                          ? "bg-brand text-brand-contrast hover:bg-brand-hover"
-                          : selected
-                            ? "bg-brand-soft font-medium text-brand-muted hover:bg-brand-soft-hover"
-                            : "text-primary hover:bg-hover",
-                      current && !selected && !disabled && "ring-1 ring-inset ring-strong",
-                    )}
-                  >
-                    {shortNames[index]}
-                  </button>
-                );
-              })}
-            </div>
-          ))}
-        </div>
+        <MonthGrid
+          active={active}
+          onActiveChange={setActive}
+          onPick={pick}
+          from={fromKey}
+          to={toKey}
+          minKey={minKey}
+          maxKey={maxKey}
+          currentKey={monthKey(new Date())}
+          locale={locale}
+          cellName={monthText.month}
+          labelledBy={captionId}
+          onEscape={escapeToDays}
+        />
       )}
     </div>
   );

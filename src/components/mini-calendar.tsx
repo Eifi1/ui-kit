@@ -3,6 +3,7 @@ import type { ComponentPropsWithRef, KeyboardEvent, ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../lib/cn";
 import { hasContent } from "../lib/presence";
+import { upperFirst } from "../lib/text-case";
 import { FOCUS_RING, FOCUS_RING_WIDTH } from "./focus-ring";
 import { horizontalStep } from "../lib/direction";
 import { useAnnounce } from "../hooks/use-announce";
@@ -351,7 +352,10 @@ export function MiniCalendar({
   const weeks: (Date | null)[][] = [];
   for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
 
-  const monthLabel = firstOfMonth.toLocaleDateString(locale, { month: "long", year: "numeric" });
+  // The first letter only, not CSS `capitalize`, which upper-cased every word: Spanish
+  // read "Septiembre De 2026" and Hungarian "2026. Szeptember" (refactor audit
+  // 2026-10-30, DUP-11) — while the same panel with `monthJump` read them right.
+  const monthLabel = upperFirst(firstOfMonth.toLocaleDateString(locale, { month: "long", year: "numeric" }), locale);
   const formatDay = (d: Date) => d.toLocaleDateString(locale, DAY_NAME_FORMAT);
 
   // Weekday labels via locale, from the week's first day: the narrow one for the
@@ -524,10 +528,7 @@ export function MiniCalendar({
           <div
             id={monthId}
             aria-live="polite"
-            className={cn(
-              "capitalize",
-              lg ? "text-base font-semibold text-primary" : "text-xs font-medium text-secondary",
-            )}
+            className={lg ? "text-base font-semibold text-primary" : "text-xs font-medium text-secondary"}
           >
             {monthLabel}
           </div>
