@@ -111,7 +111,21 @@ try {
     join(scratch, "package.json"),
     JSON.stringify({ name: "scratch", private: true, version: "1.0.0", type: "module" }, null, 2),
   );
-  const deps = required.map((p) => `${p}@${(pkg.devDependencies ?? {})[p] ?? "latest"}`);
+  // lucide-react at the FLOOR of its peer range, not at the devDependency (MOD-2, refactor
+  // audit 2026-10-30): the kit builds and tests against 1.x while all three apps run 0.577,
+  // and 198 icon names exist only in 1.x. One of those imported passed every kit gate and
+  // would have broken all three apps' builds on adoption; at the floor, the probe below
+  // refuses the module at link time ("does not provide an export named …").
+  const AT_FLOOR = new Set(["lucide-react"]);
+  const deps = required
+    .map((p) => {
+      if (!AT_FLOOR.has(p)) return `${p}@${(pkg.devDependencies ?? {})[p] ?? "latest"}`;
+      const floor = /^>=\s*(\d+\.\d+\.\d+)/.exec(pkg.peerDependencies[p])?.[1];
+      if (floor) return `${p}@${floor}`;
+      fail(`${p}'s peer range "${pkg.peerDependencies[p]}" names no >= floor to install`);
+      return null;
+    })
+    .filter(Boolean);
   log(`  required peers: ${required.join(", ") || "(none)"}`);
   run("npm", ["install", "--no-audit", "--no-fund", "--silent", tarball, ...deps], scratch);
   ok("npm install succeeded");

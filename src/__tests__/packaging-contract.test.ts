@@ -148,6 +148,11 @@ describe("packaging contract", () => {
     const range = pkg.peerDependencies["lucide-react"];
     expect(range).toBeDefined();
     expect(range, "a caret/tilde range on 0.x pins the patch line").not.toMatch(/^[\^~]?0\./);
+    // The floor is a version something proved (MOD-2, refactor audit 2026-10-30): 0.577.0 is
+    // what all three apps run, and verify-package installs the floor rather than the 1.x
+    // devDependency, so a 1.x-only icon fails the kit's gate instead of the apps' builds.
+    // `>=0.400.0` had never been loaded by anything.
+    expect(range).toBe(">=0.577.0 <2");
     // …and still pinned for this repo's own build and tests, where the version is ours.
     expect(pkg.devDependencies["lucide-react"]).toBeDefined();
   });
