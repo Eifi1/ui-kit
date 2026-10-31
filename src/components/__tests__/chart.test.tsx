@@ -272,6 +272,20 @@ describe("ChartLegendContent", () => {
     expect(other).toHaveAttribute("aria-pressed", "true");
   });
 
+  // Refactor audit 2026-10-30, DSP-9: the whole entry at `opacity-40` put a switched-off
+  // label under 2:1 on a button that brings the series back. Only the swatch fades now.
+  it("fades only a switched-off entry's swatch; the label keeps its ink", () => {
+    render(
+      <ChartContainer id="leg5" config={CONFIG}>
+        <ChartLegendContent payload={payload} onItemClick={() => {}} hiddenKeys={["revenue"]} />
+      </ChartContainer>,
+    );
+    const [revenue, other] = screen.getAllByRole("button");
+    expect(revenue.className).not.toMatch(/(^|\s)opacity-/);
+    expect(revenue.querySelector("span[aria-hidden]")).toHaveClass("opacity-40");
+    expect(other.querySelector("span[aria-hidden]")).not.toHaveClass("opacity-40");
+  });
+
   it("claims no pressed state it does not know", () => {
     render(
       <ChartContainer id="leg4" config={CONFIG}>

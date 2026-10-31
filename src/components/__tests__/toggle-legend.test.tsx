@@ -65,21 +65,35 @@ describe("ToggleLegend", () => {
     expect(x).toHaveFocus();
   });
 
-  it("keeps a hidden entry in place, dimmed, with its mark outlined rather than gone", () => {
+  it("keeps a hidden entry in place, its mark faded and outlined rather than gone", () => {
     const { container } = render(<ToggleLegend entries={ENTRIES} hidden={new Set(["x"])} onToggle={() => {}} />);
     expect(screen.getAllByRole("button").map((b) => b.textContent)).toEqual(["X", "Y", "Z"]);
-    expect(button("X")).toHaveClass("opacity-35");
     const swatch = button("X").querySelector("span[aria-hidden]") as HTMLElement;
+    expect(swatch).toHaveClass("opacity-35");
     expect(swatch.style.backgroundColor).toBe("transparent");
     expect(swatch.style.boxShadow).toContain("var(--chart-1)");
     expect(container.querySelectorAll("svg[aria-hidden]")).toHaveLength(1);
   });
 
-  it("fades a hidden stroke mark once, with its button, not a second time on the line", () => {
+  // Refactor audit 2026-10-30, DSP-9: the whole entry at `opacity-35` put its label at
+  // 1.8:1 (light) and 2.1:1 (dark) — on a button that brings the series back, whose
+  // label is the only thing saying which series it is.
+  it("keeps a hidden entry's label at full ink, struck through; only the mark fades", () => {
+    render(<ToggleLegend entries={ENTRIES} hidden={new Set(["x", "z"])} onToggle={() => {}} />);
+    for (const name of ["X", "Z"]) {
+      expect(button(name).className).not.toMatch(/(^|\s)opacity-/);
+      expect(within(button(name)).getByText(name)).toHaveClass("line-through");
+      expect(button(name).querySelector("[aria-hidden]")).toHaveClass("opacity-35");
+    }
+    expect(within(button("Y")).getByText("Y")).not.toHaveClass("line-through");
+    expect(button("Y").querySelector("[aria-hidden]")).not.toHaveClass("opacity-35");
+  });
+
+  it("fades a hidden stroke mark once, on its svg, not a second time on the line", () => {
     // The line used to carry its own opacity 0.35 inside the button's opacity-35: about
     // 12 % in all, a mark gone rather than dimmed, while a square beside it read at 35 %.
     render(<ToggleLegend entries={ENTRIES} hidden={new Set(["z"])} onToggle={() => {}} />);
-    expect(button("Z")).toHaveClass("opacity-35");
+    expect(button("Z").querySelector("svg")).toHaveClass("opacity-35");
     expect(button("Z").querySelector("line")!.hasAttribute("opacity")).toBe(false);
   });
 

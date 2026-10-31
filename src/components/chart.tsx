@@ -492,12 +492,14 @@ export function ChartLegendContent({ payload, onItemClick, hiddenKeys, activeKey
         const className = cn(
           "flex items-center gap-1.5 text-secondary transition-opacity",
           onItemClick ? "cursor-pointer hover:opacity-80" : "cursor-default",
-          dimmed && "opacity-40",
         );
+        // Only the swatch fades; the label keeps its ink (0.52, refactor audit
+        // 2026-10-30, DSP-9). The whole entry at 40 % put a switched-off label under 2:1,
+        // on a button that brings its series back and is named by nothing else.
         const swatch = (
           <span
             aria-hidden
-            className="h-2.5 w-2.5 shrink-0 rounded-[3px]"
+            className={cn("h-2.5 w-2.5 shrink-0 rounded-[3px]", dimmed && "opacity-40")}
             style={{ backgroundColor: color } as CSSProperties}
           />
         );

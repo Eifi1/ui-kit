@@ -123,7 +123,7 @@ export interface LegendEntry {
 }
 
 export interface ToggleLegendProps {
-  entries: LegendEntry[];
+  entries: readonly LegendEntry[];
   /** The keys currently off the chart. */
   hidden: ReadonlySet<string>;
   onToggle: (key: string) => void;
@@ -198,12 +198,15 @@ export function ToggleLegend({
             className={cn(
               "flex items-center gap-1.5 rounded text-start text-caption text-secondary transition-opacity hover:opacity-80",
               FOCUS_RING,
-              off && "opacity-35",
               entry.align === "end" && "ms-auto",
             )}
           >
             <LegendMark entry={entry} off={off} />
-            {entry.label}
+            {/* Off, the label keeps its ink and is struck through; only the mark fades
+                (0.52, refactor audit 2026-10-30, DSP-9). The whole entry at 35 % put the
+                label at 1.8:1 — on a button that brings the series back, whose label is
+                the only thing saying which one. `aria-pressed` carries the state. */}
+            <span className={cn(off && "line-through")}>{entry.label}</span>
           </button>
         );
       })}
@@ -212,7 +215,7 @@ export function ToggleLegend({
 }
 
 export interface StaticLegendProps {
-  entries: LegendEntry[];
+  entries: readonly LegendEntry[];
   /** See {@link ToggleLegendProps.orientation}. */
   orientation?: "horizontal" | "vertical";
   /** The list's accessible name. Default: the `seriesChart.legend` label. */
@@ -338,13 +341,15 @@ export function LegendGroup({ title, children }: { title: ReactNode; children: R
  *  A stroke is an SVG line with the chart's own `strokeDasharray`, not a CSS gradient
  *  approximating it: a gradient can say "solid or dashed" and nothing more.
  *
- *  A hidden stroke is NOT faded here: the button around it already is (`opacity-35`),
- *  and the line used to take its own 0.35 on top — 0.35 × 0.35, about 12 %, a mark
- *  gone rather than dimmed, while the square beside it read at the full 35 %. */
+ *  A hidden mark fades ONCE, on its own box (`opacity-35`; since 0.52 the label beside
+ *  it keeps its ink, DSP-9). The line used to take its own 0.35 inside a faded button —
+ *  0.35 × 0.35, about 12 %, a mark gone rather than dimmed, while the square beside it
+ *  read at the full 35 %. */
 function LegendMark({ entry, off }: { entry: LegendEntry; off: boolean }) {
+  const fade = off && "opacity-35";
   if (entry.icon != null) {
     return (
-      <span aria-hidden className="inline-flex shrink-0 items-center">
+      <span aria-hidden className={cn("inline-flex shrink-0 items-center", fade)}>
         {entry.icon}
       </span>
     );
@@ -353,7 +358,7 @@ function LegendMark({ entry, off }: { entry: LegendEntry; off: boolean }) {
     return (
       <span
         aria-hidden
-        className="size-2 shrink-0 rounded-full"
+        className={cn("size-2 shrink-0 rounded-full", fade)}
         style={{
           backgroundColor: off ? "transparent" : entry.color,
           boxShadow: `inset 0 0 0 1.5px ${entry.color}`,
@@ -363,7 +368,7 @@ function LegendMark({ entry, off }: { entry: LegendEntry; off: boolean }) {
   }
   if (entry.marker === "stroke") {
     return (
-      <svg aria-hidden viewBox="0 0 20 2" className="h-0.5 w-5 shrink-0 overflow-visible">
+      <svg aria-hidden viewBox="0 0 20 2" className={cn("h-0.5 w-5 shrink-0 overflow-visible", fade)}>
         <line
           x1={0}
           y1={1}
@@ -379,7 +384,7 @@ function LegendMark({ entry, off }: { entry: LegendEntry; off: boolean }) {
   return (
     <span
       aria-hidden
-      className="h-2.5 w-2.5 shrink-0 rounded-[3px]"
+      className={cn("h-2.5 w-2.5 shrink-0 rounded-[3px]", fade)}
       style={{
         backgroundColor: off ? "transparent" : entry.color,
         boxShadow: `inset 0 0 0 1.5px ${entry.color}`,
