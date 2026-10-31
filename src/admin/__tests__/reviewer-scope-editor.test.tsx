@@ -74,6 +74,32 @@ describe("ReviewerScopeEditor", () => {
     await waitFor(() => expect(screen.getByRole("button", { name: "Save" })).toBeEnabled());
   });
 
+  it("an app's empty words for a failure leave the kit's, thrown or rejected alike (DUP-14)", async () => {
+    const user = userEvent.setup();
+    const thrown = () => {
+      throw new Error("sync");
+    };
+    const { unmount } = render(
+      <ReviewerScopeEditor value={{ locales: [] }} languages={["fr"]} onSave={thrown} describeError={() => ""} />,
+    );
+    await user.click(screen.getByRole("checkbox", { name: "Français" }));
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    expect(await screen.findByText("The reviewer scope couldn’t be saved. Please try again.")).toBeInTheDocument();
+    unmount();
+
+    render(
+      <ReviewerScopeEditor
+        value={{ locales: [] }}
+        languages={["fr"]}
+        onSave={() => Promise.reject(new Error("async"))}
+        describeError={() => ""}
+      />,
+    );
+    await user.click(screen.getByRole("checkbox", { name: "Français" }));
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    expect(await screen.findByText("The reviewer scope couldn’t be saved. Please try again.")).toBeInTheDocument();
+  });
+
   it("says why it cannot be changed and offers no Save", () => {
     render(
       <ReviewerScopeEditor

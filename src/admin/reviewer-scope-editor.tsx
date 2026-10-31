@@ -8,6 +8,7 @@ import { CheckboxGroup } from "../components/checkbox-group";
 import type { CheckboxGroupOption } from "../components/checkbox-group";
 import { FormActions } from "../components/form-actions";
 import { Caption } from "../components/text";
+import { describeFailure } from "../lib/describe-failure";
 import { hasContent } from "../lib/presence";
 import type { MaybePromise } from "./admin-parts";
 import type { CommitScope } from "../components/write-lock";
@@ -165,7 +166,7 @@ export function ReviewerScopeEditor({
     try {
       result = onSave(scope);
     } catch (error) {
-      setFailure(describeError?.(error) ?? labels.failed);
+      setFailure(describeFailure(describeError?.(error), labels.failed));
       return;
     }
     if (!result || typeof result.then !== "function") return;
@@ -174,8 +175,7 @@ export function ReviewerScopeEditor({
       () => setPending(false),
       (error: unknown) => {
         setPending(false);
-        const own = describeError?.(error);
-        setFailure(hasContent(own) ? own : labels.failed);
+        setFailure(describeFailure(describeError?.(error), labels.failed));
       },
     );
   };
