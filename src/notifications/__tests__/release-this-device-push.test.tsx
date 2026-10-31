@@ -2,7 +2,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { PUSH_SUBSCRIPTION_CHANGED, PushDeviceError, releaseThisDevicePush, usePushDevice } from "../use-push-device";
-import { installFakePush, refusal } from "../../test/fake-push";
+import { installFakePush } from "../../test/fake-push";
 
 /**
  * docs/notifications-harmonization.md §10.6: an explicit sign-out releases this device's
@@ -77,21 +77,10 @@ describe("releaseThisDevicePush — a sign-out leaves no push on the device", ()
     expect(unregister).not.toHaveBeenCalled();
   });
 
-  it("keeps the browser's subscription when the server refuses, and rejects as the request did", async () => {
-    const push = installFakePush({ existing: "https://push.example/a", permission: "granted" });
-    uninstall = push.uninstall;
-    const failure = refusal(500);
-    await expect(releaseThisDevicePush(vi.fn(async () => Promise.reject(failure)))).rejects.toBe(failure);
-    expect(push.current()?.unsubscribe).not.toHaveBeenCalled();
-  });
+  // A refused server and a device without push: release-push-at-sign-out.test.tsx (0.52
+  // code review — the browser lets go anyway, and no registration answers false).
 
-  it("keeps the hook's cuts: no registration fails at once, a stuck unsubscribe after 15 s", async () => {
-    uninstall = installFakePush({ noRegistration: true }).uninstall;
-    await expect(releaseThisDevicePush(vi.fn(async () => undefined))).rejects.toMatchObject({
-      code: "no_service_worker",
-    });
-    uninstall();
-
+  it("keeps the hook's cut: a stuck unsubscribe fails after 15 s", async () => {
     const push = installFakePush({ existing: "https://push.example/a", permission: "granted" });
     uninstall = push.uninstall;
     push.current()!.unsubscribe.mockImplementation(() => new Promise<boolean>(() => {}));
