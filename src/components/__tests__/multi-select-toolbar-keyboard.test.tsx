@@ -34,12 +34,19 @@ function Host({ initial = [] as string[], onChange = vi.fn() }) {
   );
 }
 
-/** Opens the panel and puts focus in its search box, where the panel puts it. */
-function open() {
+/**
+ * Opens the panel and lets its opening frame run, which puts focus in the search box. The
+ * panel focuses the box a frame after it opens (`combobox-core`'s `requestAnimationFrame`),
+ * and a Tab pressed before that frame was undone by it: Enter then went to the search box
+ * and toggled the highlighted row — a run in three under load. A frame asked for now runs
+ * after the panel's, however loaded the machine is (focus-trap.tab-stops.test's rule).
+ */
+async function open() {
   const trigger = screen.getByRole("combobox", { name: /Accounts/ });
   fireEvent.click(trigger);
   const search = screen.getByRole("textbox");
-  act(() => search.focus());
+  await act(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
+  expect(search).toHaveFocus();
   return { trigger, search };
 }
 
@@ -49,7 +56,7 @@ describe("MultiSelect's toolbar from the keyboard", () => {
   it("Tab walks search box → Select all → Clear, and past the last closes to the trigger", async () => {
     const user = userEvent.setup();
     render(<Host />);
-    const { trigger, search } = open();
+    const { trigger, search } = await open();
     await user.tab();
     expect(button("Select all")).toHaveFocus();
     await user.tab();
@@ -69,18 +76,35 @@ describe("MultiSelect's toolbar from the keyboard", () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
     render(<Host onChange={onChange} />);
-    open();
+    await open();
     await user.tab();
     await user.keyboard("{Enter}");
     // Select all, not the highlighted row's toggle.
     expect(onChange).toHaveBeenLastCalledWith(["a", "b"]);
   });
 
+  // 0.52 code review, combobox-core.tsx: once a toolbar button's keys were its own, a
+  // MOUSE press on one — which focuses a button in Chrome and Firefox — left the arrows
+  // dead: they reached the button, not the list, where until 0.52 they had moved the
+  // highlight. A press keeps the focus in the search box, as a press on a row does.
+  it("a pointer press on a toolbar button leaves the keys with the list", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<Host onChange={onChange} />);
+    const { search } = await open();
+    const first = search.getAttribute("aria-activedescendant");
+    await user.click(button("Select all"));
+    expect(onChange).toHaveBeenLastCalledWith(["a", "b"]);
+    expect(search).toHaveFocus();
+    await user.keyboard("{ArrowDown}");
+    expect(search.getAttribute("aria-activedescendant")).not.toBe(first);
+  });
+
   it("Clear keeps its focus once it has nothing left to clear, and refuses the next press", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
     render(<Host initial={["a"]} onChange={onChange} />);
-    open();
+    await open();
     await user.tab();
     await user.tab();
     const clear = button("Clear");

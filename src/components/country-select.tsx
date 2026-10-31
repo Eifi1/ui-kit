@@ -3,7 +3,7 @@ import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
 import { X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { COUNTRY_CODES, countryName, normalizeCountryCode } from "../lib/countries";
-import { matchesSearch, rankHit, searchWords } from "../lib/text-match";
+import { searchRanked } from "../lib/text-match";
 import { FieldChevron, FIELD_FLOATING_PAD, FIELD_INVALID, FIELD_TRIGGER, FloatingField } from "./field-base";
 import {
   assignRef,
@@ -178,20 +178,22 @@ interface Entry {
   name: string;
 }
 
-/** Every word of the query in the name or the code (0.51.4's rule: "kinshasa congo"
- *  finds Congo - Kinshasa; refactor audit 2026-10-30, DUP-4), best rank first; a stable
- *  sort, so equal ranks keep the collated (or preferred) order they came in. The rank is
- *  the kit's one, for the WHOLE query (`rankMatch`, DUP-5 — written here first): the code
- *  itself (a two-letter query "ch" means Switzerland before it means Chad), then the
- *  start of the name, then anywhere in it, then the words apart (`rankHit`), with accents
- *  and case folded — "osterreich" finds Österreich, "cote" Côte d'Ivoire. */
+/** Every word of the query in the name, or the whole code (0.51.4's rule: "kinshasa
+ *  congo" finds Congo - Kinshasa; refactor audit 2026-10-30, DUP-4), best rank first; a
+ *  stable sort, so equal ranks keep the collated (or preferred) order they came in. The
+ *  rank is the kit's one, for the WHOLE query (`rankMatch`, DUP-5 — written here first):
+ *  the code itself (a two-letter query "ch" means Switzerland before it means Chad), then
+ *  the start of the name, then anywhere in it, then the words apart (`searchRanked`, each
+ *  name and code folded once), with accents and case folded — "osterreich" finds
+ *  Österreich, "cote" Côte d'Ivoire.
+ *
+ *  A word is the code or it is not: searched INSIDE the code, as one more text, "w"
+ *  listed Aruba (AW) and Samoa (WS) and "d" Germany (DE), names with nothing of the
+ *  query in them (0.52 code review, country-select.tsx). */
 function search(entries: Entry[], q: string, locale: string): Entry[] {
-  const words = searchWords(q, locale);
-  return entries
-    .filter((e) => matchesSearch(words, [e.name, e.code], locale))
-    .map((e) => ({ e, r: rankHit(e.name, q, { code: e.code, locale }) }))
-    .sort((a, b) => a.r - b.r)
-    .map((x) => x.e);
+  return searchRanked(entries, q, (e) => [e.name], { code: (e) => e.code, locale })
+    .sort((a, b) => a.rank - b.rank)
+    .map((x) => x.row);
 }
 
 function toOption(e: Entry, flags: boolean, group?: string): ComboOption<string> {

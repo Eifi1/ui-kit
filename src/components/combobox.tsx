@@ -1,4 +1,4 @@
-import { Fragment, useId, useMemo, useRef, useState } from "react";
+import { useId, useMemo, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode, Ref } from "react";
 import { ChevronDown } from "lucide-react";
 import { FIELD_BASE, FIELD_FLOATING_PAD, FIELD_INVALID } from "./field-base";
@@ -10,15 +10,17 @@ import { isQuietFocus } from "../lib/quiet-focus";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { PickerSheet, SHEET_ROW_CLASS } from "./picker-sheet";
 import {
+  anchoredHeadingClass,
   ComboboxFieldLabel,
   endHintRowProps,
+  GroupedOptions,
   groupRuns,
-  OptionGroup,
-  useActiveOptionScroll,
+  SHEET_HEADING_CLASS,
+  useTypedListStatus,
   type GroupRun,
 } from "./combobox-core";
 import { DEFAULT_COMBOBOX_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-labels";
-import { matchesSearch, rankHit, sameName, searchWords } from "../lib/text-match";
+import { sameName, searchRanked } from "../lib/text-match";
 import {
   EndHintRow,
   FieldCaption,
@@ -230,6 +232,12 @@ export function Combobox(props: ComboboxProps) {
   const { open, setOpen, wrapperRef, panelRef } = useDropdown({ backCloses: !isPhone, escapeLayer: false });
   const primaryOnly = usePrimaryPressOnly();
   const [active, setActive] = useState(-1);
+  // A closed list has no row the keyboard is on, however it closed — the sheet's X,
+  // Escape or Back, a press outside — adjusted while rendering. The arrows' row outlived
+  // it: the list reopens on the whole pool, so the row the arrows had put on "Migros"
+  // showed "Aldi" highlighted, and Enter took it over the typed value (0.52 code review,
+  // combobox.tsx). An ArrowDown that opens the list sets both at once, and keeps its row.
+  if (!open && active !== -1) setActive(-1);
   // The lock (see `lockedKeyDown`): a lock arriving while the list is up closes it,
   // adjusted while rendering so no frame offers a row that can no longer be taken.
   const lock = useLockReason(commit, disabledReason);
@@ -285,14 +293,11 @@ export function Combobox(props: ComboboxProps) {
       // Every word of the query somewhere in the name (0.51.4's rule, which this list
       // was said to have and did not: refactor audit 2026-10-30, DUP-4), ranked by the
       // WHOLE query — the whole name, then prefix matches, then substring matches, then
-      // the names that hold the words apart (`rankHit`). A stable sort keeps the
-      // pool's order within a rank.
-      const words = searchWords(query, locale);
-      ranked = uniq
-        .filter((o) => matchesSearch(words, [o], locale))
-        .map((o) => ({ o, rank: rankHit(o, query, { locale }) }))
+      // the names that hold the words apart (`searchRanked`, each name folded once). A
+      // stable sort keeps the pool's order within a rank.
+      ranked = searchRanked(uniq, query, (o) => [o], { locale })
         .sort((a, b) => a.rank - b.rank)
-        .map((x) => x.o)
+        .map((x) => x.row)
         .slice(0, cap);
     }
     if (!groupBy) return ranked;
@@ -358,41 +363,27 @@ export function Combobox(props: ComboboxProps) {
   const createRow =
     createLabel && typed.length > 0 && !options.some((o) => sameName(o, typed, locale)) ? createLabel(typed) : null;
 
+  // Whether a list shows, the row the keyboard is on — named by the field, or on a phone
+  // by the sheet's own search box, which takes the same keys (INP-6, 0.34's BUG-5 for
+  // this field) — and the live status: the family's one rule for a typed list.
+  const { showing, expanded, activeOption, statusRegion } = useTypedListStatus({
+    isPhone,
+    open,
+    inert,
+    rowCount: matches.length,
+    extraRow: Boolean(createRow),
+    query,
+    active: active < matches.length ? active : -1,
+    optionId,
+    labels,
+  });
   // The list is a layer on the Escape stack while it SHOWS (Wave 2, DUP-1): an Escape
   // over an empty "open" list is the dialog's, as it always was. On a phone the sheet
   // is the layer.
-  const showing = !isPhone && open && !inert && (matches.length > 0 || Boolean(createRow));
-  // Whether a list is on screen — what the field's `aria-expanded` says: an open list
-  // with nothing to show said "expanded" with no listbox in the document (INP-6).
-  const expanded = isPhone ? open && !inert : showing;
   useDismissLayer(showing, () => {
     setOpen(false);
     setActive(-1);
   });
-
-  // The row the keyboard is on, in whichever list shows: the anchored one, named by the
-  // field, or the phone sheet's, named by the sheet's own search box, which takes the
-  // same keys (INP-6, 0.34's BUG-5 for this field).
-  const activeOption = expanded && active >= 0 && active < matches.length ? optionId(active) : undefined;
-  useActiveOptionScroll(activeOption);
-
-  // What the list holds, said in a live region kept mounted (INP-6): focus stays in the
-  // field, or in the sheet's search box, so a list changing under it was silent. The
-  // count while rows show; "No results" only for a query that left none — a field
-  // opened on an empty pool asked nothing.
-  const status =
-    !open || inert
-      ? null
-      : matches.length > 0
-        ? labels.resultCount(matches.length)
-        : query && !createRow
-          ? labels.noResults
-          : null;
-  const statusRegion = (
-    <div role="status" aria-live="polite" className="sr-only">
-      {status}
-    </div>
-  );
 
   /** The list's keys — in the field and, on a phone, in the sheet's search box. Enter
    *  with no row highlighted is "I mean what I typed" in both. */
@@ -425,27 +416,17 @@ export function Combobox(props: ComboboxProps) {
    *  for the sheet or the anchored list; `row` draws one option, `grouped` when it
    *  stands under a heading. `matches` is group-contiguous, so the boundaries are a
    *  property of the list rather than of the branch drawing it (see `runs`). */
-  const groupedRows = (sheet: boolean, row: (o: string, i: number, grouped: boolean) => ReactNode) =>
-    runs.map((run) => {
-      const rows = run.rows.map((o, k) => <Fragment key={o}>{row(o, run.start + k, run.group !== null)}</Fragment>);
-      if (run.group === null) return <Fragment key={`|${run.start}`}>{rows}</Fragment>;
-      return (
-        <OptionGroup
-          key={`${run.group}|${run.start}`}
-          id={`${listboxId}-group-${run.start}`}
-          heading={run.group}
-          className={
-            sheet
-              ? "px-4 pb-0.5 pt-3 text-caption"
-              : // The list's first item sits closer to its top edge; the create row
-                // comes first when there is one.
-                cn("px-3 pb-0.5 text-caption", run.start === 0 && !createRow ? "pt-1" : "pt-2")
-          }
-        >
-          {rows}
-        </OptionGroup>
-      );
-    });
+  const groupedRows = (sheet: boolean, row: (o: string, i: number, grouped: boolean) => ReactNode) => (
+    <GroupedOptions
+      runs={runs}
+      listboxId={listboxId}
+      rowKey={(o) => o}
+      row={row}
+      // The list's first item sits closer to its top edge; the create row comes first
+      // when there is one.
+      headingClassName={(run) => (sheet ? SHEET_HEADING_CLASS : anchoredHeadingClass(run, !createRow))}
+    />
+  );
 
   return (
     // `rest` dresses the outer box — a `data-tour` anchor, a test id. Not the NAME,
@@ -515,6 +496,7 @@ export function Combobox(props: ComboboxProps) {
                 if (isQuietFocus(e.currentTarget)) return;
                 setOpen(true);
                 setTyping(false);
+                setActive(-1);
                 // The sheet carries its own input, so the field behind it must not also
                 // pull up the keyboard and scroll the page under the dialog.
                 if (isPhone) sheetInputRef.current?.focus();
@@ -527,7 +509,10 @@ export function Combobox(props: ComboboxProps) {
               onClick={() => {
                 if (locked) return;
                 setOpen(true);
+                // The whole pool again, so no row of the typed list is the keyboard's
+                // (0.52 code review, combobox.tsx — see `active`).
                 setTyping(false);
+                setActive(-1);
               }}
               // `inputMode="none"` rather than readOnly: the field must not look
               // uneditable (FIELD_BASE greys a read-only field since dev#468) and must
@@ -599,8 +584,7 @@ export function Combobox(props: ComboboxProps) {
       )}
       <FieldCaption parts={hintParts} />
       {field.errorEl}
-      {/* Kept mounted, so a change is an announcement. On a phone it is in the sheet,
-          which hides from a reader what lies outside it. */}
+      {/* The live status — see `useTypedListStatus` for where it goes and why. */}
       {!isPhone && statusRegion}
       {isPhone && (
         <PickerSheet

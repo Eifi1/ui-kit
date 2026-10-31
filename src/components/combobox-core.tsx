@@ -545,6 +545,74 @@ export function OptionGroup({
   );
 }
 
+/**
+ * A list's rows in their {@link groupRuns}: a run filed under no group stands bare, any
+ * other is an {@link OptionGroup} under its heading. The one drawing of it for
+ * {@link ComboboxPanel}, {@link Combobox}, {@link InlineEntityCombobox} and
+ * {@link Autocomplete}, which had a copy each (0.52 code review, combobox-core.tsx).
+ *
+ * A run is keyed by its group and how many runs of that group came before it — NOT by
+ * the index of its first row, which every keystroke that drops a row from an earlier
+ * group moves: each later group was re-keyed and React rebuilt it, every row of it, per
+ * keystroke. A row is keyed by `rowKey` among the rows of its run; an option may stand
+ * in two groups (keksdose's "Recent", live #203), never twice in one.
+ *
+ * `row(o, i, grouped)`: `i` is the row's index in the whole list (the option ids and the
+ * arrows count by it), `grouped` whether it stands under a heading. `headingClassName`
+ * places a run's heading text in its list. The group's id is the list's id and the run's
+ * first row, unique in the document.
+ */
+export function GroupedOptions<T>({
+  runs,
+  listboxId,
+  rowKey,
+  row,
+  headingClassName,
+}: {
+  runs: readonly GroupRun<T>[];
+  listboxId: string;
+  rowKey: (o: T) => string;
+  row: (o: T, index: number, grouped: boolean) => ReactNode;
+  headingClassName: (run: GroupRun<T>) => string;
+}) {
+  return keyRuns(runs).map(({ run, key }) => {
+    const grouped = run.group !== null;
+    const rows = run.rows.map((o, k) => <Fragment key={rowKey(o)}>{row(o, run.start + k, grouped)}</Fragment>);
+    if (!grouped) return <Fragment key={key}>{rows}</Fragment>;
+    return (
+      <OptionGroup
+        key={key}
+        id={`${listboxId}-group-${run.start}`}
+        heading={run.group}
+        className={headingClassName(run)}
+      >
+        {rows}
+      </OptionGroup>
+    );
+  });
+}
+
+/** Each run with its key — see {@link GroupedOptions}: the group and how many runs of it
+ *  came before, which a query narrowing an earlier group does not move. */
+function keyRuns<T>(runs: readonly GroupRun<T>[]): { run: GroupRun<T>; key: string }[] {
+  const seen = new Map<string | null, number>();
+  return runs.map((run) => {
+    const nth = seen.get(run.group) ?? 0;
+    seen.set(run.group, nth + 1);
+    // The count first: it never holds a ":", so no group's name can make two keys equal.
+    return { run, key: run.group === null ? String(nth) : `${nth}:${run.group}` };
+  });
+}
+
+/** The anchored list's heading text: the first group's sits closer to the list's top
+ *  edge, unless a row stands above it (`first: false`, Combobox's create row). */
+export const anchoredHeadingClass = (run: GroupRun<unknown>, first = true) =>
+  cn("px-3 pb-0.5 text-caption", run.start === 0 && first ? "pt-1" : "pt-2");
+
+/** The typed comboboxes' phone sheet's heading text ({@link Combobox},
+ *  {@link InlineEntityCombobox}). */
+export const SHEET_HEADING_CLASS = "px-4 pb-0.5 pt-3 text-caption";
+
 export const SUGGESTION_LIST_CLASS =
   "max-h-64 overflow-y-auto rounded-md border border-subtle bg-surface py-1 shadow-lg";
 
@@ -573,6 +641,63 @@ export function useActiveOptionScroll(activeId: string | undefined): void {
     if (!activeId) return;
     document.getElementById(activeId)?.scrollIntoView?.({ block: "nearest" });
   }, [activeId]);
+}
+
+/**
+ * What a TYPED combobox's list says — {@link Combobox} and {@link InlineEntityCombobox},
+ * which had a copy each, the second saying "see the twin" (0.52 code review,
+ * inline-entity-combobox.tsx; the rules are refactor audit 2026-10-30, INP-6):
+ *
+ * - `showing`: the anchored list is on screen — open, not inert, with a row to show (an
+ *   option, or `extraRow`, the create row). The list is then a layer on the Escape stack
+ *   (Wave 2, DUP-1). Never on a phone, where the sheet is the list and the layer.
+ * - `expanded`, the field's `aria-expanded`: a list on screen. An open list with nothing
+ *   to show said "expanded" with no listbox in the document.
+ * - `activeOption`: the id of the row the keyboard is on — `active`, a TAKEABLE row's
+ *   index, else -1 — in whichever list shows, kept scrolled into view.
+ * - `statusRegion`: a polite live region with the row count, or "No results" for a query
+ *   that left nothing to show or do. Focus stays in the field, or in the sheet's search
+ *   box, so a list changing under it was silent. A list opened on no query asked nothing.
+ *   Render it outside the list, so the list going cannot take it along: on a phone inside
+ *   the sheet, which hides from a reader what lies outside it. There it mounts with the
+ *   sheet, so the count the sheet opens with is not announced — as a ComboboxPanel's is
+ *   not, in either shell — and every change after it is.
+ */
+export function useTypedListStatus({
+  isPhone,
+  open,
+  inert,
+  rowCount,
+  extraRow,
+  query,
+  active,
+  optionId,
+  labels,
+}: {
+  isPhone: boolean;
+  open: boolean;
+  inert: boolean;
+  /** The options the list shows. */
+  rowCount: number;
+  /** A create row shows: the list is not empty, it offers to fill itself. */
+  extraRow: boolean;
+  query: string;
+  active: number;
+  optionId: (index: number) => string;
+  labels: { resultCount: (count: number) => string; noResults: string };
+}): { showing: boolean; expanded: boolean; activeOption: string | undefined; statusRegion: ReactNode } {
+  const showing = !isPhone && open && !inert && (rowCount > 0 || extraRow);
+  const expanded = isPhone ? open && !inert : showing;
+  const activeOption = expanded && active >= 0 ? optionId(active) : undefined;
+  useActiveOptionScroll(activeOption);
+  const status =
+    !open || inert ? null : rowCount > 0 ? labels.resultCount(rowCount) : query && !extraRow ? labels.noResults : null;
+  const statusRegion = (
+    <div role="status" aria-live="polite" className="sr-only">
+      {status}
+    </div>
+  );
+  return { showing, expanded, activeOption, statusRegion };
 }
 
 /** The anchored panel's least width, in rem: 220 px at Normal (§3.2). */
@@ -773,6 +898,23 @@ export function ComboboxPanel<V extends string | number>({
   // copy of the selector, without its `hidden`/`inert` half. An `aria-disabled` button
   // stays a stop — it keeps its focus (INP-9).
   const toolbarStops = () => (toolbarRef.current ? tabStops(toolbarRef.current, { includeSelf: false }) : []);
+  // A POINTER press on the toolbar leaves the focus in the search box, as a press on a
+  // row does: since a toolbar button's keys are its own (INP-9), a mouse press — which
+  // focuses a button in Chrome and Firefox — left the arrows on "Select all", where they
+  // did nothing; until 0.52 they moved the list's highlight (0.52 code review,
+  // combobox-core.tsx). Tab still reaches the buttons. A field in a toolbar keeps its
+  // press: it is there to be typed in.
+  const toolbarBox = hasContent(toolbar) && (
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions -- never focused itself: it only keeps a pointer press on its buttons from taking the focus out of the search box.
+    <div
+      ref={toolbarRef}
+      onMouseDown={(e) => {
+        if (!(e.target as Element).closest("input, select, textarea, [contenteditable]")) e.preventDefault();
+      }}
+    >
+      {toolbar}
+    </div>
+  );
   /** Tab on a toolbar button in the anchored panel: Shift+Tab off the first goes back to
    *  the search box, Tab off the last leaves as the search box's Tab did; between two of
    *  them the browser's own Tab is right, as they stand next to each other. */
@@ -996,17 +1138,9 @@ export function ComboboxPanel<V extends string | number>({
     </li>
   );
 
-  // In columns, a block per run of one group; `results` keeps its source order, so a
-  // run is the rows up to the next change of group.
-  const blocks: { group: string; rows: { o: ComboOption<V>; i: number }[] }[] = [];
-  if (columns && !isPhone) {
-    results.forEach((o, i) => {
-      const group = o.group ?? "";
-      const last = blocks[blocks.length - 1];
-      if (last && last.group === group) last.rows.push({ o, i });
-      else blocks.push({ group, rows: [{ o, i }] });
-    });
-  }
+  // The rows' group runs — `results` keeps its source order, so a run is the rows up to
+  // the next change of group. In columns, a block per run.
+  const runs = groupRuns(results, (o) => o.group);
 
   const list = (
     <ul
@@ -1026,49 +1160,39 @@ export function ComboboxPanel<V extends string | number>({
         isPhone && "flex-none",
       )}
     >
-      {columns && !isPhone
-        ? blocks.map((block) => (
-            // A column block: its heading is a picture of the group's name, which the
-            // `role="group"` carries for a reader — the listbox may own options and
-            // groups, and a heading of loose text in it is neither.
-            <li key={`${block.group}|${block.rows[0].i}`} role="presentation" className="mb-3 break-inside-avoid">
-              {block.group && (
-                <div aria-hidden className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted">
-                  {block.group}
-                </div>
-              )}
-              <ul role="group" aria-label={block.group || undefined} className="space-y-0.5">
-                {block.rows.map(({ o, i }) => (
-                  <Fragment key={`${o.group ?? ""}|${String(o.value)}`}>{optionRow(o, i)}</Fragment>
-                ))}
-              </ul>
-            </li>
-          ))
-        : // One heading per group rather than a grey suffix on every row (#136), and the
-          // thing the native <select>'s <optgroup> used to give the account picker for
-          // free (live #200) — a `role="group"` it names (INP-8). `results` keeps its
-          // source order, so a boundary is simply "different from the row above".
-          groupRuns(results, (o) => o.group).map((run) => {
-            // Keyed by group AND value: an option may deliberately appear twice —
-            // Keksdose repeats recently-used categories in a "Recent" group at the top
-            // (live #203) — and a bare value key would collide.
-            const rows = run.rows.map((o, k) => (
-              <Fragment key={`${o.group ?? ""}|${String(o.value)}`}>{optionRow(o, run.start + k)}</Fragment>
-            ));
-            if (run.group === null) return <Fragment key={`|${run.start}`}>{rows}</Fragment>;
-            return (
-              <OptionGroup
-                key={`${run.group}|${run.start}`}
-                id={`${listboxId}-group-${run.start}`}
-                heading={run.group}
-                className={
-                  isPhone ? "px-4 pb-1 pt-3 text-xs" : cn("px-3 pb-0.5 text-caption", run.start === 0 ? "pt-1" : "pt-2")
-                }
-              >
-                {rows}
-              </OptionGroup>
-            );
-          })}
+      {columns && !isPhone ? (
+        keyRuns(runs).map(({ run, key }) => (
+          // A column block: its heading is a picture of the group's name, which the
+          // `role="group"` carries for a reader — the listbox may own options and
+          // groups, and a heading of loose text in it is neither. Keyed as
+          // GroupedOptions keys a run, so a filter does not rebuild the later columns.
+          <li key={key} role="presentation" className="mb-3 break-inside-avoid">
+            {run.group !== null && (
+              <div aria-hidden className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted">
+                {run.group}
+              </div>
+            )}
+            <ul role="group" aria-label={run.group ?? undefined} className="space-y-0.5">
+              {run.rows.map((o, k) => (
+                <Fragment key={String(o.value)}>{optionRow(o, run.start + k)}</Fragment>
+              ))}
+            </ul>
+          </li>
+        ))
+      ) : (
+        // One heading per group rather than a grey suffix on every row (#136), and the
+        // thing the native <select>'s <optgroup> used to give the account picker for
+        // free (live #200) — a `role="group"` it names (INP-8). Keksdose repeats
+        // recently-used categories in a "Recent" group at the top (live #203): a value
+        // is a row's key within its group alone.
+        <GroupedOptions
+          runs={runs}
+          listboxId={listboxId}
+          rowKey={(o) => String(o.value)}
+          row={optionRow}
+          headingClassName={(run) => (isPhone ? "px-4 pb-1 pt-3 text-xs" : anchoredHeadingClass(run))}
+        />
+      )}
       {createRow}
     </ul>
   );
@@ -1112,7 +1236,7 @@ export function ComboboxPanel<V extends string | number>({
         // A single pick closes the sheet itself.
         done={multi}
       >
-        {hasContent(toolbar) && <div ref={toolbarRef}>{toolbar}</div>}
+        {toolbarBox}
         <div className="relative">
           {list}
           {announcement}
@@ -1186,7 +1310,7 @@ export function ComboboxPanel<V extends string | number>({
         listboxId={listboxId}
         activeId={activeId}
       />
-      {hasContent(toolbar) && <div ref={toolbarRef}>{toolbar}</div>}
+      {toolbarBox}
       {/* One list, two containers: the desktop panel and the phone sheet render
           the same rows through the same handlers (live #200). */}
       {list}

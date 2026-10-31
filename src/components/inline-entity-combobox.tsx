@@ -1,6 +1,6 @@
 // The id-keyed sibling of Combobox. Moved out of combobox.tsx as it was (MOD-9,
 // refactor audit 2026-10); combobox still exports `InlineEntityCombobox` and its props.
-import { Fragment, useId, useMemo, useRef, useState } from "react";
+import { useId, useMemo, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode, Ref } from "react";
 import { ChevronDown, Plus, X } from "lucide-react";
 import { FIELD_BASE, FIELD_FLOATING_PAD, FIELD_INVALID } from "./field-base";
@@ -12,20 +12,22 @@ import { isQuietFocus } from "../lib/quiet-focus";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { PickerSheet, SHEET_ROW_CLASS } from "./picker-sheet";
 import {
+  anchoredHeadingClass,
   ComboboxFieldLabel,
   DISABLED_ROW_CLASS,
   endHintRowProps,
+  GroupedOptions,
   groupRuns,
   isOptionEnabled,
   offersCreate,
-  OptionGroup,
+  SHEET_HEADING_CLASS,
   stepEnabled,
-  useActiveOptionScroll,
+  useTypedListStatus,
   type ComboClearValue,
   type ComboOption,
 } from "./combobox-core";
 import { DEFAULT_COMBOBOX_LABELS, useKitLabels, useKitLocale } from "../i18n/kit-labels";
-import { matchesSearch, rankMatch, sameName, searchWords } from "../lib/text-match";
+import { sameName, searchRanked } from "../lib/text-match";
 import {
   EndHintRow,
   FieldCaption,
@@ -312,19 +314,14 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
   const matches = useMemo(() => {
     let ranked = options;
     if (query) {
-      // Every word of the query, in the label or the sublabel (0.51.4).
-      const words = searchWords(query, locale);
-      const hit = (o: ComboOption<V>) => matchesSearch(words, [o.label, o.sublabel], locale);
-      // The label's whole name or its start first (`rankMatch` 0 and 1), then a match
-      // anywhere in the label or the sublabel. Not the group (0.40, kk run 79): with
-      // first-letter groups one typed letter matched its whole group.
-      const leads = (o: ComboOption<V>) => {
-        const rank = rankMatch(o.label, query, { locale });
-        return rank === 0 || rank === 1;
-      };
-      const starts = options.filter(leads);
-      const rest = options.filter((o) => !leads(o) && hit(o));
-      ranked = [...starts, ...rest];
+      // Every word of the query, in the label or the sublabel (0.51.4). The label's whole
+      // name or its start first (rank 0 and 1), then a match anywhere in the label or the
+      // sublabel; a stable sort keeps the options' order within each. Not the group
+      // (0.40, kk run 79): with first-letter groups one typed letter matched its whole
+      // group. Each option folded once (`searchRanked`).
+      ranked = searchRanked(options, query, (o) => [o.label, o.sublabel], { locale })
+        .sort((a, b) => Number(a.rank > 1) - Number(b.rank > 1))
+        .map((x) => x.row);
     }
     if (!ranked.some((o) => o.group)) return ranked;
     // Keep each group contiguous so the headings below appear once instead of
@@ -368,36 +365,26 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
     setActive(-1);
     setSheetQuery("");
   };
-  // See the twin above: a layer while the list SHOWS, and Escape puts the label back.
-  const showing = !isPhone && open && !inert && (matches.length > 0 || showCreate);
-  // What the field's `aria-expanded` says: a list on screen (INP-6) — see the twin.
-  const expanded = isPhone ? open && !inert : showing;
+  // Whether a list shows, the row the keyboard is on — in the anchored list or the phone
+  // sheet, whose search box takes the same keys (INP-6) — and the live status, as
+  // Combobox has them. A disabled row is never the keyboard's, even if the list changed
+  // under it.
+  const { showing, expanded, activeOption, statusRegion } = useTypedListStatus({
+    isPhone,
+    open,
+    inert,
+    rowCount: matches.length,
+    extraRow: showCreate,
+    query,
+    active: isOptionEnabled(rows[active]) ? active : -1,
+    optionId,
+    labels,
+  });
+  // A layer while the list SHOWS, and Escape puts the label back.
   useDismissLayer(showing, () => {
     setText(null);
     close();
   });
-
-  // The row the keyboard is on, in the anchored list or the phone sheet, whose search
-  // box takes the same keys (INP-6). A disabled row is never the keyboard's, even if the
-  // list changed under it.
-  const activeOption = expanded && isOptionEnabled(rows[active]) ? optionId(active) : undefined;
-  useActiveOptionScroll(activeOption);
-
-  // The live status — see the twin (INP-6). "No results" only for a query: the sheet
-  // opens on an empty search, and an empty pool is not a search that found nothing.
-  const status =
-    !open || inert
-      ? null
-      : matches.length > 0
-        ? labels.resultCount(matches.length)
-        : query && !showCreate
-          ? labels.noResults
-          : null;
-  const statusRegion = (
-    <div role="status" aria-live="polite" className="sr-only">
-      {status}
-    </div>
-  );
   const take = (o: ComboOption<V>) => {
     // A `disabled` option is listed, never taken — by any path; nor is anything while
     // the field is locked.
@@ -422,6 +409,13 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
     setText(null);
     close();
   };
+  // The ONE option a name typed out in full names, else null. A disabled option's label
+  // is not a hit — typing it is not a way round `disabled` — and a label is typed out in
+  // full as the list matches it, so "cafe" names Café (DUP-5).
+  const exactHit = (q: string): ComboOption<V> | null => {
+    const hits = options.filter((o) => !o.disabled && sameName(o.label, q, locale));
+    return new Set(hits.map((h) => h.value)).size === 1 ? hits[0] : null;
+  };
   const reconcile = () => {
     // Locked, loose text is dropped rather than judged: nothing reaches `onChange`.
     if (text !== null && !locked) {
@@ -429,14 +423,20 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
       if (!q) {
         if (value != null) onChange(clearValue);
       } else {
-        // A disabled option's label typed out in full is not a way round `disabled`:
-        // it is not a hit, so the text reverts like any other non-answer. A label is
-        // typed out in full as the list matches it, so "cafe" commits Café (DUP-5).
-        const hits = options.filter((o) => !o.disabled && sameName(o.label, q, locale));
-        const ids = new Set(hits.map((h) => h.value));
-        if (ids.size === 1 && hits[0].value !== value) onChange(hits[0].value);
+        // Anything but a hit reverts, like any other non-answer.
+        const hit = exactHit(q);
+        if (hit && hit.value !== value) onChange(hit.value);
       }
     }
+    setText(null);
+    close();
+  };
+  // The phone sheet's way out — the X, Escape, Back — keeps the value and judges nothing.
+  // Not `reconcile`: on a phone `text` is never typed in (the sheet's own box is), so it
+  // only holds what the field showed at focus, and that is "" for a value whose option
+  // has not loaded yet — judged, it read as "the user emptied the field" and the X
+  // cleared the answer (0.52 code review, inline-entity-combobox.tsx).
+  const dismissSheet = () => {
     setText(null);
     close();
   };
@@ -460,6 +460,18 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
         e.preventDefault();
         if (active === createIndex && showCreate) create();
         else take(matches[active]);
+      } else if (isPhone) {
+        // The sheet's search box: its QUERY is what was typed, and a name typed out in
+        // full is taken, as the desktop field takes it. Anything else leaves the sheet
+        // and its search as they are — the panel pickers' sheet does the same. This was
+        // `reconcile`, which judged the field's text from before the sheet opened and
+        // closed: the search was thrown away and "Groceries" typed out was not taken
+        // (0.52 code review, inline-entity-combobox.tsx).
+        const hit = exactHit(sheetQuery.trim());
+        if (hit) {
+          e.preventDefault();
+          take(hit);
+        }
       } else {
         reconcile();
       }
@@ -492,31 +504,19 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
     );
 
   /** The rows in their runs, each group a `role="group"` its heading names (INP-8), for
-   *  the sheet or the anchored list. `matches` is group-contiguous, so comparing with
-   *  the row above is enough. Keyed by group AND value, like combobox-core.tsx: an
-   *  option may deliberately appear twice (see `reconcile`), and a bare value key would
-   *  collide. */
-  const groupedRows = (sheet: boolean, row: (o: ComboOption<V>, i: number) => ReactNode) =>
-    groupRuns(matches, (o) => o.group).map((run) => {
-      const rows = run.rows.map((o, k) => (
-        <Fragment key={`${o.group ?? ""}|${String(o.value)}`}>{row(o, run.start + k)}</Fragment>
-      ));
-      if (run.group === null) return <Fragment key={`|${run.start}`}>{rows}</Fragment>;
-      return (
-        <OptionGroup
-          key={`${run.group}|${run.start}`}
-          id={`${listboxId}-group-${run.start}`}
-          heading={run.group}
-          // A group heading at each boundary rather than the group on every row
-          // (feedback #136); the list's first item sits closer to its top edge.
-          className={
-            sheet ? "px-4 pb-0.5 pt-3 text-caption" : cn("px-3 pb-0.5 text-caption", run.start === 0 ? "pt-1" : "pt-2")
-          }
-        >
-          {rows}
-        </OptionGroup>
-      );
-    });
+   *  the sheet or the anchored list — a group heading at each boundary rather than the
+   *  group on every row (feedback #136). `matches` is group-contiguous, so comparing with
+   *  the row above is enough. An option may deliberately appear in two groups (see
+   *  `reconcile`): a value is a row's key within its group. */
+  const groupedRows = (sheet: boolean, row: (o: ComboOption<V>, i: number) => ReactNode) => (
+    <GroupedOptions
+      runs={groupRuns(matches, (o) => o.group)}
+      listboxId={listboxId}
+      rowKey={(o) => String(o.value)}
+      row={row}
+      headingClassName={(run) => (sheet ? SHEET_HEADING_CLASS : anchoredHeadingClass(run))}
+    />
+  );
 
   return (
     // `rest` dresses the outer box — a `data-tour` anchor, a test id. Not the NAME,
@@ -697,15 +697,13 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
       )}
       <FieldCaption parts={hintParts} />
       {field.errorEl}
-      {/* Kept mounted, so a change is an announcement. On a phone it is in the sheet,
-          which hides from a reader what lies outside it. */}
+      {/* The live status — see `useTypedListStatus` for where it goes and why. */}
       {!isPhone && statusRegion}
       {isPhone && (
         <PickerSheet
           open={open && !inert}
-          // Closing without choosing keeps the value: `text` was never emptied, so
-          // reconcile has nothing to undo — it just puts the label back.
-          onClose={reconcile}
+          // Closing without choosing keeps the value — see `dismissSheet`.
+          onClose={dismissSheet}
           title={sheetTitle ?? label}
           query={sheetQuery}
           onQueryChange={(v) => {

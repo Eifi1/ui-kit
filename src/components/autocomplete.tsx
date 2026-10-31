@@ -1,4 +1,4 @@
-import { Fragment, useId, useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "../lib/cn";
@@ -11,12 +11,13 @@ import { isImeEnter } from "../lib/ime";
 import { isQuietFocus } from "../lib/quiet-focus";
 import { useAnchorDir } from "./use-anchor-dir";
 import {
+  anchoredHeadingClass,
   ComboboxFieldLabel,
   DISABLED_ROW_CLASS,
   endHintRowProps,
+  GroupedOptions,
   groupRuns,
   isOptionEnabled,
-  OptionGroup,
   stepEnabled,
   SUGGESTION_LIST_CLASS,
   suggestionRowClass,
@@ -562,77 +563,65 @@ export function Autocomplete<V extends string | number = string>(props: Autocomp
                 className="min-h-0 flex-1 overflow-y-auto py-1"
               >
                 {/* One heading per group, a `role="group"` it names, as in the core panel
-                    (refactor audit 2026-10-30, INP-8). Keyed by group AND value, as
-                    there: an option may appear once per group. */}
-                {groupRuns(results, (o) => o.group).map((run) => {
-                  const rows = run.rows.map((o, k) => {
-                    const i = run.start + k;
-                    return (
-                      <Fragment key={`${o.group ?? ""}|${String(o.value)}`}>
-                        <li role="presentation">
-                          <button
-                            type="button"
-                            id={optionId(i)}
-                            role="option"
-                            // CHOSEN, never "highlighted" — the family's rule. This
-                            // field holds no value, so the only row that can be chosen
-                            // is the one whose label the text already is.
-                            aria-selected={fillOnSelect && o.label === value}
-                            // Listed, announced as unavailable, never taken: `take`
-                            // refuses it and the arrows pass it over.
-                            aria-disabled={o.disabled || undefined}
-                            tabIndex={-1}
-                            onClick={() => take(o)}
-                            onMouseEnter={() => {
-                              if (!o.disabled) setActive(i);
-                            }}
-                            className={cn(
-                              // The family's suggestion row (DUP-4): it hand-rolled its
-                              // own with a plain `truncate`, so a long address was cut at
-                              // Large, where Combobox's rows wrap (text size §10.17, T1).
-                              // A flex row here, for the icon and the two lines.
-                              suggestionRowClass(i === active && !o.disabled),
-                              "flex items-center gap-2",
-                              small && "py-1 text-xs",
-                              o.disabled && DISABLED_ROW_CLASS,
-                              o.group && "ps-6",
-                            )}
-                          >
-                            {o.icon && (
-                              <span aria-hidden className="shrink-0 text-muted">
-                                {o.icon}
-                              </span>
-                            )}
-                            <span className="min-w-0 flex-1">
-                              <span className="block truncate-until-large text-primary">{o.label}</span>
-                              {o.sublabel && (
-                                <span
-                                  className={cn(
-                                    "block truncate-until-large text-placeholder",
-                                    small ? "text-caption" : "text-xs",
-                                  )}
-                                >
-                                  {o.sublabel}
-                                </span>
+                    (refactor audit 2026-10-30, INP-8), drawn by the same renderer: an
+                    option may appear once per group. */}
+                <GroupedOptions
+                  runs={groupRuns(results, (o) => o.group)}
+                  listboxId={listboxId}
+                  rowKey={(o) => String(o.value)}
+                  headingClassName={(run) => anchoredHeadingClass(run)}
+                  row={(o, i) => (
+                    <li role="presentation">
+                      <button
+                        type="button"
+                        id={optionId(i)}
+                        role="option"
+                        // CHOSEN, never "highlighted" — the family's rule. This
+                        // field holds no value, so the only row that can be chosen
+                        // is the one whose label the text already is.
+                        aria-selected={fillOnSelect && o.label === value}
+                        // Listed, announced as unavailable, never taken: `take`
+                        // refuses it and the arrows pass it over.
+                        aria-disabled={o.disabled || undefined}
+                        tabIndex={-1}
+                        onClick={() => take(o)}
+                        onMouseEnter={() => {
+                          if (!o.disabled) setActive(i);
+                        }}
+                        className={cn(
+                          // The family's suggestion row (DUP-4): it hand-rolled its
+                          // own with a plain `truncate`, so a long address was cut at
+                          // Large, where Combobox's rows wrap (text size §10.17, T1).
+                          // A flex row here, for the icon and the two lines.
+                          suggestionRowClass(i === active && !o.disabled),
+                          "flex items-center gap-2",
+                          small && "py-1 text-xs",
+                          o.disabled && DISABLED_ROW_CLASS,
+                          o.group && "ps-6",
+                        )}
+                      >
+                        {o.icon && (
+                          <span aria-hidden className="shrink-0 text-muted">
+                            {o.icon}
+                          </span>
+                        )}
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate-until-large text-primary">{o.label}</span>
+                          {o.sublabel && (
+                            <span
+                              className={cn(
+                                "block truncate-until-large text-placeholder",
+                                small ? "text-caption" : "text-xs",
                               )}
+                            >
+                              {o.sublabel}
                             </span>
-                          </button>
-                        </li>
-                      </Fragment>
-                    );
-                  });
-                  if (run.group === null) return <Fragment key={`|${run.start}`}>{rows}</Fragment>;
-                  return (
-                    <OptionGroup
-                      key={`${run.group}|${run.start}`}
-                      id={`${listboxId}-group-${run.start}`}
-                      heading={run.group}
-                      className={cn("px-3 pb-0.5 text-caption", run.start === 0 ? "pt-1" : "pt-2")}
-                    >
-                      {rows}
-                    </OptionGroup>
-                  );
-                })}
+                          )}
+                        </span>
+                      </button>
+                    </li>
+                  )}
+                />
               </ul>
             )}
             {statusLine !== null && (
