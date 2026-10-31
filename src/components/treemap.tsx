@@ -119,6 +119,10 @@ export interface TreemapProps extends Omit<ComponentPropsWithoutRef<"div">, "chi
    * and the whole tooltip bubble get `data-private`, the same attribute the kit's
    * `Tooltip redact` and `ChartTooltipContent`'s value cell carry, so the host's one
    * privacy rule reaches them. Off by default — a category name is a label of the app.
+   *
+   * Every tile is tagged as a whole too, clickable or not (0.52): its accessible name
+   * (`labels.tile`) says the name and the value, in an attribute a host's redaction
+   * reaches only through the tag.
    */
   redactNames?: boolean;
   /**
@@ -420,11 +424,14 @@ function Tile({
       onFocus={roving ? () => roving.onFocus(id!) : undefined}
       // A clickable tile is a button to a keyboard and a screen reader too; the
       // drilldown it opens was mouse-only in the app this came from. Under `redactNames`
-      // the group carries `data-private`, since its name is the node's.
+      // the group carries `data-private` whenever it carries a name, button or not: the
+      // name says the node's name and value, and an untagged `aria-label` is read by a
+      // session replay or a redaction keyed on `[data-private]` (0.52, code review of
+      // feat/0.52.0 — DSP-5 named every tile, and this tagged only the buttons).
       role={activate ? "button" : roving ? "img" : undefined}
       tabIndex={roving ? (roving.stop === id ? 0 : -1) : activate ? 0 : undefined}
       aria-label={focusable ? (roving?.name(id!) ?? name) : undefined}
-      data-private={activate && redactNames ? "" : undefined}
+      data-private={focusable && redactNames ? "" : undefined}
       cursor={activate ? "pointer" : undefined}
       // CSS beats a presentation attribute, so this recolours the rect's own stroke
       // for as long as the tile has keyboard focus.
