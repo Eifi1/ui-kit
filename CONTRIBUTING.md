@@ -524,8 +524,10 @@ just the symptom, because a reader upgrading needs to know whether it could have
    `package.json` and the lockfile, writes `CHANGELOG.md` and commits
    `chore(release): X.Y.Z`. It does NOT tag (`skip.tag`). Force a version with
    `npm run release -- --release-as minor` when the commits under-state it.
-4. Push (the pre-push hook runs `npm run check`), open the PR, and merge it once CI
-   confirms. Pushes wait until the work is done and go out in one batch. The version bump
+4. Push, open the PR, and merge it once CI confirms. The pre-push hook does not run
+   `npm run check` again for the release commit: on a parent whose tree passed in step 1,
+   a commit that changes only CHANGELOG.md and the `"version"` lines runs the commit
+   messages and `deprecations.test.ts` (TST-1, refactor audit 2026-10-30). Pushes wait until the work is done and go out in one batch. The version bump
    makes it a release PR, so CI also runs the truncation sweep (`Truncation sweep (release)`,
    see [The gates](#the-gates)); a TRUNCATED or PINNED finding fails it and stops the
    release. To know the verdict before you push, run `npm run check:sweep` yourself.
