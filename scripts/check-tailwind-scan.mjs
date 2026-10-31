@@ -6,11 +6,20 @@
  * reaches the package. `pointer-events-auto` comes from the kit's overlays and from
  * almost nothing else.
  *
- * Run after `npm run build:showcase`. Part of `npm run check`, which CI calls as it is.
+ * And the documented lines themselves, as an app runs them (at the end): README's and
+ * ADOPTING's `@source` lines, compiled over this build's dist/ installed under an app's
+ * node_modules. They must reach the kit's classes and scan no `.d.ts` or `.map` file —
+ * their comments and `sourcesContent` became utilities in every app's stylesheet
+ * (refactor audit 2026-10-30, MOD-3).
+ *
+ * Run after `npm run build` and `npm run build:showcase`. Part of `npm run check`,
+ * which CI calls as it is.
  */
-import { readFileSync, readdirSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
+import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
+import { Scanner } from "@tailwindcss/oxide";
 import { compile } from "tailwindcss";
 
 const dir = "showcase/dist/assets";
@@ -190,3 +199,77 @@ if (/--text-color-muted\s*:/.test(probe)) {
   process.exit(1);
 }
 console.log("✓ the colour roles survive the build, and every role namespace compiles");
+
+/**
+ * The documented `@source` lines, run the way an app runs them (MOD-3, refactor audit
+ * 2026-10-30). Measured on 0.51.7's dist with Tailwind 4.3.3: `@source ".../dist"` scans
+ * 554 `.js`, 553 `.d.ts` and 553 `.js.map` files, and the JSDoc and `sourcesContent`
+ * put 181 rules (11 KB) into an app's CSS, palette shades the kit's own lint refuses
+ * among them (`bg-green-500` from status-dot's doc comment). The glob
+ * `@source ".../dist/**\/*.js"` changes NOTHING in an app: an explicit source inside
+ * the gitignored node_modules un-ignores its base folder, and the app's own root
+ * detection (`**\/*`) then walks all of it. Only `@source not` keeps those files out.
+ *
+ * So this compiles README's lines (ADOPTING must say the same) in a scratch app — a
+ * `.gitignore` naming node_modules, the kit linked in as @eifi1/ui-kit, the scanner built
+ * as @tailwindcss/vite builds it: root detection plus the stylesheet's sources — and
+ * fails when a `.d.ts` or `.map` file is scanned or a kit class goes missing.
+ */
+const KIT_SOURCE = /^\s*@source\s+(?:not\s+)?"[^"]*@eifi1\/ui-kit\/[^"]*"\s*;/gm;
+const documented = (file) =>
+  (readFileSync(join(ROOT, file), "utf8").match(KIT_SOURCE) ?? []).map((line) => line.trim()).sort();
+const readme = documented("README.md");
+const adopting = documented("ADOPTING.md");
+if (readme.length === 0) {
+  console.error("✖ README.md documents no @source line for @eifi1/ui-kit");
+  process.exit(1);
+}
+if (JSON.stringify(readme) !== JSON.stringify(adopting)) {
+  console.error(
+    `✖ README.md and ADOPTING.md document different @source lines:\n  README:    ${readme.join("\n             ")}\n  ADOPTING:  ${adopting.join("\n             ")}`,
+  );
+  process.exit(1);
+}
+const app = mkdtempSync(join(tmpdir(), "uikit-tailwind-app-"));
+try {
+  mkdirSync(join(app, "src"));
+  mkdirSync(join(app, "node_modules", "@eifi1"), { recursive: true });
+  symlinkSync(ROOT, join(app, "node_modules", "@eifi1", "ui-kit"), "dir");
+  writeFileSync(join(app, ".gitignore"), "node_modules\n");
+  // Each documented path, from its `@eifi1/ui-kit/` on, under the scratch app's package.
+  const installed = join(app, "node_modules", "@eifi1", "ui-kit");
+  const lines = readme.map((line) =>
+    line.replace(/"[^"]*@eifi1\/ui-kit\/([^"]*)"/, (_, rest) => `"${join(installed, rest)}"`),
+  );
+  const appCompiler = await compile(
+    `@import "tailwindcss";\n@import "${join(ROOT, "tokens.css")}";\n${lines.join("\n")}\n`,
+    {
+      base: join(app, "src"),
+      loadStylesheet,
+    },
+  );
+  const root =
+    appCompiler.root === "none" ? [] : [{ ...(appCompiler.root ?? { base: app, pattern: "**/*" }), negated: false }];
+  const scanner = new Scanner({ sources: [...root, ...appCompiler.sources] });
+  const appCss = appCompiler.build(scanner.scan());
+  const commented = scanner.files.filter((f) => /\.d\.ts$|\.map$/.test(f));
+  if (commented.length > 0) {
+    console.error(
+      `✖ the documented @source lines scan ${commented.length} .d.ts / .map file(s) of the kit (${commented[0]}, …):\n` +
+        "  their comments become utilities in every app's CSS. Document\n" +
+        '  @source not "../../node_modules/@eifi1/ui-kit/dist/**/*.{map,d.ts}"; beside the @source line (MOD-3).',
+    );
+    process.exit(1);
+  }
+  for (const cls of ["pointer-events-auto", "sr-only"]) {
+    if (!appCss.includes(`.${cls}`)) {
+      console.error(`✖ ${cls} is missing from an app's CSS under the documented @source lines — the scan misses dist/`);
+      process.exit(1);
+    }
+  }
+  console.log(
+    `✓ the documented @source lines reach the kit's classes and scan ${scanner.files.length} files, no .d.ts or .map`,
+  );
+} finally {
+  rmSync(app, { recursive: true, force: true });
+}
