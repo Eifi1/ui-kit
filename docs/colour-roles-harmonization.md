@@ -594,6 +594,13 @@ Colour table and adopt-0.49 said it.
   Treemap since ui-kit 0.51.6, with `edges="uniform"` or `"contrast"` to pin one rule;
   SeriesChart's bars and areas since ui-kit 0.52 (Marcel, 2026-10-31, on the refactor
   audit's DSP-18: the same rule, rather than recording that it is for tiles only).
+- **Treemap groups** (ui-kit 0.52, `TreemapNode.children`; keksdose dev #642). A group is
+  a frame round its tiles: the well, `--bg-surface-2`, under `--text-primary` for its name
+  band (≥ 8.17:1 at Standard and ≥ 7.44:1 under More contrast, measured across the
+  presets). The well is only 1.09–1.24:1 from the card, so under More contrast every frame
+  gets the `--chart-ink` edge whatever `edges` says. A group's `fill` is its tiles' default
+  (a tile's own wins). A node's `shade` mixes its hue into `--bg-surface` as a hex the map
+  measures, so the label ink stays automatic: an app no longer lerps colours by hand.
 
 ## 6. SwipeAction `tone` (k24, §2.6, §2.12)
 

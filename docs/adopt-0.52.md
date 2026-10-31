@@ -120,13 +120,30 @@ and its resolver copy (`formatDateTimeFor` → `formatDateTimeWithPreference`). 
 pickers take the write lock (`commit`, `disabledReason`). Spanish and Hungarian month captions
 are right; MonthPicker's rows are 44 px.
 
+**Treemap groups** (keksdose dev #642). A `TreemapNode` with `children` is a group, drawn
+as a labelled frame round its tiles; a group's `fill` is its tiles' default, a node's
+`shade` mixes the hue into the surface as a measured hex (label ink stays automatic),
+`onGroupClick` makes the frames buttons, and `onNodeClick` gets the ancestor group ids as
+an optional third argument. The keyboard walks frames and tiles depth-first; a tile reads
+"Bakery: 40 (2%), in Groceries". keksdose:
+- the matching tab's map can be one group per chain (`fill` = the chain's hue, `children`
+  = its shops, `shade` per shop by recency, an "other chains" group in
+  `CHART_ROLES.other`), and then delete `lerpHex`, the `bgSurface` lookup, the hex regex
+  test and the rank sort with its "no nesting yet" comment; the StaticLegend's chain
+  entries become optional;
+- CategoryTreemap must pass `children` and `shade` through (its `Node` mapping drops them);
+- the all-categories map (dev#533) can nest categories under their groups.
+Under `redactNames` whole tiles and the frames' names now blur in demo mode (they carry
+names in their accessible labels).
+
 **Search.** Combobox, CountrySelect, the DataTable text filter, TourCatalogue, translation
 review and ShareCard match every word of a query in any order. DataTable exports
 `compareSortValues(a, b, locale?)`, its own sort order: keksdose's transaction-order.ts can
 import it instead of its copy.
 
 **Flows.** Each status change keeps its own Undo; `/join`, `/register?invite=` and the other
-one-shot pages in a feedback row show as text with Copy; an inbox row's url opens only as a
+one-shot pages in a feedback row show as text with Copy, matched as the router matches them
+(decoded, in any case: `/Join`, `/j%6Fin`), `pageLinkExclude` adds routes; an inbox row's url opens only as a
 same-origin path; QuietHoursSetting saves on blur or Enter; passkeys are locked under the
 demo's write lock. Modal `busy` (0.51.7) is joined by `InlineConfirm` inside the kit.
 
@@ -136,7 +153,8 @@ stops the others' engines on that copy, and the query copy's `clear()` reaches e
 Tests: name BroadcastChannel keys and database names per test file.
 
 **Tour and shell.** The tour overlay loads on the first start (−5.5 KB gzip from every first
-load); a field step docks below 800 px at Large text; ⌘K is Cmd on a Mac and Ctrl elsewhere,
+load); if that chunk fails to load (a tab left open across a deploy, offline), the tour
+ends and logs to the console, and the app stays up; a field step docks below 800 px at Large text; ⌘K is Cmd on a Mac and Ctrl elsewhere,
 once per press; the feedback dialog drags from 960 px at Large text.
 
 **New exports.** `releaseThisDevicePush`, `formatDateTimeWithPreference`, `compareSortValues`,
