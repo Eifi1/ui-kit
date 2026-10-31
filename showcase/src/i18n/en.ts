@@ -1,4 +1,4 @@
-import { DEFAULT_UI_KIT_LABELS } from "@eifi1/ui-kit";
+import { uiKitLabelsEn } from "@eifi1/ui-kit/i18n/en";
 import type { Dictionary } from "./types";
 
 /**
@@ -1325,5 +1325,7 @@ export const en: Dictionary = {
    * provider changes nothing on screen, which is the point: if picking English moves
    * anything, something has drifted. The other six dictionaries spell out every key.
    */
-  kit: DEFAULT_UI_KIT_LABELS,
+  // The shipped catalogue as an app's `loadUiKitLabels("en")` gets it: formatted in en-GB,
+  // not the raw defaults (refactor audit 2026-10-30, DOC-12).
+  kit: uiKitLabelsEn("en-GB"),
 };

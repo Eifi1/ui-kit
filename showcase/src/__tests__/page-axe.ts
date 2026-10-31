@@ -12,11 +12,41 @@ import axe from "axe-core";
  * loads no app stylesheet, so colour contrast, target size, `region` and the other
  * landmark and visibility rules would report on a page nobody sees; those are the
  * Playwright sweep's (`check:sweep`) business.
+ *
+ * And the STRUCTURE rules, which read only the tree (refactor audit 2026-10-30, DOC-7):
+ * a control inside a control (row actions, a chip's remove button, a card link), a native
+ * select's name, the image roles (charts, sparklines, the QR code), description lists,
+ * input buttons, `autocomplete` values (the auth forms), positive tabindex, a field with
+ * two labels, table headers and their cells, `<summary>`'s name, and a presentational
+ * role that a focusable element or a global ARIA attribute overrides.
  */
+const STRUCTURE_RULES = [
+  "nested-interactive",
+  "select-name",
+  "role-img-alt",
+  "svg-img-alt",
+  "image-alt",
+  "definition-list",
+  "dlitem",
+  "input-button-name",
+  "autocomplete-valid",
+  "tabindex",
+  "form-field-multiple-labels",
+  "empty-table-header",
+  "td-headers-attr",
+  "th-has-data-cells",
+  "summary-name",
+  "presentation-role-conflict",
+];
+
 export const AXE_RULES: readonly string[] = axe
   .getRules()
   .map((rule) => rule.ruleId)
-  .filter((id) => id.startsWith("aria-") || ["label", "button-name", "link-name", "list", "listitem"].includes(id));
+  .filter(
+    (id) =>
+      id.startsWith("aria-") ||
+      ["label", "button-name", "link-name", "list", "listitem", ...STRUCTURE_RULES].includes(id),
+  );
 
 /** One known finding: the rule, the pages it is known on (all when left out), the start
  *  of the element's HTML as axe prints it, and why it is there. */
@@ -33,13 +63,56 @@ export interface AxeKnown {
  * is fixed in the showcase instead of listed. Matched on the rule, the page (when given)
  * and the start of the element's HTML as axe prints it.
  *
- * Empty since round 0.34: the five kit bugs the check found when it landed are fixed —
- * FileDropzone's and FeedbackAttachmentField's single-mode file input (out of the tab
- * order and the tree), FeedbackNoteEditor's unnamed box (`feedbackDetail.note`),
- * DataTable's `aria-expanded` on a `<tr>` (a disclosure button in the row now), and
- * Tabs' × inside the tablist (the named remove button sits after it).
+ * Empty from round 0.34 (the five kit bugs the check found when it landed were fixed:
+ * FileDropzone's and FeedbackAttachmentField's single-mode file input, FeedbackNoteEditor's
+ * unnamed box, DataTable's `aria-expanded` on a `<tr>`, Tabs' × inside the tablist) until
+ * 0.52's structure rules (DOC-7) found the ones below on their first run. Each names the
+ * area that owns the fix.
  */
-export const AXE_KNOWN: readonly AxeKnown[] = [];
+export const AXE_KNOWN: readonly AxeKnown[] = [
+  {
+    rule: "empty-table-header",
+    pages: ["calendar-heatmap"],
+    html: /^<div role="rowheader" aria-label="[^"]+" class="overflow-hidden pe-1 text-micro/,
+    reason:
+      "CalendarHeatmap (charts) prints every other weekday, as a contribution graph does, and names all seven " +
+      "with aria-label; axe's best-practice rule wants visible text in a header. Charts' call: a sr-only name " +
+      "in the blank rows would satisfy it.",
+  },
+  {
+    rule: "empty-table-header",
+    pages: ["measured-grid"],
+    html: /^<div role="columnheader" aria-label="[^"]+" class="border-s border-subtle"><\/div>/,
+    reason:
+      "MeasuredGrid's (tables) row-actions column header has no visible text by design, only " +
+      "`labels.rowActions` as aria-label; a sr-only span with the same words would satisfy the rule.",
+  },
+  {
+    rule: "nested-interactive",
+    pages: ["buttons"],
+    html: /^<div (?:class="relative h-56 [^"]*" style="[^"]*" )?role="img" aria-label="(?:A map at|Camera viewfinder)/,
+    reason:
+      'The specimen\'s own backdrop (showcase/src/sections/buttons-012-demo.tsx): a role="img" stand-in for a ' +
+      "map or a camera with the FloatingActionButton inside it. Fix in the showcase: no role on the backdrop, " +
+      "or the picture's name on a sibling.",
+  },
+  {
+    rule: "nested-interactive",
+    pages: ["links"],
+    html: /^<div role="button" tabindex="0" class="flex min-w-0 flex-wrap items-center justify-between/,
+    reason:
+      "The specimen (showcase/src/sections/links-demo.tsx) is a clickable row with a TextLink inside, the pattern " +
+      "TextLink's stopPropagation exists for; the nesting is what it demonstrates.",
+  },
+  {
+    rule: "definition-list",
+    pages: ["media"],
+    html: /^<dl class="space-y-1 font-mono/,
+    reason:
+      "The specimen's status readout (showcase/src/sections/media-demo.tsx) is a <dl> of plain <div>s. Fix in " +
+      "the showcase: a <div>, or <dt>/<dd> pairs.",
+  },
+];
 
 export interface AxeFinding {
   rule: string;

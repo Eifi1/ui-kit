@@ -7,8 +7,28 @@ import { AXE_RULES, axeFindings, duplicateIds, type AxeKnown } from "./page-axe"
 describe("axeFindings", () => {
   it("runs only the rules jsdom can judge", () => {
     expect(AXE_RULES).toEqual(expect.arrayContaining(["button-name", "label", "link-name", "aria-valid-attr-value"]));
+    // The structure rules (DOC-7), each one axe still has under that name.
+    expect(AXE_RULES).toEqual(
+      expect.arrayContaining(["nested-interactive", "select-name", "role-img-alt", "dlitem", "th-has-data-cells"]),
+    );
+    expect(AXE_RULES).toHaveLength(new Set(AXE_RULES).size);
     expect(AXE_RULES).not.toContain("color-contrast");
     expect(AXE_RULES).not.toContain("region");
+  });
+
+  it("reports a control inside a control and an unnamed native select (DOC-7)", async () => {
+    const { container } = render(
+      <div>
+        <div role="button" tabIndex={0}>
+          Row <button type="button">Delete</button>
+        </div>
+        <select>
+          <option>One</option>
+        </select>
+      </div>,
+    );
+    const findings = await axeFindings(container, "any");
+    expect(findings.map((f) => f.rule).sort()).toEqual(["nested-interactive", "select-name"]);
   });
 
   it("reports a button with no name and an input with no label", async () => {
@@ -24,7 +44,7 @@ describe("axeFindings", () => {
   });
 
   it("leaves out a known finding — on its page, and only there when it names pages", async () => {
-    // Its own list: the real one is empty since round 0.34 fixed the five it held.
+    // Its own list, so the case does not depend on the real one's entries.
     const known: AxeKnown[] = [{ rule: "label", pages: ["feedback-inbox"], html: /^<textarea /, reason: "test" }];
     const { container } = render(<textarea rows={3} />);
     expect(await axeFindings(container, "feedback-inbox", undefined, known)).toEqual([]);

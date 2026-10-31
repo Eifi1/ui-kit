@@ -19,7 +19,7 @@ const VISITS = [120, 132, 101, 134, 90, 230, 210, 250, 245, 280];
 const GAPPY = [4, 6, 5, null, null, 7, 9, 8];
 const NET = [320, -140, 80, -60, 210, 150];
 
-/** keksdose's two forward rows (#633), on every tile (live #455: "Always show both"). */
+/** Two forward rows, Committed and Projected, the same on every tile. */
 function forwardRows(committed: number, projected: number, date: string): StatTileSubValue[] {
   return [
     { label: `Committed ${date}`, value: committed },
@@ -188,7 +188,7 @@ export function StatsDemo() {
 
       <Example
         label="projection as a list: Committed and Projected"
-        hint="0.51, keksdose #633: two forward rows with the headline, the history below"
+        hint="two forward rows with the headline, the history below"
       >
         <StatTileGrid>
           <StatTile
@@ -213,10 +213,10 @@ export function StatsDemo() {
         </StatTileGrid>
         <Note>
           <code className="font-mono">projection</code> takes one row or several, drawn in order under the headline.
-          keksdose&apos;s tiles show &ldquo;Committed&rdquo; (today plus what is scheduled) and &ldquo;Projected&rdquo;
-          (that plus the usual variable money), on every tile: the second has nothing scheduled, so Committed equals
-          today&apos;s figure, and it is shown all the same (keksdose live #455). Which rows to give is the app&apos;s
-          choice; the tile draws the rows it is given.
+          Here &ldquo;Committed&rdquo; is today plus what is scheduled and &ldquo;Projected&rdquo; adds the usual
+          variable money, on every tile: the second has nothing scheduled, so Committed equals today&apos;s figure, and
+          it is shown all the same, so the rows line up from tile to tile. Which rows to give is the app&apos;s choice;
+          the tile draws the rows it is given.
         </Note>
       </Example>
 
