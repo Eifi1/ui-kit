@@ -370,7 +370,7 @@ export const it: Dictionary = {
       title: "Grafico a riquadri",
       short: "Riquadri",
       blurb:
-        "La treemap: le parti di un tutto come riquadri, con etichette che ci stanno e riquadri cliccabili, percorribili da tastiera e letti da uno screen reader — e il drill-down, con un grafico a barre come con i riquadri.",
+        "La treemap: le parti di un tutto come riquadri, con etichette che ci stanno e riquadri cliccabili, percorribili da tastiera e letti da uno screen reader, raggruppati all’occorrenza in cornici con titolo — e il drill-down, con un grafico a barre come con i riquadri.",
     },
     "series-chart": {
       title: "Grafico a serie",
@@ -1027,6 +1027,7 @@ export const it: Dictionary = {
       "riquadri cliccabili",
       "spese per categoria",
       "far stare le etichette nei riquadri",
+      "raggruppare i riquadri in cornici",
     ],
     "series-chart": [
       "grafico nel tempo",

@@ -381,7 +381,7 @@ export const de: Dictionary = {
       title: "Kacheldiagramm",
       short: "Kacheln",
       blurb:
-        "Die Treemap: Anteile an einem Ganzen als Kacheln, mit passenden Beschriftungen und Kacheln, die man anklicken, mit der Tastatur durchgehen und vorlesen lassen kann — und der Drilldown, per Balkendiagramm wie per Kacheln.",
+        "Die Treemap: Anteile an einem Ganzen als Kacheln, mit passenden Beschriftungen und Kacheln, die man anklicken, mit der Tastatur durchgehen und vorlesen lassen kann, auch in beschrifteten Gruppenrahmen — und der Drilldown, per Balkendiagramm wie per Kacheln.",
     },
     "series-chart": {
       title: "Reihendiagramm",
@@ -1039,6 +1039,7 @@ export const de: Dictionary = {
       "anklickbare Kacheln",
       "Ausgaben nach Kategorie",
       "Beschriftungen in Kacheln einpassen",
+      "Kacheln in Rahmen gruppieren",
     ],
     "series-chart": [
       "Verlauf über die Zeit darstellen",

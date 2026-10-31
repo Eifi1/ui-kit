@@ -382,7 +382,7 @@ export const en: Dictionary = {
       title: "Tile chart",
       short: "Tiles",
       blurb:
-        "The treemap: a share of a whole as tiles, with labels that fit, tiles you can click, walk with the keyboard and hear read out — and drilling down, through a bar chart as well as through tiles.",
+        "The treemap: a share of a whole as tiles, with labels that fit, tiles you can click, walk with the keyboard and hear read out, tiles grouped in labelled frames — and drilling down, through a bar chart as well as through tiles.",
     },
     "series-chart": {
       title: "Series chart",
@@ -1024,6 +1024,7 @@ export const en: Dictionary = {
       "clickable tiles",
       "spending by category",
       "fit labels in tiles",
+      "group tiles in frames",
     ],
     "series-chart": [
       "show a chart over time",
