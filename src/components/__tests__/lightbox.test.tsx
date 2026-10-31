@@ -67,14 +67,15 @@ describe("Lightbox", () => {
     expect(within(dialog()).getByText("Sink leaks")).toBeInTheDocument();
   });
 
-  it("pages with the buttons, disabled at the ends unless `loop`", () => {
+  it("pages with the buttons, refused at the ends unless `loop`", () => {
     const { unmount } = render(<Harness />);
-    expect(screen.getByRole("button", { name: "Previous image" })).toBeDisabled();
+    // `aria-disabled`, not `disabled`: the press onto the end keeps its focus (INP-4).
+    expect(screen.getByRole("button", { name: "Previous image" })).toHaveAttribute("aria-disabled", "true");
     fireEvent.click(screen.getByRole("button", { name: "Next image" }));
     fireEvent.click(screen.getByRole("button", { name: "Next image" }));
     expect(shown()).toBe("Bathroom");
     expect(screen.getByText("3 / 3")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Next image" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Next image" })).toHaveAttribute("aria-disabled", "true");
     unmount();
 
     render(<Harness loop />);
@@ -291,5 +292,26 @@ describe("Lightbox with a fetcher", () => {
     );
     await waitFor(() => expect(screen.getByText("No preview available for this file")).toBeInTheDocument());
     expect(screen.getByRole("link", { name: "Open in new tab" })).toHaveAttribute("href", "blob:t/1");
+  });
+});
+
+/**
+ * An empty caption draws no footer (refactor audit 2026-10-30, DUP-14): the footer's
+ * test was `!== undefined && !== null && !== false`, so a `""` caption — what an upload
+ * with no note stores — drew the footer's bar with nothing in it. `hasContent` is the
+ * kit's one rule.
+ */
+describe("Lightbox caption", () => {
+  it("draws no footer for an empty caption", () => {
+    render(
+      <Lightbox
+        open
+        onClose={() => {}}
+        items={[{ src: "/a.jpg", alt: "Kitchen", caption: "" }]}
+        index={0}
+        onIndexChange={() => {}}
+      />,
+    );
+    expect(dialog().querySelector("[data-full-bleed-footer]")).toBeNull();
   });
 });

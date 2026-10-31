@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Download, ExternalLink, FileText, ZoomIn } f
 
 import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
+import { hasContent } from "../lib/presence";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { useAuthedSrc } from "../hooks/use-authed-src";
 import { useBreakpoint } from "../hooks/use-breakpoint";
@@ -92,8 +93,8 @@ export interface LightboxProps {
    *  loaded by the browser as usual. */
   fetcher?: AuthedFetcher | null;
   /** Previous from the first goes to the last, and next from the last to the first.
-   *  Default `false`: the buttons at the ends are disabled, which says where the set
-   *  ends. */
+   *  Default `false`: the buttons at the ends refuse (`aria-disabled`, focus kept — 0.52),
+   *  which says where the set ends. */
   loop?: boolean;
   /** Double-click (or double-tap) the picture, or the zoom button, to see it at full
    *  size and pan by scrolling. Default `true`. Pinch zoom is the browser's own. */
@@ -113,6 +114,11 @@ export interface LightboxProps {
 
 /** Swipes shorter than this are taps, and a drag that is mostly vertical is a scroll. */
 const SWIPE_MIN_PX = 50;
+
+/** An end arrow's look: a disabled `overlay` IconButton's (its 50% and its resting disc
+ *  under hover), for the focusable kind — `disabled:` cannot match `aria-disabled`. */
+const ARROW_AT_END =
+  "aria-disabled:cursor-not-allowed aria-disabled:opacity-50 aria-disabled:hover:bg-[color-mix(in_srgb,var(--bg-inverse)_60%,transparent)]";
 
 /**
  * A full-screen viewer for a set of images (and files that are not images).
@@ -336,8 +342,10 @@ export function Lightbox({
         onKeyDown={onKeyDown}
         data-lightbox=""
         footer={
-          item?.caption !== undefined && item.caption !== null && item.caption !== false ? (
-            <p className="me-auto min-w-0 text-sm text-secondary">{item.caption}</p>
+          // `hasContent` (refactor audit 2026-10-30, DUP-14): a `""` caption drew an empty
+          // footer bar.
+          hasContent(item?.caption) ? (
+            <p className="me-auto min-w-0 text-sm text-secondary">{item?.caption}</p>
           ) : undefined
         }
       >
@@ -355,14 +363,19 @@ export function Lightbox({
           {slide}
         </div>
         {count > 1 && (
+          // At an end the arrow refuses rather than turns `disabled` (refactor audit
+          // 2026-10-30, INP-4, JumpCalendar's rule): the press that reaches the last
+          // picture is made with the focus on ›, and a focused button that turns
+          // `disabled` drops the focus out of the viewer's trap to <body>. kastlan's
+          // ImageGrid and keksdose's invoice review open it without `loop`.
           <>
             <IconButton
               variant="overlay"
               size="lg"
               label={labels.previous}
-              disabled={!canPrev}
+              aria-disabled={!canPrev || undefined}
               onClick={() => go(-1)}
-              className="absolute start-3 top-1/2 -translate-y-1/2"
+              className={cn("absolute start-3 top-1/2 -translate-y-1/2", ARROW_AT_END)}
               tooltip={false}
             >
               <ChevronLeft className="rtl:-scale-x-100" />
@@ -371,9 +384,9 @@ export function Lightbox({
               variant="overlay"
               size="lg"
               label={labels.next}
-              disabled={!canNext}
+              aria-disabled={!canNext || undefined}
               onClick={() => go(1)}
-              className="absolute end-3 top-1/2 -translate-y-1/2"
+              className={cn("absolute end-3 top-1/2 -translate-y-1/2", ARROW_AT_END)}
               tooltip={false}
             >
               <ChevronRight className="rtl:-scale-x-100" />
