@@ -25,7 +25,8 @@ export { DEFAULT_DIALOG_FRAME_LABELS };
  * `PickerSheet` met first. Everything else, `size`, `draggable`, `fullBleed`,
  * `onKeyDown`, a `data-tour` anchor, still reaches the `Modal` — and since 0.35 `ref`
  * (round 0.35 R4): the panel, the `role="dialog"` element the frame's header, body and
- * actions sit in.
+ * actions sit in. `busy` too (DUP-3): it holds the frame's X and the `close` that
+ * `actions` and `headerActions` receive, since both are the `Modal`'s own close.
  */
 export interface DialogFrameProps extends Omit<ModalProps, "labelledBy" | "children" | "title"> {
   /** The heading, and therefore the dialog's accessible name (`aria-labelledby`). */

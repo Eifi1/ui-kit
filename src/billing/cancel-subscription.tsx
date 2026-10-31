@@ -1,5 +1,3 @@
-import type { KeyboardEvent } from "react";
-
 import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import type { LabelOverride } from "../i18n/kit-labels";
 import { DEFAULT_COMMON_LABELS } from "../i18n/shared-labels";
@@ -21,8 +19,8 @@ export interface CancelSubscriptionConfirmProps {
   periodEnd: DateInput;
   /** Confirm: the app's `POST /billing/cancel` (server-kit 0.14, §16.3). */
   onConfirm: () => void;
-  /** The cancel is under way: Confirm's spinner, no second press, and Escape and Back
-   *  don't close. */
+  /** The cancel is under way: Confirm's spinner, no second press, and neither Escape,
+   *  the backdrop nor Back closes it. */
   pending?: boolean;
   /** The date's locale. Default: the provider's. */
   locale?: string;
@@ -72,13 +70,8 @@ export function CancelSubscriptionConfirm({
       open={open}
       title={labels.cancelConfirmTitle}
       description={labels.cancelConfirmBody(formatDate(periodEnd, "medium", { locale }))}
-      onClose={() => {
-        if (!pending) onOpenChange(false);
-      }}
-      onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => {
-        if (pending && e.key === "Escape") e.preventDefault();
-      }}
-      aria-busy={pending || undefined}
+      onClose={() => onOpenChange(false)}
+      busy={pending}
       data-cancel-subscription-confirm=""
       actions={(close) => (
         <>

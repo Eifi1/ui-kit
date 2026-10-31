@@ -1,5 +1,5 @@
 import { Children, useContext, useEffect, useId, useRef, useState } from "react";
-import type { KeyboardEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { AlertBanner } from "../components/alert-banner";
 import { Checkbox } from "../components/checkbox";
@@ -378,6 +378,8 @@ export function AdminActionConfirm({
         title={heading}
         description={identity}
         onClose={() => onClose(confirmed.current)}
+        // The removal offered with the refusal is a request too.
+        busy={busy}
         actions={(close) => (
           <CloseOnDone done={done}>
             <Button type="button" variant="secondary" disabled={busy} onClick={close}>
@@ -426,10 +428,7 @@ export function AdminActionConfirm({
       description={identity}
       onClose={() => onClose(confirmed.current)}
       // A request that has left cannot be called back by closing the dialog.
-      onKeyDown={(event: KeyboardEvent<HTMLDivElement>) => {
-        if (busy && event.key === "Escape") event.preventDefault();
-      }}
-      aria-busy={busy || undefined}
+      busy={busy}
       actions={(close) => (
         <CloseOnDone done={done}>
           <Button type="button" variant="ghost" disabled={busy} onClick={close}>

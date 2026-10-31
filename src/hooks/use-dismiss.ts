@@ -42,8 +42,9 @@ import { isComposing } from "../lib/ime";
  * draft, InlineEditField cancelling its edit, the date picker's month grid going back to
  * the days. Those call {@link claimEscape}, and no layer is handed the key. The only
  * other claim is the layer owner's OWN handler — a dialog's `onKeyDown` prop calling
- * `preventDefault()` on Escape (a busy reauth dialog holding itself open, Kurvenschmiede's
- * gear wizard asking first), through {@link runOwnKeyDown}. A `preventDefault()`
+ * `preventDefault()` on Escape (Kurvenschmiede's gear wizard asking first), through
+ * {@link runOwnKeyDown}. A dialog holding itself open while its request runs passes
+ * Modal's `busy` instead (0.51.7, DUP-3), which holds the backdrop and Back as well. A `preventDefault()`
  * anywhere else claims nothing: a search box keeping Chromium from clearing itself
  * must not hold a dialog open (FullBleedDialog's 0.8.0 fix, which Modal never had).
  *

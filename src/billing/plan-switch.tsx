@@ -1,5 +1,3 @@
-import type { KeyboardEvent } from "react";
-
 import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import type { LabelOverride } from "../i18n/kit-labels";
 import { DEFAULT_COMMON_LABELS } from "../i18n/shared-labels";
@@ -50,8 +48,8 @@ export interface PlanSwitchConfirmProps {
   /** `POST /billing/plan/preview`'s answer. Undefined while it loads: a spinner, and
    *  Confirm is held. */
   preview?: PlanSwitchPreview;
-  /** `POST /billing/plan` is under way: Confirm's spinner, no second press, and Escape
-   *  doesn't close. */
+  /** `POST /billing/plan` is under way: Confirm's spinner, no second press, and neither
+   *  Escape, the backdrop nor Back closes it. */
   pending?: boolean;
   /** The plan's display name, the app's (§3.1). Default: the code. */
   planName?: (code: string) => string;
@@ -152,10 +150,9 @@ export function PlanSwitchConfirm({
       title={labels.switchTitle}
       description={labels.switchFromTo(side(from), side(to))}
       onClose={() => onOpenChange(false)}
-      onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => {
-        if (pending && e.key === "Escape") e.preventDefault();
-      }}
-      aria-busy={preview === undefined || pending || undefined}
+      busy={pending}
+      // A preview that loads is busy too, but holds nothing: Cancel stays a way out.
+      aria-busy={preview === undefined || undefined}
       actions={(close) => (
         <>
           <Button variant="secondary" onClick={close} disabled={pending}>

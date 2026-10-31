@@ -71,6 +71,8 @@ const SENTINEL_KEY = "__hbUiOverlayHistory";
 interface OverlayEntry {
   id: string;
   close: () => void;
+  /** The overlay refuses to close right now — see the `held` option. */
+  held: () => boolean;
 }
 
 const stack: OverlayEntry[] = [];
@@ -510,6 +512,11 @@ function closeOnPop() {
   // is no longer ours: either the layer below (a different overlay's marker) or
   // the plain page entry (none at all).
   if (currentSentinel() === top.id) return;
+  // Checked before anything below moves: a held overlay keeps its place and its record.
+  if (top.held()) {
+    putBack(top.id);
+    return;
+  }
   stack.pop();
   // The browser consumed this entry, so the overlay's own cleanup has nothing left
   // to unwind and nothing to record as owed.
@@ -519,6 +526,29 @@ function closeOnPop() {
   // What the page wrote into the address while we were up stays (#412).
   if (record && !record.dead) carryOnto(record.seen, record);
   top.close();
+}
+
+/**
+ * A Back press the top overlay refuses (a busy `Modal`, DUP-3). A popstate cannot be
+ * refused — the browser has already left our entry — so the entry is put back: what the
+ * page wrote into the address while the overlay was up is carried down first (#412), as
+ * for a close, and the same marker is pushed again over it, as the mount pushed it. Left
+ * on the page entry, the overlay would stay up with no entry of its own, and the Back
+ * after its request would leave the page under it.
+ *
+ * A push and not `history.go(1)` back onto the old entry: a traversal lands a task later
+ * and fires nothing at all if a listener has pushed meanwhile, and a programmatic pop
+ * counted for it would then swallow the user's next real Back.
+ */
+function putBack(id: string): void {
+  const record = pushed.find((p) => p.id === id);
+  if (record && !record.dead) carryOnto(record.seen, record);
+  const prev: unknown = window.history.state;
+  window.history.pushState({ ...(prev && typeof prev === "object" ? prev : {}), [SENTINEL_KEY]: id }, "");
+  standing = id;
+  // The address the entry shows now is the one the user last acted on: the cleanup's
+  // owner's-close check (#584) must not read the carried address as a rewrite.
+  if (record) record.href = record.seen = currentHref();
 }
 
 function ensureListening() {
@@ -536,20 +566,26 @@ function ensureListening() {
  * @param open      whether the overlay is currently showing. Components that mount
  *                  only while open (the common case) pass `true`.
  * @param onClose   the overlay's own close handler — the same one Escape calls.
+ * @param options.held  the overlay refuses to close right now (a `Modal` whose request
+ *                  is in flight, DUP-3): Back does not call `onClose`, and the entry the
+ *                  press took is put back, so the overlay still has one for the next
+ *                  Back. Read when Back is pressed. Default false.
  */
-export function useOverlayHistory(open: boolean, onClose: () => void): void {
+export function useOverlayHistory(open: boolean, onClose: () => void, { held = false }: { held?: boolean } = {}): void {
   // The listener fires outside React's render, so it reads the latest handler
   // through a ref rather than through the closure the effect captured.
   const closeRef = useRef(onClose);
+  const heldRef = useRef(held);
   useEffect(() => {
     closeRef.current = onClose;
+    heldRef.current = held;
   });
 
   useEffect(() => {
     if (!open || typeof window === "undefined") return;
     ensureListening();
     const id = `overlay-${(nextId += 1)}`;
-    const entry: OverlayEntry = { id, close: () => closeRef.current() };
+    const entry: OverlayEntry = { id, close: () => closeRef.current(), held: () => heldRef.current };
     stack.push(entry);
     const prev = window.history.state;
     const marked = { ...(prev && typeof prev === "object" ? prev : {}), [SENTINEL_KEY]: id };
