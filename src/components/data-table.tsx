@@ -1860,7 +1860,7 @@ export function DataTable<T>({
       const row = list.querySelector<HTMLElement>(
         isMdUp ? `:scope > tbody > tr[data-row-index="${at}"]` : `:scope > li[data-row-index="${at}"]`,
       );
-      const target = row && (isMdUp && rowsFocusable ? row : firstTabStop(row));
+      const target = row && (isMdUp && rowsFocusable ? row : firstTabStop(row, { includeSelf: false }));
       if (target) target.focus();
       else focusContainer(list);
     }

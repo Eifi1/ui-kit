@@ -58,7 +58,9 @@ export function ColumnSettingsPanel<T>({
     focusOnOpen.current = false;
     const drawer = drawerRef.current;
     if (!drawer) return;
-    (drawer.querySelector<HTMLElement>('input[type="checkbox"]') ?? firstTabStop(drawer))?.focus();
+    (
+      drawer.querySelector<HTMLElement>('input[type="checkbox"]') ?? firstTabStop(drawer, { includeSelf: false })
+    )?.focus();
   }, [showSettings]);
   const close = () => {
     setShowSettings(false);

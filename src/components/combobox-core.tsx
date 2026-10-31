@@ -11,6 +11,7 @@ import type {
 import { Check, Plus } from "lucide-react";
 import { cn } from "../lib/cn";
 import { CLIPS_ATTRIBUTE } from "../lib/clipping";
+import { tabStops } from "../lib/focus-left";
 import { DropdownSearchHeader } from "./dropdown";
 import { PickerSheet, SHEET_ROW_CLASS } from "./picker-sheet";
 import { usePhoneLayout, useRemPx } from "../hooks/use-breakpoint";
@@ -581,10 +582,6 @@ const PANEL_MIN_REM = 13.75;
  *  `anchoredInline`'s default. */
 const PANEL_EDGE = 8;
 
-/** What may be a tab stop in a panel's `toolbar`: its buttons (an `aria-disabled` one
- *  included — it keeps its focus, INP-9) and anything else that takes focus. */
-const TOOLBAR_STOPS = 'button:not([disabled]),a[href],input:not([disabled]),[tabindex]:not([tabindex="-1"])';
-
 /**
  * How wide the anchored panel is. The phone sheet is the screen's width whatever this
  * says.
@@ -772,8 +769,10 @@ export function ComboboxPanel<V extends string | number>({
 
   // The toolbar's own box, so the keyboard can tell its buttons from the search box.
   const toolbarRef = useRef<HTMLDivElement>(null);
-  const toolbarStops = () =>
-    Array.from(toolbarRef.current?.querySelectorAll<HTMLElement>(TOOLBAR_STOPS) ?? []).filter((el) => el.tabIndex >= 0);
+  // The kit's one tab-stop rule (0.52 code review, lib/focus-left.ts): this had a third
+  // copy of the selector, without its `hidden`/`inert` half. An `aria-disabled` button
+  // stays a stop — it keeps its focus (INP-9).
+  const toolbarStops = () => (toolbarRef.current ? tabStops(toolbarRef.current, { includeSelf: false }) : []);
   /** Tab on a toolbar button in the anchored panel: Shift+Tab off the first goes back to
    *  the search box, Tab off the last leaves as the search box's Tab did; between two of
    *  them the browser's own Tab is right, as they stand next to each other. */

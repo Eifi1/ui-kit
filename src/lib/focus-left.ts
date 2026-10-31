@@ -7,15 +7,52 @@
 // the page while the focus is IN them, and decide where it goes instead.
 
 /**
- * Candidate tab stops, narrowed by {@link isTabStop} — use-focus-trap's selector and
- * rule (round 0.34 BUG-4), so "the next stop" here is the one Tab would reach there.
+ * Candidate tab stops, in DOM order — narrowed by {@link isTabStop} to the ones a Tab
+ * really reaches. The kit's one copy of the rule (0.52 code review, lib/focus-left.ts):
+ * this file and use-focus-trap each had it, with an exported `firstTabStop` apiece that
+ * disagreed about the element itself, and a combobox panel's toolbar had a third
+ * selector. The trap, the focus a removed node drops (below), the tour's field ring and
+ * the toolbar all read it here, so "the next stop" is the same stop everywhere.
+ *
+ * The selector is the one `Modal` used. On its own it was not enough (round 0.34
+ * BUG-4): only the bare `[tabindex]` clause excluded `-1`, so a `button`, an `input` or
+ * a link taken out of the tab order still counted. A panel that ends in a roving grid —
+ * the calendar's days, the month grid, the picker sheet's rows, every one of them `-1`
+ * but the active cell — then had a "last" stop no Tab ever reaches: Tab from the real
+ * last stop was not wrapped and walked out of the open panel, and Shift+Tab from the
+ * first landed on a cell that is not a stop at all.
  */
 const TAB_STOP =
   'a[href],button:not([disabled]),textarea:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
-/** In the tab order and not inside something `hidden` or `inert`. No layout is read. */
+/**
+ * A stop the browser's own Tab would land on: in the tab order (`tabIndex` ≥ 0) and not
+ * inside something `hidden` or `inert`. Removes only elements a native Tab never
+ * reaches, so no correct order changes. `visibility: hidden` and closed `<details>` are
+ * still not walked — they need layout, which this rule has never read.
+ */
 function isTabStop(el: HTMLElement): boolean {
   return el.tabIndex >= 0 && !el.closest("[hidden],[inert]");
+}
+
+export interface TabStopOptions {
+  /** Whether `el` itself counts, first, when it is a stop. Default true: the tour's
+   *  target may BE the field (refactor audit 2026-10-30, DUP-9). False for "a control
+   *  inside it" — a row, a drawer, a trap's container, a toolbar. */
+  includeSelf?: boolean;
+}
+
+/** The tab stops in `el`, in DOM order — `el` itself first when it is one, unless
+ *  `includeSelf: false`. */
+export function tabStops(el: Element, { includeSelf = true }: TabStopOptions = {}): HTMLElement[] {
+  const inside = Array.from(el.querySelectorAll<HTMLElement>(TAB_STOP)).filter(isTabStop);
+  const own = includeSelf && el instanceof HTMLElement && el.matches(TAB_STOP) && isTabStop(el);
+  return own ? [el, ...inside] : inside;
+}
+
+/** The first of {@link tabStops} — the control a person types into or presses — or null. */
+export function firstTabStop(el: Element, options?: TabStopOptions): HTMLElement | null {
+  return tabStops(el, options)[0] ?? null;
 }
 
 /**
@@ -28,12 +65,6 @@ export function focusIsLost(): boolean {
   if (typeof document === "undefined") return false;
   const el = document.activeElement;
   return !el || el === document.body || !el.isConnected;
-}
-
-/** The first stop a Tab would reach inside `root` (not `root` itself), or null. */
-export function firstTabStop(root: Element): HTMLElement | null {
-  for (const el of root.querySelectorAll<HTMLElement>(TAB_STOP)) if (isTabStop(el)) return el;
-  return null;
 }
 
 /**
