@@ -17,7 +17,7 @@ import {
   useFieldHint,
   useLockReason,
 } from "./field-parts";
-import { DEFAULT_PASSWORD_REVEAL_LABELS } from "./ui-labels";
+import { DEFAULT_PASSWORD_REVEAL_LABELS } from "./field-base-labels";
 import {
   CharacterCount,
   FIELD_BASE,

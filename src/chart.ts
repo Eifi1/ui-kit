@@ -2,8 +2,9 @@
 //
 // A re-slicing of what the main barrel already exports, not a new API. It exists so a
 // consumer can reach the chart kit WITHOUT the barrel: `import("@eifi1/ui-kit/chart")`
-// is a 31KB chunk, where the same lazy import through the barrel pulls 221KB, because
-// a dynamic import of the barrel cannot be tree-shaken down to one of its members.
+// is a chunk of its own (50.4 KB min, 19.9 KB gzip at 0.51.6, refactor audit 2026-10-30
+// MOD-7; it was 31KB when this was written), where the same lazy import through the barrel
+// pulls the barrel, because a dynamic import of it cannot be tree-shaken down to one member.
 //
 // It is about chunk size, not about the peer: `recharts` is a REQUIRED peer (since 0.5.0),
 // because the main barrel re-exports everything here too, so `import { Button } from

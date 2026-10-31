@@ -11,7 +11,7 @@ import {
   STATIC_LABEL_TYPE,
   type FieldHintParts,
 } from "./field-parts";
-import { DEFAULT_CHARACTER_COUNT_LABELS, DEFAULT_PASSWORD_REVEAL_LABELS } from "./ui-labels";
+import { DEFAULT_CHARACTER_COUNT_LABELS, DEFAULT_PASSWORD_REVEAL_LABELS } from "./field-base-labels";
 
 /**
  * The field base: what Input, Select and Textarea — and every kit field built on the same
@@ -20,7 +20,8 @@ import { DEFAULT_CHARACTER_COUNT_LABELS, DEFAULT_PASSWORD_REVEAL_LABELS } from "
  * reveal and the character counter. The message under a wrong field is field-parts'
  * `useFieldError`, every field's.
  *
- * Public through ./ui by name. `FieldGroup`, the counter and the placeholder helpers are
+ * Public through the barrel (src/index.ts) by name. `FieldGroup`, the counter and the
+ * placeholder helpers are
  * the three fields' shared parts (`@internal`), as are the Select's own classes and its
  * `SelectWidthFloor` (0.51).
  */
@@ -509,7 +510,7 @@ export interface PasswordRevealLabels {
   hide: string;
 }
 
-// Defined in ./ui-labels, which holds no component code (0.34, KS U8).
+// Defined in ./field-base-labels, which holds no component code (0.34, KS U8).
 export { DEFAULT_PASSWORD_REVEAL_LABELS };
 
 /**
@@ -528,7 +529,7 @@ export interface CharacterCountLabels {
   limitReached: string;
 }
 
-// Defined in ./ui-labels, which holds no component code (0.34, KS U8).
+// Defined in ./field-base-labels, which holds no component code (0.34, KS U8).
 export { DEFAULT_CHARACTER_COUNT_LABELS };
 
 /** The length the browser's own `maxLength` counts — UTF-16 code units — so the counter

@@ -6,11 +6,8 @@ import { DEFAULT_PAGE_CONTENTS_LABELS } from "../components/page-contents-labels
 import { DEFAULT_POPOVER_LABELS } from "../components/popover-labels";
 import { DEFAULT_CHIP_INPUT_LABELS } from "../components/chip-labels";
 import { DEFAULT_FIELD_SYNC_LABELS } from "../components/field-sync-labels";
-import {
-  DEFAULT_CHARACTER_COUNT_LABELS,
-  DEFAULT_PASSWORD_REVEAL_LABELS,
-  DEFAULT_TABS_LABELS,
-} from "../components/ui-labels";
+import { DEFAULT_CHARACTER_COUNT_LABELS, DEFAULT_PASSWORD_REVEAL_LABELS } from "../components/field-base-labels";
+import { DEFAULT_TABS_LABELS } from "../components/tabs-labels";
 import { DEFAULT_WIZARD_LABELS } from "../wizard/wizard-labels";
 import { DEFAULT_TOUR_LABELS } from "../tour/tour-labels";
 import { DEFAULT_TOUR_CATALOGUE_LABELS } from "../tour/tour-catalogue-labels";
