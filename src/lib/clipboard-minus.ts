@@ -5,8 +5,8 @@
  * as a number: a figure copied out of a kit table and pasted into Excel landed as text.
  * So while a selection inside the page is copied, every U+2212 standing directly before a
  * number — optionally after a currency code or symbol and spaces: "−CHF 1,250.50",
- * "−€2,000", "−12%" — becomes the ASCII "-" in the clipboard, in `text/plain` AND in
- * `text/html` (Excel pastes the HTML flavour, as cells). The page keeps "−".
+ * "−€2,000", "−US$12", "−12%" — becomes the ASCII "-" in the clipboard, in `text/plain` AND
+ * in `text/html` (Excel pastes the HTML flavour, as cells). The page keeps "−".
  *
  * A copy with no such minus is left to the browser untouched, and so is any copy out of an
  * input, a textarea or an editable element: what the person typed is theirs.
@@ -15,8 +15,18 @@
  * the one part every app mounts, the signed-out pages included.
  */
 
-/** U+2212, then (optionally) a currency code or symbol, then spaces, then a digit. */
-const MINUS_BEFORE_NUMBER = /\u2212(?=(?:[A-Z]{3}|\p{Sc})?[\s\u00a0\u202f]*\d)/gu;
+/**
+ * U+2212, then up to five letters, currency symbols or dots, then spaces, then a digit.
+ *
+ * Five of them, not "a code or one symbol": English and Chinese write a currency with
+ * letters before the symbol — "−US$", "−CA$", "−A$", "−NZ$", "−HK$", "−R$", "−MX$",
+ * "−JP¥", "−CN¥" — and `narrowSymbol` with letters alone ("−kr", "−zł", "−Kč"). Those kept
+ * U+2212 in the clipboard, and Excel pasted them as text: 35 of 351 locale × currency
+ * pairs at the default display, every one English or Chinese, and 136 of 1428 with
+ * `narrowSymbol` (refactor audit 2026-10-30, DSP-11). A minus with no digit after it
+ * ("x−y", "a − b") is still left alone.
+ */
+const MINUS_BEFORE_NUMBER = /\u2212(?=[\p{L}\p{Sc}.]{0,5}[\s\u00a0\u202f]*\d)/gu;
 
 /**
  * `text` with each U+2212 that stands before a number (in the sense above) as the ASCII
