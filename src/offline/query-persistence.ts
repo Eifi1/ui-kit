@@ -2,7 +2,7 @@ import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persi
 import type { QueryClient } from "@tanstack/react-query";
 import type { PersistedClient, PersistQueryClientOptions } from "@tanstack/react-query-persist-client";
 import { del, get, keys, set } from "idb-keyval";
-import { postOnce } from "../lib/broadcast";
+import { listenOn, postOnce } from "../lib/broadcast";
 
 /**
  * The persisted TanStack Query cache, keksdose's policy as a kit helper
@@ -233,31 +233,22 @@ export function createQueryPersistence({
   // own already under way first. A `leave` posts nothing: another tab may still be on that
   // company. Without BroadcastChannel, as before 0.52.
   const across = `eifi1-query-cache:${key}`;
-  let channel: BroadcastChannel | null = null;
+  let unlisten: (() => void) | null = null;
 
   const retire = () => {
     retired = true;
-    channel?.close();
-    channel = null;
+    unlisten?.();
+    unlisten = null;
   };
 
   const listen = () => {
-    if (channel || typeof BroadcastChannel === "undefined") return;
-    try {
-      channel = new BroadcastChannel(across);
-    } catch {
-      return;
-    }
-    // Node's channel (an app's tests) holds its worker open while it listens, and a test that
-    // restores and never leaves would keep it listening. Browsers have no `unref`.
-    (channel as BroadcastChannel & { unref?: () => void }).unref?.();
-    channel.onmessage = ({ data }: MessageEvent<unknown>) => {
+    unlisten ??= listenOn(across, (data) => {
       if (data !== "clear") return;
       retire();
       Promise.resolve()
         .then(() => storage.removeItem(key))
         .catch(() => undefined);
-    };
+    });
   };
 
   const keyAllowed = (queryKey: readonly unknown[]) =>

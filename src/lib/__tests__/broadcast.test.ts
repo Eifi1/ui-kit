@@ -1,10 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { postOnce } from "../broadcast";
+import { listenOn, postOnce } from "../broadcast";
 
 /*
- * The one post to the other tabs that the sync engine's `forget()` and the query copy's
- * `clear()` share (0.52 code review: each wrote it by hand). Best-effort: it never throws,
- * and it never leaves a channel open.
+ * The one post to the other tabs, and the one listener, that the sync engine (`forget()`'s
+ * epoch) and the query copy (`clear()`) share (0.52 code review: each wrote both by hand, and
+ * only one listener let go of Node's worker). Best-effort: neither ever throws, and a post
+ * never leaves a channel open.
  */
 
 afterEach(() => {
@@ -19,8 +20,12 @@ const fresh = () => `broadcast-test-${(n += 1)}`;
 function recordingChannel(post: (message: unknown) => void = () => undefined) {
   const log: string[] = [];
   class Recording {
+    onmessage: ((event: MessageEvent<unknown>) => void) | null = null;
     constructor(readonly name: string) {
       log.push(`open ${name}`);
+    }
+    unref() {
+      log.push("unref");
     }
     postMessage(message: unknown) {
       log.push(`post ${JSON.stringify(message)}`);
@@ -72,5 +77,53 @@ describe("postOnce", () => {
       },
     );
     expect(() => postOnce("eifi1-sync:copy", { epoch: "e1" })).not.toThrow();
+  });
+});
+
+describe("listenOn", () => {
+  it("hears another channel's post until it is closed", async () => {
+    const name = fresh();
+    const heard: unknown[] = [];
+    let first!: () => void;
+    const arrived = new Promise<void>((resolve) => (first = resolve));
+    const close = listenOn(name, (data) => {
+      heard.push(data);
+      first();
+    });
+    postOnce(name, "clear");
+    await arrived;
+    close();
+    // A second listener, opened after the close, is the decision point: it hears the next
+    // post, so the closed one had its chance to hear it too.
+    const later = new Promise<unknown>((resolve) => {
+      const closeLater = listenOn(name, (data) => {
+        closeLater();
+        resolve(data);
+      });
+    });
+    postOnce(name, { epoch: "e2" });
+    expect(await later).toEqual({ epoch: "e2" });
+    expect(heard).toEqual(["clear"]);
+  });
+
+  it("lets go of Node's worker for every caller, and closes its one channel", () => {
+    const log = recordingChannel();
+    const close = listenOn("eifi1-sync:copy", () => undefined);
+    close();
+    expect(log).toEqual(["open eifi1-sync:copy", "unref", "close"]);
+  });
+
+  it("hears nothing and closes nothing where there is no BroadcastChannel, or none can be opened", () => {
+    vi.stubGlobal("BroadcastChannel", undefined);
+    expect(() => listenOn("eifi1-sync:copy", () => undefined)()).not.toThrow();
+    vi.stubGlobal(
+      "BroadcastChannel",
+      class {
+        constructor() {
+          throw new DOMException("refused", "SecurityError");
+        }
+      },
+    );
+    expect(() => listenOn("eifi1-sync:copy", () => undefined)()).not.toThrow();
   });
 });
