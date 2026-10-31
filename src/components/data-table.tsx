@@ -67,6 +67,10 @@ export interface DataTableColumn<T> {
   key: string;
   header: ReactNode;
   cell: (row: T) => ReactNode;
+  /** What a client sort orders the column by. Strings collate in the table's `locale`
+   *  (digits as numbers, case and accents left out; 0.51.7, audit 2026-10-30 DSP-3),
+   *  numbers compare as numbers and sort before strings, `null` and `undefined` sort
+   *  last in either direction. */
   sortBy?: (row: T) => string | number | null | undefined;
   filter?: ColumnFilter<T>;
   filterBy?: (row: T) => string;
@@ -953,6 +957,38 @@ export const DEFAULT_DATA_TABLE_SORT_LABELS: DataTableSortLabels = {
 
 const flipDir = (d: SortDir): SortDir => (d === "asc" ? "desc" : "asc");
 
+/**
+ * The client sort's and the derived select options' string order (audit 2026-10-30
+ * DSP-3): the table locale's collation, digits as numbers ("Item 2" before "Item 10"),
+ * case and accents left out (two values that differ only by them go to the next sort
+ * key, then keep the order given). `<` and `Array.sort()` compared UTF-16 code units —
+ * every lower-case initial after every capital, Ä/Ö/Ü after Z — on the payees, names,
+ * insurers and titles all three apps sort. Built once per table locale, not per
+ * comparison: `localeCompare` with a locale sets one up on every call, n·log n times a
+ * sort. An unknown tag (a typo in a provider's `locale`) throws a RangeError, and a
+ * sort is no reason for a table to stop rendering: the runtime's own collation then,
+ * as CountrySelect falls back.
+ */
+function sortCollator(locale: string | undefined): Intl.Collator {
+  const options: Intl.CollatorOptions = { numeric: true, sensitivity: "base" };
+  try {
+    return new Intl.Collator(locale, options);
+  } catch {
+    return new Intl.Collator(undefined, options);
+  }
+}
+
+/** Two present `sortBy` values, ascending. Strings collate; a number sorts before a
+ *  string (`<` called that pair equal, so they stayed wherever they were given); any
+ *  other pair — numbers, and a `Date` an untyped caller returns — keeps `<` / `>`. */
+function compareSortValues(a: string | number, b: string | number, collator: Intl.Collator): number {
+  const aText = typeof a === "string";
+  const bText = typeof b === "string";
+  if (aText && bText) return collator.compare(a, b);
+  if (aText !== bText) return aText ? 1 : -1;
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
 // `virtualize`'s constants (0.48.2): the band levels a group's `<tbody>` opens with.
 const NO_BANDS: readonly (1 | 2)[] = [];
 const BAND_1: readonly (1 | 2)[] = [1];
@@ -1052,6 +1088,7 @@ export function DataTable<T>({
   const storageKeyPrefix = storageKeyPrefixProp ?? providerStorageKeyPrefix ?? DEFAULT_PERSIST_PREFIX;
   const labels = useMemo(() => resolveDataTableLabels(labelOverrides, labelsProp), [labelOverrides, labelsProp]);
   const locale = useKitLocale(localeProp);
+  const collator = useMemo(() => sortCollator(locale), [locale]);
 
   // ---- Row actions ---- (data-table-row-actions.tsx)
   // The actions column joins the caller's columns; on a phone the same actions are the
@@ -1159,13 +1196,13 @@ export function DataTable<T>({
         if (v && !seen.has(v)) seen.add(v);
       }
       map[col.key] = Array.from(seen)
-        .sort()
+        .sort(collator.compare)
         .map((v) => ({ value: v, label: v }));
     }
     return map;
     // `columns` by signature — see the note above the signatures.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [columnSig, selectOptionsSig, rows]);
+  }, [columnSig, selectOptionsSig, rows, collator]);
 
   const filtered = useMemo(() => {
     if (serverRows) return rows;
@@ -1198,14 +1235,14 @@ export function DataTable<T>({
         if (av == null && bv == null) continue;
         if (av == null) return 1;
         if (bv == null) return -1;
-        if (av < bv) return dir === "asc" ? -1 : 1;
-        if (av > bv) return dir === "asc" ? 1 : -1;
+        const order = compareSortValues(av, bv, collator);
+        if (order !== 0) return dir === "asc" ? order : -order;
       }
       return 0;
     });
     return copy;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtered, sorts, columnSig, serverRows]);
+  }, [filtered, sorts, columnSig, serverRows, collator]);
 
   // `paginated={false}` is expressed as "page size = everything" rather than as a
   // second code path, so slicing, the page clamp and the range summary all keep
