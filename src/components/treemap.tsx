@@ -29,7 +29,8 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } f
 import { CHART_ROLES, PALETTE_HEX, PALETTE_SIZE, lerpHex, textOn } from "../theme/chart-palette";
 import { resolveChartColor, useChartEdge, useEdgesInForce, type ChartEdges } from "./chart-edge";
 import { parseHex } from "../theme/color";
-import { dirOf, horizontalStep, type Direction } from "../lib/direction";
+import { dirOf, rovingTarget, type Direction } from "../lib/direction";
+import { shareFormat } from "../lib/share-format";
 import { cn } from "../lib/cn";
 import { useTextSize } from "../theme/text-size";
 import { chartHeightProps, type ChartHeight } from "./chart-height";
@@ -909,13 +910,9 @@ export function Treemap({
   // formatter default in the kit that took the runtime's.
   const locale = useKitLocale();
   const numberFormat = useMemo(() => new Intl.NumberFormat(locale), [locale]);
-  const percentFormats = useMemo(
-    () => ({
-      whole: new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 0 }),
-      fine: new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 1 }),
-    }),
-    [locale],
-  );
+  // One decimal under 10 %, the rule PieChart says its shares by too (lib/share-format):
+  // a tile of 0.4 % named "0%" says it is not there.
+  const shareText = useMemo(() => shareFormat(locale), [locale]);
   // Read off the DOM after mount: the `dir` a treemap sits under is an ancestor's
   // attribute, and SVG text anchoring cannot follow it by CSS (see TreemapCell). Again
   // on new data, because a map that had nothing to draw rendered no root to read.
@@ -1010,20 +1007,10 @@ export function Treemap({
   const move = useCallback((path: string, event: KeyboardEvent<SVGGElement>) => {
     const drawn = orderRef.current;
     const at = drawn.findIndex((n) => n.path === path);
-    const step = horizontalStep(event.key, event.currentTarget);
-    const to = step
-      ? at + step
-      : event.key === "ArrowDown"
-        ? at + 1
-        : event.key === "ArrowUp"
-          ? at - 1
-          : event.key === "Home"
-            ? 0
-            : event.key === "End"
-              ? drawn.length - 1
-              : undefined;
-    if (at < 0 || to === undefined) return false;
-    const target = drawn[Math.max(0, Math.min(drawn.length - 1, to))];
+    // The ends hold: a map is a plane, not PieChart's ring.
+    const to = at < 0 ? undefined : rovingTarget(event.key, event.currentTarget, at, drawn.length, false);
+    if (to === undefined) return false;
+    const target = drawn[to];
     if (target) tiles.current.get(target.path)?.focus();
     return true;
   }, []);
@@ -1061,8 +1048,6 @@ export function Treemap({
       const text = typeof out === "string" || typeof out === "number" ? String(out) : undefined;
       return text !== undefined && !text.includes("NaN") ? text : formatWithMinus(numberFormat, v);
     };
-    // One decimal under 10 %, as PieChart: a tile of 0.4 % named "0%" says it is not there.
-    const shareText = (share: number) => (share < 0.1 ? percentFormats.fine : percentFormats.whole).format(share);
     // A group's name by its path; a node's groups by theirs, its own path's prefixes.
     const groupName = new Map(order.filter((n) => n.children).map((n) => [n.path, n.name]));
     return new Map(
@@ -1076,7 +1061,7 @@ export function Treemap({
         return [n.path, named] as const;
       }),
     );
-  }, [order, labels, valueFormatter, numberFormat, percentFormats, total]);
+  }, [order, labels, valueFormatter, numberFormat, shareText, total]);
   const keys = useMemo<TileKeys>(
     () => ({ name: (path) => names.get(path), onFocus, register, move }),
     [names, onFocus, register, move],

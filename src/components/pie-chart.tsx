@@ -12,7 +12,8 @@ import type { ComponentProps, ComponentPropsWithRef, KeyboardEvent, ReactNode } 
 import { Pie, PieChart as RechartsPieChart, Sector } from "recharts";
 import type { PieLabelRenderProps, PieSectorShapeProps } from "recharts";
 import { cn } from "../lib/cn";
-import { horizontalStep } from "../lib/direction";
+import { rovingTarget } from "../lib/direction";
+import { shareFormat } from "../lib/share-format";
 import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { paletteFor } from "../theme/chart-palette";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "./chart";
@@ -177,25 +178,14 @@ export function PieChart({
   const { scale } = useTextSize();
   const box = chartHeightProps(height);
   const numberFormat = useMemo(() => new Intl.NumberFormat(locale), [locale]);
-  const percentFormats = useMemo(
-    () => ({
-      whole: new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 0 }),
-      fine: new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 1 }),
-    }),
-    [locale],
-  );
   // Memoised, like everything the sectors are drawn from: they must not be rebuilt on
   // this component's own re-renders (see `pie` below).
   const formatValue = useCallback(
     (v: number) => (formatValueProp ? formatValueProp(v) : formatWithMinus(numberFormat, v)),
     [formatValueProp, numberFormat],
   );
-  // One decimal under 10 %, where rounding to whole percents starts to lie — a slice
-  // of 0.4 % labelled "0%" says it is not there.
-  const formatShare = useCallback(
-    (share: number) => (share < 0.1 ? percentFormats.fine : percentFormats.whole).format(share),
-    [percentFormats],
-  );
+  // One decimal under 10 %, the rule Treemap says its shares by too (lib/share-format).
+  const formatShare = useMemo(() => shareFormat(locale), [locale]);
 
   const [ownHidden, setOwnHidden] = useState<ReadonlySet<string>>(() => new Set());
   const hidden = hiddenProp ?? ownHidden;
@@ -273,17 +263,11 @@ export function PieChart({
       const d = drawn[index];
       if (!d) return <Sector key={key ?? undefined} {...sector} />;
       const onKeyDown = (event: KeyboardEvent<SVGGElement>) => {
-        const step = horizontalStep(event.key, event.currentTarget);
-        let target: number | undefined;
-        if (step) target = index + step;
-        else if (event.key === "ArrowDown") target = index + 1;
-        else if (event.key === "ArrowUp") target = index - 1;
-        else if (event.key === "Home") target = 0;
-        else if (event.key === "End") target = drawn.length - 1;
+        // Round the circle: past the last slice is the first, as the eye goes.
+        const target = rovingTarget(event.key, event.currentTarget, index, drawn.length, true);
         if (target !== undefined) {
           event.preventDefault();
-          // Round the circle: past the last slice is the first, as the eye goes.
-          refs.current[((target % drawn.length) + drawn.length) % drawn.length]?.focus();
+          refs.current[target]?.focus();
         } else if (clickable && (event.key === "Enter" || event.key === " ")) {
           event.preventDefault();
           clickRef.current?.(d.slice.key, d.slice);
