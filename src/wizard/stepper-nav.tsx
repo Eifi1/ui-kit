@@ -35,8 +35,10 @@ import { useTourGateRelease } from "../tour/tour-gates";
  * `onDone` — are all set on `useWizard`. What is set HERE is how the Finish button
  * looks and what wraps it, because that is presentation and usually depends on
  * state the app holds (a "replace everything" toggle, a write lock — `finishCommit`).
+ *
+ * `TData`'s constraint is `UseWizardOptions`' (its mapped half is for `Parameters<>`).
  */
-export function StepperNav<TData extends object>({
+export function StepperNav<TData extends object & { [K in keyof TData]: unknown }>({
   wizard,
   children,
   title,

@@ -142,7 +142,10 @@ function createReducer<TData>(stepCount: number) {
   };
 }
 
-export function useWizard<TData extends object>(options: UseWizardOptions<TData>): UseWizardReturn<TData> {
+// The constraint's mapped half: see `UseWizardOptions` (Parameters<> and ReturnType<> read it).
+export function useWizard<TData extends object & { [K in keyof TData]: unknown }>(
+  options: UseWizardOptions<TData>,
+): UseWizardReturn<TData> {
   const {
     steps,
     initialData,
