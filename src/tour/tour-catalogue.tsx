@@ -223,9 +223,16 @@ export function TourCatalogue({
   // "Your budget" whose about says "Visits the budget page" — as every kit list searches
   // since 0.51.4 (refactor audit 2026-10-30, DUP-4: the whole query had to be one
   // substring of one text).
+  // `|| undefined`: an app's JSON says `null` where TourInfo says absent, and
+  // `matchesSearch` leaves out only `undefined` — `"about": null` threw on the first letter
+  // typed, as the old matcher's `!!text` never did (0.52 code review, tour-catalogue.tsx).
   const queryWords = searchWords(query, locale);
   const matchesQuery = (tour: TourInfo) =>
-    matchesSearch(queryWords, [tour.title, tour.description, tour.about], locale);
+    matchesSearch(
+      queryWords,
+      [tour.title || undefined, tour.description || undefined, tour.about || undefined],
+      locale,
+    );
   const inState = (tour: TourInfo) => (state === "all" ? true : state === "done" ? done(tour) : !done(tour));
   const inGroup = (tour: TourInfo, id: string | null = group) => id === null || tour.group === id;
 
