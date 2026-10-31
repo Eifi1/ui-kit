@@ -228,5 +228,16 @@ the pager's Next/Previous or MultiSelect's Select all switch to `aria-disabled` 
 - **AlertBanner / BulkActionBar:** a Safari or iOS tap on the × no longer moves the focus;
   a background click no longer pulls it back later.
 - **useLongPress:** a press already held when `enabled` turns false no longer fires.
+- **Sync (kastlan):** a stuck round (a dead POST /sync or photo upload) ends after 10
+  minutes with a `TimeoutError`, backs off and frees the other tabs (`roundTimeoutMs` to
+  change it). Your own request timeouts (done: /sync 60 s, a photo 30 s + 1 s per 50 KB)
+  come first.
+- **Storage:** `writeStored(key, null)` removes the key, as `writeSessionStored(key, null)`
+  does.
+- **Wizard:** the generics are `TData extends object & { [K in keyof TData]: unknown }`: an
+  interface needs no index signature, and wrappers typed `Parameters<typeof useWizard>` or
+  `ReturnType<typeof useWizard<Data>>` read the data as a record, as in 0.51.
+- **PieChart under `redact`:** a slice is named "Label: 60%" (`pieChart.sliceShare`), never
+  its amount.
 - **Focus:** a hidden input is no longer a tab stop (Shift+Tab could leave a dialog that
   held a form's hidden field).

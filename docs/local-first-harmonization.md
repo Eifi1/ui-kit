@@ -862,6 +862,13 @@ ka's; kk has none and keeps none, D10.)
     cascade); one committed after ends the engine too. A step's own writes rely on
     `isCurrent()`, false once the message lands. Either end of a session leaves the state
     idle: no error, no retry, `lastSyncedAt` null;
+  - **a round's deadline** (ui-kit 0.52, `roundTimeoutMs`, default 10 minutes, counted from
+    when the round holds the lock): past it the round is cut. Its requests and steps are
+    aborted, the generation moves so their late answers and writes are dropped, and they lay
+    nothing back (the next round takes their `sending` changes back). The round ends `error`
+    with a `TimeoutError`, not `offline`, so the backoff starts and the lock passes to the
+    next tab even when the app ignores the abort. The apps' own request timeouts come first
+    (kastlan: POST /sync and the photo upload); `0` or `Infinity` turns it off;
   - **the query copy's `clear()` reaches every tab** through a `BroadcastChannel` (§1.6).
 
   App side: kastlan ends the session in every tab when its refresh token is removed (a
