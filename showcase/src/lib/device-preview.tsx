@@ -1,7 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router";
 import { ArrowLeft } from "lucide-react";
-import { Button, TEXT_SIZES, ToggleGroup, cn, useAppearanceLabels, type TextSize } from "@eifi1/ui-kit";
+import {
+  Button,
+  TEXT_SIZES,
+  ToggleGroup,
+  cn,
+  readStored,
+  useAppearanceLabels,
+  writeStored,
+  type TextSize,
+} from "@eifi1/ui-kit";
 import { useLocale, useT } from "../i18n";
 import { usePalette, useTheme } from "../stores";
 
@@ -58,41 +67,22 @@ interface Frame {
 }
 
 /** The last choice, per browser, so a reader who checks every page on a phone does not
- *  pick "Phone" again on each one. Wrapped: storage can be unavailable. */
+ *  pick "Phone" again on each one. Through the kit's guard: storage can be unavailable,
+ *  and then the choice just is not remembered. */
 const CHOICE_KEY = "uikit-showcase-preview-device";
 function readChoice(): PreviewChoice {
-  try {
-    const v = localStorage.getItem(CHOICE_KEY);
-    return v === "phone" || v === "tablet" || v === "desktop" || v === "small" || v === "all" ? v : "phone";
-  } catch {
-    return "phone";
-  }
+  const v = readStored(CHOICE_KEY);
+  return v === "phone" || v === "tablet" || v === "desktop" || v === "small" || v === "all" ? v : "phone";
 }
-function writeChoice(v: PreviewChoice) {
-  try {
-    localStorage.setItem(CHOICE_KEY, v);
-  } catch {
-    /* private mode: the choice just is not remembered */
-  }
-}
+const writeChoice = (v: PreviewChoice) => writeStored(CHOICE_KEY, v);
 
 /** The size axis' last choice, likewise. */
 const SIZE_KEY = "uikit-showcase-preview-text-size";
 function readSize(): TextSize {
-  try {
-    const v = localStorage.getItem(SIZE_KEY);
-    return v === "large" || v === "xlarge" ? v : "normal";
-  } catch {
-    return "normal";
-  }
+  const v = readStored(SIZE_KEY);
+  return v === "large" || v === "xlarge" ? v : "normal";
 }
-function writeSize(v: TextSize) {
-  try {
-    localStorage.setItem(SIZE_KEY, v);
-  } catch {
-    /* as above */
-  }
-}
+const writeSize = (v: TextSize) => writeStored(SIZE_KEY, v);
 
 /**
  * The preview: ONE device at a time at its real CSS width, shrunk only when the window

@@ -7,6 +7,7 @@ import {
   applyPersistedTextSize,
   applyPersistedTheme,
   applyTextSize,
+  readStored,
 } from "@eifi1/ui-kit";
 import { Showcase } from "./showcase";
 import { LOCALE_STORAGE_KEY, LocaleProvider, dictionaryFor } from "./i18n";
@@ -40,15 +41,13 @@ applyPersistedContrast(CONTRAST_KEY);
 //
 // Guarded, and total: `dictionaryFor` answers English for null, for a stale code and for
 // a full tag, and a blocked `localStorage` throws on READ rather than returning null
-// (Safari private browsing, a partitioned webview). This runs before `createRoot`, so an
-// unguarded throw here is a blank page rather than a lost preference.
-try {
-  const stored = window.localStorage.getItem(LOCALE_STORAGE_KEY) ?? "";
-  const dict = dictionaryFor(stored);
+// (Safari private browsing, a partitioned webview) — `readStored` answers null there. This
+// runs before `createRoot`, so an unguarded throw here is a blank page rather than a lost
+// preference.
+{
+  const dict = dictionaryFor(readStored(LOCALE_STORAGE_KEY) ?? "");
   document.documentElement.lang = dict.tag;
   document.documentElement.dir = dict.dir;
-} catch {
-  // blocked or disabled — the provider's effect still applies the default
 }
 
 // HashRouter, not BrowserRouter. A router is not optional here: DataTable, useWizard,

@@ -338,17 +338,28 @@ function settleAmount(text: string, digits: number | undefined, min?: number, ma
 // `lib/decimal-marks.ts`, read through the engine NumberInput and this field share
 // (`numeric-field.ts`, DUP-10).
 
-// The consuming app's ONE money palette (`--money-expense` / `--money-income`),
-// not a bespoke rose/emerald pairing: a figure being typed has to wear the same
-// colour the same figure will wear once it is a row in the table behind the form
-// (Keksdose dev#434). The utilities are unlayered and theme-aware, so no `dark:`
-// variant is needed and they win over the field's own text colour regardless of
-// where `cn` puts them.
-const TONE_CLASS: Record<"neutral" | "outflow" | "inflow", string> = {
+/**
+ * The figure's colour per {@link AmountInputProps.tone} — public as `AMOUNT_TONE_CLASS`,
+ * for a table cell or a test that must paint the same figure the same way (keksdose's
+ * receipt lines, dev#556).
+ *
+ * The consuming app's ONE money palette (`--money-expense` / `--money-income`), not a
+ * bespoke rose/emerald pairing: a figure being typed has to wear the same colour the same
+ * figure will wear once it is a row in the table behind the form (Keksdose dev#434). The
+ * utilities are unlayered and theme-aware, so no `dark:` variant is needed and they win
+ * over the field's own text colour regardless of where `cn` puts them.
+ */
+const TONE_CLASS: Readonly<Record<NonNullable<AmountInputProps["tone"]>, string>> = {
   neutral: "",
   outflow: "text-money-neg",
   inflow: "text-money-pos",
 };
+// Exported in 0.52 because keksdose's tests read it out of dist/components/amount-input.js
+// with a regex for `const TONE_CLASS` — the one reach into the kit's dist in three apps,
+// which a rename or a moved module breaks with no public change (MOD-8, refactor audit
+// 2026-10-30; 0.34's move failed 91 of keksdose's test files that way). The local name
+// stays until keksdose imports the export, so the bump itself breaks nothing.
+export { TONE_CLASS as AMOUNT_TONE_CLASS };
 
 // The shared chrome-less treatment at money size. `tabular-nums` so digits don't
 // reflow the figure as they are typed; FIELD_DISPLAY's own muted placeholder

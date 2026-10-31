@@ -16,12 +16,25 @@ export { logger, setStoreLog } from "./lib/logger";
 // Intl number / money / percent / date / relative-time formatting, and `useKitFormat()`
 // for the same bound to the provider's locale (kastlan's formatters.ts, English "5m ago").
 export * from "./lib/format";
-// localStorage that never throws (Safari private mode, blocked site data).
-export { readStored, writeStored } from "./lib/safe-storage";
+// localStorage that never throws (Safari private mode, blocked site data). 0.52 (DUP-8,
+// refactor audit 2026-10-30): the remove, the sessionStorage pair and a JSON pair with a
+// shape check — 16 files in the apps wrap storage by hand, a few of them with no guard.
+export {
+  readStored,
+  writeStored,
+  removeStored,
+  readSessionStored,
+  writeSessionStored,
+  readStoredJson,
+  writeStoredJson,
+} from "./lib/safe-storage";
+// 0.52 (DUP-8): `prefers-reduced-motion`, asked at the moment of the motion (KS copied it).
+export { prefersReducedMotion } from "./lib/reduced-motion";
 // Save a fetched Blob as a download, and read the name a Content-Disposition asks for
 // (`filename*` first) — 0.34, KS U5; the kit's own three downloads use them.
 export { saveBlob, filenameFromDisposition } from "./lib/download";
-// Date helpers are also available via the "@eifi1/ui-kit/dates" subpath.
+// The local-calendar ISO date helpers are the "@eifi1/ui-kit/dates" entry, standalone: none
+// of its names is in this barrel (public-surface.test.ts, STANDALONE).
 // One fold and one ranking for every list's search box (DUP-5), for an app's own lists;
 // and the pickers' every-word match (0.51.5), for an async `loadOptions` that filters itself.
 export { foldForSearch, rankMatch, searchWords, matchesSearch } from "./lib/text-match";
@@ -156,12 +169,21 @@ export type { UseAnnounceReturn, UseAnnounceOptions, AnnounceRegionProps } from 
 export { useOverlayHistory } from "./hooks/use-overlay-history";
 export { useCloseTransition, OVERLAY_EXIT_MS } from "./hooks/use-close-transition";
 export { useRowSwipe } from "./hooks/use-row-swipe";
+// 0.52 (DUP-8): DataTable's press-and-hold, which keksdose wrote first and still keeps.
+export { useLongPress } from "./hooks/use-long-press";
+export type { LongPressOptions, LongPressResult } from "./hooks/use-long-press";
 // 0.28: keksdose's noindex marker, for the legal and auth pages of every app.
 export { useNoIndex } from "./hooks/use-noindex";
 // 0.49 KIT-9: the window's title from page, section and app, in the provider's format.
 export { useDocumentTitle } from "./hooks/use-document-title";
 // 0.49 KIT-1b: U+2212 before a number as "-", the copy handler's rule, for an app's text.
-export { asciiMinusInNumbers } from "./lib/clipboard-minus";
+// 0.52: deprecated with the other 54 names no app, test or showcase page reads (refactor
+// audit 2026-10-30, API-4, decision 4). Each is tagged on its specifier here, not on its
+// declaration: the module keeps it for the kit's own use, only the barrel lets it go.
+export {
+  /** @deprecated 0.52 — a formatter's `minus: "ascii"`, where the figure is made (API-4); removed in 0.53 */
+  asciiMinusInNumbers,
+} from "./lib/clipboard-minus";
 export { DEFAULT_DOCUMENT_TITLE_FORMAT, formatDocumentTitle } from "./lib/document-title";
 export type { DocumentTitleParts } from "./lib/document-title";
 export type { SwipeStage, RowSwipeOptions, RowSwipeReturn } from "./hooks/use-row-swipe";

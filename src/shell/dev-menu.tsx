@@ -4,26 +4,12 @@ import { FlaskConical, Undo2 } from "lucide-react";
 import { DEFAULT_TOP_BAR_LABELS, useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { TopBarActionMenu, type TopBarMenuEntry } from "./topbar-action-menu";
 import { useTopBarPartsLabels, type DevSwitchersLabels } from "./top-bar-parts-labels";
+// The kit's one storage guard, which 0.51 wrote here again by hand (DUP-8, refactor audit
+// 2026-10-30). Storage blocked, "Back to" lasts as long as this page.
+import { readSessionStored, writeSessionStored } from "../lib/safe-storage";
 
 /** Where the role the session started with is kept, unless the app names its own key. */
 export const DEV_ORIGINAL_ROLE_KEY = "ui-kit:dev-original-role";
-
-function readKey(key: string): string | null {
-  try {
-    return sessionStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-
-function writeKey(key: string, value: string | null): void {
-  try {
-    if (value === null) sessionStorage.removeItem(key);
-    else sessionStorage.setItem(key, value);
-  } catch {
-    /* storage blocked: "Back to" lasts as long as this page */
-  }
-}
 
 /**
  * One of the app's own groups in the {@link DevMenu} (docs/top-bar-harmonization.md
@@ -151,14 +137,14 @@ export function DevMenu<R extends string, P extends string>({
 }: DevMenuProps<R, P>) {
   const bar = useKitLabels("topBar", DEFAULT_TOP_BAR_LABELS);
   const words = useTopBarPartsLabels(labelsProp ? { dev: labelsProp } : undefined).dev;
-  const [kept, setKept] = useState<string | null>(() => (enabled ? readKey(storageKey) : null));
+  const [kept, setKept] = useState<string | null>(() => (enabled ? readSessionStored(storageKey) : null));
   // 0.43 (keksdose): `enabled` may start false and turn true — an app's GET probe of the
   // dev route — so the kept role is read again then, or "Back to {role}" is lost after a
   // reload. Adjusted during render, React's pattern for state that follows a prop.
   const [wasEnabled, setWasEnabled] = useState(enabled);
   if (wasEnabled !== enabled) {
     setWasEnabled(enabled);
-    if (enabled) setKept(readKey(storageKey));
+    if (enabled) setKept(readSessionStored(storageKey));
   }
   if (!enabled) return null;
 
@@ -168,10 +154,10 @@ export function DevMenu<R extends string, P extends string>({
     if (originalRole === undefined) {
       if (next === original) {
         // Back where the session began: nothing left to go back to.
-        writeKey(storageKey, null);
+        writeSessionStored(storageKey, null);
         setKept(null);
       } else if (kept === null && role !== undefined && next !== role) {
-        writeKey(storageKey, role);
+        writeSessionStored(storageKey, role);
         setKept(role);
       }
     }

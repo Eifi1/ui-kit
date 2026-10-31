@@ -13,7 +13,8 @@
  * screen only delays its `onClose` — every test suite, the kit's and the apps', reads a
  * closed overlay as gone at once.
  *
- * Package-private — not re-exported from the barrel.
+ * Public since 0.52 (DUP-8, refactor audit 2026-10-30): Kurvenschmiede's chain animation
+ * carried a copy of its own.
  */
 export function prefersReducedMotion(whereUnknown = false): boolean {
   if (typeof window === "undefined" || typeof window.matchMedia !== "function") return whereUnknown;
