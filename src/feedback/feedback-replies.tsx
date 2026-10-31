@@ -4,9 +4,9 @@ import { BellOff } from "lucide-react";
 import { Select } from "../components/select";
 import type { CommitScope } from "../components/write-lock";
 import type { AuthedFetcher } from "../hooks/use-authed-src";
-import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
-import { formatDate } from "../lib/format";
+import { useDayFormatter } from "../lib/day-format";
 import { FeedbackStatusBadge, selectableFeedbackStatuses, type FeedbackStatus } from "./feedback-inbox";
 import { useFeedbackStatusLabels } from "./feedback-labels";
 import type { FeedbackReply } from "./feedback-public-types";
@@ -77,10 +77,15 @@ export function feedbackReplyNudge(row: {
 
 /* ── The timeline ─────────────────────────────────────────────────────────── */
 
+/** A reply's time, the kit's own: the medium date and the short clock. */
+const REPLY_TIME_STYLE: Intl.DateTimeFormatOptions = { dateStyle: "medium", timeStyle: "short" };
+
 export interface FeedbackReplyTimelineProps {
   /** Oldest first, as the server sends them. */
   replies: readonly FeedbackReply[];
-  /** How a reply's time reads. Default: the date and time in the provider's locale. */
+  /** How a reply's time reads. Default (0.52): the `<UiKitProvider formatDate>`'s day
+   *  with the language's clock when the app set one, else the date and time in the
+   *  provider's locale and time zone. */
   renderDate?: (iso: string) => string;
   /** Tag bodies and names `data-private` (a host's screen-share blur). Default true. */
   redact?: boolean;
@@ -142,13 +147,15 @@ export function FeedbackReplyTimeline({
 }: FeedbackReplyTimelineProps) {
   const labels = useFeedbackRepliesLabels(labelsProp);
   const anonymous = useKitLabels("feedbackPublic", DEFAULT_FEEDBACK_PUBLIC_LABELS).anonymous;
-  const locale = useKitLocale();
+  // `renderDate` when it answers, else the provider's `formatDate` for the day with the
+  // language's clock, else the kit's date and time in the provider's locale and time zone
+  // (0.52, refactor audit 2026-10-30, DUP-2: the provider never reached this one).
+  const day = useDayFormatter<string>(renderDate);
   const priv = redact ? "" : undefined;
   if (replies.length === 0) {
     return <p className={cn("text-sm text-placeholder", className)}>{labels.empty}</p>;
   }
-  const dateText = (iso: string) =>
-    renderDate ? renderDate(iso) : formatDate(iso, { dateStyle: "medium", timeStyle: "short" }, { locale });
+  const dateText = (iso: string) => day(iso, { time: true, style: REPLY_TIME_STYLE });
   return (
     <ol aria-label={labels.replies} className={cn("space-y-3 border-s-2 border-subtle ps-3", className)}>
       {replies.map((reply) => {

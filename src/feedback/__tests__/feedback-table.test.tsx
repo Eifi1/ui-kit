@@ -402,9 +402,13 @@ describe("the desktop table", () => {
 });
 
 describe("useFeedbackRenderDate", () => {
-  it("uses the app's renderDate as it is", () => {
+  it("uses the app's renderDate whenever it answers (0.52: an empty answer falls through to the kit's)", () => {
     const { result } = renderHook(() => useFeedbackRenderDate(isoDay));
-    expect(result.current).toBe(isoDay);
+    expect(result.current("2026-10-04T09:12:00Z")).toBe("2026-10-04");
+    const quiet = renderHook(() => useFeedbackRenderDate(() => ""), {
+      wrapper: ({ children }) => <UiKitProvider locale="en-GB">{children}</UiKitProvider>,
+    });
+    expect(quiet.result.current("2026-10-04T09:12:00Z")).toMatch(/Sun/);
   });
 
   it("asks the provider's formatDate for the local day, with the weekday", () => {

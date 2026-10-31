@@ -9,6 +9,7 @@ import {
 } from "./feedback-labels";
 import type { FeedbackRecord } from "./feedback-record";
 import type { LabelOverride } from "../i18n/kit-labels";
+import { runMutation, type FeedbackMutationCall } from "./feedback-mutation";
 
 /**
  * A status change that can be taken back — §4.5 of the feedback contract, lifted from
@@ -30,12 +31,25 @@ export interface FeedbackStatusPatch {
 }
 
 /**
- * The page's status mutation. **TanStack Query's `mutate` fits as it stands** — pass
- * `updateMutation.mutate` (stable across renders), not `mutateAsync`. A hand-written
- * one sends the PATCH and calls `onSuccess` once it has landed, and only then.
+ * The page's status mutation (0.52): **TanStack Query's `mutateAsync`** — pass
+ * `update.mutateAsync`. The toast comes when the promise resolves, which it does for every
+ * call (refactor audit 2026-10-30, FLW-3). A hand-written one returns a promise that
+ * resolves once the PATCH has landed and rejects when it failed.
  *
  * Failure is the mutation's own business: its `onError` toasts the server's `detail`,
- * else `feedbackToast.updateFailed` (§4.4) — this hook adds no second error toast.
+ * else `feedbackToast.updateFailed` (§4.4) — this hook adds no second error toast, and
+ * catches the rejection.
+ */
+export type FeedbackStatusMutateAsync = (patch: FeedbackStatusPatch) => Promise<unknown>;
+
+/**
+ * The callback form: TanStack Query's `mutate`, or a function that calls `onSuccess` once
+ * the PATCH has landed. TanStack calls a per-call `onSuccess` for the LATEST `mutate()` on
+ * its observer only, so a second change sent before the first answered — another swipe,
+ * another pill, the Undo itself — lost the first change's Undo toast.
+ *
+ * @deprecated 0.52 — pass `update.mutateAsync` ({@link FeedbackStatusMutateAsync}), whose
+ * promise settles for every call; removed in 0.53
  */
 export type FeedbackStatusMutate = (patch: FeedbackStatusPatch, callbacks: { onSuccess: () => void }) => void;
 
@@ -64,20 +78,26 @@ export const FEEDBACK_UNDO_DURATION = 8000;
  *
  * ```tsx
  * const update = useMutation({ mutationFn: api.updateFeedback, onError: … });
- * const changeStatus = useFeedbackStatusUndo(update.mutate);
+ * const changeStatus = useFeedbackStatusUndo(update.mutateAsync);
  * <FeedbackStatusTransitions … onPick={(status) => changeStatus(row, status)} />
  * ```
  *
- * Give it the PAGE's mutation, not one a row owns: TanStack only calls per-call
- * callbacks while the observer that started the mutation is mounted, and a row the new
- * status filters out unmounts before the PATCH answers — the toast would never come.
+ * Give it the PAGE's mutation, not one a row owns: a row the new status filters out
+ * unmounts before the PATCH answers.
  *
- * The flow: PATCH `{ id, status }` → on success a success toast
+ * The flow: PATCH `{ id, status }` → once it has landed a success toast
  * `statusChanged(newName, title)` with the action `statusUndo`, 8 s → Undo PATCHes
- * `{ id, status: previous }` → on success `statusRestored(previousName, title)`.
+ * `{ id, status: previous }` → once that has landed `statusRestored(previousName, title)`.
+ * Each change waits for its OWN answer, so two changes in flight each get their toast.
+ *
+ * `update.mutate` ({@link FeedbackStatusMutate}) still fits, deprecated since 0.52: with it
+ * a second change before the first answered loses the first one's Undo. One signature
+ * takes both rather than two overloads: TypeScript types an inline callback's parameters
+ * from the FIRST overload, so a hand-written `(patch, { onSuccess }) => …` — the form this
+ * hook documented until 0.52 — would no longer compile.
  */
 export function useFeedbackStatusUndo(
-  mutate: FeedbackStatusMutate,
+  mutate: FeedbackMutationCall<FeedbackStatusPatch>,
   { labels, statusLabels }: FeedbackStatusUndoOptions = {},
 ): FeedbackStatusChange {
   const words = useFeedbackToastLabels(labels);
@@ -87,22 +107,16 @@ export function useFeedbackStatusUndo(
       const { id, title, status: previous } = row;
       if (status === previous) return;
       const nameOf = (value: FeedbackStatus) => names[value] ?? value;
-      mutate(
-        { id, status },
-        {
-          onSuccess: () => {
-            toast.undo(words.statusChanged(nameOf(status), title), {
-              label: words.statusUndo,
-              duration: FEEDBACK_UNDO_DURATION,
-              onUndo: () =>
-                mutate(
-                  { id, status: previous },
-                  { onSuccess: () => void toast.success(words.statusRestored(nameOf(previous), title)) },
-                ),
-            });
-          },
-        },
-      );
+      runMutation(mutate, { id, status }, () => {
+        toast.undo(words.statusChanged(nameOf(status), title), {
+          label: words.statusUndo,
+          duration: FEEDBACK_UNDO_DURATION,
+          onUndo: () =>
+            runMutation(mutate, { id, status: previous }, () => {
+              toast.success(words.statusRestored(nameOf(previous), title));
+            }),
+        });
+      });
     },
     [mutate, words, names],
   );

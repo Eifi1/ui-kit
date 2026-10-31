@@ -17,7 +17,7 @@ import {
   useFeedbackStatusLabels,
   useFeedbackStatusUndo,
 } from "@eifi1/ui-kit";
-import type { FeedbackRecord, FeedbackStatusMutate } from "@eifi1/ui-kit";
+import type { FeedbackRecord, FeedbackStatusMutateAsync } from "@eifi1/ui-kit";
 import { Example, Note, code } from "../../lib/section";
 
 /**
@@ -144,9 +144,9 @@ export function FeedbackTable027Demo() {
   // The admin on /feedback; on /my-feedback nobody edits a status, an admin neither.
   const canEdit = !mine;
 
-  // Stands in for the page's TanStack mutation: the PATCH "lands" at once, and the
+  // Stands in for the page's TanStack `mutateAsync`: the PATCH "lands" at once, and the
   // server's resolved_at rule (§3.4) is played here.
-  const mutate = useCallback<FeedbackStatusMutate>((patch, { onSuccess }) => {
+  const mutate = useCallback<FeedbackStatusMutateAsync>(async (patch) => {
     setRows((prev) =>
       prev.map((r) => {
         if (r.id !== patch.id) return r;
@@ -156,7 +156,6 @@ export function FeedbackTable027Demo() {
         return { ...r, status: patch.status, resolved_at };
       }),
     );
-    onSuccess();
   }, []);
   const changeStatus = useFeedbackStatusUndo(mutate);
   const statusLabels = useFeedbackStatusLabels();
@@ -221,16 +220,16 @@ export function FeedbackTable027Demo() {
           {code("useFeedbackColumns({ mine, canEdit, onStatus, renderDate })")} is §4.3's nine columns in the contract's
           order, with both select filters listing the whole vocabulary. The subject carries the environment chip
           (non-prod {code("context.environment")}) and {code("Rework ×n")} from {code("reworkCount(body)")}.{" "}
-          {code("onStatus")} is {code("useFeedbackStatusUndo(update.mutate)")} — the same change the row detail and the
-          swipes use, so every one of them offers Undo. On a wide screen the swipes are also the row&apos;s last column
-          ({code("desktopSwipeActions")}), and {code("feedbackSwipeOmitShown")} leaves out the steps the status cell
-          already shows — “Done” stays where DONE is more than one step away. On a phone, {code("FeedbackMobileCard")}{" "}
-          draws both chips itself: {code("DataTable")} never renders the {code("mobilePrimary")} cell when{" "}
-          {code("mobileCard")} is set. The eye at the bottom corner (phone, inbox only) narrows to In evaluation + Test
-          when live. An app adds {code('urlSync storageKey="feedback"')}, its {code("?row=")} deep link and the row
-          detail. The table fits its own width: Subject {code("grow")}s and ellipsises, and a narrow table leaves out
-          URL, then Email, then Resolved ({code("fitPriority")}) — the Columns rail counts what is drawn and marks those
-          “hidden for width”.
+          {code("onStatus")} is {code("useFeedbackStatusUndo(update.mutateAsync)")} — the same change the row detail and
+          the swipes use, so every one of them offers Undo. On a wide screen the swipes are also the row&apos;s last
+          column ({code("desktopSwipeActions")}), and {code("feedbackSwipeOmitShown")} leaves out the steps the status
+          cell already shows — “Done” stays where DONE is more than one step away. On a phone,{" "}
+          {code("FeedbackMobileCard")} draws both chips itself: {code("DataTable")} never renders the{" "}
+          {code("mobilePrimary")} cell when {code("mobileCard")} is set. The eye at the bottom corner (phone, inbox
+          only) narrows to In evaluation + Test when live. An app adds {code('urlSync storageKey="feedback"')}, its{" "}
+          {code("?row=")} deep link and the row detail. The table fits its own width: Subject {code("grow")}s and
+          ellipsises, and a narrow table leaves out URL, then Email, then Resolved ({code("fitPriority")}) — the Columns
+          rail counts what is drawn and marks those “hidden for width”.
         </Note>
       </div>
     </Example>

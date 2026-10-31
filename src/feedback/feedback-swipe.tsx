@@ -124,7 +124,7 @@ function panel(
  * for it, or `null` when the row offers no swipe at all:
  *
  * ```tsx
- * const changeStatus = useFeedbackStatusUndo(update.mutate);
+ * const changeStatus = useFeedbackStatusUndo(update.mutateAsync);
  * const statusLabels = useFeedbackStatusLabels();
  * <DataTable
  *   mobileSwipeActions={isAdmin && !mine

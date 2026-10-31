@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { FeedbackRowDetail, ToggleGroup, UiKitProvider, appendRework, useFeedbackStatusUndo } from "@eifi1/ui-kit";
-import type { AuthedFetcher, FeedbackDetailUpdate, FeedbackRecord, UiKitLabelOverrides } from "@eifi1/ui-kit";
+import type { AuthedFetcher, FeedbackDetailUpdateAsync, FeedbackRecord, UiKitLabelOverrides } from "@eifi1/ui-kit";
 import { Example, Note, code } from "../../lib/section";
 
 /**
@@ -118,9 +118,9 @@ function Detail({ viewer }: { viewer: Viewer }) {
   const files = useRef(new Map<string, Blob>());
   const counter = useRef(10);
 
-  // Stands in for the page's TanStack mutation: the PATCH "lands" at once, and a rework
-  // append on an answered row reopens it, as the server does (§3.4).
-  const update = useCallback<FeedbackDetailUpdate>((patch, { onSuccess }) => {
+  // Stands in for the page's TanStack `mutateAsync`: the PATCH "lands" at once, and a
+  // rework append on an answered row reopens it, as the server does (§3.4).
+  const update = useCallback<FeedbackDetailUpdateAsync>(async (patch) => {
     setRow((prev) => {
       const next = { ...prev, updated_at: new Date().toISOString() };
       if (patch.body !== undefined) {
@@ -140,7 +140,6 @@ function Detail({ viewer }: { viewer: Viewer }) {
       }
       return next;
     });
-    onSuccess();
   }, []);
   const statusChange = useFeedbackStatusUndo(update);
 
@@ -219,11 +218,13 @@ export function FeedbackDetail027Demo() {
       </div>
       <Note>
         {code("FeedbackRowDetail")} is what {code("DataTable")}'s {code("expandedRow")} renders: the row,{" "}
-        {code("canEdit")} (admin on {code("/feedback")}), {code("viewerId")}, the page's {code("update.mutate")} as{" "}
+        {code("canEdit")} (admin on {code("/feedback")}), {code("viewerId")}, the page's {code("update.mutateAsync")} as{" "}
         {code("onUpdate")}, the upload, the authed {code("fetcher")} and {code("useFeedbackStatusUndo")}'s change. The
         author's Edit holds the original text only — the rework rounds and file lines go back unchanged. Rework needs a
         note, takes one file (uploaded first) and PATCHes the body alone; the server reopens the row. Send a rework as
-        the author: the row goes back to Open, and the Edit button appears.
+        the author: the row goes back to Open, and the Edit button appears. The page it was filed on is the reporter's
+        to write, so a route that acts on load — {code("/join")}, {code("/register")}, {code("/verify-email")},{" "}
+        {code("/reset-password")} and the app's {code("pageLinkExclude")} — is shown as text with Copy, never as a link.
       </Note>
     </Example>
   );

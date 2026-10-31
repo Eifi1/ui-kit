@@ -12,7 +12,7 @@ import {
 import { UI_KIT_LABELS_DE_CH } from "@eifi1/ui-kit/i18n/de-CH";
 import type {
   FeedbackComment,
-  FeedbackDetailUpdate,
+  FeedbackDetailUpdateAsync,
   FeedbackRecord,
   FeedbackReply,
   FeedbackStatus,
@@ -106,9 +106,8 @@ function Thread({ viewer }: { viewer: Viewer }) {
   const isAdmin = viewer === "admin";
   const viewerId = VIEWER_ID[viewer];
 
-  const update = useCallback<FeedbackDetailUpdate>((patch, { onSuccess }) => {
+  const update = useCallback<FeedbackDetailUpdateAsync>(async (patch) => {
     setRow((prev) => ({ ...prev, ...(patch.status ? { status: patch.status } : null) }));
-    onSuccess();
   }, []);
 
   const reply = async (body: string, status?: FeedbackStatus) => {

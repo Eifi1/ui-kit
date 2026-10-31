@@ -9,7 +9,7 @@ import {
   UiKitProvider,
 } from "@eifi1/ui-kit";
 import { UI_KIT_LABELS_DE_CH } from "@eifi1/ui-kit/i18n/de-CH";
-import type { FeedbackDetailUpdate, FeedbackRecord, FeedbackReply, FeedbackStatus } from "@eifi1/ui-kit";
+import type { FeedbackDetailUpdateAsync, FeedbackRecord, FeedbackReply, FeedbackStatus } from "@eifi1/ui-kit";
 import { Example, Note, code } from "../../lib/section";
 
 /**
@@ -90,9 +90,8 @@ function Rework({ viewer }: { viewer: Viewer }) {
   const [row, setRow] = useState(seedRow);
   const isAdmin = viewer === "admin";
 
-  const update = useCallback<FeedbackDetailUpdate>((patch, { onSuccess }) => {
+  const update = useCallback<FeedbackDetailUpdateAsync>(async (patch) => {
     setRow((prev) => ({ ...prev, ...(patch.status ? { status: patch.status } : null) }));
-    onSuccess();
   }, []);
 
   const entry = (fields: Omit<FeedbackReply, "id" | "created_at">) =>

@@ -1,12 +1,14 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import type { MouseEvent, ReactElement, ReactNode } from "react";
 import { ExternalLink, ThumbsUp } from "lucide-react";
 import { cn } from "../lib/cn";
-import { toLocalIso } from "../lib/dates";
-import { EMPTY_FORMATTED_VALUE, formatDate, toDate } from "../lib/format";
-import { useKitDateFormatter, useKitLabels, useKitLink, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
+import { useDayFormatter } from "../lib/day-format";
+import { EMPTY_FORMATTED_VALUE } from "../lib/format";
+import { useKitLabels, useKitLink, type LabelOverride } from "../i18n/kit-labels";
 import type { KitLinkProps } from "../i18n/kit-labels";
+import type { PathPattern } from "../landing/routing";
 import { Chip } from "../components/chip";
+import { CopyButton } from "../components/copy-button";
 import { Tooltip } from "../components/tooltip";
 import { FloatingAction, FloatingActionGroup } from "../components/floating-panel";
 import type { FloatingCorner } from "../components/floating-panel";
@@ -36,7 +38,8 @@ import {
   type FeedbackRecord,
 } from "./feedback-record";
 import type { FeedbackStatusChange } from "./feedback-status-undo";
-import { feedbackPageHref, feedbackPagePath } from "./feedback-row-detail";
+import { feedbackPageHref, feedbackPagePath, feedbackPageUrl, useFeedbackDetailLabels } from "./feedback-row-detail";
+import { isOneShotPage } from "./feedback-page-link";
 import type { CommitScope } from "../components/write-lock";
 import { DEFAULT_FEEDBACK_PAGE_LABELS } from "./feedback-table-labels";
 import { DEFAULT_FEEDBACK_PUBLIC_LABELS } from "./feedback-public-labels";
@@ -235,25 +238,16 @@ const FEEDBACK_DATE_STYLE: Intl.DateTimeFormatOptions = {
 };
 
 /**
- * `renderDate` when the app gave one, else the kit's: the `<UiKitProvider formatDate>`
- * when the app set one (called with the LOCAL calendar day and `weekday: true`, as
- * `DateMark` calls it), else `Intl` in the provider's locale with the weekday. An
- * unparseable value is passed through rather than hidden.
+ * `renderDate` when the app gave one (and it answers), else the kit's: the
+ * `<UiKitProvider formatDate>` when the app set one (called with the calendar day and
+ * `weekday: true`, as `DateMark` calls it), else `Intl` in the provider's locale and
+ * (0.52) time zone, with the weekday. An unparseable value is passed through rather than
+ * hidden. The kit's one day ladder since 0.52 (refactor audit 2026-10-30, DUP-2), which
+ * every date a kit component prints goes down.
  */
 export function useFeedbackRenderDate(renderDate?: FeedbackRenderDate, locale?: string): FeedbackRenderDate {
-  const kitLocale = useKitLocale(locale);
-  const fromProvider = useKitDateFormatter();
-  return useMemo<FeedbackRenderDate>(() => {
-    if (renderDate) return renderDate;
-    return (iso) => {
-      const date = toDate(iso);
-      if (!date) return iso || EMPTY_FORMATTED_VALUE;
-      const own = fromProvider
-        ? fromProvider(toLocalIso(date), { unit: "day", source: "dateMark", locale: kitLocale, weekday: true })
-        : "";
-      return own || formatDate(date, FEEDBACK_DATE_STYLE, { locale: kitLocale });
-    };
-  }, [renderDate, fromProvider, kitLocale]);
+  const day = useDayFormatter<string>(renderDate, locale);
+  return useCallback<FeedbackRenderDate>((iso) => day(iso, { weekday: true, style: FEEDBACK_DATE_STYLE }), [day]);
 }
 
 /** A date in a cell: `<time>`, nowrap, tabular figures; "—" when there is none. */
@@ -349,12 +343,35 @@ export function FeedbackSubject({ row, wrap = false, labels: labelsProp, classNa
  * Its name is the path, as on screen, with "Open page" said before it — keksdose's
  * `aria-label="Open page"` replaced the path, so a screen reader heard forty identical
  * links down the column.
+ *
+ * A one-shot route — `/join`, `/register`, `/verify-email`, `/reset-password` and the
+ * app's `pageLinkExclude` — is the path as text with Copy, never a link (0.52, refactor
+ * audit 2026-10-30, FLW-7): the path and query are the reporter's to write, and those
+ * routes act on load.
  */
-function FeedbackPageLinkCell({ context, openPage }: { context: FeedbackContext | null; openPage: string }) {
+function FeedbackPageLinkCell({
+  context,
+  openPage,
+  exclude,
+}: {
+  context: FeedbackContext | null;
+  openPage: string;
+  exclude: readonly PathPattern[] | undefined;
+}) {
   const kitLink = useKitLink();
+  const { copyUrl } = useFeedbackDetailLabels();
   const href = feedbackPageHref(context);
   const path = feedbackPagePath(context);
+  const url = feedbackPageUrl(context);
   if (!href || !path) return <span className="text-placeholder">{EMPTY_FORMATTED_VALUE}</span>;
+  if (isOneShotPage(href, exclude)) {
+    return (
+      <span className="inline-flex min-w-0 max-w-full items-center gap-1 text-secondary" data-feedback-page-unlinked="">
+        <code className="min-w-0 truncate text-xs">{path}</code>
+        {url && <CopyButton size="xs" className="shrink-0" text={url} label={copyUrl} stopPropagation />}
+      </span>
+    );
+  }
   const className =
     "inline-flex min-w-0 max-w-full items-center gap-1 text-secondary hover:text-primary hover:underline";
   const children = (
@@ -395,8 +412,8 @@ export interface FeedbackColumnsOptions {
   /** The admin on `/feedback` — the status cell offers its steps. Otherwise it shows them
    *  read-only. */
   canEdit: boolean;
-  /** The undoable status change, `useFeedbackStatusUndo(update.mutate)` (§4.5) — the
-   *  same one the row detail and the swipes use. */
+  /** The undoable status change, `useFeedbackStatusUndo(update.mutateAsync)` (§4.5) —
+   *  the same one the row detail and the swipes use. */
   onStatus: FeedbackStatusChange;
   /** See {@link FeedbackRenderDate}. */
   renderDate: FeedbackRenderDate;
@@ -414,6 +431,14 @@ export interface FeedbackColumnsOptions {
   /** The Votes header — `feedbackPublic.columnVotes`, so the inbox and the public list
    *  say the same ({@link useFeedbackColumns} reads it). Default "Votes". */
   votesHeader?: string;
+  /**
+   * 0.52 (FLW-7): the app's one-shot routes, ON TOP of the kit's — `/join`, `/register`,
+   * `/verify-email`, `/reset-password` (a string is that path and everything under it, a
+   * RegExp is tested on the path, as `useLastVisitedPage`'s `exclude`). The URL cell
+   * shows such a page as text with Copy, never as a link. Keep it stable (module scope):
+   * it is a dependency of {@link useFeedbackColumns}' memo.
+   */
+  pageLinkExclude?: readonly PathPattern[];
 }
 
 /** The vote count, a quiet chip with the thumb (§9.6) — the Votes cell and the card's. */
@@ -479,6 +504,7 @@ export function feedbackColumns<T extends FeedbackTableRow>({
   categoryLabels,
   votes = false,
   votesHeader = DEFAULT_FEEDBACK_PUBLIC_LABELS.columnVotes,
+  pageLinkExclude,
 }: FeedbackColumnsOptions): DataTableColumn<T>[] {
   const editable = canEdit && !mine;
   const votesColumn: DataTableColumn<T>[] = votes
@@ -608,7 +634,9 @@ export function feedbackColumns<T extends FeedbackTableRow>({
       // The cell IS a link, so the row's own permalink must never wrap it (keksdose
       // feedback #451: <a> in <a>, and "open the page" silently did nothing).
       noRowLink: true,
-      cell: (row) => <FeedbackPageLinkCell context={row.context} openPage={labels.openPage} />,
+      cell: (row) => (
+        <FeedbackPageLinkCell context={row.context} openPage={labels.openPage} exclude={pageLinkExclude} />
+      ),
       sortBy: (row) => feedbackPagePath(row.context) ?? "",
       filterBy: (row) => feedbackPagePath(row.context) ?? "",
       mobileHidden: true,
@@ -670,7 +698,7 @@ export interface UseFeedbackColumnsOptions extends Omit<
 /**
  * {@link feedbackColumns} with the `feedbackPage`, `feedbackStatus` and
  * `feedbackCategory` words from the provider, memoised on what it reads — pass
- * `update.mutate` through `useFeedbackStatusUndo` (stable) rather than a fresh function
+ * `update.mutateAsync` through `useFeedbackStatusUndo` (stable) rather than a fresh function
  * per render, or every row's columns are rebuilt on each render (keksdose :667).
  */
 export function useFeedbackColumns<T extends FeedbackTableRow>({
@@ -680,6 +708,7 @@ export function useFeedbackColumns<T extends FeedbackTableRow>({
   renderDate: renderDateProp,
   commit,
   votes,
+  pageLinkExclude,
   labels: labelsProp,
 }: UseFeedbackColumnsOptions): DataTableColumn<T>[] {
   const labels = useFeedbackPageLabels(labelsProp);
@@ -700,8 +729,21 @@ export function useFeedbackColumns<T extends FeedbackTableRow>({
         categoryLabels,
         votes,
         votesHeader,
+        pageLinkExclude,
       }),
-    [mine, canEdit, onStatus, renderDate, commit, labels, statusLabels, categoryLabels, votes, votesHeader],
+    [
+      mine,
+      canEdit,
+      onStatus,
+      renderDate,
+      commit,
+      labels,
+      statusLabels,
+      categoryLabels,
+      votes,
+      votesHeader,
+      pageLinkExclude,
+    ],
   );
 }
 

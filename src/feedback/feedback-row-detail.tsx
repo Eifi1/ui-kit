@@ -7,8 +7,9 @@ import { TextLink } from "../components/text-link";
 import { toast } from "../components/toast";
 import { Button } from "../components/button";
 import type { AuthedFetcher } from "../hooks/use-authed-src";
-import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
-import { formatDate } from "../lib/format";
+import type { PathPattern } from "../landing/routing";
+import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
+import { useDayFormatter } from "../lib/day-format";
 import { DEFAULT_MAX_ATTACHMENT_BYTES } from "./feedback-attachment";
 import { DEFAULT_FEEDBACK_DIALOG_LABELS } from "./feedback-dialog";
 import {
@@ -34,6 +35,8 @@ import {
   splitDescription,
 } from "./feedback-record";
 import type { FeedbackContext, FeedbackRecord } from "./feedback-record";
+import { runMutation, type FeedbackMutationCall } from "./feedback-mutation";
+import { isOneShotPage } from "./feedback-page-link";
 import { useFeedbackStatusUndo } from "./feedback-status-undo";
 import type { FeedbackStatusChange } from "./feedback-status-undo";
 import type { CommitScope } from "../components/write-lock";
@@ -196,8 +199,13 @@ const localPath = (pathname: string) => pathname.replace(/^\/{2,}/, "/");
  * The in-app link to the page a report was filed on — path + query + hash (keksdose
  * `localHref`: the query and hash carry the state worth restoring, `?tab=import`, a
  * drill-down). Read from `context.url`, else `context.route`; a path-only `url` works.
- * Always a path on THIS app, never another origin's address, so it is safe as an
- * `href` whatever the row says. `null` when there is nothing to link.
+ * `null` when there is nothing to link.
+ *
+ * Always a path on THIS app, never another origin's address — but the path and query
+ * are the reporter's to write, so it is not safe to follow blindly: `/join?token=…`
+ * acts on load (refactor audit 2026-10-30, FLW-7). The kit's URL cell and section show a
+ * one-shot route as text with Copy (`pageLinkExclude`); an app linking it elsewhere
+ * should do the same.
  */
 export function feedbackPageHref(context: FeedbackContext | null | undefined): string | null {
   const url = parsePage(context);
@@ -315,12 +323,24 @@ export interface FeedbackDetailPatch {
 }
 
 /**
- * The page's update mutation. **TanStack Query's `mutate` fits as it stands** — pass
- * `update.mutate` (and `pending={update.isPending}`), the same function
- * `useFeedbackStatusUndo` takes. A hand-written one sends the PATCH and calls
- * `onSuccess` once it has landed, and only then: that is when an editor closes. A
- * failure is the mutation's own to toast — the server's `detail`, else
+ * The page's update mutation (0.52): **TanStack Query's `mutateAsync`** — pass
+ * `update.mutateAsync` (and `pending={update.isPending}`), the same function
+ * `useFeedbackStatusUndo` takes. An editor closes when the promise resolves, which it does
+ * for every call — also when a status pill was pressed while the save was in flight
+ * (refactor audit 2026-10-30, FLW-3). A hand-written one resolves once the PATCH has
+ * landed. A failure is the mutation's own to toast — the server's `detail`, else
  * `feedbackToast.updateFailed` (§4.4) — and leaves the editor open with its draft.
+ */
+export type FeedbackDetailUpdateAsync = (patch: FeedbackDetailPatch) => Promise<unknown>;
+
+/**
+ * The callback form: TanStack Query's `mutate`, or a function that calls `onSuccess` once
+ * the PATCH has landed. TanStack calls a per-call `onSuccess` for the LATEST `mutate()`
+ * only, so an editor whose save was followed by another PATCH before it answered stayed
+ * open, and the earlier status change lost its Undo.
+ *
+ * @deprecated 0.52 — pass `update.mutateAsync` ({@link FeedbackDetailUpdateAsync}); removed
+ * in 0.53
  */
 export type FeedbackDetailUpdate = (patch: FeedbackDetailPatch, callbacks: { onSuccess: () => void }) => void;
 
@@ -342,10 +362,10 @@ export interface FeedbackReworkSectionProps {
   /** 0.40: the rework as an entry of its own — see {@link FeedbackReworkSend}. With it,
    *  `onUpdate` is not called. */
   onRework?: FeedbackReworkSend;
-  /** The PATCH — see {@link FeedbackDetailUpdate}. Called with `{ id, body }` only, and
-   *  only without `onRework`: the legacy append (§3.4), which server-kit 0.13 still
+  /** The PATCH — see {@link FeedbackDetailUpdateAsync}. Called with `{ id, body }` only,
+   *  and only without `onRework`: the legacy append (§3.4), which server-kit 0.13 still
    *  turns into an entry for one release. Optional since 0.40; pass one of the two. */
-  onUpdate?: FeedbackDetailUpdate;
+  onUpdate?: FeedbackMutationCall<FeedbackDetailPatch>;
   /** The PATCH is in flight (`update.isPending`). The upload adds its own. */
   pending?: boolean;
   /** The upload. Left out, the note goes without a file field. */
@@ -466,7 +486,7 @@ export function FeedbackReworkSection({
       return;
     }
     if (body === null) return;
-    onUpdate({ id: row.id, body }, { onSuccess: () => onSent?.() });
+    runMutation(onUpdate, { id: row.id, body }, () => onSent?.());
   };
 
   return (
@@ -510,8 +530,10 @@ export interface FeedbackRowDetailProps {
   canEdit: boolean;
   /** The signed-in user's id — who the AUTHOR is: the description editor and rework. */
   viewerId?: number | null;
-  /** The page's PATCH — `update.mutate` (see {@link FeedbackDetailUpdate}). */
-  onUpdate: FeedbackDetailUpdate;
+  /** The page's PATCH — `update.mutateAsync` (see {@link FeedbackDetailUpdateAsync}). The
+   *  callback form ({@link FeedbackDetailUpdate}, `update.mutate`) still fits, deprecated
+   *  since 0.52; the prop's one signature takes both. */
+  onUpdate: FeedbackMutationCall<FeedbackDetailPatch>;
   /** `update.isPending`: the editors' save buttons wait for it. */
   pending?: boolean;
   /** `POST /feedback/attachments` for the rework's one file and, since 0.47 (§12) with
@@ -522,7 +544,7 @@ export interface FeedbackRowDetailProps {
    *  the browser's own fetch with same-origin cookies. */
   fetcher?: AuthedFetcher | null;
   /**
-   * The undoable status change — what `useFeedbackStatusUndo(update.mutate)` returns,
+   * The undoable status change — what `useFeedbackStatusUndo(update.mutateAsync)` returns,
    * the SAME one the table's status cell and the swipes use (§4.5). Left out, the
    * detail builds one from `onUpdate`, which is equivalent as long as `onUpdate` is the
    * page's mutation (its observer outlives the row a status filter removes).
@@ -534,9 +556,19 @@ export interface FeedbackRowDetailProps {
   /** The rework's and (0.47, with `replyAttachments`) the reply composer's file field,
    *  over the contract's defaults. */
   reworkAttachment?: Partial<FeedbackNoteAttachment>;
-  /** How the `resolved_at` date reads — the app's date cell, as a string. Default: the
-   *  kit's `formatDate` in the provider's locale, `medium` style. */
+  /** How the `resolved_at` date reads — the app's date cell, as a string. Default
+   *  (0.52): the `<UiKitProvider formatDate>` when the app set one, else the kit's
+   *  `formatDate` in the provider's locale and time zone, `medium` style. */
   renderDate?: (iso: string) => string;
+  /**
+   * 0.52 (FLW-7): the app's one-shot routes, ON TOP of the kit's — `/join`,
+   * `/register`, `/verify-email`, `/reset-password` (a string is that path and everything
+   * under it, a RegExp is tested on the path, as `useLastVisitedPage`'s `exclude`). The
+   * URL section shows such a page as text with Copy, never as a link: it acts on load,
+   * and a report's page is the reporter's to write. keksdose: `["/banks/callback",
+   * "/share-target"]`. Keep it stable (module scope).
+   */
+  pageLinkExclude?: readonly PathPattern[];
   /**
    * The detail's saves COMMIT (description, outcome, rework, status): under a locked
    * `WriteLockProvider` each is `aria-disabled` with the lock's reason, and nothing
@@ -607,12 +639,12 @@ export interface FeedbackRowDetailProps {
  * ```tsx
  * const update = useMutation({ mutationFn: ({ id, ...patch }) => api.updateFeedback(id, patch),
  *   onSuccess: invalidate, onError: (e) => toast.error(detailOf(e) ?? toastLabels.updateFailed) });
- * const changeStatus = useFeedbackStatusUndo(update.mutate);
+ * const changeStatus = useFeedbackStatusUndo(update.mutateAsync);
  * <DataTable
  *   isExpanded={(row) => expandedId === row.id}
  *   expandedRow={(row) => (
  *     <FeedbackRowDetail row={row} canEdit={isAdmin && !mine} viewerId={user?.id}
- *       onUpdate={update.mutate} pending={update.isPending} statusChange={changeStatus}
+ *       onUpdate={update.mutateAsync} pending={update.isPending} statusChange={changeStatus}
  *       onUpload={api.uploadFeedbackAttachment} fetcher={authedImageFetcher}
  *       onCaptureScreenshot={captureAppScreenshot} />
  *   )} … />
@@ -634,6 +666,7 @@ export function FeedbackRowDetail({
   onCaptureScreenshot,
   reworkAttachment,
   renderDate,
+  pageLinkExclude,
   commit,
   showSubject = true,
   onReply,
@@ -649,7 +682,6 @@ export function FeedbackRowDetail({
   // "placeholder = the dialog's body label" (§4.4.1): read from the dialog's own
   // namespace, so the two can never say different things.
   const dialogText = useKitLabels("feedbackDialog", DEFAULT_FEEDBACK_DIALOG_LABELS);
-  const locale = useKitLocale();
   const ownStatusChange = useFeedbackStatusUndo(onUpdate);
   const changeStatus = statusChange ?? ownStatusChange;
   const [editingBody, setEditingBody] = useState(false);
@@ -666,7 +698,11 @@ export function FeedbackRowDetail({
   // timeline, so the Attachment section holds the report's own files.
   const files = feedbackAttachmentUrls(row.replies ? { ...row, replies: undefined } : row);
   const fetchFile = fetcher ?? plainFeedbackFetch;
-  const dateText = (iso: string) => (renderDate ? renderDate(iso) : formatDate(iso, "medium", { locale }));
+  // A date in a sentence ("Resolved: …"), so no weekday — through the kit's one day
+  // ladder, which reaches the provider's `formatDate` (0.52, refactor audit 2026-10-30,
+  // DUP-2).
+  const day = useDayFormatter<string>(renderDate);
+  const dateText = (iso: string) => day(iso);
 
   const saveDescription = (value: string) => {
     // Only a real change makes a round trip; clearing it is one ("" — the description
@@ -675,7 +711,7 @@ export function FeedbackRowDetail({
       setEditingBody(false);
       return;
     }
-    onUpdate({ id: row.id, body: replaceDescription(row.body, value) }, { onSuccess: () => setEditingBody(false) });
+    runMutation(onUpdate, { id: row.id, body: replaceDescription(row.body, value) }, () => setEditingBody(false));
   };
 
   // 0.38 (§9.7): the replies replace the outcome; a row without them is a server before
@@ -739,9 +775,16 @@ export function FeedbackRowDetail({
         // The page it was filed on, with the full URL a click away (keksdose #278).
         <FeedbackDetailSection title={labels.url}>
           <div className="flex min-w-0 items-center gap-1.5">
-            <TextLink href={pageHref} tone="secondary" underline="hover" stopPropagation className="min-w-0">
-              <code className="break-all text-xs">{pageHref}</code>
-            </TextLink>
+            {isOneShotPage(pageHref, pageLinkExclude) ? (
+              // A route that acts on load: the path to read and copy, no link (FLW-7).
+              <code className="min-w-0 break-all text-xs text-secondary" data-feedback-page-unlinked="">
+                {pageHref}
+              </code>
+            ) : (
+              <TextLink href={pageHref} tone="secondary" underline="hover" stopPropagation className="min-w-0">
+                <code className="break-all text-xs">{pageHref}</code>
+              </TextLink>
+            )}
             <CopyButton size="xs" className="shrink-0" text={pageUrl} label={labels.copyUrl} stopPropagation />
           </div>
         </FeedbackDetailSection>

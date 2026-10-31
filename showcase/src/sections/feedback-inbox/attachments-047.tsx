@@ -3,7 +3,7 @@ import { FeedbackCommentThread, FeedbackRowDetail } from "@eifi1/ui-kit";
 import type {
   AuthedFetcher,
   FeedbackComment,
-  FeedbackDetailUpdate,
+  FeedbackDetailUpdateAsync,
   FeedbackRecord,
   FeedbackReply,
   FeedbackStatus,
@@ -117,9 +117,8 @@ export function FeedbackAttachments047Demo() {
   const { fetcher, onUpload } = useFakeFiles();
   const [row, setRow] = useState(seedRow);
   const [comments, setComments] = useState(SEED_COMMENTS);
-  const update = useCallback<FeedbackDetailUpdate>((patch, { onSuccess }) => {
+  const update = useCallback<FeedbackDetailUpdateAsync>(async (patch) => {
     setRow((prev) => ({ ...prev, ...(patch.status ? { status: patch.status } : null) }));
-    onSuccess();
   }, []);
 
   return (
