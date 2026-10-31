@@ -39,16 +39,11 @@ function flagOf(lang: AccountMenuLanguageOption): ReactNode {
   );
 }
 
-export interface AccountMenuLanguageProps {
+/** {@link AccountMenuLanguageProps} but the handler. */
+interface AccountMenuLanguageBaseProps {
   languages: readonly AccountMenuLanguageOption[];
   /** The active language's code. */
   value: string | undefined;
-  /** A pick: the app sets the device's language and, signed in, the account's
-   *  (settings §6.2). `value` + `onChange`, as every kit control pairs them (CONTRIBUTING
-   *  §4; refactor audit 2026-10-30, API-5). */
-  onChange?: (code: string) => void;
-  /** @deprecated 0.52 — `onChange` (the same call); removed in 0.53. */
-  onPick?: (code: string) => void;
   /** The account menu's `close` (from `TopBarActionMenu`'s `children`): a pick shuts it. */
   close?: () => void;
   /** The row's name. Default: `topBar.language` ("Language"). */
@@ -56,6 +51,28 @@ export interface AccountMenuLanguageProps {
   /** Open the sub-list at first. Default `false`. */
   defaultOpen?: boolean;
 }
+
+/**
+ * `onChange`, or the deprecated `onPick`, is required: with both optional, a row an app
+ * moved off `onPick` without adding `onChange` — or with it misspelt — compiled, and a
+ * pick only closed the menu (0.52 code review, account-menu-language.tsx).
+ */
+export type AccountMenuLanguageProps = AccountMenuLanguageBaseProps &
+  (
+    | {
+        /** A pick: the app sets the device's language and, signed in, the account's
+         *  (settings §6.2). `value` + `onChange`, as every kit control pairs them
+         *  (CONTRIBUTING §4; refactor audit 2026-10-30, API-5). */
+        onChange: (code: string) => void;
+        /** @deprecated 0.52 — `onChange` (the same call); removed in 0.53. */
+        onPick?: (code: string) => void;
+      }
+    | {
+        onChange?: undefined;
+        /** @deprecated 0.52 — `onChange` (the same call); removed in 0.53. */
+        onPick: (code: string) => void;
+      }
+  );
 
 /**
  * The language choice INSIDE the account menu (docs/top-bar-harmonization.md §2.3),
