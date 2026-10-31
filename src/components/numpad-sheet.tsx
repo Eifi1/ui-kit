@@ -46,9 +46,10 @@ type PadKey = { kind: "ins"; label: string; ins: string; accent?: boolean; name?
 /** The {@link CalculatorLabels} key naming a non-digit key; digits are their glyph. */
 type PadKeyName = "plus" | "minus" | "times" | "divide" | "decimal";
 
-// Insert chars that survive `sanitizeLive` (it keeps `× ÷` and ASCII `+ - * /`
-// but strips the unicode minus `−`, so minus inserts an ASCII "-" while showing
-// the nicer glyph). The evaluator normalises `× ÷` back to `* /`.
+// Insert chars `sanitizeLive` keeps as they are (`× ÷` and ASCII `+ - * /`; it maps the
+// unicode minus `−` to "-" since 0.51.7, INP-3), so minus inserts the ASCII "-" its
+// field shows while the key shows the nicer glyph. The evaluator normalises `× ÷` back
+// to `* /`.
 const PAD_KEYS: PadKey[] = [
   { kind: "ins", label: "7", ins: "7" },
   { kind: "ins", label: "8", ins: "8" },

@@ -244,9 +244,20 @@ export function commitExpression(raw: string): string {
  * keystroke-by-keystroke but stray characters can't be entered. A lone leading
  * `-` is kept — in a plain field it is simply a negative amount; in a field whose
  * caller owns the sign it is read off again by {@link splitLeadingSign}. The text
- * is resolved to a plain number on blur/Enter via {@link commitExpression}. */
+ * is resolved to a plain number on blur/Enter via {@link commitExpression}.
+ *
+ * The typographic minus and the two dashes become "-" first, as in
+ * {@link evaluateExpression}: U+2212 is what the kit's own `formatMoney` and
+ * `formatNumber` print for every negative since 0.49, and stripping it with the
+ * stray characters turned a pasted "−1.234,50 €" into a positive amount (refactor
+ * audit 2026-10-30, INP-3). */
 export function sanitizeLive(raw: string): string {
-  return dropExtraDots(raw.replace(/,/g, ".").replace(/[^0-9.+\-*/×÷()]/g, ""));
+  return dropExtraDots(
+    raw
+      .replace(/[−–—]/g, "-")
+      .replace(/,/g, ".")
+      .replace(/[^0-9.+\-*/×÷()]/g, ""),
+  );
 }
 
 /**

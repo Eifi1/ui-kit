@@ -37,7 +37,13 @@ export function decimalMark(locale: string | undefined): "," | "." {
  * field's settle then made that 1.23, final. This decides per operand, from the
  * typist's own text, before that fold:
  *
- * - both marks present: the one that is not the locale's is grouping, and goes;
+ * - both marks present: the LAST one is the decimal mark, whichever the locale's is, and
+ *   the other is grouping and goes. The order says the convention the figure was written
+ *   in — "1.234,56" German, "1,234.56" English — and a figure pasted from another app or
+ *   locale keeps it. Taking the non-locale mark as grouping wherever it stood read
+ *   "1.234,56" in a "." locale (en, de-CH) as 1.23456, which a money field then settled
+ *   to 1.23 (refactor audit 2026-10-30, INP-3). Typed in the locale's own convention, its
+ *   mark comes last and nothing changes;
  * - in a "," locale, only "." present: grouping when it cannot be a decimal as a
  *   German reader writes it — twice ("1.234.567"), or in thousands shape ("1.234",
  *   "12.500") — otherwise a decimal ("1.5", typed by a dot-decimal habit). A first
@@ -53,10 +59,13 @@ export function decimalMark(locale: string | undefined): "," | "." {
 export function normalizeTypedMarks(raw: string, mark: "," | "."): string {
   const other = mark === "," ? "." : ",";
   return raw.replace(/[0-9.,]+/g, (operand) => {
-    const hasMark = operand.includes(mark);
     const count = operand.split(other).length - 1;
     if (count === 0) return operand;
-    const grouping = hasMark ? true : count > 1 || (mark === "," && /^[1-9]\d{0,2}(\.\d{3})+$/.test(operand));
+    if (operand.includes(mark)) {
+      const grouping = operand.lastIndexOf(mark) > operand.lastIndexOf(other) ? other : mark;
+      return operand.split(grouping).join("");
+    }
+    const grouping = count > 1 || (mark === "," && /^[1-9]\d{0,2}(\.\d{3})+$/.test(operand));
     return grouping ? operand.split(other).join("") : operand;
   });
 }
