@@ -12,7 +12,7 @@ import type { ComponentProps, ComponentPropsWithRef, KeyboardEvent, ReactNode } 
 import { Pie, PieChart as RechartsPieChart, Sector } from "recharts";
 import type { PieLabelRenderProps, PieSectorShapeProps } from "recharts";
 import { cn } from "../lib/cn";
-import { rovingTarget } from "../lib/direction";
+import { dirOf, rovingTarget } from "../lib/direction";
 import { shareFormat } from "../lib/share-format";
 import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { paletteFor } from "../theme/chart-palette";
@@ -264,7 +264,7 @@ export function PieChart({
       if (!d) return <Sector key={key ?? undefined} {...sector} />;
       const onKeyDown = (event: KeyboardEvent<SVGGElement>) => {
         // Round the circle: past the last slice is the first, as the eye goes.
-        const target = rovingTarget(event.key, event.currentTarget, index, drawn.length, true);
+        const target = rovingTarget(event.key, dirOf(event.currentTarget), index, drawn.length, true);
         if (target !== undefined) {
           event.preventDefault();
           refs.current[target]?.focus();

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Treemap as RechartsTreemap } from "recharts";
 import { CHART_ROLES, ChartContainer, Treemap, TreemapCell, fitLabel, paletteFor } from "@eifi1/ui-kit";
-import type { TreemapNode } from "@eifi1/ui-kit";
+import type { TreemapLabels, TreemapNode } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row } from "../lib/section";
 import { numberFormat } from "../lib/number-format";
 
@@ -29,6 +29,14 @@ const PERCENT = numberFormat("en-GB", { style: "percent", maximumFractionDigits:
 function moneyAndShare(value: number, share: number | undefined): string {
   return share == null ? MONEY.format(value) : `${MONEY.format(value)} · ${PERCENT.format(share)}`;
 }
+
+/** The names' words beside `moneyAndShare`. A tile's name asks the formatter as the
+ *  tooltip does, share and all, so the formatter's text already says it: these leave the
+ *  name's own `(57%)` out — "Housing: £1,240 · 57%", not "… · 57% (57%)". */
+const SHARE_IN_VALUE: Partial<TreemapLabels> = {
+  tile: (name, value) => `${name}: ${value}`,
+  group: (name, value) => `${name}, group: ${value}`,
+};
 
 const SPEND: TreemapNode[] = [
   { id: "housing", name: "Housing", value: 1240 },
@@ -204,6 +212,7 @@ export function TreemapDemo() {
         <Treemap
           data={SPEND}
           valueFormatter={moneyAndShare}
+          labels={SHARE_IN_VALUE}
           height={320}
           aria-label="Spending by group, last month"
           description="Housing is more than half of the month; groceries a fifth."
@@ -216,9 +225,12 @@ export function TreemapDemo() {
         <p className="mt-2 text-xs text-secondary">
           Or Tab to the map: it is ONE tab stop, a <code className="font-mono">figure</code> named by{" "}
           <code className="font-mono">aria-label</code> and described by <code className="font-mono">description</code>,
-          and the arrow keys, Home and End walk the tiles in the order given. Each tile is named &ldquo;Housing: £1,240
-          (57%)&rdquo; (<code className="font-mono">treemap.tile</code>) — the formatter is asked once more without the
-          share, since the name says it. Nobody clicks these tiles, so each is an image to read.
+          and the arrow keys, Home and End walk the tiles in the order given — → to the next in a right-to-left page
+          too, since the map is not mirrored. Each tile is named by <code className="font-mono">treemap.tile</code> —
+          &ldquo;Housing: £1,240 (57%)&rdquo; by default — its value asked of the formatter as the tooltip asks it,
+          share included. This formatter says the share itself, so this map&apos;s{" "}
+          <code className="font-mono">labels</code> leave the name&apos;s own out: &ldquo;Housing: £1,240 · 57%&rdquo;.
+          Nobody clicks these tiles, so each is an image to read.
         </p>
       </Example>
 
@@ -244,6 +256,7 @@ export function TreemapDemo() {
             key={group}
             data={drilled.map((n) => ({ ...n, fill: `var(--chart-${(parentIndex % 9) + 1})` }))}
             valueFormatter={moneyAndShare}
+            labels={SHARE_IN_VALUE}
             height={280}
             onNodeClick={(_, name) => setClicked(name)}
           />
@@ -251,6 +264,7 @@ export function TreemapDemo() {
           <Treemap
             data={SPEND}
             valueFormatter={moneyAndShare}
+            labels={SHARE_IN_VALUE}
             height={280}
             onNodeClick={(id, name) => (CHILDREN[id] ? setGroup(id) : setClicked(name))}
           />
@@ -275,14 +289,20 @@ export function TreemapDemo() {
         label="Treemap — a second line per tile"
         hint="nodeNote: one extra figure the name cannot carry; drawn only where it fits"
       >
-        <Treemap data={SPEND} valueFormatter={moneyAndShare} height={320} nodeNote={(id) => DELTAS[id]} />
+        <Treemap
+          data={SPEND}
+          valueFormatter={moneyAndShare}
+          labels={SHARE_IN_VALUE}
+          height={320}
+          nodeNote={(id) => DELTAS[id]}
+        />
       </Example>
 
       <Example
         label="Treemap — names that are the user's own data"
         hint="redactNames: tile labels and the tooltip bubble carry data-private"
       >
-        <Treemap data={PAYEES} valueFormatter={moneyAndShare} height={240} redactNames />
+        <Treemap data={PAYEES} valueFormatter={moneyAndShare} labels={SHARE_IN_VALUE} height={240} redactNames />
         <p className="mt-2 text-xs text-secondary">
           The kit only sets the attribute; the host&apos;s own <code className="font-mono">[data-private]</code> rule
           decides what it looks like — the same contract as <code className="font-mono">Tooltip redact</code>. A
@@ -374,7 +394,7 @@ function LabelColorTreemaps() {
           </span>
         </label>
       </Row>
-      <Treemap data={data} valueFormatter={moneyAndShare} height={260} />
+      <Treemap data={data} valueFormatter={moneyAndShare} labels={SHARE_IN_VALUE} height={260} />
       <p className="mt-2 text-xs text-secondary">
         Every tile is <code className="font-mono">color-mix(in srgb, var(--chart-1) N%, transparent)</code>. The kit
         measures a hex fill and picks black or white ink itself; a mix it cannot measure, so it falls back to{" "}
@@ -407,6 +427,7 @@ function GroupedTreemap() {
       <Treemap
         data={recency ? SHOPS_BY_RECENCY : SHOPS_BY_CHAIN}
         valueFormatter={moneyAndShare}
+        labels={SHARE_IN_VALUE}
         height={340}
         nodeNote={recency ? recencyNote : undefined}
         onNodeClick={(id, _name, groups) => setClicked(path(id, groups))}

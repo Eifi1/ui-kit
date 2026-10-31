@@ -41,6 +41,24 @@ describe("Treemap as a figure", () => {
       "Rent is three fifths.",
     );
   });
+
+  // 0.52 code review (deep, charts), finding 7: the description was a `hidden` sibling
+  // AFTER the figure, so the chart stopped being its parent's last child and a stack's
+  // `space-y-*` / `divide-y` put a margin or a rule under it that it never had.
+  it("holds its description inside, and stays its parent's last child", () => {
+    const { container } = render(
+      <div>
+        <p>Above</p>
+        <Treemap data={DATA} aria-label="Spending" description="Rent is three fifths." aria-describedby="note" />
+      </div>,
+    );
+    const figure = screen.getByRole("figure", { name: "Spending" });
+    expect(container.firstElementChild!.lastElementChild).toBe(figure);
+    expect(figure.getAttribute("aria-describedby")!.split(" ")[0]).toBe("note");
+    expect(figure.querySelector(`[id="${figure.getAttribute("aria-describedby")!.split(" ")[1]}"]`)).toHaveTextContent(
+      "Rent is three fifths.",
+    );
+  });
 });
 
 describe("Treemap's tiles", () => {
@@ -78,13 +96,11 @@ describe("Treemap's tiles", () => {
     expect(onNodeClick).toHaveBeenCalledWith("food", "Groceries");
   });
 
-  it("says the value the caller formats, asked without the share the name says itself", () => {
-    const valueFormatter = vi.fn((v: number, share: number | undefined) =>
-      share === undefined ? `CHF ${v}` : `CHF ${v} · ${share}`,
-    );
+  it("says the value the caller formats, asked with its share as the tooltip asks", () => {
+    const valueFormatter = vi.fn((v: number, _share: number | undefined) => `CHF ${v}`);
     render(<Treemap data={DATA} valueFormatter={valueFormatter} />);
     expect(screen.getByRole("img", { name: "Rent: CHF 1200 (60%)" })).toBeInTheDocument();
-    expect(valueFormatter).toHaveBeenCalledWith(1200, undefined);
+    expect(valueFormatter).toHaveBeenCalledWith(1200, 0.6);
   });
 
   it("takes the provider's locale and words (DOC-10: the default number was the runtime's)", () => {

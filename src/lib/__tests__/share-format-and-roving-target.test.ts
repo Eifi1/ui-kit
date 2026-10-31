@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { shareFormat } from "../share-format";
 import { rovingTarget } from "../direction";
 
@@ -23,30 +23,27 @@ describe("shareFormat", () => {
 });
 
 describe("rovingTarget", () => {
-  afterEach(() => document.documentElement.removeAttribute("dir"));
-
-  it("steps along the reading direction, and down and up as next and previous", () => {
-    const el = document.createElement("div");
-    document.body.append(el);
-    expect(rovingTarget("ArrowRight", el, 1, 4, false)).toBe(2);
-    expect(rovingTarget("ArrowDown", el, 1, 4, false)).toBe(2);
-    expect(rovingTarget("ArrowUp", el, 1, 4, false)).toBe(0);
-    document.documentElement.setAttribute("dir", "rtl");
-    expect(rovingTarget("ArrowRight", el, 1, 4, false)).toBe(0);
-    el.remove();
+  it("steps along the direction it is given, and down and up as next and previous", () => {
+    expect(rovingTarget("ArrowRight", "ltr", 1, 4, false)).toBe(2);
+    expect(rovingTarget("ArrowLeft", "ltr", 1, 4, false)).toBe(0);
+    expect(rovingTarget("ArrowDown", "ltr", 1, 4, false)).toBe(2);
+    expect(rovingTarget("ArrowUp", "ltr", 1, 4, false)).toBe(0);
+    expect(rovingTarget("ArrowRight", "rtl", 1, 4, false)).toBe(0);
+    expect(rovingTarget("ArrowLeft", "rtl", 1, 4, false)).toBe(2);
+    expect(rovingTarget("ArrowDown", "rtl", 1, 4, false)).toBe(2);
   });
 
   it("goes to the ends on Home and End, and moves nothing for another key", () => {
-    expect(rovingTarget("Home", null, 2, 4, false)).toBe(0);
-    expect(rovingTarget("End", null, 0, 4, false)).toBe(3);
-    expect(rovingTarget("Enter", null, 0, 4, false)).toBeUndefined();
-    expect(rovingTarget("End", null, 0, 0, false)).toBeUndefined();
+    expect(rovingTarget("Home", "ltr", 2, 4, false)).toBe(0);
+    expect(rovingTarget("End", "ltr", 0, 4, false)).toBe(3);
+    expect(rovingTarget("Enter", "ltr", 0, 4, false)).toBeUndefined();
+    expect(rovingTarget("End", "ltr", 0, 0, false)).toBeUndefined();
   });
 
   it("holds at the ends without `wrap`, and goes round with it", () => {
-    expect(rovingTarget("ArrowDown", null, 3, 4, false)).toBe(3);
-    expect(rovingTarget("ArrowUp", null, 0, 4, false)).toBe(0);
-    expect(rovingTarget("ArrowDown", null, 3, 4, true)).toBe(0);
-    expect(rovingTarget("ArrowUp", null, 0, 4, true)).toBe(3);
+    expect(rovingTarget("ArrowDown", "ltr", 3, 4, false)).toBe(3);
+    expect(rovingTarget("ArrowUp", "ltr", 0, 4, false)).toBe(0);
+    expect(rovingTarget("ArrowDown", "ltr", 3, 4, true)).toBe(0);
+    expect(rovingTarget("ArrowUp", "ltr", 0, 4, true)).toBe(3);
   });
 });

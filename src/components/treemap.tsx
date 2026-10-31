@@ -16,7 +16,6 @@ import {
   createContext,
   useCallback,
   useContext,
-  useId,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -99,8 +98,9 @@ export interface TreemapNode {
   /**
    * Makes this node a GROUP (0.52, keksdose dev #642: "Is there already a distinction
    * between shop and chain?"): a labelled frame, its name in a band along the top, its
-   * tiles laid out inside it by recharts' own nested layout. Groups nest. A group with
-   * nothing drawable inside is not drawn; an empty array is a tile.
+   * tiles laid out inside it by the map's own layout, each at its share of the whole
+   * picture (see "Groups: a frame round their tiles"). Groups nest. A group with nothing
+   * drawable inside is not drawn; an empty array is a tile.
    *
    * The frame is in the page's colours (the well, `--bg-surface-2`, under
    * `--text-primary`, at least 7.4:1 in every preset and contrast), and under More
@@ -126,10 +126,10 @@ export interface TreemapProps extends Omit<ComponentPropsWithoutRef<"div">, "chi
    * the rest, and "€412.30" alone makes the reader estimate that ratio off the areas.
    * The share is `undefined` when the drawn total is not positive.
    *
-   * A tile's accessible name (`labels.tile`, 0.52) says the value too: the formatter is
-   * asked again with the share `undefined` — the name says the share itself — and its
-   * text is used; markup is said as the bare number, and so is an answer that throws or
-   * says "NaN" (a formatter that relies on the share being there).
+   * A tile's and a group's accessible name (`labels.tile`, `labels.group`, 0.52) says the
+   * value too, asked of the formatter as the tooltip asks it, share and all, and its text
+   * is used; markup is said as the bare number. The name says the share itself, so a
+   * formatter that writes it into its text has it said twice.
    *
    * Default: the bare number through `Intl.NumberFormat` in the provider's locale (0.52,
    * DOC-10: before, the runtime's). A host with a currency passes this — the kit knows
@@ -797,12 +797,14 @@ interface Paint {
 function mapNodes(
   data: readonly TreemapNode[],
   ramp: readonly string[],
-  maxTiles: number | undefined,
+  maxTiles: number | null | undefined,
   shaded: (fill: string, shade: number | undefined) => string,
 ): MapNode[] {
-  // Whole tiles, as `slice(0, maxTiles)` counted them up to 0.51: 2.5 draws 2 and NaN none
-  // (0.52 code review of treemap.tsx, finding 4 — a bare counter drew 3, and every tile).
-  let left = maxTiles === undefined ? Infinity : Number.isNaN(maxTiles) ? 0 : Math.floor(maxTiles);
+  // Whole tiles, as `slice(0, maxTiles ?? undefined)` counted them up to 0.51: 2.5 draws 2,
+  // NaN none and null every one (0.52 code review of treemap.tsx, finding 4 — a bare
+  // counter drew 3, and every tile; deep review, charts, finding 2 — Math.floor(null) is 0,
+  // and a JS caller's or a `number | null` setting's null drew an empty card).
+  let left = maxTiles == null ? Infinity : Number.isNaN(maxTiles) ? 0 : Math.floor(maxTiles);
   const walk = (list: readonly TreemapNode[], groups: readonly string[], paint: Paint | undefined): MapNode[] =>
     list.flatMap((d, idx): MapNode[] => {
       const fill = d.fill ?? paint?.fill ?? ramp[idx % ramp.length]!;
@@ -845,7 +847,8 @@ function layoutFor(nodes: readonly MapNode[], width: number, height: number, sca
 }
 
 /** One ref callback per map and path, the same on every render: a new function each time
- *  makes React detach and attach the element on every render of the tile. */
+ *  makes React detach and attach the element on every render of the tile. A path no longer
+ *  drawn is let go as the map lays out its new data (see the map's keyboard). */
 const REFS = new WeakMap<TileKeys["register"], Map<string, (element: SVGGElement | null) => void>>();
 
 function refFor(register: TileKeys["register"], path: string) {
@@ -921,7 +924,6 @@ export function Treemap({
   useLayoutEffect(() => {
     setDir(dirOf(rootRef.current));
   }, [data]);
-  const describedBy = useId();
   const ramp = colors && colors.length > 0 ? colors : tokenHex;
   // Memoised: moving the tab stop re-renders the map, and fresh nodes would re-lay it.
   const nodes = useMemo(
@@ -983,7 +985,16 @@ export function Treemap({
         return;
       }
       // Detached before it is removed: still the focused element if it held the focus.
-      if (tiles.current.get(path) === document.activeElement) restoreRef.current = path;
+      // Kept for this commit only — the node's new element mounts in it, or the effect below
+      // hands the focus on. A node that left with no new data (`<Activity mode="hidden">`, a
+      // panel 0 wide) took the focus back whenever it was shown again, from wherever the
+      // reader was by then (0.52 code review, deep, charts, finding 3).
+      if (tiles.current.get(path) === document.activeElement) {
+        restoreRef.current = path;
+        queueMicrotask(() => {
+          if (restoreRef.current === path) restoreRef.current = null;
+        });
+      }
       tiles.current.delete(path);
     },
     [stopOf],
@@ -996,19 +1007,29 @@ export function Treemap({
     [applyStop],
   );
   // New data: the order the stop is read against, the stop set again on what is drawn now,
-  // and the focus of a node that is gone handed to the stop.
+  // the focus of a node that is gone handed to the stop — and the ref callbacks of the paths
+  // no longer drawn let go: a map that switched data (a month picker over payees) kept one
+  // for every node it had ever drawn (0.52 code review, deep, charts, finding 11).
   useLayoutEffect(() => {
     orderRef.current = order;
+    const refs = REFS.get(register);
+    if (refs) {
+      const drawn = new Set(order.map((n) => n.path));
+      for (const path of refs.keys()) if (!drawn.has(path)) refs.delete(path);
+    }
     const at = applyStop();
     if (restoreRef.current === null) return;
     restoreRef.current = null;
     if (at) tiles.current.get(at)?.focus();
-  }, [order, applyStop]);
+  }, [order, applyStop, register]);
   const move = useCallback((path: string, event: KeyboardEvent<SVGGElement>) => {
     const drawn = orderRef.current;
     const at = drawn.findIndex((n) => n.path === path);
-    // The ends hold: a map is a plane, not PieChart's ring.
-    const to = at < 0 ? undefined : rovingTarget(event.key, event.currentTarget, at, drawn.length, false);
+    // The ends hold: a map is a plane, not PieChart's ring. → is the next tile in any page:
+    // the tiles are laid out left to right whatever the reading direction (the plot is not
+    // mirrored, see `ChartContainer`), and → read off the page walked an RTL page's map
+    // backwards, against the picture (0.52 code review, deep, charts, finding 1).
+    const to = at < 0 ? undefined : rovingTarget(event.key, "ltr", at, drawn.length, false);
     if (to === undefined) return false;
     const target = drawn[to];
     if (target) tiles.current.get(target.path)?.focus();
@@ -1031,22 +1052,17 @@ export function Treemap({
     [valueFormatter, total, numberFormat],
   );
   const names = useMemo(() => {
-    // The caller's text when it gives text, asked with no share — the name says that
-    // itself; a value it formats as markup is said as a number.
+    // The value as the tooltip says it: the caller's formatter, handed the node's share as
+    // it is there, when it gives text; a value it formats as markup is said as a number.
     //
-    // Guarded (0.52 code review of treemap.tsx, finding 2): with anything drawn the share
-    // was never `undefined` before DSP-5 asked for it here, so a formatter may lean on it —
-    // `share!` printed "NaN%" into every name, `share.toFixed()` threw inside this memo and
-    // took the whole chart down. Either way the name says the number instead.
+    // It was asked with the share `undefined` — which, with anything drawn, it had never
+    // been before 0.52 — so a formatter leaning on the share printed "NaN%" into every name
+    // or threw and took the chart down (0.52 code review of treemap.tsx, finding 2). A guard
+    // caught both; every named node has its share, so it is handed over instead (deep
+    // review, charts, finding 13).
     const valueText = (v: number) => {
-      let out: ReactNode;
-      try {
-        out = valueFormatter?.(v, undefined);
-      } catch {
-        out = undefined;
-      }
-      const text = typeof out === "string" || typeof out === "number" ? String(out) : undefined;
-      return text !== undefined && !text.includes("NaN") ? text : formatWithMinus(numberFormat, v);
+      const out = format(v);
+      return typeof out === "string" || typeof out === "number" ? String(out) : formatWithMinus(numberFormat, v);
     };
     // A group's name by its path; a node's groups by theirs, its own path's prefixes.
     const groupName = new Map(order.filter((n) => n.children).map((n) => [n.path, n.name]));
@@ -1061,7 +1077,7 @@ export function Treemap({
         return [n.path, named] as const;
       }),
     );
-  }, [order, labels, valueFormatter, numberFormat, shareText, total]);
+  }, [order, labels, format, numberFormat, shareText, total]);
   const keys = useMemo<TileKeys>(
     () => ({ name: (path) => names.get(path), onFocus, register, move }),
     [names, onFocus, register, move],
@@ -1090,14 +1106,15 @@ export function Treemap({
 
   if (nodes.length === 0) return null;
   const box = chartHeightProps(height);
-  const describedByProp = rest["aria-describedby"];
   return (
     // Round the container, not inside it: ResponsiveContainer sizes its ONE child, the chart.
     <TreemapTiles.Provider value={context}>
       <ChartContainer
         role="figure"
         {...rest}
-        aria-describedby={description ? [describedByProp, describedBy].filter(Boolean).join(" ") : describedByProp}
+        // Read through `aria-describedby`, after a caller's own ids; `hidden`, inside the
+        // figure (0.52 code review, deep, charts, finding 7).
+        description={description}
         ref={rootRef}
         config={TREEMAP_CONFIG}
         className={cn(box.className, rest.className)}
@@ -1109,12 +1126,6 @@ export function Treemap({
           {tooltip}
         </RechartsTreemap>
       </ChartContainer>
-      {description && (
-        // Read through `aria-describedby`; `hidden`, so browse mode does not read it twice.
-        <span id={describedBy} hidden>
-          {description}
-        </span>
-      )}
     </TreemapTiles.Provider>
   );
 }

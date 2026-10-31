@@ -42,4 +42,12 @@ describe("Treemap's maxTiles", () => {
     render(<Treemap data={DATA} maxTiles={Number.POSITIVE_INFINITY} />);
     expect(screen.getAllByRole("img")).toHaveLength(4);
   });
+
+  // 0.52 code review (deep, charts), finding 2 of treemap.tsx: `slice(0, maxTiles ?? undefined)`
+  // read null as no cap; the whole-tile count made it Math.floor(null) — 0, and an empty
+  // card. A JS caller, or a `number | null` setting cast through.
+  it("draws every tile for null, as slice() did", () => {
+    render(<Treemap data={DATA} maxTiles={null as unknown as number} />);
+    expect(screen.getAllByRole("img")).toHaveLength(4);
+  });
 });
