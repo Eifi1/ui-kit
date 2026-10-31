@@ -1,4 +1,13 @@
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
+import {
+  useCallback,
+  useEffect,
+  useEffectEvent,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import type { CSSProperties, RefObject } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "../lib/cn";
@@ -276,8 +285,11 @@ export function TourOverlay({
   // Large, which lays the page out as a phone (refactor audit 2026-10-30, DUP-9).
   const phone = useBreakpoint("max-sm");
   // A touch screen: the card takes focus, so no keyboard or pad opens before the step is
-  // read (§11.8).
+  // read (§11.8). Asked on arrival, not followed: a dependency of the arrival effect, a
+  // 2-in-1's keyboard detached mid-step ran the arrival again and pulled the focus out of
+  // the field being typed in (0.52 code review, tour-overlay.tsx).
   const coarse = useCoarsePointer();
+  const coarseOnArrival = useEffectEvent(() => coarse);
 
   // The gate (§11.1). Re-rendered on every registry change while the tour runs.
   const gateVersion = useSyncExternalStore(gates.subscribe, gates.version, gates.version);
@@ -397,7 +409,7 @@ export function TourOverlay({
   useDismissLayer(
     ready,
     (e) => {
-      if (fieldStepNow && step.target && e.target instanceof Node) {
+      if (interactive && step.target && e.target instanceof Node) {
         const el = queryVisibleTarget(step.target);
         if (el?.contains(e.target)) return;
       }
@@ -425,13 +437,13 @@ export function TourOverlay({
   }, [ready, spotted, index, step, onNext]);
 
   // A field step (see `TourStep.interactive`): only while the target is lit — a step
-  // whose target is missing centres its card over a full scrim, modal as ever.
-  const interactive =
-    spotted && !!step.target && !!(step.interactive || step.awaitInput || step.gate || step.awaitGate);
+  // whose target is missing centres its card over a full scrim, modal as ever. The one
+  // `isFieldStep`, as the layer insertion in `settle` reads it: an inline copy of its
+  // flags, and an alias of that, could drift from it (0.52 code review, tour-overlay.tsx).
+  const interactive = spotted && !!step.target && isFieldStep(step);
   // A GUIDED field step (§11.8): focus goes to the field on a fine pointer, and Tab
   // cycles field + card. A plain `interactive` step keeps the card's own trap.
   const guided = interactive && !!(step.gate || step.awaitInput || step.awaitGate);
-  const fieldStepNow = interactive;
   // An awaitGate step whose target is lit: only `release` moves it (a missing Save
   // button would otherwise be a dead end, as for awaitClick).
   const awaitsRelease = spotted && !!step.target && !!step.awaitGate;
@@ -479,14 +491,14 @@ export function TourOverlay({
     // closed, or its list would cover the card; ArrowDown, typing or a click opens it.
     const previous = control ? control.getAttribute("aria-describedby") : null;
     if (control) control.setAttribute("aria-describedby", previous ? `${previous} ${bodyId}` : bodyId);
-    if (coarse || !control) cardRef.current?.focus();
+    if (coarseOnArrival() || !control) cardRef.current?.focus();
     else if (!el!.contains(document.activeElement)) focusQuietly(control);
     if (!control) return;
     return () => {
       if (previous === null) control.removeAttribute("aria-describedby");
       else control.setAttribute("aria-describedby", previous);
     };
-  }, [ready, guided, index, step, bodyId, coarse]);
+  }, [ready, guided, index, step, bodyId]);
 
   // Tab on a guided step cycles field + card as one ring (§11.8): from the field's last
   // stop to the card's first, from the card's last back to the field. Captured on the
