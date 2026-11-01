@@ -159,7 +159,9 @@ query the row again after it (added after the release, keksdose).
 **Sync (kastlan).** Tabs on one database take turns per round (Web Locks, https or
 localhost); `syncNow()` may resolve `paused` while another tab syncs; `forget()` in one tab
 stops the others' engines on that copy, and the query copy's `clear()` reaches every tab.
-Tests: name BroadcastChannel keys and database names per test file.
+Tests on Vitest's `threads` or `vmThreads` pool (files share one process): name
+BroadcastChannel keys and database names per test file. The default `forks` pool runs each
+file in its own process and needs nothing (added after the release, kastlan).
 
 **Tour and shell.** The tour overlay loads on the first start (−5.5 KB gzip from every first
 load); if that chunk fails to load (a tab left open across a deploy, offline), the tour

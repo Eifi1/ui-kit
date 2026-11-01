@@ -127,3 +127,5 @@ kit's suite now, the latch reset of keksdose live #153 among them.
 - `compareSortValues` is exported from the root too, not only from `@eifi1/ui-kit/data-table`.
 - In PasskeysSetting and PushDevicesSetting the confirm replaces the row's `<li>`: a test
   holding the row from before the press re-queries it after.
+- "Name BroadcastChannel keys and database names per test file" is for Vitest's `threads` and
+  `vmThreads` pools only. All three apps run `forks` and have nothing to do.
