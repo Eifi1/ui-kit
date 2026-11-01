@@ -51,7 +51,8 @@ session as it is. Once all three apps have adopted a release, its note moves to
 
 | Note | Release | What it was | Apps |
 |---|---|---|---|
-| [adopt-0.52](adopt-0.52.md) | ui-kit 0.52 | Round 0.52: the refactor audit of 2026-10-30, Waves 1–7 (focus, semantics and contrast, flows, consolidation, API deprecations, tests, docs); `DevSwitchers` removed | being built |
+| [adopt-0.53](adopt-0.53.md) | ui-kit 0.53 | The 0.52 deprecations removed; keksdose's notes after 0.52: SeriesChart's row type, Treemap `shareInValue` and `redactNames="tiles"` | being built |
+| [adopt-0.52](adopt-0.52.md) | ui-kit 0.52 | Round 0.52: the refactor audit of 2026-10-30, Waves 1–7 (focus, semantics and contrast, flows, consolidation, API deprecations, tests, docs); `DevSwitchers` removed | all three on local `feat/kit-0.52` branches (2026-11-01), not yet merged |
 | [adopt-0.51](adopt-0.51.md) | ui-kit 0.51.0–0.51.7, server-kit 0.20 | The 0.49 deprecations removed; one `DevMenu` with the app's sections, the dev clock; `PublicPage`; legal decisions 10 and 11 (0.51.3–0.51.4); multi-word search (0.51.5); Treemap `edges` (0.51.6); Wave 0 of the 2026-10-30 refactor audit (0.51.7) | all three on `^0.51.6` |
 | [adopt-0.50](archive/adopt/adopt-0.50.md) | ui-kit 0.50 (server-kit stays 0.19) | Guided form tours (tours §11); `@eifi1/ui-kit/testing/react`; `formatWithMinus`; kastlan K1–K4 | all three adopted |
 | [adopt-0.49](archive/adopt/adopt-0.49.md) | ui-kit 0.49, server-kit 0.19 | The design-review round KIT-1 … KIT-15: one minus sign, the Imprint chart palette, Button `default`/`accent`, the phone bar, status tones, page titles | all three adopted |
