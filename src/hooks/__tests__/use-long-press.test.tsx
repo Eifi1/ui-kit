@@ -11,7 +11,9 @@ import { useLongPress } from "../use-long-press";
  */
 
 /** A minimal stand-in for a swipeable row: one pressable element wired to the hook,
- *  with the same onClickCapture swallow the real row uses. */
+ *  with the same onClickCapture swallow the real row uses. A `<button>`, where keksdose's
+ *  was a `div` with `role="button"`: the kit's lint wants a keyboard handler on that, and
+ *  the gesture is a pointer's either way. */
 function Row({
   onLongPress,
   onClick,
@@ -25,9 +27,8 @@ function Row({
 }) {
   const longPress = useLongPress(onLongPress, { enabled, delay });
   return (
-    <div
-      role="button"
-      tabIndex={0}
+    <button
+      type="button"
       onClick={onClick}
       onClickCapture={(e) => {
         if (!longPress.consumeClick()) return;
@@ -37,7 +38,7 @@ function Row({
       {...longPress.handlers}
     >
       row
-    </div>
+    </button>
   );
 }
 
