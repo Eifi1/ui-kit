@@ -212,7 +212,12 @@ export function anchoredBand(extent: readonly [number, number] | undefined): [nu
  * it in its neighbour's colour on each click. Resolving the colours on the full list
  * and filtering after keeps each series in the colour its legend entry shows.
  */
-export function visibleSeries(series: readonly SeriesChartSeries[], hidden: ReadonlySet<string>): SeriesChartSeries[] {
+// Generic so a typed list comes back typed (0.53): a chart of `Month` rows takes it, and
+// its `dot`s still read `point.row` as a `Month`.
+export function visibleSeries<TRow extends object>(
+  series: readonly SeriesChartSeries<TRow>[],
+  hidden: ReadonlySet<string>,
+): SeriesChartSeries<TRow>[] {
   return series
     .map((entry, index) => ({ ...entry, color: entry.color ?? paletteFor(index) }))
     .filter((entry) => !hidden.has(entry.key));
