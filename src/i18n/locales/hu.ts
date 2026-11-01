@@ -742,10 +742,10 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       legend: "Kategóriák",
     },
     treemap: {
-      tile: (name, value, share) => `${name}: ${value} (${share})`,
+      tile: (name, value, share) => `${name}: ${value}${share ? ` (${share})` : ""}`,
       // Appositive, not a case ending: "-ban/-ben" and the article follow the name's own
       // sounds, which a template cannot know.
-      group: (name, value, share) => `${name} csoport: ${value} (${share})`,
+      group: (name, value, share) => `${name} csoport: ${value}${share ? ` (${share})` : ""}`,
       inGroup: (name, group) => `${name}, ${group} csoport`,
     },
     confirmDialog: {

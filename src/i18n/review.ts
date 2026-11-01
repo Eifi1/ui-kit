@@ -163,8 +163,15 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "globalSearch.shortcut": [["{{keys}}"]],
   "pieChart.slice": [["{{label}}", "{{value}}", "{{percent}}"]],
   "pieChart.sliceShare": [["{{label}}", "{{percent}}"]],
-  "treemap.tile": [["{{name}}", "{{value}}", "{{share}}"]],
-  "treemap.group": [["{{name}}", "{{value}}", "{{share}}"]],
+  // The second form is `shareInValue` (0.53): no share, and nothing round it.
+  "treemap.tile": [
+    ["{{name}}", "{{value}}", "{{share}}"],
+    ["{{name}}", "{{value}}", ""],
+  ],
+  "treemap.group": [
+    ["{{name}}", "{{value}}", "{{share}}"],
+    ["{{name}}", "{{value}}", ""],
+  ],
   "treemap.inGroup": [["{{name}}", "{{group}}"]],
   "sparkline.rising": [["{{first}}", "{{last}}"]],
   "sparkline.falling": [["{{first}}", "{{last}}"]],

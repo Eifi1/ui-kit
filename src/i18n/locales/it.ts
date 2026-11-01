@@ -745,8 +745,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       legend: "Categorie",
     },
     treemap: {
-      tile: (name, value, share) => `${name}: ${value} (${share})`,
-      group: (name, value, share) => `${name}, gruppo: ${value} (${share})`,
+      tile: (name, value, share) => `${name}: ${value}${share ? ` (${share})` : ""}`,
+      group: (name, value, share) => `${name}, gruppo: ${value}${share ? ` (${share})` : ""}`,
       inGroup: (name, group) => `${name}, in ${group}`,
     },
     confirmDialog: {

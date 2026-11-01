@@ -754,8 +754,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       legend: "Catégories",
     },
     treemap: {
-      tile: (name, value, share) => `${name}\u00a0: ${value} (${share})`,
-      group: (name, value, share) => `${name}, groupe\u00a0: ${value} (${share})`,
+      tile: (name, value, share) => `${name}\u00a0: ${value}${share ? ` (${share})` : ""}`,
+      group: (name, value, share) => `${name}, groupe\u00a0: ${value}${share ? ` (${share})` : ""}`,
       inGroup: (name, group) => `${name}, dans ${group}`,
     },
     confirmDialog: {

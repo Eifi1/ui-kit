@@ -755,8 +755,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       legend: "Kategorien",
     },
     treemap: {
-      tile: (name, value, share) => `${name}: ${value} (${share})`,
-      group: (name, value, share) => `${name}, Gruppe: ${value} (${share})`,
+      tile: (name, value, share) => `${name}: ${value}${share ? ` (${share})` : ""}`,
+      group: (name, value, share) => `${name}, Gruppe: ${value}${share ? ` (${share})` : ""}`,
       inGroup: (name, group) => `${name}, in ${group}`,
     },
     confirmDialog: {
