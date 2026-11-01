@@ -903,13 +903,3 @@ function dataAttributes(props: object): Record<string, unknown> {
   for (const [key, value] of Object.entries(props)) if (key.startsWith("data-")) out[key] = value;
   return out;
 }
-
-/** @deprecated 0.52 — {@link ChatComposerProps}, the same type; removed in 0.53 */
-export type FeedbackComposerProps = ChatComposerProps;
-/** @deprecated 0.52 — {@link ChatComposerHandle}, the same type; removed in 0.53 */
-export type FeedbackComposerHandle = ChatComposerHandle;
-/** @deprecated 0.52 — {@link ChatComposerLabels}, the same type (still the provider's
- *  `feedbackComposer` namespace); removed in 0.53 */
-export type FeedbackComposerLabels = ChatComposerLabels;
-/** @deprecated 0.52 — {@link ChatComposerSlotContext}, the same type; removed in 0.53 */
-export type FeedbackComposerSlotContext = ChatComposerSlotContext;

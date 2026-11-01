@@ -334,12 +334,11 @@ export function UserRoster030Demo() {
         <Note>
           The column preset in the app&apos;s own {code("DataTable")}: {code("UserIdentityCell")} (name in the
           reader&apos;s order, address under it), {code("RoleSelect")} where {code("editableRole")} says so — locked on
-          your own row, CUSTOMER unavailable for an account that owns work — the state chips from{" "}
-          {code("adminUserStates")} (deletion with its day), the two dates, the app&apos;s {code("Owned")} column and
-          the row&apos;s menu. Every action asks at the level the pretend server states: resend and reactivate at{" "}
-          {code("none")}, the role and the password requirement at {code("acknowledge")}, deactivation at{" "}
-          {code("type_email")}. Deactivating Eva answers {code("other_companies")}: the account belongs to other
-          companies too.
+          your own row, CUSTOMER unavailable for an account that owns work — the state chips (deletion with its day),
+          the two dates, the app&apos;s {code("Owned")} column and the row&apos;s menu. Every action asks at the level
+          the pretend server states: resend and reactivate at {code("none")}, the role and the password requirement at{" "}
+          {code("acknowledge")}, deactivation at {code("type_email")}. Deactivating Eva answers{" "}
+          {code("other_companies")}: the account belongs to other companies too.
         </Note>
       </Example>
 

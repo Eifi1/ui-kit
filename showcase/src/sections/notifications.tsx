@@ -574,9 +574,9 @@ export function PushDevicesDemo() {
       <Readout lines={lines} />
       <Note>
         Removing this device also unsubscribes the browser and fires {code("PUSH_SUBSCRIPTION_CHANGED")}, so the push
-        card stops saying &quot;on&quot;. The browser and system come from the stored user agent (
-        {code("describeUserAgent")}). &quot;Types on this device&quot; lists the types with push on; a device can mute
-        one, never add one, and each flip saves its whole {code("muted_types")} list.
+        card stops saying &quot;on&quot;. The browser and system come from the stored user agent. &quot;Types on this
+        device&quot; lists the types with push on; a device can mute one, never add one, and each flip saves its whole{" "}
+        {code("muted_types")} list.
       </Note>
     </Example>
   );

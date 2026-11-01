@@ -9,7 +9,7 @@ import {
 } from "./feedback-labels";
 import type { FeedbackRecord } from "./feedback-record";
 import type { LabelOverride } from "../i18n/kit-labels";
-import { runMutation, type FeedbackMutationCall } from "./feedback-mutation";
+import { runMutation } from "./feedback-mutation";
 
 /**
  * A status change that can be taken back — §4.5 of the feedback contract, lifted from
@@ -41,17 +41,6 @@ export interface FeedbackStatusPatch {
  * catches the rejection.
  */
 export type FeedbackStatusMutateAsync = (patch: FeedbackStatusPatch) => Promise<unknown>;
-
-/**
- * The callback form: TanStack Query's `mutate`, or a function that calls `onSuccess` once
- * the PATCH has landed. TanStack calls a per-call `onSuccess` for the LATEST `mutate()` on
- * its observer only, so a second change sent before the first answered — another swipe,
- * another pill, the Undo itself — lost the first change's Undo toast.
- *
- * @deprecated 0.52 — pass `update.mutateAsync` ({@link FeedbackStatusMutateAsync}), whose
- * promise settles for every call; removed in 0.53
- */
-export type FeedbackStatusMutate = (patch: FeedbackStatusPatch, callbacks: { onSuccess: () => void }) => void;
 
 /** What the change needs to know about the row: which one, what it is called in the
  *  toast, and where it stood (the status Undo goes back to). */
@@ -90,14 +79,11 @@ export const FEEDBACK_UNDO_DURATION = 8000;
  * `{ id, status: previous }` → once that has landed `statusRestored(previousName, title)`.
  * Each change waits for its OWN answer, so two changes in flight each get their toast.
  *
- * `update.mutate` ({@link FeedbackStatusMutate}) still fits, deprecated since 0.52: with it
- * a second change before the first answered loses the first one's Undo. One signature
- * takes both rather than two overloads: TypeScript types an inline callback's parameters
- * from the FIRST overload, so a hand-written `(patch, { onSuccess }) => …` — the form this
- * hook documented until 0.52 — would no longer compile.
+ * `update.mutate`, the callback form, went in 0.53 (deprecated in 0.52): with it a second
+ * change before the first answered lost the first one's Undo.
  */
 export function useFeedbackStatusUndo(
-  mutate: FeedbackMutationCall<FeedbackStatusPatch>,
+  mutate: FeedbackStatusMutateAsync,
   { labels, statusLabels }: FeedbackStatusUndoOptions = {},
 ): FeedbackStatusChange {
   const words = useFeedbackToastLabels(labels);

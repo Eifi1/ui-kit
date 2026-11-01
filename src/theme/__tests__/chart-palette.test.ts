@@ -1,6 +1,5 @@
 import {
   CHART_COLORS,
-  CHART_INK_HEX,
   CHART_MUTED_HEX,
   CHART_ROLES,
   CVD_ORDER,
@@ -67,7 +66,6 @@ describe("paletteFor", () => {
     for (const role of ["other", "rest", "disabled", "band"] as const)
       expect(CHART_ROLES[role]).toBe("var(--chart-muted)");
     for (const role of ["total", "baseline", "outline"] as const) expect(CHART_ROLES[role]).toBe("var(--chart-ink)");
-    expect(CHART_INK_HEX).toEqual({ light: "#1a1a17", dark: "#f0efe8" });
     expect(CHART_MUTED_HEX).toEqual({ light: "#6b6a63", dark: "#a8a79f" });
   });
 });
@@ -241,14 +239,10 @@ describe("chartEdge — the WCAG 1.4.11 ink edge", () => {
     expect(chartEdge("#2abccd", ["not-a-colour"])).toBeUndefined();
   });
 
-  it("keeps the ink and the muted ink legible against every default surface", () => {
-    for (const s of LIGHT) {
-      expect(contrast(CHART_INK_HEX.light, s)).toBeGreaterThanOrEqual(4.5);
-      expect(contrast(CHART_MUTED_HEX.light, s)).toBeGreaterThanOrEqual(3);
-    }
-    for (const s of DARK) {
-      expect(contrast(CHART_INK_HEX.dark, s)).toBeGreaterThanOrEqual(4.5);
-      expect(contrast(CHART_MUTED_HEX.dark, s)).toBeGreaterThanOrEqual(3);
-    }
+  // The ink's own hex, `CHART_INK_HEX`, went in 0.53 (deprecated in 0.52, API-4): the token
+  // is measured in tokens.css's audit (theme/__tests__/tokens-css-audit.test.ts).
+  it("keeps the muted ink legible against every default surface", () => {
+    for (const s of LIGHT) expect(contrast(CHART_MUTED_HEX.light, s)).toBeGreaterThanOrEqual(3);
+    for (const s of DARK) expect(contrast(CHART_MUTED_HEX.dark, s)).toBeGreaterThanOrEqual(3);
   });
 });

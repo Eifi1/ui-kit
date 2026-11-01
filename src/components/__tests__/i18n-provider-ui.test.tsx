@@ -8,8 +8,6 @@ import type { UiKitLabelOverrides } from "../../i18n/kit-labels";
 import { EntityCombobox } from "../entity-combobox";
 import { MultiEntityCombobox } from "../multi-entity-combobox";
 import { MultiSelect } from "../multi-select";
-import { FieldSyncRow } from "../field-sync";
-import type { UseFieldSyncReturn } from "../field-sync";
 import { Input } from "../input";
 import { Spinner } from "../spinner";
 import { Chip } from "../chip";
@@ -32,7 +30,6 @@ const DE: UiKitLabelOverrides = {
   multiSelect: { selectAll: "Alle auswählen", clear: "Keine", all: "Alle Konten" },
   appShell: { collapse: "Seitenleiste einklappen" },
   wizard: { next: "Weiter", missingRequired: "Bitte alle Pflichtfelder ausfüllen." },
-  fieldSync: { edited: "Ungespeichert" },
   passwordReveal: { show: "Passwort anzeigen" },
 };
 
@@ -142,27 +139,6 @@ describe("UiKitProvider reaches the components", () => {
       await result.current.goNext();
     });
     expect(onValidationFailed).toHaveBeenCalledWith("Bitte alle Pflichtfelder ausfüllen.");
-  });
-
-  it("FieldSyncRow: the state line", () => {
-    const sync: UseFieldSyncReturn<string> = {
-      value: "x",
-      setValue: () => {},
-      state: "edited",
-      error: null,
-      dirty: true,
-      save: () => {},
-      retry: () => {},
-      reset: () => {},
-    };
-    render(
-      <German>
-        <FieldSyncRow sync={sync}>
-          <input aria-label="Name" defaultValue="x" />
-        </FieldSyncRow>
-      </German>,
-    );
-    expect(screen.getByText("Ungespeichert")).toBeInTheDocument();
   });
 
   it("Input: the password reveal toggle", () => {

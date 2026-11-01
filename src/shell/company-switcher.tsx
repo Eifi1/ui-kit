@@ -56,7 +56,7 @@ export interface CompanySwitcherProps<Id extends string | number> {
  * The company switcher in the top bar (docs/auth-harmonization.md §5.3, §8): a kastlan
  * user may belong to several companies, and the access token carries the current one,
  * so switching is a request for new tokens — `onSwitch`, the app's. Built on
- * {@link OptionSwitcherMenu}, like `RoleSwitcher`: the icon trigger, the current company
+ * {@link OptionSwitcherMenu}: the icon trigger, the current company
  * in its tooltip, the list with a check on the current one.
  *
  * **Only for more than one company** — a user in one company has nothing to switch, and

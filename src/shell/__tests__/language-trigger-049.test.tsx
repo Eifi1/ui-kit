@@ -77,7 +77,7 @@ describe("AccountMenuLanguage row (KIT-10)", () => {
     render(
       <MemoryRouter>
         <TopBarActionMenu aria-label="Account" icon={<span>A</span>} entries={[]}>
-          {(close) => <AccountMenuLanguage languages={SWISS} value="it-CH" onPick={() => {}} close={close} />}
+          {(close) => <AccountMenuLanguage languages={SWISS} value="it-CH" onChange={() => {}} close={close} />}
         </TopBarActionMenu>
       </MemoryRouter>,
     );

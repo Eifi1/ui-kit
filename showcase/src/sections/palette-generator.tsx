@@ -164,7 +164,7 @@ function cssBlock(selector: string, p: DerivedPalette, chart: string[] | null): 
 /**
  * A ratio with its verdict.
  *
- * Colour is never the only signal — the same rule `FieldSyncIndicator` follows, and for
+ * Colour is never the only signal — the same rule the feedback statuses follow, and for
  * the same reason: the pass/fail pair here is green-ish against `--danger`, which is the
  * one combination roughly one man in twelve cannot read. The glyph carries the meaning,
  * the word carries it to a screen reader, and the colour is the third copy.

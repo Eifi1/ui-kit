@@ -7,7 +7,6 @@ import { CurrencySelect } from "../currency-select";
 import { MoneyField } from "../money-field";
 import { NumberField } from "../number-field";
 import { NumberInput } from "../number-input";
-import { SignChip } from "../sign-chip";
 import { FieldHint } from "../field-parts";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import { PHONE_WIDTH, stubViewportWidth } from "../../test/viewport";
@@ -469,46 +468,5 @@ describe("CurrencySelect error and hint (keksdose K4)", () => {
     expect(trigger()).not.toHaveAttribute("aria-invalid");
     expect(trigger()).not.toHaveAttribute("aria-describedby");
     expect(container.querySelectorAll("p")).toHaveLength(0);
-  });
-});
-
-describe("SignChip (keksdose K15)", () => {
-  function Signed() {
-    const [negative, setNegative] = useState(true);
-    return (
-      <>
-        <AmountInput
-          aria-label="Amount"
-          value="42.5"
-          onChange={vi.fn()}
-          negative={negative}
-          onNegativeChange={setNegative}
-        />
-        <SignChip negative={negative} onNegativeChange={setNegative} />
-      </>
-    );
-  }
-
-  it("shows the state it is in, names the flip, and is no pressed toggle", async () => {
-    const user = userEvent.setup();
-    render(<Signed />);
-    const chip = screen.getByRole("button", { name: "Direction: Outflow — switch to Inflow" });
-    expect(chip).toHaveTextContent("Outflow");
-    expect(chip).not.toHaveAttribute("aria-pressed");
-    expect(field("Amount")).toHaveValue("-42.5");
-    await user.click(chip);
-    expect(screen.getByRole("button", { name: "Direction: Inflow — switch to Outflow" })).toHaveTextContent("Inflow");
-    expect(field("Amount")).toHaveValue("42.5");
-  });
-
-  it("takes its words from `labels`", () => {
-    render(
-      <SignChip
-        negative={false}
-        onNegativeChange={vi.fn()}
-        labels={{ outflow: "Ausgang", inflow: "Eingang", direction: (c, n) => `Richtung: ${c} — wechseln zu ${n}` }}
-      />,
-    );
-    expect(screen.getByRole("button", { name: "Richtung: Eingang — wechseln zu Ausgang" })).toBeInTheDocument();
   });
 });

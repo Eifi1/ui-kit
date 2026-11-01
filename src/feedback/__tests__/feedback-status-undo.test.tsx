@@ -1,9 +1,9 @@
-import { renderHook } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { toast } from "../../components/toast";
 import { UiKitProvider, type UiKitLabelOverrides } from "../../i18n/kit-labels";
-import { FEEDBACK_UNDO_DURATION, useFeedbackStatusUndo, type FeedbackStatusMutate } from "../feedback-status-undo";
+import { FEEDBACK_UNDO_DURATION, useFeedbackStatusUndo, type FeedbackStatusMutateAsync } from "../feedback-status-undo";
 
 vi.mock("../../components/toast", () => ({
   toast: Object.assign(vi.fn(), { undo: vi.fn(), success: vi.fn(), error: vi.fn() }),
@@ -17,11 +17,11 @@ vi.mock("../../components/toast", () => ({
 
 const row = { id: 412, title: "Chart jumps on save", status: "IN_EVALUATION" as const };
 
-/** A mutation that answers at once, as TanStack's `mutate` would on success. */
-const landing = () =>
-  vi.fn<FeedbackStatusMutate>((_patch, { onSuccess }) => {
-    onSuccess();
-  });
+/** A mutation that lands at once, as TanStack's `mutateAsync` would on success. */
+const landing = () => vi.fn<FeedbackStatusMutateAsync>(async () => undefined);
+
+/** Let the mutations' promises settle. */
+const settle = () => act(async () => {});
 
 beforeEach(() => {
   vi.mocked(toast.undo).mockClear();
@@ -29,10 +29,11 @@ beforeEach(() => {
 });
 
 describe("useFeedbackStatusUndo", () => {
-  it("PATCHes the status, then offers the old one back for 8 s", () => {
+  it("PATCHes the status, then offers the old one back for 8 s", async () => {
     const mutate = landing();
     const { result } = renderHook(() => useFeedbackStatusUndo(mutate));
     result.current(row, "DONE");
+    await settle();
 
     expect(mutate).toHaveBeenCalledTimes(1);
     expect(mutate.mock.calls[0][0]).toEqual({ id: 412, status: "DONE" });
@@ -43,19 +44,34 @@ describe("useFeedbackStatusUndo", () => {
     expect(FEEDBACK_UNDO_DURATION).toBe(8000);
 
     vi.mocked(toast.undo).mock.calls[0][1].onUndo();
+    await settle();
     expect(mutate).toHaveBeenCalledTimes(2);
     expect(mutate.mock.calls[1][0]).toEqual({ id: 412, status: "IN_EVALUATION" });
     expect(toast.success).toHaveBeenCalledWith("Back to “In evaluation”: Chart jumps on save");
   });
 
-  it("toasts nothing until the PATCH has landed, and nothing at all when it fails", () => {
+  it("toasts nothing until the PATCH has landed, and nothing at all when it fails", async () => {
     // The mutation's own onError owns the failure toast; this hook adds no second one.
-    const mutate = vi.fn<FeedbackStatusMutate>();
+    let land = () => {};
+    const mutate = vi.fn<FeedbackStatusMutateAsync>(
+      () =>
+        new Promise((resolve) => {
+          land = () => resolve(undefined);
+        }),
+    );
     const { result } = renderHook(() => useFeedbackStatusUndo(mutate));
     result.current(row, "WONT_DO");
     expect(mutate).toHaveBeenCalledTimes(1);
+    await settle();
     expect(toast.undo).not.toHaveBeenCalled();
-    mutate.mock.calls[0][1].onSuccess();
+    land();
+    await settle();
+    expect(toast.undo).toHaveBeenCalledTimes(1);
+
+    const failing = vi.fn<FeedbackStatusMutateAsync>(() => Promise.reject(new Error("409")));
+    const { result: other } = renderHook(() => useFeedbackStatusUndo(failing));
+    other.current(row, "DONE");
+    await settle();
     expect(toast.undo).toHaveBeenCalledTimes(1);
   });
 
@@ -67,7 +83,7 @@ describe("useFeedbackStatusUndo", () => {
     expect(toast.undo).not.toHaveBeenCalled();
   });
 
-  it("speaks the provider's language, and an option's words over it", () => {
+  it("speaks the provider's language, and an option's words over it", async () => {
     const de = {
       feedbackStatus: { DONE: "Erledigt", IN_EVALUATION: "Zur Prüfung" },
       feedbackToast: {
@@ -82,22 +98,26 @@ describe("useFeedbackStatusUndo", () => {
       wrapper,
     });
     result.current(row, "DONE");
+    await settle();
     expect(toast.undo).toHaveBeenCalledWith(
       "Auf „Fertig“ gesetzt: Chart jumps on save",
       expect.objectContaining({ label: "Rückgängig" }),
     );
     vi.mocked(toast.undo).mock.calls[0][1].onUndo();
+    await settle();
     expect(toast.success).toHaveBeenCalledWith("Zurück auf „Zur Prüfung“: Chart jumps on save");
   });
 
-  it("keeps the old status and title from the moment of the change", () => {
+  it("keeps the old status and title from the moment of the change", async () => {
     // The row object may be gone (filtered out) or replaced by a refetch before Undo.
     const mutate = landing();
     const { result } = renderHook(() => useFeedbackStatusUndo(mutate));
     const live = { ...row };
     result.current(live, "DONE");
     live.title = "renamed";
+    await settle();
     vi.mocked(toast.undo).mock.calls[0][1].onUndo();
+    await settle();
     expect(mutate.mock.calls[1][0]).toEqual({ id: 412, status: "IN_EVALUATION" });
     expect(toast.success).toHaveBeenCalledWith("Back to “In evaluation”: Chart jumps on save");
   });

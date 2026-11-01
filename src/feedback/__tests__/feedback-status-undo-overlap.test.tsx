@@ -15,33 +15,29 @@ vi.mock("../../components/toast", () => ({
  *
  * TanStack Query v5's `MutationObserver.mutate` overwrites the per-call options and
  * detaches from the earlier mutation (mutationObserver.js:136-141), so a per-call
- * `onSuccess` fires for the LATEST call only (:155-168). The promise `mutateAsync`
- * returns settles for every call. The fake below keeps both rules.
+ * `onSuccess` fires for the LATEST call only (:155-168) — why the callback form went in
+ * 0.53. The promise `mutateAsync` returns settles for every call; the fake below keeps
+ * that rule.
  */
 function tanstackObserver<P>() {
-  let current: object | undefined;
   const requests: Array<{ patch: P; land: () => Promise<void>; fail: () => Promise<void> }> = [];
-  const mutateAsync = vi.fn((patch: P, options: { onSuccess?: () => void } = {}) => {
-    current = options;
-    return new Promise<P>((resolve, reject) => {
-      requests.push({
-        patch,
-        land: async () => {
-          if (current === options) options.onSuccess?.();
-          resolve(patch);
-          await Promise.resolve();
-        },
-        fail: async () => {
-          reject(new Error("409"));
-          await Promise.resolve();
-        },
-      });
-    });
-  });
-  const mutate = (patch: P, options: { onSuccess?: () => void }) => {
-    mutateAsync(patch, options).catch(() => undefined);
-  };
-  return { mutate, mutateAsync, requests };
+  const mutateAsync = vi.fn(
+    (patch: P) =>
+      new Promise<P>((resolve, reject) => {
+        requests.push({
+          patch,
+          land: async () => {
+            resolve(patch);
+            await Promise.resolve();
+          },
+          fail: async () => {
+            reject(new Error("409"));
+            await Promise.resolve();
+          },
+        });
+      }),
+  );
+  return { mutateAsync, requests };
 }
 
 const first = { id: 412, title: "Chart jumps on save", status: "IN_EVALUATION" as const };
@@ -81,7 +77,6 @@ describe("useFeedbackStatusUndo with mutateAsync — overlapping changes (FLW-3)
     const observer = tanstackObserver<{ id: number; status: string }>();
     const { result } = renderHook(() => useFeedbackStatusUndo(observer.mutateAsync));
     result.current(first, "DONE");
-    // The latest call: the per-call onSuccess AND the promise both answer — one toast.
     await act(() => observer.requests[0].land());
     expect(toast.undo).toHaveBeenCalledTimes(1);
     result.current(second, "WONT_DO");

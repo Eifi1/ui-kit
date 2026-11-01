@@ -30,8 +30,8 @@ export class SectionBoundary extends Component<{ title: string; children: ReactN
         <div
           role="alert"
           // The render test asserts on THIS attribute, not on role="alert": components
-          // legitimately render alerts of their own (FieldSyncIndicator's error state is
-          // one), so the role alone cannot distinguish "a section crashed" from "a
+          // legitimately render alerts of their own (a danger AlertBanner is one), so the
+          // role alone cannot distinguish "a section crashed" from "a
           // section is demonstrating an error affordance".
           data-section-error={this.props.title}
           className="rounded-lg border border-[var(--money-expense)] bg-surface-2 p-4"

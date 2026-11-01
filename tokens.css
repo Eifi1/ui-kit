@@ -397,13 +397,13 @@ html[data-text-size="xlarge"] {
      was: beside red-700 that orange read as a second error colour, and "unsaved" has
      to look like a caution, not an alarm. Light, it is amber-600's hue and chroma at a
      SOLVED lightness (3.1:1 on the worst surface). Below 4.5:1, so it is not a TEXT
-     colour: `FieldSyncIndicator` prints its words in `--text-secondary` beside it.
+     colour: a state's words go in `--text-secondary` beside it.
 
      GREEN AND RED ARE THE CLASSIC CVD-UNSAFE PAIR, and the rest of this file goes out
      of its way to avoid it — the money trio is teal/amber/violet for exactly this
      reason. They are used here because the states were specified in these colours, so
-     `FieldSyncIndicator` gives every state its own ICON as well and colour is never
-     the only signal. Do not drop the icons.  */
+     every state needs its own ICON as well and colour is never the only signal (as
+     FieldSyncIndicator, which drew them until 0.53, gave it). Do not drop the icons.  */
   --status-synced: #166534; /* green-800  — persisted */
   --status-pending: #1d4ed8; /* blue-700   — in flight */
   --status-edited: #bf6800; /* solved     — dirty, not yet saved */
@@ -871,7 +871,7 @@ html[data-text-size="xlarge"] {
  * counts a `[var(--role)]` class, and a `ring-[length:var(--…)]` width, for any token that
  * has a utility here and allows none (`ROLE_BUDGET` 0). What stays `[var()]` has no
  * utility on purpose: the chart colours (lookup tables of `--chart-N`), `--status-*`
- * (FieldSync's own four), and the cross-property one-offs (`bg-[var(--border)]` as a
+ * (the field-sync four), and the cross-property one-offs (`bg-[var(--border)]` as a
  * divider, `ring-[var(--text-primary)]`) — a utility there would undo the property
  * scoping above. `check:tailwind` asserts one per namespace survives a build, and the
  * README's "Styling" table is generated from this block (`scripts/gen-styling-inventory.mjs`).

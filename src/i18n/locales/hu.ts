@@ -186,9 +186,6 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       outcome: "Eredmény",
       replies: "Válaszok",
       resolvedAt: (date) => `Lezárva: ${date}`,
-      outcomeAdd: "Eredmény hozzáadása",
-      outcomeUpdate: "Frissítés",
-      outcomePlaceholder: "Mi készült el, mi a döntés, vagy miért nem valósul meg.",
       rework: "Átdolgozás",
       reworkTitle: "Visszaküldés átdolgozásra",
       reworkSend: "Átdolgozás kérése",
@@ -499,13 +496,6 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       noResults: "Nincs megfelelő ikon",
       resultCount: (count) => `${n(count)} ikon`,
     },
-    fieldSync: {
-      synced: "Mentve",
-      edited: "Nem mentett módosítások",
-      pending: "Mentés…",
-      error: "A mentés nem sikerült",
-      retry: "Újra",
-    },
     passwordReveal: {
       show: "Jelszó megjelenítése",
       hide: "Jelszó elrejtése",
@@ -539,7 +529,6 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       palette: "Megjelenési séma",
       language: "Nyelv",
       languageCurrent: (name) => `Nyelv kiválasztása, jelenlegi: ${name}`,
-      switchRole: "Szerepkör váltása",
       role: (value) => `Szerepkör: ${value}`,
     },
     pickerSheet: {
@@ -1536,12 +1525,6 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     phoneInput: {
       countryCode: "Országhívó szám",
       other: "Egyéb",
-    },
-    signChip: {
-      outflow: "Kiadás",
-      inflow: "Bevétel",
-      direction: (current, next) => `Irány: ${current} – váltás erre: ${next}`,
-      switchTo: (next) => `Váltás erre: ${next}`,
     },
     columnMapper: {
       paste: "Táblázat beillesztése",

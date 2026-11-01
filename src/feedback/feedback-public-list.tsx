@@ -175,11 +175,6 @@ export interface FeedbackPublicListProps<T extends FeedbackPublicListItem = Feed
    *  2026-10-30, API-5). */
   onOpenIdChange?: (id: number | null) => void;
   /**
-   * @deprecated 0.52 — `onOpenIdChange`, the same call: an `onOpenChange` is a boolean
-   * everywhere else in the kit; removed in 0.53
-   */
-  onOpenChange?: (id: number | null) => void;
-  /**
    * 0.38.1: the opened report when it is NOT on this page — a `?row=` link to an older
    * one (Kurvenschmiede). The app fetches it (`GET /feedback/public/{id}`, a list item's
    * fields and more) and passes it with `openId`; while `openId` is its id it is drawn
@@ -249,7 +244,6 @@ export function FeedbackPublicList<T extends FeedbackPublicListItem = FeedbackPu
   loading = false,
   openId: openIdProp,
   onOpenIdChange,
-  onOpenChange,
   openRow,
   page: pageIndex = 0,
   hasMore = false,
@@ -269,7 +263,7 @@ export function FeedbackPublicList<T extends FeedbackPublicListItem = FeedbackPu
   const openId = openIdProp !== undefined ? openIdProp : ownOpenId;
   const setOpen = (id: number | null) => {
     if (openIdProp === undefined) setOwnOpenId(id);
-    (onOpenIdChange ?? onOpenChange)?.(id);
+    onOpenIdChange?.(id);
   };
   // A `?row=` report from another page: first, while it is the open one, and only when
   // the page does not have it itself.

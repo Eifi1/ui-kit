@@ -13,7 +13,6 @@ import { Combobox, InlineEntityCombobox } from "../combobox";
 import { NumberInput } from "../number-input";
 import { AmountInput } from "../amount-input";
 import { SearchField } from "../search-field";
-import { FieldSyncRow, useFieldSync } from "../field-sync";
 import { ChoiceCard, ChoiceCardGroup } from "../choice-card";
 import { DropdownPanel, useDropdown } from "../dropdown";
 import type { ComboOption } from "../combobox-core";
@@ -139,22 +138,11 @@ describe("RTL: no physical sides in the field chrome", () => {
     expect(screen.getByText("%").parentElement!.className).toMatch(/(^|\s)end-0(\s|$)/);
   });
 
-  it("SearchField and FieldSyncRow", () => {
-    function Synced() {
-      const sync = useFieldSync({ value: "x", onSave: () => {} });
-      return (
-        <FieldSyncRow sync={sync}>
-          <Input aria-label="Synced" value={sync.value} onChange={(e) => sync.setValue(e.target.value)} />
-        </FieldSyncRow>
-      );
-    }
+  // FieldSyncRow shared this check until 0.53 removed the FieldSync family (MOD-5).
+  it("SearchField", () => {
     const { container } = rtl(
-      <>
-        <SearchField aria-label="Search" value="q" onChange={() => {}} clearLabel="Clear search" />
-        <Synced />
-      </>,
+      <SearchField aria-label="Search" value="q" onChange={() => {}} clearLabel="Clear search" />,
     );
-    fireEvent.change(screen.getByLabelText("Synced"), { target: { value: "y" } });
     expect(physicalClasses(container)).toEqual([]);
     expect(screen.getByRole("button", { name: "Clear search" }).className).toMatch(/(^|\s)end-2(\s|$)/);
   });

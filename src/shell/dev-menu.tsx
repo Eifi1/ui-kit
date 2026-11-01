@@ -95,7 +95,7 @@ const isRow = (entry: TopBarMenuEntry) => entry.kind !== "heading" && entry.kind
 
 /**
  * The top bar's local-dev menu (docs/top-bar-harmonization.md §2.7, §2.7.1, §6.2, §6.3):
- * ONE amber flask, `RoleSwitcher`'s, over the kit's Account section and the app's own.
+ * ONE amber flask over the kit's Account section and the app's own.
  *
  * 0.42's `DevSwitchers` drew a flask per switcher and had no place for anything else,
  * and an app has more dev controls than a role and a plan — keksdose's budget role, a

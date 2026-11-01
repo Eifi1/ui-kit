@@ -40,17 +40,6 @@ export interface DateRangePickerPreset {
   to: string;
 }
 
-/**
- * The 0.x values of DateRangePicker's `commit`, when it was the panel's mode:
- * `"immediate"` is `apply` left out, `"apply"` is `apply`. See
- * {@link DateRangePickerProps.apply}.
- *
- * @deprecated 0.52 — DateRangePicker's `apply` (`commit="apply"` → `apply`, `"immediate"`
- * → nothing); removed in 0.53. `commit` is the write lock's opt-in on every other kit
- * control, and since 0.52 on this one too (refactor audit 2026-10-30, API-3).
- */
-export type DateRangeCommit = "immediate" | "apply";
-
 export interface DateRangePickerProps extends DatePickerBaseProps {
   from: string;
   to: string;
@@ -89,8 +78,7 @@ export interface DateRangePickerProps extends DatePickerBaseProps {
    *    must never escape the panel.
    *
    * `commit="apply"` until 0.52 (refactor audit 2026-10-30, API-3): `commit` is the write
-   * lock's prop on every other kit control. The old spelling still works for 0.52 and
-   * goes in 0.53 ({@link DateRangeCommit}); `apply` wins where both are given.
+   * lock's prop on every other kit control. The old spelling went in 0.53.
    */
   apply?: boolean;
   /**
@@ -100,12 +88,10 @@ export interface DateRangePickerProps extends DatePickerBaseProps {
    * kit control since 0.33, and on this one since 0.52 (API-3). A range inside a form with
    * its own Save stays editable under the lock — leave this off there.
    *
-   * The strings `"immediate"` and `"apply"` are the panel's mode, the 0.x meaning of this
-   * prop: deprecated, read as `apply` for one minor, removed in 0.53 — see
-   * {@link DateRangeCommit}. They cannot be taken for a scope, which is a boolean or an
-   * object.
+   * The strings `"immediate"` and `"apply"`, the panel's mode in 0.x, went in 0.53
+   * (deprecated in 0.52): `apply` is the mode.
    */
-  commit?: CommitScope | DateRangeCommit;
+  commit?: CommitScope;
   /**
    * Draw the trigger yourself. keksdose's report range field
    * (reports/report-range-field.tsx, "Why this is app-level") is why: its trigger
@@ -428,10 +414,8 @@ export function DateRangePicker(props: DateRangePickerProps) {
   const locale = useKitLocale(localeProp);
   const text = useDatePickerLabels(clearLabel, undefined, undefined);
   const render = useTriggerFormat("dateRangePicker", locale, formatOptions, formatValue);
-  // `commit` is two props until 0.53: a string is the deprecated mode, anything else
-  // the write lock's scope (API-3).
-  const drafting = apply ?? commit === "apply";
-  const lock = useLockReason(typeof commit === "string" ? undefined : commit, disabledReason);
+  const drafting = apply ?? false;
+  const lock = useLockReason(commit, disabledReason);
   const locked = lock.locked;
   const messages = useFieldMessages({
     hint,

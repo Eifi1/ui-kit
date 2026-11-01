@@ -189,9 +189,6 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       outcome: "Résultat",
       replies: "Réponses",
       resolvedAt: (date) => `Résolu le ${date}`,
-      outcomeAdd: "Ajouter un résultat",
-      outcomeUpdate: "Mettre à jour",
-      outcomePlaceholder: "Ce qui a été fait ou décidé, ou pourquoi ce point ne sera pas traité.",
       rework: "Reprise",
       reworkTitle: "Renvoyer pour reprise",
       reworkSend: "Demander la reprise",
@@ -508,13 +505,6 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       noResults: "Aucune icône ne correspond",
       resultCount: (count) => `${n(count)} ${plural(count, "icône", "icônes")}`,
     },
-    fieldSync: {
-      synced: "Enregistré",
-      edited: "Modifications non enregistrées",
-      pending: "Enregistrement…",
-      error: "Échec de l’enregistrement",
-      retry: "Réessayer",
-    },
     passwordReveal: {
       show: "Afficher le mot de passe",
       hide: "Masquer le mot de passe",
@@ -547,7 +537,6 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       palette: "Préréglage d’apparence",
       language: "Langue",
       languageCurrent: (name) => `Choisir la langue, actuelle\u00a0: ${name}`,
-      switchRole: "Changer de rôle",
       role: (value) => `Rôle\u00a0: ${value}`,
     },
     pickerSheet: {
@@ -1560,12 +1549,6 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     phoneInput: {
       countryCode: "Indicatif du pays",
       other: "Autre",
-    },
-    signChip: {
-      outflow: "Sortie",
-      inflow: "Entrée",
-      direction: (current, next) => `Sens\u00a0: ${current} — passer à ${next}`,
-      switchTo: (next) => `Passer à ${next}`,
     },
     columnMapper: {
       paste: "Coller un tableau",

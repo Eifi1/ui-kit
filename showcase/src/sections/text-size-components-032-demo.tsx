@@ -10,14 +10,12 @@ import {
   DateMark,
   DEFAULT_MOBILE_MAX_ITEMS,
   FieldHint,
-  FieldSyncIndicator,
   FormActions,
   IconButton,
   Input,
   List,
   ListItem,
   RowActions,
-  SignChip,
   StatTile,
   Switch,
   TextSizeSetting,
@@ -41,8 +39,8 @@ import { Example, Note, code, NO_ROUTER } from "../lib/section";
  * text-size-032-demo: the mechanism first, then what the parts do with it. Components:
  * Button, IconButton (`labelVisible`, `disabledReasonDisplay`), CompactControls,
  * RowActions, DataTable (`mobileDetailsInRow`, `rowName`), ListItem, FormActions
- * (`stack`), FieldHint, Switch, Checkbox, ToggleGroup, StatTile, DateMark, SignChip,
- * FieldSyncIndicator, AppShell (`mobileMaxItems`), useWindowedRows.
+ * (`stack`), FieldHint, Switch, Checkbox, ToggleGroup, StatTile, DateMark, AppShell
+ * (`mobileMaxItems`), useWindowedRows.
  *
  * Ada Example and her garden are SYNTHETIC. Nothing sends a request.
  */
@@ -158,17 +156,12 @@ function TooltipFactsDemo() {
             <span>Last watered:</span>
             <DateMark value={WATERED} display="relative" />
           </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <SignChip negative onNegativeChange={() => {}} />
-            <FieldSyncIndicator state="synced" />
-          </div>
         </div>
       </div>
       <Note>
         At Normal with a mouse a reason is a tooltip and a hint a "?". At Large and Extra large — and on any touch
         screen — the reason is a line under its control (`disabledReasonDisplay`: `auto` / `line` / `tooltip`) and a
-        FieldHint becomes the field&apos;s caption. A relative date shows the exact one at every size; SignChip says
-        what a press does and FieldSyncIndicator its state&apos;s word at Large.
+        FieldHint becomes the field&apos;s caption. A relative date shows the exact one at every size.
       </Note>
     </Example>
   );

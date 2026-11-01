@@ -296,12 +296,6 @@ export const en: Dictionary = {
       blurb:
         "Typing a table of measurements: a keyboard grid of cells, a block pasted from a spreadsheet, and the same table as text — thousands of rows, only the visible ones mounted.",
     },
-    "field-sync": {
-      title: "Field sync state",
-      short: "Sync state",
-      blurb:
-        "Sync state for a database-backed field, saved on blur: the frame's colour and an icon at the field's end say edited, saving, saved or failed — hover the error mark for the reason.",
-    },
     "signature-password": {
       title: "Signature, password & confirmation",
       short: "Signature",
@@ -883,14 +877,6 @@ export const en: Dictionary = {
       "virtualised list",
       "parse pasted text into rows",
       "edit cells with arrow keys",
-    ],
-    "field-sync": [
-      "save a field when leaving it",
-      "show saving or saved state",
-      "show that saving failed",
-      "autosave",
-      "unsaved changes indicator",
-      "field backed by the database",
     ],
     "signature-password": [
       "sign a document",

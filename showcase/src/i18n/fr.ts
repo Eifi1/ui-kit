@@ -290,12 +290,6 @@ export const fr: Dictionary = {
       blurb:
         "Saisir un tableau de mesures : une grille de cellules au clavier, un bloc collé depuis un tableur et le même tableau en texte — des milliers de lignes, seules les visibles sont rendues.",
     },
-    "field-sync": {
-      title: "État de synchronisation",
-      short: "Synchro",
-      blurb:
-        "État de synchronisation d\u2019un champ lié à une base de données, enregistré à la sortie du champ : la couleur du cadre et une icône en fin de champ indiquent modifié, enregistrement, enregistré ou échec — survolez le symbole d\u2019erreur pour en voir la raison.",
-    },
     "signature-password": {
       title: "Signature, mot de passe et confirmation",
       short: "Signature",
@@ -880,14 +874,6 @@ export const fr: Dictionary = {
       "liste virtualisée",
       "découper un texte collé en lignes",
       "modifier les cellules avec les flèches",
-    ],
-    "field-sync": [
-      "enregistrer un champ en le quittant",
-      "afficher «\u202fenregistrement\u202f» ou «\u202fenregistré\u202f»",
-      "signaler un échec d’enregistrement",
-      "enregistrement automatique",
-      "indicateur de modifications non enregistrées",
-      "champ relié à la base de données",
     ],
     "signature-password": [
       "signer un document",

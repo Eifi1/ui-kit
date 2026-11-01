@@ -7,8 +7,8 @@ import type { FeedbackPublicListItem } from "../feedback-public-types";
 
 /**
  * API-5 / API-7 (refactor audit 2026-10-30): the opened row's id is reported through
- * `onOpenIdChange` — every other `onOpenChange` in the kit carries a boolean — with
- * `onOpenChange` kept as its deprecated alias for 0.52; `rows` takes a `readonly` page.
+ * `onOpenIdChange` — every other `onOpenChange` in the kit carries a boolean; its
+ * deprecated alias `onOpenChange` went in 0.53. `rows` takes a `readonly` page.
  */
 
 let restore: (() => void) | undefined;
@@ -58,20 +58,6 @@ describe("FeedbackPublicList — onOpenIdChange (API-5)", () => {
     expect(screen.getByTestId("detail")).toHaveTextContent("Detail of #12");
     fireEvent.click(screen.getByText("Chart jumps on save"));
     expect(onOpenIdChange).toHaveBeenLastCalledWith(null);
-  });
-
-  it("still calls the deprecated onOpenChange — and only the new name when both are given", () => {
-    const onOpenChange = vi.fn();
-    const { unmount } = renderList({ onOpenChange });
-    fireEvent.click(screen.getByText("Chart jumps on save"));
-    expect(onOpenChange).toHaveBeenLastCalledWith(12);
-    unmount();
-    const onOpenIdChange = vi.fn();
-    const old = vi.fn();
-    renderList({ onOpenIdChange, onOpenChange: old });
-    fireEvent.click(screen.getByText("Chart jumps on save"));
-    expect(onOpenIdChange).toHaveBeenCalledWith(12);
-    expect(old).not.toHaveBeenCalled();
   });
 
   it("takes a readonly page (API-7)", () => {

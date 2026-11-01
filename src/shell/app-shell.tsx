@@ -201,19 +201,6 @@ export function pickMobileBar<T>(
   };
 }
 
-/**
- * Split the bar's entries into the cells shown and the ones under "More", in the app's
- * order (§10.7: the app puts its four most used first, or orders by role). One hidden
- * entry is no saving — the More cell would take its place — so the bar then shows them
- * all: the cell count is the same either way, and a real entry beats a detour.
- */
-export function splitMobileBar<T>(entries: readonly T[], max: number): { shown: T[]; hidden: T[] } {
-  // Entries before More, as 0.32 counted them; {@link pickMobileBar} counts cells.
-  const limit = Math.max(1, Math.floor(max));
-  if (entries.length <= limit + 1) return { shown: [...entries], hidden: [] };
-  return { shown: entries.slice(0, limit), hidden: entries.slice(limit) };
-}
-
 /** The bar's cell count at `size`: `mobileMaxItems`, else the default. */
 function mobileCells(maxItems: AppShellProps["mobileMaxItems"], size: TextSize): number {
   if (maxItems === undefined) return DEFAULT_MOBILE_MAX_ITEMS[size];

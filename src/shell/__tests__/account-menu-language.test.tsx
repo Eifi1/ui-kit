@@ -71,18 +71,6 @@ describe("AccountMenuLanguage", () => {
     expect(screen.getByRole("button", { name: /Language/ })).toHaveAttribute("aria-expanded", "false");
   });
 
-  it("still takes the deprecated `onPick` (0.52 → removed in 0.53)", () => {
-    const onPick = vi.fn();
-    render(
-      <ul>
-        <AccountMenuLanguage languages={LANGS} value="fr" onPick={onPick} />
-      </ul>,
-    );
-    fireEvent.click(screen.getByRole("button", { name: /Language/ }));
-    fireEvent.click(screen.getByText("English"));
-    expect(onPick).toHaveBeenCalledWith("en");
-  });
-
   it("names itself with topBar.language from the provider; `label` wins", () => {
     const { rerender } = render(
       <UiKitProvider labels={{ topBar: { language: "Sprache" } }}>

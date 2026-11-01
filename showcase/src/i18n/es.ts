@@ -287,12 +287,6 @@ export const es: Dictionary = {
       blurb:
         "Escribir una tabla de medidas: una cuadrícula de celdas por teclado, un bloque pegado desde una hoja de cálculo y la misma tabla como texto — miles de filas, solo las visibles montadas.",
     },
-    "field-sync": {
-      title: "Estado de sincronización",
-      short: "Sincronización",
-      blurb:
-        "Estado de sincronización de un campo respaldado por base de datos, guardado al salir del campo: el color del borde y un icono al final del campo indican editado, guardando, guardado o error — pasa el cursor sobre la marca de error para ver el motivo.",
-    },
     "signature-password": {
       title: "Firma, contraseña y confirmación",
       short: "Firma",
@@ -877,14 +871,6 @@ export const es: Dictionary = {
       "lista virtualizada",
       "convertir texto pegado en filas",
       "editar celdas con las flechas",
-    ],
-    "field-sync": [
-      "guardar un campo al salir de él",
-      "mostrar el estado guardando o guardado",
-      "mostrar que no se pudo guardar",
-      "guardado automático",
-      "indicador de cambios sin guardar",
-      "campo conectado a la base de datos",
     ],
     "signature-password": [
       "firmar un documento",

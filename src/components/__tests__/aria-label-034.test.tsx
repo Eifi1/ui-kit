@@ -12,7 +12,6 @@ import { WizardStepper } from "../wizard-stepper";
 import { Form } from "../../rhf/form";
 import { RhfIntegerField, RhfMoneyField, RhfNumberField } from "../../rhf/fields";
 import { OptionSwitcherMenu } from "../../shell/option-switcher-menu";
-import { RoleSwitcher } from "../../shell/role-switcher";
 import { TopBarActionMenu } from "../../shell/topbar-action-menu";
 import { LanguageMenu, PaletteMenu, ThemeToggle } from "../../shell/topbar-controls";
 import { PALETTES } from "../../theme/palette-presets";
@@ -21,7 +20,8 @@ import { PALETTES } from "../../theme/palette-presets";
  * API-1 (refactor audit 2026-10): sixteen components took only the camelCase
  * `ariaLabel`, after 0.34 (Q2) made `aria-label` the accessible-name prop everywhere
  * else. 0.34 added `aria-label` and deprecated `ariaLabel`; 0.35 removed it (round 0.35
- * R1), so `aria-label` is the one spelling.
+ * R1), so `aria-label` is the one spelling. RoleSwitcher, the sixteenth, went in 0.53
+ * (deprecated in 0.52, MOD-5), so fifteen are checked.
  */
 
 type Name = { "aria-label": string };
@@ -90,7 +90,6 @@ const CASES: Array<[string, (name: Name) => ReactElement, string]> = [
     ),
     "button",
   ],
-  ["RoleSwitcher", (n) => <RoleSwitcher roles={["admin", "viewer"]} value="admin" onChange={noop} {...n} />, "button"],
   [
     "OptionSwitcherMenu",
     (n) => <OptionSwitcherMenu icon={<span />} options={OPTIONS} value="a" onSelect={noop} {...n} />,
@@ -107,7 +106,7 @@ const CASES: Array<[string, (name: Name) => ReactElement, string]> = [
   ],
 ];
 
-describe("aria-label on the sixteen camelCase holdouts (API-1)", () => {
+describe("aria-label on the camelCase holdouts (API-1)", () => {
   it.each(CASES)("%s is named by aria-label", (_, view, role) => {
     render(view({ "aria-label": "Given name" }));
     expect(screen.getByRole(role, { name: "Given name" })).toBeInTheDocument();
@@ -115,7 +114,7 @@ describe("aria-label on the sixteen camelCase holdouts (API-1)", () => {
 
   it("takes no other spelling: the deprecated ariaLabel went in 0.35 (round 0.35 R1)", () => {
     // Compile-time: `tsc --noEmit` fails if a directive below goes unused — that is, if
-    // one of the sixteen took `ariaLabel` again.
+    // one of the fifteen took `ariaLabel` again.
     const gone = [
       // @ts-expect-error — `ariaLabel` is gone: pass `aria-label`.
       <AmountInput key="1" value="1" onChange={noop} ariaLabel="Old" />,
@@ -144,13 +143,11 @@ describe("aria-label on the sixteen camelCase holdouts (API-1)", () => {
       // @ts-expect-error — `ariaLabel` is gone: pass `aria-label`.
       <LanguageMenu key="13" options={[]} current="en" onChange={noop} ariaLabel="Old" />,
       // @ts-expect-error — `ariaLabel` is gone: pass `aria-label`.
-      <RoleSwitcher key="14" roles={["admin"]} value="admin" onChange={noop} ariaLabel="Old" />,
+      <OptionSwitcherMenu key="14" icon={null} options={OPTIONS} value="a" onSelect={noop} ariaLabel="Old" />,
       // @ts-expect-error — `ariaLabel` is gone: pass `aria-label`.
-      <OptionSwitcherMenu key="15" icon={null} options={OPTIONS} value="a" onSelect={noop} ariaLabel="Old" />,
-      // @ts-expect-error — `ariaLabel` is gone: pass `aria-label`.
-      <TopBarActionMenu key="16" entries={[]} ariaLabel="Old" />,
+      <TopBarActionMenu key="15" entries={[]} ariaLabel="Old" />,
     ];
-    expect(gone).toHaveLength(16);
+    expect(gone).toHaveLength(15);
   });
 });
 

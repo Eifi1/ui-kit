@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { BarChart3, Banknote, Cog, Home, Layers, ListChecks, Tags, Wallet } from "lucide-react";
-import { AppShell, splitMobileBar } from "../app-shell";
+import { AppShell } from "../app-shell";
 import type { AppShellNavItem } from "../app-shell";
 import { IconButton } from "../../components/icon-button";
 import { applyTextSize } from "../../theme/text-size";
@@ -77,21 +77,6 @@ function cellNames(container: HTMLElement) {
     return control.textContent;
   });
 }
-
-describe("splitMobileBar", () => {
-  it("keeps the app's order and moves the rest under More", () => {
-    expect(splitMobileBar([1, 2, 3, 4, 5, 6, 7], 4)).toEqual({ shown: [1, 2, 3, 4], hidden: [5, 6, 7] });
-  });
-
-  it("shows one entry over the limit in full — More would take the same cell", () => {
-    expect(splitMobileBar([1, 2, 3, 4, 5], 4)).toEqual({ shown: [1, 2, 3, 4, 5], hidden: [] });
-    expect(splitMobileBar([1, 2, 3, 4], 3)).toEqual({ shown: [1, 2, 3, 4], hidden: [] });
-  });
-
-  it("never shows fewer than one entry", () => {
-    expect(splitMobileBar([1, 2, 3], 0)).toEqual({ shown: [1], hidden: [2, 3] });
-  });
-});
 
 describe("mobileMaxItems (§10.7)", () => {
   it("shows four entries and More at Normal too (0.49 KIT-6: five cells)", () => {

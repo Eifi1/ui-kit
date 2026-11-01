@@ -50,14 +50,9 @@ function minutesAt(expiry: number, now: number): number | null {
   return Math.max(0, Math.ceil((expiry - now) / MINUTE));
 }
 
-/**
- * The countdown at `now` — pure, for a test or a server-rendered value. See
- * {@link DemoCountdown} for the rounding and the thresholds.
- */
-export function demoCountdown(expiresAt: DemoExpiry | null | undefined, now: number): DemoCountdown {
-  return countdownOf(minutesAt(expiryMs(expiresAt), now));
-}
-
+/** The countdown for `minutesLeft` — see {@link DemoCountdown} for the rounding and the
+ *  thresholds. (Public as `demoCountdown(expiresAt, now)` until 0.53, deprecated in 0.52,
+ *  API-4: `useDemoCountdown` with its `now` option is the same countdown.) */
 function countdownOf(minutesLeft: number | null): DemoCountdown {
   if (minutesLeft === null) {
     return { minutesLeft, hours: 0, minutes: 0, lastHour: false, warning: false, ended: false };

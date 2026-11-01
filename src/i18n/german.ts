@@ -196,9 +196,6 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       outcome: "Ergebnis",
       replies: "Antworten",
       resolvedAt: (date) => `Erledigt am: ${date}`,
-      outcomeAdd: "Ergebnis hinzufügen",
-      outcomeUpdate: "Aktualisieren",
-      outcomePlaceholder: "Was wurde umgesetzt, entschieden oder warum nicht.",
       rework: "Nacharbeit",
       reworkTitle: "Zur Nacharbeit senden",
       reworkSend: "Nacharbeit senden",
@@ -513,13 +510,6 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       noResults: "Keine passenden Symbole",
       resultCount: (count) => `${n(count)} ${count === 1 ? "Symbol" : "Symbole"}`,
     },
-    fieldSync: {
-      synced: "Gespeichert",
-      edited: "Nicht gespeicherte Änderungen",
-      pending: "Wird gespeichert…",
-      error: "Speichern fehlgeschlagen",
-      retry: "Erneut versuchen",
-    },
     passwordReveal: {
       show: "Passwort anzeigen",
       hide: "Passwort verbergen",
@@ -553,7 +543,6 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       palette: "Darstellungsvorlage",
       language: "Sprache",
       languageCurrent: (name) => `Sprache wählen, aktuell: ${name}`,
-      switchRole: "Rolle wechseln",
       role: (value) => `Rolle: ${value}`,
     },
     pickerSheet: {
@@ -1568,12 +1557,6 @@ export function germanLabels(numberLocale: string): UiKitLabels {
     phoneInput: {
       countryCode: "Ländervorwahl",
       other: "Andere",
-    },
-    signChip: {
-      outflow: "Ausgabe",
-      inflow: "Einnahme",
-      direction: (current, next) => `Richtung: ${current} – zu ${next} wechseln`,
-      switchTo: (next) => `Zu ${next} wechseln`,
     },
     columnMapper: {
       paste: "Tabelle einfügen",

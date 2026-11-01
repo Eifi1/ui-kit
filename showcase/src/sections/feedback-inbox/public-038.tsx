@@ -317,7 +317,7 @@ export function FeedbackPublicSwitch038Demo() {
           {code("PATCH /feedback/{id} {public}")}. The author flips it while the report is OPEN, READY or IN_PROGRESS,
           and at any status on a report the migration made public ({code("filed_private")}, the opt-out the notice
           offers); past that it is locked with the reason. Never drawn on a CRASH, nor for anyone but the author and an
-          admin. {code("feedbackPublicSwitchAllowed(row, {isAdmin, viewerId})")} is the rule on its own.
+          admin.
         </Note>
       </div>
     </Example>

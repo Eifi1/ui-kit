@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { DemoBanner } from "../demo-banner";
-import { demoCountdown, useDemoCountdown } from "../demo-countdown";
+import { useDemoCountdown, type DemoExpiry } from "../demo-countdown";
 import type { AccessChoice } from "../../landing/access";
 
 const ACCESS: AccessChoice = { kind: "request", email: "support@example.com", app: "Ada's Garden Planner" };
@@ -11,9 +11,14 @@ const T0 = Date.parse("2026-10-07T12:00:00Z");
 const MIN = 60_000;
 const HOUR = 60 * MIN;
 
-describe("demoCountdown — the format's numbers and the tone's thresholds (§5.4)", () => {
+/** The countdown at `now`, read through the hook's clock — `demoCountdown(expiresAt, now)`
+ *  until 0.53 removed it (deprecated in 0.52, API-4). */
+const countdownAt = (expiresAt: DemoExpiry | null, now: number) =>
+  renderHook(() => useDemoCountdown(expiresAt, { now: () => now })).result.current;
+
+describe("the countdown — the format's numbers and the tone's thresholds (§5.4)", () => {
   it("splits hours and minutes above the last hour", () => {
-    expect(demoCountdown(T0 + 23 * HOUR + 12 * MIN, T0)).toMatchObject({
+    expect(countdownAt(T0 + 23 * HOUR + 12 * MIN, T0)).toMatchObject({
       minutesLeft: 23 * 60 + 12,
       hours: 23,
       minutes: 12,
@@ -24,24 +29,24 @@ describe("demoCountdown — the format's numbers and the tone's thresholds (§5.
   });
 
   it("rounds a part minute up, so 0 is only ever the end", () => {
-    expect(demoCountdown(T0 + 23 * HOUR + 11 * MIN + 1_000, T0)).toMatchObject({ hours: 23, minutes: 12 });
-    expect(demoCountdown(T0 + 30_000, T0)).toMatchObject({ minutesLeft: 1, ended: false, warning: true });
-    expect(demoCountdown(T0, T0)).toMatchObject({ minutesLeft: 0, ended: true });
-    expect(demoCountdown(T0 - HOUR, T0)).toMatchObject({ minutesLeft: 0, ended: true });
+    expect(countdownAt(T0 + 23 * HOUR + 11 * MIN + 1_000, T0)).toMatchObject({ hours: 23, minutes: 12 });
+    expect(countdownAt(T0 + 30_000, T0)).toMatchObject({ minutesLeft: 1, ended: false, warning: true });
+    expect(countdownAt(T0, T0)).toMatchObject({ minutesLeft: 0, ended: true });
+    expect(countdownAt(T0 - HOUR, T0)).toMatchObject({ minutesLeft: 0, ended: true });
   });
 
   it("shows minutes only from 60 down, and warns from 10 down", () => {
-    expect(demoCountdown(T0 + 61 * MIN, T0)).toMatchObject({ lastHour: false, hours: 1, minutes: 1 });
-    expect(demoCountdown(T0 + 60 * MIN, T0)).toMatchObject({ lastHour: true, hours: 0, minutes: 60 });
-    expect(demoCountdown(T0 + 11 * MIN, T0)).toMatchObject({ warning: false });
-    expect(demoCountdown(T0 + 10 * MIN, T0)).toMatchObject({ warning: true });
+    expect(countdownAt(T0 + 61 * MIN, T0)).toMatchObject({ lastHour: false, hours: 1, minutes: 1 });
+    expect(countdownAt(T0 + 60 * MIN, T0)).toMatchObject({ lastHour: true, hours: 0, minutes: 60 });
+    expect(countdownAt(T0 + 11 * MIN, T0)).toMatchObject({ warning: false });
+    expect(countdownAt(T0 + 10 * MIN, T0)).toMatchObject({ warning: true });
   });
 
   it("reads an ISO string or a Date, and never ends on an unreadable one", () => {
-    expect(demoCountdown("2026-10-07T12:50:00Z", T0).minutesLeft).toBe(50);
-    expect(demoCountdown(new Date(T0 + 4 * MIN), T0).minutesLeft).toBe(4);
-    expect(demoCountdown("not a date", T0)).toMatchObject({ minutesLeft: null, ended: false, warning: false });
-    expect(demoCountdown(null, T0)).toMatchObject({ minutesLeft: null, ended: false });
+    expect(countdownAt("2026-10-07T12:50:00Z", T0).minutesLeft).toBe(50);
+    expect(countdownAt(new Date(T0 + 4 * MIN), T0).minutesLeft).toBe(4);
+    expect(countdownAt("not a date", T0)).toMatchObject({ minutesLeft: null, ended: false, warning: false });
+    expect(countdownAt(null, T0)).toMatchObject({ minutesLeft: null, ended: false });
   });
 });
 

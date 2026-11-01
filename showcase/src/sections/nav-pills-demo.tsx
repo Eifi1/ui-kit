@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { ArrowDownUp, Hand, Inbox, ListChecks, Mail, Receipt, Settings } from "lucide-react";
-import { NavPills, PageHeader, SectionNav } from "@eifi1/ui-kit";
+import { NavPills, PageHeader } from "@eifi1/ui-kit";
 import type { NavPillLinkProps } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row } from "../lib/section";
 
@@ -117,32 +117,34 @@ const CHROME_PAGES = [
   { value: "subscription", label: "Subscription", href: "/subscription" },
 ];
 
-/** SectionNav (0.49 KIT-6): a section's pages on a phone, under the page title. */
-export function SectionNavDemo() {
+/** NavPills `layout="scroll"` (0.49 KIT-6): a section's pages on a phone, under the page
+ *  title. SectionNav wrapped this row until 0.53 removed it (deprecated in 0.52, MOD-5). */
+export function NavPillsScrollDemo() {
   return (
     <Example
-      label="SectionNav — a section's pages on the phone"
-      hint={'deprecated in 0.52, removed in 0.53 — no app renders it; `<NavPills layout="scroll">` is the same row'}
+      label='NavPills layout="scroll" — the pages of a section on the phone'
+      hint="one row that scrolls sideways, under the page title"
     >
       <div className="max-w-sm overflow-hidden rounded-md border border-subtle bg-page p-3">
         <PageHeader as="h2" title="Page header" description="App chrome" />
-        <SectionNav
-          label="App chrome"
+        <NavPills
+          aria-label="App chrome"
           items={CHROME_PAGES}
           current="page-structure"
           renderLink={routerPill}
-          phoneOnly={false}
+          layout="scroll"
+          itemClassName="min-h-11 focus-visible:ring-inset"
           className="mt-2"
         />
       </div>
       <div className="mt-3">
         <Note>
-          <code className="font-mono">SectionNav</code> is <code className="font-mono">NavPills</code> with{" "}
-          <code className="font-mono">layout=&quot;scroll&quot;</code>: one line, faded where it is cut, every pill a
-          link and its own tab stop, the open one <code className="font-mono">aria-current=&quot;page&quot;</code>. By
-          default it shows below <code className="font-mono">md</code> only (
-          <code className="font-mono">phoneOnly</code>), where the sidebar that lists the same pages is gone; this frame
-          passes <code className="font-mono">phoneOnly={"{false}"}</code> so it shows at every width.
+          <code className="font-mono">layout=&quot;scroll&quot;</code>: one line, faded where it is cut, the open page
+          scrolled into view (the row only, never the page), every pill a link and its own tab stop, the open one{" "}
+          <code className="font-mono">aria-current=&quot;page&quot;</code>. <code className="font-mono">min-h-11</code>{" "}
+          makes each pill a 44 px touch target, and <code className="font-mono">focus-visible:ring-inset</code> keeps
+          the ring inside a row that clips what leaves its box. Add <code className="font-mono">md:hidden</code> where
+          the sidebar lists the same pages.
         </Note>
       </div>
     </Example>

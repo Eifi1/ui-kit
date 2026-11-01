@@ -35,7 +35,7 @@ import {
   splitDescription,
 } from "./feedback-record";
 import type { FeedbackContext, FeedbackRecord } from "./feedback-record";
-import { runMutation, type FeedbackMutationCall } from "./feedback-mutation";
+import { runMutation } from "./feedback-mutation";
 import { feedbackPage, feedbackPageLinkTarget } from "./feedback-page-link";
 import { useFeedbackStatusUndo } from "./feedback-status-undo";
 import type { FeedbackStatusChange } from "./feedback-status-undo";
@@ -133,22 +133,6 @@ export interface FeedbackDetailLabels {
   /** On section 4's heading line once the row is settled, given the formatted
    *  `resolved_at` date. de-CH: "Erledigt am: {{date}}" */
   resolvedAt: (date: string) => string;
-  // Deprecated on these members, the ones an app's code reads and overrides through: the
-  // tags sat on the English default's keys, and reached nothing — the default is typed by
-  // this interface (0.52 code review, feedback-row-detail-labels.ts; refactor audit
-  // 2026-10-30, DOC-9).
-  /** The admin's button while there is no outcome — read by nothing since 0.38 (the
-   *  outcome is frozen, §9.7; a reply is written instead). de-CH: "Ergebnis hinzufügen"
-   *  @deprecated 0.52 — a reply: the outcome is frozen since 0.38 (§9.7); removed in 0.53. */
-  outcomeAdd: string;
-  /** The same button once there is one. Unused since 0.38, as `outcomeAdd`.
-   *  de-CH: "Aktualisieren"
-   *  @deprecated 0.52 — a reply: the outcome is frozen since 0.38 (§9.7); removed in 0.53. */
-  outcomeUpdate: string;
-  /** The line above the outcome editor. Unused since 0.38, as `outcomeAdd`.
-   *  de-CH: "Was wurde umgesetzt, entschieden oder warum nicht."
-   *  @deprecated 0.52 — a reply: the outcome is frozen since 0.38 (§9.7); removed in 0.53. */
-  outcomePlaceholder: string;
   /** The button that opens section 5 on an answered row. de-CH: "Nacharbeit" */
   rework: string;
   /** Section 5's heading. de-CH: "Zur Nacharbeit senden" */
@@ -181,37 +165,15 @@ export function useFeedbackDetailLabels(labels?: LabelOverride<FeedbackDetailLab
 
 /* ── The page a report was filed on (§3.2, §4.4.2) ────────────────────────── */
 
-/**
- * The page a report was filed on as the reporter had it — path + query + hash (keksdose
- * `localHref`: the query and hash carry the state, `?tab=import`, a drill-down). Read from
- * `context.url`, else `context.route`; a path-only `url` works. `null` when there is no
- * page.
- *
- * Always a path on THIS app, never another origin's address — but the path and query
- * are the reporter's to write, so it is TEXT, not a link target: `/join?token=…` acts on
- * load, and `/login?next=…` forwards a signed-in admin to whatever its query names
- * (refactor audit 2026-10-30, FLW-7; 0.52 code review). The kit's URL cell and section
- * link {@link feedbackPagePath} alone, and not even that for a one-shot route
- * (`pageLinkExclude`) — `FeedbackRowDetail` and `useFeedbackColumns` draw the page that
- * way; an app's own cell should not link this.
- */
-export function feedbackPageHref(context: FeedbackContext | null | undefined): string | null {
-  return feedbackPage(context)?.href ?? null;
-}
+// The page as the reporter had it (path + query + hash) and the full URL "Copy URL"
+// copies were public too, as `feedbackPageHref` and `feedbackPageUrl`, until 0.53 (deprecated
+// in 0.52, API-4): `feedbackPage` (./feedback-page-link) is the one reading, and the kit
+// links only its path.
 
 /** The page's path alone — the compact text a URL column shows (§4.3), and the only part
  *  of the page the kit links. */
 export function feedbackPagePath(context: FeedbackContext | null | undefined): string | null {
   return feedbackPage(context)?.path ?? null;
-}
-
-/**
- * What "Copy URL" copies: the FULL `context.url` as the reporter's browser had it —
- * origin included, which is the one part that says which copy of the app it was
- * (feedback #278) — else `context.route`. `null` when there is no page.
- */
-export function feedbackPageUrl(context: FeedbackContext | null | undefined): string | null {
-  return feedbackPage(context)?.url ?? null;
 }
 
 /* ── Attachments (§3.5, §4.4.3) ───────────────────────────────────────────── */
@@ -319,17 +281,6 @@ export interface FeedbackDetailPatch {
  */
 export type FeedbackDetailUpdateAsync = (patch: FeedbackDetailPatch) => Promise<unknown>;
 
-/**
- * The callback form: TanStack Query's `mutate`, or a function that calls `onSuccess` once
- * the PATCH has landed. TanStack calls a per-call `onSuccess` for the LATEST `mutate()`
- * only, so an editor whose save was followed by another PATCH before it answered stayed
- * open, and the earlier status change lost its Undo.
- *
- * @deprecated 0.52 — pass `update.mutateAsync` ({@link FeedbackDetailUpdateAsync}); removed
- * in 0.53
- */
-export type FeedbackDetailUpdate = (patch: FeedbackDetailPatch, callbacks: { onSuccess: () => void }) => void;
-
 /** `POST /feedback/attachments` (§3.3): one file up, its URL
  *  (`/api/v1/feedback/attachments/<key>`) back. Reject on failure. */
 export type FeedbackUpload = (file: File) => Promise<string>;
@@ -351,7 +302,7 @@ export interface FeedbackReworkSectionProps {
   /** The PATCH — see {@link FeedbackDetailUpdateAsync}. Called with `{ id, body }` only,
    *  and only without `onRework`: the legacy append (§3.4), which server-kit 0.13 still
    *  turns into an entry for one release. Optional since 0.40; pass one of the two. */
-  onUpdate?: FeedbackMutationCall<FeedbackDetailPatch>;
+  onUpdate?: FeedbackDetailUpdateAsync;
   /** The PATCH is in flight (`update.isPending`). The upload adds its own. */
   pending?: boolean;
   /** The upload. Left out, the note goes without a file field. */
@@ -517,9 +468,8 @@ export interface FeedbackRowDetailProps {
   /** The signed-in user's id — who the AUTHOR is: the description editor and rework. */
   viewerId?: number | null;
   /** The page's PATCH — `update.mutateAsync` (see {@link FeedbackDetailUpdateAsync}). The
-   *  callback form ({@link FeedbackDetailUpdate}, `update.mutate`) still fits, deprecated
-   *  since 0.52; the prop's one signature takes both. */
-  onUpdate: FeedbackMutationCall<FeedbackDetailPatch>;
+   *  callback form, `update.mutate`, went in 0.53 (deprecated in 0.52). */
+  onUpdate: FeedbackDetailUpdateAsync;
   /** `update.isPending`: the editors' save buttons wait for it. */
   pending?: boolean;
   /** `POST /feedback/attachments` for the rework's one file and, since 0.47 (§12) with

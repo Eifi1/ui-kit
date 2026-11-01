@@ -122,13 +122,11 @@ export type {
   TranslationReviewSwipeAction,
   TranslationReviewSwipeBinding,
 } from "./lib/translation-review";
-// 0.22.0, the inputs round: the country list and the IBAN, ISIN and phone helpers that
+// 0.22.0, the inputs round: the country list and the IBAN and phone helpers that
 // CountrySelect, IbanInput and PhoneInput are built on.
 export { COUNTRY_CODES, countryName } from "./lib/countries";
 export { IBAN_LENGTHS, compactIban, formatIban, ibanCheckDigits, ibanProblem, isValidIban, isQrIban } from "./lib/iban";
 export type { IbanKind, IbanProblem } from "./lib/iban";
-// 0.52: deprecated, removed in 0.53 (MOD-5; tagged in lib/isin).
-export { formatIsin, isinCheckDigit, isValidIsin } from "./lib/isin";
 export { PHONE_DIAL_CODES, PHONE_COUNTRIES, parsePhone, formatNationalPhone, formatPhone, isE164 } from "./lib/phone";
 export type { PhoneCountryCode, PhoneCountry, ParsedPhone } from "./lib/phone";
 // 0.23.0: ColumnMapper's pure half (Kurvenschmiede's columns input, keksdose's import map).
@@ -177,14 +175,9 @@ export type { LongPressOptions, LongPressResult } from "./hooks/use-long-press";
 export { useNoIndex } from "./hooks/use-noindex";
 // 0.49 KIT-9: the window's title from page, section and app, in the provider's format.
 export { useDocumentTitle } from "./hooks/use-document-title";
-// 0.49 KIT-1b: U+2212 before a number as "-", the copy handler's rule, for an app's text.
-// 0.52: deprecated with the other 54 names no app, test or showcase page reads (refactor
-// audit 2026-10-30, API-4, decision 4). Each is tagged on its specifier here, not on its
-// declaration: the module keeps it for the kit's own use, only the barrel lets it go.
-export {
-  /** @deprecated 0.52 — a formatter's `minus: "ascii"`, where the figure is made (API-4); removed in 0.53 */
-  asciiMinusInNumbers,
-} from "./lib/clipboard-minus";
+// 0.53: the 55 names no app reads left the entry points (deprecated in 0.52, refactor audit
+// 2026-10-30, API-4, decision 4) — here 0.49 KIT-1b's `asciiMinusInNumbers`, the copy
+// handler's rule, among them. Their modules keep the ones the kit itself uses.
 export { DEFAULT_DOCUMENT_TITLE_FORMAT, formatDocumentTitle } from "./lib/document-title";
 export type { DocumentTitleParts } from "./lib/document-title";
 export type { SwipeStage, RowSwipeOptions, RowSwipeReturn } from "./hooks/use-row-swipe";
@@ -344,11 +337,6 @@ export * from "./components/multi-select";
 export * from "./components/tooltip";
 export * from "./components/user-avatar";
 export * from "./components/settings-fields";
-// Sync state for a database-backed field: the engine (`useFieldSync`) and the
-// affordance (`FieldSyncIndicator`), kept separate because the state is useful
-// without the dot — a form can gate its submit on any field being `pending`.
-// 0.52: deprecated as a whole, removed in 0.53 (MOD-5; tagged in the module).
-export * from "./components/field-sync";
 export * from "./components/month-picker";
 export * from "./components/checkbox";
 export * from "./components/switch";
@@ -422,9 +410,6 @@ export * from "./components/alert-banner";
 export * from "./components/toggle-group";
 // A wrapping set of links/buttons marked `aria-current` — Tabs-like looks, not tabs.
 export * from "./components/nav-pills";
-// 0.49.0 (KIT-6): a section's pages on the phone, one scrolling row of pills. 0.52:
-// deprecated, removed in 0.53 (MOD-5; tagged in the module).
-export * from "./components/section-nav";
 // A pill carrying one VALUE — inert, a link, or a toggle, depending on which prop it is
 // given — and the list field built from it. Distinct from Button on purpose: a row of
 // buttons reads as "choose an action", a row of chips as "here are the things".
@@ -441,10 +426,15 @@ export * from "./components/full-bleed-dialog";
 export * from "./components/grouped-picker";
 export * from "./components/file-dropzone";
 export * from "./components/mini-calendar";
-export * from "./components/calendar-heatmap";
+// Named, not `*`: `heatmapLevel` is CalendarHeatmap's own since 0.53 (API-4).
 export {
-  /** @deprecated 0.52 — `CalendarHeatmap`, which steps its cells with it (API-4); removed in 0.53 */
-  heatmapLevel,
+  CalendarHeatmap,
+  DEFAULT_CALENDAR_HEATMAP_LABELS,
+  heatmapWindowEnd,
+  type CalendarHeatmapLabels,
+  type CalendarHeatmapDatum,
+  type CalendarHeatmapDay,
+  type CalendarHeatmapProps,
 } from "./components/calendar-heatmap";
 export * from "./components/date-picker";
 export * from "./components/tree-view";
@@ -465,13 +455,9 @@ export {
   COMMIT_EXCEPT_BILLING,
   DEFAULT_WRITE_LOCK_LABELS,
 } from "./components/write-lock";
-// 0.46 (kastlan K4): the offline lock kind, its scope and its source.
-export {
-  /** @deprecated 0.52 — the kind itself, `"offline"`, which `useOfflineWriteLock` holds (API-4); removed in 0.53 */
-  OFFLINE_LOCK,
-  COMMIT_EXCEPT_OFFLINE,
-  useOfflineWriteLock,
-} from "./components/write-lock";
+// 0.46 (kastlan K4): the offline lock's scope and its source (the kind, `OFFLINE_LOCK`, left
+// the surface in 0.53: it is the string "offline").
+export { COMMIT_EXCEPT_OFFLINE, useOfflineWriteLock } from "./components/write-lock";
 export type {
   WriteLock,
   WriteLockLabels,
@@ -535,10 +521,12 @@ export * from "./components/error-boundary";
 export * from "./components/copy-button";
 export { AuthedImage, DEFAULT_AUTHED_IMAGE_LABELS } from "./components/authed-image";
 export type { AuthedImageProps, AuthedImageLabels } from "./components/authed-image";
-export * from "./components/image-grid";
+// Named, not `*`: `splitFileName` is ImageGrid's own since 0.53 (API-4).
 export {
-  /** @deprecated 0.52 — `ImageGrid`, which shortens its file names with it (API-4); removed in 0.53 */
-  splitFileName,
+  ImageGrid,
+  DEFAULT_IMAGE_GRID_LABELS,
+  type ImageGridLabels,
+  type ImageGridProps,
 } from "./components/image-grid";
 export * from "./components/lightbox";
 export * from "./components/button-group";
@@ -567,17 +555,7 @@ export type {
 // The toast layer over sonner (an OPTIONAL peer, loaded lazily): `toast` mirrors sonner's
 // API so apps migrate by swapping the import; `<Toaster>` carries the placement, theme,
 // tones and z-index both apps had wired by hand.
-export {
-  toast,
-  Toaster,
-  DEFAULT_TOAST_LABELS,
-  /** @deprecated 0.52 — `toast()`, which times a toast with an action by it (API-4); removed in 0.53 */
-  TOAST_ACTION_DURATION,
-  /** @deprecated 0.52 — `<Toaster>`, whose default `offset` it is (API-4); removed in 0.53 */
-  TOASTER_OFFSET_TOP,
-  /** @deprecated 0.52 — `<Toaster>`, whose default `offset` it is (API-4); removed in 0.53 */
-  TOASTER_OFFSET_BOTTOM,
-} from "./components/toast";
+export { toast, Toaster, DEFAULT_TOAST_LABELS } from "./components/toast";
 export type {
   ToastId,
   ToastAction,
@@ -682,8 +660,6 @@ export {
   // 0.47.0 (keksdose N17): a hand-built table's actions heading and cell.
   RowActionsHead,
   ROW_ACTIONS_CELL_CLASS,
-  /** @deprecated 0.52 — `RowActionsHead`, which draws it (API-4); removed in 0.53 */
-  ROW_ACTIONS_HEAD_CLASS,
 } from "./components/row-actions";
 export type {
   RowAction,
@@ -704,8 +680,6 @@ export * from "./components/one-time-code-input";
 export * from "./components/language-select";
 export * from "./components/tile-radio";
 export * from "./components/inline-edit-field";
-// 0.52: deprecated, removed in 0.53 (MOD-5; tagged in the module).
-export * from "./components/sign-chip";
 export * from "./components/country-select";
 export * from "./components/iban-input";
 export * from "./components/phone-input";
@@ -859,13 +833,9 @@ export type { DataExportSettingProps, DataExportLabels, DataExportFile } from ".
 // 0.30.0 (docs/user-admin-harmonization.md): the admin user list and its actions, and the
 // invitations panel. Callbacks only; the confirmation level is the server's.
 export {
-  /** @deprecated 0.52 — `useUserRosterColumns`, the same columns in the provider's words (API-4); removed in 0.53 */
-  userRosterColumns,
   useUserRosterColumns,
   UserIdentityCell,
   UserRowActions,
-  /** @deprecated 0.52 — `useUserRosterColumns`, whose state cell reads it (API-4); removed in 0.53 */
-  adminUserStates,
   userRosterSort,
   USER_ROSTER_SORT_KEYS,
   DEFAULT_USER_ROSTER_LABELS,
@@ -945,13 +915,7 @@ export { adminSectionOrder } from "./admin/admin-sections";
 export type { AdminSectionPlace, AdminSectionOrderOptions, AdminKeptSection } from "./admin/admin-sections";
 export { AdminForbidden } from "./admin/admin-forbidden";
 export type { AdminForbiddenProps } from "./admin/admin-forbidden";
-export {
-  AdminOverview,
-  AttentionTile,
-  adminWaitingCount,
-  /** @deprecated 0.52 — `AdminOverview`, which links its tiles there unless told otherwise (API-4); removed in 0.53 */
-  DEFAULT_ADMIN_ATTENTION_HREFS,
-} from "./admin/admin-overview";
+export { AdminOverview, AttentionTile, adminWaitingCount } from "./admin/admin-overview";
 export type {
   AdminAttention,
   AdminAttentionTile,
@@ -966,23 +930,10 @@ export type {
 export { AdminToolLinks } from "./admin/admin-tool-links";
 export type { AdminToolLink, AdminToolLinksProps } from "./admin/admin-tool-links";
 // 0.45.0 (docs/admin-harmonization.md §9.2.4): "Send a test mail to me".
-export {
-  MailTestCard,
-  DEFAULT_MAIL_TEST_CARD_LABELS,
-  MAIL_TEST_ANCHOR,
-  /** @deprecated 0.52 — `MailTestCard`, which masks the address itself (API-4); removed in 0.53 */
-  maskMailAddress,
-} from "./admin/mail-test-card";
+export { MailTestCard, DEFAULT_MAIL_TEST_CARD_LABELS, MAIL_TEST_ANCHOR } from "./admin/mail-test-card";
 export type { MailTestCardProps, MailTestCardLabels, MailTestAnswer } from "./admin/mail-test-card";
 // 0.33.0: the operator's plan parts (docs/billing-harmonization.md §14.12).
-export {
-  /** @deprecated 0.52 — `usePlanColumn`, the same column in the provider's words (API-4); removed in 0.53 */
-  planColumn,
-  usePlanColumn,
-  PlanChangeConfirm,
-  usePlanChangeResult,
-  DEFAULT_PLAN_CHANGE_LABELS,
-} from "./admin/plan-change";
+export { usePlanColumn, PlanChangeConfirm, usePlanChangeResult, DEFAULT_PLAN_CHANGE_LABELS } from "./admin/plan-change";
 export type {
   PlanChangeLabels,
   PlanColumnOptions,
@@ -1007,13 +958,7 @@ export type {
   PlanPrices,
   PlanPriceAnswer,
 } from "./billing/plan-price";
-export {
-  PlanCard,
-  PlanPicker,
-  GrantWarningConfirm,
-  /** @deprecated 0.52 — `PlanPicker`, which marks each card's relation itself (API-4); removed in 0.53 */
-  planRelation,
-} from "./billing/plan-card";
+export { PlanCard, PlanPicker, GrantWarningConfirm } from "./billing/plan-card";
 export type {
   BillingPlan,
   PlanRelation,
@@ -1047,21 +992,10 @@ export {
   withoutCheckoutReturn,
   checkoutReturnUrl,
 } from "./billing/checkout-return";
-export {
-  checkoutFingerprint,
-  /** @deprecated 0.52 — `useCheckoutProcessing`, which asks it (API-4); removed in 0.53 */
-  checkoutLanded,
-  noteCheckoutStarted,
-  useCheckoutProcessing,
-} from "./billing/checkout-processing";
+export { checkoutFingerprint, noteCheckoutStarted, useCheckoutProcessing } from "./billing/checkout-processing";
 export type { CheckoutOverview, CheckoutProcessingOptions } from "./billing/checkout-processing";
 // The link to the pay page and Paddle's locale (§14.4); the page itself ships as dist/pay/.
-export {
-  /** @deprecated 0.52 — `payPageUrl`, which writes it (API-4); removed in 0.53 */
-  PAY_PAGE_LANG_PARAM,
-  paddleLocale,
-  payPageUrl,
-} from "./billing/pay-page";
+export { paddleLocale, payPageUrl } from "./billing/pay-page";
 export type { PaddleEnvironment } from "./billing/pay-page";
 // 0.39 (§15.2.6): the apps every pay page serves, by their `billing_app` tag.
 export { PAY_PAGE_APPS } from "./billing/pay-page";
@@ -1111,11 +1045,7 @@ export type {
   ResolveAccountLanguageInput,
   ResolvedAccountLanguage,
 } from "./settings/use-account-language";
-export {
-  useAccountAppearance,
-  /** @deprecated 0.52 — `useAccountAppearance`, which resolves the same three values (API-4); removed in 0.53 */
-  resolveAccountAppearance,
-} from "./settings/use-account-appearance";
+export { useAccountAppearance } from "./settings/use-account-appearance";
 export type {
   AppearanceSource,
   AccountAppearanceFields,
@@ -1192,11 +1122,7 @@ export type {
 } from "./notifications/push-worker";
 export { PushDeviceSetting } from "./notifications/push-device-setting";
 export type { PushDeviceSettingProps, PushDeviceAction } from "./notifications/push-device-setting";
-export {
-  PushDevicesSetting,
-  /** @deprecated 0.52 — `PushDevicesSetting`, which names each device with it (API-4); removed in 0.53 */
-  describeUserAgent,
-} from "./notifications/push-devices-setting";
+export { PushDevicesSetting } from "./notifications/push-devices-setting";
 export type { PushDevicesSettingProps } from "./notifications/push-devices-setting";
 export { UnsubscribePanel, unsubscribeTokenType } from "./notifications/unsubscribe-panel";
 export type { UnsubscribePanelProps } from "./notifications/unsubscribe-panel";
@@ -1243,15 +1169,7 @@ export { DEFAULT_DEMO_LABELS, useDemoLabels } from "./demo/demo-labels";
 export type { DemoLabels } from "./demo/demo-labels";
 export { isDemoSession } from "./demo/demo-session";
 export type { DemoModel, DemoSessionUser } from "./demo/demo-session";
-export {
-  useDemoCountdown,
-  /** @deprecated 0.52 — `useDemoCountdown`, the same countdown; its `now` option for a test (API-4); removed in 0.53 */
-  demoCountdown,
-  /** @deprecated 0.52 — `useDemoCountdown`, whose `warning` turns on then (API-4); removed in 0.53 */
-  DEMO_WARNING_MINUTES,
-  /** @deprecated 0.52 — `useDemoCountdown`, whose `lastHour` turns on then (API-4); removed in 0.53 */
-  DEMO_MINUTES_ONLY,
-} from "./demo/demo-countdown";
+export { useDemoCountdown } from "./demo/demo-countdown";
 export type { DemoCountdown, DemoCountdownOptions, DemoExpiry } from "./demo/demo-countdown";
 export { DemoStart } from "./demo/demo-start";
 export type { DemoStartProps } from "./demo/demo-start";

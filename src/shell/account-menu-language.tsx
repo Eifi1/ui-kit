@@ -39,11 +39,15 @@ function flagOf(lang: AccountMenuLanguageOption): ReactNode {
   );
 }
 
-/** {@link AccountMenuLanguageProps} but the handler. */
-interface AccountMenuLanguageBaseProps {
+export interface AccountMenuLanguageProps {
   languages: readonly AccountMenuLanguageOption[];
   /** The active language's code. */
   value: string | undefined;
+  /** A pick: the app sets the device's language and, signed in, the account's
+   *  (settings §6.2). `value` + `onChange`, as every kit control pairs them
+   *  (CONTRIBUTING §4; refactor audit 2026-10-30, API-5). Required: 0.53 removed the
+   *  deprecated `onPick`. */
+  onChange: (code: string) => void;
   /** The account menu's `close` (from `TopBarActionMenu`'s `children`): a pick shuts it. */
   close?: () => void;
   /** The row's name. Default: `topBar.language` ("Language"). */
@@ -51,28 +55,6 @@ interface AccountMenuLanguageBaseProps {
   /** Open the sub-list at first. Default `false`. */
   defaultOpen?: boolean;
 }
-
-/**
- * `onChange`, or the deprecated `onPick`, is required: with both optional, a row an app
- * moved off `onPick` without adding `onChange` — or with it misspelt — compiled, and a
- * pick only closed the menu (0.52 code review, account-menu-language.tsx).
- */
-export type AccountMenuLanguageProps = AccountMenuLanguageBaseProps &
-  (
-    | {
-        /** A pick: the app sets the device's language and, signed in, the account's
-         *  (settings §6.2). `value` + `onChange`, as every kit control pairs them
-         *  (CONTRIBUTING §4; refactor audit 2026-10-30, API-5). */
-        onChange: (code: string) => void;
-        /** @deprecated 0.52 — `onChange` (the same call); removed in 0.53. */
-        onPick?: (code: string) => void;
-      }
-    | {
-        onChange?: undefined;
-        /** @deprecated 0.52 — `onChange` (the same call); removed in 0.53. */
-        onPick: (code: string) => void;
-      }
-  );
 
 /**
  * The language choice INSIDE the account menu (docs/top-bar-harmonization.md §2.3),
@@ -89,12 +71,10 @@ export function AccountMenuLanguage({
   languages,
   value,
   onChange,
-  onPick,
   close,
   label,
   defaultOpen = false,
 }: AccountMenuLanguageProps) {
-  const change = onChange ?? onPick;
   const words = useKitLabels("topBar", DEFAULT_TOP_BAR_LABELS);
   const [open, setOpen] = useState(defaultOpen);
   const active = languages.find((l) => l.code === value);
@@ -131,7 +111,7 @@ export function AccountMenuLanguage({
               <MenuItem
                 checked={lang.code === value}
                 onClick={() => {
-                  change?.(lang.code);
+                  onChange(lang.code);
                   setOpen(false);
                   close?.();
                 }}

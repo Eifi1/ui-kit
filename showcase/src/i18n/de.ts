@@ -295,12 +295,6 @@ export const de: Dictionary = {
       blurb:
         "Eine Messtabelle eingeben: ein Zellenraster für die Tastatur, ein aus einer Tabellenkalkulation eingefügter Block und dieselbe Tabelle als Text — Tausende Zeilen, nur die sichtbaren gerendert.",
     },
-    "field-sync": {
-      title: "Synchronisationsstatus",
-      short: "Sync-Status",
-      blurb:
-        "Sync-Status eines datenbankgestützten Felds, gespeichert beim Verlassen: Rahmenfarbe und ein Symbol am Feldende zeigen geändert, speichert, gespeichert oder fehlgeschlagen — der Fehlergrund erscheint beim Überfahren des Fehlersymbols.",
-    },
     "signature-password": {
       title: "Unterschrift, Passwort & Bestätigung",
       short: "Unterschrift",
@@ -886,14 +880,6 @@ export const de: Dictionary = {
       "virtualisierte Liste",
       "eingefügten Text in Zeilen zerlegen",
       "Zellen mit Pfeiltasten bearbeiten",
-    ],
-    "field-sync": [
-      "Feld beim Verlassen speichern",
-      "Status speichert oder gespeichert",
-      "fehlgeschlagenes Speichern anzeigen",
-      "automatisch speichern",
-      "Hinweis auf ungespeicherte Änderungen",
-      "Feld direkt aus der Datenbank",
     ],
     "signature-password": [
       "Dokument unterschreiben",

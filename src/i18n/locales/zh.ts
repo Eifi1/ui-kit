@@ -179,9 +179,6 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       outcome: "处理结果",
       replies: "回复",
       resolvedAt: (date) => `解决日期：${date}`,
-      outcomeAdd: "添加处理结果",
-      outcomeUpdate: "更新",
-      outcomePlaceholder: "做了什么、作出了什么决定，或为什么不予处理。",
       rework: "返工",
       reworkTitle: "退回返工",
       reworkSend: "提交返工",
@@ -489,13 +486,6 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       noResults: "没有匹配的图标",
       resultCount: (count) => `${n(count)} 个图标`,
     },
-    fieldSync: {
-      synced: "已保存",
-      edited: "有未保存的更改",
-      pending: "正在保存…",
-      error: "保存失败",
-      retry: "重试",
-    },
     passwordReveal: {
       show: "显示密码",
       hide: "隐藏密码",
@@ -529,7 +519,6 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       palette: "外观预设",
       language: "语言",
       languageCurrent: (name) => `选择语言，当前：${name}`,
-      switchRole: "切换角色",
       role: (value) => `角色：${value}`,
     },
     pickerSheet: {
@@ -1484,12 +1473,6 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     phoneInput: {
       countryCode: "国家/地区代码",
       other: "其他",
-    },
-    signChip: {
-      outflow: "支出",
-      inflow: "收入",
-      direction: (current, next) => `方向：${current}，切换为${next}`,
-      switchTo: (next) => `切换为${next}`,
     },
     columnMapper: {
       paste: "粘贴表格",
