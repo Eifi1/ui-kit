@@ -21,6 +21,28 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.53.0](https://github.com/Eifi1/ui-kit/compare/v0.52.0...v0.53.0) (2026-11-02)
+
+### ⚠ BREAKING CHANGES
+
+* everything 0.52 deprecated is gone: RoleSwitcher, SectionNav, the FieldSync
+  family, SignChip, lib/isin, the feedback `.mutate` form and FeedbackComposer*, onOpenChange and
+  onPick, DateRangeCommit, and 55 names no app read. docs/adopt-0.53.md lists each with its
+  replacement.
+* **treemap:** TreemapProps.redactNames and TreemapCellProps.redactNames are `boolean | "tiles"`;
+  code that reads the prop into a `boolean` must widen its type or compare with `=== true`.
+* **series-chart:** where `rows` has a type that declares keys, `hit.row`/`point.row` is that type,
+  so (a) reading a key it lacks, (b) passing an interface row to a `SeriesChartRow` parameter,
+  (c) casting it to an unrelated type, or (d) a handler typed structurally with
+  `{ row: SeriesChartRow }` no longer type-checks. `<SeriesChart<object> …>` restores the 0.52
+  types. No direct call in keksdose, kastlan or Kurvenschmiede has these shapes.
+
+### Added
+
+* remove what 0.52 deprecated ([e71fbbd](https://github.com/Eifi1/ui-kit/commit/e71fbbd02a17abac34a42baf58fa8e594a5c7061))
+* **series-chart:** hit.row and a dot's point.row are typed as the chart's rows ([b001560](https://github.com/Eifi1/ui-kit/commit/b00156082de68225127214d74cfcafb995d636c7))
+* **treemap:** shareInValue drops the name's share; redactNames="tiles" leaves groups untagged ([39a01c8](https://github.com/Eifi1/ui-kit/commit/39a01c80fca99e4a7193352d1dcd133cde766efb))
+
 ## [0.52.0](https://github.com/Eifi1/ui-kit/compare/v0.51.7...v0.52.0) (2026-10-31)
 
 ### ⚠ BREAKING CHANGES
