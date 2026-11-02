@@ -149,7 +149,8 @@ describe("deprecations", () => {
   it("names a specifier in an export list by itself, and a labels default's key by its type", () => {
     // 0.52 (API-4, DOC-9): the barrel deprecates a name its module keeps, and a label key
     // is tagged on its English default. Read upwards for an owner, both used to borrow the
-    // nearest `type X` or none.
+    // nearest `type X` or none. (On 0.35's schedule, as the fixture above: a `0.52` tag
+    // here read as one 0.53 forgot to remove.)
     const barrel = [
       "export {",
       "  buttonClasses,",
@@ -157,7 +158,7 @@ describe("deprecations", () => {
       '} from "./components/button-look";',
       "export {",
       "  toast,",
-      "  /** @deprecated 0.52 — `toast()` applies it; removed in 0.53 */",
+      "  /** @deprecated 0.35 — `toast()` applies it; removed in 0.36 */",
       "  TOAST_ACTION_DURATION,",
       '} from "./components/toast";',
     ].join("\n");
@@ -168,7 +169,7 @@ describe("deprecations", () => {
       'import type { WidgetLabels } from "./widget";',
       "export const DEFAULT_WIDGET_LABELS: WidgetLabels = {",
       '  save: "Save",',
-      "  /** @deprecated 0.52 — nothing reads it; removed in 0.53 */",
+      "  /** @deprecated 0.35 — nothing reads it; removed in 0.36 */",
       '  outcomeAdd: "Add outcome",',
       "};",
     ].join("\n");

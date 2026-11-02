@@ -10,7 +10,7 @@ import { rowActionsColumn } from "../row-actions";
 import { TranslationReviewPanel } from "../translation-review";
 import { translationRows } from "../../lib/translation-review";
 import { UiKitProvider } from "../../i18n/kit-labels";
-import { swipePlanRowActions } from "../../data-table";
+import { swipePlanRowActions } from "../data-table-row-actions";
 import { userRosterColumns } from "../../admin/user-roster";
 
 /**
@@ -142,8 +142,10 @@ describe("userRosterColumns' actions column (0.46.1)", () => {
   });
 });
 
-describe("swipePlanRowActions (public since 0.46.1, keksdose N3)", () => {
-  it("is on the /data-table entry: end side first, each once, omit honoured, null is []", () => {
+// Public from 0.46.1 (keksdose N3) until 0.53 (deprecated in 0.52, API-4): DataTable's
+// `desktopSwipeActions` column is built with it.
+describe("swipePlanRowActions", () => {
+  it("puts the end side first, each once, omit honoured, null is []", () => {
     const onCommit = vi.fn();
     const actions = swipePlanRowActions(
       {

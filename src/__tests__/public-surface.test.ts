@@ -322,18 +322,25 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.52 (−1, breaking): `DevSwitchers`, deprecated in 0.51 — `DevMenu`.
   // 0.52 (+1, here and in /data-table): `compareSortValues`, the client sort's own order
   // (keksdose weaves its scheduled rows into a kit-sorted register).
-  ["@eifi1/ui-kit", barrel, 1028],
+  // 0.53 (−67, breaking): what 0.52 deprecated — the 52 of the 55 unread names (API-4) the
+  // barrel had (`SYNC_DB_STORES` and `DEFAULT_SYNC_BACKOFF_MS` were /sync's), with
+  // `feedbackPageHref` and `feedbackPagePath` (−54); RoleSwitcher, SectionNav, the FieldSync
+  // family (six), SignChip and its labels, lib/isin's three (−13, MOD-5).
+  ["@eifi1/ui-kit", barrel, 961],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
   // 0.35.0 (−13): the zoom maths and `withChartZoom` are the kit's own (API-6b).
   // 0.52 (+1 here and in the barrel): `DEFAULT_TREEMAP_LABELS` (DSP-5).
-  ["@eifi1/ui-kit/chart", chart, 54],
+  // 0.53 (−4, breaking): what 0.52 deprecated — `EDGE_MIN_CONTRAST`, `CHART_INK_HEX`,
+  // `resolveTooltipPlacement`, `STROKE_PATTERNS` (API-4).
+  ["@eifi1/ui-kit/chart", chart, 50],
   // 0.22.0: DEFAULT_DATA_TABLE_SORT_LABELS, the phone sort control's words (+1).
   // 0.35.0: `resolveDataTableLabels` and `missingDataTableLabels` removed (R1, API-6a) (−2).
   // 0.46.1: `swipePlanRowActions`, the desktop swipe column's derivation (keksdose N3) (+1).
   // 0.52: `compareSortValues`, the client sort's order (+1).
-  ["@eifi1/ui-kit/data-table", dataTable, 28],
+  // 0.53 (−2, breaking): what 0.52 deprecated — `swipePlanRowActions`, `readTableUrlState` (API-4).
+  ["@eifi1/ui-kit/data-table", dataTable, 26],
   // 0.12.0: `FeedbackThread`, `FeedbackComposer` and the `DEFAULT_*_LABELS` of their two
   // namespaces and of `feedbackDialog` (+5 here and in the barrel).
   // 0.15.5: `DEFAULT_MAX_ATTACHMENTS` (+1 here and in the barrel).
@@ -342,8 +349,12 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.35.0: `FeedbackComposer` removed, `ChatComposer` stays (API-6d) (−1).
   // 0.40.0: `FEEDBACK_QUEUE_STATUSES`, `feedbackReworkCount` (+2 here and in the barrel).
   // 0.46.0: `feedbackSwipeOmitShown`, the desktop column's omit (dev#598) (+1 here and in the barrel).
-  ["@eifi1/ui-kit/feedback", feedback, 105],
-  ["@eifi1/ui-kit/search", search, 9],
+  // 0.53 (−14, breaking): what 0.52 deprecated — the slice's 12 unread names (API-4) and
+  // `feedbackPageHref`, `feedbackPagePath`.
+  ["@eifi1/ui-kit/feedback", feedback, 91],
+  // 0.53 (−3, breaking): what 0.52 deprecated — `SEARCH_TIER_POINTS`, `matchEntries`,
+  // `normalizeSearchText` (API-4).
+  ["@eifi1/ui-kit/search", search, 6],
   // 0.31.0 (+26): the settings shell and its route, focus, context, heading and
   // catalogue helpers; PublicHeader, RootEntry, RedirectIfAuthed and the
   // last-visited page — the router-aware parts and their companions.
@@ -358,7 +369,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.51.0 (+1): `DevMenu` (§2.7.1, see the barrel).
   // 0.51.4 (+1): `useFocusParam` (see the barrel).
   // 0.52 (−1): `DevSwitchers` removed (see the barrel).
-  ["@eifi1/ui-kit/shell", shell, 60],
+  // 0.53 (−11, breaking): what 0.52 deprecated — the slice's 10 unread names (API-4) and
+  // `RoleSwitcher` (MOD-5).
+  ["@eifi1/ui-kit/shell", shell, 49],
   // 0.43.0 (+9): the tours page (see the barrel).
   // 0.43.0 (+3): `resetTourProgress`, `doneCount`, `earnedPoints` (build review, see the barrel).
   // 0.44.0 (+1): `completeTour` (§9.2, see the barrel).
@@ -402,7 +415,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // four leaf utilities `/offline` exports too. Standalone: its Dexie peer stays out of the barrel.
   // 0.46.1 (+3, kastlan N4/N5): `rowByPk`, `SYNC_DB_PK_INDEX` (the opt-in `[entity+pk]` index)
   // and the leaf `uuid5`.
-  ["@eifi1/ui-kit/sync", sync, 17],
+  // 0.53 (−2, breaking): what 0.52 deprecated — `SYNC_DB_STORES`, `DEFAULT_SYNC_BACKOFF_MS` (API-4).
+  ["@eifi1/ui-kit/sync", sync, 15],
   // 0.46.0: `createFakeSyncTransport`, the scripted `/sync` server for an app's tests.
   ["@eifi1/ui-kit/sync/testing", syncTesting, 1],
   // 0.46.0 (docs/notifications-harmonization.md §10.6 rule 5): the service worker's entry —

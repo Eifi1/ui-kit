@@ -50,7 +50,6 @@ export type PageSlug =
   | "entity-pickers"
   | "dropdown-parts"
   | "measured-grid"
-  | "field-sync"
   | "signature-password"
   | "data-display"
   | "buttons"

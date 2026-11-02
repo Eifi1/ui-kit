@@ -13,13 +13,18 @@ export interface TreemapLabels {
    * `valueFormatter` when that returns text, else as the number in the provider's
    * locale; `share` is the tile's share of what is drawn, already a formatted percent
    * ("60 %" in German, "60%" in English) — the function only arranges them.
+   *
+   * `share` is `""` when the map's `shareInValue` says the formatter's text already holds
+   * it (0.53): leave out whatever frames it, as every catalogue drops its " (share)" —
+   * "Migros: CHF 412.30 · 12%", not "… · 12% ()".
    */
   tile: (name: string, value: string, share: string) => string;
   /**
    * A group's accessible name (0.52, `TreemapNode.children`): its frame is a stop of the
    * map's keyboard before its tiles, so a reader hears the group and its total once, on the
    * way in. `value` and `share` as for {@link TreemapLabels.tile}, of the group's tiles
-   * together; the word "group" tells it from a tile of the same shape.
+   * together, the share `""` under `shareInValue` as there; the word "group" tells it from
+   * a tile of the same shape.
    */
   group: (name: string, value: string, share: string) => string;
   /**
@@ -32,8 +37,11 @@ export interface TreemapLabels {
   inGroup: (name: string, group: string) => string;
 }
 
+// The share in brackets only when there is one: `""` under the map's `shareInValue` (0.53,
+// keksdose after 0.52), which the catalogues in src/i18n/locales follow, each in its own
+// typography.
 export const DEFAULT_TREEMAP_LABELS: TreemapLabels = {
-  tile: (name, value, share) => `${name}: ${value} (${share})`,
-  group: (name, value, share) => `${name}, group: ${value} (${share})`,
+  tile: (name, value, share) => `${name}: ${value}${share ? ` (${share})` : ""}`,
+  group: (name, value, share) => `${name}, group: ${value}${share ? ` (${share})` : ""}`,
   inGroup: (name, group) => `${name}, in ${group}`,
 };

@@ -9,7 +9,7 @@ import type { FeedbackComment, FeedbackPublicRecord, FeedbackReply } from "../fe
 import { FeedbackPublicDetail } from "../feedback-public-list";
 import type { FeedbackRecord } from "../feedback-record";
 import { FeedbackReplyComposer, FeedbackReplyTimeline } from "../feedback-replies";
-import { FeedbackRowDetail, type FeedbackDetailUpdate } from "../feedback-row-detail";
+import { FeedbackRowDetail, type FeedbackDetailUpdateAsync } from "../feedback-row-detail";
 
 vi.mock("../../components/toast", () => ({
   toast: Object.assign(vi.fn(), { undo: vi.fn(), success: vi.fn(), error: vi.fn() }),
@@ -251,10 +251,7 @@ describe("FeedbackRowDetail and FeedbackPublicDetail (§12)", () => {
     ],
     ...over,
   });
-  const landing = () =>
-    vi.fn<FeedbackDetailUpdate>((_patch, { onSuccess }) => {
-      onSuccess();
-    });
+  const landing = () => vi.fn<FeedbackDetailUpdateAsync>(async () => undefined);
 
   it("keeps the admin's composer text only on a plain bump: the rework's onUpload alone opts nothing in", async () => {
     // keksdose and kastlan build review B1 (round 0.47): both already pass onUpload for the

@@ -10,14 +10,24 @@
 // because the main barrel re-exports everything here too, so `import { Button } from
 // "@eifi1/ui-kit"` reaches recharts as well (packaging-contract.test.ts asserts it).
 export * from "./components/chart";
-export * from "./theme/chart-palette";
-// 0.52: the slice's share of the 55 names no app reads (refactor audit 2026-10-30, API-4,
-// decision 4), tagged on their specifiers as the barrel's are — the modules keep them.
+// Named, not `*`, for chart-palette, series-chart and toggle-legend: 0.53 took the slice's
+// share of the 55 names no app reads off the surface (deprecated in 0.52, refactor audit
+// 2026-10-30, API-4) — `EDGE_MIN_CONTRAST`, `resolveTooltipPlacement`, `STROKE_PATTERNS`,
+// which their modules keep for the kit's own use.
 export {
-  /** @deprecated 0.52 — `chartEdge`, which measures a fill against it (API-4); removed in 0.53 */
-  EDGE_MIN_CONTRAST,
-  /** @deprecated 0.52 — `--chart-ink` (`CHART_ROLES.outline`), the same ink as a token (API-4); removed in 0.53 */
-  CHART_INK_HEX,
+  PALETTE_SIZE,
+  CVD_ORDER,
+  paletteFor,
+  CHART_COLORS,
+  CHART_ROLES,
+  CHART_MUTED_HEX,
+  chartEdge,
+  PALETTE_HEX,
+  HEATMAP_HEX,
+  lerpHex,
+  textOn,
+  type PaletteForOptions,
+  type HeatStops,
 } from "./theme/chart-palette";
 
 // The tile chart (treemap) the apps share — moved here from keksdose so every consumer
@@ -27,10 +37,42 @@ export * from "./components/treemap-labels";
 
 // lenkbank's zoomable series chart, its synced x-zoom, the toggle legend and the
 // mirrored-pair axis geometry — moved here so the apps derive them from the package.
-export * from "./components/series-chart";
 export {
-  /** @deprecated 0.52 — `SeriesChart`, which places its tooltip with it (API-4); removed in 0.53 */
-  resolveTooltipPlacement,
+  AXIS_TICK_WIDTH,
+  AXIS_TITLE_STRIP,
+  anchoredBand,
+  axisBandWidth,
+  mergeSeries,
+  oneAxis,
+  padBand,
+  paddedDomain,
+  seriesKey,
+  soleSeriesColor,
+  visibleSeries,
+  seriesLegendEntries,
+  StaticSeriesChart,
+  SeriesChart,
+  type TimeTickUnit,
+  type SeriesChartAxisBudget,
+  type SeriesSource,
+  type SeriesChartSeries,
+  type SeriesChartType,
+  type SeriesChartPoint,
+  type SeriesChartRow,
+  type SeriesChartXValue,
+  type SeriesChartTickValues,
+  type SeriesChartAxis,
+  type SeriesChartXTick,
+  type SeriesChartX,
+  type SeriesChartTooltipPlacement,
+  type SeriesChartTooltip,
+  type SeriesChartSpan,
+  type SeriesChartTone,
+  type SeriesChartReference,
+  type SeriesChartMarker,
+  type SeriesChartHit,
+  type SeriesChartProps,
+  type SeriesLegendAxes,
 } from "./components/series-chart";
 // 0.32.1 (keksdose's 0.32 report): the height every chart takes, for an app's wrappers.
 export type { ChartHeight } from "./components/chart-height";
@@ -41,10 +83,17 @@ export * from "./components/chart-zoom";
 // packaging contract reads this entry's own imports to know which modules may import
 // recharts, so chart-zoom-core has to be one of them (MOD-6).
 export { SharedXZoom } from "./components/chart-zoom-core";
-export * from "./components/toggle-legend";
 export {
-  /** @deprecated 0.52 — `strokeDash`, which picks a series' pattern from it (API-4); removed in 0.53 */
-  STROKE_PATTERNS,
+  strokeDash,
+  STEP_DASH,
+  toggleHidden,
+  ToggleLegend,
+  StaticLegend,
+  LegendColumn,
+  LegendGroup,
+  type LegendEntry,
+  type ToggleLegendProps,
+  type StaticLegendProps,
 } from "./components/toggle-legend";
 export * from "./components/facing-pair";
 export * from "./components/series-chart-labels";

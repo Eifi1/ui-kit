@@ -137,7 +137,7 @@ export interface DatePickerBaseProps extends Omit<ComponentPropsWithoutRef<"div"
    *
    * Off by default: the caption becomes one more stop in the panel's tab order, which a
    * 0.x minor does not spring on a form. Works in the popover and in
-   * `DateRangePicker`'s phone sheet alike, beside presets and in `commit="apply"`
+   * `DateRangePicker`'s phone sheet alike, beside presets and with `apply`
    * (a preset picked while the months are open goes back to the days, on its start).
    *
    * Why not a two-month panel (`months={2}`) instead, or beside it: for a twelve-month

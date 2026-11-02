@@ -28,7 +28,6 @@ import {
   OptionSwitcherMenu,
   PALETTES,
   PaletteMenu,
-  RoleSwitcher,
   TOPBAR_MENU_ITEM_CLASS,
   TOPBAR_TRIGGER_CLASS,
   ThemeToggle,
@@ -90,10 +89,6 @@ const ENVIRONMENTS: OptionSwitcherOption<Env>[] = [
   { value: "prod", label: "Production" },
 ];
 
-// `readonly R[]` in the prop, so `as const` is what makes R the three literals
-// instead of `string` — and therefore what makes a typo in `value` a compile error.
-const ROLES = ["admin", "accountant", "viewer"] as const;
-
 /**
  * A real `AppShellNavItem[]`, typed against the exported interface so this block
  * cannot drift from the shape it documents: rename a field in the kit and this file
@@ -154,16 +149,9 @@ export function ShellSection() {
 
       <Example
         label="OptionSwitcherMenu"
-        hint="Generic check-marked value switcher — the glue RoleSwitcher is built from."
+        hint="Generic check-marked value switcher — the glue CompanySwitcher is built from."
       >
         <Environments />
-      </Example>
-
-      <Example
-        label="RoleSwitcher"
-        hint="Deprecated in 0.52, removed in 0.53: every app switches the role in `DevMenu`'s Account section."
-      >
-        <Roles />
       </Example>
 
       <Example label="TopBarActionMenu" hint="Rows as data: actions, react-router links and dividers. Needs a Router.">
@@ -530,25 +518,6 @@ function Environments() {
         <code className="font-mono">label</code> is a <code className="font-mono">ReactNode</code>, so a row can carry a
         badge or a muted subtitle; <code className="font-mono">value</code> must be a string, because it is also the
         list key.
-      </Note>
-    </div>
-  );
-}
-
-function Roles() {
-  const [role, setRole] = useState<(typeof ROLES)[number]>("viewer");
-
-  return (
-    <div className="space-y-3">
-      <Row>
-        <RoleSwitcher roles={ROLES} value={role} onChange={setRole} heading="Act as" />
-        <span className={READOUT_STRONG}>value: {role}</span>
-      </Row>
-      <Note>
-        A thin wrapper: the flask icon, and a default <code className="font-mono">title</code> of{" "}
-        <code className="font-mono">Role: {role}</code> when none is passed. Typically a dev or UI-only affordance — the
-        kit has no opinion about whether the server honours the switch, so nothing here should be mistaken for
-        authorisation.
       </Note>
     </div>
   );

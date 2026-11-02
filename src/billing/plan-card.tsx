@@ -14,8 +14,6 @@ import { Button } from "../components/button";
 import { DialogFrame } from "../components/dialog-frame";
 import { useBillingLabels } from "./billing-labels";
 import type { BillingLabels } from "./billing-labels";
-import { dialogClose } from "./dialog-close";
-import type { WithDialogClose } from "./dialog-close";
 import { BILLING_INTERVALS, billingCurrencyFor, formatPlanPrice, planPrice } from "./plan-price";
 import type { BillingCurrency, BillingInterval, PlanPrices } from "./plan-price";
 
@@ -502,27 +500,19 @@ export function PlanPicker({
   );
 }
 
-/** {@link GrantWarningConfirmProps} before one of its two close props is required. */
-interface GrantWarningConfirmFields {
+export interface GrantWarningConfirmProps {
   /** Shown, controlled. */
   open: boolean;
   /** "Back", Escape, the backdrop — and after "Buy anyway". 0.52: every other kit
-   *  dialog's `onClose` (CONTRIBUTING §4; refactor audit 2026-10-30, API-5). */
-  onClose?: () => void;
-  /** @deprecated 0.52 — `onClose`, as every other kit dialog; removed in 0.53. Called with
-   *  `false` when there is no `onClose`. */
-  onOpenChange?: (open: boolean) => void;
+   *  dialog's `onClose` (CONTRIBUTING §4; refactor audit 2026-10-30, API-5); required
+   *  since 0.53 removed `onOpenChange` (deprecated in 0.52). */
+  onClose: () => void;
   /** "Buy anyway": the app opens its checkout. The dialog closes itself after it. */
   onConfirm: () => void;
   /** Prop > `<UiKitProvider labels={{ billing }}>` > English: `grantWarningTitle`,
    *  `grantWarningBody`, `grantWarningAction`. "Back" is `common.back`. */
   labels?: LabelOverride<BillingLabels>;
 }
-
-/** What {@link GrantWarningConfirm} takes: `onClose`, or alone the deprecated
- *  `onOpenChange`, is required (0.52 code review: with neither it compiled, and nothing
- *  could dismiss it). */
-export type GrantWarningConfirmProps = WithDialogClose<GrantWarningConfirmFields>;
 
 /**
  * 0.42 (§16.8 B): the permanent-grant warning before a checkout — `grantWarningTitle`,
@@ -533,22 +523,15 @@ export type GrantWarningConfirmProps = WithDialogClose<GrantWarningConfirmFields
  * to a checkout — show this before that checkout, so a permanent-grant holder is still
  * warned. Carries `data-grant-warning`.
  */
-export function GrantWarningConfirm({
-  open,
-  onClose,
-  onOpenChange,
-  onConfirm,
-  labels: labelsProp,
-}: GrantWarningConfirmProps) {
+export function GrantWarningConfirm({ open, onClose, onConfirm, labels: labelsProp }: GrantWarningConfirmProps) {
   const labels = useBillingLabels(labelsProp);
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
-  const close = dialogClose({ onClose, onOpenChange });
   return (
     <DialogFrame
       open={open}
       title={labels.grantWarningTitle}
       description={labels.grantWarningBody}
-      onClose={close}
+      onClose={onClose}
       data-grant-warning=""
       actions={(lower) => (
         <>
@@ -567,7 +550,7 @@ export function GrantWarningConfirm({
               // and the lowering panel is not inert: a double click on "Buy anyway" opened
               // the checkout twice (0.52 code review, plan-card.tsx). The caller's `open`
               // turning false still plays the exit.
-              close();
+              onClose();
             }}
           >
             {labels.grantWarningAction}

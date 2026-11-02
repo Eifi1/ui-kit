@@ -2,23 +2,19 @@ import { useState } from "react";
 import {
   Button,
   IbanInput,
-  Input,
   PhoneInput,
   ToggleGroup,
-  formatIsin,
   formatPhone,
   ibanCheckDigits,
   isE164,
   isQrIban,
   isValidIban,
-  isValidIsin,
-  isinCheckDigit,
 } from "@eifi1/ui-kit";
 import type { IbanKind } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, code } from "../lib/section";
 
 /**
- * Account numbers (0.22): IbanInput and the IBAN/ISIN helpers and
+ * Account numbers (0.22): IbanInput and the IBAN helpers and
  * PhoneInput. Every sample is synthetic — zeros with a single 1, the check
  * digits computed by the kit's own helpers — so nothing here is anybody's account.
  */
@@ -26,7 +22,6 @@ import { Example, Note, OutTable, code } from "../lib/section";
 const sampleIban = (country: string, bban: string) => `${country}${ibanCheckDigits(country, bban)}${bban}`;
 const PLAIN = sampleIban("CH", `${"0".repeat(16)}1`);
 const QR = sampleIban("CH", `30000${"0".repeat(11)}1`);
-const ISIN = `CH000000001${isinCheckDigit("CH000000001")}`;
 
 function IbanDemo() {
   const [kind, setKind] = useState<IbanKind>("any");
@@ -88,31 +83,6 @@ function IbanDemo() {
   );
 }
 
-function IsinDemo() {
-  const [isin, setIsin] = useState(ISIN);
-  return (
-    <Example
-      label="ISIN helpers — isValidIsin, formatIsin"
-      hint="deprecated in 0.52, removed in 0.53 — no app imports them"
-    >
-      <div className="flex flex-col gap-3">
-        <Input
-          label="ISIN"
-          value={isin}
-          onChange={(e) => setIsin(e.target.value)}
-          error={isin !== "" && !isValidIsin(isin) ? "Not a valid ISIN — check the last digit." : undefined}
-        />
-        <OutTable
-          rows={[
-            ["formatIsin(value)", formatIsin(isin) || "“”"],
-            ["isValidIsin(value)", String(isValidIsin(isin))],
-          ]}
-        />
-      </div>
-    </Example>
-  );
-}
-
 function PhoneDemo() {
   const [phone, setPhone] = useState("");
   const [legacy, setLegacy] = useState("021 000 00 01 (mornings)");
@@ -148,7 +118,6 @@ export function AccountNumbers022Demo() {
   return (
     <>
       <IbanDemo />
-      <IsinDemo />
       <PhoneDemo />
     </>
   );

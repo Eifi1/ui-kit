@@ -5,7 +5,6 @@ import { DEFAULT_MONTH_PICKER_LABELS } from "../components/month-picker-labels";
 import { DEFAULT_PAGE_CONTENTS_LABELS } from "../components/page-contents-labels";
 import { DEFAULT_POPOVER_LABELS } from "../components/popover-labels";
 import { DEFAULT_CHIP_INPUT_LABELS } from "../components/chip-labels";
-import { DEFAULT_FIELD_SYNC_LABELS } from "../components/field-sync-labels";
 import { DEFAULT_CHARACTER_COUNT_LABELS, DEFAULT_PASSWORD_REVEAL_LABELS } from "../components/field-base-labels";
 import { DEFAULT_TABS_LABELS } from "../components/tabs-labels";
 import { DEFAULT_WIZARD_LABELS } from "../wizard/wizard-labels";
@@ -109,7 +108,6 @@ import { DEFAULT_COUNTRY_SELECT_LABELS } from "../components/country-select-labe
 import { DEFAULT_INLINE_EDIT_LABELS } from "../components/inline-edit-field-labels";
 import { DEFAULT_IBAN_INPUT_LABELS } from "../components/iban-input-labels";
 import { DEFAULT_PHONE_INPUT_LABELS } from "../components/phone-input-labels";
-import { DEFAULT_SIGN_CHIP_LABELS } from "../components/sign-chip-labels";
 import { DEFAULT_COLUMN_MAPPER_LABELS } from "../components/column-mapper-labels";
 import { DEFAULT_NOTIFICATIONS_LABELS } from "../notifications/notifications-labels";
 import {
@@ -157,7 +155,6 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   calculator: DEFAULT_CALCULATOR_LABELS,
   currency: DEFAULT_CURRENCY_LABELS,
   chipInput: DEFAULT_CHIP_INPUT_LABELS,
-  fieldSync: DEFAULT_FIELD_SYNC_LABELS,
   passwordReveal: DEFAULT_PASSWORD_REVEAL_LABELS,
   tabs: DEFAULT_TABS_LABELS,
   appShell: DEFAULT_APP_SHELL_LABELS,
@@ -259,7 +256,6 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   inlineEdit: DEFAULT_INLINE_EDIT_LABELS,
   ibanInput: DEFAULT_IBAN_INPUT_LABELS,
   phoneInput: DEFAULT_PHONE_INPUT_LABELS,
-  signChip: DEFAULT_SIGN_CHIP_LABELS,
   columnMapper: DEFAULT_COLUMN_MAPPER_LABELS,
   notifications: DEFAULT_NOTIFICATIONS_LABELS,
   adminArea: DEFAULT_ADMIN_AREA_LABELS,

@@ -188,9 +188,6 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       outcome: "Resultado",
       replies: "Respuestas",
       resolvedAt: (date) => `Resuelto el ${date}`,
-      outcomeAdd: "Añadir resultado",
-      outcomeUpdate: "Actualizar",
-      outcomePlaceholder: "Qué se ha hecho o decidido, o por qué no se abordará.",
       rework: "Corrección",
       reworkTitle: "Devolver para corrección",
       reworkSend: "Solicitar corrección",
@@ -502,13 +499,6 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       noResults: "Ningún icono coincide",
       resultCount: (count) => `${n(count)} ${plural(count, "icono", "iconos")}`,
     },
-    fieldSync: {
-      synced: "Guardado",
-      edited: "Cambios sin guardar",
-      pending: "Guardando…",
-      error: "No se pudo guardar",
-      retry: "Reintentar",
-    },
     passwordReveal: {
       show: "Mostrar contraseña",
       hide: "Ocultar contraseña",
@@ -541,7 +531,6 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       palette: "Ajuste de apariencia",
       language: "Idioma",
       languageCurrent: (name) => `Elegir idioma, actual: ${name}`,
-      switchRole: "Cambiar de rol",
       role: (value) => `Rol: ${value}`,
     },
     pickerSheet: {
@@ -743,8 +732,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       legend: "Categorías",
     },
     treemap: {
-      tile: (name, value, share) => `${name}: ${value} (${share})`,
-      group: (name, value, share) => `${name}, grupo: ${value} (${share})`,
+      tile: (name, value, share) => `${name}: ${value}${share ? ` (${share})` : ""}`,
+      group: (name, value, share) => `${name}, grupo: ${value}${share ? ` (${share})` : ""}`,
       inGroup: (name, group) => `${name}, en ${group}`,
     },
     confirmDialog: {
@@ -1533,12 +1522,6 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     phoneInput: {
       countryCode: "Prefijo del país",
       other: "Otro",
-    },
-    signChip: {
-      outflow: "Salida",
-      inflow: "Entrada",
-      direction: (current, next) => `Dirección: ${current} — cambiar a ${next}`,
-      switchTo: (next) => `Cambiar a ${next}`,
     },
     columnMapper: {
       paste: "Pegar una tabla",

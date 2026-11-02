@@ -284,12 +284,6 @@ export const it: Dictionary = {
       blurb:
         "Inserire una tabella di misure: una griglia di celle da tastiera, un blocco incollato da un foglio di calcolo e la stessa tabella come testo — migliaia di righe, solo quelle visibili montate.",
     },
-    "field-sync": {
-      title: "Stato di sincronizzazione",
-      short: "Sincronizzazione",
-      blurb:
-        "Stato di sincronizzazione di un campo legato a un database, salvato all'uscita dal campo: il colore del bordo e un'icona alla fine del campo indicano modificato, salvataggio, salvato o errore — passa sopra il simbolo d'errore per vederne il motivo.",
-    },
     "signature-password": {
       title: "Firma, password e conferma",
       short: "Firma",
@@ -874,14 +868,6 @@ export const it: Dictionary = {
       "elenco virtualizzato",
       "trasformare il testo incollato in righe",
       "modificare le celle con le frecce",
-    ],
-    "field-sync": [
-      "salvare un campo quando lo si lascia",
-      "mostrare lo stato salvataggio o salvato",
-      "mostrare che il salvataggio non è riuscito",
-      "salvataggio automatico",
-      "indicatore di modifiche non salvate",
-      "campo collegato al database",
     ],
     "signature-password": [
       "firmare un documento",

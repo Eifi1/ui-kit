@@ -59,7 +59,7 @@ export interface NavPillsProps<T extends string> extends Omit<
    * 0.49: `wrap` (default) puts the pills on as many rows as they need. `scroll` keeps
    * them on ONE row that scrolls sideways — faded at a cut edge, the current pill
    * scrolled into view (the row only, never the page) — for a strip that must stay one
-   * line high, as {@link SectionNav} under a page title on a phone.
+   * line high, as a section's pages under a page title on a phone.
    */
   layout?: "wrap" | "scroll";
   /** The `<nav>` (or the `<div role="group">`) — hence `HTMLElement` (0.34, API-2,

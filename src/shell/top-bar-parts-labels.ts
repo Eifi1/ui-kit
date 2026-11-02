@@ -6,7 +6,7 @@ import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
  * `DevSwitchers`, whose words these still are, §2.7.1). A module
  * of words with no component code, like every `*-labels.ts` (0.34, KS U8). The language
  * sub-list (`AccountMenuLanguage`) names itself with `topBar.language`, and the role in the
- * dev flask's name is `topBar.role`, as `RoleSwitcher`'s tooltip.
+ * dev flask's name is `topBar.role`.
  */
 
 /** `TourMenu`'s words (§2.4). */

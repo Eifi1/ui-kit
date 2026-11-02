@@ -899,8 +899,8 @@ export type RhfDateRangePickerProps<
  *
  * Without `apply` (the picker's default) the first calendar click is reported on its
  * own, so the form holds `(from, emptyValue)` until the second; with `apply` nothing
- * reaches the form until Apply. `apply` was `commit="apply"` until 0.52 (deprecated, gone
- * in 0.53): `commit` is now the write lock's, as on every other binding — with
+ * reaches the form until Apply. `apply` was `commit="apply"` until 0.52 (gone in 0.53):
+ * `commit` is now the write lock's, as on every other binding — with
  * `disabledReason`, the picker's own (refactor audit 2026-10-30, API-3).
  *
  * The common props (`label`, `hint`, `required`, `disabled`, `excludeWhenDisabled`,

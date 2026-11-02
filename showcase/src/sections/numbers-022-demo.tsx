@@ -6,7 +6,6 @@ import {
   MoneyField,
   NumberField,
   NumberInput,
-  SignChip,
   ToggleGroup,
   UiKitProvider,
 } from "@eifi1/ui-kit";
@@ -15,8 +14,7 @@ import { Example, Note, code, READOUT_WRAP } from "../lib/section";
 /**
  * 0.22 on the Numbers & money page: NumberInput's locale marks and grouping parse,
  * its money guard, `calculator={false}` on the money fields,
- * `error` and `hint` where the field anatomy had gaps, and
- * the exported sign chip.
+ * and `error` and `hint` where the field anatomy had gaps.
  */
 
 const LOCALES = [
@@ -166,40 +164,6 @@ function Anatomy() {
   );
 }
 
-/* ── SignChip ─────────────────────────────────────────────────────────────── */
-
-function Sign() {
-  const [amount, setAmount] = useState("42.50");
-  const [negative, setNegative] = useState(true);
-  return (
-    <Example
-      label="SignChip — the amount's direction, beside the figure"
-      hint="deprecated in 0.52, removed in 0.53 — no app renders it; keksdose keeps its own chip on `Chip`"
-    >
-      <div className="flex max-w-sm items-end gap-2">
-        <div className="min-w-0 flex-1">
-          <AmountInput
-            label="Amount"
-            currency="EUR"
-            value={amount}
-            onChange={setAmount}
-            negative={negative}
-            onNegativeChange={setNegative}
-            tone={negative ? "outflow" : "inflow"}
-          />
-        </div>
-        <SignChip negative={negative} onNegativeChange={setNegative} />
-      </div>
-      <Note>
-        The direction chip as a kit piece. It takes the same {code("negative")} / {code("onNegativeChange")} pair as
-        AmountInput, so one state feeds both, and wears the same money tones as the figure. The word IS the state, so it
-        is an action button with no {code("aria-pressed")}; its name says the state and what a press does. Words from
-        the {code("signChip")} labels namespace.
-      </Note>
-    </Example>
-  );
-}
-
 export function Numbers022Demo() {
   return (
     <>
@@ -207,7 +171,6 @@ export function Numbers022Demo() {
       <MoneyNotNumber />
       <InlineCell />
       <Anatomy />
-      <Sign />
     </>
   );
 }

@@ -188,9 +188,6 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       outcome: "Esito",
       replies: "Risposte",
       resolvedAt: (date) => `Risolto il ${date}`,
-      outcomeAdd: "Aggiungi esito",
-      outcomeUpdate: "Aggiorna",
-      outcomePlaceholder: "Cosa è stato fatto o deciso, oppure perché non verrà affrontato.",
       rework: "Rielaborazione",
       reworkTitle: "Rimanda in rielaborazione",
       reworkSend: "Richiedi rielaborazione",
@@ -504,13 +501,6 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       noResults: "Nessuna icona corrispondente",
       resultCount: (count) => `${n(count)} ${plural(count, "icona", "icone")}`,
     },
-    fieldSync: {
-      synced: "Salvato",
-      edited: "Modifiche non salvate",
-      pending: "Salvataggio…",
-      error: "Impossibile salvare",
-      retry: "Riprova",
-    },
     passwordReveal: {
       show: "Mostra password",
       hide: "Nascondi password",
@@ -543,7 +533,6 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       palette: "Preset di aspetto",
       language: "Lingua",
       languageCurrent: (name) => `Scegli la lingua, attuale: ${name}`,
-      switchRole: "Cambia ruolo",
       role: (value) => `Ruolo: ${value}`,
     },
     pickerSheet: {
@@ -745,8 +734,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       legend: "Categorie",
     },
     treemap: {
-      tile: (name, value, share) => `${name}: ${value} (${share})`,
-      group: (name, value, share) => `${name}, gruppo: ${value} (${share})`,
+      tile: (name, value, share) => `${name}: ${value}${share ? ` (${share})` : ""}`,
+      group: (name, value, share) => `${name}, gruppo: ${value}${share ? ` (${share})` : ""}`,
       inGroup: (name, group) => `${name}, in ${group}`,
     },
     confirmDialog: {
@@ -1543,13 +1532,6 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     phoneInput: {
       countryCode: "Prefisso internazionale",
       other: "Altro",
-    },
-    signChip: {
-      outflow: "Uscita",
-      inflow: "Entrata",
-      // "premere per…": an instruction without a tu imperative, as the kit's Italian is formal.
-      direction: (current, next) => `Direzione: ${current} – premere per passare a ${next}`,
-      switchTo: (next) => `Passa a ${next}`,
     },
     columnMapper: {
       paste: "Incolla una tabella",

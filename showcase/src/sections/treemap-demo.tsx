@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Treemap as RechartsTreemap } from "recharts";
 import { CHART_ROLES, ChartContainer, Treemap, TreemapCell, fitLabel, paletteFor } from "@eifi1/ui-kit";
-import type { TreemapLabels, TreemapNode } from "@eifi1/ui-kit";
+import type { TreemapNode } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row } from "../lib/section";
 import { numberFormat } from "../lib/number-format";
 
@@ -29,14 +29,6 @@ const PERCENT = numberFormat("en-GB", { style: "percent", maximumFractionDigits:
 function moneyAndShare(value: number, share: number | undefined): string {
   return share == null ? MONEY.format(value) : `${MONEY.format(value)} · ${PERCENT.format(share)}`;
 }
-
-/** The names' words beside `moneyAndShare`. A tile's name asks the formatter as the
- *  tooltip does, share and all, so the formatter's text already says it: these leave the
- *  name's own `(57%)` out — "Housing: £1,240 · 57%", not "… · 57% (57%)". */
-const SHARE_IN_VALUE: Partial<TreemapLabels> = {
-  tile: (name, value) => `${name}: ${value}`,
-  group: (name, value) => `${name}, group: ${value}`,
-};
 
 const SPEND: TreemapNode[] = [
   { id: "housing", name: "Housing", value: 1240 },
@@ -212,7 +204,7 @@ export function TreemapDemo() {
         <Treemap
           data={SPEND}
           valueFormatter={moneyAndShare}
-          labels={SHARE_IN_VALUE}
+          shareInValue
           height={320}
           aria-label="Spending by group, last month"
           description="Housing is more than half of the month; groceries a fifth."
@@ -228,9 +220,9 @@ export function TreemapDemo() {
           and the arrow keys, Home and End walk the tiles in the order given — → to the next in a right-to-left page
           too, since the map is not mirrored. Each tile is named by <code className="font-mono">treemap.tile</code> —
           &ldquo;Housing: £1,240 (57%)&rdquo; by default — its value asked of the formatter as the tooltip asks it,
-          share included. This formatter says the share itself, so this map&apos;s{" "}
-          <code className="font-mono">labels</code> leave the name&apos;s own out: &ldquo;Housing: £1,240 · 57%&rdquo;.
-          Nobody clicks these tiles, so each is an image to read.
+          share included. This formatter says the share itself, so this map sets{" "}
+          <code className="font-mono">shareInValue</code> and the name leaves its own out: &ldquo;Housing: £1,240 ·
+          57%&rdquo;, in every catalogue&apos;s words. Nobody clicks these tiles, so each is an image to read.
         </p>
       </Example>
 
@@ -256,7 +248,7 @@ export function TreemapDemo() {
             key={group}
             data={drilled.map((n) => ({ ...n, fill: `var(--chart-${(parentIndex % 9) + 1})` }))}
             valueFormatter={moneyAndShare}
-            labels={SHARE_IN_VALUE}
+            shareInValue
             height={280}
             onNodeClick={(_, name) => setClicked(name)}
           />
@@ -264,7 +256,7 @@ export function TreemapDemo() {
           <Treemap
             data={SPEND}
             valueFormatter={moneyAndShare}
-            labels={SHARE_IN_VALUE}
+            shareInValue
             height={280}
             onNodeClick={(id, name) => (CHILDREN[id] ? setGroup(id) : setClicked(name))}
           />
@@ -289,25 +281,20 @@ export function TreemapDemo() {
         label="Treemap — a second line per tile"
         hint="nodeNote: one extra figure the name cannot carry; drawn only where it fits"
       >
-        <Treemap
-          data={SPEND}
-          valueFormatter={moneyAndShare}
-          labels={SHARE_IN_VALUE}
-          height={320}
-          nodeNote={(id) => DELTAS[id]}
-        />
+        <Treemap data={SPEND} valueFormatter={moneyAndShare} shareInValue height={320} nodeNote={(id) => DELTAS[id]} />
       </Example>
 
       <Example
         label="Treemap — names that are the user's own data"
         hint="redactNames: tile labels and the tooltip bubble carry data-private"
       >
-        <Treemap data={PAYEES} valueFormatter={moneyAndShare} labels={SHARE_IN_VALUE} height={240} redactNames />
+        <Treemap data={PAYEES} valueFormatter={moneyAndShare} shareInValue height={240} redactNames />
         <p className="mt-2 text-xs text-secondary">
           The kit only sets the attribute; the host&apos;s own <code className="font-mono">[data-private]</code> rule
           decides what it looks like — the same contract as <code className="font-mono">Tooltip redact</code>. A
           category is a label of the app and stays readable; a payee is the user&apos;s and does not.
         </p>
+        <RedactedGroups />
       </Example>
 
       <Example
@@ -394,7 +381,7 @@ function LabelColorTreemaps() {
           </span>
         </label>
       </Row>
-      <Treemap data={data} valueFormatter={moneyAndShare} labels={SHARE_IN_VALUE} height={260} />
+      <Treemap data={data} valueFormatter={moneyAndShare} shareInValue height={260} />
       <p className="mt-2 text-xs text-secondary">
         Every tile is <code className="font-mono">color-mix(in srgb, var(--chart-1) N%, transparent)</code>. The kit
         measures a hex fill and picks black or white ink itself; a mix it cannot measure, so it falls back to{" "}
@@ -427,7 +414,7 @@ function GroupedTreemap() {
       <Treemap
         data={recency ? SHOPS_BY_RECENCY : SHOPS_BY_CHAIN}
         valueFormatter={moneyAndShare}
-        labels={SHARE_IN_VALUE}
+        shareInValue
         height={340}
         nodeNote={recency ? recencyNote : undefined}
         onNodeClick={(id, _name, groups) => setClicked(path(id, groups))}
@@ -456,6 +443,49 @@ function GroupedTreemap() {
         &ldquo;Greenway Centre: £412 (30%), in Greenway&rdquo; (<code className="font-mono">treemap.inGroup</code>).{" "}
         <code className="font-mono">onNodeClick</code> is handed a tile&apos;s groups as a third argument;{" "}
         <code className="font-mono">onGroupClick</code> makes the frames buttons.
+      </p>
+    </>
+  );
+}
+
+/** Public groups over private tiles — keksdose's chains over the shops its user paid — with
+ *  the host's rule switched on, as its demo mode does. */
+function RedactedGroups() {
+  const [tilesOnly, setTilesOnly] = useState(true);
+  const [blur, setBlur] = useState(true);
+  return (
+    <>
+      <Row className="mb-2 mt-4 gap-4">
+        <label className="flex items-center gap-2 text-xs text-secondary">
+          <input type="checkbox" checked={tilesOnly} onChange={(e) => setTilesOnly(e.target.checked)} />
+          <span>
+            <code className="font-mono">redactNames=&quot;tiles&quot;</code> (else{" "}
+            <code className="font-mono">true</code>)
+          </span>
+        </label>
+        <label className="flex items-center gap-2 text-xs text-secondary">
+          <input type="checkbox" checked={blur} onChange={(e) => setBlur(e.target.checked)} />
+          <span>
+            Demo mode (blurs <code className="font-mono">[data-private]</code>)
+          </span>
+        </label>
+      </Row>
+      {/* The host's rule, here as a class. */}
+      <div className={blur ? "[&_[data-private]]:blur-[3px]" : undefined}>
+        <Treemap
+          data={SHOPS_BY_CHAIN}
+          valueFormatter={moneyAndShare}
+          shareInValue
+          height={280}
+          redactNames={tilesOnly ? "tiles" : true}
+        />
+      </div>
+      <p className="mt-2 text-xs text-secondary">
+        A chain is a public name, a shop is where the user paid: <code className="font-mono">&quot;tiles&quot;</code>{" "}
+        tags the tiles as <code className="font-mono">true</code> does and leaves every group untagged — its band, its
+        frame and its tooltip&apos;s name. The frame&apos;s accessible name says the group&apos;s total too
+        (&ldquo;Greenway, group: £664 · 48%&rdquo;), so that is untagged with it: use it where the groups&apos; names
+        and totals are not the private part.
       </p>
     </>
   );

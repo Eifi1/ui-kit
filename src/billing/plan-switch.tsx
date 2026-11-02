@@ -13,8 +13,6 @@ import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
 import { DEFAULT_PLAN_CHANGE_LABELS } from "./plan-change-labels";
 import { useBillingLabels } from "./billing-labels";
 import type { BillingLabels } from "./billing-labels";
-import { dialogClose } from "./dialog-close";
-import type { WithDialogClose } from "./dialog-close";
 import type { PlanSwitchPreview } from "./billing-overview";
 import { minorToMajor } from "./plan-price";
 import type { BillingInterval } from "./plan-price";
@@ -39,16 +37,13 @@ export interface PlanSwitchSide {
   interval: BillingInterval;
 }
 
-/** {@link PlanSwitchConfirmProps} before one of its two close props is required. */
-interface PlanSwitchConfirmFields {
+export interface PlanSwitchConfirmProps {
   open: boolean;
   /** The payer dismissed it — Cancel, Escape, the backdrop. Confirm leaves it open: close
    *  it once the switch answers. 0.52: every other kit dialog's `onClose` (CONTRIBUTING
-   *  §4; refactor audit 2026-10-30, API-5). */
-  onClose?: () => void;
-  /** @deprecated 0.52 — `onClose`, as every other kit dialog; removed in 0.53. Called with
-   *  `false` when there is no `onClose`. */
-  onOpenChange?: (open: boolean) => void;
+   *  §4; refactor audit 2026-10-30, API-5); required since 0.53 removed `onOpenChange`
+   *  (deprecated in 0.52). */
+  onClose: () => void;
   /** What the payer pays now: the overview's `paid`. */
   from: PlanSwitchSide;
   /** The pick. */
@@ -88,11 +83,6 @@ interface PlanSwitchConfirmFields {
   labels?: LabelOverride<BillingLabels>;
 }
 
-/** What {@link PlanSwitchConfirm} takes: `onClose`, or alone the deprecated
- *  `onOpenChange`, is required (0.52 code review: with neither it compiled, and nothing
- *  could dismiss it). */
-export type PlanSwitchConfirmProps = WithDialogClose<PlanSwitchConfirmFields>;
-
 /**
  * The confirm for a plan switch (§15.2.10): from → to, each with its billing period;
  * Paddle's preview — "Charged now" (an upgrade) or "Credited towards your next charges"
@@ -118,7 +108,6 @@ export type PlanSwitchConfirmProps = WithDialogClose<PlanSwitchConfirmFields>;
 export function PlanSwitchConfirm({
   open,
   onClose,
-  onOpenChange,
   from,
   to,
   preview,
@@ -165,7 +154,7 @@ export function PlanSwitchConfirm({
       open={open}
       title={labels.switchTitle}
       description={labels.switchFromTo(side(from), side(to))}
-      onClose={dialogClose({ onClose, onOpenChange })}
+      onClose={onClose}
       busy={pending}
       // A preview that loads is busy too, but holds nothing: Cancel stays a way out.
       aria-busy={preview === undefined || undefined}

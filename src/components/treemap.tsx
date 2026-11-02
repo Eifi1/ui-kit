@@ -129,13 +129,26 @@ export interface TreemapProps extends Omit<ComponentPropsWithoutRef<"div">, "chi
    * A tile's and a group's accessible name (`labels.tile`, `labels.group`, 0.52) says the
    * value too, asked of the formatter as the tooltip asks it, share and all, and its text
    * is used; markup is said as the bare number. The name says the share itself, so a
-   * formatter that writes it into its text has it said twice.
+   * formatter that writes it into its text has it said twice — say so with
+   * {@link TreemapProps.shareInValue}.
    *
    * Default: the bare number through `Intl.NumberFormat` in the provider's locale (0.52,
    * DOC-10: before, the runtime's). A host with a currency passes this — the kit knows
    * none.
    */
   valueFormatter?: (value: number, share: number | undefined) => ReactNode;
+  /**
+   * The `valueFormatter`'s text already says the share ("CHF 412.30 · 12%"), so a tile's
+   * and a group's accessible name leave their own " (12%)" out (0.53, keksdose after 0.52):
+   * the map hands `labels.tile` and `labels.group` the share as `""`, and every catalogue's
+   * template drops it there, in its own typography. Before, the only way out was to replace
+   * both templates, and with them the kit's seven catalogues. The tooltip is the same either
+   * way: it prints what the formatter prints. A formatter whose value is markup is said as
+   * the bare number, so its share is then not said at all.
+   *
+   * Default `false`: the name says the share.
+   */
+  shareInValue?: boolean;
   /**
    * What the map SHOWS, in a sentence — "Rent is three fifths of the month." — the
    * figure's accessible description (0.52, DSP-5). Not drawn; a caption the eye should
@@ -185,8 +198,18 @@ export interface TreemapProps extends Omit<ComponentPropsWithoutRef<"div">, "chi
    * Every tile is tagged as a whole too, clickable or not (0.52): its accessible name
    * (`labels.tile`) says the name and the value, in an attribute a host's redaction
    * reaches only through the tag.
+   *
+   * - `true`: every node — the tiles, and a group's frame (its `<g>` and its band's name)
+   *   and tooltip bubble too.
+   * - `"tiles"` (0.53, keksdose after 0.52): the tiles as `true` tags them, and no group —
+   *   for groups that are public names over private ones, as chains (Migros, Coop) over
+   *   the shops a user paid. Its frame's band, its frame and its bubble's name are
+   *   untagged, and so is the frame's accessible name (`labels.group`), which says the
+   *   group's TOTAL: use it only where the groups' names and totals are not the private
+   *   part. The bubble's value cell is tagged whatever this says, as in every chart.
+   *   A tile's name still says its group's (`labels.inGroup`), under the tile's tag.
    */
-  redactNames?: boolean;
+  redactNames?: boolean | "tiles";
   /**
    * A second, smaller line under a tile's label — one extra figure per node that the
    * name cannot carry (a year-on-year `+12%`, `new`). Return `undefined` for a node
@@ -436,7 +459,9 @@ export interface TreemapCellProps {
   /** Filled in by recharts for a GROUP: the nodes laid out inside it. A cell with
    *  children draws a frame, not a tile (0.52). */
   children?: readonly object[] | null;
-  redactNames?: boolean;
+  /** See {@link TreemapProps.redactNames}: `"tiles"` tags a cell with no `children`, and
+   *  leaves a group's frame and band untagged (0.53). */
+  redactNames?: boolean | "tiles";
   nodeNote?: (id: string) => string | undefined;
   /** The page's reading direction, which `Treemap` reads off its own root. In `rtl`
    *  the label stands in the tile's top RIGHT corner and is shaped right-to-left, so a
@@ -578,6 +603,10 @@ function Tile({
   // is a button.
   const roving = path != null && keys ? keys : undefined;
   const focusable = roving !== undefined || activate !== undefined;
+  // `"tiles"` (0.53, keksdose after 0.52) leaves a group's frame and band untagged: its
+  // groups are public chain names, and its blur on `[data-private]` blurred them with the
+  // payees. A truthy test on the union would have tagged them still.
+  const redact = redactNames === true || (redactNames === "tiles" && !group);
   const onKeyDown = focusable
     ? (e: KeyboardEvent<SVGGElement>) => {
         if (roving?.move(path!, e)) {
@@ -606,7 +635,7 @@ function Tile({
       // In a map, -1 as drawn: the map moves its one stop on the elements in place.
       tabIndex={roving ? -1 : activate ? 0 : undefined}
       aria-label={focusable ? (roving?.name(path!) ?? name) : undefined}
-      data-private={focusable && redactNames ? "" : undefined}
+      data-private={focusable && redact ? "" : undefined}
       data-group={group ? "" : undefined}
       cursor={activate ? "pointer" : undefined}
       // CSS beats a presentation attribute, so this recolours the rect's own stroke
@@ -646,7 +675,7 @@ function Tile({
         <text
           // A plain attribute, so the host's `[data-private]` rule reaches an SVG
           // <text> exactly as it reaches a table cell.
-          data-private={redactNames ? "" : undefined}
+          data-private={redact ? "" : undefined}
           x={textX}
           // A band's name centred in its 20px; a tile's where its floor leaves room below.
           y={py + (group ? 14 : 15) * scale}
@@ -697,10 +726,20 @@ const TREEMAP_CONFIG: ChartConfig = {};
  * recharts CLONES the `content` element to inject `active`/`payload`, so this has to BE
  * that element — a `<div>` wrapped around `<ChartTooltipContent />` in the JSX would
  * take those props itself and hand the tooltip nothing.
+ *
+ * `groups: false` is `redactNames="tiles"` (0.53): a group's bubble is left untagged, as its
+ * frame is. The payload says which node is hovered — recharts hands the node itself, with
+ * its laid-out `children` for a group and `null` for a tile, as the cell is told — so
+ * anything else, or no payload, is tagged.
  */
-function RedactedTooltipContent(props: ComponentProps<typeof ChartTooltipContent>) {
+function RedactedTooltipContent({
+  groups = true,
+  ...props
+}: ComponentProps<typeof ChartTooltipContent> & { groups?: boolean }) {
+  const children = props.payload?.[0]?.payload?.children;
+  const group = Array.isArray(children) && children.length > 0;
   return (
-    <div data-private>
+    <div data-private={groups || !group ? true : undefined}>
       <ChartTooltipContent {...props} />
     </div>
   );
@@ -895,6 +934,7 @@ export function Treemap({
   onNodeClick,
   onGroupClick,
   redactNames = false,
+  shareInValue = false,
   nodeNote,
   maxTiles,
   colors,
@@ -1066,10 +1106,13 @@ export function Treemap({
     };
     // A group's name by its path; a node's groups by theirs, its own path's prefixes.
     const groupName = new Map(order.filter((n) => n.children).map((n) => [n.path, n.name]));
+    // `""` when the formatter's text says the share already, which every template drops
+    // (0.53, `shareInValue`).
+    const shareOf = (v: number) => (shareInValue ? "" : shareText(total > 0 ? v / total : 0));
     return new Map(
       order.map((n) => {
         const say = n.children ? labels.group : labels.tile;
-        const own = say(n.name, valueText(n.size), shareText(total > 0 ? n.size / total : 0));
+        const own = say(n.name, valueText(n.size), shareOf(n.size));
         // The innermost group first: "Rent: …, in Housing, in Fixed costs".
         const named = n.groups
           .map((g, i) => groupName.get(pathOf(n.groups.slice(0, i), g)) ?? g)
@@ -1077,7 +1120,7 @@ export function Treemap({
         return [n.path, named] as const;
       }),
     );
-  }, [order, labels, format, numberFormat, shareText, total]);
+  }, [order, labels, format, numberFormat, shareText, shareInValue, total]);
   const keys = useMemo<TileKeys>(
     () => ({ name: (path) => names.get(path), onFocus, register, move }),
     [names, onFocus, register, move],
@@ -1086,7 +1129,6 @@ export function Treemap({
     () => ({ tokens: tokenHex, edgeFor, edges: edgesInForce, keys, layout, hover: anchor.set }),
     [tokenHex, edgeFor, edgesInForce, keys, layout, anchor],
   );
-  const Content = redactNames ? RedactedTooltipContent : ChartTooltipContent;
   const cell = useMemo(
     () => (
       <TreemapCell
@@ -1100,8 +1142,19 @@ export function Treemap({
     [onNodeClick, onGroupClick, redactNames, nodeNote, dir],
   );
   const tooltip = useMemo(
-    () => <TreemapTooltip content={<Content hideLabel valueFormatter={format} />} anchor={anchor} />,
-    [Content, format, anchor],
+    () => (
+      <TreemapTooltip
+        content={
+          redactNames ? (
+            <RedactedTooltipContent hideLabel valueFormatter={format} groups={redactNames === true} />
+          ) : (
+            <ChartTooltipContent hideLabel valueFormatter={format} />
+          )
+        }
+        anchor={anchor}
+      />
+    ),
+    [redactNames, format, anchor],
   );
 
   if (nodes.length === 0) return null;

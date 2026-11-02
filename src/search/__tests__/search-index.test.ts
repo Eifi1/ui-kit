@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createSearchIndex, matchEntries, normalizeSearchText } from "../search-index";
+import { createSearchIndex, normalizeSearchText } from "../search-index";
 import type { SearchEntry } from "../search-index";
 
 const titles = (hits: Array<{ entry: SearchEntry }>) => hits.map((h) => h.entry.title);
@@ -97,7 +97,8 @@ describe("createSearchIndex", () => {
   });
 });
 
-describe("matchEntries", () => {
+// Through `matchEntries` until 0.53 removed it (deprecated in 0.52, API-4): the same match.
+describe("a localised list", () => {
   /**
    * Ported from keksdose's global-search-i18n test: the app localises its entries (a
    * category's `name_translations`), and the matcher must find what the user SEES. A
@@ -111,9 +112,13 @@ describe("matchEntries", () => {
         keywords: lang === "de" ? ["Lohn", "Einkommen"] : ["income"],
       },
     ];
-    expect(matchEntries(localise("de"), "Gehalt").map((e) => e.title)).toEqual(["Gehalt"]);
-    expect(matchEntries(localise("de"), "Salary")).toEqual([]);
-    expect(matchEntries(localise("de"), "einkommen").map((e) => e.id)).toEqual(["c1"]);
-    expect(matchEntries(localise("en"), "Salary").map((e) => e.title)).toEqual(["Salary"]);
+    const match = (lang: "de" | "en", query: string) =>
+      createSearchIndex(localise(lang))
+        .search(query)
+        .map((hit) => hit.entry);
+    expect(match("de", "Gehalt").map((e) => e.title)).toEqual(["Gehalt"]);
+    expect(match("de", "Salary")).toEqual([]);
+    expect(match("de", "einkommen").map((e) => e.id)).toEqual(["c1"]);
+    expect(match("en", "Salary").map((e) => e.title)).toEqual(["Salary"]);
   });
 });

@@ -19,7 +19,6 @@ import {
   Percent,
   ChartLine,
   ChevronsUpDown,
-  CircleDot,
   ClipboardCheck,
   ClipboardCopy,
   Command,
@@ -100,7 +99,6 @@ const WeekStartDemo = lazySection(() => import("./sections/numbers-more-demo"), 
 const SignaturePasswordDemo = lazySection(() => import("./sections/signature-password-demo"), "SignaturePasswordDemo");
 const StatsDemo = lazySection(() => import("./sections/stats-demo"), "StatsDemo");
 const SeriesChartDemo = lazySection(() => import("./sections/series-chart-demo"), "SeriesChartDemo");
-const FieldSync = lazySection(() => import("./sections/field-sync"), "FieldSync");
 const Numbers = lazySection(() => import("./sections/numbers"), "Numbers");
 const EntityPickers = lazySection(() => import("./sections/entity-pickers"), "EntityPickers");
 const DropdownParts = lazySection(() => import("./sections/dropdown-parts"), "DropdownParts");
@@ -158,7 +156,7 @@ const AccountMenuDemo = lazySection(() => import("./sections/account-menu-demo")
 const ToggleCaptionDemo = lazySection(() => import("./sections/toggle-caption-demo"), "ToggleCaptionDemo");
 const ActionCardDemo = lazySection(() => import("./sections/action-card-demo"), "ActionCardDemo");
 const NavPillsDemo = lazySection(() => import("./sections/nav-pills-demo"), "NavPillsDemo");
-const SectionNavDemo = lazySection(() => import("./sections/nav-pills-demo"), "SectionNavDemo");
+const NavPillsScrollDemo = lazySection(() => import("./sections/nav-pills-demo"), "NavPillsScrollDemo");
 const ProgressSegmentsDemo = lazySection(() => import("./sections/progress-segments-demo"), "ProgressSegmentsDemo");
 const ProgressLegendTone018Demo = lazySection(
   () => import("./sections/progress-018-demo"),
@@ -781,7 +779,6 @@ export const GROUPS: ShowcaseGroup[] = [
           "CurrencySelect",
           "CurrencyFlag",
           "NumberPadSheet",
-          "SignChip",
         ],
         Body: () => (
           <>
@@ -967,16 +964,6 @@ export const GROUPS: ShowcaseGroup[] = [
             <ColumnMapperDemo />
           </>
         ),
-      },
-      {
-        slug: "field-sync",
-        title: "Field sync state",
-        short: "Sync state",
-        blurb:
-          "Sync state for a database-backed field, saved on blur: the frame's colour and an icon at the field's end say edited, saving, saved or failed — hover the error mark for the reason.",
-        icon: CircleDot,
-        components: ["useFieldSync", "FieldSyncRow", "FieldSyncIndicator"],
-        Body: FieldSync,
       },
       {
         slug: "signature-password",
@@ -1352,7 +1339,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Days as shaded squares: a year of weeks or one month, a day that can be picked, the scale's steps, top and colour, a long window cut to its latest days, and right-to-left.",
         icon: CalendarDays,
-        components: ["CalendarHeatmap", "heatmapLevel", "heatmapWindowEnd"],
+        components: ["CalendarHeatmap", "heatmapWindowEnd"],
         Body: () => (
           <>
             <CalendarHeatmapDemo />
@@ -1523,21 +1510,17 @@ export const GROUPS: ShowcaseGroup[] = [
           "PaletteMenu",
           "LanguageMenu",
           "OptionSwitcherMenu",
-          "RoleSwitcher",
           "TopBarActionMenu",
           "UserAvatar",
           "CompanySwitcher",
           "TopBarActions",
-          "TOP_BAR_ACTION_ORDER",
           "AccountMenuLanguage",
           "AccountMenuTextSize",
           "TourMenu",
           "SyncStatusIndicator",
-          "syncState",
           "SyncStatus",
           "DevMenu",
           "DevMenuSection",
-          "DEV_ORIGINAL_ROLE_KEY",
         ],
         Body: () => (
           <>
@@ -1567,7 +1550,6 @@ export const GROUPS: ShowcaseGroup[] = [
           "Caption",
           "StatusDot",
           "NavPills",
-          "SectionNav",
           "SECTION_LABEL_CLASS",
           "CAPTION_CLASS",
         ],
@@ -1575,7 +1557,7 @@ export const GROUPS: ShowcaseGroup[] = [
           <>
             <PageStructure />
             <NavPillsDemo />
-            <SectionNavDemo />
+            <NavPillsScrollDemo />
             <SectionLabelMdDemo />
             <Layout013Demo />
             <PageHeader014Demo />
@@ -1644,7 +1626,6 @@ export const GROUPS: ShowcaseGroup[] = [
           "usePushDevice",
           "PushDeviceSetting",
           "PushDevicesSetting",
-          "describeUserAgent",
           "PUSH_SUBSCRIPTION_CHANGED",
           "notifyPushSubscriptionChanged",
           "pushSupported",
@@ -1783,11 +1764,9 @@ export const GROUPS: ShowcaseGroup[] = [
           "The admin side of accounts: the user list with its roles and states, the four admin actions with the server's confirmation, the audit log with its group actions, invitations, handing work on, and the operator's plan column and plan change.",
         icon: UserCog,
         components: [
-          "userRosterColumns",
           "useUserRosterColumns",
           "UserIdentityCell",
           "UserRowActions",
-          "adminUserStates",
           "userRosterSort",
           "RoleSelect",
           "RolesEditor",
@@ -1797,7 +1776,6 @@ export const GROUPS: ShowcaseGroup[] = [
           "TransferOwnershipDialog",
           "InvitationsPanel",
           "AccountStateChip",
-          "planColumn",
           "usePlanColumn",
           "PlanChangeConfirm",
           "usePlanChangeResult",
@@ -1939,7 +1917,6 @@ export const GROUPS: ShowcaseGroup[] = [
           "FeedbackPublicList",
           "FeedbackPublicDetail",
           "FeedbackPublicSwitch",
-          "feedbackPublicSwitchAllowed",
           "useFeedbackPublicLabels",
           "DEFAULT_FEEDBACK_PUBLIC_LABELS",
         ],

@@ -213,7 +213,7 @@ with fewer parameters still fits the type, so a launcher an app *writes* keeps c
 code that *calls* one, or forwards it, does not. 0.50.1, a patch whose note said "nothing
 has to change", gave `TourLauncher` a required fourth parameter, and keksdose's forwarder
 stopped compiling. The types this covers include `TourLauncher`, `TourStart`, a step's
-`beforeStep` / `when`, and `FeedbackStatusMutate`: every callback type the kit exports.
+`beforeStep` / `when`, and `FeedbackStatusMutateAsync`: every callback type the kit exports.
 
 `check:api` (`scripts/check-api-compat.mjs`, run inside `check:package`) compares the packed
 tarball's public types with the last release's, both ways, and prints each changed name. Each

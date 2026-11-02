@@ -292,12 +292,6 @@ export const hu: Dictionary = {
       blurb:
         "Mérési táblázat bevitele: billentyűzettel kezelhető cellarács, táblázatkezelőből beillesztett blokk és ugyanaz a táblázat szövegként — több ezer sor, csak a láthatók jelennek meg.",
     },
-    "field-sync": {
-      title: "Mezők szinkronizálási állapota",
-      short: "Szinkron",
-      blurb:
-        "Adatbázishoz kötött mező szinkronizálási állapota, a mező elhagyásakor mentve: a keret színe és egy ikon a mező végén mutatja, hogy módosítva, mentés folyamatban, mentve vagy hiba — a hibajelre mutatva látszik az ok.",
-    },
     "signature-password": {
       title: "Aláírás, jelszó és megerősítés",
       short: "Aláírás",
@@ -882,14 +876,6 @@ export const hu: Dictionary = {
       "virtualizált lista",
       "beillesztett szöveg sorokra bontása",
       "cellák szerkesztése nyilakkal",
-    ],
-    "field-sync": [
-      "mező mentése elhagyáskor",
-      "mentés folyamatban vagy mentve állapot",
-      "sikertelen mentés jelzése",
-      "automatikus mentés",
-      "nem mentett változások jelzése",
-      "adatbázishoz kötött mező",
     ],
     "signature-password": [
       "dokumentum aláírása",

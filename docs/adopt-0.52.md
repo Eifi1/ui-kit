@@ -114,11 +114,12 @@ and areas get no per-hue ink edge at Standard contrast (as Treemap since 0.51.6)
 
 **Dates.** Every date a kit component prints follows the provider's `formatDate` (the date
 preference) and `timeZone`: legal "Last updated", the billing confirms, admin sentences, the
-tour and translation cards, passkeys, push devices, the inbox. keksdose can delete its six
+tour and translation cards, passkeys, push devices, the inbox. keksdose can delete five of its
 hand-passed date props (passkeys-card.tsx:127, notification-settings-cards.tsx:267,
-notification-inbox.tsx:81, tours-page.tsx:88, translations-page.tsx:320, feedback-page.tsx:243)
-and its resolver copy (`formatDateTimeFor` → `formatDateTimeWithPreference`). The three date
-pickers take the write lock (`commit`, `disabledReason`). Spanish and Hungarian month captions
+notification-inbox.tsx:81, tours-page.tsx:88, translations-page.tsx:320) and its resolver copy (`formatDateTimeFor` → `formatDateTimeWithPreference`). Not feedback-page.tsx:243 (corrected
+after the release, keksdose): FeedbackRowDetail's "Resolved:" date is a date in a sentence and
+asks for no weekday, so without its `renderDate` the weekday keksdose shows there goes. The
+prop stays. The three date pickers take the write lock (`commit`, `disabledReason`). Spanish and Hungarian month captions
 are right; MonthPicker's rows are 44 px.
 
 **Treemap groups** (keksdose dev #642). A `TreemapNode` with `children` is a group, drawn
@@ -141,20 +142,26 @@ name asks `valueFormatter` with the share `undefined`; a formatter that throws o
 "NaN" there falls back to the kit's number.
 
 **Search.** Combobox, CountrySelect, the DataTable text filter, TourCatalogue, translation
-review and ShareCard match every word of a query in any order. DataTable exports
-`compareSortValues(a, b, locale?)`, its own sort order: keksdose's transaction-order.ts can
+review and ShareCard match every word of a query in any order. DataTable's own sort order
+is exported as `compareSortValues(a, b, locale?)`, from the root as well as from
+`@eifi1/ui-kit/data-table`: keksdose's transaction-order.ts can
 import it instead of its copy.
 
 **Flows.** Each status change keeps its own Undo; `/join`, `/register?invite=` and the other
 one-shot pages in a feedback row show as text with Copy, matched as the router matches them
 (decoded, in any case: `/Join`, `/j%6Fin`), `pageLinkExclude` adds routes; an inbox row's url opens only as a
 same-origin path; QuietHoursSetting saves on blur or Enter; passkeys are locked under the
-demo's write lock. Modal `busy` (0.51.7) is joined by `InlineConfirm` inside the kit.
+demo's write lock. Modal `busy` (0.51.7) is joined by `InlineConfirm` inside the kit. In a
+list (PasskeysSetting, PushDevicesSetting) the confirm REPLACES the row's `<li>` with its own
+rather than filling it, so a test holding the row from before the press holds a detached node:
+query the row again after it (added after the release, keksdose).
 
 **Sync (kastlan).** Tabs on one database take turns per round (Web Locks, https or
 localhost); `syncNow()` may resolve `paused` while another tab syncs; `forget()` in one tab
 stops the others' engines on that copy, and the query copy's `clear()` reaches every tab.
-Tests: name BroadcastChannel keys and database names per test file.
+Tests on Vitest's `threads` or `vmThreads` pool (files share one process): name
+BroadcastChannel keys and database names per test file. The default `forks` pool runs each
+file in its own process and needs nothing (added after the release, kastlan).
 
 **Tour and shell.** The tour overlay loads on the first start (−5.5 KB gzip from every first
 load); if that chunk fails to load (a tab left open across a deploy, offline), the tour

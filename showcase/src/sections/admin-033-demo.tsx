@@ -17,7 +17,7 @@ import { Example, Note, READOUT_WRAP, beat } from "../lib/section";
 
 /**
  * THE OPERATOR'S PLAN PARTS (0.33, docs/billing-harmonization.md §14.12, decision 27):
- * `planColumn` in the roster, `PlanChangeConfirm` for the grant, and `usePlanChangeResult`
+ * `usePlanColumn` in the roster, `PlanChangeConfirm` for the grant, and `usePlanChangeResult`
  * for what the server's answer says — one app's column and dialog, lifted for every
  * app. Belongs on the "User administration" page, after the roster.
  *
@@ -142,7 +142,7 @@ export function PlanChange033Demo() {
 
   return (
     <Example
-      label="The plan column and the operator's plan change — planColumn, PlanChangeConfirm"
+      label="The plan column and the operator's plan change — usePlanColumn, PlanChangeConfirm"
       hint="the roster's plan with its standing and usage; the grant at acknowledge; the answer as toasts"
     >
       <div className="mb-3 flex flex-wrap gap-x-6 gap-y-2">
@@ -186,10 +186,10 @@ export function PlanChange033Demo() {
         )}
       </ul>
       <Note>
-        `planColumn` is the plan&apos;s display name, the standing chip beside it while billing is on (left out, no
-        chip) and the usage under it — &ldquo;12/30&rdquo;, with &ldquo;12 of 30 beds&rdquo; in its tooltip. It reads
-        the code without case (Dan&apos;s legacy `SEEDLING`), sorts by code unless `sortBy` says otherwise — on the
-        client only: a server-mode DataTable (`serverPagination`) reports the column&apos;s `key` through
+        `usePlanColumn`'s column is the plan&apos;s display name, the standing chip beside it while billing is on (left
+        out, no chip) and the usage under it — &ldquo;12/30&rdquo;, with &ldquo;12 of 30 beds&rdquo; in its tooltip. It
+        reads the code without case (Dan&apos;s legacy `SEEDLING`), sorts by code unless `sortBy` says otherwise — on
+        the client only: a server-mode DataTable (`serverPagination`) reports the column&apos;s `key` through
         `onSortsChange` and the server sorts — and filters over `filterPlans`. The usage&apos;s `label` may give the
         word&apos;s plural forms (`one` &ldquo;bed&rdquo;, `other` &ldquo;beds&rdquo;), and the tooltip takes the
         limit&apos;s. `PlanChangeConfirm` is `AdminActionConfirm` at `acknowledge`: the current plan and the usage — the

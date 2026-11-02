@@ -138,16 +138,8 @@ describe("CancelSubscriptionConfirm — the in-app cancel (§16.2 decision 2)", 
   it("names the period's end, confirms with its own words, and Back dismisses", async () => {
     const user = userEvent.setup();
     const onConfirm = vi.fn();
-    const onOpenChange = vi.fn();
-    render(
-      <CancelSubscriptionConfirm
-        open
-        onOpenChange={onOpenChange}
-        periodEnd={END}
-        onConfirm={onConfirm}
-        locale="en-GB"
-      />,
-    );
+    const onClose = vi.fn();
+    render(<CancelSubscriptionConfirm open onClose={onClose} periodEnd={END} onConfirm={onConfirm} locale="en-GB" />);
     const dialog = screen.getByRole("dialog", { name: L.cancelConfirmTitle });
     const date = formatDate(END, "medium", { locale: "en-GB" });
     expect(
@@ -155,22 +147,20 @@ describe("CancelSubscriptionConfirm — the in-app cancel (§16.2 decision 2)", 
     ).toBeInTheDocument();
     await user.click(within(dialog).getByRole("button", { name: "Cancel subscription now" }));
     expect(onConfirm).toHaveBeenCalledTimes(1);
-    expect(onOpenChange).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
     await user.click(within(dialog).getByRole("button", { name: "Back" }));
-    await vi.waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+    await vi.waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
   });
 
   it("holds a second press and Escape while pending", async () => {
     const user = userEvent.setup();
     const onConfirm = vi.fn();
-    const onOpenChange = vi.fn();
-    render(
-      <CancelSubscriptionConfirm open onOpenChange={onOpenChange} periodEnd={END} onConfirm={onConfirm} pending />,
-    );
+    const onClose = vi.fn();
+    render(<CancelSubscriptionConfirm open onClose={onClose} periodEnd={END} onConfirm={onConfirm} pending />);
     await user.click(screen.getByRole("button", { name: /Cancel subscription now/ }));
     await user.keyboard("{Escape}");
     expect(onConfirm).not.toHaveBeenCalled();
-    expect(onOpenChange).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
     expect(screen.getByRole("button", { name: "Back" })).toBeDisabled();
   });
 
@@ -179,14 +169,14 @@ describe("CancelSubscriptionConfirm — the in-app cancel (§16.2 decision 2)", 
     const onConfirm = vi.fn();
     const { rerender } = render(
       <WriteLockProvider locked reason="Your plan has ended." kind="billing">
-        <CancelSubscriptionConfirm open onOpenChange={() => {}} periodEnd={END} onConfirm={onConfirm} />
+        <CancelSubscriptionConfirm open onClose={() => {}} periodEnd={END} onConfirm={onConfirm} />
       </WriteLockProvider>,
     );
     await user.click(screen.getByRole("button", { name: "Cancel subscription now" }));
     expect(onConfirm).toHaveBeenCalledTimes(1);
     rerender(
       <WriteLockProvider locked reason="Not in the demo." kind="demo">
-        <CancelSubscriptionConfirm open onOpenChange={() => {}} periodEnd={END} onConfirm={onConfirm} />
+        <CancelSubscriptionConfirm open onClose={() => {}} periodEnd={END} onConfirm={onConfirm} />
       </WriteLockProvider>,
     );
     await user.click(screen.getByRole("button", { name: /Cancel subscription now/ }));
@@ -196,7 +186,7 @@ describe("CancelSubscriptionConfirm — the in-app cancel (§16.2 decision 2)", 
   it("speaks Swiss German: Jetzt kündigen", () => {
     render(
       <UiKitProvider labels={UI_KIT_LABELS_DE_CH} locale="de-CH">
-        <CancelSubscriptionConfirm open onOpenChange={() => {}} periodEnd={END} onConfirm={() => {}} />
+        <CancelSubscriptionConfirm open onClose={() => {}} periodEnd={END} onConfirm={() => {}} />
       </UiKitProvider>,
     );
     expect(screen.getByRole("dialog", { name: "Abonnement kündigen" })).toBeInTheDocument();
@@ -282,35 +272,30 @@ describe("PlanPicker and PlanSwitchConfirm — the permanent-grant warning (§16
     // skipped its own warning (switching), so the app shows this before the checkout.
     const user = userEvent.setup();
     const onConfirm = vi.fn();
-    const onOpenChange = vi.fn();
-    const { rerender } = render(<GrantWarningConfirm open={false} onOpenChange={onOpenChange} onConfirm={onConfirm} />);
+    const onClose = vi.fn();
+    const { rerender } = render(<GrantWarningConfirm open={false} onClose={onClose} onConfirm={onConfirm} />);
     expect(screen.queryByRole("dialog")).toBeNull();
-    rerender(<GrantWarningConfirm open onOpenChange={onOpenChange} onConfirm={onConfirm} />);
+    rerender(<GrantWarningConfirm open onClose={onClose} onConfirm={onConfirm} />);
     let dialog = screen.getByRole("dialog", { name: L.grantWarningTitle });
     expect(dialog.closest("[data-grant-warning]") ?? dialog.querySelector("[data-grant-warning]")).not.toBeNull();
     await user.click(within(dialog).getByRole("button", { name: "Back" }));
-    await vi.waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+    await vi.waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
     expect(onConfirm).not.toHaveBeenCalled();
 
-    onOpenChange.mockClear();
+    onClose.mockClear();
     rerender(
-      <GrantWarningConfirm
-        open
-        onOpenChange={onOpenChange}
-        onConfirm={onConfirm}
-        labels={{ grantWarningAction: "Pay now" }}
-      />,
+      <GrantWarningConfirm open onClose={onClose} onConfirm={onConfirm} labels={{ grantWarningAction: "Pay now" }} />,
     );
     dialog = screen.getByRole("dialog", { name: L.grantWarningTitle });
     await user.click(within(dialog).getByRole("button", { name: "Pay now" }));
     expect(onConfirm).toHaveBeenCalledTimes(1);
-    expect(onOpenChange).toHaveBeenCalledWith(false);
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it("GrantWarningConfirm speaks the provider's language", () => {
     render(
       <UiKitProvider labels={UI_KIT_LABELS_DE_CH}>
-        <GrantWarningConfirm open onOpenChange={() => {}} onConfirm={() => {}} />
+        <GrantWarningConfirm open onClose={() => {}} onConfirm={() => {}} />
       </UiKitProvider>,
     );
     expect(screen.getByRole("dialog", { name: UI_KIT_LABELS_DE_CH.billing.grantWarningTitle })).toBeInTheDocument();
@@ -319,7 +304,7 @@ describe("PlanPicker and PlanSwitchConfirm — the permanent-grant warning (§16
   it("PlanSwitchConfirm shows the warning above its figures, once", () => {
     const props = {
       open: true,
-      onOpenChange: () => {},
+      onClose: () => {},
       from: { plan: "pro", interval: "month" },
       to: { plan: "business", interval: "year" },
       onConfirm: () => {},

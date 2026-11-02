@@ -22,13 +22,14 @@ describe("isThenable — the kit's one check", () => {
     }
   });
 
-  it("is the one the auth forms, the admin confirm and the feedback mutation ask", () => {
+  // The feedback mutation asked it too until 0.53 dropped the callback form it told apart
+  // (deprecated in 0.52): `mutateAsync` always answers a promise.
+  it("is the one the auth forms and the admin confirm ask", () => {
     for (const file of [
       "auth/status-parts.tsx",
       "auth/forgot-password-form.tsx",
       "auth/verify-email.tsx",
       "admin/admin-action-confirm.tsx",
-      "feedback/feedback-mutation.ts",
     ]) {
       const source = readFileSync(join(__dirname, "..", "..", file), "utf8");
       expect(source, file).not.toMatch(/function isThenable|const isThenable/);

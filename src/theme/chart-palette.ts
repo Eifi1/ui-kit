@@ -74,8 +74,6 @@ export const CHART_ROLES = {
   outline: "var(--chart-ink)",
 } as const;
 
-/** `--chart-ink` per theme, as hex (tokens.css holds the same two). */
-export const CHART_INK_HEX = { light: "#1a1a17", dark: "#f0efe8" } as const;
 /** `--chart-muted` per theme, as hex (tokens.css holds the same two). */
 export const CHART_MUTED_HEX = { light: "#6b6a63", dark: "#a8a79f" } as const;
 

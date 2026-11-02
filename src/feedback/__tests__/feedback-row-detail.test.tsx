@@ -4,17 +4,16 @@ import { toast } from "../../components/toast";
 import { WriteLockProvider } from "../../components/write-lock";
 import { FeedbackCommentThread } from "../feedback-comment-thread";
 import { FeedbackNoteEditor } from "../feedback-inbox";
+import { feedbackPage } from "../feedback-page-link";
 import type { FeedbackRecord } from "../feedback-record";
 import {
   FeedbackReworkSection,
   FeedbackRowDetail,
   feedbackAttachmentUrls,
-  feedbackPageHref,
   feedbackPagePath,
-  feedbackPageUrl,
   feedbackRowAccess,
   type FeedbackDetailPatch,
-  type FeedbackDetailUpdate,
+  type FeedbackDetailUpdateAsync,
 } from "../feedback-row-detail";
 
 vi.mock("../../components/toast", () => ({
@@ -50,11 +49,8 @@ function record(over: Partial<FeedbackRecord> = {}): FeedbackRecord {
   };
 }
 
-/** A PATCH that lands at once, as TanStack's `mutate` would. */
-const landing = () =>
-  vi.fn<FeedbackDetailUpdate>((_patch, { onSuccess }) => {
-    onSuccess();
-  });
+/** A PATCH that lands at once, as TanStack's `mutateAsync` would. */
+const landing = () => vi.fn<FeedbackDetailUpdateAsync>(async () => undefined);
 
 beforeAll(() => {
   URL.createObjectURL = () => "blob:file";
@@ -114,7 +110,7 @@ describe("FeedbackRowDetail — the author's description editor", () => {
     "A folded comment.",
   ].join("\n");
 
-  it("holds ONLY the original text, and saving keeps every rework block and file line", () => {
+  it("holds ONLY the original text, and saving keeps every rework block and file line", async () => {
     const onUpdate = landing();
     render(<FeedbackRowDetail row={record({ body })} canEdit={false} viewerId={AUTHOR} onUpdate={onUpdate} />);
     const edit = screen.getByRole("button", { name: "Edit description" });
@@ -125,7 +121,9 @@ describe("FeedbackRowDetail — the author's description editor", () => {
     expect(box).toHaveValue("Original text.");
 
     fireEvent.change(box, { target: { value: "Corrected text." } });
-    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    });
 
     expect(onUpdate).toHaveBeenCalledTimes(1);
     const patch = onUpdate.mock.calls[0][0];
@@ -188,15 +186,17 @@ describe("FeedbackRowDetail — the page it was filed on", () => {
     expect(writeText).toHaveBeenCalledWith("https://app.example.test/accounts?p=2#top");
   });
 
+  // Through `feedbackPageHref` and `feedbackPageUrl` until 0.53 removed them (deprecated in
+  // 0.52, API-4); `feedbackPage` is the reading the detail and the URL cell share.
   it("takes a path-only url (Kurvenschmiede's backfill) and falls back to the route", () => {
-    expect(feedbackPageHref({ url: "/accounts?p=2" })).toBe("/accounts?p=2");
+    expect(feedbackPage({ url: "/accounts?p=2" })?.href).toBe("/accounts?p=2");
     expect(feedbackPagePath({ url: "/accounts?p=2" })).toBe("/accounts");
-    expect(feedbackPageUrl({ url: "/accounts?p=2" })).toBe("/accounts?p=2");
-    expect(feedbackPageHref({ url: "", route: "/budget" })).toBe("/budget");
-    expect(feedbackPageUrl({ route: "/budget" })).toBe("/budget");
+    expect(feedbackPage({ url: "/accounts?p=2" })?.url).toBe("/accounts?p=2");
+    expect(feedbackPage({ url: "", route: "/budget" })?.href).toBe("/budget");
+    expect(feedbackPage({ route: "/budget" })?.url).toBe("/budget");
     expect(feedbackPagePath({ url: "https://app.example.test/a/b?x=1#h" })).toBe("/a/b");
-    expect(feedbackPageHref(null)).toBeNull();
-    expect(feedbackPageHref({ url: "", route: "" })).toBeNull();
+    expect(feedbackPage(null)).toBeNull();
+    expect(feedbackPage({ url: "", route: "" })).toBeNull();
 
     render(
       <FeedbackRowDetail
@@ -210,10 +210,9 @@ describe("FeedbackRowDetail — the page it was filed on", () => {
   });
 
   it("never links off the app", () => {
-    expect(feedbackPageHref({ url: "javascript:alert(1)" })).toBeNull();
-    expect(feedbackPageUrl({ url: "javascript:alert(1)" })).toBeNull();
-    expect(feedbackPageHref({ url: "https://app.example.test//evil.example/x" })).toBe("/evil.example/x");
-    expect(feedbackPageHref({ url: "//evil.example/x" })).toBe("/x");
+    expect(feedbackPage({ url: "javascript:alert(1)" })).toBeNull();
+    expect(feedbackPage({ url: "https://app.example.test//evil.example/x" })?.href).toBe("/evil.example/x");
+    expect(feedbackPage({ url: "//evil.example/x" })?.href).toBe("/x");
   });
 });
 
@@ -468,18 +467,18 @@ describe("FeedbackRowDetail — replies (0.38 §9.7)", () => {
 
   it("sends the switch through the page's own PATCH: FeedbackDetailPatch carries `public` (0.38.1)", () => {
     expectTypeOf<FeedbackDetailPatch["public"]>().toEqualTypeOf<boolean | undefined>();
-    const update = vi.fn<FeedbackDetailUpdate>();
+    const update = landing();
     render(
       <FeedbackRowDetail
         row={record({ public: true, mine: true })}
         canEdit={false}
         viewerId={AUTHOR}
         onUpdate={update}
-        onPublicChange={(next) => update({ id: 1, public: next }, { onSuccess: () => {} })}
+        onPublicChange={(next) => void update({ id: 1, public: next })}
       />,
     );
     fireEvent.click(screen.getByRole("switch", { name: "Visible to others" }));
-    expect(update).toHaveBeenCalledWith({ id: 1, public: false }, expect.anything());
+    expect(update).toHaveBeenCalledWith({ id: 1, public: false });
   });
 });
 
@@ -505,7 +504,7 @@ describe("FeedbackRowDetail — rework", () => {
     }
   });
 
-  it("needs a note, sends the body ALONE as an append, and closes once it landed", () => {
+  it("needs a note, sends the body ALONE as an append, and closes once it landed", async () => {
     const onUpdate = landing();
     const body = "The chart jumps when I save.";
     render(
@@ -530,7 +529,9 @@ describe("FeedbackRowDetail — rework", () => {
     expect(onUpdate).not.toHaveBeenCalled();
 
     fireEvent.change(box, { target: { value: "  Still jumps on Safari.  " } });
-    fireEvent.click(send);
+    await act(async () => {
+      fireEvent.click(send);
+    });
     expect(onUpdate).toHaveBeenCalledTimes(1);
     const patch = onUpdate.mock.calls[0][0];
     expect(Object.keys(patch).sort()).toEqual(["body", "id"]);
@@ -614,10 +615,12 @@ describe("FeedbackRowDetail — status", () => {
     expect(statusChange).toHaveBeenCalledWith(row, "DONE");
   });
 
-  it("builds the Undo change from onUpdate when none is given", () => {
+  it("builds the Undo change from onUpdate when none is given", async () => {
     const onUpdate = landing();
     render(<FeedbackRowDetail row={record()} canEdit viewerId={ADMIN} onUpdate={onUpdate} />);
-    fireEvent.click(screen.getByRole("button", { name: "Done" }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Done" }));
+    });
     expect(onUpdate.mock.calls[0][0]).toEqual({ id: 412, status: "DONE" });
     expect(toast.undo).toHaveBeenCalledWith("Set to “Done”: Chart jumps on save", expect.anything());
   });

@@ -129,7 +129,14 @@ import { useChartEdge, useEdgesInForce } from "./chart-edge";
 import { cn } from "../lib/cn";
 import { formatWithMinus } from "../lib/minus";
 
-export interface SeriesChartSeries {
+/**
+ * One line, area or bar run of a {@link SeriesChart}.
+ *
+ * `TRow` is the chart's row type (0.53, keksdose after 0.52), and only `dot` reads it: its
+ * `point.row` is that type. Without a type argument a series is what it was, and a chart
+ * of typed rows still takes it — see {@link SeriesChartProps}.
+ */
+export interface SeriesChartSeries<TRow extends object = object> {
   /** The row key this line reads — and the `--color-<key>` it is painted with, so it
    *  must be a CSS identifier. Build keys out of data with {@link seriesKey}. */
   key: string;
@@ -177,8 +184,9 @@ export interface SeriesChartSeries {
    * point: `true` for the default dot, `false`/`null` for none, or any SVG node drawn
    * as-is at `point.cx`/`point.cy` — a buy/sell marker on keksdose's paper price.
    * Never called for a point with no value. Bars have no points, and ignore it.
+   * `point.row` is the caller's own row, typed as the chart's rows are (0.53).
    */
-  dot?: boolean | ((point: SeriesChartPoint) => ReactNode);
+  dot?: boolean | ((point: SeriesChartPoint<TRow>) => ReactNode);
   /** Line (or area outline) weight in px. Default 2, or 1.5 for a `step`. keksdose
    *  draws the subject of a chart at 2.5 and the reference it is read against at 1.5. */
   strokeWidth?: number;
@@ -213,14 +221,16 @@ export interface SeriesChartSeries {
 /** What a series draws. See {@link SeriesChartSeries.type}. */
 export type SeriesChartType = "line" | "bar" | "area";
 
-/** One point of a series, as a `dot` function is handed it. */
-export interface SeriesChartPoint {
+/** One point of a series, as a `dot` function is handed it. `TRow` is the chart's row
+ *  type (0.53); without one, `row` is a {@link SeriesChartRow}, as before. */
+export interface SeriesChartPoint<TRow extends object = object> {
   /** The series' key. */
   key: string;
   /** The row's position in `rows`. */
   index: number;
-  /** The caller's own row, with everything the chart did not plot still in it. */
-  row: SeriesChartRow;
+  /** The caller's own row, with everything the chart did not plot still in it: the very
+   *  object in `rows`, typed as `rows` is. */
+  row: SeriesChartRowOf<TRow>;
   /** The abscissa in the caller's terms: the number, the category, or (time) a Date. */
   x: SeriesChartXValue;
   value: number;
@@ -233,8 +243,31 @@ export interface SeriesChartPoint {
 
 /** A row of a series chart: one abscissa value and the series' values at it. Anything
  *  else in it (a raw ISO period for a drilldown) rides along untouched and is handed
- *  back in {@link SeriesChartPoint.row} and {@link SeriesChartHit.row}. */
+ *  back in {@link SeriesChartPoint.row} and {@link SeriesChartHit.row} — typed as the
+ *  caller's rows are since 0.53, and as this where their type names no keys. */
 export type SeriesChartRow = Readonly<Record<string, unknown>>;
+
+/**
+ * The row a hit or a point hands back, for a chart whose rows are `TRow[]` (0.53, keksdose
+ * after 0.52): `TRow` itself, so a drilldown reads `hit.row.rawPeriod` as the string it
+ * is. A {@link SeriesChartRow} where `TRow` names no keys — `object`, the default, which
+ * keeps `SeriesChartHit` and `SeriesChartPoint` without a type argument what they were, and
+ * the `object[]` rows an app passes today; `{}`; and `any` or `never` (`rows={[]}`), which
+ * are both assignable to `null` while no object type is.
+ *
+ * Both tests take `TRow` in the CHECKED position, never in the `extends` one, so TypeScript
+ * measures every type below as covariant in it (`SeriesChartSeries`, through `dot`'s
+ * parameter, contravariant) and relates two of them by their type arguments alone: a
+ * `SeriesChartHit<Month>` is a `SeriesChartHit`, and a handler or a series typed without an
+ * argument fits a chart of `Month` rows, though an interface has no index signature and is
+ * not, field by field, a `SeriesChartRow`. Written `object extends TRow ?`, the type is
+ * invariant and both of those stop type-checking.
+ */
+type SeriesChartRowOf<TRow> = [TRow] extends [null]
+  ? SeriesChartRow
+  : [keyof TRow] extends [never]
+    ? SeriesChartRow
+    : TRow;
 
 /** An abscissa value: a number (`x.type: "number"`), a category (a string, a number or
  *  a Date standing for a period), or a time (a Date, epoch ms or an ISO string). */
@@ -551,29 +584,42 @@ export interface SeriesChartMarker {
   r?: number;
 }
 
-/** What a click on the plot picked. */
-export interface SeriesChartHit {
+/** What a click on the plot picked. `TRow` is the chart's row type (0.53); without one,
+ *  `row` is a {@link SeriesChartRow}, as before. */
+export interface SeriesChartHit<TRow extends object = object> {
   /** The row's position in `rows`. */
   index: number;
-  /** The caller's own row — with its `rawPeriod`, id or whatever the drilldown needs. */
-  row: SeriesChartRow;
+  /** The caller's own row — with its `rawPeriod`, id or whatever the drilldown needs: the
+   *  very object in `rows`, typed as `rows` is, so it is read without a cast. */
+  row: SeriesChartRowOf<TRow>;
   x: SeriesChartXValue;
   /** The series, when the click landed ON a bar. A click anywhere else picks the slot
    *  (the period), not a series. */
   key?: string;
 }
 
-export interface SeriesChartProps {
+/**
+ * The props of {@link SeriesChart} and {@link StaticSeriesChart}, for rows of type `TRow`.
+ *
+ * `TRow` is inferred from `rows` (0.53, keksdose after 0.52), and what the chart hands back
+ * — `hit.row` in `onPointClick`, `point.row` in a series' `dot` — is that type, so a
+ * drilldown reads its own fields without narrowing an `unknown`. Without a type argument,
+ * `SeriesChartProps` is what it was: any object is a row, and a row comes back as a
+ * {@link SeriesChartRow}. So is `ComponentProps<typeof SeriesChart>`, which reads the
+ * constraint, `object`. A series, a handler or a `dot` typed without an argument fits a
+ * chart of typed rows too.
+ */
+export interface SeriesChartProps<TRow extends object = object> {
   /**
    * One row per abscissa value. A missing key is a hole (see `connectNulls`).
    *
    * Any object (0.52, refactor audit 2026-10-30, API-2): an `interface` has no index
    * signature, so a typed sweep did not fit `SeriesChartRow` and Kurvenschmiede cast its
    * Ackermann rows `as unknown as Record<string, number>[]`. The chart reads the keys
-   * `series` and `x` name, and hands the row back as {@link SeriesChartRow}.
+   * `series` and `x` name, and hands the row back typed as these are (0.53).
    */
-  rows: readonly object[];
-  series: readonly SeriesChartSeries[];
+  rows: readonly TRow[];
+  series: readonly SeriesChartSeries<TRow>[];
   /** Default: one untitled axis, `"y"`. */
   axes?: readonly SeriesChartAxis[];
   x?: SeriesChartX;
@@ -628,7 +674,7 @@ export interface SeriesChartProps {
    * a chart without bars, named "period — series: value", behind ONE tab stop. With this
    * they are buttons that Enter and Space activate; without, images to read.
    */
-  onPointClick?: (hit: SeriesChartHit) => void;
+  onPointClick?: (hit: SeriesChartHit<TRow>) => void;
   /** Where the tooltip may go: for a chart inside a scroll wrapper. See
    *  {@link SeriesChartTooltip}. */
   tooltip?: SeriesChartTooltip;
@@ -760,8 +806,10 @@ export interface SeriesLegendAxes {
  * series whose axis is not drawn says the unit that axis would have: "Velocity (mm/s)"
  * — see {@link SeriesChartAxis.unit}. Without them, the labels are as given.
  */
-export function seriesLegendEntries(
-  series: readonly SeriesChartSeries[],
+export function seriesLegendEntries<TRow extends object>(
+  // Generic only so a typed list fits (0.53): `SeriesChartSeries<Month>` is not a
+  // `SeriesChartSeries`, whose `dot` would be handed rows that are not `Month`s.
+  series: readonly SeriesChartSeries<TRow>[],
   { axes, budgeted }: SeriesLegendAxes = {},
 ): LegendEntry[] {
   const undrawn = new Map<string, string | undefined>();
@@ -1819,7 +1867,12 @@ const ZoomablePlot = withChartZoom(SeriesPlot);
  * category or time chart otherwise re-maps every row on every render, and `maxRows`'
  * envelope would be worked out again with it.
  */
-function usePlotProps(props: SeriesChartProps): PlotProps {
+function usePlotProps<TRow extends object>(typed: SeriesChartProps<TRow>): PlotProps {
+  // `TRow` types only what the caller is handed back, and that is its own row objects,
+  // untouched (0.53): the plot reads them as the `object` rows they are. Through `unknown`
+  // because the two are not comparable for an unresolved `TRow`: `SeriesChartSeries` is
+  // contravariant in it (its `dot` is handed rows) and `rows` covariant.
+  const props = typed as unknown as SeriesChartProps;
   const x = props.x ?? {};
   const { rows } = props;
   const { type, key } = x;
@@ -1833,7 +1886,7 @@ function usePlotProps(props: SeriesChartProps): PlotProps {
  * button. For a thumbnail, a print view, or a chart the consumer wraps in its own
  * interaction.
  */
-export function StaticSeriesChart(props: SeriesChartProps) {
+export function StaticSeriesChart<TRow extends object = object>(props: SeriesChartProps<TRow>) {
   return <SeriesPlot {...usePlotProps(props)} />;
 }
 
@@ -1842,8 +1895,12 @@ export function StaticSeriesChart(props: SeriesChartProps) {
  * axes), double-click or press the reset button to go back; wrap several in
  * `SharedXZoom` to move their x windows together. Which axes zoom depends on the marks
  * — see {@link SeriesChartProps.zoomAxes}.
+ *
+ * Generic in its rows (0.53): `hit.row` and a `dot`'s `point.row` are typed as `rows` is —
+ * see {@link SeriesChartProps}. A plain function, so the generic survives: a `memo` or a
+ * `forwardRef` around it would read `TRow` as its constraint.
  */
-export function SeriesChart(props: SeriesChartProps) {
+export function SeriesChart<TRow extends object = object>(props: SeriesChartProps<TRow>) {
   // The zoom fits the PLOTTED rows — slot indices and epoch ms, not the caller's labels.
   return <ZoomablePlot {...usePlotProps(props)} />;
 }

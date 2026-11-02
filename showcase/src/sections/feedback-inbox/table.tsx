@@ -22,7 +22,7 @@ import { Example, Note, code } from "../../lib/section";
 
 /**
  * The Feedback inbox page, part 1 of 4 (refactor audit 2026-10, DOC-8): the two lists —
- * `feedbackColumns`, the phone card and the awaiting toggle. The page's other parts are
+ * `useFeedbackColumns`, the phone card and the awaiting toggle. The page's other parts are
  * feedback-inbox.tsx (the vocabulary, transitions and note editor), composer.tsx, detail.tsx
  * and record.tsx beside this file.
  */
@@ -172,7 +172,7 @@ export function FeedbackTable027Demo() {
 
   return (
     <Example
-      label="feedbackColumns, FeedbackMobileCard, FeedbackAwaitingToggle — the two feedback pages"
+      label="useFeedbackColumns, FeedbackMobileCard, FeedbackAwaitingToggle — the two feedback pages"
       hint="/feedback (admin) and /my-feedback; narrow the window for the phone cards, swipes and the awaiting toggle"
     >
       <div className="flex flex-col gap-3">

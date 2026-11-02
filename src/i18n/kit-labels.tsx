@@ -20,7 +20,6 @@ import type { MiniCalendarLabels, WeekDay } from "../components/mini-calendar";
 import type { CalendarHeatmapLabels } from "../components/calendar-heatmap";
 import type { PopoverLabels } from "../components/popover";
 import type { ChipInputLabels } from "../components/chip";
-import type { FieldSyncLabels } from "../components/field-sync";
 import type { CharacterCountLabels, PasswordRevealLabels } from "../components/field-base";
 import type { TabsLabels } from "../components/tabs";
 import type { WizardLabels } from "../wizard/types";
@@ -46,7 +45,7 @@ import type { FilePickerLabels } from "../components/file-button";
 import type { MeasuredGridLabels } from "../components/measured-grid";
 import type { FeedbackAttachmentFieldLabels } from "../feedback/feedback-attachment";
 import type { FeedbackDialogTextLabels } from "../feedback/feedback-dialog";
-import type { FeedbackComposerLabels, FeedbackThreadLabels } from "../feedback/feedback-thread";
+import type { ChatComposerLabels, FeedbackThreadLabels } from "../feedback/feedback-thread";
 import type { FeedbackCategoryLabels, FeedbackStatusLabels, FeedbackToastLabels } from "../feedback/feedback-labels";
 import type { FeedbackMenuLabels } from "../feedback/feedback-menu";
 import type { FeedbackPublicLabels } from "../feedback/feedback-public-labels";
@@ -114,7 +113,6 @@ import type { CountrySelectLabels } from "../components/country-select";
 import type { InlineEditLabels } from "../components/inline-edit-field";
 import type { IbanInputLabels } from "../components/iban-input";
 import type { PhoneInputLabels } from "../components/phone-input";
-import type { SignChipLabels } from "../components/sign-chip";
 import type { ColumnMapperLabels } from "../components/column-mapper";
 import type { NotificationsLabels } from "../notifications/notifications-labels";
 import type { AdminAreaLabels } from "../admin/admin-area-labels";
@@ -284,10 +282,7 @@ export interface TopBarLabels {
   /** 0.49 KIT-10: the language menu's trigger, given the current language's name —
    *  "Choose language, current: Deutsch". */
   languageCurrent: (name: string) => string;
-  /** RoleSwitcher's name, and nothing else reads it (DevMenu's flask is `topBarParts.dev`).
-   *  @deprecated 0.52 — none: it goes with RoleSwitcher (MOD-5); removed in 0.53. */
-  switchRole: string;
-  /** The role switcher's tooltip, given the active role's name. */
+  /** The dev flask's role, given the active role's name (`DevMenu`'s name ends with it). */
   role: (value: string) => string;
 }
 
@@ -322,8 +317,6 @@ export interface UiKitLabels {
   calculator: CalculatorLabels;
   currency: CurrencyLabels;
   chipInput: ChipInputLabels;
-  /** @deprecated 0.52 — none: it goes with the FieldSync family (MOD-5); removed in 0.53. */
-  fieldSync: FieldSyncLabels;
   passwordReveal: PasswordRevealLabels;
   tabs: TabsLabels;
   appShell: AppShellLabels;
@@ -355,10 +348,11 @@ export interface UiKitLabels {
   filePicker: FilePickerLabels;
   measuredGrid: MeasuredGridLabels;
   feedbackAttachment: FeedbackAttachmentFieldLabels;
-  /** 0.12.0: `FeedbackDialog`'s own strings; `FeedbackThread` / `FeedbackComposer`. */
+  /** 0.12.0: `FeedbackDialog`'s own strings; `FeedbackThread` / `ChatComposer` (the
+   *  namespace keeps the composer's 0.12 name). */
   feedbackDialog: FeedbackDialogTextLabels;
   feedbackThread: FeedbackThreadLabels;
-  feedbackComposer: FeedbackComposerLabels;
+  feedbackComposer: ChatComposerLabels;
   /** 0.27.0: the feedback harmonisation (docs/feedback-harmonization.md §4) — a report's
    *  status and category words, keyed by the enum value; the toasts a feedback page
    *  shows; `FeedbackMenu`; `FeedbackContextBox`; the two pages' table; the row detail.
@@ -487,9 +481,6 @@ export interface UiKitLabels {
   ibanInput: IbanInputLabels;
   /** 0.22.0: `PhoneInput`'s country-code select. */
   phoneInput: PhoneInputLabels;
-  /** 0.22.0: `SignChip` — the outflow / inflow toggle beside an amount.
-   *  @deprecated 0.52 — none: it goes with SignChip (MOD-5); removed in 0.53. */
-  signChip: SignChipLabels;
   /** 0.23.0: `ColumnMapper` / `ColumnRoleTable` — a pasted or dropped table, a role per
    *  column. */
   columnMapper: ColumnMapperLabels;

@@ -578,7 +578,7 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2213 names from 365 modules** in the main barrel — 1028 values and 1185 types — and 189 more in 16 standalone entries. _Italic_ is a type-only export.
+**2129 names from 358 modules** in the main barrel — 961 values and 1168 types — and 187 more in 16 standalone entries. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 `node scripts/gen-export-inventory.mjs`; the counts are pinned by
@@ -586,14 +586,14 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2213 |
-| `@eifi1/ui-kit/chart` | 103 |
-| `@eifi1/ui-kit/shell` | 118 |
-| `@eifi1/ui-kit/data-table` | 57 |
+| `@eifi1/ui-kit` | 2129 |
+| `@eifi1/ui-kit/chart` | 99 |
+| `@eifi1/ui-kit/shell` | 106 |
+| `@eifi1/ui-kit/data-table` | 55 |
 | `@eifi1/ui-kit/wizard` | 25 |
 | `@eifi1/ui-kit/tour` | 49 |
-| `@eifi1/ui-kit/feedback` | 214 |
-| `@eifi1/ui-kit/search` | 23 |
+| `@eifi1/ui-kit/feedback` | 194 |
+| `@eifi1/ui-kit/search` | 20 |
 | `@eifi1/ui-kit/dates` | 22 |
 | `@eifi1/ui-kit/table-text` | 14 |
 | `@eifi1/ui-kit/currencies` | 3 |
@@ -602,7 +602,7 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 | `@eifi1/ui-kit/testing/react` | 2 |
 | `@eifi1/ui-kit/rhf` | 48 |
 | `@eifi1/ui-kit/offline` | 33 |
-| `@eifi1/ui-kit/sync` | 38 |
+| `@eifi1/ui-kit/sync` | 36 |
 | `@eifi1/ui-kit/sync/testing` | 3 |
 | `@eifi1/ui-kit/push-worker` | 10 |
 | `@eifi1/ui-kit/i18n/de-CH` | 2 |
@@ -635,10 +635,8 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `lib/translation-review` | `DEFAULT_TRANSLATION_REVIEW_FILTER`, `DEFAULT_TRANSLATION_REVIEW_SWIPE`, `dropReviews`, `filterTranslationRows`, `flattenStrings`, `fromApiReview`, `groupTranslationRows`, `keyInArea`, `keyInAreas`, `keyNamespace`, `mergeReviews`, `placeholderMismatch`, `placeholderTokens`, `REVIEW_STATUSES`, `reviewAreaOf`, `reviewStatus`, `reviewUndo`, `reviewWrite`, `summariseRows`, `toApiWrite`, `TRANSLATION_REVIEW_SWIPE_ACTIONS`, `translationCorrections`, `translationReviewSwipePlan`, `translationRows`, `unreviewedRows`, _`ApiTranslationReview`_, _`ApiTranslationReviewsResponse`_, _`ApiTranslationReviewWrite`_, _`ReviewStatus`_, _`TranslationCorrection`_, _`TranslationReview`_, _`TranslationReviewFilter`_, _`TranslationReviewKey`_, _`TranslationReviewSwipeAction`_, _`TranslationReviewSwipeBinding`_, _`TranslationReviewUndo`_, _`TranslationReviewWrite`_, _`TranslationRow`_, _`TranslationRowGroup`_, _`TranslationRowsInput`_, _`TranslationSummary`_, _`TranslationVerdict`_ |
 | `lib/countries` | `COUNTRY_CODES`, `countryName` |
 | `lib/iban` | `compactIban`, `formatIban`, `IBAN_LENGTHS`, `ibanCheckDigits`, `ibanProblem`, `isQrIban`, `isValidIban`, _`IbanKind`_, _`IbanProblem`_ |
-| `lib/isin` | `formatIsin`, `isinCheckDigit`, `isValidIsin` |
 | `lib/phone` | `formatNationalPhone`, `formatPhone`, `isE164`, `parsePhone`, `PHONE_COUNTRIES`, `PHONE_DIAL_CODES`, _`ParsedPhone`_, _`PhoneCountry`_, _`PhoneCountryCode`_ |
 | `lib/column-mapping` | `assignColumnRole`, `guessMapping`, `missingRoles`, `readMappedTable`, `readTextFile`, `roleOfColumn`, _`ColumnMapperResult`_, _`ColumnMapping`_, _`ColumnRole`_ |
-| `lib/clipboard-minus` | `asciiMinusInNumbers` |
 | `lib/document-title` | `DEFAULT_DOCUMENT_TITLE_FORMAT`, `formatDocumentTitle`, _`DocumentTitleParts`_ |
 | `lib/status-tone` | `STATUS_KINDS`, `statusTone`, _`StatusKind`_, _`StatusTone`_ |
 | `lib/date-format` | `DATE_FORMAT_PREFERENCES`, `dateFormatSample`, `dateFormatterFor`, `formatDateTimeWithPreference`, `formatDateWithPreference`, `isDateFormatPreference`, `resolveDateFormat`, _`DateFormatOptions`_, _`DateFormatPreference`_, _`ResolvedDateFormat`_ |
@@ -686,7 +684,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `theme/palette-store` | `applyPersistedPalette`, `createPaletteStore`, _`PaletteStore`_ |
 | `theme/text-size` | `applyPersistedTextSize`, `applyTextSize`, `createTextSizeStore`, `isTextSize`, `readPersistedTextSize`, `readTextSize`, `resolveTextSize`, `TEXT_SCALE`, `TEXT_SIZE_INLINE_SCRIPT`, `TEXT_SIZES`, `useTextSize`, _`ApplyTextSizeOptions`_, _`PersistedAppearanceOptions`_, _`PersistedTextSize`_, _`TextSize`_, _`TextSizeInfo`_, _`TextSizeState`_, _`TextSizeStore`_ |
 | `theme/contrast` | `applyContrast`, `applyPersistedContrast`, `CONTRAST_MODES`, `contrastLevel`, `createContrastStore`, `isContrastMode`, `prefersMoreContrast`, `readContrastLevel`, `readPersistedContrast`, `resolveContrastMode`, _`ApplyContrastOptions`_, _`ContrastLevel`_, _`ContrastMode`_, _`ContrastState`_, _`ContrastStore`_, _`PersistedContrast`_ |
-| `theme/chart-palette` | `CHART_COLORS`, `CHART_INK_HEX`, `CHART_MUTED_HEX`, `CHART_ROLES`, `chartEdge`, `CVD_ORDER`, `EDGE_MIN_CONTRAST`, `HEATMAP_HEX`, `lerpHex`, `PALETTE_HEX`, `PALETTE_SIZE`, `paletteFor`, `textOn`, _`HeatStops`_, _`PaletteForOptions`_ |
+| `theme/chart-palette` | `CHART_COLORS`, `CHART_MUTED_HEX`, `CHART_ROLES`, `chartEdge`, `CVD_ORDER`, `HEATMAP_HEX`, `lerpHex`, `PALETTE_HEX`, `PALETTE_SIZE`, `paletteFor`, `textOn`, _`HeatStops`_, _`PaletteForOptions`_ |
 
 ### i18n
 
@@ -735,7 +733,6 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/tooltip` | `placeTooltip`, `Tooltip`, _`TooltipPlacement`_, _`TooltipProps`_, _`TooltipSide`_, _`TooltipSize`_, _`TooltipTap`_, _`TooltipViewport`_ |
 | `components/user-avatar` | `avatarInitials`, `UserAvatar`, _`UserAvatarBadge`_, _`UserAvatarProps`_ |
 | `components/settings-fields` | `ContrastSetting`, `LanguageSetting`, `TextSizeSetting`, `ThemeSetting`, _`ContrastSettingProps`_, _`LanguageSettingProps`_, _`TextSizeSettingProps`_, _`ThemeSettingProps`_, _`ThemeSettingSelectProps`_, _`ThemeSettingToggleProps`_ |
-| `components/field-sync` | `DEFAULT_FIELD_SYNC_LABELS`, `FIELD_SYNC_FRAME`, `FIELD_SYNC_SAVED_MS`, `FieldSyncIndicator`, `FieldSyncRow`, `useFieldSync`, _`FieldSyncIndicatorProps`_, _`FieldSyncLabels`_, _`FieldSyncRowProps`_, _`FieldSyncState`_, _`UseFieldSyncOptions`_, _`UseFieldSyncReturn`_ |
 | `components/month-picker` | `DEFAULT_MONTH_PICKER_LABELS`, `MonthPicker`, _`MonthPickerLabels`_, _`MonthPickerProps`_ |
 | `components/checkbox` | `Checkbox`, _`CheckboxProps`_ |
 | `components/switch` | `Switch`, _`SwitchProps`_, _`SwitchSize`_ |
@@ -763,10 +760,10 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/chart` | `ChartContainer`, `ChartLegend`, `ChartLegendContent`, `ChartTooltip`, `ChartTooltipContent`, `useChart`, _`ChartConfig`_, _`ChartSeriesConfig`_ |
 | `components/treemap` | `fitLabel`, `Treemap`, `TreemapCell`, _`TreemapCellProps`_, _`TreemapEdges`_, _`TreemapNode`_, _`TreemapProps`_ |
 | `components/treemap-labels` | `DEFAULT_TREEMAP_LABELS`, _`TreemapLabels`_ |
-| `components/series-chart` | `resolveTooltipPlacement`, `SeriesChart`, `seriesLegendEntries`, `StaticSeriesChart`, _`SeriesChartAxis`_, _`SeriesChartHit`_, _`SeriesChartMarker`_, _`SeriesChartPoint`_, _`SeriesChartProps`_, _`SeriesChartReference`_, _`SeriesChartRow`_, _`SeriesChartSeries`_, _`SeriesChartSpan`_, _`SeriesChartTickValues`_, _`SeriesChartTone`_, _`SeriesChartTooltip`_, _`SeriesChartTooltipPlacement`_, _`SeriesChartType`_, _`SeriesChartX`_, _`SeriesChartXTick`_, _`SeriesChartXValue`_, _`SeriesLegendAxes`_ |
+| `components/series-chart` | `SeriesChart`, `seriesLegendEntries`, `StaticSeriesChart`, _`SeriesChartAxis`_, _`SeriesChartHit`_, _`SeriesChartMarker`_, _`SeriesChartPoint`_, _`SeriesChartProps`_, _`SeriesChartReference`_, _`SeriesChartRow`_, _`SeriesChartSeries`_, _`SeriesChartSpan`_, _`SeriesChartTickValues`_, _`SeriesChartTone`_, _`SeriesChartTooltip`_, _`SeriesChartTooltipPlacement`_, _`SeriesChartType`_, _`SeriesChartX`_, _`SeriesChartXTick`_, _`SeriesChartXValue`_, _`SeriesLegendAxes`_ |
 | `components/chart-height` | _`ChartHeight`_ |
 | `components/chart-zoom-core` | `SharedXZoom`, _`ZoomAxes`_, _`ZoomAxesSetting`_, _`ZoomBinding`_, _`ZoomDrag`_, _`ZoomFitSeries`_, _`ZoomFitSource`_, _`ZoomRow`_, _`ZoomSelection`_, _`ZoomState`_, _`ZoomTarget`_ |
-| `components/toggle-legend` | `LegendColumn`, `LegendGroup`, `StaticLegend`, `STEP_DASH`, `STROKE_PATTERNS`, `strokeDash`, `toggleHidden`, `ToggleLegend`, _`LegendEntry`_, _`StaticLegendProps`_, _`ToggleLegendProps`_ |
+| `components/toggle-legend` | `LegendColumn`, `LegendGroup`, `StaticLegend`, `STEP_DASH`, `strokeDash`, `toggleHidden`, `ToggleLegend`, _`LegendEntry`_, _`StaticLegendProps`_, _`ToggleLegendProps`_ |
 | `components/facing-pair` | `FACING_SIDES`, `facingAxes`, `facingBand`, `facingHeadingPad`, _`FacingSide`_ |
 | `components/series-chart-labels` | `DEFAULT_SERIES_CHART_LABELS`, _`SeriesChartLabels`_ |
 | `components/pie-chart` | `PieChart`, _`PieChartProps`_, _`PieChartSlice`_ |
@@ -775,7 +772,6 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/alert-banner` | `AlertBanner`, `alertFrameClass`, `toneFrameClass`, _`AlertBannerProps`_, _`AlertSize`_, _`AlertTone`_ |
 | `components/toggle-group` | `ToggleGroup`, _`ToggleGroupBaseProps`_, _`ToggleGroupClearableProps`_, _`ToggleGroupProps`_, _`ToggleGroupRequiredProps`_, _`ToggleOption`_ |
 | `components/nav-pills` | `NavPills`, _`NavPillItem`_, _`NavPillLinkProps`_, _`NavPillsCurrent`_, _`NavPillsProps`_ |
-| `components/section-nav` | `SectionNav`, _`SectionNavProps`_ |
 | `components/chip` | `Chip`, _`ChipHue`_, _`ChipLinkProps`_, _`ChipProps`_, _`ChipShape`_, _`ChipSize`_, _`ChipTone`_, _`ChipVariant`_ |
 | `components/chip-input` | `ChipInput`, `DEFAULT_CHIP_INPUT_LABELS`, _`ChipInputLabels`_, _`ChipInputProps`_ |
 | `components/wizard-stepper` | `WizardStepper` |
@@ -785,12 +781,12 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/grouped-picker` | `GroupedPicker`, _`GroupedPickerProps`_, _`PickerGroup`_ |
 | `components/file-dropzone` | `FileDropzone`, _`FileDropzoneProps`_, _`FileDropzoneRejectionFeedback`_, _`FileDropzoneState`_ |
 | `components/mini-calendar` | `DEFAULT_MINI_CALENDAR_LABELS`, `MiniCalendar`, _`MiniCalendarDayState`_, _`MiniCalendarLabels`_, _`MiniCalendarProps`_, _`WeekDay`_ |
-| `components/calendar-heatmap` | `CalendarHeatmap`, `DEFAULT_CALENDAR_HEATMAP_LABELS`, `heatmapLevel`, `heatmapWindowEnd`, _`CalendarHeatmapDatum`_, _`CalendarHeatmapDay`_, _`CalendarHeatmapLabels`_, _`CalendarHeatmapProps`_ |
+| `components/calendar-heatmap` | `CalendarHeatmap`, `DEFAULT_CALENDAR_HEATMAP_LABELS`, `heatmapWindowEnd`, _`CalendarHeatmapDatum`_, _`CalendarHeatmapDay`_, _`CalendarHeatmapLabels`_, _`CalendarHeatmapProps`_ |
 | `components/date-picker` | `DatePicker`, _`DatePickerProps`_ |
 | `components/tree-view` | `TreeRow`, `TreeView`, _`TreeItemState`_, _`TreeNode`_, _`TreeRowProps`_, _`TreeViewProps`_ |
 | `components/description-list` | `DEFAULT_DESCRIPTION_LIST_LABELS`, `DescriptionItem`, `DescriptionList`, _`DescriptionItemProps`_, _`DescriptionListColumns`_, _`DescriptionListDensity`_, _`DescriptionListLabels`_, _`DescriptionListLayout`_, _`DescriptionListProps`_ |
 | `components/form-actions` | `DEFAULT_FORM_ACTIONS_LABELS`, `FormActions`, _`FormActionsAlign`_, _`FormActionsDestructive`_, _`FormActionsLabels`_, _`FormActionsPlacement`_, _`FormActionsProps`_, _`FormActionsStack`_, _`FormActionsStickyWithin`_, _`FormActionsSubmitProps`_, _`FormActionsSubmitShortcut`_, _`ResponsiveFormActionsPlacement`_ |
-| `components/write-lock` | `COMMIT_EXCEPT_BILLING`, `COMMIT_EXCEPT_OFFLINE`, `DEFAULT_WRITE_LOCK_LABELS`, `OFFLINE_LOCK`, `useOfflineWriteLock`, `useWriteLock`, `writeLockFor`, `WriteLockProvider`, _`CommitScope`_, _`WriteLock`_, _`WriteLockHold`_, _`WriteLockKind`_, _`WriteLockLabels`_, _`WriteLockProviderProps`_ |
+| `components/write-lock` | `COMMIT_EXCEPT_BILLING`, `COMMIT_EXCEPT_OFFLINE`, `DEFAULT_WRITE_LOCK_LABELS`, `useOfflineWriteLock`, `useWriteLock`, `writeLockFor`, `WriteLockProvider`, _`CommitScope`_, _`WriteLock`_, _`WriteLockHold`_, _`WriteLockKind`_, _`WriteLockLabels`_, _`WriteLockProviderProps`_ |
 | `components/account-chips` | `ACCOUNT_STATE_TONES`, `AccountRoleChip`, `AccountStateChip`, `dateColumn`, `DateMark`, `DEFAULT_ACCOUNT_STATE_LABELS`, `RoleChip`, _`AccountRoleChipProps`_, _`AccountState`_, _`AccountStateChipProps`_, _`AccountStateLabels`_, _`DateColumnOptions`_, _`DateMarkProps`_, _`RoleChipProps`_, _`RoleDefinition`_, _`RoleVocabulary`_ |
 | `components/server-wake` | `DEFAULT_SERVER_WAKE_LABELS`, `ServerWakeNotice`, `useServerWakeStage`, _`ServerWakeLabels`_, _`ServerWakeNoticeProps`_ |
 | `components/share-card` | `DEFAULT_SHARE_CARD_LABELS`, `ShareCard`, `ShareDialog`, `SharePanel`, _`ShareAddRequest`_, _`ShareCandidate`_, _`ShareCardLabels`_, _`ShareCardProps`_, _`ShareDialogProps`_, _`ShareGrantee`_, _`SharePanelProps`_, _`SharePendingGrant`_, _`ShareRole`_ |
@@ -803,7 +799,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/error-boundary` | `crashFingerprint`, `DEFAULT_ERROR_BOUNDARY_LABELS`, `describeThrown`, `ErrorBoundary`, `formatCrashReport`, `isChunkLoadError`, _`CrashReport`_, _`CrashReportResult`_, _`ErrorBoundaryDetails`_, _`ErrorBoundaryFallbackProps`_, _`ErrorBoundaryLabels`_, _`ErrorBoundaryProps`_ |
 | `components/copy-button` | `CopyButton`, `DEFAULT_COPY_BUTTON_LABELS`, _`CopyButtonLabels`_, _`CopyButtonProps`_ |
 | `components/authed-image` | `AuthedImage`, `DEFAULT_AUTHED_IMAGE_LABELS`, _`AuthedImageLabels`_, _`AuthedImageProps`_ |
-| `components/image-grid` | `DEFAULT_IMAGE_GRID_LABELS`, `ImageGrid`, `splitFileName`, _`ImageGridLabels`_, _`ImageGridProps`_ |
+| `components/image-grid` | `DEFAULT_IMAGE_GRID_LABELS`, `ImageGrid`, _`ImageGridLabels`_, _`ImageGridProps`_ |
 | `components/lightbox` | `DEFAULT_LIGHTBOX_LABELS`, `imageItemKind`, `Lightbox`, _`ImageItem`_, _`ImageItemKind`_, _`LightboxLabels`_, _`LightboxProps`_ |
 | `components/button-group` | `ButtonGroup`, `ButtonGroupLink`, _`ButtonGroupLinkProps`_, _`ButtonGroupLinkRenderProps`_, _`ButtonGroupProps`_ |
 | `components/table` | `NUMERIC_CELL_CLASS`, `Table`, `TableBody`, `TableCaption`, `TableCell`, `TableEmpty`, `TableFoot`, `TableHead`, `TableHeaderCell`, `TableRow`, _`TableAlign`_, _`TableBodyProps`_, _`TableCaptionProps`_, _`TableCellProps`_, _`TableDensity`_, _`TableEmptyProps`_, _`TableFootProps`_, _`TableHeaderCellProps`_, _`TableHeaderCellSize`_, _`TableHeaderCellWeight`_, _`TableHeadProps`_, _`TableLayout`_, _`TableProps`_, _`TableRowProps`_, _`TableRowVariant`_, _`TableVAlign`_ |
@@ -816,19 +812,18 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/page-header` | `PageHeader`, _`PageHeaderActionsAlign`_, _`PageHeaderMobileLayout`_, _`PageHeaderProps`_, _`PageHeaderSize`_ |
 | `components/breadcrumbs` | `Breadcrumbs`, `DEFAULT_BREADCRUMBS_LABELS`, _`BreadcrumbItem`_, _`BreadcrumbLinkProps`_, _`BreadcrumbsLabels`_, _`BreadcrumbsProps`_ |
 | `components/text-link` | `TextLink`, _`TextLinkCurrent`_, _`TextLinkProps`_, _`TextLinkRenderProps`_, _`TextLinkTone`_, _`TextLinkUnderline`_ |
-| `components/toast` | `DEFAULT_TOAST_LABELS`, `toast`, `TOAST_ACTION_DURATION`, `Toaster`, `TOASTER_OFFSET_BOTTOM`, `TOASTER_OFFSET_TOP`, _`ToastAction`_, _`ToasterOffset`_, _`ToasterProps`_, _`ToastId`_, _`ToastLabels`_, _`ToastOptions`_, _`ToastPosition`_, _`ToastPromiseOptions`_, _`ToastRedoOptions`_, _`ToastSwipeDirection`_, _`ToastUndoOptions`_ |
+| `components/toast` | `DEFAULT_TOAST_LABELS`, `toast`, `Toaster`, _`ToastAction`_, _`ToasterOffset`_, _`ToasterProps`_, _`ToastId`_, _`ToastLabels`_, _`ToastOptions`_, _`ToastPosition`_, _`ToastPromiseOptions`_, _`ToastRedoOptions`_, _`ToastSwipeDirection`_, _`ToastUndoOptions`_ |
 | `components/translation-review` | `TranslationReviewPanel`, _`TranslationReviewGroupBy`_, _`TranslationReviewOrigin`_, _`TranslationReviewPanelProps`_, _`TranslationReviewSaveInfo`_ |
 | `components/legal` | `DEFAULT_LEGAL_LABELS`, `LEGAL_HREFS`, `LegalFooter`, `LegalLayout`, `LegalLinks`, `legalOperatorText`, `LegalSection`, `useLegalLabels`, _`LegalDisclaimerSectionLabels`_, _`LegalFooterProps`_, _`LegalFramedSectionLabels`_, _`LegalInfoPageKey`_, _`LegalLabels`_, _`LegalLayoutProps`_, _`LegalLink`_, _`LegalLinksProps`_, _`LegalOperator`_, _`LegalOperatorSectionLabels`_, _`LegalOperatorText`_, _`LegalPageKey`_, _`LegalSectionProps`_, _`LegalTextSectionLabels`_ |
 | `components/legal-page` | `LEGAL_SKELETON`, `LegalAcceptCheckbox`, `LegalKitSection`, `LegalPage`, _`LegalAcceptCheckboxProps`_, _`LegalDisclaimerVariant`_, _`LegalKitSectionKey`_, _`LegalKitSectionProps`_, _`LegalPageProps`_, _`LegalSectionOwner`_, _`LegalSkeletonEntry`_, _`LegalSkeletonPage`_ |
 | `components/appearance-labels` | `DEFAULT_APPEARANCE_LABELS`, `useAppearanceLabels`, _`AppearanceLabels`_ |
 | `components/date-format-setting` | `DateFormatSetting`, _`DateFormatSettingProps`_ |
-| `components/row-actions` | `DEFAULT_ROW_ACTIONS_LABELS`, `ROW_ACTIONS_CELL_CLASS`, `ROW_ACTIONS_HEAD_CLASS`, `RowActions`, `rowActionsColumn`, `RowActionsHead`, _`RowAction`_, _`RowActionConfirm`_, _`RowActionList`_, _`RowActionsCollapse`_, _`RowActionsColumnOptions`_, _`RowActionsHeadProps`_, _`RowActionsLabels`_, _`RowActionsProps`_, _`RowActionsSize`_, _`RowActionTone`_ |
+| `components/row-actions` | `DEFAULT_ROW_ACTIONS_LABELS`, `ROW_ACTIONS_CELL_CLASS`, `RowActions`, `rowActionsColumn`, `RowActionsHead`, _`RowAction`_, _`RowActionConfirm`_, _`RowActionList`_, _`RowActionsCollapse`_, _`RowActionsColumnOptions`_, _`RowActionsHeadProps`_, _`RowActionsLabels`_, _`RowActionsProps`_, _`RowActionsSize`_, _`RowActionTone`_ |
 | `components/checkbox-group` | `CheckboxGroup`, _`CheckboxGroupLegendVisibility`_, _`CheckboxGroupOption`_, _`CheckboxGroupProps`_ |
 | `components/one-time-code-input` | `OneTimeCodeInput`, _`OneTimeCodeInputProps`_ |
 | `components/language-select` | `LanguageSelect`, _`LanguageSelectProps`_ |
 | `components/tile-radio` | `TILE_SIZE`, `TileRadioGroup`, _`TileItem`_, _`TileRadioGroupProps`_, _`TileSize`_ |
 | `components/inline-edit-field` | `DEFAULT_INLINE_EDIT_LABELS`, `InlineEditField`, _`InlineEditFieldProps`_, _`InlineEditLabels`_, _`InlineEditorProps`_ |
-| `components/sign-chip` | `DEFAULT_SIGN_CHIP_LABELS`, `SignChip`, _`SignChipLabels`_, _`SignChipProps`_ |
 | `components/country-select` | `CountrySelect`, `DEFAULT_COUNTRY_SELECT_LABELS`, _`CountrySelectLabels`_, _`CountrySelectProps`_ |
 | `components/iban-input` | `DEFAULT_IBAN_INPUT_LABELS`, `IbanInput`, _`IbanInputLabels`_, _`IbanInputProps`_ |
 | `components/phone-input` | `DEFAULT_PHONE_INPUT_LABELS`, `PhoneInput`, _`PhoneInputLabels`_, _`PhoneInputProps`_ |
@@ -840,21 +835,20 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/data-table-pagination` | `PAGE_SIZE_OPTIONS`, `Pagination` |
 | `components/data-table-filter-popover` | `FilterPopover` |
 | `components/data-table` | `DataTable`, `DEFAULT_DATA_TABLE_SORT_LABELS`, _`DataTableCellProps`_, _`DataTableChrome`_, _`DataTableColumn`_, _`DataTableDensity`_, _`DataTableDesktopSwipeActions`_, _`DataTableHeadProps`_, _`DataTableProps`_, _`DataTableRowAction`_, _`DataTableSortLabels`_, _`FilterState`_, _`MobileSwipeActions`_, _`ServerPagination`_ |
-| `components/data-table-row-actions` | `swipePlanRowActions` |
 | `components/data-table-groups` | _`DataTableGroupBy`_, _`DataTableLoadMore`_ |
 | `components/data-table-virtual` | _`DataTableVirtualize`_ |
 | `components/data-table-cells` | `booleanColumn`, `BooleanMark`, _`BooleanColumnOptions`_, _`BooleanMarkProps`_ |
-| `components/use-table-state` | `readTableUrlState`, `useTableUrlState`, _`TableUrlState`_, _`TableUrlStateProps`_, _`TableUrlSync`_, _`UseTableUrlStateOptions`_, _`UseTableUrlStateReturn`_ |
+| `components/use-table-state` | `useTableUrlState`, _`TableUrlState`_, _`TableUrlStateProps`_, _`TableUrlSync`_, _`UseTableUrlStateOptions`_, _`UseTableUrlStateReturn`_ |
 | `components/translation-review-editor` | `TranslationReviewEditor`, _`TranslationReviewEditorProps`_ |
 | `components/translation-review-parts` | `REVIEW_STATUS_TONES`, `ReviewStatusChip`, `TranslationExportButton`, `TranslationLocaleTabs`, `TranslationProgress`, _`ReviewStatusChipProps`_, _`TranslationExportButtonProps`_, _`TranslationLocaleTab`_, _`TranslationLocaleTabsProps`_, _`TranslationProgressProps`_ |
 | `components/translation-review-labels` | `DEFAULT_TRANSLATION_REVIEW_LABELS`, _`TranslationReviewLabels`_ |
 | `components/inline-entity-combobox` | `InlineEntityCombobox`, _`InlineEntityComboboxProps`_ |
 | `components/combobox-core` | _`ComboClearValue`_, _`ComboOption`_ |
+| `components/series-chart-axes` | `anchoredBand`, `AXIS_TICK_WIDTH`, `AXIS_TITLE_STRIP`, `axisBandWidth`, `mergeSeries`, `oneAxis`, `padBand`, `paddedDomain`, `seriesKey`, `soleSeriesColor`, `visibleSeries`, _`SeriesSource`_ |
 | `components/series-chart-ticks` | _`TimeTickUnit`_ |
 | `components/series-chart-budget` | _`SeriesChartAxisBudget`_ |
-| `components/series-chart-axes` | `anchoredBand`, `AXIS_TICK_WIDTH`, `AXIS_TITLE_STRIP`, `axisBandWidth`, `mergeSeries`, `oneAxis`, `padBand`, `paddedDomain`, `seriesKey`, `soleSeriesColor`, `visibleSeries`, _`SeriesSource`_ |
 | `components/date-field` | _`DateTriggerAttributes`_ |
-| `components/date-range-picker` | `DateRangePicker`, _`DateRangeCommit`_, _`DateRangeDraftSummary`_, _`DateRangePickerPreset`_, _`DateRangePickerProps`_, _`DateRangeTriggerRenderProps`_ |
+| `components/date-range-picker` | `DateRangePicker`, _`DateRangeDraftSummary`_, _`DateRangePickerPreset`_, _`DateRangePickerProps`_, _`DateRangeTriggerRenderProps`_ |
 
 ### shell
 
@@ -862,20 +856,19 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 |---|---|
 | `shell/topbar-controls` | `LanguageMenu`, `PaletteMenu`, `ThemeToggle`, `TOPBAR_MENU_ITEM_CLASS`, `TOPBAR_TRIGGER_CLASS`, _`LanguageMenuTrigger`_, _`LanguageOption`_ |
 | `shell/top-bar` | `TopBar`, _`TopBarProps`_ |
-| `shell/app-shell` | `AppShell`, `DEFAULT_APP_SHELL_MORE_LABELS`, `DEFAULT_MOBILE_MAX_ITEMS`, `pickMobileBar`, `splitMobileBar`, _`AppShellMoreLabels`_, _`AppShellNavItem`_, _`AppShellProps`_, _`AppShellSidebarFooterItem`_, _`AppShellSubItem`_ |
+| `shell/app-shell` | `AppShell`, `DEFAULT_APP_SHELL_MORE_LABELS`, `DEFAULT_MOBILE_MAX_ITEMS`, _`AppShellMoreLabels`_, _`AppShellNavItem`_, _`AppShellProps`_, _`AppShellSidebarFooterItem`_, _`AppShellSubItem`_ |
 | `shell/option-switcher-menu` | `OptionSwitcherMenu`, _`OptionSwitcherOption`_ |
-| `shell/role-switcher` | `RoleSwitcher`, _`RoleSwitcherProps`_ |
 | `shell/topbar-action-menu` | `TopBarActionMenu`, _`TopBarMenuEntry`_, _`TopBarMenuHeader`_ |
 | `shell/top-bar-brand` | `TopBarBrand`, _`TopBarBrandProps`_ |
 | `shell/auth-layout` | `AuthLayout`, _`AuthLayoutProps`_ |
 | `shell/fill-height` | `FILL_HEIGHT_CLASS`, `FillHeight`, _`FillHeightProps`_ |
 | `shell/admin-menu` | `adminMenuEntry`, `AdminMenuRow`, `AdminWaitingBadge`, `useAdminMenuEntry`, _`AdminMenuEntryOptions`_, _`AdminMenuRowProps`_, _`AdminWaitingBadgeProps`_, _`UseAdminMenuEntryOptions`_ |
-| `shell/top-bar-actions` | `TOP_BAR_ACTION_ORDER`, `TopBarActions`, _`TopBarActionsProps`_ |
+| `shell/top-bar-actions` | `TopBarActions`, _`TopBarActionsProps`_ |
 | `shell/account-menu-language` | `AccountMenuLanguage`, _`AccountMenuLanguageOption`_, _`AccountMenuLanguageProps`_ |
 | `shell/account-menu-text-size` | `AccountMenuTextSize`, _`AccountMenuTextSizeProps`_ |
 | `shell/tour-menu` | `TourMenu`, _`TourMenuProps`_, _`TourMenuTour`_ |
-| `shell/sync-status-indicator` | `syncState`, `SyncStatusIndicator`, _`SyncState`_, _`SyncStatus`_, _`SyncStatusIndicatorProps`_, _`SyncStatusScope`_ |
-| `shell/dev-menu` | `DEV_ORIGINAL_ROLE_KEY`, `DevMenu`, _`DevMenuProps`_, _`DevMenuSection`_ |
+| `shell/sync-status-indicator` | `SyncStatusIndicator`, _`SyncState`_, _`SyncStatus`_, _`SyncStatusIndicatorProps`_, _`SyncStatusScope`_ |
+| `shell/dev-menu` | `DevMenu`, _`DevMenuProps`_, _`DevMenuSection`_ |
 | `shell/top-bar-parts-labels` | `DEFAULT_TOP_BAR_PARTS_LABELS`, `useTopBarPartsLabels`, _`DevSwitchersLabels`_, _`SyncStatusLabels`_, _`TopBarPartsLabels`_, _`TourMenuLabels`_ |
 | `shell/company-switcher` | `CompanySwitcher`, `DEFAULT_COMPANY_SWITCHER_LABELS`, _`CompanySwitcherCompany`_, _`CompanySwitcherLabels`_, _`CompanySwitcherProps`_ |
 
@@ -883,9 +876,9 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 
 | Module | Exports |
 |---|---|
-| `settings/settings-layout` | `SETTINGS_SEARCH_THRESHOLD`, `SettingsLayout`, _`SettingsDocumentTitleParts`_, _`SettingsLayoutProps`_, _`SettingsLayoutWidth`_ |
-| `settings/use-settings-route` | `resolveSettingsLocation`, `SETTINGS_FROM_LIST_STATE`, `settingsFromListState`, `useSettingsRoute`, _`SettingsLayoutMode`_, _`SettingsLocation`_, _`SettingsLocationResult`_, _`SettingsLocationRules`_, _`SettingsRoute`_, _`UseSettingsRouteOptions`_ |
-| `settings/use-settings-focus` | `SETTINGS_FOCUS_MS`, `SETTINGS_FOCUS_RING`, `useFocusParam`, `useSettingsFocus` |
+| `settings/settings-layout` | `SettingsLayout`, _`SettingsDocumentTitleParts`_, _`SettingsLayoutProps`_, _`SettingsLayoutWidth`_ |
+| `settings/use-settings-route` | `settingsFromListState`, `useSettingsRoute`, _`SettingsLayoutMode`_, _`SettingsLocation`_, _`SettingsLocationResult`_, _`SettingsLocationRules`_, _`SettingsRoute`_, _`UseSettingsRouteOptions`_ |
+| `settings/use-settings-focus` | `useFocusParam`, `useSettingsFocus` |
 | `settings/settings-section` | `SettingsSection`, _`SettingsSectionProps`_ |
 | `settings/settings-context` | `useSettingsLayout`, _`SettingsLayoutContextValue`_ |
 | `settings/settings-heading` | `SettingsHeadingLevel`, `useSettingsHeadingLevel`, _`SettingsHeadingLevelProps`_, _`SettingsHeadingTag`_ |
@@ -893,7 +886,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `settings/settings-labels` | `DEFAULT_SETTINGS_LABELS`, `useSettingsLabels`, _`SettingsCoreGroup`_, _`SettingsGroupLabels`_, _`SettingsLabels`_ |
 | `settings/device-reset-setting` | `DEFAULT_DEVICE_RESET_LABELS`, `DEVICE_RESET_ANCHOR`, `DeviceResetSetting`, _`DeviceResetLabels`_, _`DeviceResetSettingProps`_ |
 | `settings/use-account-language` | `matchOfferedLanguage`, `resolveAccountLanguage`, `useAccountLanguage`, _`AccountLanguage`_, _`AccountLanguageSource`_, _`ResolveAccountLanguageInput`_, _`ResolvedAccountLanguage`_, _`UseAccountLanguageOptions`_ |
-| `settings/use-account-appearance` | `resolveAccountAppearance`, `useAccountAppearance`, _`AccountAppearance`_, _`AccountAppearanceFields`_, _`AccountAppearancePatch`_, _`AppearanceSource`_, _`DeviceAppearance`_, _`ResolvedAccountAppearance`_, _`UseAccountAppearanceOptions`_ |
+| `settings/use-account-appearance` | `useAccountAppearance`, _`AccountAppearance`_, _`AccountAppearanceFields`_, _`AccountAppearancePatch`_, _`AppearanceSource`_, _`DeviceAppearance`_, _`ResolvedAccountAppearance`_, _`UseAccountAppearanceOptions`_ |
 
 ### landing
 
@@ -912,22 +905,22 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 
 | Module | Exports |
 |---|---|
-| `feedback/feedback-attachment` | `DEFAULT_ATTACHMENT_ACCEPT`, `DEFAULT_FEEDBACK_ATTACHMENT_LABELS`, `DEFAULT_MAX_ATTACHMENT_BYTES`, `DEFAULT_MAX_ATTACHMENTS`, `FeedbackAttachmentField`, `pastedName`, _`FeedbackAttachmentError`_, _`FeedbackAttachmentErrorInfo`_, _`FeedbackAttachmentFieldLabels`_, _`FeedbackAttachmentFieldMultipleProps`_, _`FeedbackAttachmentFieldProps`_, _`FeedbackAttachmentFieldRefsProps`_, _`FeedbackAttachmentFieldSingleProps`_, _`FeedbackAttachmentRef`_, _`FeedbackAttachmentRefsError`_ |
+| `feedback/feedback-attachment` | `DEFAULT_FEEDBACK_ATTACHMENT_LABELS`, `FeedbackAttachmentField`, `pastedName`, _`FeedbackAttachmentError`_, _`FeedbackAttachmentErrorInfo`_, _`FeedbackAttachmentFieldLabels`_, _`FeedbackAttachmentFieldMultipleProps`_, _`FeedbackAttachmentFieldProps`_, _`FeedbackAttachmentFieldRefsProps`_, _`FeedbackAttachmentFieldSingleProps`_, _`FeedbackAttachmentRef`_, _`FeedbackAttachmentRefsError`_ |
 | `feedback/feedback-dialog` | `DEFAULT_FEEDBACK_DIALOG_LABELS`, `FeedbackDialog`, _`FeedbackAttachmentLabels`_, _`FeedbackCategoryOption`_, _`FeedbackDialogLabels`_, _`FeedbackDialogMultipleProps`_, _`FeedbackDialogProps`_, _`FeedbackDialogSingleProps`_, _`FeedbackDialogTextLabels`_, _`FeedbackMultipleSubmission`_, _`FeedbackSubmission`_, _`FeedbackSubmitHint`_ |
 | `feedback/feedback-inbox` | `FeedbackCategoryBadge`, `FeedbackDetail`, `FeedbackDetailSection`, `FeedbackNoteEditor`, `FeedbackProse`, `FeedbackStatusBadge`, `FeedbackStatusTransitions`, _`FeedbackNoteAttachment`_ |
-| `feedback/feedback-thread` | `ChatComposer`, `DEFAULT_FEEDBACK_COMPOSER_LABELS`, `DEFAULT_FEEDBACK_THREAD_LABELS`, `FeedbackThread`, _`ChatComposerHandle`_, _`ChatComposerLabels`_, _`ChatComposerProps`_, _`ChatComposerSlotContext`_, _`FeedbackComposerAttachment`_, _`FeedbackComposerHandle`_, _`FeedbackComposerLabels`_, _`FeedbackComposerProps`_, _`FeedbackComposerSlotContext`_, _`FeedbackThreadAttachment`_, _`FeedbackThreadEvent`_, _`FeedbackThreadItem`_, _`FeedbackThreadLabels`_, _`FeedbackThreadMessage`_, _`FeedbackThreadProps`_ |
-| `feedback/feedback-record` | `appendRework`, `attachmentName`, `FEEDBACK_ATTACHMENT_ACCEPT`, `FEEDBACK_AUTHOR_EDITABLE_STATUSES`, `FEEDBACK_AWAITING_STATUSES`, `FEEDBACK_COMMENT_MAX`, `FEEDBACK_DECIDED_STATUSES`, `FEEDBACK_PICKABLE_CATEGORIES`, `FEEDBACK_QUEUE_STATUSES`, `FEEDBACK_REPLY_MAX`, `FEEDBACK_REWORKABLE_STATUSES`, `feedbackAttachmentLine`, `feedbackReworkCount`, `isImageAttachment`, `replaceDescription`, `reworkCount`, `splitBodyAttachments`, `splitDescription`, _`FeedbackContext`_, _`FeedbackEnvironment`_, _`FeedbackRecord`_ |
+| `feedback/feedback-thread` | `ChatComposer`, `DEFAULT_FEEDBACK_COMPOSER_LABELS`, `DEFAULT_FEEDBACK_THREAD_LABELS`, `FeedbackThread`, _`ChatComposerHandle`_, _`ChatComposerLabels`_, _`ChatComposerProps`_, _`ChatComposerSlotContext`_, _`FeedbackComposerAttachment`_, _`FeedbackThreadAttachment`_, _`FeedbackThreadEvent`_, _`FeedbackThreadItem`_, _`FeedbackThreadLabels`_, _`FeedbackThreadMessage`_, _`FeedbackThreadProps`_ |
+| `feedback/feedback-record` | `appendRework`, `attachmentName`, `DEFAULT_ATTACHMENT_ACCEPT`, `DEFAULT_MAX_ATTACHMENT_BYTES`, `DEFAULT_MAX_ATTACHMENTS`, `FEEDBACK_ATTACHMENT_ACCEPT`, `FEEDBACK_AUTHOR_EDITABLE_STATUSES`, `FEEDBACK_AWAITING_STATUSES`, `FEEDBACK_COMMENT_MAX`, `FEEDBACK_DECIDED_STATUSES`, `FEEDBACK_PICKABLE_CATEGORIES`, `FEEDBACK_QUEUE_STATUSES`, `FEEDBACK_REPLY_MAX`, `FEEDBACK_REWORKABLE_STATUSES`, `feedbackReworkCount`, `isImageAttachment`, `replaceDescription`, `reworkCount`, `splitBodyAttachments`, `splitDescription`, _`FeedbackContext`_, _`FeedbackEnvironment`_, _`FeedbackRecord`_ |
 | `feedback/feedback-labels` | `DEFAULT_FEEDBACK_CATEGORY_LABELS`, `DEFAULT_FEEDBACK_STATUS_LABELS`, `DEFAULT_FEEDBACK_TOAST_LABELS`, `useFeedbackCategoryLabels`, `useFeedbackStatusLabels`, `useFeedbackToastLabels`, _`FeedbackCategoryLabels`_, _`FeedbackStatusLabels`_, _`FeedbackToastLabels`_ |
-| `feedback/feedback-status-undo` | `FEEDBACK_UNDO_DURATION`, `useFeedbackStatusUndo`, _`FeedbackStatusChange`_, _`FeedbackStatusMutate`_, _`FeedbackStatusMutateAsync`_, _`FeedbackStatusPatch`_, _`FeedbackStatusRow`_, _`FeedbackStatusUndoOptions`_ |
-| `feedback/feedback-swipe` | `DEFAULT_FEEDBACK_SWIPE`, `FEEDBACK_SWIPE_ACTIONS`, `feedbackSwipeOmitShown`, `feedbackSwipePlan`, _`FeedbackSwipeAction`_, _`FeedbackSwipeBinding`_, _`FeedbackSwipeOptions`_ |
+| `feedback/feedback-status-undo` | `useFeedbackStatusUndo`, _`FeedbackStatusChange`_, _`FeedbackStatusMutateAsync`_, _`FeedbackStatusPatch`_, _`FeedbackStatusRow`_, _`FeedbackStatusUndoOptions`_ |
+| `feedback/feedback-swipe` | `DEFAULT_FEEDBACK_SWIPE`, `feedbackSwipeOmitShown`, `feedbackSwipePlan`, _`FeedbackSwipeAction`_, _`FeedbackSwipeBinding`_, _`FeedbackSwipeOptions`_ |
 | `feedback/feedback-menu` | `DEFAULT_FEEDBACK_MENU_LABELS`, `FeedbackMenu`, _`FeedbackMenuLabels`_, _`FeedbackMenuProps`_ |
 | `feedback/feedback-context` | `DEFAULT_FEEDBACK_CONTEXT_LABELS`, `feedbackContext`, `FeedbackContextBox`, _`FeedbackContextBoxProps`_, _`FeedbackContextInput`_, _`FeedbackContextLabels`_, _`FeedbackSubmitter`_ |
 | `feedback/feedback-capture` | `captureAppScreenshot`, _`CaptureAppScreenshotOptions`_ |
 | `feedback/feedback-submit` | `useFeedbackSubmit`, _`FeedbackCreatePayload`_, _`FeedbackSubmit`_, _`UseFeedbackSubmitOptions`_ |
-| `feedback/feedback-table` | `DEFAULT_FEEDBACK_PAGE_LABELS`, `FeedbackAwaitingToggle`, `feedbackColumns`, `FeedbackEmptyState`, `feedbackEnvironment`, `FeedbackMobileCard`, `feedbackMobileGroupBy`, `FeedbackSubject`, `feedbackSubmitter`, `feedbackSubmitterEmail`, `isFeedbackAwaiting`, `useFeedbackColumns`, `useFeedbackPageLabels`, `useFeedbackRenderDate`, _`FeedbackAwaitingToggleProps`_, _`FeedbackColumnsOptions`_, _`FeedbackEmptyStateProps`_, _`FeedbackMobileCardProps`_, _`FeedbackPageLabels`_, _`FeedbackRenderDate`_, _`FeedbackSubjectProps`_, _`FeedbackTableRow`_, _`UseFeedbackColumnsOptions`_ |
-| `feedback/feedback-row-detail` | `DEFAULT_FEEDBACK_DETAIL_LABELS`, `feedbackAttachmentUrls`, `feedbackPageHref`, `feedbackPagePath`, `feedbackPageUrl`, `FeedbackReworkSection`, `feedbackRowAccess`, `FeedbackRowDetail`, `useFeedbackDetailLabels`, _`FeedbackDetailLabels`_, _`FeedbackDetailPatch`_, _`FeedbackDetailUpdate`_, _`FeedbackDetailUpdateAsync`_, _`FeedbackReworkSectionProps`_, _`FeedbackReworkSend`_, _`FeedbackRowAccess`_, _`FeedbackRowDetailProps`_, _`FeedbackUpload`_ |
+| `feedback/feedback-table` | `DEFAULT_FEEDBACK_PAGE_LABELS`, `FeedbackAwaitingToggle`, `FeedbackEmptyState`, `FeedbackMobileCard`, `feedbackMobileGroupBy`, `FeedbackSubject`, `isFeedbackAwaiting`, `useFeedbackColumns`, `useFeedbackPageLabels`, `useFeedbackRenderDate`, _`FeedbackAwaitingToggleProps`_, _`FeedbackColumnsOptions`_, _`FeedbackEmptyStateProps`_, _`FeedbackMobileCardProps`_, _`FeedbackPageLabels`_, _`FeedbackRenderDate`_, _`FeedbackSubjectProps`_, _`FeedbackTableRow`_, _`UseFeedbackColumnsOptions`_ |
+| `feedback/feedback-row-detail` | `DEFAULT_FEEDBACK_DETAIL_LABELS`, `FeedbackReworkSection`, `FeedbackRowDetail`, _`FeedbackDetailLabels`_, _`FeedbackDetailPatch`_, _`FeedbackDetailUpdateAsync`_, _`FeedbackReworkSectionProps`_, _`FeedbackReworkSend`_, _`FeedbackRowAccess`_, _`FeedbackRowDetailProps`_, _`FeedbackUpload`_ |
 | `feedback/feedback-crash` | `createCrashReporter`, _`CrashFiling`_, _`CrashReportCreate`_, _`CrashReporter`_, _`CrashReporterOptions`_, _`CrashReportResponse`_ |
-| `feedback/feedback-public-switch` | `FeedbackPublicSwitch`, `feedbackPublicSwitchAllowed`, _`FeedbackPublicSwitchProps`_, _`FeedbackPublicSwitchRow`_, _`FeedbackPublicSwitchViewer`_ |
+| `feedback/feedback-public-switch` | `FeedbackPublicSwitch`, _`FeedbackPublicSwitchProps`_, _`FeedbackPublicSwitchRow`_, _`FeedbackPublicSwitchViewer`_ |
 | `feedback/feedback-public-list` | `DEFAULT_FEEDBACK_PUBLIC_LABELS`, `FeedbackPublicDetail`, `FeedbackPublicList`, `useFeedbackPublicLabels`, _`FeedbackPublicDetailProps`_, _`FeedbackPublicLabels`_, _`FeedbackPublicListProps`_ |
 | `feedback/feedback-public-types` | _`FeedbackComment`_, _`FeedbackEntryKind`_, _`FeedbackPublicListItem`_, _`FeedbackPublicRecord`_, _`FeedbackPublicSort`_, _`FeedbackReply`_, _`FeedbackVoteState`_ |
 | `feedback/feedback-vote-button` | `DEFAULT_FEEDBACK_VOTE_LABELS`, `FeedbackVoteButton`, _`FeedbackVoteButtonProps`_, _`FeedbackVoteLabels`_ |
@@ -965,7 +958,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | Module | Exports |
 |---|---|
 | `search/command-palette` | `CommandPalette`, `DEFAULT_COMMAND_PALETTE_LABELS`, _`CommandItem`_, _`CommandPaletteDensity`_, _`CommandPaletteLabels`_ |
-| `search/search-index` | `createSearchIndex`, `matchEntries`, `normalizeSearchText`, `SEARCH_TIER_POINTS`, _`SearchEntry`_, _`SearchHit`_, _`SearchIndex`_, _`SearchIndexOptions`_, _`SearchMatchField`_ |
+| `search/search-index` | `createSearchIndex`, _`SearchEntry`_, _`SearchHit`_, _`SearchIndex`_, _`SearchIndexOptions`_, _`SearchMatchField`_ |
 | `search/global-search` | `DEFAULT_GLOBAL_SEARCH_LABELS`, `GlobalSearch`, _`GlobalSearchLabels`_, _`GlobalSearchProps`_, _`GlobalSearchSource`_, _`GlobalSearchSourceGroup`_, _`GlobalSearchSuggestion`_, _`GlobalSearchTriggerProps`_ |
 | `search/use-command-key` | `useCommandKey` |
 
@@ -1001,7 +994,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 
 | Module | Exports |
 |---|---|
-| `admin/user-roster` | `adminUserStates`, `DEFAULT_USER_ROSTER_LABELS`, `USER_ROSTER_SORT_KEYS`, `UserIdentityCell`, `userRosterColumns`, `userRosterSort`, `UserRowActions`, `useUserRosterColumns`, _`AdminUserStateFields`_, _`RoleEditing`_, _`RosterState`_, _`UserIdentityCellProps`_, _`UserRosterColumnsOptions`_, _`UserRosterLabels`_, _`UserRosterRow`_, _`UserRosterSortKey`_, _`UserRowAction`_, _`UserRowActionList`_, _`UserRowActionsProps`_ |
+| `admin/user-roster` | `DEFAULT_USER_ROSTER_LABELS`, `USER_ROSTER_SORT_KEYS`, `UserIdentityCell`, `userRosterSort`, `UserRowActions`, `useUserRosterColumns`, _`AdminUserStateFields`_, _`RoleEditing`_, _`RosterState`_, _`UserIdentityCellProps`_, _`UserRosterColumnsOptions`_, _`UserRosterLabels`_, _`UserRosterRow`_, _`UserRosterSortKey`_, _`UserRowAction`_, _`UserRowActionList`_, _`UserRowActionsProps`_ |
 | `admin/role-select` | `DEFAULT_ROLE_SELECT_LABELS`, `RolesEditor`, `RoleSelect`, _`RoleLock`_, _`RoleLockCode`_, _`RolesEditorProps`_, _`RoleSelectLabels`_, _`RoleSelectProps`_ |
 | `admin/reviewer-scope-editor` | `DEFAULT_REVIEWER_SCOPE_LABELS`, `ReviewerScopeEditor`, _`ReviewerScope`_, _`ReviewerScopeArea`_, _`ReviewerScopeEditorProps`_, _`ReviewerScopeLabels`_, _`ReviewerScopeLanguage`_ |
 | `admin/admin-action-confirm` | `AdminActionConfirm`, `DEFAULT_ADMIN_ACTION_LABELS`, _`AdminActionConfirmProps`_, _`AdminActionConfirmValues`_, _`AdminActionLabels`_, _`AdminActionTarget`_, _`AdminConfirmLevel`_ |
@@ -1012,10 +1005,10 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `admin/admin-area-labels` | `DEFAULT_ADMIN_AREA_LABELS`, `useAdminAreaLabels`, _`AdminAreaLabels`_, _`AdminSharedSection`_, _`AdminTileLabels`_ |
 | `admin/admin-sections` | `ADMIN_SECTIONS`, `adminSectionOrder`, `adminSections`, _`AdminKeptSection`_, _`AdminOwnSection`_, _`AdminSectionDefinition`_, _`AdminSectionOrderOptions`_, _`AdminSectionPlace`_, _`AdminSectionsOptions`_ |
 | `admin/admin-forbidden` | `AdminForbidden`, _`AdminForbiddenProps`_ |
-| `admin/admin-overview` | `AdminOverview`, `adminWaitingCount`, `AttentionTile`, `DEFAULT_ADMIN_ATTENTION_HREFS`, _`AdminAttention`_, _`AdminAttentionTile`_, _`AdminExtraTile`_, _`AdminFeedbackTile`_, _`AdminFeedbackTileKey`_, _`AdminOverviewProps`_, _`AdminOwnTile`_, _`AttentionTileProps`_ |
+| `admin/admin-overview` | `AdminOverview`, `adminWaitingCount`, `AttentionTile`, _`AdminAttention`_, _`AdminAttentionTile`_, _`AdminExtraTile`_, _`AdminFeedbackTile`_, _`AdminFeedbackTileKey`_, _`AdminOverviewProps`_, _`AdminOwnTile`_, _`AttentionTileProps`_ |
 | `admin/admin-tool-links` | `AdminToolLinks`, _`AdminToolLink`_, _`AdminToolLinksProps`_ |
-| `admin/mail-test-card` | `DEFAULT_MAIL_TEST_CARD_LABELS`, `MAIL_TEST_ANCHOR`, `MailTestCard`, `maskMailAddress`, _`MailTestAnswer`_, _`MailTestCardLabels`_, _`MailTestCardProps`_ |
-| `admin/plan-change` | `DEFAULT_PLAN_CHANGE_LABELS`, `PlanChangeConfirm`, `planColumn`, `usePlanChangeResult`, `usePlanColumn`, _`PlanChange`_, _`PlanChangeConfirmProps`_, _`PlanChangeLabels`_, _`PlanChangeLine`_, _`PlanChangeOutcome`_, _`PlanChangeResultOptions`_, _`PlanChangeTone`_, _`PlanColumnOptions`_, _`PlanColumnUsage`_ |
+| `admin/mail-test-card` | `DEFAULT_MAIL_TEST_CARD_LABELS`, `MAIL_TEST_ANCHOR`, `MailTestCard`, _`MailTestAnswer`_, _`MailTestCardLabels`_, _`MailTestCardProps`_ |
+| `admin/plan-change` | `DEFAULT_PLAN_CHANGE_LABELS`, `PlanChangeConfirm`, `usePlanChangeResult`, `usePlanColumn`, _`PlanChange`_, _`PlanChangeConfirmProps`_, _`PlanChangeLabels`_, _`PlanChangeLine`_, _`PlanChangeOutcome`_, _`PlanChangeResultOptions`_, _`PlanChangeTone`_, _`PlanColumnOptions`_, _`PlanColumnUsage`_ |
 
 ### billing
 
@@ -1023,7 +1016,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 |---|---|
 | `billing/billing-labels` | `DEFAULT_BILLING_LABELS`, `SUBSCRIPTION_STATUSES`, `useBillingLabels`, _`BillingLabels`_, _`SubscriptionStatus`_ |
 | `billing/plan-price` | `BILLING_INTERVALS`, `billingCurrencyFor`, `formatPlanPrice`, `minorToMajor`, `planPrice`, _`BillingCurrency`_, _`BillingInterval`_, _`PlanIntervalPrices`_, _`PlanPriceAnswer`_, _`PlanPrices`_ |
-| `billing/plan-card` | `GrantWarningConfirm`, `PlanCard`, `PlanPicker`, `planRelation`, _`BillingPlan`_, _`GrantWarningConfirmProps`_, _`PlanCardProps`_, _`PlanChoice`_, _`PlanPickerProps`_, _`PlanRelation`_ |
+| `billing/plan-card` | `GrantWarningConfirm`, `PlanCard`, `PlanPicker`, _`BillingPlan`_, _`GrantWarningConfirmProps`_, _`PlanCardProps`_, _`PlanChoice`_, _`PlanPickerProps`_, _`PlanRelation`_ |
 | `billing/subscription-status-chip` | `SUBSCRIPTION_STATUS_TONES`, `SubscriptionStatusChip`, _`SubscriptionStatusChipProps`_ |
 | `billing/billing-banner` | `BillingBanner`, _`BillingBannerKind`_, _`BillingBannerProps`_ |
 | `billing/plan-limit-notice` | `planLimitMailto`, `PlanLimitNotice`, _`PlanLimitNoticeProps`_ |
@@ -1032,8 +1025,8 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `billing/billing-standing` | `billingDaysLeft`, `billingLockAt`, `isBillingReadOnly`, _`BillingStanding`_ |
 | `billing/subscription-actions` | `SubscriptionActions`, _`SubscriptionActionsProps`_ |
 | `billing/checkout-return` | `CHECKOUT_RETURN_PARAM`, `CHECKOUT_RETURN_VALUE`, `checkoutReturnUrl`, `isCheckoutReturn`, `withoutCheckoutReturn` |
-| `billing/checkout-processing` | `checkoutFingerprint`, `checkoutLanded`, `noteCheckoutStarted`, `useCheckoutProcessing`, _`CheckoutOverview`_, _`CheckoutProcessingOptions`_ |
-| `billing/pay-page` | `paddleLocale`, `PAY_PAGE_APPS`, `PAY_PAGE_LANG_PARAM`, `payPageUrl`, _`PaddleEnvironment`_, _`PayPageApp`_ |
+| `billing/checkout-processing` | `checkoutFingerprint`, `noteCheckoutStarted`, `useCheckoutProcessing`, _`CheckoutOverview`_, _`CheckoutProcessingOptions`_ |
+| `billing/pay-page` | `paddleLocale`, `PAY_PAGE_APPS`, `payPageUrl`, _`PaddleEnvironment`_, _`PayPageApp`_ |
 | `billing/billing-overview` | `isPermanentGrant`, _`BillingOverview`_, _`BillingPortalAccess`_, _`PaidPrice`_, _`PlanSwitchPreview`_, _`PlanSwitchRequest`_, _`PortalRequest`_, _`PortalTarget`_, _`SubscriptionSource`_ |
 | `billing/plan-limit-toast` | `usePlanLimitToast`, _`PlanLimitToastOptions`_ |
 | `billing/plan-switch` | `PlanSwitchConfirm`, _`PlanSwitchConfirmProps`_, _`PlanSwitchSide`_ |
@@ -1055,7 +1048,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `notifications/use-push-device` | `notifyPushSubscriptionChanged`, `PUSH_SUBSCRIPTION_CHANGED`, `PushDeviceError`, `pushSupported`, `releaseThisDevicePush`, `usePushDevice`, _`PushDevice`_, _`PushDeviceErrorCode`_, _`PushPermission`_, _`PushSubscriptionInput`_, _`UsePushDeviceOptions`_ |
 | `notifications/push-worker` | `handlePushSubscriptionChange`, `pushSubscriptionInput`, `resubscribeAfterChange`, _`PushReplaceInput`_, _`PushResubscribeOutcome`_, _`PushSubscriptionChangeEventLike`_, _`PushSubscriptionChangeOptions`_, _`PushWorkerScope`_ |
 | `notifications/push-device-setting` | `PushDeviceSetting`, _`PushDeviceAction`_, _`PushDeviceSettingProps`_ |
-| `notifications/push-devices-setting` | `describeUserAgent`, `PushDevicesSetting`, _`PushDevicesSettingProps`_ |
+| `notifications/push-devices-setting` | `PushDevicesSetting`, _`PushDevicesSettingProps`_ |
 | `notifications/unsubscribe-panel` | `UnsubscribePanel`, `unsubscribeTokenType`, _`UnsubscribePanelProps`_ |
 | `notifications/feedback-notification-types` | `DEFAULT_FEEDBACK_NOTIFICATION_TYPES_LABELS`, `useFeedbackNotificationTypes`, `useFeedbackNotificationTypesLabels`, _`FeedbackNotificationTypeId`_, _`FeedbackNotificationTypesLabels`_ |
 
@@ -1065,7 +1058,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 |---|---|
 | `demo/demo-labels` | `DEFAULT_DEMO_LABELS`, `useDemoLabels`, _`DemoLabels`_ |
 | `demo/demo-session` | `isDemoSession`, _`DemoModel`_, _`DemoSessionUser`_ |
-| `demo/demo-countdown` | `DEMO_MINUTES_ONLY`, `DEMO_WARNING_MINUTES`, `demoCountdown`, `useDemoCountdown`, _`DemoCountdown`_, _`DemoCountdownOptions`_, _`DemoExpiry`_ |
+| `demo/demo-countdown` | `useDemoCountdown`, _`DemoCountdown`_, _`DemoCountdownOptions`_, _`DemoExpiry`_ |
 | `demo/demo-start` | `DemoStart`, _`DemoStartProps`_ |
 | `demo/demo-banner` | `DemoBanner`, _`DemoBannerProps`_ |
 | `demo/demo-ended` | `DemoEnded`, _`DemoEndedProps`_ |
@@ -1132,8 +1125,8 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 
 | Module | Exports |
 |---|---|
-| `sync/db` | `createSyncDb`, `rowByPk`, `SYNC_DB_PK_INDEX`, `SYNC_DB_STORES`, _`CreateSyncDbOptions`_, _`OutboxChange`_, _`OutboxStatus`_, _`SyncDb`_, _`SyncDbUpgrade`_, _`SyncedRow`_, _`SyncMetaEntry`_ |
-| `sync/engine` | `createSyncEngine`, `DEFAULT_HOLD_CODES`, `DEFAULT_SYNC_BACKOFF_MS`, `releaseSyncEngine`, `syncEngineFor`, _`SyncCounts`_, _`SyncEngine`_, _`SyncEngineOptions`_, _`SyncEngineState`_, _`SyncRoundResult`_, _`SyncStep`_, _`SyncStepContext`_, _`SyncStepResult`_ |
+| `sync/db` | `createSyncDb`, `rowByPk`, `SYNC_DB_PK_INDEX`, _`CreateSyncDbOptions`_, _`OutboxChange`_, _`OutboxStatus`_, _`SyncDb`_, _`SyncDbUpgrade`_, _`SyncedRow`_, _`SyncMetaEntry`_ |
+| `sync/engine` | `createSyncEngine`, `DEFAULT_HOLD_CODES`, `releaseSyncEngine`, `syncEngineFor`, _`SyncCounts`_, _`SyncEngine`_, _`SyncEngineOptions`_, _`SyncEngineState`_, _`SyncRoundResult`_, _`SyncStep`_, _`SyncStepContext`_, _`SyncStepResult`_ |
 | `sync/hooks` | `useSyncQuery`, `useSyncStatus`, `useSyncWorker` |
 | `sync/wire` | _`SyncPageCursor`_, _`SyncRefusalBody`_, _`SyncRejectionBody`_, _`SyncRequestBody`_, _`SyncResponseBody`_, _`SyncWireChange`_ |
 | `offline/local-first` | `isOfflineError`, `readLocalFirst`, `stampAfter`, `uuid5`, `writeLocalFirst` |

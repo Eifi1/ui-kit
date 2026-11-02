@@ -58,17 +58,6 @@ describe("AccountMenuTextSize", () => {
     expect(screen.getByRole("button", { name: "Account" })).toHaveAttribute("aria-expanded", "true");
   });
 
-  it("still takes the deprecated `onPick` (0.52 → removed in 0.53)", () => {
-    const onPick = vi.fn();
-    render(
-      <ul>
-        <AccountMenuTextSize value="normal" onPick={onPick} />
-      </ul>,
-    );
-    fireEvent.click(screen.getByRole("button", { name: "Larger text" }));
-    expect(onPick).toHaveBeenCalledWith("large");
-  });
-
   it("disables A− at Normal and A+ at Extra large", () => {
     const { rerender } = render(<Menu value="normal" />);
     openMenu();

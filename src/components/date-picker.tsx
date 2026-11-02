@@ -16,7 +16,6 @@ import { PanelCalendar } from "./jump-calendar";
 export type { DateTriggerAttributes } from "./date-field";
 export { DateRangePicker } from "./date-range-picker";
 export type {
-  DateRangeCommit,
   DateRangeDraftSummary,
   DateRangePickerPreset,
   DateRangePickerProps,

@@ -49,7 +49,7 @@ function Switch(props: Partial<PlanSwitchConfirmProps> & { wrap?: (node: ReactNo
   return wrap(
     <PlanSwitchConfirm
       open
-      onOpenChange={() => {}}
+      onClose={() => {}}
       from={{ plan: "pro", interval: "month" }}
       to={{ plan: "business", interval: "year" }}
       preview={UPGRADE}
@@ -142,20 +142,20 @@ describe("PlanSwitchConfirm (§15.2.10)", () => {
     expect(onConfirm).not.toHaveBeenCalled();
   });
 
-  it("confirms once, and Cancel answers onOpenChange(false)", async () => {
+  it("confirms once, and Cancel answers onClose", async () => {
     const user = userEvent.setup();
     const onConfirm = vi.fn();
-    const onOpenChange = vi.fn();
-    const { rerender } = render(<Switch onConfirm={onConfirm} onOpenChange={onOpenChange} />);
+    const onClose = vi.fn();
+    const { rerender } = render(<Switch onConfirm={onConfirm} onClose={onClose} />);
     const d = await dialog();
     await user.click(within(d).getByRole("button", { name: "Change plan" }));
     expect(onConfirm).toHaveBeenCalledTimes(1);
-    rerender(<Switch onConfirm={onConfirm} onOpenChange={onOpenChange} pending />);
+    rerender(<Switch onConfirm={onConfirm} onClose={onClose} pending />);
     await user.click(within(d).getByRole("button", { name: "Change plan" }));
     expect(onConfirm).toHaveBeenCalledTimes(1);
-    rerender(<Switch onConfirm={onConfirm} onOpenChange={onOpenChange} />);
+    rerender(<Switch onConfirm={onConfirm} onClose={onClose} />);
     await user.click(within(d).getByRole("button", { name: "Cancel" }));
-    await vi.waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+    await vi.waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
   });
 
   it("takes no billing lock — a read-only payer may change plan — but a demo lock holds it", async () => {

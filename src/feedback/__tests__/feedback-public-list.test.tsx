@@ -255,15 +255,15 @@ describe("FeedbackPublicList — openRow, a ?row= not on this page (0.38.1, Kurv
 
   it("draws the opened report above the page, with its detail", () => {
     restore = stubViewportWidth(DESKTOP_WIDTH);
-    const onOpenChange = vi.fn();
-    renderList({ openId: 40, openRow: ELSEWHERE, onOpenChange });
+    const onOpenIdChange = vi.fn();
+    renderList({ openId: 40, openRow: ELSEWHERE, onOpenIdChange });
     expect(screen.getByText("Old report, page 4")).toBeInTheDocument();
     expect(screen.getByTestId("detail")).toHaveTextContent("Detail of #40");
     // It comes first, before the page's own rows.
     const titles = screen.getAllByText(/Old report|Chart jumps|Export as CSV/).map((el) => el.textContent);
     expect(titles[0]).toBe("Old report, page 4");
     fireEvent.click(screen.getByText("Old report, page 4"));
-    expect(onOpenChange).toHaveBeenLastCalledWith(null);
+    expect(onOpenIdChange).toHaveBeenLastCalledWith(null);
   });
 
   it("is gone once it is closed, and never doubled when the page has it", () => {

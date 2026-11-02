@@ -16,8 +16,6 @@ import { ChoiceCard } from "../choice-card";
 import { FormActions } from "../form-actions";
 import { StatTile } from "../stat-tile";
 import { DateMark } from "../account-chips";
-import { SignChip } from "../sign-chip";
-import { FieldSyncIndicator } from "../field-sync";
 import { applyTextSize, type TextSize } from "../../theme/text-size";
 import { viewportMatchMedia } from "../../test/viewport";
 
@@ -536,31 +534,6 @@ describe("Words that lived in a tooltip (§4)", () => {
     expect(below.className).toContain("flex-col");
     expect(marks[1].closest("time")!.textContent).toContain(" · ");
     fireEvent.mouseEnter(below);
-    expect(screen.queryByRole("tooltip")).toBeNull();
-  });
-
-  it("SignChip: what a press does, in words under the chip at Large", () => {
-    const { rerender } = render(<SignChip negative onNegativeChange={() => {}} />);
-    expect(screen.queryByText("Switch to Inflow")).toBeNull();
-    size("large");
-    rerender(<SignChip negative onNegativeChange={() => {}} className="self-end" />);
-    expect(screen.getByText("Switch to Inflow")).toBeVisible();
-    expect(screen.getByText("Switch to Inflow").parentElement!.className).toContain("self-end");
-    expect(screen.getByRole("button", { name: /Outflow/ })).toBeInTheDocument();
-  });
-
-  it("FieldSyncIndicator: the state's word beside the icon at Large", () => {
-    const { container, rerender } = render(<FieldSyncIndicator state="synced" />);
-    const status = () => within(container.querySelector("[role=status]") as HTMLElement);
-    // At Normal the word is for the live region only (and the tooltip).
-    expect(
-      status()
-        .getAllByText("Saved")
-        .some((el) => el.className.includes("sr-only")),
-    ).toBe(true);
-    size("large");
-    rerender(<FieldSyncIndicator state="synced" />);
-    expect(status().getByText("Saved").className).not.toContain("sr-only");
     expect(screen.queryByRole("tooltip")).toBeNull();
   });
 });

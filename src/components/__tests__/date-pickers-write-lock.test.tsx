@@ -9,8 +9,8 @@ import { COMMIT_EXCEPT_BILLING, WriteLockProvider } from "../write-lock";
  * The date pickers take the write lock (refactor audit 2026-10-30, API-3). DatePicker,
  * DateRangePicker and MonthPicker were the only value fields with neither `commit` nor
  * `disabledReason` — DateRangePicker could not get the kit's name for it, because its
- * `commit` was the panel's mode. That mode is `apply` now (`commit="apply"` still read,
- * deprecated, for 0.52), and `commit` is a {@link CommitScope} on all three, locked the
+ * `commit` was the panel's mode. That mode is `apply` now (`commit="apply"` went in 0.53,
+ * deprecated in 0.52), and `commit` is a {@link CommitScope} on all three, locked the
  * way Select and CountrySelect are: the trigger focusable, `aria-disabled` and described
  * by the reason, nothing opening and nothing reported.
  */
@@ -174,28 +174,20 @@ describe("DateRangePicker: `apply`, and `commit` as the lock", () => {
     expect(onCommit).toHaveBeenCalledWith("2026-10-05", "2026-10-09");
   });
 
-  it('still reads the deprecated `commit="apply"` as `apply` for 0.52; `apply` wins over it', () => {
-    const { unmount } = render(<Range commit="apply" />);
-    open();
-    expect(screen.getByRole("button", { name: "Apply" })).toBeInTheDocument();
-    unmount();
-
-    const onCommit = vi.fn();
-    render(<Range commit="apply" apply={false} onCommit={onCommit} />);
-    open();
-    expect(screen.queryByRole("button", { name: "Apply" })).toBeNull();
-    fireEvent.click(screen.getByRole("gridcell", { name: /\b5 October 2026$/ }));
-    expect(onCommit).toHaveBeenCalledWith("2026-10-05", "");
+  it('takes no mode string: `commit="apply"` went in 0.53 (deprecated in 0.52)', () => {
+    // @ts-expect-error — `commit` is the write lock's scope; the mode is `apply`.
+    const props: DateRangePickerProps = { from: "", to: "", onChange: () => {}, commit: "apply" };
+    expect(props).toBeDefined();
   });
 
-  it("locks with `commit` as a scope — a mode string is not a lock opt-in", () => {
+  it("locks with `commit` as a scope", () => {
     render(locked(<Range commit clearable />));
     expectLockedTrigger(screen.getByRole("combobox", { name: /^Period/ }));
     expect(screen.queryByRole("button", { name: "Clear" })).toBeNull();
   });
 
-  it('is not locked by `commit="apply"`', () => {
-    render(locked(<Range commit="apply" />));
+  it("is not locked by `apply`", () => {
+    render(locked(<Range apply />));
     const trigger = screen.getByRole("combobox", { name: /^Period/ });
     expect(trigger).not.toHaveAttribute("aria-disabled");
     open();

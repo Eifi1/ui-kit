@@ -176,8 +176,8 @@ function FormatterTable() {
           &ldquo;-&rdquo; in the clipboard wherever a &ldquo;−&rdquo; stands before a number (after a currency code or
           symbol too: &ldquo;−CHF 1,250.50&rdquo; pastes as &ldquo;-CHF 1,250.50&rdquo;), in plain text and in the HTML
           a spreadsheet pastes as cells; the page keeps &ldquo;−&rdquo;. A copy out of a field is left alone;{" "}
-          {code("copyAsciiMinus={false}")} turns it off, and {code("asciiMinusInNumbers(text)")} is the same rule for an
-          app&apos;s own text.
+          {code("copyAsciiMinus={false}")} turns it off. An app&apos;s own text gets its &ldquo;-&rdquo; where the
+          figure is made: a formatter&apos;s {code('minus: "ascii"')}.
         </Note>
       </div>
     </Example>

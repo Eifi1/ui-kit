@@ -281,18 +281,3 @@ function capByGroup<E extends SearchEntry>(hits: SearchHit<E>[], groupLimit: num
   }
   return out;
 }
-
-/**
- * One-shot form of {@link createSearchIndex}: the matching entries, best first. For a
- * list that changes on every call (a server response, a store selector); build an index
- * once when the entries are stable.
- */
-export function matchEntries<E extends SearchEntry>(
-  entries: readonly E[],
-  query: string,
-  options?: SearchIndexOptions,
-): E[] {
-  return createSearchIndex(entries, options)
-    .search(query)
-    .map((hit) => hit.entry);
-}

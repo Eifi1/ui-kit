@@ -8,19 +8,14 @@ import { DialogFrame } from "../components/dialog-frame";
 import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
 import { useBillingLabels } from "./billing-labels";
 import type { BillingLabels } from "./billing-labels";
-import { dialogClose } from "./dialog-close";
-import type { WithDialogClose } from "./dialog-close";
 
-/** {@link CancelSubscriptionConfirmProps} before one of its two close props is required. */
-interface CancelSubscriptionConfirmFields {
+export interface CancelSubscriptionConfirmProps {
   open: boolean;
   /** The admin dismissed it — Back, Escape, the backdrop. Confirm leaves it open: close it
    *  once `POST /billing/cancel` answers. 0.52: every other kit dialog's `onClose`
-   *  (CONTRIBUTING §4; refactor audit 2026-10-30, API-5). */
-  onClose?: () => void;
-  /** @deprecated 0.52 — `onClose`, as every other kit dialog; removed in 0.53. Called with
-   *  `false` when there is no `onClose`. */
-  onOpenChange?: (open: boolean) => void;
+   *  (CONTRIBUTING §4; refactor audit 2026-10-30, API-5); required since 0.53 removed
+   *  `onOpenChange` (deprecated in 0.52). */
+  onClose: () => void;
   /** The overview's `current_period_end`: the day the subscription ends, in a sentence —
    *  the `<UiKitProvider formatDate>` (the app's date preference) when it set one, else the
    *  kit's `formatDate`, `"medium"`, in the provider's locale and `timeZone` (0.52). */
@@ -35,11 +30,6 @@ interface CancelSubscriptionConfirmFields {
   /** Prop > `<UiKitProvider labels={{ billing }}>` > English. */
   labels?: LabelOverride<BillingLabels>;
 }
-
-/** What {@link CancelSubscriptionConfirm} takes: `onClose`, or alone the deprecated
- *  `onOpenChange`, is required (0.52 code review: with neither it compiled, and nothing
- *  could dismiss it). */
-export type CancelSubscriptionConfirmProps = WithDialogClose<CancelSubscriptionConfirmFields>;
 
 /**
  * The in-app cancel's confirm (docs/billing-harmonization.md §16.2 decision 2, §16.4,
@@ -68,7 +58,6 @@ export type CancelSubscriptionConfirmProps = WithDialogClose<CancelSubscriptionC
 export function CancelSubscriptionConfirm({
   open,
   onClose,
-  onOpenChange,
   periodEnd,
   onConfirm,
   pending = false,
@@ -84,7 +73,7 @@ export function CancelSubscriptionConfirm({
       open={open}
       title={labels.cancelConfirmTitle}
       description={labels.cancelConfirmBody(day(periodEnd))}
-      onClose={dialogClose({ onClose, onOpenChange })}
+      onClose={onClose}
       busy={pending}
       data-cancel-subscription-confirm=""
       actions={(close) => (

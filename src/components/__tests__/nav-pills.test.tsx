@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { NavPills } from "../nav-pills";
 import { UiKitProvider } from "../../i18n/kit-labels";
 import type { KitLinkComponent } from "../../i18n/kit-labels";
@@ -101,5 +101,47 @@ describe("NavPills — the provider's router link", () => {
     );
     expect(screen.getByRole("link", { name: "Alpha" })).toHaveAttribute("data-own");
     expect(screen.getByRole("link", { name: "Alpha" })).not.toHaveAttribute("data-router");
+  });
+});
+
+// 0.49 KIT-6: one sideways-scrolling row of pills, the current pill scrolled into view.
+// Tested through SectionNav until 0.53 removed it (deprecated in 0.52, MOD-5); the row
+// is NavPills' own.
+describe('NavPills layout="scroll"', () => {
+  const PAGES = [
+    { value: "journal", label: "Journal", href: "/accounting/journal" },
+    { value: "accounts", label: "Accounts", href: "/accounting/accounts" },
+    { value: "invoices", label: "Invoices", href: "/accounting/invoices" },
+    { value: "balance", label: "Balance sheet", href: "/accounting/balance" },
+    { value: "trial", label: "Trial balance", href: "/accounting/trial" },
+  ];
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("is one row that scrolls sideways, in a named nav, the current page marked", () => {
+    render(<NavPills aria-label="Accounting" items={PAGES} current="invoices" layout="scroll" />);
+    const nav = screen.getByRole("navigation", { name: "Accounting" });
+    const list = within(nav).getByRole("list");
+    expect(list).toHaveClass("flex-nowrap", "overflow-x-auto");
+    expect(list).not.toHaveClass("flex-wrap");
+    expect(within(nav).getByRole("link", { name: "Invoices" })).toHaveAttribute("aria-current", "page");
+  });
+
+  it("scrolls the current pill into view, in the row only", () => {
+    const scrollBy = vi.fn();
+    const pageScroll = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+    Object.defineProperty(HTMLElement.prototype, "scrollBy", { configurable: true, value: scrollBy });
+    vi.spyOn(HTMLElement.prototype, "scrollWidth", "get").mockReturnValue(600);
+    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(300);
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      const current = this.getAttribute("aria-current") === "page";
+      return (current ? { left: 400, right: 480 } : { left: 0, right: 300 }) as DOMRect;
+    });
+    render(<NavPills aria-label="Accounting" items={PAGES} current="trial" layout="scroll" />);
+    expect(scrollBy).toHaveBeenCalledWith({ left: 480 - 300 + 24 });
+    expect(pageScroll).not.toHaveBeenCalled();
+    delete (HTMLElement.prototype as { scrollBy?: unknown }).scrollBy;
   });
 });
