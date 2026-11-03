@@ -173,6 +173,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       cancel: "取消",
       url: "URL",
       copyUrl: "复制 URL",
+      diagnostics: "诊断信息",
       attachment: "附件",
       download: (name) => `下载 ${name}`,
       downloadFailed: "无法下载附件。",

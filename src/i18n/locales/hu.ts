@@ -180,6 +180,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       cancel: "Mégse",
       url: "URL",
       copyUrl: "URL másolása",
+      diagnostics: "Diagnosztika",
       attachment: "Melléklet",
       download: (name) => `${name} letöltése`,
       downloadFailed: "A mellékletet nem sikerült letölteni.",

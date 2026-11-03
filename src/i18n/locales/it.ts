@@ -182,6 +182,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       cancel: "Annulla",
       url: "URL",
       copyUrl: "Copia URL",
+      diagnostics: "Diagnostica",
       attachment: "Allegato",
       download: (name) => `Scarica ${name}`,
       downloadFailed: "Non è stato possibile scaricare l’allegato.",

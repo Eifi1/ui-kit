@@ -129,6 +129,7 @@ optional on read; readers treat a missing key as "unknown":
 | `viewport` | `"406x816"` | no |
 | `ua` | `navigator.userAgent` | no |
 | `version` | the app build (`__APP_VERSION__`) | no |
+| `diagnostics` | the app's own record about what is reported (keksdose's stuck receipt scan, live #481): flat, short values, never the reported content itself; the row detail shows it to the admin and the author only (§4.4, item 2) | no — the app decides what goes in |
 
 **Identity is the server's** (recommended for all three; Kurvenschmiede does it): the
 server overwrites `user_id`, `user_email`, `user_display_name` from the session and
@@ -485,6 +486,12 @@ the title beside the detail. Then the sections, in this order:
    `/reset-password`, an app's `pageLinkExclude`; matched decoded and in any case) shows
    as text with Copy. keksdose's label is its shared `more.copy_url` key,
    which stays app-side; the kit carries the same words in its own namespace.
+   Below it, **Diagnostics** / **Diagnose** (the round after ui-kit 0.53, keksdose live
+   #481): `context.diagnostics` as the app wrote it, each key and its value in
+   monospace (an object or a list as JSON, nothing as "—"), for the admin (`canEdit`)
+   and the author only; never for another viewer of a shared row. No section when
+   the key is missing, empty or not a record. Erasure drops it (not on the allow-list
+   in §3.2).
 3. **Attachment** / **Anhang** — screenshot, then `attachment_urls`, then rework
    pictures from the body, in that order; images via `AuthedImage`, pdf/txt as a
    download button aria **Download {{name}}** / **{{name}} herunterladen**; failure

@@ -183,6 +183,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       cancel: "Annuler",
       url: "URL",
       copyUrl: "Copier l’URL",
+      diagnostics: "Diagnostic",
       attachment: "Pièce jointe",
       download: (name) => `Télécharger ${name}`,
       downloadFailed: "La pièce jointe n’a pas pu être téléchargée.",

@@ -117,6 +117,9 @@ export interface FeedbackDetailLabels {
   /** The copy button beside the link — copies the FULL `context.url`.
    *  de-CH: "URL kopieren" */
   copyUrl: string;
+  /** The heading over `context.diagnostics`, between the URL and the attachment (keksdose
+   *  live #481). de-CH: "Diagnose" */
+  diagnostics: string;
   /** Section 3's heading, and each picture's alt text. de-CH: "Anhang" */
   attachment: string;
   /** A PDF's / text file's download button, given the file's name.
@@ -174,6 +177,25 @@ export function useFeedbackDetailLabels(labels?: LabelOverride<FeedbackDetailLab
  *  of the page the kit links. */
 export function feedbackPagePath(context: FeedbackContext | null | undefined): string | null {
   return feedbackPage(context)?.path ?? null;
+}
+
+/* ── What the app attached (§3.2, §4.4.2) ──────────────────────────────────── */
+
+/** `context.diagnostics` as [key, text] pairs, in the app's order: a string, number or
+ *  boolean as written, an object or a list as JSON, nothing as "—". Empty for no
+ *  diagnostics, and for a value that is not a plain object — the server stores whatever
+ *  the client sent. */
+function diagnosticsEntries(context: FeedbackContext | null | undefined): Array<[string, string]> {
+  const value = context?.diagnostics;
+  if (!value || typeof value !== "object" || Array.isArray(value)) return [];
+  return Object.entries(value).map(([key, v]) => [
+    key,
+    v === null || v === undefined || v === ""
+      ? "—"
+      : typeof v === "object"
+        ? JSON.stringify(v)
+        : String(v as string | number | boolean | bigint),
+  ]);
 }
 
 /* ── Attachments (§3.5, §4.4.3) ───────────────────────────────────────────── */
@@ -631,6 +653,9 @@ export function FeedbackRowDetail({
   const { description } = splitDescription(row.body);
   const page = feedbackPage(row.context);
   const pageLink = page && feedbackPageLinkTarget(page, pageLinkExclude);
+  // What the app attached is for whoever handles the report and whoever sent it, never
+  // for another viewer of a shared row (keksdose live #481).
+  const diagnostics = canEdit || access.isAuthor ? diagnosticsEntries(row.context) : [];
   // 0.47 (§12): with the entries, each entry's file is drawn inline in the Replies
   // timeline, so the Attachment section holds the report's own files.
   const files = feedbackAttachmentUrls(row.replies ? { ...row, replies: undefined } : row);
@@ -730,6 +755,22 @@ export function FeedbackRowDetail({
             </code>
             <CopyButton size="xs" className="shrink-0" text={page.url} label={labels.copyUrl} stopPropagation />
           </div>
+        </FeedbackDetailSection>
+      )}
+
+      {diagnostics.length > 0 && (
+        <FeedbackDetailSection title={labels.diagnostics}>
+          <dl
+            className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-0.5 font-mono text-xs"
+            data-feedback-diagnostics=""
+          >
+            {diagnostics.map(([key, text]) => (
+              <div key={key} className="contents">
+                <dt className="text-muted">{key}</dt>
+                <dd className="min-w-0 break-words text-secondary">{text}</dd>
+              </div>
+            ))}
+          </dl>
         </FeedbackDetailSection>
       )}
 

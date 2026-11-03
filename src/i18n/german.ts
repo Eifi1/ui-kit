@@ -190,6 +190,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       cancel: "Abbrechen",
       url: "URL",
       copyUrl: "URL kopieren",
+      diagnostics: "Diagnose",
       attachment: "Anhang",
       download: (name) => `${name} herunterladen`,
       downloadFailed: "Der Anhang konnte nicht heruntergeladen werden.",

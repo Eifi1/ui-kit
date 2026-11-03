@@ -216,6 +216,71 @@ describe("FeedbackRowDetail — the page it was filed on", () => {
   });
 });
 
+describe("FeedbackRowDetail — diagnostics (keksdose live #481)", () => {
+  const scan = {
+    kind: "receipt_scan",
+    invoice_id: 318,
+    attempts: 2,
+    last_error: null,
+    timings: { queued_s: 4, model_s: 31 },
+    retried: false,
+  };
+  const pairs = () =>
+    Array.from(document.querySelectorAll("[data-feedback-diagnostics] dt")).map((dt) => [
+      dt.textContent,
+      dt.nextElementSibling?.textContent,
+    ]);
+
+  it("shows the admin what the app attached, in its order, between the URL and the attachment", () => {
+    render(
+      <FeedbackRowDetail
+        row={record({
+          context: { url: "https://app.example.test/receipts/318", route: "/receipts/318", diagnostics: scan },
+          screenshot_url: `${ATT}/000000000000.png`,
+        })}
+        canEdit
+        viewerId={ADMIN}
+        onUpdate={landing()}
+      />,
+    );
+    expect(headings()).toEqual(["Subject", "Description", "URL", "Diagnostics", "Attachment", "Outcome", "Status"]);
+    expect(pairs()).toEqual([
+      ["kind", "receipt_scan"],
+      ["invoice_id", "318"],
+      ["attempts", "2"],
+      ["last_error", "—"],
+      ["timings", '{"queued_s":4,"model_s":31}'],
+      ["retried", "false"],
+    ]);
+  });
+
+  it("shows the author their own, and nobody else", () => {
+    const row = record({ context: { route: "/receipts/318", diagnostics: scan } });
+    const { unmount } = render(<FeedbackRowDetail row={row} canEdit={false} viewerId={AUTHOR} onUpdate={landing()} />);
+    expect(headings()).toContain("Diagnostics");
+    unmount();
+
+    render(<FeedbackRowDetail row={row} canEdit={false} viewerId={OTHER} onUpdate={landing()} />);
+    expect(headings()).not.toContain("Diagnostics");
+    expect(screen.queryByText("receipt_scan")).toBeNull();
+  });
+
+  it("draws no section for nothing, an empty record, or a value that is not a record", () => {
+    for (const diagnostics of [undefined, {}, ["a"], "stuck", 3] as unknown[]) {
+      const { unmount } = render(
+        <FeedbackRowDetail
+          row={record({ context: { route: "/receipts/318", diagnostics } as FeedbackRecord["context"] })}
+          canEdit
+          viewerId={ADMIN}
+          onUpdate={landing()}
+        />,
+      );
+      expect(headings()).not.toContain("Diagnostics");
+      unmount();
+    }
+  });
+});
+
 describe("FeedbackRowDetail — attachments", () => {
   const kastlanKey = "0123456789abcdef0123456789abcdef_0123456789ab";
 
