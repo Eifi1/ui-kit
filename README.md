@@ -579,7 +579,7 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2197 names from 371 modules** in the main barrel — 990 values and 1207 types — and 191 more in 16 standalone entries. _Italic_ is a type-only export.
+**2199 names from 371 modules** in the main barrel — 992 values and 1207 types — and 191 more in 16 standalone entries. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 `node scripts/gen-export-inventory.mjs`; the counts are pinned by
@@ -587,7 +587,7 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2197 |
+| `@eifi1/ui-kit` | 2199 |
 | `@eifi1/ui-kit/chart` | 102 |
 | `@eifi1/ui-kit/shell` | 110 |
 | `@eifi1/ui-kit/data-table` | 56 |
@@ -1006,7 +1006,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 
 | Module | Exports |
 |---|---|
-| `admin/user-roster` | `DEFAULT_USER_ROSTER_LABELS`, `USER_ROSTER_SORT_KEYS`, `UserIdentityCell`, `userRosterSort`, `UserRowActions`, `useUserRosterColumns`, _`AdminUserStateFields`_, _`RoleEditing`_, _`RosterState`_, _`UserIdentityCellProps`_, _`UserRosterColumnsOptions`_, _`UserRosterLabels`_, _`UserRosterRow`_, _`UserRosterSortKey`_, _`UserRowAction`_, _`UserRowActionList`_, _`UserRowActionsProps`_ |
+| `admin/user-roster` | `DEFAULT_USER_ROSTER_LABELS`, `USER_ROSTER_MAX_PAGE_SIZE`, `USER_ROSTER_PAGE_SIZE`, `USER_ROSTER_SORT_KEYS`, `UserIdentityCell`, `userRosterSort`, `UserRowActions`, `useUserRosterColumns`, _`AdminUserStateFields`_, _`RoleEditing`_, _`RosterState`_, _`UserIdentityCellProps`_, _`UserRosterColumnsOptions`_, _`UserRosterLabels`_, _`UserRosterRow`_, _`UserRosterSortKey`_, _`UserRowAction`_, _`UserRowActionList`_, _`UserRowActionsProps`_ |
 | `admin/role-select` | `DEFAULT_ROLE_SELECT_LABELS`, `RolesEditor`, `RoleSelect`, _`RoleLock`_, _`RoleLockCode`_, _`RolesEditorProps`_, _`RoleSelectLabels`_, _`RoleSelectProps`_ |
 | `admin/reviewer-scope-editor` | `DEFAULT_REVIEWER_SCOPE_LABELS`, `ReviewerScopeEditor`, _`ReviewerScope`_, _`ReviewerScopeArea`_, _`ReviewerScopeEditorProps`_, _`ReviewerScopeLabels`_, _`ReviewerScopeLanguage`_ |
 | `admin/admin-action-confirm` | `AdminActionConfirm`, `DEFAULT_ADMIN_ACTION_LABELS`, _`AdminActionConfirmProps`_, _`AdminActionConfirmValues`_, _`AdminActionLabels`_, _`AdminActionTarget`_, _`AdminConfirmLevel`_ |
