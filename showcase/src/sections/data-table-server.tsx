@@ -658,7 +658,7 @@ export function DataTableUrlFiltersDemo() {
       hint={
         <>
           {code("textFilter")} · {code("selectFilter")} · {code("dateFilter")} · {code("numberFilter")} ·{" "}
-          {code("booleanColumn")}
+          {code("numberBound")} · {code("booleanColumn")}
         </>
       }
     >

@@ -2010,6 +2010,7 @@ export const GROUPS: ShowcaseGroup[] = [
           "formatPercent",
           "formatDate",
           "formatRelativeTime",
+          "formatDuration",
           "useKitFormat",
           "SignedAmount",
           "Delta",

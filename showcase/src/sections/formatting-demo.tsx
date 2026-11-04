@@ -10,6 +10,7 @@ import {
   Tone,
   ToggleGroup,
   formatDate,
+  formatDuration,
   formatMoney,
   formatNumber,
   formatPercent,
@@ -72,6 +73,11 @@ const SPECIMENS: Specimen[] = [
   {
     expr: 'formatDate(ts, "dateTime", { timeZone: "Europe/Zurich" })',
     run: (locale) => formatDate("2026-07-08T14:05:00Z", "dateTime", { locale, timeZone: "Europe/Zurich" }),
+  },
+  { expr: "formatDuration(192)", run: (locale) => formatDuration(192, { locale }) },
+  {
+    expr: 'formatDuration(3725, { unitDisplay: "short" })',
+    run: (locale) => formatDuration(3725, { locale, unitDisplay: "short" }),
   },
   { expr: "formatRelativeTime(−3 h)", run: (locale) => formatRelativeTime(ago(3 * HOUR), { locale, now: NOW }) },
   { expr: "formatRelativeTime(−1 day)", run: (locale) => formatRelativeTime(ago(DAY), { locale, now: NOW }) },
