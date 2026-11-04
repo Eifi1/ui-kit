@@ -64,7 +64,7 @@
  * scripts/fixtures/screenshot-sizes-fixture.html and expects one finding of each.
  * `npm run check:sweep` runs it first, so the gate checks itself before the long run.
  *
- * The browser (TST-5): `playwright-core` is a devDependency, pinned `~1.63.0`, and the
+ * The browser (TST-5): `playwright-core` is a devDependency, pinned `~1.64.1` (0.55; `~1.63.0` before), and the
  * run uses the Chromium headless shell that release of it expects — never one borrowed
  * from an app's node_modules or picked from the cache by name. It installs no browser
  * itself; once per machine (and after a bump):
