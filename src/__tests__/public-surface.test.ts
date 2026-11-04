@@ -346,7 +346,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `UsageMeter`, a plan limit's meter.
   // 0.55 (+4, kastlan reuse audit 2026-11-02, proposal 8): `useHasCamera`, `CameraButton`,
   // `CameraCapture` and `DEFAULT_CAMERA_LABELS` — keksdose's camera, for every app.
-  ["@eifi1/ui-kit", barrel, 980],
+  // 0.55 (+2, here and in /feedback; kastlan reuse audit 2026-11-02, proposal 2):
+  // `useFeedbackInbox` and `FeedbackInbox`, the inbox assembled once (feedback §13).
+  ["@eifi1/ui-kit", barrel, 982],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -372,7 +374,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.46.0: `feedbackSwipeOmitShown`, the desktop column's omit (dev#598) (+1 here and in the barrel).
   // 0.53 (−14, breaking): what 0.52 deprecated — the slice's 12 unread names (API-4) and
   // `feedbackPageHref`, `feedbackPagePath`.
-  ["@eifi1/ui-kit/feedback", feedback, 91],
+  // 0.55: `useFeedbackInbox`, `FeedbackInbox` — the inbox assembled once (§13) (+2 here and
+  // in the barrel).
+  ["@eifi1/ui-kit/feedback", feedback, 93],
   // 0.53 (−3, breaking): what 0.52 deprecated — `SEARCH_TIER_POINTS`, `matchEntries`,
   // `normalizeSearchText` (API-4).
   ["@eifi1/ui-kit/search", search, 6],

@@ -114,3 +114,16 @@ export * from "./feedback/feedback-vote-button";
 export * from "./feedback/feedback-comment-thread";
 export * from "./feedback/feedback-replies";
 export * from "./feedback/feedback-entry-file";
+// 0.55.0: the inbox assembled once (kastlan reuse audit 2026-11-02, proposal 2;
+// docs/feedback-harmonization.md §13) — the wiring the three pages each wrote, as a hook
+// and the component that draws it.
+export {
+  useFeedbackInbox,
+  FeedbackInbox,
+  type FeedbackInboxMutation,
+  type FeedbackReplyPost,
+  type FeedbackReworkPost,
+  type UseFeedbackInboxOptions,
+  type FeedbackInboxState,
+  type FeedbackInboxProps,
+} from "./feedback/feedback-inbox-page";
