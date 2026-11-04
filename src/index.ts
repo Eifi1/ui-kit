@@ -56,17 +56,21 @@ export type {
 } from "./lib/server-wake";
 // 0.34 (docs/auth-harmonization.md §11, round 0.34 C7): renewing a session — one refresh
 // per tab, a definitive failure ends the session once, a transient one keeps it.
+// 0.55 (kastlan reuse audit 2026-11-02, proposal 6): `watchSessionElsewhere`, the session
+// ending in another tab, or while the page sat in the back/forward cache.
 export {
   createSessionRefresh,
   attachSessionRefresh,
   isTransientRefreshFailure,
   isSignedOutStep,
+  watchSessionElsewhere,
 } from "./lib/session-refresh";
 export type {
   SessionRefresh,
   SessionRefreshOptions,
   SessionRenewal,
   SessionRefreshOutcome,
+  SessionElsewhereOptions,
 } from "./lib/session-refresh";
 // 0.29.0 (docs/auth-harmonization.md): the person-name order of each language.
 export { formatPersonName, personInitials } from "./lib/person-name";
