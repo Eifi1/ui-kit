@@ -24,6 +24,7 @@ const IDLE: SyncEngineState = {
   counts: { pending: 0, waiting: 0, blocked: 0, rejected: 0 },
   lastSyncedAt: null,
   nextRetryAt: null,
+  waitingForTab: false,
 };
 const noEngine = () => () => undefined;
 const idle = () => IDLE;
@@ -31,8 +32,9 @@ const idle = () => IDLE;
 /**
  * The engine's state as the kit's `SyncStatusIndicator` reads it (§2.3): `pending` = queued
  * and in flight (and the steps' pending), `waitingForPlan` = `waiting`, `blocked` = `blocked`
- * + `rejected`, `lastSyncedAt` from `meta`. `onSync` is "Sync now". Without an engine, an
- * idle status that follows the browser's connection.
+ * + `rejected`, `lastSyncedAt` from `meta`, and (0.55) `waitingForTab` as the engine has it —
+ * a round waiting for another tab's. `onSync` is "Sync now". Without an engine, an idle
+ * status that follows the browser's connection.
  *
  * With a `null` engine (signed out, or a computer marked shared) `status.online` follows
  * `navigator.onLine` and its `online`/`offline` events, so an app may lean on
@@ -56,6 +58,7 @@ export function useSyncStatus(engine: SyncEngine | null): { status: SyncStatus; 
     waitingForPlan: state.counts.waiting,
     blocked: state.counts.blocked + state.counts.rejected,
     lastSyncedAt: state.lastSyncedAt,
+    waitingForTab: state.waitingForTab,
   };
   return { status, onSync };
 }

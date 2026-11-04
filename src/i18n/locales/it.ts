@@ -1997,6 +1997,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         refusedShort: "Non sincronizzato",
         offlineUnsaved: "Offline: le modifiche non possono essere salvate finché non si riconnette",
         saving: "Salvataggio…",
+        waitingForTab: "In attesa che un’altra scheda finisca di sincronizzare",
+        waitingForTabShort: "Attesa altra scheda",
       },
       dev: {
         menu: "Strumenti di sviluppo",

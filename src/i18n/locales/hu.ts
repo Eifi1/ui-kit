@@ -1989,6 +1989,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         refusedShort: "Nincs szinkronizálva",
         offlineUnsaved: "Offline – a módosítások az újracsatlakozásig nem menthetők",
         saving: "Mentés…",
+        waitingForTab: "Várakozás, amíg egy másik lap befejezi a szinkronizálást",
+        waitingForTabShort: "Másik lapra vár",
       },
       dev: {
         menu: "Fejlesztői eszközök",

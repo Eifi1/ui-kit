@@ -26,6 +26,11 @@ import type { SyncRequestBody, SyncResponseBody, SyncWireChange } from "./wire";
  * database, so the rounds of all tabs take turns, first come first served; and `forget()`
  * writes a new epoch into `meta` with the clear, which every round reads, so another tab's
  * round drops its answer and that tab's engine stops.
+ *
+ * 0.55 (held back from 0.53): the wait shows. A round that finds the lock taken says so in
+ * the state (`waitingForTab`) until its turn comes, and the indicator reads it as "Waiting
+ * for another tab" — before, a tap on "Sync now" spun for as long as the other tab's round
+ * took, with nothing to say why.
  */
 
 export interface SyncCounts {
@@ -68,12 +73,21 @@ export interface SyncEngineState {
   lastSyncedAt: string | null;
   /** When the next attempt after an error runs (epoch ms), or `null`. */
   nextRetryAt: number | null;
+  /**
+   * 0.55 (held back from 0.53): a round of this engine waits for the database's Web Lock,
+   * which another tab's round holds (or other tabs' rounds wait for ahead of it). True from
+   * the moment the round finds the lock taken until its turn comes, or until `stop()` or
+   * `forget()` takes it out of the queue; `phase` is left as it was meanwhile (`syncing`
+   * once the round runs). The kit's engine always sets it; optional, so a state built by
+   * hand (a test's fake engine) still compiles.
+   */
+  waitingForTab?: boolean;
 }
 
 export interface SyncRoundResult {
   /** `paused`: `paused()` held the round. (A round asked for while another tab's round holds
-   *  the database waits its turn, 0.52.) `dropped`: `forget()` ran during it, here or in
-   *  another tab, its answer unused. */
+   *  the database waits its turn, 0.52, with `waitingForTab` in the state meanwhile, 0.55.)
+   *  `dropped`: `forget()` ran during it, here or in another tab, its answer unused. */
   outcome: "synced" | "offline" | "error" | "paused" | "dropped";
   /** Changes this round set `waiting`, `blocked` or `rejected`. */
   waiting: number;
@@ -198,6 +212,9 @@ class Dropped extends Error {}
  *  round's answer is dropped as well. */
 class ForgottenElsewhere extends Dropped {}
 
+/** What a round's first ask for the lock answers when another tab's round holds it (0.55). */
+const TAKEN = Symbol("taken");
+
 /** The browser's Web Locks: a secure context (https, localhost), Safari 15.4+. */
 function webLocks(): LockManager | undefined {
   return typeof navigator === "undefined" ? undefined : (navigator as { locks?: LockManager }).locks;
@@ -273,6 +290,7 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
     counts: ZERO,
     lastSyncedAt: null,
     nextRetryAt: null,
+    waitingForTab: false,
   };
   const listeners = new Set<() => void>();
   let started = false;
@@ -607,19 +625,28 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
       const locks = webLocks();
       if (!locks) return await begin(result, withBlocked, gen, own);
       let granted = false;
+      const turn = () => {
+        granted = true;
+        if (state.waitingForTab) set({ waitingForTab: false });
+        return begin(result, withBlocked, gen, own);
+      };
       try {
+        // 0.55 (held back from 0.53): asked first without waiting, only to learn whether
+        // another tab's round holds the lock (or waits for it ahead of this one), so the
+        // state can say so while this round waits. Free, the round runs under this ask.
+        // No `signal`: the spec refuses one beside `ifAvailable`, and this ask never waits.
+        const now = await locks.request(across, { ifAvailable: true }, (lock) => (lock ? turn() : TAKEN));
+        if (now !== TAKEN) return now;
+        if (gen === generation) set({ waitingForTab: true });
         // Queued, first come first served: the rounds of every tab on this database take
         // turns, and one asked for meanwhile waits for its turn (`current` and `again` keep
         // one per engine). 0.52 code review (src/sync/engine.ts): an `ifAvailable` round
         // that found the lock taken answered `paused` at once, so the sign-out dialog's
         // "Sync now" closed as if it had synced; its one deferred round lost a
         // `retryBlocked()`'s `blocked`; and two tabs' waits refused each other's next try —
-        // the spec refuses `ifAvailable` while any request is queued. A closed tab's lock
-        // is released with it.
-        return await locks.request(across, { signal: own.signal }, () => {
-          granted = true;
-          return begin(result, withBlocked, gen, own);
-        });
+        // the spec refuses `ifAvailable` while any request is queued. (The ask above only
+        // tells; a refused one queues here.) A closed tab's lock is released with it.
+        return await locks.request(across, { signal: own.signal }, turn);
       } catch (err) {
         // `begin` throws only what the app's `paused()` throws. A wait aborted by stop() or
         // forget() is dropped there; a lock manager that refuses (an opaque origin, a
@@ -628,6 +655,8 @@ export function createSyncEngine<D extends SyncDb = SyncDb>(options: SyncEngineO
         return await begin(result, withBlocked, gen, own);
       }
     } finally {
+      // A wait taken out of the queue (stop(), forget()) or refused waits no more.
+      if (state.waitingForTab) set({ waitingForTab: false });
       if (controller === own) controller = null;
     }
   }

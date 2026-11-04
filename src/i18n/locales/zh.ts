@@ -1898,6 +1898,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         refusedShort: "未同步",
         offlineUnsaved: "离线——重新连接前无法保存修改",
         saving: "正在保存…",
+        waitingForTab: "正在等待另一个标签页完成同步",
+        waitingForTabShort: "等待其他标签页",
       },
       dev: {
         menu: "开发工具",

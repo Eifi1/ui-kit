@@ -68,6 +68,11 @@ export interface SyncStatusLabels {
   /** A round under way in an online-only app — it saves, it doesn't sync. Also its short
    *  words beside the cloud. */
   saving: string;
+  /** 0.55 (held back from 0.53): a round waits for another tab's on the same device copy
+   *  (the sync engine's Web Lock lets one tab sync at a time). */
+  waitingForTab: string;
+  /** Its short words beside the cloud. */
+  waitingForTabShort: string;
 }
 
 /**
@@ -130,6 +135,8 @@ export const DEFAULT_TOP_BAR_PARTS_LABELS: TopBarPartsLabels = {
     refusedShort: "Not synced",
     offlineUnsaved: "Offline — changes can't be saved until you reconnect",
     saving: "Saving…",
+    waitingForTab: "Waiting for another tab to finish syncing",
+    waitingForTabShort: "Waiting for tab",
   },
   dev: {
     menu: "Dev tools",

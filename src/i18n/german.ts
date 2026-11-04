@@ -2046,6 +2046,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         refusedShort: "Nicht synchronisiert",
         offlineUnsaved: "Offline – Änderungen können erst nach erneuter Verbindung gespeichert werden",
         saving: "Wird gespeichert…",
+        waitingForTab: "Wartet, bis ein anderer Tab mit dem Synchronisieren fertig ist",
+        waitingForTabShort: "Wartet auf Tab",
       },
       dev: {
         menu: "Dev-Werkzeuge",

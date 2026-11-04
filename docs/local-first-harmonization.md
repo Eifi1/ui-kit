@@ -321,7 +321,7 @@ topbar-kurvenschmiede.md §7.
 **The online-only preset exists and KS uses it.**
 - ui-kit 0.42 shipped `SyncStatusIndicator storage="none"` (src/shell/sync-status-indicator.tsx:101-108,
   :161-166; docs/archive/adopt/adopt-0.42.md:109).
-  - It drops `pending`, `blocked` and `waitingForPlan`.
+  - It drops `pending`, `blocked`, `waitingForPlan` and (0.55) `waitingForTab`.
   - Offline reads "Offline — changes can't be saved until you reconnect".
   - A round reads "Saving…".
 - KS's `AppSyncStatus` (frontend/src/app/top-bar-parts.tsx:104-121) passes `storage="none"
@@ -845,7 +845,10 @@ ka's; kk has none and keeps none, D10.)
     meanwhile waits its turn (one per engine; a request meanwhile runs once after it, ka's
     rule), so `syncNow()` runs its own round after the other tab's and answers its result;
     `stop()` and `forget()` take a waiting round out of the queue; `paused()` and the
-    connection are read when the lock is granted. A closed tab's lock is released, so a `sending` it left is
+    connection are read when the lock is granted. Since ui-kit 0.55 (held back from 0.53) the
+    wait shows: a round first asks for the lock without waiting (`ifAvailable`), and one that
+    finds it taken sets `waitingForTab` in the state until its turn comes, which the indicator
+    shows as "Waiting for another tab" (top-bar §2.6.2). A closed tab's lock is released, so a `sending` it left is
     truly orphaned when the next round takes it back. Without Web Locks (outside a secure
     context: plain http) two tabs' rounds may overlap as before; the epoch and the channel
     below still hold;
@@ -979,7 +982,8 @@ interface SyncEngine {
   getState(): SyncEngineState; subscribe(listener: () => void): () => void;
 }
 interface SyncEngineState { phase: "idle" | "syncing" | "offline" | "error"; online: boolean;
-  counts: SyncCounts; lastSyncedAt: string | null; nextRetryAt: number | null }
+  counts: SyncCounts; lastSyncedAt: string | null; nextRetryAt: number | null;
+  waitingForTab?: boolean }               // 0.55: a round waits for another tab's (the Web Lock)
 interface SyncCounts { pending: number; waiting: number; blocked: number; rejected: number }
 
 useSyncWorker(engine: SyncEngine | null): void;           // start/stop with the session (ka's useHandoverSyncLoop);
@@ -1014,12 +1018,14 @@ with `stampAfter(previous)`. A `rejected` change is never re-sent (D13).
 
 **Status to the indicator:** `pending` = `pending` + `sending` (+ the steps' pending); `waitingForPlan`
 = `waiting`; `blocked` = `blocked` + `rejected`; `phase` and `online` from the engine;
-`lastSyncedAt` from `meta`. `onSync` = `syncNow`.
+`lastSyncedAt` from `meta`; `waitingForTab` from the engine (0.55: the indicator's eighth state,
+after offline). `onSync` = `syncNow`.
 
 **Not in the engine:** E2EE, re-seal, kk's per-entity mirror and engines, ka's photo upload (a
 step), the rejection banner's words (the app's; `rejected()` gives the reasons; since ui-kit 0.55
 the banner itself and its discard question are `HeldChangesBanner`, top-bar §2.6.1), the
-online-only list (the write lock, §1.6). Seven languages: no new words (the indicator and the dialog have them).
+online-only list (the write lock, §1.6). Seven languages: no new words (the indicator and the dialog have them;
+0.55 adds the indicator's `waitingForTab` and `waitingForTabShort`, in all seven).
 
 ### 2.4 `SyncScope` and `EntityRule` in server-kit (`eifi1_server_kit.sync.scopes`, 0.16.0)
 

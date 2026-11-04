@@ -716,3 +716,92 @@ describe("a round's deadline, from the moment it holds the lock (0.52 code revie
     expect(request.signal()?.aborted).toBe(false);
   });
 });
+
+describe("a round waiting for another tab's says so (0.55, held back from 0.53)", () => {
+  /** Every state the engine publishes, as `[phase, waitingForTab]`. */
+  function record(engine: SyncEngine) {
+    const seen: [string, boolean | undefined][] = [];
+    engine.subscribe(() => seen.push([engine.getState().phase, engine.getState().waitingForTab]));
+    return seen;
+  }
+
+  it("is waitingForTab while a second tab's round holds the lock, and no longer once its turn comes", async () => {
+    const name = fresh();
+    const a = tab(createSyncEngine, name);
+    const b = tab(await otherTab(), name);
+    await a.engine.write("handover", "protocols", "p1", "upsert", { notes: "a" });
+    const release = hold(a.transport);
+    const roundA = a.engine.syncNow();
+    await vi.waitFor(() => expect(a.transport.requests).toHaveLength(1));
+
+    const seen = record(b.engine);
+    await b.engine.write("handover", "protocols", "p2", "upsert", { notes: "b" });
+    const roundB = b.engine.syncNow();
+    await vi.waitFor(() => expect(locks.state(lockOf(name)).queued).toBe(1));
+    // The phase stays what it was: the round has not begun.
+    expect(b.engine.getState()).toMatchObject({ phase: "idle", waitingForTab: true });
+    expect(b.transport.requests).toHaveLength(0);
+
+    release();
+    await roundA;
+    expect(await roundB).toMatchObject({ outcome: "synced" });
+    expect(b.engine.getState()).toMatchObject({ phase: "idle", waitingForTab: false });
+    // The wait ended before the round ran: never both at once.
+    expect(seen).toContainEqual(["idle", true]);
+    expect(seen).toContainEqual(["syncing", false]);
+    expect(seen).not.toContainEqual(["syncing", true]);
+  });
+
+  it("is never said while the lock is free: the tab that takes it does not wait", async () => {
+    const a = tab(createSyncEngine, fresh());
+    const seen = record(a.engine);
+    await a.engine.write("handover", "protocols", "p1", "upsert", { notes: "a" });
+    expect(await a.engine.syncNow()).toMatchObject({ outcome: "synced" });
+    expect(seen).toContainEqual(["syncing", false]);
+    expect(seen.some(([, waiting]) => waiting)).toBe(false);
+  });
+
+  it("is no longer said once stop() takes the wait out of the queue", async () => {
+    const name = fresh();
+    const a = tab(createSyncEngine, name);
+    const b = tab(await otherTab(), name);
+    const release = hold(a.transport);
+    const roundA = a.engine.syncNow();
+    await vi.waitFor(() => expect(a.transport.requests).toHaveLength(1));
+    b.engine.start();
+    await vi.waitFor(() => expect(b.engine.getState().waitingForTab).toBe(true));
+
+    b.engine.stop(); // a company switch in tab B
+    await vi.waitFor(() => expect(b.engine.getState().waitingForTab).toBe(false));
+    expect(locks.state(lockOf(name)).queued).toBe(0);
+    release();
+    await roundA;
+  });
+
+  it("is no longer said once this tab's forget() drops the waiting round", async () => {
+    const name = fresh();
+    const a = tab(createSyncEngine, name);
+    const b = tab(await otherTab(), name);
+    const release = hold(a.transport);
+    const roundA = a.engine.syncNow();
+    await vi.waitFor(() => expect(a.transport.requests).toHaveLength(1));
+    const roundB = b.engine.syncNow();
+    await vi.waitFor(() => expect(b.engine.getState().waitingForTab).toBe(true));
+
+    // B's own sign-out takes its waiting round out of the queue at once.
+    const forgetB = b.engine.forget({ keepQueue: true });
+    expect(await roundB).toMatchObject({ outcome: "dropped" });
+    expect(b.engine.getState().waitingForTab).toBe(false);
+    await forgetB;
+    release();
+    await roundA;
+  });
+
+  it("is never said without Web Locks (plain http): no round waits there", async () => {
+    delete (navigator as { locks?: unknown }).locks;
+    const a = tab(createSyncEngine, fresh());
+    const seen = record(a.engine);
+    expect(await a.engine.syncNow()).toMatchObject({ outcome: "synced" });
+    expect(seen.some(([, waiting]) => waiting)).toBe(false);
+  });
+});

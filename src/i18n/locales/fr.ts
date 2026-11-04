@@ -2019,6 +2019,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         refusedShort: "Non synchronisé",
         offlineUnsaved: "Hors ligne — les modifications ne peuvent pas être enregistrées avant la reconnexion",
         saving: "Enregistrement…",
+        waitingForTab: "En attente de la fin de la synchronisation dans un autre onglet",
+        waitingForTabShort: "Attente d’un onglet",
       },
       dev: {
         menu: "Outils de dev",

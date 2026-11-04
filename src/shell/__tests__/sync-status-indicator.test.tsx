@@ -34,6 +34,28 @@ describe("syncState — keksdose's ranking", () => {
   });
 });
 
+describe("syncState — waiting for another tab (0.55, held back from 0.53)", () => {
+  const WAITING: SyncStatus = { ...IDLE, waitingForTab: true };
+
+  it.each([
+    [{ ...WAITING, blocked: 1 }, "blocked"],
+    [{ ...WAITING, waitingForPlan: 2 }, "waitingForPlan"],
+    [{ ...WAITING, online: false }, "offline"],
+    [{ ...WAITING, phase: "offline" }, "offline"],
+    [{ ...WAITING, phase: "error" }, "waitingForTab"],
+    [{ ...WAITING, phase: "syncing" }, "waitingForTab"],
+    [{ ...WAITING, pending: 3 }, "waitingForTab"],
+    [WAITING, "waitingForTab"],
+    [{ ...IDLE, waitingForTab: false, pending: 3 }, "pending"],
+  ] as [SyncStatus, string][])("%o → %s", (status, expected) => {
+    expect(syncState(status)).toBe(expected);
+  });
+
+  it("wins over a tap's own round, which waits its turn with it", () => {
+    expect(syncState({ ...WAITING, pending: 1 }, true)).toBe("waitingForTab");
+  });
+});
+
 describe("SyncStatusIndicator", () => {
   it("in sync: the ✓ badge, the success role and the last time", () => {
     const { container } = render(
@@ -168,6 +190,65 @@ describe("SyncStatusIndicator", () => {
     expect(screen.getByRole("status")).toHaveTextContent("4 held");
   });
 
+  it("waiting for another tab: its own words, the info role, an hourglass that does not spin", () => {
+    const { container } = render(<SyncStatusIndicator status={{ ...IDLE, pending: 2, waitingForTab: true }} />);
+    const el = screen.getByRole("status");
+    expect(state()).toBe("waitingForTab");
+    expect(el).toHaveTextContent("Waiting for another tab to finish syncing");
+    expect(el.className).toContain("text-info");
+    expect(container.querySelector("svg.lucide-hourglass")).not.toBeNull();
+    expect(container.querySelector("svg.animate-spin")).toBeNull();
+  });
+
+  it("waiting for another tab: disabled, keeping its colour, the name without a tap hint", () => {
+    render(<SyncStatusIndicator status={{ ...IDLE, pending: 2, waitingForTab: true }} onSync={() => {}} />);
+    const button = screen.getByRole("button");
+    expect(button).toBeDisabled();
+    expect(button).toHaveAccessibleName("Waiting for another tab to finish syncing");
+    expect(button.className).toContain("text-info");
+  });
+
+  it("a tap's own round shows the wait while the engine waits for another tab, then the spin", async () => {
+    let finish!: () => void;
+    const onSync = vi.fn(() => new Promise<void>((r) => (finish = r)));
+    const status: SyncStatus = { ...IDLE, pending: 2 };
+    const { rerender } = render(<SyncStatusIndicator status={status} onSync={onSync} />);
+    fireEvent.click(screen.getByRole("button"));
+    expect(state()).toBe("syncing");
+    rerender(<SyncStatusIndicator status={{ ...status, waitingForTab: true }} onSync={onSync} />);
+    expect(state()).toBe("waitingForTab");
+    rerender(<SyncStatusIndicator status={{ ...status, phase: "syncing" }} onSync={onSync} />);
+    expect(state()).toBe("syncing");
+    await act(async () => finish());
+    rerender(<SyncStatusIndicator status={{ ...IDLE }} onSync={onSync} />);
+    expect(state()).toBe("synced");
+  });
+
+  it("waiting for another tab: its short words beside the hourglass, and the scope words before it", () => {
+    const { container } = render(
+      <SyncStatusIndicator
+        status={{ ...IDLE, waitingForTab: true }}
+        showLabel
+        scope={{ name: "Handovers on this device" }}
+      />,
+    );
+    expect(container.querySelector("[aria-hidden].text-xs")).toHaveTextContent("Waiting for tab");
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Handovers on this device: Waiting for another tab to finish syncing",
+    );
+  });
+
+  it("waiting for another tab, in Swiss German", () => {
+    render(
+      <UiKitProvider labels={UI_KIT_LABELS_DE_CH}>
+        <SyncStatusIndicator status={{ ...IDLE, waitingForTab: true }} showLabel />
+      </UiKitProvider>,
+    );
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Wartet, bis ein anderer Tab mit dem Synchronisieren fertig ist",
+    );
+  });
+
   it("forwards data-* to the trigger — a tour's anchor", () => {
     const { rerender } = render(<SyncStatusIndicator status={IDLE} data-tour="sync-status" />);
     expect(screen.getByRole("status")).toHaveAttribute("data-tour", "sync-status");
@@ -203,6 +284,11 @@ describe('SyncStatusIndicator storage="none" — an online-only app (KS B1)', ()
     expect(screen.getByRole("status")).toHaveTextContent("Up to date");
   });
 
+  it("waitingForTab doesn't apply either: no copy on the device, no other tab to wait for", () => {
+    render(<SyncStatusIndicator status={{ ...IDLE, waitingForTab: true }} storage="none" />);
+    expect(state()).toBe("synced");
+  });
+
   it("hideWhenIdle with KS's feed: offline or saving only", () => {
     const { rerender, container } = render(
       <SyncStatusIndicator status={{ ...IDLE, pending: 2 }} storage="none" hideWhenIdle />,
@@ -229,6 +315,28 @@ describe('SyncStatusIndicator storage="none" — an online-only app (KS B1)', ()
     if (code === "de-CH") {
       expect(sync.offlineUnsaved + sync.saving).not.toMatch(/ß/);
       expect(sync.saving).toBe("Wird gespeichert…");
+    }
+  });
+});
+
+describe("SyncStatusIndicator — waiting for another tab, in seven languages (0.55)", () => {
+  it.each([
+    ["de-CH", UI_KIT_LABELS_DE_CH],
+    ["en", uiKitLabelsEn()],
+    ["es", UI_KIT_LABELS_ES],
+    ["fr", UI_KIT_LABELS_FR],
+    ["hu", UI_KIT_LABELS_HU],
+    ["it", UI_KIT_LABELS_IT],
+    ["zh", UI_KIT_LABELS_ZH],
+  ] as const)("%s has its own words, long and short", (code, labels) => {
+    const sync = labels.topBarParts.sync;
+    expect(sync.waitingForTab).toBeTruthy();
+    expect(sync.waitingForTabShort).toBeTruthy();
+    expect(sync.waitingForTabShort.length).toBeLessThan(sync.waitingForTab.length);
+    if (code !== "en") {
+      const english = uiKitLabelsEn().topBarParts.sync;
+      expect(sync.waitingForTab).not.toBe(english.waitingForTab);
+      expect(sync.waitingForTabShort).not.toBe(english.waitingForTabShort);
     }
   });
 });

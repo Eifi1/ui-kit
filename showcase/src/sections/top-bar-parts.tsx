@@ -80,6 +80,8 @@ const SYNC_STATES: Record<string, SyncStatus> = {
   synced: { phase: "idle", online: true, pending: 0, lastSyncedAt: Date.UTC(2026, 9, 17, 12, 5) },
   pending: { phase: "idle", online: true, pending: 3 },
   syncing: { phase: "syncing", online: true, pending: 3 },
+  // 0.55: a round waits for another tab's on the same copy.
+  waitingForTab: { phase: "idle", online: true, pending: 3, waitingForTab: true },
   offline: { phase: "offline", online: false, pending: 2 },
   error: { phase: "error", online: true, pending: 0 },
   waitingForPlan: { phase: "idle", online: true, pending: 0, waitingForPlan: 2 },
@@ -349,8 +351,8 @@ function SyncStates() {
   const [taps, setTaps] = useState(0);
   return (
     <Example
-      label="SyncStatusIndicator — the seven states"
-      hint="ranked: blocked, plan, offline, error, syncing, pending, synced"
+      label="SyncStatusIndicator — the eight states"
+      hint="ranked: blocked, plan, offline, another tab, error, syncing, pending, synced"
     >
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-4">
@@ -377,8 +379,10 @@ function SyncStates() {
         </div>
         <Note>
           With {code("onSync")} it is a "sync now" button, disabled offline and mid-round but keeping its colour;
-          without it, a status (§6.9). The second row is a status only, {code("hideWhenIdle")} (the third one, in sync,
-          draws nothing), the short words beside the cloud, and the {code("scope")} words in the tooltip (§6.10).
+          without it, a status (§6.9). {code("waitingForTab")} (0.55) is a round that waits for another tab's on the
+          same device copy: the sync engine lets one tab sync at a time, and says so meanwhile. The second row is a
+          status only, {code("hideWhenIdle")} (the third one, in sync, draws nothing), the short words beside the cloud,
+          and the {code("scope")} words in the tooltip (§6.10).
         </Note>
       </div>
     </Example>

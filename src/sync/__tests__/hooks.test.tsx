@@ -95,6 +95,22 @@ describe("useSyncStatus", () => {
     await waitFor(() => expect(engine.syncNow).toHaveBeenCalledTimes(1));
   });
 
+  it("says when a round waits for another tab's, and the indicator shows it (0.55)", () => {
+    const engine = fakeEngine({ counts: { pending: 2, waiting: 0, blocked: 0, rejected: 0 } });
+    function Indicator() {
+      const { status, onSync } = useSyncStatus(engine);
+      return <SyncStatusIndicator status={status} onSync={onSync} />;
+    }
+    render(<Indicator />);
+    const button = screen.getByRole("button");
+    expect(button).toHaveAttribute("data-sync-state", "pending");
+    act(() => engine.emit({ waitingForTab: true }));
+    expect(button).toHaveAttribute("data-sync-state", "waitingForTab");
+    expect(button).toHaveAccessibleName("Waiting for another tab to finish syncing");
+    act(() => engine.emit({ waitingForTab: false, phase: "syncing" }));
+    expect(button).toHaveAttribute("data-sync-state", "syncing");
+  });
+
   it("is an idle status without an engine", () => {
     const { result } = renderHook(() => useSyncStatus(null));
     expect(result.current.status).toMatchObject({ phase: "idle", pending: 0, blocked: 0, waitingForPlan: 0 });

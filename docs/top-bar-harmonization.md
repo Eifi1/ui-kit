@@ -113,11 +113,11 @@ and never content. The trigger shows on a phone too (keksdose's choice; kastlan 
 
 (Marcel):
 - **The kit's `SyncStatusIndicator`** takes over keksdose's state table and ranking:
-  blocked, waiting for a plan, offline, error, syncing, pending, synced. It is a status
-  that is also a "sync now" button, with a ✓ badge when synced and a spin while
-  syncing.
+  blocked, waiting for a plan, offline, error, syncing, pending, synced (and since ui-kit
+  0.55 waiting for another tab, after offline: §2.6.2). It is a status that is also a
+  "sync now" button, with a ✓ badge when synced and a spin while syncing.
 - It is fed by a small contract, `SyncStatus {phase, online, pending, blocked?,
-  waitingForPlan?, lastSyncedAt?}`, plus `onSync`. It has `hideWhenIdle`, and optional
+  waitingForPlan?, lastSyncedAt?, waitingForTab?}`, plus `onSync`. It has `hideWhenIdle`, and optional
   `scope` words. `onSync` is optional: without it the indicator is a status, not a
   button (KS 4).
 - **keksdose:** unchanged in behaviour, now on the kit part.
@@ -174,6 +174,30 @@ danger.
   `confirmTitle(count)`, `confirmBody(count)`, `confirmAction` and `failed`. They are keksdose's
   reviewed words without its budgets, in all seven catalogues, and the three count labels have
   samples in `KIT_LABEL_SAMPLES`. Cancel is `confirmDialog.cancel`.
+
+#### 2.6.2 Addendum (ui-kit 0.55): "Waiting for another tab"
+
+Held back from 0.53. Since 0.52 the kit's sync engine runs a round under a Web Lock per
+database (local-first §2.3, FLW-1), so the tabs on one device copy take turns, and a round
+asked for while another tab's runs waits for it. The user saw nothing of the wait: a tap on
+"Sync now" spun for as long as the other tab's round took (minutes, with kastlan's photos),
+and the sign-out dialog's "Sync now" with it.
+- **The engine** says it: `SyncEngineState.waitingForTab` is true from the moment a round
+  finds the lock taken until its turn comes (or `stop()` / `forget()` takes it out of the
+  queue). The phase stays as it was meanwhile; `syncing` comes once the round runs, and the
+  engine never says both. Without Web Locks (plain http) no round waits, so it is never
+  said.
+- **The contract:** `SyncStatus.waitingForTab?: boolean`, filled by `useSyncStatus(engine)`.
+  An app that spreads the hook's status (kastlan's `use-sync-status.ts`) carries it without
+  a change.
+- **The indicator:** an eighth state, `waitingForTab`, ranked after offline (the round would
+  end offline anyway) and before error, syncing and the rest: it is the start of a round,
+  which replaces an error as `syncing` does once it runs, and a tap's own round shows it
+  while it waits its turn. An hourglass in the info tone, without the spin; disabled with
+  `onSync`, keeping its colour, since a tap would only queue one more round behind it. The
+  words are `topBarParts.sync.waitingForTab` ("Waiting for another tab to finish syncing")
+  and `waitingForTabShort` ("Waiting for tab", beside it with `showLabel`), in all seven
+  catalogues. `storage="none"` ignores it: there is no device copy to wait for.
 
 ### 2.7 Dev switchers, role and plan, "Server too"
 
@@ -449,9 +473,9 @@ All in `@eifi1/ui-kit/shell` (and the barrel). The words are a new namespace,
   - The kit's tour engine has no registry (`TourProvider` runs steps and keeps none), so
     the app feeds the list from its own.
 - **`SyncStatusIndicator`** and **`SyncStatus`** `{ phase, online, pending, blocked?,
-  waitingForPlan?, lastSyncedAt? }` (§2.6, §6.9, §6.10):
+  waitingForPlan?, lastSyncedAt?, waitingForTab? }` (§2.6, §6.9, §6.10):
   - `syncState(status)` holds keksdose's ranking: blocked, waitingForPlan, offline, error,
-    syncing, pending, synced. The icons are keksdose's. The tones are the kit's roles:
+    syncing, pending, synced; since 0.55 `waitingForTab` comes after offline (§2.6.2). The icons are keksdose's. The tones are the kit's roles:
     danger for blocked, warning for anything waiting, info while syncing, success when in
     sync. There are no raw palette colours.
   - It shows the ✓ badge when in sync, the spin while syncing, and the tooltip suffix
@@ -461,7 +485,7 @@ All in `@eifi1/ui-kit/shell` (and the barrel). The words are a new namespace,
     words), `showLabel` (the short words "Offline", "Syncing…", "3 waiting"), `labels`
     and `locale`.
   - `storage` (`"device"`, the default, or `"none"`): `"none"` is the online-only preset
-    (KS). It ignores `pending`, `blocked` and `waitingForPlan`. Offline then reads "changes
+    (KS). It ignores `pending`, `blocked`, `waitingForPlan` and `waitingForTab`. Offline then reads "changes
     can't be saved until you reconnect", and a round reads "Saving…" (docs/archive/adopt/adopt-0.42.md:109;
     local-first §1.4).
   - "Waiting for a plan" reuses `billing.waitingChanges`.

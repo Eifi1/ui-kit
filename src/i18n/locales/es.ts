@@ -1979,6 +1979,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         refusedShort: "Sin sincronizar",
         offlineUnsaved: "Sin conexión: los cambios no se pueden guardar hasta que vuelva a conectarse",
         saving: "Guardando…",
+        waitingForTab: "Esperando a que otra pestaña termine de sincronizar",
+        waitingForTabShort: "Esperando pestaña",
       },
       dev: {
         menu: "Herramientas de desarrollo",
