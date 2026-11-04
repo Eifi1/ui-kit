@@ -21,6 +21,29 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.54.0](https://github.com/Eifi1/ui-kit/compare/v0.53.0...v0.54.0) (2026-11-04)
+
+### Added
+
+* **billing:** billingRefusalText ([294ae47](https://github.com/Eifi1/ui-kit/commit/294ae478d4dc30d4207089432ee510c052ec322d))
+* **danger-confirm:** an error slot beside the field ([a7147f2](https://github.com/Eifi1/ui-kit/commit/a7147f299ed9c944f1160fefe2efac7b35f7d798))
+* **data-table:** numberBound is exported; numberFilter({ abs: false }) drops the Absolute value box ([9297d44](https://github.com/Eifi1/ui-kit/commit/9297d44b405991b4b7697b4fec55c8d763e24258))
+* **feedback:** open() takes diagnostics, a title and a body; the dialog shows what goes along ([107b2db](https://github.com/Eifi1/ui-kit/commit/107b2db45bcc68899b8021b2d3b62cd0c04b1e5d))
+* **feedback:** the row detail shows context.diagnostics to the admin and the author ([222f908](https://github.com/Eifi1/ui-kit/commit/222f9089e511335863b35fc02f6e028276a37651))
+* **format:** formatDuration ([0c00f07](https://github.com/Eifi1/ui-kit/commit/0c00f071af778dcb434bcd6eb0823d62ee783ecf))
+* **modal:** held holds every dismissal without busy's request state ([a4e96a8](https://github.com/Eifi1/ui-kit/commit/a4e96a893578d9440add47f94c10c4622ff70e68))
+* **stat-tile:** descriptionSensitive and footerSensitive hide figures outside the value ([950e80a](https://github.com/Eifi1/ui-kit/commit/950e80a4e441cc7ae9af7f73143a8f4affef1c74))
+* **translation-review:** saveReviewsInChunks and clearReviewsInChunks under server-kit's cap ([02f4fe5](https://github.com/Eifi1/ui-kit/commit/02f4fe5e2fb4107926c691829db7965080036c5b))
+
+### Fixed
+
+* **currencies:** the pickers no longer offer the Bulgarian lev ([6c1a72f](https://github.com/Eifi1/ui-kit/commit/6c1a72f67da34fb0e945cf34fd9e20b76d3e4435))
+* **hotkeys:** a contenteditable ancestor counts as typing where isContentEditable is missing ([d74a569](https://github.com/Eifi1/ui-kit/commit/d74a569403bf1a2d5f1023c9fee740102a82a66b))
+
+### Changed
+
+* **dates:** formatIsoDate and the calendars' day names reuse the cached formatter ([d298a8f](https://github.com/Eifi1/ui-kit/commit/d298a8fa8be0050cbb9856b081624c56f6a4d537))
+
 ## [0.53.0](https://github.com/Eifi1/ui-kit/compare/v0.52.0...v0.53.0) (2026-11-02)
 
 ### ⚠ BREAKING CHANGES
