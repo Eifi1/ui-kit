@@ -246,7 +246,14 @@ const BUDGETS = [
   // 155,999 B (53,642 gzip) with AppShell's `pageFallback`, the Suspense round the content
   // area (0.55, keksdose 2026-10-27) — meant growth, +58 B. Measured from 155,941 (53,636)
   // at 6421f1d, the feat/0.55.0 tip it was built on, already over the 155,700 above.
-  { label: "the shell set", names: SHELL_SET, max: 156_050 },
+  // 157,399 B (54,031 gzip) in 0.55 with Button's and IconButton's `refused` (useRefusal
+  // and the refused look; 0.52 code review 2026-10-31, held to 0.55): 167 B over the
+  // 157,232 (53,976) the branch measured before it, at b330f09 — meant growth. That
+  // figure was over 155,700 already, from the round's commits since the line above, none
+  // of which raised the ceiling: 6421f1d (SubscriptionStanding, UsageMeter) took the set
+  // from 155,666 (53,540) to 155,941 (53,636), and the commits after it to 157,232.
+  // { Button } is 19,454 B with `refused`, from 19,243, under its own.
+  { label: "the shell set", names: SHELL_SET, max: 157_450 },
 ];
 const ENTRY = "\0import-cost";
 async function importCost(names) {

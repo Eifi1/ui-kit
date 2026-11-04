@@ -590,6 +590,24 @@ export function useLockReason(commit: CommitScope | undefined, disabledReason: R
   return { reason, locked: hasContent(reason), reasonId };
 }
 
+/** {@link useRefusal}'s answer: the lock's, and whether the button refuses at all. */
+export interface Refusal extends LockReason {
+  /** The button refuses: it has a reason (`locked`), or `refused` was given as `true`. */
+  refused: boolean;
+}
+
+/**
+ * Button's and IconButton's `refused`, `disabledReason` and `commit`, read as one (0.52
+ * code review 2026-10-31, held to 0.55). `refused` as words is the reason, the path
+ * `disabledReason` has always taken, and its words win over `disabledReason`'s;
+ * `refused={true}` refuses with no words of its own; a lock's reason wins over both, as
+ * {@link useLockReason} has it.
+ */
+export function useRefusal(refused: ReactNode, disabledReason: ReactNode, commit: CommitScope | undefined): Refusal {
+  const lock = useLockReason(commit, refused !== true && hasContent(refused) ? refused : disabledReason);
+  return { ...lock, refused: lock.locked || refused === true };
+}
+
 /**
  * A locked control and its reason — the kit's ONE frame for it, used by Button,
  * IconButton, Chip, Checkbox, Switch and every field that locks (the fields through

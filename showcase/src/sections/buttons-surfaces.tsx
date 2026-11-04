@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import {
   AlignCenter,
   AlignLeft,
@@ -40,7 +40,7 @@ import {
   useConfirm,
 } from "@eifi1/ui-kit";
 import type { ButtonVariant } from "@eifi1/ui-kit";
-import { ConstList, Example, Note, OutTable, Row } from "../lib/section";
+import { ConstList, Example, Note, OutTable, READOUT, Row, code } from "../lib/section";
 import { IconButtonControls } from "./field-anatomy-demo";
 
 /**
@@ -137,6 +137,50 @@ function ButtonDisabled() {
           {blocked ? "Enable the row" : "Disable the row"}
         </Button>
       </div>
+    </Example>
+  );
+}
+
+/** `refused` (0.52 code review 2026-10-31, held to 0.55): the refusal that stays in the
+ *  Tab order and says why — in its own words, or (`true`) through the line the screen
+ *  already shows. */
+function ButtonRefused() {
+  const [owner, setOwner] = useState(false);
+  const [log, setLog] = useState("—");
+  const planId = useId();
+  const ownerOnly = !owner && "Only the curve's owner can delete it.";
+  return (
+    <Example
+      label="Button — refused"
+      hint="aria-disabled, still in the Tab order, every activation swallowed, and the reason said"
+    >
+      <Row>
+        <Button variant="danger" refused={ownerOnly} onClick={() => setLog("deleted")}>
+          Delete curve
+        </Button>
+        <IconButton label="Delete curve" tone="danger" refused={ownerOnly} onClick={() => setLog("deleted (icon)")}>
+          <Trash2 />
+        </IconButton>
+        <Button variant="ghost" onClick={() => setOwner((v) => !v)}>
+          {owner ? "View as a reader" : "View as the owner"}
+        </Button>
+      </Row>
+      <div className="mt-3 flex flex-col items-start gap-1">
+        <p id={planId} className="text-sm text-secondary">
+          Your plan has ended — this budget is read-only until you choose one.
+        </p>
+        <Button refused aria-describedby={planId} onClick={() => setLog("saved (should not happen)")}>
+          Save
+        </Button>
+      </div>
+      <p className={`mt-2 ${READOUT}`}>last action: {log}</p>
+      <Note>
+        Tab to each and press Enter or Space. With words ({code('refused="…"')}) the reason is the kit tooltip — a line
+        under the button at Large and on touch — and the button&apos;s description, the way {code("disabledReason")}{" "}
+        says it. With {code("refused")} alone the button has no bubble of its own: the sentence above already says why,
+        and {code("aria-describedby")} names it. Either way the button stays where a keyboard finds it, which{" "}
+        {code("disabled")} does not; a lock&apos;s reason ({code("commit")}) wins over the words.
+      </Note>
     </Example>
   );
 }
@@ -820,6 +864,7 @@ export function ButtonsSurfaces() {
       <IconButtonQuiet />
       <ButtonStretch />
       <ButtonDisabled />
+      <ButtonRefused />
       <ButtonRef />
       <LinkVariant />
       <ButtonClasses />

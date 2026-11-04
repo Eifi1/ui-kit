@@ -1,13 +1,10 @@
-import { useId } from "react";
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactElement, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
 import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLink } from "../i18n/kit-labels";
 import type { KitLinkComponent, KitLinkProps } from "../i18n/kit-labels";
 import { pickLinkRenderer, replacingClick, routerLinkNavigation } from "./text-link";
-import { useCommitReason } from "./write-lock";
 import type { CommitScope } from "./write-lock";
-import { hasContent } from "../lib/presence";
-import { LockedReason, type DisabledReasonDisplay } from "./field-parts";
+import { LockedReason, useRefusal, type DisabledReasonDisplay } from "./field-parts";
 import { Spinner } from "./spinner";
 import { BUTTON_LINK_PRESSED, ICON_BUTTON_PRESSED, RenderedButtonLink, buttonLook } from "./button-look";
 import type { ButtonSize, ButtonTone, ButtonVariant } from "./button-look";
@@ -72,12 +69,43 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
    * bubble exists only while hovered or focused once it is portalled, and a description
    * that comes and goes is read inconsistently. The bubble is kept visual, the way
    * DangerConfirm keeps its own.
+   *
+   * `refused={reason}` (0.55) is the same refusal by the button's own name for it, with
+   * a form for a reason said elsewhere — see `refused`.
    */
   disabledReason?: ReactNode;
   /**
+   * Refuse the action and stay where the user can learn why — no permission, a
+   * read-only plan, a held lock, an end already reached (0.52 code review 2026-10-31,
+   * held to 0.55). Shown with `disabled`, a refused action leaves the tab order and says
+   * nothing; an app's way round that was a Tooltip over the disabled button, which a
+   * keyboard never opens (Kurvenschmiede's owner-only delete,
+   * shared/lib/table-columns.tsx), and the kit's own arrows at an end hand-wrote
+   * `aria-disabled` and a guard in their `onClick`.
+   *
+   * Refused, the button is `aria-disabled="true"` — never the native `disabled`, which
+   * it wins over — and stays focusable and hoverable, with the disabled look; every
+   * activation is swallowed: the click, the Enter and Space that stand for it, and the
+   * submission a submit button would make.
+   *
+   * - **Words** (`refused={t("sharing.owner_only")}`): the reason, said the
+   *   `disabledReason` way — the kit {@link Tooltip}, or a line at Large and on touch
+   *   (`disabledReasonDisplay`) — and attached with `aria-describedby`, so a screen
+   *   reader hears it on focus. One path with `disabledReason`; these words win over its.
+   * - **`true`**: refused with no words of its own, for a reason the screen already
+   *   says — a banner over the form, a line under it — which the button's own
+   *   `aria-describedby` names ({@link DisabledReasonLine} draws the line with its id),
+   *   or one that needs no saying (› on the last picture). No bubble.
+   * - `false`, `null`, `undefined` or `""`: not refused, as `cond && reason` gives.
+   *
+   * Under a locked {@link WriteLockProvider} a `commit` button says the lock's reason
+   * instead, as it does over `disabledReason`.
+   */
+  refused?: ReactNode | boolean;
+  /**
    * Where `disabledReason` shows (0.32, §4 "No fact only in a tooltip"): by default a
    * line under the button at Large and on a touch screen, the tooltip otherwise. See
-   * {@link DisabledReasonDisplay}.
+   * {@link DisabledReasonDisplay}. A worded `refused` shows the same way.
    */
   disabledReasonDisplay?: DisabledReasonDisplay;
   /**
@@ -163,6 +191,9 @@ export interface ButtonLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorEle
   pending?: never;
   pressed?: never;
   disabledReason?: never;
+  /** A link that explains why it cannot be followed is a refused BUTTON — see
+   *  {@link ButtonProps.refused}. */
+  refused?: never;
   disabledReasonDisplay?: never;
   commit?: never;
 }
@@ -265,6 +296,7 @@ function ButtonElement({
   stretch,
   tone = "default",
   pressed,
+  refused: refusedProp,
   disabledReason: ownDisabledReason,
   disabledReasonDisplay,
   commit,
@@ -279,10 +311,9 @@ function ButtonElement({
   reloadDocument: _reloadDocument,
   ...rest
 }: ButtonProps) {
-  const reasonId = useId();
-  const disabledReason = useCommitReason(commit, ownDisabledReason);
-  const locked = hasContent(disabledReason);
-  const inert = locked || Boolean(pending);
+  // `locked`: refused WITH words, which describe it; `refused` also covers `true`.
+  const { reason: disabledReason, locked, reasonId, refused } = useRefusal(refusedProp, ownDisabledReason, commit);
+  const inert = refused || Boolean(pending);
   const ownDescribedBy = rest["aria-describedby"];
   const button = (
     <button
@@ -305,7 +336,7 @@ function ButtonElement({
         buttonLook(variant, size, stretch, tone),
         pressed && (variant === "link" ? BUTTON_LINK_PRESSED : ICON_BUTTON_PRESSED),
         // The disabled look for the focusable kind of disabled.
-        locked && "cursor-not-allowed opacity-50",
+        refused && "cursor-not-allowed opacity-50",
         // No dimming while pending: the spinner IS the state, and at half opacity it
         // would be the faintest thing on the button. `relative` anchors it.
         pending && "relative cursor-progress",

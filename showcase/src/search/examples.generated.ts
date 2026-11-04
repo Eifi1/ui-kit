@@ -364,6 +364,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "IconButton — quiet",
     "Button — stretch",
     "Button — disabled",
+    "Button — refused",
     "Button — ref",
     "Button — link",
     "buttonClasses()",

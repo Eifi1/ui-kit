@@ -67,8 +67,10 @@ export interface FileButtonProps
   extends
     Omit<UseFilePickerOptions, "disabled">,
     // `onDrop` & co. stay the caller's own when `droppable` is off; `type` is fixed to
-    // "button" (see 2. above) — a file trigger never submits a form.
-    Omit<ButtonOwnProps, "type" | "children" | "accept" | "capture" | "multiple"> {
+    // "button" (see 2. above) — a file trigger never submits a form. Button's `refused`
+    // (0.55) is not passed on: it would refuse the click but not a drop, so a refused
+    // picker is `disabledReason`, which refuses both.
+    Omit<ButtonOwnProps, "type" | "children" | "accept" | "capture" | "multiple" | "refused"> {
   /** The button's content — usually an icon and a word. It is the accessible name. */
   children: ReactNode;
   /** Busy: disabled, `aria-busy`, and a spinner before the content — for "uploading". */

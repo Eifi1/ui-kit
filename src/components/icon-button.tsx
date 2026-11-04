@@ -1,4 +1,4 @@
-import { useContext, useId } from "react";
+import { useContext } from "react";
 import type {
   AnchorHTMLAttributes,
   ButtonHTMLAttributes,
@@ -16,10 +16,9 @@ import { Tooltip, type TooltipSide } from "./tooltip";
 import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLink } from "../i18n/kit-labels";
 import type { KitLinkComponent, KitLinkProps } from "../i18n/kit-labels";
 import { pickLinkRenderer, replacingClick, routerLinkNavigation } from "./text-link";
-import { useCommitReason } from "./write-lock";
 import type { CommitScope } from "./write-lock";
 import { hasContent } from "../lib/presence";
-import { CompactControlsContext, LockedReason, type DisabledReasonDisplay } from "./field-parts";
+import { CompactControlsContext, LockedReason, useRefusal, type DisabledReasonDisplay } from "./field-parts";
 import { Spinner } from "./spinner";
 import {
   HOVER_INK,
@@ -484,10 +483,27 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
    * reason nobody can see is not one. Wins over `disabled`, as on Button.
    *
    * 0.32: at Large and on a touch screen the reason is a line under the button rather
-   * than a bubble — see `disabledReasonDisplay`.
+   * than a bubble — see `disabledReasonDisplay`. 0.55: `refused={reason}` is the same
+   * refusal — see `refused`.
    */
   disabledReason?: ReactNode;
-  /** Where `disabledReason` shows — {@link Button}'s `disabledReasonDisplay`. */
+  /**
+   * Refuse the action and stay where the user can learn why — {@link Button}'s
+   * `refused` (0.52 code review 2026-10-31, held to 0.55), on the icon button:
+   * `aria-disabled="true"`, focusable, the disabled look, every activation swallowed
+   * (`stopPropagation` still applies, so a refused action in a clickable row does not
+   * open the row either). Kurvenschmiede's owner-only delete was a Tooltip round a
+   * natively disabled IconButton (shared/lib/table-columns.tsx); the Lightbox's arrows
+   * at an end write `aria-disabled` and guard their own `onClick`.
+   *
+   * Words are the reason, the `disabledReason` way: the bubble shows them in place of
+   * the label, even with `tooltip={false}`, and they describe the button. `true` refuses
+   * with none of its own — the screen says it, and the button's `aria-describedby`
+   * names where — and keeps the label's bubble as it was.
+   */
+  refused?: ReactNode | boolean;
+  /** Where `disabledReason` (or a worded `refused`) shows — {@link Button}'s
+   *  `disabledReasonDisplay`. */
   disabledReasonDisplay?: DisabledReasonDisplay;
   /** This action COMMITS — {@link Button}'s `commit`: under a locked
    *  {@link WriteLockProvider} it takes the `disabledReason` path with the lock's
@@ -516,9 +532,9 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
  * `aria-label` + Tooltip, the badge, `toneColor` and `stopPropagation` are the button's.
  *
  * `disabled` renders an inert `<a>` with no `href` — `role="link"`, `aria-disabled`, out
- * of the tab order, dimmed — like Button's disabled link. `pressed`, `disabledReason` and
- * `disabledStyle` are a button's and are typed out: a link is not a toggle, and a link
- * that explains why it cannot be followed is a job for a disabled BUTTON.
+ * of the tab order, dimmed — like Button's disabled link. `pressed`, `disabledReason`,
+ * `refused` and `disabledStyle` are a button's and are typed out: a link is not a toggle,
+ * and a link that explains why it cannot be followed is a job for a refused BUTTON.
  */
 export interface IconButtonLinkProps
   extends
@@ -558,6 +574,7 @@ export interface IconButtonLinkProps
   form?: never;
   pressed?: never;
   disabledReason?: never;
+  refused?: never;
   disabledReasonDisplay?: never;
   commit?: never;
   disabledStyle?: never;
@@ -843,6 +860,7 @@ function IconButtonElement({
   tooltipSide,
   tooltipPortal,
   tooltipLazy = true,
+  refused: refusedProp,
   disabledReason: ownDisabledReason,
   disabledReasonDisplay,
   commit,
@@ -866,12 +884,12 @@ function IconButtonElement({
   const tone = toneProp ?? (toneColor !== undefined ? "custom" : "default");
   const keep = disabledStyle === "keep";
   const withText = useIconButtonText(label, labelVisible, variant, tooltip);
-  const reasonId = useId();
-  const disabledReason = useCommitReason(commit, ownDisabledReason);
-  const locked = hasContent(disabledReason);
-  // Pending is inert like a locked button — focusable, every activation swallowed —
-  // without the locked look: the spinner is the state.
-  const inert = locked || Boolean(pending);
+  // `locked`: refused WITH words, which take the bubble; `refused` also covers `true`,
+  // which keeps the label's.
+  const { reason: disabledReason, locked, reasonId, refused } = useRefusal(refusedProp, ownDisabledReason, commit);
+  // Pending is inert like a refused button — focusable, every activation swallowed —
+  // without the refused look: the spinner is the state.
+  const inert = refused || Boolean(pending);
   const ownDescribedBy = rest["aria-describedby"];
   const button = (
     <button
@@ -903,7 +921,7 @@ function IconButtonElement({
         iconButtonLook({ variant, size, stretch, glyphSize, shape, tone, quiet, toneColor, withText }),
         pressed && ICON_BUTTON_PRESSED,
         // The disabled look for the focusable kind of disabled, as on Button.
-        locked && (keep ? "cursor-default" : "cursor-not-allowed opacity-50"),
+        refused && (keep ? "cursor-default" : "cursor-not-allowed opacity-50"),
         keep && "disabled:cursor-default disabled:opacity-100",
         pending && "cursor-progress",
         className,
