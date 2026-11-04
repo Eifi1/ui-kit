@@ -120,6 +120,9 @@ The rest is additive: each part replaces app code that can go when the app gets 
   `wording`, `wordingLink`, `note`, `agreePending`; the title is an `h3` (`headingAs="div"` keeps
   a div).
 - **`siteLinks`** on LegalFooter / PublicFooter: a row for public pages that aren't legal.
+- **`USER_ROSTER_PAGE_SIZE` (25) and `USER_ROSTER_MAX_PAGE_SIZE` (200)**, server-kit's roster
+  page sizes, held to its 0.21 export. keksdose: features/admin/users-panel.tsx:386-388's
+  `DEFAULT_PAGE_SIZE` and `MAX_PAGE_SIZE` copies go.
 
 ## Charts
 
