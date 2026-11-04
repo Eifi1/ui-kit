@@ -70,7 +70,13 @@ The rest is additive: each part replaces app code that can go when the app gets 
   a page restored from the back/forward cache.
   - keksdose: shared/state/auth-store.ts `endSessionChangedElsewhere`, `endSessionChangedWhileCached` and the two listeners go; `ended` reads the mirror owner through `readStored`.
   - kastlan: features/auth/stores/auth-store.ts `:200-205` becomes the watch; `ended` replaces `isSessionEndedElsewhere` (shared/api/client.ts:88-99). New: a restored tab ends its session too.
-  - KS: add the watch after the store (`ended: () => useAuth.getState().token !== null && readStored(STORAGE.accessToken) === null`).
+  - KS: add the watch after the store, `ended` keyed on the persisted user's id (as KS adopted it).
+  - **`ended` reads whose session the storage holds, not only whether a token is there**
+    (corrected after the release, Kurvenschmiede): another tab may sign out and then in as
+    someone else, so a page restored from the back/forward cache finds a token and would keep
+    showing the old account while sending the new one's. Compare the stored owner with this
+    tab's user (keksdose's mirror owner, KS's persisted user id); "no token" is only the
+    simplest case of "not mine".
 - **AppShell `pageFallback`**: a Suspense round the content area, so the bar and nav stay while
   a lazy page loads. keksdose: `pageFallback={<PageSkeleton />}` and drop `PageSuspense` round
   the `<Outlet />` (its banners then wait with the page; keep `PageSuspense` if they must not).
@@ -199,3 +205,12 @@ does nothing; `UserResponse.role` is `str | None` and still required.
 
 The kit's own updates within their ranges, and tsup 9 (esbuild 0.28 without the override). The
 peer ranges are unchanged: nothing to do in the apps.
+
+## 0.55.1
+
+- **A refused or pending Button / IconButton keeps its press out of a clickable row around
+  it**, as a natively disabled button's click never reached one. `stopPropagation` is no
+  longer needed for that (Kurvenschmiede's owner-only delete opened its row without it).
+- adopt-0.55's `watchSessionElsewhere` lines: `ended` compares the stored owner with this tab's
+  user (above). kastlan: check that yours ends the tab when another tab has signed in as
+  someone else, not only when the refresh token is gone.
