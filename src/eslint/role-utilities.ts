@@ -208,8 +208,8 @@ export interface RoleClassHit {
 /**
  * Every `[var(--token)]` class in `text` (or one of v4's spellings of it, above) whose
  * token has a role utility on that property.
- * A token with no utility there (`text-[var(--chart-1)]`, `--status-*`,
- * `bg-[var(--border)]` as a divider's fill) is not a hit: `[var(--…)]` is right for it.
+ * A token with no utility there (`text-[var(--chart-1)]`, `bg-[var(--border)]` as a
+ * divider's fill) is not a hit: `[var(--…)]` is right for it.
  */
 export function findRoleClasses(text: string, table: RoleUtilityTable): RoleClassHit[] {
   // Every form names a token: `var(--x)`, or `(--x)` in v4's shorthand.

@@ -22,7 +22,9 @@ colour code against the shipped presets. **kk** = keksdose, **ka** = kastlan,
 
 The body says what the build does as of ui-kit 0.34.0, and §5.9 (the chart colours) as
 of 0.52.0; the reviews and adoptions that amended a section are folded into it, and the
-table names them. The 0.32.2 snapshot and
+table names them. The four field-sync tokens (`--status-synced/-pending/-edited/-error`)
+were removed in ui-kit 0.55.0, unread since FieldSync went in 0.53; where the body names
+them, it marks them removed and keeps the measurement. The 0.32.2 snapshot and
 measurements, the per-app to-dos, the risks, the review log and the method are in
 [archive/colour-roles-history.md](archive/colour-roles-history.md).
 
@@ -30,9 +32,9 @@ measurements, the per-app to-dos, the risks, the review log and the method are i
 |---|---|---|---|
 | 1 | Where each one stands | — (archived) | |
 | 2 | Decisions | — | §12.1; round 0.34 Q1 (decision 5); round 0.36 (decision 15 reversed, §13.3) |
-| 3 | The roles today | ui-kit 0.33.0 | §12.3, §12.9, §12.10; adopt-0.33 (`--bg-hover` 5.5 %) |
+| 3 | The roles today | ui-kit 0.33.0 | §12.3, §12.9, §12.10; adopt-0.33 (`--bg-hover` 5.5 %); ui-kit 0.55 (the field-sync tokens removed) |
 | 4 | Measured | — (archived) | |
-| 5 | The new roles | ui-kit 0.33.0 | §12.1, §12.2, §12.9–§12.12; adopt-0.33 (`--bg-hover` 5.5 %, B′'s translucent ink); §5.9 (ui-kit 0.49: the chart hues and inks; 0.51.6 and 0.52: `edges="auto"`) |
+| 5 | The new roles | ui-kit 0.33.0 | §12.1, §12.2, §12.9–§12.12; adopt-0.33 (`--bg-hover` 5.5 %, B′'s translucent ink); §5.9 (ui-kit 0.49: the chart hues and inks; 0.51.6 and 0.52: `edges="auto"`); ui-kit 0.55 (`--status-edited` removed) |
 | 6 | SwipeAction `tone` | ui-kit 0.33.0 | §12.6 (`paint`) |
 | 7 | Utility classes | ui-kit 0.33.0; the kit's own markup on them in 0.34.0 | §12.4; round 0.34 Q1 (`ROLE_BUDGET` 0) |
 | 8 | Undeclared custom properties | ui-kit 0.33.0 (`@eifi1/ui-kit/testing`) | §12.5; adopt-0.33 (`declaredCustomProperties`) |
@@ -40,7 +42,7 @@ measurements, the per-app to-dos, the risks, the review log and the method are i
 | 10 | What the kit adds | ui-kit 0.33.0 | §12.1–§12.12; adopt-0.33; round 0.34 Q1 |
 | 11 | Risks | — (archived) | |
 | 12 | Settled after the reviews | — | index; each item points to its § |
-| 13 | The More-contrast light well | — (round 0.36: settled 2026-10-13, built for ui-kit 0.36.0) | §13.9 (the reviews; round decisions 12, 13, 20) |
+| 13 | The More-contrast light well | — (round 0.36: settled 2026-10-13, built for ui-kit 0.36.0) | §13.9 (the reviews; round decisions 12, 13, 20); ui-kit 0.55 (`--status-edited` removed) |
 | A | Method | — (archived) | |
 
 ## 1. Where each one stands
@@ -72,7 +74,8 @@ All as recommended.
    - darker light `--warning`, `--success`, `--hue-orange` and `--hue-teal` (as text
      their worst was 3.86–4.22:1);
    - a louder light `--danger-border-strong` (2.07:1, where its comment claimed 3:1);
-   - a darker `--status-edited` (2.45:1, claimed 3:1).
+   - a darker `--status-edited` (2.45:1, claimed 3:1). *Removed in 0.55* with the other
+     three field-sync tokens: no part read them after FieldSync went in 0.53.
 
    It is a visual change in every app: slightly deeper status text and lines in light. A
    test audits every `tokens.css` literal against every shipped preset
@@ -183,11 +186,11 @@ Settled by the kit, and kept by the reviews:
   without a palette layer (the well and money by their own lines, in light only). CSS
   raises `--focus-ring-width` from 2 to 3 px, and in light
   (`:root[data-contrast="more"]:not(.dark)`, ui-kit 0.36) deepens `--danger`,
-  `--warning`, `--success`, `--info`, `--hue-teal`, `--hue-orange` and `--status-edited`
-  for the darker well and mixes `--bg-active` at 16 %. **Nothing else steps**: the page,
-  the card, the brand, the other hues and field-sync colours, and everything in dark
-  except the text roles and the border, are the same at both levels; the roles derived
-  from them follow their inputs (§5.6).
+  `--warning`, `--success`, `--info`, `--hue-teal` and `--hue-orange` (and
+  `--status-edited` until 0.55 removed it) for the darker well and mixes `--bg-active` at
+  16 %. **Nothing else steps**: the page, the card, the brand, the other hues, and
+  everything in dark except the text roles and the border, are the same at both levels;
+  the roles derived from them follow their inputs (§5.6).
 - **Dark mode** is `.dark` on `<html>`. Each preset carries a dark `TokenSet`; the
   `tokens.css` literals have a `.dark` block.
 - The README's "Tokens" section lists the families: Palette (inline), Derived
@@ -211,7 +214,7 @@ Settled by the kit, and kept by the reviews:
 | | `--money-*-contrast` (§5.1) | white in light, `var(--bg-page)` in dark | through inputs | — |
 | Neutral | `--neutral` (= text-muted) `--neutral-contrast` (= text-inverse) (§5.1) | aliases | through inputs | follows `--text-muted` |
 | Status (an action's consequence) | `--danger` `-hover` `-contrast` `-border` `-border-strong` `-bg`; `--warning` `-contrast` `-border` `-border-strong` `-bg`; `--info` `-contrast` `-border` `-bg`; `--success` `-contrast` `-border` `-bg` | literals per mode | no | light: the four colours deepened (§13) |
-| Field sync | `--status-synced/-pending/-edited/-error` | literals per mode | no | light `--status-edited` deepened (§13) |
+| Field sync — *removed in 0.55* | `--status-synced/-pending/-edited/-error` | literals per mode, until 0.55: no part read them after FieldSync went in 0.53 | no | light `--status-edited` deepened (§13) |
 | Categorical | `--hue-{blue,indigo,purple,teal,orange}` `-contrast` `-border` `-bg` | literals per mode | no | light teal and orange deepened (§13) |
 | Media | `--media-ink` `--media-scrim` `--media-scrim-hover` | literals, the same in both modes | no | — |
 | Toast | `--toast-*-bg/-border` (aliases), `--z-toast` | aliases | — | — |
@@ -395,7 +398,7 @@ gives `surface2` the page's lightness (`src/theme/palette-derive.ts`). Dark is u
   surface and push money text to 4.43.
 - **Not chosen either: a well one step darker than the page** (option C). Muted falls to
   4.33–4.37, money to 4.22–4.31, five status colours to 4.31–4.49 and `--status-edited`
-  to 2.93–3.00, with no headroom in the derived presets.
+  (removed in 0.55) to 2.93–3.00, with no headroom in the derived presets.
 - The derived heat stop `neutral` (= surface-2) follows.
 - **A well belongs on a card.** The kit's DataTable is framed by default (`frame = true`:
   its root is `FramedRoot`, the flush Card on `--bg-surface`), so its `thead`, sticky
@@ -445,7 +448,7 @@ gives `surface2` the page's lightness (`src/theme/palette-derive.ts`). Dark is u
 | `--hue-orange` | `#b43800` | #c2410c (3.98) | 4.60 | 5.99 |
 | `--hue-teal` | `#006f68` | #0f766e (4.21) | 4.65 | 6.05 |
 | `--danger-border-strong` | `#e11d48` (rose-600) | #fb7185 (2.07) | 3.61 | — |
-| `--status-edited` | `#bf6800` (non-text, 3:1) | #d97706 (2.45) | 3.11 | — |
+| `--status-edited` (removed in 0.55) | `#bf6800` (non-text, 3:1) | #d97706 (2.45) | 3.11 | — |
 
 - "Worst" means against the page, surface, surface-2 and the token's own wash, over all
   five light presets.
@@ -458,7 +461,8 @@ gives `surface2` the page's lightness (`src/theme/palette-derive.ts`). Dark is u
   - text at 4.5 on the page, the card, the well and a hovered row (`--bg-hover`, §5.7);
   - each tone at 4.5 on its own wash;
   - each `<fill>-contrast` at 4.5 on its fill;
-  - `-border-strong` and `--status-*` at 3 against every surface;
+  - `-border-strong` at 3 against every surface (and `--status-*` until 0.55 removed
+    them);
   - `--border` never a fill under text (§5.2);
   - the hover steps of §5.7 and the soft brand of §5.8.
 
@@ -475,9 +479,9 @@ gives `surface2` the page's lightness (`src/theme/palette-derive.ts`). Dark is u
 - **Since ui-kit 0.36 (§13) the light well steps** to a 10 % ink mix under More
   contrast, 1.19–1.24:1 from the card (the rule: ≥ 1.17). Muted is the set's secondary
   there, 6.35–7.58:1 on it. The step does not ship alone: money is solved onto the well
-  in `contrastStep`, the light status, teal, orange and `--status-edited` literals deepen
-  in tokens.css, `--bg-active` mixes at 16 %, and the border re-solves against the well.
-  Dark does not step.
+  in `contrastStep`, the light status, teal and orange literals (and `--status-edited`
+  until 0.55) deepen in tokens.css, `--bg-active` mixes at 16 %, and the border re-solves
+  against the well. Dark does not step.
 - Derived roles in CSS are safe in Tailwind 4.3 (§3.1); `check:tailwind` asserts each
   one reaches the built CSS (`--warning-border-strong`, the neutral pair, the money
   foregrounds, the row hover's 5.5 %).
@@ -1094,7 +1098,7 @@ Settled by Marcel:
      | `--info` | `#0369a1` | `#006197` | 4.07 → 4.56 | 4.56 → 5.11 | 5.93 → 6.65 |
      | `--hue-teal` | `#006f68` | `#006862` | 4.15 → 4.56 | 4.65 → 5.11 | 6.05 → 6.65 |
      | `--hue-orange` | `#b43800` | `#a93400` | 4.11 → 4.53 | 4.60 → 5.08 | 5.99 → 6.61 |
-     | `--status-edited` (a mark, 3:1) | `#bf6800` | `#b66200` | 2.77 → 3.04 | 3.11 → 3.41 | — |
+     | `--status-edited` (a mark, 3:1; removed in 0.55) | `#bf6800` | `#b66200` | 2.77 → 3.04 | 3.11 → 3.41 | — |
 
      The others hold on the stepped well: blue 4.60, indigo 5.42, purple 4.79;
      `--status-synced` 4.89, `-pending` 4.60, `-error` 4.44 and `--danger-border-strong`

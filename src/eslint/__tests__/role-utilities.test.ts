@@ -229,7 +229,7 @@ ruleTester.run("role-utilities", rule, {
   valid: [
     // No role utility for these tokens: `[var(--…)]` is the right spelling.
     `const a = "fill-[var(--chart-1)] text-[var(--chart-3)] stroke-[var(--chart-9)]";`,
-    `const b = "bg-[var(--status-synced)] text-[var(--status-error)]";`,
+    `const b = "bg-[var(--chart-muted)] text-[var(--chart-ink)]";`,
     // A divider's fill, and the colours with no ring/outline utility.
     `const c = "h-px bg-[var(--border)] ring-[var(--danger)] outline-[var(--info)]";`,
     // Already the utility.

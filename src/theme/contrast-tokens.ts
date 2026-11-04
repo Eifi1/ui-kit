@@ -38,9 +38,9 @@ import type { TokenSet } from "./palette-presets";
  *   stepped well. A dark set's well stands 1.11–1.13:1 from its card already, and its
  *   money has no room: nothing of it steps.
  *
- * What does NOT move here, because it is not inline: the light status, hue and field-sync
- * literals and `--bg-active` step in tokens.css's `:root[data-contrast="more"]:not(.dark)`
- * block, solved over these stepped wells.
+ * What does NOT move here, because it is not inline: the light status and hue literals
+ * and `--bg-active` step in tokens.css's `:root[data-contrast="more"]:not(.dark)` block,
+ * solved over these stepped wells.
  */
 
 /** The custom properties a contrast step writes. The last five only for a light set. */

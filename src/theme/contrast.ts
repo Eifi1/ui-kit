@@ -17,10 +17,10 @@ import type { PersistedAppearanceOptions } from "./text-size";
  * In force it is `<html data-contrast="more">` (else `"standard"`), which does two things:
  * - the inline colour tokens are re-written one step stronger (`applyTokenSet`'s
  *   contrast flag — see contrast-tokens.ts for what moves and why it is JS);
- * - tokens.css raises `--focus-ring-width` from 2 to 3 px, in light deepens the status,
- *   hue and field-sync literals and `--bg-active` to read on the stepped well (0.36,
- *   colour-roles §13), and turns on the `contrast:` variant for anything else a
- *   component wants to change.
+ * - tokens.css raises `--focus-ring-width` from 2 to 3 px, in light deepens the status
+ *   and hue literals and `--bg-active` to read on the stepped well (0.36, colour-roles
+ *   §13), and turns on the `contrast:` variant for anything else a component wants to
+ *   change.
  *
  * The names below are frozen like the text size's: server-kit's `CONTRAST_MODES`, the
  * stored format, the attribute.

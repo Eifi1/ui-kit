@@ -221,7 +221,7 @@ re-skins the kit by changing values rather than by forking components. The famil
 |---|---|---|
 | **Palette** | `--bg-page` `--bg-surface` `--bg-surface-2` `--border` `--text-primary` `--text-secondary` `--text-muted` `--brand` `--brand-hover` `--brand-contrast` `--money-income` `--money-expense` `--money-net` `--money-neutral` `--chart-1…9` | `applyTokenSet()`, written inline on `<html>` from the active `PalettePreset` (More contrast steps four of them; in light also the well and the four money colours) |
 | **Derived** | `--text-placeholder` `--bg-hover` `--bg-active` `--bg-inverse` `--text-inverse` `--border-strong` `--brand-bg` `--brand-bg-hover` `--brand-muted`, and `--neutral` (`--text-muted` as a fill) | `color-mix()` or `var()` in `tokens.css`, from the layer above — so they follow the preset with no preset having to list them |
-| **Semantic** | `--danger*` `--warning*` `--info*` `--success*` — each the colour, `-contrast`, `-border` and `-bg`; danger and warning also `-border-strong`, danger `-hover` — and `--status-synced/-pending/-edited/-error` | literals in `tokens.css`, per theme; in light under More contrast the four colours and `--status-edited` deepen for the darker well |
+| **Semantic** | `--danger*` `--warning*` `--info*` `--success*` — each the colour, `-contrast`, `-border` and `-bg`; danger and warning also `-border-strong`, danger `-hover` | literals in `tokens.css`, per theme; in light under More contrast the four colours deepen for the darker well |
 | **Categorical hues** | `--hue-blue` `--hue-indigo` `--hue-purple` `--hue-teal` `--hue-orange`, each with `-contrast`, `-border` and `-bg` | literals in `tokens.css`, per theme — values that mean only "a different value" (a status enum), at the semantic family's weight |
 | **Fill foregrounds** | `<fill>-contrast`: the text ON a fill — `--brand-contrast`, `--money-income-contrast` … `--money-neutral-contrast`, `--neutral-contrast`, and each tone's and hue's `-contrast` | with their family; money is white in light and the page in dark |
 | **Media** | `--media-ink` `--media-scrim` `--media-scrim-hover` | literals, the SAME in both themes: controls drawn on a photo or a camera picture, whose background is the picture, not the page |
@@ -263,7 +263,7 @@ name with the property's own prefix dropped (`--bg-surface` → `bg-surface`,
 The names are **property-scoped**: a text role makes a `text-*` utility and nothing else,
 so `bg-muted` does not exist and a role cannot land on the wrong property by accident. An
 app's own `--color-*` names (shadcn-style) do not collide with them. Keep `[var(--…)]` for a
-role with no utility: the chart colours and `--status-*`. The ring offsets
+role with no utility: the chart colours. The ring offsets
 (`ring-offset-surface`, `ring-offset-page`) and the money colours (`text-money-income`,
 `bg-money-expense` …, the table below) are utilities since 0.34 and take variants, unlike
 the plain money classes further down. The kit's own
@@ -376,9 +376,9 @@ property has a utility for the role, and names it. It reads every string literal
 template-literal part, so a JSX `className`, a `cn()` / `clsx()` argument and a class constant
 alike. Where one utility fits, `eslint --fix` writes it and keeps the variants and the opacity:
 `hover:text-[var(--text-muted)]/70` → `hover:text-muted/70`. A token with no utility on that
-property is left alone (`text-[var(--chart-1)]`, `--status-*`, `bg-[var(--border)]` as a
-divider), and so are comments. The rule reads the table above, so a role that gains a utility is
-flagged from the release that adds it.
+property is left alone (`text-[var(--chart-1)]`, `bg-[var(--border)]` as a divider), and so
+are comments. The rule reads the table above, so a role that gains a utility is flagged from
+the release that adds it.
 
 ```js
 // eslint.config.js
@@ -405,8 +405,8 @@ and everything sized in rem (Tailwind's spacing and type) grows with it.
 `data-contrast="more"` is More contrast, from the setting or from `prefers-contrast: more`
 on "System"; it steps the colour tokens in JavaScript and widens `--focus-ring-width`. In
 light it also darkens the well (`--bg-surface-2`, 10 % ink into the card) and deepens the
-money, status, teal, orange and `--status-edited` colours and `--bg-active` so they keep
-their contrast on it; dark keeps its well. A link button's and TextLink's brand reads
+money, status, teal and orange colours and `--bg-active` so they keep their contrast on it;
+dark keeps its well. A link button's and TextLink's brand reads
 `--brand-muted` (the brand as text) under it, in both modes. The
 stores in [Wiring](#wiring) put both attributes there; the attribute names are frozen.
 
@@ -461,7 +461,7 @@ because they answer different questions.
 
 | System | Tokens | The question it answers |
 |---|---|---|
-| **Semantic UI** | `--danger*` `--warning*` `--info*` `--success*`, `--status-*` | *What does this mean?* Danger is red because every other interface the reader has used made it red. Fixed meanings, so they live in `tokens.css` and are **not** part of `TokenSet` — a destructive action must not change colour because somebody picked a different preset. |
+| **Semantic UI** | `--danger*` `--warning*` `--info*` `--success*` | *What does this mean?* Danger is red because every other interface the reader has used made it red. Fixed meanings, so they live in `tokens.css` and are **not** part of `TokenSet` — a destructive action must not change colour because somebody picked a different preset. |
 | **Semantic data** | `--money-income` `--money-expense` `--money-net` `--money-neutral` | *Which direction is this number?* Never red/green: that pair is exactly the axis dichromacy collapses. Always paired with a `+`/`−` or an arrow at the call site, so colour is never the only signal. |
 | **Categorical chart** | `--chart-1` … `--chart-8` (`--chart-9` repeats slot 1) | *Which series is this?* No meaning and no order — eight hues that must stay separable from each other: anyplot's "Imprint" set (0.49; Paul Tol's "Muted" is the `paul-tol` preset), the same in light and dark, CVD-safe across protan/deutan/tritan. `paletteFor(i)` returns the CSS var (cycling eight, series 1 always the green; `{ order: "cvd" }` for anyplot's CVD order), so a Recharts series is theme-aware for free. A hue under 3:1 on the ground gets a 1px ink edge on bars, areas and treemap tiles (`chartEdge`) under More contrast; at Standard contrast no mark gets a per-hue edge (`edges="auto"`, Treemap 0.51.6, SeriesChart 0.52). A Treemap node with `children` is a group, drawn as a labelled frame round its tiles (0.52): its `fill` is its tiles' default, `shade` mixes a hue into the surface as a measured hex, `onGroupClick` makes the frames buttons, and a group's name band shows once the group is 44px wide and 61px tall at Normal text. A group's frame is given area of its own, so a tile's area is its share of the whole in any group. |
 | **Chart inks** | `--chart-ink` `--chart-muted` | The only chart colours that change with the theme. `CHART_ROLES`: total / baseline / outline in ink; other / rest / disabled and confidence bands in muted ink. |

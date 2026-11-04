@@ -109,8 +109,8 @@ export const FEEDBACK_STATUS_META: Record<FeedbackStatus, { icon: LucideIcon; ac
     },
     // The one status with nowhere to move to: the vocabulary has a brand, an info, a
     // warning and a danger, and nothing that means "succeeded". Deliberately NOT
-    // borrowed from a family that means something else — `--status-synced` is a
-    // FIELD's trip to the database rather than an outcome, and tokens.css says so in
+    // borrowed from a colour that means something else — a field's "saved" is a trip
+    // to the database rather than an outcome, and tokens.css's `--success` says so in
     // as many words. Green beside WONT_DO's red is the classic CVD-unsafe pair, which
     // is why both carry a glyph and neither leans on colour alone.
     DONE: {

@@ -18,7 +18,7 @@
  * `bg-surface-2`, `border-subtle` …). 0.33 left the kit's ~1,750 `text-[var(--text-muted)]`-style
  * classes under a falling count; 0.34 moved them all (round 0.34 Q1, a codemod), so the
  * count is zero and stays there. A `[var(--…)]` class is still right where no role
- * utility of the same token and property exists (the chart colours, `--status-*`,
+ * utility of the same token and property exists (the chart colours,
  * `bg-[var(--border)]` as a divider …) — this counts only the ones that have one. Since
  * DOC-7 (refactor audit 2026-10) that includes the money colours, a ring in
  * `--brand-contrast`, the ring offsets (`ring-offset-surface`) and the focus frame's

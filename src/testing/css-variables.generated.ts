@@ -3,7 +3,7 @@
 // fails while this is stale.
 
 /** Every custom property tokens.css declares, `@theme inline` names and `--app-nav-h`
- *  left out (102 names). */
+ *  left out (98 names). */
 export const KIT_NAMES =
   "--bg-active --bg-hover --bg-inverse --bg-page --bg-surface --bg-surface-2 --border " +
   "--border-strong --brand --brand-bg --brand-bg-hover --brand-contrast --brand-hover --brand-muted " +
@@ -16,15 +16,14 @@ export const KIT_NAMES =
   "--hue-teal-border --hue-teal-contrast --info --info-bg --info-border --info-contrast --media-ink " +
   "--media-scrim --media-scrim-hover --money-expense --money-expense-contrast --money-income " +
   "--money-income-contrast --money-net --money-net-contrast --money-neutral " +
-  "--money-neutral-contrast --neutral --neutral-contrast --status-edited --status-error " +
-  "--status-pending --status-synced --success --success-bg --success-border --success-contrast " +
-  "--text-caption --text-inverse --text-micro --text-muted --text-placeholder --text-primary " +
-  "--text-secondary --toast-action-bg --toast-action-fg --toast-danger-bg --toast-danger-border " +
-  "--toast-info-bg --toast-info-border --toast-success-bg --toast-success-border --toast-warning-bg " +
-  "--toast-warning-border --warning --warning-bg --warning-border --warning-border-strong " +
-  "--warning-contrast --z-toast";
+  "--money-neutral-contrast --neutral --neutral-contrast --success --success-bg --success-border " +
+  "--success-contrast --text-caption --text-inverse --text-micro --text-muted --text-placeholder " +
+  "--text-primary --text-secondary --toast-action-bg --toast-action-fg --toast-danger-bg " +
+  "--toast-danger-border --toast-info-bg --toast-info-border --toast-success-bg " +
+  "--toast-success-border --toast-warning-bg --toast-warning-border --warning --warning-bg " +
+  "--warning-border --warning-border-strong --warning-contrast --z-toast";
 
-/** The theme variables of Tailwind 4.3.3's `theme.css` (413 names). */
+/** The theme variables of Tailwind 4.3.4's `theme.css` (413 names). */
 export const TAILWIND_THEME_NAMES =
   "--animate-bounce --animate-ping --animate-pulse --animate-spin --aspect-video --blur-2xl " +
   "--blur-3xl --blur-lg --blur-md --blur-sm --blur-xl --blur-xs --breakpoint-2xl --breakpoint-lg " +
