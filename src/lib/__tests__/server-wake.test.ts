@@ -266,6 +266,88 @@ describe("createServerWake", () => {
   });
 });
 
+/**
+ * `slowOk` (0.55; the per-request opt-out adopt-0.51 left open): a read that is heavy on
+ * purpose is counted, never called slow, and past `wakingMs` is the server waking like
+ * any other — so under 7 s it shows nothing at all.
+ */
+describe("slowOk", () => {
+  it("a slowOk read under wakingMs never leaves idle", () => {
+    const w = createServerWake();
+    const listener = vi.fn();
+    w.subscribe(listener);
+    const token = w.start("get", "/reports/heavy", { slowOk: true });
+    expect(token).toBeTruthy();
+    expect(w.getInFlight()).toBe(1);
+    vi.advanceTimersByTime(6999);
+    expect(w.getStage()).toBe("idle");
+    w.end(token);
+    vi.advanceTimersByTime(10_000);
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  it("past wakingMs it is the server waking, as any read is", () => {
+    const w = createServerWake();
+    w.start("get", "/reports/heavy", { slowOk: true });
+    vi.advanceTimersByTime(7000);
+    expect(w.getStage()).toBe("waking");
+  });
+
+  it("a plain read beside it is timed on its own: slow from ITS age", () => {
+    const w = createServerWake();
+    w.start("get", "/reports/heavy", { slowOk: true });
+    vi.advanceTimersByTime(3000);
+    const plain = w.start("get", "/accounts");
+    expect(w.getStage()).toBe("idle");
+    vi.advanceTimersByTime(1999);
+    expect(w.getStage()).toBe("idle");
+    vi.advanceTimersByTime(1);
+    expect(w.getStage()).toBe("slow"); // /accounts is 2 s old
+    w.end(plain);
+    expect(w.getStage()).toBe("idle"); // only the slowOk read is out, 5 s old
+  });
+
+  it("the slowOk read's waking timer is not taken back by a newer read's slow one", () => {
+    const w = createServerWake();
+    w.start("get", "/reports/heavy", { slowOk: true });
+    vi.advanceTimersByTime(6000);
+    w.start("get", "/accounts"); // slow at 8 s
+    vi.advanceTimersByTime(1000);
+    expect(w.getStage()).toBe("waking"); // the heavy read at 7 s
+    vi.advanceTimersByTime(1000);
+    expect(w.getStage()).toBe("waking"); // /accounts' slow timer fired, and changed nothing
+  });
+
+  it("an older plain read keeps its own clock when a slowOk one joins", () => {
+    const w = createServerWake();
+    w.start("get", "/accounts");
+    vi.advanceTimersByTime(1000);
+    w.start("get", "/reports/heavy", { slowOk: true });
+    vi.advanceTimersByTime(1000);
+    expect(w.getStage()).toBe("slow");
+  });
+
+  it("rides the axios config, and track()'s request", async () => {
+    const w = createServerWake();
+    const api = fakeAxios();
+    attachServerWake(api, w);
+    let answer!: () => void;
+    const sent = api.send(
+      { method: "get", url: "/reports/heavy", slowOk: true },
+      "ok",
+      new Promise<void>((r) => (answer = r)),
+    );
+    await vi.waitFor(() => expect(w.getInFlight()).toBe(1));
+    void w.track(new Promise<never>(() => {}), { method: "get", url: "/heavy-too", slowOk: true });
+    vi.advanceTimersByTime(5000);
+    expect(w.getInFlight()).toBe(2);
+    expect(w.getStage()).toBe("idle");
+    answer();
+    await sent;
+    expect(w.getInFlight()).toBe(1);
+  });
+});
+
 describe("track()", () => {
   it("counts the promise until it resolves, and passes its value on", async () => {
     const w = createServerWake();

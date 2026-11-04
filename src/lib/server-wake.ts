@@ -35,6 +35,12 @@
  * It never arms while the browser is offline, whatever `shouldWatch` says: that state
  * has its own, truthful indicator, and a request that never left the device is not
  * evidence of anything about the server.
+ *
+ * A READ THAT IS HEAVY ON PURPOSE (0.55) — a report the server computes for a few
+ * seconds — says so with `slowOk` on its request (the axios config, or `track`'s
+ * request): it is counted, but never called slow, so it shows nothing while it is under
+ * `wakingMs`. Past `wakingMs` it is the server waking like any other read. A read that
+ * can take longer than that on a warm server stays out of the watch (`shouldWatch`).
  */
 
 /** `slow` = longer than a warm server ever takes; `waking` = long enough that a cold
@@ -65,6 +71,22 @@ export interface ServerWakeRequest {
   /** axios's `responseType`. `"blob"`, `"arraybuffer"` and `"stream"` mark a download,
    *  which the default filter does not count. */
   responseType?: string;
+  /**
+   * This read is slow on purpose (0.55; the per-request opt-out adopt-0.51 left open): it
+   * still counts, but its own age never shows "taking longer than usual" — only past
+   * `wakingMs`, when a cold start is the likelier story, does it show the server waking.
+   * The stage then follows the other requests out beside it, as ever.
+   *
+   * ONLY for a read that is heavy but answers under `wakingMs` (7 s) on a warm server: a
+   * report computed on request, a large page of rows. A read that can take longer — an
+   * export rendered on the server, a slow third party behind the route — would say "the
+   * server is waking up" on a warm server; keep it out of the watch through `shouldWatch`
+   * instead (kastlan's advice), as a download and an upload are.
+   *
+   * On axios it rides the request config: `api.get(url, { slowOk: true })` (declare it on
+   * `AxiosRequestConfig` once, by module augmentation); through `track`, on its request.
+   */
+  slowOk?: boolean;
 }
 
 /**
@@ -148,7 +170,10 @@ export function createServerWake({
   // request came back first, the start left standing for the older one is later than its
   // own, so the age read is never MORE than the oldest request's real age — a notice can
   // come late, never falsely. The token makes it exact.
-  const starts: Array<{ token: ServerWakeToken; at: number }> = [];
+  //
+  // A `slowOk` request (0.55) is timed for "waking" like the rest, never for "slow": the
+  // slow stage reads the oldest request out that is NOT slowOk.
+  const starts: Array<{ token: ServerWakeToken; at: number; slowOk: boolean }> = [];
   // The last token handed out. Never reset, not even by `reset()`: a token from before a
   // reset must not name a request after it.
   let lastToken = 0;
@@ -170,18 +195,29 @@ export function createServerWake({
     wakingTimer = null;
   };
 
-  // The stage for the oldest outstanding request's age, and timers for what is still to
-  // come. With none outstanding: idle.
+  // A timer only ever raises the stage: with a slowOk request oldest, the waking timer
+  // (its) can fire before the slow one (a newer read's), which must not take it back.
+  const raise = (next: "slow" | "waking") => {
+    if (stage !== "waking" && next !== stage) setStage(next);
+  };
+
+  // The stage for the outstanding requests' ages — "waking" from the oldest of all,
+  // "slow" from the oldest that is not slowOk — and timers for what is still to come.
+  // With none outstanding: idle.
   const arm = () => {
     clearTimers();
     if (starts.length === 0) {
       setStage("idle");
       return;
     }
-    const age = Date.now() - starts[0].at;
-    setStage(age >= wakingMs ? "waking" : age >= slowMs ? "slow" : "idle");
-    if (age < slowMs) slowTimer = setTimeout(() => setStage("slow"), slowMs - age);
-    if (age < wakingMs) wakingTimer = setTimeout(() => setStage("waking"), wakingMs - age);
+    const now = Date.now();
+    const age = now - starts[0].at;
+    const slowFrom = starts.find((s) => !s.slowOk);
+    // `undefined` while every request out is slowOk: nothing to call slow.
+    const slowAge = slowFrom && now - slowFrom.at;
+    setStage(age >= wakingMs ? "waking" : slowAge !== undefined && slowAge >= slowMs ? "slow" : "idle");
+    if (slowAge !== undefined && slowAge < slowMs) slowTimer = setTimeout(() => raise("slow"), slowMs - slowAge);
+    if (age < wakingMs) wakingTimer = setTimeout(() => raise("waking"), wakingMs - age);
   };
 
   const start = (
@@ -192,10 +228,12 @@ export function createServerWake({
     if (isOffline()) return false;
     if (!shouldWatch((method ?? "get").toLowerCase(), url ?? "", request)) return false;
     lastToken += 1;
-    starts.push({ token: lastToken, at: Date.now() });
+    const slowOk = request.slowOk === true;
+    starts.push({ token: lastToken, at: Date.now(), slowOk });
     // A request joining others does not move the clock: a page firing a second read at
-    // 1.9 s is still waiting on the same sleeping server, not starting afresh.
-    if (starts.length === 1) arm();
+    // 1.9 s is still waiting on the same sleeping server, not starting afresh. Only the
+    // first request out, or the first that may be called slow, starts one.
+    if (starts.length === 1 || (!slowOk && starts.every((s, i) => s.slowOk || i === starts.length - 1))) arm();
     return lastToken;
   };
 
@@ -257,6 +295,8 @@ export interface ServerWakeAxiosConfig {
   method?: string;
   url?: string;
   responseType?: string;
+  /** A read slow on purpose — see {@link ServerWakeRequest.slowOk} (0.55). */
+  slowOk?: boolean;
 }
 
 /** The slice of an interceptor manager the adapter uses. A method (not a function
