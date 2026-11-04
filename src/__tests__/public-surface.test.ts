@@ -351,7 +351,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.55 (+2, keksdose dev #638): `FieldSuggestion` and `DEFAULT_FIELD_SUGGESTION_LABELS`, a
   // field's "suggested from" caption with its clear.
   // 0.55 (+1, keksdose's page outline): `PageHeaderSkeleton`, PageHeader at its own metrics.
-  ["@eifi1/ui-kit", barrel, 985],
+  // 0.55 (+2, keksdose's price pool): `ConsentAgainNotice` and `DEFAULT_CONSENT_AGAIN_LABELS`,
+  // a consent asked again after its text changed.
+  ["@eifi1/ui-kit", barrel, 987],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

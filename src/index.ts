@@ -669,6 +669,15 @@ export type {
   LegalSectionOwner,
   LegalDisclaimerVariant,
 } from "./components/legal-page";
+// 0.55 (keksdose's price pool, consent-again-notice.tsx): a consent asked again after its
+// text changed — the card where it stays, the banner where it waits; the subject is the app's.
+export { ConsentAgainNotice, DEFAULT_CONSENT_AGAIN_LABELS } from "./components/consent-again-notice";
+export type {
+  ConsentAgainNoticeProps,
+  ConsentAgainCardProps,
+  ConsentAgainBannerProps,
+  ConsentAgainLabels,
+} from "./components/consent-again-notice";
 // 0.32.0 (docs/text-size-harmonization.md): the appearance settings' words, and a row's
 // actions, one of the behaviours at Large (§4, §10.7–10.9).
 export { DEFAULT_APPEARANCE_LABELS, useAppearanceLabels } from "./components/appearance-labels";

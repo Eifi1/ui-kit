@@ -124,6 +124,7 @@ import type { PwaUpdatePromptLabels } from "../offline/pwa-update-prompt";
 import type { SharedComputerLabels } from "../offline/shared-computer";
 import type { HeldChangesBannerLabels } from "../shell/held-changes-banner-labels";
 import type { FieldSuggestionLabels } from "../components/field-parts";
+import type { ConsentAgainLabels } from "../components/consent-again-notice-labels";
 
 /**
  * EVERY string the kit renders, as one typed tree — and an optional provider that
@@ -516,6 +517,10 @@ export interface UiKitLabels {
   /** 0.55: a field's "suggested from" caption — the default when the app names no source,
    *  and the button that clears the suggestion (keksdose dev #638). */
   fieldSuggestion: FieldSuggestionLabels;
+  /** 0.55: "What you agreed to has changed — agree again?" — the chrome of
+   *  `ConsentAgainNotice` (Agree, Not now, the two disclosures, before and now); the
+   *  subject's words are the app's. */
+  consentAgain: ConsentAgainLabels;
 }
 
 /**

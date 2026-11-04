@@ -2044,6 +2044,17 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       clear: "Törlés",
       clearName: (field) => (field ? `Javaslat törlése: ${field}` : "Javaslat törlése"),
     },
+    // 0.55: keksdose's words (price_pool.reconsent.*), translated; it ships no Hungarian.
+    consentAgain: {
+      agree: "Elfogadom",
+      notNow: "Most nem",
+      changesToggle: "A változások megtekintése",
+      wordingToggle: "A teljes szöveg megjelenítése, korábban és most",
+      beforeHeading: "Eddig",
+      nowHeading: "Mostantól",
+      removed: "Törölve:",
+      added: "Hozzáadva:",
+    },
   };
 }
 

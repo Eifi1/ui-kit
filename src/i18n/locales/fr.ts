@@ -2082,6 +2082,17 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       clear: "Effacer",
       clearName: (field) => (field ? `Effacer la suggestion pour «\u202f${field}\u202f»` : "Effacer la suggestion"),
     },
+    // 0.55: keksdose's reviewed words (price_pool.reconsent.*) without its price pool.
+    consentAgain: {
+      agree: "Accepter",
+      notNow: "Pas maintenant",
+      changesToggle: "Voir ce qui a changé",
+      wordingToggle: "Afficher le texte complet, avant et maintenant",
+      beforeHeading: "Jusqu’ici",
+      nowHeading: "Désormais",
+      removed: "Supprimé\u00a0:",
+      added: "Ajouté\u00a0:",
+    },
   };
 }
 

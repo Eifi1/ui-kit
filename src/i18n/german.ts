@@ -2111,5 +2111,16 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       clear: "Entfernen",
       clearName: (field) => (field ? `Vorschlag für „${field}“ entfernen` : "Vorschlag entfernen"),
     },
+    // 0.55: keksdose's reviewed words (price_pool.reconsent.*) without its price pool.
+    consentAgain: {
+      agree: "Zustimmen",
+      notNow: "Nicht jetzt",
+      changesToggle: "Änderungen ansehen",
+      wordingToggle: "Ganzen Wortlaut zeigen, bisher und neu",
+      beforeHeading: "Bisher",
+      nowHeading: "Neu",
+      removed: "Entfernt:",
+      added: "Hinzugefügt:",
+    },
   };
 }

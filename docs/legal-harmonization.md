@@ -28,7 +28,7 @@ snapshot of the three apps, the per-repo to-dos and the reviews' list as written
 | 2 | Decisions | — | §7.8; decision 9 (0.28.1); decision 7 by billing §8, §9 (Paddle); decisions 10 (0.51.3) and 11 (0.51.4) |
 | 3 | The page contract | ui-kit 0.28.0 | §7.3, §7.6, §7.9; 0.28.1 (translation note, `AuthLayout` footer); landing-demo §4.3 (robots, sitemap); 0.51.3 (as-of line, keksdose's stored version); 0.51.4 (summary, footer's optional pages) |
 | 4 | The content contract | ui-kit 0.28.0 | §7.1–§7.4; 0.28.1 (`language` section); 0.32.0 (commercial disclaimer); 0.51.3 (`changes` wording, `updated` label); 0.51.4 (`summary`, `links.security`/`accessibility` labels) |
-| 5 | What the kit adds, what stays app-side | ui-kit 0.28.0, server-kit 0.2.1 | §7.5; 0.28.1; 0.32.0 |
+| 5 | What the kit adds, what stays app-side | ui-kit 0.28.0, server-kit 0.2.1 | §7.5; 0.28.1; 0.32.0; 0.55 (`ConsentAgainNotice`) |
 | 6 | Per repo | — (archived) | |
 | 7 | Settled after the reviews | — | index; folded items point to their § |
 
@@ -468,6 +468,24 @@ would repeat the fr Imprint link's label, so a screen reader would read it twice
   `in_areas` makes the same one-line change.
 - From 0.3.0, `area_like_patterns(areas)` gives the same rule as SQL `LIKE` patterns, for
   a listing that filters by area in the query.
+
+**Kit 0.55**: **`ConsentAgainNotice`**, the question an app asks when the text a consent
+was given to has changed (keksdose's price pool, its second consent text; lifted from its
+`shared/components/consent-again-notice.tsx` on Marcel's rule that a part goes into the kit
+once a second app is likely to need it).
+- `frame="card"`: the title, the intro, the "what's new" list, the full wording before and
+  now behind a disclosure (`<del>` / `<ins>` with a hidden "Removed:" / "Added:"), Agree —
+  or, for a reader who may not answer, no Agree and the app's `note`. No "Not now".
+- `frame="banner"`: the short form, an info `AlertBanner` with the list one tap away, Agree
+  as its action and "Not now" as its ×; no wording, a `wordingLink` to the card instead.
+- Never a modal; "Not now" is not a refusal; the app remembers it and asks again (keksdose:
+  once per release).
+- The kit's words are the chrome only, a `consentAgain` namespace in all 7 languages
+  (Agree, Not now, the two disclosures, Until now / From now on, Removed / Added). The
+  subject's words and the consent text are the app's, as is the state (which version was
+  agreed, who may answer, where "Not now" is kept). `consentAgain` is not in the `legal`
+  review area: no legal sentence is in it. An app whose reviewer should judge the card's
+  words too adds the namespace to that reviewer's areas.
 
 **App-side**:
 - the routes;

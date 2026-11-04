@@ -2060,6 +2060,17 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       clear: "Cancella",
       clearName: (field) => (field ? `Cancella il suggerimento per «${field}»` : "Cancella il suggerimento"),
     },
+    // 0.55: keksdose's reviewed words (price_pool.reconsent.*) without its price pool.
+    consentAgain: {
+      agree: "Accetta",
+      notNow: "Non ora",
+      changesToggle: "Mostra cosa è cambiato",
+      wordingToggle: "Mostra il testo completo, prima e ora",
+      beforeHeading: "Finora",
+      nowHeading: "D’ora in poi",
+      removed: "Rimosso:",
+      added: "Aggiunto:",
+    },
   };
 }
 

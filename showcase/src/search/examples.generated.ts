@@ -811,6 +811,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "LegalLayout — Imprint, Privacy Policy, Terms",
     "LegalPage — the three pages, the kit's wording, numbers and references",
     "LegalAcceptCheckbox and LegalLinks — sign-up and the account menu",
+    "ConsentAgainNotice — a consent asked again after its text changed",
     "OneTimeCodeInput — the sign-in verification code",
     "OneTimeCodeInput — named by its prompt",
     "SignInForm — credentials, passkey, second factor, a new password",

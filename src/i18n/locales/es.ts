@@ -2042,6 +2042,17 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       clear: "Borrar",
       clearName: (field) => (field ? `Borrar la sugerencia para «${field}»` : "Borrar la sugerencia"),
     },
+    // 0.55: keksdose's words (price_pool.reconsent.*), translated; it ships no Spanish.
+    consentAgain: {
+      agree: "Aceptar",
+      notNow: "Ahora no",
+      changesToggle: "Ver qué ha cambiado",
+      wordingToggle: "Mostrar el texto completo, antes y ahora",
+      beforeHeading: "Hasta ahora",
+      nowHeading: "A partir de ahora",
+      removed: "Eliminado:",
+      added: "Añadido:",
+    },
   };
 }
 

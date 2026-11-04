@@ -1948,6 +1948,17 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       clear: "清除",
       clearName: (field) => (field ? `清除“${field}”的建议值` : "清除建议值"),
     },
+    // 0.55: keksdose's words (price_pool.reconsent.*), translated; it ships no Chinese.
+    consentAgain: {
+      agree: "同意",
+      notNow: "暂不",
+      changesToggle: "查看变更内容",
+      wordingToggle: "显示完整条文：此前与今后",
+      beforeHeading: "此前",
+      nowHeading: "今后",
+      removed: "已删除：",
+      added: "已新增：",
+    },
   };
 }
 
