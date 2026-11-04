@@ -1907,6 +1907,17 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       label: "这是一台共用电脑",
       hint: "此设备上不会保留您的数据副本。页面将只能在联网时打开。",
     },
+    // 0.55 — docs/top-bar-harmonization.md §2.6.1: keksdose's words (sync.held_*,
+    // sync.discard_held_*, sync.switch_back_held) without its budgets.
+    heldChanges: {
+      message: (count) => `${n(count)} 项修改无法从这里发送。它们会保留在此设备上，直到可以发送或您将其放弃。`,
+      switchBack: "切换回去",
+      discard: "放弃…",
+      confirmTitle: (count) => `放弃 ${n(count)} 项无法从这里发送的修改？`,
+      confirmBody: () => "放弃后无法恢复。此设备随后将与服务器上的数据同步。",
+      confirmAction: "放弃",
+      failed: "操作未成功，请重试。",
+    },
   };
 }
 

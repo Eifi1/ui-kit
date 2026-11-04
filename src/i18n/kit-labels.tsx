@@ -121,6 +121,7 @@ import type { TopBarPartsLabels } from "../shell/top-bar-parts-labels";
 import type { SignOutPendingDialogLabels } from "../offline/sign-out-pending-dialog";
 import type { PwaUpdatePromptLabels } from "../offline/pwa-update-prompt";
 import type { SharedComputerLabels } from "../offline/shared-computer";
+import type { HeldChangesBannerLabels } from "../shell/held-changes-banner-labels";
 
 /**
  * EVERY string the kit renders, as one typed tree — and an optional provider that
@@ -504,6 +505,9 @@ export interface UiKitLabels {
   pwaUpdate: PwaUpdatePromptLabels;
   /** 0.45.0: "This is a shared computer" on the sign-in form (local-first §1.5 D6). */
   sharedComputer: SharedComputerLabels;
+  /** 0.55: the banner for changes that cannot be sent from here — its sentence, "Switch
+   *  back", and the discard's question (docs/top-bar-harmonization.md §2.6.1). */
+  heldChanges: HeldChangesBannerLabels;
 }
 
 /**

@@ -477,4 +477,9 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   // both word sets.
   "signOutPending.lost": one,
   "signOutPending.kept": one,
+  // 0.55 (docs/top-bar-harmonization.md §2.6.1): the held-changes banner's sentence, and
+  // its confirm's question and consequence.
+  "heldChanges.message": one,
+  "heldChanges.confirmTitle": one,
+  "heldChanges.confirmBody": one,
 };

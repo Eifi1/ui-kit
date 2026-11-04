@@ -2032,6 +2032,24 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       label: "C’est un ordinateur partagé",
       hint: "Aucune copie de vos données ne reste sur cet appareil. Les pages ne s’ouvrent alors qu’avec une connexion.",
     },
+    // 0.55 — docs/top-bar-harmonization.md §2.6.1: keksdose's reviewed words (sync.held_*,
+    // sync.discard_held_*, sync.switch_back_held) without its budgets.
+    heldChanges: {
+      message: (count) =>
+        count < 2
+          ? `${n(count)} modification ne peut pas être envoyée d’ici. Elle reste sur cet appareil jusqu’à ce qu’elle puisse être envoyée, ou jusqu’à ce que vous l’abandonniez.`
+          : `${n(count)} modifications ne peuvent pas être envoyées d’ici. Elles restent sur cet appareil jusqu’à ce qu’elles puissent être envoyées, ou jusqu’à ce que vous les abandonniez.`,
+      switchBack: "Revenir",
+      discard: "Abandonner…",
+      confirmTitle: (count) =>
+        `Abandonner ${n(count)} ${plural(count, "modification qui ne peut pas être envoyée", "modifications qui ne peuvent pas être envoyées")} d’ici\u202f?`,
+      confirmBody: (count) =>
+        count < 2
+          ? "Elle ne pourra pas être récupérée. Cet appareil se synchronise ensuite avec les données du serveur."
+          : "Elles ne pourront pas être récupérées. Cet appareil se synchronise ensuite avec les données du serveur.",
+      confirmAction: "Abandonner",
+      failed: "Cela n’a pas fonctionné. Veuillez réessayer.",
+    },
   };
 }
 

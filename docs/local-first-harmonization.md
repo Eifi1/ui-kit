@@ -1017,8 +1017,9 @@ with `stampAfter(previous)`. A `rejected` change is never re-sent (D13).
 `lastSyncedAt` from `meta`. `onSync` = `syncNow`.
 
 **Not in the engine:** E2EE, re-seal, kk's per-entity mirror and engines, ka's photo upload (a
-step), the rejection banner's words (the app's; `rejected()` gives the reasons), the online-only
-list (the write lock, §1.6). Seven languages: no new words (the indicator and the dialog have them).
+step), the rejection banner's words (the app's; `rejected()` gives the reasons; since ui-kit 0.55
+the banner itself and its discard question are `HeldChangesBanner`, top-bar §2.6.1), the
+online-only list (the write lock, §1.6). Seven languages: no new words (the indicator and the dialog have them).
 
 ### 2.4 `SyncScope` and `EntityRule` in server-kit (`eifi1_server_kit.sync.scopes`, 0.16.0)
 

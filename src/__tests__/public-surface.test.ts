@@ -334,7 +334,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // elapsed time (keksdose's formatElapsed).
   // 0.54 (+1, kastlan reuse audit 2026-11-02, proposal 4): `billingRefusalText`, a billing
   // refusal's words in the `billing` labels.
-  ["@eifi1/ui-kit", barrel, 966],
+  // 0.55 (+2, here and in /shell, docs/top-bar-harmonization.md §2.6.1): `HeldChangesBanner`
+  // and `DEFAULT_HELD_CHANGES_BANNER_LABELS` — keksdose's and kastlan's held-changes banners.
+  ["@eifi1/ui-kit", barrel, 968],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -380,7 +382,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.52 (−1): `DevSwitchers` removed (see the barrel).
   // 0.53 (−11, breaking): what 0.52 deprecated — the slice's 10 unread names (API-4) and
   // `RoleSwitcher` (MOD-5).
-  ["@eifi1/ui-kit/shell", shell, 49],
+  // 0.55 (+2): `HeldChangesBanner`, `DEFAULT_HELD_CHANGES_BANNER_LABELS` (§2.6.1, see the barrel).
+  ["@eifi1/ui-kit/shell", shell, 51],
   // 0.43.0 (+9): the tours page (see the barrel).
   // 0.43.0 (+3): `resetTourProgress`, `doneCount`, `earnedPoints` (build review, see the barrel).
   // 0.44.0 (+1): `completeTour` (§9.2, see the barrel).

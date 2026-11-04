@@ -2057,5 +2057,25 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       label: "Dies ist ein gemeinsam genutzter Computer",
       hint: "Auf diesem Gerät bleibt keine Kopie Ihrer Daten. Seiten öffnen sich dann nur mit einer Verbindung.",
     },
+    // 0.55 — docs/top-bar-harmonization.md §2.6.1: keksdose's reviewed words (sync.held_*,
+    // sync.discard_held_*, sync.switch_back_held) without its budgets.
+    heldChanges: {
+      message: (count) =>
+        count === 1
+          ? `${n(count)} Änderung kann von hier aus nicht gesendet werden. Sie bleibt auf diesem Gerät, bis sie gesendet werden kann oder bis Sie sie verwerfen.`
+          : `${n(count)} Änderungen können von hier aus nicht gesendet werden. Sie bleiben auf diesem Gerät, bis sie gesendet werden können oder bis Sie sie verwerfen.`,
+      switchBack: "Zurückwechseln",
+      discard: "Verwerfen…",
+      confirmTitle: (count) =>
+        count === 1
+          ? `${n(count)} Änderung verwerfen, die von hier aus nicht gesendet werden kann?`
+          : `${n(count)} Änderungen verwerfen, die von hier aus nicht gesendet werden können?`,
+      confirmBody: (count) =>
+        count === 1
+          ? "Sie lässt sich nicht wiederherstellen. Dieses Gerät synchronisiert anschließend mit dem Stand des Servers."
+          : "Sie lassen sich nicht wiederherstellen. Dieses Gerät synchronisiert anschließend mit dem Stand des Servers.",
+      confirmAction: "Verwerfen",
+      failed: "Das hat nicht geklappt. Bitte erneut versuchen.",
+    },
   };
 }

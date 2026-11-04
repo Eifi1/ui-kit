@@ -100,6 +100,7 @@ import { DEFAULT_SIGN_OUT_PENDING_DIALOG_LABELS } from "../offline/sign-out-pend
 import { DEFAULT_PWA_UPDATE_PROMPT_LABELS } from "../offline/pwa-update-prompt-labels";
 import { DEFAULT_SHARED_COMPUTER_LABELS } from "../offline/shared-computer-labels";
 import { DEFAULT_TOP_BAR_PARTS_LABELS } from "../shell/top-bar-parts-labels";
+import { DEFAULT_HELD_CHANGES_BANNER_LABELS } from "../shell/held-changes-banner-labels";
 import { DEFAULT_SHARE_CARD_LABELS } from "../components/share-card-labels";
 import { DEFAULT_REAUTH_DIALOG_LABELS } from "../components/reauth-dialog-labels";
 import { DEFAULT_SERVER_WAKE_LABELS } from "../components/server-wake-labels";
@@ -264,4 +265,5 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   signOutPending: DEFAULT_SIGN_OUT_PENDING_DIALOG_LABELS,
   pwaUpdate: DEFAULT_PWA_UPDATE_PROMPT_LABELS,
   sharedComputer: DEFAULT_SHARED_COMPUTER_LABELS,
+  heldChanges: DEFAULT_HELD_CHANGES_BANNER_LABELS,
 };

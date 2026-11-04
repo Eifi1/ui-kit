@@ -1999,6 +1999,19 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       label: "Ez egy közös használatú számítógép",
       hint: "Az adatairól nem marad másolat ezen az eszközön. Az oldalak így csak kapcsolattal nyílnak meg.",
     },
+    // 0.55 — docs/top-bar-harmonization.md §2.6.1: keksdose's words (sync.held_*,
+    // sync.discard_held_*, sync.switch_back_held) without its budgets. A count takes the
+    // singular noun, so one sentence serves every count; "a(z)" as `translationReview`.
+    heldChanges: {
+      message: (count) =>
+        `${n(count)} módosítás innen nem küldhető el. Ezen az eszközön marad, amíg el nem lehet küldeni, vagy amíg el nem veti.`,
+      switchBack: "Visszaváltás",
+      discard: "Elvetés…",
+      confirmTitle: (count) => `Elveti a(z) ${n(count)} módosítást, amely innen nem küldhető el?`,
+      confirmBody: () => "Nem lehet visszaállítani. Ezután ez az eszköz a szerveren lévő adatokkal szinkronizálódik.",
+      confirmAction: "Elvetés",
+      failed: "Ez nem sikerült. Kérjük, próbálja újra.",
+    },
   };
 }
 

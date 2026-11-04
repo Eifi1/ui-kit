@@ -2009,6 +2009,24 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       label: "Questo è un computer condiviso",
       hint: "Su questo dispositivo non resta alcuna copia dei Suoi dati. Le pagine si aprono quindi solo con una connessione.",
     },
+    // 0.55 — docs/top-bar-harmonization.md §2.6.1: keksdose's reviewed words (sync.held_*,
+    // sync.discard_held_*, sync.switch_back_held) without its budgets.
+    heldChanges: {
+      message: (count) =>
+        count === 1
+          ? `${n(count)} modifica non può essere inviata da qui. Resta su questo dispositivo finché non potrà essere inviata, o finché non la scarta.`
+          : `${n(count)} modifiche non possono essere inviate da qui. Restano su questo dispositivo finché non potranno essere inviate, o finché non le scarta.`,
+      switchBack: "Torna indietro",
+      discard: "Scarta…",
+      confirmTitle: (count) =>
+        `Scartare ${n(count)} ${plural(count, "modifica che non può essere inviata", "modifiche che non possono essere inviate")} da qui?`,
+      confirmBody: (count) =>
+        count === 1
+          ? "Non potrà essere recuperata. Questo dispositivo si sincronizza poi con i dati del server."
+          : "Non potranno essere recuperate. Questo dispositivo si sincronizza poi con i dati del server.",
+      confirmAction: "Scarta",
+      failed: "Non ha funzionato. Riprovi.",
+    },
   };
 }
 

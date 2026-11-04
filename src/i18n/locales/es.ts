@@ -1994,6 +1994,24 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       label: "Este es un ordenador compartido",
       hint: "No queda ninguna copia de sus datos en este dispositivo. Las páginas solo se abren entonces con conexión.",
     },
+    // 0.55 — docs/top-bar-harmonization.md §2.6.1: keksdose's words (sync.held_*,
+    // sync.discard_held_*, sync.switch_back_held) without its budgets.
+    heldChanges: {
+      message: (count) =>
+        count === 1
+          ? `${n(count)} cambio no se puede enviar desde aquí. Se queda en este dispositivo hasta que se pueda enviar o hasta que lo descarte.`
+          : `${n(count)} cambios no se pueden enviar desde aquí. Se quedan en este dispositivo hasta que se puedan enviar o hasta que los descarte.`,
+      switchBack: "Volver",
+      discard: "Descartar…",
+      confirmTitle: (count) =>
+        `¿Descartar ${n(count)} ${plural(count, "cambio que no se puede enviar", "cambios que no se pueden enviar")} desde aquí?`,
+      confirmBody: (count) =>
+        count === 1
+          ? "No se podrá recuperar. Después, este dispositivo se sincroniza con los datos del servidor."
+          : "No se podrán recuperar. Después, este dispositivo se sincroniza con los datos del servidor.",
+      confirmAction: "Descartar",
+      failed: "No ha funcionado. Inténtelo de nuevo.",
+    },
   };
 }
 

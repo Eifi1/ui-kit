@@ -263,5 +263,15 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
           ? d.signOutPending.kept(1)
           : `${n(count)} changes are still waiting to sync. They stay on this device for you and sync the next time you log in here.`,
     },
+    // 0.55: the held-changes banner's sentence and its question (top-bar §2.6.1).
+    heldChanges: {
+      ...d.heldChanges,
+      message: (count) =>
+        count === 1
+          ? d.heldChanges.message(1)
+          : `${n(count)} changes cannot be sent from here. They stay on this device until they can be sent, or until you discard them.`,
+      confirmTitle: (count) =>
+        count === 1 ? d.heldChanges.confirmTitle(1) : `Discard ${n(count)} changes that cannot be sent from here?`,
+    },
   };
 }

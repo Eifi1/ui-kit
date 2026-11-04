@@ -32,7 +32,7 @@ is now an index whose items keep the numbers the code cites.
 | 2.3 | The language select in the account menu | ui-kit 0.42 | §6.5 |
 | 2.4 | Tours: keksdose's trigger | ui-kit 0.42 | §6.7 |
 | 2.5 | Search | ui-kit 0.42 (the apps) | §6.8, §6.11 |
-| 2.6 | Sync | ui-kit 0.42 | §6.9, §6.10; the `storage: "none"` preset (adopt-0.42, local-first §1.4) |
+| 2.6 | Sync | ui-kit 0.42 | §6.9, §6.10; the `storage: "none"` preset (adopt-0.42, local-first §1.4); §2.6.1 (ui-kit 0.55: `HeldChangesBanner`) |
 | 2.7 | Dev switchers, role and plan | ui-kit 0.42, server-kit 0.14 | §6.1–§6.3; §2.7.1 (ui-kit 0.51: one `DevMenu`; 0.51.4: a column per group); ui-kit 0.52 (`DevSwitchers` removed) |
 | 3 | What the kits add | ui-kit 0.42, server-kit 0.14 | §6.6, §6.7, §6.9 |
 | 4 | Per app | — | §6.5–§6.7, §6.10, §6.11 |
@@ -134,6 +134,46 @@ and never content. The trigger shows on a phone too (keksdose's choice; kastlan 
   `useIsMutating`, with `hideWhenIdle`. There is no pending count, since KS keeps
   nothing on the device.
 - Making more of kastlan, or any of KS, work offline is a round of its own, later.
+
+#### 2.6.1 Addendum (ui-kit 0.55): `HeldChangesBanner`, the action the `blocked` state has no room for
+
+The indicator ranks `blocked` first: changes kept on this device that cannot be sent from where
+the user is now. Waiting cannot help them, so the user has to act, and the indicator is one
+control in the top bar with no room for an action. Two apps built the same banner by hand for it:
+- **keksdose** (app/held-changes-banner.tsx): after a budget switch the queue waits for the
+  budget it was made in. A warning strip in the shell offers "Switch back" (when the account can
+  still open that budget) and "Discard…", which asks first with the count, then discards and
+  syncs.
+- **kastlan** (handover-sync-banner.tsx:57-68): the changes the server refused, a danger box with
+  their reasons and a Discard that asked nothing.
+
+**The shape.** `HeldChangesBanner` (`@eifi1/ui-kit/shell` and the barrel) is an `AlertBanner` in
+the warning tone. Nothing is lost until the user says so, and the indicator already draws the
+danger.
+- **Props:** `count` (0 renders nothing), `onDiscard`, and optionally `message`, `extra`,
+  `onSwitchBack`, `formatError`, `variant`, `labels`, `className` and `data-*`.
+  - `message` is the app's sentence (keksdose names the budget). Without it the kit says how
+    many, that they stay on this device, and that they can be discarded. It names no way back.
+  - `extra` goes under the sentence, for kastlan's refusal reasons.
+  - `onSwitchBack` gives "Switch back", which comes first, so the destructive action is never
+    the only button. Without it, Discard is the one way out.
+  - `variant`: `"box"` (default) for above a page. On a phone its actions take a line of their
+    own (`actionPlacement="own-line"`). `"strip"` is for the shell. On a phone it is one line
+    with "More" (`clampMobile`), except while an error or `extra` shows.
+- **Discard** asks first in `useConfirm`'s danger tone, so focus starts on Cancel. It names the
+  count (`heldChanges.confirmTitle`) and says what follows (`confirmBody`: they cannot be
+  recovered, and the device then syncs with what the server has). On yes, the banner awaits
+  `onDiscard()`: the button is busy and Switch back is disabled, one action at a time. A
+  rejection leaves the banner in place and shows the error under the sentence (`formatError`,
+  else `heldChanges.failed`) as an inline live region. The banner goes when the app's count
+  reaches 0. A refused `onSwitchBack` shows its error the same way. The banner is not behind
+  the write lock, because the held changes are not the page's.
+- **The app keeps the logic:** what counts as held, the discard itself and the sync after it
+  (keksdose `discardWaitingChanges`, kastlan `discardRejected` then `onSync`), and the way back.
+- **The words** are a new namespace, `heldChanges`: `message(count)`, `switchBack`, `discard`,
+  `confirmTitle(count)`, `confirmBody(count)`, `confirmAction` and `failed`. They are keksdose's
+  reviewed words without its budgets, in all seven catalogues, and the three count labels have
+  samples in `KIT_LABEL_SAMPLES`. Cancel is `confirmDialog.cancel`.
 
 ### 2.7 Dev switchers, role and plan, "Server too"
 
