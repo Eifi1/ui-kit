@@ -1,8 +1,9 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { DevMenu, DEV_ORIGINAL_ROLE_KEY, type DevMenuSection } from "../dev-menu";
+import { setToday } from "../../lib/dates";
 
 /**
  * docs/top-bar-harmonization.md §2.7.1 (0.51, keksdose): ONE flask for the kit's Account
@@ -199,6 +200,18 @@ describe("DevMenu", () => {
     expect(flask()).toHaveAccessibleName("Dev tools · Role: ADMIN · Plan: free Overrides on");
     open();
     fireEvent.click(within(group("Time")).getByRole("menuitemradio", { name: "Real today" }));
+    expect(flask().querySelector("[data-tone]")).toBeNull();
+    expect(flask()).toHaveAccessibleName("Dev tools · Role: ADMIN · Plan: free");
+  });
+
+  // 0.55: the kit's one "today" (`setToday`, the dev clock's day) is an override by itself.
+  it("a day moved with setToday puts the dot on, whatever `active` says, and takes it off again", () => {
+    render(<App />);
+    expect(flask()).not.toHaveAccessibleName(/Overrides on/);
+    act(() => setToday("2026-10-31"));
+    expect(flask().querySelector("[data-tone]")).not.toBeNull();
+    expect(flask()).toHaveAccessibleName("Dev tools · Role: ADMIN · Plan: free Overrides on");
+    act(() => setToday(null));
     expect(flask().querySelector("[data-tone]")).toBeNull();
     expect(flask()).toHaveAccessibleName("Dev tools · Role: ADMIN · Plan: free");
   });

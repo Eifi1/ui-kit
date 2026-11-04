@@ -32,9 +32,71 @@ export function pad(n: number): string {
   return String(n).padStart(2, "0");
 }
 
-/** Today as "YYYY-MM-DD" on the LOCAL calendar (see the module note). */
+// ---------- Where "today" comes from (0.55) ----------
+// keksdose's 0.51 adoption N2: the dev clock (server-kit 0.20's `DevSwitchAnswer.today`,
+// docs/top-bar-harmonization.md §2.7.1 rule 5) moves the day the SERVER takes for today,
+// and the app's own `todayIso()` followed it — but every helper below and the kit's
+// calendars (DatePicker's today, MonthPicker's this month) read the device clock, so a
+// month end or a "today" worked out by the kit disagreed with the server's. One settable
+// source now, which all of them read: the device clock until something moves it.
+
+/** The day {@link setToday} moved "today" to, or `null`: the device's own. */
+let movedToday: string | null = null;
+const todayListeners = new Set<() => void>();
+
+/**
+ * Move "today" for every helper here, and for the kit's calendars and pickers, to `day`
+ * ("YYYY-MM-DD") — the dev clock's day, which the app reads at boot and from its dev menu's
+ * Time rows (`setToday(answer.today)`) — or back to the device's own with `null`. A string
+ * that is not a real day is the device's own too: a dev tool must not stop the app.
+ *
+ * Only the DATE moves, as on the server: {@link currentDate} keeps the device's time of
+ * day, and a timestamp the kit takes (`new Date()` for a sync, a crash report, a relative
+ * time) stays on the device's real clock. Not for production code: the app gates the call
+ * (`import.meta.env.DEV`), as it gates the menu. The kit's `DevMenu` puts its "Overrides
+ * on" dot on the flask while a day is set.
+ */
+export function setToday(day: string | null): void {
+  const next = day !== null && parseIsoDate(day) !== null ? day : null;
+  if (next === movedToday) return;
+  movedToday = next;
+  for (const listener of [...todayListeners]) listener();
+}
+
+/** The day {@link setToday} moved "today" to, or `null` while it is the device's own. */
+export function todayOverride(): string | null {
+  return movedToday;
+}
+
+/** Hear {@link setToday} move the day; returns the unsubscribe. With {@link todayOverride},
+ *  `useSyncExternalStore`'s pair. */
+export function subscribeToday(listener: () => void): () => void {
+  todayListeners.add(listener);
+  return () => {
+    todayListeners.delete(listener);
+  };
+}
+
+/**
+ * Now, on the day the kit takes for today: the device's clock, or — while {@link setToday}
+ * has moved it — that day at the device's time of day. A new Date on every call, free to
+ * mutate. Every "what day is it" here reads it; read it for an app's own.
+ */
+export function currentDate(): Date {
+  const now = new Date();
+  if (movedToday !== null) {
+    const [y, m, d] = movedToday.split("-").map(Number);
+    // The date's three parts at once, so no day is passed through that does not exist
+    // (31 March set to February first); the time of day is kept.
+    now.setFullYear(y, m - 1, d);
+  }
+  return now;
+}
+
+/** Today as "YYYY-MM-DD" on the LOCAL calendar (see the module note), on the day
+ *  {@link currentDate} takes for today. */
 export function todayIso(): string {
-  return toLocalIso(new Date());
+  return toLocalIso(currentDate());
 }
 
 /** A Date as a local-time "YYYY-MM-DD" string. */
@@ -51,18 +113,19 @@ export function monthKey(d: Date): string {
 // Local-calendar like todayIso (see the module note); used by the data-table date
 // filter and its MiniCalendar. Each one mutates a local Date and must therefore READ
 // it back locally — going out through toISOString() is what shifted every one of
-// these by a day near midnight (dev#471).
+// these by a day near midnight (dev#471). "Now" is `currentDate()`, so a day moved by
+// `setToday` moves them all (0.55).
 
 /** Today shifted by `days`, as "YYYY-MM-DD". */
 export function shiftIso(days: number): string {
-  const d = new Date();
+  const d = currentDate();
   d.setDate(d.getDate() + days);
   return toLocalIso(d);
 }
 
 /** First day (Monday) of the current week, as "YYYY-MM-DD". */
 export function startOfWeekIso(): string {
-  const d = new Date();
+  const d = currentDate();
   const day = d.getDay();
   const diff = (day + 6) % 7; // monday = 0
   d.setDate(d.getDate() - diff);
@@ -71,7 +134,7 @@ export function startOfWeekIso(): string {
 
 /** First day of the month `offsetMonths` from now, as "YYYY-MM-DD". */
 export function startOfMonthIso(offsetMonths = 0): string {
-  const d = new Date();
+  const d = currentDate();
   d.setDate(1);
   d.setMonth(d.getMonth() + offsetMonths);
   return toLocalIso(d);
@@ -79,7 +142,7 @@ export function startOfMonthIso(offsetMonths = 0): string {
 
 /** Last day of the month `offsetMonths` from now, as "YYYY-MM-DD". */
 export function endOfMonthIso(offsetMonths = 0): string {
-  const d = new Date();
+  const d = currentDate();
   d.setDate(1);
   d.setMonth(d.getMonth() + offsetMonths + 1);
   d.setDate(0);
@@ -88,7 +151,7 @@ export function endOfMonthIso(offsetMonths = 0): string {
 
 /** First day of the year `offsetYears` from now, as "YYYY-MM-DD". */
 export function startOfYearIso(offsetYears = 0): string {
-  const d = new Date();
+  const d = currentDate();
   d.setMonth(0);
   d.setDate(1);
   d.setFullYear(d.getFullYear() + offsetYears);
@@ -97,7 +160,7 @@ export function startOfYearIso(offsetYears = 0): string {
 
 /** Last day of the year `offsetYears` from now, as "YYYY-MM-DD". */
 export function endOfYearIso(offsetYears = 0): string {
-  const d = new Date();
+  const d = currentDate();
   d.setMonth(11);
   d.setDate(31);
   d.setFullYear(d.getFullYear() + offsetYears);
@@ -223,7 +286,7 @@ export interface DateRangePreset {
  * `table.preset_*` labels.
  */
 export function dateRangePresets(): DateRangePreset[] {
-  const mondayOffset = (new Date().getDay() + 6) % 7; // monday = 0
+  const mondayOffset = (currentDate().getDay() + 6) % 7; // monday = 0
   return [
     { key: "today", from: todayIso(), to: todayIso() },
     { key: "yesterday", from: shiftIso(-1), to: shiftIso(-1) },
@@ -241,8 +304,9 @@ export function dateRangePresets(): DateRangePreset[] {
 
 /** The last `n` WHOLE calendar months before the current one, as an inclusive
  *  `{ from, to }` — on 15 May, `n = 3` is 1 February … 30 April. Local-calendar, like
- *  everything here; `now` is for tests and for a host with its own clock. */
-export function lastFullMonthsRange(n: number, now: Date = new Date()): { from: string; to: string } {
+ *  everything here; `now` is for tests and for a host with its own clock (default
+ *  {@link currentDate}). */
+export function lastFullMonthsRange(n: number, now: Date = currentDate()): { from: string; to: string } {
   const from = new Date(now.getFullYear(), now.getMonth() - n, 1);
   // Day 0 of the current month is the last day of the previous one.
   const to = new Date(now.getFullYear(), now.getMonth(), 0);
@@ -251,7 +315,7 @@ export function lastFullMonthsRange(n: number, now: Date = new Date()): { from: 
 
 /** The last `n` WHOLE calendar years before the current one — in 2026, `n = 2` is
  *  1 January 2024 … 31 December 2025. */
-export function lastFullYearsRange(n: number, now: Date = new Date()): { from: string; to: string } {
+export function lastFullYearsRange(n: number, now: Date = currentDate()): { from: string; to: string } {
   const year = now.getFullYear();
   return { from: `${year - n}-01-01`, to: `${year - 1}-12-31` };
 }
@@ -261,7 +325,7 @@ export interface CalendarMonthPresetOptions {
   months?: readonly number[];
   /** How many whole years each year preset spans. Default `[2]`. */
   years?: readonly number[];
-  /** The day to count back from. Default: now, on the local calendar. */
+  /** The day to count back from. Default: now, on the local calendar ({@link currentDate}). */
   now?: Date;
 }
 
@@ -280,7 +344,7 @@ export interface CalendarMonthPresetOptions {
  * identity while the dates are recomputed on every render.
  */
 export function calendarMonthPresets(options: CalendarMonthPresetOptions = {}): DateRangePreset[] {
-  const { months = [3, 6], years = [2], now = new Date() } = options;
+  const { months = [3, 6], years = [2], now = currentDate() } = options;
   return [
     ...months.map((n) => ({ key: `last_${n}_full_months`, ...lastFullMonthsRange(n, now) })),
     ...years.map((n) => ({ key: `last_${n}_full_years`, ...lastFullYearsRange(n, now) })),

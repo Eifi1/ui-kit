@@ -3,7 +3,7 @@ import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode, Ref, RefObject
 import { Calendar, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../lib/cn";
 import { dirOf, horizontalStep, type Direction } from "../lib/direction";
-import { monthKey, pad } from "../lib/dates";
+import { currentDate, monthKey, pad } from "../lib/dates";
 import { upperFirst } from "../lib/text-case";
 import { Button } from "./button";
 import { FIELD_FLOATING_PAD, FIELD_INVALID, FIELD_TRIGGER } from "./field-base";
@@ -789,7 +789,7 @@ export function MonthPicker(props: MonthPickerProps) {
   const maxKey = boundKey(max);
   const minYear = parseYear(min);
   const maxYear = parseYear(max);
-  const currentKey = boundKey(currentMonth) ?? monthKey(new Date());
+  const currentKey = boundKey(currentMonth) ?? monthKey(currentDate());
   const currentYear = parseYear(currentKey)!;
   // The key the trigger shows, in the mode's own shape: "YYYY-MM" or "YYYY".
   const shownKey = years ? (selectedYear !== null ? String(selectedYear) : null) : selected ? toKey(selected) : null;

@@ -2005,6 +2005,8 @@ export const GROUPS: ShowcaseGroup[] = [
         icon: FunctionSquare,
         components: [
           "todayIso",
+          "setToday",
+          "currentDate",
           "dateRangePresets",
           "calendarMonthPresets",
           "lastFullMonthsRange",

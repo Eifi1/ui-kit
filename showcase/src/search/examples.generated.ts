@@ -941,6 +941,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
   "helpers": [
     "@eifi1/ui-kit/dates — the helpers",
     "dateRangePresets()",
+    "One today: setToday",
     "CURRENCIES, CurrencyFlag and getCurrency",
     "lib/calc — the evaluator",
     "lib/calc — the field's own transforms",

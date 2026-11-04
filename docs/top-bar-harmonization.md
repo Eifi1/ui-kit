@@ -334,7 +334,11 @@ kit cannot enforce them.
    the lazy chunk of rule 2, so a reload waiting for it works out dates — a month end, a
    "Committed <date>" — on the device clock until it answers. A dev-only hook outside the
    chunk reads the answer first, and the app's own "today" (keksdose's `todayIso()`) takes
-   it from there.
+   it from there. Since ui-kit 0.55 that "today" is the kit's: the hook and the Time rows
+   call `setToday(answer.today)` (`@eifi1/ui-kit/dates`), and the kit's date helpers
+   (`todayIso`, `shiftIso`, `startOfMonthIso`, the range presets), its calendars (a
+   picker's today, this month) and the app's own reads of `currentDate()` follow it; only
+   the date moves. `DevMenu` wears its "Overrides on" dot while a day is set.
 
 ## 3. What the kits add
 

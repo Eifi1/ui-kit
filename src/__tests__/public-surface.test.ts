@@ -454,7 +454,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   ["@eifi1/ui-kit/table-text", tableText, 7],
   // 0.34.0: pinned at last (MOD-6, refactor audit 2026-10) — kastlan imports it on 8
   // lines and keksdose on 2, and nothing counted it. The local-calendar ISO helpers.
-  ["@eifi1/ui-kit/dates", dates, 20],
+  // 0.55 (+4, keksdose's 0.51 adoption N2): `setToday`, `todayOverride`, `subscribeToday`,
+  // `currentDate` — one "today" the dev clock moves and every helper here reads.
+  ["@eifi1/ui-kit/dates", dates, 24],
   // 0.35: `CURRENCIES` and `CURRENCY_COUNTRIES` as plain data an app's build tooling
   // imports in Node (keksdose's flag subset read them out of a dist/ file 0.34 moved). A
   // slice of the barrel, not standalone in the sense below: both names are the barrel's
