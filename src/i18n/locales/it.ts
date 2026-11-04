@@ -1744,6 +1744,17 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         expired: "Scaduto",
         comped: "In omaggio",
       },
+      // 0.55 (§7, Marcel 2026-11-04): the standing line. keksdose's reviewed Italian
+      // (`billing.trial_until`, …); `ended` is the first sentence of `planEnded`.
+      standing: {
+        ended: "Il Suo piano è terminato.",
+        pastDue: "Il pagamento non è andato a buon fine — stiamo riprovando. Nel frattempo il Suo piano resta attivo.",
+        trialUntil: (date) => `In prova fino al ${date}`,
+        freeUntil: (date) => `Gratuito fino al ${date}`,
+        free: "Gratuito, senza data di fine",
+        endsOn: (date) => `Termina il ${date}`,
+        renewsOn: (date) => `Si rinnova il ${date}`,
+      },
       trialEnding: (days) =>
         `Il Suo periodo di prova termina ${inDays(days)}. In seguito potrà ancora vedere tutto, ma per apportare modifiche servirà un piano.`,
       grantEnding: (days) =>

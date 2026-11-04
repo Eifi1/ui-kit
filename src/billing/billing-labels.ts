@@ -85,6 +85,34 @@ export interface BillingLabels {
   /** One word per status. */
   status: Record<SubscriptionStatus, string>;
 
+  /* ── SubscriptionStanding (0.55, §7; Marcel 2026-11-04) ── */
+  /**
+   * The subscription's standing in one line, under the plan's name: `SubscriptionStanding`
+   * and `subscriptionStanding` say the FIRST that applies, in this order. `date` arrives
+   * formatted. The words are keksdose's reviewed ones (`billing.trial_until`, …), which
+   * kastlan's page said in words of its own (kastlan reuse audit 2026-11-02, proposal 3).
+   */
+  standing: {
+    /** Out of good standing (§3.3): the first sentence of {@link BillingLabels.planEnded}
+     *  and {@link BillingLabels.lockReason}, which the plan-ended banner goes on with —
+     *  "Your plan has ended." */
+    ended: string;
+    /** `past_due` while the provider retries (§3.3): still in good standing, and NO date —
+     *  the payment-failed banner carries the action, and "renews on" would promise what
+     *  the retries may not keep. */
+    pastDue: string;
+    /** `trialing`, with its `trial_ends_at`: "Trial until 9 Nov 2026". */
+    trialUntil: (date: string) => string;
+    /** `comped`, with its `comped_until`: "Free until 9 Nov 2026". */
+    freeUntil: (date: string) => string;
+    /** `comped` without an end (§12.8): "Free, with no end date". */
+    free: string;
+    /** Set to cancel at the period's end (`cancel_at_period_end`): "Ends on 9 Nov 2026". */
+    endsOn: (date: string) => string;
+    /** `active`, at `current_period_end`: "Renews on 9 Nov 2026". */
+    renewsOn: (date: string) => string;
+  };
+
   /* ── BillingBanner (§3.3, §12.6, §12.21) ── */
   /** A trial ends in `days` calendar days — 0 is today, 1 tomorrow. */
   trialEnding: (days: number) => string;
@@ -298,6 +326,16 @@ export const DEFAULT_BILLING_LABELS: BillingLabels = {
     canceled: "Cancelled",
     expired: "Expired",
     comped: "Complimentary",
+  },
+
+  standing: {
+    ended: "Your plan has ended.",
+    pastDue: "Payment failed — we’re retrying. Your plan stays active meanwhile.",
+    trialUntil: (date) => `Trial until ${date}`,
+    freeUntil: (date) => `Free until ${date}`,
+    free: "Free, with no end date",
+    endsOn: (date) => `Ends on ${date}`,
+    renewsOn: (date) => `Renews on ${date}`,
   },
 
   trialEnding: (days) =>

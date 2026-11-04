@@ -341,7 +341,10 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.55 (+4, kastlan reuse audit 2026-11-02, proposal 1): `parseChangelog`,
   // `parseChangelogItem`, `changelogSectionKey`, `groupByScope`, one parser for the apps'
   // release notes.
-  ["@eifi1/ui-kit", barrel, 973],
+  // 0.55 (+3, kastlan reuse audit 2026-11-02, proposal 3; billing §7, Marcel 2026-11-04):
+  // `SubscriptionStanding` and `subscriptionStanding`, the standing in one line, and
+  // `UsageMeter`, a plan limit's meter.
+  ["@eifi1/ui-kit", barrel, 976],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

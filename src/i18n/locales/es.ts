@@ -1731,6 +1731,17 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         expired: "Caducada",
         comped: "De cortesía",
       },
+      // 0.55 (§7, Marcel 2026-11-04): the standing line; `ended` is the first sentence of
+      // `planEnded`, "no se ha completado" as `paymentFailedAskBuyer`.
+      standing: {
+        ended: "Su plan ha terminado.",
+        pastDue: "El pago no se ha completado y lo estamos reintentando. Mientras tanto, su plan sigue activo.",
+        trialUntil: (date) => `Prueba hasta el ${date}`,
+        freeUntil: (date) => `Gratis hasta el ${date}`,
+        free: "Gratis, sin fecha de finalización",
+        endsOn: (date) => `Termina el ${date}`,
+        renewsOn: (date) => `Se renueva el ${date}`,
+      },
       trialEnding: (days) =>
         `Su periodo de prueba termina ${inDays(days)}. Después podrá seguir viéndolo todo, pero necesitará un plan para hacer cambios.`,
       grantEnding: (days) =>

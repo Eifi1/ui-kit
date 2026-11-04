@@ -1760,6 +1760,17 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         expired: "Expiré",
         comped: "Offert",
       },
+      // 0.55 (§7, Marcel 2026-11-04): the standing line. keksdose's reviewed French
+      // (`billing.trial_until`, …); `ended` is the first sentence of `planEnded`.
+      standing: {
+        ended: "Votre formule a pris fin.",
+        pastDue: "Le paiement a échoué — nous réessayons. Votre formule reste active entre-temps.",
+        trialUntil: (date) => `Essai jusqu’au ${date}`,
+        freeUntil: (date) => `Gratuit jusqu’au ${date}`,
+        free: "Gratuit, sans date de fin",
+        endsOn: (date) => `Prend fin le ${date}`,
+        renewsOn: (date) => `Se renouvelle le ${date}`,
+      },
       trialEnding: (days) =>
         `Votre période d’essai se termine ${inDays(days)}. Vous pourrez ensuite continuer à tout consulter, mais il vous faudra une formule pour apporter des modifications.`,
       grantEnding: (days) =>

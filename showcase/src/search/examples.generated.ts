@@ -857,6 +857,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "The portal for the buyer only — SubscriptionActions, CancelSubscriptionConfirm",
     "The permanent-grant warning — PlanPicker, PlanSwitchConfirm",
     "The portal in a new tab — openProviderPage, useCancelRequest",
+    "The subscription's standing in one line — SubscriptionStanding",
+    "What is used of each limit — UsageMeter",
   ],
   "feedback-compose": [
     "FeedbackDialog",

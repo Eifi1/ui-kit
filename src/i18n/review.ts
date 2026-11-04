@@ -424,6 +424,11 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "billing.buyerHolds": [["{{buyer}}"], [undefined]],
   "billing.paymentFailedAskBuyer": [["{{buyer}}"], [undefined]],
   "billing.cancelConfirmBody": [["{{date}}"]],
+  // 0.55 (§7): the standing line's dated words.
+  "billing.standing.trialUntil": [["{{date}}"]],
+  "billing.standing.freeUntil": [["{{date}}"]],
+  "billing.standing.endsOn": [["{{date}}"]],
+  "billing.standing.renewsOn": [["{{date}}"]],
   "billing.portalOpensNewTab": [
     ["{{provider}}", "{{app}}"],
     ["{{provider}}", undefined],

@@ -1737,6 +1737,17 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         expired: "Lejárt",
         comped: "Ingyenesen biztosítva",
       },
+      // 0.55 (§7, Marcel 2026-11-04): the standing line; `ended` is the first sentence of
+      // `planEnded`. The date after a colon takes no case ending, as `cancelConfirmBody`.
+      standing: {
+        ended: "A csomagja lejárt.",
+        pastDue: "A fizetés sikertelen volt, de újrapróbáljuk. A csomagja addig is aktív marad.",
+        trialUntil: (date) => `Próbaidőszak vége: ${date}`,
+        freeUntil: (date) => `Ingyenes eddig: ${date}`,
+        free: "Ingyenes, lejárati dátum nélkül",
+        endsOn: (date) => `Ekkor ér véget: ${date}`,
+        renewsOn: (date) => `Ekkor újul meg: ${date}`,
+      },
       trialEnding: (days) =>
         `A próbaidőszaka ${inDays(days)} ér véget. Utána is mindent megtekinthet, de a módosításokhoz csomagra lesz szüksége.`,
       grantEnding: (days) =>

@@ -33,7 +33,7 @@ Snapshots, per-repo to-dos and the review logs are in
 | 4 | The API | server-kit 0.6; `at_provider`, the portal's `target` and `GET /admin/plans` in 0.7 | §12.17–§12.19; §14.5, §14.12; §15.2.10 (`paid` 0.12, `switching` 0.13) |
 | 5 | Webhooks | server-kit 0.6 | §12.11, §12.20; §14.3 (the app tag, 0.7); §14.16.17 |
 | 6 | The operator | server-kit 0.6; the operator's parts in ui-kit 0.33 | §12.34; §14.12; §14.17 |
-| 7 | The pages | ui-kit 0.32 | §12.6, §12.21, §12.24, §12.26; §14.4, §14.5; adopt-0.33 (`onPortal`) |
+| 7 | The pages | ui-kit 0.32 | §12.6, §12.21, §12.24, §12.26; §14.4, §14.5; adopt-0.33 (`onPortal`); ui-kit 0.55 (`SubscriptionStanding`, `UsageMeter`; Marcel 2026-11-04) |
 | 8 | Legal | ui-kit 0.32 (the commercial disclaimer); the apps' texts when billing goes on | §12.25–§12.27 |
 | 9 | The provider | server-kit 0.7 (Paddle) | decision 16; Lemon Squeezy removed in server-kit 0.8 (§14.13) |
 | 10 | What the kits add | server-kit 0.6, ui-kit 0.32 | §12.30 |
@@ -453,7 +453,34 @@ the page (§12.19).
     grant ending, payment failed, plan ended (read-only), the guest's read-only item
     (§12.6) and processing (§12.21);
   - `PlanLimitNotice` (mode `upgrade` or `contact`) and `usePlanLimitToast` (§14.11);
-  - `UsageMeter`, which is `ProgressBar`'s meter variant; no new part.
+  - `SubscriptionStanding` (ui-kit 0.55), the muted line under the plan's name, and
+    `subscriptionStanding(overview, labels, format)`, the same line as a string or
+    `null`. kastlan and keksdose each wrote it and drifted (kastlan reuse audit
+    2026-11-02, proposal 3): kastlan said nothing for an ended plan or a failed payment,
+    and keksdose's `past_due` said "Renews on …". **The first that applies, in this
+    order** (Marcel, 2026-11-04):
+    1. not in good standing → "Your plan has ended." (`billing.standing.ended`, the first
+       sentence of the plan-ended banner's words);
+    2. `past_due` → "Payment failed — we're retrying. Your plan stays active meanwhile.",
+       with **no** renewal date; the payment-failed banner keeps the action;
+    3. `trialing` → "Trial until {trial_ends_at}" (a trial that has not started, §12.9,
+       says nothing);
+    4. `comped` → "Free until {comped_until}", or "Free, with no end date";
+    5. set to cancel at the period's end → "Ends on {current_period_end}";
+    6. `active` → "Renews on {current_period_end}";
+    7. otherwise nothing.
+
+    The date is a day in a sentence: the provider's `formatDate` (the app's date
+    preference), else the kit's `formatDate`, `"medium"`, in the provider's locale and
+    time zone — as `CancelSubscriptionConfirm` names the same day. The words are
+    keksdose's reviewed ones, in the `billing.standing` labels;
+  - `UsageMeter` (ui-kit 0.55) on `ProgressBar`'s meter variant: the dimension, "3 of 10"
+    (`billing.usage`), and **a tone for what one more create would do** (Marcel,
+    2026-11-04): neutral below the limit, warning AT it (nothing more can be created,
+    §3.4), danger PAST it (after a downgrade, with `overage` saying by how much), and no
+    tone and no bar for an unlimited limit (`null`) — the count and "Unlimited" as text.
+    Every figure goes through the kit's number formatting with its digit grouping, or the
+    app's `formatValue` (kastlan's storage in bytes), never `n.toString()`.
   None sends a request.
 
 ## 8. Legal, in the release that turns billing on (legal decision 7)

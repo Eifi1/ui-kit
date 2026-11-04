@@ -1776,6 +1776,19 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         // Not "Kostenlos", the price of the Free plan: free by the operator's grant.
         comped: "Kostenlos gewährt",
       },
+      // 0.55 (§7, Marcel 2026-11-04): the standing line. keksdose's reviewed de-CH
+      // (`billing.trial_until`, …); `ended` is the first sentence of `planEnded`, and
+      // "Die Zahlung ist fehlgeschlagen" as `paymentFailedAskBuyer`.
+      standing: {
+        ended: "Ihr Tarif ist abgelaufen.",
+        pastDue:
+          "Die Zahlung ist fehlgeschlagen – wir versuchen es erneut. Ihr Tarif bleibt in der Zwischenzeit aktiv.",
+        trialUntil: (date) => `Testphase bis ${date}`,
+        freeUntil: (date) => `Kostenlos bis ${date}`,
+        free: "Kostenlos, ohne Enddatum",
+        endsOn: (date) => `Endet am ${date}`,
+        renewsOn: (date) => `Verlängert sich am ${date}`,
+      },
       trialEnding: (days) =>
         `Ihre Testphase endet ${inDays(days)}. Danach können Sie weiterhin alles ansehen, für Änderungen brauchen Sie aber einen Tarif.`,
       grantEnding: (days) =>

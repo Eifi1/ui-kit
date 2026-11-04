@@ -1046,6 +1046,12 @@ export { openProviderPage } from "./billing/provider-page";
 export type { OpenProviderPageOptions, ProviderPageWay } from "./billing/provider-page";
 export { useCancelRequest } from "./billing/cancel-request";
 export type { CancelRequest, CancelRequested, CancelRequestView } from "./billing/cancel-request";
+// 0.55 (§7, Marcel 2026-11-04; kastlan reuse audit 2026-11-02, proposal 3): the
+// subscription's standing in one line, and what is used of each limit.
+export { SubscriptionStanding, subscriptionStanding } from "./billing/subscription-standing";
+export type { SubscriptionStandingOverview, SubscriptionStandingProps } from "./billing/subscription-standing";
+export { UsageMeter } from "./billing/usage-meter";
+export type { UsageMeterProps } from "./billing/usage-meter";
 // The operator's plan parts (§14.12) are admin/plan-change, in the admin section.
 
 // ── settings ─────────────────────────────────────────────────────────────────

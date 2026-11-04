@@ -1672,6 +1672,17 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         expired: "已过期",
         comped: "免费赠送",
       },
+      // 0.55 (§7, Marcel 2026-11-04): the standing line; `ended` is the first sentence of
+      // `planEnded`, "付款未成功" as `paymentFailedAskBuyer`.
+      standing: {
+        ended: "您的套餐已结束。",
+        pastDue: "付款未成功，我们正在重试。在此期间，您的套餐仍然有效。",
+        trialUntil: (date) => `试用至 ${date}`,
+        freeUntil: (date) => `免费使用至 ${date}`,
+        free: "免费，无结束日期",
+        endsOn: (date) => `将于 ${date} 结束`,
+        renewsOn: (date) => `将于 ${date} 续订`,
+      },
       trialEnding: (days) => `您的试用期将于${inDays(days)}结束。之后您仍可查看所有内容，但需要套餐才能进行修改。`,
       grantEnding: (days) => `您的免费使用权将于${inDays(days)}结束。之后您仍可查看所有内容，但需要套餐才能进行修改。`,
       paymentFailed: "您的上一笔付款未成功。请更新付款方式，以保留您的套餐。",
