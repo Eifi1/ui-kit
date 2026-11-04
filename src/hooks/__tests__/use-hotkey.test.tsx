@@ -161,3 +161,64 @@ describe("useHotkey — a held key, Space, and a non-Latin layout", () => {
     expect(matchesHotkey(ev({ key: "ı", code: "KeyK", ctrlKey: true }), ctrlK)).toBe(false);
   });
 });
+
+/**
+ * keksdose audit follow-up, 2026-11-01: jsdom has no `isContentEditable`, so a plain key
+ * fired while typing in a contenteditable — in every test, and in any engine without the
+ * property. The attributes are read instead, with the attribute's own rules.
+ */
+describe("useHotkey — typing in a contenteditable where isContentEditable is missing", () => {
+  afterEach(() => {
+    document.body.innerHTML = "";
+  });
+
+  it('counts "", "true" in any case and "plaintext-only" as typing, inherited by children', () => {
+    document.body.innerHTML = `
+      <div contenteditable id="empty"><p><b id="child">bold</b></p></div>
+      <div contenteditable="TRUE" id="upper"></div>
+      <div contenteditable="plaintext-only" id="plain"></div>
+      <div contenteditable="true"><span contenteditable="bogus" id="invalid">inherits</span></div>`;
+    const handler = vi.fn();
+    renderHook(() => useHotkey("/", handler));
+    for (const id of ["empty", "child", "upper", "plain", "invalid"]) press({ key: "/" }, document.getElementById(id)!);
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it('leaves "false", an island of it inside an editor, and an invalid value under it, to the hotkey', () => {
+    document.body.innerHTML = `
+      <div contenteditable="true"><span contenteditable="false" id="island">chip</span></div>
+      <div contenteditable="false"><span contenteditable="bogus" id="under-false">x</span></div>
+      <div id="plain-div" tabindex="0">not editable</div>`;
+    const handler = vi.fn();
+    renderHook(() => useHotkey("/", handler));
+    for (const id of ["island", "under-false", "plain-div"]) press({ key: "/" }, document.getElementById(id)!);
+    expect(handler).toHaveBeenCalledTimes(3);
+  });
+
+  it("takes the engine's own isContentEditable where there is one", () => {
+    document.body.innerHTML = `<div contenteditable="true" id="said-no"></div><div id="said-yes" tabindex="0"></div>`;
+    Object.defineProperty(document.getElementById("said-no")!, "isContentEditable", { value: false });
+    Object.defineProperty(document.getElementById("said-yes")!, "isContentEditable", { value: true });
+    const handler = vi.fn();
+    renderHook(() => useHotkey("/", handler));
+    press({ key: "/" }, document.getElementById("said-no")!);
+    expect(handler).toHaveBeenCalledTimes(1);
+    press({ key: "/" }, document.getElementById("said-yes")!);
+    expect(handler).toHaveBeenCalledTimes(1);
+  });
+
+  it("counts a designMode document as typing, but not its contenteditable=false parts", () => {
+    document.body.innerHTML = `<p id="text">x</p><span contenteditable="false" id="locked">y</span>`;
+    Object.defineProperty(document, "designMode", { value: "on", configurable: true });
+    try {
+      const handler = vi.fn();
+      renderHook(() => useHotkey("/", handler));
+      press({ key: "/" }, document.getElementById("text")!);
+      expect(handler).not.toHaveBeenCalled();
+      press({ key: "/" }, document.getElementById("locked")!);
+      expect(handler).toHaveBeenCalledTimes(1);
+    } finally {
+      delete (document as { designMode?: string }).designMode;
+    }
+  });
+});
