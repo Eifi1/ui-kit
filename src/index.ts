@@ -205,7 +205,7 @@ export { useFileDrop, dragHasFiles } from "./hooks/use-file-drop";
 export type { UseFileDropOptions, UseFileDropReturn, FileDropProps } from "./hooks/use-file-drop";
 // kastlan's search boxes each carried a hand-rolled copy, two without the cleanup.
 export { useDebounce, useDebouncedCallback } from "./hooks/use-debounce";
-export type { DebouncedCallbackOptions, DebouncedFunction } from "./hooks/use-debounce";
+export type { DebounceOptions, DebouncedCallbackOptions, DebouncedFunction } from "./hooks/use-debounce";
 // One search param as state, the active tab in `?tab=`, and a dialog's open state in the
 // URL (Modal's `urlParam`) — kastlan's and keksdose's use-search-param-state, in the kit.
 export { useSearchParamState, useTabParam, useDialogParam } from "./hooks/use-search-param-state";

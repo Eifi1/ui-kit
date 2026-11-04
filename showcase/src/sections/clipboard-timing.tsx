@@ -253,6 +253,75 @@ function DebouncedValue() {
   );
 }
 
+/** A request body built in render, the way Kurvenschmiede's control page builds one: a new
+ *  object on every render, whatever its numbers. */
+function DebouncedKey() {
+  const [kp, setKp] = useState(2);
+  const [ki, setKi] = useState(0.5);
+  const [keyed, setKeyed] = useState(true);
+  const body = { controller: { kp, ki } };
+  const settled = useDebounce(body, 400, keyed ? { key: JSON.stringify(body) } : {});
+  // How often the "request" would have gone out — once per settled body.
+  const [requests, setRequests] = useState(0);
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    setRequests((n) => n + 1);
+  }, [settled]);
+  return (
+    <Example
+      label="useDebounce(value, ms, { key })"
+      hint="a value built in render settles on what it is, not on which object it is"
+    >
+      <Stage>
+        <div className="flex flex-wrap gap-2">
+          <Input
+            aria-label="Proportional gain"
+            type="number"
+            step="0.1"
+            value={kp}
+            onChange={(e) => setKp(Number(e.target.value))}
+            className="w-28"
+          />
+          <Input
+            aria-label="Integral gain"
+            type="number"
+            step="0.1"
+            value={ki}
+            onChange={(e) => setKi(Number(e.target.value))}
+            className="w-28"
+          />
+        </div>
+      </Stage>
+      <Row>
+        <label className="flex items-center gap-2 text-xs text-secondary">
+          <input type="checkbox" checked={keyed} onChange={(e) => setKeyed(e.target.checked)} />
+          <code className="font-mono">key: JSON.stringify(body)</code>
+        </label>
+      </Row>
+      <OutTable
+        rows={[
+          ["body (every render)", JSON.stringify(body)],
+          ["settled", JSON.stringify(settled)],
+          ["requests sent", String(requests)],
+        ]}
+      />
+      <div className="mt-3">
+        <Note>
+          Untick the key and leave the fields alone: the count climbs every 400 ms. The settled body re-renders this
+          specimen, the render builds another object, and a debounce on identity takes that as news — Kurvenschmiede ran
+          its control page&apos;s simulation that way with nobody touching it (KS U9). With{" "}
+          <code className="font-mono">{"{ key }"}</code> the wait restarts only when the key changes, and the object
+          that comes back keeps its identity until the next one settles, so it can be a query key as it is.
+        </Note>
+      </div>
+    </Example>
+  );
+}
+
 function DebouncedCallback() {
   const [text, setText] = useState("");
   const [saves, setSaves] = useState<string[]>([]);
@@ -335,6 +404,7 @@ export function ClipboardTiming() {
       <CopyButtons />
       <CopyHook />
       <DebouncedValue />
+      <DebouncedKey />
       <DebouncedCallback />
     </>
   );

@@ -932,6 +932,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "CopyButton — icon and label, and a copy that fails",
     "useCopyToClipboard / copyToClipboard",
     "useDebounce(value, ms)",
+    "useDebounce(value, ms, { key })",
     "useDebouncedCallback(fn, ms, { maxWait })",
   ],
   "helpers": [
