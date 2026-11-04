@@ -1,3 +1,4 @@
+import type { BillingLabels } from "../billing/billing-labels";
 import { httpStatusOf } from "../lib/http-status";
 
 /**
@@ -252,6 +253,74 @@ export function isAuthError(err: unknown, code?: KitErrorCode): boolean {
 export function isBillingError(err: unknown, code?: BillingErrorCode): boolean {
   const found = authErrorCode(err);
   return found !== undefined && BILLING_CODES.has(found as BillingErrorCode) && (code === undefined || found === code);
+}
+
+/** Who reads a `billing_read_only` refusal — {@link billingRefusalText}'s third argument,
+ *  `useBillingLockReason`'s two options. */
+export interface BillingRefusalTextOptions {
+  /** The reader is a GUEST in someone else's item (§12.6): the words never say why. */
+  guest?: boolean;
+  /** A guest's item, by its own name ("Household 2026"). Ignored for the payer. */
+  item?: string;
+}
+
+type RefusalWords = (labels: BillingLabels, options: BillingRefusalTextOptions) => string;
+
+/**
+ * Each billing refusal's words in the `billing` labels. A `Record` over the whole union, so
+ * a code server-kit adds is a type error here until it has words.
+ */
+const BILLING_REFUSAL_WORDS: Record<BillingErrorCode, RefusalWords> = {
+  billing_disabled: (labels) => labels.disabled,
+  // The lock's own sentence (`useBillingLockReason`): a guest's never says why (§12.6).
+  billing_read_only: (labels, options) => (options.guest ? labels.guestReadOnly(options.item) : labels.lockReason),
+  // The notice's first line. The figure and the way to more are `isPlanLimit`'s, for
+  // `PlanLimitNotice` or `usePlanLimitToast`.
+  plan_limit: (labels) => labels.limitReached,
+  billing_not_configured: (labels) => labels.notConfigured,
+  billing_provider_unavailable: (labels) => labels.providerUnavailable,
+  billing_not_at_provider: (labels) => labels.notAtProvider,
+  billing_already_subscribed: (labels) => labels.alreadySubscribed,
+  billing_plan_not_sold: (labels) => labels.planNotSold,
+  billing_not_subscribed: (labels) => labels.notSubscribed,
+  billing_plan_unchanged: (labels) => labels.planUnchanged,
+};
+
+/**
+ * The words for a billing refusal, in `labels` (an app's `useBillingLabels()`, or its
+ * `billing` catalogue outside React), or `null` when `err` is not one — for the toast or
+ * the dialog after a billing call failed, with the app's own words for anything else
+ * (kastlan reuse audit 2026-11-02, proposal 4).
+ *
+ * All three apps mapped the codes to the labels by hand: kastlan's
+ * `billing-refusal-dialog.tsx`, keksdose's `subscription-cards.tsx` and Kurvenschmiede's
+ * `api/client.ts`, the same eight codes each. This follows the most complete of them:
+ * every {@link BillingErrorCode}, so it is `null` only for an error that is not billing's.
+ *
+ * - `billing_read_only` — the write lock's sentence, as `useBillingLockReason` says it:
+ *   the payer's `lockReason`, or with `{ guest: true, item }` a guest's `guestReadOnly`,
+ *   which never says why (§12.6) — kastlan's dialog, which passes `guest: !isAdmin`.
+ * - `plan_limit` — `limitReached`, "Plan limit reached". Where the figure fits, read
+ *   `isPlanLimit` first and show `PlanLimitNotice` or `usePlanLimitToast`, as kastlan does.
+ * - the eight others — their labels: `disabled`, `notConfigured`, `providerUnavailable`,
+ *   `notAtProvider`, `alreadySubscribed`, `planNotSold`, `notSubscribed`, `planUnchanged`.
+ *
+ * Reads the code wherever {@link authErrorCode} does (axios, ofetch, a generated client,
+ * FastAPI's nested `detail`).
+ *
+ *     catch (err) {
+ *       toast.error(billingRefusalText(err, labels) ?? describeError(err));
+ *     }
+ */
+export function billingRefusalText(
+  err: unknown,
+  labels: BillingLabels,
+  options: BillingRefusalTextOptions = {},
+): string | null {
+  const found = authErrorCode(err);
+  return found !== undefined && BILLING_CODES.has(found as BillingErrorCode)
+    ? BILLING_REFUSAL_WORDS[found as BillingErrorCode](labels, options)
+    : null;
 }
 
 /**

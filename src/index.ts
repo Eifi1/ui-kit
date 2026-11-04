@@ -765,7 +765,9 @@ export type { RegisterFormProps, RegisterLabels, RegisterValues } from "./auth/r
 export { CompleteNameDialog, DEFAULT_COMPLETE_NAME_LABELS } from "./auth/complete-name-dialog";
 export type { CompleteNameDialogProps, CompleteNameLabels, CompleteNameValues } from "./auth/complete-name-dialog";
 export { taggedEmail } from "./auth/email-tag";
-export { isAuthError, authErrorCode, isBillingError } from "./auth/auth-errors";
+// 0.54 (kastlan reuse audit 2026-11-02, proposal 4): `billingRefusalText`, a billing
+// refusal's words, which every app mapped from the code by hand.
+export { isAuthError, authErrorCode, isBillingError, billingRefusalText } from "./auth/auth-errors";
 export type { AuthErrorCode } from "./auth/auth-errors";
 export { ForgotPasswordForm, DEFAULT_FORGOT_PASSWORD_LABELS } from "./auth/forgot-password-form";
 export type { ForgotPasswordFormProps, ForgotPasswordLabels } from "./auth/forgot-password-form";
@@ -797,7 +799,13 @@ export type { AuthHeadingLevel } from "./auth/status-parts";
 // 0.30.0: a rate limit and its wait, and the codes the account, billing and demo calls
 // answer with.
 export { isRateLimited, retryAfterSeconds } from "./auth/auth-errors";
-export type { AccountErrorCode, BillingErrorCode, DemoErrorCode, KitErrorCode } from "./auth/auth-errors";
+export type {
+  AccountErrorCode,
+  BillingErrorCode,
+  BillingRefusalTextOptions,
+  DemoErrorCode,
+  KitErrorCode,
+} from "./auth/auth-errors";
 
 // ── account ──────────────────────────────────────────────────────────────────
 // In account/ since 0.34, beside the other account cards (MOD-8, refactor audit 2026-10):
