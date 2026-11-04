@@ -18,7 +18,7 @@ import {
   FieldBox,
   FieldLabelLine,
   LABEL_ABOVE_BOX,
-  LockedReason,
+  LockFrame,
   mergeDescribedBy,
   mergeRefs,
   useFieldMessages,
@@ -838,14 +838,11 @@ export function MonthPicker(props: MonthPickerProps) {
   // Tooltip — which becomes the outermost box and takes the caller's classes, as on
   // Select, so a lock does not reflow the page.
   const rootClass = locked ? undefined : className;
-  const withReason = (box: ReactNode) =>
-    locked ? (
-      <LockedReason lock={lock} display={disabledReasonDisplay} className={cn("block", className)}>
-        {box}
-      </LockedReason>
-    ) : (
-      box
-    );
+  const withReason = (box: ReactNode) => (
+    <LockFrame lock={lock} display={disabledReasonDisplay} className={className}>
+      {box}
+    </LockFrame>
+  );
   const labelId = `${id}-label`;
   const valueId = `${id}-value`;
   const panelId = `${id}-panel`;

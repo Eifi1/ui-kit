@@ -32,7 +32,7 @@ import {
   EndHintRow,
   FieldCaption,
   LABEL_IN_ROW,
-  LockedReason,
+  LockFrame,
   mergeDescribedBy,
   StaticLabelRow,
   useFieldError,
@@ -494,14 +494,11 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
     </>
   );
   // While locked the field sits in the reason's Tooltip — see Combobox.
-  const withLock = (box: ReactNode) =>
-    locked ? (
-      <LockedReason lock={lock} display={disabledReasonDisplay} className="block">
-        {box}
-      </LockedReason>
-    ) : (
-      box
-    );
+  const withLock = (box: ReactNode) => (
+    <LockFrame lock={lock} display={disabledReasonDisplay}>
+      {box}
+    </LockFrame>
+  );
 
   /** The rows in their runs, each group a `role="group"` its heading names (INP-8), for
    *  the sheet or the anchored list — a group heading at each boundary rather than the

@@ -25,7 +25,7 @@ import {
   EndHintRow,
   FieldCaption,
   LABEL_IN_ROW,
-  LockedReason,
+  LockFrame,
   mergeDescribedBy,
   StaticLabelRow,
   useFieldError,
@@ -344,14 +344,11 @@ export function Combobox(props: ComboboxProps) {
 
   // While locked the field sits in the reason's Tooltip — in a fragment with a hidden
   // copy of the reason, Button's anatomy; `block` so a full-width field stays full width.
-  const withLock = (box: ReactNode) =>
-    locked ? (
-      <LockedReason lock={lock} display={disabledReasonDisplay} className="block">
-        {box}
-      </LockedReason>
-    ) : (
-      box
-    );
+  const withLock = (box: ReactNode) => (
+    <LockFrame lock={lock} display={disabledReasonDisplay}>
+      {box}
+    </LockFrame>
+  );
 
   // Offered only when the typed text is genuinely NOT in the pool: an exact match —
   // folded as the list matches, so "cafe" is Café ({@link sameName}, DUP-5 in the

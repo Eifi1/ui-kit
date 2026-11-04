@@ -18,7 +18,7 @@ import {
   EndHintRow,
   FieldCaption,
   LABEL_IN_ROW,
-  LockedReason,
+  LockFrame,
   mergeDescribedBy,
   StaticLabelRow,
   useFieldError,
@@ -262,14 +262,11 @@ export function EntityCombobox<V extends string | number, C extends ComboClearVa
   const triggerText = selectedOption?.label ?? placeholder ?? "";
   // While locked the trigger sits in the reason's Tooltip — in a fragment with a hidden
   // copy of the reason, Button's anatomy — `block` so a full-width field stays full width.
-  const withLock = (trigger: ReactNode) =>
-    lock.locked ? (
-      <LockedReason lock={lock} display={disabledReasonDisplay} className="block">
-        {trigger}
-      </LockedReason>
-    ) : (
-      trigger
-    );
+  const withLock = (trigger: ReactNode) => (
+    <LockFrame lock={lock} display={disabledReasonDisplay}>
+      {trigger}
+    </LockFrame>
+  );
 
   const choose = (o: ComboOption<V>) => {
     if (lock.locked) return;

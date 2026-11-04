@@ -9,7 +9,7 @@ import type { CommitScope } from "./write-lock";
 import {
   EndHintRow,
   FieldCaption,
-  LockedReason,
+  LockFrame,
   mergeDescribedBy,
   type DisabledReasonDisplay,
   type FieldHelpProps,
@@ -224,14 +224,11 @@ export function Input(props: InputProps) {
   // that, as on Select, and the form keeps its layout. `block` so a full-width field
   // stays full width in it.
   const boxClass = locked ? undefined : className;
-  const withReason = (box: ReactNode) =>
-    locked ? (
-      <LockedReason lock={lock} display={disabledReasonDisplay} className={cn("block", className)}>
-        {box}
-      </LockedReason>
-    ) : (
-      box
-    );
+  const withReason = (box: ReactNode) => (
+    <LockFrame lock={lock} display={disabledReasonDisplay} className={className}>
+      {box}
+    </LockFrame>
+  );
   const asDisplay = usePhoneLayout() && variant === "display";
   // Password fields get a reveal toggle so users can check what they typed.
   const isPassword = type === "password";

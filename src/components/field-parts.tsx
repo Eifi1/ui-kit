@@ -486,7 +486,8 @@ export function useLockReason(commit: CommitScope | undefined, disabledReason: R
 
 /**
  * A locked control and its reason — the kit's ONE frame for it, used by Button,
- * IconButton, Chip, Checkbox, Switch and every field that locks (DUP-3, refactor audit
+ * IconButton, Chip, Checkbox, Switch and every field that locks (the fields through
+ * {@link LockFrame} since 0.55) (DUP-3, refactor audit
  * 2026-10: Button's `ReasonFrame` and Chip's `ChipReasonFrame` were copies of it, and
  * only those two drew the line, so a field locked through `commit` kept its reason in a
  * tooltip on a phone while the Save beside it said it in words). Where it shows is
@@ -548,6 +549,45 @@ export function LockedReason({
         </span>
       </>
     </Tooltip>
+  );
+}
+
+/**
+ * A field in its lock's frame: in {@link LockedReason} while `lock` holds (a write lock's
+ * reason through `commit`, or the field's own `disabledReason`), else the field as it is —
+ * no element and no hook added.
+ *
+ * The fields' ONE helper for it, held back from 0.53 (0.52 code review,
+ * date-picker.tsx:300). Fifteen fields wrote the same ternary around the same frame:
+ * `withReason` in DatePicker, MonthPicker, Input and Select, `withLock` in Combobox,
+ * InlineEntityCombobox, EntityCombobox, MultiEntityCombobox and Autocomplete, one inline in
+ * DateRangePicker, NumberInput, MultiSelect, CountrySelect and CurrencySelect, and
+ * AmountInput's `LockedOrNot` — so a change to the frame's box had to be made in each.
+ *
+ * The frame is `block`, so a full-width field stays full width in it, then `className`. A
+ * field whose root it is while locked moves the caller's layout classes (a width, a grid
+ * cell) here, so a lock does not reflow the form; a display class there replaces `block`
+ * (CountrySelect's `flex w-full items-stretch`, so its trigger keeps the full width).
+ */
+export function LockFrame({
+  lock,
+  display,
+  className,
+  children,
+}: {
+  /** The field's lock (`useLockReason`): framed only while `locked`. */
+  lock: Pick<LockReason, "locked" | "reason" | "reasonId">;
+  /** Where the reason shows — the field's `disabledReasonDisplay`. Default `"auto"`. */
+  display?: DisabledReasonDisplay;
+  /** The frame's classes, after `block`. */
+  className?: string;
+  children: ReactNode;
+}) {
+  if (!lock.locked) return <>{children}</>;
+  return (
+    <LockedReason lock={lock} display={display} className={cn("block", className)}>
+      {children}
+    </LockedReason>
   );
 }
 

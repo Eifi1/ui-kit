@@ -5,7 +5,7 @@ import { NumberPadSheet, type NumberPadSheetLabels } from "./numpad-sheet";
 import { FIELD_BASE, FIELD_DISPLAY, FIELD_INVALID, FLOATING_INPUT_CLASS, FloatingField } from "./field-base";
 // The data alone (0.35): not the picker, which this field does not render.
 import { CURRENCIES } from "../currencies";
-import { FieldCaption, LockedReason, mergeRefs, type DisabledReasonDisplay, type FieldHelpProps } from "./field-parts";
+import { FieldCaption, LockFrame, mergeRefs, type DisabledReasonDisplay, type FieldHelpProps } from "./field-parts";
 import { useEndWidth, useNumericField } from "./numeric-field";
 import type { CommitScope } from "./write-lock";
 import { cn } from "../lib/cn";
@@ -534,12 +534,10 @@ export function NumberInput(props: NumberInputProps) {
       )}
     </FloatingField>
   );
-  const box = locked ? (
-    <LockedReason lock={lock} display={disabledReasonDisplay} className={cn("block w-full", className)}>
+  const box = (
+    <LockFrame lock={lock} display={disabledReasonDisplay} className={cn("w-full", className)}>
       {field}
-    </LockedReason>
-  ) : (
-    field
+    </LockFrame>
   );
   const data = dataAttributes(props);
   if (numeric.hint.captionText === undefined && numeric.errorEl === null && !reserve) {

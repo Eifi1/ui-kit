@@ -5,7 +5,7 @@ import { FieldLabel } from "./field-parts";
 import {
   assignRef,
   EndHintRow,
-  LockedReason,
+  LockFrame,
   useFieldMessages,
   useLockReason,
   type DisabledReasonDisplay,
@@ -287,12 +287,10 @@ export function CurrencySelect({
   // Select's frame: the line under the trigger, or the Tooltip with a hidden copy for
   // `aria-describedby`. The wrapper `<div>` keeps `className`, so the layout holds.
   // `flex w-full items-stretch`: the trigger keeps the field's full width in it.
-  const control = locked ? (
-    <LockedReason lock={lock} display={disabledReasonDisplay} className="flex w-full items-stretch">
+  const control = (
+    <LockFrame lock={lock} display={disabledReasonDisplay} className="flex w-full items-stretch">
       {trigger}
-    </LockedReason>
-  ) : (
-    trigger
+    </LockFrame>
   );
 
   return (
