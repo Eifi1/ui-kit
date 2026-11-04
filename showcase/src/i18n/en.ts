@@ -138,7 +138,7 @@ export const en: Dictionary = {
       title: "Subscription",
       short: "Billing",
       blurb:
-        "Paying for an app: the plan picker in two currencies and two intervals, the subscription's status, the banners from trial to lapse, the plan-limit notice and toast, the read-only lock and the kinds of lock, the provider's portal, the way back from the checkout, the pay page, and the imprint's commercial disclaimer.",
+        "Paying for an app: the plan picker in two currencies and two intervals, the subscription's status and its standing in one line, what is used of each limit, the banners from trial to lapse, the plan-limit notice and toast, the read-only lock and the kinds of lock, the provider's portal, the way back from the checkout, the pay page, and the imprint's commercial disclaimer.",
     },
     offline: {
       title: "Offline",
