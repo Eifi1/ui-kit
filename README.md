@@ -578,7 +578,7 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2129 names from 358 modules** in the main barrel — 961 values and 1168 types — and 187 more in 16 standalone entries. _Italic_ is a type-only export.
+**2137 names from 358 modules** in the main barrel — 966 values and 1171 types — and 187 more in 16 standalone entries. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 `node scripts/gen-export-inventory.mjs`; the counts are pinned by
@@ -586,13 +586,13 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2129 |
+| `@eifi1/ui-kit` | 2137 |
 | `@eifi1/ui-kit/chart` | 99 |
 | `@eifi1/ui-kit/shell` | 106 |
-| `@eifi1/ui-kit/data-table` | 55 |
+| `@eifi1/ui-kit/data-table` | 56 |
 | `@eifi1/ui-kit/wizard` | 25 |
 | `@eifi1/ui-kit/tour` | 49 |
-| `@eifi1/ui-kit/feedback` | 194 |
+| `@eifi1/ui-kit/feedback` | 195 |
 | `@eifi1/ui-kit/search` | 20 |
 | `@eifi1/ui-kit/dates` | 22 |
 | `@eifi1/ui-kit/table-text` | 14 |
@@ -623,7 +623,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `lib/calc` | `commitExpression`, `evaluateExpression`, `formatResult`, `isBareAmount`, `looksLikeExpression`, `sanitizeLive`, `splitLeadingSign` |
 | `lib/cn` | `cn` |
 | `lib/logger` | `logger`, `setStoreLog` |
-| `lib/format` | `currencyMinorDigits`, `EMPTY_FORMATTED_VALUE`, `formatDate`, `formatMoney`, `formatNumber`, `formatPercent`, `formatRelativeTime`, `roundToCurrency`, `toDate`, `useKitFormat`, _`DateInput`_, _`FormatDateOptions`_, _`FormatDateStyle`_, _`FormatDigits`_, _`FormatMoneyOptions`_, _`FormatNumberBaseOptions`_, _`FormatNumberOptions`_, _`FormatPercentOptions`_, _`FormatRelativeTimeOptions`_, _`FormattableNumber`_, _`KitFormat`_, _`RoundToCurrencyOptions`_ |
+| `lib/format` | `currencyMinorDigits`, `EMPTY_FORMATTED_VALUE`, `formatDate`, `formatDuration`, `formatMoney`, `formatNumber`, `formatPercent`, `formatRelativeTime`, `roundToCurrency`, `toDate`, `useKitFormat`, _`DateInput`_, _`FormatDateOptions`_, _`FormatDateStyle`_, _`FormatDigits`_, _`FormatDurationOptions`_, _`FormatMoneyOptions`_, _`FormatNumberBaseOptions`_, _`FormatNumberOptions`_, _`FormatPercentOptions`_, _`FormatRelativeTimeOptions`_, _`FormattableNumber`_, _`KitFormat`_, _`RoundToCurrencyOptions`_ |
 | `lib/safe-storage` | `readSessionStored`, `readStored`, `readStoredJson`, `removeStored`, `writeSessionStored`, `writeStored`, `writeStoredJson` |
 | `lib/reduced-motion` | `prefersReducedMotion` |
 | `lib/download` | `filenameFromDisposition`, `saveBlob` |
@@ -632,7 +632,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `lib/server-wake` | `attachServerWake`, `createServerWake`, `serverWake`, `watchReadsAnd`, `wrapFetch`, _`AxiosLikeInstance`_, _`ServerWakeAxiosConfig`_, _`ServerWakeFilter`_, _`ServerWakeOptions`_, _`ServerWakeRequest`_, _`ServerWakeStage`_, _`ServerWakeWatcher`_ |
 | `lib/session-refresh` | `attachSessionRefresh`, `createSessionRefresh`, `isSignedOutStep`, `isTransientRefreshFailure`, _`SessionRefresh`_, _`SessionRefreshOptions`_, _`SessionRefreshOutcome`_, _`SessionRenewal`_ |
 | `lib/person-name` | `formatPersonName`, `personInitials`, _`PersonName`_ |
-| `lib/translation-review` | `DEFAULT_TRANSLATION_REVIEW_FILTER`, `DEFAULT_TRANSLATION_REVIEW_SWIPE`, `dropReviews`, `filterTranslationRows`, `flattenStrings`, `fromApiReview`, `groupTranslationRows`, `keyInArea`, `keyInAreas`, `keyNamespace`, `mergeReviews`, `placeholderMismatch`, `placeholderTokens`, `REVIEW_STATUSES`, `reviewAreaOf`, `reviewStatus`, `reviewUndo`, `reviewWrite`, `summariseRows`, `toApiWrite`, `TRANSLATION_REVIEW_SWIPE_ACTIONS`, `translationCorrections`, `translationReviewSwipePlan`, `translationRows`, `unreviewedRows`, _`ApiTranslationReview`_, _`ApiTranslationReviewsResponse`_, _`ApiTranslationReviewWrite`_, _`ReviewStatus`_, _`TranslationCorrection`_, _`TranslationReview`_, _`TranslationReviewFilter`_, _`TranslationReviewKey`_, _`TranslationReviewSwipeAction`_, _`TranslationReviewSwipeBinding`_, _`TranslationReviewUndo`_, _`TranslationReviewWrite`_, _`TranslationRow`_, _`TranslationRowGroup`_, _`TranslationRowsInput`_, _`TranslationSummary`_, _`TranslationVerdict`_ |
+| `lib/translation-review` | `clearReviewsInChunks`, `DEFAULT_TRANSLATION_REVIEW_FILTER`, `DEFAULT_TRANSLATION_REVIEW_SWIPE`, `dropReviews`, `filterTranslationRows`, `flattenStrings`, `fromApiReview`, `groupTranslationRows`, `keyInArea`, `keyInAreas`, `keyNamespace`, `mergeReviews`, `placeholderMismatch`, `placeholderTokens`, `REVIEW_STATUSES`, `reviewAreaOf`, `reviewStatus`, `reviewUndo`, `reviewWrite`, `saveReviewsInChunks`, `summariseRows`, `toApiWrite`, `TRANSLATION_REVIEW_SWIPE_ACTIONS`, `translationCorrections`, `translationReviewSwipePlan`, `translationRows`, `unreviewedRows`, _`ApiTranslationReview`_, _`ApiTranslationReviewsResponse`_, _`ApiTranslationReviewWrite`_, _`ReviewStatus`_, _`TranslationCorrection`_, _`TranslationReview`_, _`TranslationReviewFilter`_, _`TranslationReviewKey`_, _`TranslationReviewSwipeAction`_, _`TranslationReviewSwipeBinding`_, _`TranslationReviewUndo`_, _`TranslationReviewWrite`_, _`TranslationRow`_, _`TranslationRowGroup`_, _`TranslationRowsInput`_, _`TranslationSummary`_, _`TranslationVerdict`_ |
 | `lib/countries` | `COUNTRY_CODES`, `countryName` |
 | `lib/iban` | `compactIban`, `formatIban`, `IBAN_LENGTHS`, `ibanCheckDigits`, `ibanProblem`, `isQrIban`, `isValidIban`, _`IbanKind`_, _`IbanProblem`_ |
 | `lib/phone` | `formatNationalPhone`, `formatPhone`, `isE164`, `parsePhone`, `PHONE_COUNTRIES`, `PHONE_DIAL_CODES`, _`ParsedPhone`_, _`PhoneCountry`_, _`PhoneCountryCode`_ |
@@ -831,7 +831,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/column-mapper` | `ColumnMapper`, `ColumnRoleTable`, `DEFAULT_COLUMN_MAPPER_LABELS`, _`ColumnMapperLabels`_, _`ColumnMapperProps`_, _`ColumnRoleTableBodyProps`_, _`ColumnRoleTableProps`_, _`ColumnRoleTableRowProps`_ |
 | `components/data-table-labels` | `DEFAULT_DATA_TABLE_LABELS`, _`DataTableLabels`_ |
 | `components/data-table-sort` | `compareSortValues`, `decodeSorts`, `encodeSorts`, `nextSorts`, `normalizeSorts`, _`SortCycle`_, _`SortDir`_, _`SortState`_, _`SortStepOptions`_ |
-| `components/data-table-filters` | `dateFilter`, `decodeFilterValue`, `decodeFilterValueOfType`, `defaultFilterState`, `encodeFilterValue`, `filterHref`, `isFilterActive`, `numberFilter`, `resolveFilter`, `rowMatches`, `selectFilter`, `textFilter`, _`ColumnFilter`_, _`FilterValue`_ |
+| `components/data-table-filters` | `dateFilter`, `decodeFilterValue`, `decodeFilterValueOfType`, `defaultFilterState`, `encodeFilterValue`, `filterHref`, `isFilterActive`, `numberBound`, `numberFilter`, `resolveFilter`, `rowMatches`, `selectFilter`, `textFilter`, _`ColumnFilter`_, _`FilterValue`_ |
 | `components/data-table-pagination` | `PAGE_SIZE_OPTIONS`, `Pagination` |
 | `components/data-table-filter-popover` | `FilterPopover` |
 | `components/data-table` | `DataTable`, `DEFAULT_DATA_TABLE_SORT_LABELS`, _`DataTableCellProps`_, _`DataTableChrome`_, _`DataTableColumn`_, _`DataTableDensity`_, _`DataTableDesktopSwipeActions`_, _`DataTableHeadProps`_, _`DataTableProps`_, _`DataTableRowAction`_, _`DataTableSortLabels`_, _`FilterState`_, _`MobileSwipeActions`_, _`ServerPagination`_ |
@@ -916,7 +916,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `feedback/feedback-menu` | `DEFAULT_FEEDBACK_MENU_LABELS`, `FeedbackMenu`, _`FeedbackMenuLabels`_, _`FeedbackMenuProps`_ |
 | `feedback/feedback-context` | `DEFAULT_FEEDBACK_CONTEXT_LABELS`, `feedbackContext`, `FeedbackContextBox`, _`FeedbackContextBoxProps`_, _`FeedbackContextInput`_, _`FeedbackContextLabels`_, _`FeedbackSubmitter`_ |
 | `feedback/feedback-capture` | `captureAppScreenshot`, _`CaptureAppScreenshotOptions`_ |
-| `feedback/feedback-submit` | `useFeedbackSubmit`, _`FeedbackCreatePayload`_, _`FeedbackSubmit`_, _`UseFeedbackSubmitOptions`_ |
+| `feedback/feedback-submit` | `useFeedbackSubmit`, _`FeedbackCreatePayload`_, _`FeedbackSubmit`_, _`FeedbackSubmitOpenOptions`_, _`UseFeedbackSubmitOptions`_ |
 | `feedback/feedback-table` | `DEFAULT_FEEDBACK_PAGE_LABELS`, `FeedbackAwaitingToggle`, `FeedbackEmptyState`, `FeedbackMobileCard`, `feedbackMobileGroupBy`, `FeedbackSubject`, `isFeedbackAwaiting`, `useFeedbackColumns`, `useFeedbackPageLabels`, `useFeedbackRenderDate`, _`FeedbackAwaitingToggleProps`_, _`FeedbackColumnsOptions`_, _`FeedbackEmptyStateProps`_, _`FeedbackMobileCardProps`_, _`FeedbackPageLabels`_, _`FeedbackRenderDate`_, _`FeedbackSubjectProps`_, _`FeedbackTableRow`_, _`UseFeedbackColumnsOptions`_ |
 | `feedback/feedback-row-detail` | `DEFAULT_FEEDBACK_DETAIL_LABELS`, `FeedbackReworkSection`, `FeedbackRowDetail`, _`FeedbackDetailLabels`_, _`FeedbackDetailPatch`_, _`FeedbackDetailUpdateAsync`_, _`FeedbackReworkSectionProps`_, _`FeedbackReworkSend`_, _`FeedbackRowAccess`_, _`FeedbackRowDetailProps`_, _`FeedbackUpload`_ |
 | `feedback/feedback-crash` | `createCrashReporter`, _`CrashFiling`_, _`CrashReportCreate`_, _`CrashReporter`_, _`CrashReporterOptions`_, _`CrashReportResponse`_ |
@@ -970,7 +970,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `auth/register-form` | `DEFAULT_REGISTER_LABELS`, `RegisterForm`, _`RegisterFormProps`_, _`RegisterLabels`_, _`RegisterValues`_ |
 | `auth/complete-name-dialog` | `CompleteNameDialog`, `DEFAULT_COMPLETE_NAME_LABELS`, _`CompleteNameDialogProps`_, _`CompleteNameLabels`_, _`CompleteNameValues`_ |
 | `auth/email-tag` | `taggedEmail` |
-| `auth/auth-errors` | `authErrorCode`, `isAuthError`, `isBillingError`, `isRateLimited`, `retryAfterSeconds`, _`AccountErrorCode`_, _`AuthErrorCode`_, _`BillingErrorCode`_, _`DemoErrorCode`_, _`KitErrorCode`_ |
+| `auth/auth-errors` | `authErrorCode`, `billingRefusalText`, `isAuthError`, `isBillingError`, `isRateLimited`, `retryAfterSeconds`, _`AccountErrorCode`_, _`AuthErrorCode`_, _`BillingErrorCode`_, _`BillingRefusalTextOptions`_, _`DemoErrorCode`_, _`KitErrorCode`_ |
 | `auth/forgot-password-form` | `DEFAULT_FORGOT_PASSWORD_LABELS`, `ForgotPasswordForm`, _`ForgotPasswordFormProps`_, _`ForgotPasswordLabels`_ |
 | `auth/reset-password-form` | `DEFAULT_RESET_PASSWORD_LABELS`, `ResetPasswordForm`, _`ResetPasswordCheck`_, _`ResetPasswordFormProps`_, _`ResetPasswordLabels`_, _`ResetPasswordResult`_, _`ResetPasswordValues`_ |
 | `auth/verify-email` | `DEFAULT_VERIFY_EMAIL_LABELS`, `EmailVerificationBanner`, `VerifyEmailStatus`, _`EmailVerificationBannerProps`_, _`VerifyEmailFailure`_, _`VerifyEmailLabels`_, _`VerifyEmailStatusProps`_ |
