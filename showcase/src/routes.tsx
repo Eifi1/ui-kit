@@ -325,6 +325,8 @@ const DataTableEdgeFadeDemo = lazySection(() => import("./sections/table-edge-fa
 const FeedbackSubmit027Demo = lazySection(() => import("./sections/feedback-compose"), "FeedbackSubmit027Demo");
 const FeedbackTable027Demo = lazySection(() => import("./sections/feedback-inbox/table"), "FeedbackTable027Demo");
 const FeedbackSubjectDemo = lazySection(() => import("./sections/feedback-inbox/table"), "FeedbackSubjectDemo");
+// 0.55.0: the inbox assembled once (feedback §13).
+const FeedbackInboxDemo = lazySection(() => import("./sections/feedback-inbox/table"), "FeedbackInboxDemo");
 const FeedbackDetail027Demo = lazySection(() => import("./sections/feedback-inbox/detail"), "FeedbackDetail027Demo");
 // 0.38.0: public feedback — the pages every user reads, the switch, the menu row, the notice, the types.
 const FeedbackPublic038Demo = lazySection(
@@ -1902,6 +1904,8 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb: "The shared status vocabulary, the transition policy, and the parts an inbox is built from.",
         icon: Inbox,
         components: [
+          "FeedbackInbox",
+          "useFeedbackInbox",
           "FeedbackSubject",
           "FeedbackDetail",
           "FeedbackDetailSection",
@@ -1935,6 +1939,7 @@ export const GROUPS: ShowcaseGroup[] = [
         Body: () => (
           <>
             <FeedbackInbox />
+            <FeedbackInboxDemo />
             <FeedbackTable027Demo />
             <FeedbackSubjectDemo />
             <FeedbackDetail027Demo />

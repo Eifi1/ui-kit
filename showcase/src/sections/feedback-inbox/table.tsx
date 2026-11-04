@@ -3,7 +3,9 @@ import {
   DEFAULT_FEEDBACK_SWIPE,
   DataTable,
   FeedbackAwaitingToggle,
+  FeedbackCommentThread,
   FeedbackEmptyState,
+  FeedbackInbox,
   FeedbackMobileCard,
   FeedbackSubject,
   ToggleGroup,
@@ -17,15 +19,336 @@ import {
   useFeedbackStatusLabels,
   useFeedbackStatusUndo,
 } from "@eifi1/ui-kit";
-import type { FeedbackRecord, FeedbackStatusMutateAsync } from "@eifi1/ui-kit";
+import type {
+  FeedbackComment,
+  FeedbackDetailPatch,
+  FeedbackInboxMutation,
+  FeedbackRecord,
+  FeedbackReplyPost,
+  FeedbackReworkPost,
+  FeedbackStatus,
+  FeedbackStatusMutateAsync,
+} from "@eifi1/ui-kit";
 import { Example, Note, code } from "../../lib/section";
 
 /**
  * The Feedback inbox page, part 1 of 4 (refactor audit 2026-10, DOC-8): the two lists —
+ * `FeedbackInbox`, the pages assembled whole, and the parts it is built from:
  * `useFeedbackColumns`, the phone card and the awaiting toggle. The page's other parts are
  * feedback-inbox.tsx (the vocabulary, transitions and note editor), composer.tsx, detail.tsx
  * and record.tsx beside this file.
  */
+
+/* ── The inbox, assembled (docs/feedback-harmonization.md §13) ───────────────────── */
+
+/** The demo's viewer of the assembled inbox: an admin, so both pages make sense. */
+const VIEWER = 1;
+
+const inboxBase = {
+  user_email: null,
+  screenshot_url: null,
+  attachment_urls: null,
+  outcome: null,
+  resolved_at: null,
+} as const;
+
+const SEED: FeedbackRecord[] = [
+  {
+    ...inboxBase,
+    id: 58,
+    user_id: 2,
+    user_email: "user@example.test",
+    title: "Chart jumps on save",
+    body: "The chart jumps to the top when I save a transaction.",
+    category: "BUG",
+    status: "OPEN",
+    context: {
+      user_display_name: "Example User",
+      user_email: "user@example.test",
+      environment: "dev",
+      url: "https://dev.example.test/reports?tab=chart",
+    },
+    public: true,
+    votes: 4,
+    replies: [],
+    created_at: "2026-11-03T09:12:00Z",
+    updated_at: "2026-11-03T09:12:00Z",
+  },
+  {
+    ...inboxBase,
+    id: 57,
+    user_id: VIEWER,
+    user_email: "admin@example.test",
+    title: "Export the register as CSV",
+    body: "One file per month would do.",
+    category: "IDEA",
+    status: "IN_EVALUATION",
+    context: { user_display_name: "Example Admin", url: "/register?month=2026-10" },
+    public: true,
+    votes: 9,
+    replies: [
+      {
+        id: 1,
+        author_name: "Example Admin",
+        body: "Built — try it on the register's ⋯ menu.",
+        status_to: "IN_EVALUATION",
+        status_from: "IN_PROGRESS",
+        created_at: "2026-11-03T08:00:00Z",
+      },
+    ],
+    created_at: "2026-11-02T16:30:00Z",
+    updated_at: "2026-11-03T08:00:00Z",
+  },
+  {
+    ...inboxBase,
+    id: 56,
+    user_id: 2,
+    user_email: "user@example.test",
+    title: "[crash] TypeError: Cannot read properties of undefined (reading 'map') in ImportReviewTable",
+    body: "",
+    category: "CRASH",
+    status: "IN_PROGRESS",
+    context: { route: "/imports", boundary: "page", occurrences: 3, auto_reported: true },
+    votes: 0,
+    replies: [],
+    created_at: "2026-11-02T11:00:00Z",
+    updated_at: "2026-11-02T11:00:00Z",
+  },
+  {
+    ...inboxBase,
+    id: 55,
+    user_id: VIEWER,
+    user_email: "admin@example.test",
+    title: "Where do I change the currency?",
+    body: "",
+    category: "QUESTION",
+    status: "DONE",
+    context: { user_display_name: "Example Admin", url: "/settings?tab=currency" },
+    public: false,
+    votes: 1,
+    resolved_at: "2026-11-02T10:00:00Z",
+    replies: [
+      {
+        id: 2,
+        author_name: "Example Admin",
+        body: "Settings ▸ Currency.",
+        status_to: "DONE",
+        status_from: "OPEN",
+        created_at: "2026-11-02T10:00:00Z",
+      },
+    ],
+    created_at: "2026-11-01T18:45:00Z",
+    updated_at: "2026-11-02T10:00:00Z",
+  },
+];
+
+const SETTLED: readonly FeedbackStatus[] = ["DONE", "WONT_DO"];
+
+/** The server's `resolved_at` rule (§3.4), played here. */
+function moved(row: FeedbackRecord, status: FeedbackStatus): FeedbackRecord {
+  const settles = SETTLED.includes(status);
+  const was = SETTLED.includes(row.status);
+  return { ...row, status, resolved_at: settles ? (was ? row.resolved_at : new Date().toISOString()) : null };
+}
+
+/** A TanStack `useMutation` result as far as the inbox reads one — `mutateAsync`, and
+ *  `isPending` while the request is out — answered in memory. */
+function useInMemoryMutation<V>(apply: (variables: V) => void): FeedbackInboxMutation<V> {
+  const [isPending, setPending] = useState(false);
+  const mutateAsync = useCallback(
+    async (variables: V) => {
+      setPending(true);
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      apply(variables);
+      setPending(false);
+    },
+    [apply],
+  );
+  return { mutateAsync, isPending };
+}
+
+/** An app's comments component: its queries are hooks, so the slot renders one per row. */
+function InboxComments({ id, canComment }: { id: number; canComment: boolean }) {
+  const [comments, setComments] = useState<FeedbackComment[]>(() =>
+    id === 58
+      ? [
+          {
+            id: 1,
+            author_name: "Anna",
+            mine: false,
+            staff: false,
+            body: "Same here on the iPad.",
+            hidden: false,
+            created_at: "2026-11-03T10:00:00Z",
+          },
+        ]
+      : [],
+  );
+  return (
+    <FeedbackCommentThread
+      comments={comments}
+      isAdmin
+      onComment={
+        canComment
+          ? async (body) =>
+              setComments((prev) => [
+                ...prev,
+                {
+                  id: prev.length + 10,
+                  author_name: null,
+                  mine: true,
+                  staff: false,
+                  body,
+                  hidden: false,
+                  created_at: new Date().toISOString(),
+                },
+              ])
+          : undefined
+      }
+      onHide={async (comment, hidden) =>
+        setComments((prev) => prev.map((c) => (c.id === comment.id ? { ...c, hidden } : c)))
+      }
+      onDelete={async (comment) => setComments((prev) => prev.filter((c) => c.id !== comment.id))}
+    />
+  );
+}
+
+export function FeedbackInboxDemo() {
+  const [page, setPage] = useState<"inbox" | "mine">("inbox");
+  const [parts, setParts] = useState<"public" | "private">("public");
+  const [rows, setRows] = useState(SEED);
+  const mine = page === "mine";
+  const publicParts = parts === "public";
+
+  const patch = useCallback(
+    (id: number, change: (row: FeedbackRecord) => FeedbackRecord) =>
+      setRows((prev) => prev.map((row) => (row.id === id ? change(row) : row))),
+    [],
+  );
+  const update = useInMemoryMutation<FeedbackDetailPatch>(
+    useCallback(
+      ({ id, status, body, public: visible }: FeedbackDetailPatch) =>
+        patch(id, (row) => {
+          let next = status ? moved(row, status) : row;
+          if (body !== undefined) next = { ...next, body };
+          if (visible !== undefined) next = { ...next, public: visible };
+          return next;
+        }),
+      [patch],
+    ),
+  );
+  const reply = useInMemoryMutation<FeedbackReplyPost>(
+    useCallback(
+      ({ id, body, status, attachmentUrl }: FeedbackReplyPost) =>
+        patch(id, (row) => ({
+          ...(status ? moved(row, status) : row),
+          replies: [
+            ...(row.replies ?? []),
+            {
+              id: Date.now(),
+              author_name: "Example Admin",
+              body,
+              status_to: status ?? null,
+              status_from: status ? row.status : null,
+              attachment_url: attachmentUrl ?? null,
+              created_at: new Date().toISOString(),
+            },
+          ],
+        })),
+      [patch],
+    ),
+  );
+  const rework = useInMemoryMutation<FeedbackReworkPost>(
+    useCallback(
+      ({ id, note, attachmentUrl }: FeedbackReworkPost) =>
+        // The server moves it (§10.3): REWORK on an admin's own report.
+        patch(id, (row) => ({
+          ...moved(row, "REWORK"),
+          replies: [
+            ...(row.replies ?? []),
+            {
+              id: Date.now(),
+              kind: "rework" as const,
+              author_name: null,
+              body: note,
+              status_to: "REWORK" as const,
+              attachment_url: attachmentUrl ?? null,
+              created_at: new Date().toISOString(),
+            },
+          ],
+        })),
+      [patch],
+    ),
+  );
+
+  // `GET /feedback/my` sends the viewer's own rows and no joined email (§3.1).
+  const list = useMemo(
+    () => (mine ? rows.filter((r) => r.user_id === VIEWER).map((r) => ({ ...r, user_email: null })) : rows),
+    [mine, rows],
+  );
+
+  return (
+    <Example
+      label="FeedbackInbox — the two feedback pages, assembled"
+      hint="open a row (it is ?row= in the address), change a status and take it back, reply; narrow the window for the cards, swipes and the toggle"
+    >
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap gap-2">
+          <ToggleGroup
+            aria-label="Inbox page"
+            value={page}
+            onChange={(v) => setPage(v as "inbox" | "mine")}
+            options={[
+              { value: "inbox", label: "/feedback" },
+              { value: "mine", label: "/my-feedback" },
+            ]}
+          />
+          <ToggleGroup
+            aria-label="Public parts"
+            value={parts}
+            onChange={(v) => setParts(v as "public" | "private")}
+            options={[
+              { value: "public", label: "With public parts" },
+              { value: "private", label: "Without" },
+            ]}
+          />
+        </div>
+        <FeedbackInbox
+          rows={list}
+          mine={mine}
+          canEdit
+          viewerId={VIEWER}
+          update={update}
+          reply={reply}
+          rework={rework}
+          votes={publicParts}
+          publicSwitch={publicParts}
+          comments={(row) =>
+            publicParts && row.category !== "CRASH" ? <InboxComments id={row.id} canComment={mine} /> : null
+          }
+          // No upload server here: a rework and a reply are text alone.
+          onCaptureScreenshot={null}
+          header={(title) => <h3 className="mb-1 text-base font-semibold">{title}</h3>}
+          // Inside a card here, not a page's fill-height column.
+          table={{ fillHeight: false }}
+        />
+        <Note>
+          {code("<FeedbackInbox rows update reply rework … />")} is the whole of {code("/feedback")} and{" "}
+          {code("/my-feedback")}. {code("useFeedbackInbox")} holds the wiring: the open row in {code("?row=")} (digits
+          only — a link naming no id opens nothing) and each row&apos;s link to it, keeping the table&apos;s filters,
+          sort and page; the Undo over {code("update.mutateAsync")} for the status cell, the pills and the swipes; the
+          detail with its reply composer and rework; the phone&apos;s day headers, cards and swipes; the awaiting
+          toggle. The three mutations are the app&apos;s TanStack {code("useMutation")} results, passed as they are —
+          the kit sends no request. What differs between apps is a slot: {code("votes")}, {code("publicSwitch")},{" "}
+          {code("comments={(row) => …}")} (the app&apos;s thread over its own queries), {code("columns")},{" "}
+          {code("swipe")}, {code("renderDate")}, {code("renderDetail")}, {code("header")}, {code("phoneActions")}, and{" "}
+          {code("table")} and {code("detail")} for the rest of the two parts&apos; props. For a layout of its own, a
+          page calls the hook and spreads {code("inbox.table")} into a {code("DataTable")}.
+        </Note>
+      </div>
+    </Example>
+  );
+}
 
 /* ── since 0.27 ─────────────────────────────────────────────────────────── */
 

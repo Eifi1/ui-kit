@@ -892,6 +892,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "visibleFeedbackStatuses(current)",
     "selectableFeedbackStatuses(current)",
     "feedbackCategoryRank(category)",
+    "FeedbackInbox — the two feedback pages, assembled",
     "useFeedbackColumns, FeedbackMobileCard, FeedbackAwaitingToggle — the two feedback pages",
     "FeedbackSubject — the title with its environment and rework chips",
     "The row detail",
@@ -1431,6 +1432,7 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
   ],
   "feedback-inbox": [
     "FeedbackInbox",
+    "FeedbackInboxDemo",
     "FeedbackTable027Demo",
     "FeedbackSubjectDemo",
     "FeedbackDetail027Demo",
