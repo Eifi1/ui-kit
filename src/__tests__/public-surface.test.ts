@@ -330,7 +330,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // sends (kastlan reuse audit 2026-11-02, proposal 7).
   // 0.54 (+2): `saveReviewsInChunks`, `clearReviewsInChunks`, the review's writes under
   // server-kit's cap of 2000 (kastlan reuse audit 2026-11-02, proposal 5).
-  ["@eifi1/ui-kit", barrel, 964],
+  // 0.54 (+1, keksdose audit follow-up, 2026-11-01): `formatDuration`, seconds as an
+  // elapsed time (keksdose's formatElapsed).
+  ["@eifi1/ui-kit", barrel, 965],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
