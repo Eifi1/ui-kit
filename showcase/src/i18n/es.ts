@@ -575,7 +575,7 @@ export const es: Dictionary = {
       title: "Límites, errores, CORS y sincronización",
       short: "Límites",
       blurb:
-        "El limitador de frecuencia de ventana deslizante y de quién es la dirección que cuenta, cada rechazo del kit respondido con el estado de su contrato, CORS para algunos orígenes más el token del planificador en las rutas de tareas y la sincronización local-first: gana la edición más reciente, rechazos por cambio.",
+        "El limitador de frecuencia de ventana deslizante y de quién es la dirección que cuenta, cada rechazo del kit respondido con el estado de su contrato, CORS para algunos orígenes más el token del planificador en las rutas de tareas y la sincronización local-first: gana la edición más reciente, rechazos por cambio. Y la auditoría de dependencias que ejecuta la comprobación de cada backend.",
     },
     "server-translation-review": {
       title: "Revisión de traducciones",

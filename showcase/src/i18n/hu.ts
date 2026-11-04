@@ -580,7 +580,7 @@ export const hu: Dictionary = {
       title: "Korlátok, hibák, CORS és szinkronizálás",
       short: "Korlátok",
       blurb:
-        "A csúszóablakos sebességkorlátozó és az, hogy kinek a címét számolja, a csomag minden elutasítása a szerződés szerinti státusszal megválaszolva, CORS néhány további originre, az ütemező tokenje a feladatútvonalakon, és a local-first szinkronizálás: a legutóbbi módosítás nyer, elutasítás módosításonként.",
+        "A csúszóablakos sebességkorlátozó és az, hogy kinek a címét számolja, a csomag minden elutasítása a szerződés szerinti státusszal megválaszolva, CORS néhány további originre, az ütemező tokenje a feladatútvonalakon, és a local-first szinkronizálás: a legutóbbi módosítás nyer, elutasítás módosításonként. És a függőségek ellenőrzése, amelyet minden backend kapuja lefuttat.",
     },
     "server-translation-review": {
       title: "Fordítások ellenőrzése",

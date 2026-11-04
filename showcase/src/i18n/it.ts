@@ -572,7 +572,7 @@ export const it: Dictionary = {
       title: "Limiti, errori, CORS e sincronizzazione",
       short: "Limiti",
       blurb:
-        "Il rate limiter a finestra scorrevole e di chi conta l’indirizzo, ogni rifiuto del kit restituito con lo stato del suo contratto, CORS per qualche origine in più il token dello scheduler sulle rotte dei job e la sincronizzazione local-first: vince la modifica più recente, rifiuti per singola modifica.",
+        "Il rate limiter a finestra scorrevole e di chi conta l’indirizzo, ogni rifiuto del kit restituito con lo stato del suo contratto, CORS per qualche origine in più il token dello scheduler sulle rotte dei job e la sincronizzazione local-first: vince la modifica più recente, rifiuti per singola modifica. E l’audit delle dipendenze che il controllo di ogni backend esegue.",
     },
     "server-translation-review": {
       title: "Revisione delle traduzioni",

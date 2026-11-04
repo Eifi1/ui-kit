@@ -578,7 +578,7 @@ export const fr: Dictionary = {
       title: "Limites, erreurs, CORS et synchronisation",
       short: "Limites",
       blurb:
-        "Le limiteur de débit à fenêtre glissante et à qui appartient l’adresse qu’il compte, chaque refus du kit renvoyé avec le statut de son contrat, CORS pour quelques origines supplémentaires, le jeton du planificateur sur les routes de tâches, et la synchronisation local-first : la modification la plus récente l’emporte, refus par modification.",
+        "Le limiteur de débit à fenêtre glissante et à qui appartient l’adresse qu’il compte, chaque refus du kit renvoyé avec le statut de son contrat, CORS pour quelques origines supplémentaires, le jeton du planificateur sur les routes de tâches, et la synchronisation local-first : la modification la plus récente l’emporte, refus par modification. Et l’audit des dépendances que lance la vérification de chaque backend.",
     },
     "server-translation-review": {
       title: "Relecture des traductions",

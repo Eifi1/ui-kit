@@ -584,7 +584,7 @@ export const de: Dictionary = {
       title: "Limits, Fehler, CORS & Sync",
       short: "Limits",
       blurb:
-        "Der Rate-Limiter mit gleitendem Fenster und wessen Adresse er zählt, jede Ablehnung des Kits mit ihrem Status aus dem Vertrag beantwortet, CORS für einige zusätzliche Origins das Token des Schedulers auf Job-Routen und die Local-first-Synchronisation: Die jüngste Änderung gilt, Ablehnungen je Änderung.",
+        "Der Rate-Limiter mit gleitendem Fenster und wessen Adresse er zählt, jede Ablehnung des Kits mit ihrem Status aus dem Vertrag beantwortet, CORS für einige zusätzliche Origins das Token des Schedulers auf Job-Routen und die Local-first-Synchronisation: Die jüngste Änderung gilt, Ablehnungen je Änderung. Und die Abhängigkeitsprüfung, die das Gate jedes Backends ausführt.",
     },
     "server-translation-review": {
       title: "Übersetzungsprüfung",

@@ -65,6 +65,9 @@ export const KIT_COUNTERPARTS: Readonly<Record<string, readonly string[]>> = {
   cors: ["kit-review"],
   // The scheduler's token on an app's job routes (server-kit 0.8): no kit page speaks it.
   jobs: [],
+  // server-kit 0.21: the dependency audit a backend's gate runs, as the frontends' `npm
+  // audit --audit-level=high`; a tool, so no kit page renders it.
+  dependency_audit: [],
 };
 
 /** The Server kit page a module is documented on (routes.tsx `serverModules`). */

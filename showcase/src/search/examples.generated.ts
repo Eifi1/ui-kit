@@ -1092,6 +1092,9 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "sync · Models",
     "sync · Protocols",
     "sync · Constants",
+    "dependency_audit · Functions",
+    "dependency_audit · Classes",
+    "dependency_audit · Constants",
   ],
   "server-translation-review": [
     "translation_review · Functions",

@@ -3,7 +3,7 @@
 // fails while this file is stale.
 
 /** The server-kit release the Server kit pages document. */
-export const SERVER_KIT_VERSION = "0.20.0";
+export const SERVER_KIT_VERSION = "0.21.0";
 
 export interface ServerKitSearchModule {
   /** The Server kit page that documents it. */
@@ -65,6 +65,10 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["RESET_TTL", "constant"],
       ["TAG_SEPARATOR", "constant"],
       ["TEXT_SIZES", "constant"],
+      ["TOTP_DIGITS", "constant"],
+      ["TOTP_STEP_CLAIM", "constant"],
+      ["TOTP_STEP_SECONDS", "constant"],
+      ["TOTP_WINDOW", "constant"],
       ["VERIFICATION_RESEND_PER_RECIPIENT", "constant"],
       ["VERIFY_TTL", "constant"],
       ["AuthError", "class"],
@@ -114,6 +118,10 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["registration_decision", "function"],
       ["tagged_variant", "function"],
       ["token_is_revoked", "function"],
+      ["totp_matched_step", "function"],
+      ["totp_step_accepted", "function"],
+      ["two_factor_challenge_claims", "function"],
+      ["two_factor_challenge_is_spent", "function"],
       ["verified_by_invitation", "function"],
     ],
   },
@@ -212,14 +220,17 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
   {
     page: "server-settings",
     module: "settings",
-    summary: "Settings on the server: one rule for every settings body, and the account's language.",
+    summary: "Settings on the server: one rule for every settings body, the account's language, and the app's secrets at start.",
     members: [
+      ["MIN_SECRET_LENGTH", "constant"],
       ["PATCH_NULL_CODE", "constant"],
+      ["PLACEHOLDER_SECRET", "constant"],
       ["PatchNullError", "class"],
       ["apply_patch", "function"],
       ["canonical_locale", "function"],
       ["parse_accept_language", "function"],
       ["profile_update_model", "function"],
+      ["secret_problems", "function"],
     ],
   },
   {
@@ -259,6 +270,8 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["DEV_SWITCH_ERROR_STATUS", "constant"],
       ["DEV_SWITCH_LOG_TAG", "constant"],
       ["DEV_SWITCH_PATH", "constant"],
+      ["LOCAL_DATABASE_PORTS", "constant"],
+      ["LOCAL_SOCKET_DIRS", "constant"],
       ["DevSwitchAnswer", "model"],
       ["DevSwitchError", "class"],
       ["DevSwitchErrorCode", "enum"],
@@ -266,6 +279,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["DevSwitchSettings", "model"],
       ["DevSwitchUnsafeError", "class"],
       ["assert_dev_switch_safe", "function"],
+      ["database_is_local", "function"],
       ["dev_switch_enabled", "function"],
       ["effective_today", "function"],
       ["require_dev_switch", "function"],
@@ -812,6 +826,8 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["Clock", "constant"],
       ["FeedbackLimiters", "class"],
       ["SlidingWindowRateLimiter", "class"],
+      ["ThrottledError", "class"],
+      ["charge", "function"],
       ["client_ip", "function"],
       ["retry_after_header", "function"],
     ],
@@ -967,6 +983,32 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["sort_changes", "function"],
       ["tombstone", "function"],
       ["withhold", "function"],
+    ],
+  },
+  {
+    page: "server-limits",
+    module: "dependency_audit",
+    summary: "The dependency audit for every backend's gate: known vulnerabilities in the lock BLOCK on high and critical, as the ui-kit's ``npm audit --audit-level=high`` does; below that they are printed and pass. Standard library only.",
+    members: [
+      ["BLOCKING_RANK", "constant"],
+      ["KNOWN_SCHEMAS", "constant"],
+      ["OSV_URL", "constant"],
+      ["PREVIEW_FEATURES", "constant"],
+      ["RANKS", "constant"],
+      ["AuditUnreadableError", "class"],
+      ["Fetcher", "constant"],
+      ["Finding", "class"],
+      ["Runner", "constant"],
+      ["Verdict", "class"],
+      ["audit", "function"],
+      ["command", "function"],
+      ["cvss3_base_score", "function"],
+      ["cvss_rating", "function"],
+      ["fetch_osv", "function"],
+      ["judge", "function"],
+      ["main", "function"],
+      ["parse_report", "function"],
+      ["run_uv", "function"],
     ],
   },
 ];

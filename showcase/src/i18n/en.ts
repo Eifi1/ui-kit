@@ -394,7 +394,7 @@ export const en: Dictionary = {
       title: "Series chart: bars, areas & time",
       short: "Bars & areas",
       blurb:
-        "The same chart drawing bars, areas and stacks, over categories and real time, with reference lines, markers, dots and clicks — and a legend whose colours hold still.",
+        "The same chart drawing bars, areas and stacks, over categories and real time, with reference lines, markers, dots and clicks — a legend whose colours hold still, and the chart with its legend as one.",
     },
     stats: {
       title: "Stats & sparklines",
@@ -581,7 +581,7 @@ export const en: Dictionary = {
       title: "Limits, errors, CORS & sync",
       short: "Limits",
       blurb:
-        "The sliding-window rate limiter and whose address it counts, every kit refusal answered with its contract status, CORS for a few extra origins, the scheduler's token on job routes, and local-first sync: the latest edit wins, refusals per change.",
+        "The sliding-window rate limiter and whose address it counts, every kit refusal answered with its contract status, CORS for a few extra origins, the scheduler's token on job routes, and local-first sync: the latest edit wins, refusals per change. And the dependency audit every backend's gate runs.",
     },
     "server-translation-review": {
       title: "Translation review",

@@ -6,6 +6,7 @@ import type { DemoSessionUser } from "../../../src/demo/demo-session";
 import type { AccountErrorCode, DemoErrorCode } from "../../../src/auth/auth-errors";
 import type { AdminPerson } from "../../../src/admin/admin-parts";
 import { ADMIN_ACTION_KINDS } from "../../../src/admin/admin-action-log";
+import { USER_ROSTER_MAX_PAGE_SIZE, USER_ROSTER_PAGE_SIZE } from "../../../src/admin/user-roster";
 import { FEEDBACK_CATEGORY_ORDER, FEEDBACK_STATUS_ORDER } from "../../../src/feedback/feedback-vocabulary";
 import { FEEDBACK_QUEUE_STATUSES } from "../../../src/feedback/feedback-record";
 import type {
@@ -163,6 +164,13 @@ describe("server-kit's vocabularies, as this package writes them", () => {
   // 7. src/admin/admin-action-log.tsx ↔ user_admin/actions.py AdminAction
   it("admin actions: ADMIN_ACTION_KINDS is AdminAction", () => {
     expect(sorted(ADMIN_ACTION_KINDS)).toEqual(sorted(enumValues("user_admin", "AdminAction")));
+  });
+
+  // 7b. src/admin/user-roster.tsx ↔ user_admin DEFAULT_PAGE_SIZE / MAX_PAGE_SIZE (server-kit
+  // 0.21 exports a constant's `value`; keksdose's users panel copied both, audit F-63).
+  it("the roster's page sizes are server-kit's", () => {
+    expect(USER_ROSTER_PAGE_SIZE).toBe(member("user_admin", "DEFAULT_PAGE_SIZE").value);
+    expect(USER_ROSTER_MAX_PAGE_SIZE).toBe(member("user_admin", "MAX_PAGE_SIZE").value);
   });
 
   // 8. src/feedback/feedback-vocabulary.ts, feedback-record.ts ↔ feedback/enums.py
