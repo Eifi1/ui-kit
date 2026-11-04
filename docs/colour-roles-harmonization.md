@@ -579,12 +579,20 @@ Colour table and adopt-0.49 said it.
   confidence bands. `CHART_ROLES` names them by role (`other`, `rest`, `disabled`, `band`
   → `var(--chart-muted)`; `total`, `baseline`, `outline` → `var(--chart-ink)`), so an app
   picks a chart colour by meaning, never by slot.
-- **A hue under 3:1 gets an ink edge, not another colour** (WCAG 1.4.11,
-  `EDGE_MIN_CONTRAST` 3). `chartEdge(fill, surfaces)` answers the outline ink for a filled
-  mark (a bar, an area, a treemap tile) whose hue is under 3:1 on its worst ground; the
-  fill keeps its hue. In light that is cyan, lime, lavender, ochre and green on cream; in
-  dark, matte red and rose. Its live side, `useChartEdge` (`chart-edge.ts`), reads the
-  resolved colours off `<html>`, so the edge follows a theme toggle and a palette switch.
+- **A hue under 3:1 gets an edge; the fill keeps its hue** (WCAG 1.4.11,
+  `EDGE_MIN_CONTRAST` 3). `chartEdge(fill, surfaces)` answers whether a filled mark (a bar,
+  an area, a treemap tile) needs one: its hue is under 3:1 on its worst ground. In light
+  that is cyan, lime, lavender, ochre and green on cream; in dark, matte red and rose. A
+  tile's edge is the ink, 1px. A SeriesChart bar's or area's is its own shade (ui-kit 0.55,
+  `chartShade`): the hue moved in OKLCH lightness, darker on a light page and lighter on a
+  dark one, until it clears 3:1 on the card and the page, measured on the hex — a bar's
+  edge 1px, an area's line at its own width. On the default grounds: green `#009e73` →
+  `#00946c`, lavender `#c475fd` → `#ad5de4`, ochre `#bd8233` → `#b17625`, cyan `#2abccd` →
+  `#00909f`, lime `#99b314` → `#768b00`; in dark, red `#ae3030` → `#b83938`, rose `#954477`
+  → `#9b4a7d`. Up to 0.54 the bars and areas took the ink too, which on an area's line read
+  as a black line where the series was coloured. The live side, `useChartEdge` and
+  `useChartShade` (`chart-edge.ts`), reads the resolved colours off `<html>`, so the edge
+  follows a theme toggle and a palette switch.
 - **When the edge is drawn: `edges="auto"`, one rule for tiles and series.** Per-hue edges
   at Standard contrast looked uneven from mark to mark: five of the eight hues outlined in
   light, two in dark, a light outline beside neighbours with none (keksdose dev #642). So
@@ -592,8 +600,8 @@ Colour table and adopt-0.49 said it.
   - **Standard contrast:** no per-hue edge. Treemap draws every tile with the same 2px
     gutter in `--bg-page`; a SeriesChart bar or area keeps its own fill and stroke.
   - **More contrast** (`<html data-contrast="more">`: chosen, or System on a device that
-    asks for more): the rule above, the ink edge on every hue under 3:1 (Treemap: on the
-    card-coloured gutter).
+    asks for more): the rule above, the edge on every hue under 3:1 (Treemap: the ink, on
+    the card-coloured gutter; SeriesChart: the mark's own shade).
 
   Treemap since ui-kit 0.51.6, with `edges="uniform"` or `"contrast"` to pin one rule;
   SeriesChart's bars and areas since ui-kit 0.52 (Marcel, 2026-10-31, on the refactor

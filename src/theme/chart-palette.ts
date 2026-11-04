@@ -5,7 +5,7 @@
 // Returning CSS vars here makes every Recharts series theme-aware for free — the
 // SVG fill/stroke resolves --chart-N against the current light/dark token set.
 
-import { contrast, parseHex as parseRgbHex } from "./color";
+import { contrast, hexToOklch, oklchToHex, parseHex as parseRgbHex, solveLightness } from "./color";
 
 /** How many categorical slots `paletteFor` cycles through: anyplot's eight hues. Amber,
  *  anyplot's ninth colour, is a semantic warning anchor and not a series slot. A preset
@@ -92,6 +92,9 @@ export const EDGE_MIN_CONTRAST = 3;
  * `fill` must be a measurable `#rgb`/`#rrggbb`; `surfaces` are the grounds the mark can
  * sit on (the card and the page), and the WORST of them decides. Anything it cannot
  * measure gets no edge rather than a guessed one.
+ *
+ * Treemap's tiles take this ink; SeriesChart's bars and areas take their own shade
+ * ({@link chartShade}) since 0.55, where this says they need an edge at all.
  */
 export function chartEdge(
   fill: string,
@@ -104,6 +107,44 @@ export function chartEdge(
   const worst = Math.min(...measurable.map((s) => contrast(fill, s)));
   return worst < EDGE_MIN_CONTRAST ? ink : undefined;
 }
+
+/**
+ * `fill`'s own shade that clears `min` ({@link EDGE_MIN_CONTRAST}, 3:1) against every one of
+ * `surfaces`: `fill` itself when it does already, else its hue and chroma moved in OKLCH
+ * lightness away from the grounds — darker on a light page, lighter on a dark one — until it
+ * does (`solveLightness`, measured on the hex). `undefined` for a fill or grounds it cannot
+ * measure, or a shade it cannot reach.
+ *
+ * The edge a SeriesChart bar or area takes under More contrast (0.55, held back from 0.53's
+ * code review), in place of {@link chartEdge}'s ink: the ink outlined a low-contrast area
+ * at its full width (0.52's stop-gap; 0.51 drew it 1px), a near-black line where the
+ * reader looked for the series' colour. Its own darker shade is the same series, and one
+ * the ground lets them see. The money tokens under More contrast are solved the same way
+ * (`contrast-tokens.ts`, `moneyOn`).
+ */
+export function chartShade(
+  fill: string,
+  surfaces: readonly string[],
+  min: number = EDGE_MIN_CONTRAST,
+): string | undefined {
+  const lch = hexToOklch(fill);
+  const grounds = surfaces.flatMap((s) => parseRgbHex(s) ?? []);
+  if (!lch || grounds.length === 0) return undefined;
+  const clears = (hex: string) => grounds.every((ground) => contrast(hex, ground) >= min);
+  if (clears(fill)) return fill;
+  // Away from the grounds, which share a theme: a ground black text reads better on is a
+  // light one, and the shade goes darker on it.
+  const light = grounds.every((ground) => contrast(ground, BLACK) >= contrast(ground, WHITE));
+  const direction = light ? "darker" : "lighter";
+  // One solve per ground, and the furthest of them: it clears every one.
+  const solved = grounds.map((ground) => solveLightness(min, ground, lch.h, lch.c, direction));
+  const l = direction === "darker" ? Math.min(...solved) : Math.max(...solved);
+  const shade = oklchToHex({ l, c: lch.c, h: lch.h });
+  return clears(shade) ? shade : undefined;
+}
+
+const BLACK = "#000000";
+const WHITE = "#ffffff";
 
 // ── Raw hex stops, by theme ────────────────────────────────────────────────
 // The heatmaps interpolate colours in JS (CSS vars can't be lerped), so they

@@ -1,10 +1,11 @@
-// The live side of `chartEdge` (theme/chart-palette.ts): which colours a FILLED mark is
-// painted with and which grounds it sits on, read off <html> as the page resolves them —
-// so the 1px ink edge follows a theme toggle and a palette switch without the chart
-// knowing either store. And WHETHER a mark gets one: `useEdgesInForce`, the contrast
-// setting's switch. Shared by SeriesChart (bars, areas) and Treemap (tiles).
+// The live side of `chartEdge` and `chartShade` (theme/chart-palette.ts): which colours a
+// FILLED mark is painted with and which grounds it sits on, read off <html> as the page
+// resolves them — so the edge follows a theme toggle and a palette switch without the chart
+// knowing either store: the 1px ink of a tile (`useChartEdge`), the own darker shade of a
+// SeriesChart bar or area since 0.55 (`useChartShade`). And WHETHER a mark gets one:
+// `useEdgesInForce`, the contrast setting's switch. Shared by SeriesChart and Treemap.
 import { useCallback, useSyncExternalStore } from "react";
-import { chartEdge } from "../theme/chart-palette";
+import { chartEdge, chartShade } from "../theme/chart-palette";
 import { parseHex } from "../theme/color";
 
 /** The tokens a theme or palette change can move, read as ONE string so
@@ -59,6 +60,32 @@ export function resolveChartColor(color: string, style: Pick<CSSStyleDeclaration
  * measure gets no edge.
  */
 export function useChartEdge(): (fill: string | undefined) => string | undefined {
+  return useOnGround(chartEdge);
+}
+
+/**
+ * `(fill) => edge`: like {@link useChartEdge}, the edge a filled mark in `fill` needs on this
+ * page — but in the mark's own shade, not in ink (0.55): `fill`'s hue moved darker on a light
+ * page, lighter on a dark one, until it clears 3:1 against the card and the page
+ * (`chartShade`). `undefined` for a colour that clears it already, or one it cannot measure;
+ * the ink for a colour whose shade it cannot reach. SeriesChart's bars and areas under More
+ * contrast.
+ */
+export function useChartShade(): (fill: string | undefined) => string | undefined {
+  return useOnGround(shadeEdge);
+}
+
+/** The edge of a mark in `fill`: none when its hue clears 3:1, else its own shade. */
+function shadeEdge(fill: string, surfaces: readonly string[]): string | undefined {
+  const ink = chartEdge(fill, surfaces);
+  return ink && (chartShade(fill, surfaces) ?? ink);
+}
+
+/** `measure` of a colour as the page resolves it, against the card and the page, followed
+ *  live: the two hooks above. */
+function useOnGround(
+  measure: (hex: string, surfaces: readonly string[]) => string | undefined,
+): (fill: string | undefined) => string | undefined {
   const snapshot = useSyncExternalStore(subscribe, readWatched, () => SERVER);
   return useCallback(
     (fill: string | undefined) => {
@@ -67,9 +94,9 @@ export function useChartEdge(): (fill: string | undefined) => string | undefined
       const hex = resolveChartColor(fill, style);
       if (!hex) return undefined;
       const surfaces = ["--bg-surface", "--bg-page"].map((n) => style.getPropertyValue(n).trim());
-      return chartEdge(hex, surfaces);
+      return measure(hex, surfaces);
     },
-    [snapshot],
+    [snapshot, measure],
   );
 }
 

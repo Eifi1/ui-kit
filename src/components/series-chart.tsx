@@ -125,7 +125,7 @@ import {
 import { useBreakpoint } from "../hooks/use-breakpoint";
 import { useTextSize } from "../theme/text-size";
 import { chartHeightProps, type ChartHeight } from "./chart-height";
-import { useChartEdge, useEdgesInForce } from "./chart-edge";
+import { useChartShade, useEdgesInForce } from "./chart-edge";
 import { cn } from "../lib/cn";
 import { formatWithMinus } from "../lib/minus";
 
@@ -1251,10 +1251,11 @@ function SeriesPlot({
   // grows by itself — and the axes aim at three ticks instead of five from Large up.
   // Strokes, dashes and the grid stay px.
   const { scale } = useTextSize();
-  const edgeFor = useChartEdge();
-  // The tiles' rule (0.52, DSP-18, Marcel's decision 3): the ink edge under More contrast
-  // only — at Standard it fell on 5 of 8 hues in light and on 2 in dark, the unevenness
-  // #642 took off the tiles.
+  // The edge of a bar or an area in a hue under 3:1: its own darker shade (0.55).
+  const edgeFor = useChartShade();
+  // The tiles' rule (0.52, DSP-18, Marcel's decision 3): the edge under More contrast only
+  // — at Standard it fell on 5 of 8 hues in light and on 2 in dark, the unevenness #642
+  // took off the tiles.
   const edges = useEdgesInForce("auto");
   const ticksAim = tickTarget(scale);
   const grow = (px: number) => (scale === 1 ? px : Math.round(px * scale));
@@ -1788,9 +1789,12 @@ function SeriesPlot({
           const type = entry.type ?? "line";
           const yAxisId = entry.axis ?? DEFAULT_Y_AXIS;
           const color = `var(--color-${entry.key})`;
-          // Under More contrast, a filled mark in a hue under 3:1 against the ground gets
-          // a 1px ink edge (WCAG 1.4.11, anyplot's rule) — measured on the colour the
-          // config paints. At Standard none does (see `edges`).
+          // Under More contrast, a filled mark in a hue under 3:1 against the card or the page
+          // (WCAG 1.4.11) is edged in its own shade that clears it, darker on a light page and
+          // lighter on a dark one (`chartShade`, 0.55): a bar with a 1px edge, an area with
+          // its line, the fill keeping the hue the legend shows. Measured on the colour the
+          // config paints. At Standard nothing is (see `edges`). Up to 0.54 the edge was the
+          // ink, which on an area's line read as a black line where the series was coloured.
           const edge = edges === "contrast" ? edgeFor(config[entry.key]?.color) : undefined;
           const own = entry.dash ?? (entry.dashed ? 1 : 0);
           const dash = entry.step ? strokeDash(STEP_DASH) : typeof own === "string" ? own : strokeDash(own);
@@ -1841,8 +1845,8 @@ function SeriesPlot({
                 type={curve}
                 dataKey={entry.key}
                 stackId={entry.stack}
-                // The edge replaces the hue on the area's outline only; the fill keeps it,
-                // and the outline its width (0.52, DSP-18: it was 1px, whatever
+                // The edge's shade replaces the hue on the area's outline only; the fill
+                // keeps it, and the outline its width (0.52, DSP-18: it was 1px, whatever
                 // `strokeWidth` said).
                 stroke={edge ?? color}
                 strokeWidth={width}
