@@ -265,3 +265,73 @@ describe("the register fit's order: rows drawn, fitted, then locked (keksdose re
     expect(windowRows()).toEqual(Array.from({ length: SCREENFUL }, (_, i) => 60 - SCREENFUL + i));
   });
 });
+
+/**
+ * keksdose N2 (0.49 review 3): c53c692's test, back with it, on this model. With
+ * `virtualize`, a `fitPriority` column brought back was estimated at 606 + 93 = 699 ≤ 757
+ * but drawn needed 778–812. Left out, the table is measured afresh (the lock's signature
+ * names the columns, so it has none); brought back within the same commit — before the
+ * window's frame measured anything — the signature was the old lock's again, and the table
+ * came back at the widths that had ratcheted up while rows scrolled, not the ones the fit
+ * had just measured. B2's guard then kept the column out although it fitted. Modelled as
+ * c53c692 did: Account ratchets 300 → 350 while a wide cell is in view and goes back to 300
+ * when it leaves; then a refetch (the same rows, a wider Amount) has the fit measure the
+ * ratcheted table, 759 > 757. In Chromium: scripts/register-fit-frames.mjs `--scenario edit
+ * --query monthly=24`.
+ */
+describe("under `virtualize`, a column brought back is drawn as the fit measured it (keksdose N2)", () => {
+  const VCOLS: DataTableColumn<Row>[] = [
+    { key: "acct", header: "acct", cell: () => "" },
+    { key: "title", header: "title", grow: true, cell: (r) => r.title },
+    { key: "amount", header: "amount", cell: () => "" },
+    { key: "state", header: "state", fitPriority: 1, cell: () => "" },
+  ];
+  const vui = (rows: Row[]) => (
+    <MemoryRouter>
+      <DataTable rows={rows} columns={VCOLS} rowKey={(r) => r.id} paginated={false} virtualize />
+    </MemoryRouter>
+  );
+  beforeEach(() => {
+    avail = 757;
+    Object.assign(NATURAL, { acct: 300, amount: 146, state: 93 });
+  });
+  afterEach(() => {
+    for (const k of ["acct", "amount"]) delete NATURAL[k];
+    NATURAL.state = 90;
+  });
+
+  it("comes back at the widths measured with it, not the ones its last showing ratcheted up to", () => {
+    const rows = [...ROWS];
+    const { rerender } = render(vui(rows));
+    // 300 + 146 + 93 + Title's 10rem = 699 ≤ 757: all in; the first frame locks the widths.
+    flushFrames(2);
+    expect(heads()).toEqual(["acct", "title", "amount", "state"]);
+    expect(lockOf()).toEqual(["300px", "", "146px", "93px"]);
+
+    // A wider Account cell in view (a scroll; here the focus moving to a row asks the same
+    // measure): its column grows once, and keeps that width after the cell has gone.
+    NATURAL.acct = 350;
+    act(() =>
+      table()
+        .querySelector("tr[data-row-index='0']")!
+        .dispatchEvent(new FocusEvent("focusin", { bubbles: true })),
+    );
+    flushFrames();
+    expect(lockOf()[0]).toBe("350px");
+    NATURAL.acct = 300;
+
+    // A refetch: the same rows, Amount 10px wider. Drawn as locked the table needs
+    // 350 + 156 + 93 + 160 = 759 > 757, so State leaves; measured afresh without it the
+    // table needs 616, and 616 + 93 ≤ 757 brings it back. Drawn as measured, it needs
+    // 300 + 156 + 93 + 160 = 709: it stays.
+    NATURAL.amount = 156;
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    rerender(vui([...rows]));
+    expect(errors.mock.calls.flat().map(String).join("\n")).not.toMatch(/Maximum update depth/);
+    expect(heads()).toEqual(["acct", "title", "amount", "state"]);
+    // The next frame locks what is drawn now: Account at 300, not the 350 it once was.
+    flushFrames(2);
+    expect(heads()).toEqual(["acct", "title", "amount", "state"]);
+    expect(lockOf()).toEqual(["300px", "", "156px", "93px"]);
+  });
+});
