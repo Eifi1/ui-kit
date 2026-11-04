@@ -14,6 +14,7 @@ all on ui-kit 0.39.1; ui-kit `75aadd2` plus round 0.40's uncommitted DataTable c
 | § | Section | Shipped in | Amended by |
 |---|---|---|---|
 | 1 | The list page fills the window | **§1 settled 2026-10-16 (round 0.40)**, built for ui-kit 0.40 | |
+| 2 | The wait for a page | ui-kit 0.55 (the apps' "later" list, closed on Marcel's rule: a part goes into the kit once a second app is likely to need it) | |
 
 ## 1. The list page fills the window (settled 2026-10-16, round 0.40)
 
@@ -284,3 +285,31 @@ recommendation. Where each point went:
   descendant `has-` works with Breadcrumbs as a fixed row → §1.3 item 2, §1.4; drop the
   `app-layout.tsx:136-140` comment at adoption → §1.3, §1.4; no floor wanted (invoices
   with four tiles the tightest) → decided by Marcel.
+
+## 2. The wait for a page (ui-kit 0.55)
+
+Every page of the three apps is its own chunk, so a page can be on its way while the shell
+is not. Where the wait was drawn, as of 0.54:
+
+- **kk** had its boundary ABOVE the shell (`routes.tsx`'s `RouteFallback`) until
+  2026-10-27: every app load, and the first visit to each page, was one centred spinner
+  where the whole app would be. It moved it inside (`app/page-skeleton.tsx`'s
+  `PageSuspense`, around the `Outlet` in `app/layout.tsx`), with an outline of the page the
+  path names, drawn after 150 ms.
+- **ka** puts one per route inside the `Outlet` (`app/lazy-page.tsx`, a `LoadingState`).
+- **KS** the same (`app/routes.tsx`'s `Page`, a `LoadingState`), with `ProtectedRoute`
+  outside it so a visitor without a session never asks for the chunk.
+
+**AppShell's `pageFallback`** is that boundary in the kit, in one place: given, the shell
+wraps `children` in `<Suspense fallback={pageFallback}>` inside `<main>`, so the top bar,
+the sidebar and the bottom bar stay while the content area waits. Left out, nothing changes.
+
+- The fallback is the app's. It renders under the router, so it can read the path and
+  draw that page's outline, and it decides whether to hold back for a frame (kk's 150 ms).
+- Everything in `children` waits together. A banner above the `Outlet` (kk's billing,
+  guest-key, held-changes and what's-new banners) waits with the page; a boundary of the
+  app's own inside `children` still catches first. An app whose banners must not wait keeps
+  its boundary around the `Outlet` and passes no `pageFallback`.
+- A per-route boundary (ka, KS) can stay or go: inside the shell's, it catches first.
+  KS's public pages outside the shell keep theirs either way.
+

@@ -235,7 +235,10 @@ const BUDGETS = [
   // `onDismissRefused` and useOverlayHistory's `onRefused`, which tell the app which
   // dismissal `busy` or `held` refused (0.54 follow-up, keksdose recovery-code-pane) —
   // meant growth.
-  { label: "the shell set", names: SHELL_SET, max: 155_700 },
+  // 155,999 B (53,642 gzip) with AppShell's `pageFallback`, the Suspense round the content
+  // area (0.55, keksdose 2026-10-27) — meant growth, +58 B. Measured from 155,941 (53,636)
+  // at 6421f1d, the feat/0.55.0 tip it was built on, already over the 155,700 above.
+  { label: "the shell set", names: SHELL_SET, max: 156_050 },
 ];
 const ENTRY = "\0import-cost";
 async function importCost(names) {

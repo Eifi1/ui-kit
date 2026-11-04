@@ -671,6 +671,14 @@ function AppShellNotes() {
         literal, so two apps on one origin in development want their own. An embedded (or nested) shell has no default
         key: it would otherwise overwrite the outer app&apos;s preference with its own.
       </Note>
+      <Note>
+        <code className="font-mono">pageFallback</code> (0.55) is the wait for a lazy page, inside{" "}
+        <code className="font-mono">&lt;main&gt;</code>: given, the shell wraps its children in{" "}
+        <code className="font-mono">&lt;Suspense fallback=&#123;pageFallback&#125;&gt;</code>, so the bar and the
+        navigation are there at once and only the content area waits. The fallback renders under the router, so an app
+        draws the outline of the page the path names; left out, a suspending page goes on to the app&apos;s own
+        boundary, as before.
+      </Note>
     </div>
   );
 }
