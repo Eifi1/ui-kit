@@ -1941,6 +1941,13 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       confirmAction: "放弃",
       failed: "操作未成功，请重试。",
     },
+    // 0.55 (keksdose dev #638): the "suggested from" caption under a field — the kit's
+    // default when the app names no source, and the button that takes the value back out.
+    fieldSuggestion: {
+      suggested: "建议值",
+      clear: "清除",
+      clearName: (field) => (field ? `清除“${field}”的建议值` : "清除建议值"),
+    },
   };
 }
 

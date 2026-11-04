@@ -2053,6 +2053,13 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       confirmAction: "Scarta",
       failed: "Non ha funzionato. Riprovi.",
     },
+    // 0.55 (keksdose dev #638): the "suggested from" caption under a field — the kit's
+    // default when the app names no source, and the button that takes the value back out.
+    fieldSuggestion: {
+      suggested: "Suggerito",
+      clear: "Cancella",
+      clearName: (field) => (field ? `Cancella il suggerimento per «${field}»` : "Cancella il suggerimento"),
+    },
   };
 }
 

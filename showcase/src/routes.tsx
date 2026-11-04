@@ -314,6 +314,7 @@ const TranslationReview025Demo = lazySection(
   "TranslationReview025Demo",
 );
 const TextareaEdge025Demo = lazySection(() => import("./sections/fields"), "TextareaEdge025Demo");
+const FieldSuggestionDemo = lazySection(() => import("./sections/fields"), "FieldSuggestionDemo");
 const FeedbackDialogButtons025Demo = lazySection(
   () => import("./sections/feedback-compose"),
   "FeedbackDialogButtons025Demo",
@@ -661,6 +662,7 @@ export const GROUPS: ShowcaseGroup[] = [
           "SearchField",
           "FloatingField",
           "FieldHint",
+          "FieldSuggestion",
           "FieldLabel",
           "FieldChevron",
           "HelpPopover",
@@ -679,6 +681,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <FieldStrip023Demo />
             <Textarea024Demo />
             <TextareaEdge025Demo />
+            <FieldSuggestionDemo />
           </>
         ),
       },

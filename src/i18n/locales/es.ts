@@ -2035,6 +2035,13 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       confirmAction: "Descartar",
       failed: "No ha funcionado. Inténtelo de nuevo.",
     },
+    // 0.55 (keksdose dev #638): the "suggested from" caption under a field — the kit's
+    // default when the app names no source, and the button that takes the value back out.
+    fieldSuggestion: {
+      suggested: "Sugerido",
+      clear: "Borrar",
+      clearName: (field) => (field ? `Borrar la sugerencia para «${field}»` : "Borrar la sugerencia"),
+    },
   };
 }
 

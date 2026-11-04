@@ -2075,6 +2075,13 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       confirmAction: "Abandonner",
       failed: "Cela n’a pas fonctionné. Veuillez réessayer.",
     },
+    // 0.55 (keksdose dev #638): the "suggested from" caption under a field — the kit's
+    // default when the app names no source, and the button that takes the value back out.
+    fieldSuggestion: {
+      suggested: "Suggéré",
+      clear: "Effacer",
+      clearName: (field) => (field ? `Effacer la suggestion pour «\u202f${field}\u202f»` : "Effacer la suggestion"),
+    },
   };
 }
 

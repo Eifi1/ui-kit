@@ -348,7 +348,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `CameraCapture` and `DEFAULT_CAMERA_LABELS` — keksdose's camera, for every app.
   // 0.55 (+2, here and in /feedback; kastlan reuse audit 2026-11-02, proposal 2):
   // `useFeedbackInbox` and `FeedbackInbox`, the inbox assembled once (feedback §13).
-  ["@eifi1/ui-kit", barrel, 982],
+  // 0.55 (+2, keksdose dev #638): `FieldSuggestion` and `DEFAULT_FIELD_SUGGESTION_LABELS`, a
+  // field's "suggested from" caption with its clear.
+  ["@eifi1/ui-kit", barrel, 984],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

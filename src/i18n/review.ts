@@ -489,4 +489,6 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "heldChanges.message": one,
   "heldChanges.confirmTitle": one,
   "heldChanges.confirmBody": one,
+  // 0.55 (keksdose dev #638): the suggestion's clear button, named with its field and alone.
+  "fieldSuggestion.clearName": [["{{field}}"], [undefined]],
 };

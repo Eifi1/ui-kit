@@ -123,6 +123,7 @@ import type { SignOutPendingDialogLabels } from "../offline/sign-out-pending-dia
 import type { PwaUpdatePromptLabels } from "../offline/pwa-update-prompt";
 import type { SharedComputerLabels } from "../offline/shared-computer";
 import type { HeldChangesBannerLabels } from "../shell/held-changes-banner-labels";
+import type { FieldSuggestionLabels } from "../components/field-parts";
 
 /**
  * EVERY string the kit renders, as one typed tree — and an optional provider that
@@ -512,6 +513,9 @@ export interface UiKitLabels {
   /** 0.55: the banner for changes that cannot be sent from here — its sentence, "Switch
    *  back", and the discard's question (docs/top-bar-harmonization.md §2.6.1). */
   heldChanges: HeldChangesBannerLabels;
+  /** 0.55: a field's "suggested from" caption — the default when the app names no source,
+   *  and the button that clears the suggestion (keksdose dev #638). */
+  fieldSuggestion: FieldSuggestionLabels;
 }
 
 /**

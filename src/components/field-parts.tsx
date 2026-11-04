@@ -1,23 +1,24 @@
-import { createContext, isValidElement, useContext, useId } from "react";
+import { cloneElement, createContext, isValidElement, useContext, useId } from "react";
 import type { ComponentPropsWithoutRef, ComponentPropsWithRef, ReactNode } from "react";
 import { HelpCircle } from "lucide-react";
 import { cn } from "../lib/cn";
 import { hasContent } from "../lib/presence";
 import { plainText } from "../lib/plain-text";
-import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
+import { DEFAULT_COMMON_LABELS, useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { useInlineFacts } from "../hooks/use-large-text";
 import { FOCUS_RING } from "./focus-ring";
 import { HelpPopover } from "./help-popover";
 import { Tooltip, type TooltipSide } from "./tooltip";
 import { useCommitReason, type CommitScope } from "./write-lock";
+import { DEFAULT_FIELD_SUGGESTION_LABELS } from "./field-suggestion-labels";
 
 /**
  * The pieces of a field's anatomy the kit's fields share — the static label, the hint
  * (caption or "?"), the caption and the error under a field, the label strip over a
  * bare group, the write lock on a control that saves itself, and the wiring under them
  * (`aria-describedby`, refs). Private to the package — not re-exported from the barrel,
- * except `FieldLabel` and `FLOATING_LABEL_STATIC`, which the barrel names (ui.tsx did until
- * 0.34 split it).
+ * except `FieldLabel`, `FLOATING_LABEL_STATIC`, `FieldHint` and (0.55) `FieldSuggestion`,
+ * which the barrel names (ui.tsx did until 0.34 split it).
  *
  * One file since 0.23: until then the pickers' half (`field-anatomy.tsx`: the date and
  * month pickers, whose trigger is a button in a wrapper of their own, and the groups
@@ -203,13 +204,118 @@ export function FieldHint({ label, side = "start", className, "aria-label": aria
  * ({@link fieldHelpMark}) — so a FieldHint is its words at EVERY size, not only at Large
  * and on touch.
  */
-export function useInlineHint(hint: ReactNode, withHelp = false): ReactNode {
+export function useInlineHint(hint: ReactNode, withHelp = false, name?: ReactNode): ReactNode {
   const inline = useInlineFacts();
   if ((inline || withHelp) && isValidElement(hint) && hint.type === FieldHint) {
     const words = (hint.props as FieldHintProps).label;
     if (words) return words;
   }
-  return hint;
+  return namedSuggestion(hint, name);
+}
+
+/* ── a suggested value: where it came from (0.55, keksdose dev #638) ──────── */
+
+export interface FieldSuggestionLabels {
+  /** The caption when the field names no source: the value was filled in for the user. */
+  suggested: string;
+  /** The button after the caption that takes the suggested value back out. */
+  clear: string;
+  /** That button's accessible name — with the field's name when it has one ("Clear the
+   *  suggestion for “Category”"), else alone. It holds `clear`'s word, the one a voice
+   *  user says to press it (WCAG 2.5.3), first where the language allows. */
+  clearName: (field?: string) => string;
+}
+
+// Defined in ./field-suggestion-labels, which holds no component code (0.34, KS U8).
+export { DEFAULT_FIELD_SUGGESTION_LABELS };
+
+export interface FieldSuggestionProps {
+  /**
+   * Where the value came from, in the app's words: "From the memo", "Last used",
+   * "From the receipt". Default the kit's "Suggested" (`fieldSuggestion.suggested`).
+   */
+  from?: ReactNode;
+  /**
+   * Take the suggestion back: the app empties the field (or restores what was there), and
+   * stops passing the caption. With it, a "Clear" button follows the words; without it,
+   * the caption is words alone and the field's own editing is the way to change it.
+   */
+  onClear?: () => void;
+  /** The field's name in the button's accessible name. The kit's fields fill it in from
+   *  their label (else `aria-label`); set it for a caption drawn outside a field. */
+  field?: string;
+  /** Prop > `<UiKitProvider labels={{ fieldSuggestion }}>` > English. */
+  labels?: LabelOverride<FieldSuggestionLabels>;
+}
+
+/**
+ * A field's "suggested from" caption (0.55, keksdose dev #638): the line under a field
+ * the app filled in for the user, saying where the value came from — "From the memo",
+ * "Last used" — and, with `onClear`, a button that takes it back out.
+ *
+ * keksdose drew it by hand twice: the memo's category under the category field (a `<p>`
+ * of the caption's type, wired to the field's `aria-describedby` by its own id) and the
+ * create card's "Last used account" as a plain `hint`. The kit's fields take it as their
+ * `hint`, so the wiring is theirs:
+ *
+ * ```tsx
+ * <CategoryCombobox
+ *   hint={fromMemo ? <FieldSuggestion from={t("from_memo")} onClear={clearCategory} /> : undefined}
+ * />
+ * ```
+ *
+ * It is a CAPTION at every size, as a text hint is — under the field, on its
+ * `aria-describedby`, never a "?" on the label line — in every field that takes a `hint`
+ * (Input, Select, Textarea, the comboboxes, the pickers, the number fields, `Field`,
+ * `RhfField` and the bound fields, the groups). The hint slot is one: while the value is
+ * the suggestion, the caption takes the place of the field's own hint, and the app passes
+ * its hint back once the user has chosen. A fact that must stay beside it goes in `help`.
+ *
+ * The button is part of the caption, so the field's description is the words and then the
+ * button ("From the memo … Clear"; the "·" between them is not read): a screen reader
+ * learns there is a way back, and the button is the next tab stop after the field.
+ */
+export function FieldSuggestion({ from, onClear, field, labels: labelsProp }: FieldSuggestionProps) {
+  const labels = useKitLabels("fieldSuggestion", DEFAULT_FIELD_SUGGESTION_LABELS, labelsProp);
+  return (
+    // Inline: the field's caption (`<p>`) holds it, and a `<p>` holds no block.
+    <span data-slot="field-suggestion">
+      {hasContent(from) ? from : labels.suggested}
+      {onClear && (
+        <>
+          <span aria-hidden="true"> · </span>
+          <button
+            type="button"
+            onClick={onClear}
+            aria-label={labels.clearName(field)}
+            // A text button in the caption's own type, underlined as the kit's secondary
+            // TextLink is; the focus outline follows a wrapped line.
+            className={cn(
+              "rounded-sm font-medium text-secondary underline underline-offset-2 transition-colors hover:text-primary",
+              "focus-visible:outline-focus focus-visible:outline-offset-2 focus-visible:outline-brand",
+            )}
+          >
+            {labels.clear}
+          </button>
+        </>
+      )}
+    </span>
+  );
+}
+
+/** Whether a `hint` is a {@link FieldSuggestion} — a caption under the field at every
+ *  size, as text is (0.55). */
+export function isSuggestionHint(hint: ReactNode): boolean {
+  return isValidElement(hint) && hint.type === FieldSuggestion;
+}
+
+/** A {@link FieldSuggestion} hint with the field's name for its button, when it names no
+ *  field of its own; any other hint unchanged. */
+function namedSuggestion(hint: ReactNode, name: ReactNode): ReactNode {
+  if (!isValidElement<FieldSuggestionProps>(hint) || hint.type !== FieldSuggestion) return hint;
+  if (hint.props.field !== undefined) return hint;
+  const field = plainText(name);
+  return field === undefined ? hint : cloneElement(hint, { field });
 }
 
 /* ── help (round 0.36, docs/text-size-harmonization.md §4, §10.23) ─────────── */
@@ -307,11 +413,11 @@ export interface FieldHintParts {
 
 /**
  * Whether a resolved `hint` goes under the field as its caption: text always (see
- * {@link isTextHint}); with a `help` beside it, whatever it is — the label line's "?"
- * is the help's (round 0.36, §4).
+ * {@link isTextHint}), and a {@link FieldSuggestion} (0.55); with a `help` beside it,
+ * whatever it is — the label line's "?" is the help's (round 0.36, §4).
  */
 export function isHintCaption(hint: ReactNode, withHelp: boolean): boolean {
-  return isTextHint(hint) || (withHelp && hasContent(hint));
+  return isTextHint(hint) || isSuggestionHint(hint) || (withHelp && hasContent(hint));
 }
 
 /**
@@ -326,7 +432,7 @@ export function useFieldHint(
 ): FieldHintParts {
   const helpMark = fieldHelpMark(help, name);
   const withHelp = helpMark !== undefined;
-  const hint = useInlineHint(hintProp, withHelp);
+  const hint = useInlineHint(hintProp, withHelp, name);
   const captionId = useId();
   const caption = isHintCaption(hint, withHelp);
   return {

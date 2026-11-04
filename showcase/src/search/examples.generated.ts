@@ -117,6 +117,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "FieldStrip group={false}",
     "Textarea — the floated label on a scrolled field",
     "Textarea — the label strip's lower edge",
+    "FieldSuggestion — where a prefilled value came from",
   ],
   "forms": [
     "Form · RhfTextField · RhfNumberField · RhfSelect · RhfInlineEntityCombobox · RhfTextarea · RhfCheckbox",
@@ -1142,6 +1143,7 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
     "FieldStrip023Demo",
     "Textarea024Demo",
     "TextareaEdge025Demo",
+    "FieldSuggestionDemo",
   ],
   "forms": [
     "FormsRhf",

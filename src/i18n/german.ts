@@ -2104,5 +2104,12 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       confirmAction: "Verwerfen",
       failed: "Das hat nicht geklappt. Bitte erneut versuchen.",
     },
+    // 0.55 (keksdose dev #638): the "suggested from" caption under a field — the kit's
+    // default when the app names no source, and the button that takes the value back out.
+    fieldSuggestion: {
+      suggested: "Vorgeschlagen",
+      clear: "Entfernen",
+      clearName: (field) => (field ? `Vorschlag für „${field}“ entfernen` : "Vorschlag entfernen"),
+    },
   };
 }

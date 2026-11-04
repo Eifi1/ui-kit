@@ -318,6 +318,9 @@ export * from "./components/tabs";
 // draws, and field-parts must not import the controls).
 export { FieldLabel, FLOATING_LABEL_STATIC, FieldHint } from "./components/field-parts";
 export type { FieldLabelProps, FieldHintProps } from "./components/field-parts";
+// 0.55 (keksdose dev #638): a field's "suggested from" caption, as its `hint`, with a clear.
+export { FieldSuggestion, DEFAULT_FIELD_SUGGESTION_LABELS } from "./components/field-parts";
+export type { FieldSuggestionProps, FieldSuggestionLabels } from "./components/field-parts";
 // The kit's focus frame (§5), in its own module so the parts the controls import
 // (field-parts, the choice controls) can draw it too.
 export { FOCUS_RING, FOCUS_RING_WIDTH } from "./components/focus-ring";

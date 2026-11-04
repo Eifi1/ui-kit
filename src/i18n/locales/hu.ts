@@ -2036,6 +2036,14 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       confirmAction: "Elvetés",
       failed: "Ez nem sikerült. Kérjük, próbálja újra.",
     },
+    // 0.55 (keksdose dev #638): the "suggested from" caption under a field — the kit's
+    // default when the app names no source, and the button that takes the value back out.
+    // The field after a colon, as `common.aboutField`: no suffix has to agree with it.
+    fieldSuggestion: {
+      suggested: "Javasolt",
+      clear: "Törlés",
+      clearName: (field) => (field ? `Javaslat törlése: ${field}` : "Javaslat törlése"),
+    },
   };
 }
 

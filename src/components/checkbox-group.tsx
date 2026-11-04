@@ -156,7 +156,7 @@ export function CheckboxGroup<T extends string = string>({
   // hint is then its words at every size, as everywhere a help stands beside one.
   const helpMark = fieldHelpMark(legend !== undefined && legendVisibility === "visible" ? help : undefined, legend);
   const legendTextId = `${generated}-legend`;
-  const shownHint = useInlineHint(hint, helpMark !== undefined);
+  const shownHint = useInlineHint(hint, helpMark !== undefined, legend);
   const showHint = hasContent(shownHint);
   const showError = hasContent(error);
   const isInvalid = Boolean(invalid) || showError;
