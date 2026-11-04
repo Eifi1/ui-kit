@@ -727,6 +727,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "TopBarActions — the one order",
     "DevMenu — one flask: the Account section, then the app's",
     "SyncStatusIndicator — the seven states",
+    "HeldChangesBanner — changes that can't be sent from here",
     "TourMenu — with and without a tours page",
     "CompanySwitcher — several companies, one session",
   ],

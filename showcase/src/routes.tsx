@@ -1519,6 +1519,7 @@ export const GROUPS: ShowcaseGroup[] = [
           "TourMenu",
           "SyncStatusIndicator",
           "SyncStatus",
+          "HeldChangesBanner",
           "DevMenu",
           "DevMenuSection",
         ],
