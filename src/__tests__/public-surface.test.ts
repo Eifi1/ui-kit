@@ -355,7 +355,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // a consent asked again after its text changed.
   // 0.55 (+2, kastlan reuse audit 2026-11-02, proposal 1): `ReleaseNotes` and
   // `DEFAULT_RELEASE_NOTES_LABELS`, the release card on the changelog parser.
-  ["@eifi1/ui-kit", barrel, 989],
+  // 0.55 (+1, here and in /chart): `LegendedSeriesChart`, the chart with its legend —
+  // keksdose's report wrapper as the kit's layout.
+  ["@eifi1/ui-kit", barrel, 990],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -363,7 +365,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.52 (+1 here and in the barrel): `DEFAULT_TREEMAP_LABELS` (DSP-5).
   // 0.53 (−4, breaking): what 0.52 deprecated — `EDGE_MIN_CONTRAST`, `CHART_INK_HEX`,
   // `resolveTooltipPlacement`, `STROKE_PATTERNS` (API-4).
-  ["@eifi1/ui-kit/chart", chart, 50],
+  // 0.55 (+1 here and in the barrel): `LegendedSeriesChart`.
+  ["@eifi1/ui-kit/chart", chart, 51],
   // 0.22.0: DEFAULT_DATA_TABLE_SORT_LABELS, the phone sort control's words (+1).
   // 0.35.0: `resolveDataTableLabels` and `missingDataTableLabels` removed (R1, API-6a) (−2).
   // 0.46.1: `swipePlanRowActions`, the desktop swipe column's derivation (keksdose N3) (+1).

@@ -607,6 +607,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "x.tickValues on a category axis",
     "zoomAxes — sixty bars that opt back into a zoom",
     "visibleSeries / seriesLegendEntries — colours that hold still",
+    "LegendedSeriesChart — the chart and its legend as one",
     "Tilted category ticks, a tooltip bounded by its scroller, whole-number ticks, a custom dash",
     "Bars and periods from the keyboard — onPointClick",
     "Bars — minBarLength, chart-wide and per series",

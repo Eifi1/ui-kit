@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import {
   Button,
+  LegendedSeriesChart,
   SeriesChart,
   ToggleGroup,
   ToggleLegend,
@@ -15,8 +16,9 @@ import { numberFormat } from "../lib/number-format";
 /**
  * SERIES CHART — BARS, AREAS & TIME. The 0.8.0 half of the series chart: per-series
  * `type` and `stack`, a category or time abscissa, references and markers, per-point
- * dots, stroke weight, curve and fill, clicks, the zoom a chart's marks imply, and the
- * two helpers that keep a legend's colours still while series are switched off.
+ * dots, stroke weight, curve and fill, clicks, the zoom a chart's marks imply, the two
+ * helpers that keep a legend's colours still while series are switched off, and (0.55)
+ * `LegendedSeriesChart`, the chart and its legend as one.
  *
  * The data is money over months and a price over irregular days — an app's reports,
  * which is what these marks were built for. Every row is fixed rather than derived from
@@ -407,6 +409,75 @@ function StableLegend() {
   );
 }
 
+/* ── 0.55: the chart and its legend as one ──────────────────────────────── */
+
+/** The months with a running sum of `net` from zero: keksdose's cumulative cash flow. */
+const RUNNING = MONTHS.map((m, i) => ({
+  ...m,
+  running: MONTHS.slice(0, i + 1).reduce((sum, row) => sum + row.net, 0),
+}));
+
+const CASH_SERIES: SeriesChartSeries[] = [
+  { key: "income", label: "Income", type: "bar", color: "var(--money-income)" },
+  { key: "expense", label: "Expenses", type: "bar", color: "var(--money-expense)" },
+  { key: "running", label: "Running net", axis: "running", color: "var(--money-net)", strokeWidth: 2.5 },
+];
+
+/** The running sum's axis leaves with its line, and hands the bars their room back. */
+const cashAxes = (hidden: ReadonlySet<string>) => [
+  ...MONEY_AXIS,
+  ...(hidden.has("running")
+    ? []
+    : [{ id: "running", title: "Running (EUR)", orientation: "right" as const, includeZero: true }]),
+];
+
+const PRICE_ROWS = MONTHS.map((m, i) => ({ period: m.period, price: 2.1 + ((i * 7) % 5) / 20 }));
+
+function LegendedCharts() {
+  return (
+    <Example
+      label="LegendedSeriesChart — the chart and its legend as one"
+      hint="switch Running net off: its line goes, and its axis with it"
+    >
+      <LegendedSeriesChart
+        rows={RUNNING}
+        x={{ type: "category", key: "period", format: (_, tick) => monthLabel(tick.value) }}
+        series={CASH_SERIES}
+        axes={cashAxes}
+        valueFormat={(v) => EUR.format(v)}
+        height="h-60"
+      />
+      <div className="mt-6">
+        <LegendedSeriesChart
+          legend="key"
+          rows={PRICE_ROWS}
+          x={{ type: "category", key: "period", format: (_, tick) => monthLabel(tick.value) }}
+          series={[{ key: "price", label: "Price", color: "var(--chart-3)" }]}
+          axes={[{ id: "y", title: "EUR", format: (v) => EUR2.format(v) }]}
+          legendEntries={[
+            { key: "price", label: "Price paid", color: "var(--chart-3)", marker: "stroke" },
+            { key: "budget", label: "Budget line", color: "var(--text-muted)", marker: "stroke", dash: 1 },
+          ]}
+          references={[{ key: "budget", value: 2.25 }]}
+          valueFormat={(v) => EUR2.format(v)}
+          height="h-48"
+        />
+      </div>
+      <div className="mt-3">
+        <Note>
+          The pairing every report chart wrote by hand: the hidden set, <code className="font-mono">visibleSeries</code>{" "}
+          for the chart, the full list for the legend, the legend centred under the plot. The chart keeps what is off,
+          or the caller does with <code className="font-mono">hidden</code> and{" "}
+          <code className="font-mono">onToggle</code>. <code className="font-mono">axes</code> may be a function of what
+          is off, so an axis leaves with its series. <code className="font-mono">legend=&quot;key&quot;</code> draws a{" "}
+          <code className="font-mono">StaticLegend</code> instead — a list with no switches, here naming a reference
+          line that is no series. A legend of one series shows only while that series is off: its one way back.
+        </Note>
+      </div>
+    </Example>
+  );
+}
+
 /* ── late 0.8.0 additions ───────────────────────────────────────────────── */
 
 const LONG_CATEGORIES = [
@@ -530,6 +601,7 @@ export function SeriesChartMarks() {
       <CategoryTicks />
       <ZoomAxesDemo />
       <StableLegend />
+      <LegendedCharts />
       <LateAdditions />
     </>
   );

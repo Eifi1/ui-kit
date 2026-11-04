@@ -74,6 +74,12 @@ export {
   type SeriesChartProps,
   type SeriesLegendAxes,
 } from "./components/series-chart";
+// 0.55: the chart with its legend under it, keksdose's report wrapper as the kit's layout.
+export {
+  LegendedSeriesChart,
+  type LegendedSeriesChartLegend,
+  type LegendedSeriesChartProps,
+} from "./components/legended-series-chart";
 // 0.32.1 (keksdose's 0.32 report): the height every chart takes, for an app's wrappers.
 export type { ChartHeight } from "./components/chart-height";
 // SharedXZoom and the zoom's types: the public face of ./chart-zoom-core, whose arithmetic

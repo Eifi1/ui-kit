@@ -1327,9 +1327,9 @@ export const GROUPS: ShowcaseGroup[] = [
         title: "Series chart: bars, areas & time",
         short: "Bars & areas",
         blurb:
-          "The same chart drawing bars, areas and stacks, over categories and real time, with reference lines, markers, dots and clicks — and a legend whose colours hold still.",
+          "The same chart drawing bars, areas and stacks, over categories and real time, with reference lines, markers, dots and clicks — a legend whose colours hold still, and the chart with its legend as one.",
         icon: ChartBar,
-        components: ["SeriesChart", "visibleSeries", "seriesLegendEntries"],
+        components: ["SeriesChart", "visibleSeries", "seriesLegendEntries", "LegendedSeriesChart"],
         Body: () => (
           <>
             <SeriesChartMarks />
