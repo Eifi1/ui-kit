@@ -899,6 +899,8 @@ export {
   UserRowActions,
   userRosterSort,
   USER_ROSTER_SORT_KEYS,
+  USER_ROSTER_PAGE_SIZE,
+  USER_ROSTER_MAX_PAGE_SIZE,
   DEFAULT_USER_ROSTER_LABELS,
 } from "./admin/user-roster";
 export type {
