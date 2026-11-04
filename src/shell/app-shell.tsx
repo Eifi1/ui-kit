@@ -286,7 +286,8 @@ export interface AppShellProps extends ComponentPropsWithoutRef<"div"> {
    * router, so it can read the path (keksdose's `PageSkeleton` draws the budget's tables
    * for `/budget`), and it is the app's to hold back for a frame or two (keksdose waits
    * 150 ms, so a chunk from the service worker's cache does not flash an outline).
-   * `TableSkeleton` is a piece of one, `<LoadingState />` the plain one.
+   * `PageHeaderSkeleton` over a `TableSkeleton` is the kit's pieces for one,
+   * `<LoadingState />` the plain one.
    *
    * Everything in `children` waits together, a banner above the `<Outlet />` included;
    * a boundary of the app's own inside it still catches first, so a per-route one keeps

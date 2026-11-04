@@ -1557,6 +1557,7 @@ export const GROUPS: ShowcaseGroup[] = [
         icon: PanelTop,
         components: [
           "PageHeader",
+          "PageHeaderSkeleton",
           "Breadcrumbs",
           "useDocumentTitle",
           "formatDocumentTitle",

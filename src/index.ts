@@ -546,6 +546,9 @@ export type { SkeletonProps, SkeletonShape } from "./components/skeleton";
 // 0.48 (keksdose dev #628): the table/list loading preset, one status label.
 export { TableSkeleton } from "./components/table-skeleton";
 export type { TableSkeletonProps } from "./components/table-skeleton";
+// 0.55 (keksdose's page outline, app/page-skeleton.tsx): PageHeader's outline at its own metrics.
+export { PageHeaderSkeleton } from "./components/page-header-skeleton";
+export type { PageHeaderSkeletonProps } from "./components/page-header-skeleton";
 // 0.12.0: a centred spinner with words, signed figures and deltas, a render-error fallback.
 export * from "./components/loading-state";
 export * from "./components/signed-amount";

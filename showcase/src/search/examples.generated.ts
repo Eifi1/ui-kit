@@ -737,6 +737,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
   "page-structure": [
     "PageHeader — eyebrow, description, actions and breadcrumbs",
     "PageHeader — title only, and title with actions",
+    "PageHeaderSkeleton — the header's outline while its page loads",
     "Breadcrumbs — collapse on phones and keepEnd",
     "Breadcrumbs — separator, renderLink, labels and right-to-left",
     "SectionLabel and Caption",

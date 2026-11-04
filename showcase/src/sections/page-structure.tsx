@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { Bell, Download, Plus, Slash } from "lucide-react";
 import {
@@ -10,6 +10,7 @@ import {
   IconButton,
   Input,
   PageHeader,
+  PageHeaderSkeleton,
   SECTION_LABEL_CLASS,
   SectionLabel,
   StatusDot,
@@ -152,6 +153,82 @@ function PageHeaderMinimal() {
             </IconButton>
           }
         />
+      </div>
+    </Example>
+  );
+}
+
+function PageHeaderSkeletonDemo() {
+  const [size, setSize] = useState<PageHeaderSize>("md");
+  const [loading, setLoading] = useState(true);
+  const box = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState(0);
+  // The box stays while its child swaps, so one observer reads both (none in jsdom).
+  useEffect(() => {
+    const el = box.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => setHeight(el.offsetHeight));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  return (
+    <Example
+      label="PageHeaderSkeleton — the header's outline while its page loads"
+      hint="switch between the two: the box keeps its height at every size and text size"
+    >
+      <Row className="mb-4">
+        <ToggleGroup<PageHeaderSize>
+          aria-label="size"
+          value={size}
+          onChange={setSize}
+          options={[
+            { value: "sm", label: "size sm" },
+            { value: "compact", label: "size compact" },
+            { value: "md", label: "size md" },
+          ]}
+        />
+        <ToggleGroup<"outline" | "header">
+          aria-label="shown"
+          value={loading ? "outline" : "header"}
+          onChange={(v) => setLoading(v === "outline")}
+          options={[
+            { value: "outline", label: "outline" },
+            { value: "header", label: "header" },
+          ]}
+        />
+      </Row>
+      <div ref={box} data-testid="page-header-skeleton-demo">
+        {loading ? (
+          <PageHeaderSkeleton size={size} actions={2} eyebrow description />
+        ) : (
+          <PageHeader
+            as="h3"
+            size={size}
+            eyebrow="Books"
+            title="Invoices"
+            description="Every invoice of the year, paid and open"
+            actions={
+              <>
+                <Button variant="secondary">
+                  <Download className="size-4" /> Export
+                </Button>
+                <Button variant="accent">
+                  <Plus className="size-4" /> New invoice
+                </Button>
+              </>
+            }
+          />
+        )}
+      </div>
+      <p className={`mt-4 ${READOUT}`}>height: {height}px</p>
+      <div className="mt-3">
+        <Note>
+          Each line is its type&apos;s own line box, {code("1lh")} of the header&apos;s class for it, so it follows{" "}
+          {code("size")}, {code("md")}&apos;s step up at {code("sm")} and the reader&apos;s text size; an action is a{" "}
+          {code("md")} Button&apos;s box, 48px from Large up. The rows and gaps are the header&apos;s own class strings.
+          Nothing is announced unless {code("label")} is given: on a page outline the {code("TableSkeleton")} under it
+          says &ldquo;Loading…&rdquo; once.
+        </Note>
       </div>
     </Example>
   );
@@ -436,6 +513,7 @@ export function PageStructure() {
     <>
       <PageHeaders />
       <PageHeaderMinimal />
+      <PageHeaderSkeletonDemo />
       <BreadcrumbCollapse />
       <BreadcrumbVariants />
       <TextPrimitives />

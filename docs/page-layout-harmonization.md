@@ -313,3 +313,11 @@ the sidebar and the bottom bar stay while the content area waits. Left out, noth
 - A per-route boundary (ka, KS) can stay or go: inside the shell's, it catches first.
   KS's public pages outside the shell keep theirs either way.
 
+
+**`PageHeaderSkeleton`** is the header's half of such an outline, at `PageHeader`'s own
+metrics: the trail, eyebrow, title and description lines each their type's line box, the
+actions a `md` Button's box (48px from Large up, full width on a phone at Large for
+`stacked`), laid out by the header's own row and gap classes (`page-header-layout.ts`).
+kk drew it by hand (`h-7` for its `compact` title, `h-9` for the actions); with this it is
+`<PageHeaderSkeleton size="compact" mobileLayout="inline" />` over its `TableSkeleton`. It
+announces nothing unless given a `label`: the `TableSkeleton` under it says "Loading…" once.
