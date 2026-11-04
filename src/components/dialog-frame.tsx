@@ -28,7 +28,9 @@ export { DEFAULT_DIALOG_FRAME_LABELS };
  * actions sit in. `busy` too (DUP-3): it holds the frame's X and the `close` that
  * `actions` and `headerActions` receive, since both are the `Modal`'s own close. And
  * `held` (keksdose audit follow-up, 2026-11-01), which holds the same and shows the X
- * disabled — see {@link ModalProps.held}.
+ * disabled — see {@link ModalProps.held}. And `onDismissRefused` (0.54 follow-up), which
+ * hears each press either one refused; the X and the `close` that `actions` and
+ * `headerActions` receive report `"close"`.
  */
 export interface DialogFrameProps extends Omit<ModalProps, "labelledBy" | "children" | "title"> {
   /** The heading, and therefore the dialog's accessible name (`aria-labelledby`). */

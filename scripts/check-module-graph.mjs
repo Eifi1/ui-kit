@@ -231,7 +231,11 @@ const BUDGETS = [
   // 155,155 B (53,319 gzip) after the 0.52 code review's fixes: lazyWithFallback (the
   // feedback dialog's and the palette's failed chunk no longer takes the shell down), the
   // tour's chunk-failure and Escape-while-loading paths, the hotkey fixes — meant growth.
-  { label: "the shell set", names: SHELL_SET, max: 155_600 },
+  // 155,656 B (53,533 gzip) in 0.55, from 155,365 (53,381) at 0.54: Modal's
+  // `onDismissRefused` and useOverlayHistory's `onRefused`, which tell the app which
+  // dismissal `busy` or `held` refused (0.54 follow-up, keksdose recovery-code-pane) —
+  // meant growth.
+  { label: "the shell set", names: SHELL_SET, max: 155_700 },
 ];
 const ENTRY = "\0import-cost";
 async function importCost(names) {

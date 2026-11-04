@@ -73,6 +73,8 @@ interface OverlayEntry {
   close: () => void;
   /** The overlay refuses to close right now — see the `held` option. */
   held: () => boolean;
+  /** A Back press `held` refused — see the `onRefused` option. */
+  refused: () => void;
 }
 
 const stack: OverlayEntry[] = [];
@@ -518,6 +520,9 @@ function closeOnPop() {
   // Checked before anything below moves: a held overlay keeps its place and its record.
   if (top.held()) {
     putBack(top.id);
+    // Told after the entry is back, so what the overlay does about it (a `Modal`'s
+    // `onDismissRefused`) runs on its own entry, not on the page under it.
+    top.refused();
     return;
   }
   stack.pop();
@@ -597,22 +602,37 @@ function syncGestureListeners(): void {
  *                  is in flight, DUP-3): Back does not call `onClose`, and the entry the
  *                  press took is put back, so the overlay still has one for the next
  *                  Back. Read when Back is pressed. Default false.
+ * @param options.onRefused  called once for each Back `held` refused, after its entry is
+ *                  put back — how a held `Modal` hears the press it dropped and passes
+ *                  it on as `onDismissRefused("back")` (0.54 follow-up, keksdose
+ *                  recovery-code-pane).
  */
-export function useOverlayHistory(open: boolean, onClose: () => void, { held = false }: { held?: boolean } = {}): void {
+export function useOverlayHistory(
+  open: boolean,
+  onClose: () => void,
+  { held = false, onRefused }: { held?: boolean; onRefused?: () => void } = {},
+): void {
   // The listener fires outside React's render, so it reads the latest handler
   // through a ref rather than through the closure the effect captured.
   const closeRef = useRef(onClose);
   const heldRef = useRef(held);
+  const refusedRef = useRef(onRefused);
   useEffect(() => {
     closeRef.current = onClose;
     heldRef.current = held;
+    refusedRef.current = onRefused;
   });
 
   useEffect(() => {
     if (!open || typeof window === "undefined") return;
     ensureListening();
     const id = `overlay-${(nextId += 1)}`;
-    const entry: OverlayEntry = { id, close: () => closeRef.current(), held: () => heldRef.current };
+    const entry: OverlayEntry = {
+      id,
+      close: () => closeRef.current(),
+      held: () => heldRef.current,
+      refused: () => refusedRef.current?.(),
+    };
     stack.push(entry);
     syncGestureListeners();
     const prev = window.history.state;
