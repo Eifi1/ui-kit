@@ -14,6 +14,7 @@ export const DEFAULT_FEEDBACK_DETAIL_LABELS: FeedbackDetailLabels = {
   cancel: "Cancel",
   url: "URL",
   copyUrl: "Copy URL",
+  diagnostics: "Diagnostics",
   attachment: "Attachment",
   download: (name) => `Download ${name}`,
   downloadFailed: "The attachment could not be downloaded.",

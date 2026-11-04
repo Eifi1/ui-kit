@@ -108,6 +108,42 @@ describe("StatTile", () => {
     expect(container.querySelector("[data-private]")).toBeNull();
   });
 
+  it("leaves the description and footer readable under sensitive alone", () => {
+    render(<StatTile label="Reserve" value={10} description="Last 12 months" footer="On track" sensitive />);
+    expect(screen.getByText("Last 12 months").closest("[data-private]")).toBeNull();
+    expect(screen.getByText("On track").closest("[data-private]")).toBeNull();
+  });
+
+  // keksdose audit follow-up, 2026-11-01: the tax reserve tile names its taxable base
+  // in the description and its shortfall in the footer, and tagged both by hand.
+  it("tags the description and the footer data-private on their own switches", () => {
+    const { rerender } = render(
+      <StatTile
+        label="Reserve"
+        value={10}
+        description="Applied to €42,000"
+        footer="Set aside €1,200 more"
+        descriptionSensitive
+      />,
+    );
+    expect(screen.getByText("Applied to €42,000").closest("[data-private]")).not.toBeNull();
+    expect(screen.getByText("Set aside €1,200 more").closest("[data-private]")).toBeNull();
+    // Not the headline: that is `sensitive`'s.
+    expect(screen.getByText("10")).not.toHaveAttribute("data-private");
+
+    rerender(
+      <StatTile
+        label="Reserve"
+        value={10}
+        description="Applied to €42,000"
+        footer="Set aside €1,200 more"
+        footerSensitive
+      />,
+    );
+    expect(screen.getByText("Applied to €42,000").closest("[data-private]")).toBeNull();
+    expect(screen.getByText("Set aside €1,200 more").closest("[data-private]")).not.toBeNull();
+  });
+
   it("names the trend sparkline after the tile and speaks in its format", () => {
     render(<StatTile label="Spend" value={40} currency="USD" locale="en-US" trend={[10, 40]} />);
     expect(screen.getByRole("img")).toHaveAccessibleName("Spend: Rising from $10.00 to $40.00");

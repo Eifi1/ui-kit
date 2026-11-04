@@ -35,6 +35,7 @@ import {
   splitDescription,
 } from "./feedback-record";
 import type { FeedbackContext, FeedbackRecord } from "./feedback-record";
+import { diagnosticsEntries, FeedbackDiagnosticsList } from "./feedback-diagnostics";
 import { runMutation } from "./feedback-mutation";
 import { feedbackPage, feedbackPageLinkTarget } from "./feedback-page-link";
 import { useFeedbackStatusUndo } from "./feedback-status-undo";
@@ -117,6 +118,9 @@ export interface FeedbackDetailLabels {
   /** The copy button beside the link — copies the FULL `context.url`.
    *  de-CH: "URL kopieren" */
   copyUrl: string;
+  /** The heading over `context.diagnostics`, between the URL and the attachment (keksdose
+   *  live #481). de-CH: "Diagnose" */
+  diagnostics: string;
   /** Section 3's heading, and each picture's alt text. de-CH: "Anhang" */
   attachment: string;
   /** A PDF's / text file's download button, given the file's name.
@@ -631,6 +635,9 @@ export function FeedbackRowDetail({
   const { description } = splitDescription(row.body);
   const page = feedbackPage(row.context);
   const pageLink = page && feedbackPageLinkTarget(page, pageLinkExclude);
+  // What the app attached is for whoever handles the report and whoever sent it, never
+  // for another viewer of a shared row (keksdose live #481).
+  const diagnostics = canEdit || access.isAuthor ? diagnosticsEntries(row.context?.diagnostics) : [];
   // 0.47 (§12): with the entries, each entry's file is drawn inline in the Replies
   // timeline, so the Attachment section holds the report's own files.
   const files = feedbackAttachmentUrls(row.replies ? { ...row, replies: undefined } : row);
@@ -730,6 +737,12 @@ export function FeedbackRowDetail({
             </code>
             <CopyButton size="xs" className="shrink-0" text={page.url} label={labels.copyUrl} stopPropagation />
           </div>
+        </FeedbackDetailSection>
+      )}
+
+      {diagnostics.length > 0 && (
+        <FeedbackDetailSection title={labels.diagnostics}>
+          <FeedbackDiagnosticsList entries={diagnostics} />
         </FeedbackDetailSection>
       )}
 

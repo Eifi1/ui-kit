@@ -146,6 +146,16 @@ interface FeedbackDialogBaseProps<C extends string = string> {
    *  English. Optional since 0.12.0; a whole `FeedbackDialogLabels` still fits. */
   labels?: LabelOverride<FeedbackDialogLabels>;
   submitting?: boolean;
+  /**
+   * The subject and the body each opening starts with, in place of empty fields — the
+   * reporter edits them like anything typed. `useFeedbackSubmit().open(category, { title,
+   * body })` passes them (keksdose live #481: "Report this problem" opens on words the
+   * screen already knows). Read when the dialog opens; a change while it is open leaves
+   * the draft alone.
+   */
+  defaultTitle?: string;
+  /** The body's, as `defaultTitle` is the subject's. */
+  defaultBody?: string;
   contextSlot?: ReactNode;
   attachmentAccept?: string[];
   maxAttachmentBytes?: number;
@@ -245,6 +255,8 @@ export function FeedbackDialog<C extends string = string>(props: FeedbackDialogP
     onCategoryChange,
     labels: labelsProp,
     submitting = false,
+    defaultTitle = "",
+    defaultBody = "",
     contextSlot,
     attachmentAccept = DEFAULT_ATTACHMENT_ACCEPT,
     maxAttachmentBytes = DEFAULT_MAX_ATTACHMENT_BYTES,
@@ -254,8 +266,8 @@ export function FeedbackDialog<C extends string = string>(props: FeedbackDialogP
     attachmentButtonSize,
     publicNotice,
   } = props;
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
+  const [title, setTitle] = useState(defaultTitle);
+  const [body, setBody] = useState(defaultBody);
   const [attachment, setAttachment] = useState<File | null>(null);
   // `attachments="multiple"` only: the capture, apart from the picked/pasted files.
   const [screenshot, setScreenshot] = useState<File | null>(null);
@@ -283,8 +295,8 @@ export function FeedbackDialog<C extends string = string>(props: FeedbackDialogP
   if (open !== wasOpen) {
     setWasOpen(open);
     if (open) {
-      setTitle("");
-      setBody("");
+      setTitle(defaultTitle);
+      setBody(defaultBody);
       setAttachment(null);
       setScreenshot(null);
       setFiles([]);

@@ -148,6 +148,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     feedbackContext: {
       user: "Felhasználó",
       attachUrl: "Az aktuális oldal URL-jének csatolása",
+      diagnostics: "A bejelentéssel küldött diagnosztika",
     },
     feedbackPage: {
       title: "Beérkezett visszajelzések",
@@ -180,6 +181,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       cancel: "Mégse",
       url: "URL",
       copyUrl: "URL másolása",
+      diagnostics: "Diagnosztika",
       attachment: "Melléklet",
       download: (name) => `${name} letöltése`,
       downloadFailed: "A mellékletet nem sikerült letölteni.",

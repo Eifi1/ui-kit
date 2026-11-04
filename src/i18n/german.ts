@@ -158,6 +158,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
     feedbackContext: {
       user: "Nutzer",
       attachUrl: "Aktuelle Seiten-URL anhängen",
+      diagnostics: "Mitgesendete Diagnose",
     },
     feedbackPage: {
       title: "Feedback-Eingang",
@@ -190,6 +191,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       cancel: "Abbrechen",
       url: "URL",
       copyUrl: "URL kopieren",
+      diagnostics: "Diagnose",
       attachment: "Anhang",
       download: (name) => `${name} herunterladen`,
       downloadFailed: "Der Anhang konnte nicht heruntergeladen werden.",

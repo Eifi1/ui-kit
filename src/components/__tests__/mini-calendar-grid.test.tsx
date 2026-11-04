@@ -311,3 +311,27 @@ describe("MiniCalendar in RTL (0.7.0)", () => {
     expect(next.querySelector("svg")!.getAttribute("class")).toContain("rtl:-scale-x-100");
   });
 });
+
+// keksdose audit follow-up, 2026-11-01: each day cell's name went through
+// toLocaleDateString, a formatter per cell and render.
+describe("MiniCalendar names its days through the formatter cache", () => {
+  it("builds no date formatter to draw a month it has drawn before", () => {
+    const { rerender } = render(
+      <MiniCalendar mode="single" from="2026-09-14" to="2026-09-14" locale={LOCALE} onSelect={noop} />,
+    );
+    // `toLocaleDateString` builds its formatter inside the engine, out of a constructor
+    // spy's sight: it is watched on its own.
+    const built = vi.spyOn(Intl, "DateTimeFormat");
+    const perCall = vi.spyOn(Date.prototype, "toLocaleDateString");
+    try {
+      rerender(<MiniCalendar mode="single" from="2026-09-14" to="2026-09-14" locale={LOCALE} onSelect={() => {}} />);
+      expect(built).not.toHaveBeenCalled();
+      expect(perCall).not.toHaveBeenCalled();
+    } finally {
+      built.mockRestore();
+      perCall.mockRestore();
+    }
+    expect(day("2026-09-14")).toBeInTheDocument();
+    expect(screen.getByRole("grid", { name: "September 2026" })).toBeInTheDocument();
+  });
+});

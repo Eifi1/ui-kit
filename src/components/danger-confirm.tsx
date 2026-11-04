@@ -6,6 +6,7 @@ import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { Button } from "./button";
 import { Input } from "./input";
 import { Label } from "./field-base";
+import { FIELD_ERROR_CLASS } from "./field-parts";
 import { Spinner } from "./spinner";
 import type { ButtonVariant } from "./button-look";
 import type { InputProps } from "./input";
@@ -536,6 +537,27 @@ export interface DangerConfirmProps extends Omit<ComponentPropsWithRef<"div">, "
    * confirm, so a keyboard user can retry or Shift+Tab to the field to correct (0.24).
    */
   busy?: boolean;
+  /**
+   * Why the last confirm failed ("Wrong password"), in the tile beside the field it is
+   * about rather than in a toast away from it (keksdose audit follow-up, 2026-11-01:
+   * PasswordDangerCard toasted its `password_incorrect` for want of this). The app sets
+   * it from the failure and words it — a 400 is a wrong password, a 500 is not.
+   *
+   * Drawn as the field's own `error`, as {@link ReauthDialog} draws its own: under the
+   * password with `requirePassword`, else under the typed phrase — the field painted,
+   * `aria-invalid`, the message its `aria-describedby` — and in a tile with neither, as
+   * a line above the buttons. Announced as it appears (`role="alert"`): it arrives
+   * after the press, with focus on the confirm, where a field's description alone is
+   * not heard. Passed at all — even as `undefined` — the field keeps its box, as with
+   * Input's `error`, so the message going away does not rebuild the field mid-edit.
+   *
+   * Hidden while the next attempt runs, once the user edits the tick, the phrase or the
+   * password (it is about what was submitted), and when the tile arms or disarms, until
+   * the next confirm; shown again when a confirm fails with it still set. So a
+   * mutation's error can be handed over as it is:
+   * `error={mut.error ? message(mut.error) : undefined}`.
+   */
+  error?: ReactNode;
   /** The arm button is disabled. */
   disabled?: boolean;
   /**
@@ -628,30 +650,32 @@ function firstSlotField(slot: HTMLElement | null): HTMLElement | null {
  * destructive button itself), and disarming moves it back to the arm button, so the
  * keyboard user is never left on an element that just vanished.
  */
-export function DangerConfirm({
-  onConfirm,
-  requirePassword,
-  requireAcknowledge,
-  consequences,
-  phrase,
-  phraseMatch = "trim",
-  prompt,
-  tone = "danger",
-  confirmVariant,
-  confirmDisabledReason,
-  children,
-  armLabel,
-  confirmLabel,
-  busy: busyProp,
-  disabled,
-  lockedReason: ownLockedReason,
-  commit,
-  armed: armedProp,
-  onArmedChange,
-  labels: labelsProp,
-  className,
-  ...rest
-}: DangerConfirmProps) {
+export function DangerConfirm(props: DangerConfirmProps) {
+  const {
+    onConfirm,
+    requirePassword,
+    requireAcknowledge,
+    consequences,
+    phrase,
+    phraseMatch = "trim",
+    prompt,
+    tone = "danger",
+    confirmVariant,
+    confirmDisabledReason,
+    children,
+    armLabel,
+    confirmLabel,
+    busy: busyProp,
+    error,
+    disabled,
+    lockedReason: ownLockedReason,
+    commit,
+    armed: armedProp,
+    onArmedChange,
+    labels: labelsProp,
+    className,
+    ...rest
+  } = props;
   const labels = useKitLabels("dangerConfirm", DEFAULT_DANGER_CONFIRM_LABELS, labelsProp);
   const lockedReason = useCommitReason(commit, ownLockedReason);
   const [armedState, setArmedState] = useState(false);
@@ -659,6 +683,9 @@ export function DangerConfirm({
   const [password, setPassword] = useState("");
   const [typed, setTyped] = useState("");
   const [acknowledged, setAcknowledged] = useState(false);
+  // The `error` describes what was submitted: an edit, an arm or a disarm leaves it
+  // describing nothing on screen. Cleared by the next confirm — ReauthDialog's `edited`.
+  const [errorStale, setErrorStale] = useState(false);
   const { pending, run } = usePromisePending();
   const busy = Boolean(busyProp) || pending;
   // `readOnly` rather than `disabled` on the fields while busy: disabling the field
@@ -686,6 +713,8 @@ export function DangerConfirm({
   const [wasArmed, setWasArmed] = useState(armed);
   if (wasArmed !== armed) {
     setWasArmed(armed);
+    // An `error` still passed is about the attempt before: not shown until a confirm.
+    setErrorStale(true);
     if (!armed) {
       setPassword("");
       setTyped("");
@@ -785,10 +814,21 @@ export function DangerConfirm({
       ...(asksAcknowledge && { acknowledged: true as const }),
     };
     confirmed.current = true;
+    setErrorStale(false);
     // Disarms when it resolves; a rejection leaves it armed, fields kept: the caller
     // shows why, the user retries.
     run(onConfirm(values.password, values), () => setArmed(false));
   };
+
+  // The failure's message, under the field it is about: the password, else the phrase,
+  // else (a tile with neither) a line of its own. Not while the next attempt runs.
+  const shownError = errorStale || busy ? undefined : error;
+  const errorAlert = hasContent(shownError) ? <span role="alert">{shownError}</span> : undefined;
+  const errorOn = requirePassword ? "password" : phrase !== undefined ? "phrase" : "line";
+  // Passed at all, the carrying field keeps its box (Input's `error` rule): only then.
+  const fieldError = (field: "password" | "phrase") =>
+    "error" in props && errorOn === field ? { error: errorAlert } : {};
+  const edited = () => setErrorStale(true);
 
   // The first field takes focus on arm: the tick, then the phrase, then the password —
   // the order they are drawn in.
@@ -880,7 +920,9 @@ export function DangerConfirm({
             // Not `disabled` while busy, for the same reason the fields are readOnly:
             // the box may hold the focus. A change while busy is simply not taken.
             onCheckedChange={(next) => {
-              if (!busy) setAcknowledged(next);
+              if (busy) return;
+              setAcknowledged(next);
+              edited();
             }}
           />
         )}
@@ -890,11 +932,15 @@ export function DangerConfirm({
             target={phrase}
             match={phraseMatch}
             value={typed}
-            onValueChange={setTyped}
+            onValueChange={(next) => {
+              setTyped(next);
+              edited();
+            }}
             busy={busy}
             // Already resolved through this tile's own `labels` prop; handed on so a
             // per-instance phrase wording reaches the field.
             labels={{ phrase: labels.phrase, phrasePlaceholder: labels.phrasePlaceholder }}
+            {...fieldError("phrase")}
           />
         )}
         {requirePassword && (
@@ -903,8 +949,15 @@ export function DangerConfirm({
             label={labels.password}
             value={password}
             busy={busy}
-            onValueChange={setPassword}
+            onValueChange={(next) => {
+              setPassword(next);
+              edited();
+            }}
+            {...fieldError("password")}
           />
+        )}
+        {errorOn === "line" && errorAlert !== undefined && (
+          <p className={cn(FIELD_ERROR_CLASS, "mt-0")}>{errorAlert}</p>
         )}
         <div className="flex flex-wrap gap-2">
           <Button id={cancelId} type="button" variant="ghost" disabled={busy} onClick={() => setArmed(false)}>

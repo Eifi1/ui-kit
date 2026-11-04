@@ -617,6 +617,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "projection as a list: Committed and Projected",
     "truncateLabel",
     "Interactive and loading",
+    "sensitive, descriptionSensitive, footerSensitive",
     "Sparkline — tones, scale and stroke",
     "StatTile — number formatting and remaining tones",
     "StatTile — renderLink, custom sparkline and labels",

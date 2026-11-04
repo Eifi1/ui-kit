@@ -52,6 +52,8 @@ function seedRow(): FeedbackRecord {
       url: "https://app.example.test/accounts?p=2&sort=date#chart",
       route: "/accounts",
       environment: "dev",
+      // What the app attached (keksdose live #481): the detail's Diagnostics section.
+      diagnostics: { kind: "chart_save", chart_id: 18, points: 412, last_error: null, render_ms: 96 },
     },
     screenshot_url: KEYS.shot,
     attachment_urls: [KEYS.log],

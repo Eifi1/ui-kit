@@ -41,7 +41,9 @@ export interface CurrencySelectProps extends Omit<ComponentPropsWithoutRef<"div"
   /**
    * Restrict the pickable currencies to these ISO codes (e.g. only the
    * currencies actually present in a budget). Order is preserved. Defaults to
-   * the full {@link CURRENCIES} list.
+   * the full {@link CURRENCIES} list but a `retired` currency (the lev, since
+   * Bulgaria's euro), which only a field that holds it lists. A retired code named
+   * here is offered: the list is the caller's.
    */
   options?: string[];
   /** Required and unanswered — {@link FIELD_INVALID}, the same rose border the

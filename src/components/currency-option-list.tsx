@@ -73,7 +73,8 @@ export interface CurrencyOptionListProps {
   /** A currency was picked. The host closes the list. */
   onChoose: (code: string) => void;
   /** Only these ISO codes, in this order; codes the kit has no definition for are
-   *  dropped. Default every one of {@link CURRENCIES}. */
+   *  dropped. Default every one of {@link CURRENCIES} that is not `retired` (the chosen
+   *  one too, if it is). A retired code named here stays: the list is the caller's. */
   codes?: readonly string[];
   /** Translated names by code — see {@link currencyName}. */
   currencyNames?: Record<string, string>;
@@ -112,19 +113,27 @@ export function CurrencyOptionList({
   searchPlaceholder,
   sheetTitle,
 }: CurrencyOptionListProps) {
+  const held = getCurrency(value);
+  const chosen = held?.code;
+  // A retired currency the field holds — the one the default list keeps for it. Its own
+  // key, so a change of an ordinary value does not rebuild the rows and their names.
+  const heldRetired = held?.retired ? held.code : undefined;
   // Keyed on the codes' CONTENTS: an inline `options={["EUR", "CHF"]}` is a new array
   // every render.
   const codesKey = codes?.join(",");
   const pool = useMemo(
     () =>
       codesKey === undefined
-        ? CURRENCIES
+        ? // No currency that was replaced (the lev, since Bulgaria's euro: keksdose audit
+          // follow-up, 2026-11-01) — unless the field holds it, which then opens on its
+          // own row, checked, rather than on a list where nothing is chosen.
+          CURRENCIES.filter((c) => !c.retired || c.code === heldRetired)
         : // The caller's order; codes the kit has no definition for are dropped.
           codesKey
             .split(",")
             .map((code) => getCurrency(code))
             .filter((c): c is CurrencyOption => c !== undefined),
-    [codesKey],
+    [codesKey, heldRetired],
   );
   const named = useMemo(
     () => pool.map((c) => ({ c, name: currencyName(c, currencyNames, locale) })),
@@ -147,7 +156,6 @@ export function CurrencyOptionList({
     }));
   }, [named, query, locale]);
 
-  const chosen = getCurrency(value)?.code;
   return (
     <ComboboxPanel
       // The core with the currency filter's rows in place of its own.

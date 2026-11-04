@@ -204,6 +204,7 @@ const NOT_SHOWN: Record<string, string> = {
   matchesHotkey: "useHotkey's parser; shown through the components that bind keys",
   parseHotkey: "useHotkey's parser; shown through the components that bind keys",
   isBillingError: "the billing refusals' test; shown through the billing page's errors",
+  billingRefusalText: "the billing refusals' words; shown through the billing page's errors",
   isBillingReadOnly: "the billing standing; shown through the billing specimens",
   billingLockAt: "the billing standing; shown through the billing specimens",
   billingCurrencyFor: OWED,

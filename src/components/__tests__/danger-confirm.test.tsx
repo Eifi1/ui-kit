@@ -816,3 +816,93 @@ describe("DangerConfirm — while the action runs (0.24)", () => {
     expect(document.body).toHaveFocus();
   });
 });
+
+/** keksdose audit follow-up, 2026-11-01: a wrong password was a toast, away from the field
+ *  (PasswordDangerCard's `password_incorrect`), because the tile had nowhere to put it. */
+describe("DangerConfirm — error", () => {
+  it("puts a failed confirm's error under the password: invalid, described, announced", async () => {
+    const user = userEvent.setup();
+    let reject!: () => void;
+    const view = (error?: string) => (
+      <DangerConfirm
+        armed
+        requirePassword
+        phrase="wipe"
+        error={error}
+        onConfirm={() => new Promise<void>((_, r) => (reject = r))}
+      />
+    );
+    const { rerender } = render(view());
+    const password = screen.getByLabelText("Password");
+    await user.type(screen.getByLabelText("Type “wipe” to confirm"), "wipe");
+    await user.type(password, "wrong{Enter}");
+    await act(async () => reject());
+    rerender(view("Wrong password"));
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Wrong password");
+    expect(password).toHaveAttribute("aria-invalid", "true");
+    expect(password).toHaveAccessibleDescription("Wrong password");
+    // On the field it is about, not on the phrase above it.
+    expect(screen.getByLabelText("Type “wipe” to confirm")).not.toHaveAttribute("aria-invalid");
+    // `error` was passed from the start, so the field kept its box: the same <input>.
+    expect(screen.getByLabelText("Password")).toBe(password);
+  });
+
+  it("hides it on an edit and while the next attempt runs, and shows it again when that fails", async () => {
+    const user = userEvent.setup();
+    let reject!: () => void;
+    render(
+      <DangerConfirm
+        armed
+        requirePassword
+        error="Wrong password"
+        onConfirm={() => new Promise<void>((_, r) => (reject = r))}
+      />,
+    );
+    const password = screen.getByLabelText("Password");
+    await user.type(password, "wrong{Enter}");
+    // Running: the message is about the attempt before this one.
+    expect(screen.queryByRole("alert")).toBeNull();
+    await act(async () => reject());
+    expect(screen.getByRole("alert")).toHaveTextContent("Wrong password");
+
+    await user.type(password, "!");
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(password).not.toHaveAttribute("aria-invalid");
+    // Gone without rebuilding the field under the typist.
+    expect(screen.getByLabelText("Password")).toBe(password);
+    expect(password).toHaveFocus();
+
+    await user.keyboard("{Enter}");
+    await act(async () => reject());
+    expect(screen.getByRole("alert")).toHaveTextContent("Wrong password");
+  });
+
+  it("is not shown on arming, until a confirm", async () => {
+    const user = userEvent.setup();
+    render(<DangerConfirm requirePassword error="Wrong password" onConfirm={() => {}} />);
+    await user.click(screen.getByRole("button", { name: "Delete…" }));
+    expect(screen.queryByRole("alert")).toBeNull();
+    await user.type(screen.getByLabelText("Password"), "pw{Enter}");
+    expect(screen.getByRole("alert")).toHaveTextContent("Wrong password");
+  });
+
+  it("goes under the typed phrase when there is no password", () => {
+    render(<DangerConfirm armed phrase="ada@example.com" error="Not this account's address" onConfirm={() => {}} />);
+    const field = screen.getByLabelText("Type “ada@example.com” to confirm");
+    expect(field).toHaveAttribute("aria-invalid", "true");
+    expect(field).toHaveAccessibleDescription("Not this account's address");
+    expect(screen.getByRole("alert")).toHaveTextContent("Not this account's address");
+  });
+
+  it("is a line above the buttons in a tile with neither field, and a tick hides it", async () => {
+    const user = userEvent.setup();
+    render(<DangerConfirm armed requireAcknowledge error="The server did not answer" onConfirm={() => {}} />);
+    const alert = screen.getByRole("alert");
+    expect(alert).toHaveTextContent("The server did not answer");
+    const cancel = screen.getByRole("button", { name: "Cancel" });
+    expect(alert.compareDocumentPosition(cancel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    await user.click(screen.getByRole("checkbox"));
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+});

@@ -44,7 +44,9 @@ No site in the three apps does: kastlan passes `columns` to `useTableUrlState`
   - report-range-field.tsx:128: `commit="apply"` → `apply`.
   - Tour tests that start a tour and read its card at once: `await screen.findByRole("dialog")`
     (the overlay is its own chunk now): budget-page, transactions-page (:565), tours,
-    app-tour-provider, tour-url-sync.
+    app-tour-provider, tour-url-sync. Change each even when it passes without: a warm chunk
+    on a fast machine lands in time, CI's slower runners don't (tour-url-sync passed
+    locally and failed in CI; added after the release, keksdose).
   - app.css: the `@source` pair below.
   (The old forms above keep working until 0.53.)
 - **kastlan**

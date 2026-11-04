@@ -570,6 +570,58 @@ export function dropReviews<T extends TranslationReviewKey>(
   return prev.filter((r) => !gone.has(`${r.locale}|${r.key}`));
 }
 
+/**
+ * How many verdicts one request carries. server-kit refuses more than 2000 in one
+ * `PUT /translations/reviews` or `POST /translations/reviews/clear` (`BATCH_MAX`, its
+ * translation_review/schemas.py); half of it, as each of the three apps sent. A whole area
+ * is rarely more than a few hundred, so most saves are one request; "Approve the
+ * unreviewed" over an app's every string is not.
+ */
+const REVIEW_CHUNK = 1000;
+
+/**
+ * A save of any size under server-kit's cap: `writes` in chunks of 1000, one request
+ * after the other, in their order, and every verdict the server answered with, in that
+ * order — to patch the page's cached list with {@link mergeReviews} once. `save` is the
+ * app's own request (`PUT /translations/reviews`), answering with the verdicts it wrote,
+ * in either spelling. No writes, no request: the server refuses an empty batch.
+ *
+ * A chunk that fails rejects with its error, and the chunks after it are not sent. What
+ * the chunks before it wrote stays written — the server has it — but is not handed back,
+ * so the page leaves its cache as it was and the panel shows the error; a second try
+ * writes those verdicts again, which changes nothing but the time on them.
+ *
+ * All three apps wrote this loop, with a `chunks` helper and `SAVE_CHUNK = 1000` of
+ * their own (kastlan reuse audit 2026-11-02, proposal 5):
+ *
+ *     const written = await saveReviewsInChunks(writes.map(toApiWrite), (part) => translationsApi.save(part));
+ *     patchCache((reviews) => mergeReviews(reviews, written));
+ */
+export async function saveReviewsInChunks<W extends TranslationReviewKey, R extends TranslationReviewKey>(
+  writes: readonly W[],
+  save: (chunk: W[]) => Promise<readonly R[]>,
+): Promise<R[]> {
+  const written: R[] = [];
+  for (let at = 0; at < writes.length; at += REVIEW_CHUNK) {
+    written.push(...(await save(writes.slice(at, at + REVIEW_CHUNK))));
+  }
+  return written;
+}
+
+/**
+ * {@link saveReviewsInChunks} for a reset (`POST /translations/reviews/clear`): `keys` in
+ * chunks of 1000, one request after the other, and the keys themselves once every chunk
+ * is through — to drop from the cached list with {@link dropReviews} once. A failing
+ * chunk rejects as a save's does, and what the chunks before it cleared stays cleared.
+ */
+export async function clearReviewsInChunks<K extends TranslationReviewKey>(
+  keys: readonly K[],
+  clear: (chunk: K[]) => Promise<unknown>,
+): Promise<K[]> {
+  for (let at = 0; at < keys.length; at += REVIEW_CHUNK) await clear(keys.slice(at, at + REVIEW_CHUNK));
+  return [...keys];
+}
+
 // ── Swipe bindings ──────────────────────────────────────────────────────────────
 
 /**

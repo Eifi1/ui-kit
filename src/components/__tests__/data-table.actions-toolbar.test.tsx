@@ -483,6 +483,30 @@ describe("useTableUrlState", () => {
     expect(hook!.search).toBe("");
   });
 
+  // kastlan reuse audit 2026-11-02, proposal 7: kastlan's server tables read their state
+  // here and send it on. A link's `!` on a column without the Absolute value box would
+  // reach the server as an `abs` nobody can see or untick.
+  it("reads a link's `!` only for a number column that has the Absolute value box", () => {
+    const numberCols: DataTableColumn<Row>[] = [
+      { key: "id", header: "Id", cell: (r) => String(r.id), filter: numberFilter((r) => r.id) },
+      { key: "year", header: "Year", cell: (r) => String(r.id), filter: numberFilter((r) => r.id, { abs: false }) },
+    ];
+    let filters: ReturnType<typeof useTableUrlState>["filters"] = {};
+    function NumberProbe() {
+      filters = useTableUrlState({ columns: numberCols }).filters;
+      return null;
+    }
+    render(
+      <MemoryRouter initialEntries={["/list?f.id=5..!&f.year=1900..!"]}>
+        <NumberProbe />
+      </MemoryRouter>,
+    );
+    expect(filters).toEqual({
+      id: { type: "number", min: "5", max: "", abs: true },
+      year: { type: "number", min: "1900", max: "", abs: false },
+    });
+  });
+
   it("hands the table everything through tableProps", () => {
     function Host() {
       const table = useTableUrlState({ columns: cols, defaultPageSize: 2 });

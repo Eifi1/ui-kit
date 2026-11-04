@@ -97,14 +97,42 @@ export interface UseFeedbackSubmitOptions<R = unknown> {
   publicNotice?: boolean;
 }
 
+/**
+ * `open`'s second argument (keksdose live #481: "Report this problem" on a receipt scan
+ * that never finished, filed with the scan's bookkeeping). All of it optional, and none of
+ * it outlives the opening it was handed to.
+ */
+export interface FeedbackSubmitOpenOptions {
+  /**
+   * What the app knows about the thing reported — keksdose's stuck scan: its id, status,
+   * attempts, last error. Taken when the dialog opens (a shallow copy, so what the box
+   * shows is what goes, even if the app's object changes while the reporter types), shown
+   * read-only in the context box, and sent as `context.diagnostics` whatever "Attach
+   * current page URL" says: that box withholds the page, not this. Flat, short values,
+   * never the reported content itself (§3.2); the row detail shows them to the admin and
+   * the author only.
+   */
+  diagnostics?: Readonly<Record<string, unknown>>;
+  /** The subject the form starts with; the reporter can change it. Where the app's reports
+   *  are public (`publicNotice`), other users read it: what only the admin should see goes
+   *  in `diagnostics`. */
+  title?: string;
+  /** The body the form starts with, as `title` is the subject's. */
+  body?: string;
+}
+
 export interface FeedbackSubmit {
   /**
    * Open the dialog on `category` — a `FeedbackMenu` row's (§4.2: "default category when
    * opened from a row: that row's"). Without one, or with `CRASH` (never pickable), it
    * opens on `OTHER`, the server's own default (§3.4). Each open starts a fresh form,
    * reads `location.href` for the context box and ticks "Attach current page URL" again.
+   *
+   * `options` (0.54, keksdose live #481) is a screen's own report — `open("BUG", {
+   * diagnostics })` from "Report this problem": the diagnostics shown in the box and sent,
+   * the subject and body prefilled. An open without them starts empty and sends none.
    */
-  open: (category?: FeedbackCategory) => void;
+  open: (category?: FeedbackCategory, options?: FeedbackSubmitOpenOptions) => void;
   /** Close it, as Cancel does. */
   close: () => void;
   /**
@@ -140,7 +168,8 @@ export interface FeedbackSubmit {
  * - The pickable categories — Bug, Idea, Question, Other, in the kit's words. `CRASH` is
  *   filed by the error boundary and is never offered (keksdose feedback #160).
  * - The context box, built from the same values as the `context` it sends
- *   ({@link FeedbackContextBox} / `feedbackContext`), the URL read when the dialog OPENS.
+ *   ({@link FeedbackContextBox} / `feedbackContext`), the URL read when the dialog OPENS,
+ *   and the diagnostics `open` was handed then (0.54, keksdose live #481).
  * - Upload every file, then create (keksdose `use-feedback-dialog.tsx:89`): the
  *   screenshot to `screenshot_url`, the rest to `attachment_urls`, all in parallel.
  * - The toasts, from `feedbackToast`: filed, failed (the server's `detail` through
@@ -161,18 +190,21 @@ export function useFeedbackSubmit<R = unknown>(options: UseFeedbackSubmitOptions
   const [category, setCategory] = useState<FeedbackCategory>("OTHER");
   const [url, setUrl] = useState("");
   const [attachUrl, setAttachUrl] = useState(true);
+  const [opened, setOpened] = useState<FeedbackSubmitOpenOptions>({});
   const [submitting, setSubmitting] = useState(false);
   // Which opening a send belongs to — see "closed and opened again" above.
   const opening = useRef(0);
   const inFlight = useRef(false);
 
-  const open = (next?: FeedbackCategory) => {
+  const open = (next?: FeedbackCategory, given?: FeedbackSubmitOpenOptions) => {
     opening.current += 1;
     setCategory(next && FEEDBACK_PICKABLE_CATEGORIES.includes(next) ? next : "OTHER");
     setUrl(typeof window === "undefined" ? "" : window.location.href);
     // Fresh every time (Kurvenschmiede use-feedback-dialog.tsx:80): a reporter who left the
     // page out of one idea is not saying the bug report after it is unrelated too.
     setAttachUrl(true);
+    // This opening's own, nothing of the last one's; the diagnostics copied now (#481).
+    setOpened({ ...given, diagnostics: given?.diagnostics && { ...given.diagnostics } });
     setIsOpen(true);
   };
   const close = () => setIsOpen(false);
@@ -229,6 +261,7 @@ export function useFeedbackSubmit<R = unknown>(options: UseFeedbackSubmitOptions
         version={version}
         capture={capture}
         publicNotice={publicNotice}
+        opened={opened}
       />
     </Suspense>
   ) : null;

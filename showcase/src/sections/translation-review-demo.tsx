@@ -15,9 +15,11 @@ import { kitLabelStrings } from "../../../src/i18n/review";
 import type { UiKitLabels } from "../../../src/i18n/kit-labels";
 import {
   REVIEW_STATUSES,
+  clearReviewsInChunks,
   dropReviews,
   flattenStrings,
   mergeReviews,
+  saveReviewsInChunks,
   translationRows,
   type TranslationReview,
   type TranslationReviewKey,
@@ -210,22 +212,23 @@ export function TranslationReviewDemo() {
   const editorRow = rowsByLocale.get("fr")?.find((row) => row.key === "legal.terms");
 
   // The app's request, here a timeout: answers with the rows it wrote, which the page
-  // merges into its copy — as an app's cache patch does.
+  // merges into its copy — as an app's cache patch does. `saveReviewsInChunks` and
+  // `clearReviewsInChunks` send them 1000 at a time, under server-kit's cap of 2000.
   const save = async (writes: TranslationReviewWrite[]) => {
-    await beat(500);
-    if (refuse) throw new Error("403");
     const now = new Date().toISOString();
-    setReviews((prev) =>
-      mergeReviews(
-        prev,
-        writes.map((w) => ({ ...w, reviewerName: "You", reviewedAt: now })),
-      ),
-    );
+    const written = await saveReviewsInChunks(writes, async (chunk) => {
+      await beat(500);
+      if (refuse) throw new Error("403");
+      return chunk.map((w) => ({ ...w, reviewerName: "You", reviewedAt: now }));
+    });
+    setReviews((prev) => mergeReviews(prev, written));
   };
   const clear = async (keys: TranslationReviewKey[]) => {
-    await beat(500);
-    if (refuse) throw new Error("403");
-    setReviews((prev) => dropReviews(prev, keys));
+    const cleared = await clearReviewsInChunks(keys, async () => {
+      await beat(500);
+      if (refuse) throw new Error("403");
+    });
+    setReviews((prev) => dropReviews(prev, cleared));
   };
 
   return (

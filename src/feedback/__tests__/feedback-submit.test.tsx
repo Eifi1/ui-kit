@@ -8,6 +8,7 @@ import {
   useFeedbackSubmit,
   type FeedbackCreatePayload,
   type FeedbackSubmit,
+  type FeedbackSubmitOpenOptions,
   type UseFeedbackSubmitOptions,
 } from "../feedback-submit";
 
@@ -332,5 +333,104 @@ describe("useFeedbackSubmit — publicNotice", () => {
     );
     await open();
     expect(screen.getByText("Andere Personen sehen Titel und Text.")).toBeInTheDocument();
+  });
+});
+
+/**
+ * 0.54 (keksdose live #481): "Report this problem" on a stuck receipt scan opens the dialog
+ * on Bug with the scan's bookkeeping — shown to the reporter in the context box and sent
+ * as `context.diagnostics` — where keksdose had merged it into the payload unseen.
+ */
+describe("useFeedbackSubmit — open(category, options)", () => {
+  const SCAN = { kind: "receipt_scan", invoice_id: 318, status: "PROCESSING", attempts: 2, last_error: null };
+  const HEADING = "Diagnostics sent with the report";
+  const openWith = async (category: FeedbackCategory, options: FeedbackSubmitOpenOptions) => {
+    act(() => handle.current!.open(category, options));
+    return screen.findByRole("dialog");
+  };
+  const lines = (scope: HTMLElement) =>
+    Array.from(scope.querySelectorAll("[data-feedback-diagnostics] dt")).map((dt) => [
+      dt.textContent,
+      dt.nextElementSibling?.textContent,
+    ]);
+  const creating = () => vi.fn(async (_p: FeedbackCreatePayload) => ({ id: 1 }));
+
+  it("shows the diagnostics in the context box and sends them as context.diagnostics", async () => {
+    const create = creating();
+    render(<Host create={create} />);
+    const dialog = await openWith("BUG", { diagnostics: SCAN });
+    expect((within(dialog).getByLabelText("Category") as HTMLSelectElement).value).toBe("BUG");
+    expect(lines(within(dialog).getByRole("group", { name: HEADING }))).toEqual([
+      ["kind", "receipt_scan"],
+      ["invoice_id", "318"],
+      ["status", "PROCESSING"],
+      ["attempts", "2"],
+      ["last_error", "—"],
+    ]);
+    subject("Scan stuck");
+    await send();
+    const { context } = create.mock.calls[0][0];
+    expect(context.diagnostics).toEqual(SCAN);
+    expect(context).toMatchObject({ url: window.location.href, route: "/accounts", version: "0.4.26" });
+  });
+
+  it("sends them with the URL unticked too: the checkbox withholds the page, not them", async () => {
+    const create = creating();
+    render(<Host create={create} />);
+    await openWith("BUG", { diagnostics: SCAN });
+    fireEvent.click(screen.getByRole("checkbox", { name: "Attach current page URL" }));
+    expect(screen.getByRole("group", { name: HEADING })).toBeInTheDocument();
+    subject("Scan stuck");
+    await send();
+    expect(create.mock.calls[0][0].context).toMatchObject({ url: "", route: "", diagnostics: SCAN });
+  });
+
+  it("takes them when it opens: a later change to the app's object neither shows nor goes", async () => {
+    const create = creating();
+    render(<Host create={create} />);
+    const live: Record<string, unknown> = { ...SCAN };
+    await openWith("BUG", { diagnostics: live });
+    live.status = "FAILED";
+    live.attempts = 3;
+    subject("Scan stuck");
+    const group = screen.getByRole("group", { name: HEADING });
+    expect(within(group).getByText("PROCESSING")).toBeInTheDocument();
+    expect(within(group).queryByText("FAILED")).toBeNull();
+    await send();
+    expect(create.mock.calls[0][0].context.diagnostics).toEqual(SCAN);
+  });
+
+  it("prefills the subject and the body, which the reporter can still change", async () => {
+    const create = creating();
+    render(<Host create={create} />);
+    await openWith("BUG", { title: "Receipt scan stuck", body: "It has said Processing for an hour." });
+    expect(screen.getByLabelText("Subject")).toHaveValue("Receipt scan stuck");
+    expect(screen.getByLabelText("What happened? (optional)")).toHaveValue("It has said Processing for an hour.");
+    // A prefilled subject is a report already.
+    expect(screen.getByRole("button", { name: "Send" })).toBeEnabled();
+    subject("Receipt 318 stuck");
+    await send();
+    expect(create.mock.calls[0][0]).toMatchObject({
+      title: "Receipt 318 stuck",
+      body: "It has said Processing for an hour.",
+      category: "BUG",
+    });
+  });
+
+  it("leaves nothing to the next open: one without options starts empty and sends none", async () => {
+    const create = creating();
+    render(<Host create={create} />);
+    await openWith("BUG", { diagnostics: SCAN, title: "Receipt scan stuck", body: "Still processing." });
+    expect(screen.getByLabelText("Subject")).toHaveValue("Receipt scan stuck");
+    expect(screen.getByRole("group", { name: HEADING })).toBeInTheDocument();
+    close();
+    // The one-argument call, as FeedbackMenu's `onFile` makes it.
+    await open("IDEA");
+    expect(screen.getByLabelText("Subject")).toHaveValue("");
+    expect(screen.getByLabelText("What happened? (optional)")).toHaveValue("");
+    expect(screen.queryByRole("group", { name: HEADING })).toBeNull();
+    subject("An idea");
+    await send();
+    expect(create.mock.calls[0][0].context).not.toHaveProperty("diagnostics");
   });
 });

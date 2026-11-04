@@ -4,6 +4,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { FilterPopover } from "../data-table-filter-popover";
 import type { DataTableColumn } from "../data-table";
+import { numberFilter } from "../data-table-filters";
 import type { ColumnFilter, FilterValue } from "../data-table-filters";
 import { dateRangePresets, todayIso } from "../../lib/dates";
 
@@ -144,6 +145,18 @@ describe("FilterPopover", () => {
     expect(last()).toEqual({ type: "number", min: "-5", max: "20", abs: true });
     await user.clear(min);
     expect(last()).toEqual({ type: "number", min: "", max: "20", abs: true });
+  });
+
+  // kastlan reuse audit 2026-11-02, proposal 7: a year or a file size is never negative,
+  // and the box under it offers a choice that changes nothing.
+  it("number: `abs: false` draws no Absolute value box, and hands on no `abs` it was given", async () => {
+    const user = userEvent.setup();
+    const noBox = numberFilter((r: Row) => r.amount, { abs: false });
+    const { last } = renderFilter(noBox, { type: "number", min: "", max: "", abs: true });
+    expect(screen.queryByRole("checkbox")).toBeNull();
+    expect(screen.queryByText("Absolute value")).toBeNull();
+    await user.type(screen.getByRole("textbox", { name: "Min (≥)" }), "5");
+    expect(last()).toEqual({ type: "number", min: "5", max: "", abs: false });
   });
 
   // BUG-10 (refactor audit 2026-10): the bounds were native `type="number"` inputs, the

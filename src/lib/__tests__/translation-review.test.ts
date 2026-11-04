@@ -1,10 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { DEFAULT_UI_KIT_LABELS } from "../../i18n/defaults";
 import { kitLabelStrings } from "../../i18n/review";
 import {
   DEFAULT_TRANSLATION_REVIEW_SWIPE,
   TRANSLATION_REVIEW_SWIPE_ACTIONS,
+  clearReviewsInChunks,
   dropReviews,
   filterTranslationRows,
   flattenStrings,
@@ -20,6 +21,7 @@ import {
   reviewStatus,
   reviewUndo,
   reviewWrite,
+  saveReviewsInChunks,
   summariseRows,
   toApiWrite,
   translationCorrections,
@@ -29,8 +31,10 @@ import {
 } from "../translation-review";
 import type {
   ApiTranslationReview,
+  ApiTranslationReviewWrite,
   ApiTranslationReviewsResponse,
   TranslationReview,
+  TranslationReviewKey,
   TranslationReviewSwipeAction,
 } from "../translation-review";
 
@@ -406,6 +410,143 @@ describe("writing", () => {
     expect(dropReviews(prev, [{ locale: "fr", key: "common.save" }]).map((r) => r.key)).toEqual(["common.cancel"]);
     // Another locale's verdict on the same key is a different verdict.
     expect(dropReviews(prev, [{ locale: "it", key: "common.save" }])).toHaveLength(2);
+  });
+});
+
+/**
+ * kastlan reuse audit 2026-11-02, proposal 5: all three apps sent a big save in chunks of
+ * 1000 under server-kit's cap of 2000 a request (`BATCH_MAX`), one after the other, and
+ * patched their cache once with what came back. Against a fake server: it stores what a
+ * request carries, refuses a batch that is empty or over the cap as server-kit does, and
+ * fails the request it is told to.
+ */
+describe("saveReviewsInChunks and clearReviewsInChunks (proposal 5)", () => {
+  const CAP = 2000;
+  /** How many items, and the sizes of the requests they go in. */
+  const BOUNDARIES: [number, number[]][] = [
+    [0, []],
+    [1, [1]],
+    [1000, [1000]],
+    [1001, [1000, 1]],
+    [2500, [1000, 1000, 500]],
+  ];
+  const writes = (n: number): ApiTranslationReviewWrite[] =>
+    Array.from({ length: n }, (_, i) => ({
+      locale: "fr",
+      key: `k.${i}`,
+      text: `t${i}`,
+      reference_text: `r${i}`,
+      verdict: "APPROVED",
+      note: null,
+      suggestion: null,
+    }));
+  const keysOf = (items: readonly TranslationReviewKey[]) => items.map(({ locale, key }) => ({ locale, key }));
+
+  function fakeServer() {
+    const stored = new Map<string, ApiTranslationReview>();
+    /** The size of each request, in the order they came. */
+    const sent: number[] = [];
+    let failAt = 0;
+    let inFlight = 0;
+    let mostInFlight = 0;
+    const request = async <T, A>(chunk: T[], apply: (item: T) => A): Promise<A[]> => {
+      sent.push(chunk.length);
+      const failing = sent.length === failAt;
+      inFlight += 1;
+      mostInFlight = Math.max(mostInFlight, inFlight);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      inFlight -= 1;
+      if (failing) throw new Error("503 Service Unavailable");
+      if (chunk.length < 1 || chunk.length > CAP) throw new Error("422 Unprocessable Entity");
+      return chunk.map(apply);
+    };
+    const save = vi.fn((chunk: ApiTranslationReviewWrite[]) =>
+      request(chunk, (write) => {
+        const review: ApiTranslationReview = { ...write, reviewer_name: "Amélie", reviewed_at: "2026-11-02T10:00:00Z" };
+        stored.set(`${write.locale}|${write.key}`, review);
+        return review;
+      }),
+    );
+    const clear = vi.fn((chunk: TranslationReviewKey[]) =>
+      request(chunk, (k) => stored.delete(`${k.locale}|${k.key}`)),
+    );
+    return {
+      stored,
+      sent,
+      save,
+      clear,
+      mostInFlight: () => mostInFlight,
+      /** The `n`th request from now fails. */
+      failRequest: (n: number) => {
+        failAt = sent.length + n;
+      },
+    };
+  }
+
+  it.each(BOUNDARIES)("saves %i writes in requests of %j, answering with every verdict, in order", async (n, sizes) => {
+    const server = fakeServer();
+    const items = writes(n);
+    const written = await saveReviewsInChunks(items, server.save);
+    expect(server.sent).toEqual(sizes);
+    expect(keysOf(written)).toEqual(keysOf(items));
+    expect(server.stored.size).toBe(n);
+  });
+
+  it.each(BOUNDARIES)("clears %i keys in requests of %j, answering with the keys, in order", async (n, sizes) => {
+    const server = fakeServer();
+    const items = writes(n);
+    await saveReviewsInChunks(items, server.save);
+    server.sent.length = 0;
+    const keys = keysOf(items);
+    expect(await clearReviewsInChunks(keys, server.clear)).toEqual(keys);
+    expect(server.sent).toEqual(sizes);
+    expect(server.stored.size).toBe(0);
+  });
+
+  it("sends the chunks in the order given, each only once the one before has answered", async () => {
+    const server = fakeServer();
+    const items = writes(2500);
+    await saveReviewsInChunks(items, server.save);
+    expect(server.save.mock.calls.map(([chunk]) => chunk)).toEqual([
+      items.slice(0, 1000),
+      items.slice(1000, 2000),
+      items.slice(2000),
+    ]);
+    await clearReviewsInChunks(keysOf(items), server.clear);
+    expect(server.clear.mock.calls.map(([chunk]) => chunk[0].key)).toEqual(["k.0", "k.1000", "k.2000"]);
+    expect(server.mostInFlight()).toBe(1);
+  });
+
+  it("a save's failing middle chunk rejects with its error; the one before stays saved, the one after is not sent", async () => {
+    const server = fakeServer();
+    const items = writes(2500);
+    server.failRequest(2);
+    await expect(saveReviewsInChunks(items, server.save)).rejects.toThrow("503 Service Unavailable");
+    expect(server.sent).toEqual([1000, 1000]);
+    expect([...server.stored.keys()]).toEqual(items.slice(0, 1000).map((w) => `fr|${w.key}`));
+  });
+
+  it("a reset's failing middle chunk rejects the same way; the one before stays cleared", async () => {
+    const server = fakeServer();
+    const items = writes(2500);
+    await saveReviewsInChunks(items, server.save);
+    server.sent.length = 0;
+    server.failRequest(2);
+    await expect(clearReviewsInChunks(keysOf(items), server.clear)).rejects.toThrow("503 Service Unavailable");
+    expect(server.sent).toEqual([1000, 1000]);
+    expect(server.stored.size).toBe(1500);
+    expect(server.stored.has("fr|k.999")).toBe(false);
+    expect(server.stored.has("fr|k.1000")).toBe(true);
+  });
+
+  it("answers with what a cache patch takes, once: mergeReviews after a save, dropReviews after a reset", async () => {
+    const server = fakeServer();
+    const cached = [fromApiReview({ ...writes(1)[0], key: "other", reviewer_name: null, reviewed_at: "2026-10-01" })];
+    const written = (await saveReviewsInChunks(writes(1001), server.save)).map(fromApiReview);
+    const merged = mergeReviews(cached, written);
+    expect(merged.map((r) => r.key)).toEqual(["other", ...written.map((r) => r.key)]);
+    const cleared = await clearReviewsInChunks(keysOf(written), server.clear);
+    expect(dropReviews(merged, cleared).map((r) => r.key)).toEqual(["other"]);
   });
 });
 

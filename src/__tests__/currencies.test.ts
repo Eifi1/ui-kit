@@ -31,4 +31,13 @@ describe("@eifi1/ui-kit/currencies", () => {
     expect(FROM_OPTION_LIST).toBe(CURRENCIES);
     expect(getCurrency("chf")?.country).toBe(CURRENCY_COUNTRIES.CHF);
   });
+
+  // keksdose audit follow-up, 2026-11-01: Bulgaria adopted the euro on 2026-01-01.
+  it("marks the lev retired and keeps knowing it, for the amounts an app holds in it", () => {
+    expect(getCurrency("BGN")).toMatchObject({ code: "BGN", symbol: "лв", country: "bg", retired: "2026-01-01" });
+    // The flag subset keeps its flag: a stored BGN value is not an empty box.
+    expect(CURRENCY_COUNTRIES.BGN).toBe("bg");
+    for (const c of CURRENCIES) if (c.retired !== undefined) expect(c.retired).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(CURRENCIES.filter((c) => c.retired).map((c) => c.code)).toEqual(["BGN"]);
+  });
 });

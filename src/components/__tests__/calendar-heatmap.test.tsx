@@ -460,3 +460,26 @@ describe("CalendarHeatmap weekday labels", () => {
     expect(screen.getByRole("rowheader", { name: long })).toBeInTheDocument();
   });
 });
+
+// keksdose audit follow-up, 2026-11-01: each cell named its date through
+// toLocaleDateString, a formatter per cell and render — 365 for a year's grid.
+describe("CalendarHeatmap names its days through the formatter cache", () => {
+  it("builds no date formatter to draw a grid it has drawn before", () => {
+    const { rerender } = render(<CalendarHeatmap data={DATA} from="2026-01-01" to="2026-12-31" locale={LOCALE} />);
+    // `toLocaleDateString` builds its formatter inside the engine, where a spy on the
+    // constructor cannot see it: it is watched on its own.
+    const built = vi.spyOn(Intl, "DateTimeFormat");
+    const perCall = vi.spyOn(Date.prototype, "toLocaleDateString");
+    try {
+      rerender(<CalendarHeatmap data={[...DATA]} from="2026-01-01" to="2026-12-31" locale={LOCALE} />);
+      expect(built).not.toHaveBeenCalled();
+      expect(perCall).not.toHaveBeenCalled();
+    } finally {
+      built.mockRestore();
+      perCall.mockRestore();
+    }
+    expect(cellOn("2026-09-03")).toHaveAttribute("aria-label", "Thursday, 3 September 2026: 100");
+    // The month labels too ("Sept" in en-GB, by ICU's version).
+    expect(screen.getByText(new Date(2026, 8, 1).toLocaleDateString(LOCALE, { month: "short" }))).toBeInTheDocument();
+  });
+});

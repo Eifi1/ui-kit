@@ -11,8 +11,8 @@ export type { MinusStyle } from "./minus";
 export { formatWithMinus } from "./minus";
 
 /**
- * Number, money, percentage, date and relative-time formatting — `Intl`, in one place,
- * for the figures an app prints OUTSIDE a kit component.
+ * Number, money, percentage, duration (0.54), date and relative-time formatting — `Intl`,
+ * in one place, for the figures an app prints OUTSIDE a kit component.
  *
  * Each app grew its own: kastlan's `utils/formatters.ts` (a Swiss-pinned
  * `formatNumber`/`formatCurrency`, a date-fns `formatDate`, and a `formatRelativeTime`
@@ -99,6 +99,19 @@ export interface FormatMoneyOptions extends FormatNumberBaseOptions {
   currencyDisplay?: Intl.NumberFormatOptions["currencyDisplay"];
 }
 
+export interface FormatDurationOptions extends BaseOptions {
+  /**
+   * How the units are written — `Intl.NumberFormat`'s `unitDisplay`, in `locale`:
+   *  - `"narrow"` (default): "3m 12s", "3 Min. 12 Sek." (de-CH), "3min 12s" (fr) —
+   *    keksdose's scan readout;
+   *  - `"short"`: "3 min 12 sec", "3 Min. 12 Sek.", "3 min 12 s";
+   *  - `"long"`: "3 minutes 12 seconds", "3 Minuten 12 Sekunden", "3 minutes 12 secondes".
+   */
+  unitDisplay?: "narrow" | "short" | "long";
+  /** The minus of a negative duration — {@link FormatNumberBaseOptions.minus}. */
+  minus?: MinusStyle;
+}
+
 export interface FormatPercentOptions extends FormatNumberBaseOptions {
   /**
    * `true` (default): `value` is a RATIO, as `Intl` and `StatTile`'s percent delta read
@@ -162,7 +175,7 @@ function devWarnings(): boolean {
 const warnedSites = new Set<string>();
 /** This module's own frames, skipped to find the caller ("Object.formatMoney" is a
  *  `useKitFormat` wrapper). */
-const OWN_FRAME = /\b(?:formatNumber|formatMoney|formatPercent|toFormattable|warnInvalid|callSite)\b/;
+const OWN_FRAME = /\b(?:formatNumber|formatMoney|formatPercent|formatDuration|toFormattable|warnInvalid|callSite)\b/;
 
 /** The first stack frame outside the formatters: where the bad value was passed. */
 function callSite(): string {
@@ -246,6 +259,53 @@ export function formatPercent(value: FormattableNumber, options: FormatPercentOp
     ...numberOptions(options),
   });
   return formatWithMinus(formatter, ratio, options.minus);
+}
+
+/** The units a duration is written in, largest first, with their length in seconds. */
+const DURATION_UNITS = [
+  ["hour", 3600],
+  ["minute", 60],
+  ["second", 1],
+] as const;
+
+/**
+ * A number of SECONDS as an elapsed time in `locale`: "42s", "3m 12s", "1h 0m 5s" — and in
+ * German "3 Min. 12 Sek.", in French "3min 12s" (keksdose audit follow-up, 2026-11-01:
+ * keksdose's `formatElapsed`, the scan card's readout, moves here). Each unit is
+ * `Intl.NumberFormat`'s `style: "unit"`, so the digits and the unit's spelling follow
+ * `locale`; `unitDisplay` picks the form, narrow by default.
+ *
+ * - Seconds alone under a minute ("0s", "59s"); minutes and seconds under an hour ("1m 0s",
+ *   "59m 59s"); from an hour on, hours, minutes and seconds ("1h 0m 0s"). Hours are the
+ *   largest unit: a day and a bit is "27h 46m 40s". Every unit below the first is printed,
+ *   zero too, so a ticking readout keeps its shape from one second to the next.
+ * - Whole seconds, cut toward zero: a timer reads "59s" until the minute is full.
+ * - The parts are joined by a space, as the readout always was — not `Intl.ListFormat`'s
+ *   "3 Min. und 12 Sek.", which is a sentence rather than a figure.
+ * - Negative: the minus on the first unit, as `Intl.DurationFormat` writes one — "−3m 12s",
+ *   with the kit's minus (`minus`). An elapsed time from a server's clock can come out a
+ *   second below zero; clamp it before, as keksdose's card does, when that is not news.
+ * - `null` / `undefined` print `empty`; `NaN`, ±`Infinity` and a non-numeric string too,
+ *   with the formatters' development warning. A numeric string ("185") is a number.
+ */
+export function formatDuration(seconds: FormattableNumber, options: FormatDurationOptions = {}): string {
+  const n = toFormattable("formatDuration", seconds);
+  if (n === undefined) return options.empty ?? EMPTY_FORMATTED_VALUE;
+  const unitDisplay = options.unitDisplay ?? "narrow";
+  const negative = n < 0;
+  let rest = Math.trunc(Math.abs(n));
+  const parts: string[] = [];
+  for (const [unit, size] of DURATION_UNITS) {
+    const count = Math.floor(rest / size);
+    rest -= count * size;
+    // Units above the first that has a count are left out; seconds always print.
+    if (parts.length === 0 && count === 0 && unit !== "second") continue;
+    const formatter = numberFormatter(options.locale, { style: "unit", unit, unitDisplay });
+    // `count > 0`: under a second either way is "0s", with no sign on it.
+    const signed = negative && parts.length === 0 && count > 0 ? -count : count;
+    parts.push(formatWithMinus(formatter, signed, options.minus));
+  }
+  return parts.join(" ");
 }
 
 /* ── Dates ─────────────────────────────────────────────────────────────────── */
@@ -436,6 +496,8 @@ export interface KitFormat {
   formatNumber: (value: FormattableNumber, options?: WithoutLocale<FormatNumberOptions>) => string;
   formatMoney: (value: FormattableNumber, currency: string, options?: WithoutLocale<FormatMoneyOptions>) => string;
   formatPercent: (value: FormattableNumber, options?: WithoutLocale<FormatPercentOptions>) => string;
+  /** 0.54: {@link formatDuration}, a number of seconds as an elapsed time. */
+  formatDuration: (seconds: FormattableNumber, options?: WithoutLocale<FormatDurationOptions>) => string;
   formatDate: (
     value: DateInput,
     style?: FormatDateStyle | Intl.DateTimeFormatOptions,
@@ -462,6 +524,7 @@ export function useKitFormat(locale?: string): KitFormat {
       formatNumber: (value, options) => formatNumber(value, { locale: kitLocale, ...options }),
       formatMoney: (value, currency, options) => formatMoney(value, currency, { locale: kitLocale, ...options }),
       formatPercent: (value, options) => formatPercent(value, { locale: kitLocale, ...options }),
+      formatDuration: (seconds, options) => formatDuration(seconds, { locale: kitLocale, ...options }),
       formatDate: (value, style, options) => formatDate(value, style, { locale: kitLocale, timeZone, ...options }),
       formatRelativeTime: (value, options) => formatRelativeTime(value, { locale: kitLocale, timeZone, ...options }),
     }),

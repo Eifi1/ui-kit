@@ -229,8 +229,27 @@ export interface StatTileProps extends Omit<ComponentPropsWithRef<"div">, "child
   /** Anything below the rest — a progress bar, a link row. */
   footer?: ReactNode;
   /** Tag every figure `data-private`, so the host's demo-mode rule blurs it — the
-   *  same attribute `Tooltip redact` and the chart tooltip's value cell carry. */
+   *  same attribute `Tooltip redact` and the chart tooltip's value cell carry.
+   *  The figures are the tile's own: value, delta, projection, sub-values and the
+   *  trend. The `description` and `footer` are the app's nodes and stay readable;
+   *  see {@link StatTileProps.descriptionSensitive} for the ones that carry an amount. */
   sensitive?: boolean;
+  /**
+   * Tag the `description` line `data-private` too, as `sensitive` tags the figures.
+   * For a description that names an amount: keksdose's tax reserve tile states its
+   * basis there ("…applied to €42,000"), and its report KpiCard puts a `hintSensitive`
+   * hint there — both tag their own `<span data-private>` today
+   * (reports/tabs/tax-tab.tsx, reports/charts/kpi-card.tsx). Separate from
+   * `sensitive`, so a description of words ("Last 12 months") on a money tile stays
+   * readable in demo mode. keksdose audit follow-up, 2026-11-01.
+   */
+  descriptionSensitive?: boolean;
+  /**
+   * Tag the `footer` `data-private`, as `sensitive` tags the figures — for a footer
+   * that carries an amount: keksdose's tax reserve tile's shortfall line ("Set aside
+   * €1,200 more…"), which it tags by hand. keksdose audit follow-up, 2026-11-01.
+   */
+  footerSensitive?: boolean;
   /** Skeleton in place of the value; delta, sub-values and trend are withheld. */
   loading?: boolean;
   /** `"sm"` for dense grids (a metrics wall); `"md"` the default KPI. */
@@ -317,6 +336,8 @@ export function StatTile({
   icon,
   footer,
   sensitive = false,
+  descriptionSensitive = false,
+  footerSensitive = false,
   loading = false,
   size = "md",
   variant = "card",
@@ -551,7 +572,11 @@ export function StatTile({
       )}
 
       {deltaNode}
-      {description != null && <div className="mt-1 text-xs text-muted">{description}</div>}
+      {description != null && (
+        <div data-private={descriptionSensitive ? "" : undefined} className="mt-1 text-xs text-muted">
+          {description}
+        </div>
+      )}
       {!large && graphic && <div className="mt-2">{graphic}</div>}
 
       {!loading && ((large && projections.length > 0) || (subValues && subValues.length > 0)) && (
@@ -572,7 +597,11 @@ export function StatTile({
         </div>
       )}
 
-      {footer != null && <div className="mt-2">{footer}</div>}
+      {footer != null && (
+        <div data-private={footerSensitive ? "" : undefined} className="mt-2">
+          {footer}
+        </div>
+      )}
     </Card>
   );
 }

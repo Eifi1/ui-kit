@@ -8,7 +8,15 @@ export type ColumnFilter<T> =
   | { type: "text"; getValue: (row: T) => string }
   | { type: "select"; getValue: (row: T) => string; options?: { value: string; label?: string }[] }
   | { type: "date"; getValue: (row: T) => string | null | undefined }
-  | { type: "number"; getValue: (row: T) => number | null | undefined };
+  | {
+      type: "number";
+      getValue: (row: T) => number | null | undefined;
+      /** `false`: no "Absolute value" box, for a figure that is never negative (a year, a
+       *  count, a size), where the box only offers a choice that changes nothing. A state
+       *  or a link that carries `abs` anyway is read without it. Default `true`. See
+       *  {@link numberFilter}. */
+      abs?: boolean;
+    };
 
 /** The current state of a column's filter (what the user has entered). */
 export type FilterValue =
@@ -46,8 +54,15 @@ export function isFilterActive(v: FilterValue | undefined): boolean {
  * match every row while the column showed its filter as active; `Number(" ")` is 0, and
  * a blank bound kept every negative row out. The popover hands in the dot-decimal text
  * its locale's marks read (`readTyped`); anything else is no bound.
+ *
+ * Exported for a server-side table (`serverPagination`), which sends the bounds to its
+ * server instead of comparing here: send what this reads, and leave out a `null`. The box
+ * holds a half-typed "-" or "5e" while the user types, and kastlan's server tables sent
+ * that text on to `col >= :bound` until they wrote this rule again for themselves (kastlan
+ * reuse audit 2026-11-02, proposal 7). And send `abs` only beside a bound: on its own it
+ * narrows nothing.
  */
-function numberBound(raw: string): number | null {
+export function numberBound(raw: string): number | null {
   if (raw.trim() === "") return null;
   const n = Number(raw);
   return Number.isFinite(n) ? n : null;
@@ -108,7 +123,9 @@ export function rowMatches<T>(col: DataTableColumn<T>, row: T, state: FilterValu
       const min = numberBound(state.min);
       const max = numberBound(state.max);
       if (raw == null || Number.isNaN(raw)) return min === null && max === null;
-      const x = state.abs ? Math.abs(raw) : raw;
+      // A column without the box (`abs: false`) compares the figure as it is, whatever
+      // the state says: there is nothing on screen to untick.
+      const x = state.abs && filter.abs !== false ? Math.abs(raw) : raw;
       if (min !== null && x < min) return false;
       if (max !== null && x > max) return false;
       return true;
@@ -204,9 +221,12 @@ export function decodeFilterValueOfType(type: FilterValue["type"], raw: string):
   }
 }
 
-/** Inverse of {@link encodeFilterValue}, typed by the column's filter config. */
+/** Inverse of {@link encodeFilterValue}, typed by the column's filter config. A number
+ *  filter without the "Absolute value" box (`abs: false`) drops a link's `!`: kept, a
+ *  server-side table would send `abs` that nobody can see or untick. */
 export function decodeFilterValue<T>(filter: ColumnFilter<T>, raw: string): FilterValue {
-  return decodeFilterValueOfType(filter.type, raw);
+  const value = decodeFilterValueOfType(filter.type, raw);
+  return value.type === "number" && filter.type === "number" && filter.abs === false ? { ...value, abs: false } : value;
 }
 
 // ---------- Filter builders ----------
@@ -244,9 +264,17 @@ export function dateFilter<T>(getValue: (row: T) => string | null | undefined): 
   return { type: "date", getValue };
 }
 
-/** A min/max (and absolute-value) filter over a number. */
-export function numberFilter<T>(getValue: (row: T) => number | null | undefined): ColumnFilter<T> {
-  return { type: "number", getValue };
+/**
+ * A min/max (and absolute-value) filter over a number. `{ abs: false }` leaves out the
+ * "Absolute value" box, for a figure that is never negative — a year, a count, a size —
+ * where it only offers a choice that changes nothing (kastlan reuse audit 2026-11-02,
+ * proposal 7: its server tables drew it under construction years and file sizes).
+ */
+export function numberFilter<T>(
+  getValue: (row: T) => number | null | undefined,
+  options?: { abs?: boolean },
+): ColumnFilter<T> {
+  return options?.abs === false ? { type: "number", getValue, abs: false } : { type: "number", getValue };
 }
 
 /**

@@ -141,6 +141,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     feedbackContext: {
       user: "用户",
       attachUrl: "附加当前页面 URL",
+      diagnostics: "随反馈发送的诊断信息",
     },
     feedbackPage: {
       title: "反馈收件箱",
@@ -173,6 +174,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       cancel: "取消",
       url: "URL",
       copyUrl: "复制 URL",
+      diagnostics: "诊断信息",
       attachment: "附件",
       download: (name) => `下载 ${name}`,
       downloadFailed: "无法下载附件。",

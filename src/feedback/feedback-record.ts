@@ -59,6 +59,11 @@ export interface FeedbackContext {
   ua?: string;
   /** The app build (`__APP_VERSION__`). */
   version?: string;
+  /** What the app attached about the thing reported (keksdose's stuck receipt scan, live
+   *  #481): a flat record of short values, in the order the app wrote them. The row
+   *  detail shows it to the admin and the author, never to anyone else; erasure drops it
+   *  (it is not on server-kit's `FEEDBACK_CONTEXT_KEEP`). */
+  diagnostics?: Readonly<Record<string, unknown>>;
   // Crash rows (server-written, keksdose `feedback_service.py:346`).
   fingerprint?: string;
   /** Which error boundary caught it. */

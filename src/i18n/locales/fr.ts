@@ -151,6 +151,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     feedbackContext: {
       user: "Utilisateur",
       attachUrl: "Joindre l’URL de la page actuelle",
+      diagnostics: "Diagnostic envoyé avec le retour",
     },
     feedbackPage: {
       title: "Retours reçus",
@@ -183,6 +184,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       cancel: "Annuler",
       url: "URL",
       copyUrl: "Copier l’URL",
+      diagnostics: "Diagnostic",
       attachment: "Pièce jointe",
       download: (name) => `Télécharger ${name}`,
       downloadFailed: "La pièce jointe n’a pas pu être téléchargée.",
