@@ -19,8 +19,11 @@ import type { DataTableColumn } from "./data-table";
 //   whose return the very next measure undoes stays out until the table has more room
 //   for it than it had then (0.48.3, keksdose B2: see the bring-back in `measure`). And
 //   the TABLE's own width, through the same observer (0.51.2): anything that widens it
-//   after a measure — rows drawn a frame later, `virtualize` locking its column widths —
-//   is measured again, so the table never stays wider than its scroller.
+//   after a measure — rows scrolled into `virtualize`'s window, its column-width lock, a
+//   font that lands — is measured again, so the table never stays wider than its
+//   scroller. Rows that ARRIVE are no longer among them: the window draws them in the
+//   render they come in, so the measure after that render fits them before a paint
+//   (keksdose register fit, 0.51.2 leftovers; data-table-virtual.ts).
 
 /** The least a `grow` column keeps before the table starts leaving columns out: about
  *  a sentence of a title. In rem, so Large text asks for more. */
@@ -257,7 +260,11 @@ export function useColumnFit<T>({
   // for good (893px in 757 at 1124, 1058 in 913 at 1280, on 0.50.1 as on 0.51). Watched,
   // a table that grows past what was measured is measured again. Only a WIDTH change of
   // the table counts: its height moves with every row the window draws, and each measure
-  // lays the whole table out.
+  // lays the whole table out. A re-fit from here comes after a painted frame (the
+  // observer reports before the paint, React renders after it); the rows a load brings
+  // no longer wait for it, as the window draws them in their own render (0.51.2
+  // leftovers: every too-wide frame of a load in scripts/register-fit-frames.mjs was
+  // theirs).
   useEffect(() => {
     const el = latest.current.scroller();
     if (!active || !el || typeof ResizeObserver === "undefined") return;
