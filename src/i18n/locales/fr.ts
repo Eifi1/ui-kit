@@ -151,6 +151,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     feedbackContext: {
       user: "Utilisateur",
       attachUrl: "Joindre l’URL de la page actuelle",
+      diagnostics: "Diagnostic envoyé avec le retour",
     },
     feedbackPage: {
       title: "Retours reçus",

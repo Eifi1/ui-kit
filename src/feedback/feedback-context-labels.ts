@@ -7,4 +7,5 @@ import type { FeedbackContextLabels } from "./feedback-context";
 export const DEFAULT_FEEDBACK_CONTEXT_LABELS: FeedbackContextLabels = {
   user: "User",
   attachUrl: "Attach current page URL",
+  diagnostics: "Diagnostics sent with the report",
 };

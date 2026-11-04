@@ -158,6 +158,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
     feedbackContext: {
       user: "Nutzer",
       attachUrl: "Aktuelle Seiten-URL anhängen",
+      diagnostics: "Mitgesendete Diagnose",
     },
     feedbackPage: {
       title: "Feedback-Eingang",

@@ -129,7 +129,7 @@ optional on read; readers treat a missing key as "unknown":
 | `viewport` | `"406x816"` | no |
 | `ua` | `navigator.userAgent` | no |
 | `version` | the app build (`__APP_VERSION__`) | no |
-| `diagnostics` | the app's own record about what is reported (keksdose's stuck receipt scan, live #481): flat, short values, never the reported content itself; the row detail shows it to the admin and the author only (§4.4, item 2) | no — the app decides what goes in |
+| `diagnostics` | the app's own record about what is reported (keksdose's stuck receipt scan, live #481): flat, short values, never the reported content itself. Handed to `open(category, { diagnostics })` and taken when the dialog opens; the dialog's context box shows it to the reporter read-only and sends it as the last key, none when it has no key (§4.2, ui-kit 0.54); the row detail shows it to the admin and the author only (§4.4, item 2) | no — the app decides what goes in, and the reporter sees it in the box |
 
 **Identity is the server's** (recommended for all three; Kurvenschmiede does it): the
 server overwrites `user_id`, `user_email`, `user_display_name` from the session and
@@ -381,6 +381,15 @@ menu is the one entry point: no hotkey, event or account-menu item opens the dia
 The kit's `FeedbackDialog` in `attachments="multiple"`, `requireBody={false}`, wired by
 `useFeedbackSubmit`. Default category when opened from a row: that row's.
 
+A screen's own report (ui-kit 0.54, keksdose live #481: "Report this problem" on a
+receipt scan that never finished) opens with `open(category, { diagnostics, title, body })`:
+`title` and `body` prefill the subject and the body, which the reporter edits as typed
+text; `diagnostics` is copied when the dialog opens, shown in the context box below and
+sent as `context.diagnostics` (§3.2). The subject and the body may be public (§9.3), the
+context never is: what only the admin should read goes in `diagnostics`. Nothing of one
+opening carries over to the next — the menu's one-argument `open(category)` starts empty
+and sends no diagnostics.
+
 | Part | EN | DE-CH |
 |---|---|---|
 | Title | Send feedback | Feedback senden |
@@ -404,6 +413,7 @@ adds a file. **Context box** (the dialog's `contextSlot`, the kit's `FeedbackCon
 |---|---|---|
 | Submitter | **User:** {display name} ({email}) — "—" when unknown; the colon is the language's (`common.fieldValue`: fr "Utilisateur : " with a no-break space, zh "用户：") | **Nutzer:** … |
 | Checkbox, on by default, URL beneath (struck through when off) | Attach current page URL | Aktuelle Seiten-URL anhängen |
+| What the app attached (`open`'s `diagnostics`; ui-kit 0.54): a heading over each key and its value, read-only and drawn as the row detail draws them (§4.4, item 2); sent whatever the checkbox says, which withholds the page only; no block when there is none | Diagnostics sent with the report | Mitgesendete Diagnose |
 
 Toasts:
 
@@ -625,12 +635,13 @@ The kit's `createCrashReporter` (keksdose's `crash-report.ts`, lifted) as the bo
   `extraEntries`, then "View feedback" when `isAdmin`, else "My feedback"; `iconBadge`,
   `onFile(category)`.
 - **`FeedbackContextBox`** + **`feedbackContext({ user, attachUrl, url, environment,
-  version })`** — the box's wording and the §3.2 object, so the two cannot drift.
+  version, diagnostics })`** — the box's wording and the §3.2 object, so the two cannot
+  drift (`diagnostics` since 0.54).
 - **`useFeedbackSubmit({ upload, create, user, environment, version, onSubmitted,
-  errorMessage })`** → `{ open(category?), close, dialog }` — the dialog with the canon
-  props (`multiple`, accept, limits, error toasts, capture), taking `upload(file) → url`
-  and `create(payload)` (a `FeedbackCreatePayload`) from the app; it uploads every file,
-  then creates.
+  errorMessage })`** → `{ open(category?, { diagnostics?, title?, body? }?), close, dialog }`
+  — the dialog with the canon props (`multiple`, accept, limits, error toasts, capture),
+  taking `upload(file) → url` and `create(payload)` (a `FeedbackCreatePayload`) from the
+  app; it uploads every file, then creates. `open`'s second argument since 0.54 (§4.2).
 - **`captureAppScreenshot({ rootId = "root" })`** — keksdose's `capture-screenshot.ts`
   (style-property allow-list, viewport and `display:none` filter, WebP with PNG
   fallback). `modern-screenshot` becomes an **optional peer**

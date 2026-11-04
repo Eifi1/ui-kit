@@ -150,6 +150,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     feedbackContext: {
       user: "Utente",
       attachUrl: "Allega l’URL della pagina corrente",
+      diagnostics: "Diagnostica inviata con la segnalazione",
     },
     feedbackPage: {
       title: "Feedback ricevuti",

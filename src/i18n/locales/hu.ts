@@ -148,6 +148,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     feedbackContext: {
       user: "Felhasználó",
       attachUrl: "Az aktuális oldal URL-jének csatolása",
+      diagnostics: "A bejelentéssel küldött diagnosztika",
     },
     feedbackPage: {
       title: "Beérkezett visszajelzések",

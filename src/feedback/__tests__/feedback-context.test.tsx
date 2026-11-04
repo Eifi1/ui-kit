@@ -1,7 +1,8 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { UiKitProvider, type UiKitLabelOverrides } from "../../i18n/kit-labels";
+import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
 import { UI_KIT_LABELS_FR } from "../../i18n/locales/fr";
 import { UI_KIT_LABELS_ZH } from "../../i18n/locales/zh";
 import {
@@ -19,6 +20,8 @@ import {
 const ADA: FeedbackSubmitter = { id: 7, email: "ada@example.com", display_name: "Ada Example" };
 const URL_ = "https://dev.example.app/accounts?p=2#row-3";
 const FIXED = { origin: "https://dev.example.app", viewport: "406x816", ua: "TestAgent/1.0" };
+/** keksdose's stuck receipt scan (live #481), as its `receiptScanDiagnostics` writes one. */
+const SCAN = { kind: "receipt_scan", invoice_id: 318, attempts: 2, last_error: null, timings: { model_s: 31 } };
 
 describe("feedbackContext", () => {
   it("writes every §3.2 key, in keksdose's order", () => {
@@ -78,6 +81,30 @@ describe("feedbackContext", () => {
     expect(feedbackContext({ attachUrl: true, url: URL_, route: "/custom", ...FIXED }).route).toBe("/custom");
   });
 
+  it("puts the app's diagnostics last, and keeps them when the URL is withheld (keksdose live #481)", () => {
+    const context = feedbackContext({
+      user: ADA,
+      attachUrl: true,
+      url: URL_,
+      version: "1",
+      diagnostics: SCAN,
+      ...FIXED,
+    });
+    expect(context.diagnostics).toEqual(SCAN);
+    expect(Object.keys(context).at(-1)).toBe("diagnostics");
+    // The checkbox is about the page; what the app attached goes regardless.
+    const withheld = feedbackContext({ attachUrl: false, url: URL_, diagnostics: SCAN, ...FIXED });
+    expect(withheld).toMatchObject({ url: "", route: "", diagnostics: SCAN });
+  });
+
+  it("sends diagnostics exactly when the box draws a line of them", () => {
+    const sent = (diagnostics: unknown) =>
+      "diagnostics" in
+      feedbackContext({ attachUrl: true, url: URL_, diagnostics: diagnostics as Record<string, unknown>, ...FIXED });
+    expect(sent({ kind: "receipt_scan" })).toBe(true);
+    for (const nothing of [undefined, null, {}, ["a"]]) expect(sent(nothing)).toBe(false);
+  });
+
   it("defaults origin, viewport and ua from the browser", () => {
     const context = feedbackContext({ attachUrl: true, url: window.location.href });
     expect(context.origin).toBe(window.location.origin);
@@ -87,10 +114,33 @@ describe("feedbackContext", () => {
   });
 });
 
-function Box({ user = ADA, url = URL_ }: { user?: FeedbackSubmitter | null; url?: string }) {
+function Box({
+  user = ADA,
+  url = URL_,
+  diagnostics,
+}: {
+  user?: FeedbackSubmitter | null;
+  url?: string;
+  diagnostics?: Record<string, unknown>;
+}) {
   const [attach, setAttach] = useState(true);
-  return <FeedbackContextBox user={user} url={url} attachUrl={attach} onAttachUrlChange={setAttach} />;
+  return (
+    <FeedbackContextBox
+      user={user}
+      url={url}
+      attachUrl={attach}
+      onAttachUrlChange={setAttach}
+      diagnostics={diagnostics}
+    />
+  );
 }
+
+/** The diagnostics drawn in `scope`, as [key, value] text pairs in their order. */
+const pairs = (scope: HTMLElement) =>
+  Array.from(scope.querySelectorAll("[data-feedback-diagnostics] dt")).map((dt) => [
+    dt.textContent,
+    dt.nextElementSibling?.textContent,
+  ]);
 
 describe("FeedbackContextBox", () => {
   it("names the submitter and offers the URL, ticked", () => {
@@ -187,6 +237,56 @@ describe("FeedbackContextBox", () => {
   });
 
   it("has English defaults", () => {
-    expect(DEFAULT_FEEDBACK_CONTEXT_LABELS).toEqual({ user: "User", attachUrl: "Attach current page URL" });
+    expect(DEFAULT_FEEDBACK_CONTEXT_LABELS).toEqual({
+      user: "User",
+      attachUrl: "Attach current page URL",
+      diagnostics: "Diagnostics sent with the report",
+    });
+  });
+});
+
+describe("FeedbackContextBox — what the app attached (keksdose live #481)", () => {
+  it("shows the diagnostics under the URL, read-only, in the row detail's lines", () => {
+    render(<Box diagnostics={SCAN} />);
+    const group = screen.getByRole("group", { name: "Diagnostics sent with the report" });
+    expect(pairs(group)).toEqual([
+      ["kind", "receipt_scan"],
+      ["invoice_id", "318"],
+      ["attempts", "2"],
+      ["last_error", "—"],
+      ["timings", '{"model_s":31}'],
+    ]);
+    // Nothing to edit or untick: they go as shown.
+    expect(group.querySelectorAll("input, textarea, select, button")).toHaveLength(0);
+    const checkbox = screen.getByRole("checkbox", { name: "Attach current page URL" });
+    expect(checkbox.compareDocumentPosition(group) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("stays as it is when the URL is unticked", () => {
+    render(<Box diagnostics={SCAN} />);
+    fireEvent.click(screen.getByRole("checkbox", { name: "Attach current page URL" }));
+    const group = screen.getByRole("group", { name: "Diagnostics sent with the report" });
+    expect(within(group).getByText("receipt_scan")).not.toHaveClass("line-through");
+    expect(group).not.toHaveAttribute("data-withheld");
+  });
+
+  it("draws the block exactly when there is a line to show", () => {
+    const { container, unmount } = render(<Box />);
+    expect(screen.queryByRole("group")).toBeNull();
+    expect(container.querySelector("[data-feedback-diagnostics]")).toBeNull();
+    unmount();
+    const { rerender } = render(<Box diagnostics={{}} />);
+    expect(screen.queryByRole("group")).toBeNull();
+    rerender(<Box diagnostics={{ kind: "receipt_scan" }} />);
+    expect(screen.getByRole("group", { name: "Diagnostics sent with the report" })).toBeInTheDocument();
+  });
+
+  it("names them in the reader's language", () => {
+    render(
+      <UiKitProvider labels={{ feedbackContext: UI_KIT_LABELS_DE_CH.feedbackContext } as UiKitLabelOverrides}>
+        <Box diagnostics={SCAN} />
+      </UiKitProvider>,
+    );
+    expect(screen.getByRole("group", { name: "Mitgesendete Diagnose" })).toBeInTheDocument();
   });
 });

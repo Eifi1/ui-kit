@@ -12,6 +12,7 @@ import {
   type FeedbackContext,
   type FeedbackEnvironment,
 } from "./feedback-record";
+import type { FeedbackSubmitOpenOptions } from "./feedback-submit";
 import type { FeedbackCategory } from "./feedback-vocabulary";
 
 /**
@@ -49,6 +50,9 @@ export interface FeedbackSubmitDialogProps {
   capture?: false | (() => Promise<File | null>);
   /** `UseFeedbackSubmitOptions.publicNotice` (0.38): the line under the body. */
   publicNotice?: boolean;
+  /** `open(category, options)`'s, taken when it opened (keksdose live #481): the box
+   *  shows the diagnostics and the report carries them; the title and body prefill. */
+  opened?: FeedbackSubmitOpenOptions;
 }
 
 /** `FeedbackDialog` as `useFeedbackSubmit` settles it — see the hook for what it settles. */
@@ -66,6 +70,7 @@ export function FeedbackSubmitDialog({
   version,
   capture,
   publicNotice = false,
+  opened: { diagnostics, title, body } = {},
 }: FeedbackSubmitDialogProps) {
   const toastText = useFeedbackToastLabels();
   const dialogText = useKitLabels("feedbackDialog", DEFAULT_FEEDBACK_DIALOG_LABELS);
@@ -108,10 +113,18 @@ export function FeedbackSubmitDialog({
       }
       onCaptureScreenshot={onCaptureScreenshot}
       publicNotice={publicNotice ? (dialogText.publicNotice ?? DEFAULT_FEEDBACK_DIALOG_LABELS.publicNotice) : undefined}
+      defaultTitle={title}
+      defaultBody={body}
       // The context is read off the very values the box below shows (§3.2).
-      onSubmit={(data) => onSubmit(data, feedbackContext({ user, attachUrl, url, environment, version }))}
+      onSubmit={(data) => onSubmit(data, feedbackContext({ user, attachUrl, url, environment, version, diagnostics }))}
       contextSlot={
-        <FeedbackContextBox user={user} url={url} attachUrl={attachUrl} onAttachUrlChange={onAttachUrlChange} />
+        <FeedbackContextBox
+          user={user}
+          url={url}
+          attachUrl={attachUrl}
+          onAttachUrlChange={onAttachUrlChange}
+          diagnostics={diagnostics}
+        />
       }
     />
   );

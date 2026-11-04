@@ -1,8 +1,10 @@
+import { useId } from "react";
 import { Checkbox } from "../components/checkbox";
 import { DEFAULT_COMMON_LABELS, useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import type { FeedbackContext, FeedbackEnvironment } from "./feedback-record";
 import { DEFAULT_FEEDBACK_CONTEXT_LABELS } from "./feedback-context-labels";
+import { diagnosticsEntries, FeedbackDiagnosticsList } from "./feedback-diagnostics";
 
 /**
  * The reporter context of a feedback report: the box the submit dialog shows, and the
@@ -70,6 +72,10 @@ export interface FeedbackContextInput {
   viewport?: string;
   /** Default `navigator.userAgent`. */
   ua?: string;
+  /** What the app attached about the thing reported — `useFeedbackSubmit().open(category,
+   *  { diagnostics })` (keksdose live #481). Sent whatever `attachUrl` says, as the box
+   *  shows it; left out of the object when it has no key to show. */
+  diagnostics?: Readonly<Record<string, unknown>> | null;
 }
 
 /** The pathname of a full or path-only URL; `""` for something that is neither. */
@@ -85,12 +91,13 @@ function pathOf(url: string, base: string | undefined): string {
 /**
  * The `context` object of `POST /feedback` (§3.2), keys in keksdose's order: `url`, `route`,
  * `origin`, `environment`, `user_id`, `user_email`, `user_display_name`, `viewport`, `ua`,
- * `version`.
+ * `version`, then the app's `diagnostics`.
  *
  * With `attachUrl: false`, `url` and `route` are `""` — present and empty, as keksdose
  * sends them, so a reader can tell "withheld" from "an old row without the key".
  * `environment` and `version` are omitted when the app passes none (kastlan had no
- * version), rather than sent as `undefined`.
+ * version), rather than sent as `undefined`; `diagnostics` when the box would show no
+ * line of it (none, `{}`, not a record).
  *
  * Reads `window` / `navigator` only for the defaults it was not given, so it is a pure
  * function in a test that passes everything.
@@ -111,6 +118,8 @@ export function feedbackContext(input: FeedbackContextInput): FeedbackContext {
   context.viewport = input.viewport ?? (win ? `${win.innerWidth}x${win.innerHeight}` : "");
   context.ua = input.ua ?? (typeof navigator === "undefined" ? "" : navigator.userAgent);
   if (input.version !== undefined) context.version = input.version;
+  // The box's own test: what it draws no line of is not sent either.
+  if (input.diagnostics && diagnosticsEntries(input.diagnostics).length) context.diagnostics = input.diagnostics;
   return context;
 }
 
@@ -127,6 +136,9 @@ export interface FeedbackContextLabels {
   user: string;
   /** The checkbox. The URL it is about is the line beneath it. */
   attachUrl: string;
+  /** The heading over what the app attached — `open(category, { diagnostics })`, shown
+   *  read-only under the URL (keksdose live #481). de-CH: "Mitgesendete Diagnose" */
+  diagnostics: string;
 }
 
 // Defined in ./feedback-context-labels, which holds no component code (0.34, KS U8).
@@ -140,6 +152,10 @@ export interface FeedbackContextBoxProps {
   /** The checkbox, on by default in the dialog (§4.2) — the same `attachUrl`. */
   attachUrl: boolean;
   onAttachUrlChange: (next: boolean) => void;
+  /** What the app attached — the same `diagnostics` handed to {@link feedbackContext}.
+   *  Shown read-only, each key and its value as the row detail draws them; no block when
+   *  there is no line to show. */
+  diagnostics?: Readonly<Record<string, unknown>> | null;
   /** Prop > `<UiKitProvider labels={{ feedbackContext }}>` > English. */
   labels?: LabelOverride<FeedbackContextLabels>;
   className?: string;
@@ -157,6 +173,10 @@ export interface FeedbackContextBoxProps {
  * against whatever screen happened to be open, the queue reads as if it were about that
  * screen.
  *
+ * Below the URL, what the app attached (`diagnostics`, keksdose live #481: a stuck receipt
+ * scan's bookkeeping), read-only and in the row detail's own lines: the reporter sees what
+ * goes with the report, and that the URL checkbox does not withhold it.
+ *
  * Nothing in here is the app's: hand it the values handed to {@link feedbackContext}, and
  * what the box shows is what is sent.
  */
@@ -165,11 +185,14 @@ export function FeedbackContextBox({
   url,
   attachUrl,
   onAttachUrlChange,
+  diagnostics,
   labels: labelsProp,
   className,
 }: FeedbackContextBoxProps) {
   const labels = useKitLabels("feedbackContext", DEFAULT_FEEDBACK_CONTEXT_LABELS, labelsProp);
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
+  const diagnosticsId = useId();
+  const attached = diagnosticsEntries(diagnostics);
   const submitter = submitterLine(user);
   // "User: Ada …" through `common.fieldValue`, so French gets its space before the colon
   // and Chinese its full-width one; the label and its punctuation are drawn bold, as
@@ -208,6 +231,15 @@ export function FeedbackContextBox({
           ) : undefined
         }
       />
+      {attached.length > 0 && (
+        // A named group, so a screen reader hears what the pairs are before it reads them.
+        <div role="group" aria-labelledby={diagnosticsId} className="space-y-0.5 pt-1">
+          <div id={diagnosticsId} className="font-medium text-secondary">
+            {labels.diagnostics}
+          </div>
+          <FeedbackDiagnosticsList entries={attached} />
+        </div>
+      )}
     </div>
   );
 }
