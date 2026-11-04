@@ -1,13 +1,16 @@
 /**
  * Internal (not exported from the package): the kit's one reading of "this is editable
- * content", for the four places that leave typed text alone — `useHotkey`'s typing check,
+ * content", for the five places that leave typed text alone — `useHotkey`'s typing check,
  * the tour's Enter and arrows (tour-overlay `ownsKey`), the bulk bar's arrows
- * (`ownsArrows`) and the clipboard's minus (clipboard-minus `isEditable`).
+ * (`ownsArrows`), the clipboard's minus (clipboard-minus `isEditable`) and the Lightbox's
+ * paging keys.
  *
  * 0.54 wrote it for `useHotkey` (keksdose audit follow-up, 2026-11-01); the other three
  * read `isContentEditable` alone, or a `[contenteditable=""], [contenteditable="true"]`
- * selector beside it, and had the gap it closed (0.54 follow-up). Here, so the four
- * cannot drift, and in lib/ because it is DOM reading with no component code: the
+ * selector beside it, and had the gap it closed (0.54 follow-up). The Lightbox's
+ * `[contenteditable='true']` selector had it too (0.52 code review 2026-10-31, held to
+ * 0.55). Here, so the five cannot drift, and in lib/ because it is DOM reading with no
+ * component code: the
  * clipboard handler, which `UiKitProvider` loads on its own, must not bring a component
  * with it.
  */

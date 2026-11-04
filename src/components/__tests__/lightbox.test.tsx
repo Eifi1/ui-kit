@@ -97,6 +97,32 @@ describe("Lightbox", () => {
     expect(shown()).toBe("Kitchen");
   });
 
+  // 0.52 code review 2026-10-31, held to 0.55: the guard matched `[contenteditable='true']`
+  // alone, so an editor in a caption written any other way that edits paged the viewer
+  // under its caret. The rule is lib/editable-content's now; a `false` island in the
+  // editor is not typed in, and its keys page again.
+  it("leaves the paging keys to editable content in a caption, by the kit's one rule", () => {
+    const caption = (
+      <>
+        <div contentEditable="plaintext-only" suppressContentEditableWarning role="textbox" aria-label="plain" />
+        <div data-testid="empty" suppressContentEditableWarning>
+          <span data-testid="island" contentEditable={false} />
+        </div>
+      </>
+    );
+    render(<Harness items={[{ ...ITEMS[0]!, caption }, ...ITEMS.slice(1)]} />);
+    // React writes `contentEditable` as "true"; the bare attribute is HTML's own spelling.
+    screen.getByTestId("empty").setAttribute("contenteditable", "");
+    for (const editor of [screen.getByRole("textbox", { name: "plain" }), screen.getByTestId("empty")]) {
+      for (const k of ["ArrowRight", "End", "ArrowLeft", "Home"]) {
+        fireEvent.keyDown(editor, { key: k });
+        expect(shown()).toBe("Kitchen");
+      }
+    }
+    fireEvent.keyDown(screen.getByTestId("island"), { key: "ArrowRight" });
+    expect(shown()).toBe("Hallway");
+  });
+
   it("swaps the arrows in a right-to-left page, though the dialog is portalled out of it", () => {
     document.documentElement.setAttribute("dir", "rtl");
     render(<Harness />);
