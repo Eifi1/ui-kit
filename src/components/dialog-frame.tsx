@@ -26,7 +26,9 @@ export { DEFAULT_DIALOG_FRAME_LABELS };
  * `onKeyDown`, a `data-tour` anchor, still reaches the `Modal` — and since 0.35 `ref`
  * (round 0.35 R4): the panel, the `role="dialog"` element the frame's header, body and
  * actions sit in. `busy` too (DUP-3): it holds the frame's X and the `close` that
- * `actions` and `headerActions` receive, since both are the `Modal`'s own close.
+ * `actions` and `headerActions` receive, since both are the `Modal`'s own close. And
+ * `held` (keksdose audit follow-up, 2026-11-01), which holds the same and shows the X
+ * disabled — see {@link ModalProps.held}.
  */
 export interface DialogFrameProps extends Omit<ModalProps, "labelledBy" | "children" | "title"> {
   /** The heading, and therefore the dialog's accessible name (`aria-labelledby`). */
@@ -187,7 +189,7 @@ export function DialogFrame({
             <FrameHeaderActions actions={headerActions} onClose={modal.onClose} />
           )}
         </div>
-        {closeButton && <FrameClose label={closeLabel} onClose={modal.onClose} />}
+        {closeButton && <FrameClose label={closeLabel} onClose={modal.onClose} held={modal.held} />}
       </div>
       {hasBody && (
         <div
@@ -210,8 +212,10 @@ export function DialogFrame({
 }
 
 /** The X. A component of its own so it can read the panel's animated close, which
- *  only exists INSIDE the `Modal` (the frame's own body runs outside it). */
-function FrameClose({ label, onClose }: { label?: string; onClose: () => void }) {
+ *  only exists INSIDE the `Modal` (the frame's own body runs outside it). Disabled
+ *  while `held`; under `busy` it stays enabled and the `Modal` drops its press (see
+ *  {@link ModalProps.held} for why the two differ). */
+function FrameClose({ label, onClose, held = false }: { label?: string; onClose: () => void; held?: boolean }) {
   const close = useContext(ModalCloseContext) ?? onClose;
   const labels = useKitLabels(
     "dialogFrame",
@@ -222,9 +226,13 @@ function FrameClose({ label, onClose }: { label?: string; onClose: () => void })
     <button
       type="button"
       onClick={close}
+      disabled={held}
       aria-label={labels.close}
       className={cn(
         "-me-1.5 -mt-1 shrink-0 rounded p-1.5 text-muted outline-none hover:bg-hover hover:text-secondary",
+        // The kit's disabled look (Button, IconButton), and the resting look pinned under
+        // `disabled:hover:` so a refused X does not light up under the pointer.
+        "disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-muted",
         FOCUS_RING,
       )}
     >

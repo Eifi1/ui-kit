@@ -238,6 +238,105 @@ describe("Modal busy", () => {
   });
 });
 
+/**
+ * `held` (keksdose audit follow-up, 2026-11-01): busy's hold without its request.
+ * keksdose's one-time recovery code refused in its own `onClose`, which could not hold
+ * a SECOND Back — the first spent the entry, and the second left the page with the code.
+ */
+describe("Modal held", () => {
+  it("refuses the backdrop and Escape like busy, and is not aria-busy", () => {
+    stubDesktop({ reducedMotion: false });
+    const onClose = vi.fn();
+    render(
+      <Modal held onClose={onClose} aria-label="Recovery code">
+        <p>body</p>
+      </Modal>,
+    );
+    const panel = screen.getByRole("dialog", { name: "Recovery code" });
+    expect(panel).not.toHaveAttribute("aria-busy");
+    expect(panel).not.toHaveAttribute("held");
+
+    pressBackdrop(panel);
+    expect(lowering(panel)).toBe(false);
+    // Taken by the dialog's layer and dropped.
+    expect(fireEvent.keyDown(panel, { key: "Escape" })).toBe(false);
+    expect(lowering(panel)).toBe(false);
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("holds every Back, not only the first, and lets the next one through once released", async () => {
+    const onClose = vi.fn();
+    const depth = window.history.length;
+    const view = (held: boolean) => (
+      <Modal held={held} onClose={onClose} aria-label="Recovery code">
+        <p>body</p>
+      </Modal>
+    );
+    const { rerender } = render(view(true));
+    const entry = liveSentinel();
+    expect(entry).not.toBeNull();
+
+    for (let press = 0; press < 2; press += 1) {
+      await pressBack();
+      await drainTasks();
+      expect(onClose).not.toHaveBeenCalled();
+      expect(screen.getByRole("dialog", { name: "Recovery code" })).toBeInTheDocument();
+      expect(liveSentinel()).toBe(entry);
+      expect(window.history.length).toBe(depth + 1);
+    }
+
+    rerender(view(false));
+    await pressBack();
+    await drainTasks();
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(liveSentinel()).toBeNull();
+    expect(window.location.pathname).toBe("/held");
+  });
+
+  it("disables the frame's X and holds an actions(close); the caller's own close still closes", async () => {
+    function Page() {
+      const [open, setOpen] = useState(true);
+      return (
+        <DialogFrame
+          open={open}
+          held
+          closeButton
+          title="Recovery code"
+          onClose={() => setOpen(false)}
+          actions={(close) => (
+            <>
+              <button type="button" onClick={close}>
+                Cancel
+              </button>
+              <button type="button" onClick={() => setOpen(false)}>
+                I have saved it
+              </button>
+            </>
+          )}
+        >
+          <p>body</p>
+        </DialogFrame>
+      );
+    }
+    render(<Page />);
+    expect(screen.getByRole("button", { name: "Close" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.getByRole("dialog", { name: "Recovery code" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "I have saved it" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+
+  it("leaves busy's X enabled, as before", () => {
+    render(
+      <DialogFrame busy closeButton title="Pay" onClose={vi.fn()}>
+        <p>body</p>
+      </DialogFrame>,
+    );
+    expect(screen.getByRole("button", { name: "Close" })).toBeEnabled();
+  });
+});
+
 /** Each caller, put into its request; `close` is its "I was dismissed" callback. */
 const CALLERS: [name: string, role: "dialog" | "alertdialog", mount: (close: () => void) => Promise<void>][] = [
   [

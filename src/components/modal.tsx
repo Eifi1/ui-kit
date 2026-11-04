@@ -257,8 +257,35 @@ export interface ModalProps extends Omit<ComponentPropsWithoutRef<"div">, "role"
    * the dialog asks for itself through `ModalCloseContext` while busy is refused too; one
    * made from an effect that depends on that close (ReauthDialog's on a resolved submit)
    * runs again once `busy` turns false, because the close changes with it.
+   *
+   * A dialog that must not be dismissed while NOTHING runs — a code shown once — wants
+   * {@link ModalProps.held} instead: the same hold without the request.
    */
   busy?: boolean;
+  /**
+   * Hold the dialog open: every dismissal `busy` refuses is refused — the backdrop,
+   * Escape, Back, the frame's X and an `actions(close)` button — but no request is
+   * claimed: the panel is not `aria-busy`. For a dialog the user must not lose by
+   * accident while nothing is in flight (keksdose audit follow-up, 2026-11-01): keksdose's
+   * one-time recovery code (auth/recovery-code-pane.tsx) refused in its own `onClose`,
+   * which comes after the exit has started and cannot hold Back — the first Back spent
+   * the dialog's history entry, and the second left the page, and the code with it.
+   * Held, a refused Back puts the entry back, so every Back is held, not only the first.
+   * The refusal is silent, as under `busy` — `onClose` is not called — so what the
+   * dialog is waiting for is said up front, not after a refused press.
+   *
+   * The way out is a close the CALLER decides on, which is never held: `open={false}`
+   * (the exit still plays) or unmounting, from the dialog's own "I have saved it" button.
+   * Not the `close` that `actions` and `headerActions` receive — that is the dialog's
+   * own dismissal, and held like the rest.
+   *
+   * `DialogFrame`'s X is DISABLED while held, where under `busy` it stays enabled and its
+   * press is dropped: a request is over in a moment, a hold lasts until the user acts,
+   * and an X that does nothing for that long reads as broken. Disabled rather than
+   * hidden, so the header does not reflow the moment the hold lifts; a caller that wants
+   * it gone passes `closeButton={!held}`. Independent of `busy`: either one holds.
+   */
+  held?: boolean;
   /**
    * The PANEL — the `role="dialog"` element the rest of the props go on, not the
    * backdrop around it (0.35, round 0.35 R4, the follow-up to API-2; as on
@@ -325,6 +352,7 @@ function ModalPanel({
   role = "dialog",
   urlParam: _urlParam,
   busy = false,
+  held = false,
   "aria-busy": ariaBusy,
   ownHistoryEntry = true,
   ref,
@@ -371,13 +399,14 @@ function ModalPanel({
     setDismissed(true);
     onClose();
   });
-  // `busy` (DUP-3) refuses HERE, before `lower` starts the exit: a refusal in the
-  // caller's `onClose` comes 220ms too late, after the panel has already gone down.
-  // A new function when `busy` flips, so a close asked for from an effect while busy
+  // `busy` (DUP-3) and `held` refuse HERE, before `lower` starts the exit: a refusal in
+  // the caller's `onClose` comes 220ms too late, after the panel has already gone down.
+  // A new function when the hold flips, so a close asked for from an effect while busy
   // (a resolved action whose caller's `isPending` trails its promise) runs again.
+  const holding = busy || held;
   const requestClose = useCallback(() => {
-    if (!busy) lower();
-  }, [busy, lower]);
+    if (!holding) lower();
+  }, [holding, lower]);
   // A panel on its way out after `open` turned false is already closed: a press on
   // its fading backdrop must not report a second close.
   const backdropClose = useBackdropClose(active ? requestClose : () => {});
@@ -385,8 +414,8 @@ function ModalPanel({
   // this the only way out of a dialog is finding its close button — and Back, the
   // gesture everyone reaches for, navigated the page underneath instead (#172).
   // Held only while open: a closed `open={false}` dialog must not own a history entry.
-  // `held`: a Back while busy is refused, and the entry it took is put back.
-  useOverlayHistory(active && ownHistoryEntry, requestClose, { held: busy });
+  // `held`: a Back while busy or held is refused, and the entry it took is put back.
+  useOverlayHistory(active && ownHistoryEntry, requestClose, { held: holding });
 
   // Through the shared hook and not by hand: this component's own save/restore copy
   // was one half of the pair that left the page permanently unscrollable when a dialog
