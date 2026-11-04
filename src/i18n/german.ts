@@ -2123,5 +2123,19 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       removed: "Entfernt:",
       added: "Hinzugefügt:",
     },
+    // 0.55: keksdose's reviewed headings (changelog.section_*) where it had one.
+    releaseNotes: {
+      version: (version) => `v${version}`,
+      sections: {
+        breaking: "Inkompatible Änderungen",
+        added: "Neu",
+        changed: "Geändert",
+        fixed: "Behoben",
+        deprecated: "Veraltet",
+        removed: "Entfernt",
+        security: "Sicherheit",
+        reverted: "Zurückgenommen",
+      },
+    },
   };
 }

@@ -152,6 +152,12 @@ export const en: Dictionary = {
       blurb:
         "Working on the device's copy: the sync engine with its queue, one request per scope, refused changes kept, the waits after an error and the guarded sign-out; its worker, its status for the indicator and the live read of the copy.",
     },
+    "release-notes": {
+      title: "Release notes",
+      short: "Releases",
+      blurb:
+        "A CHANGELOG.md for a reader: the parser for the file every repository writes with commit-and-tag-version, and the card that shows one release — its version and day, its sections by key, the notes grouped by scope.",
+    },
     "auth-account": {
       title: "Sign-in & account security",
       short: "Auth",
@@ -658,6 +664,14 @@ export const en: Dictionary = {
       "keep changes waiting for a plan",
       "show the sync status",
       "read the device's copy live",
+    ],
+    "release-notes": [
+      "show what changed in a release",
+      "a changelog page",
+      "a what's-new dialog after an update",
+      "parse CHANGELOG.md",
+      "group release notes by scope",
+      "translate the changelog's section headings",
     ],
     "auth-account": [
       "login page layout",

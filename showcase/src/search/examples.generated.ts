@@ -986,6 +986,10 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "createSyncEngine — a Dexie copy in this browser, a pretend server in memory",
     "The wiring — a handover copy",
   ],
+  "release-notes": [
+    "ReleaseNotes — one release, on the kit's parser",
+    "parseChangelogItem · changelogSectionKey · groupByScope",
+  ],
   "server-auth": [
     "auth · Functions",
     "auth · Classes",
@@ -1475,6 +1479,9 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
   ],
   "sync": [
     "SyncDemo",
+  ],
+  "release-notes": [
+    "ReleaseNotesPage",
   ],
   "server-auth": [
     "ServerModules",

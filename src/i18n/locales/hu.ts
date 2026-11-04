@@ -2056,6 +2056,20 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       removed: "Törölve:",
       added: "Hozzáadva:",
     },
+    // 0.55: keksdose's headings (changelog.section_*), translated; it ships no Hungarian.
+    releaseNotes: {
+      version: (version) => `v${version}`,
+      sections: {
+        breaking: "Nem kompatibilis változások",
+        added: "Újdonságok",
+        changed: "Változások",
+        fixed: "Javítások",
+        deprecated: "Elavult",
+        removed: "Eltávolítva",
+        security: "Biztonság",
+        reverted: "Visszavonva",
+      },
+    },
   };
 }
 

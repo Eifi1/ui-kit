@@ -141,6 +141,12 @@ export const es: Dictionary = {
       blurb:
         "Trabajar sobre la copia del dispositivo: el motor de sincronización con su cola, una petición por ámbito, los cambios rechazados que se conservan, las esperas tras un error y el cierre de sesión protegido; su worker, su estado para el indicador y la lectura en vivo de la copia.",
     },
+    "release-notes": {
+      title: "Notas de la versión",
+      short: "Versiones",
+      blurb:
+        "Un CHANGELOG.md para quien lo lee: el analizador del archivo que cada repositorio escribe con commit-and-tag-version, y la tarjeta que muestra una versión: su número y su día, sus secciones por clave, las notas agrupadas por ámbito.",
+    },
     "auth-account": {
       title: "Inicio de sesión y seguridad de la cuenta",
       short: "Acceso",
@@ -652,6 +658,14 @@ export const es: Dictionary = {
       "conservar cambios a la espera de un plan",
       "mostrar el estado de sincronización",
       "leer en vivo la copia del dispositivo",
+    ],
+    "release-notes": [
+      "mostrar qué ha cambiado en una versión",
+      "una página de registro de cambios",
+      "un diálogo de novedades tras una actualización",
+      "leer el archivo CHANGELOG.md",
+      "agrupar las notas de la versión por ámbito",
+      "traducir los títulos de sección del registro",
     ],
     "auth-account": [
       "diseño de la página de inicio de sesión",

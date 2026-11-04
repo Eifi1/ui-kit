@@ -2054,6 +2054,20 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       removed: "Eliminado:",
       added: "Añadido:",
     },
+    // 0.55: keksdose's headings (changelog.section_*), translated; it ships no Spanish.
+    releaseNotes: {
+      version: (version) => `v${version}`,
+      sections: {
+        breaking: "Cambios incompatibles",
+        added: "Novedades",
+        changed: "Cambios",
+        fixed: "Corregido",
+        deprecated: "Obsoleto",
+        removed: "Eliminado",
+        security: "Seguridad",
+        reverted: "Revertido",
+      },
+    },
   };
 }
 

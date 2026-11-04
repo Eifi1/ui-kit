@@ -2072,6 +2072,20 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       removed: "Rimosso:",
       added: "Aggiunto:",
     },
+    // 0.55: keksdose's reviewed headings (changelog.section_*) where it had one.
+    releaseNotes: {
+      version: (version) => `v${version}`,
+      sections: {
+        breaking: "Modifiche incompatibili",
+        added: "Novità",
+        changed: "Modificato",
+        fixed: "Corretto",
+        deprecated: "Deprecato",
+        removed: "Rimosso",
+        security: "Sicurezza",
+        reverted: "Ritirato",
+      },
+    },
   };
 }
 

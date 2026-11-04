@@ -85,6 +85,15 @@ export type {
   ChangelogItem,
   ChangelogScopeGroup,
 } from "./lib/changelog";
+// 0.55: the card on it — one release, its sections by key, the notes grouped by scope
+// (keksdose's release-notes.tsx and kastlan's changelog page).
+export { ReleaseNotes, DEFAULT_RELEASE_NOTES_LABELS } from "./components/release-notes";
+export type {
+  ReleaseNotesProps,
+  ReleaseNotesRelease,
+  ReleaseNotesSection,
+  ReleaseNotesLabels,
+} from "./components/release-notes";
 // 0.29.0 (docs/auth-harmonization.md): the person-name order of each language.
 export { formatPersonName, personInitials } from "./lib/person-name";
 export type { PersonName } from "./lib/person-name";

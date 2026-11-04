@@ -125,6 +125,7 @@ import type { SharedComputerLabels } from "../offline/shared-computer";
 import type { HeldChangesBannerLabels } from "../shell/held-changes-banner-labels";
 import type { FieldSuggestionLabels } from "../components/field-parts";
 import type { ConsentAgainLabels } from "../components/consent-again-notice-labels";
+import type { ReleaseNotesLabels } from "../components/release-notes-labels";
 
 /**
  * EVERY string the kit renders, as one typed tree — and an optional provider that
@@ -521,6 +522,8 @@ export interface UiKitLabels {
    *  `ConsentAgainNotice` (Agree, Not now, the two disclosures, before and now); the
    *  subject's words are the app's. */
   consentAgain: ConsentAgainLabels;
+  /** 0.55: `ReleaseNotes` — a release's heading and its sections' headings by key. */
+  releaseNotes: ReleaseNotesLabels;
 }
 
 /**

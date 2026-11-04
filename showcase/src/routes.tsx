@@ -60,6 +60,7 @@ import {
   Pin,
   Puzzle,
   RefreshCw,
+  ScrollText,
   Server,
   Settings as SettingsIcon,
   ShieldAlert,
@@ -382,6 +383,8 @@ const BillingSwitchDemo = lazySection(() => import("./sections/billing"), "Billi
 const OfflineDemo = lazySection(() => import("./sections/offline-demo"), "OfflineDemo");
 // 0.46: local-first phase 3, @eifi1/ui-kit/sync (docs/local-first-harmonization.md §2.3).
 const SyncDemo = lazySection(() => import("./sections/sync-demo"), "SyncDemo");
+// 0.55: the changelog parser and the release card on it (kastlan reuse audit, proposal 1).
+const ReleaseNotesPage = lazySection(() => import("./sections/release-notes"), "ReleaseNotesPage");
 const PlanChange033Demo = lazySection(() => import("./sections/admin-033-demo"), "PlanChange033Demo");
 const GroupActions034Demo = lazySection(() => import("./sections/admin-034-demo"), "GroupActions034Demo");
 // 0.42: the admin area's template (docs/admin-harmonization.md).
@@ -2105,6 +2108,25 @@ export const GROUPS: ShowcaseGroup[] = [
           "writeLocalFirst",
         ],
         Body: () => <SyncDemo />,
+      },
+      {
+        // 0.55: the parser and the card the apps' changelog pages and what's-new dialog draw.
+        // In API, not App chrome: that group is at its ten pages (the phone's row of page pills).
+        slug: "release-notes",
+        title: "Release notes",
+        short: "Releases",
+        blurb:
+          "A CHANGELOG.md for a reader: the parser for the file every repository writes with commit-and-tag-version, and the card that shows one release — its version and day, its sections by key, the notes grouped by scope.",
+        icon: ScrollText,
+        components: [
+          "ReleaseNotes",
+          "DEFAULT_RELEASE_NOTES_LABELS",
+          "parseChangelog",
+          "parseChangelogItem",
+          "changelogSectionKey",
+          "groupByScope",
+        ],
+        Body: () => <ReleaseNotesPage />,
       },
     ],
   },

@@ -353,7 +353,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.55 (+1, keksdose's page outline): `PageHeaderSkeleton`, PageHeader at its own metrics.
   // 0.55 (+2, keksdose's price pool): `ConsentAgainNotice` and `DEFAULT_CONSENT_AGAIN_LABELS`,
   // a consent asked again after its text changed.
-  ["@eifi1/ui-kit", barrel, 987],
+  // 0.55 (+2, kastlan reuse audit 2026-11-02, proposal 1): `ReleaseNotes` and
+  // `DEFAULT_RELEASE_NOTES_LABELS`, the release card on the changelog parser.
+  ["@eifi1/ui-kit", barrel, 989],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

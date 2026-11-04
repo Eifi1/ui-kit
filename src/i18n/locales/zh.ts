@@ -1960,6 +1960,20 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       removed: "已删除：",
       added: "已新增：",
     },
+    // 0.55: keksdose's headings (changelog.section_*), translated; it ships no Chinese.
+    releaseNotes: {
+      version: (version) => `v${version}`,
+      sections: {
+        breaking: "不兼容的变更",
+        added: "新增",
+        changed: "变更",
+        fixed: "修复",
+        deprecated: "弃用",
+        removed: "移除",
+        security: "安全",
+        reverted: "撤销",
+      },
+    },
   };
 }
 
