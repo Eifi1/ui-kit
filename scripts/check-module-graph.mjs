@@ -35,6 +35,14 @@ if (!existsSync(chart)) fail(`${chart} is missing — run \`npm run build\` firs
 if (!readFileSync(chart, "utf8").includes('from "recharts"')) {
   fail(`${chart} no longer imports recharts itself — the build bundled it`);
 }
+// And the map imports none (0.55): it draws itself (treemap.tsx, "The picture"), and recharts
+// reaches it only through the chart shell's ResponsiveContainer. Its own import was
+// recharts' `<Treemap>` and the chart store behind it: `{ Treemap }` with recharts bundled
+// was 269 kB minified (84 kB gzip) at 0.54, and is 30 kB (13 kB gzip) without it.
+const treemap = "dist/components/treemap.js";
+if (readFileSync(treemap, "utf8").includes('from "recharts"')) {
+  fail(`${treemap} imports recharts again — the map draws itself since 0.55`);
+}
 
 // One file per source module, not a bundle: a bundling build collapses these. The floor
 // is the source tree itself (tests, the test harness and ambient .d.ts excepted).
@@ -300,6 +308,6 @@ for (const { label, names, max } of BUDGETS) {
 }
 
 console.log(
-  `✓ module graph preserved: ${files} modules, no import cycle, chart keeps its own recharts import, ` +
+  `✓ module graph preserved: ${files} modules, no import cycle, chart keeps its own recharts import (the map none), ` +
     `${catalogues.length} catalogues reach nothing outside i18n/\n  import cost, minified: ${costs.join(" · ")}`,
 );

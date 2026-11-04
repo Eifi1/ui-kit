@@ -14,6 +14,9 @@
 // asking for its tiles' area PLUS its frame's, and its tiles laid out in its body. A
 // frame's area depends on the rectangle it gets, so the layout is run again with each
 // group's frame as measured until no frame moves by a pixel — two or three rounds.
+//
+// Since 0.55 it is the only layout the map has: the map draws its nodes itself, where this
+// puts them (treemap.tsx, "The picture"), and recharts lays nothing out for it any more.
 
 export interface Box {
   x: number;
