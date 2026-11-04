@@ -1726,6 +1726,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       // "Unternehmen", as `companySwitcher`.
       accessCompany: "Unternehmen:",
       accessUse: "Wofür Sie die App nutzen möchten:",
+      siteNavLabel: "Weitere Seiten",
     },
     demo: {
       starting: "Demo wird gestartet…",

@@ -199,4 +199,44 @@ describe("LegalFooter", () => {
       ["Barrierefreiheit", "/accessibility"],
     ]);
   });
+
+  it("0.55: the app's other public pages in a row of their own, named apart from the legal one", () => {
+    const SITE = [
+      { href: "/changelog", label: "Changelog" },
+      { href: "/status", label: "Status" },
+    ];
+    const { rerender } = render(<LegalFooter siteLinks={SITE} currentHref="/changelog" />);
+    const site = screen.getByRole("navigation", { name: "More pages" });
+    const legal = screen.getByRole("navigation", { name: "Legal" });
+    expect(
+      within(site)
+        .getAllByRole("link")
+        .map((a) => a.textContent),
+    ).toEqual(["Changelog", "Status"]);
+    expect(within(legal).getAllByRole("link")).toHaveLength(3);
+    // Not one of the legal links, and above them.
+    expect(within(legal).queryByRole("link", { name: "Changelog" })).toBeNull();
+    expect(site.compareDocumentPosition(legal) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(within(site).getByRole("link", { name: "Changelog" })).toHaveAttribute("aria-current", "page");
+    // The separators are the legal row's, hidden.
+    expect(site.querySelectorAll('[aria-hidden="true"]')).toHaveLength(1);
+
+    rerender(
+      <UiKitProvider labels={UI_KIT_LABELS_DE_CH}>
+        <LegalFooter siteLinks={SITE} />
+      </UiKitProvider>,
+    );
+    expect(screen.getByRole("navigation", { name: "Weitere Seiten" })).toBeInTheDocument();
+    // A landing word, not a legal one: no legal wording moves with it.
+    rerender(
+      <UiKitProvider labels={{ landing: { siteNavLabel: "Resources" } }}>
+        <LegalFooter siteLinks={SITE} />
+      </UiKitProvider>,
+    );
+    expect(screen.getByRole("navigation", { name: "Resources" })).toBeInTheDocument();
+
+    // None given, or none in the list: no row, one nav as before.
+    rerender(<LegalFooter siteLinks={[]} />);
+    expect(screen.getAllByRole("navigation")).toHaveLength(1);
+  });
 });

@@ -26,7 +26,7 @@ snapshot of the three apps, the per-repo to-dos and the reviews' list as written
 |---|---|---|---|
 | 1 | Where each one stands | — (archived) | |
 | 2 | Decisions | — | §7.8; decision 9 (0.28.1); decision 7 by billing §8, §9 (Paddle); decisions 10 (0.51.3) and 11 (0.51.4) |
-| 3 | The page contract | ui-kit 0.28.0 | §7.3, §7.6, §7.9; 0.28.1 (translation note, `AuthLayout` footer); landing-demo §4.3 (robots, sitemap); 0.51.3 (as-of line, keksdose's stored version); 0.51.4 (summary, footer's optional pages) |
+| 3 | The page contract | ui-kit 0.28.0 | §7.3, §7.6, §7.9; 0.28.1 (translation note, `AuthLayout` footer); landing-demo §4.3 (robots, sitemap); 0.51.3 (as-of line, keksdose's stored version); 0.51.4 (summary, footer's optional pages); 0.55 (the footer's `siteLinks` row) |
 | 4 | The content contract | ui-kit 0.28.0 | §7.1–§7.4; 0.28.1 (`language` section); 0.32.0 (commercial disclaimer); 0.51.3 (`changes` wording, `updated` label); 0.51.4 (`summary`, `links.security`/`accessibility` labels) |
 | 5 | What the kit adds, what stays app-side | ui-kit 0.28.0, server-kit 0.2.1 | §7.5; 0.28.1; 0.32.0; 0.55 (`ConsentAgainNotice`) |
 | 6 | Per repo | — (archived) | |
@@ -214,6 +214,12 @@ The row then goes on with Security · Accessibility, in the kit's words, each on
 its route is given. This applies in the
 account menu too, so keksdose's menu gains the dots. The current page is marked
 `aria-current="page"` wherever the router's path is known.
+
+The public footer's links are the legal ones, and a screen reader hears them as such. A
+public page that is not legal (a changelog, a status page, the docs) goes in a row of its
+own (ui-kit 0.55): `siteLinks` on `LegalFooter` / `PublicFooter`, above the legal row, the
+same look, in a `<nav>` named "More pages" (`landing.siteNavLabel`, landing-demo §4.4). The
+legal row and its labels do not change.
 
 ### 3.4 Terms acceptance
 

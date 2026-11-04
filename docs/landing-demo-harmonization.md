@@ -208,8 +208,12 @@ the public footer), without the legal parts.
   sent to someone), `null` only for a preview inside another page. A page to be found also
   goes into the sitemap and its copy into the SEO test (§4.3).
 - **A link to it** from the landing goes into a feature row's `description` (keksdose: the
-  "understand" row), not into the trust strip or the footer, whose links are announced as
-  the legal ones.
+  "understand" row), not into the trust strip or the footer's legal row, whose links are
+  announced as the legal ones.
+- **The footer's own row** (ui-kit 0.55): an app's other public pages — a changelog, a
+  status page, the docs — go in `siteLinks` on `PublicFooter` / `LegalFooter`, a row above
+  the legal links with their look, in a `<nav>` of its own named "More pages"
+  (`landing.siteNavLabel`, all seven languages). A `landing` word: no legal wording moves.
 
 ## 5. The demo
 

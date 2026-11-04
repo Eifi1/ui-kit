@@ -1626,6 +1626,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       accessName: "姓名：",
       accessCompany: "公司：",
       accessUse: "用途：",
+      siteNavLabel: "更多页面",
     },
     demo: {
       starting: "正在启动演示…",

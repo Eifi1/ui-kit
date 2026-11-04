@@ -1689,6 +1689,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       accessName: "Név:",
       accessCompany: "Cég:",
       accessUse: "Mire használná:",
+      siteNavLabel: "További oldalak",
     },
     demo: {
       starting: "A demó indítása…",

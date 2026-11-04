@@ -1694,6 +1694,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       accessName: "Nome:",
       accessCompany: "Azienda:",
       accessUse: "Uso previsto:",
+      siteNavLabel: "Altre pagine",
     },
     demo: {
       starting: "Avvio della demo…",

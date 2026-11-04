@@ -1703,6 +1703,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       tryDemo: "Essayer la démo",
       openApp: "Ouvrir l’application",
       continueDemo: "Continuer la démo",
+      siteNavLabel: "Autres pages",
       // As `legal.notice` ("Bêta fermée").
       beta: "Bêta",
       // Plain text: a mail's subject and body lines, never HTML. The no-break space

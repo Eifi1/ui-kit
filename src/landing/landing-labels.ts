@@ -37,6 +37,14 @@ export interface LandingLabels {
   /** Asked only where the app says so (`askCompany`, kastlan). */
   accessCompany: string;
   accessUse: string;
+  /**
+   * 0.55: the accessible name of the public footer's row of the app's OTHER public pages
+   * (`siteLinks` on `LegalFooter` / `PublicFooter`: the changelog, a status page, the
+   * docs), so its links are not announced as the legal ones. Here and not in `legal`: it
+   * names a landmark, it is no legal wording. Optional, as every key added to a namespace
+   * an app may annotate: left out, the provider's, then English.
+   */
+  siteNavLabel?: string;
 }
 
 export const DEFAULT_LANDING_LABELS: LandingLabels = {
@@ -51,6 +59,7 @@ export const DEFAULT_LANDING_LABELS: LandingLabels = {
   accessName: "Name:",
   accessCompany: "Company:",
   accessUse: "What would you use it for:",
+  siteNavLabel: "More pages",
 };
 
 /** The `landing` namespace, resolved: English, then the provider, then `labels`. */
