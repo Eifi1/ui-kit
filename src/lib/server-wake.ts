@@ -67,20 +67,37 @@ export interface ServerWakeRequest {
   responseType?: string;
 }
 
+/**
+ * One counted request, as {@link ServerWakeWatcher.start} names it (0.55, keksdose's 0.51
+ * review N4): a positive whole number, unique for the watcher's lifetime, which
+ * {@link ServerWakeWatcher.end} takes back to end exactly that request. `start` returns
+ * `false` where it counts nothing, as before: the token is truthy where `start` returned
+ * `true` until 0.55, so code that only tests it reads as it did.
+ */
+export type ServerWakeToken = number;
+
 export interface ServerWakeWatcher {
   /**
    * Count a request that is going out, and arm the escalation if it is the first.
-   * Returns whether it was counted — the caller MUST call {@link end} exactly once
-   * for every `true`, or the counter never returns to zero and the notice sticks.
-   * (The axios adapter stashes it on the request config for that reason.)
+   * Returns its {@link ServerWakeToken}, or `false` when it was not counted (until 0.55
+   * `true` / `false`; the token is truthy where `true` was). The caller MUST end every
+   * counted request exactly once, or the counter never returns to zero and the notice
+   * sticks: `end(token)`, which ends that request, or a bare `end()`, as before. (The
+   * axios adapter stashes the token on the request config for that reason.)
    * `request` reaches the filter as its third argument; default `{ method, url }`.
    */
-  start(method?: string, url?: string, request?: ServerWakeRequest): boolean;
-  /** A counted request settled — either way: an error still proves the server
-   *  answered or gave up. The stage then follows the oldest request still out (0.51), so
-   *  the notice goes away when the last one does, or sooner when the rest are recent.
-   *  Never takes the counter below zero. */
-  end(): void;
+  start(method?: string, url?: string, request?: ServerWakeRequest): ServerWakeToken | false;
+  /**
+   * A counted request settled — either way: an error still proves the server answered or
+   * gave up. The stage then follows the oldest request still out (0.51), so the notice
+   * goes away when the last one does, or sooner when the rest are recent.
+   *
+   * With `token` (0.55), exactly that request is retired, so the age the stage is read
+   * from is the real one; a token that was ended already (or reset away), or `false`, is
+   * a no-op. A bare `end()` — the call before 0.55 — retires the OLDEST start, which can
+   * make a notice come late, never falsely. Never takes the counter below zero.
+   */
+  end(token?: ServerWakeToken | false): void;
   /** `start` + `end` around a promise (or a function returning one), for a request
    *  that does not go through an adapter. Resolves and rejects as the work does. */
   track<T>(work: PromiseLike<T> | (() => PromiseLike<T>), request?: ServerWakeRequest): Promise<T>;
@@ -117,7 +134,8 @@ export function createServerWake({
   wakingMs = 7000,
   shouldWatch = watchReadsAnd(),
 }: ServerWakeOptions = {}): ServerWakeWatcher {
-  // When each counted request went out, oldest first; its length is the count.
+  // Each counted request still out — its token and when it went out — oldest first; its
+  // length is the count.
   //
   // The stage is the age of the OLDEST outstanding request (0.51). It used to be the age of
   // the first request since the count was last zero, so overlapping reads that were each
@@ -125,11 +143,15 @@ export function createServerWake({
   // showed "taking longer than usual" with nothing slow at all (keksdose live #454, found
   // there while chasing a read that really was slow).
   //
-  // `end()` names no request, so it retires the OLDEST start. When a newer request comes
-  // back first, the start left standing for the older one is later than its own, so the
-  // age read is never MORE than the oldest request's real age: a notice can come late,
-  // never falsely.
-  const starts: number[] = [];
+  // `end(token)` (0.55, keksdose's 0.51 review N4) retires exactly the request that
+  // settled. A bare `end()` names none, so it retires the OLDEST start: when a newer
+  // request came back first, the start left standing for the older one is later than its
+  // own, so the age read is never MORE than the oldest request's real age — a notice can
+  // come late, never falsely. The token makes it exact.
+  const starts: Array<{ token: ServerWakeToken; at: number }> = [];
+  // The last token handed out. Never reset, not even by `reset()`: a token from before a
+  // reset must not name a request after it.
+  let lastToken = 0;
   let stage: ServerWakeStage = "idle";
   let slowTimer: ReturnType<typeof setTimeout> | null = null;
   let wakingTimer: ReturnType<typeof setTimeout> | null = null;
@@ -156,27 +178,35 @@ export function createServerWake({
       setStage("idle");
       return;
     }
-    const age = Date.now() - starts[0];
+    const age = Date.now() - starts[0].at;
     setStage(age >= wakingMs ? "waking" : age >= slowMs ? "slow" : "idle");
     if (age < slowMs) slowTimer = setTimeout(() => setStage("slow"), slowMs - age);
     if (age < wakingMs) wakingTimer = setTimeout(() => setStage("waking"), wakingMs - age);
   };
 
-  const start = (method?: string, url?: string, request: ServerWakeRequest = { method, url }): boolean => {
+  const start = (
+    method?: string,
+    url?: string,
+    request: ServerWakeRequest = { method, url },
+  ): ServerWakeToken | false => {
     if (isOffline()) return false;
     if (!shouldWatch((method ?? "get").toLowerCase(), url ?? "", request)) return false;
-    starts.push(Date.now());
+    lastToken += 1;
+    starts.push({ token: lastToken, at: Date.now() });
     // A request joining others does not move the clock: a page firing a second read at
     // 1.9 s is still waiting on the same sleeping server, not starting afresh.
     if (starts.length === 1) arm();
-    return true;
+    return lastToken;
   };
 
-  const end = () => {
-    if (starts.length === 0) return;
-    // The server answered (or gave up on) one of them, so the oldest's clock is over; the
-    // next oldest's age decides, which may well put the notice away again.
-    starts.shift();
+  const end = (token?: ServerWakeToken | false) => {
+    // Bare: the oldest. Named: that one, or nothing when it is not out (ended already, from
+    // before a reset, or `false`, never counted) — never another request in its place.
+    const index = token === undefined ? 0 : starts.findIndex((s) => s.token === token);
+    if (index < 0 || index >= starts.length) return;
+    // The server answered (or gave up on) it, so its clock is over; the oldest still out
+    // decides, which may well put the notice away again.
+    starts.splice(index, 1);
     arm();
   };
 
@@ -184,7 +214,7 @@ export function createServerWake({
     start,
     end,
     track<T>(work: PromiseLike<T> | (() => PromiseLike<T>), request: ServerWakeRequest = {}) {
-      const counted = start(request.method, request.url, request);
+      const token = start(request.method, request.url, request);
       let promise: Promise<T>;
       try {
         promise = Promise.resolve(typeof work === "function" ? work() : work);
@@ -192,7 +222,8 @@ export function createServerWake({
         // A thunk that throws before it returns a promise settled too.
         promise = Promise.reject(error);
       }
-      return counted ? promise.finally(end) : promise;
+      // Its own token, so a tracked request ends exactly itself (0.55).
+      return token ? promise.finally(() => end(token)) : promise;
     },
     reset() {
       starts.length = 0;
@@ -244,13 +275,14 @@ export interface AxiosLikeInstance<C extends ServerWakeAxiosConfig, R extends { 
   };
 }
 
-/** Whether the watchdog counted this request — the response side owes a matching
- *  `end()` only then. On the config, as keksdose's `_wake` was: it travels with the
- *  request onto the response and onto an error. Cleared once settled, so a 401 replay
+/** The token the watchdog gave this request, when it counted it — the response side owes
+ *  a matching `end(token)` only then, and ends exactly this request (0.55; a `true` and
+ *  a bare `end()` until then). On the config, as keksdose's `_wake` was: it travels with
+ *  the request onto the response and onto an error. Cleared once settled, so a 401 replay
  *  of the same config re-enters the request interceptor and is counted afresh — the
  *  pairing stays balanced. */
 const COUNTED = "_serverWake";
-type Marked = { [COUNTED]?: boolean };
+type Marked = { [COUNTED]?: ServerWakeToken | false };
 
 /**
  * Drive a watcher from an axios instance's interceptors: `attachServerWake(api)`.
@@ -267,9 +299,10 @@ export function attachServerWake<C extends ServerWakeAxiosConfig, R extends { co
 ): () => void {
   const settle = (config: unknown) => {
     const marked = config as Marked | undefined;
-    if (marked?.[COUNTED]) {
+    const token = marked?.[COUNTED];
+    if (marked && token) {
       marked[COUNTED] = false;
-      watcher.end();
+      watcher.end(token);
     }
   };
   const request = instance.interceptors.request.use(

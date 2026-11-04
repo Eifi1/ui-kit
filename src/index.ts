@@ -44,12 +44,14 @@ export { encodeQr } from "./lib/qr-encode";
 export type { QrEncodeOptions, QrErrorCorrection, QrMatrix } from "./lib/qr-encode";
 // 0.18: the cold-start notice keksdose built (#199), for every app: the framework-free
 // watchdog over the app's requests (the corner notice is components/server-wake).
+// 0.55 (keksdose's 0.51 review N4): `ServerWakeToken`, what `start` returns for `end(token)`.
 export { createServerWake, serverWake, watchReadsAnd, attachServerWake, wrapFetch } from "./lib/server-wake";
 export type {
   ServerWakeStage,
   ServerWakeFilter,
   ServerWakeOptions,
   ServerWakeRequest,
+  ServerWakeToken,
   ServerWakeWatcher,
   ServerWakeAxiosConfig,
   AxiosLikeInstance,
