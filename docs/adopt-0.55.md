@@ -141,8 +141,20 @@ The rest is additive: each part replaces app code that can go when the app gets 
 
 ## Tables, release notes and the rest
 
-- **The register fit** (keksdose, 0.51.2 leftovers): see the commits of `fix(data-table)` in this
-  release; re-measure with `.feedback-live/kit0512-run.sh` after the bump.
+- **The register fit** (keksdose, 0.51.2 leftovers). A virtualized DataTable now draws a
+  screenful of rows in the render they arrive in, where it drew one row and the rest a frame
+  later, so the fit measures the same table on every load before the first paint. In the kit's
+  Chromium fixture (`scripts/register-fit-frames.mjs`, 20 loads per width) the final column set
+  went from two per width to one at 1124, 1280 and 1440, and the too-wide frame (7–11 of 20 loads,
+  50–120 ms) to none. c53c692 is back: the lock goes when its signature moves on, so a column that
+  fits comes back after a scroll and a refetch (10 of 18 runs lost Accounts without it).
+  keksdose: re-measure with `.feedback-live/kit0512-run.sh`, `kit0512-frames.mjs` and
+  `kit0512-analyse.py`, ten loads at each width: one final set per width, 0 too wide, 0
+  overflowing, and about 50 rows in the first frame with rows; then once by hand, sort or filter
+  so a column leaves, edit a transaction, and see a fitting column come back. One edge stays by
+  design: after scrolling down and back, the top window holds the visible rows plus overscan, so
+  a later lock reset there can still change the columns (drawing more rows while scrolling would
+  cost every scroll).
 - **`parseChangelog`, `parseChangelogItem`, `changelogSectionKey`, `groupByScope`** and
   **`ReleaseNotes`**.
   - keksdose: features/changelog/changelog-format.ts and its test go; /changelog and the what's-new dialog render `<ReleaseNotes release={v} />` (`frame="plain"` in the dialog); "Faster" via `labels={{ sections: { changed: t("changelog.section_perf") } }}`. The leftover "closes #639" in 0.4.72 goes.
