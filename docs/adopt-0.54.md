@@ -51,8 +51,8 @@ go when the app gets to it. The places are from keksdose, kastlan and Kurvenschm
   `actions(close)`, as `busy` does, without `aria-busy`. The × shows disabled; the caller closes
   with `open={false}` or by unmounting. With `urlParam`, Back is not held (as under `busy`).
   keksdose's features/auth/recovery-code-pane.tsx can pass `held={!kept}` and a plain `onClose`;
-  a held refusal is silent (`onClose` is not called), so its `closeRefused` banner no longer
-  fires: its warning above the code already says why the dialog stays.
+  a held refusal does not call `onClose`, so its `closeRefused` banner needs 0.55's
+  `onDismissRefused(via)` to come back (corrected after the release).
 - **DangerConfirm** `error` shows under the password field (or the phrase field), marks it
   invalid, is announced (`role="alert"`) and clears itself on the next edit and while the next
   attempt runs. keksdose's shared/components/password-danger-card.tsx can drop its `onError`
