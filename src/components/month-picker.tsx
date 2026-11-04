@@ -4,6 +4,7 @@ import { Calendar, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../lib/cn";
 import { dirOf, horizontalStep, type Direction } from "../lib/direction";
 import { currentDate, monthKey, pad } from "../lib/dates";
+import { returnFocus } from "../lib/focus-left";
 import { upperFirst } from "../lib/text-case";
 import { Button } from "./button";
 import { FIELD_FLOATING_PAD, FIELD_INVALID, FIELD_TRIGGER } from "./field-base";
@@ -267,9 +268,11 @@ function useFocusBackOnClose(open: boolean, triggerRef: RefObject<HTMLButtonElem
     wasOpen.current = open;
     if (!justClosed) return;
     // Only when focus went down with the panel. An outside click has already put it
-    // somewhere real, and dragging it back here would be worse than leaving it.
-    const active = document.activeElement;
-    if (!active || active === document.body) triggerRef.current?.focus();
+    // somewhere real, and dragging it back here would be worse than leaving it. The kit's
+    // one rule, lib/focus-left `returnFocus` (0.52 code review 2026-10-31, held to 0.55);
+    // the Popover's trap names this trigger too since then, and this stays for a panel
+    // closed before its trap engaged (no position measured yet).
+    returnFocus({ opener: triggerRef.current });
   }, [open, triggerRef]);
 }
 

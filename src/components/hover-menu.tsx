@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, KeyboardEvent as ReactKeyboardEvent, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
+import { returnFocus } from "../lib/focus-left";
 import { mergeRefs } from "./field-parts";
 import { runOwnKeyDown, takeEscape, useDismissLayer, useOutsideClick } from "../hooks/use-dismiss";
 import { anchoredInline } from "../hooks/use-anchored-panel";
@@ -184,11 +185,14 @@ export function HoverMenu({
   // hover while the user is typing elsewhere must not yank the caret over here on the
   // way out. At once, not after the commit: a row that closes the menu and opens a dialog
   // in one handler has the dialog record its restore target during that commit's render,
-  // and the row it would record is about to go (refactor audit 2026-10-30, INP-2).
+  // and the row it would record is about to go (refactor audit 2026-10-30, INP-2). By the
+  // kit's one rule (lib/focus-left `returnFocus`; 0.52 code review 2026-10-31, held to
+  // 0.55), asked only with the focus inside: a menu a hover opened never took the focus,
+  // so one on <body> was not lost by it, and the rule's "from nowhere" is not its to use.
   const closeToTrigger = () => {
-    const hadFocus = wrapperRef.current?.contains(document.activeElement) ?? false;
+    const wrapper = wrapperRef.current;
+    if (wrapper?.contains(document.activeElement)) returnFocus({ opener: triggerEl(), closing: wrapper });
     close();
-    if (hadFocus) triggerEl()?.focus();
   };
   // Escape closes, from anywhere — it did nothing at all before — as a layer on the kit's
   // Escape stack, so inside a dialog it closes the menu and not the dialog (Wave 2,

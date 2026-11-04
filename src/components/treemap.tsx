@@ -31,6 +31,7 @@ import { CHART_ROLES, PALETTE_HEX, PALETTE_SIZE, lerpHex, textOn } from "../them
 import { resolveChartColor, useChartEdge, useEdgesInForce, type ChartEdges } from "./chart-edge";
 import { parseHex } from "../theme/color";
 import { dirOf, rovingTarget, type Direction } from "../lib/direction";
+import { returnFocus } from "../lib/focus-left";
 import { shareFormat } from "../lib/share-format";
 import { cn } from "../lib/cn";
 import { useTextSize } from "../theme/text-size";
@@ -1180,9 +1181,11 @@ export function Treemap({
       if (element) {
         tiles.current.set(path, element);
         element.setAttribute("tabindex", path === stopOf() ? "0" : "-1");
+        // The kit's one rule (lib/focus-left `returnFocus`; 0.52 code review 2026-10-31,
+        // held to 0.55): the path's new element, in the commit that removed its old one.
         if (restoreRef.current === path) {
           restoreRef.current = null;
-          element.focus();
+          returnFocus({ opener: element });
         }
         return;
       }
@@ -1222,7 +1225,8 @@ export function Treemap({
     const at = applyStop();
     if (restoreRef.current === null) return;
     restoreRef.current = null;
-    if (at) tiles.current.get(at)?.focus();
+    // The node is gone: the stated fallback, the tile that holds the tab stop now.
+    returnFocus({ fallback: [at ? tiles.current.get(at) : null] });
   }, [order, applyStop, register]);
   const move = useCallback((path: string, event: KeyboardEvent<SVGGElement>) => {
     const drawn = orderRef.current;

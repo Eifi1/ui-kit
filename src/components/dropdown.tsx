@@ -15,6 +15,7 @@ import { pressInside, runOwnKeyDown, takeEscape, useDismissLayer, useOutsideClic
 import type { DismissLayer } from "../hooks/use-dismiss";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
 import { cn } from "../lib/cn";
+import { returnFocus } from "../lib/focus-left";
 import { FIELD_TOUCH_TEXT } from "./field-base";
 import { mergeRefs } from "./field-parts";
 import { FOCUS_RING } from "./focus-ring";
@@ -128,9 +129,14 @@ export function useDropdown<T extends HTMLElement = HTMLDivElement>({
   // Where focus was as the list opened — the trigger focus goes back to when the
   // caller attached none. Read in an effect, before `useDropdownSearch`'s frame moves
   // focus into the search box.
+  // Dropped on close: a note of where to go must not outlive the list it was for (0.52
+  // code review 2026-10-31, held to 0.55).
   const openerRef = useRef<HTMLElement | null>(null);
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      openerRef.current = null;
+      return;
+    }
     const el = document.activeElement;
     openerRef.current = el instanceof HTMLElement && el !== document.body ? el : null;
   }, [open]);
@@ -139,11 +145,15 @@ export function useDropdown<T extends HTMLElement = HTMLDivElement>({
   // on — and the browser then drops focus on <body>: the caret vanishes and the next
   // Tab restarts at the top of the document, and inside a dialog the next Escape goes
   // nowhere. Whoever closed the list with a key gets focus handed back to the trigger
-  // they opened it from.
+  // they opened it from — by the kit's one rule (lib/focus-left `returnFocus`, 0.55):
+  // only from inside the list or from nowhere, so an Escape pressed with the focus in the
+  // page leaves it there, and to where the focus was as the list opened when the
+  // trigger cannot take it.
   const closeToTrigger = useCallback(() => {
+    // The panel, or — not portalled, with no `panelRef` — the wrapper it sits in.
+    const closing = panelRef.current ?? wrapperRef.current;
+    returnFocus({ opener: triggerRef.current, fallback: [openerRef.current], closing });
     setOpen(false);
-    const back = triggerRef.current ?? openerRef.current;
-    if (back?.isConnected) back.focus();
   }, []);
   useOutsideClick([wrapperRef, panelRef], close, open && !panelIsSheet);
   // See "Escape inside a dialog" above.

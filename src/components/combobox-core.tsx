@@ -11,7 +11,7 @@ import type {
 import { Check, Plus } from "lucide-react";
 import { cn } from "../lib/cn";
 import { CLIPS_ATTRIBUTE } from "../lib/clipping";
-import { tabStops } from "../lib/focus-left";
+import { returnFocus, tabStops } from "../lib/focus-left";
 import { DropdownSearchHeader } from "./dropdown";
 import { PickerSheet, SHEET_ROW_CLASS } from "./picker-sheet";
 import { usePhoneLayout, useRemPx } from "../hooks/use-breakpoint";
@@ -363,9 +363,12 @@ export function useComboboxCore<V extends string | number>({
   // focus on <body>, so the caret disappears and the next Tab restarts at the top of
   // the page. A pointer dismissal deliberately does NOT do this — the press has
   // already decided where focus belongs.
+  // By the kit's one rule (lib/focus-left `returnFocus`; 0.52 code review 2026-10-31, held
+  // to 0.55): from inside the panel — the anchored one, or the phone's sheet, which wears
+  // `panelRef` too — or from nowhere, and checked it took. A focus the page has is kept.
   const closeToTrigger = () => {
+    returnFocus({ opener: triggerRef.current, closing: panelRef.current });
     setOpen(false);
-    triggerRef.current?.focus();
   };
   // Placement, not just the anchor rect: the panel has to dodge the on-screen
   // keyboard its own search box summons (feedback #135).
@@ -377,14 +380,14 @@ export function useComboboxCore<V extends string | number>({
   // Back through `useOverlayHistory` — so there is no outside left to press.
   //
   // Leaving the listener on there was not merely redundant, it was the bug:
-  // `panelRef` is attached to the desktop panel alone, so with the sheet up every
-  // press inside it answered "outside". While `useOutsideClick` listened for
-  // `mousedown` the rows survived by accident — they commit on `onMouseDown` too,
-  // and won the race — but `pointerdown` PRECEDES `mousedown`, so the sheet closed
-  // at finger-down and the commit landed on an unmounted tree: a tapped row kept the
-  // old value, and tapping the search box or the X was equally fatal. `PickerSheet`
-  // stops `mousedown` for exactly this reason, but that guard was written for
-  // `useDropdown`'s listener and never covered this hook.
+  // `panelRef` was attached to the desktop panel alone (the sheet wears it too since
+  // 0.55), so with the sheet up every press inside it answered "outside". While
+  // `useOutsideClick` listened for `mousedown` the rows survived by accident — they
+  // commit on `onMouseDown` too, and won the race — but `pointerdown` PRECEDES
+  // `mousedown`, so the sheet closed at finger-down and the commit landed on an
+  // unmounted tree: a tapped row kept the old value, and tapping the search box or the
+  // X was equally fatal. `PickerSheet` stops `mousedown` for exactly this reason, but
+  // that guard was written for `useDropdown`'s listener and never covered this hook.
   const isPhone = usePhoneLayout();
   useOutsideClick([triggerRef, panelRef], close, open && !isPhone);
   // A layer on the Escape stack while the anchored panel is open (Wave 2, DUP-1), so a
@@ -1210,6 +1213,10 @@ export function ComboboxPanel<V extends string | number>({
         // its heading — one name, two meanings, and the sheet's is the one the caller
         // asked for.
         {...rest}
+        // The core's `panelRef`, as on the anchored panel: what `closeToTrigger` gives the
+        // focus back from (0.55). Its outside press is off on a phone, so it reads nothing
+        // else here.
+        ref={panelRef}
         className={className}
         style={style}
         open

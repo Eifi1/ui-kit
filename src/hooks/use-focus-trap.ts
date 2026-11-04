@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { tabStops } from "../lib/focus-left";
+import { returnFocus, tabStops, tabStopsAround } from "../lib/focus-left";
 
 /**
  * Keep keyboard focus inside an open overlay, and give it back when it closes.
@@ -23,7 +23,9 @@ import { tabStops } from "../lib/focus-left";
  *     filtered away). Calling `.focus()` on a detached node silently drops focus to
  *     `<body>`, which for a keyboard user means losing their place in the page
  *     entirely. When the target is gone, focus falls back to the nearest thing that
- *     still exists rather than to nothing.
+ *     still exists rather than to nothing — the kit's one rule for it, lib/focus-left's
+ *     `returnFocus` (0.52 code review 2026-10-31, held to 0.55; see the cleanup). Until
+ *     then this said so and did not: a gone opener left the focus on `<body>`.
  *   - **Leaves an app's own autofocus alone** (0.33.1). React honours a child's
  *     `autoFocus` while it commits, and this hook's effect runs AFTER that commit, so
  *     focusing the container there took focus straight back off the field the app had
@@ -59,8 +61,22 @@ const TRAP_ATTR = "data-focus-trap";
 export interface FocusTrapOptions {
   /** Trap only while this is true. Mount-time `true` is the common case. */
   active?: boolean;
-  /** Return focus to whatever had it before the trap engaged. Default `true`. */
+  /**
+   * Give the focus back as the trap is released — the kit's one rule, lib/focus-left's
+   * `returnFocus` (0.52 code review 2026-10-31, held to 0.55): only a focus that was lost
+   * or is still inside the container is moved; to the {@link opener}, else to what had
+   * the focus as the trap engaged, else to the tab stops that stood around that, nearest
+   * first; never to `<body>`. Default `true`.
+   */
   restoreFocus?: boolean;
+  /**
+   * The control this overlay was opened from, when it knows it — its trigger. The focus
+   * goes back there first, and to what had it as the trap engaged only when the trigger
+   * cannot take it. Read as the trap is released. A Popover names its trigger: on Safari
+   * (and Firefox on macOS) a click does not focus the button it lands on, so "what had the
+   * focus" was the page, and the focus fell to `<body>` on close (0.55).
+   */
+  opener?: () => Element | null;
   /**
    * What to focus when the trap engages. Default is the container itself, which is
    * what `Modal` does and why: focusing the first FIELD pops the software keyboard on
@@ -85,16 +101,16 @@ function focusedElement(): Element | null {
 
 export function useFocusTrap(
   containerRef: React.RefObject<HTMLElement | null>,
-  { active = true, restoreFocus = true, initialFocus = "container" }: FocusTrapOptions = {},
+  { active = true, restoreFocus = true, initialFocus = "container", opener: namedOpener }: FocusTrapOptions = {},
 ): void {
   // Latest-ref so a caller passing an inline `initialFocus` thunk — which every caller
   // will — does not tear the trap down and re-engage it on each render, stealing focus
   // back to the top of the panel mid-interaction. Written in a LAYOUT effect so that
   // the trap's cleanup, which runs after the layout effects of the same commit, reads
   // this render's `active` rather than the last one's — see the cleanup for why.
-  const optsRef = useRef({ active, restoreFocus, initialFocus });
+  const optsRef = useRef({ active, restoreFocus, initialFocus, opener: namedOpener });
   useLayoutEffect(() => {
-    optsRef.current = { active, restoreFocus, initialFocus };
+    optsRef.current = { active, restoreFocus, initialFocus, opener: namedOpener };
   });
 
   // Where focus was BEFORE the trap engaged: the element it is given back to on close.
@@ -136,6 +152,18 @@ export function useFocusTrap(
         // inner panel's last control wraps to the OUTER panel's first.
         (el) => !inNestedTrap(el),
       );
+
+    // Where the focus goes if the opener has left by the release (the row that owned it
+    // was filtered away, deleted from the dialog it opened): the stops that stood around
+    // it, nearest first — after it, then before — as AlertBanner's × reads them. Read
+    // NOW, while the opener still has a place in the page to measure from; held by this
+    // closure only, so it goes with the trap. Three a side: one that takes the focus is
+    // all that is wanted.
+    const around: HTMLElement[] = [];
+    if (optsRef.current.restoreFocus && opener instanceof Element && opener.isConnected && opener !== document.body) {
+      const { after, before } = tabStopsAround(opener, 3);
+      for (const stop of [...after, ...before]) if (!container.contains(stop)) around.push(stop);
+    }
 
     const { initialFocus: how } = optsRef.current;
     const focused = document.activeElement;
@@ -189,11 +217,21 @@ export function useFocusTrap(
       // out of the autofocused field for good: live #402 again, in development.
       if (container.isConnected && optsRef.current.active) return;
       if (!optsRef.current.restoreFocus) return;
-      // `isConnected` is the whole point: restoring to a node that has been removed
-      // sends focus to <body> and the user loses their place entirely. When the
-      // original is gone, leave focus where the browser put it rather than moving it
-      // somewhere arbitrary — a wrong guess is worse than no move.
-      if (opener?.isConnected) (opener as HTMLElement).focus?.();
+      // The kit's one rule (lib/focus-left `returnFocus`; 0.52 code review 2026-10-31,
+      // held to 0.55), in this, the releasing commit. Only a focus that fell with the
+      // panel, or is still in one on its way out, is moved: an app's own `focus()` in
+      // `onClose` is kept, where this used to put the opener over it. Then the named
+      // trigger, what had the focus as the trap engaged, and the stops that stood around
+      // that — where a gone opener used to leave the focus on <body> ("a wrong guess is
+      // worse than no move"; the header promised the nearest thing that still exists).
+      // `isConnected` and the focus are checked for each, as restoring to a removed or a
+      // disabled node is the drop to <body> this guards against.
+      const named = optsRef.current.opener?.();
+      returnFocus({
+        opener: named ?? opener,
+        fallback: [named ? opener : null, ...around],
+        closing: container.isConnected ? container : null,
+      });
     };
   }, [active, containerRef, opener]);
 }

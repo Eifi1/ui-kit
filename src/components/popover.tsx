@@ -7,6 +7,7 @@ import { useFocusTrap } from "../hooks/use-focus-trap";
 import { lengthPx, useRemPx, type RemLength } from "../hooks/use-breakpoint";
 import { cn } from "../lib/cn";
 import { dirOf } from "../lib/direction";
+import { returnFocus } from "../lib/focus-left";
 import type { Direction } from "../lib/direction";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { DEFAULT_POPOVER_LABELS } from "./popover-labels";
@@ -134,10 +135,11 @@ export function Popover({
   // render: the menu item that is about to go. RowActions' "Delete" asks first, and the
   // answered confirm dropped focus on <body>, mid-table (refactor audit 2026-10-30,
   // INP-2). Escape and an outside press keep the plain close: nothing opens after them.
+  // By the kit's one rule (lib/focus-left `returnFocus`; 0.52 code review 2026-10-31, held
+  // to 0.55): moved only from inside the closing panel, or from nowhere.
   const closeFromPanel = () => {
-    const focusInside = panelRef.current?.contains(document.activeElement) ?? false;
+    returnFocus({ opener: triggerRef.current, closing: panelRef.current });
     setOpen(false);
-    if (focusInside) triggerRef.current?.focus();
   };
   const toggle = () => {
     setDir(dirOf(triggerRef.current));
@@ -181,6 +183,11 @@ export function Popover({
 
   useFocusTrap(panelRef, {
     active: open && pos !== null,
+    // Escape and an outside press give the focus back to the TRIGGER, by the trap's rule:
+    // on Safari a click does not focus the button it lands on, so what had the focus as
+    // the panel opened was the page (0.55; the date and month pickers carried their own
+    // copy of this for it).
+    opener: () => triggerRef.current,
     // The panel keeps a focus one of its own children has already taken. `FilterPopover`
     // autofocuses its text box on mount — that is what the press on "Filter" was FOR,
     // and it is a prop there precisely so the popover keeps it — and a trap that

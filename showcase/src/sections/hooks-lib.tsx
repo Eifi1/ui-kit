@@ -904,8 +904,11 @@ export function HooksLib() {
         <Note>
           The tabbable list is recomputed on every Tab, so fields that appear later are included. With{" "}
           <code className="font-mono">restoreFocus</code> on, closing puts focus back on the button that opened the
-          panel. <code className="font-mono">&quot;container&quot;</code> is the default because focusing a field first
-          pops the phone keyboard before the user has asked to type.
+          panel — or, since 0.55, on the control that stood after it when that button has gone, never on{" "}
+          <code className="font-mono">&lt;body&gt;</code>; a focus the app placed as it closed is left where it is, and{" "}
+          <code className="font-mono">opener</code> names a trigger to prefer (a Popover&apos;s, for Safari&apos;s
+          unfocused click). <code className="font-mono">&quot;container&quot;</code> is the default because focusing a
+          field first pops the phone keyboard before the user has asked to type.
         </Note>
       </Example>
 

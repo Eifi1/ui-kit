@@ -8,6 +8,7 @@ import { Calendar, X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { dirOf, type Direction } from "../lib/direction";
 import { formatIsoDate } from "../lib/dates";
+import { returnFocus } from "../lib/focus-left";
 import {
   DEFAULT_DATE_PICKER_LABELS,
   DEFAULT_PICKER_SHEET_LABELS,
@@ -302,14 +303,15 @@ function DateFieldTrigger({
     // keyboard user back at the top of the document with no idea where they were.
     // But an outside click closes this panel too, and that click has already given
     // focus to whatever it landed on — dragging it back here would be worse than the
-    // bug, so a focus that is somewhere real is left alone.
-    const active = document.activeElement;
-    if (!active || active === document.body) triggerRef.current?.focus();
-    // Here rather than through `useFocusTrap`'s `restoreFocus`, and not only because
-    // `Popover` runs no trap to carry it: that option restores to whatever held focus
-    // when the panel opened, and on Safari — and on Firefox on macOS — clicking a
-    // button does not focus it, so "whatever held focus" is the page. The requirement
-    // is this trigger, every time, however the panel was opened.
+    // bug, so a focus that is somewhere real is left alone. That is the kit's one rule,
+    // lib/focus-left `returnFocus` (0.52 code review 2026-10-31, held to 0.55), which also
+    // checks the trigger took it.
+    returnFocus({ opener: triggerRef.current });
+    // Here as well as through the panels' traps: the Popover's names this trigger (0.55),
+    // but the phone's FullBleedDialog restores to whatever held focus when it opened, and
+    // on Safari — and on Firefox on macOS — clicking a button does not focus it, so
+    // "whatever held focus" is the page. The requirement is this trigger, every time,
+    // however the panel was opened.
   }, [open, triggerRef]);
   // The caller's `ref` (API-3, refactor audit 2026-10) is handed the trigger once it is
   // mounted, rather than merged into `attrs.ref`: that one is a `RefObject` by contract

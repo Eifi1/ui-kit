@@ -253,7 +253,12 @@ const BUDGETS = [
   // of which raised the ceiling: 6421f1d (SubscriptionStanding, UsageMeter) took the set
   // from 155,666 (53,540) to 155,941 (53,636), and the commits after it to 157,232.
   // { Button } is 19,454 B with `refused`, from 19,243, under its own.
-  { label: "the shell set", names: SHELL_SET, max: 157_450 },
+  // 158,632 B (54,513 gzip) with the one focus-restore rule (lib/focus-left `returnFocus`;
+  // 0.52 code review 2026-10-31, held to 0.55): every trap now reads the stops around its
+  // opener as it engages and gives a gone opener's focus to them, so tabStopsAround,
+  // focusFirst and focusIsLost ride with useFocusTrap, and the shell's overlays read the
+  // rule — meant growth, 1,233 B.
+  { label: "the shell set", names: SHELL_SET, max: 158_700 },
 ];
 const ENTRY = "\0import-cost";
 async function importCost(names) {
