@@ -326,8 +326,12 @@ function ButtonElement({
       onClick={(e) => {
         // `preventDefault` as well as not calling through: a locked submit button must
         // not submit its form, and the browser does that after this handler returns.
+        // `stopPropagation` too: a natively disabled button gets no click at all, so a
+        // clickable row around it never heard one, and the focusable refusal keeps that
+        // (Kurvenschmiede's 0.55 adoption: a refused delete opened its row).
         if (inert) {
           e.preventDefault();
+          e.stopPropagation();
           return;
         }
         onClick?.(e);
