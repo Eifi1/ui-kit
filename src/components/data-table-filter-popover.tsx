@@ -40,7 +40,8 @@ interface FilterPopoverProps<T> {
  * The contents of a column's filter Popover. Renders the right control set for
  * the column's filter type — text search, select checklist, date range (presets
  * + {@link MiniCalendar} + from/to inputs), or numeric min/max with an abs
- * toggle — driving the shared {@link FilterValue} state.
+ * toggle (none for `numberFilter(getValue, { abs: false })`) — driving the shared
+ * {@link FilterValue} state.
  */
 export function FilterPopover<T>({
   column,
@@ -219,6 +220,11 @@ export function FilterPopover<T>({
   }
 
   // number
+  // `abs: false` on the filter: no "Absolute value" box, and a state that carries `abs`
+  // anyway (a view stored before the column lost the box) is handed on without it at the
+  // first bound typed — there is no box to untick it with (kastlan reuse audit
+  // 2026-11-02, proposal 7).
+  const absBox = filter.abs !== false;
   const v = state.type === "number" ? state : { type: "number" as const, min: "", max: "", abs: false };
   // The bounds were native `type="number"` inputs, the one numeric entry in the kit that
   // bypassed decimal-marks (BUG-10, refactor audit 2026-10): where the browser refuses a
@@ -237,7 +243,7 @@ export function FilterPopover<T>({
       type: "number",
       min: bound === "min" ? read : v.min,
       max: bound === "max" ? read : v.max,
-      abs: v.abs,
+      abs: absBox && v.abs,
     });
   };
   return (
@@ -266,15 +272,17 @@ export function FilterPopover<T>({
           />
         </label>
       </div>
-      <label className="flex items-center gap-2 text-sm text-secondary">
-        <input
-          type="checkbox"
-          checked={v.abs}
-          onChange={(e) => onChange({ type: "number", min: v.min, max: v.max, abs: e.target.checked })}
-          className="size-3.5"
-        />
-        {labels.numberAbs}
-      </label>
+      {absBox && (
+        <label className="flex items-center gap-2 text-sm text-secondary">
+          <input
+            type="checkbox"
+            checked={v.abs}
+            onChange={(e) => onChange({ type: "number", min: v.min, max: v.max, abs: e.target.checked })}
+            className="size-3.5"
+          />
+          {labels.numberAbs}
+        </label>
+      )}
       {clearRow}
     </div>
   );

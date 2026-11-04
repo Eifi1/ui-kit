@@ -326,7 +326,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // barrel had (`SYNC_DB_STORES` and `DEFAULT_SYNC_BACKOFF_MS` were /sync's), with
   // `feedbackPageHref` and `feedbackPagePath` (−54); RoleSwitcher, SectionNav, the FieldSync
   // family (six), SignChip and its labels, lib/isin's three (−13, MOD-5).
-  ["@eifi1/ui-kit", barrel, 961],
+  // 0.54 (+1, here and in /data-table): `numberBound`, what a server-side number filter
+  // sends (kastlan reuse audit 2026-11-02, proposal 7).
+  ["@eifi1/ui-kit", barrel, 962],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -340,7 +342,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.46.1: `swipePlanRowActions`, the desktop swipe column's derivation (keksdose N3) (+1).
   // 0.52: `compareSortValues`, the client sort's order (+1).
   // 0.53 (−2, breaking): what 0.52 deprecated — `swipePlanRowActions`, `readTableUrlState` (API-4).
-  ["@eifi1/ui-kit/data-table", dataTable, 26],
+  // 0.54: `numberBound`, a server-side number filter's bounds (kastlan proposal 7) (+1).
+  ["@eifi1/ui-kit/data-table", dataTable, 27],
   // 0.12.0: `FeedbackThread`, `FeedbackComposer` and the `DEFAULT_*_LABELS` of their two
   // namespaces and of `feedbackDialog` (+5 here and in the barrel).
   // 0.15.5: `DEFAULT_MAX_ATTACHMENTS` (+1 here and in the barrel).

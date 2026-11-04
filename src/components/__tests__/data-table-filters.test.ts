@@ -1,8 +1,11 @@
 import {
+  decodeFilterValue,
   decodeFilterValueOfType,
   defaultFilterState,
   encodeFilterValue,
   isFilterActive,
+  numberBound,
+  numberFilter,
   rowMatches,
 } from "../data-table-filters";
 import type { FilterValue } from "../data-table-filters";
@@ -212,6 +215,58 @@ describe("a number filter's bound that is not a number (BUG-10)", () => {
     const half: FilterValue = { type: "number", min: "Infinity", max: "10", abs: false };
     expect(rowMatches(amount, { n: -5 }, half)).toBe(true);
     expect(rowMatches(amount, { n: 20 }, half)).toBe(false);
+  });
+});
+
+// kastlan reuse audit 2026-11-02, proposal 7: a server-side table sends the bounds to its
+// server, and with the rule private kastlan's sent a half-typed "-" on to `col >= :bound`.
+describe("numberBound, what a server-side filter sends (proposal 7)", () => {
+  it("is the bound as a finite number", () => {
+    expect(numberBound("12.5")).toBe(12.5);
+    expect(numberBound("-5")).toBe(-5);
+    expect(numberBound("0")).toBe(0);
+    expect(numberBound("1e3")).toBe(1000);
+  });
+
+  it("is null for a blank box, a half-typed figure or anything not finite", () => {
+    for (const raw of ["", "  ", "-", "5e", ".", "abc", "Infinity", "-Infinity"]) {
+      expect(numberBound(raw), raw).toBeNull();
+    }
+  });
+});
+
+// Proposal 7 too: a year, a count or a size is never negative, and the box under it only
+// offers a choice that changes nothing.
+describe("a number filter without the Absolute value box (abs: false, proposal 7)", () => {
+  type Row = { n: number };
+  const withBox = numberFilter<Row>((r) => r.n);
+  const noBox = numberFilter<Row>((r) => r.n, { abs: false });
+  const column = (filter: typeof withBox): DataTableColumn<Row> => ({
+    key: "n",
+    header: "N",
+    cell: (r) => String(r.n),
+    filter,
+  });
+
+  it("is what numberFilter builds with { abs: false }; any other options keep the box", () => {
+    expect(noBox).toEqual({ type: "number", getValue: expect.any(Function), abs: false });
+    expect(numberFilter<Row>((r) => r.n, { abs: true })).not.toHaveProperty("abs");
+    expect(numberFilter<Row>((r) => r.n, {})).not.toHaveProperty("abs");
+    expect(withBox).not.toHaveProperty("abs");
+  });
+
+  it("reads a link without its `!`, so the filter is not active on `abs` alone", () => {
+    expect(decodeFilterValue(noBox, "1900..2000!")).toEqual({ type: "number", min: "1900", max: "2000", abs: false });
+    expect(decodeFilterValue(withBox, "1900..2000!")).toEqual({ type: "number", min: "1900", max: "2000", abs: true });
+    expect(isFilterActive(decodeFilterValue(noBox, "..!"))).toBe(false);
+    expect(isFilterActive(decodeFilterValue(withBox, "..!"))).toBe(true);
+  });
+
+  it("compares the figure as it is when a state carries `abs` anyway", () => {
+    const state: FilterValue = { type: "number", min: "100", max: "", abs: true };
+    expect(rowMatches(column(withBox), { n: -150 }, state)).toBe(true);
+    expect(rowMatches(column(noBox), { n: -150 }, state)).toBe(false);
+    expect(rowMatches(column(noBox), { n: 150 }, state)).toBe(true);
   });
 });
 
