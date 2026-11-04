@@ -250,6 +250,10 @@ const NOT_SHOWN: Record<string, string> = {
   translationCorrections: OWED,
   translationReviewSwipePlan: OWED,
   unreviewedRows: OWED,
+  parseChangelog: OWED,
+  parseChangelogItem: OWED,
+  changelogSectionKey: OWED,
+  groupByScope: OWED,
 };
 
 /**

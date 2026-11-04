@@ -419,6 +419,18 @@ describe("@eifi1/ui-kit/dates is pure (MOD-6)", () => {
 });
 
 /**
+ * 0.55 (kastlan reuse audit 2026-11-02, proposal 1): the changelog parser is string work,
+ * in the barrel alone while every app parses in the browser or on its backend. It imports
+ * nothing, so an app's build script could run it in Node, and an entry of its own, should
+ * one be asked for, is one line of `exports`.
+ */
+describe("lib/changelog is pure (0.55)", () => {
+  it("imports nothing — no package, no other kit module", () => {
+    expect(specifiersOf(join(ROOT, "src/lib/changelog.ts"))).toEqual([]);
+  });
+});
+
+/**
  * `@eifi1/ui-kit/currencies` is read by an app's BUILD, in Node, when Vite loads its config:
  * keksdose's flag subset takes its country codes from it (0.35). Until then that plugin
  * parsed `country: "xx"` out of dist/components/currency-select.js, 0.34 moved the list, and

@@ -338,7 +338,10 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // and `DEFAULT_HELD_CHANGES_BANNER_LABELS` — keksdose's and kastlan's held-changes banners.
   // 0.55 (+1, kastlan reuse audit 2026-11-02, proposal 6): `watchSessionElsewhere`, a
   // sign-out in another tab, or one a page missed in the back/forward cache.
-  ["@eifi1/ui-kit", barrel, 969],
+  // 0.55 (+4, kastlan reuse audit 2026-11-02, proposal 1): `parseChangelog`,
+  // `parseChangelogItem`, `changelogSectionKey`, `groupByScope`, one parser for the apps'
+  // release notes.
+  ["@eifi1/ui-kit", barrel, 973],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

@@ -72,6 +72,17 @@ export type {
   SessionRefreshOutcome,
   SessionElsewhereOptions,
 } from "./lib/session-refresh";
+// 0.55 (kastlan reuse audit 2026-11-02, proposal 1): one parser for the apps' release
+// notes — a CHANGELOG.md as releases, the sections keyed across both presets' headings,
+// each item without the generator's links, grouped by scope. Pure: no React.
+export { parseChangelog, parseChangelogItem, changelogSectionKey, groupByScope } from "./lib/changelog";
+export type {
+  ChangelogRelease,
+  ChangelogSection,
+  ChangelogSectionKey,
+  ChangelogItem,
+  ChangelogScopeGroup,
+} from "./lib/changelog";
 // 0.29.0 (docs/auth-harmonization.md): the person-name order of each language.
 export { formatPersonName, personInitials } from "./lib/person-name";
 export type { PersonName } from "./lib/person-name";
