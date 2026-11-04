@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Activity, Users } from "lucide-react";
-import { DEFAULT_SPARKLINE_LABELS, Sparkline, StatTile, StatTileGrid, sparklineSummary } from "@eifi1/ui-kit";
+import { DEFAULT_SPARKLINE_LABELS, Sparkline, StatTile, StatTileGrid, Switch, sparklineSummary } from "@eifi1/ui-kit";
 import type { SparklineTone, StatTileLinkProps, StatTileSubValue } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row } from "../lib/section";
 import { numberFormat } from "../lib/number-format";
@@ -256,6 +256,7 @@ export function StatsDemo() {
         </StatTileGrid>
       </Example>
 
+      <StatTilePrivacy />
       <SparklineOptions />
       <StatTileFormatting />
       <StatTileLinksAndLabels />
@@ -274,6 +275,49 @@ function ClickableTile() {
       onClick={() => setClicks((n) => n + 1)}
       description={clicks ? `onClick fired ${clicks}×` : "Click the tile"}
     />
+  );
+}
+
+/** `sensitive` and its two companions under the page's demo-mode blur. */
+function StatTilePrivacy() {
+  const [blur, setBlur] = useState(true);
+  return (
+    <Example
+      label="sensitive, descriptionSensitive, footerSensitive"
+      hint="the figures, and the description or footer only where they name an amount"
+    >
+      <div className="space-y-4">
+        <Switch label="Demo mode (blur private values)" checked={blur} onCheckedChange={setBlur} />
+        <div className={blur ? "demo-mode" : undefined}>
+          <StatTileGrid minTileWidth="12rem">
+            <StatTile
+              label="Tax reserve"
+              value={9240}
+              currency="EUR"
+              sensitive
+              description="At the 22 % rate you entered, applied to €42,000."
+              descriptionSensitive
+              footer={<p className="text-xs text-money-expense">Set aside €1,200 more to reach it.</p>}
+              footerSensitive
+            />
+            <StatTile
+              label="Avg monthly spend"
+              value={2380}
+              currency="EUR"
+              tone="expense"
+              sensitive
+              description="Last 12 months"
+              footer={<p className="text-xs text-muted">On track</p>}
+            />
+          </StatTileGrid>
+        </div>
+      </div>
+      <Note>
+        <code className="font-mono">sensitive</code> tags the tile&apos;s own figures. The description and footer are
+        yours, so they stay readable unless you say they carry an amount: the first tile names its base and its
+        shortfall there; the second&apos;s words have nothing to hide.
+      </Note>
+    </Example>
   );
 }
 
