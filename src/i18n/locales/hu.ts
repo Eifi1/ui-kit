@@ -575,6 +575,17 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       removed: (name) => `„${name}” eltávolítva`,
       cleared: "Minden fájl eltávolítva",
     },
+    // No plural after a numeral (convention 3): "1 fénykép", "3 fénykép".
+    camera: {
+      takePhoto: "Fénykép készítése",
+      choosePhoto: "Fénykép hozzáadása",
+      title: "Kamera",
+      hint: "Állítsa be a képet, majd nyomja meg az exponálógombot.",
+      starting: "A kamera indul…",
+      shutter: "Fénykép elkészítése",
+      taken: (count) => `${n(count)} fénykép elkészült.`,
+      done: (count) => `${n(count)} fénykép használata`,
+    },
     wizard: {
       done: "Kész",
       cancel: "Mégse",

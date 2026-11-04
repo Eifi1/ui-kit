@@ -589,6 +589,18 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       removed: (name) => `„${name}“ entfernt`,
       cleared: "Alle Dateien entfernt",
     },
+    // keksdose's de-CH invoices.take_photo, camera_starting, camera_shutter and
+    // shots_captured; kastlan's handover.takePhoto ("Kamera") and wizard addPhoto.
+    camera: {
+      takePhoto: "Foto aufnehmen",
+      choosePhoto: "Foto hinzufügen",
+      title: "Kamera",
+      hint: "Motiv ausrichten und auslösen.",
+      starting: "Kamera wird gestartet…",
+      shutter: "Foto aufnehmen",
+      taken: (count) => (count === 1 ? "1 Foto aufgenommen." : `${n(count)} Fotos aufgenommen.`),
+      done: (count) => (count === 1 ? "1 Foto übernehmen" : `${n(count)} Fotos übernehmen`),
+    },
     wizard: {
       done: "Fertig",
       cancel: "Abbrechen",

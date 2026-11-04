@@ -111,6 +111,12 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
       rejectedPick: (count) => (count === 1 ? "The file was not added" : `None of the ${n(count)} files were added`),
       selected: (count, firstName) => (count === 1 ? `“${firstName}” selected` : `${n(count)} files selected`),
     },
+    // 0.55: the viewfinder's two counts.
+    camera: {
+      ...d.camera,
+      taken: (count) => (count === 1 ? "1 photo taken." : `${n(count)} photos taken.`),
+      done: (count) => (count === 1 ? "Use 1 photo" : `Use ${n(count)} photos`),
+    },
     wizard: {
       ...d.wizard,
       step: (current, total) => `Step ${n(current)} of ${n(total)}`,

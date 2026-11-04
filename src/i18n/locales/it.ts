@@ -579,6 +579,19 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       removed: (name) => `«${name}» rimosso`,
       cleared: "Tutti i file rimossi",
     },
+    // keksdose's it invoices.take_photo, camera_starting, camera_shutter and
+    // shots_captured; kastlan's handover.takePhoto ("Fotocamera") and wizard addPhoto.
+    // "foto" is invariable; only the participle agrees.
+    camera: {
+      takePhoto: "Scatta foto",
+      choosePhoto: "Aggiungi foto",
+      title: "Fotocamera",
+      hint: "Inquadri il soggetto, poi tocchi l’otturatore.",
+      starting: "Avvio della fotocamera…",
+      shutter: "Scatta la foto",
+      taken: (count) => `${n(count)} ${plural(count, "foto scattata", "foto scattate")}.`,
+      done: (count) => `Usa ${n(count)} foto`,
+    },
     wizard: {
       done: "Fine",
       cancel: "Annulla",

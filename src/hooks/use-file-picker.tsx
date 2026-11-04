@@ -237,7 +237,9 @@ export interface UseFilePickerOptions extends FileScreenOptions {
    * Ask a phone for its camera instead of the file chooser: `"environment"` is the
    * back camera, `"user"` the front. A HINT — desktop browsers ignore it, and Chrome
    * drops it when `multiple` is also set (a camera cannot deliver a list), which is why
-   * keksdose's camera input has no `multiple`. Pass one or the other.
+   * keksdose's camera input has no `multiple`. Pass one or the other. Android Chrome may
+   * still show its Camera-or-Files sheet for it (keksdose live #292); `CameraButton` (0.55)
+   * opens the camera in the page instead and keeps this as its fallback.
    */
   capture?: boolean | "user" | "environment";
   /** The files that passed, in pick order. Never called with an empty array.

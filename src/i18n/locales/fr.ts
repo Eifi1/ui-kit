@@ -587,6 +587,18 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       removed: (name) => `«\u202f${name}\u202f» supprimé`,
       cleared: "Tous les fichiers ont été supprimés",
     },
+    // keksdose's fr invoices.take_photo, camera_starting, camera_shutter and
+    // shots_captured; kastlan's handover.takePhoto ("Caméra") and wizard addPhoto.
+    camera: {
+      takePhoto: "Prendre une photo",
+      choosePhoto: "Ajouter une photo",
+      title: "Caméra",
+      hint: "Cadrez le sujet, puis déclenchez.",
+      starting: "Démarrage de la caméra…",
+      shutter: "Prendre la photo",
+      taken: (count) => `${n(count)} ${plural(count, "photo prise", "photos prises")}.`,
+      done: (count) => `Utiliser ${n(count)} ${plural(count, "photo", "photos")}`,
+    },
     wizard: {
       done: "Terminé",
       cancel: "Annuler",

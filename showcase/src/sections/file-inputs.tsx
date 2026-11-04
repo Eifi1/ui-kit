@@ -3,6 +3,7 @@ import { Camera, FileText, Paperclip, Upload } from "lucide-react";
 import {
   AlertBanner,
   Button,
+  CameraButton,
   Card,
   Checkbox,
   FileButton,
@@ -12,6 +13,7 @@ import {
   formatFileSize,
   useFileDrop,
   useFilePicker,
+  useHasCamera,
   Switch,
 } from "@eifi1/ui-kit";
 import type { FileDropzoneRejectionFeedback, FilePickerLabels, FileRejection } from "@eifi1/ui-kit";
@@ -19,7 +21,7 @@ import { Example, Note, OutTable, Row, Stage, READOUT, code, StateLine } from ".
 import { WriteLockProvider } from "../../../src/components/write-lock";
 
 /**
- * FILE INPUTS — `FileButton`, `useFilePicker` and the 0.6 `FileDropzone`.
+ * FILE INPUTS — `FileButton`, `useFilePicker`, the 0.55 `CameraButton` and the 0.6 `FileDropzone`.
  *
  * Every specimen reports refusals through `onReject` and draws them itself (an
  * `AlertBanner` without `role="alert"`, since the kit already speaks them), so the page
@@ -55,6 +57,36 @@ export function FileInputs() {
       >
         <Stage>
           <CameraAndDrop />
+        </Stage>
+      </Example>
+
+      <Example
+        label="CameraButton — the camera where there is one, the photo picker where there is none"
+        hint="useHasCamera() decides. With a camera the button opens it in the page; refused, it falls back to capture; without one it is the photo picker."
+      >
+        <Stage>
+          <CameraButtons />
+        </Stage>
+        <Note>
+          <code className="font-mono">capture</code> is a hint: Android Chrome showed its Camera-or-Files sheet for{" "}
+          <code className="font-mono">accept=&quot;image/*&quot; capture=&quot;environment&quot;</code> after five
+          rounds of keksdose&apos;s live #292, and a desktop ignores it outright. So a camera opens in the page —{" "}
+          <code className="font-mono">CameraCapture</code>, the full-screen viewfinder, through{" "}
+          <code className="font-mono">getUserMedia</code>, which opens it or refuses — and a refusal (an insecure
+          context, a denied permission) opens the <code className="font-mono">capture</code> input instead, so nothing
+          regresses. <code className="font-mono">useHasCamera()</code> counts the video inputs{" "}
+          <code className="font-mono">enumerateDevices()</code> lists, which needs no permission, and fails open: only a
+          browser that lists devices and no camera turns the button into the picker. Every photo is screened like a{" "}
+          <code className="font-mono">FileButton</code> pick.
+        </Note>
+      </Example>
+
+      <Example
+        label='CameraButton — noCamera="hide" beside an upload button'
+        hint="kastlan's photo row: the camera only where there is one, and the upload always."
+      >
+        <Stage>
+          <CameraBesideUpload />
         </Stage>
       </Example>
 
@@ -249,6 +281,67 @@ function CameraAndDrop() {
         </FileButton>
       </div>
       <p className={READOUT}>uploaded: {last}</p>
+    </div>
+  );
+}
+
+const photoNames = (files: readonly File[]) =>
+  files.length ? files.map((f) => `${f.name} (${formatFileSize(f.size)})`).join(", ") : "—";
+
+function CameraButtons() {
+  const hasCamera = useHasCamera();
+  const [one, setOne] = useState<File[]>([]);
+  const [several, setSeveral] = useState<File[]>([]);
+  const [rejections, setRejections] = useState<FileRejection[]>([]);
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-2">
+        <CameraButton
+          onFiles={(files) => {
+            setRejections([]);
+            setOne(files);
+          }}
+          onReject={setRejections}
+        />
+        {/* The viewfinder stays up and counts; "Use 3 photos" — or the third shot — hands
+            them over together. */}
+        <CameraButton
+          variant="secondary"
+          multiple
+          maxFiles={3}
+          fileName="receipt"
+          labels={{ takePhoto: "Photograph receipt (up to 3 pages)" }}
+          onFiles={(files) => {
+            setRejections([]);
+            setSeveral(files);
+          }}
+          onReject={setRejections}
+        />
+      </div>
+      <OutTable
+        rows={[
+          ["useHasCamera()", String(hasCamera)],
+          ["one photo", photoNames(one)],
+          ["multiple, maxFiles 3", photoNames(several)],
+        ]}
+      />
+      <Refusal rejections={rejections} />
+    </div>
+  );
+}
+
+function CameraBesideUpload() {
+  const [last, setLast] = useState<File[]>([]);
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-1">
+        <CameraButton variant="ghost" size="sm" noCamera="hide" onFiles={setLast} />
+        <FileButton variant="ghost" size="sm" accept="image/*" onFiles={setLast}>
+          <Upload aria-hidden className="size-3.5" />
+          Upload photo
+        </FileButton>
+      </div>
+      <p className={READOUT}>last photo: {photoNames(last)}</p>
     </div>
   );
 }

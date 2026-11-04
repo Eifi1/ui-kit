@@ -562,6 +562,16 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       removed: (name) => `已移除“${name}”`,
       cleared: "已移除所有文件",
     },
+    camera: {
+      takePhoto: "拍照",
+      choosePhoto: "添加照片",
+      title: "相机",
+      hint: "对准拍摄对象，然后点击快门。",
+      starting: "正在启动相机…",
+      shutter: "拍摄照片",
+      taken: (count) => `已拍摄 ${n(count)} 张照片。`,
+      done: (count) => `使用 ${n(count)} 张照片`,
+    },
     wizard: {
       done: "完成",
       cancel: "取消",

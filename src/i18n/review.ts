@@ -212,6 +212,8 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "filePicker.remove": [["{{name}}"]],
   "filePicker.removed": [["{{name}}"]],
   "filePicker.hint": [["{{accept}}"], [""]],
+  "camera.taken": one,
+  "camera.done": one,
   "measuredGrid.removeRow": [[3]],
   "measuredGrid.cell": [["{{column}}", 3]],
   "measuredGrid.lineError": [[3]],

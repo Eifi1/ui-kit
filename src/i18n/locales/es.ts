@@ -577,6 +577,16 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       removed: (name) => `«${name}» quitado`,
       cleared: "Se han quitado todos los archivos",
     },
+    camera: {
+      takePhoto: "Hacer foto",
+      choosePhoto: "Añadir foto",
+      title: "Cámara",
+      hint: "Encuadre el motivo y pulse el disparador.",
+      starting: "Iniciando la cámara…",
+      shutter: "Hacer la foto",
+      taken: (count) => `${n(count)} ${plural(count, "foto hecha", "fotos hechas")}.`,
+      done: (count) => `Usar ${n(count)} ${plural(count, "foto", "fotos")}`,
+    },
     wizard: {
       done: "Listo",
       cancel: "Cancelar",

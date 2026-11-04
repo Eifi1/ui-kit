@@ -850,7 +850,15 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Picking files: a button that opens the picker or the camera, the drop area, and refusals reported where the user is looking, never as a toast.",
         icon: FileUp,
-        components: ["FileButton", "useFilePicker", "FileDropzone", "useFileDrop"],
+        components: [
+          "FileButton",
+          "useFilePicker",
+          "CameraButton",
+          "CameraCapture",
+          "useHasCamera",
+          "FileDropzone",
+          "useFileDrop",
+        ],
         Body: () => (
           <>
             <FileInputs />

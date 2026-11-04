@@ -418,6 +418,14 @@ export type {
   FileRejectionReason,
   FileScreenOptions,
 } from "./components/file-button";
+// 0.55: the camera where there is one, the photo picker where there is none — keksdose's
+// useHasCamera and in-page viewfinder, for kastlan's handover photos (reuse audit
+// 2026-11-02, proposal 8).
+export { useHasCamera } from "./hooks/use-has-camera";
+export { CameraButton } from "./components/camera-button";
+export type { CameraButtonProps } from "./components/camera-button";
+export { CameraCapture, DEFAULT_CAMERA_LABELS } from "./components/camera-capture";
+export type { CameraCaptureProps, CameraFacing, CameraLabels } from "./components/camera-capture";
 // The chart kit, whole, from its subpath (`@eifi1/ui-kit/chart`, which names its parts):
 // the chart shell and its palette, the treemap, the series chart with its zoom, legend,
 // labels and facing-pair axes, the height every chart takes, and the pie chart.

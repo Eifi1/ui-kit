@@ -73,6 +73,9 @@ describe("uiKitLabelsEn (@eifi1/ui-kit/i18n/en)", () => {
       "billing.waitingChanges",
       "bulkActionBar.selected",
       "calendarHeatmap.truncated",
+      // 0.55: the viewfinder's two counts.
+      "camera.done",
+      "camera.taken",
       "characterCount.count",
       "characterCount.remaining",
       "chipInput.atLimit",

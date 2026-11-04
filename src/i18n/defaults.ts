@@ -25,6 +25,7 @@ import { DEFAULT_SWATCH_PICKER_LABELS } from "../components/swatch-picker-labels
 import { DEFAULT_ICON_PICKER_LABELS } from "../components/icon-picker-labels";
 import { DEFAULT_DIALOG_FRAME_LABELS } from "../components/dialog-frame-labels";
 import { DEFAULT_FILE_PICKER_LABELS } from "../hooks/use-file-picker-labels";
+import { DEFAULT_CAMERA_LABELS } from "../components/camera-labels";
 import { DEFAULT_MEASURED_GRID_LABELS } from "../components/measured-grid-labels";
 import { DEFAULT_CONFIRM_DIALOG_LABELS } from "../components/confirm-dialog-labels";
 import { DEFAULT_FLOATING_PANEL_LABELS } from "../components/floating-panel-labels";
@@ -182,6 +183,7 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   iconPicker: DEFAULT_ICON_PICKER_LABELS,
   dialogFrame: DEFAULT_DIALOG_FRAME_LABELS,
   filePicker: DEFAULT_FILE_PICKER_LABELS,
+  camera: DEFAULT_CAMERA_LABELS,
   measuredGrid: DEFAULT_MEASURED_GRID_LABELS,
   feedbackAttachment: DEFAULT_FEEDBACK_ATTACHMENT_LABELS,
   feedbackDialog: DEFAULT_FEEDBACK_DIALOG_LABELS,

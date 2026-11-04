@@ -248,6 +248,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "FileButton — one file",
     "FileButton — several files, capped",
     "FileButton — camera, pending, droppable",
+    "CameraButton — the camera where there is one, the photo picker where there is none",
+    "CameraButton — noCamera=\"hide\" beside an upload button",
     "FileButton — own check, own words, opened through its ref",
     "useFilePicker — someone else's trigger",
     "FileDropzone — remove inside the zone, inline refusal",
