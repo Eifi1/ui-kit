@@ -19,6 +19,7 @@ import { anchoredInline, viewportSize } from "../hooks/use-anchored-panel";
 import { useBreakpoint } from "../hooks/use-breakpoint";
 import { useCoarsePointer } from "../hooks/use-large-text";
 import { dirOf, horizontalStep } from "../lib/direction";
+import { isEditableContent } from "../lib/editable-content";
 import { isComposing } from "../lib/ime";
 import { focusQuietly } from "../lib/quiet-focus";
 import type { Direction } from "../lib/direction";
@@ -804,10 +805,13 @@ function fieldValues(el: Element): string {
 }
 
 /** Does the focused element handle `key` itself? Enter on a button or link, and any
- *  editing key in a text field or select, is the control's — not the tour's. */
+ *  editing key in a text field, a select or editable content, is the control's — not the
+ *  tour's. Editable content by the kit's one rule (lib/editable-content, 0.54 follow-up):
+ *  `isContentEditable` alone is missing in jsdom and in any engine without it, and there
+ *  Enter and → in an editor a step's `action` held stepped the tour on. */
 function ownsKey(target: EventTarget | null, key: string): boolean {
   if (!(target instanceof HTMLElement)) return false;
-  if (target.isContentEditable) return true;
+  if (isEditableContent(target)) return true;
   const tag = target.tagName;
   if (tag === "TEXTAREA" || tag === "SELECT") return true;
   if (tag === "INPUT") {

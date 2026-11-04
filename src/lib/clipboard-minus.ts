@@ -15,6 +15,8 @@
  * the one part every app mounts, the signed-out pages included.
  */
 
+import { isEditableContent } from "./editable-content";
+
 /**
  * U+2212, then up to five letters, currency symbols or dots, then spaces, then a digit.
  *
@@ -44,15 +46,19 @@ function hasMinusBeforeNumber(text: string): boolean {
   return found;
 }
 
-/** An input, a textarea or an editable element: a copy there is the person's own text. */
+/**
+ * An input, a textarea or editable content: a copy there is the person's own text.
+ * Editable content by the kit's one rule (lib/editable-content, 0.54 follow-up): beside
+ * `isContentEditable` this asked a `[contenteditable=""], [contenteditable="true"]`
+ * selector, which found the editor round a `contenteditable="false"` island (a chip no
+ * one typed) and left its figure's U+2212 in the clipboard — in every engine — and,
+ * where the engine has no `isContentEditable` (jsdom), missed `plaintext-only` and took
+ * the minus out of what someone typed there.
+ */
 function isEditable(node: Node | null | undefined): boolean {
   const el = node instanceof Element ? node : node?.parentElement;
   if (!el) return false;
-  if (el.closest("input, textarea, select")) return true;
-  return (
-    (el as HTMLElement).isContentEditable === true ||
-    el.closest('[contenteditable=""], [contenteditable="true"]') !== null
-  );
+  return el.closest("input, textarea, select") !== null || isEditableContent(el);
 }
 
 /** Table parts copied alone are wrapped back into a table, which Excel reads as cells. */

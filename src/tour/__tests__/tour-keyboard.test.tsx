@@ -117,6 +117,29 @@ describe("Tour keyboard", () => {
     expect(state()).toBe("step 0");
   });
 
+  // 0.54 follow-up: `ownsKey` read `isContentEditable` alone, which jsdom (and any engine
+  // without it) does not have, so Enter and → in an editor a step's `action` holds stepped
+  // the tour on. The rule is lib/editable-content's now, `plaintext-only` included.
+  it("leaves Enter and the arrows in a contenteditable to the editor", async () => {
+    const steps: TourStep[] = [
+      {
+        ...THREE[0],
+        action: (
+          <div contentEditable="plaintext-only" suppressContentEditableWarning aria-label="Note" role="textbox" />
+        ),
+      },
+      ...THREE.slice(1),
+    ];
+    renderTour(steps);
+    await start();
+    const note = screen.getByRole("textbox", { name: "Note" });
+    for (const key of ["Enter", "ArrowRight"]) {
+      expect(fireEvent.keyDown(note, { key, cancelable: true })).toBe(true);
+      await flush();
+      expect(state()).toBe("step 0");
+    }
+  });
+
   it("follows the reading direction in RTL: ArrowLeft advances, ArrowRight goes back", async () => {
     const original = document.documentElement.getAttribute("dir");
     // A centered step takes the document's direction — the overlay is portalled out of
