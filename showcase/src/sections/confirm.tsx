@@ -82,6 +82,7 @@ function DangerStates() {
   const [busy, setBusy] = useState(false);
   const [disabled, setDisabled] = useState(true);
   const [log, setLog] = useState("—");
+  const [revokeError, setRevokeError] = useState<string>();
   return (
     <Example label="DangerConfirm — controlled, busy, disabled, rejected" hint="the parent owns the armed state">
       <div className="mb-3 flex flex-wrap gap-4 text-xs text-secondary">
@@ -116,10 +117,12 @@ function DangerStates() {
           confirmLabel="Revoke (fails)"
           prompt="The server refuses: the promise rejects, the tile stays armed and keeps the phrase."
           phrase="revoke"
+          error={revokeError}
           onConfirm={() =>
             new Promise<void>((_, reject) =>
               setTimeout(() => {
                 setLog("onConfirm rejected — still armed");
+                setRevokeError("The server refused: these keys are in use.");
                 reject(new Error("refused"));
               }, 800),
             )
@@ -145,7 +148,9 @@ function DangerStates() {
         <code>busy</code> from the parent shows the same state a pending promise does, for a mutation the app tracks
         itself. <code>disabled</code> turns the arm button off without a reason — prefer <code>lockedReason</code> when
         the user can do something about it. The third tile takes every word from <code>labels</code>;{" "}
-        <code>armLabel</code> and <code>confirmLabel</code> would win over them.
+        <code>armLabel</code> and <code>confirmLabel</code> would win over them. The second passes the refusal as{" "}
+        <code>error</code> (0.54): under the phrase, which it marks invalid, announced as it appears, and gone again on
+        the next keystroke.
       </Note>
     </Example>
   );

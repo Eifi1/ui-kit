@@ -146,8 +146,9 @@ function isConsequence(item: DeleteAccountConsequence): item is DangerConsequenc
  * and the password. They are the tile's own {@link TypedConfirmField} and
  * {@link CurrentPasswordInput}, drawn in its fields slot and held by
  * `confirmDisabledReason` with the tile's own sentences, rather than its built-in
- * `phrase` / `requirePassword` — those have no error of their own, and a wrong password
- * belongs under the password. Its consequences are the app's list, plus
+ * `phrase` / `requirePassword` — those share ONE `error` (0.54, under the password), and
+ * this card's refusals go to two fields: a wrong password under the password, a
+ * mismatched address under the address. Its consequences are the app's list, plus
  * Kurvenschmiede's hand-over line (`handOverCount`, §2.7: shared work goes to an
  * administrator, never a refusal). The typed address goes to `onRequest` as typed, so
  * the server re-checks it (`confirm_email_matches`).
