@@ -149,7 +149,8 @@ export interface AmountInputProps extends FieldHelpProps, DataAttributes {
   currencyNames?: Record<string, string>;
   /** Offer only these ISO codes in the chip's list, in this order — `CurrencySelect`'s
    *  `options`, since the chip renders CurrencySelect's list (round 0.34 Wave 2, DUP-4).
-   *  Default every currency the kit knows. */
+   *  Default every currency the kit knows but a `retired` one (the lev), which only the
+   *  field that holds it lists. */
   currencyOptions?: string[];
   /** Focus the field on mount — on mobile this also opens the numpad sheet, so a
    *  new-transaction form can jump straight to amount entry (feedback #70). */

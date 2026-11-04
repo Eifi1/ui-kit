@@ -222,9 +222,10 @@ const asTyped = (text: string) => text;
 
 // ── The money guard (kastlan 5, Kurvenschmiede) ─────────────────────────────────
 
-// The codes the kit's own currency pickers offer, as whole words: "Amount (CHF)",
-// "EUR", "Kosten CHF". Not every ISO 4217 code — "ALL", "TOP" and "PEN" are codes too,
-// and an upper-case label would trip on them.
+// The codes the kit's own currency pickers know, as whole words: "Amount (CHF)",
+// "EUR", "Kosten CHF". A `retired` one too (BGN): a label that names it is still money,
+// whatever the pickers offer. Not every ISO 4217 code — "ALL", "TOP" and "PEN" are codes
+// too, and an upper-case label would trip on them.
 const CURRENCY_CODE = new RegExp(`(?:^|[^A-Za-z])(?:${CURRENCIES.map((c) => c.code).join("|")})(?![A-Za-z])`);
 // Symbols no unit of measure is written with. Not "kr", "R" or "Fr": those are words
 // and units as often as they are money.
