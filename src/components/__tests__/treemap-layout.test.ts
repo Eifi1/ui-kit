@@ -30,6 +30,42 @@ describe("squarify", () => {
   it("draws nothing for nothing to share", () => {
     expect(squarify([0, 0], { x: 0, y: 0, width: 100, height: 100 }).map(area)).toEqual([0, 0]);
   });
+
+  // 0.55: the map is drawn from this alone (recharts' `<Treemap>` is gone from it), so what
+  // the picture promises is asserted here, on the layout, as well as on the drawn tiles.
+  it("keeps the order given: the first weight at the top-left, the last at the bottom-right", () => {
+    const rect = { x: 10, y: 20, width: 400, height: 300 };
+    const boxes = squarify([5, 4, 3, 2, 1], rect);
+    expect(boxes[0]).toMatchObject({ x: rect.x, y: rect.y });
+    const last = boxes[boxes.length - 1]!;
+    expect(last.x + last.width).toBeCloseTo(rect.x + rect.width, 9);
+    expect(last.y + last.height).toBeCloseTo(rect.y + rect.height, 9);
+    // Row by row along the shorter side: each box starts right of the one before it (along
+    // a row, or in the next column) or below it (down a column, or in the next row).
+    for (let i = 1; i < boxes.length; i++) {
+      const [a, b] = [boxes[i - 1]!, boxes[i]!];
+      expect(b.x >= a.x + a.width - 1e-9 || b.y >= a.y + a.height - 1e-9, `box ${i}`).toBe(true);
+    }
+  });
+
+  it("never overlaps two boxes", () => {
+    const boxes = squarify([9, 7, 7, 4, 3, 3, 2, 1, 1], { x: 0, y: 0, width: 640, height: 360 });
+    for (let i = 0; i < boxes.length; i++) {
+      for (let j = i + 1; j < boxes.length; j++) {
+        const [a, b] = [boxes[i]!, boxes[j]!];
+        const across = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
+        const down = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
+        expect(across <= 1e-9 || down <= 1e-9, `${i} and ${j}`).toBe(true);
+      }
+    }
+  });
+
+  it("keeps the tiles near square, where slicing would draw strips", () => {
+    // Ten equal tiles in a square: slices would be 10:1 each.
+    const boxes = squarify(Array(10).fill(1), { x: 0, y: 0, width: 500, height: 500 });
+    const worst = Math.max(...boxes.map((b) => Math.max(b.width / b.height, b.height / b.width)));
+    expect(worst).toBeLessThan(3);
+  });
 });
 
 describe("groupBody", () => {
@@ -97,5 +133,49 @@ describe("layoutTreemap", () => {
   it("covers the chart, edge to edge", () => {
     const top = ["big", "small", "outer", "top"].reduce((acc, p) => acc + area(box(p)), 0);
     expect(top).toBe(800 * 400);
+  });
+
+  it("draws every tile at its value's share, across groups: 900 is nine tiles of 100", () => {
+    // `b2` (900, in "big") against `top` (100, at the top), and `i2` (200, two groups down).
+    const slack = (a: Box, b: Box) => (a.width + a.height) / 2 + 9 * ((b.width + b.height) / 2);
+    expect(Math.abs(area(box("b2")) - 9 * area(box("top")))).toBeLessThanOrEqual(slack(box("b2"), box("top")));
+    expect(area(box("i2")) / area(box("i1"))).toBeCloseTo(2, 0);
+  });
+
+  it("gives a group its frame on top of its tiles' area, a band and a margin", () => {
+    for (const group of ["big", "small", "outer", "inner"]) {
+      const { box: outer, body, banded } = placed.get(group)!;
+      expect(inside(body!, outer), group).toBe(true);
+      // The margin on three sides; the band — or, where there is no room for it, the margin
+      // — on top.
+      expect(body!.x - outer.x, group).toBe(FRAME_MARGIN);
+      expect(outer.x + outer.width - (body!.x + body!.width), group).toBe(FRAME_MARGIN);
+      expect(outer.y + outer.height - (body!.y + body!.height), group).toBe(FRAME_MARGIN);
+      expect(body!.y - outer.y, group).toBe(banded ? BAND : FRAME_MARGIN);
+    }
+  });
+
+  it("never overlaps two nodes of one level, and keeps their order", () => {
+    const levels: string[][] = [
+      ["big", "small", "outer", "top"],
+      ["b1", "b2", "b3"],
+      ["inner", "o1"],
+      ["i1", "i2"],
+    ];
+    for (const level of levels) {
+      const boxes = level.map(box);
+      for (let i = 0; i < boxes.length; i++) {
+        for (let j = i + 1; j < boxes.length; j++) {
+          const [a, b] = [boxes[i]!, boxes[j]!];
+          const across = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
+          const down = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
+          expect(across <= 0 || down <= 0, `${level[i]} and ${level[j]}`).toBe(true);
+        }
+      }
+    }
+    // The first node of the chart and of each group starts at the corner of its rectangle.
+    expect(box("big")).toMatchObject({ x: 0, y: 0 });
+    const body = placed.get("big")!.body!;
+    expect(box("b1")).toMatchObject({ x: body.x, y: body.y });
   });
 });

@@ -38,8 +38,8 @@
 // of every drawn series — never by stride, which aliases a fast tone into a slow wave.
 // A zoom thins the window on show, so it draws more detail, not the same rows larger.
 // The rule is `series-chart-thin.ts`.
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { KeyboardEvent, ReactNode, RefObject } from "react";
+import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import type { ComponentProps, KeyboardEvent, ReactNode, RefObject } from "react";
 import {
   Area,
   Bar,
@@ -125,7 +125,7 @@ import {
 import { useBreakpoint } from "../hooks/use-breakpoint";
 import { useTextSize } from "../theme/text-size";
 import { chartHeightProps, type ChartHeight } from "./chart-height";
-import { useChartEdge, useEdgesInForce } from "./chart-edge";
+import { useChartShade, useEdgesInForce } from "./chart-edge";
 import { cn } from "../lib/cn";
 import { formatWithMinus } from "../lib/minus";
 
@@ -725,6 +725,11 @@ export interface SeriesChartProps<TRow extends object = object> {
    * The chart's name. The chart is a `role="figure"` (0.52, refactor audit 2026-10-30,
    * DSP-5), and a figure is found and told apart by its name — "Net worth", "Load over
    * travel". Its values are read stop by stop (see {@link SeriesChartProps.onPointClick}).
+   *
+   * Default (0.55, Kurvenschmiede 0.52 adoption): the axes' titles — the drawn y axes' as
+   * a list in the chart's locale, over the abscissa's: "Rack force (N) over Travel (mm)"
+   * (`seriesChart.nameFromAxes`). A chart without an x title — an upper chart of a stack —
+   * is named by its ordinates alone; one without a titled y axis has no name, as before.
    */
   "aria-label"?: string;
   /**
@@ -786,6 +791,28 @@ function withUnit(label: ReactNode, unit: string | undefined): ReactNode {
       {label} ({unit})
     </>
   );
+}
+
+/**
+ * The name of a chart the caller does not name (0.55, Kurvenschmiede 0.52 adoption): the
+ * titles of the drawn y axes as a list in `locale`, over the abscissa's title, in the
+ * catalogue's words. Kurvenschmiede's SeriesChart wrapper named every chart so: its axes
+ * carry their titles and units anyway, and a name written a second time at each call site
+ * drifts from the axes it describes. A hidden axis and an untitled one
+ * (`title: ""`, a facing pair's second chart) say nothing, and with no titled y axis there
+ * is no name: an abscissa alone does not say what is measured. The DECLARED axes, not the
+ * budget's: the name does not change with the chart's width.
+ */
+function axesName(
+  axes: readonly SeriesChartAxis[],
+  abscissa: string | undefined,
+  locale: string | undefined,
+  nameFromAxes: SeriesChartLabels["nameFromAxes"],
+): string | undefined {
+  const titles = axes.flatMap((axis) => (!axis.hide && axis.title ? [axis.title] : []));
+  if (titles.length === 0) return undefined;
+  const ordinates = new Intl.ListFormat(locale, { type: "conjunction" }).format(titles);
+  return nameFromAxes(ordinates, abscissa || undefined);
 }
 
 /** Where a legend learns which axes are not drawn — see {@link seriesLegendEntries}. */
@@ -877,18 +904,8 @@ interface PointStop {
  */
 const ALL_STOPS_UP_TO = 100;
 
-/**
- * The shape of a series whose bar has keyboard focus: recharts' own rectangle, with an
- * outline on the one bar at `index` — drawn at the bar's exact geometry, which an
- * overlay could only guess at. Not `activeBar`: that follows the tooltip's active index,
- * which recharts stops taking from `defaultIndex` once a pointer has hovered the chart.
- */
-function focusedBarShape(index: number) {
-  return function FocusedBar(props: BarShapeProps) {
-    const focused = props.originalDataIndex === index;
-    return <Rectangle {...props} {...(focused ? { stroke: "var(--text-primary)", strokeWidth: 2 } : {})} />;
-  };
-}
+/** What a bar whose stop has keyboard focus is outlined with. */
+const FOCUSED_BAR = { stroke: "var(--text-primary)", strokeWidth: 2 };
 
 /** A marker label's size in px at Normal — the one place both the text and its width
  *  estimate read it from. × the text size's scale where it is drawn (§10.10). */
@@ -938,6 +955,99 @@ function MarkerLabel({ viewBox, value }: { viewBox?: { x?: number; y?: number; w
 }
 
 /**
+ * The keyboard's roving stop and the stop that has focus, as indices into the chart's
+ * stops: a store, not the plot's state (0.55, held back from 0.52's review). Kept as state,
+ * every arrow-key step — which moves the tooltip — re-rendered the whole plot, and
+ * recharts drew every series, dot, axis and tick again; now only what reads the store
+ * draws again: the stops themselves, the tooltip they stand on, and the bar they outline.
+ */
+interface StopStore {
+  /** The roving stop: the one Tab lands on. */
+  stop: () => number;
+  /** The stop that has focus, or `undefined`. */
+  focus: () => number | undefined;
+  subscribe: (onChange: () => void) => () => void;
+  focused: (at: number) => void;
+  blurred: () => void;
+}
+
+function createStopStore(): StopStore {
+  let stop = 0;
+  let focus: number | undefined;
+  const listeners = new Set<() => void>();
+  const emit = () => listeners.forEach((onChange) => onChange());
+  return {
+    stop: () => stop,
+    focus: () => focus,
+    subscribe: (onChange) => {
+      listeners.add(onChange);
+      return () => listeners.delete(onChange);
+    },
+    focused: (at) => {
+      if (stop === at && focus === at) return;
+      stop = at;
+      focus = at;
+      emit();
+    },
+    blurred: () => {
+      if (focus === undefined) return;
+      focus = undefined;
+      emit();
+    },
+  };
+}
+
+/** The stop that has keyboard focus, read from the store: re-renders its reader only when
+ *  that stop changes. */
+function useFocusedStop(keys: StopStore, stops: readonly PointStop[]): PointStop | undefined {
+  const at = useSyncExternalStore(keys.subscribe, keys.focus, keys.focus);
+  return at === undefined ? undefined : stops[at];
+}
+
+/**
+ * The plot's tooltip, standing on the stop that has keyboard focus as the pointer's would
+ * (`defaultIndex`, and `pointAt` for a pointer that has hovered). Reads the stop from the
+ * store, so a step re-renders the tooltip and not the plot round it.
+ */
+function StopTooltip({
+  keys,
+  stops,
+  ...props
+}: ComponentProps<typeof ChartTooltip> & { keys: StopStore; stops: readonly PointStop[] }) {
+  const focused = useFocusedStop(keys, stops);
+  return <ChartTooltip {...props} defaultIndex={focused?.index} />;
+}
+
+/**
+ * One bar: recharts' own rectangle, outlined while the bar's stop has keyboard focus —
+ * drawn at the bar's exact geometry, which an overlay could only guess at. Not
+ * `activeBar`: that follows the tooltip's active index, which recharts stops taking from
+ * `defaultIndex` once a pointer has hovered the chart.
+ *
+ * Every bar is drawn through it (0.55) and reads the store itself, so a step re-renders
+ * the bar it leaves and the bar it lands on. Up to 0.54 the focused series swapped its
+ * `shape` for one that outlined the bar at an index: a new prop of the `<Bar>`, which
+ * recharts registers in its store, so each step refitted and drew the axes again.
+ */
+function StopRect({
+  keys,
+  stops,
+  seriesKey,
+  ...props
+}: BarShapeProps & { keys: StopStore; stops: readonly PointStop[]; seriesKey: string }) {
+  const focused = useSyncExternalStore(
+    keys.subscribe,
+    () => {
+      const at = keys.focus();
+      const stop = at === undefined ? undefined : stops[at];
+      return stop !== undefined && stop.key === seriesKey && stop.index === props.originalDataIndex;
+    },
+    () => false,
+  );
+  return <Rectangle {...props} {...(focused ? FOCUSED_BAR : {})} />;
+}
+
+/**
  * The keyboard's way onto a chart: one focusable `<rect>` per bar, or per slot when there
  * are no bars, laid over the plot INSIDE the recharts chart, where the x scale answers.
  *
@@ -960,22 +1070,20 @@ function MarkerLabel({ viewBox, value }: { viewBox?: { x?: number; y?: number; w
  */
 function PointKeys({
   stops,
-  current,
+  keys,
   label,
-  onFocusStop,
-  onBlurStops,
   onPick,
 }: {
   stops: readonly PointStop[];
-  current: number;
+  /** The roving stop and the focused one (see {@link StopStore}). */
+  keys: StopStore;
   label: string;
-  onFocusStop: (at: number) => void;
-  onBlurStops: () => void;
   onPick?: (stop: PointStop) => void;
 }) {
   const plot = usePlotArea();
   const scale = useXAxisScale();
   const refs = useRef<(SVGRectElement | null)[]>([]);
+  const current = Math.min(useSyncExternalStore(keys.subscribe, keys.stop, keys.stop), stops.length - 1);
   if (!plot || !scale || plot.width <= 0 || plot.height <= 0) return null;
 
   const onKeyDown = (at: number) => (event: KeyboardEvent<SVGRectElement>) => {
@@ -1039,11 +1147,11 @@ function PointKeys({
               stop.key === undefined && "focus-visible:stroke-[var(--brand)]",
             )}
             onFocus={(event) => {
-              onFocusStop(at);
+              keys.focused(at);
               pointAt(event.currentTarget, (x0 + x1) / 2, middle);
             }}
             onBlur={(event) => {
-              onBlurStops();
+              keys.blurred();
               // On to another stop: that one stands the pointer on itself. (`refs` holds a
               // null for every stop not drawn, so a blur to nowhere is no stop.)
               const next = event.relatedTarget as SVGRectElement | null;
@@ -1094,7 +1202,20 @@ interface PlotProps extends Omit<SeriesChartProps, "rows" | "x"> {
   xAxis: SeriesChartX;
 }
 
-/** The chart proper, over an abscissa already reduced to numbers (see {@link XModel}). */
+/**
+ * The chart proper, over an abscissa already reduced to numbers (see {@link XModel}).
+ *
+ * Memoised (0.55, held back from 0.52's review, which saw the plot drawn again on every
+ * render of the page): it draws again when one of its props is new — the caller's, as
+ * given, compared by identity as `memo` compares — or when its own box changes. Its
+ * keyboard state is a store the stops read (`StopStore`), so a step draws only them, the
+ * tooltip and the focused bar. A caller that wants a render of its page to cost the chart
+ * nothing keeps its `rows`, `series`, `axes`, `x` and formatters the same between renders
+ * (`useMemo`, `useCallback`, or a module constant): a list or a function written inline
+ * is a new one each time, and the chart cannot know it says the same.
+ */
+const SeriesPlotView = memo(SeriesPlot);
+
 function SeriesPlot({
   model,
   xAxis,
@@ -1130,17 +1251,18 @@ function SeriesPlot({
   // grows by itself — and the axes aim at three ticks instead of five from Large up.
   // Strokes, dashes and the grid stay px.
   const { scale } = useTextSize();
-  const edgeFor = useChartEdge();
-  // The tiles' rule (0.52, DSP-18, Marcel's decision 3): the ink edge under More contrast
-  // only — at Standard it fell on 5 of 8 hues in light and on 2 in dark, the unevenness
-  // #642 took off the tiles.
+  // The edge of a bar or an area in a hue under 3:1: its own darker shade (0.55).
+  const edgeFor = useChartShade();
+  // The tiles' rule (0.52, DSP-18, Marcel's decision 3): the edge under More contrast only
+  // — at Standard it fell on 5 of 8 hues in light and on 2 in dark, the unevenness #642
+  // took off the tiles.
   const edges = useEdgesInForce("auto");
   const ticksAim = tickTarget(scale);
   const grow = (px: number) => (scale === 1 ? px : Math.round(px * scale));
-  // The keyboard stops' roving tab stop, and the one that has focus (see `PointKeys`).
-  // Up here, above the empty state's early return, like every hook.
-  const [keyStop, setKeyStop] = useState(0);
-  const [keyFocus, setKeyFocus] = useState<number | undefined>(undefined);
+  // The keyboard stops' roving tab stop, and the one that has focus (see `PointKeys`): a
+  // store, so a step does not draw the plot again (see `StopStore`). Up here, above the
+  // empty state's early return, like every hook.
+  const [keys] = useState(createStopStore);
   // Where the tooltip goes, and — off the plot — the row it is portalled into.
   // Below `sm` (`max-sm:`, at the text size in force) — where `"auto"` takes the tooltip
   // off the plot. Narrower than the phone layout on purpose: a tablet's plot is wide
@@ -1221,7 +1343,10 @@ function SeriesPlot({
   // it never had (0.52 code review, deep, charts, findings 7 and 14 — Treemap's copy of this
   // went the same way). The plot's root is `ChartContainer`, which takes the sentence itself.
   const about = useFigureDescription(spoken || undefined);
-  const figure = { role: "figure", "aria-label": ariaLabel, "aria-describedby": about.describedBy } as const;
+  // The caller's name, else the axes' (0.55, Kurvenschmiede 0.52 adoption). `aria-label=""`
+  // is a name the caller gave too, and stays.
+  const chartName = ariaLabel ?? axesName(axes, xAxis.title, locale, labels.nameFromAxes);
+  const figure = { role: "figure", "aria-label": chartName, "aria-describedby": about.describedBy } as const;
 
   // The empty state takes the chart's own height and is centred in it: a chart that
   // shrank to its "nothing to draw" sentence moved everything under it up the page
@@ -1456,7 +1581,6 @@ function SeriesPlot({
       }
     });
   }
-  const focusedStop = keyFocus === undefined ? undefined : stops[keyFocus];
 
   const dotFor = (entry: SeriesChartSeries) => {
     const want = entry.dot;
@@ -1505,7 +1629,7 @@ function SeriesPlot({
   const inRow = placement !== "cursor";
   const chart = (
     <ChartContainer
-      {...(inRow ? {} : { role: "figure", "aria-label": ariaLabel, description: spoken || undefined })}
+      {...(inRow ? {} : { role: "figure", "aria-label": chartName, description: spoken || undefined })}
       ref={setBox}
       data-axis-budget={budgeted.length ? budgetKey.replace(/\n/g, " ") : undefined}
       // "drawn/all" while `maxRows` thins: what a reader of the DOM (a test, a bug
@@ -1624,11 +1748,12 @@ function SeriesPlot({
           // Not before the row exists: without its own portal recharts would float this
           // content over the plot for the first frame.
           readout && (
-            <ChartTooltip
+            <StopTooltip
+              keys={keys}
+              stops={stops}
               portal={readout}
               // recharts hides an inactive tooltip; the row shows its idle state instead.
               wrapperStyle={{ visibility: "visible" }}
-              defaultIndex={focusedStop?.index}
               content={
                 <ChartTooltipContent
                   variant="readout"
@@ -1641,15 +1766,16 @@ function SeriesPlot({
             />
           )
         ) : (
-          <ChartTooltip
+          <StopTooltip
+            // The keyboard's stop shows its tooltip as the pointer's would.
+            keys={keys}
+            stops={stops}
             {...(tooltip?.allowEscapeViewBox || tooltip?.boundary
               ? { allowEscapeViewBox: tooltip.allowEscapeViewBox ?? { x: true } }
               : {})}
             // The content shifts itself 12 px off the cursor (or flips) against the
             // boundary; recharts' own offset on top would double it.
             {...(tooltip?.boundary ? { offset: 0 } : {})}
-            // The keyboard's stop shows its tooltip as the pointer's would.
-            defaultIndex={focusedStop?.index}
             content={
               <ChartTooltipContent
                 labelFormatter={(value) => xLabel(Number(value))}
@@ -1663,9 +1789,12 @@ function SeriesPlot({
           const type = entry.type ?? "line";
           const yAxisId = entry.axis ?? DEFAULT_Y_AXIS;
           const color = `var(--color-${entry.key})`;
-          // Under More contrast, a filled mark in a hue under 3:1 against the ground gets
-          // a 1px ink edge (WCAG 1.4.11, anyplot's rule) — measured on the colour the
-          // config paints. At Standard none does (see `edges`).
+          // Under More contrast, a filled mark in a hue under 3:1 against the card or the page
+          // (WCAG 1.4.11) is edged in its own shade that clears it, darker on a light page and
+          // lighter on a dark one (`chartShade`, 0.55): a bar with a 1px edge, an area with
+          // its line, the fill keeping the hue the legend shows. Measured on the colour the
+          // config paints. At Standard nothing is (see `edges`). Up to 0.54 the edge was the
+          // ink, which on an area's line read as a black line where the series was coloured.
           const edge = edges === "contrast" ? edgeFor(config[entry.key]?.color) : undefined;
           const own = entry.dash ?? (entry.dashed ? 1 : 0);
           const dash = entry.step ? strokeDash(STEP_DASH) : typeof own === "string" ? own : strokeDash(own);
@@ -1683,6 +1812,8 @@ function SeriesPlot({
                 fillOpacity={entry.fillOpacity}
                 {...(edge ? { stroke: edge, strokeWidth: 1 } : {})}
                 radius={entry.stack === undefined ? BAR_RADIUS : 0}
+                // Outlined while its stop has keyboard focus (`StopRect`).
+                shape={(bar: BarShapeProps) => <StopRect {...bar} keys={keys} stops={stops} seriesKey={entry.key} />}
                 // Read off the row rather than recharts' `value`: in a stack that is the
                 // layer's running top, which a hole has too — and a hole gets no stub.
                 {...(stub
@@ -1691,9 +1822,6 @@ function SeriesPlot({
                         finite(plotted[index]?.[entry.key]) === undefined ? 0 : stub,
                     }
                   : {})}
-                // Only the focused stop's series swaps its shape, and only for as long
-                // as it has focus: every other bar keeps recharts' own.
-                {...(focusedStop?.key === entry.key ? { shape: focusedBarShape(focusedStop.index) } : {})}
                 onClick={
                   onPointClick
                     ? (_bar, index, event) => {
@@ -1717,8 +1845,8 @@ function SeriesPlot({
                 type={curve}
                 dataKey={entry.key}
                 stackId={entry.stack}
-                // The edge replaces the hue on the area's outline only; the fill keeps it,
-                // and the outline its width (0.52, DSP-18: it was 1px, whatever
+                // The edge's shade replaces the hue on the area's outline only; the fill
+                // keeps it, and the outline its width (0.52, DSP-18: it was 1px, whatever
                 // `strokeWidth` said).
                 stroke={edge ?? color}
                 strokeWidth={width}
@@ -1814,13 +1942,8 @@ function SeriesPlot({
         {stops.length > 0 && (
           <PointKeys
             stops={stops}
-            current={Math.min(keyStop, stops.length - 1)}
+            keys={keys}
             label={labels.points}
-            onFocusStop={(at) => {
-              setKeyStop(at);
-              setKeyFocus(at);
-            }}
-            onBlurStops={() => setKeyFocus(undefined)}
             onPick={
               onPointClick
                 ? (stop) => {
@@ -1859,13 +1982,17 @@ function SeriesPlot({
   );
 }
 
-const ZoomablePlot = withChartZoom(SeriesPlot);
+const ZoomablePlot = withChartZoom(SeriesPlotView);
+
+/** The abscissa of a chart that describes none, one object for every render. */
+const NO_X: SeriesChartX = {};
 
 /**
  * The caller's props, with the abscissa reduced to numbers for the plot and the zoom.
  * The reduction is kept while the rows and the two settings it reads stay the same — a
  * category or time chart otherwise re-maps every row on every render, and `maxRows`'
- * envelope would be worked out again with it.
+ * envelope would be worked out again with it. So is every prop it adds (0.55): the plot is
+ * memoised, and a new `x` per render was a new prop that drew it all again.
  */
 function usePlotProps<TRow extends object>(typed: SeriesChartProps<TRow>): PlotProps {
   // `TRow` types only what the caller is handed back, and that is its own row objects,
@@ -1873,12 +2000,13 @@ function usePlotProps<TRow extends object>(typed: SeriesChartProps<TRow>): PlotP
   // because the two are not comparable for an unresolved `TRow`: `SeriesChartSeries` is
   // contravariant in it (its `dot` is handed rows) and `rows` covariant.
   const props = typed as unknown as SeriesChartProps;
-  const x = props.x ?? {};
+  const x = props.x ?? NO_X;
   const { rows } = props;
   const { type, key } = x;
   // Read by key, so any object is a row (API-2); `SeriesChartRow` is how the plot reads it.
   const model = useMemo(() => xModel(rows as readonly SeriesChartRow[], { type, key }), [rows, type, key]);
-  return { ...props, rows: model.rows, x: { key: model.plotKey }, model, xAxis: x };
+  const plotted = useMemo(() => ({ key: model.plotKey }), [model.plotKey]);
+  return { ...props, rows: model.rows, x: plotted, model, xAxis: x };
 }
 
 /**
@@ -1887,7 +2015,7 @@ function usePlotProps<TRow extends object>(typed: SeriesChartProps<TRow>): PlotP
  * interaction.
  */
 export function StaticSeriesChart<TRow extends object = object>(props: SeriesChartProps<TRow>) {
-  return <SeriesPlot {...usePlotProps(props)} />;
+  return <SeriesPlotView {...usePlotProps(props)} />;
 }
 
 /**

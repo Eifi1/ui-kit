@@ -1,12 +1,12 @@
 {
   "format": "eifi1-server-kit-api",
   "version": 1,
-  "kit_version": "0.20.0",
+  "kit_version": "0.21.0",
   "modules": [
     {
       "name": "eifi1_server_kit.auth",
       "summary": "Sign-in, sign-up and the account, as code (``docs/auth-harmonization.md`` §8 in ``Eifi1/ui-kit``).",
-      "doc": "Sign-in, sign-up and the account, as code (``docs/auth-harmonization.md`` §8 in ``Eifi1/ui-kit``).\n\nLayer 1, like the rest of the kit: pure functions, Pydantic models and small classes —\nno database, no app ``User``, no routes, and no JWT signing (each app keeps its JWT\nlibrary; :mod:`~eifi1_server_kit.auth.tokens` builds and checks the claims). keksdose is\nthe reference, cited ``file`` per rule.\n\n* :mod:`~eifi1_server_kit.auth.accounts` — the address and its tag, invitations, the\n  registration gate, names, erasure identifiers;\n* :mod:`~eifi1_server_kit.auth.tokens` — one-time tokens (reset, verification,\n  invitation, email change), the session's claims, and what a refresh answers;\n* :mod:`~eifi1_server_kit.auth.limits` — :class:`AuthLimiters`, with the per-address\n  delay that never locks out;\n* :mod:`~eifi1_server_kit.auth.passwords` — :func:`absent_account_check`, the dummy hash an\n  address with no account is checked against, so it costs what one with an account costs;\n* :mod:`~eifi1_server_kit.auth.schemas` — the wire shapes, with the account's text size\n  and contrast (``docs/text-size-harmonization.md`` §6);\n* :mod:`~eifi1_server_kit.auth.errors` — :class:`AuthError` and its codes.",
+      "doc": "Sign-in, sign-up and the account, as code (``docs/auth-harmonization.md`` §8 in ``Eifi1/ui-kit``).\n\nLayer 1, like the rest of the kit: pure functions, Pydantic models and small classes —\nno database, no app ``User``, no routes, and no JWT signing (each app keeps its JWT\nlibrary; :mod:`~eifi1_server_kit.auth.tokens` builds and checks the claims). keksdose is\nthe reference, cited ``file`` per rule.\n\n* :mod:`~eifi1_server_kit.auth.accounts` — the address and its tag, invitations, the\n  registration gate, names, erasure identifiers;\n* :mod:`~eifi1_server_kit.auth.tokens` — one-time tokens (reset, verification,\n  invitation, email change), the session's claims, and what a refresh answers;\n* :mod:`~eifi1_server_kit.auth.limits` — :class:`AuthLimiters`, with the per-address\n  delay that never locks out;\n* :mod:`~eifi1_server_kit.auth.passwords` — :func:`absent_account_check`, the dummy hash an\n  address with no account is checked against, so it costs what one with an account costs;\n* :mod:`~eifi1_server_kit.auth.totp` — the second factor's code: the time step it matches\n  (:func:`totp_matched_step`), the replay rule, a step accepted once\n  (:func:`totp_step_accepted`), and one 2FA challenge for one sign-in\n  (:func:`two_factor_challenge_claims`, :func:`two_factor_challenge_is_spent`);\n* :mod:`~eifi1_server_kit.auth.schemas` — the wire shapes, with the account's text size\n  and contrast (``docs/text-size-harmonization.md`` §6);\n* :mod:`~eifi1_server_kit.auth.errors` — :class:`AuthError` and its codes.",
       "contract": {
         "doc": "docs/auth-harmonization.md",
         "section": "§8",
@@ -24,13 +24,15 @@
           "name": "ABSENT_ACCOUNT_SECRET_BYTES",
           "kind": "constant",
           "signature": "ABSENT_ACCOUNT_SECRET_BYTES = 32",
-          "doc": "The random bytes behind the dummy hash's password (keksdose ``secrets.token_urlsafe(32)``)."
+          "doc": "The random bytes behind the dummy hash's password (keksdose ``secrets.token_urlsafe(32)``).",
+          "value": 32
         },
         {
           "name": "ACCESS_TOKEN_EXPIRE_MINUTES",
           "kind": "constant",
           "signature": "ACCESS_TOKEN_EXPIRE_MINUTES = int(ACCESS_TOKEN_LIFETIME.total_seconds() // 60)",
-          "doc": "The same, in the minutes the apps' settings hold (``access_token_expire_minutes``)."
+          "doc": "The same, in the minutes the apps' settings hold (``access_token_expire_minutes``).",
+          "value": 1440
         },
         {
           "name": "ACCESS_TOKEN_LIFETIME",
@@ -42,7 +44,8 @@
           "name": "ACCESS_TOKEN_TYPE",
           "kind": "constant",
           "signature": "ACCESS_TOKEN_TYPE = \"access\"",
-          "doc": "The ``type`` claim of each JWT; every consumer discriminates on it, so a refresh\ntoken is never accepted as an access token, nor a challenge as either."
+          "doc": "The ``type`` claim of each JWT; every consumer discriminates on it, so a refresh\ntoken is never accepted as an access token, nor a challenge as either.",
+          "value": "access"
         },
         {
           "name": "AUTH_ERROR_DETAIL",
@@ -59,8 +62,8 @@
         {
           "name": "CHALLENGE_LIFETIMES",
           "kind": "constant",
-          "signature": "CHALLENGE_LIFETIMES: Mapping[ChallengeKind, timedelta] = {\n    ChallengeKind.TWO_FACTOR: timedelta(minutes=5),\n    ChallengeKind.PASSWORD_CHANGE: timedelta(minutes=10),\n}",
-          "doc": "How long a challenge lasts (keksdose): five minutes to copy a code out of an app that\nis already open; ten to invent, type and confirm a password."
+          "signature": "CHALLENGE_LIFETIMES: Mapping[ChallengeKind, timedelta] = {\n    ChallengeKind.TWO_FACTOR: timedelta(minutes=5),\n    ChallengeKind.PASSWORD_CHANGE: timedelta(minutes=10),\n    ChallengeKind.WEBAUTHN_REGISTER: timedelta(minutes=5),\n    ChallengeKind.WEBAUTHN_AUTH: timedelta(minutes=5),\n}",
+          "doc": "How long a challenge lasts (keksdose): five minutes to copy a code out of an app that\nis already open; ten to invent, type and confirm a password; five for a passkey\nceremony (keksdose ``_CHALLENGE_TTL_MINUTES``, kastlan ``_WEBAUTHN_LIFETIME``,\nKurvenschmiede ``CHALLENGE_TTL``) — the browser's own prompt gives up after one."
         },
         {
           "name": "CHALLENGE_PER_IP",
@@ -84,7 +87,8 @@
           "name": "DEFAULT_LOCALE",
           "kind": "constant",
           "signature": "DEFAULT_LOCALE = \"de-CH\"",
-          "doc": "What a new account is written to in when the form did not say: the UI's German, the\nkit's fallback language (i18n H7)."
+          "doc": "What a new account is written to in when the form did not say: the UI's German, the\nkit's fallback language (i18n H7).",
+          "value": "de-CH"
         },
         {
           "name": "EMAIL_CHANGE_TOKEN_KIND",
@@ -120,31 +124,36 @@
           "name": "LOCALE_PATTERN",
           "kind": "constant",
           "signature": "LOCALE_PATTERN = r\"^[A-Za-z]{2}(-[A-Za-z0-9]{2,4})?$\"",
-          "doc": "A locale tag as the UI sends it — ``de-CH``, ``en``, ``zh-Hans`` (keksdose\n``ProfileUpdateRequest.locale``). Not a list of shipped languages: an app narrows it."
+          "doc": "A locale tag as the UI sends it — ``de-CH``, ``en``, ``zh-Hans`` (keksdose\n``ProfileUpdateRequest.locale``). Not a list of shipped languages: an app narrows it.",
+          "value": "^[A-Za-z]{2}(-[A-Za-z0-9]{2,4})?$"
         },
         {
           "name": "LOGIN_FAILURES_FREE",
           "kind": "constant",
           "signature": "LOGIN_FAILURES_FREE = 5",
-          "doc": "Failures per address that cost nothing: a person mistyping a password a few times."
+          "doc": "Failures per address that cost nothing: a person mistyping a password a few times.",
+          "value": 5
         },
         {
           "name": "LOGIN_FAILURE_BASE_DELAY",
           "kind": "constant",
           "signature": "LOGIN_FAILURE_BASE_DELAY = 1.0",
-          "doc": "The delay after the first failure past the free ones, doubling with each further one…"
+          "doc": "The delay after the first failure past the free ones, doubling with each further one…",
+          "value": 1
         },
         {
           "name": "LOGIN_FAILURE_MAX_DELAY",
           "kind": "constant",
           "signature": "LOGIN_FAILURE_MAX_DELAY = 30.0",
-          "doc": "…up to this, in seconds. The owner under attack waits at most this long, never more."
+          "doc": "…up to this, in seconds. The owner under attack waits at most this long, never more.",
+          "value": 30
         },
         {
           "name": "LOGIN_FAILURE_WINDOW_SECONDS",
           "kind": "constant",
           "signature": "LOGIN_FAILURE_WINDOW_SECONDS = 900.0",
-          "doc": "How long a failure is remembered."
+          "doc": "How long a failure is remembered.",
+          "value": 900
         },
         {
           "name": "LOGIN_PER_IP",
@@ -156,37 +165,43 @@
           "name": "MAX_EMAIL_LENGTH",
           "kind": "constant",
           "signature": "MAX_EMAIL_LENGTH = 254",
-          "doc": "RFC 5321's path limit, less the angle brackets."
+          "doc": "RFC 5321's path limit, less the angle brackets.",
+          "value": 254
         },
         {
           "name": "MAX_NAME_LENGTH",
           "kind": "constant",
           "signature": "MAX_NAME_LENGTH = 120",
-          "doc": "First and last name, after trimming (§3.1): the old ``display_name`` limit, so a\nmigrated name fits."
+          "doc": "First and last name, after trimming (§3.1): the old ``display_name`` limit, so a\nmigrated name fits.",
+          "value": 120
         },
         {
           "name": "MAX_PASSWORD_BYTES",
           "kind": "constant",
           "signature": "MAX_PASSWORD_BYTES = 72",
-          "doc": "bcrypt hashes at most 72 BYTES, and bcrypt 5 RAISES past it in both the hash and the\ncheck (keksdose ``infrastructure/security.py`` ``BCRYPT_MAX_PASSWORD_BYTES``)."
+          "doc": "bcrypt hashes at most 72 BYTES, and bcrypt 5 RAISES past it in both the hash and the\ncheck (keksdose ``infrastructure/security.py`` ``BCRYPT_MAX_PASSWORD_BYTES``).",
+          "value": 72
         },
         {
           "name": "MAX_ZONE_LENGTH",
           "kind": "constant",
           "signature": "MAX_ZONE_LENGTH = 64",
-          "doc": "The longest IANA name the account's zone columns hold (``String(64)``)."
+          "doc": "The longest IANA name the account's zone columns hold (``String(64)``).",
+          "value": 64
         },
         {
           "name": "MIN_PASSWORD_LENGTH",
           "kind": "constant",
           "signature": "MIN_PASSWORD_LENGTH = 8",
-          "doc": "The one hard rule a NEW password has (keksdose feedback #124); any checklist is advisory."
+          "doc": "The one hard rule a NEW password has (keksdose feedback #124); any checklist is advisory.",
+          "value": 8
         },
         {
           "name": "ONE_TIME_TOKEN_BYTES",
           "kind": "constant",
           "signature": "ONE_TIME_TOKEN_BYTES = 32",
-          "doc": "Entropy of a one-time token's random part; ``token_urlsafe(32)`` is 43 characters."
+          "doc": "Entropy of a one-time token's random part; ``token_urlsafe(32)`` is 43 characters.",
+          "value": 32
         },
         {
           "name": "ONE_TIME_TOKEN_TTLS",
@@ -216,7 +231,8 @@
           "name": "REFRESH_TOKEN_EXPIRE_MINUTES",
           "kind": "constant",
           "signature": "REFRESH_TOKEN_EXPIRE_MINUTES = int(REFRESH_TOKEN_LIFETIME.total_seconds() // 60)",
-          "doc": ""
+          "doc": "",
+          "value": 43200
         },
         {
           "name": "REFRESH_TOKEN_LIFETIME",
@@ -228,7 +244,8 @@
           "name": "REFRESH_TOKEN_TYPE",
           "kind": "constant",
           "signature": "REFRESH_TOKEN_TYPE = \"refresh\"",
-          "doc": ""
+          "doc": "",
+          "value": "refresh"
         },
         {
           "name": "REGISTER_PER_IP",
@@ -264,13 +281,42 @@
           "name": "TAG_SEPARATOR",
           "kind": "constant",
           "signature": "TAG_SEPARATOR = \"+\"",
-          "doc": "What stands between a local part and its tag (RFC 5233 sub-addressing)."
+          "doc": "What stands between a local part and its tag (RFC 5233 sub-addressing).",
+          "value": "+"
         },
         {
           "name": "TEXT_SIZES",
           "kind": "constant",
           "signature": "TEXT_SIZES: tuple[TextSize, ...] = (\"normal\", \"large\", \"xlarge\")",
           "doc": "The text sizes in the settings card's order (text-size §10.6) — the kit's\n``TextSizeSetting`` offers the same three."
+        },
+        {
+          "name": "TOTP_DIGITS",
+          "kind": "constant",
+          "signature": "TOTP_DIGITS = 6",
+          "doc": "A code's digits (RFC 6238's default, every authenticator app's).",
+          "value": 6
+        },
+        {
+          "name": "TOTP_STEP_CLAIM",
+          "kind": "constant",
+          "signature": "TOTP_STEP_CLAIM = \"totp_step\"",
+          "doc": "The 2FA challenge's copy of the account's last accepted step, as it stood at minting\n(keksdose ``infrastructure/security.py:74-77``, kastlan ``domain/services/tokens.py:29-32``).",
+          "value": "totp_step"
+        },
+        {
+          "name": "TOTP_STEP_SECONDS",
+          "kind": "constant",
+          "signature": "TOTP_STEP_SECONDS = 30",
+          "doc": "A time step's length in seconds (RFC 6238 §4.1's ``X``, pyotp's ``interval``).",
+          "value": 30
+        },
+        {
+          "name": "TOTP_WINDOW",
+          "kind": "constant",
+          "signature": "TOTP_WINDOW = 1",
+          "doc": "Steps accepted either side of now (keksdose and kastlan: one, ``valid_window=1``), so a\ncode stays valid for about 90 seconds and a phone a little off still signs in.",
+          "value": 1
         },
         {
           "name": "VERIFICATION_RESEND_PER_RECIPIENT",
@@ -386,7 +432,7 @@
           "name": "ChallengeKind",
           "kind": "enum",
           "signature": "class ChallengeKind(enum.StrEnum)",
-          "doc": "The ``type`` of a sign-in challenge token (keksdose ``infrastructure/security.py``).",
+          "doc": "The ``type`` of a sign-in challenge token (keksdose ``infrastructure/security.py``).\n\nThe two passkey ceremonies (0.21) are keksdose's and kastlan's strings\n(``passkey_service.py:78-79``, ``domain/services/tokens.py:25-26``): a stateless token\ncarries the ceremony's ``challenge`` from ``…/begin`` to ``…/finish`` — put it in\n:func:`challenge_claims`' ``extra`` — and two types, so a registration's challenge can\nnever finish a sign-in. keksdose's E2EE unlock (``webauthn_prf``) stays its own.",
           "values": [
             {
               "name": "TWO_FACTOR",
@@ -395,6 +441,14 @@
             {
               "name": "PASSWORD_CHANGE",
               "value": "password_change"
+            },
+            {
+              "name": "WEBAUTHN_REGISTER",
+              "value": "webauthn_register"
+            },
+            {
+              "name": "WEBAUTHN_AUTH",
+              "value": "webauthn_auth"
             }
           ]
         },
@@ -770,7 +824,7 @@
           "name": "UserResponse",
           "kind": "model",
           "signature": "class UserResponse(BaseModel)",
-          "doc": "``GET /auth/me`` (§6.1): the core every app answers; subclass to add its own.\n\n``display_name`` and ``name_incomplete`` are DERIVED and read-only: computed from\n``first_name`` / ``last_name`` on every serialisation, never accepted as input. The\ndisplay name is written in the user's own ``locale`` — this is the user reading about\nthemselves; the kit formats from first and last name on screen, in the reader's\nlanguage, and uses ``display_name`` only as a fallback (§3.2).\n\n``role`` is the app's vocabulary; narrow it to the app's enum in the subclass.",
+          "doc": "``GET /auth/me`` (§6.1): the core every app answers; subclass to add its own.\n\n``display_name`` and ``name_incomplete`` are DERIVED and read-only: computed from\n``first_name`` / ``last_name`` on every serialisation, never accepted as input. The\ndisplay name is written in the user's own ``locale`` — this is the user reading about\nthemselves; the kit formats from first and last name on screen, in the reader's\nlanguage, and uses ``display_name`` only as a fallback (§3.2).\n\n``role`` is the app's vocabulary; narrow it to the app's enum in the subclass. Since\n0.21 it may be ``None`` — always answered, ``null`` for an account that holds no role:\na kastlan user in no company (its ``MeResponse.role``). An app whose every account has\none narrows it as before (``role: UserRole``, keksdose), and its answer stays a string.",
           "fields": [
             {
               "name": "id",
@@ -804,9 +858,9 @@
             },
             {
               "name": "role",
-              "type": "str",
+              "type": "str | None",
               "default": null,
-              "doc": ""
+              "doc": "The app's role, or ``None`` for an account that holds none (kastlan: in no company).\nRequired all the same: the key is always in the answer."
             },
             {
               "name": "is_active",
@@ -914,8 +968,8 @@
         {
           "name": "challenge_claims",
           "kind": "function",
-          "signature": "challenge_claims(sub: int | str, kind: ChallengeKind, *, now: datetime) -> dict[str, Any]",
-          "doc": "The payload of a sign-in challenge token, at its kind's lifetime (keksdose\n``create_2fa_challenge_token`` / ``create_password_change_challenge_token``).\n\nSingle-purpose through its ``type``: ``get_current_user`` and ``/auth/refresh`` refuse\nit, and each challenge endpoint accepts only its own kind."
+          "signature": "challenge_claims(sub: int | str, kind: ChallengeKind, *, now: datetime, extra: Mapping[str, Any] | None = None) -> dict[str, Any]",
+          "doc": "The payload of a sign-in challenge token, at its kind's lifetime (keksdose\n``create_2fa_challenge_token`` / ``create_password_change_challenge_token``).\n\nSingle-purpose through its ``type``: ``get_current_user`` and ``/auth/refresh`` refuse\nit, and each challenge endpoint accepts only its own kind.\n\n``extra`` (0.21) is what the challenge carries to its finish, under the same rules as an\naccess token's: a passkey ceremony's ``challenge``, the 2FA challenge's ``totp_step``::\n\n    challenge_claims(\"webauthn\", ChallengeKind.WEBAUTHN_AUTH, now=now,\n                     extra={\"challenge\": bytes_to_base64url(options.challenge)})\n\n``iat`` keeps its fraction of a second, which a passkey sign-in compares with the\ncredential's last use (keksdose ``_verify_assertion``, kastlan\n``finish_authentication``)."
         },
         {
           "name": "env_list_match",
@@ -1014,6 +1068,30 @@
           "doc": "Was this token — access or refresh — minted at or before the account's cut-off?\n(keksdose ``auth_service.token_is_revoked``, Kurvenschmiede's line for line.)\n\nCall it with ``claims.get(\"iat\")`` on EVERY request (``get_current_user``) and on\nrefresh: ending only the refresh chain leaves a tab with an access token signed in\nfor the rest of its lifetime.\n\n* No cut-off: never revoked.\n* The comparison is exact, to the microsecond: a token minted after the cut-off in\n  the same second survives — the user who resets and signs straight back in — and\n  one minted at the cut-off itself does not.\n* Fails CLOSED on a token with no ``iat``, or one that is not a number: only an\n  account that has had a cut-off gets this far, so \"I cannot tell when this was\n  issued\" has to mean \"before\". The cost is one extra sign-in for a stale tab.\n\nNot a query: the caller has loaded the user to authenticate at all, and the cut-off\nis a column on it. A naive cut-off (SQLite) is read as UTC."
         },
         {
+          "name": "totp_matched_step",
+          "kind": "function",
+          "signature": "totp_matched_step(secret: str, code: str, *, now: datetime | float, window: int = TOTP_WINDOW) -> int | None",
+          "doc": "The time step ``code`` matches under ``secret`` — ``window`` steps either side of\n``now`` — or ``None`` (keksdose and kastlan ``_matched_step``).\n\n* ``secret`` — the account's TOTP secret, unsealed, base32 (an empty or non-base32 one\n  raises :class:`ValueError`: the app's bug, and the check must not pass);\n* ``code`` — as typed: surrounding whitespace is dropped and the text NFKC-normalised\n  (pyotp's ``strings_equal``: full-width digits read as digits); anything but exactly\n  six digits then is ``None``, as is a backup code;\n* ``now`` — an aware ``datetime`` (a naive one is read as UTC) or a POSIX timestamp, as\n  ``time.time()`` gives: the app's clock seam, so a test steps to the next 30 seconds\n  instead of sleeping through them;\n* ``window`` — steps either side, :data:`TOTP_WINDOW` (1); ``0`` is the current step only.\n\n**The latest match wins**: a code that matches two steps (one in a million) counts for\nthe newer, so a spent older step does not refuse it. Every step in the window is\ncomputed and compared with :func:`hmac.compare_digest`, whatever matched. Pass the\nanswer to :func:`totp_step_accepted` with the account's last accepted step."
+        },
+        {
+          "name": "totp_step_accepted",
+          "kind": "function",
+          "signature": "totp_step_accepted(matched: int | None, last_step: int | None) -> bool",
+          "doc": "May a code of step ``matched`` be accepted, after ``last_step``? (RFC 6238 §5.2,\nkeksdose ``verify_totp``.)\n\nOnly a step AFTER the last accepted one: ``None`` (no match) never, a step at or before\n``last_step`` never — the same code again, or an older one still inside the window —\nand anything when no code was accepted yet (``last_step`` ``None``). On ``True`` the\napp stamps ``matched`` as the account's new last step, in the same transaction."
+        },
+        {
+          "name": "two_factor_challenge_claims",
+          "kind": "function",
+          "signature": "two_factor_challenge_claims(sub: int | str, *, last_step: int | None, now: datetime) -> dict[str, Any]",
+          "doc": "The 2FA challenge's payload: :func:`~eifi1_server_kit.auth.challenge_claims` of\n:attr:`~eifi1_server_kit.auth.ChallengeKind.TWO_FACTOR` (five minutes), with the\naccount's last accepted step under :data:`TOTP_STEP_CLAIM` — ``None`` when it has\naccepted none (keksdose ``create_2fa_challenge_token``, kastlan's the same)."
+        },
+        {
+          "name": "two_factor_challenge_is_spent",
+          "kind": "function",
+          "signature": "two_factor_challenge_is_spent(claims: Mapping[str, Any], last_step: int | None) -> bool",
+          "doc": "Has a code been accepted since this 2FA challenge was minted? (keksdose\n``auth_service.two_factor_challenge_is_spent``, kastlan\n``TwoFactorService.lock_challenge``.)\n\n``claims`` is the decoded challenge, already checked for its type and expiry;\n``last_step`` the account's ``totp_last_step`` NOW — read with the row locked, so two\nredemptions racing each other cannot both see the old step. Spent when its copy\ndiffers: every accepted code moves the step, so after one redemption no copy matches. A\nchallenge without the claim (minted before it existed) reads as ``None``, which matches\nan account that has accepted no code since. Anything but an integer or ``None`` there is\nspent. A spent challenge is refused like an expired one (``token_invalid``)."
+        },
+        {
           "name": "verified_by_invitation",
           "kind": "function",
           "signature": "verified_by_invitation(invited: str, registered: str) -> bool",
@@ -1054,7 +1132,8 @@
           "name": "BACKUP_RETENTION_DAYS",
           "kind": "constant",
           "signature": "BACKUP_RETENTION_DAYS = 7",
-          "doc": "How long a copy survives in the database backups and the deleted-files store after\nthe erasure: the shared Cloud SQL instance's 7 daily backups and 7-day point-in-time\nrecovery, and the uploads bucket's 7-day soft delete (§6.4, keksdose's production\nfigures)."
+          "doc": "How long a copy survives in the database backups and the deleted-files store after\nthe erasure: the shared Cloud SQL instance's 7 daily backups and 7-day point-in-time\nrecovery, and the uploads bucket's 7-day soft delete (§6.4, keksdose's production\nfigures).",
+          "value": 7
         },
         {
           "name": "CONFIRMATION_LEVELS",
@@ -1066,13 +1145,15 @@
           "name": "DEFAULT_DELETION_DAYS",
           "kind": "constant",
           "signature": "DEFAULT_DELETION_DAYS = 30",
-          "doc": "The window before the erasure (§2.1): the user's time to change their mind, the\nadmins' to hand shared work over (Kurvenschmiede), the guests' to export a shared\nbudget (keksdose)."
+          "doc": "The window before the erasure (§2.1): the user's time to change their mind, the\nadmins' to hand shared work over (Kurvenschmiede), the guests' to export a shared\nbudget (keksdose).",
+          "value": 30
         },
         {
           "name": "DEFAULT_PAGE_SIZE",
           "kind": "constant",
           "signature": "DEFAULT_PAGE_SIZE = 25",
-          "doc": "One page of the list, and the most one request may ask for (keksdose): the pager makes\nthe size visible, the cap stops a hand-written ``?limit=100000``."
+          "doc": "One page of the list, and the most one request may ask for (keksdose): the pager makes\nthe size visible, the cap stops a hand-written ``?limit=100000``.",
+          "value": 25
         },
         {
           "name": "DEFAULT_ROSTER_SORT",
@@ -1084,31 +1165,36 @@
           "name": "DETAIL_MAX_BYTES",
           "kind": "constant",
           "signature": "DETAIL_MAX_BYTES = 2048",
-          "doc": "The most a detail weighs as JSON — ids and counts, not a payload."
+          "doc": "The most a detail weighs as JSON — ids and counts, not a payload.",
+          "value": 2048
         },
         {
           "name": "DETAIL_MAX_DEPTH",
           "kind": "constant",
           "signature": "DETAIL_MAX_DEPTH = 3",
-          "doc": "How many objects and lists may enclose a value, ``detail`` itself included:\n``{\"counts\": {\"projects\": 3}}`` encloses the 3 in two, ``{\"before\": {\"roles\":\n[\"ADMIN\"]}}`` the role in three."
+          "doc": "How many objects and lists may enclose a value, ``detail`` itself included:\n``{\"counts\": {\"projects\": 3}}`` encloses the 3 in two, ``{\"before\": {\"roles\":\n[\"ADMIN\"]}}`` the role in three.",
+          "value": 3
         },
         {
           "name": "DETAIL_NAME_MAX_LENGTH",
           "kind": "constant",
           "signature": "DETAIL_NAME_MAX_LENGTH = 200",
-          "doc": "The longest name a ``group_rename`` detail's ``from`` / ``to`` holds (0.16, K8)."
+          "doc": "The longest name a ``group_rename`` detail's ``from`` / ``to`` holds (0.16, K8).",
+          "value": 200
         },
         {
           "name": "DETAIL_TOKEN_MAX_LENGTH",
           "kind": "constant",
           "signature": "DETAIL_TOKEN_MAX_LENGTH = 64",
-          "doc": "The longest string a detail holds: a role, a locale, an ISO timestamp (32), a kind."
+          "doc": "The longest string a detail holds: a role, a locale, an ISO timestamp (32), a kind.",
+          "value": 64
         },
         {
           "name": "EXPORT_FORMAT",
           "kind": "constant",
           "signature": "EXPORT_FORMAT = \"eifi1-account-export\"",
-          "doc": "The envelope's ``format``: what a reader checks before it trusts the rest."
+          "doc": "The envelope's ``format``: what a reader checks before it trusts the rest.",
+          "value": "eifi1-account-export"
         },
         {
           "name": "EXPORT_PER_USER",
@@ -1120,7 +1206,8 @@
           "name": "EXPORT_VERSION",
           "kind": "constant",
           "signature": "EXPORT_VERSION = 1",
-          "doc": "The envelope's ``version``; it changes only when the ENVELOPE does, not when an app\nadds a field to ``account`` or ``data``."
+          "doc": "The envelope's ``version``; it changes only when the ENVELOPE does, not when an app\nadds a field to ``account`` or ``data``.",
+          "value": 1
         },
         {
           "name": "FACT_SUFFIXES",
@@ -1132,49 +1219,57 @@
           "name": "LIKE_ESCAPE",
           "kind": "constant",
           "signature": "LIKE_ESCAPE = \"\\\\\"",
-          "doc": "The escape character :func:`area_like_patterns` uses. Name it in the query\n(SQLAlchemy ``column.like(pattern, escape=LIKE_ESCAPE)``, SQL ``LIKE … ESCAPE '\\'``):\nPostgreSQL defaults to it, SQLite has no default."
+          "doc": "The escape character :func:`area_like_patterns` uses. Name it in the query\n(SQLAlchemy ``column.like(pattern, escape=LIKE_ESCAPE)``, SQL ``LIKE … ESCAPE '\\'``):\nPostgreSQL defaults to it, SQLite has no default.",
+          "value": "\\"
         },
         {
           "name": "LOG_RETENTION_DAYS",
           "kind": "constant",
           "signature": "LOG_RETENTION_DAYS = 30",
-          "doc": "How long the server logs keep a line (Cloud Logging's ``_Default`` bucket, §6.4)."
+          "doc": "How long the server logs keep a line (Cloud Logging's ``_Default`` bucket, §6.4).",
+          "value": 30
         },
         {
           "name": "MAIL_BACKEND_CONSOLE",
           "kind": "constant",
           "signature": "MAIL_BACKEND_CONSOLE = \"console\"",
-          "doc": "The mail backend whose answers may carry a link (§4.1, §5): nothing leaves the\nmachine, so the admin is the only way the link reaches anyone."
+          "doc": "The mail backend whose answers may carry a link (§4.1, §5): nothing leaves the\nmachine, so the admin is the only way the link reaches anyone.",
+          "value": "console"
         },
         {
           "name": "MAX_NOTE_LENGTH",
           "kind": "constant",
           "signature": "MAX_NOTE_LENGTH = 255",
-          "doc": "An invitation's note (kastlan's ``String(255)``)."
+          "doc": "An invitation's note (kastlan's ``String(255)``).",
+          "value": 255
         },
         {
           "name": "MAX_PAGE_SIZE",
           "kind": "constant",
           "signature": "MAX_PAGE_SIZE = 200",
-          "doc": ""
+          "doc": "",
+          "value": 200
         },
         {
           "name": "MAX_REVIEWER_ENTRIES",
           "kind": "constant",
           "signature": "MAX_REVIEWER_ENTRIES = 8",
-          "doc": "Locales and areas in one reviewer grant (keksdose ``AdminReviewerRequest``)."
+          "doc": "Locales and areas in one reviewer grant (keksdose ``AdminReviewerRequest``).",
+          "value": 8
         },
         {
           "name": "MAX_ROLE_LENGTH",
           "kind": "constant",
           "signature": "MAX_ROLE_LENGTH = 64",
-          "doc": "A role value as an app writes it (``ADMIN``, ``PROPERTY_MANAGER``)."
+          "doc": "A role value as an app writes it (``ADMIN``, ``PROPERTY_MANAGER``).",
+          "value": 64
         },
         {
           "name": "MAX_SEARCH_LENGTH",
           "kind": "constant",
           "signature": "MAX_SEARCH_LENGTH = 200",
-          "doc": "The search box's longest query (keksdose ``Query(max_length=200)``)."
+          "doc": "The search box's longest query (keksdose ``Query(max_length=200)``).",
+          "value": 200
         },
         {
           "name": "NEVER_EXPORT",
@@ -1216,7 +1311,8 @@
           "name": "SUMMARY_ACTIVE_ADMINS",
           "kind": "constant",
           "signature": "SUMMARY_ACTIVE_ADMINS = \"active_admins\"",
-          "doc": "The :class:`UserListResponse` ``summary`` key with the count of active admins — what\nthe roster's last-admin lock reads (§4.1)."
+          "doc": "The :class:`UserListResponse` ``summary`` key with the count of active admins — what\nthe roster's last-admin lock reads (§4.1).",
+          "value": "active_admins"
         },
         {
           "name": "AccountError",
@@ -1585,9 +1681,9 @@
             },
             {
               "name": "role",
-              "type": "str",
+              "type": "str | None",
               "default": null,
-              "doc": ""
+              "doc": "The app's role, or ``None`` for an account that holds none (kastlan: in no company).\nRequired all the same: the key is always in the answer."
             },
             {
               "name": "is_active",
@@ -2365,7 +2461,7 @@
           "name": "parse_sort",
           "kind": "function",
           "signature": "parse_sort(raw: str | None, *, keys: Collection[str] = SORT_KEYS) -> tuple[RosterSort, ...]",
-          "doc": "``\"-last_login,name\"`` → ``(RosterSort(\"last_login\", True), RosterSort(\"name\", False))``.\n\n``-key`` and ``key.desc`` sort descending, ``key`` and ``key.asc`` ascending. Nothing\nasked: :data:`DEFAULT_ROSTER_SORT`. An unknown key, an unknown direction, both a ``-``\nand a suffix, or a key twice is a :class:`RosterQueryError` naming it — two\ndirections for one key have no sensible reading (keksdose ``sorting.parse_sort``)."
+          "doc": "``\"-last_login,name\"`` → ``(RosterSort(\"last_login\", True), RosterSort(\"name\", False))``.\n\n``-key`` and ``key.desc`` sort descending, ``key`` and ``key.asc`` ascending — and\n``key.``, the dot with nothing after it, ascending too, as keksdose reads it: its\ngrammar is ``key[.asc|.desc]`` split at the first dot, the direction ``\"\"``, ``asc`` or\n``desc`` (``domain/services/transactions_service.py`` ``parse_sort``, the register's;\nthe roster parsed the same way in ``domain/sorting.py`` until it took this function on\n2026-10-31). The ``-`` is the contract's (§3.1) on top. Nothing asked:\n:data:`DEFAULT_ROSTER_SORT`. An unknown key, an unknown direction, both a ``-`` and a\ndirection, or a key twice is a :class:`RosterQueryError` naming it — two directions\nfor one key have no sensible reading."
         },
         {
           "name": "parse_tokens",
@@ -2401,8 +2497,8 @@
     },
     {
       "name": "eifi1_server_kit.settings",
-      "summary": "Settings on the server: one rule for every settings body, and the account's language.",
-      "doc": "Settings on the server: one rule for every settings body, and the account's language.\n\n``docs/settings-harmonization.md`` §6 in ``Eifi1/ui-kit``. Two things every app's settings\nendpoints share; the endpoints themselves, their models and their columns stay in the app.\n\n**One PATCH rule** (§6.1). Every settings write body — ``PATCH /auth/me``, kastlan's\n``PATCH /company/settings``, keksdose's ``PUT /push/settings`` and ``/push/preferences`` —\nfollows the same five rules, whatever its verb: the rule is about the BODY, so keksdose's\npush writes stay PUT and still follow it.\n\n1. an omitted field keeps its value;\n2. an explicit ``null`` clears a nullable field — back to \"not set\", or to the field's\n   default;\n3. an explicit ``null`` on a field that can't be empty is a 422, never a silent skip;\n4. unknown fields are a 422 (``extra=\"forbid\"``), so a typo is not a silent no-op;\n5. the answer is the whole resource after the change, so the client replaces its copy\n   instead of merging.\n\n:func:`apply_patch` is rules 1–3 over a Pydantic model's ``model_fields_set`` — the one\nplace that tells \"left out\" from \"sent as null\" — and refuses a model that would break\nrule 4. Rule 5 is the endpoint's ``response_model``. The three apps each had their own\nreading of ``null`` before (keksdose's push preferences dropped it, its push settings\nkept the old cadence, kastlan skipped it on a required field, Kurvenschmiede refused it),\nwhich is why it is code now and not a convention.\n\n**The account's language** (§6.2). The account holds ONE ``locale``, canonical, from the\napp's offered languages: :func:`canonical_locale` replaces keksdose's\n``canonical_locale``, kastlan's ``normalize_lang`` and Kurvenschmiede's ``LanguageIn``.\n:func:`parse_accept_language` reads a browser's header for a mail to someone without an\naccount; for everyone with one, mails and pushes use the account's locale and the server\nnever guesses from the request. ``ProfileUpdate`` takes the app's offered languages through\nits ``offered_locales`` knob, or :func:`profile_update_model` builds that class in one call.",
+      "summary": "Settings on the server: one rule for every settings body, the account's language, and the app's secrets at start.",
+      "doc": "Settings on the server: one rule for every settings body, the account's language, and the\napp's secrets at start.\n\n``docs/settings-harmonization.md`` §6 in ``Eifi1/ui-kit``. Two things every app's settings\nendpoints share; the endpoints themselves, their models and their columns stay in the app.\n\n**One PATCH rule** (§6.1). Every settings write body — ``PATCH /auth/me``, kastlan's\n``PATCH /company/settings``, keksdose's ``PUT /push/settings`` and ``/push/preferences`` —\nfollows the same five rules, whatever its verb: the rule is about the BODY, so keksdose's\npush writes stay PUT and still follow it.\n\n1. an omitted field keeps its value;\n2. an explicit ``null`` clears a nullable field — back to \"not set\", or to the field's\n   default;\n3. an explicit ``null`` on a field that can't be empty is a 422, never a silent skip;\n4. unknown fields are a 422 (``extra=\"forbid\"``), so a typo is not a silent no-op;\n5. the answer is the whole resource after the change, so the client replaces its copy\n   instead of merging.\n\n:func:`apply_patch` is rules 1–3 over a Pydantic model's ``model_fields_set`` — the one\nplace that tells \"left out\" from \"sent as null\" — and refuses a model that would break\nrule 4. Rule 5 is the endpoint's ``response_model``. The three apps each had their own\nreading of ``null`` before (keksdose's push preferences dropped it, its push settings\nkept the old cadence, kastlan skipped it on a required field, Kurvenschmiede refused it),\nwhich is why it is code now and not a convention.\n\n**The account's language** (§6.2). The account holds ONE ``locale``, canonical, from the\napp's offered languages: :func:`canonical_locale` replaces keksdose's\n``canonical_locale``, kastlan's ``normalize_lang`` and Kurvenschmiede's ``LanguageIn``.\n:func:`parse_accept_language` reads a browser's header for a mail to someone without an\naccount; for everyone with one, mails and pushes use the account's locale and the server\nnever guesses from the request. ``ProfileUpdate`` takes the app's offered languages through\nits ``offered_locales`` knob, or :func:`profile_update_model` builds that class in one call.\n\n**The app's secrets at start** (0.21, the kastlan reuse audit's proposal 11). Each app\nchecks its signing secret and its keys when it starts and refuses to start in production\non a weak one: :func:`secret_problems` is that check — not set, a placeholder (keksdose's\n``change[-_]?me`` rule, :data:`PLACEHOLDER_SECRET`), too short (:data:`MIN_SECRET_LENGTH`).\nWhat follows from a problem — fatal in production, a warning on a laptop — stays the app's.",
       "contract": {
         "doc": "docs/settings-harmonization.md",
         "section": "§6",
@@ -2417,10 +2513,24 @@
       },
       "members": [
         {
+          "name": "MIN_SECRET_LENGTH",
+          "kind": "constant",
+          "signature": "MIN_SECRET_LENGTH = 32",
+          "doc": "The shortest secret accepted: 32 characters (kastlan ``config.py:194``, its JWT secret and\nits TOTP seal key), 256 bits of hex or more of base64.",
+          "value": 32
+        },
+        {
           "name": "PATCH_NULL_CODE",
           "kind": "constant",
           "signature": "PATCH_NULL_CODE = \"not_nullable\"",
-          "doc": "The ``code`` of :class:`PatchNullError`, named after ``apply_patch``'s ``not_nullable``."
+          "doc": "The ``code`` of :class:`PatchNullError`, named after ``apply_patch``'s ``not_nullable``.",
+          "value": "not_nullable"
+        },
+        {
+          "name": "PLACEHOLDER_SECRET",
+          "kind": "constant",
+          "signature": "PLACEHOLDER_SECRET = re.compile(r\"change[-_]?me\", re.IGNORECASE)",
+          "doc": "An env template's \"replace me\" value, anywhere in it and without case (keksdose\n``infrastructure/settings.py:30-43``): ``CHANGE_ME_…`` in its ``deploy/.env.prod.example``,\n``change-me-…`` in its ``backend/.env.example`` and in kastlan's ``.env.example``,\n``changeme``. Searched, not matched at the start as keksdose's prefix is, so the code\ndefaults that END with it (keksdose's ``dev-secret-change-me``) need no list of their own.\nA pattern rather than a list, so a template line added later is caught without anyone\nkeeping a set in step; a random secret holds it by chance about never."
         },
         {
           "name": "PatchNullError",
@@ -2458,6 +2568,12 @@
           "kind": "function",
           "signature": "profile_update_model(offered: Sequence[str], *, name: str = 'ProfileUpdate') -> type[ProfileUpdate]",
           "doc": "``ProfileUpdate`` for the app's languages, in one call (settings §7.2)::\n\n    ProfileUpdate = profile_update_model((\"de-CH\", \"en\", \"fr\", \"it\"))\n\nA subclass of :class:`~eifi1_server_kit.auth.ProfileUpdate` with ``offered_locales``\nset: everything it already did stays (unknown fields and nulls refused, names trimmed),\nand the locale goes through :func:`canonical_locale` — ``de_ch`` is stored as ``de-CH``,\nand a language the app doesn't offer is a 422. Kurvenschmiede's ``LanguageIn`` override\nand kastlan's own check go.\n\n**An app that adds fields subclasses instead** and sets the knob — mypy takes no\nfunction's result as a base class::\n\n    class ProfileUpdate(kit.ProfileUpdate):\n        offered_locales = LANGUAGES\n        reporting_currency: CurrencyCode | None = None"
+        },
+        {
+          "name": "secret_problems",
+          "kind": "function",
+          "signature": "secret_problems(value: str | None, *, name: str = 'The secret', min_length: int = MIN_SECRET_LENGTH, placeholders: Collection[str] = ()) -> list[str]",
+          "doc": "What is wrong with a secret, as sentences for a startup log; ``[]`` when nothing is\n(keksdose ``is_placeholder_secret``, kastlan ``validate_security``)::\n\n    problems = [\n        *secret_problems(s.jwt_secret, name=\"KASTLAN_JWT_SECRET\"),\n        *secret_problems(s.totp_seal_key, name=\"KASTLAN_TOTP_SEAL_KEY\",\n                         placeholders={\"another-long-random-string-min-32-chars\"}),\n    ]\n    if problems and is_production(s):\n        raise RuntimeError(\"Refusing to start in production: \" + \"; \".join(problems))\n\n* **not set** — ``None``, empty or only whitespace (and nothing else is said);\n* **a placeholder** — :data:`PLACEHOLDER_SECRET` anywhere in it, or one of\n  ``placeholders``, the app's own public values that don't say \"change me\" (a code\n  default, a template line; copies of a template outlive its next edit). A placeholder\n  of any length is public: kastlan's ``change-me-to-a-long-random-string-min-32-chars``\n  passed its 32-character check (the reuse audit's proposal 11). Anyone who signs\n  tokens with it lets a forged ``{\"sub\": \"1\", \"role\": \"ADMIN\"}`` in;\n* **too short** — fewer than ``min_length`` characters, surrounding whitespace not\n  counted (a pasted Secret Manager payload's newline adds nothing).\n\n``name`` begins each sentence: the variable to fix (``KASTLAN_JWT_SECRET``). The value\nitself is never in one, so the list can go to any log. Whether a problem is fatal is\nthe app's: in production, refuse to start; on a laptop, a warning."
         }
       ]
     },
@@ -2494,19 +2610,22 @@
           "name": "DEMO_FIRST_NAME",
           "kind": "constant",
           "signature": "DEMO_FIRST_NAME = \"Demo\"",
-          "doc": "The demo user's first name; it has no last name, so every app passes ``is_demo`` to\n:func:`~eifi1_server_kit.auth.name_incomplete` or each demo is asked to complete it\n(§5.1)."
+          "doc": "The demo user's first name; it has no last name, so every app passes ``is_demo`` to\n:func:`~eifi1_server_kit.auth.name_incomplete` or each demo is asked to complete it\n(§5.1).",
+          "value": "Demo"
         },
         {
           "name": "DEMO_LOCAL_PART",
           "kind": "constant",
           "signature": "DEMO_LOCAL_PART = \"demo\"",
-          "doc": "The local part of every demo address, before its ``+<32 hex>`` tag."
+          "doc": "The local part of every demo address, before its ``+<32 hex>`` tag.",
+          "value": "demo"
         },
         {
           "name": "DEMO_SUBDOMAIN",
           "kind": "constant",
           "signature": "DEMO_SUBDOMAIN = \"demo\"",
-          "doc": "The subdomain of the app's own domain that demo addresses live on. It has no MX record\nand no routing rule, so nothing sent to it can reach anyone (§5.1)."
+          "doc": "The subdomain of the app's own domain that demo addresses live on. It has no MX record\nand no routing rule, so nothing sent to it can reach anyone (§5.1).",
+          "value": "demo"
         },
         {
           "name": "READ_METHODS",
@@ -2518,7 +2637,8 @@
           "name": "REAP_PER_START",
           "kind": "constant",
           "signature": "REAP_PER_START = 20",
-          "doc": "A start reaps at most this many stale demo users, the oldest first (§5.1 step 3, §5.7).\nThe scheduled job, or the next starts, take the rest: a start that had to delete a\nthousand rows would time out, and the live cap would close the demo meanwhile."
+          "doc": "A start reaps at most this many stale demo users, the oldest first (§5.1 step 3, §5.7).\nThe scheduled job, or the next starts, take the rest: a start that had to delete a\nthousand rows would time out, and the live cap would close the demo meanwhile.",
+          "value": 20
         },
         {
           "name": "DemoAdmission",
@@ -2747,7 +2867,7 @@
     {
       "name": "eifi1_server_kit.dev_switch",
       "summary": "The dev switch: in local development only, a signed-in user sets their own role and plan.",
-      "doc": "The dev switch: in local development only, a signed-in user sets their own role and plan.\n\n``docs/top-bar-harmonization.md`` §2.7 and §6.1–§6.3 in ``Eifi1/ui-kit`` (§6 wins). The\nkit's ``DevSwitchers`` (role and plan, flask icon) call ``POST /dev/switch {role?, plan?}``,\nand the SERVER then enforces that role and plan, so the app behaves as it. **The route lets\na user make themselves ADMIN**, so its gate is the point of this module: it must be\nimpossible to switch on in a deployment by accident.\n\nLayer 1, like the rest of the kit: the gate, the startup check, the body, the refusals and\na validator — no route, no database. Each app writes the role and the plan its own way (the\nrecipe below and in the README).\n\n* :class:`DevSwitchSettings` — ``dev_switch_enabled: bool = False``, for the app's settings\n  to inherit (``<APP>_DEV_SWITCH_ENABLED``, set only in the local ``.env``);\n* :func:`dev_switch_enabled` — the gate: the flag AND the app's proof of a local run AND\n  not production; :func:`assert_dev_switch_safe` and :class:`DevSwitchUnsafeError` — the\n  app refuses to start with the flag set in production;\n* :func:`require_dev_switch` — a route dependency that answers 404 whenever the gate\n  doesn't hold, behind the mount;\n* :class:`DevSwitchRequest`, :class:`DevSwitchAnswer` — the wire shapes;\n* :func:`validate_dev_switch` — the app's roles and plans only (422);\n  :class:`DevSwitchError` and :class:`DevSwitchErrorCode` — the refusals.\n\n**The gate is never an environment name** (§6.1). Every app has one that says\n\"development\" where it must not be trusted:\n\n* keksdose runs a HOSTED dev deployment (``keksdose-dev`` on Cloud Run,\n  ``.github/workflows/deploy-dev.yml``), and its only environment-like setting,\n  ``metrics_environment``, defaults to ``\"dev\"`` (``infrastructure/settings.py:711``):\n  gated on it, anyone signed in on the hosted dev service could make themselves ADMIN\n  (review K-1);\n* kastlan's ``environment`` DEFAULTS to ``\"development\"``\n  (``kastlan/infrastructure/config.py:25-27``); a deployment that forgot\n  ``KASTLAN_ENVIRONMENT=production`` would mount the route (F3);\n* Kurvenschmiede's ``KURVENSCHMIEDE_DEPLOYMENT`` defaults to ``development``\n  (``backend/kurvenschmiede/infrastructure/settings.py:135``); only the image bakes in\n  ``production``, so a hand-run backend against a Cloud SQL proxy would mount it (KS 6a).\n\nSo the gate takes three things, and all three must agree: the explicit, off-by-default flag;\nthe app's own proof that this is a local run (kastlan: a loopback database host and no\n``K_SERVICE``, which Cloud Run sets; keksdose: a localhost or local-socket ``database_url``\nand no ``db_socket_dir``; KS ``is_development and is_local_database(settings)``,\n``feedback_loop.py:266``); and the app's production signal, which closes it whatever the\nother two say (kastlan ``environment == \"production\"``; keksdose\n``bool(db_socket_dir) or metrics_environment == \"prod\"``, since both its Cloud Run\nservices set ``KEKSDOSE_DB_SOCKET_DIR``; KS ``deployment is Deployment.PRODUCTION``).\n\n**The recipe** (the kit ships no router for it, as for billing's routes; ``<APP>``,\n``is_local_run`` and ``is_production`` are the app's own, as above)::\n\n    class Settings(BaseSettings, DevSwitchSettings):  # <APP>_DEV_SWITCH_ENABLED=true in .env only\n        model_config = SettingsConfigDict(env_prefix=\"<APP>_\")\n\n    def dev_switch_on(settings: Settings) -> bool:\n        return dev_switch_enabled(\n            flag=settings.dev_switch_enabled,\n            local_run=lambda: is_local_run(settings),  # the app's proof\n            production=is_production(settings),\n        )\n\n    def create_app(settings: Settings) -> FastAPI:\n        assert_dev_switch_safe(flag=settings.dev_switch_enabled, production=is_production(settings))\n        ...\n        if dev_switch_on(settings):  # otherwise the route is absent: 404\n            app.include_router(dev_router)\n\n    dev_router = APIRouter(\n        include_in_schema=False,  # never in the OpenAPI schema\n        dependencies=[Depends(require_dev_switch(lambda: dev_switch_on(get_settings())))],\n    )\n\n    @dev_router.post(DEV_SWITCH_PATH)\n    async def dev_switch(body: DevSwitchRequest, user=Depends(get_current_user), session=Depends(db)) -> DevSwitchAnswer:\n        body = validate_dev_switch(body, roles=ROLES, plans=PLANS)  # a signed-in user, NOT require_admin\n        if body.role is not None:\n            user.role = body.role  # the app's own write, see below\n        if body.plan is not None:\n            await set_plan(session, user, body.plan, comped_until=None)  # the operator's grant, permanent\n        await session.commit()\n        return DevSwitchAnswer(role=user.role, plan=...)\n\n    @dev_router.get(DEV_SWITCH_PATH)\n    async def dev_switch_state(user=Depends(get_current_user)) -> DevSwitchAnswer:\n        return DevSwitchAnswer(role=user.role, plan=...)  # the plan in effect, billing on or off\n\n* **``GET /dev/switch`` is the client's probe** (kastlan B4): behind the same gate, it\n  answers :class:`DevSwitchAnswer` — the role and the plan in effect. A 404 means the gate\n  is shut, so the client hides ``DevSwitchers`` (``enabled={import.meta.env.DEV &&\n  answered}``) rather than drawing switchers with nothing behind them; an answer gives\n  ``currentRole`` and ``currentPlan``, which the overview can't while billing is off.\n\n* **A signed-in user only, never ADMIN** (§6.2): a switch to a lesser role must be able to\n  switch back. The kit's ``DevSwitchers`` keeps the original role in session storage and\n  offers \"Back to {role}\".\n* **The role is written in the local database** (§6.2), since every app reads it from the\n  row on each request: keksdose ``users.role``; kastlan the acting company's\n  ``user_role_assignments`` (replace the caller's roles there), then ``issue_session``;\n  Kurvenschmiede ``users.role`` on the caller's own row, directly, skipping\n  ``admin_service.set_role``'s self and last-admin refusals, but still refusing CUSTOMER\n  for an account that owns work — ``DevSwitchError(DevSwitchErrorCode.DEV_SWITCH_REFUSED,\n  \"Sign in as the seed's customer\")``, a 409.\n* **The plan goes through the operator's grant, permanent** (§6.3): keksdose\n  ``admin_user_actions_service.set_plan(session, user, plan, comped_until=None)``, kastlan\n  ``BillingService.set_plan(company_id, plan, comped_until=None)``, Kurvenschmiede\n  ``billing_service.change_plan(…, comped_until=None, acknowledged=True)`` on the caller's\n  own row. That makes a permanent grant, and Billing §16's permanent-grant warning shows\n  on that account's checkout — EXCEPT on a row under a running beta grant (keksdose\n  before launch, kastlan likewise): ``comped_until=None`` keeps the beta status and source\n  and moves only the plan, so no permanent grant is made and no warning shows. That is\n  accepted: the switch is for previewing limits. With billing off, nothing is enforced;\n  the plan menu says so.\n* **No admin action log entry** — or one tagged :data:`DEV_SWITCH_LOG_TAG` — so a local\n  switch doesn't fill the activity log (review K-3).\n* The client then re-reads ``/auth/me`` and the overview. kastlan's real\n  ``/auth/switch-role`` (a held role) stays as it is.\n\n**The dev clock** (0.20, keksdose dev #640): ``{today: \"2026-10-31\"}`` sets the date the\nserver takes for today, ``{today: null}`` takes it back. An app that keeps one says so with\n``validate_dev_switch(…, clock=True)``; without it a ``today`` is refused (422). The app keeps the override where\nit keeps its other local state (a settings row, a column on the user, a process-wide\nvariable for a one-user dev server) and answers it in :class:`DevSwitchAnswer`; every path\nthat asks for today — scheduled and recurring items, month ends, the forecast — asks\n:func:`effective_today`, which gives the real date whenever the gate is shut::\n\n    def today(settings: Settings, override: date | None) -> date:\n        return effective_today(override, gate=lambda: dev_switch_on(settings), today=app_today)\n\nWhile it is set, the client takes \"today\" from the answer (``GET /dev/switch``), not from\nits own clock, so the dates it works out itself agree with the server's — read at boot,\nbefore the first render (keksdose's 0.51 review): a reload that waits for the dev menu's own\nprobe starts on the device clock until it answers.",
+      "doc": "The dev switch: in local development only, a signed-in user sets their own role and plan.\n\n``docs/top-bar-harmonization.md`` §2.7 and §6.1–§6.3 in ``Eifi1/ui-kit`` (§6 wins). The\nkit's ``DevSwitchers`` (role and plan, flask icon) call ``POST /dev/switch {role?, plan?}``,\nand the SERVER then enforces that role and plan, so the app behaves as it. **The route lets\na user make themselves ADMIN**, so its gate is the point of this module: it must be\nimpossible to switch on in a deployment by accident.\n\nLayer 1, like the rest of the kit: the gate, the startup check, the body, the refusals and\na validator — no route, no database. Each app writes the role and the plan its own way (the\nrecipe below and in the README).\n\n* :class:`DevSwitchSettings` — ``dev_switch_enabled: bool = False``, for the app's settings\n  to inherit (``<APP>_DEV_SWITCH_ENABLED``, set only in the local ``.env``);\n* :func:`dev_switch_enabled` — the gate: the flag AND the app's proof of a local run AND\n  not production; :func:`assert_dev_switch_safe` and :class:`DevSwitchUnsafeError` — the\n  app refuses to start with the flag set in production;\n* :func:`require_dev_switch` — a route dependency that answers 404 whenever the gate\n  doesn't hold, behind the mount;\n* :class:`DevSwitchRequest`, :class:`DevSwitchAnswer` — the wire shapes;\n* :func:`validate_dev_switch` — the app's roles and plans only (422);\n  :class:`DevSwitchError` and :class:`DevSwitchErrorCode` — the refusals.\n\n**The gate is never an environment name** (§6.1). Every app has one that says\n\"development\" where it must not be trusted:\n\n* keksdose runs a HOSTED dev deployment (``keksdose-dev`` on Cloud Run,\n  ``.github/workflows/deploy-dev.yml``), and its only environment-like setting,\n  ``metrics_environment``, defaults to ``\"dev\"`` (``infrastructure/settings.py:711``):\n  gated on it, anyone signed in on the hosted dev service could make themselves ADMIN\n  (review K-1);\n* kastlan's ``environment`` DEFAULTS to ``\"development\"``\n  (``kastlan/infrastructure/config.py:25-27``); a deployment that forgot\n  ``KASTLAN_ENVIRONMENT=production`` would mount the route (F3);\n* Kurvenschmiede's ``KURVENSCHMIEDE_DEPLOYMENT`` defaults to ``development``\n  (``backend/kurvenschmiede/infrastructure/settings.py:135``); only the image bakes in\n  ``production``, so a hand-run backend against a Cloud SQL proxy would mount it (KS 6a).\n\nSo the gate takes three things, and all three must agree: the explicit, off-by-default flag;\nthe app's own proof that this is a local run (kastlan: a loopback database host and no\n``K_SERVICE``, which Cloud Run sets; keksdose: a localhost or local-socket ``database_url``\nand no ``db_socket_dir``; KS ``is_development and is_local_database(settings)``,\n``feedback_loop.py:266``); and the app's production signal, which closes it whatever the\nother two say (kastlan ``environment == \"production\"``; keksdose\n``bool(db_socket_dir) or metrics_environment == \"prod\"``, since both its Cloud Run\nservices set ``KEKSDOSE_DB_SOCKET_DIR``; KS ``deployment is Deployment.PRODUCTION``).\n\n**The database half of that proof** is :func:`database_is_local` (0.21): a loopback host on a\nport the app's own Postgres listens on, or one of the local socket directories — never the\nhost alone, because a tunnel to a deployment's database listens on the loopback too.\n\n**The recipe** (the kit ships no router for it, as for billing's routes; ``<APP>``,\n``is_local_run`` and ``is_production`` are the app's own, as above)::\n\n    class Settings(BaseSettings, DevSwitchSettings):  # <APP>_DEV_SWITCH_ENABLED=true in .env only\n        model_config = SettingsConfigDict(env_prefix=\"<APP>_\")\n\n    def dev_switch_on(settings: Settings) -> bool:\n        return dev_switch_enabled(\n            flag=settings.dev_switch_enabled,\n            local_run=lambda: is_local_run(settings),  # the app's proof\n            production=is_production(settings),\n        )\n\n    def create_app(settings: Settings) -> FastAPI:\n        assert_dev_switch_safe(flag=settings.dev_switch_enabled, production=is_production(settings))\n        ...\n        if dev_switch_on(settings):  # otherwise the route is absent: 404\n            app.include_router(dev_router)\n\n    dev_router = APIRouter(\n        include_in_schema=False,  # never in the OpenAPI schema\n        dependencies=[Depends(require_dev_switch(lambda: dev_switch_on(get_settings())))],\n    )\n\n    @dev_router.post(DEV_SWITCH_PATH)\n    async def dev_switch(body: DevSwitchRequest, user=Depends(get_current_user), session=Depends(db)) -> DevSwitchAnswer:\n        body = validate_dev_switch(body, roles=ROLES, plans=PLANS)  # a signed-in user, NOT require_admin\n        if body.role is not None:\n            user.role = body.role  # the app's own write, see below\n        if body.plan is not None:\n            await set_plan(session, user, body.plan, comped_until=None)  # the operator's grant, permanent\n        await session.commit()\n        return DevSwitchAnswer(role=user.role, plan=...)\n\n    @dev_router.get(DEV_SWITCH_PATH)\n    async def dev_switch_state(user=Depends(get_current_user)) -> DevSwitchAnswer:\n        return DevSwitchAnswer(role=user.role, plan=...)  # the plan in effect, billing on or off\n\n* **``GET /dev/switch`` is the client's probe** (kastlan B4): behind the same gate, it\n  answers :class:`DevSwitchAnswer` — the role and the plan in effect. A 404 means the gate\n  is shut, so the client hides ``DevSwitchers`` (``enabled={import.meta.env.DEV &&\n  answered}``) rather than drawing switchers with nothing behind them; an answer gives\n  ``currentRole`` and ``currentPlan``, which the overview can't while billing is off.\n\n* **A signed-in user only, never ADMIN** (§6.2): a switch to a lesser role must be able to\n  switch back. The kit's ``DevSwitchers`` keeps the original role in session storage and\n  offers \"Back to {role}\".\n* **The role is written in the local database** (§6.2), since every app reads it from the\n  row on each request: keksdose ``users.role``; kastlan the acting company's\n  ``user_role_assignments`` (replace the caller's roles there), then ``issue_session``;\n  Kurvenschmiede ``users.role`` on the caller's own row, directly, skipping\n  ``admin_service.set_role``'s self and last-admin refusals, but still refusing CUSTOMER\n  for an account that owns work — ``DevSwitchError(DevSwitchErrorCode.DEV_SWITCH_REFUSED,\n  \"Sign in as the seed's customer\")``, a 409.\n* **The plan goes through the operator's grant, permanent** (§6.3): keksdose\n  ``admin_user_actions_service.set_plan(session, user, plan, comped_until=None)``, kastlan\n  ``BillingService.set_plan(company_id, plan, comped_until=None)``, Kurvenschmiede\n  ``billing_service.change_plan(…, comped_until=None, acknowledged=True)`` on the caller's\n  own row. That makes a permanent grant, and Billing §16's permanent-grant warning shows\n  on that account's checkout — EXCEPT on a row under a running beta grant (keksdose\n  before launch, kastlan likewise): ``comped_until=None`` keeps the beta status and source\n  and moves only the plan, so no permanent grant is made and no warning shows. That is\n  accepted: the switch is for previewing limits. With billing off, nothing is enforced;\n  the plan menu says so.\n* **No admin action log entry** — or one tagged :data:`DEV_SWITCH_LOG_TAG` — so a local\n  switch doesn't fill the activity log (review K-3).\n* The client then re-reads ``/auth/me`` and the overview. kastlan's real\n  ``/auth/switch-role`` (a held role) stays as it is.\n\n**The dev clock** (0.20, keksdose dev #640): ``{today: \"2026-10-31\"}`` sets the date the\nserver takes for today, ``{today: null}`` takes it back. An app that keeps one says so with\n``validate_dev_switch(…, clock=True)``; without it a ``today`` is refused (422). The app keeps the override where\nit keeps its other local state (a settings row, a column on the user, a process-wide\nvariable for a one-user dev server) and answers it in :class:`DevSwitchAnswer`; every path\nthat asks for today — scheduled and recurring items, month ends, the forecast — asks\n:func:`effective_today`, which gives the real date whenever the gate is shut::\n\n    def today(settings: Settings, override: date | None) -> date:\n        return effective_today(override, gate=lambda: dev_switch_on(settings), today=app_today)\n\nWhile it is set, the client takes \"today\" from the answer (``GET /dev/switch``), not from\nits own clock, so the dates it works out itself agree with the server's — read at boot,\nbefore the first render (keksdose's 0.51 review): a reload that waits for the dev menu's own\nprobe starts on the device clock until it answers.",
       "contract": {
         "doc": "docs/top-bar-harmonization.md",
         "section": "§2.7, §6.1, §6.2, §6.3",
@@ -2792,13 +2912,27 @@
           "name": "DEV_SWITCH_LOG_TAG",
           "kind": "constant",
           "signature": "DEV_SWITCH_LOG_TAG = \"dev_switch\"",
-          "doc": "The tag an app that does log the switch puts on its admin action entry, so a local\nswitch is told apart from an operator's (review K-3). Logging nothing is as good."
+          "doc": "The tag an app that does log the switch puts on its admin action entry, so a local\nswitch is told apart from an operator's (review K-3). Logging nothing is as good.",
+          "value": "dev_switch"
         },
         {
           "name": "DEV_SWITCH_PATH",
           "kind": "constant",
           "signature": "DEV_SWITCH_PATH = \"/dev/switch\"",
-          "doc": "The route, under the app's API prefix (``/api/v1/dev/switch``)."
+          "doc": "The route, under the app's API prefix (``/api/v1/dev/switch``).",
+          "value": "/dev/switch"
+        },
+        {
+          "name": "LOCAL_DATABASE_PORTS",
+          "kind": "constant",
+          "signature": "LOCAL_DATABASE_PORTS: frozenset[int] = frozenset({5432})",
+          "doc": "The ports a local Postgres listens on, for :func:`database_is_local`: Postgres's own,\nwhich every app's default ``database_url`` and setup script use (kastlan\n``config.py:21``, Kurvenschmiede ``settings.py:156``, keksdose's ``setup-test-pg.sh``).\nThe apps' tunnels to their deployments listen elsewhere: kastlan's\n``scripts/feedback-db.sh`` on 5433–5436, keksdose's ``feedback-live-lib.sh`` on 5433,\nKurvenschmiede's ``deploy/gcp/apply-roles.sh`` on 55432."
+        },
+        {
+          "name": "LOCAL_SOCKET_DIRS",
+          "kind": "constant",
+          "signature": "LOCAL_SOCKET_DIRS: frozenset[str] = frozenset({\"/run/postgresql\", \"/var/run/postgresql\", \"/tmp\"})",
+          "doc": "The directories a local Postgres puts its socket in: Debian's and Ubuntu's\n``/var/run/postgresql`` (``/run/postgresql``), and ``/tmp``, Postgres's built-in default\n(Homebrew, Postgres.app). Never ``/cloudsql``, where Cloud Run mounts Cloud SQL's."
         },
         {
           "name": "DevSwitchAnswer",
@@ -2934,6 +3068,12 @@
           "doc": "Refuse to start when the flag is set in production (§6.1):\n:class:`DevSwitchUnsafeError`. Call it while building the app, before anything is\nmounted. An unknown production signal (anything but ``False``) counts as production."
         },
         {
+          "name": "database_is_local",
+          "kind": "function",
+          "signature": "database_is_local(url: str, *, ports: Collection[int] = LOCAL_DATABASE_PORTS, socket_dirs: Collection[str] = LOCAL_SOCKET_DIRS) -> bool",
+          "doc": "Does ``url`` name a Postgres on THIS machine, and not a tunnel to a deployment's? The\ndatabase half of the dev switch's ``local_run`` proof (§6.1)::\n\n    local_run=lambda: database_is_local(settings.database_url) and \"K_SERVICE\" not in os.environ\n\nLocal is one of two things, and nothing else:\n\n* **a loopback host on a port the app's own Postgres listens on** — ``localhost``,\n  127.0.0.0/8 or ``::1``, AND the URL's port (5432 when it names none) in ``ports``\n  (:data:`LOCAL_DATABASE_PORTS`, Postgres's 5432);\n* **a unix socket in a local socket directory** — an absolute ``?host=`` (or a\n  percent-encoded host) that IS one of ``socket_dirs`` (:data:`LOCAL_SOCKET_DIRS`), so\n  ``/cloudsql/<instance>`` and a proxy's ``<dir>/<project:region:instance>`` are not.\n\n**Why not the host alone** (Kurvenschmiede, ``local_run.py:28-35``): a deployment's\ndatabase is reached from a laptop through a ``cloud-sql-proxy`` on 127.0.0.1 — kastlan's\n``scripts/feedback-db.sh`` starts one on 5433–5436 as ``kastlan_app``, the live\ndatabase's own role — so its host reads as local, and an app started against it with\nthe flag set would let its user make themselves ADMIN in production. kastlan's\n``is_local_run`` (``config.py:224-229``) and keksdose's (``dev_switch.py:47-69``) both\nread that tunnel as a laptop. The database's name cannot tell them apart either\n(``kastlan`` on both ends). **The port can**: a local Postgres owns 5432, a tunnel beside\nit cannot listen there too, and every tunnel the three apps start uses another port. So\nnever start a tunnel on 5432, nor on a port the app passes in ``ports``.\n\n**An app whose local Postgres listens elsewhere passes its port** — keksdose's\n``.env.example`` names a Docker Postgres on 5433, ``ports={5432, 5433}`` — but only when\nnone of its tunnels uses that port (keksdose's ``FEEDBACK_PORT`` defaults to 5433:\nmove it first). That is the explicit allow; there is no other.\n\n**Fail-closed** on everything else: a remote host, ``0.0.0.0``; a URL with no host at\nall, where the driver picks one from ``PGHOST`` or the app's ``connect_args`` —\nkeksdose's Cloud Run URL is hostless, its socket set by ``db_socket_dir``; several hosts\nor ports (``h1,h2``); a ``host`` and a port that disagree; an unparsable URL; and\nSQLite, which proves nothing about where the process runs (keksdose's code default, so a\ndeployment that forgot its URL would count as a laptop). Every host a URL names — its\nown and a ``?host=`` — must be local.\n\nOne signal of the proof, not the whole of it: kastlan adds ``K_SERVICE`` (Cloud Run\nsets it), keksdose its ``db_socket_dir``, Kurvenschmiede its shipped key ring."
+        },
+        {
           "name": "dev_switch_enabled",
           "kind": "function",
           "signature": "dev_switch_enabled(*, flag: bool, local_run: bool | Callable[[], bool], production: bool) -> bool",
@@ -2985,13 +3125,15 @@
           "name": "APP_KEY",
           "kind": "constant",
           "signature": "APP_KEY = \"app\"",
-          "doc": "The key of the app's tag in a checkout's custom data (§14.3): the settings'\n``billing_app``."
+          "doc": "The key of the app's tag in a checkout's custom data (§14.3): the settings'\n``billing_app``.",
+          "value": "app"
         },
         {
           "name": "BETA_FREE_MONTHS",
           "kind": "constant",
           "signature": "BETA_FREE_MONTHS = 12",
-          "doc": "A beta payer's free months from the day billing goes on (§2.4)."
+          "doc": "A beta payer's free months from the day billing goes on (§2.4).",
+          "value": 12
         },
         {
           "name": "BILLING_ERROR_DETAIL",
@@ -3009,19 +3151,22 @@
           "name": "BUYER_KEY",
           "kind": "constant",
           "signature": "BUYER_KEY = \"buyer\"",
-          "doc": "The key of the buying person in a checkout's custom data (§15.2.11): kastlan's buying\nadmin, ``\"user:<id>\"``, which its webhook stores as ``provider_payer_user_id`` so that\nonly that admin opens the portal's overview."
+          "doc": "The key of the buying person in a checkout's custom data (§15.2.11): kastlan's buying\nadmin, ``\"user:<id>\"``, which its webhook stores as ``provider_payer_user_id`` so that\nonly that admin opens the portal's overview.",
+          "value": "buyer"
         },
         {
           "name": "CHECKOUT_RETURN_PARAM",
           "kind": "constant",
           "signature": "CHECKOUT_RETURN_PARAM = \"checkout\"",
-          "doc": "The query parameter that marks the return from a checkout on the app's subscription\npage (§14.4): ``?checkout=done``. ui-kit's ``isCheckoutReturn`` reads it."
+          "doc": "The query parameter that marks the return from a checkout on the app's subscription\npage (§14.4): ``?checkout=done``. ui-kit's ``isCheckoutReturn`` reads it.",
+          "value": "checkout"
         },
         {
           "name": "CHECKOUT_RETURN_VALUE",
           "kind": "constant",
           "signature": "CHECKOUT_RETURN_VALUE = \"done\"",
-          "doc": "Its value."
+          "doc": "Its value.",
+          "value": "done"
         },
         {
           "name": "CURRENCY_EXPONENTS",
@@ -3057,7 +3202,8 @@
           "name": "PADDLE_API_VERSION",
           "kind": "constant",
           "signature": "PADDLE_API_VERSION = \"1\"",
-          "doc": "The API version every request names, the ``Paddle-Version`` header."
+          "doc": "The API version every request names, the ``Paddle-Version`` header.",
+          "value": "1"
         },
         {
           "name": "PADDLE_CONFIGURATION_CODES",
@@ -3075,13 +3221,15 @@
           "name": "PADDLE_SIGNATURE_HEADER",
           "kind": "constant",
           "signature": "PADDLE_SIGNATURE_HEADER = \"Paddle-Signature\"",
-          "doc": "Paddle Billing's signature header."
+          "doc": "Paddle Billing's signature header.",
+          "value": "Paddle-Signature"
         },
         {
           "name": "PADDLE_SIGNATURE_TOLERANCE",
           "kind": "constant",
           "signature": "PADDLE_SIGNATURE_TOLERANCE = 5.0",
-          "doc": "How far, in seconds, Paddle's signature timestamp ``ts`` may be from now: Paddle's own\ndefault (its docs: \"Our SDKs have a default tolerance of five seconds between the\ntimestamp and the current time\"). Checked both ways, so a clock running ahead is no\nloophole either. The default of\n:attr:`BillingSettings.billing_signature_tolerance`; exported by\n:mod:`~eifi1_server_kit.billing.signatures`."
+          "doc": "How far, in seconds, Paddle's signature timestamp ``ts`` may be from now: Paddle's own\ndefault (its docs: \"Our SDKs have a default tolerance of five seconds between the\ntimestamp and the current time\"). Checked both ways, so a clock running ahead is no\nloophole either. The default of\n:attr:`BillingSettings.billing_signature_tolerance`; exported by\n:mod:`~eifi1_server_kit.billing.signatures`.",
+          "value": 5
         },
         {
           "name": "PADDLE_STATUSES",
@@ -3093,19 +3241,22 @@
           "name": "PADDLE_TIMEOUT_SECONDS",
           "kind": "constant",
           "signature": "PADDLE_TIMEOUT_SECONDS = 15.0",
-          "doc": "How long one call may take, in seconds (kastlan's)."
+          "doc": "How long one call may take, in seconds (kastlan's).",
+          "value": 15
         },
         {
           "name": "PAYER_REF_KEY",
           "kind": "constant",
           "signature": "PAYER_REF_KEY = \"payer_ref\"",
-          "doc": "The key of the app's payer reference in a checkout's custom data\n(:func:`checkout_custom_data`)."
+          "doc": "The key of the app's payer reference in a checkout's custom data\n(:func:`checkout_custom_data`).",
+          "value": "payer_ref"
         },
         {
           "name": "PLAN_LIMIT_CODE",
           "kind": "constant",
           "signature": "PLAN_LIMIT_CODE = \"plan_limit\"",
-          "doc": "The ``code`` of :class:`PlanLimitError` (§3.4). keksdose's ``plan_budget_limit`` becomes\nthis over two releases (§12.16): release N's frontend accepts both, release N+1's server\nswitches."
+          "doc": "The ``code`` of :class:`PlanLimitError` (§3.4). keksdose's ``plan_budget_limit`` becomes\nthis over two releases (§12.16): release N's frontend accepts both, release N+1's server\nswitches.",
+          "value": "plan_limit"
         },
         {
           "name": "SIGNATURE_HEADERS",
@@ -4962,7 +5113,8 @@
           "name": "JOBS_TOKEN_HEADER",
           "kind": "constant",
           "signature": "JOBS_TOKEN_HEADER = \"X-Jobs-Token\"",
-          "doc": "The header the scheduler sends the token in (Cloud Scheduler's ``--headers``)."
+          "doc": "The header the scheduler sends the token in (Cloud Scheduler's ``--headers``).",
+          "value": "X-Jobs-Token"
         },
         {
           "name": "JobsSettings",
@@ -5032,7 +5184,8 @@
           "name": "MAIL_TEST_KIND",
           "kind": "constant",
           "signature": "MAIL_TEST_KIND = \"mail_test\"",
-          "doc": "The ``kind`` the admin's test mail is sent and logged under, and its metric label\n(keksdose ``record_email``; kastlan's kinds at ``email.py:65``)."
+          "doc": "The ``kind`` the admin's test mail is sent and logged under, and its metric label\n(keksdose ``record_email``; kastlan's kinds at ``email.py:65``).",
+          "value": "mail_test"
         },
         {
           "name": "MAIL_TEST_LIMIT",
@@ -5044,25 +5197,28 @@
           "name": "RESEND_ENDPOINT",
           "kind": "constant",
           "signature": "RESEND_ENDPOINT = \"https://api.resend.com/emails\"",
-          "doc": "Resend's send endpoint (keksdose, Kurvenschmiede, kastlan)."
+          "doc": "Resend's send endpoint (keksdose, Kurvenschmiede, kastlan).",
+          "value": "https://api.resend.com/emails"
         },
         {
           "name": "SUPPORT_LOCAL_PART",
           "kind": "constant",
           "signature": "SUPPORT_LOCAL_PART = \"support\"",
-          "doc": "The local part :func:`support_address` puts on the sender's domain."
+          "doc": "The local part :func:`support_address` puts on the sender's domain.",
+          "value": "support"
         },
         {
           "name": "TIMEOUT_SECONDS",
           "kind": "constant",
           "signature": "TIMEOUT_SECONDS = 10.0",
-          "doc": "Per attempt (keksdose ``TIMEOUT_SECONDS``)."
+          "doc": "Per attempt (keksdose ``TIMEOUT_SECONDS``).",
+          "value": 10
         },
         {
           "name": "AccountNoticeKind",
           "kind": "enum",
           "signature": "class AccountNoticeKind(enum.StrEnum)",
-          "doc": "The account mails that carry no one-time token, as the ``kind`` they are sent and\nlogged under (KS S5): each TELLS an address something rather than asking it to prove\nanything, so :class:`~eifi1_server_kit.auth.OneTimeTokenKind` has no word for them.\nNot ``MailKind``, which is :mod:`~eifi1_server_kit.user_admin`'s word for the mail an\nadmin sends again. None has a switch or an unsubscribe link: they are about the\naccount itself.\n\nThe user-admin contract requires the first two of every app with an email change and\nan account deletion; the third is Kurvenschmiede's, for its admin transfer of work\n(notifications §9.3)::\n\n    await mailer.send(user.email, message, kind=AccountNoticeKind.ACCOUNT_DELETION)",
+          "doc": "The account mails that carry no one-time token, as the ``kind`` they are sent and\nlogged under (KS S5): each TELLS an address something rather than asking it to prove\nanything, so :class:`~eifi1_server_kit.auth.OneTimeTokenKind` has no word for them.\nNot ``MailKind``, which is :mod:`~eifi1_server_kit.user_admin`'s word for the mail an\nadmin sends again. None has a switch or an unsubscribe link: they are about the\naccount itself.\n\nThe user-admin contract requires the first two of every app with an email change and\nan account deletion; the third is Kurvenschmiede's, for its admin transfer of work\n(notifications §9.3); the fifth tells an account a passkey was added (keksdose)::\n\n    await mailer.send(user.email, message, kind=AccountNoticeKind.ACCOUNT_DELETION)",
           "values": [
             {
               "name": "EMAIL_CHANGE_NOTICE",
@@ -5079,6 +5235,10 @@
             {
               "name": "FEEDBACK_PUBLISHED",
               "value": "feedback_published"
+            },
+            {
+              "name": "PASSKEY_ADDED_NOTICE",
+              "value": "passkey_added_notice"
             }
           ]
         },
@@ -5291,7 +5451,7 @@
           "name": "ResendClient",
           "kind": "class",
           "signature": "class ResendClient",
-          "doc": "One POST to Resend's HTTP API per mail (keksdose, Kurvenschmiede ``send_email``).\n\n``api_key`` and ``from_address`` are injected — the app's settings, never read here;\n``from_address`` must be on a domain verified with Resend. ``reply_to`` is where a\nreply goes — the app's ``*_EMAIL_REPLY_TO`` setting, by default\n``support_address(from_address)``; ``None`` or empty sends none. ``client`` is an\n``httpx.AsyncClient`` the app owns and closes (tests pass one with a\n``MockTransport``); without it each send opens and closes its own.\n\n**At most one retry**, and only where a second attempt can help: a transport error (no\nconnection, a timeout) or an answer of ``429`` / ``5xx``. A ``4xx`` — a bad key, an\nunverified sender — fails at once. Both attempts carry the same ``Idempotency-Key``, so\na first attempt that did reach Resend before the timeout is not sent twice: the\nmessage's :attr:`~MailMessage.idempotency_key` where it has one (a job's notification\nmail, notifications §9.4), else a random ``{kind}-{uuid}``. No queue, no delivery\ntracking: a handful of mails, each awaited by somebody at the app.\n\n**Resend's idempotency** (its docs, 2026-10-14): a key is kept 24 hours; the same key\nwith the same body answers the first request's answer, and nothing is sent again; a\n``409`` is the same key while its first request is still in progress\n(``concurrent_idempotent_requests``) or with another body\n(``invalid_idempotent_request``). A ``409`` is \"not sent\" here and not retried: the\nrequest that holds the key has the mail, and a job's next run tries again under the\nnext day's key.\n\nThe log lines name the ``kind`` and Resend's answer, never the recipient.",
+          "doc": "One POST to Resend's HTTP API per mail (keksdose, Kurvenschmiede ``send_email``).\n\n``api_key`` and ``from_address`` are injected — the app's settings, never read here;\n``from_address`` must be on a domain verified with Resend. ``reply_to`` is where a\nreply goes — the app's ``*_EMAIL_REPLY_TO`` setting, by default\n``support_address(from_address)``; ``None`` or empty sends none. ``client`` is an\n``httpx.AsyncClient`` the app owns and closes (tests pass one with a\n``MockTransport``); without it each send opens and closes its own.\n\n**At most one retry**, and only where a second attempt can help: a transport error (no\nconnection, a timeout) or an answer of ``429`` / ``5xx``. A ``4xx`` — a bad key, an\nunverified sender — fails at once. Both attempts carry the same ``Idempotency-Key``, so\na first attempt that did reach Resend before the timeout is not sent twice: the\nmessage's :attr:`~MailMessage.idempotency_key` where it has one (a job's notification\nmail, notifications §9.4), else a random ``{kind}-{uuid}``. No queue, no delivery\ntracking: a handful of mails, each awaited by somebody at the app.\n\n**Resend's idempotency** (its docs, 2026-10-14): a key is kept 24 hours; the same key\nwith the same body answers the first request's answer, and nothing is sent again; a\n``409`` is the same key while its first request is still in progress\n(``concurrent_idempotent_requests``) or with another body\n(``invalid_idempotent_request``). A ``409`` is \"not sent\" here and not retried: the\nrequest that holds the key has the mail, and a job's next run tries again under the\nnext day's key.\n\n**The log lines name the ``kind``, the status and Resend's error ``name``, never the\nrecipient** (0.21, kastlan ``infrastructure/email.py:100-138``): never Resend's body,\nwhose ``message`` can name the address it refused (``Invalid `to` field…``), and a log\nis kept for 30 days. A ``name`` that is not a plain identifier (``validation_error``) is\nleft out too. The kastlan reuse audit (proposal 12) found 0.20's ``response.text[:500]``.",
           "methods": [
             {
               "name": "__init__",
@@ -5385,7 +5545,8 @@
           "name": "DEFAULT_ZONE",
           "kind": "constant",
           "signature": "DEFAULT_ZONE = \"Europe/Zurich\"",
-          "doc": "The zone for an account that has none, or one ``zoneinfo`` no longer knows (decision 6):\nthe zone both billing notices are already written in."
+          "doc": "The zone for an account that has none, or one ``zoneinfo`` no longer knows (decision 6):\nthe zone both billing notices are already written in.",
+          "value": "Europe/Zurich"
         },
         {
           "name": "DIGEST_CADENCES",
@@ -5397,19 +5558,22 @@
           "name": "DIGEST_LATE_DAYS",
           "kind": "constant",
           "signature": "DIGEST_LATE_DAYS = 3",
-          "doc": "How many days after the period's first local day a digest is still due (decision 5): a\nTuesday digest after a missed Monday is right, its content is the view as of that day."
+          "doc": "How many days after the period's first local day a digest is still due (decision 5): a\nTuesday digest after a missed Monday is right, its content is the view as of that day.",
+          "value": 3
         },
         {
           "name": "INBOX_PAGE_DEFAULT",
           "kind": "constant",
           "signature": "INBOX_PAGE_DEFAULT = 50",
-          "doc": "``GET /notifications/inbox``'s page when no ``limit`` is sent (keksdose's 50)."
+          "doc": "``GET /notifications/inbox``'s page when no ``limit`` is sent (keksdose's 50).",
+          "value": 50
         },
         {
           "name": "INBOX_PAGE_MAX",
           "kind": "constant",
           "signature": "INBOX_PAGE_MAX = 200",
-          "doc": "The largest ``limit`` the route takes (keksdose's 200)."
+          "doc": "The largest ``limit`` the route takes (keksdose's 200).",
+          "value": 200
         },
         {
           "name": "INBOX_RETENTION",
@@ -5421,13 +5585,15 @@
           "name": "MAIL_EVENT_PATTERN",
           "kind": "constant",
           "signature": "MAIL_EVENT_PATTERN = r\"^[A-Za-z0-9][A-Za-z0-9:._-]{0,63}$\"",
-          "doc": "An event key: 1–64 letters, digits and ``:._-``, a letter or digit first. It fits the\nmarker's ``event VARCHAR(64)``."
+          "doc": "An event key: 1–64 letters, digits and ``:._-``, a letter or digit first. It fits the\nmarker's ``event VARCHAR(64)``.",
+          "value": "^[A-Za-z0-9][A-Za-z0-9:._-]{0,63}$"
         },
         {
           "name": "MAIL_LATE_DAYS",
           "kind": "constant",
           "signature": "MAIL_LATE_DAYS = 3",
-          "doc": "How many days after its event's day a job's notification mail is still owed (decision\n5): billing's and the digest's grace (``NOTICE_LATE_LIMIT``, ``DIGEST_LATE_DAYS``)."
+          "doc": "How many days after its event's day a job's notification mail is still owed (decision\n5): billing's and the digest's grace (``NOTICE_LATE_LIMIT``, ``DIGEST_LATE_DAYS``).",
+          "value": 3
         },
         {
           "name": "MAIL_MARKER_RETENTION",
@@ -5445,31 +5611,36 @@
           "name": "PUSH_MAX_FAILURES",
           "kind": "constant",
           "signature": "PUSH_MAX_FAILURES = 10",
-          "doc": "Failures in a row after which the daily job deletes a device (keksdose\n``push_max_failures``). Every success resets the count."
+          "doc": "Failures in a row after which the daily job deletes a device (keksdose\n``push_max_failures``). Every success resets the count.",
+          "value": 10
         },
         {
           "name": "PUSH_PAYLOAD_LIMIT",
           "kind": "constant",
           "signature": "PUSH_PAYLOAD_LIMIT = 3072",
-          "doc": "The encoded payload's ceiling in bytes. Web Push carries about 4 KB once encrypted; 3 KB\nof JSON leaves room for the encryption's overhead."
+          "doc": "The encoded payload's ceiling in bytes. Web Push carries about 4 KB once encrypted; 3 KB\nof JSON leaves room for the encryption's overhead.",
+          "value": 3072
         },
         {
           "name": "PUSH_TEST_TYPE",
           "kind": "constant",
           "signature": "PUSH_TEST_TYPE = \"test\"",
-          "doc": "The payload's ``data.type`` for a test push, the account's own and an admin's alike."
+          "doc": "The payload's ``data.type`` for a test push, the account's own and an admin's alike.",
+          "value": "test"
         },
         {
           "name": "PUSH_TIMEOUT",
           "kind": "constant",
           "signature": "PUSH_TIMEOUT = 10.0",
-          "doc": "Seconds one send may take before it counts as failed (keksdose ``push_timeout_seconds``)."
+          "doc": "Seconds one send may take before it counts as failed (keksdose ``push_timeout_seconds``).",
+          "value": 10
         },
         {
           "name": "PUSH_TTL",
           "kind": "constant",
           "signature": "PUSH_TTL = 86_400",
-          "doc": "Seconds a push service keeps a message for a device that is offline (keksdose\n``push_ttl_seconds``): a day."
+          "doc": "Seconds a push service keeps a message for a device that is offline (keksdose\n``push_ttl_seconds``): a day.",
+          "value": 86400
         },
         {
           "name": "QUEUE_CLAIM_TIMEOUT",
@@ -5481,19 +5652,22 @@
           "name": "QUEUE_FLUSH_LIMIT",
           "kind": "constant",
           "signature": "QUEUE_FLUSH_LIMIT = 500",
-          "doc": "How many rows one flush claims at most; the next tick takes the rest."
+          "doc": "How many rows one flush claims at most; the next tick takes the rest.",
+          "value": 500
         },
         {
           "name": "QUEUE_MAX_ATTEMPTS",
           "kind": "constant",
           "signature": "QUEUE_MAX_ATTEMPTS = 3",
-          "doc": "Claims after which an item that never went is dropped ``\"failed\"``."
+          "doc": "Claims after which an item that never went is dropped ``\"failed\"``.",
+          "value": 3
         },
         {
           "name": "QUEUE_MORE",
           "kind": "constant",
           "signature": "QUEUE_MORE = \"+{n} more\"",
-          "doc": "A collapsed held push's body when the item gave no words of its own: ``{n}`` is the\nnumber of OTHER held items. The app passes the recipient's language at enqueue\n(:meth:`QueueService.hold_push`'s ``more``)."
+          "doc": "A collapsed held push's body when the item gave no words of its own: ``{n}`` is the\nnumber of OTHER held items. The app passes the recipient's language at enqueue\n(:meth:`QueueService.hold_push`'s ``more``).",
+          "value": "+{n} more"
         },
         {
           "name": "QUEUE_RETENTION",
@@ -5505,7 +5679,8 @@
           "name": "QUIET_HOURS_PATTERN",
           "kind": "constant",
           "signature": "QUIET_HOURS_PATTERN = r\"^([01]\\d|2[0-3]):[0-5]\\d$\"",
-          "doc": "A quiet-hours bound: local ``HH:MM``, 00:00–23:59 (keksdose ``schemas/push.py:106-107``)."
+          "doc": "A quiet-hours bound: local ``HH:MM``, 00:00–23:59 (keksdose ``schemas/push.py:106-107``).",
+          "value": "^([01]\\d|2[0-3]):[0-5]\\d$"
         },
         {
           "name": "SETTINGS_NOT_NULLABLE",
@@ -5523,7 +5698,8 @@
           "name": "TYPE_ID_PATTERN",
           "kind": "constant",
           "signature": "TYPE_ID_PATTERN = r\"^[a-z][a-z0-9_]{1,39}$\"",
-          "doc": "A type id: lower case, digits and ``_``, 2–40 characters, starting with a letter — it\nfits keksdose's ``notification_preferences.notification_type String(40)``."
+          "doc": "A type id: lower case, digits and ``_``, 2–40 characters, starting with a letter — it\nfits keksdose's ``notification_preferences.notification_type String(40)``.",
+          "value": "^[a-z][a-z0-9_]{1,39}$"
         },
         {
           "name": "Delivery",
@@ -6937,7 +7113,8 @@
           "name": "ATTACHMENT_MARKER",
           "kind": "constant",
           "signature": "ATTACHMENT_MARKER = \"[screenshot]\"",
-          "doc": "The marker of one file line. It says ``[screenshot]`` for a PDF or a text log too: the\nname is history, the format is contract (keksdose live #291)."
+          "doc": "The marker of one file line. It says ``[screenshot]`` for a PDF or a text log too: the\nname is history, the format is contract (keksdose live #291).",
+          "value": "[screenshot]"
         },
         {
           "name": "AUTHOR_EDITABLE_FIELDS",
@@ -6967,13 +7144,15 @@
           "name": "COMMENTS_THROTTLED_DETAIL",
           "kind": "constant",
           "signature": "COMMENTS_THROTTLED_DETAIL = \"Too many comments — please try again later.\"",
-          "doc": "The comment and vote windows' sentences (§9.2 decision 19), on the same 429."
+          "doc": "The comment and vote windows' sentences (§9.2 decision 19), on the same 429.",
+          "value": "Too many comments — please try again later."
         },
         {
           "name": "COMMENT_MAX",
           "kind": "constant",
           "signature": "COMMENT_MAX = 4000",
-          "doc": "A comment's body, after trimming: 1–4000 characters, plain text (9.8); its one file, since\n0.18, is a field of its own (§12), never a URL in the text."
+          "doc": "A comment's body, after trimming: 1–4000 characters, plain text (9.8); its one file, since\n0.18, is a field of its own (§12), never a URL in the text.",
+          "value": 4000
         },
         {
           "name": "CONTEXT_KEYS",
@@ -6997,25 +7176,29 @@
           "name": "DEFAULT_ATTACHMENT_URL_PREFIX",
           "kind": "constant",
           "signature": "DEFAULT_ATTACHMENT_URL_PREFIX = \"/api/v1/feedback/attachments/\"",
-          "doc": "Where every app serves attachments (contract §3.3), the ``/api/v1`` prefix included,\nbecause the stored URL is what a client GETs back."
+          "doc": "Where every app serves attachments (contract §3.3), the ``/api/v1`` prefix included,\nbecause the stored URL is what a client GETs back.",
+          "value": "/api/v1/feedback/attachments/"
         },
         {
           "name": "ERASED_MARK",
           "kind": "constant",
           "signature": "ERASED_MARK = \"[erased]\"",
-          "doc": "What replaces the erased person's own identifiers where they were written INTO the text\n(a crash body's ``User: <email> (#<id>)`` line, keksdose ``_ERASED_MARK``)."
+          "doc": "What replaces the erased person's own identifiers where they were written INTO the text\n(a crash body's ``User: <email> (#<id>)`` line, keksdose ``_ERASED_MARK``).",
+          "value": "[erased]"
         },
         {
           "name": "FEEDBACK_ANSWERED",
           "kind": "constant",
           "signature": "FEEDBACK_ANSWERED = \"feedback_answered\"",
-          "doc": "The notification type a reply fires, to the author and the earlier commenters (9.11).\nA reply only (``kind = 'reply'``): a rework entry sends nothing — no\n``feedback_answered``, commenters not told, no admin mail (§10.2 decision 10); the REWORK\nstatus, or the Rework chip on an OPEN row, is the inbox's signal. An admin's reply with\nstatus REWORK is a reply and fires it."
+          "doc": "The notification type a reply fires, to the author and the earlier commenters (9.11).\nA reply only (``kind = 'reply'``): a rework entry sends nothing — no\n``feedback_answered``, commenters not told, no admin mail (§10.2 decision 10); the REWORK\nstatus, or the Rework chip on an OPEN row, is the inbox's signal. An admin's reply with\nstatus REWORK is a reply and fires it.",
+          "value": "feedback_answered"
         },
         {
           "name": "FEEDBACK_COMMENT",
           "kind": "constant",
           "signature": "FEEDBACK_COMMENT = \"feedback_comment\"",
-          "doc": "The notification type a visible comment fires, to the same people (9.11)."
+          "doc": "The notification type a visible comment fires, to the same people (9.11).",
+          "value": "feedback_comment"
         },
         {
           "name": "FEEDBACK_CONTEXT_KEEP",
@@ -7027,61 +7210,71 @@
           "name": "FEEDBACK_RECEIVED",
           "kind": "constant",
           "signature": "FEEDBACK_RECEIVED = \"feedback_received\"",
-          "doc": "The admins' notification type (§11.2 Settled 1), declared by every app."
+          "doc": "The admins' notification type (§11.2 Settled 1), declared by every app.",
+          "value": "feedback_received"
         },
         {
           "name": "LEGACY_REWORK_APPEND",
           "kind": "constant",
           "signature": "LEGACY_REWORK_APPEND = \"legacy_rework_append\"",
-          "doc": "The code of :class:`LegacyReworkAppendError` (§10.3, since 0.16)."
+          "doc": "The code of :class:`LegacyReworkAppendError` (§10.3, since 0.16).",
+          "value": "legacy_rework_append"
         },
         {
           "name": "LEGACY_REWORK_APPEND_DETAIL",
           "kind": "constant",
           "signature": "LEGACY_REWORK_APPEND_DETAIL = \"This page is out of date: reload it, then send the report back again.\"",
-          "doc": "Its sentence: only a tab older than the deploy still sends the append, and a reload mends it."
+          "doc": "Its sentence: only a tab older than the deploy still sends the append, and a reload mends it.",
+          "value": "This page is out of date: reload it, then send the report back again."
         },
         {
           "name": "MAX_ATTACHMENT_BYTES",
           "kind": "constant",
           "signature": "MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024",
-          "doc": "Per-file ceiling (contract §3.5; keksdose ``upload_guards.py:197`` ``ATTACHMENT_MAX_BYTES``)."
+          "doc": "Per-file ceiling (contract §3.5; keksdose ``upload_guards.py:197`` ``ATTACHMENT_MAX_BYTES``).",
+          "value": 10485760
         },
         {
           "name": "MAX_ATTACHMENT_URLS",
           "kind": "constant",
           "signature": "MAX_ATTACHMENT_URLS = 5",
-          "doc": "How many files one report carries besides its one screenshot (keksdose\n``schemas/feedback.py:14`` ``MAX_ATTACHMENT_URLS``; the kit's dialog stops at it)."
+          "doc": "How many files one report carries besides its one screenshot (keksdose\n``schemas/feedback.py:14`` ``MAX_ATTACHMENT_URLS``; the kit's dialog stops at it).",
+          "value": 5
         },
         {
           "name": "MAX_BODY_LENGTH",
           "kind": "constant",
           "signature": "MAX_BODY_LENGTH = 50_000",
-          "doc": "A report's text and every rework appended to it: generous, because each rework adds to\nit; bounded, because it is a column somebody else's request writes (Kurvenschmiede\n``schemas/feedback.py:61`` ``MAX_BODY``)."
+          "doc": "A report's text and every rework appended to it: generous, because each rework adds to\nit; bounded, because it is a column somebody else's request writes (Kurvenschmiede\n``schemas/feedback.py:61`` ``MAX_BODY``).",
+          "value": 50000
         },
         {
           "name": "MAX_CONTEXT_SIZE",
           "kind": "constant",
           "signature": "MAX_CONTEXT_SIZE = 8 * 1024",
-          "doc": "The cap on a sent ``context``, measured as Kurvenschmiede measures it\n(``schemas/feedback.py:69`` ``MAX_CONTEXT_BYTES``, ``:144``): the length of\n``json.dumps(context, ensure_ascii=False)``. The ten keys fit in a fraction of it."
+          "doc": "The cap on a sent ``context``, measured as Kurvenschmiede measures it\n(``schemas/feedback.py:69`` ``MAX_CONTEXT_BYTES``, ``:144``): the length of\n``json.dumps(context, ensure_ascii=False)``. The ten keys fit in a fraction of it.",
+          "value": 8192
         },
         {
           "name": "MAX_SCREENSHOT_URL_LENGTH",
           "kind": "constant",
           "signature": "MAX_SCREENSHOT_URL_LENGTH = 500",
-          "doc": "keksdose's ``screenshot_url`` column is ``String(500)``."
+          "doc": "keksdose's ``screenshot_url`` column is ``String(500)``.",
+          "value": 500
         },
         {
           "name": "MAX_TITLE_LENGTH",
           "kind": "constant",
           "signature": "MAX_TITLE_LENGTH = 255",
-          "doc": "``feedback.title`` is ``String(255)`` in every app."
+          "doc": "``feedback.title`` is ``String(255)`` in every app.",
+          "value": 255
         },
         {
           "name": "MIN_NEEDLE_LENGTH",
           "kind": "constant",
           "signature": "MIN_NEEDLE_LENGTH = 4",
-          "doc": "Needles shorter than this are skipped: a 3-character display name (\"Bob\") appears inside\nordinary words, and the email is the identifier that matters."
+          "doc": "Needles shorter than this are skipped: a 3-character display name (\"Bob\") appears inside\nordinary words, and the email is the identifier that matters.",
+          "value": 4
         },
         {
           "name": "NOT_NULLABLE_FIELDS",
@@ -7093,13 +7286,15 @@
           "name": "OPAQUE_KEY_PATTERN",
           "kind": "constant",
           "signature": "OPAQUE_KEY_PATTERN = r\"[\\w-][\\w.-]*\"",
-          "doc": "Any opaque key: word characters, dots and dashes, not starting with a dot."
+          "doc": "Any opaque key: word characters, dots and dashes, not starting with a dot.",
+          "value": "[\\w-][\\w.-]*"
         },
         {
           "name": "OUTCOME_READ_ONLY",
           "kind": "constant",
           "signature": "OUTCOME_READ_ONLY = \"outcome is read-only; post a reply\"",
-          "doc": "Why a PATCH naming ``outcome`` is refused (§9.7): the answer is a list of replies now."
+          "doc": "Why a PATCH naming ``outcome`` is refused (§9.7): the answer is a list of replies now.",
+          "value": "outcome is read-only; post a reply"
         },
         {
           "name": "PICKABLE_CATEGORIES",
@@ -7117,13 +7312,15 @@
           "name": "PUBLIC_PAGE_MAX",
           "kind": "constant",
           "signature": "PUBLIC_PAGE_MAX = 100",
-          "doc": ""
+          "doc": "",
+          "value": 100
         },
         {
           "name": "PUBLIC_PAGE_SIZE",
           "kind": "constant",
           "signature": "PUBLIC_PAGE_SIZE = 50",
-          "doc": "The public list's page (9.9): 50 rows unless asked, at most 100."
+          "doc": "The public list's page (9.9): 50 rows unless asked, at most 100.",
+          "value": 50
         },
         {
           "name": "PUBLIC_REPLY_FIELDS",
@@ -7147,19 +7344,22 @@
           "name": "REFERENCE_LENGTH",
           "kind": "constant",
           "signature": "REFERENCE_LENGTH = 8",
-          "doc": "How many characters of the fingerprint the client is shown to quote."
+          "doc": "How many characters of the fingerprint the client is shown to quote.",
+          "value": 8
         },
         {
           "name": "REMOVED_URL",
           "kind": "constant",
           "signature": "REMOVED_URL = \"[…]\"",
-          "doc": "What a removed attachment URL leaves behind (9.4)."
+          "doc": "What a removed attachment URL leaves behind (9.4).",
+          "value": "[…]"
         },
         {
           "name": "REPLY_MAX",
           "kind": "constant",
           "signature": "REPLY_MAX = 8000",
-          "doc": "A reply's body, after trimming: 1–8000 characters (9.7)."
+          "doc": "A reply's body, after trimming: 1–8000 characters (9.7).",
+          "value": 8000
         },
         {
           "name": "REWORKABLE_STATUSES",
@@ -7171,7 +7371,8 @@
           "name": "REWORK_AUTHOR_ONLY",
           "kind": "constant",
           "signature": "REWORK_AUTHOR_ONLY = \"Only the author sends a report back; an admin replies\"",
-          "doc": "Why anyone but the report's author is refused a rework entry (§10.3): an admin answers\nwith a reply, which offers REWORK as a status."
+          "doc": "Why anyone but the report's author is refused a rework entry (§10.3): an admin answers\nwith a reply, which offers REWORK as a status.",
+          "value": "Only the author sends a report back; an admin replies"
         },
         {
           "name": "REWORK_BLOCK_RE",
@@ -7189,13 +7390,15 @@
           "name": "REWORK_STAMP_FORMAT",
           "kind": "constant",
           "signature": "REWORK_STAMP_FORMAT = \"%Y-%m-%d %H:%M\"",
-          "doc": "``YYYY-MM-DD HH:MM``, UTC — ``new Date().toISOString().slice(0, 16).replace(\"T\", \" \")``\n(keksdose ``feedback-page.tsx:351``)."
+          "doc": "``YYYY-MM-DD HH:MM``, UTC — ``new Date().toISOString().slice(0, 16).replace(\"T\", \" \")``\n(keksdose ``feedback-page.tsx:351``).",
+          "value": "%Y-%m-%d %H:%M"
         },
         {
           "name": "SHA12_KEY_PATTERN",
           "kind": "constant",
           "signature": "SHA12_KEY_PATTERN = rf\"[a-f0-9]{{12}}\\.(?:{_EXTENSIONS})\"",
-          "doc": "keksdose's (and, without ``jpeg``, Kurvenschmiede's) content-addressed key."
+          "doc": "keksdose's (and, without ``jpeg``, Kurvenschmiede's) content-addressed key.",
+          "value": "[a-f0-9]{12}\\.(?:png|jpg|jpeg|webp|gif|pdf|txt)"
         },
         {
           "name": "TERMINAL_STATUSES",
@@ -7207,19 +7410,22 @@
           "name": "THROTTLED_DETAIL",
           "kind": "constant",
           "signature": "THROTTLED_DETAIL = \"Too many attachments uploaded — please try again later.\"",
-          "doc": "The upload throttle's sentence, keksdose's (``upload_guards.py:97``); its support door\nraises it too, through :func:`eifi1_server_kit.feedback.throttle_upload`."
+          "doc": "The upload throttle's sentence, keksdose's (``upload_guards.py:97``); its support door\nraises it too, through :func:`eifi1_server_kit.feedback.throttle_upload`.",
+          "value": "Too many attachments uploaded — please try again later."
         },
         {
           "name": "UUID32_SHA12_KEY_PATTERN",
           "kind": "constant",
           "signature": "UUID32_SHA12_KEY_PATTERN = rf\"[0-9a-f]{{32}}_[0-9a-f]{{12}}\\.(?:{_EXTENSIONS})\"",
-          "doc": "kastlan's ``FileStoragePort`` key: ``<uuid4 hex>_<sha256[:12]>.<ext>``."
+          "doc": "kastlan's ``FileStoragePort`` key: ``<uuid4 hex>_<sha256[:12]>.<ext>``.",
+          "value": "[0-9a-f]{32}_[0-9a-f]{12}\\.(?:png|jpg|jpeg|webp|gif|pdf|txt)"
         },
         {
           "name": "VOTES_THROTTLED_DETAIL",
           "kind": "constant",
           "signature": "VOTES_THROTTLED_DETAIL = \"Too many votes — please try again later.\"",
-          "doc": ""
+          "doc": "",
+          "value": "Too many votes — please try again later."
         },
         {
           "name": "AnonymisedFeedback",
@@ -9883,31 +10089,36 @@
           "name": "TOUR_ID_PATTERN",
           "kind": "constant",
           "signature": "TOUR_ID_PATTERN = r\"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$\"",
-          "doc": "A tour's id (§10.2.2): a letter or digit, then up to 63 of letters, digits, ``.``,\n``_`` and ``-``. kastlan's ids are camelCase (``addBuilding``). The server knows no\ntour list, so any well-formed id is taken."
+          "doc": "A tour's id (§10.2.2): a letter or digit, then up to 63 of letters, digits, ``.``,\n``_`` and ``-``. kastlan's ids are camelCase (``addBuilding``). The server knows no\ntour list, so any well-formed id is taken.",
+          "value": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
         },
         {
           "name": "TOUR_PROGRESS_CONFLICT",
           "kind": "constant",
           "signature": "TOUR_PROGRESS_CONFLICT: Final = \"tour_progress_conflict\"",
-          "doc": "One id both in ``completed`` and in ``forget``."
+          "doc": "One id both in ``completed`` and in ``forget``.",
+          "value": "tour_progress_conflict"
         },
         {
           "name": "TOUR_PROGRESS_EXPORT_KEY",
           "kind": "constant",
           "signature": "TOUR_PROGRESS_EXPORT_KEY = \"tour_progress\"",
-          "doc": "Where an app's account export puts :meth:`TourProgressService.export` (§10.2.9):\n``data[\"tour_progress\"]``."
+          "doc": "Where an app's account export puts :meth:`TourProgressService.export` (§10.2.9):\n``data[\"tour_progress\"]``.",
+          "value": "tour_progress"
         },
         {
           "name": "TOUR_PROGRESS_FULL",
           "kind": "constant",
           "signature": "TOUR_PROGRESS_FULL: Final = \"tour_progress_full\"",
-          "doc": "More than 500 entries in one body, or more than 500 tours on the account."
+          "doc": "More than 500 entries in one body, or more than 500 tours on the account.",
+          "value": "tour_progress_full"
         },
         {
           "name": "TOUR_PROGRESS_LIMIT",
           "kind": "constant",
           "signature": "TOUR_PROGRESS_LIMIT = 500",
-          "doc": "At most this many entries in one body (``completed`` and ``forget`` together) and this\nmany tours on one account; beyond either, 422 ``tour_progress_full``."
+          "doc": "At most this many entries in one body (``completed`` and ``forget`` together) and this\nmany tours on one account; beyond either, 422 ``tour_progress_full``.",
+          "value": 500
         },
         {
           "name": "TourId",
@@ -10162,7 +10373,8 @@
           "name": "MAX_ATTACHMENT_BYTES",
           "kind": "constant",
           "signature": "MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024",
-          "doc": "Per-file ceiling (contract §3.5; keksdose ``upload_guards.py:197`` ``ATTACHMENT_MAX_BYTES``)."
+          "doc": "Per-file ceiling (contract §3.5; keksdose ``upload_guards.py:197`` ``ATTACHMENT_MAX_BYTES``).",
+          "value": 10485760
         },
         {
           "name": "UNDECODABLE_IMAGE_TYPES",
@@ -10378,7 +10590,7 @@
     {
       "name": "eifi1_server_kit.limiter",
       "summary": "An in-process sliding-window rate limiter: at most N hits per key per window.",
-      "doc": "An in-process sliding-window rate limiter: at most N hits per key per window.\n\nkeksdose ``backend/keksdose/infrastructure/rate_limit.py:45-124``\n``SlidingWindowRateLimiter``, unchanged in behaviour — the lock, the blocked-hit rule and\nthe once-per-window sweep included. kastlan's copy (``infrastructure/rate_limit.py``) has\nthe same constructor and ``hit``/``reset``, so it swaps in as is.\n\n**Process-local.** The window lives in this process's memory: each Cloud Run instance and\neach uvicorn worker keeps its own counters (Kurvenschmiede's 2 workers make \"20 an hour\"\nan effective 40). It bounds one client hammering one process — a browser stuck in a render\nloop — not a cross-instance total. ``hit()`` is the whole contract, so a shared store\n(Redis, a table) could replace the deques without touching a caller.\n\n**No module globals here.** Build limiters per app — in ``create_app``, on\n``app.state`` — so a test that builds an app per test starts with empty windows\n(Kurvenschmiede ``infrastructure/security.py:288`` ``AuthLimiters`` / ``FeedbackLimiters``).\n:class:`FeedbackLimiters` is that pair for the feedback routes.\n\n**Whose address a window counts** is :func:`client_ip`'s answer: counted from the RIGHT of\n``X-Forwarded-For``, as many hops as the app has proxies — never the left-most entry,\nwhich the client writes itself.\n\n**When to charge: before the work.** Call ``hit()`` where a request starts costing the\nserver something — the feedback contract's rule since round 0.36 (§3.5, §3.6, as all\nthree apps did; ``docs/server-services-harmonization.md`` §2.11), and what\n:mod:`eifi1_server_kit.feedback.service` does:\n\n* uploads — BEFORE the file is read and checked (keksdose\n  ``upload_guards.throttle_attachment``), so a refused file uses a slot;\n* crashes — BEFORE the dedupe (keksdose ``feedback_router.py:155``), so repeats count and\n  ``occurrences`` stops rising after 20 an hour.",
+      "doc": "An in-process sliding-window rate limiter: at most N hits per key per window.\n\nkeksdose ``backend/keksdose/infrastructure/rate_limit.py:45-124``\n``SlidingWindowRateLimiter``, unchanged in behaviour — the lock, the blocked-hit rule and\nthe once-per-window sweep included. kastlan's copy (``infrastructure/rate_limit.py``) has\nthe same constructor and ``hit``/``reset``, so it swaps in as is.\n\n**Process-local.** The window lives in this process's memory: each Cloud Run instance and\neach uvicorn worker keeps its own counters (Kurvenschmiede's 2 workers make \"20 an hour\"\nan effective 40). It bounds one client hammering one process — a browser stuck in a render\nloop — not a cross-instance total. ``hit()`` is the whole contract, so a shared store\n(Redis, a table) could replace the deques without touching a caller.\n\n**No module globals here.** Build limiters per app — in ``create_app``, on\n``app.state`` — so a test that builds an app per test starts with empty windows\n(Kurvenschmiede ``infrastructure/security.py:288`` ``AuthLimiters`` / ``FeedbackLimiters``).\n:class:`FeedbackLimiters` is that pair for the feedback routes.\n\n**Whose address a window counts** is :func:`client_ip`'s answer: counted from the RIGHT of\n``X-Forwarded-For``, as many hops as the app has proxies — never the left-most entry,\nwhich the client writes itself.\n\n**When to charge: before the work.** Call ``hit()`` where a request starts costing the\nserver something — the feedback contract's rule since round 0.36 (§3.5, §3.6, as all\nthree apps did; ``docs/server-services-harmonization.md`` §2.11), and what\n:mod:`eifi1_server_kit.feedback.service` does:\n\n* uploads — BEFORE the file is read and checked (keksdose\n  ``upload_guards.throttle_attachment``), so a refused file uses a slot;\n* crashes — BEFORE the dedupe (keksdose ``feedback_router.py:155``), so repeats count and\n  ``occurrences`` stops rising after 20 an hour.\n\n**Refusing: one 429** (0.21, the kastlan reuse audit's proposal 10). :func:`charge` charges\none hit and raises :class:`ThrottledError` when the window is full: 429, the app's own\nsentence as ``{\"detail\": …}`` — no ``code``, Marcel's decision of 2026-11-04 — and a\n``Retry-After`` in whole seconds (:func:`retry_after_header`), through\n:func:`~eifi1_server_kit.errors.install_contract_error_handlers`. It replaces the\n``HTTPException`` each app raised by hand: kastlan ``auth_helpers.throttle``, keksdose\n``auth_router._throttle``, Kurvenschmiede ``auth_router._hold``.",
       "contract": {
         "doc": "docs/feedback-harmonization.md",
         "section": "§3.5, §3.6",
@@ -10401,31 +10613,36 @@
           "name": "FEEDBACK_COMMENTS_PER_HOUR",
           "kind": "constant",
           "signature": "FEEDBACK_COMMENTS_PER_HOUR = 20",
-          "doc": "Public feedback's budgets (feedback §9.2 decision 19): 20 comments and 60 votes (a vote\nand an unvote alike) per user per hour."
+          "doc": "Public feedback's budgets (feedback §9.2 decision 19): 20 comments and 60 votes (a vote\nand an unvote alike) per user per hour.",
+          "value": 20
         },
         {
           "name": "FEEDBACK_CRASHES_PER_HOUR",
           "kind": "constant",
           "signature": "FEEDBACK_CRASHES_PER_HOUR = 20",
-          "doc": ""
+          "doc": "",
+          "value": 20
         },
         {
           "name": "FEEDBACK_UPLOADS_PER_HOUR",
           "kind": "constant",
           "signature": "FEEDBACK_UPLOADS_PER_HOUR = 20",
-          "doc": "The contract's budgets (§3.5, §3.6): 20 uploads and 20 crash reports per user per hour."
+          "doc": "The contract's budgets (§3.5, §3.6): 20 uploads and 20 crash reports per user per hour.",
+          "value": 20
         },
         {
           "name": "FEEDBACK_VOTES_PER_HOUR",
           "kind": "constant",
           "signature": "FEEDBACK_VOTES_PER_HOUR = 60",
-          "doc": ""
+          "doc": "",
+          "value": 60
         },
         {
           "name": "UNKNOWN_CLIENT",
           "kind": "constant",
           "signature": "UNKNOWN_CLIENT = \"unknown\"",
-          "doc": "What :func:`client_ip` answers when it has no address at all (keksdose ``client_ip``)."
+          "doc": "What :func:`client_ip` answers when it has no address at all (keksdose ``client_ip``).",
+          "value": "unknown"
         },
         {
           "name": "Clock",
@@ -10500,6 +10717,30 @@
           ]
         },
         {
+          "name": "ThrottledError",
+          "kind": "class",
+          "signature": "class ThrottledError(ValueError)",
+          "doc": "The window is full (→ 429): ``{\"detail\": <the app's sentence>}`` with a\n``Retry-After`` in whole seconds, rounded up (:func:`retry_after_header`), answered by\n:func:`~eifi1_server_kit.errors.install_contract_error_handlers` — FastAPI's own\n``HTTPException`` body, so no client can tell it from the apps' hand-raised 429s.\n\n**No** ``code`` (Marcel, 2026-11-04): the sentence is for the person, ``Retry-After``\nfor everything that is not a browser. A ``ValueError`` like every kit refusal, so an\napp's ``ValueError`` → 400 handler cannot swallow its status. Raise it through\n:func:`charge`, or with a ``hit()`` answer of the app's own.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(detail: str, retry_after: float) -> None",
+              "doc": ""
+            },
+            {
+              "name": "headers",
+              "signature": "@property headers -> dict[str, str]",
+              "doc": "``{\"Retry-After\": …}`` — the header the answer carries."
+            }
+          ]
+        },
+        {
+          "name": "charge",
+          "kind": "function",
+          "signature": "charge(limiter: SlidingWindowRateLimiter, key: str, detail: str | Callable[[int], str]) -> None",
+          "doc": "Charge one hit to ``key``'s window, or refuse: :class:`ThrottledError` (429,\n``Retry-After``) when the window is full::\n\n    charge(limiters.login, client_ip(...), \"Too many sign-in attempts — please try again in a moment.\")\n\n``detail`` is the app's sentence, or a function of the seconds the ``Retry-After``\nsays, so the sentence and the header agree (Kurvenschmiede's)::\n\n    charge(limiters.register, ip, lambda seconds: f\"Too many new accounts from this address. Try again in {seconds} seconds.\")\n\n**A** ``hit()`` **of** ``0.0`` **is a refusal**: the oldest hit leaves the window this\nvery instant, and the attempt was not recorded — so the check is ``is not None``,\nnever truthiness (keksdose ``_throttle``'s note), and the header says ``1``. A\ndisabled limiter allows every hit."
+        },
+        {
           "name": "client_ip",
           "kind": "function",
           "signature": "client_ip(headers: Mapping[str, str], peer: str | None, *, trusted_hops: int) -> str",
@@ -10509,14 +10750,14 @@
           "name": "retry_after_header",
           "kind": "function",
           "signature": "retry_after_header(wait_seconds: float) -> str",
-          "doc": "The ``Retry-After`` value for a ``hit()`` answer: whole seconds, rounded up past it\n(keksdose ``upload_guards.py:82``: ``str(int(retry_after) + 1)``)."
+          "doc": "The ``Retry-After`` value for a ``hit()`` answer: whole seconds, rounded up past it\n(keksdose ``upload_guards.py:82``: ``str(int(retry_after) + 1)``), so never ``0`` — a\n``hit()`` of ``0.0`` is ``\"1\"`` — and a client that waits that long is let in. Every kit\n429 carries it: :class:`ThrottledError`, the feedback routes', the demo's."
         }
       ]
     },
     {
       "name": "eifi1_server_kit.errors",
       "summary": "The kit's refusals as HTTP answers: one call, so no app maps them by hand — or forgets to.",
-      "doc": "The kit's refusals as HTTP answers: one call, so no app maps them by hand — or forgets to.\n\nEvery refusal the kit raises is a plain exception carrying the contract's status as\n``status_code`` (:class:`~eifi1_server_kit.feedback.FeedbackError` 422 / 403 / 404 / 429,\n:class:`~eifi1_server_kit.uploads.UploadRejectedError` 400 / 413 / 415, the translation\nreview's 422 / 403, :class:`~eifi1_server_kit.auth.AuthError` 400 / 401 / 403 / 409,\nuser administration's :class:`~eifi1_server_kit.user_admin.AccountError` 409 and\n:class:`~eifi1_server_kit.user_admin.RosterQueryError` 422, the settings rule's\n:class:`~eifi1_server_kit.settings.PatchNullError` 422, the demo's\n:class:`~eifi1_server_kit.demo.DemoError` 403 / 404 / 429 / 503, the dev switch's\n:class:`~eifi1_server_kit.dev_switch.DevSwitchError` 404 / 409 / 422, and billing's\n:class:`~eifi1_server_kit.billing.BillingError` 400 / 402 / 404 / 409 / 422 / 502 / 503 and\n:class:`~eifi1_server_kit.billing.PlanLimitError` 402, a token route's\n:class:`~eifi1_server_kit.jobs.JobsTokenError` 401, and the notifications'\n:class:`~eifi1_server_kit.notifications.NotificationError` 400 / 409 / 422, and tour\nprogress's :class:`~eifi1_server_kit.tours.TourProgressError` 422).\nMost of them are :class:`ValueError` subclasses — on purpose, so one\nraised inside a Pydantic validator is still a 422 there — and that is the trap this module\ncloses: keksdose (``main.py:166``) and Kurvenschmiede (``main.py:193``) each answer every\nuncaught ``ValueError`` with a 400, so a kit refusal that slipped past an endpoint's own\n``except`` came out as 400 instead of 403, 415 or 422, silently.\n\n:func:`install_contract_error_handlers` registers one handler for each kit base class.\nStarlette picks the handler by walking the exception's MRO\n(``starlette/_exception_handler.py`` ``_lookup_exception_handler``) and takes the first\nclass it has one for, so ``FeedbackForbiddenError`` reaches the ``FeedbackError`` handler\nbefore ``ValueError``'s — whichever was registered first. An endpoint's own ``except``\nstill wins over both; this answers only what nobody caught. The body is FastAPI's own\n``HTTPException`` shape, ``{\"detail\": str(exc)}``, so no client can tell the difference —\nplus ``\"code\"`` for a refusal that carries one (:class:`~eifi1_server_kit.auth.AuthError`:\n``{\"detail\": \"Invalid credentials\", \"code\": \"invalid_credentials\"}``), which the kit's\npages switch on instead of the English detail — and the refusal's ``extra`` fields, for\none that names something (:class:`~eifi1_server_kit.user_admin.AccountError`: kastlan's\n``{\"detail\": …, \"code\": \"last_admin\", \"companies\": [...]}``; a plan limit's ``dimension``,\n``plan``, ``limit`` and ``used``) — and the refusal's\n``headers``, for one that carries a ``Retry-After``\n(:class:`~eifi1_server_kit.demo.DemoError`'s ``demo_rate_limited``).\n\nkastlan routes its refusals through ``DomainError`` and may keep mapping kit errors\nthere; the installer is the same answer without the mapping.\n\n**A 422 never echoes the request** (0.17.0). FastAPI's own ``RequestValidationError``\nanswer puts each error's ``input`` (and ``ctx``, and pydantic's ``url``) in the body — so\na too-long password in ``LoginRequest``, ``EmailChangeRequest`` or ``DeletionRequest``, a\nmalformed ``EmailChangeConfirm`` token, any body's values came back in the 422 and landed\nin request and response logs. On a FastAPI app the installer also registers\n:func:`validation_error_response`: FastAPI's same shape, ``{\"detail\": [{\"type\", \"loc\",\n\"msg\"}, ...]}``, without ``input``, ``ctx`` or ``url``, for every route — no app has to\ntake bodies untyped and parse them by hand. An app's own ``RequestValidationError``\nhandler is kept: registered before the call, the kit leaves it alone; registered after,\nit replaces the kit's as any later registration does. ``redact_validation_errors=False``\nkeeps FastAPI's echoing answer.",
+      "doc": "The kit's refusals as HTTP answers: one call, so no app maps them by hand — or forgets to.\n\nEvery refusal the kit raises is a plain exception carrying the contract's status as\n``status_code`` (:class:`~eifi1_server_kit.feedback.FeedbackError` 422 / 403 / 404 / 429,\n:class:`~eifi1_server_kit.uploads.UploadRejectedError` 400 / 413 / 415, the translation\nreview's 422 / 403, :class:`~eifi1_server_kit.auth.AuthError` 400 / 401 / 403 / 409,\nuser administration's :class:`~eifi1_server_kit.user_admin.AccountError` 409 and\n:class:`~eifi1_server_kit.user_admin.RosterQueryError` 422, the settings rule's\n:class:`~eifi1_server_kit.settings.PatchNullError` 422, the demo's\n:class:`~eifi1_server_kit.demo.DemoError` 403 / 404 / 429 / 503, the dev switch's\n:class:`~eifi1_server_kit.dev_switch.DevSwitchError` 404 / 409 / 422, and billing's\n:class:`~eifi1_server_kit.billing.BillingError` 400 / 402 / 404 / 409 / 422 / 502 / 503 and\n:class:`~eifi1_server_kit.billing.PlanLimitError` 402, a token route's\n:class:`~eifi1_server_kit.jobs.JobsTokenError` 401, and the notifications'\n:class:`~eifi1_server_kit.notifications.NotificationError` 400 / 409 / 422, and tour\nprogress's :class:`~eifi1_server_kit.tours.TourProgressError` 422, and a full window's\n:class:`~eifi1_server_kit.limiter.ThrottledError` 429, uncoded, with its ``Retry-After``).\nMost of them are :class:`ValueError` subclasses — on purpose, so one\nraised inside a Pydantic validator is still a 422 there — and that is the trap this module\ncloses: keksdose (``main.py:166``) and Kurvenschmiede (``main.py:193``) each answer every\nuncaught ``ValueError`` with a 400, so a kit refusal that slipped past an endpoint's own\n``except`` came out as 400 instead of 403, 415 or 422, silently.\n\n:func:`install_contract_error_handlers` registers one handler for each kit base class.\nStarlette picks the handler by walking the exception's MRO\n(``starlette/_exception_handler.py`` ``_lookup_exception_handler``) and takes the first\nclass it has one for, so ``FeedbackForbiddenError`` reaches the ``FeedbackError`` handler\nbefore ``ValueError``'s — whichever was registered first. An endpoint's own ``except``\nstill wins over both; this answers only what nobody caught. The body is FastAPI's own\n``HTTPException`` shape, ``{\"detail\": str(exc)}``, so no client can tell the difference —\nplus ``\"code\"`` for a refusal that carries one (:class:`~eifi1_server_kit.auth.AuthError`:\n``{\"detail\": \"Invalid credentials\", \"code\": \"invalid_credentials\"}``), which the kit's\npages switch on instead of the English detail — and the refusal's ``extra`` fields, for\none that names something (:class:`~eifi1_server_kit.user_admin.AccountError`: kastlan's\n``{\"detail\": …, \"code\": \"last_admin\", \"companies\": [...]}``; a plan limit's ``dimension``,\n``plan``, ``limit`` and ``used``) — and the refusal's\n``headers``, for one that carries a ``Retry-After``\n(:class:`~eifi1_server_kit.demo.DemoError`'s ``demo_rate_limited``).\n\nkastlan routes its refusals through ``DomainError`` and may keep mapping kit errors\nthere; the installer is the same answer without the mapping.\n\n**A 422 never echoes the request** (0.17.0). FastAPI's own ``RequestValidationError``\nanswer puts each error's ``input`` (and ``ctx``, and pydantic's ``url``) in the body — so\na too-long password in ``LoginRequest``, ``EmailChangeRequest`` or ``DeletionRequest``, a\nmalformed ``EmailChangeConfirm`` token, any body's values came back in the 422 and landed\nin request and response logs. On a FastAPI app the installer also registers\n:func:`validation_error_response`: FastAPI's same shape, ``{\"detail\": [{\"type\", \"loc\",\n\"msg\"}, ...]}``, without ``input``, ``ctx`` or ``url``, for every route — no app has to\ntake bodies untyped and parse them by hand. An app's own ``RequestValidationError``\nhandler is kept: registered before the call, the kit leaves it alone; registered after,\nit replaces the kit's as any later registration does. ``redact_validation_errors=False``\nkeeps FastAPI's echoing answer.",
       "contract": {
         "doc": "docs/feedback-harmonization.md",
         "section": "§3.7",
@@ -10533,14 +10774,14 @@
         {
           "name": "CONTRACT_ERRORS",
           "kind": "constant",
-          "signature": "CONTRACT_ERRORS: tuple[type[Exception], ...] = (\n    FeedbackError,\n    UploadRejectedError,\n    TranslationLocaleError,\n    TranslationAreaError,\n    TranslationAccessError,\n    AuthError,\n    AccountError,\n    RosterQueryError,\n    PatchNullError,\n    DemoError,\n    DevSwitchError,\n    BillingError,\n    PlanLimitError,\n    JobsTokenError,\n    NotificationError,\n    TourProgressError,\n)",
+          "signature": "CONTRACT_ERRORS: tuple[type[Exception], ...] = (\n    FeedbackError,\n    UploadRejectedError,\n    TranslationLocaleError,\n    TranslationAreaError,\n    TranslationAccessError,\n    AuthError,\n    AccountError,\n    RosterQueryError,\n    PatchNullError,\n    DemoError,\n    DevSwitchError,\n    BillingError,\n    PlanLimitError,\n    JobsTokenError,\n    NotificationError,\n    TourProgressError,\n    ThrottledError,\n)",
           "doc": "Every kit exception base that carries a ``status_code``; subclasses are covered by MRO."
         },
         {
           "name": "contract_error_response",
           "kind": "function",
           "signature": "async contract_error_response(_request: Request, exc: Exception) -> Response",
-          "doc": "``{\"detail\": str(exc)}`` at the refusal's own ``status_code`` — the handler\n:func:`install_contract_error_handlers` registers, for an app that registers it itself.\n\nA refusal with a ``code`` (:class:`~eifi1_server_kit.auth.AuthError`,\n:class:`~eifi1_server_kit.user_admin.AccountError`,\n:class:`~eifi1_server_kit.settings.PatchNullError`) adds it: ``{\"detail\": …, \"code\":\n…}``, and then its ``extra`` fields beside them — never in place of them. Those without\na code answer exactly as before. A refusal's ``headers`` mapping goes on the answer\n(:class:`~eifi1_server_kit.demo.DemoError`'s ``Retry-After``), as an ``HTTPException``'s\nwould."
+          "doc": "``{\"detail\": str(exc)}`` at the refusal's own ``status_code`` — the handler\n:func:`install_contract_error_handlers` registers, for an app that registers it itself.\n\nA refusal with a ``code`` (:class:`~eifi1_server_kit.auth.AuthError`,\n:class:`~eifi1_server_kit.user_admin.AccountError`,\n:class:`~eifi1_server_kit.settings.PatchNullError`) adds it: ``{\"detail\": …, \"code\":\n…}``, and then its ``extra`` fields beside them — never in place of them. Those without\na code answer exactly as before. A refusal's ``headers`` mapping goes on the answer\n(:class:`~eifi1_server_kit.demo.DemoError`'s and\n:class:`~eifi1_server_kit.limiter.ThrottledError`'s ``Retry-After``), as an\n``HTTPException``'s would."
         },
         {
           "name": "install_contract_error_handlers",
@@ -10608,97 +10849,113 @@
           "name": "BATCH_MAX",
           "kind": "constant",
           "signature": "BATCH_MAX = 2_000",
-          "doc": "One request may judge a whole namespace at once (\"approve these 120 rows\")."
+          "doc": "One request may judge a whole namespace at once (\"approve these 120 rows\").",
+          "value": 2000
         },
         {
           "name": "DEFAULT_REVIEW_TOKEN_HOURS",
           "kind": "constant",
           "signature": "DEFAULT_REVIEW_TOKEN_HOURS = 12",
-          "doc": "keksdose's ``translation_review_token_hours`` default, and its bounds."
+          "doc": "keksdose's ``translation_review_token_hours`` default, and its bounds.",
+          "value": 12
         },
         {
           "name": "KEKSDOSE_REVIEW_TOKEN_PREFIX",
           "kind": "constant",
           "signature": "KEKSDOSE_REVIEW_TOKEN_PREFIX = \"kdr_\"",
-          "doc": "keksdose's prefix — what tells its review token apart in the Bearer slot from a JWT\nand from its API tokens (``kdp_``)."
+          "doc": "keksdose's prefix — what tells its review token apart in the Bearer slot from a JWT\nand from its API tokens (``kdp_``).",
+          "value": "kdr_"
         },
         {
           "name": "KIT_AREA",
           "kind": "constant",
           "signature": "KIT_AREA = \"kit\"",
-          "doc": "The area the kit's keys form — what a review token's listing is narrowed to."
+          "doc": "The area the kit's keys form — what a review token's listing is narrowed to.",
+          "value": "kit"
         },
         {
           "name": "KIT_KEY_PREFIX",
           "kind": "constant",
           "signature": "KIT_KEY_PREFIX = \"kit.\"",
-          "doc": "The only keys a review token may read or judge: the kit's own wording."
+          "doc": "The only keys a review token may read or judge: the kit's own wording.",
+          "value": "kit."
         },
         {
           "name": "LIKE_ESCAPE",
           "kind": "constant",
           "signature": "LIKE_ESCAPE = \"\\\\\"",
-          "doc": "The escape character :func:`area_like_patterns` uses. Name it in the query\n(SQLAlchemy ``column.like(pattern, escape=LIKE_ESCAPE)``, SQL ``LIKE … ESCAPE '\\'``):\nPostgreSQL defaults to it, SQLite has no default."
+          "doc": "The escape character :func:`area_like_patterns` uses. Name it in the query\n(SQLAlchemy ``column.like(pattern, escape=LIKE_ESCAPE)``, SQL ``LIKE … ESCAPE '\\'``):\nPostgreSQL defaults to it, SQLite has no default.",
+          "value": "\\"
         },
         {
           "name": "MAX_LIVE_REVIEW_TOKENS",
           "kind": "constant",
           "signature": "MAX_LIVE_REVIEW_TOKENS = 5",
-          "doc": "Live tokens per reviewer (keksdose ``MAX_LIVE_TOKENS``)."
+          "doc": "Live tokens per reviewer (keksdose ``MAX_LIVE_TOKENS``).",
+          "value": 5
         },
         {
           "name": "MAX_REVIEW_TOKEN_HOURS",
           "kind": "constant",
           "signature": "MAX_REVIEW_TOKEN_HOURS = 72",
-          "doc": ""
+          "doc": "",
+          "value": 72
         },
         {
           "name": "MIN_REVIEW_TOKEN_HOURS",
           "kind": "constant",
           "signature": "MIN_REVIEW_TOKEN_HOURS = 1",
-          "doc": ""
+          "doc": "",
+          "value": 1
         },
         {
           "name": "NOTE_MAX",
           "kind": "constant",
           "signature": "NOTE_MAX = 4_000",
-          "doc": "A reviewer's note."
+          "doc": "A reviewer's note.",
+          "value": 4000
         },
         {
           "name": "NO_KIT_REVIEW_ACCESS",
           "kind": "constant",
           "signature": "NO_KIT_REVIEW_ACCESS = \"No review access to the kit's wording\"",
-          "doc": "The 403 for a review token on a grant with an area limit: a token lists every ``kit.``\nverdict, more than an area grant may see (keksdose's sentence at mint,\n``translation_review_token_service.py:71``; the service's ``scope()`` refuses it, §6.2.2)."
+          "doc": "The 403 for a review token on a grant with an area limit: a token lists every ``kit.``\nverdict, more than an area grant may see (keksdose's sentence at mint,\n``translation_review_token_service.py:71``; the service's ``scope()`` refuses it, §6.2.2).",
+          "value": "No review access to the kit's wording"
         },
         {
           "name": "NO_REVIEW_ACCESS",
           "kind": "constant",
           "signature": "NO_REVIEW_ACCESS = \"No translation review access\"",
-          "doc": "The ``GET``'s 403 for a caller granted no locale (keksdose ``translations_router.py:90``,\nkastlan's too; server-services §6.2.8)."
+          "doc": "The ``GET``'s 403 for a caller granted no locale (keksdose ``translations_router.py:90``,\nkastlan's too; server-services §6.2.8).",
+          "value": "No translation review access"
         },
         {
           "name": "REVIEW_TOKEN_BYTES",
           "kind": "constant",
           "signature": "REVIEW_TOKEN_BYTES = 32",
-          "doc": "Entropy of the random part; ``token_urlsafe(32)`` is 43 characters."
+          "doc": "Entropy of the random part; ``token_urlsafe(32)`` is 43 characters.",
+          "value": 32
         },
         {
           "name": "REVIEW_TOKEN_RANDOM_LENGTH",
           "kind": "constant",
           "signature": "REVIEW_TOKEN_RANDOM_LENGTH = 43",
-          "doc": ""
+          "doc": "",
+          "value": 43
         },
         {
           "name": "TEXT_MAX",
           "kind": "constant",
           "signature": "TEXT_MAX = 40_000",
-          "doc": "The longest string in any bundle is ~3.5k characters; ten times that leaves room\nwithout accepting a megabyte (keksdose ``translations.py:12-14``)."
+          "doc": "The longest string in any bundle is ~3.5k characters; ten times that leaves room\nwithout accepting a megabyte (keksdose ``translations.py:12-14``).",
+          "value": 40000
         },
         {
           "name": "VERDICTS_EXPORT_KEY",
           "kind": "constant",
           "signature": "VERDICTS_EXPORT_KEY = \"translation_verdicts\"",
-          "doc": "Where an app's account export puts :meth:`TranslationReviewService.export`:\n``data[\"translation_verdicts\"]`` (keksdose's key, every app's since 0.10; §6.2.10)."
+          "doc": "Where an app's account export puts :meth:`TranslationReviewService.export`:\n``data[\"translation_verdicts\"]`` (keksdose's key, every app's since 0.10; §6.2.10).",
+          "value": "translation_verdicts"
         },
         {
           "name": "NewVerdict",
@@ -11454,7 +11711,8 @@
           "name": "DEFAULT_MAX_AGE",
           "kind": "constant",
           "signature": "DEFAULT_MAX_AGE = 600",
-          "doc": "Ten minutes (keksdose): a showcase calls the same few paths over and over."
+          "doc": "Ten minutes (keksdose): a showcase calls the same few paths over and over.",
+          "value": 600
         },
         {
           "name": "TRANSLATION_REVIEW_ROUTES",
@@ -11563,19 +11821,22 @@
           "name": "SYNC_PAGE_LIMIT",
           "kind": "constant",
           "signature": "SYNC_PAGE_LIMIT: Final = 2000",
-          "doc": "keksdose's page size, in rows."
+          "doc": "keksdose's page size, in rows.",
+          "value": 2000
         },
         {
           "name": "SYNC_PLAN_LIMIT",
           "kind": "constant",
           "signature": "SYNC_PLAN_LIMIT: Final = \"plan_limit\"",
-          "doc": ":attr:`SyncRejection.code` for a create past the plan's limit (kastlan's photos over the\nplan, today's 402 ``planRefusal``); billing's ``plan_limit`` code, the same text."
+          "doc": ":attr:`SyncRejection.code` for a create past the plan's limit (kastlan's photos over the\nplan, today's 402 ``planRefusal``); billing's ``plan_limit`` code, the same text.",
+          "value": "plan_limit"
         },
         {
           "name": "SYNC_REJECTED",
           "kind": "constant",
           "signature": "SYNC_REJECTED: Final = \"rejected\"",
-          "doc": ":attr:`SyncRejection.code` for a change a scope rule refuses: a fixed field, a finalised\nprotocol, an entity not writable in the scope (kastlan's ``EntityRule``)."
+          "doc": ":attr:`SyncRejection.code` for a change a scope rule refuses: a fixed field, a finalised\nprotocol, an entity not writable in the scope (kastlan's ``EntityRule``).",
+          "value": "rejected"
         },
         {
           "name": "AfterApplyContext",
@@ -12239,6 +12500,194 @@
           "kind": "function",
           "signature": "withhold[C: (SyncChange, dict[str, Any])](scope: SyncScope, change: C) -> C",
           "doc": "A pulled row without the fields ``scope`` withholds from its ``data`` (D14): a\n:class:`~eifi1_server_kit.sync.SyncChange` or the app's dict, answered in kind and\nnever changed in place (a ``SyncChange`` without ``data`` comes back as it is)."
+        }
+      ]
+    },
+    {
+      "name": "eifi1_server_kit.dependency_audit",
+      "summary": "The dependency audit for every backend's gate: known vulnerabilities in the lock BLOCK on high and critical, as the ui-kit's ``npm audit --audit-level=high`` does; below that they are printed and pass. Standard library only.",
+      "doc": "The dependency audit for every backend's gate: known vulnerabilities in the lock BLOCK on\nhigh and critical, as the ui-kit's ``npm audit --audit-level=high`` does; below that they are\nprinted and pass. Standard library only.\n\nMarcel, 2026-11-04: \"Same as ui-kit would be good for harmonization\", and what a second app\nwill need ships in the kit. A bare ``uv audit`` fails on every finding, whatever its\nseverity, and has no level option, and ``pip-audit`` (the apps' ``check:security:backend``)\nneither: a dev-only moderate advisory with no fix yet (the minimatch one that blocked a\nui-kit push) would stop every push and every release. Run it from the directory that holds\nthe app's ``uv.lock``::\n\n    uv run --no-sync python -I -m eifi1_server_kit.dependency_audit\n    uv run --no-sync python -I -m eifi1_server_kit.dependency_audit --ignore-until-fixed GHSA-xxxx-xxxx-xxxx=\"dev only, no fix\"\n\n**Exit 0**: nothing high or critical. **Exit 1**: a finding blocks. **Exit 2**: the audit\ncould not be read, or the tool is broken (a bad flag included) — never a pass.\n\n1. **The findings** are ``uv audit --locked`` over the whole lock (runtime, extras, the dev\n   groups), as JSON. ``uv audit`` and its JSON are uv previews (uv 0.12), so the report is\n   read strictly: a missing subcommand, a preview flag uv no longer knows, an exit code\n   other than 0 or 1, a schema other than :data:`KNOWN_SCHEMAS` or a shape this module\n   cannot read fails the step with what went wrong — it never passes silently.\n2. **The severity** is not in uv's report, so each finding is looked up where it is\n   published, OSV (:data:`OSV_URL`), under its id and its aliases: GitHub's rating first\n   (``database_specific.severity`` of a ``GHSA-`` record: ``LOW``, ``MODERATE``, ``HIGH``,\n   ``CRITICAL``), which is what ``npm audit`` reads; else the highest CVSS v3 base score of\n   the records (7.0 and up is high, 9.0 and up critical). uv lists one advisory under each\n   of its ids (a ``PYSEC-`` and its ``GHSA-``), and every record names the others, so the\n   GitHub rating is found from either.\n3. **The rule**: high and critical BLOCK; moderate and low print one line each (id,\n   package, severity, fixed-in) and pass. **No severity anywhere** — a record with only a\n   CVSS v4 vector, an unreachable OSV — counts as high (fail closed), its id printed so a\n   deliberate exception can be made.\n4. **An exception** is the app's, never an edit of the kit: ``--ignore-until-fixed\n   ID=reason``, repeatable, with its reason; uv leaves the advisory out while no fixed\n   version exists and reports it again the day one ships. The reasons are printed on every\n   run.\n\nA project's adverse status (PEP 792: archived, deprecated, quarantined) is in the same\nreport: quarantined blocks, archived and deprecated print a line, and an entry this module\ncannot read blocks with its JSON printed (none has been seen yet; extend :func:`_status`).",
+      "members": [
+        {
+          "name": "BLOCKING_RANK",
+          "kind": "constant",
+          "signature": "BLOCKING_RANK = RANKS[\"HIGH\"]",
+          "doc": "The rank from which a finding blocks: high, as ``npm audit --audit-level=high``.",
+          "value": 3
+        },
+        {
+          "name": "KNOWN_SCHEMAS",
+          "kind": "constant",
+          "signature": "KNOWN_SCHEMAS = frozenset({\"preview\"})",
+          "doc": "The report schemas this module reads; uv's is ``\"preview\"`` (uv 0.12.22). Another one is a\nchanged format: a kit release reads it first."
+        },
+        {
+          "name": "OSV_URL",
+          "kind": "constant",
+          "signature": "OSV_URL = \"https://api.osv.dev/v1/vulns/{id}\"",
+          "doc": "Where an advisory's severity is published: its OSV record, by id.",
+          "value": "https://api.osv.dev/v1/vulns/{id}"
+        },
+        {
+          "name": "PREVIEW_FEATURES",
+          "kind": "constant",
+          "signature": "PREVIEW_FEATURES = \"audit-command,json-output\"",
+          "doc": "The previews the command needs (uv 0.12): the subcommand and its JSON output.",
+          "value": "audit-command,json-output"
+        },
+        {
+          "name": "RANKS",
+          "kind": "constant",
+          "signature": "RANKS: Mapping[str, int] = {\"LOW\": 1, \"MODERATE\": 2, \"MEDIUM\": 2, \"HIGH\": 3, \"CRITICAL\": 4}",
+          "doc": "The severities, ranked; ``MEDIUM`` is CVSS's word for GitHub's ``MODERATE``."
+        },
+        {
+          "name": "AuditUnreadableError",
+          "kind": "class",
+          "signature": "class AuditUnreadableError(Exception)",
+          "doc": "The audit's own failure: uv could not run it, or its report is not one this module\nreads. Exit 2, never a pass."
+        },
+        {
+          "name": "Fetcher",
+          "kind": "constant",
+          "signature": "type Fetcher = Callable[[str], Mapping[str, Any] | None]",
+          "doc": "An OSV record by id, or ``None`` when it cannot be had — a seam for the tests."
+        },
+        {
+          "name": "Finding",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True) class Finding",
+          "doc": "One advisory against one locked package, as uv reports it.",
+          "fields": [
+            {
+              "name": "id",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "aliases",
+              "type": "tuple[str, ...]",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "package",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "version",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "fixed_in",
+              "type": "tuple[str, ...]",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "Runner",
+          "kind": "constant",
+          "signature": "type Runner = Callable[[Sequence[str]], tuple[int, str, str]]",
+          "doc": "The ``uv audit`` run: argv in, (exit code, stdout, stderr) out — a seam for the tests."
+        },
+        {
+          "name": "Verdict",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True) class Verdict",
+          "doc": "A finding with the severity found for it (``None``: none anywhere) and where from.",
+          "fields": [
+            {
+              "name": "finding",
+              "type": "Finding",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "severity",
+              "type": "str | None",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "source",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            }
+          ],
+          "methods": [
+            {
+              "name": "blocks",
+              "signature": "@property blocks -> bool",
+              "doc": ""
+            },
+            {
+              "name": "line",
+              "signature": "line() -> str",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "audit",
+          "kind": "function",
+          "signature": "audit(*, ignore_until_fixed: Mapping[str, str] | None = None, project: Path | None = None, run: Runner | None = None, fetch: Fetcher = fetch_osv, out: Callable[[str], None] = print) -> int",
+          "doc": "The step: 0 nothing blocks, 1 a finding blocks, 2 the audit could not be read.\n\n``ignore_until_fixed`` maps each advisory the app accepts while it has no fix to its\nreason; ``project`` is the directory of its ``uv.lock`` (``None``: the working one)."
+        },
+        {
+          "name": "command",
+          "kind": "function",
+          "signature": "command(ignore_until_fixed: Iterable[str] = ()) -> list[str]",
+          "doc": "``uv audit`` as the gate runs it, with the app's accepted advisories."
+        },
+        {
+          "name": "cvss3_base_score",
+          "kind": "function",
+          "signature": "cvss3_base_score(vector: str) -> float | None",
+          "doc": "The base score of a CVSS v3.0 or v3.1 vector (``CVSS:3.1/AV:N/AC:L/…``), or ``None``\nfor anything else — a v4 or v2 vector, a malformed one."
+        },
+        {
+          "name": "cvss_rating",
+          "kind": "function",
+          "signature": "cvss_rating(score: float) -> str | None",
+          "doc": "CVSS's qualitative rating of a base score; ``None`` for 0.0 (\"none\")."
+        },
+        {
+          "name": "fetch_osv",
+          "kind": "function",
+          "signature": "fetch_osv(advisory: str) -> Mapping[str, Any] | None",
+          "doc": "OSV's record of ``advisory``; ``None`` when it cannot be had (it then counts as high)."
+        },
+        {
+          "name": "judge",
+          "kind": "function",
+          "signature": "judge(finding: Finding, fetch: Fetcher) -> Verdict",
+          "doc": "The finding's severity from OSV: GitHub's rating under any of its ids, else the\nhighest CVSS v3 base score of its records, else none (which blocks)."
+        },
+        {
+          "name": "main",
+          "kind": "function",
+          "signature": "main(argv: Sequence[str] | None = None) -> int",
+          "doc": "``python -m eifi1_server_kit.dependency_audit [--ignore-until-fixed ID=reason]… [--project DIR]``.\nA bad flag exits 2, as a broken tool does."
+        },
+        {
+          "name": "parse_report",
+          "kind": "function",
+          "signature": "parse_report(stdout: str) -> tuple[list[Finding], list[object]]",
+          "doc": "uv's JSON report → its findings and its adverse statuses, or\n:class:`AuditUnreadableError` for anything but the shape :data:`KNOWN_SCHEMAS` names."
+        },
+        {
+          "name": "run_uv",
+          "kind": "function",
+          "signature": "run_uv(argv: Sequence[str], *, cwd: Path | None = None) -> tuple[int, str, str]",
+          "doc": "Run ``argv`` in ``cwd`` (the directory of the app's ``uv.lock``; ``None``: here)."
         }
       ]
     }

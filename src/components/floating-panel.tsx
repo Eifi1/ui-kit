@@ -17,6 +17,7 @@ import { cn } from "../lib/cn";
 import { FOCUS_RING } from "./focus-ring";
 import { dirOf, type Direction } from "../lib/direction";
 import { registerFloating } from "../lib/floating-stack";
+import { returnFocus } from "../lib/focus-left";
 import { useFloatClearance } from "../lib/float-clearance";
 import { isComposing } from "../lib/ime";
 import { takeEscape, useOverlayOpen } from "../hooks/use-dismiss";
@@ -382,12 +383,13 @@ export interface FloatingPanelProps {
  *
  * What it keeps from a dialog is the focus HANDOFF: opening moves focus into it (a
  * keyboard user who pressed the FAB should not have to hunt for what appeared), and
- * closing gives it back to the FAB — but only when focus was in the panel, so a panel
- * closed from the page (a controlled owner) never pulls focus out of the field the
- * user is typing in. Escape closes it while focus is inside, and only then: on the
- * panel element, not the document, so Escape in the page keeps meaning whatever the
- * page means by it. A layer of the kit's Escape stack open over it — a tooltip, a list —
- * is handed the key first.
+ * closing gives it back to the FAB — but only when focus went down with the panel (the
+ * kit's one rule, lib/focus-left `returnFocus`, 0.55), so a panel closed from the page (a
+ * controlled owner) never pulls focus out of the field the user is typing in, nor off
+ * what the app focused in `onOpenChange`. Escape closes it while focus is inside, and
+ * only then: on the panel element, not the document, so Escape in the page keeps
+ * meaning whatever the page means by it. A layer of the kit's Escape stack open over it
+ * — a tooltip, a list — is handed the key first.
  *
  * ## Layout
  *
@@ -447,9 +449,6 @@ export function FloatingPanel({
   // Focus follows the open/closed TRANSITION, never the mount: a panel that renders
   // open (`defaultOpen`, a restored route) does not take the page's focus by existing.
   const wasOpen = useRef(open);
-  // Whether focus was inside the panel when it last changed — read at close time, when
-  // the panel (and whatever had focus in it) is already gone.
-  const focusInside = useRef(false);
   useEffect(() => {
     const changed = wasOpen.current !== open;
     wasOpen.current = open;
@@ -458,10 +457,13 @@ export function FloatingPanel({
       (initialFocusRef.current?.() ?? panelRef.current)?.focus();
       return;
     }
-    const active = document.activeElement;
-    const lost = active === null || active === document.body;
-    if (focusInside.current || lost) fabRef.current?.focus();
-    focusInside.current = false;
+    // Back to the FAB by the kit's one rule (lib/focus-left `returnFocus`; 0.52 code
+    // review 2026-10-31, held to 0.55), here in the closing commit, with the panel gone:
+    // a focus that fell with it is moved, one the page or the app holds is not. It kept a
+    // note of "focus was inside when it last changed" for this, which the panel's removal
+    // already answers — and which put the FAB over a focus the app's `onOpenChange` had
+    // placed.
+    returnFocus({ opener: fabRef.current });
   }, [open]);
 
   const onPanelKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
@@ -478,7 +480,6 @@ export function FloatingPanel({
     // Stopped here, so an overlay underneath with a document-level Escape listener does
     // not close too — the innermost thing that has focus is the one that closes.
     e.stopPropagation();
-    focusInside.current = true;
     setOpen(false);
   };
 
@@ -499,8 +500,7 @@ export function FloatingPanel({
         aria-controls={open && !hidden ? panelId : undefined}
         onClick={() => {
           // A press ON the FAB closing the panel: the FAB keeps focus by being clicked,
-          // nothing to hand back.
-          focusInside.current = false;
+          // nothing to hand back (the rule leaves a focus that is somewhere real).
           setOpen(!open);
         }}
       />
@@ -519,12 +519,6 @@ export function FloatingPanel({
             dir={dir}
             data-corner={corner}
             onKeyDown={onPanelKeyDown}
-            onFocus={() => {
-              focusInside.current = true;
-            }}
-            onBlur={(e) => {
-              if (!e.currentTarget.contains(e.relatedTarget as Node | null)) focusInside.current = false;
-            }}
             // The phone's sheet sits on the nav; from `md` up the card floats above the
             // FAB (its offset + the 3rem button + a 0.75rem gap).
             style={
@@ -552,10 +546,7 @@ export function FloatingPanel({
               </h2>
               <button
                 type="button"
-                onClick={() => {
-                  focusInside.current = true;
-                  setOpen(false);
-                }}
+                onClick={() => setOpen(false)}
                 aria-label={labels.close}
                 className={cn(
                   "-me-1.5 shrink-0 rounded p-1.5 text-muted outline-none hover:bg-hover hover:text-secondary",

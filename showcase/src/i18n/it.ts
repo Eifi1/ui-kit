@@ -138,6 +138,12 @@ export const it: Dictionary = {
       blurb:
         "Lavorare sulla copia del dispositivo: il motore di sincronizzazione con la sua coda, una richiesta per ambito, le modifiche rifiutate che restano, le attese dopo un errore e l’uscita protetta; il suo worker, il suo stato per l’indicatore e la lettura dal vivo della copia.",
     },
+    "release-notes": {
+      title: "Note di rilascio",
+      short: "Versioni",
+      blurb:
+        "Un CHANGELOG.md per chi legge: il parser del file che ogni repository scrive con commit-and-tag-version, e la scheda che mostra una versione — il numero e il giorno, le sezioni per chiave, le note raggruppate per ambito.",
+    },
     "auth-account": {
       title: "Accesso e sicurezza dell'account",
       short: "Accesso",
@@ -566,7 +572,7 @@ export const it: Dictionary = {
       title: "Limiti, errori, CORS e sincronizzazione",
       short: "Limiti",
       blurb:
-        "Il rate limiter a finestra scorrevole e di chi conta l’indirizzo, ogni rifiuto del kit restituito con lo stato del suo contratto, CORS per qualche origine in più il token dello scheduler sulle rotte dei job e la sincronizzazione local-first: vince la modifica più recente, rifiuti per singola modifica.",
+        "Il rate limiter a finestra scorrevole e di chi conta l’indirizzo, ogni rifiuto del kit restituito con lo stato del suo contratto, CORS per qualche origine in più il token dello scheduler sulle rotte dei job e la sincronizzazione local-first: vince la modifica più recente, rifiuti per singola modifica. E l’audit delle dipendenze che il controllo di ogni backend esegue.",
     },
     "server-translation-review": {
       title: "Revisione delle traduzioni",
@@ -649,6 +655,14 @@ export const it: Dictionary = {
       "tenere le modifiche in attesa di un piano",
       "mostrare lo stato della sincronizzazione",
       "leggere dal vivo la copia del dispositivo",
+    ],
+    "release-notes": [
+      "mostrare cosa è cambiato in una versione",
+      "una pagina del registro delle modifiche",
+      "una finestra delle novità dopo un aggiornamento",
+      "leggere il file CHANGELOG.md",
+      "raggruppare le note di rilascio per ambito",
+      "tradurre i titoli delle sezioni del registro",
     ],
     "auth-account": [
       "layout della pagina di accesso",

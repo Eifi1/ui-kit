@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { HTMLAttributes, KeyboardEvent, ReactNode, RefObject } from "react";
 import { cn } from "../lib/cn";
+import { returnFocus } from "../lib/focus-left";
 import { Button } from "./button";
 import type { CommitScope } from "./write-lock";
 
@@ -72,8 +73,10 @@ export function InlineConfirm({
     // Read at unmount on purpose: the node wanted is the trigger rendered in this
     // prompt's place, not whatever the ref held when the prompt opened.
     const trigger = returnFocusRef;
+    // By the kit's one rule (lib/focus-left `returnFocus`; 0.52 code review 2026-10-31,
+    // held to 0.55): the focus fell with Cancel, and goes to the trigger if it takes it.
     return () => {
-      if (leaving.current) trigger?.current?.focus();
+      if (leaving.current) returnFocus({ opener: trigger?.current });
     };
   }, [returnFocusRef]);
 

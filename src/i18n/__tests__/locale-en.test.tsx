@@ -73,6 +73,9 @@ describe("uiKitLabelsEn (@eifi1/ui-kit/i18n/en)", () => {
       "billing.waitingChanges",
       "bulkActionBar.selected",
       "calendarHeatmap.truncated",
+      // 0.55: the viewfinder's two counts.
+      "camera.done",
+      "camera.taken",
       "characterCount.count",
       "characterCount.remaining",
       "chipInput.atLimit",
@@ -105,6 +108,9 @@ describe("uiKitLabelsEn (@eifi1/ui-kit/i18n/en)", () => {
       "filePicker.rejectedPick",
       "filePicker.selected",
       "floatingPanel.badge",
+      // 0.55: the held-changes banner's sentence and its question.
+      "heldChanges.confirmTitle",
+      "heldChanges.message",
       "ibanInput.length",
       "iconPicker.resultCount",
       "imageGrid.item",

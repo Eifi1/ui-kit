@@ -4,6 +4,8 @@ import { cn } from "../lib/cn";
 import { SECTION_LABEL_CLASS } from "./text";
 import { useDocumentTitle } from "../hooks/use-document-title";
 import { PageHeaderTrailContext } from "./page-header-context";
+// The class strings PageHeaderSkeleton draws its outline from too (0.55).
+import { ACTIONS, DESCRIPTION, ROOT, ROW, STACK_ACTIONS_AT_LARGE, TITLE } from "./page-header-layout";
 
 /**
  * `md` (default) is kastlan's `text-2xl` page title from `sm` up, a step smaller on a
@@ -20,31 +22,11 @@ import { PageHeaderTrailContext } from "./page-header-context";
  */
 export type PageHeaderSize = "sm" | "compact" | "md";
 
-const TITLE: Record<PageHeaderSize, string> = {
-  sm: "text-lg font-semibold",
-  compact: "text-xl font-semibold",
-  md: "text-xl font-semibold tracking-tight sm:text-2xl",
-};
-
 /**
  * How the title block and the actions sit below the `sm` breakpoint. From `sm` up both
  * layouts are one row: title block at the start, actions at the end.
  */
 export type PageHeaderMobileLayout = "stacked" | "inline";
-
-/**
- * `stacked` at Large and Extra large on a phone (0.32.2, kastlan's 0.32.1 report;
- * docs/text-size-harmonization.md §4, as FormActions does): the actions take the full
- * width, one under the other. Side by side in 240 px of layout, two buttons each wrapped
- * their label onto three lines. `large:max-sm:`, the scaled phone width, so Normal and
- * every wider screen keep their row; `inline` is for actions known to fit, and stays.
- */
-const STACK_ACTIONS_AT_LARGE = "large:max-sm:flex-col large:max-sm:items-stretch large:max-sm:[&>*]:w-full";
-
-const ROW: Record<PageHeaderMobileLayout, string> = {
-  stacked: "flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4",
-  inline: "flex-row items-center justify-between gap-2 sm:gap-4",
-};
 
 /**
  * Where the actions sit on the title block's height, in the one row the header is from
@@ -244,7 +226,7 @@ export function PageHeader({
     return () => observer.disconnect();
   }, [measuresWrap]);
   return (
-    <div {...rest} className={cn("flex min-w-0 flex-col gap-2", className)}>
+    <div {...rest} className={cn(ROOT, className)}>
       {breadcrumbs != null && (
         <PageHeaderTrailContext.Provider value={titled ? TITLED : UNTITLED}>
           {breadcrumbs}
@@ -268,16 +250,12 @@ export function PageHeader({
           <Heading className={cn(truncateTitle ? "truncate-until-large" : "break-words", "text-primary", TITLE[size])}>
             {title}
           </Heading>
-          {description != null && <p className="mt-1 text-sm text-muted">{description}</p>}
+          {description != null && <p className={DESCRIPTION}>{description}</p>}
         </div>
         {actions != null && (
           <div
             ref={actionsRef}
-            className={cn(
-              "flex shrink-0 flex-wrap items-center gap-2",
-              hasSecondary && "sm:order-2",
-              mobileLayout === "stacked" && STACK_ACTIONS_AT_LARGE,
-            )}
+            className={cn(ACTIONS, hasSecondary && "sm:order-2", mobileLayout === "stacked" && STACK_ACTIONS_AT_LARGE)}
           >
             {actions}
           </div>

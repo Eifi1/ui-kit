@@ -3,7 +3,7 @@ import type { Dispatch, SetStateAction } from "react";
 import { X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { claimEscape } from "../hooks/use-dismiss";
-import { firstTabStop } from "../lib/focus-left";
+import { firstTabStop, returnFocus } from "../lib/focus-left";
 import { Tooltip } from "./tooltip";
 import type { DataTableLabels } from "./data-table-labels";
 import { isTableOwnColumn } from "./data-table-row-actions";
@@ -63,10 +63,12 @@ export function ColumnSettingsPanel<T>({
     )?.focus();
   }, [showSettings]);
   const close = () => {
-    setShowSettings(false);
     // Back to the rail that opened it: the drawer is about to go inert, and focus would
-    // fall to <body> with it (BUG-7a).
-    columnsRail.current?.focus();
+    // fall to <body> with it (BUG-7a). By the kit's one rule (lib/focus-left
+    // `returnFocus`; 0.52 code review 2026-10-31, held to 0.55): from inside the drawer or
+    // from nowhere, and checked it took — not over a focus the page already holds.
+    returnFocus({ opener: columnsRail.current, closing: drawerRef.current });
+    setShowSettings(false);
   };
   return (
     <>

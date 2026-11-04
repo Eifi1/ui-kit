@@ -44,30 +44,56 @@ export { encodeQr } from "./lib/qr-encode";
 export type { QrEncodeOptions, QrErrorCorrection, QrMatrix } from "./lib/qr-encode";
 // 0.18: the cold-start notice keksdose built (#199), for every app: the framework-free
 // watchdog over the app's requests (the corner notice is components/server-wake).
+// 0.55 (keksdose's 0.51 review N4): `ServerWakeToken`, what `start` returns for `end(token)`.
 export { createServerWake, serverWake, watchReadsAnd, attachServerWake, wrapFetch } from "./lib/server-wake";
 export type {
   ServerWakeStage,
   ServerWakeFilter,
   ServerWakeOptions,
   ServerWakeRequest,
+  ServerWakeToken,
   ServerWakeWatcher,
   ServerWakeAxiosConfig,
   AxiosLikeInstance,
 } from "./lib/server-wake";
 // 0.34 (docs/auth-harmonization.md §11, round 0.34 C7): renewing a session — one refresh
 // per tab, a definitive failure ends the session once, a transient one keeps it.
+// 0.55 (kastlan reuse audit 2026-11-02, proposal 6): `watchSessionElsewhere`, the session
+// ending in another tab, or while the page sat in the back/forward cache.
 export {
   createSessionRefresh,
   attachSessionRefresh,
   isTransientRefreshFailure,
   isSignedOutStep,
+  watchSessionElsewhere,
 } from "./lib/session-refresh";
 export type {
   SessionRefresh,
   SessionRefreshOptions,
   SessionRenewal,
   SessionRefreshOutcome,
+  SessionElsewhereOptions,
 } from "./lib/session-refresh";
+// 0.55 (kastlan reuse audit 2026-11-02, proposal 1): one parser for the apps' release
+// notes — a CHANGELOG.md as releases, the sections keyed across both presets' headings,
+// each item without the generator's links, grouped by scope. Pure: no React.
+export { parseChangelog, parseChangelogItem, changelogSectionKey, groupByScope } from "./lib/changelog";
+export type {
+  ChangelogRelease,
+  ChangelogSection,
+  ChangelogSectionKey,
+  ChangelogItem,
+  ChangelogScopeGroup,
+} from "./lib/changelog";
+// 0.55: the card on it — one release, its sections by key, the notes grouped by scope
+// (keksdose's release-notes.tsx and kastlan's changelog page).
+export { ReleaseNotes, DEFAULT_RELEASE_NOTES_LABELS } from "./components/release-notes";
+export type {
+  ReleaseNotesProps,
+  ReleaseNotesRelease,
+  ReleaseNotesSection,
+  ReleaseNotesLabels,
+} from "./components/release-notes";
 // 0.29.0 (docs/auth-harmonization.md): the person-name order of each language.
 export { formatPersonName, personInitials } from "./lib/person-name";
 export type { PersonName } from "./lib/person-name";
@@ -190,7 +216,7 @@ export { useFileDrop, dragHasFiles } from "./hooks/use-file-drop";
 export type { UseFileDropOptions, UseFileDropReturn, FileDropProps } from "./hooks/use-file-drop";
 // kastlan's search boxes each carried a hand-rolled copy, two without the cleanup.
 export { useDebounce, useDebouncedCallback } from "./hooks/use-debounce";
-export type { DebouncedCallbackOptions, DebouncedFunction } from "./hooks/use-debounce";
+export type { DebounceOptions, DebouncedCallbackOptions, DebouncedFunction } from "./hooks/use-debounce";
 // One search param as state, the active tab in `?tab=`, and a dialog's open state in the
 // URL (Modal's `urlParam`) — kastlan's and keksdose's use-search-param-state, in the kit.
 export { useSearchParamState, useTabParam, useDialogParam } from "./hooks/use-search-param-state";
@@ -301,6 +327,9 @@ export * from "./components/tabs";
 // draws, and field-parts must not import the controls).
 export { FieldLabel, FLOATING_LABEL_STATIC, FieldHint } from "./components/field-parts";
 export type { FieldLabelProps, FieldHintProps } from "./components/field-parts";
+// 0.55 (keksdose dev #638): a field's "suggested from" caption, as its `hint`, with a clear.
+export { FieldSuggestion, DEFAULT_FIELD_SUGGESTION_LABELS } from "./components/field-parts";
+export type { FieldSuggestionProps, FieldSuggestionLabels } from "./components/field-parts";
 // The kit's focus frame (§5), in its own module so the parts the controls import
 // (field-parts, the choice controls) can draw it too.
 export { FOCUS_RING, FOCUS_RING_WIDTH } from "./components/focus-ring";
@@ -403,6 +432,14 @@ export type {
   FileRejectionReason,
   FileScreenOptions,
 } from "./components/file-button";
+// 0.55: the camera where there is one, the photo picker where there is none — keksdose's
+// useHasCamera and in-page viewfinder, for kastlan's handover photos (reuse audit
+// 2026-11-02, proposal 8).
+export { useHasCamera } from "./hooks/use-has-camera";
+export { CameraButton } from "./components/camera-button";
+export type { CameraButtonProps } from "./components/camera-button";
+export { CameraCapture, DEFAULT_CAMERA_LABELS } from "./components/camera-capture";
+export type { CameraCaptureProps, CameraFacing, CameraLabels } from "./components/camera-capture";
 // The chart kit, whole, from its subpath (`@eifi1/ui-kit/chart`, which names its parts):
 // the chart shell and its palette, the treemap, the series chart with its zoom, legend,
 // labels and facing-pair axes, the height every chart takes, and the pie chart.
@@ -518,6 +555,9 @@ export type { SkeletonProps, SkeletonShape } from "./components/skeleton";
 // 0.48 (keksdose dev #628): the table/list loading preset, one status label.
 export { TableSkeleton } from "./components/table-skeleton";
 export type { TableSkeletonProps } from "./components/table-skeleton";
+// 0.55 (keksdose's page outline, app/page-skeleton.tsx): PageHeader's outline at its own metrics.
+export { PageHeaderSkeleton } from "./components/page-header-skeleton";
+export type { PageHeaderSkeletonProps } from "./components/page-header-skeleton";
 // 0.12.0: a centred spinner with words, signed figures and deltas, a render-error fallback.
 export * from "./components/loading-state";
 export * from "./components/signed-amount";
@@ -638,6 +678,15 @@ export type {
   LegalSectionOwner,
   LegalDisclaimerVariant,
 } from "./components/legal-page";
+// 0.55 (keksdose's price pool, consent-again-notice.tsx): a consent asked again after its
+// text changed — the card where it stays, the banner where it waits; the subject is the app's.
+export { ConsentAgainNotice, DEFAULT_CONSENT_AGAIN_LABELS } from "./components/consent-again-notice";
+export type {
+  ConsentAgainNoticeProps,
+  ConsentAgainCardProps,
+  ConsentAgainBannerProps,
+  ConsentAgainLabels,
+} from "./components/consent-again-notice";
 // 0.32.0 (docs/text-size-harmonization.md): the appearance settings' words, and a row's
 // actions, one of the behaviours at Large (§4, §10.7–10.9).
 export { DEFAULT_APPEARANCE_LABELS, useAppearanceLabels } from "./components/appearance-labels";
@@ -850,6 +899,8 @@ export {
   UserRowActions,
   userRosterSort,
   USER_ROSTER_SORT_KEYS,
+  USER_ROSTER_PAGE_SIZE,
+  USER_ROSTER_MAX_PAGE_SIZE,
   DEFAULT_USER_ROSTER_LABELS,
 } from "./admin/user-roster";
 export type {
@@ -1031,6 +1082,12 @@ export { openProviderPage } from "./billing/provider-page";
 export type { OpenProviderPageOptions, ProviderPageWay } from "./billing/provider-page";
 export { useCancelRequest } from "./billing/cancel-request";
 export type { CancelRequest, CancelRequested, CancelRequestView } from "./billing/cancel-request";
+// 0.55 (§7, Marcel 2026-11-04; kastlan reuse audit 2026-11-02, proposal 3): the
+// subscription's standing in one line, and what is used of each limit.
+export { SubscriptionStanding, subscriptionStanding } from "./billing/subscription-standing";
+export type { SubscriptionStandingOverview, SubscriptionStandingProps } from "./billing/subscription-standing";
+export { UsageMeter } from "./billing/usage-meter";
+export type { UsageMeterProps } from "./billing/usage-meter";
 // The operator's plan parts (§14.12) are admin/plan-change, in the admin section.
 
 // ── settings ─────────────────────────────────────────────────────────────────

@@ -575,6 +575,17 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       removed: (name) => `„${name}” eltávolítva`,
       cleared: "Minden fájl eltávolítva",
     },
+    // No plural after a numeral (convention 3): "1 fénykép", "3 fénykép".
+    camera: {
+      takePhoto: "Fénykép készítése",
+      choosePhoto: "Fénykép hozzáadása",
+      title: "Kamera",
+      hint: "Állítsa be a képet, majd nyomja meg az exponálógombot.",
+      starting: "A kamera indul…",
+      shutter: "Fénykép elkészítése",
+      taken: (count) => `${n(count)} fénykép elkészült.`,
+      done: (count) => `${n(count)} fénykép használata`,
+    },
     wizard: {
       done: "Kész",
       cancel: "Mégse",
@@ -723,6 +734,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       empty: "Nincs adat",
       legend: "Adatsorok",
       points: "Diagramértékek",
+      nameFromAxes: (ordinates, abscissa) => (abscissa ? `${ordinates}, ${abscissa} függvényében` : ordinates),
     },
     pieChart: {
       slices: "Diagramszeletek",
@@ -1677,6 +1689,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       accessName: "Név:",
       accessCompany: "Cég:",
       accessUse: "Mire használná:",
+      siteNavLabel: "További oldalak",
     },
     demo: {
       starting: "A demó indítása…",
@@ -1735,6 +1748,17 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         canceled: "Lemondva",
         expired: "Lejárt",
         comped: "Ingyenesen biztosítva",
+      },
+      // 0.55 (§7, Marcel 2026-11-04): the standing line; `ended` is the first sentence of
+      // `planEnded`. The date after a colon takes no case ending, as `cancelConfirmBody`.
+      standing: {
+        ended: "A csomagja lejárt.",
+        pastDue: "A fizetés sikertelen volt, de újrapróbáljuk. A csomagja addig is aktív marad.",
+        trialUntil: (date) => `Próbaidőszak vége: ${date}`,
+        freeUntil: (date) => `Ingyenes eddig: ${date}`,
+        free: "Ingyenes, lejárati dátum nélkül",
+        endsOn: (date) => `Ekkor ér véget: ${date}`,
+        renewsOn: (date) => `Ekkor újul meg: ${date}`,
       },
       trialEnding: (days) =>
         `A próbaidőszaka ${inDays(days)} ér véget. Utána is mindent megtekinthet, de a módosításokhoz csomagra lesz szüksége.`,
@@ -1966,6 +1990,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         refusedShort: "Nincs szinkronizálva",
         offlineUnsaved: "Offline – a módosítások az újracsatlakozásig nem menthetők",
         saving: "Mentés…",
+        waitingForTab: "Várakozás, amíg egy másik lap befejezi a szinkronizálást",
+        waitingForTabShort: "Másik lapra vár",
       },
       dev: {
         menu: "Fejlesztői eszközök",
@@ -1997,6 +2023,52 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     sharedComputer: {
       label: "Ez egy közös használatú számítógép",
       hint: "Az adatairól nem marad másolat ezen az eszközön. Az oldalak így csak kapcsolattal nyílnak meg.",
+    },
+    // 0.55 — docs/top-bar-harmonization.md §2.6.1: keksdose's words (sync.held_*,
+    // sync.discard_held_*, sync.switch_back_held) without its budgets. A count takes the
+    // singular noun, so one sentence serves every count; "a(z)" as `translationReview`.
+    heldChanges: {
+      message: (count) =>
+        `${n(count)} módosítás innen nem küldhető el. Ezen az eszközön marad, amíg el nem lehet küldeni, vagy amíg el nem veti.`,
+      switchBack: "Visszaváltás",
+      discard: "Elvetés…",
+      confirmTitle: (count) => `Elveti a(z) ${n(count)} módosítást, amely innen nem küldhető el?`,
+      confirmBody: () => "Nem lehet visszaállítani. Ezután ez az eszköz a szerveren lévő adatokkal szinkronizálódik.",
+      confirmAction: "Elvetés",
+      failed: "Ez nem sikerült. Kérjük, próbálja újra.",
+    },
+    // 0.55 (keksdose dev #638): the "suggested from" caption under a field — the kit's
+    // default when the app names no source, and the button that takes the value back out.
+    // The field after a colon, as `common.aboutField`: no suffix has to agree with it.
+    fieldSuggestion: {
+      suggested: "Javasolt",
+      clear: "Törlés",
+      clearName: (field) => (field ? `Javaslat törlése: ${field}` : "Javaslat törlése"),
+    },
+    // 0.55: keksdose's words (price_pool.reconsent.*), translated; it ships no Hungarian.
+    consentAgain: {
+      agree: "Elfogadom",
+      notNow: "Most nem",
+      changesToggle: "A változások megtekintése",
+      wordingToggle: "A teljes szöveg megjelenítése, korábban és most",
+      beforeHeading: "Eddig",
+      nowHeading: "Mostantól",
+      removed: "Törölve:",
+      added: "Hozzáadva:",
+    },
+    // 0.55: keksdose's headings (changelog.section_*), translated; it ships no Hungarian.
+    releaseNotes: {
+      version: (version) => `v${version}`,
+      sections: {
+        breaking: "Nem kompatibilis változások",
+        added: "Újdonságok",
+        changed: "Változások",
+        fixed: "Javítások",
+        deprecated: "Elavult",
+        removed: "Eltávolítva",
+        security: "Biztonság",
+        reverted: "Visszavonva",
+      },
     },
   };
 }

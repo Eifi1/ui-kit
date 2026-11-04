@@ -6,7 +6,7 @@ import { useId, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../lib/cn";
-import { monthKey, parseIsoDate } from "../lib/dates";
+import { currentDate, monthKey, parseIsoDate } from "../lib/dates";
 import { upperFirst } from "../lib/text-case";
 import { useKitLabels } from "../i18n/kit-labels";
 import { DEFAULT_MINI_CALENDAR_LABELS, MiniCalendar, type MiniCalendarProps } from "./mini-calendar";
@@ -22,7 +22,7 @@ import { claimEscape } from "../hooks/use-dismiss";
  * given no `month` names the month that calendar is showing.
  */
 function openingMonth(from: string, to: string, lo: Date | null, hi: Date | null): string {
-  const start = parseIsoDate(from) ?? parseIsoDate(to) ?? new Date();
+  const start = parseIsoDate(from) ?? parseIsoDate(to) ?? currentDate();
   if (lo && start < lo) return monthKey(lo);
   if (hi && start > hi) return monthKey(hi);
   return monthKey(start);
@@ -253,7 +253,7 @@ function JumpCalendar({
           to={toKey}
           minKey={minKey}
           maxKey={maxKey}
-          currentKey={monthKey(new Date())}
+          currentKey={monthKey(currentDate())}
           locale={locale}
           cellName={monthText.month}
           labelledBy={captionId}

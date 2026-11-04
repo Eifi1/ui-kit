@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 
 import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
+import { isEditableContent } from "../lib/editable-content";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { useAnnounce } from "../hooks/use-announce";
 import { useBreakpoint } from "../hooks/use-breakpoint";
@@ -160,11 +161,14 @@ const FLOATING_STYLE: CSSProperties = {
 const ITEMS =
   "button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[data-toolbar-item]";
 
-/** Keys a text field needs for itself — the toolbar must not take its caret away. */
+/** Keys a text field needs for itself — the toolbar must not take its caret away.
+ *  Editable content by the kit's one rule (lib/editable-content, 0.54 follow-up):
+ *  `isContentEditable` alone is missing in jsdom and in any engine without it, and there
+ *  the arrows took the focus out of an editor in the bar. */
 function ownsArrows(el: Element): boolean {
   if (el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement) return true;
   if (el instanceof HTMLInputElement) return !["button", "checkbox", "radio", "submit", "reset"].includes(el.type);
-  return (el as HTMLElement).isContentEditable;
+  return isEditableContent(el);
 }
 
 /**

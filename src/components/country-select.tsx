@@ -8,7 +8,7 @@ import { FieldChevron, FIELD_FLOATING_PAD, FIELD_INVALID, FIELD_TRIGGER, Floatin
 import {
   assignRef,
   EndHintRow,
-  LockedReason,
+  LockFrame,
   mergeDescribedBy,
   useFieldMessages,
   useLockReason,
@@ -490,15 +490,13 @@ export function CountrySelect<Clearable extends boolean = false>({
     </button>
   );
 
-  const control = locked ? (
-    // Button's frame: the line under the trigger, or the Tooltip with a hidden copy for
-    // `aria-describedby`. `items-stretch`: in the line's column the trigger keeps the
-    // field's full width.
-    <LockedReason lock={lock} display={disabledReasonDisplay} className="flex w-full items-stretch">
+  // Button's frame: the line under the trigger, or the Tooltip with a hidden copy for
+  // `aria-describedby`. `items-stretch`: in the line's column the trigger keeps the
+  // field's full width.
+  const control = (
+    <LockFrame lock={lock} display={disabledReasonDisplay} className="flex w-full items-stretch">
       {trigger}
-    </LockedReason>
-  ) : (
-    trigger
+    </LockFrame>
   );
 
   const box =

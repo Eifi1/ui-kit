@@ -7,6 +7,7 @@ import {
   AccountMenuTextSize,
   Button,
   DevMenu,
+  HeldChangesBanner,
   Input,
   LanguageMenu,
   MenuItem,
@@ -34,7 +35,8 @@ import { Example, Note, NO_ROUTER, READOUT, Row, code } from "../lib/section";
 /**
  * THE TOP BAR'S SHARED PARTS (0.42, docs/top-bar-harmonization.md §3.1), for a made-up
  * app, "Ada's Garden Planner": the slots in the one order, the language inside the account
- * menu, the tours compass, the sync status and the local-dev menu. Nothing is sent.
+ * menu, the tours compass, the sync status (and, 0.55, the banner for changes held here) and
+ * the local-dev menu. Nothing is sent.
  * Each bar has its own router, so its links move the frame and not this page.
  */
 
@@ -78,6 +80,8 @@ const SYNC_STATES: Record<string, SyncStatus> = {
   synced: { phase: "idle", online: true, pending: 0, lastSyncedAt: Date.UTC(2026, 9, 17, 12, 5) },
   pending: { phase: "idle", online: true, pending: 3 },
   syncing: { phase: "syncing", online: true, pending: 3 },
+  // 0.55: a round waits for another tab's on the same copy.
+  waitingForTab: { phase: "idle", online: true, pending: 3, waitingForTab: true },
   offline: { phase: "offline", online: false, pending: 2 },
   error: { phase: "error", online: true, pending: 0 },
   waitingForPlan: { phase: "idle", online: true, pending: 0, waitingForPlan: 2 },
@@ -221,6 +225,7 @@ export function TopBar042Demo() {
       </Example>
       <DevTools />
       <SyncStates />
+      <HeldChanges />
       <Tours />
     </>
   );
@@ -346,8 +351,8 @@ function SyncStates() {
   const [taps, setTaps] = useState(0);
   return (
     <Example
-      label="SyncStatusIndicator — the seven states"
-      hint="ranked: blocked, plan, offline, error, syncing, pending, synced"
+      label="SyncStatusIndicator — the eight states"
+      hint="ranked: blocked, plan, offline, another tab, error, syncing, pending, synced"
     >
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-4">
@@ -374,8 +379,111 @@ function SyncStates() {
         </div>
         <Note>
           With {code("onSync")} it is a "sync now" button, disabled offline and mid-round but keeping its colour;
-          without it, a status (§6.9). The second row is a status only, {code("hideWhenIdle")} (the third one, in sync,
-          draws nothing), the short words beside the cloud, and the {code("scope")} words in the tooltip (§6.10).
+          without it, a status (§6.9). {code("waitingForTab")} (0.55) is a round that waits for another tab's on the
+          same device copy: the sync engine lets one tab sync at a time, and says so meanwhile. The second row is a
+          status only, {code("hideWhenIdle")} (the third one, in sync, draws nothing), the short words beside the cloud,
+          and the {code("scope")} words in the tooltip (§6.10).
+        </Note>
+      </div>
+    </Example>
+  );
+}
+
+/* ── Changes held here ─────────────────────────────────────────────────── */
+
+/** The pretend app's round trip, so the busy state shows. */
+const roundTrip = () => new Promise<void>((resolve) => setTimeout(resolve, 700));
+
+/** The app's own sentence, as keksdose's `sync.held_in` names the budget. */
+const gardenSentence = (count: number) =>
+  count === 1
+    ? "1 change was made in “Allotment”, which is no longer the active garden. Switch back to send it, or discard it."
+    : `${count} changes were made in “Allotment”, which is no longer the active garden. Switch back to send them, or discard them.`;
+
+function HeldChanges() {
+  const [count, setCount] = useState(3);
+  // The garden the changes were made in is still in the account's list: a way back.
+  const [listed, setListed] = useState(true);
+  const [refuse, setRefuse] = useState(false);
+  const [variant, setVariant] = useState<"box" | "strip">("box");
+  const [log, setLog] = useState("—");
+  return (
+    <Example
+      label="HeldChangesBanner — changes that can't be sent from here"
+      hint="the indicator's blocked, with room for the way back and a discard that asks first"
+    >
+      <div className="flex flex-col gap-3">
+        <Row>
+          <ToggleGroup
+            aria-label="The garden the changes were made in"
+            value={listed ? "listed" : "gone"}
+            onChange={(v) => setListed(v === "listed")}
+            options={[
+              { value: "listed", label: "Still listed" },
+              { value: "gone", label: "No access" },
+            ]}
+          />
+          <ToggleGroup
+            aria-label="What the discard does"
+            value={refuse ? "fails" : "works"}
+            onChange={(v) => setRefuse(v === "fails")}
+            options={[
+              { value: "works", label: "Discard works" },
+              { value: "fails", label: "Discard fails" },
+            ]}
+          />
+          <ToggleGroup
+            aria-label="Look"
+            value={variant}
+            onChange={setVariant}
+            options={[
+              { value: "box", label: "Box" },
+              { value: "strip", label: "Strip" },
+            ]}
+          />
+        </Row>
+        <Row>
+          <SyncStatusIndicator status={{ phase: "idle", online: true, pending: 0, blocked: count }} showLabel />
+          <Button variant="secondary" size="sm" disabled={count > 0} onClick={() => setCount(3)}>
+            Hold 3 again
+          </Button>
+        </Row>
+        <div className={variant === "strip" ? "overflow-hidden rounded-md border border-subtle" : undefined}>
+          <HeldChangesBanner
+            count={count}
+            variant={variant}
+            // The app's sentence names the garden; without a way back the kit's own stands.
+            message={listed ? gardenSentence(count) : undefined}
+            onSwitchBack={
+              listed
+                ? async () => {
+                    await roundTrip();
+                    setLog(`switched back to Allotment: ${count} sent`);
+                    setCount(0);
+                  }
+                : undefined
+            }
+            onDiscard={async () => {
+              await roundTrip();
+              if (refuse) throw new Error("the server did not answer");
+              setLog(`${count} discarded, then a sync`);
+              setCount(0);
+            }}
+            formatError={(error) => `Not discarded: ${(error as Error).message}.`}
+          />
+        </div>
+        <p className={READOUT}>
+          held {count} · last: {log}
+        </p>
+        <Note>
+          The indicator in the bar shows the state; the banner is the room for what one control has none for (§2.6.1).
+          The app keeps the logic — what is held, how it goes, the sync after — and hands over the count, its own
+          sentence ({code("message")}, here naming the garden), the way back where there is one ({code("onSwitchBack")}:
+          keksdose's budget switch) and {code("onDiscard")}. "Discard…" asks first in the kit's confirm with the count,
+          then awaits the app's promise, busy while it runs; a refusal leaves the banner with the error under the
+          sentence (pick "Discard fails"). With no way back the kit's own sentence stands and Discard is the one button.
+          A strip for the shell (keksdose), one line on a phone with "More"; a box above a page (kastlan's handover
+          pages).
         </Note>
       </div>
     </Example>

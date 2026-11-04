@@ -12,6 +12,7 @@ import {
   FIELD_CAPTION_CLASS,
   FIELD_ERROR_CLASS,
   fieldHelpMark,
+  isSuggestionHint,
   isTextHint,
   LabelStrip,
   useDisabledReasonLine,
@@ -413,14 +414,15 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
   // and the hint — a FieldHint's words included — is the caption at every size.
   const helpMark = fieldHelpMark(hasContent(label) ? help : undefined, label);
   const withHelp = helpMark !== undefined;
-  const inlineHint = useInlineHint(hint, withHelp);
+  const inlineHint = useInlineHint(hint, withHelp, label);
+  // A FieldSuggestion (0.55) is a caption at every size, as text is.
   const hintAsCaption = withHelp
     ? hasContent(inlineHint)
       ? inlineHint
       : undefined
     : isTextHint(hint)
       ? hint
-      : inlineHint !== hint
+      : isSuggestionHint(hint) || inlineHint !== hint
         ? inlineHint
         : undefined;
   const labelHint = helpMark ?? (hintAsCaption === undefined ? hint : undefined);

@@ -83,11 +83,16 @@ for (const need of [
   if (shipped.has(need)) ok(need);
   else fail(`${need} is missing from the tarball`);
 }
-// README and ADOPTING.md both tell consumers to point Tailwind's @source at a directory
-// inside the package. Whichever directory that is, it has to be in the tarball.
-for (const dir of ["dist", "src"]) {
-  if ([...shipped].some((f) => f.startsWith(`${dir}/`))) ok(`${dir}/ ships (a documented @source target)`);
-  else fail(`${dir}/ is not in the tarball, but the docs name it as an @source target`);
+// README and ADOPTING.md both tell consumers to point Tailwind's @source at `dist`, so it
+// has to be in the tarball. `src/` is not, since 0.55 (MOD-3(b), refactor audit
+// 2026-10-30): it was 6.8 MB of every install, kept only as an older @source target, and
+// the source maps' `sourcesContent` carry the same source (checked once installed, below).
+if ([...shipped].some((f) => f.startsWith("dist/"))) ok("dist/ ships (the documented @source target)");
+else fail("dist/ is not in the tarball, but the docs name it as an @source target");
+{
+  const source = [...shipped].filter((f) => f.startsWith("src/"));
+  if (source.length === 0) ok("src/ does not ship");
+  else fail(`${source.length} file(s) under src/ ship (${source.slice(0, 3).join(", ")}): \`files\` lists dist only`);
 }
 // One declaration file per module, beside its .js: since 0.34 tsc emits them per module
 // (scripts/build-dts.mjs, TST-3), where tsup's roll-up hoisted them into hashed chunks. A
@@ -391,6 +396,24 @@ try {
   const css = join(scratch, "node_modules", pkg.name, "tokens.css");
   if (existsSync(css)) ok("tokens.css");
   else fail("tokens.css is not installed");
+
+  log("• the source maps carry the source");
+  // Since `src/` stopped shipping (0.55, MOD-3(b)), a debugger or an app's error report
+  // shows a kit frame from its map's own `sourcesContent`, with nothing beside it to fall
+  // back on: every map has to hold the text of every source it names. A types-only module
+  // (sync/wire, notification-types …) compiles to no code, and its map names no source.
+  {
+    const named = [...shipped]
+      .filter((f) => f.endsWith(".js.map"))
+      .map((f) => ({ file: f, ...JSON.parse(readFileSync(join(installed, f), "utf8")) }))
+      .filter((map) => map.sources?.length > 0);
+    const bare = named
+      .filter((map) => map.sourcesContent?.length !== map.sources.length || map.sourcesContent.some((s) => !s))
+      .map((map) => map.file);
+    if (named.length > 0 && bare.length === 0) ok(`${named.length} source maps, each with its sources' text`);
+    else if (named.length === 0) fail("the tarball ships no source map that names a source");
+    else fail(`${bare.length} source map(s) without sourcesContent: ${bare.slice(0, 3).join(", ")}`);
+  }
 } finally {
   rmSync(scratch, { recursive: true, force: true });
   rmSync(tarball, { force: true });

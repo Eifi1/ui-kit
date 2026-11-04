@@ -124,11 +124,21 @@ export type FormActionsStickyWithin = "viewport" | "container";
 /**
  * Extra attributes for the save button — an `id`, `data-*` hooks for tests or
  * analytics, an `aria-describedby`. The props FormActions drives itself (type, click,
- * disabled, variant, form, children, the busy state) are not among them.
+ * disabled, variant, form, children, the busy state) are not among them; nor is
+ * `refused` (0.55), which would refuse the submit behind `submitDisabledReason`'s back.
  */
 export type FormActionsSubmitProps = Omit<
   ButtonProps,
-  "type" | "onClick" | "disabled" | "disabledReason" | "variant" | "form" | "children" | "aria-busy" | "commit"
+  | "type"
+  | "onClick"
+  | "disabled"
+  | "disabledReason"
+  | "refused"
+  | "variant"
+  | "form"
+  | "children"
+  | "aria-busy"
+  | "commit"
 > & { [key: `data-${string}`]: string | number | boolean | undefined };
 
 /** The start-side action of {@link FormActionsProps.destructive}, as data. */

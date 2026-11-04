@@ -24,7 +24,7 @@
 // The kit's own module (0.34, refactor audit 2026-10, API-6b): SeriesChart, its axes and
 // the facing pair import from here. ./chart-zoom is the public face — `SharedXZoom`, the
 // types, and until 0.35 the deprecated arithmetic and HOC, which no app imports.
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ComponentType, Dispatch, ReactNode, SetStateAction } from "react";
 import { usePlotArea, useXAxisInverseScale, useYAxisInverseScale, type InverseScaleFunction } from "recharts";
 import { X } from "lucide-react";
@@ -406,6 +406,12 @@ export function SharedXZoom({ children }: { children: ReactNode }) {
   return <SharedX.Provider value={{ window, set }}>{children}</SharedX.Provider>;
 }
 
+/** The axes a chart that names none zooms: the single shared scale, one array for all. */
+const ONE_AXIS: readonly { id: string }[] = [{ id: DEFAULT_Y_AXIS }];
+
+/** The binding of a chart that does not zoom: no window, no layer, the same object always. */
+const NO_BINDING: ZoomBinding = { yDomains: {}, layer: null };
+
 /**
  * Wrap a chart in drag-to-zoom.
  *
@@ -423,19 +429,18 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
     const [ownY, setOwnY] = useState<Record<string, [number, number]> | null>(null);
     const xWindow = group ? group.window : ownX;
     const setXWindow = group ? group.set : setOwnX;
-    const axes = props.axes ?? [{ id: DEFAULT_Y_AXIS }];
+    const axes = props.axes ?? ONE_AXIS;
     const setting = props.zoomAxes ?? defaultZoomAxes(props.series);
     const only = setting === "x" || setting === "y" ? setting : undefined;
+    const { rows, series } = props;
+    const xKey = props.x?.key ?? "x";
 
     // Every axis, hidden ones included: a hidden axis still scales its lines, and a
     // line whose axis did not refit is drawn as a flat streak inside the window.
-    const source: ZoomFitSource = {
-      rows: props.rows ?? [],
-      series: [...(props.series ?? [])],
-      axes: [...axes],
-      xKey: props.x?.key ?? "x",
-    };
-    const state: ZoomState = { x: xWindow, y: ownY };
+    const source = useMemo<ZoomFitSource>(
+      () => ({ rows: rows ?? [], series: [...(series ?? [])], axes: [...axes], xKey }),
+      [rows, series, axes, xKey],
+    );
     const zoomed = xWindow !== undefined || ownY !== null;
     // A chart handed no rows or no series draws its empty state, not a plot — and a
     // "Reset zoom" floating over "No data" (every line toggled off while zoomed) offers
@@ -443,38 +448,47 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
     // were looking, and it applies again the moment a line comes back. Only an array
     // that is there and empty counts; a chart that does not pass its data is not known
     // to be empty.
-    const empty = props.rows?.length === 0 || props.series?.length === 0;
+    const empty = rows?.length === 0 || series?.length === 0;
 
-    const clear = () => {
+    const clear = useCallback(() => {
       setXWindow(undefined);
       setOwnY(null);
-    };
+    }, [setXWindow]);
 
+    // Memoised over what it reads (0.55, held back from 0.52's review): built afresh on every
+    // render, the binding was a new prop — and its layer a new element — for the chart,
+    // which then drew every series, axis and tick again for a render of the page that
+    // changed nothing in it.
+    //
     // Switched off, the chart still gets a binding — with no window and no layer — so a
     // chart whose series change type mid-life is not remounted by a different tree.
+    const binding = useMemo<ZoomBinding>(() => {
+      if (setting === "none") return NO_BINDING;
+      const state: ZoomState = { x: xWindow, y: ownY };
+      return {
+        ...zoomDomains(state, source),
+        layer: (
+          <ZoomLayer
+            axisIds={source.axes.map((axis) => axis.id)}
+            only={only}
+            onZoom={(selection) => {
+              const next = zoomAfter(state, selection, source);
+              if (next.x !== xWindow) setXWindow(next.x);
+              setOwnY(next.y);
+            }}
+            onReset={clear}
+          />
+        ),
+      };
+    }, [setting, xWindow, ownY, source, only, setXWindow, clear]);
+
     if (setting === "none") {
       return (
         <div className="relative">
-          <Chart {...props} zoom={{ yDomains: {}, layer: null }} />
+          <Chart {...props} zoom={binding} />
         </div>
       );
     }
-
-    const binding: ZoomBinding = {
-      ...zoomDomains(state, source),
-      layer: (
-        <ZoomLayer
-          axisIds={axes.map((axis) => axis.id)}
-          only={only}
-          onZoom={(selection) => {
-            const next = zoomAfter(state, selection, source);
-            if (next.x !== xWindow) setXWindow(next.x);
-            setOwnY(next.y);
-          }}
-          onReset={clear}
-        />
-      ),
-    };
 
     return (
       <div className="relative">

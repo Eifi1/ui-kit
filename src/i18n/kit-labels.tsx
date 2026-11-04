@@ -42,6 +42,7 @@ import type { SwatchPickerLabels } from "../components/swatch-picker";
 import type { IconPickerLabels } from "../components/icon-picker";
 import type { DialogFrameLabels } from "../components/dialog-frame";
 import type { FilePickerLabels } from "../components/file-button";
+import type { CameraLabels } from "../components/camera-labels";
 import type { MeasuredGridLabels } from "../components/measured-grid";
 import type { FeedbackAttachmentFieldLabels } from "../feedback/feedback-attachment";
 import type { FeedbackDialogTextLabels } from "../feedback/feedback-dialog";
@@ -121,6 +122,10 @@ import type { TopBarPartsLabels } from "../shell/top-bar-parts-labels";
 import type { SignOutPendingDialogLabels } from "../offline/sign-out-pending-dialog";
 import type { PwaUpdatePromptLabels } from "../offline/pwa-update-prompt";
 import type { SharedComputerLabels } from "../offline/shared-computer";
+import type { HeldChangesBannerLabels } from "../shell/held-changes-banner-labels";
+import type { FieldSuggestionLabels } from "../components/field-parts";
+import type { ConsentAgainLabels } from "../components/consent-again-notice-labels";
+import type { ReleaseNotesLabels } from "../components/release-notes-labels";
 
 /**
  * EVERY string the kit renders, as one typed tree — and an optional provider that
@@ -346,6 +351,9 @@ export interface UiKitLabels {
   iconPicker: IconPickerLabels;
   dialogFrame: DialogFrameLabels;
   filePicker: FilePickerLabels;
+  /** 0.55: `CameraButton` and `CameraCapture` — the camera where there is one, the photo
+   *  picker where there is none (kastlan reuse audit 2026-11-02, proposal 8). */
+  camera: CameraLabels;
   measuredGrid: MeasuredGridLabels;
   feedbackAttachment: FeedbackAttachmentFieldLabels;
   /** 0.12.0: `FeedbackDialog`'s own strings; `FeedbackThread` / `ChatComposer` (the
@@ -504,6 +512,18 @@ export interface UiKitLabels {
   pwaUpdate: PwaUpdatePromptLabels;
   /** 0.45.0: "This is a shared computer" on the sign-in form (local-first §1.5 D6). */
   sharedComputer: SharedComputerLabels;
+  /** 0.55: the banner for changes that cannot be sent from here — its sentence, "Switch
+   *  back", and the discard's question (docs/top-bar-harmonization.md §2.6.1). */
+  heldChanges: HeldChangesBannerLabels;
+  /** 0.55: a field's "suggested from" caption — the default when the app names no source,
+   *  and the button that clears the suggestion (keksdose dev #638). */
+  fieldSuggestion: FieldSuggestionLabels;
+  /** 0.55: "What you agreed to has changed — agree again?" — the chrome of
+   *  `ConsentAgainNotice` (Agree, Not now, the two disclosures, before and now); the
+   *  subject's words are the app's. */
+  consentAgain: ConsentAgainLabels;
+  /** 0.55: `ReleaseNotes` — a release's heading and its sections' headings by key. */
+  releaseNotes: ReleaseNotesLabels;
 }
 
 /**

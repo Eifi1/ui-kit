@@ -7,6 +7,7 @@ import {
   TextLink,
   ToggleGroup,
   Button,
+  ConsentAgainNotice,
   LegalAcceptCheckbox,
   LegalKitSection,
   LegalLinks,
@@ -372,6 +373,95 @@ function LegalAccept028Demo() {
   );
 }
 
+/** The subject's words are the app's: a price pool's, as keksdose asks it. */
+const CONSENT_COPY = {
+  title: "Price sharing has changed — please agree again",
+  intro:
+    "What sharing covers has grown, so this budget is asked again before anything new is shared. Until then, nothing new leaves it.",
+  changes: [
+    "The shop: its chain and, where we can place it, its own postcode. Never your own address.",
+    "The shared prices move to a public page, each from at least 10 households.",
+  ],
+};
+
+function ConsentAgainDemo() {
+  const [frame, setFrame] = useState<"card" | "banner">("card");
+  const [owner, setOwner] = useState(true);
+  const [answer, setAnswer] = useState<"open" | "agreed" | "not now">("open");
+  return (
+    <Example
+      label="ConsentAgainNotice — a consent asked again after its text changed"
+      hint="the card where it stays until answered; the banner where the reader is about to do what waits for it"
+    >
+      <div className="mb-4 flex flex-wrap gap-2">
+        <ToggleGroup<"card" | "banner">
+          aria-label="frame"
+          value={frame}
+          onChange={(value) => {
+            setFrame(value);
+            setAnswer("open");
+          }}
+          options={[
+            { value: "card", label: "card" },
+            { value: "banner", label: "banner" },
+          ]}
+        />
+        {frame === "card" && (
+          <ToggleGroup<"owner" | "guest">
+            aria-label="reader"
+            value={owner ? "owner" : "guest"}
+            onChange={(value) => setOwner(value === "owner")}
+            options={[
+              { value: "owner", label: "may answer" },
+              { value: "guest", label: "may not" },
+            ]}
+          />
+        )}
+      </div>
+      <div className="max-w-xl">
+        {answer !== "open" ? (
+          <p className="text-sm text-muted">
+            {answer === "agreed" ? "Agreed." : "Not now: the app remembers it, and asks again later."}{" "}
+            <Button size="sm" variant="secondary" onClick={() => setAnswer("open")}>
+              Ask again
+            </Button>
+          </p>
+        ) : frame === "card" ? (
+          <ConsentAgainNotice
+            frame="card"
+            {...CONSENT_COPY}
+            headingAs="h4"
+            wording={{
+              before: ["Every receipt you confirm sends the shop's chain — the chain, never the branch."],
+              now: ["Every receipt you confirm sends the shop's chain and, where we can place it, its postcode."],
+            }}
+            onAgree={owner ? () => setAnswer("agreed") : undefined}
+            note={owner ? undefined : "Only this budget's owner can agree. Until they do, it shares nothing new."}
+          />
+        ) : (
+          <ConsentAgainNotice
+            frame="banner"
+            title="Price sharing now covers more."
+            intro="New receipts are not shared until you agree."
+            changes={CONSENT_COPY.changes}
+            wordingLink={<TextLink href={HERE}>Full wording in Settings ▸ Data</TextLink>}
+            onAgree={() => setAnswer("agreed")}
+            onNotNow={() => setAnswer("not now")}
+          />
+        )}
+      </div>
+      <Note>
+        The kit draws the frame and says Agree, Not now, the two disclosures and Until now / From now on (the{" "}
+        {code("consentAgain")} labels); the title, the intro, the list and the wording are the app&apos;s. Never a
+        modal, and Not now is not a refusal: the banner does not hide itself, the app remembers the ×. The old text is a{" "}
+        {code("<del>")} and the new an {code("<ins>")}, each led by a hidden &ldquo;Removed:&rdquo; /
+        &ldquo;Added:&rdquo;. Agree {code("commit")}s, so a write lock (the demo, a lapsed plan, offline) disables it
+        with its reason.
+      </Note>
+    </Example>
+  );
+}
+
 /* ── the page's section ───────────────────────────────────────────────────── */
 
 /** Every legal-page specimen, in the order the releases added them. */
@@ -381,6 +471,7 @@ export function LegalDemo() {
       <Legal019Demo />
       <Legal028Demo />
       <LegalAccept028Demo />
+      <ConsentAgainDemo />
     </>
   );
 }

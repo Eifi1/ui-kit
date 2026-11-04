@@ -12,10 +12,13 @@
 // Since 0.52 a node can hold `children`: a group, drawn as a labelled frame round its
 // tiles (keksdose dev #642, shops by chain). Where every node is drawn is the map's own
 // layout (treemap-layout.ts), not recharts': see "Groups: a frame round their tiles".
+// Since 0.55 it draws them itself too, and recharts' `<Treemap>` is gone from it: see
+// "The picture".
 import {
-  createContext,
+  cloneElement,
+  memo,
   useCallback,
-  useContext,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -23,20 +26,21 @@ import {
   useSyncExternalStore,
 } from "react";
 import type { ComponentProps, ComponentPropsWithoutRef, KeyboardEvent, ReactElement, ReactNode } from "react";
-import { Treemap as RechartsTreemap, useChartHeight, useChartWidth } from "recharts";
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "./chart";
+import { ChartContainer, ChartTooltipContent, type ChartConfig } from "./chart";
 import { CHART_ROLES, PALETTE_HEX, PALETTE_SIZE, lerpHex, textOn } from "../theme/chart-palette";
 import { resolveChartColor, useChartEdge, useEdgesInForce, type ChartEdges } from "./chart-edge";
 import { parseHex } from "../theme/color";
 import { dirOf, rovingTarget, type Direction } from "../lib/direction";
+import { returnFocus } from "../lib/focus-left";
 import { shareFormat } from "../lib/share-format";
 import { cn } from "../lib/cn";
 import { useTextSize } from "../theme/text-size";
 import { chartHeightProps, type ChartHeight } from "./chart-height";
 import { formatWithMinus } from "../lib/minus";
+import { prefersReducedMotion } from "../lib/reduced-motion";
 import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { DEFAULT_TREEMAP_LABELS, type TreemapLabels } from "./treemap-labels";
-import { groupBody, layoutTreemap, type Box, type Placed } from "./treemap-layout";
+import { groupBody, layoutTreemap, type Placed } from "./treemap-layout";
 
 /**
  * One tile.
@@ -54,8 +58,8 @@ export interface TreemapNode {
   id: string;
   name: string;
   /** The tile's area. A node whose value is not a positive finite number is NOT
-   *  drawn — an area cannot be negative, and recharts lays a negative size out as
-   *  nonsense rather than refusing it. Saying so is the caller's job: a group that
+   *  drawn — an area cannot be negative, and a squarified layout handed a negative size
+   *  draws nonsense rather than refusing it. Saying so is the caller's job: a group that
    *  vanishes silently between two views of the same data is a bug report.
    *
    *  A GROUP's own `value` is not read: its area is its drawn children's together. Pass
@@ -348,8 +352,9 @@ function measurableFill(fill: string, tokens: readonly string[]): string | null 
 // 0.52 (refactor audit 2026-10-30, DSP-22): every tile resolved the token ramp, the ink
 // edge and the edge rule itself — three stores, each with a MutationObserver on <html>, so
 // 72 on keksdose's 24-tile maps, and up to 29 custom properties re-read on every render of
-// every tile. `Treemap` resolves them once and hands them down here; a TreemapCell drawn
-// in a caller's own recharts `<Treemap>` has no map above it and resolves its own.
+// every tile. `Treemap` resolves them once and hands them to every tile it draws; a
+// TreemapCell drawn in a caller's own recharts `<Treemap>` has no map above it and
+// resolves its own.
 
 interface TileContext {
   tokens: readonly string[];
@@ -357,11 +362,9 @@ interface TileContext {
   edges: "uniform" | "contrast";
   /** The map's keyboard (DSP-5): absent for a standalone cell. */
   keys?: TileKeys;
-  /** Where every node is drawn in a chart of this size (see "Groups"), by path: absent
-   *  for a standalone cell, which draws where recharts laid it. */
-  layout?: (width: number, height: number, scale: number) => ReadonlyMap<string, Placed>;
-  /** The pointer is on the node drawn at `box`: where the map's tooltip stands. */
-  hover?: (box: Box) => void;
+  /** The pointer is on the node at `path`: what the map's tooltip says, standing where the
+   *  node is drawn. Absent for a standalone cell, whose tooltip is its recharts map's. */
+  hover?: (path: string) => void;
 }
 
 /**
@@ -381,8 +384,6 @@ interface TileKeys {
   move: (path: string, event: KeyboardEvent<SVGGElement>) => boolean;
 }
 
-const TreemapTiles = createContext<TileContext | null>(null);
-
 // ── Groups: a frame round their tiles ─────────────────────────────────────
 //
 // 0.52 (keksdose dev #642). A group is a frame with its name in a band along the top, its
@@ -390,12 +391,21 @@ const TreemapTiles = createContext<TileContext | null>(null);
 // the map lays it out ITSELF (treemap-layout.ts): squarified as recharts does it, each
 // group given its frame's area on top of its tiles' — so a tile's area stays its share of
 // the picture in any group (0.52 code review of treemap.tsx, finding 1) — and computed up
-// front from the drawn nodes and the chart's size, which every cell reads by its path.
-// Before, a group's cell made the room during render and left it in a module cache for its
-// children's cells, which held only while recharts rendered a group before its children
-// (finding 8). recharts still renders each node's cell, and its tooltip; the map stands the
-// tooltip at the tile as drawn (`TreemapTooltip`), since recharts' own anchor is the centre
-// of the rectangle IT laid out.
+// front from the drawn nodes and the chart's size. Before, a group's cell made the room
+// during render and left it in a module cache for its children's cells, which held only
+// while recharts rendered a group before its children (finding 8).
+//
+// ── The picture ───────────────────────────────────────────────────────────
+//
+// 0.55 (held back from 0.53's code review): the map draws its nodes itself, an `<svg>` of
+// its own tiles in the order its keyboard walks them (`TreemapPlot`), with its own bubble
+// beside it (`TreemapTooltip`). Up to 0.54 recharts' `<Treemap>` still rendered each node's
+// cell and the tooltip, and the map worked round it at every turn: recharts laid the nodes
+// out again for nothing, keyed each by where IT had put it (so new data remounted the tile
+// holding the focus), anchored its bubble at the rectangle IT had laid out (so the map
+// stood it again), and brought its chart store along — about 240 kB of recharts, minified,
+// on a page whose one chart is a map. What stays is the shell every chart is drawn in,
+// `ChartContainer`.
 
 // ── Tile ──────────────────────────────────────────────────────────────────
 
@@ -450,11 +460,11 @@ export interface TreemapCellProps {
   onNodeClick?: (id: string, name: string, groups?: readonly string[]) => void;
   /** A group's cell's click; see {@link TreemapProps.onGroupClick}. */
   onGroupClick?: (id: string, name: string, groups?: readonly string[]) => void;
-  /** The ids of the groups round the node, outermost first. `Treemap` puts it on every
-   *  node it hands recharts; a cell drawn in a caller's own map has it if the data does. */
+  /** The ids of the groups round the node, outermost first. `Treemap` gives it every tile
+   *  it draws; a cell drawn in a caller's own map has it if the data does. */
   groups?: readonly string[];
-  /** The node's place in the tree, which `Treemap` puts on every node it hands recharts:
-   *  its key in the map's keyboard, where an id may repeat between a group and a tile. */
+  /** The node's place in the tree, which `Treemap` gives every tile it draws: its key in
+   *  the map's keyboard, where an id may repeat between a group and a tile. */
   path?: string;
   /** Filled in by recharts for a GROUP: the nodes laid out inside it. A cell with
    *  children draws a frame, not a tile (0.52). */
@@ -473,8 +483,8 @@ export interface TreemapCellProps {
 }
 
 /**
- * One tile. Exported so a caller drawing its own recharts `<Treemap>` gets the same
- * label rules.
+ * One tile, for a caller drawing its own recharts `<Treemap>`: the `content` that gives it
+ * the map's label rules. `Treemap` itself draws the same tile (0.55, "The picture").
  *
  * recharts' default cell inherits the chart-level `stroke`, an SVG presentation
  * attribute that lands on the `<svg>` root and cascades into the label — so the glyphs
@@ -483,34 +493,18 @@ export interface TreemapCellProps {
  * (`paint-order: stroke`), which defeats any inherited stroke and keeps the text solid
  * where it overlaps a lighter or darker part of its own tile.
  *
- * Inside a `Treemap` it is one stop of the map's keyboard, named with its value and
- * share (0.52); drawn on its own it is a stop only as a button (`onNodeClick`), named by
- * `name`.
+ * Drawn on its own it is a stop only as a button (`onNodeClick`), named by `name`; a
+ * `Treemap`'s tile is one stop of the map's keyboard, named with its value and share
+ * (0.52).
  *
  * A node with `children` is a GROUP (0.52): the cell draws a frame in the well's colour
  * (`--bg-surface-2`), with the group's name in a band along its top where the group has
- * the room (61px at Normal, treemap-layout's `BODY_SHARE`). Inside a `Treemap` its tiles are laid out
- * in the frame's body; in a caller's own nested recharts `<Treemap>` they are drawn where
- * recharts lays them, over the frame — only `Treemap` makes the room.
+ * the room (61px at Normal, treemap-layout's `BODY_SHARE`). In a caller's own nested
+ * recharts `<Treemap>` the group's tiles are drawn where recharts lays them, over the
+ * frame — only `Treemap` makes the room, laying them out in the frame's body.
  */
 export function TreemapCell(props: TreemapCellProps) {
-  const map = useContext(TreemapTiles);
-  return map ? <MapTile {...props} map={map} /> : <StandaloneTile {...props} />;
-}
-
-/** A cell inside a `Treemap`: drawn where the map's layout puts its node, read by path
- *  for the chart's size as recharts measured it. */
-function MapTile(props: TreemapCellProps & { map: TileContext }) {
-  const width = useChartWidth();
-  const height = useChartHeight();
-  const { scale } = useTextSize();
-  const place =
-    props.path !== undefined && width && height ? props.map.layout?.(width, height, scale).get(props.path) : undefined;
-  return <Tile {...props} place={place} />;
-}
-
-/** A cell with no `Treemap` above it: it resolves what the map would have handed it. */
-function StandaloneTile(props: TreemapCellProps) {
+  // A cell with no `Treemap` above it resolves what the map would have handed it.
   const tokens = useChartTokenHex().ramp;
   const edgeFor = useChartEdge();
   const edges = useEdgesInForce(props.edges ?? "auto");
@@ -542,10 +536,9 @@ function Tile({
   // Before the early return: a hook has to run on every render of the cell.
   const { scale } = useTextSize();
   const { tokens: tokenHex, edgeFor, edges, keys } = map;
-  // Depth 0 is recharts' synthetic root, which spans the whole chart.
+  // Depth 0 is recharts' synthetic root, which spans the whole chart; the map draws none.
   if (!depth) return null;
-  // Inside a Treemap, where the map's layout draws the node; on its own, where recharts
-  // laid it out.
+  // In a Treemap, where the map's layout puts the node; on its own, where recharts laid it.
   const box = place?.box ?? { x, y, width, height };
   // Whole pixels: a rect on a half pixel renders its edge across two half-lit
   // columns, and the text baseline inherits that blur.
@@ -624,7 +617,7 @@ function Tile({
       onClick={activate}
       onKeyDown={onKeyDown}
       onFocus={roving ? () => roving.onFocus(path!) : undefined}
-      onMouseEnter={map.hover ? () => map.hover!({ x: px, y: py, width: pw, height: ph }) : undefined}
+      onMouseEnter={map.hover && path != null ? () => map.hover!(path) : undefined}
       // A clickable tile is a button to a keyboard and a screen reader too; the
       // drilldown it opens was mouse-only in the app this came from. Under `redactNames`
       // the group carries `data-private` whenever it carries a name, button or not: the
@@ -723,14 +716,13 @@ const TREEMAP_CONFIG: ChartConfig = {};
  * (rightly) refuse it. The bubble holds the name and the value, and the value cell is
  * already `data-private`, so tagging the wrapper hides nothing extra.
  *
- * recharts CLONES the `content` element to inject `active`/`payload`, so this has to BE
- * that element — a `<div>` wrapped around `<ChartTooltipContent />` in the JSX would
- * take those props itself and hand the tooltip nothing.
+ * The map's tooltip CLONES the bubble element to hand it `active`/`payload`, as recharts'
+ * did, so this has to BE that element — a `<div>` wrapped around `<ChartTooltipContent />`
+ * in the JSX would take those props itself and hand the tooltip nothing.
  *
  * `groups: false` is `redactNames="tiles"` (0.53): a group's bubble is left untagged, as its
- * frame is. The payload says which node is hovered — recharts hands the node itself, with
- * its laid-out `children` for a group and `null` for a tile, as the cell is told — so
- * anything else, or no payload, is tagged.
+ * frame is. The payload says which node is hovered — the node itself, with its `children`
+ * for a group and none for a tile — so anything else, or no payload, is tagged.
  */
 function RedactedTooltipContent({
   groups = true,
@@ -745,67 +737,122 @@ function RedactedTooltipContent({
   );
 }
 
-/** Where the pointer last entered a node, as drawn: a store of one box, so that only the
- *  tooltip re-renders when it moves — not the map, nor (through recharts) every tile. */
+/** Which node the pointer is on, by path: a store of one string, so that only the tooltip
+ *  re-renders when it moves — not the map, nor every tile. `clear` when it leaves the
+ *  chart, or on Escape. Its box is read off the layout as drawn now, so new data or a
+ *  resize under a still pointer moves the bubble with its node, or takes it away with it. */
 interface Anchor {
-  read: () => Box | null;
+  read: () => string | null;
   subscribe: (onChange: () => void) => () => void;
-  set: (box: Box) => void;
+  set: (path: string | null) => void;
+  clear: () => void;
 }
 
 function createAnchor(): Anchor {
-  let at: Box | null = null;
+  let at: string | null = null;
   const listeners = new Set<() => void>();
+  const set = (path: string | null) => {
+    if (path === at) return;
+    at = path;
+    listeners.forEach((onChange) => onChange());
+  };
   return {
     read: () => at,
     subscribe: (onChange) => {
       listeners.add(onChange);
       return () => listeners.delete(onChange);
     },
-    set: (box) => {
-      if (at && at.x === box.x && at.y === box.y && at.width === box.width && at.height === box.height) return;
-      at = box;
-      listeners.forEach((onChange) => onChange());
-    },
+    set,
+    clear: () => set(null),
   };
 }
 
+/** The slide recharts gave its bubble between two positions, kept for the kit's own. */
+const TOOLTIP_SLIDE = "transform 400ms ease";
+
 /**
- * The map's tooltip, stood at the tile the pointer is on AS DRAWN. recharts anchors its
- * tooltip at the centre of the rectangle it laid the node out in, and since 0.52 the map
- * draws its nodes where its own layout puts them (see "Groups") — a tooltip anchored by
- * recharts could stand over a neighbour. It stands 10px off the tile's centre, towards the
- * chart's middle, so it does not run off the side the tile is on. `content` is the bubble,
- * as recharts' own `content`.
+ * The map's tooltip (0.55): the bubble for the node the pointer is on, stood at the node AS
+ * DRAWN, 10px off its centre towards the chart's middle so it does not run off the side
+ * the node is on. `content` is the bubble, cloned with `active` and the node as its
+ * `payload`, in the shape recharts handed it: `ChartTooltipContent` reads the name, the
+ * value and the node's own `fill` for its swatch.
+ *
+ * It behaves as recharts' bubble did, through which the map drew it up to 0.54: entering a
+ * node shows it, leaving the chart takes it away, Escape dismisses it until the pointer
+ * enters another node (WCAG 1.4.13, content on hover), and it slides from node to node
+ * unless the reader asked for less motion. Its box keeps recharts' class,
+ * `recharts-tooltip-wrapper`: `ChartTooltipContent` re-measures its nudge into the viewport
+ * when that box's slide ends, and a host's CSS for a chart's bubble reaches it there too.
  */
-function TreemapTooltip({ content, anchor }: { content: ReactElement; anchor: Anchor }) {
+function TreemapTooltip({
+  content,
+  anchor,
+  nodes,
+  placed,
+  width,
+  height,
+}: {
+  content: ReactElement;
+  anchor: Anchor;
+  nodes: ReadonlyMap<string, MapNode>;
+  placed: ReadonlyMap<string, Placed>;
+  width: number;
+  height: number;
+}) {
   const at = useSyncExternalStore(anchor.subscribe, anchor.read, anchor.read);
-  const width = useChartWidth() ?? 0;
-  const height = useChartHeight() ?? 0;
-  if (!at) return <ChartTooltip content={content} />;
-  const cx = at.x + at.width / 2;
-  const cy = at.y + at.height / 2;
+  const shown = at !== null;
+  useEffect(() => {
+    if (!shown) return;
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") anchor.clear();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [shown, anchor]);
+  // A node that is gone takes the bubble with it for good: the node coming back with new
+  // data is not the pointer coming back to it.
+  useEffect(() => {
+    if (at !== null && !nodes.has(at)) anchor.clear();
+  }, [at, nodes, anchor]);
+  const node = at === null ? undefined : nodes.get(at);
+  // The box the tile draws: the layout's, on whole pixels already.
+  const box = at === null ? undefined : placed.get(at)?.box;
+  if (!node || !box) return null;
+  const cx = box.x + box.width / 2;
+  const cy = box.y + box.height / 2;
   const left = cx > width / 2;
   const up = cy > height / 2;
   return (
-    <ChartTooltip
-      content={content}
-      position={{ x: cx + (left ? -10 : 10), y: cy + (up ? -10 : 10) }}
-      // `translate` composes with the `transform` recharts sets for `position`.
-      wrapperStyle={{ translate: `${left ? "-100%" : "0"} ${up ? "-100%" : "0"}` }}
-    />
+    <div
+      className="recharts-tooltip-wrapper"
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        pointerEvents: "none",
+        transform: `translate(${cx + (left ? -10 : 10)}px, ${cy + (up ? -10 : 10)}px)`,
+        // The bubble's corner at that point: towards the middle, whatever its size.
+        translate: `${left ? "-100%" : "0"} ${up ? "-100%" : "0"}`,
+        transition: prefersReducedMotion() ? undefined : TOOLTIP_SLIDE,
+      }}
+    >
+      {cloneElement(content, {
+        active: true,
+        payload: [{ dataKey: "size", name: node.name, value: node.size, color: node.fill, payload: node }],
+      } as Partial<ComponentProps<typeof ChartTooltipContent>>)}
+    </div>
   );
 }
 
-/** What `Treemap` hands recharts per node: a tile, or a group with `children`. recharts
- *  hands each node's fields to its cell; a field left out of this never reaches
- *  `TreemapCell` (0.8.0 shipped `labelColor` without it — keksdose). A type, not an
- *  interface: recharts' `data` wants an index signature, which only an alias meets. */
+/** What `Treemap` draws per node: a tile, or a group with `children`. Every field a tile
+ *  reads is here; a field left out of this never reaches the tile (0.8.0 shipped
+ *  `labelColor` without it — keksdose). A type, not an interface: the tooltip hands it on
+ *  as a `payload`, a `Record<string, unknown>`, whose index signature only an alias meets. */
 type MapNode = {
   id: string;
   name: string;
-  /** A tile's value; a group's, its drawn tiles' together. recharts sums a group again
-   *  for its layout, and its tooltip reads this field. */
+  /** A tile's value; a group's, its drawn tiles' together. The layout and the tooltip read
+   *  this field. */
   size: number;
   fill: string;
   labelColor?: string;
@@ -872,17 +919,128 @@ function mapNodes(
   return walk(data, [], undefined);
 }
 
-/** The last layout made for each drawn tree, by size and text size: a memo, not state — it
- *  is a pure function of its key, so whichever cell asks first, every cell gets the same. */
-const LAYOUTS = new WeakMap<readonly MapNode[], { key: string; placed: ReadonlyMap<string, Placed> }>();
+/** What every tile of a map is handed alike: the map's options, which a cell drawn in a
+ *  caller's own recharts map takes as props. */
+type TileOptions = Pick<TreemapCellProps, "onNodeClick" | "onGroupClick" | "redactNames" | "nodeNote" | "dir">;
 
-function layoutFor(nodes: readonly MapNode[], width: number, height: number, scale: number) {
-  const key = `${width}x${height}@${scale}`;
-  const last = LAYOUTS.get(nodes);
-  if (last?.key === key) return last.placed;
-  const placed = layoutTreemap(nodes, width, height, scale);
-  LAYOUTS.set(nodes, { key, placed });
-  return placed;
+/** A tile of the map's own picture: memoised, so a render of the map that changes nothing a
+ *  tile reads draws no tile again — its layout, fitted labels and note (0.52 code review of
+ *  feat/0.52.0; recharts' PureComponent kept that up to 0.54). */
+const PlotTile = memo(Tile);
+
+interface PlotProps {
+  /** The chart's box in px: see {@link TreemapPlot}. Nothing is drawn at 0. */
+  width?: number;
+  height?: number;
+  nodes: readonly MapNode[];
+  /** `nodes` depth first: the order the tiles are drawn and walked in. */
+  order: readonly MapNode[];
+  options: TileOptions;
+  map: TileContext;
+  /** The tooltip's bubble, cloned per node by `TreemapTooltip`. */
+  bubble: ReactElement;
+  anchor: Anchor;
+}
+
+/**
+ * The map's picture (0.55, see "The picture"): an `<svg>` of the map's own tiles and frames,
+ * laid out for the box it is handed, and the bubble over it.
+ *
+ * The box is the chart's own, which `Treemap` measures on its root (`useBoxSize`) — or the
+ * one a container hands its one child, which wins: recharts' `ResponsiveContainer` did so
+ * up to recharts 2, and the kit's suites stand one in at 800x300.
+ *
+ * Drawn in `order`, the keyboard's: a group's frame before the tiles inside it, which paint
+ * over it, so the document's order is the walk the arrows take. A node is keyed by its PATH:
+ * recharts keyed it by where it had laid it out (`x-y-name`), so new data or a resize
+ * remounted the node holding the focus, and its focus fell to <body> unless the map gave it
+ * back (0.52 code review of treemap.tsx, finding 7). Now its element stays.
+ *
+ * The SVG takes no chart-level `stroke`: recharts spread one onto its root, from where it
+ * inherited into every label (see TreemapCell). Each tile strokes its own rect. And it is
+ * pinned `ltr`, as `ChartContainer` pins recharts' surface: the tiles are laid out
+ * physically, and each label sets its own direction.
+ */
+const TreemapPlot = memo(function TreemapPlot({
+  width = 0,
+  height = 0,
+  nodes,
+  order,
+  options,
+  map,
+  bubble,
+  anchor,
+}: PlotProps) {
+  // The band a group's name stands in grows with the text size, and its frame with it.
+  const { scale } = useTextSize();
+  const placed = useMemo(
+    () => (width > 0 && height > 0 ? layoutTreemap(nodes, width, height, scale) : null),
+    [nodes, width, height, scale],
+  );
+  const byPath = useMemo(() => new Map(order.map((node) => [node.path, node])), [order]);
+  if (!placed) return null;
+  return (
+    <div className="relative" style={{ width, height }}>
+      <svg
+        width={width}
+        height={height}
+        viewBox={`0 0 ${width} ${height}`}
+        className="block outline-none"
+        style={{ direction: "ltr" }}
+        // The pointer leaving the chart takes the bubble away, as leaving recharts' wrapper
+        // did. The SVG is the whole chart, and the bubble over it takes no pointer.
+        onMouseLeave={anchor.clear}
+      >
+        {order.map((node) => (
+          <PlotTile
+            key={node.path}
+            depth={node.groups.length + 1}
+            id={node.id}
+            name={node.name}
+            fill={node.fill}
+            labelColor={node.labelColor}
+            groups={node.groups}
+            path={node.path}
+            // A group's cell is told it is one by its children, as recharts told it.
+            children={node.children}
+            {...options}
+            map={map}
+            place={placed.get(node.path)}
+          />
+        ))}
+      </svg>
+      <TreemapTooltip content={bubble} anchor={anchor} nodes={byPath} placed={placed} width={width} height={height} />
+    </div>
+  );
+});
+
+/**
+ * An element's box in whole px, measured as it mounts and followed (`ResizeObserver`):
+ * `null` until then, and where there is no layout to measure (SSR, jsdom) or nothing in it.
+ * The size the map is laid out for (see {@link TreemapPlot}).
+ */
+function useBoxSize(element: HTMLElement | null): { width: number; height: number } | null {
+  const [size, setSize] = useState<{ width: number; height: number } | null>(null);
+  useLayoutEffect(() => {
+    if (!element) return;
+    const take = (width: number, height: number) => {
+      const w = Math.round(width);
+      const h = Math.round(height);
+      setSize((last) =>
+        w > 0 && h > 0 ? (last?.width === w && last.height === h ? last : { width: w, height: h }) : null,
+      );
+    };
+    // The layout box, not the bounding one: a chart in a scaled preview is drawn in its own
+    // px, which a transform does not change.
+    take(element.clientWidth, element.clientHeight);
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry) take(entry.contentRect.width, entry.contentRect.height);
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [element]);
+  return size;
 }
 
 /** One ref callback per map and path, the same on every render: a new function each time
@@ -925,7 +1083,9 @@ function depthFirst(nodes: readonly MapNode[]): MapNode[] {
  * Renders nothing when no node has a positive value — an empty box is a hole in the
  * card, and the caller's own sentence is the better answer there.
  *
- * Needs `recharts`, like everything behind `@eifi1/ui-kit/chart`.
+ * Drawn by the kit (0.55): the layout, the SVG and the tooltip are the map's own, inside the
+ * chart shell every chart shares, `ChartContainer` — whose `ResponsiveContainer` is all of
+ * `recharts` it still needs.
  */
 export function Treemap({
   data,
@@ -944,7 +1104,7 @@ export function Treemap({
   style,
   ...rest
 }: TreemapProps) {
-  // Resolved once for every tile, which reads them from `TreemapTiles` (DSP-22).
+  // Resolved once for every tile, which is handed them (DSP-22).
   const { ramp: tokenHex, card } = useChartTokenHex();
   const edgeFor = useChartEdge();
   const edgesInForce = useEdgesInForce(edges);
@@ -958,12 +1118,19 @@ export function Treemap({
   const shareText = useMemo(() => shareFormat(locale), [locale]);
   // Read off the DOM after mount: the `dir` a treemap sits under is an ancestor's
   // attribute, and SVG text anchoring cannot follow it by CSS (see TreemapCell). Again
-  // on new data, because a map that had nothing to draw rendered no root to read.
-  const rootRef = useRef<HTMLDivElement>(null);
+  // on new data, and when the root mounts: a map that had nothing to draw rendered none.
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const [root, setRoot] = useState<HTMLDivElement | null>(null);
+  const takeRoot = useCallback((element: HTMLDivElement | null) => {
+    rootRef.current = element;
+    setRoot(element);
+  }, []);
   const [dir, setDir] = useState<Direction>("ltr");
   useLayoutEffect(() => {
     setDir(dirOf(rootRef.current));
-  }, [data]);
+  }, [root, data]);
+  // The box the map is laid out for (0.55): the root's own, as recharts measured it.
+  const size = useBoxSize(root);
   const ramp = colors && colors.length > 0 ? colors : tokenHex;
   // Memoised: moving the tab stop re-renders the map, and fresh nodes would re-lay it.
   const nodes = useMemo(
@@ -977,28 +1144,24 @@ export function Treemap({
       }),
     [data, ramp, maxTiles, tokenHex, card],
   );
-  // The keyboard walks groups and tiles alike, in the data's order (see `onNodeClick`).
+  // The keyboard walks groups and tiles alike, in the data's order (see `onNodeClick`); the
+  // picture is drawn in it too (`TreemapPlot`).
   const order = useMemo(() => depthFirst(nodes), [nodes]);
-  // The map's layout (see "Groups"), for the size recharts measured: each cell asks for it
-  // by that size, and `layoutFor` makes it once per size and text size.
-  const layout = useMemo(
-    () => (width: number, height: number, scale: number) => layoutFor(nodes, width, height, scale),
-    [nodes],
-  );
   // Where the pointer is, for the tooltip to stand at (`TreemapTooltip`).
   const [anchor] = useState(createAnchor);
 
   // The keyboard (DSP-5): one tab stop for the map, moved between tiles in `order` as
-  // PieChart's is between slices. The tiles are drawn by recharts, so they register
-  // their element here rather than being looked up.
+  // PieChart's is between slices. Each tile registers its element here as it mounts,
+  // rather than being looked up.
   //
   // The stop is moved on the elements IN PLACE, as PieChart moves its own, and never
-  // reaches the tiles' context: kept there, every arrow-key step was a new context and
-  // every tile drew again — layout, fitted labels, notes (0.52 code review of treemap.tsx,
-  // finding 6). And recharts keys a node by where IT lays it out (`x-y-name`), so new data
-  // or a resize remounts the focused node: its element leaves holding the focus, which
-  // fell to <body> (finding 7). The path it held is kept, and its new element takes the
-  // focus back as it mounts — or, if the node is gone, the stop does.
+  // reaches the tiles' props: kept there, every arrow-key step was a new context and every
+  // tile drew again — layout, fitted labels, notes (0.52 code review of treemap.tsx,
+  // finding 6). A tile keeps its element across new data and a resize (it is keyed by its
+  // path, see TreemapPlot; recharts remounted it, finding 7), but one can still leave
+  // holding the focus: its node is gone, or the whole picture is (a box measured 0). The
+  // path it held is kept for the commit, and a new element for it takes the focus back as
+  // it mounts — or, once the node is gone, the stop does.
   const tiles = useRef(new Map<string, SVGGElement>());
   const orderRef = useRef(order);
   const stopRef = useRef<string | undefined>(undefined);
@@ -1018,9 +1181,11 @@ export function Treemap({
       if (element) {
         tiles.current.set(path, element);
         element.setAttribute("tabindex", path === stopOf() ? "0" : "-1");
+        // The kit's one rule (lib/focus-left `returnFocus`; 0.52 code review 2026-10-31,
+        // held to 0.55): the path's new element, in the commit that removed its old one.
         if (restoreRef.current === path) {
           restoreRef.current = null;
-          element.focus();
+          returnFocus({ opener: element });
         }
         return;
       }
@@ -1060,7 +1225,8 @@ export function Treemap({
     const at = applyStop();
     if (restoreRef.current === null) return;
     restoreRef.current = null;
-    if (at) tiles.current.get(at)?.focus();
+    // The node is gone: the stated fallback, the tile that holds the tab stop now.
+    returnFocus({ fallback: [at ? tiles.current.get(at) : null] });
   }, [order, applyStop, register]);
   const move = useCallback((path: string, event: KeyboardEvent<SVGGElement>) => {
     const drawn = orderRef.current;
@@ -1076,12 +1242,11 @@ export function Treemap({
     return true;
   }, []);
 
-  // Everything below is memoised over what it reads (0.52, code review of feat/0.52.0). A
-  // tile re-renders when its context or its recharts element changes, and recharts' map is
-  // a PureComponent that redraws every node when `content` or its tooltip child is a new
-  // element: built afresh per render, as they were, a page re-rendering the card or one
-  // arrow-key step redrew every tile and ran `labels.tile` and two `Intl` formats per node
-  // again — the cost DSP-22 had just taken out of the tiles.
+  // Everything below is memoised over what it reads (0.52, code review of feat/0.52.0). The
+  // picture and each tile are memoised components (`TreemapPlot`, `PlotTile`) that draw
+  // again when a prop is new: built afresh per render, as these were, a page re-rendering
+  // the card or one arrow-key step redrew every tile and ran `labels.tile` and two `Intl`
+  // formats per node again — the cost DSP-22 had just taken out of the tiles.
   //
   // The share is of what is DRAWN, so it always reads as "of this picture" — a group's
   // and a tile's inside it alike.
@@ -1125,60 +1290,48 @@ export function Treemap({
     () => ({ name: (path) => names.get(path), onFocus, register, move }),
     [names, onFocus, register, move],
   );
-  const context = useMemo<TileContext>(
-    () => ({ tokens: tokenHex, edgeFor, edges: edgesInForce, keys, layout, hover: anchor.set }),
-    [tokenHex, edgeFor, edgesInForce, keys, layout, anchor],
+  const map = useMemo<TileContext>(
+    () => ({ tokens: tokenHex, edgeFor, edges: edgesInForce, keys, hover: anchor.set }),
+    [tokenHex, edgeFor, edgesInForce, keys, anchor],
   );
-  const cell = useMemo(
-    () => (
-      <TreemapCell
-        onNodeClick={onNodeClick}
-        onGroupClick={onGroupClick}
-        redactNames={redactNames}
-        nodeNote={nodeNote}
-        dir={dir}
-      />
-    ),
+  const options = useMemo<TileOptions>(
+    () => ({ onNodeClick, onGroupClick, redactNames, nodeNote, dir }),
     [onNodeClick, onGroupClick, redactNames, nodeNote, dir],
   );
-  const tooltip = useMemo(
-    () => (
-      <TreemapTooltip
-        content={
-          redactNames ? (
-            <RedactedTooltipContent hideLabel valueFormatter={format} groups={redactNames === true} />
-          ) : (
-            <ChartTooltipContent hideLabel valueFormatter={format} />
-          )
-        }
-        anchor={anchor}
-      />
-    ),
-    [redactNames, format, anchor],
+  const bubble = useMemo(
+    () =>
+      redactNames ? (
+        <RedactedTooltipContent hideLabel valueFormatter={format} groups={redactNames === true} />
+      ) : (
+        <ChartTooltipContent hideLabel valueFormatter={format} />
+      ),
+    [redactNames, format],
   );
 
   if (nodes.length === 0) return null;
   const box = chartHeightProps(height);
   return (
-    // Round the container, not inside it: ResponsiveContainer sizes its ONE child, the chart.
-    <TreemapTiles.Provider value={context}>
-      <ChartContainer
-        role="figure"
-        {...rest}
-        // Read through `aria-describedby`, after a caller's own ids; `hidden`, inside the
-        // figure (0.52 code review, deep, charts, finding 7).
-        description={description}
-        ref={rootRef}
-        config={TREEMAP_CONFIG}
-        className={cn(box.className, rest.className)}
-        style={{ ...style, ...box.style }}
-      >
-        {/* No chart-level `stroke`: recharts spreads it onto the <svg> root, from where
-            it inherits into every label (see TreemapCell). Each cell strokes its own rect. */}
-        <RechartsTreemap data={nodes} dataKey="size" fill="var(--chart-1)" isAnimationActive={false} content={cell}>
-          {tooltip}
-        </RechartsTreemap>
-      </ChartContainer>
-    </TreemapTiles.Provider>
+    <ChartContainer
+      role="figure"
+      {...rest}
+      // Read through `aria-describedby`, after a caller's own ids; `hidden`, inside the
+      // figure (0.52 code review, deep, charts, finding 7).
+      description={description}
+      ref={takeRoot}
+      config={TREEMAP_CONFIG}
+      className={cn(box.className, rest.className)}
+      style={{ ...style, ...box.style }}
+    >
+      <TreemapPlot
+        width={size?.width}
+        height={size?.height}
+        nodes={nodes}
+        order={order}
+        options={options}
+        map={map}
+        bubble={bubble}
+        anchor={anchor}
+      />
+    </ChartContainer>
   );
 }

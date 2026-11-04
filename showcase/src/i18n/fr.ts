@@ -144,6 +144,12 @@ export const fr: Dictionary = {
       blurb:
         "Travailler sur la copie de l’appareil : le moteur de synchronisation et sa file d’attente, une requête par périmètre, les modifications refusées conservées, les délais après une erreur et la déconnexion protégée ; son worker, son état pour l’indicateur et la lecture en direct de la copie.",
     },
+    "release-notes": {
+      title: "Notes de version",
+      short: "Versions",
+      blurb:
+        "Un CHANGELOG.md pour un lecteur : l’analyseur du fichier que chaque dépôt écrit avec commit-and-tag-version, et la carte qui montre une version — son numéro et son jour, ses sections par clé, les notes regroupées par périmètre.",
+    },
     "auth-account": {
       title: "Connexion et sécurité du compte",
       short: "Connexion",
@@ -572,7 +578,7 @@ export const fr: Dictionary = {
       title: "Limites, erreurs, CORS et synchronisation",
       short: "Limites",
       blurb:
-        "Le limiteur de débit à fenêtre glissante et à qui appartient l’adresse qu’il compte, chaque refus du kit renvoyé avec le statut de son contrat, CORS pour quelques origines supplémentaires, le jeton du planificateur sur les routes de tâches, et la synchronisation local-first : la modification la plus récente l’emporte, refus par modification.",
+        "Le limiteur de débit à fenêtre glissante et à qui appartient l’adresse qu’il compte, chaque refus du kit renvoyé avec le statut de son contrat, CORS pour quelques origines supplémentaires, le jeton du planificateur sur les routes de tâches, et la synchronisation local-first : la modification la plus récente l’emporte, refus par modification. Et l’audit des dépendances que lance la vérification de chaque backend.",
     },
     "server-translation-review": {
       title: "Relecture des traductions",
@@ -655,6 +661,14 @@ export const fr: Dictionary = {
       "garder des modifications en attente d’un forfait",
       "afficher l’état de la synchronisation",
       "lire en direct la copie de l’appareil",
+    ],
+    "release-notes": [
+      "montrer ce qui a changé dans une version",
+      "une page de journal des modifications",
+      "une fenêtre des nouveautés après une mise à jour",
+      "lire le fichier CHANGELOG.md",
+      "regrouper les notes de version par périmètre",
+      "traduire les titres de section du journal",
     ],
     "auth-account": [
       "mise en page de la connexion",

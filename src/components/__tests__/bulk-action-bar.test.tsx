@@ -142,6 +142,24 @@ describe("BulkActionBar", () => {
     expect(input).toHaveFocus();
   });
 
+  // 0.54 follow-up: `ownsArrows` read `isContentEditable` alone, which jsdom (and any
+  // engine without it) does not have, so the toolbar took an editor's caret keys. The rule
+  // is lib/editable-content's now.
+  it("leaves a contenteditable's arrows alone", () => {
+    render(
+      <BulkActionBar count={1} onClear={() => {}} variant="inline">
+        <div data-toolbar-item="" contentEditable suppressContentEditableWarning role="textbox" aria-label="note" />
+      </BulkActionBar>,
+    );
+    const note = screen.getByRole("textbox", { name: "note" });
+    note.focus();
+    expect(note).toHaveFocus();
+    for (const key of ["ArrowLeft", "ArrowRight", "Home", "End"]) {
+      fireEvent.keyDown(note, { key });
+      expect(note).toHaveFocus();
+    }
+  });
+
   it("reads its words from the provider", () => {
     render(
       <UiKitProvider labels={{ bulkActionBar: { selected: (n) => `${n} ausgewählt`, clear: "Auswahl aufheben" } }}>

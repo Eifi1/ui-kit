@@ -40,6 +40,9 @@ export interface ApiMember {
   fields?: ApiField[];
   values?: ApiValue[];
   methods?: ApiMethod[];
+  /** server-kit 0.21: a plain `constant`'s value (an int, float, str or bool), so a copy on
+   *  this side can be held to it; absent for enums, tuples, timedeltas and patterns. */
+  value?: string | number | boolean;
 }
 
 export interface ContractLink {

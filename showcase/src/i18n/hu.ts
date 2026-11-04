@@ -147,6 +147,12 @@ export const hu: Dictionary = {
       blurb:
         "Munka az eszköz másolatán: a szinkronizáló motor a várólistájával, hatókörönként egy kérés, a megmaradó elutasított módosítások, a hiba utáni várakozások és a védett kijelentkezés; a worker, az állapot a jelzőhöz és a másolat élő olvasása.",
     },
+    "release-notes": {
+      title: "Kiadási megjegyzések",
+      short: "Kiadások",
+      blurb:
+        "Egy CHANGELOG.md olvasóknak: az elemző a fájlhoz, amelyet minden tároló a commit-and-tag-version eszközzel ír, és a kártya, amely egy kiadást mutat — a verzióját és napját, a szakaszait kulcs szerint, a bejegyzéseket terület szerint csoportosítva.",
+    },
     "auth-account": {
       title: "Bejelentkezés és fiókbiztonság",
       short: "Belépés",
@@ -574,7 +580,7 @@ export const hu: Dictionary = {
       title: "Korlátok, hibák, CORS és szinkronizálás",
       short: "Korlátok",
       blurb:
-        "A csúszóablakos sebességkorlátozó és az, hogy kinek a címét számolja, a csomag minden elutasítása a szerződés szerinti státusszal megválaszolva, CORS néhány további originre, az ütemező tokenje a feladatútvonalakon, és a local-first szinkronizálás: a legutóbbi módosítás nyer, elutasítás módosításonként.",
+        "A csúszóablakos sebességkorlátozó és az, hogy kinek a címét számolja, a csomag minden elutasítása a szerződés szerinti státusszal megválaszolva, CORS néhány további originre, az ütemező tokenje a feladatútvonalakon, és a local-first szinkronizálás: a legutóbbi módosítás nyer, elutasítás módosításonként. És a függőségek ellenőrzése, amelyet minden backend kapuja lefuttat.",
     },
     "server-translation-review": {
       title: "Fordítások ellenőrzése",
@@ -657,6 +663,14 @@ export const hu: Dictionary = {
       "módosítások megtartása egy előfizetésig",
       "a szinkronizálás állapotának megjelenítése",
       "az eszköz másolatának élő olvasása",
+    ],
+    "release-notes": [
+      "megmutatni, mi változott egy kiadásban",
+      "változásnapló oldal",
+      "újdonságok párbeszédablak frissítés után",
+      "a CHANGELOG.md fájl beolvasása",
+      "kiadási megjegyzések csoportosítása terület szerint",
+      "a változásnapló szakaszcímeinek fordítása",
     ],
     "auth-account": [
       "bejelentkező oldal elrendezése",

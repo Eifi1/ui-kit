@@ -495,9 +495,9 @@ function WellDemo() {
       </Note>
       <Note>
         Under More contrast, in light, the well darkens to 10 % ink into the card, 1.19–1.24:1 from it, and what reads
-        on it steps with it: money is solved onto the well per preset, the status colours, teal, orange and{" "}
-        {code("--status-edited")} deepen, and {code("--bg-active")} mixes at 16 %. A link button reads{" "}
-        {code("--brand-muted")} there, in both modes. Dark keeps its well. Flip More contrast in the top bar.
+        on it steps with it: money is solved onto the well per preset, the status colours, teal and orange deepen, and{" "}
+        {code("--bg-active")} mixes at 16 %. A link button reads {code("--brand-muted")} there, in both modes. Dark
+        keeps its well. Flip More contrast in the top bar.
       </Note>
     </Example>
   );

@@ -117,6 +117,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "FieldStrip group={false}",
     "Textarea — the floated label on a scrolled field",
     "Textarea — the label strip's lower edge",
+    "FieldSuggestion — where a prefilled value came from",
   ],
   "forms": [
     "Form · RhfTextField · RhfNumberField · RhfSelect · RhfInlineEntityCombobox · RhfTextarea · RhfCheckbox",
@@ -248,6 +249,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "FileButton — one file",
     "FileButton — several files, capped",
     "FileButton — camera, pending, droppable",
+    "CameraButton — the camera where there is one, the photo picker where there is none",
+    "CameraButton — noCamera=\"hide\" beside an upload button",
     "FileButton — own check, own words, opened through its ref",
     "useFilePicker — someone else's trigger",
     "FileDropzone — remove inside the zone, inline refusal",
@@ -361,6 +364,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "IconButton — quiet",
     "Button — stretch",
     "Button — disabled",
+    "Button — refused",
     "Button — ref",
     "Button — link",
     "buttonClasses()",
@@ -604,6 +608,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "x.tickValues on a category axis",
     "zoomAxes — sixty bars that opt back into a zoom",
     "visibleSeries / seriesLegendEntries — colours that hold still",
+    "LegendedSeriesChart — the chart and its legend as one",
     "Tilted category ticks, a tooltip bounded by its scroller, whole-number ticks, a custom dash",
     "Bars and periods from the keyboard — onPointClick",
     "Bars — minBarLength, chart-wide and per series",
@@ -726,13 +731,15 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "TopBarActionMenu — group headings",
     "TopBarActions — the one order",
     "DevMenu — one flask: the Account section, then the app's",
-    "SyncStatusIndicator — the seven states",
+    "SyncStatusIndicator — the eight states",
+    "HeldChangesBanner — changes that can't be sent from here",
     "TourMenu — with and without a tours page",
     "CompanySwitcher — several companies, one session",
   ],
   "page-structure": [
     "PageHeader — eyebrow, description, actions and breadcrumbs",
     "PageHeader — title only, and title with actions",
+    "PageHeaderSkeleton — the header's outline while its page loads",
     "Breadcrumbs — collapse on phones and keepEnd",
     "Breadcrumbs — separator, renderLink, labels and right-to-left",
     "SectionLabel and Caption",
@@ -806,6 +813,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "LegalLayout — Imprint, Privacy Policy, Terms",
     "LegalPage — the three pages, the kit's wording, numbers and references",
     "LegalAcceptCheckbox and LegalLinks — sign-up and the account menu",
+    "ConsentAgainNotice — a consent asked again after its text changed",
     "OneTimeCodeInput — the sign-in verification code",
     "OneTimeCodeInput — named by its prompt",
     "SignInForm — credentials, passkey, second factor, a new password",
@@ -856,6 +864,8 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "The portal for the buyer only — SubscriptionActions, CancelSubscriptionConfirm",
     "The permanent-grant warning — PlanPicker, PlanSwitchConfirm",
     "The portal in a new tab — openProviderPage, useCancelRequest",
+    "The subscription's standing in one line — SubscriptionStanding",
+    "What is used of each limit — UsageMeter",
   ],
   "feedback-compose": [
     "FeedbackDialog",
@@ -887,6 +897,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "visibleFeedbackStatuses(current)",
     "selectableFeedbackStatuses(current)",
     "feedbackCategoryRank(category)",
+    "FeedbackInbox — the two feedback pages, assembled",
     "useFeedbackColumns, FeedbackMobileCard, FeedbackAwaitingToggle — the two feedback pages",
     "FeedbackSubject — the title with its environment and rework chips",
     "The row detail",
@@ -929,11 +940,13 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "CopyButton — icon and label, and a copy that fails",
     "useCopyToClipboard / copyToClipboard",
     "useDebounce(value, ms)",
+    "useDebounce(value, ms, { key })",
     "useDebouncedCallback(fn, ms, { maxWait })",
   ],
   "helpers": [
     "@eifi1/ui-kit/dates — the helpers",
     "dateRangePresets()",
+    "One today: setToday",
     "CURRENCIES, CurrencyFlag and getCurrency",
     "lib/calc — the evaluator",
     "lib/calc — the field's own transforms",
@@ -974,6 +987,10 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
   "sync": [
     "createSyncEngine — a Dexie copy in this browser, a pretend server in memory",
     "The wiring — a handover copy",
+  ],
+  "release-notes": [
+    "ReleaseNotes — one release, on the kit's parser",
+    "parseChangelogItem · changelogSectionKey · groupByScope",
   ],
   "server-auth": [
     "auth · Functions",
@@ -1075,6 +1092,9 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "sync · Models",
     "sync · Protocols",
     "sync · Constants",
+    "dependency_audit · Functions",
+    "dependency_audit · Classes",
+    "dependency_audit · Constants",
   ],
   "server-translation-review": [
     "translation_review · Functions",
@@ -1134,6 +1154,7 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
     "FieldStrip023Demo",
     "Textarea024Demo",
     "TextareaEdge025Demo",
+    "FieldSuggestionDemo",
   ],
   "forms": [
     "FormsRhf",
@@ -1425,6 +1446,7 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
   ],
   "feedback-inbox": [
     "FeedbackInbox",
+    "FeedbackInboxDemo",
     "FeedbackTable027Demo",
     "FeedbackSubjectDemo",
     "FeedbackDetail027Demo",
@@ -1462,6 +1484,9 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
   ],
   "sync": [
     "SyncDemo",
+  ],
+  "release-notes": [
+    "ReleaseNotesPage",
   ],
   "server-auth": [
     "ServerModules",

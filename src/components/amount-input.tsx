@@ -25,14 +25,7 @@ import {
   sanitizeLive,
   splitLeadingSign,
 } from "../lib/calc";
-import {
-  FieldCaption,
-  LockedReason,
-  mergeRefs,
-  type DisabledReasonDisplay,
-  type FieldHelpProps,
-  type LockReason,
-} from "./field-parts";
+import { FieldCaption, LockFrame, mergeRefs, type DisabledReasonDisplay, type FieldHelpProps } from "./field-parts";
 import { useEndWidth, useNumericField } from "./numeric-field";
 import type { CommitScope } from "./write-lock";
 import { dataAttributes, type DataAttributes } from "../lib/data-attributes";
@@ -586,10 +579,10 @@ export function AmountInput(props: AmountInputProps) {
           the kit's FloatingField, which draws the label — floating, or sr-only in
           the display shape — and puts a FieldHint on the label's line, as it does
           for NumberInput. */}
-      {/* Locked, the field sits in the reason's frame (LockedReason: the line, or the
+      {/* Locked, the field sits in the reason's frame (LockFrame: the line, or the
           Tooltip), as NumberInput does; the root above keeps `className`, so nothing
-          reflows. */}
-      <LockedOrNot lock={lock} display={disabledReasonDisplay}>
+          reflows. `w-full`: the frame's box stands where the field's own did. */}
+      <LockFrame lock={lock} display={disabledReasonDisplay} className="w-full">
         <FloatingField
           className="w-full"
           htmlFor={fieldId}
@@ -766,7 +759,7 @@ export function AmountInput(props: AmountInputProps) {
             />
           )}
         </FloatingField>
-      </LockedOrNot>
+      </LockFrame>
       {/* Outside the relative box, as NumberInput's caption is: the trailing
           controls are `inset-y-1` in it and would stretch down over a second line. */}
       <FieldCaption parts={numeric.hint} />
@@ -792,25 +785,5 @@ export function AmountInput(props: AmountInputProps) {
         />
       )}
     </div>
-  );
-}
-
-/** The field in its lock's {@link LockedReason} while locked, as it is otherwise. A
- *  component rather than a ternary so the field's JSX is written once. `block w-full`:
- *  the frame's box stands where the field's own did. */
-function LockedOrNot({
-  lock,
-  display,
-  children,
-}: {
-  lock: LockReason;
-  display: DisabledReasonDisplay | undefined;
-  children: ReactNode;
-}) {
-  if (!lock.locked) return <>{children}</>;
-  return (
-    <LockedReason lock={lock} display={display} className="block w-full">
-      {children}
-    </LockedReason>
   );
 }

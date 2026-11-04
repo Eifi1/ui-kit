@@ -7,7 +7,15 @@ import { upperFirst } from "../lib/text-case";
 import { FOCUS_RING, FOCUS_RING_WIDTH } from "./focus-ring";
 import { horizontalStep } from "../lib/direction";
 import { useAnnounce } from "../hooks/use-announce";
-import { addMonthsClamped, localeWeekStart, monthKey, parseIsoDate, sameYmd, toLocalIso } from "../lib/dates";
+import {
+  addMonthsClamped,
+  currentDate,
+  localeWeekStart,
+  monthKey,
+  parseIsoDate,
+  sameYmd,
+  toLocalIso,
+} from "../lib/dates";
 import { dateFormatter } from "../lib/intl-cache";
 import { useKitLabels, useKitLocale, useKitWeekStart, type LabelOverride } from "../i18n/kit-labels";
 import { DEFAULT_MINI_CALENDAR_LABELS } from "./mini-calendar-labels";
@@ -294,7 +302,9 @@ export function MiniCalendar({
    * so a bounded calendar opens on a day it will actually let you pick.
    */
   const [activeIso, setActiveIso] = useState(() => {
-    let start = fromDate ?? toDate ?? new Date();
+    // Today is the kit's (`currentDate`), so a dev clock that moved it opens the grid
+    // there too (0.55).
+    let start = fromDate ?? toDate ?? currentDate();
     // A `month` wins over the selection's month: the page asked for THAT month. The
     // selection (or today) is kept when it falls inside it, else the 1st.
     const first = monthStart(month);
@@ -325,14 +335,14 @@ export function MiniCalendar({
   if (lastMonth !== month) {
     setLastMonth(month);
     const first = monthStart(month);
-    const current = parseIsoDate(activeIso) ?? new Date();
+    const current = parseIsoDate(activeIso) ?? currentDate();
     if (first && monthKey(current) !== month) {
       // Keep the day of the month, clamped: the 31st in a 30-day month is the 30th.
       setActiveIso(toLocalIso(sameDayIn(first, current)));
     }
   }
 
-  const activeDate = parseIsoDate(activeIso) ?? new Date();
+  const activeDate = parseIsoDate(activeIso) ?? currentDate();
   const view = { year: activeDate.getFullYear(), month: activeDate.getMonth() };
 
   const firstOfMonth = new Date(view.year, view.month, 1);
@@ -490,7 +500,9 @@ export function MiniCalendar({
     }
   };
 
-  const today = new Date();
+  // The ring and `aria-current="date"` on the kit's today: a day a dev clock moved it to
+  // with `setToday`, else the device's (0.55, keksdose's 0.51 adoption N2).
+  const today = currentDate();
   const hasBand = Boolean(fromDate && toDate && !sameYmd(fromDate, toDate));
   const daysInMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
   const inRange = (d: Date) => {

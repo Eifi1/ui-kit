@@ -23,7 +23,7 @@ names them. The snapshot, the per-repo to-dos and the review records are in
 | 2 | Decisions | — | §7.2, §7.4, §7.7; §8.2 (READY, 0.31) |
 | 3 | The API contract (A) | server-kit 0.1.0 (`feedback`); apps' backends | §7.1, §7.5–§7.9, §7.15, §7.16; §8.2 (server-kit 0.5); round 0.36 (§3.5, §3.6: the limiter is charged before the work, as the three apps do; [server-services §2.11](server-services-harmonization.md)) |
 | 3.8 | What kastlan and Kurvenschmiede change | — (archived) | |
-| 4 | The UI contract (B) | ui-kit 0.27.0 | §7.3, §7.4, §7.10–§7.14; §8.1, §8.2 (ui-kit 0.31); ui-kit 0.52 (§4.5: the Undo from the mutation's promise) |
+| 4 | The UI contract (B) | ui-kit 0.27.0 | §7.3, §7.4, §7.10–§7.14; §8.1, §8.2 (ui-kit 0.31); ui-kit 0.52 (§4.5: the Undo from the mutation's promise); §13 (ui-kit 0.55: §4.3's pages assembled by the kit, `?row=` digits only) |
 | 5 | What the kit adds, what stays app-side (C) | ui-kit 0.27.0, server-kit 0.1.0 | §8.1, §8.2 (ui-kit 0.31, server-kit 0.5) |
 | 6 | Per repo (D) | — (archived) | |
 | 7 | Settled points — the final canon | — | index; folded items point to their § |
@@ -32,6 +32,7 @@ names them. The snapshot, the per-repo to-dos and the review records are in
 | 10 | Round 0.40: rework as a conversation entry, the feedback menu | **§10 settled 2026-10-16 (round 0.40)**, for server-kit 0.13 / ui-kit 0.40 | amends §2.1 (REWORK), §2.2, §3.4 (the rework), §4.1 (the menu), §4.3–§4.5, §5; §9.7, §9.11, §9.12, §9.13 |
 | 11 | Round 0.46: admin alerts for new reports and reworks | **§11 settled 2026-10-19 (round 0.46)**, for server-kit 0.16 / ui-kit 0.46 | adds a notification type (notifications §10.2); amends §10.2 decision 10 (no admin mail) |
 | 12 | Round 0.47: attachments on admin replies and public comments, inline images | **§12 settled 2026-10-21 (Marcel)**, for server-kit 0.18 / ui-kit 0.47; the apps review it in the build review | amends §9.7 (a reply's file), §9.8 (a comment's file), §9.10 (the files predicate, a comment's URL), §9.12 (erasure), §10.3 (who draws an entry's file), §4.4.3 (the Attachment section) |
+| 13 | Round 0.55: the inbox, assembled once | **§13 (2026-11-04)**, ui-kit 0.55, from the kastlan reuse audit 2026-11-02 (proposal 2); no server change | amends §4.3 (the two pages' canonical assembly: `FeedbackInbox` / `useFeedbackInbox`; `?row=` digits only), §5 (the kit's list; the app keeps its queries and mutations) |
 
 ## 1. Where each one stands
 
@@ -434,6 +435,10 @@ editing there (also for an admin), but the author can send an answered item back
 rework **and** edit the description while it is OPEN, READY or IN_PROGRESS
 (`FEEDBACK_AUTHOR_EDITABLE_STATUSES`; keksdose's `canAuthorEdit`), on either page.
 
+Since ui-kit 0.55 the page is assembled by the kit: **`FeedbackInbox`** over
+**`useFeedbackInbox`** (§13) draws everything below and in §4.4–§4.5 from the app's rows
+and three mutations; the parts stay exported for a page that lays them out itself.
+
 | Part | EN | DE-CH |
 |---|---|---|
 | Title `/feedback` | Feedback | Feedback |
@@ -457,7 +462,8 @@ Columns, in order (kit `DataTable`, `urlSync`, `storageKey="feedback"`, newest f
 
 - **Deep link: `?row=<id>`** (kit `useSearchParamState`, `history: "replace"`); every row
   is a real link that keeps the table's other params. Kurvenschmiede's `?report=` is
-  read once and rewritten.
+  read once and rewritten. The id is digits only, no leading zero (§13.2): anything
+  else opens no row.
 - **Phone**: cards grouped by day header; card = title + env chip + rework chip +
   `FeedbackStatusBadge` on one line, compact category badge · date · (admin) submitter
   beneath. The kit's `FeedbackMobileCard` renders the two chips **itself**: `DataTable`
@@ -668,6 +674,9 @@ The kit's `createCrashReporter` (keksdose's `crash-report.ts`, lifted) as the bo
   (logical `start`/`end` ladders, `"none"` and unknown ids dropped), returning what
   `DataTable mobileSwipeActions` takes.
 - **`FeedbackAwaitingToggle`** — the phone `FloatingAction` of §4.3.
+- **`useFeedbackInbox(options)`** and **`FeedbackInbox`** (0.55, §13) — the two pages
+  assembled from the parts above: the app hands its rows and its `update`, `reply` and
+  `rework` mutations, and the slots for what differs.
 
 **server-kit** (`eifi1_server_kit.feedback`, since 0.1.0) carries §3 as code: the schemas
 (`FeedbackCreate`, `FeedbackUpdate` with the explicit-null guard, `FeedbackResponse`,
@@ -2339,3 +2348,204 @@ public detail. (2) The app decides (§12.3 Delete): keksdose keeps it for 0.47, 
 comments, Kurvenschmiede purges (cascade). (3) Kurvenschmiede: a new `comment` kind tied to
 its comment (`feedback_attachment.comment_id`), read by whoever reads the comment's body.
 The rows are in docs/archive/adopt/adopt-0.47.md.
+
+## 13. Round 0.55: the inbox, assembled once (2026-11-04)
+
+From the **kastlan reuse audit 2026-11-02, proposal 2**, which Marcel put in 0.55. Since
+0.27 every part of §4.3–§4.5 is the kit's, but the wiring between them was not: each app
+wrote the same ~150 lines around them (kastlan
+`frontend/src/features/feedback/pages/feedback-page.tsx:40-205`, keksdose
+`frontend/src/features/feedback/feedback-page.tsx:51-303`, Kurvenschmiede
+`frontend/src/features/feedback/feedback-page.tsx:88-245`), so every rename of a part (0.52's
+`mutateAsync`, 0.53's removals) was made and reviewed three times. ui-kit 0.55 ships that
+wiring as **`useFeedbackInbox`** and draws it as **`FeedbackInbox`**
+(`src/feedback/feedback-inbox-page.tsx`, `@eifi1/ui-kit/feedback`). It is **the canonical
+assembly of §4.3's two pages** from 0.55 on. Additive: every part keeps its name and its
+props, and a page that lays them out itself calls the hook and spreads `inbox.table` into a
+`DataTable`. No server change, no new words (the parts' namespaces, and `common.loading`).
+
+### 13.1 What the app keeps, what it hands over
+
+The app keeps its API client, its queries and its mutations (TanStack Query in all three:
+`useQuery` for the lists, `useMutation` for the writes), its routes and the redirect of a
+non-admin from `/feedback` to `/my-feedback`. **The kit sends no request.** The app hands
+the inbox:
+
+- `rows` — the list as its query answered (`list.data ?? []`), and `loading`
+  (`list.isPending`);
+- **three mutations, passed as `useMutation` returns them** — the inbox reads
+  `mutateAsync` and `isPending` and nothing else (`FeedbackInboxMutation<V>`; any object with
+  the two fits):
+
+  | Option | Request | Variables |
+  |---|---|---|
+  | `update` (required) | `PATCH /feedback/{id}` (§3.4) | `FeedbackDetailPatch` `{ id, status?, body?, public? }` — the status from the cell, the pills and the swipes (with the Undo, §4.5), the description, the legacy rework append, and the public flip |
+  | `reply` | `POST /feedback/{id}/replies` (§9.7, §12) | `FeedbackReplyPost` `{ id, body, status?, attachmentUrl? }` |
+  | `rework` | `POST /feedback/{id}/rework` (§10.3) | `FeedbackReworkPost` `{ id, note, attachmentUrl? }` |
+
+  A key that carries nothing is left out of the variables, so a `mutationFn` may spread them
+  onto the wire. Failures stay the mutations' own (`onError` toasts the server's sentence,
+  else `feedbackToast.*`); the inbox catches the rejection. Taking the mutation rather than
+  a callback per control is the point: how the parts call it is the kit's to change, once.
+
+### 13.2 `useFeedbackInbox(options)`
+
+What it takes besides §13.1's (all optional unless marked):
+
+| Option | Default | What it does |
+|---|---|---|
+| `canEdit` (required) | — | The viewer may triage (the admin). `mine` wins, as in `feedbackColumns`, so `canEdit={isAdmin}` is enough. |
+| `mine` | `false` | `/my-feedback` (§4.3): read-only for an admin too. |
+| `viewerId` | — | Who the author is (description editor, Rework, the public switch's window). |
+| `votes` | `false` | The Votes column and the card's count (§9.6). |
+| `publicSwitch` | `false` | The **Visible to others** switch (§9.3), its flip sent through `update` as `{ id, public }`. |
+| `comments` | — | `(row) => ReactNode`: the app's `FeedbackCommentThread` over its own queries, a component of its own (§9.8). `null` / `false` for a row without a thread. Called for the open row only. |
+| `renderDetail` | — | `(row, detail) => ReactNode`: the detail as drawn, to wrap or extend (a tour anchor). |
+| `columns` | — | `(kit) => columns`: the app's own columns over §4.3's nine and Votes — add, drop, reorder by `key`; a column brings its filter. Stable (a memo's dependency). |
+| `swipe` | `DEFAULT_FEEDBACK_SWIPE` | The phone's binding (§4.5), e.g. a user's `{ end: prefs.right, start: prefs.left }`. |
+| `commit` | — | The table's status writes (the status cell and the desktop's actions column) commit under a locked `WriteLockProvider`. |
+| `onUpload`, `fetcher` | — | The rework's and the reply's one file (§12); the authenticated GET (§3.5). |
+| `onCaptureScreenshot` | `captureAppScreenshot()` | "Capture screenshot" beside those fields; `null` for none. |
+| `renderDate` | the kit's, with the weekday | The app's date writer, for the date and resolved columns, the card, the day headers **and** the detail's "Resolved:". Left out, the detail keeps its sentence date (no weekday). |
+| `pageLinkExclude` | — | The app's one-shot routes, for the URL column and the detail alike (§4.4.2). |
+| `detail` | — | Over the detail's props the inbox sets (`commit`, `showSubject`, `reworkAttachment`, `replyAttachments`, `labels`, `className`); merged last. |
+| `labels` | — | Over `feedbackPage`. |
+
+What it returns (`FeedbackInboxState<T>`): `editable` (`canEdit && !mine`), `title`
+(`feedbackPage.title` / `.myTitle`), `openId` and `setOpenId`, `rowHref(row)`,
+`changeStatus` (`useFeedbackStatusUndo(update.mutateAsync)`, the cell's, the pills' and the
+swipes'), `awaiting` / `setAwaiting`, `renderDate`, `detailProps(row)` (what
+`FeedbackRowDetail` takes) and `table` (what `DataTable` takes, ready to spread).
+
+The wiring it holds, the same for every app:
+
+- **The open row is `?row=<id>`** (`useSearchParamState`, `history: "replace"`). The id is
+  **digits only, no leading zero, a safe integer**; anything else opens no row and stays in
+  the URL until a row is opened or closed. The three apps parsed with `Number()`, so
+  `?row=1e2` opened #100, and `?row=3.0` or `?row=+3` #3, in all three.
+- **Every row's link opens that row** — `pathname` through the router (`useHref`, so a
+  basename and a hash router are in it) and the CURRENT query with `row` set, keeping the
+  table's `f.*`, `sort` and `p`. The open row's link opens it too (a link copied off it is
+  that row); a plain click toggles it.
+- **The rows newest first** (`created_at`, a stable sort) — the phone's day headers group
+  runs — and, while the phone's toggle is pressed on the inbox, only
+  `FEEDBACK_AWAITING_STATUSES`.
+- **The table**: `useFeedbackColumns` (+ `votes`, `commit`, `pageLinkExclude`, the app's
+  `columns`), `rowKey` the id, `storageKey="feedback"`, `urlSync`, `fillHeight`,
+  `FeedbackEmptyState` (or "Loading…" while `loading`), `feedbackMobileGroupBy(renderDate)`,
+  `FeedbackMobileCard` (submitter for the admin, `votes`), `feedbackSwipePlan(swipe, …)` on
+  the inbox only, and the desktop's actions column
+  (`{ omit: feedbackSwipeOmitShown, name: (row) => row.title, commit }`).
+- **The detail**: `FeedbackRowDetail` with `canEdit` = `editable`, `viewerId`,
+  `onUpdate={update.mutateAsync}`, `pending` = `update.isPending || rework.isPending`,
+  `statusChange` = `changeStatus`, `onUpload`, `fetcher`, `onCaptureScreenshot`, the app's
+  `renderDate`, `pageLinkExclude`, `onReply` / `replying` from `reply`,
+  **`replyAttachments` on** (§12: all three are on server-kit 0.18, and the reply's
+  variables carry `attachmentUrl` from the start), `onRework` from `rework`, `comments`, and
+  with `publicSwitch` the `onPublicChange`.
+
+### 13.3 `FeedbackInbox`
+
+`FeedbackInbox` takes `useFeedbackInbox`'s options and draws, in a fill-height frame
+(`FILL_HEIGHT_CLASS`, page layout §1.3): the header, the `DataTable` with `inbox.table`, and
+on the phone the awaiting toggle (inbox only). Four props of its own:
+
+| Prop | Default | What it does |
+|---|---|---|
+| `header` | `<PageHeader title={title} className="mb-4 md:shrink-0" />` | A node, `(title) => node` for the app's own header, or `null` for none. |
+| `table` | — | Over the inbox's `DataTable` props (`edgeFade`, `locale`, `mobileExpandAsDialog`, `className`, …); merged last. |
+| `phoneActions` | — | Further `FloatingAction`s: after the awaiting toggle on the inbox, in a group of their own (named `feedbackPage.phoneActions`) on `/my-feedback`. |
+| `className` | — | On the frame: the app's page padding. |
+
+The frame carries `aria-busy` while `loading`.
+
+### 13.4 What differed between the three pages, and where it went
+
+| What | kastlan | keksdose | Kurvenschmiede | 0.55 |
+|---|---|---|---|---|
+| Frame | `FillHeight` | `FillHeight className="py-4 md:p-6"` | `FillHeight className={PAGE_SHELL}` | `className` |
+| Header | `PageHeader className="mb-4 md:shrink-0" data-tour` | `size="compact"`, padding, `data-tour` | `size="sm" className="shrink-0"` | `header={(title) => …}` |
+| Rows' order | sorted newest first | sorted newest first | as the server sent them (newest first) | sorted newest first — no visible change for KS |
+| Loading | "None" until the rows arrive | "None" until the rows arrive | `LoadingState` instead of the table | `loading`: "Loading…" in the table's empty row, the table's frame kept |
+| `?row=` parse | `Number`, finite | `Number`, finite | `Number(…) \|\| null` | digits only (§13.2) |
+| Opening a row | toggles `?row=` (replace) | the same | `navigate(href, { replace })`; the open row's link closes it | toggles `?row=` (replace); every link opens its row — KS's closing link was a copied link that opened nothing |
+| Row link | `?…` (no path) | `pathname?…` | `pathname?…`, `pathname` when empty | `useHref(pathname)?…` — the same target, a basename included |
+| `?report=` | — | — | rewritten to `?row=` on arrival | stays KS's (six lines before the component): app history, not contract |
+| Columns | `commit: true` | `votes: true` | `votes: publicReader` | `commit`, `votes`, `columns` |
+| Desktop actions column | `commit: true` | `commit: true` | no `commit` | `commit` — one option for the status cell **and** the column: keksdose's cell was not under the lock while the column beside it was, the same write refused in one place and sent in the other |
+| Swipe binding | default | the user's (Settings → Interaction) | default | `swipe` |
+| Phone card | `showSubmitter={canEdit}` | + `votes` | + `votes={publicReader}` | `editable`, `votes` |
+| Phone row | inline | inline | `mobileExpandAsDialog` | `table={{ mobileExpandAsDialog: true }}` |
+| Table extras | — | — | `edgeFade`, `locale` | `table` |
+| Detail `pending` | `update` | `update \|\| rework` | `update \|\| rework` | `update \|\| rework` — kastlan's editors now also wait for a rework in flight |
+| Detail `onReply` | always | only with `canEdit` | always | always (the detail draws the composer for `canEdit` alone, so the same) |
+| Reply file | `replyAttachments` | `replyAttachments` | `replyAttachments` | on |
+| Capture | `captureAppScreenshot()` | its `useFeedbackCapture()` | `captureAppScreenshot()` | default the kit's; `onCaptureScreenshot` |
+| Detail date | the kit's sentence date | its `useDateCell()` | `useFeedbackRenderDate(undefined, locale)` | the app's `renderDate` when given, else the sentence date — each as before |
+| Comments | none | `RowComments` (read/hide on the inbox, write on `/my-feedback`) | `ReportComments` for a public reader, never on a CRASH | `comments={(row) => …}` |
+| Public flip | none | `update.mutate({ id, public })` | the same | `publicSwitch` (through `update.mutateAsync`, its rejection caught) |
+| Tour anchor on the detail | `data-tour="feedback-row-detail"` | — | — | `renderDetail` |
+| Awaiting toggle | inbox only | inbox only | inbox only | inbox only, `phoneActions` beside it |
+
+### 13.5 Per app
+
+Each page becomes its queries, its mutations and one component. The mutations keep their
+`mutationFn`s and callbacks; only the variables' names follow §13.1 where they differ.
+
+- **kastlan** (`pages/feedback-page.tsx`): its `useFeedbackReply` and `useFeedbackRework`
+  already take `FeedbackReplyPost` and `FeedbackReworkPost`. Leaves: `useSearchParamState`
+  and its parse (`:98-105`), `awaitingOnly` (`:107`), `rowHref` (`:111-119`),
+  `changeStatus`, `statusLabels`, `renderDate`, `labels`, `columns` (`:134-139`), the `rows`
+  memo (`:141-145`) and the whole `PageHeader` + `DataTable` + toggle block (`:151-204`,
+  ~110 lines with the imports).
+
+  ```tsx
+  <FeedbackInbox rows={(mine ? myList.data : allList.data) ?? []} loading={(mine ? myList : allList).isPending}
+    mine={mine} canEdit={isAdmin} viewerId={userId} update={update} reply={reply} rework={rework} commit
+    onUpload={uploadFeedbackAttachment} fetcher={fetchFeedbackAttachment}
+    header={(title) => <PageHeader title={title} className="mb-4 md:shrink-0" data-tour="feedback-header" />}
+    renderDetail={(_, detail) => <div data-tour="feedback-row-detail">{detail}</div>} />
+  ```
+  No `renderDate`: its `useFeedbackRenderDate()` is the default, and the detail keeps its
+  sentence date.
+- **keksdose** (`feedback-page.tsx`): the reply's `url` becomes `attachmentUrl`, the
+  rework's `body` / `url` `note` / `attachmentUrl`. Leaves: the `?row=` state (`:136-142`),
+  `rowHref` (`:143-157`), `changeStatus`, `list` and `visibleRows` (`:184-197`), `columns`,
+  `captureForRework`, and the `PageHeader` + `DataTable` + toggle block (`:211-302`,
+  ~130 lines). `RowComments` stays.
+
+  ```tsx
+  <FeedbackInbox className="py-4 md:p-6" rows={…} loading={…} mine={mine} canEdit={isAdmin}
+    viewerId={user?.id} update={updateMut} reply={replyMut} rework={reworkMut} votes publicSwitch commit
+    comments={(fb) => <RowComments id={fb.id} isAdmin={isAdmin} canComment={!canEdit} />}
+    swipe={{ end: swipePrefs.right, start: swipePrefs.left }} renderDate={renderDate}
+    onUpload={feedbackApi.uploadAttachment} onCaptureScreenshot={captureForRework} fetcher={authedImageFetcher}
+    header={(title) => <PageHeader size="compact" className="mb-4 px-4 md:px-0 md:shrink-0" title={title} data-tour="feedback-header" />} />
+  ```
+  `commit` puts the status cell under the demo lock too (the column beside it already
+  was); leaving it out puts neither under it.
+- **Kurvenschmiede** (`feedback-page.tsx`): the reply's and the rework's `url` become
+  `attachmentUrl`. Leaves: `openId` and `hrefOf` (`:163-172`), `rows` (`:174`), `change`,
+  `columns` (`:151-154`), `navigate`, `statusLabels`, `labels`, and the `LoadingState` /
+  `DataTable` / toggle block (`:180-244`, ~85 lines). The `?report=` rewrite (`:156-162`),
+  `hasConversation` and `ReportComments` stay.
+
+  ```tsx
+  <FeedbackInbox className={PAGE_SHELL} rows={reports.data ?? []} loading={reports.isPending}
+    mine={mine} canEdit={isAdmin(user)} viewerId={user?.id} update={update} reply={reply} rework={rework}
+    votes={publicReader} publicSwitch renderDate={renderDate}
+    comments={(row) => (hasConversation(row, publicReader) ? <ReportComments id={row.id} admin={isAdmin(user)} /> : null)}
+    onUpload={feedbackApi.upload} fetcher={feedbackApi.file}
+    header={(title) => <PageHeader size="sm" className="shrink-0" title={title} />}
+    table={{ edgeFade: true, mobileExpandAsDialog: true, locale }} />
+  ```
+
+**Tests:** `src/feedback/__tests__/feedback-inbox-page.test.tsx` — `?row=` written on open,
+kept params, cleared on close, opened on arrival, nine malformed values ignored; every row's
+link; newest first; the toggle on the inbox only; the Undo from the cell and the swipes; the
+detail's props as the apps passed them (the mutations' variables, `replyAttachments`, the
+capture, the date rule, `/my-feedback` read-only, `detail` merged last); the composer, the
+switch and the comments drawn; the phone's day headers, submitter, swipes, binding and
+toggle; each slot (`header`, `renderDetail`, `votes`, `columns`, `table`, `loading`,
+`phoneActions`, `commit`). The showcase's Feedback — inbox page has the whole inbox
+(`FeedbackInboxDemo`).

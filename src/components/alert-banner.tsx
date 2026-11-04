@@ -4,7 +4,7 @@ import { AlertTriangle, CheckCircle2, ChevronRight, Info, X } from "lucide-react
 import { cn } from "../lib/cn";
 import { FOCUS_RING } from "./focus-ring";
 import { DEFAULT_COMMON_LABELS, useKitLabels } from "../i18n/kit-labels";
-import { focusFirst, focusIsLost, tabStopsAround, whenFocusLeftForNothing } from "../lib/focus-left";
+import { returnFocus, tabStopsAround, whenFocusLeftForNothing } from "../lib/focus-left";
 
 /** `info` (0.8.0) is the sky family, for news that is neither good nor bad: keksdose's
  *  preview and beta-performance banners, which borrowed `warning` for want of it and
@@ -355,8 +355,9 @@ export function AlertBanner({
     () => () => {
       unwatchFocus.current?.();
       const around = dismissedFrom.current;
-      if (!around || !focusIsLost()) return;
-      focusFirst([dismissTarget.current?.current, ...around]);
+      // The kit's one rule (lib/focus-left `returnFocus`; 0.52 code review 2026-10-31,
+      // held to 0.55): a lost focus only, to the caller's target, else the noted stops.
+      if (around) returnFocus({ opener: dismissTarget.current?.current, fallback: around });
     },
     [],
   );

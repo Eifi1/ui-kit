@@ -334,7 +334,32 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // elapsed time (keksdose's formatElapsed).
   // 0.54 (+1, kastlan reuse audit 2026-11-02, proposal 4): `billingRefusalText`, a billing
   // refusal's words in the `billing` labels.
-  ["@eifi1/ui-kit", barrel, 966],
+  // 0.55 (+2, here and in /shell, docs/top-bar-harmonization.md §2.6.1): `HeldChangesBanner`
+  // and `DEFAULT_HELD_CHANGES_BANNER_LABELS` — keksdose's and kastlan's held-changes banners.
+  // 0.55 (+1, kastlan reuse audit 2026-11-02, proposal 6): `watchSessionElsewhere`, a
+  // sign-out in another tab, or one a page missed in the back/forward cache.
+  // 0.55 (+4, kastlan reuse audit 2026-11-02, proposal 1): `parseChangelog`,
+  // `parseChangelogItem`, `changelogSectionKey`, `groupByScope`, one parser for the apps'
+  // release notes.
+  // 0.55 (+3, kastlan reuse audit 2026-11-02, proposal 3; billing §7, Marcel 2026-11-04):
+  // `SubscriptionStanding` and `subscriptionStanding`, the standing in one line, and
+  // `UsageMeter`, a plan limit's meter.
+  // 0.55 (+4, kastlan reuse audit 2026-11-02, proposal 8): `useHasCamera`, `CameraButton`,
+  // `CameraCapture` and `DEFAULT_CAMERA_LABELS` — keksdose's camera, for every app.
+  // 0.55 (+2, here and in /feedback; kastlan reuse audit 2026-11-02, proposal 2):
+  // `useFeedbackInbox` and `FeedbackInbox`, the inbox assembled once (feedback §13).
+  // 0.55 (+2, keksdose dev #638): `FieldSuggestion` and `DEFAULT_FIELD_SUGGESTION_LABELS`, a
+  // field's "suggested from" caption with its clear.
+  // 0.55 (+1, keksdose's page outline): `PageHeaderSkeleton`, PageHeader at its own metrics.
+  // 0.55 (+2, keksdose's price pool): `ConsentAgainNotice` and `DEFAULT_CONSENT_AGAIN_LABELS`,
+  // a consent asked again after its text changed.
+  // 0.55 (+2, kastlan reuse audit 2026-11-02, proposal 1): `ReleaseNotes` and
+  // `DEFAULT_RELEASE_NOTES_LABELS`, the release card on the changelog parser.
+  // 0.55 (+1, here and in /chart): `LegendedSeriesChart`, the chart with its legend —
+  // keksdose's report wrapper as the kit's layout.
+  // 0.55 (+2, keksdose audit F-63; server-kit 0.21 exports their values): `USER_ROSTER_PAGE_SIZE`
+  // and `USER_ROSTER_MAX_PAGE_SIZE`, `GET /admin/users`'s default and largest page.
+  ["@eifi1/ui-kit", barrel, 992],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -342,7 +367,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.52 (+1 here and in the barrel): `DEFAULT_TREEMAP_LABELS` (DSP-5).
   // 0.53 (−4, breaking): what 0.52 deprecated — `EDGE_MIN_CONTRAST`, `CHART_INK_HEX`,
   // `resolveTooltipPlacement`, `STROKE_PATTERNS` (API-4).
-  ["@eifi1/ui-kit/chart", chart, 50],
+  // 0.55 (+1 here and in the barrel): `LegendedSeriesChart`.
+  ["@eifi1/ui-kit/chart", chart, 51],
   // 0.22.0: DEFAULT_DATA_TABLE_SORT_LABELS, the phone sort control's words (+1).
   // 0.35.0: `resolveDataTableLabels` and `missingDataTableLabels` removed (R1, API-6a) (−2).
   // 0.46.1: `swipePlanRowActions`, the desktop swipe column's derivation (keksdose N3) (+1).
@@ -360,7 +386,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.46.0: `feedbackSwipeOmitShown`, the desktop column's omit (dev#598) (+1 here and in the barrel).
   // 0.53 (−14, breaking): what 0.52 deprecated — the slice's 12 unread names (API-4) and
   // `feedbackPageHref`, `feedbackPagePath`.
-  ["@eifi1/ui-kit/feedback", feedback, 91],
+  // 0.55: `useFeedbackInbox`, `FeedbackInbox` — the inbox assembled once (§13) (+2 here and
+  // in the barrel).
+  ["@eifi1/ui-kit/feedback", feedback, 93],
   // 0.53 (−3, breaking): what 0.52 deprecated — `SEARCH_TIER_POINTS`, `matchEntries`,
   // `normalizeSearchText` (API-4).
   ["@eifi1/ui-kit/search", search, 6],
@@ -380,7 +408,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.52 (−1): `DevSwitchers` removed (see the barrel).
   // 0.53 (−11, breaking): what 0.52 deprecated — the slice's 10 unread names (API-4) and
   // `RoleSwitcher` (MOD-5).
-  ["@eifi1/ui-kit/shell", shell, 49],
+  // 0.55 (+2): `HeldChangesBanner`, `DEFAULT_HELD_CHANGES_BANNER_LABELS` (§2.6.1, see the barrel).
+  ["@eifi1/ui-kit/shell", shell, 51],
   // 0.43.0 (+9): the tours page (see the barrel).
   // 0.43.0 (+3): `resetTourProgress`, `doneCount`, `earnedPoints` (build review, see the barrel).
   // 0.44.0 (+1): `completeTour` (§9.2, see the barrel).
@@ -437,7 +466,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   ["@eifi1/ui-kit/table-text", tableText, 7],
   // 0.34.0: pinned at last (MOD-6, refactor audit 2026-10) — kastlan imports it on 8
   // lines and keksdose on 2, and nothing counted it. The local-calendar ISO helpers.
-  ["@eifi1/ui-kit/dates", dates, 20],
+  // 0.55 (+4, keksdose's 0.51 adoption N2): `setToday`, `todayOverride`, `subscribeToday`,
+  // `currentDate` — one "today" the dev clock moves and every helper here reads.
+  ["@eifi1/ui-kit/dates", dates, 24],
   // 0.35: `CURRENCIES` and `CURRENCY_COUNTRIES` as plain data an app's build tooling
   // imports in Node (keksdose's flag subset read them out of a dist/ file 0.34 moved). A
   // slice of the barrel, not standalone in the sense below: both names are the barrel's

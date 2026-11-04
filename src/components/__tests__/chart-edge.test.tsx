@@ -5,14 +5,16 @@ import { act, cleanup, render } from "@testing-library/react";
 import { SeriesChart } from "../series-chart";
 import { TreemapCell } from "../treemap";
 import { resolveChartColor } from "../chart-edge";
-import { CHART_ROLES, PALETTE_HEX, paletteFor } from "../../theme/chart-palette";
+import { CHART_ROLES, EDGE_MIN_CONTRAST, PALETTE_HEX, chartShade, paletteFor } from "../../theme/chart-palette";
+import { contrast } from "../../theme/color";
 import { DEFAULT_PRESET, applyTokenSet } from "../../theme/palette-presets";
 
 /**
  * 0.49 (Marcel via keksdose, anyplot.ai/palette): a FILLED mark whose hue sits under
- * 3:1 against the ground (WCAG 1.4.11) gets a 1px ink edge — SeriesChart's bars and
- * areas, Treemap's tiles — and a hue that clears it stays bare. Real recharts at a fixed
- * 800x300, as in `series-chart.test.tsx`.
+ * 3:1 against the ground (WCAG 1.4.11) gets an edge — and a hue that clears it stays bare.
+ * Treemap's tiles take a 1px ink edge; SeriesChart's bars and areas, since 0.55, their own
+ * shade that clears the rule (`chartShade`), where the ink read as a black line on an
+ * area. Real recharts at a fixed 800x300, as in `series-chart.test.tsx`.
  */
 vi.mock("recharts", async (importOriginal) => {
   const actual = await importOriginal<typeof import("recharts")>();
@@ -64,7 +66,23 @@ function moreContrast(on: boolean) {
   else root.removeAttribute("data-contrast");
 }
 
-describe("SeriesChart's ink edge (under More contrast)", () => {
+/** The card and the page, as painted. */
+const grounds = () => {
+  const style = getComputedStyle(root);
+  return ["--bg-surface", "--bg-page"].map((name) => style.getPropertyValue(name).trim());
+};
+
+/** The edge a mark in ramp slot `i` takes on the page as painted: its own shade that
+ *  clears 3:1 on both grounds (0.55) — checked here with the kit's contrast measure. */
+function shadeOf(i: number): string {
+  const hex = resolveChartColor(paletteFor(i), getComputedStyle(root))!;
+  const shade = chartShade(hex, grounds())!;
+  expect(shade).not.toBe(hex);
+  for (const ground of grounds()) expect(contrast(shade, ground)).toBeGreaterThanOrEqual(EDGE_MIN_CONTRAST);
+  return shade;
+}
+
+describe("SeriesChart's edge (under More contrast): the mark's own shade", () => {
   afterEach(() => moreContrast(false));
 
   it("edges a bar in a low-contrast hue and leaves a high-contrast one bare (light)", () => {
@@ -76,7 +94,7 @@ describe("SeriesChart's ink edge (under More contrast)", () => {
       { key: "b", color: paletteFor(2) },
       { key: "c", color: paletteFor(5) },
     ]);
-    expect(barStrokes(container)).toEqual(["var(--chart-ink)", null, "var(--chart-ink)"]);
+    expect(barStrokes(container)).toEqual([shadeOf(0), null, shadeOf(5)]);
   });
 
   it("follows the ground: on the dark theme red is edged and cyan is not", () => {
@@ -86,7 +104,7 @@ describe("SeriesChart's ink edge (under More contrast)", () => {
       { key: "a", color: paletteFor(4) },
       { key: "b", color: paletteFor(5) },
     ]);
-    expect(barStrokes(container)).toEqual(["var(--chart-ink)", null]);
+    expect(barStrokes(container)).toEqual([shadeOf(4), null]);
   });
 
   it("re-measures when the theme flips under a mounted chart", async () => {
@@ -95,17 +113,28 @@ describe("SeriesChart's ink edge (under More contrast)", () => {
     const { container } = bars([{ key: "a", color: paletteFor(4) }]);
     expect(barStrokes(container)).toEqual([null]);
     await act(async () => paint("dark"));
-    expect(barStrokes(container)).toEqual(["var(--chart-ink)"]);
+    expect(barStrokes(container)).toEqual([shadeOf(4)]);
+  });
+
+  it("draws a bar's edge thin, 1px, and never in ink", () => {
+    paint("light");
+    moreContrast(true);
+    const { container } = bars([{ key: "a", color: paletteFor(7) }]);
+    const bar = container.querySelector(".recharts-bar-rectangle path")!;
+    expect(bar.getAttribute("stroke")).toBe(shadeOf(7));
+    expect(bar.getAttribute("stroke-width")).toBe("1");
+    expect(bar.getAttribute("fill")).toBe("var(--color-a)");
   });
 
   // Refactor audit 2026-10-30, DSP-18: the edge swapped the area's 2px outline in its own
-  // hue for 1px of ink, and ignored the series' `strokeWidth`.
-  it("draws an area's outline in ink at the area's own width, keeping the hue on its fill", () => {
+  // hue for 1px of ink, and ignored the series' `strokeWidth`. 0.52 kept the width and the
+  // ink; 0.55 keeps the width and draws the line in the area's own shade.
+  it("draws an area's outline in its own shade at the area's own width, keeping the hue on its fill", () => {
     paint("light");
     moreContrast(true);
     const { container } = bars([{ key: "a", color: paletteFor(5) }], "area");
     const curve = container.querySelector(".recharts-area-curve")!;
-    expect(curve.getAttribute("stroke")).toBe("var(--chart-ink)");
+    expect(curve.getAttribute("stroke")).toBe(shadeOf(5));
     expect(curve.getAttribute("stroke-width")).toBe("2");
     expect(container.querySelector(".recharts-area-area")!.getAttribute("fill")).toBe("var(--color-a)");
     cleanup();
@@ -149,7 +178,7 @@ describe("SeriesChart's marks at Standard contrast", () => {
     expect(barStrokes(container)).toEqual([null]);
     // A MutationObserver reports in a microtask: let it.
     await act(async () => moreContrast(true));
-    expect(barStrokes(container)).toEqual(["var(--chart-ink)"]);
+    expect(barStrokes(container)).toEqual([shadeOf(5)]);
     await act(async () => moreContrast(false));
     expect(barStrokes(container)).toEqual([null]);
   });

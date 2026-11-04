@@ -579,6 +579,19 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       removed: (name) => `«${name}» rimosso`,
       cleared: "Tutti i file rimossi",
     },
+    // keksdose's it invoices.take_photo, camera_starting, camera_shutter and
+    // shots_captured; kastlan's handover.takePhoto ("Fotocamera") and wizard addPhoto.
+    // "foto" is invariable; only the participle agrees.
+    camera: {
+      takePhoto: "Scatta foto",
+      choosePhoto: "Aggiungi foto",
+      title: "Fotocamera",
+      hint: "Inquadri il soggetto, poi tocchi l’otturatore.",
+      starting: "Avvio della fotocamera…",
+      shutter: "Scatta la foto",
+      taken: (count) => `${n(count)} ${plural(count, "foto scattata", "foto scattate")}.`,
+      done: (count) => `Usa ${n(count)} foto`,
+    },
     wizard: {
       done: "Fine",
       cancel: "Annulla",
@@ -726,6 +739,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       empty: "Nessun dato",
       legend: "Serie",
       points: "Valori del grafico",
+      nameFromAxes: (ordinates, abscissa) => (abscissa ? `${ordinates} in funzione di ${abscissa}` : ordinates),
     },
     pieChart: {
       slices: "Settori del grafico",
@@ -1680,6 +1694,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       accessName: "Nome:",
       accessCompany: "Azienda:",
       accessUse: "Uso previsto:",
+      siteNavLabel: "Altre pagine",
     },
     demo: {
       starting: "Avvio della demo…",
@@ -1742,6 +1757,17 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         canceled: "Disdetto",
         expired: "Scaduto",
         comped: "In omaggio",
+      },
+      // 0.55 (§7, Marcel 2026-11-04): the standing line. keksdose's reviewed Italian
+      // (`billing.trial_until`, …); `ended` is the first sentence of `planEnded`.
+      standing: {
+        ended: "Il Suo piano è terminato.",
+        pastDue: "Il pagamento non è andato a buon fine — stiamo riprovando. Nel frattempo il Suo piano resta attivo.",
+        trialUntil: (date) => `In prova fino al ${date}`,
+        freeUntil: (date) => `Gratuito fino al ${date}`,
+        free: "Gratuito, senza data di fine",
+        endsOn: (date) => `Termina il ${date}`,
+        renewsOn: (date) => `Si rinnova il ${date}`,
       },
       trialEnding: (days) =>
         `Il Suo periodo di prova termina ${inDays(days)}. In seguito potrà ancora vedere tutto, ma per apportare modifiche servirà un piano.`,
@@ -1972,6 +1998,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         refusedShort: "Non sincronizzato",
         offlineUnsaved: "Offline: le modifiche non possono essere salvate finché non si riconnette",
         saving: "Salvataggio…",
+        waitingForTab: "In attesa che un’altra scheda finisca di sincronizzare",
+        waitingForTabShort: "Attesa altra scheda",
       },
       dev: {
         menu: "Strumenti di sviluppo",
@@ -2007,6 +2035,56 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     sharedComputer: {
       label: "Questo è un computer condiviso",
       hint: "Su questo dispositivo non resta alcuna copia dei Suoi dati. Le pagine si aprono quindi solo con una connessione.",
+    },
+    // 0.55 — docs/top-bar-harmonization.md §2.6.1: keksdose's reviewed words (sync.held_*,
+    // sync.discard_held_*, sync.switch_back_held) without its budgets.
+    heldChanges: {
+      message: (count) =>
+        count === 1
+          ? `${n(count)} modifica non può essere inviata da qui. Resta su questo dispositivo finché non potrà essere inviata, o finché non la scarta.`
+          : `${n(count)} modifiche non possono essere inviate da qui. Restano su questo dispositivo finché non potranno essere inviate, o finché non le scarta.`,
+      switchBack: "Torna indietro",
+      discard: "Scarta…",
+      confirmTitle: (count) =>
+        `Scartare ${n(count)} ${plural(count, "modifica che non può essere inviata", "modifiche che non possono essere inviate")} da qui?`,
+      confirmBody: (count) =>
+        count === 1
+          ? "Non potrà essere recuperata. Questo dispositivo si sincronizza poi con i dati del server."
+          : "Non potranno essere recuperate. Questo dispositivo si sincronizza poi con i dati del server.",
+      confirmAction: "Scarta",
+      failed: "Non ha funzionato. Riprovi.",
+    },
+    // 0.55 (keksdose dev #638): the "suggested from" caption under a field — the kit's
+    // default when the app names no source, and the button that takes the value back out.
+    fieldSuggestion: {
+      suggested: "Suggerito",
+      clear: "Cancella",
+      clearName: (field) => (field ? `Cancella il suggerimento per «${field}»` : "Cancella il suggerimento"),
+    },
+    // 0.55: keksdose's reviewed words (price_pool.reconsent.*) without its price pool.
+    consentAgain: {
+      agree: "Accetta",
+      notNow: "Non ora",
+      changesToggle: "Mostra cosa è cambiato",
+      wordingToggle: "Mostra il testo completo, prima e ora",
+      beforeHeading: "Finora",
+      nowHeading: "D’ora in poi",
+      removed: "Rimosso:",
+      added: "Aggiunto:",
+    },
+    // 0.55: keksdose's reviewed headings (changelog.section_*) where it had one.
+    releaseNotes: {
+      version: (version) => `v${version}`,
+      sections: {
+        breaking: "Modifiche incompatibili",
+        added: "Novità",
+        changed: "Modificato",
+        fixed: "Corretto",
+        deprecated: "Deprecato",
+        removed: "Rimosso",
+        security: "Sicurezza",
+        reverted: "Ritirato",
+      },
     },
   };
 }

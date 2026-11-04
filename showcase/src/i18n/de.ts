@@ -149,6 +149,12 @@ export const de: Dictionary = {
       blurb:
         "Auf der Kopie des Geräts arbeiten: die Sync-Engine mit ihrer Warteschlange, eine Anfrage pro Bereich, abgelehnte Änderungen, die bleiben, die Wartezeiten nach einem Fehler und die geschützte Abmeldung; dazu der Worker, der Status für die Anzeige und das Live-Lesen der Kopie.",
     },
+    "release-notes": {
+      title: "Versionshinweise",
+      short: "Versionen",
+      blurb:
+        "Ein CHANGELOG.md für Lesende: der Parser für die Datei, die jedes Repository mit commit-and-tag-version schreibt, und die Karte, die eine Version zeigt — ihre Nummer und ihren Tag, ihre Abschnitte nach Schlüssel, die Einträge nach Bereich gruppiert.",
+    },
     "auth-account": {
       title: "Anmeldung & Kontosicherheit",
       short: "Anmeldung",
@@ -578,7 +584,7 @@ export const de: Dictionary = {
       title: "Limits, Fehler, CORS & Sync",
       short: "Limits",
       blurb:
-        "Der Rate-Limiter mit gleitendem Fenster und wessen Adresse er zählt, jede Ablehnung des Kits mit ihrem Status aus dem Vertrag beantwortet, CORS für einige zusätzliche Origins das Token des Schedulers auf Job-Routen und die Local-first-Synchronisation: Die jüngste Änderung gilt, Ablehnungen je Änderung.",
+        "Der Rate-Limiter mit gleitendem Fenster und wessen Adresse er zählt, jede Ablehnung des Kits mit ihrem Status aus dem Vertrag beantwortet, CORS für einige zusätzliche Origins das Token des Schedulers auf Job-Routen und die Local-first-Synchronisation: Die jüngste Änderung gilt, Ablehnungen je Änderung. Und die Abhängigkeitsprüfung, die das Gate jedes Backends ausführt.",
     },
     "server-translation-review": {
       title: "Übersetzungsprüfung",
@@ -661,6 +667,14 @@ export const de: Dictionary = {
       "Änderungen bis zu einem Abo zurückhalten",
       "den Sync-Status anzeigen",
       "die Kopie auf dem Gerät live lesen",
+    ],
+    "release-notes": [
+      "zeigen, was sich in einer Version geändert hat",
+      "eine Seite mit dem Änderungsprotokoll",
+      "ein Neuigkeiten-Dialog nach einem Update",
+      "CHANGELOG.md einlesen",
+      "Versionshinweise nach Bereich gruppieren",
+      "die Abschnittsüberschriften des Änderungsprotokolls übersetzen",
     ],
     "auth-account": [
       "Layout der Anmeldeseite",

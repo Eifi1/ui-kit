@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ComponentPropsWithRef, CSSProperties, KeyboardEvent, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { dirOf, horizontalStep } from "../lib/direction";
-import { addMonthsClamped, localeWeekStart, parseIsoDate, toLocalIso } from "../lib/dates";
+import { addMonthsClamped, localeWeekStart, parseIsoDate, toLocalIso, todayIso } from "../lib/dates";
 import { dateFormatter } from "../lib/intl-cache";
 import { useKitLabels, useKitLocale, useKitWeekStart, type LabelOverride } from "../i18n/kit-labels";
 import { lerpHex, textOn } from "../theme/chart-palette";
@@ -171,7 +171,7 @@ export function heatmapWindowEnd(
   to: string,
   anchor: string,
   latestData: string,
-  today: string = toLocalIso(new Date()),
+  today: string = todayIso(),
 ): string {
   let end: string;
   if (anchor === "today") end = today;

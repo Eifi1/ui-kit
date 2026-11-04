@@ -14,7 +14,10 @@ import type { RefObject } from "react";
 // of every group that has a rendered row (and the first day of the period the window
 // starts in, whose band is the period's), every OPEN row (`isExpanded`, so an inline
 // editor keeps its state), the roving tab stop, a row holding the focus, and the row the
-// keyboard is moving to.
+// keyboard is moving to. Rows that arrive into a window holding fewer (a load, a filter
+// lifted) are drawn in the render they arrive in, a screenful from the window's height, so
+// a `fitPriority` table is fitted on them before it paints (keksdose register fit, 0.51.2
+// leftovers).
 //
 // Heights: each rendered row is measured after render (the distance to the next row's
 // top, which is exact under collapsed borders where a row's own box is half a border
@@ -30,7 +33,9 @@ import type { RefObject } from "react";
 // nothing). Re-measured from scratch when the data, the columns, a user width, the text
 // size or the scroller's width change — and when a grown column would push the table
 // past its scroller, which it fit before. A `grow` column and a user-resized one are not
-// locked (the first takes the rest, the second is pinned already).
+// locked (the first takes the rest, the second is pinned already). A lock replaced is
+// gone: changing back (a column the fit leaves out and brings back) measures again
+// (0.51, keksdose N2; reverted in 0.51.1, back with the 0.51.2 leftovers).
 
 /** {@link DataTableProps.virtualize}'s options. */
 export interface DataTableVirtualize {
@@ -232,13 +237,14 @@ export function useRowWindow<T>({
     count: 0,
     band: [estimate, estimate * 0.8],
   }));
-  const initialEnd = () =>
+  // A screenful of rows and the overscan: what the window draws before it has looked.
+  const screenful = () =>
     Math.min(
       n,
       Math.ceil((typeof window === "undefined" ? 800 : Math.min(window.innerHeight || 800, 1600)) / estimate) +
         overscan,
     );
-  const [range, setRange] = useState(() => ({ start: 0, end: initialEnd() }));
+  const [range, setRange] = useState(() => ({ start: 0, end: screenful() }));
   const [focusTarget, setFocusTarget] = useState<number | null>(null);
   const [focusKey, setFocusKey] = useState<string | number | null>(null);
   const [scrollerWidth, setScrollerWidth] = useState(0);
@@ -285,6 +291,31 @@ export function useRowWindow<T>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, rows, rowKey, groupsSig, expandedSig, measured, estimate, n, rowsBefore, rowsAfter]);
 
+  // Rows that arrive in a window set for fewer are drawn in the render they arrive in, a
+  // screenful of them (keksdose register fit, 0.51.2 leftovers). The range is the last
+  // `update`'s, and a table mounted while its rows loaded had none: it drew the tab stop's
+  // row alone, and the rows came a frame later, once `update` had looked at the scroller.
+  // So the fit, which measures in the commit that brings new rows, measured a table without
+  // them; the rows then widened it, its ResizeObserver re-fitted it only after a painted
+  // frame (keksdose: too wide for 31–215 ms in 21 of 30 loads), and WHICH rows came hung on
+  // the scroller's height at that frame — whether the tiles above it had arrived: 48 or 52
+  // rows in keksdose's loads, 33 or 35 in scripts/register-fit-frames.mjs's, and a wide cell
+  // in between chose the columns. A screenful from the window's height is the same on every
+  // load, and `update` keeps it while it covers the view. Adjusted during render (React's
+  // "storing information from previous renders"): an effect would paint the empty window.
+  const dataSig = n > 0 && model ? `${n}:${String(model.keys[0])}:${String(model.keys[n - 1])}` : "0";
+  const [rangeData, setRangeData] = useState(dataSig);
+  if (enabled && rangeData !== dataSig) {
+    setRangeData(dataSig);
+    const fill = screenful();
+    if (Math.min(range.end, n) - Math.min(range.start, n) < fill) {
+      // From where it was, as far as the rows go: a list cut short by a filter is drawn
+      // to its end, where the scroller, clamped, now shows it.
+      const from = Math.max(0, Math.min(range.start, n - fill));
+      setRange({ start: from, end: from + fill });
+    }
+  }
+
   // The rows outside the range that stay: open rows, the tab stop, the focused row and
   // the keyboard's target.
   const pinned = useMemo(() => {
@@ -309,6 +340,23 @@ export function useRowWindow<T>({
   );
 
   const lockSig = `${resetKey}|${scrollerWidth}|${colKeys.join(",")}`;
+  // A lock is the table it was measured on, so it goes as soon as the signature moves on
+  // — not merely set aside until the signature comes BACK (0.51, keksdose N2). The fit
+  // leaves a column out and, measuring the table afresh without it, brings it back in the
+  // same frame, before this hook measures anything: the signature was then the old one
+  // again, and the column came back at the widths that had ratcheted up while rows
+  // scrolled (a wider cell widens its column once), 80–110px more than the fit had just
+  // measured (606 + 93 estimated, 778–812 drawn, at 757), and B2's guard kept it out
+  // although it fitted. Dropped here, the table it comes back to is drawn as measured,
+  // and the next frame locks that. Adjusted during render, as React's "storing
+  // information from previous renders": an effect would draw the stale widths first.
+  // (c53c692; reverted in 0.51.1 when keksdose's register overflowed on load, which
+  // 0.50.1 did as well — the rows came a frame after the fit, 0.51.2 and the screenful
+  // above. Back since the 0.51.2 leftovers, measured: scripts/register-fit-frames.mjs
+  // `--scenario edit`, a refetch after a scroll, left Accounts out on 10 of 18 runs
+  // where a fresh load of the same rows drew it; with the drop, 0 of 18, and the loads
+  // are as they were.)
+  if (lock !== null && lock.sig !== lockSig) setLock(null);
   const colWidths = lock && lock.sig === lockSig ? lock.widths : null;
 
   // What the scroll handler and the frame's measure read: this render's model and lock.
@@ -501,7 +549,6 @@ export function useRowWindow<T>({
     };
   }, [enabled, tableRef]);
 
-  const dataSig = n > 0 && model ? `${n}:${String(model.keys[0])}:${String(model.keys[n - 1])}` : "0";
   const renderSig = `${start}:${end}:${dataSig}:${expandedSig}:${pinnedSig}:${lockSig}:${colWidths ? 1 : 0}`;
   const lastRender = useRef("");
   useLayoutEffect(() => {

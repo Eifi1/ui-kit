@@ -1,8 +1,10 @@
 import { useId, useState, useRef } from "react";
 import {
   cn,
+  Combobox,
   FieldChevron,
   FieldHint,
+  FieldSuggestion,
   FieldLabel,
   FloatingField,
   HelpPopover,
@@ -1004,6 +1006,97 @@ export function Fields022Demo() {
         there is no label. {code("showCount")} with {code("maxLength")} reads as &quot;12 of 60 characters&quot; with
         the field and is announced only on entering the last tenth and at the limit — type into Subject to see the
         colours turn.
+      </Note>
+    </Example>
+  );
+}
+
+/* ── FieldSuggestion ─────────────────────────────────────────────────────── */
+
+/**
+ * FieldSuggestion (keksdose dev #638): the caption under a field the app filled in, saying
+ * where the value came from, with a button that takes it back out. Passed as the field's
+ * `hint`, so the caption, its id and the control's `aria-describedby` are the field's own.
+ */
+
+const CATEGORIES = ["Groceries", "Gifts", "Postage & Shipping"];
+
+/** keksdose's memo rule, in miniature: a memo that names postage fills an EMPTY category. */
+function categoryFor(memo: string): string | null {
+  return /\b(post|parcel|stamps?)\b/i.test(memo) ? "Postage & Shipping" : null;
+}
+
+export function FieldSuggestionDemo() {
+  const [memo, setMemo] = useState("");
+  const [category, setCategory] = useState("");
+  const [fromMemo, setFromMemo] = useState(false);
+  const [account, setAccount] = useState("Giro");
+  const [lastUsed, setLastUsed] = useState(true);
+
+  const onMemo = (next: string) => {
+    setMemo(next);
+    const suggested = categoryFor(next);
+    // Never over a category somebody chose.
+    if (suggested && (category === "" || fromMemo)) {
+      setCategory(suggested);
+      setFromMemo(true);
+    }
+  };
+
+  return (
+    <Example
+      label="FieldSuggestion — where a prefilled value came from"
+      hint="the field's hint while the value is the suggestion: a caption under it, and Clear to take it back"
+    >
+      <Stage>
+        <Input label="Memo" value={memo} onChange={(e) => onMemo(e.target.value)} placeholder="Stamps for the post" />
+        <Combobox
+          label="Category"
+          value={category}
+          onChange={(next) => {
+            setCategory(next);
+            setFromMemo(false);
+          }}
+          options={CATEGORIES}
+          hint={
+            fromMemo ? (
+              <FieldSuggestion
+                from="From the memo"
+                onClear={() => {
+                  setCategory("");
+                  setFromMemo(false);
+                }}
+              />
+            ) : undefined
+          }
+        />
+        <Input
+          label="Account"
+          value={account}
+          onChange={(e) => {
+            setAccount(e.target.value);
+            setLastUsed(false);
+          }}
+          hint={
+            lastUsed ? (
+              <FieldSuggestion
+                from="Last used"
+                onClear={() => {
+                  setAccount("");
+                  setLastUsed(false);
+                }}
+              />
+            ) : (
+              "The account the row is booked to."
+            )
+          }
+        />
+      </Stage>
+      <Note>
+        The caption is a caption at every size and in every field that takes a {code("hint")}, the label-above{" "}
+        {code("Field")} and the bound {code("Rhf*")} fields included. The button is named after the field (“Clear the
+        suggestion for “Category””); without {code("onClear")} the caption is the words alone, and without{" "}
+        {code("from")} it says “Suggested”. Once the user chooses, the app passes its own hint back.
       </Note>
     </Example>
   );

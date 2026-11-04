@@ -21,6 +21,60 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.55.0](https://github.com/Eifi1/ui-kit/compare/v0.54.0...v0.55.0) (2026-11-04)
+
+### ⚠ BREAKING CHANGES
+
+* **server-wake:** ServerWakeWatcher.start() returns a ServerWakeToken (a positive number) or
+  false, where it returned a boolean. Code that annotates its result as boolean, or asserts it is
+  exactly true, changes (keksdose's server-wake-store and its tests); attachServerWake,
+  wrapFetch and track need nothing.
+* **package:** the npm package no longer contains `src/`. A Tailwind `@source` that still points at `@eifi1/ui-kit/src` finds nothing and fails silently (the kit's components render unstyled); replace it with the pair 0.52's must-change list gave, `@source "…/node_modules/@eifi1/ui-kit/dist";` and `@source not "…/node_modules/@eifi1/ui-kit/dist/**/*.{map,d.ts}";` (README §2, "Tailwind"). Debugging is unchanged: the source maps carry the source.
+* **tokens:** tokens.css no longer declares `--status-synced`, `--status-pending`, `--status-edited` or `--status-error`, the colours of the FieldSync family that 0.53 removed. A stylesheet or class that still reads one (`var(--status-error)`, `bg-[var(--status-synced)]`) paints nothing; `KIT_CSS_VARIABLES` from `@eifi1/ui-kit/testing` no longer lists them, so an app's undeclared-token test reports any such use. No kit part and no app reads them.
+
+* **package:** the tarball ships dist only; the source maps keep the source ([768d044](https://github.com/Eifi1/ui-kit/commit/768d044002f0d7d9de0ce110537722ee21169222))
+
+### Added
+
+* **admin:** USER_ROSTER_PAGE_SIZE and USER_ROSTER_MAX_PAGE_SIZE, server-kit's roster page sizes ([8e1eecc](https://github.com/Eifi1/ui-kit/commit/8e1eeccc0173e69aa6689483af42872fa1e58421))
+* **billing:** the subscription's standing in one line, and UsageMeter ([6421f1d](https://github.com/Eifi1/ui-kit/commit/6421f1d193d122bba748d7523be16ace37807721))
+* **button:** refused, a refusal that stays in the tab order and says why ([6680381](https://github.com/Eifi1/ui-kit/commit/6680381841c0e111a2b1a9c0ccf656a9774cae08))
+* **camera:** useHasCamera and CameraButton ([df434e5](https://github.com/Eifi1/ui-kit/commit/df434e5eaff1e89e1ba646824268be0703d7dcc4))
+* **changelog:** one parser for the apps' release notes ([1a55548](https://github.com/Eifi1/ui-kit/commit/1a55548fac9c50a9245c6e5fd2c3e1dbe19cccf1))
+* **changelog:** ReleaseNotes, the release card on the kit's parser ([07a44cc](https://github.com/Eifi1/ui-kit/commit/07a44ccb18f10b324e1002d5b5a05a05996881a6))
+* **chart:** LegendedSeriesChart, a series chart with its legend as the kit's layout ([0e36324](https://github.com/Eifi1/ui-kit/commit/0e363249f714619321e258545d25176372565cb6))
+* **dates:** one settable "today", which the dev clock moves and every helper reads ([a210b98](https://github.com/Eifi1/ui-kit/commit/a210b989c0c8641d33417b2d50f83c5304ad7753))
+* **feedback:** useFeedbackInbox and FeedbackInbox, the inbox assembled once ([d1bba74](https://github.com/Eifi1/ui-kit/commit/d1bba7460985530d952de0d2a072a6363ec48e74))
+* **fields:** FieldSuggestion, a field's "suggested from" caption with a clear ([6fde1fd](https://github.com/Eifi1/ui-kit/commit/6fde1fdb996c41eb12b7d7a8e5f10602bed7707d))
+* **focus:** one focus-restore rule, in the trap and the overlays that kept their own ([190b449](https://github.com/Eifi1/ui-kit/commit/190b4491763ea5f9cffed6b88f54011682adddb7))
+* **hooks:** useDebounce settles on a key when the value's identity changes every render ([6fbc072](https://github.com/Eifi1/ui-kit/commit/6fbc0727b2a3783a71a1768e2e7956089635b647))
+* **legal:** ConsentAgainNotice, a consent asked again after its text changed ([083913c](https://github.com/Eifi1/ui-kit/commit/083913c97fc13ea99475a4c0ec3b7cced01bd773))
+* **legal:** siteLinks, the public footer's own row for the app's other public pages ([03f0179](https://github.com/Eifi1/ui-kit/commit/03f0179caf545bb5f7d2ac985feb7bc3241c0828))
+* **modal:** onDismissRefused says which dismissal busy or held refused ([34f682c](https://github.com/Eifi1/ui-kit/commit/34f682ce9849b111fe87d1d48757e55992e80b4c))
+* **page-header:** PageHeaderSkeleton, the header's outline at its own metrics ([9f1e09f](https://github.com/Eifi1/ui-kit/commit/9f1e09f8f4c2c8a3e52221d67bc6120f9d9cc8dd))
+* **series-chart:** a chart without a name is named after its axes ([36658c5](https://github.com/Eifi1/ui-kit/commit/36658c53fb6bfc007d43cd2e9aa13c87f80b9935))
+* **series-chart:** under More contrast a low-contrast bar or area is edged in its own shade ([a20b11e](https://github.com/Eifi1/ui-kit/commit/a20b11e44615588c759f587ba5f5baeb2ba24fcb))
+* **server-wake:** slowOk, a read that is heavy on purpose and never called slow ([ad44c44](https://github.com/Eifi1/ui-kit/commit/ad44c442914209e4254f342b149c82827b8c46f8))
+* **server-wake:** start() returns a token, and end(token) ends exactly that request ([565167b](https://github.com/Eifi1/ui-kit/commit/565167b4d53ba1adcb335b4b1f70bdce7c7e3157))
+* **session:** watchSessionElsewhere, for a sign-out in another tab and a page back from the bfcache ([865d34b](https://github.com/Eifi1/ui-kit/commit/865d34b0b2609e278045bd74fcfe4e772fa22ced))
+* **shell:** pageFallback, the wait for a lazy page inside the content area ([595b72e](https://github.com/Eifi1/ui-kit/commit/595b72ed5a621546b67e6303572e5cea33b3b696))
+* **sync:** HeldChangesBanner, the discard and the way back for changes that can't be sent from here ([c94076a](https://github.com/Eifi1/ui-kit/commit/c94076ab41dc2313dfd185942fb6fa1ad2d74e38))
+* **sync:** the indicator says when a round waits for another tab ([24a2924](https://github.com/Eifi1/ui-kit/commit/24a292465d5a2b9e2d5983dcce7e1ea9cd5f7b7a))
+* **treemap:** the map draws itself, without recharts' Treemap ([31a9923](https://github.com/Eifi1/ui-kit/commit/31a9923144451fa77944ae09589a5902301fb106))
+
+### Fixed
+
+* **a11y:** one editable-content rule for the tour, the bulk bar and the clipboard ([657f386](https://github.com/Eifi1/ui-kit/commit/657f386c0e45d6fd1d8a7472ed835426753f131f))
+* **data-table:** the lock goes when its signature moves on, again (c53c692, keksdose N2) ([15f393b](https://github.com/Eifi1/ui-kit/commit/15f393b5e83de7c9a722a55089095d016440bc77))
+* **data-table:** virtualize draws the rows that arrive in their own render, so the fit sees them ([2405fe3](https://github.com/Eifi1/ui-kit/commit/2405fe30a9299a5a5d0ecd1c577f9f4bce68a139))
+* **lightbox:** the paging keys leave editable content alone by the kit's one rule ([bdf8eea](https://github.com/Eifi1/ui-kit/commit/bdf8eeaf6fd32cde0d6824282593e1d300a121a7))
+
+### Changed
+
+* **fields:** one LockFrame for a locked field and its reason ([6bbb66d](https://github.com/Eifi1/ui-kit/commit/6bbb66d17e7b2f5214c6cce1f61701488855a78e))
+* **series-chart:** the plot draws again only when what it shows changes ([5c47f05](https://github.com/Eifi1/ui-kit/commit/5c47f0544bfe2276d920b0d1c44f097d6bacaf43))
+* **tokens:** drop the four --status-* tokens no part reads ([3cf45bc](https://github.com/Eifi1/ui-kit/commit/3cf45bcfc29752e7b5807d4b72326db1db6dc188))
+
 ## [0.54.0](https://github.com/Eifi1/ui-kit/compare/v0.53.0...v0.54.0) (2026-11-04)
 
 ### Added

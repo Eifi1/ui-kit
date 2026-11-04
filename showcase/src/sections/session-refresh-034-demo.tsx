@@ -252,7 +252,7 @@ export function SessionRefresh034Demo() {
         </ol>
         <Note>
           {
-            "Attach it last: `attachServerWake(api)`, then the app's own interceptors, then `attachSessionRefresh(api, createSessionRefresh({ refresh, store, currentToken, isDemo, onEnded }))`. The app's `refresh` is its bare `POST /auth/refresh` and writes nothing; the kit calls `store` only while the session is unchanged, so a refresh that lands after a sign-out (try it) stores nothing and ends nothing. A signed-out step's 401 (`isSignedOutStep`: `/auth/login`, its `2fa` step, `/auth/refresh` …) never refreshes. The kit shows nothing itself: the app words a transient failure."
+            "Attach it last: `attachServerWake(api)`, then the app's own interceptors, then `attachSessionRefresh(api, createSessionRefresh({ refresh, store, currentToken, isDemo, onEnded }))`. The app's `refresh` is its bare `POST /auth/refresh` and writes nothing; the kit calls `store` only while the session is unchanged, so a refresh that lands after a sign-out (try it) stores nothing and ends nothing. A signed-out step's 401 (`isSignedOutStep`: `/auth/login`, its `2fa` step, `/auth/refresh` …) never refreshes. The kit shows nothing itself: the app words a transient failure. A sign-out in another tab is `watchSessionElsewhere({ ended, onEnded })`'s: it asks `ended` after every `storage` event and on a page restored from the back/forward cache, and calls `onEnded` once."
           }
         </Note>
       </div>

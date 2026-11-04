@@ -95,6 +95,10 @@ export { TourMenu } from "./shell/tour-menu";
 export type { TourMenuProps, TourMenuTour } from "./shell/tour-menu";
 export { SyncStatusIndicator } from "./shell/sync-status-indicator";
 export type { SyncStatus, SyncState, SyncStatusScope, SyncStatusIndicatorProps } from "./shell/sync-status-indicator";
+// 0.55 (§2.6.1): the indicator's `blocked` with room for the action — "Switch back" and a
+// discard that asks first (keksdose's budget switch, kastlan's handover sync banner).
+export { HeldChangesBanner, DEFAULT_HELD_CHANGES_BANNER_LABELS } from "./shell/held-changes-banner";
+export type { HeldChangesBannerProps, HeldChangesBannerLabels } from "./shell/held-changes-banner";
 // 0.51 (§2.7.1, keksdose): one flask, the kit's Account section and the app's own dev
 // sections. 0.42's `DevSwitchers`, a DevMenu with no sections since 0.51, went in 0.52.
 export { DevMenu } from "./shell/dev-menu";

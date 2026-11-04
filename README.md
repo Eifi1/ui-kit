@@ -28,8 +28,8 @@ with its own Tailwind config.
 ## Compatibility with server-kit
 
 The backend half, [`eifi1-server-kit`](https://github.com/Eifi1/server-kit), is a separate
-package with its own version and changelog. **ui-kit 0.51 ↔ server-kit 0.20**: this release
-is tested against server-kit 0.20.0's API export (the showcase's Server kit pages and the
+package with its own version and changelog. **ui-kit 0.55 ↔ server-kit 0.21**: this release
+is tested against server-kit 0.21.0's API export (the showcase's Server kit pages and the
 vocabulary test, `showcase/src/__tests__/server-kit-vocabularies.test.ts`).
 
 ## Documentation
@@ -44,8 +44,8 @@ vocabulary test, `showcase/src/__tests__/server-kit-vocabularies.test.ts`).
 | [Issues](https://github.com/Eifi1/ui-kit/issues) | Bugs and requests |
 
 The links are absolute because only this README is in the npm tarball — `files` ships
-`dist`, `src`, `tokens.css` and `LICENSE`, so a reader who arrived from npmjs.com has none
-of the others on disk and a relative link would be a 404.
+`dist`, `tokens.css` and `LICENSE`, so a reader who arrived from npmjs.com has none of the
+others on disk and a relative link would be a 404.
 
 Kurvenschmiede was called **lenkbank** until 2026-10-01 (repository `Eifi1/kurvenschmiede`,
 formerly `Eifi1/lenkbank`). The changelog, older adoption notes and code comments that cite
@@ -159,8 +159,9 @@ and 216,056 B (−181 rules, −11 KB), exactly what the `.js` files give on the
 `.js` holds every class a component renders. **A glob such as `dist/**/*.js` does not
 narrow the scan**: an explicit `@source` into an ignored folder un-ignores the folder, and
 Tailwind's root detection then walks every file in it, so the stylesheet comes out
-byte-identical to the directory line. Exclude with `@source not` instead. Don't scan the
-tarball's `src` either: it is the commented source, with the same extra rules.
+byte-identical to the directory line. Exclude with `@source not` instead. The tarball has
+shipped no `src` since 0.55 (the source maps carry the source): an `@source` still pointing
+there scans nothing, silently: replace it with the pair above.
 
 ### 3. Appearance stores (own persistence keys)
 
@@ -221,7 +222,7 @@ re-skins the kit by changing values rather than by forking components. The famil
 |---|---|---|
 | **Palette** | `--bg-page` `--bg-surface` `--bg-surface-2` `--border` `--text-primary` `--text-secondary` `--text-muted` `--brand` `--brand-hover` `--brand-contrast` `--money-income` `--money-expense` `--money-net` `--money-neutral` `--chart-1…9` | `applyTokenSet()`, written inline on `<html>` from the active `PalettePreset` (More contrast steps four of them; in light also the well and the four money colours) |
 | **Derived** | `--text-placeholder` `--bg-hover` `--bg-active` `--bg-inverse` `--text-inverse` `--border-strong` `--brand-bg` `--brand-bg-hover` `--brand-muted`, and `--neutral` (`--text-muted` as a fill) | `color-mix()` or `var()` in `tokens.css`, from the layer above — so they follow the preset with no preset having to list them |
-| **Semantic** | `--danger*` `--warning*` `--info*` `--success*` — each the colour, `-contrast`, `-border` and `-bg`; danger and warning also `-border-strong`, danger `-hover` — and `--status-synced/-pending/-edited/-error` | literals in `tokens.css`, per theme; in light under More contrast the four colours and `--status-edited` deepen for the darker well |
+| **Semantic** | `--danger*` `--warning*` `--info*` `--success*` — each the colour, `-contrast`, `-border` and `-bg`; danger and warning also `-border-strong`, danger `-hover` | literals in `tokens.css`, per theme; in light under More contrast the four colours deepen for the darker well |
 | **Categorical hues** | `--hue-blue` `--hue-indigo` `--hue-purple` `--hue-teal` `--hue-orange`, each with `-contrast`, `-border` and `-bg` | literals in `tokens.css`, per theme — values that mean only "a different value" (a status enum), at the semantic family's weight |
 | **Fill foregrounds** | `<fill>-contrast`: the text ON a fill — `--brand-contrast`, `--money-income-contrast` … `--money-neutral-contrast`, `--neutral-contrast`, and each tone's and hue's `-contrast` | with their family; money is white in light and the page in dark |
 | **Media** | `--media-ink` `--media-scrim` `--media-scrim-hover` | literals, the SAME in both themes: controls drawn on a photo or a camera picture, whose background is the picture, not the page |
@@ -263,7 +264,7 @@ name with the property's own prefix dropped (`--bg-surface` → `bg-surface`,
 The names are **property-scoped**: a text role makes a `text-*` utility and nothing else,
 so `bg-muted` does not exist and a role cannot land on the wrong property by accident. An
 app's own `--color-*` names (shadcn-style) do not collide with them. Keep `[var(--…)]` for a
-role with no utility: the chart colours and `--status-*`. The ring offsets
+role with no utility: the chart colours. The ring offsets
 (`ring-offset-surface`, `ring-offset-page`) and the money colours (`text-money-income`,
 `bg-money-expense` …, the table below) are utilities since 0.34 and take variants, unlike
 the plain money classes further down. The kit's own
@@ -376,9 +377,9 @@ property has a utility for the role, and names it. It reads every string literal
 template-literal part, so a JSX `className`, a `cn()` / `clsx()` argument and a class constant
 alike. Where one utility fits, `eslint --fix` writes it and keeps the variants and the opacity:
 `hover:text-[var(--text-muted)]/70` → `hover:text-muted/70`. A token with no utility on that
-property is left alone (`text-[var(--chart-1)]`, `--status-*`, `bg-[var(--border)]` as a
-divider), and so are comments. The rule reads the table above, so a role that gains a utility is
-flagged from the release that adds it.
+property is left alone (`text-[var(--chart-1)]`, `bg-[var(--border)]` as a divider), and so
+are comments. The rule reads the table above, so a role that gains a utility is flagged from
+the release that adds it.
 
 ```js
 // eslint.config.js
@@ -405,8 +406,8 @@ and everything sized in rem (Tailwind's spacing and type) grows with it.
 `data-contrast="more"` is More contrast, from the setting or from `prefers-contrast: more`
 on "System"; it steps the colour tokens in JavaScript and widens `--focus-ring-width`. In
 light it also darkens the well (`--bg-surface-2`, 10 % ink into the card) and deepens the
-money, status, teal, orange and `--status-edited` colours and `--bg-active` so they keep
-their contrast on it; dark keeps its well. A link button's and TextLink's brand reads
+money, status, teal and orange colours and `--bg-active` so they keep their contrast on it;
+dark keeps its well. A link button's and TextLink's brand reads
 `--brand-muted` (the brand as text) under it, in both modes. The
 stores in [Wiring](#wiring) put both attributes there; the attribute names are frozen.
 
@@ -461,7 +462,7 @@ because they answer different questions.
 
 | System | Tokens | The question it answers |
 |---|---|---|
-| **Semantic UI** | `--danger*` `--warning*` `--info*` `--success*`, `--status-*` | *What does this mean?* Danger is red because every other interface the reader has used made it red. Fixed meanings, so they live in `tokens.css` and are **not** part of `TokenSet` — a destructive action must not change colour because somebody picked a different preset. |
+| **Semantic UI** | `--danger*` `--warning*` `--info*` `--success*` | *What does this mean?* Danger is red because every other interface the reader has used made it red. Fixed meanings, so they live in `tokens.css` and are **not** part of `TokenSet` — a destructive action must not change colour because somebody picked a different preset. |
 | **Semantic data** | `--money-income` `--money-expense` `--money-net` `--money-neutral` | *Which direction is this number?* Never red/green: that pair is exactly the axis dichromacy collapses. Always paired with a `+`/`−` or an arrow at the call site, so colour is never the only signal. |
 | **Categorical chart** | `--chart-1` … `--chart-8` (`--chart-9` repeats slot 1) | *Which series is this?* No meaning and no order — eight hues that must stay separable from each other: anyplot's "Imprint" set (0.49; Paul Tol's "Muted" is the `paul-tol` preset), the same in light and dark, CVD-safe across protan/deutan/tritan. `paletteFor(i)` returns the CSS var (cycling eight, series 1 always the green; `{ order: "cvd" }` for anyplot's CVD order), so a Recharts series is theme-aware for free. A hue under 3:1 on the ground gets a 1px ink edge on bars, areas and treemap tiles (`chartEdge`) under More contrast; at Standard contrast no mark gets a per-hue edge (`edges="auto"`, Treemap 0.51.6, SeriesChart 0.52). A Treemap node with `children` is a group, drawn as a labelled frame round its tiles (0.52): its `fill` is its tiles' default, `shade` mixes a hue into the surface as a measured hex, `onGroupClick` makes the frames buttons, and a group's name band shows once the group is 44px wide and 61px tall at Normal text. A group's frame is given area of its own, so a tile's area is its share of the whole in any group. |
 | **Chart inks** | `--chart-ink` `--chart-muted` | The only chart colours that change with the theme. `CHART_ROLES`: total / baseline / outline in ink; other / rest / disabled and confidence bands in muted ink. |
@@ -578,7 +579,7 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2137 names from 358 modules** in the main barrel — 966 values and 1171 types — and 187 more in 16 standalone entries. _Italic_ is a type-only export.
+**2199 names from 371 modules** in the main barrel — 992 values and 1207 types — and 191 more in 16 standalone entries. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 `node scripts/gen-export-inventory.mjs`; the counts are pinned by
@@ -586,15 +587,15 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2137 |
-| `@eifi1/ui-kit/chart` | 99 |
-| `@eifi1/ui-kit/shell` | 106 |
+| `@eifi1/ui-kit` | 2199 |
+| `@eifi1/ui-kit/chart` | 102 |
+| `@eifi1/ui-kit/shell` | 110 |
 | `@eifi1/ui-kit/data-table` | 56 |
 | `@eifi1/ui-kit/wizard` | 25 |
 | `@eifi1/ui-kit/tour` | 49 |
-| `@eifi1/ui-kit/feedback` | 195 |
+| `@eifi1/ui-kit/feedback` | 203 |
 | `@eifi1/ui-kit/search` | 20 |
-| `@eifi1/ui-kit/dates` | 22 |
+| `@eifi1/ui-kit/dates` | 26 |
 | `@eifi1/ui-kit/table-text` | 14 |
 | `@eifi1/ui-kit/currencies` | 3 |
 | `@eifi1/ui-kit/eslint` | 1 |
@@ -629,8 +630,9 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `lib/download` | `filenameFromDisposition`, `saveBlob` |
 | `lib/text-match` | `foldForSearch`, `matchesSearch`, `rankMatch`, `searchWords`, _`MatchRank`_ |
 | `lib/qr-encode` | `encodeQr`, _`QrEncodeOptions`_, _`QrErrorCorrection`_, _`QrMatrix`_ |
-| `lib/server-wake` | `attachServerWake`, `createServerWake`, `serverWake`, `watchReadsAnd`, `wrapFetch`, _`AxiosLikeInstance`_, _`ServerWakeAxiosConfig`_, _`ServerWakeFilter`_, _`ServerWakeOptions`_, _`ServerWakeRequest`_, _`ServerWakeStage`_, _`ServerWakeWatcher`_ |
-| `lib/session-refresh` | `attachSessionRefresh`, `createSessionRefresh`, `isSignedOutStep`, `isTransientRefreshFailure`, _`SessionRefresh`_, _`SessionRefreshOptions`_, _`SessionRefreshOutcome`_, _`SessionRenewal`_ |
+| `lib/server-wake` | `attachServerWake`, `createServerWake`, `serverWake`, `watchReadsAnd`, `wrapFetch`, _`AxiosLikeInstance`_, _`ServerWakeAxiosConfig`_, _`ServerWakeFilter`_, _`ServerWakeOptions`_, _`ServerWakeRequest`_, _`ServerWakeStage`_, _`ServerWakeToken`_, _`ServerWakeWatcher`_ |
+| `lib/session-refresh` | `attachSessionRefresh`, `createSessionRefresh`, `isSignedOutStep`, `isTransientRefreshFailure`, `watchSessionElsewhere`, _`SessionElsewhereOptions`_, _`SessionRefresh`_, _`SessionRefreshOptions`_, _`SessionRefreshOutcome`_, _`SessionRenewal`_ |
+| `lib/changelog` | `changelogSectionKey`, `groupByScope`, `parseChangelog`, `parseChangelogItem`, _`ChangelogItem`_, _`ChangelogRelease`_, _`ChangelogScopeGroup`_, _`ChangelogSection`_, _`ChangelogSectionKey`_ |
 | `lib/person-name` | `formatPersonName`, `personInitials`, _`PersonName`_ |
 | `lib/translation-review` | `clearReviewsInChunks`, `DEFAULT_TRANSLATION_REVIEW_FILTER`, `DEFAULT_TRANSLATION_REVIEW_SWIPE`, `dropReviews`, `filterTranslationRows`, `flattenStrings`, `fromApiReview`, `groupTranslationRows`, `keyInArea`, `keyInAreas`, `keyNamespace`, `mergeReviews`, `placeholderMismatch`, `placeholderTokens`, `REVIEW_STATUSES`, `reviewAreaOf`, `reviewStatus`, `reviewUndo`, `reviewWrite`, `saveReviewsInChunks`, `summariseRows`, `toApiWrite`, `TRANSLATION_REVIEW_SWIPE_ACTIONS`, `translationCorrections`, `translationReviewSwipePlan`, `translationRows`, `unreviewedRows`, _`ApiTranslationReview`_, _`ApiTranslationReviewsResponse`_, _`ApiTranslationReviewWrite`_, _`ReviewStatus`_, _`TranslationCorrection`_, _`TranslationReview`_, _`TranslationReviewFilter`_, _`TranslationReviewKey`_, _`TranslationReviewSwipeAction`_, _`TranslationReviewSwipeBinding`_, _`TranslationReviewUndo`_, _`TranslationReviewWrite`_, _`TranslationRow`_, _`TranslationRowGroup`_, _`TranslationRowsInput`_, _`TranslationSummary`_, _`TranslationVerdict`_ |
 | `lib/countries` | `COUNTRY_CODES`, `countryName` |
@@ -645,61 +647,11 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `lib/clipping` | `CLIPS_ATTRIBUTE` |
 | `lib/chip-edge-snap` | `refreshChipEdges` |
 
-### hooks
-
-| Module | Exports |
-|---|---|
-| `hooks/use-media-query` | `useMediaQuery` |
-| `hooks/use-body-scroll-lock` | `useBodyScrollLock` |
-| `hooks/use-anchored-rect` | `useAnchoredRect`, _`AnchorRect`_ |
-| `hooks/use-anchored-panel` | `anchoredPanelPlacement`, `readKeyboardInset`, `useAnchoredPanel`, `useVisualViewport`, _`AnchoredPanel`_, _`AnchoredPanelOptions`_, _`KeyboardInsetOptions`_, _`ViewportBox`_ |
-| `hooks/use-dismiss` | `useEscapeKey`, `useOutsideClick` |
-| `hooks/use-focus-trap` | `useFocusTrap`, _`FocusTrapOptions`_ |
-| `hooks/use-announce` | `useAnnounce`, _`AnnounceRegionProps`_, _`UseAnnounceOptions`_, _`UseAnnounceReturn`_ |
-| `hooks/use-overlay-history` | `useOverlayHistory` |
-| `hooks/use-close-transition` | `OVERLAY_EXIT_MS`, `useCloseTransition` |
-| `hooks/use-row-swipe` | `useRowSwipe`, _`RowSwipeOptions`_, _`RowSwipeReturn`_, _`SwipeStage`_ |
-| `hooks/use-long-press` | `useLongPress`, _`LongPressOptions`_, _`LongPressResult`_ |
-| `hooks/use-noindex` | `useNoIndex` |
-| `hooks/use-document-title` | `useDocumentTitle` |
-| `hooks/use-file-drop` | `dragHasFiles`, `useFileDrop`, _`FileDropProps`_, _`UseFileDropOptions`_, _`UseFileDropReturn`_ |
-| `hooks/use-debounce` | `useDebounce`, `useDebouncedCallback`, _`DebouncedCallbackOptions`_, _`DebouncedFunction`_ |
-| `hooks/use-search-param-state` | `useDialogParam`, `useSearchParamsState`, `useSearchParamState`, `useTabParam`, _`DialogParam`_, _`SearchParamField`_, _`SearchParamFields`_, _`SearchParamStateOptions`_, _`SearchParamsUpdate`_ |
-| `hooks/use-copy-to-clipboard` | `copyToClipboard`, `useCopyToClipboard`, _`CopyState`_, _`UseCopyToClipboardOptions`_, _`UseCopyToClipboardReturn`_ |
-| `hooks/use-hotkey` | `matchesHotkey`, `parseHotkey`, `useHotkey`, _`Hotkey`_, _`ParsedHotkey`_, _`UseHotkeyOptions`_ |
-| `hooks/use-authed-src` | `useAuthedSrc`, _`AuthedFetcher`_, _`AuthedSrcStatus`_, _`UseAuthedSrcOptions`_, _`UseAuthedSrcResult`_ |
-| `hooks/use-windowed-rows` | `useWindowedRows`, `WINDOWED_ROW_INDEX`, _`WindowedRows`_ |
-| `hooks/use-breakpoint` | `BREAKPOINT_REM`, `breakpointQuery`, `remPx`, `useBreakpoint`, `usePhoneLayout`, `useRemPx`, _`Breakpoint`_, _`BreakpointVariant`_, _`RemLength`_ |
-| `hooks/use-large-text` | `useCoarsePointer`, `useInlineFacts`, `useLargeText` |
-| `hooks/use-file-picker` | `matchesAccept`, `useFilePicker`, _`FilePickerLabels`_, _`FileRejection`_, _`FileRejectionReason`_, _`FileScreenOptions`_, _`UseFilePickerOptions`_, _`UseFilePickerReturn`_ |
-
-### theme, palettes, colour
-
-| Module | Exports |
-|---|---|
-| `theme/color` | `contrast`, `deltaE`, `hexToOklch`, `luminance`, `oklchToHex`, `oklchToRgb`, `parseHex`, `rgbToOklch`, `simulateCvd`, `solveLightness`, `toHex`, _`CvdType`_, _`Oklch`_, _`Rgb`_ |
-| `theme/palette-derive` | `auditChartRamp`, `auditPalette`, `deriveChartRamp`, `derivePalette`, `describe`, _`AnchorRole`_, _`ChartRampReport`_, _`ContrastCheck`_, _`ContrastReport`_, _`DerivedPalette`_, _`DeriveOptions`_, _`PaletteAnchors`_, _`SemanticTokens`_ |
-| `theme/palette-presets` | `applyTokenSet`, `DEFAULT_PRESET`, `DERIVED_PRESETS`, `PALETTES`, `PAUL_TOL_PRESET`, `presetById`, _`PalettePreset`_, _`TokenSet`_ |
-| `theme/theme-store` | `applyPersistedTheme`, `createThemeStore`, _`ThemeMode`_, _`ThemePreference`_, _`ThemeState`_, _`ThemeStore`_ |
-| `theme/palette-store` | `applyPersistedPalette`, `createPaletteStore`, _`PaletteStore`_ |
-| `theme/text-size` | `applyPersistedTextSize`, `applyTextSize`, `createTextSizeStore`, `isTextSize`, `readPersistedTextSize`, `readTextSize`, `resolveTextSize`, `TEXT_SCALE`, `TEXT_SIZE_INLINE_SCRIPT`, `TEXT_SIZES`, `useTextSize`, _`ApplyTextSizeOptions`_, _`PersistedAppearanceOptions`_, _`PersistedTextSize`_, _`TextSize`_, _`TextSizeInfo`_, _`TextSizeState`_, _`TextSizeStore`_ |
-| `theme/contrast` | `applyContrast`, `applyPersistedContrast`, `CONTRAST_MODES`, `contrastLevel`, `createContrastStore`, `isContrastMode`, `prefersMoreContrast`, `readContrastLevel`, `readPersistedContrast`, `resolveContrastMode`, _`ApplyContrastOptions`_, _`ContrastLevel`_, _`ContrastMode`_, _`ContrastState`_, _`ContrastStore`_, _`PersistedContrast`_ |
-| `theme/chart-palette` | `CHART_COLORS`, `CHART_MUTED_HEX`, `CHART_ROLES`, `chartEdge`, `CVD_ORDER`, `HEATMAP_HEX`, `lerpHex`, `PALETTE_HEX`, `PALETTE_SIZE`, `paletteFor`, `textOn`, _`HeatStops`_, _`PaletteForOptions`_ |
-
-### i18n
-
-| Module | Exports |
-|---|---|
-| `i18n/kit-labels` | `DEFAULT_APP_SHELL_LABELS`, `DEFAULT_CALCULATOR_LABELS`, `DEFAULT_COMBOBOX_LABELS`, `DEFAULT_COMMON_LABELS`, `DEFAULT_CURRENCY_LABELS`, `DEFAULT_DATE_PICKER_LABELS`, `DEFAULT_FILE_LABELS`, `DEFAULT_MULTI_SELECT_LABELS`, `DEFAULT_PICKER_SHEET_LABELS`, `DEFAULT_SWIPEABLE_ROW_LABELS`, `DEFAULT_TOP_BAR_LABELS`, `formatFileSize`, `missingKitLabels`, `UiKitProvider`, `useKitChartTooltipPlacement`, `useKitDateFormatter`, `useKitDocumentTitle`, `useKitFileLabels`, `useKitLabelOverrides`, `useKitLabels`, `useKitLink`, `useKitLocale`, `useKitTableStorageKeyPrefix`, `useKitTimeZone`, `useKitWeekStart`, _`AppShellLabels`_, _`CalculatorLabels`_, _`ChartTooltipPlacement`_, _`ComboboxLabels`_, _`CommonLabels`_, _`CurrencyLabels`_, _`DatePickerLabels`_, _`FileLabels`_, _`KitDateFormatContext`_, _`KitDateFormatter`_, _`KitLinkComponent`_, _`KitLinkProps`_, _`LabelOverride`_, _`MultiSelectLabels`_, _`PickerSheetLabels`_, _`SwipeableRowLabels`_, _`TopBarLabels`_, _`UiKitLabelOverrides`_, _`UiKitLabels`_, _`UiKitProviderProps`_ |
-| `i18n/defaults` | `DEFAULT_UI_KIT_LABELS` |
-| `i18n/review` | `kitLabelStrings`, _`KitLabelStringsOptions`_ |
-| `i18n/languages` | `formatLocaleOf`, `KIT_LANGUAGES`, `languageOptions`, `loadUiKitLabels`, `peekUiKitLabels`, `resolveLanguage`, `useUiKitLabels`, _`KitLanguage`_, _`KitLanguageCode`_ |
-| `i18n/plurals` | `withAllPlurals`, _`PluralForms`_ |
-
 ### components
 
 | Module | Exports |
 |---|---|
+| `components/release-notes` | `DEFAULT_RELEASE_NOTES_LABELS`, `ReleaseNotes`, _`ReleaseNotesLabels`_, _`ReleaseNotesProps`_, _`ReleaseNotesRelease`_, _`ReleaseNotesSection`_ |
 | `components/button` | `Button`, _`ButtonLinkProps`_, _`ButtonProps`_ |
 | `components/button-look` | `buttonClasses`, `TOUCH_TARGET_LARGE`, _`ButtonClassesOptions`_, _`ButtonSize`_, _`ButtonTone`_, _`ButtonVariant`_ |
 | `components/icon-button` | `IconButton`, _`IconButtonGlyphSize`_, _`IconButtonLinkProps`_, _`IconButtonProps`_, _`IconButtonSize`_, _`IconButtonTone`_, _`IconButtonToneColor`_, _`IconButtonVariant`_ |
@@ -711,7 +663,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/spinner` | `Spinner`, _`SpinnerProps`_ |
 | `components/empty-state` | `EmptyState`, _`EmptyStateProps`_ |
 | `components/tabs` | `DEFAULT_TABS_LABELS`, `Tabs`, _`TabItem`_, _`TabsLabels`_, _`TabsProps`_ |
-| `components/field-parts` | `CompactControls`, `DISABLED_REASON_LINE_CLASS`, `DisabledReasonLine`, `FieldHint`, `FieldLabel`, `FLOATING_LABEL_STATIC`, `useDisabledReasonLine`, _`DisabledReasonDisplay`_, _`FieldHintProps`_, _`FieldLabelProps`_ |
+| `components/field-parts` | `CompactControls`, `DEFAULT_FIELD_SUGGESTION_LABELS`, `DISABLED_REASON_LINE_CLASS`, `DisabledReasonLine`, `FieldHint`, `FieldLabel`, `FieldSuggestion`, `FLOATING_LABEL_STATIC`, `useDisabledReasonLine`, _`DisabledReasonDisplay`_, _`FieldHintProps`_, _`FieldLabelProps`_, _`FieldSuggestionLabels`_, _`FieldSuggestionProps`_ |
 | `components/focus-ring` | `FOCUS_RING`, `FOCUS_RING_WIDTH` |
 | `components/field` | `Field`, _`FieldControlProps`_, _`FieldLabelVisibility`_, _`FieldProps`_, _`FieldRenderMeta`_ |
 | `components/search-field` | `SearchField`, _`SearchFieldProps`_ |
@@ -757,10 +709,13 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/autocomplete` | `Autocomplete`, _`AutocompleteProps`_ |
 | `components/measured-grid` | `DEFAULT_MEASURED_GRID_LABELS`, `MeasuredGrid`, `useMeasuredRows`, _`MeasuredGridColumn`_, _`MeasuredGridLabels`_, _`MeasuredGridProps`_, _`MeasuredGridView`_, _`MeasuredRows`_, _`UseMeasuredRowsOptions`_ |
 | `components/file-button` | `DEFAULT_FILE_PICKER_LABELS`, `FileButton`, _`FileButtonProps`_ |
+| `components/camera-button` | `CameraButton`, _`CameraButtonProps`_ |
+| `components/camera-capture` | `CameraCapture`, _`CameraCaptureProps`_, _`CameraFacing`_ |
 | `components/chart` | `ChartContainer`, `ChartLegend`, `ChartLegendContent`, `ChartTooltip`, `ChartTooltipContent`, `useChart`, _`ChartConfig`_, _`ChartSeriesConfig`_ |
 | `components/treemap` | `fitLabel`, `Treemap`, `TreemapCell`, _`TreemapCellProps`_, _`TreemapEdges`_, _`TreemapNode`_, _`TreemapProps`_ |
 | `components/treemap-labels` | `DEFAULT_TREEMAP_LABELS`, _`TreemapLabels`_ |
 | `components/series-chart` | `SeriesChart`, `seriesLegendEntries`, `StaticSeriesChart`, _`SeriesChartAxis`_, _`SeriesChartHit`_, _`SeriesChartMarker`_, _`SeriesChartPoint`_, _`SeriesChartProps`_, _`SeriesChartReference`_, _`SeriesChartRow`_, _`SeriesChartSeries`_, _`SeriesChartSpan`_, _`SeriesChartTickValues`_, _`SeriesChartTone`_, _`SeriesChartTooltip`_, _`SeriesChartTooltipPlacement`_, _`SeriesChartType`_, _`SeriesChartX`_, _`SeriesChartXTick`_, _`SeriesChartXValue`_, _`SeriesLegendAxes`_ |
+| `components/legended-series-chart` | `LegendedSeriesChart`, _`LegendedSeriesChartLegend`_, _`LegendedSeriesChartProps`_ |
 | `components/chart-height` | _`ChartHeight`_ |
 | `components/chart-zoom-core` | `SharedXZoom`, _`ZoomAxes`_, _`ZoomAxesSetting`_, _`ZoomBinding`_, _`ZoomDrag`_, _`ZoomFitSeries`_, _`ZoomFitSource`_, _`ZoomRow`_, _`ZoomSelection`_, _`ZoomState`_, _`ZoomTarget`_ |
 | `components/toggle-legend` | `LegendColumn`, `LegendGroup`, `StaticLegend`, `STEP_DASH`, `strokeDash`, `toggleHidden`, `ToggleLegend`, _`LegendEntry`_, _`StaticLegendProps`_, _`ToggleLegendProps`_ |
@@ -794,6 +749,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/progress-bar` | `DEFAULT_PROGRESS_BAR_LABELS`, `ProgressBar`, _`ProgressBarLabels`_, _`ProgressBarProps`_, _`ProgressBarSegment`_, _`ProgressBarSize`_, _`ProgressBarTone`_ |
 | `components/skeleton` | `Skeleton`, _`SkeletonProps`_, _`SkeletonShape`_ |
 | `components/table-skeleton` | `TableSkeleton`, _`TableSkeletonProps`_ |
+| `components/page-header-skeleton` | `PageHeaderSkeleton`, _`PageHeaderSkeletonProps`_ |
 | `components/loading-state` | `LoadingState`, _`LoadingStateLabelVisibility`_, _`LoadingStateProps`_, _`LoadingStateSize`_ |
 | `components/signed-amount` | `DEFAULT_SIGNED_AMOUNT_LABELS`, `Delta`, `SignedAmount`, `Tone`, `toneTextClass`, _`DeltaProps`_, _`GoodDirection`_, _`SignedAmountLabels`_, _`SignedAmountProps`_, _`SignedAmountTone`_, _`TextTone`_, _`ToneProps`_, _`VerdictPalette`_ |
 | `components/error-boundary` | `crashFingerprint`, `DEFAULT_ERROR_BOUNDARY_LABELS`, `describeThrown`, `ErrorBoundary`, `formatCrashReport`, `isChunkLoadError`, _`CrashReport`_, _`CrashReportResult`_, _`ErrorBoundaryDetails`_, _`ErrorBoundaryFallbackProps`_, _`ErrorBoundaryLabels`_, _`ErrorBoundaryProps`_ |
@@ -816,6 +772,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/translation-review` | `TranslationReviewPanel`, _`TranslationReviewGroupBy`_, _`TranslationReviewOrigin`_, _`TranslationReviewPanelProps`_, _`TranslationReviewSaveInfo`_ |
 | `components/legal` | `DEFAULT_LEGAL_LABELS`, `LEGAL_HREFS`, `LegalFooter`, `LegalLayout`, `LegalLinks`, `legalOperatorText`, `LegalSection`, `useLegalLabels`, _`LegalDisclaimerSectionLabels`_, _`LegalFooterProps`_, _`LegalFramedSectionLabels`_, _`LegalInfoPageKey`_, _`LegalLabels`_, _`LegalLayoutProps`_, _`LegalLink`_, _`LegalLinksProps`_, _`LegalOperator`_, _`LegalOperatorSectionLabels`_, _`LegalOperatorText`_, _`LegalPageKey`_, _`LegalSectionProps`_, _`LegalTextSectionLabels`_ |
 | `components/legal-page` | `LEGAL_SKELETON`, `LegalAcceptCheckbox`, `LegalKitSection`, `LegalPage`, _`LegalAcceptCheckboxProps`_, _`LegalDisclaimerVariant`_, _`LegalKitSectionKey`_, _`LegalKitSectionProps`_, _`LegalPageProps`_, _`LegalSectionOwner`_, _`LegalSkeletonEntry`_, _`LegalSkeletonPage`_ |
+| `components/consent-again-notice` | `ConsentAgainNotice`, `DEFAULT_CONSENT_AGAIN_LABELS`, _`ConsentAgainBannerProps`_, _`ConsentAgainCardProps`_, _`ConsentAgainLabels`_, _`ConsentAgainNoticeProps`_ |
 | `components/appearance-labels` | `DEFAULT_APPEARANCE_LABELS`, `useAppearanceLabels`, _`AppearanceLabels`_ |
 | `components/date-format-setting` | `DateFormatSetting`, _`DateFormatSettingProps`_ |
 | `components/row-actions` | `DEFAULT_ROW_ACTIONS_LABELS`, `ROW_ACTIONS_CELL_CLASS`, `RowActions`, `rowActionsColumn`, `RowActionsHead`, _`RowAction`_, _`RowActionConfirm`_, _`RowActionList`_, _`RowActionsCollapse`_, _`RowActionsColumnOptions`_, _`RowActionsHeadProps`_, _`RowActionsLabels`_, _`RowActionsProps`_, _`RowActionsSize`_, _`RowActionTone`_ |
@@ -839,6 +796,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/data-table-virtual` | _`DataTableVirtualize`_ |
 | `components/data-table-cells` | `booleanColumn`, `BooleanMark`, _`BooleanColumnOptions`_, _`BooleanMarkProps`_ |
 | `components/use-table-state` | `useTableUrlState`, _`TableUrlState`_, _`TableUrlStateProps`_, _`TableUrlSync`_, _`UseTableUrlStateOptions`_, _`UseTableUrlStateReturn`_ |
+| `components/camera-labels` | `DEFAULT_CAMERA_LABELS`, _`CameraLabels`_ |
 | `components/translation-review-editor` | `TranslationReviewEditor`, _`TranslationReviewEditorProps`_ |
 | `components/translation-review-parts` | `REVIEW_STATUS_TONES`, `ReviewStatusChip`, `TranslationExportButton`, `TranslationLocaleTabs`, `TranslationProgress`, _`ReviewStatusChipProps`_, _`TranslationExportButtonProps`_, _`TranslationLocaleTab`_, _`TranslationLocaleTabsProps`_, _`TranslationProgressProps`_ |
 | `components/translation-review-labels` | `DEFAULT_TRANSLATION_REVIEW_LABELS`, _`TranslationReviewLabels`_ |
@@ -849,6 +807,58 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/series-chart-budget` | _`SeriesChartAxisBudget`_ |
 | `components/date-field` | _`DateTriggerAttributes`_ |
 | `components/date-range-picker` | `DateRangePicker`, _`DateRangeDraftSummary`_, _`DateRangePickerPreset`_, _`DateRangePickerProps`_, _`DateRangeTriggerRenderProps`_ |
+
+### hooks
+
+| Module | Exports |
+|---|---|
+| `hooks/use-media-query` | `useMediaQuery` |
+| `hooks/use-body-scroll-lock` | `useBodyScrollLock` |
+| `hooks/use-anchored-rect` | `useAnchoredRect`, _`AnchorRect`_ |
+| `hooks/use-anchored-panel` | `anchoredPanelPlacement`, `readKeyboardInset`, `useAnchoredPanel`, `useVisualViewport`, _`AnchoredPanel`_, _`AnchoredPanelOptions`_, _`KeyboardInsetOptions`_, _`ViewportBox`_ |
+| `hooks/use-dismiss` | `useEscapeKey`, `useOutsideClick` |
+| `hooks/use-focus-trap` | `useFocusTrap`, _`FocusTrapOptions`_ |
+| `hooks/use-announce` | `useAnnounce`, _`AnnounceRegionProps`_, _`UseAnnounceOptions`_, _`UseAnnounceReturn`_ |
+| `hooks/use-overlay-history` | `useOverlayHistory` |
+| `hooks/use-close-transition` | `OVERLAY_EXIT_MS`, `useCloseTransition` |
+| `hooks/use-row-swipe` | `useRowSwipe`, _`RowSwipeOptions`_, _`RowSwipeReturn`_, _`SwipeStage`_ |
+| `hooks/use-long-press` | `useLongPress`, _`LongPressOptions`_, _`LongPressResult`_ |
+| `hooks/use-noindex` | `useNoIndex` |
+| `hooks/use-document-title` | `useDocumentTitle` |
+| `hooks/use-file-drop` | `dragHasFiles`, `useFileDrop`, _`FileDropProps`_, _`UseFileDropOptions`_, _`UseFileDropReturn`_ |
+| `hooks/use-debounce` | `useDebounce`, `useDebouncedCallback`, _`DebouncedCallbackOptions`_, _`DebouncedFunction`_, _`DebounceOptions`_ |
+| `hooks/use-search-param-state` | `useDialogParam`, `useSearchParamsState`, `useSearchParamState`, `useTabParam`, _`DialogParam`_, _`SearchParamField`_, _`SearchParamFields`_, _`SearchParamStateOptions`_, _`SearchParamsUpdate`_ |
+| `hooks/use-copy-to-clipboard` | `copyToClipboard`, `useCopyToClipboard`, _`CopyState`_, _`UseCopyToClipboardOptions`_, _`UseCopyToClipboardReturn`_ |
+| `hooks/use-hotkey` | `matchesHotkey`, `parseHotkey`, `useHotkey`, _`Hotkey`_, _`ParsedHotkey`_, _`UseHotkeyOptions`_ |
+| `hooks/use-authed-src` | `useAuthedSrc`, _`AuthedFetcher`_, _`AuthedSrcStatus`_, _`UseAuthedSrcOptions`_, _`UseAuthedSrcResult`_ |
+| `hooks/use-windowed-rows` | `useWindowedRows`, `WINDOWED_ROW_INDEX`, _`WindowedRows`_ |
+| `hooks/use-breakpoint` | `BREAKPOINT_REM`, `breakpointQuery`, `remPx`, `useBreakpoint`, `usePhoneLayout`, `useRemPx`, _`Breakpoint`_, _`BreakpointVariant`_, _`RemLength`_ |
+| `hooks/use-large-text` | `useCoarsePointer`, `useInlineFacts`, `useLargeText` |
+| `hooks/use-has-camera` | `useHasCamera` |
+| `hooks/use-file-picker` | `matchesAccept`, `useFilePicker`, _`FilePickerLabels`_, _`FileRejection`_, _`FileRejectionReason`_, _`FileScreenOptions`_, _`UseFilePickerOptions`_, _`UseFilePickerReturn`_ |
+
+### theme, palettes, colour
+
+| Module | Exports |
+|---|---|
+| `theme/color` | `contrast`, `deltaE`, `hexToOklch`, `luminance`, `oklchToHex`, `oklchToRgb`, `parseHex`, `rgbToOklch`, `simulateCvd`, `solveLightness`, `toHex`, _`CvdType`_, _`Oklch`_, _`Rgb`_ |
+| `theme/palette-derive` | `auditChartRamp`, `auditPalette`, `deriveChartRamp`, `derivePalette`, `describe`, _`AnchorRole`_, _`ChartRampReport`_, _`ContrastCheck`_, _`ContrastReport`_, _`DerivedPalette`_, _`DeriveOptions`_, _`PaletteAnchors`_, _`SemanticTokens`_ |
+| `theme/palette-presets` | `applyTokenSet`, `DEFAULT_PRESET`, `DERIVED_PRESETS`, `PALETTES`, `PAUL_TOL_PRESET`, `presetById`, _`PalettePreset`_, _`TokenSet`_ |
+| `theme/theme-store` | `applyPersistedTheme`, `createThemeStore`, _`ThemeMode`_, _`ThemePreference`_, _`ThemeState`_, _`ThemeStore`_ |
+| `theme/palette-store` | `applyPersistedPalette`, `createPaletteStore`, _`PaletteStore`_ |
+| `theme/text-size` | `applyPersistedTextSize`, `applyTextSize`, `createTextSizeStore`, `isTextSize`, `readPersistedTextSize`, `readTextSize`, `resolveTextSize`, `TEXT_SCALE`, `TEXT_SIZE_INLINE_SCRIPT`, `TEXT_SIZES`, `useTextSize`, _`ApplyTextSizeOptions`_, _`PersistedAppearanceOptions`_, _`PersistedTextSize`_, _`TextSize`_, _`TextSizeInfo`_, _`TextSizeState`_, _`TextSizeStore`_ |
+| `theme/contrast` | `applyContrast`, `applyPersistedContrast`, `CONTRAST_MODES`, `contrastLevel`, `createContrastStore`, `isContrastMode`, `prefersMoreContrast`, `readContrastLevel`, `readPersistedContrast`, `resolveContrastMode`, _`ApplyContrastOptions`_, _`ContrastLevel`_, _`ContrastMode`_, _`ContrastState`_, _`ContrastStore`_, _`PersistedContrast`_ |
+| `theme/chart-palette` | `CHART_COLORS`, `CHART_MUTED_HEX`, `CHART_ROLES`, `chartEdge`, `CVD_ORDER`, `HEATMAP_HEX`, `lerpHex`, `PALETTE_HEX`, `PALETTE_SIZE`, `paletteFor`, `textOn`, _`HeatStops`_, _`PaletteForOptions`_ |
+
+### i18n
+
+| Module | Exports |
+|---|---|
+| `i18n/kit-labels` | `DEFAULT_APP_SHELL_LABELS`, `DEFAULT_CALCULATOR_LABELS`, `DEFAULT_COMBOBOX_LABELS`, `DEFAULT_COMMON_LABELS`, `DEFAULT_CURRENCY_LABELS`, `DEFAULT_DATE_PICKER_LABELS`, `DEFAULT_FILE_LABELS`, `DEFAULT_MULTI_SELECT_LABELS`, `DEFAULT_PICKER_SHEET_LABELS`, `DEFAULT_SWIPEABLE_ROW_LABELS`, `DEFAULT_TOP_BAR_LABELS`, `formatFileSize`, `missingKitLabels`, `UiKitProvider`, `useKitChartTooltipPlacement`, `useKitDateFormatter`, `useKitDocumentTitle`, `useKitFileLabels`, `useKitLabelOverrides`, `useKitLabels`, `useKitLink`, `useKitLocale`, `useKitTableStorageKeyPrefix`, `useKitTimeZone`, `useKitWeekStart`, _`AppShellLabels`_, _`CalculatorLabels`_, _`ChartTooltipPlacement`_, _`ComboboxLabels`_, _`CommonLabels`_, _`CurrencyLabels`_, _`DatePickerLabels`_, _`FileLabels`_, _`KitDateFormatContext`_, _`KitDateFormatter`_, _`KitLinkComponent`_, _`KitLinkProps`_, _`LabelOverride`_, _`MultiSelectLabels`_, _`PickerSheetLabels`_, _`SwipeableRowLabels`_, _`TopBarLabels`_, _`UiKitLabelOverrides`_, _`UiKitLabels`_, _`UiKitProviderProps`_ |
+| `i18n/defaults` | `DEFAULT_UI_KIT_LABELS` |
+| `i18n/review` | `kitLabelStrings`, _`KitLabelStringsOptions`_ |
+| `i18n/languages` | `formatLocaleOf`, `KIT_LANGUAGES`, `languageOptions`, `loadUiKitLabels`, `peekUiKitLabels`, `resolveLanguage`, `useUiKitLabels`, _`KitLanguage`_, _`KitLanguageCode`_ |
+| `i18n/plurals` | `withAllPlurals`, _`PluralForms`_ |
 
 ### shell
 
@@ -868,6 +878,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `shell/account-menu-text-size` | `AccountMenuTextSize`, _`AccountMenuTextSizeProps`_ |
 | `shell/tour-menu` | `TourMenu`, _`TourMenuProps`_, _`TourMenuTour`_ |
 | `shell/sync-status-indicator` | `SyncStatusIndicator`, _`SyncState`_, _`SyncStatus`_, _`SyncStatusIndicatorProps`_, _`SyncStatusScope`_ |
+| `shell/held-changes-banner` | `DEFAULT_HELD_CHANGES_BANNER_LABELS`, `HeldChangesBanner`, _`HeldChangesBannerLabels`_, _`HeldChangesBannerProps`_ |
 | `shell/dev-menu` | `DevMenu`, _`DevMenuProps`_, _`DevMenuSection`_ |
 | `shell/top-bar-parts-labels` | `DEFAULT_TOP_BAR_PARTS_LABELS`, `useTopBarPartsLabels`, _`DevSwitchersLabels`_, _`SyncStatusLabels`_, _`TopBarPartsLabels`_, _`TourMenuLabels`_ |
 | `shell/company-switcher` | `CompanySwitcher`, `DEFAULT_COMPANY_SWITCHER_LABELS`, _`CompanySwitcherCompany`_, _`CompanySwitcherLabels`_, _`CompanySwitcherProps`_ |
@@ -927,6 +938,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `feedback/feedback-comment-thread` | `DEFAULT_FEEDBACK_COMMENTS_LABELS`, `FeedbackCommentThread`, _`FeedbackCommentsLabels`_, _`FeedbackCommentThreadProps`_ |
 | `feedback/feedback-replies` | `DEFAULT_FEEDBACK_REPLIES_LABELS`, `FeedbackReplyComposer`, `feedbackReplyNudge`, `FeedbackReplyTimeline`, `useFeedbackRepliesLabels`, _`FeedbackRepliesLabels`_, _`FeedbackReplyComposerProps`_, _`FeedbackReplyTimelineProps`_ |
 | `feedback/feedback-entry-file` | `FeedbackEntryFile`, `useFeedbackEntryUpload`, _`FeedbackEntryFileProps`_, _`FeedbackEntryUpload`_, _`FeedbackEntryUploadOptions`_, _`FeedbackEntryUploadState`_ |
+| `feedback/feedback-inbox-page` | `FeedbackInbox`, `useFeedbackInbox`, _`FeedbackInboxMutation`_, _`FeedbackInboxProps`_, _`FeedbackInboxState`_, _`FeedbackReplyPost`_, _`FeedbackReworkPost`_, _`UseFeedbackInboxOptions`_ |
 | `feedback/feedback-vocabulary` | `FEEDBACK_CATEGORY_META`, `FEEDBACK_CATEGORY_ORDER`, `FEEDBACK_STATUS_META`, `FEEDBACK_STATUS_ORDER`, `feedbackCategoryRank`, `nextFeedbackStatus`, `selectableFeedbackStatuses`, `visibleFeedbackStatuses`, _`FeedbackCategory`_, _`FeedbackStatus`_ |
 
 ### wizard
@@ -994,7 +1006,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 
 | Module | Exports |
 |---|---|
-| `admin/user-roster` | `DEFAULT_USER_ROSTER_LABELS`, `USER_ROSTER_SORT_KEYS`, `UserIdentityCell`, `userRosterSort`, `UserRowActions`, `useUserRosterColumns`, _`AdminUserStateFields`_, _`RoleEditing`_, _`RosterState`_, _`UserIdentityCellProps`_, _`UserRosterColumnsOptions`_, _`UserRosterLabels`_, _`UserRosterRow`_, _`UserRosterSortKey`_, _`UserRowAction`_, _`UserRowActionList`_, _`UserRowActionsProps`_ |
+| `admin/user-roster` | `DEFAULT_USER_ROSTER_LABELS`, `USER_ROSTER_MAX_PAGE_SIZE`, `USER_ROSTER_PAGE_SIZE`, `USER_ROSTER_SORT_KEYS`, `UserIdentityCell`, `userRosterSort`, `UserRowActions`, `useUserRosterColumns`, _`AdminUserStateFields`_, _`RoleEditing`_, _`RosterState`_, _`UserIdentityCellProps`_, _`UserRosterColumnsOptions`_, _`UserRosterLabels`_, _`UserRosterRow`_, _`UserRosterSortKey`_, _`UserRowAction`_, _`UserRowActionList`_, _`UserRowActionsProps`_ |
 | `admin/role-select` | `DEFAULT_ROLE_SELECT_LABELS`, `RolesEditor`, `RoleSelect`, _`RoleLock`_, _`RoleLockCode`_, _`RolesEditorProps`_, _`RoleSelectLabels`_, _`RoleSelectProps`_ |
 | `admin/reviewer-scope-editor` | `DEFAULT_REVIEWER_SCOPE_LABELS`, `ReviewerScopeEditor`, _`ReviewerScope`_, _`ReviewerScopeArea`_, _`ReviewerScopeEditorProps`_, _`ReviewerScopeLabels`_, _`ReviewerScopeLanguage`_ |
 | `admin/admin-action-confirm` | `AdminActionConfirm`, `DEFAULT_ADMIN_ACTION_LABELS`, _`AdminActionConfirmProps`_, _`AdminActionConfirmValues`_, _`AdminActionLabels`_, _`AdminActionTarget`_, _`AdminConfirmLevel`_ |
@@ -1033,6 +1045,8 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `billing/cancel-subscription` | `CancelSubscriptionConfirm`, _`CancelSubscriptionConfirmProps`_ |
 | `billing/provider-page` | `openProviderPage`, _`OpenProviderPageOptions`_, _`ProviderPageWay`_ |
 | `billing/cancel-request` | `useCancelRequest`, _`CancelRequest`_, _`CancelRequested`_, _`CancelRequestView`_ |
+| `billing/subscription-standing` | `subscriptionStanding`, `SubscriptionStanding`, _`SubscriptionStandingOverview`_, _`SubscriptionStandingProps`_ |
+| `billing/usage-meter` | `UsageMeter`, _`UsageMeterProps`_ |
 
 ### notifications
 
@@ -1073,7 +1087,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 
 | Module | Exports |
 |---|---|
-| `lib/dates` | `addDaysIso`, `addMonthsClamped`, `calendarMonthPresets`, `dateRangePresets`, `endOfMonthIso`, `endOfYearIso`, `formatIsoDate`, `lastFullMonthsRange`, `lastFullYearsRange`, `localeWeekStart`, `monthKey`, `pad`, `parseIsoDate`, `sameYmd`, `shiftIso`, `startOfMonthIso`, `startOfWeekIso`, `startOfYearIso`, `todayIso`, `toLocalIso`, _`CalendarMonthPresetOptions`_, _`DateRangePreset`_ |
+| `lib/dates` | `addDaysIso`, `addMonthsClamped`, `calendarMonthPresets`, `currentDate`, `dateRangePresets`, `endOfMonthIso`, `endOfYearIso`, `formatIsoDate`, `lastFullMonthsRange`, `lastFullYearsRange`, `localeWeekStart`, `monthKey`, `pad`, `parseIsoDate`, `sameYmd`, `setToday`, `shiftIso`, `startOfMonthIso`, `startOfWeekIso`, `startOfYearIso`, `subscribeToday`, `todayIso`, `todayOverride`, `toLocalIso`, _`CalendarMonthPresetOptions`_, _`DateRangePreset`_ |
 
 ### @eifi1/ui-kit/table-text (standalone)
 

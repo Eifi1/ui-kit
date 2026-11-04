@@ -30,7 +30,7 @@ import {
   EndHintRow,
   FieldCaption,
   LABEL_IN_ROW,
-  LockedReason,
+  LockFrame,
   mergeDescribedBy,
   StaticLabelRow,
   useFieldError,
@@ -341,14 +341,11 @@ export function Autocomplete<V extends string | number = string>(props: Autocomp
   const labelledBy = ariaLabel === undefined ? (ariaLabelledBy ?? (hasLabel ? labelId : undefined)) : undefined;
   // While locked the field sits in the reason's Tooltip — in a fragment with a hidden
   // copy of the reason, Button's anatomy; `block` so a full-width field stays full width.
-  const withLock = (box: ReactNode) =>
-    locked ? (
-      <LockedReason lock={lock} display={disabledReasonDisplay} className="block">
-        {box}
-      </LockedReason>
-    ) : (
-      box
-    );
+  const withLock = (box: ReactNode) => (
+    <LockFrame lock={lock} display={disabledReasonDisplay}>
+      {box}
+    </LockFrame>
+  );
 
   return (
     // `relative`: the floating label and the live region's `sr-only` both need a

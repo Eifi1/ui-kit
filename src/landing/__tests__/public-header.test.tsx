@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { describe, expect, it } from "vitest";
 
@@ -185,6 +185,13 @@ describe("FeatureRows, TrustStrip and PublicFooter", () => {
     expect(screen.getByRole("navigation", { name: "Legal" })).toBeInTheDocument();
     expect(screen.getByText("Garden planning for small plots.")).toBeInTheDocument();
     expect(screen.getByRole("contentinfo")).toBeInTheDocument();
+  });
+
+  it("footer (0.55): the app's other public pages in a row named apart from the legal one", () => {
+    render(<PublicFooter tagline="Garden planning." siteLinks={[{ href: "/changelog", label: "Changelog" }]} />);
+    const site = screen.getByRole("navigation", { name: "More pages" });
+    expect(within(site).getByRole("link", { name: "Changelog" })).toHaveAttribute("href", "/changelog");
+    expect(within(screen.getByRole("navigation", { name: "Legal" })).queryByText("Changelog")).toBeNull();
   });
 });
 

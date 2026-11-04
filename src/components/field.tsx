@@ -142,7 +142,8 @@ export function Field({
   // With a `help` (0.36) its "?" follows the label, and a FieldHint is its words at
   // every size: the help's is the field's only "?".
   const helpMark = fieldHelpMark(help, label);
-  const hint = useInlineHint(hintProp, helpMark !== undefined);
+  // The label names a FieldSuggestion's button (0.55).
+  const hint = useInlineHint(hintProp, helpMark !== undefined, label);
   const hasHint = hasContent(hint);
   const hasError = hasContent(error);
   const describedBy = [hasHint && hintId, hasError && errorId].filter(Boolean).join(" ");

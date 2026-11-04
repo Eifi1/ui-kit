@@ -8,7 +8,7 @@ import {
   assignRef,
   EndHintRow,
   LABEL_IN_ROW,
-  LockedReason,
+  LockFrame,
   StaticLabelRow,
   useFieldMessages,
   useLockReason,
@@ -307,15 +307,11 @@ export function MultiSelect<V extends string | number = string | number>(props: 
         <FieldLabel className={inert ? "opacity-50" : undefined}>{label}</FieldLabel>
       )}
       <EndHintRow hint={label === undefined ? field.labelHint : undefined}>
-        {lock.locked ? (
-          // Button's frame: the line under the trigger, or the Tooltip with a hidden copy
-          // for `aria-describedby`.
-          <LockedReason lock={lock} display={disabledReasonDisplay} className="block">
-            {trigger}
-          </LockedReason>
-        ) : (
-          trigger
-        )}
+        {/* Button's frame: the line under the trigger, or the Tooltip with a hidden copy
+            for `aria-describedby`. */}
+        <LockFrame lock={lock} display={disabledReasonDisplay}>
+          {trigger}
+        </LockFrame>
       </EndHintRow>
       {/* With a "?" the label shares the top strip with it — after the trigger, so the
           "?" follows the control in the tab order, as on Input and Select. */}

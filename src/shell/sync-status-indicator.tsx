@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { ComponentType } from "react";
-import { Check, Cloud, CloudAlert, CloudOff, RefreshCw, UploadCloud } from "lucide-react";
+import { Check, Cloud, CloudAlert, CloudOff, Hourglass, RefreshCw, UploadCloud } from "lucide-react";
 import type { LucideProps } from "lucide-react";
 import { cn } from "../lib/cn";
 import { IconButton } from "../components/icon-button";
@@ -28,22 +28,36 @@ export interface SyncStatus {
   waitingForPlan?: number;
   /** When the last good round ended — epoch ms, an ISO string or a `Date`. */
   lastSyncedAt?: number | string | Date | null;
+  /**
+   * 0.55 (held back from 0.53): a round of this tab waits for another tab's on the same
+   * device copy — the sync engine's Web Lock (0.52) lets one tab's round run at a time — so
+   * nothing goes out from here until that one ends. `useSyncStatus` fills it from the
+   * engine's `waitingForTab`.
+   */
+  waitingForTab?: boolean;
 }
 
-/** The seven states, in their ranking: the first that holds wins. */
-export type SyncState = "blocked" | "waitingForPlan" | "offline" | "error" | "syncing" | "pending" | "synced";
+/** The eight states, in their ranking: the first that holds wins. */
+export type SyncState =
+  "blocked" | "waitingForPlan" | "offline" | "waitingForTab" | "error" | "syncing" | "pending" | "synced";
 
 /**
- * Which of the seven states a {@link SyncStatus} is in — keksdose's ranking
+ * Which of the eight states a {@link SyncStatus} is in — keksdose's ranking
  * (sync-status-indicator.tsx): a write that cannot be sent at all ranks above everything,
  * because waiting cannot help it; then one waiting for a plan; then offline; then a refused
  * round; then a round under way; then writes waiting; else in sync. `syncing` also holds
  * while a tap's own round runs (`refreshing`), before the engine publishes its phase.
+ *
+ * 0.55 (held back from 0.53): a round waiting for another tab's (`waitingForTab`) ranks
+ * after offline, which it cannot help either, and before the rest: it is the start of a
+ * round, which replaces an error as `syncing` does once it runs, and the engine never says
+ * it beside `syncing` — so it is what a tap's own round shows while it waits its turn.
  */
 export function syncState(status: SyncStatus, refreshing = false): SyncState {
   if ((status.blocked ?? 0) > 0) return "blocked";
   if ((status.waitingForPlan ?? 0) > 0) return "waitingForPlan";
   if (!status.online || status.phase === "offline") return "offline";
+  if (status.waitingForTab) return "waitingForTab";
   if (status.phase === "error") return "error";
   if (status.phase === "syncing" || refreshing) return "syncing";
   if (status.pending > 0) return "pending";
@@ -58,6 +72,8 @@ const LOOK: Record<SyncState, { Icon: ComponentType<LucideProps>; tone: Tone }> 
   // Safe, and a payment sends them: amber, the kit's warning.
   waitingForPlan: { Icon: CloudAlert, tone: "warning" },
   offline: { Icon: CloudOff, tone: "warning" },
+  // A round under way, in another tab: info, as syncing, without the spin.
+  waitingForTab: { Icon: Hourglass, tone: "info" },
   // Usually resolves by itself (a deploy, a read-only view): amber, not danger.
   error: { Icon: CloudAlert, tone: "warning" },
   syncing: { Icon: RefreshCw, tone: "info" },
@@ -89,7 +105,8 @@ export interface SyncStatusIndicatorProps {
    * Run a round now (push, then pull, then re-read what is on screen). With it the
    * indicator is a "sync now" button, disabled offline and mid-round but keeping its
    * colour; a returned promise keeps the spin until it settles. Without it, a status only
-   * (§6.9).
+   * (§6.9). Disabled too while a round waits for another tab's (0.55): a tap would only
+   * queue one more behind it.
    */
   onSync?: () => void | Promise<unknown>;
   /** Render nothing while in sync — kastlan and Kurvenschmiede show it only while offline,
@@ -102,11 +119,12 @@ export interface SyncStatusIndicatorProps {
    * offline-first app (keksdose, kastlan's handovers) — offline means "kept here, sent
    * later". `"none"`: an online-only app that keeps nothing on the device (Kurvenschmiede,
    * build review B1) — offline reads "changes can't be saved until you reconnect", a
-   * round reads "Saving…", and `pending`, `blocked` and `waitingForPlan` are ignored,
-   * since there is nowhere for a change to wait. "Up to date" when settled.
+   * round reads "Saving…", and `pending`, `blocked`, `waitingForPlan` and `waitingForTab`
+   * are ignored, since there is nowhere for a change to wait. "Up to date" when settled.
    */
   storage?: "device" | "none";
-  /** Short words beside the cloud ("Offline", "Syncing…", "3 waiting") while not in sync. */
+  /** Short words beside the cloud ("Offline", "Syncing…", "3 waiting", "Waiting for tab")
+   *  while not in sync. */
   showLabel?: boolean;
   /** Prop > `<UiKitProvider labels={{ topBarParts: { sync } }}>` > English. */
   labels?: LabelOverride<SyncStatusLabels>;
@@ -124,13 +142,14 @@ function dataAttributes(rest: Record<string, unknown>): Record<string, unknown> 
 
 /**
  * The top bar's sync status (docs/top-bar-harmonization.md §2.6), lifted from keksdose's
- * `SyncStatusIndicator`: the seven states and their ranking ({@link syncState}), one cloud
- * per state, a ✓ badge when in sync and a spin while syncing. With `onSync` it is also the
- * "sync now" button, and its name says both what it is and what a tap does.
+ * `SyncStatusIndicator`: its seven states and their ranking ({@link syncState}; 0.55 adds an
+ * eighth, "Waiting for another tab", an hourglass), one cloud per state, a ✓ badge when in
+ * sync and a spin while syncing. With `onSync` it is also the "sync now" button, and its
+ * name says both what it is and what a tap does.
  *
  * Colours are the kit's roles — danger for a write that cannot be sent, warning for
- * anything waiting, info while syncing, success when in sync — where keksdose had raw
- * rose/amber/sky/emerald pairs.
+ * anything waiting, info while syncing (or waiting for another tab's round), success when
+ * in sync — where keksdose had raw rose/amber/sky/emerald pairs.
  */
 export function SyncStatusIndicator({
   status,
@@ -160,7 +179,10 @@ export function SyncStatusIndicator({
 
   const onlineOnly = storage === "none";
   // Online-only: nothing waits on the device, so only offline, error, saving and settled.
-  const state = syncState(onlineOnly ? { ...status, pending: 0, blocked: 0, waitingForPlan: 0 } : status, refreshing);
+  const state = syncState(
+    onlineOnly ? { ...status, pending: 0, blocked: 0, waitingForPlan: 0, waitingForTab: false } : status,
+    refreshing,
+  );
   const data = dataAttributes(rest);
   if (hideWhenIdle && state === "synced") return null;
 
@@ -176,6 +198,9 @@ export function SyncStatusIndicator({
       break;
     case "offline":
       text = onlineOnly ? words.offlineUnsaved : words.offline;
+      break;
+    case "waitingForTab":
+      text = words.waitingForTab;
       break;
     case "error":
       text = words.refused;
@@ -208,18 +233,21 @@ export function SyncStatusIndicator({
           : words.syncingShort
         : state === "error"
           ? words.refusedShort
-          : state === "pending" || state === "blocked" || state === "waitingForPlan"
-            ? words.waitingShort(
-                state === "pending"
-                  ? status.pending
-                  : state === "blocked"
-                    ? (status.blocked ?? 0)
-                    : (status.waitingForPlan ?? 0),
-              )
-            : null;
+          : state === "waitingForTab"
+            ? words.waitingForTabShort
+            : state === "pending" || state === "blocked" || state === "waitingForPlan"
+              ? words.waitingShort(
+                  state === "pending"
+                    ? status.pending
+                    : state === "blocked"
+                      ? (status.blocked ?? 0)
+                      : (status.waitingForPlan ?? 0),
+                )
+              : null;
 
   const offline = state === "offline";
-  const canSync = !!onSync && status.online && status.phase !== "offline" && !spin;
+  // Not while a round waits for another tab's either: a tap would queue one more behind it.
+  const canSync = !!onSync && status.online && status.phase !== "offline" && !spin && state !== "waitingForTab";
   const name = onSync
     ? canSync
       ? words.withHint(text, words.syncHint)

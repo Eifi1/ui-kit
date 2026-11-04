@@ -5,7 +5,7 @@ import { addDaysIso } from "../lib/dates";
 import { useKitLocale } from "../i18n/kit-labels";
 import { splitTriggerAria } from "./trigger-aria";
 import { FIELD_BASE } from "./field-base";
-import { FieldBox, LockedReason, useFieldMessages, useLockReason } from "./field-parts";
+import { FieldBox, LockFrame, useFieldMessages, useLockReason } from "./field-parts";
 import { Tooltip } from "./tooltip";
 import type { CommitScope } from "./write-lock";
 import { DateField, useDatePickerLabels, useTriggerFormat, withEndHint, type DatePickerBaseProps } from "./date-field";
@@ -297,14 +297,11 @@ export function DatePicker(props: DatePickerProps) {
   // Locked, the field — or the whole row, whose buttons change the value too — sits in
   // the reason's frame (the line, or the Tooltip), which becomes the outermost box: the
   // caller's classes move onto it, as on Select, so a lock does not reflow the form.
-  const withReason = (box: ReactNode) =>
-    locked ? (
-      <LockedReason lock={lock} display={disabledReasonDisplay} className={cn("block", className)}>
-        {box}
-      </LockedReason>
-    ) : (
-      box
-    );
+  const withReason = (box: ReactNode) => (
+    <LockFrame lock={lock} display={disabledReasonDisplay} className={className}>
+      {box}
+    </LockFrame>
+  );
   if (!wrapped) {
     return (
       <FieldBox below={messages.below} reserve={reserve}>

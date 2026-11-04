@@ -32,7 +32,7 @@ is now an index whose items keep the numbers the code cites.
 | 2.3 | The language select in the account menu | ui-kit 0.42 | §6.5 |
 | 2.4 | Tours: keksdose's trigger | ui-kit 0.42 | §6.7 |
 | 2.5 | Search | ui-kit 0.42 (the apps) | §6.8, §6.11 |
-| 2.6 | Sync | ui-kit 0.42 | §6.9, §6.10; the `storage: "none"` preset (adopt-0.42, local-first §1.4) |
+| 2.6 | Sync | ui-kit 0.42 | §6.9, §6.10; the `storage: "none"` preset (adopt-0.42, local-first §1.4); §2.6.1 (ui-kit 0.55: `HeldChangesBanner`) |
 | 2.7 | Dev switchers, role and plan | ui-kit 0.42, server-kit 0.14 | §6.1–§6.3; §2.7.1 (ui-kit 0.51: one `DevMenu`; 0.51.4: a column per group); ui-kit 0.52 (`DevSwitchers` removed) |
 | 3 | What the kits add | ui-kit 0.42, server-kit 0.14 | §6.6, §6.7, §6.9 |
 | 4 | Per app | — | §6.5–§6.7, §6.10, §6.11 |
@@ -113,11 +113,11 @@ and never content. The trigger shows on a phone too (keksdose's choice; kastlan 
 
 (Marcel):
 - **The kit's `SyncStatusIndicator`** takes over keksdose's state table and ranking:
-  blocked, waiting for a plan, offline, error, syncing, pending, synced. It is a status
-  that is also a "sync now" button, with a ✓ badge when synced and a spin while
-  syncing.
+  blocked, waiting for a plan, offline, error, syncing, pending, synced (and since ui-kit
+  0.55 waiting for another tab, after offline: §2.6.2). It is a status that is also a
+  "sync now" button, with a ✓ badge when synced and a spin while syncing.
 - It is fed by a small contract, `SyncStatus {phase, online, pending, blocked?,
-  waitingForPlan?, lastSyncedAt?}`, plus `onSync`. It has `hideWhenIdle`, and optional
+  waitingForPlan?, lastSyncedAt?, waitingForTab?}`, plus `onSync`. It has `hideWhenIdle`, and optional
   `scope` words. `onSync` is optional: without it the indicator is a status, not a
   button (KS 4).
 - **keksdose:** unchanged in behaviour, now on the kit part.
@@ -134,6 +134,70 @@ and never content. The trigger shows on a phone too (keksdose's choice; kastlan 
   `useIsMutating`, with `hideWhenIdle`. There is no pending count, since KS keeps
   nothing on the device.
 - Making more of kastlan, or any of KS, work offline is a round of its own, later.
+
+#### 2.6.1 Addendum (ui-kit 0.55): `HeldChangesBanner`, the action the `blocked` state has no room for
+
+The indicator ranks `blocked` first: changes kept on this device that cannot be sent from where
+the user is now. Waiting cannot help them, so the user has to act, and the indicator is one
+control in the top bar with no room for an action. Two apps built the same banner by hand for it:
+- **keksdose** (app/held-changes-banner.tsx): after a budget switch the queue waits for the
+  budget it was made in. A warning strip in the shell offers "Switch back" (when the account can
+  still open that budget) and "Discard…", which asks first with the count, then discards and
+  syncs.
+- **kastlan** (handover-sync-banner.tsx:57-68): the changes the server refused, a danger box with
+  their reasons and a Discard that asked nothing.
+
+**The shape.** `HeldChangesBanner` (`@eifi1/ui-kit/shell` and the barrel) is an `AlertBanner` in
+the warning tone. Nothing is lost until the user says so, and the indicator already draws the
+danger.
+- **Props:** `count` (0 renders nothing), `onDiscard`, and optionally `message`, `extra`,
+  `onSwitchBack`, `formatError`, `variant`, `labels`, `className` and `data-*`.
+  - `message` is the app's sentence (keksdose names the budget). Without it the kit says how
+    many, that they stay on this device, and that they can be discarded. It names no way back.
+  - `extra` goes under the sentence, for kastlan's refusal reasons.
+  - `onSwitchBack` gives "Switch back", which comes first, so the destructive action is never
+    the only button. Without it, Discard is the one way out.
+  - `variant`: `"box"` (default) for above a page. On a phone its actions take a line of their
+    own (`actionPlacement="own-line"`). `"strip"` is for the shell. On a phone it is one line
+    with "More" (`clampMobile`), except while an error or `extra` shows.
+- **Discard** asks first in `useConfirm`'s danger tone, so focus starts on Cancel. It names the
+  count (`heldChanges.confirmTitle`) and says what follows (`confirmBody`: they cannot be
+  recovered, and the device then syncs with what the server has). On yes, the banner awaits
+  `onDiscard()`: the button is busy and Switch back is disabled, one action at a time. A
+  rejection leaves the banner in place and shows the error under the sentence (`formatError`,
+  else `heldChanges.failed`) as an inline live region. The banner goes when the app's count
+  reaches 0. A refused `onSwitchBack` shows its error the same way. The banner is not behind
+  the write lock, because the held changes are not the page's.
+- **The app keeps the logic:** what counts as held, the discard itself and the sync after it
+  (keksdose `discardWaitingChanges`, kastlan `discardRejected` then `onSync`), and the way back.
+- **The words** are a new namespace, `heldChanges`: `message(count)`, `switchBack`, `discard`,
+  `confirmTitle(count)`, `confirmBody(count)`, `confirmAction` and `failed`. They are keksdose's
+  reviewed words without its budgets, in all seven catalogues, and the three count labels have
+  samples in `KIT_LABEL_SAMPLES`. Cancel is `confirmDialog.cancel`.
+
+#### 2.6.2 Addendum (ui-kit 0.55): "Waiting for another tab"
+
+Held back from 0.53. Since 0.52 the kit's sync engine runs a round under a Web Lock per
+database (local-first §2.3, FLW-1), so the tabs on one device copy take turns, and a round
+asked for while another tab's runs waits for it. The user saw nothing of the wait: a tap on
+"Sync now" spun for as long as the other tab's round took (minutes, with kastlan's photos),
+and the sign-out dialog's "Sync now" with it.
+- **The engine** says it: `SyncEngineState.waitingForTab` is true from the moment a round
+  finds the lock taken until its turn comes (or `stop()` / `forget()` takes it out of the
+  queue). The phase stays as it was meanwhile; `syncing` comes once the round runs, and the
+  engine never says both. Without Web Locks (plain http) no round waits, so it is never
+  said.
+- **The contract:** `SyncStatus.waitingForTab?: boolean`, filled by `useSyncStatus(engine)`.
+  An app that spreads the hook's status (kastlan's `use-sync-status.ts`) carries it without
+  a change.
+- **The indicator:** an eighth state, `waitingForTab`, ranked after offline (the round would
+  end offline anyway) and before error, syncing and the rest: it is the start of a round,
+  which replaces an error as `syncing` does once it runs, and a tap's own round shows it
+  while it waits its turn. An hourglass in the info tone, without the spin; disabled with
+  `onSync`, keeping its colour, since a tap would only queue one more round behind it. The
+  words are `topBarParts.sync.waitingForTab` ("Waiting for another tab to finish syncing")
+  and `waitingForTabShort` ("Waiting for tab", beside it with `showLabel`), in all seven
+  catalogues. `storage="none"` ignores it: there is no device copy to wait for.
 
 ### 2.7 Dev switchers, role and plan, "Server too"
 
@@ -270,7 +334,11 @@ kit cannot enforce them.
    the lazy chunk of rule 2, so a reload waiting for it works out dates — a month end, a
    "Committed <date>" — on the device clock until it answers. A dev-only hook outside the
    chunk reads the answer first, and the app's own "today" (keksdose's `todayIso()`) takes
-   it from there.
+   it from there. Since ui-kit 0.55 that "today" is the kit's: the hook and the Time rows
+   call `setToday(answer.today)` (`@eifi1/ui-kit/dates`), and the kit's date helpers
+   (`todayIso`, `shiftIso`, `startOfMonthIso`, the range presets), its calendars (a
+   picker's today, this month) and the app's own reads of `currentDate()` follow it; only
+   the date moves. `DevMenu` wears its "Overrides on" dot while a day is set.
 
 ## 3. What the kits add
 
@@ -409,9 +477,9 @@ All in `@eifi1/ui-kit/shell` (and the barrel). The words are a new namespace,
   - The kit's tour engine has no registry (`TourProvider` runs steps and keeps none), so
     the app feeds the list from its own.
 - **`SyncStatusIndicator`** and **`SyncStatus`** `{ phase, online, pending, blocked?,
-  waitingForPlan?, lastSyncedAt? }` (§2.6, §6.9, §6.10):
+  waitingForPlan?, lastSyncedAt?, waitingForTab? }` (§2.6, §6.9, §6.10):
   - `syncState(status)` holds keksdose's ranking: blocked, waitingForPlan, offline, error,
-    syncing, pending, synced. The icons are keksdose's. The tones are the kit's roles:
+    syncing, pending, synced; since 0.55 `waitingForTab` comes after offline (§2.6.2). The icons are keksdose's. The tones are the kit's roles:
     danger for blocked, warning for anything waiting, info while syncing, success when in
     sync. There are no raw palette colours.
   - It shows the ✓ badge when in sync, the spin while syncing, and the tooltip suffix
@@ -421,7 +489,7 @@ All in `@eifi1/ui-kit/shell` (and the barrel). The words are a new namespace,
     words), `showLabel` (the short words "Offline", "Syncing…", "3 waiting"), `labels`
     and `locale`.
   - `storage` (`"device"`, the default, or `"none"`): `"none"` is the online-only preset
-    (KS). It ignores `pending`, `blocked` and `waitingForPlan`. Offline then reads "changes
+    (KS). It ignores `pending`, `blocked`, `waitingForPlan` and `waitingForTab`. Offline then reads "changes
     can't be saved until you reconnect", and a round reads "Saving…" (docs/archive/adopt/adopt-0.42.md:109;
     local-first §1.4).
   - "Waiting for a plan" reuses `billing.waitingChanges`.

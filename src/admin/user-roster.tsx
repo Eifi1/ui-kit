@@ -108,6 +108,13 @@ export function adminUserStates(row: AdminUserStateFields): RosterState[] {
 export const USER_ROSTER_SORT_KEYS = ["name", "email", "role", "created", "last_login"] as const;
 export type UserRosterSortKey = (typeof USER_ROSTER_SORT_KEYS)[number];
 
+/** server-kit's `user_admin.DEFAULT_PAGE_SIZE`: the rows `GET /admin/users` answers when the
+ *  query names no `page_size` (keksdose audit F-63, which copied it into its users panel). */
+export const USER_ROSTER_PAGE_SIZE = 25;
+/** server-kit's `user_admin.MAX_PAGE_SIZE`: the most rows one page may ask for, which a
+ *  pager's "All" resolves to; a larger `page_size` is refused. */
+export const USER_ROSTER_MAX_PAGE_SIZE = 200;
+
 /**
  * The table's sort state as the `sort` query parameter of `GET /admin/users` (§3.1), in
  * the DataTable's own encoding ({@link encodeSorts}: `"last_login.desc"`), which

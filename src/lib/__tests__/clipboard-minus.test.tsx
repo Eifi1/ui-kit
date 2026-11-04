@@ -93,6 +93,26 @@ describe("the copy handler", () => {
     expect(event.defaultPrevented).toBe(false);
   });
 
+  // 0.54 follow-up: the fallback beside `isContentEditable` was a
+  // `[contenteditable=""], [contenteditable="true"]` selector, which missed
+  // "plaintext-only" and found the editor round a "false" island. The rule is
+  // lib/editable-content's now.
+  it('leaves a plaintext-only editor alone, and converts a contenteditable="false" island', () => {
+    uninstall = installClipboardMinus();
+    document.body.innerHTML = `
+      <div contenteditable="plaintext-only"><p id="typed">${M}5.00</p></div>
+      <div contenteditable="true"><span contenteditable="false" id="chip">${M}CHF 12.00</span></div>`;
+    const typed = document.getElementById("typed")!;
+    select(typed);
+    expect(copy(typed).event.defaultPrevented).toBe(false);
+
+    const chip = document.getElementById("chip")!;
+    select(chip);
+    const { event, data } = copy(chip);
+    expect(event.defaultPrevented).toBe(true);
+    expect(data.get("text/plain")).toBe("-CHF 12.00");
+  });
+
   it("is installed once however many times it is asked, and removed with the last", () => {
     const a = installClipboardMinus();
     const b = installClipboardMinus();

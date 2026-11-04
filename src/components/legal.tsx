@@ -8,6 +8,7 @@ import { countryName } from "../lib/countries";
 import { AlertBanner } from "./alert-banner";
 import { TextLink } from "./text-link";
 import { DEFAULT_LEGAL_LABELS } from "./legal-labels";
+import { DEFAULT_LANDING_LABELS, useLandingLabels } from "../landing/landing-labels";
 
 /**
  * The legal pages — Imprint, Privacy Policy, Terms — for every app.
@@ -484,6 +485,16 @@ export interface LegalFooterProps {
    *  its own page. */
   currentHref?: string;
   /**
+   * 0.55: the app's other public pages — the changelog, a status page, the docs — as a row
+   * of their own above the legal links. The legal row's look (quiet links, `·` between
+   * them, the current one marked), in a `<nav>` of its own named `landing.siteNavLabel`
+   * ("More pages"): a screen reader hears the footer's links announced as the legal ones,
+   * so a link that is not one goes in a row that says so (docs/landing-demo-harmonization.md
+   * §4.4). The name is a `landing` word, not a `legal` one — it is no legal wording — so
+   * the provider sets it, not {@link labels}. Left out or empty, no row.
+   */
+  siteLinks?: readonly LegalLink[];
+  /**
    * Default true: the footer is a `<footer>`. `false` draws a `<div>` — for a host that is
    * a footer already: `AuthLayout`'s `footer` slot is one, and HTML forbids a footer inside
    * a footer (0.28.1, kastlan). On an `AuthLayout` page the usual choice is simpler still:
@@ -509,6 +520,8 @@ export interface LegalFooterProps {
  * 0.51.4: an app with a security page or an accessibility statement passes their routes
  * (`securityHref`, `accessibilityHref`) and the row goes on with "Security · Accessibility"
  * in the kit's words, so the footer reads the same in every app that has them.
+ *
+ * 0.55: `siteLinks`, the app's other public pages, in a row above them that is named apart.
  */
 export function LegalFooter({
   children,
@@ -516,14 +529,25 @@ export function LegalFooter({
   securityHref,
   accessibilityHref,
   currentHref,
+  siteLinks,
   landmark = true,
   className,
   labels,
 }: LegalFooterProps) {
   const Root = landmark ? "footer" : "div";
+  const siteNavLabel = useLandingLabels().siteNavLabel ?? DEFAULT_LANDING_LABELS.siteNavLabel ?? "";
   return (
     <Root className={cn("border-t border-subtle bg-surface", className)}>
       <div className="mx-auto max-w-5xl px-4 py-8 text-sm text-muted">
+        {/* The legal row's own component, renamed: the same look, a `<nav>` of its own. */}
+        {!!siteLinks?.length && (
+          <LegalLinks
+            links={siteLinks}
+            currentHref={currentHref}
+            labels={{ navLabel: siteNavLabel }}
+            className="mb-3 justify-center gap-y-2 text-sm"
+          />
+        )}
         <LegalLinks
           links={links}
           securityHref={securityHref}

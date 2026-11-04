@@ -587,6 +587,18 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       removed: (name) => `«\u202f${name}\u202f» supprimé`,
       cleared: "Tous les fichiers ont été supprimés",
     },
+    // keksdose's fr invoices.take_photo, camera_starting, camera_shutter and
+    // shots_captured; kastlan's handover.takePhoto ("Caméra") and wizard addPhoto.
+    camera: {
+      takePhoto: "Prendre une photo",
+      choosePhoto: "Ajouter une photo",
+      title: "Caméra",
+      hint: "Cadrez le sujet, puis déclenchez.",
+      starting: "Démarrage de la caméra…",
+      shutter: "Prendre la photo",
+      taken: (count) => `${n(count)} ${plural(count, "photo prise", "photos prises")}.`,
+      done: (count) => `Utiliser ${n(count)} ${plural(count, "photo", "photos")}`,
+    },
     wizard: {
       done: "Terminé",
       cancel: "Annuler",
@@ -735,6 +747,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       empty: "Aucune donnée",
       legend: "Séries",
       points: "Valeurs du graphique",
+      nameFromAxes: (ordinates, abscissa) => (abscissa ? `${ordinates} en fonction de ${abscissa}` : ordinates),
     },
     pieChart: {
       slices: "Secteurs du graphique",
@@ -1690,6 +1703,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       tryDemo: "Essayer la démo",
       openApp: "Ouvrir l’application",
       continueDemo: "Continuer la démo",
+      siteNavLabel: "Autres pages",
       // As `legal.notice` ("Bêta fermée").
       beta: "Bêta",
       // Plain text: a mail's subject and body lines, never HTML. The no-break space
@@ -1758,6 +1772,17 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         canceled: "Résilié",
         expired: "Expiré",
         comped: "Offert",
+      },
+      // 0.55 (§7, Marcel 2026-11-04): the standing line. keksdose's reviewed French
+      // (`billing.trial_until`, …); `ended` is the first sentence of `planEnded`.
+      standing: {
+        ended: "Votre formule a pris fin.",
+        pastDue: "Le paiement a échoué — nous réessayons. Votre formule reste active entre-temps.",
+        trialUntil: (date) => `Essai jusqu’au ${date}`,
+        freeUntil: (date) => `Gratuit jusqu’au ${date}`,
+        free: "Gratuit, sans date de fin",
+        endsOn: (date) => `Prend fin le ${date}`,
+        renewsOn: (date) => `Se renouvelle le ${date}`,
       },
       trialEnding: (days) =>
         `Votre période d’essai se termine ${inDays(days)}. Vous pourrez ensuite continuer à tout consulter, mais il vous faudra une formule pour apporter des modifications.`,
@@ -1995,6 +2020,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         refusedShort: "Non synchronisé",
         offlineUnsaved: "Hors ligne — les modifications ne peuvent pas être enregistrées avant la reconnexion",
         saving: "Enregistrement…",
+        waitingForTab: "En attente de la fin de la synchronisation dans un autre onglet",
+        waitingForTabShort: "Attente d’un onglet",
       },
       dev: {
         menu: "Outils de dev",
@@ -2030,6 +2057,56 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     sharedComputer: {
       label: "C’est un ordinateur partagé",
       hint: "Aucune copie de vos données ne reste sur cet appareil. Les pages ne s’ouvrent alors qu’avec une connexion.",
+    },
+    // 0.55 — docs/top-bar-harmonization.md §2.6.1: keksdose's reviewed words (sync.held_*,
+    // sync.discard_held_*, sync.switch_back_held) without its budgets.
+    heldChanges: {
+      message: (count) =>
+        count < 2
+          ? `${n(count)} modification ne peut pas être envoyée d’ici. Elle reste sur cet appareil jusqu’à ce qu’elle puisse être envoyée, ou jusqu’à ce que vous l’abandonniez.`
+          : `${n(count)} modifications ne peuvent pas être envoyées d’ici. Elles restent sur cet appareil jusqu’à ce qu’elles puissent être envoyées, ou jusqu’à ce que vous les abandonniez.`,
+      switchBack: "Revenir",
+      discard: "Abandonner…",
+      confirmTitle: (count) =>
+        `Abandonner ${n(count)} ${plural(count, "modification qui ne peut pas être envoyée", "modifications qui ne peuvent pas être envoyées")} d’ici\u202f?`,
+      confirmBody: (count) =>
+        count < 2
+          ? "Elle ne pourra pas être récupérée. Cet appareil se synchronise ensuite avec les données du serveur."
+          : "Elles ne pourront pas être récupérées. Cet appareil se synchronise ensuite avec les données du serveur.",
+      confirmAction: "Abandonner",
+      failed: "Cela n’a pas fonctionné. Veuillez réessayer.",
+    },
+    // 0.55 (keksdose dev #638): the "suggested from" caption under a field — the kit's
+    // default when the app names no source, and the button that takes the value back out.
+    fieldSuggestion: {
+      suggested: "Suggéré",
+      clear: "Effacer",
+      clearName: (field) => (field ? `Effacer la suggestion pour «\u202f${field}\u202f»` : "Effacer la suggestion"),
+    },
+    // 0.55: keksdose's reviewed words (price_pool.reconsent.*) without its price pool.
+    consentAgain: {
+      agree: "Accepter",
+      notNow: "Pas maintenant",
+      changesToggle: "Voir ce qui a changé",
+      wordingToggle: "Afficher le texte complet, avant et maintenant",
+      beforeHeading: "Jusqu’ici",
+      nowHeading: "Désormais",
+      removed: "Supprimé\u00a0:",
+      added: "Ajouté\u00a0:",
+    },
+    // 0.55: keksdose's reviewed headings (changelog.section_*) where it had one.
+    releaseNotes: {
+      version: (version) => `v${version}`,
+      sections: {
+        breaking: "Changements incompatibles",
+        added: "Nouveau",
+        changed: "Modifié",
+        fixed: "Corrigé",
+        deprecated: "Obsolète",
+        removed: "Supprimé",
+        security: "Sécurité",
+        reverted: "Annulé",
+      },
     },
   };
 }

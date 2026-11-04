@@ -80,7 +80,7 @@ is the first service with a router factory.
 | Status and category columns | database enums (`domain/models/feedback.py:47-52`) | database enums (`value_enum`) | `String` columns; the service writes `.value` (service `:366-367`) | 2.4 |
 | `resolved_at` | the plan's | the plan's | derived from the status on every flush (`domain/models/feedback.py:195-262`); the plan's is dropped (service `:363`) | 2.4 |
 | The answer | `model_validate(row)` | `user_name` and `user_email` on every answer, also outside the inbox (router `:59-71`) | URLs read off the attachment rows (router `:83-107`) | 2.9 |
-| App extras | — | `Location` headers (router `:116`, `:163`); `GET /feedback/counts`, `GET /feedback/{id}` (router `:237-258`) | title trimmed, outcome ≤ 4 000 (`domain/schemas/feedback.py:59-62`, `:81-96`) | 2.9 |
+| App extras | — | `Location` headers (router `:116`, `:163`); `GET /feedback/counts` and `GET /feedback/{id}` until kastlan's kit-reuse round (2026-11-02) dropped them | title trimmed, outcome ≤ 4 000 (`domain/schemas/feedback.py:59-62`, `:81-96`) | 2.9 |
 | Download headers | disposition by type, `attachment.<ext>`; no `nosniff` from the app, but prod's edge sends it on every answer (`deploy/gcp/Caddyfile.cloudrun:95-99`, `deploy/Caddyfile:39-43`); `FileResponse` on local disk (router `:99-109`) | `nosniff`; `Content-Disposition` only for non-images (router `:137-141`) | type re-read from the bytes, disposition always with the stored name, `nosniff` (router `:162-175`) | 2.12 |
 | Upload checks | `ensure_decodable_image` (`upload_guards.py:240`) | the same (router `:111`) | no `images` extra; UTF-8 text only (router `:66`) | 2.9 |
 | The clock | `plan_update` and `crash_seen_at` default to `datetime.now(UTC)` | the same | `crash_seen_at(…, datetime.now(UTC))` (service `:409`); the sweep (`:289`), `stamp_settlement` (`domain/models/feedback.py:223`) | 2.6 |
@@ -811,8 +811,9 @@ async def check_round_trip(client: Any, *, policy: AttachmentUrlPolicy,
 ### 4.3 Each app keeps
 
 Its SQLAlchemy models and migrations (**no schema change** in any app), its RLS and
-company scoping (ka), the adapters, its guards, its extensions (ka's counts and
-`GET /feedback/{id}`, kk's support door, KS's claim, visibility, encryption and sweep), the
+company scoping (ka), the adapters, its guards, its extensions (kk's support door, KS's
+claim, visibility, encryption and sweep; kastlan dropped its counts and `GET /feedback/{id}`
+in its kit-reuse round, 2026-11-02), the
 outcome loop tools (kk `scripts/feedback-live-*.sh`, KS `feedback_loop.py`), its file
 deletion after an erasure (2.15), and the account export's feedback.
 
@@ -905,9 +906,9 @@ wiring, the three conformance checks (2.14) and its own variations (1.1).
    the display name first + last, and `is_demo`. Add `not_in_the_demo(what)`. The admin
    guard is `require_role(*ADMIN_ONLY)`: its `allowed_roles` keeps `GET /feedback`
    "staff" in `tests/api/test_staff_only_routes.py` (2.8).
-6. Include the kit's router with its `/feedback` prefix (kastlan's router has none today
-   and writes full paths), then kastlan's `GET /feedback/counts` and `GET
-   /feedback/{feedback_id}` after it.
+6. Include the kit's router with its `/feedback` prefix (kastlan's router had none and wrote
+   full paths). kastlan's own `GET /feedback/counts` and `GET /feedback/{feedback_id}` are
+   gone since its kit-reuse round (2026-11-02).
 7. `app.state.feedback_limiters = FeedbackLimiters()`; the module-global `_limiters` goes.
 8. These go: `FeedbackService`; `_enrich_many`, which sets `user_name` (the frontend types
    it but never reads it, `frontend/src/shared/types/feedback.ts:33`) and the address

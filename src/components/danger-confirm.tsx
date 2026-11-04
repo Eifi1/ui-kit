@@ -2,6 +2,7 @@ import { Children, useCallback, useEffect, useId, useRef, useState } from "react
 import type { ChangeEvent, ComponentPropsWithRef, FormEvent, ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { hasContent } from "../lib/presence";
+import { returnFocus } from "../lib/focus-left";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { Button } from "./button";
 import { Input } from "./input";
@@ -737,10 +738,12 @@ export function DangerConfirm(props: DangerConfirmProps) {
       return;
     }
     confirmed.current = false;
-    // A controlled parent collapsing the tile from its own `onSuccess` did not go
-    // through `setArmed`; if focus went down with the form, bring it back too.
-    const lost = document.activeElement === null || document.activeElement === document.body;
-    if (byUser || lost) document.getElementById(armId)?.focus();
+    // Back to the arm button when the focus went down with the form — Cancel's, or a
+    // controlled parent collapsing the tile from its own `onSuccess`, which did not go
+    // through `setArmed`. By the kit's one rule (lib/focus-left `returnFocus`; 0.52 code
+    // review 2026-10-31, held to 0.55): it was moved for every `setArmed(false)` too, so a
+    // confirm that resolved after the user had gone on to another field took them back.
+    returnFocus({ opener: document.getElementById(armId) });
   }, [armed, armId, cancelId]);
 
   // The action settled and the tile is still armed — it failed, and the user retries.

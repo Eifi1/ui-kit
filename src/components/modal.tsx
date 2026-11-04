@@ -259,7 +259,8 @@ export interface ModalProps extends Omit<ComponentPropsWithoutRef<"div">, "role"
    * runs again once `busy` turns false, because the close changes with it.
    *
    * A dialog that must not be dismissed while NOTHING runs — a code shown once — wants
-   * {@link ModalProps.held} instead: the same hold without the request.
+   * {@link ModalProps.held} instead: the same hold without the request. Either way, each
+   * refused press is reported to {@link ModalProps.onDismissRefused}.
    */
   busy?: boolean;
   /**
@@ -272,7 +273,8 @@ export interface ModalProps extends Omit<ComponentPropsWithoutRef<"div">, "role"
    * the dialog's history entry, and the second left the page, and the code with it.
    * Held, a refused Back puts the entry back, so every Back is held, not only the first.
    * The refusal is silent, as under `busy` — `onClose` is not called — so what the
-   * dialog is waiting for is said up front, not after a refused press.
+   * dialog is waiting for is said up front; an app that also answers the refused press
+   * hears it through {@link ModalProps.onDismissRefused}.
    *
    * The way out is a close the CALLER decides on, which is never held: `open={false}`
    * (the exit still plays) or unmounting, from the dialog's own "I have saved it" button.
@@ -287,6 +289,25 @@ export interface ModalProps extends Omit<ComponentPropsWithoutRef<"div">, "role"
    */
   held?: boolean;
   /**
+   * Called when `busy` or `held` refuses a dismissal — once per refused attempt, with
+   * the way it came: `"backdrop"`, `"escape"`, `"back"` (the platform Back) or `"close"`
+   * (the frame's X, a `close` that `actions` or `headerActions` received, any close
+   * through `ModalCloseContext`). `onClose` is still not called; the dialog stays.
+   *
+   * 0.54 follow-up: keksdose's recovery-code dialog (auth/recovery-code-pane.tsx) showed
+   * a "why won't it close" banner after a refused press, from its own refusing
+   * `onClose`. Moving to `held` lost it, since a held press never reaches `onClose`;
+   * this is where the app hears it again, and from Back too, which its `onClose` could
+   * only hear once.
+   *
+   * Only refusals: not a dismissal that goes through, not a close the caller decides on,
+   * not an Escape a layer over the dialog or the owner's `onKeyDown` claim took first,
+   * not a press on a panel already on its way out. Held, the frame's X is disabled and
+   * cannot be pressed; under `busy` it reports `"close"`. With `urlParam`, Back is never
+   * held, so never reported. A Back is reported after its history entry is put back.
+   */
+  onDismissRefused?: (via: "backdrop" | "escape" | "back" | "close") => void;
+  /**
    * The PANEL — the `role="dialog"` element the rest of the props go on, not the
    * backdrop around it (0.35, round 0.35 R4, the follow-up to API-2; as on
    * `FullBleedDialog`). Merged with the panel's own ref, which the focus
@@ -295,6 +316,9 @@ export interface ModalProps extends Omit<ComponentPropsWithoutRef<"div">, "role"
    */
   ref?: Ref<HTMLDivElement>;
 }
+
+/** The way a dismissal came, as {@link ModalProps.onDismissRefused} names it. */
+type DismissedVia = Parameters<NonNullable<ModalProps["onDismissRefused"]>>[0];
 
 /**
  * The URL-bound dialog: the param is the open state, and closing clears it. A
@@ -353,6 +377,7 @@ function ModalPanel({
   urlParam: _urlParam,
   busy = false,
   held = false,
+  onDismissRefused,
   "aria-busy": ariaBusy,
   ownHistoryEntry = true,
   ref,
@@ -404,18 +429,41 @@ function ModalPanel({
   // A new function when the hold flips, so a close asked for from an effect while busy
   // (a resolved action whose caller's `isPending` trails its promise) runs again.
   const holding = busy || held;
-  const requestClose = useCallback(() => {
-    if (!holding) lower();
-  }, [holding, lower]);
+  // A refused dismissal is reported with the way it came (`onDismissRefused`, 0.54
+  // follow-up). Both read live, as `onClose` is: an inline `onDismissRefused` must not
+  // hand the chrome a new `close` every render, which would re-run an effect that depends
+  // on it (ReauthDialog's). Not while the panel is on its way out: a press then is moot.
+  const refusedRef = useRef(onDismissRefused);
+  const openRef = useRef(active);
+  useEffect(() => {
+    refusedRef.current = onDismissRefused;
+    openRef.current = active;
+  });
+  const refuse = useCallback((via: DismissedVia) => {
+    if (openRef.current) refusedRef.current?.(via);
+  }, []);
+  const dismiss = useCallback(
+    (via: DismissedVia) => {
+      if (holding) refuse(via);
+      else lower();
+    },
+    [holding, lower, refuse],
+  );
+  // The close the panel's own chrome calls (`ModalCloseContext`): the frame's X, the
+  // `close` its `actions` and `headerActions` receive.
+  const requestClose = useCallback(() => dismiss("close"), [dismiss]);
   // A panel on its way out after `open` turned false is already closed: a press on
   // its fading backdrop must not report a second close.
-  const backdropClose = useBackdropClose(active ? requestClose : () => {});
+  const backdropClose = useBackdropClose(active ? () => dismiss("backdrop") : () => {});
   // Back means the same as Escape here. On a phone Escape doesn't exist, so without
   // this the only way out of a dialog is finding its close button — and Back, the
   // gesture everyone reaches for, navigated the page underneath instead (#172).
   // Held only while open: a closed `open={false}` dialog must not own a history entry.
   // `held`: a Back while busy or held is refused, and the entry it took is put back.
-  useOverlayHistory(active && ownHistoryEntry, requestClose, { held: holding });
+  useOverlayHistory(active && ownHistoryEntry, () => dismiss("back"), {
+    held: holding,
+    onRefused: () => refuse("back"),
+  });
 
   // Through the shared hook and not by hand: this component's own save/restore copy
   // was one half of the pair that left the page permanently unscrollable when a dialog
@@ -439,7 +487,7 @@ function ModalPanel({
   // One layer on the Escape stack while open (Wave 2, DUP-1): a list, a popover or a
   // tooltip opened inside takes the key before the dialog does, wherever focus is —
   // and the dialog gets it even when focus is not in the panel.
-  const layer = useDismissLayer(active, requestClose);
+  const layer = useDismissLayer(active, () => dismiss("escape"));
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     // The caller's handler sees Escape only while this dialog is the layer on top: a
     // tooltip or a list open over it takes that press first (0.35, KS's gear wizard).

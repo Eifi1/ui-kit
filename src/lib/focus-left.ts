@@ -2,9 +2,10 @@
 // element holding the keyboard's focus is removed — a table row deleted, filtered out or
 // approved; a bulk bar gone with its Clear; a banner its × took away — the browser puts
 // focus on <body> and says nothing: no blur in Chromium, none in jsdom. A keyboard or
-// screen-reader user then starts again from the top of the page. The overlays give focus
-// back to their opener (use-focus-trap); these helpers are for the controls that leave
-// the page while the focus is IN them, and decide where it goes instead.
+// screen-reader user then starts again from the top of the page. These helpers are for
+// the controls that leave the page while the focus is IN them, and decide where it goes
+// instead; `returnFocus` is the one rule for that and for an overlay giving the focus
+// back as it closes (0.52 code review 2026-10-31, held to 0.55; use-focus-trap reads it).
 
 /**
  * Candidate tab stops, in DOM order — narrowed by {@link isTabStop} to the ones a Tab
@@ -131,15 +132,70 @@ export function tabStopsAround(frame: Element, limit = 5): { after: HTMLElement[
 /**
  * Focus the first of `candidates` that is still in the page and takes the focus; true
  * when one did. Each is tried and checked, since `focus()` on a node that cannot hold it
- * (detached, `display: none`, disabled since) fails without a word.
+ * (detached, `display: none`, disabled since) fails without a word. An SVG element counts
+ * (a chart's tile, a slice); `<body>` and `<html>` never do — "focused" there is the
+ * focus lost, not given (0.52 code review 2026-10-31, held to 0.55).
  */
 export function focusFirst(candidates: Iterable<Element | null | undefined>): boolean {
   for (const el of candidates) {
-    if (!(el instanceof HTMLElement) || !el.isConnected) continue;
+    if (!(el instanceof HTMLElement || el instanceof SVGElement) || !el.isConnected) continue;
+    if (el === el.ownerDocument.body || el === el.ownerDocument.documentElement) continue;
     el.focus();
-    if (document.activeElement === el) return true;
+    if (el.ownerDocument.activeElement === el) return true;
   }
   return false;
+}
+
+/** {@link returnFocus}'s three answers to "where was this opened from". */
+export interface FocusReturn {
+  /** The control it was opened from: the overlay's trigger when it names one, else what
+   *  held the focus as it opened. */
+  opener?: Element | null;
+  /** Where the focus goes when the opener cannot take it, nearest first — the overlay's
+   *  stated fallback. */
+  fallback?: Iterable<Element | null | undefined>;
+  /** What is closing, while it is still in the page (a panel on its way out, a list
+   *  about to unmount): a focus inside it is one to give back. */
+  closing?: Element | null;
+}
+
+/**
+ * Where the focus goes when an overlay closes, or a control holding it leaves the page —
+ * the kit's ONE rule for it (0.52 code review 2026-10-31, held to 0.55). The dialogs, the
+ * popovers and menus, the drawers, the phone sheets, the tour, AlertBanner's × and the
+ * Treemap's tiles each decided it themselves, and they drifted: the trap gave the focus
+ * back whenever its opener was still connected — over a focus the app had just placed —
+ * and left it on `<body>` when it was not; the date and month pickers and the floating
+ * panel moved it only when it was lost; the dropdown, the combobox and the column drawer
+ * moved it to their trigger every time, unchecked; and a Treemap tile's note of where to
+ * go once outlived the commit it was for and took the focus back, from wherever the
+ * reader was, when the map was shown again.
+ *
+ * 1. **Only a lost focus is moved** — on `<body>`, on nothing or on a removed node
+ *    ({@link focusIsLost}) — or one still inside what is `closing`. A focus that went
+ *    somewhere real is the user's (an outside press landed on a field) or the app's (its
+ *    own `focus()` in `onClose`), and stays.
+ * 2. **To the opener**, if it is still in the page and takes the focus: `focus()` is
+ *    checked, as a disabled, hidden or inert opener refuses it without a word.
+ * 3. **Else to the stated fallback**, the first of it that does — each caller names its
+ *    own: the trap the stops that stood around its opener, a banner the stops around its
+ *    ×, the map the tile that holds its tab stop.
+ * 4. **Never to `<body>`**: no `focus()` on a node that has left, none on `<body>`, no
+ *    `blur()`. When nothing can take the focus — the page under the overlay was replaced
+ *    — it is left for the page's own handling of a new page, not guessed at.
+ * 5. **Only in the closing commit**: called from the commit that closes or removes (a
+ *    handler that closes, a ref callback, a layout effect, an effect's cleanup), and
+ *    nothing handed to it is kept. A note gathered earlier, where a removed node can no
+ *    longer be measured from, is spent or dropped in that commit.
+ *
+ * True when it moved the focus.
+ */
+export function returnFocus({ opener, fallback = [], closing }: FocusReturn): boolean {
+  if (typeof document === "undefined") return false;
+  const active = document.activeElement;
+  const inside = Boolean(closing?.isConnected && active && closing.contains(active));
+  if (!inside && !focusIsLost()) return false;
+  return focusFirst([opener, ...fallback]);
 }
 
 /**

@@ -27,7 +27,7 @@ afterEach(() => {
 describe("createServerWake", () => {
   it("escalates idle → slow at 2 s → waking at 7 s, and resets when the request settles", () => {
     const w = createServerWake();
-    expect(w.start("get", "/budgets")).toBe(true);
+    expect(w.start("get", "/budgets")).toBeTruthy();
     expect(w.getStage()).toBe("idle");
     vi.advanceTimersByTime(1999);
     expect(w.getStage()).toBe("idle");
@@ -128,6 +128,66 @@ describe("createServerWake", () => {
     expect(w.getStage()).toBe("slow");
   });
 
+  // 0.55 (keksdose's 0.51 review N4): start() names the request, end(token) ends that one.
+  it("start() returns a distinct token per counted request, and false for one it does not count", () => {
+    const w = createServerWake();
+    const a = w.start("get", "/a");
+    const b = w.start("get", "/b");
+    expect(typeof a).toBe("number");
+    expect(a).toBeGreaterThan(0);
+    expect(b).not.toBe(a);
+    expect(w.start("post", "/upload")).toBe(false);
+  });
+
+  it("end(token) retires exactly that request, so the stage keeps the older one's real age", () => {
+    const w = createServerWake();
+    const slow = w.start("get", "/slow");
+    vi.advanceTimersByTime(1500);
+    const fresh = w.start("get", "/fresh");
+    vi.advanceTimersByTime(100);
+    // /fresh comes back first. A bare end() would retire /slow's start and time the
+    // stage from /fresh's (0.1 s); the token keeps /slow's 1.6 s.
+    w.end(fresh);
+    expect(w.getInFlight()).toBe(1);
+    vi.advanceTimersByTime(400);
+    expect(w.getStage()).toBe("slow"); // /slow is 2 s old
+    vi.advanceTimersByTime(5000);
+    expect(w.getStage()).toBe("waking");
+    w.end(slow);
+    expect(w.getStage()).toBe("idle");
+    expect(w.getInFlight()).toBe(0);
+  });
+
+  it("the same case with a bare end() comes late, as it always did (and never falsely)", () => {
+    const w = createServerWake();
+    w.start("get", "/slow");
+    vi.advanceTimersByTime(1500);
+    w.start("get", "/fresh");
+    vi.advanceTimersByTime(100);
+    w.end(); // meant for /fresh, retires /slow's start
+    vi.advanceTimersByTime(400);
+    expect(w.getStage()).toBe("idle");
+  });
+
+  it("a token ended twice, false, or one from before reset() is a no-op — it never eats another request", () => {
+    const w = createServerWake();
+    const old = w.start("get", "/old");
+    w.reset();
+    const a = w.start("get", "/a");
+    w.end(old);
+    expect(w.getInFlight()).toBe(1);
+    w.end(false);
+    expect(w.getInFlight()).toBe(1);
+    const b = w.start("get", "/b");
+    w.end(a);
+    w.end(a);
+    expect(w.getInFlight()).toBe(1);
+    w.end(b);
+    expect(w.getInFlight()).toBe(0);
+    // A token never repeats, not even across a reset.
+    expect(new Set([old, a, b]).size).toBe(3);
+  });
+
   it("does not arm while the browser is offline", () => {
     const w = createServerWake();
     setOnline(false);
@@ -145,8 +205,8 @@ describe("createServerWake", () => {
 
   it("watches GETs by default (and a request without a method), not writes", () => {
     const w = createServerWake();
-    expect(w.start(undefined, "/x")).toBe(true);
-    expect(w.start("GET", "/x")).toBe(true);
+    expect(w.start(undefined, "/x")).toBeTruthy();
+    expect(w.start("GET", "/x")).toBeTruthy();
     expect(w.start("post", "/auth/login")).toBe(false);
     expect(w.start("post", "/statements/upload")).toBe(false);
     expect(w.getInFlight()).toBe(2);
@@ -154,8 +214,8 @@ describe("createServerWake", () => {
 
   it("watchReadsAnd adds the gating writes — and nothing else", () => {
     const w = createServerWake({ shouldWatch: watchReadsAnd(/\/auth\/(login|register)\b/) });
-    expect(w.start("post", "/auth/login")).toBe(true);
-    expect(w.start("POST", "/api/v1/auth/register")).toBe(true);
+    expect(w.start("post", "/auth/login")).toBeTruthy();
+    expect(w.start("POST", "/api/v1/auth/register")).toBeTruthy();
     expect(w.start("post", "/auth/refresh")).toBe(false);
     expect(w.start("post", "/statements/upload")).toBe(false);
   });
@@ -166,7 +226,7 @@ describe("createServerWake", () => {
       expect(w.start("get", "/invoices/7/pdf", { responseType })).toBe(false);
       expect(w.start("post", "/auth/login", { responseType })).toBe(false);
     }
-    expect(w.start("get", "/invoices/7", { responseType: "json" })).toBe(true);
+    expect(w.start("get", "/invoices/7", { responseType: "json" })).toBeTruthy();
     expect(w.getInFlight()).toBe(1);
   });
 
@@ -175,7 +235,7 @@ describe("createServerWake", () => {
       (_method: string, _url: string, request: { responseType?: string }) => request.responseType === "text",
     );
     const w = createServerWake({ shouldWatch });
-    expect(w.start("get", "/a", { responseType: "text" })).toBe(true);
+    expect(w.start("get", "/a", { responseType: "text" })).toBeTruthy();
     // Without a request, the filter still gets the method and URL in one.
     expect(w.start("GET", "/b")).toBe(false);
     expect(shouldWatch).toHaveBeenLastCalledWith("get", "/b", { method: "GET", url: "/b" });
@@ -203,6 +263,88 @@ describe("createServerWake", () => {
     expect(w.getInFlight()).toBe(0);
     vi.advanceTimersByTime(10_000);
     expect(w.getStage()).toBe("idle");
+  });
+});
+
+/**
+ * `slowOk` (0.55; the per-request opt-out adopt-0.51 left open): a read that is heavy on
+ * purpose is counted, never called slow, and past `wakingMs` is the server waking like
+ * any other — so under 7 s it shows nothing at all.
+ */
+describe("slowOk", () => {
+  it("a slowOk read under wakingMs never leaves idle", () => {
+    const w = createServerWake();
+    const listener = vi.fn();
+    w.subscribe(listener);
+    const token = w.start("get", "/reports/heavy", { slowOk: true });
+    expect(token).toBeTruthy();
+    expect(w.getInFlight()).toBe(1);
+    vi.advanceTimersByTime(6999);
+    expect(w.getStage()).toBe("idle");
+    w.end(token);
+    vi.advanceTimersByTime(10_000);
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  it("past wakingMs it is the server waking, as any read is", () => {
+    const w = createServerWake();
+    w.start("get", "/reports/heavy", { slowOk: true });
+    vi.advanceTimersByTime(7000);
+    expect(w.getStage()).toBe("waking");
+  });
+
+  it("a plain read beside it is timed on its own: slow from ITS age", () => {
+    const w = createServerWake();
+    w.start("get", "/reports/heavy", { slowOk: true });
+    vi.advanceTimersByTime(3000);
+    const plain = w.start("get", "/accounts");
+    expect(w.getStage()).toBe("idle");
+    vi.advanceTimersByTime(1999);
+    expect(w.getStage()).toBe("idle");
+    vi.advanceTimersByTime(1);
+    expect(w.getStage()).toBe("slow"); // /accounts is 2 s old
+    w.end(plain);
+    expect(w.getStage()).toBe("idle"); // only the slowOk read is out, 5 s old
+  });
+
+  it("the slowOk read's waking timer is not taken back by a newer read's slow one", () => {
+    const w = createServerWake();
+    w.start("get", "/reports/heavy", { slowOk: true });
+    vi.advanceTimersByTime(6000);
+    w.start("get", "/accounts"); // slow at 8 s
+    vi.advanceTimersByTime(1000);
+    expect(w.getStage()).toBe("waking"); // the heavy read at 7 s
+    vi.advanceTimersByTime(1000);
+    expect(w.getStage()).toBe("waking"); // /accounts' slow timer fired, and changed nothing
+  });
+
+  it("an older plain read keeps its own clock when a slowOk one joins", () => {
+    const w = createServerWake();
+    w.start("get", "/accounts");
+    vi.advanceTimersByTime(1000);
+    w.start("get", "/reports/heavy", { slowOk: true });
+    vi.advanceTimersByTime(1000);
+    expect(w.getStage()).toBe("slow");
+  });
+
+  it("rides the axios config, and track()'s request", async () => {
+    const w = createServerWake();
+    const api = fakeAxios();
+    attachServerWake(api, w);
+    let answer!: () => void;
+    const sent = api.send(
+      { method: "get", url: "/reports/heavy", slowOk: true },
+      "ok",
+      new Promise<void>((r) => (answer = r)),
+    );
+    await vi.waitFor(() => expect(w.getInFlight()).toBe(1));
+    void w.track(new Promise<never>(() => {}), { method: "get", url: "/heavy-too", slowOk: true });
+    vi.advanceTimersByTime(5000);
+    expect(w.getInFlight()).toBe(2);
+    expect(w.getStage()).toBe("idle");
+    answer();
+    await sent;
+    expect(w.getInFlight()).toBe(1);
   });
 });
 
@@ -246,6 +388,15 @@ describe("track()", () => {
     expect(w.getInFlight()).toBe(0);
     await expect(result).resolves.toBe("ok");
     expect(w.getInFlight()).toBe(0);
+  });
+
+  it("ends its own request, not the oldest (0.55)", async () => {
+    const w = createServerWake();
+    w.track(new Promise<never>(() => {}), { method: "get", url: "/slow" });
+    vi.advanceTimersByTime(1500);
+    await w.track(Promise.resolve("fast"), { method: "get", url: "/fast" });
+    vi.advanceTimersByTime(500);
+    expect(w.getStage()).toBe("slow"); // /slow's 2 s, not 0.5 s from /fast's start
   });
 });
 
@@ -358,6 +509,25 @@ describe("attachServerWake (axios)", () => {
     await expect(api.send(config, "fail")).rejects.toThrow();
     await api.send(config, "ok");
     expect(w.getInFlight()).toBe(0);
+  });
+
+  it("a response ends its own request's count, by the token on its config (0.55)", async () => {
+    const w = createServerWake();
+    const api = fakeAxios();
+    attachServerWake(api, w);
+    let answerSlow!: () => void;
+    const slow = api.send({ method: "get", url: "/slow" }, "ok", new Promise<void>((r) => (answerSlow = r)));
+    await vi.waitFor(() => expect(w.getInFlight()).toBe(1));
+    vi.advanceTimersByTime(1500);
+    await api.send({ method: "get", url: "/fast" }, "ok");
+    vi.advanceTimersByTime(500);
+    expect(w.getStage()).toBe("slow");
+    answerSlow();
+    const res = (await slow) as { config: Record<string, unknown> };
+    expect(w.getInFlight()).toBe(0);
+    expect(w.getStage()).toBe("idle");
+    // Cleared once settled, so the same config replayed is counted afresh.
+    expect(res.config._serverWake).toBe(false);
   });
 
   it("detaches", async () => {

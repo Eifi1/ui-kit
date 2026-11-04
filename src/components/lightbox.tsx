@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Download, ExternalLink, FileText, ZoomIn } f
 
 import { cn } from "../lib/cn";
 import { horizontalStep } from "../lib/direction";
+import { isEditableContent } from "../lib/editable-content";
 import { hasContent } from "../lib/presence";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { useAuthedSrc } from "../hooks/use-authed-src";
@@ -199,9 +200,13 @@ export function Lightbox({
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     // A key meant for a control stays with it: Space/Enter on a button, typing in any
-    // field a caller's caption might hold.
-    const target = e.target as HTMLElement;
-    if (target.closest("input, textarea, select, [contenteditable='true']")) return;
+    // field a caller's caption might hold. Editable content by the kit's one rule
+    // (lib/editable-content; 0.52 code review 2026-10-31, held to 0.55): the selector it
+    // replaced matched `[contenteditable='true']` alone, so in an editor written
+    // `contenteditable=""` or `"plaintext-only"` the arrows, Home and End paged the viewer
+    // instead of moving the caret.
+    const target = e.target as Element;
+    if (target.closest("input, textarea, select") || isEditableContent(target)) return;
     const step = horizontalStep(e.key, e.currentTarget);
     if (step !== 0) {
       e.preventDefault();

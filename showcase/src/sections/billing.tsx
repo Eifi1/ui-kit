@@ -7,26 +7,39 @@ import {
   PlanPicker,
   PlanSwitchConfirm,
   SubscriptionActions,
+  SubscriptionStanding,
+  SubscriptionStatusChip,
   Switch,
+  UsageMeter,
   WriteLockProvider,
   checkoutFingerprint,
   combineWriteLocks,
+  formatFileSize,
   isPermanentGrant,
   openProviderPage,
+  subscriptionStanding,
   useBillingLabels,
   useBillingWriteLock,
   useCancelRequest,
+  useKitFormat,
 } from "@eifi1/ui-kit";
-import type { BillingPlan, PlanChoice, PlanSwitchPreview, PlanSwitchSide } from "@eifi1/ui-kit";
+import type {
+  BillingPlan,
+  PlanChoice,
+  PlanSwitchPreview,
+  PlanSwitchSide,
+  SubscriptionStandingOverview,
+} from "@eifi1/ui-kit";
 import { Example, Note, OutTable, READOUT_WRAP, beat, code } from "../lib/section";
 
 /**
  * SUBSCRIPTION — billing's family file (the showcase's rule: a release adds to the
  * family, not a `*-0NN-demo.tsx`). Since 0.39 (docs/billing-harmonization.md §15): the
  * payer's plan switch — Paddle's preview as a figure the payer agrees to, under a lapsed
- * plan too — the refusals' words, and the app map every pay page serves. On the
- * "Subscription" page, after billing-033-demo; the older billing specimens move here when
- * next touched.
+ * plan too — the refusals' words, and the app map every pay page serves; the portal for
+ * the buyer only (§16), the portal in a new tab (§17); the subscription's standing line
+ * and the usage meter (§7). On the "Subscription" page, after billing-033-demo; the older
+ * billing specimens move here when next touched.
  *
  * "Ada's Garden Planner" and its payer are SYNTHETIC. Every request is the app's part,
  * played by a timer.
@@ -186,6 +199,17 @@ export function PayPageApps039Demo() {
 /** The company's buyer, SYNTHETIC. */
 const BUYER = "Ada Gardener";
 const PERIOD_END = "2026-11-09T08:00:00Z";
+
+/** The overview's standing of a payer on Pro, paid monthly and renewing (§4) — what
+ *  `SubscriptionStanding` reads. The §7 specimens below change what each case needs. */
+const PAYING: SubscriptionStandingOverview = {
+  status: "active",
+  in_good_standing: true,
+  trial_ends_at: null,
+  comped_until: null,
+  current_period_end: PERIOD_END,
+  cancel_at_period_end: false,
+};
 
 export function BuyerOnly042Demo() {
   const [viewerIsBuyer, setViewerIsBuyer] = useState(false);
@@ -423,9 +447,11 @@ export function Portal043Demo() {
           <Switch size="sm" label="The browser blocks pop-ups" checked={blocked} onCheckedChange={setBlocked} />
           <Switch size="sm" label="The server refuses the portal" checked={refuse} onCheckedChange={setRefuse} />
         </div>
-        <p className="text-sm text-muted" data-plan-line="">
-          Pro · {view.cancelScheduled ? "Cancels on 9 November 2026" : "Renews on 9 November 2026"}
-        </p>
+        <div>
+          <p className="text-sm font-medium">Pro</p>
+          {/* The app's knowledge laid over the overview, as kastlan does: "Ends on" at once. */}
+          <SubscriptionStanding overview={{ ...PAYING, cancel_at_period_end: view.cancelScheduled }} />
+        </div>
         <SubscriptionActions
           onManage={() => toPortal("overview")}
           onCancelInApp={() => void ask("cancel")}
@@ -446,8 +472,107 @@ export function Portal043Demo() {
         inside the click with {code("opener = null")}, awaits {code("POST /billing/portal")}, and points the tab at the
         answer; a refusal closes the tab and rethrows, a blocked pop-up sends this page instead. The portal&apos;s
         actions carry the external-link mark and the note names the provider and the app; the checkout stays in the same
-        tab. After the in-app cancel, {code("useCancelRequest")} shows &ldquo;Cancels on&rdquo; and &ldquo;Keep
+        tab. After the in-app cancel, {code("useCancelRequest")} shows &ldquo;Ends on&rdquo; and &ldquo;Keep
         subscription&rdquo; at once, until the webhook moves the row.
+      </Note>
+    </Example>
+  );
+}
+
+/* ── §7 (Marcel 2026-11-04): the standing line and the usage meter ─────────── */
+
+const GRANT_END = "2027-06-30T08:00:00Z";
+
+/** One payer per line of the order, the last with nothing to say. */
+const STANDINGS: Array<{ plan: string; overview: SubscriptionStandingOverview }> = [
+  { plan: "Pro", overview: { ...PAYING, status: "expired", in_good_standing: false, current_period_end: null } },
+  { plan: "Pro", overview: { ...PAYING, status: "past_due" } },
+  { plan: "Pro", overview: { ...PAYING, status: "trialing", trial_ends_at: "2026-11-21T08:00:00Z" } },
+  { plan: "Grove", overview: { ...PAYING, status: "comped", comped_until: GRANT_END } },
+  { plan: "Grove", overview: { ...PAYING, status: "comped", current_period_end: null } },
+  { plan: "Pro", overview: { ...PAYING, cancel_at_period_end: true } },
+  { plan: "Pro", overview: PAYING },
+  { plan: "Pro", overview: { ...PAYING, current_period_end: null } },
+];
+
+/** Where the order decides: the overview's fields beside what the line says. */
+const DECIDERS: Array<[string, SubscriptionStandingOverview]> = [
+  ['{ status: "past_due", in_good_standing: false }', { ...PAYING, status: "past_due", in_good_standing: false }],
+  ['{ status: "past_due", cancel_at_period_end: true }', { ...PAYING, status: "past_due", cancel_at_period_end: true }],
+  [
+    '{ status: "comped", comped_until, cancel_at_period_end: true }',
+    { ...PAYING, status: "comped", comped_until: GRANT_END, cancel_at_period_end: true },
+  ],
+  ['{ status: "trialing", trial_ends_at: null }', { ...PAYING, status: "trialing", current_period_end: null }],
+];
+
+export function SubscriptionStandingDemo() {
+  const labels = useBillingLabels();
+  const { formatDate } = useKitFormat();
+  return (
+    <Example
+      label="The subscription's standing in one line — SubscriptionStanding"
+      hint="the first that applies: ended, payment failed, trial, grant, cancelled, renewing; §7"
+    >
+      <ul className="divide-y divide-subtle rounded-lg border border-subtle">
+        {STANDINGS.map(({ plan, overview }, i) => (
+          <li key={i} className="px-3 py-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-medium">{plan}</span>
+              <SubscriptionStatusChip status={overview.status} />
+            </div>
+            <SubscriptionStanding overview={overview} />
+          </li>
+        ))}
+      </ul>
+      <p className="mt-3 text-sm text-secondary">
+        The same line as a string, {code("subscriptionStanding(overview, labels, format)")}, where the order decides:
+      </p>
+      <OutTable
+        rows={DECIDERS.map(([fields, overview]) => [
+          fields,
+          subscriptionStanding(overview, labels, (value) => formatDate(value)) ?? "null",
+        ])}
+      />
+      <Note>
+        Out of good standing the plan has ended, whatever the status says: the first sentence of the plan-ended banner,
+        which goes on with what to do. A failed payment names no date — the provider is retrying, so no renewal is
+        promised, and the payment-failed banner carries the action. A grant speaks before a scheduled cancel, and a
+        cancel before a renewal. The date is a day in a sentence, the provider&apos;s {code("formatDate")} when the app
+        set one. Back from a checkout, render the line once {code("useCheckoutProcessing")} is done: the ended line
+        would be the stale one.
+      </Note>
+    </Example>
+  );
+}
+
+const MB = 1024 ** 2;
+
+export function UsageMeterDemo() {
+  return (
+    <Example
+      label="What is used of each limit — UsageMeter"
+      hint="ProgressBar's meter; the tone says what one more create would do; §3.4, §7"
+    >
+      <div className="space-y-4">
+        <UsageMeter label="Beds" used={12} limit={30} />
+        <UsageMeter label="Helpers" used={3} limit={3} />
+        <UsageMeter label="Beds, after a downgrade to Seedling" used={7} limit={3} />
+        <UsageMeter
+          label="Photo storage"
+          used={260 * MB}
+          limit={200 * MB}
+          formatValue={(bytes) => formatFileSize(bytes)}
+        />
+        <UsageMeter label="Watering log entries" used={12_480} limit={20_000} />
+        <UsageMeter label="Helpers on Grove" used={4} limit={null} />
+      </div>
+      <Note>
+        Below the limit the bar is neutral; AT it, a warning: nothing more can be created. PAST it, after a downgrade
+        that deletes nothing (§3.4), danger: the bar stays full and a line says by how much. An unlimited limit (
+        {code("null")}) draws no bar, only the count and &ldquo;Unlimited&rdquo;. Every figure goes through the
+        kit&apos;s number formatting, digit grouping included, or the app&apos;s {code("formatValue")} — storage in
+        bytes, the overage too.
       </Note>
     </Example>
   );
@@ -461,6 +586,8 @@ export function BillingSwitchDemo() {
       <BuyerOnly042Demo />
       <GrantWarning042Demo />
       <Portal043Demo />
+      <SubscriptionStandingDemo />
+      <UsageMeterDemo />
     </>
   );
 }

@@ -577,6 +577,16 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       removed: (name) => `«${name}» quitado`,
       cleared: "Se han quitado todos los archivos",
     },
+    camera: {
+      takePhoto: "Hacer foto",
+      choosePhoto: "Añadir foto",
+      title: "Cámara",
+      hint: "Encuadre el motivo y pulse el disparador.",
+      starting: "Iniciando la cámara…",
+      shutter: "Hacer la foto",
+      taken: (count) => `${n(count)} ${plural(count, "foto hecha", "fotos hechas")}.`,
+      done: (count) => `Usar ${n(count)} ${plural(count, "foto", "fotos")}`,
+    },
     wizard: {
       done: "Listo",
       cancel: "Cancelar",
@@ -724,6 +734,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       empty: "Sin datos",
       legend: "Series",
       points: "Valores del gráfico",
+      nameFromAxes: (ordinates, abscissa) => (abscissa ? `${ordinates} frente a ${abscissa}` : ordinates),
     },
     pieChart: {
       slices: "Sectores del gráfico",
@@ -1671,6 +1682,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       accessName: "Nombre:",
       accessCompany: "Empresa:",
       accessUse: "Uso previsto:",
+      siteNavLabel: "Más páginas",
     },
     demo: {
       starting: "Iniciando la demo…",
@@ -1729,6 +1741,17 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         canceled: "Cancelada",
         expired: "Caducada",
         comped: "De cortesía",
+      },
+      // 0.55 (§7, Marcel 2026-11-04): the standing line; `ended` is the first sentence of
+      // `planEnded`, "no se ha completado" as `paymentFailedAskBuyer`.
+      standing: {
+        ended: "Su plan ha terminado.",
+        pastDue: "El pago no se ha completado y lo estamos reintentando. Mientras tanto, su plan sigue activo.",
+        trialUntil: (date) => `Prueba hasta el ${date}`,
+        freeUntil: (date) => `Gratis hasta el ${date}`,
+        free: "Gratis, sin fecha de finalización",
+        endsOn: (date) => `Termina el ${date}`,
+        renewsOn: (date) => `Se renueva el ${date}`,
       },
       trialEnding: (days) =>
         `Su periodo de prueba termina ${inDays(days)}. Después podrá seguir viéndolo todo, pero necesitará un plan para hacer cambios.`,
@@ -1957,6 +1980,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         refusedShort: "Sin sincronizar",
         offlineUnsaved: "Sin conexión: los cambios no se pueden guardar hasta que vuelva a conectarse",
         saving: "Guardando…",
+        waitingForTab: "Esperando a que otra pestaña termine de sincronizar",
+        waitingForTabShort: "Esperando pestaña",
       },
       dev: {
         menu: "Herramientas de desarrollo",
@@ -1992,6 +2017,56 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     sharedComputer: {
       label: "Este es un ordenador compartido",
       hint: "No queda ninguna copia de sus datos en este dispositivo. Las páginas solo se abren entonces con conexión.",
+    },
+    // 0.55 — docs/top-bar-harmonization.md §2.6.1: keksdose's words (sync.held_*,
+    // sync.discard_held_*, sync.switch_back_held) without its budgets.
+    heldChanges: {
+      message: (count) =>
+        count === 1
+          ? `${n(count)} cambio no se puede enviar desde aquí. Se queda en este dispositivo hasta que se pueda enviar o hasta que lo descarte.`
+          : `${n(count)} cambios no se pueden enviar desde aquí. Se quedan en este dispositivo hasta que se puedan enviar o hasta que los descarte.`,
+      switchBack: "Volver",
+      discard: "Descartar…",
+      confirmTitle: (count) =>
+        `¿Descartar ${n(count)} ${plural(count, "cambio que no se puede enviar", "cambios que no se pueden enviar")} desde aquí?`,
+      confirmBody: (count) =>
+        count === 1
+          ? "No se podrá recuperar. Después, este dispositivo se sincroniza con los datos del servidor."
+          : "No se podrán recuperar. Después, este dispositivo se sincroniza con los datos del servidor.",
+      confirmAction: "Descartar",
+      failed: "No ha funcionado. Inténtelo de nuevo.",
+    },
+    // 0.55 (keksdose dev #638): the "suggested from" caption under a field — the kit's
+    // default when the app names no source, and the button that takes the value back out.
+    fieldSuggestion: {
+      suggested: "Sugerido",
+      clear: "Borrar",
+      clearName: (field) => (field ? `Borrar la sugerencia para «${field}»` : "Borrar la sugerencia"),
+    },
+    // 0.55: keksdose's words (price_pool.reconsent.*), translated; it ships no Spanish.
+    consentAgain: {
+      agree: "Aceptar",
+      notNow: "Ahora no",
+      changesToggle: "Ver qué ha cambiado",
+      wordingToggle: "Mostrar el texto completo, antes y ahora",
+      beforeHeading: "Hasta ahora",
+      nowHeading: "A partir de ahora",
+      removed: "Eliminado:",
+      added: "Añadido:",
+    },
+    // 0.55: keksdose's headings (changelog.section_*), translated; it ships no Spanish.
+    releaseNotes: {
+      version: (version) => `v${version}`,
+      sections: {
+        breaking: "Cambios incompatibles",
+        added: "Novedades",
+        changed: "Cambios",
+        fixed: "Corregido",
+        deprecated: "Obsoleto",
+        removed: "Eliminado",
+        security: "Seguridad",
+        reverted: "Revertido",
+      },
     },
   };
 }

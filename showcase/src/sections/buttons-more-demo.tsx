@@ -464,14 +464,15 @@ export function DisabledReasonLineDemo() {
       hint="the line carries the id the control's aria-describedby names"
     >
       <DisabledReasonLine id={id} reason="A closed month cannot be exported again.">
-        <Button disabled aria-describedby={id}>
+        <Button refused aria-describedby={id}>
           Export March
         </Button>
       </DisabledReasonLine>
       <Note>
         The kit&apos;s own controls draw their {code("disabledReason")} this way where a tooltip cannot be relied on —
         on touch and at Large text ({code("useDisabledReasonLine")} decides). A control of the app&apos;s that has a
-        reason to give uses the part directly.
+        reason to give uses the part directly. The button here is {code("refused")} (0.55), not {code("disabled")}: a
+        natively disabled button leaves the Tab order, so the description the line gives it was never heard.
       </Note>
     </Example>
   );

@@ -33,6 +33,10 @@
  *
  * Framework-free like `server-wake.ts`: {@link attachSessionRefresh} takes the app's
  * axios instance as an ARGUMENT, typed structurally, so the kit never imports axios.
+ *
+ * Since 0.55, {@link watchSessionElsewhere} beside it: the session ending in ANOTHER tab,
+ * or while this page sat in the back/forward cache (kastlan reuse audit 2026-11-02,
+ * proposal 6).
  */
 
 import type { AxiosLikeInstance, ServerWakeAxiosConfig } from "./server-wake";
@@ -468,5 +472,85 @@ export function attachSessionRefresh<C extends SessionRefreshAxiosConfig, R exte
   return () => {
     instance.interceptors.request.eject(request);
     instance.interceptors.response.eject(response);
+  };
+}
+
+// ── Another tab ───────────────────────────────────────────────────────────────
+
+/** What the app hands {@link watchSessionElsewhere}. */
+export interface SessionElsewhereOptions {
+  /**
+   * Whether this tab's session is over: this tab holds one, and the storage every tab
+   * shares no longer does — its token removed by a sign-out elsewhere, the storage
+   * cleared — or holds another account's. Read where the app's request interceptor reads
+   * the token (`readStored`), against what this tab keeps in memory. A renewal elsewhere
+   * rewrites the token and is no end; a tab with no session has nothing to end.
+   */
+  ended: () => boolean;
+  /**
+   * The session is over in this tab: drop what this tab holds of it (the user, the query
+   * cache, the unlocked keys), then leave with a full load, of the sign-in or the demo's
+   * end. Not the app's whole sign-out: the other tab has already removed what the device
+   * kept, and may since have stored a session that is not this tab's to delete.
+   *
+   * Called once per session: further `storage` events while `ended` still reads `true`
+   * call nothing, until it has read `false` again. A restored page is asked afresh.
+   */
+  onEnded: () => void;
+  /** Also check a page the browser brings back from its back/forward cache (`pageshow`
+   *  with `persisted`). Default `true`. */
+  checkRestored?: boolean;
+}
+
+/**
+ * Watch for this tab's session ending in another tab (kastlan reuse audit 2026-11-02,
+ * proposal 6): `const stop = watchSessionElsewhere({ ended, onEnded })`, once per tab,
+ * beside the app's session store. Returns the function that stops watching.
+ *
+ * The session belongs to the device — its tokens sit in localStorage, which every tab
+ * shares — and the account on screen to the tab: the user, the query cache and the
+ * unlocked keys sit in this tab's memory. A sign-out in another tab changed the first and
+ * left the second, so this tab kept the previous account on screen and wrote its data
+ * back into the offline copy the other tab had just wiped (refactor audit 2026-10-30:
+ * keksdose FS-2, kastlan FLW-1). Two moments tell it:
+ *
+ *  - a `storage` event: another tab wrote or removed a key. `ended` is read after every
+ *    one, whatever its key — it reads the state, so it needs no list of keys, and a
+ *    cleared storage (`key` null) counts like any removal;
+ *  - a page restored from the back/forward cache (`pageshow` with `persisted`). Frozen
+ *    there, it heard no `storage` event and came back on the previous account, where it
+ *    could renew the old session and store its tokens again over the sign-out (keksdose
+ *    F-31; kastlan listened to `storage` alone). A fresh load reads the storage anyway,
+ *    so nothing is checked when the watch starts, nor on a `pageshow` that is no restore.
+ *
+ * Framework-free and storage-free: `ended` is the app's read, guarded where it reads
+ * (the kit's `readStored` never throws). Nothing is watched where there is no `window`.
+ */
+export function watchSessionElsewhere(options: SessionElsewhereOptions): () => void {
+  if (typeof window === "undefined") return () => undefined;
+  /** `onEnded` was called, and `ended` has not read `false` since. */
+  let told = false;
+  const check = () => {
+    if (!options.ended()) {
+      told = false;
+      return;
+    }
+    if (told) return;
+    told = true;
+    options.onEnded();
+  };
+  const onStorage = () => check();
+  const onPageShow = (event: PageTransitionEvent) => {
+    if (!event.persisted) return;
+    // A page shown again is asked again, told or not: its `onEnded` left with a full load,
+    // the browser kept the page, and Back brought it back on the previous account.
+    told = false;
+    check();
+  };
+  window.addEventListener("storage", onStorage);
+  if (options.checkRestored !== false) window.addEventListener("pageshow", onPageShow);
+  return () => {
+    window.removeEventListener("storage", onStorage);
+    window.removeEventListener("pageshow", onPageShow);
   };
 }

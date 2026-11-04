@@ -8,9 +8,10 @@ import { flushMicrotasks } from "../../test/tasks";
 /**
  * The map's tab stop and the focus it holds (0.52 code review of treemap.tsx, findings 6
  * and 7). The stop lived in the tiles' context, so each arrow-key step was a new context
- * and every tile drew again. And recharts keys a node by where it is laid out
+ * and every tile drew again. And recharts keyed a node by where it was laid out
  * (`x-y-name`), so a relayout — new data, a resize — remounted the focused tile and the
- * focus fell to <body>. Real recharts at 800x300.
+ * focus fell to <body>. recharts' `ResponsiveContainer` stood in at 800x300; the map draws
+ * itself since 0.55.
  */
 vi.mock("recharts", async (importOriginal) => {
   const actual = await importOriginal<typeof import("recharts")>();
@@ -50,7 +51,8 @@ describe("Treemap's tab stop", () => {
     const { container, rerender } = render(<Treemap data={DATA} />);
     const before = tile(container, "Leisure");
     act(() => before.focus());
-    // Leisure grows to the largest: recharts lays it out elsewhere and remounts its node.
+    // Leisure grows to the largest and is laid out elsewhere. recharts remounted its node
+    // there; since 0.55 the map draws it itself, keyed by its path, and the element stays.
     rerender(
       <Treemap
         data={[
@@ -61,7 +63,7 @@ describe("Treemap's tab stop", () => {
       />,
     );
     const after = tile(container, "Leisure");
-    expect(after).not.toBe(before);
+    expect(after).toBe(before);
     expect(document.activeElement).toBe(after);
     expect([...container.querySelectorAll('[tabindex="0"]')]).toEqual([after]);
   });

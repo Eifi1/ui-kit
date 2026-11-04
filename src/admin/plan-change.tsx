@@ -5,7 +5,7 @@ import { useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labe
 import { pluralForm } from "../i18n/plurals";
 import type { PluralForms } from "../i18n/plurals";
 import { formatNumber, EMPTY_FORMATTED_VALUE } from "../lib/format";
-import { toLocalIso } from "../lib/dates";
+import { todayIso } from "../lib/dates";
 import type { DataTableColumn } from "../components/data-table";
 import { DatePicker } from "../components/date-picker";
 import { Tooltip } from "../components/tooltip";
@@ -312,8 +312,9 @@ export function PlanChangeConfirm({
   const current = codeOf(currentProp);
   const [plan, setPlan] = useState(current ?? "");
   const [until, setUntil] = useState("");
-  // A grant ends today at the earliest; read once, not on every render.
-  const [today] = useState(() => toLocalIso(new Date()));
+  // A grant ends today at the earliest; read once, not on every render. The kit's today,
+  // so it agrees with a server whose dev clock moved it (0.55).
+  const [today] = useState(todayIso);
   const options = plans.map((p) => ({ code: codeOf(p.code) ?? p.code, name: p.name }));
   const nameOf = (code: string) => options.find((p) => p.code === code)?.name ?? code;
   // An account on a plan the catalogue no longer lists still opens on it.

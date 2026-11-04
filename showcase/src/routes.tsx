@@ -60,6 +60,7 @@ import {
   Pin,
   Puzzle,
   RefreshCw,
+  ScrollText,
   Server,
   Settings as SettingsIcon,
   ShieldAlert,
@@ -314,6 +315,7 @@ const TranslationReview025Demo = lazySection(
   "TranslationReview025Demo",
 );
 const TextareaEdge025Demo = lazySection(() => import("./sections/fields"), "TextareaEdge025Demo");
+const FieldSuggestionDemo = lazySection(() => import("./sections/fields"), "FieldSuggestionDemo");
 const FeedbackDialogButtons025Demo = lazySection(
   () => import("./sections/feedback-compose"),
   "FeedbackDialogButtons025Demo",
@@ -325,6 +327,8 @@ const DataTableEdgeFadeDemo = lazySection(() => import("./sections/table-edge-fa
 const FeedbackSubmit027Demo = lazySection(() => import("./sections/feedback-compose"), "FeedbackSubmit027Demo");
 const FeedbackTable027Demo = lazySection(() => import("./sections/feedback-inbox/table"), "FeedbackTable027Demo");
 const FeedbackSubjectDemo = lazySection(() => import("./sections/feedback-inbox/table"), "FeedbackSubjectDemo");
+// 0.55.0: the inbox assembled once (feedback §13).
+const FeedbackInboxDemo = lazySection(() => import("./sections/feedback-inbox/table"), "FeedbackInboxDemo");
 const FeedbackDetail027Demo = lazySection(() => import("./sections/feedback-inbox/detail"), "FeedbackDetail027Demo");
 // 0.38.0: public feedback — the pages every user reads, the switch, the menu row, the notice, the types.
 const FeedbackPublic038Demo = lazySection(
@@ -379,6 +383,8 @@ const BillingSwitchDemo = lazySection(() => import("./sections/billing"), "Billi
 const OfflineDemo = lazySection(() => import("./sections/offline-demo"), "OfflineDemo");
 // 0.46: local-first phase 3, @eifi1/ui-kit/sync (docs/local-first-harmonization.md §2.3).
 const SyncDemo = lazySection(() => import("./sections/sync-demo"), "SyncDemo");
+// 0.55: the changelog parser and the release card on it (kastlan reuse audit, proposal 1).
+const ReleaseNotesPage = lazySection(() => import("./sections/release-notes"), "ReleaseNotesPage");
 const PlanChange033Demo = lazySection(() => import("./sections/admin-033-demo"), "PlanChange033Demo");
 const GroupActions034Demo = lazySection(() => import("./sections/admin-034-demo"), "GroupActions034Demo");
 // 0.42: the admin area's template (docs/admin-harmonization.md).
@@ -659,6 +665,7 @@ export const GROUPS: ShowcaseGroup[] = [
           "SearchField",
           "FloatingField",
           "FieldHint",
+          "FieldSuggestion",
           "FieldLabel",
           "FieldChevron",
           "HelpPopover",
@@ -677,6 +684,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <FieldStrip023Demo />
             <Textarea024Demo />
             <TextareaEdge025Demo />
+            <FieldSuggestionDemo />
           </>
         ),
       },
@@ -850,7 +858,15 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Picking files: a button that opens the picker or the camera, the drop area, and refusals reported where the user is looking, never as a toast.",
         icon: FileUp,
-        components: ["FileButton", "useFilePicker", "FileDropzone", "useFileDrop"],
+        components: [
+          "FileButton",
+          "useFilePicker",
+          "CameraButton",
+          "CameraCapture",
+          "useHasCamera",
+          "FileDropzone",
+          "useFileDrop",
+        ],
         Body: () => (
           <>
             <FileInputs />
@@ -1311,9 +1327,9 @@ export const GROUPS: ShowcaseGroup[] = [
         title: "Series chart: bars, areas & time",
         short: "Bars & areas",
         blurb:
-          "The same chart drawing bars, areas and stacks, over categories and real time, with reference lines, markers, dots and clicks — and a legend whose colours hold still.",
+          "The same chart drawing bars, areas and stacks, over categories and real time, with reference lines, markers, dots and clicks — a legend whose colours hold still, and the chart with its legend as one.",
         icon: ChartBar,
-        components: ["SeriesChart", "visibleSeries", "seriesLegendEntries"],
+        components: ["SeriesChart", "visibleSeries", "seriesLegendEntries", "LegendedSeriesChart"],
         Body: () => (
           <>
             <SeriesChartMarks />
@@ -1519,6 +1535,7 @@ export const GROUPS: ShowcaseGroup[] = [
           "TourMenu",
           "SyncStatusIndicator",
           "SyncStatus",
+          "HeldChangesBanner",
           "DevMenu",
           "DevMenuSection",
         ],
@@ -1543,6 +1560,7 @@ export const GROUPS: ShowcaseGroup[] = [
         icon: PanelTop,
         components: [
           "PageHeader",
+          "PageHeaderSkeleton",
           "Breadcrumbs",
           "useDocumentTitle",
           "formatDocumentTitle",
@@ -1716,6 +1734,8 @@ export const GROUPS: ShowcaseGroup[] = [
           "LegalKitSection",
           "LegalFooter",
           "LegalAcceptCheckbox",
+          "ConsentAgainNotice",
+          "DEFAULT_CONSENT_AGAIN_LABELS",
           "LEGAL_SKELETON",
           "useNoIndex",
           "OneTimeCodeInput",
@@ -1814,7 +1834,7 @@ export const GROUPS: ShowcaseGroup[] = [
         title: "Subscription",
         short: "Billing",
         blurb:
-          "Paying for an app: the plan picker in two currencies and two intervals, the subscription's status, the banners from trial to lapse, the plan-limit notice and toast, the read-only lock and the kinds of lock, the provider's portal, the way back from the checkout, the pay page, and the imprint's commercial disclaimer.",
+          "Paying for an app: the plan picker in two currencies and two intervals, the subscription's status and its standing in one line, what is used of each limit, the banners from trial to lapse, the plan-limit notice and toast, the read-only lock and the kinds of lock, the provider's portal, the way back from the checkout, the pay page, and the imprint's commercial disclaimer.",
         icon: CreditCard,
         components: [
           "PlanPicker",
@@ -1847,6 +1867,9 @@ export const GROUPS: ShowcaseGroup[] = [
           "GrantWarningConfirm",
           "openProviderPage",
           "useCancelRequest",
+          "SubscriptionStanding",
+          "subscriptionStanding",
+          "UsageMeter",
         ],
         Body: () => (
           <>
@@ -1890,6 +1913,8 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb: "The shared status vocabulary, the transition policy, and the parts an inbox is built from.",
         icon: Inbox,
         components: [
+          "FeedbackInbox",
+          "useFeedbackInbox",
           "FeedbackSubject",
           "FeedbackDetail",
           "FeedbackDetailSection",
@@ -1923,6 +1948,7 @@ export const GROUPS: ShowcaseGroup[] = [
         Body: () => (
           <>
             <FeedbackInbox />
+            <FeedbackInboxDemo />
             <FeedbackTable027Demo />
             <FeedbackSubjectDemo />
             <FeedbackDetail027Demo />
@@ -1988,6 +2014,8 @@ export const GROUPS: ShowcaseGroup[] = [
         icon: FunctionSquare,
         components: [
           "todayIso",
+          "setToday",
+          "currentDate",
           "dateRangePresets",
           "calendarMonthPresets",
           "lastFullMonthsRange",
@@ -2080,6 +2108,25 @@ export const GROUPS: ShowcaseGroup[] = [
           "writeLocalFirst",
         ],
         Body: () => <SyncDemo />,
+      },
+      {
+        // 0.55: the parser and the card the apps' changelog pages and what's-new dialog draw.
+        // In API, not App chrome: that group is at its ten pages (the phone's row of page pills).
+        slug: "release-notes",
+        title: "Release notes",
+        short: "Releases",
+        blurb:
+          "A CHANGELOG.md for a reader: the parser for the file every repository writes with commit-and-tag-version, and the card that shows one release — its version and day, its sections by key, the notes grouped by scope.",
+        icon: ScrollText,
+        components: [
+          "ReleaseNotes",
+          "DEFAULT_RELEASE_NOTES_LABELS",
+          "parseChangelog",
+          "parseChangelogItem",
+          "changelogSectionKey",
+          "groupByScope",
+        ],
+        Body: () => <ReleaseNotesPage />,
       },
     ],
   },
@@ -2179,9 +2226,9 @@ export const GROUPS: ShowcaseGroup[] = [
         title: "Limits, errors, CORS & sync",
         short: "Limits",
         blurb:
-          "The sliding-window rate limiter and whose address it counts, every kit refusal answered with its contract status, CORS for a few extra origins, the scheduler's token on job routes, and local-first sync: the latest edit wins, refusals per change.",
+          "The sliding-window rate limiter and whose address it counts, every kit refusal answered with its contract status, CORS for a few extra origins, the scheduler's token on job routes, and local-first sync: the latest edit wins, refusals per change. And the dependency audit every backend's gate runs.",
         icon: ShieldAlert,
-        serverModules: ["limiter", "errors", "cors", "jobs", "sync"],
+        serverModules: ["limiter", "errors", "cors", "jobs", "sync", "dependency_audit"],
       }),
       serverPage({
         slug: "server-translation-review",

@@ -334,6 +334,116 @@ describe("useFocusTrap", () => {
   });
 });
 
+/**
+ * The trap gives the focus back by the kit's one rule, lib/focus-left `returnFocus` (0.52
+ * code review 2026-10-31, held to 0.55): a gone opener left the focus on <body>, and a
+ * focus the app placed in `onClose` was taken back to the opener.
+ */
+describe("useFocusTrap's release, by the focus-restore rule", () => {
+  /** A row of three, the middle one opening a panel; `close` can take the opener with it. */
+  function Row({ named = false, appFocus = false }: { named?: boolean; appFocus?: boolean }) {
+    const [open, setOpen] = useState(false);
+    const [openerGone, setOpenerGone] = useState(false);
+    const [openerOff, setOpenerOff] = useState(false);
+    const trigger = useRef<HTMLButtonElement>(null);
+    const after = useRef<HTMLButtonElement>(null);
+    return (
+      <>
+        <button>before</button>
+        {!openerGone && (
+          <button ref={trigger} disabled={openerOff} onClick={() => setOpen(true)}>
+            open
+          </button>
+        )}
+        <button ref={after}>after</button>
+        {open && (
+          <NamedPanel opener={named ? () => trigger.current : undefined}>
+            <button onClick={() => setOpen(false)}>close</button>
+            <button
+              onClick={() => {
+                setOpenerGone(true);
+                setOpen(false);
+              }}
+            >
+              delete the row
+            </button>
+            <button
+              onClick={() => {
+                setOpenerOff(true);
+                setOpen(false);
+              }}
+            >
+              lock the row
+            </button>
+            <button
+              onClick={() => {
+                setOpen(false);
+                if (appFocus) after.current?.focus();
+              }}
+            >
+              close to after
+            </button>
+          </NamedPanel>
+        )}
+      </>
+    );
+  }
+  function NamedPanel({ opener, children }: { opener?: () => Element | null; children: React.ReactNode }) {
+    const ref = useRef<HTMLDivElement>(null);
+    useFocusTrap(ref, { opener });
+    return (
+      <div ref={ref} tabIndex={-1} data-testid="panel">
+        {children}
+      </div>
+    );
+  }
+  const button = (name: string) => screen.getByRole("button", { name });
+  const openFromTrigger = () => {
+    button("open").focus();
+    fireEvent.click(button("open"));
+    expect(screen.getByTestId("panel")).toHaveFocus();
+  };
+
+  it("gives a gone opener's focus to the stop that stood after it, not to <body>", () => {
+    render(<Row />);
+    openFromTrigger();
+    fireEvent.click(button("delete the row"));
+    expect(button("after")).toHaveFocus();
+  });
+
+  it("passes over an opener that can no longer take the focus", () => {
+    render(<Row />);
+    openFromTrigger();
+    fireEvent.click(button("lock the row"));
+    expect(button("open")).toBeDisabled();
+    expect(button("after")).toHaveFocus();
+  });
+
+  it("keeps a focus the app placed itself as it closed", () => {
+    render(<Row appFocus />);
+    openFromTrigger();
+    // `before` is not where the opener is: the app chose it.
+    fireEvent.click(button("close to after"));
+    expect(button("after")).toHaveFocus();
+  });
+
+  it("goes to a named opener when the panel was opened with the focus on the page", () => {
+    render(<Row named />);
+    // Safari: the click does not focus the trigger, so what had the focus was <body>.
+    expect(document.activeElement).toBe(document.body);
+    fireEvent.click(button("open"));
+    fireEvent.click(button("close"));
+    expect(button("open")).toHaveFocus();
+  });
+
+  it("…and without one leaves the page's own <body> alone rather than guessing", () => {
+    render(<Row />);
+    fireEvent.click(button("open"));
+    fireEvent.click(button("close"));
+    expect(document.activeElement).toBe(document.body);
+  });
+});
+
 describe("tabStops / firstTabStop", () => {
   // The trap's reading of "a Tab lands here", for a part that walks Tab without a trap —
   // the tour's field + card ring (refactor audit 2026-10-30, DUP-9).

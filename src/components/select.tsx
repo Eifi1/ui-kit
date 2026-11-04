@@ -3,7 +3,7 @@ import type { KeyboardEvent, MouseEvent, ReactNode, Ref, SelectHTMLAttributes } 
 import { cn } from "../lib/cn";
 import type { CommitScope } from "./write-lock";
 import {
-  LockedReason,
+  LockFrame,
   mergeDescribedBy,
   type DisabledReasonDisplay,
   type FieldHelpProps,
@@ -185,14 +185,11 @@ export function Select(props: SelectProps) {
   // becomes the outermost box — so `className` (a width, a grid cell) moves onto it, and
   // the form keeps its layout. `block` so a full-width field stays full width inside it.
   const boxClass = locked ? undefined : className;
-  const withReason = (box: ReactNode) =>
-    locked ? (
-      <LockedReason lock={lock} display={disabledReasonDisplay} className={cn("block", className)}>
-        {box}
-      </LockedReason>
-    ) : (
-      box
-    );
+  const withReason = (box: ReactNode) => (
+    <LockFrame lock={lock} display={disabledReasonDisplay} className={className}>
+      {box}
+    </LockFrame>
+  );
   if (label === undefined) {
     const select = (
       <select

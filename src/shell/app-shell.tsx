@@ -1,4 +1,5 @@
 import {
+  Suspense,
   createContext,
   useCallback,
   useContext,
@@ -271,6 +272,30 @@ export interface AppShellProps extends ComponentPropsWithoutRef<"div"> {
   topBar: ReactNode;
   /** Main content — typically the router `<Outlet />`. */
   children: ReactNode;
+  /**
+   * What the content area shows while a page in `children` suspends — a lazy route's
+   * chunk on its way (0.55). Given, the shell wraps `children` in `<Suspense
+   * fallback={pageFallback}>` INSIDE `<main>`, so the top bar, the sidebar and the bottom
+   * bar are there at once and only the content area waits. keksdose's boundary sat ABOVE
+   * the shell until 2026-10-27, and every app load was one centred spinner where the whole
+   * app would be (its `PageSuspense`); kastlan (`lazyPage`) and Kurvenschmiede (routes'
+   * `Page`) each put one per route inside the `Outlet`. This is the one boundary, in one
+   * place, for all three.
+   *
+   * Which outline fits which route stays the app's: the fallback renders under the
+   * router, so it can read the path (keksdose's `PageSkeleton` draws the budget's tables
+   * for `/budget`), and it is the app's to hold back for a frame or two (keksdose waits
+   * 150 ms, so a chunk from the service worker's cache does not flash an outline).
+   * `PageHeaderSkeleton` over a `TableSkeleton` is the kit's pieces for one,
+   * `<LoadingState />` the plain one.
+   *
+   * Everything in `children` waits together, a banner above the `<Outlet />` included;
+   * a boundary of the app's own inside it still catches first, so a per-route one keeps
+   * working beside this. Left out, there is no boundary here and a suspending page goes on
+   * to the app's own, as before. `null` is a boundary that shows nothing. Set it for the
+   * shell's life: turning it on or off later mounts the page afresh.
+   */
+  pageFallback?: ReactNode;
   /** Desktop-only footer rendered below the content (hidden on mobile). */
   footer?: ReactNode;
   /** Extra sidebar content above the collapse toggle (e.g. a version link).
@@ -446,6 +471,7 @@ export function AppShell({
   nav,
   topBar,
   children,
+  pageFallback,
   footer,
   sidebarFooter,
   sidebarFooterItems,
@@ -674,7 +700,11 @@ export function AppShell({
                 embedded && "min-h-0 overflow-y-auto",
               )}
             >
-              {children}
+              {/* `undefined` and not `null` decides it: `null` is a boundary with an empty
+                  fallback, and "no prop" must stay what it was before 0.55 — no boundary,
+                  the suspension going on to the app's own. The boundary adds no element,
+                  so `<main>`'s rules above still see the page as its child. */}
+              {pageFallback === undefined ? children : <Suspense fallback={pageFallback}>{children}</Suspense>}
             </main>
             {footer}
           </div>

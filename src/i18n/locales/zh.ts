@@ -562,6 +562,16 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       removed: (name) => `已移除“${name}”`,
       cleared: "已移除所有文件",
     },
+    camera: {
+      takePhoto: "拍照",
+      choosePhoto: "添加照片",
+      title: "相机",
+      hint: "对准拍摄对象，然后点击快门。",
+      starting: "正在启动相机…",
+      shutter: "拍摄照片",
+      taken: (count) => `已拍摄 ${n(count)} 张照片。`,
+      done: (count) => `使用 ${n(count)} 张照片`,
+    },
     wizard: {
       done: "完成",
       cancel: "取消",
@@ -707,6 +717,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       empty: "无数据",
       legend: "数据系列",
       points: "图表数值",
+      nameFromAxes: (ordinates, abscissa) => (abscissa ? `${ordinates} 随 ${abscissa} 的变化` : ordinates),
     },
     pieChart: {
       slices: "图表扇区",
@@ -1615,6 +1626,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       accessName: "姓名：",
       accessCompany: "公司：",
       accessUse: "用途：",
+      siteNavLabel: "更多页面",
     },
     demo: {
       starting: "正在启动演示…",
@@ -1670,6 +1682,17 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         // As `invitations.status.expired`.
         expired: "已过期",
         comped: "免费赠送",
+      },
+      // 0.55 (§7, Marcel 2026-11-04): the standing line; `ended` is the first sentence of
+      // `planEnded`, "付款未成功" as `paymentFailedAskBuyer`.
+      standing: {
+        ended: "您的套餐已结束。",
+        pastDue: "付款未成功，我们正在重试。在此期间，您的套餐仍然有效。",
+        trialUntil: (date) => `试用至 ${date}`,
+        freeUntil: (date) => `免费使用至 ${date}`,
+        free: "免费，无结束日期",
+        endsOn: (date) => `将于 ${date} 结束`,
+        renewsOn: (date) => `将于 ${date} 续订`,
       },
       trialEnding: (days) => `您的试用期将于${inDays(days)}结束。之后您仍可查看所有内容，但需要套餐才能进行修改。`,
       grantEnding: (days) => `您的免费使用权将于${inDays(days)}结束。之后您仍可查看所有内容，但需要套餐才能进行修改。`,
@@ -1876,6 +1899,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         refusedShort: "未同步",
         offlineUnsaved: "离线——重新连接前无法保存修改",
         saving: "正在保存…",
+        waitingForTab: "正在等待另一个标签页完成同步",
+        waitingForTabShort: "等待其他标签页",
       },
       dev: {
         menu: "开发工具",
@@ -1905,6 +1930,49 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     sharedComputer: {
       label: "这是一台共用电脑",
       hint: "此设备上不会保留您的数据副本。页面将只能在联网时打开。",
+    },
+    // 0.55 — docs/top-bar-harmonization.md §2.6.1: keksdose's words (sync.held_*,
+    // sync.discard_held_*, sync.switch_back_held) without its budgets.
+    heldChanges: {
+      message: (count) => `${n(count)} 项修改无法从这里发送。它们会保留在此设备上，直到可以发送或您将其放弃。`,
+      switchBack: "切换回去",
+      discard: "放弃…",
+      confirmTitle: (count) => `放弃 ${n(count)} 项无法从这里发送的修改？`,
+      confirmBody: () => "放弃后无法恢复。此设备随后将与服务器上的数据同步。",
+      confirmAction: "放弃",
+      failed: "操作未成功，请重试。",
+    },
+    // 0.55 (keksdose dev #638): the "suggested from" caption under a field — the kit's
+    // default when the app names no source, and the button that takes the value back out.
+    fieldSuggestion: {
+      suggested: "建议值",
+      clear: "清除",
+      clearName: (field) => (field ? `清除“${field}”的建议值` : "清除建议值"),
+    },
+    // 0.55: keksdose's words (price_pool.reconsent.*), translated; it ships no Chinese.
+    consentAgain: {
+      agree: "同意",
+      notNow: "暂不",
+      changesToggle: "查看变更内容",
+      wordingToggle: "显示完整条文：此前与今后",
+      beforeHeading: "此前",
+      nowHeading: "今后",
+      removed: "已删除：",
+      added: "已新增：",
+    },
+    // 0.55: keksdose's headings (changelog.section_*), translated; it ships no Chinese.
+    releaseNotes: {
+      version: (version) => `v${version}`,
+      sections: {
+        breaking: "不兼容的变更",
+        added: "新增",
+        changed: "变更",
+        fixed: "修复",
+        deprecated: "弃用",
+        removed: "移除",
+        security: "安全",
+        reverted: "撤销",
+      },
     },
   };
 }

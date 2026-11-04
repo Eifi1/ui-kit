@@ -8,11 +8,12 @@ import {
   PALETTE_HEX,
   PALETTE_SIZE,
   chartEdge,
+  chartShade,
   lerpHex,
   paletteFor,
   textOn,
 } from "../chart-palette";
-import { contrast } from "../color";
+import { contrast, hexToOklch } from "../color";
 import { DEFAULT_PRESET, PALETTES, PAUL_TOL_PRESET, presetById } from "../palette-presets";
 
 /**
@@ -244,5 +245,59 @@ describe("chartEdge — the WCAG 1.4.11 ink edge", () => {
   it("keeps the muted ink legible against every default surface", () => {
     for (const s of LIGHT) expect(contrast(CHART_MUTED_HEX.light, s)).toBeGreaterThanOrEqual(3);
     for (const s of DARK) expect(contrast(CHART_MUTED_HEX.dark, s)).toBeGreaterThanOrEqual(3);
+  });
+});
+
+// 0.55 (held back from 0.53's code review): under More contrast a SeriesChart bar or area in
+// a hue under 3:1 is edged in its own shade that clears it, where 0.52 outlined it in ink.
+describe("chartShade — a hue's own shade that clears 3:1", () => {
+  const LIGHT = ["#ede3cf", "#f6ecd9"];
+  const DARK = ["#0e0f1c", "#181a2c"];
+  const hueOf = (hex: string) => hexToOklch(hex)!.h;
+  /** Two hue angles apart, round the circle. */
+  const turn = (a: number, b: number) => Math.abs(((a - b + 540) % 360) - 180);
+
+  it("leaves a hue that clears 3:1 on every ground as it is", () => {
+    expect(chartShade("#4467a3", LIGHT)).toBe("#4467a3");
+    expect(chartShade("#2abccd", DARK)).toBe("#2abccd");
+  });
+
+  it("shades every hue under 3:1 until it clears the rule on both grounds, keeping its hue", () => {
+    for (const [surfaces, mode] of [
+      [LIGHT, "light"],
+      [DARK, "dark"],
+    ] as const) {
+      for (const hex of PALETTE_HEX[mode]) {
+        if (chartEdge(hex, surfaces) === undefined) continue;
+        const shade = chartShade(hex, surfaces)!;
+        const what = `${mode} ${hex} → ${shade}`;
+        for (const s of surfaces) expect(contrast(shade, s), what).toBeGreaterThanOrEqual(EDGE_MIN_CONTRAST);
+        // The same hue, a few degrees at most where the gamut takes some chroma.
+        expect(turn(hueOf(shade), hueOf(hex)), what).toBeLessThan(6);
+        // Darker on the light page, lighter on the dark one.
+        const l = (c: string) => hexToOklch(c)!.l;
+        if (mode === "light") expect(l(shade), what).toBeLessThan(l(hex));
+        else expect(l(shade), what).toBeGreaterThan(l(hex));
+        // No further than it has to go: just over the rule on the worse ground.
+        const worst = Math.min(...surfaces.map((s) => contrast(shade, s)));
+        expect(worst, what).toBeLessThan(EDGE_MIN_CONTRAST + 0.15);
+      }
+    }
+  });
+
+  it("shades cyan and lime on cream, and red and rose on the dark ground", () => {
+    for (const hex of ["#2abccd", "#99b314"]) expect(chartShade(hex, LIGHT)).not.toBe(hex);
+    for (const hex of ["#ae3030", "#954477"]) expect(chartShade(hex, DARK)).not.toBe(hex);
+  });
+
+  it("answers nothing for a colour or grounds it cannot measure", () => {
+    expect(chartShade("var(--chart-1)", LIGHT)).toBeUndefined();
+    expect(chartShade("#2abccd", [])).toBeUndefined();
+    expect(chartShade("#2abccd", ["not-a-colour"])).toBeUndefined();
+  });
+
+  it("takes another rule when asked: 4.5:1, as text", () => {
+    const shade = chartShade("#2abccd", LIGHT, 4.5)!;
+    for (const s of LIGHT) expect(contrast(shade, s)).toBeGreaterThanOrEqual(4.5);
   });
 });

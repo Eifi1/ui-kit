@@ -17,13 +17,13 @@ import {
  * standard/More contrast (0.33, docs/colour-roles-harmonization.md §5.5, §12.10).
  *
  * The preset audit (`palette-audit.test.ts`) measures a `TokenSet` against itself. It
- * never saw the stylesheet's own literals — the status family, the hues, the field-sync
- * colours — against a preset's surfaces, and that is where the claims were wrong: light
- * `--warning` sat at 3.86:1 as text, `--danger-border-strong` at 2.07:1 where its comment
- * claimed 3:1, `--status-edited` at 2.45:1 where its comment said "all four clear it".
- * The cream and tinted grounds are darker than the white Tailwind's 700s are made for.
- * Nothing here is taken from a comment: each pair is resolved through the cascade a
- * browser would apply (`src/test/tokens-css.ts`) and measured.
+ * never saw the stylesheet's own literals — the status family, the hues, and until 0.55
+ * the field-sync colours — against a preset's surfaces, and that is where the claims were
+ * wrong: light `--warning` sat at 3.86:1 as text, `--danger-border-strong` at 2.07:1 where
+ * its comment claimed 3:1, `--status-edited` at 2.45:1 where its comment said "all four
+ * clear it". The cream and tinted grounds are darker than the white Tailwind's 700s are
+ * made for. Nothing here is taken from a comment: each pair is resolved through the
+ * cascade a browser would apply (`src/test/tokens-css.ts`) and measured.
  *
  * Text is measured on the darkest fill it can sit on, not only the page: a hovered row
  * on the card (`--bg-hover`), which in light is a shade darker than the page (§12.10).
@@ -201,18 +201,9 @@ describe("tokens.css, measured in every shipped preset", () => {
     ).toEqual([]);
   });
 
-  it("draws the strong lines and the field-sync marks at 3:1 against every surface", () => {
+  it("draws the strong lines and the chart inks at 3:1 against every surface", () => {
     // 0.49: the chart inks — an edge, a baseline, an "other" slice — are lines too.
-    const lines = [
-      "--danger-border-strong",
-      "--warning-border-strong",
-      "--status-synced",
-      "--status-pending",
-      "--status-edited",
-      "--status-error",
-      "--chart-ink",
-      "--chart-muted",
-    ];
+    const lines = ["--danger-border-strong", "--warning-border-strong", "--chart-ink", "--chart-muted"];
     expect(
       audit((t, fail) => {
         for (const line of lines) {
@@ -292,15 +283,7 @@ describe("More contrast's light well (0.36, colour-roles §13)", () => {
   const DARK_MORE = VARIANTS.filter((v) => v.mode === "dark" && v.more);
 
   /** The literals the `:root[data-contrast="more"]:not(.dark)` block steps (§13.3). */
-  const MORE_LITERALS = [
-    "--danger",
-    "--warning",
-    "--success",
-    "--info",
-    "--hue-teal",
-    "--hue-orange",
-    "--status-edited",
-  ];
+  const MORE_LITERALS = ["--danger", "--warning", "--success", "--info", "--hue-teal", "--hue-orange"];
 
   it("steps the light well to stand 1.17:1 from the card, in every preset", () => {
     expect(LIGHT_MORE).toHaveLength(PALETTES.length);

@@ -1,0 +1,7 @@
+@import "tailwindcss";
+/* The kit's tokens and global chrome, as an app imports them (after Tailwind). */
+@import "../../../tokens.css";
+
+/* The kit's SOURCE, as the showcase scans it, and this page's own classes. */
+@source "../../../src";
+@source ".";

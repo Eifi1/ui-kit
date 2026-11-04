@@ -138,7 +138,7 @@ export const en: Dictionary = {
       title: "Subscription",
       short: "Billing",
       blurb:
-        "Paying for an app: the plan picker in two currencies and two intervals, the subscription's status, the banners from trial to lapse, the plan-limit notice and toast, the read-only lock and the kinds of lock, the provider's portal, the way back from the checkout, the pay page, and the imprint's commercial disclaimer.",
+        "Paying for an app: the plan picker in two currencies and two intervals, the subscription's status and its standing in one line, what is used of each limit, the banners from trial to lapse, the plan-limit notice and toast, the read-only lock and the kinds of lock, the provider's portal, the way back from the checkout, the pay page, and the imprint's commercial disclaimer.",
     },
     offline: {
       title: "Offline",
@@ -151,6 +151,12 @@ export const en: Dictionary = {
       short: "Sync",
       blurb:
         "Working on the device's copy: the sync engine with its queue, one request per scope, refused changes kept, the waits after an error and the guarded sign-out; its worker, its status for the indicator and the live read of the copy.",
+    },
+    "release-notes": {
+      title: "Release notes",
+      short: "Releases",
+      blurb:
+        "A CHANGELOG.md for a reader: the parser for the file every repository writes with commit-and-tag-version, and the card that shows one release — its version and day, its sections by key, the notes grouped by scope.",
     },
     "auth-account": {
       title: "Sign-in & account security",
@@ -388,7 +394,7 @@ export const en: Dictionary = {
       title: "Series chart: bars, areas & time",
       short: "Bars & areas",
       blurb:
-        "The same chart drawing bars, areas and stacks, over categories and real time, with reference lines, markers, dots and clicks — and a legend whose colours hold still.",
+        "The same chart drawing bars, areas and stacks, over categories and real time, with reference lines, markers, dots and clicks — a legend whose colours hold still, and the chart with its legend as one.",
     },
     stats: {
       title: "Stats & sparklines",
@@ -575,7 +581,7 @@ export const en: Dictionary = {
       title: "Limits, errors, CORS & sync",
       short: "Limits",
       blurb:
-        "The sliding-window rate limiter and whose address it counts, every kit refusal answered with its contract status, CORS for a few extra origins, the scheduler's token on job routes, and local-first sync: the latest edit wins, refusals per change.",
+        "The sliding-window rate limiter and whose address it counts, every kit refusal answered with its contract status, CORS for a few extra origins, the scheduler's token on job routes, and local-first sync: the latest edit wins, refusals per change. And the dependency audit every backend's gate runs.",
     },
     "server-translation-review": {
       title: "Translation review",
@@ -658,6 +664,14 @@ export const en: Dictionary = {
       "keep changes waiting for a plan",
       "show the sync status",
       "read the device's copy live",
+    ],
+    "release-notes": [
+      "show what changed in a release",
+      "a changelog page",
+      "a what's-new dialog after an update",
+      "parse CHANGELOG.md",
+      "group release notes by scope",
+      "translate the changelog's section headings",
     ],
     "auth-account": [
       "login page layout",

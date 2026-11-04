@@ -254,7 +254,16 @@ export function PublicPage051Demo() {
         <div className="overflow-hidden rounded-md border border-subtle bg-page">
           <PublicPage
             header={<PublicHeader brand={BRAND} session="none" access={ACCESS_REQUEST} className="static" />}
-            footer={<PublicFooter tagline="Garden planning for small plots." landmark={false} />}
+            footer={
+              <PublicFooter
+                tagline="Garden planning for small plots."
+                landmark={false}
+                siteLinks={[
+                  { href: "/changelog", label: "Changelog" },
+                  { href: "/status", label: "Status" },
+                ]}
+              />
+            }
             title="What the gardens harvest"
             description="Monthly figures from the gardens that share theirs, per region. Counts are bucketed; no garden is shown on its own."
             actions={<ToggleGroup aria-label="Region" value={region} onChange={setRegion} options={[...REGIONS]} />}
@@ -284,6 +293,11 @@ export function PublicPage051Demo() {
         reading column), the title with an optional description, back link and actions, and the public footer (the three
         legal links by default). {code("seo")} has no default: a page to be found names its canonical path (
         {code("usePageSeo")}), a page to keep out says {code('"noindex"')}, and only a preview passes {code("null")}.
+      </Note>
+      <Note>
+        The footer here carries {code("siteLinks")}, the app&apos;s other public pages (a changelog, a status page, the
+        docs): a row of their own above the legal links, the same look, in a {code("<nav>")} named &ldquo;More
+        pages&rdquo; ({code("landing.siteNavLabel")}), so a screen reader does not hear them announced as legal ones.
       </Note>
     </Example>
   );

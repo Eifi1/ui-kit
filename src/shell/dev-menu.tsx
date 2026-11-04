@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { FlaskConical, Undo2 } from "lucide-react";
 import { DEFAULT_TOP_BAR_LABELS, useKitLabels, type LabelOverride } from "../i18n/kit-labels";
@@ -7,6 +7,8 @@ import { useTopBarPartsLabels, type DevSwitchersLabels } from "./top-bar-parts-l
 // The kit's one storage guard, which 0.51 wrote here again by hand (DUP-8, refactor audit
 // 2026-10-30). Storage blocked, "Back to" lasts as long as this page.
 import { readSessionStored, writeSessionStored } from "../lib/safe-storage";
+// The kit's one "today" (0.55): a day moved there is an override on, whatever `active` says.
+import { subscribeToday, todayOverride } from "../lib/dates";
 
 /** Where the role the session started with is kept, unless the app names its own key. */
 export const DEV_ORIGINAL_ROLE_KEY = "ui-kit:dev-original-role";
@@ -80,6 +82,9 @@ export interface DevMenuProps<R extends string, P extends string> {
    * today, a simulated slow server. The flask wears a dot, and its name says so ("Dev
    * tools · Role: ADMIN · Plan: free Overrides on"), since a dot alone tells a screen
    * reader nothing. The app decides what counts; the kit cannot see into its sections.
+   *
+   * 0.55: a "today" the app moved with `setToday` (`@eifi1/ui-kit/dates`, the dev clock's
+   * day) counts by itself — the dot is on while one is set, `active` or not.
    */
   active?: boolean;
 }
@@ -136,6 +141,8 @@ export function DevMenu<R extends string, P extends string>({
   active = false,
 }: DevMenuProps<R, P>) {
   const bar = useKitLabels("topBar", DEFAULT_TOP_BAR_LABELS);
+  // Server render: no day is moved there.
+  const movedToday = useSyncExternalStore(subscribeToday, todayOverride, () => null);
   const words = useTopBarPartsLabels(labelsProp ? { dev: labelsProp } : undefined).dev;
   const [kept, setKept] = useState<string | null>(() => (enabled ? readSessionStored(storageKey) : null));
   // 0.43 (keksdose): `enabled` may start false and turn true — an app's GET probe of the
@@ -247,7 +254,7 @@ export function DevMenu<R extends string, P extends string>({
       icon={flask}
       // The badge's words join the trigger's name, as the tours compass's NEW dot does.
       // `danger`, the badge's default: an amber dot would vanish into the amber flask.
-      iconBadge={active ? { label: words.overridesOn } : null}
+      iconBadge={active || movedToday !== null ? { label: words.overridesOn } : null}
       aria-label={name}
       entries={entries}
       scrollable

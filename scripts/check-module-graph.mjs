@@ -35,6 +35,14 @@ if (!existsSync(chart)) fail(`${chart} is missing — run \`npm run build\` firs
 if (!readFileSync(chart, "utf8").includes('from "recharts"')) {
   fail(`${chart} no longer imports recharts itself — the build bundled it`);
 }
+// And the map imports none (0.55): it draws itself (treemap.tsx, "The picture"), and recharts
+// reaches it only through the chart shell's ResponsiveContainer. Its own import was
+// recharts' `<Treemap>` and the chart store behind it: `{ Treemap }` with recharts bundled
+// was 269 kB minified (84 kB gzip) at 0.54, and is 30 kB (13 kB gzip) without it.
+const treemap = "dist/components/treemap.js";
+if (readFileSync(treemap, "utf8").includes('from "recharts"')) {
+  fail(`${treemap} imports recharts again — the map draws itself since 0.55`);
+}
 
 // One file per source module, not a bundle: a bundling build collapses these. The floor
 // is the source tree itself (tests, the test harness and ambient .d.ts excepted).
@@ -231,7 +239,26 @@ const BUDGETS = [
   // 155,155 B (53,319 gzip) after the 0.52 code review's fixes: lazyWithFallback (the
   // feedback dialog's and the palette's failed chunk no longer takes the shell down), the
   // tour's chunk-failure and Escape-while-loading paths, the hotkey fixes — meant growth.
-  { label: "the shell set", names: SHELL_SET, max: 155_600 },
+  // 155,656 B (53,533 gzip) in 0.55, from 155,365 (53,381) at 0.54: Modal's
+  // `onDismissRefused` and useOverlayHistory's `onRefused`, which tell the app which
+  // dismissal `busy` or `held` refused (0.54 follow-up, keksdose recovery-code-pane) —
+  // meant growth.
+  // 155,999 B (53,642 gzip) with AppShell's `pageFallback`, the Suspense round the content
+  // area (0.55, keksdose 2026-10-27) — meant growth, +58 B. Measured from 155,941 (53,636)
+  // at 6421f1d, the feat/0.55.0 tip it was built on, already over the 155,700 above.
+  // 157,399 B (54,031 gzip) in 0.55 with Button's and IconButton's `refused` (useRefusal
+  // and the refused look; 0.52 code review 2026-10-31, held to 0.55): 167 B over the
+  // 157,232 (53,976) the branch measured before it, at b330f09 — meant growth. That
+  // figure was over 155,700 already, from the round's commits since the line above, none
+  // of which raised the ceiling: 6421f1d (SubscriptionStanding, UsageMeter) took the set
+  // from 155,666 (53,540) to 155,941 (53,636), and the commits after it to 157,232.
+  // { Button } is 19,454 B with `refused`, from 19,243, under its own.
+  // 158,632 B (54,513 gzip) with the one focus-restore rule (lib/focus-left `returnFocus`;
+  // 0.52 code review 2026-10-31, held to 0.55): every trap now reads the stops around its
+  // opener as it engages and gives a gone opener's focus to them, so tabStopsAround,
+  // focusFirst and focusIsLost ride with useFocusTrap, and the shell's overlays read the
+  // rule — meant growth, 1,233 B.
+  { label: "the shell set", names: SHELL_SET, max: 158_700 },
 ];
 const ENTRY = "\0import-cost";
 async function importCost(names) {
@@ -293,6 +320,6 @@ for (const { label, names, max } of BUDGETS) {
 }
 
 console.log(
-  `✓ module graph preserved: ${files} modules, no import cycle, chart keeps its own recharts import, ` +
+  `✓ module graph preserved: ${files} modules, no import cycle, chart keeps its own recharts import (the map none), ` +
     `${catalogues.length} catalogues reach nothing outside i18n/\n  import cost, minified: ${costs.join(" · ")}`,
 );

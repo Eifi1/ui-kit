@@ -589,6 +589,18 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       removed: (name) => `„${name}“ entfernt`,
       cleared: "Alle Dateien entfernt",
     },
+    // keksdose's de-CH invoices.take_photo, camera_starting, camera_shutter and
+    // shots_captured; kastlan's handover.takePhoto ("Kamera") and wizard addPhoto.
+    camera: {
+      takePhoto: "Foto aufnehmen",
+      choosePhoto: "Foto hinzufügen",
+      title: "Kamera",
+      hint: "Motiv ausrichten und auslösen.",
+      starting: "Kamera wird gestartet…",
+      shutter: "Foto aufnehmen",
+      taken: (count) => (count === 1 ? "1 Foto aufgenommen." : `${n(count)} Fotos aufgenommen.`),
+      done: (count) => (count === 1 ? "1 Foto übernehmen" : `${n(count)} Fotos übernehmen`),
+    },
     wizard: {
       done: "Fertig",
       cancel: "Abbrechen",
@@ -736,6 +748,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       empty: "Keine Daten",
       legend: "Datenreihen",
       points: "Diagrammwerte",
+      // Kurvenschmiede's de-CH `common.chart_name` (0.55), as every catalogue takes its own.
+      nameFromAxes: (ordinates, abscissa) => (abscissa ? `${ordinates} über ${abscissa}` : ordinates),
     },
     pieChart: {
       slices: "Diagrammsegmente",
@@ -1712,6 +1726,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       // "Unternehmen", as `companySwitcher`.
       accessCompany: "Unternehmen:",
       accessUse: "Wofür Sie die App nutzen möchten:",
+      siteNavLabel: "Weitere Seiten",
     },
     demo: {
       starting: "Demo wird gestartet…",
@@ -1773,6 +1788,19 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         expired: "Abgelaufen",
         // Not "Kostenlos", the price of the Free plan: free by the operator's grant.
         comped: "Kostenlos gewährt",
+      },
+      // 0.55 (§7, Marcel 2026-11-04): the standing line. keksdose's reviewed de-CH
+      // (`billing.trial_until`, …); `ended` is the first sentence of `planEnded`, and
+      // "Die Zahlung ist fehlgeschlagen" as `paymentFailedAskBuyer`.
+      standing: {
+        ended: "Ihr Tarif ist abgelaufen.",
+        pastDue:
+          "Die Zahlung ist fehlgeschlagen – wir versuchen es erneut. Ihr Tarif bleibt in der Zwischenzeit aktiv.",
+        trialUntil: (date) => `Testphase bis ${date}`,
+        freeUntil: (date) => `Kostenlos bis ${date}`,
+        free: "Kostenlos, ohne Enddatum",
+        endsOn: (date) => `Endet am ${date}`,
+        renewsOn: (date) => `Verlängert sich am ${date}`,
       },
       trialEnding: (days) =>
         `Ihre Testphase endet ${inDays(days)}. Danach können Sie weiterhin alles ansehen, für Änderungen brauchen Sie aber einen Tarif.`,
@@ -2019,6 +2047,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         refusedShort: "Nicht synchronisiert",
         offlineUnsaved: "Offline – Änderungen können erst nach erneuter Verbindung gespeichert werden",
         saving: "Wird gespeichert…",
+        waitingForTab: "Wartet, bis ein anderer Tab mit dem Synchronisieren fertig ist",
+        waitingForTabShort: "Wartet auf Tab",
       },
       dev: {
         menu: "Dev-Werkzeuge",
@@ -2054,6 +2084,58 @@ export function germanLabels(numberLocale: string): UiKitLabels {
     sharedComputer: {
       label: "Dies ist ein gemeinsam genutzter Computer",
       hint: "Auf diesem Gerät bleibt keine Kopie Ihrer Daten. Seiten öffnen sich dann nur mit einer Verbindung.",
+    },
+    // 0.55 — docs/top-bar-harmonization.md §2.6.1: keksdose's reviewed words (sync.held_*,
+    // sync.discard_held_*, sync.switch_back_held) without its budgets.
+    heldChanges: {
+      message: (count) =>
+        count === 1
+          ? `${n(count)} Änderung kann von hier aus nicht gesendet werden. Sie bleibt auf diesem Gerät, bis sie gesendet werden kann oder bis Sie sie verwerfen.`
+          : `${n(count)} Änderungen können von hier aus nicht gesendet werden. Sie bleiben auf diesem Gerät, bis sie gesendet werden können oder bis Sie sie verwerfen.`,
+      switchBack: "Zurückwechseln",
+      discard: "Verwerfen…",
+      confirmTitle: (count) =>
+        count === 1
+          ? `${n(count)} Änderung verwerfen, die von hier aus nicht gesendet werden kann?`
+          : `${n(count)} Änderungen verwerfen, die von hier aus nicht gesendet werden können?`,
+      confirmBody: (count) =>
+        count === 1
+          ? "Sie lässt sich nicht wiederherstellen. Dieses Gerät synchronisiert anschließend mit dem Stand des Servers."
+          : "Sie lassen sich nicht wiederherstellen. Dieses Gerät synchronisiert anschließend mit dem Stand des Servers.",
+      confirmAction: "Verwerfen",
+      failed: "Das hat nicht geklappt. Bitte erneut versuchen.",
+    },
+    // 0.55 (keksdose dev #638): the "suggested from" caption under a field — the kit's
+    // default when the app names no source, and the button that takes the value back out.
+    fieldSuggestion: {
+      suggested: "Vorgeschlagen",
+      clear: "Entfernen",
+      clearName: (field) => (field ? `Vorschlag für „${field}“ entfernen` : "Vorschlag entfernen"),
+    },
+    // 0.55: keksdose's reviewed words (price_pool.reconsent.*) without its price pool.
+    consentAgain: {
+      agree: "Zustimmen",
+      notNow: "Nicht jetzt",
+      changesToggle: "Änderungen ansehen",
+      wordingToggle: "Ganzen Wortlaut zeigen, bisher und neu",
+      beforeHeading: "Bisher",
+      nowHeading: "Neu",
+      removed: "Entfernt:",
+      added: "Hinzugefügt:",
+    },
+    // 0.55: keksdose's reviewed headings (changelog.section_*) where it had one.
+    releaseNotes: {
+      version: (version) => `v${version}`,
+      sections: {
+        breaking: "Inkompatible Änderungen",
+        added: "Neu",
+        changed: "Geändert",
+        fixed: "Behoben",
+        deprecated: "Veraltet",
+        removed: "Entfernt",
+        security: "Sicherheit",
+        reverted: "Zurückgenommen",
+      },
     },
   };
 }

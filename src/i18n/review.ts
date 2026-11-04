@@ -161,6 +161,11 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "tour.step": [[2, 4]],
   "tour.backToStep": [["{{title}}"]],
   "globalSearch.shortcut": [["{{keys}}"]],
+  // The second form is a chart that leaves its abscissa to another (0.55): ordinates only.
+  "seriesChart.nameFromAxes": [
+    ["{{ordinates}}", "{{abscissa}}"],
+    ["{{ordinates}}", undefined],
+  ],
   "pieChart.slice": [["{{label}}", "{{value}}", "{{percent}}"]],
   "pieChart.sliceShare": [["{{label}}", "{{percent}}"]],
   // The second form is `shareInValue` (0.53): no share, and nothing round it.
@@ -207,6 +212,8 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "filePicker.remove": [["{{name}}"]],
   "filePicker.removed": [["{{name}}"]],
   "filePicker.hint": [["{{accept}}"], [""]],
+  "camera.taken": one,
+  "camera.done": one,
   "measuredGrid.removeRow": [[3]],
   "measuredGrid.cell": [["{{column}}", 3]],
   "measuredGrid.lineError": [[3]],
@@ -419,6 +426,11 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "billing.buyerHolds": [["{{buyer}}"], [undefined]],
   "billing.paymentFailedAskBuyer": [["{{buyer}}"], [undefined]],
   "billing.cancelConfirmBody": [["{{date}}"]],
+  // 0.55 (§7): the standing line's dated words.
+  "billing.standing.trialUntil": [["{{date}}"]],
+  "billing.standing.freeUntil": [["{{date}}"]],
+  "billing.standing.endsOn": [["{{date}}"]],
+  "billing.standing.renewsOn": [["{{date}}"]],
   "billing.portalOpensNewTab": [
     ["{{provider}}", "{{app}}"],
     ["{{provider}}", undefined],
@@ -472,4 +484,13 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   // both word sets.
   "signOutPending.lost": one,
   "signOutPending.kept": one,
+  // 0.55 (docs/top-bar-harmonization.md §2.6.1): the held-changes banner's sentence, and
+  // its confirm's question and consequence.
+  "heldChanges.message": one,
+  "heldChanges.confirmTitle": one,
+  "heldChanges.confirmBody": one,
+  // 0.55 (keksdose dev #638): the suggestion's clear button, named with its field and alone.
+  "fieldSuggestion.clearName": [["{{field}}"], [undefined]],
+  // 0.55: a release's heading, with a version as the changelog writes it.
+  "releaseNotes.version": [["0.13.9"]],
 };

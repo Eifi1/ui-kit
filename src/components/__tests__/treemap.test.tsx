@@ -1,31 +1,26 @@
-import type { ReactElement, ReactNode } from "react";
+import type { ReactElement } from "react";
 import { cloneElement } from "react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { act, cleanup, fireEvent, render, within } from "@testing-library/react";
-import { ChartContainer } from "../chart";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { PALETTE_HEX, textOn } from "../../theme/chart-palette";
 
 /**
  * The tile chart, ported from keksdose's `category-treemap` suites.
  *
- * `ResponsiveContainer` measures 0x0 under jsdom, so recharts draws no treemap at all
- * and there are no tiles in the DOM to assert on. So the recharts `Treemap` is replaced
- * by a spy that records what the kit HANDED it — which is the honest claim anyway:
- * everything this component decides (which nodes, which colours, which tooltip, whether
- * names are redacted) is decided before recharts is reached. The cell is rendered for
- * real, on its own, inside an `<svg>`.
+ * `ResponsiveContainer` measures 0x0 under jsdom, so it stands in at a fixed 800x300, as
+ * in `treemap-text-alternative.test.tsx`. Up to 0.54 recharts' `Treemap` drew the map, and
+ * this suite replaced it by a spy that recorded what the kit HANDED it (which nodes, which
+ * colours, which tooltip, which tile options). The kit draws the map itself since 0.55, so
+ * the same claims are asserted on what it draws: the tiles' rects and labels, and the
+ * bubble a hover shows. The cell is still rendered on its own too, inside an `<svg>`: it
+ * is what a caller's own recharts map draws.
  */
-const captured = vi.hoisted(() => ({ props: null as Record<string, unknown> | null }));
 vi.mock("recharts", async (importOriginal) => {
   const actual = await importOriginal<typeof import("recharts")>();
-  const { createElement } = await import("react");
   return {
     ...actual,
-    Treemap: (props: Record<string, unknown>) => {
-      captured.props = props;
-      return null;
-    },
-    ResponsiveContainer: ({ children }: { children?: ReactNode }) => createElement("div", null, children),
+    ResponsiveContainer: ({ children }: { children: ReactElement }) =>
+      cloneElement(children, { width: 800, height: 300 } as never),
   };
 });
 
@@ -34,9 +29,6 @@ import { Treemap, TreemapCell, fitLabel } from "../treemap";
 const DARK_INK = "#1a1a1a";
 const LIGHT_INK = "#f8fafc";
 
-beforeEach(() => {
-  captured.props = null;
-});
 afterEach(() => {
   // Unmount FIRST. This hook runs before the global `cleanup()` in src/test/setup.ts
   // (after-hooks run in reverse registration order), so resetting <html> with the
@@ -57,27 +49,17 @@ function renderCell(props: { width: number; height: number; name: string; fill?:
   );
 }
 
-type Node = { id: string; name: string; size: number; fill: string };
-const nodes = () => (captured.props as { data: Node[] }).data;
-const cellElement = () => (captured.props as { content: ReactElement }).content;
-function tooltipContent(): ReactElement {
-  const child = (captured.props as { children: ReactElement }).children;
-  return (child.props as { content: ReactElement }).content;
-}
-const formatter = () => (tooltipContent().props as { valueFormatter: (v: number) => ReactNode }).valueFormatter;
+/** The map's tiles as drawn, in the order drawn: each one's `<g>`, by its accessible name. */
+const drawnTiles = () => screen.getAllByRole("img");
+/** A tile's `<g>`, by the start of its accessible name ("Rent: …"). */
+const tileNamed = (start: string) => drawnTiles().find((g) => g.getAttribute("aria-label")!.startsWith(`${start}:`))!;
+/** The colour a tile is drawn in: its first rect, before any ink edge. */
+const fillOf = (g: Element) => g.querySelector("rect")!.getAttribute("fill");
 
-/** Mount the tooltip the way recharts does — cloned with an active payload — inside
- *  a chart context, which is where `ChartTooltipContent` reads its config from. */
-function renderTooltip(name: string) {
-  const cloned = cloneElement(tooltipContent(), {
-    active: true,
-    payload: [{ dataKey: "size", name, value: 120 }],
-  } as never);
-  return render(
-    <ChartContainer config={{}}>
-      <div>{cloned}</div>
-    </ChartContainer>,
-  );
+/** The bubble the map shows once the pointer is on `start`'s tile. */
+function hover(start: string): HTMLElement {
+  fireEvent.mouseEnter(tileNamed(start));
+  return document.querySelector<HTMLElement>(".recharts-tooltip-wrapper")!;
 }
 
 const DATA = [
@@ -257,37 +239,39 @@ describe("fitLabel", () => {
 });
 
 describe("Treemap", () => {
-  it("hands recharts no chart-level stroke", () => {
-    render(<Treemap data={DATA} />);
-    expect(captured.props).not.toBeNull();
-    expect(captured.props).not.toHaveProperty("stroke");
+  it("draws no chart-level stroke on its SVG", () => {
+    // recharts spread a chart-level `stroke` onto its <svg>, from where it inherited into
+    // every label (see TreemapCell); the map's own SVG carries none.
+    const { container } = render(<Treemap data={DATA} />);
+    expect(drawnTiles()).toHaveLength(2);
+    expect(container.querySelector("svg")).not.toHaveAttribute("stroke");
   });
 
   it("lets a node carry its own colour, and otherwise takes the ramp by index", () => {
     render(<Treemap data={[{ ...DATA[0]!, fill: "#123456" }, DATA[1]!]} />);
-    expect(nodes()[0]!.fill).toBe("#123456");
+    expect(fillOf(tileNamed("Groceries"))).toBe("#123456");
     // No token on <html> in jsdom: the built-in light ramp is the fallback.
-    expect(nodes()[1]!.fill).toBe(PALETTE_HEX.light[1]);
+    expect(fillOf(tileNamed("Rent"))).toBe(PALETTE_HEX.light[1]);
   });
 
   it("reads the live --chart-N tokens, and follows a palette switch", async () => {
     document.documentElement.style.setProperty("--chart-1", "#abcdef");
     render(<Treemap data={DATA} />);
-    expect(nodes()[0]!.fill).toBe("#abcdef");
+    expect(fillOf(tileNamed("Groceries"))).toBe("#abcdef");
     // A MutationObserver reports on a microtask, so the act has to be async to see it.
     await act(async () => document.documentElement.style.setProperty("--chart-1", "#fedcba"));
-    expect(nodes()[0]!.fill).toBe("#fedcba");
+    expect(fillOf(tileNamed("Groceries"))).toBe("#fedcba");
   });
 
   it("falls back to the dark ramp under .dark", () => {
     document.documentElement.classList.add("dark");
     render(<Treemap data={DATA} />);
-    expect(nodes()[0]!.fill).toBe(PALETTE_HEX.dark[0]);
+    expect(fillOf(tileNamed("Groceries"))).toBe(PALETTE_HEX.dark[0]);
   });
 
   it("takes an explicit ramp over the tokens", () => {
     render(<Treemap data={DATA} colors={["#111111", "#222222"]} />);
-    expect(nodes().map((n) => n.fill)).toEqual(["#111111", "#222222"]);
+    expect(drawnTiles().map(fillOf)).toEqual(["#111111", "#222222"]);
   });
 
   it("leaves non-positive nodes off without shifting anyone else's colour", () => {
@@ -301,55 +285,56 @@ describe("Treemap", () => {
         ]}
       />,
     );
-    expect(nodes().map((n) => [n.id, n.fill])).toEqual([
-      ["a", "#111111"],
-      ["c", "#333333"],
+    expect(drawnTiles().map((g) => [g.getAttribute("aria-label")!.split(":")[0], fillOf(g)])).toEqual([
+      ["A", "#111111"],
+      ["C", "#333333"],
     ]);
   });
 
   it("draws nothing at all when nothing is drawable", () => {
     const { container } = render(<Treemap data={[{ id: "a", name: "A", value: 0 }]} />);
-    expect(captured.props).toBeNull();
     expect(container).toBeEmptyDOMElement();
   });
 
   it("draws at most maxTiles, in the order given", () => {
     const many = Array.from({ length: 30 }, (_, i) => ({ id: String(i), name: `N${i}`, value: 100 - i }));
     render(<Treemap data={many} maxTiles={24} />);
-    expect(nodes()).toHaveLength(24);
-    expect(nodes()[23]!.id).toBe("23");
+    expect(drawnTiles()).toHaveLength(24);
+    expect(drawnTiles()[23]).toHaveAccessibleName(/^N23:/);
   });
 
   it("hands the formatter each value's share of what is drawn", () => {
     const valueFormatter = vi.fn((v: number, share: number | undefined) => `${v} · ${share}`);
     render(<Treemap data={DATA} valueFormatter={valueFormatter} />);
-    expect(formatter()(120)).toBe("120 · 0.12");
+    expect(within(hover("Groceries")).getByText("120 · 0.12")).toBeInTheDocument();
   });
 
   it("prints a bare number when no formatter is given", () => {
     render(<Treemap data={DATA} />);
-    expect(formatter()(120)).toBe(new Intl.NumberFormat().format(120));
+    expect(within(hover("Groceries")).getByText(new Intl.NumberFormat().format(120))).toBeInTheDocument();
   });
 
-  it("forwards the tile options to the cell", () => {
+  it("forwards the tile options to the tiles", () => {
     const onNodeClick = vi.fn();
     const nodeNote = () => "new";
     render(<Treemap data={DATA} onNodeClick={onNodeClick} nodeNote={nodeNote} redactNames />);
-    const props = cellElement().props as Record<string, unknown>;
-    expect(props.onNodeClick).toBe(onNodeClick);
-    expect(props.nodeNote).toBe(nodeNote);
-    expect(props.redactNames).toBe(true);
+    const groceries = screen.getByRole("button", { name: /^Groceries:/ });
+    fireEvent.click(groceries);
+    expect(onNodeClick).toHaveBeenCalledWith("1", "Groceries");
+    const [label, note] = [...groceries.querySelectorAll("text")];
+    expect(note).toHaveTextContent("new");
+    expect(label).toHaveAttribute("data-private");
   });
 
   it("redacts the tooltip's name when the names are the user's own data", () => {
     render(<Treemap data={DATA} redactNames />);
-    const tip = within(renderTooltip("Groceries").container);
+    const tip = within(hover("Groceries"));
     expect(tip.getByText("Groceries").closest("[data-private]")).not.toBeNull();
   });
 
   it("leaves ordinary node names readable", () => {
     render(<Treemap data={DATA} />);
-    const tip = within(renderTooltip("Groceries").container);
+    const tip = within(hover("Groceries"));
     expect(tip.getByText("Groceries").closest("[data-private]")).toBeNull();
   });
 
@@ -396,20 +381,20 @@ describe("Treemap in RTL", () => {
     expect(text.getAttribute("direction")).toBe("ltr");
   });
 
-  it("reads the direction off its own root and hands it to the cell", () => {
-    render(
+  it("reads the direction off its own root and hands it to its tiles", () => {
+    const rtl = render(
       <div dir="rtl">
         <Treemap data={DATA} />
       </div>,
     );
-    expect((cellElement().props as Record<string, unknown>).dir).toBe("rtl");
-    render(<Treemap data={DATA} />);
-    expect((cellElement().props as Record<string, unknown>).dir).toBe("ltr");
+    expect(rtl.container.querySelector("text")!.getAttribute("direction")).toBe("rtl");
+    const ltr = render(<Treemap data={DATA} />);
+    expect(ltr.container.querySelector("text")!.getAttribute("direction")).toBe("ltr");
   });
 });
 
 describe("Treemap passes labelColor through to its cells (0.8.1)", () => {
-  it("puts each node's labelColor on the node recharts receives", () => {
+  it("draws each node's labelColor on its tile, and measures the ink of the rest", () => {
     render(
       <Treemap
         data={[
@@ -424,8 +409,7 @@ describe("Treemap passes labelColor through to its cells (0.8.1)", () => {
         ]}
       />,
     );
-    const nodes = captured.props!.data as Array<{ id: string; labelColor?: string }>;
-    expect(nodes.find((n) => n.id === "a")!.labelColor).toBe("#ffffff");
-    expect(nodes.find((n) => n.id === "b")!.labelColor).toBeUndefined();
+    expect(tileNamed("Newest").querySelector("text")!.getAttribute("fill")).toBe("#ffffff");
+    expect(tileNamed("Oldest").querySelector("text")!.getAttribute("fill")).toBe(textOn(PALETTE_HEX.light[1]));
   });
 });

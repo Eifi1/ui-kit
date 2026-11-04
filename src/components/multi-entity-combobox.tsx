@@ -10,7 +10,7 @@ import {
   EndHintRow,
   FieldCaption,
   LABEL_IN_ROW,
-  LockedReason,
+  LockFrame,
   mergeDescribedBy,
   StaticLabelRow,
   useFieldError,
@@ -207,14 +207,11 @@ export function MultiEntityCombobox<V extends string | number>(props: MultiEntit
   })();
 
   // While locked the trigger sits in the reason's Tooltip, as on EntityCombobox.
-  const withLock = (trigger: ReactNode) =>
-    lock.locked ? (
-      <LockedReason lock={lock} display={disabledReasonDisplay} className="block">
-        {trigger}
-      </LockedReason>
-    ) : (
-      trigger
-    );
+  const withLock = (trigger: ReactNode) => (
+    <LockFrame lock={lock} display={disabledReasonDisplay}>
+      {trigger}
+    </LockFrame>
+  );
 
   const q = query.trim();
   const showCreate = offersCreate(

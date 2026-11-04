@@ -250,7 +250,8 @@ export function RhfField<
   // a "?" at every size. With a `help` (0.36) its "?" follows the label and is the
   // field's only one, so a FieldHint is its words at every size.
   const helpMark = fieldHelpMark(help, label);
-  const shownHint = useInlineHint(hint, helpMark !== undefined);
+  // The label names a FieldSuggestion's button (0.55).
+  const shownHint = useInlineHint(hint, helpMark !== undefined, label);
   const labelEl = showLabel && hasContent(label) && <RhfLabel required={required}>{label}</RhfLabel>;
   return (
     <FormField
@@ -997,7 +998,7 @@ function RangeBody({
   // RhfField's rule: a FieldHint is its words at Large and on touch (DUP-2) — and at
   // every size beside a `help`, whose "?" follows the label (0.36).
   const helpMark = fieldHelpMark(help, label);
-  const shownHint = useInlineHint(hint, helpMark !== undefined);
+  const shownHint = useInlineHint(hint, helpMark !== undefined, label);
   // Both fields' refs go to the one trigger (API-3, refactor audit 2026-10), so
   // `shouldFocusError` lands there whichever of the two is first in error.
   const triggerRef = useMemo(() => mergeRefs(from.ref, to.ref), [from.ref, to.ref]);
@@ -1637,7 +1638,7 @@ export function RhfCheckbox<
 }: RhfCheckboxProps<TFieldValues, TName, TTransformed>) {
   // RhfField's rule for the box's own description: a FieldHint is its words at Large
   // and on touch (DUP-2).
-  const description = useInlineHint(hint);
+  const description = useInlineHint(hint, false, label);
   return (
     <RhfField
       {...{ name, control, rules, required, disabled, excludeWhenDisabled, className }}

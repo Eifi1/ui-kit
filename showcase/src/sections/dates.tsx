@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import {
   Button,
@@ -18,6 +18,7 @@ import type { DateRangeDraftSummary, DateRangePickerPreset } from "@eifi1/ui-kit
 import {
   addDaysIso,
   calendarMonthPresets,
+  currentDate,
   dateRangePresets,
   endOfMonthIso,
   endOfYearIso,
@@ -28,12 +29,15 @@ import {
   pad,
   parseIsoDate,
   sameYmd,
+  setToday,
   shiftIso,
   startOfMonthIso,
   startOfWeekIso,
   startOfYearIso,
+  subscribeToday,
   toLocalIso,
   todayIso,
+  todayOverride,
 } from "@eifi1/ui-kit/dates";
 import { Example, Note, OutTable, Stage, StateLine, code } from "../lib/section";
 
@@ -1072,7 +1076,56 @@ export function DateHelpers() {
           compares plain dates with no zone at all, so the user&apos;s local day is what it wants.
         </p>
       </Example>
+
+      <MovedToday />
     </>
+  );
+}
+
+/**
+ * 0.55 (keksdose's 0.51 adoption N2): the kit's one "today". A dev clock moves the day the
+ * server takes for today; `setToday(answer.today)` moves it for every helper above and
+ * for the pickers' own today, and `null` hands it back to the device. Put back when the
+ * specimen leaves, so the rest of the showcase reads the real day.
+ */
+function MovedToday() {
+  const moved = useSyncExternalStore(subscribeToday, todayOverride, () => null);
+  const [due, setDue] = useState("");
+  useEffect(() => () => setToday(null), []);
+  // The last day of last month: a month end, where a disagreement shows first.
+  const monthEnd = endOfMonthIso(-1);
+  return (
+    <Example
+      label="One today: setToday"
+      hint="the dev clock's day, for the helpers and the pickers alike; only the date moves"
+    >
+      <Stage>
+        <ToggleGroup
+          aria-label="Today"
+          value={moved === null ? "device" : "moved"}
+          onChange={(next) => setToday(next === "moved" ? monthEnd : null)}
+          options={[
+            { value: "device", label: "The device's day" },
+            { value: "moved", label: `Moved to ${monthEnd}` },
+          ]}
+        />
+        <DatePicker value={due} onChange={setDue} locale={LOCALE} label="Due date" today={todayIso()} />
+      </Stage>
+      <OutTable
+        rows={[
+          ["todayOverride()", String(todayOverride())],
+          ["todayIso()", todayIso()],
+          ["startOfMonthIso()", startOfMonthIso()],
+          ["shiftIso(1)", shiftIso(1)],
+          ["currentDate().toTimeString().slice(0, 5)", currentDate().toTimeString().slice(0, 5)],
+        ]}
+      />
+      <Note>
+        An app calls {code("setToday(answer.today)")} at boot and from its dev menu&apos;s Time rows, behind{" "}
+        {code("import.meta.env.DEV")}; {code("DevMenu")} wears its dot while a day is set. The time of day, and every
+        timestamp, stays on the device&apos;s clock.
+      </Note>
+    </Example>
   );
 }
 

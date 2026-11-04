@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { isEditableContent } from "../lib/editable-content";
 
 /**
  * A key combination: modifiers and one key, joined by "+", case-insensitive —
@@ -119,30 +120,9 @@ export function matchesHotkey(e: KeyboardEvent, combo: ParsedHotkey): boolean {
   return symbol && !combo.shift ? true : e.shiftKey === combo.shift;
 }
 
-/**
- * Whether `el` is editable content — `isContentEditable`, read from the attributes where
- * the engine has no such property (keksdose audit follow-up, 2026-11-01). jsdom is one:
- * there a hotkey fired while typing in a contenteditable, so a test could not show the
- * editor keeping its letters, and an engine without the property would do the same.
- *
- * The nearest element with a `contenteditable` that names a state decides: `""`,
- * `"true"` and `"plaintext-only"` edit, `"false"` does not — a `false` island inside an
- * editor is not typed in. Any other value is the attribute's invalid-value default,
- * which inherits, so the search goes on to the next one up. Keywords are
- * case-insensitive. None at all: editable only in a `designMode` document.
- */
-function isEditableContent(el: HTMLElement): boolean {
-  const native = (el as { isContentEditable?: boolean }).isContentEditable;
-  if (native !== undefined) return native;
-  for (let at = el.closest("[contenteditable]"); at; at = at.parentElement?.closest("[contenteditable]") ?? null) {
-    const state = (at.getAttribute("contenteditable") ?? "").toLowerCase();
-    if (state === "" || state === "true" || state === "plaintext-only") return true;
-    if (state === "false") return false;
-  }
-  return el.ownerDocument.designMode === "on";
-}
-
-/** Is the focus somewhere that takes typed characters? */
+/** Is the focus somewhere that takes typed characters? Editable content by the kit's one
+ *  rule (lib/editable-content; written here in 0.54, moved there for the tour, the bulk
+ *  bar and the clipboard in its follow-up). */
 function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
   if (isEditableContent(target)) return true;

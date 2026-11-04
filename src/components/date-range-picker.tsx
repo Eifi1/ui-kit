@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { useKitLocale, type DatePickerLabels } from "../i18n/kit-labels";
 import { Button } from "./button";
-import { FieldBox, LockedReason, useFieldMessages, useLockReason } from "./field-parts";
+import { FieldBox, LockFrame, useFieldMessages, useLockReason } from "./field-parts";
 import type { CommitScope } from "./write-lock";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
 import {
@@ -504,15 +504,12 @@ export function DateRangePicker(props: DateRangePickerProps) {
   const box = withEndHint(field, label === undefined ? messages.labelHint : undefined);
   return (
     <FieldBox below={messages.below} reserve={"error" in props || "hint" in props}>
-      {locked ? (
-        // DatePicker's frame: the line under the field, or the Tooltip with a hidden copy
-        // for `aria-describedby`; the outermost box, so it takes the caller's classes.
-        <LockedReason lock={lock} display={disabledReasonDisplay} className={cn("block", className)}>
-          {box}
-        </LockedReason>
-      ) : (
-        box
-      )}
+      {/* DatePicker's frame: the line under the field, or the Tooltip with a hidden copy
+          for `aria-describedby`; while locked the outermost box, so it takes the caller's
+          classes. */}
+      <LockFrame lock={lock} display={disabledReasonDisplay} className={className}>
+        {box}
+      </LockFrame>
     </FieldBox>
   );
 }
