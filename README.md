@@ -44,8 +44,8 @@ vocabulary test, `showcase/src/__tests__/server-kit-vocabularies.test.ts`).
 | [Issues](https://github.com/Eifi1/ui-kit/issues) | Bugs and requests |
 
 The links are absolute because only this README is in the npm tarball — `files` ships
-`dist`, `src`, `tokens.css` and `LICENSE`, so a reader who arrived from npmjs.com has none
-of the others on disk and a relative link would be a 404.
+`dist`, `tokens.css` and `LICENSE`, so a reader who arrived from npmjs.com has none of the
+others on disk and a relative link would be a 404.
 
 Kurvenschmiede was called **lenkbank** until 2026-10-01 (repository `Eifi1/kurvenschmiede`,
 formerly `Eifi1/lenkbank`). The changelog, older adoption notes and code comments that cite
@@ -159,8 +159,9 @@ and 216,056 B (−181 rules, −11 KB), exactly what the `.js` files give on the
 `.js` holds every class a component renders. **A glob such as `dist/**/*.js` does not
 narrow the scan**: an explicit `@source` into an ignored folder un-ignores the folder, and
 Tailwind's root detection then walks every file in it, so the stylesheet comes out
-byte-identical to the directory line. Exclude with `@source not` instead. Don't scan the
-tarball's `src` either: it is the commented source, with the same extra rules.
+byte-identical to the directory line. Exclude with `@source not` instead. The tarball has
+shipped no `src` since 0.55 (the source maps carry the source): an `@source` still pointing
+there scans nothing, silently: replace it with the pair above.
 
 ### 3. Appearance stores (own persistence keys)
 

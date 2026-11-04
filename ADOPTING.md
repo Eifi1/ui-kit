@@ -57,7 +57,8 @@ primitives with the shared ones. Keep this app's domain-specific pieces local.
    source maps' `sourcesContent` are the kit's comments, and Tailwind made a rule of
    every class-like word in them (181 rules, 11 KB in every app's stylesheet on 0.51.7).
    Don't write a `dist/**/*.js` glob instead: it un-ignores the whole folder and scans
-   the same files. Don't point at the tarball's `src`: it is the commented source.
+   the same files. The tarball ships no `src` since 0.55, so an `@source` still pointing
+   there scans nothing, silently: replace it with the pair above.
 
 4. **Appearance stores: theme, palette, text size, contrast** — the factories let you
    use your own persistence keys:
