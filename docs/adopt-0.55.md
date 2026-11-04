@@ -211,6 +211,8 @@ peer ranges are unchanged: nothing to do in the apps.
 - **A refused or pending Button / IconButton keeps its press out of a clickable row around
   it**, as a natively disabled button's click never reached one. `stopPropagation` is no
   longer needed for that (Kurvenschmiede's owner-only delete opened its row without it).
-- adopt-0.55's `watchSessionElsewhere` lines: `ended` compares the stored owner with this tab's
-  user (above). kastlan: check that yours ends the tab when another tab has signed in as
-  someone else, not only when the refresh token is gone.
+- adopt-0.55's `watchSessionElsewhere` lines: `ended` compares whose session the storage
+  holds with this tab's (above). keksdose keys on its mirror owner, KS on its persisted user
+  id, and kastlan on the server session's `sid` (stricter: the same person signing in again
+  elsewhere also reloads a restored page, which kastlan wants), each with a test for a restored
+  page after a sign-in elsewhere.
