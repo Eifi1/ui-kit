@@ -8,6 +8,7 @@ import { FOCUS_RING, FOCUS_RING_WIDTH } from "./focus-ring";
 import { horizontalStep } from "../lib/direction";
 import { useAnnounce } from "../hooks/use-announce";
 import { addMonthsClamped, localeWeekStart, monthKey, parseIsoDate, sameYmd, toLocalIso } from "../lib/dates";
+import { dateFormatter } from "../lib/intl-cache";
 import { useKitLabels, useKitLocale, useKitWeekStart, type LabelOverride } from "../i18n/kit-labels";
 import { DEFAULT_MINI_CALENDAR_LABELS } from "./mini-calendar-labels";
 
@@ -355,8 +356,10 @@ export function MiniCalendar({
   // The first letter only, not CSS `capitalize`, which upper-cased every word: Spanish
   // read "Septiembre De 2026" and Hungarian "2026. Szeptember" (refactor audit
   // 2026-10-30, DUP-11) — while the same panel with `monthJump` read them right.
-  const monthLabel = upperFirst(firstOfMonth.toLocaleDateString(locale, { month: "long", year: "numeric" }), locale);
-  const formatDay = (d: Date) => d.toLocaleDateString(locale, DAY_NAME_FORMAT);
+  // Both through the kit's formatter cache: every day cell names its date, which was a
+  // formatter per cell and render (keksdose audit follow-up, 2026-11-01).
+  const monthLabel = upperFirst(dateFormatter(locale, { month: "long", year: "numeric" }).format(firstOfMonth), locale);
+  const formatDay = (d: Date) => dateFormatter(locale, DAY_NAME_FORMAT).format(d);
 
   // Weekday labels via locale, from the week's first day: the narrow one for the
   // column head, the long one as its accessible name — "M" is the same letter for

@@ -4,10 +4,12 @@
  * Constructing the formatter is the expensive part: keksdose measured 392 ms per click on
  * a 270-row register when each cell built its own (dev#632), and kept its own renderer of
  * the date-format preference because the kit's built one per call (refactor audit
- * 2026-10-30, DUP-2). `lib/format` and `lib/date-format` both format through this one.
+ * 2026-10-30, DUP-2). `lib/format` and `lib/date-format` both format through this one, and
+ * since 0.54 `lib/dates`' `formatIsoDate` (keksdose audit follow-up, 2026-11-01).
  *
  * @internal Not part of the barrel — `lib/format` is re-exported whole, so the cache
- * lives apart from it.
+ * lives apart from it. It imports nothing, which `@eifi1/ui-kit/dates` (no package at
+ * all) relies on.
  */
 
 const dateFormatters = new Map<string, Intl.DateTimeFormat>();

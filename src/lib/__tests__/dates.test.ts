@@ -1,3 +1,4 @@
+import { vi } from "vitest";
 import {
   addDaysIso,
   dateRangePresets,
@@ -148,6 +149,57 @@ describe("formatIsoDate", () => {
   it("takes no locale as the runtime's default, as Intl does (DUP-11, 0.34)", () => {
     expect(formatIsoDate("2026-07-15", undefined)).toBe(new Date(2026, 6, 15).toLocaleDateString(undefined));
     expect(formatIsoDate("nonsense", undefined)).toBe("");
+  });
+
+  // 0.54 (keksdose audit follow-up, 2026-11-01): through the kit's formatter cache, with
+  // toLocaleDateString's output — the date it adds to options that name none included.
+  it("prints what toLocaleDateString printed, for every shape of options", () => {
+    const day = new Date(2026, 6, 15);
+    const shapes: Array<Intl.DateTimeFormatOptions | undefined> = [
+      undefined,
+      {},
+      { dateStyle: "medium" },
+      { dateStyle: "full" },
+      { weekday: "short" },
+      { month: "long", year: "numeric" },
+      { day: "2-digit", month: "2-digit", year: "numeric" },
+      // No date field: toLocaleDateString adds year, month and day to these.
+      { hour: "numeric" },
+      { timeZoneName: "short" },
+      { era: "short" },
+      { timeZone: "UTC" },
+    ];
+    for (const locale of [undefined, "en", "en-GB", "de-CH", "fr", "zh"]) {
+      for (const options of shapes) {
+        expect(formatIsoDate("2026-07-15", locale, options), `${locale} ${JSON.stringify(options)}`).toBe(
+          day.toLocaleDateString(locale, options),
+        );
+      }
+    }
+  });
+
+  it("builds no formatter for a locale and options it has formatted with before", () => {
+    formatIsoDate("2026-07-15", "de-CH", { dateStyle: "medium" });
+    formatIsoDate("2026-07-15", "de-CH");
+    const built = vi.spyOn(Intl, "DateTimeFormat");
+    // `toLocaleDateString` builds its formatter inside the engine, out of the
+    // constructor spy's sight: it is watched on its own.
+    const perCall = vi.spyOn(Date.prototype, "toLocaleDateString");
+    try {
+      for (let i = 0; i < 50; i++) {
+        formatIsoDate("2026-07-15", "de-CH", { dateStyle: "medium" });
+        formatIsoDate("2026-07-15", "de-CH");
+      }
+      expect(built).not.toHaveBeenCalled();
+      expect(perCall).not.toHaveBeenCalled();
+    } finally {
+      built.mockRestore();
+      perCall.mockRestore();
+    }
+  });
+
+  it("still refuses a language tag Intl refuses, as toLocaleDateString did", () => {
+    expect(() => formatIsoDate("2026-07-15", "not a tag")).toThrow(RangeError);
   });
 });
 

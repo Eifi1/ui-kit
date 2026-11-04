@@ -3,6 +3,7 @@ import type { ComponentPropsWithRef, CSSProperties, KeyboardEvent, ReactNode } f
 import { cn } from "../lib/cn";
 import { dirOf, horizontalStep } from "../lib/direction";
 import { addMonthsClamped, localeWeekStart, parseIsoDate, toLocalIso } from "../lib/dates";
+import { dateFormatter } from "../lib/intl-cache";
 import { useKitLabels, useKitLocale, useKitWeekStart, type LabelOverride } from "../i18n/kit-labels";
 import { lerpHex, textOn } from "../theme/chart-palette";
 import { parseHex } from "../theme/color";
@@ -154,6 +155,8 @@ const DAY_NAME_FORMAT: Intl.DateTimeFormatOptions = {
   month: "long",
   year: "numeric",
 };
+/** A month's name over its first column ("Sep"). */
+const MONTH_LABEL_FORMAT: Intl.DateTimeFormatOptions = { month: "short" };
 
 /** The empty day: a wash of the text colour, like `--bg-hover`, so it reads as a cell
  *  on both themes without claiming any value. */
@@ -345,7 +348,10 @@ export function CalendarHeatmap({
     };
   }, [layout, firstIso, lastIso]);
 
-  const formatDay = (d: Date) => d.toLocaleDateString(locale, DAY_NAME_FORMAT);
+  // Every day cell names its date, so through the kit's formatter cache, as the month
+  // labels are: `toLocaleDateString` built one per cell and render, 365 for a year's grid
+  // (keksdose audit follow-up, 2026-11-01).
+  const formatDay = (d: Date) => dateFormatter(locale, DAY_NAME_FORMAT).format(d);
 
   const weekdayLabels = useMemo(() => {
     const ref = new Date(2024, 0, 7 + weekStart); // 7 January 2024 was a Sunday
@@ -503,7 +509,7 @@ export function CalendarHeatmap({
       for (let r = 0; r < 7; r++) {
         const d = dayAt(w * 7 + r);
         if (d && (d.getDate() === 1 || (w === 0 && r === lead && d.getDate() <= 14))) {
-          return d.toLocaleDateString(locale, { month: "short" });
+          return dateFormatter(locale, MONTH_LABEL_FORMAT).format(d);
         }
       }
       return "";

@@ -24,6 +24,9 @@
  * all, so sending it the user's local day is also what it wants.
  */
 
+// Imports nothing else: `@eifi1/ui-kit/dates` reaches no package (packaging-contract).
+import { dateFormatter } from "./intl-cache";
+
 /** Zero-pad a number to two digits ("3" -> "03"). */
 export function pad(n: number): string {
   return String(n).padStart(2, "0");
@@ -124,14 +127,33 @@ export function parseIsoDate(s: string): Date | null {
   return dt;
 }
 
+/** The fields that make an option set a DATE for `toLocaleDateString` (ECMA-402's
+ *  ToDateTimeOptions, required "date"): with none of them it adds year, month and day. */
+const DATE_FIELDS = ["weekday", "year", "month", "day", "dateStyle"] as const;
+const NUMERIC_DATE: Intl.DateTimeFormatOptions = { year: "numeric", month: "numeric", day: "numeric" };
+
+/** `options` as `toLocaleDateString` reads them: with a date in them, whatever else they
+ *  ask for. `{ hour: "numeric" }` alone is a date and an hour there, never the hour alone
+ *  that `Intl.DateTimeFormat` would print for it. */
+function asDateOptions(options: Intl.DateTimeFormatOptions | undefined): Intl.DateTimeFormatOptions {
+  if (!options) return NUMERIC_DATE;
+  return DATE_FIELDS.some((field) => options[field] !== undefined) ? options : { ...options, ...NUMERIC_DATE };
+}
+
 /** Format a "YYYY-MM-DD" string for display in `locale` (empty string when
  *  unparseable). Defaults to the locale's short numeric date; pass `options` to
  *  override (e.g. `{ dateStyle: "medium" }`). `locale` may be `undefined` since 0.34 —
  *  the runtime's default, as `Intl` reads it and as every other kit formatter takes it
- *  (DUP-11: DatePicker re-wrapped this function only to pass none). */
+ *  (DUP-11: DatePicker re-wrapped this function only to pass none).
+ *
+ *  Through the kit's formatter cache since 0.54 (keksdose audit follow-up, 2026-11-01):
+ *  `toLocaleDateString` builds a formatter per call, and this one runs for the date
+ *  pickers' trigger on every render and for an app's date column once per row. The output
+ *  is `toLocaleDateString`'s: the same options, with the date it adds when they name none
+ *  (`asDateOptions`). */
 export function formatIsoDate(iso: string, locale: string | undefined, options?: Intl.DateTimeFormatOptions): string {
   const d = parseIsoDate(iso);
-  return d ? d.toLocaleDateString(locale, options) : "";
+  return d ? dateFormatter(locale, asDateOptions(options)).format(d) : "";
 }
 
 /** A "YYYY-MM-DD" string shifted by `days` (negative shifts back), or the input
