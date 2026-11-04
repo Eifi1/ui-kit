@@ -328,7 +328,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // family (six), SignChip and its labels, lib/isin's three (−13, MOD-5).
   // 0.54 (+1, here and in /data-table): `numberBound`, what a server-side number filter
   // sends (kastlan reuse audit 2026-11-02, proposal 7).
-  ["@eifi1/ui-kit", barrel, 962],
+  // 0.54 (+2): `saveReviewsInChunks`, `clearReviewsInChunks`, the review's writes under
+  // server-kit's cap of 2000 (kastlan reuse audit 2026-11-02, proposal 5).
+  ["@eifi1/ui-kit", barrel, 964],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

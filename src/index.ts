@@ -93,6 +93,10 @@ export {
   reviewWrite,
   mergeReviews,
   dropReviews,
+  // 0.54: a save or a reset of any size under server-kit's cap of 2000 (kastlan reuse
+  // audit 2026-11-02, proposal 5).
+  saveReviewsInChunks,
+  clearReviewsInChunks,
   translationCorrections,
   // 0.25: grouping and the approvals' Undo (keksdose live #377).
   groupTranslationRows,
