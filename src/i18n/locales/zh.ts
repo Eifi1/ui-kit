@@ -707,6 +707,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       empty: "无数据",
       legend: "数据系列",
       points: "图表数值",
+      nameFromAxes: (ordinates, abscissa) => (abscissa ? `${ordinates} 随 ${abscissa} 的变化` : ordinates),
     },
     pieChart: {
       slices: "图表扇区",

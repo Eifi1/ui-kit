@@ -725,6 +725,11 @@ export interface SeriesChartProps<TRow extends object = object> {
    * The chart's name. The chart is a `role="figure"` (0.52, refactor audit 2026-10-30,
    * DSP-5), and a figure is found and told apart by its name — "Net worth", "Load over
    * travel". Its values are read stop by stop (see {@link SeriesChartProps.onPointClick}).
+   *
+   * Default (0.55, Kurvenschmiede 0.52 adoption): the axes' titles — the drawn y axes' as
+   * a list in the chart's locale, over the abscissa's: "Rack force (N) over Travel (mm)"
+   * (`seriesChart.nameFromAxes`). A chart without an x title — an upper chart of a stack —
+   * is named by its ordinates alone; one without a titled y axis has no name, as before.
    */
   "aria-label"?: string;
   /**
@@ -786,6 +791,28 @@ function withUnit(label: ReactNode, unit: string | undefined): ReactNode {
       {label} ({unit})
     </>
   );
+}
+
+/**
+ * The name of a chart the caller does not name (0.55, Kurvenschmiede 0.52 adoption): the
+ * titles of the drawn y axes as a list in `locale`, over the abscissa's title, in the
+ * catalogue's words. Kurvenschmiede's SeriesChart wrapper named every chart so: its axes
+ * carry their titles and units anyway, and a name written a second time at each call site
+ * drifts from the axes it describes. A hidden axis and an untitled one
+ * (`title: ""`, a facing pair's second chart) say nothing, and with no titled y axis there
+ * is no name: an abscissa alone does not say what is measured. The DECLARED axes, not the
+ * budget's: the name does not change with the chart's width.
+ */
+function axesName(
+  axes: readonly SeriesChartAxis[],
+  abscissa: string | undefined,
+  locale: string | undefined,
+  nameFromAxes: SeriesChartLabels["nameFromAxes"],
+): string | undefined {
+  const titles = axes.flatMap((axis) => (!axis.hide && axis.title ? [axis.title] : []));
+  if (titles.length === 0) return undefined;
+  const ordinates = new Intl.ListFormat(locale, { type: "conjunction" }).format(titles);
+  return nameFromAxes(ordinates, abscissa || undefined);
 }
 
 /** Where a legend learns which axes are not drawn — see {@link seriesLegendEntries}. */
@@ -1221,7 +1248,10 @@ function SeriesPlot({
   // it never had (0.52 code review, deep, charts, findings 7 and 14 — Treemap's copy of this
   // went the same way). The plot's root is `ChartContainer`, which takes the sentence itself.
   const about = useFigureDescription(spoken || undefined);
-  const figure = { role: "figure", "aria-label": ariaLabel, "aria-describedby": about.describedBy } as const;
+  // The caller's name, else the axes' (0.55, Kurvenschmiede 0.52 adoption). `aria-label=""`
+  // is a name the caller gave too, and stays.
+  const chartName = ariaLabel ?? axesName(axes, xAxis.title, locale, labels.nameFromAxes);
+  const figure = { role: "figure", "aria-label": chartName, "aria-describedby": about.describedBy } as const;
 
   // The empty state takes the chart's own height and is centred in it: a chart that
   // shrank to its "nothing to draw" sentence moved everything under it up the page
@@ -1505,7 +1535,7 @@ function SeriesPlot({
   const inRow = placement !== "cursor";
   const chart = (
     <ChartContainer
-      {...(inRow ? {} : { role: "figure", "aria-label": ariaLabel, description: spoken || undefined })}
+      {...(inRow ? {} : { role: "figure", "aria-label": chartName, description: spoken || undefined })}
       ref={setBox}
       data-axis-budget={budgeted.length ? budgetKey.replace(/\n/g, " ") : undefined}
       // "drawn/all" while `maxRows` thins: what a reader of the DOM (a test, a bug

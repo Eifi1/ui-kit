@@ -4,6 +4,8 @@ import { describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { SeriesChart, StaticSeriesChart } from "../series-chart";
 import { UiKitProvider } from "../../i18n/kit-labels";
+import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
+import { UI_KIT_LABELS_FR } from "../../i18n/locales/fr";
 
 /**
  * Refactor audit 2026-10-30, DSP-5: a SeriesChart had no text alternative. Without
@@ -230,5 +232,112 @@ describe("SeriesChart's read-only stops (no `onPointClick`)", () => {
       </UiKitProvider>,
     );
     expect(screen.getByRole("group", { name: "Werte" })).toBeInTheDocument();
+  });
+});
+
+// 0.55, Kurvenschmiede 0.52 adoption: its SeriesChart wrapper named every chart after its
+// axes — "Rack force (N) over Travel (mm)", the y titles as a list in the reader's
+// language — rather than writing the name a second time at every call site. The kit's
+// default now, and the caller's `aria-label` still wins.
+describe("SeriesChart named after its axes", () => {
+  const SWEEP = [
+    { x: 0, force: 1, speed: 3, jerk: 5, mirror: 1 },
+    { x: 1, force: 2, speed: 1, jerk: 4, mirror: 2 },
+  ];
+  const BOTH = [
+    { key: "force", label: "Force", axis: "force" },
+    { key: "speed", label: "Speed", axis: "speed" },
+  ];
+  const AXES = [
+    { id: "force", title: "Rack force (N)" },
+    { id: "speed", title: "Speed (mm/s)", orientation: "right" as const },
+  ];
+
+  it.each([
+    ["the plot", {}],
+    ["the plot and its readout row", { tooltip: { placement: "below" as const } }],
+    ["the empty state", { rows: [] }],
+  ])("names %s after its titled axes when the caller gives no name", (_, props) => {
+    render(
+      <StaticSeriesChart
+        rows={SWEEP}
+        series={[{ key: "force", label: "Force" }]}
+        axes={[{ id: "y", title: "Rack force (N)" }]}
+        x={{ title: "Travel (mm)" }}
+        {...props}
+      />,
+    );
+    expect(screen.getByRole("figure", { name: "Rack force (N) over Travel (mm)" })).toBeInTheDocument();
+  });
+
+  it("lists every drawn y axis in the provider's locale, and leaves out a hidden or untitled one", () => {
+    render(
+      <UiKitProvider locale="en">
+        <SeriesChart
+          rows={SWEEP}
+          series={[
+            ...BOTH,
+            { key: "jerk", label: "Jerk", axis: "jerk" },
+            { key: "mirror", label: "Mirror", axis: "mirror" },
+          ]}
+          axes={[...AXES, { id: "jerk", title: "Jerk (mm/s³)", hide: true }, { id: "mirror", title: "" }]}
+          x={{ title: "Time (s)" }}
+        />
+      </UiKitProvider>,
+    );
+    expect(screen.getByRole("figure", { name: "Rack force (N) and Speed (mm/s) over Time (s)" })).toBeInTheDocument();
+  });
+
+  it.each([
+    ["no abscissa title (an upper chart of a stack)", { ticks: false }],
+    ["an empty one (a facing pair's second chart)", { title: "" }],
+  ])("names a chart with %s by its ordinates alone", (_, x) => {
+    render(<SeriesChart rows={SWEEP} series={BOTH} axes={AXES} x={x} />);
+    expect(screen.getByRole("figure", { name: "Rack force (N) and Speed (mm/s)" })).toBeInTheDocument();
+  });
+
+  it("keeps the caller's own name, and says the default in the provider's words", () => {
+    render(
+      <UiKitProvider labels={{ seriesChart: { nameFromAxes: (y, x) => `${y} | ${x ?? "-"}` } }}>
+        <SeriesChart rows={SWEEP} series={BOTH} axes={AXES} x={{ title: "Time (s)" }} aria-label="Ackermann check" />
+        <SeriesChart rows={SWEEP} series={BOTH} axes={AXES.slice(0, 1)} x={{ title: "Time (s)" }} />
+      </UiKitProvider>,
+    );
+    expect(screen.getByRole("figure", { name: "Ackermann check" })).toBeInTheDocument();
+    expect(screen.getByRole("figure", { name: "Rack force (N) | Time (s)" })).toBeInTheDocument();
+  });
+
+  // Today's behaviour, pinned rather than changed: an abscissa says nothing about what is
+  // measured, so a chart without a titled y axis stays as unnamed as before 0.55.
+  it("names nothing where no y axis is titled", () => {
+    render(
+      <>
+        <SeriesChart rows={SWEEP} series={BOTH} x={{ title: "Time (s)" }} />
+        <SeriesChart rows={SWEEP} series={BOTH} axes={[{ id: "y", title: "" }]} x={{ title: "Time (s)" }} />
+      </>,
+    );
+    const figures = screen.getAllByRole("figure");
+    expect(figures).toHaveLength(2);
+    for (const figure of figures) expect(figure).not.toHaveAttribute("aria-label");
+  });
+
+  it.each([
+    ["de-CH", UI_KIT_LABELS_DE_CH, "Zahnstangenkraft (N) und Geschwindigkeit (mm/s) über Zeit (s)"],
+    ["fr", UI_KIT_LABELS_FR, "Zahnstangenkraft (N) et Geschwindigkeit (mm/s) en fonction de Zeit (s)"],
+  ])("says it in %s, the list joined in that locale", (locale, labels, name) => {
+    render(
+      <UiKitProvider labels={labels} locale={locale}>
+        <SeriesChart
+          rows={SWEEP}
+          series={BOTH}
+          axes={[
+            { id: "force", title: "Zahnstangenkraft (N)" },
+            { id: "speed", title: "Geschwindigkeit (mm/s)", orientation: "right" },
+          ]}
+          x={{ title: "Zeit (s)" }}
+        />
+      </UiKitProvider>,
+    );
+    expect(screen.getByRole("figure", { name })).toBeInTheDocument();
   });
 });

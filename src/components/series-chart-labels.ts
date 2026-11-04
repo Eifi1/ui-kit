@@ -21,6 +21,15 @@ export interface SeriesChartLabels {
    *  periods — one tab stop, arrow keys between them; buttons with `onPointClick`, and
    *  since 0.52 images to read without. */
   points: string;
+  /**
+   * The chart's name when the caller passes no `aria-label` and a y axis is titled (0.55,
+   * Kurvenschmiede 0.52 adoption): "Rack force (N) over Travel (mm)". `ordinates` is the
+   * titles of the drawn y axes, already joined as a list in the chart's locale
+   * (`Intl.ListFormat`: "Force (N) and Speed (mm/s)"); `abscissa` the x axis' title, absent
+   * on a chart that leaves it to another — an upper chart of a stack sharing one x window,
+   * named by its ordinates alone.
+   */
+  nameFromAxes: (ordinates: string, abscissa?: string) => string;
 }
 
 export const DEFAULT_SERIES_CHART_LABELS: SeriesChartLabels = {
@@ -30,4 +39,6 @@ export const DEFAULT_SERIES_CHART_LABELS: SeriesChartLabels = {
   empty: "No data",
   legend: "Series",
   points: "Chart values",
+  // Kurvenschmiede's `common.chart_name`, "{{y}} over {{x}}", as the catalogues take theirs.
+  nameFromAxes: (ordinates, abscissa) => (abscissa ? `${ordinates} over ${abscissa}` : ordinates),
 };

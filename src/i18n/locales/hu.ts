@@ -723,6 +723,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       empty: "Nincs adat",
       legend: "Adatsorok",
       points: "Diagramértékek",
+      nameFromAxes: (ordinates, abscissa) => (abscissa ? `${ordinates}, ${abscissa} függvényében` : ordinates),
     },
     pieChart: {
       slices: "Diagramszeletek",

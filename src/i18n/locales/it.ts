@@ -726,6 +726,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       empty: "Nessun dato",
       legend: "Serie",
       points: "Valori del grafico",
+      nameFromAxes: (ordinates, abscissa) => (abscissa ? `${ordinates} in funzione di ${abscissa}` : ordinates),
     },
     pieChart: {
       slices: "Settori del grafico",

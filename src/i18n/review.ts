@@ -161,6 +161,11 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "tour.step": [[2, 4]],
   "tour.backToStep": [["{{title}}"]],
   "globalSearch.shortcut": [["{{keys}}"]],
+  // The second form is a chart that leaves its abscissa to another (0.55): ordinates only.
+  "seriesChart.nameFromAxes": [
+    ["{{ordinates}}", "{{abscissa}}"],
+    ["{{ordinates}}", undefined],
+  ],
   "pieChart.slice": [["{{label}}", "{{value}}", "{{percent}}"]],
   "pieChart.sliceShare": [["{{label}}", "{{percent}}"]],
   // The second form is `shareInValue` (0.53): no share, and nothing round it.

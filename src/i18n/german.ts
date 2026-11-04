@@ -736,6 +736,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       empty: "Keine Daten",
       legend: "Datenreihen",
       points: "Diagrammwerte",
+      // Kurvenschmiede's de-CH `common.chart_name` (0.55), as every catalogue takes its own.
+      nameFromAxes: (ordinates, abscissa) => (abscissa ? `${ordinates} über ${abscissa}` : ordinates),
     },
     pieChart: {
       slices: "Diagrammsegmente",
