@@ -21,7 +21,6 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "baseUrl": ".",
     // The showcase imports `@eifi1/ui-kit` exactly as a consumer does, so the code
     // beside each specimen is copy-pasteable. These must mirror showcase/alias.ts —
     // Vite resolves the page, tsc resolves the typecheck, and a path in only one of

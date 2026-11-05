@@ -4,7 +4,7 @@
  * that fails.
  *
  *   check:static  format:check · typecheck · lint · check:tokens · check:security · check:commit-rules · check:commits
- *   check:build   build · check:graph · check:package · export inventory · styling inventory · build:showcase · check:tailwind
+ *   check:build   build · check:graph · check:package · check:consumer-types · export inventory · styling inventory · build:showcase · check:tailwind
  *   check:test    test:coverage
  *
  * CI runs the same three scripts as three jobs, so the local gate and CI cannot drift:

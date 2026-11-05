@@ -157,6 +157,28 @@ describe("IconButton refused", () => {
     expect(onRow).not.toHaveBeenCalled();
   });
 
+  it("keeps a refused or pending press from the clickable row around it, without stopPropagation", async () => {
+    // A natively disabled button gets no click at all, so the row never heard it; the
+    // focusable refusal has to keep it from the row itself (Kurvenschmiede's 0.55
+    // adoption: its owner-only delete opened the row).
+    const user = userEvent.setup();
+    const onRow = vi.fn();
+    render(
+      // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- a clickable row stand-in
+      <div onClick={onRow}>
+        <IconButton label="Delete" refused="Only the owner can delete it.">
+          <Trash2 />
+        </IconButton>
+        <Button refused>Archive</Button>
+        <Button pending>Save</Button>
+      </div>,
+    );
+    await user.click(screen.getByRole("button", { name: "Delete" }));
+    await user.click(screen.getByRole("button", { name: "Archive" }));
+    await user.click(screen.getByRole("button", { name: /Save/ }));
+    expect(onRow).not.toHaveBeenCalled();
+  });
+
   it("`true`: keeps the label's bubble and swallows every activation", async () => {
     const user = userEvent.setup();
     const onClick = vi.fn();

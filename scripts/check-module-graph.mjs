@@ -258,7 +258,10 @@ const BUDGETS = [
   // opener as it engages and gives a gone opener's focus to them, so tabStopsAround,
   // focusFirst and focusIsLost ride with useFocusTrap, and the shell's overlays read the
   // rule — meant growth, 1,233 B.
-  { label: "the shell set", names: SHELL_SET, max: 158_700 },
+  // 158,735 B (55,179 gzip) in 0.55.1: a refused or pending Button / IconButton stops its
+  // click from reaching a clickable row, as a natively disabled one never did
+  // (Kurvenschmiede's 0.55 adoption) — meant growth, 35 B.
+  { label: "the shell set", names: SHELL_SET, max: 158_750 },
 ];
 const ENTRY = "\0import-cost";
 async function importCost(names) {

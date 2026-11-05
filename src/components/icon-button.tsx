@@ -490,9 +490,9 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
   /**
    * Refuse the action and stay where the user can learn why — {@link Button}'s
    * `refused` (0.52 code review 2026-10-31, held to 0.55), on the icon button:
-   * `aria-disabled="true"`, focusable, the disabled look, every activation swallowed
-   * (`stopPropagation` still applies, so a refused action in a clickable row does not
-   * open the row either). Kurvenschmiede's owner-only delete was a Tooltip round a
+   * `aria-disabled="true"`, focusable, the disabled look, every activation swallowed and
+   * kept from a clickable row around it, as a natively disabled button's (0.55.1; no
+   * `stopPropagation` needed). Kurvenschmiede's owner-only delete was a Tooltip round a
    * natively disabled IconButton (shared/lib/table-columns.tsx); the Lightbox's arrows
    * at an end write `aria-disabled` and guard their own `onClick`.
    *
@@ -905,8 +905,11 @@ function IconButtonElement({
       onClick={(e) => {
         if (stopPropagation) e.stopPropagation();
         // `preventDefault` too: a locked (or pending) submit must not submit its form.
+        // And kept from a clickable row around it, as a natively disabled button's click
+        // never reaches one (0.55.1, Kurvenschmiede's refused delete opened its row).
         if (inert) {
           e.preventDefault();
+          e.stopPropagation();
           return;
         }
         onClick?.(e);

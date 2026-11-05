@@ -17,8 +17,11 @@ import type { BillingOverview } from "./billing-overview";
  */
 export type SubscriptionStandingOverview = Pick<
   BillingOverview,
-  "status" | "in_good_standing" | "trial_ends_at" | "comped_until" | "current_period_end" | "cancel_at_period_end"
->;
+  "status" | "in_good_standing" | "cancel_at_period_end"
+> &
+  // The dates may be left out, as `null` (0.55.1): an app's generated overview has them
+  // optional with a default, and keksdose had to pass all three by name.
+  Partial<Pick<BillingOverview, "trial_ends_at" | "comped_until" | "current_period_end">>;
 
 /** Which of `billing.standing`'s lines applies, and the date it names. */
 type Standing =

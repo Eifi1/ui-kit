@@ -70,7 +70,13 @@ The rest is additive: each part replaces app code that can go when the app gets 
   a page restored from the back/forward cache.
   - keksdose: shared/state/auth-store.ts `endSessionChangedElsewhere`, `endSessionChangedWhileCached` and the two listeners go; `ended` reads the mirror owner through `readStored`.
   - kastlan: features/auth/stores/auth-store.ts `:200-205` becomes the watch; `ended` replaces `isSessionEndedElsewhere` (shared/api/client.ts:88-99). New: a restored tab ends its session too.
-  - KS: add the watch after the store (`ended: () => useAuth.getState().token !== null && readStored(STORAGE.accessToken) === null`).
+  - KS: add the watch after the store, `ended` keyed on the persisted user's id (as KS adopted it).
+  - **`ended` reads whose session the storage holds, not only whether a token is there**
+    (corrected after the release, Kurvenschmiede): another tab may sign out and then in as
+    someone else, so a page restored from the back/forward cache finds a token and would keep
+    showing the old account while sending the new one's. Compare the stored owner with this
+    tab's user (keksdose's mirror owner, KS's persisted user id); "no token" is only the
+    simplest case of "not mine".
 - **AppShell `pageFallback`**: a Suspense round the content area, so the bar and nav stay while
   a lazy page loads. keksdose: `pageFallback={<PageSkeleton />}` and drop `PageSuspense` round
   the `<Outlet />` (its banners then wait with the page; keep `PageSuspense` if they must not).

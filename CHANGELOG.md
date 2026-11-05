@@ -21,6 +21,16 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.56.0](https://github.com/Eifi1/ui-kit/compare/v0.55.0...v0.56.0) (2026-11-05)
+
+### Added
+
+* **billing,chart:** SubscriptionStanding's dates may be left out; LegendedSeriesChart legendAlign ([1907cf3](https://github.com/Eifi1/ui-kit/commit/1907cf3231d0c230079f93001258b05c34a996a0))
+
+### Fixed
+
+* **button:** a refused or pending press stays out of the clickable row around it ([2eaeb24](https://github.com/Eifi1/ui-kit/commit/2eaeb243e4166b4a9f84db15a3b6ee25da7bb323))
+
 ## [0.55.0](https://github.com/Eifi1/ui-kit/compare/v0.54.0...v0.55.0) (2026-11-04)
 
 ### ⚠ BREAKING CHANGES
