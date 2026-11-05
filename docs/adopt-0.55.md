@@ -216,3 +216,21 @@ peer ranges are unchanged: nothing to do in the apps.
   id, and kastlan on the server session's `sid` (stricter: the same person signing in again
   elsewhere also reloads a restored page, which kastlan wants), each with a test for a restored
   page after a sign-in elsewhere.
+- **`SubscriptionStandingOverview`'s three dates are optional** (`trial_ends_at`,
+  `comped_until`, `current_period_end`; left out reads as `null`): an app whose generated
+  overview has them optional passes the overview as it is (keksdose's subscription-cards.tsx
+  stops naming them).
+- **`LegendedSeriesChart` `legendAlign: "center" | "start"`** (centre by default, as before):
+  keksdose's cash-buffer key passes `legendAlign="start"` to stay under the plot's edge.
+- **For the apps' own guards:** `FeedbackInbox` owns the phone's swipe actions and the desktop
+  actions column, so a test that reads the page's source for them (keksdose's parity test)
+  looks for the component instead.
+- **server-kit 0.21, said louder** (keksdose's adoption):
+  - `database_is_local` reads every port in `ports` as local, so a tunnel to a LIVE database
+    must not listen on one of them (keksdose moved its feedback tunnel from 5433 to 5439 when it
+    passed `ports={5432, 5433}`);
+  - an app that refuses to start on `secret_problems` stops its DEPLOY at boot when a deployed
+    secret is under 32 characters: check the deployed secrets' length before the bump goes out
+    (keksdose's are 64);
+  - the dependency audit runs `uv audit`, a preview in uv 0.12; CI installs the latest uv, and a
+    change to the preview fails the step with exit 2, never silently.
