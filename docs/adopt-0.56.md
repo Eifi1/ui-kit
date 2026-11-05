@@ -17,8 +17,10 @@ optional now: code that READS them from a value of that type sees `| undefined` 
 the apps only pass one to `SubscriptionStanding` / `subscriptionStanding`.
 
 - **A refused or pending Button / IconButton keeps its press out of a clickable row around
-  it**, as a natively disabled button's click never reached one. `stopPropagation` is no
-  longer needed for that (Kurvenschmiede's owner-only delete opened its row without it).
+  it**, as a natively disabled button's click never reached one (Kurvenschmiede's owner-only
+  delete opened its row without `stopPropagation`). Only the refused or pending press: the
+  same button's ACTIVE press still bubbles, so a button that can be active in a clickable row
+  keeps `stopPropagation` (corrected after the release, Kurvenschmiede).
 - adopt-0.55's `watchSessionElsewhere` lines: `ended` compares whose session the storage
   holds with this tab's (above). keksdose keys on its mirror owner, KS on its persisted user
   id, and kastlan on the server session's `sid` (stricter: the same person signing in again
