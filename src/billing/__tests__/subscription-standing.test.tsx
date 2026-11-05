@@ -89,6 +89,21 @@ describe("subscriptionStanding — the first line that applies, in Marcel's orde
     expect(line({})).toBe("Renews on 2026-12-01");
   });
 
+  it("takes an overview whose dates are left out, as null (0.55.1, keksdose's generated type)", () => {
+    // The three dates are optional in the type: an app's generated overview has them so.
+    const bare: SubscriptionStandingOverview = {
+      status: "active",
+      in_good_standing: true,
+      cancel_at_period_end: false,
+    };
+    expect(subscriptionStanding(bare, L, day)).toBeNull();
+    expect(subscriptionStanding({ ...bare, current_period_end: PERIOD_END }, L, day)).toBe(
+      L.standing.renewsOn(day(PERIOD_END)),
+    );
+    expect(subscriptionStanding({ ...bare, status: "trialing" }, L, day)).toBeNull();
+    expect(subscriptionStanding({ ...bare, status: "comped" }, L, day)).toBe(L.standing.free);
+  });
+
   it("7. otherwise nothing", () => {
     // No period end to name.
     expect(line({ current_period_end: null })).toBeNull();

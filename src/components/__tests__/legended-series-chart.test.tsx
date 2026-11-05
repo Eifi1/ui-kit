@@ -148,6 +148,15 @@ describe("LegendedSeriesChart", () => {
     expect(within(container).queryAllByRole("button")).toHaveLength(0);
   });
 
+  it("centres the legend under the chart, or puts it at the start with legendAlign (0.55.1)", () => {
+    const { rerender } = render(<LegendedSeriesChart rows={ROWS} series={SERIES} axes={AXES} legend="key" />);
+    expect(screen.getByRole("list", { name: "Series" })).toHaveClass("justify-center");
+    rerender(<LegendedSeriesChart rows={ROWS} series={SERIES} axes={AXES} legend="key" legendAlign="start" />);
+    const key = screen.getByRole("list", { name: "Series" });
+    expect(key).toHaveClass("justify-start");
+    expect(key).not.toHaveClass("justify-center");
+  });
+
   it("centres its legend under the chart, and takes the caller's class on it", () => {
     render(<LegendedSeriesChart rows={ROWS} series={SERIES} axes={AXES} legendClassName="mt-4" />);
     const legend = screen.getByRole("group", { name: "Series" });

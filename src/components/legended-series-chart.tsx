@@ -69,7 +69,10 @@ export type LegendedSeriesChartProps<TRow extends object = object> = Omit<Series
      * marker, a reference line). A switch reports its entry's `key`.
      */
     legendEntries?: readonly LegendEntry[];
-    /** Onto the legend: its row is centred under the chart, wrapping. */
+    /** Where the legend's row sits under the chart: centred (the default), or at the
+     *  start, under the plot's edge (keksdose's cash-buffer key; 0.55.1). */
+    legendAlign?: "center" | "start";
+    /** Onto the legend: its row wraps under the chart, as `legendAlign` places it. */
     legendClassName?: string;
     /** Wraps the chart and the chart alone — a horizontal scroller the legend has to stay
      *  out of, so it is in view however far the chart is scrolled (keksdose's budget
@@ -105,6 +108,7 @@ export function LegendedSeriesChart<TRow extends object = object>({
   axes,
   legend = "toggle",
   legendEntries,
+  legendAlign = "center",
   legendClassName,
   frame,
   hidden: hiddenProp,
@@ -148,7 +152,10 @@ export function LegendedSeriesChart<TRow extends object = object>({
     <div>
       {frame ? frame(chart) : chart}
       {legend === "key" ? (
-        <StaticLegend entries={entries} className={cn("justify-center", legendClassName)} />
+        <StaticLegend
+          entries={entries}
+          className={cn(legendAlign === "start" ? "justify-start" : "justify-center", legendClassName)}
+        />
       ) : (
         <ToggleLegend
           entries={entries}
@@ -157,7 +164,7 @@ export function LegendedSeriesChart<TRow extends object = object>({
           // One series' legend is noise — until that series is off, and its entry is the
           // only way back.
           showSingle={entries.some((entry) => hidden.has(entry.key))}
-          className={cn("justify-center", legendClassName)}
+          className={cn(legendAlign === "start" ? "justify-start" : "justify-center", legendClassName)}
         />
       )}
     </div>
