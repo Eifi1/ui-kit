@@ -208,6 +208,10 @@ peer ranges are unchanged: nothing to do in the apps.
 
 ## 0.55.1
 
+**Must change:** nothing in the three apps. `SubscriptionStandingOverview`'s three dates are
+optional now: code that READS them from a value of that type sees `| undefined` beside `null`;
+the apps only pass one to `SubscriptionStanding` / `subscriptionStanding`.
+
 - **A refused or pending Button / IconButton keeps its press out of a clickable row around
   it**, as a natively disabled button's click never reached one. `stopPropagation` is no
   longer needed for that (Kurvenschmiede's owner-only delete opened its row without it).
