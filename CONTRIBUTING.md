@@ -446,7 +446,7 @@ for one maintainer. Revisit it if a second maintainer appears.
 every one blocks:
 
 - `check:static`: format:check · typecheck · lint · check:tokens · check:security · check:commit-rules · check:commits
-- `check:build`: build · check:graph · check:package · export inventory · styling inventory · build:showcase · check:tailwind
+- `check:build`: build · check:graph · check:package · check:consumer-types · export inventory · styling inventory · build:showcase · check:tailwind
 - `check:test`: test:coverage
 
 **Serial, and it stops at the first failing group** (since 0.34, TST-1), naming the groups it

@@ -69,11 +69,12 @@ try {
   );
   try {
     execFileSync(process.execPath, [tsc, "-p", dir], { encoding: "utf8", stdio: "pipe" });
+    console.log(`✓ TypeScript ${FLOOR} reads all ${declarations.length} entry points' declarations`);
   } catch (error) {
+    // `exitCode`, not `exit()`: the `finally` below still removes the scratch folder.
     console.error(`✖ TypeScript ${FLOOR} cannot read the kit's declarations:\n${error.stdout ?? error.message}`);
-    process.exit(1);
+    process.exitCode = 1;
   }
-  console.log(`✓ TypeScript ${FLOOR} reads all ${declarations.length} entry points' declarations`);
 } finally {
   rmSync(dir, { recursive: true, force: true });
 }
