@@ -205,6 +205,7 @@ const WriteLock018Demo = lazySection(() => import("./sections/write-lock-018-dem
 const LoadingState016Demo = lazySection(() => import("./sections/feedback-more-demo"), "LoadingState016Demo");
 const Media016Demo = lazySection(() => import("./sections/media-demo"), "Media016Demo");
 const Numbers016Demo = lazySection(() => import("./sections/numbers"), "Numbers016Demo");
+const QuantityDemo = lazySection(() => import("./sections/numbers"), "QuantityDemo");
 const Files016Demo = lazySection(() => import("./sections/file-inputs"), "Files016Demo");
 const Chips016Demo = lazySection(() => import("./sections/chips-toggles"), "Chips016Demo");
 const ChipSnapEdges018Demo = lazySection(() => import("./sections/chip-toast-018-demo"), "ChipSnapEdges018Demo");
@@ -787,6 +788,15 @@ export const GROUPS: ShowcaseGroup[] = [
           "CurrencySelect",
           "CurrencyFlag",
           "NumberPadSheet",
+          "QuantityInput",
+          "QuantityField",
+          "RhfQuantityField",
+          "formatQuantity",
+          "parseQuantity",
+          "sumQuantities",
+          "convertQuantity",
+          "toBaseQuantity",
+          "quantityFamily",
         ],
         Body: () => (
           <>
@@ -795,6 +805,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <Numbers016Demo />
             <Numbers022Demo />
             <AmountClass023Demo />
+            <QuantityDemo />
           </>
         ),
       },

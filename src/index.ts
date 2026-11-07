@@ -398,6 +398,12 @@ export * from "./components/switch";
 export * from "./components/slider";
 export * from "./components/time-input";
 export * from "./components/number-field";
+// 0.57 (keksdose SL-10): a quantity's amount and unit as one control, and as a labelled
+// field with a suggestion to take. Named, not `export *`: the row both draw is internal.
+export { QuantityInput, DEFAULT_QUANTITY_LABELS } from "./components/quantity-input";
+export type { QuantityInputProps, QuantityLabels } from "./components/quantity-input";
+export { QuantityField } from "./components/quantity-field";
+export type { QuantityFieldProps } from "./components/quantity-field";
 export * from "./components/sparkline";
 export * from "./components/stat-tile";
 export * from "./components/signature-pad";

@@ -1984,6 +1984,15 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         reverted: "撤销",
       },
     },
+    // 0.57 (keksdose SL-10): a quantity's words — "个", the general measure word for a
+    // count (g, kg, ml, cl, dl and l are SI symbols in every language), the unit select's
+    // name, and the suggestion's lead and button.
+    quantity: {
+      pcs: "个",
+      unit: (field) => (field ? `“${field}”的单位` : "单位"),
+      suggested: "建议值",
+      takeSuggestion: (quantity) => `使用 ${quantity}`,
+    },
   };
 }
 

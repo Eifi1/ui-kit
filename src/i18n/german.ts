@@ -2155,5 +2155,14 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         reverted: "Zurückgenommen",
       },
     },
+    // 0.57 (keksdose SL-10): a quantity's words — "Stk.", the usual abbreviation (g, kg,
+    // ml, cl, dl and l are SI symbols in every language), the unit select's name, and the
+    // suggestion's lead and button.
+    quantity: {
+      pcs: "Stk.",
+      unit: (field) => (field ? `Einheit für „${field}“` : "Einheit"),
+      suggested: "Vorgeschlagen",
+      takeSuggestion: (quantity) => `${quantity} übernehmen`,
+    },
   };
 }

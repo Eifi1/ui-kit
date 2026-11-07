@@ -2083,6 +2083,15 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         reverted: "Revertido",
       },
     },
+    // 0.57 (keksdose SL-10): a quantity's words — "ud." (unidad), the usual abbreviation
+    // for pieces (g, kg, ml, cl, dl and l are SI symbols in every language), the unit select's
+    // name, and the suggestion's lead and button.
+    quantity: {
+      pcs: "ud.",
+      unit: (field) => (field ? `Unidad para «${field}»` : "Unidad"),
+      suggested: "Sugerido",
+      takeSuggestion: (quantity) => `Usar ${quantity}`,
+    },
   };
 }
 

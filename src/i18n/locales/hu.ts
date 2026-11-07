@@ -2081,6 +2081,16 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         reverted: "Visszavonva",
       },
     },
+    // 0.57 (keksdose SL-10): a quantity's words — "db" (darab), the usual abbreviation
+    // for pieces (g, kg, ml, cl, dl and l are SI symbols in every language), the unit
+    // select's name, and the suggestion's lead and button. The field and the quantity
+    // after a colon, as `fieldSuggestion.clearName`: no suffix has to agree with them.
+    quantity: {
+      pcs: "db",
+      unit: (field) => (field ? `Mértékegység: ${field}` : "Mértékegység"),
+      suggested: "Javasolt",
+      takeSuggestion: (quantity) => `Átvétel: ${quantity}`,
+    },
   };
 }
 

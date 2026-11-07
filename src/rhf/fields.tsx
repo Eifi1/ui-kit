@@ -16,6 +16,7 @@
  *   <RhfToggleGroup name="interval" label="Interval" options={INTERVALS} />
  *   <RhfCountrySelect name="country" label="Country" preferred={["CH", "DE"]} />
  *   <RhfMonthPicker name="fiscalYear" label="Fiscal year" mode="year" valueAsNumber />
+ *   <RhfQuantityField name="quantity" label="Quantity" family="mass" />
  * </Form>
  * ```
  *
@@ -62,6 +63,9 @@ import { Input, type InputProps } from "../components/input";
 import { Select, type SelectProps } from "../components/select";
 import { Textarea, type TextareaProps } from "../components/textarea";
 import { NumberField, type NumberFieldProps } from "../components/number-field";
+import { QuantityFieldBody, type QuantityFieldProps } from "../components/quantity-field";
+import { firstOfferedUnit } from "../components/quantity-input";
+import { QUANTITY_UNITS, type Quantity, type QuantityUnit } from "../lib/quantity";
 import { AmountInput } from "../components/amount-input";
 import type { MoneyFieldProps } from "../components/money-field";
 import { useMoneyDraft } from "../components/money-draft";
@@ -96,6 +100,7 @@ import { useKitLocale } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import { decimalMark, readTyped } from "../lib/decimal-marks";
 import { hasContent } from "../lib/presence";
+import { plainText } from "../lib/plain-text";
 
 // ── the shell ────────────────────────────────────────────────────────────────
 
@@ -606,6 +611,136 @@ export function RhfIntegerField<
       digits={props.digits ?? 0}
       calculator={props.calculator ?? false}
       emptyValue={props.emptyValue === undefined ? "" : props.emptyValue}
+    />
+  );
+}
+
+// ── quantity ─────────────────────────────────────────────────────────────────
+
+export type RhfQuantityFieldProps<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TTransformed = TFieldValues,
+> = RhfFieldBaseProps<TFieldValues, TName, TTransformed> &
+  // QuantityField's own (the units, the digits, the suggestion …), less what the form and
+  // the shell decide: `help` and `hint` are the shell's, drawn as every bound field's.
+  Omit<QuantityFieldProps, BoundByForm | "help" | "nullable" | "id"> & {
+    /** The unit a value with no unit starts in (a form whose default is `null`). Default
+     *  the first unit the select offers. */
+    defaultUnit?: QuantityUnit;
+    /** `false`: an emptied amount snaps back instead of storing `{ amount: null, unit }`.
+     *  Default `true`, as {@link RhfNumberField}'s — whether it may be empty is `rules`'. */
+    nullable?: boolean;
+  };
+
+/**
+ * The kit's {@link QuantityField} bound to one field, which holds a `Quantity` —
+ * `{ amount, unit }`, the object itself. A typed amount stores on blur or Enter, a picked
+ * unit at once, and either marks the field touched. A stored value that is not a quantity
+ * (`null`, a default not filled in yet) shows as no amount in `defaultUnit`.
+ *
+ * Bound as {@link RhfNumberField} is: `field.ref` is the amount `<input>`, so focus on
+ * error lands there; the form's error paints both controls and is the shell's message;
+ * the hint is the shell's description. The `suggestion` line stays the field's own,
+ * between the control and the hint.
+ *
+ * ```tsx
+ * <RhfQuantityField name="quantity" label="Quantity" family="volume" units={["ml", "dl", "l"]}
+ *   suggestion={usualPack} suggestionFrom="Usual pack" rules={{ validate: (q) => q?.amount != null }} />
+ * ```
+ */
+export function RhfQuantityField<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TTransformed = TFieldValues,
+>({
+  name,
+  control,
+  rules,
+  label,
+  hint,
+  help,
+  required,
+  disabled,
+  excludeWhenDisabled,
+  className,
+  defaultUnit,
+  nullable = true,
+  ...quantityProps
+}: RhfQuantityFieldProps<TFieldValues, TName, TTransformed>) {
+  return (
+    <RhfField
+      {...{ name, control, rules, label, hint, help, required, disabled, excludeWhenDisabled, className }}
+      render={({ field, invalid, id }) => (
+        // FormControl clones this element with `id` / `aria-describedby` /
+        // `aria-invalid`, which QuantityControl hands on to the field.
+        <QuantityControl
+          field={field as unknown as ControllerRenderProps}
+          focusRef={field.ref}
+          invalid={invalid}
+          required={required}
+          id={id}
+          defaultUnit={defaultUnit}
+          fieldName={plainText(label)}
+          nullable={nullable}
+          quantityProps={quantityProps}
+        />
+      )}
+    />
+  );
+}
+
+function QuantityControl({
+  field,
+  focusRef,
+  invalid,
+  required,
+  id,
+  defaultUnit,
+  fieldName,
+  nullable,
+  quantityProps,
+  ...aria
+}: {
+  field: ControllerRenderProps;
+  /** `field.ref`, handed over on its own so the compiler reads `field` as data. */
+  focusRef: ControllerRenderProps["ref"];
+  invalid: boolean;
+  required?: boolean;
+  id: string;
+  defaultUnit?: QuantityUnit;
+  /** The shell's label as text, for the unit select's name ("Unit for “Flour”"). */
+  fieldName?: string;
+  nullable: boolean;
+  quantityProps: Omit<RhfQuantityFieldProps, keyof RhfFieldBaseProps | "defaultUnit" | "nullable">;
+  "aria-describedby"?: string;
+  "aria-invalid"?: QuantityFieldProps["aria-invalid"];
+}) {
+  const stored: unknown = field.value;
+  const held = stored !== null && typeof stored === "object" ? (stored as Partial<Quantity>) : {};
+  const unit =
+    typeof held.unit === "string" && (QUANTITY_UNITS as readonly string[]).includes(held.unit)
+      ? held.unit
+      : (defaultUnit ?? firstOfferedUnit(quantityProps.units, quantityProps.family));
+  const amount = typeof held.amount === "number" && Number.isFinite(held.amount) ? held.amount : null;
+  return (
+    <QuantityFieldBody
+      {...quantityProps}
+      // The amount `<input>` (API-3): focus on error, and `setFocus`'s `shouldSelect`.
+      ref={focusRef}
+      aria-describedby={aria["aria-describedby"]}
+      aria-invalid={aria["aria-invalid"]}
+      required={required}
+      id={id}
+      value={{ amount, unit }}
+      fieldName={fieldName}
+      onChange={(next) => {
+        field.onChange(next);
+        field.onBlur();
+      }}
+      nullable={nullable}
+      disabled={field.disabled}
+      invalid={invalid}
     />
   );
 }

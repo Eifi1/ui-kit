@@ -105,6 +105,7 @@ import { DEFAULT_HELD_CHANGES_BANNER_LABELS } from "../shell/held-changes-banner
 import { DEFAULT_FIELD_SUGGESTION_LABELS } from "../components/field-suggestion-labels";
 import { DEFAULT_CONSENT_AGAIN_LABELS } from "../components/consent-again-notice-labels";
 import { DEFAULT_RELEASE_NOTES_LABELS } from "../components/release-notes-labels";
+import { DEFAULT_QUANTITY_LABELS } from "../components/quantity-labels";
 import { DEFAULT_SHARE_CARD_LABELS } from "../components/share-card-labels";
 import { DEFAULT_REAUTH_DIALOG_LABELS } from "../components/reauth-dialog-labels";
 import { DEFAULT_SERVER_WAKE_LABELS } from "../components/server-wake-labels";
@@ -274,4 +275,5 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   fieldSuggestion: DEFAULT_FIELD_SUGGESTION_LABELS,
   consentAgain: DEFAULT_CONSENT_AGAIN_LABELS,
   releaseNotes: DEFAULT_RELEASE_NOTES_LABELS,
+  quantity: DEFAULT_QUANTITY_LABELS,
 };

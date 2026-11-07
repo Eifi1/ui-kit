@@ -2104,6 +2104,15 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         reverted: "Ritirato",
       },
     },
+    // 0.57 (keksdose SL-10): a quantity's words — "pz." (pezzi), the usual abbreviation
+    // for pieces (g, kg, ml, cl, dl and l are SI symbols in every language), the unit select's
+    // name, and the suggestion's lead and button.
+    quantity: {
+      pcs: "pz.",
+      unit: (field) => (field ? `Unità per «${field}»` : "Unità"),
+      suggested: "Suggerito",
+      takeSuggestion: (quantity) => `Usa ${quantity}`,
+    },
   };
 }
 

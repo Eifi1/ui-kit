@@ -2126,6 +2126,15 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         reverted: "Annulé",
       },
     },
+    // 0.57 (keksdose SL-10): a quantity's words — "pce" (pièce), the usual abbreviation
+    // for pieces (g, kg, ml, cl, dl and l are SI symbols in every language), the unit select's
+    // name, and the suggestion's lead and button.
+    quantity: {
+      pcs: "pce",
+      unit: (field) => (field ? `Unité pour «\u202f${field}\u202f»` : "Unité"),
+      suggested: "Suggéré",
+      takeSuggestion: (quantity) => `Utiliser ${quantity}`,
+    },
   };
 }
 

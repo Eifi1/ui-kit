@@ -13,6 +13,7 @@ import { NumberInput } from "../number-input";
 import { NumberField, IntegerField } from "../number-field";
 import { AmountInput } from "../amount-input";
 import { MoneyField } from "../money-field";
+import { QuantityField } from "../quantity-field";
 import { ToggleGroup } from "../toggle-group";
 import { Slider } from "../slider";
 import { CountrySelect } from "../country-select";
@@ -54,6 +55,7 @@ import {
   RhfMonthPicker,
   RhfNumberField,
   RhfPhoneInput,
+  RhfQuantityField,
   RhfSelect,
   RhfTextarea,
   RhfTextCombobox,
@@ -178,6 +180,9 @@ const SWEEP: Record<SweptField, Make> = {
   NumberInput: (hint, help) => <NumberInput label="Status" value="1" onChange={noop} hint={hint} help={help} />,
   NumberField: (hint, help) => <NumberField label="Status" value={1} onCommit={noop} hint={hint} help={help} />,
   IntegerField: (hint, help) => <IntegerField label="Status" value={1} onCommit={noop} hint={hint} help={help} />,
+  QuantityField: (hint, help) => (
+    <QuantityField label="Status" value={{ amount: 1, unit: "kg" }} onChange={noop} hint={hint} help={help} />
+  ),
   AmountInput: (hint, help) => <AmountInput label="Status" value="1" onChange={noop} hint={hint} help={help} />,
   MoneyField: (hint, help) => <MoneyField label="Status" value={1} onCommit={noop} hint={hint} help={help} />,
   Slider: (hint, help) => <Slider label="Status" value={1} min={0} max={10} onChange={noop} hint={hint} help={help} />,
@@ -333,6 +338,11 @@ const SWEEP: Record<SweptField, Make> = {
   RhfPhoneInput: (hint, help) => (
     <InForm>
       <RhfPhoneInput name="text" label="Status" hint={hint} help={help} />
+    </InForm>
+  ),
+  RhfQuantityField: (hint, help) => (
+    <InForm>
+      <RhfQuantityField name="text" label="Status" family="mass" hint={hint} help={help} />
     </InForm>
   ),
   RhfCountrySelect: (hint, help) => (

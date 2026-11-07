@@ -362,7 +362,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.57 (+8, keksdose SL-10): `QUANTITY_UNITS`, `QUANTITY_DIGITS`, `quantityFamily`,
   // `toBaseQuantity`, `convertQuantity`, `sumQuantities`, `formatQuantity`, `parseQuantity` — quantities
   // and their exact arithmetic.
-  ["@eifi1/ui-kit", barrel, 1000],
+  // 0.57 (+3, keksdose SL-10): `QuantityInput`, `QuantityField` and
+  // `DEFAULT_QUANTITY_LABELS` — an amount and its unit as one control.
+  ["@eifi1/ui-kit", barrel, 1003],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -438,7 +440,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.24.0: RhfInlineEntityCombobox (kastlan's AccountPicker, focus-on-error) (+1).
   // 0.35.0: the shadcn scaffold — FormField, useFormField, FormItem, FormLabel,
   // FormControl, FormDescription, FormMessage — is the bound fields' own (API-6f) (−7).
-  ["@eifi1/ui-kit/rhf", rhf, 22],
+  // 0.57: RhfQuantityField, a `Quantity` bound to one field (keksdose SL-10) (+1).
+  ["@eifi1/ui-kit/rhf", rhf, 23],
   // 0.45.0: local-first phase 1 (docs/local-first-harmonization.md §1.6) —
   // `createQueryPersistence`, `DEFAULT_SCRUB_FIELDS`, `SignOutPendingDialog`, `PwaUpdatePrompt`,
   // `SharedComputerChoice`, `isSharedComputer`, `setSharedComputer` and the three
