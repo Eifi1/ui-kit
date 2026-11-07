@@ -2588,7 +2588,12 @@ No server change, no new wiring: `src/feedback/feedback-inbox-bulk.tsx`.
   category** (BUG, IDEA, QUESTION, OTHER: never CRASH, §3.4's 422) and, with
   `publicSwitch`, **Visibility** (Visible to others / Not visible to others). A value no
   selected report would change is disabled. Under a locked `WriteLockProvider` with the
-  inbox's `commit`, the bar refuses like the status cell.
+  inbox's `commit`, the bar refuses like the status cell. **On a desktop the strip is there
+  from the start** (`open`), at "0 selected" with its lists disabled: it sits in the flow
+  above the table, and appearing with the first ticked row pushed every row down by its
+  height, away from the pointer reaching for the next box (the 0.57 screenshot check). On
+  a phone the card floats over the page, moves nothing, and comes with the first selected
+  card.
 - **The writes.** **No bulk endpoint**: keksdose has only `PATCH /feedback/{id}`, and each
   report's change must pass the server's rules for that report (§3.4). So the bar calls the
   page's `update` once per report — `{ id, status }`, `{ id, category }` or `{ id, public }`

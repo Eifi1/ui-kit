@@ -26,7 +26,8 @@ types an app would only meet by building one itself changed shape:
 ## Feedback inbox: multi-select and bulk edit (feedback §13.6)
 
 The admin on `/feedback` gets a box per row and a select-all; select-all takes what the
-table's filters keep, on every page. On the phone, a long press on a card enters selection
+table's filters keep, on every page. On a desktop the bulk strip stands above the table from
+the start, so ticking a row moves no row. On the phone, a long press on a card enters selection
 mode; swipes rest while selecting, and the awaiting toggle steps aside while rows are
 selected. A bulk bar sets the selected reports' **status**, **category** (never CRASH) and,
 with `publicSwitch`, **Visible to others**.
@@ -56,8 +57,9 @@ it compiles and sends `category` anyway; widen the type so it says so.
 
 **In the browser (each app, as admin):**
 
-- Desktop `/feedback`: tick rows, select-all under a status filter, set a status, then Undo.
-  Check that the bar appearing above the table does not move the row you are working on.
+- Desktop `/feedback`: the bulk strip sits above the table from the start ("0 selected",
+  its lists greyed out), so ticking a row moves nothing. Tick rows, select-all under a
+  status filter, set a status, then Undo.
 - Phone: long-press a card, set a status; the floating bar sits above the bottom nav, and
   the awaiting toggle comes back after Clear.
 - kastlan: no Visibility list (no `publicSwitch`); with `commit`, the bar is locked offline

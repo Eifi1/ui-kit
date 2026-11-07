@@ -128,10 +128,24 @@ describe("the selection", () => {
     renderInbox();
     expect(screen.getByRole("checkbox", { name: "Select all rows" })).toBeInTheDocument();
     expect(screen.getAllByRole("checkbox", { name: "Select row" })).toHaveLength(3);
-    // The bar shows with the first box ticked, and counts.
-    expect(screen.queryByRole("toolbar")).toBeNull();
+    // On a desktop the strip is there before the first box is ticked — the SAME element
+    // after it — so ticking a row moves no row (it appearing above the table pushed them
+    // all down by its height, under the pointer reaching for the next box). Its lists wait.
+    const strip = bar();
+    expect(strip).toHaveAccessibleName("0 selected");
+    expect(within(strip).getByRole("button", { name: "Set status" })).toBeDisabled();
+    expect(within(strip).getByRole("button", { name: "Set category" })).toBeDisabled();
     tick("Export button missing");
+    expect(bar()).toBe(strip);
     expect(bar()).toHaveAccessibleName("1 selected");
+    expect(within(strip).getByRole("button", { name: "Set status" })).toBeEnabled();
+  });
+
+  it("draws no strip on a phone until a card is selected: the floating card moves nothing", () => {
+    restore?.();
+    restore = stubPhone();
+    renderInbox();
+    expect(screen.queryByRole("toolbar")).toBeNull();
   });
 
   it.each([
@@ -193,11 +207,14 @@ describe("a bulk status change", () => {
       "Set 3 reports to “Won't do”",
       expect.objectContaining({ label: "Undo", duration: 8000 }),
     );
-    // Done: the selection empties, and the bar plays its exit, inert.
+    // Done: the selection empties; the desktop's strip stays where it is, at "0 selected",
+    // its lists waiting again — nothing under the pointer moves.
     expect(
       screen.getAllByRole("checkbox", { name: "Select row" }).filter((box) => (box as HTMLInputElement).checked),
     ).toHaveLength(0);
-    expect(bar()).toHaveAttribute("inert");
+    expect(bar()).not.toHaveAttribute("inert");
+    expect(bar()).toHaveAccessibleName("0 selected");
+    expect(within(bar()).getByRole("button", { name: "Set status" })).toBeDisabled();
   });
 
   it("puts each report back to ITS previous status with the one Undo", async () => {

@@ -5,6 +5,7 @@ import { BulkActionBar, type ResponsiveBulkActionBarVariant } from "../component
 import { Button } from "../components/button";
 import type { DataTableProps } from "../components/data-table";
 import { Popover } from "../components/popover";
+import { useBreakpoint } from "../hooks/use-breakpoint";
 import { toast } from "../components/toast";
 import type { CommitScope } from "../components/write-lock";
 import type { LabelOverride } from "../i18n/kit-labels";
@@ -296,6 +297,7 @@ function BulkChoiceMenu({
   label,
   icon: Icon,
   choices,
+  empty,
   busy,
   running,
   commit,
@@ -303,6 +305,8 @@ function BulkChoiceMenu({
   label: string;
   icon: LucideIcon;
   choices: readonly BulkChoice[];
+  /** Nothing selected yet (the desktop's strip, shown from the start): the list waits. */
+  empty: boolean;
   /** Some bulk change is out: no second one starts. */
   busy: boolean;
   /** This one is. */
@@ -322,7 +326,7 @@ function BulkChoiceMenu({
           aria-haspopup="dialog"
           aria-expanded={open}
           pending={running}
-          disabled={busy && !running}
+          disabled={empty || (busy && !running)}
           commit={commit}
           onClick={toggle}
         >
@@ -360,8 +364,13 @@ function BulkChoiceMenu({
 /**
  * The inbox's bulk bar: the count, Clear, and Set status / Set category / Visibility, each
  * a list of the values — the statuses in chain order with their glyphs, the categories
- * less CRASH, on and off. Rendered unconditionally, as `BulkActionBar` asks: it shows with
- * the first selected row.
+ * less CRASH, on and off. Rendered unconditionally, as `BulkActionBar` asks.
+ *
+ * On a desktop the strip is OPEN from the start, at "0 selected" with its lists waiting:
+ * it sits in the flow above the table, so showing it with the first ticked row pushed every
+ * row down by its height — away from the pointer reaching for the next box — and clearing
+ * pulled them back up (the 0.57 screenshot check). On a phone the card floats over the page
+ * and moves nothing, so it still comes with the first selected card.
  *
  * @internal Drawn by {@link FeedbackInbox}; not part of `/feedback` or the barrel.
  */
@@ -380,13 +389,22 @@ export function FeedbackInboxBulkBar<T extends FeedbackRecord>({
   const categoryNames = useFeedbackCategoryLabels();
   const { rows, pending, setPublic } = bulk;
   const busy = pending !== null;
+  const empty = rows.length === 0;
+  const desktop = useBreakpoint("md");
   const sends = (field: BulkField, value: FeedbackStatus | FeedbackCategory | boolean) =>
     feedbackBulkTargets(rows, field, value).length > 0;
   return (
-    <BulkActionBar count={rows.length} onClear={bulk.clear} variant={BAR_VARIANT} className="md:shrink-0">
+    <BulkActionBar
+      count={rows.length}
+      open={desktop || undefined}
+      onClear={bulk.clear}
+      variant={BAR_VARIANT}
+      className="md:shrink-0"
+    >
       <BulkChoiceMenu
         label={words.bulkStatus}
         icon={CircleDot}
+        empty={empty}
         busy={busy}
         running={pending === "status"}
         commit={commit}
@@ -401,6 +419,7 @@ export function FeedbackInboxBulkBar<T extends FeedbackRecord>({
       <BulkChoiceMenu
         label={words.bulkCategory}
         icon={Tag}
+        empty={empty}
         busy={busy}
         running={pending === "category"}
         commit={commit}
@@ -416,6 +435,7 @@ export function FeedbackInboxBulkBar<T extends FeedbackRecord>({
         <BulkChoiceMenu
           label={words.bulkVisibility}
           icon={Eye}
+          empty={empty}
           busy={busy}
           running={pending === "public"}
           commit={commit}
