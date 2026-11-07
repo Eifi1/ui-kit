@@ -11,7 +11,17 @@ feedback #663 in keksdose). Both are additive. With them: the minor dependency u
 
 **Restart the Vite dev server after the bump** (`vite --force` if a change still does not show).
 
-**Must change:** nothing in the three apps.
+**Must change:** nothing in the three apps (checked: none of them names these types). Five
+types an app would only meet by building one itself changed shape:
+
+- `ThemeStore`, `PaletteStore`, `TextSizeStore` and `ContrastStore` (what `createThemeStore`
+  and its siblings return): zustand 5.1 types the persist API's `rehydrate()` as
+  `Promise<void>`, where 5.0 said `Promise<void> | void`. Awaiting it is unchanged; only a
+  hand-made stand-in whose `rehydrate` returns nothing no longer fits.
+- `FeedbackColumnsOptions`: its `labels` is the whole `FeedbackPageLabels`, which gained the
+  nine bulk keys below. The kit's catalogues and `useKitLabels` carry them; only an app that
+  calls `feedbackColumns` with a labels object it wrote out itself would add them (none does
+  since the inbox moved into the kit in 0.55).
 
 ## Feedback inbox: multi-select and bulk edit (feedback §13.6)
 
