@@ -21,6 +21,19 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.57.0](https://github.com/Eifi1/ui-kit/compare/v0.56.0...v0.57.0) (2026-11-07)
+
+### Added
+
+* **data-table:** selection.onFilteredRowsChange tells the owner which rows the filters keep ([ded83d2](https://github.com/Eifi1/ui-kit/commit/ded83d255f74d1aeb1421f690251644dd775d606))
+* **feedback:** multi-select and bulk edit in the feedback inbox ([ba5b4a5](https://github.com/Eifi1/ui-kit/commit/ba5b4a501df01e91785fce39c8717777d74bf5b5))
+* **quantity:** quantities with exact arithmetic, formatting and parsing ([f1573d7](https://github.com/Eifi1/ui-kit/commit/f1573d7bed3aac0abe83bfd904c05d4f0e2e3f24))
+* **quantity:** QuantityInput, QuantityField and RhfQuantityField ([43079d5](https://github.com/Eifi1/ui-kit/commit/43079d53f70a3f36ba870be49e9ca2872989b89a))
+
+### Fixed
+
+* **feedback:** the desktop's bulk strip stands above the table from the start ([ed83c64](https://github.com/Eifi1/ui-kit/commit/ed83c64f39ea1faa4360e6393112d4a8b15b4093))
+
 ## [0.56.0](https://github.com/Eifi1/ui-kit/compare/v0.55.0...v0.56.0) (2026-11-05)
 
 ### Added
