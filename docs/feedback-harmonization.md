@@ -23,7 +23,7 @@ names them. The snapshot, the per-repo to-dos and the review records are in
 | 2 | Decisions | — | §7.2, §7.4, §7.7; §8.2 (READY, 0.31) |
 | 3 | The API contract (A) | server-kit 0.1.0 (`feedback`); apps' backends | §7.1, §7.5–§7.9, §7.15, §7.16; §8.2 (server-kit 0.5); round 0.36 (§3.5, §3.6: the limiter is charged before the work, as the three apps do; [server-services §2.11](server-services-harmonization.md)) |
 | 3.8 | What kastlan and Kurvenschmiede change | — (archived) | |
-| 4 | The UI contract (B) | ui-kit 0.27.0 | §7.3, §7.4, §7.10–§7.14; §8.1, §8.2 (ui-kit 0.31); ui-kit 0.52 (§4.5: the Undo from the mutation's promise); §13 (ui-kit 0.55: §4.3's pages assembled by the kit, `?row=` digits only) |
+| 4 | The UI contract (B) | ui-kit 0.27.0 | §7.3, §7.4, §7.10–§7.14; §8.1, §8.2 (ui-kit 0.31); ui-kit 0.52 (§4.5: the Undo from the mutation's promise); §13 (ui-kit 0.55: §4.3's pages assembled by the kit, `?row=` digits only); §13.6 (ui-kit 0.57: the bulk edit, §4.5's one Undo per batch, swipes resting while the phone selects) |
 | 5 | What the kit adds, what stays app-side (C) | ui-kit 0.27.0, server-kit 0.1.0 | §8.1, §8.2 (ui-kit 0.31, server-kit 0.5) |
 | 6 | Per repo (D) | — (archived) | |
 | 7 | Settled points — the final canon | — | index; folded items point to their § |
@@ -32,7 +32,7 @@ names them. The snapshot, the per-repo to-dos and the review records are in
 | 10 | Round 0.40: rework as a conversation entry, the feedback menu | **§10 settled 2026-10-16 (round 0.40)**, for server-kit 0.13 / ui-kit 0.40 | amends §2.1 (REWORK), §2.2, §3.4 (the rework), §4.1 (the menu), §4.3–§4.5, §5; §9.7, §9.11, §9.12, §9.13 |
 | 11 | Round 0.46: admin alerts for new reports and reworks | **§11 settled 2026-10-19 (round 0.46)**, for server-kit 0.16 / ui-kit 0.46 | adds a notification type (notifications §10.2); amends §10.2 decision 10 (no admin mail) |
 | 12 | Round 0.47: attachments on admin replies and public comments, inline images | **§12 settled 2026-10-21 (Marcel)**, for server-kit 0.18 / ui-kit 0.47; the apps review it in the build review | amends §9.7 (a reply's file), §9.8 (a comment's file), §9.10 (the files predicate, a comment's URL), §9.12 (erasure), §10.3 (who draws an entry's file), §4.4.3 (the Attachment section) |
-| 13 | Round 0.55: the inbox, assembled once | **§13 (2026-11-04)**, ui-kit 0.55, from the kastlan reuse audit 2026-11-02 (proposal 2); no server change | amends §4.3 (the two pages' canonical assembly: `FeedbackInbox` / `useFeedbackInbox`; `?row=` digits only), §5 (the kit's list; the app keeps its queries and mutations) |
+| 13 | Round 0.55: the inbox, assembled once | **§13 (2026-11-04)**, ui-kit 0.55, from the kastlan reuse audit 2026-11-02 (proposal 2); no server change. §13.6 the bulk edit, ui-kit 0.57 (keksdose dev #663); no server change | amends §4.3 (the two pages' canonical assembly: `FeedbackInbox` / `useFeedbackInbox`; `?row=` digits only), §5 (the kit's list; the app keeps its queries and mutations); §13.6 amends §4.5 (one Undo per batch) and §3.4's use (`category` through `update`) |
 
 ## 1. Where each one stands
 
@@ -563,6 +563,14 @@ with it, and the row left the filtered list with nothing saying what it became. 
 callback form stays accepted, deprecated in 0.52 and removed in 0.53. The row detail's own updates
 (the rework and description editors closing on success) take the promise the same way.
 
+**A batch** (ui-kit 0.57, §13.6): the inbox's bulk bar sets the status of every selected
+report through the same mutation, one PATCH per report, and answers with ONE 8 s toast for
+the batch, **Set 3 reports to “{{status}}”** / **3 Meldungen auf „{{status}}“ gesetzt**,
+with **Undo**, which PATCHes each report that changed back to ITS previous status (a
+selection may mix them) and confirms **3 reports are back as they were** /
+**3 Meldungen wiederhergestellt**. A report whose PATCH failed is not in the Undo and stays
+selected. The category and Visible to others take the same toast and the same Undo.
+
 **Swipes** (the kit's `feedbackSwipePlan`, `DEFAULT_FEEDBACK_SWIPE`): actions `advance`
 (to `nextFeedbackStatus`, `ChevronsRight`, tone `info`, label = the next status), `done`
 (`Check`, tone `success`, "Done"), `wont_do` (`Ban`, tone `danger`, "Won't do"); an
@@ -575,7 +583,9 @@ uses exactly those three ids on logical `start` / `end` ladders and drops `"none
 any unknown id, mirroring `TranslationReviewPanel`'s binding. The other two apps use the
 default. **Every swipe commits through the same undoable change as a tap**: the 8 s
 "Set to …" toast with Undo (`feedbackSwipePlan` takes `useFeedbackStatusUndo`'s
-change).
+change). **The swipes rest while the phone selects** (ui-kit 0.57, §13.6): a long press
+on a card enters the selection mode, where a sideways drag would be a second meaning for a
+selecting touch.
 
 ### 4.6 Crash filing (client)
 
@@ -2379,7 +2389,7 @@ the inbox:
 
   | Option | Request | Variables |
   |---|---|---|
-  | `update` (required) | `PATCH /feedback/{id}` (§3.4) | `FeedbackDetailPatch` `{ id, status?, body?, public? }` — the status from the cell, the pills and the swipes (with the Undo, §4.5), the description, the legacy rework append, and the public flip |
+  | `update` (required) | `PATCH /feedback/{id}` (§3.4) | `FeedbackDetailPatch` `{ id, status?, body?, public?, category? }` — the status from the cell, the pills and the swipes (with the Undo, §4.5), the description, the legacy rework append, the public flip, and (0.57, §13.6) the bulk bar's status, category and public flip, one report per call |
   | `reply` | `POST /feedback/{id}/replies` (§9.7, §12) | `FeedbackReplyPost` `{ id, body, status?, attachmentUrl? }` |
   | `rework` | `POST /feedback/{id}/rework` (§10.3) | `FeedbackReworkPost` `{ id, note, attachmentUrl? }` |
 
@@ -2410,12 +2420,15 @@ What it takes besides §13.1's (all optional unless marked):
 | `pageLinkExclude` | — | The app's one-shot routes, for the URL column and the detail alike (§4.4.2). |
 | `detail` | — | Over the detail's props the inbox sets (`commit`, `showSubject`, `reworkAttachment`, `replyAttachments`, `labels`, `className`); merged last. |
 | `labels` | — | Over `feedbackPage`. |
+| `selectable` | `true` | 0.57 (§13.6): the admin's multi-select and bulk edit, wherever the inbox is `editable`. `false` for none. |
 
 What it returns (`FeedbackInboxState<T>`): `editable` (`canEdit && !mine`), `title`
 (`feedbackPage.title` / `.myTitle`), `openId` and `setOpenId`, `rowHref(row)`,
 `changeStatus` (`useFeedbackStatusUndo(update.mutateAsync)`, the cell's, the pills' and the
 swipes'), `awaiting` / `setAwaiting`, `renderDate`, `detailProps(row)` (what
-`FeedbackRowDetail` takes) and `table` (what `DataTable` takes, ready to spread).
+`FeedbackRowDetail` takes), `table` (what `DataTable` takes, ready to spread; with the
+`selection` when `bulk` is there) and, 0.57, `bulk` (`FeedbackInboxBulk<T>`, §13.6;
+present where `editable && selectable`).
 
 The wiring it holds, the same for every app:
 
@@ -2447,8 +2460,10 @@ The wiring it holds, the same for every app:
 ### 13.3 `FeedbackInbox`
 
 `FeedbackInbox` takes `useFeedbackInbox`'s options and draws, in a fill-height frame
-(`FILL_HEIGHT_CLASS`, page layout §1.3): the header, the `DataTable` with `inbox.table`, and
-on the phone the awaiting toggle (inbox only). Four props of its own:
+(`FILL_HEIGHT_CLASS`, page layout §1.3): the header, the bulk bar (0.57, §13.6: with
+`inbox.bulk`, between the header and the table), the `DataTable` with `inbox.table`, and
+on the phone the awaiting toggle (inbox only; it steps aside while rows are selected, where
+the floating bulk bar takes the bottom of the screen). Four props of its own:
 
 | Prop | Default | What it does |
 |---|---|---|
@@ -2548,4 +2563,65 @@ capture, the date rule, `/my-feedback` read-only, `detail` merged last); the com
 switch and the comments drawn; the phone's day headers, submitter, swipes, binding and
 toggle; each slot (`header`, `renderDetail`, `votes`, `columns`, `table`, `loading`,
 `phoneActions`, `commit`). The showcase's Feedback — inbox page has the whole inbox
-(`FeedbackInboxDemo`).
+(`FeedbackInboxDemo`), the bulk edit included.
+
+### 13.6 The bulk edit (ui-kit 0.57)
+
+keksdose dev #663 (Marcel, 2026-11-07): *"I want to have multiselect and bulk edit (back)
+for the feedback table."* The inbox §13 assembles had no selection, so triaging a dozen
+stale reports was a dozen rows. All three apps draw `FeedbackInbox`, so it is the kit's.
+No server change, no new wiring: `src/feedback/feedback-inbox-bulk.tsx`.
+
+- **Who and where.** The admin on `/feedback` — wherever the inbox is `editable` (`canEdit
+  && !mine`) — unless the app passes `selectable={false}`. On by default: Marcel asked for
+  it, and an admin inbox all three share gets it on the bump. Never on `/my-feedback`.
+- **Selecting.** The desktop: `DataTable`'s boxes, Shift-click for a range, and the header
+  box for **every row the table's filters keep, on every page** — never a row a filter
+  hides (`DataTable`'s `selection.onFilteredRowsChange`, 0.57: the filters are the table's,
+  out of the owner's sight). A selected row a filter or the awaiting toggle then hides
+  leaves the selection, as in `TranslationReviewPanel`. The phone: `DataTable`'s selection
+  mode — a long press on a card (or "Select rows" for a keyboard), every card a toggle,
+  **the swipes resting while it lasts** (§4.5). The awaiting toggle's floating group steps
+  aside while rows are selected.
+- **The bar** (`BulkActionBar`, `{ base: "floating", md: "sticky" }`): the count, Clear,
+  and three lists — **Set status** (every status, chain order, with its glyph), **Set
+  category** (BUG, IDEA, QUESTION, OTHER: never CRASH, §3.4's 422) and, with
+  `publicSwitch`, **Visibility** (Visible to others / Not visible to others). A value no
+  selected report would change is disabled. Under a locked `WriteLockProvider` with the
+  inbox's `commit`, the bar refuses like the status cell.
+- **The writes.** **No bulk endpoint**: keksdose has only `PATCH /feedback/{id}`, and each
+  report's change must pass the server's rules for that report (§3.4) and send its author
+  the notification a single change sends (§9.11). So the bar calls the page's `update`
+  once per report — `{ id, status }`, `{ id, category }` or `{ id, public }` — three in
+  flight at a time, and only for the reports not at the value already. Visible to others
+  leaves a CRASH and a row without `public` alone (§9.3, as the detail's switch). One
+  batch at a time.
+- **One Undo** (§4.5): one 8 s toast for the batch, `feedbackPage.bulkChanged(count,
+  value)`, with `feedbackToast.statusUndo`; Undo PATCHes **each report that changed back
+  to its own previous value**, then `bulkRestored(count)` (or `bulkRestoreFailed(count)`
+  for the ones it could not).
+- **Partial failure.** A refused PATCH is the mutation's own to report (its `onError`
+  toasts the server's sentence, as for one change). The bar adds `bulkFailed(count)` and
+  **keeps those reports selected**, so the next press retries exactly them; the changed
+  ones leave the selection, and only they are in the Undo.
+- **The words** (`feedbackPage`, seven catalogues): `bulkStatus`, `bulkCategory`,
+  `bulkVisibility`, `bulkPublicOn`, `bulkPublicOff`, `bulkChanged`, `bulkFailed`,
+  `bulkRestored`, `bulkRestoreFailed`. The count and Clear are `bulkActionBar`'s, the
+  boxes `dataTable`'s.
+- **For a layout of its own**, `inbox.bulk` (`FeedbackInboxBulk<T>`): `rows` (the selected
+  reports on view), `clear`, `setStatus`, `setCategory`, `setPublic` (with
+  `publicSwitch`), `pending`; `inbox.table.selection` carries the boxes.
+
+**Per app:** nothing to change. `update`'s `mutationFn` must put the variables on the wire
+as they come — all three spread them (`({ id, ...patch }) => api.patch(id, patch)`), so
+`category` reaches server-kit's `FeedbackUpdate`, which takes it. An app whose
+`mutationFn` picked fields one by one would drop it.
+
+**Tests:** `src/feedback/__tests__/feedback-inbox-bulk.test.tsx` — the boxes for the admin
+only (not `/my-feedback`, not a reader, not `selectable={false}`); select-all under a
+status filter; a row leaving the list; one PATCH per report with its patch; the one Undo
+putting each back to its own status; nothing sent for a report already there; partial and
+total failure; three in flight; the category (no CRASH) and Visible to others (no CRASH, no
+flagless row); the provider's words; the phone's long press, the resting swipes and the
+toggle stepping aside. `src/components/__tests__/data-table-filtered-rows.test.tsx` —
+`onFilteredRowsChange`.
