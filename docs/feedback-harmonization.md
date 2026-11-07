@@ -2590,12 +2590,16 @@ No server change, no new wiring: `src/feedback/feedback-inbox-bulk.tsx`.
   selected report would change is disabled. Under a locked `WriteLockProvider` with the
   inbox's `commit`, the bar refuses like the status cell.
 - **The writes.** **No bulk endpoint**: keksdose has only `PATCH /feedback/{id}`, and each
-  report's change must pass the server's rules for that report (§3.4) and send its author
-  the notification a single change sends (§9.11). So the bar calls the page's `update`
-  once per report — `{ id, status }`, `{ id, category }` or `{ id, public }` — three in
-  flight at a time, and only for the reports not at the value already. Visible to others
-  leaves a CRASH and a row without `public` alone (§9.3, as the detail's switch). One
-  batch at a time.
+  report's change must pass the server's rules for that report (§3.4). So the bar calls the
+  page's `update` once per report — `{ id, status }`, `{ id, category }` or `{ id, public }`
+  — three in flight at a time, and only for the reports not at the value already. Visible
+  to others leaves a CRASH and a row without `public` alone (§9.3, as the detail's switch).
+  One batch at a time.
+- **It notifies nobody, its Undo neither.** A status, a category or the visibility alone
+  tells no one (decision 13, §9.11); only a reply or a comment does, and the bar writes
+  neither. Checked in all three backends: `feedback_answered` fires from the reply store's
+  `add`, `feedback_comment` from the comment store's. Should a status ever notify, the
+  Undo window would have to hold the notification first.
 - **One Undo** (§4.5): one 8 s toast for the batch, `feedbackPage.bulkChanged(count,
   value)`, with `feedbackToast.statusUndo`; Undo PATCHes **each report that changed back
   to its own previous value**, then `bulkRestored(count)` (or `bulkRestoreFailed(count)`

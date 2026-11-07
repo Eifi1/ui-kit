@@ -32,10 +32,11 @@ import {
  * changed a dozen stale reports one row at a time.
  *
  * **No bulk endpoint, on purpose.** keksdose has none, and none of the three needs one:
- * each report's change has to pass the server's own rules for that report (§3.4) and send
- * its author the notification a single change sends (§9.11), so the bar loops the page's
- * ONE `update` mutation — `PATCH /feedback/{id}` per report — exactly as a tap on the
- * status cell does. An app gets the bulk edit with no wiring of its own.
+ * each report's change has to pass the server's own rules for that report (§3.4), so the bar
+ * loops the page's ONE `update` mutation — `PATCH /feedback/{id}` per report — exactly as a
+ * tap on the status cell does. An app gets the bulk edit with no wiring of its own. It
+ * notifies nobody, its Undo neither: a status, a category or the visibility alone tells no
+ * one (decision 13, §9.11); only a reply or a comment does, and the bar writes neither.
  *
  * What it changes: the **status**, the **category** (never to CRASH — §3.4 answers 422;
  * CRASH → BUG is an ordinary admin edit) and, with the inbox's `publicSwitch`, **Visible to
@@ -55,9 +56,8 @@ import {
 type BulkField = NonNullable<FeedbackInboxBulk<FeedbackRecord>["pending"]>;
 
 /** How many PATCHes a bulk change keeps in flight. Each one is a full update on the
- *  server — its rules, its author notification (§9.11) — so a trickle rather than a burst
- *  of 20, and still about a second for the 20 rather than the 20 round trips back to back
- *  a plain loop would take.
+ *  server, with its rules, so a trickle rather than a burst of 20, and still about a second
+ *  for the 20 rather than the 20 round trips back to back a plain loop would take.
  *
  * @internal Not part of `/feedback` or the barrel. */
 export const FEEDBACK_BULK_CONCURRENCY = 3;

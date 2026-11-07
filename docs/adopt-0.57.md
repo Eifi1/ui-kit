@@ -22,8 +22,11 @@ selected. A bulk bar sets the selected reports' **status**, **category** (never 
 with `publicSwitch`, **Visible to others**.
 
 - It uses the page's own `update` mutation: one `PATCH /feedback/{id}` per report, three at
-  a time, so each report goes through the server's rules and notifies its author. No bulk
-  endpoint is needed.
+  a time, so each report goes through the server's rules. No bulk endpoint is needed.
+- **It notifies nobody**, and neither does its Undo: by decision 13 (§9.11) a status, a
+  category or the visibility alone tells no one; only a reply or a comment does, and the bar
+  writes neither (checked in all three backends: `feedback_answered` fires from the reply
+  store's `add`, `feedback_comment` from the comment store's).
 - One 8 s Undo toast for the batch puts each report back to its own previous value. A report
   whose PATCH fails stays selected (pressing again retries just those) and is left out of
   the Undo.

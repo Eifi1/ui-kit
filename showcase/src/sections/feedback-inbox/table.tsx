@@ -352,9 +352,9 @@ export function FeedbackInboxDemo() {
           header box takes every row the filters keep, on every page) or, on a phone, long-press a card — its swipes
           rest while selecting. The bar sets the status, the category (never Crash) or, with {code("publicSwitch")}, the
           visibility of all of them: the page&apos;s {code("update")}, once per report, so each goes through the
-          server&apos;s own rules and its author&apos;s notification — no bulk endpoint. One Undo puts each report back
-          to what it was. A report whose change fails stays ticked, to try again; {code("selectable={false}")} turns it
-          off.
+          server&apos;s own rules — no bulk endpoint. It notifies nobody: a status alone never does, only a reply. One
+          Undo puts each report back to what it was. A report whose change fails stays ticked, to try again;{" "}
+          {code("selectable={false}")} turns it off.
         </Note>
       </div>
     </Example>
