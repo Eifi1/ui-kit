@@ -159,6 +159,28 @@ export { IBAN_LENGTHS, compactIban, formatIban, ibanCheckDigits, ibanProblem, is
 export type { IbanKind, IbanProblem } from "./lib/iban";
 export { PHONE_DIAL_CODES, PHONE_COUNTRIES, parsePhone, formatNationalPhone, formatPhone, isE164 } from "./lib/phone";
 export type { PhoneCountryCode, PhoneCountry, ParsedPhone } from "./lib/phone";
+// 0.57 (keksdose SL-10, its shopping lists): quantities — an amount and its unit — with
+// exact arithmetic in milli-units, and formatting and parsing in the reader's locale.
+// QuantityInput and QuantityField are built on them; a list's totals use them directly.
+export {
+  QUANTITY_UNITS,
+  QUANTITY_DIGITS,
+  quantityFamily,
+  toBaseQuantity,
+  convertQuantity,
+  sumQuantities,
+  formatQuantity,
+  parseQuantity,
+} from "./lib/quantity";
+export type {
+  Quantity,
+  QuantityUnit,
+  QuantityFamily,
+  QuantityBaseUnit,
+  BaseQuantity,
+  FormatQuantityOptions,
+  QuantityUnitWords,
+} from "./lib/quantity";
 // 0.23.0: ColumnMapper's pure half (Kurvenschmiede's columns input, keksdose's import map).
 export {
   assignColumnRole,

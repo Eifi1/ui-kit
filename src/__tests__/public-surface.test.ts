@@ -359,7 +359,10 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // keksdose's report wrapper as the kit's layout.
   // 0.55 (+2, keksdose audit F-63; server-kit 0.21 exports their values): `USER_ROSTER_PAGE_SIZE`
   // and `USER_ROSTER_MAX_PAGE_SIZE`, `GET /admin/users`'s default and largest page.
-  ["@eifi1/ui-kit", barrel, 992],
+  // 0.57 (+8, keksdose SL-10): `QUANTITY_UNITS`, `QUANTITY_DIGITS`, `quantityFamily`,
+  // `toBaseQuantity`, `convertQuantity`, `sumQuantities`, `formatQuantity`, `parseQuantity` — quantities
+  // and their exact arithmetic.
+  ["@eifi1/ui-kit", barrel, 1000],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
