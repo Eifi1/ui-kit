@@ -504,6 +504,22 @@ export interface DataTableProps<T> {
     allSelected: boolean;
     someSelected: boolean;
     onToggleAll: (checked: boolean) => void;
+    /**
+     * Told which rows the table's OWN filters keep — on every page, in the order `rows`
+     * gave them — each time that set changes (0.57, keksdose dev #663: the feedback
+     * inbox's bulk edit). Optional and additive.
+     *
+     * What a select-all should take and a bulk action act on. `onToggleAll` says only
+     * "checked", and the filters are the table's (its state, `urlSync`'s `f.*`), out of
+     * the owner's sight: an owner selecting "all of `rows`" under a status filter ticked
+     * the rows the filter hides too, and its bulk change then reached rows nobody was
+     * looking at. With this the owner selects, counts and acts on these rows.
+     *
+     * Called after the commit that changed the set, not on every render — compared by
+     * `rowKey`, so a fresh but equal `rows` (`list.data ?? []` while a query loads)
+     * does not call it again, and an owner may set state in it.
+     */
+    onFilteredRowsChange?: (rows: readonly T[]) => void;
   };
   /** User-facing strings (English defaults); pass translated overrides. Merged over
    *  `dataTable` from `<UiKitProvider labels>`, so a call site only states what
@@ -1238,6 +1254,29 @@ export function DataTable<T>({
     return result;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rows, columnSig, filters, serverRows, locale]);
+
+  // `selection.onFilteredRowsChange` (0.57): the filtered set, told to the owner when its
+  // KEYS change. The callback and `rowKey` are written inline at every call site, so they
+  // are read through a ref; the keys are compared because `filtered` is a new array
+  // whenever `rows` is, and an owner that stores what it is told would otherwise re-render
+  // this table into telling it again.
+  const notifyFiltered = !!selection?.onFilteredRowsChange;
+  const filteredReport = useRef({ notify: selection?.onFilteredRowsChange, rowKey });
+  useLayoutEffect(() => {
+    filteredReport.current = { notify: selection?.onFilteredRowsChange, rowKey };
+  });
+  const reportedKeys = useRef<string | null>(null);
+  useEffect(() => {
+    const { notify, rowKey: keyOf } = filteredReport.current;
+    if (!notify) {
+      reportedKeys.current = null;
+      return;
+    }
+    const keys = filtered.map((row) => String(keyOf(row))).join("\u0000");
+    if (keys === reportedKeys.current) return;
+    reportedKeys.current = keys;
+    notify(filtered);
+  }, [filtered, notifyFiltered]);
 
   const sorted = useMemo(() => {
     if (serverRows) return filtered;
