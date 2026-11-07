@@ -159,6 +159,28 @@ export { IBAN_LENGTHS, compactIban, formatIban, ibanCheckDigits, ibanProblem, is
 export type { IbanKind, IbanProblem } from "./lib/iban";
 export { PHONE_DIAL_CODES, PHONE_COUNTRIES, parsePhone, formatNationalPhone, formatPhone, isE164 } from "./lib/phone";
 export type { PhoneCountryCode, PhoneCountry, ParsedPhone } from "./lib/phone";
+// 0.57 (keksdose SL-10, its shopping lists): quantities — an amount and its unit — with
+// exact arithmetic in milli-units, and formatting and parsing in the reader's locale.
+// QuantityInput and QuantityField are built on them; a list's totals use them directly.
+export {
+  QUANTITY_UNITS,
+  QUANTITY_DIGITS,
+  quantityFamily,
+  toBaseQuantity,
+  convertQuantity,
+  sumQuantities,
+  formatQuantity,
+  parseQuantity,
+} from "./lib/quantity";
+export type {
+  Quantity,
+  QuantityUnit,
+  QuantityFamily,
+  QuantityBaseUnit,
+  BaseQuantity,
+  FormatQuantityOptions,
+  QuantityUnitWords,
+} from "./lib/quantity";
 // 0.23.0: ColumnMapper's pure half (Kurvenschmiede's columns input, keksdose's import map).
 export {
   assignColumnRole,
@@ -376,6 +398,12 @@ export * from "./components/switch";
 export * from "./components/slider";
 export * from "./components/time-input";
 export * from "./components/number-field";
+// 0.57 (keksdose SL-10): a quantity's amount and unit as one control, and as a labelled
+// field with a suggestion to take. Named, not `export *`: the row both draw is internal.
+export { QuantityInput, DEFAULT_QUANTITY_LABELS } from "./components/quantity-input";
+export type { QuantityInputProps, QuantityLabels } from "./components/quantity-input";
+export { QuantityField } from "./components/quantity-field";
+export type { QuantityFieldProps } from "./components/quantity-field";
 export * from "./components/sparkline";
 export * from "./components/stat-tile";
 export * from "./components/signature-pad";

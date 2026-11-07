@@ -171,6 +171,17 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       reworkChip: (count) => (count === 1 ? "Átdolgozás" : `Átdolgozás ×${n(count)}`),
       awaitingFilter: "Csak ami Önre vár",
       phoneActions: "Visszajelzés-műveletek",
+      // 0.57 (keksdose dev #663): the inbox's bulk bar. "Bejelentés" as in
+      // `feedbackPublic.total`; singular after a numeral, as Hungarian has it.
+      bulkStatus: "Állapot beállítása",
+      bulkCategory: "Kategória beállítása",
+      bulkVisibility: "Láthatóság",
+      bulkPublicOn: "Mások számára látható",
+      bulkPublicOff: "Mások számára nem látható",
+      bulkChanged: (count, value) => `${n(count)} bejelentés „${value}” értékre állítva`,
+      bulkFailed: (count) => `${n(count)} bejelentést nem sikerült módosítani, kijelölve marad.`,
+      bulkRestored: (count) => `${n(count)} bejelentés visszaállítva`,
+      bulkRestoreFailed: (count) => `${n(count)} bejelentést nem sikerült visszaállítani.`,
     },
     feedbackDetail: {
       subject: "Tárgy",
@@ -2069,6 +2080,16 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         security: "Biztonság",
         reverted: "Visszavonva",
       },
+    },
+    // 0.57 (keksdose SL-10): a quantity's words — "db" (darab), the usual abbreviation
+    // for pieces (g, kg, ml, cl, dl and l are SI symbols in every language), the unit
+    // select's name, and the suggestion's lead and button. The field and the quantity
+    // after a colon, as `fieldSuggestion.clearName`: no suffix has to agree with them.
+    quantity: {
+      pcs: "db",
+      unit: (field) => (field ? `Mértékegység: ${field}` : "Mértékegység"),
+      suggested: "Javasolt",
+      takeSuggestion: (quantity) => `Átvétel: ${quantity}`,
     },
   };
 }

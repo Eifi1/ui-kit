@@ -199,6 +199,10 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "AmountInput / MoneyField calculator={false}",
     "error on NumberInput, AmountInput, MoneyField, CurrencySelect; hint on CurrencySelect",
     "AmountInput and MoneyField — inputClassName",
+    "QuantityField — an amount and its unit",
+    "QuantityInput — inline in a list",
+    "RhfQuantityField",
+    "lib/quantity — exact, and in the reader's locale",
   ],
   "calendars": [
     "MiniCalendar — range mode (the default)",
@@ -1185,6 +1189,7 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
     "Numbers016Demo",
     "Numbers022Demo",
     "AmountClass023Demo",
+    "QuantityDemo",
   ],
   "calendars": [
     "Dates",

@@ -14,6 +14,7 @@ import { NumberInput } from "../number-input";
 import { NumberField, IntegerField } from "../number-field";
 import { AmountInput } from "../amount-input";
 import { MoneyField } from "../money-field";
+import { QuantityField } from "../quantity-field";
 import { ToggleGroup } from "../toggle-group";
 import { Slider } from "../slider";
 import { CountrySelect } from "../country-select";
@@ -54,6 +55,7 @@ import {
   RhfMonthPicker,
   RhfNumberField,
   RhfPhoneInput,
+  RhfQuantityField,
   RhfSelect,
   RhfTextarea,
   RhfTextCombobox,
@@ -267,6 +269,9 @@ const SWEEP: Record<SweptField, (hint: ReactNode) => ReactElement> = {
   NumberInput: (hint) => <NumberInput label="Status" value="1" onChange={noop} hint={hint} />,
   NumberField: (hint) => <NumberField label="Status" value={1} onCommit={noop} hint={hint} />,
   IntegerField: (hint) => <IntegerField label="Status" value={1} onCommit={noop} hint={hint} />,
+  QuantityField: (hint) => (
+    <QuantityField label="Status" value={{ amount: 1, unit: "kg" }} onChange={noop} hint={hint} />
+  ),
   AmountInput: (hint) => <AmountInput label="Status" value="1" onChange={noop} hint={hint} />,
   MoneyField: (hint) => <MoneyField label="Status" value={1} onCommit={noop} hint={hint} />,
   Slider: (hint) => <Slider label="Status" value={1} min={0} max={10} onChange={noop} hint={hint} />,
@@ -389,6 +394,11 @@ const SWEEP: Record<SweptField, (hint: ReactNode) => ReactElement> = {
   RhfPhoneInput: (hint) => (
     <InForm>
       <RhfPhoneInput name="text" label="Status" hint={hint} />
+    </InForm>
+  ),
+  RhfQuantityField: (hint) => (
+    <InForm>
+      <RhfQuantityField name="text" label="Status" family="mass" hint={hint} />
     </InForm>
   ),
   RhfCountrySelect: (hint) => (

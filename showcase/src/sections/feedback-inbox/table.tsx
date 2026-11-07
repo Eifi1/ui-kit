@@ -227,11 +227,13 @@ export function FeedbackInboxDemo() {
   );
   const update = useInMemoryMutation<FeedbackDetailPatch>(
     useCallback(
-      ({ id, status, body, public: visible }: FeedbackDetailPatch) =>
+      ({ id, status, body, public: visible, category }: FeedbackDetailPatch) =>
         patch(id, (row) => {
           let next = status ? moved(row, status) : row;
           if (body !== undefined) next = { ...next, body };
           if (visible !== undefined) next = { ...next, public: visible };
+          // The bulk bar's category: the same PATCH, one report at a time.
+          if (category !== undefined) next = { ...next, category };
           return next;
         }),
       [patch],
@@ -290,7 +292,7 @@ export function FeedbackInboxDemo() {
   return (
     <Example
       label="FeedbackInbox — the two feedback pages, assembled"
-      hint="open a row (it is ?row= in the address), change a status and take it back, reply; narrow the window for the cards, swipes and the toggle"
+      hint="open a row (it is ?row= in the address), change a status and take it back, reply; tick a few rows (or long-press a card) and set them all at once; narrow the window for the cards, swipes and the toggle"
     >
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap gap-2">
@@ -344,6 +346,15 @@ export function FeedbackInboxDemo() {
           {code("swipe")}, {code("renderDate")}, {code("renderDetail")}, {code("header")}, {code("phoneActions")}, and{" "}
           {code("table")} and {code("detail")} for the rest of the two parts&apos; props. For a layout of its own, a
           page calls the hook and spreads {code("inbox.table")} into a {code("DataTable")}.
+        </Note>
+        <Note>
+          <strong>Bulk edit</strong>, the admin&apos;s on {code("/feedback")}: tick rows (Shift-click for a range; the
+          header box takes every row the filters keep, on every page) or, on a phone, long-press a card — its swipes
+          rest while selecting. The bar sets the status, the category (never Crash) or, with {code("publicSwitch")}, the
+          visibility of all of them: the page&apos;s {code("update")}, once per report, so each goes through the
+          server&apos;s own rules — no bulk endpoint. It notifies nobody: a status alone never does, only a reply. One
+          Undo puts each report back to what it was. A report whose change fails stays ticked, to try again;{" "}
+          {code("selectable={false}")} turns it off.
         </Note>
       </div>
     </Example>

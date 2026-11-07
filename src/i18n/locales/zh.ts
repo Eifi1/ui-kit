@@ -164,6 +164,16 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       reworkChip: (count) => (count === 1 ? "返工" : `返工 ×${n(count)}`),
       awaitingFilter: "仅显示待您处理的",
       phoneActions: "反馈操作",
+      // 0.57 (keksdose dev #663): the inbox's bulk bar. "条反馈" as in `feedbackPublic.total`.
+      bulkStatus: "设置状态",
+      bulkCategory: "设置类别",
+      bulkVisibility: "可见性",
+      bulkPublicOn: "对他人可见",
+      bulkPublicOff: "对他人不可见",
+      bulkChanged: (count, value) => `已将 ${n(count)} 条反馈设为“${value}”`,
+      bulkFailed: (count) => `${n(count)} 条反馈无法更改，仍保持选中。`,
+      bulkRestored: (count) => `已恢复 ${n(count)} 条反馈`,
+      bulkRestoreFailed: (count) => `${n(count)} 条反馈无法恢复。`,
     },
     feedbackDetail: {
       subject: "主题",
@@ -1973,6 +1983,15 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         security: "安全",
         reverted: "撤销",
       },
+    },
+    // 0.57 (keksdose SL-10): a quantity's words — "个", the general measure word for a
+    // count (g, kg, ml, cl, dl and l are SI symbols in every language), the unit select's
+    // name, and the suggestion's lead and button.
+    quantity: {
+      pcs: "个",
+      unit: (field) => (field ? `“${field}”的单位` : "单位"),
+      suggested: "建议值",
+      takeSuggestion: (quantity) => `使用 ${quantity}`,
     },
   };
 }

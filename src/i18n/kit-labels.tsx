@@ -126,6 +126,7 @@ import type { HeldChangesBannerLabels } from "../shell/held-changes-banner-label
 import type { FieldSuggestionLabels } from "../components/field-parts";
 import type { ConsentAgainLabels } from "../components/consent-again-notice-labels";
 import type { ReleaseNotesLabels } from "../components/release-notes-labels";
+import type { QuantityLabels } from "../components/quantity-input";
 
 /**
  * EVERY string the kit renders, as one typed tree — and an optional provider that
@@ -524,6 +525,9 @@ export interface UiKitLabels {
   consentAgain: ConsentAgainLabels;
   /** 0.55: `ReleaseNotes` — a release's heading and its sections' headings by key. */
   releaseNotes: ReleaseNotesLabels;
+  /** 0.57: `QuantityInput` and `QuantityField` — the pieces word ("pcs", "Stk."), the unit
+   *  select's name, and the suggestion's lead and button (keksdose SL-10). */
+  quantity: QuantityLabels;
 }
 
 /**

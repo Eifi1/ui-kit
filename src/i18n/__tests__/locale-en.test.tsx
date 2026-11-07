@@ -97,6 +97,11 @@ describe("uiKitLabelsEn (@eifi1/ui-kit/i18n/en)", () => {
       "demo.minutesLeft",
       "demo.rateLimited",
       "feedbackAttachment.attachmentLimit",
+      // 0.57: the inbox's bulk bar (keksdose dev #663).
+      "feedbackPage.bulkChanged",
+      "feedbackPage.bulkFailed",
+      "feedbackPage.bulkRestoreFailed",
+      "feedbackPage.bulkRestored",
       "feedbackPage.reworkChip",
       "feedbackPublic.comments",
       "feedbackPublic.page",

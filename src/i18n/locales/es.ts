@@ -173,6 +173,21 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       reworkChip: (count) => (count === 1 ? "Corrección" : `Corrección ×${n(count)}`),
       awaitingFilter: "Solo lo que está pendiente de usted",
       phoneActions: "Acciones de comentarios",
+      // 0.57 (keksdose dev #663): the inbox's bulk bar. "Informe" as in `feedbackPublic.total`.
+      bulkStatus: "Cambiar estado",
+      bulkCategory: "Cambiar categoría",
+      bulkVisibility: "Visibilidad",
+      bulkPublicOn: "Visible para otras personas",
+      bulkPublicOff: "No visible para otras personas",
+      bulkChanged: (count, value) =>
+        `${n(count)} ${plural(count, "informe cambiado", "informes cambiados")} a «${value}»`,
+      bulkFailed: (count) =>
+        count === 1
+          ? "1 informe no se ha podido cambiar y sigue seleccionado."
+          : `${n(count)} informes no se han podido cambiar y siguen seleccionados.`,
+      bulkRestored: (count) => `${n(count)} ${plural(count, "informe restaurado", "informes restaurados")}`,
+      bulkRestoreFailed: (count) =>
+        count === 1 ? "1 informe no se ha podido restaurar." : `${n(count)} informes no se han podido restaurar.`,
     },
     feedbackDetail: {
       subject: "Asunto",
@@ -2067,6 +2082,15 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         security: "Seguridad",
         reverted: "Revertido",
       },
+    },
+    // 0.57 (keksdose SL-10): a quantity's words — "ud." (unidad), the usual abbreviation
+    // for pieces (g, kg, ml, cl, dl and l are SI symbols in every language), the unit select's
+    // name, and the suggestion's lead and button.
+    quantity: {
+      pcs: "ud.",
+      unit: (field) => (field ? `Unidad para «${field}»` : "Unidad"),
+      suggested: "Sugerido",
+      takeSuggestion: (quantity) => `Usar ${quantity}`,
     },
   };
 }

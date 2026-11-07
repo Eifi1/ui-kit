@@ -19,7 +19,18 @@ import {
   splitLeadingSign,
   usePhoneLayout,
   roundToCurrency,
+  QuantityField,
+  QuantityInput,
+  convertQuantity,
+  formatQuantity,
+  parseQuantity,
+  sumQuantities,
+  toBaseQuantity,
+  quantityFamily,
 } from "@eifi1/ui-kit";
+import type { Quantity } from "@eifi1/ui-kit";
+import { Form, RhfQuantityField } from "@eifi1/ui-kit/rhf";
+import { useForm } from "react-hook-form";
 import { NumberFieldDemo } from "./number-time-demo";
 import { Example, Note, OutTable, Row, Swatch, Stage, READOUT } from "../lib/section";
 
@@ -804,5 +815,176 @@ export function Numbers016Demo() {
         </li>
       </ul>
     </Example>
+  );
+}
+
+/* ── quantities ─────────────────────────────────────────────────────────── */
+
+/** A quantity as the source would write it, so `null` stays visible. */
+const showQuantity = (q: Quantity | null) => (q === null ? "null" : `{ amount: ${q.amount}, unit: "${q.unit}" }`);
+
+const SHOPPING: Array<{ item: string; quantity: Quantity }> = [
+  { item: "Flour", quantity: { amount: 500, unit: "g" } },
+  { item: "Butter", quantity: { amount: 0.25, unit: "kg" } },
+  { item: "Eggs", quantity: { amount: 6, unit: "pcs" } },
+];
+
+/** A form holding one quantity, for the bound field. */
+interface Pantry {
+  milk: Quantity | null;
+}
+
+export function QuantityDemo() {
+  const [flour, setFlour] = useState<Quantity>({ amount: null, unit: "g" });
+  const [wine, setWine] = useState<Quantity>({ amount: 75, unit: "cl" });
+  const [rows, setRows] = useState(SHOPPING);
+  const form = useForm<Pantry>({ defaultValues: { milk: null }, mode: "onTouched" });
+  const [submitted, setSubmitted] = useState("—");
+  const mass = rows.map((r) => r.quantity).filter((q) => q.unit !== "pcs");
+
+  return (
+    <>
+      <Example
+        label="QuantityField — an amount and its unit"
+        hint="type an amount and tab away; pick another unit; take the suggestion under the field"
+      >
+        <Stage>
+          <QuantityField
+            label="Flour"
+            family="mass"
+            value={flour}
+            onChange={setFlour}
+            suggestion={{ amount: 1, unit: "kg" }}
+            suggestionFrom="Usual pack"
+            hint="Whole grams, or kilograms to the gram"
+          />
+          <QuantityField
+            label="Wine"
+            family="volume"
+            units={["ml", "dl", "l"]}
+            convertOnUnitChange
+            value={wine}
+            onChange={setWine}
+          />
+        </Stage>
+        <State
+          rows={[
+            ["flour", showQuantity(flour)],
+            ["wine", showQuantity(wine)],
+            ["wine, best unit", formatQuantity(wine, "en", { bestUnit: true })],
+          ]}
+        />
+        <Note>
+          The amount commits on blur or Enter, rounded to the unit's digits (g 0, kg 3, ml 0, cl 1, dl 2, l 3, pcs 0);
+          0, a negative or text that is no number snaps back. The wine field offers ml, dl and l, and still lists cl
+          while the value is in centilitres (a value read off a label with parseQuantity); with convertOnUnitChange a
+          unit switch converts the amount, without it the amount is kept as typed.
+        </Note>
+      </Example>
+
+      <Example label="QuantityInput — inline in a list" hint="the bare control: no label line, named by aria-label">
+        <ul className="max-w-md space-y-2">
+          {rows.map((row, i) => (
+            <li key={row.item} className="flex items-center gap-3">
+              <span className="w-16 shrink-0 text-sm text-primary">{row.item}</span>
+              <QuantityInput
+                aria-label={row.item}
+                className="min-w-0 flex-1"
+                value={row.quantity}
+                onChange={(quantity) => setRows((all) => all.map((r, j) => (j === i ? { ...r, quantity } : r)))}
+              />
+            </li>
+          ))}
+        </ul>
+        <p className={`mt-3 ${READOUT}`}>
+          sumQuantities(the weights) → {showQuantity(sumQuantities(mass))} · bestUnit →{" "}
+          {formatQuantity(sumQuantities(mass) ?? { amount: null, unit: "g" }, "en", { bestUnit: true })}
+        </p>
+      </Example>
+
+      <Example label="RhfQuantityField" hint="the form holds the Quantity object; Save on the empty form focuses it">
+        <Form {...form}>
+          <form
+            noValidate
+            className="max-w-xs space-y-3"
+            onSubmit={form.handleSubmit(
+              (v) => setSubmitted(JSON.stringify(v)),
+              () => setSubmitted("invalid"),
+            )}
+          >
+            <RhfQuantityField<Pantry, "milk">
+              name="milk"
+              label="Milk"
+              family="volume"
+              units={["ml", "dl", "l"]}
+              defaultUnit="l"
+              suggestion={{ amount: 1, unit: "l" }}
+              rules={{ validate: (q) => q?.amount != null || "Enter an amount." }}
+            />
+            <Button type="submit">Save</Button>
+          </form>
+        </Form>
+        <p className={`mt-3 ${READOUT}`}>submitted → {submitted}</p>
+      </Example>
+
+      <Example label="lib/quantity — exact, and in the reader's locale" hint="every result is the real call, at render">
+        <OutTable
+          rows={[
+            ["0.1 + 0.2", String(0.1 + 0.2)],
+            [
+              'sumQuantities([{0.1,"kg"}, {0.2,"kg"}])',
+              showQuantity(
+                sumQuantities([
+                  { amount: 0.1, unit: "kg" },
+                  { amount: 0.2, unit: "kg" },
+                ]),
+              ),
+            ],
+            [
+              'sumQuantities([{500,"g"}, {1,"kg"}])',
+              showQuantity(
+                sumQuantities([
+                  { amount: 500, unit: "g" },
+                  { amount: 1, unit: "kg" },
+                ]),
+              ),
+            ],
+            [
+              'sumQuantities([{500,"g"}, {1,"l"}])',
+              showQuantity(
+                sumQuantities([
+                  { amount: 500, unit: "g" },
+                  { amount: 1, unit: "l" },
+                ]),
+              ),
+            ],
+            ['convertQuantity({75,"cl"}, "l")', showQuantity(convertQuantity({ amount: 75, unit: "cl" }, "l"))],
+            ['convertQuantity({6,"pcs"}, "kg")', showQuantity(convertQuantity({ amount: 6, unit: "pcs" }, "kg"))],
+            ['toBaseQuantity({250,"ml"})', JSON.stringify(toBaseQuantity({ amount: 250, unit: "ml" }))],
+            ['quantityFamily("dl")', JSON.stringify(quantityFamily("dl"))],
+            ['formatQuantity({1.5,"kg"}, "de-CH")', formatQuantity({ amount: 1.5, unit: "kg" }, "de-CH")],
+            ['formatQuantity({1.5,"kg"}, "de-DE")', formatQuantity({ amount: 1.5, unit: "kg" }, "de-DE")],
+            [
+              'formatQuantity({1500,"g"}, "en", { bestUnit })',
+              formatQuantity({ amount: 1500, unit: "g" }, "en", { bestUnit: true }),
+            ],
+            [
+              'formatQuantity({75,"cl"}, "en", { bestUnit })',
+              formatQuantity({ amount: 75, unit: "cl" }, "en", { bestUnit: true }),
+            ],
+            [
+              'formatQuantity({6,"pcs"}, "de-CH", { labels: { pcs: "Stk." } })',
+              formatQuantity({ amount: 6, unit: "pcs" }, "de-CH", { labels: { pcs: "Stk." } }),
+            ],
+            ['parseQuantity("1,5 kg", "de-DE")', showQuantity(parseQuantity("1,5 kg", "de-DE"))],
+            ['parseQuantity("1.5l", "de-CH")', showQuantity(parseQuantity("1.5l", "de-CH"))],
+            ['parseQuantity("6 Stk.", "de-CH")', showQuantity(parseQuantity("6 Stk.", "de-CH"))],
+            ['parseQuantity("6x", "en")', showQuantity(parseQuantity("6x", "en"))],
+            ['parseQuantity("6 x 1.5 l", "en")', showQuantity(parseQuantity("6 x 1.5 l", "en"))],
+            ['parseQuantity("0.5 g", "en")', showQuantity(parseQuantity("0.5 g", "en"))],
+          ]}
+        />
+      </Example>
+    </>
   );
 }

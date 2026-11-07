@@ -232,6 +232,13 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   // "{{ENVIRONMENT}}" would read as a placeholder of that name.
   "feedbackPage.environment": [["dev"]],
   "feedbackPage.reworkChip": one,
+  "feedbackPage.bulkChanged": [
+    [1, "{{value}}"],
+    [3, "{{value}}"],
+  ],
+  "feedbackPage.bulkFailed": one,
+  "feedbackPage.bulkRestored": one,
+  "feedbackPage.bulkRestoreFailed": one,
   "feedbackDetail.download": [["{{name}}"]],
   "feedbackDetail.resolvedAt": [["{{date}}"]],
   "feedbackPublic.total": one,
@@ -493,4 +500,8 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "fieldSuggestion.clearName": [["{{field}}"], [undefined]],
   // 0.55: a release's heading, with a version as the changelog writes it.
   "releaseNotes.version": [["0.13.9"]],
+  // 0.57 (keksdose SL-10): the unit select, named with its field and alone; the
+  // suggestion's button, with the quantity it takes as formatQuantity prints it.
+  "quantity.unit": [["{{field}}"], [undefined]],
+  "quantity.takeSuggestion": [["{{quantity}}"]],
 };
