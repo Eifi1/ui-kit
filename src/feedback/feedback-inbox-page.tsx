@@ -13,6 +13,7 @@ import type { LabelOverride } from "../i18n/kit-labels";
 import type { PathPattern } from "../landing/routing";
 import { FILL_HEIGHT_CLASS } from "../shell/fill-height";
 import { captureAppScreenshot } from "./feedback-capture";
+import { FeedbackInboxBulkBar, useFeedbackInboxBulk } from "./feedback-inbox-bulk";
 import { useFeedbackStatusLabels } from "./feedback-labels";
 import { runMutation } from "./feedback-mutation";
 import type { FeedbackRecord } from "./feedback-record";
@@ -41,7 +42,7 @@ import {
   type FeedbackPageLabels,
   type FeedbackRenderDate,
 } from "./feedback-table";
-import type { FeedbackStatus } from "./feedback-vocabulary";
+import type { FeedbackCategory, FeedbackStatus } from "./feedback-vocabulary";
 
 /**
  * The feedback inbox, ASSEMBLED ONCE (0.55; kastlan reuse audit 2026-11-02, proposal 2;
@@ -70,6 +71,11 @@ import type { FeedbackStatus } from "./feedback-vocabulary";
  *
  * Additive: every part it is built from stays exported and unchanged, for a page that
  * wants its own layout — call the hook and spread `inbox.table` into a `DataTable`.
+ *
+ * 0.57 (keksdose dev #663): the admin's multi-select and bulk edit — the table's boxes (on
+ * the phone, the long press), and a bulk bar that sets the selected reports' status,
+ * category or visibility through the same `update`, one PATCH per report, with one Undo
+ * (feedback-inbox-bulk.tsx, §13.6).
  */
 
 /* ── The mutations ──────────────────────────────────────────────────────────── */
@@ -207,6 +213,42 @@ export interface UseFeedbackInboxOptions<T extends FeedbackRecord> {
   /** Over the `feedbackPage` namespace: the columns, the card, the empty state, the toggle
    *  and the title. Keep it stable: it is a memo's dependency. */
   labels?: LabelOverride<FeedbackPageLabels>;
+  /**
+   * The admin's multi-select and bulk edit (0.57, keksdose dev #663; §13.6): a box per row
+   * and a select-all on the desktop, the long press on the phone (swipes rest while
+   * selecting), and a bulk bar that sets the selected reports' status, category or — with
+   * {@link publicSwitch} — visibility through {@link update}, one PATCH per report, with
+   * one Undo. **On** wherever the inbox is editable (the admin, not `/my-feedback`);
+   * `false` for none. Nothing to wire: it is the page's own mutation.
+   */
+  selectable?: boolean;
+}
+
+/**
+ * The admin's selection and its bulk changes (0.57, keksdose dev #663; §13.6) —
+ * `inbox.bulk`, which {@link FeedbackInbox} draws as its bulk bar (feedback-inbox-bulk.tsx).
+ * For a page that lays the parts out itself, what its own `BulkActionBar` needs. Every
+ * change is {@link UseFeedbackInboxOptions.update}, once per report.
+ */
+export interface FeedbackInboxBulk<T extends FeedbackRecord> {
+  /** The selected reports the admin can SEE — the table's filters and the awaiting toggle
+   *  applied, in the order the inbox lists them: what the bar counts and a change acts
+   *  on. A selected row a filter hides drops out of the selection. */
+  rows: readonly T[];
+  /** Empty the selection (the bar's Clear). */
+  clear: () => void;
+  /** Set every selected report's status: one `update` per report not there yet, one Undo
+   *  toast for those that changed — each back to its own status. Resolves when every
+   *  PATCH has answered; a report whose PATCH failed stays selected. */
+  setStatus: (status: FeedbackStatus) => Promise<void>;
+  /** The same for the category. Never CRASH (§3.4: a 422) — ignored. */
+  setCategory: (category: FeedbackCategory) => Promise<void>;
+  /** The same for **Visible to others** — with {@link UseFeedbackInboxOptions.publicSwitch}
+   *  only. A CRASH and a row without `public` are left as they are (§9.3). */
+  setPublic?: (next: boolean) => Promise<void>;
+  /** The bulk change in flight, or `null`. One at a time: a press while one is out is
+   *  ignored. */
+  pending: "status" | "category" | "public" | null;
 }
 
 /** What {@link useFeedbackInbox} returns: the state, and the props of the parts. */
@@ -236,8 +278,12 @@ export interface FeedbackInboxState<T extends FeedbackRecord> {
   /** `DataTable`'s props, ready to spread: the rows (newest first, narrowed by
    *  `awaiting`), the columns, the open row, the detail, the phone's card, day headers and
    *  swipes, the desktop's actions column, the empty state, `urlSync`,
-   *  `storageKey="feedback"`, `fillHeight`. */
+   *  `storageKey="feedback"`, `fillHeight` — and, with {@link bulk}, the `selection`. */
   table: DataTableProps<T>;
+  /** 0.57: the selection and the bulk changes — present where the inbox is editable and
+   *  `selectable` (the default). {@link FeedbackInbox} draws them as its bulk bar; a page
+   *  of its own draws a `BulkActionBar` from them. */
+  bulk?: FeedbackInboxBulk<T>;
 }
 
 /** `?row=`'s value: a report's id is a positive integer, written in digits. Anything
@@ -303,6 +349,7 @@ export function useFeedbackInbox<T extends FeedbackRecord>({
   loading = false,
   detail,
   labels,
+  selectable = true,
 }: UseFeedbackInboxOptions<T>): FeedbackInboxState<T> {
   // An admin on /my-feedback reads as any author does (§4.3), as `feedbackColumns` has it.
   const editable = canEdit && !mine;
@@ -340,6 +387,16 @@ export function useFeedbackInbox<T extends FeedbackRecord>({
     () => (editable && awaiting ? rows.filter((row) => isFeedbackAwaiting(row.status)) : [...rows]).sort(newestFirst),
     [rows, editable, awaiting],
   );
+
+  // The admin's selection and bulk edit (§13.6): through the same `update` as every other
+  // write here, one PATCH per report — no bulk endpoint, none needed.
+  const { bulk, selection } = useFeedbackInboxBulk<T>({
+    on: editable && selectable,
+    rows: shown,
+    update: updateAsync,
+    publicSwitch,
+    labels,
+  });
 
   const kitColumns = useFeedbackColumns<T>({
     mine,
@@ -427,6 +484,9 @@ export function useFeedbackInbox<T extends FeedbackRecord>({
     // The swipes as the desktop's last column (0.46, keksdose dev#598), less what the
     // status cell already offers.
     desktopSwipeActions: { omit: feedbackSwipeOmitShown, name: rowTitle, ...(commit === undefined ? {} : { commit }) },
+    // The boxes, the select-all over what the filters keep, and the phone's long press —
+    // in whose mode DataTable rests the swipes (§13.6).
+    ...(selection ? { selection } : {}),
   };
 
   return {
@@ -441,6 +501,7 @@ export function useFeedbackInbox<T extends FeedbackRecord>({
     renderDate,
     detailProps,
     table,
+    ...(bulk ? { bulk } : {}),
   };
 }
 
@@ -509,12 +570,16 @@ export function FeedbackInbox<T extends FeedbackRecord>({
     ) : (
       header
     );
+  // The phone's floating bulk bar takes the bottom of the screen while rows are selected,
+  // where the toggle's group sits: the group steps aside until the selection empties.
+  const selecting = (inbox.bulk?.rows.length ?? 0) > 0;
   return (
     // A plain element on the way to the table carries the fill (page layout §1.3).
     <div className={cn(FILL_HEIGHT_CLASS, className)} aria-busy={options.loading || undefined} data-feedback-inbox="">
       {head}
+      {inbox.bulk && <FeedbackInboxBulkBar bulk={inbox.bulk} commit={options.commit} labels={options.labels} />}
       <DataTable {...inbox.table} {...table} />
-      {inbox.editable ? (
+      {selecting ? null : inbox.editable ? (
         // The phone's floating action (keksdose feedback #58): only on the inbox — on
         // /my-feedback the author is not waiting on their own verdict.
         <FeedbackAwaitingToggle pressed={inbox.awaiting} onPressedChange={inbox.setAwaiting} labels={options.labels}>

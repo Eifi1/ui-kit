@@ -171,6 +171,17 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       reworkChip: (count) => (count === 1 ? "Átdolgozás" : `Átdolgozás ×${n(count)}`),
       awaitingFilter: "Csak ami Önre vár",
       phoneActions: "Visszajelzés-műveletek",
+      // 0.57 (keksdose dev #663): the inbox's bulk bar. "Bejelentés" as in
+      // `feedbackPublic.total`; singular after a numeral, as Hungarian has it.
+      bulkStatus: "Állapot beállítása",
+      bulkCategory: "Kategória beállítása",
+      bulkVisibility: "Láthatóság",
+      bulkPublicOn: "Mások számára látható",
+      bulkPublicOff: "Mások számára nem látható",
+      bulkChanged: (count, value) => `${n(count)} bejelentés „${value}” értékre állítva`,
+      bulkFailed: (count) => `${n(count)} bejelentést nem sikerült módosítani, kijelölve marad.`,
+      bulkRestored: (count) => `${n(count)} bejelentés visszaállítva`,
+      bulkRestoreFailed: (count) => `${n(count)} bejelentést nem sikerült visszaállítani.`,
     },
     feedbackDetail: {
       subject: "Tárgy",

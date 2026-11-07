@@ -126,4 +126,6 @@ export {
   type UseFeedbackInboxOptions,
   type FeedbackInboxState,
   type FeedbackInboxProps,
+  // 0.57 (keksdose dev #663): `inbox.bulk`, the admin's selection and bulk edit (§13.6).
+  type FeedbackInboxBulk,
 } from "./feedback/feedback-inbox-page";

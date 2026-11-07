@@ -22,7 +22,7 @@ import {
   selectableFeedbackStatuses,
   visibleFeedbackStatuses,
 } from "./feedback-inbox";
-import type { FeedbackNoteAttachment, FeedbackStatus } from "./feedback-inbox";
+import type { FeedbackCategory, FeedbackNoteAttachment, FeedbackStatus } from "./feedback-inbox";
 import { useFeedbackToastLabels } from "./feedback-labels";
 import {
   FEEDBACK_ATTACHMENT_ACCEPT,
@@ -272,6 +272,10 @@ export interface FeedbackDetailPatch {
    *  `PATCH /feedback/{id} {"public": next}` carries, alone, so an app can send it
    *  through the same `onUpdate` mutation. */
   public?: boolean;
+  /** 0.57: the category (§3.4: the admin's, any time; never CRASH) — what the inbox's bulk
+   *  bar sends, alone, through the same mutation (`FeedbackInbox`, §13.6). The detail
+   *  itself never sends it. */
+  category?: FeedbackCategory;
 }
 
 /**

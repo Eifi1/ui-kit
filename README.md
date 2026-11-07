@@ -579,7 +579,7 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2199 names from 371 modules** in the main barrel — 992 values and 1207 types — and 191 more in 16 standalone entries. _Italic_ is a type-only export.
+**2200 names from 371 modules** in the main barrel — 992 values and 1208 types — and 191 more in 16 standalone entries. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 `node scripts/gen-export-inventory.mjs`; the counts are pinned by
@@ -938,7 +938,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `feedback/feedback-comment-thread` | `DEFAULT_FEEDBACK_COMMENTS_LABELS`, `FeedbackCommentThread`, _`FeedbackCommentsLabels`_, _`FeedbackCommentThreadProps`_ |
 | `feedback/feedback-replies` | `DEFAULT_FEEDBACK_REPLIES_LABELS`, `FeedbackReplyComposer`, `feedbackReplyNudge`, `FeedbackReplyTimeline`, `useFeedbackRepliesLabels`, _`FeedbackRepliesLabels`_, _`FeedbackReplyComposerProps`_, _`FeedbackReplyTimelineProps`_ |
 | `feedback/feedback-entry-file` | `FeedbackEntryFile`, `useFeedbackEntryUpload`, _`FeedbackEntryFileProps`_, _`FeedbackEntryUpload`_, _`FeedbackEntryUploadOptions`_, _`FeedbackEntryUploadState`_ |
-| `feedback/feedback-inbox-page` | `FeedbackInbox`, `useFeedbackInbox`, _`FeedbackInboxMutation`_, _`FeedbackInboxProps`_, _`FeedbackInboxState`_, _`FeedbackReplyPost`_, _`FeedbackReworkPost`_, _`UseFeedbackInboxOptions`_ |
+| `feedback/feedback-inbox-page` | `FeedbackInbox`, `useFeedbackInbox`, _`FeedbackInboxBulk`_, _`FeedbackInboxMutation`_, _`FeedbackInboxProps`_, _`FeedbackInboxState`_, _`FeedbackReplyPost`_, _`FeedbackReworkPost`_, _`UseFeedbackInboxOptions`_ |
 | `feedback/feedback-vocabulary` | `FEEDBACK_CATEGORY_META`, `FEEDBACK_CATEGORY_ORDER`, `FEEDBACK_STATUS_META`, `FEEDBACK_STATUS_ORDER`, `feedbackCategoryRank`, `nextFeedbackStatus`, `selectableFeedbackStatuses`, `visibleFeedbackStatuses`, _`FeedbackCategory`_, _`FeedbackStatus`_ |
 
 ### wizard

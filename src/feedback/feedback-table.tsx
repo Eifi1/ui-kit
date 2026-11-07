@@ -129,6 +129,32 @@ export interface FeedbackPageLabels {
   awaitingFilter: string;
   /** The name of the phone's floating group that holds it. de-CH: "Feedback-Aktionen" */
   phoneActions: string;
+  /** 0.57 (keksdose dev #663), the inbox's bulk bar: the button that sets the selected
+   *  reports' status, and the name of the list it opens. de-CH: "Status setzen" */
+  bulkStatus: string;
+  /** The same for the category (never CRASH: a report is not re-labelled a crash, §3.4).
+   *  de-CH: "Kategorie setzen" */
+  bulkCategory: string;
+  /** The same for **Visible to others** (§9.3), with `publicSwitch`.
+   *  de-CH: "Sichtbarkeit" */
+  bulkVisibility: string;
+  /** Its two choices: `public` on… de-CH: "Für andere sichtbar" */
+  bulkPublicOn: string;
+  /** …and off. de-CH: "Nicht für andere sichtbar" */
+  bulkPublicOff: string;
+  /** The Undo toast of a bulk change that landed — `count` reports changed, `value` the
+   *  status, category or visibility they were set to (its label).
+   *  de-CH: "{{count}} Meldungen auf „{{value}}“ gesetzt" */
+  bulkChanged: (count: number, value: string) => string;
+  /** The reports a bulk change could not change — they stay selected, to try again.
+   *  de-CH: "{{count}} Meldungen konnten nicht geändert werden und bleiben ausgewählt." */
+  bulkFailed: (count: number) => string;
+  /** The bulk change's Undo landed: `count` reports are back as they were.
+   *  de-CH: "{{count}} Meldungen zurückgesetzt" */
+  bulkRestored: (count: number) => string;
+  /** Reports the Undo could not put back. de-CH: "{{count}} Meldungen konnten nicht
+   *  zurückgesetzt werden." */
+  bulkRestoreFailed: (count: number) => string;
 }
 
 // Defined in ./feedback-table-labels, which holds no component code (0.34, KS U8).

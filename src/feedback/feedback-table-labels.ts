@@ -24,4 +24,17 @@ export const DEFAULT_FEEDBACK_PAGE_LABELS: FeedbackPageLabels = {
   reworkChip: (count) => (count === 1 ? "Rework" : `Rework ×${count}`),
   awaitingFilter: "Only what is waiting for you",
   phoneActions: "Feedback actions",
+  bulkStatus: "Set status",
+  bulkCategory: "Set category",
+  bulkVisibility: "Visibility",
+  bulkPublicOn: "Visible to others",
+  bulkPublicOff: "Not visible to others",
+  bulkChanged: (count, value) => (count === 1 ? `Set 1 report to “${value}”` : `Set ${count} reports to “${value}”`),
+  bulkFailed: (count) =>
+    count === 1
+      ? "1 report could not be changed and stays selected."
+      : `${count} reports could not be changed and stay selected.`,
+  bulkRestored: (count) => (count === 1 ? "1 report is back as it was" : `${count} reports are back as they were`),
+  bulkRestoreFailed: (count) =>
+    count === 1 ? "1 report could not be put back." : `${count} reports could not be put back.`,
 };

@@ -174,6 +174,24 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       reworkChip: (count) => plural(count, "Reprise", `Reprise ×${n(count)}`),
       awaitingFilter: "Seulement ce qui vous attend",
       phoneActions: "Actions sur les retours",
+      // 0.57 (keksdose dev #663): the inbox's bulk bar. "Retour" as in `feedbackPublic.total`;
+      // `plural` keeps 0 singular, as French does.
+      bulkStatus: "Définir le statut",
+      bulkCategory: "Définir la catégorie",
+      bulkVisibility: "Visibilité",
+      bulkPublicOn: "Visible par les autres",
+      bulkPublicOff: "Non visible par les autres",
+      bulkChanged: (count, value) =>
+        `${n(count)} ${plural(count, "retour passé", "retours passés")} à «\u202f${value}\u202f»`,
+      bulkFailed: (count) =>
+        `${n(count)} ${plural(
+          count,
+          "retour n’a pas pu être modifié et reste sélectionné.",
+          "retours n’ont pas pu être modifiés et restent sélectionnés.",
+        )}`,
+      bulkRestored: (count) => `${n(count)} ${plural(count, "retour rétabli", "retours rétablis")}`,
+      bulkRestoreFailed: (count) =>
+        `${n(count)} ${plural(count, "retour n’a pas pu être rétabli.", "retours n’ont pas pu être rétablis.")}`,
     },
     feedbackDetail: {
       subject: "Objet",

@@ -232,6 +232,13 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   // "{{ENVIRONMENT}}" would read as a placeholder of that name.
   "feedbackPage.environment": [["dev"]],
   "feedbackPage.reworkChip": one,
+  "feedbackPage.bulkChanged": [
+    [1, "{{value}}"],
+    [3, "{{value}}"],
+  ],
+  "feedbackPage.bulkFailed": one,
+  "feedbackPage.bulkRestored": one,
+  "feedbackPage.bulkRestoreFailed": one,
   "feedbackDetail.download": [["{{name}}"]],
   "feedbackDetail.resolvedAt": [["{{date}}"]],
   "feedbackPublic.total": one,

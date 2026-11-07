@@ -181,6 +181,24 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       reworkChip: (count) => (count === 1 ? "Nacharbeit" : `Nacharbeit ×${n(count)}`),
       awaitingFilter: "Nur was auf Sie wartet",
       phoneActions: "Feedback-Aktionen",
+      // 0.57 (keksdose dev #663): the inbox's bulk bar. "Meldung" as in `feedbackPublic.total`.
+      bulkStatus: "Status setzen",
+      bulkCategory: "Kategorie setzen",
+      bulkVisibility: "Sichtbarkeit",
+      bulkPublicOn: "Für andere sichtbar",
+      bulkPublicOff: "Nicht für andere sichtbar",
+      bulkChanged: (count, value) =>
+        count === 1 ? `1 Meldung auf „${value}“ gesetzt` : `${n(count)} Meldungen auf „${value}“ gesetzt`,
+      bulkFailed: (count) =>
+        count === 1
+          ? "1 Meldung konnte nicht geändert werden und bleibt ausgewählt."
+          : `${n(count)} Meldungen konnten nicht geändert werden und bleiben ausgewählt.`,
+      bulkRestored: (count) =>
+        count === 1 ? "1 Meldung wiederhergestellt" : `${n(count)} Meldungen wiederhergestellt`,
+      bulkRestoreFailed: (count) =>
+        count === 1
+          ? "1 Meldung konnte nicht wiederhergestellt werden."
+          : `${n(count)} Meldungen konnten nicht wiederhergestellt werden.`,
     },
     feedbackDetail: {
       subject: "Betreff",

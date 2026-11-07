@@ -46,6 +46,17 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
       ...d.feedbackPage,
       // `userFallback`'s number is an id, not a count: it stays as the default prints it.
       reworkChip: (count) => (count === 1 ? "Rework" : `Rework ×${n(count)}`),
+      // 0.57: the bulk bar's four counts.
+      bulkChanged: (count, value) =>
+        count === 1 ? `Set 1 report to “${value}”` : `Set ${n(count)} reports to “${value}”`,
+      bulkFailed: (count) =>
+        count === 1
+          ? "1 report could not be changed and stays selected."
+          : `${n(count)} reports could not be changed and stay selected.`,
+      bulkRestored: (count) =>
+        count === 1 ? "1 report is back as it was" : `${n(count)} reports are back as they were`,
+      bulkRestoreFailed: (count) =>
+        count === 1 ? "1 report could not be put back." : `${n(count)} reports could not be put back.`,
     },
     // 0.38.0: the public list's two counts.
     feedbackPublic: {
