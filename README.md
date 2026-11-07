@@ -579,7 +579,7 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2200 names from 371 modules** in the main barrel — 992 values and 1208 types — and 191 more in 16 standalone entries. _Italic_ is a type-only export.
+**2221 names from 374 modules** in the main barrel — 1003 values and 1218 types — and 193 more in 16 standalone entries. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 `node scripts/gen-export-inventory.mjs`; the counts are pinned by
@@ -587,13 +587,13 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2199 |
+| `@eifi1/ui-kit` | 2221 |
 | `@eifi1/ui-kit/chart` | 102 |
 | `@eifi1/ui-kit/shell` | 110 |
 | `@eifi1/ui-kit/data-table` | 56 |
 | `@eifi1/ui-kit/wizard` | 25 |
 | `@eifi1/ui-kit/tour` | 49 |
-| `@eifi1/ui-kit/feedback` | 203 |
+| `@eifi1/ui-kit/feedback` | 204 |
 | `@eifi1/ui-kit/search` | 20 |
 | `@eifi1/ui-kit/dates` | 26 |
 | `@eifi1/ui-kit/table-text` | 14 |
@@ -601,7 +601,7 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 | `@eifi1/ui-kit/eslint` | 1 |
 | `@eifi1/ui-kit/testing` | 15 |
 | `@eifi1/ui-kit/testing/react` | 2 |
-| `@eifi1/ui-kit/rhf` | 48 |
+| `@eifi1/ui-kit/rhf` | 50 |
 | `@eifi1/ui-kit/offline` | 33 |
 | `@eifi1/ui-kit/sync` | 36 |
 | `@eifi1/ui-kit/sync/testing` | 3 |
@@ -638,6 +638,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `lib/countries` | `COUNTRY_CODES`, `countryName` |
 | `lib/iban` | `compactIban`, `formatIban`, `IBAN_LENGTHS`, `ibanCheckDigits`, `ibanProblem`, `isQrIban`, `isValidIban`, _`IbanKind`_, _`IbanProblem`_ |
 | `lib/phone` | `formatNationalPhone`, `formatPhone`, `isE164`, `parsePhone`, `PHONE_COUNTRIES`, `PHONE_DIAL_CODES`, _`ParsedPhone`_, _`PhoneCountry`_, _`PhoneCountryCode`_ |
+| `lib/quantity` | `convertQuantity`, `formatQuantity`, `parseQuantity`, `QUANTITY_DIGITS`, `QUANTITY_UNITS`, `quantityFamily`, `sumQuantities`, `toBaseQuantity`, _`BaseQuantity`_, _`FormatQuantityOptions`_, _`Quantity`_, _`QuantityBaseUnit`_, _`QuantityFamily`_, _`QuantityUnit`_, _`QuantityUnitWords`_ |
 | `lib/column-mapping` | `assignColumnRole`, `guessMapping`, `missingRoles`, `readMappedTable`, `readTextFile`, `roleOfColumn`, _`ColumnMapperResult`_, _`ColumnMapping`_, _`ColumnRole`_ |
 | `lib/document-title` | `DEFAULT_DOCUMENT_TITLE_FORMAT`, `formatDocumentTitle`, _`DocumentTitleParts`_ |
 | `lib/status-tone` | `STATUS_KINDS`, `statusTone`, _`StatusKind`_, _`StatusTone`_ |
@@ -691,6 +692,8 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/slider` | `fromLogPosition`, `Slider`, `toLogPosition`, _`SliderMark`_, _`SliderProps`_ |
 | `components/time-input` | `isTimeInRange`, `normalizeTime`, `TimeInput`, _`TimeInputProps`_ |
 | `components/number-field` | `IntegerField`, `NumberField`, _`NumberFieldProps`_ |
+| `components/quantity-input` | `DEFAULT_QUANTITY_LABELS`, `QuantityInput`, _`QuantityInputProps`_, _`QuantityLabels`_ |
+| `components/quantity-field` | `QuantityField`, _`QuantityFieldProps`_ |
 | `components/sparkline` | `DEFAULT_SPARKLINE_LABELS`, `Sparkline`, `sparklineSummary`, _`SparklineLabels`_, _`SparklineProps`_, _`SparklineTone`_ |
 | `components/stat-tile` | `DEFAULT_STAT_TILE_LABELS`, `StatTile`, `StatTileGrid`, _`StatTileDelta`_, _`StatTileGridProps`_, _`StatTileLabels`_, _`StatTileLinkProps`_, _`StatTileProps`_, _`StatTileSubValue`_, _`StatTileTone`_ |
 | `components/signature-pad` | `DEFAULT_SIGNATURE_PAD_LABELS`, `SignaturePad`, `SignatureView`, _`SignatureDetail`_, _`SignaturePadHandle`_, _`SignaturePadLabels`_, _`SignaturePadProps`_, _`SignatureViewProps`_ |
@@ -1121,7 +1124,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 |---|---|
 | `rhf/form-core` | `Form` |
 | `rhf/use-rhf-wizard-step` | `useRhfWizardStep`, _`RhfWizardStepOptions`_ |
-| `rhf/fields` | `RhfCheckbox`, `RhfCombobox`, `RhfCountrySelect`, `RhfDateField`, `RhfDateRangePicker`, `RhfField`, `RhfIbanInput`, `RhfInlineEntityCombobox`, `RhfIntegerField`, `RhfMoneyField`, `RhfMonthPicker`, `RhfNumberField`, `RhfPhoneInput`, `RhfSelect`, `RhfTextarea`, `RhfTextCombobox`, `RhfTextField`, `RhfTimeInput`, `RhfToggleGroup`, _`RhfCheckboxProps`_, _`RhfComboboxProps`_, _`RhfCountrySelectProps`_, _`RhfDateFieldProps`_, _`RhfDateRangePickerProps`_, _`RhfFieldBaseProps`_, _`RhfFieldProps`_, _`RhfFieldRenderContext`_, _`RhfIbanInputProps`_, _`RhfInlineEntityComboboxProps`_, _`RhfIntegerFieldProps`_, _`RhfMoneyFieldProps`_, _`RhfMonthPickerProps`_, _`RhfNumberFieldProps`_, _`RhfPhoneInputProps`_, _`RhfSelectOption`_, _`RhfSelectProps`_, _`RhfTextareaProps`_, _`RhfTextComboboxProps`_, _`RhfTextFieldProps`_, _`RhfTimeInputProps`_, _`RhfToggleGroupProps`_ |
+| `rhf/fields` | `RhfCheckbox`, `RhfCombobox`, `RhfCountrySelect`, `RhfDateField`, `RhfDateRangePicker`, `RhfField`, `RhfIbanInput`, `RhfInlineEntityCombobox`, `RhfIntegerField`, `RhfMoneyField`, `RhfMonthPicker`, `RhfNumberField`, `RhfPhoneInput`, `RhfQuantityField`, `RhfSelect`, `RhfTextarea`, `RhfTextCombobox`, `RhfTextField`, `RhfTimeInput`, `RhfToggleGroup`, _`RhfCheckboxProps`_, _`RhfComboboxProps`_, _`RhfCountrySelectProps`_, _`RhfDateFieldProps`_, _`RhfDateRangePickerProps`_, _`RhfFieldBaseProps`_, _`RhfFieldProps`_, _`RhfFieldRenderContext`_, _`RhfIbanInputProps`_, _`RhfInlineEntityComboboxProps`_, _`RhfIntegerFieldProps`_, _`RhfMoneyFieldProps`_, _`RhfMonthPickerProps`_, _`RhfNumberFieldProps`_, _`RhfPhoneInputProps`_, _`RhfQuantityFieldProps`_, _`RhfSelectOption`_, _`RhfSelectProps`_, _`RhfTextareaProps`_, _`RhfTextComboboxProps`_, _`RhfTextFieldProps`_, _`RhfTimeInputProps`_, _`RhfToggleGroupProps`_ |
 | `rhf/line-items` | `RhfLineItems`, _`RhfLineItemCellContext`_, _`RhfLineItemsColumn`_, _`RhfLineItemsProps`_ |
 
 ### @eifi1/ui-kit/offline (standalone)
