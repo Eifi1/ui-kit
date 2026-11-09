@@ -995,7 +995,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
           browser: {
             title: "Ce que votre navigateur enregistre",
             lead: "Aucun cookie. L’app conserve les éléments suivants dans le stockage de votre navigateur\u00a0:",
-            tail: "Rien de tout cela ne sert à vous suivre. Les éléments en attente d’envoi nous sont transmis dès que possible\u202f; tout le reste demeure sur votre appareil. Tout cela disparaît lorsque vous effacez les données du site, et la déconnexion supprime les jetons de connexion.",
+            tail: "Rien de tout cela ne sert à vous suivre. Les éléments en attente d’envoi nous sont transmis dès que possible. Tout cela disparaît lorsque vous effacez les données du site, et la déconnexion supprime les jetons de connexion.",
           },
           rights: {
             title: "Vos droits",

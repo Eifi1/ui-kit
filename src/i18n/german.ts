@@ -998,7 +998,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
           browser: {
             title: "Was Ihr Browser speichert",
             lead: "Keine Cookies. Die App legt Folgendes im Speicher Ihres Browsers ab:",
-            tail: "Nichts davon dient dazu, Sie zu verfolgen. Noch nicht gesendete Einträge werden an uns übermittelt, sobald das möglich ist; alles andere bleibt auf Ihrem Gerät. Das alles verschwindet, wenn Sie die Websitedaten löschen, und beim Abmelden werden die Anmeldetoken entfernt.",
+            tail: "Nichts davon dient dazu, Sie zu verfolgen. Noch nicht gesendete Einträge werden an uns übermittelt, sobald das möglich ist. Das alles verschwindet, wenn Sie die Websitedaten löschen, und beim Abmelden werden die Anmeldetoken entfernt.",
           },
           rights: {
             title: "Ihre Rechte",

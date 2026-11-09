@@ -356,8 +356,10 @@ The texts are keksdose's unless marked otherwise.
     - No cookies. The app keeps the following in your browser's storage:
     - `{entries}`, rendered as a list, one item per entry, from the app.
     - None of it is used to track you. Entries waiting to be sent are sent to us as soon
-      as they can be; everything else stays on your device. All of it disappears when you
-      clear the site's data, and signing out removes the sign-in tokens.
+      as they can be. All of it disappears when you clear the site's data, and signing out
+      removes the sign-in tokens. (0.58, decision 10: without "everything else stays on
+      your device", which read as "never leaves it"; what an account keeps is the app's
+      to say.)
     - → *app paragraph*
   - **rights**, "Your rights":
     - lead: You have the right to access, rectification, erasure, restriction, data

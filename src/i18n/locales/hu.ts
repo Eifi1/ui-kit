@@ -980,7 +980,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
           browser: {
             title: "Mit tárol az Ön böngészője",
             lead: "Nincsenek sütik. Az alkalmazás a következőket tárolja az Ön böngészőjének tárhelyén:",
-            tail: "Egyiket sem használjuk az Ön követésére. A küldésre váró bejegyzéseket a böngésző elküldi nekünk, amint lehetséges; minden más az Ön eszközén marad. Mindez eltűnik, amikor törli a webhely adatait, kijelentkezéskor pedig a bejelentkezési tokenek törlődnek.",
+            tail: "Egyiket sem használjuk az Ön követésére. A küldésre váró bejegyzéseket a böngésző elküldi nekünk, amint lehetséges. Mindez eltűnik, amikor törli a webhely adatait, kijelentkezéskor pedig a bejelentkezési tokenek törlődnek.",
           },
           rights: {
             title: "Az Ön jogai",

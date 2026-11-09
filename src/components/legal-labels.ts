@@ -65,7 +65,7 @@ export const DEFAULT_LEGAL_LABELS: LegalLabels = {
       browser: {
         title: "What your browser stores",
         lead: "No cookies. The app keeps the following in your browser's storage:",
-        tail: "None of it is used to track you. Entries waiting to be sent are sent to us as soon as they can be; everything else stays on your device. All of it disappears when you clear the site's data, and signing out removes the sign-in tokens.",
+        tail: "None of it is used to track you. Entries waiting to be sent are sent to us as soon as they can be. All of it disappears when you clear the site's data, and signing out removes the sign-in tokens.",
       },
       rights: {
         title: "Your rights",

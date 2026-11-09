@@ -58,16 +58,17 @@ function legalWording(labels: UiKitLabels): Record<string, string> {
  * `**Legal wording:**` line for it to the adopt doc.
  *
  * 0.58 (keksdose's legal audit, legal decision 10): `terms` — the refund sentence moved
- * to the `changes` clause's commercial variant.
+ * to the `changes` clause's commercial variant; `privacy` — the browser section's tail
+ * lost "everything else stays on your device".
  */
 const LEGAL_WORDING: Record<string, Record<string, string>> = {
-  en: { impressum: "425fe7961e6a", legal: "4a756d653db4", privacy: "295cb92abc11", terms: "41d67860190b" },
-  "de-CH": { impressum: "6e8e555a0f60", legal: "2e098df47183", privacy: "72104c51331d", terms: "ce9971b444c5" },
-  fr: { impressum: "3f703ecd6763", legal: "cbffca19f763", privacy: "5030aaf51462", terms: "257115a45dde" },
-  it: { impressum: "9e60a55f89ef", legal: "bb36cce4e722", privacy: "413fca6deac5", terms: "98995c10e7a1" },
-  es: { impressum: "ff37b004be44", legal: "b7f4c56a85a4", privacy: "1190aa922e01", terms: "604a6af9da3c" },
-  hu: { impressum: "bf4d3a8d0b77", legal: "49cf3c68c030", privacy: "e2ae5cf77632", terms: "12871aadd0ab" },
-  zh: { impressum: "c98c0d1ac118", legal: "f892d035ee15", privacy: "04d2267708fe", terms: "e4cacb32ea2d" },
+  en: { impressum: "425fe7961e6a", legal: "4a756d653db4", privacy: "84c9a6bd5dc2", terms: "41d67860190b" },
+  "de-CH": { impressum: "6e8e555a0f60", legal: "2e098df47183", privacy: "a397f7b3ecac", terms: "ce9971b444c5" },
+  fr: { impressum: "3f703ecd6763", legal: "cbffca19f763", privacy: "f23b55700378", terms: "257115a45dde" },
+  it: { impressum: "9e60a55f89ef", legal: "bb36cce4e722", privacy: "787f9b6e3142", terms: "98995c10e7a1" },
+  es: { impressum: "ff37b004be44", legal: "b7f4c56a85a4", privacy: "8c81229e06f7", terms: "604a6af9da3c" },
+  hu: { impressum: "bf4d3a8d0b77", legal: "49cf3c68c030", privacy: "9eeaf61602e4", terms: "12871aadd0ab" },
+  zh: { impressum: "c98c0d1ac118", legal: "f892d035ee15", privacy: "c4cc8ea5ffed", terms: "e4cacb32ea2d" },
 };
 
 describe("the legal wording (DOC-6)", () => {

@@ -976,7 +976,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
           browser: {
             title: "Qué guarda su navegador",
             lead: "Ninguna cookie. La aplicación guarda lo siguiente en el almacenamiento de su navegador:",
-            tail: "Nada de ello se usa para rastrearle. Las entradas pendientes de envío se nos envían en cuanto sea posible; todo lo demás permanece en su dispositivo. Todo ello desaparece cuando borra los datos del sitio, y al cerrar sesión se eliminan los tokens de inicio de sesión.",
+            tail: "Nada de ello se usa para rastrearle. Las entradas pendientes de envío se nos envían en cuanto sea posible. Todo ello desaparece cuando borra los datos del sitio, y al cerrar sesión se eliminan los tokens de inicio de sesión.",
           },
           rights: {
             title: "Sus derechos",
