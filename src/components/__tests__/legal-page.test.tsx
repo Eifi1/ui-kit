@@ -266,7 +266,9 @@ describe("LegalPage — the frame (§3.2)", () => {
     // 0.51.4 (Marcel): what an objection leads to.
     expect(body).toContain("only benefit you, or that the law requires, apply without this notice");
     expect(body).toContain("If you object to a change, we may end your account on the date it takes effect.");
-    expect(body).toContain("we refund the unused part");
+    // 0.58 (keksdose's legal audit): the refund of a paid period is the commercial
+    // variant's alone (legal-page.changes.test.tsx).
+    expect(body).not.toContain("refund");
   });
 
   it("0.28.1: the language section needs the operator's bindingLanguage", () => {

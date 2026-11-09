@@ -198,14 +198,29 @@ export type LegalKitSectionProps = LegalKitSectionBase &
         children?: never;
       }
     | {
-        section: Exclude<LegalKitSectionKey, "browser" | "legal_basis" | "rights" | "disclaimer">;
+        section: "changes";
+        /**
+         * 0.58 (keksdose's legal audit, Marcel 2026-11-09): which changes clause, keyed as
+         * the disclaimer's. `non-commercial` (default) ends with what an objection leads
+         * to; `commercial` adds the refund of a paid period beyond the effective date — for
+         * an app that charges, in the release that turns its billing on, beside the
+         * commercial disclaimer.
+         */
+        variant?: LegalDisclaimerVariant;
+        entries?: never;
+        children?: never;
+      }
+    | {
+        section: Exclude<LegalKitSectionKey, "browser" | "legal_basis" | "rights" | "disclaimer" | "changes">;
         variant?: never;
         entries?: never;
         children?: never;
       }
   );
 
-/** 0.32.0: the imprint disclaimer's two texts — see {@link LegalKitSectionProps}. */
+/** 0.32.0: the imprint disclaimer's two texts — see {@link LegalKitSectionProps}. Since
+ *  0.58 the terms' `changes` section's two as well: the two sections whose wording
+ *  depends on whether the app takes payment, switched together. */
 export type LegalDisclaimerVariant = "non-commercial" | "commercial";
 
 /** The app's paragraph: a plain string as running text (line breaks kept, refs
@@ -284,12 +299,18 @@ export function LegalKitSection(props: LegalKitSectionProps) {
       parts = [lead, app, tail];
     }
   } else {
-    // The imprint's commercial disclaimer (0.32.0): its own body under the same title.
+    // The commercial variants — the imprint's disclaimer (0.32.0) and the terms' changes
+    // clause (0.58): their own body under the same title, the provider's, else English.
     const commercial =
-      props.section === "disclaimer" && props.variant === "commercial"
-        ? ((entry as LegalDisclaimerSectionLabels).commercial ??
-          DEFAULT_LEGAL_LABELS.sections.impressum.disclaimer.commercial)
-        : undefined;
+      props.variant !== "commercial"
+        ? undefined
+        : props.section === "disclaimer"
+          ? ((entry as LegalDisclaimerSectionLabels).commercial ??
+            DEFAULT_LEGAL_LABELS.sections.impressum.disclaimer.commercial)
+          : props.section === "changes"
+            ? ((entry as LegalLabels["sections"]["terms"]["changes"]).commercial ??
+              DEFAULT_LEGAL_LABELS.sections.terms.changes.commercial)
+            : undefined;
     parts = [<LegalText key="body" text={commercial ?? fill(entry.body)} />, app];
   }
 

@@ -63,8 +63,9 @@ before the 0.28 round, and how far their wording differed.
    purchase and the privacy policy names it as a recipient and independent controller of
    the buyer's data (billing §12.25); the prices go into the app's terms; and the imprint
    takes the kit's **commercial disclaimer**, `<LegalKitSection section="disclaimer"
-   variant="commercial" />` (ui-kit 0.32.0, §4.3). (Marcel, after the reviews; amended
-   by the billing round.)
+   variant="commercial" />` (ui-kit 0.32.0, §4.3), and the terms the **commercial changes
+   clause**, `<LegalKitSection section="changes" variant="commercial" />` (ui-kit 0.58,
+   decision 10). (Marcel, after the reviews; amended by the billing round.)
 8. **Kurvenschmiede is a closed beta** like the other two, so all three carry the same
    disclaimer, warranty and notices. (Marcel, after the reviews.)
 9. **German is the binding language** (Marcel, after the adoption, 0.28.1). The lawyer
@@ -85,7 +86,8 @@ before the 0.28 round, and how far their wording differed.
       question 4: continued use alone may not bind German consumers). Since 0.51.4 it says
       what an objection leads to: the operator may end the account on the effective date,
       with a pro-rata refund of a paid period; changes that only benefit the user or that
-      the law requires apply without notice or objection (Marcel, 2026-10-29).
+      the law requires apply without notice or objection (Marcel, 2026-10-29). Since 0.58
+      the refund is the commercial variant's only (the audit below).
     - keksdose stores the accepted terms version (the terms page's `updated` date) and the
       time at registration, in a users column of its own. This reverses decision 4's "no
       stored version" for keksdose only; the kit's checkbox still sends nothing (§3.4).
@@ -305,7 +307,7 @@ the app's own request and column; the checkbox itself still sends nothing.
 | *app sections* | app | Kurvenschmiede's `accounts`, `content` |
 | `warranty` | kit | |
 | `liability` | kit | |
-| `changes` | kit | |
+| `changes` | kit | two texts under one title, as the disclaimer: by default the notice, the way out and what an objection leads to; `variant="commercial"`, for an app that bills (decision 7), the same with the refund of a paid period after it (0.58, decision 10) |
 | `language` | kit | which language's version prevails: the operator's `bindingLanguage` (decision 9) |
 | `law` | kit | the place of jurisdiction comes from the operator |
 
@@ -380,8 +382,12 @@ The texts are keksdose's unless marked otherwise.
     then. If you keep using the service after that date, the changed terms apply. Changes
     that only benefit you, or that the law requires, apply without this notice and cannot
     be objected to. If you object to a change, we may end your account on the date it
-    takes effect. If you have paid for a period that runs beyond that date, we refund the
-    unused part. (The last three sentences: ui-kit 0.51.4, Marcel 2026-10-29.)
+    takes effect. (The last two sentences: ui-kit 0.51.4, Marcel 2026-10-29.)
+    - **commercial** (`variant="commercial"`, the same title; decisions 7 and 10, ui-kit
+      0.58): the same text, then: If you have paid for a period that runs beyond that
+      date, we refund the unused part. (In the default until 0.58; it moved here because
+      no app can take payment, and payment wording undercut the imprint's
+      "non-commercial".)
   - **language**, "Language" (decision 9): These terms are written in
     `{bindingLanguage}`. Translations into other languages are provided for convenience
     only; where a translation differs, the `{bindingLanguage}` version prevails.
@@ -455,7 +461,9 @@ would repeat the fr Imprint link's label, so a screen reader would read it twice
   number (`<LegalKitSection section="warranty" />`). It takes `children` for the app
   paragraph where §4.2 says kit + app, and only there (the type holds an app to it). For
   the browser section it takes `entries` as a list of strings, rendered as a `<ul>`. The
-  disclaimer takes `variant`: `"non-commercial"` (default) or `"commercial"` (0.32.0).
+  disclaimer takes `variant`: `"non-commercial"` (default) or `"commercial"` (0.32.0); so
+  does the terms' `changes` section (0.58), with
+  `sections.terms.changes.commercial`.
 - **`LegalSection`** gains automatic numbering inside a `LegalPage`, its key as id, and
   `{ref:key}` resolution. Its API stays the same otherwise.
 - **`LegalLinks`**:
@@ -516,8 +524,8 @@ once a second app is likely to need it).
 - the operator values, `bindingLanguage` included;
 - the web server's `X-Robots-Tag`, `robots.txt` and `sitemap.xml` (§3.2);
 - the review-area mapping on its server and translation page;
-- in the release that turns its billing on: the commercial disclaimer, and the Merchant
-  of Record in its terms and privacy policy (decision 7).
+- in the release that turns its billing on: the commercial disclaimer and the commercial
+  changes clause, and the Merchant of Record in its terms and privacy policy (decision 7).
 
 ## 6. Per repo
 

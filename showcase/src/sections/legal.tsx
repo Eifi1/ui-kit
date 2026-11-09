@@ -14,7 +14,7 @@ import {
   LegalPage,
   UiKitProvider,
 } from "@eifi1/ui-kit";
-import type { KitLinkComponent, LegalOperator, LegalPageKey } from "@eifi1/ui-kit";
+import type { KitLinkComponent, LegalDisclaimerVariant, LegalOperator, LegalPageKey } from "@eifi1/ui-kit";
 import { Example, Note, code } from "../lib/section";
 
 /**
@@ -194,14 +194,20 @@ function DemoHeader() {
   );
 }
 
-// Module-level elements, not components: the page reads its sections out of its
-// children before they render, through fragments and arrays but not through a component
-// of the app's own — `<PrivacySections />` would hide them, and nothing would be numbered.
-const IMPRESSUM = (
+/** Whether the made-up app takes payment: the disclaimer and the changes clause switch
+ *  to their commercial texts together (`variant="commercial"`). */
+type Billing = "off" | "on";
+const variantOf = (billing: Billing): LegalDisclaimerVariant => (billing === "on" ? "commercial" : "non-commercial");
+
+// Elements, not components: the page reads its sections out of its children before they
+// render, through fragments and arrays but not through a component of the app's own —
+// `<PrivacySections />` would hide them, and nothing would be numbered. A plain function
+// that RETURNS the elements (`impressum(billing)`) is fine: the page sees what it returned.
+const impressum = (billing: Billing) => (
   <>
     <LegalKitSection section="operator" />
     <LegalKitSection section="contact" />
-    <LegalKitSection section="disclaimer" />
+    <LegalKitSection section="disclaimer" variant={variantOf(billing)} />
     <LegalSection
       key="credits"
       heading="Credits"
@@ -247,7 +253,7 @@ const PRIVACY = (
   </>
 );
 
-const TERMS = (
+const terms = (billing: Billing) => (
   <>
     <LegalSection
       key="scope"
@@ -261,13 +267,17 @@ const TERMS = (
     />
     <LegalKitSection section="warranty" />
     <LegalKitSection section="liability" />
-    <LegalKitSection section="changes" />
+    <LegalKitSection section="changes" variant={variantOf(billing)} />
     <LegalKitSection section="language" />
     <LegalKitSection section="law" />
   </>
 );
 
-const SECTIONS: Record<LegalPageKey, React.JSX.Element> = { impressum: IMPRESSUM, privacy: PRIVACY, terms: TERMS };
+const SECTIONS: Record<LegalPageKey, (billing: Billing) => React.JSX.Element> = {
+  impressum,
+  privacy: () => PRIVACY,
+  terms,
+};
 
 /** 0.51.4: the app's plain-language points; the heading and the "only the full text binds"
  *  line are the kit's. */
@@ -284,6 +294,7 @@ const SUMMARY: Partial<Record<LegalPageKey, string[]>> = {
 
 function Legal028Demo() {
   const [page, setPage] = useState<LegalPageKey>("privacy");
+  const [billing, setBilling] = useState<Billing>("off");
   const link = usePreviewLink(setPage);
   const box = useRef<HTMLDivElement>(null);
   useInPageAnchors(box);
@@ -293,16 +304,27 @@ function Legal028Demo() {
       hint="an app's frame; the shared sections are the kit's, the rest the app's"
     >
       <div className="flex flex-col gap-3">
-        <ToggleGroup
-          aria-label="Page"
-          value={page}
-          onChange={(v) => setPage(v as LegalPageKey)}
-          options={[
-            { value: "impressum", label: "Imprint" },
-            { value: "privacy", label: "Privacy Policy" },
-            { value: "terms", label: "Terms" },
-          ]}
-        />
+        <div className="flex flex-wrap gap-2">
+          <ToggleGroup
+            aria-label="Page"
+            value={page}
+            onChange={(v) => setPage(v as LegalPageKey)}
+            options={[
+              { value: "impressum", label: "Imprint" },
+              { value: "privacy", label: "Privacy Policy" },
+              { value: "terms", label: "Terms" },
+            ]}
+          />
+          <ToggleGroup<Billing>
+            aria-label="Billing"
+            value={billing}
+            onChange={setBilling}
+            options={[
+              { value: "off", label: "Billing off" },
+              { value: "on", label: "Billing on" },
+            ]}
+          />
+        </div>
         <div ref={box} className="overflow-hidden rounded-lg border border-subtle">
           <UiKitProvider linkComponent={link}>
             {/* An app renders it on its own route: an h1, a <main>, and noindex. A
@@ -318,7 +340,7 @@ function Legal028Demo() {
               landmark={false}
               noIndex={false}
             >
-              {SECTIONS[page]}
+              {SECTIONS[page](billing)}
             </LegalPage>
           </UiKitProvider>
         </div>
@@ -334,7 +356,9 @@ function Legal028Demo() {
           {code("{ref:retention}")} in an app text becomes that section&apos;s number, linked — section 2 points forward
           to section 7. Sections must be direct children of the page, or inside fragments or arrays: the page reads the
           order before anything renders. The page also calls {code("useNoIndex()")}; this preview passes{" "}
-          {code("noIndex={false}")}.
+          {code("noIndex={false}")}. With billing on, the imprint&apos;s disclaimer and the terms&apos; changes clause
+          take {code('variant="commercial"')}: a commercial service sold through a Merchant of Record, and the refund of
+          a paid period beyond a change&apos;s effective date — words an app shows only once it takes payment.
         </Note>
       </div>
     </Example>

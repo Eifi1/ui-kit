@@ -54,17 +54,20 @@ function legalWording(labels: UiKitLabels): Record<string, string> {
 }
 
 /**
- * The legal wording as of 0.51.7. Update an entry ONLY in the change that adds the
+ * The legal wording as of 0.58. Update an entry ONLY in the change that adds the
  * `**Legal wording:**` line for it to the adopt doc.
+ *
+ * 0.58 (keksdose's legal audit, legal decision 10): `terms` — the refund sentence moved
+ * to the `changes` clause's commercial variant.
  */
 const LEGAL_WORDING: Record<string, Record<string, string>> = {
-  en: { impressum: "425fe7961e6a", legal: "4a756d653db4", privacy: "295cb92abc11", terms: "f173b6a8b8b2" },
-  "de-CH": { impressum: "6e8e555a0f60", legal: "2e098df47183", privacy: "72104c51331d", terms: "e4a7c7b032e4" },
-  fr: { impressum: "3f703ecd6763", legal: "cbffca19f763", privacy: "5030aaf51462", terms: "c80ee2af9159" },
-  it: { impressum: "9e60a55f89ef", legal: "bb36cce4e722", privacy: "413fca6deac5", terms: "3205065d1192" },
-  es: { impressum: "ff37b004be44", legal: "b7f4c56a85a4", privacy: "1190aa922e01", terms: "a8abedb07988" },
-  hu: { impressum: "bf4d3a8d0b77", legal: "49cf3c68c030", privacy: "e2ae5cf77632", terms: "e9f678f80047" },
-  zh: { impressum: "c98c0d1ac118", legal: "f892d035ee15", privacy: "04d2267708fe", terms: "af4ba9ed834c" },
+  en: { impressum: "425fe7961e6a", legal: "4a756d653db4", privacy: "295cb92abc11", terms: "41d67860190b" },
+  "de-CH": { impressum: "6e8e555a0f60", legal: "2e098df47183", privacy: "72104c51331d", terms: "ce9971b444c5" },
+  fr: { impressum: "3f703ecd6763", legal: "cbffca19f763", privacy: "5030aaf51462", terms: "257115a45dde" },
+  it: { impressum: "9e60a55f89ef", legal: "bb36cce4e722", privacy: "413fca6deac5", terms: "98995c10e7a1" },
+  es: { impressum: "ff37b004be44", legal: "b7f4c56a85a4", privacy: "1190aa922e01", terms: "604a6af9da3c" },
+  hu: { impressum: "bf4d3a8d0b77", legal: "49cf3c68c030", privacy: "e2ae5cf77632", terms: "12871aadd0ab" },
+  zh: { impressum: "c98c0d1ac118", legal: "f892d035ee15", privacy: "04d2267708fe", terms: "e4cacb32ea2d" },
 };
 
 describe("the legal wording (DOC-6)", () => {

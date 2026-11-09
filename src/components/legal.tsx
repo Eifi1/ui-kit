@@ -257,7 +257,16 @@ export interface LegalLabels {
     terms: {
       warranty: LegalTextSectionLabels;
       liability: LegalTextSectionLabels;
-      changes: LegalTextSectionLabels;
+      /**
+       * `body` is the default; `commercial` (0.58) the same text with the refund of a paid
+       * period after it, for `<LegalKitSection section="changes" variant="commercial">` —
+       * keyed as the imprint disclaimer's (keksdose's legal audit, Marcel 2026-11-09): no
+       * app can take payment today, and payment wording undercut the imprint's
+       * "non-commercial" (an external pre-review). An app shows it again in the release
+       * that turns its billing on. OPTIONAL, as the disclaimer's: left out, the provider's,
+       * then English.
+       */
+      changes: LegalTextSectionLabels & { commercial?: string };
       /** 0.28.1: which language's version prevails — `o.bindingLanguage`, named. */
       language: LegalOperatorSectionLabels;
       /** The place of jurisdiction is the operator's `{city} ({region}), {country}`. */
