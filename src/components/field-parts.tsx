@@ -629,6 +629,13 @@ export function useRefusal(refused: ReactNode, disabledReason: ReactNode, commit
  *
  * `className` is the wrapper's, which becomes the outermost element while locked — a
  * control moves its own layout classes here so a lock does not reflow the form.
+ *
+ * Either wrapper carries `data-lock-frame`, for a parent whose layout has to pass through
+ * it to the control. The frame keeps the control at the control's own width — in a row the
+ * frame is as wide as the reason's words, and a button stretched to them would grow with
+ * every lock — so a column that stretches its items stretches only the frame: FormActions'
+ * phone stack reaches through it (`[&>[data-lock-frame]]:items-stretch`) and stretches a
+ * locked action as it stretches a bare one.
  */
 export function LockedReason({
   lock,
@@ -665,7 +672,7 @@ export function LockedReason({
     );
   }
   return (
-    <Tooltip label={lock.reason} side={side} portal={portal} className={className}>
+    <Tooltip data-lock-frame="" label={lock.reason} side={side} portal={portal} className={className}>
       <>
         {children}
         <span id={lock.reasonId} hidden>
@@ -790,7 +797,12 @@ export function DisabledReasonLine({
   children: ReactNode;
 }) {
   return (
-    <span data-slot="disabled-reason" className={cn("inline-flex max-w-full flex-col items-start", className)}>
+    <span
+      data-slot="disabled-reason"
+      // LockedReason's mark for a parent to reach the control through (FormActions' stack).
+      data-lock-frame=""
+      className={cn("inline-flex max-w-full flex-col items-start", className)}
+    >
       {children}
       <span id={id} className={cn(DISABLED_REASON_LINE_CLASS, lineClassName)}>
         {reason}

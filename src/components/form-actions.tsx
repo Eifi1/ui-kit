@@ -157,6 +157,23 @@ const ALIGN_CLASS: Record<FormActionsAlign, string> = {
   between: "justify-between",
 };
 
+/**
+ * Stacked, an action in a lock frame fills its line as a bare one does. The column stretches
+ * its own items — a bare `<Button>` among the caller's `children` fills the line with no class
+ * of its own — but a refused one sits in its reason's frame (`data-lock-frame`: the line
+ * under it at Large and on a touch screen, else the tooltip's wrapper), which keeps the
+ * control at the control's own width; the column stretched only the frame. So a caller's
+ * locked action stood narrow between a full-width Cancel and Save, whose `w-full` reaches
+ * through: keksdose's "Save as template" (`commit`, the read-only demo's lock), widened by
+ * hand with `usePhoneLayout` and `w-full`.
+ *
+ * Child selectors, so a frame that is the group's OWN item is reached and none inside a
+ * caller's element (a DangerConfirm's, a row of its own); the caller's element is neither
+ * cloned nor re-classed. `flex-col` for the tooltip's wrapper, a row; the line's is a column
+ * already. A control with a width of its own (an IconButton) keeps it, framed or bare.
+ */
+const STACKED_FRAMES = "[&>[data-lock-frame]]:flex-col [&>[data-lock-frame]]:items-stretch";
+
 const PLACEMENT_CLASS: Record<FormActionsPlacement, string> = {
   inline: "pt-4",
   sticky: "sticky bottom-0 z-10 border-t border-subtle bg-surface pt-3",
@@ -330,7 +347,9 @@ export interface FormActionsProps extends Omit<ComponentPropsWithoutRef<"div">, 
   /** When the buttons stack full width — see {@link FormActionsStack}. Default `auto`:
    *  on the phone layout at Large and Extra large. */
   stack?: FormActionsStack;
-  /** Extra actions, placed before Cancel. */
+  /** Extra actions, placed before Cancel. Stacked, a `<Button>` here fills its line as
+   *  Cancel and Save do — refused or locked too, its reason's frame and all; no `w-full` of
+   *  your own. An element of yours that wraps one fills its line, and its insides stay yours. */
   children?: ReactNode;
   /** The row, where the rest of the props go (0.34, API-2, refactor audit 2026-10) —
    *  merged with its own ref, which `submitShortcut` finds its form from. It rode the
@@ -528,14 +547,20 @@ export function FormActions({
       {(hasDestructive || hasStart) && (
         <div
           className={
-            stacked ? "flex min-w-0 flex-col items-stretch gap-2" : "me-auto flex min-w-0 flex-wrap items-center gap-2"
+            stacked
+              ? `flex min-w-0 flex-col items-stretch gap-2 ${STACKED_FRAMES}`
+              : "me-auto flex min-w-0 flex-wrap items-center gap-2"
           }
         >
           {destructiveNode}
           {hasStart && startSlot}
         </div>
       )}
-      <div className={stacked ? "flex flex-col items-stretch gap-2" : "flex flex-wrap items-center gap-2"}>
+      <div
+        className={
+          stacked ? `flex flex-col items-stretch gap-2 ${STACKED_FRAMES}` : "flex flex-wrap items-center gap-2"
+        }
+      >
         {children}
         {onCancel && (
           <Button type="button" variant={cancelVariant} size={size} onClick={onCancel} className={full}>

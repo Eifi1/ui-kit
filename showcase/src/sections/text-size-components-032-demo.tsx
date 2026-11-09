@@ -280,8 +280,9 @@ function FormAndTileDemo() {
       </div>
       <Note>
         On the phone layout at Large FormActions stacks its buttons full width, Save at the bottom under the thumb
-        (`stack`: `auto` / `phone` / `never`). StatTile at Large puts the hint in words, never truncates its label, and
-        moves the sub-values (label over figure) and then the sparkline below the one big number.
+        (`stack`: `auto` / `phone` / `never`) — the extra actions passed as `children` too, a locked one with its reason
+        line under it. StatTile at Large puts the hint in words, never truncates its label, and moves the sub-values
+        (label over figure) and then the sparkline below the one big number.
       </Note>
     </Example>
   );
