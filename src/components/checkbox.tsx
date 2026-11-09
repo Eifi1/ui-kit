@@ -15,6 +15,7 @@ import {
   type DisabledReasonDisplay,
 } from "./field-parts";
 import { FOCUS_RING } from "./focus-ring";
+import { CHECKBOX_BOX_CLASS, CHECKBOX_BOX_ON_CLASS, CHECKBOX_GLYPH_CLASS } from "./checkbox-look";
 import type { CommitScope } from "./write-lock";
 
 /**
@@ -40,8 +41,10 @@ import type { CommitScope } from "./write-lock";
 // The kit's focus frame (§5), with an offset in the surface colour: a --brand ring
 // touching a --brand-filled (checked) box would be a ring painted in the colour it sits
 // on — present in the DOM and invisible on screen. The offset is what separates the two.
+//
+// The paint itself is ./checkbox-look's, which a checkable ListItem's drawn box shares.
 const BOX =
-  "peer size-4 shrink-0 cursor-pointer appearance-none rounded border border-strong bg-surface shadow-sm transition-colors " +
+  `peer ${CHECKBOX_BOX_CLASS} cursor-pointer appearance-none ` +
   "checked:border-brand checked:bg-brand " +
   `focus:outline-none ${FOCUS_RING} focus-visible:ring-offset-1 focus-visible:ring-offset-surface ` +
   "disabled:cursor-not-allowed";
@@ -61,7 +64,7 @@ const LABEL_TOUCH_LARGE =
 // A mixed box wears the checked fill whether or not the underlying input is checked:
 // `indeterminate` is a property the browser keeps separately from `checked`, and the
 // dash means "some", which is neither answer.
-const BOX_MIXED = "border-brand bg-brand";
+const BOX_MIXED = CHECKBOX_BOX_ON_CLASS;
 
 // The same geometry as FIELD_INVALID — a border plus a 1px ring, so the highlight
 // survives fractional display scaling on every edge (see the note on FIELD_BASE in field-base.tsx). The
@@ -261,13 +264,16 @@ export function Checkbox({
         <Minus
           aria-hidden
           strokeWidth={3}
-          className="pointer-events-none absolute inset-0 m-auto size-3 text-brand-contrast"
+          className={cn("pointer-events-none absolute inset-0 m-auto", CHECKBOX_GLYPH_CLASS)}
         />
       ) : (
         <Check
           aria-hidden
           strokeWidth={3}
-          className="pointer-events-none invisible absolute inset-0 m-auto size-3 text-brand-contrast peer-checked:visible"
+          className={cn(
+            "pointer-events-none invisible absolute inset-0 m-auto peer-checked:visible",
+            CHECKBOX_GLYPH_CLASS,
+          )}
         />
       )}
     </span>

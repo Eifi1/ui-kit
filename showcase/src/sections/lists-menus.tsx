@@ -40,7 +40,7 @@ import type {
   ListSeparator,
   MenuItemLinkProps,
 } from "@eifi1/ui-kit";
-import { Example, Note, Row, READOUT, code } from "../lib/section";
+import { Example, Note, OutTable, Row, READOUT, code } from "../lib/section";
 import type { ReactNode } from "react";
 
 /**
@@ -229,6 +229,118 @@ function RowStates() {
           <code className="font-mono">aria-disabled</code>, not <code className="font-mono">disabled</code>) so a
           keyboard user is not thrown to the top of the page mid-download; a <code className="font-mono">disabled</code>{" "}
           one has nothing to do and is skipped.
+        </Note>
+      </div>
+    </Example>
+  );
+}
+
+/* ── A checklist: checked rows, and sections built from them ─────────────── */
+
+interface ShopItem {
+  id: string;
+  name: string;
+  shelf?: string;
+  amount?: string;
+}
+
+const AISLES: Array<{ key: string; name: string; items: ShopItem[] }> = [
+  {
+    key: "dairy",
+    name: "Dairy",
+    items: [
+      { id: "milk", name: "Milk", amount: "2 l · Organic" },
+      { id: "butter", name: "Butter", shelf: "Fats", amount: "250 g" },
+    ],
+  },
+  { key: "bakery", name: "Bakery", items: [{ id: "bread", name: "Bread", shelf: "Cereals", amount: "500 g" }] },
+  {
+    key: "fruit",
+    name: "Fruit & vegetables",
+    items: [
+      { id: "apples", name: "Apples", shelf: "Fruit", amount: "1 kg" },
+      { id: "bananas", name: "Bananas", shelf: "Fruit", amount: "6 pcs" },
+      { id: "carrots", name: "Carrots", shelf: "Vegetables", amount: "1 kg" },
+    ],
+  },
+  { key: "other", name: "Other", items: [{ id: "candles", name: "Birthday candles" }] },
+];
+
+const ITEM_COUNT = AISLES.reduce((sum, aisle) => sum + aisle.items.length, 0);
+
+function Checklist() {
+  const [ticked, setTicked] = useState<Record<string, boolean>>({ bread: true, bananas: true });
+  const [strike, setStrike] = useState(true);
+  const [last, setLast] = useState("—");
+  const tick = (ids: string[], value: boolean, what: string) => {
+    setTicked((was) => ({ ...was, ...Object.fromEntries(ids.map((id) => [id, value])) }));
+    setLast(`${what} → onCheckedChange(${value})`);
+  };
+  const inBasket = Object.values(ticked).filter(Boolean).length;
+  return (
+    <Example
+      label="ListItem — checked: a checklist in sections"
+      hint="tap anywhere on a row; a section's row ticks all of its items, and is mixed while some are"
+    >
+      <label className="mb-3 flex items-center gap-2 text-sm text-secondary">
+        <input type="checkbox" checked={strike} onChange={(e) => setStrike(e.target.checked)} />
+        <code className="font-mono">checkedStyle=&quot;strike&quot;</code>
+      </label>
+      <List aria-label="Shopping list" separator="divider" density="comfortable" className="max-w-md">
+        {AISLES.map((aisle) => {
+          const done = aisle.items.filter((item) => ticked[item.id]).length;
+          return (
+            <ListItem
+              key={aisle.key}
+              title={aisle.name}
+              trailing={`${done} of ${aisle.items.length}`}
+              checked={done === 0 ? false : done === aisle.items.length ? true : "mixed"}
+              onCheckedChange={(value) =>
+                tick(
+                  aisle.items.map((item) => item.id),
+                  value,
+                  aisle.name,
+                )
+              }
+            >
+              <List separator="divider">
+                {aisle.items.map((item) => (
+                  <ListItem
+                    key={item.id}
+                    title={item.name}
+                    overline={item.shelf}
+                    subtitle={item.amount}
+                    checked={ticked[item.id] ?? false}
+                    checkedStyle={strike ? "strike" : "none"}
+                    onCheckedChange={(value) => tick([item.id], value, item.name)}
+                  />
+                ))}
+              </List>
+            </ListItem>
+          );
+        })}
+      </List>
+      <div className="mt-3">
+        <OutTable
+          rows={[
+            ["in the basket", `${inBasket} of ${ITEM_COUNT}`],
+            ["last change", last],
+          ]}
+        />
+      </div>
+      <div className="mt-3">
+        <Note>
+          With <code className="font-mono">checked</code> the WHOLE row is the toggle and the kit draws the box: one{" "}
+          <code className="font-mono">role=&quot;checkbox&quot;</code> per row, named by its title alone and described
+          by its other lines (&ldquo;Bread, checkbox, checked, Cereals, 500 g&rdquo;), Space to toggle, and no 16 px box
+          to aim at. A section&apos;s row is the same row: <code className="font-mono">checked=&quot;mixed&quot;</code>{" "}
+          while some of its items are ticked, its count in <code className="font-mono">trailing</code>, its items in{" "}
+          <code className="font-mono">children</code> (a group named by its title). Ticking it calls{" "}
+          <code className="font-mono">onCheckedChange(true)</code> from mixed, as a native box does. The box is the
+          row&apos;s one action, so the types refuse <code className="font-mono">onClick</code>,{" "}
+          <code className="font-mono">href</code> and <code className="font-mono">expandedContent</code> beside it; a
+          section that folds stays an expandable row with a <code className="font-mono">Checkbox</code> in{" "}
+          <code className="font-mono">leadingActions</code>.
         </Note>
       </div>
     </Example>
@@ -779,6 +891,7 @@ export function ListsMenus() {
     <>
       <RowKinds />
       <RowStates />
+      <Checklist />
       <RowText />
       <ListLayout />
       <MenuItemChoices />

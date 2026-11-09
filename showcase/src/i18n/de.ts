@@ -968,6 +968,7 @@ export const de: Dictionary = {
       "mehrere Zeilen auswählen",
       "Sammelaktionen für ausgewählte Zeilen",
       "Auswahl-Werkzeugleiste",
+      "Checkliste zum Abhaken",
     ],
     "tree-view": [
       "hierarchische Daten anzeigen",

@@ -959,6 +959,7 @@ export const en: Dictionary = {
       "select several rows",
       "bulk actions on selected rows",
       "selection toolbar",
+      "checklist to tick off",
     ],
     "tree-view": [
       "show hierarchical data",

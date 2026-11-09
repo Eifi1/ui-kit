@@ -503,6 +503,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
   "lists-menus": [
     "ListItem — button, link, external and static rows",
     "ListItem — unread, selected, status, loading and disabled",
+    "ListItem — checked: a checklist in sections",
     "ListItem — subtitleLines, meta, leading and align",
     "List — density, separator and as",
     "MenuItem — radio, checkbox, danger and disabled",

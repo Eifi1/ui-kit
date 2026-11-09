@@ -962,6 +962,7 @@ export const fr: Dictionary = {
       "sélectionner plusieurs lignes",
       "actions groupées sur la sélection",
       "barre d’outils de sélection",
+      "liste à cocher",
     ],
     "tree-view": [
       "afficher des données hiérarchiques",
