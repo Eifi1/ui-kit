@@ -278,6 +278,7 @@ const DateFormatDemo = lazySection(() => import("./sections/date-format"), "Date
 const TileRadioGroup022Demo = lazySection(() => import("./sections/account-fields-022-demo"), "TileRadioGroup022Demo");
 const AccountNumbers022Demo = lazySection(() => import("./sections/account-numbers-022-demo"), "AccountNumbers022Demo");
 const ToggleGroup022Demo = lazySection(() => import("./sections/chips-toggles"), "ToggleGroup022Demo");
+const ChoiceFieldDemo = lazySection(() => import("./sections/chips-toggles"), "ChoiceFieldDemo");
 const Choices022Demo = lazySection(() => import("./sections/choices"), "Choices022Demo");
 const Dates022Demo = lazySection(() => import("./sections/dates"), "Dates022Demo");
 const Month022Demo = lazySection(() => import("./sections/month-picker-demo"), "Month022Demo");
@@ -1090,7 +1091,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Chips and the chip field, the toggle group, and tabs — the small controls that pick one of a few or hold a short list.",
         icon: Tags,
-        components: ["Chip", "ChipInput", "ToggleGroup", "Tabs"],
+        components: ["Chip", "ChipInput", "ToggleGroup", "ChoiceField", "RhfChoiceField", "Tabs"],
         Body: () => (
           <>
             <ChipsToggles />
@@ -1100,6 +1101,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <Chips016Demo />
             <ChipSnapEdges018Demo />
             <ToggleGroup022Demo />
+            <ChoiceFieldDemo />
           </>
         ),
       },

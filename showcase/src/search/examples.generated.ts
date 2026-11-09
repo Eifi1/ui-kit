@@ -437,6 +437,9 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "ToggleGroup as a field — the label is clear of the fill",
     "ToggleGroup labelPlacement=\"strip\"",
     "commit / disabledReason on a group and a chip",
+    "ChoiceField — a segmented group from md up, a select on a phone",
+    "ChoiceField layout=\"segmented\" and layout=\"select\"",
+    "RhfChoiceField",
   ],
   "feedback": [
     "ProgressBar — determinate",
@@ -1264,6 +1267,7 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
     "Chips016Demo",
     "ChipSnapEdges018Demo",
     "ToggleGroup022Demo",
+    "ChoiceFieldDemo",
   ],
   "feedback": [
     "FeedbackProgress",

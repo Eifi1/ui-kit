@@ -730,6 +730,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/qr-code` | `QrCode`, _`QrCodeProps`_ |
 | `components/alert-banner` | `AlertBanner`, `alertFrameClass`, `toneFrameClass`, _`AlertBannerProps`_, _`AlertSize`_, _`AlertTone`_ |
 | `components/toggle-group` | `ToggleGroup`, _`ToggleGroupBaseProps`_, _`ToggleGroupClearableProps`_, _`ToggleGroupProps`_, _`ToggleGroupRequiredProps`_, _`ToggleOption`_ |
+| `components/choice-field` | `ChoiceField`, _`ChoiceFieldLayout`_, _`ChoiceFieldOption`_, _`ChoiceFieldProps`_ |
 | `components/nav-pills` | `NavPills`, _`NavPillItem`_, _`NavPillLinkProps`_, _`NavPillsCurrent`_, _`NavPillsProps`_ |
 | `components/chip` | `Chip`, _`ChipHue`_, _`ChipLinkProps`_, _`ChipProps`_, _`ChipShape`_, _`ChipSize`_, _`ChipTone`_, _`ChipVariant`_ |
 | `components/chip-input` | `ChipInput`, `DEFAULT_CHIP_INPUT_LABELS`, _`ChipInputLabels`_, _`ChipInputProps`_ |
@@ -1125,7 +1126,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 |---|---|
 | `rhf/form-core` | `Form` |
 | `rhf/use-rhf-wizard-step` | `useRhfWizardStep`, _`RhfWizardStepOptions`_ |
-| `rhf/fields` | `RhfCheckbox`, `RhfCombobox`, `RhfCountrySelect`, `RhfDateField`, `RhfDateRangePicker`, `RhfField`, `RhfIbanInput`, `RhfInlineEntityCombobox`, `RhfIntegerField`, `RhfMoneyField`, `RhfMonthPicker`, `RhfNumberField`, `RhfPhoneInput`, `RhfQuantityField`, `RhfSelect`, `RhfTextarea`, `RhfTextCombobox`, `RhfTextField`, `RhfTimeInput`, `RhfToggleGroup`, _`RhfCheckboxProps`_, _`RhfComboboxProps`_, _`RhfCountrySelectProps`_, _`RhfDateFieldProps`_, _`RhfDateRangePickerProps`_, _`RhfFieldBaseProps`_, _`RhfFieldProps`_, _`RhfFieldRenderContext`_, _`RhfIbanInputProps`_, _`RhfInlineEntityComboboxProps`_, _`RhfIntegerFieldProps`_, _`RhfMoneyFieldProps`_, _`RhfMonthPickerProps`_, _`RhfNumberFieldProps`_, _`RhfPhoneInputProps`_, _`RhfQuantityFieldProps`_, _`RhfSelectOption`_, _`RhfSelectProps`_, _`RhfTextareaProps`_, _`RhfTextComboboxProps`_, _`RhfTextFieldProps`_, _`RhfTimeInputProps`_, _`RhfToggleGroupProps`_ |
+| `rhf/fields` | `RhfCheckbox`, `RhfChoiceField`, `RhfCombobox`, `RhfCountrySelect`, `RhfDateField`, `RhfDateRangePicker`, `RhfField`, `RhfIbanInput`, `RhfInlineEntityCombobox`, `RhfIntegerField`, `RhfMoneyField`, `RhfMonthPicker`, `RhfNumberField`, `RhfPhoneInput`, `RhfQuantityField`, `RhfSelect`, `RhfTextarea`, `RhfTextCombobox`, `RhfTextField`, `RhfTimeInput`, `RhfToggleGroup`, _`RhfCheckboxProps`_, _`RhfChoiceFieldProps`_, _`RhfComboboxProps`_, _`RhfCountrySelectProps`_, _`RhfDateFieldProps`_, _`RhfDateRangePickerProps`_, _`RhfFieldBaseProps`_, _`RhfFieldProps`_, _`RhfFieldRenderContext`_, _`RhfIbanInputProps`_, _`RhfInlineEntityComboboxProps`_, _`RhfIntegerFieldProps`_, _`RhfMoneyFieldProps`_, _`RhfMonthPickerProps`_, _`RhfNumberFieldProps`_, _`RhfPhoneInputProps`_, _`RhfQuantityFieldProps`_, _`RhfSelectOption`_, _`RhfSelectProps`_, _`RhfTextareaProps`_, _`RhfTextComboboxProps`_, _`RhfTextFieldProps`_, _`RhfTimeInputProps`_, _`RhfToggleGroupProps`_ |
 | `rhf/line-items` | `RhfLineItems`, _`RhfLineItemCellContext`_, _`RhfLineItemsColumn`_, _`RhfLineItemsProps`_ |
 
 ### @eifi1/ui-kit/offline (standalone)
@@ -1175,7 +1176,7 @@ Every field takes a `ref` — a React 19 ref prop, no `forwardRef` (since 0.34) 
 element that takes focus: the `<input>` of `Input`, `NumberField`, `AmountInput`,
 `ChipInput`…, the trigger button of a picker (`DatePicker`, `MonthPicker`, `MultiSelect`,
 `CurrencySelect`, `CountrySelect`), and for `ToggleGroup` the group, whose `focus()` lands
-on its checked option. So they work directly with react-hook-form:
+on its checked option (`ChoiceField`: that group, or its `<select>` on a phone). So they work directly with react-hook-form:
 `<Input {...field} />` (from `Controller`/`register`) attaches RHF's ref, giving
 focus-and-scroll-to-error for free. A component that spreads its props onto an element
 (`Card`, `EmptyState`, `PageHeader`, …) takes that element's `ref` too. For fields bound

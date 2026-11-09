@@ -481,6 +481,9 @@ export * from "./chart";
 export * from "./components/qr-code";
 export * from "./components/alert-banner";
 export * from "./components/toggle-group";
+// 0.58: one answer from a few — the segmented ToggleGroup from `md` up, a Select on a phone
+// (keksdose's HeaderChoice and SL-18 Choice, hand-rolled twice).
+export * from "./components/choice-field";
 // A wrapping set of links/buttons marked `aria-current` — Tabs-like looks, not tabs.
 export * from "./components/nav-pills";
 // A pill carrying one VALUE — inert, a link, or a toggle, depending on which prop it is

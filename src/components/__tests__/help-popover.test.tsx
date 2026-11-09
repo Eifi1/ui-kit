@@ -16,6 +16,7 @@ import { AmountInput } from "../amount-input";
 import { MoneyField } from "../money-field";
 import { QuantityField } from "../quantity-field";
 import { ToggleGroup } from "../toggle-group";
+import { ChoiceField } from "../choice-field";
 import { Slider } from "../slider";
 import { CountrySelect } from "../country-select";
 import { CurrencySelect } from "../currency-select";
@@ -43,6 +44,7 @@ import { RoleSelect, RolesEditor } from "../../admin/role-select";
 import { Form } from "../../rhf/form";
 import {
   RhfCheckbox,
+  RhfChoiceField,
   RhfCombobox,
   RhfCountrySelect,
   RhfDateField,
@@ -311,6 +313,7 @@ const SWEEP: Record<SweptField, (hint: ReactNode) => ReactElement> = {
   ),
   MonthPicker: (hint) => <MonthPicker label="Status" value="2026-08" onChange={noop} hint={hint} />,
   ToggleGroup: (hint) => <ToggleGroup label="Status" hint={hint} value="a" onChange={noop} options={OPTIONS} />,
+  ChoiceField: (hint) => <ChoiceField label="Status" hint={hint} value="a" onChange={noop} options={OPTIONS} />,
   CheckboxGroup: (hint) => <CheckboxGroup legend="Status" options={OPTIONS} value={[]} onChange={noop} hint={hint} />,
   SwatchPicker: (hint) => (
     <SwatchPicker
@@ -424,6 +427,11 @@ const SWEEP: Record<SweptField, (hint: ReactNode) => ReactElement> = {
   RhfToggleGroup: (hint) => (
     <InForm>
       <RhfToggleGroup name="choice" label="Status" options={OPTIONS} hint={hint} />
+    </InForm>
+  ),
+  RhfChoiceField: (hint) => (
+    <InForm>
+      <RhfChoiceField name="choice" label="Status" options={OPTIONS} hint={hint} />
     </InForm>
   ),
   RhfCombobox: (hint) => (

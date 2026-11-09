@@ -366,7 +366,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `DEFAULT_QUANTITY_LABELS` — an amount and its unit as one control.
   // 0.58 (+2, keksdose live #495): `focusQuietly` and `isQuietFocus`, the tours' and
   // LineItems' focus that opens no picker, for an app's own focus moves and pickers.
-  ["@eifi1/ui-kit", barrel, 1005],
+  // 0.58 (+1, keksdose's HeaderChoice and SL-18 Choice): `ChoiceField`, a segmented group
+  // from `md` up and a select on a phone.
+  ["@eifi1/ui-kit", barrel, 1006],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -443,7 +445,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.35.0: the shadcn scaffold — FormField, useFormField, FormItem, FormLabel,
   // FormControl, FormDescription, FormMessage — is the bound fields' own (API-6f) (−7).
   // 0.57: RhfQuantityField, a `Quantity` bound to one field (keksdose SL-10) (+1).
-  ["@eifi1/ui-kit/rhf", rhf, 23],
+  // 0.58: RhfChoiceField, ChoiceField bound to one field (+1).
+  ["@eifi1/ui-kit/rhf", rhf, 24],
   // 0.45.0: local-first phase 1 (docs/local-first-harmonization.md §1.6) —
   // `createQueryPersistence`, `DEFAULT_SCRUB_FIELDS`, `SignOutPendingDialog`, `PwaUpdatePrompt`,
   // `SharedComputerChoice`, `isSharedComputer`, `setSharedComputer` and the three
