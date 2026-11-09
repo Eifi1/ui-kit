@@ -579,7 +579,7 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2221 names from 374 modules** in the main barrel — 1003 values and 1218 types — and 193 more in 16 standalone entries. _Italic_ is a type-only export.
+**2239 names from 378 modules** in the main barrel — 1009 values and 1230 types — and 195 more in 16 standalone entries. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 `node scripts/gen-export-inventory.mjs`; the counts are pinned by
@@ -587,7 +587,7 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2221 |
+| `@eifi1/ui-kit` | 2239 |
 | `@eifi1/ui-kit/chart` | 102 |
 | `@eifi1/ui-kit/shell` | 110 |
 | `@eifi1/ui-kit/data-table` | 56 |
@@ -601,7 +601,7 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 | `@eifi1/ui-kit/eslint` | 1 |
 | `@eifi1/ui-kit/testing` | 15 |
 | `@eifi1/ui-kit/testing/react` | 2 |
-| `@eifi1/ui-kit/rhf` | 50 |
+| `@eifi1/ui-kit/rhf` | 52 |
 | `@eifi1/ui-kit/offline` | 33 |
 | `@eifi1/ui-kit/sync` | 36 |
 | `@eifi1/ui-kit/sync/testing` | 3 |

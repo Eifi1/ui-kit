@@ -261,7 +261,12 @@ const BUDGETS = [
   // 158,735 B (55,179 gzip) in 0.55.1: a refused or pending Button / IconButton stops its
   // click from reaching a clickable row, as a natively disabled one never did
   // (Kurvenschmiede's 0.55 adoption) — meant growth, 35 B.
-  { label: "the shell set", names: SHELL_SET, max: 158_750 },
+  // 160,053 B (55,542 gzip) in 0.58: Tooltip's `block` and the buttons' `wrapperClassName`
+  // (keksdose dev #649, the top bar's buttons stand in a tooltip), the band's IconButton size
+  // context in button-look, the reason frames' `data-lock-frame` (FormActions' phone stack)
+  // and the legal labels' new words (the terms' commercial `changes`, `acceptWithAge`, the
+  // change notice) — meant growth, 1,303 B (363 gzip) over 0.57's 158,750.
+  { label: "the shell set", names: SHELL_SET, max: 160_100 },
 ];
 const ENTRY = "\0import-cost";
 async function importCost(names) {
