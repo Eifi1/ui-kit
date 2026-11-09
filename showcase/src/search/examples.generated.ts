@@ -690,6 +690,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Tooltip — lazy: in place, mounted only while up",
     "Tooltip — in-place bubble clamped to the viewport",
     "Tooltip — a tap leaves no bubble behind; the page edge holds",
+    "Tooltip — a line of its own, and the wrapper's classes",
   ],
   "tour": [
     "Guided tour — useTour + TourProvider",

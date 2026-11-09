@@ -1,5 +1,5 @@
 import { useId, useState, useEffect, useRef } from "react";
-import { Info, Keyboard, ArrowLeftRight, Terminal, CircleHelp, RefreshCw, Search, Settings } from "lucide-react";
+import { Info, Keyboard, ArrowLeftRight, Terminal, CircleHelp, RefreshCw, Search, Settings, Plus } from "lucide-react";
 import {
   IconButton,
   Tooltip,
@@ -8,6 +8,7 @@ import {
   CLIPS_ATTRIBUTE,
   Button,
   CompactControls,
+  Switch,
 } from "@eifi1/ui-kit";
 import type { AnchorRect, TooltipPlacement, TooltipSize, TooltipViewport } from "@eifi1/ui-kit";
 import { Example, OutTable, Row, Note, code, READOUT } from "../lib/section";
@@ -15,10 +16,11 @@ import { Example, OutTable, Row, Note, code, READOUT } from "../lib/section";
 /**
  * Tooltip in one module, rendered as one section of the "Popovers, menus & tooltips" page:
  * its sides, portal, rich labels and the pure `placeTooltip` (from overlays.tsx), then what
- * the releases added — the auto-portal, `data-clips`, `lazy`, the viewport clamp and the
- * tap. Those were filed by release (tooltip-auto-portal-demo, props-011, tooltip-013,
- * tooltip-014, tooltip-025); each keeps its label, so its anchor and its search entry
- * hold, and says since which release in a Note (refactor audit 2026-10, DOC-8).
+ * the releases added — the auto-portal, `data-clips`, `lazy`, the viewport clamp, the
+ * tap and the wrapper's box (`block`, `wrapperClassName`). Those were filed by release
+ * (tooltip-auto-portal-demo, props-011, tooltip-013, tooltip-014, tooltip-025); each
+ * keeps its label, so its anchor and its search entry hold, and says since which release
+ * in a Note (refactor audit 2026-10, DOC-8).
  */
 
 const TOOLTIP_SIDES = ["top", "right", "bottom", "left", "start", "end"] as const;
@@ -511,6 +513,80 @@ function TooltipTapDemo() {
   );
 }
 
+/**
+ * TOOLTIP — the box round the trigger. `block` puts it on a line of its own;
+ * `wrapperClassName` styles it from an IconButton or a Button, whose `className` styles
+ * the button inside it.
+ */
+function TooltipAnchorDemo() {
+  const [locked, setLocked] = useState(false);
+  return (
+    <Example
+      label="Tooltip — a line of its own, and the wrapper's classes"
+      hint="block on Tooltip · wrapperClassName on IconButton and Button"
+    >
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="rounded-md border border-subtle p-3 text-end text-sm tabular-nums" data-demo="tooltip-inline">
+          <span>CHF 1.95/l</span>
+          <Tooltip label="2026-W44">
+            <span className="block text-xs text-muted">Paid this week · 11 prices</span>
+          </Tooltip>
+        </div>
+        <div className="rounded-md border border-subtle p-3 text-end text-sm tabular-nums" data-demo="tooltip-block">
+          <span>CHF 1.95/l</span>
+          <Tooltip block label="2026-W44" className="text-xs text-muted">
+            <span>Paid this week · 11 prices</span>
+          </Tooltip>
+        </div>
+      </div>
+      <div
+        className="mt-3 flex items-center justify-between gap-2 bg-surface-2 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted"
+        data-demo="tooltip-wrapper-band"
+      >
+        <span className="min-w-0">Checking accounts</span>
+        <IconButton
+          label="Add a checking account"
+          size="xs"
+          labelVisible={false}
+          wrapperClassName="-my-1.5 -me-1.5"
+          onClick={() => {}}
+        >
+          <Plus />
+        </IconButton>
+      </div>
+      <Row className="mt-3">
+        <Switch label="Lock saving" checked={locked} onCheckedChange={setLocked} />
+      </Row>
+      <div className="mt-2 flex items-center gap-2 rounded-md border border-subtle p-2 text-sm">
+        <span className="text-secondary">Draft · 3 changes</span>
+        <Button
+          size="sm"
+          wrapperClassName="ms-auto"
+          disabledReason={locked ? "Read-only demo — saving is disabled." : undefined}
+        >
+          Save
+        </Button>
+      </div>
+      <div className="mt-3 space-y-2">
+        <Note>
+          The wrapper round a trigger is `inline-flex`: it hugs its child and stands in the line. So on the left the
+          block inside the Tooltip starts no line, and the words run on from the price. On the right `block` puts the
+          wrapper on a line of its own, following the cell&apos;s alignment, while the wrapper still hugs the words —
+          the bubble stands over them, and only they open it. The `className`, the small muted type here, goes on that
+          line, so the line is as tall as its type.
+        </Note>
+        <Note>
+          An IconButton&apos;s `className` styles the button; `wrapperClassName` reaches the box round it — the
+          tooltip&apos;s wrapper, a reason&apos;s frame, or the button itself when nothing wraps it. The band&apos;s “+”
+          overhangs the band&apos;s padding by its `-my-1.5`, so the band is as tall with it as without. The Save
+          button&apos;s `ms-auto` is on its wrapper too: lock saving, and the button stays at the end of the row while
+          its reason shows.
+        </Note>
+      </div>
+    </Example>
+  );
+}
+
 /* ── the page's section ───────────────────────────────────────────────────── */
 
 /** Every Tooltip specimen */
@@ -523,6 +599,7 @@ export function TooltipDemo() {
       <TooltipLazyDemo />
       <TooltipClampDemo />
       <TooltipTapDemo />
+      <TooltipAnchorDemo />
     </>
   );
 }

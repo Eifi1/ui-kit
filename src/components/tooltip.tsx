@@ -101,7 +101,36 @@ const sidePositionClass: Record<TooltipSide, string> = {
 export interface TooltipProps extends ComponentPropsWithoutRef<"span"> {
   label: ReactNode;
   side?: TooltipSide;
+  /**
+   * Classes for the box the layout sees — a margin, `align-top`, a flex item's
+   * `shrink-0`, the type: the WRAPPER round the trigger (`span.relative.inline-flex`), or
+   * with `block` the line round that. Not the bubble. {@link IconButton} and
+   * {@link Button} take theirs as `wrapperClassName`, since their own `className` styles
+   * the button inside.
+   */
   className?: string;
+  /**
+   * Put the trigger on a line of its own (keksdose dev #649). The wrapper is `inline-flex`:
+   * it hugs its child and stands in the run of text round it, so a block child inside a
+   * Tooltip starts NO line — keksdose's /prices cells read "CHF 1.95/lPaid this week"
+   * until each wrapped its Tooltip in a block span of its own.
+   *
+   * `block` is that span: a `<span class="block">` round the wrapper, which takes the
+   * line and follows its container's `text-align`, while the wrapper inside still hugs
+   * the child — so the bubble stands over the words, not over the middle of the line,
+   * and only the words open it. `className` goes on the line, the box the layout sees
+   * (as it is the wrapper without `block`): a type class there sets the line's own
+   * height too, which on the wrapper inside it would not — the line would keep its
+   * container's taller strut. The span attributes and `ref` stay on the wrapper, which
+   * is the trigger. The line is kept, `className` with it, on the empty-label branch,
+   * where there is no wrapper: whether there is anything to say must not move the layout.
+   * A span, so it may stand where only phrasing content may.
+   *
+   * For a trigger that should FILL the line (a bar, a row) leave `block` out and pass
+   * `className="flex"`: the wrapper itself is then a block-level box, the bubble centred
+   * on all of it.
+   */
+  block?: boolean;
   /**
    * Where the bubble lives. Left out (the default since 0.10.0), the tooltip decides for
    * itself: the bubble stays next to the trigger unless an ancestor clips or scrolls
@@ -144,7 +173,7 @@ export interface TooltipProps extends ComponentPropsWithoutRef<"span"> {
 
 /** What each variant below takes: the resolved `side` and `tap`, and every span attribute
  *  the caller handed {@link Tooltip}, forwarded to that variant's own wrapper. */
-type TooltipVariantProps = Omit<TooltipProps, "side" | "portal" | "lazy" | "tap"> & {
+type TooltipVariantProps = Omit<TooltipProps, "side" | "portal" | "lazy" | "tap" | "block"> & {
   side: TooltipSide;
   tap: TooltipTap;
 };
@@ -372,38 +401,44 @@ export function Tooltip({
   lazy = false,
   redact = false,
   tap = "auto",
+  block = false,
   children,
   ...rest
 }: TooltipProps) {
   // No label, no bubble — and no wrapper either, so a conditional tooltip costs the
   // layout nothing on the branch where it does not apply. `...rest` goes with the
   // wrapper on this branch, which is the documented limit of the pass-through: there is
-  // no element left to put an attribute on.
-  if (isEmptyLabel(label)) return <>{children}</>;
-  if (portal === true) {
-    return (
-      <PortalTooltip label={label} side={side} className={className} redact={redact} tap={tap} {...rest}>
-        {children}
-      </PortalTooltip>
-    );
+  // no element left to put an attribute on. `block`'s line stays, with `className`: it
+  // is layout.
+  if (isEmptyLabel(label)) {
+    return block ? <span className={cn("block", className)}>{children}</span> : <>{children}</>;
   }
+  // `className` is the outer box's: the wrapper's, or with `block` the line's.
+  const wrapperClass = block ? undefined : className;
   // Both variants are separate components so that `Tooltip` itself can keep calling NO
   // hooks: the empty-label branch above returns before either of them, and a hook after
   // a conditional return is a hooks-order bug rather than a style violation.
-  return (
-    <InPlaceTooltip
-      label={label}
-      side={side}
-      className={className}
-      redact={redact}
-      detect={portal === undefined}
-      lazy={lazy}
-      tap={tap}
-      {...rest}
-    >
-      {children}
-    </InPlaceTooltip>
-  );
+  const tip =
+    portal === true ? (
+      <PortalTooltip label={label} side={side} className={wrapperClass} redact={redact} tap={tap} {...rest}>
+        {children}
+      </PortalTooltip>
+    ) : (
+      <InPlaceTooltip
+        label={label}
+        side={side}
+        className={wrapperClass}
+        redact={redact}
+        detect={portal === undefined}
+        lazy={lazy}
+        tap={tap}
+        {...rest}
+      >
+        {children}
+      </InPlaceTooltip>
+    );
+  // `block` (dev #649): the line round the wrapper, which keeps hugging its child.
+  return block ? <span className={cn("block", className)}>{tip}</span> : tip;
 }
 
 /** The pointer handlers a caller may hand {@link Tooltip} that the trigger also needs:
