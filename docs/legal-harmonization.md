@@ -96,6 +96,21 @@ before the 0.28 round, and how far their wording differed.
       the pages. Each app moves those pages' `updated` to the day it ships that release.
       Without it, keksdose's stored version would no longer say which text someone
       accepted.
+    - **keksdose's legal audit against the app** (Marcel, 2026-11-09; for the next kit
+      round, not built yet):
+      - The refund sentence ("If you paid for a period beyond that date, we refund the
+        unused part") moves to a `commercial` variant of `changes`, keyed like the
+        imprint's disclaimer: no app can take payment today, and payment wording undercut
+        the imprint's "non-commercial" (an external pre-review). An app shows it again when
+        it turns billing on.
+      - The notice stays **by email and in the app**. Since no app could mail every
+        account, the kits add the means: a one-off terms-change mail to every active
+        account (server-kit) and an in-app notice (ui-kit).
+      - The sign-up box may name a minimum age: an optional `LegalOperator.minAge` makes it
+        "I am at least {minAge} years old and accept the {terms} and the {privacy}"
+        (keksdose: 16).
+      - The privacy policy's browser-storage section drops "everything else stays on your
+        device", which read as "never leaves"; each app says what its account keeps.
 11. **The benchmark's optional rows** (Marcel, 2026-10-29: "you can already add the
     optional points"; ui-kit 0.51.4):
     - A plain-language summary at the top of the terms and the privacy policy, the full
