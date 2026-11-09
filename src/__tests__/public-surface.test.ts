@@ -370,7 +370,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // from `md` up and a select on a phone.
   // 0.58 (+1, keksdose's legal audit, legal decision 10): `LegalChangeNotice`, the in-app
   // notice of an announced change to the terms or the privacy policy.
-  ["@eifi1/ui-kit", barrel, 1007],
+  // 0.58 (+2, keksdose SL-10): `useReorder` and `DEFAULT_REORDER_LABELS`, rows moved by hand.
+  ["@eifi1/ui-kit", barrel, 1009],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

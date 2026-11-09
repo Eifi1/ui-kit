@@ -1193,7 +1193,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The row every app draws by hand — a button, a link or a record, with its actions beside it — the row of a menu, and the bar a selection of rows brings up.",
         icon: ListChecks,
-        components: ["List", "ListItem", "MenuItem", "BulkActionBar"],
+        components: ["List", "ListItem", "useReorder", "MenuItem", "BulkActionBar"],
         Body: () => (
           <>
             <ListsMenus />

@@ -2100,6 +2100,15 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       suggested: "Sugerido",
       takeSuggestion: (quantity) => `Usar ${quantity}`,
     },
+    // 0.58 (keksdose SL-10): a row moved by hand — the two actions, why one is not
+    // available at an end, and the move as a screen reader hears it.
+    reorder: {
+      moveUp: "Mover arriba",
+      moveDown: "Mover abajo",
+      atTop: "Ya está arriba del todo",
+      atBottom: "Ya está abajo del todo",
+      moved: (position, total) => `Movido a la posición ${n(position)} de ${n(total)}`,
+    },
   };
 }
 

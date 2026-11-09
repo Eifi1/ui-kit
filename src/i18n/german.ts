@@ -2174,5 +2174,14 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       suggested: "Vorgeschlagen",
       takeSuggestion: (quantity) => `${quantity} übernehmen`,
     },
+    // 0.58 (keksdose SL-10): a row moved by hand — the two actions, why one is not
+    // available at an end, and the move as a screen reader hears it.
+    reorder: {
+      moveUp: "Nach oben verschieben",
+      moveDown: "Nach unten verschieben",
+      atTop: "Steht bereits ganz oben",
+      atBottom: "Steht bereits ganz unten",
+      moved: (position, total) => `An Position ${n(position)} von ${n(total)} verschoben`,
+    },
   };
 }

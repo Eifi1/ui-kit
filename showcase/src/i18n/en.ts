@@ -960,6 +960,7 @@ export const en: Dictionary = {
       "bulk actions on selected rows",
       "selection toolbar",
       "checklist to tick off",
+      "move rows up and down",
     ],
     "tree-view": [
       "show hierarchical data",

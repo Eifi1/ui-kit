@@ -960,6 +960,7 @@ export const es: Dictionary = {
       "acciones en lote sobre la selección",
       "barra de herramientas de selección",
       "lista de verificación para marcar",
+      "mover filas arriba y abajo",
     ],
     "tree-view": [
       "mostrar datos jerárquicos",

@@ -509,4 +509,11 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   // suggestion's button, with the quantity it takes as formatQuantity prints it.
   "quantity.unit": [["{{field}}"], [undefined]],
   "quantity.takeSuggestion": [["{{quantity}}"]],
+  // 0.58 (keksdose SL-10): a moved row's place and the row count — the first, a middle,
+  // and the last of a long list.
+  "reorder.moved": [
+    [1, 7],
+    [3, 7],
+    [1240, 1240],
+  ],
 };

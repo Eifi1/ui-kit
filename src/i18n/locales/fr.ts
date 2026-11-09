@@ -2143,6 +2143,16 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       suggested: "Suggéré",
       takeSuggestion: (quantity) => `Utiliser ${quantity}`,
     },
+    // 0.58 (keksdose SL-10): a row moved by hand — the two actions, why one is not
+    // available at an end, and the move as a screen reader hears it ("sur", as
+    // `dataTable.pageChanged`).
+    reorder: {
+      moveUp: "Monter",
+      moveDown: "Descendre",
+      atTop: "Déjà tout en haut",
+      atBottom: "Déjà tout en bas",
+      moved: (position, total) => `Déplacé en position ${n(position)} sur ${n(total)}`,
+    },
   };
 }
 

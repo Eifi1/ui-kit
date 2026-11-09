@@ -965,6 +965,7 @@ export const hu: Dictionary = {
       "tömeges műveletek a kijelölt sorokon",
       "kijelölési eszköztár",
       "kipipálható ellenőrzőlista",
+      "sorok mozgatása fel és le",
     ],
     "tree-view": [
       "hierarchikus adatok",

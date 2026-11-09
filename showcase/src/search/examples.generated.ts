@@ -510,6 +510,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "MenuItem — links, current and renderLink",
     "BulkActionBar — sticky and inline",
     "BulkActionBar — floating, count, clear and labels",
+    "useReorder — Move up, Move down and Alt+arrows",
     "ListItem — targetProps: the whole row is the drag source",
     "ListItem — bordered, in a wrapping strip",
     "ListItem — content, overline, trailingTone",

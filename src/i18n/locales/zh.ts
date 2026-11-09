@@ -2001,6 +2001,16 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       suggested: "建议值",
       takeSuggestion: (quantity) => `使用 ${quantity}`,
     },
+    // 0.58 (keksdose SL-10): a row moved by hand — the two actions, why one is not
+    // available at an end, and the move as a screen reader hears it ("第 … 位，共 … 位",
+    // as `dataTable.pageChanged`).
+    reorder: {
+      moveUp: "上移",
+      moveDown: "下移",
+      atTop: "已在最上方",
+      atBottom: "已在最下方",
+      moved: (position, total) => `已移至第 ${n(position)} 位，共 ${n(total)} 位`,
+    },
   };
 }
 

@@ -131,6 +131,8 @@ describe("uiKitLabelsEn (@eifi1/ui-kit/i18n/en)", () => {
       "notifications.testSent",
       "passwordStrength.ruleLength",
       "passwordStrength.tooLong",
+      // 0.58: a moved row's place and the row count.
+      "reorder.moved",
       "settings.matchCount",
       "signIn.recoveryCodeHint",
       // 0.45.0: the sign-out question's count, in both word sets (/offline).

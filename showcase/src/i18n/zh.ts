@@ -881,6 +881,7 @@ export const zh: Dictionary = {
       "批量 操作",
       "选择 工具栏",
       "可勾选的 清单",
+      "上移 下移 行",
     ],
     "tree-view": [
       "层级 数据",

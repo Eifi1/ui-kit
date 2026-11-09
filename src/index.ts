@@ -616,6 +616,16 @@ export { ScrollArea } from "./components/scroll-area";
 export type { ScrollAreaProps } from "./components/scroll-area";
 // 0.10.0 rows, menu rows, text primitives and page chrome the apps drew by hand.
 export * from "./components/list";
+// 0.58 (keksdose SL-10): rows the app orders by hand — "Move up" / "Move down", Alt+arrows,
+// the focus kept on the moved row and the move announced.
+export { useReorder, DEFAULT_REORDER_LABELS } from "./components/reorder";
+export type {
+  ReorderLabels,
+  ReorderRow,
+  ReorderRowProps,
+  UseReorderOptions,
+  UseReorderReturn,
+} from "./components/reorder";
 export * from "./components/menu-item";
 export * from "./components/text";
 export * from "./components/status-dot";

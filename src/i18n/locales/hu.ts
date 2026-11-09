@@ -2099,6 +2099,17 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       suggested: "Javasolt",
       takeSuggestion: (quantity) => `Átvétel: ${quantity}`,
     },
+    // 0.58 (keksdose SL-10): a row moved by hand — the two actions, why one is not
+    // available at an end, and the move as a screen reader hears it: the place as an
+    // ordinal and the total after it, as `dataTable.pageChanged` ("3. oldal (összesen 7)"),
+    // so no a/az has to agree with a number.
+    reorder: {
+      moveUp: "Mozgatás felfelé",
+      moveDown: "Mozgatás lefelé",
+      atTop: "Már a legfelső helyen van",
+      atBottom: "Már a legalsó helyen van",
+      moved: (position, total) => `Áthelyezve: ${n(position)}. hely (összesen ${n(total)})`,
+    },
   };
 }
 

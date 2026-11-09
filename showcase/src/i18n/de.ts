@@ -969,6 +969,7 @@ export const de: Dictionary = {
       "Sammelaktionen für ausgewählte Zeilen",
       "Auswahl-Werkzeugleiste",
       "Checkliste zum Abhaken",
+      "Zeilen nach oben und unten verschieben",
     ],
     "tree-view": [
       "hierarchische Daten anzeigen",

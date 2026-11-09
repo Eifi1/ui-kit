@@ -957,6 +957,7 @@ export const it: Dictionary = {
       "azioni di gruppo sulle righe selezionate",
       "barra degli strumenti della selezione",
       "lista di controllo da spuntare",
+      "spostare righe su e giù",
     ],
     "tree-view": [
       "mostrare dati gerarchici",

@@ -767,6 +767,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/separator` | `Separator`, _`SeparatorProps`_ |
 | `components/scroll-area` | `ScrollArea`, _`ScrollAreaProps`_ |
 | `components/list` | `DEFAULT_LIST_LABELS`, `List`, `ListItem`, _`ListDensity`_, _`ListItemCheckedStyle`_, _`ListItemLinkProps`_, _`ListItemProps`_, _`ListItemTrailingTone`_, _`ListLabels`_, _`ListProps`_, _`ListSeparator`_ |
+| `components/reorder` | `DEFAULT_REORDER_LABELS`, `useReorder`, _`ReorderLabels`_, _`ReorderRow`_, _`ReorderRowProps`_, _`UseReorderOptions`_, _`UseReorderReturn`_ |
 | `components/menu-item` | `MenuItem`, _`MenuItemLinkProps`_, _`MenuItemProps`_, _`MenuItemTone`_ |
 | `components/text` | `Caption`, `CAPTION_CLASS`, `SECTION_LABEL_CLASS`, `SectionLabel`, _`CaptionProps`_, _`SectionLabelProps`_, _`SectionLabelSize`_, _`SectionLabelVariant`_ |
 | `components/status-dot` | `StatusDot`, `statusDotColor`, _`StatusDotProps`_, _`StatusDotSize`_, _`StatusDotTone`_ |

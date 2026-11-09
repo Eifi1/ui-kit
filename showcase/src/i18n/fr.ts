@@ -963,6 +963,7 @@ export const fr: Dictionary = {
       "actions groupées sur la sélection",
       "barre d’outils de sélection",
       "liste à cocher",
+      "monter et descendre des lignes",
     ],
     "tree-view": [
       "afficher des données hiérarchiques",

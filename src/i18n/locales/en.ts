@@ -290,5 +290,10 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
       confirmTitle: (count) =>
         count === 1 ? d.heldChanges.confirmTitle(1) : `Discard ${n(count)} changes that cannot be sent from here?`,
     },
+    // 0.58: a moved row's place and the row count, both formatted as every catalogue does.
+    reorder: {
+      ...d.reorder,
+      moved: (position, total) => `Moved to position ${n(position)} of ${n(total)}`,
+    },
   };
 }
