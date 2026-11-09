@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MemoryRouter, UNSAFE_LocationContext } from "react-router";
-import { ChevronDown, ChevronRight, ExternalLink, Archive, Home, List } from "lucide-react";
+import { ChevronDown, ChevronRight, ExternalLink, Archive, Home, List, Plus } from "lucide-react";
 import {
   AppShell,
   FillHeight,
@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
   DataTable,
+  IconButton,
   Pagination,
   ToggleGroup,
   BooleanMark,
@@ -1002,6 +1003,19 @@ const LEDGER_DAY: DataTableGroupBy<LedgerRow> = {
   end: (_k, rows) => bandTotals(rows),
 };
 
+/** The day level with its "+": add a transaction on the band's day. The IconButton gives
+ *  no `size`: the band sizes it, and its height holds. */
+function ledgerDayWithAdd(onAdd: (day: string) => void): DataTableGroupBy<LedgerRow> {
+  return {
+    ...LEDGER_DAY,
+    action: (k) => (
+      <IconButton label={`Add a transaction on ${DAY_FMT.format(new Date(`${k}T12:00:00`))}`} onClick={() => onAdd(k)}>
+        <Plus />
+      </IconButton>
+    ),
+  };
+}
+
 const LEDGER_COLUMNS: DataTableColumn<LedgerRow>[] = [
   { key: "date", header: "Date", cell: (r) => r.date, className: "whitespace-nowrap tabular-nums" },
   { key: "payee", header: "Payee", cell: (r) => r.payee, grow: true },
@@ -1058,6 +1072,9 @@ function PeriodGroupsTable() {
   const [loading, setLoading] = useState(false);
   const [twoLevels, setTwoLevels] = useState(true);
   const [stickyLead, setStickyLead] = useState(true);
+  const [dayAdd, setDayAdd] = useState(true);
+  const [addedOn, setAddedOn] = useState<string | null>(null);
+  const day = useMemo(() => (dayAdd ? ledgerDayWithAdd(setAddedOn) : LEDGER_DAY), [dayAdd]);
   const [loads, setLoads] = useState(0);
   const timer = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(timer.current), []);
@@ -1073,14 +1090,15 @@ function PeriodGroupsTable() {
       label="Period groups and load more — groupBy, loadMore"
       hint={
         <>
-          {code("groupBy")} in two levels (month → day) with sticky, stacked bands and their end slots;{" "}
-          {code("loadMore")} in place of the pager, loading the next month as the footer scrolls into view — or by its
-          button. Inside {code("fillHeight")}.
+          {code("groupBy")} in two levels (month → day) with sticky, stacked bands, their end slots and a “+” on each
+          day; {code("loadMore")} in place of the pager, loading the next month as the footer scrolls into view — or by
+          its button. Inside {code("fillHeight")}.
         </>
       }
     >
       <Row>
         <Switch label="Day bands under the month" checked={twoLevels} onCheckedChange={setTwoLevels} />
+        <Switch label="“+” on each day band" checked={dayAdd} onCheckedChange={setDayAdd} />
         <Switch label="Sticky leading row" checked={stickyLead} onCheckedChange={setStickyLead} />
         <ToggleGroup<LedgerSize>
           aria-label="Rows"
@@ -1117,7 +1135,7 @@ function PeriodGroupsTable() {
           rows={rows}
           columns={LEDGER_COLUMNS}
           rowKey={(r) => r.id}
-          groupBy={twoLevels ? [period, LEDGER_DAY] : period}
+          groupBy={twoLevels ? [period, day] : period}
           mobileGroupBy={period}
           virtualize={virtual}
           onRowClick={big ? (r) => setOpenId((id) => (id === r.id ? null : r.id)) : undefined}
@@ -1183,6 +1201,11 @@ function PeriodGroupsTable() {
           ? `${rows.length} rows · ${picked.size} selected`
           : `${rows.length} of ${LEDGER.length} rows · ${loads} ${loads === 1 ? "load" : "loads"}`}
       </p>
+      {addedOn && (
+        <p className={READOUT} data-demo="period-add">
+          {`The add form would open dated ${addedOn}`}
+        </p>
+      )}
       <div className="mt-3">
         <Note>
           Each band is a row header ({code('<th scope="rowgroup">')}) opening its own {code("<tbody>")}, spanning the
@@ -1190,6 +1213,14 @@ function PeriodGroupsTable() {
           the month, and a new month covers the day still pinned above it. The month&apos;s end slot is the app&apos;s
           total over the whole month; the day&apos;s is over its rows. The same level drives the phone&apos;s sections:{" "}
           {code("mobileGroupBy={period}")}.
+        </Note>
+        <Note>
+          The day level&apos;s {code("action")} puts a “+” at each day band&apos;s end, after its totals: the band reads
+          day, totals, then what can be done there, and Tab reaches the “+” in that order, just before the day&apos;s
+          rows. Every “+” stands at the same place down the table, whatever the width of the totals. The IconButton
+          names its day and gives no size: the band sizes it (28px, 24px in a compact table) and lets it overhang the
+          band&apos;s padding, so a band with a “+” is as tall as one without. At Large text it keeps its glyph alone —
+          the band already names the day. On a phone the same slot ends {code("mobileGroupBy")}&apos;s section header.
         </Note>
         <Note>
           The footer is observed: it calls {code("onLoadMore")} once as it nears the view, not again while{" "}

@@ -22,6 +22,7 @@ import { DataTableLeadingRow } from "./data-table-leading-row";
 import {
   DataTableGroupBand,
   DataTableLoadMoreFooter,
+  GroupBandEnd,
   groupLevels,
   groupRows,
   useGroupBandTops,
@@ -583,6 +584,10 @@ export interface DataTableProps<T> {
    * the section a row belongs to; rows must already be ordered so equal keys are
    * contiguous (pair with a matching default sort). `mobileGroupLabel` formats
    * the header. Desktop is unaffected. Feedback #317.
+   *
+   * A {@link DataTableGroupBy} level draws its `label`, its `end` and (0.58) its
+   * `action` in the header, as the desktop band does — the "+" at the header's end,
+   * 28px, the header's height kept.
    */
   mobileGroupBy?: ((row: T) => string) | DataTableGroupBy<T>;
   /** The section header's words for `mobileGroupBy`'s key. Wins over a level's own
@@ -673,8 +678,9 @@ export interface DataTableProps<T> {
   /**
    * 0.48 (keksdose dev #605): group the desktop table's rows under full-width bands, one
    * level or two (period → day). Each band is a row header spanning the visible columns
-   * (selection column included, hidden and fit-hidden columns not) with a label and an
-   * end slot (counts, totals), and opens its own `<tbody>`, so a screen reader announces
+   * (selection column included, hidden and fit-hidden columns not) with a label, an
+   * end slot (counts, totals) and, since 0.58, an `action` after it (a "+" that adds to
+   * the group, placed and sized by the kit), and opens its own `<tbody>`, so a screen reader announces
    * it as the reader enters the group; the period band opens the first day's. Rows must
    * already be ordered so equal keys are contiguous (as for `mobileGroupBy`); grouping
    * runs over the rows on screen, page by page.
@@ -1981,7 +1987,8 @@ export function DataTable<T>({
     settleFocus();
   });
 
-  // `mobileGroupBy` may be a desktop `groupBy` level (0.48), its label and end slot too.
+  // `mobileGroupBy` may be a desktop `groupBy` level (0.48), its label, end slot and
+  // action too.
   const mobileLevel = typeof mobileGroupBy === "function" ? null : (mobileGroupBy ?? null);
   const mobileKey = typeof mobileGroupBy === "function" ? mobileGroupBy : mobileGroupBy?.key;
   // `start`: the section's first card's place in the list (its `data-row-index`, DSP-4).
@@ -2163,9 +2170,13 @@ export function DataTable<T>({
                             ? mobileLevel.label(g.key, g.rows)
                             : g.key}
                       </span>
-                      {mobileLevel?.end && (
-                        <span className="ms-auto tabular-nums">{mobileLevel.end(g.key, g.rows)}</span>
-                      )}
+                      {/* The desktop band's end, `action` included (0.58): 28px, overhanging
+                        the header's `py-1.5` so it stays 28px tall. */}
+                      <GroupBandEnd
+                        end={mobileLevel?.end?.(g.key, g.rows)}
+                        action={mobileLevel?.action?.(g.key, g.rows)}
+                        size="xs"
+                      />
                     </li>
                     {g.rows.map((r, i) => renderMobileRow(r, g.start + i))}
                   </Fragment>
@@ -2427,6 +2438,7 @@ export function DataTable<T>({
                       compact={compact}
                       label={def.label ? def.label(g.key, g.rows) : g.key}
                       end={def.end?.(g.key, g.rows)}
+                      action={def.action?.(g.key, g.rows)}
                       ariaRowIndex={ariaRowIndex}
                     />
                   );

@@ -23,6 +23,7 @@ import { Spinner } from "./spinner";
 import {
   HOVER_INK,
   ICON_BUTTON_PRESSED,
+  IconButtonSizeContext,
   RenderedButtonLink,
   HIT_AREA_LARGE,
   TOUCH_TARGET_LARGE,
@@ -279,7 +280,9 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
    *  icon, lg = 44px (a phone's touch target), md = 36px (matches the top bar),
    *  sm = 32px — all three with a 20px icon;
    *  xs = 28px with a 16px icon (an action in a list row), 2xs = 24px with a 14px
-   *  icon (an action on a chip or a tab). `glyphSize` overrides the icon. */
+   *  icon (an action on a chip or a tab). `glyphSize` overrides the icon. Default `md` —
+   *  or, left out in a DataTable group band's `action`, the band's size (24px compact,
+   *  28px otherwise), so the band keeps its height. */
   size?: IconButtonSize;
   /**
    * The icon's size in px, when the box's own is not the one wanted. keksdose's sync
@@ -760,7 +763,7 @@ function IconButtonLink({
   reloadDocument,
   disabled,
   variant = "ghost",
-  size = "md",
+  size: sizeProp,
   tone: toneProp,
   quiet,
   stopPropagation,
@@ -786,6 +789,8 @@ function IconButtonLink({
   ref,
   ...rest
 }: IconButtonLinkProps) {
+  const regionSize = useContext(IconButtonSizeContext);
+  const size = sizeProp ?? regionSize ?? "md";
   const withText = useIconButtonText(label, labelVisible, variant, tooltip);
   const outer = outerBox(tipped(tooltip, withText, label), badge);
   const children = withText ? (
@@ -885,7 +890,7 @@ function IconButtonLink({
 
 function IconButtonElement({
   variant = "ghost",
-  size = "md",
+  size: sizeProp,
   tone: toneProp,
   quiet,
   pressed,
@@ -921,6 +926,8 @@ function IconButtonElement({
   ref,
   ...rest
 }: IconButtonProps) {
+  const regionSize = useContext(IconButtonSizeContext);
+  const size = sizeProp ?? regionSize ?? "md";
   const tone = toneProp ?? (toneColor !== undefined ? "custom" : "default");
   const keep = disabledStyle === "keep";
   const withText = useIconButtonText(label, labelVisible, variant, tooltip);

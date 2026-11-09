@@ -2,6 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { ReactNode, RefObject } from "react";
 import { cn } from "../lib/cn";
 import { Button } from "./button";
+import { IconButtonSizeContext } from "./button-look";
+import { CompactControls } from "./field-parts";
 import { Spinner } from "./spinner";
 
 /**
@@ -23,6 +25,35 @@ export interface DataTableGroupBy<T> {
    * looks it up by `key` instead.
    */
   end?: (key: string, rows: T[]) => ReactNode;
+  /**
+   * A small control at the band's end — the "+" that adds a row to THIS group (keksdose
+   * live #492: a transaction on the band's day, an account of the section's type). Return
+   * an {@link IconButton} whose `label` names the group ("Add a transaction on Mon, 2
+   * Nov"), so a reader who reaches it out of the band still hears which one; `null` for a
+   * group that takes none (a month, "Upcoming": no one date to fill in).
+   *
+   * The kit places and sizes it, so the three bands keksdose drew a "+" in by hand
+   * (band-add-button.tsx) need no wrapper. An IconButton with no `size` of its own takes
+   * the band's — 24px at compact density, 28px otherwise — and overhangs the band's line
+   * of text into the band's padding, so a band with a "+" is exactly as tall as one
+   * without: the bands are sticky, and a taller one covers more of the rows it pins
+   * above. The slot is a {@link CompactControls} region: the glyph alone at Large text
+   * (the band already says the day; the sentence beside it would wrap the band), the
+   * `label` still its name and its tooltip.
+   *
+   * At the very END, after `end`, and why there rather than before it: the order a
+   * screen reader reads the band and a keyboard reaches the control is then the order
+   * the eye reads it — which group, how much is in it, then what you can do there, as a
+   * field's label comes before the field; and the control stands at the same place on
+   * every band, whatever the width of each band's count or total, so a column of "+"
+   * lines up down the table, at the edge where the rows' own actions are. `end` and the
+   * action wrap together, at the end, when the band runs out of room.
+   *
+   * Sticky with its band. Each band's action is a tab stop of its own, in document order
+   * — before its group's rows, as the band is; the rows' Arrow keys skip it. On a phone the
+   * same slot ends `mobileGroupBy`'s section header when it is given a level.
+   */
+  action?: (key: string, rows: T[]) => ReactNode;
 }
 
 /**
@@ -137,6 +168,7 @@ export function DataTableGroupBand({
   compact,
   label,
   end,
+  action,
   ariaRowIndex,
 }: {
   level: 1 | 2;
@@ -145,6 +177,8 @@ export function DataTableGroupBand({
   compact: boolean;
   label: ReactNode;
   end: ReactNode;
+  /** The level's `action` for this group (0.58). */
+  action?: ReactNode;
   /** Under `virtualize` (0.48.2). */
   ariaRowIndex?: number;
 }) {
@@ -172,11 +206,45 @@ export function DataTableGroupBand({
             )}
           >
             <span className="min-w-0">{label}</span>
-            {end != null && end !== false && <span className="ms-auto tabular-nums">{end}</span>}
+            <GroupBandEnd end={end} action={action} size={compact ? "2xs" : "xs"} />
           </div>
         </div>
       </th>
     </tr>
+  );
+}
+
+/**
+ * The end of a band — the desktop's and the phone section header's: the `end` slot, then
+ * the `action` (see {@link DataTableGroupBy.action}).
+ *
+ * The action's box overhangs the band's line by as much as the band's padding has room
+ * for, so its margin box is one line of the band's text and the band keeps its height:
+ * `2xs` (24px) in a compact band (`py-1`, a 16px line: `-my-1`); `xs` (28px) in the others
+ * — `py-1.5` round a 16px line (`-my-1.5`), and the period band's `py-2` round a 20px one,
+ * with room to spare. The same overhang at the end edge (`-me-*`, the glyph's side
+ * padding) lines the glyph up with where the rows' content ends. `self-center`, not the
+ * band's baseline: a glyph-only button has no text to align by, and its synthesized
+ * baseline (the glyph's bottom edge) hangs the box off the line — keksdose's hand-made
+ * "+" grew the phone section header from 28 to 32px that way (band-add-button.tsx).
+ */
+export function GroupBandEnd({ end, action, size }: { end: ReactNode; action: ReactNode; size: "2xs" | "xs" }) {
+  const hasEnd = end != null && end !== false;
+  if (action == null || action === false) {
+    return hasEnd ? <span className="ms-auto tabular-nums">{end}</span> : null;
+  }
+  return (
+    <span className="ms-auto flex items-center gap-x-2 self-center">
+      {hasEnd && <span className="tabular-nums">{end}</span>}
+      <span
+        data-group-action=""
+        className={cn("inline-flex shrink-0 items-center", size === "2xs" ? "-my-1 -me-1" : "-my-1.5 -me-1.5")}
+      >
+        <CompactControls>
+          <IconButtonSizeContext.Provider value={size}>{action}</IconButtonSizeContext.Provider>
+        </CompactControls>
+      </span>
+    </span>
   );
 }
 

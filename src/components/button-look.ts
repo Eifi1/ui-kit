@@ -1,6 +1,8 @@
+import { createContext } from "react";
 import { cn } from "../lib/cn";
 import { FOCUS_RING_WIDTH } from "./focus-ring";
 import type { KitLinkComponent, KitLinkProps } from "../i18n/kit-labels";
+import type { IconButtonSize } from "./icon-button";
 
 /**
  * The button look, which {@link Button} and {@link IconButton} share (0.34, MOD-2, refactor
@@ -254,3 +256,12 @@ export function buttonLook(variant: ButtonVariant, size: ButtonSize, stretch: bo
 export function RenderedButtonLink({ render, ...props }: KitLinkProps & { render: KitLinkComponent }) {
   return render(props);
 }
+
+/**
+ * @internal The IconButton size a region asks for, where the IconButton gives none of its
+ * own: DataTable's group band action (0.58) sizes the "+" to its band — 24px at compact
+ * density, 28px otherwise — so a band keeps its height whatever the app hands it. Not
+ * public: a size is the IconButton's own `size` everywhere else, and one context is not a
+ * theme. Here and not in ./icon-button, whose every export the barrel re-exports.
+ */
+export const IconButtonSizeContext = createContext<IconButtonSize | null>(null);
