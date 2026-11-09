@@ -3,6 +3,7 @@ import type { ComponentPropsWithRef, CSSProperties, HTMLAttributes, KeyboardEven
 import { Plus, Trash2 } from "lucide-react";
 import { cn } from "../lib/cn";
 import { hasContent } from "../lib/presence";
+import { focusQuietly } from "../lib/quiet-focus";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { Button } from "./button";
 import { IconButton } from "./icon-button";
@@ -127,7 +128,8 @@ export interface LineItemsProps<T> extends Omit<ComponentPropsWithRef<"div">, "c
   /** The row's React key. Default: the item's `id` (react-hook-form's `useFieldArray`
    *  `fields` carry one), else its index. */
   getKey?: (item: T, index: number) => Key;
-  /** Append a row. Omitted: no add button. The first field of the new row is focused. */
+  /** Append a row. Omitted: no add button. The first field of the new row is focused —
+   *  quietly: a picker there takes the focus without opening its list. */
   onAdd?: () => void;
   /** Remove the row at `index`. Omitted: no remove buttons. */
   onRemove?: (index: number) => void;
@@ -249,7 +251,8 @@ type PendingFocus = { kind: "added" } | { kind: "removed"; index: number };
  *
  * Keyboard: after Add, focus lands in the new row's first field; after a remove, on
  * the row that took its place (else the add button). Ctrl/⌘+Enter in any row adds a
- * row.
+ * row. Both moves are {@link focusQuietly}'s: a picker that opens on focus takes this one
+ * and opens nothing.
  */
 export function LineItems<T>({
   items,
@@ -294,13 +297,21 @@ export function LineItems<T>({
 
   // Focus after the list has re-rendered with the new rows — a layout effect, so the
   // caret is where it belongs before paint.
+  //
+  // QUIETLY (lib/quiet-focus, as a tour's arrival): the list moves the focus, nobody asked
+  // to open anything. With a picker as the row's first field (Combobox, InlineEntityCombobox,
+  // Autocomplete, which open on focus) a plain `focus()` opened its list on every Add — on a
+  // phone the full-screen sheet, over the row just asked for (keksdose live #495: "Only add
+  // the new line with the empty field for the user to do what he wants"). The picker takes
+  // the focus and stays shut until ArrowDown, typing or a tap. The same after a remove,
+  // where the focus falls to the next row's first field once its remove is disabled.
   useLayoutEffect(() => {
     const pending = pendingFocus.current;
     if (!pending) return;
     pendingFocus.current = null;
     if (pending.kind === "added") {
-      const row = rowRefs.current[items.length - 1];
-      row?.querySelector<HTMLElement>(FOCUSABLE)?.focus();
+      const first = rowRefs.current[items.length - 1]?.querySelector<HTMLElement>(FOCUSABLE);
+      if (first) focusQuietly(first);
       return;
     }
     const row = rowRefs.current[Math.min(pending.index, items.length - 1)];
@@ -308,7 +319,7 @@ export function LineItems<T>({
       row?.querySelector<HTMLElement>("[data-line-items-remove]:not([disabled])") ??
       row?.querySelector<HTMLElement>(FOCUSABLE) ??
       addRef.current;
-    target?.focus();
+    if (target) focusQuietly(target);
   }, [items.length]);
 
   const add = useCallback(() => {
