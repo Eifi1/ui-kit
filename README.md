@@ -627,6 +627,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `lib/format` | `currencyMinorDigits`, `EMPTY_FORMATTED_VALUE`, `formatDate`, `formatDuration`, `formatMoney`, `formatNumber`, `formatPercent`, `formatRelativeTime`, `roundToCurrency`, `toDate`, `useKitFormat`, _`DateInput`_, _`FormatDateOptions`_, _`FormatDateStyle`_, _`FormatDigits`_, _`FormatDurationOptions`_, _`FormatMoneyOptions`_, _`FormatNumberBaseOptions`_, _`FormatNumberOptions`_, _`FormatPercentOptions`_, _`FormatRelativeTimeOptions`_, _`FormattableNumber`_, _`KitFormat`_, _`RoundToCurrencyOptions`_ |
 | `lib/safe-storage` | `readSessionStored`, `readStored`, `readStoredJson`, `removeStored`, `writeSessionStored`, `writeStored`, `writeStoredJson` |
 | `lib/reduced-motion` | `prefersReducedMotion` |
+| `lib/quiet-focus` | `focusQuietly`, `isQuietFocus` |
 | `lib/download` | `filenameFromDisposition`, `saveBlob` |
 | `lib/text-match` | `foldForSearch`, `matchesSearch`, `rankMatch`, `searchWords`, _`MatchRank`_ |
 | `lib/qr-encode` | `encodeQr`, _`QrEncodeOptions`_, _`QrErrorCorrection`_, _`QrMatrix`_ |

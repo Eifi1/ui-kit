@@ -30,6 +30,10 @@ export {
 } from "./lib/safe-storage";
 // 0.52 (DUP-8): `prefers-reduced-motion`, asked at the moment of the motion (KS copied it).
 export { prefersReducedMotion } from "./lib/reduced-motion";
+// 0.58: focus that is not a request to open anything — the kit's tours and LineItems' Add
+// move the focus this way. `focusQuietly` for an app's own focus move (keksdose's split
+// editor), `isQuietFocus` for an app's own open-on-focus control to honour the kit's.
+export { focusQuietly, isQuietFocus } from "./lib/quiet-focus";
 // Save a fetched Blob as a download, and read the name a Content-Disposition asks for
 // (`filename*` first) — 0.34, KS U5; the kit's own three downloads use them.
 export { saveBlob, filenameFromDisposition } from "./lib/download";

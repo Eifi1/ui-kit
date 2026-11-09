@@ -282,6 +282,13 @@ function LineItems016Demo() {
           {code("narrowColumns={2}")} pairs Amount and Date on a phone; Category's {code("narrowSpan={2}")} keeps a row
           to itself.
         </Note>
+        <Note>
+          Add focuses the new line&rsquo;s first field with {code("focusQuietly")}, and so does a remove that leaves the
+          focus on a field: a picker there (Combobox, InlineEntityCombobox, Autocomplete) takes the focus and opens
+          neither its list nor, on a phone, its sheet until the person asks. An app that moves the focus itself calls{" "}
+          {code("focusQuietly(el)")}; a control of its own that opens on focus asks {code("isQuietFocus(el)")} in its{" "}
+          {code("onFocus")}.
+        </Note>
       </div>
     </Example>
   );

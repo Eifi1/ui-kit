@@ -364,7 +364,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // and their exact arithmetic.
   // 0.57 (+3, keksdose SL-10): `QuantityInput`, `QuantityField` and
   // `DEFAULT_QUANTITY_LABELS` — an amount and its unit as one control.
-  ["@eifi1/ui-kit", barrel, 1003],
+  // 0.58 (+2, keksdose live #495): `focusQuietly` and `isQuietFocus`, the tours' and
+  // LineItems' focus that opens no picker, for an app's own focus moves and pickers.
+  ["@eifi1/ui-kit", barrel, 1005],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
