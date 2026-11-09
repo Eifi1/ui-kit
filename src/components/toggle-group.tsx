@@ -26,6 +26,13 @@ export interface ToggleOption<T extends string> {
   value: T;
   label: string;
   className?: string;
+  /**
+   * Drawn before the label, inside the segment — an icon sized to the text (`size-4` at
+   * `md`, `size-3.5` at `sm`). Hidden from assistive tech: the segment's name is its
+   * `label`, so the radio a screen reader hears is the option a {@link ChoiceField}'s
+   * select lists on a phone, where a native `<option>` holds text and nothing else.
+   */
+  icon?: ReactNode;
 }
 
 /**
@@ -552,7 +559,22 @@ export function ToggleGroup<T extends string>(props: ToggleGroupProps<T>): React
           opt.className,
         )}
       >
-        {opt.label}
+        {opt.icon == null ? (
+          opt.label
+        ) : (
+          // The icon and the label as one inline box no wider than the segment, which the
+          // segment still centres; the LABEL in it ends in the ellipsis (or wraps from Large
+          // up). The segment's own `truncate` cannot cut an inline-flex box: it would be
+          // clipped whole, the words cut off with no ellipsis. `align-top`: a flex box's
+          // baseline is its first item's, here the icon's bottom edge, which would push the
+          // line box taller than the segment's line.
+          <span className="inline-flex max-w-full min-w-0 items-center gap-1.5 align-top">
+            <span aria-hidden className="inline-flex shrink-0 items-center">
+              {opt.icon}
+            </span>
+            <span className={overflow === "wrap" ? undefined : "min-w-0 truncate-until-large"}>{opt.label}</span>
+          </span>
+        )}
       </button>
     );
   });

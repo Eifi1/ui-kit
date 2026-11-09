@@ -190,3 +190,29 @@ describe("ToggleGroup keyboard (radio mode)", () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 });
+
+describe("ToggleGroup — an option's icon (0.58)", () => {
+  const WITH_ICON = [
+    { value: "list", label: "List", icon: <svg data-testid="list-icon" /> },
+    { value: "grid", label: "Grid" },
+  ];
+
+  it("draws it before the label, hidden, so the segment is named by its label alone", () => {
+    render(<ToggleGroup options={WITH_ICON} value="list" onChange={vi.fn()} aria-label="View" />);
+    const list = screen.getByRole("radio", { name: "List" });
+    const icon = screen.getByTestId("list-icon");
+    expect(list).toContainElement(icon);
+    expect(icon.closest("[aria-hidden]")).not.toBeNull();
+    expect(icon.compareDocumentPosition(screen.getByText("List")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("puts the ellipsis on the label, not on a box that would clip the icon and the words whole", () => {
+    render(<ToggleGroup options={WITH_ICON} value="list" onChange={vi.fn()} aria-label="View" />);
+    const label = screen.getByText("List");
+    // The label's own element inside the segment, not the segment itself.
+    expect(label).not.toBe(screen.getByRole("radio", { name: "List" }));
+    expect(label).toHaveClass("min-w-0", "truncate-until-large");
+    // Without an icon the segment is its label, as it always was.
+    expect(screen.getByRole("radio", { name: "Grid" }).children).toHaveLength(0);
+  });
+});
