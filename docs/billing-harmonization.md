@@ -77,7 +77,9 @@ kits before billing (2026-10-07).
    to a normal plan.
 5. **Who pays:** kastlan the company; keksdose the user (the person who owns budgets;
    guests never pay); Kurvenschmiede the user.
-6. **Prices in CHF and EUR.**
+6. **Prices in CHF and EUR**; **keksdose in CHF only** (Marcel, 2026-11-09: Swiss customers
+   only; keksdose 0.4.75). Its `PlanPicker` gets `currency="CHF"` and no `onCurrencyChange`,
+   so the currency toggle hides itself; no kit change.
 7. **New users get a 30-day trial without a card.** After it, an account without a plan
    is read-only (decision 3).
 
@@ -708,8 +710,8 @@ stands here. The reviews' wording is in [archive/billing-history.md](archive/bil
 
 Marcel: "Propose like that." Starting points, not market research. Billing stays off in
 production; the apps wire these catalogues now so the whole path can be reviewed
-locally (§13.4). Prices are gross (§3.1), the same figure in CHF and EUR, and yearly is
-ten months.
+locally (§13.4). Prices are gross (§3.1), the same figure in CHF and EUR (keksdose: CHF only,
+decision 6), and yearly is ten months.
 
 ### 13.1 kastlan: per company, by units
 
@@ -2296,7 +2298,8 @@ Beside what `feat/0.39.0` already has. Size **M**.
 Before:
 1. Create the Paddle sandbox account (sandbox-vendors.paddle.com) under the business name.
 2. Catalog → Products: one product per app plan, named with the app's brand; prices in
-   CHF and EUR, monthly and yearly (§13). Copy the price ids.
+   CHF and EUR (keksdose: CHF only, decision 6), monthly and yearly (§13). Copy the price
+   ids.
 3. Developer tools → Authentication: one API key per app (`pdl_sdbx_apikey_…`) with
    transaction write, customer-portal-session write, subscription write and customer
    read/write; one client-side token (`test_…`) per pay host.
