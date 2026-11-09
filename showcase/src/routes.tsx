@@ -159,6 +159,7 @@ const ActionCardDemo = lazySection(() => import("./sections/action-card-demo"), 
 const NavPillsDemo = lazySection(() => import("./sections/nav-pills-demo"), "NavPillsDemo");
 const NavPillsScrollDemo = lazySection(() => import("./sections/nav-pills-demo"), "NavPillsScrollDemo");
 const ProgressSegmentsDemo = lazySection(() => import("./sections/progress-segments-demo"), "ProgressSegmentsDemo");
+const ProgressMarkersDemo = lazySection(() => import("./sections/progress-segments-demo"), "ProgressMarkersDemo");
 const ProgressLegendTone018Demo = lazySection(
   () => import("./sections/progress-018-demo"),
   "ProgressLegendTone018Demo",
@@ -1130,6 +1131,7 @@ export const GROUPS: ShowcaseGroup[] = [
           <>
             <FeedbackProgress />
             <ProgressSegmentsDemo />
+            <ProgressMarkersDemo />
             <ProgressLegendTone018Demo />
             <FeedbackMore />
             <AlertBannerBlockDemo />

@@ -455,6 +455,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "AlertBanner — inline",
     "toneFrameClass() / alertFrameClass()",
     "ProgressBar — segments, legend and showValue",
+    "ProgressBar — markers",
     "ProgressBar — legendTone",
     "EmptyState — inline variant and the danger and success tones",
     "AlertBanner — success, a box with an action, size sm, strip with an action, elevated",
@@ -1275,6 +1276,7 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
   "feedback": [
     "FeedbackProgress",
     "ProgressSegmentsDemo",
+    "ProgressMarkersDemo",
     "ProgressLegendTone018Demo",
     "FeedbackMore",
     "AlertBannerBlockDemo",
