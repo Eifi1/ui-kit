@@ -948,6 +948,11 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       backHome: "Retour à l’accueil",
       accept: "J’accepte les {terms} et la {privacy}",
       acceptWithAge: (minAge) => `J’ai au moins ${minAge} ans et j’accepte les {terms} et la {privacy}`,
+      changeNotice: {
+        terms: (date) => `Nos conditions d’utilisation changent le ${date}.`,
+        privacy: (date) => `Notre politique de confidentialité change le ${date}.`,
+        read: "Lire le nouveau texte",
+      },
       notice: {
         beta: "Bêta fermée. Ces textes n’ont pas encore été relus par un avocat et le seront avant un lancement public.",
         privacy:

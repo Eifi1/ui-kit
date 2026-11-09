@@ -21,6 +21,11 @@ export const DEFAULT_LEGAL_LABELS: LegalLabels = {
   backHome: "Back to home",
   accept: "I accept the {terms} and the {privacy}",
   acceptWithAge: (minAge) => `I am at least ${minAge} years old and accept the {terms} and the {privacy}`,
+  changeNotice: {
+    terms: (date) => `Our Terms of Service change on ${date}.`,
+    privacy: (date) => `Our Privacy Policy changes on ${date}.`,
+    read: "Read the new text",
+  },
   notice: {
     beta: "Closed beta. These texts have not been reviewed by a lawyer yet and will be before a public launch.",
     privacy:

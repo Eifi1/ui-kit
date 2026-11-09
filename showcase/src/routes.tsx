@@ -1747,6 +1747,7 @@ export const GROUPS: ShowcaseGroup[] = [
           "LegalKitSection",
           "LegalFooter",
           "LegalAcceptCheckbox",
+          "LegalChangeNotice",
           "ConsentAgainNotice",
           "DEFAULT_CONSENT_AGAIN_LABELS",
           "LEGAL_SKELETON",

@@ -9,16 +9,26 @@ import {
   Button,
   ConsentAgainNotice,
   LegalAcceptCheckbox,
+  LegalChangeNotice,
   LegalKitSection,
   LegalLinks,
   LegalPage,
   UiKitProvider,
+  removeStored,
 } from "@eifi1/ui-kit";
-import type { KitLinkComponent, LegalDisclaimerVariant, LegalOperator, LegalPageKey } from "@eifi1/ui-kit";
+import type {
+  KitLinkComponent,
+  LegalChangeAnnouncement,
+  LegalDisclaimerVariant,
+  LegalOperator,
+  LegalPageKey,
+} from "@eifi1/ui-kit";
+import { addDaysIso, todayIso } from "@eifi1/ui-kit/dates";
 import { Example, Note, code } from "../lib/section";
 
 /**
- * The legal pages — LegalLayout, LegalPage, LegalAcceptCheckbox and LegalLinks — in one
+ * The legal pages — LegalLayout, LegalPage, LegalAcceptCheckbox, LegalLinks and the
+ * notices beside them, ConsentAgainNotice and LegalChangeNotice — in one
  * module, rendered as one section of the Sign-in & account page. Filed by release until
  * the refactor audit of 2026-10 (DOC-8): legal-019, legal-028. Each specimen keeps its
  * label, so its anchor and its search entry hold, and says since which release in a Note.
@@ -502,6 +512,70 @@ function ConsentAgainDemo() {
   );
 }
 
+/** Where this specimen keeps its dismissals: the showcase's own key, not the kit's default. */
+const CHANGE_KEY = "showcase.legalChange.dismissed";
+
+function LegalChangeNoticeDemo() {
+  // The made-up app's `GET /api/v1/legal/changes`, dated from today so the specimen never
+  // runs out of date: the terms in 30 days (the notice period), the privacy policy in 45.
+  const [announcements] = useState<LegalChangeAnnouncement[]>(() => {
+    const today = todayIso();
+    return [
+      { page: "terms", effective: addDaysIso(today, 30) },
+      { page: "privacy", effective: addDaysIso(today, 45) },
+    ];
+  });
+  const [answer, setAnswer] = useState<"two" | "none">("two");
+  const [round, setRound] = useState(0);
+  const [page, setPage] = useState<LegalPageKey | null>(null);
+  const link = usePreviewLink(setPage);
+  const showAgain = () => {
+    for (const a of announcements) removeStored(`${CHANGE_KEY}.${a.page}.${a.effective}`);
+    setRound((r) => r + 1);
+  };
+  return (
+    <Example
+      label="LegalChangeNotice — an announced change to the terms or the privacy policy"
+      hint="a banner per announcement until it takes effect; dismissed per page and date"
+    >
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <ToggleGroup<"two" | "none">
+          aria-label="The server's answer"
+          value={answer}
+          onChange={setAnswer}
+          options={[
+            { value: "two", label: "Two announcements" },
+            { value: "none", label: "An empty list" },
+          ]}
+        />
+        <Button size="sm" variant="secondary" onClick={showAgain}>
+          Show the dismissed again
+        </Button>
+      </div>
+      <div className="flex max-w-xl flex-col gap-3">
+        <UiKitProvider linkComponent={link}>
+          <LegalChangeNotice
+            key={round}
+            announcements={answer === "two" ? announcements : []}
+            storageKey={CHANGE_KEY}
+          />
+        </UiKitProvider>
+        {answer === "none" && <p className="text-sm text-muted">Nothing announced: nothing rendered, no gap.</p>}
+        {page !== null && <p className="text-xs text-muted">In an app, that link opens {code(`/${page}`)}.</p>}
+      </div>
+      <Note>
+        {code("<LegalChangeNotice announcements={data} />")} takes the list {code("GET /api/v1/legal/changes")} answers,{" "}
+        {code('{ page: "terms" | "privacy", effective: "YYYY-MM-DD", href? }')} each — server-kit builds the same shape
+        — and shows a banner per announcement until its effective date has passed, that day included: the date in the
+        reader&apos;s language, and a link to the new text ({code("href")}, else the page&apos;s own route). The ×
+        dismisses it on this device, remembered per page and date ({code("storageKey")}), so the next change is news
+        again. Never a modal and never the focus: the app goes on. It is the in-app half of the 30 days&apos; notice the
+        terms promise; the email is server-kit&apos;s terms-change mail.
+      </Note>
+    </Example>
+  );
+}
+
 /* ── the page's section ───────────────────────────────────────────────────── */
 
 /** Every legal-page specimen, in the order the releases added them. */
@@ -512,6 +586,7 @@ export function LegalDemo() {
       <Legal028Demo />
       <LegalAccept028Demo />
       <ConsentAgainDemo />
+      <LegalChangeNoticeDemo />
     </>
   );
 }

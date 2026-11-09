@@ -722,6 +722,10 @@ export type {
   ConsentAgainBannerProps,
   ConsentAgainLabels,
 } from "./components/consent-again-notice";
+// 0.58 (keksdose's legal audit, legal decision 10): the in-app half of a change's notice —
+// a banner per announcement from `GET /api/v1/legal/changes` until it takes effect.
+export { LegalChangeNotice } from "./components/legal-change-notice";
+export type { LegalChangeAnnouncement, LegalChangeNoticeProps } from "./components/legal-change-notice";
 // 0.32.0 (docs/text-size-harmonization.md): the appearance settings' words, and a row's
 // actions, one of the behaviours at Large (§4, §10.7–10.9).
 export { DEFAULT_APPEARANCE_LABELS, useAppearanceLabels } from "./components/appearance-labels";

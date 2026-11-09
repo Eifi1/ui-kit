@@ -951,6 +951,11 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       backHome: "Zurück zur Startseite",
       accept: "Ich akzeptiere die {terms} und die {privacy}",
       acceptWithAge: (minAge) => `Ich bin mindestens ${minAge} Jahre alt und akzeptiere die {terms} und die {privacy}`,
+      changeNotice: {
+        terms: (date) => `Unsere Nutzungsbedingungen ändern sich am ${date}.`,
+        privacy: (date) => `Unsere Datenschutzerklärung ändert sich am ${date}.`,
+        read: "Neuen Text lesen",
+      },
       notice: {
         beta: "Geschlossene Beta. Diese Texte sind noch nicht anwaltlich geprüft; das geschieht vor einem öffentlichen Start.",
         privacy:

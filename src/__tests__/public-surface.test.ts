@@ -368,7 +368,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // LineItems' focus that opens no picker, for an app's own focus moves and pickers.
   // 0.58 (+1, keksdose's HeaderChoice and SL-18 Choice): `ChoiceField`, a segmented group
   // from `md` up and a select on a phone.
-  ["@eifi1/ui-kit", barrel, 1006],
+  // 0.58 (+1, keksdose's legal audit, legal decision 10): `LegalChangeNotice`, the in-app
+  // notice of an announced change to the terms or the privacy policy.
+  ["@eifi1/ui-kit", barrel, 1007],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

@@ -934,6 +934,11 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       // a placeholder, and the articles fit these two titles (a F…, az A…).
       accept: "Elfogadom a következőket: {terms} és {privacy}",
       acceptWithAge: (minAge) => `Legalább ${minAge} éves vagyok, és elfogadom a következőket: {terms} és {privacy}`,
+      changeNotice: {
+        terms: (date) => `Felhasználási feltételeink módosulnak. Az új szöveg hatálybalépésének napja: ${date}`,
+        privacy: (date) => `Adatvédelmi tájékoztatónk módosul. Az új szöveg hatálybalépésének napja: ${date}`,
+        read: "Az új szöveg elolvasása",
+      },
       notice: {
         beta: "Zárt béta. Ezeket a szövegeket ügyvéd még nem ellenőrizte; erre a nyilvános indulás előtt sor kerül.",
         privacy:

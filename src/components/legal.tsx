@@ -233,6 +233,20 @@ export interface LegalLabels {
    * provider's, then English.
    */
   acceptWithAge?: (minAge: number) => string;
+  /**
+   * 0.58: `LegalChangeNotice`, the in-app notice of an announced change to the terms or
+   * the privacy policy (§3.5; decision 10: a change is announced by email AND in the app).
+   * One sentence per page, called with the effective date written out in the reader's
+   * language — per page because the verb agrees with the page's name: "Our Terms of
+   * Service change", "Our Privacy Policy changes"; „Unsere Nutzungsbedingungen ändern
+   * sich“, „Unsere Datenschutzerklärung ändert sich“. `read` is the link to the new text
+   * after it. Optional, as `acceptWithAge`.
+   */
+  changeNotice?: {
+    terms: (date: string) => string;
+    privacy: (date: string) => string;
+    read: string;
+  };
   /** The notice under the title (§3.2): `beta` on the imprint and the terms, `privacy`
    *  on the privacy policy. */
   notice: {

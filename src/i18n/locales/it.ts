@@ -939,6 +939,11 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       // The elided article stays glued to the link: "e l’Informativa", no space (§4.4).
       accept: "Accetto le {terms} e l’{privacy}",
       acceptWithAge: (minAge) => `Ho almeno ${minAge} anni e accetto le {terms} e l’{privacy}`,
+      changeNotice: {
+        terms: (date) => `Le nostre Condizioni d’uso cambiano a partire dal ${date}.`,
+        privacy: (date) => `La nostra Informativa sulla privacy cambia a partire dal ${date}.`,
+        read: "Leggi il nuovo testo",
+      },
       notice: {
         beta: "Beta chiusa. Questi testi non sono ancora stati verificati da un avvocato e lo saranno prima di un lancio pubblico.",
         privacy:

@@ -929,6 +929,11 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       backHome: "Volver al inicio",
       accept: "Acepto las {terms} y la {privacy}",
       acceptWithAge: (minAge) => `Tengo al menos ${minAge} años y acepto las {terms} y la {privacy}`,
+      changeNotice: {
+        terms: (date) => `Nuestras Condiciones de uso cambian el ${date}.`,
+        privacy: (date) => `Nuestra Política de privacidad cambia el ${date}.`,
+        read: "Leer el nuevo texto",
+      },
       notice: {
         beta: "Beta cerrada. Estos textos aún no han sido revisados por un abogado y lo serán antes de un lanzamiento público.",
         privacy:
