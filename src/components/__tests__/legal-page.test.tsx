@@ -628,4 +628,41 @@ describe("LegalAcceptCheckbox (§3.4)", () => {
     const terms = screen.getByRole("link", { name: "Conditions" });
     expect(terms.closest("label")!.textContent).toContain(`J’accepte les Conditions et la ${L.titles.privacy}`);
   });
+
+  it("0.58: an operator with a minAge puts the age in the one sentence, links and all", () => {
+    const { rerender } = render(
+      <LegalAcceptCheckbox checked={false} onCheckedChange={() => {}} operator={{ ...OPERATOR, minAge: 16 }} />,
+    );
+    const box = screen.getByRole("checkbox");
+    expect(box).toBeRequired();
+    expect(box).toHaveAccessibleName(
+      "I am at least 16 years old and accept the Terms of Service and the Privacy Policy",
+    );
+    expect(screen.getByRole("link", { name: L.titles.terms })).toHaveAttribute("href", "/terms");
+    expect(screen.getByRole("link", { name: L.titles.privacy })).toHaveAttribute("href", "/privacy");
+    // Without minAge, or without the operator: today's sentence.
+    rerender(<LegalAcceptCheckbox checked={false} onCheckedChange={() => {}} operator={OPERATOR} />);
+    expect(screen.getByRole("checkbox")).toHaveAccessibleName("I accept the Terms of Service and the Privacy Policy");
+  });
+
+  it("0.58: says the age in the provider's language", () => {
+    render(
+      <UiKitProvider labels={UI_KIT_LABELS_DE_CH}>
+        <LegalAcceptCheckbox checked={false} onCheckedChange={() => {}} operator={{ ...OPERATOR, minAge: 16 }} />
+      </UiKitProvider>,
+    );
+    expect(screen.getByRole("checkbox")).toHaveAccessibleName(
+      "Ich bin mindestens 16 Jahre alt und akzeptiere die Nutzungsbedingungen und die Datenschutzerklärung",
+    );
+  });
+
+  it("0.58: an age that is no whole number of years is a config typo: the plain sentence, never NaN", () => {
+    for (const minAge of [Number.NaN, 0, -1, 15.5]) {
+      const { unmount } = render(
+        <LegalAcceptCheckbox checked={false} onCheckedChange={() => {}} operator={{ ...OPERATOR, minAge }} />,
+      );
+      expect(screen.getByRole("checkbox")).toHaveAccessibleName("I accept the Terms of Service and the Privacy Policy");
+      unmount();
+    }
+  });
 });

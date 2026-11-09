@@ -240,6 +240,24 @@ describe("RegisterForm — slots and language", () => {
     await user.click(submitButton());
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ locale: "fr" }));
   });
+
+  it("0.58: hands the operator to the terms box, whose minAge it then says", () => {
+    const operator = {
+      name: "Example Operator",
+      postalCode: "0000",
+      city: "Example Town",
+      region: "EX",
+      country: "CH",
+      email: "legal@example.com",
+      minAge: 16,
+    };
+    const { rerender } = setup({ operator });
+    expect(termsBox()).toHaveAccessibleName(
+      "I am at least 16 years old and accept the Terms of Service and the Privacy Policy",
+    );
+    rerender(<RegisterForm onSubmit={async () => undefined} />);
+    expect(termsBox()).toHaveAccessibleName("I accept the Terms of Service and the Privacy Policy");
+  });
 });
 
 describe("RegisterForm — refusals", () => {

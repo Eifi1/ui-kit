@@ -368,6 +368,7 @@ function Legal028Demo() {
 function LegalAccept028Demo() {
   const [accepted, setAccepted] = useState(false);
   const [page, setPage] = useState<LegalPageKey | null>(null);
+  const [age, setAge] = useState<"none" | "16">("none");
   const link = usePreviewLink(setPage);
   return (
     <Example
@@ -376,7 +377,20 @@ function LegalAccept028Demo() {
     >
       <UiKitProvider linkComponent={link}>
         <div className="flex max-w-sm flex-col gap-4">
-          <LegalAcceptCheckbox checked={accepted} onCheckedChange={setAccepted} />
+          <ToggleGroup<"none" | "16">
+            aria-label="Minimum age"
+            value={age}
+            onChange={setAge}
+            options={[
+              { value: "none", label: "No minimum age" },
+              { value: "16", label: "minAge 16" },
+            ]}
+          />
+          <LegalAcceptCheckbox
+            checked={accepted}
+            onCheckedChange={setAccepted}
+            operator={age === "16" ? { ...OPERATOR, minAge: 16 } : OPERATOR}
+          />
           <Button disabled={!accepted}>Create account</Button>
           {page !== null && <p className="text-xs text-muted">In an app, that link opens {code(`/${page}`)}.</p>}
           <div className="rounded-md border border-subtle p-3">
@@ -389,9 +403,11 @@ function LegalAccept028Demo() {
         {code("<LegalAcceptCheckbox checked onCheckedChange />")} is required and never an error: the submit stays
         disabled until it is ticked, and nothing is sent to the server. Its label is one template,{" "}
         {code("I accept the {terms} and the {privacy}")}, so a language places the links and their articles itself —
-        Italian writes {code("e l’{privacy}")} with no space, and none is added. {code("<LegalLinks />")} needs no{" "}
-        {code("links")} any more: the three routes with the kit&apos;s labels and {code("·")} separators;{" "}
-        {code("nav={false}")} inside a menu that is a named nav already.
+        Italian writes {code("e l’{privacy}")} with no space, and none is added. Given {code("operator={OPERATOR}")}{" "}
+        (which {code("RegisterForm")} hands on) with {code("minAge: 16")}, the age and the terms are one tick:{" "}
+        {code("I am at least 16 years old and accept …")}. {code("<LegalLinks />")} needs no {code("links")} any more:
+        the three routes with the kit&apos;s labels and {code("·")} separators; {code("nav={false}")} inside a menu that
+        is a named nav already.
       </Note>
     </Example>
   );

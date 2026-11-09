@@ -904,6 +904,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       backHome: "返回首页",
       // Book-title marks around the two documents, outside the links.
       accept: "我已阅读并同意《{terms}》和《{privacy}》",
+      acceptWithAge: (minAge) => `我已年满 ${minAge} 周岁，已阅读并同意《{terms}》和《{privacy}》`,
       notice: {
         beta: "封闭测试阶段。这些文本尚未经律师审阅，将在公开发布之前完成审阅。",
         privacy:

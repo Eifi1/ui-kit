@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { legalOperatorText } from "../../components/legal";
 import { DEFAULT_UI_KIT_LABELS } from "../defaults";
 import { KIT_LABEL_SAMPLES, kitLabelStrings } from "../review";
 import { UI_KIT_LABELS_DE_CH } from "../locales/de-CH";
@@ -87,6 +88,10 @@ describe("kitLabelStrings", () => {
   it("lists the legal labels (0.28), the operator's texts with one placeholder per field", () => {
     expect(reference["legal.titles.terms"]).toBe("Terms of Service");
     expect(reference["legal.accept"]).toBe("I accept the {terms} and the {privacy}");
+    // 0.58: the age the operator names, as a real number — the template's links stay.
+    expect(reference["legal.acceptWithAge(16)"]).toBe(
+      "I am at least 16 years old and accept the {terms} and the {privacy}",
+    );
     expect(reference["legal.sections.privacy.browser.lead"]).toBe(
       "No cookies. The app keeps the following in your browser's storage:",
     );
@@ -119,6 +124,10 @@ describe("kitLabelStrings", () => {
     expect(rows["combobox.resultCount(3)"]).toBe(reference["combobox.resultCount(3)"]);
     const german = kitLabelStrings(DEFAULT_UI_KIT_LABELS, { operator, locale: "de-CH" });
     expect(german["legal.sections.terms.law.body(operator)"]).toContain("is Example Town (EX), Schweiz.");
+    // 0.58: an operator with a minimum age changes no row: the age is no text of the pages,
+    // and the operator as the texts read it does not carry the number at all.
+    expect(kitLabelStrings(DEFAULT_UI_KIT_LABELS, { operator: { ...operator, minAge: 16 } })).toEqual(rows);
+    expect(legalOperatorText({ ...operator, minAge: 16 })).not.toHaveProperty("minAge");
   });
 
   it("gives the English reference no ⚠ rows and nothing unrendered", () => {

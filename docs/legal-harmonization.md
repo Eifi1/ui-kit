@@ -249,6 +249,14 @@ keksdose (decision 10) also records which terms were accepted: with the registra
 sends the terms page's `updated` date, which its backend stores with the time. That is
 the app's own request and column; the checkbox itself still sends nothing.
 
+**A minimum age** (decision 10, ui-kit 0.58): an app whose operator names `minAge`
+(keksdose: 16) asks for the age in the same tick: "I am at least 16 years old and accept
+the [Terms of Service] and the [Privacy Policy]" (`legal.acceptWithAge`). The checkbox
+takes the operator as a prop of its own, `LegalAcceptCheckbox operator={OPERATOR}`,
+because nothing else carries it to the sign-up page; `RegisterForm operator={OPERATOR}`
+hands it on. Without `minAge` the box reads as before. An age that is not a whole number
+of years above zero is a config typo: the plain sentence.
+
 ## 4. The content contract
 
 ### 4.1 Keys and numbering
@@ -419,6 +427,7 @@ The texts are keksdose's unless marked otherwise.
 | `titles.impressum` / `privacy` / `terms` | Imprint / Privacy Policy / Terms of Service | Impressum / Datenschutzerklärung / Nutzungsbedingungen |
 | `backHome` | Back to home | Zurück zur Startseite |
 | `accept` | I accept the {terms} and the {privacy} | Ich akzeptiere die {terms} und die {privacy} |
+| `acceptWithAge(minAge)` (0.58) | I am at least {minAge} years old and accept the {terms} and the {privacy} | Ich bin mindestens {minAge} Jahre alt und akzeptiere die {terms} und die {privacy} |
 | `updated` | Last updated: {date} | Stand: {date} |
 | `summary.title` / `note` | In short / This summary is for orientation; only the full text is binding. | Das Wichtigste in Kürze / Diese Zusammenfassung dient der Orientierung; verbindlich ist allein der vollständige Text. |
 | `links.security` / `accessibility` | Security / Accessibility | Sicherheit / Barrierefreiheit |
@@ -440,15 +449,16 @@ would repeat the fr Imprint link's label, so a screen reader would read it twice
 **Kit 0.28.0** (main barrel, beside the 0.19 parts; 0.28.1 and 0.32.0 where marked):
 
 - **The `legal` label namespace, extended, in all 7 languages**:
-  - `links`, `titles`, `backHome`, `accept`;
+  - `links`, `titles`, `backHome`, `accept`, and `acceptWithAge` (0.58);
   - `notice.beta`, `notice.privacy`;
   - `translation.note`, `translation.show` (0.28.1);
   - `sections.*`, the §4.3 texts as functions of the operator, with
     `sections.impressum.disclaimer.commercial` (0.32.0).
 - **`LegalOperator`**: `{ name, postalCode, city, region, country, email,
-  bindingLanguage? }`. `country` is an ISO code and `bindingLanguage` (0.28.1) a BCP 47
-  code; the kit names both in the page's language (`legalOperatorText`). The kit holds
-  **no personal data**: each app passes the same values once (kk, ka and KS: Marcel
+  bindingLanguage?, minAge? }`. `country` is an ISO code and `bindingLanguage` (0.28.1) a
+  BCP 47 code; the kit names both in the page's language (`legalOperatorText`). `minAge`
+  (0.58), whole years, puts the age in the sign-up box (§3.4); no page prints it. The kit
+  holds **no personal data**: each app passes the same values once (kk, ka and KS: Marcel
   Eifert, 9470 Buchs, SG, CH, marcel.eifert@outlook.com).
 - **`LegalPage`**: the §3.2 frame.
   - Props: `page` (`"impressum" | "privacy" | "terms"`), `operator`, `header`, `footer`
@@ -478,7 +488,8 @@ would repeat the fr Imprint link's label, so a screen reader would read it twice
   links and their separators. `children` sit under the links, for a tagline.
   `landmark={false}` draws a `<div>` instead of a `<footer>` (0.28.1).
 - **`LegalAcceptCheckbox`**: the §3.4 checkbox, with `checked`, `onCheckedChange` and
-  optional hrefs.
+  optional hrefs; from 0.58 an optional `operator`, whose `minAge` it says
+  (`RegisterForm` takes the same prop and hands it on).
 - **`useNoIndex()`**: keksdose's hook, which removes its `<meta>` on unmount.
 - **`LEGAL_SKELETON`**: the §4.2 order as data, so an app test can assert that its pages
   follow it.
