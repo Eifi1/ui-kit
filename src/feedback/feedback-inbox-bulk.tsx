@@ -1,13 +1,16 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { CircleDot, Eye, EyeOff, Tag } from "lucide-react";
 import { BulkActionBar, type ResponsiveBulkActionBarVariant } from "../components/bulk-action-bar";
 import { Button } from "../components/button";
 import type { DataTableProps } from "../components/data-table";
+import { DISABLED_REASON_LINE_CLASS, useDisabledReasonLine } from "../components/field-parts";
 import { Popover } from "../components/popover";
 import { useBreakpoint } from "../hooks/use-breakpoint";
 import { toast } from "../components/toast";
-import type { CommitScope } from "../components/write-lock";
+import { useCommitReason, type CommitScope } from "../components/write-lock";
+import { cn } from "../lib/cn";
+import { hasContent } from "../lib/presence";
 import type { LabelOverride } from "../i18n/kit-labels";
 import { useFeedbackCategoryLabels, useFeedbackStatusLabels, useFeedbackToastLabels } from "./feedback-labels";
 import type { FeedbackRecord } from "./feedback-record";
@@ -292,7 +295,15 @@ interface BulkChoice {
 }
 
 /** One of the bar's buttons and the list it opens — RowActions' "⋯" menu, the kit's one
- *  popover of actions: a dialog-shaped panel of ghost buttons, closed by the pick. */
+ *  popover of actions: a dialog-shaped panel of ghost buttons, closed by the pick.
+ *
+ *  Under a write lock each button keeps the lock's reason in its tooltip and its
+ *  description, never a line of its own (`disabledReasonDisplay="tooltip"`): the BAR says
+ *  it once, under its row ({@link BulkLockLine}). "auto" drew the line under every button
+ *  at Large and on a touch screen, and on the phone's floating card the three same
+ *  sentences grew it to about three rows, over a card and a half of the list (kastlan,
+ *  0.57 adoption). The choices in the list too: a lock that comes while it is open would
+ *  otherwise put the sentence under each of them. */
 function BulkChoiceMenu({
   label,
   icon: Icon,
@@ -328,6 +339,7 @@ function BulkChoiceMenu({
           pending={running}
           disabled={empty || (busy && !running)}
           commit={commit}
+          disabledReasonDisplay="tooltip"
           onClick={toggle}
         >
           <Icon className="size-4" aria-hidden />
@@ -345,6 +357,7 @@ function BulkChoiceMenu({
                 className="w-full justify-start text-start"
                 disabled={!sends}
                 commit={commit}
+                disabledReasonDisplay="tooltip"
                 onClick={() => {
                   close();
                   void pick();
@@ -362,6 +375,32 @@ function BulkChoiceMenu({
 }
 
 /**
+ * The write lock's reason, ONCE for the bar: the line each locked button would have drawn
+ * under itself, on the same rule (`disabledReasonDisplay` "auto": at Large and on a touch
+ * screen, not in a compact region) — so a pointer at Normal still hovers a button for it,
+ * as before. The buttons keep it in their tooltips and descriptions; this one is visible
+ * text, read once in the bar, not anyone's description.
+ *
+ * A component of its own, as `LockedReason` is, so only a locked bar asks the text size and
+ * the pointer.
+ */
+function BulkLockLine({ reason }: { reason: ReactNode }) {
+  const line = useDisabledReasonLine();
+  if (!line) return null;
+  return (
+    <span
+      data-slot="bulk-lock-reason"
+      // A row of its own under the buttons (`basis-full` in the bar's wrapping row), after
+      // the desktop strip's Clear as well (`order-last`: the bar draws Clear after the
+      // actions). The row's gap spaces it, and it may run the bar's width.
+      className={cn(DISABLED_REASON_LINE_CLASS, "order-last mt-0 max-w-none basis-full")}
+    >
+      {reason}
+    </span>
+  );
+}
+
+/**
  * The inbox's bulk bar: the count, Clear, and Set status / Set category / Visibility, each
  * a list of the values — the statuses in chain order with their glyphs, the categories
  * less CRASH, on and off. Rendered unconditionally, as `BulkActionBar` asks.
@@ -371,6 +410,10 @@ function BulkChoiceMenu({
  * row down by its height — away from the pointer reaching for the next box — and clearing
  * pulled them back up (the 0.57 screenshot check). On a phone the card floats over the page
  * and moves nothing, so it still comes with the first selected card.
+ *
+ * Under a write lock (`commit`) the lists refuse with the lock's reason, said once for the
+ * bar on a line under its row where a line is due ({@link BulkLockLine}), and in each
+ * button's tooltip.
  *
  * @internal Drawn by {@link FeedbackInbox}; not part of `/feedback` or the barrel.
  */
@@ -391,6 +434,8 @@ export function FeedbackInboxBulkBar<T extends FeedbackRecord>({
   const busy = pending !== null;
   const empty = rows.length === 0;
   const desktop = useBreakpoint("md");
+  // The lock as the bar's buttons see it, with their `commit` scope: the one reason they share.
+  const lockReason = useCommitReason(commit, undefined);
   const sends = (field: BulkField, value: FeedbackStatus | FeedbackCategory | boolean) =>
     feedbackBulkTargets(rows, field, value).length > 0;
   return (
@@ -457,6 +502,7 @@ export function FeedbackInboxBulkBar<T extends FeedbackRecord>({
           ]}
         />
       )}
+      {hasContent(lockReason) && <BulkLockLine reason={lockReason} />}
     </BulkActionBar>
   );
 }
