@@ -114,6 +114,14 @@ before the 0.28 round, and how far their wording differed.
       - The privacy policy's browser-storage section drops "everything else stays on your
         device", which read as "never leaves"; each app says what its account keeps
         (§4.3).
+    - **keksdose's scan for absolute claims** (Marcel, 2026-11-10; for the next kit round,
+      not built yet): the browser-storage section's lead "No cookies. The app stores the
+      following in your browser's storage:" becomes "The app sets no cookies and stores the
+      following in your browser's storage:" (de-CH «Die App setzt keine Cookies und legt
+      Folgendes im Speicher Ihres Browsers ab:»): the claim is about the app, not about a pay
+      host's checkout script. The commercial variant adds one sentence on what the checkout
+      stores on the pay host, checked in the Paddle sandbox before billing goes on. "Nothing
+      of this tracks you" and the 30-day notice stay: promises every app keeps.
 11. **The benchmark's optional rows** (Marcel, 2026-10-29: "you can already add the
     optional points"; ui-kit 0.51.4):
     - A plain-language summary at the top of the terms and the privacy policy, the full
