@@ -137,9 +137,12 @@ buttons at the bottom end corner; the level is announced. Words: the new `zoomab
 namespace in all seven catalogues.
 
 - **keksdose:** `shared/components/scan-file-preview.tsx` can replace its touch half
-  (`PinchZoomImage` and the `useTallImage` / `isTallImage` switch) with
-  `<ZoomableImage src={url} alt={filename} maxHeight="75vh" />`; its `common.zoom_in` /
-  `zoom_out` / `map.zoom` keys become the kit's. The desktop hover lens stays the app's choice.
+  (`PinchZoomImage`) with `<ZoomableImage src={url} alt={filename} maxHeight="75vh" />`; its
+  `common.zoom_in` / `zoom_out` / `map.zoom` keys become the kit's. `useTallImage` /
+  `isTallImage` stay with the desktop hover lens, which reads them too (corrected after the
+  release, keksdose); the lens stays the app's choice.
+- An empty group's line (`empty(key)`) is not a row: to make it act, put a link or button in it
+  (keksdose's "add the first account" line).
 - **kastlan:** available for handover photos and document scans shown inline.
 
 ## server-kit 0.23
