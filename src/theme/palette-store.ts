@@ -22,6 +22,10 @@ const holdsPaletteId = (blob: unknown): blob is { state: { id: string } } => {
  * tokens for the given resolved `mode` to <html>, BEFORE React mounts (no flash of
  * the default palette). Falls back to the default preset for missing/malformed
  * state, so an app entrypoint never re-types the persist envelope.
+ *
+ * @deprecated 0.59 — `createFixedPalette(useTheme, { legacyStorageKey })` and its
+ * `applyPalette(mode)`: no app offers a palette choice, so there is no stored one to
+ * read; removed in 0.60
  */
 export function applyPersistedPalette(storageKey: string, mode: ThemeMode): void {
   const id = readStoredJson(storageKey, holdsPaletteId)?.state.id ?? DEFAULT_PRESET.id;
@@ -40,6 +44,10 @@ interface PaletteState {
  * Build a palette store bound to a consumer-supplied localStorage key, wired to
  * that app's theme store (for the active light/dark mode). Returns the palette
  * hook plus the effect + selector hooks that read the active preset's tokens.
+ *
+ * @deprecated 0.59 — `createFixedPalette(useTheme, { legacyStorageKey: <this key> })`,
+ * the same hooks with one preset and nothing kept (no app offers a palette choice since
+ * 2026-11-10); removed in 0.60
  */
 export function createPaletteStore(storageKey: string, useTheme: UseBoundStore<StoreApi<ThemeState>>) {
   const usePalette = create<PaletteState>()(
@@ -105,4 +113,5 @@ export function createPaletteStore(storageKey: string, useTheme: UseBoundStore<S
   return { usePalette, useApplyPalette, useActiveTokenSet, useChartHex, useHeatStops };
 }
 
+/** @deprecated 0.59 — `FixedPalette`, what `createFixedPalette` returns; removed in 0.60 */
 export type PaletteStore = ReturnType<typeof createPaletteStore>;

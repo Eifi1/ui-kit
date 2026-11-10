@@ -284,6 +284,7 @@ export interface AppShellLabels {
 
 export interface TopBarLabels {
   theme: string;
+  /** @deprecated 0.59 — `PaletteMenu`'s name, which goes with it; removed in 0.60 */
   palette: string;
   language: string;
   /** 0.49 KIT-10: the language menu's trigger, given the current language's name —

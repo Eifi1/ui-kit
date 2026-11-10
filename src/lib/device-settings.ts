@@ -5,8 +5,9 @@ import { readSessionStored, readStored, removeStored, storedKeys, writeSessionSt
  * back: "Reset this device's settings" (docs/settings-harmonization.md §11).
  *
  * A registry, because no one part knows every key. The kit's own stores and components
- * join it themselves — the theme, palette, text-size and contrast stores when they are
- * created, `UiKitProvider` (the prefix its tables keep their views under) and `AppShell`
+ * join it themselves — the theme, text-size and contrast stores (and the deprecated palette
+ * store; `createFixedPalette` keeps nothing and joins nothing) when they are created,
+ * `UiKitProvider` (the prefix its tables keep their views under) and `AppShell`
  * (the sidebar's folded state) while they are mounted — and an app adds its own keys
  * beside the store or accessor that owns each (keksdose's date format, kastlan's
  * language, Kurvenschmiede's curve channels). {@link resetDeviceSettings} then clears

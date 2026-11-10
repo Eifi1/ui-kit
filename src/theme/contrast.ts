@@ -147,7 +147,7 @@ export function readPersistedContrast(storageKey: string): ContrastMode | null {
 /**
  * Pre-paint (§10.3, §10.5): this device's choice under `storageKey` — else the account's
  * last known value, else "system" — resolved against `prefers-contrast` and applied
- * BEFORE `createRoot`. Call it next to `applyPersistedPalette`, in EITHER order — the
+ * BEFORE `createRoot`. Call it next to the palette's paint, in EITHER order — the
  * palette steps itself when `data-contrast` is already set, and this re-applies the
  * palette's set when it is not; no app has to put one first (0.32.1, keksdose's 0.32
  * report asked which). Returns the level applied.

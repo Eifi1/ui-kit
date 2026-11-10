@@ -70,7 +70,8 @@ const isEnvelope = (blob: unknown): blob is { state?: { mode?: string; preferenc
  * from localStorage, resolve it to a concrete light/dark mode, and toggle the
  * `.dark` class (and `color-scheme`) on <html> — BEFORE React and the store mount,
  * so the first paint already has the right theme (no flash). Returns the resolved
- * mode so the caller can chain {@link applyPersistedPalette}. Encapsulates the
+ * mode so the caller can chain the palette's paint (`createFixedPalette`'s
+ * `applyPalette(mode)`). Encapsulates the
  * zustand-persist envelope + the legacy `mode`→`preference` fallback so apps never re-type the
  * storage shape in their entrypoint.
  */
