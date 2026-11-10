@@ -873,6 +873,16 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       noPreview: "Aucun aperçu disponible pour ce fichier",
       openInNewTab: "Ouvrir dans un nouvel onglet",
     },
+    zoomableImage: {
+      viewer: (alt) => (alt ? `Image zoomable\u00a0: ${alt}` : "Image zoomable"),
+      hint: "Appuyez sur + ou − pour zoomer et sur 0 pour ajuster à la largeur.",
+      controls: "Zoom",
+      zoomIn: "Zoom avant",
+      zoomOut: "Zoom arrière",
+      fit: "Ajuster à la largeur",
+      level: (percent) => `Zoom ${n(percent)}\u00a0%`,
+      fitted: "Ajustée à la largeur",
+    },
     writeLock: {
       reason: "Vous pouvez consulter ceci, mais pas le modifier.",
       offline: "Nécessite une connexion.",

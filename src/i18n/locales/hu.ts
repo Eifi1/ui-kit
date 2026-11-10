@@ -856,6 +856,16 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       noPreview: "Ehhez a fájlhoz nincs előnézet",
       openInNewTab: "Megnyitás új lapon",
     },
+    zoomableImage: {
+      viewer: (alt) => (alt ? `Nagyítható kép: ${alt}` : "Nagyítható kép"),
+      hint: "A + és a − billentyűvel nagyíthat és kicsinyíthet, a 0-val a szélességhez igazíthatja.",
+      controls: "Méretezés",
+      zoomIn: "Nagyítás",
+      zoomOut: "Kicsinyítés",
+      fit: "Szélességhez igazítás",
+      level: (percent) => `Nagyítás: ${n(percent)}%`,
+      fitted: "Szélességhez igazítva",
+    },
     writeLock: {
       reason: "Ezt megtekintheti, de nem módosíthatja.",
       offline: "Internetkapcsolat szükséges.",

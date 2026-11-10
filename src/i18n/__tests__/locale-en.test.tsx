@@ -164,6 +164,8 @@ describe("uiKitLabelsEn (@eifi1/ui-kit/i18n/en)", () => {
       "translationReview.progress",
       "verifyEmail.resendIn",
       "wizard.step",
+      // 0.59: ZoomableImage's announced zoom level.
+      "zoomableImage.level",
     ]);
   });
 

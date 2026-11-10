@@ -373,7 +373,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.58 (+2, keksdose SL-10): `useReorder` and `DEFAULT_REORDER_LABELS`, rows moved by hand.
   // 0.59 (+1, no app offers a chart palette since 2026-11-10): `createFixedPalette`, one
   // palette painted for the mode, which `createPaletteStore` (deprecated) gives way to.
-  ["@eifi1/ui-kit", barrel, 1010],
+  // 0.59 (+2, keksdose #505): `ZoomableImage` and `DEFAULT_ZOOMABLE_IMAGE_LABELS`, the inline
+  // picture that zooms (pinch, wheel, keys, double-tap) where it is.
+  ["@eifi1/ui-kit", barrel, 1012],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

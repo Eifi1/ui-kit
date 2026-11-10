@@ -834,6 +834,16 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       noPreview: "此文件无法预览",
       openInNewTab: "在新标签页中打开",
     },
+    zoomableImage: {
+      viewer: (alt) => (alt ? `可缩放图片：${alt}` : "可缩放图片"),
+      hint: "按 + 或 − 缩放，按 0 适应宽度。",
+      controls: "缩放",
+      zoomIn: "放大",
+      zoomOut: "缩小",
+      fit: "适应宽度",
+      level: (percent) => `缩放 ${n(percent)}%`,
+      fitted: "已适应宽度",
+    },
     writeLock: {
       reason: "仅可查看，无法修改。",
       offline: "需要网络连接。",

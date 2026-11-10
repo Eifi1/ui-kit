@@ -611,6 +611,10 @@ export {
   type ImageGridProps,
 } from "./components/image-grid";
 export * from "./components/lightbox";
+// 0.59 (keksdose #505): a picture shown inline that zooms where it is — fitted to the width,
+// pinch and two-finger pan, ⌘/Ctrl + wheel, the + − 0 keys and buttons, double-tap to 100 %.
+export { ZoomableImage, DEFAULT_ZOOMABLE_IMAGE_LABELS } from "./components/zoomable-image";
+export type { ZoomableImageProps, ZoomableImageLabels } from "./components/zoomable-image";
 export * from "./components/button-group";
 export * from "./components/table";
 export * from "./components/separator";

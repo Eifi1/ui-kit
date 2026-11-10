@@ -270,6 +270,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
   "media": [
     "ImageGrid — actions, captions and a PDF tile",
     "Lightbox — keys, swipe, zoom, download and a PDF card",
+    "ZoomableImage — a very tall receipt, fitted to the width",
     "AuthedImage — a fake fetcher with a delay and an error",
     "useAuthedSrc — status, type and retry",
     "AuthedImage — errorFallback={null} and stopPropagation",

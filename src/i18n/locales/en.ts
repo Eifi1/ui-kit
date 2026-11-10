@@ -154,6 +154,10 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
       counter: (index, count) => `${n(index)} / ${n(count)}`,
       position: (index, count) => `Image ${n(index)} of ${n(count)}`,
     },
+    zoomableImage: {
+      ...d.zoomableImage,
+      level: (percent) => `Zoom ${n(percent)}%`,
+    },
     translationReview: {
       ...d.translationReview,
       filterCount: (label, count) => `${label} · ${n(count)}`,

@@ -877,6 +877,16 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       noPreview: "Für diese Datei ist keine Vorschau verfügbar",
       openInNewTab: "In neuem Tab öffnen",
     },
+    zoomableImage: {
+      viewer: (alt) => (alt ? `Zoombares Bild: ${alt}` : "Zoombares Bild"),
+      hint: "Mit + und − zoomen, mit 0 an die Breite anpassen.",
+      controls: "Zoom",
+      zoomIn: "Vergrößern",
+      zoomOut: "Verkleinern",
+      fit: "An Breite anpassen",
+      level: (percent) => `Zoom ${n(percent)}\u00a0%`,
+      fitted: "An Breite angepasst",
+    },
     writeLock: {
       // Impersonal, like the rest of this catalogue where it can be: an app that
       // addresses its users with "du" then has fewer keys to override.

@@ -74,6 +74,7 @@ import type { ErrorBoundaryLabels } from "../components/error-boundary";
 import type { AuthedImageLabels } from "../components/authed-image";
 import type { ImageGridLabels } from "../components/image-grid";
 import type { LightboxLabels } from "../components/lightbox";
+import type { ZoomableImageLabels } from "../components/zoomable-image";
 import type { WriteLockLabels } from "../components/write-lock";
 import type { LegalLabels } from "../components/legal";
 import type { SignInLabels } from "../auth/sign-in-form";
@@ -406,6 +407,8 @@ export interface UiKitLabels {
   authedImage: AuthedImageLabels;
   imageGrid: ImageGridLabels;
   lightbox: LightboxLabels;
+  /** 0.59: `ZoomableImage`, the inline picture that zooms (keksdose #505). */
+  zoomableImage: ZoomableImageLabels;
   /** 0.18.0: `WriteLockProvider`'s fallback reason, `AccountStateChip`, `SharePanel` /
    *  `ShareCard` / `ShareDialog`, `ReauthDialog`. */
   writeLock: WriteLockLabels;

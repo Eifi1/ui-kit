@@ -269,6 +269,8 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "imageGrid.actions": [["{{name}}"]],
   "lightbox.counter": [[2, 5]],
   "lightbox.position": [[2, 5]],
+  "zoomableImage.viewer": [["{{alt}}"], [""]],
+  "zoomableImage.level": [[150]],
   "shareCard.roleOf": [["{{name}}"]],
   "shareCard.teamHint": [["{{name}}"]],
   "shareCard.removeConfirm": [["{{name}}"]],

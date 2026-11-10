@@ -865,6 +865,16 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       noPreview: "Nessuna anteprima disponibile per questo file",
       openInNewTab: "Apri in una nuova scheda",
     },
+    zoomableImage: {
+      viewer: (alt) => (alt ? `Immagine ingrandibile: ${alt}` : "Immagine ingrandibile"),
+      hint: "Prema + o − per ingrandire o ridurre e 0 per adattare alla larghezza.",
+      controls: "Zoom",
+      zoomIn: "Ingrandisci",
+      zoomOut: "Riduci",
+      fit: "Adatta alla larghezza",
+      level: (percent) => `Zoom ${n(percent)}%`,
+      fitted: "Adattata alla larghezza",
+    },
     writeLock: {
       reason: "Può visualizzarlo, ma non modificarlo.",
       offline: "Richiede una connessione.",
