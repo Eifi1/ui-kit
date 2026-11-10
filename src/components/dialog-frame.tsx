@@ -8,6 +8,7 @@ import { Modal, ModalCloseContext } from "./modal";
 import type { ModalProps } from "./modal";
 import { useKitLabels } from "../i18n/kit-labels";
 import { DEFAULT_DIALOG_FRAME_LABELS } from "./dialog-frame-labels";
+import { FOOTER_FORM_ACTIONS } from "./footer-row";
 
 export interface DialogFrameLabels {
   /** Accessible name of the header's X, when {@link DialogFrameProps.closeButton} shows it. */
@@ -45,7 +46,9 @@ export interface DialogFrameProps extends Omit<ModalProps, "labelledBy" | "child
   /**
    * The row under the body — buttons, in the caller's own order and variants (the two
    * apps disagree about the cancel button's variant, so the frame has no opinion on
-   * it). Stays put while the body scrolls.
+   * it). Stays put while the body scrolls. A {@link FormActions} given here as the row's
+   * own item fills it (0.59): its `start` and `destructive` reach the row's start, and
+   * stacked on a phone its buttons span the dialog.
    *
    * A FUNCTION receives the panel's animated close: `(close) => <Button
    * onClick={close}>Cancel</Button>` lowers the panel the way Escape does, where
@@ -273,10 +276,12 @@ function FrameActions({
   const close = useContext(ModalCloseContext) ?? onClose;
   return (
     // The border marks where the scrolling stops; `flex-wrap` keeps three long
-    // translated labels on a phone from pushing the row wider than the sheet.
+    // translated labels on a phone from pushing the row wider than the sheet. A
+    // FormActions here fills the row (FOOTER_FORM_ACTIONS, keksdose live #496).
     <div
       className={cn(
         "flex shrink-0 flex-wrap items-center justify-end gap-2 px-4 py-3",
+        FOOTER_FORM_ACTIONS,
         divider && "border-t border-subtle",
       )}
     >

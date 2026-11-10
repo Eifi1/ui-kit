@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 
 import { cn } from "../lib/cn";
 import { mergeRefs } from "./field-parts";
+import { FOOTER_FORM_ACTIONS } from "./footer-row";
 import { useBackdropClose } from "./modal";
 import { useBodyScrollLock } from "../hooks/use-body-scroll-lock";
 import { useOverlayHistory } from "../hooks/use-overlay-history";
@@ -281,7 +282,11 @@ export function FullBleedDialog({
         {footer !== undefined && footer !== null && footer !== false && (
           <div
             data-full-bleed-footer=""
-            className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-subtle px-3 pt-3"
+            // A FormActions here fills the footer (FOOTER_FORM_ACTIONS, keksdose live #496).
+            className={cn(
+              "flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-subtle px-3 pt-3",
+              FOOTER_FORM_ACTIONS,
+            )}
             style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
           >
             {footer}

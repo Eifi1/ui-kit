@@ -44,7 +44,10 @@ export type FormActionsAlign = "start" | "center" | "end" | "between";
  *    colour with a rule above, clear of the phone's home indicator — for a long form
  *    whose Save should not be a scroll away.
  *  - `dialog`: no spacing of its own, for a dialog's footer slot (DialogFrame,
- *    FullBleedDialog's `footer`), which already pads and rules it.
+ *    FullBleedDialog's `footer`), which already pads and rules it. The footer also sizes
+ *    the row (0.59, keksdose live #496): as its own item a row takes the footer's line,
+ *    so `destructive` and `start` reach its start, and a stacked one a line of the
+ *    footer's whole width — no `className="w-full"`.
  */
 export type FormActionsPlacement = "inline" | "sticky" | "dialog";
 
