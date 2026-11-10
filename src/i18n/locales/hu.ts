@@ -985,7 +985,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
           },
           browser: {
             title: "Mit tárol az Ön böngészője",
-            lead: "Nincsenek sütik. Az alkalmazás a következőket tárolja az Ön böngészőjének tárhelyén:",
+            lead: "Az alkalmazás nem helyez el sütiket, és a következőket tárolja az Ön böngészőjének tárhelyén:",
             tail: "Egyiket sem használjuk az Ön követésére. A küldésre váró bejegyzéseket a böngésző elküldi nekünk, amint lehetséges. Mindez eltűnik, amikor törli a webhely adatait, kijelentkezéskor pedig a bejelentkezési tokenek törlődnek.",
           },
           rights: {

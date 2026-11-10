@@ -422,7 +422,9 @@ The texts are keksdose's unless marked otherwise.
   - **browser**, "What your browser stores" (Kurvenschmiede's section; every app keeps
     more than local storage — IndexedDB, Cache Storage, the crash reporter's buffer — so
     the text says "your browser's storage" and takes the app's entries as a list):
-    - No cookies. The app keeps the following in your browser's storage:
+    - The app sets no cookies and stores the following in your browser's storage: (0.59,
+      decision 10: "No cookies." until then; the claim is about the app, not about a pay
+      host's checkout script.)
     - `{entries}`, rendered as a list, one item per entry, from the app.
     - None of it is used to track you. Entries waiting to be sent are sent to us as soon
       as they can be. All of it disappears when you clear the site's data, and signing out

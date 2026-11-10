@@ -992,7 +992,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
           },
           browser: {
             title: "Che cosa salva il Suo browser",
-            lead: "Nessun cookie. L’app salva quanto segue nella memoria del Suo browser:",
+            lead: "L’app non imposta alcun cookie e salva quanto segue nella memoria del Suo browser:",
             tail: "Niente di tutto ciò viene usato per tracciarLa. Le voci in attesa di invio ci vengono trasmesse non appena possibile. Tutto questo scompare quando cancella i dati del sito, e uscendo dall’account vengono rimossi i token di accesso.",
           },
           rights: {

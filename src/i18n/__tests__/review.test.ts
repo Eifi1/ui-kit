@@ -92,8 +92,9 @@ describe("kitLabelStrings", () => {
     expect(reference["legal.acceptWithAge(16)"]).toBe(
       "I am at least 16 years old and accept the {terms} and the {privacy}",
     );
+    // 0.59 (keksdose's scan for absolute claims): a claim about the app.
     expect(reference["legal.sections.privacy.browser.lead"]).toBe(
-      "No cookies. The app keeps the following in your browser's storage:",
+      "The app sets no cookies and stores the following in your browser's storage:",
     );
     expect(reference["legal.sections.impressum.operator.body(operator)"]).toBe(
       "{{name}}\n{{postalCode}} {{city}}\n{{country}}\n\nThe full postal address is supplied on request to anyone with a legitimate legal interest; write to the contact address below.",

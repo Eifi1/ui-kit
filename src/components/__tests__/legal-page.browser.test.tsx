@@ -18,6 +18,9 @@ import { LegalKitSection } from "../legal-page";
  * everything but the entries waiting to be sent "stays on your device", which read as
  * "never leaves it". The clause goes; what an account keeps on the server is each app's
  * to say, in its own sections.
+ *
+ * 0.59 (keksdose's scan for absolute claims, Marcel 2026-11-10, decision 10): the lead says
+ * what the app sets, not that a page has no cookies at all.
  */
 
 const CATALOGUES: Record<string, () => UiKitLabels> = {
@@ -51,6 +54,35 @@ const KEPT: Record<string, string> = {
   hu: "A küldésre váró bejegyzéseket a böngésző elküldi nekünk, amint lehetséges. Mindez eltűnik",
   zh: "等待发送的条目会尽快发送给我们。清除网站数据后",
 };
+
+/**
+ * The lead as each catalogue words it since 0.59 (keksdose's scan for absolute claims,
+ * Marcel 2026-11-10, decision 10): "No cookies." stood alone, a claim about the whole page —
+ * which a pay host's checkout script could make untrue. It is a claim about the app now,
+ * the one thing the kit can vouch for.
+ */
+const LEAD: Record<string, string> = {
+  en: "The app sets no cookies and stores the following in your browser's storage:",
+  "de-CH": "Die App setzt keine Cookies und legt Folgendes im Speicher Ihres Browsers ab:",
+  fr: "L’app ne dépose aucun cookie et enregistre les éléments suivants dans le stockage de votre navigateur\u00a0:",
+  it: "L’app non imposta alcun cookie e salva quanto segue nella memoria del Suo browser:",
+  es: "La aplicación no instala cookies y guarda lo siguiente en el almacenamiento de su navegador:",
+  hu: "Az alkalmazás nem helyez el sütiket, és a következőket tárolja az Ön böngészőjének tárhelyén:",
+  zh: "应用程序不设置 Cookie，并会在您浏览器的存储中保存以下内容：",
+};
+
+describe('LegalKitSection section="browser": the lead (0.59)', () => {
+  it("says the app sets no cookies, not that there are none", () => {
+    render(<LegalKitSection section="browser" entries={["your sign-in tokens"]} />);
+    const text = document.getElementById("browser")?.textContent ?? "";
+    expect(text).toContain(`${LEAD.en}your sign-in tokens`);
+    expect(text).not.toMatch(/No cookies\./);
+  });
+
+  it.each(Object.entries(CATALOGUES))("%s: the lead's claim is about the app", (code, make) => {
+    expect(make().legal.sections.privacy.browser.lead).toBe(LEAD[code]);
+  });
+});
 
 describe('LegalKitSection section="browser" (0.58)', () => {
   it("no longer says that everything else stays on the device", () => {
