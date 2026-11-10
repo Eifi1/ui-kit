@@ -99,6 +99,18 @@ export interface BulkActionBarProps extends Omit<ComponentPropsWithRef<"div">, "
   /** Clear the selection / leave selection mode. */
   onClear: () => void;
   /**
+   * 0.59 (keksdose dev #678): the Clear drawn REFUSED — `aria-disabled`, every press
+   * swallowed, still focusable — for a bar held open as a standing strip with nothing
+   * selected. There "Clear selection" clears nothing, and it reads as a clear of the LIST:
+   * on the feedback inbox's desktop strip at "0 selected", Marcel pressed it to leave a
+   * notice's narrowed list (*"the Clear selection also does not revert the url"*). Refused,
+   * not removed or `disabled`: a Clear pressed into the state that refuses it keeps the
+   * focus, where a native `disabled` (or an unmount) dropped it to `<body>`, and the strip
+   * keeps its layout. Not for selection mode (`open` with a "Select" that entered it),
+   * where Clear at zero is the way out. Default `false`.
+   */
+  clearDisabled?: boolean;
+  /**
    * The actions: buttons (`IconButton size="lg"` on a phone, `Button` from md up),
    * in the caller's order. They are the toolbar's arrow-key stops, after the clear.
    *
@@ -203,6 +215,7 @@ function ownsArrows(el: Element): boolean {
 export function BulkActionBar({
   count,
   onClear,
+  clearDisabled = false,
   children,
   variant: variantProp = "floating",
   open,
@@ -332,12 +345,12 @@ export function BulkActionBar({
 
   const floating = variant === "floating";
   const clear = floating ? (
-    <IconButton size="lg" onClick={onClear} aria-label={labels.clear}>
+    <IconButton size="lg" onClick={onClear} aria-label={labels.clear} refused={clearDisabled}>
       <X />
     </IconButton>
   ) : (
     // `ms-auto`: when the actions wrap, the way out still sits at the bar's end.
-    <Button type="button" variant="secondary" size="sm" onClick={onClear} className="ms-auto">
+    <Button type="button" variant="secondary" size="sm" onClick={onClear} className="ms-auto" refused={clearDisabled}>
       {labels.clear}
     </Button>
   );
