@@ -582,7 +582,7 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2239 names from 378 modules** in the main barrel — 1009 values and 1230 types — and 195 more in 16 standalone entries. _Italic_ is a type-only export.
+**2255 names from 382 modules** in the main barrel — 1016 values and 1239 types — and 195 more in 16 standalone entries. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 `node scripts/gen-export-inventory.mjs`; the counts are pinned by
@@ -590,10 +590,10 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2239 |
+| `@eifi1/ui-kit` | 2255 |
 | `@eifi1/ui-kit/chart` | 102 |
 | `@eifi1/ui-kit/shell` | 110 |
-| `@eifi1/ui-kit/data-table` | 56 |
+| `@eifi1/ui-kit/data-table` | 57 |
 | `@eifi1/ui-kit/wizard` | 25 |
 | `@eifi1/ui-kit/tour` | 49 |
 | `@eifi1/ui-kit/feedback` | 204 |
@@ -847,8 +847,8 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `hooks/use-breakpoint` | `BREAKPOINT_REM`, `breakpointQuery`, `remPx`, `useBreakpoint`, `usePhoneLayout`, `useRemPx`, _`Breakpoint`_, _`BreakpointVariant`_, _`RemLength`_ |
 | `hooks/use-large-text` | `useCoarsePointer`, `useInlineFacts`, `useLargeText` |
 | `hooks/use-has-camera` | `useHasCamera` |
-| `hooks/use-file-picker` | `matchesAccept`, `useFilePicker`, _`FilePickerLabels`_, _`FileRejection`_, _`FileRejectionReason`_, _`FileScreenOptions`_, _`UseFilePickerOptions`_, _`UseFilePickerReturn`_ |
 | `hooks/use-row-leaves` | `useRowLeaves`, _`RowLeavesProps`_, _`UseRowLeavesOptions`_, _`UseRowLeavesReturn`_ |
+| `hooks/use-file-picker` | `matchesAccept`, `useFilePicker`, _`FilePickerLabels`_, _`FileRejection`_, _`FileRejectionReason`_, _`FileScreenOptions`_, _`UseFilePickerOptions`_, _`UseFilePickerReturn`_ |
 
 ### theme, palettes, colour
 
@@ -859,6 +859,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `theme/palette-presets` | `applyTokenSet`, `DEFAULT_PRESET`, `DERIVED_PRESETS`, `PALETTES`, `PAUL_TOL_PRESET`, `presetById`, _`PalettePreset`_, _`TokenSet`_ |
 | `theme/theme-store` | `applyPersistedTheme`, `createThemeStore`, _`ThemeMode`_, _`ThemePreference`_, _`ThemeState`_, _`ThemeStore`_ |
 | `theme/palette-store` | `applyPersistedPalette`, `createPaletteStore`, _`PaletteStore`_ |
+| `theme/fixed-palette` | `createFixedPalette`, _`FixedPalette`_, _`FixedPaletteOptions`_ |
 | `theme/text-size` | `applyPersistedTextSize`, `applyTextSize`, `createTextSizeStore`, `isTextSize`, `readPersistedTextSize`, `readTextSize`, `resolveTextSize`, `TEXT_SCALE`, `TEXT_SIZE_INLINE_SCRIPT`, `TEXT_SIZES`, `useTextSize`, _`ApplyTextSizeOptions`_, _`PersistedAppearanceOptions`_, _`PersistedTextSize`_, _`TextSize`_, _`TextSizeInfo`_, _`TextSizeState`_, _`TextSizeStore`_ |
 | `theme/contrast` | `applyContrast`, `applyPersistedContrast`, `CONTRAST_MODES`, `contrastLevel`, `createContrastStore`, `isContrastMode`, `prefersMoreContrast`, `readContrastLevel`, `readPersistedContrast`, `resolveContrastMode`, _`ApplyContrastOptions`_, _`ContrastLevel`_, _`ContrastMode`_, _`ContrastState`_, _`ContrastStore`_, _`PersistedContrast`_ |
 | `theme/chart-palette` | `CHART_COLORS`, `CHART_MUTED_HEX`, `CHART_ROLES`, `chartEdge`, `CVD_ORDER`, `HEATMAP_HEX`, `lerpHex`, `PALETTE_HEX`, `PALETTE_SIZE`, `paletteFor`, `textOn`, _`HeatStops`_, _`PaletteForOptions`_ |
