@@ -25,6 +25,36 @@ export type FilterValue =
   | { type: "date"; from: string; to: string }
   | { type: "number"; min: string; max: string; abs: boolean };
 
+/**
+ * {@link DataTableProps.keyFilter} (0.59, keksdose live #500, dev #678): a SET of rows
+ * named from outside the table — the reports a notification links (`?ids=492,493,494`) —
+ * shown as one column's filter. A number filter holds a range, so a set had no place in
+ * the table: keksdose narrowed the rows above it, the table showed no filter at all, and
+ * its own "Clear filter" left the `ids` in the address.
+ */
+export interface DataTableKeyFilter {
+  /** The rows to show, by `rowKey` — compared as strings, so `7` names the row keyed `"7"`. */
+  keys: readonly (string | number)[];
+  /**
+   * The column whose filter shows the set — the inbox's `#` (`id`): its header's filter
+   * button is on, and its panel (the header's popover, the phone's filter sheet) says
+   * {@link label} and offers Clear, in place of the column's own fields. The set wins over
+   * the column's own filter (a link's `f.id=3..9` beside it is not applied), and the
+   * column's Clear clears both. A column with no filter of its own gets the button while
+   * the set is on.
+   */
+  column: string;
+  /** What the panel says: "Only these 3 reports". Default: the kit's
+   *  `dataTable.keyFilter(count)`, "Only these 3 rows". */
+  label?: string;
+  /**
+   * The set's Clear — the column's "Clear filter", the phone's "Clear all": the owner drops
+   * the set from wherever it keeps it (`?ids=` out of the address). The table cannot: the
+   * set is the owner's.
+   */
+  onClear: () => void;
+}
+
 /** A column's filter config, falling back to a plain text filter over `filterBy`. */
 export function resolveFilter<T>(col: DataTableColumn<T>): ColumnFilter<T> | null {
   if (col.filter) return col.filter;

@@ -97,7 +97,7 @@ export const es: Dictionary = {
       title: "Imágenes y multimedia",
       short: "Multimedia",
       blurb:
-        "Mostrar lo que se ha subido: una cuadrícula de miniaturas con acciones y pies de foto, el visor a pantalla completa con teclas, deslizamiento y zoom, e imágenes que requieren una descarga autenticada.",
+        "Mostrar lo que se ha subido: una cuadrícula de miniaturas con acciones y pies de foto, el visor a pantalla completa con teclas, deslizamiento y zoom, una imagen que se amplía en su sitio e imágenes que requieren una descarga autenticada.",
     },
     "pie-chart": {
       title: "Gráfico circular",

@@ -63,6 +63,7 @@ import { DEFAULT_ERROR_BOUNDARY_LABELS } from "../components/error-boundary-labe
 import { DEFAULT_AUTHED_IMAGE_LABELS } from "../components/authed-image-labels";
 import { DEFAULT_IMAGE_GRID_LABELS } from "../components/image-grid-labels";
 import { DEFAULT_LIGHTBOX_LABELS } from "../components/lightbox-labels";
+import { DEFAULT_ZOOMABLE_IMAGE_LABELS } from "../components/zoomable-image-labels";
 import { DEFAULT_WRITE_LOCK_LABELS } from "../components/write-lock-labels";
 import { DEFAULT_LEGAL_LABELS } from "../components/legal-labels";
 import { DEFAULT_SIGN_IN_LABELS } from "../auth/sign-in-form-labels";
@@ -223,6 +224,7 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   authedImage: DEFAULT_AUTHED_IMAGE_LABELS,
   imageGrid: DEFAULT_IMAGE_GRID_LABELS,
   lightbox: DEFAULT_LIGHTBOX_LABELS,
+  zoomableImage: DEFAULT_ZOOMABLE_IMAGE_LABELS,
   writeLock: DEFAULT_WRITE_LOCK_LABELS,
   accountState: DEFAULT_ACCOUNT_STATE_LABELS,
   shareCard: DEFAULT_SHARE_CARD_LABELS,

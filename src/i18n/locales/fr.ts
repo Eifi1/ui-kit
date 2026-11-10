@@ -190,6 +190,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
           "retours n’ont pas pu être modifiés et restent sélectionnés.",
         )}`,
       bulkRestored: (count) => `${n(count)} ${plural(count, "retour rétabli", "retours rétablis")}`,
+      focusIds: (count) => (count === 1 ? "Seulement ce retour" : `Seulement ces ${n(count)} retours`),
       bulkRestoreFailed: (count) =>
         `${n(count)} ${plural(count, "retour n’a pas pu être rétabli.", "retours n’ont pas pu être rétablis.")}`,
     },
@@ -406,6 +407,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       rowCount: (total) => n(total),
       columnsCount: (visible, total) => `Colonnes (${n(visible)}/${n(total)})`,
       filterColumn: (column, active) => (active ? `Filtrer ${column} (actif)` : `Filtrer ${column}`),
+      keyFilter: (count) => (count === 1 ? "Seulement cette ligne" : `Seulement ces ${n(count)} lignes`),
       empty: "Aucune entrée",
       actions: "Actions",
       edit: "Modifier",
@@ -873,6 +875,16 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       noPreview: "Aucun aperçu disponible pour ce fichier",
       openInNewTab: "Ouvrir dans un nouvel onglet",
     },
+    zoomableImage: {
+      viewer: (alt) => (alt ? `Image zoomable\u00a0: ${alt}` : "Image zoomable"),
+      hint: "Appuyez sur + ou − pour zoomer et sur 0 pour ajuster à la largeur.",
+      controls: "Zoom",
+      zoomIn: "Zoom avant",
+      zoomOut: "Zoom arrière",
+      fit: "Ajuster à la largeur",
+      level: (percent) => `Zoom ${n(percent)}\u00a0%`,
+      fitted: "Ajustée à la largeur",
+    },
     writeLock: {
       reason: "Vous pouvez consulter ceci, mais pas le modifier.",
       offline: "Nécessite une connexion.",
@@ -1000,8 +1012,10 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
           },
           browser: {
             title: "Ce que votre navigateur enregistre",
-            lead: "Aucun cookie. L’app conserve les éléments suivants dans le stockage de votre navigateur\u00a0:",
+            lead: "L’app ne dépose aucun cookie et enregistre les éléments suivants dans le stockage de votre navigateur\u00a0:",
             tail: "Rien de tout cela ne sert à vous suivre. Les éléments en attente d’envoi nous sont transmis dès que possible. Tout cela disparaît lorsque vous effacez les données du site, et la déconnexion supprime les jetons de connexion.",
+            commercial:
+              "Rien de tout cela ne sert à vous suivre. Les éléments en attente d’envoi nous sont transmis dès que possible. Tout cela disparaît lorsque vous effacez les données du site, et la déconnexion supprime les jetons de connexion. Le paiement se déroule dans une fenêtre de Paddle, sur le propre domaine de Paddle\u202f; ce que cette fenêtre y enregistre (par exemple un cookie de sécurité et des paramètres) relève de la politique de confidentialité de Paddle.",
           },
           rights: {
             title: "Vos droits",

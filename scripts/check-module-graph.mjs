@@ -266,7 +266,11 @@ const BUDGETS = [
   // context in button-look, the reason frames' `data-lock-frame` (FormActions' phone stack)
   // and the legal labels' new words (the terms' commercial `changes`, `acceptWithAge`, the
   // change notice) — meant growth, 1,303 B (363 gzip) over 0.57's 158,750.
-  { label: "the shell set", names: SHELL_SET, max: 160_100 },
+  // 160,538 B (55,686 gzip) in 0.59: the leading slot's full-size targets (ListItem's
+  // `data-slot` marks and the hit areas, Checkbox's box passing a tap to its input; #497),
+  // the dialog footers' FormActions rule (footer-row, #496), BulkActionBar's `clearDisabled`
+  // and the privacy policy's new browser-storage words — meant growth, 485 B (144 gzip).
+  { label: "the shell set", names: SHELL_SET, max: 160_600 },
 ];
 const ENTRY = "\0import-cost";
 async function importCost(names) {

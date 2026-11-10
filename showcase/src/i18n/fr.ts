@@ -100,7 +100,7 @@ export const fr: Dictionary = {
       title: "Images et médias",
       short: "Médias",
       blurb:
-        "Afficher ce qui a été téléversé : une grille de vignettes avec actions et légendes, la visionneuse plein écran avec clavier, balayage et zoom, et des images qui exigent une récupération authentifiée.",
+        "Afficher ce qui a été téléversé : une grille de vignettes avec actions et légendes, la visionneuse plein écran avec clavier, balayage et zoom, une image qui s’agrandit sur place, et des images qui exigent une récupération authentifiée.",
     },
     "pie-chart": {
       title: "Graphique circulaire",

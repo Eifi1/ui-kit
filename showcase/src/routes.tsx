@@ -509,7 +509,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Every value in the active TokenSet, live. Flip the theme or the palette in the top bar and watch this page move — anything that does not move is hardcoded.",
         icon: Palette,
-        components: ["TokenSet", "PALETTES", "applyPersistedTheme", "applyPersistedPalette"],
+        components: ["TokenSet", "PALETTES", "applyPersistedTheme", "createFixedPalette"],
         Body: Foundations,
       },
       {
@@ -893,9 +893,9 @@ export const GROUPS: ShowcaseGroup[] = [
         title: "Images & media",
         short: "Media",
         blurb:
-          "Showing what was uploaded: a grid of thumbnails with actions and captions, the full-screen viewer with keys, swipe and zoom, and images that need a signed-in fetch.",
+          "Showing what was uploaded: a grid of thumbnails with actions and captions, the full-screen viewer with keys, swipe and zoom, a picture that zooms in place, and images that need a signed-in fetch.",
         icon: Images,
-        components: ["ImageGrid", "Lightbox", "AuthedImage", "useAuthedSrc"],
+        components: ["ImageGrid", "Lightbox", "ZoomableImage", "AuthedImage", "useAuthedSrc"],
         Body: () => (
           <>
             <MediaDemo />
@@ -1195,7 +1195,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The row every app draws by hand — a button, a link or a record, with its actions beside it — the row of a menu, and the bar a selection of rows brings up.",
         icon: ListChecks,
-        components: ["List", "ListItem", "useReorder", "MenuItem", "BulkActionBar"],
+        components: ["List", "ListItem", "useReorder", "useRowLeaves", "MenuItem", "BulkActionBar"],
         Body: () => (
           <>
             <ListsMenus />

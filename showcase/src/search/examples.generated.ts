@@ -26,7 +26,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Animation utilities",
     "PALETTES",
     "Every preset, scoped to one card",
-    "createThemeStore · createPaletteStore",
+    "createThemeStore · createFixedPalette",
   ],
   "colour-roles": [
     "Which tone for which status",
@@ -270,6 +270,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
   "media": [
     "ImageGrid — actions, captions and a PDF tile",
     "Lightbox — keys, swipe, zoom, download and a PDF card",
+    "ZoomableImage — a very tall receipt, fitted to the width",
     "AuthedImage — a fake fetcher with a delay and an error",
     "useAuthedSrc — status, type and retry",
     "AuthedImage — errorFallback={null} and stopPropagation",
@@ -505,6 +506,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "ListItem — button, link, external and static rows",
     "ListItem — unread, selected, status, loading and disabled",
     "ListItem — checked: a checklist in sections",
+    "ListItem — a box before the row, and the focus when a row leaves",
     "ListItem — subtitleLines, meta, leading and align",
     "List — density, separator and as",
     "MenuItem — radio, checkbox, danger and disabled",
@@ -531,6 +533,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "fillHeight — a table in a bounded pane",
     "The list page fills the window — FillHeight in an AppShell",
     "Period groups and load more — groupBy, loadMore",
+    "Groups with no rows yet — groupBy keys",
     "Right-to-left",
     "rowActions, toolbar and the empty label",
     "Totals row: a trial balance",

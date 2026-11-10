@@ -55,6 +55,7 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
           : `${n(count)} reports could not be changed and stay selected.`,
       bulkRestored: (count) =>
         count === 1 ? "1 report is back as it was" : `${n(count)} reports are back as they were`,
+      focusIds: (count) => (count === 1 ? "Only this report" : `Only these ${n(count)} reports`),
       bulkRestoreFailed: (count) =>
         count === 1 ? "1 report could not be put back." : `${n(count)} reports could not be put back.`,
     },
@@ -78,6 +79,7 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
       pageRange: (from, to, total) => `${n(from)}–${n(to)} / ${n(total)}`,
       rowCount: (total) => n(total),
       columnsCount: (visible, total) => `Columns (${n(visible)}/${n(total)})`,
+      keyFilter: (count) => (count === 1 ? "Only this row" : `Only these ${n(count)} rows`),
     },
     calendarHeatmap: {
       ...d.calendarHeatmap,
@@ -153,6 +155,10 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
       ...d.lightbox,
       counter: (index, count) => `${n(index)} / ${n(count)}`,
       position: (index, count) => `Image ${n(index)} of ${n(count)}`,
+    },
+    zoomableImage: {
+      ...d.zoomableImage,
+      level: (percent) => `Zoom ${n(percent)}%`,
     },
     translationReview: {
       ...d.translationReview,

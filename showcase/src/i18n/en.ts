@@ -108,7 +108,7 @@ export const en: Dictionary = {
       title: "Images & media",
       short: "Media",
       blurb:
-        "Showing what was uploaded: a grid of thumbnails with actions and captions, the full-screen viewer with keys, swipe and zoom, and images that need a signed-in fetch.",
+        "Showing what was uploaded: a grid of thumbnails with actions and captions, the full-screen viewer with keys, swipe and zoom, a picture that zooms in place, and images that need a signed-in fetch.",
     },
     "pie-chart": {
       title: "Pie chart",

@@ -37,4 +37,5 @@ export const DEFAULT_FEEDBACK_PAGE_LABELS: FeedbackPageLabels = {
   bulkRestored: (count) => (count === 1 ? "1 report is back as it was" : `${count} reports are back as they were`),
   bulkRestoreFailed: (count) =>
     count === 1 ? "1 report could not be put back." : `${count} reports could not be put back.`,
+  focusIds: (count) => (count === 1 ? "Only this report" : `Only these ${count} reports`),
 };

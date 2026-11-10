@@ -1,0 +1,488 @@
+import { act, createEvent, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+import { ZoomableImage } from "../zoomable-image";
+import type { ZoomableImageProps } from "../zoomable-image";
+import { UiKitProvider } from "../../i18n/kit-labels";
+import { UI_KIT_LABELS_DE_CH } from "../../i18n/locales/de-CH";
+import { stubDesktop } from "../../test/viewport";
+
+/**
+ * keksdose live #505: a receipt the supermarket's app shares as one long screenshot,
+ * 1220×11615. Here in a 305px box (a phone's preview column) capped at 600px, so the
+ * picture's own pixels are exactly 4x the fit and every figure below is a round one.
+ *
+ * jsdom lays nothing out and decodes no image: the box's client size is set on the
+ * element, the picture's natural size on the `<img>` before its `load` is fired, and the
+ * box's scroll offsets are read back as the pan (jsdom keeps what is set, unclamped —
+ * the clamping asserted here is the component's own). jsdom 30 has `PointerEvent`, so
+ * the gestures are real pointer events with ids, types and coordinates.
+ */
+const W = 305;
+const H = 600;
+
+function view(props: Partial<ZoomableImageProps> = {}) {
+  const utils = render(<ZoomableImage src="/receipt.png" alt="Receipt" {...props} />);
+  const box = screen.getByRole("region");
+  Object.defineProperty(box, "clientWidth", { configurable: true, value: W });
+  Object.defineProperty(box, "clientHeight", { configurable: true, value: H });
+  return { ...utils, box, img: () => screen.getByAltText(props.alt ?? "Receipt") };
+}
+
+function decode(img: HTMLElement, width = 1220, height = 11615) {
+  Object.defineProperty(img, "naturalWidth", { configurable: true, value: width });
+  Object.defineProperty(img, "naturalHeight", { configurable: true, value: height });
+  fireEvent.load(img);
+}
+
+const width = (img: HTMLElement) => img.style.width;
+const scroll = (box: HTMLElement) => [box.scrollLeft, box.scrollTop];
+const button = (name: string) => screen.getByRole("button", { name });
+
+type PointerKind = "touch" | "mouse" | "pen";
+function pointer(
+  type: "pointerDown" | "pointerMove" | "pointerUp" | "pointerCancel",
+  el: HTMLElement,
+  id: number,
+  x: number,
+  y: number,
+  kind: PointerKind = "touch",
+) {
+  fireEvent[type](el, { pointerId: id, pointerType: kind, isPrimary: id === 1, clientX: x, clientY: y, button: 0 });
+}
+const tap = (el: HTMLElement, x: number, y: number) => {
+  pointer("pointerDown", el, 1, x, y);
+  pointer("pointerUp", el, 1, x, y);
+};
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe("ZoomableImage: fit to width", () => {
+  it("shows the picture at the box's width, in a box named after it that scrolls past its height", () => {
+    const { box, img } = view();
+    expect(box).toHaveAccessibleName("Zoomable image: Receipt");
+    expect(box).toHaveAccessibleDescription("Press + or − to zoom and 0 to fit the width.");
+    expect(box).toHaveAttribute("tabindex", "0");
+    expect(box).toHaveClass("overflow-auto");
+    expect(box.style.maxHeight).toBe("75svh");
+    expect(width(img())).toBe("100%");
+    expect(img()).toHaveClass("max-w-none", "h-auto");
+  });
+
+  it("takes its height from the decoded picture's shape, and only then offers the zoom", () => {
+    const { box, img } = view();
+    // Nothing to zoom before the shape is known: the pan's limits are the picture's height.
+    expect(box.style.aspectRatio).toBe("");
+    expect(screen.queryByRole("group", { name: "Zoom" })).toBeNull();
+    decode(img());
+    expect(box.style.aspectRatio).toBe("1220 / 11615");
+    expect(img()).toHaveAttribute("width", "1220");
+    expect(img()).toHaveAttribute("height", "11615");
+    expect(screen.getByRole("group", { name: "Zoom" })).toBeInTheDocument();
+  });
+
+  it("reserves the box from naturalWidth / naturalHeight before the file arrives", () => {
+    const { box, img } = view({ naturalWidth: 1220, naturalHeight: 11615, maxHeight: 480 });
+    expect(box.style.aspectRatio).toBe("1220 / 11615");
+    expect(box.style.maxHeight).toBe("480px");
+    expect(img()).toHaveAttribute("height", "11615");
+    expect(button("Zoom in")).toBeInTheDocument();
+    // The decoded size wins over the one the app gave.
+    decode(img(), 1000, 3000);
+    expect(box.style.aspectRatio).toBe("1000 / 3000");
+  });
+
+  it("drops the zoom and the reserved shape when the picture cannot be loaded", () => {
+    const { box, img } = view({ naturalWidth: 1220, naturalHeight: 11615 });
+    fireEvent.error(img());
+    expect(screen.getByRole("img", { name: "Receipt: image couldn’t be loaded" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Zoom in" })).toBeNull();
+    expect(box.style.aspectRatio).toBe("");
+  });
+
+  it("leaves the page scrollable at rest: the vertical swipe stays the browser's", () => {
+    const { box, img } = view();
+    decode(img());
+    expect(box).toHaveClass("touch-pan-y");
+    // A one-finger drag at fit is not the viewer's: no pan of its own, no capture of the page.
+    pointer("pointerDown", box, 1, 100, 300);
+    pointer("pointerMove", box, 1, 100, 100);
+    expect(scroll(box)).toEqual([0, 0]);
+    expect(width(img())).toBe("100%");
+  });
+
+  it("is laid out left to right in a right-to-left page; the buttons follow the page", () => {
+    render(
+      <div dir="rtl">
+        <ZoomableImage src="/r.png" alt="R" naturalWidth={10} naturalHeight={100} />
+      </div>,
+    );
+    expect(screen.getByRole("region")).toHaveAttribute("dir", "ltr");
+    expect(screen.getByRole("group", { name: "Zoom" }).closest("[dir]")).toHaveAttribute("dir", "rtl");
+  });
+});
+
+describe("ZoomableImage: buttons and keys", () => {
+  it("zooms in about the middle, refuses at fit and at the ceiling, and fits again", async () => {
+    const { box, img } = view();
+    decode(img());
+    // At fit, − and fit refuse — focusable, `aria-disabled`, so the press that gets back
+    // here keeps its focus.
+    expect(button("Zoom out")).toHaveAttribute("aria-disabled", "true");
+    expect(button("Fit to width")).toHaveAttribute("aria-disabled", "true");
+
+    fireEvent.click(button("Zoom in"));
+    expect(width(img())).toBe("150%");
+    // The middle (152.5, 300) stays put: (152.5 + 0) × 1.5 − 152.5, (300 + 0) × 1.5 − 300.
+    expect(scroll(box)).toEqual([76.25, 150]);
+    expect(box).toHaveClass("touch-none");
+    expect(button("Zoom out")).not.toHaveAttribute("aria-disabled");
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Zoom 38%"));
+
+    // 1.5 → 2.25 → 3.375 → 5.0625 → 6, the ceiling.
+    for (let i = 0; i < 4; i += 1) fireEvent.click(button("Zoom in"));
+    expect(width(img())).toBe("600%");
+    expect(button("Zoom in")).toHaveAttribute("aria-disabled", "true");
+    fireEvent.click(button("Zoom in"));
+    expect(width(img())).toBe("600%");
+
+    fireEvent.click(button("Fit to width"));
+    expect(width(img())).toBe("100%");
+    expect(scroll(box)).toEqual([0, 0]);
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Fitted to width"));
+  });
+
+  it("takes + = − 0 on the box, and leaves Ctrl/⌘ with them to the browser's page zoom", () => {
+    const { box, img } = view();
+    decode(img());
+    fireEvent.keyDown(box, { key: "+" });
+    expect(width(img())).toBe("150%");
+    fireEvent.keyDown(box, { key: "=" });
+    expect(width(img())).toBe("225%");
+    fireEvent.keyDown(box, { key: "-" });
+    expect(width(img())).toBe("150%");
+    fireEvent.keyDown(box, { key: "0" });
+    expect(width(img())).toBe("100%");
+
+    // Not taken, not prevented: the reader who needs larger type keeps the browser's zoom.
+    expect(fireEvent.keyDown(box, { key: "+", ctrlKey: true })).toBe(true);
+    expect(fireEvent.keyDown(box, { key: "+", metaKey: true })).toBe(true);
+    expect(width(img())).toBe("100%");
+    // Any other key is the box's own (the arrows scroll it natively).
+    expect(fireEvent.keyDown(box, { key: "ArrowDown" })).toBe(true);
+  });
+
+  it("ignores the keys while there is nothing to zoom", () => {
+    const { box, img } = view();
+    expect(fireEvent.keyDown(box, { key: "+" })).toBe(true);
+    expect(width(img())).toBe("100%");
+  });
+
+  it("honours maxZoom", () => {
+    const { box, img } = view({ maxZoom: 2 });
+    decode(img());
+    for (let i = 0; i < 3; i += 1) fireEvent.keyDown(box, { key: "+" });
+    expect(width(img())).toBe("200%");
+  });
+});
+
+describe("ZoomableImage: double-tap and double-click", () => {
+  it("double-click toggles between fit and the picture's own pixels, about the click", () => {
+    const { box, img } = view();
+    decode(img());
+    pointer("pointerDown", box, 1, 100, 200, "mouse");
+    pointer("pointerUp", box, 1, 100, 200, "mouse");
+    fireEvent.doubleClick(box, { clientX: 100, clientY: 200 });
+    // 1220 over 305: 4x is 100 %. The point under the cursor stays there: 100 × 4 − 100.
+    expect(width(img())).toBe("400%");
+    expect(scroll(box)).toEqual([300, 600]);
+    fireEvent.doubleClick(box, { clientX: 100, clientY: 200 });
+    expect(width(img())).toBe("100%");
+    expect(scroll(box)).toEqual([0, 0]);
+  });
+
+  it("double-tap does the same on a touch screen, and the dblclick a phone adds does not undo it", () => {
+    const { box, img } = view();
+    decode(img());
+    tap(box, 100, 200);
+    expect(width(img())).toBe("100%");
+    tap(box, 102, 198);
+    expect(width(img())).toBe("400%");
+    // Some phone browsers follow a double tap with a synthesised dblclick; toggled by it
+    // too, the picture would be back at fit before anyone saw it zoom.
+    fireEvent.doubleClick(box, { clientX: 100, clientY: 200 });
+    expect(width(img())).toBe("400%");
+    tap(box, 100, 200);
+    tap(box, 100, 200);
+    expect(width(img())).toBe("100%");
+  });
+
+  it("does not take two slow taps, two far apart, or a drag for a double tap", () => {
+    const { box, img } = view();
+    decode(img());
+    const at = (type: "pointerDown" | "pointerUp", x: number, y: number, time: number) => {
+      const ev = createEvent[type](box, {
+        pointerId: 1,
+        pointerType: "touch",
+        isPrimary: true,
+        clientX: x,
+        clientY: y,
+      });
+      Object.defineProperty(ev, "timeStamp", { value: time });
+      fireEvent(box, ev);
+    };
+    at("pointerDown", 100, 200, 1000);
+    at("pointerUp", 100, 200, 1050);
+    at("pointerDown", 100, 200, 1500);
+    at("pointerUp", 100, 200, 1550);
+    expect(width(img())).toBe("100%");
+    tap(box, 100, 200);
+    tap(box, 250, 500);
+    expect(width(img())).toBe("100%");
+    tap(box, 100, 200);
+    pointer("pointerDown", box, 1, 100, 200);
+    pointer("pointerMove", box, 1, 100, 260);
+    pointer("pointerUp", box, 1, 100, 260);
+    expect(width(img())).toBe("100%");
+  });
+
+  it("does not take a tap the browser cancelled (its own scroll) as a tap", () => {
+    const { box, img } = view();
+    decode(img());
+    tap(box, 100, 200);
+    pointer("pointerDown", box, 1, 100, 200);
+    pointer("pointerCancel", box, 1, 100, 200);
+    expect(width(img())).toBe("100%");
+  });
+});
+
+describe("ZoomableImage: pinch and pan", () => {
+  it("pinches about the fingers' midpoint, pans with two fingers, and pans on the finger left", async () => {
+    const { box, img } = view();
+    decode(img());
+    pointer("pointerDown", box, 1, 100, 100);
+    pointer("pointerDown", box, 2, 200, 100);
+    // Off from the second finger on, before any movement: or the browser scrolls under it.
+    expect(box).toHaveClass("touch-none");
+
+    // 100px apart to 200px: 2x, about the midpoint (150, 100), which then moves to (200, 100).
+    pointer("pointerMove", box, 2, 300, 100);
+    expect(width(img())).toBe("200%");
+    expect(scroll(box)).toEqual([100, 100]);
+
+    // Both fingers 40px up, still 200 apart: the zoom holds and the picture follows them.
+    pointer("pointerMove", box, 1, 100, 60);
+    pointer("pointerMove", box, 2, 300, 60);
+    expect(width(img())).toBe("200%");
+    expect(scroll(box)).toEqual([100, 140]);
+
+    // One finger up: the pinch ends, is announced, and the other finger pans on from here.
+    pointer("pointerUp", box, 2, 300, 60);
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Zoom 50%"));
+    pointer("pointerMove", box, 1, 60, 30);
+    expect(scroll(box)).toEqual([140, 170]);
+    expect(width(img())).toBe("200%");
+  });
+
+  it("keeps a one-finger pan inside the picture", () => {
+    const { box, img } = view();
+    decode(img());
+    fireEvent.click(button("Zoom in"));
+    pointer("pointerDown", box, 1, 100, 100);
+    pointer("pointerMove", box, 1, -5000, -100000);
+    // At 1.5x: 457.5 wide in 305, and 457.5 × 11615 / 1220 tall in 600.
+    expect(box.scrollLeft).toBe(152.5);
+    expect(box.scrollTop).toBeCloseTo(457.5 * (11615 / 1220) - 600);
+    pointer("pointerMove", box, 1, 9000, 9000);
+    expect(scroll(box)).toEqual([0, 0]);
+  });
+
+  it("does not zoom below fit or past the ceiling with a pinch", () => {
+    const { box, img } = view();
+    decode(img());
+    pointer("pointerDown", box, 1, 100, 100);
+    pointer("pointerDown", box, 2, 200, 100);
+    pointer("pointerMove", box, 2, 110, 100);
+    expect(width(img())).toBe("100%");
+    pointer("pointerMove", box, 2, 5000, 100);
+    expect(width(img())).toBe("600%");
+  });
+
+  it("starts each touch afresh, whatever a lost pointerup left behind", () => {
+    const { box, img } = view();
+    decode(img());
+    // A finger whose lift never arrived …
+    pointer("pointerDown", box, 1, 100, 100);
+    // … and the next touch (primary again) is one finger, not the second of a pinch.
+    fireEvent.pointerDown(box, { pointerId: 7, pointerType: "touch", isPrimary: true, clientX: 100, clientY: 100 });
+    fireEvent.pointerMove(box, { pointerId: 7, pointerType: "touch", isPrimary: true, clientX: 300, clientY: 100 });
+    expect(width(img())).toBe("100%");
+    expect(box).toHaveClass("touch-pan-y");
+  });
+
+  it("drags a zoomed picture with the mouse, and leaves a fitted one alone", () => {
+    const { box, img } = view();
+    decode(img());
+    expect(box).toHaveClass("cursor-zoom-in");
+    pointer("pointerDown", box, 1, 100, 100, "mouse");
+    pointer("pointerMove", box, 1, 50, 40, "mouse");
+    expect(scroll(box)).toEqual([0, 0]);
+    pointer("pointerUp", box, 1, 50, 40, "mouse");
+
+    fireEvent.keyDown(box, { key: "+" });
+    const [left, top] = scroll(box);
+    expect(box).toHaveClass("cursor-grab");
+    pointer("pointerDown", box, 1, 100, 100, "mouse");
+    expect(box).toHaveClass("cursor-grabbing");
+    pointer("pointerMove", box, 1, 50, 40, "mouse");
+    expect(scroll(box)).toEqual([left + 50, top + 60]);
+    pointer("pointerUp", box, 1, 50, 40, "mouse");
+    expect(box).toHaveClass("cursor-grab");
+  });
+});
+
+describe("ZoomableImage: wheel and touchmove", () => {
+  it("zooms on ⌘/Ctrl + wheel (a trackpad pinch) about the cursor, and leaves a plain wheel to scroll", () => {
+    const { box, img } = view();
+    decode(img());
+    // Not prevented: the box, then the page, scrolls as anywhere else.
+    expect(fireEvent.wheel(box, { deltaY: 100, clientX: 100, clientY: 100 })).toBe(true);
+    expect(width(img())).toBe("100%");
+
+    expect(fireEvent.wheel(box, { deltaY: -100, ctrlKey: true, clientX: 100, clientY: 100 })).toBe(false);
+    const zoom = Math.exp(0.2);
+    expect(parseFloat(width(img()))).toBeCloseTo(zoom * 100);
+    expect(box.scrollLeft).toBeCloseTo(100 * zoom - 100);
+    expect(box.scrollTop).toBeCloseTo(100 * zoom - 100);
+
+    expect(fireEvent.wheel(box, { deltaY: 500, metaKey: true, clientX: 100, clientY: 100 })).toBe(false);
+    expect(width(img())).toBe("100%");
+  });
+
+  it("does not take the wheel before there is anything to zoom", () => {
+    const { box } = view();
+    expect(fireEvent.wheel(box, { deltaY: -100, ctrlKey: true })).toBe(true);
+  });
+
+  it("keeps two fingers from the browser's scroll and page zoom, and leaves one alone", () => {
+    const { box, img } = view();
+    decode(img());
+    const move = (fingers: number) => {
+      const ev = new Event("touchmove", { bubbles: true, cancelable: true });
+      Object.defineProperty(ev, "touches", { value: Array.from({ length: fingers }, () => ({})) });
+      return fireEvent(box, ev);
+    };
+    expect(move(1)).toBe(true);
+    expect(move(2)).toBe(false);
+  });
+});
+
+describe("ZoomableImage: motion", () => {
+  /** The animation frames, run by hand at a given time: what the browser would paint. */
+  function stubFrames() {
+    const frames = new Map<number, FrameRequestCallback>();
+    let next = 0;
+    vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => {
+      frames.set((next += 1), cb);
+      return next;
+    });
+    vi.stubGlobal("cancelAnimationFrame", (handle: number) => frames.delete(handle));
+    return {
+      pending: () => frames.size,
+      run: (at: number) =>
+        act(() => {
+          for (const [handle, cb] of [...frames]) {
+            frames.delete(handle);
+            cb(at);
+          }
+        }),
+    };
+  }
+
+  it("eases a step when motion is welcome", () => {
+    stubDesktop();
+    const frames = stubFrames();
+    const { img } = view();
+    decode(img());
+    const t0 = performance.now();
+    fireEvent.click(button("Zoom in"));
+    // Nothing painted yet; half-way through the ease-out it is most of the way there.
+    expect(width(img())).toBe("100%");
+    frames.run(t0 + 80);
+    const mid = parseFloat(width(img()));
+    expect(mid).toBeGreaterThan(125);
+    expect(mid).toBeLessThan(150);
+    frames.run(t0 + 1000);
+    expect(width(img())).toBe("150%");
+    expect(frames.pending()).toBe(0);
+  });
+
+  it("jumps under prefers-reduced-motion", () => {
+    stubDesktop({ reducedMotion: true });
+    const frames = stubFrames();
+    const { img } = view();
+    decode(img());
+    fireEvent.click(button("Zoom in"));
+    expect(width(img())).toBe("150%");
+    expect(frames.pending()).toBe(0);
+  });
+
+  it("a touch stops a step mid-way", () => {
+    stubDesktop();
+    const frames = stubFrames();
+    const { box, img } = view();
+    decode(img());
+    fireEvent.click(button("Zoom in"));
+    pointer("pointerDown", box, 1, 100, 100);
+    expect(frames.pending()).toBe(0);
+    expect(width(img())).toBe("100%");
+  });
+});
+
+describe("ZoomableImage: a new picture, and the words", () => {
+  it("starts a new src over at fit and at the top", () => {
+    const { box, img, rerender } = view();
+    decode(img());
+    fireEvent.keyDown(box, { key: "+" });
+    expect(width(img())).toBe("150%");
+    rerender(<ZoomableImage src="/other.png" alt="Receipt" />);
+    expect(width(img())).toBe("100%");
+    expect(screen.getByRole("region").scrollTop).toBe(0);
+    expect(screen.queryByRole("button", { name: "Zoom in" })).toBeNull();
+  });
+
+  it("speaks the provider's catalogue, and the labels prop wins", async () => {
+    render(
+      <UiKitProvider labels={UI_KIT_LABELS_DE_CH}>
+        <ZoomableImage src="/beleg.png" alt="Beleg" naturalWidth={1220} naturalHeight={11615} />
+        <ZoomableImage src="/b.png" alt="" naturalWidth={10} naturalHeight={10} labels={{ zoomIn: "Näher" }} />
+      </UiKitProvider>,
+    );
+    expect(screen.getByRole("region", { name: "Zoombares Bild: Beleg" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Zoombares Bild" })).toBeInTheDocument();
+    // Swiss: "ss" for "ß".
+    expect(screen.getAllByRole("button", { name: "Vergrössern" })).toHaveLength(1);
+    expect(screen.getByRole("button", { name: "Näher" })).toBeInTheDocument();
+    expect(screen.getAllByRole("group", { name: "Zoom" })).toHaveLength(2);
+  });
+
+  it("loads through the app's fetcher, as AuthedImage does", async () => {
+    Object.defineProperty(URL, "createObjectURL", { configurable: true, value: () => "blob:receipt" });
+    Object.defineProperty(URL, "revokeObjectURL", { configurable: true, value: () => {} });
+    try {
+      const fetcher = vi.fn(async () => new Blob(["png"], { type: "image/png" }));
+      render(<ZoomableImage src="/api/files/7" alt="Receipt" fetcher={fetcher} />);
+      expect(screen.queryByRole("button", { name: "Zoom in" })).toBeNull();
+      const img = await screen.findByAltText("Receipt");
+      expect(fetcher).toHaveBeenCalledWith("/api/files/7", expect.objectContaining({ signal: expect.anything() }));
+      expect(img).toHaveAttribute("src", "blob:receipt");
+      decode(img);
+      expect(button("Zoom in")).toBeInTheDocument();
+    } finally {
+      Reflect.deleteProperty(URL, "createObjectURL");
+      Reflect.deleteProperty(URL, "revokeObjectURL");
+    }
+  });
+});

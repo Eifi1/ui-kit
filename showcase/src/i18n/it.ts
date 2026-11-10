@@ -94,7 +94,7 @@ export const it: Dictionary = {
       title: "Immagini e media",
       short: "Media",
       blurb:
-        "Mostrare ciò che è stato caricato: una griglia di miniature con azioni e didascalie, il visualizzatore a schermo intero con tasti, swipe e zoom, e immagini che richiedono un recupero autenticato.",
+        "Mostrare ciò che è stato caricato: una griglia di miniature con azioni e didascalie, il visualizzatore a schermo intero con tasti, swipe e zoom, un’immagine che si ingrandisce sul posto e immagini che richiedono un recupero autenticato.",
     },
     "pie-chart": {
       title: "Grafico a torta",

@@ -25,9 +25,9 @@ snapshot of the three apps, the per-repo to-dos and the reviews' list as written
 | § | Section | Shipped in | Amended by |
 |---|---|---|---|
 | 1 | Where each one stands | — (archived) | |
-| 2 | Decisions | — | §7.8; decision 9 (0.28.1); decision 7 by billing §8, §9 (Paddle); decisions 10 (0.51.3; keksdose's legal audit, 0.58) and 11 (0.51.4) |
+| 2 | Decisions | — | §7.8; decision 9 (0.28.1); decision 7 by billing §8, §9 (Paddle); decisions 10 (0.51.3; keksdose's legal audit, 0.58; its scan for absolute claims, 0.59) and 11 (0.51.4) |
 | 3 | The page contract | ui-kit 0.28.0 | §7.3, §7.6, §7.9; 0.28.1 (translation note, `AuthLayout` footer); landing-demo §4.3 (robots, sitemap); 0.51.3 (as-of line, keksdose's stored version); 0.51.4 (summary, footer's optional pages); 0.55 (the footer's `siteLinks` row); 0.58 (§3.4's minimum age, §3.5 announcing a change) |
-| 4 | The content contract | ui-kit 0.28.0 | §7.1–§7.4; 0.28.1 (`language` section); 0.32.0 (commercial disclaimer); 0.51.3 (`changes` wording, `updated` label); 0.51.4 (`summary`, `links.security`/`accessibility` labels); 0.58 (`changes`' commercial variant, the `browser` tail, `acceptWithAge`, `changeNotice`) |
+| 4 | The content contract | ui-kit 0.28.0 | §7.1–§7.4; 0.28.1 (`language` section); 0.32.0 (commercial disclaimer); 0.51.3 (`changes` wording, `updated` label); 0.51.4 (`summary`, `links.security`/`accessibility` labels); 0.58 (`changes`' commercial variant, the `browser` tail, `acceptWithAge`, `changeNotice`); 0.59 (the `browser` lead and its commercial variant) |
 | 5 | What the kit adds, what stays app-side | ui-kit 0.28.0, server-kit 0.2.1 | §7.5; 0.28.1; 0.32.0; 0.55 (`ConsentAgainNotice`); 0.58 (`LegalChangeNotice`, `LegalOperator.minAge`) |
 | 6 | Per repo | — (archived) | |
 | 7 | Settled after the reviews | — | index; folded items point to their § |
@@ -63,9 +63,11 @@ before the 0.28 round, and how far their wording differed.
    purchase and the privacy policy names it as a recipient and independent controller of
    the buyer's data (billing §12.25); the prices go into the app's terms; and the imprint
    takes the kit's **commercial disclaimer**, `<LegalKitSection section="disclaimer"
-   variant="commercial" />` (ui-kit 0.32.0, §4.3), and the terms the **commercial changes
+   variant="commercial" />` (ui-kit 0.32.0, §4.3), the terms the **commercial changes
    clause**, `<LegalKitSection section="changes" variant="commercial" />` (ui-kit 0.58,
-   decision 10). (Marcel, after the reviews; amended by the billing round.)
+   decision 10), and the privacy policy the **commercial browser section**,
+   `<LegalKitSection section="browser" variant="commercial" />` (ui-kit 0.59, decision
+   10). (Marcel, after the reviews; amended by the billing round.)
 8. **Kurvenschmiede is a closed beta** like the other two, so all three carry the same
    disclaimer, warranty and notices. (Marcel, after the reviews.)
 9. **German is the binding language** (Marcel, after the adoption, 0.28.1). The lawyer
@@ -114,6 +116,21 @@ before the 0.28 round, and how far their wording differed.
       - The privacy policy's browser-storage section drops "everything else stays on your
         device", which read as "never leaves"; each app says what its account keeps
         (§4.3).
+    - **keksdose's scan for absolute claims** (Marcel, 2026-11-10; built in 0.59): the
+      browser-storage section's lead "No cookies. The app keeps the following in your
+      browser's storage:" becomes "The app sets no cookies and stores the following in your
+      browser's storage:" (de-CH «Die App setzt keine Cookies und legt Folgendes im Speicher
+      Ihres Browsers ab:»): the claim is about the app, not about a pay host's checkout
+      script. The section's commercial variant (`variant="commercial"`, keyed as the
+      disclaimer's, §4.3) adds one sentence after the tail: the payment runs in a Paddle
+      window on Paddle's own domain, and what that window stores there falls under Paddle's
+      privacy policy. A headless probe of Paddle.js v2 in the sandbox (an invalid token, so
+      the full form was not reached) found that the app's own pay page stores nothing, while
+      the checkout frame, served from Paddle's domain, keeps a Cloudflare security cookie and
+      settings in its own storage and loads Paddle's services (error monitoring, translation,
+      fonts). The sentence names no entry: the full sandbox check, through to the completed
+      form, is still open and runs before billing goes on. "Nothing of this tracks you" and
+      the 30-day notice stay: promises every app keeps.
 11. **The benchmark's optional rows** (Marcel, 2026-10-29: "you can already add the
     optional points"; ui-kit 0.51.4):
     - A plain-language summary at the top of the terms and the privacy policy, the full
@@ -353,7 +370,7 @@ On the effective date the page shows the new text, and its `updated` is that dat
 | `legal_basis` | kit + app | the kit's FADP/GDPR paragraph names contract and legitimate interest only. **Consent is the app's**: an app that relies on it says so in its paragraph (keksdose's consent list); claiming it for every app would imply a withdrawal right with nothing behind it. Kurvenschmiede's paragraph: "no tracking, no analytics, no advertising" |
 | `third_parties` | app | hosting and processors |
 | *app sections* | app | keksdose's `price_pool`, `location`, `documents_ai` |
-| `browser` | kit + app | the kit's text around the app's list of what it keeps (§4.3), then an optional app paragraph: what sign-out removes beyond the tokens, what stays |
+| `browser` | kit + app | the kit's text around the app's list of what it keeps (§4.3), then an optional app paragraph: what sign-out removes beyond the tokens, what stays; `variant="commercial"`, for an app that bills (decision 7), the same with the checkout's sentence after the tail (0.59, decision 10) |
 | `transfers` | app | which providers, in which countries |
 | `retention` | app | |
 | `rights` | kit + app | the kit's list of rights, then the app's paragraph (how to export, how to delete), then the kit's sentence about the supervisory authorities |
@@ -414,13 +431,21 @@ The texts are keksdose's unless marked otherwise.
   - **browser**, "What your browser stores" (Kurvenschmiede's section; every app keeps
     more than local storage — IndexedDB, Cache Storage, the crash reporter's buffer — so
     the text says "your browser's storage" and takes the app's entries as a list):
-    - No cookies. The app keeps the following in your browser's storage:
+    - The app sets no cookies and stores the following in your browser's storage: (0.59,
+      decision 10: "No cookies." until then; the claim is about the app, not about a pay
+      host's checkout script.)
     - `{entries}`, rendered as a list, one item per entry, from the app.
     - None of it is used to track you. Entries waiting to be sent are sent to us as soon
       as they can be. All of it disappears when you clear the site's data, and signing out
       removes the sign-in tokens. (0.58, decision 10: without "everything else stays on
       your device", which read as "never leaves it"; what an account keeps is the app's
       to say.)
+    - **commercial** (`variant="commercial"`, the same title, lead and list; decisions 7
+      and 10, ui-kit 0.59): the same tail, then: The payment runs in a Paddle window on
+      Paddle's own domain; what that window stores there (such as a security cookie and
+      settings) is governed by Paddle's privacy policy. (After the tail, not before it: the
+      tail's promises are about the app's own list. No entry named until the full sandbox
+      check has run.)
     - → *app paragraph*
   - **rights**, "Your rights":
     - lead: You have the right to access, rectification, erasure, restriction, data
@@ -529,7 +554,8 @@ would repeat the fr Imprint link's label, so a screen reader would read it twice
   the browser section it takes `entries` as a list of strings, rendered as a `<ul>`. The
   disclaimer takes `variant`: `"non-commercial"` (default) or `"commercial"` (0.32.0); so
   does the terms' `changes` section (0.58), with
-  `sections.terms.changes.commercial`.
+  `sections.terms.changes.commercial`, and the privacy policy's `browser` section (0.59),
+  with `sections.privacy.browser.commercial`, the tail it shows instead.
 - **`LegalSection`** gains automatic numbering inside a `LegalPage`, its key as id, and
   `{ref:key}` resolution. Its API stays the same otherwise.
 - **`LegalLinks`**:
@@ -600,8 +626,9 @@ mail, and the list's shape is server-kit's schema too.
 - an announced change (§3.5): the new text at its `href`, `GET /api/v1/legal/changes`,
   the one mail to every active account, and the `LegalChangeNotice` in its signed-in
   frame;
-- in the release that turns its billing on: the commercial disclaimer and the commercial
-  changes clause, and the Merchant of Record in its terms and privacy policy (decision 7).
+- in the release that turns its billing on: the commercial disclaimer, the commercial
+  changes clause and the commercial browser section, and the Merchant of Record in its
+  terms and privacy policy (decision 7).
 
 ## 6. Per repo
 

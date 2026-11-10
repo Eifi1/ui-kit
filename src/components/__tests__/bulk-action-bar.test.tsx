@@ -274,3 +274,33 @@ describe("BulkActionBar 0.11.0 (keksdose's invoice-lines and payees bars)", () =
     expect(screen.getByRole("button", { name: "Clear selection" })).toHaveTextContent("Clear selection");
   });
 });
+
+describe("BulkActionBar clearDisabled (0.59, keksdose dev #678)", () => {
+  // The feedback inbox's desktop strip stands open at "0 selected"; its Clear there cleared
+  // nothing and read as a clear of the list, which Marcel pressed to leave a notice's view.
+  it("draws the Clear refused: focusable, every press swallowed", () => {
+    const onClear = vi.fn();
+    render(bar(0, { open: true, variant: "sticky", clearDisabled: true, onClear }));
+    const clear = screen.getByRole("button", { name: "Clear selection" });
+    expect(clear).toHaveAttribute("aria-disabled", "true");
+    expect(clear).not.toBeDisabled();
+    fireEvent.click(clear);
+    expect(onClear).not.toHaveBeenCalled();
+  });
+
+  it("keeps the focus on a Clear pressed into the state that refuses it", () => {
+    const { rerender } = render(bar(2, { open: true, variant: "sticky" }));
+    const clear = screen.getByRole("button", { name: "Clear selection" });
+    act(() => clear.focus());
+    rerender(bar(0, { open: true, variant: "sticky", clearDisabled: true }));
+    expect(clear).toHaveFocus();
+    expect(clear).toHaveAttribute("aria-disabled", "true");
+  });
+
+  it("refuses the floating card's X the same way, and leaves it alone by default", () => {
+    const { rerender } = render(bar(0, { open: true, clearDisabled: true }));
+    expect(screen.getByRole("button", { name: "Clear selection" })).toHaveAttribute("aria-disabled", "true");
+    rerender(bar(0, { open: true }));
+    expect(screen.getByRole("button", { name: "Clear selection" })).not.toHaveAttribute("aria-disabled");
+  });
+});

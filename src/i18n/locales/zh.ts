@@ -173,6 +173,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       bulkChanged: (count, value) => `已将 ${n(count)} 条反馈设为“${value}”`,
       bulkFailed: (count) => `${n(count)} 条反馈无法更改，仍保持选中。`,
       bulkRestored: (count) => `已恢复 ${n(count)} 条反馈`,
+      focusIds: (count) => `仅显示这 ${n(count)} 条反馈`,
       bulkRestoreFailed: (count) => `${n(count)} 条反馈无法恢复。`,
     },
     feedbackDetail: {
@@ -385,6 +386,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       rowCount: (total) => n(total),
       columnsCount: (visible, total) => `列（${n(visible)}/${n(total)}）`,
       filterColumn: (column, active) => (active ? `筛选${column}（已启用）` : `筛选${column}`),
+      keyFilter: (count) => `仅显示这 ${n(count)} 行`,
       empty: "暂无条目",
       actions: "操作",
       edit: "编辑",
@@ -834,6 +836,16 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       noPreview: "此文件无法预览",
       openInNewTab: "在新标签页中打开",
     },
+    zoomableImage: {
+      viewer: (alt) => (alt ? `可缩放图片：${alt}` : "可缩放图片"),
+      hint: "按 + 或 − 缩放，按 0 适应宽度。",
+      controls: "缩放",
+      zoomIn: "放大",
+      zoomOut: "缩小",
+      fit: "适应宽度",
+      level: (percent) => `缩放 ${n(percent)}%`,
+      fitted: "已适应宽度",
+    },
     writeLock: {
       reason: "仅可查看，无法修改。",
       offline: "需要网络连接。",
@@ -956,8 +968,10 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
           },
           browser: {
             title: "您的浏览器存储什么",
-            lead: "不使用 Cookie。应用程序会在您浏览器的存储中保留以下内容：",
+            lead: "应用程序不设置 Cookie，并会在您浏览器的存储中保存以下内容：",
             tail: "这些内容都不会用于跟踪您。等待发送的条目会尽快发送给我们。清除网站数据后，这些内容会全部消失；退出登录会删除登录令牌。",
+            commercial:
+              "这些内容都不会用于跟踪您。等待发送的条目会尽快发送给我们。清除网站数据后，这些内容会全部消失；退出登录会删除登录令牌。付款在 Paddle 自有域名上的 Paddle 窗口中进行；该窗口在那里存储的内容（例如一个安全 Cookie 和一些设置）受 Paddle 隐私政策的约束。",
           },
           rights: {
             title: "您的权利",

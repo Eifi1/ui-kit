@@ -1,5 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
+import { useSearchParams } from "react-router";
 import {
+  Button,
   DEFAULT_FEEDBACK_SWIPE,
   DataTable,
   FeedbackAwaitingToggle,
@@ -219,6 +221,17 @@ export function FeedbackInboxDemo() {
   const [rows, setRows] = useState(SEED);
   const mine = page === "mine";
   const publicParts = parts === "public";
+  // A notice's link (§13.7): `?ids=` on the page's own address, as a notification opens it.
+  const [params, setParams] = useSearchParams();
+  const openNotice = () =>
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.set("ids", "57,55");
+        return next;
+      },
+      { replace: true },
+    );
 
   const patch = useCallback(
     (id: number, change: (row: FeedbackRecord) => FeedbackRecord) =>
@@ -314,6 +327,9 @@ export function FeedbackInboxDemo() {
               { value: "private", label: "Without" },
             ]}
           />
+          <Button variant="secondary" size="sm" onClick={openNotice} disabled={params.has("ids")}>
+            Open a notice&apos;s link (?ids=57,55)
+          </Button>
         </div>
         <FeedbackInbox
           rows={list}
@@ -354,7 +370,16 @@ export function FeedbackInboxDemo() {
           visibility of all of them: the page&apos;s {code("update")}, once per report, so each goes through the
           server&apos;s own rules — no bulk endpoint. It notifies nobody: a status alone never does, only a reply. One
           Undo puts each report back to what it was. A report whose change fails stays ticked, to try again;{" "}
-          {code("selectable={false}")} turns it off.
+          {code("selectable={false}")} turns it off. At &ldquo;0 selected&rdquo; the desktop strip&apos;s Clear
+          selection is refused: there it would clear nothing.
+        </Note>
+        <Note>
+          <strong>A notice&apos;s reports</strong>: {code("?ids=57,55")} — what a notification about several reports
+          opens — shows exactly those, as the # column&apos;s filter (&ldquo;Only these 2 reports&rdquo;; on a phone, in
+          the Filters sheet). Its Clear filter, or the sheet&apos;s Clear all, takes {code("ids")} out of the address.
+          The view keeps the filters the list saved out of the way — neither applied nor overwritten — and gives them
+          back once the set goes; the sort, the page size and the columns stay the person&apos;s. One report is a set of
+          one.
         </Note>
       </div>
     </Example>

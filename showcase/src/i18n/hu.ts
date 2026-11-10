@@ -103,7 +103,7 @@ export const hu: Dictionary = {
       title: "Képek és média",
       short: "Média",
       blurb:
-        "A feltöltöttek megjelenítése: bélyegképrács műveletekkel és képaláírásokkal, a teljes képernyős nézegető billentyűkkel, húzással és nagyítással, valamint bejelentkezést igénylő képek.",
+        "A feltöltöttek megjelenítése: bélyegképrács műveletekkel és képaláírásokkal, a teljes képernyős nézegető billentyűkkel, húzással és nagyítással, a helyben nagyítható kép, valamint bejelentkezést igénylő képek.",
     },
     "pie-chart": {
       title: "Kördiagram",

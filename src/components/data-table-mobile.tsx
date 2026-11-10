@@ -9,7 +9,7 @@ import { dirOf, type Direction } from "../lib/direction";
 import { defaultFilterState, isFilterActive, resolveFilter } from "./data-table-filters";
 import type { ColumnFilter, FilterValue } from "./data-table-filters";
 import type { SortCycle, SortState } from "./data-table-sort";
-import { FilterPopover } from "./data-table-filter-popover";
+import { FilterPopover, KeySetPanel } from "./data-table-filter-popover";
 import { SwipeableRow, type SwipeAction } from "./swipeable-row";
 import { DialogFrame } from "./dialog-frame";
 import { Checkbox } from "./checkbox";
@@ -978,6 +978,7 @@ export function MobileFilters<T>({
   onSetFilter,
   onClearFilter,
   onClearAll,
+  keySet,
   labels,
   locale,
 }: {
@@ -989,6 +990,8 @@ export function MobileFilters<T>({
   onSetFilter: (key: string, value: FilterValue) => void;
   onClearFilter: (key: string) => void;
   onClearAll: () => void;
+  /** 0.59: the `keyFilter` set — its column's section says the set and clears it. */
+  keySet?: { column: string; label: string };
   labels: DataTableLabels;
   locale?: string;
 }) {
@@ -999,17 +1002,24 @@ export function MobileFilters<T>({
   const [dir, setDir] = useState<Direction>("ltr");
   const [expanded, setExpanded] = useState<string | null>(null);
 
+  // The set's column has a section of its own while the set is on, with a filter of its
+  // own or none (0.59): `filter` is then null.
+  const setColumn = keySet?.column;
   const filterable = useMemo(
     () =>
       columns
         .map((col) => ({ col, filter: !isServer || hasFilterCallback ? resolveFilter(col) : null }))
-        .filter((x): x is { col: DataTableColumn<T>; filter: ColumnFilter<T> } => !!x.filter),
-    [columns, isServer, hasFilterCallback],
+        .filter(
+          (x): x is { col: DataTableColumn<T>; filter: ColumnFilter<T> | null } =>
+            !!x.filter || x.col.key === setColumn,
+        ),
+    [columns, isServer, hasFilterCallback, setColumn],
   );
 
   if (filterable.length === 0) return null;
 
   const activeCount = filterable.filter(({ col }) => {
+    if (col.key === setColumn) return true;
     const s = filters[col.key];
     return s && isFilterActive(s);
   }).length;
@@ -1077,7 +1087,8 @@ export function MobileFilters<T>({
       >
         {filterable.map(({ col, filter }) => {
           const state = filters[col.key];
-          const active = !!state && isFilterActive(state);
+          const setHere = keySet?.column === col.key ? keySet : undefined;
+          const active = !!setHere || (!!state && isFilterActive(state));
           const isItemOpen = expanded === col.key;
           return (
             <div key={col.key}>
@@ -1097,15 +1108,21 @@ export function MobileFilters<T>({
               </button>
               {isItemOpen && (
                 <div className="px-4 pb-3">
-                  <FilterPopover
-                    column={col}
-                    state={state ?? defaultFilterState(filter)}
-                    onChange={(next) => onSetFilter(col.key, next)}
-                    onClear={() => onClearFilter(col.key)}
-                    selectOptions={selectOptionsByKey[col.key] ?? []}
-                    labels={labels}
-                    locale={locale}
-                  />
+                  {setHere ? (
+                    <KeySetPanel label={setHere.label} onClear={() => onClearFilter(col.key)} labels={labels} />
+                  ) : (
+                    filter && (
+                      <FilterPopover
+                        column={col}
+                        state={state ?? defaultFilterState(filter)}
+                        onChange={(next) => onSetFilter(col.key, next)}
+                        onClear={() => onClearFilter(col.key)}
+                        selectOptions={selectOptionsByKey[col.key] ?? []}
+                        labels={labels}
+                        locale={locale}
+                      />
+                    )
+                  )}
                 </div>
               )}
             </div>

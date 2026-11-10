@@ -88,6 +88,8 @@ describe("uiKitLabelsEn (@eifi1/ui-kit/i18n/en)", () => {
       "combobox.selectedCount",
       "dataTable.columnsCount",
       "dataTable.filterResults",
+      // 0.59: a `keyFilter` set's panel (keksdose dev #678).
+      "dataTable.keyFilter",
       "dataTable.pageChanged",
       "dataTable.pageRange",
       "dataTable.rowCount",
@@ -102,6 +104,8 @@ describe("uiKitLabelsEn (@eifi1/ui-kit/i18n/en)", () => {
       "feedbackPage.bulkFailed",
       "feedbackPage.bulkRestoreFailed",
       "feedbackPage.bulkRestored",
+      // 0.59: the `?ids=` set (keksdose dev #678).
+      "feedbackPage.focusIds",
       "feedbackPage.reworkChip",
       "feedbackPublic.comments",
       "feedbackPublic.page",
@@ -164,6 +168,8 @@ describe("uiKitLabelsEn (@eifi1/ui-kit/i18n/en)", () => {
       "translationReview.progress",
       "verifyEmail.resendIn",
       "wizard.step",
+      // 0.59: ZoomableImage's announced zoom level.
+      "zoomableImage.level",
     ]);
   });
 

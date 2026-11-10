@@ -204,8 +204,8 @@ function DemoHeader() {
   );
 }
 
-/** Whether the made-up app takes payment: the disclaimer and the changes clause switch
- *  to their commercial texts together (`variant="commercial"`). */
+/** Whether the made-up app takes payment: the disclaimer, the browser-storage section and
+ *  the changes clause switch to their commercial texts together (`variant="commercial"`). */
 type Billing = "off" | "on";
 const variantOf = (billing: Billing): LegalDisclaimerVariant => (billing === "on" ? "commercial" : "non-commercial");
 
@@ -226,7 +226,7 @@ const impressum = (billing: Billing) => (
   </>
 );
 
-const PRIVACY = (
+const privacy = (billing: Billing) => (
   <>
     <LegalKitSection section="controller" />
     <LegalSection
@@ -244,6 +244,7 @@ const PRIVACY = (
     />
     <LegalKitSection
       section="browser"
+      variant={variantOf(billing)}
       entries={["your sign-in tokens", "the language and theme you picked", "error reports, until they are sent"]}
     >
       Signing out also removes the offline copy of your data.
@@ -285,7 +286,7 @@ const terms = (billing: Billing) => (
 
 const SECTIONS: Record<LegalPageKey, (billing: Billing) => React.JSX.Element> = {
   impressum,
-  privacy: () => PRIVACY,
+  privacy,
   terms,
 };
 
@@ -366,9 +367,11 @@ function Legal028Demo() {
           {code("{ref:retention}")} in an app text becomes that section&apos;s number, linked — section 2 points forward
           to section 7. Sections must be direct children of the page, or inside fragments or arrays: the page reads the
           order before anything renders. The page also calls {code("useNoIndex()")}; this preview passes{" "}
-          {code("noIndex={false}")}. With billing on, the imprint&apos;s disclaimer and the terms&apos; changes clause
-          take {code('variant="commercial"')}: a commercial service sold through a Merchant of Record, and the refund of
-          a paid period beyond a change&apos;s effective date — words an app shows only once it takes payment.
+          {code("noIndex={false}")}. With billing on, the imprint&apos;s disclaimer, the privacy policy&apos;s browser
+          section and the terms&apos; changes clause take {code('variant="commercial"')}: a commercial service sold
+          through a Merchant of Record, where the checkout&apos;s window stores its own entries (on Paddle&apos;s
+          domain, under Paddle&apos;s privacy policy), and the refund of a paid period beyond a change&apos;s effective
+          date — words an app shows only once it takes payment.
         </Note>
       </div>
     </Example>

@@ -3,7 +3,6 @@ import ReactDOM from "react-dom/client";
 import { HashRouter } from "react-router";
 import {
   applyPersistedContrast,
-  applyPersistedPalette,
   applyPersistedTextSize,
   applyPersistedTheme,
   applyTextSize,
@@ -11,7 +10,7 @@ import {
 } from "@eifi1/ui-kit";
 import { Showcase } from "./showcase";
 import { LOCALE_STORAGE_KEY, LocaleProvider, dictionaryFor } from "./i18n";
-import { CONTRAST_KEY, PALETTE_KEY, TEXT_SIZE_KEY, THEME_KEY, URL_TEXT_SIZE } from "./stores";
+import { CONTRAST_KEY, TEXT_SIZE_KEY, THEME_KEY, URL_TEXT_SIZE, applyShowcasePalette } from "./stores";
 import "./app.css";
 // LanguageMenu's trigger and CurrencyFlag render `fi fi-xx` spans. Without this
 // stylesheet they are empty boxes — and `flag-icons` is a hard dependency of the
@@ -22,9 +21,11 @@ import "flag-icons/css/flag-icons.min.css";
 // Pre-hydration, at module scope, BEFORE createRoot — the no-flash boot the README
 // describes. Resolve the persisted preference, put `.dark` on <html>, write the
 // active preset's tokens inline. The first paint is already correct, so the page
-// demonstrates the pattern by depending on it rather than by describing it.
+// demonstrates the pattern by depending on it rather than by describing it. The preset
+// is the top bar's choice, the showcase's own; an app paints its one palette here with
+// `createFixedPalette`'s `applyPalette(mode)`.
 const mode = applyPersistedTheme(THEME_KEY);
-applyPersistedPalette(PALETTE_KEY, mode);
+applyShowcasePalette(mode);
 // The text size and the contrast, the same way (0.32): `data-text-size` sets the root
 // font size, so painting Normal first and then the stored size would reflow the whole
 // page. The contrast re-steps the palette's tokens just written — either order works.

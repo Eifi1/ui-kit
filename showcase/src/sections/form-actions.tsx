@@ -99,7 +99,8 @@ function FormActionsPlacements() {
           >
             <p className="text-sm text-secondary">
               Save is disabled with a reason — hover or Tab to it. Delete sits at the start, so the row aligns{" "}
-              <code className="font-mono">between</code>.
+              <code className="font-mono">between</code> across the footer, which the row fills. On a phone at Large the
+              buttons stack, each as wide as the dialog.
             </p>
           </DialogFrame>
         </div>

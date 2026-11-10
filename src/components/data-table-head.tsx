@@ -4,7 +4,7 @@ import { cn } from "../lib/cn";
 import { defaultFilterState, isFilterActive, resolveFilter } from "./data-table-filters";
 import type { FilterValue } from "./data-table-filters";
 import type { SortState } from "./data-table-sort";
-import { FilterPopover } from "./data-table-filter-popover";
+import { FilterPopover, KeySetPanel } from "./data-table-filter-popover";
 import { Popover } from "./popover";
 import { Tooltip } from "./tooltip";
 import { Checkbox } from "./checkbox";
@@ -49,6 +49,7 @@ export function DataTableHead<T>({
   ariaRowIndex,
   lockedWidths,
   selectionLockKey,
+  keySet,
 }: {
   visibleColumns: DataTableColumn<T>[];
   selection: DataTableProps<T>["selection"];
@@ -82,6 +83,9 @@ export function DataTableHead<T>({
   lockedWidths?: Record<string, number> | null;
   /** The selection column's key in `lockedWidths`. */
   selectionLockKey?: string;
+  /** 0.59: the `keyFilter` set — its column, and the words its panel says. Clearing it is
+   *  `clearFilter(column)`, which hands the set's Clear to the owner. */
+  keySet?: { column: string; label: string };
 }) {
   return (
     <thead className="bg-surface-2 text-secondary">
@@ -120,10 +124,13 @@ export function DataTableHead<T>({
           const sortable = (!isServer || hasSortCallback) && !!col.sortBy;
           const filter = !isServer || hasFilterCallback ? resolveFilter(col) : null;
           const filterState = filters[col.key] ?? (filter ? defaultFilterState(filter) : undefined);
+          // The set's column (0.59): its button is on, whatever the column's own filter
+          // holds (the set wins), and drawn for a column that has none.
+          const setHere = keySet?.column === col.key ? keySet : undefined;
           const sortIdx = sorts.findIndex((s) => s.key === col.key);
           const active = sortIdx !== -1;
           const Icon = active ? (sorts[sortIdx].dir === "asc" ? ArrowUp : ArrowDown) : ArrowUpDown;
-          const filterActive = filterState && isFilterActive(filterState);
+          const filterActive = !!setHere || (filterState && isFilterActive(filterState));
           // Logical, and a legacy `text-right` still counts — see `logicalAlign`.
           const headClass = logicalAlign(col.headClassName);
           const isEndAligned = !!headClass && END_ALIGN.test(headClass);
@@ -200,11 +207,11 @@ export function DataTableHead<T>({
                   // be sorted — a control that is not there.
                   <span className="text-start">{col.header}</span>
                 )}
-                {filter && (
+                {(filter || setHere) && (
                   <Popover
                     // 420 px at Normal, in rem so the calendar grows with its
                     // text (§3.2); Popover caps it at the viewport.
-                    width={filter.type === "date" ? "26.25rem" : undefined}
+                    width={!setHere && filter?.type === "date" ? "26.25rem" : undefined}
                     // The panel is THIS column's filter, and says so. Unnamed it was
                     // announced as the kit-wide fallback, "Popover"; then as "Filter"
                     // in every column alike (round 0.34 Wave 2, BUG-7c).
@@ -230,17 +237,23 @@ export function DataTableHead<T>({
                       </button>
                     )}
                   >
-                    {() => (
-                      <FilterPopover
-                        column={col}
-                        state={filterState ?? defaultFilterState(filter)}
-                        onChange={(next) => setFilterValue(col.key, next)}
-                        onClear={() => clearFilter(col.key)}
-                        selectOptions={selectOptionsByKey[col.key] ?? []}
-                        labels={labels}
-                        locale={locale}
-                      />
-                    )}
+                    {() =>
+                      setHere ? (
+                        <KeySetPanel label={setHere.label} onClear={() => clearFilter(col.key)} labels={labels} />
+                      ) : (
+                        filter && (
+                          <FilterPopover
+                            column={col}
+                            state={filterState ?? defaultFilterState(filter)}
+                            onChange={(next) => setFilterValue(col.key, next)}
+                            onClear={() => clearFilter(col.key)}
+                            selectOptions={selectOptionsByKey[col.key] ?? []}
+                            labels={labels}
+                            locale={locale}
+                          />
+                        )
+                      )
+                    }
                   </Popover>
                 )}
               </div>

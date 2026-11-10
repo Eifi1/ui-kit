@@ -79,7 +79,10 @@ export function ThemeToggle({
 }
 
 /** Appearance-preset switcher: a hover menu of palette presets with per-theme
- *  colour swatches. Controlled — the app owns the active id and applies it. */
+ *  colour swatches. Controlled — the app owns the active id and applies it.
+ *
+ *  @deprecated 0.59 — none: no app offers a palette choice (`createFixedPalette` paints
+ *  the one palette), and `OptionSwitcherMenu` switches any other value; removed in 0.60 */
 export function PaletteMenu({
   palettes,
   activeId,

@@ -195,6 +195,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
           : `${n(count)} Meldungen konnten nicht geändert werden und bleiben ausgewählt.`,
       bulkRestored: (count) =>
         count === 1 ? "1 Meldung wiederhergestellt" : `${n(count)} Meldungen wiederhergestellt`,
+      focusIds: (count) => (count === 1 ? "Nur diese Meldung" : `Nur diese ${n(count)} Meldungen`),
       bulkRestoreFailed: (count) =>
         count === 1
           ? "1 Meldung konnte nicht wiederhergestellt werden."
@@ -412,6 +413,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       rowCount: (total) => n(total),
       columnsCount: (visible, total) => `Spalten (${n(visible)}/${n(total)})`,
       filterColumn: (column, active) => (active ? `${column} filtern (aktiv)` : `${column} filtern`),
+      keyFilter: (count) => (count === 1 ? "Nur diese Zeile" : `Nur diese ${n(count)} Zeilen`),
       empty: "Keine Einträge",
       actions: "Aktionen",
       edit: "Bearbeiten",
@@ -877,6 +879,16 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       noPreview: "Für diese Datei ist keine Vorschau verfügbar",
       openInNewTab: "In neuem Tab öffnen",
     },
+    zoomableImage: {
+      viewer: (alt) => (alt ? `Zoombares Bild: ${alt}` : "Zoombares Bild"),
+      hint: "Mit + und − zoomen, mit 0 an die Breite anpassen.",
+      controls: "Zoom",
+      zoomIn: "Vergrößern",
+      zoomOut: "Verkleinern",
+      fit: "An Breite anpassen",
+      level: (percent) => `Zoom ${n(percent)}\u00a0%`,
+      fitted: "An Breite angepasst",
+    },
     writeLock: {
       // Impersonal, like the rest of this catalogue where it can be: an app that
       // addresses its users with "du" then has fewer keys to override.
@@ -1003,8 +1015,14 @@ export function germanLabels(numberLocale: string): UiKitLabels {
           },
           browser: {
             title: "Was Ihr Browser speichert",
-            lead: "Keine Cookies. Die App legt Folgendes im Speicher Ihres Browsers ab:",
+            // 0.59 — keksdose's scan for absolute claims (Marcel, 2026-11-10): what the APP
+            // sets, not "keine Cookies" for every script a page loads.
+            lead: "Die App setzt keine Cookies und legt Folgendes im Speicher Ihres Browsers ab:",
             tail: "Nichts davon dient dazu, Sie zu verfolgen. Noch nicht gesendete Einträge werden an uns übermittelt, sobald das möglich ist. Das alles verschwindet, wenn Sie die Websitedaten löschen, und beim Abmelden werden die Anmeldetoken entfernt.",
+            // 0.59: the commercial variant, the checkout's window on Paddle's own domain —
+            // beside the commercial disclaimer and changes clause.
+            commercial:
+              "Nichts davon dient dazu, Sie zu verfolgen. Noch nicht gesendete Einträge werden an uns übermittelt, sobald das möglich ist. Das alles verschwindet, wenn Sie die Websitedaten löschen, und beim Abmelden werden die Anmeldetoken entfernt. Die Zahlung läuft in einem Fenster von Paddle auf Paddles eigener Domain; was dieses dort speichert (etwa ein Sicherheits-Cookie und Einstellungen), regelt die Datenschutzerklärung von Paddle.",
           },
           rights: {
             title: "Ihre Rechte",

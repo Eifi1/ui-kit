@@ -5,6 +5,7 @@ import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode, Ref, RefObject
 import { cn } from "../lib/cn";
 import { hasContent } from "../lib/presence";
 import { mergeRefs } from "./field-parts";
+import { FOOTER_FORM_ACTIONS } from "./footer-row";
 import { CLIPS_ATTRIBUTE } from "../lib/clipping";
 import { DropdownSearchHeader } from "./dropdown";
 import { Button } from "./button";
@@ -305,7 +306,11 @@ export function PickerSheet({
       {hasFooter && (
         <div
           data-picker-sheet-footer=""
-          className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-subtle bg-surface px-3 pt-3"
+          // A FormActions here fills the footer (FOOTER_FORM_ACTIONS, keksdose live #496).
+          className={cn(
+            "flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-subtle bg-surface px-3 pt-3",
+            FOOTER_FORM_ACTIONS,
+          )}
           style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
         >
           {footer}

@@ -242,7 +242,7 @@ export interface TreemapProps extends Omit<ComponentPropsWithoutRef<"div">, "chi
    * The categorical ramp tiles take by index, as concrete hex. Default: the page's
    * live `--chart-1…8` tokens (see `useChartTokenHex`), cycled after eight like
    * `paletteFor` (0.49). Pass one when the host
-   * already holds the active palette — e.g. `createPaletteStore`'s `useChartHex()` —
+   * already holds the active palette — e.g. `createFixedPalette`'s `useChartHex()` —
    * so a caller colouring a legend beside the map is guaranteed the same list.
    */
   colors?: readonly string[];

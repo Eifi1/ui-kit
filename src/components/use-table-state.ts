@@ -333,6 +333,7 @@ export function useTableState<T>({
   sortsProp,
   filtersProp,
   pageSizeProp,
+  linkView = false,
 }: {
   columns: readonly DataTableColumn<T>[];
   storageKey?: string;
@@ -342,6 +343,15 @@ export function useTableState<T>({
   sortsProp?: readonly SortState[];
   filtersProp?: FilterState;
   pageSizeProp?: number;
+  /**
+   * 0.59 (DataTable's `keyFilter`, keksdose live #500): the table shows a link's view — a
+   * set of rows the owner names. Its FILTERS are the link's: the stored ones are neither
+   * applied (the view starts from the URL's `f.<column>`, else none) nor written (the blob
+   * keeps them as they were), and when the view ends they come back. The sort, the page
+   * size, the widths and the hidden columns are read and written as always: a link's
+   * narrowing must neither persist nor wipe the saved view, and the layout is the person's.
+   */
+  linkView?: boolean;
 }) {
   const { enabled: urlSync, prefix: urlPrefix } = resolveTableUrlSync(urlSyncOption);
   const keys = useMemo(() => urlKeys(urlPrefix), [urlPrefix]);
@@ -358,13 +368,37 @@ export function useTableState<T>({
     urlInitial.sorts !== undefined ? urlInitial.sorts : normalizeSorts(initial.sort),
   );
   const [internalFilters, setInternalFilters] = useState<FilterState>(
-    () => urlInitial.filters ?? initial.filters ?? {},
+    () => urlInitial.filters ?? (linkView ? undefined : initial.filters) ?? {},
+  );
+  // The saved filters while a link's view holds the table (`linkView`): what the blob keeps
+  // for them, and what the table goes back to when the view ends. `null` outside one.
+  const [savedFilters, setSavedFilters] = useState<FilterState | null>(() =>
+    linkView ? (initial.filters ?? {}) : null,
   );
   // Controlled when the owner passes state + callback (server-driven tables);
   // self-owned otherwise.
   const sorts = sortsProp ?? internalSorts;
   const filters = filtersProp ?? internalFilters;
   const [page, setPage] = useState(() => urlInitial.page ?? 0);
+
+  // A link's view arriving or ending while the table lives (0.59): a second notification
+  // tapped on the open page, the set's Clear. Adjusted during render, so neither the stale
+  // filters nor a stale page is painted or written. Arriving, the filters the table held
+  // are the saved ones (storage has them: they were written as they changed), and the view
+  // starts from what the URL now says; ending, the saved ones are back, whatever the view
+  // set — a filter set in a link's view is the link's too (keksdose's Chip view, live #500).
+  const [inLinkView, setInLinkView] = useState(linkView);
+  if (inLinkView !== linkView) {
+    setInLinkView(linkView);
+    if (linkView) {
+      setSavedFilters(internalFilters);
+      setInternalFilters((urlSync ? readTableUrlState(searchParams, columns, urlPrefix).filters : undefined) ?? {});
+    } else {
+      setInternalFilters(savedFilters ?? {});
+      setSavedFilters(null);
+    }
+    setPage(0);
+  }
 
   // ---- Controlled filters/sorts reset the page ----
   //
@@ -453,7 +487,8 @@ export function useTableState<T>({
     ? ""
     : serializePersisted({
         sort: sorts,
-        filters,
+        // In a link's view the blob keeps the saved filters, untouched (0.59).
+        filters: savedFilters ?? filters,
         pageSize: pageSize === Infinity ? "all" : pageSize,
         widths,
         hidden: Array.from(view.hidden),

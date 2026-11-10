@@ -187,6 +187,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
           ? "1 segnalazione non è stata modificata e resta selezionata."
           : `${n(count)} segnalazioni non sono state modificate e restano selezionate.`,
       bulkRestored: (count) => (count === 1 ? "1 segnalazione ripristinata" : `${n(count)} segnalazioni ripristinate`),
+      focusIds: (count) => (count === 1 ? "Solo questa segnalazione" : `Solo queste ${n(count)} segnalazioni`),
       bulkRestoreFailed: (count) =>
         count === 1
           ? "1 segnalazione non è stata ripristinata."
@@ -402,6 +403,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       rowCount: (total) => n(total),
       columnsCount: (visible, total) => `Colonne (${n(visible)}/${n(total)})`,
       filterColumn: (column, active) => (active ? `Filtra ${column} (attivo)` : `Filtra ${column}`),
+      keyFilter: (count) => (count === 1 ? "Solo questa riga" : `Solo queste ${n(count)} righe`),
       empty: "Nessuna voce",
       actions: "Azioni",
       edit: "Modifica",
@@ -865,6 +867,16 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       noPreview: "Nessuna anteprima disponibile per questo file",
       openInNewTab: "Apri in una nuova scheda",
     },
+    zoomableImage: {
+      viewer: (alt) => (alt ? `Immagine ingrandibile: ${alt}` : "Immagine ingrandibile"),
+      hint: "Prema + o − per ingrandire o ridurre e 0 per adattare alla larghezza.",
+      controls: "Zoom",
+      zoomIn: "Ingrandisci",
+      zoomOut: "Riduci",
+      fit: "Adatta alla larghezza",
+      level: (percent) => `Zoom ${n(percent)}%`,
+      fitted: "Adattata alla larghezza",
+    },
     writeLock: {
       reason: "Può visualizzarlo, ma non modificarlo.",
       offline: "Richiede una connessione.",
@@ -992,8 +1004,10 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
           },
           browser: {
             title: "Che cosa salva il Suo browser",
-            lead: "Nessun cookie. L’app salva quanto segue nella memoria del Suo browser:",
+            lead: "L’app non imposta alcun cookie e salva quanto segue nella memoria del Suo browser:",
             tail: "Niente di tutto ciò viene usato per tracciarLa. Le voci in attesa di invio ci vengono trasmesse non appena possibile. Tutto questo scompare quando cancella i dati del sito, e uscendo dall’account vengono rimossi i token di accesso.",
+            commercial:
+              "Niente di tutto ciò viene usato per tracciarLa. Le voci in attesa di invio ci vengono trasmesse non appena possibile. Tutto questo scompare quando cancella i dati del sito, e uscendo dall’account vengono rimossi i token di accesso. Il pagamento avviene in una finestra di Paddle, sul dominio proprio di Paddle; ciò che questa finestra vi salva (ad esempio un cookie di sicurezza e alcune impostazioni) è disciplinato dall’informativa sulla privacy di Paddle.",
           },
           rights: {
             title: "I Suoi diritti",

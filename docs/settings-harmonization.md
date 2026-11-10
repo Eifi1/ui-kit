@@ -28,14 +28,14 @@ snapshot of the three apps, the per-repo to-dos and the review list as written a
 | 1 | Where each one stands | — (archived) | |
 | 2 | Decisions | — | the text-size round (decision 4: the text size and the contrast follow the account too) |
 | 3 | The page | ui-kit 0.31 | §10.1–§10.4; round 0.34 (the window title, KS U7; `PHONE_QUERY` removed) |
-| 4 | The catalogue | ui-kit 0.31; `useSettingsLabels` 0.31.1 | §10.5; the text-size round (§4.2's appearance group) |
+| 4 | The catalogue | ui-kit 0.31; `useSettingsLabels` 0.31.1 | §10.5; the text-size round (§4.2's appearance group); ui-kit 0.59 (no palette entry) |
 | 5 | The admin page, same shell | ui-kit 0.31 | §10.6 |
 | 6 | The backend | server-kit 0.5; ui-kit 0.31 (`useAccountLanguage`); §6.4 waits for the notifications round | §10.7–§10.10 |
 | 7 | What the kits add | ui-kit 0.31, server-kit 0.5 | round 0.34 (`appName`, `documentTitle`); refactor audit DOC-2 (the signatures as shipped) |
 | 8 | Per repo | — (archived) | |
 | 9 | Order | — (archived) | |
 | 10 | Settled after the reviews | — | an index: each item points to its § |
-| 11 | Reset this device's settings | — (round 0.36: settled 2026-10-13, built for ui-kit 0.36.0) | §11.7 (the reviews; round decisions 10, 11) |
+| 11 | Reset this device's settings | — (round 0.36: settled 2026-10-13, built for ui-kit 0.36.0) | §11.7 (the reviews; round decisions 10, 11); ui-kit 0.59 (`createFixedPalette` joins nothing; each app drops its `*-palette` key, §11.1) |
 | 12 | The role chip is the way into the role's tool | **DRAFT, superseded**: moved to the admin round 0.43 (Marcel: the chip alone is too hidden) | amends §5's "Who sees it" |
 
 ## 1. Where each one stands
@@ -258,7 +258,7 @@ interface SettingsEntry<G extends string = string> {
 
 | Group | Holds |
 |---|---|
-| `appearance` | language, theme, text size and contrast (text-size §6), palette, date format, density; last, the device reset (§11) |
+| `appearance` | language, theme, text size and contrast (text-size §6), date format, density; last, the device reset (§11) |
 | `account` | profile, email change, the app's memberships (kastlan's companies, KS's pending shares) |
 | `security` | password, 2FA, passkeys, sessions, API tokens |
 | *app groups* | the app's own (keksdose: privacy, assistant, interaction) |
@@ -269,6 +269,9 @@ interface SettingsEntry<G extends string = string> {
   app's plan of 2026-10-07 per group is in the archive.
 - **Not in settings:** anything about the company (§5), keksdose's reporting currency
   (set in Reports) and display currency (per budget).
+- **No palette entry** (ui-kit 0.59): none of the three apps offers a chart palette
+  (Marcel, 2026-11-10). Each paints one preset, `createFixedPalette`, with no setting and
+  nothing stored; keksdose's select, the last one, went in its 7e64b326.
 - Language stays in the top bar or account menu as well. That is the quick switch; the
   card is the place to find it.
 
@@ -368,9 +371,10 @@ server-kit's `ProfileUpdate` follows the rule.
 
 ### 6.3 Everything else stays on the device
 
-- Theme, palette, date format, density, keksdose's gestures and blur mode are
+- Theme, date format, density, keksdose's gestures and blur mode are
   **device-local and never on the server**: not sent, not in `/auth/me`, not in the
-  export (0.30). Their storage keys stay as each app has them.
+  export (0.30). Their storage keys stay as each app has them. The palette is no longer a
+  setting at all (§4.2; ui-kit 0.59).
 - The date format in particular stays on the device: its "auto" follows the language,
   so a new device that adopts the account's language gets the matching format anyway.
   It would move to the account only once the server renders a date as text.
@@ -528,7 +532,7 @@ card's own: keksdose's gestures ("Reset to defaults", "Restore the shipped defau
 | What | Key | Where |
 |---|---|---|
 | theme | the app's | `createThemeStore`, `src/theme/theme-store.ts:86-101`; pre-paint `:65` |
-| palette | the app's | `createPaletteStore`, `src/theme/palette-store.ts:43-54`; pre-paint `:17` |
+| palette | the app's, until each app drops it (below) | `createPaletteStore`, `src/theme/palette-store.ts`, deprecated in 0.59; its replacement `createFixedPalette` (`src/theme/fixed-palette.ts`) stores nothing |
 | text size, contrast (this device's choice) | the app's | `src/theme/text-size.ts:246-255`, `src/theme/contrast.ts:179-188` |
 | table views (sort, filters, page size, widths, hidden columns) | `tableStorageKeyPrefix` (provider) or `hbui-table:`, then the table's `storageKey` | `src/components/use-table-state.ts:29`, `:370-374` |
 | the sidebar folded | `collapseStorageKey` or `appLayout.sidebarCollapsed` | `src/shell/app-shell.tsx:368-369`, `:395` |
@@ -542,9 +546,11 @@ The language picked on a device is under the app's own key: `useAccountLanguage`
 
 **The apps** (paths under each app's `frontend/src/`):
 - **keksdose:**
-  - appearance: `keksdose-theme`, `keksdose-palette`, `keksdose-text-size`,
-    `keksdose-contrast` (`shared/state/theme-store.ts:8`, `palette-store.ts:8`,
-    `text-size-store.ts:10`, `contrast-store.ts:9`), all four the kit's factories; the
+  - appearance: `keksdose-theme`, `keksdose-text-size`, `keksdose-contrast`
+    (`shared/state/theme-store.ts:8`, `text-size-store.ts:10`, `contrast-store.ts:9`), the
+    kit's factories. `keksdose-palette` goes from its next release: the palette select
+    went in 7e64b326 and the boot removes the key (`createFixedPalette`'s
+    `legacyStorageKey` from 0.59; until then its own `removeStored`); the
     language, `keksdose-lang`, in a store (`shared/i18n/account-language.tsx:35`,
     `:58-68`), which i18next never writes (`shared/i18n/index.ts:116`, `caches: []`); the
     date format (`shared/state/date-format-store.ts:74`); the feature set, simple or
@@ -580,8 +586,11 @@ The language picked on a device is under the app's own key: `useAccountLanguage`
     (`shared/crypto/pending-key-file.ts:68`) and, in development only, sessionStorage
     `keksdose.pending-key-file` (`:64`, `:119`).
 - **kastlan:**
-  - appearance: `kastlan-theme`, `-palette`, `-text-size`, `-contrast`
-    (`shared/theme/storage-keys.ts:7-13`); the language, `kastlan-lang`, read when needed
+  - appearance: `kastlan-theme`, `-text-size`, `-contrast`
+    (`shared/theme/storage-keys.ts:7-13`). `kastlan-palette` goes with its 0.59 adoption: no
+    switcher ships, but a device that used the old one, or ran a device reset (the
+    deprecated store's reset writes the Default), still holds it, so `createFixedPalette`
+    removes it (`legacyStorageKey`); the language, `kastlan-lang`, read when needed
     (`shared/i18n/language-storage.ts:11`, `:20-31`; the old `i18nextLng` moves over once,
     `:14`);
   - **the account's values, cached for the first paint and the start language**:
@@ -603,9 +612,11 @@ The language picked on a device is under the app's own key: `useAccountLanguage`
     every boot (`app/providers.tsx:32`).
 - **Kurvenschmiede** keeps one list, `STORAGE`, with the privacy line of each key in
   `ENTRY_OF` (`shared/lib/storage-keys.ts:36-96`), and a test fails on a key outside it:
-  - appearance: `steering-theme`, `steering-palette` (pinned to Default, `main.tsx:64`),
-    `kurvenschmiede-text-size`, `-contrast`; the language, `kurvenschmiede-lang`, read
-    when needed (`shared/i18n/index.ts:134-146`);
+  - appearance: `steering-theme`, `kurvenschmiede-text-size`, `-contrast`.
+    `steering-palette` goes with its 0.59 adoption: the pin in `main.tsx`
+    (`usePalette.setState`) writes it on every boot, so `createFixedPalette` removes it
+    (`legacyStorageKey`) and the pin goes; `KIND_OF` stops counting it as appearance; the
+    language, `kurvenschmiede-lang`, read when needed (`shared/i18n/index.ts:134-146`);
   - views: tables `steering-table:`, the sidebar `kurvenschmiede.sidebarCollapsed`, the
     curve plot's channels `steering-curve-channels` (`storage-keys.ts:53-58`), a persisted
     zustand store (`shared/state/curve-channels-store.ts`);
@@ -620,9 +631,9 @@ All settled (Marcel, 2026-10-13: "As recommended"; round decisions 10 and 11), w
 reviews' corrections:
 
 1. **It clears how this device shows the app**, in two kinds:
-   - **appearance**: the theme, the palette, this device's own language, text size and
-     contrast, and the app's own appearance choices (keksdose's date format, feature set
-     and gestures);
+   - **appearance**: the theme, the palette (none is kept since 0.59, §4.2), this
+     device's own language, text size and contrast, and the app's own appearance
+     choices (keksdose's date format, feature set and gestures);
    - **views**: table views, the sidebar, folded groups, saved page filters, KS's curve
      channels, keksdose's display currency per budget.
 
@@ -758,12 +769,17 @@ export function resetDeviceSettings(): string[];
 **The kit's parts join on their own** (kind; reset):
 - `createThemeStore(key)`, at creation: appearance;
   `useTheme.getState().setPreference("system")`. `useApplyTheme` puts the class back.
-- `createPaletteStore(key, useTheme)`, at creation: appearance;
-  `usePalette.getState().setId(DEFAULT_PRESET.id)`. **State only, never `applyTokenSet`**
-  (KS 3.3): an imperative write would remember a token set on `<html>`, and an app without
-  a palette layer (KS) would then take the palette branch, where a theme switch no longer
-  re-writes the stepped tokens. `useApplyPalette`, where an app mounts it, re-applies
-  through its effect.
+- `createFixedPalette(useTheme, options)` (0.59): **joins nothing**. It stores nothing, so
+  there is nothing to put back; the theme's reset changes the mode and `useApplyPalette`,
+  where an app mounts it, re-paints. Its `legacyStorageKey` is removed when it is created
+  and again by the boot's `applyPalette` (never on a mode change), so the app's old
+  palette key leaves the device instead of the registry. Like the store
+  before it, it never paints on its own (KS 3.3): an imperative write would remember a
+  token set on `<html>`, and an app without a palette layer (KS) would then take the
+  contrast store's palette branch, where a theme switch no longer re-writes the stepped
+  tokens.
+- `createPaletteStore(key, useTheme)`, deprecated in 0.59: at creation, appearance;
+  `usePalette.getState().setId(DEFAULT_PRESET.id)`, state only for the same reason.
 - `createTextSizeStore(key)`, `createContrastStore(key)`, at creation: appearance;
   `setSize(null)`, `setContrast(null)` (no choice on this device). `useApplyTextSize` and
   `useApplyContrast` re-resolve against the account's value they are given, else Normal
@@ -790,8 +806,9 @@ export function resetDeviceSettings(): string[];
   the appearance group's page, which holds no stored table in any of the three apps, so
   nothing it removes is on screen.
 - **At the next load**: the pre-paint calls (`applyPersistedTheme`,
-  `applyPersistedPalette`, `applyPersistedTextSize`, `applyPersistedContrast`) read what
-  the stores wrote and paint the defaults, with no step of their own.
+  `applyPersistedTextSize`, `applyPersistedContrast`) read what the stores wrote and paint
+  the defaults, with no step of their own; the palette's `applyPalette(mode)` paints the
+  one preset for the mode the theme's returned.
 - **Other open tabs** keep what they hold until they reload.
 
 **The card**, `src/settings/device-reset-setting.tsx`, in the main entry beside
@@ -851,8 +868,8 @@ would have left the blur on while the store said off).
     `forgetPreviousAccount` already uses, not written twice); `budget.collapsedGroups`
     (no reset: read at mount); `budget.displayCurrency.` (a prefix, no reset: a plain
     accessor read at mount);
-  - the kit covers the four appearance stores, `keksdose-table:` and the sidebar's
-    default key;
+  - the kit covers the theme, text-size and contrast stores, `keksdose-table:` and the
+    sidebar's default key;
   - leaves `keksdose-ui-prefs` whole, `keksdose-home-position`, usage, notices, the
     sign-in, crash reports, the checkout, the three IndexedDB stores and the developer
     overrides alone (decisions 2, 6, 7);
@@ -868,7 +885,8 @@ would have left the blur on while the store said off).
     `applyAccountLanguage`: with no locale it returns at `:54` and leaves the old
     language on screen, and `rememberAccountLanguage(null)` would clear the account's
     cached language;
-  - the kit covers the rest: the four stores, `hbui-table:`, `kastlan.sidebarCollapsed`;
+  - the kit covers the rest: the theme, text-size and contrast stores, `hbui-table:`,
+    `kastlan.sidebarCollapsed`;
   - the two `kastlan-account-*` keys, crash reports, the checkout, the photo outbox, the
     handover copies and the demo banner's key stay (decision 2);
   - the card and its entry.
@@ -880,8 +898,9 @@ would have left the blur on while the store said off).
   - registers `steering-curve-channels`, view; reset:
     `useCurveChannels.setState({ flipped: [] })`. A persisted zustand store, so removing
     the key alone would be written back (KS 3.1);
-  - the kit covers the rest; its palette stays pinned (`main.tsx:64`), and the palette's
-    state-only reset changes nothing it shows;
+  - the kit covers the rest. Its palette is `createFixedPalette` from 0.59 (the chart
+    hooks only, never painted), which joins nothing, so `KIND_OF.palette` is no longer
+    appearance;
   - `storage-keys.ts` gains `KIND_OF: Record<keyof typeof STORAGE, "appearance" | "view" |
     "never">` beside `ENTRY_OF`. `storage-keys.test.ts` renders the app's providers and
     shell (so the kit's parts join; the provider's a microtask later, §11.4), then holds

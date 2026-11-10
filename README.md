@@ -28,8 +28,8 @@ with its own Tailwind config.
 ## Compatibility with server-kit
 
 The backend half, [`eifi1-server-kit`](https://github.com/Eifi1/server-kit), is a separate
-package with its own version and changelog. **ui-kit 0.58 ↔ server-kit 0.22**: this release
-is tested against server-kit 0.22.0's API export (the showcase's Server kit pages and the
+package with its own version and changelog. **ui-kit 0.59 ↔ server-kit 0.23**: this release
+is tested against server-kit 0.23.0's API export (the showcase's Server kit pages and the
 vocabulary test, `showcase/src/__tests__/server-kit-vocabularies.test.ts`).
 
 ## Documentation
@@ -165,14 +165,17 @@ there scans nothing, silently: replace it with the pair above.
 
 ### 3. Appearance stores (own persistence keys)
 
-The stores are factories so each app namespaces its own `localStorage`: theme, palette,
-text size and contrast.
+The stores are factories so each app namespaces its own `localStorage`: theme, text size
+and contrast. The palette is one preset and no choice (0.59): `createFixedPalette` paints
+it for the theme's mode and keeps nothing (`DEFAULT_PRESET` unless `preset` names another;
+`legacyStorageKey` removes an old palette key at boot). `createPaletteStore` and
+`applyPersistedPalette`, which kept a choice per device, are deprecated.
 
 ```ts
-import { createContrastStore, createPaletteStore, createTextSizeStore, createThemeStore } from "@eifi1/ui-kit";
+import { createContrastStore, createFixedPalette, createTextSizeStore, createThemeStore } from "@eifi1/ui-kit";
 export const { useTheme, useApplyTheme } = createThemeStore("myapp-theme");
-export const { usePalette, useApplyPalette, useActiveTokenSet, useChartHex, useHeatStops } =
-  createPaletteStore("myapp-palette", useTheme);
+export const { applyPalette, useApplyPalette, useActiveTokenSet, useChartHex, useHeatStops } =
+  createFixedPalette(useTheme);
 export const { useTextSizeStore, useApplyTextSize } = createTextSizeStore("myapp-text-size");
 export const { useContrastStore, useApplyContrast } = createContrastStore("myapp-contrast");
 ```
@@ -181,13 +184,13 @@ Call `useApplyTheme()`, `useApplyPalette()`, `useApplyTextSize({ account })` and
 `useApplyContrast({ account })` once near the root; `account` is the signed-in user's
 saved value, which applies while this device has no choice of its own. For a no-flash
 first paint, apply all four **before** hydration — `applyPersistedTheme(key)` resolves the
-stored preference, toggles `.dark` and returns the mode, which
-`applyPersistedPalette(key, mode)` then uses:
+stored preference, toggles `.dark` and returns the mode, which `applyPalette(mode)` then
+uses:
 
 ```ts
 // main.tsx, at module scope, before createRoot (readPersistedUser is the app's own)
 const mode = applyPersistedTheme("myapp-theme");
-applyPersistedPalette("myapp-palette", mode);
+applyPalette(mode);
 applyPersistedTextSize("myapp-text-size", { account: () => readPersistedUser()?.text_size });
 applyPersistedContrast("myapp-contrast", { account: () => readPersistedUser()?.contrast });
 ```
@@ -197,9 +200,9 @@ module runs needs the text size even earlier: see "Before the first paint" under
 [Styling](#styling). Worked example:
 [`showcase/src/main.tsx`](https://github.com/Eifi1/ui-kit/blob/main/showcase/src/main.tsx).
 
-**Reset this device's settings** (0.36, `docs/settings-harmonization.md` §11): the four
-stores, `AppShell`'s sidebar key and `UiKitProvider`'s table prefix join a registry by
-themselves; `DeviceResetSetting` (the last card of the appearance group) clears them all and
+**Reset this device's settings** (0.36, `docs/settings-harmonization.md` §11): the theme,
+text-size and contrast stores, `AppShell`'s sidebar key and `UiKitProvider`'s table prefix join a registry by
+themselves (the fixed palette keeps nothing and joins nothing); `DeviceResetSetting` (the last card of the appearance group) clears them all and
 puts each back live. An app adds its own device keys, each with a reset that goes through its
 own store:
 
@@ -579,7 +582,7 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2239 names from 378 modules** in the main barrel — 1009 values and 1230 types — and 195 more in 16 standalone entries. _Italic_ is a type-only export.
+**2255 names from 382 modules** in the main barrel — 1016 values and 1239 types — and 195 more in 16 standalone entries. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 `node scripts/gen-export-inventory.mjs`; the counts are pinned by
@@ -587,10 +590,10 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2239 |
+| `@eifi1/ui-kit` | 2255 |
 | `@eifi1/ui-kit/chart` | 102 |
 | `@eifi1/ui-kit/shell` | 110 |
-| `@eifi1/ui-kit/data-table` | 56 |
+| `@eifi1/ui-kit/data-table` | 57 |
 | `@eifi1/ui-kit/wizard` | 25 |
 | `@eifi1/ui-kit/tour` | 49 |
 | `@eifi1/ui-kit/feedback` | 204 |
@@ -628,6 +631,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `lib/safe-storage` | `readSessionStored`, `readStored`, `readStoredJson`, `removeStored`, `writeSessionStored`, `writeStored`, `writeStoredJson` |
 | `lib/reduced-motion` | `prefersReducedMotion` |
 | `lib/quiet-focus` | `focusQuietly`, `isQuietFocus` |
+| `lib/focus-left` | `focusFirst`, `focusIsLost`, `returnFocus`, _`FocusReturn`_ |
 | `lib/download` | `filenameFromDisposition`, `saveBlob` |
 | `lib/text-match` | `foldForSearch`, `matchesSearch`, `rankMatch`, `searchWords`, _`MatchRank`_ |
 | `lib/qr-encode` | `encodeQr`, _`QrEncodeOptions`_, _`QrErrorCorrection`_, _`QrMatrix`_ |
@@ -762,6 +766,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/authed-image` | `AuthedImage`, `DEFAULT_AUTHED_IMAGE_LABELS`, _`AuthedImageLabels`_, _`AuthedImageProps`_ |
 | `components/image-grid` | `DEFAULT_IMAGE_GRID_LABELS`, `ImageGrid`, _`ImageGridLabels`_, _`ImageGridProps`_ |
 | `components/lightbox` | `DEFAULT_LIGHTBOX_LABELS`, `imageItemKind`, `Lightbox`, _`ImageItem`_, _`ImageItemKind`_, _`LightboxLabels`_, _`LightboxProps`_ |
+| `components/zoomable-image` | `DEFAULT_ZOOMABLE_IMAGE_LABELS`, `ZoomableImage`, _`ZoomableImageLabels`_, _`ZoomableImageProps`_ |
 | `components/button-group` | `ButtonGroup`, `ButtonGroupLink`, _`ButtonGroupLinkProps`_, _`ButtonGroupLinkRenderProps`_, _`ButtonGroupProps`_ |
 | `components/table` | `NUMERIC_CELL_CLASS`, `Table`, `TableBody`, `TableCaption`, `TableCell`, `TableEmpty`, `TableFoot`, `TableHead`, `TableHeaderCell`, `TableRow`, _`TableAlign`_, _`TableBodyProps`_, _`TableCaptionProps`_, _`TableCellProps`_, _`TableDensity`_, _`TableEmptyProps`_, _`TableFootProps`_, _`TableHeaderCellProps`_, _`TableHeaderCellSize`_, _`TableHeaderCellWeight`_, _`TableHeadProps`_, _`TableLayout`_, _`TableProps`_, _`TableRowProps`_, _`TableRowVariant`_, _`TableVAlign`_ |
 | `components/separator` | `Separator`, _`SeparatorProps`_ |
@@ -795,7 +800,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/column-mapper` | `ColumnMapper`, `ColumnRoleTable`, `DEFAULT_COLUMN_MAPPER_LABELS`, _`ColumnMapperLabels`_, _`ColumnMapperProps`_, _`ColumnRoleTableBodyProps`_, _`ColumnRoleTableProps`_, _`ColumnRoleTableRowProps`_ |
 | `components/data-table-labels` | `DEFAULT_DATA_TABLE_LABELS`, _`DataTableLabels`_ |
 | `components/data-table-sort` | `compareSortValues`, `decodeSorts`, `encodeSorts`, `nextSorts`, `normalizeSorts`, _`SortCycle`_, _`SortDir`_, _`SortState`_, _`SortStepOptions`_ |
-| `components/data-table-filters` | `dateFilter`, `decodeFilterValue`, `decodeFilterValueOfType`, `defaultFilterState`, `encodeFilterValue`, `filterHref`, `isFilterActive`, `numberBound`, `numberFilter`, `resolveFilter`, `rowMatches`, `selectFilter`, `textFilter`, _`ColumnFilter`_, _`FilterValue`_ |
+| `components/data-table-filters` | `dateFilter`, `decodeFilterValue`, `decodeFilterValueOfType`, `defaultFilterState`, `encodeFilterValue`, `filterHref`, `isFilterActive`, `numberBound`, `numberFilter`, `resolveFilter`, `rowMatches`, `selectFilter`, `textFilter`, _`ColumnFilter`_, _`DataTableKeyFilter`_, _`FilterValue`_ |
 | `components/data-table-pagination` | `PAGE_SIZE_OPTIONS`, `Pagination` |
 | `components/data-table-filter-popover` | `FilterPopover` |
 | `components/data-table` | `DataTable`, `DEFAULT_DATA_TABLE_SORT_LABELS`, _`DataTableCellProps`_, _`DataTableChrome`_, _`DataTableColumn`_, _`DataTableDensity`_, _`DataTableDesktopSwipeActions`_, _`DataTableHeadProps`_, _`DataTableProps`_, _`DataTableRowAction`_, _`DataTableSortLabels`_, _`FilterState`_, _`MobileSwipeActions`_, _`ServerPagination`_ |
@@ -842,6 +847,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `hooks/use-breakpoint` | `BREAKPOINT_REM`, `breakpointQuery`, `remPx`, `useBreakpoint`, `usePhoneLayout`, `useRemPx`, _`Breakpoint`_, _`BreakpointVariant`_, _`RemLength`_ |
 | `hooks/use-large-text` | `useCoarsePointer`, `useInlineFacts`, `useLargeText` |
 | `hooks/use-has-camera` | `useHasCamera` |
+| `hooks/use-row-leaves` | `useRowLeaves`, _`RowLeavesProps`_, _`UseRowLeavesOptions`_, _`UseRowLeavesReturn`_ |
 | `hooks/use-file-picker` | `matchesAccept`, `useFilePicker`, _`FilePickerLabels`_, _`FileRejection`_, _`FileRejectionReason`_, _`FileScreenOptions`_, _`UseFilePickerOptions`_, _`UseFilePickerReturn`_ |
 
 ### theme, palettes, colour
@@ -853,6 +859,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `theme/palette-presets` | `applyTokenSet`, `DEFAULT_PRESET`, `DERIVED_PRESETS`, `PALETTES`, `PAUL_TOL_PRESET`, `presetById`, _`PalettePreset`_, _`TokenSet`_ |
 | `theme/theme-store` | `applyPersistedTheme`, `createThemeStore`, _`ThemeMode`_, _`ThemePreference`_, _`ThemeState`_, _`ThemeStore`_ |
 | `theme/palette-store` | `applyPersistedPalette`, `createPaletteStore`, _`PaletteStore`_ |
+| `theme/fixed-palette` | `createFixedPalette`, _`FixedPalette`_, _`FixedPaletteOptions`_ |
 | `theme/text-size` | `applyPersistedTextSize`, `applyTextSize`, `createTextSizeStore`, `isTextSize`, `readPersistedTextSize`, `readTextSize`, `resolveTextSize`, `TEXT_SCALE`, `TEXT_SIZE_INLINE_SCRIPT`, `TEXT_SIZES`, `useTextSize`, _`ApplyTextSizeOptions`_, _`PersistedAppearanceOptions`_, _`PersistedTextSize`_, _`TextSize`_, _`TextSizeInfo`_, _`TextSizeState`_, _`TextSizeStore`_ |
 | `theme/contrast` | `applyContrast`, `applyPersistedContrast`, `CONTRAST_MODES`, `contrastLevel`, `createContrastStore`, `isContrastMode`, `prefersMoreContrast`, `readContrastLevel`, `readPersistedContrast`, `resolveContrastMode`, _`ApplyContrastOptions`_, _`ContrastLevel`_, _`ContrastMode`_, _`ContrastState`_, _`ContrastStore`_, _`PersistedContrast`_ |
 | `theme/chart-palette` | `CHART_COLORS`, `CHART_MUTED_HEX`, `CHART_ROLES`, `chartEdge`, `CVD_ORDER`, `HEATMAP_HEX`, `lerpHex`, `PALETTE_HEX`, `PALETTE_SIZE`, `paletteFor`, `textOn`, _`HeatStops`_, _`PaletteForOptions`_ |
@@ -1454,14 +1461,14 @@ route it elsewhere.
 ## Shell
 
 `TopBar`/`AppShell` are composable chrome. Feed `AppShell` your nav items and pass
-a `TopBar` whose `actions` combine the shared controls (`ThemeToggle`,
-`PaletteMenu`, `LanguageMenu`) with your own app-owned menus (account, etc.):
+a `TopBar` whose `actions` combine the shared controls (`ThemeToggle`, `LanguageMenu`;
+`PaletteMenu` is deprecated, no app offers a palette choice) with your own app-owned menus
+(account, etc.):
 
 ```tsx
 <AppShell nav={nav} footer={<Footer/>} topBar={
   <TopBar brand={<Logo/>} actions={<>
     <ThemeToggle mode={mode} onToggle={toggle} />
-    <PaletteMenu palettes={PALETTES} activeId={id} mode={mode} onSelect={setId} />
     <LanguageMenu options={langs} current={lang} onChange={setLang} />
     {/* app-owned menus */}
   </>} />

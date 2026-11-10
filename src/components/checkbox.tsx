@@ -1,6 +1,6 @@
 import { useCallback, useContext, useEffect, useId, useRef } from "react";
 import { Check, Minus } from "lucide-react";
-import type { ChangeEvent, InputHTMLAttributes, ReactNode, Ref } from "react";
+import type { ChangeEvent, InputHTMLAttributes, MouseEvent, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
 import { hasContent } from "../lib/presence";
 import {
@@ -154,6 +154,10 @@ export interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement
  * did — give it an `aria-label` there. Every other prop reaches the `<input>`
  * (`checked`, `defaultChecked`, `name`, `required`, `data-*`, `aria-*`), so it works
  * controlled, uncontrolled, and inside a plain `<form>`.
+ *
+ * The box's wrapper (`data-slot="checkbox-box"`) hands a tap on itself to the box (0.59), so
+ * a hit area drawn round the box as the wrapper's `::after` ticks it — ListItem's
+ * `leadingActions` draws one, 44 px square.
  */
 export function Checkbox({
   ref,
@@ -207,9 +211,33 @@ export function Checkbox({
   useEffect(() => {
     if (local.current) local.current.indeterminate = indeterminate;
   });
+  // A tap on the box's wrapper itself, not on the input inside it, is a tap on the box — as
+  // one on a `<label for>` is: the input is focused and clicked, so the change, a lock's
+  // refusal and `disabled` stay the input's own. The wrapper is exactly the input's size, so
+  // on its own nothing lands there; it is the hit area a slot draws round the box as the
+  // wrapper's `::after` (ListItem's `leadingActions`, 0.59, keksdose live #497: a 16 px box
+  // beside a row that opens on a tap). The input's own click, bubbling, is not handed back.
+  const tapBox = (e: MouseEvent<HTMLSpanElement>) => {
+    const input = local.current;
+    if (e.target !== e.currentTarget || !input || input.disabled) return;
+    input.focus({ preventScroll: true });
+    input.click();
+  };
 
   const control = (
-    <span className={cn("relative inline-flex shrink-0", bare && !locked && className)}>
+    // A pointer convenience for the hit area round the box (see `tapBox`): the keyboard path
+    // is the <input> itself, which is in the tab order and answers Space.
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- see above
+    <span
+      data-slot="checkbox-box"
+      onClick={tapBox}
+      className={cn(
+        "relative inline-flex shrink-0",
+        // The hit area's pointer, which its `::after` takes from here; the input shows its own.
+        looksDisabled ? "cursor-not-allowed" : "cursor-pointer",
+        bare && !locked && className,
+      )}
+    >
       <input
         ref={setRef}
         id={bare ? id : inputId}

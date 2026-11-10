@@ -4,16 +4,18 @@
 // semantic money trio and the categorical chart palette (anyplot's eight "Imprint"
 // hues by default since 0.49, Paul Tol's nine in `PAUL_TOL_PRESET`), plus the
 // heatmap stops. A preset is applied at runtime by writing these as CSS custom
-// properties onto <html> (see palette-store.ts), which instantly re-skins every
+// properties onto <html> (see fixed-palette.ts), which instantly re-skins every
 // token-driven surface and chart. The two heatmaps and the treemap interpolate
 // concrete hex in JS, so they read the same values from here via the hooks in
-// palette-store.
+// fixed-palette.
 //
 // The default preset here mirrors the :root/.dark blocks in tokens.css exactly. The
 // five hand-picked alternatives of #307 (`ALTERNATIVE_PRESETS`, a reference bank that
 // `presetById` never resolved) were removed in 0.35 (refactor audit 2026-10, API-6c;
-// deprecated in 0.34): `PALETTES` is what an app offers, and `derivePalette` makes a
-// palette of its own.
+// deprecated in 0.34): `PALETTES` is every preset the kit ships, and `derivePalette` makes
+// a palette of its own. No app offers a choice among them any more (2026-11-10): an app
+// paints one with `createFixedPalette` (fixed-palette.ts), the default unless it names
+// another.
 
 import type { HeatStops } from "./chart-palette";
 import { contrastStep, rememberTokenSet } from "./contrast-tokens";
@@ -176,9 +178,10 @@ export const DEFAULT_PRESET: PalettePreset = {
 
 /**
  * The 0.48 default: the same surfaces, brand and money, with Paul Tol's "Muted" nine
- * as the chart ramp and the teal/amber heat stops that went with it. Selectable, no
- * longer the default (0.49). `paletteFor` cycles eight, so its ninth hue (#aa4499) is
- * reachable only as `var(--chart-9)`.
+ * as the chart ramp and the teal/amber heat stops that went with it. No longer the
+ * default (0.49); `createFixedPalette(useTheme, { preset: PAUL_TOL_PRESET })` paints it.
+ * `paletteFor` cycles eight, so its ninth hue (#aa4499) is reachable only as
+ * `var(--chart-9)`.
  */
 export const PAUL_TOL_PRESET: PalettePreset = {
   id: "paul-tol",
@@ -212,9 +215,9 @@ export const PAUL_TOL_PRESET: PalettePreset = {
 
 // The full-theme switcher from #307 stayed retired (feedback #328) — the default
 // is still the single source of truth for surfaces, brand and money (its five
-// alternatives are gone, see the header). What IS selectable is
-// the categorical chart ramp (feedback #119), so Imprint (the default) and Paul Tol are
-// the live set; presetById falls back to the default for any stale persisted id.
+// alternatives are gone, see the header). What differs between Imprint (the default) and
+// Paul Tol is the categorical chart ramp (feedback #119); presetById falls back to the
+// default for any stale persisted id.
 /**
  * The categorical chart ramp, shared by every derived preset below.
  *
@@ -478,6 +481,8 @@ export const DERIVED_PRESETS: PalettePreset[] = [
   },
 ];
 
+/** Every preset the kit ships, the default first: what `presetById` resolves, the audit
+ *  measures and the showcase compares. Not a menu: no app offers a palette choice. */
 export const PALETTES: PalettePreset[] = [DEFAULT_PRESET, PAUL_TOL_PRESET, ...DERIVED_PRESETS];
 
 export function presetById(id: string): PalettePreset {

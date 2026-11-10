@@ -60,13 +60,14 @@ primitives with the shared ones. Keep this app's domain-specific pieces local.
    the same files. The tarball ships no `src` since 0.55, so an `@source` still pointing
    there scans nothing, silently: replace it with the pair above.
 
-4. **Appearance stores: theme, palette, text size, contrast** — the factories let you
-   use your own persistence keys:
+4. **Appearance stores: theme, text size, contrast, and the palette** — the factories let
+   you use your own persistence keys. The palette is one preset with no choice
+   (`createFixedPalette`, 0.59): painted for the theme's mode, nothing stored:
    ```ts
-   import { createContrastStore, createPaletteStore, createTextSizeStore, createThemeStore } from "@eifi1/ui-kit";
+   import { createContrastStore, createFixedPalette, createTextSizeStore, createThemeStore } from "@eifi1/ui-kit";
    export const { useTheme, useApplyTheme } = createThemeStore("<app>-theme");
-   export const { usePalette, useApplyPalette, useActiveTokenSet, useChartHex, useHeatStops } =
-     createPaletteStore("<app>-palette", useTheme);
+   export const { applyPalette, useApplyPalette, useActiveTokenSet, useChartHex, useHeatStops } =
+     createFixedPalette(useTheme);
    export const { useTextSizeStore, useApplyTextSize } = createTextSizeStore("<app>-text-size");
    export const { useContrastStore, useApplyContrast } = createContrastStore("<app>-contrast");
    ```
@@ -78,7 +79,7 @@ primitives with the shared ones. Keep this app's domain-specific pieces local.
    ```ts
    // main.tsx, at module scope, before createRoot
    const mode = applyPersistedTheme("<app>-theme");
-   applyPersistedPalette("<app>-palette", mode);
+   applyPalette(mode);
    applyPersistedTextSize("<app>-text-size", { account: () => /* the persisted user's text_size */ null });
    applyPersistedContrast("<app>-contrast", { account: () => /* the persisted user's contrast */ null });
    ```
@@ -86,8 +87,9 @@ primitives with the shared ones. Keep this app's domain-specific pieces local.
    `TEXT_SIZE_INLINE_SCRIPT` and the two root rules (README → Styling → "Before the
    first paint"), and add the script's hash if you run a hash-based CSP.
 
-   The four stores join the **device reset** on their own (0.36,
-   docs/settings-harmonization.md §11), as do `UiKitProvider` (its tables' prefix) and
+   The theme, text-size and contrast stores join the **device reset** on their own (0.36,
+   docs/settings-harmonization.md §11; the fixed palette keeps nothing and joins nothing),
+   as do `UiKitProvider` (its tables' prefix) and
    `AppShell` (the sidebar). Register what else this device keeps of your app's look and
    views, at module scope beside the store that owns it, with a `reset` through the
    store's own setter for anything held in memory:
@@ -139,7 +141,7 @@ primitives with the shared ones. Keep this app's domain-specific pieces local.
    README → "Lint: the role utilities in an app" has the details.
 
 8. **Shell.** Build your app frame by composing `TopBar` + `AppShell` +
-   `ThemeToggle`/`PaletteMenu`/`LanguageMenu` with your own nav items and app-owned
+   `ThemeToggle`/`LanguageMenu` with your own nav items and app-owned
    menus (account, etc.). See the example at the end of the README.
 
 9. **Tests.**

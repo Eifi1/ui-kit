@@ -181,6 +181,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       bulkChanged: (count, value) => `${n(count)} bejelentés „${value}” értékre állítva`,
       bulkFailed: (count) => `${n(count)} bejelentést nem sikerült módosítani, kijelölve marad.`,
       bulkRestored: (count) => `${n(count)} bejelentés visszaállítva`,
+      focusIds: (count) => (count === 1 ? "Csak ez a bejelentés" : `Csak ez a ${n(count)} bejelentés`),
       bulkRestoreFailed: (count) => `${n(count)} bejelentést nem sikerült visszaállítani.`,
     },
     feedbackDetail: {
@@ -394,6 +395,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       rowCount: (total) => n(total),
       columnsCount: (visible, total) => `Oszlopok (${n(visible)}/${n(total)})`,
       filterColumn: (column, active) => (active ? `${column} szűrése (aktív)` : `${column} szűrése`),
+      keyFilter: (count) => (count === 1 ? "Csak ez a sor" : `Csak ez a ${n(count)} sor`),
       empty: "Nincsenek bejegyzések",
       actions: "Műveletek",
       edit: "Szerkesztés",
@@ -856,6 +858,16 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       noPreview: "Ehhez a fájlhoz nincs előnézet",
       openInNewTab: "Megnyitás új lapon",
     },
+    zoomableImage: {
+      viewer: (alt) => (alt ? `Nagyítható kép: ${alt}` : "Nagyítható kép"),
+      hint: "A + és a − billentyűvel nagyíthat és kicsinyíthet, a 0-val a szélességhez igazíthatja.",
+      controls: "Méretezés",
+      zoomIn: "Nagyítás",
+      zoomOut: "Kicsinyítés",
+      fit: "Szélességhez igazítás",
+      level: (percent) => `Nagyítás: ${n(percent)}%`,
+      fitted: "Szélességhez igazítva",
+    },
     writeLock: {
       reason: "Ezt megtekintheti, de nem módosíthatja.",
       offline: "Internetkapcsolat szükséges.",
@@ -985,8 +997,10 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
           },
           browser: {
             title: "Mit tárol az Ön böngészője",
-            lead: "Nincsenek sütik. Az alkalmazás a következőket tárolja az Ön böngészőjének tárhelyén:",
+            lead: "Az alkalmazás nem helyez el sütiket, és a következőket tárolja az Ön böngészőjének tárhelyén:",
             tail: "Egyiket sem használjuk az Ön követésére. A küldésre váró bejegyzéseket a böngésző elküldi nekünk, amint lehetséges. Mindez eltűnik, amikor törli a webhely adatait, kijelentkezéskor pedig a bejelentkezési tokenek törlődnek.",
+            commercial:
+              "Egyiket sem használjuk az Ön követésére. A küldésre váró bejegyzéseket a böngésző elküldi nekünk, amint lehetséges. Mindez eltűnik, amikor törli a webhely adatait, kijelentkezéskor pedig a bejelentkezési tokenek törlődnek. A fizetés a Paddle egy ablakában, a Paddle saját domainjén zajlik; amit ez az ablak ott tárol (például egy biztonsági sütit és beállításokat), arra a Paddle adatvédelmi tájékoztatója vonatkozik.",
           },
           rights: {
             title: "Az Ön jogai",

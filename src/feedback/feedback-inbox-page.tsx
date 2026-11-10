@@ -263,6 +263,13 @@ export interface FeedbackInboxState<T extends FeedbackRecord> {
   /** Open a row by its id, or close it with `null`: rewrites `?row=`, replacing the
    *  history entry rather than stacking one per report looked at. */
   setOpenId: (id: number | null) => void;
+  /**
+   * 0.59 (keksdose live #500, dev #678; §13.7): the reports `?ids=` names — a notice's
+   * "4 of your reports have answers" — while it names any; absent otherwise (also for an
+   * `?ids=` that does not parse). The table shows exactly those, as the # column's filter
+   * (`table.keyFilter`), whose Clear takes `ids` out of the address.
+   */
+  focusIds?: readonly number[];
   /** A row's own address: this view — the table's page, sort and filters — with the row
    *  open. The row's link (a new tab, a copied address); a plain click opens it in place. */
   rowHref: (row: T) => string;
@@ -297,6 +304,19 @@ function parseRowId(raw: string): number | undefined {
 }
 
 const ROW_PARAM = { parse: parseRowId, history: "replace" } as const;
+
+/**
+ * `?ids=`'s value (0.59, §13.7): report ids as `?row=` takes one — digits, no leading zero,
+ * safe integers — comma-separated, each once. Anything else (`?ids=1,,2`, `?ids=1e2`,
+ * `?ids=`) names no set: the whole list, as a broken `?row=` opens no row.
+ */
+export function parseFeedbackIds(raw: string): readonly number[] | undefined {
+  if (!/^[1-9]\d*(?:,[1-9]\d*)*$/.test(raw)) return undefined;
+  const ids = [...new Set(raw.split(",").map(Number))];
+  return ids.every(Number.isSafeInteger) ? ids : undefined;
+}
+
+const IDS_PARAM = { history: "replace" } as const;
 
 /** Newest first, as `GET /feedback` sends it (§3.3) — the phone's day headers group runs
  *  of equal days, so an older row between two of today's would split the day in two.
@@ -380,6 +400,14 @@ export function useFeedbackInbox<T extends FeedbackRecord>({
     },
     [here, search],
   );
+
+  // The reports a link names (0.59, §13.7; keksdose live #500, dev #678): `?ids=492,493`,
+  // which a notice about several reports opens. Shown as the # column's filter — a set,
+  // which a number filter's range cannot hold — and cleared with it, which takes `ids` out
+  // of the address (replace: the link's view is not a step for Back). The table keeps its
+  // saved filters out of the view and gives them back after (DataTable `keyFilter`).
+  const [idsParam, setIdsParam] = useSearchParamState<string | null>("ids", null, IDS_PARAM);
+  const focusIds = useMemo(() => (idsParam === null ? undefined : parseFeedbackIds(idsParam)), [idsParam]);
 
   // A thumb gesture on one screen, not a view worth linking to (§4.3; keksdose live #330).
   const [awaiting, setAwaiting] = useState(false);
@@ -487,6 +515,18 @@ export function useFeedbackInbox<T extends FeedbackRecord>({
     // The boxes, the select-all over what the filters keep, and the phone's long press —
     // in whose mode DataTable rests the swipes (§13.6).
     ...(selection ? { selection } : {}),
+    // `?ids=` as the # column's filter (§13.7). On `id`, the kit's # column: an app whose
+    // `columns` drops it keeps the narrowing and loses the indicator.
+    ...(focusIds
+      ? {
+          keyFilter: {
+            column: "id",
+            keys: focusIds,
+            label: pageLabels.focusIds(focusIds.length),
+            onClear: () => setIdsParam(null),
+          },
+        }
+      : {}),
   };
 
   return {
@@ -494,6 +534,7 @@ export function useFeedbackInbox<T extends FeedbackRecord>({
     title: mine ? pageLabels.myTitle : pageLabels.title,
     openId,
     setOpenId,
+    ...(focusIds ? { focusIds } : {}),
     rowHref,
     changeStatus,
     awaiting,

@@ -130,6 +130,8 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "dataTable.sortedDescending": [["{{column}}"]],
   "dataTable.sortCleared": [["{{column}}"]],
   "dataTable.pageChanged": [[2, 5]],
+  // 0.59 (keksdose dev #678): a `keyFilter` set, one row and several.
+  "dataTable.keyFilter": one,
   "dataTable.pageRange": [[1, 25, 1240]],
   "dataTable.rowCount": [[1], [1240]],
   "dataTable.columnsCount": [[3, 8]],
@@ -239,6 +241,8 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "feedbackPage.bulkFailed": one,
   "feedbackPage.bulkRestored": one,
   "feedbackPage.bulkRestoreFailed": one,
+  // 0.59 (keksdose dev #678): the inbox narrowed to a notice's `?ids=`.
+  "feedbackPage.focusIds": one,
   "feedbackDetail.download": [["{{name}}"]],
   "feedbackDetail.resolvedAt": [["{{date}}"]],
   "feedbackPublic.total": one,
@@ -269,6 +273,8 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "imageGrid.actions": [["{{name}}"]],
   "lightbox.counter": [[2, 5]],
   "lightbox.position": [[2, 5]],
+  "zoomableImage.viewer": [["{{alt}}"], [""]],
+  "zoomableImage.level": [[150]],
   "shareCard.roleOf": [["{{name}}"]],
   "shareCard.teamHint": [["{{name}}"]],
   "shareCard.removeConfirm": [["{{name}}"]],

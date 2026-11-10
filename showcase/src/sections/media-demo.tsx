@@ -1,14 +1,25 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { RotateCcw, Star, Trash2 } from "lucide-react";
-import { AuthedImage, Button, IconButton, ImageGrid, Lightbox, Switch, ToggleGroup, useAuthedSrc } from "@eifi1/ui-kit";
+import {
+  AuthedImage,
+  Button,
+  IconButton,
+  ImageGrid,
+  Lightbox,
+  Switch,
+  ToggleGroup,
+  ZoomableImage,
+  useAuthedSrc,
+} from "@eifi1/ui-kit";
 import type { AuthedFetcher, ImageItem } from "@eifi1/ui-kit";
 import { Example, Note, Row, code, READOUT } from "../lib/section";
 
 /**
- * MEDIA — the photo grid, the viewer it opens, and the image that fetches itself with
- * the app's credentials. Everything on this page is generated here: the "photos" are
- * SVG scenes, the "floor plan" is a one-page PDF written out by hand, and the "API" is
- * a function that waits and then answers — so nothing leaves the machine.
+ * MEDIA — the photo grid, the viewer it opens, the inline picture that zooms where it is,
+ * and the image that fetches itself with the app's credentials. Everything on this page
+ * is generated here: the "photos" are SVG scenes, the receipt is an SVG written line by
+ * line, the "floor plan" is a one-page PDF written out by hand, and the "API" is a
+ * function that waits and then answers — so nothing leaves the machine.
  */
 
 /* ── Generated media ─────────────────────────────────────────────────────── */
@@ -261,6 +272,129 @@ function LightboxSpecimen() {
         <Note>
           Built on {code("FullBleedDialog")}: the focus trap, the scroll lock and the history entry that makes Back
           close it are that component&apos;s, not re-implemented here.
+        </Note>
+      </div>
+    </Example>
+  );
+}
+
+/* ── ZoomableImage ───────────────────────────────────────────────────────── */
+
+const RECEIPT_ITEMS = [
+  "Oat drink 1 l",
+  "Rye bread, sliced",
+  "Apples 1 kg",
+  "Free-range eggs ×10",
+  "Butter 250 g",
+  "Tomatoes on the vine",
+  "Basmati rice 1 kg",
+  "Dish soap",
+  "Coffee beans 500 g",
+  "Yoghurt, plain",
+  "Pasta, fusilli",
+  "Cheddar, mature",
+] as const;
+
+/**
+ * A till receipt the way a shopping app shares it: one screenshot, 1220 px wide and over
+ * eleven thousand tall, every line printed small. Generated here, line by line, so the
+ * prices and the total are deterministic and nothing is fetched.
+ */
+function receiptSvg(): { url: string; width: number; height: number } {
+  const width = 1220;
+  const lineHeight = 64;
+  const lines = 167;
+  const head = 420;
+  const height = head + lines * lineHeight + 520;
+  let total = 0;
+  const rows: string[] = [];
+  for (let i = 0; i < lines; i += 1) {
+    const cents = 49 + ((i * 373) % 1150);
+    total += cents;
+    const y = head + i * lineHeight;
+    const name = RECEIPT_ITEMS[i % RECEIPT_ITEMS.length];
+    rows.push(
+      `<text x="70" y="${y}">${String(i + 1).padStart(3, "0")}  ${name}</text>` +
+        `<text x="1150" y="${y}" text-anchor="end">${(cents / 100).toFixed(2)}</text>`,
+    );
+  }
+  const foot = head + lines * lineHeight + 80;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+<rect width="${width}" height="${height}" fill="#fffdf7"/>
+<g font-family="ui-monospace, Menlo, Consolas, monospace" fill="#1f2937">
+<text x="${width / 2}" y="150" text-anchor="middle" font-size="72" font-weight="700">CORNER MARKET</text>
+<text x="${width / 2}" y="230" text-anchor="middle" font-size="34">12 Example Street · Receipt 0042</text>
+<line x1="70" y1="300" x2="1150" y2="300" stroke="#9ca3af" stroke-width="4" stroke-dasharray="16 12"/>
+<g font-size="34">${rows.join("")}</g>
+<line x1="70" y1="${foot - 70}" x2="1150" y2="${foot - 70}" stroke="#9ca3af" stroke-width="4" stroke-dasharray="16 12"/>
+<text x="70" y="${foot}" font-size="52" font-weight="700">TOTAL</text>
+<text x="1150" y="${foot}" text-anchor="end" font-size="52" font-weight="700">${(total / 100).toFixed(2)}</text>
+<text x="${width / 2}" y="${foot + 160}" text-anchor="middle" font-size="34">Thank you for shopping with us</text>
+</g>
+</svg>`;
+  return { url: svgUrl(svg), width, height };
+}
+
+type ZoomSample = "receipt" | "photo";
+
+function ZoomableImageSpecimen() {
+  const receipt = useMemo(() => receiptSvg(), []);
+  const photo = useMemo(
+    () => ({ url: svgUrl(sceneSvg("Balcony", "#10b981", "#a7f3d0", "#065f46")), width: 640, height: 480 }),
+    [],
+  );
+  const [sample, setSample] = useState<ZoomSample>("receipt");
+  const [known, setKnown] = useState(true);
+  const [short, setShort] = useState(false);
+  const shown = sample === "receipt" ? receipt : photo;
+
+  return (
+    <Example
+      label="ZoomableImage — a very tall receipt, fitted to the width"
+      hint="inline, not a dialog: pinch, ⌘/Ctrl + wheel, + − 0, the buttons, or a double-tap"
+    >
+      <Row>
+        <ToggleGroup<ZoomSample>
+          aria-label="picture"
+          value={sample}
+          onChange={setSample}
+          options={[
+            { value: "receipt", label: `receipt ${receipt.width}×${receipt.height}` },
+            { value: "photo", label: "photo 640×480" },
+          ]}
+        />
+        <Switch label="naturalWidth / naturalHeight given" checked={known} onCheckedChange={setKnown} />
+        <Switch label="maxHeight 20rem" checked={short} onCheckedChange={setShort} />
+      </Row>
+      <div className="mt-4 max-w-sm">
+        <ZoomableImage
+          src={shown.url}
+          alt={sample === "receipt" ? "Till receipt, Corner Market" : "Balcony, inspection photo"}
+          naturalWidth={known ? shown.width : undefined}
+          naturalHeight={known ? shown.height : undefined}
+          maxHeight={short ? "20rem" : undefined}
+          className="rounded-md border border-subtle"
+        />
+      </div>
+      <div className="mt-3 space-y-2">
+        <Note>
+          The picture always takes the box&apos;s width, and a zoom widens it — the box&apos;s own scroll is the pan.
+          The box grows with the picture up to {code("maxHeight")} ({code("75svh")} by default) and scrolls past it, so
+          the photo shows whole and the receipt reads top to bottom; zoomed, the box keeps its height and the page
+          around it does not move.
+        </Note>
+        <Note>
+          Touch: pinch to zoom about the fingers, move two fingers to pan, drag with one once zoomed, double-tap for the
+          picture&apos;s own pixels (100 %) and again for the fit. At the fit a one-finger swipe is the browser&apos;s,
+          so it scrolls the receipt and then the page. Desktop: {code("⌘/Ctrl")} + wheel or a trackpad pinch zooms about
+          the cursor (a plain wheel scrolls), double-click toggles 100 %, a zoomed picture drags, and on the focused box
+          + and − zoom, 0 fits, the arrows scroll. The new level is announced. Under reduced motion the button steps
+          jump instead of easing.
+        </Note>
+        <Note>
+          {code("naturalWidth")} / {code("naturalHeight")} (from an upload&apos;s stored size) reserve the box before
+          the file arrives; {code("fetcher")} loads it through the app&apos;s authenticated GET, as{" "}
+          {code("AuthedImage")} does.
         </Note>
       </div>
     </Example>
@@ -520,6 +654,7 @@ export function MediaDemo() {
     <>
       <ImageGridSpecimen />
       <LightboxSpecimen />
+      <ZoomableImageSpecimen />
       <AuthedImageSpecimen />
       <UseAuthedSrcSpecimen />
     </>

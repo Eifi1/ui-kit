@@ -186,6 +186,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
           ? "1 informe no se ha podido cambiar y sigue seleccionado."
           : `${n(count)} informes no se han podido cambiar y siguen seleccionados.`,
       bulkRestored: (count) => `${n(count)} ${plural(count, "informe restaurado", "informes restaurados")}`,
+      focusIds: (count) => (count === 1 ? "Solo este informe" : `Solo estos ${n(count)} informes`),
       bulkRestoreFailed: (count) =>
         count === 1 ? "1 informe no se ha podido restaurar." : `${n(count)} informes no se han podido restaurar.`,
     },
@@ -399,6 +400,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       rowCount: (total) => n(total),
       columnsCount: (visible, total) => `Columnas (${n(visible)}/${n(total)})`,
       filterColumn: (column, active) => (active ? `Filtrar ${column} (activo)` : `Filtrar ${column}`),
+      keyFilter: (count) => (count === 1 ? "Solo esta fila" : `Solo estas ${n(count)} filas`),
       empty: "No hay entradas",
       actions: "Acciones",
       edit: "Editar",
@@ -857,6 +859,16 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       noPreview: "No hay vista previa disponible para este archivo",
       openInNewTab: "Abrir en una pestaña nueva",
     },
+    zoomableImage: {
+      viewer: (alt) => (alt ? `Imagen ampliable: ${alt}` : "Imagen ampliable"),
+      hint: "Pulse + o − para ampliar o reducir y 0 para ajustar al ancho.",
+      controls: "Zoom",
+      zoomIn: "Acercar",
+      zoomOut: "Alejar",
+      fit: "Ajustar al ancho",
+      level: (percent) => `Zoom ${n(percent)}\u00a0%`,
+      fitted: "Ajustada al ancho",
+    },
     writeLock: {
       reason: "Puede verlo, pero no modificarlo.",
       offline: "Requiere conexión.",
@@ -981,8 +993,10 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
           },
           browser: {
             title: "Qué guarda su navegador",
-            lead: "Ninguna cookie. La aplicación guarda lo siguiente en el almacenamiento de su navegador:",
+            lead: "La aplicación no instala cookies y guarda lo siguiente en el almacenamiento de su navegador:",
             tail: "Nada de ello se usa para rastrearle. Las entradas pendientes de envío se nos envían en cuanto sea posible. Todo ello desaparece cuando borra los datos del sitio, y al cerrar sesión se eliminan los tokens de inicio de sesión.",
+            commercial:
+              "Nada de ello se usa para rastrearle. Las entradas pendientes de envío se nos envían en cuanto sea posible. Todo ello desaparece cuando borra los datos del sitio, y al cerrar sesión se eliminan los tokens de inicio de sesión. El pago se realiza en una ventana de Paddle, en el propio dominio de Paddle; lo que esa ventana guarda allí (por ejemplo, una cookie de seguridad y ajustes) se rige por la política de privacidad de Paddle.",
           },
           rights: {
             title: "Sus derechos",

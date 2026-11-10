@@ -215,6 +215,40 @@ export type ListItemCheckedStyle = "strike" | "none";
 const TARGET_RING = cn(FOCUS_RING, "focus-visible:ring-inset");
 
 /**
+ * A control in {@link ListItemBaseProps.leadingActions} is a full-size touch target (0.59,
+ * keksdose live #497, Marcel 2026-11-10): on a shopping list a tap on the ROW opens the item
+ * and the box before it TICKS the item, and a 16 px `Checkbox` there was no target for a thumb.
+ * Each button and each kit `Checkbox` box in the slot gets an invisible hit area, an `::after`
+ * centred on it: 44 px square (WCAG 2.5.5's size, IconButton `lg`'s), 48 px from Large (the
+ * §4 target, `TOUCH_TARGET_LARGE`'s), and never smaller than the control (`min(0px, …)`).
+ *
+ * Positioned, so it changes neither the row's layout nor the control's look; round a 16 px box
+ * it reaches 14 px past it, over the row's start padding and the target's own (16 px at
+ * `comfortable`; at `default`'s 12 and `compact`'s 8 its last 2 or 6 px cover the start of the
+ * row's icon or title, which a tap there then misses). A button takes a tap on its own
+ * `::after`; the box's wrapper hands one on its `::after` to the box (Checkbox's `tapBox`),
+ * since an `<input>` draws no pseudo-element of its own.
+ *
+ * The slot's, by descendant selectors, rather than a ListItem prop that draws a box of its
+ * own: every control a caller already puts there gains it, a box keeps all of Checkbox's
+ * props (`commit`, `disabledReason`, `indeterminate`, a `ref`) and its name (the caller's
+ * `aria-label`, "Done: Bread"), and there is one checkbox API, not two. A DOM selector reaches
+ * nothing the slot portals elsewhere (a menu a leading button opens). Not the checkable row
+ * (`checked`): there the whole row is the box.
+ */
+const LEADING_TARGETS = [
+  "[&_button]:relative",
+  "[&_button]:after:absolute",
+  "[&_button]:after:content-['']",
+  "[&_button]:after:inset-[min(0px,calc((100%-44px)/2))]",
+  "large:[&_button]:after:inset-[min(0px,calc((100%-48px)/2))]",
+  "[&_[data-slot=checkbox-box]]:after:absolute",
+  "[&_[data-slot=checkbox-box]]:after:content-['']",
+  "[&_[data-slot=checkbox-box]]:after:inset-[min(0px,calc((100%-44px)/2))]",
+  "large:[&_[data-slot=checkbox-box]]:after:inset-[min(0px,calc((100%-48px)/2))]",
+].join(" ");
+
+/**
  * §4 "ListItem: title, subtitle and meta wrap instead of truncating" at Large and Extra
  * large (docs/text-size-harmonization.md). `large:` variants over the Normal look, so
  * a list keeps its one-height rows at Normal and costs no render to switch: a one-line
@@ -315,6 +349,12 @@ interface ListItemBaseProps {
    * and the checkbox keeps its own name. Give the control an `aria-label` naming the
    * row ("Select Groceries"), since it is not inside the row's name. Anything that only
    * shows goes in {@link leading}, inside the target.
+   *
+   * Each button and each {@link Checkbox} box here is a full-size touch target (0.59): an
+   * invisible 44 px hit area round it (48 px from Large) that leaves the row's layout and the
+   * control's look as they were — so a row can OPEN on a tap (`onClick`) while the box before
+   * it TICKS (keksdose's shopping list: `aria-label` "Done: Bread"). For a row that is only
+   * a box, use `checked` instead.
    */
   leadingActions?: ReactNode;
   /**
@@ -933,7 +973,12 @@ export function ListItem({
 
   const leadingActionsEl =
     leadingActions != null ? (
-      <div className={cn("flex shrink-0 items-center", pad.gap, pad.leadingActions)}>{leadingActions}</div>
+      <div
+        data-slot="list-item-leading"
+        className={cn("flex shrink-0 items-center", pad.gap, pad.leadingActions, LEADING_TARGETS)}
+      >
+        {leadingActions}
+      </div>
     ) : null;
   const actionsEl =
     actions != null ? <div className={cn("flex shrink-0 items-center", pad.gap, pad.actions)}>{actions}</div> : null;

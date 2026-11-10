@@ -291,8 +291,17 @@ export interface LegalLabels {
       controller: LegalOperatorSectionLabels;
       /** The app's paragraph follows the body (§4.2): consent, where an app relies on it. */
       legal_basis: LegalTextSectionLabels;
-      /** `lead`, then the app's entries as a list, then `tail`, then the app's paragraph. */
-      browser: LegalFramedSectionLabels;
+      /**
+       * `lead`, then the app's entries as a list, then `tail`, then the app's paragraph.
+       * `commercial` (0.59) is the tail for `<LegalKitSection section="browser"
+       * variant="commercial">`: the same tail, then one sentence on the checkout — it runs
+       * in a Paddle window on Paddle's own domain, and what that window stores there falls
+       * under Paddle's privacy policy (keksdose's scan for absolute claims, Marcel
+       * 2026-11-10). After the tail, not before it: the tail's "none of it is used to track
+       * you" is the app's promise about its own list. Keyed as the disclaimer's and the
+       * changes clause's, OPTIONAL as theirs: left out, the provider's, then English.
+       */
+      browser: LegalFramedSectionLabels & { commercial?: string };
       /** `lead` (the rights), then the app's paragraph (export, deletion), then `tail`
        *  (the supervisory authorities). */
       rights: LegalFramedSectionLabels;

@@ -34,6 +34,12 @@ export { prefersReducedMotion } from "./lib/reduced-motion";
 // move the focus this way. `focusQuietly` for an app's own focus move (keksdose's split
 // editor), `isQuietFocus` for an app's own open-on-focus control to honour the kit's.
 export { focusQuietly, isQuietFocus } from "./lib/quiet-focus";
+// 0.59 (keksdose 846423e6, which carried private copies): where the focus goes when the
+// control holding it leaves the page, by the kit's own rules — `focusIsLost` (it fell to
+// <body>), `focusFirst` (to the first candidate that takes it), and `returnFocus`, the whole
+// rule an overlay closing or a removed control follows. A row leaving a list: `useRowLeaves`.
+export { focusIsLost, focusFirst, returnFocus } from "./lib/focus-left";
+export type { FocusReturn } from "./lib/focus-left";
 // Save a fetched Blob as a download, and read the name a Content-Disposition asks for
 // (`filename*` first) — 0.34, KS U5; the kit's own three downloads use them.
 export { saveBlob, filenameFromDisposition } from "./lib/download";
@@ -286,6 +292,9 @@ export * from "./theme/palette-derive";
 export * from "./theme/palette-presets";
 export * from "./theme/theme-store";
 export * from "./theme/palette-store";
+// 0.59: one palette and no choice of it (no app offers a chart palette since 2026-11-10);
+// `createPaletteStore` and `applyPersistedPalette` are deprecated in its favour.
+export * from "./theme/fixed-palette";
 // 0.32.0: text size and contrast (docs/text-size-harmonization.md).
 export * from "./theme/text-size";
 export * from "./theme/contrast";
@@ -608,6 +617,10 @@ export {
   type ImageGridProps,
 } from "./components/image-grid";
 export * from "./components/lightbox";
+// 0.59 (keksdose #505): a picture shown inline that zooms where it is — fitted to the width,
+// pinch and two-finger pan, ⌘/Ctrl + wheel, the + − 0 keys and buttons, double-tap to 100 %.
+export { ZoomableImage, DEFAULT_ZOOMABLE_IMAGE_LABELS } from "./components/zoomable-image";
+export type { ZoomableImageProps, ZoomableImageLabels } from "./components/zoomable-image";
 export * from "./components/button-group";
 export * from "./components/table";
 export * from "./components/separator";
@@ -626,6 +639,10 @@ export type {
   UseReorderOptions,
   UseReorderReturn,
 } from "./components/reorder";
+// 0.59 (keksdose 846423e6): the focus when a row LEAVES its list — a ticked item folded into
+// "Done" — goes to the same control in the next row, else the previous, else a fallback.
+export { useRowLeaves } from "./hooks/use-row-leaves";
+export type { RowLeavesProps, UseRowLeavesOptions, UseRowLeavesReturn } from "./hooks/use-row-leaves";
 export * from "./components/menu-item";
 export * from "./components/text";
 export * from "./components/status-dot";

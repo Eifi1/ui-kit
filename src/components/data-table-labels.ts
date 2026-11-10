@@ -99,6 +99,12 @@ export interface DataTableLabels extends DataTableSortLabels {
    * gets `"<filter>: <column>"` from it: DataTable derives the one from the other.
    */
   filterColumn: (column: string, active: boolean) => string;
+  /**
+   * 0.59 (keksdose dev #678): a `keyFilter` set's panel, in its column's filter popover and
+   * the phone's filter sheet, when the owner names nothing of its own — `count` rows named
+   * from outside the table (a link's `?ids=`).
+   */
+  keyFilter: (count: number) => string;
 
   // ---- Empty state, row actions, boolean cells (0.12.0) ----
 
@@ -178,6 +184,7 @@ export const DEFAULT_DATA_TABLE_LABELS: DataTableLabels = {
   rowCount: (total) => `${total}`,
   columnsCount: (visible, total) => `Columns (${visible}/${total})`,
   filterColumn: (column, active) => (active ? `Filter ${column} (active)` : `Filter ${column}`),
+  keyFilter: (count) => (count === 1 ? "Only this row" : `Only these ${count} rows`),
   empty: "No entries",
   actions: "Actions",
   edit: "Edit",
