@@ -286,6 +286,9 @@ export * from "./theme/palette-derive";
 export * from "./theme/palette-presets";
 export * from "./theme/theme-store";
 export * from "./theme/palette-store";
+// 0.59: one palette and no choice of it (no app offers a chart palette since 2026-11-10);
+// `createPaletteStore` and `applyPersistedPalette` are deprecated in its favour.
+export * from "./theme/fixed-palette";
 // 0.32.0: text size and contrast (docs/text-size-harmonization.md).
 export * from "./theme/text-size";
 export * from "./theme/contrast";
