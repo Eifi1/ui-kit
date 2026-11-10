@@ -165,14 +165,17 @@ there scans nothing, silently: replace it with the pair above.
 
 ### 3. Appearance stores (own persistence keys)
 
-The stores are factories so each app namespaces its own `localStorage`: theme, palette,
-text size and contrast.
+The stores are factories so each app namespaces its own `localStorage`: theme, text size
+and contrast. The palette is one preset and no choice (0.59): `createFixedPalette` paints
+it for the theme's mode and keeps nothing (`DEFAULT_PRESET` unless `preset` names another;
+`legacyStorageKey` removes an old palette key at boot). `createPaletteStore` and
+`applyPersistedPalette`, which kept a choice per device, are deprecated.
 
 ```ts
-import { createContrastStore, createPaletteStore, createTextSizeStore, createThemeStore } from "@eifi1/ui-kit";
+import { createContrastStore, createFixedPalette, createTextSizeStore, createThemeStore } from "@eifi1/ui-kit";
 export const { useTheme, useApplyTheme } = createThemeStore("myapp-theme");
-export const { usePalette, useApplyPalette, useActiveTokenSet, useChartHex, useHeatStops } =
-  createPaletteStore("myapp-palette", useTheme);
+export const { applyPalette, useApplyPalette, useActiveTokenSet, useChartHex, useHeatStops } =
+  createFixedPalette(useTheme);
 export const { useTextSizeStore, useApplyTextSize } = createTextSizeStore("myapp-text-size");
 export const { useContrastStore, useApplyContrast } = createContrastStore("myapp-contrast");
 ```
@@ -181,13 +184,13 @@ Call `useApplyTheme()`, `useApplyPalette()`, `useApplyTextSize({ account })` and
 `useApplyContrast({ account })` once near the root; `account` is the signed-in user's
 saved value, which applies while this device has no choice of its own. For a no-flash
 first paint, apply all four **before** hydration — `applyPersistedTheme(key)` resolves the
-stored preference, toggles `.dark` and returns the mode, which
-`applyPersistedPalette(key, mode)` then uses:
+stored preference, toggles `.dark` and returns the mode, which `applyPalette(mode)` then
+uses:
 
 ```ts
 // main.tsx, at module scope, before createRoot (readPersistedUser is the app's own)
 const mode = applyPersistedTheme("myapp-theme");
-applyPersistedPalette("myapp-palette", mode);
+applyPalette(mode);
 applyPersistedTextSize("myapp-text-size", { account: () => readPersistedUser()?.text_size });
 applyPersistedContrast("myapp-contrast", { account: () => readPersistedUser()?.contrast });
 ```
@@ -197,9 +200,9 @@ module runs needs the text size even earlier: see "Before the first paint" under
 [Styling](#styling). Worked example:
 [`showcase/src/main.tsx`](https://github.com/Eifi1/ui-kit/blob/main/showcase/src/main.tsx).
 
-**Reset this device's settings** (0.36, `docs/settings-harmonization.md` §11): the four
-stores, `AppShell`'s sidebar key and `UiKitProvider`'s table prefix join a registry by
-themselves; `DeviceResetSetting` (the last card of the appearance group) clears them all and
+**Reset this device's settings** (0.36, `docs/settings-harmonization.md` §11): the theme,
+text-size and contrast stores, `AppShell`'s sidebar key and `UiKitProvider`'s table prefix join a registry by
+themselves (the fixed palette keeps nothing and joins nothing); `DeviceResetSetting` (the last card of the appearance group) clears them all and
 puts each back live. An app adds its own device keys, each with a reset that goes through its
 own store:
 
@@ -1454,14 +1457,14 @@ route it elsewhere.
 ## Shell
 
 `TopBar`/`AppShell` are composable chrome. Feed `AppShell` your nav items and pass
-a `TopBar` whose `actions` combine the shared controls (`ThemeToggle`,
-`PaletteMenu`, `LanguageMenu`) with your own app-owned menus (account, etc.):
+a `TopBar` whose `actions` combine the shared controls (`ThemeToggle`, `LanguageMenu`;
+`PaletteMenu` is deprecated, no app offers a palette choice) with your own app-owned menus
+(account, etc.):
 
 ```tsx
 <AppShell nav={nav} footer={<Footer/>} topBar={
   <TopBar brand={<Logo/>} actions={<>
     <ThemeToggle mode={mode} onToggle={toggle} />
-    <PaletteMenu palettes={PALETTES} activeId={id} mode={mode} onSelect={setId} />
     <LanguageMenu options={langs} current={lang} onChange={setLang} />
     {/* app-owned menus */}
   </>} />
