@@ -195,6 +195,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
           : `${n(count)} Meldungen konnten nicht geändert werden und bleiben ausgewählt.`,
       bulkRestored: (count) =>
         count === 1 ? "1 Meldung wiederhergestellt" : `${n(count)} Meldungen wiederhergestellt`,
+      focusIds: (count) => (count === 1 ? "Nur diese Meldung" : `Nur diese ${n(count)} Meldungen`),
       bulkRestoreFailed: (count) =>
         count === 1
           ? "1 Meldung konnte nicht wiederhergestellt werden."

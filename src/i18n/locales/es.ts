@@ -186,6 +186,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
           ? "1 informe no se ha podido cambiar y sigue seleccionado."
           : `${n(count)} informes no se han podido cambiar y siguen seleccionados.`,
       bulkRestored: (count) => `${n(count)} ${plural(count, "informe restaurado", "informes restaurados")}`,
+      focusIds: (count) => (count === 1 ? "Solo este informe" : `Solo estos ${n(count)} informes`),
       bulkRestoreFailed: (count) =>
         count === 1 ? "1 informe no se ha podido restaurar." : `${n(count)} informes no se han podido restaurar.`,
     },

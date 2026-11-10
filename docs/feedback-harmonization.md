@@ -32,7 +32,7 @@ names them. The snapshot, the per-repo to-dos and the review records are in
 | 10 | Round 0.40: rework as a conversation entry, the feedback menu | **§10 settled 2026-10-16 (round 0.40)**, for server-kit 0.13 / ui-kit 0.40 | amends §2.1 (REWORK), §2.2, §3.4 (the rework), §4.1 (the menu), §4.3–§4.5, §5; §9.7, §9.11, §9.12, §9.13 |
 | 11 | Round 0.46: admin alerts for new reports and reworks | **§11 settled 2026-10-19 (round 0.46)**, for server-kit 0.16 / ui-kit 0.46 | adds a notification type (notifications §10.2); amends §10.2 decision 10 (no admin mail) |
 | 12 | Round 0.47: attachments on admin replies and public comments, inline images | **§12 settled 2026-10-21 (Marcel)**, for server-kit 0.18 / ui-kit 0.47; the apps review it in the build review | amends §9.7 (a reply's file), §9.8 (a comment's file), §9.10 (the files predicate, a comment's URL), §9.12 (erasure), §10.3 (who draws an entry's file), §4.4.3 (the Attachment section) |
-| 13 | Round 0.55: the inbox, assembled once | **§13 (2026-11-04)**, ui-kit 0.55, from the kastlan reuse audit 2026-11-02 (proposal 2); no server change. §13.6 the bulk edit, ui-kit 0.57 (keksdose dev #663); no server change | amends §4.3 (the two pages' canonical assembly: `FeedbackInbox` / `useFeedbackInbox`; `?row=` digits only), §5 (the kit's list; the app keeps its queries and mutations); §13.6 amends §4.5 (one Undo per batch) and §3.4's use (`category` through `update`) |
+| 13 | Round 0.55: the inbox, assembled once | **§13 (2026-11-04)**, ui-kit 0.55, from the kastlan reuse audit 2026-11-02 (proposal 2); no server change. §13.6 the bulk edit, ui-kit 0.57 (keksdose dev #663); no server change. §13.7 the `?ids=` set, ui-kit 0.59 (keksdose live #500, dev #678); no server change | amends §4.3 (the two pages' canonical assembly: `FeedbackInbox` / `useFeedbackInbox`; `?row=` digits only), §5 (the kit's list; the app keeps its queries and mutations); §13.6 amends §4.5 (one Undo per batch) and §3.4's use (`category` through `update`); §13.7 amends §4.3 (the inbox reads `?ids=` beside `?row=`) and §9.11 (a notice about several of a person's reports links `/my-feedback?ids=…`) |
 
 ## 1. Where each one stands
 
@@ -2427,8 +2427,9 @@ What it returns (`FeedbackInboxState<T>`): `editable` (`canEdit && !mine`), `tit
 `changeStatus` (`useFeedbackStatusUndo(update.mutateAsync)`, the cell's, the pills' and the
 swipes'), `awaiting` / `setAwaiting`, `renderDate`, `detailProps(row)` (what
 `FeedbackRowDetail` takes), `table` (what `DataTable` takes, ready to spread; with the
-`selection` when `bulk` is there) and, 0.57, `bulk` (`FeedbackInboxBulk<T>`, §13.6;
-present where `editable && selectable`).
+`selection` when `bulk` is there, and with a set its `keyFilter`), 0.57, `bulk`
+(`FeedbackInboxBulk<T>`, §13.6; present where `editable && selectable`) and, 0.59,
+`focusIds` (the reports `?ids=` names, §13.7; absent without a set).
 
 The wiring it holds, the same for every app:
 
@@ -2436,6 +2437,9 @@ The wiring it holds, the same for every app:
   **digits only, no leading zero, a safe integer**; anything else opens no row and stays in
   the URL until a row is opened or closed. The three apps parsed with `Number()`, so
   `?row=1e2` opened #100, and `?row=3.0` or `?row=+3` #3, in all three.
+- **A set of reports is `?ids=<id>,<id>`** (0.59, §13.7): the table shows exactly those, as
+  the # column's filter, whose Clear takes `ids` out of the address; the saved filters stay
+  out of that view and come back after it.
 - **Every row's link opens that row** — `pathname` through the router (`useHref`, so a
   basename and a hash router are in it) and the CURRENT query with `row` set, keeping the
   table's `f.*`, `sort` and `p`. The open row's link opens it too (a link copied off it is
@@ -2636,3 +2640,73 @@ total failure; three in flight; the category (no CRASH) and Visible to others (n
 flagless row); the provider's words; the phone's long press, the resting swipes and the
 toggle stepping aside. `src/components/__tests__/data-table-filtered-rows.test.tsx` —
 `onFilteredRowsChange`.
+
+### 13.7 A notice's reports: `?ids=` (ui-kit 0.59)
+
+keksdose live #500 (Marcel tapped "4 of your feedback reports have answers" and saw none of
+them: the bare `/my-feedback` the notice opened kept the status filter he had left on,
+which hid all four) and dev #678 (*"Url shows …/feedback?ids=675&row=675. But nowhere in
+the table columns is a filter set (should be in the # column) and the Clear selection also
+does not revert the url to without filtering."*). keksdose answered both on its page — a
+Chip above the table and `storageKey: undefined` for several reports, `f.id=N..N` with a
+`notice=1` marker for one (keksdose `91816159`) — and lost the person's saved layout with
+the storage. The inbox §13 assembles now does it, for all three. No server change, no new
+wiring.
+
+- **The contract.** `?ids=<id>,<id>,…` on `/feedback` and `/my-feedback` names a SET of
+  reports: report ids as `?row=` takes one (digits, no leading zero, safe integers),
+  comma-separated, each once. Anything else (`?ids=1,,2`, `?ids=1e2`, an empty value)
+  names no set: the whole list, the param left in the address, as a broken `?row=` opens
+  no row. One report is a set of one (`?ids=675&row=675` names it and opens it);
+  `f.id=675..675` stays what it is, the # column's own number range, a filter the person
+  set. With both, **`ids` wins**: the range is not applied while the set is on, and the
+  column's Clear clears both. `useFeedbackInbox` reads it beside `?row=` and returns it as
+  `inbox.focusIds` (absent without a set).
+- **Who links it.** A notification about several of a person's OWN reports
+  (`feedback_answered` bundled, §9.11): `/my-feedback?ids=…`, and `&row=<id>` beside a
+  single one — keksdose's `feedback_notice_url`, which caps the link at 50 ids and opens
+  the bare list past that. Reports a person follows live on the public list
+  (`FeedbackPublicList`, §9.3), which keeps no filter of its own and pages on the server:
+  one opens in `?row=`, several with `?sort=updated` (they were just answered, so they
+  lead). The public list takes no `ids` — it has no filter to show a set in, and its rows
+  are the server's page; a server `ids` parameter would be its first step.
+- **It shows as the # column's filter** (`DataTable`'s new `keyFilter`, on the `id`
+  column): the header's filter button is on ("Filter # (active)"), and its popover says
+  `feedbackPage.focusIds(count)` — "Only these 4 reports", "Only this report" — with
+  **Clear filter** in place of the column's range. On a phone the # column is no card
+  field, but it is a section of the Filters sheet: the bar counts it, the section says the
+  same words, and **Clear all** clears it with the rest. Either Clear takes `ids` out of
+  the address (replace; the open `row` stays). An app whose `columns` drops `id` keeps the
+  narrowing and loses the indicator.
+- **A link's view keeps the saved filters out — and gives them back.** While the set is on,
+  the filters the inbox keeps under `storageKey="feedback"` are neither applied (the view
+  starts from the address's own `f.<column>`, usually none) nor written (the stored view
+  keeps them as they were); a filter set inside the view is the view's. When the set goes,
+  the saved filters come back: the list the person left. **Only the filters**: the sort,
+  the page size, the column widths and the hidden columns are read and written as always,
+  so the layout stays theirs (keksdose's interim, mounting without storage, lost it). A set
+  that arrives while the page is open (a second notice tapped) starts the view the same way.
+- **"Clear selection" at "0 selected".** The desktop's bulk strip stands open from the
+  start (§13.6), and at "0 selected" its Clear cleared nothing — it read as a clear of the
+  list, which is what Marcel pressed. It is refused there now (`BulkActionBar`'s new
+  `clearDisabled`: `aria-disabled`, focusable, a press swallowed — a Clear pressed into that
+  state keeps the focus), enabled again with the first ticked row. The phone's floating
+  card comes with a selection and goes with it, unchanged.
+- **The words** (seven catalogues): `feedbackPage.focusIds(count)`; `dataTable.keyFilter(count)`
+  ("Only these 3 rows") is `keyFilter`'s default for a table whose owner names none.
+
+**Per app:** keksdose drops its `?ids=` handling from `feedback-page.tsx` — `parseFeedbackIds`,
+the Chip and `withoutNoticeView`, the `notice=1` marker and `noticeFilterSearch`,
+`FOCUS_TABLE` (`storageKey: undefined`) and the `key` remount — and keeps the backend's
+links as they are. kastlan and Kurvenschmiede link no `ids` today: nothing to change; a
+notice that names several reports links `?ids=` from then on.
+
+**Tests:** `src/feedback/__tests__/feedback-inbox-focus.test.tsx` — the parse (ten malformed
+values); the set as the # column's filter; its Clear taking `ids` out with the row kept; the
+saved filter kept out and given back; a set of one winning over `f.id`; no set for a broken
+value; `inbox.focusIds` and `table.keyFilter` for a page of its own; the phone's sheet and
+Clear all; the strip's refused Clear. `src/components/__tests__/data-table-key-filter.test.tsx`
+— `keyFilter` itself (the narrowing, the default words, the owner's Clear, the set over the
+column's own filter, a column with no filter, the other filters on top, `serverRows`, the
+saved filters neither read nor written and given back, the layout kept, a set arriving
+mid-life, the phone). `src/components/__tests__/bulk-action-bar.test.tsx` — `clearDisabled`.

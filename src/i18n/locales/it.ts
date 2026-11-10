@@ -187,6 +187,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
           ? "1 segnalazione non è stata modificata e resta selezionata."
           : `${n(count)} segnalazioni non sono state modificate e restano selezionate.`,
       bulkRestored: (count) => (count === 1 ? "1 segnalazione ripristinata" : `${n(count)} segnalazioni ripristinate`),
+      focusIds: (count) => (count === 1 ? "Solo questa segnalazione" : `Solo queste ${n(count)} segnalazioni`),
       bulkRestoreFailed: (count) =>
         count === 1
           ? "1 segnalazione non è stata ripristinata."

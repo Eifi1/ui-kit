@@ -55,6 +55,7 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
           : `${n(count)} reports could not be changed and stay selected.`,
       bulkRestored: (count) =>
         count === 1 ? "1 report is back as it was" : `${n(count)} reports are back as they were`,
+      focusIds: (count) => (count === 1 ? "Only this report" : `Only these ${n(count)} reports`),
       bulkRestoreFailed: (count) =>
         count === 1 ? "1 report could not be put back." : `${n(count)} reports could not be put back.`,
     },

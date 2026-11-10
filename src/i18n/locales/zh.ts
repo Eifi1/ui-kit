@@ -173,6 +173,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       bulkChanged: (count, value) => `已将 ${n(count)} 条反馈设为“${value}”`,
       bulkFailed: (count) => `${n(count)} 条反馈无法更改，仍保持选中。`,
       bulkRestored: (count) => `已恢复 ${n(count)} 条反馈`,
+      focusIds: (count) => `仅显示这 ${n(count)} 条反馈`,
       bulkRestoreFailed: (count) => `${n(count)} 条反馈无法恢复。`,
     },
     feedbackDetail: {

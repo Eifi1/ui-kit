@@ -181,6 +181,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       bulkChanged: (count, value) => `${n(count)} bejelentés „${value}” értékre állítva`,
       bulkFailed: (count) => `${n(count)} bejelentést nem sikerült módosítani, kijelölve marad.`,
       bulkRestored: (count) => `${n(count)} bejelentés visszaállítva`,
+      focusIds: (count) => (count === 1 ? "Csak ez a bejelentés" : `Csak ez a ${n(count)} bejelentés`),
       bulkRestoreFailed: (count) => `${n(count)} bejelentést nem sikerült visszaállítani.`,
     },
     feedbackDetail: {

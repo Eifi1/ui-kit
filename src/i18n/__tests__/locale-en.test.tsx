@@ -104,6 +104,8 @@ describe("uiKitLabelsEn (@eifi1/ui-kit/i18n/en)", () => {
       "feedbackPage.bulkFailed",
       "feedbackPage.bulkRestoreFailed",
       "feedbackPage.bulkRestored",
+      // 0.59: the `?ids=` set (keksdose dev #678).
+      "feedbackPage.focusIds",
       "feedbackPage.reworkChip",
       "feedbackPublic.comments",
       "feedbackPublic.page",

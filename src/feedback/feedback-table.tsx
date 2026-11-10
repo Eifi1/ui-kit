@@ -155,6 +155,10 @@ export interface FeedbackPageLabels {
   /** Reports the Undo could not put back. de-CH: "{{count}} Meldungen konnten nicht
    *  zurückgesetzt werden." */
   bulkRestoreFailed: (count: number) => string;
+  /** 0.59 (keksdose live #500, dev #678): the `?ids=` set — the reports a link names — as
+   *  the # column's filter, in its popover and the phone's filter sheet.
+   *  de-CH: "Nur diese Meldung" / "Nur diese {{count}} Meldungen" */
+  focusIds: (count: number) => string;
 }
 
 // Defined in ./feedback-table-labels, which holds no component code (0.34, KS U8).

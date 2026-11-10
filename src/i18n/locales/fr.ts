@@ -190,6 +190,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
           "retours n’ont pas pu être modifiés et restent sélectionnés.",
         )}`,
       bulkRestored: (count) => `${n(count)} ${plural(count, "retour rétabli", "retours rétablis")}`,
+      focusIds: (count) => (count === 1 ? "Seulement ce retour" : `Seulement ces ${n(count)} retours`),
       bulkRestoreFailed: (count) =>
         `${n(count)} ${plural(count, "retour n’a pas pu être rétabli.", "retours n’ont pas pu être rétablis.")}`,
     },

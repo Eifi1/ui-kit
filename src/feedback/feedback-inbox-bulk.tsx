@@ -443,6 +443,9 @@ export function FeedbackInboxBulkBar<T extends FeedbackRecord>({
       count={rows.length}
       open={desktop || undefined}
       onClear={bulk.clear}
+      // The standing desktop strip at "0 selected" offers no Clear (dev #678: Marcel pressed
+      // it to leave a notice's list); the phone's card comes with a selection and goes with it.
+      clearDisabled={desktop && empty}
       variant={BAR_VARIANT}
       className="md:shrink-0"
     >
