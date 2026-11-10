@@ -21,6 +21,30 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.59.0](https://github.com/Eifi1/ui-kit/compare/v0.58.0...v0.59.0) (2026-11-10)
+
+### Added
+
+* **bulk-action-bar:** clearDisabled, the Clear refused where it would clear nothing ([986756b](https://github.com/Eifi1/ui-kit/commit/986756b798721aac00880903c1902ca7764adc04))
+* **data-table:** a group level's keys draw its groups with no rows, with their "+" ([71f660f](https://github.com/Eifi1/ui-kit/commit/71f660fab22b9f83effcef08b9b8425bc7b0778e))
+* **data-table:** keyFilter, a set of rows named from outside as one column's filter ([0f30e18](https://github.com/Eifi1/ui-kit/commit/0f30e1879bc22a4e50c812436adcecf71347c36b))
+* **feedback:** the inbox shows the reports ?ids= names, as the # column's filter ([4ca824a](https://github.com/Eifi1/ui-kit/commit/4ca824a60ff06ff619ed91e24a8d88f2e82b8f60))
+* **focus:** useRowLeaves, and the kit's focus rules exported ([7ac7835](https://github.com/Eifi1/ui-kit/commit/7ac7835009aed30f7d69d2a976189f5ab6461bd7))
+* **image-viewer:** ZoomableImage, an inline picture that zooms where it is ([a8276b2](https://github.com/Eifi1/ui-kit/commit/a8276b257e3665091340e00a78512f194646f531))
+* **legal:** a commercial variant of the browser-storage section names the checkout's window ([69ed443](https://github.com/Eifi1/ui-kit/commit/69ed443b85edb8ad76e588b075082dee0586f670))
+* **list:** a control in ListItem's leadingActions is a full-size touch target ([eb013dd](https://github.com/Eifi1/ui-kit/commit/eb013dd6a32d6276978dda50150243098ceace0c))
+* **theme:** createFixedPalette, one palette painted for the theme's mode with nothing kept ([2b94199](https://github.com/Eifi1/ui-kit/commit/2b9419986acdf25ebcd50bbca5bb9ca3be44dd8f))
+
+### Fixed
+
+* **form-actions:** a FormActions in a dialog's footer fills the footer ([ebb1ea8](https://github.com/Eifi1/ui-kit/commit/ebb1ea8043d233baf64318476b4e9722d7263f3b))
+* **i18n:** review samples for dataTable.keyFilter and feedbackPage.focusIds; the media page's blurb ([d38dbd1](https://github.com/Eifi1/ui-kit/commit/d38dbd18d233298c0932df2b7bc993ccea095d54))
+* **legal:** the browser-storage lead says the app sets no cookies ([96fb9ca](https://github.com/Eifi1/ui-kit/commit/96fb9ca18557fd8bc6b4a2ecbb49598155a73275))
+
+### Changed
+
+* **theme:** deprecate createPaletteStore, applyPersistedPalette and PaletteMenu ([76e1a25](https://github.com/Eifi1/ui-kit/commit/76e1a25df317eda8912958c67f6690472ee35f3d))
+
 ## [0.58.0](https://github.com/Eifi1/ui-kit/compare/v0.57.0...v0.58.0) (2026-11-10)
 
 ### Added
