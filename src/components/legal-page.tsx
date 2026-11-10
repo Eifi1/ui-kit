@@ -168,7 +168,15 @@ export type LegalKitSectionProps = LegalKitSectionBase &
   (
     | {
         section: "browser";
-        variant?: never;
+        /**
+         * 0.59 (keksdose's scan for absolute claims, Marcel 2026-11-10): which tail, keyed
+         * as the disclaimer's. `non-commercial` (default) is the app's own storage only;
+         * `commercial` adds where the checkout's entries are — in Paddle's window, on
+         * Paddle's domain, under Paddle's privacy policy — for an app that charges, in the
+         * release that turns its billing on, beside the commercial disclaimer and changes
+         * clause.
+         */
+        variant?: LegalDisclaimerVariant;
         /** What this app keeps in the browser, one entry per item — rendered as a `<ul>`
          *  between the kit's two sentences. The app's words, in every language it serves. */
         entries: readonly string[];
@@ -219,8 +227,9 @@ export type LegalKitSectionProps = LegalKitSectionBase &
   );
 
 /** 0.32.0: the imprint disclaimer's two texts — see {@link LegalKitSectionProps}. Since
- *  0.58 the terms' `changes` section's two as well: the two sections whose wording
- *  depends on whether the app takes payment, switched together. */
+ *  0.58 the terms' `changes` section's two as well, and since 0.59 the privacy policy's
+ *  `browser` section's two tails: the sections whose wording depends on whether the app
+ *  takes payment, switched together. */
 export type LegalDisclaimerVariant = "non-commercial" | "commercial";
 
 /** The app's paragraph: a plain string as running text (line breaks kept, refs
@@ -293,7 +302,14 @@ export function LegalKitSection(props: LegalKitSectionProps) {
             ))}
           </ul>
         ) : null;
-      parts = [lead, list, tail, app];
+      // The commercial tail (0.59): the same tail with the checkout's sentence after it, the
+      // provider's, else English — as the disclaimer's and the changes clause's body.
+      const commercialTail =
+        props.variant === "commercial"
+          ? ((entry as LegalLabels["sections"]["privacy"]["browser"]).commercial ??
+            DEFAULT_LEGAL_LABELS.sections.privacy.browser.commercial)
+          : undefined;
+      parts = [lead, list, commercialTail ? <LegalText key="tail" text={commercialTail} /> : tail, app];
     } else {
       // `rights`: the app's paragraph sits between the rights and the authorities.
       parts = [lead, app, tail];

@@ -96,6 +96,10 @@ describe("kitLabelStrings", () => {
     expect(reference["legal.sections.privacy.browser.lead"]).toBe(
       "The app sets no cookies and stores the following in your browser's storage:",
     );
+    // 0.59: the commercial tail is a row of its own, the whole paragraph the page prints.
+    expect(reference["legal.sections.privacy.browser.commercial"]).toBe(
+      `${reference["legal.sections.privacy.browser.tail"]} The payment runs in a Paddle window on Paddle's own domain; what that window stores there (such as a security cookie and settings) is governed by Paddle's privacy policy.`,
+    );
     expect(reference["legal.sections.impressum.operator.body(operator)"]).toBe(
       "{{name}}\n{{postalCode}} {{city}}\n{{country}}\n\nThe full postal address is supplied on request to anyone with a legitimate legal interest; write to the contact address below.",
     );

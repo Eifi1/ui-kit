@@ -983,6 +983,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
             title: "Qué guarda su navegador",
             lead: "La aplicación no instala cookies y guarda lo siguiente en el almacenamiento de su navegador:",
             tail: "Nada de ello se usa para rastrearle. Las entradas pendientes de envío se nos envían en cuanto sea posible. Todo ello desaparece cuando borra los datos del sitio, y al cerrar sesión se eliminan los tokens de inicio de sesión.",
+            commercial:
+              "Nada de ello se usa para rastrearle. Las entradas pendientes de envío se nos envían en cuanto sea posible. Todo ello desaparece cuando borra los datos del sitio, y al cerrar sesión se eliminan los tokens de inicio de sesión. El pago se realiza en una ventana de Paddle, en el propio dominio de Paddle; lo que esa ventana guarda allí (por ejemplo, una cookie de seguridad y ajustes) se rige por la política de privacidad de Paddle.",
           },
           rights: {
             title: "Sus derechos",

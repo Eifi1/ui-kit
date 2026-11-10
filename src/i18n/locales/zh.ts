@@ -958,6 +958,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
             title: "您的浏览器存储什么",
             lead: "应用程序不设置 Cookie，并会在您浏览器的存储中保存以下内容：",
             tail: "这些内容都不会用于跟踪您。等待发送的条目会尽快发送给我们。清除网站数据后，这些内容会全部消失；退出登录会删除登录令牌。",
+            commercial:
+              "这些内容都不会用于跟踪您。等待发送的条目会尽快发送给我们。清除网站数据后，这些内容会全部消失；退出登录会删除登录令牌。付款在 Paddle 自有域名上的 Paddle 窗口中进行；该窗口在那里存储的内容（例如一个安全 Cookie 和一些设置）受 Paddle 隐私政策的约束。",
           },
           rights: {
             title: "您的权利",

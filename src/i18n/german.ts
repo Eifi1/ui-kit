@@ -1007,6 +1007,10 @@ export function germanLabels(numberLocale: string): UiKitLabels {
             // sets, not "keine Cookies" for every script a page loads.
             lead: "Die App setzt keine Cookies und legt Folgendes im Speicher Ihres Browsers ab:",
             tail: "Nichts davon dient dazu, Sie zu verfolgen. Noch nicht gesendete Einträge werden an uns übermittelt, sobald das möglich ist. Das alles verschwindet, wenn Sie die Websitedaten löschen, und beim Abmelden werden die Anmeldetoken entfernt.",
+            // 0.59: the commercial variant, the checkout's window on Paddle's own domain —
+            // beside the commercial disclaimer and changes clause.
+            commercial:
+              "Nichts davon dient dazu, Sie zu verfolgen. Noch nicht gesendete Einträge werden an uns übermittelt, sobald das möglich ist. Das alles verschwindet, wenn Sie die Websitedaten löschen, und beim Abmelden werden die Anmeldetoken entfernt. Die Zahlung läuft in einem Fenster von Paddle auf Paddles eigener Domain; was dieses dort speichert (etwa ein Sicherheits-Cookie und Einstellungen), regelt die Datenschutzerklärung von Paddle.",
           },
           rights: {
             title: "Ihre Rechte",

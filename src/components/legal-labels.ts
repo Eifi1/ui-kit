@@ -74,6 +74,10 @@ export const DEFAULT_LEGAL_LABELS: LegalLabels = {
         // kit can vouch for, not about every script a page loads.
         lead: "The app sets no cookies and stores the following in your browser's storage:",
         tail: "None of it is used to track you. Entries waiting to be sent are sent to us as soon as they can be. All of it disappears when you clear the site's data, and signing out removes the sign-in tokens.",
+        // 0.59: the pay page stores nothing; the checkout frame on Paddle's domain does. No
+        // entry is named until the full sandbox check has run.
+        commercial:
+          "None of it is used to track you. Entries waiting to be sent are sent to us as soon as they can be. All of it disappears when you clear the site's data, and signing out removes the sign-in tokens. The payment runs in a Paddle window on Paddle's own domain; what that window stores there (such as a security cookie and settings) is governed by Paddle's privacy policy.",
       },
       rights: {
         title: "Your rights",

@@ -1002,6 +1002,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
             title: "Ce que votre navigateur enregistre",
             lead: "L’app ne dépose aucun cookie et enregistre les éléments suivants dans le stockage de votre navigateur\u00a0:",
             tail: "Rien de tout cela ne sert à vous suivre. Les éléments en attente d’envoi nous sont transmis dès que possible. Tout cela disparaît lorsque vous effacez les données du site, et la déconnexion supprime les jetons de connexion.",
+            commercial:
+              "Rien de tout cela ne sert à vous suivre. Les éléments en attente d’envoi nous sont transmis dès que possible. Tout cela disparaît lorsque vous effacez les données du site, et la déconnexion supprime les jetons de connexion. Le paiement se déroule dans une fenêtre de Paddle, sur le propre domaine de Paddle\u202f; ce que cette fenêtre y enregistre (par exemple un cookie de sécurité et des paramètres) relève de la politique de confidentialité de Paddle.",
           },
           rights: {
             title: "Vos droits",

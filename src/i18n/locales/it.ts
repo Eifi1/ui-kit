@@ -994,6 +994,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
             title: "Che cosa salva il Suo browser",
             lead: "L’app non imposta alcun cookie e salva quanto segue nella memoria del Suo browser:",
             tail: "Niente di tutto ciò viene usato per tracciarLa. Le voci in attesa di invio ci vengono trasmesse non appena possibile. Tutto questo scompare quando cancella i dati del sito, e uscendo dall’account vengono rimossi i token di accesso.",
+            commercial:
+              "Niente di tutto ciò viene usato per tracciarLa. Le voci in attesa di invio ci vengono trasmesse non appena possibile. Tutto questo scompare quando cancella i dati del sito, e uscendo dall’account vengono rimossi i token di accesso. Il pagamento avviene in una finestra di Paddle, sul dominio proprio di Paddle; ciò che questa finestra vi salva (ad esempio un cookie di sicurezza e alcune impostazioni) è disciplinato dall’informativa sulla privacy di Paddle.",
           },
           rights: {
             title: "I Suoi diritti",
