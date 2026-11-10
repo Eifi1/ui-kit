@@ -1059,6 +1059,11 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "mail · Enums",
     "mail · Protocols",
     "mail · Constants",
+    "legal · Functions",
+    "legal · Classes",
+    "legal · Models",
+    "legal · Enums",
+    "legal · Constants",
   ],
   "server-notifications": [
     "notifications · Functions",

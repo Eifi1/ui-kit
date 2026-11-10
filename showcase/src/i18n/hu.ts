@@ -562,7 +562,7 @@ export const hu: Dictionary = {
       title: "E-mail",
       short: "E-mail",
       blurb:
-        "A fiók e-mailjei: a szövegek nyelvenként, egyetlen elrendezés, amely minden értéket escape-el, két küldési mód, amely soha nem dob kivételt — és a kiadás minta-e-mailjei, renderelve.",
+        "A fiók e-mailjei: a szövegek nyelvenként, egyetlen elrendezés, amely minden értéket escape-el, két küldési mód, amely soha nem dob kivételt — és a kiadás minta-e-mailjei, renderelve. És egy jogi változás bejelentése: a lista, amelyet az alkalmazáson belüli értesítés olvas, és a levele minden fióknak.",
     },
     "server-notifications": {
       title: "Értesítések",

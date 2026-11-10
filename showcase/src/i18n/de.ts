@@ -566,7 +566,7 @@ export const de: Dictionary = {
       title: "E-Mail",
       short: "E-Mail",
       blurb:
-        "E-Mails zum Konto: die Texte pro Sprache, ein einziges Layout, das jeden Wert escapt, zwei Transporte, die nie eine Ausnahme werfen — und die Beispiel-E-Mails des Releases, gerendert.",
+        "E-Mails zum Konto: die Texte pro Sprache, ein einziges Layout, das jeden Wert escapt, zwei Transporte, die nie eine Ausnahme werfen — und die Beispiel-E-Mails des Releases, gerendert. Dazu die Ankündigung einer Rechtsänderung: die Liste, die der Hinweis in der App liest, und ihre E-Mail an jedes Konto.",
     },
     "server-notifications": {
       title: "Benachrichtigungen",

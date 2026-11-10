@@ -563,7 +563,7 @@ export const en: Dictionary = {
       title: "Mail",
       short: "Mail",
       blurb:
-        "Account mail: the words per language, one escaped layout, two transports that never raise — and the sample mails of the release, rendered.",
+        "Account mail: the words per language, one escaped layout, two transports that never raise — and the sample mails of the release, rendered. And the legal-change announcement: the list the in-app notice reads, and its mail to every account.",
     },
     "server-notifications": {
       title: "Notifications",

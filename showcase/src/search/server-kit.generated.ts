@@ -3,7 +3,7 @@
 // fails while this file is stale.
 
 /** The server-kit release the Server kit pages document. */
-export const SERVER_KIT_VERSION = "0.21.0";
+export const SERVER_KIT_VERSION = "0.22.0";
 
 export interface ServerKitSearchModule {
   /** The Server kit page that documents it. */
@@ -450,6 +450,29 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["render_message", "function"],
       ["support_address", "function"],
       ["test_mail_message", "function"],
+    ],
+  },
+  {
+    page: "server-mail",
+    module: "legal",
+    summary: "A change to the terms or the privacy policy: announced 30 days ahead, by email and in the app.",
+    members: [
+      ["LEGAL_CHANGES_PATH", "constant"],
+      ["LEGAL_CHANGE_BATCH", "constant"],
+      ["LEGAL_CHANGE_PAUSE", "constant"],
+      ["LEGAL_CHANGE_STOP_AFTER", "constant"],
+      ["NOTICE_DAYS", "constant"],
+      ["LegalChange", "class"],
+      ["LegalChangeAnnouncement", "model"],
+      ["LegalChangeOutcome", "enum"],
+      ["LegalChangePage", "constant"],
+      ["LegalChangeRecipient", "class"],
+      ["LegalChangeResult", "class"],
+      ["LegalChangeRun", "class"],
+      ["LegalNoticeError", "class"],
+      ["current_announcements", "function"],
+      ["legal_change_message", "function"],
+      ["send_legal_change_mails", "function"],
     ],
   },
   {
