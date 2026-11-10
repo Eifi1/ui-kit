@@ -533,6 +533,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "fillHeight — a table in a bounded pane",
     "The list page fills the window — FillHeight in an AppShell",
     "Period groups and load more — groupBy, loadMore",
+    "Groups with no rows yet — groupBy keys",
     "Right-to-left",
     "rowActions, toolbar and the empty label",
     "Totals row: a trial balance",

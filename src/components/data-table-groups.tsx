@@ -54,6 +54,112 @@ export interface DataTableGroupBy<T> {
    * same slot ends `mobileGroupBy`'s section header when it is given a level.
    */
   action?: (key: string, rows: T[]) => ReactNode;
+  /**
+   * The groups to draw EVEN WITH NO ROWS (0.59, keksdose live #504: *"Can the headers be
+   * shown without entries? To get the + from the header row that fills in the account
+   * type."*), in their order — a section per account type, the first Depot's "+" included.
+   * A group with rows is drawn as always; a declared one with none gets its band (its
+   * `label`, `end` and `action` called with no rows — the "+" that adds the first one) and
+   * one line under it, {@link empty}. keksdose faked it with a placeholder row per type,
+   * which the table then counted, paged, selected and swiped as an account.
+   *
+   * **An empty group is not a row.** The pager, the counts, the select-all, the phone's
+   * reveal and the rows' arrow keys know only the rows; the line has no row link, no swipe,
+   * no box.
+   *
+   * **Where it goes:** at its place in `keys` among the groups the rows make, when the rows
+   * come in that order (the sort `keys` is written in); a key the rows put out of that order
+   * (a column sort) sends the empty ones it skipped to after the last row. A group whose
+   * key is NOT in `keys` is drawn where its rows are, as always — never dropped: a row the
+   * pager counts is a row on screen (a type the app's list does not know yet, keksdose's
+   * catch-all OTHER). So `keys` of only the groups to START puts them all after the rows,
+   * as keksdose's accounts list has them.
+   *
+   * **When:** only where the table knows the group IS empty — it holds every row, and
+   * nothing narrows them. Not while a column filter (or a {@link DataTableProps.keyFilter})
+   * is on — "No account yet" under a filter would be untrue —, not under `serverPagination`
+   * or a `loadMore` with more to come, and not under `virtualize` (a windowed table is the
+   * long list, whose groups are its rows' runs). A narrowing of the app's own (a search box
+   * above the table) is the app's to know: pass no `keys` while it is on. On the first level
+   * of `groupBy` and on `mobileGroupBy`; a second level's are not read (a period's days are
+   * its rows). Paged, an empty group is drawn on the page whose first row follows it, the
+   * ones after the last row on the last page.
+   */
+  keys?: readonly string[];
+  /**
+   * The line an empty declared group shows ({@link keys}) — "No account yet". Default: the
+   * table's `labels.empty` ("No entries"); `null` draws the band alone.
+   */
+  empty?: (key: string) => ReactNode;
+}
+
+/** A declared group with no rows ({@link DataTableGroupBy.keys}): drawn before the row at
+ *  index `at` of the rows it was placed among, or after the last when `at` is their length. */
+export interface EmptyGroupAt {
+  key: string;
+  at: number;
+}
+
+/**
+ * Where `keys`' groups with no rows go among `rows`' runs (0.59, live #504). Pure.
+ *
+ * One pass over the runs with a pointer into `keys`: a run whose key is declared at or past
+ * the pointer first places every declared key it passes that has no row anywhere, then moves
+ * the pointer past itself; a run out of `keys`' order, or of an undeclared key, moves
+ * nothing. What is left is placed after the last row. So the rows never move — the slice,
+ * its indices and its order are the table's — and the empties land where `keys` puts them
+ * whenever the rows follow it.
+ */
+export function placeEmptyGroups<T>(
+  rows: readonly T[],
+  keyOf: (row: T) => string,
+  keys: readonly string[],
+): EmptyGroupAt[] {
+  const order = new Map<string, number>();
+  keys.forEach((k, i) => {
+    if (!order.has(k)) order.set(k, i);
+  });
+  const runs: { key: string; at: number }[] = [];
+  const present = new Set<string>();
+  rows.forEach((row, i) => {
+    const key = keyOf(row);
+    present.add(key);
+    if (runs.length === 0 || runs[runs.length - 1].key !== key) runs.push({ key, at: i });
+  });
+  const out: EmptyGroupAt[] = [];
+  const placed = new Set<string>();
+  let next = 0;
+  const placeUpTo = (end: number, at: number) => {
+    for (; next < end; next++) {
+      const key = keys[next];
+      if (present.has(key) || placed.has(key)) continue;
+      placed.add(key);
+      out.push({ key, at });
+    }
+  };
+  for (const run of runs) {
+    const j = order.get(run.key);
+    if (j === undefined || j < next) continue;
+    placeUpTo(j, run.at);
+    next = j + 1;
+  }
+  placeUpTo(keys.length, rows.length);
+  return out;
+}
+
+/**
+ * The empty groups a window of the rows draws — a page `[from, to)` of `total` rows, or
+ * the phone's revealed `[0, to)`: each on the page whose first row follows it, the ones
+ * after the last row on the last page (so none is drawn twice, and a table with no rows
+ * draws them all).
+ */
+export function emptyGroupsIn(
+  empties: readonly EmptyGroupAt[],
+  from: number,
+  to: number,
+  total: number,
+): EmptyGroupAt[] {
+  return empties.filter((e) => (e.at >= from && e.at < to) || (e.at === total && to >= total));
 }
 
 /**
@@ -85,6 +191,54 @@ export interface RowGroup<T> {
   start: number;
   /** The second level's runs inside this one, or null with one level. */
   children: RowGroup<T>[] | null;
+  /** 0.59: a declared group with no rows ({@link DataTableGroupBy.keys}); `start` is where
+   *  it stands, the index of the row after it. */
+  empty?: true;
+}
+
+/** `groups` (one level's runs over a window of the rows) with the window's empty declared
+ *  groups put in place — `offset` is the window's first row's index among all the rows. */
+export function withEmptyGroups<T>(
+  groups: RowGroup<T>[],
+  empties: readonly EmptyGroupAt[],
+  offset: number,
+): RowGroup<T>[] {
+  if (empties.length === 0) return groups;
+  const out: RowGroup<T>[] = [];
+  let e = 0;
+  for (const g of groups) {
+    while (e < empties.length && empties[e].at - offset <= g.start) {
+      out.push({ key: empties[e].key, rows: [], start: empties[e].at - offset, children: null, empty: true });
+      e++;
+    }
+    out.push(g);
+  }
+  for (; e < empties.length; e++)
+    out.push({ key: empties[e].key, rows: [], start: empties[e].at - offset, children: null, empty: true });
+  return out;
+}
+
+/**
+ * The line under an empty declared group's band — or the phone's section header — with
+ * {@link DataTableGroupBy.empty}'s words (0.59). Not a row: no `data-row-index`, so the
+ * rows' arrow keys, the focus rules and the counts pass it by.
+ */
+export function DataTableEmptyGroupLine({
+  colSpan,
+  compact,
+  children,
+}: {
+  colSpan: number;
+  compact: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <tr data-group-empty="">
+      <td colSpan={colSpan} className={cn("text-muted", compact ? "px-2 py-1.5 text-xs" : "px-3 py-2 text-sm")}>
+        {children}
+      </td>
+    </tr>
+  );
 }
 
 /** Consecutive runs by `level.key`, nested once for a second level. */

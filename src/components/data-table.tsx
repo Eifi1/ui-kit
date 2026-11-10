@@ -20,12 +20,16 @@ import { DataTableMobileRow, DataTableRow, type DataTableRowCtx } from "./data-t
 import { DataTableHead } from "./data-table-head";
 import { DataTableLeadingRow } from "./data-table-leading-row";
 import {
+  DataTableEmptyGroupLine,
   DataTableGroupBand,
   DataTableLoadMoreFooter,
+  emptyGroupsIn,
   GroupBandEnd,
   groupLevels,
   groupRows,
+  placeEmptyGroups,
   useGroupBandTops,
+  withEmptyGroups,
   type DataTableGroupBy,
   type DataTableLoadMore,
   type RowGroup,
@@ -587,7 +591,9 @@ export interface DataTableProps<T> {
    *
    * A {@link DataTableGroupBy} level draws its `label`, its `end` and (0.58) its
    * `action` in the header, as the desktop band does — the "+" at the header's end,
-   * 28px, the header's height kept.
+   * 28px, the header's height kept. And (0.59, keksdose live #504) its `keys`: the
+   * sections to draw with no rows, each its header (the "+" that adds the first one) and
+   * the level's `empty` line — no card, nothing the reveal, the selection or the counts see.
    */
   mobileGroupBy?: ((row: T) => string) | DataTableGroupBy<T>;
   /** The section header's words for `mobileGroupBy`'s key. Wins over a level's own
@@ -684,6 +690,10 @@ export interface DataTableProps<T> {
    * it as the reader enters the group; the period band opens the first day's. Rows must
    * already be ordered so equal keys are contiguous (as for `mobileGroupBy`); grouping
    * runs over the rows on screen, page by page.
+   *
+   * Since 0.59 the first level's `keys` declares groups to draw with no rows — a band, its
+   * `action` and an `empty` line, not a row (keksdose live #504). See
+   * {@link DataTableGroupBy.keys}.
    *
    * The bands are sticky: the period under the header (and under a sticky
    * {@link leadingRow}), the day under the period — measured offsets, inside the table's
@@ -1869,7 +1879,33 @@ export function DataTable<T>({
   // caller opts in via `mobileGroupBy`.
   // The desktop's bands (0.48, keksdose dev #605), over the rows on screen.
   const tableRef = useRef<HTMLTableElement | null>(null);
-  const desktopGroups = isMdUp && levels.length > 0 ? groupRows(slice, levels) : null;
+  // A level's declared groups with no rows (0.59, keksdose live #504; `DataTableGroupBy.keys`):
+  // only where the table knows they ARE empty — it holds every row and nothing narrows them
+  // (a filter), and never under `virtualize`. Placed over ALL the rows, so a page
+  // draws the ones that fall on it (`emptyGroupsIn`) and a group on another page is no
+  // empty one here.
+  const narrowed = columns.some((c) => isFilterActive(filters[c.key]) && !!resolveFilter(c));
+  const declaresEmpty = !isServer && !loadMore?.hasMore && !narrowed;
+  const emptyGroupsOf = (level: DataTableGroupBy<T> | null | undefined, from: number, to: number) =>
+    declaresEmpty && level?.keys
+      ? emptyGroupsIn(placeEmptyGroups(sorted, level.key, level.keys), from, to, sorted.length)
+      : [];
+  const pageFrom = wholeList ? 0 : safePage * effectivePageSize;
+  const desktopGroups =
+    isMdUp && levels.length > 0
+      ? withEmptyGroups(
+          groupRows(slice, levels),
+          virtualize ? [] : emptyGroupsOf(levels[0], pageFrom, pageFrom + slice.length),
+          pageFrom,
+        )
+      : null;
+  const desktopEmptyGroups = !!desktopGroups?.some((g) => g.empty);
+  // An empty declared group's line: the level's words, the table's "No entries" by
+  // default; `null` (or `false`, `""`) for the band alone.
+  const emptyGroupLine = (def: DataTableGroupBy<T> | null, key: string): ReactNode => {
+    const line = def?.empty ? def.empty(key) : labels.empty;
+    return line === false || line === "" ? null : line;
+  };
   const bandTops = useGroupBandTops(
     tableRef,
     !!desktopGroups,
@@ -1992,15 +2028,21 @@ export function DataTable<T>({
   const mobileLevel = typeof mobileGroupBy === "function" ? null : (mobileGroupBy ?? null);
   const mobileKey = typeof mobileGroupBy === "function" ? mobileGroupBy : mobileGroupBy?.key;
   // `start`: the section's first card's place in the list (its `data-row-index`, DSP-4).
-  const mobileGroups: { key: string; rows: T[]; start: number }[] | null = mobileKey
-    ? mobileSlice.reduce<{ key: string; rows: T[]; start: number }[]>((acc, row, i) => {
-        const key = mobileKey(row);
-        const last = acc[acc.length - 1];
-        if (last && last.key === key) last.rows.push(row);
-        else acc.push({ key, rows: [row], start: i });
-        return acc;
-      }, [])
+  // A level's declared empty sections (0.59, live #504), over the cards revealed so far.
+  const mobileGroups: RowGroup<T>[] | null = mobileKey
+    ? withEmptyGroups(
+        mobileSlice.reduce<RowGroup<T>[]>((acc, row, i) => {
+          const key = mobileKey(row);
+          const last = acc[acc.length - 1];
+          if (last && last.key === key) last.rows.push(row);
+          else acc.push({ key, rows: [row], start: i, children: null });
+          return acc;
+        }, []),
+        emptyGroupsOf(mobileLevel, 0, mobileSlice.length),
+        0,
+      )
     : null;
+  const mobileEmptyGroups = !!mobileGroups?.some((g) => g.empty);
 
   // `frame={false}` swaps the Card for a bare wrapper carrying the same hooks and
   // layout classes, so everything inside renders identically either way.
@@ -2178,11 +2220,25 @@ export function DataTable<T>({
                         size="xs"
                       />
                     </li>
-                    {g.rows.map((r, i) => renderMobileRow(r, g.start + i))}
+                    {g.empty
+                      ? (() => {
+                          // A declared section with no rows (0.59): one line, not a card —
+                          // no row link, no swipe, no box, no `data-row-index`.
+                          const line = emptyGroupLine(mobileLevel, g.key);
+                          return line == null ? null : (
+                            <li
+                              data-group-empty=""
+                              className={cn("text-muted", compact ? "px-3 py-2 text-xs" : "px-4 py-3 text-sm")}
+                            >
+                              {line}
+                            </li>
+                          );
+                        })()
+                      : g.rows.map((r, i) => renderMobileRow(r, g.start + i))}
                   </Fragment>
                 ))
               : mobileSlice.map(renderMobileRow)}
-            {mobileSlice.length === 0 && (
+            {mobileSlice.length === 0 && !mobileEmptyGroups && (
               <li className={cn("text-center text-muted", compact ? "px-3 py-3 text-xs" : "px-4 py-6 text-sm")}>
                 {isLoading ? <LoadingText label={labels.loading} /> : (empty ?? labels.empty)}
               </li>
@@ -2412,8 +2468,9 @@ export function DataTable<T>({
                       />
                     );
                   };
+                  // The table's own empty state — unless declared groups stand there (0.59).
                   const emptyRow =
-                    slice.length === 0 ? (
+                    slice.length === 0 && !desktopEmptyGroups ? (
                       <tr>
                         <td
                           colSpan={totalColSpan}
@@ -2493,6 +2550,15 @@ export function DataTable<T>({
                   // band the row header; the leading row (and the empty state) in their own
                   // before the first group.
                   const rowsOf = (g: { rows: T[]; start: number }) => g.rows.map((r, i) => renderRow(r, g.start + i));
+                  // The row under an empty declared group's band, when it has a line.
+                  const emptyLineRow = (def: DataTableGroupBy<T>, key: string) => {
+                    const line = emptyGroupLine(def, key);
+                    return line == null ? null : (
+                      <DataTableEmptyGroupLine colSpan={totalColSpan} compact={compact}>
+                        {line}
+                      </DataTableEmptyGroupLine>
+                    );
+                  };
                   return (
                     <>
                       {(leading || emptyRow) && (
@@ -2502,7 +2568,13 @@ export function DataTable<T>({
                         </tbody>
                       )}
                       {desktopGroups.map((g1) =>
-                        g1.children ? (
+                        g1.empty ? (
+                          // A declared group with no rows (0.59): its band and one line.
+                          <tbody key={`g:${g1.key}:empty`} className={bodyClass}>
+                            {band(1, levels[0], g1)}
+                            {emptyLineRow(levels[0], g1.key)}
+                          </tbody>
+                        ) : g1.children ? (
                           g1.children.map((g2, j) => (
                             <tbody key={`g:${g1.key}:${g2.key}:${g2.start}`} className={bodyClass}>
                               {j === 0 && band(1, levels[0], g1)}

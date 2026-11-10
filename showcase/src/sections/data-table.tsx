@@ -79,6 +79,7 @@ function DataTableSection() {
       <FillHeightTable />
       <ListPageTable />
       <PeriodGroupsTable />
+      <DeclaredGroupsTable />
       <RtlTable />
     </>
   );
@@ -1235,6 +1236,111 @@ function PeriodGroupsTable() {
           rows drawn.
         </Note>
       </div>
+    </Example>
+  );
+}
+
+/* ── groups drawn with no rows ───────────────────────────────────────────── */
+
+interface TypedAccount {
+  id: number;
+  type: string;
+  name: string;
+  balance: number;
+}
+/** The account types in their order; "Other" is the catch-all, with no section of its own
+ *  to start (its accounts are drawn where they are). */
+const TYPE_ORDER = ["Checking", "Savings", "Credit card", "Depot", "Loan"];
+const TYPED_ACCOUNTS: TypedAccount[] = [
+  { id: 1, type: "Checking", name: "Everyday account", balance: 2140.5 },
+  { id: 2, type: "Checking", name: "Joint account", balance: 860 },
+  { id: 3, type: "Credit card", name: "Travel card", balance: -312.4 },
+  { id: 4, type: "Other", name: "Piggy bank", balance: 48.2 },
+];
+const TYPED_ACCOUNT_COLUMNS: DataTableColumn<TypedAccount>[] = [
+  {
+    key: "name",
+    header: "Account",
+    cell: (r) => r.name,
+    grow: true,
+    filter: { type: "text", getValue: (r) => r.name },
+  },
+  {
+    key: "balance",
+    header: "Balance",
+    cell: (r) => CHF.format(r.balance).replace("-", "−"),
+    className: "text-end tabular-nums whitespace-nowrap",
+    headClassName: "text-end",
+  },
+];
+
+function DeclaredGroupsTable() {
+  const [accounts, setAccounts] = useState(TYPED_ACCOUNTS);
+  const [declared, setDeclared] = useState(true);
+  const [after, setAfter] = useState(false);
+  // In the types' order, then by name: the runs follow `keys`' order.
+  const rows = useMemo(
+    () =>
+      [...accounts].sort(
+        (a, b) =>
+          (TYPE_ORDER.indexOf(a.type) + 1 || 99) - (TYPE_ORDER.indexOf(b.type) + 1 || 99) ||
+          a.name.localeCompare(b.name),
+      ),
+    [accounts],
+  );
+  const add = (type: string) =>
+    setAccounts((prev) => [
+      ...prev,
+      { id: Math.max(...prev.map((a) => a.id)) + 1, type, name: `New ${type.toLowerCase()} account`, balance: 0 },
+    ]);
+  // `after`: only the types not yet started, which puts all of them after the accounts.
+  const keys = after ? TYPE_ORDER.filter((t) => !accounts.some((a) => a.type === t)) : TYPE_ORDER;
+  const byType: DataTableGroupBy<TypedAccount> = {
+    key: (r) => r.type,
+    end: (_k, group) => (group.length === 1 ? "1 account" : `${group.length} accounts`),
+    action: (k) => (
+      <IconButton label={`Add an account of type ${k}`} onClick={() => add(k)}>
+        <Plus />
+      </IconButton>
+    ),
+    ...(declared ? { keys, empty: (k: string) => `No ${k.toLowerCase()} account yet — the “+” adds the first` } : {}),
+  };
+  return (
+    <Example
+      label="Groups with no rows yet — groupBy keys"
+      hint={
+        <>
+          a level&apos;s {code("keys")} draws its groups even when they are empty — the band, its {code("action")} (the
+          “+” that adds the first one) and an {code("empty")} line; narrow the window for the phone&apos;s sections
+        </>
+      }
+    >
+      <Row>
+        <Switch label="Declared types (keys)" checked={declared} onCheckedChange={setDeclared} />
+        <Switch label="Only the types not started, after the accounts" checked={after} onCheckedChange={setAfter} />
+        <Button variant="secondary" size="sm" onClick={() => setAccounts(TYPED_ACCOUNTS)}>
+          Start over
+        </Button>
+      </Row>
+      <div className="mt-3" data-demo="declared-groups">
+        <DataTable
+          rows={rows}
+          columns={TYPED_ACCOUNT_COLUMNS}
+          rowKey={(r) => r.id}
+          groupBy={byType}
+          mobileGroupBy={byType}
+          paginated={false}
+          labels={{ table: "Accounts by type" }}
+        />
+      </div>
+      <Note>
+        An empty group is no row: the counts, the pager, the select-all, the phone&apos;s reveal and the rows&apos;
+        arrow keys know only the accounts, and its line has no link, swipe or box. It goes at its place in{" "}
+        {code("keys")} when the rows follow that order; a group the app did not declare (“Other”) is drawn where its
+        rows are, never dropped. Passing only the types not yet started puts them all after the accounts. None is drawn
+        while a filter narrows the rows — type in the Account filter — nor while the table does not hold every row (a
+        server pager, a {code("loadMore")} with more to come, {code("virtualize")}).
+      </Note>
     </Example>
   );
 }
