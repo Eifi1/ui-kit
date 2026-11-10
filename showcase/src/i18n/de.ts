@@ -105,7 +105,7 @@ export const de: Dictionary = {
       title: "Bilder & Medien",
       short: "Medien",
       blurb:
-        "Hochgeladenes zeigen: ein Raster von Vorschaubildern mit Aktionen und Bildunterschriften, der Vollbild-Betrachter mit Tasten, Wischen und Zoom, und Bilder, die nur angemeldet geladen werden können.",
+        "Hochgeladenes zeigen: ein Raster von Vorschaubildern mit Aktionen und Bildunterschriften, der Vollbild-Betrachter mit Tasten, Wischen und Zoom, ein Bild, das sich an Ort und Stelle zoomen lässt, und Bilder, die nur angemeldet geladen werden können.",
     },
     "pie-chart": {
       title: "Kreisdiagramm",
