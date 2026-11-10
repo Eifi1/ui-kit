@@ -33,6 +33,16 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   /** In a flex row next to a taller labelled field, fill the field's height so the
    *  two line up. No effect outside a flex row. */
   stretch?: boolean;
+  /**
+   * Classes for the box the button stands in its layout as: the `disabledReason` frame
+   * round it while a reason shows (a tooltip's `span.relative.inline-flex`, or the line's
+   * box), else the button itself (after `className`) — {@link IconButton}'s
+   * `wrapperClassName`. `className` stays on the `<button>` and styles it; this is for a
+   * layout class that has to reach the outer box — `ms-auto`, `self-end`, a margin, a
+   * grid cell — which on the button inside the frame moves nothing, so a lock would
+   * reflow the row.
+   */
+  wrapperClassName?: string;
   /** The `<button>` element. React 19 passes `ref` to a function component as an
    *  ordinary prop, so it rides `...rest` onto the element with no `forwardRef` —
    *  declared here only because `ButtonHTMLAttributes` does not carry it. */
@@ -158,6 +168,10 @@ export interface ButtonLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorEle
   variant?: ButtonVariant;
   size?: ButtonSize;
   stretch?: boolean;
+  /** See {@link ButtonProps.wrapperClassName}. A link has no frame round it, so these
+   *  are the link's own, after `className`: a call site keeps its layout when it turns
+   *  a button into a link. */
+  wrapperClassName?: string;
   tone?: ButtonTone;
   /** The in-app router link, over the provider's `linkComponent` (see
    *  {@link KitLinkComponent}). Ignored when `external`. */
@@ -218,6 +232,7 @@ function ButtonLink({
   variant = "default",
   size = "md",
   stretch,
+  wrapperClassName,
   tone = "default",
   className,
   children,
@@ -242,6 +257,7 @@ function ButtonLink({
     // keeps the hover fill from lighting up on something that refuses the click.
     disabled && "pointer-events-none cursor-not-allowed opacity-50",
     className,
+    wrapperClassName,
   );
   const body = (
     <>
@@ -294,6 +310,7 @@ function ButtonElement({
   variant = "default",
   size = "md",
   stretch,
+  wrapperClassName,
   tone = "default",
   pressed,
   refused: refusedProp,
@@ -345,6 +362,7 @@ function ButtonElement({
         // would be the faintest thing on the button. `relative` anchors it.
         pending && "relative cursor-progress",
         className,
+        !locked && wrapperClassName,
       )}
     >
       {pending ? (
@@ -366,7 +384,7 @@ function ButtonElement({
     <LockedReason
       lock={{ reason: disabledReason, reasonId }}
       display={disabledReasonDisplay}
-      className={stretch ? "self-stretch" : undefined}
+      className={cn(stretch && "self-stretch", wrapperClassName) || undefined}
     >
       {button}
     </LockedReason>

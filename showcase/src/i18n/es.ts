@@ -557,7 +557,7 @@ export const es: Dictionary = {
       title: "Correo",
       short: "Correo",
       blurb:
-        "El correo de la cuenta: los textos por idioma, una sola plantilla que escapa cada valor, dos transportes que nunca lanzan excepciones — y los correos de ejemplo de la versión, renderizados.",
+        "El correo de la cuenta: los textos por idioma, una sola plantilla que escapa cada valor, dos transportes que nunca lanzan excepciones — y los correos de ejemplo de la versión, renderizados. Y el anuncio de un cambio legal: la lista que lee el aviso en la app y su correo a cada cuenta.",
     },
     "server-notifications": {
       title: "Notificaciones",
@@ -959,6 +959,8 @@ export const es: Dictionary = {
       "seleccionar varias filas",
       "acciones en lote sobre la selección",
       "barra de herramientas de selección",
+      "lista de verificación para marcar",
+      "mover filas arriba y abajo",
     ],
     "tree-view": [
       "mostrar datos jerárquicos",

@@ -1,6 +1,14 @@
-import { Children, createContext, useContext, useId, useState } from "react";
-import type { ComponentPropsWithoutRef, HTMLAttributes, MouseEvent, ReactElement, ReactNode, Ref } from "react";
-import { ChevronDown, ExternalLink } from "lucide-react";
+import { Children, createContext, useContext, useEffect, useId, useState } from "react";
+import type {
+  ComponentPropsWithoutRef,
+  HTMLAttributes,
+  KeyboardEvent,
+  MouseEvent,
+  ReactElement,
+  ReactNode,
+  Ref,
+} from "react";
+import { Check, ChevronDown, ExternalLink, Minus } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "../lib/cn";
 import { hasContent } from "../lib/presence";
@@ -16,6 +24,7 @@ import { LockedReason, mergeDescribedBy, useLockReason, type DisabledReasonDispl
 import type { CommitScope } from "./write-lock";
 import { DEFAULT_LIST_LABELS } from "./list-labels";
 import { Button } from "./button";
+import { CHECKBOX_BOX_CLASS, CHECKBOX_BOX_ON_CLASS, CHECKBOX_GLYPH_CLASS } from "./checkbox-look";
 
 /* ── Labels ───────────────────────────────────────────────────────────────── */
 
@@ -195,6 +204,11 @@ const PAD: Record<ListDensity, { target: string; actions: string; leadingActions
 /** {@link ListItemBaseProps.trailingTone}: a {@link TextTone}, or `inherit` — no
  *  colour of the slot's own, so an element's colour (or the row's) stands. */
 export type ListItemTrailingTone = TextTone | "inherit";
+
+/** {@link ListItemProps}' `checkedStyle`: how a checked row's title looks. `strike` crosses
+ *  it out and mutes it (a shopping list's item in the basket, a done task); `none` leaves it
+ *  as it is, so the box alone says it (a choice of options). */
+export type ListItemCheckedStyle = "strike" | "none";
 
 // The kit's focus frame (§5), inset so the row's own border and its neighbours do not
 // clip it.
@@ -401,7 +415,8 @@ interface ListItemBaseProps {
 
 /**
  * The row is ONE thing to activate, so the types allow one: a button, an in-app link,
- * an external link, or nothing (a static row, like kastlan's passkey and user lists).
+ * an external link, a disclosure, a checkbox, or nothing (a static row, like kastlan's
+ * passkey and user lists).
  */
 export type ListItemProps = ListItemBaseProps &
   (
@@ -436,7 +451,8 @@ export type ListItemProps = ListItemBaseProps &
         renderLink?: never;
         external?: never;
         onAuxClick?: never;
-      } & NotExpandable)
+      } & NotExpandable &
+        NotCheckable)
     | ({
         /**
          * Makes the row a link. A real `<a href>`, so a middle click opens it in a
@@ -463,7 +479,8 @@ export type ListItemProps = ListItemBaseProps &
         disabledReason?: never;
         disabledReasonDisplay?: never;
         commit?: never;
-      } & NotExpandable)
+      } & NotExpandable &
+        NotCheckable)
     | ({
         onClick?: never;
         href?: never;
@@ -473,8 +490,9 @@ export type ListItemProps = ListItemBaseProps &
         disabledReason?: never;
         disabledReasonDisplay?: never;
         commit?: never;
-      } & NotExpandable)
-    | {
+      } & NotExpandable &
+        NotCheckable)
+    | ({
         /**
          * Makes the row a disclosure: the target is a button with `aria-expanded` and a
          * turning chevron at its end, and this opens under the row, outside the target
@@ -501,7 +519,48 @@ export type ListItemProps = ListItemBaseProps &
         disabledReason?: never;
         disabledReasonDisplay?: never;
         commit?: never;
-      }
+      } & NotCheckable)
+    | ({
+        /**
+         * Makes the row a CHECKBOX (0.58, keksdose's shopping list): the WHOLE row is the
+         * toggle, and the kit draws the box at its start. A 16 px `Checkbox` in the row is
+         * no target for a thumb in a shop aisle, so keksdose's checklist took a tap
+         * anywhere on the row by hand (`targetProps.onClick`, minus the box's own).
+         *
+         * The target is `role="checkbox"` with `aria-checked` (`"mixed"` for a section's
+         * row whose items are partly ticked), named by the {@link title} alone (an
+         * `aria-label` of yours wins) and described by the overline, subtitle, meta and
+         * trailing slot: "Bread, checkbox, not checked, 500 g" rather than one long name.
+         * Space toggles it; Enter does not, as on a native checkbox. Controlled, as every
+         * kit field value is.
+         *
+         * The row's ONE action is the box, so it takes no `onClick`, `href` or
+         * `expandedContent`: a checkbox inside a button, or a toggle that both ticks and
+         * folds, is two controls in one target. A section's items go in {@link children},
+         * the body under the row (a `role="group"` named by its title), and its count
+         * ("1 of 2") in {@link trailing}. Passed anyway (from untyped code), the box wins
+         * and a development build warns once.
+         */
+        checked: boolean | "mixed";
+        /** Called with the new state on a click, a tap or Space: `true` from unchecked and
+         *  from `"mixed"`, `false` from checked. */
+        onCheckedChange?: (checked: boolean) => void;
+        /** How a checked row's title looks. Default `none`; `strike` for a shopping list. */
+        checkedStyle?: ListItemCheckedStyle;
+        /** Why the box cannot be changed: still focusable, Space and a click do nothing,
+         *  the reason as on a button row (see `onClick`'s `disabledReason`). */
+        disabledReason?: ReactNode;
+        /** Where the reason shows — {@link Button}'s `disabledReasonDisplay`. */
+        disabledReasonDisplay?: DisabledReasonDisplay;
+        /** Ticking SAVES: locked under a locked {@link WriteLockProvider}, as a button
+         *  row's `commit` is — a read-only viewer's or a done list's box. */
+        commit?: CommitScope;
+        onClick?: never;
+        href?: never;
+        renderLink?: never;
+        external?: never;
+        onAuxClick?: never;
+      } & NotExpandable)
   );
 
 interface NotExpandable {
@@ -509,6 +568,12 @@ interface NotExpandable {
   expanded?: never;
   defaultExpanded?: never;
   onExpandedChange?: never;
+}
+
+interface NotCheckable {
+  checked?: never;
+  onCheckedChange?: never;
+  checkedStyle?: never;
 }
 
 /**
@@ -571,6 +636,9 @@ export function ListItem({
   expanded: expandedProp,
   defaultExpanded = false,
   onExpandedChange,
+  checked,
+  onCheckedChange,
+  checkedStyle = "none",
   ...rest
 }: ListItemProps) {
   const list = useContext(ListContext);
@@ -579,13 +647,22 @@ export function ListItem({
   const [ownExpanded, setOwnExpanded] = useState(defaultExpanded);
   const density = densityProp ?? list.density;
   const pad = PAD[density];
-  const expandable = expandedContent !== undefined;
+  // A checkable row is its own one action (see `checked`): an `onClick`, `href` or
+  // `expandedContent` the types refused but untyped code passed is dropped, never nested.
+  const checkable = checked !== undefined;
+  const misused = checkable && (onClick !== undefined || href !== undefined || expandedContent !== undefined);
+  useEffect(() => {
+    if (misused) warnCheckableOnce();
+  }, [misused]);
+  const expandable = expandedContent !== undefined && !checkable;
   const expanded = expandable && (expandedProp ?? ownExpanded);
-  const isLink = href !== undefined && !disabled;
-  const isButton = !isLink && (onClick !== undefined || expandable) && href === undefined;
+  const isLink = href !== undefined && !disabled && !checkable;
+  const isButton = checkable || (!isLink && (onClick !== undefined || expandable) && href === undefined);
   const interactive = isLink || isButton;
-  // Only an onClick row takes a reason (the types allow no other); the hook runs on
-  // every row so the hook order never depends on which kind of row this is.
+  // A link that leaves the app, even when disabled (its marks still say where it went).
+  const outward = external && href !== undefined && !checkable;
+  // Only an onClick or a checkable row takes a reason (the types allow no other); the
+  // hook runs on every row so the hook order never depends on which kind of row this is.
   const lock = useLockReason(commit, disabledReason);
   const locked = lock.locked && isButton && !expandable;
   const inert = disabled || loading || locked;
@@ -596,12 +673,22 @@ export function ListItem({
   const stacked = hasBody || expandable;
   const titleId = useId();
   const expandedId = useId();
+  // A checkable row's description, part by part: each line that is there (see `checked`).
+  const detailsId = useId();
+  const detail = (part: string, present: boolean) => (checkable && present ? `${detailsId}-${part}` : undefined);
+  const overlineId = detail("overline", overline != null);
+  const subtitleId = detail("subtitle", subtitle != null);
+  const metaId = detail("meta", meta != null);
+  const trailingId = detail("trailing", trailing != null);
+  const struck = checkable && checked === true && checkedStyle === "strike";
 
   const toggle = () => {
     const next = !expanded;
     if (expandedProp === undefined) setOwnExpanded(next);
     onExpandedChange?.(next);
   };
+  // "mixed" ticks everything, as a native indeterminate box does on a click.
+  const toggleChecked = () => onCheckedChange?.(checked !== true);
 
   const mark =
     status ??
@@ -609,6 +696,25 @@ export function ListItem({
 
   const body = (
     <>
+      {checkable && (
+        // Checkbox's own box, drawn: the row is the checkbox, so the box only shows it.
+        <span
+          aria-hidden
+          data-slot="list-item-check"
+          className={cn(
+            "flex items-center justify-center",
+            CHECKBOX_BOX_CLASS,
+            checked !== false && CHECKBOX_BOX_ON_CLASS,
+            align === "start" && "mt-0.5",
+          )}
+        >
+          {checked === "mixed" ? (
+            <Minus aria-hidden strokeWidth={3} className={CHECKBOX_GLYPH_CLASS} />
+          ) : (
+            checked && <Check aria-hidden strokeWidth={3} className={CHECKBOX_GLYPH_CLASS} />
+          )}
+        </span>
+      )}
       {Icon && <Icon className={cn("size-4 shrink-0 text-muted", align === "start" && "mt-0.5")} aria-hidden />}
       {leading}
       {/* With a trailing slot, a basis at Large: below it the trailing chip or figure
@@ -616,15 +722,17 @@ export function ListItem({
           now-wrapping title into a column one word wide (§4, 240 px effective width). */}
       <span className={cn("flex min-w-0 flex-1 flex-col", trailing != null && "large:basis-40")}>
         {overline != null && (
-          <span className="block truncate-until-large text-caption font-medium leading-snug text-muted">
+          <span id={overlineId} className="block truncate-until-large text-caption font-medium leading-snug text-muted">
             {overline}
           </span>
         )}
         <span
-          // Names the body's and the expanded content's group; harmless without one.
-          id={stacked ? titleId : undefined}
+          // Names the body's and the expanded content's group, and a checkable row;
+          // harmless without one.
+          id={stacked || checkable ? titleId : undefined}
           className={cn(
-            "block text-sm text-primary",
+            "block text-sm",
+            struck ? "text-muted line-through" : "text-primary",
             titleLines === 1
               ? "truncate-until-large"
               : titleLines === 2
@@ -635,10 +743,11 @@ export function ListItem({
         >
           {title}
           {unread && <span className="sr-only"> ({labels.unread})</span>}
-          {external && href !== undefined && <span className="sr-only"> ({labels.opensInNewTab})</span>}
+          {outward && <span className="sr-only"> ({labels.opensInNewTab})</span>}
         </span>
         {subtitle != null && (
           <span
+            id={subtitleId}
             className={cn(
               "block text-xs text-muted",
               subtitleLines === 2 ? cn("line-clamp-2 break-words", UNCLAMP_AT_LARGE) : "truncate-until-large",
@@ -649,6 +758,7 @@ export function ListItem({
         )}
         {meta != null && (
           <span
+            id={metaId}
             className={cn(
               "mt-0.5 text-caption leading-snug text-muted",
               metaWrap ? "flex flex-wrap items-center gap-1" : "block truncate-until-large",
@@ -661,6 +771,7 @@ export function ListItem({
       </span>
       {trailing != null && (
         <span
+          id={trailingId}
           className={cn(
             "flex shrink-0 items-center gap-2 text-xs large:ms-auto",
             trailingTone !== "inherit" && toneTextClass(trailingTone),
@@ -672,8 +783,7 @@ export function ListItem({
       {loading ? (
         <Spinner label={null} className="size-3.5 shrink-0" />
       ) : (
-        external &&
-        href !== undefined && <ExternalLink className="size-3.5 shrink-0 text-muted rtl:-scale-x-100" aria-hidden />
+        outward && <ExternalLink className="size-3.5 shrink-0 text-muted rtl:-scale-x-100" aria-hidden />
       )}
       {mark}
       {expandable && (
@@ -703,6 +813,8 @@ export function ListItem({
     stacked && interactive && !inert && !selected && "transition-colors hover:bg-hover",
     interactive && TARGET_RING,
     interactive && !inert && "cursor-pointer",
+    // A double tap to tick and untick must not select the words (keksdose's checklist).
+    checkable && "select-none",
     loading && "cursor-progress",
     locked && !loading && "cursor-not-allowed",
     targetClassName,
@@ -736,12 +848,18 @@ export function ListItem({
       </a>
     );
   } else if (isButton) {
+    const ownName = rest["aria-label"] !== undefined || rest["aria-labelledby"] !== undefined;
     main = (
       <button
         {...(targetExtras as HTMLAttributes<HTMLButtonElement>)}
         {...rest}
         ref={ref as Ref<HTMLButtonElement>}
         type="button"
+        // A `<button>` may be a checkbox (ARIA in HTML): focusable, `disabled`, and Space
+        // clicks it, which is all a checkbox needs from the element.
+        role={checkable ? "checkbox" : undefined}
+        aria-checked={checkable ? checked : undefined}
+        aria-labelledby={checkable && !ownName ? titleId : (rest["aria-labelledby"] as string | undefined)}
         // A disabled row is `disabled`: nothing to do there, and nothing to reach. A
         // loading row is only `aria-disabled` — see `loading` — and so is a locked one:
         // a reason wins over `disabled`, so the row stays reachable to say it.
@@ -751,17 +869,32 @@ export function ListItem({
         aria-current={selected ? "true" : undefined}
         aria-expanded={expandable ? expanded : undefined}
         aria-controls={expandable ? expandedId : undefined}
-        aria-describedby={
-          locked
-            ? mergeDescribedBy(rest["aria-describedby"] as string | undefined, lock.reasonId)
-            : (rest["aria-describedby"] as string | undefined)
+        aria-describedby={mergeDescribedBy(
+          rest["aria-describedby"] as string | undefined,
+          overlineId,
+          subtitleId,
+          metaId,
+          trailingId,
+          locked && lock.reasonId,
+        )}
+        onKeyDown={
+          checkable
+            ? (e: KeyboardEvent<HTMLButtonElement>) => {
+                targetExtras.onKeyDown?.(e);
+                // Enter clicks a button but does not tick a checkbox: a native box ignores
+                // it (in a form it submits). Space stays the one key, as there.
+                if (e.key === "Enter") e.preventDefault();
+              }
+            : targetExtras.onKeyDown
         }
         onClick={
           loading || locked
             ? undefined
-            : expandable
-              ? toggle
-              : (onClick as (event: MouseEvent<HTMLButtonElement>) => void)
+            : checkable
+              ? toggleChecked
+              : expandable
+                ? toggle
+                : (onClick as (event: MouseEvent<HTMLButtonElement>) => void)
         }
         className={target}
       >
@@ -859,6 +992,25 @@ export function ListItem({
     >
       {renderRow ? renderRow(row) : row}
     </Tag>
+  );
+}
+
+/** The kit's dev switch, as `lib/logger.ts` reads it: a development build, never a
+ *  production one, and never under vitest. Read per call so a test can switch it on with
+ *  `vi.stubEnv`. Optional-chained: `import.meta.env` is a Vite injection. */
+function devWarnings(): boolean {
+  return Boolean(import.meta.env?.DEV) && !import.meta.env?.VITEST;
+}
+
+let warnedCheckable = false;
+
+/** Once per page: a checkable row given a second action (see `checked`). */
+function warnCheckableOnce(): void {
+  if (warnedCheckable || !devWarnings()) return;
+  warnedCheckable = true;
+  console.warn(
+    "[ui-kit] ListItem: a checkable row (`checked`) is its own one action; its `onClick`, `href` and " +
+      "`expandedContent` are ignored. Put a section's rows in `children`, and other controls in `actions`.",
   );
 }
 

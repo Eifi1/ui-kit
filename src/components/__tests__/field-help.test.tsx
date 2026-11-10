@@ -15,6 +15,7 @@ import { AmountInput } from "../amount-input";
 import { MoneyField } from "../money-field";
 import { QuantityField } from "../quantity-field";
 import { ToggleGroup } from "../toggle-group";
+import { ChoiceField } from "../choice-field";
 import { Slider } from "../slider";
 import { CountrySelect } from "../country-select";
 import { CurrencySelect } from "../currency-select";
@@ -43,6 +44,7 @@ import { RoleSelect, RolesEditor } from "../../admin/role-select";
 import { Form } from "../../rhf/form";
 import {
   RhfCheckbox,
+  RhfChoiceField,
   RhfCombobox,
   RhfCountrySelect,
   RhfDateField,
@@ -241,6 +243,9 @@ const SWEEP: Record<SweptField, Make> = {
   ToggleGroup: (hint, help) => (
     <ToggleGroup label="Status" hint={hint} help={help} value="a" onChange={noop} options={OPTIONS} />
   ),
+  ChoiceField: (hint, help) => (
+    <ChoiceField label="Status" hint={hint} help={help} value="a" onChange={noop} options={OPTIONS} />
+  ),
   CheckboxGroup: (hint, help) => (
     <CheckboxGroup legend="Status" options={OPTIONS} value={[]} onChange={noop} hint={hint} help={help} />
   ),
@@ -363,6 +368,11 @@ const SWEEP: Record<SweptField, Make> = {
   RhfToggleGroup: (hint, help) => (
     <InForm>
       <RhfToggleGroup name="choice" label="Status" options={OPTIONS} hint={hint} help={help} />
+    </InForm>
+  ),
+  RhfChoiceField: (hint, help) => (
+    <InForm>
+      <RhfChoiceField name="choice" label="Status" options={OPTIONS} hint={hint} help={help} />
     </InForm>
   ),
   RhfCombobox: (hint, help) => (

@@ -554,7 +554,7 @@ export const it: Dictionary = {
       title: "Email",
       short: "Email",
       blurb:
-        "Le email dell’account: i testi per lingua, un unico layout che fa l’escape di ogni valore, due trasporti che non sollevano mai eccezioni — e le email di esempio della release, renderizzate.",
+        "Le email dell’account: i testi per lingua, un unico layout che fa l’escape di ogni valore, due trasporti che non sollevano mai eccezioni — e le email di esempio della release, renderizzate. E l’annuncio di una modifica legale: l’elenco che legge l’avviso nell’app e la sua email a ogni account.",
     },
     "server-notifications": {
       title: "Notifiche",
@@ -956,6 +956,8 @@ export const it: Dictionary = {
       "selezionare più righe",
       "azioni di gruppo sulle righe selezionate",
       "barra degli strumenti della selezione",
+      "lista di controllo da spuntare",
+      "spostare righe su e giù",
     ],
     "tree-view": [
       "mostrare dati gerarchici",

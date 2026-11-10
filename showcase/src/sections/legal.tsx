@@ -9,16 +9,26 @@ import {
   Button,
   ConsentAgainNotice,
   LegalAcceptCheckbox,
+  LegalChangeNotice,
   LegalKitSection,
   LegalLinks,
   LegalPage,
   UiKitProvider,
+  removeStored,
 } from "@eifi1/ui-kit";
-import type { KitLinkComponent, LegalOperator, LegalPageKey } from "@eifi1/ui-kit";
+import type {
+  KitLinkComponent,
+  LegalChangeAnnouncement,
+  LegalDisclaimerVariant,
+  LegalOperator,
+  LegalPageKey,
+} from "@eifi1/ui-kit";
+import { addDaysIso, todayIso } from "@eifi1/ui-kit/dates";
 import { Example, Note, code } from "../lib/section";
 
 /**
- * The legal pages — LegalLayout, LegalPage, LegalAcceptCheckbox and LegalLinks — in one
+ * The legal pages — LegalLayout, LegalPage, LegalAcceptCheckbox, LegalLinks and the
+ * notices beside them, ConsentAgainNotice and LegalChangeNotice — in one
  * module, rendered as one section of the Sign-in & account page. Filed by release until
  * the refactor audit of 2026-10 (DOC-8): legal-019, legal-028. Each specimen keeps its
  * label, so its anchor and its search entry hold, and says since which release in a Note.
@@ -194,14 +204,20 @@ function DemoHeader() {
   );
 }
 
-// Module-level elements, not components: the page reads its sections out of its
-// children before they render, through fragments and arrays but not through a component
-// of the app's own — `<PrivacySections />` would hide them, and nothing would be numbered.
-const IMPRESSUM = (
+/** Whether the made-up app takes payment: the disclaimer and the changes clause switch
+ *  to their commercial texts together (`variant="commercial"`). */
+type Billing = "off" | "on";
+const variantOf = (billing: Billing): LegalDisclaimerVariant => (billing === "on" ? "commercial" : "non-commercial");
+
+// Elements, not components: the page reads its sections out of its children before they
+// render, through fragments and arrays but not through a component of the app's own —
+// `<PrivacySections />` would hide them, and nothing would be numbered. A plain function
+// that RETURNS the elements (`impressum(billing)`) is fine: the page sees what it returned.
+const impressum = (billing: Billing) => (
   <>
     <LegalKitSection section="operator" />
     <LegalKitSection section="contact" />
-    <LegalKitSection section="disclaimer" />
+    <LegalKitSection section="disclaimer" variant={variantOf(billing)} />
     <LegalSection
       key="credits"
       heading="Credits"
@@ -247,7 +263,7 @@ const PRIVACY = (
   </>
 );
 
-const TERMS = (
+const terms = (billing: Billing) => (
   <>
     <LegalSection
       key="scope"
@@ -261,13 +277,17 @@ const TERMS = (
     />
     <LegalKitSection section="warranty" />
     <LegalKitSection section="liability" />
-    <LegalKitSection section="changes" />
+    <LegalKitSection section="changes" variant={variantOf(billing)} />
     <LegalKitSection section="language" />
     <LegalKitSection section="law" />
   </>
 );
 
-const SECTIONS: Record<LegalPageKey, React.JSX.Element> = { impressum: IMPRESSUM, privacy: PRIVACY, terms: TERMS };
+const SECTIONS: Record<LegalPageKey, (billing: Billing) => React.JSX.Element> = {
+  impressum,
+  privacy: () => PRIVACY,
+  terms,
+};
 
 /** 0.51.4: the app's plain-language points; the heading and the "only the full text binds"
  *  line are the kit's. */
@@ -284,6 +304,7 @@ const SUMMARY: Partial<Record<LegalPageKey, string[]>> = {
 
 function Legal028Demo() {
   const [page, setPage] = useState<LegalPageKey>("privacy");
+  const [billing, setBilling] = useState<Billing>("off");
   const link = usePreviewLink(setPage);
   const box = useRef<HTMLDivElement>(null);
   useInPageAnchors(box);
@@ -293,16 +314,27 @@ function Legal028Demo() {
       hint="an app's frame; the shared sections are the kit's, the rest the app's"
     >
       <div className="flex flex-col gap-3">
-        <ToggleGroup
-          aria-label="Page"
-          value={page}
-          onChange={(v) => setPage(v as LegalPageKey)}
-          options={[
-            { value: "impressum", label: "Imprint" },
-            { value: "privacy", label: "Privacy Policy" },
-            { value: "terms", label: "Terms" },
-          ]}
-        />
+        <div className="flex flex-wrap gap-2">
+          <ToggleGroup
+            aria-label="Page"
+            value={page}
+            onChange={(v) => setPage(v as LegalPageKey)}
+            options={[
+              { value: "impressum", label: "Imprint" },
+              { value: "privacy", label: "Privacy Policy" },
+              { value: "terms", label: "Terms" },
+            ]}
+          />
+          <ToggleGroup<Billing>
+            aria-label="Billing"
+            value={billing}
+            onChange={setBilling}
+            options={[
+              { value: "off", label: "Billing off" },
+              { value: "on", label: "Billing on" },
+            ]}
+          />
+        </div>
         <div ref={box} className="overflow-hidden rounded-lg border border-subtle">
           <UiKitProvider linkComponent={link}>
             {/* An app renders it on its own route: an h1, a <main>, and noindex. A
@@ -318,7 +350,7 @@ function Legal028Demo() {
               landmark={false}
               noIndex={false}
             >
-              {SECTIONS[page]}
+              {SECTIONS[page](billing)}
             </LegalPage>
           </UiKitProvider>
         </div>
@@ -334,7 +366,9 @@ function Legal028Demo() {
           {code("{ref:retention}")} in an app text becomes that section&apos;s number, linked — section 2 points forward
           to section 7. Sections must be direct children of the page, or inside fragments or arrays: the page reads the
           order before anything renders. The page also calls {code("useNoIndex()")}; this preview passes{" "}
-          {code("noIndex={false}")}.
+          {code("noIndex={false}")}. With billing on, the imprint&apos;s disclaimer and the terms&apos; changes clause
+          take {code('variant="commercial"')}: a commercial service sold through a Merchant of Record, and the refund of
+          a paid period beyond a change&apos;s effective date — words an app shows only once it takes payment.
         </Note>
       </div>
     </Example>
@@ -344,6 +378,7 @@ function Legal028Demo() {
 function LegalAccept028Demo() {
   const [accepted, setAccepted] = useState(false);
   const [page, setPage] = useState<LegalPageKey | null>(null);
+  const [age, setAge] = useState<"none" | "16">("none");
   const link = usePreviewLink(setPage);
   return (
     <Example
@@ -352,7 +387,20 @@ function LegalAccept028Demo() {
     >
       <UiKitProvider linkComponent={link}>
         <div className="flex max-w-sm flex-col gap-4">
-          <LegalAcceptCheckbox checked={accepted} onCheckedChange={setAccepted} />
+          <ToggleGroup<"none" | "16">
+            aria-label="Minimum age"
+            value={age}
+            onChange={setAge}
+            options={[
+              { value: "none", label: "No minimum age" },
+              { value: "16", label: "minAge 16" },
+            ]}
+          />
+          <LegalAcceptCheckbox
+            checked={accepted}
+            onCheckedChange={setAccepted}
+            operator={age === "16" ? { ...OPERATOR, minAge: 16 } : OPERATOR}
+          />
           <Button disabled={!accepted}>Create account</Button>
           {page !== null && <p className="text-xs text-muted">In an app, that link opens {code(`/${page}`)}.</p>}
           <div className="rounded-md border border-subtle p-3">
@@ -365,9 +413,11 @@ function LegalAccept028Demo() {
         {code("<LegalAcceptCheckbox checked onCheckedChange />")} is required and never an error: the submit stays
         disabled until it is ticked, and nothing is sent to the server. Its label is one template,{" "}
         {code("I accept the {terms} and the {privacy}")}, so a language places the links and their articles itself —
-        Italian writes {code("e l’{privacy}")} with no space, and none is added. {code("<LegalLinks />")} needs no{" "}
-        {code("links")} any more: the three routes with the kit&apos;s labels and {code("·")} separators;{" "}
-        {code("nav={false}")} inside a menu that is a named nav already.
+        Italian writes {code("e l’{privacy}")} with no space, and none is added. Given {code("operator={OPERATOR}")}{" "}
+        (which {code("RegisterForm")} hands on) with {code("minAge: 16")}, the age and the terms are one tick:{" "}
+        {code("I am at least 16 years old and accept …")}. {code("<LegalLinks />")} needs no {code("links")} any more:
+        the three routes with the kit&apos;s labels and {code("·")} separators; {code("nav={false}")} inside a menu that
+        is a named nav already.
       </Note>
     </Example>
   );
@@ -462,6 +512,70 @@ function ConsentAgainDemo() {
   );
 }
 
+/** Where this specimen keeps its dismissals: the showcase's own key, not the kit's default. */
+const CHANGE_KEY = "showcase.legalChange.dismissed";
+
+function LegalChangeNoticeDemo() {
+  // The made-up app's `GET /api/v1/legal/changes`, dated from today so the specimen never
+  // runs out of date: the terms in 30 days (the notice period), the privacy policy in 45.
+  const [announcements] = useState<LegalChangeAnnouncement[]>(() => {
+    const today = todayIso();
+    return [
+      { page: "terms", effective: addDaysIso(today, 30) },
+      { page: "privacy", effective: addDaysIso(today, 45) },
+    ];
+  });
+  const [answer, setAnswer] = useState<"two" | "none">("two");
+  const [round, setRound] = useState(0);
+  const [page, setPage] = useState<LegalPageKey | null>(null);
+  const link = usePreviewLink(setPage);
+  const showAgain = () => {
+    for (const a of announcements) removeStored(`${CHANGE_KEY}.${a.page}.${a.effective}`);
+    setRound((r) => r + 1);
+  };
+  return (
+    <Example
+      label="LegalChangeNotice — an announced change to the terms or the privacy policy"
+      hint="a banner per announcement until it takes effect; dismissed per page and date"
+    >
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <ToggleGroup<"two" | "none">
+          aria-label="The server's answer"
+          value={answer}
+          onChange={setAnswer}
+          options={[
+            { value: "two", label: "Two announcements" },
+            { value: "none", label: "An empty list" },
+          ]}
+        />
+        <Button size="sm" variant="secondary" onClick={showAgain}>
+          Show the dismissed again
+        </Button>
+      </div>
+      <div className="flex max-w-xl flex-col gap-3">
+        <UiKitProvider linkComponent={link}>
+          <LegalChangeNotice
+            key={round}
+            announcements={answer === "two" ? announcements : []}
+            storageKey={CHANGE_KEY}
+          />
+        </UiKitProvider>
+        {answer === "none" && <p className="text-sm text-muted">Nothing announced: nothing rendered, no gap.</p>}
+        {page !== null && <p className="text-xs text-muted">In an app, that link opens {code(`/${page}`)}.</p>}
+      </div>
+      <Note>
+        {code("<LegalChangeNotice announcements={data} />")} takes the list {code("GET /api/v1/legal/changes")} answers,{" "}
+        {code('{ page: "terms" | "privacy", effective: "YYYY-MM-DD", href? }')} each — server-kit builds the same shape
+        — and shows a banner per announcement until its effective date has passed, that day included: the date in the
+        reader&apos;s language, and a link to the new text ({code("href")}, else the page&apos;s own route). The ×
+        dismisses it on this device, remembered per page and date ({code("storageKey")}), so the next change is news
+        again. Never a modal and never the focus: the app goes on. It is the in-app half of the 30 days&apos; notice the
+        terms promise; the email is server-kit&apos;s terms-change mail.
+      </Note>
+    </Example>
+  );
+}
+
 /* ── the page's section ───────────────────────────────────────────────────── */
 
 /** Every legal-page specimen, in the order the releases added them. */
@@ -472,6 +586,7 @@ export function LegalDemo() {
       <Legal028Demo />
       <LegalAccept028Demo />
       <ConsentAgainDemo />
+      <LegalChangeNoticeDemo />
     </>
   );
 }

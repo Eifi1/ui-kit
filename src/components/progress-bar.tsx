@@ -1,5 +1,5 @@
-import { useId } from "react";
-import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
+import { Fragment, useId } from "react";
+import type { ComponentPropsWithoutRef, CSSProperties, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
 import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLocale, type LabelOverride } from "../i18n/kit-labels";
 import { toneTextClass } from "./signed-amount";
@@ -75,6 +75,45 @@ function segmentFills(segments: ProgressBarSegment[]): Array<string | undefined>
   });
 }
 
+/** Where `withField` puts the field while the catalogue's function runs. */
+const FIELD_HOLE = "\u0000";
+
+/**
+ * `common.fieldValue` with a node for the field: the catalogue's own order and separator
+ * ("Recommended: 25%", "Recommandé : 25 %"), and a marker's label in the field's place
+ * whatever it is. A string goes straight through; a node is put where the catalogue put
+ * a placeholder, so word order stays the translator's (rule 1) with no string forced out
+ * of a node. A catalogue that leaves the field out gets the node, then the value.
+ */
+function withField(fieldValue: (field: string, value: string) => string, field: ReactNode, value: string): ReactNode {
+  if (typeof field === "string" || typeof field === "number") return fieldValue(String(field), value);
+  const parts = fieldValue(FIELD_HOLE, value).split(FIELD_HOLE);
+  if (parts.length !== 2) {
+    return (
+      <>
+        {field} {value}
+      </>
+    );
+  }
+  return (
+    <>
+      {parts[0]}
+      {field}
+      {parts[1]}
+    </>
+  );
+}
+
+/** Nodes joined as the locale lists them — the short unit list a segmented bar's
+ *  `aria-valuetext` is joined with ("A, B") — by `formatToParts`, so a node needs no
+ *  string of its own. */
+function listOfNodes(locale: string | undefined, items: ReactNode[]): ReactNode {
+  const parts = new Intl.ListFormat(locale, { style: "short", type: "unit" }).formatToParts(
+    items.map((_, i) => String(i)),
+  );
+  return parts.map((p, k) => (p.type === "element" ? <Fragment key={k}>{items[Number(p.value)]}</Fragment> : p.value));
+}
+
 /** One part of a stacked bar. See {@link ProgressBarProps.segments}. */
 export interface ProgressBarSegment {
   /** Its size, on the bar's own `min`–`max` scale. */
@@ -96,6 +135,30 @@ export interface ProgressBarSegment {
    * ones with a share: pass the empty buckets as `legendOnly` entries.
    */
   legendOnly?: boolean;
+}
+
+/** A mark on the track — a recommendation, a target, a limit. See
+ *  {@link ProgressBarProps.markers}. */
+export interface ProgressBarMarker {
+  /** Where it stands, on the bar's own `min`–`max` scale. Drawn clamped into the track;
+   *  one that is not a finite number is left out, drawn and said alike. */
+  value: number;
+  /** What it marks — "Recommended", "Target", "Limit". Never drawn: said in the bar's
+   *  description with the marker's value ("Recommended: 25%"). */
+  label: ReactNode;
+  /**
+   * The value as the description says it, in place of `formatValue` (or the percentage
+   * of the scale). For a scale that is not the figure's own: keksdose's food-pyramid
+   * meters run to TWICE the recommended share, so the tick at their middle is "25%", not
+   * "50%" — and their `formatValue` states the bar's whole reading whatever it is handed.
+   * `null`: the `label` alone, for a label that already says the value.
+   */
+  valueText?: string | null;
+  /** The tick's colour, a kit tone. Left out, the body text colour (`--text-primary`),
+   *  which stands out from every fill and from the track in both themes. */
+  tone?: ProgressBarTone;
+  /** A stable React key, when `label` is not a string. */
+  key?: string;
 }
 
 export interface ProgressBarProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "role"> {
@@ -175,6 +238,27 @@ export interface ProgressBarProps extends Omit<ComponentPropsWithoutRef<"div">, 
    * (it inherits the colour unless it sets its own).
    */
   legendTone?: TextTone | ((segment: ProgressBarSegment, index: number) => TextTone | undefined);
+  /**
+   * Ticks across the track at fixed points of the scale — a recommendation, a target, a
+   * limit. keksdose's food-pyramid meters (food-pyramid-card) drew their recommendation
+   * over the kit's bar by hand: an `aria-hidden` span positioned over it, so a reader
+   * heard the share and never what it was measured against.
+   *
+   * Each is a 2px tick standing 4px above and below the track, so it shows over the fill
+   * as well as over the empty track, coloured by its `tone` (the body text colour by
+   * default). Its place is the value CLAMPED into `min`–`max`, kept whole inside the
+   * track at either end; a limit past `max` stands at the end. With `segments` it is
+   * drawn over the parts, on the same scale. The ticks are decoration: what a reader
+   * hears is the bar's DESCRIPTION (`aria-describedby`, before the `hint`), one entry
+   * per marker — "Recommended: 25%" — its label and its value through `formatValue` (or
+   * the percentage of the scale), unclamped, or its own `valueText`.
+   *
+   * The 4px they stand out by is room the bar keeps: the label row's gap above, the
+   * hint's or the legend's below, and where there is neither, a 4px margin of the
+   * track's own — so the ticks never paint over what is next to the bar. Ignored for
+   * `max={null}`, which draws no bar.
+   */
+  markers?: ProgressBarMarker[];
   /** A muted line under the bar — the plan's reset date, "3 of 5 seats in use". It
    *  describes the bar (`aria-describedby`). */
   hint?: ReactNode;
@@ -235,6 +319,7 @@ export function ProgressBar({
   legend = false,
   legendValue,
   legendTone = "muted",
+  markers,
   hint,
   overage,
   sensitive = false,
@@ -350,15 +435,109 @@ export function ProgressBar({
         {typeof overage === "function" ? overage(over) : text.overLimit(new Intl.NumberFormat(kitLocale).format(over))}
       </p>
     ) : null;
-  const describedBy =
-    [ariaDescribedBy, hintNode && hintId, overageNode && `${hintId}-over`].filter(Boolean).join(" ") || undefined;
+  // The markers that can be placed, each with where it stands (0–1 of the track) and
+  // what the description says of it.
+  const marks = (markers ?? [])
+    .filter((m) => Number.isFinite(m.value))
+    .map((m) => ({
+      marker: m,
+      at: span <= 0 ? 0 : (Math.min(max, Math.max(min, m.value)) - min) / span,
+      said: m.valueText === null ? m.label : withField(common.fieldValue, m.label, m.valueText ?? formatPart(m.value)),
+    }));
+  const marksId = `${hintId}-marks`;
+  const marksNode =
+    marks.length > 0 ? (
+      // `hidden`: a description, not a line on the screen — `aria-describedby` reads a
+      // hidden node all the same (LockedReason's copy of a reason is one too). A span, so
+      // it stays phrasing content under `as="span"`.
+      <span id={marksId} hidden data-part="markers">
+        {listOfNodes(
+          kitLocale,
+          marks.map((m) => m.said),
+        )}
+      </span>
+    ) : null;
+  const describers = [ariaDescribedBy, marksNode && marksId, hintNode && hintId, overageNode && `${hintId}-over`];
+  const describedBy = describers.filter(Boolean).join(" ") || undefined;
+  // The room the ticks stand out into (see `markers`): the label row's `mb-1` above, the
+  // hint's, the overage line's or the legend's top margin below — else 4px of the track's own.
+  const labelRow = label != null || (showValue && valueText !== undefined);
+  const below = (stacked && legend && segments.length > 0) || overageNode !== null || hintNode !== null;
 
   const labelledBy = ariaLabelledBy ?? (label != null ? labelId : undefined);
   const name = labelledBy ? undefined : (ariaLabel ?? (indeterminate ? common.loading : undefined));
 
+  const track = (
+    <Tag
+      {...rest}
+      ref={tagRef}
+      role={meter ? "meter" : "progressbar"}
+      aria-label={name}
+      aria-labelledby={labelledBy}
+      aria-describedby={describedBy}
+      aria-valuemin={indeterminate ? undefined : min}
+      aria-valuemax={indeterminate ? undefined : max}
+      aria-valuenow={clamped}
+      aria-valuetext={ariaValueText}
+      aria-busy={!meter && indeterminate ? true : undefined}
+      // `relative` + `overflow-hidden`: the indeterminate segment is positioned in
+      // here and must not paint past the rounded ends.
+      className={cn("relative w-full overflow-hidden rounded-full bg-active", TRACK_HEIGHT[size])}
+    >
+      {stacked ? (
+        // The parts in a flex row with a 2px gap, so two neighbouring steps of one
+        // hue are parted by the track rather than by their difference in lightness.
+        <Tag className="flex h-full w-full gap-0.5">
+          {segments.map((seg, i) =>
+            seg.legendOnly ? null : (
+              <Tag
+                key={seg.key ?? i}
+                data-part="segment"
+                className={cn(
+                  "h-full shrink-0 rounded-full transition-[width] duration-300 motion-reduce:transition-none",
+                  fills[i],
+                )}
+                style={{
+                  width: `${span <= 0 ? 0 : (partValue(seg.value) / span) * 100}%`,
+                  backgroundColor: seg.className ? undefined : seg.color,
+                }}
+              />
+            ),
+          )}
+        </Tag>
+      ) : indeterminate ? (
+        <Tag
+          data-part="fill"
+          className={cn(
+            // `left-0`, deliberately physical: the keyframes (tokens.css
+            // `indeterminate-sweep`) translate along the physical x axis, and under
+            // RTL the same keyframes are run in REVERSE — from the right edge back
+            // to the left. A logical `start-0` would park the segment at the right
+            // in RTL and the reversed sweep would then start off-screen.
+            "absolute inset-y-0 left-0 w-1/3 rounded-full",
+            "animate-[indeterminate-sweep_1.4s_ease-in-out_infinite] rtl:[animation-direction:reverse]",
+            "motion-reduce:w-full motion-reduce:animate-none motion-reduce:opacity-50",
+            FILL[tone],
+          )}
+        />
+      ) : (
+        <Tag
+          data-part="fill"
+          // Block flow starts at the inline start, so a plain width fills from the
+          // right under `dir="rtl"` with nothing extra.
+          className={cn(
+            "h-full rounded-full transition-[width] duration-300 motion-reduce:transition-none",
+            FILL[tone],
+          )}
+          style={{ width: `${fraction * 100}%` }}
+        />
+      )}
+    </Tag>
+  );
+
   return (
     <Tag className={cn("min-w-0", inlineClass, className)} data-state={indeterminate ? "indeterminate" : "determinate"}>
-      {(label != null || (showValue && valueText !== undefined)) && (
+      {labelRow && (
         <Tag className="mb-1 flex items-baseline gap-2 text-sm">
           {label != null && (
             <span id={labelId} className="min-w-0 text-secondary">
@@ -379,71 +558,33 @@ export function ProgressBar({
           )}
         </Tag>
       )}
-      <Tag
-        {...rest}
-        ref={tagRef}
-        role={meter ? "meter" : "progressbar"}
-        aria-label={name}
-        aria-labelledby={labelledBy}
-        aria-describedby={describedBy}
-        aria-valuemin={indeterminate ? undefined : min}
-        aria-valuemax={indeterminate ? undefined : max}
-        aria-valuenow={clamped}
-        aria-valuetext={ariaValueText}
-        aria-busy={!meter && indeterminate ? true : undefined}
-        // `relative` + `overflow-hidden`: the indeterminate segment is positioned in
-        // here and must not paint past the rounded ends.
-        className={cn("relative w-full overflow-hidden rounded-full bg-active", TRACK_HEIGHT[size])}
-      >
-        {stacked ? (
-          // The parts in a flex row with a 2px gap, so two neighbouring steps of one
-          // hue are parted by the track rather than by their difference in lightness.
-          <Tag className="flex h-full w-full gap-0.5">
-            {segments.map((seg, i) =>
-              seg.legendOnly ? null : (
-                <Tag
-                  key={seg.key ?? i}
-                  data-part="segment"
-                  className={cn(
-                    "h-full shrink-0 rounded-full transition-[width] duration-300 motion-reduce:transition-none",
-                    fills[i],
-                  )}
-                  style={{
-                    width: `${span <= 0 ? 0 : (partValue(seg.value) / span) * 100}%`,
-                    backgroundColor: seg.className ? undefined : seg.color,
-                  }}
-                />
-              ),
-            )}
-          </Tag>
-        ) : indeterminate ? (
-          <Tag
-            data-part="fill"
-            className={cn(
-              // `left-0`, deliberately physical: the keyframes (tokens.css
-              // `indeterminate-sweep`) translate along the physical x axis, and under
-              // RTL the same keyframes are run in REVERSE — from the right edge back
-              // to the left. A logical `start-0` would park the segment at the right
-              // in RTL and the reversed sweep would then start off-screen.
-              "absolute inset-y-0 left-0 w-1/3 rounded-full",
-              "animate-[indeterminate-sweep_1.4s_ease-in-out_infinite] rtl:[animation-direction:reverse]",
-              "motion-reduce:w-full motion-reduce:animate-none motion-reduce:opacity-50",
-              FILL[tone],
-            )}
-          />
-        ) : (
-          <Tag
-            data-part="fill"
-            // Block flow starts at the inline start, so a plain width fills from the
-            // right under `dir="rtl"` with nothing extra.
-            className={cn(
-              "h-full rounded-full transition-[width] duration-300 motion-reduce:transition-none",
-              FILL[tone],
-            )}
-            style={{ width: `${fraction * 100}%` }}
-          />
-        )}
-      </Tag>
+      {marks.length > 0 ? (
+        // The ticks stand out of the track, which clips (`overflow-hidden`, for the
+        // rounded ends): so they are its siblings, over it in a frame of its size.
+        <Tag data-part="track-frame" className={cn("relative", !labelRow && "mt-1", !below && "mb-1")}>
+          {track}
+          {marks.map(({ marker, at }, i) => (
+            <Tag
+              key={marker.key ?? i}
+              aria-hidden
+              data-part="marker"
+              // A 2px tick, its START edge at that share of the track less its own width,
+              // so it is centred on its point and whole inside the track at 0 and at 1 —
+              // logical, so it mirrors with the fill under `dir="rtl"`, no translate to flip.
+              // `--progress-marker-at` is the share; the 2px is a width in px, not rem, so the
+              // sum holds at every text size.
+              className={cn(
+                "pointer-events-none absolute -inset-y-1 w-[2px] rounded-full start-[calc((100%_-_2px)*var(--progress-marker-at))]",
+                marker.tone ? FILL[marker.tone] : "bg-[var(--text-primary)]",
+              )}
+              style={{ "--progress-marker-at": at } as CSSProperties}
+            />
+          ))}
+        </Tag>
+      ) : (
+        track
+      )}
+      {marksNode}
       {stacked && legend && segments.length > 0 && (
         <ul className="mt-2 space-y-1 text-sm" data-part="legend">
           {segments.map((seg, i) => (

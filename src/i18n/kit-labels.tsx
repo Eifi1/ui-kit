@@ -127,6 +127,7 @@ import type { FieldSuggestionLabels } from "../components/field-parts";
 import type { ConsentAgainLabels } from "../components/consent-again-notice-labels";
 import type { ReleaseNotesLabels } from "../components/release-notes-labels";
 import type { QuantityLabels } from "../components/quantity-input";
+import type { ReorderLabels } from "../components/reorder";
 
 /**
  * EVERY string the kit renders, as one typed tree — and an optional provider that
@@ -528,6 +529,9 @@ export interface UiKitLabels {
   /** 0.57: `QuantityInput` and `QuantityField` — the pieces word ("pcs", "Stk."), the unit
    *  select's name, and the suggestion's lead and button (keksdose SL-10). */
   quantity: QuantityLabels;
+  /** 0.58: `useReorder` — "Move up" and "Move down", why one is not available at an end,
+   *  and the announcement of a move, "Moved to position 3 of 7" (keksdose SL-10). */
+  reorder: ReorderLabels;
 }
 
 /**

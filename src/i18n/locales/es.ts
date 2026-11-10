@@ -928,6 +928,12 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       },
       backHome: "Volver al inicio",
       accept: "Acepto las {terms} y la {privacy}",
+      acceptWithAge: (minAge) => `Tengo al menos ${minAge} años y acepto las {terms} y la {privacy}`,
+      changeNotice: {
+        terms: (date) => `Nuestras Condiciones de uso cambian el ${date}.`,
+        privacy: (date) => `Nuestra Política de privacidad cambia el ${date}.`,
+        read: "Leer el nuevo texto",
+      },
       notice: {
         beta: "Beta cerrada. Estos textos aún no han sido revisados por un abogado y lo serán antes de un lanzamiento público.",
         privacy:
@@ -976,7 +982,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
           browser: {
             title: "Qué guarda su navegador",
             lead: "Ninguna cookie. La aplicación guarda lo siguiente en el almacenamiento de su navegador:",
-            tail: "Nada de ello se usa para rastrearle. Las entradas pendientes de envío se nos envían en cuanto sea posible; todo lo demás permanece en su dispositivo. Todo ello desaparece cuando borra los datos del sitio, y al cerrar sesión se eliminan los tokens de inicio de sesión.",
+            tail: "Nada de ello se usa para rastrearle. Las entradas pendientes de envío se nos envían en cuanto sea posible. Todo ello desaparece cuando borra los datos del sitio, y al cerrar sesión se eliminan los tokens de inicio de sesión.",
           },
           rights: {
             title: "Sus derechos",
@@ -999,7 +1005,9 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
           },
           changes: {
             title: "Cambios en estas condiciones",
-            body: "Podemos actualizar estas condiciones a medida que evolucione el servicio. Anunciamos cualquier cambio importante al menos 30 días antes de que entre en vigor, por correo electrónico y en la aplicación, junto con el nuevo texto. Si no está de acuerdo, puede oponerse o eliminar su cuenta antes de esa fecha, y puede exportar sus datos hasta entonces. Si sigue usando el servicio después de esa fecha, se aplican las condiciones modificadas. Los cambios que solo le benefician, o que exige la ley, se aplican sin este preaviso y no admiten oposición. Si se opone a un cambio, podemos cerrar su cuenta en la fecha en que entre en vigor. Si ha pagado un periodo que va más allá de esa fecha, le reembolsamos la parte no utilizada.",
+            body: "Podemos actualizar estas condiciones a medida que evolucione el servicio. Anunciamos cualquier cambio importante al menos 30 días antes de que entre en vigor, por correo electrónico y en la aplicación, junto con el nuevo texto. Si no está de acuerdo, puede oponerse o eliminar su cuenta antes de esa fecha, y puede exportar sus datos hasta entonces. Si sigue usando el servicio después de esa fecha, se aplican las condiciones modificadas. Los cambios que solo le benefician, o que exige la ley, se aplican sin este preaviso y no admiten oposición. Si se opone a un cambio, podemos cerrar su cuenta en la fecha en que entre en vigor.",
+            commercial:
+              "Podemos actualizar estas condiciones a medida que evolucione el servicio. Anunciamos cualquier cambio importante al menos 30 días antes de que entre en vigor, por correo electrónico y en la aplicación, junto con el nuevo texto. Si no está de acuerdo, puede oponerse o eliminar su cuenta antes de esa fecha, y puede exportar sus datos hasta entonces. Si sigue usando el servicio después de esa fecha, se aplican las condiciones modificadas. Los cambios que solo le benefician, o que exige la ley, se aplican sin este preaviso y no admiten oposición. Si se opone a un cambio, podemos cerrar su cuenta en la fecha en que entre en vigor. Si ha pagado un periodo que va más allá de esa fecha, le reembolsamos la parte no utilizada.",
           },
           language: {
             title: "Idioma",
@@ -2091,6 +2099,15 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       unit: (field) => (field ? `Unidad para «${field}»` : "Unidad"),
       suggested: "Sugerido",
       takeSuggestion: (quantity) => `Usar ${quantity}`,
+    },
+    // 0.58 (keksdose SL-10): a row moved by hand — the two actions, why one is not
+    // available at an end, and the move as a screen reader hears it.
+    reorder: {
+      moveUp: "Mover arriba",
+      moveDown: "Mover abajo",
+      atTop: "Ya está arriba del todo",
+      atBottom: "Ya está abajo del todo",
+      moved: (position, total) => `Movido a la posición ${n(position)} de ${n(total)}`,
     },
   };
 }

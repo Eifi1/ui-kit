@@ -20,6 +20,12 @@ export const DEFAULT_LEGAL_LABELS: LegalLabels = {
   },
   backHome: "Back to home",
   accept: "I accept the {terms} and the {privacy}",
+  acceptWithAge: (minAge) => `I am at least ${minAge} years old and accept the {terms} and the {privacy}`,
+  changeNotice: {
+    terms: (date) => `Our Terms of Service change on ${date}.`,
+    privacy: (date) => `Our Privacy Policy changes on ${date}.`,
+    read: "Read the new text",
+  },
   notice: {
     beta: "Closed beta. These texts have not been reviewed by a lawyer yet and will be before a public launch.",
     privacy:
@@ -65,7 +71,7 @@ export const DEFAULT_LEGAL_LABELS: LegalLabels = {
       browser: {
         title: "What your browser stores",
         lead: "No cookies. The app keeps the following in your browser's storage:",
-        tail: "None of it is used to track you. Entries waiting to be sent are sent to us as soon as they can be; everything else stays on your device. All of it disappears when you clear the site's data, and signing out removes the sign-in tokens.",
+        tail: "None of it is used to track you. Entries waiting to be sent are sent to us as soon as they can be. All of it disappears when you clear the site's data, and signing out removes the sign-in tokens.",
       },
       rights: {
         title: "Your rights",
@@ -88,7 +94,9 @@ export const DEFAULT_LEGAL_LABELS: LegalLabels = {
       },
       changes: {
         title: "Changes to these terms",
-        body: "We may update these terms as the service evolves. We announce a material change at least 30 days before it takes effect, by email and in the app, together with the new text. If you do not agree, you can object or delete your account before that date, and you can export your data until then. If you keep using the service after that date, the changed terms apply. Changes that only benefit you, or that the law requires, apply without this notice and cannot be objected to. If you object to a change, we may end your account on the date it takes effect. If you have paid for a period that runs beyond that date, we refund the unused part.",
+        body: "We may update these terms as the service evolves. We announce a material change at least 30 days before it takes effect, by email and in the app, together with the new text. If you do not agree, you can object or delete your account before that date, and you can export your data until then. If you keep using the service after that date, the changed terms apply. Changes that only benefit you, or that the law requires, apply without this notice and cannot be objected to. If you object to a change, we may end your account on the date it takes effect.",
+        commercial:
+          "We may update these terms as the service evolves. We announce a material change at least 30 days before it takes effect, by email and in the app, together with the new text. If you do not agree, you can object or delete your account before that date, and you can export your data until then. If you keep using the service after that date, the changed terms apply. Changes that only benefit you, or that the law requires, apply without this notice and cannot be objected to. If you object to a change, we may end your account on the date it takes effect. If you have paid for a period that runs beyond that date, we refund the unused part.",
       },
       language: {
         title: "Language",

@@ -159,6 +159,7 @@ const ActionCardDemo = lazySection(() => import("./sections/action-card-demo"), 
 const NavPillsDemo = lazySection(() => import("./sections/nav-pills-demo"), "NavPillsDemo");
 const NavPillsScrollDemo = lazySection(() => import("./sections/nav-pills-demo"), "NavPillsScrollDemo");
 const ProgressSegmentsDemo = lazySection(() => import("./sections/progress-segments-demo"), "ProgressSegmentsDemo");
+const ProgressMarkersDemo = lazySection(() => import("./sections/progress-segments-demo"), "ProgressMarkersDemo");
 const ProgressLegendTone018Demo = lazySection(
   () => import("./sections/progress-018-demo"),
   "ProgressLegendTone018Demo",
@@ -278,6 +279,7 @@ const DateFormatDemo = lazySection(() => import("./sections/date-format"), "Date
 const TileRadioGroup022Demo = lazySection(() => import("./sections/account-fields-022-demo"), "TileRadioGroup022Demo");
 const AccountNumbers022Demo = lazySection(() => import("./sections/account-numbers-022-demo"), "AccountNumbers022Demo");
 const ToggleGroup022Demo = lazySection(() => import("./sections/chips-toggles"), "ToggleGroup022Demo");
+const ChoiceFieldDemo = lazySection(() => import("./sections/chips-toggles"), "ChoiceFieldDemo");
 const Choices022Demo = lazySection(() => import("./sections/choices"), "Choices022Demo");
 const Dates022Demo = lazySection(() => import("./sections/dates"), "Dates022Demo");
 const Month022Demo = lazySection(() => import("./sections/month-picker-demo"), "Month022Demo");
@@ -1090,7 +1092,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Chips and the chip field, the toggle group, and tabs — the small controls that pick one of a few or hold a short list.",
         icon: Tags,
-        components: ["Chip", "ChipInput", "ToggleGroup", "Tabs"],
+        components: ["Chip", "ChipInput", "ToggleGroup", "ChoiceField", "RhfChoiceField", "Tabs"],
         Body: () => (
           <>
             <ChipsToggles />
@@ -1100,6 +1102,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <Chips016Demo />
             <ChipSnapEdges018Demo />
             <ToggleGroup022Demo />
+            <ChoiceFieldDemo />
           </>
         ),
       },
@@ -1128,6 +1131,7 @@ export const GROUPS: ShowcaseGroup[] = [
           <>
             <FeedbackProgress />
             <ProgressSegmentsDemo />
+            <ProgressMarkersDemo />
             <ProgressLegendTone018Demo />
             <FeedbackMore />
             <AlertBannerBlockDemo />
@@ -1191,7 +1195,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The row every app draws by hand — a button, a link or a record, with its actions beside it — the row of a menu, and the bar a selection of rows brings up.",
         icon: ListChecks,
-        components: ["List", "ListItem", "MenuItem", "BulkActionBar"],
+        components: ["List", "ListItem", "useReorder", "MenuItem", "BulkActionBar"],
         Body: () => (
           <>
             <ListsMenus />
@@ -1745,6 +1749,7 @@ export const GROUPS: ShowcaseGroup[] = [
           "LegalKitSection",
           "LegalFooter",
           "LegalAcceptCheckbox",
+          "LegalChangeNotice",
           "ConsentAgainNotice",
           "DEFAULT_CONSENT_AGAIN_LABELS",
           "LEGAL_SKELETON",
@@ -2205,9 +2210,9 @@ export const GROUPS: ShowcaseGroup[] = [
         title: "Mail",
         short: "Mail",
         blurb:
-          "Account mail: the words per language, one escaped layout, two transports that never raise — and the sample mails of the release, rendered.",
+          "Account mail: the words per language, one escaped layout, two transports that never raise — and the sample mails of the release, rendered. And the legal-change announcement: the list the in-app notice reads, and its mail to every account.",
         icon: Mail,
-        serverModules: ["mail"],
+        serverModules: ["mail", "legal"],
       }),
       // server-kit 0.9 (docs/notifications-harmonization.md §4.1): the server half of the
       // kit's Notifications page.

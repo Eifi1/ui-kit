@@ -947,6 +947,12 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       },
       backHome: "Retour à l’accueil",
       accept: "J’accepte les {terms} et la {privacy}",
+      acceptWithAge: (minAge) => `J’ai au moins ${minAge} ans et j’accepte les {terms} et la {privacy}`,
+      changeNotice: {
+        terms: (date) => `Nos conditions d’utilisation changent le ${date}.`,
+        privacy: (date) => `Notre politique de confidentialité change le ${date}.`,
+        read: "Lire le nouveau texte",
+      },
       notice: {
         beta: "Bêta fermée. Ces textes n’ont pas encore été relus par un avocat et le seront avant un lancement public.",
         privacy:
@@ -995,7 +1001,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
           browser: {
             title: "Ce que votre navigateur enregistre",
             lead: "Aucun cookie. L’app conserve les éléments suivants dans le stockage de votre navigateur\u00a0:",
-            tail: "Rien de tout cela ne sert à vous suivre. Les éléments en attente d’envoi nous sont transmis dès que possible\u202f; tout le reste demeure sur votre appareil. Tout cela disparaît lorsque vous effacez les données du site, et la déconnexion supprime les jetons de connexion.",
+            tail: "Rien de tout cela ne sert à vous suivre. Les éléments en attente d’envoi nous sont transmis dès que possible. Tout cela disparaît lorsque vous effacez les données du site, et la déconnexion supprime les jetons de connexion.",
           },
           rights: {
             title: "Vos droits",
@@ -1018,7 +1024,9 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
           },
           changes: {
             title: "Modifications des présentes conditions",
-            body: "Nous pouvons mettre à jour ces conditions au fil de l’évolution du service. Nous annonçons toute modification importante au moins 30 jours avant son entrée en vigueur, par e-mail et dans l’app, avec le nouveau texte. Si vous n’êtes pas d’accord, vous pouvez vous y opposer ou supprimer votre compte avant cette date, et exporter vos données jusque-là. Si vous continuez à utiliser le service après cette date, les conditions modifiées s’appliquent. Les modifications qui sont uniquement à votre avantage, ou que la loi impose, s’appliquent sans ce préavis et ne peuvent pas faire l’objet d’une opposition. Si vous vous opposez à une modification, nous pouvons fermer votre compte à la date de son entrée en vigueur. Si vous avez payé une période qui s’étend au-delà de cette date, nous remboursons la part non utilisée.",
+            body: "Nous pouvons mettre à jour ces conditions au fil de l’évolution du service. Nous annonçons toute modification importante au moins 30 jours avant son entrée en vigueur, par e-mail et dans l’app, avec le nouveau texte. Si vous n’êtes pas d’accord, vous pouvez vous y opposer ou supprimer votre compte avant cette date, et exporter vos données jusque-là. Si vous continuez à utiliser le service après cette date, les conditions modifiées s’appliquent. Les modifications qui sont uniquement à votre avantage, ou que la loi impose, s’appliquent sans ce préavis et ne peuvent pas faire l’objet d’une opposition. Si vous vous opposez à une modification, nous pouvons fermer votre compte à la date de son entrée en vigueur.",
+            commercial:
+              "Nous pouvons mettre à jour ces conditions au fil de l’évolution du service. Nous annonçons toute modification importante au moins 30 jours avant son entrée en vigueur, par e-mail et dans l’app, avec le nouveau texte. Si vous n’êtes pas d’accord, vous pouvez vous y opposer ou supprimer votre compte avant cette date, et exporter vos données jusque-là. Si vous continuez à utiliser le service après cette date, les conditions modifiées s’appliquent. Les modifications qui sont uniquement à votre avantage, ou que la loi impose, s’appliquent sans ce préavis et ne peuvent pas faire l’objet d’une opposition. Si vous vous opposez à une modification, nous pouvons fermer votre compte à la date de son entrée en vigueur. Si vous avez payé une période qui s’étend au-delà de cette date, nous remboursons la part non utilisée.",
           },
           language: {
             title: "Langue",
@@ -2134,6 +2142,16 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       unit: (field) => (field ? `Unité pour «\u202f${field}\u202f»` : "Unité"),
       suggested: "Suggéré",
       takeSuggestion: (quantity) => `Utiliser ${quantity}`,
+    },
+    // 0.58 (keksdose SL-10): a row moved by hand — the two actions, why one is not
+    // available at an end, and the move as a screen reader hears it ("sur", as
+    // `dataTable.pageChanged`).
+    reorder: {
+      moveUp: "Monter",
+      moveDown: "Descendre",
+      atTop: "Déjà tout en haut",
+      atBottom: "Déjà tout en bas",
+      moved: (position, total) => `Déplacé en position ${n(position)} sur ${n(total)}`,
     },
   };
 }

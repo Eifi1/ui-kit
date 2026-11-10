@@ -388,13 +388,16 @@ export function CommercialDisclaimer032Demo() {
           ]}
         />
       </div>
-      <div className="rounded-lg border border-subtle p-4">
+      <div className="space-y-6 rounded-lg border border-subtle p-4">
         <LegalKitSection page="impressum" section="disclaimer" variant={variant} headingAs="h3" operator={OPERATOR} />
+        <LegalKitSection page="terms" section="changes" variant={variant} headingAs="h3" />
       </div>
       <Note>
         {code('<LegalKitSection section="disclaimer" variant="commercial" />')} — chosen per app, in the release that
         turns its billing on. The Merchant of Record sells in its own name, so the beta&apos;s &ldquo;private,
-        non-commercial&rdquo; would be untrue; the title and the {code("#disclaimer")} id stay.
+        non-commercial&rdquo; would be untrue; the title and the {code("#disclaimer")} id stay. The terms&apos;{" "}
+        {code('<LegalKitSection section="changes" variant="commercial" />')} switches with it: the same clause, with the
+        refund of a paid period beyond a change&apos;s effective date after it.
       </Note>
     </Example>
   );

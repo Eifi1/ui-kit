@@ -68,6 +68,9 @@ export const KIT_COUNTERPARTS: Readonly<Record<string, readonly string[]>> = {
   // server-kit 0.21: the dependency audit a backend's gate runs, as the frontends' `npm
   // audit --audit-level=high`; a tool, so no kit page renders it.
   dependency_audit: [],
+  // server-kit 0.22: a legal change's list and mail, behind the Account page's
+  // `LegalChangeNotice` (legal §3.5).
+  legal: ["auth-account"],
 };
 
 /** The Server kit page a module is documented on (routes.tsx `serverModules`). */

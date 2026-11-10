@@ -933,6 +933,12 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       // Felhasználási feltételeket és az Adatvédelmi tájékoztatót". Nothing is added around
       // a placeholder, and the articles fit these two titles (a F…, az A…).
       accept: "Elfogadom a következőket: {terms} és {privacy}",
+      acceptWithAge: (minAge) => `Legalább ${minAge} éves vagyok, és elfogadom a következőket: {terms} és {privacy}`,
+      changeNotice: {
+        terms: (date) => `Felhasználási feltételeink módosulnak. Az új szöveg hatálybalépésének napja: ${date}`,
+        privacy: (date) => `Adatvédelmi tájékoztatónk módosul. Az új szöveg hatálybalépésének napja: ${date}`,
+        read: "Az új szöveg elolvasása",
+      },
       notice: {
         beta: "Zárt béta. Ezeket a szövegeket ügyvéd még nem ellenőrizte; erre a nyilvános indulás előtt sor kerül.",
         privacy:
@@ -980,7 +986,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
           browser: {
             title: "Mit tárol az Ön böngészője",
             lead: "Nincsenek sütik. Az alkalmazás a következőket tárolja az Ön böngészőjének tárhelyén:",
-            tail: "Egyiket sem használjuk az Ön követésére. A küldésre váró bejegyzéseket a böngésző elküldi nekünk, amint lehetséges; minden más az Ön eszközén marad. Mindez eltűnik, amikor törli a webhely adatait, kijelentkezéskor pedig a bejelentkezési tokenek törlődnek.",
+            tail: "Egyiket sem használjuk az Ön követésére. A küldésre váró bejegyzéseket a böngésző elküldi nekünk, amint lehetséges. Mindez eltűnik, amikor törli a webhely adatait, kijelentkezéskor pedig a bejelentkezési tokenek törlődnek.",
           },
           rights: {
             title: "Az Ön jogai",
@@ -1003,7 +1009,9 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
           },
           changes: {
             title: "A feltételek módosítása",
-            body: "Ezeket a feltételeket a szolgáltatás fejlődésével módosíthatjuk. A lényeges változásokat legalább 30 nappal a hatálybalépésük előtt bejelentjük e-mailben és az alkalmazásban, az új szöveggel együtt. Ha nem ért egyet, ezen időpont előtt tiltakozhat, vagy törölheti a fiókját, és addig exportálhatja az adatait. Ha ezen időpont után is használja a szolgáltatást, a módosított feltételek érvényesek. Azok a változások, amelyek kizárólag az Ön javát szolgálják, vagy amelyeket jogszabály ír elő, e bejelentés nélkül is hatályosak, és ellenük nem lehet tiltakozni. Ha tiltakozik egy változás ellen, a hatálybalépés napjával megszüntethetjük a fiókját. Ha olyan időszakra fizetett, amely ezen a napon túlnyúlik, a fel nem használt részt visszatérítjük.",
+            body: "Ezeket a feltételeket a szolgáltatás fejlődésével módosíthatjuk. A lényeges változásokat legalább 30 nappal a hatálybalépésük előtt bejelentjük e-mailben és az alkalmazásban, az új szöveggel együtt. Ha nem ért egyet, ezen időpont előtt tiltakozhat, vagy törölheti a fiókját, és addig exportálhatja az adatait. Ha ezen időpont után is használja a szolgáltatást, a módosított feltételek érvényesek. Azok a változások, amelyek kizárólag az Ön javát szolgálják, vagy amelyeket jogszabály ír elő, e bejelentés nélkül is hatályosak, és ellenük nem lehet tiltakozni. Ha tiltakozik egy változás ellen, a hatálybalépés napjával megszüntethetjük a fiókját.",
+            commercial:
+              "Ezeket a feltételeket a szolgáltatás fejlődésével módosíthatjuk. A lényeges változásokat legalább 30 nappal a hatálybalépésük előtt bejelentjük e-mailben és az alkalmazásban, az új szöveggel együtt. Ha nem ért egyet, ezen időpont előtt tiltakozhat, vagy törölheti a fiókját, és addig exportálhatja az adatait. Ha ezen időpont után is használja a szolgáltatást, a módosított feltételek érvényesek. Azok a változások, amelyek kizárólag az Ön javát szolgálják, vagy amelyeket jogszabály ír elő, e bejelentés nélkül is hatályosak, és ellenük nem lehet tiltakozni. Ha tiltakozik egy változás ellen, a hatálybalépés napjával megszüntethetjük a fiókját. Ha olyan időszakra fizetett, amely ezen a napon túlnyúlik, a fel nem használt részt visszatérítjük.",
           },
           language: {
             title: "Nyelv",
@@ -2090,6 +2098,17 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       unit: (field) => (field ? `Mértékegység: ${field}` : "Mértékegység"),
       suggested: "Javasolt",
       takeSuggestion: (quantity) => `Átvétel: ${quantity}`,
+    },
+    // 0.58 (keksdose SL-10): a row moved by hand — the two actions, why one is not
+    // available at an end, and the move as a screen reader hears it: the place as an
+    // ordinal and the total after it, as `dataTable.pageChanged` ("3. oldal (összesen 7)"),
+    // so no a/az has to agree with a number.
+    reorder: {
+      moveUp: "Mozgatás felfelé",
+      moveDown: "Mozgatás lefelé",
+      atTop: "Már a legfelső helyen van",
+      atBottom: "Már a legalsó helyen van",
+      moved: (position, total) => `Áthelyezve: ${n(position)}. hely (összesen ${n(total)})`,
     },
   };
 }

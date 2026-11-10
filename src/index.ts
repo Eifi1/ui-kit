@@ -30,6 +30,10 @@ export {
 } from "./lib/safe-storage";
 // 0.52 (DUP-8): `prefers-reduced-motion`, asked at the moment of the motion (KS copied it).
 export { prefersReducedMotion } from "./lib/reduced-motion";
+// 0.58: focus that is not a request to open anything — the kit's tours and LineItems' Add
+// move the focus this way. `focusQuietly` for an app's own focus move (keksdose's split
+// editor), `isQuietFocus` for an app's own open-on-focus control to honour the kit's.
+export { focusQuietly, isQuietFocus } from "./lib/quiet-focus";
 // Save a fetched Blob as a download, and read the name a Content-Disposition asks for
 // (`filename*` first) — 0.34, KS U5; the kit's own three downloads use them.
 export { saveBlob, filenameFromDisposition } from "./lib/download";
@@ -477,6 +481,9 @@ export * from "./chart";
 export * from "./components/qr-code";
 export * from "./components/alert-banner";
 export * from "./components/toggle-group";
+// 0.58: one answer from a few — the segmented ToggleGroup from `md` up, a Select on a phone
+// (keksdose's HeaderChoice and SL-18 Choice, hand-rolled twice).
+export * from "./components/choice-field";
 // A wrapping set of links/buttons marked `aria-current` — Tabs-like looks, not tabs.
 export * from "./components/nav-pills";
 // A pill carrying one VALUE — inert, a link, or a toggle, depending on which prop it is
@@ -609,6 +616,16 @@ export { ScrollArea } from "./components/scroll-area";
 export type { ScrollAreaProps } from "./components/scroll-area";
 // 0.10.0 rows, menu rows, text primitives and page chrome the apps drew by hand.
 export * from "./components/list";
+// 0.58 (keksdose SL-10): rows the app orders by hand — "Move up" / "Move down", Alt+arrows,
+// the focus kept on the moved row and the move announced.
+export { useReorder, DEFAULT_REORDER_LABELS } from "./components/reorder";
+export type {
+  ReorderLabels,
+  ReorderRow,
+  ReorderRowProps,
+  UseReorderOptions,
+  UseReorderReturn,
+} from "./components/reorder";
 export * from "./components/menu-item";
 export * from "./components/text";
 export * from "./components/status-dot";
@@ -715,6 +732,10 @@ export type {
   ConsentAgainBannerProps,
   ConsentAgainLabels,
 } from "./components/consent-again-notice";
+// 0.58 (keksdose's legal audit, legal decision 10): the in-app half of a change's notice —
+// a banner per announcement from `GET /api/v1/legal/changes` until it takes effect.
+export { LegalChangeNotice } from "./components/legal-change-notice";
+export type { LegalChangeAnnouncement, LegalChangeNoticeProps } from "./components/legal-change-notice";
 // 0.32.0 (docs/text-size-harmonization.md): the appearance settings' words, and a row's
 // actions, one of the behaviours at Large (§4, §10.7–10.9).
 export { DEFAULT_APPEARANCE_LABELS, useAppearanceLabels } from "./components/appearance-labels";

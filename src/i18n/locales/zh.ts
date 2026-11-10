@@ -904,6 +904,12 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       backHome: "返回首页",
       // Book-title marks around the two documents, outside the links.
       accept: "我已阅读并同意《{terms}》和《{privacy}》",
+      acceptWithAge: (minAge) => `我已年满 ${minAge} 周岁，已阅读并同意《{terms}》和《{privacy}》`,
+      changeNotice: {
+        terms: (date) => `我们的《使用条款》将于${date}起变更。`,
+        privacy: (date) => `我们的《隐私政策》将于${date}起变更。`,
+        read: "阅读新文本",
+      },
       notice: {
         beta: "封闭测试阶段。这些文本尚未经律师审阅，将在公开发布之前完成审阅。",
         privacy:
@@ -951,7 +957,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
           browser: {
             title: "您的浏览器存储什么",
             lead: "不使用 Cookie。应用程序会在您浏览器的存储中保留以下内容：",
-            tail: "这些内容都不会用于跟踪您。等待发送的条目会尽快发送给我们；其他所有内容都保留在您的设备上。清除网站数据后，这些内容会全部消失；退出登录会删除登录令牌。",
+            tail: "这些内容都不会用于跟踪您。等待发送的条目会尽快发送给我们。清除网站数据后，这些内容会全部消失；退出登录会删除登录令牌。",
           },
           rights: {
             title: "您的权利",
@@ -974,7 +980,9 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
           },
           changes: {
             title: "条款变更",
-            body: "我们可能会随着服务的发展更新本条款。重大变更将至少在生效前 30 天通过电子邮件和应用程序公布，并附上新文本。如您不同意，可在该日期前提出异议或删除您的账户，并可在此之前导出您的数据。如您在该日期后继续使用本服务，则适用变更后的条款。仅对您有利的变更或法律要求的变更，无需上述提前通知即可生效，且不得提出异议。如您对某项变更提出异议，我们可在该变更生效之日关闭您的账户。如您已付费的期间超过该日期，我们将退还未使用部分的费用。",
+            body: "我们可能会随着服务的发展更新本条款。重大变更将至少在生效前 30 天通过电子邮件和应用程序公布，并附上新文本。如您不同意，可在该日期前提出异议或删除您的账户，并可在此之前导出您的数据。如您在该日期后继续使用本服务，则适用变更后的条款。仅对您有利的变更或法律要求的变更，无需上述提前通知即可生效，且不得提出异议。如您对某项变更提出异议，我们可在该变更生效之日关闭您的账户。",
+            commercial:
+              "我们可能会随着服务的发展更新本条款。重大变更将至少在生效前 30 天通过电子邮件和应用程序公布，并附上新文本。如您不同意，可在该日期前提出异议或删除您的账户，并可在此之前导出您的数据。如您在该日期后继续使用本服务，则适用变更后的条款。仅对您有利的变更或法律要求的变更，无需上述提前通知即可生效，且不得提出异议。如您对某项变更提出异议，我们可在该变更生效之日关闭您的账户。如您已付费的期间超过该日期，我们将退还未使用部分的费用。",
           },
           language: {
             title: "语言",
@@ -1992,6 +2000,16 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       unit: (field) => (field ? `“${field}”的单位` : "单位"),
       suggested: "建议值",
       takeSuggestion: (quantity) => `使用 ${quantity}`,
+    },
+    // 0.58 (keksdose SL-10): a row moved by hand — the two actions, why one is not
+    // available at an end, and the move as a screen reader hears it ("第 … 位，共 … 位",
+    // as `dataTable.pageChanged`).
+    reorder: {
+      moveUp: "上移",
+      moveDown: "下移",
+      atTop: "已在最上方",
+      atBottom: "已在最下方",
+      moved: (position, total) => `已移至第 ${n(position)} 位，共 ${n(total)} 位`,
     },
   };
 }

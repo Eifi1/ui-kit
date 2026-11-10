@@ -14,6 +14,7 @@
  *   <RhfTimeInput name="meetingTime" label="Time" />
  *   <RhfDateRangePicker fromName="periodFrom" toName="periodTo" label="Period" />
  *   <RhfToggleGroup name="interval" label="Interval" options={INTERVALS} />
+ *   <RhfChoiceField name="grain" label="Group by" options={GRAINS} />
  *   <RhfCountrySelect name="country" label="Country" preferred={["CH", "DE"]} />
  *   <RhfMonthPicker name="fiscalYear" label="Fiscal year" mode="year" valueAsNumber />
  *   <RhfQuantityField name="quantity" label="Quantity" family="mass" />
@@ -86,6 +87,7 @@ import {
   type ToggleGroupClearableProps,
   type ToggleGroupRequiredProps,
 } from "../components/toggle-group";
+import { ChoiceField, type ChoiceFieldProps } from "../components/choice-field";
 import { Checkbox, type CheckboxProps } from "../components/checkbox";
 import { EntityCombobox, type EntityComboboxProps } from "../components/entity-combobox";
 import {
@@ -1955,6 +1957,110 @@ function ToggleControl<T extends string>({
       // stop.
       value={(value ?? "") as T}
       onChange={(v) => field.onChange(v)}
+    />
+  );
+}
+
+// ── choice field ─────────────────────────────────────────────────────────────
+
+export type RhfChoiceFieldProps<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  T extends string = string,
+  TTransformed = TFieldValues,
+> = RhfFieldBaseProps<TFieldValues, TName, TTransformed> &
+  // The field's own — `layout`, `breakpoint`, `size`, its lock — less what the form binds,
+  // the ids, and `help`, which the shell draws after its label.
+  Omit<ChoiceFieldProps<T>, BoundByForm | "id" | "aria-labelledby" | "help">;
+
+/**
+ * The kit's {@link ChoiceField} bound to one field: a segmented group from `md` up, a
+ * select on a phone, the chosen option's `value` stored — {@link RhfToggleGroup} for a form
+ * a phone opens too, where four answers in a row of segments do not fit.
+ *
+ * The label is the shell's, above the bare control, as on {@link RhfToggleGroup} and
+ * {@link RhfSelect}: it names the group (`aria-labelledby`) and the select (its
+ * `<label htmlFor>` too); the hint and the message describe whichever is on screen, and
+ * an error paints it. Focus on error lands on the chosen segment (else the first) or on
+ * the select; touched is set when focus leaves the field, not when it moves between
+ * segments. A value no option has (an empty default) shows nothing chosen in either form.
+ */
+export function RhfChoiceField<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  T extends string = string,
+  TTransformed = TFieldValues,
+>({
+  name,
+  control,
+  rules,
+  label,
+  hint,
+  help,
+  required,
+  disabled,
+  excludeWhenDisabled,
+  className,
+  ...choiceProps
+}: RhfChoiceFieldProps<TFieldValues, TName, T, TTransformed>) {
+  const labelled = hasContent(label);
+  return (
+    <RhfField
+      {...{ name, control, rules, label, hint, help, required, disabled, excludeWhenDisabled, className }}
+      asControl={false}
+      render={({ field, invalid, id, labelId, describedBy }) => (
+        <ChoiceControl<T>
+          field={field as unknown as ControllerRenderProps}
+          invalid={invalid}
+          required={required}
+          id={id}
+          labelledBy={labelled ? labelId : undefined}
+          describedBy={describedBy}
+          choiceProps={choiceProps}
+        />
+      )}
+    />
+  );
+}
+
+function ChoiceControl<T extends string>({
+  field,
+  invalid,
+  required,
+  id,
+  labelledBy,
+  describedBy,
+  choiceProps,
+}: {
+  field: ControllerRenderProps;
+  invalid: boolean;
+  required?: boolean;
+  id: string;
+  labelledBy: string | undefined;
+  describedBy: string | undefined;
+  choiceProps: Omit<RhfChoiceFieldProps<FieldValues, string, T>, keyof RhfFieldBaseProps>;
+}) {
+  // Taken apart first: read as `field.x` beside `ref={field.ref}`, the React Compiler's
+  // `refs` rule takes the whole `field` for a ref and refuses every read of it in render.
+  const { ref, value: raw, disabled, onChange, onBlur } = field;
+  return (
+    <ChoiceField<T>
+      {...choiceProps}
+      ref={ref}
+      id={id}
+      aria-labelledby={labelledBy}
+      aria-describedby={describedBy}
+      aria-invalid={invalid || undefined}
+      aria-required={required || undefined}
+      disabled={disabled}
+      // null, undefined and "" are no choice: nothing pressed, the select's empty stand-in.
+      value={(raw === null || raw === undefined ? "" : String(raw)) as T}
+      onChange={(v) => onChange(v)}
+      // React's onBlur is focusout: on the group it fires on every move between segments
+      // as well, and only leaving the field is a blur of the FIELD.
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) onBlur();
+      }}
     />
   );
 }

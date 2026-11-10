@@ -950,6 +950,12 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       },
       backHome: "Zurück zur Startseite",
       accept: "Ich akzeptiere die {terms} und die {privacy}",
+      acceptWithAge: (minAge) => `Ich bin mindestens ${minAge} Jahre alt und akzeptiere die {terms} und die {privacy}`,
+      changeNotice: {
+        terms: (date) => `Unsere Nutzungsbedingungen ändern sich am ${date}.`,
+        privacy: (date) => `Unsere Datenschutzerklärung ändert sich am ${date}.`,
+        read: "Neuen Text lesen",
+      },
       notice: {
         beta: "Geschlossene Beta. Diese Texte sind noch nicht anwaltlich geprüft; das geschieht vor einem öffentlichen Start.",
         privacy:
@@ -998,7 +1004,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
           browser: {
             title: "Was Ihr Browser speichert",
             lead: "Keine Cookies. Die App legt Folgendes im Speicher Ihres Browsers ab:",
-            tail: "Nichts davon dient dazu, Sie zu verfolgen. Noch nicht gesendete Einträge werden an uns übermittelt, sobald das möglich ist; alles andere bleibt auf Ihrem Gerät. Das alles verschwindet, wenn Sie die Websitedaten löschen, und beim Abmelden werden die Anmeldetoken entfernt.",
+            tail: "Nichts davon dient dazu, Sie zu verfolgen. Noch nicht gesendete Einträge werden an uns übermittelt, sobald das möglich ist. Das alles verschwindet, wenn Sie die Websitedaten löschen, und beim Abmelden werden die Anmeldetoken entfernt.",
           },
           rights: {
             title: "Ihre Rechte",
@@ -1021,7 +1027,11 @@ export function germanLabels(numberLocale: string): UiKitLabels {
           },
           changes: {
             title: "Änderungen dieser Bedingungen",
-            body: "Wir können diese Bedingungen im Zuge der Weiterentwicklung des Dienstes anpassen. Wesentliche Änderungen kündigen wir mindestens 30 Tage vor ihrem Inkrafttreten per E-Mail und in der App an, zusammen mit dem neuen Text. Wenn Sie nicht einverstanden sind, können Sie vor diesem Datum widersprechen oder Ihr Konto löschen und bis dahin Ihre Daten exportieren. Nutzen Sie den Dienst nach diesem Datum weiter, gelten die geänderten Bedingungen. Änderungen, die nur zu Ihrem Vorteil sind oder gesetzlich vorgeschrieben sind, gelten ohne diese Ankündigung; ihnen kann nicht widersprochen werden. Widersprechen Sie einer Änderung, können wir Ihr Konto auf den Tag ihres Inkrafttretens schließen. Haben Sie einen Zeitraum bezahlt, der über dieses Datum hinausgeht, erstatten wir den nicht genutzten Teil.",
+            body: "Wir können diese Bedingungen im Zuge der Weiterentwicklung des Dienstes anpassen. Wesentliche Änderungen kündigen wir mindestens 30 Tage vor ihrem Inkrafttreten per E-Mail und in der App an, zusammen mit dem neuen Text. Wenn Sie nicht einverstanden sind, können Sie vor diesem Datum widersprechen oder Ihr Konto löschen und bis dahin Ihre Daten exportieren. Nutzen Sie den Dienst nach diesem Datum weiter, gelten die geänderten Bedingungen. Änderungen, die nur zu Ihrem Vorteil sind oder gesetzlich vorgeschrieben sind, gelten ohne diese Ankündigung; ihnen kann nicht widersprochen werden. Widersprechen Sie einer Änderung, können wir Ihr Konto auf den Tag ihres Inkrafttretens schließen.",
+            // 0.58 — keksdose's legal audit (Marcel, 2026-11-09): the refund of a paid
+            // period only in the commercial variant, beside the commercial disclaimer.
+            commercial:
+              "Wir können diese Bedingungen im Zuge der Weiterentwicklung des Dienstes anpassen. Wesentliche Änderungen kündigen wir mindestens 30 Tage vor ihrem Inkrafttreten per E-Mail und in der App an, zusammen mit dem neuen Text. Wenn Sie nicht einverstanden sind, können Sie vor diesem Datum widersprechen oder Ihr Konto löschen und bis dahin Ihre Daten exportieren. Nutzen Sie den Dienst nach diesem Datum weiter, gelten die geänderten Bedingungen. Änderungen, die nur zu Ihrem Vorteil sind oder gesetzlich vorgeschrieben sind, gelten ohne diese Ankündigung; ihnen kann nicht widersprochen werden. Widersprechen Sie einer Änderung, können wir Ihr Konto auf den Tag ihres Inkrafttretens schließen. Haben Sie einen Zeitraum bezahlt, der über dieses Datum hinausgeht, erstatten wir den nicht genutzten Teil.",
           },
           language: {
             title: "Sprache",
@@ -2163,6 +2173,15 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       unit: (field) => (field ? `Einheit für „${field}“` : "Einheit"),
       suggested: "Vorgeschlagen",
       takeSuggestion: (quantity) => `${quantity} übernehmen`,
+    },
+    // 0.58 (keksdose SL-10): a row moved by hand — the two actions, why one is not
+    // available at an end, and the move as a screen reader hears it.
+    reorder: {
+      moveUp: "Nach oben verschieben",
+      moveDown: "Nach unten verschieben",
+      atTop: "Steht bereits ganz oben",
+      atBottom: "Steht bereits ganz unten",
+      moved: (position, total) => `An Position ${n(position)} von ${n(total)} verschoben`,
     },
   };
 }

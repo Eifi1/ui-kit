@@ -364,7 +364,14 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // and their exact arithmetic.
   // 0.57 (+3, keksdose SL-10): `QuantityInput`, `QuantityField` and
   // `DEFAULT_QUANTITY_LABELS` — an amount and its unit as one control.
-  ["@eifi1/ui-kit", barrel, 1003],
+  // 0.58 (+2, keksdose live #495): `focusQuietly` and `isQuietFocus`, the tours' and
+  // LineItems' focus that opens no picker, for an app's own focus moves and pickers.
+  // 0.58 (+1, keksdose's HeaderChoice and SL-18 Choice): `ChoiceField`, a segmented group
+  // from `md` up and a select on a phone.
+  // 0.58 (+1, keksdose's legal audit, legal decision 10): `LegalChangeNotice`, the in-app
+  // notice of an announced change to the terms or the privacy policy.
+  // 0.58 (+2, keksdose SL-10): `useReorder` and `DEFAULT_REORDER_LABELS`, rows moved by hand.
+  ["@eifi1/ui-kit", barrel, 1009],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -441,7 +448,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.35.0: the shadcn scaffold — FormField, useFormField, FormItem, FormLabel,
   // FormControl, FormDescription, FormMessage — is the bound fields' own (API-6f) (−7).
   // 0.57: RhfQuantityField, a `Quantity` bound to one field (keksdose SL-10) (+1).
-  ["@eifi1/ui-kit/rhf", rhf, 23],
+  // 0.58: RhfChoiceField, ChoiceField bound to one field (+1).
+  ["@eifi1/ui-kit/rhf", rhf, 24],
   // 0.45.0: local-first phase 1 (docs/local-first-harmonization.md §1.6) —
   // `createQueryPersistence`, `DEFAULT_SCRUB_FIELDS`, `SignOutPendingDialog`, `PwaUpdatePrompt`,
   // `SharedComputerChoice`, `isSharedComputer`, `setSharedComputer` and the three

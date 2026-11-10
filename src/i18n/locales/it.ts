@@ -938,6 +938,12 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       backHome: "Torna alla pagina iniziale",
       // The elided article stays glued to the link: "e l’Informativa", no space (§4.4).
       accept: "Accetto le {terms} e l’{privacy}",
+      acceptWithAge: (minAge) => `Ho almeno ${minAge} anni e accetto le {terms} e l’{privacy}`,
+      changeNotice: {
+        terms: (date) => `Le nostre Condizioni d’uso cambiano a partire dal ${date}.`,
+        privacy: (date) => `La nostra Informativa sulla privacy cambia a partire dal ${date}.`,
+        read: "Leggi il nuovo testo",
+      },
       notice: {
         beta: "Beta chiusa. Questi testi non sono ancora stati verificati da un avvocato e lo saranno prima di un lancio pubblico.",
         privacy:
@@ -987,7 +993,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
           browser: {
             title: "Che cosa salva il Suo browser",
             lead: "Nessun cookie. L’app salva quanto segue nella memoria del Suo browser:",
-            tail: "Niente di tutto ciò viene usato per tracciarLa. Le voci in attesa di invio ci vengono trasmesse non appena possibile; tutto il resto rimane sul Suo dispositivo. Tutto questo scompare quando cancella i dati del sito, e uscendo dall’account vengono rimossi i token di accesso.",
+            tail: "Niente di tutto ciò viene usato per tracciarLa. Le voci in attesa di invio ci vengono trasmesse non appena possibile. Tutto questo scompare quando cancella i dati del sito, e uscendo dall’account vengono rimossi i token di accesso.",
           },
           rights: {
             title: "I Suoi diritti",
@@ -1010,7 +1016,9 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
           },
           changes: {
             title: "Modifiche a queste condizioni",
-            body: "Possiamo aggiornare queste condizioni con l’evoluzione del servizio. Annunciamo ogni modifica sostanziale almeno 30 giorni prima della sua entrata in vigore, via email e nell’app, insieme al nuovo testo. Se non è d’accordo, può opporsi o eliminare il Suo account prima di tale data, e può esportare i Suoi dati fino ad allora. Se continua a usare il servizio dopo tale data, si applicano le condizioni modificate. Le modifiche che vanno solo a Suo vantaggio, o che sono imposte dalla legge, si applicano senza questo preavviso e non è possibile opporvisi. Se si oppone a una modifica, possiamo chiudere il Suo account alla data della sua entrata in vigore. Se ha pagato un periodo che va oltre tale data, Le rimborsiamo la parte non utilizzata.",
+            body: "Possiamo aggiornare queste condizioni con l’evoluzione del servizio. Annunciamo ogni modifica sostanziale almeno 30 giorni prima della sua entrata in vigore, via email e nell’app, insieme al nuovo testo. Se non è d’accordo, può opporsi o eliminare il Suo account prima di tale data, e può esportare i Suoi dati fino ad allora. Se continua a usare il servizio dopo tale data, si applicano le condizioni modificate. Le modifiche che vanno solo a Suo vantaggio, o che sono imposte dalla legge, si applicano senza questo preavviso e non è possibile opporvisi. Se si oppone a una modifica, possiamo chiudere il Suo account alla data della sua entrata in vigore.",
+            commercial:
+              "Possiamo aggiornare queste condizioni con l’evoluzione del servizio. Annunciamo ogni modifica sostanziale almeno 30 giorni prima della sua entrata in vigore, via email e nell’app, insieme al nuovo testo. Se non è d’accordo, può opporsi o eliminare il Suo account prima di tale data, e può esportare i Suoi dati fino ad allora. Se continua a usare il servizio dopo tale data, si applicano le condizioni modificate. Le modifiche che vanno solo a Suo vantaggio, o che sono imposte dalla legge, si applicano senza questo preavviso e non è possibile opporvisi. Se si oppone a una modifica, possiamo chiudere il Suo account alla data della sua entrata in vigore. Se ha pagato un periodo che va oltre tale data, Le rimborsiamo la parte non utilizzata.",
           },
           language: {
             title: "Lingua",
@@ -2112,6 +2120,15 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       unit: (field) => (field ? `Unità per «${field}»` : "Unità"),
       suggested: "Suggerito",
       takeSuggestion: (quantity) => `Usa ${quantity}`,
+    },
+    // 0.58 (keksdose SL-10): a row moved by hand — the two actions, why one is not
+    // available at an end, and the move as a screen reader hears it.
+    reorder: {
+      moveUp: "Sposta su",
+      moveDown: "Sposta giù",
+      atTop: "Già in cima",
+      atBottom: "Già in fondo",
+      moved: (position, total) => `Spostato alla posizione ${n(position)} di ${n(total)}`,
     },
   };
 }

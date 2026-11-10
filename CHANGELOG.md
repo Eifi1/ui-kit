@@ -21,6 +21,29 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.58.0](https://github.com/Eifi1/ui-kit/compare/v0.57.0...v0.58.0) (2026-11-10)
+
+### Added
+
+* **choice:** ChoiceField and RhfChoiceField, segments from md up, a select on a phone ([6b3059a](https://github.com/Eifi1/ui-kit/commit/6b3059aada58b50e2fe60480945951da27899487))
+* **data-table:** a group band's action, the "+" placed and sized by the kit ([a10814a](https://github.com/Eifi1/ui-kit/commit/a10814a3d9be29162cbda9636fb511d6f9a016ff))
+* **focus:** export focusQuietly and isQuietFocus from the main entry ([7497358](https://github.com/Eifi1/ui-kit/commit/74973583ce91ee38c74705f74f49c748284b2ca1))
+* **legal:** `LegalChangeNotice`, the in-app notice of an announced legal change ([5720776](https://github.com/Eifi1/ui-kit/commit/5720776e0fedb8d989349ed15504e0df6287fb54))
+* **legal:** `LegalOperator.minAge` puts the age in the sign-up box ([f7c6989](https://github.com/Eifi1/ui-kit/commit/f7c6989c82f6bca2eecaf3f6036d19ee49e6bb9a))
+* **legal:** the refund sentence moves to a commercial variant of the terms' changes clause ([0bf5d40](https://github.com/Eifi1/ui-kit/commit/0bf5d40ed68a3bee4c3d780cba916ec14ec119d8))
+* **list:** a checkable ListItem, the whole row its checkbox ([f884214](https://github.com/Eifi1/ui-kit/commit/f884214b5929b7f8d174e1ed3a0da0bf02904e32))
+* **list:** useReorder, rows moved up and down by hand ([3e031c6](https://github.com/Eifi1/ui-kit/commit/3e031c6c504adab8ed33792d2259b31b38f83a52))
+* **progress-bar:** markers, ticks at a recommendation, a target, a limit ([7c40fdd](https://github.com/Eifi1/ui-kit/commit/7c40fddb9c49bf9ce29a68924a1b0c4eb03ba823))
+* **toggle-group:** an option's icon, drawn before its label ([dcf84b3](https://github.com/Eifi1/ui-kit/commit/dcf84b316d133cdd3f5e4b0f520bbc86ca984f94))
+* **tooltip:** block, a trigger on a line of its own; wrapperClassName on the buttons ([e510645](https://github.com/Eifi1/ui-kit/commit/e51064580c3a1e0062e4e17d674dc45c4c2fe241))
+
+### Fixed
+
+* **feedback:** the bulk bar says a write lock's reason once, not under each button ([d3794ae](https://github.com/Eifi1/ui-kit/commit/d3794ae7513bb2ad9adf19ad53b4c45996023f8b))
+* **form-actions:** a caller's refused action fills its line in the phone stack too ([7f6928c](https://github.com/Eifi1/ui-kit/commit/7f6928ccf48bf8b9a6d7f77f3e9db7cf59be0fea))
+* **legal:** the browser-storage section no longer says everything else stays on the device ([c6b0ea2](https://github.com/Eifi1/ui-kit/commit/c6b0ea2f69fa6fd0f8d03302c2594028d77e3d5d))
+* **line-items:** Add focuses the new row's picker without opening it ([697e8b6](https://github.com/Eifi1/ui-kit/commit/697e8b60265bc5cb444349a03ed7b7bf273099a9))
+
 ## [0.57.0](https://github.com/Eifi1/ui-kit/compare/v0.56.0...v0.57.0) (2026-11-07)
 
 ### Added

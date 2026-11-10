@@ -1,10 +1,25 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { Bell, CreditCard, Hash, Pin, Settings2, Star, Tag, User } from "lucide-react";
+import { useForm } from "react-hook-form";
+import {
+  Bell,
+  CalendarDays,
+  CalendarRange,
+  CreditCard,
+  Hash,
+  LayoutGrid,
+  List,
+  Pin,
+  Settings2,
+  Star,
+  Tag,
+  User,
+} from "lucide-react";
 import {
   Button,
   Chip,
   ChipInput,
+  ChoiceField,
   HoverMenu,
   TOPBAR_MENU_ITEM_CLASS,
   Tabs,
@@ -15,8 +30,10 @@ import {
   Switch,
   WriteLockProvider,
 } from "@eifi1/ui-kit";
-import type { ChipLinkProps, ToggleOption } from "@eifi1/ui-kit";
-import { Example, Note, Row, code } from "../lib/section";
+import type { ChipLinkProps, ChoiceFieldOption, ToggleOption } from "@eifi1/ui-kit";
+// See forms-rhf.tsx: the showcase alias maps "@eifi1/ui-kit/rhf" to src/rhf.ts.
+import { Form, RhfChoiceField } from "@eifi1/ui-kit/rhf";
+import { Example, Note, Row, StateLine, code, READOUT_PRE } from "../lib/section";
 import { useT } from "../i18n";
 import { TabControls } from "./field-anatomy-demo";
 
@@ -1038,5 +1055,113 @@ export function ToggleGroup022Demo() {
         </Note>
       </Example>
     </>
+  );
+}
+
+const VIEWS: ChoiceFieldOption<string>[] = [
+  { value: "list", label: "List", icon: <List className="size-4" /> },
+  { value: "grid", label: "Grid", icon: <LayoutGrid className="size-4" /> },
+  { value: "week", label: "Week", icon: <CalendarDays className="size-4" /> },
+  { value: "month", label: "Month", icon: <CalendarRange className="size-4" /> },
+];
+
+/** ChoiceField: the segmented group from `md` up and a select on a phone, as one field. */
+export function ChoiceFieldDemo() {
+  const [grain, setGrain] = useState("month");
+  const [view, setView] = useState("list");
+  return (
+    <>
+      <Example
+        label="ChoiceField — a segmented group from md up, a select on a phone"
+        hint="the window picks the form; the device preview shows a phone's"
+      >
+        {/* Two by two on a phone, where each choice is a select; one row from md up. */}
+        <div className="grid grid-cols-2 gap-3 md:flex md:flex-wrap md:items-stretch">
+          <ChoiceField
+            label="Group by"
+            size="sm"
+            className="min-w-0"
+            value={grain}
+            onChange={setGrain}
+            options={GRAINS}
+          />
+          <Select label="Range" defaultValue="12" className="min-w-0 md:w-48">
+            <option value="12">Last 12 months</option>
+            <option value="24">Last 24 months</option>
+          </Select>
+        </div>
+        <StateLine label="value">{grain}</StateLine>
+        <Note>
+          One control is mounted, never both: the form is chosen by {code("usePhoneLayout()")}, so it switches where{" "}
+          {code("md:")} does at every text size (960 px at Large). The label names the radio group and the select alike,
+          and the chosen option is the checked radio and the select&apos;s value by the same words; the value is the
+          caller&apos;s, so a resize keeps it. With a label both forms are the field&apos;s 42 px, so the row keeps its
+          height. {code('breakpoint="lg"')} moves the switch; open the device preview to see the phone&apos;s form.
+        </Note>
+      </Example>
+      <Example
+        label='ChoiceField layout="segmented" and layout="select"'
+        hint="both forms pinned, on one value; an icon draws in its segment only"
+      >
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <ChoiceField
+            label="View, segmented"
+            layout="segmented"
+            hint="Pinned to the group at every width"
+            value={view}
+            onChange={setView}
+            options={VIEWS}
+          />
+          <ChoiceField
+            label="View, select"
+            layout="select"
+            hint="Pinned to the select at every width"
+            value={view}
+            onChange={setView}
+            options={VIEWS}
+          />
+        </div>
+        <Note>
+          {code('layout="segmented"')} keeps the group on a phone with room for it; {code('layout="select"')} keeps the
+          select in a narrow pane on a wide screen, and either one pins a test. An option&apos;s {code("icon")} stands
+          before its label in the segment and is hidden from a screen reader, so the segment is named by the label — the
+          text a native option shows, alone.
+        </Note>
+      </Example>
+      <RhfChoiceFieldExample />
+    </>
+  );
+}
+
+type Report = { grain: string };
+
+function RhfChoiceFieldExample() {
+  const form = useForm<Report>({ defaultValues: { grain: "" } });
+  const [submitted, setSubmitted] = useState("—");
+  return (
+    <Example label="RhfChoiceField" hint="save empty to see the error; resize to see it keep the value">
+      <Form {...form}>
+        <form noValidate onSubmit={form.handleSubmit((v) => setSubmitted(JSON.stringify(v)))} className="grid gap-4">
+          <RhfChoiceField<Report>
+            name="grain"
+            label="Group by"
+            required
+            options={GRAINS}
+            rules={{ required: "Choose how to group" }}
+          />
+          <div>
+            <Button type="submit" size="sm">
+              Save
+            </Button>
+          </div>
+        </form>
+      </Form>
+      <p className={READOUT_PRE}>submitted: {submitted}</p>
+      <Note>
+        The label is the form&apos;s, above the bare control, as on {code("RhfToggleGroup")} and {code("RhfSelect")}; it
+        names the group and the select alike. A failed save paints whichever is on screen and puts the focus on it — the
+        first segment, or the select; touched is set when the focus leaves the field.
+      </Note>
+    </Example>
   );
 }

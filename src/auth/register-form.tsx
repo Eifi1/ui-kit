@@ -9,6 +9,7 @@ import { AlertBanner } from "../components/alert-banner";
 import { hasContent } from "../lib/presence";
 import { LanguageSelect } from "../components/language-select";
 import { LegalAcceptCheckbox } from "../components/legal-page";
+import type { LegalOperator } from "../components/legal";
 import { TextLink } from "../components/text-link";
 import { Button } from "../components/button";
 import { Input } from "../components/input";
@@ -150,6 +151,13 @@ export interface RegisterFormProps extends Omit<ComponentPropsWithRef<"div">, "o
   /** The terms checkbox's links. Default `/terms` and `/privacy`. */
   termsHref?: string;
   privacyHref?: string;
+  /**
+   * 0.58: the app's operator, the one its legal pages get, handed to the terms checkbox:
+   * with a `minAge` it reads "I am at least 16 years old and accept the Terms of Service
+   * and the Privacy Policy" (docs/legal-harmonization.md §3.4). Left out, the plain
+   * sentence.
+   */
+  operator?: LegalOperator;
   /** "Already have an account? Sign in" goes here — `/login`. Left out, no line. */
   signInHref?: string;
   /** The app's own words for a failure the kit cannot know (the device offline, a
@@ -219,6 +227,7 @@ export function RegisterForm({
   appFieldsComplete = true,
   termsHref,
   privacyHref,
+  operator,
   signInHref,
   describeError,
   labels: labelsProp,
@@ -430,6 +439,7 @@ export function RegisterForm({
           onCheckedChange={setAccepted}
           termsHref={termsHref}
           privacyHref={privacyHref}
+          operator={operator}
           disabled={working}
         />
 

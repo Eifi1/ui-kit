@@ -25,10 +25,10 @@ snapshot of the three apps, the per-repo to-dos and the reviews' list as written
 | § | Section | Shipped in | Amended by |
 |---|---|---|---|
 | 1 | Where each one stands | — (archived) | |
-| 2 | Decisions | — | §7.8; decision 9 (0.28.1); decision 7 by billing §8, §9 (Paddle); decisions 10 (0.51.3) and 11 (0.51.4) |
-| 3 | The page contract | ui-kit 0.28.0 | §7.3, §7.6, §7.9; 0.28.1 (translation note, `AuthLayout` footer); landing-demo §4.3 (robots, sitemap); 0.51.3 (as-of line, keksdose's stored version); 0.51.4 (summary, footer's optional pages); 0.55 (the footer's `siteLinks` row) |
-| 4 | The content contract | ui-kit 0.28.0 | §7.1–§7.4; 0.28.1 (`language` section); 0.32.0 (commercial disclaimer); 0.51.3 (`changes` wording, `updated` label); 0.51.4 (`summary`, `links.security`/`accessibility` labels) |
-| 5 | What the kit adds, what stays app-side | ui-kit 0.28.0, server-kit 0.2.1 | §7.5; 0.28.1; 0.32.0; 0.55 (`ConsentAgainNotice`) |
+| 2 | Decisions | — | §7.8; decision 9 (0.28.1); decision 7 by billing §8, §9 (Paddle); decisions 10 (0.51.3; keksdose's legal audit, 0.58) and 11 (0.51.4) |
+| 3 | The page contract | ui-kit 0.28.0 | §7.3, §7.6, §7.9; 0.28.1 (translation note, `AuthLayout` footer); landing-demo §4.3 (robots, sitemap); 0.51.3 (as-of line, keksdose's stored version); 0.51.4 (summary, footer's optional pages); 0.55 (the footer's `siteLinks` row); 0.58 (§3.4's minimum age, §3.5 announcing a change) |
+| 4 | The content contract | ui-kit 0.28.0 | §7.1–§7.4; 0.28.1 (`language` section); 0.32.0 (commercial disclaimer); 0.51.3 (`changes` wording, `updated` label); 0.51.4 (`summary`, `links.security`/`accessibility` labels); 0.58 (`changes`' commercial variant, the `browser` tail, `acceptWithAge`, `changeNotice`) |
+| 5 | What the kit adds, what stays app-side | ui-kit 0.28.0, server-kit 0.2.1 | §7.5; 0.28.1; 0.32.0; 0.55 (`ConsentAgainNotice`); 0.58 (`LegalChangeNotice`, `LegalOperator.minAge`) |
 | 6 | Per repo | — (archived) | |
 | 7 | Settled after the reviews | — | index; folded items point to their § |
 
@@ -63,8 +63,9 @@ before the 0.28 round, and how far their wording differed.
    purchase and the privacy policy names it as a recipient and independent controller of
    the buyer's data (billing §12.25); the prices go into the app's terms; and the imprint
    takes the kit's **commercial disclaimer**, `<LegalKitSection section="disclaimer"
-   variant="commercial" />` (ui-kit 0.32.0, §4.3). (Marcel, after the reviews; amended
-   by the billing round.)
+   variant="commercial" />` (ui-kit 0.32.0, §4.3), and the terms the **commercial changes
+   clause**, `<LegalKitSection section="changes" variant="commercial" />` (ui-kit 0.58,
+   decision 10). (Marcel, after the reviews; amended by the billing round.)
 8. **Kurvenschmiede is a closed beta** like the other two, so all three carry the same
    disclaimer, warranty and notices. (Marcel, after the reviews.)
 9. **German is the binding language** (Marcel, after the adoption, 0.28.1). The lawyer
@@ -85,7 +86,8 @@ before the 0.28 round, and how far their wording differed.
       question 4: continued use alone may not bind German consumers). Since 0.51.4 it says
       what an objection leads to: the operator may end the account on the effective date,
       with a pro-rata refund of a paid period; changes that only benefit the user or that
-      the law requires apply without notice or objection (Marcel, 2026-10-29).
+      the law requires apply without notice or objection (Marcel, 2026-10-29). Since 0.58
+      the refund is the commercial variant's only (the audit below).
     - keksdose stores the accepted terms version (the terms page's `updated` date) and the
       time at registration, in a users column of its own. This reverses decision 4's "no
       stored version" for keksdose only; the kit's checkbox still sends nothing (§3.4).
@@ -96,6 +98,22 @@ before the 0.28 round, and how far their wording differed.
       the pages. Each app moves those pages' `updated` to the day it ships that release.
       Without it, keksdose's stored version would no longer say which text someone
       accepted.
+    - **keksdose's legal audit against the app** (Marcel, 2026-11-09; ui-kit 0.58):
+      - The refund sentence ("If you paid for a period beyond that date, we refund the
+        unused part") moves to a `commercial` variant of `changes`, keyed like the
+        imprint's disclaimer: no app can take payment today, and payment wording undercut
+        the imprint's "non-commercial" (an external pre-review). An app shows it again when
+        it turns billing on (§4.2, §4.3).
+      - The notice stays **by email and in the app**. Since no app could mail every
+        account, the kits add the means: a one-off terms-change mail to every active
+        account (server-kit) and an in-app notice (ui-kit's `LegalChangeNotice`), with
+        what the app does between them in §3.5.
+      - The sign-up box may name a minimum age: an optional `LegalOperator.minAge` makes it
+        "I am at least {minAge} years old and accept the {terms} and the {privacy}"
+        (keksdose: 16; §3.4).
+      - The privacy policy's browser-storage section drops "everything else stays on your
+        device", which read as "never leaves"; each app says what its account keeps
+        (§4.3).
 11. **The benchmark's optional rows** (Marcel, 2026-10-29: "you can already add the
     optional points"; ui-kit 0.51.4):
     - A plain-language summary at the top of the terms and the privacy policy, the full
@@ -232,6 +250,66 @@ keksdose (decision 10) also records which terms were accepted: with the registra
 sends the terms page's `updated` date, which its backend stores with the time. That is
 the app's own request and column; the checkbox itself still sends nothing.
 
+**A minimum age** (decision 10, ui-kit 0.58): an app whose operator names `minAge`
+(keksdose: 16) asks for the age in the same tick: "I am at least 16 years old and accept
+the [Terms of Service] and the [Privacy Policy]" (`legal.acceptWithAge`). The checkbox
+takes the operator as a prop of its own, `LegalAcceptCheckbox operator={OPERATOR}`,
+because nothing else carries it to the sign-up page; `RegisterForm operator={OPERATOR}`
+hands it on. Without `minAge` the box reads as before. An age that is not a whole number
+of years above zero is a config typo: the plain sentence.
+
+### 3.5 Announcing a change
+
+The terms promise a material change "at least 30 days before it takes effect, by email
+and in the app, together with the new text" (`changes`, §4.3; decision 10). The notice
+period is **30 days**. The kits carry both halves (ui-kit 0.58, server-kit's terms-change
+mail); the app does four things:
+
+1. **Publishes the new text at `href`**, where a reader can read it before it takes
+   effect. Left out, `href` is the page's own route (`/terms`, `/privacy`).
+2. **Serves `GET /api/v1/legal/changes`** (server-kit's `LEGAL_CHANGES_PATH`): a JSON
+   list of the announced changes, built with server-kit's schema, possibly empty. A change
+   is listed from the day it is announced through its effective day, inclusive, soonest
+   first, the terms before the privacy policy. Each entry is exactly this shape, the kit's
+   `LegalChangeAnnouncement` (server-kit builds the same; a field changes in both or in
+   neither):
+
+   ```ts
+   interface LegalChangeAnnouncement {
+     page: "terms" | "privacy";
+     effective: string;     // ISO date YYYY-MM-DD, at least 30 days after it was announced
+     href?: string | null;  // where the new text can be read; default the page's own route
+   }
+   ```
+
+   `href` is `null` on the wire when the app gives none (server-kit's model,
+   `str | None = None`); the kit reads `null` as absent.
+3. **Mails every active account once**, through server-kit's terms-change mail, when the
+   change is announced. The mail says how to object: by replying to it. The in-app notice
+   only links the new text.
+4. **Renders `LegalChangeNotice`** with that list (`announcements={data}`), where its
+   signed-in pages show page-wide news (under the top bar, above the page).
+
+What the notice does:
+- One info banner per announcement, "Our Terms of Service change on 9 December 2026.
+  [Read the new text]", until its effective date has passed on the app's own calendar day
+  (not UTC's): it still shows on the effective day. The date is written as the legal
+  pages' as-of line writes it (§3.2): the reader's language, the app's date preference
+  where it has one. Soonest first, the terms before the privacy policy on one day, as the
+  server lists them (the kit sorts again, whatever order arrives); an entry twice shows
+  once.
+- Its × dismisses it on this device, remembered per (page, effective) in `localStorage`
+  (`kit.legalChange.dismissed.<page>.<effective>`, or the app's `storageKey`). A later
+  announcement for the same page shows again.
+- It never blocks the app: no modal, no focus taken, no answer asked. Continued use after
+  the date is what the `changes` section says it is, not something the banner collects.
+- An entry that is not an announcement (another page, a date that is not a real
+  `YYYY-MM-DD`) is left out; `href: null` counts as none. A bad answer never takes the
+  app down.
+
+On the effective date the page shows the new text, and its `updated` is that date
+(decision 10), so keksdose's stored version names the text accepted from then on.
+
 ## 4. The content contract
 
 ### 4.1 Keys and numbering
@@ -290,7 +368,7 @@ the app's own request and column; the checkbox itself still sends nothing.
 | *app sections* | app | Kurvenschmiede's `accounts`, `content` |
 | `warranty` | kit | |
 | `liability` | kit | |
-| `changes` | kit | |
+| `changes` | kit | two texts under one title, as the disclaimer: by default the notice, the way out and what an objection leads to; `variant="commercial"`, for an app that bills (decision 7), the same with the refund of a paid period after it (0.58, decision 10) |
 | `language` | kit | which language's version prevails: the operator's `bindingLanguage` (decision 9) |
 | `law` | kit | the place of jurisdiction comes from the operator |
 
@@ -339,8 +417,10 @@ The texts are keksdose's unless marked otherwise.
     - No cookies. The app keeps the following in your browser's storage:
     - `{entries}`, rendered as a list, one item per entry, from the app.
     - None of it is used to track you. Entries waiting to be sent are sent to us as soon
-      as they can be; everything else stays on your device. All of it disappears when you
-      clear the site's data, and signing out removes the sign-in tokens.
+      as they can be. All of it disappears when you clear the site's data, and signing out
+      removes the sign-in tokens. (0.58, decision 10: without "everything else stays on
+      your device", which read as "never leaves it"; what an account keeps is the app's
+      to say.)
     - → *app paragraph*
   - **rights**, "Your rights":
     - lead: You have the right to access, rectification, erasure, restriction, data
@@ -365,8 +445,12 @@ The texts are keksdose's unless marked otherwise.
     then. If you keep using the service after that date, the changed terms apply. Changes
     that only benefit you, or that the law requires, apply without this notice and cannot
     be objected to. If you object to a change, we may end your account on the date it
-    takes effect. If you have paid for a period that runs beyond that date, we refund the
-    unused part. (The last three sentences: ui-kit 0.51.4, Marcel 2026-10-29.)
+    takes effect. (The last two sentences: ui-kit 0.51.4, Marcel 2026-10-29.)
+    - **commercial** (`variant="commercial"`, the same title; decisions 7 and 10, ui-kit
+      0.58): the same text, then: If you have paid for a period that runs beyond that
+      date, we refund the unused part. (In the default until 0.58; it moved here because
+      no app can take payment, and payment wording undercut the imprint's
+      "non-commercial".)
   - **language**, "Language" (decision 9): These terms are written in
     `{bindingLanguage}`. Translations into other languages are provided for convenience
     only; where a translation differs, the `{bindingLanguage}` version prevails.
@@ -396,10 +480,12 @@ The texts are keksdose's unless marked otherwise.
 | `titles.impressum` / `privacy` / `terms` | Imprint / Privacy Policy / Terms of Service | Impressum / Datenschutzerklärung / Nutzungsbedingungen |
 | `backHome` | Back to home | Zurück zur Startseite |
 | `accept` | I accept the {terms} and the {privacy} | Ich akzeptiere die {terms} und die {privacy} |
+| `acceptWithAge(minAge)` (0.58) | I am at least {minAge} years old and accept the {terms} and the {privacy} | Ich bin mindestens {minAge} Jahre alt und akzeptiere die {terms} und die {privacy} |
 | `updated` | Last updated: {date} | Stand: {date} |
 | `summary.title` / `note` | In short / This summary is for orientation; only the full text is binding. | Das Wichtigste in Kürze / Diese Zusammenfassung dient der Orientierung; verbindlich ist allein der vollständige Text. |
 | `links.security` / `accessibility` | Security / Accessibility | Sicherheit / Barrierefreiheit |
 | `translation.note` / `show` | This is a translation for your convenience. The {bindingLanguage} version is binding. / Show the {bindingLanguage} version | Dies ist eine Übersetzung zu Ihrer Information. Massgebend ist die Fassung auf {bindingLanguage}. / Fassung auf {bindingLanguage} anzeigen |
+| `changeNotice.terms(date)` / `privacy(date)` / `read` (0.58, §3.5) | Our Terms of Service change on {date}. / Our Privacy Policy changes on {date}. / Read the new text | Unsere Nutzungsbedingungen ändern sich am {date}. / Unsere Datenschutzerklärung ändert sich am {date}. / Neuen Text lesen |
 
 fr and it come from keksdose's `landing.footer.*`, `legal.*` and `auth.accept_*`. es, hu
 and zh are new; they come from Kurvenschmiede's titles. `accept` is one template, not a
@@ -417,15 +503,16 @@ would repeat the fr Imprint link's label, so a screen reader would read it twice
 **Kit 0.28.0** (main barrel, beside the 0.19 parts; 0.28.1 and 0.32.0 where marked):
 
 - **The `legal` label namespace, extended, in all 7 languages**:
-  - `links`, `titles`, `backHome`, `accept`;
+  - `links`, `titles`, `backHome`, `accept`, and `acceptWithAge` (0.58);
   - `notice.beta`, `notice.privacy`;
   - `translation.note`, `translation.show` (0.28.1);
   - `sections.*`, the §4.3 texts as functions of the operator, with
     `sections.impressum.disclaimer.commercial` (0.32.0).
 - **`LegalOperator`**: `{ name, postalCode, city, region, country, email,
-  bindingLanguage? }`. `country` is an ISO code and `bindingLanguage` (0.28.1) a BCP 47
-  code; the kit names both in the page's language (`legalOperatorText`). The kit holds
-  **no personal data**: each app passes the same values once (kk, ka and KS: Marcel
+  bindingLanguage?, minAge? }`. `country` is an ISO code and `bindingLanguage` (0.28.1) a
+  BCP 47 code; the kit names both in the page's language (`legalOperatorText`). `minAge`
+  (0.58), whole years, puts the age in the sign-up box (§3.4); no page prints it. The kit
+  holds **no personal data**: each app passes the same values once (kk, ka and KS: Marcel
   Eifert, 9470 Buchs, SG, CH, marcel.eifert@outlook.com).
 - **`LegalPage`**: the §3.2 frame.
   - Props: `page` (`"impressum" | "privacy" | "terms"`), `operator`, `header`, `footer`
@@ -440,7 +527,9 @@ would repeat the fr Imprint link's label, so a screen reader would read it twice
   number (`<LegalKitSection section="warranty" />`). It takes `children` for the app
   paragraph where §4.2 says kit + app, and only there (the type holds an app to it). For
   the browser section it takes `entries` as a list of strings, rendered as a `<ul>`. The
-  disclaimer takes `variant`: `"non-commercial"` (default) or `"commercial"` (0.32.0).
+  disclaimer takes `variant`: `"non-commercial"` (default) or `"commercial"` (0.32.0); so
+  does the terms' `changes` section (0.58), with
+  `sections.terms.changes.commercial`.
 - **`LegalSection`** gains automatic numbering inside a `LegalPage`, its key as id, and
   `{ref:key}` resolution. Its API stays the same otherwise.
 - **`LegalLinks`**:
@@ -453,7 +542,8 @@ would repeat the fr Imprint link's label, so a screen reader would read it twice
   links and their separators. `children` sit under the links, for a tagline.
   `landmark={false}` draws a `<div>` instead of a `<footer>` (0.28.1).
 - **`LegalAcceptCheckbox`**: the §3.4 checkbox, with `checked`, `onCheckedChange` and
-  optional hrefs.
+  optional hrefs; from 0.58 an optional `operator`, whose `minAge` it says
+  (`RegisterForm` takes the same prop and hands it on).
 - **`useNoIndex()`**: keksdose's hook, which removes its `<meta>` on unmount.
 - **`LEGAL_SKELETON`**: the §4.2 order as data, so an app test can assert that its pages
   follow it.
@@ -493,6 +583,12 @@ once a second app is likely to need it).
   review area: no legal sentence is in it. An app whose reviewer should judge the card's
   words too adds the namespace to that reviewer's areas.
 
+**Kit 0.58**: **`LegalChangeNotice`** and its entry type **`LegalChangeAnnouncement`**, the
+in-app half of a change's notice (§3.5; keksdose's legal audit, decision 10). Its words are
+`legal.changeNotice.*`, in the `legal` review area like every legal sentence; the
+dismissals are the device's (`storageKey`). The email half is server-kit's terms-change
+mail, and the list's shape is server-kit's schema too.
+
 **App-side**:
 - the routes;
 - the public header;
@@ -501,8 +597,11 @@ once a second app is likely to need it).
 - the operator values, `bindingLanguage` included;
 - the web server's `X-Robots-Tag`, `robots.txt` and `sitemap.xml` (§3.2);
 - the review-area mapping on its server and translation page;
-- in the release that turns its billing on: the commercial disclaimer, and the Merchant
-  of Record in its terms and privacy policy (decision 7).
+- an announced change (§3.5): the new text at its `href`, `GET /api/v1/legal/changes`,
+  the one mail to every active account, and the `LegalChangeNotice` in its signed-in
+  frame;
+- in the release that turns its billing on: the commercial disclaimer and the commercial
+  changes clause, and the Merchant of Record in its terms and privacy policy (decision 7).
 
 ## 6. Per repo
 

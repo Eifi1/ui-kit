@@ -198,14 +198,29 @@ export type LegalKitSectionProps = LegalKitSectionBase &
         children?: never;
       }
     | {
-        section: Exclude<LegalKitSectionKey, "browser" | "legal_basis" | "rights" | "disclaimer">;
+        section: "changes";
+        /**
+         * 0.58 (keksdose's legal audit, Marcel 2026-11-09): which changes clause, keyed as
+         * the disclaimer's. `non-commercial` (default) ends with what an objection leads
+         * to; `commercial` adds the refund of a paid period beyond the effective date — for
+         * an app that charges, in the release that turns its billing on, beside the
+         * commercial disclaimer.
+         */
+        variant?: LegalDisclaimerVariant;
+        entries?: never;
+        children?: never;
+      }
+    | {
+        section: Exclude<LegalKitSectionKey, "browser" | "legal_basis" | "rights" | "disclaimer" | "changes">;
         variant?: never;
         entries?: never;
         children?: never;
       }
   );
 
-/** 0.32.0: the imprint disclaimer's two texts — see {@link LegalKitSectionProps}. */
+/** 0.32.0: the imprint disclaimer's two texts — see {@link LegalKitSectionProps}. Since
+ *  0.58 the terms' `changes` section's two as well: the two sections whose wording
+ *  depends on whether the app takes payment, switched together. */
 export type LegalDisclaimerVariant = "non-commercial" | "commercial";
 
 /** The app's paragraph: a plain string as running text (line breaks kept, refs
@@ -284,12 +299,18 @@ export function LegalKitSection(props: LegalKitSectionProps) {
       parts = [lead, app, tail];
     }
   } else {
-    // The imprint's commercial disclaimer (0.32.0): its own body under the same title.
+    // The commercial variants — the imprint's disclaimer (0.32.0) and the terms' changes
+    // clause (0.58): their own body under the same title, the provider's, else English.
     const commercial =
-      props.section === "disclaimer" && props.variant === "commercial"
-        ? ((entry as LegalDisclaimerSectionLabels).commercial ??
-          DEFAULT_LEGAL_LABELS.sections.impressum.disclaimer.commercial)
-        : undefined;
+      props.variant !== "commercial"
+        ? undefined
+        : props.section === "disclaimer"
+          ? ((entry as LegalDisclaimerSectionLabels).commercial ??
+            DEFAULT_LEGAL_LABELS.sections.impressum.disclaimer.commercial)
+          : props.section === "changes"
+            ? ((entry as LegalLabels["sections"]["terms"]["changes"]).commercial ??
+              DEFAULT_LEGAL_LABELS.sections.terms.changes.commercial)
+            : undefined;
     parts = [<LegalText key="body" text={commercial ?? fill(entry.body)} />, app];
   }
 
@@ -642,15 +663,35 @@ export interface LegalAcceptCheckboxProps extends Omit<
   termsHref?: string;
   /** Default `/privacy`. */
   privacyHref?: string;
+  /**
+   * 0.58: the app's operator, the one its legal pages get. The box reads its `minAge`:
+   * with one, "I am at least 16 years old and accept the {terms} and the {privacy}"
+   * (`legal.acceptWithAge`, §3.4; keksdose's legal audit, Marcel 2026-11-09). A prop of
+   * its own because nothing else carries the operator to the sign-up page — the legal
+   * pages get it from {@link LegalPage}, and the checkbox sits on the register form. Left
+   * out, or without `minAge`, the plain "I accept …".
+   */
+  operator?: LegalOperator;
   labels?: LabelOverride<LegalLabels>;
   ref?: Ref<HTMLInputElement>;
 }
 
-/** `legal.accept` with its `{terms}` and `{privacy}` as links named by the page titles.
- *  Split, not interpolated: the text between the placeholders is the template's own,
- *  to the character — nothing is added around a link. */
-function acceptLabel(labels: LegalLabels, termsHref: string, privacyHref: string): ReactNode[] {
-  const template = labels.accept;
+/** The template the box speaks: `legal.acceptWithAge(minAge)` for an operator with a real
+ *  minimum age (a whole number of years above zero), else `legal.accept`. An age that is
+ *  not one is a typo in the app's config: the plain sentence, never "at least NaN years". */
+function acceptTemplate(labels: LegalLabels, minAge: number | undefined): string {
+  if (minAge === undefined) return labels.accept;
+  if (!Number.isInteger(minAge) || minAge <= 0) {
+    warnLegalOnce(`LegalOperator.minAge is ${minAge}, not a whole number of years; the box says legal.accept.`);
+    return labels.accept;
+  }
+  return (labels.acceptWithAge ?? DEFAULT_LEGAL_LABELS.acceptWithAge!)(minAge);
+}
+
+/** `legal.accept` (or `legal.acceptWithAge`) with its `{terms}` and `{privacy}` as links
+ *  named by the page titles. Split, not interpolated: the text between the placeholders
+ *  is the template's own, to the character — nothing is added around a link. */
+function acceptLabel(labels: LegalLabels, template: string, termsHref: string, privacyHref: string): ReactNode[] {
   for (const placeholder of ["{terms}", "{privacy}"]) {
     if (!template.includes(placeholder)) warnLegalOnce(`legal.accept has no ${placeholder}: "${template}".`);
   }
@@ -687,12 +728,17 @@ function acceptLabel(labels: LegalLabels, termsHref: string, privacyHref: string
  * grammar needs them, articles included — fr "J’accepte les {terms} et la {privacy}",
  * it "Accetto le {terms} e l’{privacy}" with no space after the elided article. The link
  * texts are the page titles (`legal.titles`), as on the pages themselves.
+ *
+ * 0.58: given an `operator` with a `minAge`, the one template is `legal.acceptWithAge` —
+ * "I am at least 16 years old and accept …" — so the age and the acceptance are one tick,
+ * as keksdose asks them.
  */
 export function LegalAcceptCheckbox({
   checked,
   onCheckedChange,
   termsHref = LEGAL_HREFS.terms,
   privacyHref = LEGAL_HREFS.privacy,
+  operator,
   labels: labelsProp,
   ref,
   ...rest
@@ -705,7 +751,7 @@ export function LegalAcceptCheckbox({
       checked={checked}
       onCheckedChange={onCheckedChange}
       required
-      label={acceptLabel(labels, termsHref, privacyHref)}
+      label={acceptLabel(labels, acceptTemplate(labels, operator?.minAge), termsHref, privacyHref)}
     />
   );
 }

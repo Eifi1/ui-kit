@@ -1,11 +1,12 @@
 import { useState } from "react";
 import type { DragEvent } from "react";
-import { GripVertical, User } from "lucide-react";
-import { List, ListItem } from "@eifi1/ui-kit";
+import { GripVertical, Trash2, User } from "lucide-react";
+import { Button, List, ListItem, RowActions, useReorder } from "@eifi1/ui-kit";
 import { Example, Note, OutTable } from "../lib/section";
 
 /**
- * ListItem `targetProps` and `bordered` (0.11). `targetProps` hands extra attributes and
+ * Rows in an order the app keeps: `useReorder`'s Move up / Move down and Alt+arrows, and
+ * ListItem `targetProps` and `bordered`. `targetProps` hands extra attributes and
  * handlers to the row's main target — here HTML5 drag-and-drop on the WHOLE row, which a
  * grip inside a button cannot start in Firefox — and `bordered` gives unselected rows a
  * visible border, for rows laid out as a wrapping strip.
@@ -18,6 +19,84 @@ function moved<T>(list: T[], from: number, to: number): T[] {
   const [item] = next.splice(from, 1);
   next.splice(to, 0, item);
   return next;
+}
+
+const PLAN = ["Warm-up", "Drills", "Intervals 4 × 4 min", "Tempo", "Cool-down", "Stretching"];
+
+function ReorderRows() {
+  const [steps, setSteps] = useState(PLAN);
+  const [log, setLog] = useState("—");
+  const reorder = useReorder({
+    items: steps,
+    rowKey: (step) => step,
+    onReorder: (from, to) => {
+      setSteps((list) => moved(list, from, to));
+      setLog(`onReorder(${from}, ${to})`);
+    },
+  });
+  return (
+    <Example
+      label="useReorder — Move up, Move down and Alt+arrows"
+      hint="focus a row and press Alt+↑ or Alt+↓, or use its arrows; the focus stays on what moved"
+    >
+      <List aria-label="Session plan" separator="divider" className="max-w-md">
+        {steps.map((step, index) => {
+          const row = reorder.row(index);
+          return (
+            <ListItem
+              key={step}
+              {...row.props}
+              title={step}
+              subtitle={`Step ${index + 1} of ${steps.length}`}
+              onClick={() => setLog(`opened “${step}”`)}
+              actions={
+                <RowActions
+                  name={step}
+                  actions={[
+                    ...row.actions,
+                    {
+                      key: "remove",
+                      label: "Remove",
+                      icon: Trash2,
+                      tone: "danger",
+                      confirm: false,
+                      onSelect: () => setSteps((list) => list.filter((s) => s !== step)),
+                    },
+                  ]}
+                />
+              }
+            />
+          );
+        })}
+      </List>
+      {reorder.element}
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <Button variant="ghost" size="sm" onClick={() => setSteps(PLAN)}>
+          Reset
+        </Button>
+      </div>
+      <OutTable
+        rows={[
+          ["order", steps.join(" → ")],
+          ["last call", log],
+        ]}
+      />
+      <div className="mt-3">
+        <Note>
+          The app owns the order: <code className="font-mono">useReorder</code> calls{" "}
+          <code className="font-mono">onReorder(from, to)</code> and waits for <code className="font-mono">items</code>{" "}
+          to show the row in its new place — at once here, when the answer comes for an app that saves first. Then it
+          announces &ldquo;Moved to position 3 of 6&rdquo; and, if the move lost the focus (the arrow that took the row
+          to an end is mounted anew with its reason), gives it back to that arrow, the row or the &ldquo;⋯&rdquo;. Each
+          row gets <code className="font-mono">row.actions</code>, two RowActions entries to put before its own, and{" "}
+          <code className="font-mono">row.props</code>, Alt+ArrowUp / Alt+ArrowDown on its target, named in{" "}
+          <code className="font-mono">aria-keyshortcuts</code>. At an end the arrow stays, focusable, and says why
+          (&ldquo;Already at the top&rdquo;). Pass <code className="font-mono">commit</code> when a move saves: a write
+          lock refuses both arrows and the keys with its reason.
+        </Note>
+      </div>
+    </Example>
+  );
 }
 
 function DraggableRows() {
@@ -90,8 +169,9 @@ function DraggableRows() {
           <code className="font-mono">onDragEnd</code>, and an <code className="font-mono">aria-roledescription</code>.
           They also pass <code className="font-mono">role: &quot;listitem&quot;</code>, which is dropped: inspect a row
           and it is still a <code className="font-mono">button</code> — a role from outside would silently turn the row
-          into something else. Drag needs a mouse; the keyboard reorder is the app&apos;s to add (a pair of move buttons
-          in <code className="font-mono">actions</code>).
+          into something else. Drag needs a mouse; the keyboard&apos;s and the thumb&apos;s way is{" "}
+          <code className="font-mono">useReorder</code> (above), whose <code className="font-mono">move(from, to)</code>{" "}
+          a drop can call to have the move announced.
         </Note>
       </div>
     </Example>
@@ -140,6 +220,7 @@ function BorderedStrip() {
 export function ListDragDemo() {
   return (
     <>
+      <ReorderRows />
       <DraggableRows />
       <BorderedStrip />
     </>

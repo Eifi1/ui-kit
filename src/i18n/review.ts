@@ -336,6 +336,11 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "legal.translation.show": operatorSample,
   // 0.51.3: the as-of line, with the date already written out.
   "legal.updated": [["{{date}}"]],
+  // 0.58: the sign-up box with the operator's minimum age — keksdose's 16.
+  "legal.acceptWithAge": [[16]],
+  // 0.58: the in-app notice of an announced change, with the date already written out.
+  "legal.changeNotice.terms": [["{{date}}"]],
+  "legal.changeNotice.privacy": [["{{date}}"]],
   // 0.51.4: a limited list's "Show all (n)", with the whole list's count.
   "list.showAll": [[12], [1240]],
   // 0.29.0: the sign-in and sign-up parts (docs/auth-harmonization.md).
@@ -504,4 +509,11 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   // suggestion's button, with the quantity it takes as formatQuantity prints it.
   "quantity.unit": [["{{field}}"], [undefined]],
   "quantity.takeSuggestion": [["{{quantity}}"]],
+  // 0.58 (keksdose SL-10): a moved row's place and the row count — the first, a middle,
+  // and the last of a long list.
+  "reorder.moved": [
+    [1, 7],
+    [3, 7],
+    [1240, 1240],
+  ],
 };

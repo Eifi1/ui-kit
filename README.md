@@ -28,8 +28,8 @@ with its own Tailwind config.
 ## Compatibility with server-kit
 
 The backend half, [`eifi1-server-kit`](https://github.com/Eifi1/server-kit), is a separate
-package with its own version and changelog. **ui-kit 0.55 ↔ server-kit 0.21**: this release
-is tested against server-kit 0.21.0's API export (the showcase's Server kit pages and the
+package with its own version and changelog. **ui-kit 0.58 ↔ server-kit 0.22**: this release
+is tested against server-kit 0.22.0's API export (the showcase's Server kit pages and the
 vocabulary test, `showcase/src/__tests__/server-kit-vocabularies.test.ts`).
 
 ## Documentation
@@ -579,7 +579,7 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2221 names from 374 modules** in the main barrel — 1003 values and 1218 types — and 193 more in 16 standalone entries. _Italic_ is a type-only export.
+**2239 names from 378 modules** in the main barrel — 1009 values and 1230 types — and 195 more in 16 standalone entries. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 `node scripts/gen-export-inventory.mjs`; the counts are pinned by
@@ -587,7 +587,7 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2221 |
+| `@eifi1/ui-kit` | 2239 |
 | `@eifi1/ui-kit/chart` | 102 |
 | `@eifi1/ui-kit/shell` | 110 |
 | `@eifi1/ui-kit/data-table` | 56 |
@@ -601,7 +601,7 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 | `@eifi1/ui-kit/eslint` | 1 |
 | `@eifi1/ui-kit/testing` | 15 |
 | `@eifi1/ui-kit/testing/react` | 2 |
-| `@eifi1/ui-kit/rhf` | 50 |
+| `@eifi1/ui-kit/rhf` | 52 |
 | `@eifi1/ui-kit/offline` | 33 |
 | `@eifi1/ui-kit/sync` | 36 |
 | `@eifi1/ui-kit/sync/testing` | 3 |
@@ -627,6 +627,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `lib/format` | `currencyMinorDigits`, `EMPTY_FORMATTED_VALUE`, `formatDate`, `formatDuration`, `formatMoney`, `formatNumber`, `formatPercent`, `formatRelativeTime`, `roundToCurrency`, `toDate`, `useKitFormat`, _`DateInput`_, _`FormatDateOptions`_, _`FormatDateStyle`_, _`FormatDigits`_, _`FormatDurationOptions`_, _`FormatMoneyOptions`_, _`FormatNumberBaseOptions`_, _`FormatNumberOptions`_, _`FormatPercentOptions`_, _`FormatRelativeTimeOptions`_, _`FormattableNumber`_, _`KitFormat`_, _`RoundToCurrencyOptions`_ |
 | `lib/safe-storage` | `readSessionStored`, `readStored`, `readStoredJson`, `removeStored`, `writeSessionStored`, `writeStored`, `writeStoredJson` |
 | `lib/reduced-motion` | `prefersReducedMotion` |
+| `lib/quiet-focus` | `focusQuietly`, `isQuietFocus` |
 | `lib/download` | `filenameFromDisposition`, `saveBlob` |
 | `lib/text-match` | `foldForSearch`, `matchesSearch`, `rankMatch`, `searchWords`, _`MatchRank`_ |
 | `lib/qr-encode` | `encodeQr`, _`QrEncodeOptions`_, _`QrErrorCorrection`_, _`QrMatrix`_ |
@@ -729,6 +730,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/qr-code` | `QrCode`, _`QrCodeProps`_ |
 | `components/alert-banner` | `AlertBanner`, `alertFrameClass`, `toneFrameClass`, _`AlertBannerProps`_, _`AlertSize`_, _`AlertTone`_ |
 | `components/toggle-group` | `ToggleGroup`, _`ToggleGroupBaseProps`_, _`ToggleGroupClearableProps`_, _`ToggleGroupProps`_, _`ToggleGroupRequiredProps`_, _`ToggleOption`_ |
+| `components/choice-field` | `ChoiceField`, _`ChoiceFieldLayout`_, _`ChoiceFieldOption`_, _`ChoiceFieldProps`_ |
 | `components/nav-pills` | `NavPills`, _`NavPillItem`_, _`NavPillLinkProps`_, _`NavPillsCurrent`_, _`NavPillsProps`_ |
 | `components/chip` | `Chip`, _`ChipHue`_, _`ChipLinkProps`_, _`ChipProps`_, _`ChipShape`_, _`ChipSize`_, _`ChipTone`_, _`ChipVariant`_ |
 | `components/chip-input` | `ChipInput`, `DEFAULT_CHIP_INPUT_LABELS`, _`ChipInputLabels`_, _`ChipInputProps`_ |
@@ -749,7 +751,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/server-wake` | `DEFAULT_SERVER_WAKE_LABELS`, `ServerWakeNotice`, `useServerWakeStage`, _`ServerWakeLabels`_, _`ServerWakeNoticeProps`_ |
 | `components/share-card` | `DEFAULT_SHARE_CARD_LABELS`, `ShareCard`, `ShareDialog`, `SharePanel`, _`ShareAddRequest`_, _`ShareCandidate`_, _`ShareCardLabels`_, _`ShareCardProps`_, _`ShareDialogProps`_, _`ShareGrantee`_, _`SharePanelProps`_, _`SharePendingGrant`_, _`ShareRole`_ |
 | `components/line-items` | `DEFAULT_LINE_ITEMS_LABELS`, `LineItems`, _`LineItemCellContext`_, _`LineItemsColumn`_, _`LineItemsFieldLabels`_, _`LineItemsLabels`_, _`LineItemsProps`_, _`LineItemsRemoveAlign`_, _`LineItemsRemovePlacement`_, _`LineItemsRowProps`_, _`LineItemsSummary`_, _`LineItemsSummaryTone`_ |
-| `components/progress-bar` | `DEFAULT_PROGRESS_BAR_LABELS`, `ProgressBar`, _`ProgressBarLabels`_, _`ProgressBarProps`_, _`ProgressBarSegment`_, _`ProgressBarSize`_, _`ProgressBarTone`_ |
+| `components/progress-bar` | `DEFAULT_PROGRESS_BAR_LABELS`, `ProgressBar`, _`ProgressBarLabels`_, _`ProgressBarMarker`_, _`ProgressBarProps`_, _`ProgressBarSegment`_, _`ProgressBarSize`_, _`ProgressBarTone`_ |
 | `components/skeleton` | `Skeleton`, _`SkeletonProps`_, _`SkeletonShape`_ |
 | `components/table-skeleton` | `TableSkeleton`, _`TableSkeletonProps`_ |
 | `components/page-header-skeleton` | `PageHeaderSkeleton`, _`PageHeaderSkeletonProps`_ |
@@ -764,7 +766,8 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/table` | `NUMERIC_CELL_CLASS`, `Table`, `TableBody`, `TableCaption`, `TableCell`, `TableEmpty`, `TableFoot`, `TableHead`, `TableHeaderCell`, `TableRow`, _`TableAlign`_, _`TableBodyProps`_, _`TableCaptionProps`_, _`TableCellProps`_, _`TableDensity`_, _`TableEmptyProps`_, _`TableFootProps`_, _`TableHeaderCellProps`_, _`TableHeaderCellSize`_, _`TableHeaderCellWeight`_, _`TableHeadProps`_, _`TableLayout`_, _`TableProps`_, _`TableRowProps`_, _`TableRowVariant`_, _`TableVAlign`_ |
 | `components/separator` | `Separator`, _`SeparatorProps`_ |
 | `components/scroll-area` | `ScrollArea`, _`ScrollAreaProps`_ |
-| `components/list` | `DEFAULT_LIST_LABELS`, `List`, `ListItem`, _`ListDensity`_, _`ListItemLinkProps`_, _`ListItemProps`_, _`ListItemTrailingTone`_, _`ListLabels`_, _`ListProps`_, _`ListSeparator`_ |
+| `components/list` | `DEFAULT_LIST_LABELS`, `List`, `ListItem`, _`ListDensity`_, _`ListItemCheckedStyle`_, _`ListItemLinkProps`_, _`ListItemProps`_, _`ListItemTrailingTone`_, _`ListLabels`_, _`ListProps`_, _`ListSeparator`_ |
+| `components/reorder` | `DEFAULT_REORDER_LABELS`, `useReorder`, _`ReorderLabels`_, _`ReorderRow`_, _`ReorderRowProps`_, _`UseReorderOptions`_, _`UseReorderReturn`_ |
 | `components/menu-item` | `MenuItem`, _`MenuItemLinkProps`_, _`MenuItemProps`_, _`MenuItemTone`_ |
 | `components/text` | `Caption`, `CAPTION_CLASS`, `SECTION_LABEL_CLASS`, `SectionLabel`, _`CaptionProps`_, _`SectionLabelProps`_, _`SectionLabelSize`_, _`SectionLabelVariant`_ |
 | `components/status-dot` | `StatusDot`, `statusDotColor`, _`StatusDotProps`_, _`StatusDotSize`_, _`StatusDotTone`_ |
@@ -776,6 +779,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/legal` | `DEFAULT_LEGAL_LABELS`, `LEGAL_HREFS`, `LegalFooter`, `LegalLayout`, `LegalLinks`, `legalOperatorText`, `LegalSection`, `useLegalLabels`, _`LegalDisclaimerSectionLabels`_, _`LegalFooterProps`_, _`LegalFramedSectionLabels`_, _`LegalInfoPageKey`_, _`LegalLabels`_, _`LegalLayoutProps`_, _`LegalLink`_, _`LegalLinksProps`_, _`LegalOperator`_, _`LegalOperatorSectionLabels`_, _`LegalOperatorText`_, _`LegalPageKey`_, _`LegalSectionProps`_, _`LegalTextSectionLabels`_ |
 | `components/legal-page` | `LEGAL_SKELETON`, `LegalAcceptCheckbox`, `LegalKitSection`, `LegalPage`, _`LegalAcceptCheckboxProps`_, _`LegalDisclaimerVariant`_, _`LegalKitSectionKey`_, _`LegalKitSectionProps`_, _`LegalPageProps`_, _`LegalSectionOwner`_, _`LegalSkeletonEntry`_, _`LegalSkeletonPage`_ |
 | `components/consent-again-notice` | `ConsentAgainNotice`, `DEFAULT_CONSENT_AGAIN_LABELS`, _`ConsentAgainBannerProps`_, _`ConsentAgainCardProps`_, _`ConsentAgainLabels`_, _`ConsentAgainNoticeProps`_ |
+| `components/legal-change-notice` | `LegalChangeNotice`, _`LegalChangeAnnouncement`_, _`LegalChangeNoticeProps`_ |
 | `components/appearance-labels` | `DEFAULT_APPEARANCE_LABELS`, `useAppearanceLabels`, _`AppearanceLabels`_ |
 | `components/date-format-setting` | `DateFormatSetting`, _`DateFormatSettingProps`_ |
 | `components/row-actions` | `DEFAULT_ROW_ACTIONS_LABELS`, `ROW_ACTIONS_CELL_CLASS`, `RowActions`, `rowActionsColumn`, `RowActionsHead`, _`RowAction`_, _`RowActionConfirm`_, _`RowActionList`_, _`RowActionsCollapse`_, _`RowActionsColumnOptions`_, _`RowActionsHeadProps`_, _`RowActionsLabels`_, _`RowActionsProps`_, _`RowActionsSize`_, _`RowActionTone`_ |
@@ -1124,7 +1128,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 |---|---|
 | `rhf/form-core` | `Form` |
 | `rhf/use-rhf-wizard-step` | `useRhfWizardStep`, _`RhfWizardStepOptions`_ |
-| `rhf/fields` | `RhfCheckbox`, `RhfCombobox`, `RhfCountrySelect`, `RhfDateField`, `RhfDateRangePicker`, `RhfField`, `RhfIbanInput`, `RhfInlineEntityCombobox`, `RhfIntegerField`, `RhfMoneyField`, `RhfMonthPicker`, `RhfNumberField`, `RhfPhoneInput`, `RhfQuantityField`, `RhfSelect`, `RhfTextarea`, `RhfTextCombobox`, `RhfTextField`, `RhfTimeInput`, `RhfToggleGroup`, _`RhfCheckboxProps`_, _`RhfComboboxProps`_, _`RhfCountrySelectProps`_, _`RhfDateFieldProps`_, _`RhfDateRangePickerProps`_, _`RhfFieldBaseProps`_, _`RhfFieldProps`_, _`RhfFieldRenderContext`_, _`RhfIbanInputProps`_, _`RhfInlineEntityComboboxProps`_, _`RhfIntegerFieldProps`_, _`RhfMoneyFieldProps`_, _`RhfMonthPickerProps`_, _`RhfNumberFieldProps`_, _`RhfPhoneInputProps`_, _`RhfQuantityFieldProps`_, _`RhfSelectOption`_, _`RhfSelectProps`_, _`RhfTextareaProps`_, _`RhfTextComboboxProps`_, _`RhfTextFieldProps`_, _`RhfTimeInputProps`_, _`RhfToggleGroupProps`_ |
+| `rhf/fields` | `RhfCheckbox`, `RhfChoiceField`, `RhfCombobox`, `RhfCountrySelect`, `RhfDateField`, `RhfDateRangePicker`, `RhfField`, `RhfIbanInput`, `RhfInlineEntityCombobox`, `RhfIntegerField`, `RhfMoneyField`, `RhfMonthPicker`, `RhfNumberField`, `RhfPhoneInput`, `RhfQuantityField`, `RhfSelect`, `RhfTextarea`, `RhfTextCombobox`, `RhfTextField`, `RhfTimeInput`, `RhfToggleGroup`, _`RhfCheckboxProps`_, _`RhfChoiceFieldProps`_, _`RhfComboboxProps`_, _`RhfCountrySelectProps`_, _`RhfDateFieldProps`_, _`RhfDateRangePickerProps`_, _`RhfFieldBaseProps`_, _`RhfFieldProps`_, _`RhfFieldRenderContext`_, _`RhfIbanInputProps`_, _`RhfInlineEntityComboboxProps`_, _`RhfIntegerFieldProps`_, _`RhfMoneyFieldProps`_, _`RhfMonthPickerProps`_, _`RhfNumberFieldProps`_, _`RhfPhoneInputProps`_, _`RhfQuantityFieldProps`_, _`RhfSelectOption`_, _`RhfSelectProps`_, _`RhfTextareaProps`_, _`RhfTextComboboxProps`_, _`RhfTextFieldProps`_, _`RhfTimeInputProps`_, _`RhfToggleGroupProps`_ |
 | `rhf/line-items` | `RhfLineItems`, _`RhfLineItemCellContext`_, _`RhfLineItemsColumn`_, _`RhfLineItemsProps`_ |
 
 ### @eifi1/ui-kit/offline (standalone)
@@ -1174,7 +1178,7 @@ Every field takes a `ref` — a React 19 ref prop, no `forwardRef` (since 0.34) 
 element that takes focus: the `<input>` of `Input`, `NumberField`, `AmountInput`,
 `ChipInput`…, the trigger button of a picker (`DatePicker`, `MonthPicker`, `MultiSelect`,
 `CurrencySelect`, `CountrySelect`), and for `ToggleGroup` the group, whose `focus()` lands
-on its checked option. So they work directly with react-hook-form:
+on its checked option (`ChoiceField`: that group, or its `<select>` on a phone). So they work directly with react-hook-form:
 `<Input {...field} />` (from `Controller`/`register`) attaches RHF's ref, giving
 focus-and-scroll-to-error for free. A component that spreads its props onto an element
 (`Card`, `EmptyState`, `PageHeader`, …) takes that element's `ref` too. For fields bound

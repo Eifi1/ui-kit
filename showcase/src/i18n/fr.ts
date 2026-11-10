@@ -560,7 +560,7 @@ export const fr: Dictionary = {
       title: "E-mails",
       short: "E-mails",
       blurb:
-        "Les e-mails du compte\u00a0: les textes par langue, une seule mise en page qui échappe chaque valeur, deux transports qui ne lèvent jamais d’exception — et les e-mails d’exemple de la version, rendus.",
+        "Les e-mails du compte\u00a0: les textes par langue, une seule mise en page qui échappe chaque valeur, deux transports qui ne lèvent jamais d’exception — et les e-mails d’exemple de la version, rendus. Et l’annonce d’un changement juridique\u00a0: la liste que lit l’avis dans l’app, et son e-mail à chaque compte.",
     },
     "server-notifications": {
       title: "Notifications",
@@ -962,6 +962,8 @@ export const fr: Dictionary = {
       "sélectionner plusieurs lignes",
       "actions groupées sur la sélection",
       "barre d’outils de sélection",
+      "liste à cocher",
+      "monter et descendre des lignes",
     ],
     "tree-view": [
       "afficher des données hiérarchiques",

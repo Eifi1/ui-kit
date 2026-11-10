@@ -23,6 +23,7 @@ import { Spinner } from "./spinner";
 import {
   HOVER_INK,
   ICON_BUTTON_PRESSED,
+  IconButtonSizeContext,
   RenderedButtonLink,
   HIT_AREA_LARGE,
   TOUCH_TARGET_LARGE,
@@ -279,7 +280,9 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
    *  icon, lg = 44px (a phone's touch target), md = 36px (matches the top bar),
    *  sm = 32px — all three with a 20px icon;
    *  xs = 28px with a 16px icon (an action in a list row), 2xs = 24px with a 14px
-   *  icon (an action on a chip or a tab). `glyphSize` overrides the icon. */
+   *  icon (an action on a chip or a tab). `glyphSize` overrides the icon. Default `md` —
+   *  or, left out in a DataTable group band's `action`, the band's size (24px compact,
+   *  28px otherwise), so the band keeps its height. */
   size?: IconButtonSize;
   /**
    * The icon's size in px, when the box's own is not the one wanted. keksdose's sync
@@ -315,6 +318,22 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
    * what stretches.
    */
   stretch?: boolean;
+  /**
+   * Classes for the box the button stands in its layout as: the wrapper the kit puts round
+   * it — the `label` tooltip's (`span.relative.inline-flex`), the `disabledReason` frame's,
+   * the `badge`'s — or, with none of those, the button itself (after `className`).
+   * `className` stays on the `<button>`, where it has always been: it styles the button.
+   * This is for what has to reach the OUTER box — a margin, `align-top`, a flex item's
+   * `shrink-0` or `ms-auto` — which on the button inside a wrapper moves nothing.
+   *
+   * keksdose's group-band "+" (band-add-button.tsx) needed a span of its own round the
+   * IconButton for `align-top` and a negative margin: on the button they never reached the
+   * line box, the wrapper stood on the text's baseline, and the kit's phone section header
+   * grew from 28 to 32px. Whichever box is outermost takes these, so they hold at Large text
+   * (where the label may be drawn as text and the tooltip goes) and while a reason shows.
+   * {@link Tooltip}'s own `className` is the same wrapper's.
+   */
+  wrapperClassName?: string;
   /** `round`: a circle instead of the rounded square — a compact status chip in a top
    *  bar (keksdose's sync indicator). `overlay` is always round. */
   shape?: "square" | "round";
@@ -546,6 +565,7 @@ export interface IconButtonLinkProps
       | "glyphSize"
       | "badge"
       | "stretch"
+      | "wrapperClassName"
       | "shape"
       | "toneColor"
       | "tone"
@@ -678,12 +698,31 @@ function iconButtonLook({
   );
 }
 
+/** Whether the `label` tooltip is drawn round the button — the condition the two forms
+ *  return their Tooltip on, with Tooltip's own blank test (a `" "` label draws none). */
+function tipped(tooltip: boolean, withText: boolean, label: string | undefined): boolean {
+  return tooltip && !withText && label !== undefined && label.trim() !== "";
+}
+
+/** Which box `wrapperClassName` goes on: the outermost of the ones drawn — a wrapper
+ *  (the tooltip's, a reason's frame), else the badge's box, else the control itself. */
+function outerBox(wrapped: boolean, badge: ReactNode): "wrapper" | "badge" | "control" {
+  if (wrapped) return "wrapper";
+  return hasContent(badge) ? "badge" : "control";
+}
+
 /** The badge beside the control, not in it — see `badge`. The wrapper is only a
  *  positioning box: the control inside it keeps its own focus ring and hit area. */
-function withIconButtonBadge(control: ReactElement, badge: ReactNode, stretch: boolean | undefined) {
+function withIconButtonBadge(
+  control: ReactElement,
+  badge: ReactNode,
+  stretch: boolean | undefined,
+  /** `wrapperClassName`, when this box is the outermost. */
+  outerClassName?: string,
+) {
   if (!hasContent(badge)) return control;
   return (
-    <span className={cn("relative inline-flex shrink-0", stretch && "self-stretch")}>
+    <span className={cn("relative inline-flex shrink-0", stretch && "self-stretch", outerClassName)}>
       {control}
       <span
         aria-hidden
@@ -724,11 +763,12 @@ function IconButtonLink({
   reloadDocument,
   disabled,
   variant = "ghost",
-  size = "md",
+  size: sizeProp,
   tone: toneProp,
   quiet,
   stopPropagation,
   stretch,
+  wrapperClassName,
   shape = "square",
   toneColor,
   label,
@@ -749,7 +789,10 @@ function IconButtonLink({
   ref,
   ...rest
 }: IconButtonLinkProps) {
+  const regionSize = useContext(IconButtonSizeContext);
+  const size = sizeProp ?? regionSize ?? "md";
   const withText = useIconButtonText(label, labelVisible, variant, tooltip);
+  const outer = outerBox(tipped(tooltip, withText, label), badge);
   const children = withText ? (
     <>
       {glyph}
@@ -783,6 +826,7 @@ function IconButtonLink({
     // BASE's `disabled:` classes never match an `<a>` — Button's disabled link look.
     disabled && "pointer-events-none cursor-not-allowed opacity-50",
     className,
+    outer === "control" && wrapperClassName,
   );
   const look = { style: toneColorStyle(toneColor, style), className: cls };
   let control: ReactElement;
@@ -827,7 +871,7 @@ function IconButtonLink({
       </RenderedButtonLink>
     );
   }
-  control = withIconButtonBadge(control, badge, stretch);
+  control = withIconButtonBadge(control, badge, stretch, outer === "badge" ? wrapperClassName : undefined);
   // The words are on the link at Large: a bubble would only repeat them.
   if (!tooltip || withText || label === undefined || label === "") return control;
   return (
@@ -837,7 +881,7 @@ function IconButtonLink({
       side={tooltipSide}
       portal={tooltipPortal}
       lazy={tooltipLazy}
-      className={stretch ? "self-stretch" : undefined}
+      className={cn(stretch && "self-stretch", wrapperClassName) || undefined}
     >
       <>{control}</>
     </Tooltip>
@@ -846,12 +890,13 @@ function IconButtonLink({
 
 function IconButtonElement({
   variant = "ghost",
-  size = "md",
+  size: sizeProp,
   tone: toneProp,
   quiet,
   pressed,
   stopPropagation,
   stretch,
+  wrapperClassName,
   shape = "square",
   toneColor,
   label,
@@ -881,12 +926,15 @@ function IconButtonElement({
   ref,
   ...rest
 }: IconButtonProps) {
+  const regionSize = useContext(IconButtonSizeContext);
+  const size = sizeProp ?? regionSize ?? "md";
   const tone = toneProp ?? (toneColor !== undefined ? "custom" : "default");
   const keep = disabledStyle === "keep";
   const withText = useIconButtonText(label, labelVisible, variant, tooltip);
   // `locked`: refused WITH words, which take the bubble; `refused` also covers `true`,
   // which keeps the label's.
   const { reason: disabledReason, locked, reasonId, refused } = useRefusal(refusedProp, ownDisabledReason, commit);
+  const outer = outerBox(locked || tipped(tooltip, withText, label), badge);
   // Pending is inert like a refused button — focusable, every activation swallowed —
   // without the refused look: the spinner is the state.
   const inert = refused || Boolean(pending);
@@ -928,6 +976,7 @@ function IconButtonElement({
         keep && "disabled:cursor-default disabled:opacity-100",
         pending && "cursor-progress",
         className,
+        outer === "control" && wrapperClassName,
       )}
     >
       {pending ? (
@@ -946,7 +995,8 @@ function IconButtonElement({
       {withText && <IconButtonText label={label!} />}
     </button>
   );
-  const control = withIconButtonBadge(button, badge, stretch);
+  const control = withIconButtonBadge(button, badge, stretch, outer === "badge" ? wrapperClassName : undefined);
+  const wrapperClass = cn(stretch && "self-stretch", wrapperClassName) || undefined;
   if (locked) {
     return (
       // Button's shape: the reason as a line under it, or the bubble with a hidden copy
@@ -956,7 +1006,7 @@ function IconButtonElement({
         display={disabledReasonDisplay}
         side={tooltipSide}
         portal={tooltipPortal}
-        className={stretch ? "self-stretch" : undefined}
+        className={wrapperClass}
       >
         {control}
       </LockedReason>
@@ -967,13 +1017,7 @@ function IconButtonElement({
   return (
     // A fragment, so Tooltip leaves the button's description alone: the bubble says
     // exactly what `aria-label` already does. Lazy by default — see `tooltipLazy`.
-    <Tooltip
-      label={label}
-      side={tooltipSide}
-      portal={tooltipPortal}
-      lazy={tooltipLazy}
-      className={stretch ? "self-stretch" : undefined}
-    >
+    <Tooltip label={label} side={tooltipSide} portal={tooltipPortal} lazy={tooltipLazy} className={wrapperClass}>
       <>{control}</>
     </Tooltip>
   );

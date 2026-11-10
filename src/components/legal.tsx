@@ -81,6 +81,16 @@ export interface LegalOperator {
    * Only the language subtag counts: "de-CH" and "de" are the same language here.
    */
   bindingLanguage?: string;
+  /**
+   * 0.58: the youngest age the app accepts, in whole years (keksdose: 16; Marcel,
+   * 2026-11-09, from keksdose's legal audit against the app). With it the sign-up box says
+   * so — "I am at least 16 years old and accept the {terms} and the {privacy}"
+   * (`legal.acceptWithAge`, §3.4) — wherever it is given the operator: `LegalAcceptCheckbox`'s
+   * `operator`, or `RegisterForm`'s, which hands it on. Left out, the box is the plain
+   * "I accept …". No section of the pages prints it, so {@link LegalOperatorText} leaves
+   * it out.
+   */
+  minAge?: number;
 }
 
 /**
@@ -90,8 +100,13 @@ export interface LegalOperator {
  * The label functions take this rather than the code so they stay pure string functions
  * of plain values, like every other function label in the kit: a catalogue never calls
  * `Intl`, and a review row can be rendered from placeholders (`{{country}}`).
+ *
+ * Without `minAge` (0.58): a number no section prints, and the age sentence is a function
+ * of the number itself (`legal.acceptWithAge(minAge)`). Left out, this type is the one it
+ * was, so an app's own `LegalOperatorText` (a review sample, a test) still compiles
+ * without a field it has no use for.
  */
-export type LegalOperatorText = Readonly<Record<keyof LegalOperator, string>>;
+export type LegalOperatorText = Readonly<Record<Exclude<keyof LegalOperator, "minAge">, string>>;
 
 /** The language subtag of a BCP 47 code, lower-cased: "de-CH" → "de". */
 export function baseLanguage(code: string): string {
@@ -126,9 +141,15 @@ function languageName(code: string, locale: string): string {
  *  for an app's own footer label in the kit's words; it carried an `@internal` tag the
  *  barrel contradicted until 0.52 (API-8, refactor audit 2026-10-30). */
 export function legalOperatorText(operator: LegalOperator, locale: string = "en"): LegalOperatorText {
+  // Field by field, not `...operator` (0.58): a spread would carry `minAge`, a number, into
+  // a record of strings — and into a review row built from it.
   return {
-    ...operator,
+    name: operator.name,
+    postalCode: operator.postalCode,
+    city: operator.city,
+    region: operator.region,
     country: countryName(operator.country, locale),
+    email: operator.email,
     bindingLanguage: operator.bindingLanguage ? languageName(operator.bindingLanguage, locale) : "",
   };
 }
@@ -203,6 +224,29 @@ export interface LegalLabels {
    * around a placeholder — Italian elides, "e l’{privacy}", with no space.
    */
   accept: string;
+  /**
+   * 0.58: the terms checkbox when the operator names a `minAge` (§3.4; keksdose's legal
+   * audit, Marcel 2026-11-09) — called with the age, answering a template of `accept`'s
+   * kind: "I am at least 16 years old and accept the {terms} and the {privacy}". One
+   * sentence, not a prefix before `accept`, so a language joins the two halves its own
+   * way. OPTIONAL, as every key added to a namespace an app may annotate: left out, the
+   * provider's, then English.
+   */
+  acceptWithAge?: (minAge: number) => string;
+  /**
+   * 0.58: `LegalChangeNotice`, the in-app notice of an announced change to the terms or
+   * the privacy policy (§3.5; decision 10: a change is announced by email AND in the app).
+   * One sentence per page, called with the effective date written out in the reader's
+   * language — per page because the verb agrees with the page's name: "Our Terms of
+   * Service change", "Our Privacy Policy changes"; „Unsere Nutzungsbedingungen ändern
+   * sich“, „Unsere Datenschutzerklärung ändert sich“. `read` is the link to the new text
+   * after it. Optional, as `acceptWithAge`.
+   */
+  changeNotice?: {
+    terms: (date: string) => string;
+    privacy: (date: string) => string;
+    read: string;
+  };
   /** The notice under the title (§3.2): `beta` on the imprint and the terms, `privacy`
    *  on the privacy policy. */
   notice: {
@@ -257,7 +301,16 @@ export interface LegalLabels {
     terms: {
       warranty: LegalTextSectionLabels;
       liability: LegalTextSectionLabels;
-      changes: LegalTextSectionLabels;
+      /**
+       * `body` is the default; `commercial` (0.58) the same text with the refund of a paid
+       * period after it, for `<LegalKitSection section="changes" variant="commercial">` —
+       * keyed as the imprint disclaimer's (keksdose's legal audit, Marcel 2026-11-09): no
+       * app can take payment today, and payment wording undercut the imprint's
+       * "non-commercial" (an external pre-review). An app shows it again in the release
+       * that turns its billing on. OPTIONAL, as the disclaimer's: left out, the provider's,
+       * then English.
+       */
+      changes: LegalTextSectionLabels & { commercial?: string };
       /** 0.28.1: which language's version prevails — `o.bindingLanguage`, named. */
       language: LegalOperatorSectionLabels;
       /** The place of jurisdiction is the operator's `{city} ({region}), {country}`. */

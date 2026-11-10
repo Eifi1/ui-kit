@@ -6,7 +6,8 @@ import { numberFormat } from "../lib/number-format";
 
 /**
  * ProgressBar `segments` + `legend` (0.11): a meter of parts — one bar, several fills
- * side by side, named in `aria-valuetext` and listed in a legend.
+ * side by side, named in `aria-valuetext` and listed in a legend. And `markers` (0.58):
+ * ticks at a recommendation, a target, a limit, in the bar's description.
  */
 
 const eur = numberFormat("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
@@ -17,6 +18,82 @@ const STEP_CLASS = [
   "bg-[color-mix(in_oklab,var(--brand)_70%,var(--bg-surface))]",
   "bg-[color-mix(in_oklab,var(--brand)_45%,var(--bg-surface))]",
 ];
+
+/** A food-pyramid-style group: its share of the shopping, against the share the
+ *  recommendations give it. */
+interface FoodGroup {
+  name: string;
+  share: number;
+  recommended: number;
+}
+
+const FOOD_GROUPS: FoodGroup[] = [
+  { name: "Vegetables & fruit", share: 0.31, recommended: 0.35 },
+  { name: "Grains & potatoes", share: 0.27, recommended: 0.25 },
+  { name: "Dairy, meat, fish & eggs", share: 0.29, recommended: 0.2 },
+  { name: "Sweets & snacks", share: 0.09, recommended: 0.05 },
+];
+
+const pct = numberFormat("en-GB", { style: "percent", maximumFractionDigits: 0 });
+
+/** ProgressBar `markers`: a recommendation tick on a meter that runs to twice it, so the
+ *  tick is always the middle — a fill short of it is under, one past it over. */
+export function ProgressMarkersDemo() {
+  return (
+    <Example label="ProgressBar — markers" hint="a tick at a recommendation, a target, a limit — said, not only drawn">
+      <div className="grid gap-2 sm:grid-cols-2">
+        {FOOD_GROUPS.map((g) => (
+          <div key={g.name} className="rounded-md bg-surface-2 px-2.5 py-2">
+            <p className="text-xs text-secondary">{g.name}</p>
+            <p className="text-base font-semibold tabular-nums">{pct.format(g.share)}</p>
+            <ProgressBar
+              variant="meter"
+              size="slim"
+              value={g.share}
+              max={g.recommended * 2}
+              aria-label={g.name}
+              formatValue={() => `${pct.format(g.share)} of the shopping`}
+              markers={[{ value: g.recommended, label: "Recommended", valueText: pct.format(g.recommended) }]}
+            />
+            <p className="text-xs text-muted">Recommended {pct.format(g.recommended)}</p>
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 space-y-4">
+        <ProgressBar
+          label="Monthly budget"
+          showValue
+          value={72}
+          tone="warning"
+          hint="CHF 1'440 of CHF 2'000 spent"
+          markers={[
+            { value: 60, label: "Plan for today" },
+            { value: 90, label: "Alert", tone: "danger" },
+          ]}
+        />
+        <ProgressBar
+          label="Spending, by part, against the budget"
+          max={1}
+          segments={[
+            { label: "Rent", value: 0.45, tone: "expense" },
+            { label: "Food", value: 0.2, tone: "warning" },
+          ]}
+          markers={[{ value: 0.8, label: "Budget" }]}
+        />
+      </div>
+      <div className="mt-3">
+        <Note>
+          Each marker is a 2px tick standing 4px out of the track, in the body text colour or its own `tone`, at its
+          value clamped into the scale. A reader hears the markers in the bar&apos;s description — &ldquo;Recommended:
+          35%&rdquo; — each label with its value through `formatValue`, or its own `valueText` where the scale is not
+          the figure&apos;s own: these meters run to twice the recommendation, so the tick at their middle says the
+          recommended share, not 50%. The bar keeps room for the ticks where nothing next to it gives it, so they never
+          paint over a neighbour.
+        </Note>
+      </div>
+    </Example>
+  );
+}
 
 export function ProgressSegmentsDemo() {
   const [food, setFood] = useState(25);

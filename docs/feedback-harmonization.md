@@ -2593,7 +2593,9 @@ No server change, no new wiring: `src/feedback/feedback-inbox-bulk.tsx`.
   above the table, and appearing with the first ticked row pushed every row down by its
   height, away from the pointer reaching for the next box (the 0.57 screenshot check). On
   a phone the card floats over the page, moves nothing, and comes with the first selected
-  card.
+  card. Under a write lock the bar says the lock's reason once, on a line under its row
+  (at Large text and on a touch screen, where a button's reason would be a line), and each
+  button keeps it in its tooltip (0.58, kastlan: three lines grew the phone's card).
 - **The writes.** **No bulk endpoint**: keksdose has only `PATCH /feedback/{id}`, and each
   report's change must pass the server's rules for that report (§3.4). So the bar calls the
   page's `update` once per report — `{ id, status }`, `{ id, category }` or `{ id, public }`
