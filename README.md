@@ -631,6 +631,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `lib/safe-storage` | `readSessionStored`, `readStored`, `readStoredJson`, `removeStored`, `writeSessionStored`, `writeStored`, `writeStoredJson` |
 | `lib/reduced-motion` | `prefersReducedMotion` |
 | `lib/quiet-focus` | `focusQuietly`, `isQuietFocus` |
+| `lib/focus-left` | `focusFirst`, `focusIsLost`, `returnFocus`, _`FocusReturn`_ |
 | `lib/download` | `filenameFromDisposition`, `saveBlob` |
 | `lib/text-match` | `foldForSearch`, `matchesSearch`, `rankMatch`, `searchWords`, _`MatchRank`_ |
 | `lib/qr-encode` | `encodeQr`, _`QrEncodeOptions`_, _`QrErrorCorrection`_, _`QrMatrix`_ |
@@ -847,6 +848,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `hooks/use-large-text` | `useCoarsePointer`, `useInlineFacts`, `useLargeText` |
 | `hooks/use-has-camera` | `useHasCamera` |
 | `hooks/use-file-picker` | `matchesAccept`, `useFilePicker`, _`FilePickerLabels`_, _`FileRejection`_, _`FileRejectionReason`_, _`FileScreenOptions`_, _`UseFilePickerOptions`_, _`UseFilePickerReturn`_ |
+| `hooks/use-row-leaves` | `useRowLeaves`, _`RowLeavesProps`_, _`UseRowLeavesOptions`_, _`UseRowLeavesReturn`_ |
 
 ### theme, palettes, colour
 

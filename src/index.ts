@@ -34,6 +34,12 @@ export { prefersReducedMotion } from "./lib/reduced-motion";
 // move the focus this way. `focusQuietly` for an app's own focus move (keksdose's split
 // editor), `isQuietFocus` for an app's own open-on-focus control to honour the kit's.
 export { focusQuietly, isQuietFocus } from "./lib/quiet-focus";
+// 0.59 (keksdose 846423e6, which carried private copies): where the focus goes when the
+// control holding it leaves the page, by the kit's own rules — `focusIsLost` (it fell to
+// <body>), `focusFirst` (to the first candidate that takes it), and `returnFocus`, the whole
+// rule an overlay closing or a removed control follows. A row leaving a list: `useRowLeaves`.
+export { focusIsLost, focusFirst, returnFocus } from "./lib/focus-left";
+export type { FocusReturn } from "./lib/focus-left";
 // Save a fetched Blob as a download, and read the name a Content-Disposition asks for
 // (`filename*` first) — 0.34, KS U5; the kit's own three downloads use them.
 export { saveBlob, filenameFromDisposition } from "./lib/download";
@@ -633,6 +639,10 @@ export type {
   UseReorderOptions,
   UseReorderReturn,
 } from "./components/reorder";
+// 0.59 (keksdose 846423e6): the focus when a row LEAVES its list — a ticked item folded into
+// "Done" — goes to the same control in the next row, else the previous, else a fallback.
+export { useRowLeaves } from "./hooks/use-row-leaves";
+export type { RowLeavesProps, UseRowLeavesOptions, UseRowLeavesReturn } from "./hooks/use-row-leaves";
 export * from "./components/menu-item";
 export * from "./components/text";
 export * from "./components/status-dot";

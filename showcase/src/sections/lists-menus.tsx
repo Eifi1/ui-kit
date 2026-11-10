@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import {
   Archive,
@@ -32,6 +32,7 @@ import {
   UserAvatar,
   Chip,
   Select,
+  useRowLeaves,
 } from "@eifi1/ui-kit";
 import type {
   BulkActionBarVariant,
@@ -341,6 +342,100 @@ function Checklist() {
           <code className="font-mono">href</code> and <code className="font-mono">expandedContent</code> beside it; a
           section that folds stays an expandable row with a <code className="font-mono">Checkbox</code> in{" "}
           <code className="font-mono">leadingActions</code>.
+        </Note>
+      </div>
+    </Example>
+  );
+}
+
+/* ── A box before the row, and the focus when a row leaves ───────────────── */
+
+interface ListedItem extends ShopItem {
+  done: boolean;
+}
+
+const LISTED: ListedItem[] = AISLES.flatMap((aisle) => aisle.items).map((item) => ({ ...item, done: false }));
+
+function TickedAway() {
+  const [items, setItems] = useState(LISTED);
+  const [last, setLast] = useState("—");
+  const doneHeader = useRef<HTMLElement>(null);
+  const boxes = useRef(new Map<string, HTMLInputElement>());
+  const open = items.filter((item) => !item.done);
+  const done = items.filter((item) => item.done);
+  const openLeaves = useRowLeaves({ items: open, rowKey: (item) => item.id, fallback: doneHeader });
+  // The last item taken back out of Done: its own box, back on the list.
+  const doneLeaves = useRowLeaves({
+    items: done,
+    rowKey: (item) => item.id,
+    fallback: (item) => boxes.current.get(item.id),
+  });
+  const tick = (item: ListedItem, value: boolean) => {
+    setItems((was) => was.map((each) => (each.id === item.id ? { ...each, done: value } : each)));
+    setLast(`ticked “${item.name}” → ${value}`);
+  };
+  const row = (item: ListedItem, leaves: typeof openLeaves) => (
+    <ListItem
+      key={item.id}
+      {...leaves.row(item)}
+      title={item.name}
+      subtitle={item.amount}
+      onClick={() => setLast(`opened “${item.name}”`)}
+      leadingActions={
+        <Checkbox
+          ref={(box) => {
+            if (box) boxes.current.set(item.id, box);
+          }}
+          aria-label={`Done: ${item.name}`}
+          checked={item.done}
+          onCheckedChange={(value) => tick(item, value)}
+        />
+      }
+    />
+  );
+  return (
+    <Example
+      label="ListItem — a box before the row, and the focus when a row leaves"
+      hint="tap a row to open it, its box to tick it; Tab to a box and press Space: the focus moves on to the next box"
+    >
+      <List aria-label="Shopping list, by item" separator="divider" density="comfortable" className="max-w-md">
+        {open.map((item) => row(item, openLeaves))}
+        {done.length > 0 && (
+          <ListItem
+            ref={doneHeader}
+            title={`Done (${done.length})`}
+            expandedContent={
+              <List aria-label="Done" separator="divider" density="comfortable">
+                {done.map((item) => row(item, doneLeaves))}
+              </List>
+            }
+          />
+        )}
+      </List>
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <Button variant="ghost" size="sm" onClick={() => setItems(LISTED)}>
+          Reset
+        </Button>
+      </div>
+      <OutTable
+        rows={[
+          ["on the list", `${open.length} of ${items.length}`],
+          ["last", last],
+        ]}
+      />
+      <div className="mt-3">
+        <Note>
+          A row that OPENS on a tap, with a box before it that TICKS: a <code className="font-mono">Checkbox</code> in{" "}
+          <code className="font-mono">leadingActions</code>, named by the caller (&ldquo;Done: Milk&rdquo;). Every
+          button and box in that slot is a full-size target — an invisible 44 px square round the 16 px box (48 px from
+          Large), so the row and the box look as before and a thumb need not find the box&apos;s edge. A ticked item
+          leaves the list for the folded &ldquo;Done&rdquo; group and its box goes with it;{" "}
+          <code className="font-mono">useRowLeaves</code> gives a focus that fell to the page to the next item&apos;s
+          box, else the one before, else its <code className="font-mono">fallback</code> (the group&apos;s header here;
+          for the last item taken back out of Done, that item&apos;s own box on the list). A focus that went somewhere
+          real stays there. The rules under it — <code className="font-mono">focusIsLost</code>,{" "}
+          <code className="font-mono">focusFirst</code> and <code className="font-mono">returnFocus</code> — are
+          exported for a recovery of an app&apos;s own.
         </Note>
       </div>
     </Example>
@@ -892,6 +987,7 @@ export function ListsMenus() {
       <RowKinds />
       <RowStates />
       <Checklist />
+      <TickedAway />
       <RowText />
       <ListLayout />
       <MenuItemChoices />

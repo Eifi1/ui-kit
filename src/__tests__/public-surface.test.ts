@@ -375,7 +375,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // palette painted for the mode, which `createPaletteStore` (deprecated) gives way to.
   // 0.59 (+2, keksdose #505): `ZoomableImage` and `DEFAULT_ZOOMABLE_IMAGE_LABELS`, the inline
   // picture that zooms (pinch, wheel, keys, double-tap) where it is.
-  ["@eifi1/ui-kit", barrel, 1012],
+  // 0.59 (+4, keksdose 846423e6): `focusIsLost`, `focusFirst` and `returnFocus`, the kit's
+  // focus rules (lib/focus-left), and `useRowLeaves`, the focus when a row leaves its list.
+  ["@eifi1/ui-kit", barrel, 1016],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
