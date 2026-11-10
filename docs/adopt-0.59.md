@@ -156,8 +156,10 @@ namespace in all seven catalogues.
 
 ## Toolchain and housekeeping
 
-- jsdom 31 (the test environment) and playwright-core 1.65 (Chromium headless shell 1254 for the
-  sweep). Nothing for the apps.
+- playwright-core 1.65 (Chromium headless shell 1254 for the sweep). jsdom stays on 30: 31's
+  new CSS serialisation changes ten exact-string style assertions (`minmax(0px, 1fr)`, collapsed
+  `calc`, a dropped default `ease`, a `var()` background that no longer reads back); moving
+  means rewriting those tests, a round of its own. Nothing for the apps.
 - The shell set's ceiling rises to 160,600 B (+485 B, +144 gzip): the leading slot's targets,
   the dialog footers' rule, `clearDisabled` and the new privacy words.
 
