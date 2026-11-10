@@ -402,6 +402,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       rowCount: (total) => n(total),
       columnsCount: (visible, total) => `Colonne (${n(visible)}/${n(total)})`,
       filterColumn: (column, active) => (active ? `Filtra ${column} (attivo)` : `Filtra ${column}`),
+      keyFilter: (count) => (count === 1 ? "Solo questa riga" : `Solo queste ${n(count)} righe`),
       empty: "Nessuna voce",
       actions: "Azioni",
       edit: "Modifica",

@@ -399,6 +399,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       rowCount: (total) => n(total),
       columnsCount: (visible, total) => `Columnas (${n(visible)}/${n(total)})`,
       filterColumn: (column, active) => (active ? `Filtrar ${column} (activo)` : `Filtrar ${column}`),
+      keyFilter: (count) => (count === 1 ? "Solo esta fila" : `Solo estas ${n(count)} filas`),
       empty: "No hay entradas",
       actions: "Acciones",
       edit: "Editar",

@@ -48,7 +48,7 @@ import { useLargeText } from "../hooks/use-large-text";
 import { cn } from "../lib/cn";
 import { isFilterActive, resolveFilter, rowMatches } from "./data-table-filters";
 import { matchesSearch, searchWords } from "../lib/text-match";
-import type { ColumnFilter, FilterValue } from "./data-table-filters";
+import type { ColumnFilter, DataTableKeyFilter, FilterValue } from "./data-table-filters";
 import { compareSortValues, nextSorts } from "./data-table-sort";
 import type { SortCycle, SortDir, SortState } from "./data-table-sort";
 import { Pagination } from "./data-table-pagination";
@@ -458,6 +458,25 @@ export interface DataTableProps<T> {
    */
   filters?: FilterState;
   onFiltersChange?: (next: FilterState) => void;
+  /**
+   * 0.59 (keksdose live #500, dev #678): narrow the table to a SET of rows named from
+   * outside — the reports a notification links (`?ids=492,493`) — and show it as one
+   * column's filter: that column's filter button is on and its panel says how many, with
+   * the set's Clear ({@link DataTableKeyFilter}). Its Clear, the column's "Clear filter"
+   * and the phone's "Clear all" call `onClear`; the owner drops the set.
+   *
+   * **A link's view, so the table keeps its saved filters out of it** (keksdose live #500:
+   * the filter Marcel had left on hid all four reports a notice named). While the set is
+   * on, the filters `storageKey` keeps are neither applied nor written — the view starts
+   * from the URL's own `f.<column>` — and when it goes, they come back: the list the person
+   * left. Everything else the table keeps (the sort, the page size, the column widths and
+   * the hidden columns) is read and written as always, so the layout stays theirs.
+   *
+   * Client-side: the rows whose `rowKey` is in `keys`, the other filters on top. With
+   * `serverRows` (or `serverPagination`) the rows are the owner's to narrow; the table
+   * shows the set and calls `onClear`.
+   */
+  keyFilter?: DataTableKeyFilter;
   sorts?: readonly SortState[];
   onSortsChange?: (next: SortState[]) => void;
   /**
@@ -1078,6 +1097,7 @@ export function DataTable<T>({
   serverRows: serverRowsProp,
   filters: filtersProp,
   onFiltersChange,
+  keyFilter,
   sorts: sortsProp,
   onSortsChange,
   pageSize: pageSizeProp,
@@ -1187,6 +1207,8 @@ export function DataTable<T>({
     filtersProp,
     // Ignored in `serverPagination` mode, where the owner's is the page size.
     pageSizeProp: isServer ? undefined : pageSizeProp,
+    // A link's set (0.59): its view keeps the saved filters out, and gives them back.
+    linkView: !!keyFilter,
   });
 
   // With the controls that change them switched off, persisted widths and hidden
@@ -1258,18 +1280,28 @@ export function DataTable<T>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [columnSig, selectOptionsSig, rows, locale]);
 
+  // The set's keys as a signature (0.59): the owner builds `keyFilter` inline.
+  const keySetSig = keyFilter ? keyFilter.keys.map(String).join("\u0000") : null;
+  const keySetColumn = keyFilter?.column;
   const filtered = useMemo(() => {
     if (serverRows) return rows;
     let result = rows;
+    if (keySetSig !== null) {
+      const set = new Set(keySetSig.split("\u0000"));
+      result = result.filter((row) => set.has(String(rowKey(row))));
+    }
     for (const col of columns) {
+      // The set wins over its column's own filter (a link's `f.id` beside `ids`).
+      if (col.key === keySetColumn) continue;
       const state = filters[col.key];
       if (!state || !isFilterActive(state)) continue;
       // One matcher per filter, its query folded once (0.52 code review, data-table-filters.ts).
       result = result.filter(rowMatcher(col, state, locale));
     }
     return result;
+    // `rowKey` is written inline at every call site; the set by its signature.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows, columnSig, filters, serverRows, locale]);
+  }, [rows, columnSig, filters, serverRows, locale, keySetSig, keySetColumn]);
 
   // `selection.onFilteredRowsChange` (0.57): the filtered set, told to the owner when its
   // KEYS change. The callback and `rowKey` are written inline at every call site, so they
@@ -1398,6 +1430,8 @@ export function DataTable<T>({
   };
 
   const clearFilter = (key: string) => {
+    // The set's column clears the set with it (0.59): the owner drops `?ids=`.
+    if (keyFilter && key === keyFilter.column) keyFilter.onClear();
     if (onFiltersChange) {
       const rest = { ...filters };
       delete rest[key];
@@ -1415,6 +1449,7 @@ export function DataTable<T>({
   // Clear every column filter at once (drives the mobile filter sheet's
   // "clear all"). Only touches keys the table actually exposes as filters.
   const clearAllFilters = () => {
+    keyFilter?.onClear();
     const keys = columns
       .filter((col) => (!serverRows || onFiltersChange ? resolveFilter(col) : null))
       .map((col) => col.key);
@@ -1433,13 +1468,19 @@ export function DataTable<T>({
     setPage(0);
   };
 
+  // The set's column and words, for its panel in the header and the phone's sheet (0.59).
+  const keySet = keyFilter
+    ? { column: keyFilter.column, label: keyFilter.label ?? labels.keyFilter(keyFilter.keys.length) }
+    : undefined;
+
   // The result count only exists AFTER the table has re-filtered, so the sentence is
   // spoken from the render that produced the new number rather than from the handler
   // that changed the filter. Keyed on a serialised copy of the filter state, for two
   // reasons: a controlled `filters` prop arrives with a fresh identity on every
   // parent render, and a change the OWNER makes (a saved view applied, a filter chip
   // dismissed outside the table) moves the same rows and deserves the same sentence.
-  const filterKey = useMemo(() => JSON.stringify(filters), [filters]);
+  // The set (0.59) is a filter too: clearing it says the count.
+  const filterKey = useMemo(() => JSON.stringify([filters, keySetSig]), [filters, keySetSig]);
   // Seeded with the mount value: a live region that speaks on first paint talks over
   // the page the user has just opened, and every table on that page does it at once.
   const announcedFilterKey = useRef(filterKey);
@@ -1881,10 +1922,10 @@ export function DataTable<T>({
   const tableRef = useRef<HTMLTableElement | null>(null);
   // A level's declared groups with no rows (0.59, keksdose live #504; `DataTableGroupBy.keys`):
   // only where the table knows they ARE empty — it holds every row and nothing narrows them
-  // (a filter), and never under `virtualize`. Placed over ALL the rows, so a page
+  // (a filter, the set), and never under `virtualize`. Placed over ALL the rows, so a page
   // draws the ones that fall on it (`emptyGroupsIn`) and a group on another page is no
   // empty one here.
-  const narrowed = columns.some((c) => isFilterActive(filters[c.key]) && !!resolveFilter(c));
+  const narrowed = !!keyFilter || columns.some((c) => isFilterActive(filters[c.key]) && !!resolveFilter(c));
   const declaresEmpty = !isServer && !loadMore?.hasMore && !narrowed;
   const emptyGroupsOf = (level: DataTableGroupBy<T> | null | undefined, from: number, to: number) =>
     declaresEmpty && level?.keys
@@ -2115,7 +2156,7 @@ export function DataTable<T>({
           {/* Mobile filter access (feedback #299): the per-column filter popovers
             live in the desktop header, which the card list doesn't render — so
             expose the same filters through a bottom sheet here. */}
-          {(!serverRows || onFiltersChange) && (
+          {(!serverRows || onFiltersChange || keySet) && (
             <MobileFilters
               columns={columns}
               filters={filters}
@@ -2125,6 +2166,7 @@ export function DataTable<T>({
               onSetFilter={setFilterValue}
               onClearFilter={clearFilter}
               onClearAll={clearAllFilters}
+              keySet={keySet}
               labels={labels}
               locale={locale}
             />
@@ -2418,6 +2460,7 @@ export function DataTable<T>({
                   ariaRowIndex={rowWindow ? 1 : undefined}
                   lockedWidths={rowWindow?.colWidths}
                   selectionLockKey={VIRTUAL_SELECT_COL}
+                  keySet={keySet}
                 />
                 {(() => {
                   const bodyClass = cn(isLoading && slice.length > 0 && "opacity-60 transition-opacity");

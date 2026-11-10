@@ -385,6 +385,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       rowCount: (total) => n(total),
       columnsCount: (visible, total) => `列（${n(visible)}/${n(total)}）`,
       filterColumn: (column, active) => (active ? `筛选${column}（已启用）` : `筛选${column}`),
+      keyFilter: (count) => `仅显示这 ${n(count)} 行`,
       empty: "暂无条目",
       actions: "操作",
       edit: "编辑",

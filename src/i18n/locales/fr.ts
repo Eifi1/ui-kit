@@ -406,6 +406,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       rowCount: (total) => n(total),
       columnsCount: (visible, total) => `Colonnes (${n(visible)}/${n(total)})`,
       filterColumn: (column, active) => (active ? `Filtrer ${column} (actif)` : `Filtrer ${column}`),
+      keyFilter: (count) => (count === 1 ? "Seulement cette ligne" : `Seulement ces ${n(count)} lignes`),
       empty: "Aucune entrée",
       actions: "Actions",
       edit: "Modifier",

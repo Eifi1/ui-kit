@@ -78,6 +78,7 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
       pageRange: (from, to, total) => `${n(from)}–${n(to)} / ${n(total)}`,
       rowCount: (total) => n(total),
       columnsCount: (visible, total) => `Columns (${n(visible)}/${n(total)})`,
+      keyFilter: (count) => (count === 1 ? "Only this row" : `Only these ${n(count)} rows`),
     },
     calendarHeatmap: {
       ...d.calendarHeatmap,

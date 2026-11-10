@@ -88,6 +88,8 @@ describe("uiKitLabelsEn (@eifi1/ui-kit/i18n/en)", () => {
       "combobox.selectedCount",
       "dataTable.columnsCount",
       "dataTable.filterResults",
+      // 0.59: a `keyFilter` set's panel (keksdose dev #678).
+      "dataTable.keyFilter",
       "dataTable.pageChanged",
       "dataTable.pageRange",
       "dataTable.rowCount",

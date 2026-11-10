@@ -394,6 +394,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       rowCount: (total) => n(total),
       columnsCount: (visible, total) => `Oszlopok (${n(visible)}/${n(total)})`,
       filterColumn: (column, active) => (active ? `${column} szűrése (aktív)` : `${column} szűrése`),
+      keyFilter: (count) => (count === 1 ? "Csak ez a sor" : `Csak ez a ${n(count)} sor`),
       empty: "Nincsenek bejegyzések",
       actions: "Műveletek",
       edit: "Szerkesztés",

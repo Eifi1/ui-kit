@@ -37,6 +37,37 @@ interface FilterPopoverProps<T> {
 }
 
 /**
+ * A `keyFilter` set's panel (0.59, keksdose dev #678), in place of its column's fields — in
+ * the header's popover and in the phone's filter sheet: what the set is ("Only these 3
+ * reports") and its Clear, the same "Clear filter" every column's panel ends with. The
+ * set's keys are not listed: the rows on screen are them. Internal: drawn by DataTable.
+ */
+export function KeySetPanel({
+  label,
+  onClear,
+  labels,
+}: {
+  label: string;
+  onClear: () => void;
+  labels: DataTableLabels;
+}) {
+  return (
+    <div className="space-y-2" data-key-filter="">
+      <p className="text-sm text-secondary">{label}</p>
+      <div className="flex justify-end pt-1">
+        <button
+          type="button"
+          onClick={onClear}
+          className="flex items-center gap-1 rounded border border-subtle bg-surface px-2 py-1 text-xs text-secondary hover:bg-hover"
+        >
+          <X className="size-3" /> {labels.clearFilter}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/**
  * The contents of a column's filter Popover. Renders the right control set for
  * the column's filter type — text search, select checklist, date range (presets
  * + {@link MiniCalendar} + from/to inputs), or numeric min/max with an abs

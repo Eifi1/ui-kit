@@ -412,6 +412,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       rowCount: (total) => n(total),
       columnsCount: (visible, total) => `Spalten (${n(visible)}/${n(total)})`,
       filterColumn: (column, active) => (active ? `${column} filtern (aktiv)` : `${column} filtern`),
+      keyFilter: (count) => (count === 1 ? "Nur diese Zeile" : `Nur diese ${n(count)} Zeilen`),
       empty: "Keine Einträge",
       actions: "Aktionen",
       edit: "Bearbeiten",
