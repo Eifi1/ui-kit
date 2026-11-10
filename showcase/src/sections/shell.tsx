@@ -416,10 +416,11 @@ function ThemeAndPalette() {
         read <code className="font-mono">preference</code> only to show the choice back.
       </Note>
       <Note>
-        <code className="font-mono">PaletteMenu</code> indexes each preset by <code className="font-mono">mode</code> to
-        draw its swatches, so the menu's own colours change when you flip the theme.{" "}
-        <code className="font-mono">PALETTES</code> is {PALETTES.length} presets, and passing it is a choice about which
-        presets an app offers: a list of its own works the same.
+        <code className="font-mono">PaletteMenu</code> is deprecated and leaves the kit in the next minor: no app offers
+        a palette choice, and an app paints its one palette with <code className="font-mono">createFixedPalette</code>{" "}
+        (Foundations → Tokens). The top bar&apos;s preset switcher is the showcase&apos;s own. The menu indexes each
+        preset by <code className="font-mono">mode</code> to draw its swatches, so its colours change when you flip the
+        theme; <code className="font-mono">PALETTES</code> is {PALETTES.length} presets.
       </Note>
     </div>
   );

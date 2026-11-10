@@ -509,7 +509,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "Every value in the active TokenSet, live. Flip the theme or the palette in the top bar and watch this page move — anything that does not move is hardcoded.",
         icon: Palette,
-        components: ["TokenSet", "PALETTES", "applyPersistedTheme", "applyPersistedPalette"],
+        components: ["TokenSet", "PALETTES", "applyPersistedTheme", "createFixedPalette"],
         Body: Foundations,
       },
       {

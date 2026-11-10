@@ -8,6 +8,7 @@ import {
   Contrast,
   ListTree,
   MonitorSmartphone,
+  Palette,
   PanelLeft,
   PanelRight,
   PanelRightOpen,
@@ -27,7 +28,6 @@ import {
   PALETTES,
   PageContents,
   PageContentsLayout,
-  PaletteMenu,
   TEXT_SIZES,
   ThemeToggle,
   Tooltip,
@@ -193,8 +193,8 @@ function AppearanceMenu() {
     { kind: "heading", key: "palette", label: t.chrome.palette },
     ...PALETTES.map((p) => ({
       key: `palette-${p.id}`,
-      // The preset's brand colour, ringed the way PaletteMenu rings its swatches: a
-      // DATA colour, so not a token.
+      // The preset's brand colour, ringed as the wide top bar's preset switcher rings
+      // it: a DATA colour, so not a token.
       icon: (
         <span
           aria-hidden
@@ -256,13 +256,27 @@ function TopBarAppearance() {
   if (phone && large) return <AppearanceMenu />;
   return (
     <>
-      <PaletteMenu
-        palettes={PALETTES}
-        activeId={paletteId}
-        mode={mode}
-        onSelect={setPaletteId}
+      {/* The preset switcher is the showcase's own (stores.ts): no app offers a palette
+          choice. The trigger carries a DATA colour, `--chart-1`, which follows the preset. */}
+      <OptionSwitcherMenu<string>
+        icon={<Palette className="size-5 text-[var(--chart-1)]" />}
         aria-label={t.chrome.palette}
         heading={t.chrome.palette}
+        options={PALETTES.map((p) => ({
+          value: p.id,
+          label: (
+            <span className="flex items-center gap-2">
+              <span
+                aria-hidden
+                className="size-3.5 shrink-0 rounded-sm ring-1 ring-inset ring-black/10 dark:ring-white/10"
+                style={{ background: p[mode].brand }}
+              />
+              {p.name}
+            </span>
+          ),
+        }))}
+        value={paletteId}
+        onSelect={setPaletteId}
       />
       <AppearanceSwitches />
       {/* Driven by the locale registry, so adding a dictionary to `LOCALES` adds

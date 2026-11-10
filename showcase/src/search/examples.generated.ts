@@ -26,7 +26,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Animation utilities",
     "PALETTES",
     "Every preset, scoped to one card",
-    "createThemeStore · createPaletteStore",
+    "createThemeStore · createFixedPalette",
   ],
   "colour-roles": [
     "Which tone for which status",

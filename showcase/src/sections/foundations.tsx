@@ -13,9 +13,9 @@ import {
   PALETTE_HEX,
   PAUL_TOL_PRESET,
   Select,
-  applyPersistedPalette,
   applyPersistedTheme,
   applyTokenSet,
+  createFixedPalette,
   chartEdge,
   lerpHex,
   paletteFor,
@@ -24,7 +24,18 @@ import {
 } from "@eifi1/ui-kit";
 import type { HeatStops, PalettePreset, TokenSet } from "@eifi1/ui-kit";
 import { ConstList, Example, Note, OutTable, Row, Swatch } from "../lib/section";
-import { PALETTE_KEY, THEME_KEY, useActiveTokenSet, useChartHex, useHeatStops, usePalette, useTheme } from "../stores";
+import { THEME_KEY, useActiveTokenSet, usePalette, useTheme } from "../stores";
+
+/**
+ * An app's palette, as each app builds it: one preset, nothing kept. Bound to the
+ * showcase's theme store; creating it and reading its hooks paints nothing, so the top
+ * bar's preset switcher (the showcase's own) still owns <html>.
+ */
+const {
+  useActiveTokenSet: useAppTokenSet,
+  useChartHex: useAppChartHex,
+  useHeatStops: useAppHeatStops,
+} = createFixedPalette(useTheme);
 
 /**
  * Foundations & tokens.
@@ -398,7 +409,10 @@ export function Foundations() {
         classes are never applied.
       </Note>
 
-      <Example label="PALETTES" hint={`the ${PALETTES.length} presets an app offers, in menu order`}>
+      <Example
+        label="PALETTES"
+        hint={`the ${PALETTES.length} presets the kit ships, the default first — the top bar's switcher, the showcase's own, offers them all`}
+      >
         <div className="space-y-4">
           {PALETTES.map((p) => (
             <div key={p.id} className="space-y-1.5">
@@ -438,8 +452,8 @@ export function Foundations() {
       </Example>
 
       <Example
-        label="createThemeStore · createPaletteStore"
-        hint="the store API this page runs on, driven from here — the top bar follows"
+        label="createThemeStore · createFixedPalette"
+        hint="an app's theme store and its one palette — the theme is this page's own, driven from here"
       >
         <StoreApi />
       </Example>
@@ -575,8 +589,9 @@ const STORE_BUTTON =
   "rounded-md border border-subtle bg-surface-2 px-2 py-1 font-mono text-xs text-primary hover:border-brand";
 
 /**
- * The hooks the two factories return, wired to the showcase's real stores
- * (`../stores`). Every button changes the actual page.
+ * The theme store's hooks, wired to the showcase's real store (`../stores`), and an
+ * app's fixed palette bound to it. Every theme button changes the actual page; the
+ * palette's hooks answer for the theme in force and ignore the top bar's preset.
  */
 function StoreApi() {
   const mode = useTheme((s) => s.mode);
@@ -584,24 +599,23 @@ function StoreApi() {
   const setMode = useTheme((s) => s.setMode);
   const setPreference = useTheme((s) => s.setPreference);
   const toggle = useTheme((s) => s.toggle);
-  const id = usePalette((s) => s.id);
-  const setId = usePalette((s) => s.setId);
-  const chartHex = useChartHex();
-  const heat = useHeatStops();
+  const switcherId = usePalette((s) => s.id);
+  const appTokens = useAppTokenSet();
+  const chartHex = useAppChartHex();
+  const heat = useAppHeatStops();
   const [boot, setBoot] = useState<string | null>(null);
-  const next = PALETTES[(PALETTES.findIndex((p) => p.id === id) + 1) % PALETTES.length];
 
   return (
     <div className="space-y-3">
       <pre className="overflow-x-auto rounded-md border border-subtle bg-surface-2 p-3 font-mono text-xs text-secondary">
         {`// stores.ts — one key per app, so two apps on one origin do not share a theme
-export const { useTheme, useApplyTheme } = createThemeStore("${THEME_KEY}");
-export const { usePalette, useApplyPalette, useActiveTokenSet, useChartHex, useHeatStops } =
-  createPaletteStore("${PALETTE_KEY}", useTheme);
+export const { useTheme, useApplyTheme } = createThemeStore("myapp-theme");
+// One palette, nothing kept; the key of the palette choice the app once offered goes once
+export const { applyPalette, useApplyPalette, useActiveTokenSet, useChartHex, useHeatStops } =
+  createFixedPalette(useTheme, { legacyStorageKey: "myapp-palette" });
 
 // main.tsx — before createRoot, so the first paint is already right
-const mode = applyPersistedTheme("${THEME_KEY}");
-applyPersistedPalette("${PALETTE_KEY}", mode);`}
+applyPalette(applyPersistedTheme("myapp-theme"));`}
       </pre>
       <div className="flex flex-wrap gap-2">
         <button type="button" className={STORE_BUTTON} onClick={() => setMode("light")}>
@@ -616,39 +630,44 @@ applyPersistedPalette("${PALETTE_KEY}", mode);`}
         <button type="button" className={STORE_BUTTON} onClick={toggle}>
           toggle()
         </button>
-        <button type="button" className={STORE_BUTTON} onClick={() => setId(next.id)}>
-          setId(&quot;{next.id}&quot;)
-        </button>
         <button
           type="button"
           className={STORE_BUTTON}
           onClick={() => {
-            // Harmless to call again: it only re-reads storage and re-applies.
-            const booted = applyPersistedTheme(THEME_KEY);
-            applyPersistedPalette(PALETTE_KEY, booted);
-            setBoot(booted);
+            // Harmless to call again: it only re-reads storage and re-applies the class.
+            setBoot(applyPersistedTheme(THEME_KEY));
           }}
         >
-          applyPersistedTheme() + applyPersistedPalette()
+          applyPersistedTheme()
         </button>
       </div>
       <OutTable
         rows={[
           ["useTheme(s => s.preference)", preference],
           ["useTheme(s => s.mode)", mode],
-          ["usePalette(s => s.id)", id],
+          ["useActiveTokenSet().bgPage", <Hex value={appTokens.bgPage} />],
+          ["useChartHex()[0]", <Hex value={chartHex[0]} />],
           ["useChartHex().length", String(chartHex.length)],
           ["useHeatStops().under", <Hex value={heat.under} />],
           ["applyPersistedTheme(key) returned", boot ?? "(not called on this page yet)"],
+          ["the top bar's preset (the showcase's own)", switcherId],
         ]}
       />
       <Note>
         <code className="font-mono">setMode</code> and <code className="font-mono">toggle</code> both store an explicit
         preference, which is why neither can hand the user back to &ldquo;system&rdquo; — only{" "}
         <code className="font-mono">setPreference</code> can. <code className="font-mono">useApplyTheme</code> and{" "}
-        <code className="font-mono">useApplyPalette</code> are mounted once, in the app root (
-        <code className="font-mono">showcase.tsx</code> here): they write the class and the tokens onto{" "}
-        <code className="font-mono">&lt;html&gt;</code>.
+        <code className="font-mono">useApplyPalette</code> are mounted once, in the app root: they write the class and
+        the tokens onto <code className="font-mono">&lt;html&gt;</code>.
+      </Note>
+      <Note>
+        <code className="font-mono">createFixedPalette</code> keeps nothing and joins no device reset: there is no
+        choice to put back, and a theme reset re-paints it through the mode. It paints only when the app calls{" "}
+        <code className="font-mono">applyPalette</code> or mounts <code className="font-mono">useApplyPalette</code>, so
+        an app whose tokens come from <code className="font-mono">tokens.css</code> can take just the chart hooks.{" "}
+        <code className="font-mono">legacyStorageKey</code> removes the key of the palette choice the app once kept. The
+        one here never paints, and its values follow the theme, not the top bar&apos;s preset switcher: that switcher is
+        the showcase&apos;s own, for reading the pages under every preset.
       </Note>
     </div>
   );
