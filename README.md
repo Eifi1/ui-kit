@@ -28,8 +28,8 @@ with its own Tailwind config.
 ## Compatibility with server-kit
 
 The backend half, [`eifi1-server-kit`](https://github.com/Eifi1/server-kit), is a separate
-package with its own version and changelog. **ui-kit 0.58 ↔ server-kit 0.22**: this release
-is tested against server-kit 0.22.0's API export (the showcase's Server kit pages and the
+package with its own version and changelog. **ui-kit 0.59 ↔ server-kit 0.23**: this release
+is tested against server-kit 0.23.0's API export (the showcase's Server kit pages and the
 vocabulary test, `showcase/src/__tests__/server-kit-vocabularies.test.ts`).
 
 ## Documentation

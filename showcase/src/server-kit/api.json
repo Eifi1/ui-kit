@@ -1,7 +1,7 @@
 {
   "format": "eifi1-server-kit-api",
   "version": 1,
-  "kit_version": "0.22.0",
+  "kit_version": "0.23.0",
   "modules": [
     {
       "name": "eifi1_server_kit.auth",
@@ -5306,7 +5306,7 @@
           "name": "MailMessage",
           "kind": "class",
           "signature": "@dataclass(frozen=True, slots=True) class MailMessage",
-          "doc": "One mail, ready to send: ``html`` may be ``None`` for a plain-text mail (kastlan).\n\n``headers`` are extra mail headers — a notification mail's\n:func:`list_unsubscribe_headers` — which :class:`ResendClient` sends as Resend's\n``headers`` object and an SMTP transport sets on its message. A :class:`ValueError` for\na name that is no header name, or a line break in a value.\n\n``idempotency_key`` is the send's own ``Idempotency-Key`` — a request header to the\nprovider, not a mail header — for a mail a job may send again (notifications §9.4,\n:meth:`~eifi1_server_kit.notifications.MailMarker.idempotency_key`)::\n\n    message = replace(message, idempotency_key=marker.idempotency_key(today))\n\n:class:`ResendClient` sends it on both tries; ``None`` (account mail) is a random key\nper send. :class:`ConsoleMailer` ignores it. A :class:`ValueError` unless it is 1–256\ncharacters of printable ASCII with no space: Resend refuses a longer one, and it is\none header line.",
+          "doc": "One mail, ready to send: ``html`` may be ``None`` for a plain-text mail (kastlan).\n\n``headers`` are extra mail headers — a notification mail's\n:func:`list_unsubscribe_headers` — which :class:`ResendClient` sends as Resend's\n``headers`` object and an SMTP transport sets on its message. A :class:`ValueError` for\na name that is no header name, or a line break in a value.\n\n``idempotency_key`` is the send's own ``Idempotency-Key`` — a request header to the\nprovider, not a mail header — for a mail a job may send again (notifications §9.4,\n:meth:`~eifi1_server_kit.notifications.MailMarker.idempotency_key`)::\n\n    key = marker.idempotency_key(today, app_base_url=settings.app_base_url)\n    message = replace(message, idempotency_key=key)\n\n:class:`ResendClient` sends it on both tries; ``None`` (account mail) is a random key\nper send. :class:`ConsoleMailer` ignores it. A :class:`ValueError` unless it is 1–256\ncharacters of printable ASCII with no space: Resend refuses a longer one, and it is\none header line.",
           "fields": [
             {
               "name": "subject",
@@ -5497,7 +5497,7 @@
           "name": "render_message",
           "kind": "function",
           "signature": "render_message(*, subject: str, lang: str, intro: str, body: str, cta: str, link: str, outro: str, unsubscribe: MailUnsubscribe | None = None) -> tuple[str, str]",
-          "doc": "``(html, text)`` for a transactional mail: greeting, one paragraph, one link, footer\n(keksdose ``infrastructure/email.py:50``).\n\nThe one place a mail's layout is decided; the callers own the words. ``html`` is a\nWHOLE document — ``<!doctype html><html lang=\"{lang}\"><head><meta charset=\"utf-8\">\n<title>{subject}</title></head><body>…</body></html>`` — because a bare fragment is one\nmore mark against a mail with a spam filter (Kurvenschmiede's Outlook finding).\n``lang`` is the language the words are in (``de-CH``, ``en``; :func:`pick_entry`'s\nkey), ``subject`` the mail's subject.\n\n**Escaped here**, not by each caller: ``intro`` is built from a name, and a name may\nhold markup; the subject may hold one too. The plain-text half is not markup and stays\nexactly as written.\n\n``link`` must be ``http(s)``; it is server-built from the app's base URL and a token\nthe server minted. Unlike keksdose it is escaped inside the ``href`` too: ``&amp;`` in\nan attribute IS ``&`` to every HTML parser, so a query string survives, and a link can\nno longer close the attribute.\n\nThe plain text's link line is ``{cta}: {link}``, typeset for ``lang``: French takes a\nno-break space before the colon (``Choisir : https://…``), every other language\nnone.\n\n``unsubscribe`` (a notification mail, :class:`MailUnsubscribe`) adds a last line after\nthe footer, linking its ``page``: escaped and typeset like the action line —\n``{label}: {page}`` in the text half."
+          "doc": "``(html, text)`` for a transactional mail: greeting, one paragraph, one link, footer\n(keksdose ``infrastructure/email.py:50``).\n\nThe one place a mail's layout is decided; the callers own the words. ``html`` is a\nWHOLE document — ``<!doctype html><html lang=\"{lang}\"><head><meta charset=\"utf-8\">\n<title>{subject}</title></head><body>…</body></html>`` — because a bare fragment is one\nmore mark against a mail with a spam filter (Kurvenschmiede's Outlook finding).\n``lang`` is the language the words are in (``de-CH``, ``en``; :func:`pick_entry`'s\nkey), ``subject`` the mail's subject.\n\n**Escaped here**, not by each caller: ``intro`` is built from a name, and a name may\nhold markup; the subject may hold one too. The plain-text half is not markup and stays\nexactly as written.\n\n``link`` must be ``http(s)``; it is server-built from the app's base URL and a token\nthe server minted. Unlike keksdose it is escaped inside the ``href`` too: ``&amp;`` in\nan attribute IS ``&`` to every HTML parser, so a query string survives, and a link can\nno longer close the attribute.\n\nThe plain text's link line is ``{cta}: {link}``, typeset for ``lang``: French takes a\nno-break space before the colon (``Choisir : https://…``), Chinese the full-width\ncolon with no space (``阅读新条款：https://…``, 0.23), every other language ``: ``.\n\n``unsubscribe`` (a notification mail, :class:`MailUnsubscribe`) adds a last line after\nthe footer, linking its ``page``: escaped and typeset like the action line —\n``{label}: {page}`` in the text half."
         },
         {
           "name": "support_address",
@@ -6235,7 +6235,7 @@
           "name": "MailMarker",
           "kind": "class",
           "signature": "@dataclass(frozen=True, slots=True) class MailMarker",
-          "doc": "One recipient's mail for one event, sent (decision 6): the row the app writes, and\nthe source of the send's ``Idempotency-Key`` (§9.4)::\n\n    marker = MailMarker(user.id, \"invoices_overdue\", mail_event(company.id, day))\n    if not mail_due(day, today, sent=marker in markers):\n        continue\n    message = replace(message, idempotency_key=marker.idempotency_key(today))\n    if await mailer.send(user.email, message, kind=marker.type_id):\n        ...  # INSERT (user_id, type_id, event, sent_at) ON CONFLICT DO NOTHING; commit\n\nA :class:`ValueError` for a ``type_id`` outside\n:data:`~eifi1_server_kit.notifications.TYPE_ID_PATTERN`, an ``event`` outside\n:data:`MAIL_EVENT_PATTERN`, or a string ``user_id`` with a colon, a space or nothing\nin it (a number or a UUID is right).",
+          "doc": "One recipient's mail for one event, sent (decision 6): the row the app writes, and\nthe source of the send's ``Idempotency-Key`` (§9.4)::\n\n    marker = MailMarker(user.id, \"invoices_overdue\", mail_event(company.id, day))\n    if not mail_due(day, today, sent=marker in markers):\n        continue\n    key = marker.idempotency_key(today, app_base_url=settings.app_base_url)\n    message = replace(message, idempotency_key=key)\n    if await mailer.send(user.email, message, kind=marker.type_id):\n        ...  # INSERT (user_id, type_id, event, sent_at) ON CONFLICT DO NOTHING; commit\n\nA :class:`ValueError` for a ``type_id`` outside\n:data:`~eifi1_server_kit.notifications.TYPE_ID_PATTERN`, an ``event`` outside\n:data:`MAIL_EVENT_PATTERN`, or a string ``user_id`` with a colon, a space or nothing\nin it (a number or a UUID is right).",
           "fields": [
             {
               "name": "user_id",
@@ -6259,8 +6259,8 @@
           "methods": [
             {
               "name": "idempotency_key",
-              "signature": "idempotency_key(day: date) -> str",
-              "doc": "``<type>:<event>:<user_id>:<YYYY-MM-DD>`` for the try on ``day`` (decision 7)::\n\n    MailMarker(17, \"invoices_overdue\", \"42:2026-10-13\").idempotency_key(date(2026, 10, 14))\n    # \"invoices_overdue:42:2026-10-13:17:2026-10-14\"\n\nTwo runs on one day send one mail: Resend answers the second from the first (it\nkeeps a key 24 hours). The next day's try is a new key, so a count that changed in\nbetween is no conflict at Resend. At most 181 characters, within Resend's 256. A\n:class:`TypeError` for a ``datetime``."
+              "signature": "idempotency_key(day: date, *, app_base_url: str | None = None) -> str",
+              "doc": "``<type>:<host>:<event>:<user_id>:<YYYY-MM-DD>`` for the try on ``day`` (decision\n7), ``<host>`` that of ``app_base_url``, the app's own base URL::\n\n    marker = MailMarker(17, \"invoices_overdue\", \"42:2026-10-13\")\n    marker.idempotency_key(date(2026, 10, 14), app_base_url=\"https://kastlan.example\")\n    # \"invoices_overdue:kastlan.example:42:2026-10-13:17:2026-10-14\"\n\nTwo runs on one day send one mail: Resend answers the second from the first (it\nkeeps a key 24 hours). The next day's try is a new key, so a count that changed in\nbetween is no conflict at Resend.\n\n**The host keeps the apps apart** (0.23): the apps send through one Resend team, and\na key is the team's, so two apps' mails of one type, event, user id and day would be\none key, and Resend would refuse the second app's for 24 hours (another body: a\n``409``). Pass the base URL the app builds its links from, the one\n:func:`~eifi1_server_kit.legal.send_legal_change_mails` takes. Only its host counts,\nin lower case, so a port, a path or a trailing slash never makes a rerun's key a new\none. Without it the key is 0.22's, ``<type>:<event>:<user_id>:<YYYY-MM-DD>``.\n\nAt most 246 characters, within Resend's 256. A :class:`TypeError` for a\n``datetime``; a :class:`ValueError` for an ``app_base_url`` that is not http(s) with\nan ASCII host of at most 64 characters."
             }
           ]
         },
@@ -6924,11 +6924,11 @@
           "name": "QueueService",
           "kind": "class",
           "signature": "class QueueService",
-          "doc": "The queue's flows over the app's :class:`NotificationQueue` and :class:`FlushPort`::\n\nservice = QueueService(queue, port)\nawait service.hold_push(user.id, \"scan_done\", event, payload, not_before=end, now=now)\nawait notifications_tick(service, now)  # every 15 minutes",
+          "doc": "The queue's flows over the app's :class:`NotificationQueue` and :class:`FlushPort`::\n\nservice = QueueService(queue, port, app_base_url=settings.app_base_url)\nawait service.hold_push(user.id, \"scan_done\", event, payload, not_before=end, now=now)\nawait notifications_tick(service, now)  # every 15 minutes\n\n``app_base_url`` (0.23) puts the app's host into a bundled mail's ``Idempotency-Key``,\n``queue:<host>:<first row id>:<count>``: the base URL the app builds its links from, as\n:meth:`~.retry.MailMarker.idempotency_key` takes it, the host only. Without it the key\nis 0.22's, ``queue:<first row id>:<count>``, which another app's queue on the same\nResend team sends too. A :class:`ValueError` for a ``limit`` below 1 or an\n``app_base_url`` that is not http(s) with an ASCII host, when the service is built.",
           "methods": [
             {
               "name": "__init__",
-              "signature": "__init__(queue: NotificationQueue, port: FlushPort, *, limit: int = QUEUE_FLUSH_LIMIT) -> None",
+              "signature": "__init__(queue: NotificationQueue, port: FlushPort, *, limit: int = QUEUE_FLUSH_LIMIT, app_base_url: str | None = None) -> None",
               "doc": ""
             },
             {
