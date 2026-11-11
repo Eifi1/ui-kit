@@ -7,7 +7,8 @@ ui-kit 0.60 ships with **server-kit 0.24**. So far:
 
 - the feedback dialog's page address keeps only the query params the app allows (keksdose's
   legal audit of 2026-11-11, G-10);
-- server-kit: an erased crash report's body loses the person's diagnostics (same audit, C-7).
+- server-kit: an erased crash report's body loses the person's diagnostics (same audit, C-7);
+- `SignInForm`'s `afterPasswordContent`, the place for the shared-computer choice (kastlan #31).
 
 **From 0.59, nothing else first.**
 
@@ -45,6 +46,21 @@ function.
 - **Tests:** an app test that expects `context.url` to equal `window.location.href` now gets the
   reduced address. keksdose: drop the policy's interim sentence ("die vollständige Adresse der
   Seite samt Such- und Filterangaben") with the bump.
+
+## The shared-computer choice goes under the password (kastlan #31)
+
+`SignInForm` had one place for app content on the credentials step, `credentialsContent`, at
+the top. Apps put `SharedComputerChoice` there, so the choice and its hint were the first thing
+on the page, above the email field. kastlan's UX review asked for email, password, the choice,
+"Sign in", then "Sign in with a passkey".
+
+- **New prop `afterPasswordContent`:** rendered under the password field. A failed attempt's
+  message comes after it, right above "Sign in". `credentialsContent` is unchanged.
+- **Adopt:** kastlan, the only app that shows the choice, moves `<SharedComputerChoice
+  storage="local" />` from `credentialsContent` to `afterPasswordContent`
+  (`frontend/src/features/auth/pages/login-page.tsx:62`). keksdose and Kurvenschmiede: nothing.
+- **The hint's length:** the kit's hint is two sentences. An app that wants one line passes its
+  own words through `labels={{ hint: … }}`. The kit's text is unchanged.
 
 ## server-kit 0.24
 
