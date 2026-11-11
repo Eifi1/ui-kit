@@ -17,7 +17,9 @@ address) match the code with this bump, so its interim sentence can go.
 **Restart the Vite dev server after the bump** (`vite --force` if a change still does not show).
 
 **Must change:** nothing in the three apps compiles differently: none of them uses a removed
-palette name (searched their sources and tests). Two changes of behaviour need a look:
+palette name or `FeedbackSwipeAction`, which gained `postpone` (an exhaustive `switch` or a
+`Record` over it needs the new id; searched their sources and tests). Changes of behaviour that
+need a look:
 
 - **The feedback dialog's page address stops at the pathname** unless the app passes
   `allowParams`. Each app passes its crash reporter's list (table below).
@@ -31,7 +33,7 @@ palette name (searched their sources and tests). Two changes of behaviour need a
 
 **What `check:api` prints:** `createPaletteStore`, `applyPersistedPalette`, `PaletteStore` and
 `PaletteMenu` removed; `TopBarLabels` without `palette`, and through it `UiKitLabels` and
-`kitLabelStrings`. The three new optional props (`SignInForm`'s `afterPasswordContent`,
+`kitLabelStrings`; `FeedbackSwipeAction` with `postpone`. The three new optional props (`SignInForm`'s `afterPasswordContent`,
 `AppShell`'s `mobileSubNavPlacement`, `useFeedbackSubmit`'s `allowParams`) are additive and
 not listed.
 
