@@ -1538,7 +1538,6 @@ export const GROUPS: ShowcaseGroup[] = [
           "PageContents",
           "PageContentsLayout",
           "ThemeToggle",
-          "PaletteMenu",
           "LanguageMenu",
           "OptionSwitcherMenu",
           "TopBarActionMenu",

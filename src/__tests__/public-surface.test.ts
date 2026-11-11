@@ -377,7 +377,10 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // picture that zooms (pinch, wheel, keys, double-tap) where it is.
   // 0.59 (+4, keksdose 846423e6): `focusIsLost`, `focusFirst` and `returnFocus`, the kit's
   // focus rules (lib/focus-left), and `useRowLeaves`, the focus when a row leaves its list.
-  ["@eifi1/ui-kit", barrel, 1016],
+  // 0.60 (−3, breaking): what 0.59 deprecated — `createPaletteStore` and
+  // `applyPersistedPalette` (`createFixedPalette` replaces both), and `PaletteMenu` (none:
+  // no app offers a palette choice). The type `PaletteStore` goes with them.
+  ["@eifi1/ui-kit", barrel, 1013],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -427,7 +430,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.53 (−11, breaking): what 0.52 deprecated — the slice's 10 unread names (API-4) and
   // `RoleSwitcher` (MOD-5).
   // 0.55 (+2): `HeldChangesBanner`, `DEFAULT_HELD_CHANGES_BANNER_LABELS` (§2.6.1, see the barrel).
-  ["@eifi1/ui-kit/shell", shell, 51],
+  // 0.60 (−1, breaking): `PaletteMenu`, deprecated in 0.59 (see the barrel).
+  ["@eifi1/ui-kit/shell", shell, 50],
   // 0.43.0 (+9): the tours page (see the barrel).
   // 0.43.0 (+3): `resetTourProgress`, `doneCount`, `earnedPoints` (build review, see the barrel).
   // 0.44.0 (+1): `completeTour` (§9.2, see the barrel).

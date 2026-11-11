@@ -547,7 +547,6 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     },
     topBar: {
       theme: "Cambiar de tema",
-      palette: "Ajuste de apariencia",
       language: "Idioma",
       languageCurrent: (name) => `Elegir idioma, actual: ${name}`,
       role: (value) => `Rol: ${value}`,

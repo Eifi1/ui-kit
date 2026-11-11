@@ -11,7 +11,7 @@ import {
   resolveContrastMode,
 } from "../contrast";
 import { DEFAULT_PRESET, PALETTES, applyTokenSet, presetById, type TokenSet } from "../palette-presets";
-import { createPaletteStore } from "../palette-store";
+import { createFixedPalette } from "../fixed-palette";
 import { createThemeStore } from "../theme-store";
 
 /**
@@ -135,22 +135,28 @@ describe("the palette and the contrast cooperate", () => {
   });
 
   it("through the stores: useApplyPalette and useApplyContrast in one tree", () => {
+    // The fixed palette since 0.60 (`createPaletteStore` went): its only repaint is the
+    // theme's mode, so a mode change is what has to keep More, as a preset change did.
     const { useTheme } = createThemeStore("test-theme");
-    const { usePalette, useApplyPalette } = createPaletteStore("test-palette", useTheme);
+    const { useApplyPalette } = createFixedPalette(useTheme);
     const { useContrastStore, useApplyContrast } = createContrastStore(KEY);
     stubPrefersMore(false);
+    act(() => useTheme.getState().setPreference("light"));
     renderHook(() => {
       useApplyPalette();
       return useApplyContrast();
     });
-    const mode = useTheme.getState().mode;
-    expect(inline("--text-muted")).toBe(DEFAULT_PRESET[mode].textMuted);
+    expect(inline("--text-muted")).toBe(DEFAULT_PRESET.light.textMuted);
 
     act(() => useContrastStore.getState().setContrast("more"));
-    expect(inline("--text-muted")).toBe(DEFAULT_PRESET[mode].textSecondary);
+    expect(inline("--text-muted")).toBe(DEFAULT_PRESET.light.textSecondary);
 
-    act(() => usePalette.getState().setId("plum"));
-    expect(inline("--text-muted")).toBe(presetById("plum")[mode].textSecondary);
+    expect(DEFAULT_PRESET.dark.textSecondary).not.toBe(DEFAULT_PRESET.light.textSecondary);
+    act(() => useTheme.getState().setPreference("dark"));
+    expect(inline("--text-muted")).toBe(DEFAULT_PRESET.dark.textSecondary);
+
+    act(() => useContrastStore.getState().setContrast("standard"));
+    expect(inline("--text-muted")).toBe(DEFAULT_PRESET.dark.textMuted);
   });
 });
 

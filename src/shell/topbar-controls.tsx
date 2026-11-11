@@ -1,7 +1,6 @@
-import { Check, Globe, Moon, Palette, Sun } from "lucide-react";
+import { Check, Globe, Moon, Sun } from "lucide-react";
 import { cn } from "../lib/cn";
 import { HoverMenu } from "../components/hover-menu";
-import type { PalettePreset } from "../theme/palette-presets";
 import type { ThemeMode } from "../theme/theme-store";
 import { Tooltip } from "../components/tooltip";
 import { DEFAULT_TOP_BAR_LABELS, useKitLabels } from "../i18n/kit-labels";
@@ -78,91 +77,6 @@ export function ThemeToggle({
   );
 }
 
-/** Appearance-preset switcher: a hover menu of palette presets with per-theme
- *  colour swatches. Controlled — the app owns the active id and applies it.
- *
- *  @deprecated 0.59 — none: no app offers a palette choice (`createFixedPalette` paints
- *  the one palette), and `OptionSwitcherMenu` switches any other value; removed in 0.60 */
-export function PaletteMenu({
-  palettes,
-  activeId,
-  mode,
-  onSelect,
-  "aria-label": ariaLabel,
-  heading,
-}: {
-  palettes: PalettePreset[];
-  activeId: string;
-  mode: ThemeMode;
-  onSelect: (id: string) => void;
-  /** Default: `topBar.palette` from the {@link UiKitProvider}, else English. */
-  "aria-label"?: string;
-  /** Optional small heading row above the list. */
-  heading?: string;
-}) {
-  const labels = useKitLabels("topBar", DEFAULT_TOP_BAR_LABELS, { palette: ariaLabel });
-  const activeName = palettes.find((p) => p.id === activeId)?.name ?? activeId;
-  return (
-    <HoverMenu
-      aria-label={labels.palette}
-      trigger={({ toggle }) => (
-        <Tooltip label={activeName} portal>
-          <button type="button" onClick={toggle} aria-label={labels.palette} className={TOPBAR_TRIGGER_CLASS}>
-            {/* A DATA colour, not a semantic one: the palette mark is the
-                "colour" control, so it carries a colour, and which hue is
-                arbitrary. `--chart-1` is the violet end of the CVD-safe
-                categorical ramp and flips per theme — a fixed `violet-500` did
-                not, and stayed a cool violet island on a warm page. */}
-            <Palette className="size-5 text-[var(--chart-1)]" />
-          </button>
-        </Tooltip>
-      )}
-    >
-      {(close) => (
-        <ul className="w-60 py-1">
-          {heading && <MenuHeading>{heading}</MenuHeading>}
-          {palettes.map((p) => {
-            const ts = p[mode];
-            const swatches = [ts.bgPage, ts.brand, ts.moneyIncome, ts.moneyExpense, ts.moneyNet];
-            return (
-              <li key={p.id}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    onSelect(p.id);
-                    close();
-                  }}
-                  className={TOPBAR_MENU_ITEM_CLASS}
-                >
-                  <span className="flex min-w-0 items-center gap-2">
-                    <span className="flex shrink-0 gap-0.5">
-                      {/* Deliberately a neutral at 10% and not a token: this hairline
-                          sits on an ARBITRARY preset colour, so it has to read against
-                          whatever that preset paints, which no themed border does. */}
-                      {swatches.map((c, i) => (
-                        <span
-                          key={i}
-                          className="size-3.5 rounded-sm ring-1 ring-inset ring-black/10 dark:ring-white/10"
-                          style={{ background: c }}
-                        />
-                      ))}
-                    </span>
-                    <span className="flex min-w-0 flex-col text-start">
-                      <span className="truncate">{p.name}</span>
-                      <span className="truncate text-caption text-placeholder">{p.blurb}</span>
-                    </span>
-                  </span>
-                  {activeId === p.id && <Check className="size-4 shrink-0 text-secondary" />}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </HoverMenu>
-  );
-}
-
 export interface LanguageOption {
   code: string;
   label: string;
@@ -204,8 +118,8 @@ export function LanguageMenu({
    *  the trigger `topBar.languageCurrent(<the active label>)`, from the
    *  {@link UiKitProvider}, else English. */
   "aria-label"?: string;
-  /** Optional small heading row above the list — as on `TopBarActionMenu`,
-   *  `OptionSwitcherMenu` and `PaletteMenu`. */
+  /** Optional small heading row above the list — as on `TopBarActionMenu` and
+   *  `OptionSwitcherMenu`. */
   heading?: string;
   /** What the trigger shows: `"flag+code"` (default), `"code"` or `"flag"`. */
   trigger?: LanguageMenuTrigger;

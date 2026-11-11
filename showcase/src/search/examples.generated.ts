@@ -727,7 +727,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
   "shell": [
     "PageContents · PageContentsLayout · useScrollSpy",
     "TopBar",
-    "ThemeToggle and PaletteMenu",
+    "ThemeToggle",
     "LanguageMenu",
     "OptionSwitcherMenu",
     "TopBarActionMenu",

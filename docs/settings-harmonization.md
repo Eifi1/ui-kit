@@ -532,7 +532,7 @@ card's own: keksdose's gestures ("Reset to defaults", "Restore the shipped defau
 | What | Key | Where |
 |---|---|---|
 | theme | the app's | `createThemeStore`, `src/theme/theme-store.ts:86-101`; pre-paint `:65` |
-| palette | the app's, until each app drops it (below) | `createPaletteStore`, `src/theme/palette-store.ts`, deprecated in 0.59; its replacement `createFixedPalette` (`src/theme/fixed-palette.ts`) stores nothing |
+| palette | nothing since 0.59; the app's old key is removed (below) | `createFixedPalette`, `src/theme/fixed-palette.ts` (`legacyStorageKey`); `createPaletteStore`, which kept a choice under the app's key, was removed in 0.60 |
 | text size, contrast (this device's choice) | the app's | `src/theme/text-size.ts:246-255`, `src/theme/contrast.ts:179-188` |
 | table views (sort, filters, page size, widths, hidden columns) | `tableStorageKeyPrefix` (provider) or `hbui-table:`, then the table's `storageKey` | `src/components/use-table-state.ts:29`, `:370-374` |
 | the sidebar folded | `collapseStorageKey` or `appLayout.sidebarCollapsed` | `src/shell/app-shell.tsx:368-369`, `:395` |
@@ -589,7 +589,7 @@ The language picked on a device is under the app's own key: `useAccountLanguage`
   - appearance: `kastlan-theme`, `-text-size`, `-contrast`
     (`shared/theme/storage-keys.ts:7-13`). `kastlan-palette` goes with its 0.59 adoption: no
     switcher ships, but a device that used the old one, or ran a device reset (the
-    deprecated store's reset writes the Default), still holds it, so `createFixedPalette`
+    removed store's reset wrote the Default), still holds it, so `createFixedPalette`
     removes it (`legacyStorageKey`); the language, `kastlan-lang`, read when needed
     (`shared/i18n/language-storage.ts:11`, `:20-31`; the old `i18nextLng` moves over once,
     `:14`);
@@ -778,8 +778,6 @@ export function resetDeviceSettings(): string[];
   token set on `<html>`, and an app without a palette layer (KS) would then take the
   contrast store's palette branch, where a theme switch no longer re-writes the stepped
   tokens.
-- `createPaletteStore(key, useTheme)`, deprecated in 0.59: at creation, appearance;
-  `usePalette.getState().setId(DEFAULT_PRESET.id)`, state only for the same reason.
 - `createTextSizeStore(key)`, `createContrastStore(key)`, at creation: appearance;
   `setSize(null)`, `setContrast(null)` (no choice on this device). `useApplyTextSize` and
   `useApplyContrast` re-resolve against the account's value they are given, else Normal
@@ -916,7 +914,8 @@ would have left the blur on while the store said off).
    `registerDeviceSetting`, `deviceSettings`, `resetDeviceSettings` (§11.4), exported from
    the main entry; `storedKeys(prefix, area)` package-private in `src/lib/safe-storage.ts`.
 2. Joins, each with the kind and the `reset` of §11.4: `createThemeStore`,
-   `createPaletteStore` (state only), `createTextSizeStore`, `createContrastStore` at
+   `createPaletteStore` (state only; removed in 0.60, and `createFixedPalette`, which
+   replaced it, joins nothing), `createTextSizeStore`, `createContrastStore` at
    creation; `UiKitProvider` (`src/i18n/kit-labels.tsx`) and `AppShell`
    (`src/shell/app-shell.tsx`) in an effect, left on unmount.
 3. `src/settings/device-reset-setting.tsx`: `DeviceResetSetting`,
@@ -935,13 +934,14 @@ would have left the blur on while the store said off).
      reset; the answer lists the keys reset and removed, prefixes expanded;
    - the kit's parts (`src/theme/__tests__/`, `src/shell/__tests__/app-shell.test.tsx`,
      `src/i18n/`): each joins with its key and kind; a reset puts each value back live
-     (the `.dark` class follows the system, the palette id is Default and, with
-     `useApplyPalette` mounted, its inline tokens are re-written, `data-text-size` and
+     (the `.dark` class follows the system and, with `useApplyPalette` mounted, the
+     fixed palette re-paints for the mode it goes back to, `data-text-size` and
      `data-contrast` re-resolve to the account's value passed in, the sidebar unfolds)
      and each persisted blob then holds the default the pre-paint call reads;
-   - **without a palette layer** (`useApplyPalette` never mounted, as in KS): the palette
-     reset writes nothing inline, `rememberedTokenSet(document.documentElement)` stays
-     undefined, and a theme switch afterwards still re-writes the stepped tokens (KS 3.3);
+   - **without a palette layer** (`useApplyPalette` never mounted, as in KS): creating the
+     palette, reading its chart hooks and the reset write nothing inline,
+     `rememberedTokenSet(document.documentElement)` stays undefined, and a theme switch
+     afterwards still re-writes the stepped tokens (KS 3.3);
    - `UiKitProvider`: its own prefix, an inherited one, the default `hbui-table:`; left on
      unmount; two nested providers with one prefix keep one entry until the outer goes.
      `AppShell`: joins with its key, an embedded shell without a key joins nothing;

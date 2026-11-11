@@ -103,7 +103,6 @@ export const DEFAULT_APP_SHELL_LABELS: AppShellLabels = {
 
 export const DEFAULT_TOP_BAR_LABELS: TopBarLabels = {
   theme: "Toggle theme",
-  palette: "Appearance preset",
   language: "Language",
   languageCurrent: (name) => `Choose language, current: ${name}`,
   role: (value) => `Role: ${value}`,

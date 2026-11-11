@@ -2,20 +2,21 @@ import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { deviceSettings, resetDeviceSettings } from "../../lib/device-settings";
 import { applyPersistedTheme, createThemeStore } from "../theme-store";
-import { applyPersistedPalette, createPaletteStore } from "../palette-store";
 import { createTextSizeStore, readPersistedTextSize } from "../text-size";
 import { createContrastStore, readPersistedContrast } from "../contrast";
-import { DEFAULT_PRESET, presetById } from "../palette-presets";
 
 /**
- * The four appearance stores join the reset of this device's settings on their own
+ * The three appearance stores join the reset of this device's settings on their own
  * (docs/settings-harmonization.md §11.4, §11.6 item 4): each at creation, with its key,
  * as appearance; and a reset puts each value back LIVE, through the store's own setter,
  * leaving the persisted blob the pre-paint call reads next load.
+ *
+ * The palette was the fourth until 0.60 removed `createPaletteStore`. `createFixedPalette`
+ * keeps nothing and joins nothing; fixed-palette.test.tsx holds that, and that a reset
+ * re-paints it through the theme's mode.
  */
 
 const root = () => document.documentElement;
-const inline = (name: string) => root().style.getPropertyValue(name);
 const stored = (key: string) => JSON.parse(localStorage.getItem(key) ?? "null") as unknown;
 
 let n = 0;
@@ -45,19 +46,16 @@ afterEach(() => {
 });
 
 describe("each store joins at creation, with its key, as appearance", () => {
-  it("theme, palette, text size and contrast", () => {
+  it("theme, text size and contrast", () => {
     const themeKey = fresh("theme");
-    const paletteKey = fresh("palette");
     const sizeKey = fresh("size");
     const contrastKey = fresh("contrast");
-    const { useTheme } = createThemeStore(themeKey);
-    createPaletteStore(paletteKey, useTheme);
+    createThemeStore(themeKey);
     createTextSizeStore(sizeKey);
     createContrastStore(contrastKey);
-    const joined = deviceSettings().filter((e) => [themeKey, paletteKey, sizeKey, contrastKey].includes(e.key));
+    const joined = deviceSettings().filter((e) => [themeKey, sizeKey, contrastKey].includes(e.key));
     expect(joined.map((e) => [e.key, e.kind, e.prefix ?? false, typeof e.reset])).toEqual([
       [themeKey, "appearance", false, "function"],
-      [paletteKey, "appearance", false, "function"],
       [sizeKey, "appearance", false, "function"],
       [contrastKey, "appearance", false, "function"],
     ]);
@@ -81,25 +79,6 @@ describe("a reset puts each value back live", () => {
     expect(stored(key)).toEqual({ state: { preference: "system" }, version: 2 });
     root().classList.remove("dark");
     expect(applyPersistedTheme(key)).toBe("dark");
-  });
-
-  it("palette: back to Default, re-written inline where useApplyPalette is mounted", () => {
-    const { useTheme } = createThemeStore(fresh("theme"));
-    const key = fresh("palette");
-    const { usePalette, useApplyPalette } = createPaletteStore(key, useTheme);
-    const other = presetById("ink");
-    expect(other.light.brand).not.toBe(DEFAULT_PRESET.light.brand);
-    act(() => usePalette.getState().setId(other.id));
-    renderHook(() => useApplyPalette());
-    expect(inline("--brand")).toBe(other.light.brand);
-
-    act(() => void resetDeviceSettings());
-    expect(usePalette.getState().id).toBe(DEFAULT_PRESET.id);
-    expect(inline("--brand")).toBe(DEFAULT_PRESET.light.brand);
-    expect(stored(key)).toEqual({ state: { id: DEFAULT_PRESET.id }, version: 1 });
-    root().removeAttribute("style");
-    applyPersistedPalette(key, "light");
-    expect(inline("--brand")).toBe(DEFAULT_PRESET.light.brand);
   });
 
   it("text size: no choice on this device, so the account's size applies again, else Normal", () => {

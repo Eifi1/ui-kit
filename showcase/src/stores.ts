@@ -41,8 +41,8 @@ export const { useTheme, useApplyTheme } = createThemeStore(THEME_KEY);
  * The top bar's preset switcher: the kit's own showcase only. No app offers a palette
  * choice; an app paints its one palette with `createFixedPalette` (the Tokens page). The
  * showcase keeps a choice so every page can be read under each of `PALETTES`, built here
- * from the public parts (`presetById`, `applyTokenSet`, the device registry) rather than
- * on the deprecated `createPaletteStore`.
+ * from the public parts (`presetById`, `applyTokenSet`, the device registry): the kit has
+ * no store for a palette choice.
  */
 interface PresetChoice {
   id: string;
