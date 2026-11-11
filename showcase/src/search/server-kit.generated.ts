@@ -3,7 +3,7 @@
 // fails while this file is stale.
 
 /** The server-kit release the Server kit pages document. */
-export const SERVER_KIT_VERSION = "0.23.0";
+export const SERVER_KIT_VERSION = "0.24.0";
 
 export interface ServerKitSearchModule {
   /** The Server kit page that documents it. */
@@ -748,6 +748,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["rework_stamp", "function"],
       ["rework_status", "function"],
       ["scrub_context", "function"],
+      ["scrub_crash_diagnostics", "function"],
       ["scrub_text", "function"],
       ["split_body_attachments", "function"],
       ["split_rework_blocks", "function"],
