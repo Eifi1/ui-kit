@@ -816,6 +816,7 @@ const DEMO_FOOTER_ITEMS: AppShellSidebarFooterItem[] = [
 function AppShellPlayground() {
   const [subNav, setSubNav] = useState<"flyout" | "inline">("inline");
   const [mobileSubNav, setMobileSubNav] = useState(true);
+  const [subNavPlacement, setSubNavPlacement] = useState<"bottom" | "top">("bottom");
   const [withFooter, setWithFooter] = useState(true);
   const [withSidebarFooter, setWithSidebarFooter] = useState(true);
   const [withFooterItems, setWithFooterItems] = useState(true);
@@ -841,10 +842,25 @@ function AppShellPlayground() {
         </div>
         <Switch
           label="mobileSubNav"
-          description="The group's pages as a row above the phone bar"
+          description="The group's pages as a row on the phone"
           checked={mobileSubNav}
           onCheckedChange={setMobileSubNav}
         />
+        <div className="space-y-1">
+          <span className="text-xs text-muted">mobileSubNavPlacement</span>
+          <ToggleGroup<"bottom" | "top">
+            aria-label="mobileSubNavPlacement"
+            value={subNavPlacement}
+            onChange={setSubNavPlacement}
+            options={[
+              { value: "bottom", label: "bottom" },
+              { value: "top", label: "top" },
+            ]}
+          />
+          <p className="text-xs text-muted">
+            Above the bar, or sticky under the top bar; on top, --app-nav-h measures the bar alone
+          </p>
+        </div>
         <Switch
           label="footer"
           description="Desktop only, under the content"
@@ -892,6 +908,7 @@ function AppShellPlayground() {
               nav={DEMO_NAV}
               subNav={subNav}
               mobileSubNav={mobileSubNav}
+              mobileSubNavPlacement={subNavPlacement}
               embedded={embedded}
               // A key of its own: the default is shared by every app on the origin. An
               // embedded shell without one keeps its collapse state for this mount only.
@@ -956,7 +973,8 @@ function AppShellPlayground() {
         <code className="font-mono">#demo-shell</code>, while <code className="font-mono">&lt;html&gt;</code> keeps the
         page shell&apos;s value — the page&apos;s bottom bar does not move when this box mounts, and nothing is left
         behind when it unmounts. Inside the box, <code className="font-mono">var(--app-nav-h)</code> resolves to the
-        nearest shell&apos;s bar.
+        nearest shell&apos;s bar. With <code className="font-mono">mobileSubNavPlacement</code> on top, the Books row
+        moves under the box&apos;s top bar and the value drops to the bar&apos;s own height.
       </Note>
       <Note>
         Try: hover or expand <strong>Books</strong> (flyout vs inline), collapse the sidebar with the button at its foot
