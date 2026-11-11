@@ -23,7 +23,7 @@ names them. The snapshot, the per-repo to-dos and the review records are in
 | 2 | Decisions | — | §7.2, §7.4, §7.7; §8.2 (READY, 0.31) |
 | 3 | The API contract (A) | server-kit 0.1.0 (`feedback`); apps' backends | §7.1, §7.5–§7.9, §7.15, §7.16; §8.2 (server-kit 0.5); round 0.36 (§3.5, §3.6: the limiter is charged before the work, as the three apps do; [server-services §2.11](server-services-harmonization.md)) |
 | 3.8 | What kastlan and Kurvenschmiede change | — (archived) | |
-| 4 | The UI contract (B) | ui-kit 0.27.0 | §7.3, §7.4, §7.10–§7.14; §8.1, §8.2 (ui-kit 0.31); ui-kit 0.52 (§4.5: the Undo from the mutation's promise); §13 (ui-kit 0.55: §4.3's pages assembled by the kit, `?row=` digits only); §13.6 (ui-kit 0.57: the bulk edit, §4.5's one Undo per batch, swipes resting while the phone selects) |
+| 4 | The UI contract (B) | ui-kit 0.27.0 | §7.3, §7.4, §7.10–§7.14; §8.1, §8.2 (ui-kit 0.31); ui-kit 0.52 (§4.5: the Undo from the mutation's promise); §13 (ui-kit 0.55: §4.3's pages assembled by the kit, `?row=` digits only); §13.6 (ui-kit 0.57: the bulk edit, §4.5's one Undo per batch, swipes resting while the phone selects); ui-kit 0.60 (§4.5: the advance through NEEDS_LIVE_TEST, the `postpone` swipe) |
 | 5 | What the kit adds, what stays app-side (C) | ui-kit 0.27.0, server-kit 0.1.0 | §8.1, §8.2 (ui-kit 0.31, server-kit 0.5) |
 | 6 | Per repo (D) | — (archived) | |
 | 7 | Settled points — the final canon | — | index; folded items point to their § |
@@ -573,13 +573,20 @@ selected. The category and Visible to others take the same toast and the same Un
 
 **Swipes** (the kit's `feedbackSwipePlan`, `DEFAULT_FEEDBACK_SWIPE`): actions `advance`
 (to `nextFeedbackStatus`, `ChevronsRight`, tone `info`, label = the next status), `done`
-(`Check`, tone `success`, "Done"), `wont_do` (`Ban`, tone `danger`, "Won't do"); an
-action the row cannot take drops out. Default binding: toward the end advance, then done
-on the longer drag; toward the start won't do. keksdose lets the user rebind them
+(`Check`, tone `success`, "Done"), `postpone` (ui-kit 0.60, keksdose live #515:
+`PauseCircle`, tone `neutral`, "Postponed"), `wont_do` (`Ban`, tone `danger`, "Won't do");
+an action the row cannot take drops out. **The advance walks OPEN → READY → IN_PROGRESS →
+IN_EVALUATION → NEEDS_LIVE_TEST → DONE** (ui-kit 0.60, keksdose live #513, Marcel
+2026-11-11): an evaluated report goes out with the next deploy and is checked there. The
+table cell's and the detail's pills are unchanged: they already offer NEEDS_LIVE_TEST from
+every chain status and DONE from IN_EVALUATION, so a fix that needs no deploy is closed
+there without the stop, and `done` swipes to DONE from anywhere. Default binding: toward the
+end advance, then done on the longer drag; toward the start postpone, then won't do on the
+longer drag (0.60; before, won't do alone). keksdose lets the user rebind them
 (Settings → Interaction) and stores **physical** `right` / `left` ladders with `"none"`
-fillers over the ids `advance` | `done` | `wont_do`, mapping them to
+fillers over the ids `advance` | `done` | `postpone` | `wont_do`, mapping them to
 `{ end: right, start: left }` as its translations page does. The kit's inbox binding
-uses exactly those three ids on logical `start` / `end` ladders and drops `"none"` or
+uses exactly those four ids on logical `start` / `end` ladders and drops `"none"` or
 any unknown id, mirroring `TranslationReviewPanel`'s binding. The other two apps use the
 default. **Every swipe commits through the same undoable change as a tap**: the 8 s
 "Set to …" toast with Undo (`feedbackSwipePlan` takes `useFeedbackStatusUndo`'s
@@ -679,7 +686,7 @@ The kit's `createCrashReporter` (keksdose's `crash-report.ts`, lifted) as the bo
   (`FeedbackReworkSection`, one file, exported for reuse).
 - **`useFeedbackStatusUndo(mutate)`** — §4.5's toast trio around one status PATCH, used
   by the table, the detail and the swipes.
-- **`FEEDBACK_SWIPE_ACTIONS` (`advance`, `done`, `wont_do`), `DEFAULT_FEEDBACK_SWIPE`,
+- **`FEEDBACK_SWIPE_ACTIONS` (`advance`, `done`, `postpone` since 0.60, `wont_do`), `DEFAULT_FEEDBACK_SWIPE`,
   `feedbackSwipePlan(binding, row)`** — modelled on 0.26's `translationReviewSwipePlan`
   (logical `start`/`end` ladders, `"none"` and unknown ids dropped), returning what
   `DataTable mobileSwipeActions` takes.
