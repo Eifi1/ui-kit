@@ -32,7 +32,7 @@ names them. The snapshot, the per-repo to-dos and the review records are in
 | 10 | Round 0.40: rework as a conversation entry, the feedback menu | **§10 settled 2026-10-16 (round 0.40)**, for server-kit 0.13 / ui-kit 0.40 | amends §2.1 (REWORK), §2.2, §3.4 (the rework), §4.1 (the menu), §4.3–§4.5, §5; §9.7, §9.11, §9.12, §9.13 |
 | 11 | Round 0.46: admin alerts for new reports and reworks | **§11 settled 2026-10-19 (round 0.46)**, for server-kit 0.16 / ui-kit 0.46 | adds a notification type (notifications §10.2); amends §10.2 decision 10 (no admin mail) |
 | 12 | Round 0.47: attachments on admin replies and public comments, inline images | **§12 settled 2026-10-21 (Marcel)**, for server-kit 0.18 / ui-kit 0.47; the apps review it in the build review | amends §9.7 (a reply's file), §9.8 (a comment's file), §9.10 (the files predicate, a comment's URL), §9.12 (erasure), §10.3 (who draws an entry's file), §4.4.3 (the Attachment section) |
-| 13 | Round 0.55: the inbox, assembled once | **§13 (2026-11-04)**, ui-kit 0.55, from the kastlan reuse audit 2026-11-02 (proposal 2); no server change. §13.6 the bulk edit, ui-kit 0.57 (keksdose dev #663); no server change. §13.7 the `?ids=` set, ui-kit 0.59 (keksdose live #500, dev #678); no server change | amends §4.3 (the two pages' canonical assembly: `FeedbackInbox` / `useFeedbackInbox`; `?row=` digits only), §5 (the kit's list; the app keeps its queries and mutations); §13.6 amends §4.5 (one Undo per batch) and §3.4's use (`category` through `update`); §13.7 amends §4.3 (the inbox reads `?ids=` beside `?row=`) and §9.11 (a notice about several of a person's reports links `/my-feedback?ids=…`) |
+| 13 | Round 0.55: the inbox, assembled once | **§13 (2026-11-04)**, ui-kit 0.55, from the kastlan reuse audit 2026-11-02 (proposal 2); no server change. §13.6 the bulk edit, ui-kit 0.57 (keksdose dev #663); no server change. §13.7 the `?ids=` set, ui-kit 0.59 (keksdose live #500, dev #678), and its line above the desktop table while the # column is hidden, ui-kit 0.60; no server change | amends §4.3 (the two pages' canonical assembly: `FeedbackInbox` / `useFeedbackInbox`; `?row=` digits only), §5 (the kit's list; the app keeps its queries and mutations); §13.6 amends §4.5 (one Undo per batch) and §3.4's use (`category` through `update`); §13.7 amends §4.3 (the inbox reads `?ids=` beside `?row=`) and §9.11 (a notice about several of a person's reports links `/my-feedback?ids=…`) |
 
 ## 1. Where each one stands
 
@@ -2676,8 +2676,11 @@ wiring.
   **Clear filter** in place of the column's range. On a phone the # column is no card
   field, but it is a section of the Filters sheet: the bar counts it, the section says the
   same words, and **Clear all** clears it with the rest. Either Clear takes `ids` out of
-  the address (replace; the open `row` stays). An app whose `columns` drops `id` keeps the
-  narrowing and loses the indicator.
+  the address (replace; the open `row` stays). With the # column not drawn on a desktop
+  (the person hid it, the width left it out, or an app's `columns` drops `id`; ui-kit
+  0.60), a line above the table says the same words with the same **Clear filter**; in
+  0.59 the rows stayed narrowed with nothing on screen to say so. The phone's sheet lists a
+  hidden # as before; an app that drops `id` has no section there.
 - **A link's view keeps the saved filters out — and gives them back.** While the set is on,
   the filters the inbox keeps under `storageKey="feedback"` are neither applied (the view
   starts from the address's own `f.<column>`, usually none) nor written (the stored view

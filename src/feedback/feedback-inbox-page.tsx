@@ -515,8 +515,9 @@ export function useFeedbackInbox<T extends FeedbackRecord>({
     // The boxes, the select-all over what the filters keep, and the phone's long press —
     // in whose mode DataTable rests the swipes (§13.6).
     ...(selection ? { selection } : {}),
-    // `?ids=` as the # column's filter (§13.7). On `id`, the kit's # column: an app whose
-    // `columns` drops it keeps the narrowing and loses the indicator.
+    // `?ids=` as the # column's filter (§13.7). On `id`, the kit's # column: hidden, or
+    // dropped from an app's `columns`, the desktop says the set on a line above the table
+    // (0.60). The phone's Filters sheet says it for a hidden # too, not for a dropped one.
     ...(focusIds
       ? {
           keyFilter: {

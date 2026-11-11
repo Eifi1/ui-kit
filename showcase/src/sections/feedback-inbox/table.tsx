@@ -376,10 +376,10 @@ export function FeedbackInboxDemo() {
         <Note>
           <strong>A notice&apos;s reports</strong>: {code("?ids=57,55")} — what a notification about several reports
           opens — shows exactly those, as the # column&apos;s filter (&ldquo;Only these 2 reports&rdquo;; on a phone, in
-          the Filters sheet). Its Clear filter, or the sheet&apos;s Clear all, takes {code("ids")} out of the address.
-          The view keeps the filters the list saved out of the way — neither applied nor overwritten — and gives them
-          back once the set goes; the sort, the page size and the columns stay the person&apos;s. One report is a set of
-          one.
+          the Filters sheet; with the # column hidden, on a line above the table). Its Clear filter, or the sheet&apos;s
+          Clear all, takes {code("ids")} out of the address. The view keeps the filters the list saved out of the way —
+          neither applied nor overwritten — and gives them back once the set goes; the sort, the page size and the
+          columns stay the person&apos;s. One report is a set of one.
         </Note>
       </div>
     </Example>

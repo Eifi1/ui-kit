@@ -272,6 +272,104 @@ describe("DataTable keyFilter — a link's view keeps the saved filters out (0.5
   });
 });
 
+describe("DataTable keyFilter with its column hidden, on a desktop (0.60)", () => {
+  // 0.59's known limit: the set showed only in its column's header, so with the # column
+  // hidden the table showed 2 rows of 5 (3 of hundreds in an inbox) and said nothing, with
+  // no Clear anywhere but the address bar.
+
+  /** The set's line above the table, named as its column's filter button is. */
+  const line = () => screen.queryByRole("group", { name: "Filter # (active)" });
+  const toggleColumn = (name: string) => fireEvent.click(screen.getByRole("checkbox", { name }));
+  const openColumns = () => fireEvent.click(screen.getByRole("button", { name: /^Columns/ }));
+
+  it("says the set above the table once its column is hidden, and nothing more while it is drawn", () => {
+    render(
+      <MemoryRouter>
+        <Table keyFilter={set([1, 3], vi.fn(), "Only these 2 reports")} />
+      </MemoryRouter>,
+    );
+    // Drawn: its header's button says it, and nothing else does.
+    expect(line()).toBeNull();
+    expect(screen.queryByText("Only these 2 reports")).toBeNull();
+    openColumns();
+    toggleColumn("#");
+    expect(screen.queryByRole("columnheader", { name: /^#/ })).toBeNull();
+    shows("Crash on save", "Dark mode");
+    expect(line()).toHaveTextContent("Only these 2 reports");
+    // Drawn again: the header has it back, and the line goes.
+    toggleColumn("#");
+    expect(line()).toBeNull();
+    expect(within(header("#")).getByRole("button", { name: "Filter # (active)" })).toBeInTheDocument();
+  });
+
+  it("says the kit's words when the owner names none, for a column the view saved hidden", () => {
+    localStorage.setItem(STORE, JSON.stringify({ hidden: ["id"] }));
+    render(
+      <MemoryRouter>
+        <Table storageKey="reports" keyFilter={set([1, 3])} />
+      </MemoryRouter>,
+    );
+    expect(line()).toHaveTextContent("Only these 2 rows");
+  });
+
+  it("is the column's own Clear filter: the set's onClear, and the column's filter with it", () => {
+    localStorage.setItem(STORE, JSON.stringify({ hidden: ["id"] }));
+    const onClear = vi.fn();
+    render(
+      <MemoryRouter initialEntries={["/?f.id=4..5"]}>
+        <Table storageKey="reports" urlSync keyFilter={set([1, 3], onClear)} />
+        <Search />
+      </MemoryRouter>,
+    );
+    fireEvent.click(within(line()!).getByRole("button", { name: "Clear filter" }));
+    expect(onClear).toHaveBeenCalledTimes(1);
+    expect(search().has("f.id")).toBe(false);
+  });
+
+  it("goes with the set, and leaves the focus on the table rather than on <body>", () => {
+    localStorage.setItem(STORE, JSON.stringify({ hidden: ["id"] }));
+    render(
+      <MemoryRouter>
+        <Owner initial={[1, 3]} storageKey="reports" />
+      </MemoryRouter>,
+    );
+    shows("Crash on save", "Dark mode");
+    const clear = within(line()!).getByRole("button", { name: "Clear filter" });
+    act(() => clear.focus());
+    fireEvent.click(clear);
+    shows("Crash on save", "Typo in the footer", "Dark mode", "Export to CSV", "Slow list");
+    expect(line()).toBeNull();
+    expect(screen.getByRole("table")).toHaveFocus();
+  });
+
+  it("says the set for a column the table does not have", () => {
+    render(
+      <MemoryRouter>
+        <DataTable
+          rows={REPORTS}
+          columns={COLUMNS.filter((c) => c.key !== "id")}
+          rowKey={(r) => r.id}
+          keyFilter={set([2])}
+        />
+      </MemoryRouter>,
+    );
+    shows("Typo in the footer");
+    expect(screen.getByText("Only this row")).toBeInTheDocument();
+  });
+
+  it("leaves the phone as it was: no line, and the Filters sheet counts the set", () => {
+    stubPhone();
+    localStorage.setItem(STORE, JSON.stringify({ hidden: ["id"] }));
+    render(
+      <MemoryRouter>
+        <Table storageKey="reports" keyFilter={set([1, 3], vi.fn(), "Only these 2 reports")} />
+      </MemoryRouter>,
+    );
+    expect(screen.queryByText("Only these 2 reports")).toBeNull();
+    expect(screen.getByRole("button", { name: /^Filters/ })).toHaveTextContent("1");
+  });
+});
+
 describe("DataTable keyFilter on the phone (0.59, dev #678)", () => {
   it("is a filter in the sheet, said there, and Clear all drops it", () => {
     stubPhone();
