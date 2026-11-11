@@ -1,20 +1,53 @@
 # Adopting `@eifi1/ui-kit` 0.60
 
-> **Draft.** Round 0.60 is open: the sections below are written as their items land, and the
-> lead, the "Must change" list and the **Legal wording** line are settled when the round is.
+ui-kit 0.60 removes the palette names 0.59 deprecated, closes two findings of keksdose's legal
+audit of 2026-11-11 (the feedback dialog's page address; with **server-kit 0.24**, an erased
+crash report's diagnostics), takes kastlan's two UX findings (the shared-computer choice under
+the password, the phone's page row at the top), fixes a `keyFilter` on a hidden column and two
+follow-ups to 0.59's ZoomableImage, and moves the kit's tests to jsdom 31.
 
-ui-kit 0.60 ships with **server-kit 0.24**. So far:
+**From 0.59, nothing else first.** An app still on 0.58 takes 0.59's notes first.
 
-- the feedback dialog's page address keeps only the query params the app allows (keksdose's
-  legal audit of 2026-11-11, G-10);
-- server-kit: an erased crash report's body loses the person's diagnostics (same audit, C-7);
-- `SignInForm`'s `afterPasswordContent`, the place for the shared-computer choice (kastlan #31).
+**Legal wording:** none. No change touches a kit legal text, so no page's `updated` date moves
+for the kit. keksdose's own policy: its §11 (erasure) and its feedback paragraph (the page
+address) match the code with this bump, so its interim sentence can go.
 
-**From 0.59, nothing else first.**
+**Restart the Vite dev server after the bump** (`vite --force` if a change still does not show).
 
-**Legal wording:** none so far. Neither change touches a kit legal text. Each app's own policy
-may describe the two channels: keksdose's §11 (erasure) and its feedback paragraph (the page
-address) now match the code without its interim sentence.
+**Must change:** nothing in the three apps compiles differently: none of them uses a removed
+palette name (searched their sources and tests). Two changes of behaviour need a look:
+
+- **The feedback dialog's page address stops at the pathname** unless the app passes
+  `allowParams`. Each app passes its crash reporter's list (table below).
+- **An app test** that expects `context.url` to equal `window.location.href` gets the reduced
+  address.
+
+**What `check:api` prints:** `createPaletteStore`, `applyPersistedPalette`, `PaletteStore`,
+`PaletteMenu` removed, `TopBarLabels` changed (no `palette`); `SignInFormProps`,
+`AppShellProps` and `UseFeedbackSubmitOptions` gained an optional prop each.
+
+## Removed: the palette names 0.59 deprecated (breaking)
+
+No app offers a palette choice since 2026-11-10, so the store that kept one per device and
+the menu that switched it go. The fixed palette (`createFixedPalette`, 0.59) paints the one
+preset and keeps nothing.
+
+| Removed | Use |
+|---|---|
+| `createPaletteStore` | `createFixedPalette(useTheme, { legacyStorageKey })` |
+| `applyPersistedPalette` | `createFixedPalette`'s `applyPalette(mode)` |
+| `PaletteStore` (type) | `FixedPalette` |
+| `PaletteMenu` | none: no app offers a palette choice (`OptionSwitcherMenu` for any other value) |
+| label key `topBar.palette` (`TopBarLabels.palette`), in all seven catalogues | none: it was `PaletteMenu`'s name |
+
+- **What `check:api` prints:** the four names above and `TopBarLabels`, which lost
+  `palette`. `UiKitLabels`, `DEFAULT_TOP_BAR_LABELS` and the label overrides change only
+  through `TopBarLabels`.
+- **keksdose:** nothing to change.
+- **kastlan:** nothing to change. A comment in `frontend/src/app.css` (line 23) still says
+  "the PaletteMenu switches"; it may go with the bump. It is a comment, so nothing breaks.
+- **Kurvenschmiede:** nothing to change.
+- **Tests:** none of the three apps' tests uses a removed name.
 
 ## The feedback dialog names the page without what the person typed (G-10)
 
@@ -62,6 +95,95 @@ on the page, above the email field. kastlan's UX review asked for email, passwor
 - **The hint's length:** the kit's hint is two sentences. An app that wants one line passes its
   own words through `labels={{ hint: … }}`. The kit's text is unchanged.
 
+## The phone's page row can sit at the top (kastlan prod feedback #22, KX-5)
+
+Below `md`, AppShell draws the current group's pages as a row above the bottom bar. kastlan
+runs it as one `scroll` row. Its UX review found that row and the bar stacked into one deep
+block at the bottom of every page: about 43px of row and 56px of bar.
+
+- **New prop `mobileSubNavPlacement`:** `"bottom"` (default) or `"top"`. Not passing it
+  changes nothing.
+- **With `"top"`:** the row sits directly under the shell's top bar. It is `sticky` like the
+  kit's `TopBar`, so it stays in view while the page scrolls. It takes its own height in the
+  page's flow, so the content starts below it, not under it.
+- **`--app-nav-h` then measures the bar alone.** `<main>`'s bottom padding shrinks by the
+  row's height. Anything docked at `bottom: var(--app-nav-h)` sits right on the bar.
+- **Both layouts work at the top.** `wrap` and `scroll`, with the faded cut edge and the
+  current page scrolled into view. `embedded`, `mobileSubNav={false}`, the More sheet and
+  groups without `items` behave as before. No new labels.
+- **Under the kit's top bar, not under the page title.** kastlan's review asked for "under the
+  page title". The title is the page's own content, so the kit cannot put anything below it.
+  The row sticks 3rem down, which is the `TopBar`'s `h-12`. A top bar of another height
+  would leave a gap or an overlap.
+- **Height:** about 43px at Normal text (worked out from the classes, not measured in a
+  browser). That is within the review's 48px. It scales with the text size: about 53px at
+  Large and 63px at Extra large.
+- **Layer:** `z-[35]`, under the top bar's `z-40` (its menus open over the row) and over a
+  page's own `z-30` sticky elements.
+
+**Adopt:**
+
+- **kastlan:** pass `mobileSubNavPlacement="top"` beside `mobileSubNavLayout="scroll"` in
+  `frontend/src/app/app-layout.tsx`. It uses the kit's `TopBar` unchanged, so the 3rem fits.
+  A grep found no page element sticking at the top and no `--app-nav-h` use. Check one
+  grouped page on a phone: the row under the top bar, the bar alone at the bottom.
+- **keksdose:** nothing. The row stays above the bar.
+- **Kurvenschmiede:** nothing. The row stays above the bar.
+- **Tests:** an app test that finds the row inside the bottom bar's box (`.fixed.bottom-0`)
+  looks for it under the top bar once the app opts in. The row carries
+  `data-slot="app-shell-subnav"` and `data-placement` in both places.
+
+## A `keyFilter` on a hidden column still says so (desktop)
+
+- **What changed.** When the desktop table does not draw a `keyFilter`'s column, a line
+  above the table now says the set. The column may be hidden by the person, left out for
+  width, or missing from `columns`. The line shows the set's own words (`label`, or the
+  kit's "Only these 3 rows") and the same **Clear filter** as the column's popover: it calls
+  `onClear` and clears the column's own filter with it. Screen readers hear the line as
+  "Filter # (active)", the same name as the header's button. When the Clear removes the
+  line, the focus goes to the table, not to the page's top. While the column is drawn,
+  nothing changes. The phone is unchanged: its Filters sheet already listed a hidden
+  column.
+- **Why.** 0.59 showed the set only in its column's header. With the inbox's # column
+  hidden, a notice's link showed 3 reports of hundreds and said nothing, and only the
+  address bar could clear it (the 0.59 known limit).
+- **Words.** No new labels. The line uses `dataTable.keyFilter` / `feedbackPage.focusIds`,
+  `dataTable.clearFilter` and `dataTable.filterColumn`, which every catalogue already has.
+- **keksdose, kastlan, Kurvenschmiede:** nothing to change. The feedback inbox gets the
+  line with the bump. In the browser: hide the # column in /feedback's Columns panel, open
+  a notice's link (`?ids=…`): the line "Only these N reports" is above the table, and its
+  Clear filter brings the whole list back and takes `ids` out of the address.
+
+## Safari's trackpad pinch; the Lightbox's zoom pans across (0.59 ZoomableImage follow-ups)
+
+- **ZoomableImage: a trackpad pinch in desktop Safari zooms the picture.** 0.59 promised that a
+  trackpad pinch zooms about the cursor. That held in Chrome, Edge and Firefox, which send the
+  pinch as Ctrl + wheel. Safari on a Mac sends WebKit's own gesture events instead. Nothing
+  handled them, so the pinch zoomed the whole page. The box now takes them: it zooms about the
+  cursor, clamped and announced as the wheel is, and the page stays as it is. Before the
+  picture's shape is known, the pinch is left to the page, as the wheel is.
+- **iOS: one pinch, zoomed once.** iOS Safari sends a touch pinch as gesture events too, beside
+  the touches the kit already follows. While a finger is down on the box, the gesture events are
+  only prevented, so one pinch never zooms twice.
+- **Lightbox: a zoomed picture pans to its far side.** Zoom shows the picture at its own size,
+  and the viewer scrolls to pan it. Since 0.12 a box around the picture cut it off at the
+  screen's edge, so you could scroll down but never across. A phone photo (4032 px wide) showed
+  only its first screen-wide strip. Now the whole picture scrolls. Unzoomed, nothing changes.
+  This reaches every ImageGrid, whose tiles open the Lightbox.
+- **Must change:** nothing. No API change and no new labels.
+- **Not tried in a browser.** The Safari fix was tested in jsdom with synthetic gesture events,
+  not in a real Safari (macOS or iOS). The Lightbox clip was worked out from the CSS, not seen.
+
+**In the browser:**
+
+- **keksdose:** in the invoice review, open a scanned page from the grid, press Zoom, and scroll
+  sideways to the page's right edge (on a phone, too). The receipt preview shows ZoomableImage
+  only to a touch screen (`scan-file-preview.tsx`, `(pointer: fine)` gets the hover lens), so
+  the Safari fix does not reach it on a Mac. On an iPhone, a pinch on a receipt zooms as before.
+- **kastlan:** open a full-size handover photo from an ImageGrid (room inspector, the unit's
+  rooms tab, the document gallery), press Zoom, and scroll sideways to its right edge.
+- **Kurvenschmiede:** nothing. It uses neither ZoomableImage nor the Lightbox.
+
 ## server-kit 0.24
 
 - **An erased crash report keeps only what describes the software (C-7).** `crash_body` writes
@@ -76,3 +198,12 @@ on the page, above the email field. kastlan's UX review asked for email, passwor
   `scrub_crash_diagnostics(body)` serves a one-off over rows erased before 0.24 (crash
   reports whose `user_id` is already NULL), should an app need one; a second pass changes
   nothing.
+
+## Toolchain
+
+- **jsdom 31** runs the kit's tests (0.59 went back to 30 for it). Its CSS parser writes an
+  inline style back in its own spelling (`minmax(0px, 1fr)`, a folded `calc()`, a transition
+  without its default `ease`), so ten assertions compared exact strings and broke. They now
+  compare through `src/test/css.ts`'s `cssValue`, the expected value read back by the same
+  parser. jsdom only runs the kit's own tests; nothing reaches an app. An app moving to jsdom 31
+  itself may meet the same spellings in its own style assertions.
