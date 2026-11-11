@@ -270,7 +270,11 @@ const BUDGETS = [
   // `data-slot` marks and the hit areas, Checkbox's box passing a tap to its input; #497),
   // the dialog footers' FormActions rule (footer-row, #496), BulkActionBar's `clearDisabled`
   // and the privacy policy's new browser-storage words — meant growth, 485 B (144 gzip).
-  { label: "the shell set", names: SHELL_SET, max: 160_600 },
+  // 161,134 B (55,910 gzip) in 0.60: the feedback dialog's page reduction (feedback-page.ts,
+  // which useFeedbackSubmit in the top bar now imports so the dialog names the page without
+  // what the person typed; keksdose legal audit G-10) and AppShell's `mobileSubNavPlacement`
+  // (the page row's second place, kastlan #22) — meant growth, 596 B (224 gzip).
+  { label: "the shell set", names: SHELL_SET, max: 161_200 },
 ];
 const ENTRY = "\0import-cost";
 async function importCost(names) {
