@@ -321,7 +321,13 @@ export function Lightbox({
       fetched={fetched}
       alt={item.alt}
       labels={imageLabels}
-      wrapperClassName={zoomed ? "max-w-none shrink-0" : "flex h-full w-full items-center justify-center"}
+      // Zoomed, the picture is at its own size and the STAGE's scroll is the pan, so the
+      // wrapper lets it hang out. It is a block as wide as the stage (the stage is no flex
+      // box then, so the `shrink-0` it had did nothing), and with ImageStates' default
+      // `overflow-hidden` it cut off the far side of any picture wider than the screen,
+      // leaving the stage nothing to scroll sideways. ZoomableImage's wrapper is unclipped
+      // the same way.
+      wrapperClassName={zoomed ? "overflow-visible" : "flex h-full w-full items-center justify-center"}
       className={cn(
         zoomed ? "max-w-none cursor-zoom-out" : "max-h-full max-w-full object-contain",
         !zoomed && zoomEnabled && "cursor-zoom-in",

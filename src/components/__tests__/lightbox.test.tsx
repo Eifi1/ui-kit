@@ -224,6 +224,22 @@ describe("Lightbox", () => {
     expect(screen.getByRole("button", { name: "Zoom" })).toHaveAttribute("aria-pressed", "true");
   });
 
+  // jsdom lays nothing out, so this reads the classes: a zoomed picture at its own size
+  // (a 4032px phone photo) hangs out of the stage, and the stage's scroll pans only what
+  // no box between them clips. An `overflow-hidden` there as wide as the stage cut the
+  // picture's far side off, and the stage had nothing to scroll sideways.
+  it("lets the stage scroll the whole zoomed picture: nothing between them clips it", () => {
+    render(<Harness />);
+    fireEvent.click(screen.getByRole("button", { name: "Zoom" }));
+    const stage = dialog().querySelector<HTMLElement>("[data-lightbox-stage]")!;
+    expect(stage).toHaveClass("overflow-auto");
+    const clipping: string[] = [];
+    for (let el = within(dialog()).getByRole("img").parentElement; el && el !== stage; el = el.parentElement) {
+      if (/\boverflow-(hidden|clip)\b/.test(el.className)) clipping.push(el.className);
+    }
+    expect(clipping).toEqual([]);
+  });
+
   it("shows a PDF as a file card with open and download, not as a broken image", () => {
     render(
       <Lightbox
