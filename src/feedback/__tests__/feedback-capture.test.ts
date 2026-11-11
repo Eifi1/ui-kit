@@ -68,6 +68,58 @@ describe("captureAppScreenshot", () => {
   });
 });
 
+describe("the form state in the picture (0.60.1, keksdose's 0.60 adoption)", () => {
+  /** What modern-screenshot does with the hook: clone the tree, call it on each node after
+   *  its children. */
+  const cloneThroughHook = (el: Element, hook: (cloned: Node) => void): Element => {
+    const clone = el.cloneNode(true) as Element;
+    const visit = (node: Node) => {
+      node.childNodes.forEach(visit);
+      hook(node);
+    };
+    visit(clone);
+    return clone;
+  };
+
+  it("shows each select at its chosen option and each box as it is, and leaves the page untagged", async () => {
+    document.body.innerHTML = `<div id="root">
+      <select id="pick"><option value="">— none —</option><option value="advance">Advance</option></select>
+      <input id="box" type="checkbox" /><input id="off" type="checkbox" checked />
+      <input id="r1" type="radio" name="g" checked /><input id="r2" type="radio" name="g" />
+    </div>`;
+    // Set as React sets them: the properties, never the attributes.
+    (document.getElementById("pick") as HTMLSelectElement).value = "advance";
+    (document.getElementById("box") as HTMLInputElement).checked = true;
+    (document.getElementById("off") as HTMLInputElement).checked = false;
+    (document.getElementById("r2") as HTMLInputElement).checked = true;
+    let clone: Element | null = null;
+    domToBlob.mockImplementation(async (el, options) => {
+      clone = cloneThroughHook(el, options.onCloneEachNode as (cloned: Node) => void);
+      return new Blob(["x"], { type: "image/webp" });
+    });
+    await captureAppScreenshot();
+    const options = clone!.querySelectorAll("option");
+    expect(options[0].hasAttribute("selected")).toBe(false);
+    expect(options[1].hasAttribute("selected")).toBe(true);
+    expect(clone!.querySelector("#box")!.hasAttribute("checked")).toBe(true);
+    expect(clone!.querySelector("#off")!.hasAttribute("checked")).toBe(false);
+    expect(clone!.querySelector("#r1")!.hasAttribute("checked")).toBe(false);
+    expect(clone!.querySelector("#r2")!.hasAttribute("checked")).toBe(true);
+    expect(clone!.querySelector("[data-kit-capture-state]")).toBeNull();
+    // The page keeps its state and loses its tags.
+    expect(document.querySelector("[data-kit-capture-state]")).toBeNull();
+    expect((document.getElementById("pick") as HTMLSelectElement).value).toBe("advance");
+    expect((document.getElementById("r2") as HTMLInputElement).checked).toBe(true);
+  });
+
+  it("takes the tags off when the capture fails", async () => {
+    document.body.innerHTML = '<div id="root"><select><option>A</option></select></div>';
+    domToBlob.mockRejectedValue(new Error("canvas tainted"));
+    await expect(captureAppScreenshot()).rejects.toThrow("canvas tainted");
+    expect(document.querySelector("[data-kit-capture-state]")).toBeNull();
+  });
+});
+
 describe("the capture filter", () => {
   const rect = (r: Partial<DOMRect>) =>
     ({ x: 0, y: 0, width: 10, height: 10, top: 0, left: 0, right: 10, bottom: 10, ...r }) as DOMRect;
