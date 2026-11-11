@@ -6,8 +6,10 @@ import { DEFAULT_SHARED_COMPUTER_LABELS } from "./shared-computer-labels";
 
 /**
  * "This is a shared computer" — a choice on the sign-in form that persists nothing
- * (docs/local-first-harmonization.md §1.5 D6, D7). When it is on, the app does not mount
- * the query persistence (`createQueryPersistence`): the cache lives in memory only.
+ * (docs/local-first-harmonization.md §1.5 D6, D7). Its place is `SignInForm`'s
+ * `afterPasswordContent` (0.60): under the password, before "Sign in". When it is on, the
+ * app does not mount the query persistence (`createQueryPersistence`): the cache lives in
+ * memory only.
  *
  * The choice must live exactly as long as the session it governs. By default it is held in
  * `sessionStorage`, which fits a session that ends with the tab. An app whose session

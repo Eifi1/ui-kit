@@ -267,6 +267,14 @@ export interface SignInFormProps extends Omit<ComponentPropsWithRef<"div">, "onS
   /** App content at the top of the credentials step — a notice, a demo button. */
   credentialsContent?: ReactNode;
   /**
+   * App content under the password field, before "Sign in" (0.60, kastlan prod #31): the
+   * place for `SharedComputerChoice`, so the form reads email, password, the choice, then
+   * the buttons — a choice about the session belongs with the act that starts it, and above
+   * the email field it was the first thing read on the page. A failed attempt's message
+   * comes after it, right above the button that answered.
+   */
+  afterPasswordContent?: ReactNode;
+  /**
    * App content on the second-factor step, under its intro. 0.30.0: pass a function and
    * it gets the challenge token — kastlan kept its own copy of the token for a "lost
    * your device?" link, which the step now hands over.
@@ -398,6 +406,7 @@ export function SignInForm({
   codeLength = 6,
   recoveryCode,
   credentialsContent,
+  afterPasswordContent,
   twoFactorContent,
   passwordChangeContent,
   describeError,
@@ -794,6 +803,7 @@ export function SignInForm({
           busy={working}
           required
         />
+        {afterPasswordContent}
         {failure && (
           // One live region for the sentence and its hints: they are one answer.
           <div role="alert" className="space-y-1.5">
