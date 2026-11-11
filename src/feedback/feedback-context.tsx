@@ -57,7 +57,8 @@ export interface FeedbackContextInput {
    *  not personal, and triage needs it first (keksdose `use-feedback-dialog.tsx:110`). */
   attachUrl: boolean;
   /** `location.href` when the dialog OPENED — the page the report is about, not the one
-   *  the reporter may have navigated to while typing. */
+   *  the reporter may have navigated to while typing. Sent as given: `useFeedbackSubmit`
+   *  reduces it to its `allowParams` first (0.60). */
   url: string;
   /** Its pathname. Default: read off `url` (a path-only `url` works too). */
   route?: string;

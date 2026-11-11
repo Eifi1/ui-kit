@@ -27,6 +27,18 @@ describe("NavPills (keksdose swipe-settings-card:152)", () => {
     expect(screen.getByRole("button", { name: "Accounts" })).toBeDisabled();
   });
 
+  it("rests every pill in an outline, the current one filled on the same box (0.60, keksdose live #514)", () => {
+    render(<NavPills aria-label="Surface" items={SURFACES} current="budgets" onSelect={vi.fn()} />);
+    // Not current: the secondary Button's outline, so it reads as pressable at rest.
+    const idle = screen.getByRole("button", { name: "Transactions" });
+    expect(idle).toHaveClass("border", "border-subtle");
+    expect(idle).not.toHaveClass("bg-inverse");
+    // Current: the inverse fill, its border there but transparent, so no pill jumps a pixel.
+    const current = screen.getByRole("button", { name: "Budgets" });
+    expect(current).toHaveClass("border", "border-transparent", "bg-inverse");
+    expect(current).not.toHaveClass("border-subtle");
+  });
+
   it("links get aria-current=page and go through renderLink", () => {
     const onSelect = vi.fn();
     render(

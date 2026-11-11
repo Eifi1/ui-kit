@@ -6,6 +6,7 @@ import { AppShell, DEFAULT_MOBILE_MAX_ITEMS, pickMobileBar } from "../app-shell"
 import type { AppShellNavItem } from "../app-shell";
 import { applyTextSize } from "../../theme/text-size";
 import { viewportMatchMedia } from "../../test/viewport";
+import { cssValue } from "../../test/css";
 
 /**
  * 0.49 KIT-6, the phone navigation: at most `mobileMaxItems` cells (default 5, "More"
@@ -107,7 +108,9 @@ describe("mobileMaxItems", () => {
     viewport(390);
     const { container } = renderShell();
     expect(cellNames(container)).toEqual(["Home", "Budget", "Transactions", "Accounts", "More"]);
-    expect(phoneBar(container).style.gridTemplateColumns).toBe("repeat(5, minmax(0, 1fr))");
+    expect(phoneBar(container).style.gridTemplateColumns).toBe(
+      cssValue("grid-template-columns", "repeat(5, minmax(0, 1fr))"),
+    );
   });
 
   it("three entries and More at Extra large", () => {

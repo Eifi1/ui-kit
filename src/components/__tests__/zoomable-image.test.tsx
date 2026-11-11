@@ -379,6 +379,89 @@ describe("ZoomableImage: wheel and touchmove", () => {
   });
 });
 
+/** WebKit's GestureEvent, as Safari dispatches it for a two-finger pinch: jsdom has none,
+ *  so a plain cancelable Event carrying the fields Safari gives it. */
+function gesture(
+  el: HTMLElement,
+  type: "gesturestart" | "gesturechange" | "gestureend",
+  scale: number,
+  x: number,
+  y: number,
+) {
+  const ev = new Event(type, { bubbles: true, cancelable: true });
+  Object.defineProperties(ev, { scale: { value: scale }, clientX: { value: x }, clientY: { value: y } });
+  return fireEvent(el, ev);
+}
+
+describe("ZoomableImage: Safari's gesture events", () => {
+  it("zooms on desktop Safari's trackpad pinch about the cursor, from the level the pinch began at", async () => {
+    const { box, img } = view();
+    decode(img());
+    // Prevented, or Safari zooms the whole page.
+    expect(gesture(box, "gesturestart", 1, 100, 100)).toBe(false);
+    expect(width(img())).toBe("100%");
+    expect(gesture(box, "gesturechange", 1.5, 100, 100)).toBe(false);
+    expect(width(img())).toBe("150%");
+    // The point under the cursor stays there: (0 + 100) × 1.5 − 100.
+    expect(scroll(box)).toEqual([50, 50]);
+    // `scale` counts from the pinch's start, not from the last event: 1 × 2, not 1.5 × 2.
+    gesture(box, "gesturechange", 2, 100, 100);
+    expect(width(img())).toBe("200%");
+    expect(scroll(box)).toEqual([100, 100]);
+    expect(gesture(box, "gestureend", 2, 100, 100)).toBe(false);
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Zoom 50%"));
+
+    // The next pinch counts from 2, where it began: 2 × 2 is the picture's own pixels.
+    gesture(box, "gesturestart", 1, 100, 100);
+    gesture(box, "gesturechange", 2, 100, 100);
+    expect(width(img())).toBe("400%");
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Zoom 100%"));
+    // Kept between fit and the ceiling, as the wheel is.
+    gesture(box, "gesturechange", 10, 100, 100);
+    expect(width(img())).toBe("600%");
+    expect(button("Zoom in")).toHaveAttribute("aria-disabled", "true");
+    gesture(box, "gesturechange", 0.1, 100, 100);
+    expect(width(img())).toBe("100%");
+    expect(scroll(box)).toEqual([0, 0]);
+    gesture(box, "gestureend", 0.1, 100, 100);
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Fitted to width"));
+  });
+
+  it("leaves a Safari pinch to the page before there is anything to zoom", () => {
+    const { box, img } = view();
+    expect(gesture(box, "gesturestart", 1, 100, 100)).toBe(true);
+    expect(gesture(box, "gesturechange", 2, 100, 100)).toBe(true);
+    expect(width(img())).toBe("100%");
+  });
+
+  it("leaves a touch screen's pinch to its pointers: iOS's gesture events beside them are only prevented", () => {
+    const { box, img } = view();
+    decode(img());
+    // iOS Safari sends one pinch twice: as pointer events, which the touch pinch follows,
+    // and as gesture events. A gesturechange that runs ahead of the pointers moves nothing.
+    pointer("pointerDown", box, 1, 100, 100);
+    pointer("pointerDown", box, 2, 200, 100);
+    expect(gesture(box, "gesturestart", 1, 150, 100)).toBe(false);
+    expect(gesture(box, "gesturechange", 2, 200, 100)).toBe(false);
+    expect(width(img())).toBe("100%");
+    pointer("pointerMove", box, 2, 300, 100);
+    expect(width(img())).toBe("200%");
+    expect(scroll(box)).toEqual([100, 100]);
+    expect(gesture(box, "gesturechange", 3, 200, 100)).toBe(false);
+    expect(width(img())).toBe("200%");
+    pointer("pointerUp", box, 2, 300, 100);
+    pointer("pointerUp", box, 1, 100, 100);
+    expect(gesture(box, "gestureend", 3, 200, 100)).toBe(false);
+
+    // Two fingers that land together: their `gesturestart` may come before either pointerdown.
+    gesture(box, "gesturestart", 1, 150, 100);
+    pointer("pointerDown", box, 1, 100, 100);
+    pointer("pointerDown", box, 2, 200, 100);
+    gesture(box, "gesturechange", 1.5, 150, 100);
+    expect(width(img())).toBe("200%");
+  });
+});
+
 describe("ZoomableImage: motion", () => {
   /** The animation frames, run by hand at a given time: what the browser would paint. */
   function stubFrames() {

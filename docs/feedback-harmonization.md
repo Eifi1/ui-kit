@@ -23,7 +23,7 @@ names them. The snapshot, the per-repo to-dos and the review records are in
 | 2 | Decisions | — | §7.2, §7.4, §7.7; §8.2 (READY, 0.31) |
 | 3 | The API contract (A) | server-kit 0.1.0 (`feedback`); apps' backends | §7.1, §7.5–§7.9, §7.15, §7.16; §8.2 (server-kit 0.5); round 0.36 (§3.5, §3.6: the limiter is charged before the work, as the three apps do; [server-services §2.11](server-services-harmonization.md)) |
 | 3.8 | What kastlan and Kurvenschmiede change | — (archived) | |
-| 4 | The UI contract (B) | ui-kit 0.27.0 | §7.3, §7.4, §7.10–§7.14; §8.1, §8.2 (ui-kit 0.31); ui-kit 0.52 (§4.5: the Undo from the mutation's promise); §13 (ui-kit 0.55: §4.3's pages assembled by the kit, `?row=` digits only); §13.6 (ui-kit 0.57: the bulk edit, §4.5's one Undo per batch, swipes resting while the phone selects) |
+| 4 | The UI contract (B) | ui-kit 0.27.0 | §7.3, §7.4, §7.10–§7.14; §8.1, §8.2 (ui-kit 0.31); ui-kit 0.52 (§4.5: the Undo from the mutation's promise); §13 (ui-kit 0.55: §4.3's pages assembled by the kit, `?row=` digits only); §13.6 (ui-kit 0.57: the bulk edit, §4.5's one Undo per batch, swipes resting while the phone selects); ui-kit 0.60 (§4.5: the advance through NEEDS_LIVE_TEST, the `postpone` swipe) |
 | 5 | What the kit adds, what stays app-side (C) | ui-kit 0.27.0, server-kit 0.1.0 | §8.1, §8.2 (ui-kit 0.31, server-kit 0.5) |
 | 6 | Per repo (D) | — (archived) | |
 | 7 | Settled points — the final canon | — | index; folded items point to their § |
@@ -32,7 +32,7 @@ names them. The snapshot, the per-repo to-dos and the review records are in
 | 10 | Round 0.40: rework as a conversation entry, the feedback menu | **§10 settled 2026-10-16 (round 0.40)**, for server-kit 0.13 / ui-kit 0.40 | amends §2.1 (REWORK), §2.2, §3.4 (the rework), §4.1 (the menu), §4.3–§4.5, §5; §9.7, §9.11, §9.12, §9.13 |
 | 11 | Round 0.46: admin alerts for new reports and reworks | **§11 settled 2026-10-19 (round 0.46)**, for server-kit 0.16 / ui-kit 0.46 | adds a notification type (notifications §10.2); amends §10.2 decision 10 (no admin mail) |
 | 12 | Round 0.47: attachments on admin replies and public comments, inline images | **§12 settled 2026-10-21 (Marcel)**, for server-kit 0.18 / ui-kit 0.47; the apps review it in the build review | amends §9.7 (a reply's file), §9.8 (a comment's file), §9.10 (the files predicate, a comment's URL), §9.12 (erasure), §10.3 (who draws an entry's file), §4.4.3 (the Attachment section) |
-| 13 | Round 0.55: the inbox, assembled once | **§13 (2026-11-04)**, ui-kit 0.55, from the kastlan reuse audit 2026-11-02 (proposal 2); no server change. §13.6 the bulk edit, ui-kit 0.57 (keksdose dev #663); no server change. §13.7 the `?ids=` set, ui-kit 0.59 (keksdose live #500, dev #678); no server change | amends §4.3 (the two pages' canonical assembly: `FeedbackInbox` / `useFeedbackInbox`; `?row=` digits only), §5 (the kit's list; the app keeps its queries and mutations); §13.6 amends §4.5 (one Undo per batch) and §3.4's use (`category` through `update`); §13.7 amends §4.3 (the inbox reads `?ids=` beside `?row=`) and §9.11 (a notice about several of a person's reports links `/my-feedback?ids=…`) |
+| 13 | Round 0.55: the inbox, assembled once | **§13 (2026-11-04)**, ui-kit 0.55, from the kastlan reuse audit 2026-11-02 (proposal 2); no server change. §13.6 the bulk edit, ui-kit 0.57 (keksdose dev #663); no server change. §13.7 the `?ids=` set, ui-kit 0.59 (keksdose live #500, dev #678), and its line above the desktop table while the # column is hidden, ui-kit 0.60; no server change | amends §4.3 (the two pages' canonical assembly: `FeedbackInbox` / `useFeedbackInbox`; `?row=` digits only), §5 (the kit's list; the app keeps its queries and mutations); §13.6 amends §4.5 (one Undo per batch) and §3.4's use (`category` through `update`); §13.7 amends §4.3 (the inbox reads `?ids=` beside `?row=`) and §9.11 (a notice about several of a person's reports links `/my-feedback?ids=…`) |
 
 ## 1. Where each one stands
 
@@ -573,13 +573,20 @@ selected. The category and Visible to others take the same toast and the same Un
 
 **Swipes** (the kit's `feedbackSwipePlan`, `DEFAULT_FEEDBACK_SWIPE`): actions `advance`
 (to `nextFeedbackStatus`, `ChevronsRight`, tone `info`, label = the next status), `done`
-(`Check`, tone `success`, "Done"), `wont_do` (`Ban`, tone `danger`, "Won't do"); an
-action the row cannot take drops out. Default binding: toward the end advance, then done
-on the longer drag; toward the start won't do. keksdose lets the user rebind them
+(`Check`, tone `success`, "Done"), `postpone` (ui-kit 0.60, keksdose live #515:
+`PauseCircle`, tone `neutral`, "Postponed"), `wont_do` (`Ban`, tone `danger`, "Won't do");
+an action the row cannot take drops out. **The advance walks OPEN → READY → IN_PROGRESS →
+IN_EVALUATION → NEEDS_LIVE_TEST → DONE** (ui-kit 0.60, keksdose live #513, Marcel
+2026-11-11): an evaluated report goes out with the next deploy and is checked there. The
+table cell's and the detail's pills are unchanged: they already offer NEEDS_LIVE_TEST from
+every chain status and DONE from IN_EVALUATION, so a fix that needs no deploy is closed
+there without the stop, and `done` swipes to DONE from anywhere. Default binding: toward the
+end advance, then done on the longer drag; toward the start postpone, then won't do on the
+longer drag (0.60; before, won't do alone). keksdose lets the user rebind them
 (Settings → Interaction) and stores **physical** `right` / `left` ladders with `"none"`
-fillers over the ids `advance` | `done` | `wont_do`, mapping them to
+fillers over the ids `advance` | `done` | `postpone` | `wont_do`, mapping them to
 `{ end: right, start: left }` as its translations page does. The kit's inbox binding
-uses exactly those three ids on logical `start` / `end` ladders and drops `"none"` or
+uses exactly those four ids on logical `start` / `end` ladders and drops `"none"` or
 any unknown id, mirroring `TranslationReviewPanel`'s binding. The other two apps use the
 default. **Every swipe commits through the same undoable change as a tap**: the 8 s
 "Set to …" toast with Undo (`feedbackSwipePlan` takes `useFeedbackStatusUndo`'s
@@ -679,7 +686,7 @@ The kit's `createCrashReporter` (keksdose's `crash-report.ts`, lifted) as the bo
   (`FeedbackReworkSection`, one file, exported for reuse).
 - **`useFeedbackStatusUndo(mutate)`** — §4.5's toast trio around one status PATCH, used
   by the table, the detail and the swipes.
-- **`FEEDBACK_SWIPE_ACTIONS` (`advance`, `done`, `wont_do`), `DEFAULT_FEEDBACK_SWIPE`,
+- **`FEEDBACK_SWIPE_ACTIONS` (`advance`, `done`, `postpone` since 0.60, `wont_do`), `DEFAULT_FEEDBACK_SWIPE`,
   `feedbackSwipePlan(binding, row)`** — modelled on 0.26's `translationReviewSwipePlan`
   (logical `start`/`end` ladders, `"none"` and unknown ids dropped), returning what
   `DataTable mobileSwipeActions` takes.
@@ -2676,8 +2683,11 @@ wiring.
   **Clear filter** in place of the column's range. On a phone the # column is no card
   field, but it is a section of the Filters sheet: the bar counts it, the section says the
   same words, and **Clear all** clears it with the rest. Either Clear takes `ids` out of
-  the address (replace; the open `row` stays). An app whose `columns` drops `id` keeps the
-  narrowing and loses the indicator.
+  the address (replace; the open `row` stays). With the # column not drawn on a desktop
+  (the person hid it, the width left it out, or an app's `columns` drops `id`; ui-kit
+  0.60), a line above the table says the same words with the same **Clear filter**; in
+  0.59 the rows stayed narrowed with nothing on screen to say so. The phone's sheet lists a
+  hidden # as before; an app that drops `id` has no section there.
 - **A link's view keeps the saved filters out — and gives them back.** While the set is on,
   the filters the inbox keeps under `storageKey="feedback"` are neither applied (the view
   starts from the address's own `f.<column>`, usually none) nor written (the stored view

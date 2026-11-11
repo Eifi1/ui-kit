@@ -41,7 +41,9 @@ export interface DataTableKeyFilter {
    * {@link label} and offers Clear, in place of the column's own fields. The set wins over
    * the column's own filter (a link's `f.id=3..9` beside it is not applied), and the
    * column's Clear clears both. A column with no filter of its own gets the button while
-   * the set is on.
+   * the set is on. While the desktop does not draw the column (hidden by the person, left
+   * out for width, or not among the columns; 0.60), a line above the table says the set
+   * and offers the same Clear. The phone's Filters sheet lists a hidden column as any other.
    */
   column: string;
   /** What the panel says: "Only these 3 reports". Default: the kit's

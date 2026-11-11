@@ -21,6 +21,42 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.60.0](https://github.com/Eifi1/ui-kit/compare/v0.59.0...v0.60.0) (2026-11-11)
+
+### ⚠ BREAKING CHANGES
+
+* **theme:** createPaletteStore, applyPersistedPalette, the PaletteStore type,
+  PaletteMenu and the label key topBar.palette (TopBarLabels.palette) are removed, as 0.59
+  announced. Use createFixedPalette(useTheme, { legacyStorageKey }) for createPaletteStore,
+  its applyPalette(mode) for applyPersistedPalette and FixedPalette for PaletteStore.
+  PaletteMenu and its label have no replacement: no app offers a palette choice
+  (OptionSwitcherMenu switches any other value). keksdose, kastlan and Kurvenschmiede use
+  none of them.
+* **feedback:** without allowParams the dialog's address stops at the
+  pathname, where it was location.href with its query and hash. An app
+  that wants its paging or tab in a hand-filed report passes them; a test
+  that expects context.url to equal window.location.href gets the reduced
+  address.
+
+### Added
+
+* **app-shell:** the phone's page row can sit under the top bar ([1d65a9e](https://github.com/Eifi1/ui-kit/commit/1d65a9ed5195680967316f1c98464373adc86e56))
+* **feedback:** the dialog names the page without what the person typed ([d0fdaca](https://github.com/Eifi1/ui-kit/commit/d0fdacaffa8cb4986da97924a39915869fc01935))
+* **feedback:** the swipe's advance goes through the live test, and a postpone swipe ([9aa66d7](https://github.com/Eifi1/ui-kit/commit/9aa66d7e988f98b4c50006a55f9ecb938e08403d))
+* **sign-in-form:** afterPasswordContent, a place for the app under the password ([25e2b01](https://github.com/Eifi1/ui-kit/commit/25e2b0131b9880615f3886eb69afcce7fe6fbbf2))
+
+### Fixed
+
+* **data-table:** a keyFilter on a hidden column says so above the table, with its Clear ([7c1d3a6](https://github.com/Eifi1/ui-kit/commit/7c1d3a63a29a03e47c3983355be8f27ebaa621e1))
+* **data-table:** any filter on a hidden column says so above the table ([2cbf8ce](https://github.com/Eifi1/ui-kit/commit/2cbf8ce987aa4fde3ef464dddfa00dbc38190914))
+* **lightbox:** a zoomed picture wider than the screen pans to its far side ([233374f](https://github.com/Eifi1/ui-kit/commit/233374fef1797fa809f564d8d3400032efcb0873))
+* **nav-pills:** every pill rests in an outline, so the others look pressable ([bb3e480](https://github.com/Eifi1/ui-kit/commit/bb3e480acbb795cffcf683e56b2b1b46dbe698a7))
+* **zoomable-image:** desktop Safari's trackpad pinch zooms the picture, not the page ([115a506](https://github.com/Eifi1/ui-kit/commit/115a506a4051c4a8fb943bf3f2acf979bbfe64d7))
+
+### Changed
+
+* **theme:** the palette store, its pre-paint and PaletteMenu removed, as 0.59 announced ([a378254](https://github.com/Eifi1/ui-kit/commit/a378254546dfe36424e1b11dd10da30c00e78bbf))
+
 ## [0.59.0](https://github.com/Eifi1/ui-kit/compare/v0.58.0...v0.59.0) (2026-11-10)
 
 ### Added

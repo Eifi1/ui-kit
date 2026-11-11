@@ -26,8 +26,6 @@ import {
   AppShell,
   LanguageMenu,
   OptionSwitcherMenu,
-  PALETTES,
-  PaletteMenu,
   TOPBAR_MENU_ITEM_CLASS,
   TOPBAR_TRIGGER_CLASS,
   ThemeToggle,
@@ -47,7 +45,7 @@ import type {
 } from "@eifi1/ui-kit";
 import { PageContents, PageContentsLayout, Switch, ToggleGroup, useScrollSpy } from "@eifi1/ui-kit";
 import { ConstList, Example, Note, OutTable, Row, NO_ROUTER, code, READOUT } from "../lib/section";
-import { usePalette, useTheme } from "../stores";
+import { useTheme } from "../stores";
 
 /**
  * SHELL.
@@ -133,11 +131,8 @@ export function ShellSection() {
         <TopBarSpecimen />
       </Example>
 
-      <Example
-        label="ThemeToggle and PaletteMenu"
-        hint="Wired to the showcase's own stores — operate these and the header follows."
-      >
-        <ThemeAndPalette />
+      <Example label="ThemeToggle" hint="Wired to the showcase's own theme store — operate it and the header follows.">
+        <Theme />
       </Example>
 
       <Example
@@ -371,14 +366,11 @@ function TopBarSpecimen() {
   );
 }
 
-function ThemeAndPalette() {
+function Theme() {
   const mode = useTheme((s) => s.mode);
   const preference = useTheme((s) => s.preference);
   const toggle = useTheme((s) => s.toggle);
   const setPreference = useTheme((s) => s.setPreference);
-  const paletteId = usePalette((s) => s.id);
-  const setPaletteId = usePalette((s) => s.setId);
-  const activeName = PALETTES.find((p) => p.id === paletteId)?.name ?? paletteId;
 
   return (
     <div className="space-y-3">
@@ -389,14 +381,6 @@ function ThemeAndPalette() {
           aria-label="Toggle theme (specimen)"
           title={mode === "dark" ? "Dark" : "Light"}
         />
-        <PaletteMenu
-          palettes={PALETTES}
-          activeId={paletteId}
-          mode={mode}
-          onSelect={setPaletteId}
-          aria-label="Appearance preset (specimen)"
-          heading="Palette"
-        />
         {/* `toggle` only ever produces an explicit light or dark, so nothing in the
             top bar can hand the user back to "system" once they have left it. The
             escape hatch is `setPreference`, which is why it is a separate action
@@ -406,7 +390,7 @@ function ThemeAndPalette() {
         </button>
       </Row>
       <p className={READOUT_STRONG}>
-        mode: {mode} · preference: {preference} · palette: {paletteId} ({activeName})
+        mode: {mode} · preference: {preference}
       </p>
       <Note>
         <code className="font-mono">mode</code> is the RESOLVED light/dark and{" "}
@@ -416,11 +400,10 @@ function ThemeAndPalette() {
         read <code className="font-mono">preference</code> only to show the choice back.
       </Note>
       <Note>
-        <code className="font-mono">PaletteMenu</code> is deprecated and leaves the kit in the next minor: no app offers
-        a palette choice, and an app paints its one palette with <code className="font-mono">createFixedPalette</code>{" "}
-        (Foundations → Tokens). The top bar&apos;s preset switcher is the showcase&apos;s own. The menu indexes each
-        preset by <code className="font-mono">mode</code> to draw its swatches, so its colours change when you flip the
-        theme; <code className="font-mono">PALETTES</code> is {PALETTES.length} presets.
+        The kit ships no palette switcher: no app offers a palette choice, and an app paints its one palette with{" "}
+        <code className="font-mono">createFixedPalette</code> (Foundations → Tokens), which follows{" "}
+        <code className="font-mono">mode</code>. The top bar&apos;s preset switcher is the showcase&apos;s own, an{" "}
+        <code className="font-mono">OptionSwitcherMenu</code>.
       </Note>
     </div>
   );
@@ -487,10 +470,10 @@ function Languages() {
       </Note>
       <Note>
         <code className="font-mono">heading</code> is the same small uppercase row{" "}
-        <code className="font-mono">PaletteMenu</code>, <code className="font-mono">OptionSwitcherMenu</code> and{" "}
-        <code className="font-mono">TopBarActionMenu</code> draw, so a row of top-bar menus reads alike. Like every
-        top-bar menu this one is a <code className="font-mono">HoverMenu</code>: focus the flag and press ↓ or Enter to
-        open it onto the first language, ↑/↓ to move, Escape to close back onto the flag.
+        <code className="font-mono">OptionSwitcherMenu</code> and <code className="font-mono">TopBarActionMenu</code>{" "}
+        draw, so a row of top-bar menus reads alike. Like every top-bar menu this one is a{" "}
+        <code className="font-mono">HoverMenu</code>: focus the flag and press ↓ or Enter to open it onto the first
+        language, ↑/↓ to move, Escape to close back onto the flag.
       </Note>
     </div>
   );
@@ -816,6 +799,7 @@ const DEMO_FOOTER_ITEMS: AppShellSidebarFooterItem[] = [
 function AppShellPlayground() {
   const [subNav, setSubNav] = useState<"flyout" | "inline">("inline");
   const [mobileSubNav, setMobileSubNav] = useState(true);
+  const [subNavPlacement, setSubNavPlacement] = useState<"bottom" | "top">("bottom");
   const [withFooter, setWithFooter] = useState(true);
   const [withSidebarFooter, setWithSidebarFooter] = useState(true);
   const [withFooterItems, setWithFooterItems] = useState(true);
@@ -841,10 +825,25 @@ function AppShellPlayground() {
         </div>
         <Switch
           label="mobileSubNav"
-          description="The group's pages as a row above the phone bar"
+          description="The group's pages as a row on the phone"
           checked={mobileSubNav}
           onCheckedChange={setMobileSubNav}
         />
+        <div className="space-y-1">
+          <span className="text-xs text-muted">mobileSubNavPlacement</span>
+          <ToggleGroup<"bottom" | "top">
+            aria-label="mobileSubNavPlacement"
+            value={subNavPlacement}
+            onChange={setSubNavPlacement}
+            options={[
+              { value: "bottom", label: "bottom" },
+              { value: "top", label: "top" },
+            ]}
+          />
+          <p className="text-xs text-muted">
+            Above the bar, or sticky under the top bar; on top, --app-nav-h measures the bar alone
+          </p>
+        </div>
         <Switch
           label="footer"
           description="Desktop only, under the content"
@@ -892,6 +891,7 @@ function AppShellPlayground() {
               nav={DEMO_NAV}
               subNav={subNav}
               mobileSubNav={mobileSubNav}
+              mobileSubNavPlacement={subNavPlacement}
               embedded={embedded}
               // A key of its own: the default is shared by every app on the origin. An
               // embedded shell without one keeps its collapse state for this mount only.
@@ -956,7 +956,8 @@ function AppShellPlayground() {
         <code className="font-mono">#demo-shell</code>, while <code className="font-mono">&lt;html&gt;</code> keeps the
         page shell&apos;s value — the page&apos;s bottom bar does not move when this box mounts, and nothing is left
         behind when it unmounts. Inside the box, <code className="font-mono">var(--app-nav-h)</code> resolves to the
-        nearest shell&apos;s bar.
+        nearest shell&apos;s bar. With <code className="font-mono">mobileSubNavPlacement</code> on top, the Books row
+        moves under the box&apos;s top bar and the value drops to the bar&apos;s own height.
       </Note>
       <Note>
         Try: hover or expand <strong>Books</strong> (flyout vs inline), collapse the sidebar with the button at its foot

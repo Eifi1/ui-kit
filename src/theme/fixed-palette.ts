@@ -7,10 +7,10 @@ import type { ThemeMode, ThemeState } from "./theme-store";
 
 /**
  * One palette, and no choice of it (Marcel, 2026-11-10: none of the three apps offers a
- * chart palette any more). `createPaletteStore` kept a choice per device; with nothing to
- * choose, what is left is a preset painted for the light or dark mode in force — what
- * keksdose's own `palette-store.ts` became (7e64b326), here so the other two do not write
- * it a second and a third time.
+ * chart palette any more). `createPaletteStore` kept a choice per device until 0.60 removed
+ * it; with nothing to choose, what is left is a preset painted for the light or dark mode in
+ * force — what keksdose's own `palette-store.ts` became (7e64b326), here so the other two do
+ * not write it a second and a third time.
  *
  * **Nothing is kept**, so nothing joins the device reset (docs/settings-harmonization.md
  * §11.4): there is no value to put back, and an entry would make the reset report, and an
@@ -38,8 +38,9 @@ export interface FixedPaletteOptions {
   legacyStorageKey?: string;
 }
 
-/** What {@link createFixedPalette} hands back: the names `createPaletteStore` used, so
- *  an app's `palette-store.ts` swaps one call and its consumers keep their imports. */
+/** What {@link createFixedPalette} hands back: the names the removed `createPaletteStore`
+ *  used, so an app's `palette-store.ts` swapped one call and its consumers kept their
+ *  imports. */
 export interface FixedPalette {
   /** Paint the preset's set for `mode` on `<html>`. Before React mounts: at module scope
    *  in `main.tsx`, with the mode `applyPersistedTheme` returned. */
@@ -56,8 +57,7 @@ export interface FixedPalette {
 }
 
 /**
- * The app's one palette, bound to its theme store (for the light/dark mode in force).
- * Replaces `createPaletteStore` for an app that offers no palette choice:
+ * The app's one palette, bound to its theme store (for the light/dark mode in force):
  *
  * ```ts
  * // palette-store.ts

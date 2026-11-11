@@ -40,7 +40,7 @@ export interface FeedbackSubmitDialogProps {
   /** The form, and the `context` built from the same values the box showed. */
   onSubmit: (data: FeedbackMultipleSubmission<FeedbackCategory>, context: FeedbackContext) => void | Promise<void>;
   user?: FeedbackSubmitter | null;
-  /** `location.href` when the dialog opened. */
+  /** `location.href` when the dialog opened, reduced to the allowed params (0.60). */
   url: string;
   attachUrl: boolean;
   onAttachUrlChange: (attachUrl: boolean) => void;

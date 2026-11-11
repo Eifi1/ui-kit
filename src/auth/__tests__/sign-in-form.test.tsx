@@ -41,6 +41,35 @@ async function signIn(user: ReturnType<typeof userEvent.setup>, email = "ada@exa
 }
 
 describe("SignInForm — credentials", () => {
+  it("puts the app's content where it asks: credentialsContent first, afterPasswordContent after the password", async () => {
+    const { user } = setup({
+      credentialsContent: <p>Demo notice</p>,
+      afterPasswordContent: <input type="checkbox" aria-label="This is a shared computer" />,
+      onSubmit: async () => Promise.reject(refusal(401, "invalid_credentials")),
+    });
+    // kastlan #31: email, password, the shared-computer choice, then the buttons.
+    const order = [
+      screen.getByText("Demo notice"),
+      screen.getByLabelText("Email"),
+      screen.getByLabelText("Password"),
+      screen.getByRole("checkbox", { name: "This is a shared computer" }),
+      screen.getByRole("button", { name: "Sign in" }),
+    ];
+    for (const [before, after] of order.slice(0, -1).map((node, i) => [node, order[i + 1]] as const)) {
+      expect(before.compareDocumentPosition(after) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    }
+    // A refusal's message sits between the choice and the button that answered.
+    await signIn(user);
+    const alert = await screen.findByRole("alert");
+    expect(
+      screen.getByRole("checkbox", { name: "This is a shared computer" }).compareDocumentPosition(alert) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      alert.compareDocumentPosition(screen.getByRole("button", { name: "Sign in" })) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
   it("names the fields for passkey autofill and the password manager", () => {
     setup();
     expect(screen.getByLabelText("Email")).toHaveAttribute("autocomplete", "username webauthn");

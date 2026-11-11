@@ -1,6 +1,6 @@
 {
   "name": "@eifi1/ui-kit",
-  "version": "0.59.0",
+  "version": "0.60.0",
   "type": "module",
   "description": "App-agnostic shared design system: domain-free React components, theme and tokens.",
   "_sideEffects": "The barrel (src/index.ts) re-exports EVERY component, including components/chart, which statically imports recharts. Without this field a bundler must assume each of those modules has side effects, so it cannot drop the unused ones: importing a Button from '@eifi1/ui-kit' dragged all 433KB of recharts into the consumer's ENTRY chunk, and Keksdose was preloading it on every page load, login included. Nothing in src/ imports for side effects (no bare imports, no CSS imports from JS, no module-level global writes) — the token stylesheet is its own './tokens.css' export — so this is safe. CSS is still listed so any future stylesheet survives. Re-checked when `flag-icons` left `dependencies` and tsup started emitting a `\"use client\"` banner: neither touches this. The flag stylesheet was never imported from JS in the first place (that was the finding), and a directive prologue is a string literal every bundler lifts out before it decides whether a module is inert.",
@@ -214,7 +214,7 @@
     "globals": "^17.12.0",
     "husky": "^9.1.7",
     "idb-keyval": "^6.2.6",
-    "jsdom": "^30.1.3",
+    "jsdom": "^31.0.0",
     "lucide-react": "^1.47.0",
     "modern-screenshot": "^4.7.0",
     "playwright-core": "~1.65.0",

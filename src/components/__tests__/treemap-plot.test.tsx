@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { Treemap, type TreemapNode } from "../treemap";
 import { stubDesktop, stubResizeObserver, type ResizeObserverStub } from "../../test/viewport";
+import { cssValue } from "../../test/css";
 
 /**
  * The map's own picture (0.55, held back from 0.53's code review): the kit lays the nodes
@@ -169,7 +170,7 @@ describe("Treemap's bubble", () => {
   it("slides from node to node, unless the reader asked for less motion", () => {
     drawn(<Treemap data={DATA} />);
     fireEvent.mouseEnter(named("Rent"));
-    expect(bubble()!.style.transition).toBe("transform 400ms ease");
+    expect(bubble()!.style.transition).toBe(cssValue("transition", "transform 400ms ease"));
     stubDesktop({ reducedMotion: true });
     fireEvent.mouseEnter(named("Groceries"));
     expect(bubble()!.style.transition).toBe("");

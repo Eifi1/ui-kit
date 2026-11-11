@@ -144,14 +144,31 @@ const OFF_CHAIN: FeedbackStatus[] = ["NEEDS_LIVE_TEST", "POSTPONED", "WONT_DO"];
 
 const FORWARD_CHAIN: FeedbackStatus[] = ["OPEN", "READY", "IN_PROGRESS", "IN_EVALUATION", "DONE"];
 
-/** The next status along the chain, or null at the end (or off it, as `WONT_DO`
- *  is). What a swipe-to-advance gesture commits. `REWORK` (0.40) is not in the chain —
- *  "advance" from READY still goes to IN_PROGRESS — but it leads there too: a reworked
- *  row is READY's twin. */
+/**
+ * What "advance" walks (0.60, keksdose live #513, Marcel's decision 2026-11-11): the chain
+ * with `NEEDS_LIVE_TEST` between `IN_EVALUATION` and `DONE`. A report keksdose has
+ * evaluated goes out with the next deploy and is checked there, so its short swipe from
+ * IN_EVALUATION landed on DONE one stage too early, and a row waiting on the deploy had no
+ * advance at all.
+ *
+ * The pills keep {@link FORWARD_CHAIN}'s neighbours, which already offer both steps:
+ * NEEDS_LIVE_TEST from every chain status (a row can be handed to the next deploy from any
+ * point) and DONE from IN_EVALUATION and from NEEDS_LIVE_TEST. Moving NEEDS_LIVE_TEST into
+ * that chain would drop DONE from an IN_EVALUATION row's pills (a fix that needs no deploy
+ * is finished there) and IN_EVALUATION from a DONE row's: every row would have to pass
+ * through the deploy stage to be closed, which the advance alone should not force. The
+ * swipe's "done" still goes to DONE from anywhere.
+ */
+const ADVANCE_CHAIN: FeedbackStatus[] = ["OPEN", "READY", "IN_PROGRESS", "IN_EVALUATION", "NEEDS_LIVE_TEST", "DONE"];
+
+/** The next status along {@link ADVANCE_CHAIN}, or null at the end (or off it, as
+ *  `POSTPONED` and `WONT_DO` are). What a swipe-to-advance gesture commits. `REWORK`
+ *  (0.40) is not in the chain — "advance" from READY still goes to IN_PROGRESS — but it
+ *  leads there too: a reworked row is READY's twin. */
 export function nextFeedbackStatus(current: FeedbackStatus): FeedbackStatus | null {
   if (current === "REWORK") return "IN_PROGRESS";
-  const at = FORWARD_CHAIN.indexOf(current);
-  return at !== -1 && at < FORWARD_CHAIN.length - 1 ? FORWARD_CHAIN[at + 1] : null;
+  const at = ADVANCE_CHAIN.indexOf(current);
+  return at !== -1 && at < ADVANCE_CHAIN.length - 1 ? ADVANCE_CHAIN[at + 1] : null;
 }
 
 /**

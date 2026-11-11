@@ -154,6 +154,21 @@ describe("the inbox's ?ids= set (0.59, §13.7)", () => {
     expect(screen.getByText("Only this report")).toBeInTheDocument();
   });
 
+  it("says the set above the table while the # column is hidden, and its Clear takes ids out (0.60)", () => {
+    restore = stubViewportWidth(DESKTOP_WIDTH);
+    localStorage.setItem(STORE, JSON.stringify({ hidden: ["id"] }));
+    renderInbox("/feedback?ids=2,4&row=4");
+    expect(screen.queryByRole("columnheader", { name: /^#/ })).toBeNull();
+    expect(titles()).toEqual(["Typo in the footer", "Where is the currency?"]);
+    const line = screen.getByRole("group", { name: "Filter # (active)" });
+    expect(line).toHaveTextContent("Only these 2 reports");
+    fireEvent.click(within(line).getByRole("button", { name: "Clear filter" }));
+    expect(params().has("ids")).toBe(false);
+    expect(params().get("row")).toBe("4");
+    expect(titles()).toHaveLength(4);
+    expect(screen.queryByRole("group", { name: "Filter # (active)" })).toBeNull();
+  });
+
   it("shows the whole list for an ?ids= that names no set", () => {
     restore = stubViewportWidth(DESKTOP_WIDTH);
     renderInbox("/feedback?ids=2,,4");

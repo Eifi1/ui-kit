@@ -7,6 +7,7 @@ import type { AppShellNavItem } from "../app-shell";
 import { IconButton } from "../../components/icon-button";
 import { applyTextSize } from "../../theme/text-size";
 import { viewportMatchMedia } from "../../test/viewport";
+import { cssValue } from "../../test/css";
 
 /**
  * The phone bar and the sidebar at Large and Extra large (docs/text-size-harmonization.md
@@ -83,14 +84,18 @@ describe("mobileMaxItems (§10.7)", () => {
     viewport(390);
     const { container } = renderShell();
     expect(cellNames(container)).toEqual(["Home", "Budget", "Transactions", "Accounts", "More"]);
-    expect(phoneBar(container).style.gridTemplateColumns).toBe("repeat(5, minmax(0, 1fr))");
+    expect(phoneBar(container).style.gridTemplateColumns).toBe(
+      cssValue("grid-template-columns", "repeat(5, minmax(0, 1fr))"),
+    );
   });
 
   it("shows every entry when mobileMaxItems holds them all, with no More cell", () => {
     viewport(390);
     const { container } = renderShell({ mobileMaxItems: 7 });
     expect(cellNames(container)).toEqual(NAV.map((n) => n.label));
-    expect(phoneBar(container).style.gridTemplateColumns).toBe("repeat(7, minmax(0, 1fr))");
+    expect(phoneBar(container).style.gridTemplateColumns).toBe(
+      cssValue("grid-template-columns", "repeat(7, minmax(0, 1fr))"),
+    );
   });
 
   it("shows four entries and More at Large", () => {
@@ -98,7 +103,9 @@ describe("mobileMaxItems (§10.7)", () => {
     applyTextSize("large");
     const { container } = renderShell();
     expect(cellNames(container)).toEqual(["Home", "Budget", "Transactions", "Accounts", "More"]);
-    expect(phoneBar(container).style.gridTemplateColumns).toBe("repeat(5, minmax(0, 1fr))");
+    expect(phoneBar(container).style.gridTemplateColumns).toBe(
+      cssValue("grid-template-columns", "repeat(5, minmax(0, 1fr))"),
+    );
   });
 
   it("shows three entries and More at Extra large", () => {

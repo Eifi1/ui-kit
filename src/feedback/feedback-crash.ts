@@ -1,6 +1,7 @@
 import { crashFingerprint } from "../components/error-boundary";
 import type { CrashReport } from "../components/error-boundary";
 import type { FeedbackEnvironment } from "./feedback-record";
+import { reducePage } from "./feedback-page";
 
 /**
  * Crash auto-filing, the client half — §4.6 of the feedback contract
@@ -209,24 +210,6 @@ function clamp(value: unknown, max: number): string | null {
   const trimmed = value.trim();
   if (!trimmed) return null;
   return trimmed.length > max ? trimmed.slice(0, max) : trimmed;
-}
-
-/** The page as `pathname?allowed=params` — never anything else. */
-function reducePage(page: unknown, allow: ReadonlySet<string>): string {
-  const raw = typeof page === "string" ? page : "";
-  try {
-    // The base only lets a path parse; it never leaves this function.
-    const url = new URL(raw, "http://localhost");
-    const kept = new URLSearchParams();
-    for (const [key, value] of url.searchParams) {
-      if (allow.has(key)) kept.append(key, value);
-    }
-    const query = kept.toString();
-    return `${url.pathname}${query ? `?${query}` : ""}`;
-  } catch {
-    // A page that will not parse still has a pathname worth having (kk `:163-167`).
-    return raw.split(/[?#]/)[0];
-  }
 }
 
 /** The server's message normalisation (kk `feedback_service.py` `_normalise`): hex runs

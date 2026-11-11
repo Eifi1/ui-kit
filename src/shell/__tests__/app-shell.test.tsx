@@ -2,6 +2,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { Home, Layers, TextCursorInput } from "lucide-react";
 import { AppShell } from "../app-shell";
+import { cssValue } from "../../test/css";
 
 /**
  * Refactor plan 2026-08-24, U-4.
@@ -262,7 +263,7 @@ describe("AppShell — an entry the phone reaches another way (mobileHidden, 0.3
     const bar = container.querySelector<HTMLElement>(".fixed.bottom-0 [data-tour=nav]")!;
     expect(within(bar).queryByRole("link", { name: "Start" })).toBeNull();
     expect(within(bar).getAllByRole("link")).toHaveLength(2);
-    expect(bar.style.gridTemplateColumns).toBe("repeat(2, minmax(0, 1fr))");
+    expect(bar.style.gridTemplateColumns).toBe(cssValue("grid-template-columns", "repeat(2, minmax(0, 1fr))"));
     expect(screen.getAllByRole("link", { name: "Start" }).length).toBeGreaterThan(0);
   });
 });

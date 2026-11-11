@@ -1229,6 +1229,24 @@ body {
     animation-name: overlay-fade-in;
   }
 }
+/* Under the top bar (`mobileSubNavPlacement="top"`) it comes down out of the top bar
+   instead: the same 6px, the other way. Inside `no-preference` because this selector
+   outranks the plain `.animate-subnav` above, and would beat the reduced-motion fade. */
+@keyframes subnav-down {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .animate-subnav[data-placement="top"] {
+    animation-name: subnav-down;
+  }
+}
 
 /* Chart drilldown fan-out/-in (feedback #260 rework): the remounted chart eases
    in instead of snapping. */

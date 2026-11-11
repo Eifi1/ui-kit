@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Trash2 } from "lucide-react";
+import { cssValue } from "../../test/css";
 
 import { ImageGrid } from "../image-grid";
 import { AuthedImage } from "../authed-image";
@@ -84,10 +85,14 @@ describe("ImageGrid", () => {
 
   it("is responsive by default and takes a fixed column count", () => {
     const { unmount } = render(<ImageGrid items={ITEMS} minTileSize={120} />);
-    expect(screen.getByRole("list").style.gridTemplateColumns).toBe("repeat(auto-fill, minmax(min(120px, 100%), 1fr))");
+    expect(screen.getByRole("list").style.gridTemplateColumns).toBe(
+      cssValue("grid-template-columns", "repeat(auto-fill, minmax(min(120px, 100%), 1fr))"),
+    );
     unmount();
     render(<ImageGrid items={ITEMS} columns={4} />);
-    expect(screen.getByRole("list").style.gridTemplateColumns).toBe("repeat(4, minmax(0, 1fr))");
+    expect(screen.getByRole("list").style.gridTemplateColumns).toBe(
+      cssValue("grid-template-columns", "repeat(4, minmax(0, 1fr))"),
+    );
   });
 
   it("names a tile with no alt by its position", () => {

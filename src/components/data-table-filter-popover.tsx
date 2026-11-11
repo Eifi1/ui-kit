@@ -1,6 +1,8 @@
-import { useCallback, useState } from "react";
-import { X } from "lucide-react";
+import { useCallback, useEffectEvent, useLayoutEffect, useRef, useState } from "react";
+import type { RefObject } from "react";
+import { Filter, X } from "lucide-react";
 import { cn } from "../lib/cn";
+import { focusContainer } from "../lib/focus-left";
 import { decimalMark, localizeMark, readTyped, showsTyped } from "../lib/decimal-marks";
 import { FIELD_TOUCH_TEXT } from "./field-base";
 import { FOCUS_RING } from "./focus-ring";
@@ -55,15 +57,91 @@ export function KeySetPanel({
     <div className="space-y-2" data-key-filter="">
       <p className="text-sm text-secondary">{label}</p>
       <div className="flex justify-end pt-1">
-        <button
-          type="button"
-          onClick={onClear}
-          className="flex items-center gap-1 rounded border border-subtle bg-surface px-2 py-1 text-xs text-secondary hover:bg-hover"
-        >
-          <X className="size-3" /> {labels.clearFilter}
-        </button>
+        <KeySetClear onClear={onClear} labels={labels} />
       </div>
     </div>
+  );
+}
+
+/**
+ * A filter whose column the desktop does not draw (0.60) — hidden by the person, left out
+ * for width, or not among the columns: a line above the table that says it, with its Clear.
+ * Only the column's header said a filter was on, so a hidden column's filter narrowed the
+ * rows with no word and no Clear: the inbox's # column hidden under a notice's `?ids=` (3
+ * reports of hundreds), and the saved layout of live #500 — DONE only, Status hidden —
+ * which showed 2 of 5 reports and never said why. A line where the toolbar's sits, standing
+ * in for the column's filter button:
+ *
+ * - `kind="set"`, a `keyFilter` set: {@link KeySetPanel}'s words ("Only these 3 rows"), the
+ *   line named as the button is ("Filter # (active)");
+ * - `kind="column"`, the column's own filter: the button's name as the line's words
+ *   ("Filter Status (active)").
+ *
+ * The phone draws none: its Filters sheet lists a hidden column as any other. Internal:
+ * drawn by DataTable.
+ */
+export function HiddenFilterLine({
+  kind,
+  label,
+  name,
+  onClear,
+  labels,
+  focusAfter,
+  className,
+}: {
+  kind: "set" | "column";
+  label: string;
+  /** The column's name, for the line's own; none for a column the table does not have, or
+   *  where `label` already is that name (`kind="column"`). */
+  name?: string;
+  onClear: () => void;
+  labels: DataTableLabels;
+  /** Where the focus goes when the line leaves while it holds it: the table. */
+  focusAfter: RefObject<HTMLElement | null>;
+  className?: string;
+}) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  // Its Clear takes the line away under the focus, which fell to <body> (lib/focus-left,
+  // DSP-15): to the table instead, the rows the Clear brought back. In the commit that
+  // removes the line, while the line is still in the page to ask whether it held it. The
+  // table is read then, not when the line came: a line drawn in the table's first commit
+  // runs its effect before the table's ref is set.
+  const toTable = useEffectEvent(() => {
+    const table = focusAfter.current;
+    if (table?.isConnected) focusContainer(table);
+  });
+  useLayoutEffect(() => {
+    const root = ref.current;
+    return () => {
+      if (root?.contains(document.activeElement)) toTable();
+    };
+  }, []);
+  return (
+    <div
+      ref={ref}
+      role="group"
+      aria-label={name === undefined ? undefined : labels.filterColumn(name, true)}
+      data-hidden-filter={kind}
+      className={cn("flex flex-wrap items-center gap-2", className)}
+    >
+      <Filter className="size-4 shrink-0 text-brand-muted" />
+      <p className="min-w-0 flex-1 text-sm text-secondary">{label}</p>
+      <KeySetClear onClear={onClear} labels={labels} />
+    </div>
+  );
+}
+
+/** The set's Clear, in its panel and on its line: the "Clear filter" every column's
+ *  panel ends with. */
+function KeySetClear({ onClear, labels }: { onClear: () => void; labels: DataTableLabels }) {
+  return (
+    <button
+      type="button"
+      onClick={onClear}
+      className="flex items-center gap-1 rounded border border-subtle bg-surface px-2 py-1 text-xs text-secondary hover:bg-hover"
+    >
+      <X className="size-3" /> {labels.clearFilter}
+    </button>
   );
 }
 

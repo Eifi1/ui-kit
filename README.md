@@ -28,8 +28,8 @@ with its own Tailwind config.
 ## Compatibility with server-kit
 
 The backend half, [`eifi1-server-kit`](https://github.com/Eifi1/server-kit), is a separate
-package with its own version and changelog. **ui-kit 0.59 ↔ server-kit 0.23**: this release
-is tested against server-kit 0.23.0's API export (the showcase's Server kit pages and the
+package with its own version and changelog. **ui-kit 0.60 ↔ server-kit 0.24**: this release
+is tested against server-kit 0.24.0's API export (the showcase's Server kit pages and the
 vocabulary test, `showcase/src/__tests__/server-kit-vocabularies.test.ts`).
 
 ## Documentation
@@ -169,7 +169,7 @@ The stores are factories so each app namespaces its own `localStorage`: theme, t
 and contrast. The palette is one preset and no choice (0.59): `createFixedPalette` paints
 it for the theme's mode and keeps nothing (`DEFAULT_PRESET` unless `preset` names another;
 `legacyStorageKey` removes an old palette key at boot). `createPaletteStore` and
-`applyPersistedPalette`, which kept a choice per device, are deprecated.
+`applyPersistedPalette`, which kept a choice per device, were removed in 0.60.
 
 ```ts
 import { createContrastStore, createFixedPalette, createTextSizeStore, createThemeStore } from "@eifi1/ui-kit";
@@ -582,7 +582,7 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2255 names from 382 modules** in the main barrel — 1016 values and 1239 types — and 195 more in 16 standalone entries. _Italic_ is a type-only export.
+**2251 names from 381 modules** in the main barrel — 1013 values and 1238 types — and 195 more in 16 standalone entries. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 `node scripts/gen-export-inventory.mjs`; the counts are pinned by
@@ -590,9 +590,9 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2255 |
+| `@eifi1/ui-kit` | 2251 |
 | `@eifi1/ui-kit/chart` | 102 |
-| `@eifi1/ui-kit/shell` | 110 |
+| `@eifi1/ui-kit/shell` | 109 |
 | `@eifi1/ui-kit/data-table` | 57 |
 | `@eifi1/ui-kit/wizard` | 25 |
 | `@eifi1/ui-kit/tour` | 49 |
@@ -858,7 +858,6 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `theme/palette-derive` | `auditChartRamp`, `auditPalette`, `deriveChartRamp`, `derivePalette`, `describe`, _`AnchorRole`_, _`ChartRampReport`_, _`ContrastCheck`_, _`ContrastReport`_, _`DerivedPalette`_, _`DeriveOptions`_, _`PaletteAnchors`_, _`SemanticTokens`_ |
 | `theme/palette-presets` | `applyTokenSet`, `DEFAULT_PRESET`, `DERIVED_PRESETS`, `PALETTES`, `PAUL_TOL_PRESET`, `presetById`, _`PalettePreset`_, _`TokenSet`_ |
 | `theme/theme-store` | `applyPersistedTheme`, `createThemeStore`, _`ThemeMode`_, _`ThemePreference`_, _`ThemeState`_, _`ThemeStore`_ |
-| `theme/palette-store` | `applyPersistedPalette`, `createPaletteStore`, _`PaletteStore`_ |
 | `theme/fixed-palette` | `createFixedPalette`, _`FixedPalette`_, _`FixedPaletteOptions`_ |
 | `theme/text-size` | `applyPersistedTextSize`, `applyTextSize`, `createTextSizeStore`, `isTextSize`, `readPersistedTextSize`, `readTextSize`, `resolveTextSize`, `TEXT_SCALE`, `TEXT_SIZE_INLINE_SCRIPT`, `TEXT_SIZES`, `useTextSize`, _`ApplyTextSizeOptions`_, _`PersistedAppearanceOptions`_, _`PersistedTextSize`_, _`TextSize`_, _`TextSizeInfo`_, _`TextSizeState`_, _`TextSizeStore`_ |
 | `theme/contrast` | `applyContrast`, `applyPersistedContrast`, `CONTRAST_MODES`, `contrastLevel`, `createContrastStore`, `isContrastMode`, `prefersMoreContrast`, `readContrastLevel`, `readPersistedContrast`, `resolveContrastMode`, _`ApplyContrastOptions`_, _`ContrastLevel`_, _`ContrastMode`_, _`ContrastState`_, _`ContrastStore`_, _`PersistedContrast`_ |
@@ -878,7 +877,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 
 | Module | Exports |
 |---|---|
-| `shell/topbar-controls` | `LanguageMenu`, `PaletteMenu`, `ThemeToggle`, `TOPBAR_MENU_ITEM_CLASS`, `TOPBAR_TRIGGER_CLASS`, _`LanguageMenuTrigger`_, _`LanguageOption`_ |
+| `shell/topbar-controls` | `LanguageMenu`, `ThemeToggle`, `TOPBAR_MENU_ITEM_CLASS`, `TOPBAR_TRIGGER_CLASS`, _`LanguageMenuTrigger`_, _`LanguageOption`_ |
 | `shell/top-bar` | `TopBar`, _`TopBarProps`_ |
 | `shell/app-shell` | `AppShell`, `DEFAULT_APP_SHELL_MORE_LABELS`, `DEFAULT_MOBILE_MAX_ITEMS`, _`AppShellMoreLabels`_, _`AppShellNavItem`_, _`AppShellProps`_, _`AppShellSidebarFooterItem`_, _`AppShellSubItem`_ |
 | `shell/option-switcher-menu` | `OptionSwitcherMenu`, _`OptionSwitcherOption`_ |
@@ -1461,9 +1460,8 @@ route it elsewhere.
 ## Shell
 
 `TopBar`/`AppShell` are composable chrome. Feed `AppShell` your nav items and pass
-a `TopBar` whose `actions` combine the shared controls (`ThemeToggle`, `LanguageMenu`;
-`PaletteMenu` is deprecated, no app offers a palette choice) with your own app-owned menus
-(account, etc.):
+a `TopBar` whose `actions` combine the shared controls (`ThemeToggle`, `LanguageMenu`) with
+your own app-owned menus (account, etc.):
 
 ```tsx
 <AppShell nav={nav} footer={<Footer/>} topBar={

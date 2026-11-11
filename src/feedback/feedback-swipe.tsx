@@ -1,4 +1,4 @@
-import { Ban, Check, ChevronsRight } from "lucide-react";
+import { Ban, Check, ChevronsRight, PauseCircle } from "lucide-react";
 import type { SwipeAction } from "../components/swipeable-row";
 import type { MobileSwipeActions } from "../components/data-table";
 import { nextFeedbackStatus, visibleFeedbackStatuses, type FeedbackStatus } from "./feedback-vocabulary";
@@ -11,15 +11,18 @@ import type { FeedbackStatusChange, FeedbackStatusRow } from "./feedback-status-
  * one tap-into-the-row at a time is the slow way"*), for every app.
  *
  * - `advance` — one step along the chain (`nextFeedbackStatus`: OPEN → READY → IN_PROGRESS →
- *   IN_EVALUATION → DONE), labelled with the status it goes to;
+ *   IN_EVALUATION → NEEDS_LIVE_TEST → DONE, the live test on it since 0.60, keksdose live
+ *   #513), labelled with the status it goes to;
  * - `done` — straight to DONE, for a row that plainly needs no stop on the way;
+ * - `postpone` — park as POSTPONED (0.60, keksdose live #515): "not now", undone by a later
+ *   pick, as the status column parks a row;
  * - `wont_do` — dismiss as WONT_DO.
  *
  * The same transitions the status column offers, so nothing is reachable by gesture that
  * is not reachable by tap. keksdose lets the user rebind them (Settings → Interaction,
  * feedback #404) and keeps that storage; kastlan and Kurvenschmiede take the default.
  */
-export const FEEDBACK_SWIPE_ACTIONS = ["advance", "done", "wont_do"] as const;
+export const FEEDBACK_SWIPE_ACTIONS = ["advance", "done", "postpone", "wont_do"] as const;
 
 /** One of {@link FEEDBACK_SWIPE_ACTIONS}. */
 export type FeedbackSwipeAction = (typeof FEEDBACK_SWIPE_ACTIONS)[number];
@@ -43,10 +46,12 @@ export interface FeedbackSwipeBinding {
   end?: readonly (FeedbackSwipeAction | (string & {}))[];
 }
 
-/** keksdose's shipped binding (`swipe-prefs-store.ts:99`): toward the end advance, then
- *  done on the longer drag; toward the start won't do. A settings page's reset goes here. */
+/** keksdose's binding (`swipe-prefs-store.ts:99`): toward the end advance, then done on
+ *  the longer drag; toward the start postpone, then won't do on the longer drag (0.60,
+ *  keksdose live #515: the short drag parks a row, the long one dismisses it — the gentler
+ *  verdict on the easier gesture). A settings page's reset goes here. */
 export const DEFAULT_FEEDBACK_SWIPE: FeedbackSwipeBinding = Object.freeze({
-  start: Object.freeze(["wont_do"] as const),
+  start: Object.freeze(["postpone", "wont_do"] as const),
   end: Object.freeze(["advance", "done"] as const),
 });
 
@@ -58,7 +63,8 @@ export interface FeedbackSwipeOptions {
    *  make by accident. The plan calls it and nothing else, so the page owns the PATCH. */
   change: FeedbackStatusChange;
   /** The status names the panels show — `useFeedbackStatusLabels()`. The `done` panel
-   *  reads DONE's, `wont_do` WONT_DO's, `advance` the next status's. */
+   *  reads DONE's, `postpone` POSTPONED's, `wont_do` WONT_DO's, `advance` the next
+   *  status's. */
   labels: FeedbackStatusLabels;
 }
 
@@ -66,11 +72,13 @@ export interface FeedbackSwipeOptions {
 function targetOf(id: string, status: FeedbackStatus): FeedbackStatus | null {
   switch (id) {
     case "advance":
-      // Null at the chain's end (DONE) and off it (NEEDS_LIVE_TEST, POSTPONED, WONT_DO):
-      // "advance" has no meaning there, and a threshold that commits nothing is a trap.
+      // Null at the chain's end (DONE) and off it (POSTPONED, WONT_DO): "advance" has no
+      // meaning there, and a threshold that commits nothing is a trap.
       return nextFeedbackStatus(status);
     case "done":
       return status === "DONE" ? null : "DONE";
+    case "postpone":
+      return status === "POSTPONED" ? null : "POSTPONED";
     case "wont_do":
       return status === "WONT_DO" ? null : "WONT_DO";
     default:
@@ -108,6 +116,16 @@ function panel(
         icon: <Check className="size-4" aria-hidden />,
         tone: "success",
       };
+    case "postpone":
+      // POSTPONED's own look (feedback-vocabulary: `bg-active` / `text-secondary`): parked,
+      // not refused, so the neutral tone, never danger's.
+      return {
+        id,
+        onCommit,
+        label: labels.POSTPONED,
+        icon: <PauseCircle className="size-4" aria-hidden />,
+        tone: "neutral",
+      };
     case "wont_do":
       return {
         id,
@@ -137,12 +155,13 @@ function panel(
  * action the row cannot take DROPS OUT and the ladder closes up behind it, so the second
  * stage becomes the first instead of the side going dead behind an unreachable stage:
  *
- * - `advance` on DONE and off the chain (NEEDS_LIVE_TEST, POSTPONED, WONT_DO);
- * - `done` on DONE, `wont_do` on WONT_DO;
+ * - `advance` on DONE and off the chain (POSTPONED, WONT_DO);
+ * - `done` on DONE, `postpone` on POSTPONED, `wont_do` on WONT_DO;
  * - `"none"` and any id this version does not know;
  * - a later stage that lands where an earlier one on the same side already does — the id
- *   named twice, or `done` behind `advance` on IN_EVALUATION (both go to DONE): a longer
- *   drag to the same effect would arm a threshold that adds nothing.
+ *   named twice, or `done` behind `advance` on NEEDS_LIVE_TEST (both go to DONE; on
+ *   IN_EVALUATION they part since 0.60, advance to NEEDS_LIVE_TEST): a longer drag to the
+ *   same effect would arm a threshold that adds nothing.
  *
  * Only what the ROW decides. Whether the page may write at all — the admin inbox, not
  * `/my-feedback`; no write lock — is the caller's, by passing no `mobileSwipeActions`.

@@ -35,6 +35,27 @@ describe("the REWORK status", () => {
     expect(FEEDBACK_STATUS_META.WONT_DO.icon).toBe(Ban);
   });
 
+  it("advances IN_EVALUATION to NEEDS_LIVE_TEST and that to DONE, the pills unchanged (0.60, #513)", () => {
+    expect(nextFeedbackStatus("IN_PROGRESS")).toBe("IN_EVALUATION");
+    expect(nextFeedbackStatus("IN_EVALUATION")).toBe("NEEDS_LIVE_TEST");
+    expect(nextFeedbackStatus("NEEDS_LIVE_TEST")).toBe("DONE");
+    expect(nextFeedbackStatus("DONE")).toBeNull();
+    expect(nextFeedbackStatus("POSTPONED")).toBeNull();
+    expect(nextFeedbackStatus("WONT_DO")).toBeNull();
+    // The pills still offer DONE from IN_EVALUATION (a fix that needs no deploy) and
+    // IN_EVALUATION from DONE: the deploy stage is the advance's, never a forced stop.
+    expect(visibleFeedbackStatuses("IN_EVALUATION")).toEqual([
+      "IN_PROGRESS",
+      "IN_EVALUATION",
+      "NEEDS_LIVE_TEST",
+      "POSTPONED",
+      "DONE",
+      "WONT_DO",
+    ]);
+    expect(visibleFeedbackStatuses("DONE")).toContain("IN_EVALUATION");
+    expect(visibleFeedbackStatuses("NEEDS_LIVE_TEST")).toEqual(["IN_PROGRESS", "NEEDS_LIVE_TEST", "DONE", "WONT_DO"]);
+  });
+
   it("leads to IN_PROGRESS; advancing READY still goes to IN_PROGRESS", () => {
     expect(nextFeedbackStatus("REWORK")).toBe("IN_PROGRESS");
     expect(nextFeedbackStatus("READY")).toBe("IN_PROGRESS");

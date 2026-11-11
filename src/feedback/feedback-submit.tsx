@@ -7,6 +7,7 @@ import type { FeedbackSubmitter } from "./feedback-context";
 import type { FeedbackSubmitDialogProps } from "./feedback-submit-dialog";
 import type { FeedbackMultipleSubmission } from "./feedback-dialog";
 import { useFeedbackToastLabels } from "./feedback-labels";
+import { reduceAddress } from "./feedback-page";
 import { FEEDBACK_PICKABLE_CATEGORIES, type FeedbackContext, type FeedbackEnvironment } from "./feedback-record";
 import type { FeedbackCategory } from "./feedback-vocabulary";
 
@@ -70,6 +71,17 @@ export interface UseFeedbackSubmitOptions<R = unknown> {
   environment?: FeedbackEnvironment | (string & {});
   /** `context.version` — the app build (`__APP_VERSION__`). */
   version?: string;
+  /**
+   * The query params the page address may keep (0.60, keksdose legal audit 2026-11-11,
+   * G-10) — pass the crash reporter's `allowParams`, so a report filed by hand names the
+   * page as a crash report does. The dialog shows and sends `origin` + the pathname + these
+   * params; every other param and the hash stay on the device. Left out, none: the address
+   * stops at the pathname.
+   *
+   * Until 0.60 the dialog sent `location.href` whole — keksdose's register search (`?q=`)
+   * and its column filters, which hold payee names, went into a column every admin reads.
+   */
+  allowParams?: Iterable<string>;
   /** The report was filed: after the "Thanks for the feedback!" toast and the close. The
    *  place to invalidate the app's feedback queries. */
   onSubmitted?: (result: R) => void;
@@ -126,7 +138,8 @@ export interface FeedbackSubmit {
    * Open the dialog on `category` — a `FeedbackMenu` row's (§4.2: "default category when
    * opened from a row: that row's"). Without one, or with `CRASH` (never pickable), it
    * opens on `OTHER`, the server's own default (§3.4). Each open starts a fresh form,
-   * reads `location.href` for the context box and ticks "Attach current page URL" again.
+   * reads `location.href` for the context box — reduced to `allowParams` — and ticks
+   * "Attach current page URL" again.
    *
    * `options` (0.54, keksdose live #481) is a screen's own report — `open("BUG", {
    * diagnostics })` from "Report this problem": the diagnostics shown in the box and sent,
@@ -168,8 +181,9 @@ export interface FeedbackSubmit {
  * - The pickable categories — Bug, Idea, Question, Other, in the kit's words. `CRASH` is
  *   filed by the error boundary and is never offered (keksdose feedback #160).
  * - The context box, built from the same values as the `context` it sends
- *   ({@link FeedbackContextBox} / `feedbackContext`), the URL read when the dialog OPENS,
- *   and the diagnostics `open` was handed then (0.54, keksdose live #481).
+ *   ({@link FeedbackContextBox} / `feedbackContext`), the URL read when the dialog OPENS
+ *   and reduced to `allowParams` (0.60), and the diagnostics `open` was handed then
+ *   (0.54, keksdose live #481).
  * - Upload every file, then create (keksdose `use-feedback-dialog.tsx:89`): the
  *   screenshot to `screenshot_url`, the rest to `attachment_urls`, all in parallel.
  * - The toasts, from `feedbackToast`: filed, failed (the server's `detail` through
@@ -184,7 +198,8 @@ export interface FeedbackSubmit {
  * new draft is somebody's next report.
  */
 export function useFeedbackSubmit<R = unknown>(options: UseFeedbackSubmitOptions<R>): FeedbackSubmit {
-  const { upload, create, user, environment, version, onSubmitted, errorMessage, capture, publicNotice } = options;
+  const { upload, create, user, environment, version, allowParams, onSubmitted, errorMessage, capture, publicNotice } =
+    options;
   const toastText = useFeedbackToastLabels();
   const [isOpen, setIsOpen] = useState(false);
   const [category, setCategory] = useState<FeedbackCategory>("OTHER");
@@ -199,7 +214,8 @@ export function useFeedbackSubmit<R = unknown>(options: UseFeedbackSubmitOptions
   const open = (next?: FeedbackCategory, given?: FeedbackSubmitOpenOptions) => {
     opening.current += 1;
     setCategory(next && FEEDBACK_PICKABLE_CATEGORIES.includes(next) ? next : "OTHER");
-    setUrl(typeof window === "undefined" ? "" : window.location.href);
+    // Reduced here, before the box shows it: what the reporter reads is what is sent (G-10).
+    setUrl(typeof window === "undefined" ? "" : reduceAddress(window.location.href, new Set(allowParams)));
     // Fresh every time (Kurvenschmiede use-feedback-dialog.tsx:80): a reporter who left the
     // page out of one idea is not saying the bug report after it is unrelated too.
     setAttachUrl(true);

@@ -349,6 +349,31 @@ export interface AppShellProps extends ComponentPropsWithoutRef<"div"> {
    */
   mobileSubNavLayout?: "wrap" | "scroll";
   /**
+   * Where the phone sub-nav sits (0.60).
+   *
+   * - `"bottom"` (default): directly above the bottom bar, in the bar's own box.
+   *   `--app-nav-h` measures both rows, so whatever docks on the bar sits on the whole
+   *   navigation.
+   * - `"top"`: directly under the shell's top bar, `sticky` like the kit's `TopBar`
+   *   itself, so it stays in view while the page scrolls. `--app-nav-h` then measures
+   *   the bar alone, so `<main>`'s bottom padding shrinks and anything docked at
+   *   `bottom: var(--app-nav-h)` sits right on the bar. The row takes its own height in
+   *   the page's flow, as the top bar does, so the content starts below it rather than
+   *   under it.
+   *
+   * kastlan's UX review (prod feedback #22) asked for `"top"`: at the bottom its one
+   * `scroll` row (~43px at Normal text) and the bar (~56px) stacked into one block of
+   * about 100px over the end of every page.
+   *
+   * The row sticks 3rem down: the kit's `TopBar` is `h-12`, the height the sidebar's
+   * `md:top-12` already assumes. A top bar of another height leaves a gap or an overlap.
+   * It sits under the shell's top bar, never under a page's title, which is the page's
+   * own content. Both layouts work there, the faded cut edge and the current page
+   * scrolled into view included. Without `mobileSubNav`, or on a page outside every
+   * group, there is no row in either place.
+   */
+  mobileSubNavPlacement?: "bottom" | "top";
+  /**
    * The most cells the phone bar holds, "More" included (0.49 KIT-6). When `nav` (after
    * `mobileHidden`) has more entries, the bar keeps `mobileMaxItems − 1` of them and a
    * last "More" cell opens a sheet with the rest, each group with its pages. Which
@@ -482,6 +507,7 @@ export function AppShell({
   subNav = "flyout",
   mobileSubNav = true,
   mobileSubNavLayout: mobileSubNavLayoutProp,
+  mobileSubNavPlacement = "bottom",
   mobileMaxItems,
   moreLabels,
   toggleGroupLabel,
@@ -494,6 +520,7 @@ export function AppShell({
   const { size: textSize } = useTextSize();
   const large = textSize !== "normal";
   const mobileSubNavLayout = mobileSubNavLayoutProp ?? (large ? "scroll" : "wrap");
+  const subNavOnTop = mobileSubNavPlacement === "top";
   // The bottom bar's cells: every entry the phone does not reach another way, up to the
   // text size's limit, More included; the rest go under More (§10.7, KIT-6).
   const maxItems = mobileCells(mobileMaxItems, textSize);
@@ -570,6 +597,10 @@ export function AppShell({
             Large (their labels the names and tooltips) and a locked one keeps its reason
             in the tooltip: a bar 3rem tall has no room for words under every glyph. */}
         <CompactControls>{topBar}</CompactControls>
+        {/* `mobileSubNavPlacement="top"`: the page row as the shell's next child, between
+            the top bar and the content row, so it takes its height in the column's flow
+            (the content starts under it, as under the bar) and sticks under the bar. */}
+        {mobileSubNav && subNavOnTop && <MobileSubNav nav={nav} layout={mobileSubNavLayout} placement="top" />}
         <div className="flex flex-1 min-h-0">
           <aside
             className={cn(
@@ -715,9 +746,10 @@ export function AppShell({
             is the phone's version of the sidebar's two levels; without the upper row a
             group's `items` were simply unreachable below `md`. ONE measured box, so
             `--app-nav-h` covers both rows and whatever docks on the bar sits on the
-            whole of it. */}
+            whole of it. With the row at the top (`mobileSubNavPlacement`), the box holds
+            the bar alone and measures that. */}
         <div ref={navRef} className="md:hidden fixed bottom-0 inset-x-0 z-30 border-t border-subtle bg-surface">
-          {mobileSubNav && <MobileSubNav nav={nav} layout={mobileSubNavLayout} />}
+          {mobileSubNav && !subNavOnTop && <MobileSubNav nav={nav} layout={mobileSubNavLayout} placement="bottom" />}
           <nav
             data-tour="nav"
             className="grid"
@@ -1158,10 +1190,29 @@ function MobileMoreCell({
  * on a page outside every group the bar stays one row, rather than showing an empty
  * shelf or guessing a group.
  *
- * It slides in over 200ms (fade only under reduced motion) and wraps onto more rows
- * rather than scrolling, so every page of the group is in view at once.
+ * It slides in over 200ms (fade only under reduced motion): up out of the bottom bar,
+ * or down out of the top bar at `placement="top"`. Its layout is the shell's
+ * `mobileSubNavLayout`, the same in both places.
+ *
+ * At the bottom it is a plain block in the bar's fixed box. At the top it is its own
+ * sticky box, so it carries what that box carried: `md:hidden`, the surface, a layer.
+ * The layer is `z-[35]`, between the two the chrome already uses. Under the top bar's
+ * `z-40`: the top bar's menus hang inside that layer (HoverMenu's `absolute top-full`),
+ * and a row level with it, later in the document, would paint over them. Over `z-30`:
+ * the bottom box is `z-30` too and beats a page's own `z-30` sticky element (keksdose's
+ * open transaction editor, the reason the top bar is `z-40`) by coming after it in the
+ * document. At the top the row comes BEFORE the page, so `z-30` would lose that tie and
+ * the editor would scroll over the row.
  */
-function MobileSubNav({ nav, layout }: { nav: AppShellNavItem[]; layout: "wrap" | "scroll" }) {
+function MobileSubNav({
+  nav,
+  layout,
+  placement,
+}: {
+  nav: AppShellNavItem[];
+  layout: "wrap" | "scroll";
+  placement: "bottom" | "top";
+}) {
   const { pathname } = useLocation();
   const scroll = layout === "scroll";
   const listRef = useRef<HTMLUListElement>(null);
@@ -1185,7 +1236,13 @@ function MobileSubNav({ nav, layout }: { nav: AppShellNavItem[]; layout: "wrap" 
       aria-label={group.label}
       // Keyed by group so switching groups replays the entrance.
       key={group.to}
-      className="animate-subnav border-b border-subtle"
+      data-slot="app-shell-subnav"
+      // tokens.css turns the entrance round on `top`.
+      data-placement={placement}
+      className={cn(
+        "animate-subnav border-b border-subtle",
+        placement === "top" && "md:hidden sticky top-12 z-[35] bg-surface",
+      )}
     >
       <ul
         ref={listRef}

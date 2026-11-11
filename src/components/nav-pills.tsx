@@ -72,10 +72,17 @@ export interface NavPillsProps<T extends string> extends Omit<
 // family. Unlike the segments, a pill never truncates: the strip WRAPS instead. Its focus
 // ring is the kit's one focus frame (text-size §5), in brand; until 0.34 it copied the
 // segment's `ring-strong` too (refactor audit 2026-10, DOC-7).
-const PILL = `inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none ${FOCUS_RING} [&_svg]:size-4 [&_svg]:shrink-0`;
+//
+// Every pill has a 1px border (0.60, keksdose live #514). A segment sits in its control's
+// own well, which says "these are pressable"; a pill sits on the page, so the ones that
+// were not current were bare words — five on keksdose's swipe settings, two rows at 406px
+// in the dark theme, and only the current one looked like something to press. The others
+// now rest in the outline of a secondary Button (`border-subtle`), the current one keeps the
+// inverse fill, its border transparent so every pill has the same box.
+const PILL = `inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none ${FOCUS_RING} [&_svg]:size-4 [&_svg]:shrink-0`;
 const PILL_SM = "gap-1 px-2 py-1 text-xs [&_svg]:size-3.5";
-const PILL_CURRENT = "bg-inverse text-inverse";
-const PILL_IDLE = "text-secondary hover:bg-hover hover:text-primary";
+const PILL_CURRENT = "border-transparent bg-inverse text-inverse";
+const PILL_IDLE = "border-subtle text-secondary hover:bg-hover hover:text-primary";
 const PILL_DISABLED = "cursor-not-allowed opacity-50 hover:bg-transparent hover:text-secondary";
 
 /**

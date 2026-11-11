@@ -39,8 +39,9 @@ export type FeedbackEnvironment = "prod" | "dev" | "local";
  * signature.
  */
 export interface FeedbackContext {
-  /** The full `location.href` at open time; `""` when "Attach current page URL" was off.
-   *  Readers also accept a path-only value (Kurvenschmiede's backfilled rows). */
+  /** `location.href` at open time — since 0.60 without the hash and every query param the
+   *  app did not allow (`useFeedbackSubmit`'s `allowParams`); `""` when "Attach current page
+   *  URL" was off. Readers also accept a path-only value (Kurvenschmiede's backfilled rows). */
   url?: string;
   /** Its pathname; `""` when the URL was withheld. */
   route?: string;

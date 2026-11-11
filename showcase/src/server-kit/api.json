@@ -1,7 +1,7 @@
 {
   "format": "eifi1-server-kit-api",
   "version": 1,
-  "kit_version": "0.23.0",
+  "kit_version": "0.24.0",
   "modules": [
     {
       "name": "eifi1_server_kit.auth",
@@ -7449,7 +7449,7 @@
           "name": "ERASED_MARK",
           "kind": "constant",
           "signature": "ERASED_MARK = \"[erased]\"",
-          "doc": "What replaces the erased person's own identifiers where they were written INTO the text\n(a crash body's ``User: <email> (#<id>)`` line, keksdose ``_ERASED_MARK``).",
+          "doc": "What replaces the erased person's own identifiers where they were written INTO the text\n(keksdose ``_ERASED_MARK``). A crash body's ``User: <email> (#<id>)`` line goes whole\nsince 0.24 (:func:`scrub_crash_diagnostics`); the mark is for the rest of the text.",
           "value": "[erased]"
         },
         {
@@ -9836,7 +9836,7 @@
           "name": "anonymise_feedback",
           "kind": "function",
           "signature": "anonymise_feedback(*, title: str | None, body: str | None, context: Mapping[str, Any] | None, screenshot_url: str | None, attachment_urls: Iterable[str] | None, identifiers: Iterable[str | None], policy: AttachmentUrlPolicy = DEFAULT_ATTACHMENT_URL_POLICY) -> AnonymisedFeedback",
-          "doc": "One report with its author taken out (keksdose ``_anonymise_feedback`` row loop, ``:1201-1214``).\n\n``identifiers`` are the person's own strings — build them with\n:func:`eifi1_server_kit.auth.erasure_identifiers` (the email, the old display name, the\nfull name in every order, longest first; never a bare first or last name). The body's\n``[screenshot] <url>`` lines are stripped (the fix this module documents) BEFORE the\nscrub, and every URL the row named is returned in ``urls`` for\n:func:`attachment_keys_to_purge`. ``changes`` sets ``user_id``, ``crash_fingerprint``,\n``screenshot_url`` and ``attachment_urls`` to ``None``."
+          "doc": "One report with its author taken out (keksdose ``_anonymise_feedback`` row loop, ``:1201-1214``).\n\n``identifiers`` are the person's own strings — build them with\n:func:`eifi1_server_kit.auth.erasure_identifiers` (the email, the old display name, the\nfull name in every order, longest first; never a bare first or last name). The body's\n``[screenshot] <url>`` lines are stripped (the fix this module documents) BEFORE the\nscrub, as are a crash body's personal diagnostics (:func:`scrub_crash_diagnostics`,\n0.24), and every URL the row named is returned in ``urls`` for\n:func:`attachment_keys_to_purge`. ``changes`` sets ``user_id``, ``crash_fingerprint``,\n``screenshot_url`` and ``attachment_urls`` to ``None``."
         },
         {
           "name": "anonymise_reply",
@@ -9890,7 +9890,7 @@
           "name": "crash_body",
           "kind": "function",
           "signature": "crash_body(payload: CrashReportCreate, *, user_id: int | str, user_email: str, fingerprint: str, seen_at: str | None = None) -> str",
-          "doc": "The diagnostics block, as plain greppable text (keksdose ``_crash_body``, ``:262``).\n\nThe ``User:`` line embeds the address — which is why erasure scrubs bodies too\n(:func:`eifi1_server_kit.feedback.anonymise_feedback`)."
+          "doc": "The diagnostics block, as plain greppable text (keksdose ``_crash_body``, ``:262``).\n\nThe ``User:`` line embeds the address and the account number, ``User agent:`` and\n``Fingerprint:`` the device and a token for the person — erasure drops those three lines\nand cuts ``URL:`` to its path (:func:`eifi1_server_kit.feedback.scrub_crash_diagnostics`,\n0.24), so keep the labels as they are: the scrub finds the lines by them."
         },
         {
           "name": "crash_context",
@@ -10065,6 +10065,12 @@
           "kind": "function",
           "signature": "scrub_context(context: Mapping[str, Any] | None) -> dict[str, Any] | None",
           "doc": "Keep the diagnostics, drop everything that names the reporter (keksdose ``_scrub_context``, ``:1156``).\n\nA NEW dict (a JSON column has no mutation tracking); ``None`` when nothing is left."
+        },
+        {
+          "name": "scrub_crash_diagnostics",
+          "kind": "function",
+          "signature": "scrub_crash_diagnostics(body: str | None) -> str",
+          "doc": "A crash body without the diagnostics that name the person or the device (C-7).\n\nInside the ``-- Diagnostics --`` block only: the ``User:``, ``User agent:`` and\n``Fingerprint:`` lines go, and ``URL:`` keeps only its path — what the context keeps\n(``route``) and nothing of what it drops (``url``, ``origin``: a query can carry what\nthe person typed, a developer's origin an IP). The message, the stack and everything\nelse stay as they were; a body without the block comes back unchanged, so a hand-filed\nreport with a line that starts \"User:\" keeps it.\n\n:func:`anonymise_feedback` applies it (0.24). Rows erased before 0.24 — a crash report\nwhose ``user_id`` is already NULL — still have the three lines: run it once over their\nbodies. A second pass changes nothing."
         },
         {
           "name": "scrub_text",

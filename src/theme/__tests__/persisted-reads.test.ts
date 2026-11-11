@@ -1,15 +1,19 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { readPersistedContrast } from "../contrast";
 import { readPersistedTextSize } from "../text-size";
-import { applyPersistedTheme } from "../theme-store";
-import { applyPersistedPalette } from "../palette-store";
+import { applyPersistedTheme, createThemeStore } from "../theme-store";
+import { createFixedPalette } from "../fixed-palette";
 import { DEFAULT_PRESET, presetById } from "../palette-presets";
 
 /**
- * The four pre-paint reads, one rule since 0.52 (DUP-8, refactor audit 2026-10-30): each
+ * The pre-paint reads, one rule since 0.52 (DUP-8, refactor audit 2026-10-30): each
  * goes through `readStoredJson` with its own shape check, where each had its own
  * `JSON.parse` in its own try/catch — two of them on a bare `localStorage`. Absent,
  * malformed, another shape and blocked storage all read as "never chose".
+ *
+ * There were four until 0.60 removed `applyPersistedPalette`. The palette's pre-paint is
+ * now `createFixedPalette`'s `applyPalette`, which reads nothing: it paints the preset
+ * whatever the old key held, and removes that key through the kit's storage guard.
  */
 const KEY = "persisted-reads-test";
 
@@ -54,28 +58,37 @@ describe("the persisted appearance reads", () => {
     expect(readPersistedContrast(KEY)).toBeNull();
     expect(readPersistedTextSize(KEY)).toBeNull();
     expect(applyPersistedTheme(KEY)).toBe("light");
-    expect(() => applyPersistedPalette(KEY, "light")).not.toThrow();
   });
 });
 
-describe("applyPersistedPalette", () => {
+describe("createFixedPalette's applyPalette, the palette's pre-paint", () => {
   const brand = () => document.documentElement.style.getPropertyValue("--brand");
-  const other = presetById("moss");
+  // `applyPalette` is handed the mode and reads no store; the theme store is only its binding.
+  const fixedPalette = () => createFixedPalette(createThemeStore(`${KEY}-theme`).useTheme, { legacyStorageKey: KEY });
 
-  it("applies the stored preset", () => {
-    expect(other.light.brand).not.toBe(DEFAULT_PRESET.light.brand);
-    localStorage.setItem(KEY, JSON.stringify({ state: { id: other.id }, version: 1 }));
-    applyPersistedPalette(KEY, "light");
-    expect(brand()).toBe(other.light.brand);
-  });
-
-  it("applies the default for an absent, malformed, empty or unknown id", () => {
-    for (const stored of [null, "{not json", '{"state":{"id":""}}', '{"state":{"id":3}}', '{"state":{"id":"gone"}}']) {
+  it("paints the preset, and removes the old key whatever it held", () => {
+    const other = presetById("moss");
+    expect(other.dark.brand).not.toBe(DEFAULT_PRESET.dark.brand);
+    const { applyPalette } = fixedPalette();
+    // Another preset's id, as the old store kept it, and every shape it never wrote.
+    const held = [JSON.stringify({ state: { id: other.id }, version: 1 }), "{not json", '{"state":{"id":""}}'];
+    for (const stored of [null, ...held, '{"state":{"id":3}}', '{"state":{"id":"gone"}}']) {
       if (stored === null) localStorage.removeItem(KEY);
       else localStorage.setItem(KEY, stored);
       document.documentElement.removeAttribute("style");
-      applyPersistedPalette(KEY, "dark");
+      applyPalette("dark");
       expect(brand(), String(stored)).toBe(DEFAULT_PRESET.dark.brand);
+      expect(localStorage.getItem(KEY), String(stored)).toBeNull();
     }
+  });
+
+  it("paints where storage is blocked, and never throws", () => {
+    const { applyPalette } = fixedPalette();
+    blockStorage();
+    vi.spyOn(Storage.prototype, "removeItem").mockImplementation(() => {
+      throw new Error("blocked");
+    });
+    expect(() => applyPalette("light")).not.toThrow();
+    expect(brand()).toBe(DEFAULT_PRESET.light.brand);
   });
 });
