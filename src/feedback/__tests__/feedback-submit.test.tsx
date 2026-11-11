@@ -25,6 +25,9 @@ vi.mock("modern-screenshot", () => ({ domToBlob: () => domToBlob() }));
  */
 
 const ADA = { id: 7, email: "ada@example.com", display_name: "Ada Example" };
+/** The page every test opens on is `/accounts?p=2`; without `allowParams` the dialog names
+ *  it as `origin` + the pathname (0.60, G-10). */
+const PAGE = () => `${window.location.origin}/accounts`;
 const png = (name: string, size = 10) => new File(["x".repeat(size)], name, { type: "image/png" });
 
 /** The hook's latest `open` / `close`, handed out after each render as an app's top bar
@@ -94,7 +97,7 @@ describe("useFeedbackSubmit — the dialog", () => {
     expect(within(dialog).getByText("Ada Example (ada@example.com)")).toBeInTheDocument();
     const box = within(dialog).getByRole("checkbox", { name: "Attach current page URL" });
     expect(box).toBeChecked();
-    expect(box).toHaveAccessibleDescription(window.location.href);
+    expect(box).toHaveAccessibleDescription(PAGE());
   });
 
   it("opens on Other without a category, and never on Crash", async () => {
@@ -113,7 +116,6 @@ describe("useFeedbackSubmit — the dialog", () => {
     const onSubmitted = vi.fn();
     render(<Host upload={upload} create={create} onSubmitted={onSubmitted} />);
     await open("IDEA");
-    const href = window.location.href;
     subject("  Chart jumps on save  ");
     fireEvent.change(screen.getByLabelText("What happened? (optional)"), { target: { value: "   " } });
     await send();
@@ -124,7 +126,7 @@ describe("useFeedbackSubmit — the dialog", () => {
       body: "",
       category: "IDEA",
       context: {
-        url: href,
+        url: PAGE(),
         route: "/accounts",
         origin: window.location.origin,
         environment: "dev",
@@ -175,12 +177,47 @@ describe("useFeedbackSubmit — the dialog", () => {
     ]);
   });
 
+  it("names the page without what the person typed: only the allowed params go (G-10)", async () => {
+    // keksdose's register: the search in `?q=`, the column filters (payee names) in `f.<col>`.
+    window.history.replaceState(null, "", "/register?q=Psychotherapie&f.payee=Dr%20Muster&p=2&sort=date#row-4");
+    const create = vi.fn(async (_p: FeedbackCreatePayload) => ({ id: 1 }));
+    render(<Host create={create} allowParams={["p", "sort", "tab"]} />);
+    const dialog = await open("BUG");
+    const shown = `${window.location.origin}/register?p=2&sort=date`;
+    // What the box shows is what is sent.
+    expect(within(dialog).getByRole("checkbox", { name: "Attach current page URL" })).toHaveAccessibleDescription(
+      shown,
+    );
+    subject("Totals wrong");
+    await send();
+    const payload = create.mock.calls[0][0];
+    expect(payload.context).toMatchObject({ url: shown, route: "/register" });
+    const sent = JSON.stringify(payload);
+    for (const typed of ["Psychotherapie", "Muster", "f.payee", "row-4"]) expect(sent).not.toContain(typed);
+  });
+
+  it("keeps no query at all without allowParams, and reads the page afresh at each open", async () => {
+    const create = vi.fn(async (_p: FeedbackCreatePayload) => ({ id: 1 }));
+    render(<Host create={create} />);
+    await open("BUG");
+    expect(screen.getByRole("checkbox", { name: "Attach current page URL" })).toHaveAccessibleDescription(PAGE());
+    close();
+    window.history.replaceState(null, "", "/budget/12?q=rent");
+    await open("BUG");
+    subject("Broken");
+    await send();
+    expect(create.mock.calls[0][0].context).toMatchObject({
+      url: `${window.location.origin}/budget/12`,
+      route: "/budget/12",
+    });
+  });
+
   it("withholds url and route when the box is unticked", async () => {
     const create = vi.fn(async (_p: FeedbackCreatePayload) => ({ id: 1 }));
     render(<Host create={create} />);
     await open("BUG");
     fireEvent.click(screen.getByRole("checkbox", { name: "Attach current page URL" }));
-    expect(screen.getByText(window.location.href)).toHaveClass("line-through");
+    expect(screen.getByText(PAGE())).toHaveClass("line-through");
     subject("Broken");
     await send();
     expect(create.mock.calls[0][0].context).toMatchObject({ url: "", route: "", origin: window.location.origin });
@@ -371,7 +408,7 @@ describe("useFeedbackSubmit — open(category, options)", () => {
     await send();
     const { context } = create.mock.calls[0][0];
     expect(context.diagnostics).toEqual(SCAN);
-    expect(context).toMatchObject({ url: window.location.href, route: "/accounts", version: "0.4.26" });
+    expect(context).toMatchObject({ url: PAGE(), route: "/accounts", version: "0.4.26" });
   });
 
   it("sends them with the URL unticked too: the checkbox withholds the page, not them", async () => {
