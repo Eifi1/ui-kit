@@ -266,3 +266,16 @@ inverse fill, its border transparent so every pill has the same box. Hover, focu
   compare through `src/test/css.ts`'s `cssValue`, the expected value read back by the same
   parser. jsdom only runs the kit's own tests; nothing reaches an app. An app moving to jsdom 31
   itself may meet the same spellings in its own style assertions.
+
+## 0.60.1
+
+- **`FEEDBACK_SWIPE_ACTIONS` is exported again** from `@eifi1/ui-kit` and
+  `@eifi1/ui-kit/feedback` (keksdose's 0.60 adoption). 0.60's note named it for apps, but 0.53
+  had taken it off the surface as unread, so only `DEFAULT_FEEDBACK_SWIPE`, `feedbackSwipePlan`
+  and the type `FeedbackSwipeAction` were reachable. An app's swipe settings take the feedback
+  list's ids from it (`advance`, `done`, `postpone`, `wont_do`), as they take
+  `TRANSLATION_REVIEW_SWIPE_ACTIONS`.
+- **keksdose:** its list typed `satisfies readonly FeedbackSwipeAction[]` can become
+  `FEEDBACK_SWIPE_ACTIONS`; nothing has to change.
+- **kastlan, Kurvenschmiede:** nothing to change.
+- **Legal wording:** none.

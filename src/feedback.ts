@@ -17,6 +17,9 @@ export * from "./feedback/feedback-thread";
 // `feedbackPagePath`, `feedbackAttachmentUrls`, `feedbackRowAccess`, `useFeedbackDetailLabels`
 // and `feedbackPublicSwitchAllowed`, which their modules keep for the kit's own use.
 // `feedbackPageHref` and `feedbackPageUrl` went whole: nothing read them.
+// `FEEDBACK_SWIPE_ACTIONS` is back since 0.60.1: keksdose's swipe settings take the
+// feedback list's ids from it, as they take `TRANSLATION_REVIEW_SWIPE_ACTIONS` (0.60 added
+// `postpone`, and an app copy of the list would miss the next id).
 export {
   DEFAULT_ATTACHMENT_ACCEPT,
   DEFAULT_MAX_ATTACHMENT_BYTES,
@@ -53,6 +56,7 @@ export {
 } from "./feedback/feedback-status-undo";
 export {
   DEFAULT_FEEDBACK_SWIPE,
+  FEEDBACK_SWIPE_ACTIONS,
   feedbackSwipePlan,
   feedbackSwipeOmitShown,
   type FeedbackSwipeAction,

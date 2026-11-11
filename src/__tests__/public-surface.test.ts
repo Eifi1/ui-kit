@@ -380,7 +380,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.60 (−3, breaking): what 0.59 deprecated — `createPaletteStore` and
   // `applyPersistedPalette` (`createFixedPalette` replaces both), and `PaletteMenu` (none:
   // no app offers a palette choice). The type `PaletteStore` goes with them.
-  ["@eifi1/ui-kit", barrel, 1013],
+  // 0.60.1 (+1, here and in /feedback; keksdose's 0.60 adoption): `FEEDBACK_SWIPE_ACTIONS`,
+  // the feedback swipe's ids, back for an app's settings (0.53 had dropped it unread).
+  ["@eifi1/ui-kit", barrel, 1014],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -409,7 +411,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `feedbackPageHref`, `feedbackPagePath`.
   // 0.55: `useFeedbackInbox`, `FeedbackInbox` — the inbox assembled once (§13) (+2 here and
   // in the barrel).
-  ["@eifi1/ui-kit/feedback", feedback, 93],
+  // 0.60.1: `FEEDBACK_SWIPE_ACTIONS` (+1 here and in the barrel).
+  ["@eifi1/ui-kit/feedback", feedback, 94],
   // 0.53 (−3, breaking): what 0.52 deprecated — `SEARCH_TIER_POINTS`, `matchEntries`,
   // `normalizeSearchText` (API-4).
   ["@eifi1/ui-kit/search", search, 6],
