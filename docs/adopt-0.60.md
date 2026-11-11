@@ -22,9 +22,11 @@ palette name (searched their sources and tests). Two changes of behaviour need a
 - **An app test** that expects `context.url` to equal `window.location.href` gets the reduced
   address.
 
-**What `check:api` prints:** `createPaletteStore`, `applyPersistedPalette`, `PaletteStore`,
-`PaletteMenu` removed, `TopBarLabels` changed (no `palette`); `SignInFormProps`,
-`AppShellProps` and `UseFeedbackSubmitOptions` gained an optional prop each.
+**What `check:api` prints:** `createPaletteStore`, `applyPersistedPalette`, `PaletteStore` and
+`PaletteMenu` removed; `TopBarLabels` without `palette`, and through it `UiKitLabels` and
+`kitLabelStrings`. The three new optional props (`SignInForm`'s `afterPasswordContent`,
+`AppShell`'s `mobileSubNavPlacement`, `useFeedbackSubmit`'s `allowParams`) are additive and
+not listed.
 
 ## Removed: the palette names 0.59 deprecated (breaking)
 
@@ -40,9 +42,8 @@ preset and keeps nothing.
 | `PaletteMenu` | none: no app offers a palette choice (`OptionSwitcherMenu` for any other value) |
 | label key `topBar.palette` (`TopBarLabels.palette`), in all seven catalogues | none: it was `PaletteMenu`'s name |
 
-- **What `check:api` prints:** the four names above and `TopBarLabels`, which lost
-  `palette`. `UiKitLabels`, `DEFAULT_TOP_BAR_LABELS` and the label overrides change only
-  through `TopBarLabels`.
+- **What `check:api` prints:** the four names above, and `TopBarLabels` without `palette` (with
+  `UiKitLabels` and `kitLabelStrings` through it).
 - **keksdose:** nothing to change.
 - **kastlan:** nothing to change. A comment in `frontend/src/app.css` (line 23) still says
   "the PaletteMenu switches"; it may go with the bump. It is a comment, so nothing breaks.
