@@ -3,9 +3,10 @@
 ui-kit 0.60 removes the palette names 0.59 deprecated, closes two findings of keksdose's legal
 audit of 2026-11-11 (the feedback dialog's page address; with **server-kit 0.24**, an erased
 crash report's diagnostics), takes kastlan's two UX findings (the shared-computer choice under
-the password, the phone's page row at the top), stops a filter on a hidden column from hiding
-rows unseen, fixes two follow-ups to 0.59's ZoomableImage, and moves the kit's tests to jsdom
-31.
+the password, the phone's page row at the top) and keksdose's three live reports (#513 the
+swipe's advance through "Test when live", #515 a postpone swipe, #514 NavPills that look
+pressable), stops a filter on a hidden column from hiding rows unseen, fixes two follow-ups to
+0.59's ZoomableImage, and moves the kit's tests to jsdom 31.
 
 **From 0.59, nothing else first.** An app still on 0.58 takes 0.59's notes first.
 
@@ -22,6 +23,11 @@ palette name (searched their sources and tests). Two changes of behaviour need a
   `allowParams`. Each app passes its crash reporter's list (table below).
 - **An app test** that expects `context.url` to equal `window.location.href` gets the reduced
   address.
+- **The feedback swipes** (every app that takes `DEFAULT_FEEDBACK_SWIPE`): the short drag
+  toward the start now postpones (won't do moved to the longer drag), and the advance from
+  "In evaluation" goes to "Test when live", then to "Done". An app test of the default
+  binding's panels changes with it.
+- **NavPills** draw a 1px outline on every pill: 2px taller than before.
 
 **What `check:api` prints:** `createPaletteStore`, `applyPersistedPalette`, `PaletteStore` and
 `PaletteMenu` removed; `TopBarLabels` without `palette`, and through it `UiKitLabels` and
@@ -134,6 +140,47 @@ block at the bottom of every page: about 43px of row and 56px of bar.
 - **Tests:** an app test that finds the row inside the bottom bar's box (`.fixed.bottom-0`)
   looks for it under the top bar once the app opts in. The row carries
   `data-slot="app-shell-subnav"` and `data-placement` in both places.
+
+## The feedback swipes: the live test on the advance, and postpone (keksdose #513, #515)
+
+- **The advance goes through "Test when live"** (#513, Marcel 2026-11-11). `nextFeedbackStatus`
+  walks OPEN → READY → IN_PROGRESS → IN_EVALUATION → NEEDS_LIVE_TEST → DONE: an evaluated
+  report goes out with the next deploy and is checked there. Before, the short swipe from
+  "In evaluation" went straight to "Done", and a row waiting on the deploy had no advance.
+  With the default binding, an "In evaluation" card now has two stages toward the end:
+  "Test when live", then "Done" on the longer drag.
+- **The pills are unchanged.** The table cell and the detail already offer "Test when live"
+  from every chain status and "Done" from "In evaluation", so a fix that needs no deploy is
+  closed there without the stop. The `done` swipe still goes to "Done" from anywhere.
+- **New swipe action `postpone`** (#515): sets POSTPONED, drawn as that status is (the pause
+  glyph, the neutral tone; it parks a row, it does not refuse it), labelled with the status's
+  own name. It drops out on a postponed row. `FEEDBACK_SWIPE_ACTIONS` is `advance`, `done`,
+  `postpone`, `wont_do`.
+- **The default binding** (`DEFAULT_FEEDBACK_SWIPE`): toward the start `postpone`, then
+  `wont_do` on the longer drag (before: `wont_do` alone); toward the end unchanged.
+- **Adopt:**
+  - **keksdose:** add `postpone` to `SWIPE_ACTIONS.feedback` and to the default in
+    `shared/state/swipe-prefs-store.ts`, with the store migration for devices still on the
+    shipped left side, and the picker's label (its four languages). The status name it shows
+    is the kit's `POSTPONED`.
+  - **kastlan, Kurvenschmiede:** nothing to change; both take the default, so their inbox
+    cards get the new start side and the new advance with the bump. A test that lists the
+    default binding's panels changes with it.
+- **Words:** no new labels; the panel reads the status label `POSTPONED`.
+
+## NavPills look pressable at rest (keksdose #514)
+
+The pills that were not current were bare words; only the current one was a chip (keksdose's
+Settings › Interaction › Swipe gestures: five pills, two rows at 406px, dark theme). Every pill
+now rests in the outline of a secondary Button (`border-subtle`); the current one keeps the
+inverse fill, its border transparent so every pill has the same box. Hover, focus, `disabled`,
+`size="sm"` and both layouts are as before.
+
+- **The size:** a 1px border all round makes each pill 2px taller and wider than in 0.59.
+- **Adopt:** nothing to change. keksdose's swipe settings and Kurvenschmiede's three section
+  layouts (dynamics, steering, experiments) get the outline with the bump; look at one of each
+  in both themes. kastlan uses no NavPills.
+- **An `itemClassName`** that sets its own border colour still wins over the kit's.
 
 ## A filter on a hidden column still says so (desktop)
 
