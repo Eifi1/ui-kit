@@ -100,12 +100,22 @@ type Gesture =
   | { kind: "pan"; pointerId: number; from: ZoomView; x: number; y: number }
   | { kind: "pinch"; ids: [number, number]; start: PinchStart };
 
+/** WebKit's GestureEvent, which lib.dom does not declare: Safari's two-finger pinch, on a
+ *  Mac's trackpad and on iOS. `scale` is the fingers' spread over their spread at
+ *  `gesturestart` (1 there). Only the fields read here. */
+interface WebKitGestureEvent extends UIEvent {
+  readonly scale: number;
+  readonly clientX: number;
+  readonly clientY: number;
+}
+const WEBKIT_GESTURE_EVENTS = ["gesturestart", "gesturechange", "gestureend"] as const;
+
 /**
  * A picture shown inline, in the page's flow, that zooms where it is: fitted to the box's
  * width, pinch and two-finger pan on a touch screen, ⌘/Ctrl + wheel (and a trackpad
- * pinch), the − / fit / + buttons and the + − 0 keys on a desktop, and a double-tap or
- * double-click between fit-to-width and the picture's own pixels (100 %). Not a modal:
- * for a set of photos opened full screen, {@link Lightbox}.
+ * pinch, Safari's included), the − / fit / + buttons and the + − 0 keys on a desktop,
+ * and a double-tap or double-click between fit-to-width and the picture's own pixels
+ * (100 %). Not a modal: for a set of photos opened full screen, {@link Lightbox}.
  *
  * keksdose's receipt preview (live #505): a receipt shared as one long screenshot,
  * 1220×11615, fitted whole into its frame was a sliver about 60px wide on a phone, and a
@@ -183,6 +193,8 @@ function ZoomableImageView({
   const tap = useRef<{ id: number; x: number; y: number } | null>(null);
   const lastTap = useRef<{ time: number; x: number; y: number } | null>(null);
   const lastPointerType = useRef("");
+  // The zoom a Safari trackpad pinch began at: each of its events' `scale` counts from there.
+  const safariPinchFrom = useRef<number | null>(null);
 
   // After every commit, not only a changed zoom: a zoom that went 2 → 3 → 2 inside one
   // batch commits nothing new, and a scroll kept for it would wait for the next zoom. A
@@ -397,14 +409,15 @@ function ZoomableImageView({
     }
   };
 
-  // Native listeners, because both must be able to cancel: React attaches `wheel` and
-  // `touchmove` as passive, where `preventDefault` is ignored.
+  // Native listeners, because each must be able to cancel: React attaches `wheel` and
+  // `touchmove` as passive, where `preventDefault` is ignored, and has no `gesture*`
+  // events at all.
   const onWheel = useEffectEvent((e: WheelEvent) => {
     const box = boxRef.current;
     // A plain wheel scrolls — the box, then the page — as it would anywhere else.
     if (!box || !canZoom || !(e.ctrlKey || e.metaKey)) return;
-    // Ctrl + wheel is also what a trackpad pinch arrives as; either way the browser
-    // would zoom the whole page.
+    // Ctrl + wheel is also what a trackpad pinch arrives as in Chrome, Edge and Firefox
+    // (Safari's is below); either way the browser would zoom the whole page.
     e.preventDefault();
     stopEasing();
     const from = viewOf(box);
@@ -418,16 +431,52 @@ function ZoomableImageView({
     // scroll (or Safari as a page zoom) before `touch-none` lands.
     if (canZoom && e.touches.length > 1 && e.cancelable) e.preventDefault();
   });
+  // Desktop Safari sends a trackpad pinch as WebKit's GestureEvents instead of Ctrl +
+  // wheel, and left alone they zoom the whole page. The zoom is the level at
+  // `gesturestart` times `scale`, about the cursor, clamped and announced as the wheel's
+  // is; measured from the start, so rounding never builds up over a long pinch.
+  const onSafariGesture = useEffectEvent((e: WebKitGestureEvent) => {
+    const box = boxRef.current;
+    if (!box || !canZoom) return;
+    e.preventDefault();
+    // iOS Safari sends a touch screen's pinch as these events too, beside the pointer
+    // events the touch pinch above already follows: applied both ways, one pinch would
+    // zoom twice. A Mac's trackpad puts no touch or pen pointer down, so one down on the
+    // box says the fingers are the touch pinch's, and this side only prevents the event
+    // (what keeps iOS from zooming the page under them). Asked on every event, not only
+    // at `gesturestart`: two fingers that land together may send it before either
+    // `pointerdown`. Not a user-agent test: an iPad with a trackpad has both inputs.
+    if (pointers.current.size > 0 || e.type === "gestureend") {
+      safariPinchFrom.current = null;
+      return;
+    }
+    if (e.type === "gesturestart") {
+      stopEasing();
+      safariPinchFrom.current = zoomRef.current;
+      return;
+    }
+    const startZoom = safariPinchFrom.current;
+    // A missing `scale` would make the picture NaN % wide.
+    if (startZoom === null || !(e.scale > 0)) return;
+    const from = viewOf(box);
+    const to = clampZoom(startZoom * e.scale, ceiling(box));
+    show(box, zoomAt(frameOf(box), from, to, pointIn(box, e.clientX, e.clientY)));
+    say(box, to);
+  });
   useEffect(() => {
     const box = boxRef.current;
     if (!box) return;
     const wheel = (e: WheelEvent) => onWheel(e);
     const touchMove = (e: TouchEvent) => onTouchMove(e);
+    // lib.dom types an unknown event's listener as taking an `Event`.
+    const safariGesture = (e: Event) => onSafariGesture(e as WebKitGestureEvent);
     box.addEventListener("wheel", wheel, { passive: false });
     box.addEventListener("touchmove", touchMove, { passive: false });
+    for (const type of WEBKIT_GESTURE_EVENTS) box.addEventListener(type, safariGesture);
     return () => {
       box.removeEventListener("wheel", wheel);
       box.removeEventListener("touchmove", touchMove);
+      for (const type of WEBKIT_GESTURE_EVENTS) box.removeEventListener(type, safariGesture);
     };
   }, []);
 
