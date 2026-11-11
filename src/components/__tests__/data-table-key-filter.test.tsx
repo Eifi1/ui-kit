@@ -370,6 +370,105 @@ describe("DataTable keyFilter with its column hidden, on a desktop (0.60)", () =
   });
 });
 
+describe("DataTable: a column's own filter with the column hidden, on a desktop (0.60)", () => {
+  // The same gap as the set's, for any column: the filter loop runs over every column, so a
+  // hidden column's filter kept narrowing the rows while only its (absent) header could say
+  // so. Live #500's saved layout — DONE only, Status hidden — showed 2 of 5 reports, no word
+  // and no Clear (Marcel, 2026-11-11: "avoid hiding rows").
+  const DONE_HIDDEN = { filters: { status: { type: "select", values: ["DONE"] } }, hidden: ["status"] };
+
+  /** The line standing in for the Status column's filter button. */
+  const statusLine = () =>
+    screen.queryByText("Filter Status (active)")?.closest<HTMLElement>("[data-hidden-filter]") ?? null;
+  const lines = () => document.querySelectorAll("[data-hidden-filter]");
+
+  it("says the filter above the table, and its Clear filter brings the rows back", () => {
+    localStorage.setItem(STORE, JSON.stringify(DONE_HIDDEN));
+    render(
+      <MemoryRouter>
+        <Table storageKey="reports" columnSettings />
+      </MemoryRouter>,
+    );
+    shows("Typo in the footer", "Export to CSV");
+    expect(screen.queryByRole("columnheader", { name: /^Status/ })).toBeNull();
+    expect(statusLine()).toHaveAttribute("data-hidden-filter", "column");
+    const clear = within(statusLine()!).getByRole("button", { name: "Clear filter" });
+    act(() => clear.focus());
+    fireEvent.click(clear);
+    shows("Crash on save", "Typo in the footer", "Dark mode", "Export to CSV", "Slow list");
+    expect(statusLine()).toBeNull();
+    // The focus stays in the table, not on <body>; the saved view loses the filter, not the
+    // hidden column.
+    expect(screen.getByRole("table")).toHaveFocus();
+    expect(stored()).toMatchObject({ hidden: ["status"] });
+    expect((stored().filters as Record<string, unknown> | undefined)?.status).toBeUndefined();
+  });
+
+  it("appears when the person hides a filtered column, and goes when it is drawn again", () => {
+    localStorage.setItem(STORE, JSON.stringify({ filters: DONE_HIDDEN.filters }));
+    render(
+      <MemoryRouter>
+        <Table storageKey="reports" columnSettings />
+      </MemoryRouter>,
+    );
+    // Drawn: its header's button says it, and no line does.
+    expect(within(header("Status")).getByRole("button", { name: "Filter Status (active)" })).toBeInTheDocument();
+    expect(lines()).toHaveLength(0);
+    fireEvent.click(screen.getByRole("button", { name: /^Columns/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Status" }));
+    shows("Typo in the footer", "Export to CSV");
+    expect(statusLine()).not.toBeNull();
+    fireEvent.click(screen.getByRole("checkbox", { name: "Status" }));
+    expect(lines()).toHaveLength(0);
+  });
+
+  it("draws nothing for a hidden column with no filter on", () => {
+    localStorage.setItem(STORE, JSON.stringify({ hidden: ["status"] }));
+    render(
+      <MemoryRouter>
+        <Table storageKey="reports" columnSettings />
+      </MemoryRouter>,
+    );
+    shows("Crash on save", "Typo in the footer", "Dark mode", "Export to CSV", "Slow list");
+    expect(lines()).toHaveLength(0);
+  });
+
+  it("draws one line for the set, not a second for its column's own filter", () => {
+    localStorage.setItem(STORE, JSON.stringify({ hidden: ["id"] }));
+    render(
+      <MemoryRouter initialEntries={["/?f.id=4..5"]}>
+        <Table storageKey="reports" urlSync keyFilter={set([1, 3])} />
+      </MemoryRouter>,
+    );
+    expect(lines()).toHaveLength(1);
+    expect(lines()[0]).toHaveAttribute("data-hidden-filter", "set");
+  });
+
+  it("draws a line for each hidden filtered column, beside the set's", () => {
+    localStorage.setItem(STORE, JSON.stringify({ hidden: ["id", "status"] }));
+    render(
+      <MemoryRouter initialEntries={["/?f.status=DONE"]}>
+        <Table storageKey="reports" urlSync keyFilter={set([1, 2, 4])} />
+      </MemoryRouter>,
+    );
+    shows("Typo in the footer", "Export to CSV");
+    expect(Array.from(lines(), (l) => l.getAttribute("data-hidden-filter"))).toEqual(["set", "column"]);
+    expect(statusLine()).not.toBeNull();
+  });
+
+  it("leaves the phone as it was: no line, and the Filters sheet counts the filter", () => {
+    stubPhone();
+    localStorage.setItem(STORE, JSON.stringify(DONE_HIDDEN));
+    render(
+      <MemoryRouter>
+        <Table storageKey="reports" columnSettings />
+      </MemoryRouter>,
+    );
+    expect(lines()).toHaveLength(0);
+    expect(screen.getByRole("button", { name: /^Filters/ })).toHaveTextContent("1");
+  });
+});
+
 describe("DataTable keyFilter on the phone (0.59, dev #678)", () => {
   it("is a filter in the sheet, said there, and Clear all drops it", () => {
     stubPhone();

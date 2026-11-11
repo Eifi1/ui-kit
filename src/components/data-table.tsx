@@ -18,7 +18,7 @@ import {
 } from "./data-table-mobile";
 import { DataTableMobileRow, DataTableRow, type DataTableRowCtx } from "./data-table-row";
 import { DataTableHead } from "./data-table-head";
-import { KeySetLine } from "./data-table-filter-popover";
+import { HiddenFilterLine } from "./data-table-filter-popover";
 import { DataTableLeadingRow } from "./data-table-leading-row";
 import {
   DataTableEmptyGroupLine,
@@ -466,7 +466,8 @@ export interface DataTableProps<T> {
    * the set's Clear ({@link DataTableKeyFilter}). Its Clear, the column's "Clear filter"
    * and the phone's "Clear all" call `onClear`; the owner drops the set. With the column
    * not drawn on a desktop (hidden, left out for width, or not among `columns`; 0.60),
-   * the set and its Clear are a line above the table instead.
+   * the set and its Clear are a line above the table instead — as any column's own filter
+   * is then ("Filter Status (active)", with its Clear filter).
    *
    * **A link's view, so the table keeps its saved filters out of it** (keksdose live #500:
    * the filter Marcel had left on hid all four reports a notice named). While the set is
@@ -1540,11 +1541,27 @@ export function DataTable<T>({
     () => columns.filter((c) => !hiddenCols.has(c.key) && !autoHidden.has(c.key)),
     [columns, hiddenCols, autoHidden],
   );
-  // The set whose column the desktop does not draw (0.60): hidden by the person, left out
-  // for width, or not among the columns. No header can say it then, and 0.59 showed the
-  // narrowed rows with no word and no Clear; a line above the table says it instead.
-  const keySetLine = keySet && !visibleColumns.some((c) => c.key === keySet.column) ? keySet : undefined;
+  // A filter whose column the desktop does not draw (0.60): hidden by the person, left out
+  // for width, or not among the columns. Only a column's header says its filter is on, so
+  // the rows stayed narrowed with no word and no Clear — the set under a notice's `?ids=`
+  // with the # column hidden, and any column's own filter: live #500's saved layout, DONE
+  // only with Status hidden, showed 2 of 5 reports and never said why. A line above the
+  // table says each instead. The filter loop runs over every column, drawn or not (hiding
+  // a column keeps its filter, as it keeps its width), so these are exactly the filters that
+  // narrow the rows unseen. A column filter counts where the loop applies it or the owner
+  // does (`serverRows` with `onFiltersChange`), as `clearAllFilters` counts them.
+  const drawn = (key: string) => visibleColumns.some((c) => c.key === key);
+  const keySetLine = keySet && !drawn(keySet.column) ? keySet : undefined;
   const keySetLineCol = keySetLine ? columns.find((c) => c.key === keySetLine.column) : undefined;
+  const hiddenFilterLineClass = frame ? cn("border-b border-subtle", compact ? "px-2 py-1.5" : "px-3 py-2") : "pb-3";
+  const hiddenFilterCols = columns.filter(
+    (c) =>
+      c.key !== keySet?.column &&
+      !drawn(c.key) &&
+      (!serverRows || !!onFiltersChange) &&
+      !!resolveFilter(c) &&
+      isFilterActive(filters[c.key]),
+  );
   // With a `grow` column drawn, every other cell keeps one line at Normal (kastlan S2,
   // 0.48): the `w-full` column squeezed them to their min-content width.
   const growDrawn = visibleColumns.some((c) => c.grow);
@@ -2389,7 +2406,8 @@ export function DataTable<T>({
             basis (`basis-48`, below), not at its rows — so the floor carries up. */}
           <div className={cn("relative min-w-0 flex-1", fillHeight && "flex flex-col")}>
             {keySetLine && (
-              <KeySetLine
+              <HiddenFilterLine
+                kind="set"
                 label={keySetLine.label}
                 name={keySetLineCol ? columnLabel(keySetLineCol, labels) : undefined}
                 // The column's own Clear, as its header's panel calls it: the set's
@@ -2398,9 +2416,22 @@ export function DataTable<T>({
                 labels={labels}
                 focusAfter={tableRef}
                 // Drawn as the toolbar's line is, framed or not.
-                className={frame ? cn("border-b border-subtle", compact ? "px-2 py-1.5" : "px-3 py-2") : "pb-3"}
+                className={hiddenFilterLineClass}
               />
             )}
+            {hiddenFilterCols.map((col) => (
+              <HiddenFilterLine
+                key={col.key}
+                kind="column"
+                // The column's filter button's own name, "Filter Status (active)": the line
+                // stands in for it, in words every catalogue has.
+                label={labels.filterColumn(columnLabel(col, labels), true)}
+                onClear={() => clearFilter(col.key)}
+                labels={labels}
+                focusAfter={tableRef}
+                className={hiddenFilterLineClass}
+              />
+            ))}
             {/* scrollbar-gutter:stable reserves the vertical-scrollbar space up
               front. Expanding a row adds height, which can bring the scrollbar
               in, which narrows the content box — and in an `auto` table layout

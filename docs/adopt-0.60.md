@@ -3,8 +3,9 @@
 ui-kit 0.60 removes the palette names 0.59 deprecated, closes two findings of keksdose's legal
 audit of 2026-11-11 (the feedback dialog's page address; with **server-kit 0.24**, an erased
 crash report's diagnostics), takes kastlan's two UX findings (the shared-computer choice under
-the password, the phone's page row at the top), fixes a `keyFilter` on a hidden column and two
-follow-ups to 0.59's ZoomableImage, and moves the kit's tests to jsdom 31.
+the password, the phone's page row at the top), stops a filter on a hidden column from hiding
+rows unseen, fixes two follow-ups to 0.59's ZoomableImage, and moves the kit's tests to jsdom
+31.
 
 **From 0.59, nothing else first.** An app still on 0.58 takes 0.59's notes first.
 
@@ -134,26 +135,34 @@ block at the bottom of every page: about 43px of row and 56px of bar.
   looks for it under the top bar once the app opts in. The row carries
   `data-slot="app-shell-subnav"` and `data-placement` in both places.
 
-## A `keyFilter` on a hidden column still says so (desktop)
+## A filter on a hidden column still says so (desktop)
 
-- **What changed.** When the desktop table does not draw a `keyFilter`'s column, a line
-  above the table now says the set. The column may be hidden by the person, left out for
-  width, or missing from `columns`. The line shows the set's own words (`label`, or the
-  kit's "Only these 3 rows") and the same **Clear filter** as the column's popover: it calls
-  `onClear` and clears the column's own filter with it. Screen readers hear the line as
-  "Filter # (active)", the same name as the header's button. When the Clear removes the
-  line, the focus goes to the table, not to the page's top. While the column is drawn,
-  nothing changes. The phone is unchanged: its Filters sheet already listed a hidden
-  column.
-- **Why.** 0.59 showed the set only in its column's header. With the inbox's # column
-  hidden, a notice's link showed 3 reports of hundreds and said nothing, and only the
-  address bar could clear it (the 0.59 known limit).
-- **Words.** No new labels. The line uses `dataTable.keyFilter` / `feedbackPage.focusIds`,
-  `dataTable.clearFilter` and `dataTable.filterColumn`, which every catalogue already has.
-- **keksdose, kastlan, Kurvenschmiede:** nothing to change. The feedback inbox gets the
-  line with the bump. In the browser: hide the # column in /feedback's Columns panel, open
-  a notice's link (`?ids=…`): the line "Only these N reports" is above the table, and its
-  Clear filter brings the whole list back and takes `ids` out of the address.
+- **What changed.** On a desktop, only a column's header said its filter was on, and the
+  table filters over every column, drawn or not. So a filter on a column the desktop does
+  not draw kept hiding rows with no word and no Clear. The column may be hidden by the
+  person, left out for width, or missing from `columns`. A line above the table now says
+  each such filter, with the same **Clear filter** as the column's popover:
+  - **a column's own filter:** "Filter Status (active)", the name of the column's filter
+    button. Live #500's saved layout (DONE only, Status hidden) showed 2 of 5 reports and
+    never said why; it now says so above the table;
+  - **a `keyFilter` set:** the set's own words (`label`, or the kit's "Only these 3 rows"),
+    the line named "Filter # (active)" for screen readers. Its Clear calls `onClear` and
+    clears the column's own filter with it. One line for the set, not a second for its
+    column's filter.
+- When a Clear removes a line, the focus goes to the table, not to the page's top. While the
+  column is drawn, nothing changes. A hidden column with no filter on draws nothing. The
+  phone is unchanged: its Filters sheet already listed a hidden column. Hiding a column
+  still keeps its filter (as it keeps its width): the line is what says so.
+- **Words.** No new labels: `dataTable.filterColumn`, `dataTable.clearFilter` and
+  `dataTable.keyFilter` / `feedbackPage.focusIds`, which every catalogue already has.
+- **keksdose, kastlan, Kurvenschmiede:** nothing to change; every DataTable gets the lines
+  with the bump. In the browser: in any table with column settings, filter a column, then
+  hide it in the Columns panel: "Filter <column> (active)" is above the table, and its Clear
+  filter brings the rows back. The feedback inbox: hide the # column and open a notice's link
+  (`?ids=…`): "Only these N reports" is above the table.
+- **Tests:** an app test that counts the elements above a table, or finds the table's first
+  child by position, meets the line where a hidden column has a filter on. The lines carry
+  `data-hidden-filter="column"` or `"set"`.
 
 ## Safari's trackpad pinch; the Lightbox's zoom pans across (0.59 ZoomableImage follow-ups)
 

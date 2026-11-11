@@ -64,16 +64,24 @@ export function KeySetPanel({
 }
 
 /**
- * A `keyFilter` set whose column the desktop does not draw (0.60) — hidden by the person,
- * left out for width, or not among the columns: a line above the table that says the set,
- * with its Clear. In 0.59 only that column's header said it, so with the inbox's # column
- * hidden the table showed 3 reports of hundreds, said nothing, and had no Clear but the
- * address bar. {@link KeySetPanel}'s words and Clear, on a line where the toolbar's sits,
- * named as the column's filter button is ("Filter # (active)"): it stands in for that
- * button. The phone draws none: its Filters sheet lists a hidden column as any other.
- * Internal: drawn by DataTable.
+ * A filter whose column the desktop does not draw (0.60) — hidden by the person, left out
+ * for width, or not among the columns: a line above the table that says it, with its Clear.
+ * Only the column's header said a filter was on, so a hidden column's filter narrowed the
+ * rows with no word and no Clear: the inbox's # column hidden under a notice's `?ids=` (3
+ * reports of hundreds), and the saved layout of live #500 — DONE only, Status hidden —
+ * which showed 2 of 5 reports and never said why. A line where the toolbar's sits, standing
+ * in for the column's filter button:
+ *
+ * - `kind="set"`, a `keyFilter` set: {@link KeySetPanel}'s words ("Only these 3 rows"), the
+ *   line named as the button is ("Filter # (active)");
+ * - `kind="column"`, the column's own filter: the button's name as the line's words
+ *   ("Filter Status (active)").
+ *
+ * The phone draws none: its Filters sheet lists a hidden column as any other. Internal:
+ * drawn by DataTable.
  */
-export function KeySetLine({
+export function HiddenFilterLine({
+  kind,
   label,
   name,
   onClear,
@@ -81,8 +89,10 @@ export function KeySetLine({
   focusAfter,
   className,
 }: {
+  kind: "set" | "column";
   label: string;
-  /** The column's name, for the line's own; none for a column the table does not have. */
+  /** The column's name, for the line's own; none for a column the table does not have, or
+   *  where `label` already is that name (`kind="column"`). */
   name?: string;
   onClear: () => void;
   labels: DataTableLabels;
@@ -111,7 +121,7 @@ export function KeySetLine({
       ref={ref}
       role="group"
       aria-label={name === undefined ? undefined : labels.filterColumn(name, true)}
-      data-key-filter-line=""
+      data-hidden-filter={kind}
       className={cn("flex flex-wrap items-center gap-2", className)}
     >
       <Filter className="size-4 shrink-0 text-brand-muted" />
