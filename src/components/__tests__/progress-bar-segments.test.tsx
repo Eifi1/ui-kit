@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { ProgressBar } from "../progress-bar";
+import { cssValue } from "../../test/css";
 
 describe("ProgressBar segments (keksdose cut-card:133)", () => {
   const PARTS = [
@@ -46,7 +47,8 @@ describe("ProgressBar segments (keksdose cut-card:133)", () => {
     expect(segs[1].className).toContain("bg-[var(--chart-1)]");
     expect(segs[4].className).toContain("bg-[var(--chart-2)]");
     expect(segs[2].className).not.toMatch(/--chart-/);
-    expect(segs[2]).toHaveStyle({ backgroundColor: "var(--text-muted)" });
+    // The inline colour, as the kit set it (jsdom 31 resolves no `var()` in a computed style).
+    expect(segs[2].style.backgroundColor).toBe(cssValue("background-color", "var(--text-muted)"));
     const swatches = document.querySelectorAll<HTMLElement>('[data-part="legend"] li > :first-child');
     expect(swatches[1].className).toContain("bg-[var(--chart-1)]");
     expect(swatches[4].className).toContain("bg-[var(--chart-2)]");

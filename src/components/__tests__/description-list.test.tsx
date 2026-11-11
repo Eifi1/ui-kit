@@ -1,6 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { DescriptionItem, DescriptionList } from "../description-list";
+import { cssValue } from "../../test/css";
 
 describe("DescriptionList", () => {
   it("is a real <dl> of dt/dd pairs, conditional children included", () => {
@@ -193,8 +194,9 @@ describe("DescriptionList 0.10.0", () => {
         <DescriptionItem term="Available">60.00</DescriptionItem>
       </DescriptionList>,
     );
-    const style = container.querySelector("dl")!.getAttribute("style")!;
-    expect(style).toContain("max(0px, (100% - 1 * 0.5rem) / 2)");
+    expect(container.querySelector("dl")!.style.gridTemplateColumns).toBe(
+      cssValue("grid-template-columns", "repeat(auto-fill, minmax(min(100%, max(0px, (100% - 1 * 0.5rem) / 2)), 1fr))"),
+    );
     // Without `columns` the template is exactly what it was.
     const { container: plain } = render(
       <DescriptionList layout="cards">

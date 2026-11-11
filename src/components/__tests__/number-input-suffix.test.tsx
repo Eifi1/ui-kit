@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { NumberInput } from "../number-input";
+import { cssValue } from "../../test/css";
 
 /**
  * The unit read-out — the half of {@link AmountInput}'s currency chip that does not
@@ -75,8 +76,8 @@ describe("NumberInput suffix padding (keksdose P9)", () => {
       <NumberInput aria-label="Speed" value="1" suffix="km/h" calculator={false} onChange={vi.fn()} />,
     );
     const input = () => container.querySelector("input")!;
-    expect(input().style.paddingInlineEnd).toBe("calc(4ch + 0.75rem)");
+    expect(input().style.paddingInlineEnd).toBe(cssValue("padding-inline-end", "calc(4ch + 0.75rem)"));
     rerender(<NumberInput aria-label="Speed" value="1" suffix="%" onChange={vi.fn()} />);
-    expect(input().style.paddingInlineEnd).toBe("calc(1ch + 0.75rem + 2.25rem)");
+    expect(input().style.paddingInlineEnd).toBe(cssValue("padding-inline-end", "calc(1ch + 0.75rem + 2.25rem)"));
   });
 });
