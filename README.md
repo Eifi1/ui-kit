@@ -582,7 +582,7 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2251 names from 381 modules** in the main barrel — 1013 values and 1238 types — and 195 more in 16 standalone entries. _Italic_ is a type-only export.
+**2252 names from 381 modules** in the main barrel — 1014 values and 1238 types — and 195 more in 16 standalone entries. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 `node scripts/gen-export-inventory.mjs`; the counts are pinned by
@@ -590,13 +590,13 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2251 |
+| `@eifi1/ui-kit` | 2252 |
 | `@eifi1/ui-kit/chart` | 102 |
 | `@eifi1/ui-kit/shell` | 109 |
 | `@eifi1/ui-kit/data-table` | 57 |
 | `@eifi1/ui-kit/wizard` | 25 |
 | `@eifi1/ui-kit/tour` | 49 |
-| `@eifi1/ui-kit/feedback` | 204 |
+| `@eifi1/ui-kit/feedback` | 205 |
 | `@eifi1/ui-kit/search` | 20 |
 | `@eifi1/ui-kit/dates` | 26 |
 | `@eifi1/ui-kit/table-text` | 14 |
@@ -936,7 +936,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `feedback/feedback-record` | `appendRework`, `attachmentName`, `DEFAULT_ATTACHMENT_ACCEPT`, `DEFAULT_MAX_ATTACHMENT_BYTES`, `DEFAULT_MAX_ATTACHMENTS`, `FEEDBACK_ATTACHMENT_ACCEPT`, `FEEDBACK_AUTHOR_EDITABLE_STATUSES`, `FEEDBACK_AWAITING_STATUSES`, `FEEDBACK_COMMENT_MAX`, `FEEDBACK_DECIDED_STATUSES`, `FEEDBACK_PICKABLE_CATEGORIES`, `FEEDBACK_QUEUE_STATUSES`, `FEEDBACK_REPLY_MAX`, `FEEDBACK_REWORKABLE_STATUSES`, `feedbackReworkCount`, `isImageAttachment`, `replaceDescription`, `reworkCount`, `splitBodyAttachments`, `splitDescription`, _`FeedbackContext`_, _`FeedbackEnvironment`_, _`FeedbackRecord`_ |
 | `feedback/feedback-labels` | `DEFAULT_FEEDBACK_CATEGORY_LABELS`, `DEFAULT_FEEDBACK_STATUS_LABELS`, `DEFAULT_FEEDBACK_TOAST_LABELS`, `useFeedbackCategoryLabels`, `useFeedbackStatusLabels`, `useFeedbackToastLabels`, _`FeedbackCategoryLabels`_, _`FeedbackStatusLabels`_, _`FeedbackToastLabels`_ |
 | `feedback/feedback-status-undo` | `useFeedbackStatusUndo`, _`FeedbackStatusChange`_, _`FeedbackStatusMutateAsync`_, _`FeedbackStatusPatch`_, _`FeedbackStatusRow`_, _`FeedbackStatusUndoOptions`_ |
-| `feedback/feedback-swipe` | `DEFAULT_FEEDBACK_SWIPE`, `feedbackSwipeOmitShown`, `feedbackSwipePlan`, _`FeedbackSwipeAction`_, _`FeedbackSwipeBinding`_, _`FeedbackSwipeOptions`_ |
+| `feedback/feedback-swipe` | `DEFAULT_FEEDBACK_SWIPE`, `FEEDBACK_SWIPE_ACTIONS`, `feedbackSwipeOmitShown`, `feedbackSwipePlan`, _`FeedbackSwipeAction`_, _`FeedbackSwipeBinding`_, _`FeedbackSwipeOptions`_ |
 | `feedback/feedback-menu` | `DEFAULT_FEEDBACK_MENU_LABELS`, `FeedbackMenu`, _`FeedbackMenuLabels`_, _`FeedbackMenuProps`_ |
 | `feedback/feedback-context` | `DEFAULT_FEEDBACK_CONTEXT_LABELS`, `feedbackContext`, `FeedbackContextBox`, _`FeedbackContextBoxProps`_, _`FeedbackContextInput`_, _`FeedbackContextLabels`_, _`FeedbackSubmitter`_ |
 | `feedback/feedback-capture` | `captureAppScreenshot`, _`CaptureAppScreenshotOptions`_ |
