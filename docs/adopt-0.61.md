@@ -611,6 +611,25 @@ The kit names no implementation and adds no dependency: an app that uses this ad
   while the box is ticked.
 - **Kurvenschmiede:** nothing; it has no sync database.
 
+## On a shared computer the session ends with the tab (`SharedComputerChoice`'s guidance)
+
+**What changed.** The guidance, not the code: with "This is a shared computer" ticked, the app
+keeps the sign-in itself (its access and refresh tokens) in `sessionStorage`, the choice there
+too (`storage: "session"`, the default), and anything else the session unlocks on the device in
+memory or `sessionStorage`. Unticked, nothing changes. `storage: "local"` remains only for an
+app that has not moved its session yet.
+
+**Why.** Marcel, 2026-11-12 (keksdose's finding): a closed tab on a library PC left a session
+the next visitor simply opened, with a refresh token good for weeks in `localStorage`; "no copy
+of your data stays on this device" was then true and beside the point.
+
+- **keksdose:** tokens and the flag in `sessionStorage` while ticked; the private-mode keys
+  (`keksdose-keys`) in memory; the sync copy in memory (Marcel's plan). Its own change.
+- **kastlan:** today `storage="local"` with the refresh token in `localStorage`
+  (`login-page.tsx:62`): while ticked, keep the tokens in `sessionStorage` and drop
+  `storage="local"`; the handover copy may live in memory (`createSyncDb`'s `indexedDB`).
+- **Kurvenschmiede:** its new choice uses `storage="local"`: the same move as kastlan's.
+
 ## The privacy page's standard lines: the page cache and the shared-computer choice
 
 **What changed.** The privacy page's browser section has two standard entries in the kit's

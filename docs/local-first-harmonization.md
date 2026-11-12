@@ -483,6 +483,12 @@ they are (no ETags). KS's version contract stays KS's.
 - **The tour `:pending` record** (tours §10.2.4, `<storageKey>:pending`) is not the app's outbox: it
   stays out of any "N waiting" count and out of the sign-out guard, in kk and in ka, on purpose
   (losing a tour mark is acceptable). `signOutTourProgress` keeps it for its owner.
+- **The session ends with the tab on a shared computer** (ui-kit 0.61, Marcel 2026-11-12;
+  keksdose's finding): with the box ticked, the app keeps its tokens, the choice
+  (`storage: "session"`) and anything the session unlocks on the device (keksdose's
+  private-mode keys) in `sessionStorage` or memory, and its sync copy in memory
+  (`createSyncDb`'s `indexedDB`). A closed tab then leaves neither data nor a session behind.
+  Unticked, nothing changes.
 
 **D7 Plaintext at rest, with a scrub list (kk's decision).**
 
