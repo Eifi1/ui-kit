@@ -62,6 +62,7 @@ import { rovingTarget } from "../lib/direction";
 import {
   DEFAULT_Y_AXIS,
   axisExtent,
+  pointAt,
   withChartZoom,
   type ZoomAxesSetting,
   type ZoomBinding,
@@ -1164,32 +1165,6 @@ function PointKeys({
         );
       })}
     </g>
-  );
-}
-
-/**
- * Stands recharts' pointer at (`x`, `y`) in the chart's own px, as a mouse moved there
- * would — what the keyboard's stops show their tooltip by (0.52 code review, deep, charts,
- * finding 4). Their `defaultIndex` alone moved it only until a pointer had hovered the
- * chart: recharts reads it no more once a hover has an index, and a mouse that has left
- * keeps its index. After one hover the arrows moved the tint, and the tooltip, the one
- * place the value is drawn, stayed where the mouse had left it. recharts' own keyboard
- * layer, which these stops replaced (DSP-5), drove the tooltip through its own state.
- *
- * A point off the plot (`x` left of it) takes the pointer off the chart: recharts hides
- * its tooltip there, through the same frame-throttled path a pending move takes, so a
- * blur right after a focus is never overtaken by it. recharts reads the pointer against
- * its wrapper's box, scaled as the box is drawn (`getRelativeCoordinate`); the point is
- * put back into that box.
- */
-function pointAt(within: Element, x: number, y: number) {
-  const wrapper = within.closest<HTMLElement>(".recharts-wrapper");
-  if (!wrapper) return;
-  const box = wrapper.getBoundingClientRect();
-  const scaleX = wrapper.offsetWidth > 0 ? box.width / wrapper.offsetWidth : 1;
-  const scaleY = wrapper.offsetHeight > 0 ? box.height / wrapper.offsetHeight : 1;
-  wrapper.dispatchEvent(
-    new MouseEvent("mousemove", { bubbles: true, clientX: box.left + x * scaleX, clientY: box.top + y * scaleY }),
   );
 }
 

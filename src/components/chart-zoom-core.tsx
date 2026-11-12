@@ -337,6 +337,52 @@ export function zoomDomains(
   };
 }
 
+/* ── recharts' pointer ──────────────────────────────────────────────────── */
+
+/**
+ * Stands recharts' pointer at (`x`, `y`) in the chart's own px, as a mouse moved there
+ * would — what the keyboard's stops show their tooltip by (0.52 code review, deep, charts,
+ * finding 4). Their `defaultIndex` alone moved it only until a pointer had hovered the
+ * chart: recharts reads it no more once a hover has an index, and a mouse that has left
+ * keeps its index. After one hover the arrows moved the tint, and the tooltip, the one
+ * place the value is drawn, stayed where the mouse had left it. recharts' own keyboard
+ * layer, which these stops replaced (DSP-5), drove the tooltip through its own state.
+ *
+ * A point off the plot (`x` left of it) takes the pointer off the chart: recharts hides
+ * its tooltip there, through the same frame-throttled path a pending move takes, so a
+ * blur right after a focus is never overtaken by it. recharts reads the pointer against
+ * its wrapper's box, scaled as the box is drawn (`getRelativeCoordinate`); the point is
+ * put back into that box.
+ *
+ * Here rather than in series-chart.tsx since 0.61: the zoom takes the pointer off the
+ * chart on a reset (see {@link leaveChart}).
+ */
+export function pointAt(within: Element, x: number, y: number) {
+  const wrapper = within.closest<HTMLElement>(".recharts-wrapper");
+  if (!wrapper) return;
+  const box = wrapper.getBoundingClientRect();
+  const scaleX = wrapper.offsetWidth > 0 ? box.width / wrapper.offsetWidth : 1;
+  const scaleY = wrapper.offsetHeight > 0 ? box.height / wrapper.offsetHeight : 1;
+  wrapper.dispatchEvent(
+    new MouseEvent("mousemove", { bubbles: true, clientX: box.left + x * scaleX, clientY: box.top + y * scaleY }),
+  );
+}
+
+/**
+ * Takes recharts' pointer off the chart inside `root`, which hides its tooltip (and sends
+ * a readout row back to idle). x = −1 is left of any plot: the axes and the margins put
+ * the plot's own left edge at 0 or right of it.
+ *
+ * What a reset does (Kurvenschmiede, 2026-11, Android Chrome): recharts hides its tooltip
+ * when the mouse LEAVES its wrapper, and a finger never leaves — a tap on Reset zoom lands
+ * on a button outside the wrapper and sends it nothing. So the tooltip of the last tap
+ * stood over the whole range, naming a value from the window that was just left.
+ */
+export function leaveChart(root: Element | null) {
+  const wrapper = root?.querySelector(".recharts-wrapper");
+  if (wrapper) pointAt(wrapper, -1, 0);
+}
+
 /* ── The components ─────────────────────────────────────────────────────── */
 
 /** What the wrapped chart is handed. It applies the domains to its own axes and renders
@@ -455,6 +501,16 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
       setOwnY(null);
     }, [setXWindow]);
 
+    // Every way back to the whole range clears the tooltip — the button, a double click,
+    // and in a `SharedXZoom` a reset pressed on another chart of the column (see
+    // `leaveChart`). On the change, not in each handler, so none of them can miss it.
+    const root = useRef<HTMLDivElement>(null);
+    const wasZoomed = useRef(zoomed);
+    useEffect(() => {
+      if (wasZoomed.current && !zoomed) leaveChart(root.current);
+      wasZoomed.current = zoomed;
+    }, [zoomed]);
+
     // Memoised over what it reads (0.55, held back from 0.52's review): built afresh on every
     // render, the binding was a new prop — and its layer a new element — for the chart,
     // which then drew every series, axis and tick again for a render of the page that
@@ -491,7 +547,7 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
     }
 
     return (
-      <div className="relative">
+      <div ref={root} className="relative">
         <Chart {...props} zoom={binding} />
         {zoomed && !empty && (
           <button
