@@ -222,6 +222,20 @@ describe("the overview strip, through real recharts", () => {
     expect(slider.parentElement).toHaveStyle({ left: `${x}px`, width: `${width}px` });
   });
 
+  it("holds a band carried past the plot's end inside the range, so the handle stays on the track", () => {
+    months();
+    const { x, width } = plot();
+    pointer("pointerdown", x + width * 0.6, 100);
+    pointer("pointermove", x + width * 1.4, 104);
+    pointer("pointerup", x + width * 1.4, 104);
+    const slider = screen.getByRole("slider", { name: "Visible range" });
+    // The eight slots and their half slot of air end at 7.5: a window that ends there
+    // starts where the handle's travel ends. Past it, the handle stood beyond its track.
+    const now = Number(slider.getAttribute("aria-valuenow"));
+    const max = Number(slider.getAttribute("aria-valuemax"));
+    expect(now - max).toBeLessThan(1e-9);
+  });
+
   it("never reaches the chart's drilldown with a click", async () => {
     const onPointClick = vi.fn();
     months({ onPointClick });

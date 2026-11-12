@@ -472,6 +472,28 @@ describe("withChartZoom", () => {
     expect(preview.getAttribute("y")).toBe(String(PLOT.y));
   });
 
+  it("stops a band carried past the plot's edge at the edge, both while it is drawn and once it is let go", () => {
+    // Pointer capture keeps a mouse drag alive past the plot, where the scales read on
+    // into values the chart does not draw: a window outside the data.
+    const { container } = render(<Zoomable axes={[{ id: "y" }]} rows={SWEEP} series={[{ key: "v" }]} />);
+    const rect = overlay();
+    pointer(rect, "pointerdown", 760, 100);
+    pointer(rect, "pointermove", 1200, 110);
+    const preview = container.querySelector("rect[stroke-dasharray]")!;
+    expect(Number(preview.getAttribute("x")) + Number(preview.getAttribute("width"))).toBe(PLOT.x + PLOT.width);
+    pointer(rect, "pointerup", 1200, 110);
+    expect(bindings()[0].x).toEqual([700, 900]);
+    fireEvent.click(screen.getByRole("button", { name: /reset zoom/i }));
+    // Out past the start, and a box out past the bottom: its y stops at the plot's 0, and
+    // its shape is read off what is left on the plot (a box, where 340 px down read as a
+    // tall y band).
+    drag([160, 100], [-200, 104]);
+    expect(bindings()[0].x).toEqual([0, 100]);
+    fireEvent.click(screen.getByRole("button", { name: /reset zoom/i }));
+    drag([160, 60], [610, 400]);
+    expect(bindings()[0]).toEqual({ x: [100, 550], y: { y: [0, 250] } });
+  });
+
   it("puts the whole plot back on a double click", () => {
     render(<Zoomable axes={[{ id: "y" }]} />);
     drag([160, 60], [610, 210]);

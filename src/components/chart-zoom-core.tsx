@@ -888,6 +888,19 @@ function ZoomLayer({
     return { x: event.clientX - box.left + plot.x, y: event.clientY - box.top + plot.y };
   };
 
+  /** Where a mouse band's end is: the pointer, kept on the plot. Pointer capture keeps the
+   *  drag alive past the plot's edge, and there the scales read on into values the chart
+   *  does not draw — a window outside the data, whose overview handle then ran off its
+   *  track. The plot shows the window on show, which is inside the range the chart draws
+   *  unzoomed (`ZoomRange.whole`): stopped at the plot, a band is inside both, on y too,
+   *  and is never cut down to nothing in a `SharedXZoom` column whose charts span
+   *  different ranges, as a clamp to this chart's own range could. The band drawn while
+   *  dragging stops there too, so it shows what the zoom will be. */
+  const onPlot = (point: { x: number; y: number }) => ({
+    x: Math.min(Math.max(point.x, plot.x), plot.x + plot.width),
+    y: Math.min(Math.max(point.y, plot.y), plot.y + plot.height),
+  });
+
   const finish = () => {
     if (!drag) return;
     setDrag(null);
@@ -997,7 +1010,7 @@ function ZoomLayer({
           }
           if (event.button !== 0) return;
           draggedRef.current = false;
-          const point = at(event);
+          const point = onPlot(at(event));
           // Best effort: capture keeps a drag alive past the plot's edge, but a
           // pointer id the environment does not know throws — jsdom refuses them all —
           // and a zoom that threw on pointer-down would be a chart nobody could click.
@@ -1014,7 +1027,7 @@ function ZoomLayer({
             return;
           }
           if (!drag) return;
-          const point = at(event);
+          const point = onPlot(at(event));
           setDrag({ ...drag, toX: point.x, toY: point.y });
         }}
         onPointerUp={(event) => {
