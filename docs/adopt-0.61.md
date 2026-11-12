@@ -423,6 +423,34 @@ The card names the kit's lists in the kit's words, the words their swipe panels 
 
 Legal wording: none.
 
+## A sync database in memory, for a computer marked as shared (`createSyncDb`'s `indexedDB`)
+
+**What changed.** `createSyncDb(name, { indexedDB })` (`@eifi1/ui-kit/sync`) takes the IndexedDB
+the database lives in (type `SyncDbIndexedDB`). Left out, the browser's, on disk, as before.
+
+**Why.** Marcel, 2026-11-12: with "This is a shared computer" ticked, no copy of the person's
+data stays on the device. A copy on disk deleted at sign-out stays whenever the tab is just
+closed, and a library PC may never open the app again to clean it up. In memory, the copy works
+for the session, offline included, and closing the tab leaves nothing.
+
+```ts
+const memory = isSharedComputer() ? await import("fake-indexeddb") : null;
+const db = createSyncDb(name, {
+  extraStores,
+  indexedDB: memory ? { indexedDB: new memory.IDBFactory(), IDBKeyRange: memory.IDBKeyRange } : undefined,
+});
+```
+
+The kit names no implementation and adds no dependency: an app that uses this adds
+`fake-indexeddb` (or another in-memory IndexedDB) to its own dependencies.
+
+- **kastlan:** its handover copy (`createSyncDb`) can take this while `isSharedComputer()`; the
+  query cache already stays in memory there.
+- **keksdose:** its own Dexie database (`db.ts`) is not `createSyncDb`; Marcel's plan is the same
+  rule there: `new Dexie(name, { indexedDB, IDBKeyRange })` with the in-memory implementation
+  while the box is ticked.
+- **Kurvenschmiede:** nothing; it has no sync database.
+
 ## The privacy page's standard lines: the page cache and the shared-computer choice
 
 **What changed.** The privacy page's browser section has two standard entries in the kit's
