@@ -11,6 +11,13 @@ export interface SeriesChartLabels {
   /** The button beside it that undoes the last zoom step — a band, a pinch — where
    *  `resetZoom` goes back to the whole range at once. Visible text, beside an undo arrow. */
   zoomBack: string;
+  /** The accessible name of the overview strip's handle — the window on show, dragged
+   *  along the whole range under a zoomed chart. A `slider`; not drawn as text. */
+  zoomWindow: string;
+  /** What that handle says its value is: the window's two ends, `from` and `to`, each
+   *  already as the chart names a position (its tooltip's heading: a date, a month, a
+   *  number). */
+  zoomWindowRange: (from: string, to: string) => string;
   /** The drag-to-zoom gesture, said at the end of a zoomable chart's description (the
    *  figure's `aria-describedby`; until 0.52 the name of the drag surface, an
    *  `application` nothing could focus). It is the only place the gesture is explained,
@@ -38,6 +45,8 @@ export interface SeriesChartLabels {
 export const DEFAULT_SERIES_CHART_LABELS: SeriesChartLabels = {
   resetZoom: "Reset zoom",
   zoomBack: "Back",
+  zoomWindow: "Visible range",
+  zoomWindowRange: (from, to) => `${from} to ${to}`,
   zoomHint:
     "Drag to zoom: a roughly square selection zooms both axes, a long thin one only its own. Double-click to reset.",
   empty: "No data",

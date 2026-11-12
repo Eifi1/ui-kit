@@ -168,6 +168,7 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
     ["{{ordinates}}", "{{abscissa}}"],
     ["{{ordinates}}", undefined],
   ],
+  "seriesChart.zoomWindowRange": [["{{from}}", "{{to}}"]],
   "pieChart.slice": [["{{label}}", "{{value}}", "{{percent}}"]],
   "pieChart.sliceShare": [["{{label}}", "{{percent}}"]],
   // The second form is `shareInValue` (0.53): no share, and nothing round it.

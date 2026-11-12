@@ -328,6 +328,7 @@ function StubChart({
   zoom?: ZoomBinding;
   labels?: { resetZoom?: string };
   zoomAxes?: ZoomAxesSetting;
+  zoomOverview?: boolean;
 }) {
   return (
     <svg data-testid="chart">
@@ -775,6 +776,145 @@ describe("withChartZoom — Back", () => {
     );
     drag([160, 60], [610, 210]);
     expect(screen.getByRole("button", { name: "Zurück" })).toBeInTheDocument();
+  });
+});
+
+/* ── The overview strip (0.61) ──────────────────────────────────────────── */
+
+describe("withChartZoom — the overview strip", () => {
+  const draw = (props: { zoomAxes?: ZoomAxesSetting; zoomOverview?: boolean } = {}) =>
+    render(<Zoomable axes={[{ id: "y" }]} rows={SWEEP} series={[{ key: "v" }]} {...props} />);
+  const handle = () => screen.queryByRole("slider", { name: "Visible range" });
+  /** A pointer on the handle; jsdom has no layout, so only the moves between events count. */
+  function slide(type: string, x: number, kind = "mouse") {
+    const event = new MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: 0 });
+    Object.defineProperty(event, "pointerId", { value: 7 });
+    Object.defineProperty(event, "pointerType", { value: kind });
+    fireEvent(handle()!, event);
+  }
+
+  it("is drawn only while x is zoomed, under the chart, as a slider over the window", () => {
+    draw();
+    expect(handle()).toBeNull();
+    // An x band over [100, 700] of the sweep's 0…900.
+    drag([160, 100], [760, 110]);
+    const slider = handle()!;
+    expect(slider).toHaveAttribute("aria-valuemin", "0");
+    expect(slider).toHaveAttribute("aria-valuemax", "300");
+    expect(slider).toHaveAttribute("aria-valuenow", "100");
+    // Without a chart to name its positions, the numbers as they are.
+    expect(slider).toHaveAttribute("aria-valuetext", "100 to 700");
+    expect(slider).toHaveAttribute("tabindex", "0");
+    // After the chart in the document: under it.
+    expect(screen.getByTestId("chart").compareDocumentPosition(slider) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /reset zoom/i }));
+    expect(handle()).toBeNull();
+  });
+
+  it("lines up under the plot, the handle standing for the window's share of the range", () => {
+    draw();
+    drag([160, 100], [760, 110]);
+    const slider = handle()!;
+    // The plot starts 60 px in and is 900 wide; two thirds of it, a third of the way along.
+    expect(slider.parentElement).toHaveStyle({ left: "60px", width: "900px" });
+    expect(slider).toHaveStyle({ left: "100px", width: "600px" });
+  });
+
+  it("pans as the handle is dragged, by mouse or by finger, and stops at the range's end", () => {
+    draw();
+    drag([160, 100], [760, 110]);
+    slide("pointerdown", 0);
+    slide("pointermove", 100);
+    expect(bindings()[0].x).toEqual([200, 800]);
+    slide("pointermove", 1000);
+    expect(bindings()[0].x).toEqual([300, 900]);
+    slide("pointerup", 1000);
+    slide("pointerdown", 500, "touch");
+    slide("pointermove", 300, "touch");
+    slide("pointerup", 300, "touch");
+    expect(bindings()[0].x).toEqual([100, 700]);
+  });
+
+  it("pans by a tenth of the window with ← and →, and to the ends with Home and End", () => {
+    draw();
+    drag([160, 100], [760, 110]);
+    fireEvent.keyDown(handle()!, { key: "ArrowRight" });
+    expect(bindings()[0].x).toEqual([160, 760]);
+    fireEvent.keyDown(handle()!, { key: "ArrowLeft" });
+    expect(bindings()[0].x).toEqual([100, 700]);
+    fireEvent.keyDown(handle()!, { key: "End" });
+    expect(bindings()[0].x).toEqual([300, 900]);
+    fireEvent.keyDown(handle()!, { key: "Home" });
+    expect(bindings()[0].x).toEqual([0, 600]);
+  });
+
+  it("is a pan, not a zoom step: Back returns to before the zoom it panned", () => {
+    draw();
+    drag([160, 100], [760, 110]);
+    fireEvent.keyDown(handle()!, { key: "End" });
+    fireEvent.click(screen.getByRole("button", { name: "Back" }));
+    expect(bindings()[0].x).toBeNull();
+  });
+
+  it("keeps its clicks from the chart's own", () => {
+    const onClick = vi.fn();
+    // A button standing in for recharts' wrapper, which the strip is React's child of.
+    render(
+      <button type="button" onClick={onClick}>
+        <Zoomable axes={[{ id: "y" }]} rows={SWEEP} series={[{ key: "v" }]} />
+      </button>,
+    );
+    drag([160, 100], [760, 110]);
+    fireEvent.click(overlay());
+    onClick.mockClear();
+    fireEvent.click(handle()!);
+    fireEvent.click(handle()!.parentElement!);
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it("is not drawn with zoomOverview={false}, nor while x shows the whole range", () => {
+    const { unmount } = draw({ zoomOverview: false });
+    drag([160, 100], [760, 110]);
+    expect(screen.getByRole("button", { name: /reset zoom/i })).toBeInTheDocument();
+    expect(handle()).toBeNull();
+    unmount();
+    // A y band over 150…250, above every sample (0…100): it holds none, so x stays whole.
+    draw({ zoomAxes: "y" });
+    drag([300, 60], [310, 160]);
+    expect(bindings()[0]).toEqual({ x: null, y: { y: [150, 250] } });
+    expect(handle()).toBeNull();
+  });
+
+  it("draws one for a SharedXZoom column, under its last chart that has one", () => {
+    const column = (lastHasOne: boolean) => (
+      <SharedXZoom>
+        <Zoomable axes={[{ id: "y" }]} rows={SWEEP} series={[{ key: "v" }]} />
+        <Zoomable axes={[{ id: "y" }]} rows={SWEEP} series={[{ key: "v" }]} zoomOverview={lastHasOne} />
+      </SharedXZoom>
+    );
+    const { rerender } = render(column(true));
+    drag([160, 100], [760, 110], 0);
+    expect(screen.getAllByRole("slider")).toHaveLength(1);
+    const [first, second] = screen.getAllByTestId("chart");
+    expect(second.compareDocumentPosition(handle()!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    rerender(column(false));
+    expect(screen.getAllByRole("slider")).toHaveLength(1);
+    expect(first.compareDocumentPosition(handle()!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(second.compareDocumentPosition(handle()!) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
+  });
+
+  it("speaks the provider's words", () => {
+    render(
+      <UiKitProvider
+        labels={{
+          seriesChart: { zoomWindow: "Sichtbarer Bereich", zoomWindowRange: (from, to) => `${from} bis ${to}` },
+        }}
+      >
+        <Zoomable axes={[{ id: "y" }]} rows={SWEEP} series={[{ key: "v" }]} />
+      </UiKitProvider>,
+    );
+    drag([160, 100], [760, 110]);
+    expect(screen.getByRole("slider", { name: "Sichtbarer Bereich" })).toHaveAttribute("aria-valuetext", "100 bis 700");
   });
 });
 

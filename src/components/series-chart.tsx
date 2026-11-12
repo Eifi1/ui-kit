@@ -665,8 +665,20 @@ export interface SeriesChartProps<TRow extends object = object> {
    * the marks — see `defaultZoomAxes` (lines both, areas x, bars none). An axis carrying
    * bars or areas never takes a DRAGGED y window: it refits to the x window, from zero.
    * Ignored by `StaticSeriesChart`, which does not zoom.
+   *
+   * On a touch screen one finger reads (the tooltip follows it) and two fingers zoom and
+   * pan x, on a chart whose zoom names x; a mouse or a pen drags the band. While zoomed,
+   * Back undoes one zoom step and Reset zoom shows the whole range.
    */
   zoomAxes?: ZoomAxesSetting;
+  /**
+   * The overview strip under the plot while x is zoomed: the whole range as a thin track,
+   * and the window on show as a handle that drags (mouse or finger) and takes ←/→ to pan,
+   * Home and End to go to the ends. Default `true`; `false` draws none. Inside a
+   * `SharedXZoom` the column draws one, under its last chart that has one. Ignored by
+   * `StaticSeriesChart` and by a chart that does not zoom.
+   */
+  zoomOverview?: boolean;
   /**
    * A click on the plot: the slot under the pointer, and the series when it landed on a
    * bar. keksdose's drilldowns — a payee's month, a budget line, a spending category.
@@ -1454,6 +1466,12 @@ function SeriesPlot({
   const xFormat = (position: number) => format(position, tickAt(position));
   const label = x.label ?? (model.kind === "time" ? (position: number) => dateFormat.format(position) : format);
   const xLabel = (position: number) => label(position, tickAt(position));
+  // A position as words: the heading the tooltip would give it, when that is text; else
+  // the tick. What a keyboard stop is named by, and the zoom strip's handle says.
+  const xText = (position: number) => {
+    const heading = xLabel(position);
+    return typeof heading === "string" && heading ? heading : xFormat(position);
+  };
 
   const tickAngle = x.ticks === false ? 0 : (x.tickAngle ?? 0);
   const tickBand = tiltedTickBand(
@@ -1537,11 +1555,7 @@ function SeriesPlot({
     placed.forEach(({ index, at }, k) => {
       const from = k > 0 ? (placed[k - 1].at + at) / 2 : low;
       const to = k < placed.length - 1 ? (placed[k + 1].at + at) / 2 : high;
-      // The heading the tooltip would give it, when that is text; else the tick.
-      const where = () => {
-        const heading = xLabel(at);
-        return typeof heading === "string" && heading ? heading : xFormat(at);
-      };
+      const where = () => xText(at);
       const valued = (bars.length ? bars : series)
         .map((entry) => ({ entry, value: finite(rows[index]?.[entry.key]) }))
         .filter((cell): cell is { entry: SeriesChartSeries; value: number } => cell.value !== undefined);
@@ -1932,7 +1946,9 @@ function SeriesPlot({
             }
           />
         )}
-        {zoom?.layer && <ZoomRangeContext.Provider value={{ whole: wholeX }}>{zoom.layer}</ZoomRangeContext.Provider>}
+        {zoom?.layer && (
+          <ZoomRangeContext.Provider value={{ whole: wholeX, label: xText }}>{zoom.layer}</ZoomRangeContext.Provider>
+        )}
       </ComposedChart>
     </ChartContainer>
   );

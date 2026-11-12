@@ -204,8 +204,12 @@ export function SeriesChartDemo() {
           Needs <code className="font-mono">recharts</code>
         </strong>
         , like everything behind <code className="font-mono">@eifi1/ui-kit/chart</code>. Drag across a plot to zoom: a
-        roughly square selection zooms both axes, a long thin one only its own (the other refits to what is inside).
-        Double-click or press <em>Reset zoom</em> to go back — the button is a real button, so Tab reaches it.
+        roughly square selection zooms both axes, a long thin one only its own (the other refits to what is inside). On
+        a touch screen one finger reads instead — the tooltip follows it, and a vertical swipe still scrolls the page —
+        and two fingers pinch the time axis about their midpoint, or pan it once zoomed. <em>Back</em> undoes one zoom,{" "}
+        <em>Reset zoom</em> (or a double-click) shows the whole range; both are real buttons, so Tab reaches them. While
+        zoomed, a thin strip under the plot shows the whole range with the window on show as a handle: drag it, or focus
+        it and press ← and →, to pan.
       </Note>
 
       <Example
@@ -369,7 +373,7 @@ export function SeriesChartDemo() {
 
       <Example
         label="SharedXZoom — one x window for a stack"
-        hint="drag either chart; both follow, each refitting its own y. Only the bottom one prints the abscissa"
+        hint="drag either chart; both follow, each refitting its own y. Only the bottom one prints the abscissa, and only the bottom one draws the overview strip while zoomed; Back on either undoes the last zoom of both"
       >
         <SharedXZoom>
           <div className="space-y-1">

@@ -729,6 +729,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     seriesChart: {
       resetZoom: "重置缩放",
       zoomBack: "后退",
+      zoomWindow: "可见范围",
+      zoomWindowRange: (from, to) => `${from} 至 ${to}`,
       zoomHint: "拖动以缩放：近似正方形的选区同时缩放两条坐标轴，细长的选区只缩放其所沿的那条轴。双击可重置。",
       empty: "无数据",
       legend: "数据系列",

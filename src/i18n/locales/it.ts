@@ -759,6 +759,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     seriesChart: {
       resetZoom: "Reimposta zoom",
       zoomBack: "Indietro",
+      zoomWindow: "Intervallo visibile",
+      zoomWindowRange: (from, to) => `da ${from} a ${to}`,
       zoomHint:
         "Trascini per ingrandire: una selezione più o meno quadrata ingrandisce entrambi gli assi, una lunga e sottile solo il proprio. Faccia doppio clic per ripristinare.",
       empty: "Nessun dato",

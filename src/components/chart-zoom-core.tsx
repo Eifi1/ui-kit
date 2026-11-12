@@ -15,15 +15,17 @@
 //
 // The zoom is VIEW state and lives here, never in a query or a store: it is where
 // somebody is looking, and a chart whose data reloads should not lose it. It is cleared
-// by the reset button, by a double click, by two fingers pinched out to the whole range,
-// and by nothing else.
+// by the reset button, by a double click, by Back past the first zoom step, by two
+// fingers pinched out to the whole range, and by nothing else.
 //
 // On a touch screen one finger READS (the tooltip follows it) and two fingers zoom and
-// pan x (`ZoomLayer`); a mouse or a pen draws the band.
+// pan x (`ZoomLayer`); a mouse or a pen draws the band. While x is zoomed an overview
+// strip under the plot pans it (./chart-zoom-overview).
 //
 // Everything with a decision in it is a pure exported function below (`zoomAxesFor`,
-// `selectionFromDrag`, `zoomAfter`, `zoomDomains`, `fitYToX`, `fitXToY`); the
-// components are plumbing between a pointer and those.
+// `selectionFromDrag`, `zoomAfter`, `zoomDomains`, `fitYToX`, `fitXToY`, `zoomStep`,
+// `zoomBack`) or in lib/zoom-window.ts (the pinch and the pan); the components are
+// plumbing between a pointer and those.
 //
 // The kit's own module (0.34, refactor audit 2026-10, API-6b): SeriesChart, its axes and
 // the facing pair import from here. ./chart-zoom is the public face — `SharedXZoom`, the
@@ -40,11 +42,13 @@ import {
   useState,
 } from "react";
 import type { ComponentType, Dispatch, PointerEvent, ReactNode, SetStateAction } from "react";
+import { createPortal } from "react-dom";
 import { usePlotArea, useXAxisInverseScale, useYAxisInverseScale, type InverseScaleFunction } from "recharts";
 import { Undo2, X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { extentOf, isWholeRange, pinchWindow, pinchZoomed, type PinchStart } from "../lib/zoom-window";
 import { FOCUS_RING } from "./focus-ring";
+import { ZoomOverview } from "./chart-zoom-overview";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { DEFAULT_SERIES_CHART_LABELS, type SeriesChartLabels } from "./series-chart-labels";
 
@@ -504,6 +508,13 @@ export interface ZoomTarget {
   labels?: LabelOverride<SeriesChartLabels>;
   /** Which axes a drag may zoom. Default: {@link defaultZoomAxes} of `series`. */
   zoomAxes?: ZoomAxesSetting;
+  /**
+   * The overview strip under the chart while x is zoomed: the whole range, with the window
+   * on show as a handle that drags and takes ←/→. Default `true`. Inside a `SharedXZoom`
+   * the column draws ONE, under its last chart that has one: `false` on a chart takes it
+   * off that chart (the strip then goes under the last chart that still has one).
+   */
+  zoomOverview?: boolean;
 }
 
 /** A view and the way back to it, and the setter: a chart's own, or a `SharedXZoom`'s. */
@@ -512,7 +523,23 @@ interface ZoomStore {
   set: Dispatch<SetStateAction<ZoomHistory>>;
 }
 
-const SharedX = createContext<ZoomStore | null>(null);
+/** A `SharedXZoom`'s strips: each chart that would draw one claims its slot (the claim's
+ *  return gives it back), and the last slot in the document is the one drawn. */
+interface ZoomGroup extends ZoomStore {
+  claim: (slot: Element) => () => void;
+  strip?: Element;
+}
+
+const SharedX = createContext<ZoomGroup | null>(null);
+
+/** The last of `slots` in document order. */
+function lastInDocument(slots: readonly Element[]): Element | undefined {
+  let last: Element | undefined;
+  for (const slot of slots) {
+    if (!last || last.compareDocumentPosition(slot) & Node.DOCUMENT_POSITION_FOLLOWING) last = slot;
+  }
+  return last;
+}
 
 /**
  * One x window for several charts.
@@ -526,11 +553,22 @@ const SharedX = createContext<ZoomStore | null>(null);
  *
  * The way back is shared too (0.61): Back on any chart of the column undoes the column's
  * last zoom, whichever chart it was made on, and Reset zoom on any of them shows the
- * whole range on all of them.
+ * whole range on all of them. So is the overview strip: one for the column, under its
+ * last chart (see {@link ZoomTarget.zoomOverview}) — a strip under every chart would say
+ * the same thing once per chart, between an upper chart and the one under it.
  */
 export function SharedXZoom({ children }: { children: ReactNode }) {
   const [history, set] = useState<ZoomHistory>(NO_HISTORY);
-  return <SharedX.Provider value={{ history, set }}>{children}</SharedX.Provider>;
+  const [slots, setSlots] = useState<readonly Element[]>([]);
+  const claim = useCallback((slot: Element) => {
+    setSlots((was) => [...was, slot]);
+    return () => setSlots((was) => was.filter((other) => other !== slot));
+  }, []);
+  const value = useMemo<ZoomGroup>(
+    () => ({ history, set, claim, strip: lastInDocument(slots) }),
+    [history, claim, slots],
+  );
+  return <SharedX.Provider value={value}>{children}</SharedX.Provider>;
 }
 
 /**
@@ -542,6 +580,9 @@ export function SharedXZoom({ children }: { children: ReactNode }) {
  */
 export interface ZoomRange {
   whole?: [number, number];
+  /** A position as the chart names it (its tooltip's heading): what the overview strip's
+   *  handle says its window is. */
+  label?: (position: number) => string;
 }
 
 export const ZoomRangeContext = createContext<ZoomRange | null>(null);
@@ -603,6 +644,27 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
 
     const clear = useCallback(() => setHistory(NO_HISTORY), [setHistory]);
     const back = useCallback(() => setHistory(zoomBack), [setHistory]);
+
+    // The overview strip's slot, under the chart: the layer portals the strip into it (it
+    // knows where the plot is). In a `SharedXZoom` only the column's last slot is drawn
+    // into, so each chart claims its own (a ref callback's cleanup gives it back).
+    const overview = setting !== "none" && props.zoomOverview !== false && !empty;
+    const [slot, setSlot] = useState<HTMLDivElement | null>(null);
+    const claim = group?.claim;
+    const slotRef = useCallback(
+      (node: HTMLDivElement | null) => {
+        setSlot(node);
+        if (!node) return;
+        const release = claim?.(node);
+        // With a cleanup to call, React no longer calls the ref with `null` on detach.
+        return () => {
+          setSlot(null);
+          release?.();
+        };
+      },
+      [claim],
+    );
+    const strip = overview && slot && (!group || group.strip === slot) ? slot : null;
 
     // Every way back to the whole range clears the tooltip — the button, a double click,
     // Back past the first step, a pinch out to it, and in a `SharedXZoom` any of those on
@@ -680,10 +742,30 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
               setHistory((was) => zoomMove(was, id, window, zooming ? null : (from.y[id] ?? null)));
             }}
             onReset={clear}
+            strip={strip}
+            stripName={labels.zoomWindow}
+            stripRange={labels.zoomWindowRange}
+            // A pan is no step: Back returns to before the zoom it panned.
+            onPan={(window) => setHistory((was) => zoomMove(was, id, window, was.y[id] ?? null))}
           />
         ),
       };
-    }, [setting, xWindow, ownY, history, id, source, dataWhole, only, pinchable, setHistory, clear]);
+    }, [
+      setting,
+      xWindow,
+      ownY,
+      history,
+      id,
+      source,
+      dataWhole,
+      only,
+      pinchable,
+      setHistory,
+      clear,
+      strip,
+      labels.zoomWindow,
+      labels.zoomWindowRange,
+    ]);
 
     if (setting === "none") {
       return (
@@ -708,6 +790,7 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
             </button>
           </div>
         )}
+        {overview && <div ref={slotRef} data-zoom-overview-slot="" />}
       </div>
     );
   }
@@ -752,6 +835,10 @@ function ZoomLayer({
   onZoom,
   onPinch,
   onReset,
+  strip,
+  stripName,
+  stripRange,
+  onPan,
 }: {
   axisIds: string[];
   only?: "x" | "y";
@@ -766,10 +853,17 @@ function ZoomLayer({
    *  it shows the whole range) and whether it has zoomed rather than panned, and its end. */
   onPinch: (phase: "start" | "move" | "end", window?: [number, number], zooming?: boolean) => void;
   onReset: () => void;
+  /** Where the overview strip goes while x is zoomed; `null` draws none. */
+  strip: HTMLElement | null;
+  stripName: string;
+  stripRange: (from: string, to: string) => string;
+  /** The strip moved the window: a pan. */
+  onPan: (window: [number, number]) => void;
 }) {
   const plot = usePlotArea();
   const xInverse = useXAxisInverseScale();
-  const drawnWhole = useContext(ZoomRangeContext)?.whole;
+  const range = useContext(ZoomRangeContext);
+  const drawnWhole = range?.whole;
   const whole = drawnWhole ?? dataWhole;
   // One probe COMPONENT per axis rather than a hook in a loop: the number of axes
   // changes as series are toggled, and a hook count that changes with the data is the
@@ -946,6 +1040,22 @@ function ZoomLayer({
         }}
         onDoubleClick={onReset}
       />
+      {strip &&
+        window &&
+        whole &&
+        createPortal(
+          <ZoomOverview
+            whole={whole}
+            window={window}
+            left={plot.x}
+            width={plot.width}
+            label={range?.label}
+            name={stripName}
+            range={stripRange}
+            onPan={onPan}
+          />,
+          strip,
+        )}
     </g>
   );
 }

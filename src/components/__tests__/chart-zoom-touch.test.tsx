@@ -197,3 +197,41 @@ describe("two fingers zoom", () => {
     expect(tooltip()).toBe("10A4");
   });
 });
+
+describe("the overview strip, through real recharts", () => {
+  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"].map((period, i) => ({ period, v: i * 3 }));
+  const months = (props: Partial<SeriesChartProps> = {}) =>
+    render(
+      <SeriesChart
+        rows={MONTHS}
+        x={{ type: "category", key: "period" }}
+        series={[{ key: "v", label: "V" }]}
+        zoomAxes="x"
+        {...props}
+      />,
+    );
+
+  it("says the window in the chart's own words, and stands under the plot", () => {
+    months();
+    bandZoom();
+    const slider = screen.getByRole("slider", { name: "Visible range" });
+    expect(slider.getAttribute("aria-valuetext")).toMatch(/^[A-Z][a-z]{2} to [A-Z][a-z]{2}$/);
+    // Category slots: the range is the eight slots with half a slot either side.
+    expect(slider).toHaveAttribute("aria-valuemin", "-0.5");
+    const { x, width } = plot();
+    expect(slider.parentElement).toHaveStyle({ left: `${x}px`, width: `${width}px` });
+  });
+
+  it("never reaches the chart's drilldown with a click", async () => {
+    const onPointClick = vi.fn();
+    months({ onPointClick });
+    bandZoom();
+    const { x, width, y, height } = plot();
+    hover(x + width / 2, y + height / 2);
+    await frame();
+    fireEvent.click(screen.getByRole("slider", { name: "Visible range" }));
+    fireEvent.click(document.querySelector("[data-zoom-overview]")!);
+    await frame();
+    expect(onPointClick).not.toHaveBeenCalled();
+  });
+});

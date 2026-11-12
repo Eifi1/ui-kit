@@ -748,6 +748,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     seriesChart: {
       resetZoom: "Nagyítás visszaállítása",
       zoomBack: "Vissza",
+      zoomWindow: "Látható tartomány",
+      zoomWindowRange: (from, to) => `${from} – ${to}`,
       zoomHint:
         "Húzással nagyíthat: a nagyjából négyzetes kijelölés mindkét tengelyt nagyítja, a hosszú, keskeny csak a saját tengelyét. Dupla kattintással visszaállíthatja.",
       empty: "Nincs adat",
