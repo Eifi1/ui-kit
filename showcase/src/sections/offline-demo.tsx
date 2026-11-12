@@ -161,6 +161,12 @@ function QueryPersistenceRecipe() {
         skipped and reported through {code("onUnsafe")}. On restore, a denied or unsafe entry an older build wrote is
         dropped, and paused mutations are kept.
       </Note>
+      <Note>
+        A feedback report's comment thread kept for offline reading: {code("useFeedbackCommentsQuery(id, feedbackApi)")}{" "}
+        reads it through this cache under {code("feedbackCommentsQueryKey(id, admin)")} — an admin's thread apart, for{" "}
+        {code("shouldPersistKey")} to keep off the disk — and its answer is the {code("thread")} that{" "}
+        {code("FeedbackPublicPage")} and the inbox's comments take.
+      </Note>
     </Example>
   );
 }

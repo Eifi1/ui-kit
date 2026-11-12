@@ -479,7 +479,7 @@ export const fr: Dictionary = {
       title: "Paramètres",
       short: "Paramètres",
       blurb:
-        "La page des paramètres et la page d’administration sur une même structure\u00a0: la barre latérale sur ordinateur, la liste à explorer en profondeur sur téléphone, un groupe par chemin, la recherche, et la carte qu’un lien met en évidence. Les lignes des paramètres du compte\u00a0: thème, langue, profil, mot de passe et authentification à deux facteurs.",
+        "La page des paramètres et la page d’administration sur une même structure\u00a0: la barre latérale sur ordinateur, la liste à explorer en profondeur sur téléphone, un groupe par chemin, la recherche, et la carte qu’un lien met en évidence. Les lignes des paramètres du compte\u00a0: thème, langue, profil, mot de passe, authentification à deux facteurs et ce que fait chaque balayage.",
     },
     wizard: {
       title: "Assistant",

@@ -482,7 +482,7 @@ export const hu: Dictionary = {
       title: "Beállítások",
       short: "Beállítások",
       blurb:
-        "A beállítások oldal és az adminisztrációs oldal ugyanazon a vázon: asztali gépen oldalsáv, telefonon lefúró lista, útvonalanként egy csoport, keresés, és a kártya, amelyet egy hivatkozás kiemel. A fiókbeállítások sorai: téma, nyelv, profil, jelszó és kétfaktoros hitelesítés.",
+        "A beállítások oldal és az adminisztrációs oldal ugyanazon a vázon: asztali gépen oldalsáv, telefonon lefúró lista, útvonalanként egy csoport, keresés, és a kártya, amelyet egy hivatkozás kiemel. A fiókbeállítások sorai: téma, nyelv, profil, jelszó, kétfaktoros hitelesítés és hogy melyik húzás mit csinál.",
     },
     wizard: {
       title: "Varázsló",

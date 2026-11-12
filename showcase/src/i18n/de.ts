@@ -485,7 +485,7 @@ export const de: Dictionary = {
       title: "Einstellungen",
       short: "Einstellungen",
       blurb:
-        "Die Einstellungsseite und die Admin-Seite auf einem gemeinsamen Grundgerüst: die Seitenleiste auf dem Desktop, die Drilldown-Liste auf dem Smartphone, eine Gruppe pro Pfad, die Suche und die Karte, die ein Link hervorhebt. Die Zeilen der Kontoeinstellungen: Theme, Sprache, Profil, Passwort und Zwei-Faktor-Authentifizierung.",
+        "Die Einstellungsseite und die Admin-Seite auf einem gemeinsamen Grundgerüst: die Seitenleiste auf dem Desktop, die Drilldown-Liste auf dem Smartphone, eine Gruppe pro Pfad, die Suche und die Karte, die ein Link hervorhebt. Die Zeilen der Kontoeinstellungen: Theme, Sprache, Profil, Passwort, Zwei-Faktor-Authentifizierung und welches Wischen was tut.",
     },
     wizard: {
       title: "Assistent",

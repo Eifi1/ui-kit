@@ -476,7 +476,7 @@ export const es: Dictionary = {
       title: "Ajustes",
       short: "Ajustes",
       blurb:
-        "La página de ajustes y la de administración sobre la misma estructura: la barra lateral en el escritorio, la lista con desglose en el móvil, un grupo por ruta, la búsqueda y la tarjeta que un enlace resalta. Las filas de los ajustes de la cuenta: tema, idioma, perfil, contraseña y verificación en dos pasos.",
+        "La página de ajustes y la de administración sobre la misma estructura: la barra lateral en el escritorio, la lista con desglose en el móvil, un grupo por ruta, la búsqueda y la tarjeta que un enlace resalta. Las filas de los ajustes de la cuenta: tema, idioma, perfil, contraseña, verificación en dos pasos y qué hace cada deslizamiento.",
     },
     wizard: {
       title: "Asistente",

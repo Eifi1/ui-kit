@@ -474,7 +474,7 @@ export const it: Dictionary = {
       title: "Impostazioni",
       short: "Impostazioni",
       blurb:
-        "La pagina delle impostazioni e quella di amministrazione sulla stessa shell: la barra laterale su desktop, l’elenco con drill-down sul telefono, un gruppo per percorso, la ricerca e la scheda che un link mette in evidenza. Le righe delle impostazioni dell’account: tema, lingua, profilo, password e autenticazione a due fattori.",
+        "La pagina delle impostazioni e quella di amministrazione sulla stessa shell: la barra laterale su desktop, l’elenco con drill-down sul telefono, un gruppo per percorso, la ricerca e la scheda che un link mette in evidenza. Le righe delle impostazioni dell’account: tema, lingua, profilo, password, autenticazione a due fattori e cosa fa ogni scorrimento.",
     },
     wizard: {
       title: "Procedura guidata",
