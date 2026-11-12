@@ -13,6 +13,7 @@ import type { LabelOverride } from "../i18n/kit-labels";
 import type { PathPattern } from "../landing/routing";
 import { FILL_HEIGHT_CLASS } from "../shell/fill-height";
 import { captureAppScreenshot } from "./feedback-capture";
+import { useFeedbackPageFrameHeader } from "./feedback-page-frame";
 import { FeedbackInboxBulkBar, useFeedbackInboxBulk } from "./feedback-inbox-bulk";
 import { useFeedbackStatusLabels } from "./feedback-labels";
 import { runMutation } from "./feedback-mutation";
@@ -551,10 +552,12 @@ export function useFeedbackInbox<T extends FeedbackRecord>({
 
 export interface FeedbackInboxProps<T extends FeedbackRecord> extends UseFeedbackInboxOptions<T> {
   /**
-   * Above the table. Default: `<PageHeader title={title} className="mb-4 md:shrink-0" />`.
-   * A function gets the page's title (`feedbackPage.title` / `.myTitle`) — the app's own
-   * header: `(title) => <PageHeader size="compact" title={title} data-tour="feedback-header" />`.
-   * `null` for none.
+   * Above the table. Default: `<PageHeader title={title} className="mb-4 md:shrink-0" />` —
+   * and inside a {@link FeedbackPageFrame}, the frame's header with this title (none when
+   * the frame was given a `title` of its own). A function gets the page's title
+   * (`feedbackPage.title` / `.myTitle`) — the app's own header:
+   * `(title) => <PageHeader size="compact" title={title} data-tour="feedback-header" />`.
+   * `null` for none. Given, it wins over the frame's.
    */
   header?: ReactNode | ((title: string) => ReactNode);
   /** Over the inbox's `DataTable` props — `edgeFade`, `locale`, `mobileExpandAsDialog`,
@@ -564,7 +567,8 @@ export interface FeedbackInboxProps<T extends FeedbackRecord> extends UseFeedbac
    *  group of their own on `/my-feedback`. */
   phoneActions?: ReactNode;
   /** On the page's frame — the fill-height column (`FILL_HEIGHT_CLASS`); the app's page
-   *  padding goes here. */
+   *  padding goes here. The feedback pages' own padding and header are
+   *  {@link FeedbackPageFrame}'s (0.61): wrap the inbox in it instead. */
   className?: string;
 }
 
@@ -604,9 +608,16 @@ export function FeedbackInbox<T extends FeedbackRecord>({
 }: FeedbackInboxProps<T>) {
   const inbox = useFeedbackInbox<T>(options);
   const pageLabels = useFeedbackPageLabels(options.labels);
+  // In a FeedbackPageFrame (0.61) the default header is the frame's, with this page's own
+  // title: the inbox knows whether it is the inbox or "My feedback", and the frame does not.
+  const frameHeader = useFeedbackPageFrameHeader();
   const head =
     header === undefined ? (
-      <PageHeader title={inbox.title} className="mb-4 md:shrink-0" />
+      frameHeader === undefined ? (
+        <PageHeader title={inbox.title} className="mb-4 md:shrink-0" />
+      ) : (
+        frameHeader?.(inbox.title)
+      )
     ) : typeof header === "function" ? (
       header(inbox.title)
     ) : (

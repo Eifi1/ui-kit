@@ -9,6 +9,8 @@ import {
   FeedbackEmptyState,
   FeedbackInbox,
   FeedbackMobileCard,
+  FeedbackPageFrame,
+  FeedbackPublicList,
   FeedbackSubject,
   ToggleGroup,
   feedbackMobileGroupBy,
@@ -25,6 +27,8 @@ import type {
   FeedbackComment,
   FeedbackDetailPatch,
   FeedbackInboxMutation,
+  FeedbackPublicListItem,
+  FeedbackPublicSort,
   FeedbackRecord,
   FeedbackReplyPost,
   FeedbackReworkPost,
@@ -615,6 +619,79 @@ export function FeedbackSubjectDemo() {
         The chips are facts read off the record: {code("context.environment")} when it is not production, and{" "}
         {code("Rework ×n")} from the body&apos;s rework rounds. Without {code("wrap")} the title truncates and the chips
         stay whole; with it the title wraps and the chips follow its last word.
+      </Note>
+    </Example>
+  );
+}
+
+/* ── The pages' frame ───────────────────────────────────────────────────────── */
+
+const FRAMED: FeedbackPublicListItem[] = [
+  {
+    id: 61,
+    title: "Dark mode for the reports",
+    category: "IDEA",
+    status: "IN_EVALUATION",
+    author_name: "Anna",
+    mine: false,
+    votes: 6,
+    voted: false,
+    comment_count: 3,
+    created_at: "2026-11-10T09:12:00Z",
+    updated_at: "2026-11-11T16:40:00Z",
+    resolved_at: null,
+  },
+  {
+    id: 60,
+    title: "Export skips the last row",
+    category: "BUG",
+    status: "IN_PROGRESS",
+    author_name: null,
+    mine: true,
+    votes: 2,
+    voted: true,
+    comment_count: 0,
+    created_at: "2026-11-08T14:03:00Z",
+    updated_at: "2026-11-09T08:00:00Z",
+    resolved_at: null,
+  },
+];
+
+/** `FeedbackPageFrame` — the padding and header of the three feedback pages. */
+export function FeedbackPageFrameDemo() {
+  const [rows, setRows] = useState(FRAMED);
+  const [sort, setSort] = useState<FeedbackPublicSort>("newest");
+  const vote = async (row: FeedbackPublicListItem, next: boolean) => {
+    const answer = { votes: row.votes + (next === row.voted ? 0 : next ? 1 : -1), voted: next };
+    setRows((all) => all.map((r) => (r.id === row.id ? { ...r, ...answer } : r)));
+    return answer;
+  };
+  return (
+    <Example
+      label="FeedbackPageFrame — the feedback pages' padding and header"
+      hint="narrow the window: the header keeps a 16px gutter, the list runs edge to edge"
+    >
+      {/* The frame is a page's root; in a specimen card its header is an h2 (the showcase
+          page has its h1), and the card's own padding is taken back so the frame's shows. */}
+      <div className="-m-4 overflow-hidden rounded-lg">
+        <FeedbackPageFrame title="Feedback discussion" headerProps={{ as: "h2" }}>
+          <FeedbackPublicList
+            rows={rows}
+            sort={sort}
+            onSortChange={setSort}
+            onVote={vote}
+            renderDetail={(row) => <p className="text-sm text-secondary">Report #{row.id}, opened.</p>}
+          />
+        </FeedbackPageFrame>
+      </div>
+      <Note>
+        {code("<FeedbackPageFrame>")} is the root of {code("/feedback")}, {code("/my-feedback")} and{" "}
+        {code("/all-feedback")}: {code("py-4 md:p-6")}, so on a phone the list runs edge to edge (its cards carry their
+        own inset), a {code("compact")} header with that gutter on itself ({code("px-4 md:px-0")}), and the fill-height
+        column a {code("fillHeight")} table fills the window in. Around {code("FeedbackInbox")} leave {code("title")}{" "}
+        out: the inbox draws its own (&ldquo;Feedback inbox&rdquo; or &ldquo;My feedback&rdquo;) in the frame&apos;s
+        header. Around anything else, the frame draws {code("title")}. {code("headerProps")} reach the header — a tour
+        anchor, {code("actions")}. Not inside a content column that pads its pages already.
       </Note>
     </Example>
   );
