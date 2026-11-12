@@ -340,6 +340,8 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "legal.sections.terms.law.body": operatorSample,
   // 0.28.1: the binding language, named in the reader's language.
   "legal.sections.terms.language.body": operatorSample,
+  // 0.61: the persisted cache's line with keksdose's 24 hours.
+  "legal.sections.privacy.browser.standardEntries.recentData": [[24]],
   "legal.translation.note": operatorSample,
   "legal.translation.show": operatorSample,
   // 0.51.3: the as-of line, with the date already written out.

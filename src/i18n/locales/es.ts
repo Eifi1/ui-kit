@@ -1001,6 +1001,13 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
             tail: "Nada de ello se usa para rastrearle. Las entradas pendientes de envío se nos envían en cuanto sea posible. Todo ello desaparece cuando borra los datos del sitio, y al cerrar sesión se eliminan los tokens de inicio de sesión.",
             commercial:
               "Nada de ello se usa para rastrearle. Las entradas pendientes de envío se nos envían en cuanto sea posible. Todo ello desaparece cuando borra los datos del sitio, y al cerrar sesión se eliminan los tokens de inicio de sesión. El pago se realiza en una ventana de Paddle, en el propio dominio de Paddle; lo que esa ventana guarda allí (por ejemplo, una cookie de seguridad y ajustes) se rige por la política de privacidad de Paddle.",
+            // 0.61 (Marcel 2026-11-12): the persisted cache and the shared-computer flag, for an app's entries.
+            standardEntries: {
+              recentData: (hours) =>
+                `Los datos cargados recientemente, para que las páginas se abran también sin conexión; lo que tenga más de ${hours} horas la app ya no lo usa y lo elimina la próxima vez que se abra. No se conserva nada de ello si inicia sesión con «Este es un ordenador compartido».`,
+              sharedComputer:
+                "Si eligió «Este es un ordenador compartido» al iniciar sesión, mientras dure esa sesión.",
+            },
           },
           rights: {
             title: "Sus derechos",

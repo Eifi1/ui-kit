@@ -1028,6 +1028,13 @@ export function germanLabels(numberLocale: string): UiKitLabels {
             // beside the commercial disclaimer and changes clause.
             commercial:
               "Nichts davon dient dazu, Sie zu verfolgen. Noch nicht gesendete Einträge werden an uns übermittelt, sobald das möglich ist. Das alles verschwindet, wenn Sie die Websitedaten löschen, und beim Abmelden werden die Anmeldetoken entfernt. Die Zahlung läuft in einem Fenster von Paddle auf Paddles eigener Domain; was dieses dort speichert (etwa ein Sicherheits-Cookie und Einstellungen), regelt die Datenschutzerklärung von Paddle.",
+            // 0.61 (Marcel 2026-11-12): the persisted cache and the shared-computer flag, for an app's entries.
+            standardEntries: {
+              recentData: (hours) =>
+                `Kürzlich geladene Daten, damit Seiten auch ohne Verbindung öffnen; was älter als ${hours} Stunden ist, verwendet die App nicht mehr und entfernt es, sobald sie wieder geöffnet wird. Davon bleibt nichts, wenn Sie sich mit «Dies ist ein gemeinsam genutzter Computer» anmelden.`,
+              sharedComputer:
+                "Ob Sie bei der Anmeldung «Dies ist ein gemeinsam genutzter Computer» gewählt haben, solange diese Sitzung dauert.",
+            },
           },
           rights: {
             title: "Ihre Rechte",

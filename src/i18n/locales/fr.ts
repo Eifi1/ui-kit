@@ -1020,6 +1020,13 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
             tail: "Rien de tout cela ne sert à vous suivre. Les éléments en attente d’envoi nous sont transmis dès que possible. Tout cela disparaît lorsque vous effacez les données du site, et la déconnexion supprime les jetons de connexion.",
             commercial:
               "Rien de tout cela ne sert à vous suivre. Les éléments en attente d’envoi nous sont transmis dès que possible. Tout cela disparaît lorsque vous effacez les données du site, et la déconnexion supprime les jetons de connexion. Le paiement se déroule dans une fenêtre de Paddle, sur le propre domaine de Paddle\u202f; ce que cette fenêtre y enregistre (par exemple un cookie de sécurité et des paramètres) relève de la politique de confidentialité de Paddle.",
+            // 0.61 (Marcel 2026-11-12): the persisted cache and the shared-computer flag, for an app's entries.
+            standardEntries: {
+              recentData: (hours) =>
+                `Les données chargées récemment, pour que les pages s’ouvrent aussi sans connexion ; ce qui date de plus de ${hours} heures n’est plus utilisé et est supprimé à la prochaine ouverture de l’app. Rien n’en est conservé si vous vous connectez avec « C’est un ordinateur partagé ».`,
+              sharedComputer:
+                "Si vous avez choisi « C’est un ordinateur partagé » à la connexion, le temps que dure cette session.",
+            },
           },
           rights: {
             title: "Vos droits",

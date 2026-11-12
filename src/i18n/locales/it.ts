@@ -1012,6 +1012,12 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
             tail: "Niente di tutto ciò viene usato per tracciarLa. Le voci in attesa di invio ci vengono trasmesse non appena possibile. Tutto questo scompare quando cancella i dati del sito, e uscendo dall’account vengono rimossi i token di accesso.",
             commercial:
               "Niente di tutto ciò viene usato per tracciarLa. Le voci in attesa di invio ci vengono trasmesse non appena possibile. Tutto questo scompare quando cancella i dati del sito, e uscendo dall’account vengono rimossi i token di accesso. Il pagamento avviene in una finestra di Paddle, sul dominio proprio di Paddle; ciò che questa finestra vi salva (ad esempio un cookie di sicurezza e alcune impostazioni) è disciplinato dall’informativa sulla privacy di Paddle.",
+            // 0.61 (Marcel 2026-11-12): the persisted cache and the shared-computer flag, for an app's entries.
+            standardEntries: {
+              recentData: (hours) =>
+                `I dati caricati di recente, perché le pagine si aprano anche senza connessione; ciò che ha più di ${hours} ore l’app non lo usa più e lo rimuove alla successiva apertura. Non ne resta nulla se accede con «Questo è un computer condiviso».`,
+              sharedComputer: "Se all’accesso ha scelto «Questo è un computer condiviso», finché dura quella sessione.",
+            },
           },
           rights: {
             title: "I Suoi diritti",

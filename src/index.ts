@@ -715,6 +715,7 @@ export {
 } from "./components/legal";
 export type {
   LegalLabels,
+  LegalBrowserStandardEntries,
   LegalLink,
   LegalLinksProps,
   LegalSectionProps,

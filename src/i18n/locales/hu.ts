@@ -1006,6 +1006,13 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
             tail: "Egyiket sem használjuk az Ön követésére. A küldésre váró bejegyzéseket a böngésző elküldi nekünk, amint lehetséges. Mindez eltűnik, amikor törli a webhely adatait, kijelentkezéskor pedig a bejelentkezési tokenek törlődnek.",
             commercial:
               "Egyiket sem használjuk az Ön követésére. A küldésre váró bejegyzéseket a böngésző elküldi nekünk, amint lehetséges. Mindez eltűnik, amikor törli a webhely adatait, kijelentkezéskor pedig a bejelentkezési tokenek törlődnek. A fizetés a Paddle egy ablakában, a Paddle saját domainjén zajlik; amit ez az ablak ott tárol (például egy biztonsági sütit és beállításokat), arra a Paddle adatvédelmi tájékoztatója vonatkozik.",
+            // 0.61 (Marcel 2026-11-12): the persisted cache and the shared-computer flag, for an app's entries.
+            standardEntries: {
+              recentData: (hours) =>
+                `A nemrég betöltött adatok, hogy az oldalak kapcsolat nélkül is megnyíljanak; ami ${hours} óránál régebbi, azt az alkalmazás már nem használja, és a következő megnyitáskor törli. Semmi sem marad meg belőle, ha az „Ez egy közös használatú számítógép” beállítással jelentkezik be.`,
+              sharedComputer:
+                "Hogy bejelentkezéskor az „Ez egy közös használatú számítógép” lehetőséget választotta-e, amíg az a munkamenet tart.",
+            },
           },
           rights: {
             title: "Az Ön jogai",

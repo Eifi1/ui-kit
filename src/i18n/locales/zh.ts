@@ -975,6 +975,12 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
             tail: "这些内容都不会用于跟踪您。等待发送的条目会尽快发送给我们。清除网站数据后，这些内容会全部消失；退出登录会删除登录令牌。",
             commercial:
               "这些内容都不会用于跟踪您。等待发送的条目会尽快发送给我们。清除网站数据后，这些内容会全部消失；退出登录会删除登录令牌。付款在 Paddle 自有域名上的 Paddle 窗口中进行；该窗口在那里存储的内容（例如一个安全 Cookie 和一些设置）受 Paddle 隐私政策的约束。",
+            // 0.61 (Marcel 2026-11-12): the persisted cache and the shared-computer flag, for an app's entries.
+            standardEntries: {
+              recentData: (hours) =>
+                `最近加载的数据，以便页面在未联网时也能打开；超过 ${hours} 小时的数据应用不再使用，并在下次打开时删除。如果您登录时选择了“这是一台共用电脑”，则不会保留任何此类数据。`,
+              sharedComputer: "您登录时是否选择了“这是一台共用电脑”，仅在该次会话期间保存。",
+            },
           },
           rights: {
             title: "您的权利",
