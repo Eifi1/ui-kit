@@ -239,8 +239,8 @@ export async function releaseThisDevicePush(unregister: (endpoint: string) => Pr
  * `.catch(() => undefined)`, and one that forgot never signed out when the server refused.
  *
  *     async function signOut() {
- *       await dropPushSubscription(api.unregisterDevice);
- *       await api.revokeSession().catch(() => undefined);
+ *       await dropPushSubscription(api.unregisterDevice);   // needs the token: first
+ *       await api.endThisSession().catch(() => undefined);  // DELETE /auth/sessions/current
  *       clear();
  *     }
  *

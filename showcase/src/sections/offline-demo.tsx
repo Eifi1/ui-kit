@@ -127,7 +127,8 @@ function SharedComputerDemo() {
       <Note>
         {code("useSharedComputerIdleSignOut({ onSignOut })")} in the signed-in shell signs an abandoned tab out after 15
         minutes without input. A minute before, a toast offers {code("Stay signed in")}. {code("onSignOut")} is the
-        app&apos;s ordinary sign-out: revoke on the server, then drop the tokens.
+        app&apos;s ordinary sign-out: {code("dropPushSubscription")}, then {code("DELETE /auth/sessions/current")}, then
+        drop the tokens.
       </Note>
     </Example>
   );

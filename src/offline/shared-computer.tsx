@@ -31,9 +31,10 @@ import { DEFAULT_SHARED_COMPUTER_LABELS } from "./shared-computer-labels";
  * Page memory is one layer of four (0.62, Marcel 2026-11-12 and 2026-11-13):
  * - the sign-in sends `shared_device: true` (`isSharedComputer()`), and the server gives that
  *   session a short life (server-kit 0.27's `SessionPolicy`: 15 minutes idle, 4 hours at
- *   most; docs/auth-harmonization.md §5.1, §6.2);
+ *   most, a 5-minute access token; docs/auth-harmonization.md §5.1, §6.2);
  * - every sign-out, shared or not, drops this device's push (`dropPushSubscription`), then
- *   ends the session on the server (the app's revoke), then drops the tokens (auth §6.3);
+ *   ends the session on the server (`DELETE /auth/sessions/current`), then drops the tokens
+ *   (auth §6.3);
  * - {@link useSharedComputerIdleSignOut} signs an abandoned tab out after 15 minutes without
  *   input;
  * - no push while the box is ticked (`PushDeviceSetting` refuses it): a subscription belongs

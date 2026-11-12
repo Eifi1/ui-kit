@@ -498,14 +498,17 @@ they are (no ETags). KS's version contract stays KS's.
     load and taken at once.
   - **The price:** a reload or a reopened tab lands on the sign-in. The app says so (keksdose's
     privacy text: "the session ends when you close the tab or reload the page").
-  - **Defence in depth** (ui-kit 0.62, server-kit 0.27; Marcel 2026-11-12 and 2026-11-13): the
-    sign-in sends `shared_device: true` and the server gives that session a short life
-    (`SessionPolicy`: 15 minutes idle, 4 hours at most; auth §5.1, §6.2); every sign-out,
-    shared or not, drops this device's push, then revokes the session on the server, then drops
-    the tokens (auth §6.3); `useSharedComputerIdleSignOut` signs an abandoned tab out after 15
-    minutes without input; and push is not offered while the box is ticked
-    (`PushDeviceSetting`), since a subscription belongs to the browser, not to the tab or the
-    sign-in.
+  - **Defence in depth** (ui-kit 0.62, server-kit 0.27; Marcel 2026-11-12 and 2026-11-13):
+    - the sign-in sends `shared_device: true` and the server gives that session a short life
+      (`SessionPolicy`: 15 minutes idle, 4 hours at most, and a 5-minute access token, so a busy
+      person renews about every 5 minutes while an abandoned tab's session ends 10 to 15
+      minutes after its last request; auth §5.1, §6.2);
+    - every sign-out, shared or not, drops this device's push, then ends the session on the
+      server (`DELETE /auth/sessions/current`), then drops the tokens (auth §6.3);
+    - `useSharedComputerIdleSignOut` signs an abandoned tab out after 15 minutes without
+      input: the server ends the session, not what the open tab shows;
+    - push is not offered while the box is ticked (`PushDeviceSetting`), since a subscription
+      belongs to the browser, not to the tab or the sign-in.
 - **What the person leaves in the kit's parts goes in page memory too** (ui-kit 0.62,
   keksdose's shared-computer session): the tables' saved views (`<UiKitProvider
   tableStorage>`, or a table's `storage`) and the crash reporter's buffer

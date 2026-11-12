@@ -15,9 +15,10 @@ import { DEFAULT_SHARED_COMPUTER_LABELS } from "./shared-computer-labels";
  * shows. A tab left open on a library PC keeps the last person's pages on screen, and their
  * tokens in its memory, until something calls the server. This hook is that something.
  *
- * `onSignOut` is the app's ordinary sign-out: the revoke on the server first, then the tokens
- * and the person's traces dropped (auth §6.3), then the sign-in page. It must drop the tokens
- * however the revoke ends: offline, or with the server's own limit already past (a 401).
+ * `onSignOut` is the app's ordinary sign-out (auth §6.3): this device's push dropped
+ * (`dropPushSubscription`), the session ended on the server (`DELETE /auth/sessions/current`),
+ * then the tokens and the person's traces dropped, then the sign-in page. It must drop the
+ * tokens however the revoke ends: offline, or with the server's own limit already past.
  *
  * Input is a press, a key, a touch, a wheel, a moving pointer, or the tab shown again
  * (`visibilitychange` to visible, `pageshow` from the back-forward cache). While the warning
@@ -128,8 +129,8 @@ export function useSharedComputerIdleSignOut({
 }
 
 export interface SharedComputerIdleSignOutOptions {
-  /** The app's sign-out: revoke this session on the server, then drop the tokens whatever
-   *  the revoke answered, then go to the sign-in page. Called once per run. */
+  /** The app's sign-out: push dropped, this session ended on the server, then the tokens
+   *  dropped whatever the server answered, then the sign-in page. Called once per run. */
   onSignOut: () => Promise<unknown> | void;
   /** Minutes without input. Default 15: server-kit 0.27's idle limit for a shared session,
    *  so the tab and the server end it together. */
