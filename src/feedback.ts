@@ -102,6 +102,9 @@ export {
   type FeedbackRowDetailProps,
 } from "./feedback/feedback-row-detail";
 export * from "./feedback/feedback-crash";
+// 0.61: which copy of the app a report and a crash come from, off the host (keksdose's
+// rule; Kurvenschmiede read a build flag, which a deployment's production build defeats).
+export { deployEnvironment, type DeployEnvironmentHosts } from "./feedback/deploy-environment";
 // 0.38.0: the public pages (§9.15) — the "Visible to others" switch, the list every user
 // reads and one report opened.
 export {

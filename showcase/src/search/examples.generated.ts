@@ -898,6 +898,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "FeedbackDialog — the attachment buttons' look",
     "FeedbackMenu + useFeedbackSubmit — the top-bar menu and the wired dialog",
     "FeedbackContextBox + feedbackContext() — what the box shows is what is sent",
+    "deployEnvironment(hosts) — which copy of the app a report comes from",
     "FeedbackMenu publicHref + useFeedbackSubmit publicNotice — reports others read",
   ],
   "feedback-inbox": [
@@ -1466,6 +1467,7 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
     "FeedbackAttachment023Demo",
     "FeedbackDialogButtons025Demo",
     "FeedbackSubmit027Demo",
+    "DeployEnvironmentDemo",
     "FeedbackPublicCompose038Demo",
   ],
   "feedback-inbox": [

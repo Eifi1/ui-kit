@@ -328,6 +328,8 @@ const TableEdgeFadeDemo = lazySection(() => import("./sections/table-edge-fade")
 const DataTableEdgeFadeDemo = lazySection(() => import("./sections/table-edge-fade"), "DataTableEdgeFadeDemo");
 // 0.27.0: the feedback harmonization.
 const FeedbackSubmit027Demo = lazySection(() => import("./sections/feedback-compose"), "FeedbackSubmit027Demo");
+// 0.61: which copy of the app, off the host.
+const DeployEnvironmentDemo = lazySection(() => import("./sections/feedback-compose"), "DeployEnvironmentDemo");
 const FeedbackTable027Demo = lazySection(() => import("./sections/feedback-inbox/table"), "FeedbackTable027Demo");
 const FeedbackSubjectDemo = lazySection(() => import("./sections/feedback-inbox/table"), "FeedbackSubjectDemo");
 // 0.55.0: the inbox assembled once (feedback §13).
@@ -1910,6 +1912,7 @@ export const GROUPS: ShowcaseGroup[] = [
           "FeedbackContextBox",
           "captureAppScreenshot",
           "createCrashReporter",
+          "deployEnvironment",
         ],
         Body: () => (
           <>
@@ -1919,6 +1922,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <FeedbackAttachment023Demo />
             <FeedbackDialogButtons025Demo />
             <FeedbackSubmit027Demo />
+            <DeployEnvironmentDemo />
             <FeedbackPublicCompose038Demo />
           </>
         ),

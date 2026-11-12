@@ -66,8 +66,8 @@ export interface UseFeedbackSubmitOptions<R = unknown> {
   create: (payload: FeedbackCreatePayload) => Promise<R>;
   /** Who is filing — shown in the context box and sent in `context.user_*`. */
   user?: FeedbackSubmitter | null;
-  /** `context.environment` — the app's own reading of which copy it is (keksdose
-   *  `deployEnvironment()`). */
+  /** `context.environment` — the app's own reading of which copy it is: the kit's
+   *  `deployEnvironment(hosts)` (0.61), off the host, never a build flag. */
   environment?: FeedbackEnvironment | (string & {});
   /** `context.version` — the app build (`__APP_VERSION__`). */
   version?: string;
@@ -165,7 +165,7 @@ export interface FeedbackSubmit {
  * const feedback = useFeedbackSubmit({
  *   upload: (file) => feedbackApi.uploadAttachment(file),
  *   create: (payload) => feedbackApi.create(payload),
- *   user, environment: deployEnvironment(), version: __APP_VERSION__,
+ *   user, environment: deployEnvironment({ prod: ["myapp.example"] }), version: __APP_VERSION__,
  *   errorMessage: extractApiErrorMessage,
  *   onSubmitted: () => qc.invalidateQueries({ queryKey: queryKeys.feedback.all }),
  * });

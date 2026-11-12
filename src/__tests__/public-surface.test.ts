@@ -384,7 +384,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // the feedback swipe's ids, back for an app's settings (0.53 had dropped it unread).
   // 0.61 (+1, here and in /feedback; Marcel 2026-11-12): `FeedbackPageFrame`, the feedback
   // pages' padding and header as keksdose draws them.
-  ["@eifi1/ui-kit", barrel, 1015],
+  // 0.61 (+1, here and in /feedback): `deployEnvironment`, which copy of the app a report
+  // comes from, read off the host by each app's own list (keksdose's rule).
+  ["@eifi1/ui-kit", barrel, 1016],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -415,7 +417,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // in the barrel).
   // 0.60.1: `FEEDBACK_SWIPE_ACTIONS` (+1 here and in the barrel).
   // 0.61: `FeedbackPageFrame` (+1 here and in the barrel).
-  ["@eifi1/ui-kit/feedback", feedback, 95],
+  // 0.61: `deployEnvironment` (+1 here and in the barrel).
+  ["@eifi1/ui-kit/feedback", feedback, 96],
   // 0.53 (−3, breaking): what 0.52 deprecated — `SEARCH_TIER_POINTS`, `matchEntries`,
   // `normalizeSearchText` (API-4).
   ["@eifi1/ui-kit/search", search, 6],

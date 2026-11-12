@@ -21,7 +21,8 @@ import type { FeedbackReply } from "./feedback-public-types";
 
 /* ── The resource (§3.1, §3.2) ────────────────────────────────────────────── */
 
-/** Which copy of an app a report came from — keksdose `app/deploy-environment.ts`.
+/** Which copy of an app a report came from — read off the host by the kit's
+ *  `deployEnvironment(hosts)` (0.61; keksdose `app/deploy-environment.ts` before it).
  *  Any other string is read as "not prod" (the admin list shows it upper-cased as a
  *  chip, §4.3), so an app with a `staging` loses nothing. */
 export type FeedbackEnvironment = "prod" | "dev" | "local";

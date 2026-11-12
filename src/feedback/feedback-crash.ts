@@ -145,8 +145,8 @@ export interface CrashReporterOptions {
    * kastlan has no demo users.
    */
   suppress?: () => boolean;
-  /** The deploy environment, copied into every report (§3.2; kk
-   *  `app/deploy-environment.ts`). */
+  /** The deploy environment, copied into every report (§3.2): the kit's
+   *  `deployEnvironment(hosts)` (0.61), off the host, never a build flag. */
   environment: FeedbackEnvironment | (string & {});
   /** Which copy of the app — default `location.origin` at filing time. */
   origin?: string;
@@ -310,7 +310,7 @@ type PostResult = { filed: true; reference?: string } | { filed: false; retry: b
  *   allowParams: ["p", "ps", "sort", "tab"],
  *   storageKey: "myapp.pendingCrashReports",
  *   suppress: () => useAuth.getState().user?.is_demo === true,
- *   environment: deployEnvironment(),
+ *   environment: deployEnvironment({ prod: ["myapp.example", "www.myapp.example"] }),
  * });
  *
  * <ErrorBoundary placement="page" appVersion={APP_VERSION}
