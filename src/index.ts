@@ -19,6 +19,9 @@ export * from "./lib/format";
 // localStorage that never throws (Safari private mode, blocked site data). 0.52 (DUP-8,
 // refactor audit 2026-10-30): the remove, the sessionStorage pair and a JSON pair with a
 // shape check — 16 files in the apps wrap storage by hand, a few of them with no guard.
+// 0.62: `createMemoryStorage`, a Storage in the page's memory, for a shared-computer
+// session's table views (`<UiKitProvider tableStorage>`) and crash buffer — keksdose's
+// `PageMemoryStorage`; the local trio takes one as an optional last argument.
 export {
   readStored,
   writeStored,
@@ -27,6 +30,7 @@ export {
   writeSessionStored,
   readStoredJson,
   writeStoredJson,
+  createMemoryStorage,
 } from "./lib/safe-storage";
 // 0.52 (DUP-8): `prefers-reduced-motion`, asked at the moment of the motion (KS copied it).
 export { prefersReducedMotion } from "./lib/reduced-motion";

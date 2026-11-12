@@ -215,7 +215,12 @@ function MainTable() {
           it — <code className="font-mono">TranslationReviewPanel</code>
           too — while a table&apos;s own prop still wins. The stored key is the prefix plus{" "}
           <code className="font-mono">storageKey</code>, so an app that wrapped DataTable to pass its prefix keeps every
-          reader&apos;s saved view when it moves the prefix to the provider.
+          reader&apos;s saved view when it moves the prefix to the provider. Where the view is kept is a{" "}
+          <code className="font-mono">Storage</code>, <code className="font-mono">localStorage</code> unless the
+          table&apos;s <code className="font-mono">storage</code> or{" "}
+          <code className="font-mono">{"<UiKitProvider tableStorage>"}</code> names another: a shared-computer session
+          passes <code className="font-mono">createMemoryStorage()</code>, so its views last as long as the page and
+          never reach the device.
         </Note>
         <Note>
           Selection and the row link share the modifier keys, and the link wins:{" "}

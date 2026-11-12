@@ -489,6 +489,12 @@ they are (no ETags). KS's version contract stays KS's.
   private-mode keys) in `sessionStorage` or memory, and its sync copy in memory
   (`createSyncDb`'s `indexedDB`). A closed tab then leaves neither data nor a session behind.
   Unticked, nothing changes.
+- **What the person leaves in the kit's parts goes in page memory too** (ui-kit 0.62,
+  keksdose's shared-computer session): the tables' saved views (`<UiKitProvider
+  tableStorage>`, or a table's `storage`) and the crash reporter's buffer
+  (`createCrashReporter`'s `storage`), in a `createMemoryStorage()` the app makes once per
+  page. Not `sessionStorage`: Chrome brings a closed tab back with it (Chromium 156,
+  2026-11-12). The device's own views and buffer stay as they were for its own session.
 
 **D7 Plaintext at rest, with a scrub list (kk's decision).**
 

@@ -591,6 +591,7 @@ interface KitI18n {
   chartTooltipPlacement?: ChartTooltipPlacement;
   formatDate?: KitDateFormatter;
   tableStorageKeyPrefix?: string;
+  tableStorage?: Storage;
   timeZone?: string;
   documentTitleFormat?: string;
   appName?: string;
@@ -729,6 +730,20 @@ export interface UiKitProviderProps {
    */
   tableStorageKeyPrefix?: string;
   /**
+   * 0.62: the `Storage` every kit table below keeps its view in, when the table is not
+   * handed a `storage` of its own: `DataTable`, `TranslationReviewPanel`'s table and its
+   * groups (`useSharedTableView`). Left out, `localStorage`, as before. Resolves like the
+   * prefix: the table's own prop > this > `localStorage`; the key is the same in either.
+   *
+   * For a shared-computer session, the page's memory — `createMemoryStorage()`, made once
+   * at module scope (keep it stable: it is in the context value) — so a person's saved
+   * filters and sorts last as long as the page and never reach the device. keksdose's
+   * shared-computer mode mounted its tables without `storageKey` instead, and lost the view
+   * on every navigation. "Reset this device's settings" clears the views in `localStorage`
+   * only; a page-memory view goes with the page.
+   */
+  tableStorage?: Storage;
+  /**
    * 0.46 (docs/notifications-harmonization.md §10.3): the IANA zone ("Europe/Zurich") every
    * TIMESTAMP below is shown in through `useKitFormat().formatDate` /
    * `formatRelativeTime`, when the call names none — the account's picked zone, for an app
@@ -774,6 +789,7 @@ export function UiKitProvider({
   chartTooltipPlacement,
   formatDate,
   tableStorageKeyPrefix,
+  tableStorage,
   timeZone,
   documentTitleFormat,
   appName,
@@ -790,6 +806,7 @@ export function UiKitProvider({
       chartTooltipPlacement: chartTooltipPlacement ?? outer.chartTooltipPlacement,
       formatDate: formatDate ?? outer.formatDate,
       tableStorageKeyPrefix: tableStorageKeyPrefix ?? outer.tableStorageKeyPrefix,
+      tableStorage: tableStorage ?? outer.tableStorage,
       timeZone: timeZone ?? outer.timeZone,
       documentTitleFormat: documentTitleFormat ?? outer.documentTitleFormat,
       appName: appName ?? outer.appName,
@@ -803,6 +820,7 @@ export function UiKitProvider({
       chartTooltipPlacement,
       formatDate,
       tableStorageKeyPrefix,
+      tableStorage,
       timeZone,
       documentTitleFormat,
       appName,
@@ -977,6 +995,12 @@ export function useKitDateFormatter(): KitDateFormatter | undefined {
  *  `storageKeyPrefix` wins over it, and the kit's `"hbui-table:"` comes after both. */
 export function useKitTableStorageKeyPrefix(): string | undefined {
   return useContext(KitI18nContext).tableStorageKeyPrefix;
+}
+
+/** The nearest provider's `tableStorage` (0.62), or `undefined` — `localStorage`. A
+ *  table's own `storage` wins over it. */
+export function useKitTableStorage(): Storage | undefined {
+  return useContext(KitI18nContext).tableStorage;
 }
 
 /** The nearest provider's `timeZone` (0.46), or `undefined` — the device's. A call's own

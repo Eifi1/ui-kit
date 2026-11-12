@@ -394,7 +394,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // through the app's API client (feedback §14.3).
   // 0.61 (+2, here and in /feedback; Marcel 2026-11-12): `useFeedbackPublicPage` and
   // `FeedbackPublicPage`, the public page assembled once (feedback §14).
-  ["@eifi1/ui-kit", barrel, 1026],
+  // 0.62 (+2, keksdose's shared-computer session): `createMemoryStorage`, a Storage in the
+  // page's memory, and `useKitTableStorage`, the provider's new `tableStorage`.
+  ["@eifi1/ui-kit", barrel, 1028],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

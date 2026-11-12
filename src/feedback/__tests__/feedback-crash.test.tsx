@@ -2,6 +2,7 @@ import { act, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ErrorBoundary } from "../../components/error-boundary";
 import type { CrashReport } from "../../components/error-boundary";
+import { createMemoryStorage } from "../../lib/safe-storage";
 import { createCrashReporter } from "../feedback-crash";
 import type { CrashReportCreate, CrashReporterOptions } from "../feedback-crash";
 
@@ -500,5 +501,55 @@ describe("createCrashReporter — flushPending", () => {
     await first;
     expect(r.fetchImpl).toHaveBeenCalledTimes(1);
     expect(pending().map((p) => p.message)).toEqual(["two", "three", "during"]);
+  });
+});
+
+describe("createCrashReporter — storage, the page's memory on a shared computer (0.62)", () => {
+  // keksdose's shared-computer session keeps everything the person leaves in the page's
+  // memory: Chrome restores a closed tab's sessionStorage, and localStorage outlives the
+  // tab. The buffer was localStorage only, so keksdose put back the device's buffer after
+  // every filing and skipped the flush. `storage` puts the buffer where the app says.
+
+  const buffered = (store: Storage) => JSON.parse(store.getItem(KEY) ?? "[]") as CrashReportCreate[];
+
+  it("buffers in the Storage it is given, never in localStorage, and flushes from it", async () => {
+    const memory = createMemoryStorage();
+    localStorage.setItem(KEY, JSON.stringify([{ message: "the device's own", occurred_at: "2026-11-01T00:00:00Z" }]));
+    const r = setup({ storage: memory });
+    r.setToken(null);
+    await r.reporter.onReport(crash({ message: "on the shared computer" }));
+    expect(buffered(memory).map((p) => p.message)).toEqual(["on the shared computer"]);
+    // The device's buffer is left as it was, for its own session's next flush.
+    expect(pending().map((p) => p.message)).toEqual(["the device's own"]);
+    r.setToken("token-000");
+    await r.reporter.flushPending();
+    expect(r.fetchImpl).toHaveBeenCalledTimes(1);
+    expect(sent(r.fetchImpl).message).toBe("on the shared computer");
+    expect(memory.getItem(KEY)).toBeNull();
+    expect(pending().map((p) => p.message)).toEqual(["the device's own"]);
+  });
+
+  it("asks a function for it at each filing, for a mode chosen while the page lives", async () => {
+    const memory = createMemoryStorage();
+    let shared = false;
+    const r = setup({ storage: () => (shared ? memory : localStorage) });
+    r.setToken(null);
+    await r.reporter.onReport(crash({ message: "before the sign-in" }));
+    shared = true;
+    await r.reporter.onReport(crash({ message: "after it" }));
+    expect(pending().map((p) => p.message)).toEqual(["before the sign-in"]);
+    expect(buffered(memory).map((p) => p.message)).toEqual(["after it"]);
+  });
+
+  it("buffers nothing, and never throws, when the function throws", async () => {
+    const r = setup({
+      storage: () => {
+        throw new Error("no storage");
+      },
+    });
+    r.setToken(null);
+    await expect(r.reporter.onReport(crash())).resolves.toEqual({ filed: false });
+    await expect(r.reporter.flushPending()).resolves.toBeUndefined();
+    expect(localStorage.getItem(KEY)).toBeNull();
   });
 });

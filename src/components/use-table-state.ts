@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { SetStateAction } from "react";
 import * as ReactRouter from "react-router";
 import { useLocation, useSearchParams } from "react-router";
-import { useKitTableStorageKeyPrefix } from "../i18n/kit-labels";
+import { useKitTableStorage, useKitTableStorageKeyPrefix } from "../i18n/kit-labels";
 import { readStored, writeStored } from "../lib/safe-storage";
 import { decodeFilterValue, encodeFilterValue, isFilterActive, resolveFilter } from "./data-table-filters";
 import { decodeSorts, encodeSorts, normalizeSorts, type SortState } from "./data-table-sort";
@@ -36,9 +36,10 @@ function withDefaultHidden(view: { hidden: Set<string>; shown: Set<string> }, de
 
 export const DEFAULT_PERSIST_PREFIX = "hbui-table:";
 
-function loadPersisted(storageKey: string | undefined, prefix: string): Partial<PersistedState> {
+/** The view stored under `prefix + storageKey`, in `storage` (0.62) or `localStorage`. */
+function loadPersisted(storageKey: string | undefined, prefix: string, storage?: Storage): Partial<PersistedState> {
   if (!storageKey) return {};
-  const raw = readStored(prefix + storageKey);
+  const raw = readStored(prefix + storageKey, storage);
   if (!raw) return {};
   try {
     const parsed = JSON.parse(raw) as Partial<PersistedState>;
@@ -328,6 +329,7 @@ export function useTableState<T>({
   columns,
   storageKey,
   storageKeyPrefix,
+  storage,
   urlSync: urlSyncOption,
   defaultPageSize,
   sortsProp,
@@ -338,6 +340,8 @@ export function useTableState<T>({
   columns: readonly DataTableColumn<T>[];
   storageKey?: string;
   storageKeyPrefix: string;
+  /** Where the view is kept (0.62), resolved by DataTable: `undefined` is `localStorage`. */
+  storage?: Storage;
   urlSync?: TableUrlSync;
   defaultPageSize: number;
   sortsProp?: readonly SortState[];
@@ -363,7 +367,10 @@ export function useTableState<T>({
   const [urlInitial] = useState<TableUrlState>(() =>
     urlSync ? readTableUrlState(searchParams, columns, urlPrefix) : {},
   );
-  const initial = useMemo(() => loadPersisted(storageKey, storageKeyPrefix), [storageKey, storageKeyPrefix]);
+  const initial = useMemo(
+    () => loadPersisted(storageKey, storageKeyPrefix, storage),
+    [storageKey, storageKeyPrefix, storage],
+  );
   const [internalSorts, setInternalSorts] = useState<SortState[]>(() =>
     urlInitial.sorts !== undefined ? urlInitial.sorts : normalizeSorts(initial.sort),
   );
@@ -482,7 +489,9 @@ export function useTableState<T>({
   // other half may be a form being typed into — and the URL one handed react-router a
   // `replace` it answers with a render, which is the loop the audit records. A `ref`
   // holding what was last written is what makes "changed" mean changed.
-  const lastPersisted = useRef<string | null>(null);
+  // The Storage it went to beside the signature (0.62): a table whose `storage` changes
+  // (a provider's, as a shared-computer sign-in sets it) writes its view into the new one.
+  const lastPersisted = useRef<{ sig: string; storage: Storage | undefined } | null>(null);
   const persisted = !storageKey
     ? ""
     : serializePersisted({
@@ -501,10 +510,10 @@ export function useTableState<T>({
     // nothing about the view changed.
     const target = storageKeyPrefix + storageKey;
     const sig = `${target}\u0000${persisted}`;
-    if (lastPersisted.current === sig) return;
-    lastPersisted.current = sig;
-    writeStored(target, persisted);
-  }, [storageKey, storageKeyPrefix, persisted]);
+    if (lastPersisted.current?.sig === sig && lastPersisted.current.storage === storage) return;
+    lastPersisted.current = { sig, storage };
+    writeStored(target, persisted, storage);
+  }, [storageKey, storageKeyPrefix, persisted, storage]);
 
   const lastUrl = useRef<string | null>(null);
   const urlSig = urlSync ? urlSignature(columns, sorts, filters, pageSize, page, defaultPageSize, keys) : "";
@@ -571,23 +580,29 @@ export interface SharedTableView {
  * holds besides (filters, column widths, hidden columns) is carried over as stored, for
  * the single table to find as it left it. Read when `active` turns on — on mount, or
  * when the owner switches to this view — and written on a change, never on a read. The
- * prefix resolves as DataTable's does: prop > provider > the kit's.
+ * prefix resolves as DataTable's does: prop > provider > the kit's; so does the `Storage`
+ * (0.62): `storage` > `<UiKitProvider tableStorage>` > `localStorage`.
  */
 export function useSharedTableView({
   active,
   storageKey,
   storageKeyPrefix,
+  storage: storageProp,
   defaultPageSize,
 }: {
   active: boolean;
   storageKey?: string;
   storageKeyPrefix?: string;
+  /** 0.62: where the view is kept, as DataTable's `storage`. */
+  storage?: Storage;
   defaultPageSize: number;
 }): SharedTableView {
   const providerPrefix = useKitTableStorageKeyPrefix();
   const prefix = storageKeyPrefix ?? providerPrefix ?? DEFAULT_PERSIST_PREFIX;
+  const providerStorage = useKitTableStorage();
+  const storage = storageProp ?? providerStorage;
   const read = () => {
-    const stored = active ? loadPersisted(storageKey, prefix) : {};
+    const stored = active ? loadPersisted(storageKey, prefix, storage) : {};
     return { sorts: normalizeSorts(stored.sort), pageSize: storedPageSize(stored, defaultPageSize) };
   };
   const [view, setView] = useState(read);
@@ -602,7 +617,7 @@ export function useSharedTableView({
     const next = { ...view, ...patch };
     setView(next);
     if (!active || !storageKey) return;
-    const stored = loadPersisted(storageKey, prefix);
+    const stored = loadPersisted(storageKey, prefix, storage);
     const blob: PersistedState = {
       sort: next.sorts,
       filters: stored.filters ?? {},
@@ -613,7 +628,7 @@ export function useSharedTableView({
       // out, a sort changed here hid them again there (refactor audit 2026-10-30, DSP-23 c).
       ...(stored.shown ? { shown: stored.shown } : {}),
     };
-    writeStored(prefix + storageKey, serializePersisted(blob));
+    writeStored(prefix + storageKey, serializePersisted(blob), storage);
   };
   return {
     sorts: view.sorts,

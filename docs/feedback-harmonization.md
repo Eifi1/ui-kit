@@ -619,8 +619,9 @@ The kit's `createCrashReporter` (keksdose's `crash-report.ts`, lifted) as the bo
 - posts with a bare `fetch` + `keepalive` and the bearer token — not the app's axios
   client, whose 401 handler would log the user out of a crashed page;
 - never assumes a session token: offline or signed out → buffered in `localStorage`
-  (newest 3), flushed at start-up and when a token appears (`flushPending`, wired by the
-  app);
+  (newest 3; in the app's `storage` since ui-kit 0.62 — the page's memory on a shared
+  computer, local-first D6), flushed at start-up and when a token appears (`flushPending`,
+  wired by the app);
   401/5xx are retried, other 4xx dropped. A signed-out visitor's crash stays buffered
   until a sign-in (Kurvenschmiede's public pages; accepted — there is no
   unauthenticated crash endpoint);
@@ -681,7 +682,7 @@ The kit's `createCrashReporter` (keksdose's `crash-report.ts`, lifted) as the bo
   (`peerDependenciesMeta.optional`, like `sonner`) loaded with a dynamic `import()`, so
   an app without it pays nothing and an app that calls the helper without it gets a
   rejected promise (→ the capture-failed toast).
-- **`createCrashReporter({ endpoint, getToken, allowParams, storageKey, suppress,
+- **`createCrashReporter({ endpoint, getToken, allowParams, storageKey, storage?, suppress,
   environment, origin?, version? })`** → `{ onReport, redact, flushPending }` — §4.6: filed only on
   `stored === true`, buffers while `getToken()` is empty, adds `origin` / `environment`;
   the endpoint, token source, allow-list and demo check come from the app.

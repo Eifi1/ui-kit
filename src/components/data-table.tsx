@@ -63,6 +63,7 @@ import { DEFAULT_DATA_TABLE_LABELS, type DataTableLabels } from "./data-table-la
 import {
   useKitLabelOverrides,
   useKitLocale,
+  useKitTableStorage,
   useKitTableStorageKeyPrefix,
   type LabelOverride,
 } from "../i18n/kit-labels";
@@ -346,8 +347,8 @@ export interface DataTableProps<T> {
   paginated?: boolean;
   empty?: ReactNode;
   /**
-   * If set, the table persists filter / sort / page-size state to localStorage under this key.
-   * Use a stable, unique key per table (e.g. "transactions-table").
+   * If set, the table persists filter / sort / page-size state to localStorage under this key
+   * (or to its `storage`, 0.62). Use a stable, unique key per table (e.g. "transactions-table").
    */
   storageKey?: string;
   /**
@@ -562,6 +563,17 @@ export interface DataTableProps<T> {
    *  plus `storageKey`. Falls back to `<UiKitProvider tableStorageKeyPrefix>` (0.34, set
    *  your app's prefix there once), then to "hbui-table:". This prop wins over both. */
   storageKeyPrefix?: string;
+  /**
+   * 0.62: the `Storage` `storageKey` keeps the view in — read on mount, written on every
+   * change — under the same key. Falls back to `<UiKitProvider tableStorage>` (set it there
+   * once), then to `localStorage`; this prop wins over both.
+   *
+   * For a shared-computer session, the page's memory (`createMemoryStorage()`): a view's
+   * filters hold what the person searched for, and must not stay on the device when the tab
+   * is closed. Not `sessionStorage`, which Chrome brings back with a reopened tab. The view
+   * then lasts as long as the page, and the device's own saved views stay as they were.
+   */
+  storage?: Storage;
   /**
    * On phones, surface the expanded row's detail in a full-screen dialog instead
    * of unfolding it inline (feedback #204). Desktop always uses inline expansion.
@@ -1112,6 +1124,7 @@ export function DataTable<T>({
   labels: labelsProp,
   locale: localeProp,
   storageKeyPrefix: storageKeyPrefixProp,
+  storage: storageProp,
   mobileExpandAsDialog = false,
   mobileDetailsInRow = false,
   rowName,
@@ -1165,6 +1178,9 @@ export function DataTable<T>({
   // prop to, `TranslationReviewPanel`'s among them.
   const providerStorageKeyPrefix = useKitTableStorageKeyPrefix();
   const storageKeyPrefix = storageKeyPrefixProp ?? providerStorageKeyPrefix ?? DEFAULT_PERSIST_PREFIX;
+  // The same order for where the view is kept (0.62); `undefined` is `localStorage`.
+  const providerStorage = useKitTableStorage();
+  const storage = storageProp ?? providerStorage;
   const labels = useMemo(() => resolveDataTableLabels(labelOverrides, labelsProp), [labelOverrides, labelsProp]);
   const locale = useKitLocale(localeProp);
 
@@ -1207,6 +1223,7 @@ export function DataTable<T>({
     columns,
     storageKey,
     storageKeyPrefix,
+    storage,
     urlSync,
     defaultPageSize,
     sortsProp,
