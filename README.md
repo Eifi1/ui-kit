@@ -582,7 +582,7 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2275 names from 383 modules** in the main barrel — 1021 values and 1254 types — and 195 more in 16 standalone entries. _Italic_ is a type-only export.
+**2293 names from 387 modules** in the main barrel — 1026 values and 1267 types — and 199 more in 16 standalone entries. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 `node scripts/gen-export-inventory.mjs`; the counts are pinned by
@@ -590,13 +590,13 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2252 |
+| `@eifi1/ui-kit` | 2293 |
 | `@eifi1/ui-kit/chart` | 102 |
 | `@eifi1/ui-kit/shell` | 109 |
 | `@eifi1/ui-kit/data-table` | 57 |
 | `@eifi1/ui-kit/wizard` | 25 |
 | `@eifi1/ui-kit/tour` | 49 |
-| `@eifi1/ui-kit/feedback` | 205 |
+| `@eifi1/ui-kit/feedback` | 222 |
 | `@eifi1/ui-kit/search` | 20 |
 | `@eifi1/ui-kit/dates` | 26 |
 | `@eifi1/ui-kit/table-text` | 14 |
@@ -605,8 +605,8 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 | `@eifi1/ui-kit/testing` | 15 |
 | `@eifi1/ui-kit/testing/react` | 2 |
 | `@eifi1/ui-kit/rhf` | 52 |
-| `@eifi1/ui-kit/offline` | 33 |
-| `@eifi1/ui-kit/sync` | 36 |
+| `@eifi1/ui-kit/offline` | 36 |
+| `@eifi1/ui-kit/sync` | 37 |
 | `@eifi1/ui-kit/sync/testing` | 3 |
 | `@eifi1/ui-kit/push-worker` | 10 |
 | `@eifi1/ui-kit/i18n/de-CH` | 2 |
@@ -781,7 +781,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/text-link` | `TextLink`, _`TextLinkCurrent`_, _`TextLinkProps`_, _`TextLinkRenderProps`_, _`TextLinkTone`_, _`TextLinkUnderline`_ |
 | `components/toast` | `DEFAULT_TOAST_LABELS`, `toast`, `Toaster`, _`ToastAction`_, _`ToasterOffset`_, _`ToasterProps`_, _`ToastId`_, _`ToastLabels`_, _`ToastOptions`_, _`ToastPosition`_, _`ToastPromiseOptions`_, _`ToastRedoOptions`_, _`ToastSwipeDirection`_, _`ToastUndoOptions`_ |
 | `components/translation-review` | `TranslationReviewPanel`, _`TranslationReviewGroupBy`_, _`TranslationReviewOrigin`_, _`TranslationReviewPanelProps`_, _`TranslationReviewSaveInfo`_ |
-| `components/legal` | `DEFAULT_LEGAL_LABELS`, `LEGAL_HREFS`, `LegalFooter`, `LegalLayout`, `LegalLinks`, `legalOperatorText`, `LegalSection`, `useLegalLabels`, _`LegalDisclaimerSectionLabels`_, _`LegalFooterProps`_, _`LegalFramedSectionLabels`_, _`LegalInfoPageKey`_, _`LegalLabels`_, _`LegalLayoutProps`_, _`LegalLink`_, _`LegalLinksProps`_, _`LegalOperator`_, _`LegalOperatorSectionLabels`_, _`LegalOperatorText`_, _`LegalPageKey`_, _`LegalSectionProps`_, _`LegalTextSectionLabels`_ |
+| `components/legal` | `DEFAULT_LEGAL_LABELS`, `LEGAL_HREFS`, `LegalFooter`, `LegalLayout`, `LegalLinks`, `legalOperatorText`, `LegalSection`, `useLegalLabels`, _`LegalBrowserStandardEntries`_, _`LegalDisclaimerSectionLabels`_, _`LegalFooterProps`_, _`LegalFramedSectionLabels`_, _`LegalInfoPageKey`_, _`LegalLabels`_, _`LegalLayoutProps`_, _`LegalLink`_, _`LegalLinksProps`_, _`LegalOperator`_, _`LegalOperatorSectionLabels`_, _`LegalOperatorText`_, _`LegalPageKey`_, _`LegalSectionProps`_, _`LegalTextSectionLabels`_ |
 | `components/legal-page` | `LEGAL_SKELETON`, `LegalAcceptCheckbox`, `LegalKitSection`, `LegalPage`, _`LegalAcceptCheckboxProps`_, _`LegalDisclaimerVariant`_, _`LegalKitSectionKey`_, _`LegalKitSectionProps`_, _`LegalPageProps`_, _`LegalSectionOwner`_, _`LegalSkeletonEntry`_, _`LegalSkeletonPage`_ |
 | `components/consent-again-notice` | `ConsentAgainNotice`, `DEFAULT_CONSENT_AGAIN_LABELS`, _`ConsentAgainBannerProps`_, _`ConsentAgainCardProps`_, _`ConsentAgainLabels`_, _`ConsentAgainNoticeProps`_ |
 | `components/legal-change-notice` | `LegalChangeNotice`, _`LegalChangeAnnouncement`_, _`LegalChangeNoticeProps`_ |
@@ -946,6 +946,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `feedback/feedback-table` | `DEFAULT_FEEDBACK_PAGE_LABELS`, `FeedbackAwaitingToggle`, `FeedbackEmptyState`, `FeedbackMobileCard`, `feedbackMobileGroupBy`, `FeedbackSubject`, `isFeedbackAwaiting`, `useFeedbackColumns`, `useFeedbackPageLabels`, `useFeedbackRenderDate`, _`FeedbackAwaitingToggleProps`_, _`FeedbackColumnsOptions`_, _`FeedbackEmptyStateProps`_, _`FeedbackMobileCardProps`_, _`FeedbackPageLabels`_, _`FeedbackRenderDate`_, _`FeedbackSubjectProps`_, _`FeedbackTableRow`_, _`UseFeedbackColumnsOptions`_ |
 | `feedback/feedback-row-detail` | `DEFAULT_FEEDBACK_DETAIL_LABELS`, `FeedbackReworkSection`, `FeedbackRowDetail`, _`FeedbackDetailLabels`_, _`FeedbackDetailPatch`_, _`FeedbackDetailUpdateAsync`_, _`FeedbackReworkSectionProps`_, _`FeedbackReworkSend`_, _`FeedbackRowAccess`_, _`FeedbackRowDetailProps`_, _`FeedbackUpload`_ |
 | `feedback/feedback-crash` | `createCrashReporter`, _`CrashFiling`_, _`CrashReportCreate`_, _`CrashReporter`_, _`CrashReporterOptions`_, _`CrashReportResponse`_ |
+| `feedback/deploy-environment` | `deployEnvironment`, _`DeployEnvironmentHosts`_ |
 | `feedback/feedback-public-switch` | `FeedbackPublicSwitch`, _`FeedbackPublicSwitchProps`_, _`FeedbackPublicSwitchRow`_, _`FeedbackPublicSwitchViewer`_ |
 | `feedback/feedback-public-list` | `DEFAULT_FEEDBACK_PUBLIC_LABELS`, `FeedbackPublicDetail`, `FeedbackPublicList`, `useFeedbackPublicLabels`, _`FeedbackPublicDetailProps`_, _`FeedbackPublicLabels`_, _`FeedbackPublicListProps`_ |
 | `feedback/feedback-public-types` | _`FeedbackComment`_, _`FeedbackEntryKind`_, _`FeedbackPublicListItem`_, _`FeedbackPublicRecord`_, _`FeedbackPublicSort`_, _`FeedbackReply`_, _`FeedbackVoteState`_ |
@@ -954,6 +955,9 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `feedback/feedback-replies` | `DEFAULT_FEEDBACK_REPLIES_LABELS`, `FeedbackReplyComposer`, `feedbackReplyNudge`, `FeedbackReplyTimeline`, `useFeedbackRepliesLabels`, _`FeedbackRepliesLabels`_, _`FeedbackReplyComposerProps`_, _`FeedbackReplyTimelineProps`_ |
 | `feedback/feedback-entry-file` | `FeedbackEntryFile`, `useFeedbackEntryUpload`, _`FeedbackEntryFileProps`_, _`FeedbackEntryUpload`_, _`FeedbackEntryUploadOptions`_, _`FeedbackEntryUploadState`_ |
 | `feedback/feedback-inbox-page` | `FeedbackInbox`, `useFeedbackInbox`, _`FeedbackInboxBulk`_, _`FeedbackInboxMutation`_, _`FeedbackInboxProps`_, _`FeedbackInboxState`_, _`FeedbackReplyPost`_, _`FeedbackReworkPost`_, _`UseFeedbackInboxOptions`_ |
+| `feedback/feedback-page-frame` | `FeedbackPageFrame`, _`FeedbackPageFrameHeaderProps`_, _`FeedbackPageFrameProps`_ |
+| `feedback/feedback-comments` | `useFeedbackComments`, _`FeedbackCommentsApi`_, _`FeedbackCommentsState`_, _`UseFeedbackCommentsOptions`_ |
+| `feedback/feedback-public-page` | `FeedbackPublicPage`, `useFeedbackPublicPage`, _`FeedbackPublicApi`_, _`FeedbackPublicPageProps`_, _`FeedbackPublicPageState`_, _`FeedbackPublicRead`_, _`FeedbackPublicRequest`_, _`UseFeedbackPublicPageOptions`_ |
 | `feedback/feedback-vocabulary` | `FEEDBACK_CATEGORY_META`, `FEEDBACK_CATEGORY_ORDER`, `FEEDBACK_STATUS_META`, `FEEDBACK_STATUS_ORDER`, `feedbackCategoryRank`, `nextFeedbackStatus`, `selectableFeedbackStatuses`, `visibleFeedbackStatuses`, _`FeedbackCategory`_, _`FeedbackStatus`_ |
 
 ### wizard
@@ -1149,12 +1153,13 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `offline/service-worker-updates` | `createServiceWorkerUpdates`, `useServiceWorkerUpdate`, _`RegisterServiceWorker`_, _`ServiceWorkerUpdates`_ |
 | `offline/shared-computer` | `DEFAULT_SHARED_COMPUTER_LABELS`, `isSharedComputer`, `setSharedComputer`, `SharedComputerChoice`, _`SharedComputerChoiceProps`_, _`SharedComputerLabels`_, _`SharedComputerStorage`_ |
 | `offline/local-first` | `isOfflineError`, `readLocalFirst`, `stampAfter`, `uuid5`, `writeLocalFirst` |
+| `offline/feedback-comments-query` | `feedbackCommentsQueryKey`, `useFeedbackCommentsQuery`, _`UseFeedbackCommentsQueryOptions`_ |
 
 ### @eifi1/ui-kit/sync (standalone)
 
 | Module | Exports |
 |---|---|
-| `sync/db` | `createSyncDb`, `rowByPk`, `SYNC_DB_PK_INDEX`, _`CreateSyncDbOptions`_, _`OutboxChange`_, _`OutboxStatus`_, _`SyncDb`_, _`SyncDbUpgrade`_, _`SyncedRow`_, _`SyncMetaEntry`_ |
+| `sync/db` | `createSyncDb`, `rowByPk`, `SYNC_DB_PK_INDEX`, _`CreateSyncDbOptions`_, _`OutboxChange`_, _`OutboxStatus`_, _`SyncDb`_, _`SyncDbIndexedDB`_, _`SyncDbUpgrade`_, _`SyncedRow`_, _`SyncMetaEntry`_ |
 | `sync/engine` | `createSyncEngine`, `DEFAULT_HOLD_CODES`, `releaseSyncEngine`, `syncEngineFor`, _`SyncCounts`_, _`SyncEngine`_, _`SyncEngineOptions`_, _`SyncEngineState`_, _`SyncRoundResult`_, _`SyncStep`_, _`SyncStepContext`_, _`SyncStepResult`_ |
 | `sync/hooks` | `useSyncQuery`, `useSyncStatus`, `useSyncWorker` |
 | `sync/wire` | _`SyncPageCursor`_, _`SyncRefusalBody`_, _`SyncRejectionBody`_, _`SyncRequestBody`_, _`SyncResponseBody`_, _`SyncWireChange`_ |
