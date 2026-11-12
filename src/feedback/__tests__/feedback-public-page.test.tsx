@@ -459,6 +459,28 @@ describe("the vote and the conversation", () => {
     await waitFor(() => expect(onChanged).toHaveBeenCalledWith(52));
   });
 
+  it("draws the app's own thread instead of reading one, as keksdose's offline cache hands it", async () => {
+    // keksdose persists its threads for offline reading; the kit's hook holds them in memory.
+    const onComment = vi.fn(async (_body: string, _attachmentUrl?: string): Promise<unknown> => undefined);
+    const thread = {
+      comments: [{ ...COMMENT, id: 91, body: "From the device's cache." }],
+      loading: false,
+      failed: false,
+      offline: false,
+      retry: vi.fn(),
+      pending: false,
+      onComment,
+    };
+    const { api } = renderPage("/all-feedback?row=52", { thread });
+    expect(await screen.findByText("From the device's cache.")).toBeInTheDocument();
+    expect(screen.queryByText("Same on the iPad.")).toBeNull();
+    fireEvent.change(screen.getByRole("textbox", { name: "Write a comment" }), { target: { value: "Me too" } });
+    fireEvent.click(screen.getByRole("button", { name: "Comment" }));
+    await waitFor(() => expect(onComment).toHaveBeenCalled());
+    expect(onComment.mock.calls[0][0]).toBe("Me too");
+    expect(api.comments).not.toHaveBeenCalled();
+  });
+
   it("offers Hide to the admin alone", async () => {
     const { unmount } = renderPage("/all-feedback?row=52");
     await screen.findByText("Same on the iPad.");

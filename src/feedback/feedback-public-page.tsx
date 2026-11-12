@@ -15,7 +15,7 @@ import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
 import { FILL_HEIGHT_CLASS } from "../shell/fill-height";
 import { captureAppScreenshot } from "./feedback-capture";
-import { useFeedbackComments, type FeedbackCommentsApi } from "./feedback-comments";
+import { useFeedbackComments, type FeedbackCommentsApi, type FeedbackCommentsState } from "./feedback-comments";
 import type { FeedbackEntryUploadOptions } from "./feedback-entry-file";
 import { parseRowId } from "./feedback-inbox-page";
 import { useFeedbackToastLabels } from "./feedback-labels";
@@ -256,6 +256,15 @@ export interface FeedbackPublicPageProps {
    *  `extractApiErrorMessage` / `apiErrorMessage`, so the server's sentence wins (§3.7).
    *  Without it: `feedbackToast.voteFailed`, `.commentFailed`, `.updateFailed`. */
   errorMessage?: (error: unknown, fallback: string) => string;
+  /**
+   * The open report's thread from the app's own source instead of the kit's
+   * {@link useFeedbackComments} (0.61): keksdose keeps its threads in the TanStack cache it
+   * persists for offline reading, so a member offline still sees the last comments where the
+   * kit's hook, which holds the thread in memory, would show the offline card. Its
+   * {@link FeedbackCommentsState} for `view.openId`; left out, the page reads the thread over
+   * `api` itself.
+   */
+  thread?: FeedbackCommentsState;
   /** The viewer is the app's admin: Hide / Unhide on the comments. */
   isAdmin?: boolean;
   /** `POST /feedback/attachments` (§12): a comment's one file. Left out, text only. */
@@ -379,7 +388,8 @@ const captureScreenshot = () => captureAppScreenshot();
  *   opened…" — once per report, rather than the link seeming to do nothing.
  * - **The vote**: `api.vote`; a refusal toasts (`errorMessage`) and the button rolls back;
  *   a landing calls `onChanged(id, answer)`.
- * - **The conversation**: {@link useFeedbackComments} over `api` for the open report.
+ * - **The conversation**: {@link useFeedbackComments} over `api` for the open report, or
+ *   the app's own `thread` (keksdose's offline-cached one).
  */
 export function FeedbackPublicPage({
   view,
@@ -388,6 +398,7 @@ export function FeedbackPublicPage({
   api,
   onChanged,
   errorMessage,
+  thread: ownThread,
   isAdmin = false,
   onUpload,
   onCaptureScreenshot = captureScreenshot,
@@ -441,10 +452,12 @@ export function FeedbackPublicPage({
     [api, onChanged, errorMessage, toastLabels],
   );
 
-  const thread = useFeedbackComments(openId, api, {
+  // With the app's own thread the kit's reads nothing (`null`): a hook is never skipped.
+  const kitThread = useFeedbackComments(ownThread ? null : openId, api, {
     onChanged: onChanged ? (id) => onChanged(id) : undefined,
     errorMessage,
   });
+  const thread = ownThread ?? kitThread;
 
   const listState = list.data === undefined ? stateOf(list) : null;
   const title = labels.title;
