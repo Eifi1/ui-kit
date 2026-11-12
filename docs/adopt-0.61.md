@@ -12,9 +12,11 @@ one link builder for the feedback notices.
 found, which no app has as 0.60.1: `FEEDBACK_SWIPE_ACTIONS` exported again, and the feedback
 screenshot showing each select, checkbox and radio as it is (`docs/adopt-0.60.md`, section 0.60.1).
 
-**Legal wording:** none. No kit legal text changes. Kurvenschmiede's own privacy text changes
-with its own work this round (feedback stored unencrypted, no customer role, the offline cache);
-that is the app's, not the kit's.
+**Legal wording:** the **Privacy Policy**, only for an app that adds the new standard entries
+(next to last section): its browser list gains the page cache's line and the shared-computer
+choice's line, and the app moves its /privacy `updated` date to the day it ships them. No kit
+text an app already shows changes. Kurvenschmiede's own privacy text changes with its own work
+this round (feedback stored unencrypted, no customer role); that is the app's.
 
 **Restart the Vite dev server after the bump** (`vite --force` if a change still does not show).
 
@@ -22,7 +24,8 @@ that is the app's, not the kit's.
 store draws what it drew.
 
 **New words** (all seven catalogues; **es, hu and zh need native review**): `feedbackPublic`
-`loadFailed`, `offlineHint`, `rowUnavailable(id)`; the `swipeSetting` namespace (17 keys). de-CH,
+`loadFailed`, `offlineHint`, `rowUnavailable(id)`; the `swipeSetting` namespace (17 keys); the
+privacy page's two standard entries. de-CH,
 fr and it are keksdose's reviewed wording.
 
 ## The discussion page, assembled once (`FeedbackPublicPage`, `useFeedbackPublicPage`, `useFeedbackComments`)
@@ -419,6 +422,40 @@ The card names the kit's lists in the kit's words, the words their swipe panels 
 **kastlan:** nothing, unless it wants the setting. Then it follows Kurvenschmiede's steps.
 
 Legal wording: none.
+
+## The privacy page's standard lines: the page cache and the shared-computer choice
+
+**What changed.** The privacy page's browser section has two standard entries in the kit's
+words, in all seven catalogues (`legal.sections.privacy.browser.standardEntries`, the type
+`LegalBrowserStandardEntries`):
+
+- `recentData(hours)`: "Recently loaded data, so pages also open without a connection; what is
+  older than {hours} hours the app no longer uses and removes the next time it opens. None of it
+  is kept when you sign in with “This is a shared computer”." It is keksdose's reviewed
+  `recent_data` line, with the shared-computer exception.
+- `sharedComputer`: "Whether you chose “This is a shared computer” at sign-in, for as long as
+  that session lasts."
+
+Each catalogue quotes its own `sharedComputer.label`, so the line names the box the reader
+ticked. The app places them in its own `entries`, in its reading order:
+
+```tsx
+const standard = useLegalLabels().sections.privacy.browser.standardEntries!;
+<LegalKitSection section="browser" entries={[...own, standard.recentData(24), standard.sharedComputer]} />
+```
+
+**Why.** Marcel, 2026-11-12: keksdose and Kurvenschmiede both get the shared-computer choice,
+and Kurvenschmiede a persisted cache. All three apps would otherwise write the same two lines
+seven times each.
+
+**Words:** es, hu and zh need a native review. de-CH is keksdose's reviewed line with the new
+sentence.
+
+- **keksdose:** with its shared-computer change, `recent_data` can become `recentData(24)` and the
+  flag line `sharedComputer`; its `offline_copy` line names its own exception. Marcel decides
+  whether this goes into the live text now or with the slim policy draft.
+- **Kurvenschmiede:** with its persisted cache and the choice, both lines in `BROWSER_ENTRIES`.
+- **kastlan:** it has the cache and the choice; its privacy list can take both lines.
 
 ## server-kit 0.25: one link builder for the feedback notices (feedback §9.11, §13.7)
 
