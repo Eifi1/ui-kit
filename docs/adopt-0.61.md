@@ -5,8 +5,11 @@ should look and work exactly like keksdose's): the discussion page assembled onc
 (`FeedbackPublicPage`), the comment thread once (`useFeedbackComments`, and
 `useFeedbackCommentsQuery` for a thread a persisted cache keeps offline), the pages' frame
 (`FeedbackPageFrame`), which copy of the app a report comes from (`deployEnvironment`), and the
-swipe settings (`createSwipeSettingsStore`, `SwipeSetting`). It ships with **server-kit 0.25**:
-one link builder for the feedback notices.
+swipe settings (`createSwipeSettingsStore`, `SwipeSetting`). It also takes Kurvenschmiede's
+production feedback: charts on a touch screen (one finger reads, two fingers zoom and pan), Back
+one zoom step and an overview strip, a reset that clears the tooltip, and a report's page link
+that keeps the app's safe query params. It ships with **server-kit 0.25**: one link builder for
+the feedback notices.
 
 **From 0.60, nothing else first.** 0.61 also carries the two fixes keksdose's 0.60 adoption
 found, which no app has as 0.60.1: `FEEDBACK_SWIPE_ACTIONS` exported again, and the feedback
@@ -25,7 +28,8 @@ store draws what it drew.
 
 **New words** (all seven catalogues; **es, hu and zh need native review**): `feedbackPublic`
 `loadFailed`, `offlineHint`, `rowUnavailable(id)`; the `swipeSetting` namespace (17 keys); the
-privacy page's two standard entries. de-CH,
+privacy page's two standard entries; `seriesChart.zoomBack`, `zoomWindow`, `zoomWindowRange`,
+and the extended `zoomHint`. de-CH,
 fr and it are keksdose's reviewed wording.
 
 ## The discussion page, assembled once (`FeedbackPublicPage`, `useFeedbackPublicPage`, `useFeedbackComments`)
@@ -422,6 +426,162 @@ The card names the kit's lists in the kit's words, the words their swipe panels 
 **kastlan:** nothing, unless it wants the setting. Then it follows Kurvenschmiede's steps.
 
 Legal wording: none.
+
+## A report's page link keeps the params the app declares safe (`pageLinkParams`, Kurvenschmiede production feedback #7)
+
+**What changed.** A new optional `pageLinkParams` sits beside `pageLinkExclude` on
+`FeedbackInbox` / `useFeedbackInbox`, `useFeedbackColumns` / `feedbackColumns` and
+`FeedbackRowDetail`. It lists the query params the page's link keeps, in the URL column and in
+the detail's URL section alike (docs/feedback-harmonization.md §4.3 column 7, §4.4.2, §13.2):
+
+- With `pageLinkParams={["profile"]}`, a report filed on `/curves/2?profile=5&q=Kurve%20A#chart`
+  links `/curves/2?profile=5`. The URL cell shows what its link opens. The detail shows the link
+  and then, as text, only what the link does not carry: `&q=Kurve+A#chart`.
+- Every param not on the list stays off the link and is text, as before. **Copy URL** still
+  copies the whole `context.url`.
+- **A one-shot path** (`/join`, `/register`, `/verify-email`, `/reset-password`, the app's
+  `pageLinkExclude`) stays text with Copy, whatever the list holds.
+- The reduction is the kit's own: the same function the crash reporter and `useFeedbackSubmit`
+  use for `allowParams`.
+- **Default: none.** The link is the path alone, so an app that passes nothing sees no change.
+
+**Why.** Kurvenschmiede production feedback #7: the link went to `/curves/2`, so the admin
+landed on a different view from the one in the report. The link has been path-only since the
+0.52 code review, and that stays the default. A link that kept its query let
+`/login?next=%2Fjoin%3Ftoken%3D…` through, and `RedirectIfAuthed` sent the signed-in admin on to
+the invitation. An allow-list fixes #7 without reopening that hole: only the params an app
+vouches for are followed.
+
+**⚠ Never list a param that forwards or acts on load:** `next`, `returnTo`, `redirect`, a
+token, an `action`. The link follows whatever is listed, and a report's page is written by the
+reporter. List only params that locate a view: paging, sort, a tab, a range. kastlan's login
+reads `?next=` (`features/auth/pages/login-page.tsx:34`). `next` is on none of the three lists
+and must stay off them.
+
+**Must change:** nothing. The new prop is optional (`check:api` does not list it).
+
+**Adopt:** pass the list the app already gives `useFeedbackSubmit` and its crash reporter as
+`allowParams` (0.60). Then the link keeps exactly what a hand-filed report still carries. One
+constant feeds all three. Keep it at module scope, because the columns' memo depends on it.
+
+| App | List | Where it lives | Where to pass it |
+|---|---|---|---|
+| keksdose | `REPORT_URL_PARAMS` (p, ps, sort, tab, g, granularity, month, preset, from, to, tstate, future, archived, uncleared) | `frontend/src/shared/lib/report-url-params.ts` | `<FeedbackInbox>`, `frontend/src/features/feedback/feedback-page.tsx:162` |
+| kastlan | `REPORT_URL_PARAMS` (p, ps, sort, tab, locale) | `frontend/src/shared/feedback/crash-reporter.ts:22` | `<FeedbackInbox>`, `frontend/src/features/feedback/pages/feedback-page.tsx:81` |
+| Kurvenschmiede | `PAGE_PARAMS` (tab, compare, open, ns, wheels, locale) | `frontend/src/shared/lib/crash-reporter.ts:16` | `<FeedbackInbox>`, `frontend/src/features/feedback/feedback-page.tsx:138` |
+
+```tsx
+<FeedbackInbox … pageLinkParams={REPORT_URL_PARAMS} />
+```
+
+(keksdose's list was called `CRASH_URL_PARAMS` in 0.60's note. It is `REPORT_URL_PARAMS` now,
+in its own module.) Checked for forwarders: keksdose's `from` / `to` are a report range
+(`features/reports/hooks/use-reports-query.ts:150`) and the compare page's `home` | `live`.
+Kurvenschmiede's `open` is matched against its fixed `TOPICS` (`features/compare/compare-page.tsx:19`).
+None of them forwards.
+
+- **Kurvenschmiede, #7 itself:** `PAGE_PARAMS` holds no `profile` today. If the page in #7 is
+  located by a param that is not on the list, add it to `PAGE_PARAMS` (once it is checked to
+  only locate a view). The dialog and the crash reporter then keep it too, and a report names
+  that view through all three channels.
+- **Old rows:** a report filed before the app's 0.60 bump carries its whole address. Its listed
+  params are linked now, and the rest stays text. A row filed since then carries only the listed
+  params anyway (the dialog reduced it), so its whole query is now in the link.
+- **An app page of its own** that calls `FeedbackRowDetail` or `useFeedbackColumns` directly
+  takes the same `pageLinkParams`. None of the three does.
+
+**Tests:** no app test changes. keksdose's `feedback-row-link.test.tsx` uses a query-less
+`/budget`. The kit's: `src/feedback/__tests__/feedback-page-link-params.test.tsx`.
+
+## Charts on a touch screen, Back, and the overview strip (`SeriesChart`'s zoom)
+
+**What changed.** Kurvenschmiede's production feedback #1, #3 and #4, built to Marcel's design of
+2026-11-12. Every zoomable `SeriesChart` gets it, and so every `LegendedSeriesChart` (lines: zoom
+both axes; areas: x; bars zoom nothing by default and are unchanged). `StaticSeriesChart` does not
+zoom and is unchanged.
+
+- **Every reset clears the tooltip** (#1). Reset zoom, a double click, Back past the first step,
+  and two fingers pinched out to the whole range all take recharts' pointer off the chart. Before,
+  on Android Chrome, the tooltip of the last tap stayed over the whole range, naming a value from
+  the window that had just been left. In a `SharedXZoom` column a reset clears every chart's tooltip.
+- **One finger reads** (#3, `pointerType` "touch"). There is no zoom band for a finger: the tooltip
+  shows the value under it from touch-down and follows it along the curve, as a mouse hover does.
+  A vertical swipe still scrolls the page (`ChartContainer` is `touch-pan-y`, as before).
+  **Lifting the finger keeps the tooltip**, as a tap always has; the next touch, a reset or the
+  mouse moves it.
+- **Two fingers zoom x** (#3). A pinch narrows or widens the time axis about the fingers' midpoint;
+  once zoomed, two fingers moving together pan it. The window stops at the range the chart draws
+  unzoomed (its fitted domain, with its air), and one pinch narrows to no less than 2 % of where it
+  began (the band's own floor). A pinch out to the whole range ends the zoom. Only on a chart whose
+  zoom names x (`zoomAxes` "both" or "x"); a y-only chart leaves two fingers to the browser.
+- **A mouse or a pen is unchanged**: a drag draws the band.
+- **Back** (#4). A Back button now stands beside Reset zoom while the chart is zoomed. Every zoom is
+  one step: a band, or a two-finger gesture that changed the window's width (one step per gesture,
+  however many moves). A pan is no step. Back undoes the last step; past the first it shows the
+  whole range. Reset zoom shows the whole range and forgets the steps. In a `SharedXZoom` column the
+  steps are the column's: Back on any chart undoes the column's last zoom, and Reset zoom on any
+  chart now also clears every chart's dragged y window, not only its own.
+- **The overview strip** (#4). While x is zoomed, a thin strip under the plot shows the whole
+  range, with the window on show as a handle. Dragging the handle pans it, by mouse or finger. The
+  handle is a focusable `slider`, named "Visible range", whose value is said in the chart's own
+  words ("Feb to May"). ←/→ pan a tenth of the window; Home and End go to the ends. A pan is no step.
+  It is drawn only while x is zoomed, so an unzoomed chart looks as it did. When it appears, the page
+  under the chart moves down by 1.5rem. **`zoomOverview={false}`** (new, optional, default `true`)
+  turns it off on a chart. A `SharedXZoom` column draws **one** strip, under its last chart that
+  has one.
+- A readout row above a zoomable chart (`tooltip.placement` "above", or "auto" on a phone) now
+  keeps 12rem free beside its heading, where it kept 8rem, so Back and Reset zoom fit there. On a
+  narrow phone the heading truncates sooner. A chart that does not zoom keeps 8rem.
+
+**Why.** Kurvenschmiede on phones: a finger dragged across a curve to read it drew a zoom band and
+zoomed into the value it was reading. Two fingers did nothing. A reset left a stale tooltip. Once
+zoomed in, the only way out was all the way. The plot alone did not show where in the sweep the
+window was.
+
+**Must change:** nothing. The new prop is optional, and the new words arrive in the kit's
+catalogues. An app that builds its own full `UiKitLabels` gets a type error until it adds the three
+keys below. None of the three apps does that.
+
+**New words** (all seven catalogues; **es, hu and zh need native review**):
+`seriesChart.zoomBack` ("Back", visible), `seriesChart.zoomWindow` ("Visible range", the handle's
+name), `seriesChart.zoomWindowRange(from, to)` ("{from} to {to}", the handle's value, with a review
+sample). Hungarian uses a dash ("{from} – {to}") because its "from/to" suffixes depend on the word.
+`seriesChart.zoomHint` (the figure's description) is unchanged. It still describes the mouse
+gesture.
+
+**Legal wording:** none.
+
+**Kurvenschmiede** (every chart is a line chart: all of it applies).
+
+- Nothing to change. On a phone: scrub a curve with one finger, pinch with two, then try Back and
+  the strip. Please report what a real Android Chrome and iOS Safari do. The kit's tests drive
+  synthetic pointer events in jsdom.
+- `SharedXZoom` columns (`features/control/tracking-chart.tsx`, `features/setpoint/load-command-dialog.tsx`,
+  `features/compare/kinematics-compare.tsx`) draw one strip, under their last chart, and share
+  Back. Where a column's last chart should not carry it, put `zoomOverview={false}` on that chart.
+  The strip then moves to the last chart that still has one.
+- A facing pair side by side in one `SharedXZoom` draws the strip under the right-hand chart only
+  (the last in the document). Set `zoomOverview={false}` on both and accept no strip, or keep the
+  default.
+- `shared/charts/series-chart.tsx` passes props through, so `zoomOverview` reaches the kit's
+  chart unchanged.
+
+**keksdose** (zoomable charts: net worth, investments, the stacked areas, the admin metrics lines;
+the bar charts are unchanged).
+
+- Nothing to change. On a phone, one finger now reads those charts instead of zooming them. Two
+  fingers zoom; Back and the strip appear once zoomed.
+- `chartTooltipPlacement="auto"` puts the readout above on a phone. On the zoomable charts its
+  heading line now leaves 12rem for the two buttons, so a long heading truncates sooner.
+
+**kastlan** (the occupancy area chart on the reporting page zooms; the revenue and financial bar
+charts do not, and are unchanged).
+
+- Nothing to change. The occupancy chart reads with one finger, zooms with two, and shows Back and
+  the strip once zoomed.
+
+**The spoken hint** (`seriesChart.zoomHint`) now names the touch gestures, Back and the reset, in
+each language's own button names; es, hu and zh need a native review.
 
 ## A sync database in memory, for a computer marked as shared (`createSyncDb`'s `indexedDB`)
 
