@@ -20,6 +20,9 @@ const WAIT_MS = 5000;
 
 const HEADING = "[data-settings-heading], h1, h2, h3, h4, h5, h6";
 
+/** AppShell's page row at the top, as a scroll margin (see `land` below). */
+const SUBNAV_MARGIN = "var(--app-subnav-h, 0px)";
+
 /**
  * `?focus=<anchor>` (docs/settings-harmonization.md §3.5): scroll the card into view, ring
  * it for 1.8 s, move focus to its heading for a screen reader, then remove `focus` — and
@@ -54,7 +57,16 @@ export function useSettingsFocus(anchor?: string | null): void {
     const { pathname, search, hash, state } = location;
 
     const land = (el: HTMLElement) => {
+      // Centred in the screen below the page row AppShell sticks under its top bar on a
+      // phone (`mobileSubNavPlacement="top"`), not behind it: the row's height
+      // (`--app-subnav-h`; 0px with no row at the top, or outside an AppShell) as the card's
+      // top scroll margin, which `scrollIntoView` centres with the card. Inline for the
+      // call only: the browser works out where to scroll as it is called, and the card's
+      // own margin is back before anything else reads it.
+      const margin = el.style.scrollMarginTop;
+      el.style.scrollMarginTop = SUBNAV_MARGIN;
       el.scrollIntoView?.({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "center" });
+      el.style.scrollMarginTop = margin;
 
       if (ring.current) {
         window.clearTimeout(ring.current.timer);

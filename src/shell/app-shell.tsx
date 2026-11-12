@@ -359,7 +359,11 @@ export interface AppShellProps extends ComponentPropsWithoutRef<"div"> {
    *   the bar alone, so `<main>`'s bottom padding shrinks and anything docked at
    *   `bottom: var(--app-nav-h)` sits right on the bar. The row takes its own height in
    *   the page's flow, as the top bar does, so the content starts below it rather than
-   *   under it.
+   *   under it. Its measured height is published as `--app-subnav-h` (0.62; `0px` with
+   *   no row at the top), on the shell and on `<html>` like `--app-nav-h`: an anchor's
+   *   scroll margin adds it, `scroll-mt-[calc(4rem+var(--app-subnav-h,0px))]`, so a jump
+   *   lands below the row rather than under it. The kit's own anchors (LegalSection,
+   *   `?focus=`) do.
    *
    * kastlan's UX review (prod feedback #22) asked for `"top"`: at the bottom its one
    * `scroll` row (~43px at Normal text) and the bar (~56px) stacked into one block of
@@ -427,9 +431,16 @@ const AppShellNesting = createContext(false);
  * `0px` when the nav is not rendered — above `md` it is `display:none`, which observes
  * as a zero box — so a consumer can write `bottom-[var(--app-nav-h,0px)]` once and get
  * the right answer at both widths without a breakpoint of its own.
+ *
+ * The same, as `--app-subnav-h` (0.62), for the row of a group's pages stuck under the top
+ * bar (`mobileSubNavPlacement="top"`): an anchor that jumped there (`scroll-mt-*`) landed
+ * partly under the row, which covers the top of the page. `0px` while there is no row at
+ * the top: placed at the bottom (where `--app-nav-h` measures it), on a page outside every
+ * group, or from `md` up. `node` is the measured element, `null` while there is none.
  */
-function useNavHeightVar(
-  ref: React.RefObject<HTMLElement | null>,
+function useHeightVar(
+  name: "--app-nav-h" | "--app-subnav-h",
+  node: HTMLElement | null,
   shellRef: React.RefObject<HTMLElement | null>,
   embedded: boolean,
 ): void {
@@ -441,7 +452,6 @@ function useNavHeightVar(
   // boundary is — at Extra large both move to 72rem.
   const isMdUp = useBreakpoint("md", false);
   useEffect(() => {
-    const node = ref.current;
     const shell = shellRef.current;
     // Always on the shell's own root, so everything inside it — a nested shell's
     // content included — reads the nearest bar's height. On <html> as well only for
@@ -466,9 +476,12 @@ function useNavHeightVar(
     // it (`z-30` against `z-10`): invisible. Too LARGE opens the seam. So floor, and
     // consumers subtract a further pixel (see `invoice-line-totals.tsx`) for the case
     // where the height lands on a whole pixel and floor leaves no overlap at all.
+    // The page row's floor is the same trade: a page element stuck under it at
+    // `calc(3rem + var(--app-subnav-h))` tucks half a pixel under the opaque row (`z-[35]`)
+    // rather than open a seam, and an anchor gains half a pixel of air.
     const publish = () => {
       const value = `${node ? Math.floor(node.getBoundingClientRect().height) : 0}px`;
-      for (const el of targets) el.style.setProperty("--app-nav-h", value);
+      for (const el of targets) el.style.setProperty(name, value);
     };
     publish();
     // The observer is the refinement, not the mechanism: `publish()` above is already
@@ -480,9 +493,11 @@ function useNavHeightVar(
     if (ro && node) ro.observe(node);
     return () => {
       ro?.disconnect();
-      for (const el of targets) el.style.removeProperty("--app-nav-h");
+      for (const el of targets) el.style.removeProperty(name);
     };
-  }, [ref, shellRef, embedded, isMdUp]);
+    // `node`: the page row is keyed by its group, so a new group is a new element to
+    // observe, and a page outside every group has none.
+  }, [name, node, shellRef, embedded, isMdUp]);
 }
 
 /**
@@ -552,11 +567,16 @@ export function AppShell({
   // Held here rather than per group so opening one can close the other — two lists
   // open at once pushed every entry below them off a laptop screen.
   const [openGroup, setOpenGroup] = useState<string | null>(null);
-  // Publishes `--app-nav-h` for anything that has to sit on the bottom bar.
-  const navRef = useRef<HTMLDivElement>(null);
+  // Publishes `--app-nav-h` for anything that has to sit on the bottom bar, and
+  // `--app-subnav-h` for anything that has to clear the page row at the top. Elements in
+  // state, not refs: the row comes and goes with the page's group, and each new one is
+  // measured again.
+  const [navBox, setNavBox] = useState<HTMLDivElement | null>(null);
+  const [topRow, setTopRow] = useState<HTMLElement | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const setRoot = useMemo(() => mergeRefs(rootRef, ref), [ref]);
-  useNavHeightVar(navRef, rootRef, embedded);
+  useHeightVar("--app-nav-h", navBox, rootRef, embedded);
+  useHeightVar("--app-subnav-h", topRow, rootRef, embedded);
   useEffect(() => {
     if (collapseStorageKey !== null) writeStored(collapseStorageKey, collapsed ? "1" : "0");
   }, [collapsed, collapseStorageKey]);
@@ -600,7 +620,9 @@ export function AppShell({
         {/* `mobileSubNavPlacement="top"`: the page row as the shell's next child, between
             the top bar and the content row, so it takes its height in the column's flow
             (the content starts under it, as under the bar) and sticks under the bar. */}
-        {mobileSubNav && subNavOnTop && <MobileSubNav nav={nav} layout={mobileSubNavLayout} placement="top" />}
+        {mobileSubNav && subNavOnTop && (
+          <MobileSubNav nav={nav} layout={mobileSubNavLayout} placement="top" rowRef={setTopRow} />
+        )}
         <div className="flex flex-1 min-h-0">
           <aside
             className={cn(
@@ -748,7 +770,7 @@ export function AppShell({
             `--app-nav-h` covers both rows and whatever docks on the bar sits on the
             whole of it. With the row at the top (`mobileSubNavPlacement`), the box holds
             the bar alone and measures that. */}
-        <div ref={navRef} className="md:hidden fixed bottom-0 inset-x-0 z-30 border-t border-subtle bg-surface">
+        <div ref={setNavBox} className="md:hidden fixed bottom-0 inset-x-0 z-30 border-t border-subtle bg-surface">
           {mobileSubNav && !subNavOnTop && <MobileSubNav nav={nav} layout={mobileSubNavLayout} placement="bottom" />}
           <nav
             data-tour="nav"
@@ -1208,10 +1230,13 @@ function MobileSubNav({
   nav,
   layout,
   placement,
+  rowRef,
 }: {
   nav: AppShellNavItem[];
   layout: "wrap" | "scroll";
   placement: "bottom" | "top";
+  /** The row's element, for `--app-subnav-h`: at the top only. */
+  rowRef?: (node: HTMLElement | null) => void;
 }) {
   const { pathname } = useLocation();
   const scroll = layout === "scroll";
@@ -1233,6 +1258,7 @@ function MobileSubNav({
   if (!group) return null;
   return (
     <nav
+      ref={rowRef}
       aria-label={group.label}
       // Keyed by group so switching groups replays the entrance.
       key={group.to}

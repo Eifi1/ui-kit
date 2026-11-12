@@ -48,7 +48,8 @@ describe("every token the kit emits is defined somewhere", () => {
 
   it("checks the uses with a fallback too: every one names something declared, or a knob", () => {
     // Stricter than an app has to be (keksdose's own guard checks these). `--app-nav-h`
-    // is the kit's AppShell's own write. What is left are the knobs an APP sets and the
+    // and `--app-subnav-h` are AppShell's measured heights, which this form accepts as it
+    // does in an app. What is left are the knobs an APP sets and the
     // kit reads with a default — CalendarHeatmap's cell and label sizes, documented on
     // its props. Listing them here is the inventory: a new fallback read either names a
     // token or joins this list on purpose.
@@ -157,6 +158,17 @@ describe("undeclaredCssVariables (§8.2, §8.3)", () => {
     };
     expect(run(files, { checkFallbacks: true })).toEqual(["src/a.tsx:1 --maybe", "src/a.tsx:2 --app-nav-h"]);
     expect(run(files)).toEqual(["src/a.tsx:2 --app-nav-h"]);
+  });
+
+  it("counts AppShell's --app-subnav-h as it counts --app-nav-h: in a fallback use, never bare (0.62)", () => {
+    // The top page row's height, published only while an AppShell is mounted.
+    const files = {
+      "src/a.tsx":
+        'const a = "scroll-mt-[calc(4rem+var(--app-subnav-h,0px))]";\nconst b = "top-[var(--app-subnav-h)]";',
+    };
+    expect(run(files, { checkFallbacks: true })).toEqual(["src/a.tsx:2 --app-subnav-h"]);
+    expect(run(files)).toEqual(["src/a.tsx:2 --app-subnav-h"]);
+    expect(KIT_CSS_VARIABLES).not.toContain("--app-subnav-h");
   });
 
   it("lets Tailwind's theme variables resolve, and reports its palette under refusePalette", () => {

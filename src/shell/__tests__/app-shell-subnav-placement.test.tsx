@@ -117,6 +117,57 @@ describe("AppShell mobileSubNavPlacement (0.60)", () => {
     });
   });
 
+  describe("--app-subnav-h (0.62)", () => {
+    // The page row at the top, 43.5px tall (about its height at Normal text), floored as
+    // `--app-nav-h` is; every other box 0.
+    function stubTopRow() {
+      vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+        const height = this.dataset.slot === "app-shell-subnav" ? 43.5 : 0;
+        return { x: 0, y: 0, top: 0, left: 0, right: 0, width: 0, bottom: height, height, toJSON: () => ({}) };
+      });
+    }
+    const subnavH = () => document.documentElement.style.getPropertyValue("--app-subnav-h");
+    afterEach(() => document.documentElement.style.removeProperty("--app-subnav-h"));
+
+    it("top: publishes the row's measured height on <html> and on the shell, for anchors to clear", () => {
+      stubTopRow();
+      const { container, unmount } = renderShell({ mobileSubNavPlacement: "top" });
+      expect(subnavH()).toBe("43px");
+      expect(shellRoot(container).style.getPropertyValue("--app-subnav-h")).toBe("43px");
+      unmount();
+      expect(subnavH()).toBe("");
+    });
+
+    it("is 0px while there is no row at the top: at the bottom, on a page outside every group, or switched off", () => {
+      stubTopRow();
+      const { unmount } = renderShell();
+      expect(subnavH()).toBe("0px");
+      unmount();
+      const outside = renderShell({ mobileSubNavPlacement: "top" }, "/");
+      expect(subnavH()).toBe("0px");
+      outside.unmount();
+      renderShell({ mobileSubNavPlacement: "top", mobileSubNav: false });
+      expect(subnavH()).toBe("0px");
+    });
+
+    it("follows the row from a page outside every group into one", () => {
+      stubTopRow();
+      renderShell({ mobileSubNavPlacement: "top" }, "/");
+      expect(subnavH()).toBe("0px");
+      fireEvent.click(within(bottomBox(document.body)).getByRole("button", { name: "Display" }));
+      fireEvent.click(within(screen.getByRole("dialog")).getByRole("link", { name: "Chips" }));
+      expect(pageRow()).not.toBeNull();
+      expect(subnavH()).toBe("43px");
+    });
+
+    it("embedded: on the shell alone", () => {
+      stubTopRow();
+      const { container } = renderShell({ mobileSubNavPlacement: "top", embedded: true });
+      expect(shellRoot(container).style.getPropertyValue("--app-subnav-h")).toBe("43px");
+      expect(subnavH()).toBe("");
+    });
+  });
+
   it.each(["wrap", "scroll"] as const)("top: lays the row out as %s, as at the bottom", (layout) => {
     const { container } = renderShell({ mobileSubNavPlacement: "top", mobileSubNavLayout: layout });
     const row = pageRow()!;

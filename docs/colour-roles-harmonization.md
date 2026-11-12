@@ -804,11 +804,12 @@ must name something declared. Declared means any of:
    - Everything `applyTokenSet` and the More-contrast step write on `<html>` (surfaces,
      border, text, brand, money, `--chart-1…9`) is declared in `tokens.css` too, through
      the `:root`/`.dark` mirror; a kit test asserts it.
-   - The one runtime-only name the kit publishes, AppShell's measured `--app-nav-h`, is
-     **not** declared. AppShell sets it only while it is mounted, so on a landing, legal,
-     sign-in or pay page it is undefined. An app reads it in the fallback form,
+   - The runtime-only names the kit publishes, AppShell's measured `--app-nav-h` and
+     (0.62) `--app-subnav-h`, the page row's height at the top, are **not** declared.
+     AppShell sets them only while it is mounted, so on a landing, legal, sign-in or pay
+     page they are undefined. An app reads them in the fallback form,
      `var(--app-nav-h,0px)`, as every kit read does. With `checkFallbacks` (§8.3) that
-     form is accepted; in the kit's own run, AppShell's `setProperty` counts as a write.
+     form is accepted, in the kit's own run too; a bare use is reported.
    - Component-internal variables the kit sets for its own classes (`--slider-fill`,
      `--fp-*`, `--line-items-cols`, `--icon-button-tone-*`, `--label-strip-edge*`) are
      not on the list. An app that reads one depends on internals, and the guard says so.
@@ -833,7 +834,8 @@ Not counted:
   and ratchet strip them.
 - **A use with a fallback**, `var(--x, …)`: it says what happens when `--x` is missing.
   AppShell tells apps to write `bottom-[var(--app-nav-h,0px)]`. With
-  `checkFallbacks: true` these are checked too, and `--app-nav-h` counts there.
+  `checkFallbacks: true` these are checked too, and `--app-nav-h` and `--app-subnav-h`
+  count there.
 - **A name built at runtime** (`` `var(--chart-${n})` ``): a name must be followed by
   `)` or `,` to count. The kit asserts its own chart ramp separately; an app that builds
   names checks them itself.
@@ -865,7 +867,7 @@ export function declaredCustomProperties(css: string): Set<string>;
 export interface UndeclaredCssVariablesOptions {
   /** Variables a library writes at runtime: names or patterns. */
   runtime?: readonly (string | RegExp)[];
-  /** Also check `var(--x, …)`. `--app-nav-h` counts only here. Default false. */
+  /** Also check `var(--x, …)`. `--app-nav-h` and `--app-subnav-h` count only here. Default false. */
   checkFallbacks?: boolean;
   /** Report Tailwind palette variables (`--color-red-500`, …) although they resolve. Default false. */
   refusePalette?: boolean;
