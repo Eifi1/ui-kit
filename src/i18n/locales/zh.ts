@@ -1248,6 +1248,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       on: "此设备的通知已开启。",
       off: "此设备的通知已关闭。",
       otherAccount: "此浏览器正在接收另一个账户的通知。在此开启，即可接收您当前登录账户的通知。",
+      sharedComputer: "在共用电脑上不可用：您离开后，此浏览器仍会继续接收您的通知。",
       enable: "开启通知",
       disable: "关闭",
       sendTest: "发送测试",

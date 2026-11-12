@@ -1,11 +1,12 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { PushDeviceSetting } from "../push-device-setting";
 import { PushDeviceError } from "../use-push-device";
 import type { PushDevice } from "../use-push-device";
 import { axeViolations } from "../../test/axe";
+import { setSharedComputer } from "../../offline/shared-computer";
 
 /**
  * docs/notifications-harmonization.md §4.2: keksdose's push block as a card — its states
@@ -201,5 +202,53 @@ describe("PushDeviceSetting — on", () => {
     card(device());
     await user.click(screen.getByRole("button", { name: "Turn on notifications" }));
     expect(await axeViolations(document.body)).toEqual([]);
+  });
+});
+
+/**
+ * 0.62 (Marcel 2026-11-13): no push on a shared computer. A subscription belongs to the
+ * browser, not to the tab or the sign-in: switched on at a library PC, it went on showing
+ * the person's notifications to whoever used that browser next.
+ */
+describe("PushDeviceSetting on a shared computer", () => {
+  afterEach(() => window.sessionStorage.clear());
+  const REASON = /^Not available on a shared computer: this browser would keep getting your notifications/;
+
+  it("will not turn push on, and says why in a line the button names", async () => {
+    const user = userEvent.setup();
+    setSharedComputer(true);
+    const push = device({ permission: "granted" });
+    card(push);
+    const on = screen.getByRole("button", { name: "Turn on notifications" });
+    expect(on).toHaveAttribute("aria-disabled", "true");
+    expect(screen.getByText(REASON)).toBeVisible();
+    expect(on).toHaveAccessibleDescription(REASON);
+    await user.click(on);
+    expect(push.enable).not.toHaveBeenCalled();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("follows the app's own answer where it passes one", () => {
+    const { unmount } = card(device(), { sharedComputer: true });
+    expect(screen.getByRole("button", { name: "Turn on notifications" })).toHaveAttribute("aria-disabled", "true");
+    unmount();
+    setSharedComputer(true);
+    card(device(), { sharedComputer: false });
+    expect(screen.getByRole("button", { name: "Turn on notifications" })).not.toHaveAttribute("aria-disabled");
+    expect(screen.queryByText(REASON)).not.toBeInTheDocument();
+  });
+
+  it("still turns off a subscription the browser already holds", async () => {
+    const user = userEvent.setup();
+    setSharedComputer(true);
+    const push = device({ subscribed: true, permission: "granted" });
+    card(push);
+    await user.click(screen.getByRole("button", { name: "Turn off" }));
+    expect(push.disable).toHaveBeenCalledTimes(1);
+  });
+
+  it("passes axe", async () => {
+    const { container } = card(device(), { sharedComputer: true });
+    expect(await axeViolations(container)).toEqual([]);
   });
 });

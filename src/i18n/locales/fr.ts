@@ -1312,6 +1312,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       off: "Les notifications sont désactivées pour cet appareil.",
       otherAccount:
         "Ce navigateur reçoit les notifications d’un autre compte. Activez-les ici pour les recevoir sur le compte avec lequel vous êtes connecté.",
+      sharedComputer:
+        "Indisponible sur un ordinateur partagé : ce navigateur continuerait à recevoir vos notifications après votre départ.",
       enable: "Activer les notifications",
       disable: "Désactiver",
       sendTest: "Envoyer un test",

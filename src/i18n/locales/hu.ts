@@ -1289,6 +1289,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       off: "Az értesítések ki vannak kapcsolva ezen az eszközön.",
       otherAccount:
         "Ez a böngésző egy másik fiók értesítéseit kapja. Kapcsolja be itt, hogy a bejelentkezett fiók értesítéseit kapja.",
+      sharedComputer:
+        "Közös használatú számítógépen nem érhető el: ez a böngésző az Ön távozása után is megkapná az értesítéseit.",
       enable: "Értesítések bekapcsolása",
       disable: "Kikapcsolás",
       sendTest: "Teszt küldése",

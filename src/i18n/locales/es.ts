@@ -1283,6 +1283,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       off: "Las notificaciones están desactivadas en este dispositivo.",
       otherAccount:
         "Este navegador recibe notificaciones de otra cuenta. Actívelas aquí para recibirlas en la cuenta con la que ha iniciado sesión.",
+      sharedComputer:
+        "No disponible en un ordenador compartido: este navegador seguiría recibiendo sus notificaciones cuando usted ya no esté.",
       enable: "Activar notificaciones",
       disable: "Desactivar",
       sendTest: "Enviar una prueba",

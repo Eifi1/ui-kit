@@ -1298,6 +1298,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       off: "Le notifiche sono disattivate per questo dispositivo.",
       otherAccount:
         "Questo browser riceve le notifiche di un altro account. Le attivi qui per riceverle sull’account con cui ha effettuato l’accesso.",
+      sharedComputer:
+        "Non disponibile su un computer condiviso: questo browser continuerebbe a ricevere le Sue notifiche anche dopo che avrà lasciato il computer.",
       enable: "Attiva notifiche",
       disable: "Disattiva",
       sendTest: "Invia un test",

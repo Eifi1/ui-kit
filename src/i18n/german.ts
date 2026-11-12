@@ -1319,6 +1319,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       off: "Benachrichtigungen sind für dieses Gerät ausgeschaltet.",
       otherAccount:
         "Dieser Browser erhält Benachrichtigungen für ein anderes Konto. Schalten Sie sie hier ein, um sie für das angemeldete Konto zu erhalten.",
+      sharedComputer:
+        "Auf einem gemeinsam genutzten Computer nicht verfügbar: Dieser Browser würde Ihre Benachrichtigungen auch dann noch erhalten, wenn Sie nicht mehr da sind.",
       enable: "Benachrichtigungen einschalten",
       disable: "Ausschalten",
       sendTest: "Test senden",

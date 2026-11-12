@@ -444,7 +444,7 @@ export function NotificationBellDemo() {
 
 /* ── This device ─────────────────────────────────────────────────────────── */
 
-type PushState = "unsupported" | "ios" | "not-configured" | "blocked" | "off" | "on" | "other-account";
+type PushState = "unsupported" | "ios" | "not-configured" | "blocked" | "off" | "on" | "other-account" | "shared";
 
 const PUSH_STATES: { value: PushState; label: string }[] = [
   { value: "unsupported", label: "Unsupported" },
@@ -454,6 +454,7 @@ const PUSH_STATES: { value: PushState; label: string }[] = [
   { value: "off", label: "Off" },
   { value: "on", label: "On" },
   { value: "other-account", label: "Another account" },
+  { value: "shared", label: "Shared computer" },
 ];
 
 function fakePush(state: PushState, setState: (state: PushState) => void, log: (line: string) => void): PushDevice {
@@ -501,7 +502,11 @@ export function PushDeviceDemo() {
         />
       </div>
       <Column>
-        <PushDeviceSetting push={fakePush(state, setState, log)} appName="Example" />
+        <PushDeviceSetting
+          push={fakePush(state, setState, log)}
+          appName="Example"
+          sharedComputer={state === "shared"}
+        />
       </Column>
       <Readout lines={lines} />
       <Note>
@@ -509,7 +514,8 @@ export function PushDeviceDemo() {
         on while the browser has not asked yet opens the explainer first; the browser&apos;s own prompt comes after
         Continue. A test that reached no device says so. An explicit sign-out calls{" "}
         {code("releaseThisDevicePush(unregister)")} before it clears the session (0.52): the device stops showing the
-        account&apos;s notifications to whoever uses it next.
+        account&apos;s notifications to whoever uses it next. On a shared computer ({code("isSharedComputer()")}, or the{" "}
+        {code("sharedComputer")} prop) the card does not offer push at all.
       </Note>
     </Example>
   );
