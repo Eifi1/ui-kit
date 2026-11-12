@@ -1,7 +1,7 @@
 {
   "format": "eifi1-server-kit-api",
   "version": 1,
-  "kit_version": "0.24.0",
+  "kit_version": "0.25.0",
   "modules": [
     {
       "name": "eifi1_server_kit.auth",
@@ -7344,7 +7344,7 @@
     {
       "name": "eifi1_server_kit.feedback",
       "summary": "The feedback contract as code (``docs/feedback-harmonization.md`` §3 in ``Eifi1/ui-kit``).",
-      "doc": "The feedback contract as code (``docs/feedback-harmonization.md`` §3 in ``Eifi1/ui-kit``).\n\nSchemas, enums, limits, the PATCH rules, rework bodies, crash filing, erasure and the\nattachment URL check — every rule keksdose's backend enforces, as pure functions over\nplain values, so kastlan and Kurvenschmiede import them instead of writing them a third\ntime. The database, the queries (RLS, ``company_id``), auth and the routes stay per app.\n\nLayer 2 (0.9.0, ``docs/server-services-harmonization.md``): the flows written once against\nports each app implements — :class:`FeedbackService` over a :class:`FeedbackRepository`,\n:func:`upload_attachment` and :func:`download_attachment` over an\n:class:`AttachmentStorage`, :func:`throttle_upload` — re-exported here, without FastAPI.\nThe routes are ``eifi1_server_kit.feedback.router`` (the ``fastapi`` extra) and the fakes\nand conformance checks ``eifi1_server_kit.feedback.testing``; neither is re-exported.\n\nPublic feedback (0.11, contract §9): the rules of :mod:`~eifi1_server_kit.feedback.public`\n(the public body, who is told, the field lists), the reply, comment and vote shapes, the\nfour stores' ports and the service's public flows.\n\nRework as an entry (0.13, contract §10): ``FeedbackStatus.REWORK``, :data:`QUEUE_STATUSES`,\n:class:`FeedbackEntryKind`, :func:`plan_rework`, :class:`FeedbackReworkCreate`,\n:meth:`FeedbackService.rework`, and :func:`split_rework_blocks` for the migrations.\n\nThe admin's counts (0.15, ``docs/admin-harmonization.md`` §9.5):\n:meth:`FeedbackRepository.count_by_status` and :func:`feedback_attention`, which folds it\ninto :class:`FeedbackAttention`'s three tiles from the kit's own status sets.\n\nThe admins' alert (0.16, contract §11): :data:`FEEDBACK_RECEIVED`, :class:`FeedbackAlert`,\nthe :class:`FeedbackAlerts` port :class:`FeedbackService` tells (``alerts=``),\n:func:`admin_alert_recipients` and :func:`mails_at_once`.",
+      "doc": "The feedback contract as code (``docs/feedback-harmonization.md`` §3 in ``Eifi1/ui-kit``).\n\nSchemas, enums, limits, the PATCH rules, rework bodies, crash filing, erasure and the\nattachment URL check — every rule keksdose's backend enforces, as pure functions over\nplain values, so kastlan and Kurvenschmiede import them instead of writing them a third\ntime. The database, the queries (RLS, ``company_id``), auth and the routes stay per app.\n\nLayer 2 (0.9.0, ``docs/server-services-harmonization.md``): the flows written once against\nports each app implements — :class:`FeedbackService` over a :class:`FeedbackRepository`,\n:func:`upload_attachment` and :func:`download_attachment` over an\n:class:`AttachmentStorage`, :func:`throttle_upload` — re-exported here, without FastAPI.\nThe routes are ``eifi1_server_kit.feedback.router`` (the ``fastapi`` extra) and the fakes\nand conformance checks ``eifi1_server_kit.feedback.testing``; neither is re-exported.\n\nPublic feedback (0.11, contract §9): the rules of :mod:`~eifi1_server_kit.feedback.public`\n(the public body, who is told, the field lists), the reply, comment and vote shapes, the\nfour stores' ports and the service's public flows.\n\nRework as an entry (0.13, contract §10): ``FeedbackStatus.REWORK``, :data:`QUEUE_STATUSES`,\n:class:`FeedbackEntryKind`, :func:`plan_rework`, :class:`FeedbackReworkCreate`,\n:meth:`FeedbackService.rework`, and :func:`split_rework_blocks` for the migrations.\n\nThe admin's counts (0.15, ``docs/admin-harmonization.md`` §9.5):\n:meth:`FeedbackRepository.count_by_status` and :func:`feedback_attention`, which folds it\ninto :class:`FeedbackAttention`'s three tiles from the kit's own status sets.\n\nThe admins' alert (0.16, contract §11): :data:`FEEDBACK_RECEIVED`, :class:`FeedbackAlert`,\nthe :class:`FeedbackAlerts` port :class:`FeedbackService` tells (``alerts=``),\n:func:`admin_alert_recipients` and :func:`mails_at_once`.\n\nWhere a notice opens (0.25, contract §9.11, §13.7): :func:`feedback_inbox_href`,\n:func:`my_feedback_href`, :func:`public_feedback_href` and :func:`feedback_notice_href`,\nthe ``?ids=`` set and the ``?row=`` the pages read, one rule for every app's mails and\npushes in place of each app's own string.",
       "contract": {
         "doc": "docs/feedback-harmonization.md",
         "section": "§3, §11",
@@ -7473,6 +7473,20 @@
           "doc": "The context keys an anonymised row KEEPS — an allow-list, never a deny-list: a\ndeny-list keeps every key nobody thought about, and those are the ones that name people.\nEverything here describes the SOFTWARE at the moment of the report.\n\n``environment`` stays (Marcel, 2026-10-04): which copy of the software, or an erased dev\nreport reads as production. ``origin`` goes although it answers the same question: on a\ndeveloper's machine it is a LAN address or an ``sslip.io`` name with an IP in it.\n``url`` goes (its query can carry what the person typed; ``route`` stays), ``ua`` goes\n(a device fingerprint), as do ``fingerprint`` and every ``user_*`` key."
         },
         {
+          "name": "FEEDBACK_INBOX_PATH",
+          "kind": "constant",
+          "signature": "FEEDBACK_INBOX_PATH = \"/feedback\"",
+          "doc": "The admin's inbox (§4.1): every report, triaged there.",
+          "value": "/feedback"
+        },
+        {
+          "name": "FEEDBACK_LINK_IDS_MAX",
+          "kind": "constant",
+          "signature": "FEEDBACK_LINK_IDS_MAX = 50",
+          "doc": "The most reports a link names (keksdose's ``_NOTICE_IDS_MAX``): the inbox keeps a\nnotice's link in a ``String(400)``, and fifty ids of up to six digits fill it to ~370.\nPast it the link opens the whole list, as before ``?ids=``.",
+          "value": 50
+        },
+        {
           "name": "FEEDBACK_RECEIVED",
           "kind": "constant",
           "signature": "FEEDBACK_RECEIVED = \"feedback_received\"",
@@ -7543,6 +7557,13 @@
           "value": 4
         },
         {
+          "name": "MY_FEEDBACK_PATH",
+          "kind": "constant",
+          "signature": "MY_FEEDBACK_PATH = \"/my-feedback\"",
+          "doc": "The person's own reports (§4.1), an admin's too.",
+          "value": "/my-feedback"
+        },
+        {
           "name": "NOT_NULLABLE_FIELDS",
           "kind": "constant",
           "signature": "NOT_NULLABLE_FIELDS: tuple[str, ...] = (\"status\", \"title\", \"body\", \"category\", \"public\")",
@@ -7573,6 +7594,13 @@
           "kind": "constant",
           "signature": "PUBLIC_COMMENT_FIELDS: frozenset[str] = frozenset(\n    {\"id\", \"author_name\", \"mine\", \"staff\", \"body\", \"hidden\", \"created_at\", \"attachment_url\"}\n)",
           "doc": "What a comment says to anyone (9.10); ``body`` is null when hidden, but for its writer\nand an admin. ``attachment_url`` (0.18, §12): the comment's own file, posted to be seen\nwith it, null when hidden as ``body`` is — the one attachment URL a public answer carries."
+        },
+        {
+          "name": "PUBLIC_FEEDBACK_PATH",
+          "kind": "constant",
+          "signature": "PUBLIC_FEEDBACK_PATH = \"/all-feedback\"",
+          "doc": "The public list (§9.3, \"Feedback discussion\"), where the reports a person follows live.",
+          "value": "/all-feedback"
         },
         {
           "name": "PUBLIC_PAGE_MAX",
@@ -9947,6 +9975,18 @@
           "doc": "The tiles from :meth:`~eifi1_server_kit.feedback.FeedbackRepository.count_by_status`'s\nmapping. A status missing from ``counts`` counts 0."
         },
         {
+          "name": "feedback_inbox_href",
+          "kind": "function",
+          "signature": "feedback_inbox_href(ids: int | Iterable[int], *, app_base_url: str | None = None) -> str",
+          "doc": "The admin's inbox narrowed to ``ids`` (§13.7), for :data:`FEEDBACK_RECEIVED`:\n``/feedback?ids=123&row=123`` for one report, ``/feedback?ids=7,8,9`` for a crash\nbundle, ``/feedback`` past :data:`FEEDBACK_LINK_IDS_MAX`. Each id once, in the order\ngiven. ``app_base_url`` makes it the absolute link a mail carries.\n\nA :class:`TypeError` for an id that is no ``int``; a :class:`ValueError` for no id,\nan id below 1 or above ``2**53 - 1``, or an ``app_base_url`` that is no http(s)\norigin (a query or a fragment in it included)."
+        },
+        {
+          "name": "feedback_notice_href",
+          "kind": "function",
+          "signature": "feedback_notice_href(ids: int | Iterable[int], *, mine: bool, app_base_url: str | None = None) -> str",
+          "doc": "Where a :data:`FEEDBACK_ANSWERED` or :data:`FEEDBACK_COMMENT` notice about ``ids``\nopens for its recipient (§9.11): :func:`my_feedback_href` when they are the reports'\nauthor (``mine``), :func:`public_feedback_href` when they follow them — a commenter,\nan admin on someone else's report too. keksdose's ``feedback_notice_url``."
+        },
+        {
           "name": "feedback_recipients",
           "kind": "function",
           "signature": "feedback_recipients(*, author_id: int | None, commenter_ids: Iterable[int | None], writer_id: int | None) -> list[int]",
@@ -9983,6 +10023,12 @@
           "doc": "Whether the alert's mail goes right after the commit (§11.2 Settled 3): a report\nand a rework do; a crash does not — it is in the app (an inbox row and a push, or the\nattention badge) and mailed only inside the queue's bundle where the app runs one."
         },
         {
+          "name": "my_feedback_href",
+          "kind": "function",
+          "signature": "my_feedback_href(ids: int | Iterable[int], *, app_base_url: str | None = None) -> str",
+          "doc": "The person's own reports narrowed to ``ids`` (§13.7), for a reply or a comment on\ntheir own report: ``/my-feedback?ids=12&row=12`` for one, ``/my-feedback?ids=12,14``\nfor a bundle, ``/my-feedback`` past :data:`FEEDBACK_LINK_IDS_MAX`. Refuses what\n:func:`feedback_inbox_href` refuses."
+        },
+        {
           "name": "normalise_crash_text",
           "kind": "function",
           "signature": "normalise_crash_text(text: str) -> str",
@@ -10017,6 +10063,12 @@
           "kind": "function",
           "signature": "public_body(body: str | None, *, policy: AttachmentUrlPolicy = DEFAULT_ATTACHMENT_URL_POLICY) -> str",
           "doc": "A report's body as the public detail shows it (9.4), applied by the server, never\nthe client.\n\nEvery ``[screenshot] <url>`` line is dropped (§3.4's pattern); every other attachment\nURL is removed wherever it stands (:func:`public_text`); kastlan's folded headers\n``--- COMMENT <stamp> · <name> ---`` become ``--- COMMENT <stamp> ---``. The\n``--- REWORK <stamp> ---`` lines and the notes stay: the author's own words."
+        },
+        {
+          "name": "public_feedback_href",
+          "kind": "function",
+          "signature": "public_feedback_href(ids: int | Iterable[int], *, app_base_url: str | None = None) -> str",
+          "doc": "The public list for the reports ``ids`` a person follows (§13.7), for a reply or a\ncomment on someone else's report: ``/all-feedback?row=12`` for one, and\n``/all-feedback?sort=updated`` for several — the list names no set, and they were just\nanswered, so they lead. No cap: no id is in the link. Refuses what\n:func:`feedback_inbox_href` refuses."
         },
         {
           "name": "public_text",
