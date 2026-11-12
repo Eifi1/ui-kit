@@ -2090,6 +2090,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     sharedComputer: {
       label: "Este es un ordenador compartido",
       hint: "No queda ninguna copia de sus datos en este dispositivo. Las páginas solo se abren entonces con conexión.",
+      idleWarning: "No ha pasado nada aquí desde hace un rato. La sesión se cerrará dentro de un minuto.",
+      staySignedIn: "Mantener la sesión",
     },
     // 0.55 — docs/top-bar-harmonization.md §2.6.1: keksdose's words (sync.held_*,
     // sync.discard_held_*, sync.switch_back_held) without its budgets.

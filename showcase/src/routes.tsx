@@ -2119,6 +2119,7 @@ export const GROUPS: ShowcaseGroup[] = [
           "SharedComputerChoice",
           "isSharedComputer",
           "setSharedComputer",
+          "useSharedComputerIdleSignOut",
         ],
         Body: () => <OfflineDemo />,
       },

@@ -1996,6 +1996,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     sharedComputer: {
       label: "这是一台共用电脑",
       hint: "此设备上不会保留您的数据副本。页面将只能在联网时打开。",
+      idleWarning: "此处已有一段时间没有任何操作。一分钟后将退出登录。",
+      staySignedIn: "保持登录",
     },
     // 0.55 — docs/top-bar-harmonization.md §2.6.1: keksdose's words (sync.held_*,
     // sync.discard_held_*, sync.switch_back_held) without its budgets.

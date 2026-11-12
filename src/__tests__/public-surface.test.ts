@@ -494,7 +494,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.46.1 (+1, kastlan N5): `uuid5`, the name-based id beside `stampAfter`.
   // 0.61 (+2, Marcel 2026-11-12: the offline thread for every app): `useFeedbackCommentsQuery`
   // and `feedbackCommentsQueryKey`, keksdose's TanStack-backed comment thread.
-  ["@eifi1/ui-kit/offline", offline, 21],
+  // 0.62 (+1, Marcel 2026-11-12: a shared-computer sign-in has a short life):
+  // `useSharedComputerIdleSignOut`.
+  ["@eifi1/ui-kit/offline", offline, 22],
   // 0.46.0: local-first phase 3 (docs/local-first-harmonization.md §2.3) — `createSyncDb`,
   // `SYNC_DB_STORES`, `createSyncEngine`, `DEFAULT_HOLD_CODES`, `DEFAULT_SYNC_BACKOFF_MS`,
   // `syncEngineFor`, `releaseSyncEngine`, `useSyncWorker`, `useSyncStatus`, `useSyncQuery` and the

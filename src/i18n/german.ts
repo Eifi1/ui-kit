@@ -2166,6 +2166,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
     sharedComputer: {
       label: "Dies ist ein gemeinsam genutzter Computer",
       hint: "Auf diesem Gerät bleibt keine Kopie Ihrer Daten. Seiten öffnen sich dann nur mit einer Verbindung.",
+      idleWarning: "Hier ist seit einer Weile nichts passiert. In einer Minute werden Sie abgemeldet.",
+      staySignedIn: "Angemeldet bleiben",
     },
     // 0.55 — docs/top-bar-harmonization.md §2.6.1: keksdose's reviewed words (sync.held_*,
     // sync.discard_held_*, sync.switch_back_held) without its budgets.

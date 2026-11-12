@@ -33,6 +33,10 @@ export interface SharedComputerLabels {
   label: string;
   /** The one line under it: what the choice does. */
   hint: string;
+  /** 0.62: {@link useSharedComputerIdleSignOut}'s toast, a minute before it signs out. */
+  idleWarning: string;
+  /** 0.62: that toast's button, which keeps the session (any input does too). */
+  staySignedIn: string;
 }
 
 // Defined in ./shared-computer-labels, which holds no component code (0.34, KS U8).

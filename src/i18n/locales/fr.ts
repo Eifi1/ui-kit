@@ -2132,6 +2132,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     sharedComputer: {
       label: "C’est un ordinateur partagé",
       hint: "Aucune copie de vos données ne reste sur cet appareil. Les pages ne s’ouvrent alors qu’avec une connexion.",
+      idleWarning: "Rien ne s’est passé ici depuis un moment. La session prendra fin dans une minute.",
+      staySignedIn: "Continuer la session",
     },
     // 0.55 — docs/top-bar-harmonization.md §2.6.1: keksdose's reviewed words (sync.held_*,
     // sync.discard_held_*, sync.switch_back_held) without its budgets.
