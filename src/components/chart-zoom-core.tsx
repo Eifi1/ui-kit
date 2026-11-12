@@ -15,7 +15,11 @@
 //
 // The zoom is VIEW state and lives here, never in a query or a store: it is where
 // somebody is looking, and a chart whose data reloads should not lose it. It is cleared
-// by the reset button, by a double click, and by nothing else.
+// by the reset button, by a double click, by two fingers pinched out to the whole range,
+// and by nothing else.
+//
+// On a touch screen one finger READS (the tooltip follows it) and two fingers zoom and
+// pan x (`ZoomLayer`); a mouse or a pen draws the band.
 //
 // Everything with a decision in it is a pure exported function below (`zoomAxesFor`,
 // `selectionFromDrag`, `zoomAfter`, `zoomDomains`, `fitYToX`, `fitXToY`); the
@@ -24,11 +28,12 @@
 // The kit's own module (0.34, refactor audit 2026-10, API-6b): SeriesChart, its axes and
 // the facing pair import from here. ./chart-zoom is the public face — `SharedXZoom`, the
 // types, and until 0.35 the deprecated arithmetic and HOC, which no app imports.
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import type { ComponentType, Dispatch, ReactNode, SetStateAction } from "react";
+import { createContext, useCallback, useContext, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
+import type { ComponentType, Dispatch, PointerEvent, ReactNode, SetStateAction } from "react";
 import { usePlotArea, useXAxisInverseScale, useYAxisInverseScale, type InverseScaleFunction } from "recharts";
 import { X } from "lucide-react";
 import { cn } from "../lib/cn";
+import { extentOf, isWholeRange, pinchWindow, pinchZoomed, type PinchStart } from "../lib/zoom-window";
 import { FOCUS_RING } from "./focus-ring";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { DEFAULT_SERIES_CHART_LABELS, type SeriesChartLabels } from "./series-chart-labels";
@@ -452,6 +457,19 @@ export function SharedXZoom({ children }: { children: ReactNode }) {
   return <SharedX.Provider value={{ window, set }}>{children}</SharedX.Provider>;
 }
 
+/**
+ * What only the chart knows about its abscissa, for the layer it renders: the range it
+ * draws when nothing is zoomed — its fitted domain, with its air, or a category axis'
+ * half slot either side. A pinch and a pan stop at its edges. `SeriesChart` provides it
+ * round `zoom.layer`; under a chart that does not, the layer falls back on the extent of
+ * the rows' own abscissae.
+ */
+export interface ZoomRange {
+  whole?: [number, number];
+}
+
+export const ZoomRangeContext = createContext<ZoomRange | null>(null);
+
 /** The axes a chart that names none zooms: the single shared scale, one array for all. */
 const ONE_AXIS: readonly { id: string }[] = [{ id: DEFAULT_Y_AXIS }];
 
@@ -487,6 +505,8 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
       () => ({ rows: rows ?? [], series: [...(series ?? [])], axes: [...axes], xKey }),
       [rows, series, axes, xKey],
     );
+    // The range a pinch stops at, under a chart that does not say its own (`ZoomRange`).
+    const dataWhole = useMemo(() => extentOf(source.rows, source.xKey), [source]);
     const zoomed = xWindow !== undefined || ownY !== null;
     // A chart handed no rows or no series draws its empty state, not a plot — and a
     // "Reset zoom" floating over "No data" (every line toggled off while zoomed) offers
@@ -511,6 +531,30 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
       wasZoomed.current = zoomed;
     }, [zoomed]);
 
+    // Two fingers zoom x: on a chart whose drag names x at all.
+    const pinchable = setting === "both" || setting === "x";
+    // While two fingers are down the whole chart is `touch-none`, so the browser does not
+    // read them as a scroll (ChartContainer's `touch-pan-y` would let a vertical two-finger
+    // drag scroll the page) — set from the second finger, before it has moved, as
+    // ZoomableImage's pinch does.
+    const [pinching, setPinching] = useState(false);
+    // The y the chart had when the gesture began: a two-finger PAN keeps a dragged y
+    // window, a pinch lets y refit as an x band does.
+    const pinchY = useRef<Record<string, [number, number]> | null>(null);
+    const onTouchMove = useEffectEvent((event: TouchEvent) => {
+      // The class above lands a render after the second finger; a move the browser sends
+      // before it would still scroll. React attaches `touchmove` passive, where
+      // `preventDefault` is ignored — hence the native listener below.
+      if (pinchable && event.touches.length > 1 && event.cancelable) event.preventDefault();
+    });
+    useEffect(() => {
+      const node = root.current;
+      if (!node) return;
+      const move = (event: TouchEvent) => onTouchMove(event);
+      node.addEventListener("touchmove", move, { passive: false });
+      return () => node.removeEventListener("touchmove", move);
+    }, []);
+
     // Memoised over what it reads (0.55, held back from 0.52's review): built afresh on every
     // render, the binding was a new prop — and its layer a new element — for the chart,
     // which then drew every series, axis and tick again for a render of the page that
@@ -527,27 +571,43 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
           <ZoomLayer
             axisIds={source.axes.map((axis) => axis.id)}
             only={only}
+            whole={dataWhole}
+            window={xWindow}
+            pinchable={pinchable}
             onZoom={(selection) => {
               const next = zoomAfter(state, selection, source);
               if (next.x !== xWindow) setXWindow(next.x);
               setOwnY(next.y);
             }}
+            onPinch={(phase, window, zooming) => {
+              if (phase === "start") {
+                pinchY.current = ownY;
+                setPinching(true);
+                return;
+              }
+              if (phase === "end") {
+                setPinching(false);
+                return;
+              }
+              setXWindow(window);
+              setOwnY(zooming ? null : pinchY.current);
+            }}
             onReset={clear}
           />
         ),
       };
-    }, [setting, xWindow, ownY, source, only, setXWindow, clear]);
+    }, [setting, xWindow, ownY, source, dataWhole, only, pinchable, setXWindow, clear]);
 
     if (setting === "none") {
       return (
-        <div className="relative">
+        <div ref={root} className="relative">
           <Chart {...props} zoom={binding} />
         </div>
       );
     }
 
     return (
-      <div ref={root} className="relative">
+      <div ref={root} className={cn("relative", pinching && "touch-none")}>
         <Chart {...props} zoom={binding} />
         {zoomed && !empty && (
           <button
@@ -572,9 +632,24 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
  * The part that lives INSIDE the recharts chart, where recharts will say where the plot
  * is and what value a pixel is.
  *
- * A transparent rectangle over the plot area that reads the drag. It does NOT stop the
+ * A transparent rectangle over the plot area that reads the pointer. It does NOT stop the
  * event: recharts drives its tooltip from the same pointer move bubbling up to its own
  * wrapper, so swallowing it here would trade the tooltip for the zoom.
+ *
+ * **A mouse (or a pen) draws the band; a finger reads** (Kurvenschmiede production
+ * feedback, 2026-11, Marcel's design of 2026-11-12). On a phone a drag across the plot is
+ * how a curve is READ — the tooltip following the finger — and one finger drew a zoom band
+ * instead, so reading a value zoomed into it. Now:
+ *
+ * - One finger stands recharts' pointer where it is (`pointAt`, the hover a mouse sets),
+ *   on touch-down and on every move, so the tooltip follows it along the curve. A
+ *   vertical swipe is still the page's: ChartContainer is `touch-pan-y`, so horizontal
+ *   movement is the chart's and vertical the browser's. Lifting the finger KEEPS the
+ *   tooltip, as a tap always has: the value stays readable once the finger is out of the
+ *   way. The next touch, a reset, or the mouse moves it.
+ * - Two fingers zoom x about their midpoint and, as they move together, pan it
+ *   (`pinchWindow`): tracked by pointer id, as ZoomableImage tracks its pinch. Lifting one
+ *   ends the pinch, and the finger still down reads on.
  *
  * Nothing to assistive technology (0.52, refactor audit 2026-10-30, DSP-5): it was a
  * `role="application"` named by the drag hint, which could not take focus — the one name
@@ -584,16 +659,31 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
 function ZoomLayer({
   axisIds,
   only,
+  whole: dataWhole,
+  window,
+  pinchable,
   onZoom,
+  onPinch,
   onReset,
 }: {
   axisIds: string[];
   only?: "x" | "y";
+  /** The range a pinch stops at when the chart does not say its own (see `ZoomRange`). */
+  whole?: [number, number];
+  /** The x window on show, `undefined` for the whole range. */
+  window?: [number, number];
+  /** Whether two fingers zoom x. */
+  pinchable: boolean;
   onZoom: (selection: ZoomSelection) => void;
+  /** A two-finger gesture: its start, each move with the window it leaves (`undefined` once
+   *  it shows the whole range) and whether it has zoomed rather than panned, and its end. */
+  onPinch: (phase: "start" | "move" | "end", window?: [number, number], zooming?: boolean) => void;
   onReset: () => void;
 }) {
   const plot = usePlotArea();
   const xInverse = useXAxisInverseScale();
+  const drawnWhole = useContext(ZoomRangeContext)?.whole;
+  const whole = drawnWhole ?? dataWhole;
   // One probe COMPONENT per axis rather than a hook in a loop: the number of axes
   // changes as series are toggled, and a hook count that changes with the data is the
   // one thing React will not forgive.
@@ -602,6 +692,10 @@ function ZoomLayer({
   // A finished drag is followed by a click on the same element, and a chart with an
   // `onClick` (keksdose opens a drilldown on one) would read the zoom as a pick.
   const draggedRef = useRef(false);
+  // The fingers on the plot, by pointer id, in the chart's px.
+  const fingers = useRef(new Map<number, { x: number; y: number }>());
+  // The two-finger gesture under way: its fingers, where it began, and whether it zooms.
+  const pinch = useRef<{ ids: [number, number]; start: PinchStart; zooming: boolean } | null>(null);
 
   if (!plot || plot.width <= 0 || plot.height <= 0) return null;
 
@@ -619,6 +713,69 @@ function ZoomLayer({
     const selection = selectionFromDrag(drag, plot, xInverse, (id) => scales.get(id), axisIds, only);
     draggedRef.current = selection !== null;
     if (selection) onZoom(selection);
+  };
+
+  /** The window on show: the zoom's own while zoomed (the axis draws exactly that, under
+   *  `allowDataOverflow`), else the whole range as the chart draws it — said by the chart,
+   *  or read back off the x scale at the plot's edges. */
+  const shown = (): [number, number] | undefined => {
+    if (window ?? drawnWhole) return window ?? drawnWhole;
+    const from = Number(xInverse?.(plot.x));
+    const to = Number(xInverse?.(plot.x + plot.width));
+    return Number.isFinite(from) && Number.isFinite(to) && to > from ? [from, to] : dataWhole;
+  };
+
+  const touchDown = (event: PointerEvent<SVGRectElement>) => {
+    draggedRef.current = false;
+    const down = fingers.current;
+    // A primary pointer starts a new touch: no other finger is down, whatever a lost
+    // `pointerup` left in the map.
+    if (event.isPrimary) down.clear();
+    const point = at(event);
+    down.set(event.pointerId, point);
+    if (down.size === 1) {
+      pointAt(event.currentTarget, point.x, point.y);
+      return;
+    }
+    if (down.size !== 2 || !pinchable || !whole || pinch.current) return;
+    const from = shown();
+    if (!from) return;
+    const [[idA, a], [idB, b]] = [...down.entries()];
+    pinch.current = { ids: [idA, idB], start: { window: from, a: a.x - plot.x, b: b.x - plot.x }, zooming: false };
+    // Two fingers are not reading: the tooltip of the first would stand over a plot that
+    // is rescaling under it.
+    pointAt(event.currentTarget, -1, 0);
+    onPinch("start");
+  };
+
+  const touchMove = (event: PointerEvent<SVGRectElement>) => {
+    const down = fingers.current;
+    if (!down.has(event.pointerId)) return;
+    const point = at(event);
+    down.set(event.pointerId, point);
+    const now = pinch.current;
+    if (!now) {
+      if (down.size === 1) pointAt(event.currentTarget, point.x, point.y);
+      return;
+    }
+    const a = down.get(now.ids[0]);
+    const b = down.get(now.ids[1]);
+    if (!a || !b || !whole) return;
+    const next = pinchWindow(now.start, a.x - plot.x, b.x - plot.x, plot.width, whole);
+    now.zooming = pinchZoomed(now.start.window, next);
+    onPinch("move", isWholeRange(next, whole) ? undefined : next, now.zooming);
+  };
+
+  const touchUp = (event: PointerEvent<SVGRectElement>) => {
+    const down = fingers.current;
+    down.delete(event.pointerId);
+    const now = pinch.current;
+    if (!now || !now.ids.includes(event.pointerId)) return;
+    pinch.current = null;
+    onPinch("end", undefined, now.zooming);
+    // Two fingers down to one: the one still down reads on from where it is.
+    const survivor = [...down.values()][0];
+    if (survivor) pointAt(event.currentTarget, survivor.x, survivor.y);
   };
 
   // What the drag would do, shown while it is being made: a band paints the full width
@@ -653,6 +810,10 @@ function ZoomLayer({
         data-zoom-surface=""
         style={{ cursor: "crosshair" }}
         onPointerDown={(event) => {
+          if (event.pointerType === "touch") {
+            touchDown(event);
+            return;
+          }
           if (event.button !== 0) return;
           draggedRef.current = false;
           const point = at(event);
@@ -667,12 +828,30 @@ function ZoomLayer({
           setDrag({ fromX: point.x, fromY: point.y, toX: point.x, toY: point.y });
         }}
         onPointerMove={(event) => {
+          if (event.pointerType === "touch") {
+            touchMove(event);
+            return;
+          }
           if (!drag) return;
           const point = at(event);
           setDrag({ ...drag, toX: point.x, toY: point.y });
         }}
-        onPointerUp={finish}
-        onPointerCancel={() => setDrag(null)}
+        onPointerUp={(event) => {
+          if (event.pointerType === "touch") touchUp(event);
+          else finish();
+        }}
+        onPointerCancel={(event) => {
+          // A cancel is the browser taking the touch over — the vertical swipe that
+          // scrolls the page — or a pinch it would not leave to us: either way it ends.
+          if (event.pointerType === "touch") touchUp(event);
+          else setDrag(null);
+        }}
+        // recharts follows a touch itself (its wrapper's `touchmove`, from the FIRST
+        // finger), which during a pinch is a tooltip jumping over a plot that rescales
+        // under it. Two fingers are the zoom's, so their moves stop here.
+        onTouchMove={(event) => {
+          if (pinch.current) event.stopPropagation();
+        }}
         onClick={(event) => {
           if (!draggedRef.current) return;
           draggedRef.current = false;

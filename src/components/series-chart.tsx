@@ -64,6 +64,7 @@ import {
   axisExtent,
   pointAt,
   withChartZoom,
+  ZoomRangeContext,
   type ZoomAxesSetting,
   type ZoomBinding,
   type ZoomFitSource,
@@ -1395,10 +1396,11 @@ function SeriesPlot({
   // Ticks are the round values INSIDE whichever domain that is (see
   // `series-chart-ticks.ts`), so a zoom window still gets round numbers, just finer.
   // A category axis is its slots, each half a slot of air either side — room for a
-  // bar, and the tick under the middle of it.
-  const fittedX: [number, number] | undefined =
-    zoom?.xDomain ??
-    (model.kind === "category"
+  // bar, and the tick under the middle of it. `wholeX`, the unzoomed one, is also the
+  // range the zoom's pinch and pan stop at (`ZoomRange`), so they reach the air and the
+  // half slots and no further.
+  const wholeX: [number, number] | undefined =
+    model.kind === "category"
       ? [-0.5, rows.length - 0.5]
       : padBand(
           ...(extend(undefined, [
@@ -1406,7 +1408,8 @@ function SeriesPlot({
             ...xRefs.map((ref) => xPos(ref.value)),
             ...(markers ?? []).map((marker) => xPos(marker.x)),
           ]) ?? [Infinity, -Infinity]),
-        ));
+        );
+  const fittedX = zoom?.xDomain ?? wholeX;
 
   const timeUnit = model.kind === "time" ? timeTicksWithUnit(fittedX, ticksAim) : undefined;
   // Whole-number ticks on a number line whose rows are all whole numbers — see
@@ -1929,7 +1932,7 @@ function SeriesPlot({
             }
           />
         )}
-        {zoom?.layer}
+        {zoom?.layer && <ZoomRangeContext.Provider value={{ whole: wholeX }}>{zoom.layer}</ZoomRangeContext.Provider>}
       </ComposedChart>
     </ChartContainer>
   );

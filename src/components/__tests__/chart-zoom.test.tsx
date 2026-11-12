@@ -516,6 +516,124 @@ describe("withChartZoom", () => {
   });
 });
 
+/* ── On a touch screen (0.61: one finger reads, two zoom) ───────────────── */
+
+/** A finger on the overlay: a pointer event of type touch, with its own id. The first
+ *  finger of a touch is the primary pointer. */
+function finger(type: string, x: number, y: number, id = 1) {
+  const event = new MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y });
+  Object.defineProperty(event, "pointerId", { value: id });
+  Object.defineProperty(event, "pointerType", { value: "touch" });
+  Object.defineProperty(event, "isPrimary", { value: id === 1 });
+  fireEvent(overlay(), event);
+}
+
+/** A sweep over 0…900, the stub's x scale unzoomed: one unit a pixel, from pixel 60. */
+const SWEEP = Array.from({ length: 11 }, (_, i) => ({ x: i * 90, v: i * 10 }));
+
+/** Two fingers down at chart px `a` and `b`, moved to `a2` and `b2`, and lifted. */
+function pinch(a: number, b: number, a2: number, b2: number) {
+  finger("pointerdown", a, 150, 1);
+  finger("pointerdown", b, 150, 2);
+  finger("pointermove", a2, 150, 1);
+  finger("pointermove", b2, 150, 2);
+  finger("pointerup", a2, 150, 1);
+  finger("pointerup", b2, 150, 2);
+}
+
+const chartRoot = () => screen.getByTestId("chart").parentElement!;
+
+describe("withChartZoom — on a touch screen", () => {
+  const draw = (props: { zoomAxes?: ZoomAxesSetting } = {}) =>
+    render(<Zoomable axes={[{ id: "y" }]} rows={SWEEP} series={[{ key: "v" }]} {...props} />);
+
+  it("draws no band for one finger and zooms nothing: a drag across the plot reads it", () => {
+    const { container } = draw();
+    finger("pointerdown", 160, 60);
+    finger("pointermove", 610, 210);
+    expect(container.querySelector("rect[stroke-dasharray]")).toBeNull();
+    finger("pointerup", 610, 210);
+    expect(bindings()[0]).toEqual({ x: null, y: {} });
+    expect(screen.queryByRole("button", { name: /reset zoom/i })).toBeNull();
+  });
+
+  it("zooms x about the fingers' midpoint as two fingers spread", () => {
+    draw();
+    // Chart px 460 and 560 are the values 400 and 500; spread 100 → 200 about 450.
+    pinch(460, 560, 410, 610);
+    expect(bindings()[0].x).toEqual([225, 675]);
+    // A pinch is an x band: y refits to what is inside, no y window of its own.
+    expect(bindings()[0].y.y).toBeDefined();
+    expect(screen.getByRole("button", { name: /reset zoom/i })).toBeInTheDocument();
+  });
+
+  it("pans a zoomed window when two fingers move together", () => {
+    draw();
+    pinch(460, 560, 410, 610);
+    // 450 units over 900 px: 100 px to the left is 50 units to the right.
+    pinch(460, 560, 360, 460);
+    expect(bindings()[0].x).toEqual([275, 725]);
+  });
+
+  it("stops at the whole range, and a pinch out to it is no zoom at all", () => {
+    draw();
+    pinch(460, 560, 410, 610);
+    // From 900 px apart to 40: twenty times the window, which is far more than the whole.
+    pinch(60, 960, 490, 530);
+    expect(bindings()[0].x).toBeNull();
+    expect(screen.queryByRole("button", { name: /reset zoom/i })).toBeNull();
+  });
+
+  it("keeps a dragged y window through a two-finger pan, and lets a pinch refit it", () => {
+    draw();
+    drag([160, 60], [610, 210]);
+    expect(bindings()[0].y).toEqual({ y: [100, 250] });
+    // [100, 550] is 450 wide on 900 px: −100 px pans it by +50.
+    pinch(460, 560, 360, 460);
+    expect(bindings()[0]).toEqual({ x: [150, 600], y: { y: [100, 250] } });
+    pinch(460, 560, 410, 610);
+    expect(bindings()[0].y.y).not.toEqual([100, 250]);
+  });
+
+  it("takes the page's touch away from the chart only while two fingers are down", () => {
+    draw();
+    expect(chartRoot()).not.toHaveClass("touch-none");
+    finger("pointerdown", 460, 150, 1);
+    expect(chartRoot()).not.toHaveClass("touch-none");
+    finger("pointerdown", 560, 150, 2);
+    expect(chartRoot()).toHaveClass("touch-none");
+    finger("pointerup", 560, 150, 2);
+    expect(chartRoot()).not.toHaveClass("touch-none");
+  });
+
+  it("holds the browser's two-finger scroll over a chart that zooms x, and only there", () => {
+    const touchMove = (target: Element, touches: number) => {
+      const event = new Event("touchmove", { bubbles: true, cancelable: true });
+      Object.defineProperty(event, "touches", { value: { length: touches } });
+      target.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    const { unmount } = draw();
+    expect(touchMove(chartRoot(), 2)).toBe(true);
+    expect(touchMove(chartRoot(), 1)).toBe(false);
+    unmount();
+    draw({ zoomAxes: "y" });
+    expect(touchMove(chartRoot(), 2)).toBe(false);
+  });
+
+  it("does not pinch a chart that zooms only y", () => {
+    draw({ zoomAxes: "y" });
+    pinch(460, 560, 410, 610);
+    expect(bindings()[0]).toEqual({ x: null, y: {} });
+  });
+
+  it("still draws the band for a mouse", () => {
+    draw();
+    drag([160, 100], [760, 110]);
+    expect(bindings()[0].x).toEqual([100, 700]);
+  });
+});
+
 /* ── One axis, or none (0.8.0: bars, areas) ─────────────────────────────── */
 
 describe("zoomAxesFor on a one-axis chart", () => {

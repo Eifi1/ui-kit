@@ -41,8 +41,12 @@ const frame = () =>
 
 const surface = () => {
   const rect = document.querySelector<SVGRectElement>("rect[data-zoom-surface]")! as unknown as HTMLElement;
-  // The overlay's box starts at the chart origin, so client coordinates are chart ones.
-  rect.getBoundingClientRect = () => ({ left: 0, top: 0, width: 0, height: 0 }) as DOMRect;
+  // jsdom has no layout: the overlay's box is put where the plot is in the chart, whose
+  // own box starts at 0, so a client position is a position in the chart — what both
+  // the layer and recharts' wrapper read back.
+  const left = Number(rect.getAttribute("x"));
+  const top = Number(rect.getAttribute("y"));
+  rect.getBoundingClientRect = () => ({ left, top, width: 0, height: 0 }) as DOMRect;
   return rect;
 };
 const plot = () => {
@@ -114,5 +118,65 @@ describe("a reset clears the tooltip", () => {
     hover(x + width / 2, y + height / 2);
     await frame();
     expect(tooltip()).toContain("A");
+  });
+});
+
+/** Where the row at `value` is drawn, unzoomed: the domain is the rows' 0…20 with 4 % air
+ *  either side (`paddedDomain`). */
+function pxOf(value: number) {
+  const { x, width } = plot();
+  return x + ((value + 0.8) / 21.6) * width;
+}
+const xTicks = () =>
+  [...document.querySelectorAll(".recharts-xAxis-tick-labels tspan")].map((t) => Number(t.textContent));
+
+describe("one finger reads", () => {
+  it("shows the value under the finger from touch-down, follows it, and keeps it once lifted", async () => {
+    const { container } = draw();
+    pointer("pointerdown", pxOf(5), 150, { kind: "touch" });
+    await frame();
+    // The row's x, the series, its value: (5 × 7) mod 11 = 2.
+    expect(tooltip()).toBe("5A2");
+    pointer("pointermove", pxOf(15), 150, { kind: "touch" });
+    await frame();
+    expect(tooltip()).toBe("15A6");
+    // No band while the finger moves, and none to zoom into once it is lifted.
+    expect(container.querySelector("rect[stroke-dasharray]")).toBeNull();
+    pointer("pointerup", pxOf(15), 150, { kind: "touch" });
+    await frame();
+    expect(screen.queryByRole("button", { name: /reset zoom/i })).toBeNull();
+    expect(tooltip()).toBe("15A6");
+  });
+
+  it("leaves the mouse's band as it was", () => {
+    draw();
+    const before = xTicks();
+    bandZoom();
+    expect(screen.getByRole("button", { name: /reset zoom/i })).toBeInTheDocument();
+    expect(Math.min(...xTicks())).toBeGreaterThan(Math.min(...before));
+  });
+});
+
+describe("two fingers zoom", () => {
+  it("narrows the abscissa through the real scales as two fingers spread, and the one left down reads on", async () => {
+    draw();
+    const before = xTicks();
+    pointer("pointerdown", pxOf(9), 150, { id: 1, kind: "touch" });
+    pointer("pointerdown", pxOf(11), 150, { id: 2, kind: "touch" });
+    pointer("pointermove", pxOf(6), 150, { id: 1, kind: "touch" });
+    pointer("pointermove", pxOf(14), 150, { id: 2, kind: "touch" });
+    pointer("pointerup", pxOf(14), 150, { id: 2, kind: "touch" });
+    expect(screen.getByRole("button", { name: /reset zoom/i })).toBeInTheDocument();
+    const zoomed = xTicks();
+    expect(Math.min(...zoomed)).toBeGreaterThan(Math.min(...before));
+    expect(Math.max(...zoomed)).toBeLessThan(Math.max(...before));
+    // Four times the spread about the value 10: a window about 5.4 wide round it.
+    expect(Math.min(...zoomed)).toBeGreaterThanOrEqual(7);
+    expect(Math.max(...zoomed)).toBeLessThanOrEqual(13);
+    // Finger 1 is still down, and reads where it is: the plot's middle is now 10.
+    const { x, width } = plot();
+    pointer("pointermove", x + width / 2, 150, { id: 1, kind: "touch" });
+    await frame();
+    expect(tooltip()).toBe("10A4");
   });
 });
