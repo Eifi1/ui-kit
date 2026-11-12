@@ -7,8 +7,10 @@ import {
   extentOf,
   isWholeRange,
   panWindow,
+  pinchScale,
   pinchWindow,
   pinchZoomed,
+  zoomWindowAt,
 } from "../zoom-window";
 
 /** A sweep of 0…1000 on a plot 500 px wide: 2 units a pixel, unzoomed. */
@@ -107,6 +109,40 @@ describe("pinchZoomed", () => {
     expect(pinchZoomed([400, 600], [420, 620])).toBe(false);
     expect(pinchZoomed([400, 600], [400, 603])).toBe(false);
     expect(pinchZoomed([400, 600], [400, 605])).toBe(true);
+  });
+});
+
+describe("zoomWindowAt / pinchScale (a trackpad pinch)", () => {
+  it("shows the window narrower about the cursor: the value under it stays under it", () => {
+    // 100 px across a 500 px plot is a fifth of the way: the value 200 of 0…1000.
+    expect(zoomWindowAt([0, 1000], 500, 100, WIDTH, WHOLE)).toEqual([100, 600]);
+    // From a zoomed window: 250 px of [400, 600] is 500, and stays under 250 px.
+    expect(zoomWindowAt([400, 600], 100, 250, WIDTH, WHOLE)).toEqual([450, 550]);
+  });
+
+  it("widens about the cursor, stops at the range's edge and is never wider than the range", () => {
+    expect(zoomWindowAt([400, 600], 400, 250, WIDTH, WHOLE)).toEqual([300, 700]);
+    expect(zoomWindowAt([0, 200], 400, 0, WIDTH, WHOLE)).toEqual([0, 400]);
+    expect(zoomWindowAt([400, 600], 5000, 250, WIDTH, WHOLE)).toEqual([0, 1000]);
+  });
+
+  it("reads a cursor off the plot as the plot's own edge", () => {
+    expect(zoomWindowAt([0, 1000], 500, -80, WIDTH, WHOLE)).toEqual([0, 500]);
+    expect(zoomWindowAt([0, 1000], 500, 900, WIDTH, WHOLE)).toEqual([500, 1000]);
+  });
+
+  it("does nothing on a plot, a window or a span with no width", () => {
+    expect(zoomWindowAt([0, 1000], 500, 100, 0, WHOLE)).toEqual([0, 1000]);
+    expect(zoomWindowAt([5, 5], 500, 100, WIDTH, WHOLE)).toEqual([5, 5]);
+    expect(zoomWindowAt([0, 1000], 0, 100, WIDTH, WHOLE)).toEqual([0, 1000]);
+  });
+
+  it("keeps a pinch between the whole range and its floor, measured from where it began", () => {
+    // From [400, 600] (a fifth of the range), out to the whole range at most: ×0.2.
+    expect(pinchScale(0.01, [400, 600], WHOLE)).toBeCloseTo(0.2);
+    // In to 2 % of where it began at most: ×50.
+    expect(pinchScale(1000, [400, 600], WHOLE)).toBe(1 / PINCH_MIN_SHARE);
+    expect(pinchScale(3, [400, 600], WHOLE)).toBe(3);
   });
 });
 

@@ -1,6 +1,6 @@
 /**
  * The x window of a zoomed chart, moved by a gesture: the pure half of the chart zoom's
- * two-finger pinch and pan and of its overview strip (components/chart-zoom-core.tsx,
+ * two-finger pinch and pan, its trackpad pinch, and its overview strip (components/chart-zoom-core.tsx,
  * components/chart-zoom-overview.tsx), kept apart so every number can be checked on its
  * own. Internal (not exported from the package).
  *
@@ -87,6 +87,46 @@ export function pinchWindow(start: PinchStart, a: number, b: number, width: numb
   const under = start.window[0] + (((start.a + start.b) / 2) * was) / width;
   const from = under - (((a + b) / 2) * span) / width;
   return clampWindow([from, from + span], whole);
+}
+
+/**
+ * `window` shown `span` wide about the point `at` px across a plot `width` px wide: the value
+ * under that point stays under it, as a map zooms about the cursor. A trackpad pinch over
+ * the plot (Ctrl + wheel in Chrome, Edge and Firefox; WebKit's gesture events in Safari)
+ * and a mouse's Ctrl + wheel. A cursor off the plot counts as the edge it is past. Kept
+ * inside `whole`, and never wider (see {@link clampWindow}).
+ *
+ * Unlike {@link pinchWindow}, the point is read in the window on show, not the one the
+ * gesture began on: a trackpad holds the cursor still through a pinch, but a mouse moves
+ * between turns of the wheel, and each turn zooms about where it is now.
+ */
+export function zoomWindowAt(
+  window: XWindow,
+  span: number,
+  at: number,
+  width: number,
+  whole: XWindow,
+): [number, number] {
+  const was = window[1] - window[0];
+  if (!(width > 0) || !(was > 0) || !(span > 0)) return [window[0], window[1]];
+  const share = clamp(at / width, 0, 1);
+  const under = window[0] + share * was;
+  const room = whole[1] - whole[0];
+  const next = room > 0 ? Math.min(span, room) : span;
+  const from = under - share * next;
+  return clampWindow([from, from + next], whole);
+}
+
+/**
+ * How many times larger a trackpad pinch may show the window it began on, `start`: no
+ * further out than the whole range, no further in than {@link PINCH_MIN_SHARE} of `start`,
+ * as two fingers on a touch screen. Kept as the gesture goes, so a pinch carried out past
+ * the whole range turns back in at once rather than first unwinding what it overshot.
+ */
+export function pinchScale(scale: number, start: XWindow, whole: XWindow): number {
+  const was = start[1] - start[0];
+  const room = whole[1] - whole[0];
+  return clamp(scale, room > 0 && was > 0 ? was / room : 0, 1 / PINCH_MIN_SHARE);
 }
 
 /** Whether a two-finger gesture from `from` to `to` changed the window's width enough to be

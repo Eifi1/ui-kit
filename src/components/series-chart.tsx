@@ -667,8 +667,10 @@ export interface SeriesChartProps<TRow extends object = object> {
    * Ignored by `StaticSeriesChart`, which does not zoom.
    *
    * On a touch screen one finger reads (the tooltip follows it) and two fingers zoom and
-   * pan x, on a chart whose zoom names x; a mouse or a pen drags the band. While zoomed,
-   * Back undoes one zoom step and Reset zoom shows the whole range.
+   * pan x, on a chart whose zoom names x; a mouse or a pen drags the band. On such a
+   * chart a trackpad pinch, or Ctrl (⌘) + wheel, zooms x about the cursor instead of the
+   * page; a plain wheel still scrolls. While zoomed, Back undoes one zoom step (a band,
+   * or a whole pinch) and Reset zoom shows the whole range.
    */
   zoomAxes?: ZoomAxesSetting;
   /**

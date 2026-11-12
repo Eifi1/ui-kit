@@ -15,12 +15,13 @@
 //
 // The zoom is VIEW state and lives here, never in a query or a store: it is where
 // somebody is looking, and a chart whose data reloads should not lose it. It is cleared
-// by the reset button, by a double click, by Back past the first zoom step, by two
-// fingers pinched out to the whole range, and by nothing else.
+// by the reset button, by a double click, by Back past the first zoom step, by a pinch
+// (two fingers or a trackpad) out to the whole range, and by nothing else.
 //
 // On a touch screen one finger READS (the tooltip follows it) and two fingers zoom and
-// pan x (`ZoomLayer`); a mouse or a pen draws the band. While x is zoomed an overview
-// strip under the plot pans it (./chart-zoom-overview).
+// pan x (`ZoomLayer`); a mouse or a pen draws the band; a trackpad pinch, or Ctrl + wheel,
+// zooms x about the cursor. While x is zoomed an overview strip under the plot pans it
+// (./chart-zoom-overview).
 //
 // Everything with a decision in it is a pure exported function below (`zoomAxesFor`,
 // `selectionFromDrag`, `zoomAfter`, `zoomDomains`, `fitYToX`, `fitXToY`, `zoomStep`,
@@ -41,12 +42,22 @@ import {
   useRef,
   useState,
 } from "react";
-import type { ComponentType, Dispatch, PointerEvent, ReactNode, SetStateAction } from "react";
+import type { ComponentType, Dispatch, PointerEvent, ReactNode, RefObject, SetStateAction } from "react";
 import { createPortal } from "react-dom";
 import { usePlotArea, useXAxisInverseScale, useYAxisInverseScale, type InverseScaleFunction } from "recharts";
 import { Undo2, X } from "lucide-react";
 import { cn } from "../lib/cn";
-import { extentOf, isWholeRange, pinchWindow, pinchZoomed, type PinchStart } from "../lib/zoom-window";
+import {
+  extentOf,
+  isWholeRange,
+  pinchScale,
+  pinchWindow,
+  pinchZoomed,
+  zoomWindowAt,
+  type PinchStart,
+  type XWindow,
+} from "../lib/zoom-window";
+import { wheelZoomFactor } from "../lib/zoom-view";
 import { FOCUS_RING } from "./focus-ring";
 import { ZoomOverview } from "./chart-zoom-overview";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
@@ -371,7 +382,7 @@ export interface ZoomSnapshot {
 /**
  * The view, and the view before each zoom step, oldest first: what Back walks (Kurvenschmiede
  * production feedback #4, Marcel's design of 2026-11-12). A step is a zoom: a band, or a
- * two-finger gesture that changed the window's width. A pan is not: it moves the view the
+ * two-finger gesture or a trackpad pinch that changed the window's width. A pan is not: it moves the view the
  * step left, so Back returns to where the reader was before that zoom, whatever was
  * panned since. Reset empties it.
  */
@@ -715,6 +726,7 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
         ...zoomDomains(state, source),
         layer: (
           <ZoomLayer
+            root={root}
             axisIds={source.axes.map((axis) => axis.id)}
             only={only}
             whole={dataWhole}
@@ -799,6 +811,40 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
 }
 
 /**
+ * How long a trackpad pinch's wheel may pause before the pinch counts as over: the end of
+ * one zoom step for Back. Chrome sends a pinch as a wheel event a frame, and the notches of
+ * one spin of a mouse wheel with Ctrl held come well inside it; a reader who pinches again
+ * after a pause has made a second zoom.
+ */
+const TRACKPAD_QUIET_MS = 300;
+
+/** WebKit's GestureEvent, which lib.dom does not declare: Safari's two-finger pinch, on a
+ *  Mac's trackpad and on iOS. `scale` is the fingers' spread over their spread at
+ *  `gesturestart` (1 there). Only the fields read here. */
+interface WebKitGestureEvent extends UIEvent {
+  readonly scale: number;
+  readonly clientX: number;
+}
+const WEBKIT_GESTURE_EVENTS = ["gesturestart", "gesturechange", "gestureend"] as const;
+
+/** A trackpad pinch under way. One pinch may arrive both ways at once; the way it came
+ *  first zooms, and the other is only kept from zooming the page. */
+interface TrackpadPinch {
+  via: "wheel" | "safari";
+  /** The window it began on, and the one it shows now: unset until it first moves
+   *  anything (a Safari pinch begins at its first `gesturechange`). */
+  start?: XWindow;
+  window?: XWindow;
+  /** How many times larger than `start` it shows the window (see `pinchScale`). */
+  scale: number;
+  /** Whether it changed the window's width enough to be a zoom step (`pinchZoomed`). */
+  zooming: boolean;
+  /** Ended (Safari's `gestureend`), and kept until the wheel is quiet: a Ctrl + wheel that
+   *  trails it is the same pinch's. */
+  over: boolean;
+}
+
+/**
  * The part that lives INSIDE the recharts chart, where recharts will say where the plot
  * is and what value a pixel is.
  *
@@ -820,13 +866,16 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
  * - Two fingers zoom x about their midpoint and, as they move together, pan it
  *   (`pinchWindow`): tracked by pointer id, as ZoomableImage tracks its pinch. Lifting one
  *   ends the pinch, and the finger still down reads on.
+ * - A trackpad pinch zooms x about the cursor (`zoomWindowAt`), one step a pinch (0.62).
  *
+
  * Nothing to assistive technology (0.52, refactor audit 2026-10-30, DSP-5): it was a
  * `role="application"` named by the drag hint, which could not take focus — the one name
  * on an otherwise unnamed chart. The hint is in the chart's description now
  * (`SeriesChart`'s figure), and `data-zoom-surface` is how a test finds the rect.
  */
 function ZoomLayer({
+  root,
   axisIds,
   only,
   whole: dataWhole,
@@ -840,17 +889,20 @@ function ZoomLayer({
   stripRange,
   onPan,
 }: {
+  /** The zoomable chart's own root, which hears a trackpad pinch over any of it. */
+  root: RefObject<HTMLDivElement | null>;
   axisIds: string[];
   only?: "x" | "y";
   /** The range a pinch stops at when the chart does not say its own (see `ZoomRange`). */
   whole?: [number, number];
   /** The x window on show, `undefined` for the whole range. */
   window?: [number, number];
-  /** Whether two fingers zoom x. */
+  /** Whether two fingers, and a trackpad pinch, zoom x. */
   pinchable: boolean;
   onZoom: (selection: ZoomSelection) => void;
-  /** A two-finger gesture: its start, each move with the window it leaves (`undefined` once
-   *  it shows the whole range) and whether it has zoomed rather than panned, and its end. */
+  /** A two-finger gesture, or a trackpad pinch: its start, each move with the window it
+   *  leaves (`undefined` once it shows the whole range) and whether it has zoomed rather
+   *  than panned, and its end. */
   onPinch: (phase: "start" | "move" | "end", window?: [number, number], zooming?: boolean) => void;
   onReset: () => void;
   /** Where the overview strip goes while x is zoomed; `null` draws none. */
@@ -877,6 +929,147 @@ function ZoomLayer({
   const fingers = useRef(new Map<number, { x: number; y: number }>());
   // The two-finger gesture under way: its fingers, where it began, and whether it zooms.
   const pinch = useRef<{ ids: [number, number]; start: PinchStart; zooming: boolean } | null>(null);
+  // The overlay, whose screen box is where the plot is: what a trackpad pinch's cursor is
+  // read against.
+  const surface = useRef<SVGRectElement>(null);
+  // The trackpad pinch under way, and the timer that ends a wheel's (see `TRACKPAD_QUIET_MS`).
+  const trackpad = useRef<TrackpadPinch | null>(null);
+  const quiet = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  /** The window on show: the zoom's own while zoomed (the axis draws exactly that, under
+   *  `allowDataOverflow`), else the whole range as the chart draws it — said by the chart,
+   *  or read back off the x scale at the plot's edges. */
+  const shown = (): [number, number] | undefined => {
+    if (window ?? drawnWhole) return window ?? drawnWhole;
+    if (!plot) return dataWhole;
+    const from = Number(xInverse?.(plot.x));
+    const to = Number(xInverse?.(plot.x + plot.width));
+    return Number.isFinite(from) && Number.isFinite(to) && to > from ? [from, to] : dataWhole;
+  };
+
+  /* A trackpad pinch (0.62): Chrome, Edge and Firefox send it as a wheel with `ctrlKey`,
+     Safari as WebKit's gesture events, and either left alone zooms the whole page. Over a
+     chart whose zoom names x it zooms x about the cursor instead, as ZoomableImage zooms
+     its picture, and a mouse's Ctrl (⌘) + wheel does the same. Heard on the chart's root,
+     so the axes and the strip take it too; a plain wheel still scrolls the page. Each
+     pinch is one step for Back, through the two-finger gesture's own `onPinch`. */
+
+  /** The pinch, `now`, `scale` times larger than where it began, about the cursor at
+   *  `clientX`. */
+  const pinchTo = (now: TrackpadPinch, scale: number, clientX: number) => {
+    const box = surface.current?.getBoundingClientRect();
+    if (!box || !plot || !whole || !now.start || !now.window) return;
+    now.scale = pinchScale(scale, now.start, whole);
+    const span = (now.start[1] - now.start[0]) / now.scale;
+    const next = zoomWindowAt(now.window, span, clientX - box.left, plot.width, whole);
+    now.window = next;
+    now.zooming = pinchZoomed(now.start, next);
+    onPinch("move", isWholeRange(next, whole) ? undefined : next, now.zooming);
+  };
+  /** The pinch begun on the window on show: the view Back returns to once it has zoomed. */
+  const beginTrackpad = (now: TrackpadPinch) => {
+    const from = shown();
+    if (!from) return false;
+    now.start = from;
+    now.window = from;
+    onPinch("start");
+    return true;
+  };
+  /** The pinch over: one zoom step, if it zoomed. Kept as `over` until the wheel is quiet. */
+  const endTrackpad = () => {
+    const now = trackpad.current;
+    if (!now) return;
+    if (now.start && !now.over) onPinch("end", undefined, now.zooming);
+    now.over = true;
+  };
+  const onQuiet = useEffectEvent(() => {
+    endTrackpad();
+    trackpad.current = null;
+  });
+  /** (Re)starts the quiet spell after which the pinch is over. */
+  const untilQuiet = useEffectEvent(() => {
+    clearTimeout(quiet.current);
+    quiet.current = setTimeout(() => onQuiet(), TRACKPAD_QUIET_MS);
+  });
+
+  const onWheel = useEffectEvent((event: WheelEvent) => {
+    // A plain wheel scrolls the page, as anywhere else.
+    if (!pinchable || !(event.ctrlKey || event.metaKey) || !plot || !(plot.width > 0) || !whole) return;
+    event.preventDefault();
+    const now = trackpad.current;
+    // Two fingers on a touch screen are their pointers'. A Safari pinch is its gesture
+    // events': a wheel beside them, or trailing them, is the same pinch, which zooms once.
+    if (pinch.current) return;
+    if (now?.via === "safari") {
+      if (now.over) untilQuiet();
+      return;
+    }
+    untilQuiet();
+    let wheel = now;
+    if (!wheel) {
+      wheel = { via: "wheel", scale: 1, zooming: false, over: false };
+      if (!beginTrackpad(wheel)) return;
+      trackpad.current = wheel;
+    }
+    // A turn and its reverse cancel, and a trackpad's many small deltas add up to what one
+    // notch does: ZoomableImage's factor, measured from where the pinch began.
+    pinchTo(wheel, wheel.scale * wheelZoomFactor(event.deltaY, event.deltaMode, plot.height), event.clientX);
+  });
+
+  const onSafariGesture = useEffectEvent((event: WebKitGestureEvent) => {
+    if (!pinchable || !plot || !(plot.width > 0) || !whole) return;
+    event.preventDefault();
+    const now = trackpad.current;
+    // iOS Safari sends a touch screen's pinch as these events too, beside the pointer
+    // events two fingers already follow: applied both ways, one pinch would zoom twice.
+    // A Mac's trackpad puts no finger down on the plot, so one there says the pinch is the
+    // fingers', and this side only prevents the event (what keeps iOS from zooming the
+    // page). Asked on every event: two fingers that land together may send `gesturestart`
+    // before either `pointerdown` (ZoomableImage's rule, 0.60).
+    if (fingers.current.size > 0) {
+      if (now?.via === "safari") {
+        endTrackpad();
+        trackpad.current = null;
+      }
+      return;
+    }
+    if (event.type === "gesturestart") {
+      // A wheel pinch under way is this same pinch, arriving both ways.
+      if (now?.via === "wheel") return;
+      clearTimeout(quiet.current);
+      // Begun at its first change, not here: the fingers may yet land on the plot.
+      trackpad.current = { via: "safari", scale: 1, zooming: false, over: false };
+      return;
+    }
+    if (now?.via !== "safari" || now.over) return;
+    if (event.type === "gestureend") {
+      endTrackpad();
+      untilQuiet();
+      return;
+    }
+    // `scale` is the fingers' spread over their spread at `gesturestart`; a missing one
+    // would make the window NaN wide.
+    if (!(event.scale > 0) || (!now.start && !beginTrackpad(now))) return;
+    pinchTo(now, event.scale, event.clientX);
+  });
+
+  // Native listeners, because each must be able to cancel: React attaches `wheel` as
+  // passive, where `preventDefault` is ignored, and has no `gesture*` events at all.
+  useEffect(() => {
+    const node = root.current;
+    if (!node) return;
+    const wheel = (event: WheelEvent) => onWheel(event);
+    // lib.dom types an unknown event's listener as taking an `Event`.
+    const gesture = (event: Event) => onSafariGesture(event as WebKitGestureEvent);
+    node.addEventListener("wheel", wheel, { passive: false });
+    for (const type of WEBKIT_GESTURE_EVENTS) node.addEventListener(type, gesture);
+    const timer = quiet;
+    return () => {
+      node.removeEventListener("wheel", wheel);
+      for (const type of WEBKIT_GESTURE_EVENTS) node.removeEventListener(type, gesture);
+      clearTimeout(timer.current);
+    };
+  }, [root]);
 
   if (!plot || plot.width <= 0 || plot.height <= 0) return null;
 
@@ -909,16 +1102,6 @@ function ZoomLayer({
     if (selection) onZoom(selection);
   };
 
-  /** The window on show: the zoom's own while zoomed (the axis draws exactly that, under
-   *  `allowDataOverflow`), else the whole range as the chart draws it — said by the chart,
-   *  or read back off the x scale at the plot's edges. */
-  const shown = (): [number, number] | undefined => {
-    if (window ?? drawnWhole) return window ?? drawnWhole;
-    const from = Number(xInverse?.(plot.x));
-    const to = Number(xInverse?.(plot.x + plot.width));
-    return Number.isFinite(from) && Number.isFinite(to) && to > from ? [from, to] : dataWhole;
-  };
-
   const touchDown = (event: PointerEvent<SVGRectElement>) => {
     draggedRef.current = false;
     const down = fingers.current;
@@ -932,6 +1115,13 @@ function ZoomLayer({
       return;
     }
     if (down.size !== 2 || !pinchable || !whole || pinch.current) return;
+    // Two fingers on the plot are a touch screen's pinch: a trackpad pinch that began before
+    // them (iOS's gesture events) is over, as one step, before this one starts.
+    if (trackpad.current) {
+      endTrackpad();
+      trackpad.current = null;
+      clearTimeout(quiet.current);
+    }
     const from = shown();
     if (!from) return;
     const [[idA, a], [idB, b]] = [...down.entries()];
@@ -999,6 +1189,7 @@ function ZoomLayer({
         y={plot.y}
         width={plot.width}
         height={plot.height}
+        ref={surface}
         // `transparent`, not `none`: an unpainted shape takes no pointer events.
         fill="transparent"
         data-zoom-surface=""

@@ -198,6 +198,24 @@ describe("two fingers zoom", () => {
   });
 });
 
+describe("a trackpad pinch, through real recharts", () => {
+  it("narrows the abscissa about the cursor on Ctrl + wheel anywhere over the chart; a plain wheel scrolls", () => {
+    const { container } = draw();
+    const before = xTicks();
+    surface();
+    // The chart's own root hears it: over the axes and the strip as over the plot.
+    const root = container.firstElementChild!;
+    expect(fireEvent.wheel(root, { deltaY: 100, clientX: pxOf(10), clientY: 150 })).toBe(true);
+    expect(xTicks()).toEqual(before);
+    // −300 px of wheel shows e^0.6 ≈ 1.8 times less, about the value 10 under the cursor.
+    expect(fireEvent.wheel(root, { deltaY: -300, ctrlKey: true, clientX: pxOf(10), clientY: 150 })).toBe(false);
+    const zoomed = xTicks();
+    expect(Math.min(...zoomed)).toBeGreaterThanOrEqual(4);
+    expect(Math.max(...zoomed)).toBeLessThanOrEqual(16);
+    expect(screen.getByRole("button", { name: /reset zoom/i })).toBeInTheDocument();
+  });
+});
+
 describe("the overview strip, through real recharts", () => {
   const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"].map((period, i) => ({ period, v: i * 3 }));
   const months = (props: Partial<SeriesChartProps> = {}) =>

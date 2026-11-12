@@ -770,7 +770,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       zoomWindow: "Plage visible",
       zoomWindowRange: (from, to) => `de ${from} à ${to}`,
       zoomHint:
-        "Faites glisser pour zoomer\u00a0: une sélection à peu près carrée zoome sur les deux axes, une sélection longue et étroite sur son seul axe. Sur un écran tactile, un doigt lit les valeurs et deux doigts zooment et déplacent. «\u00a0Retour\u00a0» annule un pas de zoom\u00a0; un double-clic ou «\u00a0Réinitialiser le zoom\u00a0» affiche à nouveau toute la plage.",
+        "Faites glisser pour zoomer\u00a0: une sélection à peu près carrée zoome sur les deux axes, une sélection longue et étroite sur son seul axe. Sur un écran tactile, un doigt lit les valeurs et deux doigts zooment et déplacent. Sur un pavé tactile, pincez pour zoomer\u00a0; avec une souris, maintenez Ctrl et tournez la molette. «\u00a0Retour\u00a0» annule un pas de zoom\u00a0; un double-clic ou «\u00a0Réinitialiser le zoom\u00a0» affiche à nouveau toute la plage.",
       empty: "Aucune donnée",
       legend: "Séries",
       points: "Valeurs du graphique",

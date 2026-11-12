@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import {
   NO_HISTORY,
   NO_ZOOM,
@@ -659,6 +659,144 @@ describe("withChartZoom — on a touch screen", () => {
     draw();
     drag([160, 100], [760, 110]);
     expect(bindings()[0].x).toEqual([100, 700]);
+  });
+});
+
+/* ── A trackpad pinch (0.62: Ctrl + wheel, Safari's gesture events) ─────── */
+
+/** WebKit's GestureEvent, as Safari sends a trackpad pinch: jsdom has none, so a plain
+ *  cancelable Event with the fields Safari gives it. `false` when it was prevented. */
+function gesture(type: "gesturestart" | "gesturechange" | "gestureend", scale: number, x: number) {
+  overlay();
+  const event = new Event(type, { bubbles: true, cancelable: true });
+  Object.defineProperties(event, { scale: { value: scale }, clientX: { value: x }, clientY: { value: 150 } });
+  return fireEvent(chartRoot(), event);
+}
+
+/** A turn of the wheel over the chart, or a trackpad pinch as Chrome sends it (`ctrlKey`).
+ *  `false` when it was prevented. */
+const wheel = (deltaY: number, x: number, keys: { ctrlKey?: boolean; metaKey?: boolean } = { ctrlKey: true }) => {
+  overlay();
+  return fireEvent.wheel(chartRoot(), { deltaY, clientX: x, clientY: 150, ...keys });
+};
+
+describe("withChartZoom — a trackpad pinch", () => {
+  const draw = (props: { zoomAxes?: ZoomAxesSetting } = {}) =>
+    render(<Zoomable axes={[{ id: "y" }]} rows={SWEEP} series={[{ key: "v" }]} {...props} />);
+  /** Past the quiet spell that ends a wheel gesture. */
+  const quiet = () => act(() => vi.advanceTimersByTime(1000));
+  afterEach(() => vi.useRealTimers());
+
+  it("zooms x about the cursor on Ctrl or ⌘ + wheel, and leaves a plain wheel to scroll the page", () => {
+    draw();
+    // Not prevented: the page scrolls, as anywhere else.
+    expect(wheel(-100, 510, {})).toBe(true);
+    expect(bindings()[0].x).toBeNull();
+    // Chart px 510 is the plot's middle, the value 450; −100 px of wheel is ×e^0.2.
+    expect(wheel(-100, 510)).toBe(false);
+    const [from, to] = bindings()[0].x;
+    expect(to - from).toBeCloseTo(900 / Math.exp(0.2));
+    expect((from + to) / 2).toBeCloseTo(450);
+    // ⌘ on a Mac's mouse; the zoom goes on from where it is, about the cursor.
+    expect(wheel(-100, 285, { metaKey: true })).toBe(false);
+    const [from2, to2] = bindings()[0].x;
+    expect(to2 - from2).toBeCloseTo(900 / Math.exp(0.4));
+    // 285 is a quarter of the plot: the value under it before the turn stays under it.
+    expect(from2 + (to2 - from2) / 4).toBeCloseTo(from + (to - from) / 4);
+    // A pinch is an x band: y refits to what is inside.
+    expect(bindings()[0].y.y).toBeDefined();
+  });
+
+  it("is one zoom step for a whole gesture, ended by a quiet spell", () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    draw();
+    wheel(-40, 510);
+    wheel(-40, 510);
+    wheel(-40, 510);
+    // Still pinching: no step yet, so no Back.
+    expect(screen.queryByRole("button", { name: "Back" })).toBeNull();
+    quiet();
+    const first = bindings()[0].x;
+    expect(screen.getByRole("button", { name: "Back" })).toBeInTheDocument();
+    wheel(-100, 510);
+    quiet();
+    fireEvent.click(screen.getByRole("button", { name: "Back" }));
+    expect(bindings()[0].x).toEqual(first);
+    fireEvent.click(screen.getByRole("button", { name: "Back" }));
+    expect(bindings()[0].x).toBeNull();
+  });
+
+  it("ends the zoom when it pinches out to the whole range, with nothing to go back to", () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    draw();
+    drag([160, 100], [760, 110]);
+    wheel(2000, 510);
+    quiet();
+    expect(bindings()[0]).toEqual({ x: null, y: {} });
+    expect(screen.queryByRole("button", { name: /reset zoom/i })).toBeNull();
+    // Out past the whole range over an unzoomed chart is still the chart's: no page zoom.
+    expect(wheel(500, 510)).toBe(false);
+  });
+
+  it("follows Safari's gesture events from the window the pinch began on, one step when it ends", () => {
+    draw();
+    // Prevented, or Safari zooms the whole page.
+    expect(gesture("gesturestart", 1, 510)).toBe(false);
+    expect(gesture("gesturechange", 2, 510)).toBe(false);
+    expect(bindings()[0].x).toEqual([225, 675]);
+    // `scale` counts from the start of the pinch: 4, not 2 × 2.
+    gesture("gesturechange", 4, 510);
+    expect(bindings()[0].x).toEqual([337.5, 562.5]);
+    expect(screen.queryByRole("button", { name: "Back" })).toBeNull();
+    expect(gesture("gestureend", 4, 510)).toBe(false);
+    expect(screen.getByRole("button", { name: "Back" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Back" }));
+    expect(bindings()[0].x).toBeNull();
+  });
+
+  it("zooms once when one pinch arrives both ways, as gesture events and as Ctrl + wheel", () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    draw();
+    gesture("gesturestart", 1, 510);
+    expect(wheel(-100, 510)).toBe(false);
+    gesture("gesturechange", 2, 510);
+    expect(wheel(-100, 510)).toBe(false);
+    expect(bindings()[0].x).toEqual([225, 675]);
+    gesture("gestureend", 2, 510);
+    // A wheel that trails the gesture is the same pinch's.
+    expect(wheel(-100, 510)).toBe(false);
+    expect(bindings()[0].x).toEqual([225, 675]);
+    quiet();
+    fireEvent.click(screen.getByRole("button", { name: "Back" }));
+    expect(bindings()[0].x).toBeNull();
+    // The other way round: a wheel gesture under way keeps Safari's events from zooming again.
+    wheel(-100, 510);
+    const wheeled = bindings()[0].x;
+    gesture("gesturestart", 1, 510);
+    gesture("gesturechange", 3, 510);
+    expect(bindings()[0].x).toEqual(wheeled);
+  });
+
+  it("leaves a touch screen's pinch to its pointers: iOS's gesture events beside them are only prevented", () => {
+    draw();
+    finger("pointerdown", 460, 150, 1);
+    finger("pointerdown", 560, 150, 2);
+    expect(gesture("gesturestart", 1, 510)).toBe(false);
+    expect(gesture("gesturechange", 2, 510)).toBe(false);
+    expect(bindings()[0].x).toBeNull();
+    finger("pointermove", 410, 150, 1);
+    finger("pointermove", 610, 150, 2);
+    expect(bindings()[0].x).toEqual([225, 675]);
+    gesture("gesturechange", 4, 510);
+    expect(bindings()[0].x).toEqual([225, 675]);
+  });
+
+  it("leaves the page's zoom alone over a chart whose zoom names no x", () => {
+    draw({ zoomAxes: "y" });
+    expect(wheel(-100, 510)).toBe(true);
+    expect(gesture("gesturestart", 1, 510)).toBe(true);
+    expect(gesture("gesturechange", 2, 510)).toBe(true);
+    expect(bindings()[0]).toEqual({ x: null, y: {} });
   });
 });
 
