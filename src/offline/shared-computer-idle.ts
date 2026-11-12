@@ -111,7 +111,10 @@ export function useSharedComputerIdleSignOut({
     const onShown = () => {
       if (document.visibilityState === "visible") presence(false);
     };
-    const onPageShow = () => presence(false);
+    // Back to this page from the back-forward cache: the page's memory, and so a shared
+    // session kept there, came back with it, though the person may have left for another site
+    // in this tab. Ended at once, as a reload ends it (0.62).
+    const onPageShow = (event: PageTransitionEvent) => (event.persisted ? end() : presence(false));
     const listen = { capture: true, passive: true } as const;
     for (const type of INPUT_EVENTS) window.addEventListener(type, onInput, listen);
     document.addEventListener("visibilitychange", onShown);

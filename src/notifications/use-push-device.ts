@@ -4,6 +4,7 @@ import { useMediaQuery } from "../hooks/use-media-query";
 import { httpStatusOf } from "../lib/http-status";
 import { PUSH_SUBSCRIPTION_CHANGED, keyBytes, pushSubscriptionInput as inputOf } from "./push-worker";
 import type { PushSubscriptionInput } from "./push-worker";
+import { isSharedComputer } from "../offline/shared-computer";
 
 export { PUSH_SUBSCRIPTION_CHANGED };
 export type { PushSubscriptionInput };
@@ -40,6 +41,14 @@ export class PushDeviceError extends Error {
 }
 
 export interface UsePushDeviceOptions {
+  /**
+   * The person ticked "This is a shared computer" (0.62, Marcel 2026-11-13): `enable` refuses
+   * (answers `false`, asks the browser nothing), since a push subscription belongs to the
+   * browser and would keep delivering their notifications after they leave. Default
+   * `isSharedComputer()` (`@eifi1/ui-kit/offline`), read at each `enable`. `PushDeviceSetting`
+   * says why; an app's own control must say so too.
+   */
+  sharedComputer?: boolean;
   /** `GET /notifications/push-key` → its `key`; `""` when push is off on the server. */
   pushKey: () => Promise<string>;
   /** `POST /notifications/devices`. A 409 (another account's endpoint) is recovered
@@ -391,6 +400,8 @@ export function usePushDevice(options: UsePushDeviceOptions): PushDevice {
 
   const enable = useCallback(async (): Promise<boolean> => {
     if (!supported) return false;
+    // Not on a shared computer: the subscription would outlive the person's visit (0.62).
+    if (latest.current.sharedComputer ?? isSharedComputer()) return false;
     const { pushKey, register, isEndpointTaken = defaultEndpointTaken } = latest.current;
     setBusy(true);
     try {

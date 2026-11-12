@@ -210,6 +210,26 @@ describe("a tab whose timers slept", () => {
   });
 });
 
+describe("a page back from the back-forward cache (0.62)", () => {
+  it("ends the session at once, inside the idle limit too: the page's memory came back with it", () => {
+    const restored = mount();
+    sleep(MINUTE);
+    act(() => {
+      const event = new Event("pageshow") as Event & { persisted: boolean };
+      Object.defineProperty(event, "persisted", { value: true });
+      window.dispatchEvent(event);
+    });
+    expect(restored.onSignOut).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves a first load's pageshow alone", () => {
+    const loaded = mount();
+    sleep(MINUTE);
+    fire(window, "pageshow");
+    expect(loaded.onSignOut).not.toHaveBeenCalled();
+  });
+});
+
 describe("when it does nothing", () => {
   it("on a computer not marked shared (the default reads isSharedComputer())", () => {
     setSharedComputer(false);
