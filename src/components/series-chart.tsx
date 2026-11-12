@@ -1453,7 +1453,7 @@ function SeriesPlot({
     value instanceof Date ? dateFormat.format(value) : typeof value === "number" ? number(value) : String(value ?? "");
   const tickAt = (position: number): SeriesChartXTick => ({
     value: model.valueAt(position),
-    ...(model.kind === "category" ? { index: Math.round(position) } : {}),
+    ...(model.slotAt ? { index: model.slotAt(position) } : {}),
     ...(timeUnit ? { unit: timeUnit.unit } : {}),
   });
   const defaultFormat = (position: number, tick: SeriesChartXTick) =>

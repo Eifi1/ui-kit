@@ -236,6 +236,20 @@ describe("the overview strip, through real recharts", () => {
     expect(now - max).toBeLessThan(1e-9);
   });
 
+  it("names the last slot, not nothing, once the window reaches the half slot of air at the end", () => {
+    const format = vi.fn((_: number, tick: { value: unknown; index?: number }) => String(tick.value));
+    months({ x: { type: "category", key: "period", format } });
+    bandZoom();
+    const slider = screen.getByRole("slider", { name: "Visible range" });
+    fireEvent.keyDown(slider, { key: "End" });
+    // The window ends at 7.5, half a slot past Aug: that edge is Aug's.
+    expect(slider.getAttribute("aria-valuetext")).toMatch(/ to Aug$/);
+    fireEvent.keyDown(slider, { key: "Home" });
+    expect(slider.getAttribute("aria-valuetext")).toMatch(/^Jan to /);
+    // An app's format that looks its row up by index is never handed one past the rows.
+    for (const [, tick] of format.mock.calls) expect(tick.index ?? 0).toBeLessThan(MONTHS.length);
+  });
+
   it("never reaches the chart's drilldown with a click", async () => {
     const onPointClick = vi.fn();
     months({ onPointClick });
