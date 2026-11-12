@@ -235,3 +235,25 @@ describe("the overview strip, through real recharts", () => {
     expect(onPointClick).not.toHaveBeenCalled();
   });
 });
+
+describe("the readout above a zoomable chart (0.61 release sweep)", () => {
+  /** The readout row's class on its heading's gap, read off the row's own class list. */
+  const gap = () => document.querySelector("[data-tooltip-readout]")!.className.match(/pe-(\d+)/)?.[1];
+
+  it("keeps 0.60's 8rem until the chart is zoomed, and 12rem for Back and Reset zoom while it is", async () => {
+    // A phone at Extra large cut the heading ("Time (s)") for buttons that were not there.
+    draw({ tooltip: { placement: "above" } });
+    await frame();
+    expect(gap()).toBe("32");
+    const { x, y, width, height } = plot();
+    pointer("pointerdown", x + width * 0.2, y + 10);
+    pointer("pointermove", x + width * 0.6, y + height - 10);
+    pointer("pointerup", x + width * 0.6, y + height - 10);
+    await frame();
+    expect(screen.getByRole("button", { name: /back/i })).toBeInTheDocument();
+    expect(gap()).toBe("48");
+    fireEvent.click(screen.getByRole("button", { name: /reset zoom/i }));
+    await frame();
+    expect(gap()).toBe("32");
+  });
+});

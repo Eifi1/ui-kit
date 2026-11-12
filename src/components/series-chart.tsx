@@ -1953,6 +1953,8 @@ function SeriesPlot({
     </ChartContainer>
   );
   if (!inRow) return chart;
+  // Back and Reset zoom stand in the readout's corner only while the chart is zoomed.
+  const zoomedNow = !!zoom?.layer && (zoom.xDomain !== undefined || Object.keys(zoom.yDomains).length > 0);
   // The row's own box, reserved from the first render: its idle state has the cells the
   // active one will, so the first tap fills it in rather than pushing the plot down.
   const row = (
@@ -1962,10 +1964,13 @@ function SeriesPlot({
       className={cn(
         "shrink-0",
         // Above, the heading line shares the top corner with the zoom's buttons: Back and
-        // Reset zoom on a chart that zooms, about 11rem in German at the micro size
-        // ("Zurück", "Zoom zurücksetzen"), where Reset alone took 8.
+        // Reset zoom, about 11rem in German at the micro size ("Zurück", "Zoom
+        // zurücksetzen"), where Reset alone took 8. The two show only WHILE zoomed, so the
+        // wider gap is reserved only then; unzoomed the heading keeps 0.60's 8rem, or a
+        // phone at Extra large cut "Time (s)" for buttons that were not there (the 0.61
+        // release sweep: series-chart at 360 and 390px).
         placement === "above"
-          ? cn("pb-2", zoom?.layer ? "[&_[data-readout-heading]]:pe-48" : "[&_[data-readout-heading]]:pe-32")
+          ? cn("pb-2", zoomedNow ? "[&_[data-readout-heading]]:pe-48" : "[&_[data-readout-heading]]:pe-32")
           : "pt-2",
       )}
     />
