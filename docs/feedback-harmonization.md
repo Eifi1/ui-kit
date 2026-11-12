@@ -457,7 +457,7 @@ Columns, in order (kit `DataTable`, `urlSync`, `storageKey="feedback"`, newest f
 | 4 | Subject / Betreff | title + env chip (non-prod `context.environment`, upper case) + **Rework** / **Rework ×{{count}}** chip (DE Nacharbeit / Nacharbeit ×{{count}}) | text (title + env) | card heading |
 | 5 | User / Nutzer | display name → email → `user #id`; erased → <deleted user> | text | |
 | 6 | Email / E-Mail | `user_email` → `context.user_email` | text | hidden |
-| 7 | URL | link (`noRowLink`): text = pathname, `href` = the path only (ui-kit 0.52: the query is the reporter's to write; a one-shot path shows as text with Copy); aria "Open page" / "Seite öffnen" | text | hidden |
+| 7 | URL | link (`noRowLink`): text = `href` = the path only (ui-kit 0.52: the query is the reporter's to write; a one-shot path shows as text with Copy), with the params the app lists in `pageLinkParams` (0.61, §4.4.2); aria "Open page" / "Seite öffnen" | text | hidden |
 | 8 | Status | `FeedbackStatusTransitions variant="icon"` with `visibleFeedbackStatuses` | select, chain order | |
 | 9 | Resolved / Erledigt am | `resolved_at` date | date | hidden |
 
@@ -501,7 +501,15 @@ the title beside the detail. Then the sections, in this order:
    shown as text beside it, and `CopyButton` **Copy URL** / **URL kopieren** copies the
    full `context.url`. A one-shot path (`/join`, `/register`, `/verify-email`,
    `/reset-password`, an app's `pageLinkExclude`; matched decoded and in any case) shows
-   as text with Copy. keksdose's label is its shared `more.copy_url` key,
+   as text with Copy. **The params the app lists** (`pageLinkParams`, ui-kit 0.61,
+   Kurvenschmiede production feedback #7: `/curves/2?profile=5` opened `/curves/2`) are
+   kept on the link and its text, in the page's order, reduced as the crash reporter and
+   the dialog reduce their page (§4.6's `allowParams`, which `useFeedbackSubmit` takes too
+   since 0.60: the same list); the text beside it is
+   then only what the link does not carry, the other params and the hash. An allow-list,
+   default none: a param nobody listed is text, so `/login?next=…` stays a bare `/login`.
+   An app never lists a param that forwards or acts on load (`next`, `returnTo`, a token);
+   a one-shot path stays text whatever it holds. keksdose's label is its shared `more.copy_url` key,
    which stays app-side; the kit carries the same words in its own namespace.
    Below it, **Diagnostics** / **Diagnose** (the round after ui-kit 0.53, keksdose live
    #481): `context.diagnostics` as the app wrote it, each key and its value in
@@ -522,7 +530,8 @@ the title beside the detail. Then the sections, in this order:
      entschieden oder warum nicht.**; blank saves `null`;
    - admin or author, status reworkable (§3.4): `RotateCcw` **Rework** / **Nacharbeit**;
    - when the URL (or the route fallback above) is set: `ExternalLink` **Open page** /
-     **Seite öffnen** (a real `href`, the path only; not on a one-shot path).
+     **Seite öffnen** (a real `href`, the path only, with the app's `pageLinkParams`; not on
+     a one-shot path).
 5. **Send for rework** / **Zur Nacharbeit senden** — only while reworking:
    `FeedbackNoteEditor` with a **one-file** attachment field (add, capture or paste;
    same types and size), placeholder **What still needs refinement? Any new
@@ -2426,6 +2435,7 @@ What it takes besides §13.1's (all optional unless marked):
 | `onCaptureScreenshot` | `captureAppScreenshot()` | "Capture screenshot" beside those fields; `null` for none. |
 | `renderDate` | the kit's, with the weekday | The app's date writer, for the date and resolved columns, the card, the day headers **and** the detail's "Resolved:". Left out, the detail keeps its sentence date (no weekday). |
 | `pageLinkExclude` | — | The app's one-shot routes, for the URL column and the detail alike (§4.4.2). |
+| `pageLinkParams` | — | 0.61: the query params the page's link keeps, for the URL column and the detail alike (§4.4.2) — the app's `allowParams` list. Never a forwarding or acting param. Stable (a memo's dependency). |
 | `detail` | — | Over the detail's props the inbox sets (`commit`, `showSubject`, `reworkAttachment`, `replyAttachments`, `labels`, `className`); merged last. |
 | `labels` | — | Over `feedbackPage`. |
 | `selectable` | `true` | 0.57 (§13.6): the admin's multi-select and bulk edit, wherever the inbox is `editable`. `false` for none. |
@@ -2455,8 +2465,8 @@ The wiring it holds, the same for every app:
 - **The rows newest first** (`created_at`, a stable sort) — the phone's day headers group
   runs — and, while the phone's toggle is pressed on the inbox, only
   `FEEDBACK_AWAITING_STATUSES`.
-- **The table**: `useFeedbackColumns` (+ `votes`, `commit`, `pageLinkExclude`, the app's
-  `columns`), `rowKey` the id, `storageKey="feedback"`, `urlSync`, `fillHeight`,
+- **The table**: `useFeedbackColumns` (+ `votes`, `commit`, `pageLinkExclude`,
+  `pageLinkParams`, the app's `columns`), `rowKey` the id, `storageKey="feedback"`, `urlSync`, `fillHeight`,
   `FeedbackEmptyState` (or "Loading…" while `loading`), `feedbackMobileGroupBy(renderDate)`,
   `FeedbackMobileCard` (submitter for the admin, `votes`), `feedbackSwipePlan(swipe, …)` on
   the inbox only, and the desktop's actions column
@@ -2464,7 +2474,7 @@ The wiring it holds, the same for every app:
 - **The detail**: `FeedbackRowDetail` with `canEdit` = `editable`, `viewerId`,
   `onUpdate={update.mutateAsync}`, `pending` = `update.isPending || rework.isPending`,
   `statusChange` = `changeStatus`, `onUpload`, `fetcher`, `onCaptureScreenshot`, the app's
-  `renderDate`, `pageLinkExclude`, `onReply` / `replying` from `reply`,
+  `renderDate`, `pageLinkExclude`, `pageLinkParams`, `onReply` / `replying` from `reply`,
   **`replyAttachments` on** (§12: all three are on server-kit 0.18, and the reply's
   variables carry `attachmentUrl` from the start), `onRework` from `rework`, `comments`, and
   with `publicSwitch` the `onPublicChange`.

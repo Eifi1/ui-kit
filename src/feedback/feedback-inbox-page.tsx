@@ -204,6 +204,15 @@ export interface UseFeedbackInboxOptions<T extends FeedbackRecord> {
   /** The app's one-shot routes, on top of the kit's (0.52, FLW-7) — for the URL column and
    *  the detail's URL section alike. Keep it stable (module scope). */
   pageLinkExclude?: readonly PathPattern[];
+  /**
+   * 0.61 (Kurvenschmiede production feedback #7): the query params the page's link keeps,
+   * for the URL column and the detail's URL section alike — `/curves/2?profile=5` with
+   * `["profile"]`. The list the app gives `useFeedbackSubmit` and its crash reporter as
+   * `allowParams`: `pageLinkParams={REPORT_URL_PARAMS}`. **Never a param that forwards or
+   * acts on load** (`next`, `returnTo`, a token). Default: none, the path alone. Keep it
+   * stable (module scope).
+   */
+  pageLinkParams?: Iterable<string>;
   /** The list is still loading (`list.isPending`): the table says "Loading…" where its
    *  rows will be, not "None". */
   loading?: boolean;
@@ -370,6 +379,7 @@ export function useFeedbackInbox<T extends FeedbackRecord>({
   onCaptureScreenshot = captureScreenshot,
   renderDate: renderDateProp,
   pageLinkExclude,
+  pageLinkParams,
   loading = false,
   detail,
   labels,
@@ -438,6 +448,7 @@ export function useFeedbackInbox<T extends FeedbackRecord>({
     commit,
     votes,
     pageLinkExclude,
+    pageLinkParams,
     labels,
   });
   const columns = useMemo(() => (ownColumns ? ownColumns(kitColumns) : kitColumns), [ownColumns, kitColumns]);
@@ -463,6 +474,7 @@ export function useFeedbackInbox<T extends FeedbackRecord>({
     // no weekday — as kastlan's has always been.
     renderDate: renderDateProp,
     pageLinkExclude,
+    pageLinkParams,
     onReply: reply
       ? (body, status, attachmentUrl) =>
           reply.mutateAsync({

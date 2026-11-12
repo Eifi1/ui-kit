@@ -20,15 +20,22 @@ export function reducePage(page: unknown, allow: ReadonlySet<string>): string {
   try {
     // The base only lets a path parse; it never leaves this function.
     const url = new URL(raw, "http://localhost");
-    const kept = new URLSearchParams();
-    for (const [key, value] of url.searchParams) {
-      if (allow.has(key)) kept.append(key, value);
-    }
-    const query = kept.toString();
-    return `${url.pathname}${query ? `?${query}` : ""}`;
+    return `${url.pathname}${reduceQuery(url.searchParams, allow)}`;
   } catch {
     return raw.split(/[?#]/)[0];
   }
+}
+
+/** The reduction itself: the `allow`ed params of a query, in their order, as `?p=2&sort=date`
+ *  — `""` when none is left. {@link reducePage}'s, and since 0.61 the feedback inbox's page
+ *  link's (feedback-page-link.ts), which has its page parsed already. */
+export function reduceQuery(params: URLSearchParams, allow: ReadonlySet<string>): string {
+  const kept = new URLSearchParams();
+  for (const [key, value] of params) {
+    if (allow.has(key)) kept.append(key, value);
+  }
+  const query = kept.toString();
+  return query ? `?${query}` : "";
 }
 
 /** A full address with its page reduced ({@link reducePage}): `origin` + the pathname +

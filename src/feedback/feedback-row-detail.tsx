@@ -37,7 +37,7 @@ import {
 import type { FeedbackContext, FeedbackRecord } from "./feedback-record";
 import { diagnosticsEntries, FeedbackDiagnosticsList } from "./feedback-diagnostics";
 import { runMutation } from "./feedback-mutation";
-import { feedbackPage, feedbackPageLinkTarget } from "./feedback-page-link";
+import { feedbackPage, feedbackPageLinkTarget, feedbackPageUnlinked } from "./feedback-page-link";
 import { useFeedbackStatusUndo } from "./feedback-status-undo";
 import type { FeedbackStatusChange } from "./feedback-status-undo";
 import type { CommitScope } from "../components/write-lock";
@@ -172,10 +172,10 @@ export function useFeedbackDetailLabels(labels?: LabelOverride<FeedbackDetailLab
 // The page as the reporter had it (path + query + hash) and the full URL "Copy URL"
 // copies were public too, as `feedbackPageHref` and `feedbackPageUrl`, until 0.53 (deprecated
 // in 0.52, API-4): `feedbackPage` (./feedback-page-link) is the one reading, and the kit
-// links only its path.
+// links only its path — with the params the app lists in `pageLinkParams` (0.61).
 
-/** The page's path alone — the compact text a URL column shows (§4.3), and the only part
- *  of the page the kit links. */
+/** The page's path alone — the compact text a URL column shows (§4.3), and the part of the
+ *  page the kit always links (with the app's `pageLinkParams`, 0.61, after it). */
 export function feedbackPagePath(context: FeedbackContext | null | undefined): string | null {
   return feedbackPage(context)?.path ?? null;
 }
@@ -515,6 +515,15 @@ export interface FeedbackRowDetailProps {
    */
   pageLinkExclude?: readonly PathPattern[];
   /**
+   * 0.61 (Kurvenschmiede production feedback #7): the query params the URL section's link
+   * keeps — `/curves/2?profile=5` with `["profile"]`; the text after the link is then only
+   * what it does not carry (the other params, the hash). Pass the list the app gives
+   * `useFeedbackSubmit` and its crash reporter as `allowParams`. **Never a param that
+   * forwards or acts on load** (`next`, `returnTo`, a token): the link follows what is
+   * listed. A one-shot path stays text whatever it holds. Default: none, the path alone.
+   */
+  pageLinkParams?: Iterable<string>;
+  /**
    * The detail's saves COMMIT (description, outcome, rework, status): under a locked
    * `WriteLockProvider` each is `aria-disabled` with the lock's reason, and nothing
    * reaches `onUpdate`. Off by default — keksdose's shell lock is a read-only demo
@@ -612,6 +621,7 @@ export function FeedbackRowDetail({
   reworkAttachment,
   renderDate,
   pageLinkExclude,
+  pageLinkParams,
   commit,
   showSubject = true,
   onReply,
@@ -638,7 +648,8 @@ export function FeedbackRowDetail({
   const bodyText = splitBodyAttachments(row.body).text;
   const { description } = splitDescription(row.body);
   const page = feedbackPage(row.context);
-  const pageLink = page && feedbackPageLinkTarget(page, pageLinkExclude);
+  const linkParams = new Set(pageLinkParams);
+  const pageLink = page && feedbackPageLinkTarget(page, pageLinkExclude, linkParams);
   // What the app attached is for whoever handles the report and whoever sent it, never
   // for another viewer of a shared row (keksdose live #481).
   const diagnostics = canEdit || access.isAuthor ? diagnosticsEntries(row.context?.diagnostics) : [];
@@ -721,8 +732,9 @@ export function FeedbackRowDetail({
 
       {page && (
         // The page it was filed on, with the full URL a click away (keksdose #278). Only
-        // the path is a link; the query and hash, the reporter's to write, are text — and
-        // a one-shot path is text too (FLW-7, 0.52 code review: see feedback-page-link).
+        // the path and the params the app lists (0.61) are a link; the rest of the query
+        // and the hash, the reporter's to write, are text — and a one-shot path is text
+        // too (FLW-7, 0.52 code review: see feedback-page-link).
         <FeedbackDetailSection title={labels.url}>
           <div className="flex min-w-0 items-center gap-1.5">
             <code
@@ -732,12 +744,12 @@ export function FeedbackRowDetail({
             >
               {pageLink ? (
                 <TextLink href={pageLink} tone="secondary" underline="hover" stopPropagation>
-                  {page.path}
+                  {pageLink}
                 </TextLink>
               ) : (
                 page.path
               )}
-              {page.href.slice(page.path.length)}
+              {feedbackPageUnlinked(page, pageLink, linkParams)}
             </code>
             <CopyButton size="xs" className="shrink-0" text={page.url} label={labels.copyUrl} stopPropagation />
           </div>
