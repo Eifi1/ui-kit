@@ -512,10 +512,11 @@ export function PushDeviceDemo() {
       <Note>
         In an app {code("usePushDevice({pushKey, register, unregister, devices, test})")} answers this object. Turning
         on while the browser has not asked yet opens the explainer first; the browser&apos;s own prompt comes after
-        Continue. A test that reached no device says so. An explicit sign-out calls{" "}
-        {code("releaseThisDevicePush(unregister)")} before it clears the session (0.52): the device stops showing the
-        account&apos;s notifications to whoever uses it next. On a shared computer ({code("isSharedComputer()")}, or the{" "}
-        {code("sharedComputer")} prop) the card does not offer push at all.
+        Continue. A test that reached no device says so. Every sign-out calls {code("dropPushSubscription(unregister)")}{" "}
+        before it revokes and clears the session: the device stops showing the account&apos;s notifications to whoever
+        uses it next, and a failure there never stops the sign-out ({code("releaseThisDevicePush(unregister)")} does the
+        same and rejects as the request did, for a caller that wants to know). On a shared computer (
+        {code("isSharedComputer()")}, or the {code("sharedComputer")} prop) the card does not offer push at all.
       </Note>
     </Example>
   );

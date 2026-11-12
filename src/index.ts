@@ -1264,6 +1264,8 @@ export {
   PushDeviceError,
   // 0.52 (§10.6, refactor audit 2026-10-30 FLW-2): an explicit sign-out releases this device's push.
   releaseThisDevicePush,
+  // 0.62 (Marcel 2026-11-13): the same at every sign-out, never rejecting.
+  dropPushSubscription,
 } from "./notifications/use-push-device";
 export type {
   PushDevice,

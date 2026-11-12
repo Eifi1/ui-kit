@@ -396,7 +396,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `FeedbackPublicPage`, the public page assembled once (feedback §14).
   // 0.62 (+2, keksdose's shared-computer session): `createMemoryStorage`, a Storage in the
   // page's memory, and `useKitTableStorage`, the provider's new `tableStorage`.
-  ["@eifi1/ui-kit", barrel, 1028],
+  // 0.62 (+1, Marcel 2026-11-13: every sign-out drops this device's push): `dropPushSubscription`,
+  // `releaseThisDevicePush` that never rejects.
+  ["@eifi1/ui-kit", barrel, 1029],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

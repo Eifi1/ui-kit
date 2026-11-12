@@ -204,7 +204,8 @@ async function releaseSubscription(unregister: (endpoint: string) => Promise<unk
  * effort at a sign-out: catch it, a sign-out must not stop on push.
  *
  * Only an explicit sign-out (Marcel's decision 2 of the 2026-10-30 audit): a session that
- * merely expired keeps its device, and whoever signs back in turns push on again.
+ * merely expired keeps its device, and whoever signs back in turns push on again. Since
+ * 0.62 a sign-out calls {@link dropPushSubscription}, this without the rejection.
  */
 export async function releaseThisDevicePush(unregister: (endpoint: string) => Promise<unknown>): Promise<boolean> {
   if (!pushSupported()) return false;
@@ -222,6 +223,37 @@ export async function releaseThisDevicePush(unregister: (endpoint: string) => Pr
     return true;
   } finally {
     notifyPushSubscriptionChanged();
+  }
+}
+
+/**
+ * {@link releaseThisDevicePush} for a sign-out, which must not fail on push (0.62, Marcel
+ * 2026-11-13: every sign-out drops this device's push; docs/auth-harmonization.md §6.3).
+ * The same work in the same order: the app's `unregister` (`POST
+ * /notifications/devices/unregister {endpoint}`) while the token still holds, then the
+ * browser's unsubscribe even when the server refused, then {@link PUSH_SUBSCRIPTION_CHANGED}.
+ *
+ * It NEVER rejects: a refused or unreachable server, a browser that will not let go or
+ * cannot be asked, a call that throws before it returns. `releaseThisDevicePush` rejects as
+ * the request did, for a caller that wants to know, so every sign-out wrapped it in
+ * `.catch(() => undefined)`, and one that forgot never signed out when the server refused.
+ *
+ *     async function signOut() {
+ *       await dropPushSubscription(api.unregisterDevice);
+ *       await api.revokeSession().catch(() => undefined);
+ *       clear();
+ *     }
+ *
+ * Resolves `true` when this browser held a subscription and both the server and the
+ * browser let it go; `false` otherwise, whatever failed.
+ */
+export async function dropPushSubscription(unregister: (endpoint: string) => Promise<unknown>): Promise<boolean> {
+  try {
+    return await releaseThisDevicePush(unregister);
+  } catch {
+    // Best effort: the browser was asked to let go whatever the server said, and a
+    // subscription the push service no longer has is pruned on the server's next send (410).
+    return false;
   }
 }
 
