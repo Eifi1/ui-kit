@@ -64,6 +64,9 @@ describe("cross-links", () => {
     expect(serverModulesFor("feedback-compose")).toEqual(expect.arrayContaining(["feedback", "feedback.router"]));
     expect(serverPageOf("feedback.router")).toBe("server-feedback");
     expect(serverPageOf("notifications")).toBe("server-notifications");
+    // server-kit 0.26: the object store an app keeps the attachment field's files in.
+    expect(serverPageOf("objects")).toBe("server-feedback");
+    expect(serverModulesFor("feedback-compose")).toContain("objects");
   });
 });
 
@@ -75,6 +78,7 @@ describe("a nested module (server-kit 0.9's feedback.router)", () => {
       "feedback",
       "feedback.router",
       "uploads",
+      "objects",
       "clock",
     ]);
   });
@@ -220,5 +224,12 @@ describe("search", () => {
     expect(index.search("eifi1_server_kit.feedback.router")[0].entry.href).toBe("/server-feedback#feedback.router");
     const [hit] = index.search("feedback_router");
     expect(hit.entry.href).toBe("/server-feedback#feedback.router.feedback_router");
+  });
+
+  it("finds the object store (server-kit 0.26) and its backends on the Feedback page", () => {
+    const index = createSearchIndex(entries);
+    expect(index.search("eifi1_server_kit.objects")[0].entry.href).toBe("/server-feedback#objects");
+    const [hit] = index.search("GcsObjectStore");
+    expect(hit.entry.href).toBe("/server-feedback#objects.GcsObjectStore");
   });
 });

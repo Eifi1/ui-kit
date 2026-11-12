@@ -569,7 +569,7 @@ export const es: Dictionary = {
       title: "Comentarios y subidas",
       short: "Comentarios",
       blurb:
-        "El contrato de comentarios como funciones puras — esquemas, estados, las reglas del PATCH, correcciones, registro de bloqueos, borrado — sus rutas como una fábrica de routers, y adjuntos juzgados por sus bytes.",
+        "El contrato de comentarios como funciones puras — esquemas, estados, las reglas del PATCH, correcciones, registro de bloqueos, borrado — sus rutas como una fábrica de routers, y adjuntos juzgados por sus bytes. Y el almacén de objetos donde una app guarda sus archivos: una sola interfaz para el disco local, Cloud Storage o S3.",
     },
     "server-limits": {
       title: "Límites, errores, CORS y sincronización",
@@ -1317,6 +1317,7 @@ export const es: Dictionary = {
       "limitar el tamaño de los adjuntos",
       "borrar los comentarios de un usuario eliminado",
       "montar las rutas de comentarios",
+      "guardar archivos en un bucket en la nube",
     ],
     "server-limits": [
       "limitar la frecuencia de una ruta",

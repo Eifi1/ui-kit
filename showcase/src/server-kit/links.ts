@@ -43,6 +43,9 @@ export const KIT_COUNTERPARTS: Readonly<Record<string, readonly string[]>> = {
   "feedback.router": ["feedback-compose", "feedback-inbox"],
   // The attachment policy behind the feedback dialog's attachment field.
   uploads: ["feedback-compose"],
+  // server-kit 0.26: the object store the same field's files are kept in, behind the app's
+  // feedback `AttachmentStorage` (server-services §2.5).
+  objects: ["feedback-compose"],
   // `Retry-After` and the per-address delay, which `isRateLimited` / `retryAfterSeconds`
   // read; and the feedback routes' upload and crash windows.
   limiter: ["auth-account", "feedback-compose"],

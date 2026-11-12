@@ -566,7 +566,7 @@ export const it: Dictionary = {
       title: "Feedback e upload",
       short: "Feedback",
       blurb:
-        "Il contratto del feedback come funzioni pure — schemi, stati, le regole del PATCH, rielaborazione, segnalazione degli arresti anomali, cancellazione — le sue route come un’unica factory di router, e allegati giudicati dai loro byte.",
+        "Il contratto del feedback come funzioni pure — schemi, stati, le regole del PATCH, rielaborazione, segnalazione degli arresti anomali, cancellazione — le sue route come un’unica factory di router, e allegati giudicati dai loro byte. E l’object store in cui un’app conserva i suoi file: un’unica interfaccia per il disco locale, Cloud Storage o S3.",
     },
     "server-limits": {
       title: "Limiti, errori, CORS e sincronizzazione",
@@ -1320,6 +1320,7 @@ export const it: Dictionary = {
       "limitare la dimensione degli allegati",
       "cancellare il feedback di un utente eliminato",
       "montare le route del feedback",
+      "salvare file in un bucket cloud",
     ],
     "server-limits": [
       "limitare la frequenza di una route",

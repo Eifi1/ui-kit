@@ -575,7 +575,7 @@ export const en: Dictionary = {
       title: "Feedback & uploads",
       short: "Feedback",
       blurb:
-        "The feedback contract as pure functions — schemas, statuses, the PATCH rules, rework, crash filing, erasure — its routes as one router factory, and attachments judged by their bytes.",
+        "The feedback contract as pure functions — schemas, statuses, the PATCH rules, rework, crash filing, erasure — its routes as one router factory, and attachments judged by their bytes. And the object store an app keeps its files in: one interface over the local disk, Cloud Storage or S3.",
     },
     "server-limits": {
       title: "Limits, errors, CORS & sync",
@@ -1304,6 +1304,7 @@ export const en: Dictionary = {
       "limit the attachment size",
       "erase feedback of a deleted user",
       "mount the feedback routes",
+      "store files in a cloud bucket",
     ],
     "server-limits": [
       "rate limit a route",

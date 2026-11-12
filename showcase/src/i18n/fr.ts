@@ -572,7 +572,7 @@ export const fr: Dictionary = {
       title: "Retours et téléversements",
       short: "Retours",
       blurb:
-        "Le contrat des retours en fonctions pures — schémas, statuts, règles du PATCH, reprise, signalement des plantages, effacement — ses routes en une fabrique de routeurs, et des pièces jointes jugées sur leurs octets.",
+        "Le contrat des retours en fonctions pures — schémas, statuts, règles du PATCH, reprise, signalement des plantages, effacement — ses routes en une fabrique de routeurs, et des pièces jointes jugées sur leurs octets. Et le stockage d’objets où une application garde ses fichiers : une seule interface pour le disque local, Cloud Storage ou S3.",
     },
     "server-limits": {
       title: "Limites, erreurs, CORS et synchronisation",
@@ -1326,6 +1326,7 @@ export const fr: Dictionary = {
       "limiter la taille des pièces jointes",
       "effacer les retours d’un utilisateur supprimé",
       "monter les routes des retours",
+      "stocker des fichiers dans un bucket cloud",
     ],
     "server-limits": [
       "limiter le débit d’une route",

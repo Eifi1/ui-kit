@@ -3,7 +3,7 @@
 // fails while this file is stale.
 
 /** The server-kit release the Server kit pages document. */
-export const SERVER_KIT_VERSION = "0.25.0";
+export const SERVER_KIT_VERSION = "0.26.0";
 
 export interface ServerKitSearchModule {
   /** The Server kit page that documents it. */
@@ -843,6 +843,24 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["signature_type", "function"],
       ["sniffed_type", "function"],
       ["store_attachment", "function"],
+    ],
+  },
+  {
+    page: "server-feedback",
+    module: "objects",
+    summary: "The apps' stored files in an object store: one port, three backends, one purge (0.26).",
+    members: [
+      ["MAX_KEY_BYTES", "constant"],
+      ["MAX_SEGMENT_BYTES", "constant"],
+      ["PURGE_CONCURRENCY", "constant"],
+      ["GcsObjectStore", "class"],
+      ["LocalObjectStore", "class"],
+      ["ObjectNotFoundError", "class"],
+      ["ObjectStore", "protocol"],
+      ["ObjectStoreError", "class"],
+      ["S3ObjectStore", "class"],
+      ["StoredObject", "class"],
+      ["purge_objects", "function"],
     ],
   },
   {

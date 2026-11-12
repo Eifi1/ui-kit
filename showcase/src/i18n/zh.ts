@@ -534,7 +534,7 @@ export const zh: Dictionary = {
       title: "反馈与上传",
       short: "反馈",
       blurb:
-        "以纯函数实现的反馈契约——Schema、状态、PATCH 规则、返工、崩溃上报、数据清除——由一个路由工厂生成的全部路由，以及按字节判定的附件。",
+        "以纯函数实现的反馈契约——Schema、状态、PATCH 规则、返工、崩溃上报、数据清除——由一个路由工厂生成的全部路由，以及按字节判定的附件。还有应用存放文件的对象存储：本地磁盘、Cloud Storage 或 S3，共用一个接口。",
     },
     "server-limits": {
       title: "限流、错误、CORS 与同步",
@@ -1147,6 +1147,7 @@ export const zh: Dictionary = {
       "限制 附件 大小",
       "清除 已删除用户的 反馈",
       "挂载 反馈 路由",
+      "把 文件 存入 云存储桶",
     ],
     "server-limits": [
       "路由 限流",

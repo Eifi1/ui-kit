@@ -1,7 +1,7 @@
 {
   "format": "eifi1-server-kit-api",
   "version": 1,
-  "kit_version": "0.25.0",
+  "kit_version": "0.26.0",
   "modules": [
     {
       "name": "eifi1_server_kit.auth",
@@ -10908,6 +10908,211 @@
           "kind": "function",
           "signature": "async store_attachment(data: bytes, declared_type: str | None, *, save: SaveFn, mint_key: MintKeyFn = content_addressed_key, max_bytes: int = MAX_ATTACHMENT_BYTES, require_utf8_text: bool = False) -> StoredUpload",
           "doc": "The whole upload policy for one attachment, with the storing left to the app.\n\nkeksdose ``upload_guards.py:250`` ``store_attachment_bytes`` without its object store:\n:func:`check_upload`, then ``mint_key(data, extension)``, then\n``await save(key, data, media_type)`` — ``save`` adds whatever prefix or folder the app\nkeeps its attachments under. The caller keeps what is genuinely its own: the throttle\n(charge it before or after this, see :mod:`eifi1_server_kit.limiter`), any per-user\nrefusal (keksdose's demo account), and the URL it answers with."
+        }
+      ]
+    },
+    {
+      "name": "eifi1_server_kit.objects",
+      "summary": "The apps' stored files in an object store: one port, three backends, one purge (0.26).",
+      "doc": "The apps' stored files in an object store: one port, three backends, one purge (0.26).\n\nkeksdose keeps its uploads — receipts, transaction and feedback attachments, support files —\nbehind ``InvoiceFileStore`` (``adapters/external/invoice_file_store.py:109``): the local disk\nin development, an S3-compatible store in production (minio against\nstorage.googleapis.com with an HMAC pair). Kurvenschmiede moves its feedback attachments out\nof its database into a Cloud Storage bucket reached without a key, and the store is written\nonce, here (Marcel, 2026-11-12: \"mehr im ui und server kit sharen\"):\n\n* :class:`ObjectStore` — the port: ``save``, ``read``, ``remove``, ``list_objects``, each\n  async. An app's adapters take one: its feedback\n  :class:`~eifi1_server_kit.feedback.AttachmentStorage`, its sweep, its erasure;\n* :class:`LocalObjectStore` — files under a root directory: development and tests;\n* :class:`GcsObjectStore` — a Cloud Storage bucket through Google's own client and\n  Application Default Credentials, on Cloud Run the runtime service account: no key to\n  keep or rotate (the ``gcs`` extra);\n* :class:`S3ObjectStore` — any S3 API through minio, keksdose's production path today (the\n  ``s3`` extra), kept until keksdose's move is decided;\n* :func:`purge_objects` — many removes, bounded, never raising, the keys it left returned.\n\n**The app mints the key.** The store takes any key the rule below accepts and makes none:\nkeksdose's ``feedback/<sha256[:12]>.<ext>``, Kurvenschmiede's keyed digest\n``feedback/1ed84e1bc3c7.webp`` and kastlan's ``feedback/<uuid32>_<sha12>.<ext>`` stay each\napp's own, as the feedback port says (``AttachmentStorage``). There is no locator beside the\nkey: the key is the one name of an object on every backend.\n\n**Stored as given.** No backend seals a file: the bytes saved are the bytes in the bucket,\nunder the provider's encryption at rest (Marcel, 2026-11-12). An app that seals its files\n(kastlan's ``at_rest``) does so before ``save`` and after ``read``.\n\n**A key** is what every backend can hold under one name, so a key that works on the local\ndisk works in the bucket: 1 to :data:`MAX_KEY_BYTES` bytes of UTF-8 (Cloud Storage's and\nS3's limit), split on ``/`` into segments of at most :data:`MAX_SEGMENT_BYTES` bytes (a file\nname's limit on disk: keksdose's ENAMETOOLONG, ``key_file_name``), none empty (no leading,\ntrailing or double ``/``), none starting with a dot (no ``.``, no ``..``, no hidden name:\nnothing climbs out of the local root, and the local store's half-written files are its own),\nand no backslash or control character. Anything else is a :class:`ValueError` before any\nstore is asked. A listing names only such keys, so a sweep is never handed one it cannot\nremove (a folder placeholder ``feedback/``, a ``.keep``).\n\n**One failure type.** Every failure is an :class:`ObjectStoreError`, an :class:`OSError`,\nwith the backend's own exception chained: minio's ``S3Error`` and urllib3's errors are no\n``OSError``, so keksdose's ``except OSError`` could not fire in production until\n``_as_os_error`` (``invoice_file_store.py:211``) relabelled them. A missing object on\n``read`` is an :class:`ObjectNotFoundError`, a :class:`FileNotFoundError` too: the app's\n404. ``remove`` of a missing object is no failure: what it promises holds.\n\n**Calls run in a worker thread.** Google's and minio's clients are synchronous, so each call\nruns in :func:`asyncio.to_thread`, as keksdose's do; so does the local store's file I/O. Build\none store per process and share it: each holds its client and that client's connection pool\n(keksdose ``_minio_client``, ``invoice_file_store.py:247``: a store per call was a TLS\nhandshake per attachment).",
+      "contract": {
+        "doc": "docs/server-services-harmonization.md",
+        "section": "§2.5",
+        "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/server-services-harmonization.md#25-the-storage-port",
+        "links": [
+          {
+            "section": "§2.5",
+            "heading": "2.5 The storage port",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/server-services-harmonization.md#25-the-storage-port"
+          }
+        ]
+      },
+      "members": [
+        {
+          "name": "MAX_KEY_BYTES",
+          "kind": "constant",
+          "signature": "MAX_KEY_BYTES = 1024",
+          "doc": "The most bytes of UTF-8 in a key: Cloud Storage's and S3's own limit on an object name.",
+          "value": 1024
+        },
+        {
+          "name": "MAX_SEGMENT_BYTES",
+          "kind": "constant",
+          "signature": "MAX_SEGMENT_BYTES = 255",
+          "doc": "The most bytes of UTF-8 in one segment of a key: a file name's limit on disk (NAME_MAX),\nwhich the local store's last segment is.",
+          "value": 255
+        },
+        {
+          "name": "PURGE_CONCURRENCY",
+          "kind": "constant",
+          "signature": "PURGE_CONCURRENCY = 16",
+          "doc": "How many removes :func:`purge_objects` keeps in flight by default (keksdose\n``_PURGE_CONCURRENCY``, ``invoice_file_store.py:62``): a wipe is hundreds of objects and\neach a round trip, so not one at a time; and each a worker thread, so not all at once.",
+          "value": 16
+        },
+        {
+          "name": "GcsObjectStore",
+          "kind": "class",
+          "signature": "class GcsObjectStore",
+          "doc": "A Cloud Storage bucket through Google's own client (the ``gcs`` extra,\n``google-cloud-storage``), with no key: without ``client``, the first call builds\n``storage.Client()``, which reads Application Default Credentials — on Cloud Run the\nservice's runtime account, locally ``gcloud auth application-default login``. Its project\nis the environment's; the store's calls name the bucket and need none. Built once, in the\nworker, however many calls race for it; a build that fails (no credentials) is an\n:class:`ObjectStoreError`, and the next call tries again.\n\nThe account needs ``roles/storage.objectUser`` on the bucket and nothing on the bucket\nitself: the store never creates, configures or deletes a bucket (Kurvenschmiede\n``deploy/gcp/README.md``, \"The uploads bucket\"). ``client`` is an app's own\n``storage.Client`` (another project, an emulator) or a test's stub; the client's own\nretry and timeout defaults apply.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(bucket: str, *, client: Client | None = None) -> None",
+              "doc": ""
+            },
+            {
+              "name": "save",
+              "signature": "async save(key: str, data: bytes, *, content_type: str | None = None) -> None",
+              "doc": ""
+            },
+            {
+              "name": "read",
+              "signature": "async read(key: str) -> bytes",
+              "doc": ""
+            },
+            {
+              "name": "remove",
+              "signature": "async remove(key: str) -> None",
+              "doc": ""
+            },
+            {
+              "name": "list_objects",
+              "signature": "async list_objects(prefix: str = '') -> list[StoredObject]",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "LocalObjectStore",
+          "kind": "class",
+          "signature": "class LocalObjectStore",
+          "doc": "Objects as files under ``root``, each at its key's path (keksdose\n``LocalInvoiceFileStore``, ``invoice_file_store.py:148``): development and tests. The root\nis made on the first save.\n\nA key cannot leave the root: the rule refuses ``..``, a leading ``/`` and a backslash\nbefore any path is built. A write goes to a temporary file in the object's directory and\nreplaces the object in one rename, so a reader sees the old bytes or the new, never half\na file, and a write that fails leaves the object as it was. The files are its owner's\nalone (``0600``), and no type is kept. A file system cannot hold ``a`` and ``a/b`` at\nonce, as a bucket can; saving the second is an :class:`ObjectStoreError`.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(root: str | os.PathLike[str]) -> None",
+              "doc": ""
+            },
+            {
+              "name": "save",
+              "signature": "async save(key: str, data: bytes, *, content_type: str | None = None) -> None",
+              "doc": ""
+            },
+            {
+              "name": "read",
+              "signature": "async read(key: str) -> bytes",
+              "doc": ""
+            },
+            {
+              "name": "remove",
+              "signature": "async remove(key: str) -> None",
+              "doc": ""
+            },
+            {
+              "name": "list_objects",
+              "signature": "async list_objects(prefix: str = '') -> list[StoredObject]",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "ObjectNotFoundError",
+          "kind": "class",
+          "signature": "class ObjectNotFoundError(ObjectStoreError, FileNotFoundError)",
+          "doc": "``read`` found no object under the key: the app's 404. ``errno`` is ``ENOENT`` and\n``filename`` the key, as a missing file's are."
+        },
+        {
+          "name": "ObjectStore",
+          "kind": "protocol",
+          "signature": "class ObjectStore(Protocol)",
+          "doc": "Where an app's files live, by the key the app minted. Every method is async and runs\nthe backend in a worker thread; a key the rule refuses is a :class:`ValueError` before\nanything is asked; every failure is an :class:`ObjectStoreError`.",
+          "methods": [
+            {
+              "name": "save",
+              "signature": "async save(key: str, data: bytes, *, content_type: str | None = None) -> None",
+              "doc": "Store ``data`` under ``key``, replacing whatever was there. ``content_type`` is\nkept where the backend keeps one (``application/octet-stream`` without it); the\nlocal store keeps none, and an app that serves the type keeps it on its row or reads\nit off the key's extension."
+            },
+            {
+              "name": "read",
+              "signature": "async read(key: str) -> bytes",
+              "doc": "The object's bytes; :class:`ObjectNotFoundError` when there is none."
+            },
+            {
+              "name": "remove",
+              "signature": "async remove(key: str) -> None",
+              "doc": "Delete the object, raising :class:`ObjectStoreError` when the store could not. An\nobject already absent is no error: the delete's postcondition holds (keksdose\n``InvoiceFileStore.remove``)."
+            },
+            {
+              "name": "list_objects",
+              "signature": "async list_objects(prefix: str = '') -> list[StoredObject]",
+              "doc": "Every object whose key starts with ``prefix`` (a string's start, as an object\nstore's prefix is: ``feedback/1e`` finds ``feedback/1ed84e1bc3c7.webp``), in key\norder. For a sweep: an object no row names has no name anywhere but the store."
+            }
+          ]
+        },
+        {
+          "name": "ObjectStoreError",
+          "kind": "class",
+          "signature": "class ObjectStoreError(OSError)",
+          "doc": "The store could not do what it was asked: unreachable, refused, no credentials, a\nfile system's error. The backend's own exception is chained as ``__cause__``. An\n:class:`OSError`, so an app's one ``except OSError`` (keksdose's extraction and statement\npollers, its feedback download) holds for every backend."
+        },
+        {
+          "name": "S3ObjectStore",
+          "kind": "class",
+          "signature": "class S3ObjectStore",
+          "doc": "Any S3 API through minio (the ``s3`` extra), as keksdose's ``S3InvoiceFileStore``\n(``invoice_file_store.py:265``) reaches storage.googleapis.com with an HMAC pair today.\n\n``endpoint`` is an http(s) origin — ``https://storage.googleapis.com``, a development\nMinIO's ``http://127.0.0.1:9000`` — with ``access_key`` and ``secret_key`` (blank: none)\nand ``region`` (``europe-west4`` spares minio asking the bucket where it is). Or\n``client``, an app's own ``Minio`` or a test's stub, in place of the four. The store never\ncreates a bucket: a development MinIO's is made once, beside the container\n(``mc mb --ignore-existing``), as a cloud bucket is made by its deploy.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(bucket: str, *, endpoint: str | None = None, access_key: str | None = None, secret_key: str | None = None, region: str | None = None, client: Minio | None = None) -> None",
+              "doc": ""
+            },
+            {
+              "name": "save",
+              "signature": "async save(key: str, data: bytes, *, content_type: str | None = None) -> None",
+              "doc": ""
+            },
+            {
+              "name": "read",
+              "signature": "async read(key: str) -> bytes",
+              "doc": ""
+            },
+            {
+              "name": "remove",
+              "signature": "async remove(key: str) -> None",
+              "doc": ""
+            },
+            {
+              "name": "list_objects",
+              "signature": "async list_objects(prefix: str = '') -> list[StoredObject]",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "StoredObject",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class StoredObject",
+          "doc": "One object :meth:`ObjectStore.list_objects` found (keksdose ``StoredObject``,\n``invoice_file_store.py:98``).",
+          "fields": [
+            {
+              "name": "key",
+              "type": "str",
+              "default": null,
+              "doc": "Its key, as ``save`` took it."
+            },
+            {
+              "name": "modified",
+              "type": "datetime",
+              "default": null,
+              "doc": "When it was last written, aware UTC: a sweep's age (keksdose's day for an upload no\nrow names yet). Saving the same key again moves it."
+            }
+          ]
+        },
+        {
+          "name": "purge_objects",
+          "kind": "function",
+          "signature": "async purge_objects(store: ObjectStore, keys: Iterable[str], *, reason: str, concurrency: int = PURGE_CONCURRENCY) -> list[str]",
+          "doc": "Remove many objects; return the keys left behind, in the order given (keksdose\n``purge_objects``, ``invoice_file_store.py:404``).\n\nFor a row's files once its delete committed — a wipe's hundreds, an erasure's, a sweep's\norphans — when nothing but the key names the file any more, so two rules hold:\n\n* **Nothing raises.** A store outage must not turn \"erase everything\" into a 500 over a\n  database already emptied. A key that fails, a refused key included, is collected.\n* **Every key left is in the log**, each with its exception and then all in one line\n  with ``reason``: they are the instructions for removing them by hand.\n\nAt most ``concurrency`` removes are in flight. Duplicates are asked once and empty keys\nnot at all. An app's own placeholders (keksdose's ``(pending)`` and ``(manual)``) are\nthe app's to leave out; when to purge (keksdose's ``delete_after_commit``) stays the\napp's too."
         }
       ]
     },
