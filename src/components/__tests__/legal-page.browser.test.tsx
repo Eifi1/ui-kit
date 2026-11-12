@@ -213,6 +213,14 @@ describe("the browser section's standard entries (0.61, Marcel 2026-11-12)", () 
     expect(standard.sharedComputer).toContain(BOX[lang]);
   });
 
+  // 0.62 (Marcel 2026-11-13): an entry in an app's list, and no app's list (keksdose,
+  // kastlan, Kurvenschmiede, in every language) closes an entry with a full stop.
+  it.each(Object.keys(CATALOGUES))("%s: neither line closes with a full stop, as the apps' entries", (lang) => {
+    const standard = CATALOGUES[lang]!().legal!.sections!.privacy!.browser!.standardEntries!;
+    expect(standard.recentData!(24)).not.toMatch(/[.。]$/);
+    expect(standard.sharedComputer).not.toMatch(/[.。]$/);
+  });
+
   it("are entries the app places in its own list, as the kit words them", () => {
     const standard = B.standardEntries!;
     render(
@@ -224,8 +232,9 @@ describe("the browser section's standard entries (0.61, Marcel 2026-11-12)", () 
     const items = Array.from(section()!.querySelectorAll("li"), (li) => li.textContent);
     expect(items).toEqual([
       "your sign-in tokens",
-      "Recently loaded data, so pages also open without a connection; what is older than 24 hours the app no longer uses and removes the next time it opens. None of it is kept when you sign in with “This is a shared computer”.",
-      "Whether you chose “This is a shared computer” at sign-in, for as long as that session lasts.",
+      "Recently loaded data, so pages also open without a connection; what is older than 24 hours the app no longer uses and removes the next time it opens. None of it is kept when you sign in with “This is a shared computer”",
+      // A flag in the tab's storage comes back with a reopened tab; the sign-in is in page memory.
+      "Whether you chose “This is a shared computer” at sign-in, kept with the tab; your sign-in itself is not stored",
     ]);
   });
 });

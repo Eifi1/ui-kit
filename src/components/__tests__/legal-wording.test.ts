@@ -54,7 +54,7 @@ function legalWording(labels: UiKitLabels): Record<string, string> {
 }
 
 /**
- * The legal wording as of 0.59. Update an entry ONLY in the change that adds the
+ * The legal wording as of 0.62. Update an entry ONLY in the change that adds the
  * `**Legal wording:**` line for it to the adopt doc.
  *
  * 0.58 (keksdose's legal audit, legal decision 10): `terms` — the refund sentence moved
@@ -70,15 +70,20 @@ function legalWording(labels: UiKitLabels): Record<string, string> {
  * 0.61 (Marcel 2026-11-12): `privacy` — the browser section's two standard entries, the page
  * cache's line and the shared-computer choice's (`standardEntries`), which an app places in
  * its own list. Announced in docs/adopt-0.61.md for the apps that add them.
+ *
+ * 0.62 (Marcel 2026-11-13): `privacy` — both standard entries lose their closing full stop
+ * (no app's list has one), and the flag line says the flag is kept with the tab and the
+ * sign-in itself is not stored (a reopened tab brings its storage back). Announced in the
+ * 0.62 adopt note for the apps that use `standardEntries`.
  */
 const LEGAL_WORDING: Record<string, Record<string, string>> = {
-  en: { impressum: "425fe7961e6a", legal: "19962ca87a89", privacy: "f553229f0dd5", terms: "41d67860190b" },
-  "de-CH": { impressum: "6e8e555a0f60", legal: "aaea3302cba4", privacy: "4fca6c7383be", terms: "ce9971b444c5" },
-  fr: { impressum: "3f703ecd6763", legal: "4cbd81b82932", privacy: "c737eb8416e0", terms: "257115a45dde" },
-  it: { impressum: "9e60a55f89ef", legal: "ec2d48f0fa4a", privacy: "5319d954926d", terms: "98995c10e7a1" },
-  es: { impressum: "ff37b004be44", legal: "6afe0fa1f3ee", privacy: "f3979ccecdb8", terms: "604a6af9da3c" },
-  hu: { impressum: "bf4d3a8d0b77", legal: "75d7bbd6869e", privacy: "370e2caf0828", terms: "12871aadd0ab" },
-  zh: { impressum: "c98c0d1ac118", legal: "d923f39bab7b", privacy: "c9600ccb880f", terms: "e4cacb32ea2d" },
+  en: { impressum: "425fe7961e6a", legal: "19962ca87a89", privacy: "a68f34b18901", terms: "41d67860190b" },
+  "de-CH": { impressum: "6e8e555a0f60", legal: "aaea3302cba4", privacy: "ce9280965547", terms: "ce9971b444c5" },
+  fr: { impressum: "3f703ecd6763", legal: "4cbd81b82932", privacy: "a17f4c5788f2", terms: "257115a45dde" },
+  it: { impressum: "9e60a55f89ef", legal: "ec2d48f0fa4a", privacy: "de03872e274a", terms: "98995c10e7a1" },
+  es: { impressum: "ff37b004be44", legal: "6afe0fa1f3ee", privacy: "65597a17615a", terms: "604a6af9da3c" },
+  hu: { impressum: "bf4d3a8d0b77", legal: "75d7bbd6869e", privacy: "2e0f85d4034c", terms: "12871aadd0ab" },
+  zh: { impressum: "c98c0d1ac118", legal: "d923f39bab7b", privacy: "639dbad4a398", terms: "e4cacb32ea2d" },
 };
 
 describe("the legal wording (DOC-6)", () => {
