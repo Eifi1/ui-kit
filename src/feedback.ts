@@ -144,3 +144,12 @@ export {
   type FeedbackPageFrameProps,
   type FeedbackPageFrameHeaderProps,
 } from "./feedback/feedback-page-frame";
+// 0.61: one report's comment thread through the app's API client — keksdose's
+// `use-feedback-comments.ts` and Kurvenschmiede's `use-feedback-conversation.ts`, once
+// (docs/feedback-harmonization.md §14.3).
+export {
+  useFeedbackComments,
+  type FeedbackCommentsApi,
+  type UseFeedbackCommentsOptions,
+  type FeedbackCommentsState,
+} from "./feedback/feedback-comments";

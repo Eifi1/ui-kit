@@ -390,7 +390,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `createSwipeSettingsStore`, `FEEDBACK_SWIPE_SURFACE`, `TRANSLATION_REVIEW_SWIPE_SURFACE`,
   // `SWIPE_NONE`, and the card: `SwipeSetting`, `SWIPE_SETTING_ANCHOR`,
   // `DEFAULT_SWIPE_SETTING_LABELS`.
-  ["@eifi1/ui-kit", barrel, 1023],
+  // 0.61 (+1, here and in /feedback): `useFeedbackComments`, one report's comment thread
+  // through the app's API client (feedback §14.3).
+  ["@eifi1/ui-kit", barrel, 1024],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -422,7 +424,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.60.1: `FEEDBACK_SWIPE_ACTIONS` (+1 here and in the barrel).
   // 0.61: `FeedbackPageFrame` (+1 here and in the barrel).
   // 0.61: `deployEnvironment` (+1 here and in the barrel).
-  ["@eifi1/ui-kit/feedback", feedback, 96],
+  // 0.61: `useFeedbackComments` (+1 here and in the barrel).
+  ["@eifi1/ui-kit/feedback", feedback, 97],
   // 0.53 (−3, breaking): what 0.52 deprecated — `SEARCH_TIER_POINTS`, `matchEntries`,
   // `normalizeSearchText` (API-4).
   ["@eifi1/ui-kit/search", search, 6],
