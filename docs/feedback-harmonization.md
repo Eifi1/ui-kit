@@ -457,7 +457,7 @@ Columns, in order (kit `DataTable`, `urlSync`, `storageKey="feedback"`, newest f
 | 4 | Subject / Betreff | title + env chip (non-prod `context.environment`, upper case) + **Rework** / **Rework ×{{count}}** chip (DE Nacharbeit / Nacharbeit ×{{count}}) | text (title + env) | card heading |
 | 5 | User / Nutzer | display name → email → `user #id`; erased → <deleted user> | text | |
 | 6 | Email / E-Mail | `user_email` → `context.user_email` | text | hidden |
-| 7 | URL | link (`noRowLink`): text = `href` = the path only (ui-kit 0.52: the query is the reporter's to write; a one-shot path shows as text with Copy), with the params the app lists in `pageLinkParams` (0.61, §4.4.2); aria "Open page" / "Seite öffnen" | text | hidden |
+| 7 | URL | link (`noRowLink`): text = `href` = the path only (ui-kit 0.52: the query is the reporter's to write; a one-shot path shows as text with Copy), with the params the app lists in `pageLinkParams` (0.61, §4.4.2); aria "Open page" / "Seite öffnen" | text, by what the cell shows: the path with those params (ui-kit 0.62; the sort too) | hidden |
 | 8 | Status | `FeedbackStatusTransitions variant="icon"` with `visibleFeedbackStatuses` | select, chain order | |
 | 9 | Resolved / Erledigt am | `resolved_at` date | date | hidden |
 
