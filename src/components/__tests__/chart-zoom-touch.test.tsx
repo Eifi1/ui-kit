@@ -111,6 +111,23 @@ describe("a reset clears the tooltip", () => {
     expect(tooltip()).toBe("");
   });
 
+  it("hides it when Back reaches the whole range, and not on a Back that stays zoomed", async () => {
+    draw();
+    bandZoom();
+    bandZoom();
+    const { x, width, y, height } = plot();
+    hover(x + width / 2, y + height / 2);
+    await frame();
+    expect(tooltip()).toContain("A");
+    fireEvent.click(screen.getByRole("button", { name: "Back" }));
+    await frame();
+    expect(tooltip()).toContain("A");
+    fireEvent.click(screen.getByRole("button", { name: "Back" }));
+    await frame();
+    expect(screen.queryByRole("button", { name: /reset zoom/i })).toBeNull();
+    expect(tooltip()).toBe("");
+  });
+
   it("leaves the tooltip alone while the chart stays zoomed", async () => {
     draw();
     bandZoom();

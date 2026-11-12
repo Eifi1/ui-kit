@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import {
+  NO_HISTORY,
   NO_ZOOM,
   SharedXZoom,
   ZOOM_MIN_DRAG,
@@ -10,11 +11,15 @@ import {
   defaultZoomAxes,
   fitXToY,
   fitYToX,
+  isUnzoomed,
   selectionFromDrag,
   withChartZoom,
   zoomAfter,
   zoomAxesFor,
+  zoomBack,
   zoomDomains,
+  zoomMove,
+  zoomStep,
   type ZoomBinding,
   type ZoomFitSource,
   type ZoomAxesSetting,
@@ -631,6 +636,145 @@ describe("withChartZoom — on a touch screen", () => {
     draw();
     drag([160, 100], [760, 110]);
     expect(bindings()[0].x).toEqual([100, 700]);
+  });
+});
+
+/* ── The way back (0.61: Back one zoom step) ────────────────────────────── */
+
+describe("zoomMove / zoomStep / zoomBack", () => {
+  const A: [number, number] = [100, 500];
+  const B: [number, number] = [200, 300];
+
+  it("keeps the view before each step, oldest first, and walks back through them", () => {
+    const one = zoomStep(zoomMove(NO_HISTORY, "c", A, null), NO_HISTORY);
+    const two = zoomStep(zoomMove(one, "c", B, { y: [1, 2] }), one);
+    expect(two).toEqual({
+      x: B,
+      y: { c: { y: [1, 2] } },
+      back: [
+        { x: undefined, y: {} },
+        { x: A, y: { c: null } },
+      ],
+    });
+    expect(zoomBack(two)).toEqual({ x: A, y: { c: null }, back: [{ x: undefined, y: {} }] });
+    expect(zoomBack(zoomBack(two))).toBe(NO_HISTORY);
+    expect(zoomBack(NO_HISTORY)).toBe(NO_HISTORY);
+  });
+
+  it("moves the view without a step, so Back skips what was panned", () => {
+    const one = zoomStep(zoomMove(NO_HISTORY, "c", A, null), NO_HISTORY);
+    const panned = zoomMove(one, "c", [150, 550], null);
+    expect(panned.back).toBe(one.back);
+    expect(zoomBack(panned)).toBe(NO_HISTORY);
+  });
+
+  it("ends the zoom, with nothing to go back to, on a step that lands on the whole range", () => {
+    const one = zoomStep(zoomMove(NO_HISTORY, "c", A, null), NO_HISTORY);
+    expect(zoomStep(zoomMove(one, "c", undefined, null), one)).toBe(NO_HISTORY);
+  });
+
+  it("keeps each chart's own y windows apart", () => {
+    const view = zoomMove(zoomMove(NO_HISTORY, "a", A, { y: [1, 2] }), "b", A, null);
+    expect(view.y).toEqual({ a: { y: [1, 2] }, b: null });
+    expect(isUnzoomed(view)).toBe(false);
+    expect(isUnzoomed({ x: undefined, y: { a: null, b: null } })).toBe(true);
+    expect(isUnzoomed({ x: undefined, y: { a: { y: [1, 2] } } })).toBe(false);
+  });
+});
+
+describe("withChartZoom — Back", () => {
+  const draw = () => render(<Zoomable axes={[{ id: "y" }]} rows={SWEEP} series={[{ key: "v" }]} />);
+  const back = () => screen.queryByRole("button", { name: "Back" });
+  const reset = () => screen.queryByRole("button", { name: /reset zoom/i });
+
+  it("stands beside Reset zoom while zoomed, a real button before it", () => {
+    draw();
+    expect(back()).toBeNull();
+    drag([160, 60], [610, 210]);
+    const buttons = screen.getAllByRole("button");
+    expect(buttons.map((button) => button.textContent?.trim())).toEqual(["Back", "Reset zoom"]);
+    expect(back()).toHaveAttribute("type", "button");
+  });
+
+  it("undoes one zoom at a time, the dragged y with it, and past the first shows the whole range", () => {
+    draw();
+    drag([160, 60], [610, 210]);
+    drag([200, 100], [500, 104]);
+    expect(bindings()[0].x).toEqual([140, 440]);
+    fireEvent.click(back()!);
+    expect(bindings()[0]).toEqual({ x: [100, 550], y: { y: [100, 250] } });
+    fireEvent.click(back()!);
+    expect(bindings()[0]).toEqual({ x: null, y: {} });
+    expect(back()).toBeNull();
+    expect(reset()).toBeNull();
+  });
+
+  it("is one step for a whole pinch, and none for a two-finger pan", () => {
+    draw();
+    pinch(460, 560, 410, 610);
+    // Another pinch, in several moves.
+    finger("pointerdown", 460, 150, 1);
+    finger("pointerdown", 560, 150, 2);
+    finger("pointermove", 440, 150, 1);
+    finger("pointermove", 580, 150, 2);
+    finger("pointermove", 410, 150, 1);
+    finger("pointermove", 610, 150, 2);
+    finger("pointerup", 410, 150, 1);
+    finger("pointerup", 610, 150, 2);
+    expect(bindings()[0].x).toEqual([337.5, 562.5]);
+    pinch(460, 560, 360, 460);
+    expect(bindings()[0].x).toEqual([362.5, 587.5]);
+    // Back skips the pan and the second pinch's moves: the first pinch's window.
+    fireEvent.click(back()!);
+    expect(bindings()[0].x).toEqual([225, 675]);
+    fireEvent.click(back()!);
+    expect(bindings()[0].x).toBeNull();
+  });
+
+  it("empties the way back on Reset zoom", () => {
+    draw();
+    drag([160, 60], [610, 210]);
+    drag([200, 100], [500, 104]);
+    fireEvent.click(reset()!);
+    expect(bindings()[0]).toEqual({ x: null, y: {} });
+    drag([160, 100], [760, 110]);
+    fireEvent.click(back()!);
+    // The two steps before the reset are gone: one Back is the whole range.
+    expect(bindings()[0]).toEqual({ x: null, y: {} });
+  });
+
+  it("walks a SharedXZoom column back together, whichever chart zoomed, and resets every chart's y", () => {
+    render(
+      <SharedXZoom>
+        <Zoomable axes={[{ id: "y" }]} />
+        <Zoomable axes={[{ id: "y" }]} />
+      </SharedXZoom>,
+    );
+    drag([160, 60], [610, 210], 0);
+    drag([200, 60], [500, 160], 1);
+    expect(bindings().map((b) => b.y)).toEqual([{ y: [100, 250] }, { y: [150, 250] }]);
+    // Back on the FIRST chart undoes the second chart's box: its y goes, the first's stays.
+    fireEvent.click(screen.getAllByRole("button", { name: "Back" })[0]);
+    expect(bindings()).toEqual([
+      { x: [100, 550], y: { y: [100, 250] } },
+      { x: [100, 550], y: {} },
+    ]);
+    drag([200, 60], [500, 160], 1);
+    fireEvent.click(screen.getAllByRole("button", { name: /reset zoom/i })[1]);
+    expect(bindings()).toEqual([
+      { x: null, y: {} },
+      { x: null, y: {} },
+    ]);
+  });
+
+  it("speaks the provider's word", () => {
+    render(
+      <UiKitProvider labels={{ seriesChart: { zoomBack: "Zurück" } }}>
+        <Zoomable axes={[{ id: "y" }]} />
+      </UiKitProvider>,
+    );
+    drag([160, 60], [610, 210]);
+    expect(screen.getByRole("button", { name: "Zurück" })).toBeInTheDocument();
   });
 });
 

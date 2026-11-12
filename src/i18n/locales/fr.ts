@@ -766,6 +766,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     },
     seriesChart: {
       resetZoom: "Réinitialiser le zoom",
+      zoomBack: "Retour",
       zoomHint:
         "Faites glisser pour zoomer\u00a0: une sélection à peu près carrée zoome sur les deux axes, une sélection longue et étroite sur son seul axe. Double-cliquez pour réinitialiser.",
       empty: "Aucune donnée",

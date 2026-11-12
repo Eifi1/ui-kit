@@ -8,6 +8,9 @@
 export interface SeriesChartLabels {
   /** The button that puts a zoomed chart back to its full extent. Visible text. */
   resetZoom: string;
+  /** The button beside it that undoes the last zoom step — a band, a pinch — where
+   *  `resetZoom` goes back to the whole range at once. Visible text, beside an undo arrow. */
+  zoomBack: string;
   /** The drag-to-zoom gesture, said at the end of a zoomable chart's description (the
    *  figure's `aria-describedby`; until 0.52 the name of the drag surface, an
    *  `application` nothing could focus). It is the only place the gesture is explained,
@@ -34,6 +37,7 @@ export interface SeriesChartLabels {
 
 export const DEFAULT_SERIES_CHART_LABELS: SeriesChartLabels = {
   resetZoom: "Reset zoom",
+  zoomBack: "Back",
   zoomHint:
     "Drag to zoom: a roughly square selection zooms both axes, a long thin one only its own. Double-click to reset.",
   empty: "No data",

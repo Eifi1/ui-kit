@@ -768,6 +768,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
     },
     seriesChart: {
       resetZoom: "Zoom zurücksetzen",
+      zoomBack: "Zurück",
       zoomHint:
         "Zum Zoomen ziehen: Eine annähernd quadratische Auswahl zoomt beide Achsen, eine lange, schmale nur ihre eigene. Doppelklick setzt zurück.",
       empty: "Keine Daten",

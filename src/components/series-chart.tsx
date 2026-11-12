@@ -1945,8 +1945,12 @@ function SeriesPlot({
       data-tooltip-readout={placement}
       className={cn(
         "shrink-0",
-        // Above, the heading line shares the top corner with the zoom's reset button.
-        placement === "above" ? "pb-2 [&_[data-readout-heading]]:pe-32" : "pt-2",
+        // Above, the heading line shares the top corner with the zoom's buttons: Back and
+        // Reset zoom on a chart that zooms, about 11rem in German at the micro size
+        // ("Zurück", "Zoom zurücksetzen"), where Reset alone took 8.
+        placement === "above"
+          ? cn("pb-2", zoom?.layer ? "[&_[data-readout-heading]]:pe-48" : "[&_[data-readout-heading]]:pe-32")
+          : "pt-2",
       )}
     />
   );

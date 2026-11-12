@@ -28,10 +28,20 @@
 // The kit's own module (0.34, refactor audit 2026-10, API-6b): SeriesChart, its axes and
 // the facing pair import from here. ./chart-zoom is the public face — `SharedXZoom`, the
 // types, and until 0.35 the deprecated arithmetic and HOC, which no app imports.
-import { createContext, useCallback, useContext, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useEffectEvent,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { ComponentType, Dispatch, PointerEvent, ReactNode, SetStateAction } from "react";
 import { usePlotArea, useXAxisInverseScale, useYAxisInverseScale, type InverseScaleFunction } from "recharts";
-import { X } from "lucide-react";
+import { Undo2, X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { extentOf, isWholeRange, pinchWindow, pinchZoomed, type PinchStart } from "../lib/zoom-window";
 import { FOCUS_RING } from "./focus-ring";
@@ -342,6 +352,65 @@ export function zoomDomains(
   };
 }
 
+/* ── The way back ───────────────────────────────────────────────────────── */
+
+/**
+ * Where a chart is looking — or every chart of a `SharedXZoom`, which share it: the x
+ * window, and each chart's DRAGGED y windows by chart (a chart missing, or `null`,
+ * derives its y from x — see {@link ZoomState}).
+ */
+export interface ZoomSnapshot {
+  x?: [number, number];
+  y: Readonly<Record<string, Record<string, [number, number]> | null>>;
+}
+
+/**
+ * The view, and the view before each zoom step, oldest first: what Back walks (Kurvenschmiede
+ * production feedback #4, Marcel's design of 2026-11-12). A step is a zoom: a band, or a
+ * two-finger gesture that changed the window's width. A pan is not: it moves the view the
+ * step left, so Back returns to where the reader was before that zoom, whatever was
+ * panned since. Reset empties it.
+ */
+export interface ZoomHistory extends ZoomSnapshot {
+  back: readonly ZoomSnapshot[];
+}
+
+/** The whole range, with nowhere to go back to. */
+export const NO_HISTORY: ZoomHistory = { x: undefined, y: {}, back: [] };
+
+/** Whether a view shows the whole range: no x window, and no chart with a y window. */
+export function isUnzoomed(view: ZoomSnapshot): boolean {
+  return view.x === undefined && Object.values(view.y).every((windows) => windows == null);
+}
+
+/** `history` showing `x`, and `y` on `chart` — a pan, or a two-finger gesture under way.
+ *  No step: what Back returns to is left as it was. */
+export function zoomMove(
+  history: ZoomHistory,
+  chart: string,
+  x: [number, number] | undefined,
+  y: Record<string, [number, number]> | null,
+): ZoomHistory {
+  return { x, y: { ...history.y, [chart]: y }, back: history.back };
+}
+
+/**
+ * The view `history` shows made a step, with `before` — the view the zoom began on — as
+ * the one Back returns to. A step that lands on the whole range (a pinch out to it) is the
+ * end of the zoom, not a step: no Back is drawn there, so nothing is kept to go back to.
+ */
+export function zoomStep(history: ZoomHistory, before: ZoomSnapshot): ZoomHistory {
+  if (isUnzoomed(history)) return NO_HISTORY;
+  return { x: history.x, y: history.y, back: [...history.back, { x: before.x, y: before.y }] };
+}
+
+/** One step back: the view before the last zoom. Past the first, the whole range. */
+export function zoomBack(history: ZoomHistory): ZoomHistory {
+  const last = history.back[history.back.length - 1];
+  if (!last || isUnzoomed(last)) return NO_HISTORY;
+  return { x: last.x, y: last.y, back: history.back.slice(0, -1) };
+}
+
 /* ── recharts' pointer ──────────────────────────────────────────────────── */
 
 /**
@@ -437,10 +506,13 @@ export interface ZoomTarget {
   zoomAxes?: ZoomAxesSetting;
 }
 
-const SharedX = createContext<{
-  window?: [number, number];
-  set: Dispatch<SetStateAction<[number, number] | undefined>>;
-} | null>(null);
+/** A view and the way back to it, and the setter: a chart's own, or a `SharedXZoom`'s. */
+interface ZoomStore {
+  history: ZoomHistory;
+  set: Dispatch<SetStateAction<ZoomHistory>>;
+}
+
+const SharedX = createContext<ZoomStore | null>(null);
 
 /**
  * One x window for several charts.
@@ -451,10 +523,14 @@ const SharedX = createContext<{
  *
  * **Only x.** The y axes stay each chart's own — they are in different units — and
  * each refits its own y to what is inside the shared window.
+ *
+ * The way back is shared too (0.61): Back on any chart of the column undoes the column's
+ * last zoom, whichever chart it was made on, and Reset zoom on any of them shows the
+ * whole range on all of them.
  */
 export function SharedXZoom({ children }: { children: ReactNode }) {
-  const [window, set] = useState<[number, number] | undefined>(undefined);
-  return <SharedX.Provider value={{ window, set }}>{children}</SharedX.Provider>;
+  const [history, set] = useState<ZoomHistory>(NO_HISTORY);
+  return <SharedX.Provider value={{ history, set }}>{children}</SharedX.Provider>;
 }
 
 /**
@@ -476,23 +552,32 @@ const ONE_AXIS: readonly { id: string }[] = [{ id: DEFAULT_Y_AXIS }];
 /** The binding of a chart that does not zoom: no window, no layer, the same object always. */
 const NO_BINDING: ZoomBinding = { yDomains: {}, layer: null };
 
+/** The zoom's two buttons over the chart's top end corner. */
+const CORNER_BUTTON = cn(
+  "inline-flex items-center gap-1 rounded border border-subtle bg-surface/90 px-1.5 py-0.5 text-micro text-muted backdrop-blur transition-colors hover:text-primary",
+  FOCUS_RING,
+);
+
 /**
  * Wrap a chart in drag-to-zoom.
  *
  * The chart receives a `zoom` binding: it applies `xDomain`/`yDomains` to its axes
  * (with `allowDataOverflow`, so recharts clips to the window instead of widening it
- * back out) and renders `layer` as a child of its recharts chart. A reset button
- * appears over the chart's top end corner while it is zoomed — a real button, so the
- * keyboard can undo what the pointer did.
+ * back out) and renders `layer` as a child of its recharts chart. While it is zoomed two
+ * buttons stand over the chart's top end corner — Back, one zoom step, and Reset zoom,
+ * the whole range — real buttons, so the keyboard can undo what the pointer did.
  */
 export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
   function Zoomable(props: P) {
     const labels = useKitLabels("seriesChart", DEFAULT_SERIES_CHART_LABELS, props.labels);
     const group = useContext(SharedX);
-    const [ownX, setOwnX] = useState<[number, number] | undefined>(undefined);
-    const [ownY, setOwnY] = useState<Record<string, [number, number]> | null>(null);
-    const xWindow = group ? group.window : ownX;
-    const setXWindow = group ? group.set : setOwnX;
+    const [own, setOwn] = useState<ZoomHistory>(NO_HISTORY);
+    const history = group ? group.history : own;
+    const setHistory = group ? group.set : setOwn;
+    // This chart's key for its own y windows in a history a `SharedXZoom` shares.
+    const id = useId();
+    const xWindow = history.x;
+    const ownY = history.y[id] ?? null;
     const axes = props.axes ?? ONE_AXIS;
     const setting = props.zoomAxes ?? defaultZoomAxes(props.series);
     const only = setting === "x" || setting === "y" ? setting : undefined;
@@ -516,14 +601,13 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
     // to be empty.
     const empty = rows?.length === 0 || series?.length === 0;
 
-    const clear = useCallback(() => {
-      setXWindow(undefined);
-      setOwnY(null);
-    }, [setXWindow]);
+    const clear = useCallback(() => setHistory(NO_HISTORY), [setHistory]);
+    const back = useCallback(() => setHistory(zoomBack), [setHistory]);
 
     // Every way back to the whole range clears the tooltip — the button, a double click,
-    // and in a `SharedXZoom` a reset pressed on another chart of the column (see
-    // `leaveChart`). On the change, not in each handler, so none of them can miss it.
+    // Back past the first step, a pinch out to it, and in a `SharedXZoom` any of those on
+    // another chart of the column (see `leaveChart`). On the change, not in each handler,
+    // so none of them can miss it.
     const root = useRef<HTMLDivElement>(null);
     const wasZoomed = useRef(zoomed);
     useEffect(() => {
@@ -538,9 +622,9 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
     // drag scroll the page) — set from the second finger, before it has moved, as
     // ZoomableImage's pinch does.
     const [pinching, setPinching] = useState(false);
-    // The y the chart had when the gesture began: a two-finger PAN keeps a dragged y
-    // window, a pinch lets y refit as an x band does.
-    const pinchY = useRef<Record<string, [number, number]> | null>(null);
+    // The view the gesture began on: what Back returns to once it has zoomed, and the y a
+    // two-finger PAN keeps (a pinch lets y refit, as an x band does).
+    const pinchFrom = useRef<ZoomSnapshot>(NO_HISTORY);
     const onTouchMove = useEffectEvent((event: TouchEvent) => {
       // The class above lands a render after the second finger; a move the browser sends
       // before it would still scroll. React attaches `touchmove` passive, where
@@ -574,29 +658,32 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
             whole={dataWhole}
             window={xWindow}
             pinchable={pinchable}
-            onZoom={(selection) => {
-              const next = zoomAfter(state, selection, source);
-              if (next.x !== xWindow) setXWindow(next.x);
-              setOwnY(next.y);
-            }}
+            onZoom={(selection) =>
+              setHistory((was) => {
+                const next = zoomAfter({ x: was.x, y: was.y[id] ?? null }, selection, source);
+                return zoomStep(zoomMove(was, id, next.x, next.y), was);
+              })
+            }
             onPinch={(phase, window, zooming) => {
               if (phase === "start") {
-                pinchY.current = ownY;
+                pinchFrom.current = { x: history.x, y: history.y };
                 setPinching(true);
                 return;
               }
+              const from = pinchFrom.current;
               if (phase === "end") {
                 setPinching(false);
+                // One step for the whole gesture, from where it began; a pan is none.
+                if (zooming) setHistory((was) => zoomStep(was, from));
                 return;
               }
-              setXWindow(window);
-              setOwnY(zooming ? null : pinchY.current);
+              setHistory((was) => zoomMove(was, id, window, zooming ? null : (from.y[id] ?? null)));
             }}
             onReset={clear}
           />
         ),
       };
-    }, [setting, xWindow, ownY, source, dataWhole, only, pinchable, setXWindow, clear]);
+    }, [setting, xWindow, ownY, history, id, source, dataWhole, only, pinchable, setHistory, clear]);
 
     if (setting === "none") {
       return (
@@ -610,16 +697,16 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
       <div ref={root} className={cn("relative", pinching && "touch-none")}>
         <Chart {...props} zoom={binding} />
         {zoomed && !empty && (
-          <button
-            type="button"
-            onClick={clear}
-            className={cn(
-              "absolute end-1 top-1 z-10 inline-flex items-center gap-1 rounded border border-subtle bg-surface/90 px-1.5 py-0.5 text-micro text-muted backdrop-blur transition-colors hover:text-primary",
-              FOCUS_RING,
+          <div className="absolute end-1 top-1 z-10 flex gap-1">
+            {history.back.length > 0 && (
+              <button type="button" onClick={back} className={CORNER_BUTTON}>
+                <Undo2 aria-hidden className="size-3 rtl:-scale-x-100" /> {labels.zoomBack}
+              </button>
             )}
-          >
-            <X aria-hidden className="size-3" /> {labels.resetZoom}
-          </button>
+            <button type="button" onClick={clear} className={CORNER_BUTTON}>
+              <X aria-hidden className="size-3" /> {labels.resetZoom}
+            </button>
+          </div>
         )}
       </div>
     );
