@@ -1150,7 +1150,8 @@ Each app has since built its 0.36 adoption, and the cites below are re-read ther
   projects, setpoint sessions, gears, transmissions, hysteresis sets, kinematics
   mappings. Reports stay with their author (`REPORTS`, :89-95).
 - Refused onto the source itself, onto an inactive account and onto a customer
-  (:459-475); confirmed by the source's typed address. The source may be active or
+  (:459-475; the customer case went with the role, KS migration 0060, 2026-11-12);
+  confirmed by the source's typed address. The source may be active or
   deactivated (the docstring's case: "a colleague left").
 - The grants on the moved rows stay, now granted by the recipient; a grant the recipient
   held on a moved row goes (`share_service.follow_transfer`, `share_service.py:419-438`).

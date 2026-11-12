@@ -6,8 +6,9 @@ import { TransferOwnershipDialog } from "../transfer-ownership-dialog";
 import type { TransferCandidate } from "../transfer-ownership-dialog";
 
 /**
- * §4.1, §9.6: the transfer is a typed confirm with a recipient — never a customer, a
- * deactivated account or the account itself; the app marks them, the kit says why.
+ * §4.1, §9.6: the transfer is a typed confirm with a recipient — never a deactivated
+ * account or the account itself; the app marks them, the kit says why. `"customer"` is
+ * still the kit's reason, though no app passes it any more (`TransferUnavailable`).
  */
 
 const FROM = { id: 1, email: "ada@example.com", first: "Ada", last: "Example" };

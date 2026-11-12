@@ -134,7 +134,7 @@ Phone cards come from the same preset.
 | Action | Request | Rules |
 |---|---|---|
 | Deactivate / reactivate | `POST /admin/users/{id}/active {active, confirm_email?}` | Deactivating ends every session (`sessions_invalid_before`; kastlan's session rows) and needs the typed email. Never yourself, never the last active admin. Reactivating also clears a pending deletion (§6.4). |
-| Change role | `POST /admin/users/{id}/role {role}` (kastlan: `PUT /admin/users/{id}/roles {roles}` for the current company) | Never your own admin role away, never the last admin. Kurvenschmiede: a CUSTOMER is never a team manager, nor an account that owns work, and REVIEWER is set only through `/reviewer`. kastlan: TENANT is not grantable until a tenant portal exists. |
+| Change role | `POST /admin/users/{id}/role {role}` (kastlan: `PUT /admin/users/{id}/roles {roles}` for the current company) | Never your own admin role away, never the last admin. Kurvenschmiede: REVIEWER is set only through `/reviewer` (its CUSTOMER, never a team manager nor an account that owns work, went in its migration 0060: every customer became a member, Marcel 2026-11-12). kastlan: TENANT is not grantable until a tenant portal exists. |
 | Force password change | `POST` / `DELETE /admin/users/{id}/password-change` | keksdose's: the next sign-in answers `password_change_required` (auth §5.1), and the user sets a new one. Withdrawing clears it. |
 | Resend a mail | `POST /admin/users/{id}/mail {kind: "verification" \| "password_reset"}` → `{sent, mail_backend, link?}` | `link` only while mail goes to the console (dev, or a deploy without mail), the shown-once rule of invitations. Throttled per recipient. |
 
@@ -153,7 +153,8 @@ because the passkey proved who it is (auth §5.1).
 Plus, where an app has them:
 - the reviewer scope: `PUT /admin/users/{id}/reviewer {locales, areas}`;
 - Kurvenschmiede's transfer of owned work: `POST /admin/users/{id}/transfer {to, confirm_email}`.
-  The recipient is never a CUSTOMER, a deactivated account, or yourself.
+  The recipient is never a deactivated account, or yourself (nor a CUSTOMER, until its
+  migration 0060 removed the role).
 
 ### 4.2 Confirmation levels, decided on the server
 
@@ -348,7 +349,7 @@ From auth §4.4: hashed tokens, 14 days, email + scope + role.
   - authorship foreign keys are nulled. Every user foreign key has an explicit
     `ON DELETE`, and a cascade becomes SET NULL **only together with** the scrub, never
     alone;
-  - feedback is anonymised (`erasure_identifiers`), the encrypted context included;
+  - feedback is anonymised (`erasure_identifiers`), its `context` included;
   - the user row goes, and the `admin_actions` rows stay, scrubbed.
 - The kit's `DeleteAccountSetting`: the consequences (the app's list, and the hand-over
   count where it applies), password, typed email, and the mode's sentence ("in 30 days"

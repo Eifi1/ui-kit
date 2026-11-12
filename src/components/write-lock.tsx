@@ -19,8 +19,7 @@ export { DEFAULT_WRITE_LOCK_LABELS };
  * What kind of lock a source is (docs/billing-harmonization.md §12.36, ui-kit 0.33).
  * `"demo"` (the read-only demo, `demo.writeLocked`), `"billing"` (a lapsed plan,
  * `billing.lockReason`) and, since 0.46, `"offline"` ({@link OFFLINE_LOCK}) are the kit's; an app names its own — Kurvenschmiede's
- * `"access"` (a curve shared to view) and `"customer"` (an account that owns nothing).
- * A control exempts itself from a kind with {@link CommitScope}; a source without a
+ * `"access"` (a curve shared to view). A control exempts itself from a kind with {@link CommitScope}; a source without a
  * kind is never exempted.
  */
 export type WriteLockKind = "demo" | "billing" | "offline" | (string & {});
@@ -97,8 +96,7 @@ export interface WriteLockProviderProps {
   locked: boolean;
   /**
    * The one sentence that says why — "Shared with you to read", "Read-only demo —
-   * saving is disabled", "A customer account cannot create curves". The app's policy,
-   * already translated. Left out: `labels.reason`.
+   * saving is disabled". The app's policy, already translated. Left out: `labels.reason`.
    */
   reason?: ReactNode;
   /** What kind of lock this is — `"demo"`, `"billing"` or the app's own (see
@@ -123,10 +121,10 @@ export interface WriteLockProviderProps {
  * The read-only lock — **everything renders; only the commit is locked.**
  *
  * keksdose (features/budgets/write-lock.tsx, the read-only demo budget) and
- * Kurvenschmiede (features/sharing/write-lock.tsx, a curve shared to view, a customer
- * account that owns nothing) each built the same `SaveGuard`: the page, its tabs,
- * forms and dialogs render exactly as for an owner, because a viewer looking at half
- * a page is not looking at what they were sent; what changes is that the control
+ * Kurvenschmiede (features/sharing/write-lock.tsx, a curve shared to view) each built
+ * the same `SaveGuard`: the page, its tabs, forms and dialogs render exactly as for an
+ * owner, because a viewer looking at half a page is not looking at what they were sent;
+ * what changes is that the control
  * that SAVES is off and says why on hover or focus. Both wrapped each Save in a
  * Tooltip and forced a native `disabled` on it — out of the tab order, so the reason
  * never reached a keyboard — and both had to remember it at thirty call sites.

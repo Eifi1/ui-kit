@@ -155,8 +155,8 @@ export interface FeedbackPublicListProps<T extends FeedbackPublicListItem = Feed
   search?: string;
   /**
    * The search box is drawn ONLY with this handler: where the app's titles are sealed
-   * (Kurvenschmiede, `FeedbackDeps.public_search=False`, §9.9) there is nothing to search
-   * on and the server answers `q` with a 422 — so it passes none.
+   * (`FeedbackDeps.public_search=False`, §9.9) there is nothing to search on and the
+   * server answers `q` with a 422 — so it passes none.
    */
   onSearchChange?: (search: string) => void;
   /** The opened row: the app's {@link FeedbackPublicDetail} with the row's

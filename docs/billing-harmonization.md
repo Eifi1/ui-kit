@@ -192,8 +192,9 @@ one row (§12.12): keksdose `register_user`; kastlan `_new_company`, `create_com
 the demo company (comped) and the seed; Kurvenschmiede `auth_service.register` and the
 seed. kastlan's GRANDFATHERED maps to `comped`/`beta`.
 
-**Not payers** (§12.8): Kurvenschmiede's customers (they read) and reviewers; kastlan's
-tenants (decision 15). The operator's admin accounts are `comped`, `manual`, with no end
+**Not payers** (§12.8): Kurvenschmiede's reviewers; kastlan's tenants (decision 15).
+Kurvenschmiede's customers, who read, were not either, until its migration 0060 made them
+members (2026-11-12). The operator's admin accounts are `comped`, `manual`, with no end
 (keksdose's first user's UNLIMITED became this).
 
 **No row, always in good standing** (§12.7): demo users, the demo's system account,
@@ -624,7 +625,8 @@ stands here. The reviews' wording is in [archive/billing-history.md](archive/bil
 36. **A lock says its source; a control can be exempt** (decision 26 as amended; ui-kit
     0.33, `src/components/write-lock.tsx`, `src/billing/billing-lock.ts`).
     1. **Every lock source has a kind.** `"demo"` and `"billing"` are the kit's; an app
-       names its own (Kurvenschmiede's `"access"` and `"customer"`). A source without a
+       names its own (Kurvenschmiede's `"access"`; its `"customer"` went with the role in
+       its migration 0060). A source without a
        kind is never exempted.
     2. **The provider holds every locked source, in refusal order** (§3.3), as `holds`,
        beside the first one's reason and kind. Nesting still follows "nearest wins": an

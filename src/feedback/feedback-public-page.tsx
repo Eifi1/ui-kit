@@ -94,9 +94,10 @@ const SEARCH_SETTLE_MS = 300;
 export interface UseFeedbackPublicPageOptions {
   /**
    * The search box and `?q=` — titles only (§9.9). Off by default: where the titles are
-   * sealed at rest (Kurvenschmiede, server-kit `FeedbackDeps.public_search=False`) there is
-   * nothing to search and the server answers `q` with a 422, so the box is not drawn and `q`
-   * is never sent, whatever the address says. keksdose passes `search`.
+   * sealed at rest (server-kit `FeedbackDeps.public_search=False`) there is nothing to
+   * search and the server answers `q` with a 422, so the box is not drawn and `q` is never
+   * sent, whatever the address says. keksdose and Kurvenschmiede, whose titles are plain
+   * text, pass `search`.
    */
   search?: boolean;
   /** One server page, the `limit`. Default 50, both apps'. */

@@ -59,7 +59,7 @@ export interface FeedbackMenuProps {
    * a **Feedback discussion** row (`Users`, key `all-feedback`; "All feedback" until 0.40)
    * first of the list links, for everyone — the admin too, who reads what the others read
    * there. keksdose: `"/all-feedback"`. Leave it out where the app has no
-   * public parts (kastlan) or the viewer may not see them (a Kurvenschmiede customer, a
+   * public parts (kastlan) or the viewer may not see them (outside the app's predicate, a
    * demo — §9.2 decisions 7, 8).
    */
   publicHref?: string;

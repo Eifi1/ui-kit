@@ -137,7 +137,8 @@ optional on read; readers treat a missing key as "unknown":
 server overwrites `user_id`, `user_email`, `user_display_name` from the session and
 caps the object's size (server-kit `stamp_identity`, 8 KB), so a client cannot file in
 someone else's name. Encrypting `context` at rest like the other reporter data is the
-app's choice, and recommended (Kurvenschmiede does).
+app's choice. None of the three does: Kurvenschmiede did until its migration 0059, and
+keeps its feedback in plain text since, as keksdose (Marcel, 2026-11-12).
 
 Crash rows add (server-written, kk `feedback_service.record_crash`): `fingerprint`,
 `boundary` (`app`/`page`), `online`, `occurrences`, `first_seen_at`, `last_seen_at`,
@@ -279,7 +280,9 @@ and `feedback.attachments`:
   (`upload_guards._attachment_limiter`). kastlan has the same in-process limiter
   (20 uploads/h, 20 crashes/h per user); Kurvenschmiede's are per process (2 uvicorn
   workers → effectively 40/h).
-- Storage is the app's: Kurvenschmiede keeps its own table and encryption. The two-step
+- Storage is the app's: Kurvenschmiede keeps its own attachment table, its files sealed
+  in it until they move to an object store, plain, as keksdose's (its migration 0059's
+  plan, Marcel 2026-11-12; server-kit 0.26's `objects`). The two-step
   upload's orphans are the app's to clean (Kurvenschmiede: each upload sweeps unattached
   uploads older than 24 h, with no scheduler); the URL shape the client sees is this
   section's.
@@ -803,6 +806,10 @@ Outcome section, §5 the kit's parts).
 | Export | own reports with `outcome` and every comment on them (`account_export_service.py:268-331`) | own reports with `outcome` (`account_service.py:244`, `:294-305`) | own reports (`export_service.py:89-92`) |
 | Demo | refused on writes (§3.3) | throwaway `is_demo` accounts, minted at the gate (`domain/services/demo_session_service.py:119`, `last_name=""` `:129`), refused on writes at sign-in (`adapters/api/feedback_router.py:58-62`) | `is_demo` accounts, refused by `not_in_the_demo` (`feedback_router.py:78`); **the demo is public**: anyone may open `/demo`, no invitation (`frontend/src/features/demo/demo-pages.tsx:12`) |
 
+Kurvenschmiede's column is the survey's. Since 2026-11-12 (Marcel) its feedback is plain
+text, as keksdose's (its migration 0059: titles, bodies, `context`, `outcome`, replies and
+comments), and it has no CUSTOMER role (0060: every customer became a member).
+
 The kit: `FeedbackResponse` has one `outcome` (server-kit `feedback/schemas.py:155-182`;
 ui-kit `FeedbackRecord`, `src/feedback/feedback-record.ts:84-120`); `FeedbackRowDetail`'s
 Outcome section is one editor (§4.4.4). A crash body carries the reporter's address
@@ -849,8 +856,9 @@ only mine." The five relayed decisions are confirmed. Each line below is the rul
      Dateien)."**
 7. **Who sees the public parts is the app's predicate**, a callable on the viewer in
    `FeedbackDeps` (`public_viewer`). An admin always passes; a demo never does (8).
-   keksdose: every signed-in user. Kurvenschmiede: ADMIN, MEMBER, REVIEWER, **never
-   CUSTOMER** (a customer files and reads their own reports only). kastlan: **off**
+   keksdose: every signed-in user. Kurvenschmiede: ADMIN, MEMBER, REVIEWER, which is
+   every signed-in user since its CUSTOMER role went (migration 0060, 2026-11-12; until
+   then a customer filed and read their own reports only). kastlan: **off**
    (`None`): the public routes are not mounted, no menu entry, no votes, no comments;
    **replies ship everywhere** (they are not public parts). Should kastlan switch it on
    later: per company (RLS), staff only (`ALL_EMPLOYEES`, never TENANT).
@@ -986,9 +994,9 @@ a `CompanyMixin` table.
 
 Table `feedback_replies (id serial, feedback_id FK ON DELETE CASCADE, author_id FK users
 nullable, body Text NOT NULL, status_from nullable, status_to nullable, created_at
-server_default now())`; keksdose adds `notified_at timestamptz NULL` (9.13); KS seals
-`body`; kastlan's is a `CompanyMixin` table. Both status columns use the app's status
-type.
+server_default now())`; keksdose adds `notified_at timestamptz NULL` (9.13); KS's `body`
+is plain text since its migration 0059 (sealed until then); kastlan's is a `CompanyMixin`
+table. Both status columns use the app's status type.
 
 ```jsonc
 // FeedbackReplyResponse
@@ -1016,8 +1024,9 @@ type.
   `outcome` is not blank: `body = outcome`, `author_id = NULL`, `status_from` and
   `status_to` NULL, `created_at = coalesce(resolved_at, updated_at)` (kk's raw `UPDATE`
   never bumped `updated_at`, so it is the last app write; fine), and in kk
-  `notified_at = created_at` (never sent). KS seals the copy under the same key; kastlan
-  runs it under `SET LOCAL app.bypass_rls` and copies `company_id`.
+  `notified_at = created_at` (never sent). KS sealed the copy under the same key (plain
+  since its migration 0059); kastlan runs it under `SET LOCAL app.bypass_rls` and copies
+  `company_id`.
 - **`outcome` is frozen for one release:** the column stays and is answered as stored
   (an old client still shows the last answer); nothing writes it any more, and nothing
   computes it from replies; `PATCH {outcome}` is 422 "outcome is read-only; post a
@@ -1030,8 +1039,9 @@ type.
 Table `feedback_comments (id serial, feedback_id FK ON DELETE CASCADE, user_id FK users
 nullable, body Text NOT NULL, staff boolean NOT NULL default false, created_at
 server_default now(), updated_at, hidden_at nullable, hidden_by FK users nullable)`:
-keksdose's table plus `staff` and the two hide columns; KS seals `body`; kastlan's would
-be a `CompanyMixin` table (not built while public is off).
+keksdose's table plus `staff` and the two hide columns; KS's `body` is plain text since
+its migration 0059 (sealed until then); kastlan's would be a `CompanyMixin` table (not
+built while public is off).
 
 ```jsonc
 // FeedbackCommentResponse
@@ -1083,11 +1093,12 @@ dependencies (server-services §2.8). keksdose's names (`list_*`, `create_*`):
   eight only when `public_viewer` is set (kk, KS). They go before `PATCH /{feedback_id}`
   in the router, and `/public` before any `/{feedback_id}` GET of the app's own.
 - **"Who sees the report":** an admin; its author (comments only when the author passes
-  `public_viewer` too: a KS customer gets 404); anyone passing `public_viewer` when the
-  report is public. A demo never passes (decision 8).
+  `public_viewer` too: an author outside it gets 404); anyone passing `public_viewer` when
+  the report is public. A demo never passes (decision 8).
 - **The list (B4):** titles only, no body; `q` searches `title` and only where it is a
-  plaintext column (kk, ka; `FeedbackDeps.public_search=False` in KS, where `q` is a
-  422); sort as 9.6; `limit` 1–100 (default 50); counts in SQL.
+  plaintext column (kk, ka, and KS since its migration 0059); an app whose titles are
+  sealed sets `FeedbackDeps.public_search=False`, and `q` is a 422 there (KS until 0059);
+  sort as 9.6; `limit` 1–100 (default 50); counts in SQL.
 - **The detail** carries the public body and the replies; the comments are fetched
   with it (`list_comments`), since they may be many.
 - **Replies ride on the report** on `GET /feedback`, `GET /feedback/my` and the create
@@ -1451,6 +1462,9 @@ Size: **M–L** (~900 code, ~900 test lines, seven locales).
   is never told others read it); `filed_private` is set on exactly the rows 0052 made
   public; the feedback mails link the author to `/my-feedback?row=<id>`, everyone else to
   `/all-feedback?row=<id>`.
+  Since 2026-11-12 (Marcel): the bodies, the titles and the outcome are plain text (its
+  migration 0059) and the server runs `public_search=True`; there is no CUSTOMER role
+  (0060: every customer became a member, and their reports stayed as filed).
 
 ### 9.17 Shipped, amended elsewhere
 
@@ -1524,6 +1538,10 @@ loops).
 | An admin's own list | `/my-feedback` works for an admin (`features/feedback/feedback-page.tsx:148`), but no menu link | the same (`features/feedback/pages/feedback-page.tsx:121`; `CLAUDE.md:86` says admins review their own there) | the same (`features/feedback/feedback-page.tsx:87-107`) |
 | The PWA cache | `registerType: "prompt"` (`frontend/vite.config.ts:171`, `src/sw.ts:23`): an old bundle lives for days | — | — |
 
+Kurvenschmiede's column is the survey's: its reply bodies are plain text since its
+migration 0059 and it has no customer since 0060 (Marcel, 2026-11-12), so its menu rows
+are keksdose's.
+
 **What today's run shows.** Marcel answered nine of the loop's questions on his own
 reports (#405–#419, 14:00–14:14) with the admin's **reply** composer, no status, then moved
 each to READY by hand (`queue-run79.txt`: the replies with an empty `status_to`, the rows
@@ -1579,7 +1597,7 @@ merged thread (`feedback-comment-thread.tsx:124-207`), the menu's one list link 
    An admin answers on any report, their own included, with the composer, which offers
    **REWORK as a status** like every status: one reply that says what is wanted and moves
    the report. The **Rework button shows only to an author the composer is not shown to**
-   (members, customers, tenants). A rework entry is the report's author's only: the server
+   (members, tenants). A rework entry is the report's author's only: the server
    takes `POST /rework` from the author (an admin author too, for an API caller or a cached
    client: their entry lands REWORK) and refuses anyone else.
 7. **Entry kind, not a comment flag.** `feedback_replies.kind` (`'reply'` | `'rework'`,
@@ -1706,7 +1724,8 @@ old loop answers, and `reworkCount` never reads it either.
   `/feedback/attachments/<key>` (the key the block's `[screenshot]` line names), no second
   copy, and erasure already purges it through the report's attachments. `author_id` is
   that attachment row's `user_id` (the uploader) when a block's key matches one, else
-  decision 12's;
+  decision 12's; its migration 0059 opened those seals on 2026-11-12, and the bodies and
+  entries are plain text since;
 - **downgrade:** re-appends each entry in `append_rework`'s shape (oldest first), deletes
   the entries, drops the columns; a Postgres enum label cannot be dropped, so the label
   stays and every `REWORK` in `feedback.status`, `status_from` and `status_to` becomes
@@ -1826,8 +1845,8 @@ Size: **M** (~350 code, ~600 test lines).
   (`labels.inbox`, `Inbox`, `to: inboxHref`, when `isAdmin`); `FeedbackMenuLabels` gains
   `discussion`, `inbox`; `allFeedback`, `viewFeedback` optional and `@deprecated` (removed
   in 0.41).
-  Rows per role: admin with public parts 3, member 2; kastlan admin 2, member 1; a KS
-  customer 1.
+  Rows per role: admin with public parts 3, member 2; kastlan admin 2, member 1; anyone
+  the app's predicate leaves out (KS's customers, until its migration 0060) 1.
 - Labels in seven languages (10.6): `src/i18n/german.ts`, `src/i18n/locales/{fr,it,es,hu,
   zh}.ts`, the English defaults; `feedbackMenu.discussion`, `feedbackMenu.inbox`,
   `feedbackPage.title`, `feedbackPublic.title`, `feedbackStatus.REWORK`.
@@ -2016,8 +2035,9 @@ attention badge, which the app polls.
 6. **The words. No sealed content, no reporter.** The push, the inbox row and the mail
    carry the same text: "New feedback report #123 (Bug)", "Report #123 was sent back for
    rework", "New crash report #123". The link is the admin inbox, `/feedback?row=123`.
-   - No title, no body, no reporter name or address in any of them. KS seals titles; mail
-     and push are plaintext. The admin reads the rest in the app.
+   - No title, no body, no reporter name or address in any of them: mail and push are
+     plaintext. (KS sealed its titles then; they are plain text since its migration 0059,
+     and the rule stands.) The admin reads the rest in the app.
    - Category labels are the app's. The mail carries the unsubscribe footer and headers
      (notifications §3.6).
    - A bundle reads "{n} new feedback reports and reworks", one line each.
@@ -2776,8 +2796,9 @@ answer. The hook first, the queries, the component last.
 
 Every write replaces the history entry. A new sort or a new search writes `p` back to the
 first page in the same navigation. `search` is **off by default**: where titles are sealed
-(Kurvenschmiede, `public_search=False`, §9.9) there is no box and `q` is never sent, whatever
-the address says. The server is asked once the typing pauses 300 ms (keksdose's), trimmed.
+(`public_search=False`, §9.9) there is no box and `q` is never sent, whatever the address
+says. keksdose and Kurvenschmiede, whose titles are plain text (KS since its migration 0059),
+pass `search`. The server is asked once the typing pauses 300 ms (keksdose's), trimmed.
 It returns `FeedbackPublicPageState`: the values and their setters, `searchable`, `query` (the
 settled search), `pageSize` (default 50, both apps') and **`request`** — `{ sort, q?, limit,
 offset }`, `q` only with text, the same object until one of them changes — for the list query
@@ -2856,7 +2877,7 @@ props, merged last), `labels`, `pageLabels`, `header`, `className`. It draws:
 | What | keksdose | Kurvenschmiede | 0.61 |
 |---|---|---|---|
 | Sort, page | `?sort=`, `?p=` | `useState` | the URL |
-| Search | `?q=`, debounced 300 ms | none (sealed) | `search` (off by default) |
+| Search | `?q=`, debounced 300 ms | none (sealed until its migration 0059) | `search` (off by default; both pass it) |
 | `?row=` parse | `Number`, finite (`?row=1e2` opened #100) | `Number(…) \|\| null` | digits only |
 | Next while the next page loads | on | off (`!isPlaceholderData`) | off |
 | The list failed | "No reports yet" | a banner in place of the list, sort gone | the card with Try again in the table, sort kept |

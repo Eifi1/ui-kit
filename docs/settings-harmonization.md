@@ -1057,5 +1057,6 @@ menu row and not a sidebar entry.
 2. **kastlan's role is per company**: should the chip show the role in the active
    company and follow the `CompanySwitcher`?
 3. **Kurvenschmiede's customer role**: is it a plain chip, or does it have a tool of its own?
+   (Moot since its migration 0060, 2026-11-12: the role is gone.)
 4. Is a chip as the only way in discoverable enough on a phone? keksdose: does live use
    show anyone missing it?

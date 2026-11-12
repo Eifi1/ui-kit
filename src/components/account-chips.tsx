@@ -96,8 +96,8 @@ export interface RoleChipProps<R extends string = string> extends AccountChipLoo
  * A role as a chip: the API's key looked up in the app's {@link RoleVocabulary}.
  *
  * The vocabulary is a prop and not kit English, because the roles are the app's —
- * Kurvenschmiede has admin, member and customer, keksdose admin and user, kastlan its
- * own — and so are their names. Carries `data-role` with the key, for a test or a
+ * keksdose and Kurvenschmiede have admin, member and reviewer, kastlan its own — and so
+ * are their names. Carries `data-role` with the key, for a test or a
  * style hook.
  */
 export function RoleChip<R extends string = string>({

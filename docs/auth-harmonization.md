@@ -191,8 +191,8 @@ avatars, feedback, and the greeting in a mail.
   other: the token reached `you@x`, which says nothing about whether `you+app@x` is
   delivered.
 - **TENANT is not an invitable role** in kastlan until a tenant portal exists (§2.9).
-  Kurvenschmiede's CUSTOMER rule holds for invitations too: a customer is never a team
-  manager.
+  Kurvenschmiede invites members only: its CUSTOMER (never a team manager, on an
+  invitation either) went in its migration 0060 (Marcel, 2026-11-12).
 
 ### 4.4 Invitations (one shape)
 

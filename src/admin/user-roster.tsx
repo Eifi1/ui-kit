@@ -436,8 +436,9 @@ export function userRosterColumns<T extends UserRosterRow, R extends string = st
                 // "Admi…". Every word of the vocabulary, not only the row's offered
                 // ones: the column is as wide as its widest row, so the rows line up, and
                 // a role held but not offered (KS's Reviewer) is still a selected value.
-                // Not the options' reasons ("Customer (owns work)"): they are never the
-                // selected value, and the open list is as wide as it needs anyway.
+                // Not the options' reasons ("Member (not for the last administrator)"):
+                // they are never the selected value, and the open list is as wide as it
+                // needs anyway.
                 <div>
                   <RoleSelect<R>
                     size="sm"

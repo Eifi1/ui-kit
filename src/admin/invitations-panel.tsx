@@ -164,8 +164,9 @@ export interface InvitationsPanelProps<R extends string = string> {
   invitations: readonly InvitationRow<R>[];
   /** The app's roles. Left out: no role choice, and no role chip on a row. */
   roles?: RoleVocabulary<R>;
-  /** The roles an invitation may carry — Kurvenschmiede's member or customer. Default:
-   *  the whole vocabulary. One role: no choice is drawn, and it is sent. */
+  /** The roles an invitation may carry — kastlan's grantable ones (no TENANT),
+   *  Kurvenschmiede's MEMBER alone. Default: the whole vocabulary. One role: no choice is
+   *  drawn, and it is sent. */
   invitableRoles?: readonly R[];
   /** The role the form starts with. Default: the first invitable one. */
   defaultRole?: R;

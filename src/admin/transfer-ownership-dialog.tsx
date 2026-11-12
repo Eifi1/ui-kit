@@ -19,21 +19,29 @@ import { DEFAULT_TRANSFER_OWNERSHIP_LABELS } from "./transfer-ownership-dialog-l
  * typed address is the SOURCE account's — the one whose work moves, which is the row the
  * admin must prove they are on — and the confirm waits for a recipient too.
  *
- * WHO MAY RECEIVE IT (§9.6): never a customer, never a deactivated account, never the
- * account itself. The APP decides — it knows its roles and states — and marks each
- * candidate with why it cannot (`unavailable`); the kit shows those accounts, unavailable,
- * with the reason, rather than leaving the admin to wonder where somebody went. The
- * source account is marked `self` here whether or not the app did.
+ * WHO MAY RECEIVE IT (§9.6): never a deactivated account, never the account itself. The
+ * APP decides — it knows its roles and states — and marks each candidate with why it
+ * cannot (`unavailable`); the kit shows those accounts, unavailable, with the reason,
+ * rather than leaving the admin to wonder where somebody went. The source account is
+ * marked `self` here whether or not the app did.
  */
 
-/** Why a candidate cannot receive the work: the kit's three, or the app's own words. */
+/**
+ * Why a candidate cannot receive the work: the kit's three, or the app's own words.
+ *
+ * `"customer"` is no longer used by any app: it was Kurvenschmiede's CUSTOMER, an account
+ * that owns nothing, and Kurvenschmiede has no such role since its migration 0060 (Marcel,
+ * 2026-11-12: every customer became a member). Kept, since dropping a member of an exported
+ * union is breaking, until a minor deprecates it.
+ */
 export type TransferUnavailable = "customer" | "deactivated" | "self";
 
 /** An account that might receive the work. */
 export interface TransferCandidate extends AdminPerson {
   id: string | number;
   email: string;
-  /** Why it cannot: `"customer"`, `"deactivated"`, `"self"`, or the app's own words. */
+  /** Why it cannot: `"deactivated"`, `"self"`, the app's own words, or `"customer"`, which
+   *  no app passes any more ({@link TransferUnavailable}). */
   unavailable?: TransferUnavailable | (string & {});
 }
 
@@ -59,7 +67,8 @@ export interface TransferOwnershipLabels {
   chooseFirst: string;
   /** The confirm button. */
   confirm: string;
-  /** Reasons, said after the account's name inside its option. */
+  /** Reasons, said after the account's name inside its option. `customer` is
+   *  `"customer"`'s, which no app passes any more ({@link TransferUnavailable}). */
   customer: string;
   deactivated: string;
   self: string;
