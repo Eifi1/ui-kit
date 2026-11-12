@@ -274,7 +274,11 @@ const BUDGETS = [
   // which useFeedbackSubmit in the top bar now imports so the dialog names the page without
   // what the person typed; keksdose legal audit G-10) and AppShell's `mobileSubNavPlacement`
   // (the page row's second place, kastlan #22) — meant growth, 596 B (224 gzip).
-  { label: "the shell set", names: SHELL_SET, max: 161_200 },
+  // 161,558 B (56,068 gzip) in 0.61: the kit's English words for the new swipe settings
+  // (`swipeSetting`, 17 keys, registered in i18n/defaults.ts beside every namespace) and the
+  // page reduction's shared query step (feedback-page.ts, which the top bar's dialog reads) —
+  // meant growth, 424 B (158 gzip).
+  { label: "the shell set", names: SHELL_SET, max: 161_600 },
 ];
 const ENTRY = "\0import-cost";
 async function importCost(names) {
