@@ -467,7 +467,9 @@ export interface DataTableProps<T> {
    * and the phone's "Clear all" call `onClear`; the owner drops the set. With the column
    * not drawn on a desktop (hidden, left out for width, or not among `columns`; 0.60),
    * the set and its Clear are a line above the table instead — as any column's own filter
-   * is then ("Filter Status (active)", with its Clear filter).
+   * is then ("Filter Status (active)", with its Clear filter). On a phone the Filters sheet
+   * has a section for the column, drawn on the card or not; with the column not among
+   * `columns`, the line is above the cards (0.62).
    *
    * **A link's view, so the table keeps its saved filters out of it** (keksdose live #500:
    * the filter Marcel had left on hid all four reports a notice named). While the set is
@@ -1553,6 +1555,11 @@ export function DataTable<T>({
   const drawn = (key: string) => visibleColumns.some((c) => c.key === key);
   const keySetLine = keySet && !drawn(keySet.column) ? keySet : undefined;
   const keySetLineCol = keySetLine ? columns.find((c) => c.key === keySetLine.column) : undefined;
+  // The phone's Filters sheet lists every column, drawn on the card or not, so its section
+  // says the set — unless the set's column is not among the columns at all (0.62): then the
+  // set narrowed the cards with no section, no count and, with no other filterable column,
+  // no Filters bar. The same line says it there, above the cards.
+  const phoneKeySetLine = keySet && !columns.some((c) => c.key === keySet.column) ? keySet : undefined;
   const hiddenFilterLineClass = frame ? cn("border-b border-subtle", compact ? "px-2 py-1.5" : "px-3 py-2") : "pb-3";
   const hiddenFilterCols = columns.filter(
     (c) =>
@@ -2195,6 +2202,18 @@ export function DataTable<T>({
               keySet={keySet}
               labels={labels}
               locale={locale}
+            />
+          )}
+          {phoneKeySetLine && (
+            <HiddenFilterLine
+              kind="set"
+              label={phoneKeySetLine.label}
+              // The column's own Clear, as the desktop's line calls it.
+              onClear={() => clearFilter(phoneKeySetLine.column)}
+              labels={labels}
+              focusAfter={phoneListRef}
+              // The Filters bar's own line, the sort bar's padding when compact.
+              className={cn("border-b border-subtle", compact ? "px-3 py-1.5" : "px-4 py-2")}
             />
           )}
           {mobileSort && (

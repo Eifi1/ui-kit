@@ -77,8 +77,9 @@ export function KeySetPanel({
  * - `kind="column"`, the column's own filter: the button's name as the line's words
  *   ("Filter Status (active)").
  *
- * The phone draws none: its Filters sheet lists a hidden column as any other. Internal:
- * drawn by DataTable.
+ * The phone draws a column's line nowhere: its Filters sheet lists a hidden column as any
+ * other. It draws the set's line above the cards when the set's column is not among the
+ * columns at all (0.62), which no section of the sheet can say. Internal: drawn by DataTable.
  */
 export function HiddenFilterLine({
   kind,

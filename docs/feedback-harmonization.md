@@ -2698,7 +2698,8 @@ wiring.
   (the person hid it, the width left it out, or an app's `columns` drops `id`; ui-kit
   0.60), a line above the table says the same words with the same **Clear filter**; in
   0.59 the rows stayed narrowed with nothing on screen to say so. The phone's sheet lists a
-  hidden # as before; an app that drops `id` has no section there.
+  hidden # as before; an app that drops `id` has no section there, so the same line stands
+  above the cards instead (ui-kit 0.62).
 - **A link's view keeps the saved filters out — and gives them back.** While the set is on,
   the filters the inbox keeps under `storageKey="feedback"` are neither applied (the view
   starts from the address's own `f.<column>`, usually none) nor written (the stored view
