@@ -484,7 +484,7 @@ export const en: Dictionary = {
       title: "Settings",
       short: "Settings",
       blurb:
-        "The settings page and the admin page on one shell — the sidebar on a desktop, the drill-down list on a phone, a group per path, search, the card a link rings — and the account-settings rows that go on it: theme, language, profile, password and two-factor.",
+        "The settings page and the admin page on one shell — the sidebar on a desktop, the drill-down list on a phone, a group per path, search, the card a link rings — and the account-settings rows that go on it: theme, language, profile, password, two-factor and which swipe does what.",
     },
     wizard: {
       title: "Wizard",

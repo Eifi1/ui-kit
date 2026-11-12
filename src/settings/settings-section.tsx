@@ -86,7 +86,11 @@ export function SettingsSection({
           {heading}
           {description != null && <div className={CARD_DESCRIPTION_CLASS}>{description}</div>}
         </div>
-        {action != null && <div className="flex shrink-0 items-center gap-2">{action}</div>}
+        {/* The header wraps, so a narrow card puts the actions on a line of their own; the
+            actions wrap there too, never wider than the card (0.61 release sweep: the swipe
+            card's "Set as my defaults" and "Reset to defaults" ran 81px past a 390px phone
+            at Large, 204px at Extra large on 360). */}
+        {action != null && <div className="flex max-w-full shrink-0 flex-wrap items-center gap-2">{action}</div>}
       </div>
     ) : (
       heading

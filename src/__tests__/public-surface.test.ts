@@ -380,7 +380,21 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.60 (−3, breaking): what 0.59 deprecated — `createPaletteStore` and
   // `applyPersistedPalette` (`createFixedPalette` replaces both), and `PaletteMenu` (none:
   // no app offers a palette choice). The type `PaletteStore` goes with them.
-  ["@eifi1/ui-kit", barrel, 1013],
+  // 0.60.1 (+1, here and in /feedback; keksdose's 0.60 adoption): `FEEDBACK_SWIPE_ACTIONS`,
+  // the feedback swipe's ids, back for an app's settings (0.53 had dropped it unread).
+  // 0.61 (+1, here and in /feedback; Marcel 2026-11-12): `FeedbackPageFrame`, the feedback
+  // pages' padding and header as keksdose draws them.
+  // 0.61 (+1, here and in /feedback): `deployEnvironment`, which copy of the app a report
+  // comes from, read off the host by each app's own list (keksdose's rule).
+  // 0.61 (+7, Marcel 2026-11-12: the kit owns keksdose's swipe settings):
+  // `createSwipeSettingsStore`, `FEEDBACK_SWIPE_SURFACE`, `TRANSLATION_REVIEW_SWIPE_SURFACE`,
+  // `SWIPE_NONE`, and the card: `SwipeSetting`, `SWIPE_SETTING_ANCHOR`,
+  // `DEFAULT_SWIPE_SETTING_LABELS`.
+  // 0.61 (+1, here and in /feedback): `useFeedbackComments`, one report's comment thread
+  // through the app's API client (feedback §14.3).
+  // 0.61 (+2, here and in /feedback; Marcel 2026-11-12): `useFeedbackPublicPage` and
+  // `FeedbackPublicPage`, the public page assembled once (feedback §14).
+  ["@eifi1/ui-kit", barrel, 1026],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -409,7 +423,13 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `feedbackPageHref`, `feedbackPagePath`.
   // 0.55: `useFeedbackInbox`, `FeedbackInbox` — the inbox assembled once (§13) (+2 here and
   // in the barrel).
-  ["@eifi1/ui-kit/feedback", feedback, 93],
+  // 0.60.1: `FEEDBACK_SWIPE_ACTIONS` (+1 here and in the barrel).
+  // 0.61: `FeedbackPageFrame` (+1 here and in the barrel).
+  // 0.61: `deployEnvironment` (+1 here and in the barrel).
+  // 0.61: `useFeedbackComments` (+1 here and in the barrel).
+  // 0.61: `useFeedbackPublicPage`, `FeedbackPublicPage` — the public page assembled once
+  // (§14) (+2 here and in the barrel).
+  ["@eifi1/ui-kit/feedback", feedback, 99],
   // 0.53 (−3, breaking): what 0.52 deprecated — `SEARCH_TIER_POINTS`, `matchEntries`,
   // `normalizeSearchText` (API-4).
   ["@eifi1/ui-kit/search", search, 6],
@@ -470,7 +490,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.46.0 (+4, local-first §2.3): the leaf utilities `stampAfter`, `isOfflineError`,
   // `readLocalFirst`, `writeLocalFirst`, shared with `/sync` from one module.
   // 0.46.1 (+1, kastlan N5): `uuid5`, the name-based id beside `stampAfter`.
-  ["@eifi1/ui-kit/offline", offline, 19],
+  // 0.61 (+2, Marcel 2026-11-12: the offline thread for every app): `useFeedbackCommentsQuery`
+  // and `feedbackCommentsQueryKey`, keksdose's TanStack-backed comment thread.
+  ["@eifi1/ui-kit/offline", offline, 21],
   // 0.46.0: local-first phase 3 (docs/local-first-harmonization.md §2.3) — `createSyncDb`,
   // `SYNC_DB_STORES`, `createSyncEngine`, `DEFAULT_HOLD_CODES`, `DEFAULT_SYNC_BACKOFF_MS`,
   // `syncEngineFor`, `releaseSyncEngine`, `useSyncWorker`, `useSyncStatus`, `useSyncQuery` and the

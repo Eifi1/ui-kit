@@ -135,6 +135,12 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       visibleHint: "Mások a címet és a szöveget látják, a képernyőképeit és fájljait soha.",
       visibleLocked: "Csak amíg a bejelentés nyitott.",
       page: (page) => `${n(page)}. oldal`,
+      // 0.61: FeedbackPublicPage's read states and its toast. The number after a colon, as
+      // `userFallback` writes an id after its noun, so no article has to agree with it.
+      loadFailed: "Nem sikerült betölteni.",
+      offlineHint: "Ehhez internetkapcsolat kell. Amint újra online lesz, betöltődik.",
+      rowUnavailable: (id) =>
+        `Nem sikerült megnyitni ezt a bejelentést: #${id}. Lehet, hogy törölték, vagy elrejtették mások elől.`,
     },
     feedbackNotificationTypes: {
       answered: "Válaszok a bejelentéseire",
@@ -741,8 +747,11 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     },
     seriesChart: {
       resetZoom: "Nagyítás visszaállítása",
+      zoomBack: "Vissza",
+      zoomWindow: "Látható tartomány",
+      zoomWindowRange: (from, to) => `${from} – ${to}`,
       zoomHint:
-        "Húzással nagyíthat: a nagyjából négyzetes kijelölés mindkét tengelyt nagyítja, a hosszú, keskeny csak a saját tengelyét. Dupla kattintással visszaállíthatja.",
+        "Húzással nagyíthat: a nagyjából négyzetes kijelölés mindkét tengelyt nagyítja, a hosszú, keskeny csak a saját tengelyét. Érintőképernyőn egy ujjal leolvashatja az értékeket, két ujjal nagyíthat és mozgathat. A „Vissza” egy nagyítási lépést visszavon; dupla kattintás vagy a „Nagyítás visszaállítása” ismét a teljes tartományt mutatja.",
       empty: "Nincs adat",
       legend: "Adatsorok",
       points: "Diagramértékek",
@@ -1000,6 +1009,13 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
             tail: "Egyiket sem használjuk az Ön követésére. A küldésre váró bejegyzéseket a böngésző elküldi nekünk, amint lehetséges. Mindez eltűnik, amikor törli a webhely adatait, kijelentkezéskor pedig a bejelentkezési tokenek törlődnek.",
             commercial:
               "Egyiket sem használjuk az Ön követésére. A küldésre váró bejegyzéseket a böngésző elküldi nekünk, amint lehetséges. Mindez eltűnik, amikor törli a webhely adatait, kijelentkezéskor pedig a bejelentkezési tokenek törlődnek. A fizetés a Paddle egy ablakában, a Paddle saját domainjén zajlik; amit ez az ablak ott tárol (például egy biztonsági sütit és beállításokat), arra a Paddle adatvédelmi tájékoztatója vonatkozik.",
+            // 0.61 (Marcel 2026-11-12): the persisted cache and the shared-computer flag, for an app's entries.
+            standardEntries: {
+              recentData: (hours) =>
+                `A nemrég betöltött adatok, hogy az oldalak kapcsolat nélkül is megnyíljanak; ami ${hours} óránál régebbi, azt az alkalmazás már nem használja, és a következő megnyitáskor törli. Semmi sem marad meg belőle, ha az „Ez egy közös használatú számítógép” beállítással jelentkezik be.`,
+              sharedComputer:
+                "Hogy bejelentkezéskor az „Ez egy közös használatú számítógép” lehetőséget választotta-e, amíg az a munkamenet tart.",
+            },
           },
           rights: {
             title: "Az Ön jogai",
@@ -1930,6 +1946,27 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       confirmAction: "Visszaállítás",
       done: "Az eszköz beállításai visszaálltak az alapértékekre.",
       keywords: "visszaállítás alapértelmezett alapérték eszköz helyreállítás megjelenés táblázatok elrendezés",
+    },
+    // 0.61 — SwipeSetting (keksdose's Settings → Interaction). Not reviewed by a native
+    // speaker yet.
+    swipeSetting: {
+      title: "Csúsztatási mozdulatok",
+      description: "Hogyan reagálnak a listák sorai a vízszintes húzásra – érintéssel vagy az egérrel húzva.",
+      surfacePicker: "Melyik lista",
+      surfaces: { feedback: "Visszajelzések", translationReview: "Fordítások" },
+      right: "Csúsztatás jobbra",
+      left: "Csúsztatás balra",
+      primary: "Rövid csúsztatás",
+      secondary: "Hosszú csúsztatás",
+      none: "— nincs —",
+      nextStatus: "Következő állapot",
+      help: "Egy rövid húzás az első műveletet hajtja végre, egy hosszabb a másodikat. Ha egy sor egy műveletet nem tud végrehajtani, az kimarad, és a következő lép a helyére.",
+      saveDefault: "Beállítás saját alapértékként",
+      reset: "Visszaállítás alapértékekre",
+      resetMine: "Vissza a saját alapértékeimhez",
+      defaultSaved: "A visszaállítás mostantól az Ön által mentett alapértékekre áll vissza.",
+      resetShipped: "Gyári alapértékek visszaállítása",
+      keywords: "csúsztatás húzás mozdulat bal jobb rövid hosszú sorok listák",
     },
     rowActions: {
       actions: "Műveletek",

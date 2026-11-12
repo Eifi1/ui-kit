@@ -64,8 +64,8 @@ export interface FeedbackContextInput {
   route?: string;
   /** Default `location.origin`. */
   origin?: string;
-  /** `"prod"` / `"dev"` / `"local"` — the app's own reading (keksdose
-   *  `app/deploy-environment.ts`). Left out of the object when not given. */
+  /** `"prod"` / `"dev"` / `"local"` — the app's own reading (`deployEnvironment(hosts)`,
+   *  0.61). Left out of the object when not given. */
   environment?: FeedbackEnvironment | (string & {});
   /** The app build (`__APP_VERSION__`). Left out of the object when not given. */
   version?: string;

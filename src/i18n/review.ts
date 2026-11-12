@@ -168,6 +168,7 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
     ["{{ordinates}}", "{{abscissa}}"],
     ["{{ordinates}}", undefined],
   ],
+  "seriesChart.zoomWindowRange": [["{{from}}", "{{to}}"]],
   "pieChart.slice": [["{{label}}", "{{value}}", "{{percent}}"]],
   "pieChart.sliceShare": [["{{label}}", "{{percent}}"]],
   // The second form is `shareInValue` (0.53): no share, and nothing round it.
@@ -250,6 +251,8 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "feedbackPublic.votes": one,
   "feedbackPublic.filedBy": [["{{name}}"]],
   "feedbackPublic.page": [[3]],
+  // 0.61: a report's number, not a count — one sample, as `feedbackPage.userFallback`.
+  "feedbackPublic.rowUnavailable": [[52]],
   "accountSettings.passkeys.renameItem": [["{{name}}"]],
   "accountSettings.passkeys.renameField": [["{{name}}"]],
   "accountSettings.passkeys.deleteItem": [["{{name}}"]],
@@ -338,6 +341,8 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "legal.sections.terms.law.body": operatorSample,
   // 0.28.1: the binding language, named in the reader's language.
   "legal.sections.terms.language.body": operatorSample,
+  // 0.61: the persisted cache's line with keksdose's 24 hours.
+  "legal.sections.privacy.browser.standardEntries.recentData": [[24]],
   "legal.translation.note": operatorSample,
   "legal.translation.show": operatorSample,
   // 0.51.3: the as-of line, with the date already written out.

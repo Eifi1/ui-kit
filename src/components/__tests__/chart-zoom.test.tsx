@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import {
+  NO_HISTORY,
   NO_ZOOM,
   SharedXZoom,
   ZOOM_MIN_DRAG,
@@ -10,11 +11,15 @@ import {
   defaultZoomAxes,
   fitXToY,
   fitYToX,
+  isUnzoomed,
   selectionFromDrag,
   withChartZoom,
   zoomAfter,
   zoomAxesFor,
+  zoomBack,
   zoomDomains,
+  zoomMove,
+  zoomStep,
   type ZoomBinding,
   type ZoomFitSource,
   type ZoomAxesSetting,
@@ -323,6 +328,7 @@ function StubChart({
   zoom?: ZoomBinding;
   labels?: { resetZoom?: string };
   zoomAxes?: ZoomAxesSetting;
+  zoomOverview?: boolean;
 }) {
   return (
     <svg data-testid="chart">
@@ -513,6 +519,402 @@ describe("withChartZoom", () => {
     pointer(rect, "pointermove", 610, 210);
     pointer(rect, "pointerup", 610, 210);
     expect(screen.getByRole("button", { name: "Alles zeigen" })).toBeInTheDocument();
+  });
+});
+
+/* ── On a touch screen (0.61: one finger reads, two zoom) ───────────────── */
+
+/** A finger on the overlay: a pointer event of type touch, with its own id. The first
+ *  finger of a touch is the primary pointer. */
+function finger(type: string, x: number, y: number, id = 1) {
+  const event = new MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y });
+  Object.defineProperty(event, "pointerId", { value: id });
+  Object.defineProperty(event, "pointerType", { value: "touch" });
+  Object.defineProperty(event, "isPrimary", { value: id === 1 });
+  fireEvent(overlay(), event);
+}
+
+/** A sweep over 0…900, the stub's x scale unzoomed: one unit a pixel, from pixel 60. */
+const SWEEP = Array.from({ length: 11 }, (_, i) => ({ x: i * 90, v: i * 10 }));
+
+/** Two fingers down at chart px `a` and `b`, moved to `a2` and `b2`, and lifted. */
+function pinch(a: number, b: number, a2: number, b2: number) {
+  finger("pointerdown", a, 150, 1);
+  finger("pointerdown", b, 150, 2);
+  finger("pointermove", a2, 150, 1);
+  finger("pointermove", b2, 150, 2);
+  finger("pointerup", a2, 150, 1);
+  finger("pointerup", b2, 150, 2);
+}
+
+const chartRoot = () => screen.getByTestId("chart").parentElement!;
+
+describe("withChartZoom — on a touch screen", () => {
+  const draw = (props: { zoomAxes?: ZoomAxesSetting } = {}) =>
+    render(<Zoomable axes={[{ id: "y" }]} rows={SWEEP} series={[{ key: "v" }]} {...props} />);
+
+  it("draws no band for one finger and zooms nothing: a drag across the plot reads it", () => {
+    const { container } = draw();
+    finger("pointerdown", 160, 60);
+    finger("pointermove", 610, 210);
+    expect(container.querySelector("rect[stroke-dasharray]")).toBeNull();
+    finger("pointerup", 610, 210);
+    expect(bindings()[0]).toEqual({ x: null, y: {} });
+    expect(screen.queryByRole("button", { name: /reset zoom/i })).toBeNull();
+  });
+
+  it("zooms x about the fingers' midpoint as two fingers spread", () => {
+    draw();
+    // Chart px 460 and 560 are the values 400 and 500; spread 100 → 200 about 450.
+    pinch(460, 560, 410, 610);
+    expect(bindings()[0].x).toEqual([225, 675]);
+    // A pinch is an x band: y refits to what is inside, no y window of its own.
+    expect(bindings()[0].y.y).toBeDefined();
+    expect(screen.getByRole("button", { name: /reset zoom/i })).toBeInTheDocument();
+  });
+
+  it("pans a zoomed window when two fingers move together", () => {
+    draw();
+    pinch(460, 560, 410, 610);
+    // 450 units over 900 px: 100 px to the left is 50 units to the right.
+    pinch(460, 560, 360, 460);
+    expect(bindings()[0].x).toEqual([275, 725]);
+  });
+
+  it("stops at the whole range, and a pinch out to it is no zoom at all", () => {
+    draw();
+    pinch(460, 560, 410, 610);
+    // From 900 px apart to 40: twenty times the window, which is far more than the whole.
+    pinch(60, 960, 490, 530);
+    expect(bindings()[0].x).toBeNull();
+    expect(screen.queryByRole("button", { name: /reset zoom/i })).toBeNull();
+  });
+
+  it("keeps a dragged y window through a two-finger pan, and lets a pinch refit it", () => {
+    draw();
+    drag([160, 60], [610, 210]);
+    expect(bindings()[0].y).toEqual({ y: [100, 250] });
+    // [100, 550] is 450 wide on 900 px: −100 px pans it by +50.
+    pinch(460, 560, 360, 460);
+    expect(bindings()[0]).toEqual({ x: [150, 600], y: { y: [100, 250] } });
+    pinch(460, 560, 410, 610);
+    expect(bindings()[0].y.y).not.toEqual([100, 250]);
+  });
+
+  it("takes the page's touch away from the chart only while two fingers are down", () => {
+    draw();
+    expect(chartRoot()).not.toHaveClass("touch-none");
+    finger("pointerdown", 460, 150, 1);
+    expect(chartRoot()).not.toHaveClass("touch-none");
+    finger("pointerdown", 560, 150, 2);
+    expect(chartRoot()).toHaveClass("touch-none");
+    finger("pointerup", 560, 150, 2);
+    expect(chartRoot()).not.toHaveClass("touch-none");
+  });
+
+  it("holds the browser's two-finger scroll over a chart that zooms x, and only there", () => {
+    const touchMove = (target: Element, touches: number) => {
+      const event = new Event("touchmove", { bubbles: true, cancelable: true });
+      Object.defineProperty(event, "touches", { value: { length: touches } });
+      target.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    const { unmount } = draw();
+    expect(touchMove(chartRoot(), 2)).toBe(true);
+    expect(touchMove(chartRoot(), 1)).toBe(false);
+    unmount();
+    draw({ zoomAxes: "y" });
+    expect(touchMove(chartRoot(), 2)).toBe(false);
+  });
+
+  it("does not pinch a chart that zooms only y", () => {
+    draw({ zoomAxes: "y" });
+    pinch(460, 560, 410, 610);
+    expect(bindings()[0]).toEqual({ x: null, y: {} });
+  });
+
+  it("still draws the band for a mouse", () => {
+    draw();
+    drag([160, 100], [760, 110]);
+    expect(bindings()[0].x).toEqual([100, 700]);
+  });
+});
+
+/* ── The way back (0.61: Back one zoom step) ────────────────────────────── */
+
+describe("zoomMove / zoomStep / zoomBack", () => {
+  const A: [number, number] = [100, 500];
+  const B: [number, number] = [200, 300];
+
+  it("keeps the view before each step, oldest first, and walks back through them", () => {
+    const one = zoomStep(zoomMove(NO_HISTORY, "c", A, null), NO_HISTORY);
+    const two = zoomStep(zoomMove(one, "c", B, { y: [1, 2] }), one);
+    expect(two).toEqual({
+      x: B,
+      y: { c: { y: [1, 2] } },
+      back: [
+        { x: undefined, y: {} },
+        { x: A, y: { c: null } },
+      ],
+    });
+    expect(zoomBack(two)).toEqual({ x: A, y: { c: null }, back: [{ x: undefined, y: {} }] });
+    expect(zoomBack(zoomBack(two))).toBe(NO_HISTORY);
+    expect(zoomBack(NO_HISTORY)).toBe(NO_HISTORY);
+  });
+
+  it("moves the view without a step, so Back skips what was panned", () => {
+    const one = zoomStep(zoomMove(NO_HISTORY, "c", A, null), NO_HISTORY);
+    const panned = zoomMove(one, "c", [150, 550], null);
+    expect(panned.back).toBe(one.back);
+    expect(zoomBack(panned)).toBe(NO_HISTORY);
+  });
+
+  it("ends the zoom, with nothing to go back to, on a step that lands on the whole range", () => {
+    const one = zoomStep(zoomMove(NO_HISTORY, "c", A, null), NO_HISTORY);
+    expect(zoomStep(zoomMove(one, "c", undefined, null), one)).toBe(NO_HISTORY);
+  });
+
+  it("keeps each chart's own y windows apart", () => {
+    const view = zoomMove(zoomMove(NO_HISTORY, "a", A, { y: [1, 2] }), "b", A, null);
+    expect(view.y).toEqual({ a: { y: [1, 2] }, b: null });
+    expect(isUnzoomed(view)).toBe(false);
+    expect(isUnzoomed({ x: undefined, y: { a: null, b: null } })).toBe(true);
+    expect(isUnzoomed({ x: undefined, y: { a: { y: [1, 2] } } })).toBe(false);
+  });
+});
+
+describe("withChartZoom — Back", () => {
+  const draw = () => render(<Zoomable axes={[{ id: "y" }]} rows={SWEEP} series={[{ key: "v" }]} />);
+  const back = () => screen.queryByRole("button", { name: "Back" });
+  const reset = () => screen.queryByRole("button", { name: /reset zoom/i });
+
+  it("stands beside Reset zoom while zoomed, a real button before it", () => {
+    draw();
+    expect(back()).toBeNull();
+    drag([160, 60], [610, 210]);
+    const buttons = screen.getAllByRole("button");
+    expect(buttons.map((button) => button.textContent?.trim())).toEqual(["Back", "Reset zoom"]);
+    expect(back()).toHaveAttribute("type", "button");
+  });
+
+  it("undoes one zoom at a time, the dragged y with it, and past the first shows the whole range", () => {
+    draw();
+    drag([160, 60], [610, 210]);
+    drag([200, 100], [500, 104]);
+    expect(bindings()[0].x).toEqual([140, 440]);
+    fireEvent.click(back()!);
+    expect(bindings()[0]).toEqual({ x: [100, 550], y: { y: [100, 250] } });
+    fireEvent.click(back()!);
+    expect(bindings()[0]).toEqual({ x: null, y: {} });
+    expect(back()).toBeNull();
+    expect(reset()).toBeNull();
+  });
+
+  it("is one step for a whole pinch, and none for a two-finger pan", () => {
+    draw();
+    pinch(460, 560, 410, 610);
+    // Another pinch, in several moves.
+    finger("pointerdown", 460, 150, 1);
+    finger("pointerdown", 560, 150, 2);
+    finger("pointermove", 440, 150, 1);
+    finger("pointermove", 580, 150, 2);
+    finger("pointermove", 410, 150, 1);
+    finger("pointermove", 610, 150, 2);
+    finger("pointerup", 410, 150, 1);
+    finger("pointerup", 610, 150, 2);
+    expect(bindings()[0].x).toEqual([337.5, 562.5]);
+    pinch(460, 560, 360, 460);
+    expect(bindings()[0].x).toEqual([362.5, 587.5]);
+    // Back skips the pan and the second pinch's moves: the first pinch's window.
+    fireEvent.click(back()!);
+    expect(bindings()[0].x).toEqual([225, 675]);
+    fireEvent.click(back()!);
+    expect(bindings()[0].x).toBeNull();
+  });
+
+  it("empties the way back on Reset zoom", () => {
+    draw();
+    drag([160, 60], [610, 210]);
+    drag([200, 100], [500, 104]);
+    fireEvent.click(reset()!);
+    expect(bindings()[0]).toEqual({ x: null, y: {} });
+    drag([160, 100], [760, 110]);
+    fireEvent.click(back()!);
+    // The two steps before the reset are gone: one Back is the whole range.
+    expect(bindings()[0]).toEqual({ x: null, y: {} });
+  });
+
+  it("walks a SharedXZoom column back together, whichever chart zoomed, and resets every chart's y", () => {
+    render(
+      <SharedXZoom>
+        <Zoomable axes={[{ id: "y" }]} />
+        <Zoomable axes={[{ id: "y" }]} />
+      </SharedXZoom>,
+    );
+    drag([160, 60], [610, 210], 0);
+    drag([200, 60], [500, 160], 1);
+    expect(bindings().map((b) => b.y)).toEqual([{ y: [100, 250] }, { y: [150, 250] }]);
+    // Back on the FIRST chart undoes the second chart's box: its y goes, the first's stays.
+    fireEvent.click(screen.getAllByRole("button", { name: "Back" })[0]);
+    expect(bindings()).toEqual([
+      { x: [100, 550], y: { y: [100, 250] } },
+      { x: [100, 550], y: {} },
+    ]);
+    drag([200, 60], [500, 160], 1);
+    fireEvent.click(screen.getAllByRole("button", { name: /reset zoom/i })[1]);
+    expect(bindings()).toEqual([
+      { x: null, y: {} },
+      { x: null, y: {} },
+    ]);
+  });
+
+  it("speaks the provider's word", () => {
+    render(
+      <UiKitProvider labels={{ seriesChart: { zoomBack: "Zurück" } }}>
+        <Zoomable axes={[{ id: "y" }]} />
+      </UiKitProvider>,
+    );
+    drag([160, 60], [610, 210]);
+    expect(screen.getByRole("button", { name: "Zurück" })).toBeInTheDocument();
+  });
+});
+
+/* ── The overview strip (0.61) ──────────────────────────────────────────── */
+
+describe("withChartZoom — the overview strip", () => {
+  const draw = (props: { zoomAxes?: ZoomAxesSetting; zoomOverview?: boolean } = {}) =>
+    render(<Zoomable axes={[{ id: "y" }]} rows={SWEEP} series={[{ key: "v" }]} {...props} />);
+  const handle = () => screen.queryByRole("slider", { name: "Visible range" });
+  /** A pointer on the handle; jsdom has no layout, so only the moves between events count. */
+  function slide(type: string, x: number, kind = "mouse") {
+    const event = new MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: 0 });
+    Object.defineProperty(event, "pointerId", { value: 7 });
+    Object.defineProperty(event, "pointerType", { value: kind });
+    fireEvent(handle()!, event);
+  }
+
+  it("is drawn only while x is zoomed, under the chart, as a slider over the window", () => {
+    draw();
+    expect(handle()).toBeNull();
+    // An x band over [100, 700] of the sweep's 0…900.
+    drag([160, 100], [760, 110]);
+    const slider = handle()!;
+    expect(slider).toHaveAttribute("aria-valuemin", "0");
+    expect(slider).toHaveAttribute("aria-valuemax", "300");
+    expect(slider).toHaveAttribute("aria-valuenow", "100");
+    // Without a chart to name its positions, the numbers as they are.
+    expect(slider).toHaveAttribute("aria-valuetext", "100 to 700");
+    expect(slider).toHaveAttribute("tabindex", "0");
+    // After the chart in the document: under it.
+    expect(screen.getByTestId("chart").compareDocumentPosition(slider) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /reset zoom/i }));
+    expect(handle()).toBeNull();
+  });
+
+  it("lines up under the plot, the handle standing for the window's share of the range", () => {
+    draw();
+    drag([160, 100], [760, 110]);
+    const slider = handle()!;
+    // The plot starts 60 px in and is 900 wide; two thirds of it, a third of the way along.
+    expect(slider.parentElement).toHaveStyle({ left: "60px", width: "900px" });
+    expect(slider).toHaveStyle({ left: "100px", width: "600px" });
+  });
+
+  it("pans as the handle is dragged, by mouse or by finger, and stops at the range's end", () => {
+    draw();
+    drag([160, 100], [760, 110]);
+    slide("pointerdown", 0);
+    slide("pointermove", 100);
+    expect(bindings()[0].x).toEqual([200, 800]);
+    slide("pointermove", 1000);
+    expect(bindings()[0].x).toEqual([300, 900]);
+    slide("pointerup", 1000);
+    slide("pointerdown", 500, "touch");
+    slide("pointermove", 300, "touch");
+    slide("pointerup", 300, "touch");
+    expect(bindings()[0].x).toEqual([100, 700]);
+  });
+
+  it("pans by a tenth of the window with ← and →, and to the ends with Home and End", () => {
+    draw();
+    drag([160, 100], [760, 110]);
+    fireEvent.keyDown(handle()!, { key: "ArrowRight" });
+    expect(bindings()[0].x).toEqual([160, 760]);
+    fireEvent.keyDown(handle()!, { key: "ArrowLeft" });
+    expect(bindings()[0].x).toEqual([100, 700]);
+    fireEvent.keyDown(handle()!, { key: "End" });
+    expect(bindings()[0].x).toEqual([300, 900]);
+    fireEvent.keyDown(handle()!, { key: "Home" });
+    expect(bindings()[0].x).toEqual([0, 600]);
+  });
+
+  it("is a pan, not a zoom step: Back returns to before the zoom it panned", () => {
+    draw();
+    drag([160, 100], [760, 110]);
+    fireEvent.keyDown(handle()!, { key: "End" });
+    fireEvent.click(screen.getByRole("button", { name: "Back" }));
+    expect(bindings()[0].x).toBeNull();
+  });
+
+  it("keeps its clicks from the chart's own", () => {
+    const onClick = vi.fn();
+    // A button standing in for recharts' wrapper, which the strip is React's child of.
+    render(
+      <button type="button" onClick={onClick}>
+        <Zoomable axes={[{ id: "y" }]} rows={SWEEP} series={[{ key: "v" }]} />
+      </button>,
+    );
+    drag([160, 100], [760, 110]);
+    fireEvent.click(overlay());
+    onClick.mockClear();
+    fireEvent.click(handle()!);
+    fireEvent.click(handle()!.parentElement!);
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it("is not drawn with zoomOverview={false}, nor while x shows the whole range", () => {
+    const { unmount } = draw({ zoomOverview: false });
+    drag([160, 100], [760, 110]);
+    expect(screen.getByRole("button", { name: /reset zoom/i })).toBeInTheDocument();
+    expect(handle()).toBeNull();
+    unmount();
+    // A y band over 150…250, above every sample (0…100): it holds none, so x stays whole.
+    draw({ zoomAxes: "y" });
+    drag([300, 60], [310, 160]);
+    expect(bindings()[0]).toEqual({ x: null, y: { y: [150, 250] } });
+    expect(handle()).toBeNull();
+  });
+
+  it("draws one for a SharedXZoom column, under its last chart that has one", () => {
+    const column = (lastHasOne: boolean) => (
+      <SharedXZoom>
+        <Zoomable axes={[{ id: "y" }]} rows={SWEEP} series={[{ key: "v" }]} />
+        <Zoomable axes={[{ id: "y" }]} rows={SWEEP} series={[{ key: "v" }]} zoomOverview={lastHasOne} />
+      </SharedXZoom>
+    );
+    const { rerender } = render(column(true));
+    drag([160, 100], [760, 110], 0);
+    expect(screen.getAllByRole("slider")).toHaveLength(1);
+    const [first, second] = screen.getAllByTestId("chart");
+    expect(second.compareDocumentPosition(handle()!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    rerender(column(false));
+    expect(screen.getAllByRole("slider")).toHaveLength(1);
+    expect(first.compareDocumentPosition(handle()!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(second.compareDocumentPosition(handle()!) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
+  });
+
+  it("speaks the provider's words", () => {
+    render(
+      <UiKitProvider
+        labels={{
+          seriesChart: { zoomWindow: "Sichtbarer Bereich", zoomWindowRange: (from, to) => `${from} bis ${to}` },
+        }}
+      >
+        <Zoomable axes={[{ id: "y" }]} rows={SWEEP} series={[{ key: "v" }]} />
+      </UiKitProvider>,
+    );
+    drag([160, 100], [760, 110]);
+    expect(screen.getByRole("slider", { name: "Sichtbarer Bereich" })).toHaveAttribute("aria-valuetext", "100 bis 700");
   });
 });
 

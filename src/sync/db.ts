@@ -70,6 +70,32 @@ export interface CreateSyncDbOptions {
   extraStores?: Record<string, string>;
   /** Later versions of a database that exists on devices already, oldest first. */
   upgrades?: readonly SyncDbUpgrade[];
+  /**
+   * The IndexedDB the database lives in (0.61, Marcel 2026-11-12). Left out, the browser's,
+   * on disk. On a computer the person marked as shared (`isSharedComputer()`,
+   * `@eifi1/ui-kit/offline`), pass an IN-MEMORY one: the copy then works for the session,
+   * offline included, and nothing of it is ever written to the device — closing the tab
+   * leaves nothing, where a copy on disk, deleted only at sign-out, stays behind whenever the
+   * tab is just closed (and a library PC may never open the app again to clean it up).
+   *
+   * The kit names no implementation and adds no dependency; `fake-indexeddb`'s is one, loaded
+   * only when it is needed:
+   *
+   * ```ts
+   * const memory = isSharedComputer() ? await import("fake-indexeddb") : null;
+   * const db = createSyncDb(name, {
+   *   extraStores,
+   *   indexedDB: memory ? { indexedDB: new memory.IDBFactory(), IDBKeyRange: memory.IDBKeyRange } : undefined,
+   * });
+   * ```
+   */
+  indexedDB?: SyncDbIndexedDB;
+}
+
+/** An IndexedDB implementation and its key range, as Dexie takes them. */
+export interface SyncDbIndexedDB {
+  indexedDB: IDBFactory;
+  IDBKeyRange: typeof IDBKeyRange;
 }
 
 /** The engine's own tables. `scope` is indexed: a round takes one scope's queue (D11). */
@@ -116,7 +142,7 @@ export async function rowByPk(db: SyncDb, entity: string, pk: number): Promise<S
  * Name the app's own type for its tables: `createSyncDb<HandoverDb>(name, { extraStores })`.
  */
 export function createSyncDb<D extends SyncDb = SyncDb>(name: string, options: CreateSyncDbOptions = {}): D {
-  const db = new Dexie(name) as D;
+  const db = (options.indexedDB ? new Dexie(name, options.indexedDB) : new Dexie(name)) as D;
   let stores: Record<string, string | null> = { ...SYNC_DB_STORES, ...options.extraStores };
   db.version(1).stores(stores);
   const upgrades = [...(options.upgrades ?? [])].sort((a, b) => a.version - b.version);

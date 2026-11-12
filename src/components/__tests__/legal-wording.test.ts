@@ -66,15 +66,19 @@ function legalWording(labels: UiKitLabels): Record<string, string> {
  * 0.59 (keksdose's scan for absolute claims, decision 10): `privacy` — the browser
  * section's lead says the app sets no cookies, where it said "No cookies."; and the
  * section's commercial tail, the checkout's window on Paddle's domain.
+ *
+ * 0.61 (Marcel 2026-11-12): `privacy` — the browser section's two standard entries, the page
+ * cache's line and the shared-computer choice's (`standardEntries`), which an app places in
+ * its own list. Announced in docs/adopt-0.61.md for the apps that add them.
  */
 const LEGAL_WORDING: Record<string, Record<string, string>> = {
-  en: { impressum: "425fe7961e6a", legal: "19962ca87a89", privacy: "bd94aa7fc65b", terms: "41d67860190b" },
-  "de-CH": { impressum: "6e8e555a0f60", legal: "aaea3302cba4", privacy: "0a03c85f359c", terms: "ce9971b444c5" },
-  fr: { impressum: "3f703ecd6763", legal: "4cbd81b82932", privacy: "10b2e8d0d5f3", terms: "257115a45dde" },
-  it: { impressum: "9e60a55f89ef", legal: "ec2d48f0fa4a", privacy: "608a9583f6c7", terms: "98995c10e7a1" },
-  es: { impressum: "ff37b004be44", legal: "6afe0fa1f3ee", privacy: "f7926dee8494", terms: "604a6af9da3c" },
-  hu: { impressum: "bf4d3a8d0b77", legal: "75d7bbd6869e", privacy: "ea06e5485e58", terms: "12871aadd0ab" },
-  zh: { impressum: "c98c0d1ac118", legal: "d923f39bab7b", privacy: "7e6f5b20bbe0", terms: "e4cacb32ea2d" },
+  en: { impressum: "425fe7961e6a", legal: "19962ca87a89", privacy: "f553229f0dd5", terms: "41d67860190b" },
+  "de-CH": { impressum: "6e8e555a0f60", legal: "aaea3302cba4", privacy: "4fca6c7383be", terms: "ce9971b444c5" },
+  fr: { impressum: "3f703ecd6763", legal: "4cbd81b82932", privacy: "c737eb8416e0", terms: "257115a45dde" },
+  it: { impressum: "9e60a55f89ef", legal: "ec2d48f0fa4a", privacy: "5319d954926d", terms: "98995c10e7a1" },
+  es: { impressum: "ff37b004be44", legal: "6afe0fa1f3ee", privacy: "f3979ccecdb8", terms: "604a6af9da3c" },
+  hu: { impressum: "bf4d3a8d0b77", legal: "75d7bbd6869e", privacy: "370e2caf0828", terms: "12871aadd0ab" },
+  zh: { impressum: "c98c0d1ac118", legal: "d923f39bab7b", privacy: "c9600ccb880f", terms: "e4cacb32ea2d" },
 };
 
 describe("the legal wording (DOC-6)", () => {

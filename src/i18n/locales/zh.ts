@@ -128,6 +128,10 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       visibleHint: "其他用户可以看到标题和正文，绝不会看到您的截图或文件。",
       visibleLocked: "仅在反馈仍处于打开状态时可更改。",
       page: (page) => `第 ${n(page)} 页`,
+      // 0.61: FeedbackPublicPage's read states and its toast.
+      loadFailed: "加载失败。",
+      offlineHint: "此内容需要网络连接，恢复联网后会自动加载。",
+      rowUnavailable: (id) => `无法打开反馈 #${id}。它可能已被删除，或已对他人隐藏。`,
     },
     feedbackNotificationTypes: {
       answered: "您的反馈收到的回复",
@@ -724,7 +728,11 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     },
     seriesChart: {
       resetZoom: "重置缩放",
-      zoomHint: "拖动以缩放：近似正方形的选区同时缩放两条坐标轴，细长的选区只缩放其所沿的那条轴。双击可重置。",
+      zoomBack: "后退",
+      zoomWindow: "可见范围",
+      zoomWindowRange: (from, to) => `${from} 至 ${to}`,
+      zoomHint:
+        "拖动以缩放：近似正方形的选区同时缩放两条坐标轴，细长的选区只缩放其所沿的那条轴。在触摸屏上，单指读取数值，双指缩放和平移。“后退”撤销一步缩放；双击或“重置缩放”可再次显示完整范围。",
       empty: "无数据",
       legend: "数据系列",
       points: "图表数值",
@@ -971,6 +979,12 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
             tail: "这些内容都不会用于跟踪您。等待发送的条目会尽快发送给我们。清除网站数据后，这些内容会全部消失；退出登录会删除登录令牌。",
             commercial:
               "这些内容都不会用于跟踪您。等待发送的条目会尽快发送给我们。清除网站数据后，这些内容会全部消失；退出登录会删除登录令牌。付款在 Paddle 自有域名上的 Paddle 窗口中进行；该窗口在那里存储的内容（例如一个安全 Cookie 和一些设置）受 Paddle 隐私政策的约束。",
+            // 0.61 (Marcel 2026-11-12): the persisted cache and the shared-computer flag, for an app's entries.
+            standardEntries: {
+              recentData: (hours) =>
+                `最近加载的数据，以便页面在未联网时也能打开；超过 ${hours} 小时的数据应用不再使用，并在下次打开时删除。如果您登录时选择了“这是一台共用电脑”，则不会保留任何此类数据。`,
+              sharedComputer: "您登录时是否选择了“这是一台共用电脑”，仅在该次会话期间保存。",
+            },
           },
           rights: {
             title: "您的权利",
@@ -1843,6 +1857,27 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       confirmAction: "重置",
       done: "此设备的设置已恢复为默认值。",
       keywords: "重置 默认 设备 恢复 外观 表格 布局",
+    },
+    // 0.61 — SwipeSetting (keksdose's Settings → Interaction). Not reviewed by a native
+    // speaker yet.
+    swipeSetting: {
+      title: "滑动手势",
+      description: "列表行如何响应横向拖动——触摸滑动，或用鼠标拖动。",
+      surfacePicker: "哪个列表",
+      surfaces: { feedback: "反馈", translationReview: "翻译" },
+      right: "向右滑动",
+      left: "向左滑动",
+      primary: "短滑",
+      secondary: "长滑",
+      none: "— 无 —",
+      nextStatus: "下一个状态",
+      help: "短距离拖动执行第一个操作；继续拖动执行第二个操作。某一行无法执行的操作会被跳过，由下一个操作顶上。",
+      saveDefault: "设为我的默认值",
+      reset: "恢复默认值",
+      resetMine: "恢复为我的默认值",
+      defaultSaved: "现在“恢复”会回到您保存的默认值。",
+      resetShipped: "恢复出厂默认值",
+      keywords: "滑动 手势 拖动 左 右 短 长 行 列表",
     },
     rowActions: {
       actions: "操作",

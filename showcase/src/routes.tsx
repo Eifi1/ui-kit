@@ -328,15 +328,24 @@ const TableEdgeFadeDemo = lazySection(() => import("./sections/table-edge-fade")
 const DataTableEdgeFadeDemo = lazySection(() => import("./sections/table-edge-fade"), "DataTableEdgeFadeDemo");
 // 0.27.0: the feedback harmonization.
 const FeedbackSubmit027Demo = lazySection(() => import("./sections/feedback-compose"), "FeedbackSubmit027Demo");
+// 0.61: which copy of the app, off the host.
+const DeployEnvironmentDemo = lazySection(() => import("./sections/feedback-compose"), "DeployEnvironmentDemo");
 const FeedbackTable027Demo = lazySection(() => import("./sections/feedback-inbox/table"), "FeedbackTable027Demo");
 const FeedbackSubjectDemo = lazySection(() => import("./sections/feedback-inbox/table"), "FeedbackSubjectDemo");
 // 0.55.0: the inbox assembled once (feedback §13).
 const FeedbackInboxDemo = lazySection(() => import("./sections/feedback-inbox/table"), "FeedbackInboxDemo");
+// 0.61: the feedback pages' frame.
+const FeedbackPageFrameDemo = lazySection(() => import("./sections/feedback-inbox/table"), "FeedbackPageFrameDemo");
 const FeedbackDetail027Demo = lazySection(() => import("./sections/feedback-inbox/detail"), "FeedbackDetail027Demo");
 // 0.38.0: public feedback — the pages every user reads, the switch, the menu row, the notice, the types.
 const FeedbackPublic038Demo = lazySection(
   () => import("./sections/feedback-inbox/public-038"),
   "FeedbackPublic038Demo",
+);
+// 0.61: the public page assembled once (feedback §14).
+const FeedbackPublicPageDemo = lazySection(
+  () => import("./sections/feedback-inbox/public-038"),
+  "FeedbackPublicPageDemo",
 );
 const FeedbackPublicSwitch038Demo = lazySection(
   () => import("./sections/feedback-inbox/public-038"),
@@ -1604,7 +1613,7 @@ export const GROUPS: ShowcaseGroup[] = [
         title: "Settings",
         short: "Settings",
         blurb:
-          "The settings page and the admin page on one shell — the sidebar on a desktop, the drill-down list on a phone, a group per path, search, the card a link rings — and the account-settings rows that go on it: theme, language, profile, password and two-factor.",
+          "The settings page and the admin page on one shell — the sidebar on a desktop, the drill-down list on a phone, a group per path, search, the card a link rings — and the account-settings rows that go on it: theme, language, profile, password, two-factor and which swipe does what.",
         icon: SettingsIcon,
         components: [
           "SettingsLayout",
@@ -1621,6 +1630,8 @@ export const GROUPS: ShowcaseGroup[] = [
           "PasswordSetting",
           "TwoFactorSetting",
           "LanguageSelect",
+          "SwipeSetting",
+          "createSwipeSettingsStore",
           "DeviceResetSetting",
           "registerDeviceSetting",
           "deviceSettings",
@@ -1908,6 +1919,7 @@ export const GROUPS: ShowcaseGroup[] = [
           "FeedbackContextBox",
           "captureAppScreenshot",
           "createCrashReporter",
+          "deployEnvironment",
         ],
         Body: () => (
           <>
@@ -1917,6 +1929,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <FeedbackAttachment023Demo />
             <FeedbackDialogButtons025Demo />
             <FeedbackSubmit027Demo />
+            <DeployEnvironmentDemo />
             <FeedbackPublicCompose038Demo />
           </>
         ),
@@ -1930,6 +1943,7 @@ export const GROUPS: ShowcaseGroup[] = [
         components: [
           "FeedbackInbox",
           "useFeedbackInbox",
+          "FeedbackPageFrame",
           "FeedbackSubject",
           "FeedbackDetail",
           "FeedbackDetailSection",
@@ -1954,6 +1968,9 @@ export const GROUPS: ShowcaseGroup[] = [
           "FeedbackReplyComposer",
           "FeedbackEntryFile",
           "useFeedbackEntryUpload",
+          "FeedbackPublicPage",
+          "useFeedbackPublicPage",
+          "useFeedbackComments",
           "FeedbackPublicList",
           "FeedbackPublicDetail",
           "FeedbackPublicSwitch",
@@ -1964,9 +1981,11 @@ export const GROUPS: ShowcaseGroup[] = [
           <>
             <FeedbackInbox />
             <FeedbackInboxDemo />
+            <FeedbackPageFrameDemo />
             <FeedbackTable027Demo />
             <FeedbackSubjectDemo />
             <FeedbackDetail027Demo />
+            <FeedbackPublicPageDemo />
             <FeedbackPublic038Demo />
             <FeedbackPublicSwitch038Demo />
             <FeedbackThread038Demo />

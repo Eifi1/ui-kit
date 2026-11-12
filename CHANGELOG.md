@@ -21,6 +21,32 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.61.0](https://github.com/Eifi1/ui-kit/compare/v0.60.0...v0.61.0) (2026-11-12)
+
+### Added
+
+* **chart-zoom:** Back one zoom step ([706044e](https://github.com/Eifi1/ui-kit/commit/706044e9547abd329ed094cc9f235b1ae596e512))
+* **chart-zoom:** one finger reads, two fingers zoom and pan ([16e187b](https://github.com/Eifi1/ui-kit/commit/16e187bd7b29f5db28234445fa69509e38a63ffa))
+* **chart-zoom:** the overview strip while zoomed ([bbddcb8](https://github.com/Eifi1/ui-kit/commit/bbddcb86429571c6a617545987848f307077bb30))
+* **feedback:** a report's page link keeps the query params the app declares safe ([706453c](https://github.com/Eifi1/ui-kit/commit/706453c0ae0445045cce957da19115fd0357153d))
+* **feedback:** deployEnvironment, which copy of the app a report comes from, read off the host ([5a3978d](https://github.com/Eifi1/ui-kit/commit/5a3978d33f586a0446545d8a235029af4638f04a))
+* **feedback:** FeedbackPageFrame, the feedback pages' padding and header as keksdose draws them ([4857647](https://github.com/Eifi1/ui-kit/commit/4857647f9626d55cb62041aa50b90dc44bef9f97))
+* **feedback:** FeedbackPublicPage takes the app's own thread ([54e3d88](https://github.com/Eifi1/ui-kit/commit/54e3d883184092cd1b16b2fc34c6666edca5475f))
+* **feedback:** FeedbackPublicPage, the discussion page keksdose draws, for every app ([e9a4a3b](https://github.com/Eifi1/ui-kit/commit/e9a4a3b120b72f47b436d4e59bdb8ff1a10b91b9))
+* **feedback:** useFeedbackComments, one report's comment thread through the app's client ([c910e3a](https://github.com/Eifi1/ui-kit/commit/c910e3a5bb820d18f1fad01f9582d06b1c0ee74b))
+* **legal:** the privacy page's standard lines for the page cache and the shared-computer choice ([8c3bcb4](https://github.com/Eifi1/ui-kit/commit/8c3bcb4b6d3a1fb13c28d03578110bad647cf520))
+* **offline:** useFeedbackCommentsQuery, the comment thread a persisted cache keeps ([639b37a](https://github.com/Eifi1/ui-kit/commit/639b37a33dcc34dbbaeba51be13c8fa2cca48f7f))
+* **settings:** the swipe settings are the kit's, a store and a card for every app ([8a174dc](https://github.com/Eifi1/ui-kit/commit/8a174dc4d92ed771771e157ea309163dd25cc5f3))
+* **sync:** createSyncDb can live in memory, for a computer marked as shared ([aa1cf3e](https://github.com/Eifi1/ui-kit/commit/aa1cf3e81d3d1f724ee99163ed285b4026ed3043))
+
+### Fixed
+
+* **chart-zoom:** a reset clears the tooltip ([d0002bc](https://github.com/Eifi1/ui-kit/commit/d0002bc8beded5820466ed3ce77346f280882cca))
+* **feedback:** FEEDBACK_SWIPE_ACTIONS is exported again ([26a8103](https://github.com/Eifi1/ui-kit/commit/26a810362dafa488699718b68ea4e171d81f8bbf))
+* **feedback:** the screenshot shows each select, checkbox and radio as it is ([067a69c](https://github.com/Eifi1/ui-kit/commit/067a69ca8bfd67273f5ff26e3de5ef366a71ea1d))
+* **series-chart:** the chart's spoken hint names touch, Back and the reset ([45a215e](https://github.com/Eifi1/ui-kit/commit/45a215e7f0f4f09a93e3f81f2dc9fd787dfba8c9))
+* **showcase:** the round's names on a page, the settings blurb, and the legal fingerprints ([5077dc1](https://github.com/Eifi1/ui-kit/commit/5077dc19343d0cc131646d9ca8506e22b612f0d6))
+
 ## [0.60.0](https://github.com/Eifi1/ui-kit/compare/v0.59.0...v0.60.0) (2026-11-11)
 
 ### ⚠ BREAKING CHANGES

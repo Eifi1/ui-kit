@@ -17,6 +17,9 @@ export * from "./feedback/feedback-thread";
 // `feedbackPagePath`, `feedbackAttachmentUrls`, `feedbackRowAccess`, `useFeedbackDetailLabels`
 // and `feedbackPublicSwitchAllowed`, which their modules keep for the kit's own use.
 // `feedbackPageHref` and `feedbackPageUrl` went whole: nothing read them.
+// `FEEDBACK_SWIPE_ACTIONS` is back since 0.60.1: keksdose's swipe settings take the
+// feedback list's ids from it, as they take `TRANSLATION_REVIEW_SWIPE_ACTIONS` (0.60 added
+// `postpone`, and an app copy of the list would miss the next id).
 export {
   DEFAULT_ATTACHMENT_ACCEPT,
   DEFAULT_MAX_ATTACHMENT_BYTES,
@@ -53,6 +56,7 @@ export {
 } from "./feedback/feedback-status-undo";
 export {
   DEFAULT_FEEDBACK_SWIPE,
+  FEEDBACK_SWIPE_ACTIONS,
   feedbackSwipePlan,
   feedbackSwipeOmitShown,
   type FeedbackSwipeAction,
@@ -98,6 +102,9 @@ export {
   type FeedbackRowDetailProps,
 } from "./feedback/feedback-row-detail";
 export * from "./feedback/feedback-crash";
+// 0.61: which copy of the app a report and a crash come from, off the host (keksdose's
+// rule; Kurvenschmiede read a build flag, which a deployment's production build defeats).
+export { deployEnvironment, type DeployEnvironmentHosts } from "./feedback/deploy-environment";
 // 0.38.0: the public pages (§9.15) — the "Visible to others" switch, the list every user
 // reads and one report opened.
 export {
@@ -129,3 +136,33 @@ export {
   // 0.57 (keksdose dev #663): `inbox.bulk`, the admin's selection and bulk edit (§13.6).
   type FeedbackInboxBulk,
 } from "./feedback/feedback-inbox-page";
+// 0.61: the feedback pages' frame (Marcel 2026-11-12) — keksdose's padding and header
+// around the inbox and the public page, which every app wrote itself. Named: the hook a
+// kit page reads the frame's header with stays the kit's.
+export {
+  FeedbackPageFrame,
+  type FeedbackPageFrameProps,
+  type FeedbackPageFrameHeaderProps,
+} from "./feedback/feedback-page-frame";
+// 0.61: one report's comment thread through the app's API client — keksdose's
+// `use-feedback-comments.ts` and Kurvenschmiede's `use-feedback-conversation.ts`, once
+// (docs/feedback-harmonization.md §14.3).
+export {
+  useFeedbackComments,
+  type FeedbackCommentsApi,
+  type UseFeedbackCommentsOptions,
+  type FeedbackCommentsState,
+} from "./feedback/feedback-comments";
+// 0.61: the public page, assembled once (Marcel 2026-11-12: Kurvenschmiede's feedback area
+// as keksdose's; docs/feedback-harmonization.md §14) — the URL state the app's queries read,
+// and the page drawn from their answers.
+export {
+  useFeedbackPublicPage,
+  FeedbackPublicPage,
+  type UseFeedbackPublicPageOptions,
+  type FeedbackPublicRequest,
+  type FeedbackPublicPageState,
+  type FeedbackPublicRead,
+  type FeedbackPublicApi,
+  type FeedbackPublicPageProps,
+} from "./feedback/feedback-public-page";

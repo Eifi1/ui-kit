@@ -104,6 +104,7 @@ import type { BillingLabels } from "../billing/billing-labels";
 import type { PlanChangeLabels } from "../admin/plan-change";
 import type { AppearanceLabels } from "../components/appearance-labels";
 import type { DeviceResetLabels } from "../settings/device-reset-setting";
+import type { SwipeSettingLabels } from "../settings/swipe-setting";
 import type { RowActionsLabels } from "../components/row-actions";
 import type { AppShellMoreLabels } from "../shell/app-shell";
 import type { AccountStateLabels } from "../components/account-chips";
@@ -479,6 +480,10 @@ export interface UiKitLabels {
   /** 0.36.0: resetting this device's settings, the appearance group's last card
    *  (docs/settings-harmonization.md §11.3). */
   deviceReset: DeviceResetLabels;
+  /** 0.61: `SwipeSetting`, which swipe does what per list (keksdose's Settings →
+   *  Interaction, now every app's). Its actions are named by `feedbackStatus` and
+   *  `translationReview`, as the swipe panels name them. */
+  swipeSetting: SwipeSettingLabels;
   /** 0.32.0: a row's actions folded into a "⋯" menu at Large (text size §10.8). */
   rowActions: RowActionsLabels;
   /** 0.32.0: the phone bar's "More" cell and sheet (text size §10.7). */

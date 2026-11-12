@@ -3,7 +3,7 @@
 // fails while this file is stale.
 
 /** The server-kit release the Server kit pages document. */
-export const SERVER_KIT_VERSION = "0.24.0";
+export const SERVER_KIT_VERSION = "0.25.0";
 
 export interface ServerKitSearchModule {
   /** The Server kit page that documents it. */
@@ -613,6 +613,8 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["FEEDBACK_ANSWERED", "constant"],
       ["FEEDBACK_COMMENT", "constant"],
       ["FEEDBACK_CONTEXT_KEEP", "constant"],
+      ["FEEDBACK_INBOX_PATH", "constant"],
+      ["FEEDBACK_LINK_IDS_MAX", "constant"],
       ["FEEDBACK_RECEIVED", "constant"],
       ["LEGACY_REWORK_APPEND", "constant"],
       ["LEGACY_REWORK_APPEND_DETAIL", "constant"],
@@ -623,11 +625,13 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["MAX_SCREENSHOT_URL_LENGTH", "constant"],
       ["MAX_TITLE_LENGTH", "constant"],
       ["MIN_NEEDLE_LENGTH", "constant"],
+      ["MY_FEEDBACK_PATH", "constant"],
       ["NOT_NULLABLE_FIELDS", "constant"],
       ["OPAQUE_KEY_PATTERN", "constant"],
       ["OUTCOME_READ_ONLY", "constant"],
       ["PICKABLE_CATEGORIES", "constant"],
       ["PUBLIC_COMMENT_FIELDS", "constant"],
+      ["PUBLIC_FEEDBACK_PATH", "constant"],
       ["PUBLIC_PAGE_MAX", "constant"],
       ["PUBLIC_PAGE_SIZE", "constant"],
       ["PUBLIC_REPLY_FIELDS", "constant"],
@@ -728,18 +732,22 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["download_attachment", "function"],
       ["feedback_attachment_urls", "function"],
       ["feedback_attention", "function"],
+      ["feedback_inbox_href", "function"],
+      ["feedback_notice_href", "function"],
       ["feedback_recipients", "function"],
       ["fold_crash_context", "function"],
       ["initial_status", "function"],
       ["is_public", "function"],
       ["is_rework_append", "function"],
       ["mails_at_once", "function"],
+      ["my_feedback_href", "function"],
       ["normalise_crash_text", "function"],
       ["opens_with_rework_rule", "function"],
       ["plan_reply", "function"],
       ["plan_rework", "function"],
       ["plan_update", "function"],
       ["public_body", "function"],
+      ["public_feedback_href", "function"],
       ["public_text", "function"],
       ["reject_manual_crash", "function"],
       ["reopens", "function"],

@@ -15,6 +15,7 @@ import {
   FeedbackContextBox,
   FeedbackMenu,
   feedbackContext,
+  deployEnvironment,
   useFeedbackSubmit,
 } from "@eifi1/ui-kit";
 import type {
@@ -27,6 +28,7 @@ import type {
   FeedbackAttachmentRef,
   ButtonSize,
   ButtonVariant,
+  DeployEnvironmentHosts,
   FeedbackCreatePayload,
   TopBarMenuEntry,
 } from "@eifi1/ui-kit";
@@ -1088,5 +1090,56 @@ export function FeedbackSubmit027Demo() {
         </Note>
       </Example>
     </>
+  );
+}
+
+/* ── Which copy of the app ──────────────────────────────────────────────── */
+
+/** An app's deployments, as it names them: the domain and its www, a dev copy and the
+ *  platform URL behind that copy's domain. */
+const DEPLOY_HOSTS: DeployEnvironmentHosts = {
+  prod: ["myapp.example", "www.myapp.example"],
+  dev: ["dev.myapp.example", /^myapp-web-dev-[a-z0-9-]+\.a\.run\.app$/],
+};
+
+const DEPLOY_SAMPLES = [
+  "myapp.example",
+  "WWW.MyApp.Example",
+  "dev.myapp.example",
+  "myapp-web-dev-w5vg2p66ea-ez.a.run.app",
+  "localhost",
+  "192.168.1.13.sslip.io",
+  "some-tunnel.trycloudflare.com",
+  "evil-myapp.example",
+  "myapp.example.attacker.test",
+];
+
+/** `deployEnvironment(hosts)` — the `environment` a report and a crash carry. */
+export function DeployEnvironmentDemo() {
+  const here = typeof window === "undefined" ? "" : window.location.hostname;
+  return (
+    <Example
+      label="deployEnvironment(hosts) — which copy of the app a report comes from"
+      hint="read off the host, never a build flag; anything it cannot name is local"
+    >
+      <OutTable
+        rows={[
+          ...DEPLOY_SAMPLES.map((host): [string, string] => [
+            `deployEnvironment(hosts, "${host}")`,
+            deployEnvironment(DEPLOY_HOSTS, host),
+          ]),
+          [`deployEnvironment(hosts) — this page, ${here || "no host"}`, deployEnvironment(DEPLOY_HOSTS)],
+        ]}
+      />
+      <Note>
+        {code("hosts")} is the app&apos;s own — here {code('prod: ["myapp.example", "www.myapp.example"]')} and{" "}
+        {code('dev: ["dev.myapp.example", /^myapp-web-dev-…\\.a\\.run\\.app$/]')}. A name matches whole and in any case,
+        never as a suffix; a pattern is for a platform URL with a generated part, anchored. A deployment runs a
+        production build, so a build flag would call a dev copy, a preview and a docker run on a laptop production; the
+        host tells them apart. Everything not named — localhost, a LAN address, an {code(".sslip.io")} phone preview, a
+        tunnel — is {code("local")}, never production. Hand the answer to {code("useFeedbackSubmit")} and{" "}
+        {code("createCrashReporter")} as {code("environment")}.
+      </Note>
+    </Example>
   );
 }

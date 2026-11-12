@@ -78,6 +78,13 @@ export const DEFAULT_LEGAL_LABELS: LegalLabels = {
         // entry is named until the full sandbox check has run.
         commercial:
           "None of it is used to track you. Entries waiting to be sent are sent to us as soon as they can be. All of it disappears when you clear the site's data, and signing out removes the sign-in tokens. The payment runs in a Paddle window on Paddle's own domain; what that window stores there (such as a security cookie and settings) is governed by Paddle's privacy policy.",
+        // 0.61 (Marcel 2026-11-12): keksdose's reviewed `recent_data` line, and the shared-computer flag.
+        standardEntries: {
+          recentData: (hours) =>
+            `Recently loaded data, so pages also open without a connection; what is older than ${hours} hours the app no longer uses and removes the next time it opens. None of it is kept when you sign in with “This is a shared computer”.`,
+          sharedComputer:
+            "Whether you chose “This is a shared computer” at sign-in, for as long as that session lasts.",
+        },
       },
       rights: {
         title: "Your rights",

@@ -33,6 +33,7 @@ names them. The snapshot, the per-repo to-dos and the review records are in
 | 11 | Round 0.46: admin alerts for new reports and reworks | **§11 settled 2026-10-19 (round 0.46)**, for server-kit 0.16 / ui-kit 0.46 | adds a notification type (notifications §10.2); amends §10.2 decision 10 (no admin mail) |
 | 12 | Round 0.47: attachments on admin replies and public comments, inline images | **§12 settled 2026-10-21 (Marcel)**, for server-kit 0.18 / ui-kit 0.47; the apps review it in the build review | amends §9.7 (a reply's file), §9.8 (a comment's file), §9.10 (the files predicate, a comment's URL), §9.12 (erasure), §10.3 (who draws an entry's file), §4.4.3 (the Attachment section) |
 | 13 | Round 0.55: the inbox, assembled once | **§13 (2026-11-04)**, ui-kit 0.55, from the kastlan reuse audit 2026-11-02 (proposal 2); no server change. §13.6 the bulk edit, ui-kit 0.57 (keksdose dev #663); no server change. §13.7 the `?ids=` set, ui-kit 0.59 (keksdose live #500, dev #678), and its line above the desktop table while the # column is hidden, ui-kit 0.60; no server change | amends §4.3 (the two pages' canonical assembly: `FeedbackInbox` / `useFeedbackInbox`; `?row=` digits only), §5 (the kit's list; the app keeps its queries and mutations); §13.6 amends §4.5 (one Undo per batch) and §3.4's use (`category` through `update`); §13.7 amends §4.3 (the inbox reads `?ids=` beside `?row=`) and §9.11 (a notice about several of a person's reports links `/my-feedback?ids=…`) |
+| 14 | Round 0.61: the public page, assembled once | **§14 (2026-11-12)**, ui-kit 0.61 (Marcel: Kurvenschmiede's feedback area as keksdose's); no server change | amends §9.15 (`/all-feedback`'s canonical assembly: `FeedbackPublicPage` / `useFeedbackPublicPage`, its URL state; `FeedbackPublicList`'s `empty`, `FeedbackPublicDetail`'s `commentsError`), §9.8 (the thread's hook, `useFeedbackComments`: `pending` a comment only, `updateFailed` for a hide or a delete) |
 
 ## 1. Where each one stands
 
@@ -456,7 +457,7 @@ Columns, in order (kit `DataTable`, `urlSync`, `storageKey="feedback"`, newest f
 | 4 | Subject / Betreff | title + env chip (non-prod `context.environment`, upper case) + **Rework** / **Rework ×{{count}}** chip (DE Nacharbeit / Nacharbeit ×{{count}}) | text (title + env) | card heading |
 | 5 | User / Nutzer | display name → email → `user #id`; erased → <deleted user> | text | |
 | 6 | Email / E-Mail | `user_email` → `context.user_email` | text | hidden |
-| 7 | URL | link (`noRowLink`): text = pathname, `href` = the path only (ui-kit 0.52: the query is the reporter's to write; a one-shot path shows as text with Copy); aria "Open page" / "Seite öffnen" | text | hidden |
+| 7 | URL | link (`noRowLink`): text = `href` = the path only (ui-kit 0.52: the query is the reporter's to write; a one-shot path shows as text with Copy), with the params the app lists in `pageLinkParams` (0.61, §4.4.2); aria "Open page" / "Seite öffnen" | text | hidden |
 | 8 | Status | `FeedbackStatusTransitions variant="icon"` with `visibleFeedbackStatuses` | select, chain order | |
 | 9 | Resolved / Erledigt am | `resolved_at` date | date | hidden |
 
@@ -500,7 +501,15 @@ the title beside the detail. Then the sections, in this order:
    shown as text beside it, and `CopyButton` **Copy URL** / **URL kopieren** copies the
    full `context.url`. A one-shot path (`/join`, `/register`, `/verify-email`,
    `/reset-password`, an app's `pageLinkExclude`; matched decoded and in any case) shows
-   as text with Copy. keksdose's label is its shared `more.copy_url` key,
+   as text with Copy. **The params the app lists** (`pageLinkParams`, ui-kit 0.61,
+   Kurvenschmiede production feedback #7: `/curves/2?profile=5` opened `/curves/2`) are
+   kept on the link and its text, in the page's order, reduced as the crash reporter and
+   the dialog reduce their page (§4.6's `allowParams`, which `useFeedbackSubmit` takes too
+   since 0.60: the same list); the text beside it is
+   then only what the link does not carry, the other params and the hash. An allow-list,
+   default none: a param nobody listed is text, so `/login?next=…` stays a bare `/login`.
+   An app never lists a param that forwards or acts on load (`next`, `returnTo`, a token);
+   a one-shot path stays text whatever it holds. keksdose's label is its shared `more.copy_url` key,
    which stays app-side; the kit carries the same words in its own namespace.
    Below it, **Diagnostics** / **Diagnose** (the round after ui-kit 0.53, keksdose live
    #481): `context.diagnostics` as the app wrote it, each key and its value in
@@ -521,7 +530,8 @@ the title beside the detail. Then the sections, in this order:
      entschieden oder warum nicht.**; blank saves `null`;
    - admin or author, status reworkable (§3.4): `RotateCcw` **Rework** / **Nacharbeit**;
    - when the URL (or the route fallback above) is set: `ExternalLink` **Open page** /
-     **Seite öffnen** (a real `href`, the path only; not on a one-shot path).
+     **Seite öffnen** (a real `href`, the path only, with the app's `pageLinkParams`; not on
+     a one-shot path).
 5. **Send for rework** / **Zur Nacharbeit senden** — only while reworking:
    `FeedbackNoteEditor` with a **one-file** attachment field (add, capture or paste;
    same types and size), placeholder **What still needs refinement? Any new
@@ -2425,6 +2435,7 @@ What it takes besides §13.1's (all optional unless marked):
 | `onCaptureScreenshot` | `captureAppScreenshot()` | "Capture screenshot" beside those fields; `null` for none. |
 | `renderDate` | the kit's, with the weekday | The app's date writer, for the date and resolved columns, the card, the day headers **and** the detail's "Resolved:". Left out, the detail keeps its sentence date (no weekday). |
 | `pageLinkExclude` | — | The app's one-shot routes, for the URL column and the detail alike (§4.4.2). |
+| `pageLinkParams` | — | 0.61: the query params the page's link keeps, for the URL column and the detail alike (§4.4.2) — the app's `allowParams` list. Never a forwarding or acting param. Stable (a memo's dependency). |
 | `detail` | — | Over the detail's props the inbox sets (`commit`, `showSubject`, `reworkAttachment`, `replyAttachments`, `labels`, `className`); merged last. |
 | `labels` | — | Over `feedbackPage`. |
 | `selectable` | `true` | 0.57 (§13.6): the admin's multi-select and bulk edit, wherever the inbox is `editable`. `false` for none. |
@@ -2454,8 +2465,8 @@ The wiring it holds, the same for every app:
 - **The rows newest first** (`created_at`, a stable sort) — the phone's day headers group
   runs — and, while the phone's toggle is pressed on the inbox, only
   `FEEDBACK_AWAITING_STATUSES`.
-- **The table**: `useFeedbackColumns` (+ `votes`, `commit`, `pageLinkExclude`, the app's
-  `columns`), `rowKey` the id, `storageKey="feedback"`, `urlSync`, `fillHeight`,
+- **The table**: `useFeedbackColumns` (+ `votes`, `commit`, `pageLinkExclude`,
+  `pageLinkParams`, the app's `columns`), `rowKey` the id, `storageKey="feedback"`, `urlSync`, `fillHeight`,
   `FeedbackEmptyState` (or "Loading…" while `loading`), `feedbackMobileGroupBy(renderDate)`,
   `FeedbackMobileCard` (submitter for the admin, `votes`), `feedbackSwipePlan(swipe, …)` on
   the inbox only, and the desktop's actions column
@@ -2463,7 +2474,7 @@ The wiring it holds, the same for every app:
 - **The detail**: `FeedbackRowDetail` with `canEdit` = `editable`, `viewerId`,
   `onUpdate={update.mutateAsync}`, `pending` = `update.isPending || rework.isPending`,
   `statusChange` = `changeStatus`, `onUpload`, `fetcher`, `onCaptureScreenshot`, the app's
-  `renderDate`, `pageLinkExclude`, `onReply` / `replying` from `reply`,
+  `renderDate`, `pageLinkExclude`, `pageLinkParams`, `onReply` / `replying` from `reply`,
   **`replyAttachments` on** (§12: all three are on server-kit 0.18, and the reply's
   variables carry `attachmentUrl` from the start), `onRework` from `rework`, `comments`, and
   with `publicSwitch` the `onPublicChange`.
@@ -2720,3 +2731,161 @@ Clear all; the strip's refused Clear. `src/components/__tests__/data-table-key-f
 column's own filter, a column with no filter, the other filters on top, `serverRows`, the
 saved filters neither read nor written and given back, the layout kept, a set arriving
 mid-life, the phone). `src/components/__tests__/bulk-action-bar.test.tsx` — `clearDisabled`.
+
+## 14. Round 0.61: the public page, assembled once (2026-11-12)
+
+Marcel, 2026-11-12: Kurvenschmiede's feedback area should look and work exactly like
+keksdose's. Since 0.38 every part of `/all-feedback` is the kit's (`FeedbackPublicList`,
+`FeedbackPublicDetail`, the vote, the thread; §9.15), but the page around them was each app's,
+and the two had drifted: keksdose (`frontend/src/features/feedback/all-feedback-page.tsx`, the
+canon) keeps the sort, the page, the search and the open row in the URL, draws a failed read
+with a Retry and a paused one as offline, and toasts a link it cannot open; Kurvenschmiede
+(`frontend/src/features/feedback/all-feedback-page.tsx`) kept the sort and the page in
+`useState` (a reload or a shared link started over), drew a failed report as a red line with
+nothing to press, and replaced the whole list, sort included, with a banner when the list
+failed. Their comment hooks (keksdose `use-feedback-comments.ts`, Kurvenschmiede
+`use-feedback-conversation.ts`) had drifted too (§14.3). ui-kit 0.61 ships the page as
+**`useFeedbackPublicPage`** + **`FeedbackPublicPage`** (`src/feedback/feedback-public-page.tsx`)
+and the thread as **`useFeedbackComments`** (`src/feedback/feedback-comments.ts`), all on
+`@eifi1/ui-kit/feedback`. Additive: the parts keep their names and props. No server change.
+Three new words (§14.4).
+
+### 14.1 What the app keeps, what it hands over
+
+The app keeps its API client and its two reads (TanStack Query in both: the list and the open
+report), who may open the page (Kurvenschmiede's `seesPublicFeedback` and its not-found page),
+who the admin is, whether titles can be searched, its date writer, upload, capture and file
+fetcher, and its cache refresh. **The kit's own requests are the vote and the thread's**, made
+through the client it is handed (`api`, the app's `feedbackApi` as it is: both apps' method
+names already match).
+
+Why two calls where the inbox is one (§13): the list query is keyed on the sort, the search
+and the page, so the app reads them from the hook before the page can be drawn from its
+answer. The hook first, the queries, the component last.
+
+### 14.2 `useFeedbackPublicPage({ search?, pageSize? })`
+
+| Param | Value | Default (the clean URL) | A bad value |
+|---|---|---|---|
+| `?sort=` | `newest`, `votes`, `updated` (§9.6) | `newest` | the default |
+| `?p=` | the server's page, from 0, digits only | 0 | the default |
+| `?q=` | the box's text, keystroke by keystroke — only with `search` | none | — |
+| `?row=` | the open report: digits, no leading zero, a safe integer (§13.2's parse) | none | no row |
+
+Every write replaces the history entry. A new sort or a new search writes `p` back to the
+first page in the same navigation. `search` is **off by default**: where titles are sealed
+(Kurvenschmiede, `public_search=False`, §9.9) there is no box and `q` is never sent, whatever
+the address says. The server is asked once the typing pauses 300 ms (keksdose's), trimmed.
+It returns `FeedbackPublicPageState`: the values and their setters, `searchable`, `query` (the
+settled search), `pageSize` (default 50, both apps') and **`request`** — `{ sort, q?, limit,
+offset }`, `q` only with text, the same object until one of them changes — for the list query
+to key on and send as it is.
+
+### 14.3 `useFeedbackComments(id, api, { onChanged?, errorMessage? })`
+
+One report's thread (§9.8) through the app's client — `comments(id)`, `comment(id, body,
+attachmentUrl?)`, and the optional `hideComment` / `deleteComment` (without one, no such
+button). `null` reads nothing (no report open; Kurvenschmiede's `enabled: false` for a CRASH or
+a reader outside the public parts). Plain promises, as `useFeedbackSubmit` (§4.2): the feedback
+area imports no optional peer, and the thread lives in memory while the report is open — never
+in a persisted cache. It returns what `FeedbackPublicDetail` and `FeedbackCommentThread` take:
+`comments` (`undefined` until the first answer), `pending`, `onComment`, `onHide`,
+`onDelete`, and the read's `loading`, `failed`, `offline` (`navigator.onLine` at the failure)
+and `retry`.
+
+- **`pending` is a comment in flight only** — Kurvenschmiede's. keksdose's was also true while
+  a hide or a delete was out, which set the composer's Send spinning (`aria-busy`) and locked
+  its file field while nothing was being sent; the thread's `pending` means "a comment is being
+  sent".
+- **The failure's words**: a comment `feedbackToast.commentFailed`, a hide or a delete
+  `feedbackToast.updateFailed` — Kurvenschmiede's, as `FeedbackCommentThread`'s `onHide`
+  documents. keksdose said "Could not post the comment." for all three. `errorMessage(err,
+  fallback)` lets the server's sentence win (§3.7). A refused write rejects after the toast: the
+  composer keeps the draft, the thread puts back what it showed.
+- After a write the hook calls `onChanged(id)` (the app refreshes its lists: `comment_count`)
+  and reads the thread again **before** the write's promise settles, so the box clears as the
+  comment appears. A failed read keeps what is on screen; the hook reads again on `retry`, and
+  by itself on the browser's `online` event. Only the newest read lands.
+
+### 14.4 `FeedbackPublicPage`
+
+Props: `view` (the hook's state), `list` and `record` — **TanStack's `useQuery` results passed
+as they are** (`FeedbackPublicRead<D>`: `data`, `isPending`, `isError`, `isPaused?`,
+`isPlaceholderData?`, `refetch`) for `GET /feedback/public` with `view.request` and
+`GET /feedback/public/{id}` with `view.openId` (enabled while one is open) — `api`
+(`FeedbackPublicApi`: the thread's four and `vote(id, next)`), `onChanged(id, vote?)`,
+`errorMessage`, `isAdmin`, `onUpload`, `onCaptureScreenshot` (default `captureAppScreenshot()`,
+`null` for none), `fetcher`, `renderDate`, `commit`, `detail` (over `FeedbackPublicDetail`'s
+props, merged last), `labels`, `pageLabels`, `header`, `className`. It draws:
+
+- **The header**: `<PageHeader title={feedbackPublic.title} className="mb-4 md:shrink-0" />`;
+  inside a `FeedbackPageFrame`, the frame's compact header with that title (none where the
+  frame has a `title` of its own); an app's `header` (a node, `(title) => node`, `null`) wins.
+  **The frame is `FeedbackPageFrame`'s** (0.61, the same round: keksdose's `py-4 md:p-6`, edge
+  to edge on the phone): the page's root is only the fill-height column.
+- **The list** (`FeedbackPublicList`, `fillHeight`): the sort, the search box with `search`,
+  the pager — Next while a page comes back full and **not while the page before's rows stand
+  in for this one** (`isPlaceholderData`, Kurvenschmiede's), the vote on each row.
+- **Every state a read can be in**, gated on DATA, so a refetch that fails keeps what is on
+  screen: loading is the table's "Loading…" (its frame kept) and the opened report's Skeleton;
+  `isPaused` is **You’re offline** (`errorBoundary.offlineTitle`) with
+  `feedbackPublic.offlineHint` and no button (it loads by itself); `isError` is
+  `feedbackPublic.loadFailed` with **Try again** (`errorBoundary.retry`, the query's
+  `refetch`). The list's goes in the table's empty row — the sort and the search stay to change
+  what is asked (`FeedbackPublicList`'s new `empty`); the report's in its place; the thread's
+  in the conversation's place (`FeedbackPublicDetail`'s new `commentsError`) rather than its
+  loading lines for good.
+- **A `?row=` link to a report this page does not list** (a notice's, §9.11): drawn above the
+  page's rows from `record`, open (`openRow`, 0.38.1), once the page is in; one that cannot be
+  read is said in a toast, `feedbackPublic.rowUnavailable(id)` ("Report #52 could not be
+  opened. It may have been removed or hidden from others."), id `feedback-row-<id>`, once per
+  report. On the page, a failed read is the row's own card instead, and no toast.
+- **The vote** through `api.vote`: a refusal toasts (`errorMessage`, else
+  `feedbackToast.voteFailed`) and rejects, so the button rolls back; a landing calls
+  `onChanged(id, answer)`.
+- **The conversation**: `useFeedbackComments(view.openId, api, …)`, Hide for `isAdmin` only.
+
+**The words** (`feedbackPublic`, seven catalogues): `loadFailed`, `offlineHint`,
+`rowUnavailable(id)` — keksdose's reviewed `common.load_failed` and
+`common.feedback_row_unavailable` where it had them (de-CH, fr, it).
+
+### 14.5 What differed between the two pages, and where it went
+
+| What | keksdose | Kurvenschmiede | 0.61 |
+|---|---|---|---|
+| Sort, page | `?sort=`, `?p=` | `useState` | the URL |
+| Search | `?q=`, debounced 300 ms | none (sealed) | `search` (off by default) |
+| `?row=` parse | `Number`, finite (`?row=1e2` opened #100) | `Number(…) \|\| null` | digits only |
+| Next while the next page loads | on | off (`!isPlaceholderData`) | off |
+| The list failed | "No reports yet" | a banner in place of the list, sort gone | the card with Try again in the table, sort kept |
+| The report failed | `QueryState`: Retry, offline | a red line, no Retry | keksdose's |
+| A link to a report not readable | toast | nothing | keksdose's toast |
+| Off-page report fetched | after the list, own query (same key) | after the list | `record` — the open report's one query |
+| Comments read failed | loading lines for good | the same | the conversation's card with Try again |
+| Comment `pending` | comment, hide or delete | comment | comment (§14.3) |
+| Hide/delete failure toast | `commentFailed` | `updateFailed` | `updateFailed` (§14.3) |
+| Vote's cache | invalidate `feedback.all` | written in place (`putVote`) | `onChanged(id, vote)`: each app's own |
+| Frame | `FillHeight py-4 md:p-6`, compact header | `PAGE_SHELL`, `size="sm"` header | `FeedbackPageFrame` |
+
+### 14.6 Per app
+
+Each page becomes the hook, its two queries and one component; both apps drop their comment
+hook for `useFeedbackComments`. `docs/adopt-0.61.md` names the files.
+
+**Tests:** `src/feedback/__tests__/feedback-public-page.test.tsx` (35) — the first page newest
+first under the title; the sort and the page read from the address and written to it, a new
+sort back on page one, four malformed values; the pager, Next waiting for a placeholder; the
+list's failure with Try again and the sort kept, offline; the search off (no box, no `q`) and
+on (from `?q=`, back to page one, one request per pause, trimmed, the rows kept); `?row=`
+opened, written, cleared, four malformed values; the off-page report drawn first; the toast,
+once; the Skeleton; the report's failure with Try again, offline, a refetch that fails keeping
+it; the comments' failure in the conversation; the vote from the detail and the row, its
+refusal rolled back with the server's sentence; a comment; Hide for the admin only; the
+frame's header, a frame with its own title, the app's header; the phone's card; the types
+(TanStack's results and both apps' clients). `src/feedback/__tests__/feedback-comments.test.tsx`
+(13) — the read, `null`, a report switched mid-read, an inline api, a failed read and Try
+again, offline and the `online` re-read; a comment (two arguments without a file, settling
+after the re-read, `onChanged`), `pending` for a comment only, each refusal's words,
+`errorMessage`, no Hide or Delete without the calls, both clients' types. The showcase's
+Feedback — inbox page has the whole page in a router of its own (`FeedbackPublicPageDemo`),
+the address under it.

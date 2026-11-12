@@ -102,6 +102,9 @@ const DE_CH = {
 
 type Viewer = "admin" | "author" | "other";
 
+/** The params the page's link keeps — an app's crash-reporter list; here only the paging. */
+const PAGE_LINK_PARAMS = ["p"];
+
 const VIEWERS: Record<Viewer, { canEdit: boolean; viewerId: number }> = {
   // The admin on /feedback (not the author of this row).
   admin: { canEdit: true, viewerId: 1 },
@@ -172,6 +175,7 @@ function Detail({ viewer }: { viewer: Viewer }) {
         statusChange={statusChange}
         onUpload={onUpload}
         fetcher={fetcher}
+        pageLinkParams={PAGE_LINK_PARAMS}
       />
       <button type="button" className="text-xs text-muted underline" onClick={() => setRow(seedRow())}>
         Reset the row
@@ -224,6 +228,9 @@ export function FeedbackDetail027Demo() {
         the author: the row goes back to Open, and the Edit button appears. The page it was filed on is the reporter's
         to write, so a route that acts on load — {code("/join")}, {code("/register")}, {code("/verify-email")},{" "}
         {code("/reset-password")} and the app's {code("pageLinkExclude")} — is shown as text with Copy, never as a link.
+        Any other page links its path and the query params the app lists in {code("pageLinkParams")} (the{" "}
+        {code("allowParams")} its crash reporter keeps; here {code("p")}), and shows the rest of the query and the hash
+        as text beside the link. Never list a param that forwards, such as {code("next")}.
       </Note>
     </Example>
   );

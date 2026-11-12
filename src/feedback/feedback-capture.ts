@@ -237,6 +237,51 @@ function inViewport(node: Node): boolean {
   return !(rect.bottom <= 0 || rect.right <= 0 || rect.top >= window.innerHeight || rect.left >= window.innerWidth);
 }
 
+/**
+ * The attribute that carries a control's state from the page to its clone (0.60.1).
+ *
+ * The picture is drawn from a CLONE of the page, serialised, and a control's current state
+ * is a property, which neither a clone nor its markup keeps: only attributes go over.
+ * modern-screenshot's `copyInputValue` writes `value` onto a cloned `<select>`, which a
+ * select ignores, so every select showed its first option (keksdose's 0.60 adoption: on
+ * the screenshot of live #514/#515 all four swipe pickers read "— none —" whatever was
+ * bound, and the report read as a settings fault); a checkbox or radio that React set showed
+ * its markup's state. The selected options and the checked boxes are tagged on the page,
+ * and {@link showFormState} turns the tag into `selected` / `checked` on the clone.
+ *
+ * A `data-` tag, never `selected` / `checked` on the page itself: a control nobody has
+ * changed still follows those attributes, and putting a radio's `checked` back afterwards
+ * could check it again on the live page. The tag changes no state, and goes in `finally`.
+ */
+const FORM_STATE = "data-kit-capture-state";
+
+/** Tag every `<option>`, checkbox and radio under `root` with its state ("1" / "0").
+ *  Returns what takes the tags off again. */
+function tagFormState(root: Element): () => void {
+  const tagged: Element[] = [];
+  for (const el of root.querySelectorAll<HTMLOptionElement | HTMLInputElement>(
+    'option, input[type="checkbox"], input[type="radio"]',
+  )) {
+    const on = el.tagName === "OPTION" ? (el as HTMLOptionElement).selected : (el as HTMLInputElement).checked;
+    el.setAttribute(FORM_STATE, on ? "1" : "0");
+    tagged.push(el);
+  }
+  return () => {
+    for (const el of tagged) el.removeAttribute(FORM_STATE);
+  };
+}
+
+/** modern-screenshot's `onCloneEachNode`: a tagged control's clone shows its original's
+ *  state — `selected` on an option, `checked` on a checkbox or radio — and loses the tag. */
+function showFormState(cloned: Node): void {
+  if (cloned.nodeType !== Node.ELEMENT_NODE) return;
+  const el = cloned as Element;
+  const state = el.getAttribute(FORM_STATE);
+  if (state === null) return;
+  el.removeAttribute(FORM_STATE);
+  el.toggleAttribute(el.tagName === "OPTION" ? "selected" : "checked", state === "1");
+}
+
 /** What `captureAppScreenshot` takes. */
 export interface CaptureAppScreenshotOptions {
   /**
@@ -274,14 +319,22 @@ export async function captureAppScreenshot({
   }
   const el = document.getElementById(rootId);
   if (!el) return null;
-  const blob = await domToBlob(el, {
-    // Falls back to PNG where WebP cannot be encoded; the File is named from the blob.
-    type: "image/webp",
-    quality: 0.9,
-    font: false,
-    includeStyleProperties: [...CAPTURE_STYLE_PROPERTIES],
-    filter: inViewport,
-  });
+  const untag = tagFormState(el);
+  let blob: Blob;
+  try {
+    blob = await domToBlob(el, {
+      // Falls back to PNG where WebP cannot be encoded; the File is named from the blob.
+      type: "image/webp",
+      quality: 0.9,
+      font: false,
+      includeStyleProperties: [...CAPTURE_STYLE_PROPERTIES],
+      filter: inViewport,
+      // Each select at its chosen option, each box as it is (0.60.1).
+      onCloneEachNode: showFormState,
+    });
+  } finally {
+    untag();
+  }
   const type = blob.type || "image/png";
   return new File([blob], `screenshot.${EXTENSIONS[type] ?? "png"}`, { type });
 }

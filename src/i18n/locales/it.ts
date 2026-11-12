@@ -137,6 +137,11 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       visibleHint: "Le altre persone vedono il titolo e il testo, mai i Suoi screenshot o file.",
       visibleLocked: "Solo finché la segnalazione è ancora aperta.",
       page: (page) => `Pagina ${n(page)}`,
+      // 0.61: FeedbackPublicPage — keksdose's `load_failed`, "segnalazione" as above.
+      loadFailed: "Impossibile caricare.",
+      offlineHint: "Serve una connessione. Il caricamento riprenderà appena sarà di nuovo online.",
+      rowUnavailable: (id) =>
+        `Impossibile aprire la segnalazione #${id}. Potrebbe essere stata rimossa o nascosta agli altri.`,
     },
     feedbackNotificationTypes: {
       answered: "Risposte alle Sue segnalazioni",
@@ -753,8 +758,11 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     },
     seriesChart: {
       resetZoom: "Reimposta zoom",
+      zoomBack: "Indietro",
+      zoomWindow: "Intervallo visibile",
+      zoomWindowRange: (from, to) => `da ${from} a ${to}`,
       zoomHint:
-        "Trascini per ingrandire: una selezione più o meno quadrata ingrandisce entrambi gli assi, una lunga e sottile solo il proprio. Faccia doppio clic per ripristinare.",
+        "Trascini per ingrandire: una selezione più o meno quadrata ingrandisce entrambi gli assi, una lunga e sottile solo il proprio. Su uno schermo tattile, un dito legge i valori e due dita ingrandiscono e spostano. «Indietro» annulla un passo di zoom; un doppio clic o «Reimposta zoom» mostra di nuovo l’intervallo intero.",
       empty: "Nessun dato",
       legend: "Serie",
       points: "Valori del grafico",
@@ -1007,6 +1015,12 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
             tail: "Niente di tutto ciò viene usato per tracciarLa. Le voci in attesa di invio ci vengono trasmesse non appena possibile. Tutto questo scompare quando cancella i dati del sito, e uscendo dall’account vengono rimossi i token di accesso.",
             commercial:
               "Niente di tutto ciò viene usato per tracciarLa. Le voci in attesa di invio ci vengono trasmesse non appena possibile. Tutto questo scompare quando cancella i dati del sito, e uscendo dall’account vengono rimossi i token di accesso. Il pagamento avviene in una finestra di Paddle, sul dominio proprio di Paddle; ciò che questa finestra vi salva (ad esempio un cookie di sicurezza e alcune impostazioni) è disciplinato dall’informativa sulla privacy di Paddle.",
+            // 0.61 (Marcel 2026-11-12): the persisted cache and the shared-computer flag, for an app's entries.
+            standardEntries: {
+              recentData: (hours) =>
+                `I dati caricati di recente, perché le pagine si aprano anche senza connessione; ciò che ha più di ${hours} ore l’app non lo usa più e lo rimuove alla successiva apertura. Non ne resta nulla se accede con «Questo è un computer condiviso».`,
+              sharedComputer: "Se all’accesso ha scelto «Questo è un computer condiviso», finché dura quella sessione.",
+            },
           },
           rights: {
             title: "I Suoi diritti",
@@ -1943,6 +1957,27 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       confirmAction: "Ripristina",
       done: "Le impostazioni di questo dispositivo sono tornate ai valori predefiniti.",
       keywords: "ripristina predefiniti dispositivo reimposta aspetto tabelle layout",
+    },
+    // 0.61 — SwipeSetting: keksdose's `settings.swipe_*`, its Italian wording.
+    swipeSetting: {
+      title: "Gesti di scorrimento",
+      description:
+        "Come le righe degli elenchi rispondono a un trascinamento orizzontale: con il tocco o trascinando con il mouse.",
+      surfacePicker: "Quale elenco",
+      surfaces: { feedback: "Feedback", translationReview: "Traduzioni" },
+      right: "Scorri a destra",
+      left: "Scorri a sinistra",
+      primary: "Scorrimento breve",
+      secondary: "Scorrimento lungo",
+      none: "— nessuna —",
+      nextStatus: "Stato successivo",
+      help: "Un trascinamento breve esegue la prima azione; trascinando oltre si esegue la seconda. Un’azione che una riga non può eseguire viene saltata, così la successiva sale di posto.",
+      saveDefault: "Imposta come miei predefiniti",
+      reset: "Ripristina predefiniti",
+      resetMine: "Torna ai miei predefiniti",
+      defaultSaved: "Ripristina ora torna ai predefiniti che ha salvato.",
+      resetShipped: "Ripristina i predefiniti di fabbrica",
+      keywords: "scorrere scorrimento gesto trascinare sinistra destra breve lungo righe elenchi",
     },
     rowActions: {
       actions: "Azioni",

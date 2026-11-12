@@ -715,6 +715,7 @@ export {
 } from "./components/legal";
 export type {
   LegalLabels,
+  LegalBrowserStandardEntries,
   LegalLink,
   LegalLinksProps,
   LegalSectionProps,
@@ -1170,6 +1171,32 @@ export { registerDeviceSetting, deviceSettings, resetDeviceSettings } from "./li
 export type { DeviceSetting, DeviceSettingKind } from "./lib/device-settings";
 export { DeviceResetSetting, DEVICE_RESET_ANCHOR, DEFAULT_DEVICE_RESET_LABELS } from "./settings/device-reset-setting";
 export type { DeviceResetSettingProps, DeviceResetLabels } from "./settings/device-reset-setting";
+// 0.61 (Marcel 2026-11-12: the kit owns them): which swipe does what, per list — the store,
+// with the kit's two lists as surfaces and room for an app's own, and the card. keksdose's
+// Settings → Interaction, moved in; Kurvenschmiede offers it for its inbox.
+export {
+  createSwipeSettingsStore,
+  FEEDBACK_SWIPE_SURFACE,
+  TRANSLATION_REVIEW_SWIPE_SURFACE,
+  SWIPE_NONE,
+} from "./settings/swipe-settings-store";
+export type {
+  SwipeActionOf,
+  SwipeBinding,
+  SwipeLadderMap,
+  SwipeLadders,
+  SwipeNone,
+  SwipeSettingsLegacy,
+  SwipeSettingsOptions,
+  SwipeSettingsState,
+  SwipeSettingsStore,
+  SwipeSide,
+  SwipeSlot,
+  SwipeSurface,
+  SwipeSurfaces,
+} from "./settings/swipe-settings-store";
+export { SwipeSetting, SWIPE_SETTING_ANCHOR, DEFAULT_SWIPE_SETTING_LABELS } from "./settings/swipe-setting";
+export type { SwipeSettingProps, SwipeSettingLabels, SwipeSurfaceLabels } from "./settings/swipe-setting";
 // The language follows the account (§6.2); since 0.32 so do the text size and the
 // contrast (useAccountAppearance below, docs/text-size-harmonization.md §6).
 export { useAccountLanguage, resolveAccountLanguage, matchOfferedLanguage } from "./settings/use-account-language";

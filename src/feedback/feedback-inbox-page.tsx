@@ -13,6 +13,7 @@ import type { LabelOverride } from "../i18n/kit-labels";
 import type { PathPattern } from "../landing/routing";
 import { FILL_HEIGHT_CLASS } from "../shell/fill-height";
 import { captureAppScreenshot } from "./feedback-capture";
+import { useFeedbackPageFrameHeader } from "./feedback-page-frame";
 import { FeedbackInboxBulkBar, useFeedbackInboxBulk } from "./feedback-inbox-bulk";
 import { useFeedbackStatusLabels } from "./feedback-labels";
 import { runMutation } from "./feedback-mutation";
@@ -203,6 +204,15 @@ export interface UseFeedbackInboxOptions<T extends FeedbackRecord> {
   /** The app's one-shot routes, on top of the kit's (0.52, FLW-7) — for the URL column and
    *  the detail's URL section alike. Keep it stable (module scope). */
   pageLinkExclude?: readonly PathPattern[];
+  /**
+   * 0.61 (Kurvenschmiede production feedback #7): the query params the page's link keeps,
+   * for the URL column and the detail's URL section alike — `/curves/2?profile=5` with
+   * `["profile"]`. The list the app gives `useFeedbackSubmit` and its crash reporter as
+   * `allowParams`: `pageLinkParams={REPORT_URL_PARAMS}`. **Never a param that forwards or
+   * acts on load** (`next`, `returnTo`, a token). Default: none, the path alone. Keep it
+   * stable (module scope).
+   */
+  pageLinkParams?: Iterable<string>;
   /** The list is still loading (`list.isPending`): the table says "Loading…" where its
    *  rows will be, not "None". */
   loading?: boolean;
@@ -296,8 +306,11 @@ export interface FeedbackInboxState<T extends FeedbackRecord> {
 /** `?row=`'s value: a report's id is a positive integer, written in digits. Anything
  *  else — a hand-edited link, `1e2`, `0x10`, `-3`, `1.5` — opens no row (and the URL
  *  keeps it until a row is opened or closed). The three apps parsed with `Number()`, so
- *  `?row=1e2` opened #100 in all three. */
-function parseRowId(raw: string): number | undefined {
+ *  `?row=1e2` opened #100 in all three. The public page (feedback-public-page.tsx) reads
+ *  its `?row=` with it too.
+ *
+ *  @internal Not part of `/feedback` or the barrel. */
+export function parseRowId(raw: string): number | undefined {
   if (!/^[1-9]\d*$/.test(raw)) return undefined;
   const id = Number(raw);
   return Number.isSafeInteger(id) ? id : undefined;
@@ -366,6 +379,7 @@ export function useFeedbackInbox<T extends FeedbackRecord>({
   onCaptureScreenshot = captureScreenshot,
   renderDate: renderDateProp,
   pageLinkExclude,
+  pageLinkParams,
   loading = false,
   detail,
   labels,
@@ -434,6 +448,7 @@ export function useFeedbackInbox<T extends FeedbackRecord>({
     commit,
     votes,
     pageLinkExclude,
+    pageLinkParams,
     labels,
   });
   const columns = useMemo(() => (ownColumns ? ownColumns(kitColumns) : kitColumns), [ownColumns, kitColumns]);
@@ -459,6 +474,7 @@ export function useFeedbackInbox<T extends FeedbackRecord>({
     // no weekday — as kastlan's has always been.
     renderDate: renderDateProp,
     pageLinkExclude,
+    pageLinkParams,
     onReply: reply
       ? (body, status, attachmentUrl) =>
           reply.mutateAsync({
@@ -551,10 +567,12 @@ export function useFeedbackInbox<T extends FeedbackRecord>({
 
 export interface FeedbackInboxProps<T extends FeedbackRecord> extends UseFeedbackInboxOptions<T> {
   /**
-   * Above the table. Default: `<PageHeader title={title} className="mb-4 md:shrink-0" />`.
-   * A function gets the page's title (`feedbackPage.title` / `.myTitle`) — the app's own
-   * header: `(title) => <PageHeader size="compact" title={title} data-tour="feedback-header" />`.
-   * `null` for none.
+   * Above the table. Default: `<PageHeader title={title} className="mb-4 md:shrink-0" />` —
+   * and inside a {@link FeedbackPageFrame}, the frame's header with this title (none when
+   * the frame was given a `title` of its own). A function gets the page's title
+   * (`feedbackPage.title` / `.myTitle`) — the app's own header:
+   * `(title) => <PageHeader size="compact" title={title} data-tour="feedback-header" />`.
+   * `null` for none. Given, it wins over the frame's.
    */
   header?: ReactNode | ((title: string) => ReactNode);
   /** Over the inbox's `DataTable` props — `edgeFade`, `locale`, `mobileExpandAsDialog`,
@@ -564,7 +582,8 @@ export interface FeedbackInboxProps<T extends FeedbackRecord> extends UseFeedbac
    *  group of their own on `/my-feedback`. */
   phoneActions?: ReactNode;
   /** On the page's frame — the fill-height column (`FILL_HEIGHT_CLASS`); the app's page
-   *  padding goes here. */
+   *  padding goes here. The feedback pages' own padding and header are
+   *  {@link FeedbackPageFrame}'s (0.61): wrap the inbox in it instead. */
   className?: string;
 }
 
@@ -604,9 +623,16 @@ export function FeedbackInbox<T extends FeedbackRecord>({
 }: FeedbackInboxProps<T>) {
   const inbox = useFeedbackInbox<T>(options);
   const pageLabels = useFeedbackPageLabels(options.labels);
+  // In a FeedbackPageFrame (0.61) the default header is the frame's, with this page's own
+  // title: the inbox knows whether it is the inbox or "My feedback", and the frame does not.
+  const frameHeader = useFeedbackPageFrameHeader();
   const head =
     header === undefined ? (
-      <PageHeader title={inbox.title} className="mb-4 md:shrink-0" />
+      frameHeader === undefined ? (
+        <PageHeader title={inbox.title} className="mb-4 md:shrink-0" />
+      ) : (
+        frameHeader?.(inbox.title)
+      )
     ) : typeof header === "function" ? (
       header(inbox.title)
     ) : (

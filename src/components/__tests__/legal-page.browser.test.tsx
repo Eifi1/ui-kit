@@ -189,3 +189,43 @@ describe('LegalKitSection section="browser" variant="commercial" (0.59)', () => 
     expect(commercial!.slice(tail.length).trim()).toBe(CHECKOUT[code]);
   });
 });
+
+describe("the browser section's standard entries (0.61, Marcel 2026-11-12)", () => {
+  /** The shared-computer choice's name, as each catalogue's `sharedComputer.label` says it:
+   *  the two lines quote the box the reader ticked. */
+  const BOX: Record<string, string> = {
+    en: "This is a shared computer",
+    "de-CH": "Dies ist ein gemeinsam genutzter Computer",
+    fr: "C’est un ordinateur partagé",
+    it: "Questo è un computer condiviso",
+    es: "Este es un ordenador compartido",
+    hu: "Ez egy közös használatú számítógép",
+    zh: "这是一台共用电脑",
+  };
+
+  it.each(Object.keys(CATALOGUES))("%s: the cache line names its hours and the box, the flag line the box", (lang) => {
+    const labels = CATALOGUES[lang]!();
+    const standard = labels.legal!.sections!.privacy!.browser!.standardEntries!;
+    expect(labels.sharedComputer!.label).toBe(BOX[lang]);
+    const cache = standard.recentData!(24);
+    expect(cache).toContain("24");
+    expect(cache).toContain(BOX[lang]);
+    expect(standard.sharedComputer).toContain(BOX[lang]);
+  });
+
+  it("are entries the app places in its own list, as the kit words them", () => {
+    const standard = B.standardEntries!;
+    render(
+      <LegalKitSection
+        section="browser"
+        entries={["your sign-in tokens", standard.recentData(24), standard.sharedComputer]}
+      />,
+    );
+    const items = Array.from(section()!.querySelectorAll("li"), (li) => li.textContent);
+    expect(items).toEqual([
+      "your sign-in tokens",
+      "Recently loaded data, so pages also open without a connection; what is older than 24 hours the app no longer uses and removes the next time it opens. None of it is kept when you sign in with “This is a shared computer”.",
+      "Whether you chose “This is a shared computer” at sign-in, for as long as that session lasts.",
+    ]);
+  });
+});

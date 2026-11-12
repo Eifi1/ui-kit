@@ -145,6 +145,12 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       visibleHint: "Andere Personen sehen Titel und Text, nie Ihre Screenshots oder Dateien.",
       visibleLocked: "Nur solange die Meldung noch offen ist.",
       page: (page) => `Seite ${n(page)}`,
+      // 0.61: FeedbackPublicPage's read states and the toast for a link it cannot open; the
+      // wording is keksdose's reviewed `common.load_failed` / `feedback_row_unavailable`.
+      loadFailed: "Das konnte nicht geladen werden.",
+      offlineHint: "Dafür ist eine Verbindung nötig. Es lädt, sobald Sie wieder online sind.",
+      rowUnavailable: (id) =>
+        `Meldung #${id} konnte nicht geöffnet werden. Möglicherweise wurde sie entfernt oder für andere ausgeblendet.`,
     },
     feedbackNotificationTypes: {
       answered: "Antworten auf Ihre Meldungen",
@@ -762,8 +768,11 @@ export function germanLabels(numberLocale: string): UiKitLabels {
     },
     seriesChart: {
       resetZoom: "Zoom zurücksetzen",
+      zoomBack: "Zurück",
+      zoomWindow: "Sichtbarer Bereich",
+      zoomWindowRange: (from, to) => `${from} bis ${to}`,
       zoomHint:
-        "Zum Zoomen ziehen: Eine annähernd quadratische Auswahl zoomt beide Achsen, eine lange, schmale nur ihre eigene. Doppelklick setzt zurück.",
+        "Zum Zoomen ziehen: Eine annähernd quadratische Auswahl zoomt beide Achsen, eine lange, schmale nur ihre eigene. Auf einem Touchscreen liest ein Finger die Werte ab, zwei Finger zoomen und verschieben. «Zurück» nimmt einen Zoomschritt zurück; Doppelklick oder «Zoom zurücksetzen» zeigt wieder den ganzen Bereich.",
       empty: "Keine Daten",
       legend: "Datenreihen",
       points: "Diagrammwerte",
@@ -1022,6 +1031,13 @@ export function germanLabels(numberLocale: string): UiKitLabels {
             // beside the commercial disclaimer and changes clause.
             commercial:
               "Nichts davon dient dazu, Sie zu verfolgen. Noch nicht gesendete Einträge werden an uns übermittelt, sobald das möglich ist. Das alles verschwindet, wenn Sie die Websitedaten löschen, und beim Abmelden werden die Anmeldetoken entfernt. Die Zahlung läuft in einem Fenster von Paddle auf Paddles eigener Domain; was dieses dort speichert (etwa ein Sicherheits-Cookie und Einstellungen), regelt die Datenschutzerklärung von Paddle.",
+            // 0.61 (Marcel 2026-11-12): the persisted cache and the shared-computer flag, for an app's entries.
+            standardEntries: {
+              recentData: (hours) =>
+                `Kürzlich geladene Daten, damit Seiten auch ohne Verbindung öffnen; was älter als ${hours} Stunden ist, verwendet die App nicht mehr und entfernt es, sobald sie wieder geöffnet wird. Davon bleibt nichts, wenn Sie sich mit «Dies ist ein gemeinsam genutzter Computer» anmelden.`,
+              sharedComputer:
+                "Ob Sie bei der Anmeldung «Dies ist ein gemeinsam genutzter Computer» gewählt haben, solange diese Sitzung dauert.",
+            },
           },
           rights: {
             title: "Ihre Rechte",
@@ -1993,6 +2009,27 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       confirmAction: "Zurücksetzen",
       done: "Die Einstellungen dieses Geräts sind auf die Standardwerte zurückgesetzt.",
       keywords: "zurücksetzen standard standardwerte gerät wiederherstellen darstellung tabellen layout",
+    },
+    // 0.61 — SwipeSetting (keksdose's Settings → Interaction, `settings.swipe_*`, its de-CH
+    // wording). The actions are named by `feedbackStatus` and `translationReview`.
+    swipeSetting: {
+      title: "Wischgesten",
+      description: "Wie Listenzeilen auf horizontales Ziehen reagieren – per Wischgeste oder mit gedrückter Maustaste.",
+      surfacePicker: "Welche Liste",
+      surfaces: { feedback: "Feedback", translationReview: "Übersetzungen" },
+      right: "Nach rechts wischen",
+      left: "Nach links wischen",
+      primary: "Kurz wischen",
+      secondary: "Weit wischen",
+      none: "— keine —",
+      nextStatus: "Nächster Status",
+      help: "Ein kurzer Zug löst die erste Aktion aus, ein weiterer Zug die zweite. Aktionen, die eine Zeile nicht ausführen kann, werden übersprungen — die nächste rückt auf.",
+      saveDefault: "Als meine Standardwerte setzen",
+      reset: "Auf Standard zurücksetzen",
+      resetMine: "Auf meine Standardwerte",
+      defaultSaved: "Zurücksetzen führt jetzt auf Ihre gespeicherten Standardwerte.",
+      resetShipped: "Auslieferungszustand wiederherstellen",
+      keywords: "wischen wischgeste ziehen links rechts kurz weit zeilen listen",
     },
     rowActions: {
       actions: "Aktionen",

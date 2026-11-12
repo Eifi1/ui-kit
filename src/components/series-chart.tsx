@@ -62,7 +62,9 @@ import { rovingTarget } from "../lib/direction";
 import {
   DEFAULT_Y_AXIS,
   axisExtent,
+  pointAt,
   withChartZoom,
+  ZoomRangeContext,
   type ZoomAxesSetting,
   type ZoomBinding,
   type ZoomFitSource,
@@ -663,8 +665,20 @@ export interface SeriesChartProps<TRow extends object = object> {
    * the marks — see `defaultZoomAxes` (lines both, areas x, bars none). An axis carrying
    * bars or areas never takes a DRAGGED y window: it refits to the x window, from zero.
    * Ignored by `StaticSeriesChart`, which does not zoom.
+   *
+   * On a touch screen one finger reads (the tooltip follows it) and two fingers zoom and
+   * pan x, on a chart whose zoom names x; a mouse or a pen drags the band. While zoomed,
+   * Back undoes one zoom step and Reset zoom shows the whole range.
    */
   zoomAxes?: ZoomAxesSetting;
+  /**
+   * The overview strip under the plot while x is zoomed: the whole range as a thin track,
+   * and the window on show as a handle that drags (mouse or finger) and takes ←/→ to pan,
+   * Home and End to go to the ends. Default `true`; `false` draws none. Inside a
+   * `SharedXZoom` the column draws one, under its last chart that has one. Ignored by
+   * `StaticSeriesChart` and by a chart that does not zoom.
+   */
+  zoomOverview?: boolean;
   /**
    * A click on the plot: the slot under the pointer, and the series when it landed on a
    * bar. keksdose's drilldowns — a payee's month, a budget line, a spending category.
@@ -1167,32 +1181,6 @@ function PointKeys({
   );
 }
 
-/**
- * Stands recharts' pointer at (`x`, `y`) in the chart's own px, as a mouse moved there
- * would — what the keyboard's stops show their tooltip by (0.52 code review, deep, charts,
- * finding 4). Their `defaultIndex` alone moved it only until a pointer had hovered the
- * chart: recharts reads it no more once a hover has an index, and a mouse that has left
- * keeps its index. After one hover the arrows moved the tint, and the tooltip, the one
- * place the value is drawn, stayed where the mouse had left it. recharts' own keyboard
- * layer, which these stops replaced (DSP-5), drove the tooltip through its own state.
- *
- * A point off the plot (`x` left of it) takes the pointer off the chart: recharts hides
- * its tooltip there, through the same frame-throttled path a pending move takes, so a
- * blur right after a focus is never overtaken by it. recharts reads the pointer against
- * its wrapper's box, scaled as the box is drawn (`getRelativeCoordinate`); the point is
- * put back into that box.
- */
-function pointAt(within: Element, x: number, y: number) {
-  const wrapper = within.closest<HTMLElement>(".recharts-wrapper");
-  if (!wrapper) return;
-  const box = wrapper.getBoundingClientRect();
-  const scaleX = wrapper.offsetWidth > 0 ? box.width / wrapper.offsetWidth : 1;
-  const scaleY = wrapper.offsetHeight > 0 ? box.height / wrapper.offsetHeight : 1;
-  wrapper.dispatchEvent(
-    new MouseEvent("mousemove", { bubbles: true, clientX: box.left + x * scaleX, clientY: box.top + y * scaleY }),
-  );
-}
-
 interface PlotProps extends Omit<SeriesChartProps, "rows" | "x"> {
   /** The rows AS PLOTTED — what the zoom fits on. The caller's are `model.source`. */
   rows: readonly SeriesChartRow[];
@@ -1420,10 +1408,11 @@ function SeriesPlot({
   // Ticks are the round values INSIDE whichever domain that is (see
   // `series-chart-ticks.ts`), so a zoom window still gets round numbers, just finer.
   // A category axis is its slots, each half a slot of air either side — room for a
-  // bar, and the tick under the middle of it.
-  const fittedX: [number, number] | undefined =
-    zoom?.xDomain ??
-    (model.kind === "category"
+  // bar, and the tick under the middle of it. `wholeX`, the unzoomed one, is also the
+  // range the zoom's pinch and pan stop at (`ZoomRange`), so they reach the air and the
+  // half slots and no further.
+  const wholeX: [number, number] | undefined =
+    model.kind === "category"
       ? [-0.5, rows.length - 0.5]
       : padBand(
           ...(extend(undefined, [
@@ -1431,7 +1420,8 @@ function SeriesPlot({
             ...xRefs.map((ref) => xPos(ref.value)),
             ...(markers ?? []).map((marker) => xPos(marker.x)),
           ]) ?? [Infinity, -Infinity]),
-        ));
+        );
+  const fittedX = zoom?.xDomain ?? wholeX;
 
   const timeUnit = model.kind === "time" ? timeTicksWithUnit(fittedX, ticksAim) : undefined;
   // Whole-number ticks on a number line whose rows are all whole numbers — see
@@ -1476,6 +1466,12 @@ function SeriesPlot({
   const xFormat = (position: number) => format(position, tickAt(position));
   const label = x.label ?? (model.kind === "time" ? (position: number) => dateFormat.format(position) : format);
   const xLabel = (position: number) => label(position, tickAt(position));
+  // A position as words: the heading the tooltip would give it, when that is text; else
+  // the tick. What a keyboard stop is named by, and the zoom strip's handle says.
+  const xText = (position: number) => {
+    const heading = xLabel(position);
+    return typeof heading === "string" && heading ? heading : xFormat(position);
+  };
 
   const tickAngle = x.ticks === false ? 0 : (x.tickAngle ?? 0);
   const tickBand = tiltedTickBand(
@@ -1559,11 +1555,7 @@ function SeriesPlot({
     placed.forEach(({ index, at }, k) => {
       const from = k > 0 ? (placed[k - 1].at + at) / 2 : low;
       const to = k < placed.length - 1 ? (placed[k + 1].at + at) / 2 : high;
-      // The heading the tooltip would give it, when that is text; else the tick.
-      const where = () => {
-        const heading = xLabel(at);
-        return typeof heading === "string" && heading ? heading : xFormat(at);
-      };
+      const where = () => xText(at);
       const valued = (bars.length ? bars : series)
         .map((entry) => ({ entry, value: finite(rows[index]?.[entry.key]) }))
         .filter((cell): cell is { entry: SeriesChartSeries; value: number } => cell.value !== undefined);
@@ -1954,11 +1946,15 @@ function SeriesPlot({
             }
           />
         )}
-        {zoom?.layer}
+        {zoom?.layer && (
+          <ZoomRangeContext.Provider value={{ whole: wholeX, label: xText }}>{zoom.layer}</ZoomRangeContext.Provider>
+        )}
       </ComposedChart>
     </ChartContainer>
   );
   if (!inRow) return chart;
+  // Back and Reset zoom stand in the readout's corner only while the chart is zoomed.
+  const zoomedNow = !!zoom?.layer && (zoom.xDomain !== undefined || Object.keys(zoom.yDomains).length > 0);
   // The row's own box, reserved from the first render: its idle state has the cells the
   // active one will, so the first tap fills it in rather than pushing the plot down.
   const row = (
@@ -1967,8 +1963,15 @@ function SeriesPlot({
       data-tooltip-readout={placement}
       className={cn(
         "shrink-0",
-        // Above, the heading line shares the top corner with the zoom's reset button.
-        placement === "above" ? "pb-2 [&_[data-readout-heading]]:pe-32" : "pt-2",
+        // Above, the heading line shares the top corner with the zoom's buttons: Back and
+        // Reset zoom, about 11rem in German at the micro size ("Zurück", "Zoom
+        // zurücksetzen"), where Reset alone took 8. The two show only WHILE zoomed, so the
+        // wider gap is reserved only then; unzoomed the heading keeps 0.60's 8rem, or a
+        // phone at Extra large cut "Time (s)" for buttons that were not there (the 0.61
+        // release sweep: series-chart at 360 and 390px).
+        placement === "above"
+          ? cn("pb-2", zoomedNow ? "[&_[data-readout-heading]]:pe-48" : "[&_[data-readout-heading]]:pe-32")
+          : "pt-2",
       )}
     />
   );

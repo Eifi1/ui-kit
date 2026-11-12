@@ -11,13 +11,23 @@ import { DEFAULT_SHARED_COMPUTER_LABELS } from "./shared-computer-labels";
  * app does not mount the query persistence (`createQueryPersistence`): the cache lives in
  * memory only.
  *
- * The choice must live exactly as long as the session it governs. By default it is held in
- * `sessionStorage`, which fits a session that ends with the tab. An app whose session
- * outlives the tab (a refresh token in `localStorage`: kastlan) passes `storage: "local"`
- * and calls `setSharedComputer(false)` at every end of that session (logout, a failed
- * refresh), beside removing the token. `isSharedComputer()` reads both places, so a choice
- * made in either keeps the cache in memory. Where storage is blocked, `isSharedComputer()`
- * is `false` and `setSharedComputer` does nothing.
+ * **On a shared computer the SESSION ends with the tab** (0.61, Marcel 2026-11-12;
+ * keksdose's finding). With the box ticked, the app keeps the sign-in itself — its access
+ * and refresh tokens — in `sessionStorage`, and the choice there too (`storage: "session"`,
+ * the default). Otherwise a closed tab on a library PC leaves a session the next visitor
+ * simply opens: "no copy of your data stays" would be true and beside the point, with a
+ * refresh token good for weeks in `localStorage`. Unticked, the app keeps its session where
+ * it always did. The same goes for anything else the session unlocks on the device (keksdose's
+ * private-mode keys): in memory or `sessionStorage` while the box is ticked, never on disk.
+ *
+ * The choice must live exactly as long as the session it governs, so with the rule above
+ * it is `"session"`. `storage: "local"` remains only for an app that cannot yet move its
+ * session out of `localStorage` (kastlan's and Kurvenschmiede's before their 0.61
+ * adoption): it then calls `setSharedComputer(false)` at every end of that session (logout,
+ * a failed refresh), beside removing the token — and the closed-tab gap stays until it
+ * moves. `isSharedComputer()` reads both places, so a choice made in either keeps the cache
+ * in memory. Where storage is blocked, `isSharedComputer()` is `false` and
+ * `setSharedComputer` does nothing.
  */
 export interface SharedComputerLabels {
   label: string;
@@ -54,7 +64,8 @@ export interface SharedComputerChoiceProps {
   checked?: boolean;
   /** Told after the choice is stored. */
   onCheckedChange?: (on: boolean) => void;
-  /** Where the choice is stored: see {@link setSharedComputer}. Default `"session"`. */
+  /** Where the choice is stored: see {@link setSharedComputer}. Default `"session"`, and
+   *  keep it so: on a shared computer the session itself ends with the tab (0.61). */
   storage?: SharedComputerStorage;
   disabled?: boolean;
   className?: string;

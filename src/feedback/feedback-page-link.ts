@@ -1,5 +1,6 @@
 import type { PathPattern } from "../landing/routing";
 import { matchesPathPattern, routerPathname } from "../lib/path-pattern";
+import { reduceQuery } from "./feedback-page";
 import type { FeedbackContext } from "./feedback-record";
 
 /**
@@ -19,6 +20,15 @@ import type { FeedbackContext } from "./feedback-record";
  * next (`?returnTo=`, a share target). No list of forwarders can know them all; a link
  * without a query reaches none. The query and hash are shown as text beside it, and "Copy
  * URL" copies the whole address, for whoever wants that exact state and opens it knowingly.
+ *
+ * **…and the params the app lists** (0.61, Kurvenschmiede production feedback #7: a report
+ * on `/curves/2?profile=5` opened `/curves/2`, another view than the one reported). An
+ * ALLOW-list, as the denial above needs: the app's `pageLinkParams`, the list its crash
+ * reporter and `useFeedbackSubmit` already keep as `allowParams` (0.60, G-10), reduced by the
+ * same function (`reduceQuery`, feedback-page.ts). A param nobody listed is text, as before,
+ * so `/login?next=…` is still a bare `/login` — unless an app lists `next`, which it must
+ * never: a listed param is one the app vouches does nothing but locate a view (paging, sort,
+ * a tab, a range), never a forward target or a token.
  *
  * **A one-shot PATH is not linked at all** — the kit's `/join`, `/register`,
  * `/verify-email`, `/reset-password` (`/reset-password/<token>` carries it in the path),
@@ -49,11 +59,17 @@ export function isOneShotPage(href: string, exclude: readonly PathPattern[] = []
  *  three times, once per part (0.52 code review, feedback-table.tsx: 810 `URL`s per render
  *  of a 270-row inbox, for one column). */
 export interface FeedbackPage {
-  /** The path: what the URL column shows, and the only part ever linked. */
+  /** The path: what the URL column shows, and the part always linked (with the app's
+   *  `pageLinkParams`, 0.61). */
   path: string;
   /** Path + query + hash: the page as the reporter had it (keksdose `localHref`: the query
-   *  and hash carry the state, `?tab=import`, a drill-down) — shown, never followed. */
+   *  and hash carry the state, `?tab=import`, a drill-down) — shown, never followed whole. */
   href: string;
+  /** `href`'s query, `""` or `?…` — kept, so the link's reduction (0.61) needs no second
+   *  parse. */
+  search: string;
+  /** `href`'s hash, `""` or `#…` — never linked. */
+  hash: string;
   /** What "Copy URL" copies: the FULL `context.url` as the reporter's browser had it —
    *  origin included, the one part that says which copy of the app it was (feedback
    *  #278) — else `context.route`. */
@@ -80,11 +96,38 @@ export function feedbackPage(context: FeedbackContext | null | undefined): Feedb
   }
   if (url.protocol !== "http:" && url.protocol !== "https:") return null;
   const path = localPath(url.pathname);
-  return { path, href: `${path}${url.search}${url.hash}`, url: raw };
+  return { path, href: `${path}${url.search}${url.hash}`, search: url.search, hash: url.hash, url: raw };
 }
 
-/** Where a click on the page goes: its path, or `null` — show it as text — when that path
- *  is one-shot. */
-export function feedbackPageLinkTarget(page: FeedbackPage, exclude: readonly PathPattern[] = []): string | null {
-  return isOneShotPage(page.path, exclude) ? null : page.path;
+const NO_PARAMS: ReadonlySet<string> = new Set();
+
+/** Where a click on the page goes: its path with the `params` the app lists (0.61), or
+ *  `null` — show it as text — when that path is one-shot, whatever the params. */
+export function feedbackPageLinkTarget(
+  page: FeedbackPage,
+  exclude: readonly PathPattern[] = [],
+  params: ReadonlySet<string> = NO_PARAMS,
+): string | null {
+  if (isOneShotPage(page.path, exclude)) return null;
+  // The path the guard just read, the kept query after it — never a path read back out of
+  // a reduced address, so what is linked is what was checked.
+  return params.size === 0 ? page.path : `${page.path}${reduceQuery(new URLSearchParams(page.search), params)}`;
+}
+
+/** The text drawn after the page's link (or after its path, unlinked): what `target` does
+ *  not carry. A target without a query leaves the query and hash as the reporter's browser
+ *  wrote them, as since 0.52; one that kept params leaves the others and the hash, the
+ *  query reading on from the link's `?`. */
+export function feedbackPageUnlinked(
+  page: FeedbackPage,
+  target: string | null,
+  params: ReadonlySet<string> = NO_PARAMS,
+): string {
+  if (target === null || target === page.path) return page.href.slice(page.path.length);
+  const rest = new URLSearchParams();
+  for (const [key, value] of new URLSearchParams(page.search)) {
+    if (!params.has(key)) rest.append(key, value);
+  }
+  const query = rest.toString();
+  return `${query ? `&${query}` : ""}${page.hash}`;
 }

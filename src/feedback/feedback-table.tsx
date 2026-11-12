@@ -378,21 +378,25 @@ export function FeedbackSubject({ row, wrap = false, labels: labelsProp, classNa
  * write, and `/login?next=%2Fjoin%3Ftoken%3D…` forwarded the admin's click to an
  * invitation. A one-shot route — `/join`, `/register`, `/verify-email`, `/reset-password`
  * and the app's `pageLinkExclude` — is the path as text with Copy, never a link (0.52,
- * refactor audit 2026-10-30, FLW-7): those routes act on load.
+ * refactor audit 2026-10-30, FLW-7): those routes act on load. With the params the app
+ * lists in `pageLinkParams` (0.61), which then show after the path as well: the cell says
+ * what the click opens. The others stay off it, as the column has always left the query.
  */
 function FeedbackPageLinkCell({
   context,
   openPage,
   exclude,
+  params,
 }: {
   context: FeedbackContext | null;
   openPage: string;
   exclude: readonly PathPattern[] | undefined;
+  params: ReadonlySet<string>;
 }) {
   const kitLink = useKitLink();
   const page = feedbackPage(context);
   if (!page) return <span className="text-placeholder">{EMPTY_FORMATTED_VALUE}</span>;
-  const href = feedbackPageLinkTarget(page, exclude);
+  const href = feedbackPageLinkTarget(page, exclude, params);
   if (!href) return <FeedbackPageText path={page.path} url={page.url} />;
   const className =
     "inline-flex min-w-0 max-w-full items-center gap-1 text-secondary hover:text-primary hover:underline";
@@ -400,7 +404,7 @@ function FeedbackPageLinkCell({
     <>
       {/* The space outside the hidden span: a flex container drops it from the layout,
           and the accessible name keeps it ("Open page /accounts"). */}
-      <span className="sr-only">{openPage}</span> <code className="min-w-0 truncate text-xs">{page.path}</code>
+      <span className="sr-only">{openPage}</span> <code className="min-w-0 truncate text-xs">{href}</code>
       <ExternalLink className="size-3 shrink-0" aria-hidden />
     </>
   );
@@ -475,6 +479,17 @@ export interface FeedbackColumnsOptions {
    * memo.
    */
   pageLinkExclude?: readonly PathPattern[];
+  /**
+   * 0.61 (Kurvenschmiede production feedback #7): the query params the URL cell's link
+   * keeps — `/curves/2?profile=5` with `["profile"]` — in the page's order; every other
+   * param stays off the link. Pass the list the app gives `useFeedbackSubmit` and its crash
+   * reporter as `allowParams`. **Never a param that forwards or acts on load** (`next`,
+   * `returnTo`, a token): the link follows what is listed, and a report's page is the
+   * reporter's to write. A one-shot path stays unlinked whatever it holds. Default: none,
+   * the path alone. Keep it stable (module scope): it is a dependency of
+   * {@link useFeedbackColumns}' memo.
+   */
+  pageLinkParams?: Iterable<string>;
 }
 
 /** The vote count, a quiet chip with the thumb (§9.6) — the Votes cell and the card's. */
@@ -541,8 +556,11 @@ export function feedbackColumns<T extends FeedbackTableRow>({
   votes = false,
   votesHeader = DEFAULT_FEEDBACK_PUBLIC_LABELS.columnVotes,
   pageLinkExclude,
+  pageLinkParams,
 }: FeedbackColumnsOptions): DataTableColumn<T>[] {
   const editable = canEdit && !mine;
+  // One Set for the column, not one per cell of a 270-row inbox.
+  const linkParams: ReadonlySet<string> = new Set(pageLinkParams);
   const votesColumn: DataTableColumn<T>[] = votes
     ? [
         {
@@ -671,7 +689,12 @@ export function feedbackColumns<T extends FeedbackTableRow>({
       // feedback #451: <a> in <a>, and "open the page" silently did nothing).
       noRowLink: true,
       cell: (row) => (
-        <FeedbackPageLinkCell context={row.context} openPage={labels.openPage} exclude={pageLinkExclude} />
+        <FeedbackPageLinkCell
+          context={row.context}
+          openPage={labels.openPage}
+          exclude={pageLinkExclude}
+          params={linkParams}
+        />
       ),
       sortBy: (row) => feedbackPagePath(row.context) ?? "",
       filterBy: (row) => feedbackPagePath(row.context) ?? "",
@@ -745,6 +768,7 @@ export function useFeedbackColumns<T extends FeedbackTableRow>({
   commit,
   votes,
   pageLinkExclude,
+  pageLinkParams,
   labels: labelsProp,
 }: UseFeedbackColumnsOptions): DataTableColumn<T>[] {
   const labels = useFeedbackPageLabels(labelsProp);
@@ -766,6 +790,7 @@ export function useFeedbackColumns<T extends FeedbackTableRow>({
         votes,
         votesHeader,
         pageLinkExclude,
+        pageLinkParams,
       }),
     [
       mine,
@@ -779,6 +804,7 @@ export function useFeedbackColumns<T extends FeedbackTableRow>({
       votes,
       votesHeader,
       pageLinkExclude,
+      pageLinkParams,
     ],
   );
 }

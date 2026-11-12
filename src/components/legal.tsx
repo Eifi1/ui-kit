@@ -301,7 +301,17 @@ export interface LegalLabels {
        * you" is the app's promise about its own list. Keyed as the disclaimer's and the
        * changes clause's, OPTIONAL as theirs: left out, the provider's, then English.
        */
-      browser: LegalFramedSectionLabels & { commercial?: string };
+      browser: LegalFramedSectionLabels & {
+        commercial?: string;
+        /**
+         * 0.61 (Marcel 2026-11-12): two entries every app with a persisted page cache and the
+         * shared-computer choice lists the same way, in the kit's words, so its privacy page
+         * says what the kit's parts keep. The app places them in its own `entries`, where they
+         * belong in its reading order: `useLegalLabels().sections.privacy.browser.standardEntries`.
+         * OPTIONAL, as `commercial`: left out, the provider's, then English.
+         */
+        standardEntries?: LegalBrowserStandardEntries;
+      };
       /** `lead` (the rights), then the app's paragraph (export, deletion), then `tail`
        *  (the supervisory authorities). */
       rights: LegalFramedSectionLabels;
@@ -330,6 +340,16 @@ export interface LegalLabels {
 
 // Defined in ./legal-labels, which holds no component code (0.34, KS U8).
 export { DEFAULT_LEGAL_LABELS };
+
+/** The browser section's standard entries (0.61), for an app's `entries`. */
+export interface LegalBrowserStandardEntries {
+  /** The persisted page cache (`createQueryPersistence`, or an app's own), with its age limit
+   *  in hours (`maxAge`; keksdose's 24), and that nothing of it is kept after a sign-in with
+   *  "This is a shared computer". keksdose's reviewed `recent_data` line. */
+  recentData: (hours: number) => string;
+  /** The shared-computer choice's own flag (`SharedComputerChoice`), kept for the session. */
+  sharedComputer: string;
+}
 
 /** The `legal` namespace, resolved: defaults < provider < `labels` prop. The prop may be
  *  partial at every depth (`{ titles: { terms: "…" } }`), as the provider's is. */

@@ -138,6 +138,11 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       visibleHint: "Les autres personnes voient le titre et le texte, jamais vos captures d’écran ni vos fichiers.",
       visibleLocked: "Seulement tant que le retour est encore ouvert.",
       page: (page) => `Page ${n(page)}`,
+      // 0.61: FeedbackPublicPage — keksdose's reviewed wording, "retour" as above.
+      loadFailed: "Le chargement a échoué.",
+      offlineHint: "Une connexion est nécessaire. Le chargement reprendra dès que vous serez de retour en ligne.",
+      rowUnavailable: (id) =>
+        `Le retour #${id} n’a pas pu être ouvert. Il a peut-être été supprimé ou masqué pour les autres.`,
     },
     feedbackNotificationTypes: {
       answered: "Réponses à vos retours",
@@ -761,8 +766,11 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     },
     seriesChart: {
       resetZoom: "Réinitialiser le zoom",
+      zoomBack: "Retour",
+      zoomWindow: "Plage visible",
+      zoomWindowRange: (from, to) => `de ${from} à ${to}`,
       zoomHint:
-        "Faites glisser pour zoomer\u00a0: une sélection à peu près carrée zoome sur les deux axes, une sélection longue et étroite sur son seul axe. Double-cliquez pour réinitialiser.",
+        "Faites glisser pour zoomer\u00a0: une sélection à peu près carrée zoome sur les deux axes, une sélection longue et étroite sur son seul axe. Sur un écran tactile, un doigt lit les valeurs et deux doigts zooment et déplacent. «\u00a0Retour\u00a0» annule un pas de zoom\u00a0; un double-clic ou «\u00a0Réinitialiser le zoom\u00a0» affiche à nouveau toute la plage.",
       empty: "Aucune donnée",
       legend: "Séries",
       points: "Valeurs du graphique",
@@ -1015,6 +1023,13 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
             tail: "Rien de tout cela ne sert à vous suivre. Les éléments en attente d’envoi nous sont transmis dès que possible. Tout cela disparaît lorsque vous effacez les données du site, et la déconnexion supprime les jetons de connexion.",
             commercial:
               "Rien de tout cela ne sert à vous suivre. Les éléments en attente d’envoi nous sont transmis dès que possible. Tout cela disparaît lorsque vous effacez les données du site, et la déconnexion supprime les jetons de connexion. Le paiement se déroule dans une fenêtre de Paddle, sur le propre domaine de Paddle\u202f; ce que cette fenêtre y enregistre (par exemple un cookie de sécurité et des paramètres) relève de la politique de confidentialité de Paddle.",
+            // 0.61 (Marcel 2026-11-12): the persisted cache and the shared-computer flag, for an app's entries.
+            standardEntries: {
+              recentData: (hours) =>
+                `Les données chargées récemment, pour que les pages s’ouvrent aussi sans connexion ; ce qui date de plus de ${hours} heures n’est plus utilisé et est supprimé à la prochaine ouverture de l’app. Rien n’en est conservé si vous vous connectez avec « C’est un ordinateur partagé ».`,
+              sharedComputer:
+                "Si vous avez choisi « C’est un ordinateur partagé » à la connexion, le temps que dure cette session.",
+            },
           },
           rights: {
             title: "Vos droits",
@@ -1964,6 +1979,27 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       confirmAction: "Réinitialiser",
       done: "Les réglages de cet appareil ont retrouvé leurs valeurs par défaut.",
       keywords: "réinitialiser défaut appareil restaurer rétablir apparence tableaux disposition",
+    },
+    // 0.61 — SwipeSetting: keksdose's `settings.swipe_*`, its French wording.
+    swipeSetting: {
+      title: "Gestes de balayage",
+      description:
+        "Comment les lignes de liste réagissent à un glissement horizontal — au toucher, ou en faisant glisser avec la souris.",
+      surfacePicker: "Quelle liste",
+      surfaces: { feedback: "Retours", translationReview: "Traductions" },
+      right: "Balayer vers la droite",
+      left: "Balayer vers la gauche",
+      primary: "Balayage court",
+      secondary: "Balayage long",
+      none: "— aucune —",
+      nextStatus: "Statut suivant",
+      help: "Un glissement court déclenche la première action ; glisser plus loin déclenche la seconde. Une action qu’une ligne donnée ne peut pas effectuer est sautée, la suivante prend sa place.",
+      saveDefault: "Définir comme mes valeurs par défaut",
+      reset: "Rétablir les valeurs par défaut",
+      resetMine: "Revenir à mes valeurs par défaut",
+      defaultSaved: "Rétablir revient désormais aux valeurs par défaut que vous avez enregistrées.",
+      resetShipped: "Restaurer les valeurs d’origine",
+      keywords: "balayer balayage geste glisser gauche droite court long lignes listes",
     },
     rowActions: {
       actions: "Actions",
