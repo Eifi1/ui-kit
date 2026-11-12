@@ -138,6 +138,11 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       visibleHint: "Les autres personnes voient le titre et le texte, jamais vos captures d’écran ni vos fichiers.",
       visibleLocked: "Seulement tant que le retour est encore ouvert.",
       page: (page) => `Page ${n(page)}`,
+      // 0.61: FeedbackPublicPage — keksdose's reviewed wording, "retour" as above.
+      loadFailed: "Le chargement a échoué.",
+      offlineHint: "Une connexion est nécessaire. Le chargement reprendra dès que vous serez de retour en ligne.",
+      rowUnavailable: (id) =>
+        `Le retour #${id} n’a pas pu être ouvert. Il a peut-être été supprimé ou masqué pour les autres.`,
     },
     feedbackNotificationTypes: {
       answered: "Réponses à vos retours",

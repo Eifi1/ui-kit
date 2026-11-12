@@ -137,6 +137,11 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       visibleHint: "Le altre persone vedono il titolo e il testo, mai i Suoi screenshot o file.",
       visibleLocked: "Solo finché la segnalazione è ancora aperta.",
       page: (page) => `Pagina ${n(page)}`,
+      // 0.61: FeedbackPublicPage — keksdose's `load_failed`, "segnalazione" as above.
+      loadFailed: "Impossibile caricare.",
+      offlineHint: "Serve una connessione. Il caricamento riprenderà appena sarà di nuovo online.",
+      rowUnavailable: (id) =>
+        `Impossibile aprire la segnalazione #${id}. Potrebbe essere stata rimossa o nascosta agli altri.`,
     },
     feedbackNotificationTypes: {
       answered: "Risposte alle Sue segnalazioni",

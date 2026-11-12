@@ -135,6 +135,12 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       visibleHint: "Mások a címet és a szöveget látják, a képernyőképeit és fájljait soha.",
       visibleLocked: "Csak amíg a bejelentés nyitott.",
       page: (page) => `${n(page)}. oldal`,
+      // 0.61: FeedbackPublicPage's read states and its toast. The number after a colon, as
+      // `userFallback` writes an id after its noun, so no article has to agree with it.
+      loadFailed: "Nem sikerült betölteni.",
+      offlineHint: "Ehhez internetkapcsolat kell. Amint újra online lesz, betöltődik.",
+      rowUnavailable: (id) =>
+        `Nem sikerült megnyitni ezt a bejelentést: #${id}. Lehet, hogy törölték, vagy elrejtették mások elől.`,
     },
     feedbackNotificationTypes: {
       answered: "Válaszok a bejelentéseire",

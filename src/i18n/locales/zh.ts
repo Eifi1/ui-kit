@@ -128,6 +128,10 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       visibleHint: "其他用户可以看到标题和正文，绝不会看到您的截图或文件。",
       visibleLocked: "仅在反馈仍处于打开状态时可更改。",
       page: (page) => `第 ${n(page)} 页`,
+      // 0.61: FeedbackPublicPage's read states and its toast.
+      loadFailed: "加载失败。",
+      offlineHint: "此内容需要网络连接，恢复联网后会自动加载。",
+      rowUnavailable: (id) => `无法打开反馈 #${id}。它可能已被删除，或已对他人隐藏。`,
     },
     feedbackNotificationTypes: {
       answered: "您的反馈收到的回复",

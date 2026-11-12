@@ -297,8 +297,11 @@ export interface FeedbackInboxState<T extends FeedbackRecord> {
 /** `?row=`'s value: a report's id is a positive integer, written in digits. Anything
  *  else — a hand-edited link, `1e2`, `0x10`, `-3`, `1.5` — opens no row (and the URL
  *  keeps it until a row is opened or closed). The three apps parsed with `Number()`, so
- *  `?row=1e2` opened #100 in all three. */
-function parseRowId(raw: string): number | undefined {
+ *  `?row=1e2` opened #100 in all three. The public page (feedback-public-page.tsx) reads
+ *  its `?row=` with it too.
+ *
+ *  @internal Not part of `/feedback` or the barrel. */
+export function parseRowId(raw: string): number | undefined {
   if (!/^[1-9]\d*$/.test(raw)) return undefined;
   const id = Number(raw);
   return Number.isSafeInteger(id) ? id : undefined;

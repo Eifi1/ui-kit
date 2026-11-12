@@ -167,6 +167,10 @@ export interface FeedbackPublicListProps<T extends FeedbackPublicListItem = Feed
   onVote: (row: T, next: boolean) => Promise<FeedbackVoteState>;
   /** The page is loading: the table says so where its rows would be. */
   loading?: boolean;
+  /** 0.61: what the table says where its rows would be, over {@link loading}'s words and
+   *  "No reports yet" — `FeedbackPublicPage`'s failed read and its Try again, so the sort
+   *  and the search stay on screen to change what is asked. */
+  empty?: ReactNode;
   /** The opened row's id, when the app keeps it (a `?row=` param). Left out, the list
    *  keeps it itself. */
   openId?: number | null;
@@ -242,6 +246,7 @@ export function FeedbackPublicList<T extends FeedbackPublicListItem = FeedbackPu
   renderDetail,
   onVote,
   loading = false,
+  empty,
   openId: openIdProp,
   onOpenIdChange,
   openRow,
@@ -370,7 +375,7 @@ export function FeedbackPublicList<T extends FeedbackPublicListItem = FeedbackPu
         mobileExpandAsDialog
         paginated={false}
         fillHeight={fillHeight}
-        empty={loading ? labels.loading : labels.empty}
+        empty={empty ?? (loading ? labels.loading : labels.empty)}
         mobileCard={(row) => (
           <div className="min-w-0 space-y-1">
             <div className="flex items-start justify-between gap-2">
@@ -403,6 +408,13 @@ export interface FeedbackPublicDetailProps {
   row: FeedbackPublicRecord;
   /** `GET /feedback/{id}/comments`, oldest first; `undefined` while it loads. */
   comments: readonly FeedbackComment[] | undefined;
+  /**
+   * 0.61: the comments could not be read — `FeedbackPublicPage`'s failed-read card with its
+   * Try again. Drawn in the conversation's place, the replies and the composer with it: a
+   * thread merged by time cannot be drawn with half of it missing, and `undefined`
+   * comments would otherwise show the loading lines for good.
+   */
+  commentsError?: ReactNode;
   /** `PUT` / `DELETE /feedback/{id}/vote`; resolve with the answer, reject to roll back. */
   onVote: (next: boolean) => Promise<FeedbackVoteState>;
   /** The viewer is the app's admin: Hide / Unhide on the comments. */
@@ -456,6 +468,7 @@ export interface FeedbackPublicDetailProps {
 export function FeedbackPublicDetail({
   row,
   comments,
+  commentsError,
   onVote,
   isAdmin = false,
   onComment,
@@ -499,25 +512,27 @@ export function FeedbackPublicDetail({
         <FeedbackProse>{row.body}</FeedbackProse>
       </FeedbackDetailSection>
       <FeedbackDetailSection title={labels.conversation}>
-        <FeedbackCommentThread
-          replies={row.replies}
-          comments={comments ?? []}
-          loading={comments === undefined}
-          isAdmin={isAdmin}
-          // 0.40 (§10.3): the author's rework entries are theirs — at the reading end.
-          isAuthor={row.mine}
-          onComment={onComment}
-          onHide={onHide}
-          onDelete={onDelete}
-          onUpload={onUpload}
-          onCaptureScreenshot={onCaptureScreenshot}
-          attachment={attachment}
-          fetcher={fetcher}
-          pending={pending}
-          commit={commit}
-          now={now}
-          labels={commentLabels}
-        />
+        {commentsError ?? (
+          <FeedbackCommentThread
+            replies={row.replies}
+            comments={comments ?? []}
+            loading={comments === undefined}
+            isAdmin={isAdmin}
+            // 0.40 (§10.3): the author's rework entries are theirs — at the reading end.
+            isAuthor={row.mine}
+            onComment={onComment}
+            onHide={onHide}
+            onDelete={onDelete}
+            onUpload={onUpload}
+            onCaptureScreenshot={onCaptureScreenshot}
+            attachment={attachment}
+            fetcher={fetcher}
+            pending={pending}
+            commit={commit}
+            now={now}
+            labels={commentLabels}
+          />
+        )}
       </FeedbackDetailSection>
     </FeedbackDetail>
   );

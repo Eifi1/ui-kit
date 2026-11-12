@@ -1,25 +1,32 @@
 import { useCallback, useMemo, useState } from "react";
+import { MemoryRouter, UNSAFE_LocationContext, useLocation } from "react-router";
 import {
+  Button,
   FeedbackMenu,
   FeedbackPublicDetail,
   FeedbackPublicList,
+  FeedbackPublicPage,
   FeedbackPublicSwitch,
   NotificationTypesSetting,
+  PageHeader,
   ToggleGroup,
   useFeedbackNotificationTypes,
+  useFeedbackPublicPage,
   useFeedbackSubmit,
 } from "@eifi1/ui-kit";
 import type {
   FeedbackComment,
   FeedbackCreatePayload,
+  FeedbackPublicApi,
   FeedbackPublicListItem,
+  FeedbackPublicRead,
   FeedbackPublicRecord,
   FeedbackPublicSort,
   FeedbackRecord,
   FeedbackVoteState,
   NotificationTypesValue,
 } from "@eifi1/ui-kit";
-import { Example, Note, beat, code } from "../../lib/section";
+import { Example, NO_ROUTER, Note, StateLine, beat, code } from "../../lib/section";
 
 /**
  * Round 0.38's public feedback pages (docs/feedback-harmonization.md §9.15): the list every
@@ -246,6 +253,202 @@ export function FeedbackPublic038Demo() {
           only with {code("onSearchChange")}; an app that seals its titles passes none. The viewer&apos;s own report
           counts as their vote and is locked. The detail names people by first name, or &quot;A user&quot;, and merges
           the admin&apos;s replies with the comments, oldest first.
+        </Note>
+      </div>
+    </Example>
+  );
+}
+
+/* ── The page ───────────────────────────────────────────────────────────── */
+
+/** Two reports a page, so the three above take a pager. */
+const PAGE_OF = 2;
+
+/** A pretend `/feedback` server for the page: the reports, their threads, the votes. Its
+ *  own copies, so the specimens above keep theirs. */
+function pretendServer() {
+  let reports = REPORTS.map((r) => ({ ...r }));
+  const threads: Record<number, FeedbackComment[]> = Object.fromEntries(
+    Object.entries(COMMENTS).map(([id, list]) => [id, [...list]]),
+  );
+  const count = (id: number) =>
+    (reports = reports.map((r) =>
+      r.id === id ? { ...r, comment_count: (threads[id] ?? []).filter((c) => !c.hidden).length } : r,
+    ));
+  const api: FeedbackPublicApi = {
+    vote: async (id, next) => {
+      await beat(300);
+      let answer: FeedbackVoteState = { votes: 0, voted: next };
+      reports = reports.map((r) => {
+        if (r.id !== id) return r;
+        answer = { votes: r.votes + (next === r.voted ? 0 : next ? 1 : -1), voted: next };
+        return { ...r, ...answer };
+      });
+      return answer;
+    },
+    comments: async (id) => {
+      await beat(250);
+      return [...(threads[id] ?? [])];
+    },
+    comment: async (id, body) => {
+      await beat(300);
+      threads[id] = [
+        ...(threads[id] ?? []),
+        {
+          id: Date.now(),
+          author_name: "Ada",
+          mine: true,
+          staff: false,
+          body,
+          hidden: false,
+          created_at: new Date().toISOString(),
+        },
+      ];
+      count(id);
+    },
+    hideComment: async (id, commentId, hidden) => {
+      await beat(200);
+      threads[id] = (threads[id] ?? []).map((c) => (c.id === commentId ? { ...c, hidden } : c));
+      count(id);
+    },
+    deleteComment: async (id, commentId) => {
+      await beat(200);
+      threads[id] = (threads[id] ?? []).filter((c) => c.id !== commentId);
+      count(id);
+    },
+  };
+  return { api, reports: () => reports };
+}
+
+type ServerMode = "answers" | "fails" | "offline";
+
+/** A read as the page takes it — what `useQuery` returns, played from the pretend server. */
+function pretendRead<D>(mode: ServerMode, data: D | undefined, retry: () => void): FeedbackPublicRead<D> {
+  if (mode === "answers") return { data, isPending: false, isError: data === undefined, refetch: retry };
+  return {
+    data: undefined,
+    isPending: mode === "offline",
+    isError: mode === "fails",
+    isPaused: mode === "offline",
+    refetch: retry,
+  };
+}
+
+/** The app's `/all-feedback`, in a router of its own: the hook, two reads, the page. */
+function PublicPageSpecimen({
+  titles,
+  role,
+  mode,
+  onRetry,
+}: {
+  titles: "plain" | "sealed";
+  role: "user" | "admin";
+  mode: ServerMode;
+  onRetry: () => void;
+}) {
+  const server = useMemo(() => pretendServer(), []);
+  // A write landed: read the pretend server again, as the app's invalidation would.
+  const [, setVersion] = useState(0);
+  const view = useFeedbackPublicPage({ search: titles === "plain", pageSize: PAGE_OF });
+  const { pathname, search } = useLocation();
+  const { sort, query, page, openId } = view;
+  const all = server.reports();
+  const q = query.toLowerCase();
+  const rows = all
+    .filter((r) => !q || r.title.toLowerCase().includes(q))
+    .sort(SORTERS[sort])
+    .slice(page * PAGE_OF, (page + 1) * PAGE_OF);
+  const list = pretendRead<readonly FeedbackPublicListItem[]>(mode, rows, onRetry);
+  // A report the server does not have (#48, removed) answers 404: a failed read.
+  const record = pretendRead<FeedbackPublicRecord>(
+    mode,
+    all.find((r) => r.id === openId),
+    onRetry,
+  );
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-wrap gap-2">
+        <Button size="sm" variant="secondary" onClick={() => view.setOpenId(49)}>
+          A notice&apos;s link to #49
+        </Button>
+        <Button size="sm" variant="secondary" onClick={() => view.setOpenId(48)}>
+          A link to a removed report, #48
+        </Button>
+      </div>
+      <FeedbackPublicPage
+        view={view}
+        list={list}
+        record={record}
+        api={server.api}
+        isAdmin={role === "admin"}
+        onChanged={() => setVersion((n) => n + 1)}
+        onCaptureScreenshot={null}
+        // In a specimen card the page's header is an h2: the showcase page has its h1.
+        header={(title) => <PageHeader as="h2" size="compact" title={title} className="mb-4" />}
+      />
+      <StateLine label="address">
+        {pathname}
+        {search}
+      </StateLine>
+    </div>
+  );
+}
+
+export function FeedbackPublicPageDemo() {
+  const [titles, setTitles] = useState<"plain" | "sealed">("plain");
+  const [role, setRole] = useState<"user" | "admin">("user");
+  const [mode, setMode] = useState<ServerMode>("answers");
+  return (
+    <Example
+      label="FeedbackPublicPage + useFeedbackPublicPage — the whole discussion page"
+      hint="sort, page, search and open a report: it is all in the address below; let the server fail or go offline"
+    >
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap gap-2">
+          <ToggleGroup
+            aria-label="Signed in as"
+            value={role}
+            onChange={(v) => setRole(v as "user" | "admin")}
+            options={[
+              { value: "user", label: "User" },
+              { value: "admin", label: "Admin" },
+            ]}
+          />
+          <ToggleGroup
+            aria-label="The app's titles"
+            value={titles}
+            onChange={(v) => setTitles(v as "plain" | "sealed")}
+            options={[
+              { value: "plain", label: "Plain titles" },
+              { value: "sealed", label: "Sealed titles" },
+            ]}
+          />
+          <ToggleGroup
+            aria-label="The server"
+            value={mode}
+            onChange={(v) => setMode(v as ServerMode)}
+            options={[
+              { value: "answers", label: "Answers" },
+              { value: "fails", label: "Fails" },
+              { value: "offline", label: "Offline" },
+            ]}
+          />
+        </div>
+        <div className="overflow-hidden rounded-lg border border-subtle">
+          <UNSAFE_LocationContext.Provider value={NO_ROUTER}>
+            <MemoryRouter initialEntries={["/all-feedback"]}>
+              <PublicPageSpecimen titles={titles} role={role} mode={mode} onRetry={() => setMode("answers")} />
+            </MemoryRouter>
+          </UNSAFE_LocationContext.Provider>
+        </div>
+        <Note>
+          The page is {code("useFeedbackPublicPage()")}, the app&apos;s two queries keyed on what it returns —{" "}
+          {code("view.request")} for {code("GET /feedback/public")}, {code("view.openId")} for the open report — and{" "}
+          {code("<FeedbackPublicPage>")} drawn from their answers. The sort, the page, the search and the open report
+          are {code("?sort=")}, {code("?p=")}, {code("?q=")} and {code("?row=")}; a new sort or search starts on the
+          first page. A read with nothing to show says it was offline, or that it failed, with Try again — in the table,
+          in the opened report and in its conversation. A {code("?row=")} report the page does not list is drawn above
+          it; one that cannot be read is said in a toast. Sealed titles: no search box, and no {code("q")} is sent.
         </Note>
       </div>
     </Example>

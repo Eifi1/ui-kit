@@ -153,3 +153,16 @@ export {
   type UseFeedbackCommentsOptions,
   type FeedbackCommentsState,
 } from "./feedback/feedback-comments";
+// 0.61: the public page, assembled once (Marcel 2026-11-12: Kurvenschmiede's feedback area
+// as keksdose's; docs/feedback-harmonization.md §14) — the URL state the app's queries read,
+// and the page drawn from their answers.
+export {
+  useFeedbackPublicPage,
+  FeedbackPublicPage,
+  type UseFeedbackPublicPageOptions,
+  type FeedbackPublicRequest,
+  type FeedbackPublicPageState,
+  type FeedbackPublicRead,
+  type FeedbackPublicApi,
+  type FeedbackPublicPageProps,
+} from "./feedback/feedback-public-page";

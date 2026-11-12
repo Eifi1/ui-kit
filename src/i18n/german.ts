@@ -145,6 +145,12 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       visibleHint: "Andere Personen sehen Titel und Text, nie Ihre Screenshots oder Dateien.",
       visibleLocked: "Nur solange die Meldung noch offen ist.",
       page: (page) => `Seite ${n(page)}`,
+      // 0.61: FeedbackPublicPage's read states and the toast for a link it cannot open; the
+      // wording is keksdose's reviewed `common.load_failed` / `feedback_row_unavailable`.
+      loadFailed: "Das konnte nicht geladen werden.",
+      offlineHint: "Dafür ist eine Verbindung nötig. Es lädt, sobald Sie wieder online sind.",
+      rowUnavailable: (id) =>
+        `Meldung #${id} konnte nicht geöffnet werden. Möglicherweise wurde sie entfernt oder für andere ausgeblendet.`,
     },
     feedbackNotificationTypes: {
       answered: "Antworten auf Ihre Meldungen",

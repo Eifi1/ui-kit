@@ -392,7 +392,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `DEFAULT_SWIPE_SETTING_LABELS`.
   // 0.61 (+1, here and in /feedback): `useFeedbackComments`, one report's comment thread
   // through the app's API client (feedback §14.3).
-  ["@eifi1/ui-kit", barrel, 1024],
+  // 0.61 (+2, here and in /feedback; Marcel 2026-11-12): `useFeedbackPublicPage` and
+  // `FeedbackPublicPage`, the public page assembled once (feedback §14).
+  ["@eifi1/ui-kit", barrel, 1026],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -425,7 +427,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.61: `FeedbackPageFrame` (+1 here and in the barrel).
   // 0.61: `deployEnvironment` (+1 here and in the barrel).
   // 0.61: `useFeedbackComments` (+1 here and in the barrel).
-  ["@eifi1/ui-kit/feedback", feedback, 97],
+  // 0.61: `useFeedbackPublicPage`, `FeedbackPublicPage` — the public page assembled once
+  // (§14) (+2 here and in the barrel).
+  ["@eifi1/ui-kit/feedback", feedback, 99],
   // 0.53 (−3, breaking): what 0.52 deprecated — `SEARCH_TIER_POINTS`, `matchEntries`,
   // `normalizeSearchText` (API-4).
   ["@eifi1/ui-kit/search", search, 6],

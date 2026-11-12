@@ -250,6 +250,8 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "feedbackPublic.votes": one,
   "feedbackPublic.filedBy": [["{{name}}"]],
   "feedbackPublic.page": [[3]],
+  // 0.61: a report's number, not a count — one sample, as `feedbackPage.userFallback`.
+  "feedbackPublic.rowUnavailable": [[52]],
   "accountSettings.passkeys.renameItem": [["{{name}}"]],
   "accountSettings.passkeys.renameField": [["{{name}}"]],
   "accountSettings.passkeys.deleteItem": [["{{name}}"]],

@@ -55,6 +55,16 @@ export interface FeedbackPublicLabels {
   /** 0.38.1: the pager's "where am I" — `page` counts from 1. The server answers no
    *  total, so there is no "of N". */
   page: (page: number) => string;
+  /** 0.61, `FeedbackPublicPage`: a read the server answered with a failure — the list, the
+   *  opened report or its conversation — over a **Try again** (`errorBoundary.retry`). */
+  loadFailed: string;
+  /** 0.61: under **You’re offline** (`errorBoundary.offlineTitle`) where a read waits for
+   *  the network. No "reload": it loads by itself once the connection is back. */
+  offlineHint: string;
+  /** 0.61: the toast for a `?row=` link to a report that is not on the page and cannot be
+   *  read — removed, or its author made it private since the link was sent. `id` is the
+   *  report's number, printed as it is (no thousands separator: a number, not a count). */
+  rowUnavailable: (id: number) => string;
 }
 
 export const DEFAULT_FEEDBACK_PUBLIC_LABELS: FeedbackPublicLabels = {
@@ -78,4 +88,7 @@ export const DEFAULT_FEEDBACK_PUBLIC_LABELS: FeedbackPublicLabels = {
   visibleHint: "Other users see the title and text, never your screenshots or files.",
   visibleLocked: "Only while the report is still open.",
   page: (page) => `Page ${page}`,
+  loadFailed: "That didn’t load.",
+  offlineHint: "This needs a connection. It loads as soon as you’re back online.",
+  rowUnavailable: (id) => `Report #${id} could not be opened. It may have been removed or hidden from others.`,
 };

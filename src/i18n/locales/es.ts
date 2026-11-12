@@ -137,6 +137,11 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       visibleHint: "Otras personas ven el título y el texto, nunca sus capturas ni sus archivos.",
       visibleLocked: "Solo mientras el informe siga abierto.",
       page: (page) => `Página ${n(page)}`,
+      // 0.61: FeedbackPublicPage's read states and its toast, "informe" as above.
+      loadFailed: "No se pudo cargar.",
+      offlineHint: "Se necesita conexión. Se cargará en cuanto vuelva a estar en línea.",
+      rowUnavailable: (id) =>
+        `No se pudo abrir el informe #${id}. Puede que se haya eliminado o que se haya ocultado a otras personas.`,
     },
     feedbackNotificationTypes: {
       answered: "Respuestas a sus informes",

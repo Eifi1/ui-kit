@@ -342,6 +342,11 @@ const FeedbackPublic038Demo = lazySection(
   () => import("./sections/feedback-inbox/public-038"),
   "FeedbackPublic038Demo",
 );
+// 0.61: the public page assembled once (feedback §14).
+const FeedbackPublicPageDemo = lazySection(
+  () => import("./sections/feedback-inbox/public-038"),
+  "FeedbackPublicPageDemo",
+);
 const FeedbackPublicSwitch038Demo = lazySection(
   () => import("./sections/feedback-inbox/public-038"),
   "FeedbackPublicSwitch038Demo",
@@ -1963,6 +1968,9 @@ export const GROUPS: ShowcaseGroup[] = [
           "FeedbackReplyComposer",
           "FeedbackEntryFile",
           "useFeedbackEntryUpload",
+          "FeedbackPublicPage",
+          "useFeedbackPublicPage",
+          "useFeedbackComments",
           "FeedbackPublicList",
           "FeedbackPublicDetail",
           "FeedbackPublicSwitch",
@@ -1977,6 +1985,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <FeedbackTable027Demo />
             <FeedbackSubjectDemo />
             <FeedbackDetail027Demo />
+            <FeedbackPublicPageDemo />
             <FeedbackPublic038Demo />
             <FeedbackPublicSwitch038Demo />
             <FeedbackThread038Demo />
