@@ -971,6 +971,42 @@ describe("withChartZoom — the overview strip", () => {
     expect(handle()).toBeNull();
   });
 
+  it("keeps its room under the chart before it is drawn, so nothing under the chart moves when it comes", () => {
+    const { container, rerender } = draw();
+    const slot = () => container.querySelector<HTMLElement>("[data-zoom-overview-slot]");
+    // The strip's own height, h-6, reserved while the chart shows the whole range.
+    expect(slot()).toHaveClass("h-6");
+    expect(handle()).toBeNull();
+    drag([160, 100], [760, 110]);
+    expect(slot()).toHaveClass("h-6");
+    expect(slot()).toContainElement(handle());
+    fireEvent.click(screen.getByRole("button", { name: /reset zoom/i }));
+    expect(slot()).toHaveClass("h-6");
+    // Every line toggled off: the chart draws its empty state and keeps the room, so the
+    // page does not move either way.
+    rerender(<Zoomable axes={[{ id: "y" }]} rows={SWEEP} series={[]} />);
+    expect(slot()).toHaveClass("h-6");
+    // No strip, no room: switched off, or a chart that does not zoom.
+    rerender(<Zoomable axes={[{ id: "y" }]} rows={SWEEP} series={[{ key: "v" }]} zoomOverview={false} />);
+    expect(slot()).toBeNull();
+    rerender(<Zoomable axes={[{ id: "y" }]} rows={SWEEP} series={[{ key: "v" }]} zoomAxes="none" />);
+    expect(slot()).toBeNull();
+  });
+
+  it("keeps the room in a SharedXZoom column only under the chart that draws the column's strip", () => {
+    const { container } = render(
+      <SharedXZoom>
+        <Zoomable axes={[{ id: "y" }]} rows={SWEEP} series={[{ key: "v" }]} />
+        <Zoomable axes={[{ id: "y" }]} rows={SWEEP} series={[{ key: "v" }]} />
+      </SharedXZoom>,
+    );
+    const slots = () =>
+      [...container.querySelectorAll("[data-zoom-overview-slot]")].map((slot) => slot.classList.contains("h-6"));
+    expect(slots()).toEqual([false, true]);
+    drag([160, 100], [760, 110], 0);
+    expect(slots()).toEqual([false, true]);
+  });
+
   it("lines up under the plot, the handle standing for the window's share of the range", () => {
     draw();
     drag([160, 100], [760, 110]);

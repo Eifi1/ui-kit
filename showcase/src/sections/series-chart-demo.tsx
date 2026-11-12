@@ -211,7 +211,7 @@ export function SeriesChartDemo() {
         plain wheel still scrolls. <em>Back</em> undoes one zoom (a band, or a whole pinch), <em>Reset zoom</em> (or a
         double-click) shows the whole range; both are real buttons, so Tab reaches them. While zoomed, a thin strip
         under the plot shows the whole range with the window on show as a handle: drag it, or focus it and press ← and
-        →, to pan.
+        →, to pan. Its room stays free under the chart while unzoomed, so the page does not move when it comes.
       </Note>
 
       <Example
