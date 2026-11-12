@@ -386,7 +386,11 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // pages' padding and header as keksdose draws them.
   // 0.61 (+1, here and in /feedback): `deployEnvironment`, which copy of the app a report
   // comes from, read off the host by each app's own list (keksdose's rule).
-  ["@eifi1/ui-kit", barrel, 1016],
+  // 0.61 (+7, Marcel 2026-11-12: the kit owns keksdose's swipe settings):
+  // `createSwipeSettingsStore`, `FEEDBACK_SWIPE_SURFACE`, `TRANSLATION_REVIEW_SWIPE_SURFACE`,
+  // `SWIPE_NONE`, and the card: `SwipeSetting`, `SWIPE_SETTING_ANCHOR`,
+  // `DEFAULT_SWIPE_SETTING_LABELS`.
+  ["@eifi1/ui-kit", barrel, 1023],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

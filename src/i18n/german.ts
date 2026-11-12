@@ -1994,6 +1994,27 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       done: "Die Einstellungen dieses Geräts sind auf die Standardwerte zurückgesetzt.",
       keywords: "zurücksetzen standard standardwerte gerät wiederherstellen darstellung tabellen layout",
     },
+    // 0.61 — SwipeSetting (keksdose's Settings → Interaction, `settings.swipe_*`, its de-CH
+    // wording). The actions are named by `feedbackStatus` and `translationReview`.
+    swipeSetting: {
+      title: "Wischgesten",
+      description: "Wie Listenzeilen auf horizontales Ziehen reagieren – per Wischgeste oder mit gedrückter Maustaste.",
+      surfacePicker: "Welche Liste",
+      surfaces: { feedback: "Feedback", translationReview: "Übersetzungen" },
+      right: "Nach rechts wischen",
+      left: "Nach links wischen",
+      primary: "Kurz wischen",
+      secondary: "Weit wischen",
+      none: "— keine —",
+      nextStatus: "Nächster Status",
+      help: "Ein kurzer Zug löst die erste Aktion aus, ein weiterer Zug die zweite. Aktionen, die eine Zeile nicht ausführen kann, werden übersprungen — die nächste rückt auf.",
+      saveDefault: "Als meine Standardwerte setzen",
+      reset: "Auf Standard zurücksetzen",
+      resetMine: "Auf meine Standardwerte",
+      defaultSaved: "Zurücksetzen führt jetzt auf Ihre gespeicherten Standardwerte.",
+      resetShipped: "Auslieferungszustand wiederherstellen",
+      keywords: "wischen wischgeste ziehen links rechts kurz weit zeilen listen",
+    },
     rowActions: {
       actions: "Aktionen",
       actionsFor: (name) => `Aktionen für ${name}`,

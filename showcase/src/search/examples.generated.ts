@@ -785,6 +785,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "PasswordSetting — resolving handler",
     "PasswordSetting — rejecting handler",
     "TwoFactorSetting",
+    "SwipeSetting — the kit's two lists and an app's own",
     "DeviceResetSetting — this page's own registry",
     "PasswordSetting — strength + maxBytes",
     "LanguageSelect — a language as a form field",

@@ -1965,6 +1965,27 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       done: "Les réglages de cet appareil ont retrouvé leurs valeurs par défaut.",
       keywords: "réinitialiser défaut appareil restaurer rétablir apparence tableaux disposition",
     },
+    // 0.61 — SwipeSetting: keksdose's `settings.swipe_*`, its French wording.
+    swipeSetting: {
+      title: "Gestes de balayage",
+      description:
+        "Comment les lignes de liste réagissent à un glissement horizontal — au toucher, ou en faisant glisser avec la souris.",
+      surfacePicker: "Quelle liste",
+      surfaces: { feedback: "Retours", translationReview: "Traductions" },
+      right: "Balayer vers la droite",
+      left: "Balayer vers la gauche",
+      primary: "Balayage court",
+      secondary: "Balayage long",
+      none: "— aucune —",
+      nextStatus: "Statut suivant",
+      help: "Un glissement court déclenche la première action ; glisser plus loin déclenche la seconde. Une action qu’une ligne donnée ne peut pas effectuer est sautée, la suivante prend sa place.",
+      saveDefault: "Définir comme mes valeurs par défaut",
+      reset: "Rétablir les valeurs par défaut",
+      resetMine: "Revenir à mes valeurs par défaut",
+      defaultSaved: "Rétablir revient désormais aux valeurs par défaut que vous avez enregistrées.",
+      resetShipped: "Restaurer les valeurs d’origine",
+      keywords: "balayer balayage geste glisser gauche droite court long lignes listes",
+    },
     rowActions: {
       actions: "Actions",
       actionsFor: (name) => `Actions pour ${name}`,

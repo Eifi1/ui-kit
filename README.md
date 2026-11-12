@@ -582,7 +582,7 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2252 names from 381 modules** in the main barrel — 1014 values and 1238 types — and 195 more in 16 standalone entries. _Italic_ is a type-only export.
+**2275 names from 383 modules** in the main barrel — 1021 values and 1254 types — and 195 more in 16 standalone entries. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 `node scripts/gen-export-inventory.mjs`; the counts are pinned by
@@ -909,6 +909,8 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `settings/settings-catalogue` | `settingsHref`, `settingsSearchEntries`, `visibleSettingsEntries`, `visibleSettingsGroups`, _`SettingsEntry`_, _`SettingsGroup`_, _`SettingsSearchEntriesOptions`_ |
 | `settings/settings-labels` | `DEFAULT_SETTINGS_LABELS`, `useSettingsLabels`, _`SettingsCoreGroup`_, _`SettingsGroupLabels`_, _`SettingsLabels`_ |
 | `settings/device-reset-setting` | `DEFAULT_DEVICE_RESET_LABELS`, `DEVICE_RESET_ANCHOR`, `DeviceResetSetting`, _`DeviceResetLabels`_, _`DeviceResetSettingProps`_ |
+| `settings/swipe-settings-store` | `createSwipeSettingsStore`, `FEEDBACK_SWIPE_SURFACE`, `SWIPE_NONE`, `TRANSLATION_REVIEW_SWIPE_SURFACE`, _`SwipeActionOf`_, _`SwipeBinding`_, _`SwipeLadderMap`_, _`SwipeLadders`_, _`SwipeNone`_, _`SwipeSettingsLegacy`_, _`SwipeSettingsOptions`_, _`SwipeSettingsState`_, _`SwipeSettingsStore`_, _`SwipeSide`_, _`SwipeSlot`_, _`SwipeSurface`_, _`SwipeSurfaces`_ |
+| `settings/swipe-setting` | `DEFAULT_SWIPE_SETTING_LABELS`, `SWIPE_SETTING_ANCHOR`, `SwipeSetting`, _`SwipeSettingLabels`_, _`SwipeSettingProps`_, _`SwipeSurfaceLabels`_ |
 | `settings/use-account-language` | `matchOfferedLanguage`, `resolveAccountLanguage`, `useAccountLanguage`, _`AccountLanguage`_, _`AccountLanguageSource`_, _`ResolveAccountLanguageInput`_, _`ResolvedAccountLanguage`_, _`UseAccountLanguageOptions`_ |
 | `settings/use-account-appearance` | `useAccountAppearance`, _`AccountAppearance`_, _`AccountAppearanceFields`_, _`AccountAppearancePatch`_, _`AppearanceSource`_, _`DeviceAppearance`_, _`ResolvedAccountAppearance`_, _`UseAccountAppearanceOptions`_ |
 

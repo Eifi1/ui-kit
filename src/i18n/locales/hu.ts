@@ -1931,6 +1931,27 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       done: "Az eszköz beállításai visszaálltak az alapértékekre.",
       keywords: "visszaállítás alapértelmezett alapérték eszköz helyreállítás megjelenés táblázatok elrendezés",
     },
+    // 0.61 — SwipeSetting (keksdose's Settings → Interaction). Not reviewed by a native
+    // speaker yet.
+    swipeSetting: {
+      title: "Csúsztatási mozdulatok",
+      description: "Hogyan reagálnak a listák sorai a vízszintes húzásra – érintéssel vagy az egérrel húzva.",
+      surfacePicker: "Melyik lista",
+      surfaces: { feedback: "Visszajelzések", translationReview: "Fordítások" },
+      right: "Csúsztatás jobbra",
+      left: "Csúsztatás balra",
+      primary: "Rövid csúsztatás",
+      secondary: "Hosszú csúsztatás",
+      none: "— nincs —",
+      nextStatus: "Következő állapot",
+      help: "Egy rövid húzás az első műveletet hajtja végre, egy hosszabb a másodikat. Ha egy sor egy műveletet nem tud végrehajtani, az kimarad, és a következő lép a helyére.",
+      saveDefault: "Beállítás saját alapértékként",
+      reset: "Visszaállítás alapértékekre",
+      resetMine: "Vissza a saját alapértékeimhez",
+      defaultSaved: "A visszaállítás mostantól az Ön által mentett alapértékekre áll vissza.",
+      resetShipped: "Gyári alapértékek visszaállítása",
+      keywords: "csúsztatás húzás mozdulat bal jobb rövid hosszú sorok listák",
+    },
     rowActions: {
       actions: "Műveletek",
       actionsFor: (name) => `${name} – műveletek`,

@@ -1844,6 +1844,27 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       done: "此设备的设置已恢复为默认值。",
       keywords: "重置 默认 设备 恢复 外观 表格 布局",
     },
+    // 0.61 — SwipeSetting (keksdose's Settings → Interaction). Not reviewed by a native
+    // speaker yet.
+    swipeSetting: {
+      title: "滑动手势",
+      description: "列表行如何响应横向拖动——触摸滑动，或用鼠标拖动。",
+      surfacePicker: "哪个列表",
+      surfaces: { feedback: "反馈", translationReview: "翻译" },
+      right: "向右滑动",
+      left: "向左滑动",
+      primary: "短滑",
+      secondary: "长滑",
+      none: "— 无 —",
+      nextStatus: "下一个状态",
+      help: "短距离拖动执行第一个操作；继续拖动执行第二个操作。某一行无法执行的操作会被跳过，由下一个操作顶上。",
+      saveDefault: "设为我的默认值",
+      reset: "恢复默认值",
+      resetMine: "恢复为我的默认值",
+      defaultSaved: "现在“恢复”会回到您保存的默认值。",
+      resetShipped: "恢复出厂默认值",
+      keywords: "滑动 手势 拖动 左 右 短 长 行 列表",
+    },
     rowActions: {
       actions: "操作",
       actionsFor: (name) => `${name} 的操作`,

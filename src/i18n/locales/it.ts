@@ -1944,6 +1944,27 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       done: "Le impostazioni di questo dispositivo sono tornate ai valori predefiniti.",
       keywords: "ripristina predefiniti dispositivo reimposta aspetto tabelle layout",
     },
+    // 0.61 — SwipeSetting: keksdose's `settings.swipe_*`, its Italian wording.
+    swipeSetting: {
+      title: "Gesti di scorrimento",
+      description:
+        "Come le righe degli elenchi rispondono a un trascinamento orizzontale: con il tocco o trascinando con il mouse.",
+      surfacePicker: "Quale elenco",
+      surfaces: { feedback: "Feedback", translationReview: "Traduzioni" },
+      right: "Scorri a destra",
+      left: "Scorri a sinistra",
+      primary: "Scorrimento breve",
+      secondary: "Scorrimento lungo",
+      none: "— nessuna —",
+      nextStatus: "Stato successivo",
+      help: "Un trascinamento breve esegue la prima azione; trascinando oltre si esegue la seconda. Un’azione che una riga non può eseguire viene saltata, così la successiva sale di posto.",
+      saveDefault: "Imposta come miei predefiniti",
+      reset: "Ripristina predefiniti",
+      resetMine: "Torna ai miei predefiniti",
+      defaultSaved: "Ripristina ora torna ai predefiniti che ha salvato.",
+      resetShipped: "Ripristina i predefiniti di fabbrica",
+      keywords: "scorrere scorrimento gesto trascinare sinistra destra breve lungo righe elenchi",
+    },
     rowActions: {
       actions: "Azioni",
       actionsFor: (name) => `Azioni per ${name}`,

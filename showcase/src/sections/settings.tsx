@@ -5,8 +5,10 @@
 import { useEffect, useState } from "react";
 import {
   Button,
+  createSwipeSettingsStore,
   DeviceResetSetting,
   deviceSettings,
+  FEEDBACK_SWIPE_SURFACE,
   LanguageSetting,
   PasswordSetting,
   ProfileSetting,
@@ -14,7 +16,9 @@ import {
   registerDeviceSetting,
   SettingsHeadingLevel,
   Switch,
+  SwipeSetting,
   ThemeSetting,
+  TRANSLATION_REVIEW_SWIPE_SURFACE,
   TwoFactorSetting,
   writeStored,
 } from "@eifi1/ui-kit";
@@ -574,6 +578,63 @@ function DeviceResetRow() {
   );
 }
 
+/**
+ * The showcase's own swipe store, as an app's: the kit's two lists, and one of the page's
+ * own — its ids, its defaults, and its words through the card's `surfaceLabels`.
+ */
+const swipeSettings = createSwipeSettingsStore({
+  storageKey: "uikit-showcase-swipe-settings",
+  surfaces: {
+    feedback: FEEDBACK_SWIPE_SURFACE,
+    translations: TRANSLATION_REVIEW_SWIPE_SURFACE,
+    tasks: {
+      actions: ["complete", "snooze", "archive"],
+      defaults: { right: ["complete", "none"], left: ["snooze", "archive"] },
+    },
+  },
+});
+
+const TASK_WORDS = {
+  tasks: { name: "Tasks", actions: { complete: "Complete", snooze: "Snooze", archive: "Archive" } },
+};
+
+const ladder = (ids: readonly string[]) => (ids.length ? `[${ids.join(", ")}]` : "[]");
+
+function SwipeSettingRow() {
+  const feedback = swipeSettings.useSwipeBinding("feedback");
+  const translations = swipeSettings.useSwipeBinding("translations");
+  return (
+    <Example
+      label="SwipeSetting — the kit's two lists and an app's own"
+      hint="kept on this device under the page's key; Reset this device puts the shipped bindings back"
+    >
+      <div className="max-w-2xl space-y-4">
+        {/* Under this example's own h3, the card titles itself one level down. */}
+        <SettingsHeadingLevel level="h4">
+          <SwipeSetting store={swipeSettings} surfaceLabels={TASK_WORDS} />
+        </SettingsHeadingLevel>
+        <OutTable
+          rows={[
+            ['useSwipeBinding("feedback").end', ladder(feedback.end)],
+            ['useSwipeBinding("feedback").start', ladder(feedback.start)],
+            ['useSwipeBinding("translations").end', ladder(translations.end)],
+            ['useSwipeBinding("translations").start', ladder(translations.start)],
+          ]}
+        />
+      </div>
+      <Note>
+        {"`createSwipeSettingsStore` keeps per list a `right` and a `left` ladder, a short and a long swipe, with " +
+          "`none` where a stage binds nothing; `useSwipeBinding` hands one list over as the `{ start, end }` that " +
+          "`FeedbackInbox` and `TranslationReviewPanel` take as `swipe`, `none` left out, right as the end of a " +
+          "left-to-right line. An id a list does not offer reads as `none`. The kit names its own lists and their " +
+          "actions — the status a feedback swipe sets, the review panel's buttons; an app's own list brings its words " +
+          "in `surfaceLabels`. One list at a time, in the URL inside a `SettingsLayout` (the path segment after the " +
+          "group)."}
+      </Note>
+    </Example>
+  );
+}
+
 export function Settings() {
   return (
     <>
@@ -584,6 +645,7 @@ export function Settings() {
       <ProfileLoadingRow />
       <PasswordRow />
       <TwoFactorRow />
+      <SwipeSettingRow />
       <DeviceResetRow />
     </>
   );

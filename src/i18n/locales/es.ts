@@ -1923,6 +1923,28 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       done: "Los ajustes de este dispositivo han vuelto a sus valores predeterminados.",
       keywords: "restablecer predeterminado valores dispositivo restaurar apariencia tablas diseño",
     },
+    // 0.61 — SwipeSetting (keksdose's Settings → Interaction). Not reviewed by a native
+    // speaker yet.
+    swipeSetting: {
+      title: "Gestos de deslizamiento",
+      description:
+        "Cómo responden las filas de las listas a un arrastre horizontal: con el dedo o arrastrando con el ratón.",
+      surfacePicker: "Qué lista",
+      surfaces: { feedback: "Comentarios", translationReview: "Traducciones" },
+      right: "Deslizar a la derecha",
+      left: "Deslizar a la izquierda",
+      primary: "Deslizamiento corto",
+      secondary: "Deslizamiento largo",
+      none: "— ninguna —",
+      nextStatus: "Siguiente estado",
+      help: "Un arrastre corto ejecuta la primera acción; arrastrar más lejos ejecuta la segunda. Si una fila no puede realizar una acción, esta se omite y la siguiente ocupa su lugar.",
+      saveDefault: "Establecer como mis valores predeterminados",
+      reset: "Restablecer los valores predeterminados",
+      resetMine: "Volver a mis valores predeterminados",
+      defaultSaved: "Restablecer vuelve ahora a los valores predeterminados que guardó.",
+      resetShipped: "Restaurar los valores de fábrica",
+      keywords: "deslizar deslizamiento gesto arrastrar izquierda derecha corto largo filas listas",
+    },
     rowActions: {
       actions: "Acciones",
       actionsFor: (name) => `Acciones de ${name}`,

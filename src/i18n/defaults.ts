@@ -92,6 +92,7 @@ import { DEFAULT_DEMO_LABELS } from "../demo/demo-labels";
 import { DEFAULT_BILLING_LABELS } from "../billing/billing-labels";
 import { DEFAULT_PLAN_CHANGE_LABELS } from "../admin/plan-change-labels";
 import { DEFAULT_APPEARANCE_LABELS } from "../components/appearance-labels";
+import { DEFAULT_SWIPE_SETTING_LABELS } from "../settings/swipe-setting-labels";
 import { DEFAULT_DEVICE_RESET_LABELS } from "../settings/device-reset-setting-labels";
 import { DEFAULT_ROW_ACTIONS_LABELS } from "../components/row-actions-labels";
 import { DEFAULT_APP_SHELL_MORE_LABELS } from "../shell/app-shell-labels";
@@ -259,6 +260,7 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   planChange: DEFAULT_PLAN_CHANGE_LABELS,
   appearance: DEFAULT_APPEARANCE_LABELS,
   deviceReset: DEFAULT_DEVICE_RESET_LABELS,
+  swipeSetting: DEFAULT_SWIPE_SETTING_LABELS,
   rowActions: DEFAULT_ROW_ACTIONS_LABELS,
   appShellMore: DEFAULT_APP_SHELL_MORE_LABELS,
   characterCount: DEFAULT_CHARACTER_COUNT_LABELS,
