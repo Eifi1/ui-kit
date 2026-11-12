@@ -754,7 +754,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       zoomWindow: "Rango visible",
       zoomWindowRange: (from, to) => `de ${from} a ${to}`,
       zoomHint:
-        "Arrastre para ampliar: una selección más o menos cuadrada amplía ambos ejes; una larga y estrecha, solo el suyo. Haga doble clic para restablecer.",
+        "Arrastre para ampliar: una selección más o menos cuadrada amplía ambos ejes; una larga y estrecha, solo el suyo. En una pantalla táctil, un dedo lee los valores y dos dedos amplían y desplazan. «Atrás» deshace un paso de zoom; un doble clic o «Restablecer zoom» muestra de nuevo todo el rango.",
       empty: "Sin datos",
       legend: "Series",
       points: "Valores del gráfico",

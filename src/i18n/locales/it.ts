@@ -762,7 +762,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       zoomWindow: "Intervallo visibile",
       zoomWindowRange: (from, to) => `da ${from} a ${to}`,
       zoomHint:
-        "Trascini per ingrandire: una selezione più o meno quadrata ingrandisce entrambi gli assi, una lunga e sottile solo il proprio. Faccia doppio clic per ripristinare.",
+        "Trascini per ingrandire: una selezione più o meno quadrata ingrandisce entrambi gli assi, una lunga e sottile solo il proprio. Su uno schermo tattile, un dito legge i valori e due dita ingrandiscono e spostano. «Indietro» annulla un passo di zoom; un doppio clic o «Reimposta zoom» mostra di nuovo l’intervallo intero.",
       empty: "Nessun dato",
       legend: "Serie",
       points: "Valori del grafico",

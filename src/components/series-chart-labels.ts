@@ -48,7 +48,7 @@ export const DEFAULT_SERIES_CHART_LABELS: SeriesChartLabels = {
   zoomWindow: "Visible range",
   zoomWindowRange: (from, to) => `${from} to ${to}`,
   zoomHint:
-    "Drag to zoom: a roughly square selection zooms both axes, a long thin one only its own. Double-click to reset.",
+    "Drag to zoom: a roughly square selection zooms both axes, a long thin one only its own. On a touch screen, one finger reads the values and two fingers zoom and pan. Back undoes one zoom; double-click or Reset zoom shows the whole range again.",
   empty: "No data",
   legend: "Series",
   points: "Chart values",

@@ -772,7 +772,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       zoomWindow: "Sichtbarer Bereich",
       zoomWindowRange: (from, to) => `${from} bis ${to}`,
       zoomHint:
-        "Zum Zoomen ziehen: Eine annähernd quadratische Auswahl zoomt beide Achsen, eine lange, schmale nur ihre eigene. Doppelklick setzt zurück.",
+        "Zum Zoomen ziehen: Eine annähernd quadratische Auswahl zoomt beide Achsen, eine lange, schmale nur ihre eigene. Auf einem Touchscreen liest ein Finger die Werte ab, zwei Finger zoomen und verschieben. «Zurück» nimmt einen Zoomschritt zurück; Doppelklick oder «Zoom zurücksetzen» zeigt wieder den ganzen Bereich.",
       empty: "Keine Daten",
       legend: "Datenreihen",
       points: "Diagrammwerte",
