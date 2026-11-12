@@ -23,13 +23,13 @@ Snapshots, per-repo to-dos and the review logs are in
 | § | Section | Shipped in | Amended by |
 |---|---|---|---|
 | 1 | Where each one stands | — (archived) | |
-| 2 | Decisions | — | decisions 9–13 after the reviews (§10) |
+| 2 | Decisions | — | decisions 9–13 after the reviews (§10); decisions 14–16 (2026-11-12, 2026-11-13) |
 | 3 | The account | ui-kit 0.29.0, server-kit 0.3.0 | §10.6 |
 | 4 | Sign-up | ui-kit 0.29.0, server-kit 0.3.0 | §10.4, §10.7, §10.8, §10.12–14; ui-kit 0.30.0 (`defaultEmail`, `token_expired`) |
-| 5 | Sign-in | ui-kit 0.29.0, server-kit 0.3.0 | §10.1, §10.9, §10.10, §10.15; ui-kit 0.30.0 (the 429 line); server-kit 0.8.0 (`absent_account_check`) |
-| 6 | The session | ui-kit 0.29.0, server-kit 0.3.0 | §10.2, §10.3, §10.11; §11 |
+| 5 | Sign-in | ui-kit 0.29.0, server-kit 0.3.0 | §10.1, §10.9, §10.10, §10.15; ui-kit 0.30.0 (the 429 line); server-kit 0.8.0 (`absent_account_check`); ui-kit 0.62, server-kit 0.27 (`shared_device`, §2.14) |
+| 6 | The session | ui-kit 0.29.0, server-kit 0.3.0 | §10.2, §10.3, §10.11; §11; §2.14–16: ui-kit 0.62, server-kit 0.27 (a shared session's short life, every sign-out revokes, push dropped) |
 | 7 | Signed-out pages | ui-kit 0.29.0 | §10.10 |
-| 8 | What the kits add | ui-kit 0.29.0, server-kit 0.3.0 | §10.5, §10.6, §10.11; later releases as listed there |
+| 8 | What the kits add | ui-kit 0.29.0, server-kit 0.3.0 | §10.5, §10.6, §10.11; later releases as listed there (ui-kit 0.62) |
 | 9 | Per repo | — (archived) | |
 | 10 | Settled after the reviews | — | index; folded items point to their § |
 | 11 | Session refresh | ui-kit 0.34.0, server-kit 0.8.0 | §11.7 |
@@ -80,6 +80,21 @@ After the reviews:
     first admin.
 13. **The address tag in every app** (0.29.0): the sign-up form offers
     `you+<app>@example.com` as one click, as keksdose does (§4.5).
+
+Later (Marcel, 2026-11-12 and 2026-11-13; ui-kit 0.62, server-kit 0.27). The 0.61 rule kept a
+shared-computer session in `sessionStorage` "so it ends with the tab", but Chrome and Firefox
+bring a closed tab back with its sessionStorage (kastlan's finding; keksdose's test in Chromium
+156), and the next person at a library PC reopened it signed in:
+
+14. **A shared-computer sign-in has a short life.** The sign-in says so (`shared_device: true`,
+    §5.1), and the server ends that session after 15 minutes idle and 4 hours at most
+    (server-kit 0.27 `SessionPolicy`, §6.2). The client keeps it in page memory
+    (docs/local-first-harmonization.md D6) and signs an abandoned tab out after 15 minutes
+    without input (`useSharedComputerIdleSignOut`, §6.3).
+15. **Every sign-out ends the session on the server**, shared or not: the client calls the
+    app's revoke of this session first, then drops its tokens (§6.3).
+16. **No push on a shared computer, and every sign-out drops this device's push** (2026-11-13):
+    a push subscription belongs to the browser, not to the tab or the sign-in (§6.3, §8).
 
 ## 3. The account
 
@@ -284,6 +299,13 @@ three) answers the same way.
   `encrypted` on the password-change challenge, `key_wrap_unchanged` on its answer.
 - keksdose's passkey PRF unlock is not part of sign-in. It is a separate step after it,
   and stays the app's.
+- **`shared_device`** (§2.14; ui-kit 0.62, server-kit 0.27): `true` when the person ticked
+  "This is a shared computer" (`isSharedComputer()`, `@eifi1/ui-kit/offline`), on every
+  request that can start the session: `/auth/login`, the passkey finish, and the challenge
+  steps `/auth/login/2fa` and `/auth/login/set-password`. Absent means `false`. The kit's
+  forms send no request (§8), so the app adds it beside the credentials
+  (`{ ...credentials, shared_device: isSharedComputer() }`). A server whose request schema
+  refuses unknown fields (`extra="forbid"`) takes the field before its client sends it.
 
 ### 5.2 Rules
 
@@ -365,12 +387,32 @@ three) answers the same way.
 - **Lifetimes are a per-app setting** with a server-kit default of 24 h access and 30 d
   refresh. keksdose is an offline-first app people may open weekly. kastlan keeps
   15 min until its per-request check exists, and its refresh moves to 30 d.
+- **A shared-computer session has a short life** (§2.14, server-kit 0.27 `SessionPolicy`):
+  signed in with `shared_device: true`, it ends after 15 minutes idle and 4 hours after the
+  sign-in at most, whatever the app's lifetimes; the refresh then answers `session_ended`
+  (§11). The server keeps the flag with the session, so every renewal keeps the limits.
 
 ### 6.3 Ending sessions
 
+- **Every sign-out ends this session on the server** (§2.15, 2026-11-12), shared or not:
+  the explicit one and `useSharedComputerIdleSignOut`'s, in this order, while the token
+  still holds:
+  1. this device's push goes: `dropPushSubscription(unregister)` (§2.16; ui-kit 0.62), which
+     tells the server and unsubscribes the browser and never rejects;
+  2. the app's revoke of THIS session (server-kit 0.27; kastlan's `DELETE
+     /auth/sessions/{sid}` today), not `POST /auth/logout`, which ends every session;
+  3. the tokens and this device's copy go (keksdose also wipes its offline copy), and the
+     app goes to the sign-in page.
+
+  A revoke that fails (offline, a 5xx, a session the server's limits already ended) does
+  not stop the sign-out: the tokens go all the same, and the server's limits end the session
+  (a shared one within 15 minutes). Until 0.62 the normal sign-out only dropped the client's
+  tokens, and the server went on honouring a refresh token it never heard was given up.
+- **A session that ended on its own** (the refresh refused, §11; ended in another tab) calls
+  no revoke: the server already ended it, and its token can no longer ask. Its device keeps
+  push (Marcel's decision 2 of 2026-10-30); a shared computer's never had any (§2.16).
 - `POST /auth/logout` ends **every** session (Kurvenschmiede's), behind its own "Sign out
-  everywhere" action. The normal sign-out stays on this device only: the client drops
-  its tokens (and keksdose wipes this device's offline copy).
+  everywhere" action.
 - **A password change ends every other session and keeps the caller's**: stamp the
   cut-off, then mint fresh tokens (keksdose's forced-change endpoint). So the change
   answers with tokens, not `204`. kastlan ends every session row but the token's `sid`.
@@ -466,7 +508,10 @@ address nobody read.
 
 Later: `AuthErrorCode.TOKEN_EXPIRED` (server-kit 0.4.0); `absent_account_check` (§5.2),
 `AuthErrorCode.SESSION_ENDED` and `RefreshRequest` (0.8.0, §11.6). ui-kit 0.34.0 adds
-the session refresh (§11.6).
+the session refresh (§11.6). server-kit 0.27 adds `shared_device` and a shared session's
+`SessionPolicy` (§5.1, §6.2), and the revoke of one session (§6.3). ui-kit 0.62 adds
+`useSharedComputerIdleSignOut` (`@eifi1/ui-kit/offline`), `dropPushSubscription`, and
+`PushDeviceSetting`'s refusal on a shared computer (§6.3).
 
 **App-side**:
 - the database, migrations and routes;

@@ -14,7 +14,7 @@ The body says what the build does; each round's reviews are folded into its sect
 
 | § | Section | Shipped in | Amended by |
 |---|---|---|---|
-| 1 | kastlan local-first like keksdose; KS stays online-only; what the kits lift | **SETTLED (round 0.45)**: P1+P2 in ui-kit 0.45 / server-kit 0.15 | §1.8–§1.9 (the reviews); ui-kit 0.46 (kastlan K1–K4, §1.6); ui-kit 0.52 (`clear()` reaches every tab, §1.6, D15) |
+| 1 | kastlan local-first like keksdose; KS stays online-only; what the kits lift | **SETTLED (round 0.45)**: P1+P2 in ui-kit 0.45 / server-kit 0.15 | §1.8–§1.9 (the reviews); ui-kit 0.46 (kastlan K1–K4, §1.6); ui-kit 0.52 (`clear()` reaches every tab, §1.6, D15); ui-kit 0.61, 0.62 (D6: the shared computer's session in page memory, its short life, the idle sign-out, no push; §1.6) |
 | 2 | The sync engine in ui-kit (kastlan the user); `SyncScope`/`EntityRule` in server-kit; kastlan's meetings, meters, maintenance and contacts scopes | **SETTLED (round 0.46)**: P3+P4 in ui-kit 0.46 / server-kit 0.16 | §2.9 (the reviews); ui-kit 0.52 (D15, §2.3: one engine per database across tabs) |
 
 ## 1. kastlan becomes local-first — SETTLED (round 0.45)
@@ -483,12 +483,29 @@ they are (no ETags). KS's version contract stays KS's.
 - **The tour `:pending` record** (tours §10.2.4, `<storageKey>:pending`) is not the app's outbox: it
   stays out of any "N waiting" count and out of the sign-out guard, in kk and in ka, on purpose
   (losing a tour mark is acceptable). `signOutTourProgress` keeps it for its owner.
-- **The session ends with the tab on a shared computer** (ui-kit 0.61, Marcel 2026-11-12;
-  keksdose's finding): with the box ticked, the app keeps its tokens, the choice
-  (`storage: "session"`) and anything the session unlocks on the device (keksdose's
-  private-mode keys) in `sessionStorage` or memory, and its sync copy in memory
-  (`createSyncDb`'s `indexedDB`). A closed tab then leaves neither data nor a session behind.
-  Unticked, nothing changes.
+- **On a shared computer the session lives in page memory** (ui-kit 0.61, corrected in 0.62;
+  Marcel 2026-11-12, keksdose's finding): with the box ticked, the app keeps its tokens, the
+  profile, anything the session unlocks on the device (keksdose's private-mode keys) and the
+  person's traces (the last page, searches, filters) **in the page's memory only**, e.g. a
+  Map-backed `Storage` behind the app's storage accessor (keksdose
+  `frontend/src/shared/lib/shared-session.ts`, eba87635), and its sync copy in memory
+  (`createSyncDb`'s `indexedDB`). Unticked, nothing changes.
+  - **Not in `sessionStorage`** (0.61 had said it): Chrome and Firefox bring a closed tab back
+    WITH its sessionStorage (Ctrl+Shift+T, and "Continue where you left off" after a restart),
+    and keep it on disk to be able to (keksdose's test in Chromium 156, 2026-11-12). The tab's
+    storage holds only markers that are not the person's data: the kit's choice
+    (`storage: "session"`), an app's page-mode marker, a sign-in answer handed to the next page
+    load and taken at once.
+  - **The price:** a reload or a reopened tab lands on the sign-in. The app says so (keksdose's
+    privacy text: "the session ends when you close the tab or reload the page").
+  - **Defence in depth** (ui-kit 0.62, server-kit 0.27; Marcel 2026-11-12 and 2026-11-13): the
+    sign-in sends `shared_device: true` and the server gives that session a short life
+    (`SessionPolicy`: 15 minutes idle, 4 hours at most; auth §5.1, §6.2); every sign-out,
+    shared or not, drops this device's push, then revokes the session on the server, then drops
+    the tokens (auth §6.3); `useSharedComputerIdleSignOut` signs an abandoned tab out after 15
+    minutes without input; and push is not offered while the box is ticked
+    (`PushDeviceSetting`), since a subscription belongs to the browser, not to the tab or the
+    sign-in.
 - **What the person leaves in the kit's parts goes in page memory too** (ui-kit 0.62,
   keksdose's shared-computer session): the tables' saved views (`<UiKitProvider
   tableStorage>`, or a table's `storage`) and the crash reporter's buffer
@@ -580,10 +597,18 @@ as optional peers). Size **S–M**.
 - `PwaUpdatePrompt({ needRefresh, onReload, onDismiss?, hold?, labels? })`: kk's toast with
   "Reload"; while `hold` it waits (D8). Seven languages.
 - `SharedComputerChoice` (a labelled checkbox for the sign-in form) with
-  `isSharedComputer()`/`setSharedComputer(on, {storage?})`. The choice lives as long as the
-  session it governs: `sessionStorage` by default, `localStorage` (`storage: "local"`, cleared
-  with `setSharedComputer(false)` at every end of the session) for an app whose refresh token
-  outlives the tab (kastlan; round-046 B3). Seven languages.
+  `isSharedComputer()`/`setSharedComputer(on, {storage?})`. The choice is a marker in the tab:
+  `sessionStorage` by default, `localStorage` (`storage: "local"`, cleared with
+  `setSharedComputer(false)` at every end of the session) for an app whose refresh token still
+  outlives the tab. The session it governs lives in page memory (D6). Seven languages.
+- **0.62 (D6's defence in depth):** `useSharedComputerIdleSignOut({ onSignOut, idleMinutes = 15,
+  enabled = isSharedComputer(), warn = true })`: after `idleMinutes` without input (a press, a
+  key, a touch, a wheel, a moving pointer, the tab shown again) it calls the app's sign-out; a
+  minute before, a toast offers "Stay signed in". One timer, counted on the wall clock, so a tab
+  whose timers slept signs out when it is shown again past the limit; input counts per tab.
+  Mounted in the signed-in shell. `PushDeviceSetting` refuses "Turn on" while the box is ticked
+  (`sharedComputer`, default `isSharedComputer()`), and `dropPushSubscription(unregister)` lets
+  this device's push go at every sign-out without ever rejecting. Seven languages.
 - **0.46, from the 0.45 adoptions (kastlan K1–K4):**
   - `createQueryPersistence({ …, persistMutations? })`: default `true` (kk: paused mutations wait
     in TanStack's queue across a reload). `false` writes no mutation and drops any an older build
