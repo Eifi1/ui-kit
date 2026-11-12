@@ -7,6 +7,7 @@
 export { createSyncDb, rowByPk, SYNC_DB_PK_INDEX } from "./sync/db";
 export type {
   CreateSyncDbOptions,
+  SyncDbIndexedDB,
   OutboxChange,
   OutboxStatus,
   SyncDb,
