@@ -103,6 +103,24 @@ describe("the sign-in page", () => {
     expect(localStorage.getItem(KEY)).toBeNull();
   });
 
+  it("asks for the new password an admin required, and signs in with it", async () => {
+    const { calls, user } = mount("/login", {
+      "post /auth/login": () => ({ status: 200, data: { requires_password_change: true, challenge_token: "c1" } }),
+      "post /auth/login/set-password": () => ({ status: 200, data: tokens("a1", "r1", ada) }),
+    });
+    await fill(user, screen.getByLabelText("Email"), "ada@example.com");
+    await fill(user, screen.getByLabelText("Password"), "pw");
+    await user.click(screen.getByRole("button", { name: "Sign in" }));
+    await fill(user, await screen.findByLabelText("New password"), "a new password");
+    await fill(user, screen.getByLabelText("Repeat new password"), "a new password");
+    await user.click(screen.getByRole("button", { name: "Set password and sign in" }));
+    await screen.findByText("Home");
+    expect(calls[1]).toEqual({
+      route: "post /auth/login/set-password",
+      data: { challenge_token: "c1", new_password: "a new password" },
+    });
+  });
+
   it("leaves the shared-computer choice out when the app says so", () => {
     mount("/login", {}, { sharedComputerChoice: false });
     expect(screen.queryByRole("checkbox", { name: /shared computer/ })).toBeNull();
@@ -194,6 +212,20 @@ describe("the sign-up page", () => {
     expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login");
   });
 
+  it("lets a signed-in account accept the invitation", async () => {
+    localStorage.setItem(KEY, JSON.stringify({ token: "a1", refreshToken: "r1", user: ada }));
+    const { calls } = mount("/register?invite=tok", {
+      "post /auth/invitations/check": () => ({
+        status: 200,
+        data: { email: "ada@example.com", expires_at: "2026-12-01T00:00:00Z", account_exists: true },
+      }),
+      "post /auth/invitations/accept": () => ({ status: 200, data: { email: "ada@example.com" } }),
+    });
+    // Signed in, the page takes the invitation up at once (AcceptInvitation's own rule).
+    expect(await screen.findByText("Invitation accepted.")).toBeInTheDocument();
+    expect(calls.map((c) => c.route)).toContain("post /auth/invitations/accept");
+  });
+
   it("asks an address that has an account to sign in and accept", async () => {
     mount("/register?invite=tok", {
       "post /auth/invitations/check": () => ({
@@ -241,6 +273,16 @@ describe("the mailed links", () => {
     await waitFor(() => expect(calls).toEqual([{ route: "post /auth/verify-email", data: { token: "v1" } }]));
   });
 
+  it("offers a signed-in reader a new link where the old one is dead", async () => {
+    localStorage.setItem(KEY, JSON.stringify({ token: "a1", refreshToken: "r1", user: ada }));
+    const { calls, user } = mount("/verify-email?token=v1", {
+      "post /auth/verify-email": () => ({ status: 400, data: { code: "token_invalid" } }),
+      "post /auth/resend-verification": () => ({ status: 200, data: { email: ada.email, email_verified: false } }),
+    });
+    await user.click(await screen.findByRole("button", { name: "Send again" }));
+    await waitFor(() => expect(calls.map((c) => c.route)).toContain("post /auth/resend-verification"));
+  });
+
   it("confirms an address change, and the signed-in account shows the new address", async () => {
     localStorage.setItem(KEY, JSON.stringify({ token: "a1", refreshToken: "r1", user: ada }));
     const { calls, client } = mount("/confirm-email?token=c1", {
@@ -267,6 +309,11 @@ describe("the routes", () => {
     expect(paths({ demo: { model: "sandbox", access: { kind: "register", href: "/register" } } })).toContain(
       "/demo/ended",
     );
+  });
+
+  it("draw the demo's end page with a demo", () => {
+    mount("/demo/ended", {}, { demo: { model: "sandbox", access: { kind: "register", href: "/register" } } });
+    expect(screen.getByRole("link", { name: "Start a new demo" })).toBeInTheDocument();
   });
 
   it("draw each page in the app's frame", () => {

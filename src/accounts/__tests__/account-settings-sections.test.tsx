@@ -145,6 +145,23 @@ describe("AccountEmailSection", () => {
   });
 });
 
+describe("AccountEmailSection's waiting change", () => {
+  it("sends the link again and withdraws the change", async () => {
+    const { calls, user } = mount(<AccountEmailSection />, {
+      "get /auth/me/email": () => ({ status: 200, data: { email: ada.email, pending_email: "ada@new.example" } }),
+      "get /auth/passkeys": () => ({ status: 200, data: [] }),
+      "post /auth/me/email/resend": () => ({
+        status: 200,
+        data: { email: ada.email, pending_email: "ada@new.example", sent: true },
+      }),
+    });
+    await user.click(await screen.findByRole("button", { name: "Send the link again" }));
+    await waitFor(() => expect(calls.map((c) => c.route)).toContain("post /auth/me/email/resend"));
+    await user.click(screen.getByRole("button", { name: "Cancel the change" }));
+    await waitFor(() => expect(calls.map((c) => c.route)).toContain("delete /auth/me/email"));
+  });
+});
+
 describe("AccountSessionsSection", () => {
   const sessions = [
     { id: "s2", device: "Phone", started_at: "x", last_active: "2026-11-13T08:00:00Z", expires_at: "y" },
@@ -211,14 +228,70 @@ describe("AccountPasskeysSection", () => {
   });
 });
 
+describe("AccountPasskeysSection's add, rename and delete", () => {
+  it("adds one: the password, then the device, then the finish; renames and deletes", async () => {
+    vi.stubGlobal("isSecureContext", true);
+    vi.stubGlobal("PublicKeyCredential", function PublicKeyCredential() {});
+    const buf = (values: number[]) => new Uint8Array(values).buffer;
+    const create = vi.fn(async () => ({
+      id: "cred",
+      rawId: buf([1]),
+      type: "public-key",
+      getClientExtensionResults: () => ({}),
+      response: { clientDataJSON: buf([2]), attestationObject: buf([3]) },
+    }));
+    vi.stubGlobal("navigator", { ...navigator, credentials: { get: vi.fn(), create } });
+    const laptop = { id: 3, name: "Laptop", created_at: "2026-11-01T09:00:00Z" };
+    const { calls, user } = mount(<AccountPasskeysSection />, {
+      "get /auth/passkeys": () => ({ status: 200, data: [laptop] }),
+      "post /auth/passkey/register/begin": () => ({
+        status: 200,
+        data: {
+          challenge_token: "c1",
+          options: { challenge: "AQID", user: { id: "AQ", name: "a" }, rp: { name: "x" } },
+        },
+      }),
+      "post /auth/passkey/register/finish": () => ({ status: 201, data: { id: 4, name: "Phone", created_at: "x" } }),
+      "patch /auth/passkeys/3": () => ({ status: 200, data: { ...laptop, name: "Desk" } }),
+    });
+    await screen.findByText("Laptop");
+    await fill(user, screen.getByLabelText("Name (optional)"), "Phone");
+    await user.click(screen.getByRole("button", { name: "Add passkey" }));
+    const dialog = await screen.findByRole("dialog");
+    await fill(user, within(dialog).getByLabelText("Current password"), "pw");
+    await user.click(within(dialog).getByRole("button", { name: "Continue" }));
+    await waitFor(() => expect(calls.map((c) => c.route)).toContain("post /auth/passkey/register/finish"));
+    expect(create).toHaveBeenCalledTimes(1);
+    expect(calls.find((c) => c.route === "post /auth/passkey/register/finish")!.data).toMatchObject({
+      challenge_token: "c1",
+      name: "Phone",
+    });
+
+    await user.click(screen.getByRole("button", { name: "Rename Laptop" }));
+    const field = screen.getByLabelText("New name for Laptop");
+    await user.clear(field);
+    await fill(user, field, "Desk");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(calls.map((c) => c.route)).toContain("patch /auth/passkeys/3"));
+
+    await user.click(screen.getByRole("button", { name: "Delete Laptop" }));
+    await user.click(await screen.findByRole("button", { name: "Delete passkey" }));
+    await waitFor(() => expect(calls.map((c) => c.route)).toContain("delete /auth/passkeys/3"));
+  });
+});
+
 describe("AccountExportSection and AccountDeletionSection", () => {
   it("downloads the export", async () => {
     vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: vi.fn(() => "blob:x"), revokeObjectURL: vi.fn() }));
+    // jsdom cannot follow the download link; the card's own test holds what it saves.
+    const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
     const { calls, user } = mount(<AccountExportSection />, {
       "get /auth/me/export": () => ({ status: 200, data: new Blob(["{}"]) }),
     });
     await user.click(screen.getByRole("button", { name: "Download my data" }));
     await waitFor(() => expect(calls.map((c) => c.route)).toEqual(["get /auth/me/export"]));
+    await waitFor(() => expect(click).toHaveBeenCalled());
+    click.mockRestore();
   });
 
   it("says the server's terms, and a granted request signs the tab out", async () => {
@@ -270,5 +343,23 @@ describe("AccountInvitationsSection", () => {
     const item = await screen.findByRole("listitem");
     expect(await within(item).findByRole("button", { name: "Copy invitation link" })).toBeInTheDocument();
     expect(screen.getByText(/written to the server log/)).toBeInTheDocument();
+  });
+
+  it("sends a new link, and says a refusal in the account words", async () => {
+    const row = {
+      id: 7,
+      email: "eve@example.com",
+      role: "MEMBER",
+      locale: "en",
+      status: "open",
+      created_at: "2026-11-13T09:00:00Z",
+      expires_at: "2026-11-27T09:00:00Z",
+    };
+    const { calls, user } = mount(<AccountInvitationsSection />, {
+      "get /admin/invitations": () => ({ status: 200, data: [row] }),
+      "post /admin/invitations/7/resend": () => ({ status: 409, data: { code: "invitation_closed" } }),
+    });
+    await user.click(await screen.findByRole("button", { name: "Send eve@example.com a new link" }));
+    await waitFor(() => expect(calls.map((c) => c.route)).toContain("post /admin/invitations/7/resend"));
   });
 });
