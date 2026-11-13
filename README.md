@@ -582,7 +582,7 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2296 names from 387 modules** in the main barrel — 1029 values and 1267 types — and 201 more in 16 standalone entries. _Italic_ is a type-only export.
+**2296 names from 387 modules** in the main barrel — 1029 values and 1267 types — and 214 more in 17 standalone entries. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 `node scripts/gen-export-inventory.mjs`; the counts are pinned by
@@ -606,6 +606,7 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 | `@eifi1/ui-kit/testing/react` | 2 |
 | `@eifi1/ui-kit/rhf` | 52 |
 | `@eifi1/ui-kit/offline` | 38 |
+| `@eifi1/ui-kit/accounts` | 13 |
 | `@eifi1/ui-kit/sync` | 37 |
 | `@eifi1/ui-kit/sync/testing` | 3 |
 | `@eifi1/ui-kit/push-worker` | 10 |
@@ -1156,6 +1157,14 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `offline/local-first` | `isOfflineError`, `readLocalFirst`, `stampAfter`, `uuid5`, `writeLocalFirst` |
 | `offline/feedback-comments-query` | `feedbackCommentsQueryKey`, `useFeedbackCommentsQuery`, _`UseFeedbackCommentsQueryOptions`_ |
 
+### @eifi1/ui-kit/accounts (standalone)
+
+| Module | Exports |
+|---|---|
+| `accounts/storage-entries` | `accountStorageEntries`, _`AccountStorageEntry`_ |
+| `accounts/accounts-client` | `createAccountsClient`, _`AccountsClient`_, _`AccountsClientOptions`_, _`AccountSessionEnd`_, _`AccountsHttp`_, _`AccountsPasskeyFinish`_, _`AccountsRequest`_, _`AccountTokens`_ |
+| `accounts/session-store` | _`AccountSession`_, _`AccountUser`_, _`SharedSessionPlace`_ |
+
 ### @eifi1/ui-kit/sync (standalone)
 
 | Module | Exports |
@@ -1265,6 +1274,21 @@ neither (their names are in the export inventory above):
 What works offline, the merge rule, sign-out on a shared computer and the engine's round
 are the contract's:
 [docs/local-first-harmonization.md](https://github.com/Eifi1/ui-kit/blob/main/docs/local-first-harmonization.md).
+
+## Accounts
+
+`@eifi1/ui-kit/accounts` (0.63, standalone) wires the kit's sign-in parts to server-kit's
+`auth_router` once, so an app writes no session plumbing of its own. Its first part is the
+session: `createAccountsClient({ http, storagePrefix, publicPaths, … })` on the app's own
+axios instance (typed structurally: axios stays the app's) puts the bearer on every request,
+renews the session through the kit's refresh over a bare `fetch`, keeps it where the
+shared-computer choice says (the device, the tab, or page memory), signs out in the contract's
+order (this device's push, `DELETE /auth/sessions/current`, then the tokens), and sends
+`shared_device` with the sign-in, the sign-up and the passkey finish. `accountStorageEntries`
+lists the keys it keeps, each with the privacy page's line in the kit's seven languages. No
+peer beyond the required ones. The contract is
+[docs/auth-harmonization.md](https://github.com/Eifi1/ui-kit/blob/main/docs/auth-harmonization.md)
+§12.9.
 
 ## i18n
 
