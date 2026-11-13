@@ -4,8 +4,8 @@ import { documentNavigation } from "../../lib/document-navigation";
 import { isTransientRefreshFailure } from "../../lib/session-refresh";
 import { createAccountsClient } from "../accounts-client";
 import type { AccountsClientOptions } from "../accounts-client";
-import { fakeFetch, fakeHttp, tokens } from "./fake-http";
-import type { Answer, Cfg } from "./fake-http";
+import { fakeFetch, fakeHttp, tokens } from "../../test/fake-axios";
+import type { Answer, Cfg } from "../../test/fake-axios";
 
 /**
  * The session half of `@eifi1/ui-kit/accounts` (docs/auth-harmonization.md §12.9): the

@@ -4,8 +4,8 @@ import { setSharedComputer } from "../../offline/shared-computer";
 import { installFakePush } from "../../test/fake-push";
 import { createAccountsClient } from "../accounts-client";
 import type { AccountsClientOptions } from "../accounts-client";
-import { fakeFetch, fakeHttp, noAnswer, tokens } from "./fake-http";
-import type { Answer, Cfg } from "./fake-http";
+import { fakeFetch, fakeHttp, noAnswer, tokens } from "../../test/fake-axios";
+import type { Answer, Cfg } from "../../test/fake-axios";
 
 /**
  * One sign-out, in the contract's order (docs/auth-harmonization.md §6.3, §2.15, §2.16):

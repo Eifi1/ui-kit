@@ -3,8 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { authErrorCode } from "../../auth/auth-errors";
 import { setSharedComputer } from "../../offline/shared-computer";
 import { createAccountsClient } from "../accounts-client";
-import { fakeFetch, fakeHttp, tokens } from "./fake-http";
-import type { Answer, Cfg } from "./fake-http";
+import { fakeFetch, fakeHttp, tokens } from "../../test/fake-axios";
+import type { Answer, Cfg } from "../../test/fake-axios";
 
 /**
  * The requests that start a session (docs/auth-harmonization.md §5.1, §12.9), against

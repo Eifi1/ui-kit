@@ -6,6 +6,10 @@ import { vi } from "vitest";
  * added), `request(config)` COPIES the config as axios's `mergeConfig` does, and an HTTP
  * refusal rejects as axios's error (`isAxiosError`, `response.status`, `response.data`).
  * `server` answers each request as it went out: a status and a body, or a throw (no answer).
+ *
+ * Here and not beside the tests: tsup builds every module under `src/` but the test files and
+ * `src/test/`, and this one, in `src/accounts/__tests__/`, shipped in `dist/` with its vitest
+ * import until the 0.63 build showed it.
  */
 
 export type Cfg = {
