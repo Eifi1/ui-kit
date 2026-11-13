@@ -180,6 +180,9 @@ try {
     ],
     // 0.46: `/sync` alone imports Dexie (§2.3); `/offline` loads without it.
     "./sync": ["dexie"],
+    // 0.63: `/accounts`' hooks are TanStack Query's (auth §12.9); its session client alone
+    // would need nothing, but the entry is one module graph.
+    "./accounts": ["@tanstack/react-query"],
     // 0.50: `/testing/react` drives components through Testing Library; `/testing` stays pure.
     "./testing/react": ["@testing-library/react"],
   };

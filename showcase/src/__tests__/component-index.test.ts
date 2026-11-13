@@ -15,6 +15,7 @@ import * as wizard from "../../../src/wizard";
 import * as rhf from "../../../src/rhf";
 import * as tableText from "../../../src/table-text";
 import * as offline from "../../../src/offline";
+import * as accounts from "../../../src/accounts";
 import * as sync from "../../../src/sync";
 import * as syncTesting from "../../../src/sync/testing";
 import * as testing from "../../../src/testing";
@@ -63,6 +64,7 @@ const ENTRIES: Record<string, Record<string, unknown>> = {
   "./rhf": rhf,
   "./table-text": tableText,
   "./offline": offline,
+  "./accounts": accounts,
   "./sync": sync,
   "./sync/testing": syncTesting,
   "./testing": testing,
@@ -89,6 +91,7 @@ const ENTRY_FILES = [
   "src/rhf.ts",
   "src/table-text.ts",
   "src/offline.ts",
+  "src/accounts.ts",
   "src/testing/index.ts",
   "src/testing/react.ts",
   "src/currencies.ts",
@@ -115,6 +118,24 @@ const NOT_ON_A_PAGE: Record<string, string> = {
   TableRow: "a part of Table (the Description list & table page)",
   TableHeaderCell: "a part of Table (the Description list & table page)",
   TableCell: "a part of Table (the Description list & table page)",
+  AccountsProvider: "hands `@eifi1/ui-kit/accounts`' client down; renders nothing of its own",
+  RequireSession: "the account pages' gate: renders its children or a redirect, nothing of its own",
+  AccountProfileSection:
+    "ProfileSetting wired to server-kit's routes through AccountsProvider; ProfileSetting is on its own page",
+  AccountPasswordSection:
+    "PasswordSetting wired to server-kit's routes through AccountsProvider; PasswordSetting is on its own page",
+  AccountEmailSection:
+    "EmailChangeSetting wired to server-kit's routes through AccountsProvider; EmailChangeSetting is on its own page",
+  AccountSessionsSection:
+    "SessionsSetting wired to server-kit's routes through AccountsProvider; SessionsSetting is on its own page",
+  AccountPasskeysSection:
+    "PasskeysSetting wired to server-kit's routes through AccountsProvider; PasskeysSetting is on its own page",
+  AccountExportSection:
+    "DataExportSetting wired to server-kit's routes through AccountsProvider; DataExportSetting is on its own page",
+  AccountDeletionSection:
+    "DeleteAccountSetting wired to server-kit's routes through AccountsProvider; DeleteAccountSetting is on its own page",
+  AccountInvitationsSection:
+    "InvitationsPanel wired to server-kit's routes through AccountsProvider; InvitationsPanel is on its own page",
 };
 
 /**
@@ -133,6 +154,8 @@ const ENGINE = "the offline and sync engine's plumbing, shown through the compon
 const APPEARANCE =
   "the appearance settings' plumbing (the pre-paint read, the stores' writers): the Appearance page shows its effect";
 const OWED = "a pure helper still owed its input → output table (CONTRIBUTING, the showcase; DOC-12)";
+const ACCOUNTS =
+  "the account layer's session client (`@eifi1/ui-kit/accounts`, 0.63): no markup of its own; shown with the account pages its later rounds wire to it";
 const NOT_SHOWN: Record<string, string> = {
   createFakeSyncTransport: TEST_HELPER,
   rowMenuAction: TEST_HELPER,
@@ -158,6 +181,22 @@ const NOT_SHOWN: Record<string, string> = {
   handlePushSubscriptionChange: WORKER,
   pushSubscriptionInput: WORKER,
   resubscribeAfterChange: WORKER,
+  createAccountsClient: ACCOUNTS,
+  accountStorageEntries: ACCOUNTS,
+  describeAccountFailure: ACCOUNTS,
+  useDescribeAccountFailure: ACCOUNTS,
+  passkeysAvailable: ACCOUNTS,
+  useAccountsClient: ACCOUNTS,
+  useCurrentUser: ACCOUNTS,
+  useUpdateProfile: ACCOUNTS,
+  useChangePassword: ACCOUNTS,
+  useEmailChange: ACCOUNTS,
+  useAccountSessions: ACCOUNTS,
+  usePasskeys: ACCOUNTS,
+  useAccountExport: ACCOUNTS,
+  useAccountDeletion: ACCOUNTS,
+  useInvitationsAdmin: ACCOUNTS,
+  accountRoutes: ACCOUNTS,
   releaseSyncEngine: ENGINE,
   syncEngineFor: ENGINE,
   rowByPk: ENGINE,

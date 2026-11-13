@@ -1027,6 +1027,9 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
                 `I dati caricati di recente, perché le pagine si aprano anche senza connessione; ciò che ha più di ${hours} ore l’app non lo usa più e lo rimuove alla successiva apertura. Non ne resta nulla se accede con «Questo è un computer condiviso»`,
               sharedComputer:
                 "Se all’accesso ha scelto «Questo è un computer condiviso», conservato insieme alla scheda",
+              // 0.63 (auth §12.9): the sign-in `@eifi1/ui-kit/accounts` keeps.
+              session:
+                "Il Suo accesso, finché non esce dall’account: i token di accesso e i dati del Suo account, come il nome e l’indirizzo e-mail. Dopo un accesso con «Questo è un computer condiviso», conservato solo insieme alla scheda",
             },
           },
           rights: {
@@ -2188,6 +2191,51 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       atTop: "Già in cima",
       atBottom: "Già in fondo",
       moved: (position, total) => `Spostato alla posizione ${n(position)} di ${n(total)}`,
+    },
+    // 0.63 (auth §12.9, server-kit 0.29): describeAccountFailure — every coded refusal of the
+    // account routes; the older codes in the words the kit's forms already use for them.
+    accountFailure: {
+      codes: {
+        invalid_credentials: "L’indirizzo email o la password non sono corretti.",
+        registration_closed:
+          "I nuovi account si creano solo su invito. Chieda al gestore di invitare il Suo indirizzo email.",
+        email_taken: "Esiste già un account con questo indirizzo email.",
+        invitation_invalid: "Questo link di invito non è valido.",
+        invitation_expired: "Questo invito è scaduto. Ne chieda uno nuovo.",
+        token_invalid: "Questo link non è valido o è scaduto.",
+        token_expired: "Questo link è scaduto. Ne chieda uno nuovo.",
+        account_inactive: "Questo account è disattivato.",
+        session_ended: "La Sua sessione è terminata. Acceda di nuovo.",
+        not_signed_in: "Non ha effettuato l’accesso. Acceda, per favore.",
+        admin_required: "Solo un amministratore può farlo.",
+        password_unchanged: "La nuova password è uguale a quella attuale. Ne scelga un’altra.",
+        password_change_not_required: "Questo account non ha più bisogno di una nuova password. Acceda, per favore.",
+        email_unchanged: "Questo è già il Suo indirizzo.",
+        email_change_not_pending: "Nessuna modifica dell’indirizzo è in attesa.",
+        mail_not_sent: "Non è stato possibile inviare l’email. Riprovi più tardi.",
+        passkey_refused: "Accesso con passkey non riuscito.",
+        passkey_registration_refused: "Non è stato possibile aggiungere la passkey. Riprovi.",
+        passkey_not_found: "Questa passkey non esiste più.",
+        session_not_found: "Questa sessione è già terminata.",
+        invitation_not_found: "Questo invito non esiste più.",
+        invitation_closed: "Questo invito è già stato accettato o revocato.",
+        invitation_scope_invalid: "La selezione per questo invito non è disponibile.",
+        last_admin: "Questo è l’ultimo account amministratore attivo. Renda prima amministratore qualcun altro.",
+        self_action: "Non può farlo sul Suo account.",
+        other_companies:
+          "Questo account appartiene anche ad altre aziende, quindi solo il gestore della piattaforma può farlo. Può invece rimuoverlo da questa azienda.",
+        household_has_members:
+          "La Sua famiglia ha altri membri, quindi l’account non può essere eliminato qui. Scriva al gestore.",
+        confirmation_required: "Confermi prima, per favore.",
+        confirmation_mismatch: "Questo non è l’indirizzo del Suo account.",
+        password_incorrect: "La password non è corretta.",
+        demo_refused: "Nella demo non è possibile.",
+      },
+      offline: "Il server non è raggiungibile. Controlli la connessione e riprovi.",
+      timeout: "Il server ha impiegato troppo tempo a rispondere. Riprovi.",
+      server: "Si è verificato un problema sul server. Riprovi più tardi.",
+      rateLimited,
+      failed: "Non ha funzionato. Riprovi.",
     },
   };
 }

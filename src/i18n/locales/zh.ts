@@ -990,6 +990,9 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
               recentData: (hours) =>
                 `最近加载的数据，以便页面在未联网时也能打开；超过 ${hours} 小时的数据应用不再使用，并在下次打开时删除。如果您登录时选择了“这是一台共用电脑”，则不会保留任何此类数据`,
               sharedComputer: "您登录时是否选择了“这是一台共用电脑”，随标签页一同保存",
+              // 0.63 (auth §12.9): the sign-in `@eifi1/ui-kit/accounts` keeps.
+              session:
+                "您的登录状态，保留到您退出登录为止：登录令牌以及您账户的信息，例如姓名和电子邮件地址。如果您登录时选择了“这是一台共用电脑”，则仅随标签页一同保存",
             },
           },
           rights: {
@@ -2067,6 +2070,48 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       atTop: "已在最上方",
       atBottom: "已在最下方",
       moved: (position, total) => `已移至第 ${n(position)} 位，共 ${n(total)} 位`,
+    },
+    // 0.63 (auth §12.9, server-kit 0.29): describeAccountFailure — every coded refusal of the
+    // account routes; the older codes in the words the kit's forms already use for them.
+    accountFailure: {
+      codes: {
+        invalid_credentials: "电子邮箱或密码不正确。",
+        registration_closed: "新账户仅限受邀注册。请联系运营者，为您的电子邮箱地址发送邀请。",
+        email_taken: "该电子邮箱地址已有账户。",
+        invitation_invalid: "此邀请链接无效。",
+        invitation_expired: "此邀请已过期，请索取新的邀请。",
+        token_invalid: "此链接无效或已过期。",
+        token_expired: "此链接已过期，请索取新的链接。",
+        account_inactive: "此账户已停用。",
+        session_ended: "您的会话已结束，请重新登录。",
+        not_signed_in: "您尚未登录，请先登录。",
+        admin_required: "只有管理员才能执行此操作。",
+        password_unchanged: "新密码与当前密码相同，请另选一个。",
+        password_change_not_required: "此账户已无需设置新密码，请直接登录。",
+        email_unchanged: "这已经是您的地址。",
+        email_change_not_pending: "没有待处理的地址更改。",
+        mail_not_sent: "邮件未能发送，请稍后重试。",
+        passkey_refused: "通行密钥登录失败。",
+        passkey_registration_refused: "无法添加通行密钥，请重试。",
+        passkey_not_found: "此通行密钥已不存在。",
+        session_not_found: "此会话已结束。",
+        invitation_not_found: "此邀请已不存在。",
+        invitation_closed: "此邀请已被接受或撤销。",
+        invitation_scope_invalid: "此邀请所选的范围不可用。",
+        last_admin: "这是最后一位活跃管理员。请先将其他人设为管理员。",
+        self_action: "不能对您自己的账户执行此操作。",
+        other_companies: "此账户也属于其他公司，因此只有平台运营者才能执行此操作。您可以改为将其从本公司移除。",
+        household_has_members: "您的家庭还有其他成员，因此无法在此删除账户。请联系运营者。",
+        confirmation_required: "请先确认。",
+        confirmation_mismatch: "这不是您账户的地址。",
+        password_incorrect: "密码不正确。",
+        demo_refused: "演示版不能执行此操作。",
+      },
+      offline: "无法连接到服务器，请检查网络连接后重试。",
+      timeout: "服务器响应时间过长，请重试。",
+      server: "服务器出错，请稍后重试。",
+      rateLimited,
+      failed: "操作未成功，请重试。",
     },
   };
 }

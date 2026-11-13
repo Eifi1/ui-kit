@@ -213,12 +213,21 @@ describe("the browser section's standard entries (0.61, Marcel 2026-11-12)", () 
     expect(standard.sharedComputer).toContain(BOX[lang]);
   });
 
+  // 0.63 (docs/auth-harmonization.md §12.9): the sign-in `@eifi1/ui-kit/accounts` keeps
+  // (`accountStorageEntries`), in every catalogue, with the box that keeps it with the tab.
+  it.each(Object.keys(CATALOGUES))("%s: the sign-in's line names the box that keeps it with the tab", (lang) => {
+    const standard = CATALOGUES[lang]!().legal!.sections!.privacy!.browser!.standardEntries!;
+    expect(standard.session).toEqual(expect.any(String));
+    expect(standard.session).toContain(BOX[lang]);
+  });
+
   // 0.62 (Marcel 2026-11-13): an entry in an app's list, and no app's list (keksdose,
   // kastlan, Kurvenschmiede, in every language) closes an entry with a full stop.
-  it.each(Object.keys(CATALOGUES))("%s: neither line closes with a full stop, as the apps' entries", (lang) => {
+  it.each(Object.keys(CATALOGUES))("%s: no line closes with a full stop, as the apps' entries", (lang) => {
     const standard = CATALOGUES[lang]!().legal!.sections!.privacy!.browser!.standardEntries!;
     expect(standard.recentData!(24)).not.toMatch(/[.。]$/);
     expect(standard.sharedComputer).not.toMatch(/[.。]$/);
+    expect(standard.session).not.toMatch(/[.。]$/);
   });
 
   it("are entries the app places in its own list, as the kit words them", () => {

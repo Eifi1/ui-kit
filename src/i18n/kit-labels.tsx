@@ -124,6 +124,7 @@ import type { TopBarPartsLabels } from "../shell/top-bar-parts-labels";
 import type { SignOutPendingDialogLabels } from "../offline/sign-out-pending-dialog";
 import type { PwaUpdatePromptLabels } from "../offline/pwa-update-prompt";
 import type { SharedComputerLabels } from "../offline/shared-computer";
+import type { AccountFailureLabels } from "../accounts/account-failure";
 import type { HeldChangesBannerLabels } from "../shell/held-changes-banner-labels";
 import type { FieldSuggestionLabels } from "../components/field-parts";
 import type { ConsentAgainLabels } from "../components/consent-again-notice-labels";
@@ -539,6 +540,10 @@ export interface UiKitLabels {
   /** 0.58: `useReorder` — "Move up" and "Move down", why one is not available at an end,
    *  and the announcement of a move, "Moved to position 3 of 7" (keksdose SL-10). */
   reorder: ReorderLabels;
+  /** 0.63: `describeAccountFailure` — every coded refusal of the account routes (server-kit
+   *  0.29's `auth_router`, docs/auth-harmonization.md §12.5 item 3, §12.9), offline, a
+   *  timeout, the server's fault and a throttle. */
+  accountFailure: AccountFailureLabels;
 }
 
 /**

@@ -92,6 +92,10 @@ export const DEFAULT_LEGAL_LABELS: LegalLabels = {
           recentData: (hours) =>
             `Recently loaded data, so pages also open without a connection; what is older than ${hours} hours the app no longer uses and removes the next time it opens. None of it is kept when you sign in with “This is a shared computer”`,
           sharedComputer: "Whether you chose “This is a shared computer” at sign-in, kept with the tab",
+          // 0.63 (auth §12.9): `@eifi1/ui-kit/accounts`' one key. "Only with the tab" holds on
+          // both shared paths: the tab's storage, and page memory, where a reload signs out.
+          session:
+            "Your sign-in, until you sign out: the sign-in tokens and your account's details, such as your name and email address. After a sign-in with “This is a shared computer”, kept only with the tab",
         },
       },
       rights: {

@@ -360,6 +360,15 @@ export interface LegalBrowserStandardEntries {
   recentData: (hours: number) => string;
   /** The shared-computer choice's own flag (`SharedComputerChoice`), kept for the session. */
   sharedComputer: string;
+  /**
+   * 0.63 (docs/auth-harmonization.md §12.9): the sign-in `@eifi1/ui-kit/accounts` keeps — the
+   * tokens and the account as the app shows it, until the person signs out, and only with
+   * the tab after a sign-in with "This is a shared computer". The line for every key
+   * `accountStorageEntries` names with `entry: "session"`; true on both of that choice's
+   * paths, the tab's storage and page memory. OPTIONAL, as every key added to a namespace an
+   * app may annotate: left out, the provider's, then English.
+   */
+  session?: string;
 }
 
 /** The `legal` namespace, resolved: defaults < provider < `labels` prop. The prop may be

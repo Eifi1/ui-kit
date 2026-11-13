@@ -12,7 +12,8 @@
  *   - no runtime import cycle among the dist/ modules (there are none; a cycle is where
  *     load order starts to matter, and where a bundler stops splitting cleanly);
  *   - an import-cost budget: Rollup bundles `{ Button }`, `{ Spinner }`, `{ cn }` and the
- *     shell set from dist/, the way an app's build does, and fails above the ceiling.
+ *     shell set from dist/, the way an app's build does, and fails above the ceiling; since
+ *     0.63 also the accounts client, from its own entry.
  * Which modules may import recharts at all is packaging-contract.test.ts's rule.
  *
  * Run after `npm run build`. Part of `npm run check`, which CI calls as it is.
@@ -285,11 +286,30 @@ const BUDGETS = [
   // IconButton, ListItem, AppShell's footer links; 81 B, 58 gzip, at 161,758) and the
   // imprint's `credits` section, whose English words are registered with every namespace
   // (245 B, 126 gzip) — meant growth.
-  { label: "the shell set", names: SHELL_SET, max: 162_100 },
+  // And the privacy page's sign-in line (`standardEntries.session`, auth §12.9), English
+  // registered beside every namespace as the legal labels are — meant growth, 211 B: 162,214 B
+  // (56,362 gzip) with both.
+  { label: "the shell set", names: SHELL_SET, max: 162_300 },
+  // 0.63 (auth §12.9): what `@eifi1/ui-kit/accounts`' session costs an app, which creates the
+  // client at once beside its axios instance — the kit's code only, zustand outside the count.
+  // 12,115 B (4,702 gzip): the client 9.1 kB, the session refresh's flight 6.7 kB, the store
+  // 2.7 kB, `dropPushSubscription` 1.5 kB and the storage guard 1.4 kB (Rollup's rendered
+  // lengths, before minifying). No component: `isSharedComputer` comes without its checkbox,
+  // `NEXT_PARAM` without the routing components.
+  // 16,287 B (6,031 gzip) with the round's second part: `client.api`, every route typed (2.7 kB
+  // rendered), and the passkey sign-in's ceremony, converting WebAuthn's JSON itself instead of
+  // a library (2.6 kB) — meant growth, 4,172 B. The hooks, pages and sections are not in it:
+  // an app imports them where it draws them.
+  {
+    label: "{ createAccountsClient }",
+    entry: "dist/accounts.js",
+    names: ["createAccountsClient", "accountStorageEntries"],
+    max: 16_400,
+  },
 ];
 const ENTRY = "\0import-cost";
-async function importCost(names) {
-  const source = `export { ${names.join(", ")} } from ${JSON.stringify(resolve("dist/index.js"))};`;
+async function importCost(names, entry = "dist/index.js") {
+  const source = `export { ${names.join(", ")} } from ${JSON.stringify(resolve(entry))};`;
   const bundle = await rollup({
     input: ENTRY,
     plugins: [
@@ -333,8 +353,8 @@ async function importCost(names) {
 }
 const size = (bytes) => (bytes < 1000 ? `${bytes} B` : `${(bytes / 1000).toFixed(1)} kB`);
 const costs = [];
-for (const { label, names, max } of BUDGETS) {
-  const { min, gzip, packages } = await importCost(names);
+for (const { label, names, max, entry } of BUDGETS) {
+  const { min, gzip, packages } = await importCost(names, entry);
   if (packages.includes("recharts"))
     fail(`${label} reaches recharts — only the chart kit may (packaging-contract.test.ts)`);
   if (min > max) {

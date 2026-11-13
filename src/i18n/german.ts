@@ -1043,6 +1043,9 @@ export function germanLabels(numberLocale: string): UiKitLabels {
                 `Kürzlich geladene Daten, damit Seiten auch ohne Verbindung öffnen; was älter als ${hours} Stunden ist, verwendet die App nicht mehr und entfernt es, sobald sie wieder geöffnet wird. Davon bleibt nichts, wenn Sie sich mit «Dies ist ein gemeinsam genutzter Computer» anmelden`,
               sharedComputer:
                 "Ob Sie bei der Anmeldung «Dies ist ein gemeinsam genutzter Computer» gewählt haben, zusammen mit dem Tab gespeichert",
+              // 0.63 (auth §12.9): the sign-in `@eifi1/ui-kit/accounts` keeps.
+              session:
+                "Ihre Anmeldung, bis Sie sich abmelden: die Anmeldetoken und die Angaben Ihres Kontos, etwa Ihr Name und Ihre E-Mail-Adresse. Nach einer Anmeldung mit «Dies ist ein gemeinsam genutzter Computer» nur zusammen mit dem Tab gespeichert",
             },
           },
           rights: {
@@ -2246,6 +2249,52 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       atTop: "Steht bereits ganz oben",
       atBottom: "Steht bereits ganz unten",
       moved: (position, total) => `An Position ${n(position)} von ${n(total)} verschoben`,
+    },
+    // 0.63 (auth §12.9, server-kit 0.29): describeAccountFailure — every coded refusal of the
+    // account routes; the older codes in the words the kit's forms already use for them.
+    accountFailure: {
+      codes: {
+        invalid_credentials: "Die E-Mail-Adresse oder das Passwort ist falsch.",
+        registration_closed:
+          "Neue Konten gibt es nur auf Einladung. Bitten Sie den Betreiber, Ihre E-Mail-Adresse einzuladen.",
+        email_taken: "Ein Konto mit dieser E-Mail-Adresse existiert bereits.",
+        invitation_invalid: "Dieser Einladungslink ist ungültig.",
+        invitation_expired: "Diese Einladung ist abgelaufen. Bitten Sie um eine neue.",
+        token_invalid: "Dieser Link ist ungültig oder abgelaufen.",
+        token_expired: "Dieser Link ist abgelaufen. Fordern Sie einen neuen an.",
+        account_inactive: "Dieses Konto ist deaktiviert.",
+        session_ended: "Ihre Sitzung ist beendet. Bitte melden Sie sich erneut an.",
+        not_signed_in: "Sie sind nicht angemeldet. Bitte melden Sie sich an.",
+        admin_required: "Das ist nur mit Administratorrechten möglich.",
+        password_unchanged: "Das neue Passwort ist dasselbe wie das bisherige. Bitte wählen Sie ein anderes.",
+        password_change_not_required: "Für dieses Konto ist kein neues Passwort mehr nötig. Bitte melden Sie sich an.",
+        email_unchanged: "Das ist bereits Ihre Adresse.",
+        email_change_not_pending: "Es wartet keine Adressänderung.",
+        mail_not_sent: "Die E-Mail konnte nicht gesendet werden. Bitte versuchen Sie es später erneut.",
+        passkey_refused: "Passkey-Anmeldung fehlgeschlagen.",
+        passkey_registration_refused: "Der Passkey konnte nicht hinzugefügt werden. Bitte versuchen Sie es erneut.",
+        passkey_not_found: "Diesen Passkey gibt es nicht mehr.",
+        session_not_found: "Diese Sitzung ist bereits beendet.",
+        invitation_not_found: "Diese Einladung gibt es nicht mehr.",
+        invitation_closed: "Diese Einladung wurde bereits angenommen oder zurückgezogen.",
+        invitation_scope_invalid: "Die Auswahl für diese Einladung ist nicht verfügbar.",
+        last_admin:
+          "Dies ist das letzte aktive Konto mit Administratorrechten. Geben Sie zuerst einem anderen Konto Administratorrechte.",
+        self_action: "Mit Ihrem eigenen Konto ist das nicht möglich.",
+        other_companies:
+          "Dieses Konto gehört auch zu anderen Unternehmen, deshalb kann nur der Plattformbetreiber das tun. Sie können es stattdessen aus diesem Unternehmen entfernen.",
+        household_has_members:
+          "Ihr Haushalt hat weitere Mitglieder, deshalb kann das Konto hier nicht gelöscht werden. Bitte schreiben Sie dem Betreiber.",
+        confirmation_required: "Bitte bestätigen Sie das zuerst.",
+        confirmation_mismatch: "Das ist nicht die Adresse Ihres Kontos.",
+        password_incorrect: "Das Passwort ist falsch.",
+        demo_refused: "Das ist in der Demo nicht möglich.",
+      },
+      offline: "Der Server ist nicht erreichbar. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+      timeout: "Der Server hat zu lange nicht geantwortet. Bitte versuchen Sie es erneut.",
+      server: "Auf dem Server ist etwas schiefgegangen. Bitte versuchen Sie es später erneut.",
+      rateLimited,
+      failed: "Das hat nicht geklappt. Bitte erneut versuchen.",
     },
   };
 }

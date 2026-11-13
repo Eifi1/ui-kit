@@ -1016,6 +1016,9 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
                 `Los datos cargados recientemente, para que las páginas se abran también sin conexión; lo que tenga más de ${hours} horas la app ya no lo usa y lo elimina la próxima vez que se abra. No se conserva nada de ello si inicia sesión con «Este es un ordenador compartido»`,
               sharedComputer:
                 "Si eligió «Este es un ordenador compartido» al iniciar sesión, guardado junto con la pestaña",
+              // 0.63 (auth §12.9): the sign-in `@eifi1/ui-kit/accounts` keeps.
+              session:
+                "Su inicio de sesión, hasta que cierre sesión: los tokens de inicio de sesión y los datos de su cuenta, como su nombre y su dirección de correo electrónico. Tras iniciar sesión con «Este es un ordenador compartido», guardado solo junto con la pestaña",
             },
           },
           rights: {
@@ -2168,6 +2171,51 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       atTop: "Ya está arriba del todo",
       atBottom: "Ya está abajo del todo",
       moved: (position, total) => `Movido a la posición ${n(position)} de ${n(total)}`,
+    },
+    // 0.63 (auth §12.9, server-kit 0.29): describeAccountFailure — every coded refusal of the
+    // account routes; the older codes in the words the kit's forms already use for them.
+    accountFailure: {
+      codes: {
+        invalid_credentials: "El correo electrónico o la contraseña no son correctos.",
+        registration_closed:
+          "Solo se pueden crear cuentas nuevas por invitación. Pida al operador que envíe una invitación a su dirección de correo electrónico.",
+        email_taken: "Ya existe una cuenta con esta dirección de correo electrónico.",
+        invitation_invalid: "Este enlace de invitación no es válido.",
+        invitation_expired: "Esta invitación ha caducado. Pida una nueva.",
+        token_invalid: "Este enlace no es válido o ha caducado.",
+        token_expired: "Este enlace ha caducado. Pida uno nuevo.",
+        account_inactive: "Esta cuenta está desactivada.",
+        session_ended: "Su sesión ha terminado. Inicie sesión de nuevo.",
+        not_signed_in: "No ha iniciado sesión. Inicie sesión, por favor.",
+        admin_required: "Solo un administrador puede hacer esto.",
+        password_unchanged: "La nueva contraseña es igual a la actual. Elija otra.",
+        password_change_not_required: "Esta cuenta ya no necesita una nueva contraseña. Inicie sesión, por favor.",
+        email_unchanged: "Esta ya es su dirección.",
+        email_change_not_pending: "No hay ningún cambio de dirección pendiente.",
+        mail_not_sent: "No se pudo enviar el correo. Inténtelo de nuevo más tarde.",
+        passkey_refused: "No se pudo iniciar sesión con la llave de acceso.",
+        passkey_registration_refused: "No se pudo añadir la llave de acceso. Inténtelo de nuevo.",
+        passkey_not_found: "Esta llave de acceso ya no existe.",
+        session_not_found: "Esta sesión ya ha terminado.",
+        invitation_not_found: "Esta invitación ya no existe.",
+        invitation_closed: "Esta invitación ya se ha aceptado o revocado.",
+        invitation_scope_invalid: "La selección para esta invitación no está disponible.",
+        last_admin: "Esta es la última cuenta de administrador activa. Primero haga administrador a otra persona.",
+        self_action: "No puede hacer esto con su propia cuenta.",
+        other_companies:
+          "Esta cuenta también pertenece a otras empresas, así que solo el operador de la plataforma puede hacer esto. En su lugar, puede quitarla de esta empresa.",
+        household_has_members:
+          "Su hogar tiene otros miembros, así que la cuenta no se puede eliminar aquí. Escriba al operador.",
+        confirmation_required: "Confírmelo primero, por favor.",
+        confirmation_mismatch: "Esta no es la dirección de su cuenta.",
+        password_incorrect: "La contraseña no es correcta.",
+        demo_refused: "La demo no permite hacer esto.",
+      },
+      offline: "No se puede conectar con el servidor. Compruebe su conexión e inténtelo de nuevo.",
+      timeout: "El servidor ha tardado demasiado en responder. Inténtelo de nuevo.",
+      server: "Algo ha fallado en el servidor. Inténtelo de nuevo más tarde.",
+      rateLimited,
+      failed: "No ha funcionado. Inténtelo de nuevo.",
     },
   };
 }
