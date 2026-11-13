@@ -532,7 +532,7 @@ export const hu: Dictionary = {
       title: "Bejelentkezés és fiók",
       short: "Belépés",
       blurb:
-        "Regisztráció, bejelentkezés, egyszer használatos tokenek, munkamenet-claimek és a fiók átviteli formátumai — a bejelentkezési, regisztrációs és fiókoldalak szerveroldali fele.",
+        "Regisztráció, bejelentkezés, egyszer használatos tokenek, munkamenet-claimek és a fiók átviteli formátumai — és a 0.29 óta maguk az útvonalak: egy router az alkalmazás tárolói fölött, a fiók e-mailjei, passkeyek és kész táblák. A bejelentkezési, regisztrációs és fiókoldalak szerveroldali fele.",
     },
     "server-user-admin": {
       title: "Felhasználókezelés",
@@ -1269,6 +1269,8 @@ export const hu: Dictionary = {
       "munkamenet-token claimjei",
       "e-mail-cím normalizálása",
       "hitelesítési hibakódok",
+      "fiókútvonalak a szerveren",
+      "passkeyes bejelentkezés a szerveren",
     ],
     "server-user-admin": [
       "felhasználólista lekérdezése a szerveren",

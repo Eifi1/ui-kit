@@ -16,6 +16,14 @@ import { PAGES } from "../routes";
 export const KIT_COUNTERPARTS: Readonly<Record<string, readonly string[]>> = {
   // The sign-in, register, reset and verify pages, and the session rules behind them.
   auth: ["auth-account"],
+  // server-kit 0.29 (auth §12): the account layer — the routes those pages call, the service
+  // and ports behind them, their mails, the passkey ceremony and the `[sql]` tables.
+  "auth.router": ["auth-account"],
+  "auth.service": ["auth-account"],
+  "auth.ports": ["auth-account"],
+  "auth.mails": ["auth-account"],
+  "auth.passkeys": ["auth-account"],
+  "auth.sql": ["auth-account"],
   // The admin roster, actions and invitations — and the account's own email change,
   // sessions, deletion and export, which the Auth page shows.
   user_admin: ["user-admin", "auth-account"],

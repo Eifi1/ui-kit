@@ -1,7 +1,7 @@
 {
   "format": "eifi1-server-kit-api",
   "version": 1,
-  "kit_version": "0.27.0",
+  "kit_version": "0.29.0",
   "modules": [
     {
       "name": "eifi1_server_kit.auth",
@@ -50,13 +50,13 @@
         {
           "name": "AUTH_ERROR_DETAIL",
           "kind": "constant",
-          "signature": "AUTH_ERROR_DETAIL: Mapping[AuthErrorCode, str] = {\n    AuthErrorCode.INVALID_CREDENTIALS: \"Invalid credentials\",\n    AuthErrorCode.REGISTRATION_CLOSED: \"Registration is by invitation only\",\n    AuthErrorCode.EMAIL_TAKEN: \"Email already registered\",\n    AuthErrorCode.INVITATION_INVALID: \"This invitation is not valid\",\n    AuthErrorCode.INVITATION_EXPIRED: \"This invitation has expired\",\n    AuthErrorCode.TOKEN_INVALID: \"This link is invalid or has expired\",\n    AuthErrorCode.TOKEN_EXPIRED: \"This link has expired\",\n    # Kurvenschmiede's ``TokenRefusal.ENDED`` (``auth_service.py:187``).\n    AuthErrorCode.SESSION_ENDED: \"This session has ended. Please sign in again.\",\n}",
+          "signature": "AUTH_ERROR_DETAIL: Mapping[AuthErrorCode, str] = {\n    AuthErrorCode.INVALID_CREDENTIALS: \"Invalid credentials\",\n    AuthErrorCode.REGISTRATION_CLOSED: \"Registration is by invitation only\",\n    AuthErrorCode.EMAIL_TAKEN: \"Email already registered\",\n    AuthErrorCode.INVITATION_INVALID: \"This invitation is not valid\",\n    AuthErrorCode.INVITATION_EXPIRED: \"This invitation has expired\",\n    AuthErrorCode.TOKEN_INVALID: \"This link is invalid or has expired\",\n    AuthErrorCode.TOKEN_EXPIRED: \"This link has expired\",\n    # Kurvenschmiede's ``TokenRefusal.ENDED`` (``auth_service.py:187``).\n    AuthErrorCode.SESSION_ENDED: \"This session has ended. Please sign in again.\",\n    AuthErrorCode.NOT_SIGNED_IN: \"Not signed in\",\n    AuthErrorCode.ADMIN_REQUIRED: \"Insufficient role\",\n    AuthErrorCode.PASSWORD_UNCHANGED: \"New password must be different\",\n    AuthErrorCode.PASSWORD_CHANGE_NOT_REQUIRED: \"This account no longer has to change its password. Please sign in normally.\",\n    AuthErrorCode.EMAIL_UNCHANGED: \"This is already the account's address\",\n    AuthErrorCode.EMAIL_CHANGE_NOT_PENDING: \"No address change is pending\",\n    AuthErrorCode.MAIL_NOT_SENT: \"The mail could not be sent. Please try again later.\",\n    AuthErrorCode.PASSKEY_REFUSED: \"That passkey could not sign you in.\",\n    AuthErrorCode.PASSKEY_REGISTRATION_REFUSED: \"The passkey could not be added.\",\n    AuthErrorCode.PASSKEY_NOT_FOUND: \"Passkey not found\",\n    AuthErrorCode.SESSION_NOT_FOUND: \"Session not found\",\n    AuthErrorCode.INVITATION_NOT_FOUND: \"Invitation not found\",\n    AuthErrorCode.INVITATION_CLOSED: \"This invitation was accepted or revoked\",\n    AuthErrorCode.INVITATION_SCOPE_INVALID: \"This invitation's scope is not allowed\",\n}",
           "doc": "The English ``detail`` of each code, keksdose's words where it had them. The pages\nshow the kit's own text for the code; this is for logs and API clients."
         },
         {
           "name": "AUTH_ERROR_STATUS",
           "kind": "constant",
-          "signature": "AUTH_ERROR_STATUS: Mapping[AuthErrorCode, int] = {\n    AuthErrorCode.INVALID_CREDENTIALS: 401,\n    AuthErrorCode.REGISTRATION_CLOSED: 403,\n    AuthErrorCode.EMAIL_TAKEN: 409,\n    AuthErrorCode.INVITATION_INVALID: 400,\n    AuthErrorCode.INVITATION_EXPIRED: 400,\n    AuthErrorCode.TOKEN_INVALID: 400,\n    AuthErrorCode.TOKEN_EXPIRED: 400,\n    AuthErrorCode.SESSION_ENDED: 401,\n}",
+          "signature": "AUTH_ERROR_STATUS: Mapping[AuthErrorCode, int] = {\n    AuthErrorCode.INVALID_CREDENTIALS: 401,\n    AuthErrorCode.REGISTRATION_CLOSED: 403,\n    AuthErrorCode.EMAIL_TAKEN: 409,\n    AuthErrorCode.INVITATION_INVALID: 400,\n    AuthErrorCode.INVITATION_EXPIRED: 400,\n    AuthErrorCode.TOKEN_INVALID: 400,\n    AuthErrorCode.TOKEN_EXPIRED: 400,\n    AuthErrorCode.SESSION_ENDED: 401,\n    AuthErrorCode.NOT_SIGNED_IN: 401,\n    AuthErrorCode.ADMIN_REQUIRED: 403,\n    AuthErrorCode.PASSWORD_UNCHANGED: 400,\n    AuthErrorCode.PASSWORD_CHANGE_NOT_REQUIRED: 409,\n    AuthErrorCode.EMAIL_UNCHANGED: 400,\n    AuthErrorCode.EMAIL_CHANGE_NOT_PENDING: 404,\n    AuthErrorCode.MAIL_NOT_SENT: 503,\n    AuthErrorCode.PASSKEY_REFUSED: 401,\n    AuthErrorCode.PASSKEY_REGISTRATION_REFUSED: 400,\n    AuthErrorCode.PASSKEY_NOT_FOUND: 404,\n    AuthErrorCode.SESSION_NOT_FOUND: 404,\n    AuthErrorCode.INVITATION_NOT_FOUND: 404,\n    AuthErrorCode.INVITATION_CLOSED: 409,\n    AuthErrorCode.INVITATION_SCOPE_INVALID: 400,\n}",
           "doc": "Each code's status. The token codes are ``400`` as keksdose answers a bad reset or\nverification link today; the page tells them apart by ``code``, not by status. A\nrefresh's refusal is ``401``, never ``403``: the three apps' refresh routes already\nanswer so (auth §11.1)."
         },
         {
@@ -91,6 +91,12 @@
           "value": "de-CH"
         },
         {
+          "name": "EMAIL_CHANGE_PER_ACCOUNT",
+          "kind": "constant",
+          "signature": "EMAIL_CHANGE_PER_ACCOUNT = Budget(5, 3600)",
+          "doc": "An address change and its re-send, per account (0.29; keksdose's ``_email_change_limiter``)."
+        },
+        {
           "name": "EMAIL_CHANGE_TOKEN_KIND",
           "kind": "constant",
           "signature": "EMAIL_CHANGE_TOKEN_KIND = OneTimeTokenKind.EMAIL_CHANGE",
@@ -101,6 +107,12 @@
           "kind": "constant",
           "signature": "EMAIL_CHANGE_TTL = timedelta(hours=48)",
           "doc": "An email change's confirmation link, mailed to the NEW address (user-admin §6.2). As\nlong as a verification link, because it proves the same thing — that the mailbox is\ntheirs — and the address does not change until it is redeemed."
+        },
+        {
+          "name": "EXPORT_PER_ACCOUNT",
+          "kind": "constant",
+          "signature": "EXPORT_PER_ACCOUNT = Budget(1, 60)",
+          "doc": "The account export, per account (0.29): user-admin's ``EXPORT_PER_USER``, once a minute."
         },
         {
           "name": "FAMILY_NAME_FIRST",
@@ -176,6 +188,13 @@
           "value": 120
         },
         {
+          "name": "MAX_PASSKEY_NAME_LENGTH",
+          "kind": "constant",
+          "signature": "MAX_PASSKEY_NAME_LENGTH = 120",
+          "doc": "A passkey's name, as the account page shows it.",
+          "value": 120
+        },
+        {
           "name": "MAX_PASSWORD_BYTES",
           "kind": "constant",
           "signature": "MAX_PASSWORD_BYTES = 72",
@@ -210,6 +229,12 @@
           "doc": "Each kind's lifetime."
         },
         {
+          "name": "PASSWORD_CHECK_PER_ACCOUNT",
+          "kind": "constant",
+          "signature": "PASSWORD_CHECK_PER_ACCOUNT = Budget(10, 900)",
+          "doc": "Every signed-in route that checks the current password again, per account (0.29;\nkeksdose's ``_password_recheck_limiter``): the password and address changes, a new\npasskey, the deletion request. Every check is charged, the right password too, before the\nhash; per account is safe, since only a session of that account can charge it."
+        },
+        {
           "name": "PROFILE_CLAIMS",
           "kind": "constant",
           "signature": "PROFILE_CLAIMS: frozenset[str] = frozenset(\n    {\"email\", \"name\", \"first_name\", \"last_name\", \"display_name\", \"given_name\", \"family_name\", \"locale\"}\n)",
@@ -226,6 +251,18 @@
           "kind": "constant",
           "signature": "PROFILE_ZONE_FIELDS: tuple[str, ...] = (\"device_timezone\",)",
           "doc": ":func:`apply_zone_update`'s fields: pass them as ``apply_patch``'s ``skip``, so a demo's\nzone is never written."
+        },
+        {
+          "name": "REDEEM_PER_IP",
+          "kind": "constant",
+          "signature": "REDEEM_PER_IP = Budget(20, 300)",
+          "doc": "The anonymous redemptions of a mailed token, per IP (0.29, §12.5 item 4; keksdose's\n``_redeem_limiter``): ``/verify-email``, ``/password-reset/check`` and ``/confirm``,\n``/invitations/check`` and ``/accept``, ``/me/email/confirm``. Their tokens are 256 bits,\nso a guess never lands; the window bounds a script hammering them for free."
+        },
+        {
+          "name": "REFRESH_PER_IP",
+          "kind": "constant",
+          "signature": "REFRESH_PER_IP = Budget(120, 60)",
+          "doc": "``/auth/refresh``, per IP (0.29; keksdose's ``_refresh_limiter``): generous, because a\npage that 401s several requests at once renews them all, and its 429 is transient to the\nclient (§11.2), never a sign-out."
         },
         {
           "name": "REFRESH_TOKEN_EXPIRE_MINUTES",
@@ -359,11 +396,11 @@
           "name": "AuthError",
           "kind": "class",
           "signature": "class AuthError(ValueError)",
-          "doc": "A coded refusal: ``status_code`` and ``code`` from :class:`AuthErrorCode`.\n\n``AuthError(AuthErrorCode.EMAIL_TAKEN)`` is a 409 with the code's English detail; pass\n``detail`` to say more. A ``ValueError`` like every kit refusal, and registered in\n:data:`~eifi1_server_kit.errors.CONTRACT_ERRORS`, so an app-wide ``ValueError`` → 400\nhandler does not swallow its status.",
+          "doc": "A coded refusal: ``status_code`` and ``code`` from :class:`AuthErrorCode`.\n\n``AuthError(AuthErrorCode.EMAIL_TAKEN)`` is a 409 with the code's English detail; pass\n``detail`` to say more. ``headers`` (0.29) go on the answer: a bearer refusal's\n``WWW-Authenticate: Bearer`` (RFC 6750). A ``ValueError`` like every kit refusal, and registered in\n:data:`~eifi1_server_kit.errors.CONTRACT_ERRORS`, so an app-wide ``ValueError`` → 400\nhandler does not swallow its status.",
           "methods": [
             {
               "name": "__init__",
-              "signature": "__init__(code: AuthErrorCode, detail: str | None = None) -> None",
+              "signature": "__init__(code: AuthErrorCode, detail: str | None = None, *, headers: Mapping[str, str] | None = None) -> None",
               "doc": ""
             }
           ]
@@ -405,6 +442,62 @@
             {
               "name": "SESSION_ENDED",
               "value": "session_ended"
+            },
+            {
+              "name": "NOT_SIGNED_IN",
+              "value": "not_signed_in"
+            },
+            {
+              "name": "ADMIN_REQUIRED",
+              "value": "admin_required"
+            },
+            {
+              "name": "PASSWORD_UNCHANGED",
+              "value": "password_unchanged"
+            },
+            {
+              "name": "PASSWORD_CHANGE_NOT_REQUIRED",
+              "value": "password_change_not_required"
+            },
+            {
+              "name": "EMAIL_UNCHANGED",
+              "value": "email_unchanged"
+            },
+            {
+              "name": "EMAIL_CHANGE_NOT_PENDING",
+              "value": "email_change_not_pending"
+            },
+            {
+              "name": "MAIL_NOT_SENT",
+              "value": "mail_not_sent"
+            },
+            {
+              "name": "PASSKEY_REFUSED",
+              "value": "passkey_refused"
+            },
+            {
+              "name": "PASSKEY_REGISTRATION_REFUSED",
+              "value": "passkey_registration_refused"
+            },
+            {
+              "name": "PASSKEY_NOT_FOUND",
+              "value": "passkey_not_found"
+            },
+            {
+              "name": "SESSION_NOT_FOUND",
+              "value": "session_not_found"
+            },
+            {
+              "name": "INVITATION_NOT_FOUND",
+              "value": "invitation_not_found"
+            },
+            {
+              "name": "INVITATION_CLOSED",
+              "value": "invitation_closed"
+            },
+            {
+              "name": "INVITATION_SCOPE_INVALID",
+              "value": "invitation_scope_invalid"
             }
           ]
         },
@@ -412,11 +505,11 @@
           "name": "AuthLimiters",
           "kind": "class",
           "signature": "class AuthLimiters",
-          "doc": "Every budget of the signed-out routes, built once per app.\n\n``login`` (per IP), ``login_failures`` (per address, a delay — see\n:class:`LoginFailureThrottle`), ``challenge`` (per IP) and ``challenge_subject`` (per\nuser id of the challenge token) for the 2FA and set-password steps, ``register`` (per\nIP), ``reset_ip`` and ``reset_address`` for the reset request, and\n``verification_resend`` (per recipient). Charge an IP window with ``hit`` and answer a\nnon-``None`` result with ``429`` and ``Retry-After``\n(:func:`~eifi1_server_kit.limiter.retry_after_header`); charge it BEFORE any hashing,\nso a shed request costs no bcrypt. Key every address window by\n:func:`~eifi1_server_kit.auth.normalise_email` of what was submitted.",
+          "doc": "Every budget of the signed-out routes, built once per app.\n\n``login`` (per IP), ``login_failures`` (per address, a delay — see\n:class:`LoginFailureThrottle`), ``challenge`` (per IP) and ``challenge_subject`` (per\nuser id of the challenge token) for the 2FA and set-password steps, ``register`` (per\nIP), ``reset_ip`` and ``reset_address`` for the reset request, and\n``verification_resend`` (per recipient; the account layer charges every account mail to an\naddress there). Since 0.29 also ``redeem`` and ``refresh`` (per IP), ``password_check``,\n``email_change`` and ``export`` (per account). Charge an IP window with ``hit`` and answer a\nnon-``None`` result with ``429`` and ``Retry-After``\n(:func:`~eifi1_server_kit.limiter.retry_after_header`); charge it BEFORE any hashing,\nso a shed request costs no bcrypt. Key every address window by\n:func:`~eifi1_server_kit.auth.normalise_email` of what was submitted.",
           "methods": [
             {
               "name": "__init__",
-              "signature": "__init__(*, login: Budget = LOGIN_PER_IP, challenge: Budget = CHALLENGE_PER_IP, challenge_subject: Budget = CHALLENGE_PER_SUBJECT, register: Budget = REGISTER_PER_IP, reset_ip: Budget = RESET_PER_IP, reset_address: Budget = RESET_PER_ADDRESS, verification_resend: Budget = VERIFICATION_RESEND_PER_RECIPIENT, login_failures: LoginFailureThrottle | None = None, clock: Clock = time.monotonic) -> None",
+              "signature": "__init__(*, login: Budget = LOGIN_PER_IP, challenge: Budget = CHALLENGE_PER_IP, challenge_subject: Budget = CHALLENGE_PER_SUBJECT, register: Budget = REGISTER_PER_IP, reset_ip: Budget = RESET_PER_IP, reset_address: Budget = RESET_PER_ADDRESS, verification_resend: Budget = VERIFICATION_RESEND_PER_RECIPIENT, login_failures: LoginFailureThrottle | None = None, clock: Clock = time.monotonic, redeem: Budget = REDEEM_PER_IP, refresh: Budget = REFRESH_PER_IP, password_check: Budget = PASSWORD_CHECK_PER_ACCOUNT, email_change: Budget = EMAIL_CHANGE_PER_ACCOUNT, export: Budget = EXPORT_PER_ACCOUNT) -> None",
               "doc": ""
             },
             {
@@ -484,16 +577,186 @@
           "doc": "A contrast mode as stored on the account (text-size §2.4, §10.6). ``\"system\"`` follows\nthe device's ``prefers-contrast``; it is a stored value, not the absence of one."
         },
         {
+          "name": "DeletionResult",
+          "kind": "model",
+          "signature": "class DeletionResult(BaseModel)",
+          "doc": "``POST /auth/me/deletion`` answers ``202`` (keksdose ``AccountDeletionResponse``): when\nthe erasure runs (``None`` in ``operator`` mode) and whether the confirming mail went out.\nThe app's outcomes (keksdose's revoked tokens, the guests told) ride in a subclass\nthrough ``on_deletion_requested``.",
+          "fields": [
+            {
+              "name": "deletion_scheduled_at",
+              "type": "UtcDateTime | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "mail_sent",
+              "type": "bool",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "DeletionTerms",
+          "kind": "model",
+          "signature": "class DeletionTerms(BaseModel)",
+          "doc": "``GET /auth/me/deletion`` (user-admin §6.4; Kurvenschmiede ``DeletionTerms``): what a\ndeletion would do, said before it is asked for. ``days`` is ``None`` in ``operator``\nmode, which promises no date. The app's counts ride in a subclass through\n``deletion_terms`` (Kurvenschmiede's ``hand_over_count``).",
+          "fields": [
+            {
+              "name": "mode",
+              "type": "Literal['after_days', 'operator']",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "days",
+              "type": "int | None",
+              "default": "None",
+              "doc": ""
+            }
+          ]
+        },
+        {
           "name": "Email",
           "kind": "constant",
           "signature": "Email = Annotated[\n    str,\n    BeforeValidator(_normalised),\n    Field(max_length=MAX_EMAIL_LENGTH),\n    AfterValidator(_plausible_email),\n]",
           "doc": "An address as it comes in: trimmed, lower-cased (a ``+tag`` kept), then checked for\nshape — every entry normalises (§3.1)."
         },
         {
+          "name": "EmailChangeConfirmed",
+          "kind": "model",
+          "signature": "class EmailChangeConfirmed(BaseModel)",
+          "doc": "``POST /auth/me/email/confirm`` (user-admin §6.2): the new address, verified, and how\nmany open invitations for it were attached (§12.5 item 9).",
+          "fields": [
+            {
+              "name": "email",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "email_verified",
+              "type": "Literal[True]",
+              "default": "True",
+              "doc": ""
+            },
+            {
+              "name": "invitations_attached",
+              "type": "int",
+              "default": "0",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "EmailChangeState",
+          "kind": "model",
+          "signature": "class EmailChangeState(BaseModel)",
+          "doc": "``GET /auth/me/email`` and the answers of the request and its re-send (user-admin §6.2;\nkeksdose ``EmailChangeState``, with Kurvenschmiede's ``pending_expires_at``): the address\nnow, the change it waits on, and whether this answer's mail went out (``None`` on the\nGET, which sent none).",
+          "fields": [
+            {
+              "name": "email",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "pending_email",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "pending_expires_at",
+              "type": "UtcDateTime | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "sent",
+              "type": "bool | None",
+              "default": "None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "EmailVerificationStatus",
+          "kind": "model",
+          "signature": "class EmailVerificationStatus(BaseModel)",
+          "doc": "``/verify-email`` and ``/resend-verification`` (keksdose's shape): which address, and\nwhether it is verified.",
+          "fields": [
+            {
+              "name": "email",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "email_verified",
+              "type": "bool",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
           "name": "ExistingPassword",
           "kind": "constant",
           "signature": "ExistingPassword = Annotated[str, AfterValidator(_within_bcrypt_limit)]",
           "doc": "An EXISTING password presented for checking: no minimum (the account may predate the\nrule), the same ceiling — an over-long one could not have been set (keksdose\n``ExistingPassword``)."
+        },
+        {
+          "name": "InvitationAccepted",
+          "kind": "model",
+          "signature": "class InvitationAccepted(BaseModel)",
+          "doc": "``POST /auth/invitations/accept {token}``: the invitation an existing account took up\n(§4.4). What it attached is the app's (``on_invitation_redeemed``), and the words for it\nride in a subclass through ``describe_invitation`` (Kurvenschmiede's team name, keksdose's\nbudget).",
+          "fields": [
+            {
+              "name": "email",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "role",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "InvitationCheck",
+          "kind": "model",
+          "signature": "class InvitationCheck(BaseModel)",
+          "doc": "``POST /auth/invitations/check {token}`` (§4.4): what an invitation is for, without\nspending it. ``email`` fixes the sign-up's address (the kit's ``invitedEmail``);\n``account_exists`` sends the page to sign-in and accept instead (Kurvenschmiede). The\napp's scope words (a team's name) ride in a subclass through ``describe_invitation``.",
+          "fields": [
+            {
+              "name": "email",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "expires_at",
+              "type": "UtcDateTime",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "account_exists",
+              "type": "bool",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "role",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            }
+          ]
         },
         {
           "name": "LocaleTag",
@@ -616,6 +879,138 @@
           ]
         },
         {
+          "name": "PasskeyLoginFinish",
+          "kind": "model",
+          "signature": "class PasskeyLoginFinish(SharedDeviceChoice)",
+          "doc": "``POST /auth/passkey/login/finish {challenge_token, credential, shared_device}``: the\nusernameless sign-in's second half; ``shared_device`` as the password sign-in's (§5.1).",
+          "fields": [
+            {
+              "name": "shared_device",
+              "type": "bool",
+              "default": "False",
+              "doc": "Ticked on the sign-in form. ``false`` when left out, so a client from before the box\nsigns in as before; a boolean, never ``null``."
+            },
+            {
+              "name": "challenge_token",
+              "type": "_ChallengeToken",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "credential",
+              "type": "WebAuthnCredentialJson",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "PasskeyOptions",
+          "kind": "model",
+          "signature": "class PasskeyOptions(BaseModel)",
+          "doc": "A ceremony's first half: the options for ``navigator.credentials``, and the signed\nchallenge token the second half brings back.",
+          "fields": [
+            {
+              "name": "options",
+              "type": "dict[str, Any]",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "challenge_token",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "PasskeyRegistrationBegin",
+          "kind": "model",
+          "signature": "class PasskeyRegistrationBegin(BaseModel)",
+          "doc": "``POST /auth/passkey/register/begin {current_password}`` (Kurvenschmiede): a passkey\noutlives a password change, a reset and every sign-out, so a session alone (a bench PC\nleft open) must not be enough to add one.",
+          "fields": [
+            {
+              "name": "current_password",
+              "type": "ExistingPassword",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "PasskeyRegistrationFinish",
+          "kind": "model",
+          "signature": "class PasskeyRegistrationFinish(BaseModel)",
+          "doc": "``POST /auth/passkey/register/finish {challenge_token, credential, name}``. A blank\nname becomes ``\"Passkey\"``.",
+          "fields": [
+            {
+              "name": "challenge_token",
+              "type": "_ChallengeToken",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "credential",
+              "type": "WebAuthnCredentialJson",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "name",
+              "type": "Annotated[str, StringConstraints(strip_whitespace=True, max_length=MAX_PASSKEY_NAME_LENGTH)]",
+              "default": "''",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "PasskeyRename",
+          "kind": "model",
+          "signature": "class PasskeyRename(BaseModel)",
+          "doc": "``PATCH /auth/passkeys/{id} {name}``.",
+          "fields": [
+            {
+              "name": "name",
+              "type": "Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=MAX_PASSKEY_NAME_LENGTH)]",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "PasskeyResponse",
+          "kind": "model",
+          "signature": "class PasskeyResponse(BaseModel)",
+          "doc": "One passkey as the account page lists it: no credential id and no key (user-admin\n§6.5: a passkey leaves as its name, created and last used).",
+          "fields": [
+            {
+              "name": "id",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "name",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "created_at",
+              "type": "UtcDateTime",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "last_used_at",
+              "type": "UtcDateTime | None",
+              "default": "None",
+              "doc": ""
+            }
+          ]
+        },
+        {
           "name": "PasswordChangeChallenge",
           "kind": "model",
           "signature": "class PasswordChangeChallenge(BaseModel)",
@@ -629,6 +1024,74 @@
             },
             {
               "name": "challenge_token",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "PasswordChangeRequest",
+          "kind": "model",
+          "signature": "class PasswordChangeRequest(BaseModel)",
+          "doc": "``POST /auth/me/password {current_password, new_password}`` (§6.3; keksdose\n``SignInPasswordChangeRequest``, which adds its key wrap in a subclass).",
+          "fields": [
+            {
+              "name": "current_password",
+              "type": "ExistingPassword",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "new_password",
+              "type": "NewPassword",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "PasswordResetConfirm",
+          "kind": "model",
+          "signature": "class PasswordResetConfirm(TokenRequest)",
+          "doc": "``POST /auth/password-reset/confirm {token, new_password}``: no tokens in the answer\n(§6.3: a reset is not a sign-in).",
+          "fields": [
+            {
+              "name": "token",
+              "type": "_Token",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "new_password",
+              "type": "NewPassword",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "PasswordResetRequest",
+          "kind": "model",
+          "signature": "class PasswordResetRequest(BaseModel)",
+          "doc": "``POST /auth/password-reset/request {email}``: always ``204`` (§4.5).",
+          "fields": [
+            {
+              "name": "email",
+              "type": "Email",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "PasswordResetState",
+          "kind": "model",
+          "signature": "class PasswordResetState(BaseModel)",
+          "doc": "The answer of ``/password-reset/check`` and ``/confirm``: which account the link\nresets, told to whoever holds the link (who holds the inbox). An app's fields ride in a\nsubclass (keksdose's ``encrypted``, its revoked API tokens) through ``reset_extras``.",
+          "fields": [
+            {
+              "name": "email",
               "type": "str",
               "default": null,
               "doc": ""
@@ -794,6 +1257,62 @@
           ]
         },
         {
+          "name": "SessionInfo",
+          "kind": "model",
+          "signature": "class SessionInfo(BaseModel)",
+          "doc": "One row of ``GET /auth/sessions`` (§6.3, user-admin §6.3): a signed-in device, the\ncaller's own marked ``current`` (§12.5 item 1). ``id`` is the session's ``sid``, which\n``DELETE /auth/sessions/{id}`` ends.",
+          "fields": [
+            {
+              "name": "id",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "device",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "ip_address",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "started_at",
+              "type": "UtcDateTime",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "last_active",
+              "type": "UtcDateTime",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "expires_at",
+              "type": "UtcDateTime",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "shared_device",
+              "type": "bool",
+              "default": "False",
+              "doc": ""
+            },
+            {
+              "name": "current",
+              "type": "bool",
+              "default": "False",
+              "doc": ""
+            }
+          ]
+        },
+        {
           "name": "SessionPolicy",
           "kind": "class",
           "signature": "@dataclass(frozen=True, slots=True) class SessionPolicy",
@@ -832,6 +1351,26 @@
           ]
         },
         {
+          "name": "SetPasswordRequest",
+          "kind": "model",
+          "signature": "class SetPasswordRequest(BaseModel)",
+          "doc": "``POST /auth/login/set-password {challenge_token, new_password}`` (§5.1; keksdose\n``ForcedPasswordSetRequest``): the new password an admin required, set from the sign-in's\nchallenge. No current password: the sign-in that minted the challenge proved who this\nis, by password or by passkey.",
+          "fields": [
+            {
+              "name": "challenge_token",
+              "type": "_ChallengeToken",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "new_password",
+              "type": "NewPassword",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
           "name": "SharedDeviceChoice",
           "kind": "model",
           "signature": "class SharedDeviceChoice(BaseModel)",
@@ -850,6 +1389,20 @@
           "kind": "constant",
           "signature": "TextSize = Literal[\"normal\", \"large\", \"xlarge\"]",
           "doc": "A text size as stored on the account (``docs/text-size-harmonization.md`` §2.1,\n§10.6): 100, 125 and 150 % of the browser's own font size."
+        },
+        {
+          "name": "TokenRequest",
+          "kind": "model",
+          "signature": "class TokenRequest(BaseModel)",
+          "doc": "``{token}``: the body of ``/verify-email``, ``/password-reset/check`` and\n``/invitations/check`` and ``/accept`` (keksdose ``EmailVerifyRequest``,\n``InvitationTokenRequest``).",
+          "fields": [
+            {
+              "name": "token",
+              "type": "_Token",
+              "default": null,
+              "doc": ""
+            }
+          ]
         },
         {
           "name": "TokenResponse",
@@ -1023,6 +1576,12 @@
           "kind": "constant",
           "signature": "UtcDateTime = Annotated[datetime, AfterValidator(_as_utc)]",
           "doc": "An instant on the wire, always ISO-8601 in UTC (``2026-10-08T09:00:00Z``): the client\ncounts down to it (landing-demo §5.3), so it must never be a local time without an\noffset, which a browser would read in ITS zone."
+        },
+        {
+          "name": "WebAuthnCredentialJson",
+          "kind": "constant",
+          "signature": "WebAuthnCredentialJson = dict[str, Any]",
+          "doc": "What the browser hands back from ``navigator.credentials``, serialised by\n``@simplewebauthn/browser``: passed to py_webauthn as it is, which parses and refuses it\nfar more precisely than a schema could (Kurvenschmiede ``WebAuthnCredentialJson``)."
         },
         {
           "name": "ZoneName",
@@ -1215,6 +1774,2475 @@
           "kind": "function",
           "signature": "verified_by_invitation(invited: str, registered: str) -> bool",
           "doc": "Does registering through this invitation prove the mailbox? Only for the exact\ninvited address (§4.3, §10.7).\n\nThe token reached ``you@x``, which says nothing about whether ``you+app@x`` is\ndelivered — not every server implements sub-addressing — so a tagged registration\nstarts unverified and is sent its own verification mail (Kurvenschmiede's point)."
+        }
+      ]
+    },
+    {
+      "name": "eifi1_server_kit.auth.ports",
+      "summary": "The ports the account service runs on: the rows, the sessions, the links, the invitations, the passkeys, the admin log, the work after the commit, and the app's JWT signer and password hasher.",
+      "doc": "The ports the account service runs on: the rows, the sessions, the links, the invitations,\nthe passkeys, the admin log, the work after the commit, and the app's JWT signer and\npassword hasher.\n\nLayer 2 (``docs/auth-harmonization.md`` §12 in ``Eifi1/ui-kit``, on the pattern of\n:mod:`eifi1_server_kit.feedback.ports`). Each app implements these over its own session and\ntables, or inherits the ready ones of the ``sql`` extra; the kit never sees the app's\nmodels, and no SQLAlchemy or FastAPI is imported here.\n\nThe ports are async and run in the caller's transaction: **every write flushes and none\ncommits** (``docs/server-services-harmonization.md`` §2.7). Rows are read through protocols\nwith read-only members, so an app's mapped row satisfies them as it is and its own columns\n(sealed ones included) stay in its adapter; every write goes through the store.\n\n**What waits for the commit** goes through :class:`AfterCommit`: the account mails and the\npurge of an erased person's files. The kit never commits, so it cannot know when the work\nis safe to do; the app runs the queue from its session's commit event and drops it on a\nrollback (Kurvenschmiede's ``send_after_commit``).\n\n**Not in this cut**: the second factor's store (keksdose's adoption brings it) and the admin\nscope of a company (kastlan rests, Marcel 2026-11-13).",
+      "contract": {
+        "doc": "docs/auth-harmonization.md",
+        "section": "§12",
+        "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/auth-harmonization.md#12-layer-2-the-server-kit-runs-the-account-routes-draft-2026-11-13",
+        "links": [
+          {
+            "section": "§12",
+            "heading": "12. Layer 2: the server-kit runs the account routes (draft, 2026-11-13)",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/auth-harmonization.md#12-layer-2-the-server-kit-runs-the-account-routes-draft-2026-11-13"
+          }
+        ]
+      },
+      "members": [
+        {
+          "name": "ACCOUNT_FIELDS",
+          "kind": "constant",
+          "signature": "ACCOUNT_FIELDS: frozenset[str] = frozenset(\n    {\n        \"email\",\n        \"password_hash\",\n        \"first_name\",\n        \"last_name\",\n        \"locale\",\n        \"role\",\n        \"is_active\",\n        \"email_verified_at\",\n        \"last_login_at\",\n        \"password_change_required_at\",\n        \"deletion_requested_at\",\n        \"deletion_scheduled_at\",\n        \"text_size\",\n        \"contrast\",\n        \"device_timezone\",\n        \"translation_review_locales\",\n        \"translation_review_areas\",\n        \"sessions_invalid_before\",\n    }\n)",
+          "doc": "The members :meth:`UserStore.apply` may change, as named on :class:`AccountRow`."
+        },
+        {
+          "name": "OPTIONAL_ACCOUNT_FIELDS",
+          "kind": "constant",
+          "signature": "OPTIONAL_ACCOUNT_FIELDS: Mapping[str, object] = {\"is_demo\": False, \"sessions_invalid_before\": None}",
+          "doc": "The members an app may leave out, with what the kit reads instead."
+        },
+        {
+          "name": "AccountRow",
+          "kind": "protocol",
+          "signature": "class AccountRow(Protocol)",
+          "doc": "An account as the kit reads it (§12.3): read-only members; every write goes through\n:meth:`UserStore.apply`.\n\nTwo members are optional and read with a default, so an app without them leaves them\nout (:data:`OPTIONAL_ACCOUNT_FIELDS`): ``is_demo`` (False: Staunlabor has no demo) and\n``sessions_invalid_before`` (None: the ``iat`` cut-off keksdose and Kurvenschmiede keep\nuntil every token carries a ``sid``; a new app ends sessions through the rows only).",
+          "methods": [
+            {
+              "name": "id",
+              "signature": "@property id -> int",
+              "doc": ""
+            },
+            {
+              "name": "email",
+              "signature": "@property email -> str",
+              "doc": ""
+            },
+            {
+              "name": "password_hash",
+              "signature": "@property password_hash -> str",
+              "doc": ""
+            },
+            {
+              "name": "first_name",
+              "signature": "@property first_name -> str",
+              "doc": ""
+            },
+            {
+              "name": "last_name",
+              "signature": "@property last_name -> str",
+              "doc": ""
+            },
+            {
+              "name": "locale",
+              "signature": "@property locale -> str",
+              "doc": ""
+            },
+            {
+              "name": "role",
+              "signature": "@property role -> str",
+              "doc": ""
+            },
+            {
+              "name": "is_active",
+              "signature": "@property is_active -> bool",
+              "doc": ""
+            },
+            {
+              "name": "email_verified_at",
+              "signature": "@property email_verified_at -> datetime | None",
+              "doc": ""
+            },
+            {
+              "name": "last_login_at",
+              "signature": "@property last_login_at -> datetime | None",
+              "doc": ""
+            },
+            {
+              "name": "password_change_required_at",
+              "signature": "@property password_change_required_at -> datetime | None",
+              "doc": ""
+            },
+            {
+              "name": "deletion_requested_at",
+              "signature": "@property deletion_requested_at -> datetime | None",
+              "doc": ""
+            },
+            {
+              "name": "deletion_scheduled_at",
+              "signature": "@property deletion_scheduled_at -> datetime | None",
+              "doc": ""
+            },
+            {
+              "name": "text_size",
+              "signature": "@property text_size -> str | None",
+              "doc": ""
+            },
+            {
+              "name": "contrast",
+              "signature": "@property contrast -> str | None",
+              "doc": ""
+            },
+            {
+              "name": "device_timezone",
+              "signature": "@property device_timezone -> str | None",
+              "doc": ""
+            },
+            {
+              "name": "translation_review_locales",
+              "signature": "@property translation_review_locales -> Sequence[str] | None",
+              "doc": ""
+            },
+            {
+              "name": "translation_review_areas",
+              "signature": "@property translation_review_areas -> Sequence[str] | None",
+              "doc": ""
+            },
+            {
+              "name": "created_at",
+              "signature": "@property created_at -> datetime",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "AdminActionLog",
+          "kind": "protocol",
+          "signature": "class AdminActionLog[ActionT: AdminActionRowView](Protocol)",
+          "doc": "The admin log. The kit builds every record with ``admin_action_record``.",
+          "methods": [
+            {
+              "name": "add",
+              "signature": "async add(record: Mapping[str, Any]) -> ActionT",
+              "doc": "Insert ``admin_action_record``'s mapping and flush."
+            },
+            {
+              "name": "page",
+              "signature": "async page(*, target_user_id: int | None, limit: int, offset: int) -> tuple[Sequence[ActionT], int]",
+              "doc": "The rows about ``target_user_id`` (None: every row), the newest first, the higher\nid first on a tie, and how many there are in all."
+            },
+            {
+              "name": "scrub_email",
+              "signature": "async scrub_email(email: str) -> None",
+              "doc": "An erasure: clear ``target_email`` wherever it is this address, flushed."
+            }
+          ]
+        },
+        {
+          "name": "AdminActionRowView",
+          "kind": "protocol",
+          "signature": "class AdminActionRowView(Protocol)",
+          "doc": "An ``admin_actions`` row as the kit reads it (user-admin §4.3).",
+          "methods": [
+            {
+              "name": "id",
+              "signature": "@property id -> int",
+              "doc": ""
+            },
+            {
+              "name": "at",
+              "signature": "@property at -> datetime",
+              "doc": ""
+            },
+            {
+              "name": "actor_id",
+              "signature": "@property actor_id -> int | None",
+              "doc": ""
+            },
+            {
+              "name": "action",
+              "signature": "@property action -> str",
+              "doc": ""
+            },
+            {
+              "name": "target_user_id",
+              "signature": "@property target_user_id -> int | None",
+              "doc": ""
+            },
+            {
+              "name": "target_email",
+              "signature": "@property target_email -> str | None",
+              "doc": ""
+            },
+            {
+              "name": "detail",
+              "signature": "@property detail -> Mapping[str, Any]",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "AfterCommit",
+          "kind": "protocol",
+          "signature": "class AfterCommit(Protocol)",
+          "doc": "Work that may only happen once the app committed: a mail with a link the rollback\nwould have voided, the purge of files whose rows were deleted.",
+          "methods": [
+            {
+              "name": "later",
+              "signature": "later(work: Callable[[], Awaitable[None]]) -> None",
+              "doc": "Queue it. The app runs the queue after its commit, each item on its own (one that\nfails is logged, the rest run), and drops it on a rollback."
+            },
+            {
+              "name": "commit_now",
+              "signature": "async commit_now() -> None",
+              "doc": "Commit the request's transaction now, and so run the work queued with\n:meth:`later`. The one place the kit commits: a route whose\nanswer says whether its mail went out (``sent``: an address change, its re-send, an\ninvitation and its re-send, an admin's mail) commits first and then sends, so a\nrollback never mails a dead link and the answer is still true (keksdose's plan and\nKurvenschmiede's point, 2026-11-13)."
+            }
+          ]
+        },
+        {
+          "name": "InvitationRow",
+          "kind": "protocol",
+          "signature": "class InvitationRow(Protocol)",
+          "doc": "An invitation (auth §4.4). ``scope`` is the app's, opaque to the kit: a team, a\nbudget, nothing; ``on_invitation_redeemed`` reads it.",
+          "methods": [
+            {
+              "name": "id",
+              "signature": "@property id -> int",
+              "doc": ""
+            },
+            {
+              "name": "email",
+              "signature": "@property email -> str",
+              "doc": ""
+            },
+            {
+              "name": "role",
+              "signature": "@property role -> str | None",
+              "doc": ""
+            },
+            {
+              "name": "scope",
+              "signature": "@property scope -> Mapping[str, Any] | None",
+              "doc": ""
+            },
+            {
+              "name": "token_hash",
+              "signature": "@property token_hash -> str | None",
+              "doc": ""
+            },
+            {
+              "name": "expires_at",
+              "signature": "@property expires_at -> datetime | None",
+              "doc": ""
+            },
+            {
+              "name": "accepted_at",
+              "signature": "@property accepted_at -> datetime | None",
+              "doc": ""
+            },
+            {
+              "name": "accepted_by_user_id",
+              "signature": "@property accepted_by_user_id -> int | None",
+              "doc": ""
+            },
+            {
+              "name": "revoked_at",
+              "signature": "@property revoked_at -> datetime | None",
+              "doc": ""
+            },
+            {
+              "name": "invited_by_user_id",
+              "signature": "@property invited_by_user_id -> int | None",
+              "doc": ""
+            },
+            {
+              "name": "locale",
+              "signature": "@property locale -> str",
+              "doc": ""
+            },
+            {
+              "name": "note",
+              "signature": "@property note -> str | None",
+              "doc": ""
+            },
+            {
+              "name": "created_at",
+              "signature": "@property created_at -> datetime",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "InvitationStore",
+          "kind": "protocol",
+          "signature": "class InvitationStore[InvT: InvitationRow](Protocol)",
+          "doc": "The app's invitations.",
+          "methods": [
+            {
+              "name": "get",
+              "signature": "async get(invitation_id: int) -> InvT | None",
+              "doc": "The invitation, or None."
+            },
+            {
+              "name": "by_token_hash",
+              "signature": "async by_token_hash(token_hash: str) -> InvT | None",
+              "doc": "The invitation whose link this is, in any state, or None."
+            },
+            {
+              "name": "open_for",
+              "signature": "async open_for(email: str) -> Sequence[InvT]",
+              "doc": "The address's invitations that are neither accepted nor revoked, expired ones\nincluded: the kit decides on the expiry."
+            },
+            {
+              "name": "listing",
+              "signature": "async listing() -> Sequence[InvT]",
+              "doc": "Every invitation that was not accepted (open, expired and revoked ones), newest\nfirst, the higher id first on a tie: the admin's list."
+            },
+            {
+              "name": "add",
+              "signature": "async add(new: NewInvitation) -> InvT",
+              "doc": "Insert and flush."
+            },
+            {
+              "name": "remint",
+              "signature": "async remint(invitation: InvT, *, token_hash: str, expires_at: datetime) -> InvT",
+              "doc": "A new link for the same invitation (a re-send), flushed."
+            },
+            {
+              "name": "accept",
+              "signature": "async accept(invitation: InvT, *, user_id: int, at: datetime) -> None",
+              "doc": "Mark it accepted by the account, flushed."
+            },
+            {
+              "name": "revoke",
+              "signature": "async revoke(invitation: InvT, *, at: datetime) -> None",
+              "doc": "Withdraw it, flushed (an app may delete the row instead)."
+            }
+          ]
+        },
+        {
+          "name": "NewAccount",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class NewAccount",
+          "doc": "An account to insert: the kit's columns; the app adds its own in ``on_register``.",
+          "fields": [
+            {
+              "name": "email",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "password_hash",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "first_name",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "last_name",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "locale",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "role",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "email_verified_at",
+              "type": "datetime | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "last_login_at",
+              "type": "datetime | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "device_timezone",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "NewInvitation",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class NewInvitation",
+          "doc": "An invitation to insert.",
+          "fields": [
+            {
+              "name": "email",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "token_hash",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "expires_at",
+              "type": "datetime",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "locale",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "invited_by_user_id",
+              "type": "int | None",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "role",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "scope",
+              "type": "Mapping[str, Any] | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "note",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "NewPasskey",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class NewPasskey",
+          "doc": "A passkey to insert.",
+          "fields": [
+            {
+              "name": "user_id",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "credential_id",
+              "type": "bytes",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "public_key",
+              "type": "bytes",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "sign_count",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "name",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "transports",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "NewSession",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class NewSession",
+          "doc": "A session to start; ``sid`` is the kit's ``mint()``.",
+          "fields": [
+            {
+              "name": "sid",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "user_id",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "started_at",
+              "type": "datetime",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "expires_at",
+              "type": "datetime",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "shared_device",
+              "type": "bool",
+              "default": "False",
+              "doc": ""
+            },
+            {
+              "name": "device",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "ip_address",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "OneTimeTokenRow",
+          "kind": "protocol",
+          "signature": "class OneTimeTokenRow(Protocol)",
+          "doc": "A link's row: only the hash of its token is stored (``hash_token``).",
+          "methods": [
+            {
+              "name": "kind",
+              "signature": "@property kind -> OneTimeTokenKind | str",
+              "doc": ""
+            },
+            {
+              "name": "user_id",
+              "signature": "@property user_id -> int",
+              "doc": ""
+            },
+            {
+              "name": "token_hash",
+              "signature": "@property token_hash -> str",
+              "doc": ""
+            },
+            {
+              "name": "email",
+              "signature": "@property email -> str",
+              "doc": ""
+            },
+            {
+              "name": "expires_at",
+              "signature": "@property expires_at -> datetime",
+              "doc": ""
+            },
+            {
+              "name": "created_at",
+              "signature": "@property created_at -> datetime",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "OneTimeTokenStore",
+          "kind": "protocol",
+          "signature": "class OneTimeTokenStore[TokenT: OneTimeTokenRow](Protocol)",
+          "doc": "The reset, verification and address-change links (``RESET``, ``VERIFY``,\n``EMAIL_CHANGE``; an invitation's link lives on the invitation): at most one per account\nand kind (kastlan keeps them as columns on ``users``; that is an adapter's business).\nEvery lookup is by kind: a hash asked for under another kind is None.",
+          "methods": [
+            {
+              "name": "put",
+              "signature": "async put(kind: OneTimeTokenKind, *, user_id: int, token_hash: str, email: str, expires_at: datetime) -> TokenT",
+              "doc": "Replace the account's earlier link of this kind, and flush."
+            },
+            {
+              "name": "take",
+              "signature": "async take(kind: OneTimeTokenKind, token_hash: str) -> TokenT | None",
+              "doc": "The link with this hash, expired or not, or None. Reading does not spend it."
+            },
+            {
+              "name": "pending",
+              "signature": "async pending(kind: OneTimeTokenKind, user_id: int) -> TokenT | None",
+              "doc": "The account's link of this kind, expired or not (the pending address change)."
+            },
+            {
+              "name": "drop",
+              "signature": "async drop(kind: OneTimeTokenKind, user_id: int) -> None",
+              "doc": "Delete the account's link of this kind, if any."
+            }
+          ]
+        },
+        {
+          "name": "PasskeyRow",
+          "kind": "protocol",
+          "signature": "class PasskeyRow(Protocol)",
+          "doc": "A registered passkey (WebAuthn credential).",
+          "methods": [
+            {
+              "name": "id",
+              "signature": "@property id -> int",
+              "doc": ""
+            },
+            {
+              "name": "user_id",
+              "signature": "@property user_id -> int",
+              "doc": ""
+            },
+            {
+              "name": "credential_id",
+              "signature": "@property credential_id -> bytes",
+              "doc": ""
+            },
+            {
+              "name": "public_key",
+              "signature": "@property public_key -> bytes",
+              "doc": ""
+            },
+            {
+              "name": "sign_count",
+              "signature": "@property sign_count -> int",
+              "doc": ""
+            },
+            {
+              "name": "transports",
+              "signature": "@property transports -> str | None",
+              "doc": ""
+            },
+            {
+              "name": "name",
+              "signature": "@property name -> str",
+              "doc": ""
+            },
+            {
+              "name": "created_at",
+              "signature": "@property created_at -> datetime",
+              "doc": ""
+            },
+            {
+              "name": "last_used_at",
+              "signature": "@property last_used_at -> datetime | None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "PasskeyStore",
+          "kind": "protocol",
+          "signature": "class PasskeyStore[PasskeyT: PasskeyRow](Protocol)",
+          "doc": "The app's passkeys and the challenges already answered.",
+          "methods": [
+            {
+              "name": "for_user",
+              "signature": "async for_user(user_id: int) -> Sequence[PasskeyT]",
+              "doc": "The account's passkeys, oldest first, the lower id first on a tie."
+            },
+            {
+              "name": "by_credential_id",
+              "signature": "async by_credential_id(credential_id: bytes) -> PasskeyT | None",
+              "doc": "The passkey with this credential id, or None."
+            },
+            {
+              "name": "add",
+              "signature": "async add(new: NewPasskey) -> PasskeyT",
+              "doc": "Insert and flush. A credential id that exists already is the app's integrity\nerror; the kit checks first."
+            },
+            {
+              "name": "used",
+              "signature": "async used(passkey: PasskeyT, *, sign_count: int, at: datetime) -> None",
+              "doc": "A sign-in with it: the new counter and time, flushed."
+            },
+            {
+              "name": "rename",
+              "signature": "async rename(passkey: PasskeyT, name: str) -> None",
+              "doc": "Flushed."
+            },
+            {
+              "name": "remove",
+              "signature": "async remove(passkey: PasskeyT) -> None",
+              "doc": "Delete and flush."
+            },
+            {
+              "name": "spend_challenge",
+              "signature": "async spend_challenge(challenge_hash: str, *, expires_at: datetime) -> bool",
+              "doc": "Record that this challenge was answered: True the first time, False when it was\nspent before (one use per challenge, Kurvenschmiede's table, §12.5 item 8). The row\nmay go once ``expires_at`` has passed; a store may sweep expired rows here (there is\nno separate prune: old session rows are the app's own clean-up)."
+            }
+          ]
+        },
+        {
+          "name": "PasswordHasher",
+          "kind": "protocol",
+          "signature": "class PasswordHasher(Protocol)",
+          "doc": "The app's password hashing (the kit depends on no hasher, ``auth.passwords``): bcrypt\nin all four apps, its cost the app's setting. The kit refuses a password over\n``MAX_PASSWORD_BYTES`` before it asks.",
+          "methods": [
+            {
+              "name": "hash",
+              "signature": "hash(password: str) -> str",
+              "doc": "A new hash of the password."
+            },
+            {
+              "name": "verify",
+              "signature": "verify(password: str, password_hash: str) -> bool",
+              "doc": "Whether the password matches the hash; never raises for a malformed hash."
+            }
+          ]
+        },
+        {
+          "name": "SessionRow",
+          "kind": "protocol",
+          "signature": "class SessionRow(Protocol)",
+          "doc": "One signed-in device (auth §6.3): its ``sid`` is in both tokens and is checked on\nevery request.",
+          "methods": [
+            {
+              "name": "sid",
+              "signature": "@property sid -> str",
+              "doc": ""
+            },
+            {
+              "name": "user_id",
+              "signature": "@property user_id -> int",
+              "doc": ""
+            },
+            {
+              "name": "device",
+              "signature": "@property device -> str | None",
+              "doc": ""
+            },
+            {
+              "name": "ip_address",
+              "signature": "@property ip_address -> str | None",
+              "doc": ""
+            },
+            {
+              "name": "started_at",
+              "signature": "@property started_at -> datetime",
+              "doc": ""
+            },
+            {
+              "name": "last_active",
+              "signature": "@property last_active -> datetime",
+              "doc": ""
+            },
+            {
+              "name": "shared_device",
+              "signature": "@property shared_device -> bool",
+              "doc": ""
+            },
+            {
+              "name": "expires_at",
+              "signature": "@property expires_at -> datetime",
+              "doc": ""
+            },
+            {
+              "name": "is_active",
+              "signature": "@property is_active -> bool",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "SessionStore",
+          "kind": "protocol",
+          "signature": "class SessionStore[SessionT: SessionRow](Protocol)",
+          "doc": "The app's ``user_sessions`` rows. Ending a session sets ``is_active`` false; a row\nis never needed again once it ended, so an app may prune it.",
+          "methods": [
+            {
+              "name": "start",
+              "signature": "async start(new: NewSession) -> SessionT",
+              "doc": "Insert and flush, active, with ``last_active`` = ``started_at``."
+            },
+            {
+              "name": "get",
+              "signature": "async get(sid: str) -> SessionT | None",
+              "doc": "The session, active or not, or None."
+            },
+            {
+              "name": "touch",
+              "signature": "async touch(session: SessionT, *, last_active: datetime, expires_at: datetime) -> None",
+              "doc": "A refresh: the new last activity and end, flushed."
+            },
+            {
+              "name": "end",
+              "signature": "async end(session: SessionT) -> None",
+              "doc": "End this one; ending an ended one is no error."
+            },
+            {
+              "name": "end_all",
+              "signature": "async end_all(user_id: int, *, keep: str | None = None) -> int",
+              "doc": "End every active session of the account but ``keep`` (the caller's, after a\npassword change); answer how many ended."
+            },
+            {
+              "name": "live",
+              "signature": "async live(user_id: int) -> Sequence[SessionT]",
+              "doc": "The account's active sessions (``is_active``; the store knows no clock, so the\nservice drops the ones past ``expires_at``), the latest activity first, the higher\n``sid`` first on a tie."
+            }
+          ]
+        },
+        {
+          "name": "TokenSigner",
+          "kind": "protocol",
+          "signature": "class TokenSigner(Protocol)",
+          "doc": "The app's JWT library behind the kit's claims (the kit keeps no JWT dependency, §8).",
+          "methods": [
+            {
+              "name": "sign",
+              "signature": "sign(claims: Mapping[str, Any]) -> str",
+              "doc": "The signed token for these claims (``exp`` included)."
+            },
+            {
+              "name": "verify",
+              "signature": "verify(token: str) -> Mapping[str, Any] | None",
+              "doc": "The claims of a token this app signed and that has not expired, or None."
+            }
+          ]
+        },
+        {
+          "name": "UserStore",
+          "kind": "protocol",
+          "signature": "class UserStore[UserT: AccountRow](Protocol)",
+          "doc": "The app's accounts, on the request's session. Async; every write flushes and never\ncommits.",
+          "methods": [
+            {
+              "name": "get",
+              "signature": "async get(user_id: int) -> UserT | None",
+              "doc": "The account, or None."
+            },
+            {
+              "name": "by_email",
+              "signature": "async by_email(email: str) -> UserT | None",
+              "doc": "The account whose address is exactly ``email`` (already normalised by the kit)."
+            },
+            {
+              "name": "by_emails",
+              "signature": "async by_emails(emails: Sequence[str]) -> Sequence[UserT]",
+              "doc": "The accounts whose address is one of ``emails`` (the address tag's variants,\n``addresses_for_reset``), in no particular order."
+            },
+            {
+              "name": "count_people",
+              "signature": "async count_people() -> int",
+              "doc": "Accounts that are people: demo accounts and an app's system account left out\n(``registration_decision``'s \"is this the first account\"). A deactivated account\nand one that asked for its deletion still count, or the next sign-up would be\n\"the first\"."
+            },
+            {
+              "name": "count_active",
+              "signature": "async count_active(*, role: str) -> int",
+              "doc": "Active accounts that are people and hold ``role``: the last-admin rule's count\n(``refuse_last_admin``; the deletion request, and the admin's actions of 0.30).\nAdded in 0.29."
+            },
+            {
+              "name": "add",
+              "signature": "async add(new: NewAccount) -> UserT",
+              "doc": "Insert and flush, so the id is set. What :class:`NewAccount` does not carry\nstarts as: ``is_active`` True, ``created_at`` now, every other member None (the\nreview scope, the stamps, the appearance); ``is_demo`` False where the app has it."
+            },
+            {
+              "name": "apply",
+              "signature": "async apply(row: UserT, changes: Mapping[str, Any]) -> UserT",
+              "doc": "Assign and flush. A key outside :data:`ACCOUNT_FIELDS` raises\n:class:`ValueError`, never drops silently; an app without the ``iat`` cut-off\nignores ``sessions_invalid_before``."
+            },
+            {
+              "name": "delete",
+              "signature": "async delete(row: UserT) -> None",
+              "doc": "Delete the account and flush; the app's foreign keys cascade or set null."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "eifi1_server_kit.auth.service",
+      "summary": "The account service: sign-up, sign-in, the session, the account's own settings, written once against the ports.",
+      "doc": "The account service: sign-up, sign-in, the session, the account's own settings, written\nonce against the ports.\n\nLayer 2 (``docs/auth-harmonization.md`` §12 in ``Eifi1/ui-kit``; the pattern of\n:mod:`eifi1_server_kit.feedback.service`). What the three apps each wrote around the layer-1\nrules — the lookups, the gate, the claims, the limits, the links and their mails, the\nsession rows — as one :class:`AccountService` over the app's\n:mod:`~eifi1_server_kit.auth.ports`. No FastAPI: :mod:`eifi1_server_kit.auth.router` builds one\nper request on the request's stores, and a caller without a router (a command-line tool)\nbuilds its own.\n\n**The kit settles where the copies differ** (§12.5), each point one app's today:\n\n1. session rows and ``sid`` in every token; ``logout_everywhere`` ends every row (and stamps\n   the ``iat`` cut-off where the row has one), ``end_session`` this one;\n2. **every account mail after the commit** (:class:`~eifi1_server_kit.auth.ports.AfterCommit`):\n   a route whose answer says whether its mail went out commits first\n   (``commit_now``) and then sends; every other mail waits in ``later``;\n3. a code on every refusal (:class:`~eifi1_server_kit.auth.AuthError`, ``AccountError``);\n4. a limit on every anonymous redemption, on the refresh, and on every signed-in password\n   check (:class:`~eifi1_server_kit.auth.AuthLimiters`), charged before the work;\n5. sign-up checks in the order invitation, gate, ``email_taken``, so an anonymous caller\n   learns nothing about addresses it holds no invitation for;\n6. a reset ends a forced password change, ends every session and marks the address\n   verified (it proved it), and answers no tokens;\n7. a forced password change ends the person's sessions;\n8. passkeys: user verification required, one use per challenge (:mod:`~eifi1_server_kit.auth.passkeys`);\n9. only open, unexpired invitations attach at an address confirmation;\n10. the kit's mail texts (:mod:`~eifi1_server_kit.auth.mails`).\n\n**The kit never commits** but where ``commit_now`` says (§2.7 of\n``docs/server-services-harmonization.md``): every store write flushes. A refusal raised\nafter a write leaves it to the app's rollback.\n\n**The hooks** (:class:`AuthHooks`, every one optional and async) are what differs between\nthe apps (§12.2's six seams): what a sign-up or an invitation attaches, what a token carries\nand what each request binds, the private mode around passwords and passkeys, what else ends\nwith the sessions, the deletion's outcomes, and the extras on the answers.",
+      "contract": {
+        "doc": "docs/auth-harmonization.md",
+        "section": "§12",
+        "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/auth-harmonization.md#12-layer-2-the-server-kit-runs-the-account-routes-draft-2026-11-13",
+        "links": [
+          {
+            "section": "§12",
+            "heading": "12. Layer 2: the server-kit runs the account routes (draft, 2026-11-13)",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/auth-harmonization.md#12-layer-2-the-server-kit-runs-the-account-routes-draft-2026-11-13"
+          }
+        ]
+      },
+      "members": [
+        {
+          "name": "AUTH_THROTTLED",
+          "kind": "constant",
+          "signature": "AUTH_THROTTLED: Mapping[str, str] = {\n    \"login\": \"Too many sign-in attempts — please try again in a moment.\",\n    \"challenge\": \"Too many attempts — please try again in a moment.\",\n    \"register\": \"Too many new accounts from this address — please try again later.\",\n    \"reset\": \"Too many password reset requests — please try again in a moment.\",\n    \"redeem\": \"Too many attempts — please try again in a moment.\",\n    \"refresh\": \"Too many session renewals — please try again in a moment.\",\n    \"password_check\": \"Too many password attempts — please try again in a few minutes.\",\n    \"email_change\": \"Too many address changes requested — please try again later.\",\n    \"mail\": \"Too many mails to this address — please try again later.\",\n    \"export\": \"You exported your data a moment ago — please try again in a minute.\",\n}",
+          "doc": "The 429 sentence of each :class:`~eifi1_server_kit.auth.AuthLimiters` window, keksdose's\nwords; ``Retry-After`` says how long (:func:`~eifi1_server_kit.limiter.charge`)."
+        },
+        {
+          "name": "AccountLinks",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True, kw_only=True) class AccountLinks",
+          "doc": "Where the mails' links lead: the app's own pages, on its public base URL (the ui-kit's\nsigned-out pages, auth §7).",
+          "fields": [
+            {
+              "name": "base_url",
+              "type": "str",
+              "default": null,
+              "doc": "``https://staunlabor.app`` — the frontend's origin, as the mails link it."
+            },
+            {
+              "name": "reset_password",
+              "type": "str",
+              "default": "'/reset-password'",
+              "doc": ""
+            },
+            {
+              "name": "verify_email",
+              "type": "str",
+              "default": "'/verify-email'",
+              "doc": ""
+            },
+            {
+              "name": "confirm_email",
+              "type": "str",
+              "default": "'/confirm-email'",
+              "doc": "The address change's link (Kurvenschmiede's page; the kit's ``VerifyEmailStatus``)."
+            },
+            {
+              "name": "register",
+              "type": "str",
+              "default": "'/register'",
+              "doc": "An invitation's link: ``/register?invite=<token>`` (§4.4)."
+            },
+            {
+              "name": "settings",
+              "type": "str",
+              "default": "'/settings'",
+              "doc": "The notices' link: the passkey list, the address change's \"not you?\"."
+            },
+            {
+              "name": "home",
+              "type": "str",
+              "default": "'/'",
+              "doc": "The deletion mail's link."
+            }
+          ],
+          "methods": [
+            {
+              "name": "url",
+              "signature": "url(path: str, **query: str) -> str",
+              "doc": "``base_url`` + ``path`` + the query, encoded."
+            }
+          ]
+        },
+        {
+          "name": "AccountPolicy",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True, kw_only=True) class AccountPolicy",
+          "doc": "The app's choices the account layer reads, one per app.",
+          "fields": [
+            {
+              "name": "app",
+              "type": "str",
+              "default": null,
+              "doc": "The app's name in lower case: the address tag (``you+staunlabor@…``, §4.5) and the\nexport's ``app``."
+            },
+            {
+              "name": "app_name",
+              "type": "str",
+              "default": null,
+              "doc": "The app's name as the mails write it (``Staunlabor``)."
+            },
+            {
+              "name": "links",
+              "type": "AccountLinks",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "contact",
+              "type": "str",
+              "default": null,
+              "doc": "A person to write to, as the mails name one (the app's support address)."
+            },
+            {
+              "name": "admin_role",
+              "type": "str",
+              "default": "'ADMIN'",
+              "doc": "The role the first account gets and the admin routes require (§4.3)."
+            },
+            {
+              "name": "default_role",
+              "type": "str",
+              "default": "'MEMBER'",
+              "doc": "The role of an account an invitation names none for."
+            },
+            {
+              "name": "bootstrap",
+              "type": "frozenset[str] | None",
+              "default": "None",
+              "doc": "The environment list that bootstraps the first admin (``parse_env_list``); ``None``:\nthe first registration is open (``registration_decision``)."
+            },
+            {
+              "name": "sessions",
+              "type": "SessionPolicy",
+              "default": "SessionPolicy()",
+              "doc": ""
+            },
+            {
+              "name": "deletion_mode",
+              "type": "DeletionMode",
+              "default": "<DeletionMode.AFTER_DAYS: 'after_days'>",
+              "doc": ""
+            },
+            {
+              "name": "deletion_days",
+              "type": "int",
+              "default": "30",
+              "doc": ""
+            },
+            {
+              "name": "retention",
+              "type": "RetentionNote",
+              "default": "deletion_mail_retention_note()",
+              "doc": "What the deletion mail says may outlive the erasure."
+            }
+          ]
+        },
+        {
+          "name": "AccountService",
+          "kind": "class",
+          "signature": "class AccountService[UserT: AccountRow, SessionT: SessionRow, InvT: InvitationRow]",
+          "doc": "The account's flows over the app's stores, for one request. The limiters are the\napp's (``app.state``); ``absent_check`` is :func:`~eifi1_server_kit.auth.absent_account_check`\nbuilt ONCE per app (the router does), since its dummy hash costs a hash.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(*, users: UserStore[UserT], sessions: SessionStore[SessionT], tokens: OneTimeTokenStore[Any], invitations: InvitationStore[InvT], log: AdminActionLog[Any], after_commit: AfterCommit, signer: TokenSigner, hasher: PasswordHasher, mailer: Mailer, policy: AccountPolicy, limiters: AuthLimiters, hooks: AuthHooks[UserT, InvT] | None = None, passkeys: PasskeyStore[Any] | None = None, relying_party: RelyingParty | None = None, mail_texts: Mapping[AccountMailText, Any] = ACCOUNT_MAIL_TEXTS, absent_check: Callable[[str], bool] | None = None, now: Clock = utc_now, sleep: Callable[[float], Awaitable[None]] = asyncio.sleep) -> None",
+              "doc": ""
+            },
+            {
+              "name": "me",
+              "signature": "async me(user: UserT, model: type[BaseModel]) -> BaseModel",
+              "doc": "The account as ``/auth/me`` answers it: ``to_me``, else ``model`` from the row\nwith ``email_verified`` read off ``email_verified_at``."
+            },
+            {
+              "name": "authenticate",
+              "signature": "async authenticate(token: str | None) -> SignedIn[UserT]",
+              "doc": "``current_user``'s checks (§12.3): a bearer token this app signed, an access\ntoken, its session row alive, the cut-off, the account active, then the ``bind``\nhook. ``401 not_signed_in`` without a usable token, ``401 session_ended`` once the\nsession is over: the client renews, and signs out on the second (§11.3)."
+            },
+            {
+              "name": "register",
+              "signature": "async register(body: RegisterRequest, *, ip: str, device: str | None = None) -> IssuedSession[UserT]",
+              "doc": "Sign up, signed in on the answer (§4.2–§4.4). In the order of §12.5 item 5: the\ninvitation (its own codes), the gate (``registration_closed``), then\n``email_taken`` — so only an invited address, or the first, can learn it has an\naccount. The first account is the admin; the invitation names the role, else the\napp's default. The invitation's exact address counts as verified; anything else\nis sent a verification link after the commit."
+            },
+            {
+              "name": "login",
+              "signature": "async login(body: LoginRequest, *, ip: str, device: str | None = None) -> IssuedSession[UserT] | ChallengeIssued[UserT]",
+              "doc": "``POST /auth/login`` (§5.1–§5.2): the per-IP limit before any hash, then the\naddress's delay (failures only, never a lockout), then one refusal for an unknown\naddress, a wrong password and a deactivated account, in the same time (a dummy\nhash for the absent account)."
+            },
+            {
+              "name": "set_password",
+              "signature": "async set_password(body: SetPasswordRequest, *, ip: str, device: str | None = None) -> IssuedSession[UserT]",
+              "doc": "``POST /auth/login/set-password``: the forced change, from the sign-in's\nchallenge, then a session. Every session ends with it (§12.5 item 7). A dead\nchallenge, or one whose account is gone or deactivated, is ``token_invalid``\n(keksdose's dead challenge: signing in again is the one way on)."
+            },
+            {
+              "name": "refresh",
+              "signature": "async refresh(body: RefreshRequest, *, ip: str) -> IssuedSession[UserT]",
+              "doc": "``POST /auth/refresh`` (§11): a new pair for the same session, its idle limit\nmoved on. Every refusal is ``401 session_ended`` (decision 7); nothing else here\nanswers 401 or 403, so a database fault stays a 5xx, which the client retries."
+            },
+            {
+              "name": "end_session",
+              "signature": "async end_session(token: str | None) -> None",
+              "doc": "``DELETE /auth/sessions/current`` (§6.3): end the session this access token names\n— also no error when it had already ended. Only an unusable token is refused."
+            },
+            {
+              "name": "logout_everywhere",
+              "signature": "async logout_everywhere(user: UserT) -> None",
+              "doc": "``POST /auth/logout`` (§6.3): every session ends, this one included."
+            },
+            {
+              "name": "sessions_of",
+              "signature": "async sessions_of(signed_in: SignedIn[UserT]) -> list[SessionInfo]",
+              "doc": "``GET /auth/sessions``: the account's live sessions, the latest activity first,\nthe caller's marked ``current`` (§12.5 item 1)."
+            },
+            {
+              "name": "end_device",
+              "signature": "async end_device(signed_in: SignedIn[UserT], sid: str) -> None",
+              "doc": "``DELETE /auth/sessions/{id}``: end one of the account's own sessions."
+            },
+            {
+              "name": "update_profile",
+              "signature": "async update_profile(user: UserT, body: ProfileUpdate) -> UserT",
+              "doc": "``PATCH /auth/me`` (§6.1): the fields the body sent. A demo's pick of language,\ntext size, contrast and zone stays on its device (Kurvenschmiede): only its name\nis written. An app's own profile fields are its own route."
+            },
+            {
+              "name": "change_password",
+              "signature": "async change_password(signed_in: SignedIn[UserT], body: PasswordChangeRequest) -> IssuedSession[UserT]",
+              "doc": "``POST /auth/me/password`` (§6.3): every OTHER session ends, the caller's goes on\nwith a fresh pair minted after the cut-off. A forced change is met too."
+            },
+            {
+              "name": "email_state",
+              "signature": "async email_state(user: UserT, *, sent: bool | None = None) -> EmailChangeState",
+              "doc": "``GET /auth/me/email``: the address, and the change it waits on."
+            },
+            {
+              "name": "request_email_change",
+              "signature": "async request_email_change(user: UserT, new_email: str, password: str) -> EmailChangeState",
+              "doc": "``POST /auth/me/email`` (user-admin §6.2): the password again (``400\npassword_incorrect``), a link to the new address, a notice to the old. Nothing\nchanges until the link is opened; a new request replaces an earlier one."
+            },
+            {
+              "name": "resend_email_change",
+              "signature": "async resend_email_change(user: UserT) -> EmailChangeState",
+              "doc": "``POST /auth/me/email/resend``: a new link for the pending change, the old one dead."
+            },
+            {
+              "name": "cancel_email_change",
+              "signature": "async cancel_email_change(user: UserT) -> None",
+              "doc": "``DELETE /auth/me/email``: the pending change goes; the address stays."
+            },
+            {
+              "name": "confirm_email_change",
+              "signature": "async confirm_email_change(token: str, *, ip: str) -> EmailChangeConfirmed",
+              "doc": "``POST /auth/me/email/confirm`` (user-admin §6.2), anonymous: the address switches\nand is verified, the sessions stay, and the open, unexpired invitations for the new\naddress attach (§12.5 item 9). ``email_taken`` if it found an account meanwhile."
+            },
+            {
+              "name": "verify_email",
+              "signature": "async verify_email(token: str, *, ip: str) -> EmailVerificationStatus",
+              "doc": "``POST /auth/verify-email`` (§7, by POST: a mail scanner's GET verifies nothing).\nA link for an address the account no longer has is ``token_invalid``."
+            },
+            {
+              "name": "resend_verification",
+              "signature": "async resend_verification(user: UserT) -> EmailVerificationStatus",
+              "doc": "``POST /auth/resend-verification``: a verified address sends nothing and spends\nno budget; otherwise the recipient's window, a new link, the commit, the mail — and\n``503 mail_not_sent`` when it could not go, so the banner says so. A demo's address\nis nobody's: answered, never mailed (landing-demo §6.4)."
+            },
+            {
+              "name": "request_password_reset",
+              "signature": "async request_password_reset(body: PasswordResetRequest, *, ip: str) -> None",
+              "doc": "``POST /auth/password-reset/request``: always ``204``, account or not (§4.5). The\ncaller's window first, then the address's (a request the first refused spends\nnothing of the second). The address's tagged variant is tried too; the mail goes\nto the account's own address, after the commit. A deactivated account or a demo\ngets none."
+            },
+            {
+              "name": "check_password_reset",
+              "signature": "async check_password_reset(token: str, *, ip: str) -> tuple[UserT, dict[str, Any]]",
+              "doc": "``POST /auth/password-reset/check``: is the link good, without spending it; the\naccount and the ``reset_extras``."
+            },
+            {
+              "name": "confirm_password_reset",
+              "signature": "async confirm_password_reset(body: PasswordResetConfirm, *, ip: str) -> tuple[UserT, dict[str, Any]]",
+              "doc": "``POST /auth/password-reset/confirm`` (§6.3, §12.5 item 6): the new password, the\nforced change met, the address verified (the link proved it), every session ended\n— and no tokens: a reset is not a sign-in, so a second factor cannot be skipped."
+            },
+            {
+              "name": "check_invitation",
+              "signature": "async check_invitation(token: str, *, ip: str) -> tuple[InvT, bool, dict[str, Any]]",
+              "doc": "``POST /auth/invitations/check`` (§4.4): the invitation without spending it,\nwhether its address has an account, and the ``describe_invitation`` extras."
+            },
+            {
+              "name": "accept_invitation",
+              "signature": "async accept_invitation(user: UserT, token: str, *, ip: str) -> tuple[InvT, dict[str, Any]]",
+              "doc": "``POST /auth/invitations/accept`` (§4.4): an existing account takes up an\ninvitation for its address (or the app's tag on it); ``on_invitation_redeemed``\nattaches what it names."
+            },
+            {
+              "name": "invitation_rows",
+              "signature": "async invitation_rows() -> list[dict[str, Any]]",
+              "doc": "``GET /admin/invitations`` (user-admin §5): every invitation not accepted, newest\nfirst, as ``InvitationRow`` fields — the inviter as a person, the status from the\ncolumns, never a link. A row never sent (an allow-list entry carried over) reads as\nexpired, so the admin re-sends it."
+            },
+            {
+              "name": "create_invitation",
+              "signature": "async create_invitation(admin: UserT, body: InvitationCreate, *, show_link: bool) -> dict[str, Any]",
+              "doc": "``POST /admin/invitations`` (user-admin §5): an invitation to an address, in the\ninvitee's language, logged as ``invite``; the mail after the commit. ``show_link``:\nthe console transport's shown-once link (§12.5 item 11). A ``scope`` goes through the\n``invitation_scope`` hook, else it is refused."
+            },
+            {
+              "name": "resend_invitation",
+              "signature": "async resend_invitation(admin: UserT, invitation_id: int, *, show_link: bool) -> dict[str, Any]",
+              "doc": "``POST /admin/invitations/{id}/resend``: a new token and 14 more days, the old\nlink dead (§4.4), logged as ``invite_resend``. Not for an accepted or revoked one."
+            },
+            {
+              "name": "revoke_invitation",
+              "signature": "async revoke_invitation(admin: UserT, invitation_id: int) -> None",
+              "doc": "``DELETE /admin/invitations/{id}``: an open or expired invitation is withdrawn,\nlogged as ``invite_revoke``; a revoked one stays as it is; an accepted one is\n``invitation_closed``."
+            },
+            {
+              "name": "deletion_terms",
+              "signature": "async deletion_terms(user: UserT) -> dict[str, Any]",
+              "doc": "``GET /auth/me/deletion``: the mode, the days (none in ``operator`` mode), and the\n``deletion_terms`` extras."
+            },
+            {
+              "name": "request_deletion",
+              "signature": "async request_deletion(user: UserT, password: str, confirm_email: str) -> dict[str, Any]",
+              "doc": "``POST /auth/me/deletion`` (user-admin §6.4): the password (``password_incorrect``)\nand the typed address (``confirmation_required`` / ``_mismatch``); never the last\nactive admin (``last_admin``). The account is deactivated at once, every session\nends, the request is logged with the account as its actor; the confirming mail goes\nafter the commit, and the answer says whether it did."
+            },
+            {
+              "name": "withdraw_deletion",
+              "signature": "async withdraw_deletion(user: UserT, *, actor_id: int) -> UserT",
+              "doc": "An admin's reactivation before the erasure (user-admin §6.4; 0.30's admin route):\nboth stamps cleared, the account active, ``deletion_cancel`` logged, the hook told."
+            },
+            {
+              "name": "export",
+              "signature": "async export(user: UserT) -> dict[str, Any]",
+              "doc": "``GET /auth/me/export`` (user-admin §6.5): the kit's envelope, the account as the\nkit knows it — the profile, the role, the dates, the sessions as device and dates,\nthe passkeys as name and dates, never a secret — and the app's ``data``."
+            },
+            {
+              "name": "begin_passkey_registration",
+              "signature": "async begin_passkey_registration(user: UserT, body: PasskeyRegistrationBegin) -> PasskeyOptions",
+              "doc": "``POST /auth/passkey/register/begin``: the current password first (a passkey\noutlives every sign-out; Kurvenschmiede), then the options and the challenge token."
+            },
+            {
+              "name": "finish_passkey_registration",
+              "signature": "async finish_passkey_registration(user: UserT, body: PasskeyRegistrationFinish) -> PasskeyRow",
+              "doc": "``POST /auth/passkey/register/finish``: the answer verified (user verification\nrequired), the challenge spent once, the credential new to the app; the account's\naddress is told after the commit (keksdose's notice). Every refusal is ``400\npasskey_registration_refused``: the caller is signed in."
+            },
+            {
+              "name": "begin_passkey_login",
+              "signature": "async begin_passkey_login() -> PasskeyOptions",
+              "doc": "``POST /auth/passkey/login/begin``: options with no allow-list, and the token.\nReads nothing and writes nothing, so it tells nobody anything."
+            },
+            {
+              "name": "finish_passkey_login",
+              "signature": "async finish_passkey_login(body: PasskeyLoginFinish, *, ip: str, device: str | None = None) -> IssuedSession[UserT] | ChallengeIssued[UserT]",
+              "doc": "``POST /auth/passkey/login/finish``: the sign-in's limit, then one ``401\npasskey_refused`` for every reason (the reason to the log). A verified answer spends\nits challenge once (after the signature, so only a genuine answer learns it is\nspent; keksdose's order), and the sign-in answers as the password one does — a\nforced change caught too. User verification makes it both factors (§12.5 item 8)."
+            },
+            {
+              "name": "passkeys_of",
+              "signature": "async passkeys_of(user: UserT) -> Sequence[PasskeyRow]",
+              "doc": "``GET /auth/passkeys``: the account's own, oldest first."
+            },
+            {
+              "name": "rename_passkey",
+              "signature": "async rename_passkey(user: UserT, passkey_id: int, name: str) -> PasskeyRow",
+              "doc": "``PATCH /auth/passkeys/{id}``: another account's is not found either."
+            },
+            {
+              "name": "remove_passkey",
+              "signature": "async remove_passkey(user: UserT, passkey_id: int) -> None",
+              "doc": "``DELETE /auth/passkeys/{id}``: the last one included (the password stays), unless\n``passkey_removing`` refuses (keksdose's last unlock path)."
+            }
+          ]
+        },
+        {
+          "name": "AuthHooks",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True, kw_only=True) class AuthHooks[UserT: AccountRow = Any, InvT: InvitationRow = Any]",
+          "doc": "What differs between the apps (§12.3), as optional coroutines the app's hook\ndependency answers per request, on the request's own session — so ``on_register`` can\nwrite the app's rows in the sign-up's transaction (kastlan's company). Each may raise a\nkit refusal (``AuthError``, ``AccountError``) to refuse the step. A hook that answers a\nmapping adds its keys to the route's answer, which the app's answer model (an\n``AuthDeps`` field) declares.",
+          "fields": [
+            {
+              "name": "on_register",
+              "type": "Callable[[UserT, InvT | None, RegisterRequest], Awaitable[None]] | None",
+              "default": "None",
+              "doc": "Seam 1: a sign-up, with the invitation that let it in (``None`` for the first account),\nand the app's body (its ``register_model``): the household, the company, the team."
+            },
+            {
+              "name": "on_invitation_redeemed",
+              "type": "Callable[[UserT, InvT], Awaitable[None]] | None",
+              "default": "None",
+              "doc": "Seam 1: an existing account took up an invitation (``/invitations/accept``), or an\naddress confirmation found an open one for the new address (§12.5 item 9)."
+            },
+            {
+              "name": "describe_invitation",
+              "type": "Callable[[InvT], Awaitable[_Extras]] | None",
+              "default": "None",
+              "doc": "The answer's words for an invitation (its team's name), on ``/invitations/check``,\n``/accept`` and the admin's rows."
+            },
+            {
+              "name": "invitation_scope",
+              "type": "Callable[[UserT, int | str], Awaitable[Mapping[str, Any]]] | None",
+              "default": "None",
+              "doc": "The admin named a ``scope`` (``InvitationCreate.scope``): what the store keeps for it,\nor a refusal (a team the admin may not invite into). Without it a scope is refused."
+            },
+            {
+              "name": "claims",
+              "type": "Callable[[UserT, SessionRow], Awaitable[_Extras]] | None",
+              "default": "None",
+              "doc": "Seam 2: the access token's extra claims (kastlan's ``company_id`` and ``roles``); may\nrefuse with ``session_ended`` at a refresh (a lost membership). ``sid`` is the kit's."
+            },
+            {
+              "name": "bind",
+              "type": "Callable[[UserT, Mapping[str, Any]], Awaitable[None]] | None",
+              "default": "None",
+              "doc": "Seam 2: every signed-in request, after the kit's checks: bind the request (kastlan's\nRLS variables), or refuse (its 401 for a lost membership, 403 for a closed company)."
+            },
+            {
+              "name": "sessions_ended",
+              "type": "Callable[[UserT, SessionsEndedReason], Awaitable[None]] | None",
+              "default": "None",
+              "doc": "Seam 4: every session of the account ended, and why: what else ends with them."
+            },
+            {
+              "name": "password_changing",
+              "type": "Callable[[UserT, BaseModel], Awaitable[_Extras | None]] | None",
+              "default": "None",
+              "doc": "Seam 3: a password is about to change (the voluntary change and the forced one),\nwith the app's body: refuse, or answer extras (keksdose's key wrap,\n``key_wrap_unchanged``)."
+            },
+            {
+              "name": "challenge_extras",
+              "type": "Callable[[UserT], Awaitable[_Extras]] | None",
+              "default": "None",
+              "doc": "Seam 3: the forced-change challenge's extras (keksdose's ``encrypted``)."
+            },
+            {
+              "name": "reset_extras",
+              "type": "Callable[[UserT, bool], Awaitable[_Extras]] | None",
+              "default": "None",
+              "doc": "Seam 3: a reset's extras, at its check (``False``) and after its confirm (``True``):\nkeksdose's ``encrypted``, its revoked API tokens."
+            },
+            {
+              "name": "passkey_extensions",
+              "type": "Callable[[UserT | None, PasskeyCeremony], Awaitable[_Extras]] | None",
+              "default": "None",
+              "doc": "Seam 3: WebAuthn extensions for a ceremony (keksdose's ``prf``); the account is\n``None`` at the usernameless sign-in."
+            },
+            {
+              "name": "passkey_removing",
+              "type": "Callable[[UserT, PasskeyRow], Awaitable[None]] | None",
+              "default": "None",
+              "doc": "Seam 3: a passkey is about to go: refuse (keksdose's last unlock path)."
+            },
+            {
+              "name": "deletion_terms",
+              "type": "Callable[[UserT], Awaitable[_Extras]] | None",
+              "default": "None",
+              "doc": "Seam 5: what a deletion would do, on ``GET /auth/me/deletion`` (Kurvenschmiede's\n``hand_over_count``)."
+            },
+            {
+              "name": "on_deletion_requested",
+              "type": "Callable[[UserT], Awaitable[_Extras | None]] | None",
+              "default": "None",
+              "doc": "Seam 5: the account asked to be deleted and is deactivated: cancel or tell what is\nthe app's (billing, budget guests); the extras ride on the answer."
+            },
+            {
+              "name": "on_deletion_withdrawn",
+              "type": "Callable[[UserT], Awaitable[None]] | None",
+              "default": "None",
+              "doc": "Seam 5: an admin reactivated the account before its erasure (0.30's admin routes)."
+            },
+            {
+              "name": "export_data",
+              "type": "Callable[[UserT], Awaitable[_Extras]] | None",
+              "default": "None",
+              "doc": "Seam 5: the export's ``data`` (user-admin §6.5): the app's own rows."
+            },
+            {
+              "name": "to_me",
+              "type": "Callable[[UserT], Awaitable[BaseModel]] | None",
+              "default": "None",
+              "doc": "Seam 6: ``/auth/me`` and the user in every token answer, as the app's ``me_model``;\nwithout it, ``me_model.model_validate(user)`` with ``email_verified`` from the row."
+            }
+          ]
+        },
+        {
+          "name": "ChallengeIssued",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class ChallengeIssued[UserT: AccountRow = Any]",
+          "doc": "The sign-in passed and the account must choose a new password first (§5.1).",
+          "fields": [
+            {
+              "name": "user",
+              "type": "UserT",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "challenge_token",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "extras",
+              "type": "_Extras",
+              "default": "dict()",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "IssuedInvitation",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class IssuedInvitation[InvT: InvitationRow = Any]",
+          "doc": "An invitation minted or re-minted: its link (the only time the raw token is in the\nserver's hands) and whether its mail went out.",
+          "fields": [
+            {
+              "name": "invitation",
+              "type": "InvT",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "link",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "sent",
+              "type": "bool",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "IssuedSession",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class IssuedSession[UserT: AccountRow = Any]",
+          "doc": "A session started or renewed: the pair, and the hooks' extras for the answer.",
+          "fields": [
+            {
+              "name": "user",
+              "type": "UserT",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "session",
+              "type": "SessionRow",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "access_token",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "refresh_token",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "extras",
+              "type": "_Extras",
+              "default": "dict()",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "SessionsEndedReason",
+          "kind": "enum",
+          "signature": "class SessionsEndedReason(enum.StrEnum)",
+          "doc": "Why every session of an account ended — ``AuthHooks.sessions_ended``'s second argument\n(§12.3 seam 4: keksdose revokes its API tokens and push devices at some of these).",
+          "values": [
+            {
+              "name": "LOGOUT_EVERYWHERE",
+              "value": "logout_everywhere"
+            },
+            {
+              "name": "PASSWORD_CHANGED",
+              "value": "password_changed"
+            },
+            {
+              "name": "PASSWORD_RESET",
+              "value": "password_reset"
+            },
+            {
+              "name": "FORCED_CHANGE",
+              "value": "forced_change"
+            },
+            {
+              "name": "DEACTIVATED",
+              "value": "deactivated"
+            },
+            {
+              "name": "DELETION_REQUESTED",
+              "value": "deletion_requested"
+            }
+          ]
+        },
+        {
+          "name": "SignedIn",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class SignedIn[UserT: AccountRow = Any]",
+          "doc": "A signed-in request: the account, its session row and the token's claims.",
+          "fields": [
+            {
+              "name": "user",
+              "type": "UserT",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "session",
+              "type": "SessionRow",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "claims",
+              "type": "Mapping[str, Any]",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "eifi1_server_kit.auth.router",
+      "summary": "The account routes as router factories: ``auth_router(AuthDeps(...))`` and ``invitations_admin_router(...)``.",
+      "doc": "The account routes as router factories: ``auth_router(AuthDeps(...))`` and\n``invitations_admin_router(...)``.\n\nLayer 2 (``docs/auth-harmonization.md`` §12.3 in ``Eifi1/ui-kit``; the pattern of\n:func:`eifi1_server_kit.feedback.router.feedback_router`), behind the ``fastapi`` extra, and\nthe passkey routes behind the ``passkeys`` extra too. The app passes its stores as\ndependencies on the request's session, its signer, hasher and mailer, its policy, its hooks\ndependency, and the schema subclasses it extends; and includes the routers as its own::\n\n    deps = AuthDeps(\n        users=user_store, sessions=session_store, tokens=token_store, invitations=invitation_store,\n        log=admin_log, after_commit=after_commit, hooks=account_hooks,\n        signer=jwt_signer, hasher=bcrypt_hasher, mailer=mailer, mail_backend=settings.mail_backend,\n        policy=AccountPolicy(app=\"staunlabor\", app_name=\"Staunlabor\", contact=\"support@staunlabor.app\",\n                             links=AccountLinks(base_url=settings.app_base_url)),\n        passkeys=passkey_store, relying_party=RelyingParty(rp_id=..., rp_name=\"Staunlabor\", origins=(...,)),\n        client_address=caller_address,\n    )\n    app.include_router(auth_router(deps), prefix=\"/api/v1\")\n    app.include_router(invitations_admin_router(deps), prefix=\"/api/v1\")\n    app.state.auth_limiters = AuthLimiters()\n    install_contract_error_handlers(app)\n\n**One** :func:`current_user` **for every router** (§12.3): the dependency the account routes\ncheck the bearer with — the token, its session row, the cut-off, the account active, the\napp's ``bind`` — so ``FeedbackDeps.actor`` and ``TranslationReviewDeps.reviewer`` map that\nuser instead of checking a bearer a second time. :func:`admin_guard` is built on it. Both are\nthe same callables for the same ``deps`` however often they are asked for, so FastAPI runs\neach once per request.\n\n**The router raises no** ``HTTPException``: every refusal is a coded kit refusal (§12.5 item\n3), answered by :func:`~eifi1_server_kit.errors.install_contract_error_handlers`; a signed-in\nroute answers ``401`` only about the session, never for a wrong input. The limits are the\napp's :class:`~eifi1_server_kit.auth.AuthLimiters` on ``app.state.auth_limiters``, each window\nkeyed by the app's ``client_address`` (its ``client_ip`` with ``vouched_hops``).\n\nNo ``from __future__ import annotations`` here, on purpose: the endpoints' parameter types\nare the app's models, closed over in the factory, and FastAPI cannot resolve a string\nannotation that names a local.",
+      "contract": {
+        "doc": "docs/auth-harmonization.md",
+        "section": "§12",
+        "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/auth-harmonization.md#12-layer-2-the-server-kit-runs-the-account-routes-draft-2026-11-13",
+        "links": [
+          {
+            "section": "§12",
+            "heading": "12. Layer 2: the server-kit runs the account routes (draft, 2026-11-13)",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/auth-harmonization.md#12-layer-2-the-server-kit-runs-the-account-routes-draft-2026-11-13"
+          }
+        ]
+      },
+      "members": [
+        {
+          "name": "AuthDeps",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True, kw_only=True, eq=False, weakref_slot=True) class AuthDeps",
+          "doc": "What an app hands :func:`auth_router` (§12.3): its stores as dependencies on the\nrequest's session, its objects, its policy, the schema subclasses it extends, and its\nchoices. Compared by identity: :func:`current_user` is one callable per ``AuthDeps``.",
+          "fields": [
+            {
+              "name": "users",
+              "type": "Callable[..., Any]",
+              "default": null,
+              "doc": "``UserStore``."
+            },
+            {
+              "name": "sessions",
+              "type": "Callable[..., Any]",
+              "default": null,
+              "doc": "``SessionStore``."
+            },
+            {
+              "name": "tokens",
+              "type": "Callable[..., Any]",
+              "default": null,
+              "doc": "``OneTimeTokenStore``."
+            },
+            {
+              "name": "invitations",
+              "type": "Callable[..., Any]",
+              "default": null,
+              "doc": "``InvitationStore``."
+            },
+            {
+              "name": "log",
+              "type": "Callable[..., Any]",
+              "default": null,
+              "doc": "``AdminActionLog``."
+            },
+            {
+              "name": "after_commit",
+              "type": "Callable[..., Any]",
+              "default": null,
+              "doc": "``AfterCommit``: the request's queue for the work after its commit."
+            },
+            {
+              "name": "hooks",
+              "type": "Callable[..., Any]",
+              "default": "<function no_hooks>",
+              "doc": "The app's :class:`~eifi1_server_kit.auth.service.AuthHooks` for this request (§12.3:\na dependency, so a hook works in the request's transaction)."
+            },
+            {
+              "name": "passkeys",
+              "type": "Callable[..., Any] | None",
+              "default": "None",
+              "doc": "``PasskeyStore``: mounts the passkey routes, with ``relying_party``."
+            },
+            {
+              "name": "signer",
+              "type": "TokenSigner",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "hasher",
+              "type": "PasswordHasher",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "mailer",
+              "type": "Mailer",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "mail_backend",
+              "type": "str",
+              "default": null,
+              "doc": "The transport's name (``console``, ``resend``, ``smtp``): an admin's answer carries a\nlink only while it is ``console`` (§12.5 item 11)."
+            },
+            {
+              "name": "policy",
+              "type": "AccountPolicy",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "relying_party",
+              "type": "RelyingParty | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "demo_guard",
+              "type": "Callable[[str], Callable[..., Any]] | None",
+              "default": "None",
+              "doc": "The app's factory for the never-list routes: ``demo_guard(\"passkeys\")``. ``None``: the\nservice's own ``refuse_demo`` is the only check."
+            },
+            {
+              "name": "register_model",
+              "type": "type[RegisterRequest]",
+              "default": "<class 'eifi1_server_kit.auth.schemas.RegisterRequest'>",
+              "doc": ""
+            },
+            {
+              "name": "profile_model",
+              "type": "type[ProfileUpdate]",
+              "default": "<class 'eifi1_server_kit.auth.schemas.ProfileUpdate'>",
+              "doc": ""
+            },
+            {
+              "name": "password_change_model",
+              "type": "type[PasswordChangeRequest]",
+              "default": "<class 'eifi1_server_kit.auth.schemas.PasswordChangeRequest'>",
+              "doc": ""
+            },
+            {
+              "name": "set_password_model",
+              "type": "type[SetPasswordRequest]",
+              "default": "<class 'eifi1_server_kit.auth.schemas.SetPasswordRequest'>",
+              "doc": ""
+            },
+            {
+              "name": "email_change_model",
+              "type": "type[EmailChangeRequest]",
+              "default": "<class 'eifi1_server_kit.user_admin.schemas.EmailChangeRequest'>",
+              "doc": ""
+            },
+            {
+              "name": "deletion_model",
+              "type": "type[DeletionRequest]",
+              "default": "<class 'eifi1_server_kit.user_admin.schemas.DeletionRequest'>",
+              "doc": ""
+            },
+            {
+              "name": "invitation_create_model",
+              "type": "type[InvitationCreate]",
+              "default": "<class 'eifi1_server_kit.user_admin.schemas.InvitationCreate'>",
+              "doc": ""
+            },
+            {
+              "name": "passkey_login_model",
+              "type": "type[PasskeyLoginFinish]",
+              "default": "<class 'eifi1_server_kit.auth.schemas.PasskeyLoginFinish'>",
+              "doc": ""
+            },
+            {
+              "name": "me_model",
+              "type": "type[UserResponse]",
+              "default": "<class 'eifi1_server_kit.auth.schemas.UserResponse'>",
+              "doc": ""
+            },
+            {
+              "name": "token_model",
+              "type": "type[TokenResponse[Any]] | None",
+              "default": "None",
+              "doc": "``None``: ``TokenResponse[me_model]``; an app whose ``password_changing`` answers\nextras declares them in its subclass."
+            },
+            {
+              "name": "challenge_model",
+              "type": "type[PasswordChangeChallenge]",
+              "default": "<class 'eifi1_server_kit.auth.schemas.PasswordChangeChallenge'>",
+              "doc": ""
+            },
+            {
+              "name": "reset_state_model",
+              "type": "type[PasswordResetState]",
+              "default": "<class 'eifi1_server_kit.auth.schemas.PasswordResetState'>",
+              "doc": ""
+            },
+            {
+              "name": "invitation_check_model",
+              "type": "type[InvitationCheck]",
+              "default": "<class 'eifi1_server_kit.auth.schemas.InvitationCheck'>",
+              "doc": ""
+            },
+            {
+              "name": "invitation_accepted_model",
+              "type": "type[InvitationAccepted]",
+              "default": "<class 'eifi1_server_kit.auth.schemas.InvitationAccepted'>",
+              "doc": ""
+            },
+            {
+              "name": "invitation_row_model",
+              "type": "type[InvitationRow]",
+              "default": "<class 'eifi1_server_kit.user_admin.schemas.InvitationRow'>",
+              "doc": ""
+            },
+            {
+              "name": "invitation_issued_model",
+              "type": "type[InvitationIssued]",
+              "default": "<class 'eifi1_server_kit.user_admin.schemas.InvitationIssued'>",
+              "doc": ""
+            },
+            {
+              "name": "deletion_terms_model",
+              "type": "type[DeletionTerms]",
+              "default": "<class 'eifi1_server_kit.auth.schemas.DeletionTerms'>",
+              "doc": ""
+            },
+            {
+              "name": "deletion_result_model",
+              "type": "type[DeletionResult]",
+              "default": "<class 'eifi1_server_kit.auth.schemas.DeletionResult'>",
+              "doc": ""
+            },
+            {
+              "name": "mail_texts",
+              "type": "Mapping[AccountMailText | str, Mapping[str, MailText]]",
+              "default": "dict()",
+              "doc": "The app's words for a kind of mail, in place of the kit's (:mod:`~eifi1_server_kit.auth.mails`)."
+            },
+            {
+              "name": "client_address",
+              "type": "Callable[[Request], str]",
+              "default": "<function peer_address>",
+              "doc": "The caller's address for the per-IP windows."
+            },
+            {
+              "name": "limiters",
+              "type": "Callable[[Request], AuthLimiters]",
+              "default": "<function app_state_limiters>",
+              "doc": ""
+            },
+            {
+              "name": "now",
+              "type": "Clock",
+              "default": "<function utc_now>",
+              "doc": ""
+            },
+            {
+              "name": "sleep",
+              "type": "Callable[[float], Awaitable[None]]",
+              "default": "<function sleep>",
+              "doc": "The per-address delay's wait (a test passes one that records)."
+            }
+          ]
+        },
+        {
+          "name": "account_service",
+          "kind": "function",
+          "signature": "account_service(deps: AuthDeps) -> Callable[..., Awaitable[AccountService[Any, Any, Any]]]",
+          "doc": "The dependency answering this request's :class:`~eifi1_server_kit.auth.service.AccountService`,\nfor an app's own routes beside the kit's (keksdose's private mode)."
+        },
+        {
+          "name": "admin_guard",
+          "kind": "function",
+          "signature": "admin_guard(deps: AuthDeps) -> Callable[..., Awaitable[Any]]",
+          "doc": ":func:`current_user`, and ``403 admin_required`` unless the account holds\n``policy.admin_role``. The same callable for the same ``deps``."
+        },
+        {
+          "name": "app_state_limiters",
+          "kind": "function",
+          "signature": "app_state_limiters(request: Request) -> AuthLimiters",
+          "doc": "The app's :class:`~eifi1_server_kit.auth.AuthLimiters`, read per request from\n``app.state.auth_limiters`` — built once in ``create_app``, so a test that builds an app\nper test starts with empty windows."
+        },
+        {
+          "name": "auth_router",
+          "kind": "function",
+          "signature": "auth_router(deps: AuthDeps, *, prefix: str = '/auth', tags: Sequence[str] = ('auth',)) -> APIRouter",
+          "doc": "The account routes (§12.1), on ``APIRouter(prefix=prefix, tags=tags)``: sign-up and\nsign-in with its forced change, the refresh, the sessions, ``/me`` and its settings\n(password, address, deletion, export), the mailed links (verification, reset,\ninvitations), and with ``deps.passkeys`` the passkey routes. ``/sessions/current`` comes\nbefore ``/sessions/{session_id}``. Raises :class:`ValueError` for a ``passkeys`` without a\n``relying_party`` (or the reverse) and for an app mail table the kit cannot fill."
+        },
+        {
+          "name": "current_user",
+          "kind": "function",
+          "signature": "current_user(deps: AuthDeps) -> Callable[..., Awaitable[Any]]",
+          "doc": "The dependency answering the signed-in account (the app's row): ``401 not_signed_in``\nwithout a usable bearer token, ``401 session_ended`` once its session is over, or the\n``bind`` hook's refusal. The same callable for the same ``deps``."
+        },
+        {
+          "name": "invitations_admin_router",
+          "kind": "function",
+          "signature": "invitations_admin_router(deps: AuthDeps, *, prefix: str = '/admin/invitations', tags: Sequence[str] = ('admin',), guard: Callable[..., Any] | None = None) -> APIRouter",
+          "doc": "The admin's invitation routes (user-admin §5; §12.6: an invitation-only app lets\nnobody in without them): ``GET \"\"`` the list, ``POST \"\"`` a new one, ``POST\n/{invitation_id}/resend``, ``DELETE /{invitation_id}``. Every route is behind ``guard``,\nthe kit's :func:`admin_guard` unless the app passes its own (its route walks find their\nown name). Each mail goes after the commit; the answer carries the link once while mail\ngoes to the console (§12.5 item 11)."
+        },
+        {
+          "name": "no_hooks",
+          "kind": "function",
+          "signature": "async no_hooks() -> AuthHooks[Any, Any]",
+          "doc": "``AuthDeps.hooks``' default: no hook at all."
+        },
+        {
+          "name": "peer_address",
+          "kind": "function",
+          "signature": "peer_address(request: Request) -> str",
+          "doc": "The TCP peer: ``AuthDeps.client_address``'s default, right only for a process no proxy\nfronts. Behind one, pass the app's own ``client_ip(…, trusted_hops=vouched_hops(…))``."
+        }
+      ]
+    },
+    {
+      "name": "eifi1_server_kit.auth.mails",
+      "summary": "The account mails' words, in the seven languages: the account layer writes them once.",
+      "doc": "The account mails' words, in the seven languages: the account layer writes them once.\n\n``docs/auth-harmonization.md`` §12.3 (\"Mail texts\") and §12.5 item 10 in ``Eifi1/ui-kit``.\nUntil 0.29 the words were each app's (§8); the account layer sends the mails itself, so it\nwrites them, as the ui-kit writes the sign-in's words: German is ``de-CH``, formal, with\n\"ss\", as in the ui-kit's catalogues. They are lifted from Kurvenschmiede's (which had all\nseven: ``password_reset_service``, ``email_verification_service``, ``email_change_service``,\n``invitation_service``, ``erasure_service``), with the app's name as ``{app}`` and its\nproduct line left out, and from keksdose's passkey notice (``passkey_service._announce_added``),\nwhich had four.\n\nAn app may replace a kind with its own table (``AuthDeps.mail_texts``):\n:func:`account_mail_texts` merges and checks it, so a placeholder the kit does not fill, or a\ntable without the fallback language, fails when the router is built rather than at a send.\n\n**The lifetimes are written out** (\"one hour\", \"48 hours\", \"14 days\"), so every language\ngets its plural right; they are the kit's :data:`~eifi1_server_kit.auth.RESET_TTL`,\n:data:`~eifi1_server_kit.auth.VERIFY_TTL`, :data:`~eifi1_server_kit.auth.EMAIL_CHANGE_TTL`\nand :data:`~eifi1_server_kit.auth.INVITE_TTL`, and the kit's tests hold the two together.\n\nThe placeholders each kind fills are :data:`ACCOUNT_MAIL_VALUES`: ``{app}`` the app's name,\n``{name}`` the recipient's in their own language (:func:`~eifi1_server_kit.auth.full_name`),\n``{contact}`` a person to write to (the app's support address), ``{new_email}`` where an\naddress change's link went, ``{passkey}`` the new passkey's name, ``{date}`` the erasure's day\n(:func:`mail_date`), ``{backup_days}`` and ``{log_days}`` the retention note\n(:func:`~eifi1_server_kit.user_admin.deletion_mail_retention_note`).",
+      "contract": {
+        "doc": "docs/auth-harmonization.md",
+        "section": "§12",
+        "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/auth-harmonization.md#12-layer-2-the-server-kit-runs-the-account-routes-draft-2026-11-13",
+        "links": [
+          {
+            "section": "§12",
+            "heading": "12. Layer 2: the server-kit runs the account routes (draft, 2026-11-13)",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/auth-harmonization.md#12-layer-2-the-server-kit-runs-the-account-routes-draft-2026-11-13"
+          }
+        ]
+      },
+      "members": [
+        {
+          "name": "ACCOUNT_MAIL_KINDS",
+          "kind": "constant",
+          "signature": "ACCOUNT_MAIL_KINDS: Mapping[AccountMailText, str] = {\n    AccountMailText.PASSWORD_RESET: OneTimeTokenKind.PASSWORD_RESET,\n    AccountMailText.VERIFICATION: OneTimeTokenKind.VERIFICATION,\n    AccountMailText.EMAIL_CHANGE: OneTimeTokenKind.EMAIL_CHANGE,\n    AccountMailText.EMAIL_CHANGE_NOTICE: AccountNoticeKind.EMAIL_CHANGE_NOTICE,\n    AccountMailText.INVITATION: OneTimeTokenKind.INVITATION,\n    AccountMailText.ACCOUNT_DELETION: AccountNoticeKind.ACCOUNT_DELETION,\n    AccountMailText.ACCOUNT_DELETION_OPERATOR: AccountNoticeKind.ACCOUNT_DELETION,\n    AccountMailText.PASSKEY_ADDED_NOTICE: AccountNoticeKind.PASSKEY_ADDED_NOTICE,\n}",
+          "doc": "The ``kind`` each mail is sent and logged under (:meth:`~eifi1_server_kit.mail.Mailer.send`):\na link's by its token kind, a notice's by :class:`~eifi1_server_kit.mail.AccountNoticeKind`."
+        },
+        {
+          "name": "ACCOUNT_MAIL_TEXTS",
+          "kind": "constant",
+          "signature": "ACCOUNT_MAIL_TEXTS: Mapping[AccountMailText, Mapping[str, MailText]] = {\n    AccountMailText.PASSWORD_RESET: _RESET,\n    AccountMailText.VERIFICATION: _VERIFICATION,\n    AccountMailText.EMAIL_CHANGE: _EMAIL_CHANGE,\n    AccountMailText.EMAIL_CHANGE_NOTICE: _EMAIL_CHANGE_NOTICE,\n    AccountMailText.INVITATION: _INVITATION,\n    AccountMailText.ACCOUNT_DELETION: _DELETION,\n    AccountMailText.ACCOUNT_DELETION_OPERATOR: _DELETION_OPERATOR,\n    AccountMailText.PASSKEY_ADDED_NOTICE: _PASSKEY_ADDED,\n}",
+          "doc": "The kit's words for every account mail, seven languages each."
+        },
+        {
+          "name": "ACCOUNT_MAIL_VALUES",
+          "kind": "constant",
+          "signature": "ACCOUNT_MAIL_VALUES: Mapping[AccountMailText, frozenset[str]] = {\n    AccountMailText.PASSWORD_RESET: frozenset({\"app\", \"name\"}),\n    AccountMailText.VERIFICATION: frozenset({\"app\", \"name\"}),\n    AccountMailText.EMAIL_CHANGE: frozenset({\"app\", \"name\"}),\n    AccountMailText.EMAIL_CHANGE_NOTICE: frozenset({\"app\", \"name\", \"new_email\", \"contact\"}),\n    AccountMailText.INVITATION: frozenset({\"app\"}),\n    AccountMailText.ACCOUNT_DELETION: frozenset({\"app\", \"name\", \"date\", \"contact\", \"backup_days\", \"log_days\"}),\n    AccountMailText.ACCOUNT_DELETION_OPERATOR: frozenset({\"app\", \"name\", \"contact\", \"backup_days\", \"log_days\"}),\n    AccountMailText.PASSKEY_ADDED_NOTICE: frozenset({\"app\", \"name\", \"passkey\", \"contact\"}),\n}",
+          "doc": "The placeholders the account layer fills for each mail; a table may use any of them."
+        },
+        {
+          "name": "AccountMailText",
+          "kind": "enum",
+          "signature": "class AccountMailText(enum.StrEnum)",
+          "doc": "Which account mail a table of words is for — the key of ``AuthDeps.mail_texts``.",
+          "values": [
+            {
+              "name": "PASSWORD_RESET",
+              "value": "password_reset"
+            },
+            {
+              "name": "VERIFICATION",
+              "value": "verification"
+            },
+            {
+              "name": "EMAIL_CHANGE",
+              "value": "email_change"
+            },
+            {
+              "name": "EMAIL_CHANGE_NOTICE",
+              "value": "email_change_notice"
+            },
+            {
+              "name": "INVITATION",
+              "value": "invitation"
+            },
+            {
+              "name": "ACCOUNT_DELETION",
+              "value": "account_deletion"
+            },
+            {
+              "name": "ACCOUNT_DELETION_OPERATOR",
+              "value": "account_deletion_operator"
+            },
+            {
+              "name": "PASSKEY_ADDED_NOTICE",
+              "value": "passkey_added_notice"
+            }
+          ]
+        },
+        {
+          "name": "account_mail_texts",
+          "kind": "function",
+          "signature": "account_mail_texts(overrides: Mapping[AccountMailText | str, Mapping[str, MailText]] | None = None) -> Mapping[AccountMailText, Mapping[str, MailText]]",
+          "doc": "The kit's tables with the app's own in place of the kinds it names, checked: an\napp's table needs a fallback row (``de-CH``, ``de`` or ``en``, as\n:func:`~eifi1_server_kit.mail.pick` falls back) and may use only the kind's\n:data:`ACCOUNT_MAIL_VALUES`; either fault is a :class:`ValueError`, raised when the\nrouter is built. A kind the kit does not know is one too."
+        },
+        {
+          "name": "mail_date",
+          "kind": "function",
+          "signature": "mail_date(when: date | datetime, locale: str | None) -> str",
+          "doc": "The day ``when`` falls on, as ``locale``'s language writes it in a sentence:\n``13.12.2026`` (de), ``13/12/2026`` (fr, it, es), ``2026. 12. 13.`` (hu),\n``2026年12月13日`` (zh), ``2026-12-13`` (en and any other). An aware datetime is read in\nUTC; the erasure job runs on UTC days."
+        }
+      ]
+    },
+    {
+      "name": "eifi1_server_kit.auth.passkeys",
+      "summary": "Passkeys (WebAuthn): the two ceremonies' options and checks, over py_webauthn.",
+      "doc": "Passkeys (WebAuthn): the two ceremonies' options and checks, over py_webauthn.\n\n``docs/auth-harmonization.md`` §12.3 and §12.5 item 8 in ``Eifi1/ui-kit``. The cryptography —\nattestation, signature, origin, RP id, the flags — is py_webauthn's, behind the ``passkeys``\nextra (``eifi1-server-kit[passkeys]``) and imported only when a ceremony runs, so an app\nwithout passkeys installs nothing (the ``gcs`` extra's pattern, :mod:`eifi1_server_kit.objects`).\n:class:`~eifi1_server_kit.auth.service.AccountService` owns the orchestration around these:\nthe challenge tokens, the store, the one use per challenge, the session.\n\nThe rules the kit settles for every app (§12.5 item 8), each one app's today:\n\n* **Usernameless sign-in only** (Kurvenschmiede): the options carry no allow-list, and the\n  registration demands a discoverable credential (``resident_key`` required), so the\n  browser offers every passkey it holds for the RP and the answer names the account. An\n  address hint would make the first step say something about the account behind it.\n* **User verification required**, in both ceremonies and in the check\n  (``require_user_verification``): a passkey sign-in then proves the device AND its PIN or\n  biometric, so it counts as both factors and a person with 2FA is not asked for a code\n  after it. No app required it before (keksdose's 2026-11-13 change is the model).\n* **One use per challenge** through the store's ``spend_challenge`` (Kurvenschmiede's\n  table): the signature counter cannot be the replay guard, because a synced passkey's\n  stays at zero.\n\n``extensions`` (the ``passkey_extensions`` hook) are merged into the options as they are:\nkeksdose's ``prf`` for its private mode. The kit reads no extension output.",
+      "contract": {
+        "doc": "docs/auth-harmonization.md",
+        "section": "§12",
+        "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/auth-harmonization.md#12-layer-2-the-server-kit-runs-the-account-routes-draft-2026-11-13",
+        "links": [
+          {
+            "section": "§12",
+            "heading": "12. Layer 2: the server-kit runs the account routes (draft, 2026-11-13)",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/auth-harmonization.md#12-layer-2-the-server-kit-runs-the-account-routes-draft-2026-11-13"
+          }
+        ]
+      },
+      "members": [
+        {
+          "name": "DEFAULT_PASSKEY_NAME",
+          "kind": "constant",
+          "signature": "DEFAULT_PASSKEY_NAME = \"Passkey\"",
+          "doc": "What a passkey added with a blank name is called (Kurvenschmiede ``DEFAULT_NAME``): the\nsame word in every language the apps speak.",
+          "value": "Passkey"
+        },
+        {
+          "name": "PasskeyCeremony",
+          "kind": "constant",
+          "signature": "type PasskeyCeremony = Literal[\"registration\", \"authentication\"]",
+          "doc": "Which ceremony a ``passkey_extensions`` hook is asked for."
+        },
+        {
+          "name": "PasskeyCheckError",
+          "kind": "class",
+          "signature": "class PasskeyCheckError(ValueError)",
+          "doc": "A ceremony's answer did not verify. The message is py_webauthn's or the kit's, for the\nlog only: it is attacker-influenced text, never an answer."
+        },
+        {
+          "name": "RelyingParty",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True, kw_only=True) class RelyingParty",
+          "doc": "The app as WebAuthn knows it: ``rp_id`` its registrable domain (``staunlabor.app``;\n``localhost`` in development), ``rp_name`` what the authenticator shows, and ``origins``\nthe exact page origins an answer may come from (``https://staunlabor.app``).",
+          "fields": [
+            {
+              "name": "rp_id",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "rp_name",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "origins",
+              "type": "tuple[str, ...]",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "VerifiedPasskey",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class VerifiedPasskey",
+          "doc": "A registration that verified: what the store keeps.",
+          "fields": [
+            {
+              "name": "credential_id",
+              "type": "bytes",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "public_key",
+              "type": "bytes",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "sign_count",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "transports",
+              "type": "str | None",
+              "default": null,
+              "doc": "Comma-separated, as the browser reported them; ``None`` when it did not."
+            }
+          ]
+        },
+        {
+          "name": "authentication_options",
+          "kind": "function",
+          "signature": "authentication_options(rp: RelyingParty, *, extensions: Mapping[str, Any] | None = None) -> tuple[dict[str, Any], bytes]",
+          "doc": "``(options, challenge)`` for ``navigator.credentials.get``: no allow-list (the\nusernameless sign-in), user verification required."
+        },
+        {
+          "name": "base64url_decode",
+          "kind": "function",
+          "signature": "base64url_decode(text: str) -> bytes",
+          "doc": "The bytes of unpadded (or padded) base64url; :class:`ValueError` for anything else."
+        },
+        {
+          "name": "base64url_encode",
+          "kind": "function",
+          "signature": "base64url_encode(data: bytes) -> str",
+          "doc": "Unpadded base64url, as WebAuthn writes every binary field (and a challenge claim)."
+        },
+        {
+          "name": "credential_id_of",
+          "kind": "function",
+          "signature": "credential_id_of(credential: Mapping[str, Any]) -> bytes",
+          "doc": "The raw credential id an assertion names (``rawId``, base64url);\n:class:`PasskeyCheckError` when it is missing or malformed."
+        },
+        {
+          "name": "registration_options",
+          "kind": "function",
+          "signature": "registration_options(rp: RelyingParty, *, user_id: int, user_name: str, user_display_name: str, exclude: Sequence[bytes], extensions: Mapping[str, Any] | None = None) -> tuple[dict[str, Any], bytes]",
+          "doc": "``(options, challenge)`` for ``navigator.credentials.create``: a discoverable\ncredential with user verification required, the account's existing passkeys excluded (an\nauthenticator that holds one says so instead of minting a second). ``user_id`` goes in\nas the user handle, the account id's decimal digits (keksdose, Kurvenschmiede)."
+        },
+        {
+          "name": "user_handle_of",
+          "kind": "function",
+          "signature": "user_handle_of(credential: Mapping[str, Any]) -> int | None",
+          "doc": "The account id an assertion's user handle names, ``None`` when it carries none;\n:class:`PasskeyCheckError` for one that is not an id this app wrote. A cross-check: the\ncredential row is the binding (Kurvenschmiede)."
+        },
+        {
+          "name": "verify_authentication",
+          "kind": "function",
+          "signature": "verify_authentication(rp: RelyingParty, credential: Mapping[str, Any], challenge: bytes, *, public_key: bytes, sign_count: int) -> int",
+          "doc": "A sign-in's answer, checked against ``challenge``, the RP, its origins and the stored\nkey, with user verification required; the new signature counter, or\n:class:`PasskeyCheckError`."
+        },
+        {
+          "name": "verify_registration",
+          "kind": "function",
+          "signature": "verify_registration(rp: RelyingParty, credential: Mapping[str, Any], challenge: bytes) -> VerifiedPasskey",
+          "doc": "The registration's answer, checked against ``challenge``, the RP and its origins, with\nuser verification required; :class:`PasskeyCheckError` for any fault."
+        }
+      ]
+    },
+    {
+      "name": "eifi1_server_kit.auth.sql",
+      "summary": "The account tables as SQLAlchemy declarative mixins, the ``sql`` extra (``docs/auth-harmonization.md`` §12.3 in ``Eifi1/ui-kit``, decision C of 2026-11-13).",
+      "doc": "The account tables as SQLAlchemy declarative mixins, the ``sql`` extra\n(``docs/auth-harmonization.md`` §12.3 in ``Eifi1/ui-kit``, decision C of 2026-11-13).\n\nLayer 2's ports read rows through protocols, so an app may keep tables of its own. For the\ncommon case (one role per account, the global admin scope) these mixins ARE the tables: the\napp subclasses each on its own declarative base, names the table, adds what is its own (a\ncolumn, an index, a relationship) and writes its own Alembic migration. Without them every\napp writes the same nine tables again, and the copies drift the way the routes did (§12.2).\n\n* :class:`AccountColumns`: the account row; two optional columns beside it,\n  :class:`DemoAccountColumn` for an app with a demo and :class:`SessionCutoffColumn` for one\n  that still ends sessions by an ``iat`` cut-off. A new app needs neither: \"end every\n  session\" ends every :class:`SessionColumns` row (§12.5).\n* :class:`SessionColumns`: a signed-in session, server-kit 0.27's row (``sid``, the shared\n  device and its :func:`~eifi1_server_kit.auth.session_expires_at`).\n* :class:`OneTimeTokenColumns`: the reset, verification and address-change links, one row\n  per account and :class:`~eifi1_server_kit.auth.tokens.OneTimeTokenKind`.\n* :class:`InvitationColumns`: invitations; ``scope`` is the app's (a company, a team, a\n  budget) and opaque to the kit.\n* :class:`PasskeyColumns` and :class:`SpentChallengeColumns`: WebAuthn credentials, and the\n  challenges already answered, so that each is accepted once.\n* :class:`AdminActionColumns`: the activity log, the fields\n  :func:`~eifi1_server_kit.user_admin.admin_action_record` returns, plus ``scope``.\n\n**The stores** implement :mod:`~eifi1_server_kit.auth.ports` over models built from these\nmixins, on the request's ``AsyncSession``: :class:`SqlUserStore`, :class:`SqlSessionStore`,\n:class:`SqlOneTimeTokenStore`, :class:`SqlInvitationStore`, :class:`SqlPasskeyStore`,\n:class:`SqlAdminActionLog`, and :class:`SqlAfterCommit` for the work that waits for the\ncommit. Every write flushes and none commits, but :meth:`SqlAfterCommit.commit_now`, the one\nplace the port allows it. A store sets only mapped attributes: a value for a column the\nmodel lacks (a kastlan ``company_id`` on a log without one) is a :class:`ValueError`, never\na plain attribute the flush silently leaves out.\n\n**What this does not do.** It names no table (the app's ``__tablename__``), picks no base,\nseals no column (an app that encrypts one overrides that attribute with its own type), and\ncreates no schema: ``create_all`` is for tests, the migrations are the app's.\n\n**The account table's name.** Every column that points at an account builds its foreign key\nfrom ``__accounts_table__`` (default ``\"users\"``). An app whose table is called otherwise sets\nit on each subclass, or once on a mixin of its own placed before these.\n\n**Constraints are unnamed**, so the app's ``MetaData(naming_convention=…)`` names them as it\nnames its own, and its migrations and its models agree. A subclass that needs table arguments\nof its own adds them to the mixin's: ``__table_args__ = (*OneTimeTokenColumns.table_args(), …)``.\n\nNeeds the ``sql`` extra (``eifi1-server-kit[sql]``).",
+      "contract": {
+        "doc": "docs/auth-harmonization.md",
+        "section": "§12",
+        "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/auth-harmonization.md#12-layer-2-the-server-kit-runs-the-account-routes-draft-2026-11-13",
+        "links": [
+          {
+            "section": "§12",
+            "heading": "12. Layer 2: the server-kit runs the account routes (draft, 2026-11-13)",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/auth-harmonization.md#12-layer-2-the-server-kit-runs-the-account-routes-draft-2026-11-13"
+          }
+        ]
+      },
+      "members": [
+        {
+          "name": "ACCOUNTS_TABLE",
+          "kind": "constant",
+          "signature": "ACCOUNTS_TABLE = \"users\"",
+          "doc": "The account table every foreign key points at unless a subclass says otherwise.",
+          "value": "users"
+        },
+        {
+          "name": "EMAIL_WIDTH",
+          "kind": "constant",
+          "signature": "EMAIL_WIDTH = 320",
+          "doc": "The width of every address column: 320, the apps' columns as they are, so adopting a\nmixin changes no address column. What a request may send is shorter,\n:data:`~eifi1_server_kit.auth.schemas.MAX_EMAIL_LENGTH`.",
+          "value": 320
+        },
+        {
+          "name": "AccountColumns",
+          "kind": "class",
+          "signature": "class AccountColumns",
+          "doc": "The account row (§12.3's ``AccountRow``): the address, the password's hash, the name,\nthe language, the one role, the states an admin or the person sets, the appearance, the\nzone and when the account was made.\n\nThe review scope (``translation_review_locales``, ``translation_review_areas``) is a\nreviewer's grant (:func:`~eifi1_server_kit.translation_review.review_grant`): ``None`` is\nno grant for the locales and every area for the areas, as\n:func:`~eifi1_server_kit.translation_review.normalize_areas` answers them."
+        },
+        {
+          "name": "AdminActionColumns",
+          "kind": "class",
+          "signature": "class AdminActionColumns(_PointsAtAccounts)",
+          "doc": "One row of the activity log: :func:`~eifi1_server_kit.user_admin.admin_action_record`'s\nfields, so the record goes in as it is. The people stay named by ``target_email`` after an\nerasure deletes their account (the keys are ``SET NULL``).",
+          "methods": [
+            {
+              "name": "actor_id",
+              "signature": "@declared_attr actor_id() -> Mapped[int | None]",
+              "doc": ""
+            },
+            {
+              "name": "target_user_id",
+              "signature": "@declared_attr target_user_id() -> Mapped[int | None]",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "DemoAccountColumn",
+          "kind": "class",
+          "signature": "class DemoAccountColumn",
+          "doc": "``is_demo``, for an app with a demo session: the demo's accounts are never people\n(``AccountRow``'s optional attribute; without the column it reads ``False``)."
+        },
+        {
+          "name": "InvitationColumns",
+          "kind": "class",
+          "signature": "class InvitationColumns(_PointsAtAccounts)",
+          "doc": "An invitation: an address, the role it gives, the app's ``scope``, and its token's\ndigest. Revoked or expired, it stays on the admin's list (§4.4); accepted, it leaves it.",
+          "methods": [
+            {
+              "name": "accepted_by_user_id",
+              "signature": "@declared_attr accepted_by_user_id() -> Mapped[int | None]",
+              "doc": ""
+            },
+            {
+              "name": "invited_by_user_id",
+              "signature": "@declared_attr invited_by_user_id() -> Mapped[int | None]",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "OneTimeTokenColumns",
+          "kind": "class",
+          "signature": "class OneTimeTokenColumns(_PointsAtAccounts)",
+          "doc": "A reset, verification or address-change link: the digest, never the token\n(:func:`~eifi1_server_kit.auth.mint`). One row per account and kind, so a new link\nreplaces the old and only the newest works.",
+          "methods": [
+            {
+              "name": "user_id",
+              "signature": "@declared_attr user_id() -> Mapped[int]",
+              "doc": ""
+            },
+            {
+              "name": "table_args",
+              "signature": "@classmethod table_args() -> tuple[Any, ...]",
+              "doc": "The one-row-per-account-and-kind rule, a fresh constraint per table."
+            }
+          ]
+        },
+        {
+          "name": "PasskeyColumns",
+          "kind": "class",
+          "signature": "class PasskeyColumns(_PointsAtAccounts)",
+          "doc": "A WebAuthn credential: the authenticator's id and public key, its signature counter,\nhow it can be reached, and the person's name for it.",
+          "methods": [
+            {
+              "name": "user_id",
+              "signature": "@declared_attr user_id() -> Mapped[int]",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "SessionColumns",
+          "kind": "class",
+          "signature": "class SessionColumns(_PointsAtAccounts)",
+          "doc": "One signed-in session (server-kit 0.27). The token's ``sid`` claim names the row, and\nevery request checks it is active and not expired, so ending the row ends the session\nwhatever tokens are still out.",
+          "methods": [
+            {
+              "name": "user_id",
+              "signature": "@declared_attr user_id() -> Mapped[int]",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "SessionCutoffColumn",
+          "kind": "class",
+          "signature": "class SessionCutoffColumn",
+          "doc": "``sessions_invalid_before``, the ``iat`` cut-off of an app that signed out by it before\nserver-kit 0.27's session rows. A new app does without: it ends the rows."
+        },
+        {
+          "name": "SpentChallengeColumns",
+          "kind": "class",
+          "signature": "class SpentChallengeColumns",
+          "doc": "A WebAuthn challenge already answered, by its digest, until it would have expired\nanyway. The primary key is the one-use rule: a second insert of the same challenge fails,\nin every app (§12.5)."
+        },
+        {
+          "name": "SqlAdminActionLog",
+          "kind": "class",
+          "signature": "class SqlAdminActionLog[ActionT: AdminActionColumns]",
+          "doc": ":class:`~eifi1_server_kit.auth.ports.AdminActionLog` over a model built from\n:class:`AdminActionColumns`. ``add`` takes\n:func:`~eifi1_server_kit.user_admin.admin_action_record`'s mapping as it is, and refuses a\nkey the model does not map (a ``company_id`` on a log without one).",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(session: AsyncSession, model: type[ActionT]) -> None",
+              "doc": ""
+            },
+            {
+              "name": "add",
+              "signature": "async add(record: Mapping[str, Any]) -> ActionT",
+              "doc": ""
+            },
+            {
+              "name": "page",
+              "signature": "async page(*, target_user_id: int | None, limit: int, offset: int) -> tuple[Sequence[ActionT], int]",
+              "doc": ""
+            },
+            {
+              "name": "scrub_email",
+              "signature": "async scrub_email(email: str) -> None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "SqlAfterCommit",
+          "kind": "class",
+          "signature": "class SqlAfterCommit",
+          "doc": ":class:`~eifi1_server_kit.auth.ports.AfterCommit` on an ``AsyncSession``\n(Kurvenschmiede's ``send_after_commit``, keksdose's object purge).\n\nThe work waits on the session's ``info``, and an ``after_commit`` listener runs it from\ninside the commit's greenlet, so every writer that commits (the request's unit of work,\na kit router under it, :meth:`commit_now`) runs it with no step of its own to forget. A\nrollback, or a session closed uncommitted, drops it; a savepoint's release is no commit\nand runs nothing. Each item runs on its own: one that raises is logged and the rest run.\n\nThe work runs after the commit, when the session must not be used for SQL: a mail is\nrendered whole before it is queued, a purge knows its keys.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(session: AsyncSession) -> None",
+              "doc": ""
+            },
+            {
+              "name": "later",
+              "signature": "later(work: Callable[[], Awaitable[None]]) -> None",
+              "doc": ""
+            },
+            {
+              "name": "commit_now",
+              "signature": "async commit_now() -> None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "SqlInvitationStore",
+          "kind": "class",
+          "signature": "class SqlInvitationStore[InvT: InvitationColumns]",
+          "doc": ":class:`~eifi1_server_kit.auth.ports.InvitationStore` over a model built from\n:class:`InvitationColumns`. ``revoke`` keeps the row (stamped); an app that deletes a\nwithdrawn invitation instead subclasses it.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(session: AsyncSession, model: type[InvT]) -> None",
+              "doc": ""
+            },
+            {
+              "name": "get",
+              "signature": "async get(invitation_id: int) -> InvT | None",
+              "doc": ""
+            },
+            {
+              "name": "by_token_hash",
+              "signature": "async by_token_hash(token_hash: str) -> InvT | None",
+              "doc": ""
+            },
+            {
+              "name": "open_for",
+              "signature": "async open_for(email: str) -> Sequence[InvT]",
+              "doc": ""
+            },
+            {
+              "name": "listing",
+              "signature": "async listing() -> Sequence[InvT]",
+              "doc": ""
+            },
+            {
+              "name": "add",
+              "signature": "async add(new: NewInvitation) -> InvT",
+              "doc": ""
+            },
+            {
+              "name": "remint",
+              "signature": "async remint(invitation: InvT, *, token_hash: str, expires_at: datetime) -> InvT",
+              "doc": ""
+            },
+            {
+              "name": "accept",
+              "signature": "async accept(invitation: InvT, *, user_id: int, at: datetime) -> None",
+              "doc": ""
+            },
+            {
+              "name": "revoke",
+              "signature": "async revoke(invitation: InvT, *, at: datetime) -> None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "SqlOneTimeTokenStore",
+          "kind": "class",
+          "signature": "class SqlOneTimeTokenStore[TokenT: OneTimeTokenColumns]",
+          "doc": ":class:`~eifi1_server_kit.auth.ports.OneTimeTokenStore` over a model built from\n:class:`OneTimeTokenColumns`: one row per account and kind, the unique constraint\nholding the rule even against a writer that skips the store.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(session: AsyncSession, model: type[TokenT]) -> None",
+              "doc": ""
+            },
+            {
+              "name": "put",
+              "signature": "async put(kind: OneTimeTokenKind, *, user_id: int, token_hash: str, email: str, expires_at: datetime) -> TokenT",
+              "doc": ""
+            },
+            {
+              "name": "take",
+              "signature": "async take(kind: OneTimeTokenKind, token_hash: str) -> TokenT | None",
+              "doc": ""
+            },
+            {
+              "name": "pending",
+              "signature": "async pending(kind: OneTimeTokenKind, user_id: int) -> TokenT | None",
+              "doc": ""
+            },
+            {
+              "name": "drop",
+              "signature": "async drop(kind: OneTimeTokenKind, user_id: int) -> None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "SqlPasskeyStore",
+          "kind": "class",
+          "signature": "class SqlPasskeyStore[PasskeyT: PasskeyColumns, ChallengeT: SpentChallengeColumns]",
+          "doc": ":class:`~eifi1_server_kit.auth.ports.PasskeyStore` over two models, one built from\n:class:`PasskeyColumns` and one from :class:`SpentChallengeColumns`.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(session: AsyncSession, model: type[PasskeyT], challenges: type[ChallengeT]) -> None",
+              "doc": ""
+            },
+            {
+              "name": "for_user",
+              "signature": "async for_user(user_id: int) -> Sequence[PasskeyT]",
+              "doc": ""
+            },
+            {
+              "name": "by_credential_id",
+              "signature": "async by_credential_id(credential_id: bytes) -> PasskeyT | None",
+              "doc": ""
+            },
+            {
+              "name": "add",
+              "signature": "async add(new: NewPasskey) -> PasskeyT",
+              "doc": ""
+            },
+            {
+              "name": "used",
+              "signature": "async used(passkey: PasskeyT, *, sign_count: int, at: datetime) -> None",
+              "doc": ""
+            },
+            {
+              "name": "rename",
+              "signature": "async rename(passkey: PasskeyT, name: str) -> None",
+              "doc": ""
+            },
+            {
+              "name": "remove",
+              "signature": "async remove(passkey: PasskeyT) -> None",
+              "doc": ""
+            },
+            {
+              "name": "spend_challenge",
+              "signature": "async spend_challenge(challenge_hash: str, *, expires_at: datetime) -> bool",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "SqlSessionStore",
+          "kind": "class",
+          "signature": "class SqlSessionStore[SessionT: SessionColumns]",
+          "doc": ":class:`~eifi1_server_kit.auth.ports.SessionStore` over a model built from\n:class:`SessionColumns`.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(session: AsyncSession, model: type[SessionT]) -> None",
+              "doc": ""
+            },
+            {
+              "name": "start",
+              "signature": "async start(new: NewSession) -> SessionT",
+              "doc": ""
+            },
+            {
+              "name": "get",
+              "signature": "async get(sid: str) -> SessionT | None",
+              "doc": ""
+            },
+            {
+              "name": "touch",
+              "signature": "async touch(session: SessionT, *, last_active: datetime, expires_at: datetime) -> None",
+              "doc": ""
+            },
+            {
+              "name": "end",
+              "signature": "async end(session: SessionT) -> None",
+              "doc": ""
+            },
+            {
+              "name": "end_all",
+              "signature": "async end_all(user_id: int, *, keep: str | None = None) -> int",
+              "doc": ""
+            },
+            {
+              "name": "live",
+              "signature": "async live(user_id: int) -> Sequence[SessionT]",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "SqlUserStore",
+          "kind": "class",
+          "signature": "class SqlUserStore[UserT: AccountColumns]",
+          "doc": ":class:`~eifi1_server_kit.auth.ports.UserStore` over a model built from\n:class:`AccountColumns`. ``count_people`` leaves out ``is_demo`` accounts where the model\nhas :class:`DemoAccountColumn`; an app with a system account of its own subclasses and\nnarrows :meth:`people`.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(session: AsyncSession, model: type[UserT]) -> None",
+              "doc": ""
+            },
+            {
+              "name": "get",
+              "signature": "async get(user_id: int) -> UserT | None",
+              "doc": ""
+            },
+            {
+              "name": "by_email",
+              "signature": "async by_email(email: str) -> UserT | None",
+              "doc": ""
+            },
+            {
+              "name": "by_emails",
+              "signature": "async by_emails(emails: Sequence[str]) -> Sequence[UserT]",
+              "doc": ""
+            },
+            {
+              "name": "people",
+              "signature": "people() -> Any",
+              "doc": "The ``WHERE`` clause of an account that is a person, or ``None`` for every row."
+            },
+            {
+              "name": "count_people",
+              "signature": "async count_people() -> int",
+              "doc": ""
+            },
+            {
+              "name": "count_active",
+              "signature": "async count_active(*, role: str) -> int",
+              "doc": ""
+            },
+            {
+              "name": "add",
+              "signature": "async add(new: NewAccount) -> UserT",
+              "doc": ""
+            },
+            {
+              "name": "apply",
+              "signature": "async apply(row: UserT, changes: Mapping[str, Any]) -> UserT",
+              "doc": ""
+            },
+            {
+              "name": "delete",
+              "signature": "async delete(row: UserT) -> None",
+              "doc": ""
+            }
+          ]
         }
       ]
     },
@@ -2078,6 +5106,92 @@
               "name": "locale",
               "type": "LocaleTag",
               "default": "'de-CH'",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "InvitationIssued",
+          "kind": "model",
+          "signature": "class InvitationIssued(InvitationRow)",
+          "doc": "The answer to ``POST /admin/invitations`` and ``POST /admin/invitations/{id}/resend``\n(§5; 0.29, the account layer): the row, whether its mail went out, and the transport —\n:class:`MailResult`'s rule, so ``link`` is answered only while mail goes to the console\n(§12.5 item 11 of the auth contract: an app without a transport shows the link once).",
+          "fields": [
+            {
+              "name": "id",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "email",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "role",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "scope",
+              "type": "int | str | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "note",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "locale",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "invited_by",
+              "type": "PersonRef | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "created_at",
+              "type": "datetime",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "expires_at",
+              "type": "datetime",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "status",
+              "type": "InvitationStatus",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "link",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "sent",
+              "type": "bool",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "mail_backend",
+              "type": "str",
+              "default": null,
               "doc": ""
             }
           ]
@@ -11288,7 +14402,7 @@
     {
       "name": "eifi1_server_kit.limiter",
       "summary": "An in-process sliding-window rate limiter: at most N hits per key per window.",
-      "doc": "An in-process sliding-window rate limiter: at most N hits per key per window.\n\nkeksdose ``backend/keksdose/infrastructure/rate_limit.py:45-124``\n``SlidingWindowRateLimiter``, unchanged in behaviour — the lock, the blocked-hit rule and\nthe once-per-window sweep included. kastlan's copy (``infrastructure/rate_limit.py``) has\nthe same constructor and ``hit``/``reset``, so it swaps in as is.\n\n**Process-local.** The window lives in this process's memory: each Cloud Run instance and\neach uvicorn worker keeps its own counters (Kurvenschmiede's 2 workers make \"20 an hour\"\nan effective 40). It bounds one client hammering one process — a browser stuck in a render\nloop — not a cross-instance total. ``hit()`` is the whole contract, so a shared store\n(Redis, a table) could replace the deques without touching a caller.\n\n**No module globals here.** Build limiters per app — in ``create_app``, on\n``app.state`` — so a test that builds an app per test starts with empty windows\n(Kurvenschmiede ``infrastructure/security.py:288`` ``AuthLimiters`` / ``FeedbackLimiters``).\n:class:`FeedbackLimiters` is that pair for the feedback routes.\n\n**Whose address a window counts** is :func:`client_ip`'s answer: counted from the RIGHT of\n``X-Forwarded-For``, as many hops as the app has proxies — never the left-most entry,\nwhich the client writes itself.\n\n**When to charge: before the work.** Call ``hit()`` where a request starts costing the\nserver something — the feedback contract's rule since round 0.36 (§3.5, §3.6, as all\nthree apps did; ``docs/server-services-harmonization.md`` §2.11), and what\n:mod:`eifi1_server_kit.feedback.service` does:\n\n* uploads — BEFORE the file is read and checked (keksdose\n  ``upload_guards.throttle_attachment``), so a refused file uses a slot;\n* crashes — BEFORE the dedupe (keksdose ``feedback_router.py:155``), so repeats count and\n  ``occurrences`` stops rising after 20 an hour.\n\n**Refusing: one 429** (0.21, the kastlan reuse audit's proposal 10). :func:`charge` charges\none hit and raises :class:`ThrottledError` when the window is full: 429, the app's own\nsentence as ``{\"detail\": …}`` — no ``code``, Marcel's decision of 2026-11-04 — and a\n``Retry-After`` in whole seconds (:func:`retry_after_header`), through\n:func:`~eifi1_server_kit.errors.install_contract_error_handlers`. It replaces the\n``HTTPException`` each app raised by hand: kastlan ``auth_helpers.throttle``, keksdose\n``auth_router._throttle``, Kurvenschmiede ``auth_router._hold``.",
+      "doc": "An in-process sliding-window rate limiter: at most N hits per key per window.\n\nkeksdose ``backend/keksdose/infrastructure/rate_limit.py:45-124``\n``SlidingWindowRateLimiter``, unchanged in behaviour — the lock, the blocked-hit rule and\nthe once-per-window sweep included. kastlan's copy (``infrastructure/rate_limit.py``) has\nthe same constructor and ``hit``/``reset``, so it swaps in as is.\n\n**Process-local.** The window lives in this process's memory: each Cloud Run instance and\neach uvicorn worker keeps its own counters (Kurvenschmiede's 2 workers make \"20 an hour\"\nan effective 40). It bounds one client hammering one process — a browser stuck in a render\nloop — not a cross-instance total. ``hit()`` is the whole contract, so a shared store\n(Redis, a table) could replace the deques without touching a caller.\n\n**No module globals here.** Build limiters per app — in ``create_app``, on\n``app.state`` — so a test that builds an app per test starts with empty windows\n(Kurvenschmiede ``infrastructure/security.py:288`` ``AuthLimiters`` / ``FeedbackLimiters``).\n:class:`FeedbackLimiters` is that pair for the feedback routes.\n\n**Whose address a window counts** is :func:`client_ip`'s answer: counted from the RIGHT of\n``X-Forwarded-For``, as many hops as the app has proxies — never the left-most entry,\nwhich the client writes itself. Where the backend's own URL is public too (Cloud Run's\n``run.app``), :func:`vouched_hops` (0.28) trusts those hops only for a request that proves\nit crossed the edge proxy.\n\n**When to charge: before the work.** Call ``hit()`` where a request starts costing the\nserver something — the feedback contract's rule since round 0.36 (§3.5, §3.6, as all\nthree apps did; ``docs/server-services-harmonization.md`` §2.11), and what\n:mod:`eifi1_server_kit.feedback.service` does:\n\n* uploads — BEFORE the file is read and checked (keksdose\n  ``upload_guards.throttle_attachment``), so a refused file uses a slot;\n* crashes — BEFORE the dedupe (keksdose ``feedback_router.py:155``), so repeats count and\n  ``occurrences`` stops rising after 20 an hour.\n\n**Refusing: one 429** (0.21, the kastlan reuse audit's proposal 10). :func:`charge` charges\none hit and raises :class:`ThrottledError` when the window is full: 429, the app's own\nsentence as ``{\"detail\": …}`` — no ``code``, Marcel's decision of 2026-11-04 — and a\n``Retry-After`` in whole seconds (:func:`retry_after_header`), through\n:func:`~eifi1_server_kit.errors.install_contract_error_handlers`. It replaces the\n``HTTPException`` each app raised by hand: kastlan ``auth_helpers.throttle``, keksdose\n``auth_router._throttle``, Kurvenschmiede ``auth_router._hold``.",
       "contract": {
         "doc": "docs/feedback-harmonization.md",
         "section": "§3.5, §3.6",
@@ -11449,6 +14563,12 @@
           "kind": "function",
           "signature": "retry_after_header(wait_seconds: float) -> str",
           "doc": "The ``Retry-After`` value for a ``hit()`` answer: whole seconds, rounded up past it\n(keksdose ``upload_guards.py:82``: ``str(int(retry_after) + 1)``), so never ``0`` — a\n``hit()`` of ``0.0`` is ``\"1\"`` — and a client that waits that long is let in. Every kit\n429 carries it: :class:`ThrottledError`, the feedback routes', the demo's."
+        },
+        {
+          "name": "vouched_hops",
+          "kind": "function",
+          "signature": "vouched_hops(headers: Mapping[str, str], *, trusted_hops: int, edge_header: str, edge_token: str | None) -> int",
+          "doc": "How many ``X-Forwarded-For`` entries, from the right, this request's proxies vouch for:\n``trusted_hops`` when the request proves it crossed the edge proxy, otherwise at most\none. Hand the answer to :func:`client_ip` (0.28, keksdose audit 2026-10-12 B-1)::\n\n    hops = vouched_hops(request.headers, trusted_hops=settings.trusted_proxy_hops,\n                        edge_header=\"x-keksdose-edge\", edge_token=settings.edge_token)\n    ip = client_ip(request.headers, request.client.host if request.client else None,\n                   trusted_hops=hops)\n\n**Why.** ``trusted_hops`` describes ONE path: Google's front end, the edge Caddy, the\nbackend's own front end. The backend has a second one: its ``run.app`` URL is public, so\na caller can skip the edge. That request gets ONE appended entry, not three, and with\nthree trusted a header of ``a, b`` arrives as ``a, b, <caller>`` and keys the window on\n``a``, which the caller chose: a fresh window per request (Staunlabor measured 150 of 150\nforged requests through, 2026-11-13). Only the edge holds the token, so a request without\nit is counted from the one entry its own front end appended: the caller.\n\n**The edge sets the header** with the token (Caddy ``header_up <edge_header>\n{$EDGE_TOKEN}`` replaces whatever the browser sent; never ``+``, which appends). The\nname is the app's (keksdose ``x-keksdose-edge``).\n\n* ``0`` or ``1`` hops have nothing to prove (local development; one proxy, whose\n  appended entry the caller cannot write) and come back as they are;\n* above one, the header must hold exactly one value equal to ``edge_token``\n  (:func:`hmac.compare_digest` on bytes: Starlette decodes a header as latin-1, so the\n  value is encoded back as latin-1; a value that is not latin-1 is no proof);\n* above one with no token configured (``None`` or empty), nothing can prove anything:\n  one hop, and a warning once per process. Every request then shares the edge's window,\n  which is the safe error: it limits too much, never too little."
         }
       ]
     },

@@ -2184,9 +2184,12 @@ export const GROUPS: ShowcaseGroup[] = [
         title: "Sign-in & account",
         short: "Auth",
         blurb:
-          "Registration, sign-in, one-time tokens, session claims and the account's wire shapes — the server half of the sign-in, register and account pages.",
+          "Registration, sign-in, one-time tokens, session claims and the account's wire shapes — and since 0.29 the routes themselves: one router over the app's stores, the account mails, passkeys and ready tables. The server half of the sign-in, register and account pages.",
         icon: KeyRound,
-        serverModules: ["auth"],
+        // server-kit 0.29 (docs/auth-harmonization.md §12): the account layer — the routes,
+        // their service, ports, mails, passkeys and the `[sql]` tables — joins layer 1 here:
+        // one page for the sign-in, as the frontend has one group (the Server kit holds ten).
+        serverModules: ["auth", "auth.router", "auth.service", "auth.ports", "auth.mails", "auth.passkeys", "auth.sql"],
       }),
       serverPage({
         slug: "server-user-admin",
