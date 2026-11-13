@@ -181,6 +181,14 @@ export interface TranslationReviewPanelProps {
    * kit's, which an app listing what it stores had to list as its own (KS U4).
    */
   storageKeyPrefix?: string;
+  /**
+   * 0.63: the `Storage` `storageKey` keeps the view in — the single table's and, under
+   * {@link groupBy}, the groups' one view alike (DataTable's `storage`). Left out, the
+   * provider's `tableStorage`, then `localStorage`; this wins over both. A shared
+   * computer's page memory (`createMemoryStorage()`): the view's filters hold what the
+   * reviewer searched for.
+   */
+  storage?: Storage;
   /** How a verdict's date reads in the editor. Default: the editor's — the
    *  `<UiKitProvider formatDate>`, else the kit's medium date (0.52). */
   formatDate?: (iso: string) => string;
@@ -479,6 +487,7 @@ export function TranslationReviewPanel({
   pageSize = 50,
   storageKey,
   storageKeyPrefix,
+  storage,
   formatDate,
   formatError,
   swipe = false,
@@ -605,6 +614,7 @@ export function TranslationReviewPanel({
     active: groupBy !== undefined,
     storageKey,
     storageKeyPrefix,
+    storage,
     defaultPageSize: pageSize,
   });
 
@@ -980,7 +990,7 @@ export function TranslationReviewPanel({
             onPageSizeChange: groupView.setPageSize,
             labels: { table: group.name },
           }
-        : { storageKey, storageKeyPrefix })}
+        : { storageKey, storageKeyPrefix, storage })}
       isExpanded={(r) => r.id === openId}
       onRowClick={(r) => {
         if (openId !== r.id) keepGroupOpen(group?.key);

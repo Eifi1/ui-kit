@@ -152,3 +152,22 @@ its service worker (all three) has them offline too. Staunlabor does not use `/o
 `packaging-contract.test.ts` "idb-keyval and the persister are imported on first use, not when the
 entry loads" walks the entry's static imports. `scripts/verify-package.mjs` loads the installed
 `/offline` with `@tanstack/react-query` alone, before it installs the other optional peers.
+
+## `TranslationReviewPanel` takes `storage`
+
+**What changed.** `TranslationReviewPanel` keeps one thing: its table view, under `storageKey`.
+That is the sort, the page size and the single table's filters, widths and hidden columns, or
+the groups' one view under `groupBy`. Since 0.62 it went to the provider's `tableStorage`, else
+`localStorage`. The panel now takes `storage?: Storage` as `DataTable` does: where the view is
+kept, for the single table and for the groups alike. The prop wins over the provider's. Left
+out, nothing changes. Nothing else the panel holds is stored: the open editor and the folded
+groups live as long as the panel.
+
+**What apps do.** Nothing. An app that set `<UiKitProvider tableStorage>` for its shared-computer
+session (0.62) already reaches the panel: keksdose
+`frontend/src/features/translations/translations-page.tsx:271`. `storage` is for a panel that
+should keep its view somewhere other than the app's other tables.
+
+**Tests:** `src/components/__tests__/translation-review.groups.test.tsx` "storage (0.63)": the
+groups read and write their view in the given `Storage`, over the provider's, and the ungrouped
+table keeps its own there under the app's prefix. Neither writes to `localStorage`.
