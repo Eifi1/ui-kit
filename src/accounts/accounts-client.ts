@@ -18,6 +18,8 @@ import {
 } from "../lib/session-refresh";
 import { dropPushSubscription } from "../notifications/use-push-device";
 import { isSharedComputer } from "../offline/shared-computer";
+import { createAccountsApi, type AccountsApi } from "./accounts-api";
+import { passkeyAssertion } from "./passkey-ceremony";
 import { createSessionStore, type AccountSession, type AccountUser, type SharedSessionPlace } from "./session-store";
 import type { StoredSession } from "./session-store";
 import { sessionKey } from "./storage-entries";
@@ -67,12 +69,14 @@ interface AccountsAxiosConfig extends ServerWakeAxiosConfig {
   baseURL?: string;
 }
 
-/** One request the client sends on the app's instance itself. `timeout` is axios's. */
+/** One request the client sends on the app's instance itself. `timeout` and `responseType`
+ *  are axios's. */
 export interface AccountsRequest {
-  method: "post" | "delete";
+  method: "get" | "post" | "patch" | "delete";
   url: string;
   data?: unknown;
   timeout?: number;
+  responseType?: "blob";
 }
 
 /** An interceptor manager, structurally. The callback is generic so that axios's — typed
@@ -205,6 +209,9 @@ export interface AccountsClientOptions<U extends AccountUser = AccountUser> {
 
 /** What {@link createAccountsClient} answers. */
 export interface AccountsClient<U extends AccountUser = AccountUser> {
+  /** The routes of server-kit's `auth_router` and the admin's invitations, typed, on `http`
+   *  (`accountsApi`, §12.9). They keep nothing: what an answer changes is the caller's. */
+  api: AccountsApi<U>;
   /** The session store: `client.useSession((s) => s.user)` in a component,
    *  `client.useSession.getState()` outside one. Read it; write it only through the
    *  client, which keeps the stored copy beside it. */
@@ -227,6 +234,13 @@ export interface AccountsClient<U extends AccountUser = AccountUser> {
   /** `POST /auth/passkey/login/finish {challenge_token, credential, shared_device}`, the end of
    *  `SignInForm`'s `onPasskey` once the browser's ceremony has answered. */
   passkeyFinish(body: AccountsPasskeyFinish): Promise<SignInAnswer>;
+  /**
+   * The whole passkey sign-in, `SignInForm`'s `onPasskey` as it is: `POST
+   * /auth/passkey/login/begin`, the browser's prompt (no library: the kit converts the JSON
+   * itself), then {@link passkeyFinish}. Closing the prompt rejects with an `AbortError`,
+   * which the form passes over in silence. Pass it only where `passkeysAvailable()`.
+   */
+  signInWithPasskey(): Promise<SignInAnswer>;
   /**
    * `POST /auth/register`: `RegisterForm`'s values in the wire's names (`first_name`,
    * `last_name`, …), the app's own fields from `extra` (`invite_token` from the link,
@@ -260,8 +274,11 @@ export interface AccountsClient<U extends AccountUser = AccountUser> {
    * heard was given up (a shared computer's within 15 minutes). Never rejects but for the
    * app's own `onSessionEnded` throwing. A second call while one runs joins it. A plain
    * function, so `useSharedComputerIdleSignOut({ onSignOut: client.signOut })` takes it.
+   *
+   * `{ everywhere: true }` ("Sign out everywhere", §6.3) sends `POST /auth/logout`, which ends
+   * every session of the account, in step 2's place.
    */
-  signOut(): Promise<void>;
+  signOut(options?: { everywhere?: boolean }): Promise<void>;
   /** Eject the interceptors and stop watching other tabs: for a test, or a hot reload. */
   detach(): void;
 }
@@ -524,15 +541,24 @@ export function createAccountsClient<U extends AccountUser = AccountUser>(
   };
   const post = async (url: string, data: unknown) => (await http.request({ method: "post", url, data })).data;
 
+  const api = createAccountsApi<U>(http);
+  const passkeyFinish = async (body: AccountsPasskeyFinish) =>
+    answerOf(await post("/auth/passkey/login/finish", { ...body, shared_device: isSharedComputer() }));
+
   return {
+    api,
     useSession,
     currentToken: () => store.token(),
     signIn: async ({ email, password }) =>
       answerOf(await post("/auth/login", { email, password, shared_device: isSharedComputer() })),
     setPassword: async ({ challengeToken, password }) =>
       answerOf(await post("/auth/login/set-password", { challenge_token: challengeToken, new_password: password })),
-    passkeyFinish: async (body) =>
-      answerOf(await post("/auth/passkey/login/finish", { ...body, shared_device: isSharedComputer() })),
+    passkeyFinish,
+    async signInWithPasskey() {
+      const begin = await api.passkeyLoginBegin();
+      const credential = await passkeyAssertion(begin.options);
+      return passkeyFinish({ challenge_token: begin.challenge_token, credential });
+    },
     async register({ firstName, lastName, email, password, locale }, extra) {
       const data = await post("/auth/register", {
         email,
@@ -554,7 +580,7 @@ export function createAccountsClient<U extends AccountUser = AccountUser>(
       else begin(answer);
     },
     setUser: (user) => store.setUser(user),
-    signOut() {
+    signOut(signOutOptions) {
       signingOut ??= (async () => {
         const user = store.read()?.user ?? useSession.getState().user;
         const demo = options.demo !== undefined && isDemoSession(user);
@@ -562,10 +588,10 @@ export function createAccountsClient<U extends AccountUser = AccountUser>(
         if (store.token() !== null) {
           await within(() => dropPushSubscription(unregisterPush), SIGN_OUT_STEP_MS);
           if (store.token() !== null) {
-            await within(
-              () => http.request({ method: "delete", url: "/auth/sessions/current", timeout: SIGN_OUT_STEP_MS }),
-              SIGN_OUT_STEP_MS,
-            );
+            const revoke: AccountsRequest = signOutOptions?.everywhere
+              ? { method: "post", url: "/auth/logout", timeout: SIGN_OUT_STEP_MS }
+              : { method: "delete", url: "/auth/sessions/current", timeout: SIGN_OUT_STEP_MS };
+            await within(() => http.request(revoke), SIGN_OUT_STEP_MS);
           }
         }
         store.drop();

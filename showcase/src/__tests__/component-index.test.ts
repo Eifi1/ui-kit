@@ -167,6 +167,7 @@ const NOT_SHOWN: Record<string, string> = {
   accountStorageEntries: ACCOUNTS,
   describeAccountFailure: ACCOUNTS,
   useDescribeAccountFailure: ACCOUNTS,
+  passkeysAvailable: ACCOUNTS,
   releaseSyncEngine: ENGINE,
   syncEngineFor: ENGINE,
   rowByPk: ENGINE,

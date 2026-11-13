@@ -32,3 +32,25 @@ export type {
   AccountFailureLabels,
   DescribeAccountFailureOptions,
 } from "./accounts/account-failure";
+// 0.63 (§12.9 "The API and its hooks"): auth_router's routes typed once, as `client.api`;
+// the passkey ceremony with no library.
+export type {
+  AccountDeletionResult,
+  AccountDeletionTerms,
+  AccountEmailChange,
+  AccountEmailConfirmed,
+  AccountEmailVerification,
+  AccountInvitation,
+  AccountInvitationAccepted,
+  AccountInvitationCheck,
+  AccountInvitationDraft,
+  AccountInvitationIssued,
+  AccountMe,
+  AccountPasskey,
+  AccountPasskeyOptions,
+  AccountPasswordReset,
+  AccountProfilePatch,
+  AccountsApi,
+  AccountSessionInfo,
+} from "./accounts/accounts-api";
+export { passkeysAvailable } from "./accounts/passkey-ceremony";
