@@ -27,7 +27,7 @@ snapshot of the three apps, the per-repo to-dos and the reviews' list as written
 | 1 | Where each one stands | — (archived) | |
 | 2 | Decisions | — | §7.8; decision 9 (0.28.1); decision 7 by billing §8, §9 (Paddle); decisions 10 (0.51.3; keksdose's legal audit, 0.58; its scan for absolute claims, 0.59) and 11 (0.51.4) |
 | 3 | The page contract | ui-kit 0.28.0 | §7.3, §7.6, §7.9; 0.28.1 (translation note, `AuthLayout` footer); landing-demo §4.3 (robots, sitemap); 0.51.3 (as-of line, keksdose's stored version); 0.51.4 (summary, footer's optional pages); 0.55 (the footer's `siteLinks` row); 0.58 (§3.4's minimum age, §3.5 announcing a change) |
-| 4 | The content contract | ui-kit 0.28.0 | §7.1–§7.4; 0.28.1 (`language` section); 0.32.0 (commercial disclaimer); 0.51.3 (`changes` wording, `updated` label); 0.51.4 (`summary`, `links.security`/`accessibility` labels); 0.58 (`changes`' commercial variant, the `browser` tail, `acceptWithAge`, `changeNotice`); 0.59 (the `browser` lead and its commercial variant) |
+| 4 | The content contract | ui-kit 0.28.0 | §7.1–§7.4; 0.28.1 (`language` section); 0.32.0 (commercial disclaimer); 0.51.3 (`changes` wording, `updated` label); 0.51.4 (`summary`, `links.security`/`accessibility` labels); 0.58 (`changes`' commercial variant, the `browser` tail, `acceptWithAge`, `changeNotice`); 0.59 (the `browser` lead and its commercial variant); 0.63 (the imprint's optional `credits`) |
 | 5 | What the kit adds, what stays app-side | ui-kit 0.28.0, server-kit 0.2.1 | §7.5; 0.28.1; 0.32.0; 0.55 (`ConsentAgainNotice`); 0.58 (`LegalChangeNotice`, `LegalOperator.minAge`) |
 | 6 | Per repo | — (archived) | |
 | 7 | Settled after the reviews | — | index; folded items point to their § |
@@ -359,7 +359,8 @@ On the effective date the page shows the new text, and its `updated` is that dat
 | `operator` | kit | name, place, country; the full postal address "on request" |
 | `contact` | kit | email |
 | `disclaimer` | kit | two texts under one title: by default "private, non-commercial project … closed beta, without warranty"; `variant="commercial"`, for an app that bills (decision 7), "a commercial service … the Merchant of Record" |
-| *app sections* | app | keksdose's `credits` |
+| *app sections* | app | |
+| `credits` | kit, **optional** | 0.63: the kit's default chart palette credited to anyplot.ai ("Imprint"), with both links counting for it (`referrer`, no `noreferrer`). For an app whose charts use the palette; one that does not leaves it out (`LEGAL_SKELETON`'s `optional`). It was each app's own section until then (keksdose, kastlan, Kurvenschmiede, Staunlabor) |
 
 **Privacy Policy** (numbered):
 
@@ -390,7 +391,7 @@ On the effective date the page shows the new text, and its `updated` is that dat
 | `law` | kit | the place of jurisdiction comes from the operator |
 
 The same order is `LEGAL_SKELETON` (`src/components/legal-page.tsx`), where `"*"` marks the
-app sections' slot.
+app sections' slot and `optional: true` (0.63) a kit section an app may leave out.
 
 ### 4.3 The kit's wording (English canon)
 
@@ -417,6 +418,12 @@ The texts are keksdose's unless marked otherwise.
       that the content of this service is accurate, but cannot guarantee that it is
       complete or up to date. External sites we link to are the responsibility of their
       respective operators; we have no control over their content.
+  - **credits**, "Credits" (0.63; optional; Staunlabor's wording, the charts only): The
+    colours in the charts come from “`{palette}`”, the categorical palette of `{site}`. Its
+    eight hues were validated by anyplot.ai against deuteranopia, protanopia and tritanopia
+    and tuned for warm paper. `{palette}` is the link "Imprint" (https://anyplot.ai/palette),
+    `{site}` the link "anyplot.ai" (https://anyplot.ai): new-tab links with the kit's mark,
+    `rel="noopener"` alone.
 - **Privacy Policy**
   - **controller**, "Controller": The party responsible for processing personal data in
     this service is:\n`{name}`\n`{postalCode} {city}, {country}`\nEmail: `{email}`\n\nThe

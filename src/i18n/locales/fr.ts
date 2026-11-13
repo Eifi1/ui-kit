@@ -1006,6 +1006,12 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
             commercial:
               "Il s’agit d’un service commercial. Les formules payantes sont vendues par notre revendeur, qui agit en qualité de Merchant of Record\u00a0: il vend l’abonnement en son nom propre, encaisse le paiement, émet la facture et se charge de la TVA, et ses conditions de vente s’appliquent à l’achat. Nous veillons à l’exactitude du contenu de ce service, mais ne pouvons pas garantir qu’il soit complet ou à jour. Les sites externes vers lesquels nous renvoyons relèvent de la responsabilité de leurs exploitants respectifs\u202f; nous n’avons aucun contrôle sur leur contenu.",
           },
+          // 0.63: the credits for the kit's default chart palette (Staunlabor's wording,
+          // the charts only).
+          credits: {
+            title: "Crédits",
+            body: "Les couleurs des graphiques proviennent de «\u00a0{palette}\u00a0», la palette catégorielle de {site}. Ses huit teintes ont été validées par anyplot.ai contre la deutéranopie, la protanopie et la tritanopie et ajustées pour un papier chaud.",
+          },
         },
         privacy: {
           controller: {

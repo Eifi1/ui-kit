@@ -996,6 +996,12 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
             commercial:
               "Questo è un servizio commerciale. I piani a pagamento sono venduti dal nostro rivenditore, che agisce in qualità di Merchant of Record: vende l’abbonamento in nome proprio, incassa il pagamento, emette la fattura e gestisce l’IVA, e all’acquisto si applicano le sue condizioni di vendita. Ci impegniamo affinché i contenuti di questo servizio siano corretti, ma non possiamo garantire che siano completi o aggiornati. I siti esterni a cui rimandiamo sono di responsabilità dei rispettivi gestori; non abbiamo alcun controllo sui loro contenuti.",
           },
+          // 0.63: the credits for the kit's default chart palette (Staunlabor's wording,
+          // the charts only).
+          credits: {
+            title: "Ringraziamenti",
+            body: "I colori dei grafici provengono da «{palette}», la palette categoriale di {site}. Le sue otto tonalità sono state verificate da anyplot.ai per deuteranopia, protanopia e tritanopia e calibrate per carta calda.",
+          },
         },
         privacy: {
           controller: {

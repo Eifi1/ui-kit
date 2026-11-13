@@ -105,6 +105,12 @@ describe("kitLabelStrings", () => {
     );
     expect(reference["legal.sections.terms.law.body(operator)"]).toContain("is {{city}} ({{region}}), {{country}}.");
     expect(reference).not.toHaveProperty("legal.sections.terms.law.body([object Object])");
+    // 0.63: the imprint's credits, its two links as the template's placeholders — a
+    // translation that drops or renames one is flagged as the terms checkbox's would be.
+    expect(reference["legal.sections.impressum.credits.title"]).toBe("Credits");
+    expect(reference["legal.sections.impressum.credits.body"]).toBe(
+      "The colours in the charts come from “{palette}”, the categorical palette of {site}. Its eight hues were validated by anyplot.ai against deuteranopia, protanopia and tritanopia and tuned for warm paper.",
+    );
   });
 
   it("reads the real sentence with the app's operator — same keys, the country in the rows' language", () => {

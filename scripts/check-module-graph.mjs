@@ -281,7 +281,11 @@ const BUDGETS = [
   // 161,677 B (56,117 gzip) in 0.62: the shared-computer words (the idle warning, Stay signed
   // in, push refused on a shared computer) registered beside every namespace, and AppShell's
   // measured top row (`--app-subnav-h`) — meant growth, 119 B (49 gzip).
-  { label: "the shell set", names: SHELL_SET, max: 161_800 },
+  // 162,003 B (56,301 gzip) in 0.63: the external links' `referrer` (TextLink, Button,
+  // IconButton, ListItem, AppShell's footer links; 81 B, 58 gzip, at 161,758) and the
+  // imprint's `credits` section, whose English words are registered with every namespace
+  // (245 B, 126 gzip) — meant growth.
+  { label: "the shell set", names: SHELL_SET, max: 162_100 },
 ];
 const ENTRY = "\0import-cost";
 async function importCost(names) {

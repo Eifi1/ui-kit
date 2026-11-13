@@ -1010,6 +1010,12 @@ export function germanLabels(numberLocale: string): UiKitLabels {
             commercial:
               "Dies ist ein kommerzieller Dienst. Kostenpflichtige Tarife verkauft unser Wiederverkäufer, der als Merchant of Record auftritt: Er verkauft das Abonnement im eigenen Namen, nimmt die Zahlung entgegen, stellt die Rechnung aus und rechnet die MWST ab, und für den Kauf gelten seine Verkaufsbedingungen. Wir achten darauf, dass die Inhalte dieses Dienstes richtig sind, können aber keine Gewähr für ihre Vollständigkeit und Aktualität übernehmen. Für verlinkte externe Websites sind deren Betreiber verantwortlich; auf deren Inhalte haben wir keinen Einfluss.",
           },
+          // 0.63: the credits for the kit's default chart palette (Staunlabor's wording,
+          // the charts only).
+          credits: {
+            title: "Danksagungen",
+            body: "Die Farben in den Diagrammen stammen aus „{palette}“, der kategorialen Palette von {site}. Ihre acht Farbtöne hat anyplot.ai gegen Deuteranopie, Protanopie und Tritanopie geprüft und auf warmes Papier abgestimmt.",
+          },
         },
         privacy: {
           controller: {

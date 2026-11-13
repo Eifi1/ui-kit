@@ -218,11 +218,7 @@ const impressum = (billing: Billing) => (
     <LegalKitSection section="operator" />
     <LegalKitSection section="contact" />
     <LegalKitSection section="disclaimer" variant={variantOf(billing)} />
-    <LegalSection
-      key="credits"
-      heading="Credits"
-      body="The chart palette is anyplot's “Imprint” scheme (anyplot.ai)."
-    />
+    <LegalKitSection section="credits" />
   </>
 );
 
@@ -371,7 +367,10 @@ function Legal028Demo() {
           section and the terms&apos; changes clause take {code('variant="commercial"')}: a commercial service sold
           through a Merchant of Record, where the checkout&apos;s window stores its own entries (on Paddle&apos;s
           domain, under Paddle&apos;s privacy policy), and the refund of a paid period beyond a change&apos;s effective
-          date — words an app shows only once it takes payment.
+          date — words an app shows only once it takes payment. The imprint ends with{" "}
+          {code('<LegalKitSection section="credits" />')}, optional: the kit&apos;s default chart palette credited to
+          anyplot.ai, both links new-tab links that count for it ({code("referrer")}), for an app whose charts use the
+          palette.
         </Note>
       </div>
     </Example>

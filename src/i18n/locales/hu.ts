@@ -992,6 +992,12 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
             commercial:
               "Ez egy kereskedelmi szolgáltatás. A fizetős csomagokat viszonteladónk értékesíti, amely Merchant of Record szerepben jár el: a saját nevében értékesíti az előfizetést, beszedi a vételárat, kiállítja a számlát és elszámolja az áfát, a vásárlásra pedig az ő értékesítési feltételei vonatkoznak. Igyekszünk gondoskodni arról, hogy a szolgáltatás tartalma pontos legyen, de nem tudjuk szavatolni, hogy teljes és naprakész legyen. Az általunk hivatkozott külső oldalakért azok üzemeltetői felelősek; tartalmukra nincs befolyásunk.",
           },
+          // 0.63: the credits for the kit's default chart palette (Staunlabor's wording,
+          // the charts only).
+          credits: {
+            title: "Köszönetnyilvánítás",
+            body: "A diagramok színei az {site} „{palette}” nevű kategorikus palettájából származnak. Nyolc színárnyalatát az anyplot.ai deuteranópiára, protanópiára és tritanópiára ellenőrizte, és meleg tónusú papírhoz hangolta.",
+          },
         },
         privacy: {
           controller: {

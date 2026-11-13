@@ -57,6 +57,12 @@ export const DEFAULT_LEGAL_LABELS: LegalLabels = {
         commercial:
           "This is a commercial service. Paid plans are sold by our reseller, which acts as the Merchant of Record: it sells the subscription in its own name, takes the payment, issues the invoice and handles VAT, and its terms of sale apply to the purchase. We take care that the content of this service is accurate, but cannot guarantee that it is complete or up to date. External sites we link to are the responsibility of their respective operators; we have no control over their content.",
       },
+      // 0.63: the apps' credits for the kit's default palette (Staunlabor's wording, the
+      // charts only: not every app has drawings).
+      credits: {
+        title: "Credits",
+        body: "The colours in the charts come from “{palette}”, the categorical palette of {site}. Its eight hues were validated by anyplot.ai against deuteranopia, protanopia and tritanopia and tuned for warm paper.",
+      },
     },
     privacy: {
       controller: {

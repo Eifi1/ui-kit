@@ -962,6 +962,12 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
             commercial:
               "这是一项商业服务。付费套餐由我们的经销商销售，该经销商作为记录商户（Merchant of Record）行事：它以自己的名义销售订阅、收取款项、开具发票并处理增值税，且该笔购买适用其销售条款。我们尽力确保本服务的内容准确，但无法保证其完整或最新。我们所链接的外部网站由其各自的运营者负责；我们无法控制其内容。",
           },
+          // 0.63: the credits for the kit's default chart palette (Staunlabor's wording,
+          // the charts only).
+          credits: {
+            title: "致谢",
+            body: "图表中的颜色来自 {site} 的分类调色板“{palette}”。anyplot.ai 针对绿色盲、红色盲和蓝色盲验证了其八种色调，并针对暖色纸张进行了调校。",
+          },
         },
         privacy: {
           controller: {

@@ -987,6 +987,12 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
             commercial:
               "Este es un servicio comercial. Los planes de pago los vende nuestro revendedor, que actúa como Merchant of Record: vende la suscripción en su propio nombre, cobra el pago, emite la factura y gestiona el IVA, y sus condiciones de venta se aplican a la compra. Procuramos que el contenido de este servicio sea correcto, pero no podemos garantizar que esté completo ni actualizado. Los sitios externos que enlazamos son responsabilidad de sus respectivos operadores; no tenemos control sobre su contenido.",
           },
+          // 0.63: the credits for the kit's default chart palette (Staunlabor's wording,
+          // the charts only).
+          credits: {
+            title: "Créditos",
+            body: "Los colores de los gráficos proceden de «{palette}», la paleta categórica de {site}. anyplot.ai validó sus ocho tonos frente a la deuteranopía, la protanopía y la tritanopía y los ajustó para papel cálido.",
+          },
         },
         privacy: {
           controller: {
