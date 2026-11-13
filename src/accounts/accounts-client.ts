@@ -1,5 +1,7 @@
 import type { StoreApi, UseBoundStore } from "zustand";
 
+import type { RegisterValues } from "../auth/register-form";
+import type { SignInAnswer, SignInCredentials, SignInNewPasswordValues } from "../auth/sign-in-form";
 import { isDemoSession } from "../demo/demo-session";
 import { NEXT_PARAM, type PathPattern } from "../landing/routing";
 import { documentNavigation } from "../lib/document-navigation";
@@ -13,7 +15,9 @@ import {
   watchSessionElsewhere,
   type SessionRenewal,
 } from "../lib/session-refresh";
+import { isSharedComputer } from "../offline/shared-computer";
 import { createSessionStore, type AccountSession, type AccountUser, type SharedSessionPlace } from "./session-store";
+import type { StoredSession } from "./session-store";
 import { sessionKey } from "./storage-entries";
 
 /**
@@ -34,6 +38,10 @@ import { sessionKey } from "./storage-entries";
  *  - **the session store** (zustand), kept where §2.14 says: the device's `localStorage`, the
  *    tab's `sessionStorage` after "This is a shared computer", or page memory on the stricter
  *    path;
+ *  - **the requests that start a session** — the sign-in, its forced password change, the
+ *    sign-up, the passkey finish — each answering the kit's `SignInAnswer`, so `SignInForm`
+ *    and `RegisterForm` take them as they are; the three that start one from the form send
+ *    `shared_device` (server-kit 0.27), which no app sent before;
  *  - **a session that ends without this tab signing out** — the renewal refused, a demo's
  *    401, a sign-out or another account's sign-in in another tab (`watchSessionElsewhere`) —
  *    drops what this tab holds, tells the app (`onSessionEnded`), and leaves a page that
@@ -92,6 +100,14 @@ export interface AccountTokens<U extends AccountUser = AccountUser> {
   user: U;
   /** When the access token ends, ISO-8601 in UTC; a demo's countdown reads it. */
   expires_at?: string | null;
+}
+
+/** `POST /auth/passkey/login/finish`'s body (server-kit's `PasskeyLoginFinish`): the
+ *  challenge `…/begin` answered, and the authenticator's answer as JSON (`credential.toJSON()`,
+ *  or the app's encoding of it). The client adds `shared_device`. */
+export interface AccountsPasskeyFinish {
+  challenge_token: string;
+  credential: unknown;
 }
 
 /** What {@link AccountsClientOptions.onSessionEnded} is told. */
@@ -180,6 +196,37 @@ export interface AccountsClient<U extends AccountUser = AccountUser> {
   /** The access token the next request sends, `null` while signed out. Read from the
    *  storage, where another tab's renewal lands too. */
   currentToken(): string | null;
+  /**
+   * `POST /auth/login {email, password, shared_device}` — `SignInForm`'s `onSubmit` as it is.
+   * Resolves the kit's answer: `signed-in` once the session is kept (where the
+   * shared-computer box says), or the challenge (`password-change` with the server's app
+   * fields as `extra`; `2fa` from a server that asks for one). A refusal rejects with the
+   * client's own error, so `authErrorCode` reads its code; nothing is kept.
+   */
+  signIn(credentials: SignInCredentials): Promise<SignInAnswer>;
+  /** `POST /auth/login/set-password {challenge_token, new_password}`, the forced change —
+   *  `SignInForm`'s `onSetPassword` as it is. Its challenge carries the box, so it sends
+   *  nothing of it. */
+  setPassword(values: SignInNewPasswordValues): Promise<SignInAnswer>;
+  /** `POST /auth/passkey/login/finish {challenge_token, credential, shared_device}`, the end of
+   *  `SignInForm`'s `onPasskey` once the browser's ceremony has answered. */
+  passkeyFinish(body: AccountsPasskeyFinish): Promise<SignInAnswer>;
+  /**
+   * `POST /auth/register`: `RegisterForm`'s values in the wire's names (`first_name`,
+   * `last_name`, …), the app's own fields from `extra` (`invite_token` from the link,
+   * `device_timezone`, kastlan's company), and `shared_device` — the box's, whatever `extra`
+   * says (server-kit 0.27: a sign-up starts a session as a sign-in does). Resolves the
+   * account once its session is kept; a refusal rejects with the client's own error.
+   */
+  register(values: RegisterValues, extra?: Readonly<Record<string, unknown>>): Promise<U>;
+  /**
+   * Keep a session another route answered: a password change's fresh pair (`POST
+   * /auth/me/password`, §6.3), a demo start, an invitation accepted. The same account is
+   * renewed where its session is, its refresh token kept if the answer brings none; another
+   * account, or none before, starts as a sign-in does (placed by the box, the one before
+   * `"replaced"`). Throws a TypeError for an answer that holds no session.
+   */
+  storeSession(answer: AccountTokens<U>): void;
   /** A newer copy of the account (`GET /auth/me`, `PATCH /auth/me`), kept beside the tokens.
    *  Nothing while signed out. */
   setUser(user: U): void;
@@ -350,9 +397,70 @@ export function createAccountsClient<U extends AccountUser = AccountUser>(
   };
   if (typeof window !== "undefined") window.addEventListener("storage", takeUp);
 
+  // ── Starting a session ──────────────────────────────────────────────────────
+  const toStored = (answer: AccountTokens<U>, before: StoredSession<U> | null): StoredSession<U> => ({
+    token: answer.access_token,
+    refreshToken: answer.refresh_token ?? (before?.user.id === answer.user.id ? before.refreshToken : null),
+    user: answer.user,
+  });
+  /** A sign-in: kept where the box says now. Another account's session before it is gone
+   *  from this tab, and the app drops what that account left here (Kurvenschmiede's F33:
+   *  the next account was handed the last one's cached lists). */
+  const begin = (answer: AccountTokens<U>) => {
+    const before = store.read();
+    const previous = before?.user ?? useSession.getState().user;
+    if (previous !== null && previous.id !== answer.user.id) {
+      ended({ reason: "replaced", user: previous, demo: options.demo !== undefined && isDemoSession(previous) }, null);
+    }
+    store.begin(toStored(answer, before));
+  };
+
+  /** A sign-in route's answer, as `SignInForm` reads it (§5.1). */
+  const answerOf = (data: unknown): SignInAnswer => {
+    if (isRecord(data) && typeof data.challenge_token === "string") {
+      const { requires_password_change, requires_2fa, challenge_token, ...extra } = data;
+      if (requires_password_change === true) {
+        return Object.keys(extra).length > 0
+          ? { kind: "password-change", challengeToken: challenge_token, extra }
+          : { kind: "password-change", challengeToken: challenge_token };
+      }
+      if (requires_2fa === true) return { kind: "2fa", challengeToken: challenge_token };
+    }
+    if (!isTokens<U>(data)) throw new TypeError("the sign-in answered neither a session nor a challenge");
+    begin(data);
+    return { kind: "signed-in" };
+  };
+  const post = async (url: string, data: unknown) => (await http.request({ method: "post", url, data })).data;
+
   return {
     useSession,
     currentToken: () => store.token(),
+    signIn: async ({ email, password }) =>
+      answerOf(await post("/auth/login", { email, password, shared_device: isSharedComputer() })),
+    setPassword: async ({ challengeToken, password }) =>
+      answerOf(await post("/auth/login/set-password", { challenge_token: challengeToken, new_password: password })),
+    passkeyFinish: async (body) =>
+      answerOf(await post("/auth/passkey/login/finish", { ...body, shared_device: isSharedComputer() })),
+    async register({ firstName, lastName, email, password, locale }, extra) {
+      const data = await post("/auth/register", {
+        email,
+        password,
+        first_name: firstName,
+        last_name: lastName,
+        locale,
+        ...extra,
+        shared_device: isSharedComputer(),
+      });
+      if (!isTokens<U>(data)) throw new TypeError("POST /auth/register answered no session");
+      begin(data);
+      return data.user;
+    },
+    storeSession(answer) {
+      if (!isTokens<U>(answer)) throw new TypeError("storeSession takes a session: access_token and user");
+      const before = store.read();
+      if (before?.user.id === answer.user.id) store.keep(toStored(answer, before));
+      else begin(answer);
+    },
     setUser: (user) => store.setUser(user),
     detach() {
       http.interceptors.request.eject(bearer);

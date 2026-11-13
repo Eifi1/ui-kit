@@ -14,6 +14,7 @@ export type {
   AccountsClientOptions,
   AccountSessionEnd,
   AccountsHttp,
+  AccountsPasskeyFinish,
   AccountsRequest,
   AccountTokens,
 } from "./accounts/accounts-client";

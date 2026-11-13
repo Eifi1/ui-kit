@@ -100,7 +100,7 @@ export function fakeFetch(answer: (body: { refresh_token: string }) => Answer | 
 }
 
 /** A session answer, server-kit's `TokenResponse`. */
-export const tokens = (access: string, refresh: string | null, user: { id: number; [key: string]: unknown }) => ({
+export const tokens = <V extends { id: number }>(access: string, refresh: string | null, user: V) => ({
   access_token: access,
   refresh_token: refresh,
   token_type: "bearer",
