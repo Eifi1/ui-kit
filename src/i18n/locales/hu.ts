@@ -751,7 +751,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       zoomWindow: "Látható tartomány",
       zoomWindowRange: (from, to) => `${from} – ${to}`,
       zoomHint:
-        "Húzással nagyíthat: a nagyjából négyzetes kijelölés mindkét tengelyt nagyítja, a hosszú, keskeny csak a saját tengelyét. Érintőképernyőn egy ujjal leolvashatja az értékeket, két ujjal nagyíthat és mozgathat. Érintőpadon két ujjal csippentve, egérrel a Ctrl billentyűt lenyomva tartva görgetéssel nagyíthat. A „Vissza” egy nagyítási lépést visszavon; dupla kattintás vagy a „Nagyítás visszaállítása” ismét a teljes tartományt mutatja.",
+        "Húzással nagyíthat: a nagyjából négyzetes kijelölés mindkét tengelyt nagyítja, a hosszú, keskeny csak a saját tengelyét. Érintőképernyőn egy ujjal leolvashatja az értékeket, két ujjal nagyíthat és mozgathat. Ha érintőpadon két ujjal csippentve vagy egérrel a Ctrl billentyűt lenyomva tartva görgetéssel szeretne nagyítani, előbb kattintson a diagramra. A „Vissza” egy nagyítási lépést visszavon; dupla kattintás vagy a „Nagyítás visszaállítása” ismét a teljes tartományt mutatja.",
       empty: "Nincs adat",
       legend: "Adatsorok",
       points: "Diagramértékek",

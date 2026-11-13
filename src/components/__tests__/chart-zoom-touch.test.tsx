@@ -199,7 +199,7 @@ describe("two fingers zoom", () => {
 });
 
 describe("a trackpad pinch, through real recharts", () => {
-  it("narrows the abscissa about the cursor on Ctrl + wheel anywhere over the chart; a plain wheel scrolls", () => {
+  it("narrows the abscissa about the cursor on Ctrl + wheel anywhere over the chart, once clicked; a plain wheel scrolls", () => {
     const { container } = draw();
     const before = xTicks();
     surface();
@@ -207,12 +207,42 @@ describe("a trackpad pinch, through real recharts", () => {
     const root = container.firstElementChild!;
     expect(fireEvent.wheel(root, { deltaY: 100, clientX: pxOf(10), clientY: 150 })).toBe(true);
     expect(xTicks()).toEqual(before);
+    // Not clicked yet: the page's zoom, a reader with low vision enlarging the page.
+    expect(fireEvent.wheel(root, { deltaY: -300, ctrlKey: true, clientX: pxOf(10), clientY: 150 })).toBe(true);
+    expect(xTicks()).toEqual(before);
+    pointer("pointerdown", pxOf(10), 150);
+    pointer("pointerup", pxOf(10), 150);
     // −300 px of wheel shows e^0.6 ≈ 1.8 times less, about the value 10 under the cursor.
     expect(fireEvent.wheel(root, { deltaY: -300, ctrlKey: true, clientX: pxOf(10), clientY: 150 })).toBe(false);
     const zoomed = xTicks();
     expect(Math.min(...zoomed)).toBeGreaterThanOrEqual(4);
     expect(Math.max(...zoomed)).toBeLessThanOrEqual(16);
     expect(screen.getByRole("button", { name: /reset zoom/i })).toBeInTheDocument();
+  });
+});
+
+describe("engaged by the focus, through real recharts", () => {
+  it("takes Ctrl + wheel while the chart's keyboard stop has the focus, and leaves it once the focus moves on", () => {
+    const { container } = render(
+      <>
+        <SeriesChart rows={ROWS} series={[{ key: "a", label: "A" }]} axes={oneAxis(undefined, "A")} />
+        <button type="button">After the chart</button>
+      </>,
+    );
+    const before = xTicks();
+    surface();
+    const root = container.firstElementChild!;
+    const ctrlWheel = () => fireEvent.wheel(root, { deltaY: -300, ctrlKey: true, clientX: pxOf(10), clientY: 150 });
+    // The chart's one tab stop (`PointKeys`), as Tab reaches it.
+    const stop = container.querySelector<SVGElement>('[tabindex="0"]')!;
+    act(() => stop.focus());
+    expect(document.activeElement).toBe(stop);
+    act(() => screen.getByRole("button", { name: "After the chart" }).focus());
+    expect(ctrlWheel()).toBe(true);
+    expect(xTicks()).toEqual(before);
+    act(() => stop.focus());
+    expect(ctrlWheel()).toBe(false);
+    expect(Math.min(...xTicks())).toBeGreaterThan(Math.min(...before));
   });
 });
 

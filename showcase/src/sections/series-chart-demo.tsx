@@ -206,12 +206,13 @@ export function SeriesChartDemo() {
         , like everything behind <code className="font-mono">@eifi1/ui-kit/chart</code>. Drag across a plot to zoom: a
         roughly square selection zooms both axes, a long thin one only its own (the other refits to what is inside). On
         a touch screen one finger reads instead — the tooltip follows it, and a vertical swipe still scrolls the page —
-        and two fingers pinch the time axis about their midpoint, or pan it once zoomed. A trackpad pinch, or{" "}
-        <code className="font-mono">⌘/Ctrl</code> + wheel, zooms the time axis about the cursor instead of the page; a
-        plain wheel still scrolls. <em>Back</em> undoes one zoom (a band, or a whole pinch), <em>Reset zoom</em> (or a
-        double-click) shows the whole range; both are real buttons, so Tab reaches them. While zoomed, a thin strip
-        under the plot shows the whole range with the window on show as a handle: drag it, or focus it and press ← and
-        →, to pan.
+        and two fingers pinch the time axis about their midpoint, or pan it once zoomed. Click a chart first, and a
+        trackpad pinch, or <code className="font-mono">⌘/Ctrl</code> + wheel, zooms its time axis about the cursor
+        instead of the page; it stays the chart&apos;s while the chart has the focus or is zoomed, and a click elsewhere
+        gives it back to the page&apos;s zoom. A plain wheel always scrolls. <em>Back</em> undoes one zoom (a band, or a
+        whole pinch), <em>Reset zoom</em> (or a double-click) shows the whole range; both are real buttons, so Tab
+        reaches them. While zoomed, a thin strip under the plot shows the whole range with the window on show as a
+        handle: drag it, or focus it and press ← and →, to pan.
       </Note>
 
       <Example

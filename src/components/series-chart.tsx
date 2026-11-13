@@ -669,7 +669,9 @@ export interface SeriesChartProps<TRow extends object = object> {
    * On a touch screen one finger reads (the tooltip follows it) and two fingers zoom and
    * pan x, on a chart whose zoom names x; a mouse or a pen drags the band. On such a
    * chart a trackpad pinch, or Ctrl (⌘) + wheel, zooms x about the cursor instead of the
-   * page; a plain wheel still scrolls. While zoomed, Back undoes one zoom step (a band,
+   * page once the reader has clicked into the chart, while the focus is in it, and while
+   * it is zoomed; before that they are the page's zoom, which readers with low vision rely
+   * on. A plain wheel always scrolls. While zoomed, Back undoes one zoom step (a band,
    * or a whole pinch) and Reset zoom shows the whole range.
    */
   zoomAxes?: ZoomAxesSetting;

@@ -20,8 +20,9 @@
 //
 // On a touch screen one finger READS (the tooltip follows it) and two fingers zoom and
 // pan x (`ZoomLayer`); a mouse or a pen draws the band; a trackpad pinch, or Ctrl + wheel,
-// zooms x about the cursor. While x is zoomed an overview strip under the plot pans it
-// (./chart-zoom-overview).
+// zooms x about the cursor once the reader has clicked into the chart or focused it (until
+// then they are the page's zoom: ../hooks/use-zoom-engagement). While x is zoomed an
+// overview strip under the plot pans it (./chart-zoom-overview).
 //
 // Everything with a decision in it is a pure exported function below (`zoomAxesFor`,
 // `selectionFromDrag`, `zoomAfter`, `zoomDomains`, `fitYToX`, `fitXToY`, `zoomStep`,
@@ -58,6 +59,7 @@ import {
   type XWindow,
 } from "../lib/zoom-window";
 import { wheelZoomFactor } from "../lib/zoom-view";
+import { useZoomEngagement } from "../hooks/use-zoom-engagement";
 import { FOCUS_RING } from "./focus-ring";
 import { ZoomOverview } from "./chart-zoom-overview";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
@@ -687,6 +689,9 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
       if (wasZoomed.current && !zoomed) leaveChart(root.current);
       wasZoomed.current = zoomed;
     }, [zoomed]);
+    // Whether a trackpad pinch, or Ctrl + wheel, over the chart is the chart's zoom or the
+    // page's: pressed into, focused, or zoomed (in a `SharedXZoom`, the column zoomed).
+    const engaged = useZoomEngagement(root, zoomed);
 
     // Two fingers zoom x: on a chart whose drag names x at all.
     const pinchable = setting === "both" || setting === "x";
@@ -727,6 +732,7 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
         layer: (
           <ZoomLayer
             root={root}
+            engaged={engaged}
             axisIds={source.axes.map((axis) => axis.id)}
             only={only}
             whole={dataWhole}
@@ -764,6 +770,7 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
       };
     }, [
       setting,
+      engaged,
       xWindow,
       ownY,
       history,
@@ -866,9 +873,9 @@ interface TrackpadPinch {
  * - Two fingers zoom x about their midpoint and, as they move together, pan it
  *   (`pinchWindow`): tracked by pointer id, as ZoomableImage tracks its pinch. Lifting one
  *   ends the pinch, and the finger still down reads on.
- * - A trackpad pinch zooms x about the cursor (`zoomWindowAt`), one step a pinch (0.62).
+ * - A trackpad pinch zooms x about the cursor (`zoomWindowAt`), one step a pinch (0.62),
+ *   once the chart is engaged: pressed into, focused, or zoomed (`useZoomEngagement`).
  *
-
  * Nothing to assistive technology (0.52, refactor audit 2026-10-30, DSP-5): it was a
  * `role="application"` named by the drag hint, which could not take focus — the one name
  * on an otherwise unnamed chart. The hint is in the chart's description now
@@ -876,6 +883,7 @@ interface TrackpadPinch {
  */
 function ZoomLayer({
   root,
+  engaged,
   axisIds,
   only,
   whole: dataWhole,
@@ -891,6 +899,8 @@ function ZoomLayer({
 }: {
   /** The zoomable chart's own root, which hears a trackpad pinch over any of it. */
   root: RefObject<HTMLDivElement | null>;
+  /** Whether a trackpad pinch over it is the chart's yet (see `useZoomEngagement`). */
+  engaged: () => boolean;
   axisIds: string[];
   only?: "x" | "y";
   /** The range a pinch stops at when the chart does not say its own (see `ZoomRange`). */
@@ -952,7 +962,14 @@ function ZoomLayer({
      chart whose zoom names x it zooms x about the cursor instead, as ZoomableImage zooms
      its picture, and a mouse's Ctrl (⌘) + wheel does the same. Heard on the chart's root,
      so the axes and the strip take it too; a plain wheel still scrolls the page. Each
-     pinch is one step for Back, through the two-finger gesture's own `onPinch`. */
+     pinch is one step for Back, through the two-finger gesture's own `onPinch`.
+
+     Only once the chart is engaged (`useZoomEngagement`; Marcel, 2026-11-13): Ctrl + wheel
+     is also how a reader with low vision enlarges the page, and a page zoom that crossed a
+     chart zoomed the chart. Until it is pressed into, focused or zoomed, both are left to
+     the browser, unprevented. A pinch it took runs to its end even once the chart lets go
+     (`trackpad` until the wheel is quiet): a pinch out to the whole range after a press
+     elsewhere would otherwise hand its last turns to the page zoom halfway through. */
 
   /** The pinch, `now`, `scale` times larger than where it began, about the cursor at
    *  `clientX`. */
@@ -995,6 +1012,8 @@ function ZoomLayer({
   const onWheel = useEffectEvent((event: WheelEvent) => {
     // A plain wheel scrolls the page, as anywhere else.
     if (!pinchable || !(event.ctrlKey || event.metaKey) || !plot || !(plot.width > 0) || !whole) return;
+    // And a Ctrl + wheel over a chart the reader has not engaged is the page's zoom.
+    if (!trackpad.current && !engaged()) return;
     event.preventDefault();
     const now = trackpad.current;
     // Two fingers on a touch screen are their pointers'. A Safari pinch is its gesture
@@ -1018,6 +1037,9 @@ function ZoomLayer({
 
   const onSafariGesture = useEffectEvent((event: WebKitGestureEvent) => {
     if (!pinchable || !plot || !(plot.width > 0) || !whole) return;
+    // The wheel's rule. Two fingers on the plot have pressed into it: iOS's events beside
+    // them are still prevented below.
+    if (!trackpad.current && !engaged()) return;
     event.preventDefault();
     const now = trackpad.current;
     // iOS Safari sends a touch screen's pinch as these events too, beside the pointer
