@@ -246,8 +246,11 @@ describe("the offline peers stay behind @eifi1/ui-kit/offline", () => {
   it.each(PEERS)("%s is imported by the offline entry's modules and nowhere else", (peer) => {
     const importers = importedPackages().get(peer) ?? [];
     expect(importers.length).toBeGreaterThan(0);
-    const outside = importers.filter((file) => !/^src\/offline(\.ts|\/)/.test(file));
-    expect(outside, `${peer} imported outside src/offline*`).toEqual([]);
+    // 0.63: `@tanstack/react-query` is `/accounts`' too (its hooks, §12.9), behind that
+    // entry as behind this one; the persister and idb-keyval stay `/offline`'s alone.
+    const holders = peer === "@tanstack/react-query" ? /^src\/(offline|accounts)(\.ts|\/)/ : /^src\/offline(\.ts|\/)/;
+    const outside = importers.filter((file) => !holders.test(file));
+    expect(outside, `${peer} imported outside its entries' modules`).toEqual([]);
   });
 
   it.each(PEERS)("%s is an optional peer, and a devDependency for this repo's own tests", (peer) => {
@@ -356,12 +359,13 @@ describe("@eifi1/ui-kit/push-worker is worker-safe", () => {
  * `attachSessionRefresh` does: axios stays the app's dependency, and the entry asks for no
  * optional peer. Standalone, so its later rounds' TanStack Query hooks never reach the barrel.
  */
-describe("@eifi1/ui-kit/accounts needs only the kit's required peers", () => {
-  /** The optional peers another entry holds (`/offline`, `/sync`, `/rhf`, `/testing/react`),
-   *  and axios. Not sonner or modern-screenshot: the barrel's own modules load those lazily,
-   *  on first use, so reaching their importer installs nothing. */
+describe("@eifi1/ui-kit/accounts needs TanStack Query and the kit's required peers, nothing else", () => {
+  /** The optional peers another entry holds (`/offline`'s persistence, `/sync`, `/rhf`,
+   *  `/testing/react`), and axios. Not sonner or modern-screenshot: the barrel's own modules
+   *  load those lazily, on first use, so reaching their importer installs nothing. And not
+   *  `@tanstack/react-query`, which the hooks need (0.63, §12.9): an optional peer of this
+   *  entry as of `/offline`. */
   const HELD = [
-    "@tanstack/react-query",
     "@tanstack/react-query-persist-client",
     "@tanstack/query-async-storage-persister",
     "idb-keyval",
@@ -375,6 +379,7 @@ describe("@eifi1/ui-kit/accounts needs only the kit's required peers", () => {
     const reached = packagesReachedFrom("src/accounts.ts");
     // The session store; a dependency of the kit, so no install of the app's.
     expect(reached).toContain("zustand");
+    expect(reached).toContain("@tanstack/react-query");
     for (const peer of HELD) expect(reached).not.toContain(peer);
   });
 

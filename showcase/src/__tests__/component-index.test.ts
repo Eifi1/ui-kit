@@ -118,6 +118,7 @@ const NOT_ON_A_PAGE: Record<string, string> = {
   TableRow: "a part of Table (the Description list & table page)",
   TableHeaderCell: "a part of Table (the Description list & table page)",
   TableCell: "a part of Table (the Description list & table page)",
+  AccountsProvider: "hands `@eifi1/ui-kit/accounts`' client down; renders nothing of its own",
 };
 
 /**
@@ -168,6 +169,16 @@ const NOT_SHOWN: Record<string, string> = {
   describeAccountFailure: ACCOUNTS,
   useDescribeAccountFailure: ACCOUNTS,
   passkeysAvailable: ACCOUNTS,
+  useAccountsClient: ACCOUNTS,
+  useCurrentUser: ACCOUNTS,
+  useUpdateProfile: ACCOUNTS,
+  useChangePassword: ACCOUNTS,
+  useEmailChange: ACCOUNTS,
+  useAccountSessions: ACCOUNTS,
+  usePasskeys: ACCOUNTS,
+  useAccountExport: ACCOUNTS,
+  useAccountDeletion: ACCOUNTS,
+  useInvitationsAdmin: ACCOUNTS,
   releaseSyncEngine: ENGINE,
   syncEngineFor: ENGINE,
   rowByPk: ENGINE,

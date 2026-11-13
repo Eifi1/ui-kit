@@ -54,3 +54,18 @@ export type {
   AccountSessionInfo,
 } from "./accounts/accounts-api";
 export { passkeysAvailable } from "./accounts/passkey-ceremony";
+// 0.63 (§12.9 "The API and its hooks"): the provider and the TanStack Query hooks, with their
+// query keys. `@tanstack/react-query` is an optional peer, and this entry is one that needs it.
+export { AccountsProvider, accountQueryKeys, useAccountsClient } from "./accounts/accounts-context";
+export type { AccountsProviderProps } from "./accounts/accounts-context";
+export {
+  useAccountDeletion,
+  useAccountExport,
+  useAccountSessions,
+  useChangePassword,
+  useCurrentUser,
+  useEmailChange,
+  useInvitationsAdmin,
+  usePasskeys,
+  useUpdateProfile,
+} from "./accounts/accounts-hooks";

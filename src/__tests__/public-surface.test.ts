@@ -506,7 +506,11 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.63, the round's second part (+4): `describeAccountFailure`, `useDescribeAccountFailure`,
   // `ACCOUNT_FAILURE_CODES` and `DEFAULT_ACCOUNT_FAILURE_LABELS`.
   // (+1) `passkeysAvailable`; the routes are `client.api`, a property, not a name.
-  ["@eifi1/ui-kit/accounts", accounts, 7],
+  // (+12) the provider and the hooks: `AccountsProvider`, `useAccountsClient`,
+  // `accountQueryKeys`, `useCurrentUser`, `useUpdateProfile`, `useChangePassword`,
+  // `useEmailChange`, `useAccountSessions`, `usePasskeys`, `useAccountExport`,
+  // `useAccountDeletion`, `useInvitationsAdmin`.
+  ["@eifi1/ui-kit/accounts", accounts, 19],
   // 0.46.0: local-first phase 3 (docs/local-first-harmonization.md §2.3) — `createSyncDb`,
   // `SYNC_DB_STORES`, `createSyncEngine`, `DEFAULT_HOLD_CODES`, `DEFAULT_SYNC_BACKOFF_MS`,
   // `syncEngineFor`, `releaseSyncEngine`, `useSyncWorker`, `useSyncStatus`, `useSyncQuery` and the
