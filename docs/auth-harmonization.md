@@ -35,6 +35,7 @@ Snapshots, per-repo to-dos and the review logs are in
 | 11 | Session refresh | ui-kit 0.34.0, server-kit 0.8.0 | §11.7 |
 | 11.1, 11.5 | Where each one stands; per app | — (archived) | |
 | 11.7 | Settled after the reviews | — | index; folded into §11.2–§11.4 |
+| 12 | Layer 2: the server-kit runs the account routes | — (draft, 2026-11-13) | |
 
 ## 1. Where each one stands
 
@@ -829,3 +830,213 @@ went:
 - the kit's interceptor goes last (kk 4) → §11.3;
 - a signed-in endpoint answers 401 only about the session (ka 2) → §11.3, and decision 7;
 - each app's own steps (kk 1–5, kk 7, ka 4–9, KS 5, KS 6, KS 9) → the archive's §11.5.
+
+## 12. Layer 2: the server-kit runs the account routes (draft, 2026-11-13)
+
+**Status: draft for Marcel's decision (§12.7). Nothing is built.** Marcel, 2026-11-13, in
+Staunlabor's session: accounts and user admin should move into the server-kit next, "wenn das
+in weiten Teilen, wenn nicht sogar komplett, gleich ist". Staunlabor, a fourth app, starts
+accounts, admin, public feedback, passkeys and the translation review now, and would otherwise
+copy about 5,000 lines of backend a fourth time. The edge-token gap in the per-IP limits (only
+keksdose had the fix) shows what four copies cost. This section asks whether the copies are
+alike enough, and draws the cut on the pattern of feedback (server-kit 0.9) and the translation
+review (0.10): services behind ports that each app fills with its own tables, and a router
+factory (`docs/server-services-harmonization.md` §2).
+
+Sources: three read-only maps of the backends (2026-11-13: keksdose `main`, kastlan `main`,
+Kurvenschmiede `fix/edge-token` = `origin/main` + the edge token), and Staunlabor's two maps.
+
+### 12.1 Where each one stands
+
+| | keksdose | kastlan | Kurvenschmiede |
+|---|---|---|---|
+| Auth + account + user-admin backend, no tests | ≈ 11,800 lines (+ ≈ 450 erasure) | ≈ 6,300 (+ ≈ 2,200 shared with other parts) | ≈ 8,300 (teams, demo and dev switch ≈ 1,200 of it) |
+| Their tests | ≈ 12,700 | ≈ 3,900 | ≈ 6,000 |
+| server-kit pinned | 0.25 | 0.25 | 0.26 |
+| Sessions | the `iat` cut-off only | rows (`sid`), no expiry, never pruned | the `iat` cut-off only |
+| Access token | 24 h | 15 min, carries `company_id`, `roles`, `sid` | 24 h |
+| 2FA | TOTP, no backup codes | TOTP + 8 backup codes | none |
+| Passkeys | resident key; PRF for private mode; "passkey added" notice | resident key | resident key; spent-challenge table; name sealed |
+| Invitations | registration table + budget-share invites, one token lookup | one table: company + role, or a sign-up invitation | one table: role + team |
+| Pending address, links | token tables | columns on `users` | token tables |
+| Deletion | after 30 days, a job erases | operator: the platform erases | operator: an admin erases |
+| Admin scope | everybody | the acting company; a superuser's `/platform` | everybody |
+| Mail texts | inline, 4 languages | one file, 4 languages | inline, 7 languages |
+
+**The route surface is the same.** All three serve `register`, `login`, `login/set-password`,
+`refresh`, `logout`, `me` (GET, PATCH), `me/password`, `me/email` (with `resend`, `DELETE` and
+`confirm`), `me/export`, `me/deletion`, `invitations/check` and `invitations/accept`,
+`verify-email`, `resend-verification`, `password-reset/request`, `check` and `confirm`,
+`passkey/{register,login}/{begin,finish}`, `passkeys` (GET, PATCH, DELETE) and `demo-session`:
+about 30 routes, with the same bodies and answers within a field or a status, and the decisions
+inside them already server-kit layer 1 (`registration_decision`, `absent_account_check`, the
+claims, `mint`/`hash_token`, the schemas and `AuthErrorCode`). The admin surface is the same as
+well: the roster, active, role, forced password change, the two mails, the log, the attention
+tile, invitations, erase, the reviewer scope and the test mail, on `user_admin` layer 1.
+
+What only some have: 2FA (keksdose, kastlan), a sessions list (kastlan), the company routes
+(kastlan: switch company or role, create, leave), private mode's routes (keksdose: PRF, the key
+wrap) and keksdose's data operations under `/auth/me` (reset budget, wipe, load demo).
+
+### 12.2 The verdict: alike enough, with six seams
+
+What differs between the apps sits in six places, and each is a hook, not a fork:
+
+1. **What a sign-up and an accepted invitation attach**: keksdose's subscription, household,
+   budget and starter categories, or a budget share; kastlan's company, membership, contact and
+   subscription (with its RLS binding); Kurvenschmiede's subscription, team and shares.
+2. **What a token carries and what each request binds**: kastlan's acting company and roles,
+   the membership check (401) and the company check (403), the RLS variables.
+3. **Private mode around passwords and passkeys** (keksdose): the `encrypted` flag on the
+   challenge and the reset, the key wrap on a password change, PRF, and the last unlock path
+   that may not be deleted.
+4. **What else ends with the sessions**, and why: keksdose's API tokens and push devices
+   (revoked at a reset, a deactivation and a deletion request; kept at a password change).
+5. **Deletion and erasure**: the mode (operator or after N days, server-kit
+   `deletion_schedule`), what the request cancels or tells (billing, budget guests), and what
+   the erasure hands over (Kurvenschmiede's shared work, keksdose's budgets).
+6. **The extras on `/auth/me` and on the roster row**: plan, review scope, companies, privacy
+   fields, counts.
+
+Everything else is the same code three times, and **the drift between the copies is where the
+faults are**:
+- every app mails before its commit, so a request that rolls back can send a link that does not
+  work (only the public reset waits);
+- the token redemptions (`verify-email`, `password-reset/check|confirm`, `invitations/check`),
+  `refresh` and, in kastlan, the passkey, 2FA, password and address routes run without a limit;
+- kastlan checks `email_taken` before the registration gate, so an anonymous caller can tell
+  which addresses have an account;
+- kastlan's reset leaves an admin's forced password change in place; its forced change ends no
+  session; its `GET /auth/sessions` never marks the current one;
+- Kurvenschmiede's address confirmation attaches every unaccepted invitation for the new
+  address, expired ones included;
+- many refusals have no code (the bearer 401s, a wrong 2FA code, the passkey errors), so the
+  frontends show the server's English sentence;
+- a passkey sign-in skips the second factor in keksdose and kastlan, while no app asks the
+  authenticator to verify the person (UV).
+
+### 12.3 The cut
+
+Two router factories, on the pattern of `feedback_router(FeedbackDeps(...))`:
+
+- **`auth_router(AuthDeps(...))`** in `eifi1_server_kit.auth` (new `auth.ports`, `auth.service`,
+  `auth.router`, `auth.testing`): the ≈ 30 routes of §12.1, with 2FA, passkeys, the sessions
+  list and the demo session each mounted only when the app gives what they need.
+- **`user_admin_router(UserAdminDeps(...))`** in `eifi1_server_kit.user_admin`: the admin
+  surface of §12.1. kastlan mounts it twice, its company admin and its platform, each with its
+  own scope (§12.4).
+
+What stays app-side: the database and migrations, the app's routes beside the kit's (kastlan's
+company routes, keksdose's private-mode and data routes, Kurvenschmiede's teams), the hooks'
+bodies, and JWT signing (the kit keeps "no JWT library", §8: the app hands a signer).
+
+**The ports.** Async, in the caller's transaction; every write flushes and none commits
+(server-services §2.7). Rows are read through protocols, so an app's own columns and sealed
+fields stay in its adapter.
+
+| Port | Holds | Notes |
+|---|---|---|
+| `UserStore[UserT]` | the account row: `AccountRow` protocol (id, email, password hash, names, locale, role, active, demo, verified, the cut-off, forced change, deletion stamps, appearance, zone, created) | lookups by id and exact address (and the address tag's variants); add; update named fields; count people; delete |
+| `SessionStore` | the `user_sessions` rows of server-kit 0.27 (`sid`, user, device, address, started, last active, `shared_device`, `expires_at`, active) | start, get, touch, end one, end all but one, list a user's live ones |
+| `OneTimeTokenStore` | the reset, verification and address-change links (`OneTimeTokenKind`): hash, user, pinned address or new address, expiry | put replaces the user's earlier one of that kind; take by hash; drop. kastlan fills it from its `users` columns |
+| `InvitationStore[InvT]` | invitations: address, role, the app's `scope` (company, team, budget; opaque to the kit), expiry, accepted, revoked | by token hash; open ones for an address; accept; and the admin's list, add, re-mint, revoke |
+| `PasskeyStore` | credentials (id, public key, sign count, transports, name, used) and spent challenges | one-use challenges through a spend that answers false the second time (Kurvenschmiede's table), for every app |
+| `TwoFactorStore` (optional) | the sealed secret, the pending secret, the last step, the backup-code digests | mounted only with it; the app hands a `SecretSeal` (seal, open), so keksdose and kastlan keep their keys |
+| `AdminActionLog` | `admin_actions` rows (`admin_action_record`) | add; page by target; kastlan's company column through the scope |
+| `Mailer` | the transport (exists: Resend, console; kastlan's SMTP as its own `Mailer`) | |
+| `TokenSigner` | sign and verify the app's JWTs | the kit builds and checks the claims, as today |
+
+**The hooks** (`AuthHooks`, every one optional, each in the request's transaction unless said):
+- `on_register(user, invitation, body)` and `on_invitation_redeemed(user, invitation)`: seam 1.
+  The second also runs at an address confirmation, for open and unexpired invitations only.
+  `register_model` (a subclass of `RegisterRequest`) carries the app's fields: keksdose's
+  currency and terms version, kastlan's company name.
+- `claims(user, session)` and `bind(user, claims)`: seam 2. The kit's `current_user`
+  dependency checks the token, the session row and the cut-off, then calls `bind`, which may
+  refuse (kastlan's 401 for a lost membership, 403 for a deactivated company).
+- `password_changing(user, body)`, `challenge_extras(user)`, `reset_extras(user)`,
+  `passkey_extensions(user, ceremony)` and `passkey_removing(user, credential)`: seam 3, each
+  with a schema subclass where the body grows.
+- `sessions_ended(user, reason)`, the reason one of logout everywhere, password changed,
+  reset, deactivated, deletion requested, forced change: seam 4.
+- `DeletionPolicy` (server-kit's `deletion_schedule`), `on_deletion_requested(user)`,
+  `on_deletion_withdrawn(user)` and `erase(user)` (the hand-over; the kit then scrubs the log,
+  anonymises the feedback through `FeedbackService.erase_author` and deletes the row): seam 5.
+- `me_model` (a subclass of `UserResponse`) with `to_me(user)`, and `row_model` with
+  `to_row(user)` on the roster: seam 6.
+- `demo_guard` and `admin_guard`, the factories `feedback_router` already takes.
+- **Mail texts**: the kit writes the account mails in the seven languages (reset,
+  verification, address change and its notice, invitation, deletion, passkey added, the test
+  mail), as the ui-kit writes the sign-in words; an app may replace one kind.
+
+**Testing support** (`auth.testing`, `user_admin.testing`): in-memory stores, a `check_*`
+contract suite per port that an app runs against its own adapters, and a software
+authenticator for passkey tests (keksdose and Kurvenschmiede each have a `soft_webauthn.py`
+today).
+
+### 12.4 The admin scope
+
+`user_admin_router` takes an `AdminScope`: which accounts an admin sees and acts on, how the last
+admin is counted, whether a role is one value or a set, and which roles may be given. keksdose,
+Kurvenschmiede and Staunlabor use the global scope (one role per account). kastlan mounts its
+company admin with a company scope (the roles of the acting company, `other_companies`,
+`last_admin` naming the companies, seats through a hook) and its platform with the global scope
+under `/platform`. Teams (Kurvenschmiede) and budget shares (keksdose) stay app routes.
+
+### 12.5 What the kit settles where the copies differ
+
+The router does one thing where the apps do three. Most of it is the contract as written
+(§4–§6, §11, server-kit 0.27); these are the points where at least one app does otherwise
+today, and its adopt note names each:
+
+1. **Session rows and `sid` in every app** (0.27 already says so); `POST /auth/logout` ends
+   every session, `DELETE /auth/sessions/current` this one (§6.3); `GET /auth/sessions` marks
+   the caller's.
+2. **Mail after the commit**, every account mail (feedback already works this way, server-services
+   §2.16).
+3. **A code on every refusal**: new `AuthErrorCode` values for the bearer 401s, a wrong 2FA code
+   and a refused passkey, so the ui-kit says them in seven languages.
+4. **A limit on every anonymous redemption and on `refresh`** (per address of the caller, through
+   the edge-token check), and keksdose's per-account limit on signed-in password checks for all.
+5. **Sign-up checks in the order invitation, gate, `email_taken`**: kastlan changes.
+6. **A reset ends a forced password change, ends every session, and marks the address
+   verified** (it proved the address): kastlan's first part changes; keksdose and
+   Kurvenschmiede gain the last.
+7. **A forced password change ends the person's sessions** (keksdose, Kurvenschmiede): kastlan
+   changes.
+8. **Passkeys: one use per challenge through the store**; a passkey sign-in asks the
+   authenticator to verify the person (UV required) and then counts as both factors, so a
+   person with 2FA is not asked for a code after it. Today no app requires UV.
+9. **Only open, unexpired invitations attach** at an address confirmation (Kurvenschmiede
+   changes).
+10. **The kit's mail texts** in seven languages; an app may keep its own kind by kind.
+
+Not in this cut: rotating refresh tokens with reuse detection (no app rotates today; two tabs
+renewing at once would sign each other out without a grace window), and security notices for a
+password, 2FA or new sign-in (no app sends them). Both are later rounds if Marcel wants them.
+
+### 12.6 The order
+
+1. **server-kit 0.28**: `auth_router` with its ports, hooks, texts and testing support, and
+   the edge-token proof in `client_ip` (if it has not shipped on its own before). Staunlabor
+   builds its side against the draft ports at the same time (models, adapters, migration 0001,
+   the contract suites) and reports gaps; it is the first app on it.
+2. **server-kit 0.29**: `user_admin_router` with `AdminScope`. Staunlabor next, then
+   Kurvenschmiede (closest to the kit: one role, global scope; it needs the 0.27 session table
+   anyway).
+3. **kastlan and keksdose when it suits them**: kastlan's company scope and binding, keksdose's
+   private mode, are the largest hooks. Each keeps its own routes until it moves; nothing in the
+   kit forces a date.
+
+The ui-kit side is small: the new codes' words (§12.5 item 3) and the sessions list's current
+mark, in the round that ships with 0.28.
+
+### 12.7 For Marcel (one decision)
+
+- **A. The cut and the order** of §12.3–§12.6: two routers, the ports and hooks as drawn,
+  server-kit 0.28 (accounts) and 0.29 (admin), Staunlabor first, then Kurvenschmiede, kastlan
+  and keksdose at their own pace. *Recommended.*
+- **B. The kit's behaviour where the copies differ** (§12.5), as the default for every app.
+  Two of them a person notices: a passkey sign-in asks to unlock the device (PIN, fingerprint)
+  and then needs no 2FA code; and the account mails read in the kit's words.
+  *Recommended.*
