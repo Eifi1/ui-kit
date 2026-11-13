@@ -8,7 +8,7 @@ short life (15 minutes idle, 4 hours at most), every sign-out ends the session o
 an abandoned tab signs itself out, and push is not offered there (Marcel, 2026-11-12 and 13).
 Beside it: the kit's tables and crash buffer in a storage the app names (page memory on a shared
 computer), a `keyFilter` set said on the phone, the feedback URL column sorted by what it shows,
-a trackpad pinch that zooms a chart, the mouse band kept on the plot, the top page row's height
+a trackpad pinch that zooms a chart once it is clicked, the mouse band kept on the plot, the top page row's height
 for anchors, the showcase on server-kit 0.26 (the object store), and the kit's texts brought in
 line with Kurvenschmiede's plain feedback and its roles without customers.
 
@@ -390,17 +390,30 @@ column sorts and filters by what its cell shows, the kept params included".
 `SeriesChart` gets them, and so every `LegendedSeriesChart` with lines or areas. Bar charts zoom
 nothing by default and are unchanged. `StaticSeriesChart` does not zoom and is unchanged.
 
-- **A trackpad pinch zooms the chart, not the page.** Chrome, Edge and Firefox send a trackpad
-  pinch as Ctrl + wheel; Safari sends WebKit gesture events. Over a chart whose zoom names x
-  (`zoomAxes` "both" or "x", so every line and area chart by default), the pinch now zooms x
-  about the cursor and the page does not zoom. Ctrl (⌘ on a Mac) + mouse wheel does the same.
-  The whole chart takes it, axes and strip included. A **plain wheel still scrolls the page**.
-  A chart that zooms only y, or nothing, leaves the pinch to the browser.
+- **A trackpad pinch zooms the chart, not the page, once the chart is clicked.** Chrome, Edge
+  and Firefox send a trackpad pinch as Ctrl + wheel; Safari sends WebKit gesture events. Over a
+  chart whose zoom names x (`zoomAxes` "both" or "x", so every line and area chart by default),
+  the pinch zooms x about the cursor and the page does not zoom. Ctrl (⌘ on a Mac) + mouse wheel
+  does the same. The whole chart takes it, axes and strip included. A **plain wheel still
+  scrolls the page**. A chart that zooms only y, or nothing, leaves the pinch to the browser.
+  - **Only while the chart is engaged** (Marcel, 2026-11-13). Ctrl + mouse wheel is how many
+    readers with low vision enlarge a page, so over a chart nobody has clicked, the pinch and
+    Ctrl + wheel are left to the browser and the page zooms as usual. The chart is engaged when
+    the reader's last press (mouse, pen or finger) landed in it, or the focus last moved into it
+    (its keyboard stop, Back, Reset zoom, the overview strip), or while it is zoomed. A press
+    elsewhere, or the focus moving elsewhere, ends it while the chart is not zoomed. A zoomed
+    chart stays engaged until the zoom is reset. In a `SharedXZoom` column every chart counts as
+    zoomed while the column is.
+  - A pinch the chart took runs to its end, even once the chart lets go (a pinch out to the
+    whole range after a press elsewhere). The page zoom does not take over halfway through.
   - One Back step per pinch. A wheel pinch ends after 300 ms without a wheel event; a Safari
     pinch ends at `gestureend`. Pinching out to the whole range ends the zoom, as two fingers do.
   - One pinch arriving both ways (gesture events and Ctrl + wheel) zooms once.
-  - On iOS, the gesture events Safari sends beside a two-finger touch pinch are only prevented.
-    The touch pinch zooms, as before.
+  - **Touch is unchanged.** Two fingers on the plot press into it, so they zoom as before. On
+    iOS, the gesture events Safari sends beside a two-finger touch pinch are only prevented.
+  - No hint appears when an un-clicked chart gets Ctrl + wheel. That wheel is taken to be a page
+    zoom, and a hint would show on every chart a reader's pointer crossed while enlarging the
+    page. The chart's spoken description says to click first (below).
 - **A mouse band stops at the plot's edge.** A drag carried past the plot used to zoom into a
   window outside the data, and the overview handle then stood past the end of its track. The
   band is now kept on the plot, on both axes, both while it is drawn and when it is let go.
@@ -417,32 +430,77 @@ nothing by default and are unchanged. `StaticSeriesChart` does not zoom and is u
 
 **New words** (all seven catalogues; **es, hu and zh need native review**):
 `seriesChart.zoomHint`, the chart's spoken description, gains one sentence on the trackpad
-pinch and Ctrl + wheel ("On a trackpad, pinch to zoom; with a mouse, hold Ctrl and turn the
-wheel."). No new key. An app that overrides `zoomHint` keeps its own text.
+pinch and Ctrl + wheel ("To zoom with a trackpad pinch, or with Ctrl and the mouse wheel, click
+the chart first."). No new key. An app that overrides `zoomHint` keeps its own text; if its text
+names the pinch or the wheel, add that the chart is clicked first.
 
 **Legal wording:** none.
 
-**Kurvenschmiede** (every chart is a line chart, through `frontend/src/shared/charts/series-chart.tsx`):
+**Kurvenschmiede:**
 
-- Nothing to change. On a laptop: pinch on the trackpad over a curve, then press Back.
-- Please report what a real Safari on a Mac does with a trackpad pinch over a chart: the
-  kit's tests send synthetic gesture events in jsdom.
+- Nothing to change. On a laptop: click a curve, pinch on the trackpad, then press Back. Then
+  click outside the chart and pinch over it again: the page zooms.
+- Please report what a real Safari on a Mac does with a trackpad pinch over a chart, before and
+  after a click: the kit's tests send synthetic gesture events in jsdom.
 
-**keksdose** (zoomable: the line charts `features/reports/charts/networth-line.tsx`,
-`investments-line.tsx`, `paper-price-chart.tsx`, `features/reports/tabs/price-history-tab.tsx`,
-`features/admin/metrics-panel.tsx`; the area charts `features/reports/charts/cash-buffer-chart.tsx`
-and `wide-series-chart.tsx` when it draws areas; the bar charts are unchanged):
+**keksdose:**
 
 - Nothing to change.
-- A Ctrl + wheel over one of these charts now zooms the chart instead of the page.
+- A Ctrl + wheel over one of these charts zooms the page as before until the chart is clicked;
+  after a click it zooms the chart.
 
-**kastlan** (the occupancy area chart in `frontend/src/features/reporting/components/charts-tab.tsx`
-zooms; `features/dashboard/components/revenue-chart.tsx` is bars and is unchanged):
+**kastlan:**
 
-- Nothing to change. The occupancy chart zooms with a trackpad pinch.
+- Nothing to change. The occupancy chart zooms with a trackpad pinch once it is clicked.
 
-**Tests:** no app test changes. No app test sends a wheel event to a chart. The kit's tests: `src/components/__tests__/chart-zoom.test.tsx` and
-`chart-zoom-touch.test.tsx`, plus `src/lib/__tests__/zoom-window.test.ts`.
+**Tests:** no app test changes. No app test sends a wheel event to a chart. The kit's tests:
+`src/components/__tests__/chart-zoom.test.tsx` (the block "Ctrl + wheel and Safari's pinch only
+once engaged") and `chart-zoom-touch.test.tsx`, plus `src/lib/__tests__/zoom-window.test.ts`.
+
+## ZoomableImage: Ctrl + wheel and a trackpad pinch only once the picture is clicked
+
+**What changed.** Since 0.59 (Ctrl/⌘ + wheel) and 0.60 (Safari's trackpad pinch), the picture
+took the page-zoom signal whenever the pointer was over it. A reader enlarging the page with
+Ctrl + wheel zoomed the receipt instead. Now ZoomableImage follows the charts' rule (Marcel,
+2026-11-13):
+
+- Ctrl/⌘ + wheel and Safari's gesture events zoom the picture only while it is engaged:
+  - the reader's last press landed in it (the picture or its zoom buttons, any pointer), or
+  - the focus last moved into it (the box, a button), or
+  - it is zoomed.
+
+  Otherwise they are left to the browser, and the page zooms as usual.
+- A press elsewhere, or the focus moving elsewhere, ends it at fit-to-width. A zoomed picture
+  stays engaged until it is back at fit.
+- A wheel turn it took runs to its end (300 ms without a wheel), and a Safari pinch from its
+  `gesturestart` to its `gestureend`.
+- **Touch is unchanged:** pinch, two-finger pan and double-tap work as before. The plain wheel
+  still scrolls the box, then the page. The + − 0 keys and the buttons are unchanged.
+- The root element now merges the caller's `ref` with the kit's own. What the caller's ref
+  points at is unchanged.
+
+**Must change:** nothing. No prop or type changed.
+
+**New words:** none. The box's spoken hint names only the keys.
+
+**Legal wording:** none.
+
+**keksdose:** nothing to change. The receipt preview (`shared/components/scan-file-preview.tsx`)
+shows ZoomableImage only to a touch screen (`(pointer: fine)` gets the hover lens), so on a
+desktop this does not reach it. On a touch laptop with a trackpad: click the receipt, then
+pinch.
+
+**kastlan:** nothing to change, if it shows ZoomableImage anywhere (0.59 offered it for handover
+photos and scans).
+
+**Kurvenschmiede:** nothing. It does not use ZoomableImage.
+
+**Tests:** no app test changes. The kit's: `src/components/__tests__/zoomable-image.test.tsx`
+(the block "⌘/Ctrl + wheel and Safari's pinch only once engaged").
+
+**Not tried in a browser.** Engagement was tested in jsdom with synthetic pointer, focus, wheel
+and gesture events. Not tried: a real Chrome or Firefox trackpad pinch, or Safari on a Mac or an
+iPad.
 
 ## The top page row's height, `--app-subnav-h`, and anchors that clear it (AppShell)
 

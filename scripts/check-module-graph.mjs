@@ -278,7 +278,10 @@ const BUDGETS = [
   // (`swipeSetting`, 17 keys, registered in i18n/defaults.ts beside every namespace) and the
   // page reduction's shared query step (feedback-page.ts, which the top bar's dialog reads) —
   // meant growth, 424 B (158 gzip).
-  { label: "the shell set", names: SHELL_SET, max: 161_600 },
+  // 161,677 B (56,117 gzip) in 0.62: the shared-computer words (the idle warning, Stay signed
+  // in, push refused on a shared computer) registered beside every namespace, and AppShell's
+  // measured top row (`--app-subnav-h`) — meant growth, 119 B (49 gzip).
+  { label: "the shell set", names: SHELL_SET, max: 161_800 },
 ];
 const ENTRY = "\0import-cost";
 async function importCost(names) {
