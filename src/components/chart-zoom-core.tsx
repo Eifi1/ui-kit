@@ -59,7 +59,7 @@ import {
 } from "../lib/zoom-window";
 import { wheelZoomFactor } from "../lib/zoom-view";
 import { FOCUS_RING } from "./focus-ring";
-import { ZOOM_OVERVIEW_HEIGHT, ZoomOverview } from "./chart-zoom-overview";
+import { ZoomOverview } from "./chart-zoom-overview";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { DEFAULT_SERIES_CHART_LABELS, type SeriesChartLabels } from "./series-chart-labels";
 
@@ -521,11 +521,9 @@ export interface ZoomTarget {
   zoomAxes?: ZoomAxesSetting;
   /**
    * The overview strip under the chart while x is zoomed: the whole range, with the window
-   * on show as a handle that drags and takes ←/→. Default `true`. Its 1.5rem stays free
-   * under the chart while unzoomed too, so nothing moves when it comes; `false` frees it.
-   * Inside a `SharedXZoom` the column draws ONE, under its last chart that has one, and
-   * only that chart keeps the room: `false` on a chart takes it off that chart (the strip
-   * then goes under the last chart that still has one).
+   * on show as a handle that drags and takes ←/→. Default `true`. Inside a `SharedXZoom`
+   * the column draws ONE, under its last chart that has one: `false` on a chart takes it
+   * off that chart (the strip then goes under the last chart that still has one).
    */
   zoomOverview?: boolean;
 }
@@ -660,15 +658,14 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
 
     // The overview strip's slot, under the chart: the layer portals the strip into it (it
     // knows where the plot is). In a `SharedXZoom` only the column's last slot is drawn
-    // into, so each chart with a plot claims its own (a ref callback's cleanup gives it back).
-    const stripable = setting !== "none" && props.zoomOverview !== false;
-    const overview = stripable && !empty;
+    // into, so each chart claims its own (a ref callback's cleanup gives it back).
+    const overview = setting !== "none" && props.zoomOverview !== false && !empty;
     const [slot, setSlot] = useState<HTMLDivElement | null>(null);
     const claim = group?.claim;
     const slotRef = useCallback(
       (node: HTMLDivElement | null) => {
         setSlot(node);
-        if (!node || !overview) return;
+        if (!node) return;
         const release = claim?.(node);
         // With a cleanup to call, React no longer calls the ref with `null` on detach.
         return () => {
@@ -676,19 +673,9 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
           release?.();
         };
       },
-      [claim, overview],
+      [claim],
     );
     const strip = overview && slot && (!group || group.strip === slot) ? slot : null;
-    // The strip's room is kept from the start (0.62): drawn only once x was zoomed, the
-    // strip pushed everything under the chart 1.5rem down at the first zoom. Kept, not
-    // overlaid: over the plot's foot it would hide the lowest samples, which the refit puts
-    // there, and over the x ticks the one ruler a zoomed window has; and a plot that gave
-    // the room up only while zoomed would jump shorter the moment the reader zoomed in to
-    // look closer. The price is 1.5rem free under each chart that can draw a strip, the
-    // same zoomed or not, and none under one that cannot (`zoomOverview={false}`, no zoom).
-    // An empty chart keeps it, so toggling every line off and on again moves nothing. In
-    // a `SharedXZoom` column only the chart that draws the column's strip keeps it.
-    const reserved = stripable && (!group || (slot !== null && group.strip === slot));
 
     // Every way back to the whole range clears the tooltip — the button, a double click,
     // Back past the first step, a pinch out to it, and in a `SharedXZoom` any of those on
@@ -815,9 +802,7 @@ export function withChartZoom<P extends ZoomTarget>(Chart: ComponentType<P>) {
             </button>
           </div>
         )}
-        {stripable && (
-          <div ref={slotRef} data-zoom-overview-slot="" className={reserved ? ZOOM_OVERVIEW_HEIGHT : undefined} />
-        )}
+        {overview && <div ref={slotRef} data-zoom-overview-slot="" />}
       </div>
     );
   }

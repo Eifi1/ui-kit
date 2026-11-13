@@ -21,10 +21,6 @@ const MIN_HANDLE = 24;
 /** What an arrow key pans, as a share of the window on show. */
 const KEY_STEP = 0.1;
 
-/** The strip's height: the handle's 24px hit area (WCAG 2.5.8) at Normal text. The zoom
- *  keeps this much room under the chart before the strip is drawn (chart-zoom-core.tsx). */
-export const ZOOM_OVERVIEW_HEIGHT = "h-6";
-
 export interface ZoomOverviewProps {
   /** The range the chart draws unzoomed: the track. */
   whole: XWindow;
@@ -47,9 +43,9 @@ const clamp = (value: number, min: number, max: number) => Math.min(Math.max(val
 
 /**
  * The strip. Thin and quiet — a `bg-hover` track, a handle in the input border's ink —
- * and only there while x is zoomed, so an unzoomed chart draws nothing more. Its 1.5rem
- * is kept free under the chart from the start (see `withChartZoom`), so nothing under the
- * chart moves when it comes, and the plot keeps the height the app gave it.
+ * and only there while x is zoomed, so it costs an unzoomed chart nothing; when it comes,
+ * the page under the chart moves down by its 1.5rem, the price of keeping the plot's own
+ * height.
  *
  * The handle is a `slider` (the window's start, between the range's start and its end less
  * the window), named by `name` and said by `range`: ←/↓ and →/↑ pan a tenth of the window,
@@ -105,7 +101,7 @@ export function ZoomOverview({ whole, window, left, width, label = String, name,
 
   return (
     // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- it only keeps a click from reaching the chart's drilldown (above); the handle inside is the control, with its keys
-    <div dir="ltr" className={cn("relative", ZOOM_OVERVIEW_HEIGHT)} data-zoom-overview="" onClick={keepClick}>
+    <div dir="ltr" className="relative h-6" data-zoom-overview="" onClick={keepClick}>
       <div className="absolute inset-y-0" style={{ left, width }}>
         <div aria-hidden className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-hover" />
         <div

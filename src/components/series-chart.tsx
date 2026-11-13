@@ -676,11 +676,9 @@ export interface SeriesChartProps<TRow extends object = object> {
   /**
    * The overview strip under the plot while x is zoomed: the whole range as a thin track,
    * and the window on show as a handle that drags (mouse or finger) and takes ←/→ to pan,
-   * Home and End to go to the ends. Default `true`; `false` draws none. Its 1.5rem stays
-   * free under the chart while unzoomed too, so the page does not move when it comes;
-   * `false` frees it. Inside a `SharedXZoom` the column draws one, under its last chart
-   * that has one, and only that chart keeps the room. Ignored by `StaticSeriesChart` and
-   * by a chart that does not zoom.
+   * Home and End to go to the ends. Default `true`; `false` draws none. Inside a
+   * `SharedXZoom` the column draws one, under its last chart that has one. Ignored by
+   * `StaticSeriesChart` and by a chart that does not zoom.
    */
   zoomOverview?: boolean;
   /**
