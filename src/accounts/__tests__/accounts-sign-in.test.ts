@@ -105,9 +105,11 @@ describe("signIn", () => {
   });
 
   it("rejects an answer that is neither a session nor a challenge, and keeps nothing", async () => {
-    const { client } = setup(() => ({ status: 200, data: { access_token: "a1" } }));
-    await expect(client.signIn({ email: "a@x", password: "pw" })).rejects.toThrow(TypeError);
-    expect(localStorage.getItem(KEY)).toBeNull();
+    for (const data of [{ access_token: "a1" }, { challenge_token: "c3", requires_magic_link: true }]) {
+      const { client } = setup(() => ({ status: 200, data }));
+      await expect(client.signIn({ email: "a@x", password: "pw" })).rejects.toThrow(TypeError);
+      expect(localStorage.getItem(KEY)).toBeNull();
+    }
   });
 
   it("tells the app that a sign-in as another account replaced the one before, and stays on the page", async () => {
@@ -186,6 +188,12 @@ describe("register", () => {
     const { client, http } = setup(() => ({ status: 201, data: tokens("a1", "r1", ada) }));
     await client.register(values, { shared_device: false });
     expect(body(http.sent[0]).shared_device).toBe(true);
+  });
+
+  it("rejects an answer that holds no session, and keeps nothing", async () => {
+    const { client } = setup(() => ({ status: 201, data: { user: ada } }));
+    await expect(client.register(values)).rejects.toThrow(TypeError);
+    expect(localStorage.getItem(KEY)).toBeNull();
   });
 
   it("rejects a refusal with the client's own error, and keeps nothing", async () => {

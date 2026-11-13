@@ -130,6 +130,32 @@ describe("the refresh", () => {
     expect(fetch.mock.calls[0]![0]).toBe("https://api.example/v1/auth/refresh");
   });
 
+  it("goes out on the browser's fetch by default, at the origin's /auth/refresh without a base URL", async () => {
+    stored("a1");
+    const browserFetch = fakeFetch((body) => ({ status: 200, data: tokens("a2", body.refresh_token, ada) }));
+    vi.stubGlobal("fetch", browserFetch);
+    try {
+      const http = fakeHttp((config) => ({ status: config.headers?.Authorization === "Bearer a2" ? 200 : 401 }), null);
+      track({
+        client: createAccountsClient<User>({ http, storagePrefix: "app.", publicPaths: [], navigate: vi.fn() }),
+      });
+      expect((await http.get("/me")).status).toBe(200);
+      expect(browserFetch.mock.calls[0]![0]).toBe("/auth/refresh");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("keeps an account whose id is a string (a UUID), as one whose id is a number", async () => {
+    const uuid = { id: "0b9d…", email: "u@example.com" } as unknown as User;
+    stored("a1", "r1", uuid);
+    const { client, http } = track(
+      setup({ refresh: (body) => ({ status: 200, data: tokens("a2", body.refresh_token, uuid as never) }) }),
+    );
+    await http.get("/me");
+    expect(client.useSession.getState().user).toEqual(uuid);
+  });
+
   it("a refresh the server refuses ends the session: gone from the storage and the store, the app told, a private page off to the sign-in with ?next=", async () => {
     stored("a1");
     const { client, http, navigate, onSessionEnded } = track(
@@ -268,6 +294,23 @@ describe("a session ended in another tab", () => {
     otherTab();
     expect(record()).toEqual({ token: "b1", refreshToken: "rb", user: { id: 2, email: "bob@example.com" } });
     expect(navigate).toHaveBeenCalledExactlyOnceWith("/start");
+  });
+
+  it("a demo signed out in another tab ends at its own page", () => {
+    stored("a1", null, { ...ada, is_demo: true });
+    const { navigate, onSessionEnded } = track(setup({ demo: {} }));
+    localStorage.removeItem(KEY);
+    otherTab();
+    expect(onSessionEnded).toHaveBeenCalledWith({ reason: "elsewhere", user: { ...ada, is_demo: true }, demo: true });
+    expect(navigate).toHaveBeenCalledExactlyOnceWith("/demo/ended");
+  });
+
+  it("a tab that holds no session ends nothing when another tab signs in", () => {
+    const { navigate, onSessionEnded } = track(setup());
+    stored("b1", "rb", { id: 2, email: "bob@example.com" });
+    otherTab();
+    expect(onSessionEnded).not.toHaveBeenCalled();
+    expect(navigate).not.toHaveBeenCalled();
   });
 
   it("on a public page, the page is loaded again where it stands", () => {

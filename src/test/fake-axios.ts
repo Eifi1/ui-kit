@@ -31,7 +31,8 @@ export function httpError(status: number, config: Cfg, data?: unknown) {
   });
 }
 
-export function fakeHttp(server: (config: Cfg) => Answer | Promise<Answer>, baseURL = "/api/v1") {
+/** `baseURL` `null`: an instance with no `defaults` at all. */
+export function fakeHttp(server: (config: Cfg) => Answer | Promise<Answer>, baseURL: string | null = "/api/v1") {
   const manager = <V>() => {
     const handlers: Array<{ ok: (v: V) => V | Promise<V>; err: (e: unknown) => unknown } | null> = [];
     return {
@@ -80,7 +81,7 @@ export function fakeHttp(server: (config: Cfg) => Answer | Promise<Answer>, base
   return {
     interceptors: { request, response },
     request: vi.fn(send),
-    defaults: { baseURL },
+    defaults: baseURL === null ? undefined : { baseURL },
     sent,
     get: (url: string) => send({ method: "get", url }),
   };

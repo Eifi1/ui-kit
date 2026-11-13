@@ -98,6 +98,8 @@ describe("the session store", () => {
     }
     localStorage.setItem(KEY, JSON.stringify({ ...ada, user: { email: "no id" } }));
     expect(createSessionStore<User>({ key: KEY }).read()).toBeNull();
+    localStorage.setItem(KEY, JSON.stringify({ ...ada, refreshToken: 7 }));
+    expect(createSessionStore<User>({ key: KEY }).read()).toBeNull();
   });
 
   it("keeps a session that has no refresh token, as a demo's", () => {
@@ -112,6 +114,15 @@ describe("the session store", () => {
     store.setUser({ id: 1, email: "ada@new.example" });
     expect(JSON.parse(local()!)).toEqual({ ...ada, user: { id: 1, email: "ada@new.example" } });
     expect(store.useSession.getState().user).toEqual({ id: 1, email: "ada@new.example" });
+  });
+
+  it("keeps no account without a session, and takes up nothing when nothing is stored", () => {
+    const store = createSessionStore<User>({ key: KEY });
+    store.setUser(ada.user);
+    expect(local()).toBeNull();
+    expect(store.useSession.getState()).toEqual({ token: null, user: null });
+    store.adopt();
+    expect(store.useSession.getState()).toEqual({ token: null, user: null });
   });
 
   it("drops the session from every place and from the state", () => {
