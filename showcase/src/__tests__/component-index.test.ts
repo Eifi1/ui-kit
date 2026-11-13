@@ -165,6 +165,8 @@ const NOT_SHOWN: Record<string, string> = {
   resubscribeAfterChange: WORKER,
   createAccountsClient: ACCOUNTS,
   accountStorageEntries: ACCOUNTS,
+  describeAccountFailure: ACCOUNTS,
+  useDescribeAccountFailure: ACCOUNTS,
   releaseSyncEngine: ENGINE,
   syncEngineFor: ENGINE,
   rowByPk: ENGINE,

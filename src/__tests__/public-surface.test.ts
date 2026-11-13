@@ -503,7 +503,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.63 (docs/auth-harmonization.md §12.9): the account layer's frontend half, its first
   // part the session — `createAccountsClient`, `accountStorageEntries`. Standalone: an API of
   // its own, whose later rounds bring TanStack Query hooks the barrel must not reach.
-  ["@eifi1/ui-kit/accounts", accounts, 2],
+  // 0.63, the round's second part (+4): `describeAccountFailure`, `useDescribeAccountFailure`,
+  // `ACCOUNT_FAILURE_CODES` and `DEFAULT_ACCOUNT_FAILURE_LABELS`.
+  ["@eifi1/ui-kit/accounts", accounts, 6],
   // 0.46.0: local-first phase 3 (docs/local-first-harmonization.md §2.3) — `createSyncDb`,
   // `SYNC_DB_STORES`, `createSyncEngine`, `DEFAULT_HOLD_CODES`, `DEFAULT_SYNC_BACKOFF_MS`,
   // `syncEngineFor`, `releaseSyncEngine`, `useSyncWorker`, `useSyncStatus`, `useSyncQuery` and the

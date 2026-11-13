@@ -475,6 +475,8 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "mailTestCard.transport": [["{{backend}}"]],
   "mailTestCard.sent": [["{{address}}"]],
   "mailTestCard.rateLimited": [[], [30], [300]],
+  // 0.63 (auth §12.9): describeAccountFailure's throttle, as every other one.
+  "accountFailure.rateLimited": [[], [30], [300]],
   "adminArea.forbiddenBody": [["{{app}}"]],
   "adminArea.tiles.usersNew": one,
   // 0.42.0 (docs/top-bar-harmonization.md §3.1): the sync indicator's counts, its time, the

@@ -19,3 +19,16 @@ export type {
   AccountTokens,
 } from "./accounts/accounts-client";
 export type { AccountSession, AccountUser, SharedSessionPlace } from "./accounts/session-store";
+// 0.63 (§12.9 "Refusals"): every coded refusal of the account routes in the kit's seven
+// languages, offline and timeouts, and the app's own codes through its catalogue.
+export {
+  ACCOUNT_FAILURE_CODES,
+  DEFAULT_ACCOUNT_FAILURE_LABELS,
+  describeAccountFailure,
+  useDescribeAccountFailure,
+} from "./accounts/account-failure";
+export type {
+  AccountFailureCode,
+  AccountFailureLabels,
+  DescribeAccountFailureOptions,
+} from "./accounts/account-failure";

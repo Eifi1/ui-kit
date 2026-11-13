@@ -2209,6 +2209,51 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       atBottom: "Déjà tout en bas",
       moved: (position, total) => `Déplacé en position ${n(position)} sur ${n(total)}`,
     },
+    // 0.63 (auth §12.9, server-kit 0.29): describeAccountFailure — every coded refusal of the
+    // account routes; the older codes in the words the kit's forms already use for them.
+    accountFailure: {
+      codes: {
+        invalid_credentials: "L’adresse e-mail ou le mot de passe est incorrect.",
+        registration_closed:
+          "Les nouveaux comptes ne sont créés que sur invitation. Demandez à l’exploitant d’inviter votre adresse e-mail.",
+        email_taken: "Un compte existe déjà avec cette adresse e-mail.",
+        invitation_invalid: "Ce lien d’invitation n’est pas valide.",
+        invitation_expired: "Cette invitation a expiré. Demandez-en une nouvelle.",
+        token_invalid: "Ce lien est invalide ou a expiré.",
+        token_expired: "Ce lien a expiré. Demandez-en un nouveau.",
+        account_inactive: "Ce compte est désactivé.",
+        session_ended: "Votre session a pris fin. Veuillez vous reconnecter.",
+        not_signed_in: "Vous n’êtes pas connecté. Veuillez vous connecter.",
+        admin_required: "Seul un administrateur peut faire cela.",
+        password_unchanged: "Le nouveau mot de passe est identique à l’actuel. Choisissez-en un autre.",
+        password_change_not_required: "Ce compte n’a plus besoin d’un nouveau mot de passe. Veuillez vous connecter.",
+        email_unchanged: "C’est déjà votre adresse.",
+        email_change_not_pending: "Aucun changement d’adresse n’est en attente.",
+        mail_not_sent: "L’e-mail n’a pas pu être envoyé. Veuillez réessayer plus tard.",
+        passkey_refused: "Échec de la connexion par clé d’accès.",
+        passkey_registration_refused: "La clé d’accès n’a pas pu être ajoutée. Veuillez réessayer.",
+        passkey_not_found: "Cette clé d’accès n’existe plus.",
+        session_not_found: "Cette session a déjà pris fin.",
+        invitation_not_found: "Cette invitation n’existe plus.",
+        invitation_closed: "Cette invitation a déjà été acceptée ou révoquée.",
+        invitation_scope_invalid: "La sélection pour cette invitation n’est pas disponible.",
+        last_admin: "C’est le dernier compte administrateur actif. Nommez d’abord quelqu’un d’autre administrateur.",
+        self_action: "Vous ne pouvez pas faire cela sur votre propre compte.",
+        other_companies:
+          "Ce compte appartient aussi à d’autres entreprises, seul l’exploitant de la plateforme peut donc faire cela. Vous pouvez plutôt le retirer de cette entreprise.",
+        household_has_members:
+          "Votre ménage a d’autres membres, le compte ne peut donc pas être supprimé ici. Veuillez écrire à l’exploitant.",
+        confirmation_required: "Veuillez d’abord confirmer.",
+        confirmation_mismatch: "Ce n’est pas l’adresse de votre compte.",
+        password_incorrect: "Le mot de passe est incorrect.",
+        demo_refused: "La démo ne permet pas cela.",
+      },
+      offline: "Impossible de joindre le serveur. Vérifiez votre connexion et réessayez.",
+      timeout: "Le serveur a mis trop de temps à répondre. Veuillez réessayer.",
+      server: "Une erreur s’est produite sur le serveur. Veuillez réessayer plus tard.",
+      rateLimited,
+      failed: "Cela n’a pas fonctionné. Veuillez réessayer.",
+    },
   };
 }
 

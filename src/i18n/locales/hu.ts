@@ -2167,6 +2167,51 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       atBottom: "Már a legalsó helyen van",
       moved: (position, total) => `Áthelyezve: ${n(position)}. hely (összesen ${n(total)})`,
     },
+    // 0.63 (auth §12.9, server-kit 0.29): describeAccountFailure — every coded refusal of the
+    // account routes; the older codes in the words the kit's forms already use for them.
+    accountFailure: {
+      codes: {
+        invalid_credentials: "Az e-mail-cím vagy a jelszó helytelen.",
+        registration_closed:
+          "Új fiókot csak meghívással lehet létrehozni. Kérje meg az üzemeltetőt, hogy küldjön meghívót az e-mail-címére.",
+        email_taken: "Ezzel az e-mail-címmel már létezik fiók.",
+        invitation_invalid: "Ez a meghívóhivatkozás érvénytelen.",
+        invitation_expired: "Ez a meghívó lejárt. Kérjen újat.",
+        token_invalid: "Ez a hivatkozás érvénytelen vagy lejárt.",
+        token_expired: "Ez a hivatkozás lejárt. Kérjen újat.",
+        account_inactive: "Ez a fiók inaktív.",
+        session_ended: "A munkamenete véget ért. Kérjük, jelentkezzen be újra.",
+        not_signed_in: "Nincs bejelentkezve. Kérjük, jelentkezzen be.",
+        admin_required: "Ezt csak adminisztrátor teheti meg.",
+        password_unchanged: "Az új jelszó megegyezik a jelenlegivel. Válasszon másikat.",
+        password_change_not_required: "Ennek a fióknak már nincs szüksége új jelszóra. Kérjük, jelentkezzen be.",
+        email_unchanged: "Már ez az Ön címe.",
+        email_change_not_pending: "Nincs függőben lévő címváltoztatás.",
+        mail_not_sent: "Az e-mailt nem sikerült elküldeni. Kérjük, próbálja újra később.",
+        passkey_refused: "A bejelentkezés hozzáférési kulccsal sikertelen.",
+        passkey_registration_refused: "A hozzáférési kulcsot nem sikerült hozzáadni. Kérjük, próbálja újra.",
+        passkey_not_found: "Ez a hozzáférési kulcs már nem létezik.",
+        session_not_found: "Ez a munkamenet már véget ért.",
+        invitation_not_found: "Ez a meghívó már nem létezik.",
+        invitation_closed: "Ezt a meghívót már elfogadták vagy visszavonták.",
+        invitation_scope_invalid: "A meghívóhoz választott lehetőség nem érhető el.",
+        last_admin: "Ez az utolsó aktív adminisztrátor. Előbb tegyen adminisztrátorrá valaki mást.",
+        self_action: "Ezt a saját fiókjával nem teheti meg.",
+        other_companies:
+          "Ez a fiók más cégekhez is tartozik, ezért ezt csak a platform üzemeltetője teheti meg. Ehelyett eltávolíthatja ebből a cégből.",
+        household_has_members:
+          "A háztartásának más tagjai is vannak, ezért a fiók itt nem törölhető. Kérjük, írjon az üzemeltetőnek.",
+        confirmation_required: "Kérjük, előbb erősítse meg.",
+        confirmation_mismatch: "Ez nem a fiókja címe.",
+        password_incorrect: "A jelszó helytelen.",
+        demo_refused: "Ez a demóban nem lehetséges.",
+      },
+      offline: "A kiszolgáló nem érhető el. Ellenőrizze a kapcsolatot, és próbálja újra.",
+      timeout: "A kiszolgáló túl sokáig nem válaszolt. Kérjük, próbálja újra.",
+      server: "Hiba történt a kiszolgálón. Kérjük, próbálja újra később.",
+      rateLimited,
+      failed: "Ez nem sikerült. Kérjük, próbálja újra.",
+    },
   };
 }
 
