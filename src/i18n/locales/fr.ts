@@ -1029,6 +1029,9 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
                 `Les données chargées récemment, pour que les pages s’ouvrent aussi sans connexion ; ce qui date de plus de ${hours} heures n’est plus utilisé et est supprimé à la prochaine ouverture de l’app. Rien n’en est conservé si vous vous connectez avec « C’est un ordinateur partagé »`,
               sharedComputer:
                 "Si vous avez choisi « C’est un ordinateur partagé » à la connexion, conservé avec l’onglet",
+              // 0.63 (auth §12.9): the sign-in `@eifi1/ui-kit/accounts` keeps.
+              session:
+                "Votre connexion, jusqu’à ce que vous vous déconnectiez : les jetons de connexion et les informations de votre compte, comme votre nom et votre adresse e-mail. Après une connexion avec « C’est un ordinateur partagé », conservée uniquement avec l’onglet",
             },
           },
           rights: {

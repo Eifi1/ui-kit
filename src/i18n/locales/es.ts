@@ -1010,6 +1010,9 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
                 `Los datos cargados recientemente, para que las páginas se abran también sin conexión; lo que tenga más de ${hours} horas la app ya no lo usa y lo elimina la próxima vez que se abra. No se conserva nada de ello si inicia sesión con «Este es un ordenador compartido»`,
               sharedComputer:
                 "Si eligió «Este es un ordenador compartido» al iniciar sesión, guardado junto con la pestaña",
+              // 0.63 (auth §12.9): the sign-in `@eifi1/ui-kit/accounts` keeps.
+              session:
+                "Su inicio de sesión, hasta que cierre sesión: los tokens de inicio de sesión y los datos de su cuenta, como su nombre y su dirección de correo electrónico. Tras iniciar sesión con «Este es un ordenador compartido», guardado solo junto con la pestaña",
             },
           },
           rights: {

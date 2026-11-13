@@ -1015,6 +1015,9 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
                 `A nemrég betöltött adatok, hogy az oldalak kapcsolat nélkül is megnyíljanak; ami ${hours} óránál régebbi, azt az alkalmazás már nem használja, és a következő megnyitáskor törli. Semmi sem marad meg belőle, ha az „Ez egy közös használatú számítógép” beállítással jelentkezik be`,
               sharedComputer:
                 "Hogy bejelentkezéskor az „Ez egy közös használatú számítógép” lehetőséget választotta-e, a lappal együtt tárolva",
+              // 0.63 (auth §12.9): the sign-in `@eifi1/ui-kit/accounts` keeps.
+              session:
+                "Az Ön bejelentkezése, amíg ki nem jelentkezik: a bejelentkezési tokenek és a fiókja adatai, például a neve és az e-mail-címe. Az „Ez egy közös használatú számítógép” beállítással történt bejelentkezés után csak a lappal együtt tárolva",
             },
           },
           rights: {

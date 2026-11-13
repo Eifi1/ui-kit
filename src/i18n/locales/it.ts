@@ -1021,6 +1021,9 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
                 `I dati caricati di recente, perché le pagine si aprano anche senza connessione; ciò che ha più di ${hours} ore l’app non lo usa più e lo rimuove alla successiva apertura. Non ne resta nulla se accede con «Questo è un computer condiviso»`,
               sharedComputer:
                 "Se all’accesso ha scelto «Questo è un computer condiviso», conservato insieme alla scheda",
+              // 0.63 (auth §12.9): the sign-in `@eifi1/ui-kit/accounts` keeps.
+              session:
+                "Il Suo accesso, finché non esce dall’account: i token di accesso e i dati del Suo account, come il nome e l’indirizzo e-mail. Dopo un accesso con «Questo è un computer condiviso», conservato solo insieme alla scheda",
             },
           },
           rights: {

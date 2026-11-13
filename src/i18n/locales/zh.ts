@@ -984,6 +984,9 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
               recentData: (hours) =>
                 `最近加载的数据，以便页面在未联网时也能打开；超过 ${hours} 小时的数据应用不再使用，并在下次打开时删除。如果您登录时选择了“这是一台共用电脑”，则不会保留任何此类数据`,
               sharedComputer: "您登录时是否选择了“这是一台共用电脑”，随标签页一同保存",
+              // 0.63 (auth §12.9): the sign-in `@eifi1/ui-kit/accounts` keeps.
+              session:
+                "您的登录状态，保留到您退出登录为止：登录令牌以及您账户的信息，例如姓名和电子邮件地址。如果您登录时选择了“这是一台共用电脑”，则仅随标签页一同保存",
             },
           },
           rights: {
