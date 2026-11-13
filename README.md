@@ -582,7 +582,7 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2295 names from 387 modules** in the main barrel — 1028 values and 1267 types — and 199 more in 16 standalone entries. _Italic_ is a type-only export.
+**2296 names from 387 modules** in the main barrel — 1029 values and 1267 types — and 201 more in 16 standalone entries. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 `node scripts/gen-export-inventory.mjs`; the counts are pinned by
@@ -590,7 +590,7 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2293 |
+| `@eifi1/ui-kit` | 2296 |
 | `@eifi1/ui-kit/chart` | 102 |
 | `@eifi1/ui-kit/shell` | 109 |
 | `@eifi1/ui-kit/data-table` | 57 |
@@ -605,7 +605,7 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 | `@eifi1/ui-kit/testing` | 15 |
 | `@eifi1/ui-kit/testing/react` | 2 |
 | `@eifi1/ui-kit/rhf` | 52 |
-| `@eifi1/ui-kit/offline` | 36 |
+| `@eifi1/ui-kit/offline` | 38 |
 | `@eifi1/ui-kit/sync` | 37 |
 | `@eifi1/ui-kit/sync/testing` | 3 |
 | `@eifi1/ui-kit/push-worker` | 10 |
@@ -1078,7 +1078,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `notifications/notification-inbox` | `INBOX_BADGE_INTERVAL`, `NotificationInbox`, _`NotificationInboxAction`_, _`NotificationInboxItem`_, _`NotificationInboxProps`_ |
 | `notifications/notification-bell` | `NotificationBell`, _`NotificationBellProps`_ |
 | `notifications/device-zone-report` | `deviceTimeZone`, `useDeviceZoneReport`, _`DeviceZoneReportOptions`_ |
-| `notifications/use-push-device` | `notifyPushSubscriptionChanged`, `PUSH_SUBSCRIPTION_CHANGED`, `PushDeviceError`, `pushSupported`, `releaseThisDevicePush`, `usePushDevice`, _`PushDevice`_, _`PushDeviceErrorCode`_, _`PushPermission`_, _`PushSubscriptionInput`_, _`UsePushDeviceOptions`_ |
+| `notifications/use-push-device` | `dropPushSubscription`, `notifyPushSubscriptionChanged`, `PUSH_SUBSCRIPTION_CHANGED`, `PushDeviceError`, `pushSupported`, `releaseThisDevicePush`, `usePushDevice`, _`PushDevice`_, _`PushDeviceErrorCode`_, _`PushPermission`_, _`PushSubscriptionInput`_, _`UsePushDeviceOptions`_ |
 | `notifications/push-worker` | `handlePushSubscriptionChange`, `pushSubscriptionInput`, `resubscribeAfterChange`, _`PushReplaceInput`_, _`PushResubscribeOutcome`_, _`PushSubscriptionChangeEventLike`_, _`PushSubscriptionChangeOptions`_, _`PushWorkerScope`_ |
 | `notifications/push-device-setting` | `PushDeviceSetting`, _`PushDeviceAction`_, _`PushDeviceSettingProps`_ |
 | `notifications/push-devices-setting` | `PushDevicesSetting`, _`PushDevicesSettingProps`_ |
@@ -1152,6 +1152,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `offline/pwa-update-prompt` | `DEFAULT_PWA_UPDATE_PROMPT_LABELS`, `PwaUpdatePrompt`, _`PwaUpdatePromptLabels`_, _`PwaUpdatePromptProps`_ |
 | `offline/service-worker-updates` | `createServiceWorkerUpdates`, `useServiceWorkerUpdate`, _`RegisterServiceWorker`_, _`ServiceWorkerUpdates`_ |
 | `offline/shared-computer` | `DEFAULT_SHARED_COMPUTER_LABELS`, `isSharedComputer`, `setSharedComputer`, `SharedComputerChoice`, _`SharedComputerChoiceProps`_, _`SharedComputerLabels`_, _`SharedComputerStorage`_ |
+| `offline/shared-computer-idle` | `useSharedComputerIdleSignOut`, _`SharedComputerIdleSignOutOptions`_ |
 | `offline/local-first` | `isOfflineError`, `readLocalFirst`, `stampAfter`, `uuid5`, `writeLocalFirst` |
 | `offline/feedback-comments-query` | `feedbackCommentsQueryKey`, `useFeedbackCommentsQuery`, _`UseFeedbackCommentsQueryOptions`_ |
 
