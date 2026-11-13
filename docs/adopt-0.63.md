@@ -171,3 +171,32 @@ should keep its view somewhere other than the app's other tables.
 **Tests:** `src/components/__tests__/translation-review.groups.test.tsx` "storage (0.63)": the
 groups read and write their view in the given `Storage`, over the provider's, and the ungrouped
 table keeps its own there under the app's prefix. Neither writes to `localStorage`.
+
+## The transfer dialog's "customer" texts are deprecated
+
+**What changed.** `TransferOwnershipDialog` still has the reason "a customer" from Kurvenschmiede's
+CUSTOMER role. That was an account that owned nothing and so could not receive work.
+Kurvenschmiede dropped the role on 2026-11-12 (its migration 0060: every customer became a
+member), and no app has customers any more. Both texts are deprecated for one minor and work as
+before until 0.64 removes them.
+
+**Deprecated (removed in 0.64):**
+
+- `TransferUnavailable`'s `"customer"` → none: drop the case. A candidate the app cannot hand
+  work to for a reason of its own takes its own words in `unavailable`.
+- `TransferOwnershipLabels.customer` → none: drop the key from an app's own labels.
+  `"customer"` goes with it.
+
+The kit's seven catalogues keep `transferOwnership.customer` until then.
+
+**What apps do.** Nothing. No app passes `unavailable: "customer"` or writes
+`transferOwnership.customer` (searched in keksdose's, kastlan's and Kurvenschmiede's
+frontends). Kurvenschmiede's `frontend/src/features/admin/users-panel.tsx:562` marks
+deactivated accounts only.
+
+**Tests:** `src/__tests__/deprecations.test.ts`:
+
+- "names a member of a union type by its literal, in its type": the scanner now reads a tag on
+  a union's `| "literal"`;
+- "holds 0.63's": both tags, deprecated in 0.63 and removed in 0.64. This test goes with them in
+  0.64.

@@ -373,7 +373,7 @@ export function UserRoster030Demo() {
           summary={`${transferFrom.owned} items others can see`}
           candidates={people.map((row) => ({
             ...asPerson(row),
-            unavailable: row.role === "CUSTOMER" ? "customer" : !row.is_active ? "deactivated" : undefined,
+            unavailable: row.role === "CUSTOMER" ? "a customer" : !row.is_active ? "deactivated" : undefined,
           }))}
           onTransfer={async ({ toUserId }) => {
             await beat(500);
