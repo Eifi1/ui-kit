@@ -3,7 +3,7 @@
 // fails while this file is stale.
 
 /** The server-kit release the Server kit pages document. */
-export const SERVER_KIT_VERSION = "0.26.0";
+export const SERVER_KIT_VERSION = "0.27.0";
 
 export interface ServerKitSearchModule {
   /** The Server kit page that documents it. */
@@ -63,6 +63,10 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["RESET_PER_ADDRESS", "constant"],
       ["RESET_PER_IP", "constant"],
       ["RESET_TTL", "constant"],
+      ["SHARED_ABSOLUTE", "constant"],
+      ["SHARED_ACCESS_LIFETIME", "constant"],
+      ["SHARED_DEVICE_CLAIM", "constant"],
+      ["SHARED_IDLE", "constant"],
       ["TAG_SEPARATOR", "constant"],
       ["TEXT_SIZES", "constant"],
       ["TOTP_DIGITS", "constant"],
@@ -91,6 +95,8 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["RefreshRequest", "model"],
       ["RegisterRequest", "model"],
       ["RegistrationDecision", "enum"],
+      ["SessionPolicy", "class"],
+      ["SharedDeviceChoice", "model"],
       ["TextSize", "constant"],
       ["TokenResponse", "model"],
       ["TwoFactorChallenge", "model"],
@@ -99,6 +105,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["ZoneName", "constant"],
       ["absent_account_check", "function"],
       ["access_claims", "function"],
+      ["access_lifetime", "function"],
       ["addresses_for_reset", "function"],
       ["apply_zone_update", "function"],
       ["challenge_claims", "function"],
@@ -115,7 +122,11 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["normalise_email", "function"],
       ["parse_env_list", "function"],
       ["refresh_claims", "function"],
+      ["refresh_lifetime", "function"],
       ["registration_decision", "function"],
+      ["session_expired", "function"],
+      ["session_expires_at", "function"],
+      ["shared_device_of", "function"],
       ["tagged_variant", "function"],
       ["token_is_revoked", "function"],
       ["totp_matched_step", "function"],
