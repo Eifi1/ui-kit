@@ -110,3 +110,45 @@ links. The kit now writes that section.
 and their `rel`, the English sentence, every catalogue's link order, a page without it, an app's
 legal tree without the key. `legal-wording.test.ts` has the new `impressum` fingerprints in all
 seven catalogues; `review.test.ts` has the sentence among the review rows.
+
+## `@eifi1/ui-kit/offline` without `idb-keyval` and the persister
+
+**What changed.** The `/offline` entry imported `idb-keyval` and
+`@tanstack/query-async-storage-persister` when it loaded, through `createQueryPersistence`'s
+module. The exports map allows no deep import, so an app that took only `SharedComputerChoice`,
+`useSharedComputerIdleSignOut` or `useFeedbackCommentsQuery` from it still had to install both.
+
+`createQueryPersistence` now imports them on first use: the persister on the first save,
+restore or delete, `idb-keyval` on the first read or write of the default store (and
+`removeStaleQueryCopies` on its first sweep). The entry loads with `@tanstack/react-query`
+alone. The public API is unchanged:
+
+- `persistOptions.persister` is still a `Persister`;
+- it is still throttled by `throttleTime`;
+- `clear`, `leave` and `removeStale` behave as before.
+
+A failed load (a chunk that did not arrive) fails that one call, as a failed IndexedDB call did,
+and the next call tries again. The kit's `toast` loads `sonner` the same way.
+
+The peers stay optional peers, all four. Each is now needed only for what it serves:
+
+- `@tanstack/react-query`: the entry itself;
+- `@tanstack/react-query-persist-client`: the app's own `<PersistQueryClientProvider>`;
+- `@tanstack/query-async-storage-persister`: the persisted cache;
+- `idb-keyval`: the persisted cache's default store.
+
+**What apps do.** Nothing. keksdose, kastlan and Kurvenschmiede persist their cache and keep all
+four installed. In a production build, the persister and `idb-keyval` become chunks of their own,
+fetched when the cache is first restored at start. An app that precaches its build's chunks in
+its service worker (all three) has them offline too. Staunlabor does not use `/offline`.
+
+**Tests:** `src/offline/__tests__/query-persistence-lazy.test.ts`:
+
+- importing the entry and creating a persistence loads neither (each mock counts its own
+  evaluation);
+- a save, a restore and a `clear` through IndexedDB load each once;
+- the sweep reads the same lazy store.
+
+`packaging-contract.test.ts` "idb-keyval and the persister are imported on first use, not when the
+entry loads" walks the entry's static imports. `scripts/verify-package.mjs` loads the installed
+`/offline` with `@tanstack/react-query` alone, before it installs the other optional peers.

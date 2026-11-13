@@ -72,8 +72,8 @@ when it chooses. To work on the design system and an app together, use
 | `sonner` | peer, `>=2`, **optional** | Under the kit's `toast` and `<Toaster>` (and through them `FileDropzone` and the wizard's "fill in the required fields" toast), reached only through `await import()`. Pass `onValidationFailed` to route the wizard's elsewhere. |
 | `react-hook-form` | peer, `^7.55.0`, **optional** | Only `@eifi1/ui-kit/rhf` imports it; the main barrel does not (see "Forms / refs" below). |
 | `modern-screenshot` | peer, `^4.7.0`, **optional** | The feedback dialog's "Capture screenshot" (`captureAppScreenshot`), reached only through `await import()`. Without it the capture rejects and the dialog toasts `feedbackToast.captureFailed`. |
-| `@tanstack/react-query`, `@tanstack/react-query-persist-client`, `@tanstack/query-async-storage-persister` | peer, `^5`, **optional** | Only `@eifi1/ui-kit/offline` imports them (0.45, the persisted query cache, `createQueryPersistence`); the main barrel does not. |
-| `idb-keyval` | peer, `^6`, **optional** | The persisted cache's default IndexedDB store, in `@eifi1/ui-kit/offline` only. |
+| `@tanstack/react-query`, `@tanstack/react-query-persist-client`, `@tanstack/query-async-storage-persister` | peer, `^5`, **optional** | Only `@eifi1/ui-kit/offline` imports them (0.45, the persisted query cache, `createQueryPersistence`); the main barrel does not. The entry loads with `@tanstack/react-query` alone (`useFeedbackCommentsQuery`); the persister is reached only through `await import()`, when `createQueryPersistence` first saves or restores (0.63), and `-persist-client` is what mounts it in your app. |
+| `idb-keyval` | peer, `^6`, **optional** | The persisted cache's default IndexedDB store, in `@eifi1/ui-kit/offline` only, reached only through `await import()` (0.63): an app that passes its own `storage`, or persists nothing, need not install it. |
 | `dexie` | peer, `^4`, **optional** | The sync engine's device copy, in `@eifi1/ui-kit/sync` only (0.46); `/offline` loads without it. |
 | `@testing-library/react` | peer, `>=16`, **optional** | `rowMenuAction` in `@eifi1/ui-kit/testing/react` only (0.50), for an app's own tests; `@eifi1/ui-kit/testing` stays pure. |
 | `clsx`, `tailwind-merge`, `zustand` | dependency | Small, imported directly, and the kit owns the version. Add `zustand` to Vite's `dedupe` (below) — the appearance stores are singletons. |
@@ -1254,9 +1254,9 @@ neither (their names are in the export inventory above):
 - **`@eifi1/ui-kit/offline`** — the query cache kept on the device with its scrub list
   (`createQueryPersistence`), the question at sign-out while changes wait
   (`SignOutPendingDialog`), the service-worker update prompt (`PwaUpdatePrompt`) and the
-  shared-computer choice. Peers: `@tanstack/react-query`,
-  `@tanstack/react-query-persist-client`, `@tanstack/query-async-storage-persister`,
-  `idb-keyval`.
+  shared-computer choice. Peers: `@tanstack/react-query`, which the entry needs to load;
+  `@tanstack/react-query-persist-client`, `@tanstack/query-async-storage-persister` and
+  `idb-keyval` only for the persisted cache, which imports the last two on first use (0.63).
 - **`@eifi1/ui-kit/sync`** — the sync engine, one per Dexie database (`createSyncDb`,
   `createSyncEngine`, `useSyncWorker`, `useSyncStatus`, `useSyncQuery`), speaking
   server-kit's `POST /sync`; `@eifi1/ui-kit/sync/testing` has a fake transport. Peer:

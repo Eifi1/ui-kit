@@ -65,10 +65,13 @@ const DYNAMIC = /\bimport\(\s*["']([^"']+)["']\s*\)/g;
 const packageOf = (specifier: string) =>
   specifier.startsWith("@") ? specifier.split("/").slice(0, 2).join("/") : specifier.split("/")[0];
 
-/** Every import specifier in one module, relative ones included. */
-function specifiersOf(file: string): string[] {
+/** Every import specifier in one module, relative ones included; with `dynamic: false`, only
+ *  those a module loads with it (not an `import()` it makes on first use). */
+function specifiersOf(file: string, { dynamic = true }: { dynamic?: boolean } = {}): string[] {
   const source = stripComments(readFileSync(file, "utf8"));
-  return [STATIC, BARE, DYNAMIC].flatMap((pattern) => [...source.matchAll(pattern)].map(([, specifier]) => specifier));
+  return [STATIC, BARE, ...(dynamic ? [DYNAMIC] : [])].flatMap((pattern) =>
+    [...source.matchAll(pattern)].map(([, specifier]) => specifier),
+  );
 }
 
 const isRelative = (specifier: string) => specifier.startsWith(".") || specifier.startsWith("/");
@@ -100,13 +103,13 @@ function resolveRelative(from: string, specifier: string): string | null {
  * scan cannot answer this: a module that imports react-hook-form is harmless until the
  * barrel re-exports it, and then it is every consumer's install.
  */
-function packagesReachedFrom(entry: string): Set<string> {
+function packagesReachedFrom(entry: string, options: { dynamic?: boolean } = {}): Set<string> {
   const seen = new Set<string>();
   const packages = new Set<string>();
   const walk = (file: string) => {
     if (seen.has(file)) return;
     seen.add(file);
-    for (const specifier of specifiersOf(file)) {
+    for (const specifier of specifiersOf(file, options)) {
       if (!isRelative(specifier)) packages.add(packageOf(specifier));
       else {
         const next = resolveRelative(file, specifier);
@@ -263,6 +266,17 @@ describe("the offline peers stay behind @eifi1/ui-kit/offline", () => {
     for (const peer of PEERS) expect(fromBarrel).not.toContain(peer);
     const fromOffline = packagesReachedFrom("src/offline.ts");
     for (const peer of PEERS) expect(fromOffline).toContain(peer);
+  });
+
+  // 0.63: the persistence imports idb-keyval and the persister when it first persists,
+  // restores or sweeps, so an app that takes only `SharedComputerChoice` or
+  // `useFeedbackCommentsQuery` from the entry installs neither (verify-package loads the
+  // entry with TanStack Query alone).
+  it("idb-keyval and the persister are imported on first use, not when the entry loads", () => {
+    const atLoad = packagesReachedFrom("src/offline.ts", { dynamic: false });
+    expect(atLoad).toContain("@tanstack/react-query");
+    expect(atLoad).not.toContain("idb-keyval");
+    expect(atLoad).not.toContain("@tanstack/query-async-storage-persister");
   });
 
   it("is an exports entry", () => {

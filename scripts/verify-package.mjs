@@ -203,6 +203,26 @@ try {
     if (line.startsWith("ERR") && missing) ok(`${entry} refuses to load without ${missing}`);
     else fail(`${entry} without ${peers.join(", ")}: expected a missing-package error, got "${line}"`);
   }
+  // 0.63: `/offline` imports the persister and idb-keyval when `createQueryPersistence` first
+  // saves, restores or sweeps, so it loads with TanStack Query alone: an app that takes only
+  // `SharedComputerChoice` or `useFeedbackCommentsQuery` from it installs neither.
+  log("• /offline loads with TanStack Query alone; the persistence's two peers wait for first use");
+  run(
+    "npm",
+    [
+      "install",
+      "--no-audit",
+      "--no-fund",
+      "--silent",
+      `@tanstack/react-query@${(pkg.devDependencies ?? {})["@tanstack/react-query"] ?? "latest"}`,
+    ],
+    scratch,
+  );
+  {
+    const [line] = runProbe(probeLines(["./offline"]));
+    if (line.startsWith("OK")) ok(`${line.slice(3)} without idb-keyval and @tanstack/query-async-storage-persister`);
+    else fail(`./offline with @tanstack/react-query alone: ${line.slice(4)}`);
+  }
   const optionalPeers = [...new Set(Object.values(optionalEntries).flat())];
   run(
     "npm",
