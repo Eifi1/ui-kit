@@ -59,7 +59,8 @@ src/
                       the account's own settings, user admin, the settings page, plans,
                       the public landing page, the demo
   accounts/           those parts wired to server-kit's auth_router (@eifi1/ui-kit/accounts,
-                      auth §12.9): the session client so far
+                      auth §12.9): the session client, the hooks, the pages, the settings
+                      sections, describeAccountFailure (@tanstack/react-query an optional peer)
   rhf/                the react-hook-form adapter (@eifi1/ui-kit/rhf, optional peer)
   testing/            helpers for the apps' own tests (@eifi1/ui-kit/testing, /testing/react)
   eslint/             the role-utility lint plugin the apps run (@eifi1/ui-kit/eslint)

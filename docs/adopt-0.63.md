@@ -16,10 +16,20 @@ nothing for the kit.
 **Restart the Vite dev server after the bump** (`vite --force` if a change still does not show).
 
 **New words** (all seven catalogues; **es, hu and zh need native review**, and de-CH, fr and it
-are new sentences, not yet reviewed): `legal.sections.privacy.browser.standardEntries.session`.
+are new sentences, not yet reviewed): `legal.sections.privacy.browser.standardEntries.session`;
+the namespace `accountFailure` — a sentence per coded refusal (31: the fourteen new codes, the
+older ones in the words the kit's forms already use for them), `offline`, `timeout`, `server`,
+`rateLimited`, `failed`.
 
-**Must change:** nothing. `@eifi1/ui-kit/accounts` is new, and it asks for no peer beyond the
-required ones (axios stays the app's; the client takes its instance).
+**Must change** (in the type only): `AuthErrorCode` (and `KitErrorCode` through it) has server-kit
+0.29's fourteen new codes — `not_signed_in`, `admin_required`, `password_unchanged`,
+`password_change_not_required`, `email_unchanged`, `email_change_not_pending`, `mail_not_sent`,
+`passkey_refused`, `passkey_registration_refused`, `passkey_not_found`, `session_not_found`,
+`invitation_not_found`, `invitation_closed`, `invitation_scope_invalid` — so an exhaustive
+`switch` over it adds them; `authErrorCode` now answers them instead of `undefined`. No app's
+code switches over it today. `@eifi1/ui-kit/accounts` is new; it needs `@tanstack/react-query`
+(already an optional peer, `/offline`'s), and axios stays the app's (the client takes its
+instance).
 
 ## The session (`createAccountsClient`, `accountStorageEntries`)
 
@@ -69,9 +79,46 @@ that path and everything under it, a RegExp is tested on the decoded path. Kurve
 exact paths (`/steering` is public, `/steering/curves` is not): it writes `/^\/steering$/` for
 those.
 
-**Not in it yet:** the pages, the `accountsApi` hooks and the settings cards (with server-kit
-0.29's route table, next in this round); the 2FA step (`/auth/login/2fa` is not in 0.29's cut;
-an app with 2FA keeps its own `onCode`).
+**The bearer goes only to the app's own API:** a URL under `baseURL` (else
+`http.defaults.baseURL`), never another host the same instance calls; another host's 401
+refreshes nothing.
+
+## The rest of the layer (`client.api`, the hooks, `accountRoutes`, the settings sections, `describeAccountFailure`)
+
+Built against server-kit 0.29's route table.
+
+- **`client.api`**: every route of `auth_router` and `invitations_admin_router`, typed
+  (`AccountMe`, `AccountSessionInfo` with `current`, `AccountPasskey`, …), on the app's
+  instance. `client.signInWithPasskey()` runs the passkey sign-in (no library: the kit
+  converts py_webauthn's JSON itself; `passkeysAvailable()` gates it).
+  `client.signOut({ everywhere: true })` is "Sign out everywhere" (`POST /auth/logout`) in the
+  sign-out's order.
+- **The hooks**, under `<AccountsProvider client={accounts}>` inside the app's
+  `QueryClientProvider`: `useCurrentUser` (writes `/me` back to the session), `useUpdateProfile`,
+  `useChangePassword` (keeps the fresh pair), `useEmailChange`, `useAccountSessions`,
+  `usePasskeys` (`begin(password)` then `register({ options, name })`), `useAccountExport`,
+  `useAccountDeletion` (a granted request signs out), `useInvitationsAdmin`; keys under
+  `accountQueryKeys.all`, which the provider drops when the account changes. The language: the
+  kit's `useAccountLanguage` with `save: (locale) => updateProfile.mutateAsync({ locale })`.
+- **`accountRoutes(options)`**: `/login`, `/register` (the invitation's check, a dead link's
+  banner, `AcceptInvitation`), `/forgot-password`, `/reset-password`, `/verify-email`,
+  `/confirm-email`, and `/demo/ended` with `demo`. Options: `paths`, `afterSignIn`, `frame` (the
+  app's frame round each page), `signUp` (`"invitation"` by default), `access`, `emailTag`,
+  `deactivatedContact`, `signInHint`, `sharedComputerChoice`, `legal` (the terms link may be
+  left out), `registerLocale`, `registerFields`, `appCode`, `demo`. No second factor: 0.29 has
+  no 2FA routes. `<RequireSession>` gates a private route.
+- **The settings sections**: `AccountProfileSection` (`roleLabel`), `AccountPasswordSection`,
+  `AccountEmailSection` (`emailTag`), `AccountSessionsSection` (the device list, this device
+  first and marked), `AccountPasskeysSection` (`unavailable`), `AccountExportSection`
+  (`description`), `AccountDeletionSection` (`consequences`, `handOverField`),
+  `AccountInvitationsSection` (the panel's role vocabulary).
+- **`describeAccountFailure(error, labels, { appCode })`** and `useDescribeAccountFailure()`:
+  the code first, never the server's English; then offline, a timeout, a throttle's wait, an
+  uncoded 401 as the session's end, the server's fault.
+
+For Staunlabor: `accountRoutes({ emailTag: "staunlabor", legal: { privacyHref: "/privacy" },
+registerLocale: language, frame: SiteFrame })` — no terms, no demo, invitation-only — and the
+sections it wants in its own settings page.
 
 ### Per app
 
