@@ -69,3 +69,12 @@ export {
   usePasskeys,
   useUpdateProfile,
 } from "./accounts/accounts-hooks";
+// 0.63 (§12.9 "The pages"): the signed-out pages as route objects, and the gate.
+export { accountRoutes, RequireSession } from "./accounts/account-pages";
+export type {
+  AccountPageFrameProps,
+  AccountPaths,
+  AccountRegisterFieldsProps,
+  AccountRoutesOptions,
+  RequireSessionProps,
+} from "./accounts/account-pages";

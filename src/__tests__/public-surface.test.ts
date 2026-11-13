@@ -510,7 +510,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `accountQueryKeys`, `useCurrentUser`, `useUpdateProfile`, `useChangePassword`,
   // `useEmailChange`, `useAccountSessions`, `usePasskeys`, `useAccountExport`,
   // `useAccountDeletion`, `useInvitationsAdmin`.
-  ["@eifi1/ui-kit/accounts", accounts, 19],
+  // (+2) the pages: `accountRoutes`, `RequireSession`.
+  ["@eifi1/ui-kit/accounts", accounts, 21],
   // 0.46.0: local-first phase 3 (docs/local-first-harmonization.md §2.3) — `createSyncDb`,
   // `SYNC_DB_STORES`, `createSyncEngine`, `DEFAULT_HOLD_CODES`, `DEFAULT_SYNC_BACKOFF_MS`,
   // `syncEngineFor`, `releaseSyncEngine`, `useSyncWorker`, `useSyncStatus`, `useSyncQuery` and the

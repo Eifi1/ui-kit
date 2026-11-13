@@ -119,6 +119,7 @@ const NOT_ON_A_PAGE: Record<string, string> = {
   TableHeaderCell: "a part of Table (the Description list & table page)",
   TableCell: "a part of Table (the Description list & table page)",
   AccountsProvider: "hands `@eifi1/ui-kit/accounts`' client down; renders nothing of its own",
+  RequireSession: "the account pages' gate: renders its children or a redirect, nothing of its own",
 };
 
 /**
@@ -179,6 +180,7 @@ const NOT_SHOWN: Record<string, string> = {
   useAccountExport: ACCOUNTS,
   useAccountDeletion: ACCOUNTS,
   useInvitationsAdmin: ACCOUNTS,
+  accountRoutes: ACCOUNTS,
   releaseSyncEngine: ENGINE,
   syncEngineFor: ENGINE,
   rowByPk: ENGINE,
