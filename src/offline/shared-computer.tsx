@@ -85,10 +85,16 @@ export interface SharedComputerChoiceProps {
   checked?: boolean;
   /** Told after the choice is stored. */
   onCheckedChange?: (on: boolean) => void;
-  /** Where the choice is stored: see {@link setSharedComputer}. Default `"session"`, and
-   *  keep it so: a marker in the tab, beside the session it governs (the tab's storage or page
-   *  memory, as the app chose)
-   *  (0.62; `sessionStorage` comes back with a reopened tab, so it is no place for tokens). */
+  /**
+   * Where the choice is stored: see {@link setSharedComputer}. Default `"session"`, and keep
+   * it so: a marker in the tab, beside the session it governs.
+   *
+   * The session itself lives in the tab's storage too, by default (docs/auth-harmonization.md
+   * §2.14; Marcel 2026-11-13): a reload must stay signed in. A browser brings a closed tab
+   * back WITH its `sessionStorage`, and server-kit 0.27's session limits cover that tab — 15
+   * minutes idle, 4 hours at most — as every sign-out ends the session on the server. Page
+   * memory is the stricter path an app may choose, where a reload signs out.
+   */
   storage?: SharedComputerStorage;
   disabled?: boolean;
   className?: string;
