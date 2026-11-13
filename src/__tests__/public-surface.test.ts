@@ -11,6 +11,7 @@ import * as tour from "../tour";
 import * as wizard from "../wizard";
 import * as rhf from "../rhf";
 import * as offline from "../offline";
+import * as accounts from "../accounts";
 import * as sync from "../sync";
 import * as syncTesting from "../sync/testing";
 import * as pushWorker from "../push-worker";
@@ -499,6 +500,10 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.62 (+1, Marcel 2026-11-12: a shared-computer sign-in has a short life):
   // `useSharedComputerIdleSignOut`.
   ["@eifi1/ui-kit/offline", offline, 22],
+  // 0.63 (docs/auth-harmonization.md §12.9): the account layer's frontend half, its first
+  // part the session — `accountStorageEntries`. Standalone: an API of its own, whose later
+  // rounds bring TanStack Query hooks the barrel must not reach.
+  ["@eifi1/ui-kit/accounts", accounts, 1],
   // 0.46.0: local-first phase 3 (docs/local-first-harmonization.md §2.3) — `createSyncDb`,
   // `SYNC_DB_STORES`, `createSyncEngine`, `DEFAULT_HOLD_CODES`, `DEFAULT_SYNC_BACKOFF_MS`,
   // `syncEngineFor`, `releaseSyncEngine`, `useSyncWorker`, `useSyncStatus`, `useSyncQuery` and the
@@ -562,6 +567,7 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
 const STANDALONE = new Set([
   "@eifi1/ui-kit/rhf",
   "@eifi1/ui-kit/offline",
+  "@eifi1/ui-kit/accounts",
   "@eifi1/ui-kit/sync",
   "@eifi1/ui-kit/sync/testing",
   "@eifi1/ui-kit/table-text",

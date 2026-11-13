@@ -350,6 +350,51 @@ describe("@eifi1/ui-kit/push-worker is worker-safe", () => {
   });
 });
 
+/**
+ * 0.63 (docs/auth-harmonization.md §12.9): `@eifi1/ui-kit/accounts`, the account layer's
+ * frontend half, takes the app's axios instance as an ARGUMENT, typed structurally, as
+ * `attachSessionRefresh` does: axios stays the app's dependency, and the entry asks for no
+ * optional peer. Standalone, so its later rounds' TanStack Query hooks never reach the barrel.
+ */
+describe("@eifi1/ui-kit/accounts needs only the kit's required peers", () => {
+  /** The optional peers another entry holds (`/offline`, `/sync`, `/rhf`, `/testing/react`),
+   *  and axios. Not sonner or modern-screenshot: the barrel's own modules load those lazily,
+   *  on first use, so reaching their importer installs nothing. */
+  const HELD = [
+    "@tanstack/react-query",
+    "@tanstack/react-query-persist-client",
+    "@tanstack/query-async-storage-persister",
+    "idb-keyval",
+    "dexie",
+    "react-hook-form",
+    "@testing-library/react",
+    "axios",
+  ];
+
+  it("reaches no peer another entry holds, and no axios", () => {
+    const reached = packagesReachedFrom("src/accounts.ts");
+    for (const peer of HELD) expect(reached).not.toContain(peer);
+  });
+
+  it("is not reached from the main barrel", () => {
+    const fromBarrel = new Set<string>();
+    const walk = (file: string) => {
+      if (fromBarrel.has(file)) return;
+      fromBarrel.add(file);
+      for (const specifier of specifiersOf(file)) {
+        const next = isRelative(specifier) ? resolveRelative(file, specifier) : null;
+        if (next) walk(next);
+      }
+    };
+    walk(join(ROOT, "src/index.ts"));
+    expect(fromBarrel.has(join(ROOT, "src/accounts.ts"))).toBe(false);
+  });
+
+  it("is an exports entry", () => {
+    expect(pkg.exports["./accounts"]).toEqual({ types: "./dist/accounts.d.ts", import: "./dist/accounts.js" });
+  });
+});
+
 describe("@eifi1/ui-kit/testing is pure (0.33)", () => {
   // The guard an app runs from its own test suite (docs/colour-roles-harmonization.md
   // §8.3): browser-safe like the rest of the kit, so it runs under jsdom or node alike.

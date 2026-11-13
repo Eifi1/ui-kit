@@ -72,6 +72,10 @@
       "types": "./dist/offline.d.ts",
       "import": "./dist/offline.js"
     },
+    "./accounts": {
+      "types": "./dist/accounts.d.ts",
+      "import": "./dist/accounts.js"
+    },
     "./sync": {
       "types": "./dist/sync.d.ts",
       "import": "./dist/sync.js"
