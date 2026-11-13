@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useId, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type {
   ComponentPropsWithRef,
   KeyboardEvent,
@@ -10,6 +10,7 @@ import type {
 import { Shrink, ZoomIn, ZoomOut } from "lucide-react";
 
 import { cn } from "../lib/cn";
+import { mergeRefs } from "../lib/refs";
 import { prefersReducedMotion } from "../lib/reduced-motion";
 import {
   ZOOM_STEP,
@@ -27,6 +28,7 @@ import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { useAnnounce } from "../hooks/use-announce";
 import { useAuthedSrc } from "../hooks/use-authed-src";
 import type { AuthedFetcher } from "../hooks/use-authed-src";
+import { useZoomEngagement } from "../hooks/use-zoom-engagement";
 import { ImageStates, DEFAULT_AUTHED_IMAGE_LABELS } from "./authed-image";
 import { ButtonGroup } from "./button-group";
 import { IconButton } from "./icon-button";
@@ -95,6 +97,10 @@ const DOUBLE_TAP_MS = 350;
 const DOUBLE_TAP_PX = 40;
 /** Zooms this close to 1 are fit-to-width (a float that came back from a pinch). */
 const FIT_EPSILON = 0.001;
+/** How long a ⌘/Ctrl + wheel the picture took may pause before its burst is over: the
+ *  chart zoom's trackpad pinch ends after the same 300 ms. A burst runs to its end in the
+ *  picture, even once it has let go (zoomed out to fit, after a press elsewhere). */
+const WHEEL_QUIET_MS = 300;
 
 type Gesture =
   | { kind: "pan"; pointerId: number; from: ZoomView; x: number; y: number }
@@ -113,7 +119,7 @@ const WEBKIT_GESTURE_EVENTS = ["gesturestart", "gesturechange", "gestureend"] as
 /**
  * A picture shown inline, in the page's flow, that zooms where it is: fitted to the box's
  * width, pinch and two-finger pan on a touch screen, ⌘/Ctrl + wheel (and a trackpad
- * pinch, Safari's included), the − / fit / + buttons and the + − 0 keys on a desktop,
+ * pinch, Safari's included) once clicked into, the − / fit / + buttons and the + − 0 keys on a desktop,
  * and a double-tap or double-click between fit-to-width and the picture's own pixels
  * (100 %). Not a modal: for a set of photos opened full screen, {@link Lightbox}.
  *
@@ -133,6 +139,12 @@ const WEBKIT_GESTURE_EVENTS = ["gesturestart", "gesturechange", "gestureend"] as
  * browser's own (`touch-action: pan-y`), so it scrolls the receipt and, at its end, the
  * page, and a plain wheel does the same. Only two fingers, a modified wheel, and — once
  * zoomed — a drag on the picture are the viewer's; the page still scrolls outside it.
+ *
+ * Nor is the page ZOOM: ⌘/Ctrl + wheel and Safari's trackpad pinch are the picture's only
+ * once the reader has pressed into it (or its buttons), while the focus is in it, and
+ * while it is zoomed (Marcel, 2026-11-13; ../hooks/use-zoom-engagement). Ctrl + wheel is
+ * how many readers with low vision enlarge a page, and one that crossed the receipt zoomed
+ * the receipt instead. Two fingers on a touch screen are an engagement in themselves.
  *
  * Right-to-left: the box is laid out left to right (`dir="ltr"`), since a picture has no
  * reading direction and the pan's scroll offsets then mean the same in every page; the
@@ -155,6 +167,7 @@ function ZoomableImageView({
   maxZoom: maxZoomProp,
   labels: labelsProp,
   className,
+  ref,
   ...rest
 }: ZoomableImageProps) {
   const labels = useKitLabels("zoomableImage", DEFAULT_ZOOMABLE_IMAGE_LABELS, labelsProp);
@@ -178,6 +191,13 @@ function ZoomableImageView({
   const [dragging, setDragging] = useState(false);
   const zoomed = zoom > 1 + FIT_EPSILON;
 
+  // The whole viewer, buttons included: a press on Fit, or the focus on a button, is the
+  // reader engaging the picture, whose ⌘/Ctrl + wheel is then its own.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const setRoot = useMemo(() => mergeRefs(rootRef, ref), [ref]);
+  const engaged = useZoomEngagement(rootRef, zoomed);
+  // The ⌘/Ctrl + wheel burst under way, until it is quiet (`WHEEL_QUIET_MS`).
+  const wheelBurst = useRef<ReturnType<typeof setTimeout> | null>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   // The zoom the handlers act on: the state is a render behind a pinch's moves.
   const zoomRef = useRef(1);
@@ -213,6 +233,7 @@ function ZoomableImageView({
   useEffect(
     () => () => {
       if (frameRequest.current !== null) cancelAnimationFrame(frameRequest.current);
+      if (wheelBurst.current !== null) clearTimeout(wheelBurst.current);
     },
     [],
   );
@@ -416,9 +437,16 @@ function ZoomableImageView({
     const box = boxRef.current;
     // A plain wheel scrolls — the box, then the page — as it would anywhere else.
     if (!box || !canZoom || !(e.ctrlKey || e.metaKey)) return;
+    // And over a picture the reader has not engaged it is the browser's page zoom, which a
+    // reader with low vision relies on; a burst already under way here runs to its end.
+    if (wheelBurst.current === null && !engaged()) return;
     // Ctrl + wheel is also what a trackpad pinch arrives as in Chrome, Edge and Firefox
     // (Safari's is below); either way the browser would zoom the whole page.
     e.preventDefault();
+    if (wheelBurst.current !== null) clearTimeout(wheelBurst.current);
+    wheelBurst.current = setTimeout(() => {
+      wheelBurst.current = null;
+    }, WHEEL_QUIET_MS);
     stopEasing();
     const from = viewOf(box);
     const to = clampZoom(from.zoom * wheelZoomFactor(e.deltaY, e.deltaMode, box.clientHeight), ceiling(box));
@@ -438,6 +466,10 @@ function ZoomableImageView({
   const onSafariGesture = useEffectEvent((e: WebKitGestureEvent) => {
     const box = boxRef.current;
     if (!box || !canZoom) return;
+    // The wheel's rule: the page's zoom until the picture is engaged; a pinch begun here
+    // (from its `gesturestart`) runs to its `gestureend`. Two fingers on a touch screen
+    // have pressed into it, so iOS's events beside them are still prevented.
+    if (safariPinchFrom.current === null && !engaged()) return;
     e.preventDefault();
     // iOS Safari sends a touch screen's pinch as these events too, beside the pointer
     // events the touch pinch above already follows: applied both ways, one pinch would
@@ -489,7 +521,7 @@ function ZoomableImageView({
   };
 
   return (
-    <div {...rest} className={cn("relative", className)} data-zoomable-image="">
+    <div {...rest} ref={setRoot} className={cn("relative", className)} data-zoomable-image="">
       {/* The box is the picture's focus stop and takes its keys: Tab reaches it, the
           arrows scroll it natively, + − 0 zoom. A region (ScrollArea's form) so it is
           announced by name on focus. */}
