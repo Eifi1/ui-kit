@@ -54,6 +54,9 @@ export const accounts = createAccountsClient<User>({
   fields in `extra`). The three from the form send `shared_device`. `storeSession(answer)` keeps a
   password change's fresh pair.
 - **`signOut()`** in §6.3's order; hand it to `useSharedComputerIdleSignOut({ onSignOut })` too.
+  It does NOT reset the shared-computer flag: a reset fails toward the unsafe side, signing the
+  next person at a shared computer in to `localStorage` without the tick, and the flag lives in
+  the tab's storage and goes with the tab.
 - **A session that ends by itself** (the refresh refused, a demo's 401 with `demo: {}`, another
   tab): `onSessionEnded({ reason, user, demo })`, then a full load of the sign-in (`?next=` the
   page), the home page, or the page itself; a public page stays where it is when the server
@@ -76,6 +79,6 @@ an app with 2FA keeps its own `onCode`).
   `shared/lib/storage-keys.ts` and its line on the privacy page.
 - **Kurvenschmiede**, with its move to `auth_router`: the client replaces `client.ts`'s refresh,
   bearer and `watchSessionElsewhere`, `auth-store.ts`, `session-place.ts` and `protected-route`'s
-  token read. Its session moves from `auth_token`, `refresh_token` and `steering-auth` to one
-  `<prefix>session` record: read the old three once into `storeSession` at start, or let the
-  people sign in once. `nameDeferred` stays the app's.
+  token read. One sign-out at the move; announce it: `auth_router` checks the session's `sid`
+  row on every request, and Kurvenschmiede's tokens carry no `sid`. Its reset of the
+  shared-computer flag in `clear()` goes (below). `nameDeferred` stays the app's.
