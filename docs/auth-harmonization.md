@@ -88,9 +88,11 @@ bring a closed tab back with its sessionStorage (kastlan's finding; keksdose's t
 
 14. **A shared-computer sign-in has a short life.** The sign-in says so (`shared_device: true`,
     §5.1), and the server ends that session after 15 minutes idle and 4 hours at most
-    (server-kit 0.27 `SessionPolicy`, §6.2). The client keeps it in page memory
-    (docs/local-first-harmonization.md D6) and signs an abandoned tab out after 15 minutes
-    without input (`useSharedComputerIdleSignOut`, §6.3).
+    (server-kit 0.27 `SessionPolicy`, §6.2). The client keeps it in the tab's storage, so a
+    reload keeps it, and the server's limit covers a tab the browser restores; or, stricter,
+    in page memory, where a reload signs out (docs/local-first-harmonization.md D6; Marcel
+    2026-11-13: the tab's storage is the default). It signs an abandoned tab out after 15
+    minutes without input (`useSharedComputerIdleSignOut`, §6.3).
 15. **Every sign-out ends the session on the server**, shared or not: the client calls the
     app's revoke of this session first, then drops its tokens (§6.3).
 16. **No push on a shared computer, and every sign-out drops this device's push** (2026-11-13):

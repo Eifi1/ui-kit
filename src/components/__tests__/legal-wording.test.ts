@@ -77,13 +77,13 @@ function legalWording(labels: UiKitLabels): Record<string, string> {
  * 0.62 adopt note for the apps that use `standardEntries`.
  */
 const LEGAL_WORDING: Record<string, Record<string, string>> = {
-  en: { impressum: "425fe7961e6a", legal: "19962ca87a89", privacy: "a68f34b18901", terms: "41d67860190b" },
-  "de-CH": { impressum: "6e8e555a0f60", legal: "aaea3302cba4", privacy: "ce9280965547", terms: "ce9971b444c5" },
-  fr: { impressum: "3f703ecd6763", legal: "4cbd81b82932", privacy: "a17f4c5788f2", terms: "257115a45dde" },
-  it: { impressum: "9e60a55f89ef", legal: "ec2d48f0fa4a", privacy: "de03872e274a", terms: "98995c10e7a1" },
-  es: { impressum: "ff37b004be44", legal: "6afe0fa1f3ee", privacy: "65597a17615a", terms: "604a6af9da3c" },
-  hu: { impressum: "bf4d3a8d0b77", legal: "75d7bbd6869e", privacy: "2e0f85d4034c", terms: "12871aadd0ab" },
-  zh: { impressum: "c98c0d1ac118", legal: "d923f39bab7b", privacy: "639dbad4a398", terms: "e4cacb32ea2d" },
+  en: { impressum: "425fe7961e6a", legal: "19962ca87a89", privacy: "5d0457d1c4b4", terms: "41d67860190b" },
+  "de-CH": { impressum: "6e8e555a0f60", legal: "aaea3302cba4", privacy: "af320a2ae85f", terms: "ce9971b444c5" },
+  fr: { impressum: "3f703ecd6763", legal: "4cbd81b82932", privacy: "7f962784e381", terms: "257115a45dde" },
+  it: { impressum: "9e60a55f89ef", legal: "ec2d48f0fa4a", privacy: "1624408aea9f", terms: "98995c10e7a1" },
+  es: { impressum: "ff37b004be44", legal: "6afe0fa1f3ee", privacy: "bd8a1741d40c", terms: "604a6af9da3c" },
+  hu: { impressum: "bf4d3a8d0b77", legal: "75d7bbd6869e", privacy: "732e2bbcce95", terms: "12871aadd0ab" },
+  zh: { impressum: "c98c0d1ac118", legal: "d923f39bab7b", privacy: "bc8a0915d3ca", terms: "e4cacb32ea2d" },
 };
 
 describe("the legal wording (DOC-6)", () => {

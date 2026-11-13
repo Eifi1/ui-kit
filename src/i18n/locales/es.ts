@@ -1009,7 +1009,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
               recentData: (hours) =>
                 `Los datos cargados recientemente, para que las páginas se abran también sin conexión; lo que tenga más de ${hours} horas la app ya no lo usa y lo elimina la próxima vez que se abra. No se conserva nada de ello si inicia sesión con «Este es un ordenador compartido»`,
               sharedComputer:
-                "Si eligió «Este es un ordenador compartido» al iniciar sesión, guardado junto con la pestaña; su inicio de sesión en sí no se guarda",
+                "Si eligió «Este es un ordenador compartido» al iniciar sesión, guardado junto con la pestaña",
             },
           },
           rights: {

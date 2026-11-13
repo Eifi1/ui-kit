@@ -1014,7 +1014,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
               recentData: (hours) =>
                 `A nemrég betöltött adatok, hogy az oldalak kapcsolat nélkül is megnyíljanak; ami ${hours} óránál régebbi, azt az alkalmazás már nem használja, és a következő megnyitáskor törli. Semmi sem marad meg belőle, ha az „Ez egy közös használatú számítógép” beállítással jelentkezik be`,
               sharedComputer:
-                "Hogy bejelentkezéskor az „Ez egy közös használatú számítógép” lehetőséget választotta-e, a lappal együtt tárolva; magát a bejelentkezést nem tárolja az alkalmazás",
+                "Hogy bejelentkezéskor az „Ez egy közös használatú számítógép” lehetőséget választotta-e, a lappal együtt tárolva",
             },
           },
           rights: {

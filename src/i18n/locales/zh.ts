@@ -983,7 +983,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
             standardEntries: {
               recentData: (hours) =>
                 `最近加载的数据，以便页面在未联网时也能打开；超过 ${hours} 小时的数据应用不再使用，并在下次打开时删除。如果您登录时选择了“这是一台共用电脑”，则不会保留任何此类数据`,
-              sharedComputer: "您登录时是否选择了“这是一台共用电脑”，随标签页一同保存；您的登录信息本身不会被保存",
+              sharedComputer: "您登录时是否选择了“这是一台共用电脑”，随标签页一同保存",
             },
           },
           rights: {

@@ -1036,7 +1036,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
               recentData: (hours) =>
                 `Kürzlich geladene Daten, damit Seiten auch ohne Verbindung öffnen; was älter als ${hours} Stunden ist, verwendet die App nicht mehr und entfernt es, sobald sie wieder geöffnet wird. Davon bleibt nichts, wenn Sie sich mit «Dies ist ein gemeinsam genutzter Computer» anmelden`,
               sharedComputer:
-                "Ob Sie bei der Anmeldung «Dies ist ein gemeinsam genutzter Computer» gewählt haben, zusammen mit dem Tab gespeichert; Ihre Anmeldung selbst wird nicht gespeichert",
+                "Ob Sie bei der Anmeldung «Dies ist ein gemeinsam genutzter Computer» gewählt haben, zusammen mit dem Tab gespeichert",
             },
           },
           rights: {

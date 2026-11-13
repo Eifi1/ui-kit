@@ -234,7 +234,7 @@ describe("the browser section's standard entries (0.61, Marcel 2026-11-12)", () 
       "your sign-in tokens",
       "Recently loaded data, so pages also open without a connection; what is older than 24 hours the app no longer uses and removes the next time it opens. None of it is kept when you sign in with “This is a shared computer”",
       // A flag in the tab's storage comes back with a reopened tab; the sign-in is in page memory.
-      "Whether you chose “This is a shared computer” at sign-in, kept with the tab; your sign-in itself is not stored",
+      "Whether you chose “This is a shared computer” at sign-in, kept with the tab",
     ]);
   });
 });

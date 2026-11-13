@@ -483,21 +483,20 @@ they are (no ETags). KS's version contract stays KS's.
 - **The tour `:pending` record** (tours §10.2.4, `<storageKey>:pending`) is not the app's outbox: it
   stays out of any "N waiting" count and out of the sign-out guard, in kk and in ka, on purpose
   (losing a tour mark is acceptable). `signOutTourProgress` keeps it for its owner.
-- **On a shared computer the session lives in page memory** (ui-kit 0.61, corrected in 0.62;
-  Marcel 2026-11-12, keksdose's finding): with the box ticked, the app keeps its tokens, the
-  profile, anything the session unlocks on the device (keksdose's private-mode keys) and the
-  person's traces (the last page, searches, filters) **in the page's memory only**, e.g. a
-  Map-backed `Storage` behind the app's storage accessor (keksdose
-  `frontend/src/shared/lib/shared-session.ts`, eba87635), and its sync copy in memory
-  (`createSyncDb`'s `indexedDB`). Unticked, nothing changes.
-  - **Not in `sessionStorage`** (0.61 had said it): Chrome and Firefox bring a closed tab back
-    WITH its sessionStorage (Ctrl+Shift+T, and "Continue where you left off" after a restart),
-    and keep it on disk to be able to (keksdose's test in Chromium 156, 2026-11-12). The tab's
-    storage holds only markers that are not the person's data: the kit's choice
-    (`storage: "session"`), an app's page-mode marker, a sign-in answer handed to the next page
-    load and taken at once.
-  - **The price:** a reload or a reopened tab lands on the sign-in. The app says so (keksdose's
-    privacy text: "the session ends when you close the tab or reload the page").
+- **Where a shared session lives: two paths** (ui-kit 0.61, revised in 0.62; Marcel
+  2026-11-12 and 2026-11-13). Unticked, nothing changes. Ticked:
+  - **Default: the tab's storage plus the server's short life.** The tokens and the profile in
+    `sessionStorage`, so a reload keeps the session (Marcel: a sign-out on every reload "wäre
+    nicht gut", Kurvenschmiede). Chrome and Firefox bring a closed tab back WITH its
+    sessionStorage (Ctrl+Shift+T, "Continue where you left off"; keksdose's test in Chromium
+    156), so a reopened tab can still hold the session until the server's limit ends it.
+  - **Stricter: page memory.** The tokens, the profile, anything the session unlocks
+    (keksdose's private-mode keys) and the person's traces in the page's memory only
+    (`createMemoryStorage()`; keksdose `frontend/src/shared/lib/shared-session.ts`,
+    eba87635). A reopened tab holds nothing; a reload lands on the sign-in. keksdose's choice.
+  - Either way the sync copy lives in memory (`createSyncDb`'s `indexedDB`), and the tab's
+    storage may hold markers that are not the person's data (the kit's choice,
+    `storage: "session"`; an app's page-mode marker).
   - **Defence in depth** (ui-kit 0.62, server-kit 0.27; Marcel 2026-11-12 and 2026-11-13):
     - the sign-in sends `shared_device: true` and the server gives that session a short life
       (`SessionPolicy`: 15 minutes idle, 4 hours at most, and a 5-minute access token, so a busy

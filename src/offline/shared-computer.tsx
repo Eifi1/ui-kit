@@ -11,24 +11,23 @@ import { DEFAULT_SHARED_COMPUTER_LABELS } from "./shared-computer-labels";
  * app does not mount the query persistence (`createQueryPersistence`): the cache lives in
  * memory only.
  *
- * **On a shared computer the session lives in PAGE MEMORY** (0.61, corrected in 0.62; Marcel
- * 2026-11-12, keksdose's finding). With the box ticked, the app keeps the sign-in itself (its
- * access and refresh tokens and the profile), anything else the session unlocks on the device
- * (keksdose's private-mode keys) and the person's traces (the last page, searches, filters)
- * in the page's memory only: a Map-backed `Storage` behind the app's storage accessor, as
- * keksdose's `shared-session.ts` does. Otherwise a tab left on a library PC is a session the
- * next visitor simply opens, with a refresh token good for weeks.
+ * **Where a shared session lives: two paths** (0.61, revised in 0.62; Marcel 2026-11-12 and
+ * 2026-11-13). Unticked, the app keeps its session where it always did. Ticked:
+ * - **Default: the tab's storage, with the server's short life.** The app keeps the sign-in
+ *   (its tokens and the profile) in `sessionStorage`, so a reload keeps the session, a phone's
+ *   background reload included (Marcel: signing out on every reload "wäre nicht gut",
+ *   Kurvenschmiede). Chrome and Firefox bring a closed tab back WITH its sessionStorage
+ *   (Ctrl+Shift+T, "Continue where you left off"; keksdose's test in Chromium 156), so a
+ *   reopened tab can still hold the session: the server's limit ends it (15 minutes idle,
+ *   4 hours at most, below), and every sign-out ends it on the server.
+ * - **Stricter: page memory.** The app keeps the sign-in, anything else the session unlocks
+ *   (keksdose's private-mode keys) and the person's traces in the page's memory only, a
+ *   Map-backed `Storage` (the kit's `createMemoryStorage()`), as keksdose's `shared-session.ts`
+ *   does. A reopened tab then holds nothing; the price is that a reload lands on the sign-in.
+ * Either way the tab's storage may hold markers that are not the person's data: this choice
+ * (`storage: "session"`, the default), an app's page-mode marker.
  *
- * NOT in `sessionStorage`, although it "ends with the tab": Chrome and Firefox bring a closed
- * tab back WITH its sessionStorage (Ctrl+Shift+T, and "Continue where you left off" after a
- * restart), and keep it on disk to be able to (keksdose's test in Chromium 156, 2026-11-12;
- * 0.61 had said sessionStorage). The tab's storage holds only markers that are not the
- * person's data: this choice (`storage: "session"`, the default), an app's page-mode marker,
- * a sign-in answer handed to the next page load and taken at once. The price, which the app
- * says: a reload or a reopened tab lands on the sign-in. Unticked, the app keeps its session
- * where it always did.
- *
- * Page memory is one layer of four (0.62, Marcel 2026-11-12 and 2026-11-13):
+ * Both paths rest on the same layers (0.62, Marcel 2026-11-12 and 2026-11-13):
  * - the sign-in sends `shared_device: true` (`isSharedComputer()`), and the server gives that
  *   session a short life (server-kit 0.27's `SessionPolicy`: 15 minutes idle, 4 hours at
  *   most, a 5-minute access token; docs/auth-harmonization.md §5.1, §6.2);
@@ -87,7 +86,8 @@ export interface SharedComputerChoiceProps {
   /** Told after the choice is stored. */
   onCheckedChange?: (on: boolean) => void;
   /** Where the choice is stored: see {@link setSharedComputer}. Default `"session"`, and
-   *  keep it so: a marker in the tab, while the session it governs lives in page memory
+   *  keep it so: a marker in the tab, beside the session it governs (the tab's storage or page
+   *  memory, as the app chose)
    *  (0.62; `sessionStorage` comes back with a reopened tab, so it is no place for tokens). */
   storage?: SharedComputerStorage;
   disabled?: boolean;

@@ -1028,7 +1028,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
               recentData: (hours) =>
                 `Les données chargées récemment, pour que les pages s’ouvrent aussi sans connexion ; ce qui date de plus de ${hours} heures n’est plus utilisé et est supprimé à la prochaine ouverture de l’app. Rien n’en est conservé si vous vous connectez avec « C’est un ordinateur partagé »`,
               sharedComputer:
-                "Si vous avez choisi « C’est un ordinateur partagé » à la connexion, conservé avec l’onglet ; votre connexion elle-même n’est pas enregistrée",
+                "Si vous avez choisi « C’est un ordinateur partagé » à la connexion, conservé avec l’onglet",
             },
           },
           rights: {

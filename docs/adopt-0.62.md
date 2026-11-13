@@ -2,7 +2,8 @@
 
 ui-kit 0.62 ships with **server-kit 0.27**. Its centre is the shared computer, after kastlan's
 and keksdose's findings that a closed tab comes back WITH its sessionStorage (Chrome's reopen
-and session restore): the session lives in page memory, the server gives a shared sign-in a
+and session restore): the session lives in the tab's storage (or, stricter, in page memory),
+the server gives a shared sign-in a
 short life (15 minutes idle, 4 hours at most), every sign-out ends the session on the server,
 an abandoned tab signs itself out, and push is not offered there (Marcel, 2026-11-12 and 13).
 Beside it: the kit's tables and crash buffer in a storage the app names (page memory on a shared
@@ -14,8 +15,8 @@ line with Kurvenschmiede's plain feedback and its roles without customers.
 **From 0.61, nothing else first.**
 
 **Legal wording:** the **Privacy Policy**, for an app that uses the standard browser entries:
-`standardEntries.sharedComputer` now says the flag is kept with the tab and the sign-in itself is
-not stored, and both standard lines lose their closing full stop (no app's list has one). Move
+`standardEntries.sharedComputer` now says the flag is kept with the tab, and both standard lines
+lose their closing full stop (no app's list has one). Move
 the /privacy `updated` date the day you ship them. An app that keeps its own lines (keksdose's
 `recent_data`, with its map-tile clause) changes nothing for the kit.
 
@@ -46,14 +47,18 @@ Ships with **server-kit 0.27**. Marcel decided this on 2026-11-12 and 2026-11-13
 
 **What changed.**
 
-- **The guidance, corrected.** While "This is a shared computer" is ticked, the session (the
-  tokens, the profile and the person's traces) lives in **page memory only**: a Map-backed
-  `Storage` behind the app's storage accessor. keksdose's
-  `frontend/src/shared/lib/shared-session.ts` (eba87635) and Kurvenschmiede's
-  `frontend/src/shared/state/session-place.ts` already work this way.
-  - **Not in `sessionStorage`**, which 0.61 said. It holds only markers that are not the
-    person's data, such as the kit's `eifi1-shared-computer` flag.
-  - The price: a reload or a reopened tab lands on the sign-in, and the app says so.
+- **The guidance, two paths** (Marcel 2026-11-13). While "This is a shared computer" is ticked:
+  - **Default: the tab's storage plus the server's short life.** The tokens and the profile in
+    `sessionStorage`, so a reload keeps the session, a phone's background reload included
+    (Marcel: a sign-out on every reload "wäre nicht gut"). A tab the browser restores can still
+    hold the session; server-kit 0.27's limit ends it (15 minutes idle, 4 hours at most), and
+    every sign-out ends it on the server. Kurvenschmiede's choice (c7e9beb).
+  - **Stricter: page memory.** The tokens, the profile, what the session unlocks and the
+    person's traces in the page's memory only (`createMemoryStorage()`). A reopened tab holds
+    nothing; a reload lands on the sign-in. keksdose's choice
+    (`frontend/src/shared/lib/shared-session.ts`, eba87635).
+  - Either way the tab's storage may hold markers that are not the person's data, such as the
+    kit's `eifi1-shared-computer` flag.
   - Where it is written: `SharedComputerChoice`'s doc, and docs/local-first-harmonization.md D6
     and §1.6.
 - **`useSharedComputerIdleSignOut({ onSignOut, idleMinutes = 15, enabled = isSharedComputer(),
@@ -107,8 +112,8 @@ good for 30 days. Each part closes one gap:
 
 | Part | The gap it closes |
 |---|---|
-| The session in page memory | the restored tab |
-| The short life and the revoke | a session the client gave up but the server still honoured |
+| The session in page memory (the stricter path) | the restored tab, at once |
+| The short life and the revoke | the restored tab on the default path (within 15 min idle / 4 h), and a session the client gave up but the server still honoured |
 | The idle hook | a tab simply left open |
 | No push | a browser that kept showing payees, amounts and names after the person left |
 
@@ -135,7 +140,8 @@ None is a function label, so there is no new review sample.
 The app moves its /privacy `updated` date to the day it ships the bump. Two changes:
 - **The flag line** said the choice was kept "for as long as that session lasts". But the flag
   sits in the tab's storage and comes back with a reopened tab. It now reads "Whether you chose
-  “This is a shared computer” at sign-in, kept with the tab; your sign-in itself is not stored".
+  “This is a shared computer” at sign-in, kept with the tab". Where the sign-in itself is kept
+  is each app's own sign-in line (the tab's storage or page memory).
 - **Both standard lines lose their closing full stop**, in all seven languages (Marcel
   2026-11-13). They are items in the app's own list, and no entry in keksdose's, kastlan's or
   Kurvenschmiede's lists ends with one, in any language. The new fingerprints are in
