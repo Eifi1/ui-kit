@@ -21,6 +21,30 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.62.0](https://github.com/Eifi1/ui-kit/compare/v0.61.0...v0.62.0) (2026-11-13)
+
+### Added
+
+* **app-shell:** the top page row's height as --app-subnav-h, and the kit's anchors clear it ([bc52f1c](https://github.com/Eifi1/ui-kit/commit/bc52f1c6aaee6df47950ddd3bdba4342fb317045))
+* **notifications:** dropPushSubscription, this device's push let go at every sign-out ([e9a9099](https://github.com/Eifi1/ui-kit/commit/e9a9099d7b30480f98c061340cf5b102451a9b61))
+* **notifications:** no push on a shared computer ([42f335d](https://github.com/Eifi1/ui-kit/commit/42f335d87e5e8b7148624f661d6a2194dc40c22f))
+* **offline:** an abandoned shared-computer tab signs itself out after 15 idle minutes ([20b8058](https://github.com/Eifi1/ui-kit/commit/20b805801157e9d740356264207381204c3b522c))
+* **series-chart:** a trackpad pinch zooms the chart, not the page ([2ccc6e5](https://github.com/Eifi1/ui-kit/commit/2ccc6e5b00ec46b1ca27065a1a5c41cc5b602ec0))
+* **storage:** table views and the crash buffer in a Storage the app names, createMemoryStorage ([9212729](https://github.com/Eifi1/ui-kit/commit/92127290a901ab56e045a1745b37b19adb07a07f))
+
+### Fixed
+
+* **data-table:** a keyFilter set on a column the table lacks is said above the phone's cards ([19f3025](https://github.com/Eifi1/ui-kit/commit/19f30259554a95a00be195ad3c8583296af15f38))
+* **feedback:** the URL column sorts and filters by what its cell shows ([59ed8c3](https://github.com/Eifi1/ui-kit/commit/59ed8c313fb2a8b63f74ecf4c365b46036fde893))
+* **legal:** the shared-computer line says the flag is kept with the tab; no closing full stops ([8751489](https://github.com/Eifi1/ui-kit/commit/8751489869bce0d6c005a04cd03dd493ad77c48f))
+* **offline:** no push from the hook on a shared computer, and a cached page ends its session ([66638e1](https://github.com/Eifi1/ui-kit/commit/66638e11a6b988a22c249a3cd147c1862168da15))
+* **series-chart:** a category chart's last slot names the end of its range ([d29d0e2](https://github.com/Eifi1/ui-kit/commit/d29d0e2cc437a4ba0090f88c68c40ebacea20929))
+* **series-chart:** a mouse band carried past the plot stops at its edge ([0e44913](https://github.com/Eifi1/ui-kit/commit/0e44913799b9ceb3c37e0856a0bb7a968fd4e1bb))
+* **series-chart:** a trackpad pinch or Ctrl + wheel zooms a chart only once it is clicked or focused ([076fa02](https://github.com/Eifi1/ui-kit/commit/076fa020f3bfef802a00ac468464bb4727af3d8d))
+* **series-chart:** no blank room for the overview strip on an unzoomed chart ([dbe5b62](https://github.com/Eifi1/ui-kit/commit/dbe5b6258fe8dd8f6553d0c496f496ae77edcef0))
+* **series-chart:** the overview strip's room is kept, so the page stays still when it comes ([2539923](https://github.com/Eifi1/ui-kit/commit/253992375f4e63155beb46235d92c26d26a76418))
+* **zoomable-image:** Ctrl + wheel and a trackpad pinch zoom the picture only once clicked or focused ([59b574a](https://github.com/Eifi1/ui-kit/commit/59b574a269c84066f8a33d1ef27ad4ec1dc1d21b))
+
 ## [0.61.0](https://github.com/Eifi1/ui-kit/compare/v0.60.0...v0.61.0) (2026-11-12)
 
 ### Added
