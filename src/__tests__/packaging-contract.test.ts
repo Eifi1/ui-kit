@@ -373,6 +373,8 @@ describe("@eifi1/ui-kit/accounts needs only the kit's required peers", () => {
 
   it("reaches no peer another entry holds, and no axios", () => {
     const reached = packagesReachedFrom("src/accounts.ts");
+    // The session store; a dependency of the kit, so no install of the app's.
+    expect(reached).toContain("zustand");
     for (const peer of HELD) expect(reached).not.toContain(peer);
   });
 

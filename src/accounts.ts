@@ -8,3 +8,13 @@
 // later rounds' TanStack Query hooks stay out of the barrel with it.
 export { accountStorageEntries } from "./accounts/storage-entries";
 export type { AccountStorageEntry } from "./accounts/storage-entries";
+export { createAccountsClient } from "./accounts/accounts-client";
+export type {
+  AccountsClient,
+  AccountsClientOptions,
+  AccountSessionEnd,
+  AccountsHttp,
+  AccountsRequest,
+  AccountTokens,
+} from "./accounts/accounts-client";
+export type { AccountSession, AccountUser, SharedSessionPlace } from "./accounts/session-store";

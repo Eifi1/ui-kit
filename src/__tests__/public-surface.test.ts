@@ -501,9 +501,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `useSharedComputerIdleSignOut`.
   ["@eifi1/ui-kit/offline", offline, 22],
   // 0.63 (docs/auth-harmonization.md §12.9): the account layer's frontend half, its first
-  // part the session — `accountStorageEntries`. Standalone: an API of its own, whose later
-  // rounds bring TanStack Query hooks the barrel must not reach.
-  ["@eifi1/ui-kit/accounts", accounts, 1],
+  // part the session — `createAccountsClient`, `accountStorageEntries`. Standalone: an API of
+  // its own, whose later rounds bring TanStack Query hooks the barrel must not reach.
+  ["@eifi1/ui-kit/accounts", accounts, 2],
   // 0.46.0: local-first phase 3 (docs/local-first-harmonization.md §2.3) — `createSyncDb`,
   // `SYNC_DB_STORES`, `createSyncEngine`, `DEFAULT_HOLD_CODES`, `DEFAULT_SYNC_BACKOFF_MS`,
   // `syncEngineFor`, `releaseSyncEngine`, `useSyncWorker`, `useSyncStatus`, `useSyncQuery` and the
