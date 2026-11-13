@@ -1036,27 +1036,36 @@ password, 2FA or new sign-in (no app sends them). Both are later rounds if Marce
 
 ### 12.6 The order
 
-1. **server-kit 0.28**: `auth_router` with its ports, hooks, texts and testing support, the
+The numbers moved by one: the edge-token proof shipped alone as server-kit 0.28
+(`vouched_hops`), so the accounts are 0.29 and the admin 0.30.
+
+1. **server-kit 0.29**: `auth_router` with its ports, hooks, texts and testing support, the
    admin's invitation routes (list, create, re-send, revoke: an invitation-only app cannot let
-   anybody in without them), and the edge-token proof in `client_ip` (if it has not shipped on
-   its own before). Staunlabor builds its side against the draft ports at the same time
+   anybody in without them), the `[sql]` tables and stores (decision C). Staunlabor builds its side against the draft ports at the same time
    (models, adapters, migration 0001, the contract suites) and reports gaps; it is the first
    app on it.
-2. **server-kit 0.29**: `user_admin_router` with `AdminScope`, the rest of the admin surface.
-   Staunlabor next, then
-   Kurvenschmiede (closest to the kit: one role, global scope; it needs the 0.27 session table
-   anyway).
+2. **server-kit 0.30**: `user_admin_router` with `AdminScope`, the rest of the admin surface,
+   and one public entry for a demo: start a session for an account just made, with a fixed
+   end (no sliding, no refresh token), and its access token with the `sid` and that life
+   (`start_session(user, *, expires_at, refresh=False, shared_device=False)`, Kurvenschmiede's
+   `demo_router`, keksdose's 60-minute demo the same shape). Reaping a demo account takes its
+   rows along: `[sql]`'s `user_sessions` cascades, an app's own table calls `end_all`.
+   Staunlabor next, then Kurvenschmiede (closest
+   to the kit: one role, global scope). Its 0.27 session table comes with the switch, from
+   `[sql]`, not wired by hand before it: until then it stays on server-kit 0.26 with its own
+   copy of the proxy rule, live and checked against production (2026-11-13). It may move its
+   account routes on 0.29 and keep its admin and demo routes until 0.30.
 3. **kastlan and keksdose when it suits them**: kastlan's company scope and binding, keksdose's
    private mode, are the largest hooks. Each keeps its own routes until it moves; nothing in the
    kit forces a date.
 
 The ui-kit side is small: the new codes' words (§12.5 item 3) and the sessions list's current
-mark, in the round that ships with 0.28.
+mark, in the round that ships with 0.29 (ui-kit 0.63).
 
 ### 12.7 For Marcel (one decision)
 
 - **A. The cut and the order** of §12.3–§12.6: two routers, the ports and hooks as drawn,
-  server-kit 0.28 (accounts) and 0.29 (admin), Staunlabor first, then Kurvenschmiede, kastlan
+  server-kit 0.28 (accounts) and 0.29 (admin) (shipped as 0.29 and 0.30, §12.6), Staunlabor first, then Kurvenschmiede, kastlan
   and keksdose at their own pace. *Recommended.*
 - **B. The kit's behaviour where the copies differ** (§12.5), as the default for every app.
   Two of them a person notices: a passkey sign-in asks to unlock the device (PIN, fingerprint)
@@ -1078,7 +1087,7 @@ Staunlabor, the first app on it, read the draft (13 points). Folded in: `last_lo
 review scope on `AccountRow`, `is_demo` and the cut-off optional (§12.3); hooks as a per-request
 dependency, `on_register`'s invitation may be `None`, the `AfterCommit` port, erasure with or
 without feedback, one `current_user` for every router (§12.3); the console-transport rule and
-`de-CH` mail texts (§12.3, §12.5 item 11); the invitation routes in 0.28 (§12.6). Its point 13
+`de-CH` mail texts (§12.3, §12.5 item 11); the invitation routes with the accounts (0.29, §12.6). Its point 13
 is decision C (§12.7).
 
 ### 12.9 The frontend half: `@eifi1/ui-kit/accounts` (2026-11-13)
