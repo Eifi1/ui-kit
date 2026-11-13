@@ -63,6 +63,33 @@ describe("authErrorCode — session_ended (0.34.0, auth §11.2 decision 7)", () 
   });
 });
 
+/** server-kit 0.29's `auth_router` (its README, "Account layer"): every refusal it answers
+ *  is coded (§12.5 item 3), and these fourteen are new. */
+const CODES_0_29 = [
+  "not_signed_in",
+  "admin_required",
+  "password_unchanged",
+  "password_change_not_required",
+  "email_unchanged",
+  "email_change_not_pending",
+  "mail_not_sent",
+  "passkey_refused",
+  "passkey_registration_refused",
+  "passkey_not_found",
+  "session_not_found",
+  "invitation_not_found",
+  "invitation_closed",
+  "invitation_scope_invalid",
+] as const;
+
+describe("authErrorCode — server-kit 0.29's account routes (auth §12.5 item 3)", () => {
+  it.each(CODES_0_29)("knows %s", (code) => {
+    const refused = { response: { status: 400, data: { detail: "English for the logs", code } } };
+    expect(authErrorCode(refused)).toBe(code);
+    expect(isAuthError(refused, code)).toBe(true);
+  });
+});
+
 describe("isAuthError", () => {
   const taken = { response: { status: 409, data: { code: "email_taken" } } };
 

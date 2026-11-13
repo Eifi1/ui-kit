@@ -28,7 +28,25 @@ import { httpStatusOf } from "../lib/http-status";
  * - `session_ended` — 0.34.0 (§11.2, decision 7; server-kit 0.8): every definitive
  *   refusal of `POST /auth/refresh`, a `401`. No form shows it, so it has no label: the
  *   kit's `attachSessionRefresh` decides by the STATUS, so an app whose server has not
- *   switched yet keeps working.
+ *   switched yet keeps working. Since server-kit 0.29 also a signed-in route's 401 once
+ *   the session is over.
+ *
+ * 0.63 (server-kit 0.29's `auth_router`, §12.5 item 3: a code on every refusal, so the kit
+ * says them in seven languages, `describeAccountFailure`):
+ * - `not_signed_in` — `401` with `WWW-Authenticate: Bearer`: no usable access token.
+ * - `admin_required` — `403`: an admin route asked by someone who is not one.
+ * - `password_unchanged` — the new password is the old one (a change, the forced change).
+ * - `password_change_not_required` — the forced change's step for an account that no
+ *   longer has to change its password.
+ * - `email_unchanged` — an address change to the address the account has.
+ * - `email_change_not_pending` — a re-send with no address change waiting.
+ * - `mail_not_sent` — `503`: the verification mail's re-send could not go out.
+ * - `passkey_refused` — `401` on the passkey sign-in's finish (a signed-out step).
+ * - `passkey_registration_refused` — `400`: the authenticator's answer to an added passkey.
+ * - `passkey_not_found`, `session_not_found`, `invitation_not_found` — the id is not the
+ *   account's (or the admin's) to rename, end or act on.
+ * - `invitation_closed` — accepted or revoked already, so it cannot be re-sent or revoked.
+ * - `invitation_scope_invalid` — an admin's invitation `scope` the app does not take.
  */
 export type AuthErrorCode =
   | "invalid_credentials"
@@ -41,7 +59,21 @@ export type AuthErrorCode =
    *  refusals tell it from `token_invalid`, so a page can say "expired, ask for a new one". */
   | "token_expired"
   | "account_inactive"
-  | "session_ended";
+  | "session_ended"
+  | "not_signed_in"
+  | "admin_required"
+  | "password_unchanged"
+  | "password_change_not_required"
+  | "email_unchanged"
+  | "email_change_not_pending"
+  | "mail_not_sent"
+  | "passkey_refused"
+  | "passkey_registration_refused"
+  | "passkey_not_found"
+  | "session_not_found"
+  | "invitation_not_found"
+  | "invitation_closed"
+  | "invitation_scope_invalid";
 
 /**
  * 0.30.0: the coded refusals of user administration and the account's own settings
@@ -161,6 +193,20 @@ const CODES: ReadonlySet<string> = new Set<KitErrorCode>([
   "token_expired",
   "account_inactive",
   "session_ended",
+  "not_signed_in",
+  "admin_required",
+  "password_unchanged",
+  "password_change_not_required",
+  "email_unchanged",
+  "email_change_not_pending",
+  "mail_not_sent",
+  "passkey_refused",
+  "passkey_registration_refused",
+  "passkey_not_found",
+  "session_not_found",
+  "invitation_not_found",
+  "invitation_closed",
+  "invitation_scope_invalid",
   "last_admin",
   "self_action",
   "other_companies",
