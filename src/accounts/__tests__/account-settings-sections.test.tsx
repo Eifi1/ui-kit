@@ -326,7 +326,7 @@ describe("AccountInvitationsSection", () => {
       expires_at: "2026-11-27T09:00:00Z",
     };
     let invited = false;
-    const { user } = mount(<AccountInvitationsSection invitableRoles={["MEMBER"]} defaultRole="MEMBER" />, {
+    const { calls, user } = mount(<AccountInvitationsSection invitableRoles={["MEMBER"]} defaultRole="MEMBER" />, {
       // The list never carries the link: only the answer that minted it does (§12.5 item 11).
       "get /admin/invitations": () => ({ status: 200, data: invited ? [row] : [] }),
       "post /admin/invitations": () => {
@@ -343,6 +343,12 @@ describe("AccountInvitationsSection", () => {
     const item = await screen.findByRole("listitem");
     expect(await within(item).findByRole("button", { name: "Copy invitation link" })).toBeInTheDocument();
     expect(screen.getByText(/written to the server log/)).toBeInTheDocument();
+    // An app with one invitable role passes no role vocabulary, so the panel's draft names
+    // none: the section sends the default, as server-kit's InvitationCreate requires a role.
+    expect(calls.find((c) => c.route === "post /admin/invitations")!.data).toMatchObject({
+      email: "bob@example.com",
+      role: "MEMBER",
+    });
   });
 
   it("sends a new link, and says a refusal in the account words", async () => {

@@ -358,7 +358,9 @@ export function AccountInvitationsSection<R extends string = string>(props: Acco
         invite
           .mutateAsync({
             email: draft.email,
-            role: draft.role ?? "",
+            // The panel names a role only with a role vocabulary; an app with one invitable
+            // role passes none, and server-kit's InvitationCreate requires one.
+            role: draft.role ?? props.defaultRole ?? props.invitableRoles?.[0] ?? "",
             scope: draft.scope ?? null,
             note: draft.note ?? null,
             locale: draft.locale,
