@@ -15,7 +15,7 @@ import { useLargeText } from "../hooks/use-large-text";
 import { Tooltip, type TooltipSide } from "./tooltip";
 import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLink } from "../i18n/kit-labels";
 import type { KitLinkComponent, KitLinkProps } from "../i18n/kit-labels";
-import { pickLinkRenderer, replacingClick, routerLinkNavigation } from "./text-link";
+import { externalRel, pickLinkRenderer, replacingClick, routerLinkNavigation } from "./text-link";
 import type { CommitScope } from "./write-lock";
 import { hasContent } from "../lib/presence";
 import { CompactControlsContext, LockedReason, useRefusal, type DisabledReasonDisplay } from "./field-parts";
@@ -534,6 +534,7 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
   href?: never;
   renderLink?: never;
   external?: never;
+  referrer?: never;
   replace?: never;
   reloadDocument?: never;
 }
@@ -583,6 +584,8 @@ export interface IconButtonLinkProps
   renderLink?: KitLinkComponent;
   /** See {@link ButtonLinkProps.external}. */
   external?: boolean;
+  /** 0.63: see {@link ButtonLinkProps.referrer}. */
+  referrer?: boolean;
   /** See {@link ButtonLinkProps.replace}. */
   replace?: boolean;
   /** See {@link ButtonLinkProps.reloadDocument}. */
@@ -759,6 +762,7 @@ function IconButtonLink({
   href,
   renderLink,
   external,
+  referrer,
   replace,
   reloadDocument,
   disabled,
@@ -845,7 +849,7 @@ function IconButtonLink({
         href={href}
         aria-label={ariaLabel}
         target={external ? "_blank" : target}
-        rel={external ? (rel ?? "noopener noreferrer") : rel}
+        rel={external ? (rel ?? externalRel(referrer)) : rel}
         onClick={external ? handleClick : replacingClick(handleClick, href, replace, target)}
         onKeyDown={handleKeyDown}
       >
@@ -921,6 +925,7 @@ function IconButtonElement({
   href: _href,
   renderLink: _renderLink,
   external: _external,
+  referrer: _referrer,
   replace: _replace,
   reloadDocument: _reloadDocument,
   ref,
