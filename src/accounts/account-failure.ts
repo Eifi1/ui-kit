@@ -1,4 +1,4 @@
-import type { AccountErrorCode, AuthErrorCode } from "../auth/auth-errors";
+import type { AccountErrorCode, AuthErrorCode, KitErrorCode } from "../auth/auth-errors";
 import { authErrorCode, errorBodyWithCode, isRateLimited, retryAfterSeconds } from "../auth/auth-errors";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { httpStatusOf } from "../lib/http-status";
@@ -116,4 +116,29 @@ export function useDescribeAccountFailure(
   const labels = useKitLabels("accountFailure", DEFAULT_ACCOUNT_FAILURE_LABELS, options.labels);
   const { appCode } = options;
   return (error) => describeAccountFailure(error, labels, { appCode });
+}
+
+/**
+ * A kit form's or card's `describeError`, which each asks FIRST: `undefined` for what the
+ * component words itself (the codes in `handled`, a dismissed passkey prompt, an uncoded 4xx
+ * it calls a plain failure), the account words for the rest — a code it does not know, no
+ * answer, a throttle, the server's fault, the app's own codes. Answering everything would
+ * have taken the field-level messages (a wrong password under its field) away from the cards.
+ *
+ * @internal The account pages' and settings sections'.
+ */
+export function useFailureBeside(
+  handled: readonly KitErrorCode[],
+  appCode?: DescribeAccountFailureOptions["appCode"],
+): (error: unknown) => string | undefined {
+  const labels = useKitLabels("accountFailure", DEFAULT_ACCOUNT_FAILURE_LABELS);
+  return (error) => {
+    if (error instanceof Error && error.name === "AbortError") return undefined;
+    const code = authErrorCode(error);
+    if (code !== undefined && handled.includes(code)) return undefined;
+    const status = httpStatusOf(error);
+    const words = describeAccountFailure(error, labels, { appCode });
+    if (code !== undefined || status === undefined || status >= 500 || words !== labels.failed) return words;
+    return undefined;
+  };
 }

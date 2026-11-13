@@ -120,6 +120,22 @@ const NOT_ON_A_PAGE: Record<string, string> = {
   TableCell: "a part of Table (the Description list & table page)",
   AccountsProvider: "hands `@eifi1/ui-kit/accounts`' client down; renders nothing of its own",
   RequireSession: "the account pages' gate: renders its children or a redirect, nothing of its own",
+  AccountProfileSection:
+    "ProfileSetting wired to server-kit's routes through AccountsProvider; ProfileSetting is on its own page",
+  AccountPasswordSection:
+    "PasswordSetting wired to server-kit's routes through AccountsProvider; PasswordSetting is on its own page",
+  AccountEmailSection:
+    "EmailChangeSetting wired to server-kit's routes through AccountsProvider; EmailChangeSetting is on its own page",
+  AccountSessionsSection:
+    "SessionsSetting wired to server-kit's routes through AccountsProvider; SessionsSetting is on its own page",
+  AccountPasskeysSection:
+    "PasskeysSetting wired to server-kit's routes through AccountsProvider; PasskeysSetting is on its own page",
+  AccountExportSection:
+    "DataExportSetting wired to server-kit's routes through AccountsProvider; DataExportSetting is on its own page",
+  AccountDeletionSection:
+    "DeleteAccountSetting wired to server-kit's routes through AccountsProvider; DeleteAccountSetting is on its own page",
+  AccountInvitationsSection:
+    "InvitationsPanel wired to server-kit's routes through AccountsProvider; InvitationsPanel is on its own page",
 };
 
 /**

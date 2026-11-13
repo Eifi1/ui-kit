@@ -78,3 +78,21 @@ export type {
   AccountRoutesOptions,
   RequireSessionProps,
 } from "./accounts/account-pages";
+// 0.63 (§12.9 "The account's settings"): the kit's cards wired, as sections an app puts into
+// its own SettingsLayout beside its own.
+export {
+  AccountDeletionSection,
+  AccountEmailSection,
+  AccountExportSection,
+  AccountInvitationsSection,
+  AccountPasskeysSection,
+  AccountPasswordSection,
+  AccountProfileSection,
+  AccountSessionsSection,
+} from "./accounts/account-settings-sections";
+export type {
+  AccountDeletionSectionProps,
+  AccountInvitationsSectionProps,
+  AccountPasskeysSectionProps,
+  AccountProfileSectionProps,
+} from "./accounts/account-settings-sections";

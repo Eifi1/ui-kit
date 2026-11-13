@@ -6,8 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { AcceptInvitation } from "../auth/accept-invitation";
 import { DEFAULT_ACCEPT_INVITATION_LABELS } from "../auth/accept-invitation-labels";
-import { authErrorCode, isAuthError } from "../auth/auth-errors";
-import type { KitErrorCode } from "../auth/auth-errors";
+import { isAuthError } from "../auth/auth-errors";
 import { ForgotPasswordForm } from "../auth/forgot-password-form";
 import { RegisterForm } from "../auth/register-form";
 import { DEFAULT_REGISTER_LABELS } from "../auth/register-form-labels";
@@ -31,7 +30,7 @@ import { NEXT_PARAM, safeNextPath } from "../landing/routing";
 import { httpStatusOf } from "../lib/http-status";
 import { SharedComputerChoice } from "../offline/shared-computer";
 import { AuthLayout } from "../shell/auth-layout";
-import { describeAccountFailure, type DescribeAccountFailureOptions } from "./account-failure";
+import { describeAccountFailure, useFailureBeside, type DescribeAccountFailureOptions } from "./account-failure";
 import { DEFAULT_ACCOUNT_FAILURE_LABELS } from "./account-failure-labels";
 import { accountQueryKeys, useAccountsClient } from "./accounts-context";
 import { passkeysAvailable } from "./passkey-ceremony";
@@ -129,24 +128,6 @@ function DefaultFrame({ title, children }: AccountPageFrameProps) {
   return <AuthLayout title={title}>{children}</AuthLayout>;
 }
 
-/**
- * A kit form's `describeError`: `undefined` for what the form words itself (`handled`, a
- * dismissed passkey prompt, an uncoded 4xx it calls a plain failure), the account words for
- * the rest — a code the form does not know, no answer, the server's fault, the app's own codes.
- */
-function useFormFailure(handled: readonly KitErrorCode[], appCode: Resolved["appCode"]) {
-  const labels = useKitLabels("accountFailure", DEFAULT_ACCOUNT_FAILURE_LABELS);
-  return (error: unknown): string | undefined => {
-    if (error instanceof Error && error.name === "AbortError") return undefined;
-    const code = authErrorCode(error);
-    if (code !== undefined && handled.includes(code)) return undefined;
-    const status = httpStatusOf(error);
-    const words = describeAccountFailure(error, labels, { appCode });
-    if (code !== undefined || status === undefined || status >= 500 || words !== labels.failed) return words;
-    return undefined;
-  };
-}
-
 function Page({ o, title, children }: { o: Resolved; title: ReactNode; children: ReactNode }) {
   useNoIndex();
   const Frame = o.frame ?? DefaultFrame;
@@ -161,7 +142,7 @@ function SignInPage({ o }: { o: Resolved }) {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const labels = useKitLabels("signIn", DEFAULT_SIGN_IN_LABELS);
-  const describe = useFormFailure(["invalid_credentials", "token_invalid"], o.appCode);
+  const describe = useFailureBeside(["invalid_credentials", "token_invalid"], o.appCode);
   // Where they were headed, read through the kit's open-redirect check (KS's F34).
   const destination = safeNextPath(params.get(NEXT_PARAM)) ?? o.afterSignIn;
   const done = (answer: SignInAnswer) => {
@@ -252,7 +233,7 @@ function Registration({ o, token, invitedEmail }: { o: Resolved; token: string |
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const labels = useKitLabels("register", DEFAULT_REGISTER_LABELS);
-  const describe = useFormFailure(
+  const describe = useFailureBeside(
     ["email_taken", "registration_closed", "invitation_invalid", "invitation_expired"],
     o.appCode,
   );
@@ -296,7 +277,7 @@ function ForgotPasswordPage({ o }: { o: Resolved }) {
   const client = useAccountsClient();
   const [params] = useSearchParams();
   const labels = useKitLabels("forgotPassword", DEFAULT_FORGOT_PASSWORD_LABELS);
-  const describe = useFormFailure([], o.appCode);
+  const describe = useFailureBeside([], o.appCode);
   return (
     <Page o={o} title={labels.title}>
       <ForgotPasswordForm
@@ -315,7 +296,7 @@ function ResetPasswordPage({ o }: { o: Resolved }) {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const labels = useKitLabels("resetPassword", DEFAULT_RESET_PASSWORD_LABELS);
-  const describe = useFormFailure(["token_invalid", "token_expired"], o.appCode);
+  const describe = useFailureBeside(["token_invalid", "token_expired"], o.appCode);
   return (
     <Page o={o} title={labels.title}>
       <ResetPasswordForm

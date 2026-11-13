@@ -147,7 +147,8 @@ export interface AccountInvitation {
   scope?: number | string | null;
   note?: string | null;
   locale: string;
-  invited_by?: { id: number; display_name?: string; email?: string } | null;
+  /** server-kit's `PersonRef`: the kit's `AdminPerson` reads it as it is. */
+  invited_by?: { id?: number | null; email?: string | null; first_name?: string; last_name?: string } | null;
   created_at: string;
   expires_at: string;
   status: "open" | "accepted" | "expired" | "revoked";
