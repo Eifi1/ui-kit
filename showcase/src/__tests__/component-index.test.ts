@@ -15,6 +15,7 @@ import * as wizard from "../../../src/wizard";
 import * as rhf from "../../../src/rhf";
 import * as tableText from "../../../src/table-text";
 import * as offline from "../../../src/offline";
+import * as accounts from "../../../src/accounts";
 import * as sync from "../../../src/sync";
 import * as syncTesting from "../../../src/sync/testing";
 import * as testing from "../../../src/testing";
@@ -63,6 +64,7 @@ const ENTRIES: Record<string, Record<string, unknown>> = {
   "./rhf": rhf,
   "./table-text": tableText,
   "./offline": offline,
+  "./accounts": accounts,
   "./sync": sync,
   "./sync/testing": syncTesting,
   "./testing": testing,
@@ -89,6 +91,7 @@ const ENTRY_FILES = [
   "src/rhf.ts",
   "src/table-text.ts",
   "src/offline.ts",
+  "src/accounts.ts",
   "src/testing/index.ts",
   "src/testing/react.ts",
   "src/currencies.ts",
@@ -133,6 +136,8 @@ const ENGINE = "the offline and sync engine's plumbing, shown through the compon
 const APPEARANCE =
   "the appearance settings' plumbing (the pre-paint read, the stores' writers): the Appearance page shows its effect";
 const OWED = "a pure helper still owed its input → output table (CONTRIBUTING, the showcase; DOC-12)";
+const ACCOUNTS =
+  "the account layer's session client (`@eifi1/ui-kit/accounts`, 0.63): no markup of its own; shown with the account pages its later rounds wire to it";
 const NOT_SHOWN: Record<string, string> = {
   createFakeSyncTransport: TEST_HELPER,
   rowMenuAction: TEST_HELPER,
@@ -158,6 +163,8 @@ const NOT_SHOWN: Record<string, string> = {
   handlePushSubscriptionChange: WORKER,
   pushSubscriptionInput: WORKER,
   resubscribeAfterChange: WORKER,
+  createAccountsClient: ACCOUNTS,
+  accountStorageEntries: ACCOUNTS,
   releaseSyncEngine: ENGINE,
   syncEngineFor: ENGINE,
   rowByPk: ENGINE,
