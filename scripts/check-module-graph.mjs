@@ -292,11 +292,15 @@ const BUDGETS = [
   // 2.7 kB, `dropPushSubscription` 1.5 kB and the storage guard 1.4 kB (Rollup's rendered
   // lengths, before minifying). No component: `isSharedComputer` comes without its checkbox,
   // `NEXT_PARAM` without the routing components.
+  // 16,287 B (6,031 gzip) with the round's second part: `client.api`, every route typed (2.7 kB
+  // rendered), and the passkey sign-in's ceremony, converting WebAuthn's JSON itself instead of
+  // a library (2.6 kB) — meant growth, 4,172 B. The hooks, pages and sections are not in it:
+  // an app imports them where it draws them.
   {
     label: "{ createAccountsClient }",
     entry: "dist/accounts.js",
     names: ["createAccountsClient", "accountStorageEntries"],
-    max: 12_200,
+    max: 16_400,
   },
 ];
 const ENTRY = "\0import-cost";
