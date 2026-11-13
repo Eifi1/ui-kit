@@ -35,7 +35,7 @@ Snapshots, per-repo to-dos and the review logs are in
 | 11 | Session refresh | ui-kit 0.34.0, server-kit 0.8.0 | §11.7 |
 | 11.1, 11.5 | Where each one stands; per app | — (archived) | |
 | 11.7 | Settled after the reviews | — | index; folded into §11.2–§11.4 |
-| 12 | Layer 2: the server-kit runs the account routes | — (draft, 2026-11-13) | |
+| 12 | Layer 2: the kits run the account routes, server and frontend | — (draft, 2026-11-13; A, B, C decided) | §12.8, §12.9 |
 
 ## 1. Where each one stands
 
@@ -833,7 +833,8 @@ went:
 
 ## 12. Layer 2: the server-kit runs the account routes (draft, 2026-11-13)
 
-**Status: draft for Marcel's decision (§12.7). Nothing is built.** Marcel, 2026-11-13, in
+**Status: decided 2026-11-13 (A from Marcel's "as soon as possible" and his "2"; B and C "wie
+empfohlen"); kastlan rests, so its seams wait. Being built: server-kit 0.29.** Marcel, 2026-11-13, in
 Staunlabor's session: accounts and user admin should move into the server-kit next, "wenn das
 in weiten Teilen, wenn nicht sogar komplett, gleich ist". Staunlabor, a fourth app, starts
 accounts, admin, public feedback, passkeys and the translation review now, and would otherwise
@@ -1079,3 +1080,69 @@ dependency, `on_register`'s invitation may be `None`, the `AfterCommit` port, er
 without feedback, one `current_user` for every router (§12.3); the console-transport rule and
 `de-CH` mail texts (§12.3, §12.5 item 11); the invitation routes in 0.28 (§12.6). Its point 13
 is decision C (§12.7).
+
+### 12.9 The frontend half: `@eifi1/ui-kit/accounts` (2026-11-13)
+
+Marcel, 2026-11-13 (in Staunlabor's session): "Das sollte doch lieber vollständig in die kits
+kommen, frontend wie backend. Noch eine nahezu ähnliche Fassung ist nicht wünschenswert." The
+ui-kit already ships the parts (`SignInForm`, the settings cards, `InvitationsPanel`,
+`FeedbackInbox`, `TranslationReviewPanel`, …); each app wires them itself. In Kurvenschmiede that
+wiring is about 5,000 lines (Staunlabor's inventory, 2026-11-13): the session ≈ 1,200, the
+sign-in pages ≈ 550, settings ≈ 800, admin ≈ 1,190, feedback ≈ 390, the review ≈ 330, the shell
+≈ 700, most of it generic. With `auth_router` making the routes one, the wiring can be one too:
+a new entry `@eifi1/ui-kit/accounts`, on react-router, TanStack Query and zustand, which the kit
+already uses or names as peers.
+
+**What it takes over:**
+
+- **The session**: `createAccountsClient({ http, storagePrefix, publicPaths, signInPath, … })`
+  on the app's axios instance: the bearer from the stored session, the refresh
+  (`createSessionRefresh`/`attachSessionRefresh`, §11), `watchSessionElsewhere`, the session
+  store (zustand; the tab's storage on a shared computer, page memory on the stricter path,
+  local storage otherwise, §2.14), and **one sign-out in the contract's order** (§6.3:
+  `dropPushSubscription`, then `DELETE /auth/sessions/current`, then the tokens; a failed
+  revoke still signs out). The sign-in, the sign-up and the passkey finish **send
+  `shared_device`** (server-kit 0.27). The storage keys come from the app's prefix, and the
+  client lists them for the privacy page (`accountStorageEntries`).
+- **The API and its hooks**: the routes of `auth_router` typed once (`accountsApi`), and
+  `useCurrentUser`, `useSignIn`, `useRegister`, `useSessions` (with `current` and the revoke),
+  `usePasskeys`, `useEmailChange`, `useDeletion`, `useExport`, `useAccountLanguage`,
+  `useInvitationsAdmin`, with their query keys.
+- **The pages**: `accountRoutes(options)` answers plain route objects for the sign-in,
+  sign-up (with the invitation check, a dead link's banner and `AcceptInvitation` for an
+  existing account), forgotten and new password, verification and address confirmation; and
+  `RequireSession` for the private routes.
+- **The account's settings**: the cards wired (profile, password, language, address, sessions
+  with the device list, passkeys, export, deletion) as sections the app puts into its own
+  `SettingsLayout`, beside its own.
+- **Refusals**: `describeAccountFailure`: every coded refusal (§12.5 item 3) in the kit's seven
+  languages, offline and timeouts, and the app's own codes through its catalogue.
+- **Usable outside `AppShell`**: the account menu's rows, the sign-out and the role chip work in
+  an app's own header (Staunlabor has no `AppShell`).
+
+**What the app passes in:** its axios instance and base URL, the storage prefix and the privacy
+lines, the public paths and the page after sign-in, its `User` type (the kit's
+`UserResponse` and the app's `me_model` fields), extra sign-up fields (rendered in
+`RegisterForm`'s slot and sent in the body), the sign-in hint and contact address, its legal
+links (a terms link may be left out), the deletion mode's wording, and which optional parts it
+has. Demo, billing, teams, 2FA and tours are **off unless the app turns them on**.
+
+**Later rounds of the same entry**: the admin pages (roster, action log, test mail, attention
+tile) with server-kit 0.30; the feedback pages (inbox, my feedback, public) and the review page
+wired to `current_user` after them. The invitations panel comes first, with 0.29's routes.
+
+**Found on the way** (Staunlabor's inventory):
+- `@eifi1/ui-kit/offline` imports `idb-keyval` and `@tanstack/query-async-storage-persister`
+  statically, so an app that needs only `SharedComputerChoice` must install both: the
+  persistence moves behind a lazy import or its own entry (ui-kit 0.63).
+- Kurvenschmiede sends no `shared_device` and its sign-out ends no server session; it has no
+  session rows yet, so both come with its move to the kit, not as a fix now.
+- `SessionsSetting` takes `sessions`, `onRevoke` and `current` since 0.61; no app passes them.
+  The wired card does.
+
+**Order**: ui-kit **0.63** with server-kit 0.29 (session, pages, the account's settings, the
+invitations panel, the `offline` split, plus the legal credits and the link referrer collected
+for 0.63); ui-kit **0.64** with server-kit 0.30 (the admin pages), then the feedback and review
+pages. Staunlabor goes live on 0.63/0.29 for accounts and on 0.64/0.30 for the admin, with no
+account wiring of its own.
+
