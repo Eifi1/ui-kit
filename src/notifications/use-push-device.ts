@@ -4,6 +4,7 @@ import { useMediaQuery } from "../hooks/use-media-query";
 import { httpStatusOf } from "../lib/http-status";
 import { PUSH_SUBSCRIPTION_CHANGED, keyBytes, pushSubscriptionInput as inputOf } from "./push-worker";
 import type { PushSubscriptionInput } from "./push-worker";
+import { isSharedComputer } from "../offline/shared-computer";
 
 export { PUSH_SUBSCRIPTION_CHANGED };
 export type { PushSubscriptionInput };
@@ -40,6 +41,14 @@ export class PushDeviceError extends Error {
 }
 
 export interface UsePushDeviceOptions {
+  /**
+   * The person ticked "This is a shared computer" (0.62, Marcel 2026-11-13): `enable` refuses
+   * (answers `false`, asks the browser nothing), since a push subscription belongs to the
+   * browser and would keep delivering their notifications after they leave. Default
+   * `isSharedComputer()` (`@eifi1/ui-kit/offline`), read at each `enable`. `PushDeviceSetting`
+   * says why; an app's own control must say so too.
+   */
+  sharedComputer?: boolean;
   /** `GET /notifications/push-key` → its `key`; `""` when push is off on the server. */
   pushKey: () => Promise<string>;
   /** `POST /notifications/devices`. A 409 (another account's endpoint) is recovered
@@ -204,7 +213,8 @@ async function releaseSubscription(unregister: (endpoint: string) => Promise<unk
  * effort at a sign-out: catch it, a sign-out must not stop on push.
  *
  * Only an explicit sign-out (Marcel's decision 2 of the 2026-10-30 audit): a session that
- * merely expired keeps its device, and whoever signs back in turns push on again.
+ * merely expired keeps its device, and whoever signs back in turns push on again. Since
+ * 0.62 a sign-out calls {@link dropPushSubscription}, this without the rejection.
  */
 export async function releaseThisDevicePush(unregister: (endpoint: string) => Promise<unknown>): Promise<boolean> {
   if (!pushSupported()) return false;
@@ -222,6 +232,37 @@ export async function releaseThisDevicePush(unregister: (endpoint: string) => Pr
     return true;
   } finally {
     notifyPushSubscriptionChanged();
+  }
+}
+
+/**
+ * {@link releaseThisDevicePush} for a sign-out, which must not fail on push (0.62, Marcel
+ * 2026-11-13: every sign-out drops this device's push; docs/auth-harmonization.md §6.3).
+ * The same work in the same order: the app's `unregister` (`POST
+ * /notifications/devices/unregister {endpoint}`) while the token still holds, then the
+ * browser's unsubscribe even when the server refused, then {@link PUSH_SUBSCRIPTION_CHANGED}.
+ *
+ * It NEVER rejects: a refused or unreachable server, a browser that will not let go or
+ * cannot be asked, a call that throws before it returns. `releaseThisDevicePush` rejects as
+ * the request did, for a caller that wants to know, so every sign-out wrapped it in
+ * `.catch(() => undefined)`, and one that forgot never signed out when the server refused.
+ *
+ *     async function signOut() {
+ *       await dropPushSubscription(api.unregisterDevice);   // needs the token: first
+ *       await api.endThisSession().catch(() => undefined);  // DELETE /auth/sessions/current
+ *       clear();
+ *     }
+ *
+ * Resolves `true` when this browser held a subscription and both the server and the
+ * browser let it go; `false` otherwise, whatever failed.
+ */
+export async function dropPushSubscription(unregister: (endpoint: string) => Promise<unknown>): Promise<boolean> {
+  try {
+    return await releaseThisDevicePush(unregister);
+  } catch {
+    // Best effort: the browser was asked to let go whatever the server said, and a
+    // subscription the push service no longer has is pruned on the server's next send (410).
+    return false;
   }
 }
 
@@ -359,6 +400,8 @@ export function usePushDevice(options: UsePushDeviceOptions): PushDevice {
 
   const enable = useCallback(async (): Promise<boolean> => {
     if (!supported) return false;
+    // Not on a shared computer: the subscription would outlive the person's visit (0.62).
+    if (latest.current.sharedComputer ?? isSharedComputer()) return false;
     const { pushKey, register, isEndpointTaken = defaultEndpointTaken } = latest.current;
     setBusy(true);
     try {

@@ -393,3 +393,19 @@ describe("PUSH_SUBSCRIPTION_CHANGED", () => {
     expect(PUSH_SUBSCRIPTION_CHANGED).toBe("eifi1:push-subscription-changed");
   });
 });
+
+describe("usePushDevice on a shared computer (0.62)", () => {
+  it("refuses to subscribe: it asks the browser nothing and registers nothing", async () => {
+    const fake = installFakePush();
+    uninstall = fake.uninstall;
+    const options = api({ sharedComputer: true });
+    const { result } = renderHook(() => usePushDevice(options));
+    let answer: boolean | undefined;
+    await act(async () => {
+      answer = await result.current.enable();
+    });
+    expect(answer).toBe(false);
+    expect(fake.requestPermission).not.toHaveBeenCalled();
+    expect(options.register).not.toHaveBeenCalled();
+  });
+});

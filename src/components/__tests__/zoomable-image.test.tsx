@@ -54,6 +54,11 @@ const tap = (el: HTMLElement, x: number, y: number) => {
   pointer("pointerDown", el, 1, x, y);
   pointer("pointerUp", el, 1, x, y);
 };
+/** A mouse click on the picture at fit: nothing to drag, but ⌘/Ctrl + wheel is now its own. */
+const clickInto = (el: HTMLElement) => {
+  pointer("pointerDown", el, 1, 100, 100, "mouse");
+  pointer("pointerUp", el, 1, 100, 100, "mouse");
+};
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -347,6 +352,7 @@ describe("ZoomableImage: wheel and touchmove", () => {
   it("zooms on ⌘/Ctrl + wheel (a trackpad pinch) about the cursor, and leaves a plain wheel to scroll", () => {
     const { box, img } = view();
     decode(img());
+    clickInto(box);
     // Not prevented: the box, then the page, scrolls as anywhere else.
     expect(fireEvent.wheel(box, { deltaY: 100, clientX: 100, clientY: 100 })).toBe(true);
     expect(width(img())).toBe("100%");
@@ -397,6 +403,7 @@ describe("ZoomableImage: Safari's gesture events", () => {
   it("zooms on desktop Safari's trackpad pinch about the cursor, from the level the pinch began at", async () => {
     const { box, img } = view();
     decode(img());
+    clickInto(box);
     // Prevented, or Safari zooms the whole page.
     expect(gesture(box, "gesturestart", 1, 100, 100)).toBe(false);
     expect(width(img())).toBe("100%");
@@ -458,6 +465,114 @@ describe("ZoomableImage: Safari's gesture events", () => {
     pointer("pointerDown", box, 1, 100, 100);
     pointer("pointerDown", box, 2, 200, 100);
     gesture(box, "gesturechange", 1.5, 150, 100);
+    expect(width(img())).toBe("200%");
+  });
+});
+
+describe("ZoomableImage: ⌘/Ctrl + wheel and Safari's pinch only once engaged (Marcel, 2026-11-13)", () => {
+  /** The picture, decoded, beside a button elsewhere on the page. */
+  function page() {
+    const utils = view();
+    decode(utils.img());
+    render(<button type="button">Elsewhere</button>);
+    return utils;
+  }
+  const elsewhere = () => screen.getByRole("button", { name: "Elsewhere" });
+  const ctrlWheel = (box: HTMLElement, deltaY: number) =>
+    fireEvent.wheel(box, { deltaY, ctrlKey: true, clientX: 100, clientY: 100 });
+  /** Past the quiet spell that ends a wheel's burst. */
+  const quiet = () => act(() => vi.advanceTimersByTime(1000));
+  afterEach(() => vi.useRealTimers());
+
+  it("leaves both to the page over a picture nobody has pressed into or focused: not prevented, nothing zoomed", () => {
+    const { box, img } = page();
+    // The page zoom of a reader who enlarges the page with Ctrl + wheel, the pointer over the receipt.
+    expect(ctrlWheel(box, -100)).toBe(true);
+    expect(fireEvent.wheel(box, { deltaY: -100, metaKey: true, clientX: 100, clientY: 100 })).toBe(true);
+    expect(gesture(box, "gesturestart", 1, 100, 100)).toBe(true);
+    expect(gesture(box, "gesturechange", 2, 100, 100)).toBe(true);
+    expect(gesture(box, "gestureend", 2, 100, 100)).toBe(true);
+    expect(width(img())).toBe("100%");
+    expect(scroll(box)).toEqual([0, 0]);
+  });
+
+  it("takes them once pressed into, by any pointer, anywhere on it, and lets go on a press outside", () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    const { box, img } = page();
+    // A mouse press at fit: nothing to drag, but the reader has pressed into the picture.
+    pointer("pointerDown", box, 1, 100, 100, "mouse");
+    pointer("pointerUp", box, 1, 100, 100, "mouse");
+    expect(ctrlWheel(box, -100)).toBe(false);
+    expect(parseFloat(width(img()))).toBeCloseTo(Math.exp(0.2) * 100);
+    quiet();
+    fireEvent.click(button("Fit to width"));
+    expect(width(img())).toBe("100%");
+
+    fireEvent.pointerDown(elsewhere());
+    expect(ctrlWheel(box, -100)).toBe(true);
+    expect(gesture(box, "gesturestart", 1, 100, 100)).toBe(true);
+    expect(width(img())).toBe("100%");
+
+    // A pen on the zoom buttons, as much as a press on the picture.
+    fireEvent.pointerDown(button("Fit to width"), { pointerType: "pen" });
+    expect(gesture(box, "gesturestart", 1, 100, 100)).toBe(false);
+    expect(gesture(box, "gesturechange", 1.5, 100, 100)).toBe(false);
+    expect(width(img())).toBe("150%");
+  });
+
+  it("takes them while it holds the focus, and lets go when the focus leaves it at fit", () => {
+    const { box, img } = page();
+    act(() => box.focus());
+    expect(gesture(box, "gesturestart", 1, 100, 100)).toBe(false);
+    expect(gesture(box, "gestureend", 1, 100, 100)).toBe(false);
+    act(() => elsewhere().focus());
+    expect(ctrlWheel(box, -100)).toBe(true);
+    expect(width(img())).toBe("100%");
+    // Tabbing back in takes them again.
+    act(() => button("Zoom in").focus());
+    expect(ctrlWheel(box, -100)).toBe(false);
+    expect(parseFloat(width(img()))).toBeCloseTo(Math.exp(0.2) * 100);
+  });
+
+  it("stays engaged while zoomed, whatever is pressed or focused elsewhere, until it is back at fit", () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    const { box, img } = page();
+    // Zoomed from a script (no press, no focus): zoomed alone engages it.
+    fireEvent.click(button("Zoom in"));
+    fireEvent.pointerDown(elsewhere());
+    act(() => elsewhere().focus());
+    expect(ctrlWheel(box, -100)).toBe(false);
+    expect(parseFloat(width(img()))).toBeCloseTo(150 * Math.exp(0.2));
+    quiet();
+    fireEvent.keyDown(box, { key: "0" });
+    expect(width(img())).toBe("100%");
+    expect(ctrlWheel(box, -100)).toBe(true);
+    expect(width(img())).toBe("100%");
+  });
+
+  it("lets a turn it took run to its end, out to fit, before the page has the wheel back", () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    const { box, img } = page();
+    fireEvent.click(button("Zoom in"));
+    fireEvent.pointerDown(elsewhere());
+    // Engaged by the zoom alone; turned out to fit …
+    expect(ctrlWheel(box, 500)).toBe(false);
+    expect(width(img())).toBe("100%");
+    // … and the rest of that turn is the picture's, not a page zoom starting halfway through it.
+    expect(ctrlWheel(box, 100)).toBe(false);
+    quiet();
+    expect(ctrlWheel(box, 100)).toBe(true);
+  });
+
+  it("leaves a touch screen's two fingers as they were: an engagement in themselves", () => {
+    const { box, img } = page();
+    fireEvent.pointerDown(elsewhere());
+    pointer("pointerDown", box, 1, 100, 100);
+    pointer("pointerDown", box, 2, 200, 100);
+    expect(gesture(box, "gesturestart", 1, 150, 100)).toBe(false);
+    pointer("pointerMove", box, 2, 300, 100);
+    expect(width(img())).toBe("200%");
+    expect(gesture(box, "gesturechange", 2, 200, 100)).toBe(false);
     expect(width(img())).toBe("200%");
   });
 });

@@ -5,4 +5,6 @@ import type { SharedComputerLabels } from "./shared-computer";
 export const DEFAULT_SHARED_COMPUTER_LABELS: SharedComputerLabels = {
   label: "This is a shared computer",
   hint: "No copy of your data stays on this device. Pages then open only with a connection.",
+  idleWarning: "Nothing has happened here for a while. You will be signed out in a minute.",
+  staySignedIn: "Stay signed in",
 };

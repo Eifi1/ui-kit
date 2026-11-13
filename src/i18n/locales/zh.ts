@@ -732,7 +732,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       zoomWindow: "可见范围",
       zoomWindowRange: (from, to) => `${from} 至 ${to}`,
       zoomHint:
-        "拖动以缩放：近似正方形的选区同时缩放两条坐标轴，细长的选区只缩放其所沿的那条轴。在触摸屏上，单指读取数值，双指缩放和平移。“后退”撤销一步缩放；双击或“重置缩放”可再次显示完整范围。",
+        "拖动以缩放：近似正方形的选区同时缩放两条坐标轴，细长的选区只缩放其所沿的那条轴。在触摸屏上，单指读取数值，双指缩放和平移。如需在触控板上双指捏合缩放，或使用鼠标按住 Ctrl 并滚动滚轮缩放，请先点击图表。“后退”撤销一步缩放；双击或“重置缩放”可再次显示完整范围。",
       empty: "无数据",
       legend: "数据系列",
       points: "图表数值",
@@ -982,8 +982,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
             // 0.61 (Marcel 2026-11-12): the persisted cache and the shared-computer flag, for an app's entries.
             standardEntries: {
               recentData: (hours) =>
-                `最近加载的数据，以便页面在未联网时也能打开；超过 ${hours} 小时的数据应用不再使用，并在下次打开时删除。如果您登录时选择了“这是一台共用电脑”，则不会保留任何此类数据。`,
-              sharedComputer: "您登录时是否选择了“这是一台共用电脑”，仅在该次会话期间保存。",
+                `最近加载的数据，以便页面在未联网时也能打开；超过 ${hours} 小时的数据应用不再使用，并在下次打开时删除。如果您登录时选择了“这是一台共用电脑”，则不会保留任何此类数据`,
+              sharedComputer: "您登录时是否选择了“这是一台共用电脑”，随标签页一同保存",
             },
           },
           rights: {
@@ -1248,6 +1248,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       on: "此设备的通知已开启。",
       off: "此设备的通知已关闭。",
       otherAccount: "此浏览器正在接收另一个账户的通知。在此开启，即可接收您当前登录账户的通知。",
+      sharedComputer: "在共用电脑上不可用：您离开后，此浏览器仍会继续接收您的通知。",
       enable: "开启通知",
       disable: "关闭",
       sendTest: "发送测试",
@@ -1996,6 +1997,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
     sharedComputer: {
       label: "这是一台共用电脑",
       hint: "此设备上不会保留您的数据副本。页面将只能在联网时打开。",
+      idleWarning: "此处已有一段时间没有任何操作。一分钟后将退出登录。",
+      staySignedIn: "保持登录",
     },
     // 0.55 — docs/top-bar-harmonization.md §2.6.1: keksdose's words (sync.held_*,
     // sync.discard_held_*, sync.switch_back_held) without its budgets.

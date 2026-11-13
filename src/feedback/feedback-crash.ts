@@ -134,9 +134,23 @@ export interface CrashReporterOptions {
    * payee names) or ids (`row`, `action`). Copied when the reporter is made.
    */
   allowParams: Iterable<string>;
-  /** The `localStorage` key undeliverable reports wait under — one per app, e.g.
+  /** The key undeliverable reports wait under, in {@link storage} — one per app, e.g.
    *  keksdose's `"keksdose.pendingCrashReports"` (kk `crash-report.ts:35`). */
   storageKey: string;
+  /**
+   * 0.62: where the reports wait — a `Storage`, or a function answering one, asked at each
+   * read and write. Default `localStorage`, as before.
+   *
+   * For a shared-computer session, the page's memory (`createMemoryStorage()`, or the
+   * app's own): a buffered report holds the page and the error of that person's session,
+   * and must not stay on the device when the tab is closed — not in `localStorage`, and
+   * not in `sessionStorage`, which Chrome brings back with a reopened tab. The flush then sends that page's reports under that page's sign-in and leaves the
+   * device's own buffer for the device's own session (keksdose put it back after every
+   * filing and skipped the flush). A function for an app whose mode is chosen while the
+   * page lives — `() => (isSharedComputer() ? pageMemory : localStorage)`; it must not
+   * touch React, and one that throws reads as no storage: nothing is buffered.
+   */
+  storage?: Storage | (() => Storage);
   /**
    * The app's own opt-out: `true` files nothing and buffers nothing — keksdose's demo
    * sessions (kk `crash-report.ts:183-193`; its server answers `stored: false` for them
@@ -263,14 +277,6 @@ function isPayload(value: unknown): value is CrashReportCreate {
   return typeof p.message === "string" && p.message !== "" && typeof p.occurred_at === "string";
 }
 
-function storage(): Storage | null {
-  try {
-    return globalThis.localStorage ?? null;
-  } catch {
-    return null; // private mode / storage disabled
-  }
-}
-
 function isOffline(): boolean {
   try {
     return typeof navigator !== "undefined" && navigator.onLine === false;
@@ -352,6 +358,18 @@ export function createCrashReporter(options: CrashReporterOptions): CrashReporte
       return typeof t === "string" && t !== "" ? t : null;
     } catch {
       return null;
+    }
+  }
+
+  /** The app's `storage` (0.62), else `localStorage`, at this moment — or null where there
+   *  is none: blocked, or a getter that throws. */
+  function storage(): Storage | null {
+    try {
+      const chosen = options.storage;
+      if (chosen === undefined) return globalThis.localStorage ?? null;
+      return (typeof chosen === "function" ? chosen() : chosen) ?? null;
+    } catch {
+      return null; // private mode / storage disabled / the app's getter threw
     }
   }
 

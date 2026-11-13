@@ -1,12 +1,12 @@
 {
   "format": "eifi1-server-kit-api",
   "version": 1,
-  "kit_version": "0.25.0",
+  "kit_version": "0.27.0",
   "modules": [
     {
       "name": "eifi1_server_kit.auth",
       "summary": "Sign-in, sign-up and the account, as code (``docs/auth-harmonization.md`` §8 in ``Eifi1/ui-kit``).",
-      "doc": "Sign-in, sign-up and the account, as code (``docs/auth-harmonization.md`` §8 in ``Eifi1/ui-kit``).\n\nLayer 1, like the rest of the kit: pure functions, Pydantic models and small classes —\nno database, no app ``User``, no routes, and no JWT signing (each app keeps its JWT\nlibrary; :mod:`~eifi1_server_kit.auth.tokens` builds and checks the claims). keksdose is\nthe reference, cited ``file`` per rule.\n\n* :mod:`~eifi1_server_kit.auth.accounts` — the address and its tag, invitations, the\n  registration gate, names, erasure identifiers;\n* :mod:`~eifi1_server_kit.auth.tokens` — one-time tokens (reset, verification,\n  invitation, email change), the session's claims, and what a refresh answers;\n* :mod:`~eifi1_server_kit.auth.limits` — :class:`AuthLimiters`, with the per-address\n  delay that never locks out;\n* :mod:`~eifi1_server_kit.auth.passwords` — :func:`absent_account_check`, the dummy hash an\n  address with no account is checked against, so it costs what one with an account costs;\n* :mod:`~eifi1_server_kit.auth.totp` — the second factor's code: the time step it matches\n  (:func:`totp_matched_step`), the replay rule, a step accepted once\n  (:func:`totp_step_accepted`), and one 2FA challenge for one sign-in\n  (:func:`two_factor_challenge_claims`, :func:`two_factor_challenge_is_spent`);\n* :mod:`~eifi1_server_kit.auth.schemas` — the wire shapes, with the account's text size\n  and contrast (``docs/text-size-harmonization.md`` §6);\n* :mod:`~eifi1_server_kit.auth.errors` — :class:`AuthError` and its codes.",
+      "doc": "Sign-in, sign-up and the account, as code (``docs/auth-harmonization.md`` §8 in ``Eifi1/ui-kit``).\n\nLayer 1, like the rest of the kit: pure functions, Pydantic models and small classes —\nno database, no app ``User``, no routes, and no JWT signing (each app keeps its JWT\nlibrary; :mod:`~eifi1_server_kit.auth.tokens` builds and checks the claims). keksdose is\nthe reference, cited ``file`` per rule.\n\n* :mod:`~eifi1_server_kit.auth.accounts` — the address and its tag, invitations, the\n  registration gate, names, erasure identifiers;\n* :mod:`~eifi1_server_kit.auth.tokens` — one-time tokens (reset, verification,\n  invitation, email change), the session's claims, and what a refresh answers;\n* :mod:`~eifi1_server_kit.auth.limits` — :class:`AuthLimiters`, with the per-address\n  delay that never locks out;\n* :mod:`~eifi1_server_kit.auth.passwords` — :func:`absent_account_check`, the dummy hash an\n  address with no account is checked against, so it costs what one with an account costs;\n* :mod:`~eifi1_server_kit.auth.totp` — the second factor's code: the time step it matches\n  (:func:`totp_matched_step`), the replay rule, a step accepted once\n  (:func:`totp_step_accepted`), and one 2FA challenge for one sign-in\n  (:func:`two_factor_challenge_claims`, :func:`two_factor_challenge_is_spent`);\n* :mod:`~eifi1_server_kit.auth.sessions` — a session's life on the server (0.27):\n  :class:`SessionPolicy`, a shared computer's short session (:func:`session_expired`,\n  :func:`refresh_lifetime`, :func:`access_lifetime`, :func:`session_expires_at`);\n* :mod:`~eifi1_server_kit.auth.schemas` — the wire shapes, with the account's text size\n  and contrast (``docs/text-size-harmonization.md`` §6);\n* :mod:`~eifi1_server_kit.auth.errors` — :class:`AuthError` and its codes.",
       "contract": {
         "doc": "docs/auth-harmonization.md",
         "section": "§8",
@@ -278,6 +278,31 @@
           "doc": "A password-reset link (keksdose ``password_reset_service.TOKEN_TTL``)."
         },
         {
+          "name": "SHARED_ABSOLUTE",
+          "kind": "constant",
+          "signature": "SHARED_ABSOLUTE = timedelta(hours=4)",
+          "doc": "A shared session ends this long after it started, however busy (Marcel, 2026-11-12)."
+        },
+        {
+          "name": "SHARED_ACCESS_LIFETIME",
+          "kind": "constant",
+          "signature": "SHARED_ACCESS_LIFETIME = timedelta(minutes=5)",
+          "doc": "A shared session's access token: a third of the idle limit, so the client's refresh —\non the first 401 after the access token ends — finds the refresh token alive. A session\nleft alone ends 10 to 15 minutes after its last request."
+        },
+        {
+          "name": "SHARED_DEVICE_CLAIM",
+          "kind": "constant",
+          "signature": "SHARED_DEVICE_CLAIM = \"shared_device\"",
+          "doc": "The sign-in's \"This is a shared computer\" (0.27), carried by a challenge — the 2FA\nstep's, the password change's — to the step that starts the session, so the session\ncreated there knows it (:func:`challenge_claims`' ``shared_device``,\n:func:`shared_device_of`). Only a ticked choice writes it.",
+          "value": "shared_device"
+        },
+        {
+          "name": "SHARED_IDLE",
+          "kind": "constant",
+          "signature": "SHARED_IDLE = timedelta(minutes=15)",
+          "doc": "A shared session ends this long after its last refresh (Marcel, 2026-11-12)."
+        },
+        {
           "name": "TAG_SEPARATOR",
           "kind": "constant",
           "signature": "TAG_SEPARATOR = \"+\"",
@@ -517,9 +542,15 @@
         {
           "name": "LoginRequest",
           "kind": "model",
-          "signature": "class LoginRequest(BaseModel)",
-          "doc": "``POST /auth/login {email, password}`` (§5.1; keksdose ``UserLogin``).",
+          "signature": "class LoginRequest(SharedDeviceChoice)",
+          "doc": "``POST /auth/login {email, password, shared_device}`` (§5.1; keksdose ``UserLogin``;\n``shared_device`` since 0.27, :class:`SharedDeviceChoice`).",
           "fields": [
+            {
+              "name": "shared_device",
+              "type": "bool",
+              "default": "False",
+              "doc": "Ticked on the sign-in form. ``false`` when left out, so a client from before the box\nsigns in as before; a boolean, never ``null``."
+            },
             {
               "name": "email",
               "type": "Email",
@@ -677,9 +708,15 @@
         {
           "name": "RegisterRequest",
           "kind": "model",
-          "signature": "class RegisterRequest(BaseModel)",
-          "doc": "``POST /auth/register`` (§4.2; keksdose ``UserCreate``).\n\n``{email, password, first_name, last_name, locale, invite_token?}`` plus the app's\nfields in its subclass (kastlan's company, keksdose's currency). Unknown fields are\nrefused: a role or a company id sent by a client is a 422, not silently dropped —\nthey come from the invitation or the app's default, never from the form (§4.3).",
+          "signature": "class RegisterRequest(SharedDeviceChoice)",
+          "doc": "``POST /auth/register`` (§4.2; keksdose ``UserCreate``).\n\n``{email, password, first_name, last_name, locale, invite_token?}`` plus the app's\nfields in its subclass (kastlan's company, keksdose's currency). Unknown fields are\nrefused: a role or a company id sent by a client is a 422, not silently dropped —\nthey come from the invitation or the app's default, never from the form (§4.3).\n``shared_device`` (0.27, :class:`SharedDeviceChoice`): a new account made on a computer\nmarked as shared gets the same short session as a sign-in there.",
           "fields": [
+            {
+              "name": "shared_device",
+              "type": "bool",
+              "default": "False",
+              "doc": "Ticked on the sign-in form. ``false`` when left out, so a client from before the box\nsigns in as before; a boolean, never ``null``."
+            },
             {
               "name": "email",
               "type": "Email",
@@ -753,6 +790,58 @@
               "name": "first_admin",
               "signature": "@property first_admin -> bool",
               "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "SessionPolicy",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class SessionPolicy",
+          "doc": "How long a session lives on the server, normal and shared — one per app.\n\nThe two normal lifetimes are the app's settings (kastlan:\n``SessionPolicy(access_lifetime=timedelta(minutes=15))``); the shared limits are the\ncontract's, Marcel's decision. A policy that cannot work is refused: a shared access\ntoken as long as the idle limit would end with its refresh token.",
+          "fields": [
+            {
+              "name": "access_lifetime",
+              "type": "timedelta",
+              "default": "datetime.timedelta(days=1)",
+              "doc": "A normal session's access token — the app's ``access_token_expire_minutes``."
+            },
+            {
+              "name": "refresh_lifetime",
+              "type": "timedelta",
+              "default": "datetime.timedelta(days=30)",
+              "doc": "A normal session's refresh token, and how long a normal session lives unused."
+            },
+            {
+              "name": "shared_idle",
+              "type": "timedelta",
+              "default": "datetime.timedelta(seconds=900)",
+              "doc": "A shared session ends this long after its last refresh."
+            },
+            {
+              "name": "shared_absolute",
+              "type": "timedelta",
+              "default": "datetime.timedelta(seconds=14400)",
+              "doc": "A shared session ends this long after it started."
+            },
+            {
+              "name": "shared_access_lifetime",
+              "type": "timedelta",
+              "default": "datetime.timedelta(seconds=300)",
+              "doc": "A shared session's access token at most; shorter than ``shared_idle``."
+            }
+          ]
+        },
+        {
+          "name": "SharedDeviceChoice",
+          "kind": "model",
+          "signature": "class SharedDeviceChoice(BaseModel)",
+          "doc": "The sign-in's \"This is a shared computer\" (ui-kit's ``SharedComputerChoice``; 0.27).\n\nOn every request that starts a session: :class:`LoginRequest` and :class:`RegisterRequest`\n(Marcel 2026-11-13: registering starts a session as a sign-in does) have it, and an app\nmixes it into its passkey finish (``class PasskeyLoginFinishRequest(SharedDeviceChoice): …``), which\nthe kit has no schema for. ``True`` starts a shared session, with the short life of\n:class:`~eifi1_server_kit.auth.SessionPolicy`; a step between the form and the session\n(the 2FA code, a required password change) carries it in its challenge\n(``challenge_claims(…, shared_device=…)``).",
+          "fields": [
+            {
+              "name": "shared_device",
+              "type": "bool",
+              "default": "False",
+              "doc": "Ticked on the sign-in form. ``false`` when left out, so a client from before the box\nsigns in as before; a boolean, never ``null``."
             }
           ]
         },
@@ -954,6 +1043,12 @@
           "doc": "The payload of an access token (keksdose ``auth_service.issue_access_token``).\n\n``{sub, type: \"access\", iat, exp, **extra}``. ``iat`` is ``now`` with its fraction of\na second; ``exp`` is whole seconds. ``extra`` is what the app needs to authorise —\nkeksdose's ``role``, kastlan's ``company_id``, ``roles`` and ``sid`` — and may not set\nthe four claims above, nor a name, an email or a locale (:data:`PROFILE_CLAIMS`)."
         },
         {
+          "name": "access_lifetime",
+          "kind": "function",
+          "signature": "access_lifetime(policy: SessionPolicy, *, shared: bool, started_at: datetime, now: datetime) -> timedelta",
+          "doc": "The ``lifetime`` of an access token minted at ``now`` (``access_claims``).\n\nShared: the app's access lifetime, at most ``shared_access_lifetime`` — shorter than\nthe refresh token, so the client's refresh finds it alive — and never past the absolute\nend. Normal: ``access_lifetime``. A demo's access token is the app's own business\n(``demo_expires_at``): a demo is never shared."
+        },
+        {
           "name": "addresses_for_reset",
           "kind": "function",
           "signature": "addresses_for_reset(email: str, tag: str) -> tuple[str, ...]",
@@ -968,8 +1063,8 @@
         {
           "name": "challenge_claims",
           "kind": "function",
-          "signature": "challenge_claims(sub: int | str, kind: ChallengeKind, *, now: datetime, extra: Mapping[str, Any] | None = None) -> dict[str, Any]",
-          "doc": "The payload of a sign-in challenge token, at its kind's lifetime (keksdose\n``create_2fa_challenge_token`` / ``create_password_change_challenge_token``).\n\nSingle-purpose through its ``type``: ``get_current_user`` and ``/auth/refresh`` refuse\nit, and each challenge endpoint accepts only its own kind.\n\n``extra`` (0.21) is what the challenge carries to its finish, under the same rules as an\naccess token's: a passkey ceremony's ``challenge``, the 2FA challenge's ``totp_step``::\n\n    challenge_claims(\"webauthn\", ChallengeKind.WEBAUTHN_AUTH, now=now,\n                     extra={\"challenge\": bytes_to_base64url(options.challenge)})\n\n``iat`` keeps its fraction of a second, which a passkey sign-in compares with the\ncredential's last use (keksdose ``_verify_assertion``, kastlan\n``finish_authentication``)."
+          "signature": "challenge_claims(sub: int | str, kind: ChallengeKind, *, now: datetime, extra: Mapping[str, Any] | None = None, shared_device: bool = False) -> dict[str, Any]",
+          "doc": "The payload of a sign-in challenge token, at its kind's lifetime (keksdose\n``create_2fa_challenge_token`` / ``create_password_change_challenge_token``).\n\nSingle-purpose through its ``type``: ``get_current_user`` and ``/auth/refresh`` refuse\nit, and each challenge endpoint accepts only its own kind.\n\n``extra`` (0.21) is what the challenge carries to its finish, under the same rules as an\naccess token's: a passkey ceremony's ``challenge``, the 2FA challenge's ``totp_step``::\n\n    challenge_claims(\"webauthn\", ChallengeKind.WEBAUTHN_AUTH, now=now,\n                     extra={\"challenge\": bytes_to_base64url(options.challenge)})\n\n``iat`` keeps its fraction of a second, which a passkey sign-in compares with the\ncredential's last use (keksdose ``_verify_assertion``, kastlan\n``finish_authentication``).\n\n``shared_device`` (0.27) is the sign-in's \"This is a shared computer\": ``True`` writes\n:data:`SHARED_DEVICE_CLAIM`, so the step that redeems the challenge starts a shared\nsession (:func:`shared_device_of`). ``/login`` passes the form's choice to the 2FA\nchallenge; ``/login/2fa`` and a passkey's finish pass it on to the password change's::\n\n    challenge_claims(user.id, ChallengeKind.PASSWORD_CHANGE, now=now,\n                     shared_device=shared_device_of(two_factor_claims))\n\n``False`` writes nothing, so a normal sign-in's challenge is what it was."
         },
         {
           "name": "env_list_match",
@@ -1050,10 +1145,34 @@
           "doc": "The payload of a refresh token (keksdose ``auth_service.issue_refresh_token``).\n\n``{sub, type: \"refresh\", iat, exp, **extra}``. The ``iat`` is what makes a stateless\nsession revocable at all: a reset or a password change stamps\n``sessions_invalid_before``, and :func:`token_is_revoked` compares the two. It keeps\nits fraction of a second because with whole seconds a user who resets and signs\nstraight back in gets a token stamped in the cut-off's second, and the check throws\nthe brand-new session away; rounding the other way lets an old session survive by up\nto a second."
         },
         {
+          "name": "refresh_lifetime",
+          "kind": "function",
+          "signature": "refresh_lifetime(policy: SessionPolicy, *, shared: bool, started_at: datetime, now: datetime) -> timedelta",
+          "doc": "The ``lifetime`` of a refresh token minted at ``now`` (``refresh_claims``).\n\nShared: ``shared_idle``, so a token nobody uses ends with the idle limit, and never past\n``started_at + shared_absolute`` — zero there and after, a token that is dead when\nminted (ask :func:`session_expired` first). Normal: ``refresh_lifetime``."
+        },
+        {
           "name": "registration_decision",
           "kind": "function",
           "signature": "registration_decision(*, is_first_user: bool, on_env_list: bool | None, has_valid_invitation: bool) -> RegistrationDecision",
           "doc": "May this address register, and as what? (§4.3, §2.12)\n\n* **The first account ever** becomes the admin — unless the app has an environment\n  list (``on_env_list`` is not ``None``) that does not name it. That is the list's one\n  job now: who may claim a fresh deployment, so a stranger who finds it first\n  cannot. ``None`` means the app has no list, and the first registration is open, as\n  in keksdose today. Build the argument with :func:`env_list_match`.\n* **After that**, only a valid invitation lets anyone in — an allow-list entry is an\n  invitation, so the app passes ``True`` for one. The environment list grants\n  nothing any more.\n* Everyone else: :attr:`RegistrationDecision.CLOSED`, answered as\n  ``AuthError(AuthErrorCode.REGISTRATION_CLOSED)``.\n\nThe role and the associations never come from the form: from the invitation, the\nallow-list row, or the app's default (§4.3)."
+        },
+        {
+          "name": "session_expired",
+          "kind": "function",
+          "signature": "session_expired(policy: SessionPolicy, *, shared: bool, started_at: datetime, last_active: datetime, now: datetime) -> bool",
+          "doc": "Has the session ended at ``now``? ``True`` AT the limit (:func:`session_expires_at`).\n\nAsk it at ``/auth/refresh`` (``session_ended``) and on every request, with the row's\n``shared_device``, ``created_at`` and ``last_active``. A ``now`` before either instant\n(another clock, a little behind) ends nothing the absolute limit does not."
+        },
+        {
+          "name": "session_expires_at",
+          "kind": "function",
+          "signature": "session_expires_at(policy: SessionPolicy, *, shared: bool, started_at: datetime, last_active: datetime) -> datetime",
+          "doc": "When the session ends unless it is refreshed first — the ``expires_at`` column, written\nwith ``last_active`` at sign-in and at every refresh.\n\nShared: the earlier of ``last_active + shared_idle`` and ``started_at +\nshared_absolute``. Normal: ``last_active + refresh_lifetime``, when its refresh token\nwould end. Naive datetimes are read as UTC (SQLite); the answer is aware."
+        },
+        {
+          "name": "shared_device_of",
+          "kind": "function",
+          "signature": "shared_device_of(claims: Mapping[str, Any]) -> bool",
+          "doc": "Did the sign-in this challenge continues say \"This is a shared computer\"? (0.27.)\n\n``claims`` is the decoded challenge, already checked for its type and expiry. A missing\nclaim, ``null`` or ``false`` is a normal session — a challenge minted before 0.27\nreads as one. Anything else is a value this server never writes, in a token it signed:\nits own bug, read as shared, the shorter life."
         },
         {
           "name": "tagged_variant",
@@ -1082,8 +1201,8 @@
         {
           "name": "two_factor_challenge_claims",
           "kind": "function",
-          "signature": "two_factor_challenge_claims(sub: int | str, *, last_step: int | None, now: datetime) -> dict[str, Any]",
-          "doc": "The 2FA challenge's payload: :func:`~eifi1_server_kit.auth.challenge_claims` of\n:attr:`~eifi1_server_kit.auth.ChallengeKind.TWO_FACTOR` (five minutes), with the\naccount's last accepted step under :data:`TOTP_STEP_CLAIM` — ``None`` when it has\naccepted none (keksdose ``create_2fa_challenge_token``, kastlan's the same)."
+          "signature": "two_factor_challenge_claims(sub: int | str, *, last_step: int | None, now: datetime, shared_device: bool = False) -> dict[str, Any]",
+          "doc": "The 2FA challenge's payload: :func:`~eifi1_server_kit.auth.challenge_claims` of\n:attr:`~eifi1_server_kit.auth.ChallengeKind.TWO_FACTOR` (five minutes), with the\naccount's last accepted step under :data:`TOTP_STEP_CLAIM` — ``None`` when it has\naccepted none (keksdose ``create_2fa_challenge_token``, kastlan's the same).\n\n``shared_device`` (0.27): the sign-in form's \"This is a shared computer\", which\n``/login/2fa`` reads back with :func:`~eifi1_server_kit.auth.shared_device_of` to\nstart the session it asked for."
         },
         {
           "name": "two_factor_challenge_is_spent",
@@ -2867,7 +2986,7 @@
     {
       "name": "eifi1_server_kit.dev_switch",
       "summary": "The dev switch: in local development only, a signed-in user sets their own role and plan.",
-      "doc": "The dev switch: in local development only, a signed-in user sets their own role and plan.\n\n``docs/top-bar-harmonization.md`` §2.7 and §6.1–§6.3 in ``Eifi1/ui-kit`` (§6 wins). The\nkit's ``DevSwitchers`` (role and plan, flask icon) call ``POST /dev/switch {role?, plan?}``,\nand the SERVER then enforces that role and plan, so the app behaves as it. **The route lets\na user make themselves ADMIN**, so its gate is the point of this module: it must be\nimpossible to switch on in a deployment by accident.\n\nLayer 1, like the rest of the kit: the gate, the startup check, the body, the refusals and\na validator — no route, no database. Each app writes the role and the plan its own way (the\nrecipe below and in the README).\n\n* :class:`DevSwitchSettings` — ``dev_switch_enabled: bool = False``, for the app's settings\n  to inherit (``<APP>_DEV_SWITCH_ENABLED``, set only in the local ``.env``);\n* :func:`dev_switch_enabled` — the gate: the flag AND the app's proof of a local run AND\n  not production; :func:`assert_dev_switch_safe` and :class:`DevSwitchUnsafeError` — the\n  app refuses to start with the flag set in production;\n* :func:`require_dev_switch` — a route dependency that answers 404 whenever the gate\n  doesn't hold, behind the mount;\n* :class:`DevSwitchRequest`, :class:`DevSwitchAnswer` — the wire shapes;\n* :func:`validate_dev_switch` — the app's roles and plans only (422);\n  :class:`DevSwitchError` and :class:`DevSwitchErrorCode` — the refusals.\n\n**The gate is never an environment name** (§6.1). Every app has one that says\n\"development\" where it must not be trusted:\n\n* keksdose runs a HOSTED dev deployment (``keksdose-dev`` on Cloud Run,\n  ``.github/workflows/deploy-dev.yml``), and its only environment-like setting,\n  ``metrics_environment``, defaults to ``\"dev\"`` (``infrastructure/settings.py:711``):\n  gated on it, anyone signed in on the hosted dev service could make themselves ADMIN\n  (review K-1);\n* kastlan's ``environment`` DEFAULTS to ``\"development\"``\n  (``kastlan/infrastructure/config.py:25-27``); a deployment that forgot\n  ``KASTLAN_ENVIRONMENT=production`` would mount the route (F3);\n* Kurvenschmiede's ``KURVENSCHMIEDE_DEPLOYMENT`` defaults to ``development``\n  (``backend/kurvenschmiede/infrastructure/settings.py:135``); only the image bakes in\n  ``production``, so a hand-run backend against a Cloud SQL proxy would mount it (KS 6a).\n\nSo the gate takes three things, and all three must agree: the explicit, off-by-default flag;\nthe app's own proof that this is a local run (kastlan: a loopback database host and no\n``K_SERVICE``, which Cloud Run sets; keksdose: a localhost or local-socket ``database_url``\nand no ``db_socket_dir``; KS ``is_development and is_local_database(settings)``,\n``feedback_loop.py:266``); and the app's production signal, which closes it whatever the\nother two say (kastlan ``environment == \"production\"``; keksdose\n``bool(db_socket_dir) or metrics_environment == \"prod\"``, since both its Cloud Run\nservices set ``KEKSDOSE_DB_SOCKET_DIR``; KS ``deployment is Deployment.PRODUCTION``).\n\n**The database half of that proof** is :func:`database_is_local` (0.21): a loopback host on a\nport the app's own Postgres listens on, or one of the local socket directories — never the\nhost alone, because a tunnel to a deployment's database listens on the loopback too.\n\n**The recipe** (the kit ships no router for it, as for billing's routes; ``<APP>``,\n``is_local_run`` and ``is_production`` are the app's own, as above)::\n\n    class Settings(BaseSettings, DevSwitchSettings):  # <APP>_DEV_SWITCH_ENABLED=true in .env only\n        model_config = SettingsConfigDict(env_prefix=\"<APP>_\")\n\n    def dev_switch_on(settings: Settings) -> bool:\n        return dev_switch_enabled(\n            flag=settings.dev_switch_enabled,\n            local_run=lambda: is_local_run(settings),  # the app's proof\n            production=is_production(settings),\n        )\n\n    def create_app(settings: Settings) -> FastAPI:\n        assert_dev_switch_safe(flag=settings.dev_switch_enabled, production=is_production(settings))\n        ...\n        if dev_switch_on(settings):  # otherwise the route is absent: 404\n            app.include_router(dev_router)\n\n    dev_router = APIRouter(\n        include_in_schema=False,  # never in the OpenAPI schema\n        dependencies=[Depends(require_dev_switch(lambda: dev_switch_on(get_settings())))],\n    )\n\n    @dev_router.post(DEV_SWITCH_PATH)\n    async def dev_switch(body: DevSwitchRequest, user=Depends(get_current_user), session=Depends(db)) -> DevSwitchAnswer:\n        body = validate_dev_switch(body, roles=ROLES, plans=PLANS)  # a signed-in user, NOT require_admin\n        if body.role is not None:\n            user.role = body.role  # the app's own write, see below\n        if body.plan is not None:\n            await set_plan(session, user, body.plan, comped_until=None)  # the operator's grant, permanent\n        await session.commit()\n        return DevSwitchAnswer(role=user.role, plan=...)\n\n    @dev_router.get(DEV_SWITCH_PATH)\n    async def dev_switch_state(user=Depends(get_current_user)) -> DevSwitchAnswer:\n        return DevSwitchAnswer(role=user.role, plan=...)  # the plan in effect, billing on or off\n\n* **``GET /dev/switch`` is the client's probe** (kastlan B4): behind the same gate, it\n  answers :class:`DevSwitchAnswer` — the role and the plan in effect. A 404 means the gate\n  is shut, so the client hides ``DevSwitchers`` (``enabled={import.meta.env.DEV &&\n  answered}``) rather than drawing switchers with nothing behind them; an answer gives\n  ``currentRole`` and ``currentPlan``, which the overview can't while billing is off.\n\n* **A signed-in user only, never ADMIN** (§6.2): a switch to a lesser role must be able to\n  switch back. The kit's ``DevSwitchers`` keeps the original role in session storage and\n  offers \"Back to {role}\".\n* **The role is written in the local database** (§6.2), since every app reads it from the\n  row on each request: keksdose ``users.role``; kastlan the acting company's\n  ``user_role_assignments`` (replace the caller's roles there), then ``issue_session``;\n  Kurvenschmiede ``users.role`` on the caller's own row, directly, skipping\n  ``admin_service.set_role``'s self and last-admin refusals, but still refusing CUSTOMER\n  for an account that owns work — ``DevSwitchError(DevSwitchErrorCode.DEV_SWITCH_REFUSED,\n  \"Sign in as the seed's customer\")``, a 409.\n* **The plan goes through the operator's grant, permanent** (§6.3): keksdose\n  ``admin_user_actions_service.set_plan(session, user, plan, comped_until=None)``, kastlan\n  ``BillingService.set_plan(company_id, plan, comped_until=None)``, Kurvenschmiede\n  ``billing_service.change_plan(…, comped_until=None, acknowledged=True)`` on the caller's\n  own row. That makes a permanent grant, and Billing §16's permanent-grant warning shows\n  on that account's checkout — EXCEPT on a row under a running beta grant (keksdose\n  before launch, kastlan likewise): ``comped_until=None`` keeps the beta status and source\n  and moves only the plan, so no permanent grant is made and no warning shows. That is\n  accepted: the switch is for previewing limits. With billing off, nothing is enforced;\n  the plan menu says so.\n* **No admin action log entry** — or one tagged :data:`DEV_SWITCH_LOG_TAG` — so a local\n  switch doesn't fill the activity log (review K-3).\n* The client then re-reads ``/auth/me`` and the overview. kastlan's real\n  ``/auth/switch-role`` (a held role) stays as it is.\n\n**The dev clock** (0.20, keksdose dev #640): ``{today: \"2026-10-31\"}`` sets the date the\nserver takes for today, ``{today: null}`` takes it back. An app that keeps one says so with\n``validate_dev_switch(…, clock=True)``; without it a ``today`` is refused (422). The app keeps the override where\nit keeps its other local state (a settings row, a column on the user, a process-wide\nvariable for a one-user dev server) and answers it in :class:`DevSwitchAnswer`; every path\nthat asks for today — scheduled and recurring items, month ends, the forecast — asks\n:func:`effective_today`, which gives the real date whenever the gate is shut::\n\n    def today(settings: Settings, override: date | None) -> date:\n        return effective_today(override, gate=lambda: dev_switch_on(settings), today=app_today)\n\nWhile it is set, the client takes \"today\" from the answer (``GET /dev/switch``), not from\nits own clock, so the dates it works out itself agree with the server's — read at boot,\nbefore the first render (keksdose's 0.51 review): a reload that waits for the dev menu's own\nprobe starts on the device clock until it answers.",
+      "doc": "The dev switch: in local development only, a signed-in user sets their own role and plan.\n\n``docs/top-bar-harmonization.md`` §2.7 and §6.1–§6.3 in ``Eifi1/ui-kit`` (§6 wins). The\nkit's ``DevSwitchers`` (role and plan, flask icon) call ``POST /dev/switch {role?, plan?}``,\nand the SERVER then enforces that role and plan, so the app behaves as it. **The route lets\na user make themselves ADMIN**, so its gate is the point of this module: it must be\nimpossible to switch on in a deployment by accident.\n\nLayer 1, like the rest of the kit: the gate, the startup check, the body, the refusals and\na validator — no route, no database. Each app writes the role and the plan its own way (the\nrecipe below and in the README).\n\n* :class:`DevSwitchSettings` — ``dev_switch_enabled: bool = False``, for the app's settings\n  to inherit (``<APP>_DEV_SWITCH_ENABLED``, set only in the local ``.env``);\n* :func:`dev_switch_enabled` — the gate: the flag AND the app's proof of a local run AND\n  not production; :func:`assert_dev_switch_safe` and :class:`DevSwitchUnsafeError` — the\n  app refuses to start with the flag set in production;\n* :func:`require_dev_switch` — a route dependency that answers 404 whenever the gate\n  doesn't hold, behind the mount;\n* :class:`DevSwitchRequest`, :class:`DevSwitchAnswer` — the wire shapes;\n* :func:`validate_dev_switch` — the app's roles and plans only (422);\n  :class:`DevSwitchError` and :class:`DevSwitchErrorCode` — the refusals.\n\n**The gate is never an environment name** (§6.1). Every app has one that says\n\"development\" where it must not be trusted:\n\n* keksdose runs a HOSTED dev deployment (``keksdose-dev`` on Cloud Run,\n  ``.github/workflows/deploy-dev.yml``), and its only environment-like setting,\n  ``metrics_environment``, defaults to ``\"dev\"`` (``infrastructure/settings.py:711``):\n  gated on it, anyone signed in on the hosted dev service could make themselves ADMIN\n  (review K-1);\n* kastlan's ``environment`` DEFAULTS to ``\"development\"``\n  (``kastlan/infrastructure/config.py:25-27``); a deployment that forgot\n  ``KASTLAN_ENVIRONMENT=production`` would mount the route (F3);\n* Kurvenschmiede's ``KURVENSCHMIEDE_DEPLOYMENT`` defaults to ``development``\n  (``backend/kurvenschmiede/infrastructure/settings.py:135``); only the image bakes in\n  ``production``, so a hand-run backend against a Cloud SQL proxy would mount it (KS 6a).\n\nSo the gate takes three things, and all three must agree: the explicit, off-by-default flag;\nthe app's own proof that this is a local run (kastlan: a loopback database host and no\n``K_SERVICE``, which Cloud Run sets; keksdose: a localhost or local-socket ``database_url``\nand no ``db_socket_dir``; KS ``is_development and is_local_database(settings)``,\n``feedback_loop.py:266``); and the app's production signal, which closes it whatever the\nother two say (kastlan ``environment == \"production\"``; keksdose\n``bool(db_socket_dir) or metrics_environment == \"prod\"``, since both its Cloud Run\nservices set ``KEKSDOSE_DB_SOCKET_DIR``; KS ``deployment is Deployment.PRODUCTION``).\n\n**The database half of that proof** is :func:`database_is_local` (0.21): a loopback host on a\nport the app's own Postgres listens on, or one of the local socket directories — never the\nhost alone, because a tunnel to a deployment's database listens on the loopback too.\n\n**The recipe** (the kit ships no router for it, as for billing's routes; ``<APP>``,\n``is_local_run`` and ``is_production`` are the app's own, as above)::\n\n    class Settings(BaseSettings, DevSwitchSettings):  # <APP>_DEV_SWITCH_ENABLED=true in .env only\n        model_config = SettingsConfigDict(env_prefix=\"<APP>_\")\n\n    def dev_switch_on(settings: Settings) -> bool:\n        return dev_switch_enabled(\n            flag=settings.dev_switch_enabled,\n            local_run=lambda: is_local_run(settings),  # the app's proof\n            production=is_production(settings),\n        )\n\n    def create_app(settings: Settings) -> FastAPI:\n        assert_dev_switch_safe(flag=settings.dev_switch_enabled, production=is_production(settings))\n        ...\n        if dev_switch_on(settings):  # otherwise the route is absent: 404\n            app.include_router(dev_router)\n\n    dev_router = APIRouter(\n        include_in_schema=False,  # never in the OpenAPI schema\n        dependencies=[Depends(require_dev_switch(lambda: dev_switch_on(get_settings())))],\n    )\n\n    @dev_router.post(DEV_SWITCH_PATH)\n    async def dev_switch(body: DevSwitchRequest, user=Depends(get_current_user), session=Depends(db)) -> DevSwitchAnswer:\n        body = validate_dev_switch(body, roles=ROLES, plans=PLANS)  # a signed-in user, NOT require_admin\n        if body.role is not None:\n            user.role = body.role  # the app's own write, see below\n        if body.plan is not None:\n            await set_plan(session, user, body.plan, comped_until=None)  # the operator's grant, permanent\n        await session.commit()\n        return DevSwitchAnswer(role=user.role, plan=...)\n\n    @dev_router.get(DEV_SWITCH_PATH)\n    async def dev_switch_state(user=Depends(get_current_user)) -> DevSwitchAnswer:\n        return DevSwitchAnswer(role=user.role, plan=...)  # the plan in effect, billing on or off\n\n* **``GET /dev/switch`` is the client's probe** (kastlan B4): behind the same gate, it\n  answers :class:`DevSwitchAnswer` — the role and the plan in effect. A 404 means the gate\n  is shut, so the client hides ``DevSwitchers`` (``enabled={import.meta.env.DEV &&\n  answered}``) rather than drawing switchers with nothing behind them; an answer gives\n  ``currentRole`` and ``currentPlan``, which the overview can't while billing is off.\n\n* **A signed-in user only, never ADMIN** (§6.2): a switch to a lesser role must be able to\n  switch back. The kit's ``DevSwitchers`` keeps the original role in session storage and\n  offers \"Back to {role}\".\n* **The role is written in the local database** (§6.2), since every app reads it from the\n  row on each request: keksdose ``users.role``; kastlan the acting company's\n  ``user_role_assignments`` (replace the caller's roles there), then ``issue_session``;\n  Kurvenschmiede ``users.role`` on the caller's own row, directly, skipping\n  ``admin_service.set_role``'s self and last-admin refusals. What the app's own rules\n  refuse is ``DevSwitchError(DevSwitchErrorCode.DEV_SWITCH_REFUSED, …)``, a 409:\n  keksdose's demo account, Kurvenschmiede's plan for a role that has none of its own.\n* **The plan goes through the operator's grant, permanent** (§6.3): keksdose\n  ``admin_user_actions_service.set_plan(session, user, plan, comped_until=None)``, kastlan\n  ``BillingService.set_plan(company_id, plan, comped_until=None)``, Kurvenschmiede\n  ``billing_service.change_plan(…, comped_until=None, acknowledged=True)`` on the caller's\n  own row. That makes a permanent grant, and Billing §16's permanent-grant warning shows\n  on that account's checkout — EXCEPT on a row under a running beta grant (keksdose\n  before launch, kastlan likewise): ``comped_until=None`` keeps the beta status and source\n  and moves only the plan, so no permanent grant is made and no warning shows. That is\n  accepted: the switch is for previewing limits. With billing off, nothing is enforced;\n  the plan menu says so.\n* **No admin action log entry** — or one tagged :data:`DEV_SWITCH_LOG_TAG` — so a local\n  switch doesn't fill the activity log (review K-3).\n* The client then re-reads ``/auth/me`` and the overview. kastlan's real\n  ``/auth/switch-role`` (a held role) stays as it is.\n\n**The dev clock** (0.20, keksdose dev #640): ``{today: \"2026-10-31\"}`` sets the date the\nserver takes for today, ``{today: null}`` takes it back. An app that keeps one says so with\n``validate_dev_switch(…, clock=True)``; without it a ``today`` is refused (422). The app keeps the override where\nit keeps its other local state (a settings row, a column on the user, a process-wide\nvariable for a one-user dev server) and answers it in :class:`DevSwitchAnswer`; every path\nthat asks for today — scheduled and recurring items, month ends, the forecast — asks\n:func:`effective_today`, which gives the real date whenever the gate is shut::\n\n    def today(settings: Settings, override: date | None) -> date:\n        return effective_today(override, gate=lambda: dev_switch_on(settings), today=app_today)\n\nWhile it is set, the client takes \"today\" from the answer (``GET /dev/switch``), not from\nits own clock, so the dates it works out itself agree with the server's — read at boot,\nbefore the first render (keksdose's 0.51 review): a reload that waits for the dev menu's own\nprobe starts on the device clock until it answers.",
       "contract": {
         "doc": "docs/top-bar-harmonization.md",
         "section": "§2.7, §6.1, §6.2, §6.3",
@@ -3011,7 +3130,7 @@
               "name": "role",
               "type": "str | None",
               "default": "None",
-              "doc": "The role to act as, in the app's own words (``ADMIN``, ``MEMBER``, ``CUSTOMER``)."
+              "doc": "The role to act as, in the app's own words (``ADMIN``, ``MEMBER``, ``REVIEWER``)."
             },
             {
               "name": "plan",
@@ -3095,7 +3214,7 @@
           "name": "validate_dev_switch",
           "kind": "function",
           "signature": "validate_dev_switch(request: DevSwitchRequest, *, roles: Collection[str], plans: Collection[str] = (), clock: bool = False) -> DevSwitchRequest",
-          "doc": "``request`` with its role and plan in the app's own spelling, or a refusal: 422\n``dev_switch_unknown_role`` / ``dev_switch_unknown_plan`` for a value the app doesn't\noffer (compared without case: ``admin`` is ``ADMIN``).\n\n``roles`` and ``plans`` are the app's (a role enum's values, the plan catalogue's\ncodes); an app without plans passes none, and every plan is then refused. Whether the\ncaller may hold that role — KS's CUSTOMER for an account that owns work — stays the\napp's, with :attr:`DevSwitchErrorCode.DEV_SWITCH_REFUSED`.\n\n``clock`` (0.20): ``True`` when the app keeps the dev clock (:func:`effective_today`).\nWithout it a body that names ``today`` at all — a date or ``null`` — is refused, 422\n``dev_switch_no_clock``, as a plan is for an app without plans: before 0.20 the field did\nnot exist and ``extra=\"forbid\"`` refused it, and an app that has not wired the clock must\nnot answer 200 to a switch it ignores (kastlan's 0.51 review)."
+          "doc": "``request`` with its role and plan in the app's own spelling, or a refusal: 422\n``dev_switch_unknown_role`` / ``dev_switch_unknown_plan`` for a value the app doesn't\noffer (compared without case: ``admin`` is ``ADMIN``).\n\n``roles`` and ``plans`` are the app's (a role enum's values, the plan catalogue's\ncodes); an app without plans passes none, and every plan is then refused. Whether the\ncaller may hold that role or plan — keksdose's demo account, a plan for\nKurvenschmiede's role without one — stays the app's, with\n:attr:`DevSwitchErrorCode.DEV_SWITCH_REFUSED`.\n\n``clock`` (0.20): ``True`` when the app keeps the dev clock (:func:`effective_today`).\nWithout it a body that names ``today`` at all — a date or ``null`` — is refused, 422\n``dev_switch_no_clock``, as a plan is for an app without plans: before 0.20 the field did\nnot exist and ``extra=\"forbid\"`` refused it, and an app that has not wired the clock must\nnot answer 200 to a switch it ignores (kastlan's 0.51 review)."
         }
       ]
     },
@@ -6259,8 +6378,8 @@
           "methods": [
             {
               "name": "idempotency_key",
-              "signature": "idempotency_key(day: date, *, app_base_url: str | None = None) -> str",
-              "doc": "``<type>:<host>:<event>:<user_id>:<YYYY-MM-DD>`` for the try on ``day`` (decision\n7), ``<host>`` that of ``app_base_url``, the app's own base URL::\n\n    marker = MailMarker(17, \"invoices_overdue\", \"42:2026-10-13\")\n    marker.idempotency_key(date(2026, 10, 14), app_base_url=\"https://kastlan.example\")\n    # \"invoices_overdue:kastlan.example:42:2026-10-13:17:2026-10-14\"\n\nTwo runs on one day send one mail: Resend answers the second from the first (it\nkeeps a key 24 hours). The next day's try is a new key, so a count that changed in\nbetween is no conflict at Resend.\n\n**The host keeps the apps apart** (0.23): the apps send through one Resend team, and\na key is the team's, so two apps' mails of one type, event, user id and day would be\none key, and Resend would refuse the second app's for 24 hours (another body: a\n``409``). Pass the base URL the app builds its links from, the one\n:func:`~eifi1_server_kit.legal.send_legal_change_mails` takes. Only its host counts,\nin lower case, so a port, a path or a trailing slash never makes a rerun's key a new\none. Without it the key is 0.22's, ``<type>:<event>:<user_id>:<YYYY-MM-DD>``.\n\nAt most 246 characters, within Resend's 256. A :class:`TypeError` for a\n``datetime``; a :class:`ValueError` for an ``app_base_url`` that is not http(s) with\nan ASCII host of at most 64 characters."
+              "signature": "idempotency_key(day: date, *, app_base_url: str) -> str",
+              "doc": "``<type>:<host>:<event>:<user_id>:<YYYY-MM-DD>`` for the try on ``day`` (decision\n7), ``<host>`` that of ``app_base_url``, the app's own base URL::\n\n    marker = MailMarker(17, \"invoices_overdue\", \"42:2026-10-13\")\n    marker.idempotency_key(date(2026, 10, 14), app_base_url=\"https://kastlan.example\")\n    # \"invoices_overdue:kastlan.example:42:2026-10-13:17:2026-10-14\"\n\nTwo runs on one day send one mail: Resend answers the second from the first (it\nkeeps a key 24 hours). The next day's try is a new key, so a count that changed in\nbetween is no conflict at Resend.\n\n**The host keeps the apps apart** (0.23): the apps send through one Resend team, and\na key is the team's, so two apps' mails of one type, event, user id and day would be\none key, and Resend would refuse the second app's for 24 hours (another body: a\n``409``). Pass the base URL the app builds its links from, the one\n:func:`~eifi1_server_kit.legal.send_legal_change_mails` takes. Only its host counts,\nin lower case, so a port, a path or a trailing slash never makes a rerun's key a new\none. **Required since 0.27** (Marcel, 2026-11-13): optional, a call site that left\nit out sent 0.22's key, ``<type>:<event>:<user_id>:<YYYY-MM-DD>``, and brought the\ncollision back without a word.\n\nAt most 246 characters, within Resend's 256. A :class:`TypeError` for a\n``datetime``, and for an ``app_base_url`` left out or ``None``; a\n:class:`ValueError` for one that is not http(s) with an ASCII host of at most 64\ncharacters."
             }
           ]
         },
@@ -6924,11 +7043,11 @@
           "name": "QueueService",
           "kind": "class",
           "signature": "class QueueService",
-          "doc": "The queue's flows over the app's :class:`NotificationQueue` and :class:`FlushPort`::\n\nservice = QueueService(queue, port, app_base_url=settings.app_base_url)\nawait service.hold_push(user.id, \"scan_done\", event, payload, not_before=end, now=now)\nawait notifications_tick(service, now)  # every 15 minutes\n\n``app_base_url`` (0.23) puts the app's host into a bundled mail's ``Idempotency-Key``,\n``queue:<host>:<first row id>:<count>``: the base URL the app builds its links from, as\n:meth:`~.retry.MailMarker.idempotency_key` takes it, the host only. Without it the key\nis 0.22's, ``queue:<first row id>:<count>``, which another app's queue on the same\nResend team sends too. A :class:`ValueError` for a ``limit`` below 1 or an\n``app_base_url`` that is not http(s) with an ASCII host, when the service is built.",
+          "doc": "The queue's flows over the app's :class:`NotificationQueue` and :class:`FlushPort`::\n\nservice = QueueService(queue, port, app_base_url=settings.app_base_url)\nawait service.hold_push(user.id, \"scan_done\", event, payload, not_before=end, now=now)\nawait notifications_tick(service, now)  # every 15 minutes\n\n``app_base_url`` (0.23) puts the app's host into a bundled mail's ``Idempotency-Key``,\n``queue:<host>:<first row id>:<count>``: the base URL the app builds its links from, as\n:meth:`~.retry.MailMarker.idempotency_key` takes it, the host only. **Required since\n0.27**: without it the key was 0.22's, ``queue:<first row id>:<count>``, which another\napp's queue on the same Resend team sends too. A :class:`TypeError` for an\n``app_base_url`` left out or ``None``; a :class:`ValueError` for a ``limit`` below 1 or\nan ``app_base_url`` that is not http(s) with an ASCII host, when the service is built.",
           "methods": [
             {
               "name": "__init__",
-              "signature": "__init__(queue: NotificationQueue, port: FlushPort, *, limit: int = QUEUE_FLUSH_LIMIT, app_base_url: str | None = None) -> None",
+              "signature": "__init__(queue: NotificationQueue, port: FlushPort, *, app_base_url: str, limit: int = QUEUE_FLUSH_LIMIT) -> None",
               "doc": ""
             },
             {
@@ -8092,7 +8211,7 @@
               "name": "role",
               "type": "str | None",
               "default": "None",
-              "doc": "The app's role name, for its ``public_viewer`` predicate (§9.2 decision 7):\nKurvenschmiede lets ADMIN, MEMBER and REVIEWER in, never CUSTOMER."
+              "doc": "The app's role name, for its ``public_viewer`` predicate (§9.2 decision 7). keksdose\nand Kurvenschmiede let every signed-in account in (Kurvenschmiede left out its\nCUSTOMER until that role went, migration 0060)."
             }
           ]
         },
@@ -9205,7 +9324,7 @@
           "name": "FeedbackService",
           "kind": "class",
           "signature": "class FeedbackService[RowT: FeedbackRow]",
-          "doc": "The contract's flows over the app's repository (§2.4, §2.10, §2.15).\n\n``policy`` is the app's attachment URL shape; ``foreign_row`` what a non-admin gets on\nanother person's row — ``\"forbidden\"`` lets :func:`~eifi1_server_kit.feedback.plan_update`'s\n403 speak (keksdose, kastlan), ``\"not_found\"`` answers 404 before it (Kurvenschmiede);\n``now`` stamps ``resolved_at`` and a crash's ``seen_at``.\n\nThe demo refusal and the inbox's admin check are here too, for a caller without the\nrouter (§2.8); over HTTP the app's own guards answer first.\n\nPublic feedback (0.11, §9.14), every part optional: ``replies``, ``comments``,\n``votes`` and ``people`` are the app's stores on the request's session;\n``public_viewer`` is the app's predicate on the viewer (``None``: no public parts —\nkastlan); ``public_search`` whether ``q`` may search the title (False where it is\nsealed — Kurvenschmiede). With ``public_viewer`` set, ``comments``, ``votes`` and\n``people`` are required and the repository must implement\n:class:`~eifi1_server_kit.feedback.PublicFeedbackRepository` (:class:`ValueError`).\n\n``alerts`` (0.16, feedback §11) is the app's :class:`~eifi1_server_kit.feedback.FeedbackAlerts`:\ntold after a new report, a new crash row and a rework that lands OPEN. ``None`` tells\nnobody — a loop's service (Kurvenschmiede's ``feedback_loop``) is built without it.",
+          "doc": "The contract's flows over the app's repository (§2.4, §2.10, §2.15).\n\n``policy`` is the app's attachment URL shape; ``foreign_row`` what a non-admin gets on\nanother person's row — ``\"forbidden\"`` lets :func:`~eifi1_server_kit.feedback.plan_update`'s\n403 speak (keksdose, kastlan), ``\"not_found\"`` answers 404 before it (Kurvenschmiede);\n``now`` stamps ``resolved_at`` and a crash's ``seen_at``.\n\nThe demo refusal and the inbox's admin check are here too, for a caller without the\nrouter (§2.8); over HTTP the app's own guards answer first.\n\nPublic feedback (0.11, §9.14), every part optional: ``replies``, ``comments``,\n``votes`` and ``people`` are the app's stores on the request's session;\n``public_viewer`` is the app's predicate on the viewer (``None``: no public parts —\nkastlan); ``public_search`` whether ``q`` may search the title (False for an app that\nseals its titles; none does since Kurvenschmiede's migration 0059 unsealed its\nfeedback). With ``public_viewer`` set, ``comments``, ``votes`` and\n``people`` are required and the repository must implement\n:class:`~eifi1_server_kit.feedback.PublicFeedbackRepository` (:class:`ValueError`).\n\n``alerts`` (0.16, feedback §11) is the app's :class:`~eifi1_server_kit.feedback.FeedbackAlerts`:\ntold after a new report, a new crash row and a rework that lands OPEN. ``None`` tells\nnobody — a loop's service (Kurvenschmiede's ``feedback_loop``) is built without it.",
           "methods": [
             {
               "name": "__init__",
@@ -10321,7 +10440,7 @@
               "name": "public_search",
               "type": "bool",
               "default": "True",
-              "doc": "``q`` searches the title; False where titles are sealed (Kurvenschmiede): a 422."
+              "doc": "``q`` searches the title; False for an app that seals its titles, where a ``q`` is a\n422. The three apps keep them in plain text and search (Kurvenschmiede since its\nmigration 0059, 2026-11-12)."
             },
             {
               "name": "reply_response_model",
@@ -10908,6 +11027,261 @@
           "kind": "function",
           "signature": "async store_attachment(data: bytes, declared_type: str | None, *, save: SaveFn, mint_key: MintKeyFn = content_addressed_key, max_bytes: int = MAX_ATTACHMENT_BYTES, require_utf8_text: bool = False) -> StoredUpload",
           "doc": "The whole upload policy for one attachment, with the storing left to the app.\n\nkeksdose ``upload_guards.py:250`` ``store_attachment_bytes`` without its object store:\n:func:`check_upload`, then ``mint_key(data, extension)``, then\n``await save(key, data, media_type)`` — ``save`` adds whatever prefix or folder the app\nkeeps its attachments under. The caller keeps what is genuinely its own: the throttle\n(charge it before or after this, see :mod:`eifi1_server_kit.limiter`), any per-user\nrefusal (keksdose's demo account), and the URL it answers with."
+        }
+      ]
+    },
+    {
+      "name": "eifi1_server_kit.objects",
+      "summary": "The apps' stored files in an object store: one port, three backends, one purge (0.26).",
+      "doc": "The apps' stored files in an object store: one port, three backends, one purge (0.26).\n\nkeksdose keeps its uploads — receipts, transaction and feedback attachments, support files —\nbehind ``InvoiceFileStore`` (``adapters/external/invoice_file_store.py:109``): the local disk\nin development, an S3-compatible store in production (minio against\nstorage.googleapis.com with an HMAC pair). Kurvenschmiede moves its feedback attachments out\nof its database into a Cloud Storage bucket reached without a key, and the store is written\nonce, here (Marcel, 2026-11-12: \"mehr im ui und server kit sharen\"):\n\n* :class:`ObjectStore` — the port: ``save``, ``read``, ``remove``, ``list_objects``, and\n  (0.27) ``exists`` and ``check``, each async. An app's adapters take one: its feedback\n  :class:`~eifi1_server_kit.feedback.AttachmentStorage`, its sweep, its erasure, its\n  readiness probe;\n* :class:`LocalObjectStore` — files under a root directory: development and tests;\n* :class:`GcsObjectStore` — a Cloud Storage bucket through Google's own client and\n  Application Default Credentials, on Cloud Run the runtime service account: no key to\n  keep or rotate (the ``gcs`` extra);\n* :class:`S3ObjectStore` — any S3 API through minio, keksdose's production path today (the\n  ``s3`` extra), kept until keksdose's move is decided;\n* :func:`purge_objects` — many removes, bounded, never raising, the keys it left returned.\n\n**The app mints the key.** The store takes any key the rule below accepts and makes none:\nkeksdose's ``feedback/<sha256[:12]>.<ext>``, Kurvenschmiede's keyed digest\n``feedback/1ed84e1bc3c7.webp`` and kastlan's ``feedback/<uuid32>_<sha12>.<ext>`` stay each\napp's own, as the feedback port says (``AttachmentStorage``). There is no locator beside the\nkey: the key is the one name of an object on every backend.\n\n**Stored as given.** No backend seals a file: the bytes saved are the bytes in the bucket,\nunder the provider's encryption at rest (Marcel, 2026-11-12). An app that seals its files\n(kastlan's ``at_rest``) does so before ``save`` and after ``read``.\n\n**A key** is what every backend can hold under one name, so a key that works on the local\ndisk works in the bucket: 1 to :data:`MAX_KEY_BYTES` bytes of UTF-8 (Cloud Storage's and\nS3's limit), split on ``/`` into segments of at most :data:`MAX_SEGMENT_BYTES` bytes (a file\nname's limit on disk: keksdose's ENAMETOOLONG, ``key_file_name``), none empty (no leading,\ntrailing or double ``/``), none starting with a dot (no ``.``, no ``..``, no hidden name:\nnothing climbs out of the local root, and the local store's half-written files are its own),\nand no backslash or control character. Anything else is a :class:`ValueError` before any\nstore is asked. A listing names only such keys, so a sweep is never handed one it cannot\nremove (a folder placeholder ``feedback/``, a ``.keep``).\n\n**One failure type.** Every failure is an :class:`ObjectStoreError`, an :class:`OSError`,\nwith the backend's own exception chained: minio's ``S3Error`` and urllib3's errors are no\n``OSError``, so keksdose's ``except OSError`` could not fire in production until\n``_as_os_error`` (``invoice_file_store.py:211``) relabelled them. A missing object on\n``read`` is an :class:`ObjectNotFoundError`, a :class:`FileNotFoundError` too: the app's\n404. ``remove`` of a missing object is no failure: what it promises holds.\n\n**No bucket is made behind the app's back** (0.27). ``check`` probes the store for a\nreadiness probe and makes nothing; ``ensure_bucket``, on the local and the S3 store only, makes\nthe root or the bucket when the app asks — a development MinIO's, as keksdose's made its own\non the first upload. No save ever does: in production the deploy makes the bucket.\n\n**Calls run in a worker thread.** Google's and minio's clients are synchronous, so each call\nruns in :func:`asyncio.to_thread`, as keksdose's do; so does the local store's file I/O. Build\none store per process and share it: each holds its client and that client's connection pool\n(keksdose ``_minio_client``, ``invoice_file_store.py:247``: a store per call was a TLS\nhandshake per attachment).",
+      "contract": {
+        "doc": "docs/server-services-harmonization.md",
+        "section": "§2.5",
+        "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/server-services-harmonization.md#25-the-storage-port",
+        "links": [
+          {
+            "section": "§2.5",
+            "heading": "2.5 The storage port",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/server-services-harmonization.md#25-the-storage-port"
+          }
+        ]
+      },
+      "members": [
+        {
+          "name": "MAX_KEY_BYTES",
+          "kind": "constant",
+          "signature": "MAX_KEY_BYTES = 1024",
+          "doc": "The most bytes of UTF-8 in a key: Cloud Storage's and S3's own limit on an object name.",
+          "value": 1024
+        },
+        {
+          "name": "MAX_SEGMENT_BYTES",
+          "kind": "constant",
+          "signature": "MAX_SEGMENT_BYTES = 255",
+          "doc": "The most bytes of UTF-8 in one segment of a key: a file name's limit on disk (NAME_MAX),\nwhich the local store's last segment is.",
+          "value": 255
+        },
+        {
+          "name": "PURGE_CONCURRENCY",
+          "kind": "constant",
+          "signature": "PURGE_CONCURRENCY = 16",
+          "doc": "How many removes :func:`purge_objects` keeps in flight by default (keksdose\n``_PURGE_CONCURRENCY``, ``invoice_file_store.py:62``): a wipe is hundreds of objects and\neach a round trip, so not one at a time; and each a worker thread, so not all at once.",
+          "value": 16
+        },
+        {
+          "name": "GcsObjectStore",
+          "kind": "class",
+          "signature": "class GcsObjectStore",
+          "doc": "A Cloud Storage bucket through Google's own client (the ``gcs`` extra,\n``google-cloud-storage``), with no key: without ``client``, the first call builds\n``storage.Client()``, which reads Application Default Credentials — on Cloud Run the\nservice's runtime account, locally ``gcloud auth application-default login``. Its project\nis the environment's; the store's calls name the bucket and need none. Built once, in the\nworker, however many calls race for it; a build that fails (no credentials) is an\n:class:`ObjectStoreError`, and the next call tries again.\n\nThe account needs ``roles/storage.objectUser`` on the bucket and nothing on the bucket\nitself: the store never creates, configures or deletes a bucket (Kurvenschmiede\n``deploy/gcp/README.md``, \"The uploads bucket\"), so it has no ``ensure_bucket``, and\n``check`` lists one object rather than reading the bucket's metadata, which that role\ndoes not grant. ``client`` is an app's own\n``storage.Client`` (another project, an emulator) or a test's stub; the client's own\nretry and timeout defaults apply.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(bucket: str, *, client: Client | None = None) -> None",
+              "doc": ""
+            },
+            {
+              "name": "save",
+              "signature": "async save(key: str, data: bytes, *, content_type: str | None = None) -> None",
+              "doc": ""
+            },
+            {
+              "name": "read",
+              "signature": "async read(key: str) -> bytes",
+              "doc": ""
+            },
+            {
+              "name": "remove",
+              "signature": "async remove(key: str) -> None",
+              "doc": ""
+            },
+            {
+              "name": "list_objects",
+              "signature": "async list_objects(prefix: str = '') -> list[StoredObject]",
+              "doc": ""
+            },
+            {
+              "name": "exists",
+              "signature": "async exists(key: str) -> bool",
+              "doc": ""
+            },
+            {
+              "name": "check",
+              "signature": "async check() -> None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "LocalObjectStore",
+          "kind": "class",
+          "signature": "class LocalObjectStore",
+          "doc": "Objects as files under ``root``, each at its key's path (keksdose\n``LocalInvoiceFileStore``, ``invoice_file_store.py:148``): development and tests. The root\nis made on the first save.\n\nA key cannot leave the root: the rule refuses ``..``, a leading ``/`` and a backslash\nbefore any path is built. A write goes to a temporary file in the object's directory and\nreplaces the object in one rename, so a reader sees the old bytes or the new, never half\na file, and a write that fails leaves the object as it was. The files are its owner's\nalone (``0600``), and no type is kept. A file system cannot hold ``a`` and ``a/b`` at\nonce, as a bucket can; saving the second is an :class:`ObjectStoreError`.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(root: str | os.PathLike[str]) -> None",
+              "doc": ""
+            },
+            {
+              "name": "save",
+              "signature": "async save(key: str, data: bytes, *, content_type: str | None = None) -> None",
+              "doc": ""
+            },
+            {
+              "name": "read",
+              "signature": "async read(key: str) -> bytes",
+              "doc": ""
+            },
+            {
+              "name": "remove",
+              "signature": "async remove(key: str) -> None",
+              "doc": ""
+            },
+            {
+              "name": "list_objects",
+              "signature": "async list_objects(prefix: str = '') -> list[StoredObject]",
+              "doc": ""
+            },
+            {
+              "name": "exists",
+              "signature": "async exists(key: str) -> bool",
+              "doc": ""
+            },
+            {
+              "name": "check",
+              "signature": "async check() -> None",
+              "doc": "The root, or before the first save has made it the nearest directory above it, is\na directory this process may write in: the first save can succeed. Makes nothing."
+            },
+            {
+              "name": "ensure_bucket",
+              "signature": "async ensure_bucket() -> None",
+              "doc": "Make the root now (0.27), for a development setup that wants it before the first\nsave; a save makes it anyway. A file in its place is an :class:`ObjectStoreError`."
+            }
+          ]
+        },
+        {
+          "name": "ObjectNotFoundError",
+          "kind": "class",
+          "signature": "class ObjectNotFoundError(ObjectStoreError, FileNotFoundError)",
+          "doc": "``read`` found no object under the key: the app's 404. ``errno`` is ``ENOENT`` and\n``filename`` the key, as a missing file's are."
+        },
+        {
+          "name": "ObjectStore",
+          "kind": "protocol",
+          "signature": "class ObjectStore(Protocol)",
+          "doc": "Where an app's files live, by the key the app minted. Every method is async and runs\nthe backend in a worker thread; a key the rule refuses is a :class:`ValueError` before\nanything is asked; every failure is an :class:`ObjectStoreError`.",
+          "methods": [
+            {
+              "name": "save",
+              "signature": "async save(key: str, data: bytes, *, content_type: str | None = None) -> None",
+              "doc": "Store ``data`` under ``key``, replacing whatever was there. ``content_type`` is\nkept where the backend keeps one (``application/octet-stream`` without it); the\nlocal store keeps none, and an app that serves the type keeps it on its row or reads\nit off the key's extension."
+            },
+            {
+              "name": "read",
+              "signature": "async read(key: str) -> bytes",
+              "doc": "The object's bytes; :class:`ObjectNotFoundError` when there is none."
+            },
+            {
+              "name": "remove",
+              "signature": "async remove(key: str) -> None",
+              "doc": "Delete the object, raising :class:`ObjectStoreError` when the store could not. An\nobject already absent is no error: the delete's postcondition holds (keksdose\n``InvoiceFileStore.remove``)."
+            },
+            {
+              "name": "list_objects",
+              "signature": "async list_objects(prefix: str = '') -> list[StoredObject]",
+              "doc": "Every object whose key starts with ``prefix`` (a string's start, as an object\nstore's prefix is: ``feedback/1e`` finds ``feedback/1ed84e1bc3c7.webp``), in key\norder. For a sweep: an object no row names has no name anywhere but the store."
+            },
+            {
+              "name": "exists",
+              "signature": "async exists(key: str) -> bool",
+              "doc": "Is there an object under ``key``? (0.27; keksdose ``object_exists``,\n``invoice_file_store.py:127``.) Its metadata, never its bytes: asked before a row is\nhung on a key the client sent, it must not cost what serving the file does.\n``False`` means absent, and only that: a store that cannot say raises\n:class:`ObjectStoreError` (keksdose's swallowed every failure, and an outage told a\nuser their own upload did not exist)."
+            },
+            {
+              "name": "check",
+              "signature": "async check() -> None",
+              "doc": "Raise :class:`ObjectStoreError` unless the store can be reached and its bucket (the\nlocal root) is there to use (0.27; keksdose ``healthcheck``): one cheap request, for\na readiness probe or an admin page. It reads no object's bytes, writes nothing and\nmakes nothing."
+            }
+          ]
+        },
+        {
+          "name": "ObjectStoreError",
+          "kind": "class",
+          "signature": "class ObjectStoreError(OSError)",
+          "doc": "The store could not do what it was asked: unreachable, refused, no credentials, a\nfile system's error. The backend's own exception is chained as ``__cause__``. An\n:class:`OSError`, so an app's one ``except OSError`` (keksdose's extraction and statement\npollers, its feedback download) holds for every backend."
+        },
+        {
+          "name": "S3ObjectStore",
+          "kind": "class",
+          "signature": "class S3ObjectStore",
+          "doc": "Any S3 API through minio (the ``s3`` extra), as keksdose's ``S3InvoiceFileStore``\n(``invoice_file_store.py:265``) reaches storage.googleapis.com with an HMAC pair today.\n\n``endpoint`` is an http(s) origin — ``https://storage.googleapis.com``, a development\nMinIO's ``http://127.0.0.1:9000`` — with ``access_key`` and ``secret_key`` (blank: none)\nand ``region`` (``europe-west4`` spares minio asking the bucket where it is). Or\n``client``, an app's own ``Minio`` or a test's stub, in place of the four. No save creates\na bucket: a cloud bucket is made by its deploy, and a development MinIO's by\n:meth:`ensure_bucket` when the app asks (0.27), or once beside the container\n(``mc mb --ignore-existing``).",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(bucket: str, *, endpoint: str | None = None, access_key: str | None = None, secret_key: str | None = None, region: str | None = None, client: Minio | None = None) -> None",
+              "doc": ""
+            },
+            {
+              "name": "save",
+              "signature": "async save(key: str, data: bytes, *, content_type: str | None = None) -> None",
+              "doc": ""
+            },
+            {
+              "name": "read",
+              "signature": "async read(key: str) -> bytes",
+              "doc": ""
+            },
+            {
+              "name": "remove",
+              "signature": "async remove(key: str) -> None",
+              "doc": ""
+            },
+            {
+              "name": "list_objects",
+              "signature": "async list_objects(prefix: str = '') -> list[StoredObject]",
+              "doc": ""
+            },
+            {
+              "name": "exists",
+              "signature": "async exists(key: str) -> bool",
+              "doc": ""
+            },
+            {
+              "name": "check",
+              "signature": "async check() -> None",
+              "doc": "keksdose's probe (``bucket_exists``, a HEAD on the bucket), with a missing bucket a\nfailure: keksdose's passed it."
+            },
+            {
+              "name": "ensure_bucket",
+              "signature": "async ensure_bucket() -> None",
+              "doc": "Make the bucket when it is missing (0.27): for a development MinIO, called by the\napp at its start, never by a save (keksdose made its bucket on the first upload). A\nbucket another process made first is no failure."
+            }
+          ]
+        },
+        {
+          "name": "StoredObject",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class StoredObject",
+          "doc": "One object :meth:`ObjectStore.list_objects` found (keksdose ``StoredObject``,\n``invoice_file_store.py:98``).",
+          "fields": [
+            {
+              "name": "key",
+              "type": "str",
+              "default": null,
+              "doc": "Its key, as ``save`` took it."
+            },
+            {
+              "name": "modified",
+              "type": "datetime",
+              "default": null,
+              "doc": "When it was last written, aware UTC: a sweep's age (keksdose's day for an upload no\nrow names yet). Saving the same key again moves it."
+            }
+          ]
+        },
+        {
+          "name": "purge_objects",
+          "kind": "function",
+          "signature": "async purge_objects(store: ObjectStore, keys: Iterable[str], *, reason: str, concurrency: int = PURGE_CONCURRENCY) -> list[str]",
+          "doc": "Remove many objects; return the keys left behind, in the order given (keksdose\n``purge_objects``, ``invoice_file_store.py:404``).\n\nFor a row's files once its delete committed — a wipe's hundreds, an erasure's, a sweep's\norphans — when nothing but the key names the file any more, so two rules hold:\n\n* **Nothing raises.** A store outage must not turn \"erase everything\" into a 500 over a\n  database already emptied. A key that fails, a refused key included, is collected.\n* **Every key left is in the log**, each with its exception and then all in one line\n  with ``reason``: they are the instructions for removing them by hand.\n\nAt most ``concurrency`` removes are in flight. Duplicates are asked once and empty keys\nnot at all. An app's own placeholders (keksdose's ``(pending)`` and ``(manual)``) are\nthe app's to leave out; when to purge (keksdose's ``delete_after_commit``) stays the\napp's too."
         }
       ]
     },

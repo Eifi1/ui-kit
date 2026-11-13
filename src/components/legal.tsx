@@ -681,7 +681,10 @@ export function LegalSection({ heading, body, children, id: idProp, headingAs }:
   const number = slot?.number;
   const Heading = headingAs ?? page?.sectionHeading ?? "h2";
   return (
-    <section id={id} className="scroll-mt-20">
+    // A link to it lands 5rem down: the 3rem TopBar and air. Plus, inside an AppShell with
+    // `mobileSubNavPlacement="top"`, the page row stuck under the bar (`--app-subnav-h`,
+    // 0px without the row and outside a shell), which hid the heading of a section jumped to.
+    <section id={id} className="scroll-mt-[calc(5rem+var(--app-subnav-h,0px))]">
       <Heading className="text-lg font-semibold break-words text-primary">
         {number !== undefined && `${number}. `}
         {heading}

@@ -22,11 +22,11 @@ import { DEFAULT_ROLE_SELECT_LABELS } from "./role-select-labels";
  * `onChange` and the value stays where the server has it until the server says otherwise.
  *
  * WHY THE REASONS. The server refuses the last active admin's demotion (`last_admin`),
- * your own admin role (`self`), Kurvenschmiede's CUSTOMER for an account that owns work,
- * kastlan's TENANT until a tenant portal exists (§4.1, §9.6). A choice the server will
- * refuse is shown as unavailable, with why, rather than offered and answered with an
- * error after a confirmation dialog — the 0.18 write-lock rule: a control that cannot
- * act says so where it is. `"last_admin"` and `"self"` are the kit's words in every
+ * your own admin role (`self`), kastlan's TENANT until a tenant portal exists (§4.1,
+ * §9.6), and whatever else an app's rules say. A choice the server will refuse is shown
+ * as unavailable, with why, rather than offered and answered with an error after a
+ * confirmation dialog — the 0.18 write-lock rule: a control that cannot act says so
+ * where it is. `"last_admin"` and `"self"` are the kit's words in every
  * language; anything else is the app's own sentence.
  */
 
@@ -111,9 +111,9 @@ export interface RoleSelectProps<R extends string = string> extends Omit<
   disabledReason?: RoleLock;
   /**
    * Why ONE role cannot be chosen for this account: `"last_admin"`, `"self"`, or the
-   * app's own words (Kurvenschmiede: "owns work", for CUSTOMER) — a STRING, because a
-   * native option holds text only. The option is disabled and reads "Member (not for the
-   * last administrator)". `undefined` for an available role.
+   * app's own words ("owns work", say) — a STRING, because a native option holds text
+   * only. The option is disabled and reads "Member (not for the last administrator)".
+   * `undefined` for an available role.
    */
   optionDisabledReason?: (role: R) => string | undefined;
   /** The account's name, for the select's accessible name in a roster row ("Role of

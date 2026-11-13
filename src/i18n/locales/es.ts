@@ -754,7 +754,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       zoomWindow: "Rango visible",
       zoomWindowRange: (from, to) => `de ${from} a ${to}`,
       zoomHint:
-        "Arrastre para ampliar: una selección más o menos cuadrada amplía ambos ejes; una larga y estrecha, solo el suyo. En una pantalla táctil, un dedo lee los valores y dos dedos amplían y desplazan. «Atrás» deshace un paso de zoom; un doble clic o «Restablecer zoom» muestra de nuevo todo el rango.",
+        "Arrastre para ampliar: una selección más o menos cuadrada amplía ambos ejes; una larga y estrecha, solo el suyo. En una pantalla táctil, un dedo lee los valores y dos dedos amplían y desplazan. Para ampliar pellizcando en un panel táctil, o con el ratón manteniendo pulsada la tecla Ctrl y girando la rueda, haga clic primero en el gráfico. «Atrás» deshace un paso de zoom; un doble clic o «Restablecer zoom» muestra de nuevo todo el rango.",
       empty: "Sin datos",
       legend: "Series",
       points: "Valores del gráfico",
@@ -1007,9 +1007,9 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
             // 0.61 (Marcel 2026-11-12): the persisted cache and the shared-computer flag, for an app's entries.
             standardEntries: {
               recentData: (hours) =>
-                `Los datos cargados recientemente, para que las páginas se abran también sin conexión; lo que tenga más de ${hours} horas la app ya no lo usa y lo elimina la próxima vez que se abra. No se conserva nada de ello si inicia sesión con «Este es un ordenador compartido».`,
+                `Los datos cargados recientemente, para que las páginas se abran también sin conexión; lo que tenga más de ${hours} horas la app ya no lo usa y lo elimina la próxima vez que se abra. No se conserva nada de ello si inicia sesión con «Este es un ordenador compartido»`,
               sharedComputer:
-                "Si eligió «Este es un ordenador compartido» al iniciar sesión, mientras dure esa sesión.",
+                "Si eligió «Este es un ordenador compartido» al iniciar sesión, guardado junto con la pestaña",
             },
           },
           rights: {
@@ -1283,6 +1283,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       off: "Las notificaciones están desactivadas en este dispositivo.",
       otherAccount:
         "Este navegador recibe notificaciones de otra cuenta. Actívelas aquí para recibirlas en la cuenta con la que ha iniciado sesión.",
+      sharedComputer:
+        "No disponible en un ordenador compartido: este navegador seguiría recibiendo sus notificaciones cuando usted ya no esté.",
       enable: "Activar notificaciones",
       disable: "Desactivar",
       sendTest: "Enviar una prueba",
@@ -2090,6 +2092,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
     sharedComputer: {
       label: "Este es un ordenador compartido",
       hint: "No queda ninguna copia de sus datos en este dispositivo. Las páginas solo se abren entonces con conexión.",
+      idleWarning: "No ha pasado nada aquí desde hace un rato. La sesión se cerrará dentro de un minuto.",
+      staySignedIn: "Mantener la sesión",
     },
     // 0.55 — docs/top-bar-harmonization.md §2.6.1: keksdose's words (sync.held_*,
     // sync.discard_held_*, sync.switch_back_held) without its budgets.

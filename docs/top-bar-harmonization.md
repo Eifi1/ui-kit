@@ -226,11 +226,11 @@ and plan.
   reads the role from the database on every request, so the switch **writes the role in
   the local database**: keksdose `users.role`, kastlan the acting company's
   `user_role_assignments` and then `issue_session`, KS `users.role` (it skips
-  `set_role`'s self and last-admin refusals, and still refuses CUSTOMER for an account
-  that owns work). The route needs only a signed-in user, so a lesser role can switch
-  back, and the menu offers "Back to {original role}", which the kit keeps in session
-  storage. A switch never writes the admin action log, nor tags itself `dev_switch`
-  there (kk K-3).
+  `set_role`'s self and last-admin refusals; its refusal of CUSTOMER for an account that
+  owns work went with the role, migration 0060). The route needs only a signed-in user, so
+  a lesser role can switch back, and the menu offers "Back to {original role}", which the
+  kit keeps in session storage. A switch never writes the admin action log, nor tags
+  itself `dev_switch` there (kk K-3).
 - **The plan switch** goes through the operator's grant, permanent (keksdose `set_plan`,
   kastlan `BillingService.set_plan(…, comped_until=None)`, KS `change_plan` on the
   caller's own row). While billing is off nothing is enforced, so the plan group says

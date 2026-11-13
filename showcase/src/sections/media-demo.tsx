@@ -351,7 +351,7 @@ function ZoomableImageSpecimen() {
   return (
     <Example
       label="ZoomableImage — a very tall receipt, fitted to the width"
-      hint="inline, not a dialog: pinch, ⌘/Ctrl + wheel, + − 0, the buttons, or a double-tap"
+      hint="inline, not a dialog: pinch, ⌘/Ctrl + wheel once clicked, + − 0, the buttons, or a double-tap"
     >
       <Row>
         <ToggleGroup<ZoomSample>
@@ -386,10 +386,11 @@ function ZoomableImageSpecimen() {
         <Note>
           Touch: pinch to zoom about the fingers, move two fingers to pan, drag with one once zoomed, double-tap for the
           picture&apos;s own pixels (100 %) and again for the fit. At the fit a one-finger swipe is the browser&apos;s,
-          so it scrolls the receipt and then the page. Desktop: {code("⌘/Ctrl")} + wheel or a trackpad pinch zooms about
-          the cursor (a plain wheel scrolls), double-click toggles 100 %, a zoomed picture drags, and on the focused box
-          + and − zoom, 0 fits, the arrows scroll. The new level is announced. Under reduced motion the button steps
-          jump instead of easing.
+          so it scrolls the receipt and then the page. Desktop: once the picture is clicked (or has the focus, or is
+          zoomed), {code("⌘/Ctrl")} + wheel or a trackpad pinch zooms about the cursor; before that they zoom the page,
+          as a reader enlarging the page expects. A plain wheel scrolls; double-click toggles 100 %, a zoomed picture
+          drags, and on the focused box + and − zoom, 0 fits, the arrows scroll. The new level is announced. Under
+          reduced motion the button steps jump instead of easing.
         </Note>
         <Note>
           {code("naturalWidth")} / {code("naturalHeight")} (from an upload&apos;s stored size) reserve the box before

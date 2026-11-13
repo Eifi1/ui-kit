@@ -667,8 +667,12 @@ export interface SeriesChartProps<TRow extends object = object> {
    * Ignored by `StaticSeriesChart`, which does not zoom.
    *
    * On a touch screen one finger reads (the tooltip follows it) and two fingers zoom and
-   * pan x, on a chart whose zoom names x; a mouse or a pen drags the band. While zoomed,
-   * Back undoes one zoom step and Reset zoom shows the whole range.
+   * pan x, on a chart whose zoom names x; a mouse or a pen drags the band. On such a
+   * chart a trackpad pinch, or Ctrl (⌘) + wheel, zooms x about the cursor instead of the
+   * page once the reader has clicked into the chart, while the focus is in it, and while
+   * it is zoomed; before that they are the page's zoom, which readers with low vision rely
+   * on. A plain wheel always scrolls. While zoomed, Back undoes one zoom step (a band,
+   * or a whole pinch) and Reset zoom shows the whole range.
    */
   zoomAxes?: ZoomAxesSetting;
   /**
@@ -1453,7 +1457,7 @@ function SeriesPlot({
     value instanceof Date ? dateFormat.format(value) : typeof value === "number" ? number(value) : String(value ?? "");
   const tickAt = (position: number): SeriesChartXTick => ({
     value: model.valueAt(position),
-    ...(model.kind === "category" ? { index: Math.round(position) } : {}),
+    ...(model.slotAt ? { index: model.slotAt(position) } : {}),
     ...(timeUnit ? { unit: timeUnit.unit } : {}),
   });
   const defaultFormat = (position: number, tick: SeriesChartXTick) =>

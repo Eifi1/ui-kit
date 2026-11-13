@@ -394,7 +394,11 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // through the app's API client (feedback §14.3).
   // 0.61 (+2, here and in /feedback; Marcel 2026-11-12): `useFeedbackPublicPage` and
   // `FeedbackPublicPage`, the public page assembled once (feedback §14).
-  ["@eifi1/ui-kit", barrel, 1026],
+  // 0.62 (+2, keksdose's shared-computer session): `createMemoryStorage`, a Storage in the
+  // page's memory, and `useKitTableStorage`, the provider's new `tableStorage`.
+  // 0.62 (+1, Marcel 2026-11-13: every sign-out drops this device's push): `dropPushSubscription`,
+  // `releaseThisDevicePush` that never rejects.
+  ["@eifi1/ui-kit", barrel, 1029],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -492,7 +496,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.46.1 (+1, kastlan N5): `uuid5`, the name-based id beside `stampAfter`.
   // 0.61 (+2, Marcel 2026-11-12: the offline thread for every app): `useFeedbackCommentsQuery`
   // and `feedbackCommentsQueryKey`, keksdose's TanStack-backed comment thread.
-  ["@eifi1/ui-kit/offline", offline, 21],
+  // 0.62 (+1, Marcel 2026-11-12: a shared-computer sign-in has a short life):
+  // `useSharedComputerIdleSignOut`.
+  ["@eifi1/ui-kit/offline", offline, 22],
   // 0.46.0: local-first phase 3 (docs/local-first-harmonization.md §2.3) — `createSyncDb`,
   // `SYNC_DB_STORES`, `createSyncEngine`, `DEFAULT_HOLD_CODES`, `DEFAULT_SYNC_BACKOFF_MS`,
   // `syncEngineFor`, `releaseSyncEngine`, `useSyncWorker`, `useSyncStatus`, `useSyncQuery` and the

@@ -31,8 +31,8 @@ import { DEFAULT_REVIEWER_SCOPE_LABELS } from "./reviewer-scope-editor-labels";
  * A draft with Save, not a save per click: keksdose saved every tick, and two quick ticks
  * could land as a set nobody chose; one Save sends the whole scope, in the languages'
  * order (CheckboxGroup's), so the answer equals the request and the row does not
- * reshuffle on refetch. The server keeps its rules (an admin reviews everything already,
- * a customer is not given the role): `disabledReason` says them here.
+ * reshuffle on refetch. The server keeps its rules (an admin reviews everything already):
+ * `disabledReason` says them here.
  */
 
 /** A reviewer's scope — the request body of `PUT …/reviewer`. */

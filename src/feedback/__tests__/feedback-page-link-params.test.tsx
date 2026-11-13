@@ -119,6 +119,27 @@ describe("the page link keeps the params the app lists (pageLinkParams)", () => 
     expect(parsed).toHaveBeenCalledTimes(rows.length);
   });
 
+  it("the table's URL column sorts and filters by what its cell shows, the kept params included", () => {
+    const column = urlCell({ pageLinkParams: PARAMS, pageLinkExclude: ["/banks/callback"] });
+    const shown = (url: string) => {
+      const row = record(url);
+      return [column.sortBy?.(row), column.filterBy?.(row)];
+    };
+    // A filter on `profile=5` finds the row whose cell says it, and two profiles of one curve
+    // sort apart rather than as one path.
+    expect(shown("/curves/2?q=Kurve%20A&profile=5#chart")).toEqual(["/curves/2?profile=5", "/curves/2?profile=5"]);
+    expect(shown("/curves/3?tab=wheels&profile=1")).toEqual([
+      "/curves/3?tab=wheels&profile=1",
+      "/curves/3?tab=wheels&profile=1",
+    ]);
+    // A one-shot page shows its path alone, unlinked, whatever the list holds: so it sorts.
+    expect(shown("/banks/callback?code=1&tab=a")).toEqual(["/banks/callback", "/banks/callback"]);
+    expect(shown("/join?token=abc&profile=5")).toEqual(["/join", "/join"]);
+    // Without the list, the path alone, as the cell shows it.
+    const plain = urlCell();
+    expect(plain.filterBy?.(record("/curves/2?profile=5"))).toBe("/curves/2");
+  });
+
   it("the inbox hands its list to the URL column and the detail alike", () => {
     const update = { mutateAsync: vi.fn(async () => undefined) };
     const row = record("/curves/2?profile=5&q=Kurve%20A");

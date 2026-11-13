@@ -26,9 +26,9 @@ import { KIT_NAMES, TAILWIND_THEME_NAMES } from "./css-variables.generated";
  *  - a name declared only in an `@theme inline` block (`--text-color-muted`,
  *    `--background-color-surface`): Tailwind emits no variable for it, so
  *    `var(--text-color-muted)` would pass a guard that counted it and paint nothing;
- *  - AppShell's measured `--app-nav-h`, which exists only while an AppShell is mounted —
- *    on a landing, legal, sign-in or pay page it is undefined. Read it with a fallback,
- *    `var(--app-nav-h,0px)`, as every kit read does.
+ *  - AppShell's measured `--app-nav-h` and `--app-subnav-h` (0.62), which exist only while
+ *    an AppShell is mounted — on a landing, legal, sign-in or pay page they are undefined.
+ *    Read them with a fallback, `var(--app-nav-h,0px)`, as every kit read does.
  *  Everything `applyTokenSet` and More contrast write on `<html>` is in, through the
  *  stylesheet's `:root` / `.dark` mirror. Component internals (`--slider-fill`, `--fp-*`,
  *  `--icon-button-tone`, `--label-strip-edge`) are not: an app that reads one depends on
@@ -45,8 +45,9 @@ const TAILWIND_THEME: ReadonlySet<string> = new Set(TAILWIND_THEME_NAMES.split("
  *  its refusal. */
 const PALETTE_VARIABLE = /^--color-(?:[a-z]+-\d{2,3}|black|white)$/;
 
-/** Read only where it is set: the guard accepts it in a fallback use, never bare. */
-const APP_NAV_H = "--app-nav-h";
+/** AppShell's measured heights, set only while it is mounted: the guard accepts them in a
+ *  fallback use, never bare. The bottom navigation's, and the page row's at the top. */
+const APP_SHELL_HEIGHTS: ReadonlySet<string> = new Set(["--app-nav-h", "--app-subnav-h"]);
 
 export interface UndeclaredCssVariablesOptions {
   /** Variables a library writes at runtime, as names or patterns:
@@ -54,7 +55,7 @@ export interface UndeclaredCssVariablesOptions {
    *  source and need no listing. */
   runtime?: readonly (string | RegExp)[];
   /** Also check `var(--x, …)`. Off by default: a fallback says what happens when the
-   *  name is missing. `--app-nav-h` counts as declared only here. */
+   *  name is missing. `--app-nav-h` and `--app-subnav-h` count as declared only here. */
   checkFallbacks?: boolean;
   /** Report Tailwind palette variables (`--color-red-500`, `--color-white`) although
    *  they resolve. Default false. */
@@ -167,7 +168,7 @@ export function undeclaredCssVariables(
       const fallback = next === ",";
       if (fallback && !checkFallbacks) continue;
       if (KIT_CSS_VARIABLES.has(name) || declared.has(name) || listed(name)) continue;
-      if (fallback && name === APP_NAV_H) continue;
+      if (fallback && APP_SHELL_HEIGHTS.has(name)) continue;
       if (TAILWIND_THEME.has(name)) {
         if (refusePalette && PALETTE_VARIABLE.test(name)) {
           out.push(`${path}:${lineOf(text, m.index)} ${name} (a Tailwind palette colour; refusePalette is on)`);

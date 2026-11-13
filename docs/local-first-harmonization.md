@@ -14,7 +14,7 @@ The body says what the build does; each round's reviews are folded into its sect
 
 | § | Section | Shipped in | Amended by |
 |---|---|---|---|
-| 1 | kastlan local-first like keksdose; KS stays online-only; what the kits lift | **SETTLED (round 0.45)**: P1+P2 in ui-kit 0.45 / server-kit 0.15 | §1.8–§1.9 (the reviews); ui-kit 0.46 (kastlan K1–K4, §1.6); ui-kit 0.52 (`clear()` reaches every tab, §1.6, D15) |
+| 1 | kastlan local-first like keksdose; KS stays online-only; what the kits lift | **SETTLED (round 0.45)**: P1+P2 in ui-kit 0.45 / server-kit 0.15 | §1.8–§1.9 (the reviews); ui-kit 0.46 (kastlan K1–K4, §1.6); ui-kit 0.52 (`clear()` reaches every tab, §1.6, D15); ui-kit 0.61, 0.62 (D6: the shared computer's session in page memory, its short life, the idle sign-out, no push; §1.6) |
 | 2 | The sync engine in ui-kit (kastlan the user); `SyncScope`/`EntityRule` in server-kit; kastlan's meetings, meters, maintenance and contacts scopes | **SETTLED (round 0.46)**: P3+P4 in ui-kit 0.46 / server-kit 0.16 | §2.9 (the reviews); ui-kit 0.52 (D15, §2.3: one engine per database across tabs) |
 
 ## 1. kastlan becomes local-first — SETTLED (round 0.45)
@@ -483,12 +483,37 @@ they are (no ETags). KS's version contract stays KS's.
 - **The tour `:pending` record** (tours §10.2.4, `<storageKey>:pending`) is not the app's outbox: it
   stays out of any "N waiting" count and out of the sign-out guard, in kk and in ka, on purpose
   (losing a tour mark is acceptable). `signOutTourProgress` keeps it for its owner.
-- **The session ends with the tab on a shared computer** (ui-kit 0.61, Marcel 2026-11-12;
-  keksdose's finding): with the box ticked, the app keeps its tokens, the choice
-  (`storage: "session"`) and anything the session unlocks on the device (keksdose's
-  private-mode keys) in `sessionStorage` or memory, and its sync copy in memory
-  (`createSyncDb`'s `indexedDB`). A closed tab then leaves neither data nor a session behind.
-  Unticked, nothing changes.
+- **Where a shared session lives: two paths** (ui-kit 0.61, revised in 0.62; Marcel
+  2026-11-12 and 2026-11-13). Unticked, nothing changes. Ticked:
+  - **Default: the tab's storage plus the server's short life.** The tokens and the profile in
+    `sessionStorage`, so a reload keeps the session (Marcel: a sign-out on every reload "wäre
+    nicht gut", Kurvenschmiede). Chrome and Firefox bring a closed tab back WITH its
+    sessionStorage (Ctrl+Shift+T, "Continue where you left off"; keksdose's test in Chromium
+    156), so a reopened tab can still hold the session until the server's limit ends it.
+  - **Stricter: page memory.** The tokens, the profile, anything the session unlocks
+    (keksdose's private-mode keys) and the person's traces in the page's memory only
+    (`createMemoryStorage()`; keksdose `frontend/src/shared/lib/shared-session.ts`,
+    eba87635). A reopened tab holds nothing; a reload lands on the sign-in. keksdose's choice.
+  - Either way the sync copy lives in memory (`createSyncDb`'s `indexedDB`), and the tab's
+    storage may hold markers that are not the person's data (the kit's choice,
+    `storage: "session"`; an app's page-mode marker).
+  - **Defence in depth** (ui-kit 0.62, server-kit 0.27; Marcel 2026-11-12 and 2026-11-13):
+    - the sign-in sends `shared_device: true` and the server gives that session a short life
+      (`SessionPolicy`: 15 minutes idle, 4 hours at most, and a 5-minute access token, so a busy
+      person renews about every 5 minutes while an abandoned tab's session ends 10 to 15
+      minutes after its last request; auth §5.1, §6.2);
+    - every sign-out, shared or not, drops this device's push, then ends the session on the
+      server (`DELETE /auth/sessions/current`), then drops the tokens (auth §6.3);
+    - `useSharedComputerIdleSignOut` signs an abandoned tab out after 15 minutes without
+      input: the server ends the session, not what the open tab shows;
+    - push is not offered while the box is ticked (`PushDeviceSetting`), since a subscription
+      belongs to the browser, not to the tab or the sign-in.
+- **What the person leaves in the kit's parts goes in page memory too** (ui-kit 0.62,
+  keksdose's shared-computer session): the tables' saved views (`<UiKitProvider
+  tableStorage>`, or a table's `storage`) and the crash reporter's buffer
+  (`createCrashReporter`'s `storage`), in a `createMemoryStorage()` the app makes once per
+  page. Not `sessionStorage`: Chrome brings a closed tab back with it (Chromium 156,
+  2026-11-12). The device's own views and buffer stay as they were for its own session.
 
 **D7 Plaintext at rest, with a scrub list (kk's decision).**
 
@@ -574,10 +599,18 @@ as optional peers). Size **S–M**.
 - `PwaUpdatePrompt({ needRefresh, onReload, onDismiss?, hold?, labels? })`: kk's toast with
   "Reload"; while `hold` it waits (D8). Seven languages.
 - `SharedComputerChoice` (a labelled checkbox for the sign-in form) with
-  `isSharedComputer()`/`setSharedComputer(on, {storage?})`. The choice lives as long as the
-  session it governs: `sessionStorage` by default, `localStorage` (`storage: "local"`, cleared
-  with `setSharedComputer(false)` at every end of the session) for an app whose refresh token
-  outlives the tab (kastlan; round-046 B3). Seven languages.
+  `isSharedComputer()`/`setSharedComputer(on, {storage?})`. The choice is a marker in the tab:
+  `sessionStorage` by default, `localStorage` (`storage: "local"`, cleared with
+  `setSharedComputer(false)` at every end of the session) for an app whose refresh token still
+  outlives the tab. The session it governs lives in page memory (D6). Seven languages.
+- **0.62 (D6's defence in depth):** `useSharedComputerIdleSignOut({ onSignOut, idleMinutes = 15,
+  enabled = isSharedComputer(), warn = true })`: after `idleMinutes` without input (a press, a
+  key, a touch, a wheel, a moving pointer, the tab shown again) it calls the app's sign-out; a
+  minute before, a toast offers "Stay signed in". One timer, counted on the wall clock, so a tab
+  whose timers slept signs out when it is shown again past the limit; input counts per tab.
+  Mounted in the signed-in shell. `PushDeviceSetting` refuses "Turn on" while the box is ticked
+  (`sharedComputer`, default `isSharedComputer()`), and `dropPushSubscription(unregister)` lets
+  this device's push go at every sign-out without ever rejecting. Seven languages.
 - **0.46, from the 0.45 adoptions (kastlan K1–K4):**
   - `createQueryPersistence({ …, persistMutations? })`: default `true` (kk: paused mutations wait
     in TanStack's queue across a reload). `false` writes no mutation and drops any an older build

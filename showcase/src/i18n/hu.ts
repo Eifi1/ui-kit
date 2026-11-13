@@ -574,7 +574,7 @@ export const hu: Dictionary = {
       title: "Visszajelzés és feltöltés",
       short: "Visszajelzés",
       blurb:
-        "A visszajelzési szerződés tiszta függvényekként — sémák, állapotok, a PATCH-szabályok, átdolgozás, összeomlások rögzítése, törlés —, az útvonalai egyetlen routergyárként, és a mellékletek, amelyeket a bájtjaik alapján ítél meg.",
+        "A visszajelzési szerződés tiszta függvényekként — sémák, állapotok, a PATCH-szabályok, átdolgozás, összeomlások rögzítése, törlés —, az útvonalai egyetlen routergyárként, és a mellékletek, amelyeket a bájtjaik alapján ítél meg. És az objektumtár, amelyben egy alkalmazás a fájljait tartja: egyetlen felület a helyi lemezhez, a Cloud Storage-hoz vagy az S3-hoz.",
     },
     "server-limits": {
       title: "Korlátok, hibák, CORS és szinkronizálás",
@@ -1328,6 +1328,7 @@ export const hu: Dictionary = {
       "mellékletek méretének korlátozása",
       "törölt felhasználó visszajelzéseinek törlése",
       "a visszajelzési útvonalak beillesztése",
+      "fájlok tárolása felhőbeli tárolóban",
     ],
     "server-limits": [
       "útvonal sebességkorlátozása",

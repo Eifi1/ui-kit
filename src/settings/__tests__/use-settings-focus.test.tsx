@@ -106,6 +106,27 @@ describe("useSettingsFocus — a card that mounts after the page", () => {
   });
 });
 
+describe("useSettingsFocus — where the card lands (0.62)", () => {
+  it("centres the card below AppShell's page row stuck under the top bar, and leaves the card's own margin after", () => {
+    // `--app-subnav-h` is the row's height (0px with no row at the top, or outside an
+    // AppShell): as the card's top scroll margin while it is scrolled to, the centre it
+    // is brought to is that of the screen below the row, not behind it.
+    const seenMargins: string[] = [];
+    const scrollIntoView = vi.fn(function (this: HTMLElement) {
+      seenMargins.push(this.style.scrollMarginTop);
+    });
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", { configurable: true, value: scrollIntoView });
+    try {
+      mount("/settings?focus=a-card", ["a-card"]);
+      expect(scrollIntoView).toHaveBeenCalledWith(expect.objectContaining({ block: "center" }));
+      expect(seenMargins).toEqual(["var(--app-subnav-h, 0px)"]);
+      expect(document.getElementById("a-card")!.style.scrollMarginTop).toBe("");
+    } finally {
+      delete (HTMLElement.prototype as { scrollIntoView?: unknown }).scrollIntoView;
+    }
+  });
+});
+
 describe("useSettingsFocus — a second ring while one is on", () => {
   it("moves the ring at once to another card, which keeps its full 1.8 s", () => {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });

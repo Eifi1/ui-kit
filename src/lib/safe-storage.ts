@@ -25,36 +25,44 @@
  * down with it. (The kit's own DevMenu, 0.51, wrote the session pair a second time too.)
  */
 
-/** `access` on the storage area, or `fallback` where there is none (SSR) or it throws. */
-function guarded<T>(area: "localStorage" | "sessionStorage", fallback: T, access: (storage: Storage) => T): T {
-  if (typeof window === "undefined") return fallback;
+/** `access` on the storage area — or on the `Storage` handed over (0.62) — or `fallback`
+ *  where there is none (SSR) or it throws. */
+function guarded<T>(
+  area: "localStorage" | "sessionStorage" | Storage,
+  fallback: T,
+  access: (storage: Storage) => T,
+): T {
+  if (typeof area === "string" && typeof window === "undefined") return fallback;
   try {
-    return access(window[area]);
+    return access(typeof area === "string" ? window[area] : area);
   } catch {
     // private mode, quota, partitioned or blocked storage
     return fallback;
   }
 }
 
-/** The stored string for `key`, or null when absent, unreadable, or blocked. */
-export function readStored(key: string): string | null {
-  return guarded("localStorage", null, (storage) => storage.getItem(key));
+/** The stored string for `key`, or null when absent, unreadable, or blocked. In
+ *  `localStorage`, or in `storage` when one is handed over (0.62: a page-memory one from
+ *  {@link createMemoryStorage}, for a shared-computer session). */
+export function readStored(key: string, storage?: Storage): string | null {
+  return guarded(storage ?? "localStorage", null, (area) => area.getItem(key));
 }
 
 /** Store `value` under `key`, silently doing nothing when storage is unavailable
  *  or full. A preference that cannot be persisted is not worth an exception. `null`
  *  removes the key, as {@link writeSessionStored}'s does (0.52; the two pairs wrote
- *  differently, and `null` past the types stored the string "null" — 0.52 code review). */
-export function writeStored(key: string, value: string | null): void {
-  guarded("localStorage", undefined, (storage) =>
-    value === null ? storage.removeItem(key) : storage.setItem(key, value),
+ *  differently, and `null` past the types stored the string "null" — 0.52 code review).
+ *  In `storage` when one is handed over, as {@link readStored}. */
+export function writeStored(key: string, value: string | null, storage?: Storage): void {
+  guarded(storage ?? "localStorage", undefined, (area) =>
+    value === null ? area.removeItem(key) : area.setItem(key, value),
   );
 }
 
 /** Forget `key`, silently doing nothing when storage is blocked — there is nothing to
- *  forget then. */
-export function removeStored(key: string): void {
-  guarded("localStorage", undefined, (storage) => storage.removeItem(key));
+ *  forget then. In `storage` when one is handed over, as {@link readStored}. */
+export function removeStored(key: string, storage?: Storage): void {
+  guarded(storage ?? "localStorage", undefined, (area) => area.removeItem(key));
 }
 
 /** {@link readStored} for `sessionStorage`: this tab's value, or null. */
@@ -100,6 +108,40 @@ export function writeStoredJson(key: string, value: unknown): void {
   }
   // `undefined` (and a function) has no JSON form either: stringify answers undefined.
   if (text !== undefined) writeStored(key, text);
+}
+
+/**
+ * A `Storage` that lives in this page's memory (0.62): gone with the page, a reload
+ * included, and never brought back with a reopened tab. For what a shared-computer session
+ * must not leave on the device — a table's saved view (`DataTable`'s `storage`,
+ * `<UiKitProvider tableStorage>`), the crash reporter's buffer (`createCrashReporter`'s
+ * `storage`) — where the app's own session lives in page memory too.
+ *
+ * Not `sessionStorage`, although that "ends with the tab": Chrome brings a closed tab back
+ * WITH its sessionStorage (Ctrl+Shift+T, "Continue where you left off") and keeps it on disk
+ * to be able to — keksdose tried it in Chromium 156 on 2026-11-12, and both brought back
+ * the exact value the closed tab had stored. keksdose wrote this as its `PageMemoryStorage`.
+ *
+ * Each call is a store of its own: make one per page, at module scope, and hand the same
+ * one to everything that should share it. Keys and values are strings, coerced as a
+ * browser's `Storage` coerces them; `key(i)` follows insertion order.
+ */
+export function createMemoryStorage(): Storage {
+  const items = new Map<string, string>();
+  return {
+    get length() {
+      return items.size;
+    },
+    clear: () => items.clear(),
+    getItem: (key) => items.get(String(key)) ?? null,
+    key: (index) => [...items.keys()][index] ?? null,
+    removeItem: (key) => {
+      items.delete(String(key));
+    },
+    setItem: (key, value) => {
+      items.set(String(key), String(value));
+    },
+  };
 }
 
 /**

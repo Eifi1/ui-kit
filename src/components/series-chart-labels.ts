@@ -21,7 +21,8 @@ export interface SeriesChartLabels {
   /** The drag-to-zoom gesture, said at the end of a zoomable chart's description (the
    *  figure's `aria-describedby`; until 0.52 the name of the drag surface, an
    *  `application` nothing could focus). It is the only place the gesture is explained,
-   *  so it says how the drag is read and how to undo it. */
+   *  so it says how the drag is read and how to undo it — and that a trackpad pinch or
+   *  Ctrl + wheel zooms the chart only once it is clicked (until then it is the page's zoom). */
   zoomHint: string;
   /** What a chart with nothing to draw says, when the caller passes no `empty`. */
   empty: string;
@@ -48,7 +49,7 @@ export const DEFAULT_SERIES_CHART_LABELS: SeriesChartLabels = {
   zoomWindow: "Visible range",
   zoomWindowRange: (from, to) => `${from} to ${to}`,
   zoomHint:
-    "Drag to zoom: a roughly square selection zooms both axes, a long thin one only its own. On a touch screen, one finger reads the values and two fingers zoom and pan. Back undoes one zoom; double-click or Reset zoom shows the whole range again.",
+    "Drag to zoom: a roughly square selection zooms both axes, a long thin one only its own. On a touch screen, one finger reads the values and two fingers zoom and pan. To zoom with a trackpad pinch, or with Ctrl and the mouse wheel, click the chart first. Back undoes one zoom; double-click or Reset zoom shows the whole range again.",
   empty: "No data",
   legend: "Series",
   points: "Chart values",

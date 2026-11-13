@@ -194,6 +194,11 @@ export interface SignInFormProps extends Omit<ComponentPropsWithRef<"div">, "onS
    * string as an encryption passphrase later.
    *
    * On `signed-in` the form's job is over — it stays busy while the app navigates.
+   *
+   * The request is the app's, so the app adds what its server needs beside the
+   * credentials: 0.62 (auth §5.1), `shared_device: isSharedComputer()` here and on the
+   * passkey finish, so a "This is a shared computer" sign-in gets the server's short life.
+   * The 2FA and set-password steps need nothing: their challenge carries it.
    */
   onSubmit: (credentials: SignInCredentials) => Promise<SignInAnswer>;
   /** The second factor was submitted (`/auth/login/2fa`). Resolves with the next answer

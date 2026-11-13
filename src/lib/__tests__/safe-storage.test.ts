@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  createMemoryStorage,
   readSessionStored,
   readStored,
   readStoredJson,
@@ -130,5 +131,69 @@ describe("readStoredJson / writeStoredJson (safe-storage, 0.52)", () => {
     });
     expect(() => writeStoredJson("k", { state: { size: "large" } })).not.toThrow();
     expect(readStoredJson("k", isSize)).toBeNull();
+  });
+});
+
+// 0.62 (keksdose's shared-computer session): a Storage that lives in the page's memory —
+// gone with the page, a reload included, and never brought back with a reopened tab, as
+// Chrome brings back a closed tab's sessionStorage (Chromium 156). keksdose wrote one
+// (`PageMemoryStorage`); the kit's tables and crash buffer take it.
+describe("createMemoryStorage (safe-storage, 0.62)", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    window.localStorage.clear();
+  });
+
+  it("is a Storage: strings in, strings out, null for a missing key", () => {
+    const memory = createMemoryStorage();
+    expect(memory.getItem("k")).toBeNull();
+    memory.setItem("k", "v");
+    // Coerced as a browser's Storage coerces, a value and a key alike.
+    memory.setItem("n", 3 as unknown as string);
+    memory.setItem(7 as unknown as string, "seven");
+    expect(memory.getItem("k")).toBe("v");
+    expect(memory.getItem("n")).toBe("3");
+    expect(memory.getItem("7")).toBe("seven");
+    expect(memory.length).toBe(3);
+    expect([0, 1, 2, 3].map((i) => memory.key(i))).toEqual(["k", "n", "7", null]);
+    memory.removeItem("k");
+    expect(memory.getItem("k")).toBeNull();
+    expect(memory.length).toBe(2);
+    memory.clear();
+    expect(memory.length).toBe(0);
+  });
+
+  it("is one store per call, and none of it reaches localStorage", () => {
+    const a = createMemoryStorage();
+    const b = createMemoryStorage();
+    a.setItem("k", "a");
+    expect(b.getItem("k")).toBeNull();
+    expect(window.localStorage.getItem("k")).toBeNull();
+  });
+
+  it("is what readStored, writeStored and removeStored use when they are handed it", () => {
+    const memory = createMemoryStorage();
+    writeStored("k", "v", memory);
+    expect(memory.getItem("k")).toBe("v");
+    expect(window.localStorage.getItem("k")).toBeNull();
+    expect(readStored("k", memory)).toBe("v");
+    expect(readStored("k")).toBeNull();
+    writeStored("k", null, memory);
+    expect(memory.getItem("k")).toBeNull();
+    memory.setItem("gone", "1");
+    removeStored("gone", memory);
+    expect(memory.getItem("gone")).toBeNull();
+  });
+
+  it("keeps the guard for a Storage that throws", () => {
+    const hostile = createMemoryStorage();
+    hostile.getItem = () => {
+      throw new Error("blocked");
+    };
+    hostile.setItem = () => {
+      throw new Error("quota");
+    };
+    expect(() => writeStored("k", "v", hostile)).not.toThrow();
+    expect(readStored("k", hostile)).toBeNull();
   });
 });

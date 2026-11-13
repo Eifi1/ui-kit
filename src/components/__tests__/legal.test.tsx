@@ -60,6 +60,14 @@ describe("LegalSection", () => {
     expect(screen.getByText(/Line one/).className).toContain("whitespace-pre-line");
   });
 
+  it("lands a link to it clear of the top bar and of AppShell's page row stuck under it (0.62)", () => {
+    // 5rem: the 3rem TopBar and air. With `mobileSubNavPlacement="top"` the row of a
+    // group's pages sticks under the bar too, and AppShell publishes its height; 0px
+    // without the row, and outside an AppShell.
+    const { container } = render(<LegalSection id="retention" heading="Retention" body="…" />);
+    expect(container.querySelector("section")).toHaveClass("scroll-mt-[calc(5rem+var(--app-subnav-h,0px))]");
+  });
+
   it("outside a LegalPage: no number, no id from its key, and a {ref:…} left as written", () => {
     const { container } = render(<LegalSection key="data" heading="Data" body="See section {ref:retention}." />);
     expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent(/^Data$/);

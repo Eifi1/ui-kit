@@ -247,7 +247,7 @@ describe("the list, and the URL it keeps", () => {
 
 describe("the search", () => {
   it("is off by default: no box, and a `q` in the address is never sent (sealed titles)", async () => {
-    // Kurvenschmiede: the server answers `q` with a 422 (`public_search=False`).
+    // Where titles are sealed, the server answers `q` with a 422 (`public_search=False`).
     const { api } = renderPage("/all-feedback?q=chart");
     await screen.findByText("Chart jumps on save");
     expect(screen.queryByRole("searchbox")).toBeNull();

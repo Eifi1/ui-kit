@@ -198,6 +198,54 @@ describe("two fingers zoom", () => {
   });
 });
 
+describe("a trackpad pinch, through real recharts", () => {
+  it("narrows the abscissa about the cursor on Ctrl + wheel anywhere over the chart, once clicked; a plain wheel scrolls", () => {
+    const { container } = draw();
+    const before = xTicks();
+    surface();
+    // The chart's own root hears it: over the axes and the strip as over the plot.
+    const root = container.firstElementChild!;
+    expect(fireEvent.wheel(root, { deltaY: 100, clientX: pxOf(10), clientY: 150 })).toBe(true);
+    expect(xTicks()).toEqual(before);
+    // Not clicked yet: the page's zoom, a reader with low vision enlarging the page.
+    expect(fireEvent.wheel(root, { deltaY: -300, ctrlKey: true, clientX: pxOf(10), clientY: 150 })).toBe(true);
+    expect(xTicks()).toEqual(before);
+    pointer("pointerdown", pxOf(10), 150);
+    pointer("pointerup", pxOf(10), 150);
+    // −300 px of wheel shows e^0.6 ≈ 1.8 times less, about the value 10 under the cursor.
+    expect(fireEvent.wheel(root, { deltaY: -300, ctrlKey: true, clientX: pxOf(10), clientY: 150 })).toBe(false);
+    const zoomed = xTicks();
+    expect(Math.min(...zoomed)).toBeGreaterThanOrEqual(4);
+    expect(Math.max(...zoomed)).toBeLessThanOrEqual(16);
+    expect(screen.getByRole("button", { name: /reset zoom/i })).toBeInTheDocument();
+  });
+});
+
+describe("engaged by the focus, through real recharts", () => {
+  it("takes Ctrl + wheel while the chart's keyboard stop has the focus, and leaves it once the focus moves on", () => {
+    const { container } = render(
+      <>
+        <SeriesChart rows={ROWS} series={[{ key: "a", label: "A" }]} axes={oneAxis(undefined, "A")} />
+        <button type="button">After the chart</button>
+      </>,
+    );
+    const before = xTicks();
+    surface();
+    const root = container.firstElementChild!;
+    const ctrlWheel = () => fireEvent.wheel(root, { deltaY: -300, ctrlKey: true, clientX: pxOf(10), clientY: 150 });
+    // The chart's one tab stop (`PointKeys`), as Tab reaches it.
+    const stop = container.querySelector<SVGElement>('[tabindex="0"]')!;
+    act(() => stop.focus());
+    expect(document.activeElement).toBe(stop);
+    act(() => screen.getByRole("button", { name: "After the chart" }).focus());
+    expect(ctrlWheel()).toBe(true);
+    expect(xTicks()).toEqual(before);
+    act(() => stop.focus());
+    expect(ctrlWheel()).toBe(false);
+    expect(Math.min(...xTicks())).toBeGreaterThan(Math.min(...before));
+  });
+});
+
 describe("the overview strip, through real recharts", () => {
   const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"].map((period, i) => ({ period, v: i * 3 }));
   const months = (props: Partial<SeriesChartProps> = {}) =>
@@ -220,6 +268,34 @@ describe("the overview strip, through real recharts", () => {
     expect(slider).toHaveAttribute("aria-valuemin", "-0.5");
     const { x, width } = plot();
     expect(slider.parentElement).toHaveStyle({ left: `${x}px`, width: `${width}px` });
+  });
+
+  it("holds a band carried past the plot's end inside the range, so the handle stays on the track", () => {
+    months();
+    const { x, width } = plot();
+    pointer("pointerdown", x + width * 0.6, 100);
+    pointer("pointermove", x + width * 1.4, 104);
+    pointer("pointerup", x + width * 1.4, 104);
+    const slider = screen.getByRole("slider", { name: "Visible range" });
+    // The eight slots and their half slot of air end at 7.5: a window that ends there
+    // starts where the handle's travel ends. Past it, the handle stood beyond its track.
+    const now = Number(slider.getAttribute("aria-valuenow"));
+    const max = Number(slider.getAttribute("aria-valuemax"));
+    expect(now - max).toBeLessThan(1e-9);
+  });
+
+  it("names the last slot, not nothing, once the window reaches the half slot of air at the end", () => {
+    const format = vi.fn((_: number, tick: { value: unknown; index?: number }) => String(tick.value));
+    months({ x: { type: "category", key: "period", format } });
+    bandZoom();
+    const slider = screen.getByRole("slider", { name: "Visible range" });
+    fireEvent.keyDown(slider, { key: "End" });
+    // The window ends at 7.5, half a slot past Aug: that edge is Aug's.
+    expect(slider.getAttribute("aria-valuetext")).toMatch(/ to Aug$/);
+    fireEvent.keyDown(slider, { key: "Home" });
+    expect(slider.getAttribute("aria-valuetext")).toMatch(/^Jan to /);
+    // An app's format that looks its row up by index is never handed one past the rows.
+    for (const [, tick] of format.mock.calls) expect(tick.index ?? 0).toBeLessThan(MONTHS.length);
   });
 
   it("never reaches the chart's drilldown with a click", async () => {

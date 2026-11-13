@@ -222,10 +222,10 @@ export const SELECT_SM = "h-7 py-0 ps-2 pe-7 text-xs";
  * `grow` column every other column IS squeezed to its min-content (data-table-fit.ts).
  * The user roster's role select stood 92px and read "Meml…" and "Admi…" (KS review,
  * 0.49 and 0.50). `min-width: max-content` on the select would hold it instead — but to
- * its widest OPTION, and an unavailable role's option carries its reason ("Customer (owns
- * work)", RoleSelect's `optionDisabledReason`): the column would widen for a text that is
- * never the selected value. So the caller says which values can be selected, in the
- * current language.
+ * its widest OPTION, and an unavailable role's option carries its reason ("Member (not for
+ * the last administrator)", RoleSelect's `optionDisabledReason`): the column would widen
+ * for a text that is never the selected value. So the caller says which values can be
+ * selected, in the current language.
  */
 export function SelectWidthFloor({ values, size = "md" }: { values: readonly string[]; size?: "sm" | "md" }) {
   if (values.length === 0) return null;

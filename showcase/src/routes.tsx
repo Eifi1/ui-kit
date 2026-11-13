@@ -2119,6 +2119,7 @@ export const GROUPS: ShowcaseGroup[] = [
           "SharedComputerChoice",
           "isSharedComputer",
           "setSharedComputer",
+          "useSharedComputerIdleSignOut",
         ],
         Body: () => <OfflineDemo />,
       },
@@ -2248,12 +2249,14 @@ export const GROUPS: ShowcaseGroup[] = [
         title: "Feedback & uploads",
         short: "Feedback",
         blurb:
-          "The feedback contract as pure functions — schemas, statuses, the PATCH rules, rework, crash filing, erasure — its routes as one router factory, and attachments judged by their bytes.",
+          "The feedback contract as pure functions — schemas, statuses, the PATCH rules, rework, crash filing, erasure — its routes as one router factory, and attachments judged by their bytes. And the object store an app keeps its files in: one interface over the local disk, Cloud Storage or S3.",
         icon: Paperclip,
         // `feedback.router` (server-kit 0.9) is a module of its own because it needs the
-        // `fastapi` extra, which the feedback package does not import. `clock` (0.10) is
-        // the layer-2 services' shared clock port; feedback was its first user.
-        serverModules: ["feedback", "feedback.router", "uploads", "clock"],
+        // `fastapi` extra, which the feedback package does not import. `objects` (0.26) is
+        // the store behind an app's feedback `AttachmentStorage`, so it follows `uploads`.
+        // `clock` (0.10) is the layer-2 services' shared clock port; feedback was its first
+        // user.
+        serverModules: ["feedback", "feedback.router", "uploads", "objects", "clock"],
       }),
       serverPage({
         slug: "server-limits",

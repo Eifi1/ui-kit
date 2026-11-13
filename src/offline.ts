@@ -33,6 +33,10 @@ export {
   setSharedComputer,
 } from "./offline/shared-computer";
 export type { SharedComputerChoiceProps, SharedComputerLabels, SharedComputerStorage } from "./offline/shared-computer";
+// 0.62 (Marcel 2026-11-12): an abandoned shared-computer tab signs itself out after 15 idle
+// minutes, beside server-kit 0.27's short life for a shared session.
+export { useSharedComputerIdleSignOut } from "./offline/shared-computer-idle";
+export type { SharedComputerIdleSignOutOptions } from "./offline/shared-computer-idle";
 // 0.46 (§2.3): the leaf utilities, shared with `@eifi1/ui-kit/sync` from one module that imports no peer.
 export { isOfflineError, readLocalFirst, stampAfter, uuid5, writeLocalFirst } from "./offline/local-first";
 // 0.61 (Marcel 2026-11-12): one report's comment thread through the app's TanStack cache, so

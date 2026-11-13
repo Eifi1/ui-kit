@@ -263,6 +263,9 @@ export interface XModel {
   source: readonly SeriesChartRow[];
   position: (value: unknown) => number | undefined;
   valueAt: (position: number) => SeriesChartXValue;
+  /** A category chart's slot at a position: the row index a tick names, inside the rows.
+   *  Missing on a number or time line. */
+  slotAt?: (position: number) => number;
 }
 
 export function xModel(rows: readonly SeriesChartRow[], x: SeriesChartX): XModel {
@@ -273,6 +276,12 @@ export function xModel(rows: readonly SeriesChartRow[], x: SeriesChartX): XModel
       const id = categoryId(row[sourceKey]);
       if (!slots.has(id)) slots.set(id, index);
     });
+    // The slot a position falls in, kept inside the rows. A category chart draws half a
+    // slot of air past each end, and a zoom window that reaches it (the overview strip at
+    // its end, a band or two fingers stopped there) ends at 7.5 on eight slots, which
+    // rounded to a ninth: the strip's handle said "Jul to " and an app's `format` was
+    // handed index 8. That edge is the last slot's.
+    const slotAt = (position: number) => Math.min(Math.max(Math.round(position), 0), rows.length - 1);
     return {
       kind: "category",
       sourceKey,
@@ -280,7 +289,8 @@ export function xModel(rows: readonly SeriesChartRow[], x: SeriesChartX): XModel
       rows: rows.map((row, index) => ({ ...row, [PLOTTED_X]: index })),
       source: rows,
       position: (value) => slots.get(categoryId(value)),
-      valueAt: (position) => rows[Math.round(position)]?.[sourceKey] as SeriesChartXValue,
+      valueAt: (position) => rows[slotAt(position)]?.[sourceKey] as SeriesChartXValue,
+      slotAt,
     };
   }
   if (x.type === "time") {

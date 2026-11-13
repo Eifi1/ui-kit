@@ -772,7 +772,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       zoomWindow: "Sichtbarer Bereich",
       zoomWindowRange: (from, to) => `${from} bis ${to}`,
       zoomHint:
-        "Zum Zoomen ziehen: Eine annähernd quadratische Auswahl zoomt beide Achsen, eine lange, schmale nur ihre eigene. Auf einem Touchscreen liest ein Finger die Werte ab, zwei Finger zoomen und verschieben. «Zurück» nimmt einen Zoomschritt zurück; Doppelklick oder «Zoom zurücksetzen» zeigt wieder den ganzen Bereich.",
+        "Zum Zoomen ziehen: Eine annähernd quadratische Auswahl zoomt beide Achsen, eine lange, schmale nur ihre eigene. Auf einem Touchscreen liest ein Finger die Werte ab, zwei Finger zoomen und verschieben. Um auf einem Trackpad durch Auf- und Zuziehen mit zwei Fingern oder mit dem Mausrad bei gedrückter Ctrl-Taste zu zoomen, klicken Sie zuerst auf das Diagramm. «Zurück» nimmt einen Zoomschritt zurück; Doppelklick oder «Zoom zurücksetzen» zeigt wieder den ganzen Bereich.",
       empty: "Keine Daten",
       legend: "Datenreihen",
       points: "Diagrammwerte",
@@ -1034,9 +1034,9 @@ export function germanLabels(numberLocale: string): UiKitLabels {
             // 0.61 (Marcel 2026-11-12): the persisted cache and the shared-computer flag, for an app's entries.
             standardEntries: {
               recentData: (hours) =>
-                `Kürzlich geladene Daten, damit Seiten auch ohne Verbindung öffnen; was älter als ${hours} Stunden ist, verwendet die App nicht mehr und entfernt es, sobald sie wieder geöffnet wird. Davon bleibt nichts, wenn Sie sich mit «Dies ist ein gemeinsam genutzter Computer» anmelden.`,
+                `Kürzlich geladene Daten, damit Seiten auch ohne Verbindung öffnen; was älter als ${hours} Stunden ist, verwendet die App nicht mehr und entfernt es, sobald sie wieder geöffnet wird. Davon bleibt nichts, wenn Sie sich mit «Dies ist ein gemeinsam genutzter Computer» anmelden`,
               sharedComputer:
-                "Ob Sie bei der Anmeldung «Dies ist ein gemeinsam genutzter Computer» gewählt haben, solange diese Sitzung dauert.",
+                "Ob Sie bei der Anmeldung «Dies ist ein gemeinsam genutzter Computer» gewählt haben, zusammen mit dem Tab gespeichert",
             },
           },
           rights: {
@@ -1319,6 +1319,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       off: "Benachrichtigungen sind für dieses Gerät ausgeschaltet.",
       otherAccount:
         "Dieser Browser erhält Benachrichtigungen für ein anderes Konto. Schalten Sie sie hier ein, um sie für das angemeldete Konto zu erhalten.",
+      sharedComputer:
+        "Auf einem gemeinsam genutzten Computer nicht verfügbar: Dieser Browser würde Ihre Benachrichtigungen auch dann noch erhalten, wenn Sie nicht mehr da sind.",
       enable: "Benachrichtigungen einschalten",
       disable: "Ausschalten",
       sendTest: "Test senden",
@@ -2166,6 +2168,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
     sharedComputer: {
       label: "Dies ist ein gemeinsam genutzter Computer",
       hint: "Auf diesem Gerät bleibt keine Kopie Ihrer Daten. Seiten öffnen sich dann nur mit einer Verbindung.",
+      idleWarning: "Hier ist seit einer Weile nichts passiert. In einer Minute werden Sie abgemeldet.",
+      staySignedIn: "Angemeldet bleiben",
     },
     // 0.55 — docs/top-bar-harmonization.md §2.6.1: keksdose's reviewed words (sync.held_*,
     // sync.discard_held_*, sync.switch_back_held) without its budgets.

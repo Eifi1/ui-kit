@@ -578,7 +578,7 @@ export const de: Dictionary = {
       title: "Feedback & Uploads",
       short: "Feedback",
       blurb:
-        "Der Feedback-Vertrag als reine Funktionen — Schemas, Status, die PATCH-Regeln, Nacharbeit, Absturzmeldungen, Löschung — seine Routen als eine Router-Factory, und Anhänge, beurteilt nach ihren Bytes.",
+        "Der Feedback-Vertrag als reine Funktionen — Schemas, Status, die PATCH-Regeln, Nacharbeit, Absturzmeldungen, Löschung — seine Routen als eine Router-Factory, und Anhänge, beurteilt nach ihren Bytes. Dazu der Objektspeicher, in dem eine App ihre Dateien ablegt: eine Schnittstelle für die lokale Festplatte, Cloud Storage oder S3.",
     },
     "server-limits": {
       title: "Limits, Fehler, CORS & Sync",
@@ -1326,6 +1326,7 @@ export const de: Dictionary = {
       "Grösse von Anhängen begrenzen",
       "Feedback eines gelöschten Benutzers löschen",
       "Feedback-Routen einbinden",
+      "Dateien in einem Cloud-Bucket speichern",
     ],
     "server-limits": [
       "Rate-Limit für eine Route",

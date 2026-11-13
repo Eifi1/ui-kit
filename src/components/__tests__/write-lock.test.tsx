@@ -14,7 +14,7 @@ import {
 import type { CommitScope, WriteLock, WriteLockHold } from "../write-lock";
 
 /**
- * keksdose's read-only demo and Kurvenschmiede's viewer / customer locks: everything
+ * keksdose's read-only demo and Kurvenschmiede's viewer lock: everything
  * renders, only the commit is locked — and the locked commit can say why.
  */
 

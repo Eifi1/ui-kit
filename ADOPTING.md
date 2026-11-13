@@ -163,8 +163,8 @@ primitives with the shared ones. Keep this app's domain-specific pieces local.
      Opt your stylesheet out of Vitest's CSS stub (`test: { css: { include:
      [/src\/app\.css/] } }`): the guard throws on an empty `.css` entry rather than
      pass over nothing. Options: `runtime` (a library's own variables),
-     `checkFallbacks`, `refusePalette`. `--app-nav-h` exists only while `AppShell` is
-     mounted: read it as `var(--app-nav-h,0px)`.
+     `checkFallbacks`, `refusePalette`. `--app-nav-h` and `--app-subnav-h` exist only
+     while `AppShell` is mounted: read them as `var(--app-nav-h,0px)`.
    - **Confirm dialogs.** The kit's confirm dialogs (`DangerConfirm`,
      `AdminActionConfirm`, `DeleteAccountSetting`'s confirmation) submit through the
      confirm button's `form` attribute, because the button sits in the dialog's footer

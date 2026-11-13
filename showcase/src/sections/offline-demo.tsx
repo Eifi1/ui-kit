@@ -115,10 +115,21 @@ function SharedComputerDemo() {
   return (
     <Example
       label="SharedComputerChoice — on the sign-in form"
-      hint="held in sessionStorage: the choice outlives no tab (D6)"
+      hint="a marker in the tab; the session itself lives in page memory (D6)"
     >
       <SharedComputerChoice onCheckedChange={setOn} />
       <StateLine label="isSharedComputer()">{String(on)}</StateLine>
+      <Note>
+        With the box ticked, the app keeps the sign-in in the page&apos;s memory, never in {code("sessionStorage")}: a
+        browser brings a closed tab back with its {code("sessionStorage")}. A reload therefore lands on the sign-in. The
+        sign-in sends {code("shared_device: true")}, and the server gives that session a short life.
+      </Note>
+      <Note>
+        {code("useSharedComputerIdleSignOut({ onSignOut })")} in the signed-in shell signs an abandoned tab out after 15
+        minutes without input. A minute before, a toast offers {code("Stay signed in")}. {code("onSignOut")} is the
+        app&apos;s ordinary sign-out: {code("dropPushSubscription")}, then {code("DELETE /auth/sessions/current")}, then
+        drop the tokens.
+      </Note>
     </Example>
   );
 }

@@ -38,7 +38,7 @@ import {
   type FeedbackRecord,
 } from "./feedback-record";
 import type { FeedbackStatusChange } from "./feedback-status-undo";
-import { feedbackPagePath, useFeedbackDetailLabels } from "./feedback-row-detail";
+import { useFeedbackDetailLabels } from "./feedback-row-detail";
 import { feedbackPage, feedbackPageLinkTarget } from "./feedback-page-link";
 import type { CommitScope } from "../components/write-lock";
 import { DEFAULT_FEEDBACK_PAGE_LABELS } from "./feedback-table-labels";
@@ -520,7 +520,7 @@ function statusRank(status: FeedbackStatus): number {
  * | 4 | `title` | {@link FeedbackSubject} | text: title + environment | card heading |
  * | 5 | `user` | {@link feedbackSubmitter} | text: name + email, or "deleted user" | |
  * | 6 | `email` | {@link feedbackSubmitterEmail} | text | hidden |
- * | 7 | `url` | the page, a link (`noRowLink`) | text: path | hidden |
+ * | 7 | `url` | the page, a link (`noRowLink`) | text: what it shows, the path with the `pageLinkParams` | hidden |
  * | 8 | `status` | `FeedbackStatusTransitions variant="icon"`, `visibleFeedbackStatuses` | select, chain order | |
  * | 9 | `resolved` | `resolved_at` | date | hidden |
  *
@@ -561,6 +561,14 @@ export function feedbackColumns<T extends FeedbackTableRow>({
   const editable = canEdit && !mine;
   // One Set for the column, not one per cell of a 270-row inbox.
   const linkParams: ReadonlySet<string> = new Set(pageLinkParams);
+  // What the URL cell shows, for its sort and its filter: the link's target — the path with
+  // the kept params — or a one-shot page's path. By the path alone (until 0.62) the column
+  // showed `/curves/2?profile=5` and filtered as `/curves/2`: a filter on `profile=5` found
+  // nothing, and the profiles of one curve sorted as one.
+  const shownPage = (row: T): string => {
+    const page = feedbackPage(row.context);
+    return page ? (feedbackPageLinkTarget(page, pageLinkExclude, linkParams) ?? page.path) : "";
+  };
   const votesColumn: DataTableColumn<T>[] = votes
     ? [
         {
@@ -696,8 +704,8 @@ export function feedbackColumns<T extends FeedbackTableRow>({
           params={linkParams}
         />
       ),
-      sortBy: (row) => feedbackPagePath(row.context) ?? "",
-      filterBy: (row) => feedbackPagePath(row.context) ?? "",
+      sortBy: shownPage,
+      filterBy: shownPage,
       mobileHidden: true,
       // First to go when the table is narrow (0.48): the open report repeats the page.
       fitPriority: 1,

@@ -762,7 +762,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       zoomWindow: "Intervallo visibile",
       zoomWindowRange: (from, to) => `da ${from} a ${to}`,
       zoomHint:
-        "Trascini per ingrandire: una selezione più o meno quadrata ingrandisce entrambi gli assi, una lunga e sottile solo il proprio. Su uno schermo tattile, un dito legge i valori e due dita ingrandiscono e spostano. «Indietro» annulla un passo di zoom; un doppio clic o «Reimposta zoom» mostra di nuovo l’intervallo intero.",
+        "Trascini per ingrandire: una selezione più o meno quadrata ingrandisce entrambi gli assi, una lunga e sottile solo il proprio. Su uno schermo tattile, un dito legge i valori e due dita ingrandiscono e spostano. Per ingrandire su un trackpad avvicinando o allontanando due dita, oppure con il mouse tenendo premuto Ctrl e girando la rotellina, faccia prima clic sul grafico. «Indietro» annulla un passo di zoom; un doppio clic o «Reimposta zoom» mostra di nuovo l’intervallo intero.",
       empty: "Nessun dato",
       legend: "Serie",
       points: "Valori del grafico",
@@ -1018,8 +1018,9 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
             // 0.61 (Marcel 2026-11-12): the persisted cache and the shared-computer flag, for an app's entries.
             standardEntries: {
               recentData: (hours) =>
-                `I dati caricati di recente, perché le pagine si aprano anche senza connessione; ciò che ha più di ${hours} ore l’app non lo usa più e lo rimuove alla successiva apertura. Non ne resta nulla se accede con «Questo è un computer condiviso».`,
-              sharedComputer: "Se all’accesso ha scelto «Questo è un computer condiviso», finché dura quella sessione.",
+                `I dati caricati di recente, perché le pagine si aprano anche senza connessione; ciò che ha più di ${hours} ore l’app non lo usa più e lo rimuove alla successiva apertura. Non ne resta nulla se accede con «Questo è un computer condiviso»`,
+              sharedComputer:
+                "Se all’accesso ha scelto «Questo è un computer condiviso», conservato insieme alla scheda",
             },
           },
           rights: {
@@ -1297,6 +1298,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       off: "Le notifiche sono disattivate per questo dispositivo.",
       otherAccount:
         "Questo browser riceve le notifiche di un altro account. Le attivi qui per riceverle sull’account con cui ha effettuato l’accesso.",
+      sharedComputer:
+        "Non disponibile su un computer condiviso: questo browser continuerebbe a ricevere le Sue notifiche anche dopo che avrà lasciato il computer.",
       enable: "Attiva notifiche",
       disable: "Disattiva",
       sendTest: "Invia un test",
@@ -2109,6 +2112,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
     sharedComputer: {
       label: "Questo è un computer condiviso",
       hint: "Su questo dispositivo non resta alcuna copia dei Suoi dati. Le pagine si aprono quindi solo con una connessione.",
+      idleWarning: "Qui non succede nulla da un po’. Tra un minuto la sessione terminerà.",
+      staySignedIn: "Continua la sessione",
     },
     // 0.55 — docs/top-bar-harmonization.md §2.6.1: keksdose's reviewed words (sync.held_*,
     // sync.discard_held_*, sync.switch_back_held) without its budgets.

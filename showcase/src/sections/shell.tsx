@@ -841,7 +841,8 @@ function AppShellPlayground() {
             ]}
           />
           <p className="text-xs text-muted">
-            Above the bar, or sticky under the top bar; on top, --app-nav-h measures the bar alone
+            Above the bar, or sticky under the top bar; on top, --app-nav-h measures the bar alone and --app-subnav-h
+            the row, which an anchor&apos;s scroll margin adds
           </p>
         </div>
         <Switch

@@ -181,7 +181,7 @@ describe("FeedbackMenu by role (0.40)", () => {
     ["an admin with public parts (keksdose)", { isAdmin: true, publicHref: "/all-feedback" }, LINKS],
     ["a member with public parts", { publicHref: "/all-feedback" }, ["Feedback discussion", "My feedback"]],
     ["an admin without them (kastlan)", { isAdmin: true }, ["My feedback", "Feedback inbox"]],
-    ["anyone else without them (a KS customer)", {}, ["My feedback"]],
+    ["anyone else without them (outside the app's predicate)", {}, ["My feedback"]],
   ] as const)("%s", (_who, props, expected) => {
     renderMenu(props);
     expect(links(openMenu())).toEqual(expected);

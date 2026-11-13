@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import type { ComponentPropsWithRef, ReactNode } from "react";
 
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
@@ -12,6 +12,7 @@ import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
 import { CARD_DESCRIPTION_CLASS } from "../settings/settings-card-classes";
 import { SettingsCardTitle } from "../settings/settings-heading";
 import { useMounted } from "../hooks/use-mounted";
+import { isSharedComputer } from "../offline/shared-computer";
 import { describeFailure, FailureLine, useNotificationsLabels } from "./notification-parts";
 import type { NotificationsLabels } from "./notifications-labels";
 import { PushDeviceError } from "./use-push-device";
@@ -25,6 +26,14 @@ export interface PushDeviceSettingProps extends Omit<ComponentPropsWithRef<"div"
   push: PushDevice;
   /** The app's name, for the iOS line and the explainer. */
   appName: string;
+  /**
+   * 0.62: the session is a shared computer's, so push is not offered: "Turn on" is refused
+   * with a line saying why (a subscription belongs to the browser, and would go on showing
+   * this person's notifications to the next one). A subscription already held can still be
+   * turned off. Default: `isSharedComputer()` (`@eifi1/ui-kit/offline`); pass the app's own
+   * answer where it keeps the mode elsewhere (keksdose's page mode).
+   */
+  sharedComputer?: boolean;
   /** The app's own words for a failure, or `undefined` for the kit's. The kit already
    *  has words for a missing service worker and an unanswered push service. */
   describeError?: (error: unknown, action: PushDeviceAction) => ReactNode | undefined;
@@ -47,6 +56,11 @@ type Outcome = { tone: "status" | "warning" | "danger"; text: ReactNode } | null
  * 5. on or off — with "another account" when this browser's subscription is someone
  *    else's — and "Turn on notifications", or "Send a test" and "Turn off".
  *
+ * **No push on a shared computer** (0.62, Marcel 2026-11-13; `sharedComputer`): "Turn on
+ * notifications" is refused there, with a line saying why. A subscription belongs to the
+ * browser, not to the tab or the sign-in, so one switched on at a library PC went on
+ * showing the person's notifications (names, amounts) to whoever used that browser next.
+ *
  * **The explainer comes before the browser's one prompt**: turning on while the
  * permission is still `"default"` opens a dialog first (what the notifications are for,
  * that the browser asks next); with it granted, it goes straight on. A test that reached
@@ -57,6 +71,7 @@ type Outcome = { tone: "status" | "warning" | "danger"; text: ReactNode } | null
 export function PushDeviceSetting({
   push,
   appName,
+  sharedComputer: sharedProp,
   describeError,
   labels: labelsProp,
   className,
@@ -64,6 +79,9 @@ export function PushDeviceSetting({
 }: PushDeviceSettingProps) {
   const labels = useNotificationsLabels(labelsProp);
   const common = useKitLabels("common", DEFAULT_COMMON_LABELS);
+  const sharedReasonId = useId();
+  // Read each render: the choice is made at sign-in, before this card can mount.
+  const shared = sharedProp ?? isSharedComputer();
   const [explainer, setExplainer] = useState(false);
   const [running, setRunning] = useState<PushDeviceAction | null>(null);
   const [outcome, setOutcome] = useState<Outcome>(null);
@@ -133,12 +151,20 @@ export function PushDeviceSetting({
     state = <p className="text-xs text-warning">{labels.blocked}</p>;
   } else {
     const busy = push.busy || running !== null;
+    // Only "Turn on" is refused: a subscription the browser already holds goes on reaching
+    // it, and turning that off is the one thing to let a shared computer's session do.
+    const refusedHere = shared && !push.subscribed;
     state = (
       <>
         <p className={CARD_DESCRIPTION_CLASS} data-push-state={push.subscribed ? "on" : "off"}>
           {push.subscribed ? labels.on : labels.off}
         </p>
         {push.foreignSubscription && <p className="text-xs text-warning">{labels.otherAccount}</p>}
+        {refusedHere && (
+          <p id={sharedReasonId} className={CARD_DESCRIPTION_CLASS}>
+            {labels.sharedComputer}
+          </p>
+        )}
         <div className="flex flex-wrap gap-2">
           {push.subscribed ? (
             <>
@@ -172,6 +198,9 @@ export function PushDeviceSetting({
               commit={COMMIT_EXCEPT_BILLING}
               pending={running === "enable"}
               disabled={busy && running !== "enable"}
+              // Refused, not disabled: still focusable, and named by the line above.
+              refused={refusedHere}
+              aria-describedby={refusedHere ? sharedReasonId : undefined}
               onClick={turnOn}
             >
               {labels.enable}

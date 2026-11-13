@@ -112,9 +112,10 @@ describe("a module page", () => {
       const router = findModule(api, "feedback.router")!;
       const heading = screen.getByRole("heading", { name: router.name, level: 2 });
       expect(heading).toHaveAttribute("id", "feedback.router");
-      // The package's heading comes first, the router's next, uploads after.
+      // The package's heading comes first, the router's next, uploads and the object store
+      // they are kept in (server-kit 0.26) after.
       const order = [...document.querySelectorAll("main section > header > h2")].map((h) => h.id);
-      expect(order).toEqual(["feedback", "feedback.router", "uploads", "clock"]);
+      expect(order).toEqual(["feedback", "feedback.router", "uploads", "objects", "clock"]);
       const section = heading.closest("section")!;
       expect(within(section).getByRole("link", { name: /server-services-harmonization\.md §2\.9/ })).toHaveAttribute(
         "href",

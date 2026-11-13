@@ -489,3 +489,81 @@ describe("DataTable keyFilter on the phone (0.59, dev #678)", () => {
     expect(onClear).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("DataTable keyFilter on the phone, its column not among the columns (0.62)", () => {
+  // The sheet lists the table's columns, so a set on a column the table does not have
+  // narrowed the cards with no word anywhere: no section, no count, and with no other
+  // filterable column no Filters bar at all. The desktop's line (0.60) says it above the
+  // table; the phone's says it above the cards.
+
+  const WITHOUT_ID = COLUMNS.filter((c) => c.key !== "id");
+  const cards = () =>
+    within(screen.getByRole("list", { name: "Data table" }))
+      .getAllByRole("listitem")
+      .map((li) => REPORTS.find((r) => li.textContent?.includes(r.title))?.title);
+  const line = () => document.querySelector<HTMLElement>("[data-hidden-filter]");
+
+  beforeEach(() => {
+    stubPhone();
+  });
+
+  it("says the set above the cards, and its Clear hands the set back to the owner", () => {
+    const onClear = vi.fn();
+    render(
+      <MemoryRouter>
+        <DataTable
+          rows={REPORTS}
+          columns={WITHOUT_ID}
+          rowKey={(r) => r.id}
+          keyFilter={set([2, 4], onClear, "Only these 2 reports")}
+        />
+      </MemoryRouter>,
+    );
+    expect(cards()).toEqual(["Typo in the footer", "Export to CSV"]);
+    expect(line()).toHaveAttribute("data-hidden-filter", "set");
+    expect(line()).toHaveTextContent("Only these 2 reports");
+    fireEvent.click(within(line()!).getByRole("button", { name: "Clear filter" }));
+    expect(onClear).toHaveBeenCalledTimes(1);
+  });
+
+  it("says it with no filterable column to open a sheet for", () => {
+    render(
+      <MemoryRouter>
+        <DataTable
+          rows={REPORTS}
+          columns={COLUMNS.filter((c) => c.key === "title")}
+          rowKey={(r) => r.id}
+          keyFilter={set([2])}
+        />
+      </MemoryRouter>,
+    );
+    expect(cards()).toEqual(["Typo in the footer"]);
+    expect(screen.queryByRole("button", { name: /^Filters/ })).toBeNull();
+    expect(line()).toHaveTextContent("Only this row");
+  });
+
+  it("goes with the set, and leaves the focus on the cards rather than on <body>", () => {
+    render(
+      <MemoryRouter>
+        <Owner initial={[1, 3]} columns={WITHOUT_ID} />
+      </MemoryRouter>,
+    );
+    expect(cards()).toEqual(["Crash on save", "Dark mode"]);
+    const clear = within(line()!).getByRole("button", { name: "Clear filter" });
+    act(() => clear.focus());
+    fireEvent.click(clear);
+    expect(cards()).toHaveLength(5);
+    expect(line()).toBeNull();
+    expect(screen.getByRole("list", { name: "Data table" })).toHaveFocus();
+  });
+
+  it("draws no line while the column is there: its section in the sheet says the set", () => {
+    render(
+      <MemoryRouter>
+        <Table keyFilter={set([1, 3], vi.fn(), "Only these 2 reports")} />
+      </MemoryRouter>,
+    );
+    expect(line()).toBeNull();
+    expect(screen.getByRole("button", { name: /^Filters/ })).toHaveTextContent("1");
+  });
+});

@@ -151,6 +151,7 @@ const NOT_SHOWN: Record<string, string> = {
   useKitChartTooltipPlacement: PROVIDER,
   useKitDocumentTitle: PROVIDER,
   useKitTableStorageKeyPrefix: PROVIDER,
+  useKitTableStorage: PROVIDER,
   useKitTimeZone: PROVIDER,
   peekUiKitLabels: "loadUiKitLabels' synchronous sibling (the catalogue once it has arrived); the i18n page loads one",
   useUiKitLabels: "loadUiKitLabels as a hook; the i18n page loads a catalogue",

@@ -770,7 +770,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       zoomWindow: "Plage visible",
       zoomWindowRange: (from, to) => `de ${from} à ${to}`,
       zoomHint:
-        "Faites glisser pour zoomer\u00a0: une sélection à peu près carrée zoome sur les deux axes, une sélection longue et étroite sur son seul axe. Sur un écran tactile, un doigt lit les valeurs et deux doigts zooment et déplacent. «\u00a0Retour\u00a0» annule un pas de zoom\u00a0; un double-clic ou «\u00a0Réinitialiser le zoom\u00a0» affiche à nouveau toute la plage.",
+        "Faites glisser pour zoomer\u00a0: une sélection à peu près carrée zoome sur les deux axes, une sélection longue et étroite sur son seul axe. Sur un écran tactile, un doigt lit les valeurs et deux doigts zooment et déplacent. Pour zoomer en pinçant sur un pavé tactile, ou avec Ctrl et la molette de la souris, cliquez d’abord sur le graphique. «\u00a0Retour\u00a0» annule un pas de zoom\u00a0; un double-clic ou «\u00a0Réinitialiser le zoom\u00a0» affiche à nouveau toute la plage.",
       empty: "Aucune donnée",
       legend: "Séries",
       points: "Valeurs du graphique",
@@ -1026,9 +1026,9 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
             // 0.61 (Marcel 2026-11-12): the persisted cache and the shared-computer flag, for an app's entries.
             standardEntries: {
               recentData: (hours) =>
-                `Les données chargées récemment, pour que les pages s’ouvrent aussi sans connexion ; ce qui date de plus de ${hours} heures n’est plus utilisé et est supprimé à la prochaine ouverture de l’app. Rien n’en est conservé si vous vous connectez avec « C’est un ordinateur partagé ».`,
+                `Les données chargées récemment, pour que les pages s’ouvrent aussi sans connexion ; ce qui date de plus de ${hours} heures n’est plus utilisé et est supprimé à la prochaine ouverture de l’app. Rien n’en est conservé si vous vous connectez avec « C’est un ordinateur partagé »`,
               sharedComputer:
-                "Si vous avez choisi « C’est un ordinateur partagé » à la connexion, le temps que dure cette session.",
+                "Si vous avez choisi « C’est un ordinateur partagé » à la connexion, conservé avec l’onglet",
             },
           },
           rights: {
@@ -1312,6 +1312,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       off: "Les notifications sont désactivées pour cet appareil.",
       otherAccount:
         "Ce navigateur reçoit les notifications d’un autre compte. Activez-les ici pour les recevoir sur le compte avec lequel vous êtes connecté.",
+      sharedComputer:
+        "Indisponible sur un ordinateur partagé : ce navigateur continuerait à recevoir vos notifications après votre départ.",
       enable: "Activer les notifications",
       disable: "Désactiver",
       sendTest: "Envoyer un test",
@@ -2132,6 +2134,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
     sharedComputer: {
       label: "C’est un ordinateur partagé",
       hint: "Aucune copie de vos données ne reste sur cet appareil. Les pages ne s’ouvrent alors qu’avec une connexion.",
+      idleWarning: "Rien ne s’est passé ici depuis un moment. La session prendra fin dans une minute.",
+      staySignedIn: "Continuer la session",
     },
     // 0.55 — docs/top-bar-harmonization.md §2.6.1: keksdose's reviewed words (sync.held_*,
     // sync.discard_held_*, sync.switch_back_held) without its budgets.

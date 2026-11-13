@@ -80,6 +80,9 @@ export interface NotificationsLabels {
   off: string;
   /** This browser's subscription belongs to another account. */
   otherAccount: string;
+  /** 0.62: why push cannot be turned on while the session is a shared computer's
+   *  (`isSharedComputer()`). */
+  sharedComputer: string;
   enable: string;
   disable: string;
   sendTest: string;
@@ -227,6 +230,8 @@ export const DEFAULT_NOTIFICATIONS_LABELS: NotificationsLabels = {
   off: "Notifications are off for this device.",
   otherAccount:
     "This browser gets notifications for another account. Turn them on here to get them for the account you’re signed in with.",
+  sharedComputer:
+    "Not available on a shared computer: this browser would keep getting your notifications after you leave.",
   enable: "Turn on notifications",
   disable: "Turn off",
   sendTest: "Send a test",

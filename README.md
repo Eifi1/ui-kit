@@ -28,8 +28,8 @@ with its own Tailwind config.
 ## Compatibility with server-kit
 
 The backend half, [`eifi1-server-kit`](https://github.com/Eifi1/server-kit), is a separate
-package with its own version and changelog. **ui-kit 0.61 ↔ server-kit 0.25**: this release
-is tested against server-kit 0.25.0's API export (the showcase's Server kit pages and the
+package with its own version and changelog. **ui-kit 0.62 ↔ server-kit 0.27**: this release
+is tested against server-kit 0.27.0's API export (the showcase's Server kit pages and the
 vocabulary test, `showcase/src/__tests__/server-kit-vocabularies.test.ts`).
 
 ## Documentation
@@ -582,7 +582,7 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2293 names from 387 modules** in the main barrel — 1026 values and 1267 types — and 199 more in 16 standalone entries. _Italic_ is a type-only export.
+**2296 names from 387 modules** in the main barrel — 1029 values and 1267 types — and 201 more in 16 standalone entries. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 `node scripts/gen-export-inventory.mjs`; the counts are pinned by
@@ -590,7 +590,7 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2293 |
+| `@eifi1/ui-kit` | 2296 |
 | `@eifi1/ui-kit/chart` | 102 |
 | `@eifi1/ui-kit/shell` | 109 |
 | `@eifi1/ui-kit/data-table` | 57 |
@@ -605,7 +605,7 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 | `@eifi1/ui-kit/testing` | 15 |
 | `@eifi1/ui-kit/testing/react` | 2 |
 | `@eifi1/ui-kit/rhf` | 52 |
-| `@eifi1/ui-kit/offline` | 36 |
+| `@eifi1/ui-kit/offline` | 38 |
 | `@eifi1/ui-kit/sync` | 37 |
 | `@eifi1/ui-kit/sync/testing` | 3 |
 | `@eifi1/ui-kit/push-worker` | 10 |
@@ -628,7 +628,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `lib/cn` | `cn` |
 | `lib/logger` | `logger`, `setStoreLog` |
 | `lib/format` | `currencyMinorDigits`, `EMPTY_FORMATTED_VALUE`, `formatDate`, `formatDuration`, `formatMoney`, `formatNumber`, `formatPercent`, `formatRelativeTime`, `roundToCurrency`, `toDate`, `useKitFormat`, _`DateInput`_, _`FormatDateOptions`_, _`FormatDateStyle`_, _`FormatDigits`_, _`FormatDurationOptions`_, _`FormatMoneyOptions`_, _`FormatNumberBaseOptions`_, _`FormatNumberOptions`_, _`FormatPercentOptions`_, _`FormatRelativeTimeOptions`_, _`FormattableNumber`_, _`KitFormat`_, _`RoundToCurrencyOptions`_ |
-| `lib/safe-storage` | `readSessionStored`, `readStored`, `readStoredJson`, `removeStored`, `writeSessionStored`, `writeStored`, `writeStoredJson` |
+| `lib/safe-storage` | `createMemoryStorage`, `readSessionStored`, `readStored`, `readStoredJson`, `removeStored`, `writeSessionStored`, `writeStored`, `writeStoredJson` |
 | `lib/reduced-motion` | `prefersReducedMotion` |
 | `lib/quiet-focus` | `focusQuietly`, `isQuietFocus` |
 | `lib/focus-left` | `focusFirst`, `focusIsLost`, `returnFocus`, _`FocusReturn`_ |
@@ -867,7 +867,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 
 | Module | Exports |
 |---|---|
-| `i18n/kit-labels` | `DEFAULT_APP_SHELL_LABELS`, `DEFAULT_CALCULATOR_LABELS`, `DEFAULT_COMBOBOX_LABELS`, `DEFAULT_COMMON_LABELS`, `DEFAULT_CURRENCY_LABELS`, `DEFAULT_DATE_PICKER_LABELS`, `DEFAULT_FILE_LABELS`, `DEFAULT_MULTI_SELECT_LABELS`, `DEFAULT_PICKER_SHEET_LABELS`, `DEFAULT_SWIPEABLE_ROW_LABELS`, `DEFAULT_TOP_BAR_LABELS`, `formatFileSize`, `missingKitLabels`, `UiKitProvider`, `useKitChartTooltipPlacement`, `useKitDateFormatter`, `useKitDocumentTitle`, `useKitFileLabels`, `useKitLabelOverrides`, `useKitLabels`, `useKitLink`, `useKitLocale`, `useKitTableStorageKeyPrefix`, `useKitTimeZone`, `useKitWeekStart`, _`AppShellLabels`_, _`CalculatorLabels`_, _`ChartTooltipPlacement`_, _`ComboboxLabels`_, _`CommonLabels`_, _`CurrencyLabels`_, _`DatePickerLabels`_, _`FileLabels`_, _`KitDateFormatContext`_, _`KitDateFormatter`_, _`KitLinkComponent`_, _`KitLinkProps`_, _`LabelOverride`_, _`MultiSelectLabels`_, _`PickerSheetLabels`_, _`SwipeableRowLabels`_, _`TopBarLabels`_, _`UiKitLabelOverrides`_, _`UiKitLabels`_, _`UiKitProviderProps`_ |
+| `i18n/kit-labels` | `DEFAULT_APP_SHELL_LABELS`, `DEFAULT_CALCULATOR_LABELS`, `DEFAULT_COMBOBOX_LABELS`, `DEFAULT_COMMON_LABELS`, `DEFAULT_CURRENCY_LABELS`, `DEFAULT_DATE_PICKER_LABELS`, `DEFAULT_FILE_LABELS`, `DEFAULT_MULTI_SELECT_LABELS`, `DEFAULT_PICKER_SHEET_LABELS`, `DEFAULT_SWIPEABLE_ROW_LABELS`, `DEFAULT_TOP_BAR_LABELS`, `formatFileSize`, `missingKitLabels`, `UiKitProvider`, `useKitChartTooltipPlacement`, `useKitDateFormatter`, `useKitDocumentTitle`, `useKitFileLabels`, `useKitLabelOverrides`, `useKitLabels`, `useKitLink`, `useKitLocale`, `useKitTableStorage`, `useKitTableStorageKeyPrefix`, `useKitTimeZone`, `useKitWeekStart`, _`AppShellLabels`_, _`CalculatorLabels`_, _`ChartTooltipPlacement`_, _`ComboboxLabels`_, _`CommonLabels`_, _`CurrencyLabels`_, _`DatePickerLabels`_, _`FileLabels`_, _`KitDateFormatContext`_, _`KitDateFormatter`_, _`KitLinkComponent`_, _`KitLinkProps`_, _`LabelOverride`_, _`MultiSelectLabels`_, _`PickerSheetLabels`_, _`SwipeableRowLabels`_, _`TopBarLabels`_, _`UiKitLabelOverrides`_, _`UiKitLabels`_, _`UiKitProviderProps`_ |
 | `i18n/defaults` | `DEFAULT_UI_KIT_LABELS` |
 | `i18n/review` | `kitLabelStrings`, _`KitLabelStringsOptions`_ |
 | `i18n/languages` | `formatLocaleOf`, `KIT_LANGUAGES`, `languageOptions`, `loadUiKitLabels`, `peekUiKitLabels`, `resolveLanguage`, `useUiKitLabels`, _`KitLanguage`_, _`KitLanguageCode`_ |
@@ -1078,7 +1078,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `notifications/notification-inbox` | `INBOX_BADGE_INTERVAL`, `NotificationInbox`, _`NotificationInboxAction`_, _`NotificationInboxItem`_, _`NotificationInboxProps`_ |
 | `notifications/notification-bell` | `NotificationBell`, _`NotificationBellProps`_ |
 | `notifications/device-zone-report` | `deviceTimeZone`, `useDeviceZoneReport`, _`DeviceZoneReportOptions`_ |
-| `notifications/use-push-device` | `notifyPushSubscriptionChanged`, `PUSH_SUBSCRIPTION_CHANGED`, `PushDeviceError`, `pushSupported`, `releaseThisDevicePush`, `usePushDevice`, _`PushDevice`_, _`PushDeviceErrorCode`_, _`PushPermission`_, _`PushSubscriptionInput`_, _`UsePushDeviceOptions`_ |
+| `notifications/use-push-device` | `dropPushSubscription`, `notifyPushSubscriptionChanged`, `PUSH_SUBSCRIPTION_CHANGED`, `PushDeviceError`, `pushSupported`, `releaseThisDevicePush`, `usePushDevice`, _`PushDevice`_, _`PushDeviceErrorCode`_, _`PushPermission`_, _`PushSubscriptionInput`_, _`UsePushDeviceOptions`_ |
 | `notifications/push-worker` | `handlePushSubscriptionChange`, `pushSubscriptionInput`, `resubscribeAfterChange`, _`PushReplaceInput`_, _`PushResubscribeOutcome`_, _`PushSubscriptionChangeEventLike`_, _`PushSubscriptionChangeOptions`_, _`PushWorkerScope`_ |
 | `notifications/push-device-setting` | `PushDeviceSetting`, _`PushDeviceAction`_, _`PushDeviceSettingProps`_ |
 | `notifications/push-devices-setting` | `PushDevicesSetting`, _`PushDevicesSettingProps`_ |
@@ -1152,6 +1152,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `offline/pwa-update-prompt` | `DEFAULT_PWA_UPDATE_PROMPT_LABELS`, `PwaUpdatePrompt`, _`PwaUpdatePromptLabels`_, _`PwaUpdatePromptProps`_ |
 | `offline/service-worker-updates` | `createServiceWorkerUpdates`, `useServiceWorkerUpdate`, _`RegisterServiceWorker`_, _`ServiceWorkerUpdates`_ |
 | `offline/shared-computer` | `DEFAULT_SHARED_COMPUTER_LABELS`, `isSharedComputer`, `setSharedComputer`, `SharedComputerChoice`, _`SharedComputerChoiceProps`_, _`SharedComputerLabels`_, _`SharedComputerStorage`_ |
+| `offline/shared-computer-idle` | `useSharedComputerIdleSignOut`, _`SharedComputerIdleSignOutOptions`_ |
 | `offline/local-first` | `isOfflineError`, `readLocalFirst`, `stampAfter`, `uuid5`, `writeLocalFirst` |
 | `offline/feedback-comments-query` | `feedbackCommentsQueryKey`, `useFeedbackCommentsQuery`, _`UseFeedbackCommentsQueryOptions`_ |
 

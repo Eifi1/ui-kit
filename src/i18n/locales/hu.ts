@@ -751,7 +751,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       zoomWindow: "Látható tartomány",
       zoomWindowRange: (from, to) => `${from} – ${to}`,
       zoomHint:
-        "Húzással nagyíthat: a nagyjából négyzetes kijelölés mindkét tengelyt nagyítja, a hosszú, keskeny csak a saját tengelyét. Érintőképernyőn egy ujjal leolvashatja az értékeket, két ujjal nagyíthat és mozgathat. A „Vissza” egy nagyítási lépést visszavon; dupla kattintás vagy a „Nagyítás visszaállítása” ismét a teljes tartományt mutatja.",
+        "Húzással nagyíthat: a nagyjából négyzetes kijelölés mindkét tengelyt nagyítja, a hosszú, keskeny csak a saját tengelyét. Érintőképernyőn egy ujjal leolvashatja az értékeket, két ujjal nagyíthat és mozgathat. Ha érintőpadon két ujjal csippentve vagy egérrel a Ctrl billentyűt lenyomva tartva görgetéssel szeretne nagyítani, előbb kattintson a diagramra. A „Vissza” egy nagyítási lépést visszavon; dupla kattintás vagy a „Nagyítás visszaállítása” ismét a teljes tartományt mutatja.",
       empty: "Nincs adat",
       legend: "Adatsorok",
       points: "Diagramértékek",
@@ -1012,9 +1012,9 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
             // 0.61 (Marcel 2026-11-12): the persisted cache and the shared-computer flag, for an app's entries.
             standardEntries: {
               recentData: (hours) =>
-                `A nemrég betöltött adatok, hogy az oldalak kapcsolat nélkül is megnyíljanak; ami ${hours} óránál régebbi, azt az alkalmazás már nem használja, és a következő megnyitáskor törli. Semmi sem marad meg belőle, ha az „Ez egy közös használatú számítógép” beállítással jelentkezik be.`,
+                `A nemrég betöltött adatok, hogy az oldalak kapcsolat nélkül is megnyíljanak; ami ${hours} óránál régebbi, azt az alkalmazás már nem használja, és a következő megnyitáskor törli. Semmi sem marad meg belőle, ha az „Ez egy közös használatú számítógép” beállítással jelentkezik be`,
               sharedComputer:
-                "Hogy bejelentkezéskor az „Ez egy közös használatú számítógép” lehetőséget választotta-e, amíg az a munkamenet tart.",
+                "Hogy bejelentkezéskor az „Ez egy közös használatú számítógép” lehetőséget választotta-e, a lappal együtt tárolva",
             },
           },
           rights: {
@@ -1289,6 +1289,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       off: "Az értesítések ki vannak kapcsolva ezen az eszközön.",
       otherAccount:
         "Ez a böngésző egy másik fiók értesítéseit kapja. Kapcsolja be itt, hogy a bejelentkezett fiók értesítéseit kapja.",
+      sharedComputer:
+        "Közös használatú számítógépen nem érhető el: ez a böngésző az Ön távozása után is megkapná az értesítéseit.",
       enable: "Értesítések bekapcsolása",
       disable: "Kikapcsolás",
       sendTest: "Teszt küldése",
@@ -2092,6 +2094,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
     sharedComputer: {
       label: "Ez egy közös használatú számítógép",
       hint: "Az adatairól nem marad másolat ezen az eszközön. Az oldalak így csak kapcsolattal nyílnak meg.",
+      idleWarning: "Egy ideje nem történt itt semmi. Egy perc múlva kijelentkezik.",
+      staySignedIn: "Bejelentkezve maradok",
     },
     // 0.55 — docs/top-bar-harmonization.md §2.6.1: keksdose's words (sync.held_*,
     // sync.discard_held_*, sync.switch_back_held) without its budgets. A count takes the

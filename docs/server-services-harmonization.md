@@ -87,6 +87,10 @@ is the first service with a router factory.
 | The inbox's 403 | "Insufficient role" (`require_role`, `infrastructure/dependencies.py:503-510`, the raise at `:507`) | "User roles [...] are not authorized for this action" (`infrastructure/dependencies.py:341-355`) | "Insufficient role" (`infrastructure/dependencies.py:39-53`) | 2.8 |
 | Ties in a list | `created_at` | `created_at`, then `id` | `created_at` | 2.4 |
 
+The KS column is the survey's. Since 2026-11-12 (Marcel) its reports, replies and comments
+are plain text (its migration 0059), and its attachments leave the database for an object
+store, plain, as keksdose's (server-kit 0.26's `objects`).
+
 **Two layers named 2.** The README's "Layer 2 — the read-only database transaction — is a
 recipe, not kit code (§6.3)" is the demo's second layer (landing-demo §6.3): kastlan's
 `SET TRANSACTION READ ONLY` for a demo's reads. It is unrelated to the kit's layer 2 and
@@ -812,7 +816,8 @@ async def check_round_trip(client: Any, *, policy: AttachmentUrlPolicy,
 
 Its SQLAlchemy models and migrations (**no schema change** in any app), its RLS and
 company scoping (ka), the adapters, its guards, its extensions (kk's support door, KS's
-claim, visibility, encryption and sweep; kastlan dropped its counts and `GET /feedback/{id}`
+claim, visibility and sweep, and its encryption until its migration 0059 and the move of
+its files to an object store; kastlan dropped its counts and `GET /feedback/{id}`
 in its kit-reuse round, 2026-11-02), the
 outcome loop tools (kk `scripts/feedback-live-*.sh`, KS `feedback_loop.py`), its file
 deletion after an erasure (2.15), and the account export's feedback.
