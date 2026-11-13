@@ -91,6 +91,49 @@ describe("the bearer", () => {
     expect(client.currentToken()).toBe("a1");
   });
 
+  it("goes only to the app's own API: never to another host, nor beside the base URL", async () => {
+    stored("a1");
+    const { http } = track(setup({ valid: ["a1"], baseURL: "https://api.example/v1" }));
+    for (const url of ["/me", "https://api.example/v1/me", "https://API.example/v1/me?x=1"]) {
+      await http.get(url);
+    }
+    for (const url of [
+      "https://maps.example/tiles/1",
+      "https://api.example/v2/me",
+      "https://api.example/v1x",
+      "//cdn.example/a",
+    ]) {
+      await settle(http.get(url));
+    }
+    expect(http.sent.map((c) => [c.url, c.bearer])).toEqual([
+      ["/me", "Bearer a1"],
+      ["https://api.example/v1/me", "Bearer a1"],
+      ["https://API.example/v1/me?x=1", "Bearer a1"],
+      ["https://maps.example/tiles/1", null],
+      ["https://api.example/v2/me", null],
+      ["https://api.example/v1x", null],
+      ["//cdn.example/a", null],
+    ]);
+  });
+
+  it("reads a relative base URL against the page, so a same-origin absolute URL under it is the API's", async () => {
+    stored("a1");
+    const { http } = track(setup({ valid: ["a1"] }));
+    await http.get(`${window.location.origin}/api/v1/me`);
+    await settle(http.get(`${window.location.origin}/other/me`));
+    expect(http.sent.map((c) => c.bearer)).toEqual(["Bearer a1", null]);
+  });
+
+  it("never refreshes for another host's 401, nor replays the token to it", async () => {
+    stored("a1");
+    const { http, fetch, onSessionEnded } = track(setup({ valid: ["a1"] }));
+    const r = await settle(http.get("https://maps.example/tiles/1"));
+    expect(r.ok).toBe(false);
+    expect(fetch).not.toHaveBeenCalled();
+    expect(onSessionEnded).not.toHaveBeenCalled();
+    expect(http.sent.map((c) => c.bearer)).toEqual([null]);
+  });
+
   it("shows the stored session in the store from the start", () => {
     stored("a1");
     const { client } = track(setup());

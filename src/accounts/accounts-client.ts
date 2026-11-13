@@ -11,6 +11,7 @@ import {
   attachSessionRefresh,
   authorize,
   createSessionRefresh,
+  isSignedOutStep,
   markUnanswered,
   watchSessionElsewhere,
   type SessionRenewal,
@@ -30,7 +31,8 @@ import { sessionKey } from "./storage-entries";
  * 2026-11-13: no `shared_device`, a sign-out that ended no server session).
  *
  * What it does, against server-kit's `auth_router` (0.29):
- *  - **the bearer** from the stored session on every request (a request interceptor);
+ *  - **the bearer** from the stored session on every request to the app's own API (a
+ *    request interceptor), never to another host the same instance calls;
  *  - **the refresh**, the kit's flight (`createSessionRefresh` / `attachSessionRefresh`, §11):
  *    one per tab, retried only where waiting helps, never written back over a session that
  *    changed. Its call is a bare `fetch` to `POST /auth/refresh`, never the instance: the
@@ -61,6 +63,8 @@ import { sessionKey } from "./storage-entries";
 interface AccountsAxiosConfig extends ServerWakeAxiosConfig {
   /** axios's `AxiosHeaders` (written through its `set`), or a plain record. */
   headers?: unknown;
+  /** The request's own base URL, axios's default merged in. */
+  baseURL?: string;
 }
 
 /** One request the client sends on the app's instance itself. `timeout` is axios's. */
@@ -160,8 +164,9 @@ export interface AccountsClientOptions<U extends AccountUser = AccountUser> {
   /** Where a private page goes when another tab signed in as another account: that page was
    *  the last account's. Default `"/"`. */
   homePath?: string;
-  /** Where `/auth/refresh` is: the API's base URL. Default `http.defaults.baseURL`, as
-   *  axios's other requests go. */
+  /** The API's base URL: the bearer goes only to URLs under it (a relative URL, or an
+   *  absolute one on its origin and path), and `/auth/refresh` is under it. Default
+   *  `http.defaults.baseURL`, as axios's other requests go. */
   baseURL?: string;
   /** Where a sign-in with "This is a shared computer" is kept: `"tab"` (the default) or the
    *  stricter `"memory"` (§2.14). */
@@ -264,6 +269,24 @@ export interface AccountsClient<U extends AccountUser = AccountUser> {
 /** axios's `combineURLs`: one slash between the base and the path. */
 const joinUrl = (base: string, path: string) => `${base.replace(/\/+$/, "")}/${path.replace(/^\/+/, "")}`;
 
+/** axios's `isAbsoluteURL`: a scheme, or protocol-relative. axios sends it past `baseURL`. */
+const isAbsoluteUrl = (url: string) => /^([a-z][a-z\d+.-]*:)?\/\//i.test(url);
+
+/** Whether `url` lies under `base`, both read against the page as the browser reads them:
+ *  the same origin, and the base's path a whole segment of the URL's (`/v1` is not `/v1x`). */
+function liesUnder(url: string, base: string): boolean {
+  const page = typeof window !== "undefined" ? window.location.href : "http://localhost/";
+  try {
+    const target = new URL(url, page);
+    const root = new URL(base || "/", page);
+    const prefix = root.pathname.endsWith("/") ? root.pathname : `${root.pathname}/`;
+    return target.origin === root.origin && `${target.pathname}/`.startsWith(prefix);
+  } catch {
+    // A URL the parser refuses is no URL of the API's.
+    return false;
+  }
+}
+
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null;
 
 /** @internal Whether an answer is a session (`TokenResponse`), not a challenge. */
@@ -358,13 +381,19 @@ export function createAccountsClient<U extends AccountUser = AccountUser>(
       http.request({ method: "post", url: "/notifications/devices/unregister", data: { endpoint } }));
 
   // ── The bearer ──────────────────────────────────────────────────────────────
+  // Only to the app's own API: the instance may also call another host (a map's tiles, a
+  // payment provider), and a token stamped on every request would have gone there too. A
+  // relative URL goes to the request's base URL; an absolute one must lie under the API's.
+  const apiBase = options.baseURL ?? http.defaults?.baseURL ?? "";
+  const forApi = (url: string, base?: string) =>
+    liesUnder(isAbsoluteUrl(url) ? url : joinUrl(base ?? apiBase, url), apiBase);
   // Read from the storage at each request, where the refresh's stamp reads it: another
   // tab's renewal is sent at once, and a request is never stamped with one token and sent
   // with another.
   const bearer = http.interceptors.request.use(
     (config) => {
       const token = store.token();
-      if (token) authorize(config, token);
+      if (token && forApi(config.url ?? "", config.baseURL)) authorize(config, token);
       return config;
     },
     (error) => Promise.reject(error),
@@ -405,6 +434,9 @@ export function createAccountsClient<U extends AccountUser = AccountUser>(
       store.keep({ token, refreshToken: refreshToken ?? store.read()?.refreshToken ?? null, user }),
     currentToken: () => store.token(),
     isDemo,
+    // Another host's 401 is about that host, never this session: it refreshes nothing and is
+    // never replayed, so the renewed token cannot go out to it either.
+    isSignedOutStep: (url) => !forApi(url) || isSignedOutStep(url),
     onEnded: ({ demo }) => {
       // The sign-out's own revoke found the session over: the sign-out ends it, once.
       if (signingOut) return;
