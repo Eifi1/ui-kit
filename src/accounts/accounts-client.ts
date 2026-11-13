@@ -15,6 +15,7 @@ import {
   watchSessionElsewhere,
   type SessionRenewal,
 } from "../lib/session-refresh";
+import { dropPushSubscription } from "../notifications/use-push-device";
 import { isSharedComputer } from "../offline/shared-computer";
 import { createSessionStore, type AccountSession, type AccountUser, type SharedSessionPlace } from "./session-store";
 import type { StoredSession } from "./session-store";
@@ -42,6 +43,9 @@ import { sessionKey } from "./storage-entries";
  *    sign-up, the passkey finish — each answering the kit's `SignInAnswer`, so `SignInForm`
  *    and `RegisterForm` take them as they are; the three that start one from the form send
  *    `shared_device` (server-kit 0.27), which no app sent before;
+ *  - **one sign-out in the contract's order** (§6.3): this device's push, then the session on
+ *    the server, both while the token still holds, then the tokens — and a request that
+ *    fails or hangs still signs out here;
  *  - **a session that ends without this tab signing out** — the renewal refused, a demo's
  *    401, a sign-out or another account's sign-in in another tab (`watchSessionElsewhere`) —
  *    drops what this tab holds, tells the app (`onSessionEnded`), and leaves a page that
@@ -170,6 +174,13 @@ export interface AccountsClientOptions<U extends AccountUser = AccountUser> {
    */
   onSessionEnded?: (end: AccountSessionEnd<U>) => void;
   /**
+   * Tell the server this browser's push subscription goes, at a sign-out (§6.3 step 1).
+   * Default `POST /notifications/devices/unregister {endpoint}` on `http` (notifications
+   * §3.8). Asked only where this browser holds a subscription, so an app without push sends
+   * nothing.
+   */
+  unregisterPush?: (endpoint: string) => Promise<unknown>;
+  /**
    * The demo (docs/landing-demo-harmonization.md §5.5), off unless given: an `is_demo`
    * account's 401 then ends the demo at `endedPath` (default `"/demo/ended"`) with no
    * refresh tried, as every end of a demo does.
@@ -230,6 +241,22 @@ export interface AccountsClient<U extends AccountUser = AccountUser> {
   /** A newer copy of the account (`GET /auth/me`, `PATCH /auth/me`), kept beside the tokens.
    *  Nothing while signed out. */
   setUser(user: U): void;
+  /**
+   * Sign out (§6.3, §2.15, §2.16), in this order, while the token still holds:
+   *  1. this device's push goes (`dropPushSubscription(unregisterPush)`), which never rejects;
+   *  2. `DELETE /auth/sessions/current` ends this session on the server (not `POST
+   *     /auth/logout`, which ends every session); an access token that ran out is renewed
+   *     for it first, by the refresh;
+   *  3. the tokens go, wherever they were kept; `onSessionEnded({ reason: "signed-out" })`;
+   *     the sign-in page (a demo's: its end page), with a full load.
+   *
+   * A request that fails — refused, offline, a session the server had already ended — still
+   * signs out here, and each is given 15 s: the server's own limits end a session it never
+   * heard was given up (a shared computer's within 15 minutes). Never rejects but for the
+   * app's own `onSessionEnded` throwing. A second call while one runs joins it. A plain
+   * function, so `useSharedComputerIdleSignOut({ onSignOut: client.signOut })` takes it.
+   */
+  signOut(): Promise<void>;
   /** Eject the interceptors and stop watching other tabs: for a test, or a hot reload. */
   detach(): void;
 }
@@ -244,6 +271,30 @@ export function isTokens<U extends AccountUser>(value: unknown): value is Accoun
   if (!isRecord(value) || typeof value.access_token !== "string" || value.access_token === "") return false;
   const { user } = value;
   return isRecord(user) && (typeof user.id === "number" || typeof user.id === "string");
+}
+
+/** How long each request of a sign-out is given, then it goes on without it: the 15 s the
+ *  refresh gives an attempt and the push helpers give the browser (§11.2 decision 5). A press
+ *  on "Sign out" is never left hanging on a stalled network or a server waking up. */
+const SIGN_OUT_STEP_MS = 15_000;
+
+/** `work`, settled or not after `ms`: resolves either way, and never rejects. */
+async function within(work: () => Promise<unknown>, ms: number): Promise<void> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const cut = new Promise<void>((resolve) => {
+    timer = setTimeout(resolve, ms);
+  });
+  const done = Promise.resolve()
+    .then(work)
+    .then(
+      () => undefined,
+      () => undefined,
+    );
+  try {
+    await Promise.race([done, cut]);
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /** A renewal as the client's `store` writes it. */
@@ -299,6 +350,13 @@ export function createAccountsClient<U extends AccountUser = AccountUser>(
     }
   };
 
+  /** The sign-out under way: a second press joins it, and the refresh's end defers to it. */
+  let signingOut: Promise<void> | null = null;
+  const unregisterPush =
+    options.unregisterPush ??
+    ((endpoint: string) =>
+      http.request({ method: "post", url: "/notifications/devices/unregister", data: { endpoint } }));
+
   // ── The bearer ──────────────────────────────────────────────────────────────
   // Read from the storage at each request, where the refresh's stamp reads it: another
   // tab's renewal is sent at once, and a request is never stamped with one token and sent
@@ -348,6 +406,8 @@ export function createAccountsClient<U extends AccountUser = AccountUser>(
     currentToken: () => store.token(),
     isDemo,
     onEnded: ({ demo }) => {
+      // The sign-out's own revoke found the session over: the sign-out ends it, once.
+      if (signingOut) return;
       const { token, user } = useSession.getState();
       // A 401 in a tab that holds no session (`not_signed_in` on a public page): nothing ends.
       if (token === null && store.read() === null) return;
@@ -462,6 +522,27 @@ export function createAccountsClient<U extends AccountUser = AccountUser>(
       else begin(answer);
     },
     setUser: (user) => store.setUser(user),
+    signOut() {
+      signingOut ??= (async () => {
+        const user = store.read()?.user ?? useSession.getState().user;
+        const demo = options.demo !== undefined && isDemoSession(user);
+        // Both requests need the token; with none, there is nothing to tell the server.
+        if (store.token() !== null) {
+          await within(() => dropPushSubscription(unregisterPush), SIGN_OUT_STEP_MS);
+          if (store.token() !== null) {
+            await within(
+              () => http.request({ method: "delete", url: "/auth/sessions/current", timeout: SIGN_OUT_STEP_MS }),
+              SIGN_OUT_STEP_MS,
+            );
+          }
+        }
+        store.drop();
+        ended({ reason: "signed-out", user, demo }, demo ? (options.demo?.endedPath ?? "/demo/ended") : signInPath);
+      })().finally(() => {
+        signingOut = null;
+      });
+      return signingOut;
+    },
     detach() {
       http.interceptors.request.eject(bearer);
       detachRefresh();
