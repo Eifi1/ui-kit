@@ -294,6 +294,33 @@ describe("AccountUserRosterSection", () => {
     );
   });
 
+  it("resets another account's second factor, acknowledged, where the app offers it (server-kit 0.32)", async () => {
+    const { calls, user } = mount(<AccountUserRosterSection roles={roles} twoFactorReset />, {
+      "get /admin/users": () =>
+        page([person(1, "Ada", { role: "ADMIN", totp_enabled: true }), person(7, "Ben", { totp_enabled: true })], {
+          levels: { two_factor_reset: "acknowledge" },
+        }),
+      "post /admin/users/7/two-factor-reset": () => ({ status: 200, data: person(7, "Ben", { totp_enabled: false }) }),
+    });
+    await user.click((await screen.findAllByRole("button", { name: "Actions for Ada Example" }))[0]);
+    let menu = await screen.findByRole("dialog", { name: "Actions for Ada Example" });
+    expect(within(menu).queryByRole("button", { name: "Reset two-factor sign-in" })).toBeNull();
+    await user.keyboard("{Escape}");
+    await user.click(screen.getAllByRole("button", { name: "Actions for Ben Example" })[0]);
+    menu = await screen.findByRole("dialog", { name: "Actions for Ben Example" });
+    await user.click(within(menu).getByRole("button", { name: "Reset two-factor sign-in" }));
+    const dialog = await screen.findByRole("alertdialog", { name: "Reset two-factor sign-in for Ben Example?" });
+    expect(within(dialog).getByText(/is told by email/)).toBeInTheDocument();
+    await user.click(within(dialog).getByRole("checkbox"));
+    await user.click(within(dialog).getByRole("button", { name: "Reset two-factor sign-in" }));
+    await waitFor(() =>
+      expect(calls.find((c) => c.route === "post /admin/users/7/two-factor-reset")?.data).toEqual({
+        acknowledged: true,
+        confirm_email: undefined,
+      }),
+    );
+  });
+
   it("says a mistyped address in the dialog's own words (Kurvenschmiede's U1)", async () => {
     mount(<AccountUserRosterSection roles={roles} />, {
       "get /admin/users": () => page([person(1, "Ada", { role: "ADMIN" }), person(7, "Ben")]),

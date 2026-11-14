@@ -300,6 +300,16 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
           "L’authentification à deux facteurs change votre façon de vous connecter. Pour la configurer, il faut donc d’abord le mot de passe de votre compte. Vous scannez ensuite un code avec votre application d’authentification.",
         turnedOn: "Authentification à deux facteurs activée.",
         turnedOff: "Authentification à deux facteurs désactivée.",
+        // 0.64: the backup codes, shown once, and how many are left.
+        backupTitle: "Codes de secours",
+        backupHint:
+          "Chaque code permet de se connecter une fois à la place du code de l’application d’authentification. Conservez-les en lieu sûr\u00a0: ils ne s’affichent que maintenant.",
+        backupLeft: (count) => (count === 1 ? "Il reste 1 code de secours." : `Il reste ${count} codes de secours.`),
+        backupRenew: "Créer de nouveaux codes de secours",
+        backupRenewHint: "Les nouveaux codes remplacent les anciens, qui cessent aussitôt de fonctionner.",
+        backupCopy: "Copier les codes",
+        backupDownload: "Télécharger",
+        backupDone: "Je les ai enregistrés",
       },
       passkeys: {
         title: "Clés d’accès",
@@ -1508,6 +1518,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         role: "Rôle modifié",
         password_change_require: "Nouveau mot de passe exigé",
         password_change_withdraw: "Exigence de mot de passe retirée",
+        two_factor_reset: "Connexion à deux facteurs réinitialisée",
         mail_verification: "E-mail de confirmation envoyé",
         mail_reset: "E-mail de réinitialisation du mot de passe envoyé",
         reviewer: "Périmètre de relecture modifié",
@@ -2274,6 +2285,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         two_factor_unavailable:
           "La connexion à deux facteurs est indisponible sur ce serveur pour le moment. Votre application d’authentification fonctionne. Veuillez réessayer plus tard.",
         two_factor_not_pending: "Aucune configuration n’attend de code. Recommencez la configuration.",
+        two_factor_not_enabled: "La connexion à deux facteurs est désactivée pour ce compte. Configurez-la d’abord.",
       },
       offline: "Impossible de joindre le serveur. Vérifiez votre connexion et réessayez.",
       timeout: "Le serveur a mis trop de temps à répondre. Veuillez réessayer.",
@@ -2312,6 +2324,12 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       roleToAdminBody:
         "Avec les droits d’administrateur, le compte peut gérer tous les comptes et les réglages de l’application, aussitôt, dès sa prochaine requête.",
       roleFromAdminBody: "Le compte perd ses droits d’administrateur aussitôt, dès sa prochaine requête.",
+      // 0.64: an administrator's reset of another account's second factor.
+      resetTwoFactor: "Réinitialiser la connexion à deux facteurs",
+      resetTwoFactorTitle: (name) => `Réinitialiser la connexion à deux facteurs de ${name}\u202f?`,
+      resetTwoFactorBody:
+        "Le compte se connectera ensuite avec son seul mot de passe ou une clé d’accès et en sera informé par e-mail. Il pourra la configurer à nouveau.",
+      twoFactorReset: (email) => `La connexion à deux facteurs de ${email} est réinitialisée.`,
       roleChanged: (email, role) => `${email} a désormais le rôle «\u202f${role}\u202f».`,
       deactivate: "Désactiver",
       deactivateTitle: (name) => `Désactiver ${name}\u202f?`,

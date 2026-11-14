@@ -53,6 +53,7 @@ export const DEFAULT_ACCOUNT_FAILURE_LABELS: AccountFailureLabels = {
     two_factor_unavailable:
       "Two-factor sign-in is unavailable on this server right now. Your authenticator app is fine. Please try again later.",
     two_factor_not_pending: "No setup is waiting for a code. Start the setup again.",
+    two_factor_not_enabled: "Two-factor sign-in is off for this account. Set it up first.",
   },
   offline: "Can’t reach the server. Check your connection and try again.",
   timeout: "The server took too long to answer. Please try again.",

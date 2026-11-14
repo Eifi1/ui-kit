@@ -146,6 +146,23 @@ describe("the sign-in page", () => {
     expect(calls[1]).toEqual({ route: "post /auth/login/2fa", data: { challenge_token: "c1", code: "123456" } });
   });
 
+  it("takes a backup code in the code's place (server-kit 0.32)", async () => {
+    const { calls, user } = mount("/login", {
+      "post /auth/login": () => ({ status: 200, data: { requires_2fa: true, challenge_token: "c1" } }),
+      "post /auth/login/2fa": () => ({ status: 200, data: tokens("a1", "r1", ada) }),
+    });
+    await fill(user, screen.getByLabelText("Email"), "ada@example.com");
+    await fill(user, screen.getByLabelText("Password"), "pw");
+    await user.click(screen.getByRole("button", { name: "Sign in" }));
+    await user.click(await screen.findByRole("button", { name: "Use a backup code" }));
+    await user.type(screen.getByLabelText("Backup code"), "ABCD-EFGH-JKLM-NPQR{Enter}");
+    await screen.findByText("Home");
+    expect(calls[1]).toEqual({
+      route: "post /auth/login/2fa",
+      data: { challenge_token: "c1", code: "ABCD-EFGH-JKLM-NPQR" },
+    });
+  });
+
   it("says a wrong code in the form's words, and an unreadable second factor in the account words", async () => {
     let answer: () => Answer = () => ({ status: 400, data: { code: "two_factor_invalid" } });
     const { user } = mount("/login", {

@@ -176,21 +176,38 @@ export function usePasskeys() {
 }
 
 /**
- * The second factor (0.64, server-kit 0.32): `setup` (the password; the answer is the pending
- * secret), `enable` (a code from it) and `disable` (the password and a live code). The two
- * that change the account read `/auth/me` again, so `totp_enabled` shows.
+ * The second factor (0.64, server-kit 0.32): `status` (on or off, the backup codes left),
+ * `setup` (the password; the answer is the pending secret), `enable` (a code from it; the
+ * answer is the backup codes, once), `disable` (the password and a live code) and `renew` (the
+ * password; a new set of backup codes). Each that changes the account reads `/auth/me` and the
+ * status again, so `totp_enabled` and the count show. `{ enabled: false }` holds the status.
  */
-export function useTwoFactor() {
+export function useTwoFactor(options: { enabled?: boolean } = {}) {
   const client = useAccountsClient();
   const queryClient = useQueryClient();
-  const refresh = () => queryClient.invalidateQueries({ queryKey: accountQueryKeys.me });
+  const signedIn = useSignedIn();
+  const refresh = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: accountQueryKeys.me }),
+      queryClient.invalidateQueries({ queryKey: accountQueryKeys.twoFactor }),
+    ]);
+  // 0.64 (server-kit 0.32): on or off, and the backup codes left.
+  const status = useQuery({
+    queryKey: accountQueryKeys.twoFactor,
+    queryFn: () => client.api.twoFactorStatus(),
+    enabled: signedIn && options.enabled !== false,
+  });
   const setup = useMutation({ mutationFn: (password: string) => client.api.twoFactorSetup(password) });
   const enable = useMutation({ mutationFn: (code: string) => client.api.enableTwoFactor(code), onSuccess: refresh });
   const disable = useMutation({
     mutationFn: (body: { password: string; code: string }) => client.api.disableTwoFactor(body),
     onSuccess: refresh,
   });
-  return { setup, enable, disable };
+  const renew = useMutation({
+    mutationFn: (password: string) => client.api.renewBackupCodes(password),
+    onSuccess: refresh,
+  });
+  return { status, setup, enable, disable, renew };
 }
 
 /** `GET /auth/me/export`, the account's data as one JSON file (user-admin §6.5), for
@@ -295,6 +312,10 @@ export function useAdminUserActions() {
     setReviewer: useMutation({
       mutationFn: ({ id, ...body }: { id: number; locales: string[]; areas: string[] | null }) =>
         client.api.setReviewer(id, body),
+      ...done,
+    }),
+    resetTwoFactor: useMutation({
+      mutationFn: ({ id, ...body }: Confirmed) => client.api.resetTwoFactor(id, body),
       ...done,
     }),
     erase: useMutation({

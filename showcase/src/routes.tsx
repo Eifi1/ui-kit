@@ -2200,6 +2200,7 @@ export const GROUPS: ShowcaseGroup[] = [
           "auth.jobs",
           "auth.jwt_signer",
           "auth.bcrypt_hasher",
+          "auth.seal",
         ],
       }),
       serverPage({

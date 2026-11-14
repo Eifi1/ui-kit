@@ -21,6 +21,7 @@ export const DEFAULT_ADMIN_ACTION_LOG_LABELS: AdminActionLogLabels = {
     role: "Role changed",
     password_change_require: "New password required",
     password_change_withdraw: "Password requirement withdrawn",
+    two_factor_reset: "Two-factor sign-in reset",
     mail_verification: "Verification mail sent",
     mail_reset: "Password reset mail sent",
     reviewer: "Reviewer scope changed",

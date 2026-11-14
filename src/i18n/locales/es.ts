@@ -296,6 +296,16 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
           "La verificación en dos pasos cambia cómo inicia sesión, por eso configurarla pide primero la contraseña de su cuenta. Después escaneará un código con su app de autenticación.",
         turnedOn: "Verificación en dos pasos activada.",
         turnedOff: "Verificación en dos pasos desactivada.",
+        // 0.64: the backup codes, shown once, and how many are left.
+        backupTitle: "Códigos de respaldo",
+        backupHint:
+          "Cada código permite iniciar sesión una vez en lugar del código de la app de autenticación. Guárdelos en un lugar seguro: solo se muestran ahora.",
+        backupLeft: (count) => (count === 1 ? "Queda 1 código de respaldo." : `Quedan ${count} códigos de respaldo.`),
+        backupRenew: "Crear nuevos códigos de respaldo",
+        backupRenewHint: "Los nuevos códigos sustituyen a los anteriores, que dejan de funcionar de inmediato.",
+        backupCopy: "Copiar los códigos",
+        backupDownload: "Descargar",
+        backupDone: "Ya los he guardado",
       },
       passkeys: {
         title: "Llaves de acceso",
@@ -1480,6 +1490,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         role: "Rol cambiado",
         password_change_require: "Nueva contraseña exigida",
         password_change_withdraw: "Exigencia de contraseña retirada",
+        two_factor_reset: "Verificación en dos pasos restablecida",
         mail_verification: "Correo de confirmación enviado",
         mail_reset: "Correo de restablecimiento de contraseña enviado",
         reviewer: "Ámbito de revisión cambiado",
@@ -2231,6 +2242,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         two_factor_unavailable:
           "El inicio de sesión en dos pasos no está disponible en este servidor ahora mismo. Su app de autenticación funciona bien. Vuelva a intentarlo más tarde.",
         two_factor_not_pending: "Ninguna configuración espera un código. Vuelva a iniciar la configuración.",
+        two_factor_not_enabled: "La verificación en dos pasos está desactivada para esta cuenta. Configúrela primero.",
       },
       offline: "No se puede conectar con el servidor. Compruebe su conexión e inténtelo de nuevo.",
       timeout: "El servidor ha tardado demasiado en responder. Inténtelo de nuevo.",
@@ -2269,6 +2281,12 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       roleToAdminBody:
         "Con derechos de administrador, la cuenta puede gestionar todas las cuentas y la configuración de la aplicación, de inmediato, desde su próxima solicitud.",
       roleFromAdminBody: "La cuenta pierde sus derechos de administrador de inmediato, desde su próxima solicitud.",
+      // 0.64: an administrator's reset of another account's second factor.
+      resetTwoFactor: "Restablecer la verificación en dos pasos",
+      resetTwoFactorTitle: (name) => `¿Restablecer la verificación en dos pasos de ${name}?`,
+      resetTwoFactorBody:
+        "La cuenta iniciará sesión solo con su contraseña o una clave de acceso y recibirá un correo. Podrá configurarla de nuevo.",
+      twoFactorReset: (email) => `Se ha restablecido la verificación en dos pasos de ${email}.`,
       roleChanged: (email, role) => `${email} tiene ahora el rol «${role}».`,
       deactivate: "Desactivar",
       deactivateTitle: (name) => `¿Desactivar a ${name}?`,

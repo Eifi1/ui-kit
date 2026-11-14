@@ -76,7 +76,9 @@ export type AdminActionKind =
   // 0.45 (admin §9.1.3): a group switched off or on again — kastlan's company PATCH
   // (`is_active`). server-kit 0.15's `AdminAction.GROUP_DEACTIVATE` / `GROUP_REACTIVATE`.
   | "group_deactivate"
-  | "group_reactivate";
+  | "group_reactivate"
+  // 0.64 (server-kit 0.32): an administrator switched another account's second factor off.
+  | "two_factor_reset";
 
 /** Every {@link AdminActionKind}, in the contract's order. */
 export const ADMIN_ACTION_KINDS: readonly AdminActionKind[] = [
@@ -104,6 +106,7 @@ export const ADMIN_ACTION_KINDS: readonly AdminActionKind[] = [
   "membership_role",
   "group_deactivate",
   "group_reactivate",
+  "two_factor_reset",
 ];
 
 /** The app's word for its groups (§11.5): Kurvenschmiede's teams, kastlan's companies,

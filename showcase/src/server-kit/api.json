@@ -6,7 +6,7 @@
     {
       "name": "eifi1_server_kit.auth",
       "summary": "Sign-in, sign-up and the account, as code (``docs/auth-harmonization.md`` §8 in ``Eifi1/ui-kit``).",
-      "doc": "Sign-in, sign-up and the account, as code (``docs/auth-harmonization.md`` §8 in ``Eifi1/ui-kit``).\n\nLayer 1, like the rest of the kit: pure functions, Pydantic models and small classes —\nno database, no app ``User``, no routes, and no JWT signing (each app keeps its JWT\nlibrary; :mod:`~eifi1_server_kit.auth.tokens` builds and checks the claims). keksdose is\nthe reference, cited ``file`` per rule.\n\n* :mod:`~eifi1_server_kit.auth.accounts` — the address and its tag, invitations, the\n  registration gate, names, erasure identifiers;\n* :mod:`~eifi1_server_kit.auth.tokens` — one-time tokens (reset, verification,\n  invitation, email change), the session's claims, and what a refresh answers;\n* :mod:`~eifi1_server_kit.auth.limits` — :class:`AuthLimiters`, with the per-address\n  delay that never locks out;\n* :mod:`~eifi1_server_kit.auth.passwords` — :func:`absent_account_check`, the dummy hash an\n  address with no account is checked against, so it costs what one with an account costs;\n* :mod:`~eifi1_server_kit.auth.totp` — the second factor's code: the time step it matches\n  (:func:`totp_matched_step`), the replay rule, a step accepted once\n  (:func:`totp_step_accepted`), and one 2FA challenge for one sign-in\n  (:func:`two_factor_challenge_claims`, :func:`two_factor_challenge_is_spent`);\n* :mod:`~eifi1_server_kit.auth.sessions` — a session's life on the server (0.27):\n  :class:`SessionPolicy`, a shared computer's short session (:func:`session_expired`,\n  :func:`refresh_lifetime`, :func:`access_lifetime`, :func:`session_expires_at`);\n* :mod:`~eifi1_server_kit.auth.schemas` — the wire shapes, with the account's text size\n  and contrast (``docs/text-size-harmonization.md`` §6);\n* :mod:`~eifi1_server_kit.auth.errors` — :class:`AuthError` and its codes.",
+      "doc": "Sign-in, sign-up and the account, as code (``docs/auth-harmonization.md`` §8 in ``Eifi1/ui-kit``).\n\nLayer 1, like the rest of the kit: pure functions, Pydantic models and small classes —\nno database, no app ``User``, no routes, and no JWT signing (each app keeps its JWT\nlibrary; :mod:`~eifi1_server_kit.auth.tokens` builds and checks the claims). keksdose is\nthe reference, cited ``file`` per rule.\n\n* :mod:`~eifi1_server_kit.auth.accounts` — the address and its tag, invitations, the\n  registration gate, names, erasure identifiers;\n* :mod:`~eifi1_server_kit.auth.tokens` — one-time tokens (reset, verification,\n  invitation, email change), the session's claims, and what a refresh answers;\n* :mod:`~eifi1_server_kit.auth.limits` — :class:`AuthLimiters`, with the per-address\n  delay that never locks out;\n* :mod:`~eifi1_server_kit.auth.passwords` — :func:`absent_account_check`, the dummy hash an\n  address with no account is checked against, so it costs what one with an account costs;\n* :mod:`~eifi1_server_kit.auth.totp` — the second factor's code: the time step it matches\n  (:func:`totp_matched_step`), the replay rule, a step accepted once\n  (:func:`totp_step_accepted`), and one 2FA challenge for one sign-in\n  (:func:`two_factor_challenge_claims`, :func:`two_factor_challenge_is_spent`); since 0.32 a\n  new secret (:func:`new_totp_secret`), its ``otpauth://`` URI (:func:`totp_uri`) and the code\n  an authenticator shows (:func:`totp_code`, for tests);\n* :mod:`~eifi1_server_kit.auth.sessions` — a session's life on the server (0.27):\n  :class:`SessionPolicy`, a shared computer's short session (:func:`session_expired`,\n  :func:`refresh_lifetime`, :func:`access_lifetime`, :func:`session_expires_at`);\n* :mod:`~eifi1_server_kit.auth.schemas` — the wire shapes, with the account's text size\n  and contrast (``docs/text-size-harmonization.md`` §6);\n* :mod:`~eifi1_server_kit.auth.errors` — :class:`AuthError` and its codes.",
       "contract": {
         "doc": "docs/auth-harmonization.md",
         "section": "§8",
@@ -50,14 +50,28 @@
         {
           "name": "AUTH_ERROR_DETAIL",
           "kind": "constant",
-          "signature": "AUTH_ERROR_DETAIL: Mapping[AuthErrorCode, str] = {\n    AuthErrorCode.INVALID_CREDENTIALS: \"Invalid credentials\",\n    AuthErrorCode.REGISTRATION_CLOSED: \"Registration is by invitation only\",\n    AuthErrorCode.EMAIL_TAKEN: \"Email already registered\",\n    AuthErrorCode.INVITATION_INVALID: \"This invitation is not valid\",\n    AuthErrorCode.INVITATION_EXPIRED: \"This invitation has expired\",\n    AuthErrorCode.TOKEN_INVALID: \"This link is invalid or has expired\",\n    AuthErrorCode.TOKEN_EXPIRED: \"This link has expired\",\n    # Kurvenschmiede's ``TokenRefusal.ENDED`` (``auth_service.py:187``).\n    AuthErrorCode.SESSION_ENDED: \"This session has ended. Please sign in again.\",\n    AuthErrorCode.NOT_SIGNED_IN: \"Not signed in\",\n    AuthErrorCode.ADMIN_REQUIRED: \"Insufficient role\",\n    AuthErrorCode.PASSWORD_UNCHANGED: \"New password must be different\",\n    AuthErrorCode.PASSWORD_CHANGE_NOT_REQUIRED: \"This account no longer has to change its password. Please sign in normally.\",\n    AuthErrorCode.EMAIL_UNCHANGED: \"This is already the account's address\",\n    AuthErrorCode.EMAIL_CHANGE_NOT_PENDING: \"No address change is pending\",\n    AuthErrorCode.MAIL_NOT_SENT: \"The mail could not be sent. Please try again later.\",\n    AuthErrorCode.PASSKEY_REFUSED: \"That passkey could not sign you in.\",\n    AuthErrorCode.PASSKEY_REGISTRATION_REFUSED: \"The passkey could not be added.\",\n    AuthErrorCode.PASSKEY_NOT_FOUND: \"Passkey not found\",\n    AuthErrorCode.SESSION_NOT_FOUND: \"Session not found\",\n    AuthErrorCode.INVITATION_NOT_FOUND: \"Invitation not found\",\n    AuthErrorCode.INVITATION_CLOSED: \"This invitation was accepted or revoked\",\n    AuthErrorCode.INVITATION_SCOPE_INVALID: \"This invitation's scope is not allowed\",\n}",
+          "signature": "AUTH_ERROR_DETAIL: Mapping[AuthErrorCode, str] = {\n    AuthErrorCode.INVALID_CREDENTIALS: \"Invalid credentials\",\n    AuthErrorCode.REGISTRATION_CLOSED: \"Registration is by invitation only\",\n    AuthErrorCode.EMAIL_TAKEN: \"Email already registered\",\n    AuthErrorCode.INVITATION_INVALID: \"This invitation is not valid\",\n    AuthErrorCode.INVITATION_EXPIRED: \"This invitation has expired\",\n    AuthErrorCode.TOKEN_INVALID: \"This link is invalid or has expired\",\n    AuthErrorCode.TOKEN_EXPIRED: \"This link has expired\",\n    # Kurvenschmiede's ``TokenRefusal.ENDED`` (``auth_service.py:187``).\n    AuthErrorCode.SESSION_ENDED: \"This session has ended. Please sign in again.\",\n    AuthErrorCode.NOT_SIGNED_IN: \"Not signed in\",\n    AuthErrorCode.ADMIN_REQUIRED: \"Insufficient role\",\n    AuthErrorCode.PASSWORD_UNCHANGED: \"New password must be different\",\n    AuthErrorCode.PASSWORD_CHANGE_NOT_REQUIRED: \"This account no longer has to change its password. Please sign in normally.\",\n    AuthErrorCode.EMAIL_UNCHANGED: \"This is already the account's address\",\n    AuthErrorCode.EMAIL_CHANGE_NOT_PENDING: \"No address change is pending\",\n    AuthErrorCode.MAIL_NOT_SENT: \"The mail could not be sent. Please try again later.\",\n    AuthErrorCode.PASSKEY_REFUSED: \"That passkey could not sign you in.\",\n    AuthErrorCode.PASSKEY_REGISTRATION_REFUSED: \"The passkey could not be added.\",\n    AuthErrorCode.PASSKEY_NOT_FOUND: \"Passkey not found\",\n    AuthErrorCode.SESSION_NOT_FOUND: \"Session not found\",\n    AuthErrorCode.INVITATION_NOT_FOUND: \"Invitation not found\",\n    AuthErrorCode.INVITATION_CLOSED: \"This invitation was accepted or revoked\",\n    AuthErrorCode.INVITATION_SCOPE_INVALID: \"This invitation's scope is not allowed\",\n    AuthErrorCode.TWO_FACTOR_INVALID: \"Invalid 2FA code\",\n    AuthErrorCode.TWO_FACTOR_UNAVAILABLE: (\n        \"Two-factor authentication is unavailable on this server right now: the stored second factor \"\n        \"cannot be read or stored. This is a server-side key problem, not a wrong code.\"\n    ),\n    AuthErrorCode.TWO_FACTOR_NOT_PENDING: \"No two-factor setup is waiting for its code\",\n    AuthErrorCode.TWO_FACTOR_NOT_ENABLED: \"Two-factor sign-in is off for this account\",\n}",
           "doc": "The English ``detail`` of each code, keksdose's words where it had them. The pages\nshow the kit's own text for the code; this is for logs and API clients."
         },
         {
           "name": "AUTH_ERROR_STATUS",
           "kind": "constant",
-          "signature": "AUTH_ERROR_STATUS: Mapping[AuthErrorCode, int] = {\n    AuthErrorCode.INVALID_CREDENTIALS: 401,\n    AuthErrorCode.REGISTRATION_CLOSED: 403,\n    AuthErrorCode.EMAIL_TAKEN: 409,\n    AuthErrorCode.INVITATION_INVALID: 400,\n    AuthErrorCode.INVITATION_EXPIRED: 400,\n    AuthErrorCode.TOKEN_INVALID: 400,\n    AuthErrorCode.TOKEN_EXPIRED: 400,\n    AuthErrorCode.SESSION_ENDED: 401,\n    AuthErrorCode.NOT_SIGNED_IN: 401,\n    AuthErrorCode.ADMIN_REQUIRED: 403,\n    AuthErrorCode.PASSWORD_UNCHANGED: 400,\n    AuthErrorCode.PASSWORD_CHANGE_NOT_REQUIRED: 409,\n    AuthErrorCode.EMAIL_UNCHANGED: 400,\n    AuthErrorCode.EMAIL_CHANGE_NOT_PENDING: 404,\n    AuthErrorCode.MAIL_NOT_SENT: 503,\n    AuthErrorCode.PASSKEY_REFUSED: 401,\n    AuthErrorCode.PASSKEY_REGISTRATION_REFUSED: 400,\n    AuthErrorCode.PASSKEY_NOT_FOUND: 404,\n    AuthErrorCode.SESSION_NOT_FOUND: 404,\n    AuthErrorCode.INVITATION_NOT_FOUND: 404,\n    AuthErrorCode.INVITATION_CLOSED: 409,\n    AuthErrorCode.INVITATION_SCOPE_INVALID: 400,\n}",
+          "signature": "AUTH_ERROR_STATUS: Mapping[AuthErrorCode, int] = {\n    AuthErrorCode.INVALID_CREDENTIALS: 401,\n    AuthErrorCode.REGISTRATION_CLOSED: 403,\n    AuthErrorCode.EMAIL_TAKEN: 409,\n    AuthErrorCode.INVITATION_INVALID: 400,\n    AuthErrorCode.INVITATION_EXPIRED: 400,\n    AuthErrorCode.TOKEN_INVALID: 400,\n    AuthErrorCode.TOKEN_EXPIRED: 400,\n    AuthErrorCode.SESSION_ENDED: 401,\n    AuthErrorCode.NOT_SIGNED_IN: 401,\n    AuthErrorCode.ADMIN_REQUIRED: 403,\n    AuthErrorCode.PASSWORD_UNCHANGED: 400,\n    AuthErrorCode.PASSWORD_CHANGE_NOT_REQUIRED: 409,\n    AuthErrorCode.EMAIL_UNCHANGED: 400,\n    AuthErrorCode.EMAIL_CHANGE_NOT_PENDING: 404,\n    AuthErrorCode.MAIL_NOT_SENT: 503,\n    AuthErrorCode.PASSKEY_REFUSED: 401,\n    AuthErrorCode.PASSKEY_REGISTRATION_REFUSED: 400,\n    AuthErrorCode.PASSKEY_NOT_FOUND: 404,\n    AuthErrorCode.SESSION_NOT_FOUND: 404,\n    AuthErrorCode.INVITATION_NOT_FOUND: 404,\n    AuthErrorCode.INVITATION_CLOSED: 409,\n    AuthErrorCode.INVITATION_SCOPE_INVALID: 400,\n    AuthErrorCode.TWO_FACTOR_INVALID: 400,\n    AuthErrorCode.TWO_FACTOR_UNAVAILABLE: 503,\n    AuthErrorCode.TWO_FACTOR_NOT_PENDING: 404,\n    AuthErrorCode.TWO_FACTOR_NOT_ENABLED: 409,\n}",
           "doc": "Each code's status. The token codes are ``400`` as keksdose answers a bad reset or\nverification link today; the page tells them apart by ``code``, not by status. A\nrefresh's refusal is ``401``, never ``403``: the three apps' refresh routes already\nanswer so (auth §11.1)."
+        },
+        {
+          "name": "BACKUP_CODE_ALPHABET",
+          "kind": "constant",
+          "signature": "BACKUP_CODE_ALPHABET = \"ABCDEFGHJKLMNPQRSTUVWXYZ23456789\"",
+          "doc": "What a backup code is made of: letters and digits without I, O, 0 and 1, which read alike.",
+          "value": "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+        },
+        {
+          "name": "BACKUP_CODE_COUNT",
+          "kind": "constant",
+          "signature": "BACKUP_CODE_COUNT = 10",
+          "doc": "Backup codes in a set (0.32): made when two-factor is switched on, and again on request.",
+          "value": 10
         },
         {
           "name": "CHALLENGE_LIFETIMES",
@@ -510,6 +524,22 @@
             {
               "name": "INVITATION_SCOPE_INVALID",
               "value": "invitation_scope_invalid"
+            },
+            {
+              "name": "TWO_FACTOR_INVALID",
+              "value": "two_factor_invalid"
+            },
+            {
+              "name": "TWO_FACTOR_UNAVAILABLE",
+              "value": "two_factor_unavailable"
+            },
+            {
+              "name": "TWO_FACTOR_NOT_PENDING",
+              "value": "two_factor_not_pending"
+            },
+            {
+              "name": "TWO_FACTOR_NOT_ENABLED",
+              "value": "two_factor_not_enabled"
             }
           ]
         },
@@ -722,7 +752,7 @@
           "name": "InvitationAccepted",
           "kind": "model",
           "signature": "class InvitationAccepted(BaseModel)",
-          "doc": "``POST /auth/invitations/accept {token}``: the invitation an existing account took up\n(§4.4). What it attached is the app's (``on_invitation_redeemed``), and the words for it\nride in a subclass through ``describe_invitation`` (Kurvenschmiede's team name, keksdose's\nbudget).",
+          "doc": "``POST /auth/invitations/accept {token}``: the invitation an existing account took up\n(§4.4). What it attached is the app's (``on_invitation_redeemed``), and the words for it\nride in a subclass through ``describe_invitation`` (Kurvenschmiede's team name, keksdose's\nbudget). ``group`` (0.32): what ``invitation_group`` names, so a page says what the account\njoined; ``None`` without the hook or a group.",
           "fields": [
             {
               "name": "email",
@@ -733,6 +763,12 @@
             {
               "name": "role",
               "type": "str | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "group",
+              "type": "InvitationGroup | None",
               "default": "None",
               "doc": ""
             }
@@ -764,6 +800,26 @@
             },
             {
               "name": "role",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "InvitationGroup",
+          "kind": "model",
+          "signature": "class InvitationGroup(BaseModel)",
+          "doc": "The group an accepted invitation joined (0.32), as ``AuthHooks.invitation_group``\nnames it: a team, a company, a budget.",
+          "fields": [
+            {
+              "name": "id",
+              "type": "int | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "name",
               "type": "str | None",
               "default": "None",
               "doc": ""
@@ -1461,6 +1517,20 @@
           ]
         },
         {
+          "name": "TwoFactorBackupCodesRequest",
+          "kind": "model",
+          "signature": "class TwoFactorBackupCodesRequest(BaseModel)",
+          "doc": "``POST /auth/me/2fa/backup-codes {password}`` (0.32): a new set, the old one gone.",
+          "fields": [
+            {
+              "name": "password",
+              "type": "ExistingPassword",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
           "name": "TwoFactorChallenge",
           "kind": "model",
           "signature": "class TwoFactorChallenge(BaseModel)",
@@ -1475,6 +1545,134 @@
             {
               "name": "challenge_token",
               "type": "str",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "TwoFactorCodeText",
+          "kind": "constant",
+          "signature": "TwoFactorCodeText = Annotated[str, Field(min_length=6, max_length=32)]",
+          "doc": "A second factor's code as typed: six digits from the authenticator (with room for\n\"123 456\"), or a backup code (0.32: ``ABCD-EFGH-JKLM-NPQR``, spaces or dashes as typed). The\nkit tells them apart by shape; anything that is neither is the route's ``two_factor_invalid``,\nnot a 422."
+        },
+        {
+          "name": "TwoFactorConfirm",
+          "kind": "model",
+          "signature": "class TwoFactorConfirm(BaseModel)",
+          "doc": "``POST /auth/me/2fa/enable {code}`` (0.32; keksdose ``TwoFactorEnableRequest``): a code\nfrom the pending secret makes it the factor that signs in.",
+          "fields": [
+            {
+              "name": "code",
+              "type": "TwoFactorCodeText",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "TwoFactorDisableRequest",
+          "kind": "model",
+          "signature": "class TwoFactorDisableRequest(BaseModel)",
+          "doc": "``POST /auth/me/2fa/disable {password, code}`` (0.32; keksdose's): the password and a\nlive code. A secret this server cannot open is switched off by the password alone.",
+          "fields": [
+            {
+              "name": "password",
+              "type": "ExistingPassword",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "code",
+              "type": "TwoFactorCodeText",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "TwoFactorEnabled",
+          "kind": "model",
+          "signature": "class TwoFactorEnabled(BaseModel)",
+          "doc": "Two-factor sign-in is on (0.32): the backup codes, shown once — the server keeps their\ndigests only. ``POST /auth/me/2fa/enable`` and ``POST /auth/me/2fa/backup-codes`` answer it.",
+          "fields": [
+            {
+              "name": "backup_codes",
+              "type": "list[str]",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "TwoFactorLogin",
+          "kind": "model",
+          "signature": "class TwoFactorLogin(BaseModel)",
+          "doc": "``POST /auth/login/2fa {challenge_token, code}`` (§5.1, 0.32; keksdose\n``TwoFactorVerifyRequest``, whose field was ``totp_code``): the sign-in's second step.",
+          "fields": [
+            {
+              "name": "challenge_token",
+              "type": "_ChallengeToken",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "code",
+              "type": "TwoFactorCodeText",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "TwoFactorSetup",
+          "kind": "model",
+          "signature": "class TwoFactorSetup(BaseModel)",
+          "doc": "The setup's answer: the new secret (base32, for typing in) and its ``otpauth://`` URI,\nwhich the page draws as a QR code (ui-kit's own encoder; keksdose's ``qr_svg`` is the\nkit's front's). PENDING until a code from it confirms it: what signs in now keeps doing so.",
+          "fields": [
+            {
+              "name": "secret",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "otpauth_url",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "TwoFactorSetupRequest",
+          "kind": "model",
+          "signature": "class TwoFactorSetupRequest(BaseModel)",
+          "doc": "``POST /auth/me/2fa/setup {password}`` (0.32; keksdose ``TwoFactorSetupRequest``): the\naccount's password on EVERY setup, a first one as much as a replacement. A bearer token\nalone must not change how the account signs in: a factor added from a stolen session\npairs the thief's authenticator, and the owner's next sign-in asks a code they do not have\n(keksdose's AU-3). The password is also the way back from a lost authenticator: a new\nsetup replaces the secret without the old one's code.",
+          "fields": [
+            {
+              "name": "password",
+              "type": "ExistingPassword",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "TwoFactorStatus",
+          "kind": "model",
+          "signature": "class TwoFactorStatus(BaseModel)",
+          "doc": "``GET /auth/me/2fa`` (0.32): whether two-factor sign-in is on, and how many backup codes\nare left (``0`` while it is off).",
+          "fields": [
+            {
+              "name": "enabled",
+              "type": "bool",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "backup_codes_left",
+              "type": "int",
               "default": null,
               "doc": ""
             }
@@ -1638,6 +1836,18 @@
           "doc": "Write the zone field the PATCH sent (:data:`PROFILE_ZONE_FIELDS`: the device's\nreport) onto ``user`` — an ORM row (``setattr``) or a mutable mapping — and answer it;\nnothing for a demo, whose device zone is never stored (notifications §10.3 Settled).\n``patch`` is a :class:`ProfileUpdate` (or any model with the field); left out keeps."
         },
         {
+          "name": "backup_code_digest",
+          "kind": "function",
+          "signature": "backup_code_digest(code: str) -> str | None",
+          "doc": "A backup code's digest as stored (:func:`~eifi1_server_kit.auth.hash_token` of the code\nin upper case, without spaces or dashes, NFKC-normalised as typed), or ``None`` for\nanything that is not one's shape — a six-digit TOTP code among them."
+        },
+        {
+          "name": "backup_code_spent",
+          "kind": "function",
+          "signature": "backup_code_spent(code: str, digests: Sequence[str]) -> tuple[str, ...] | None",
+          "doc": "The digests left once ``code`` is spent, or ``None`` when it matches none of\n``digests`` (0.32): a backup code works once. Every digest is compared in constant time,\nwhatever matched."
+        },
+        {
           "name": "challenge_claims",
           "kind": "function",
           "signature": "challenge_claims(sub: int | str, kind: ChallengeKind, *, now: datetime, extra: Mapping[str, Any] | None = None, shared_device: bool = False) -> dict[str, Any]",
@@ -1704,6 +1914,18 @@
           "doc": "``/auth/me``'s ``name_incomplete`` (§3.3): either part empty after trimming.\n\nA demo session never counts as incomplete (keksdose's anonymous demo has nobody to\nask), so ``is_demo=True`` is always ``False``."
         },
         {
+          "name": "new_backup_codes",
+          "kind": "function",
+          "signature": "new_backup_codes(count: int = BACKUP_CODE_COUNT) -> list[str]",
+          "doc": "A fresh set of backup codes (0.32), each ``ABCD-EFGH-JKLM-NPQR`` from\n:data:`BACKUP_CODE_ALPHABET` through :mod:`secrets`: shown to the person once, kept as\n:func:`backup_code_digest` only."
+        },
+        {
+          "name": "new_totp_secret",
+          "kind": "function",
+          "signature": "new_totp_secret() -> str",
+          "doc": "A fresh TOTP secret, base32 without padding (0.32, keksdose ``begin_totp_setup``'s\n``pyotp.random_base32()``): 32 characters from :mod:`secrets`."
+        },
+        {
           "name": "normalise_email",
           "kind": "function",
           "signature": "normalise_email(raw: str) -> str",
@@ -1764,6 +1986,12 @@
           "doc": "Was this token — access or refresh — minted at or before the account's cut-off?\n(keksdose ``auth_service.token_is_revoked``, Kurvenschmiede's line for line.)\n\nCall it with ``claims.get(\"iat\")`` on EVERY request (``get_current_user``) and on\nrefresh: ending only the refresh chain leaves a tab with an access token signed in\nfor the rest of its lifetime.\n\n* No cut-off: never revoked.\n* The comparison is exact, to the microsecond: a token minted after the cut-off in\n  the same second survives — the user who resets and signs straight back in — and\n  one minted at the cut-off itself does not.\n* Fails CLOSED on a token with no ``iat``, or one that is not a number: only an\n  account that has had a cut-off gets this far, so \"I cannot tell when this was\n  issued\" has to mean \"before\". The cost is one extra sign-in for a stale tab.\n\nNot a query: the caller has loaded the user to authenticate at all, and the cut-off\nis a column on it. A naive cut-off (SQLite) is read as UTC."
         },
         {
+          "name": "totp_code",
+          "kind": "function",
+          "signature": "totp_code(secret: str, *, now: datetime | float) -> str",
+          "doc": "The code ``secret`` shows at ``now`` (0.32): what an authenticator app displays, for a\ntest or a tool. A server never needs it — it checks with :func:`totp_matched_step`."
+        },
+        {
           "name": "totp_matched_step",
           "kind": "function",
           "signature": "totp_matched_step(secret: str, code: str, *, now: datetime | float, window: int = TOTP_WINDOW) -> int | None",
@@ -1774,6 +2002,12 @@
           "kind": "function",
           "signature": "totp_step_accepted(matched: int | None, last_step: int | None) -> bool",
           "doc": "May a code of step ``matched`` be accepted, after ``last_step``? (RFC 6238 §5.2,\nkeksdose ``verify_totp``.)\n\nOnly a step AFTER the last accepted one: ``None`` (no match) never, a step at or before\n``last_step`` never — the same code again, or an older one still inside the window —\nand anything when no code was accepted yet (``last_step`` ``None``). On ``True`` the\napp stamps ``matched`` as the account's new last step, in the same transaction."
+        },
+        {
+          "name": "totp_uri",
+          "kind": "function",
+          "signature": "totp_uri(secret: str, *, account: str, issuer: str) -> str",
+          "doc": "The ``otpauth://totp/…`` URI an authenticator app reads from a QR code (0.32; pyotp's\n``provisioning_uri(name=account, issuer_name=issuer)``, byte for byte): the label\n``issuer:account``, the secret and the issuer, nothing else — SHA-1, six digits and thirty\nseconds are every app's defaults."
         },
         {
           "name": "two_factor_challenge_claims",
@@ -1797,8 +2031,8 @@
     },
     {
       "name": "eifi1_server_kit.auth.ports",
-      "summary": "The ports the account service runs on: the rows, the sessions, the links, the invitations, the passkeys, the admin log, the work after the commit, and the app's JWT signer and password hasher.",
-      "doc": "The ports the account service runs on: the rows, the sessions, the links, the invitations,\nthe passkeys, the admin log, the work after the commit, and the app's JWT signer and\npassword hasher.\n\nLayer 2 (``docs/auth-harmonization.md`` §12 in ``Eifi1/ui-kit``, on the pattern of\n:mod:`eifi1_server_kit.feedback.ports`). Each app implements these over its own session and\ntables, or inherits the ready ones of the ``sql`` extra; the kit never sees the app's\nmodels, and no SQLAlchemy or FastAPI is imported here.\n\nThe ports are async and run in the caller's transaction: **every write flushes and none\ncommits** (``docs/server-services-harmonization.md`` §2.7). Rows are read through protocols\nwith read-only members, so an app's mapped row satisfies them as it is and its own columns\n(sealed ones included) stay in its adapter; every write goes through the store.\n\n**What waits for the commit** goes through :class:`AfterCommit`: the account mails and the\npurge of an erased person's files. The kit never commits, so it cannot know when the work\nis safe to do; the app runs the queue from its session's commit event and drops it on a\nrollback (Kurvenschmiede's ``send_after_commit``).\n\n**Not in this cut**: the second factor's store (keksdose's adoption brings it) and the admin\nscope of a company (kastlan rests, Marcel 2026-11-13).",
+      "summary": "The ports the account service runs on: the rows, the sessions, the links, the invitations, the passkeys, the second factor, the admin log, the work after the commit, and the app's JWT signer, password hasher and seal.",
+      "doc": "The ports the account service runs on: the rows, the sessions, the links, the invitations,\nthe passkeys, the second factor, the admin log, the work after the commit, and the app's JWT\nsigner, password hasher and seal.\n\nLayer 2 (``docs/auth-harmonization.md`` §12 in ``Eifi1/ui-kit``, on the pattern of\n:mod:`eifi1_server_kit.feedback.ports`). Each app implements these over its own session and\ntables, or inherits the ready ones of the ``sql`` extra; the kit never sees the app's\nmodels, and no SQLAlchemy or FastAPI is imported here.\n\nThe ports are async and run in the caller's transaction: **every write flushes and none\ncommits** (``docs/server-services-harmonization.md`` §2.7). Rows are read through protocols\nwith read-only members, so an app's mapped row satisfies them as it is and its own columns\n(sealed ones included) stay in its adapter; every write goes through the store.\n\n**What waits for the commit** goes through :class:`AfterCommit`: the account mails and the\npurge of an erased person's files. The kit never commits, so it cannot know when the work\nis safe to do; the app runs the queue from its session's commit event and drops it on a\nrollback (Kurvenschmiede's ``send_after_commit``).\n\n**The second factor** (0.32, keksdose's KG-1): :class:`TwoFactorStore` keeps an account's\n:class:`TwoFactorState`, its secrets sealed by the app's :class:`SecretSeal`; both optional,\nand together they mount the two-factor routes.\n\n**Not in this cut**: the admin scope of a company (kastlan rests, Marcel 2026-11-13).",
       "contract": {
         "doc": "docs/auth-harmonization.md",
         "section": "§12",
@@ -2525,6 +2759,24 @@
           ]
         },
         {
+          "name": "SecretSeal",
+          "kind": "protocol",
+          "signature": "class SecretSeal(Protocol)",
+          "doc": "The app's encryption of a secret the server reads back: the TOTP secret, bound to its\nrow by ``aad`` (:func:`~eifi1_server_kit.auth.seal.totp_secret_aad`). Ready-made:\n:class:`~eifi1_server_kit.auth.seal.SecretBox`, the ``seal`` extra's (AES-256-GCM, keksdose's).\nEither method raises :class:`~eifi1_server_kit.auth.seal.SecretSealError` — no key, or a\nvalue no key opens — and never answers the plaintext as sealed.",
+          "methods": [
+            {
+              "name": "seal",
+              "signature": "seal(plaintext: str, *, aad: bytes) -> str",
+              "doc": "The sealed value."
+            },
+            {
+              "name": "unseal",
+              "signature": "unseal(sealed: str, *, aad: bytes) -> str",
+              "doc": "The plaintext of a value :meth:`seal` made with the same ``aad``."
+            }
+          ]
+        },
+        {
           "name": "SessionRow",
           "kind": "protocol",
           "signature": "class SessionRow(Protocol)",
@@ -2630,6 +2882,62 @@
               "name": "verify",
               "signature": "verify(token: str) -> Mapping[str, Any] | None",
               "doc": "The claims of a token this app signed and that has not expired, or None."
+            }
+          ]
+        },
+        {
+          "name": "TwoFactorState",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class TwoFactorState",
+          "doc": "An account's second factor as the kit reads and writes it (0.32, keksdose's KG-1, its\nfour ``users`` columns): the default is \"never set up\".\n\n* ``enabled`` — the code is asked at sign-in;\n* ``secret`` — the live TOTP secret, sealed (:class:`SecretSeal`), or ``None``;\n* ``pending_secret`` — a setup not yet confirmed by a code, sealed beside the live one so\n  that a setup walked away from changes nothing (keksdose's F-4), or ``None``;\n* ``last_step`` — the time step of the last code accepted\n  (:func:`~eifi1_server_kit.auth.totp_step_accepted`), ``None`` until one is;\n* ``backup_codes`` — the backup codes left, each a digest\n  (:func:`~eifi1_server_kit.auth.backup_code_digest`), never the code (0.32, Marcel\n  2026-11-14: a lost phone with no passkey must not lock the account out).",
+          "fields": [
+            {
+              "name": "enabled",
+              "type": "bool",
+              "default": "False",
+              "doc": ""
+            },
+            {
+              "name": "secret",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "pending_secret",
+              "type": "str | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "last_step",
+              "type": "int | None",
+              "default": "None",
+              "doc": ""
+            },
+            {
+              "name": "backup_codes",
+              "type": "tuple[str, ...]",
+              "default": "()",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "TwoFactorStore",
+          "kind": "protocol",
+          "signature": "class TwoFactorStore(Protocol)",
+          "doc": "The app's second factor per account: keksdose's columns on ``users``, the ``sql`` extra's\n:class:`~eifi1_server_kit.auth.sql.TwoFactorColumns`, or a table of its own.",
+          "methods": [
+            {
+              "name": "state",
+              "signature": "async state(user_id: int, *, lock: bool = False) -> TwoFactorState",
+              "doc": "The account's state, :class:`TwoFactorState` ``()`` when it has none. ``lock``: the\nrow locked for the transaction and read again (``SELECT … FOR UPDATE``), so two\nredemptions of one code racing each other cannot both read the step as unspent\n(keksdose's AU-10); the kit locks wherever it may spend a step or replace a secret."
+            },
+            {
+              "name": "save",
+              "signature": "async save(user_id: int, state: TwoFactorState) -> None",
+              "doc": "Write the whole state, flushed."
             }
           ]
         },
@@ -2753,6 +3061,12 @@
               "type": "str",
               "default": "'/'",
               "doc": "The deletion mail's link."
+            },
+            {
+              "name": "privacy",
+              "type": "str",
+              "default": "'/privacy'",
+              "doc": "The privacy page, which a deletion mail's own words may link (``{privacy}``, 0.32)."
             }
           ],
           "methods": [
@@ -2863,13 +3177,13 @@
           "methods": [
             {
               "name": "__init__",
-              "signature": "__init__(*, users: UserStore[UserT], sessions: SessionStore[SessionT], tokens: OneTimeTokenStore[Any], invitations: InvitationStore[InvT], log: AdminActionLog[Any], after_commit: AfterCommit, signer: TokenSigner, hasher: PasswordHasher, mailer: Mailer, policy: AccountPolicy, limiters: AuthLimiters, hooks: AuthHooks[UserT, InvT] | None = None, passkeys: PasskeyStore[Any] | None = None, relying_party: RelyingParty | None = None, mail_texts: Mapping[AccountMailText, Any] = ACCOUNT_MAIL_TEXTS, absent_check: Callable[[str], bool] | None = None, now: Clock = utc_now, sleep: Callable[[float], Awaitable[None]] = asyncio.sleep, timer: Callable[[], float] = time.monotonic) -> None",
+              "signature": "__init__(*, users: UserStore[UserT], sessions: SessionStore[SessionT], tokens: OneTimeTokenStore[Any], invitations: InvitationStore[InvT], log: AdminActionLog[Any], after_commit: AfterCommit, signer: TokenSigner, hasher: PasswordHasher, mailer: Mailer, policy: AccountPolicy, limiters: AuthLimiters, hooks: AuthHooks[UserT, InvT] | None = None, passkeys: PasskeyStore[Any] | None = None, relying_party: RelyingParty | None = None, two_factor: TwoFactorStore | None = None, secret_seal: SecretSeal | None = None, mail_texts: Mapping[AccountMailText, Any] = ACCOUNT_MAIL_TEXTS, absent_check: Callable[[str], bool] | None = None, now: Clock = utc_now, sleep: Callable[[float], Awaitable[None]] = asyncio.sleep, timer: Callable[[], float] = time.monotonic) -> None",
               "doc": ""
             },
             {
               "name": "me",
               "signature": "async me(user: UserT, model: type[BaseModel]) -> BaseModel",
-              "doc": "The account as ``/auth/me`` answers it: ``to_me``, else ``model`` from the row\nwith ``email_verified`` read off ``email_verified_at``."
+              "doc": "The account as ``/auth/me`` answers it: ``to_me``, else ``model`` from the row\nwith ``email_verified`` read off ``email_verified_at`` and, with a\n:class:`~eifi1_server_kit.auth.ports.TwoFactorStore` (0.32), ``totp_enabled`` off its\nstate."
             },
             {
               "name": "start_session",
@@ -2880,6 +3194,11 @@
               "name": "end_sessions",
               "signature": "async end_sessions(user: UserT, reason: SessionsEndedReason) -> int",
               "doc": "Every session of the account ends, for ``reason`` (0.30, the admin's deactivation\nand forced password change): every row, the ``iat`` cut-off where the row has one, the\npending address change, and the ``sessions_ended`` hook (keksdose's API tokens and push\ndevices). Nothing else is cleared. Answers how many rows ended."
+            },
+            {
+              "name": "end_sessions_noting",
+              "signature": "async end_sessions_noting(user: UserT, reason: SessionsEndedReason) -> tuple[int, dict[str, Any]]",
+              "doc": ":meth:`end_sessions`, answering the ``sessions_ended`` hook's mapping beside the\ncount (0.32): the admin router puts it on its row."
             },
             {
               "name": "authenticate",
@@ -2893,8 +3212,53 @@
             },
             {
               "name": "login",
-              "signature": "async login(body: LoginRequest, *, ip: str, device: str | None = None) -> IssuedSession[UserT] | ChallengeIssued[UserT]",
-              "doc": "``POST /auth/login`` (§5.1–§5.2): the per-IP limit before any hash, then the\naddress's delay (failures only, never a lockout), then one refusal for an unknown\naddress, a wrong password and a deactivated account, in the same time (a dummy\nhash for the absent account)."
+              "signature": "async login(body: LoginRequest, *, ip: str, device: str | None = None) -> IssuedSession[UserT] | ChallengeIssued[UserT] | TwoFactorChallengeIssued[UserT]",
+              "doc": "``POST /auth/login`` (§5.1–§5.2): the per-IP limit before any hash, then the\naddress's delay (failures only, never a lockout), then one refusal for an unknown\naddress, a wrong password and a deactivated account, in the same time (a dummy\nhash for the absent account). An account with two-factor sign-in on gets the code's\nchallenge (0.32), before a forced password change: a 2FA account clears its second\nfactor before it may set a new password (keksdose's order)."
+            },
+            {
+              "name": "login_two_factor",
+              "signature": "async login_two_factor(body: TwoFactorLogin, *, ip: str, device: str | None = None) -> IssuedSession[UserT] | ChallengeIssued[UserT]",
+              "doc": "``POST /auth/login/2fa`` (§5.1; keksdose ``login_2fa``): the code's step. The per-IP\nwindow, then the challenge, then the per-account window (a header cannot re-key it),\nthen keksdose's order: the account active, two-factor still on, its secret readable,\nthe challenge unspent, the code — whose step is spent — then a forced password change,\nthen the session, on a shared computer when the sign-in asked for one. A dead\nchallenge (expired, redeemed, its account gone or deactivated, 2FA off since) is\n``token_invalid``: signing in again is the way on. The account's row is locked, so\ntwo redemptions of one code cannot both pass."
+            },
+            {
+              "name": "begin_two_factor",
+              "signature": "async begin_two_factor(user: UserT, body: TwoFactorSetupRequest) -> TwoFactorSetup",
+              "doc": "``POST /auth/me/2fa/setup`` (keksdose ``setup_2fa``): the password every time, then\na new secret sealed as the PENDING one, beside the live one — what signs in now keeps\ndoing so until a code confirms it (keksdose's F-4). Neither this nor the confirmation\nopens the old secret, so a new setup is the way back from a lost authenticator or a\nkey rotated out. ``503 two_factor_unavailable`` without a key."
+            },
+            {
+              "name": "enable_two_factor",
+              "signature": "async enable_two_factor(user: UserT, body: TwoFactorConfirm) -> TwoFactorEnabled",
+              "doc": "``POST /auth/me/2fa/enable`` (keksdose ``enable_2fa``): a code from the pending\nsecret makes it the factor that signs in, replacing the old one, and spends its step —\nthe first sign-in after it waits for the next code. Charged to the account's\npassword-check window: a code is a guess like a password. A wrong code changes nothing;\nno setup is ``404 two_factor_not_pending``. Answers a fresh set of backup codes, once\n(0.32): the server keeps their digests."
+            },
+            {
+              "name": "two_factor_status",
+              "signature": "async two_factor_status(user: UserT) -> TwoFactorStatus",
+              "doc": "``GET /auth/me/2fa`` (0.32): on or off, and the backup codes left."
+            },
+            {
+              "name": "renew_backup_codes",
+              "signature": "async renew_backup_codes(user: UserT, body: TwoFactorBackupCodesRequest) -> TwoFactorEnabled",
+              "doc": "``POST /auth/me/2fa/backup-codes`` (0.32): the password, then a new set — the old\ncodes no longer work. ``409 two_factor_not_enabled`` while two-factor sign-in is off."
+            },
+            {
+              "name": "has_two_factor",
+              "signature": "@property has_two_factor -> bool",
+              "doc": "Whether the account layer was given a second factor's store (0.32)."
+            },
+            {
+              "name": "two_factor_enabled",
+              "signature": "async two_factor_enabled(user: UserT) -> bool",
+              "doc": "Whether the account signs in with a second factor: its store's word, or the row's\nown ``totp_enabled`` where the app gives the kit no store."
+            },
+            {
+              "name": "reset_two_factor",
+              "signature": "async reset_two_factor(user: UserT) -> bool",
+              "doc": "An administrator's reset (0.32, ``user_admin``'s ``two-factor-reset``): every field\ncleared, and the account told by mail after the commit. ``False``, with nothing\nchanged and nobody told, when it was off. The caller checks who may."
+            },
+            {
+              "name": "disable_two_factor",
+              "signature": "async disable_two_factor(user: UserT, body: TwoFactorDisableRequest) -> None",
+              "doc": "``POST /auth/me/2fa/disable`` (keksdose ``disable_2fa``): the password and a live\ncode, then everything goes — the live secret, a pending one, the last step. A secret\nthis server cannot open is switched off by the password alone: a code it cannot check\nwould leave it on for good, and the password already replaces the secret through a new\nsetup. Switching off what is off drops a pending setup."
             },
             {
               "name": "set_password",
@@ -3131,6 +3495,12 @@
               "doc": "The group an invitation is for (0.31, G5/G6; Kurvenschmiede's team): its ``id`` goes\non the invitation's log rows (``target_group_id``), its ``name`` into the mail's\n``{group}``. ``None``, or no hook: no group."
             },
             {
+              "name": "invitation_accepting",
+              "type": "Callable[[UserT, InvT], Awaitable[None]] | None",
+              "default": "None",
+              "doc": "An existing account is about to take up an invitation (``/invitations/accept``, 0.32,\nkeksdose's KG-4): ``(user, invitation)``, before anything is spent; a kit refusal\nrefuses it (keksdose: a registration invitation is for a new address)."
+            },
+            {
               "name": "invitation_creating",
               "type": "Callable[[UserT, Any, AccountRow | None, Mapping[str, Any] | None], Awaitable[None]] | None",
               "default": "None",
@@ -3149,10 +3519,16 @@
               "doc": "Seam 2: every signed-in request, after the kit's checks: bind the request (kastlan's\nRLS variables), or refuse (its 401 for a lost membership, 403 for a closed company)."
             },
             {
-              "name": "sessions_ended",
-              "type": "Callable[[UserT, SessionsEndedReason], Awaitable[None]] | None",
+              "name": "bind_anonymous",
+              "type": "Callable[[UserT], Awaitable[None]] | None",
               "default": "None",
-              "doc": "Seam 4: every session of the account ended, and why: what else ends with them."
+              "doc": "The same on a signed-out path that names an account (0.32, keksdose's KG-2): a mailed\nlink (reset, verification, address change), the sign-in once its credential passed\n(password or passkey), or a sign-in challenge (the forced change, the second\nfactor). Called as soon as the account is loaded, before any other hook reads under\nit (keksdose's key wraps are FORCE row-level security on the current user)."
+            },
+            {
+              "name": "sessions_ended",
+              "type": "Callable[[UserT, SessionsEndedReason], Awaitable[_Extras | None]] | None",
+              "default": "None",
+              "doc": "Seam 4: every session of the account ended, and why: what else ends with them.\nIt may answer a mapping (0.32, keksdose's KG-7): its counts join the detail of the\nadmin's row that ended the sessions (deactivate, password_change_require)."
             },
             {
               "name": "password_changing",
@@ -3195,6 +3571,12 @@
               "type": "Callable[[UserT], Awaitable[_Extras | None]] | None",
               "default": "None",
               "doc": "Seam 5: the account asked to be deleted and is deactivated: cancel or tell what is\nthe app's (billing, budget guests); the extras ride on the answer and, since 0.31, are\nthe ``deletion_request`` row's detail (ids, counts and flags: ``audit_detail``'s rule)."
+            },
+            {
+              "name": "deletion_requesting",
+              "type": "Callable[[UserT], Awaitable[None]] | None",
+              "default": "None",
+              "doc": "Before a deletion request changes anything (0.32, keksdose's KG-8): raise a kit\nrefusal to refuse it (``household_has_members``), so nothing is deactivated, ended,\nmailed or logged — not a rollback after the fact."
             },
             {
               "name": "on_deletion_withdrawn",
@@ -3417,13 +3799,33 @@
               "doc": ""
             }
           ]
+        },
+        {
+          "name": "TwoFactorChallengeIssued",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class TwoFactorChallengeIssued[UserT: AccountRow = Any]",
+          "doc": "The password was right and the account has two-factor sign-in on: its code is next\n(§5.1, 0.32; keksdose ``TwoFactorChallengeResponse``) → ``POST /auth/login/2fa``. Its own\nclass, not a :class:`ChallengeIssued`: an app's code that reads that one as \"a new\npassword first\" stays right.",
+          "fields": [
+            {
+              "name": "user",
+              "type": "UserT",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "challenge_token",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            }
+          ]
         }
       ]
     },
     {
       "name": "eifi1_server_kit.auth.router",
       "summary": "The account routes as router factories: ``auth_router(AuthDeps(...))`` and ``invitations_admin_router(...)``.",
-      "doc": "The account routes as router factories: ``auth_router(AuthDeps(...))`` and\n``invitations_admin_router(...)``.\n\nLayer 2 (``docs/auth-harmonization.md`` §12.3 in ``Eifi1/ui-kit``; the pattern of\n:func:`eifi1_server_kit.feedback.router.feedback_router`), behind the ``fastapi`` extra, and\nthe passkey routes behind the ``passkeys`` extra too. The app passes its stores as\ndependencies on the request's session, its signer, hasher and mailer, its policy, its hooks\ndependency, and the schema subclasses it extends; and includes the routers as its own::\n\n    deps = AuthDeps(\n        users=user_store, sessions=session_store, tokens=token_store, invitations=invitation_store,\n        log=admin_log, after_commit=after_commit, hooks=account_hooks,\n        signer=jwt_signer, hasher=bcrypt_hasher, mailer=mailer, mail_backend=settings.mail_backend,\n        policy=AccountPolicy(app=\"staunlabor\", app_name=\"Staunlabor\", contact=\"support@staunlabor.app\",\n                             links=AccountLinks(base_url=settings.app_base_url)),\n        passkeys=passkey_store, relying_party=RelyingParty(rp_id=..., rp_name=\"Staunlabor\", origins=(...,)),\n        client_address=caller_address,\n    )\n    app.include_router(auth_router(deps), prefix=\"/api/v1\")\n    app.include_router(invitations_admin_router(deps), prefix=\"/api/v1\")\n    app.state.auth_limiters = AuthLimiters()\n    install_contract_error_handlers(app)\n\n**One** :func:`current_user` **for every router** (§12.3): the dependency the account routes\ncheck the bearer with — the token, its session row, the cut-off, the account active, the\napp's ``bind`` — so ``FeedbackDeps.actor`` and ``TranslationReviewDeps.reviewer`` map that\nuser instead of checking a bearer a second time. :func:`admin_guard` is built on it. Both are\nthe same callables for the same ``deps`` however often they are asked for, so FastAPI runs\neach once per request.\n\n**The router raises no** ``HTTPException``: every refusal is a coded kit refusal (§12.5 item\n3), answered by :func:`~eifi1_server_kit.errors.install_contract_error_handlers`; a signed-in\nroute answers ``401`` only about the session, never for a wrong input. The limits are the\napp's :class:`~eifi1_server_kit.auth.AuthLimiters` on ``app.state.auth_limiters``, each window\nkeyed by the app's ``client_address`` (its ``client_ip`` with ``vouched_hops``).\n\nNo ``from __future__ import annotations`` here, on purpose: the endpoints' parameter types\nare the app's models, closed over in the factory, and FastAPI cannot resolve a string\nannotation that names a local.",
+      "doc": "The account routes as router factories: ``auth_router(AuthDeps(...))`` and\n``invitations_admin_router(...)``.\n\nLayer 2 (``docs/auth-harmonization.md`` §12.3 in ``Eifi1/ui-kit``; the pattern of\n:func:`eifi1_server_kit.feedback.router.feedback_router`), behind the ``fastapi`` extra, and\nthe passkey routes behind the ``passkeys`` extra too; with a ``two_factor`` store and a\n``secret_seal`` (0.32, keksdose's KG-1), the two-factor routes. The app passes its stores as\ndependencies on the request's session, its signer, hasher and mailer, its policy, its hooks\ndependency, and the schema subclasses it extends; and includes the routers as its own::\n\n    deps = AuthDeps(\n        users=user_store, sessions=session_store, tokens=token_store, invitations=invitation_store,\n        log=admin_log, after_commit=after_commit, hooks=account_hooks,\n        signer=jwt_signer, hasher=bcrypt_hasher, mailer=mailer, mail_backend=settings.mail_backend,\n        policy=AccountPolicy(app=\"staunlabor\", app_name=\"Staunlabor\", contact=\"support@staunlabor.app\",\n                             links=AccountLinks(base_url=settings.app_base_url)),\n        passkeys=passkey_store, relying_party=RelyingParty(rp_id=..., rp_name=\"Staunlabor\", origins=(...,)),\n        client_address=caller_address,\n    )\n    app.include_router(auth_router(deps), prefix=\"/api/v1\")\n    app.include_router(invitations_admin_router(deps), prefix=\"/api/v1\")\n    app.state.auth_limiters = AuthLimiters()\n    install_contract_error_handlers(app)\n\n**One** :func:`current_user` **for every router** (§12.3): the dependency the account routes\ncheck the bearer with — the token, its session row, the cut-off, the account active, the\napp's ``bind`` — so ``FeedbackDeps.actor`` and ``TranslationReviewDeps.reviewer`` map that\nuser instead of checking a bearer a second time. :func:`admin_guard` is built on it. Both are\nthe same callables for the same ``deps`` however often they are asked for, so FastAPI runs\neach once per request.\n\n**The router raises no** ``HTTPException``: every refusal is a coded kit refusal (§12.5 item\n3), answered by :func:`~eifi1_server_kit.errors.install_contract_error_handlers`; a signed-in\nroute answers ``401`` only about the session, never for a wrong input. The limits are the\napp's :class:`~eifi1_server_kit.auth.AuthLimiters` on ``app.state.auth_limiters``, each window\nkeyed by the app's ``client_address`` (its ``client_ip`` with ``vouched_hops``).\n\nNo ``from __future__ import annotations`` here, on purpose: the endpoints' parameter types\nare the app's models, closed over in the factory, and FastAPI cannot resolve a string\nannotation that names a local.",
       "contract": {
         "doc": "docs/auth-harmonization.md",
         "section": "§12",
@@ -3492,6 +3894,12 @@
               "doc": "``PasskeyStore``: mounts the passkey routes, with ``relying_party``."
             },
             {
+              "name": "two_factor",
+              "type": "Callable[..., Any] | None",
+              "default": "None",
+              "doc": "``TwoFactorStore`` (0.32): mounts the two-factor routes, with ``secret_seal``."
+            },
+            {
               "name": "signer",
               "type": "TokenSigner",
               "default": null,
@@ -3526,6 +3934,12 @@
               "type": "RelyingParty | None",
               "default": "None",
               "doc": ""
+            },
+            {
+              "name": "secret_seal",
+              "type": "SecretSeal | None",
+              "default": "None",
+              "doc": "The TOTP secret's seal (0.32): :class:`~eifi1_server_kit.auth.seal.SecretBox`, or the\napp's own :class:`~eifi1_server_kit.auth.ports.SecretSeal`."
             },
             {
               "name": "demo_guard",
@@ -3704,6 +4118,30 @@
           "doc": ":func:`current_user`, and ``403 admin_required`` unless the account holds\n``policy.admin_role``. The same callable for the same ``deps``."
         },
         {
+          "name": "app_account_service",
+          "kind": "function",
+          "signature": "async app_account_service() -> AccountService[Any, Any, Any]",
+          "doc": "This request's :class:`~eifi1_server_kit.auth.service.AccountService`, for an\nimport-time router (:func:`app_current_user`)."
+        },
+        {
+          "name": "app_admin",
+          "kind": "function",
+          "signature": "async app_admin(_credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)] = None) -> Any",
+          "doc": ":func:`admin_guard`'s account, for an import-time router (:func:`app_current_user`),\ndeclaring the bearer as it does."
+        },
+        {
+          "name": "app_current_user",
+          "kind": "function",
+          "signature": "async app_current_user(_credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)] = None) -> Any",
+          "doc": "The signed-in account, for a router an app makes when its module is imported — before\nits ``AuthDeps`` exist, so :func:`current_user` cannot be called yet (0.32,\nKurvenschmiede's gap 1). ``Depends(app_current_user)`` there, and\n:func:`install_account_layer` binds it to the app's ``current_user(deps)``; unbound, it\nraises :class:`RuntimeError` naming the missing call.\n\nIt takes the kit's bearer scheme itself, unused: ``dependency_overrides`` do not reach\n``app.openapi()``, which reads this function's own dependencies, so a route on it declares\nthe bearer as the kit's routes do (Kurvenschmiede's S1)."
+        },
+        {
+          "name": "app_feedback_actor",
+          "kind": "function",
+          "signature": "async app_feedback_actor(request: Request, user: Annotated[Any, Depends(app_current_user)]) -> FeedbackActor",
+          "doc": "The signed-in account as the feedback router's actor (0.32, Staunlabor's pilot):\n``FeedbackDeps(actor=app_feedback_actor)``. A module-level dependency, so FastAPI resolves\nit under ``from __future__ import annotations`` too, where a closure over\n``current_user(deps)`` left the feedback routes out of ``app.openapi()``. Admin is\n``policy.admin_role``; the name is :func:`~eifi1_server_kit.auth.full_name` in the\naccount's language. Needs :func:`install_account_layer`."
+        },
+        {
           "name": "app_state_limiters",
           "kind": "function",
           "signature": "app_state_limiters(request: Request) -> AuthLimiters",
@@ -3713,13 +4151,19 @@
           "name": "auth_router",
           "kind": "function",
           "signature": "auth_router(deps: AuthDeps, *, prefix: str = '/auth', tags: Sequence[str] = ('auth',)) -> APIRouter",
-          "doc": "The account routes (§12.1), on ``APIRouter(prefix=prefix, tags=tags)``: sign-up and\nsign-in with its forced change, the refresh, the sessions, ``/me`` and its settings\n(password, address, deletion, export), the mailed links (verification, reset,\ninvitations), and with ``deps.passkeys`` the passkey routes. ``/sessions/current`` comes\nbefore ``/sessions/{session_id}``. Raises :class:`ValueError` for a ``passkeys`` without a\n``relying_party`` (or the reverse) and for an app mail table the kit cannot fill."
+          "doc": "The account routes (§12.1), on ``APIRouter(prefix=prefix, tags=tags)``: sign-up and\nsign-in with its forced change, the refresh, the sessions, ``/me`` and its settings\n(password, address, deletion, export), the mailed links (verification, reset,\ninvitations), with ``deps.passkeys`` the passkey routes, and with ``deps.two_factor`` the\ntwo-factor routes (0.32). ``/sessions/current`` comes before ``/sessions/{session_id}``.\nRaises :class:`ValueError` for a ``passkeys`` without a ``relying_party``, a ``two_factor``\nwithout a ``secret_seal`` (or the reverse of either), and for an app mail table the kit\ncannot fill."
         },
         {
           "name": "current_user",
           "kind": "function",
           "signature": "current_user(deps: AuthDeps) -> Callable[..., Awaitable[Any]]",
           "doc": "The dependency answering the signed-in account (the app's row): ``401 not_signed_in``\nwithout a usable bearer token, ``401 session_ended`` once its session is over, or the\n``bind`` hook's refusal. The same callable for the same ``deps``."
+        },
+        {
+          "name": "install_account_layer",
+          "kind": "function",
+          "signature": "install_account_layer(app: Any, deps: AuthDeps) -> None",
+          "doc": "Bind the import-time placeholders — :func:`app_current_user`, :func:`app_admin`,\n:func:`app_account_service` — to ``deps``, through the app's ``dependency_overrides``,\nand keep ``deps`` on ``app.state.account_deps``. Call it once where the app is built,\nbeside mounting :func:`auth_router` (0.32)::\n\n    deps = AuthDeps(...)\n    app.include_router(auth_router(deps), prefix=\"/api/v1\")\n    install_account_layer(app, deps)\n\nA test that builds its own app calls it on that app too."
         },
         {
           "name": "invitations_admin_router",
@@ -3975,7 +4419,7 @@
     {
       "name": "eifi1_server_kit.auth.mails",
       "summary": "The account mails' words, in the seven languages: the account layer writes them once.",
-      "doc": "The account mails' words, in the seven languages: the account layer writes them once.\n\n``docs/auth-harmonization.md`` §12.3 (\"Mail texts\") and §12.5 item 10 in ``Eifi1/ui-kit``.\nUntil 0.29 the words were each app's (§8); the account layer sends the mails itself, so it\nwrites them, as the ui-kit writes the sign-in's words: German is ``de-CH``, formal, with\n\"ss\", as in the ui-kit's catalogues. They are lifted from Kurvenschmiede's (which had all\nseven: ``password_reset_service``, ``email_verification_service``, ``email_change_service``,\n``invitation_service``, ``erasure_service``), with the app's name as ``{app}`` and its\nproduct line left out, and from keksdose's passkey notice (``passkey_service._announce_added``),\nwhich had four.\n\nAn app may replace a kind with its own table (``AuthDeps.mail_texts``):\n:func:`account_mail_texts` merges and checks it, so a placeholder the kit does not fill, or a\ntable without the fallback language, fails when the router is built rather than at a send.\n\n**The lifetimes are written out** (\"one hour\", \"48 hours\", \"14 days\"), so every language\ngets its plural right; they are the kit's :data:`~eifi1_server_kit.auth.RESET_TTL`,\n:data:`~eifi1_server_kit.auth.VERIFY_TTL`, :data:`~eifi1_server_kit.auth.EMAIL_CHANGE_TTL`\nand :data:`~eifi1_server_kit.auth.INVITE_TTL`, and the kit's tests hold the two together.\n\nThe placeholders each kind fills are :data:`ACCOUNT_MAIL_VALUES`: ``{app}`` the app's name,\n``{name}`` the recipient's in their own language (:func:`~eifi1_server_kit.auth.full_name`),\n``{contact}`` a person to write to (the app's support address), ``{new_email}`` where an\naddress change's link went, ``{passkey}`` the new passkey's name, ``{date}`` the erasure's day\n(:func:`mail_date`), ``{backup_days}`` and ``{log_days}`` the retention note\n(:func:`~eifi1_server_kit.user_admin.deletion_mail_retention_note`), ``{group}`` the invitation's\ngroup (0.31: a team's name from ``AuthHooks.invitation_group``, empty without one; the kit's own\ninvitation text names none, an app's own table may).",
+      "doc": "The account mails' words, in the seven languages: the account layer writes them once.\n\n``docs/auth-harmonization.md`` §12.3 (\"Mail texts\") and §12.5 item 10 in ``Eifi1/ui-kit``.\nUntil 0.29 the words were each app's (§8); the account layer sends the mails itself, so it\nwrites them, as the ui-kit writes the sign-in's words: German is ``de-CH``, formal, with\n\"ss\", as in the ui-kit's catalogues. They are lifted from Kurvenschmiede's (which had all\nseven: ``password_reset_service``, ``email_verification_service``, ``email_change_service``,\n``invitation_service``, ``erasure_service``), with the app's name as ``{app}`` and its\nproduct line left out, and from keksdose's passkey notice (``passkey_service._announce_added``),\nwhich had four.\n\nAn app may replace a kind with its own table (``AuthDeps.mail_texts``):\n:func:`account_mail_texts` merges and checks it, so a placeholder the kit does not fill, or a\ntable without the fallback language, fails when the router is built rather than at a send.\n\n**The lifetimes are written out** (\"one hour\", \"48 hours\", \"14 days\"), so every language\ngets its plural right; they are the kit's :data:`~eifi1_server_kit.auth.RESET_TTL`,\n:data:`~eifi1_server_kit.auth.VERIFY_TTL`, :data:`~eifi1_server_kit.auth.EMAIL_CHANGE_TTL`\nand :data:`~eifi1_server_kit.auth.INVITE_TTL`, and the kit's tests hold the two together.\n\nThe placeholders each kind fills are :data:`ACCOUNT_MAIL_VALUES`: ``{app}`` the app's name,\n``{name}`` the recipient's in their own language (:func:`~eifi1_server_kit.auth.full_name`),\n``{contact}`` a person to write to (the app's support address), ``{new_email}`` where an\naddress change's link went, ``{passkey}`` the new passkey's name, ``{date}`` the erasure's day\n(:func:`mail_date`), ``{backup_days}`` and ``{log_days}`` the retention note\n(:func:`~eifi1_server_kit.user_admin.deletion_mail_retention_note`), ``{group}`` the invitation's\ngroup (0.31: a team's name from ``AuthHooks.invitation_group``, empty without one; the kit's own\ninvitation text names none, an app's own table may), ``{inviter}`` who invited (0.32), and\n``{privacy}`` the privacy page's link in the deletion mails (0.32, ``AccountLinks.privacy``).",
       "contract": {
         "doc": "docs/auth-harmonization.md",
         "section": "§12",
@@ -3992,19 +4436,19 @@
         {
           "name": "ACCOUNT_MAIL_KINDS",
           "kind": "constant",
-          "signature": "ACCOUNT_MAIL_KINDS: Mapping[AccountMailText, str] = {\n    AccountMailText.PASSWORD_RESET: OneTimeTokenKind.PASSWORD_RESET,\n    AccountMailText.VERIFICATION: OneTimeTokenKind.VERIFICATION,\n    AccountMailText.EMAIL_CHANGE: OneTimeTokenKind.EMAIL_CHANGE,\n    AccountMailText.EMAIL_CHANGE_NOTICE: AccountNoticeKind.EMAIL_CHANGE_NOTICE,\n    AccountMailText.INVITATION: OneTimeTokenKind.INVITATION,\n    AccountMailText.ACCOUNT_DELETION: AccountNoticeKind.ACCOUNT_DELETION,\n    AccountMailText.ACCOUNT_DELETION_OPERATOR: AccountNoticeKind.ACCOUNT_DELETION,\n    AccountMailText.PASSKEY_ADDED_NOTICE: AccountNoticeKind.PASSKEY_ADDED_NOTICE,\n}",
+          "signature": "ACCOUNT_MAIL_KINDS: Mapping[AccountMailText, str] = {\n    AccountMailText.PASSWORD_RESET: OneTimeTokenKind.PASSWORD_RESET,\n    AccountMailText.VERIFICATION: OneTimeTokenKind.VERIFICATION,\n    AccountMailText.EMAIL_CHANGE: OneTimeTokenKind.EMAIL_CHANGE,\n    AccountMailText.EMAIL_CHANGE_NOTICE: AccountNoticeKind.EMAIL_CHANGE_NOTICE,\n    AccountMailText.INVITATION: OneTimeTokenKind.INVITATION,\n    AccountMailText.GROUP_INVITATION: OneTimeTokenKind.INVITATION,\n    AccountMailText.INVITATION_ACCOUNT: OneTimeTokenKind.INVITATION,\n    AccountMailText.GROUP_INVITATION_ACCOUNT: OneTimeTokenKind.INVITATION,\n    AccountMailText.ACCOUNT_DELETION: AccountNoticeKind.ACCOUNT_DELETION,\n    AccountMailText.ACCOUNT_DELETION_OPERATOR: AccountNoticeKind.ACCOUNT_DELETION,\n    AccountMailText.PASSKEY_ADDED_NOTICE: AccountNoticeKind.PASSKEY_ADDED_NOTICE,\n    AccountMailText.TWO_FACTOR_RESET_NOTICE: AccountNoticeKind.TWO_FACTOR_RESET_NOTICE,\n}",
           "doc": "The ``kind`` each mail is sent and logged under (:meth:`~eifi1_server_kit.mail.Mailer.send`):\na link's by its token kind, a notice's by :class:`~eifi1_server_kit.mail.AccountNoticeKind`."
         },
         {
           "name": "ACCOUNT_MAIL_TEXTS",
           "kind": "constant",
-          "signature": "ACCOUNT_MAIL_TEXTS: Mapping[AccountMailText, Mapping[str, MailText]] = {\n    AccountMailText.PASSWORD_RESET: _RESET,\n    AccountMailText.VERIFICATION: _VERIFICATION,\n    AccountMailText.EMAIL_CHANGE: _EMAIL_CHANGE,\n    AccountMailText.EMAIL_CHANGE_NOTICE: _EMAIL_CHANGE_NOTICE,\n    AccountMailText.INVITATION: _INVITATION,\n    AccountMailText.ACCOUNT_DELETION: _DELETION,\n    AccountMailText.ACCOUNT_DELETION_OPERATOR: _DELETION_OPERATOR,\n    AccountMailText.PASSKEY_ADDED_NOTICE: _PASSKEY_ADDED,\n}",
+          "signature": "ACCOUNT_MAIL_TEXTS: Mapping[AccountMailText, Mapping[str, MailText]] = {\n    AccountMailText.PASSWORD_RESET: _RESET,\n    AccountMailText.VERIFICATION: _VERIFICATION,\n    AccountMailText.EMAIL_CHANGE: _EMAIL_CHANGE,\n    AccountMailText.EMAIL_CHANGE_NOTICE: _EMAIL_CHANGE_NOTICE,\n    AccountMailText.INVITATION: _INVITATION,\n    AccountMailText.GROUP_INVITATION: _GROUP_INVITATION,\n    AccountMailText.INVITATION_ACCOUNT: _INVITATION,\n    AccountMailText.GROUP_INVITATION_ACCOUNT: _GROUP_INVITATION,\n    AccountMailText.ACCOUNT_DELETION: _DELETION,\n    AccountMailText.ACCOUNT_DELETION_OPERATOR: _DELETION_OPERATOR,\n    AccountMailText.PASSKEY_ADDED_NOTICE: _PASSKEY_ADDED,\n    AccountMailText.TWO_FACTOR_RESET_NOTICE: _TWO_FACTOR_RESET,\n}",
           "doc": "The kit's words for every account mail, seven languages each."
         },
         {
           "name": "ACCOUNT_MAIL_VALUES",
           "kind": "constant",
-          "signature": "ACCOUNT_MAIL_VALUES: Mapping[AccountMailText, frozenset[str]] = {\n    AccountMailText.PASSWORD_RESET: frozenset({\"app\", \"name\"}),\n    AccountMailText.VERIFICATION: frozenset({\"app\", \"name\"}),\n    AccountMailText.EMAIL_CHANGE: frozenset({\"app\", \"name\"}),\n    AccountMailText.EMAIL_CHANGE_NOTICE: frozenset({\"app\", \"name\", \"new_email\", \"contact\"}),\n    AccountMailText.INVITATION: frozenset({\"app\", \"group\"}),\n    AccountMailText.ACCOUNT_DELETION: frozenset({\"app\", \"name\", \"date\", \"contact\", \"backup_days\", \"log_days\"}),\n    AccountMailText.ACCOUNT_DELETION_OPERATOR: frozenset({\"app\", \"name\", \"contact\", \"backup_days\", \"log_days\"}),\n    AccountMailText.PASSKEY_ADDED_NOTICE: frozenset({\"app\", \"name\", \"passkey\", \"contact\"}),\n}",
+          "signature": "ACCOUNT_MAIL_VALUES: Mapping[AccountMailText, frozenset[str]] = {\n    AccountMailText.PASSWORD_RESET: frozenset({\"app\", \"name\"}),\n    AccountMailText.VERIFICATION: frozenset({\"app\", \"name\"}),\n    AccountMailText.EMAIL_CHANGE: frozenset({\"app\", \"name\"}),\n    AccountMailText.EMAIL_CHANGE_NOTICE: frozenset({\"app\", \"name\", \"new_email\", \"contact\"}),\n    AccountMailText.INVITATION: frozenset({\"app\", \"group\", \"inviter\"}),\n    AccountMailText.GROUP_INVITATION: frozenset({\"app\", \"group\", \"inviter\"}),\n    AccountMailText.INVITATION_ACCOUNT: frozenset({\"app\", \"group\", \"inviter\"}),\n    AccountMailText.GROUP_INVITATION_ACCOUNT: frozenset({\"app\", \"group\", \"inviter\"}),\n    AccountMailText.ACCOUNT_DELETION: frozenset(\n        {\"app\", \"name\", \"date\", \"contact\", \"backup_days\", \"log_days\", \"privacy\"}\n    ),\n    AccountMailText.ACCOUNT_DELETION_OPERATOR: frozenset(\n        {\"app\", \"name\", \"contact\", \"backup_days\", \"log_days\", \"privacy\"}\n    ),\n    AccountMailText.PASSKEY_ADDED_NOTICE: frozenset({\"app\", \"name\", \"passkey\", \"contact\"}),\n    AccountMailText.TWO_FACTOR_RESET_NOTICE: frozenset({\"app\", \"name\", \"contact\"}),\n}",
           "doc": "The placeholders the account layer fills for each mail; a table may use any of them."
         },
         {
@@ -4034,6 +4478,18 @@
               "value": "invitation"
             },
             {
+              "name": "GROUP_INVITATION",
+              "value": "group_invitation"
+            },
+            {
+              "name": "INVITATION_ACCOUNT",
+              "value": "invitation_account"
+            },
+            {
+              "name": "GROUP_INVITATION_ACCOUNT",
+              "value": "group_invitation_account"
+            },
+            {
               "name": "ACCOUNT_DELETION",
               "value": "account_deletion"
             },
@@ -4044,6 +4500,10 @@
             {
               "name": "PASSKEY_ADDED_NOTICE",
               "value": "passkey_added_notice"
+            },
+            {
+              "name": "TWO_FACTOR_RESET_NOTICE",
+              "value": "two_factor_reset_notice"
             }
           ]
         },
@@ -4214,7 +4674,7 @@
     {
       "name": "eifi1_server_kit.auth.sql",
       "summary": "The account tables as SQLAlchemy declarative mixins, the ``sql`` extra (``docs/auth-harmonization.md`` §12.3 in ``Eifi1/ui-kit``, decision C of 2026-11-13).",
-      "doc": "The account tables as SQLAlchemy declarative mixins, the ``sql`` extra\n(``docs/auth-harmonization.md`` §12.3 in ``Eifi1/ui-kit``, decision C of 2026-11-13).\n\nLayer 2's ports read rows through protocols, so an app may keep tables of its own. For the\ncommon case (one role per account, the global admin scope) these mixins ARE the tables: the\napp subclasses each on its own declarative base, names the table, adds what is its own (a\ncolumn, an index, a relationship) and writes its own Alembic migration. Without them every\napp writes the same nine tables again, and the copies drift the way the routes did (§12.2).\n\n* :class:`AccountColumns`: the account row; two optional columns beside it,\n  :class:`DemoAccountColumn` for an app with a demo and :class:`SessionCutoffColumn` for one\n  that still ends sessions by an ``iat`` cut-off. A new app needs neither: \"end every\n  session\" ends every :class:`SessionColumns` row (§12.5).\n* :class:`SessionColumns`: a signed-in session, server-kit 0.27's row (``sid``, the shared\n  device and its :func:`~eifi1_server_kit.auth.session_expires_at`).\n* :class:`OneTimeTokenColumns`: the reset, verification and address-change links, one row\n  per account and :class:`~eifi1_server_kit.auth.tokens.OneTimeTokenKind`.\n* :class:`InvitationColumns`: invitations; ``scope`` is the app's (a company, a team, a\n  budget) and opaque to the kit.\n* :class:`PasskeyColumns` and :class:`SpentChallengeColumns`: WebAuthn credentials, and the\n  challenges already answered, so that each is accepted once.\n* :class:`AdminActionColumns`: the activity log, the fields\n  :func:`~eifi1_server_kit.user_admin.admin_action_record` returns, plus ``scope``.\n\n0.30 adds no table and no column: :class:`SqlRosterStore` (the admin's user list, the\noverview's counts and the erasure job's candidates, :mod:`eifi1_server_kit.user_admin.ports`)\nreads the account table as it is, and :meth:`SqlInvitationStore.forget_accepted` deletes rows\nof the invitations table as it is.\n\n**The stores** implement :mod:`~eifi1_server_kit.auth.ports` over models built from these\nmixins, on the request's ``AsyncSession``: :class:`SqlUserStore`, :class:`SqlSessionStore`,\n:class:`SqlOneTimeTokenStore`, :class:`SqlInvitationStore`, :class:`SqlPasskeyStore`,\n:class:`SqlAdminActionLog`, and :class:`SqlAfterCommit` for the work that waits for the\ncommit; and since 0.30 :class:`SqlRosterStore`. Every write flushes and none commits, but :meth:`SqlAfterCommit.commit_now`, the one\nplace the port allows it. A store sets only mapped attributes: a value for a column the\nmodel lacks (a kastlan ``company_id`` on a log without one) is a :class:`ValueError`, never\na plain attribute the flush silently leaves out.\n\n**What this does not do.** It names no table (the app's ``__tablename__``), picks no base,\nseals no column (an app that encrypts one overrides that attribute with its own type), and\ncreates no schema: ``create_all`` is for tests, the migrations are the app's.\n\n**The account table's name.** Every column that points at an account builds its foreign key\nfrom ``__accounts_table__`` (default ``\"users\"``). An app whose table is called otherwise sets\nit on each subclass, or once on a mixin of its own placed before these.\n\n**Constraints are unnamed**, so the app's ``MetaData(naming_convention=…)`` names them as it\nnames its own, and its migrations and its models agree. A subclass that needs table arguments\nof its own adds them to the mixin's: ``__table_args__ = (*OneTimeTokenColumns.table_args(), …)``.\n\nNeeds the ``sql`` extra (``eifi1-server-kit[sql]``).",
+      "doc": "The account tables as SQLAlchemy declarative mixins, the ``sql`` extra\n(``docs/auth-harmonization.md`` §12.3 in ``Eifi1/ui-kit``, decision C of 2026-11-13).\n\nLayer 2's ports read rows through protocols, so an app may keep tables of its own. For the\ncommon case (one role per account, the global admin scope) these mixins ARE the tables: the\napp subclasses each on its own declarative base, names the table, adds what is its own (a\ncolumn, an index, a relationship) and writes its own Alembic migration. Without them every\napp writes the same nine tables again, and the copies drift the way the routes did (§12.2).\n\n* :class:`AccountColumns`: the account row; two optional columns beside it,\n  :class:`DemoAccountColumn` for an app with a demo and :class:`SessionCutoffColumn` for one\n  that still ends sessions by an ``iat`` cut-off. A new app needs neither: \"end every\n  session\" ends every :class:`SessionColumns` row (§12.5).\n* :class:`SessionColumns`: a signed-in session, server-kit 0.27's row (``sid``, the shared\n  device and its :func:`~eifi1_server_kit.auth.session_expires_at`).\n* :class:`OneTimeTokenColumns`: the reset, verification and address-change links, one row\n  per account and :class:`~eifi1_server_kit.auth.tokens.OneTimeTokenKind`.\n* :class:`InvitationColumns`: invitations; ``scope`` is the app's (a company, a team, a\n  budget) and opaque to the kit.\n* :class:`PasskeyColumns` and :class:`SpentChallengeColumns`: WebAuthn credentials, and the\n  challenges already answered, so that each is accepted once.\n* :class:`TwoFactorColumns` (0.32): the second factor's four columns on the account row,\n  keksdose's ``users.totp_*``, for an app with two-factor sign-in.\n* :class:`AdminActionColumns`: the activity log, the fields\n  :func:`~eifi1_server_kit.user_admin.admin_action_record` returns, plus ``scope``.\n\n0.30 adds no table and no column: :class:`SqlRosterStore` (the admin's user list, the\noverview's counts and the erasure job's candidates, :mod:`eifi1_server_kit.user_admin.ports`)\nreads the account table as it is, and :meth:`SqlInvitationStore.forget_accepted` deletes rows\nof the invitations table as it is.\n\n**The stores** implement :mod:`~eifi1_server_kit.auth.ports` over models built from these\nmixins, on the request's ``AsyncSession``: :class:`SqlUserStore`, :class:`SqlSessionStore`,\n:class:`SqlOneTimeTokenStore`, :class:`SqlInvitationStore`, :class:`SqlPasskeyStore`,\nthe second factor's :class:`SqlTwoFactorStore` (0.32), :class:`SqlAdminActionLog`, and\n:class:`SqlAfterCommit` for the work that waits for the commit; and since 0.30\n:class:`SqlRosterStore`. Every write flushes and none commits, but :meth:`SqlAfterCommit.commit_now`, the one\nplace the port allows it. A store sets only mapped attributes: a value for a column the\nmodel lacks (a kastlan ``company_id`` on a log without one) is a :class:`ValueError`, never\na plain attribute the flush silently leaves out.\n\n**What this does not do.** It names no table (the app's ``__tablename__``), picks no base,\nseals no column (an app that encrypts one overrides that attribute with its own type), and\ncreates no schema: ``create_all`` is for tests, the migrations are the app's.\n\n**The account table's name.** Every column that points at an account builds its foreign key\nfrom ``__accounts_table__`` (default ``\"users\"``). An app whose table is called otherwise sets\nit on each subclass, or once on a mixin of its own placed before these.\n\n**Constraints are unnamed**, so the app's ``MetaData(naming_convention=…)`` names them as it\nnames its own, and its migrations and its models agree. A subclass that needs table arguments\nof its own adds them to the mixin's: ``__table_args__ = (*OneTimeTokenColumns.table_args(), …)``.\n\nNeeds the ``sql`` extra (``eifi1-server-kit[sql]``).",
       "contract": {
         "doc": "docs/auth-harmonization.md",
         "section": "§12",
@@ -4687,6 +5147,29 @@
           ]
         },
         {
+          "name": "SqlTwoFactorStore",
+          "kind": "class",
+          "signature": "class SqlTwoFactorStore[UserT: TwoFactorColumns]",
+          "doc": ":class:`~eifi1_server_kit.auth.ports.TwoFactorStore` over the account model with\n:class:`TwoFactorColumns` (0.32). ``lock`` reads the row ``FOR UPDATE`` and again from the\ndatabase (a no-op lock on SQLite, which locks the whole file on a write). An account that\ndoes not exist has the empty state, and saving one is a :class:`LookupError`.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(session: AsyncSession, model: type[UserT]) -> None",
+              "doc": ""
+            },
+            {
+              "name": "state",
+              "signature": "async state(user_id: int, *, lock: bool = False) -> TwoFactorState",
+              "doc": ""
+            },
+            {
+              "name": "save",
+              "signature": "async save(user_id: int, state: TwoFactorState) -> None",
+              "doc": ""
+            }
+          ]
+        },
+        {
           "name": "SqlUserStore",
           "kind": "class",
           "signature": "class SqlUserStore[UserT: AccountColumns]",
@@ -4743,6 +5226,12 @@
               "doc": ""
             }
           ]
+        },
+        {
+          "name": "TwoFactorColumns",
+          "kind": "class",
+          "signature": "class TwoFactorColumns",
+          "doc": "The second factor on the account row (0.32, keksdose's KG-1 and its ``users.totp_*``):\non, the live secret, the pending one, the last accepted step and (0.32) the backup codes'\ndigests (:class:`~eifi1_server_kit.auth.ports.TwoFactorState`). The secrets hold what the app's\n:class:`~eifi1_server_kit.auth.ports.SecretSeal` makes — never the plaintext — with room\nfor :class:`~eifi1_server_kit.auth.seal.SecretBox`'s 87 characters. The step is a\n``BIGINT``, as a count of 30-second steps since 1970. Placed beside :class:`AccountColumns`\non the app's account model; :class:`SqlTwoFactorStore` reads and writes them."
         },
         {
           "name": "UtcDateTime",
@@ -4894,6 +5383,96 @@
       ]
     },
     {
+      "name": "eifi1_server_kit.auth.seal",
+      "summary": "Sealing a secret the server has to read back (0.32, keksdose's KG-1): the TOTP secret.",
+      "doc": "Sealing a secret the server has to read back (0.32, keksdose's KG-1): the TOTP secret.\n\nkeksdose ``infrastructure/secret_box.py`` (live #278) is the canon. Most of an account's\nsecrets are one-way — a password is hashed, a mailed link's token is a digest — but a TOTP\nsecret mints every second-factor code, so the check needs the plaintext. In the clear, anyone\nwho reads the database (an export, a backup) mints valid codes for every account with 2FA.\n\n**What this is.** AES-256-GCM under keys the app holds outside the database (its secret\nmanager). A sealed value is::\n\n    enc:v1:<base64url( nonce(12) || ciphertext || tag(16) )>\n\nThe prefix answers \"is this sealed?\" without a key, and it is punctuated, so a base32 secret\n(``[A-Z2-7]+``) never collides with it.\n\n**The AAD binds a ciphertext to its row**: :func:`totp_secret_aad` and\n:func:`totp_pending_secret_aad` name the column and the account, so a value pasted into\nanother account's row, or a pending secret pasted over the live one, fails the tag instead of\nworking. keksdose's bytes exactly, so its stored values open unchanged.\n\n**Several keys, newest first.** The first seals, every one is tried on unseal: rotating is\n\"prepend the new key, deploy, drop the old one later\", and restoring an old key is a\nconfiguration change, not a data recovery.\n\n**No plaintext fallback, ever.** :meth:`SecretBox.seal` raises :class:`SecretKeyMissingError`\nwithout a key; it never returns its input.\n\n:class:`SecretBox` needs the ``seal`` extra (``eifi1-server-kit[seal]``, pyca's\n``cryptography``), imported when it seals or opens; the errors and the AAD need nothing. An\napp with a box of its own implements :class:`~eifi1_server_kit.auth.ports.SecretSeal` and\nraises these errors.",
+      "contract": {
+        "doc": "docs/auth-harmonization.md",
+        "section": "§12",
+        "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/auth-harmonization.md#12-layer-2-the-server-kit-runs-the-account-routes-draft-2026-11-13",
+        "links": [
+          {
+            "section": "§12",
+            "heading": "12. Layer 2: the server-kit runs the account routes (draft, 2026-11-13)",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/auth-harmonization.md#12-layer-2-the-server-kit-runs-the-account-routes-draft-2026-11-13"
+          }
+        ]
+      },
+      "members": [
+        {
+          "name": "DEFAULT_SEAL_LABEL",
+          "kind": "constant",
+          "signature": "DEFAULT_SEAL_LABEL = b\"eifi1.secret_box.v1\"",
+          "doc": "The key derivation's domain separation for a new app: the same operator string used for two\npurposes never derives the same AES key. keksdose passes its own,\n``b\"keksdose.secret_box.v1\"``, so its stored values open."
+        },
+        {
+          "name": "SEALED_PREFIX",
+          "kind": "constant",
+          "signature": "SEALED_PREFIX = \"enc:v1:\"",
+          "doc": "Marks a value as sealed. Versioned: a different construction gets its own prefix, so both\nread during a rollout.",
+          "value": "enc:v1:"
+        },
+        {
+          "name": "SecretBox",
+          "kind": "class",
+          "signature": "class SecretBox",
+          "doc": "A :class:`~eifi1_server_kit.auth.ports.SecretSeal` with AES-256-GCM (keksdose's).\n\n* ``keys`` — the operator's strings, newest first: a sequence, or one string separated by\n  whitespace or commas (one setting, so a key holds neither). Each is hashed into a 256-bit\n  key, so any format an operator pastes works (``openssl rand -hex 32``); none is allowed\n  and refuses to seal.\n* ``label`` — the derivation's domain separation, :data:`DEFAULT_SEAL_LABEL`; keksdose\n  passes ``b\"keksdose.secret_box.v1\"``.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(keys: Sequence[str] | str, *, label: bytes = DEFAULT_SEAL_LABEL) -> None",
+              "doc": ""
+            },
+            {
+              "name": "key_is_configured",
+              "signature": "@property key_is_configured -> bool",
+              "doc": "Is there a key to seal with? Read it before offering what will have to seal."
+            },
+            {
+              "name": "seal",
+              "signature": "seal(plaintext: str, *, aad: bytes) -> str",
+              "doc": "Encrypt under the newest key, or raise :class:`SecretKeyMissingError`."
+            },
+            {
+              "name": "unseal",
+              "signature": "unseal(sealed: str, *, aad: bytes) -> str",
+              "doc": "Open a value :meth:`seal` made, trying every key in order:\n:class:`SecretKeyMissingError` without a key, :class:`SecretUnreadableError` when none\nopens it."
+            }
+          ]
+        },
+        {
+          "name": "SecretKeyMissingError",
+          "kind": "class",
+          "signature": "class SecretKeyMissingError(SecretSealError)",
+          "doc": "No key is configured: nothing is sealed in the clear instead."
+        },
+        {
+          "name": "SecretSealError",
+          "kind": "class",
+          "signature": "class SecretSealError(RuntimeError)",
+          "doc": "This server could not seal or open a secret it is responsible for: the operator's to\nmend, never the person's (an unreadable second factor is ``503 two_factor_unavailable``)."
+        },
+        {
+          "name": "SecretUnreadableError",
+          "kind": "class",
+          "signature": "class SecretUnreadableError(SecretSealError)",
+          "doc": "A sealed value opened under no configured key: a key wrong or rotated out, a value\ntampered with or pasted into another row, or not a sealed value at all. One error for all,\nsince each means \"the operator must act\"."
+        },
+        {
+          "name": "totp_pending_secret_aad",
+          "kind": "function",
+          "signature": "totp_pending_secret_aad(user_id: int) -> bytes",
+          "doc": "The context of a secret set up and not yet confirmed (keksdose ``totp_pending_aad``).\nIts own, so an unconfirmed secret pasted over the live one does not open there: the one way\nfrom pending to live is the confirmation re-sealing it."
+        },
+        {
+          "name": "totp_secret_aad",
+          "kind": "function",
+          "signature": "totp_secret_aad(user_id: int) -> bytes",
+          "doc": "The context the account's live TOTP secret is sealed in (keksdose ``totp_aad``)."
+        }
+      ]
+    },
+    {
       "name": "eifi1_server_kit.user_admin",
       "summary": "User administration and the account's own settings, as code (``docs/user-admin-harmonization.md`` §7 in ``Eifi1/ui-kit``).",
       "doc": "User administration and the account's own settings, as code\n(``docs/user-admin-harmonization.md`` §7 in ``Eifi1/ui-kit``).\n\nLayer 1, like the rest of the kit: pure functions, Pydantic models and small classes — no\ndatabase, no app ``User``, no routes. The tables (``admin_actions``, the token rows), the\nqueries, RLS and company scoping, what an erasure deletes and what an export holds stay in\neach app. keksdose and Kurvenschmiede are the reference, cited per rule.\n\n* :mod:`~eifi1_server_kit.user_admin.rules` — never yourself, never the last admin, the\n  typed address;\n* :mod:`~eifi1_server_kit.user_admin.actions` — :class:`AdminAction` and each action's\n  :class:`ConfirmationLevel`;\n* :mod:`~eifi1_server_kit.user_admin.roster` — the user list's query;\n* :mod:`~eifi1_server_kit.user_admin.audit` — the ``admin_actions`` row, and a detail\n  that never holds content;\n* :mod:`~eifi1_server_kit.user_admin.schemas` — the wire shapes;\n* :mod:`~eifi1_server_kit.user_admin.deletion` — the two-stage deletion's dates;\n* :mod:`~eifi1_server_kit.user_admin.export` — the export envelope and the secret check;\n* :mod:`~eifi1_server_kit.user_admin.sensitive` — what looks like a secret;\n* :mod:`~eifi1_server_kit.user_admin.errors` — :class:`AccountError` and its codes;\n* :mod:`~eifi1_server_kit.user_admin.attention` — :class:`AdminAttention`, what waits on\n  the admin (``docs/admin-harmonization.md`` §2.4, §6.4).\n\nThe email change's token lifetime and kind are the one-time token recipe's, in\n:mod:`eifi1_server_kit.auth`: ``EMAIL_CHANGE_TTL``, ``EMAIL_CHANGE_TOKEN_KIND``.",
@@ -4932,7 +5511,7 @@
         {
           "name": "CONFIRMATION_LEVELS",
           "kind": "constant",
-          "signature": "CONFIRMATION_LEVELS: Mapping[AdminAction, ConfirmationLevel] = {\n    AdminAction.DEACTIVATE: ConfirmationLevel.TYPE_EMAIL,\n    AdminAction.REACTIVATE: ConfirmationLevel.NONE,\n    AdminAction.ROLE: ConfirmationLevel.ACKNOWLEDGE,\n    AdminAction.MEMBERSHIP_REMOVE: ConfirmationLevel.NONE,\n    AdminAction.PASSWORD_CHANGE_REQUIRE: ConfirmationLevel.ACKNOWLEDGE,\n    AdminAction.PASSWORD_CHANGE_WITHDRAW: ConfirmationLevel.NONE,\n    AdminAction.MAIL_VERIFICATION: ConfirmationLevel.NONE,\n    AdminAction.MAIL_RESET: ConfirmationLevel.NONE,\n    AdminAction.REVIEWER: ConfirmationLevel.NONE,\n    AdminAction.INVITE: ConfirmationLevel.NONE,\n    AdminAction.INVITE_RESEND: ConfirmationLevel.NONE,\n    AdminAction.INVITE_REVOKE: ConfirmationLevel.NONE,\n    AdminAction.TRANSFER: ConfirmationLevel.TYPE_EMAIL,\n    AdminAction.DELETION_REQUEST: ConfirmationLevel.TYPE_EMAIL,\n    AdminAction.DELETION_CANCEL: ConfirmationLevel.NONE,\n    AdminAction.ERASE: ConfirmationLevel.TYPE_EMAIL,\n    AdminAction.PLAN: ConfirmationLevel.ACKNOWLEDGE,\n    AdminAction.GROUP_CREATE: ConfirmationLevel.NONE,\n    AdminAction.GROUP_RENAME: ConfirmationLevel.NONE,\n    AdminAction.GROUP_DELETE: ConfirmationLevel.ACKNOWLEDGE,\n    AdminAction.MEMBERSHIP_ADD: ConfirmationLevel.NONE,\n    AdminAction.MEMBERSHIP_ROLE: ConfirmationLevel.NONE,\n    AdminAction.GROUP_DEACTIVATE: ConfirmationLevel.NONE,\n    AdminAction.GROUP_REACTIVATE: ConfirmationLevel.NONE,\n}",
+          "signature": "CONFIRMATION_LEVELS: Mapping[AdminAction, ConfirmationLevel] = {\n    AdminAction.DEACTIVATE: ConfirmationLevel.TYPE_EMAIL,\n    AdminAction.REACTIVATE: ConfirmationLevel.NONE,\n    AdminAction.ROLE: ConfirmationLevel.ACKNOWLEDGE,\n    AdminAction.MEMBERSHIP_REMOVE: ConfirmationLevel.NONE,\n    AdminAction.PASSWORD_CHANGE_REQUIRE: ConfirmationLevel.ACKNOWLEDGE,\n    AdminAction.PASSWORD_CHANGE_WITHDRAW: ConfirmationLevel.NONE,\n    AdminAction.MAIL_VERIFICATION: ConfirmationLevel.NONE,\n    AdminAction.MAIL_RESET: ConfirmationLevel.NONE,\n    AdminAction.REVIEWER: ConfirmationLevel.NONE,\n    AdminAction.INVITE: ConfirmationLevel.NONE,\n    AdminAction.INVITE_RESEND: ConfirmationLevel.NONE,\n    AdminAction.INVITE_REVOKE: ConfirmationLevel.NONE,\n    AdminAction.TRANSFER: ConfirmationLevel.TYPE_EMAIL,\n    AdminAction.DELETION_REQUEST: ConfirmationLevel.TYPE_EMAIL,\n    AdminAction.DELETION_CANCEL: ConfirmationLevel.NONE,\n    AdminAction.ERASE: ConfirmationLevel.TYPE_EMAIL,\n    AdminAction.PLAN: ConfirmationLevel.ACKNOWLEDGE,\n    AdminAction.GROUP_CREATE: ConfirmationLevel.NONE,\n    AdminAction.GROUP_RENAME: ConfirmationLevel.NONE,\n    AdminAction.GROUP_DELETE: ConfirmationLevel.ACKNOWLEDGE,\n    AdminAction.TWO_FACTOR_RESET: ConfirmationLevel.ACKNOWLEDGE,\n    AdminAction.MEMBERSHIP_ADD: ConfirmationLevel.NONE,\n    AdminAction.MEMBERSHIP_ROLE: ConfirmationLevel.NONE,\n    AdminAction.GROUP_DEACTIVATE: ConfirmationLevel.NONE,\n    AdminAction.GROUP_REACTIVATE: ConfirmationLevel.NONE,\n}",
           "doc": "The contract's level per action (§4.2). ``type_email``: deactivate, erase (the\noperator's \"erase now\"), transfer — and the user's own deletion request, whose body\ncarries the typed address (§6.4). ``acknowledge``: force a password change, change a\nrole, change a plan (billing §6), delete a group (§11.2 decision 5: what goes with it\nis what nobody can see afterwards). Everything else: ``none``. No group's action is\n``type_email``: a group has no address to type."
         },
         {
@@ -5328,6 +5907,10 @@
             {
               "name": "GROUP_REACTIVATE",
               "value": "group_reactivate"
+            },
+            {
+              "name": "TWO_FACTOR_RESET",
+              "value": "two_factor_reset"
             }
           ]
         },
@@ -5787,7 +6370,7 @@
           "name": "InvitationCreate",
           "kind": "model",
           "signature": "class InvitationCreate(BaseModel)",
-          "doc": "``POST /admin/invitations {email, role, scope?, note?, locale}`` (§5).\n\nThe address is normalised like every entry; the kit's form suggests no ``+tag`` — it\nis someone else's address. ``scope`` is the app's: a Kurvenschmiede team, ``None``\nfor registration; kastlan's company comes from the admin's own, never from the body.\n``locale`` is the invitee's language, which the mail is written in.",
+          "doc": "``POST /admin/invitations {email, role, scope?, note?, locale}`` (§5).\n\nThe address is normalised like every entry; the kit's form suggests no ``+tag`` — it\nis someone else's address. ``scope`` is the app's: a Kurvenschmiede team, ``None``\nfor registration; kastlan's company comes from the admin's own, never from the body.\n``locale`` is the invitee's language, which the mail is written in; left out, the\ninviting admin's (0.32), and the schema's default only for an admin with none.",
           "fields": [
             {
               "name": "email",
@@ -6878,6 +7461,12 @@
               "doc": "Seam 6: one roster row as the app's ``row_model`` (keksdose's plan and key custody,\nKurvenschmiede's owned counts, kastlan's roles); without it the row from the account."
             },
             {
+              "name": "to_rows",
+              "type": "Callable[[Sequence[UserT]], Awaitable[Sequence[BaseModel]]] | None",
+              "default": "None",
+              "doc": "The same for a page at once (0.32, Kurvenschmiede's G13): one row per account, in\ntheir order, so the app reads its own columns (Kurvenschmiede's subscriptions) in one\nquery. It wins over ``to_row``; a single action's row is a batch of one."
+            },
+            {
               "name": "attention",
               "type": "Callable[[UserT], Awaitable[_Extras]] | None",
               "default": "None",
@@ -6897,9 +7486,9 @@
             },
             {
               "name": "activating",
-              "type": "Callable[[UserT, UserT], Awaitable[None]] | None",
+              "type": "Callable[[UserT, UserT], Awaitable[_Extras | None]] | None",
               "default": "None",
-              "doc": "A reactivation, before it is written: ``(admin, target)``; refuse to refuse it\n(kastlan's seats again)."
+              "doc": "A reactivation, before it is written: ``(admin, target)``; refuse to refuse it\n(kastlan's seats again).\nIt may answer a mapping (0.32, keksdose's KG-7): the reactivate row's detail."
             },
             {
               "name": "group_names",
@@ -6928,12 +7517,17 @@
             {
               "name": "row",
               "signature": "async row(user: UserT) -> BaseModel",
-              "doc": "The account as one roster row: the ``to_row`` hook, else ``row_model`` from the\naccount with ``email_verified`` from ``email_verified_at``."
+              "doc": "The account as one roster row: the ``to_rows`` hook with a batch of one, the\n``to_row`` hook, else ``row_model`` from the account with ``email_verified`` from\n``email_verified_at``."
+            },
+            {
+              "name": "rows",
+              "signature": "async rows(users: Sequence[UserT]) -> list[BaseModel]",
+              "doc": "A page's rows: the ``to_rows`` hook at once (:class:`ValueError` unless it answers\none row per account), else :meth:`row` each."
             },
             {
               "name": "levels",
               "signature": "levels() -> dict[str, ConfirmationLevel]",
-              "doc": "The level of each action the router takes (§3.1, §4.2), the contract's floor."
+              "doc": "The level of each action the router takes (§3.1, §4.2), the contract's floor — the\nsecond factor's reset where the account layer has a second factor (0.32)."
             },
             {
               "name": "roster",
@@ -6959,6 +7553,11 @@
               "name": "withdraw_password_change",
               "signature": "async withdraw_password_change(admin: UserT, target: UserT, body: ActionConfirmation) -> UserT",
               "doc": "``DELETE /admin/users/{id}/password-change``: the requirement goes; the sessions it\nended stay ended."
+            },
+            {
+              "name": "reset_two_factor",
+              "signature": "async reset_two_factor(admin: UserT, target: UserT, body: ActionConfirmation) -> UserT",
+              "doc": "``POST /admin/users/{id}/two-factor-reset`` (0.32, Marcel 2026-11-14): another\naccount's second factor off — never one's own (``self_action``: one's own goes through\nthe settings or a backup code) — the scope's account-wide refusal, acknowledged; every\nfield cleared, its row logged, the account told by mail. Off already: nothing."
             },
             {
               "name": "send_mail",
@@ -9889,6 +10488,10 @@
             {
               "name": "LEGAL_CHANGE",
               "value": "legal_change"
+            },
+            {
+              "name": "TWO_FACTOR_RESET_NOTICE",
+              "value": "two_factor_reset_notice"
             }
           ]
         },
@@ -16219,8 +16822,8 @@
         {
           "name": "purge_objects",
           "kind": "function",
-          "signature": "async purge_objects(store: ObjectStore, keys: Iterable[str], *, reason: str, concurrency: int = PURGE_CONCURRENCY, spare_written_within: timedelta | None = PURGE_SPARE_RECENT, now: datetime | None = None) -> list[str]",
-          "doc": "Remove many objects; return the keys left behind, in the order given (keksdose\n``purge_objects``, ``invoice_file_store.py:404``).\n\nFor a row's files once its delete committed — a wipe's hundreds, an erasure's, a sweep's\norphans — when nothing but the key names the file any more, so two rules hold:\n\n* **Nothing raises.** A store outage must not turn \"erase everything\" into a 500 over a\n  database already emptied. A key that fails, a refused key included, is collected.\n* **Every key left is in the log**, each with its exception and then all in one line\n  with ``reason``: they are the instructions for removing them by hand.\n\nAt most ``concurrency`` removes are in flight. Duplicates are asked once and empty keys\nnot at all. An app's own placeholders (keksdose's ``(pending)`` and ``(manual)``) are\nthe app's to leave out; when to purge (keksdose's ``delete_after_commit``) stays the\napp's too.\n\n**``spare_written_within``** (0.31, **on by default**: :data:`PURGE_SPARE_RECENT`, 5\nminutes) protects **content-addressed keys** (keksdose's and Kurvenschmiede's\n``<sha12>.<ext>``), which two rows share: the purge's keys were decided inside a\ntransaction, and a byte-identical upload committed after that decision names the same\nobject. Such an upload writes the object again, so a file written within that span\nbefore ``now`` (default: the clock's) is spared, logged, and left to the app's orphan\nsweep; a file already gone is nothing to do. It asks each key's age first (a listing by\nthe key), one more round trip per key; a key whose age it cannot ask is one it left.\n``None`` removes at once, as before 0.31 — for keys no two rows share (kastlan's\n``<uuid>_<sha12>``) or a store that cannot list."
+          "signature": "async purge_objects(store: ObjectStore, keys: Iterable[str], *, reason: str, concurrency: int = PURGE_CONCURRENCY, spare_written_within: timedelta | None = PURGE_SPARE_RECENT, now: datetime | None = None, object_key: Callable[[str], str] | None = None) -> list[str]",
+          "doc": "Remove many objects; return the keys left behind, in the order given (keksdose\n``purge_objects``, ``invoice_file_store.py:404``).\n\nFor a row's files once its delete committed — a wipe's hundreds, an erasure's, a sweep's\norphans — when nothing but the key names the file any more, so two rules hold:\n\n* **Nothing raises.** A store outage must not turn \"erase everything\" into a 500 over a\n  database already emptied. A key that fails, a refused key included, is collected.\n* **Every key left is in the log**, each with its exception and then all in one line\n  with ``reason``: they are the instructions for removing them by hand.\n\nAt most ``concurrency`` removes are in flight. Duplicates are asked once and empty keys\nnot at all. An app's own placeholders (keksdose's ``(pending)`` and ``(manual)``) are\nthe app's to leave out; when to purge (keksdose's ``delete_after_commit``) stays the\napp's too.\n\n**``spare_written_within``** (0.31, **on by default**: :data:`PURGE_SPARE_RECENT`, 5\nminutes) protects **content-addressed keys** (keksdose's and Kurvenschmiede's\n``<sha12>.<ext>``), which two rows share: the purge's keys were decided inside a\ntransaction, and a byte-identical upload committed after that decision names the same\nobject. Such an upload writes the object again, so a file written within that span\nbefore ``now`` (default: the clock's) is spared, logged, and left to the app's orphan\nsweep; a file already gone is nothing to do. It asks each key's age first (a listing by\nthe key), one more round trip per key; a key whose age it cannot ask is one it left.\n``None`` removes at once, as before 0.31 — for keys no two rows share (kastlan's\n``<uuid>_<sha12>``) or a store that cannot list.\n\n**``object_key``** (0.32, keksdose's locators): ``keys`` are the app's names for its files\n(``s3://bucket/<key>``, a local path), and this maps each to the store's key; what the\npurge answers and logs stays in the app's names. ``None``: the names are the keys."
         }
       ]
     },

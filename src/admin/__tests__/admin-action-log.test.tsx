@@ -362,7 +362,7 @@ const GROUP_KINDS = [
 
 describe("AdminActionLog — the group words in every language (§11.5)", () => {
   it("lists the five words in ADMIN_ACTION_KINDS", () => {
-    expect(ADMIN_ACTION_KINDS.slice(-7, -2)).toEqual([
+    expect(ADMIN_ACTION_KINDS.slice(-8, -3)).toEqual([
       "group_create",
       "group_rename",
       "group_delete",
@@ -372,10 +372,10 @@ describe("AdminActionLog — the group words in every language (§11.5)", () => 
     expect(new Set(ADMIN_ACTION_KINDS).size).toBe(ADMIN_ACTION_KINDS.length);
   });
 
-  it("ends with server-kit 0.15's group_deactivate and group_reactivate (admin §9.1.3)", () => {
-    // server-kit's `AdminAction` order: the two come after `membership_role`.
-    expect(ADMIN_ACTION_KINDS.slice(-2)).toEqual(["group_deactivate", "group_reactivate"]);
-    expect(ADMIN_ACTION_KINDS).toHaveLength(24);
+  it("has server-kit 0.15's group_deactivate and group_reactivate, then 0.32's two_factor_reset", () => {
+    // server-kit's `AdminAction` order: the two come after `membership_role`, the reset last.
+    expect(ADMIN_ACTION_KINDS.slice(-3)).toEqual(["group_deactivate", "group_reactivate", "two_factor_reset"]);
+    expect(ADMIN_ACTION_KINDS).toHaveLength(25);
   });
 
   it("words a company's deactivation as the company's, not a person's", () => {

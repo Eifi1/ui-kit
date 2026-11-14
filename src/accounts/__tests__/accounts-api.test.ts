@@ -119,6 +119,15 @@ describe("client.api", () => {
     ["passkeyLoginBegin", (api) => api.passkeyLoginBegin(), "post", "/auth/passkey/login/begin"],
     ["twoFactorSetup", (api) => api.twoFactorSetup("pw"), "post", "/auth/me/2fa/setup", { password: "pw" }],
     ["enableTwoFactor", (api) => api.enableTwoFactor("123456"), "post", "/auth/me/2fa/enable", { code: "123456" }],
+    ["twoFactorStatus", (api) => api.twoFactorStatus(), "get", "/auth/me/2fa"],
+    ["renewBackupCodes", (api) => api.renewBackupCodes("pw"), "post", "/auth/me/2fa/backup-codes", { password: "pw" }],
+    [
+      "resetTwoFactor",
+      (api) => api.resetTwoFactor(7, { acknowledged: true }),
+      "post",
+      "/admin/users/7/two-factor-reset",
+      { acknowledged: true },
+    ],
     [
       "disableTwoFactor",
       (api) => api.disableTwoFactor({ password: "pw", code: "123456" }),

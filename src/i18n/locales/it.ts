@@ -299,6 +299,16 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
           "L’autenticazione a due fattori cambia il modo in cui accede, perciò per configurarla serve prima la password del Suo account. Poi scansiona un codice con la Sua app di autenticazione.",
         turnedOn: "Autenticazione a due fattori attivata.",
         turnedOff: "Autenticazione a due fattori disattivata.",
+        // 0.64: the backup codes, shown once, and how many are left.
+        backupTitle: "Codici di riserva",
+        backupHint:
+          "Ogni codice permette di accedere una volta al posto del codice dell’app di autenticazione. Li conservi in un luogo sicuro: vengono mostrati solo ora.",
+        backupLeft: (count) => (count === 1 ? "Resta 1 codice di riserva." : `Restano ${count} codici di riserva.`),
+        backupRenew: "Crea nuovi codici di riserva",
+        backupRenewHint: "I nuovi codici sostituiscono quelli precedenti, che smettono subito di funzionare.",
+        backupCopy: "Copia i codici",
+        backupDownload: "Scarica",
+        backupDone: "Li ho salvati",
       },
       passkeys: {
         title: "Passkey",
@@ -1493,6 +1503,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         role: "Ruolo cambiato",
         password_change_require: "Nuova password richiesta",
         password_change_withdraw: "Richiesta di nuova password ritirata",
+        two_factor_reset: "Accesso a due fattori reimpostato",
         mail_verification: "Email di conferma inviata",
         mail_reset: "Email di reimpostazione password inviata",
         reviewer: "Ambito di revisione cambiato",
@@ -2251,6 +2262,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         two_factor_unavailable:
           "L’accesso a due fattori non è disponibile su questo server al momento. La Sua app di autenticazione funziona. Riprovi più tardi.",
         two_factor_not_pending: "Nessuna configurazione è in attesa di un codice. Avvii di nuovo la configurazione.",
+        two_factor_not_enabled: "L’accesso a due fattori è disattivato per questo account. Lo configuri prima.",
       },
       offline: "Il server non è raggiungibile. Controlli la connessione e riprovi.",
       timeout: "Il server ha impiegato troppo tempo a rispondere. Riprovi.",
@@ -2289,6 +2301,12 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       roleToAdminBody:
         "Con i diritti di amministratore, l’account può gestire tutti gli account e le impostazioni dell’app, subito, dalla sua prossima richiesta.",
       roleFromAdminBody: "L’account perde subito i diritti di amministratore, dalla sua prossima richiesta.",
+      // 0.64: an administrator's reset of another account's second factor.
+      resetTwoFactor: "Reimposta l’accesso a due fattori",
+      resetTwoFactorTitle: (name) => `Reimpostare l’accesso a due fattori di ${name}?`,
+      resetTwoFactorBody:
+        "L’account accederà poi solo con la password o una passkey e riceverà un’e-mail. Potrà configurarlo di nuovo.",
+      twoFactorReset: (email) => `L’accesso a due fattori di ${email} è stato reimpostato.`,
       roleChanged: (email, role) => `${email} ha ora il ruolo «${role}».`,
       deactivate: "Disattiva",
       deactivateTitle: (name) => `Disattivare ${name}?`,

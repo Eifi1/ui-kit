@@ -100,7 +100,12 @@ const CODES_0_30 = [
 ] as const;
 
 /** 0.64: server-kit 0.32's two-factor routes (keksdose's KG-1). */
-const CODES_0_32 = ["two_factor_invalid", "two_factor_unavailable", "two_factor_not_pending"] as const;
+const CODES_0_32 = [
+  "two_factor_invalid",
+  "two_factor_unavailable",
+  "two_factor_not_pending",
+  "two_factor_not_enabled",
+] as const;
 
 describe("authErrorCode — server-kit 0.32's two-factor routes", () => {
   it.each(CODES_0_32)("knows %s", (code) => {

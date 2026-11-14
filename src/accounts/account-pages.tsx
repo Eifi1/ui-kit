@@ -169,6 +169,8 @@ function SignInPage({ o }: { o: Resolved }) {
         onSubmit={async (credentials) => done(await client.signIn(credentials))}
         onSetPassword={async (values) => done(await client.setPassword(values))}
         onCode={async (values) => done(await client.verifyCode(values))}
+        // server-kit 0.32's backup codes: a switch under the code field takes one.
+        recoveryCode
         onPasskey={passkeysAvailable() ? async () => done(await client.signInWithPasskey()) : undefined}
         forgotHref={o.paths.forgotPassword}
         registerHref={o.signUp === "open" ? o.paths.register : undefined}

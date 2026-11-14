@@ -1044,6 +1044,9 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "auth.jwt_signer · Constants",
     "auth.bcrypt_hasher · Classes",
     "auth.bcrypt_hasher · Constants",
+    "auth.seal · Functions",
+    "auth.seal · Classes",
+    "auth.seal · Constants",
   ],
   "server-user-admin": [
     "user_admin · Functions",

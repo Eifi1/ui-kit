@@ -291,6 +291,16 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
           "A kétlépcsős azonosítás megváltoztatja a bejelentkezés módját, ezért a beállításához először a fiókja jelszava kell. Utána egy kódot olvas be a hitelesítő alkalmazásával.",
         turnedOn: "Kétlépcsős azonosítás bekapcsolva.",
         turnedOff: "Kétlépcsős azonosítás kikapcsolva.",
+        // 0.64: the backup codes, shown once, and how many are left.
+        backupTitle: "Tartalékkódok",
+        backupHint:
+          "Minden kód egyszer használható bejelentkezésre a hitelesítő alkalmazás kódja helyett. Tárolja őket biztonságos helyen: csak most jelennek meg.",
+        backupLeft: (count) => `${count} tartalékkód maradt.`,
+        backupRenew: "Új tartalékkódok létrehozása",
+        backupRenewHint: "Az új kódok felváltják a régieket, amelyek azonnal érvényüket vesztik.",
+        backupCopy: "Kódok másolása",
+        backupDownload: "Letöltés",
+        backupDone: "Elmentettem őket",
       },
       passkeys: {
         title: "Hozzáférési kulcsok",
@@ -1479,6 +1489,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         role: "Szerepkör módosítva",
         password_change_require: "Új jelszó előírva",
         password_change_withdraw: "Jelszócsere-előírás visszavonva",
+        two_factor_reset: "Kétlépcsős azonosítás visszaállítva",
         mail_verification: "Megerősítő e-mail elküldve",
         mail_reset: "Jelszó-visszaállító e-mail elküldve",
         reviewer: "Lektori beállítás módosítva",
@@ -2232,6 +2243,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         two_factor_unavailable:
           "A kétlépcsős bejelentkezés jelenleg nem érhető el ezen a szerveren. A hitelesítő alkalmazása rendben van. Próbálja újra később.",
         two_factor_not_pending: "Nincs kódra váró beállítás. Kezdje újra a beállítást.",
+        two_factor_not_enabled: "Ennél a fióknál ki van kapcsolva a kétlépcsős azonosítás. Először állítsa be.",
       },
       offline: "A kiszolgáló nem érhető el. Ellenőrizze a kapcsolatot, és próbálja újra.",
       timeout: "A kiszolgáló túl sokáig nem válaszolt. Kérjük, próbálja újra.",
@@ -2270,6 +2282,12 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       roleToAdminBody:
         "Adminisztrátori jogokkal a fiók minden fiókot és az alkalmazás beállításait kezelheti, azonnal, a következő kérésétől.",
       roleFromAdminBody: "A fiók azonnal, a következő kérésétől elveszíti adminisztrátori jogait.",
+      // 0.64: an administrator's reset of another account's second factor.
+      resetTwoFactor: "Kétlépcsős azonosítás visszaállítása",
+      resetTwoFactorTitle: (name) => `Visszaállítja ${name} kétlépcsős azonosítását?`,
+      resetTwoFactorBody:
+        "A fiók ezután csak jelszóval vagy azonosítókulccsal jelentkezik be, és e-mailt kap erről. Később újra beállíthatja.",
+      twoFactorReset: (email) => `${email} kétlépcsős azonosítása visszaállítva.`,
       roleChanged: (email, role) => `${email} szerepköre mostantól „${role}”.`,
       deactivate: "Inaktiválás",
       deactivateTitle: (name) => `Inaktiválja ezt a fiókot: ${name}?`,

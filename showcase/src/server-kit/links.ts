@@ -29,6 +29,8 @@ export const KIT_COUNTERPARTS: Readonly<Record<string, readonly string[]>> = {
   "auth.jobs": ["auth-account"],
   "auth.jwt_signer": ["auth-account"],
   "auth.bcrypt_hasher": ["auth-account"],
+  // server-kit 0.32: the TOTP secret's ready seal (the second factor on the account pages).
+  "auth.seal": ["auth-account"],
   "user_admin.router": ["user-admin"],
   "user_admin.service": ["user-admin"],
   "user_admin.scope": ["user-admin"],

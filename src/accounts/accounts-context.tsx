@@ -24,6 +24,8 @@ export const accountQueryKeys = {
   emailChange: ["accounts", "email-change"] as const,
   sessions: ["accounts", "sessions"] as const,
   passkeys: ["accounts", "passkeys"] as const,
+  /** The second factor's status (0.64): on or off, and the backup codes left. */
+  twoFactor: ["accounts", "two-factor"] as const,
   deletionTerms: ["accounts", "deletion-terms"] as const,
   invitations: ["accounts", "admin", "invitations"] as const,
   /** Everything the admin reads (0.64): an action invalidates it all at once. */

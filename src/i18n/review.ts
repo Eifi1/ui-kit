@@ -258,6 +258,8 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "accountSettings.passkeys.deleteItem": [["{{name}}"]],
   "accountSettings.passkeys.deleteConfirm": [["{{name}}"]],
   "accountSettings.passkeys.created": [["{{date}}"]],
+  // 0.64 (server-kit 0.32): how many backup codes are left — one, and several.
+  "accountSettings.twoFactor.backupLeft": [[1], [7]],
   "accountSettings.passkeys.lastUsed": [["{{date}}"]],
   "confirmDialog.typed": [["{{text}}"]],
   "floatingPanel.badge": one,
@@ -497,6 +499,9 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "accountRoster.deletionCancelled": [["{{email}}"]],
   "accountRoster.eraseTitle": [["{{name}}"]],
   "accountRoster.erased": [["{{email}}"]],
+  // 0.64 (server-kit 0.32): an administrator's reset of another account's second factor.
+  "accountRoster.resetTwoFactorTitle": [["{{name}}"]],
+  "accountRoster.twoFactorReset": [["{{email}}"]],
   "adminArea.forbiddenBody": [["{{app}}"]],
   "adminArea.tiles.usersNew": one,
   // 0.42.0 (docs/top-bar-harmonization.md §3.1): the sync indicator's counts, its time, the

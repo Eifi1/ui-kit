@@ -100,6 +100,17 @@ export interface TwoFactorSettingLabels {
   setupReauth?: string;
   turnedOn?: string;
   turnedOff?: string;
+  /** 0.64 (server-kit 0.32): the backup codes — their heading and line where they are shown
+   *  once, how many are left, making new ones (and its password question's line), and the
+   *  copy, download and "saved" buttons. */
+  backupTitle?: string;
+  backupHint?: string;
+  backupLeft?: (count: number) => string;
+  backupRenew?: string;
+  backupRenewHint?: string;
+  backupCopy?: string;
+  backupDownload?: string;
+  backupDone?: string;
 }
 
 export interface PasskeysSettingLabels {
@@ -201,6 +212,15 @@ export const DEFAULT_ACCOUNT_SETTINGS_LABELS: AccountSettingsLabels = {
       "Two-factor authentication changes how you sign in, so setting it up takes your account password first. Then you scan a code with your authenticator app.",
     turnedOn: "Two-factor authentication turned on.",
     turnedOff: "Two-factor authentication turned off.",
+    backupTitle: "Backup codes",
+    backupHint:
+      "Each code signs in once in place of the authenticator’s code. Keep them somewhere safe: they are shown only now.",
+    backupLeft: (count) => (count === 1 ? "1 backup code left." : `${count} backup codes left.`),
+    backupRenew: "Make new backup codes",
+    backupRenewHint: "New codes replace the old ones, which stop working at once.",
+    backupCopy: "Copy codes",
+    backupDownload: "Download",
+    backupDone: "I have saved them",
   },
   passkeys: {
     title: "Passkeys",

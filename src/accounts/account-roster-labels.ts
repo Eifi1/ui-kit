@@ -43,6 +43,11 @@ export interface AccountRosterLabels {
   roleToAdminBody: string;
   roleFromAdminBody: string;
   roleChanged: (email: string, role: string) => string;
+  /** 0.64 (server-kit 0.32): an administrator's reset of another account's second factor. */
+  resetTwoFactor: string;
+  resetTwoFactorTitle: (name: string) => string;
+  resetTwoFactorBody: string;
+  twoFactorReset: (email: string) => string;
   deactivate: string;
   deactivateTitle: (name: string) => string;
   deactivateBody: string;
@@ -64,6 +69,11 @@ export interface AccountRosterLabels {
  *  once done. Kurvenschmiede's `admin.*` keys, which every app had in its own catalogue. */
 export const DEFAULT_ACCOUNT_ROSTER_LABELS: AccountRosterLabels = {
   search: "Search accounts",
+  resetTwoFactor: "Reset two-factor sign-in",
+  resetTwoFactorTitle: (name) => `Reset two-factor sign-in for ${name}?`,
+  resetTwoFactorBody:
+    "The account then signs in with its password or a passkey alone, and is told by email. It can set two-factor sign-in up again.",
+  twoFactorReset: (email) => `Two-factor sign-in for ${email} is reset.`,
   consoleMail:
     "This server sends no mail: each one goes to its log. After a mail action, its link appears here to hand on.",
   mailLink: (email) => `The link for ${email}, to hand on:`,

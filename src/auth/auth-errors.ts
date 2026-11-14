@@ -56,6 +56,7 @@ import { httpStatusOf } from "../lib/http-status";
  *   missing or rotated out), or a setup cannot be stored. The operator's to mend: never
  *   said as a wrong code, which would send the person to re-pair a phone that is fine.
  * - `two_factor_not_pending` — `404`: a confirmation with no setup waiting for its code.
+ * - `two_factor_not_enabled` — `409`: new backup codes while two-factor sign-in is off.
  */
 export type AuthErrorCode =
   | "invalid_credentials"
@@ -85,7 +86,8 @@ export type AuthErrorCode =
   | "invitation_scope_invalid"
   | "two_factor_invalid"
   | "two_factor_unavailable"
-  | "two_factor_not_pending";
+  | "two_factor_not_pending"
+  | "two_factor_not_enabled";
 
 /**
  * 0.30.0: the coded refusals of user administration and the account's own settings
@@ -234,6 +236,7 @@ const CODES: ReadonlySet<string> = new Set<KitErrorCode>([
   "two_factor_invalid",
   "two_factor_unavailable",
   "two_factor_not_pending",
+  "two_factor_not_enabled",
   "last_admin",
   "self_action",
   "other_companies",

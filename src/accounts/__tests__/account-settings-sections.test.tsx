@@ -255,8 +255,9 @@ describe("AccountTwoFactorSection (0.64, server-kit 0.32)", () => {
             : { status: 400, data: { code: "password_incorrect" } },
         "post /auth/me/2fa/enable": () => {
           enabled = true;
-          return { status: 204 };
+          return { status: 200, data: { backup_codes: ["ABCD-EFGH-JKLM-NPQR", "BCDE-FGHJ-KLMN-PQRS"] } };
         },
+        "get /auth/me/2fa": () => ({ status: 200, data: { enabled, backup_codes_left: enabled ? 2 : 0 } }),
       },
     );
     await user.click(await screen.findByRole("button", { name: "Set up two-factor authentication" }));
@@ -276,6 +277,34 @@ describe("AccountTwoFactorSection (0.64, server-kit 0.32)", () => {
     expect(calls.find((c) => c.route === "post /auth/me/2fa/enable")?.data).toEqual({ code: "123456" });
     expect(await screen.findByText("On")).toBeInTheDocument();
     expect(screen.queryByRole("img", { name: "QR code" })).toBeNull();
+    // The backup codes, once (server-kit 0.32), then how many are left.
+    expect(screen.getByText("ABCD-EFGH-JKLM-NPQR").closest("[data-private]")).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Copy codes" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "I have saved them" }));
+    expect(screen.queryByText("ABCD-EFGH-JKLM-NPQR")).toBeNull();
+    expect(await screen.findByText("2 backup codes left.")).toBeInTheDocument();
+  });
+
+  it("makes new backup codes behind the password, and shows them once", async () => {
+    const { calls, user } = mount(
+      <>
+        <Toaster />
+        <AccountTwoFactorSection />
+      </>,
+      {
+        "get /auth/me": () => ({ status: 200, data: { ...ada, totp_enabled: true } }),
+        "get /auth/me/2fa": () => ({ status: 200, data: { enabled: true, backup_codes_left: 1 } }),
+        "post /auth/me/2fa/backup-codes": () => ({ status: 200, data: { backup_codes: ["CDEF-GHJK-LMNP-QRST"] } }),
+      },
+    );
+    expect(await screen.findByText("1 backup code left.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Make new backup codes" }));
+    const dialog = await screen.findByRole("dialog", { name: "Make new backup codes" });
+    expect(within(dialog).getByText(/replace the old ones/)).toBeInTheDocument();
+    await fill(user, within(dialog).getByLabelText("Current password"), "pw");
+    await user.click(within(dialog).getByRole("button", { name: "Make new backup codes" }));
+    expect(await screen.findByText("CDEF-GHJK-LMNP-QRST")).toBeInTheDocument();
+    expect(calls.find((c) => c.route === "post /auth/me/2fa/backup-codes")?.data).toEqual({ password: "pw" });
   });
 
   it("says a refused code in the account words, and keeps the setup", async () => {

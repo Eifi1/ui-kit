@@ -209,56 +209,77 @@ export function AccountTwoFactorSection({
   renderQr,
 }: AccountTwoFactorSectionProps) {
   const me = useCurrentUser<AccountMe>();
-  const { setup, enable, disable } = useTwoFactor();
+  const enabled = me.data?.totp_enabled === true;
+  const { status, setup, enable, disable, renew } = useTwoFactor({ enabled });
   const describe = useDescribeAccountFailure();
   const words = useAccountSettingsLabels("twoFactor", labels);
-  const [asking, setAsking] = useState<"setup" | "replace" | null>(null);
+  const [asking, setAsking] = useState<"setup" | "replace" | "backup" | null>(null);
   const [passwordError, setPasswordError] = useState<string>();
   const [pending, setPending] = useState<AccountTwoFactorSetup | null>(null);
+  // 0.64 (server-kit 0.32): a set of backup codes just made, shown once.
+  const [fresh, setFresh] = useState<readonly string[] | null>(null);
   if (!me.data) return null;
-  const ask = (why: "setup" | "replace") => {
+  const ask = (why: "setup" | "replace" | "backup") => {
     setPasswordError(undefined);
     setAsking(why);
   };
-  const done = (said: string | undefined) => () => {
-    setPending(null);
-    toast.success(said);
-  };
   const replacing = asking === "replace";
+  const renewing = asking === "backup";
 
   return (
     <>
       <TwoFactorSetting
         id={id}
-        enabled={me.data.totp_enabled === true}
+        enabled={enabled}
         setup={pending ? { otpauthUri: pending.otpauth_url, secret: pending.secret } : null}
         onStartSetup={() => ask("setup")}
         onReplace={() => ask("replace")}
         onEnable={(code) =>
-          enable.mutate(code, { onSuccess: done(words.turnedOn), onError: (error) => toast.error(describe(error)) })
+          enable.mutate(code, {
+            onSuccess: (answer) => {
+              setPending(null);
+              setFresh(answer.backup_codes);
+              toast.success(words.turnedOn);
+            },
+            onError: (error) => toast.error(describe(error)),
+          })
         }
         onDisable={(password, code) =>
           disable.mutate(
             { password, code },
-            { onSuccess: done(words.turnedOff), onError: (error) => toast.error(describe(error)) },
+            {
+              onSuccess: () => {
+                setPending(null);
+                setFresh(null);
+                toast.success(words.turnedOff);
+              },
+              onError: (error) => toast.error(describe(error)),
+            },
           )
         }
-        busy={setup.isPending || enable.isPending || disable.isPending}
+        backupCodes={{
+          fresh,
+          left: status.data?.backup_codes_left,
+          onRenew: () => ask("backup"),
+          onDismiss: () => setFresh(null),
+        }}
+        busy={setup.isPending || enable.isPending || disable.isPending || renew.isPending}
         renderQr={renderQr}
         labels={labels}
       />
       {asking !== null && (
         <ReauthDialog
           labels={reauthLabels}
-          title={replacing ? words.replaceTitle : words.enable}
-          description={replacing ? words.replaceHint : words.setupReauth}
+          title={renewing ? words.backupRenew : replacing ? words.replaceTitle : words.enable}
+          description={renewing ? words.backupRenewHint : replacing ? words.replaceHint : words.setupReauth}
           // A first setup keeps the dialog's "Continue": the next step is the QR code.
-          submitLabel={replacing ? words.replace : undefined}
+          submitLabel={renewing ? words.backupRenew : replacing ? words.replace : undefined}
           error={passwordError}
-          busy={setup.isPending}
+          busy={setup.isPending || renew.isPending}
           onSubmit={async (password) => {
             try {
-              setPending(await setup.mutateAsync(password));
+              if (renewing) setFresh((await renew.mutateAsync(password)).backup_codes);
+              else setPending(await setup.mutateAsync(password));
             } catch (error) {
               setPasswordError(describe(error));
               throw error;

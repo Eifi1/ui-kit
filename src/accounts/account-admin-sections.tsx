@@ -1,7 +1,7 @@
 import { Fragment, useState } from "react";
 import type { ReactNode } from "react";
 import { useSearchParams } from "react-router";
-import { Ban, Inbox, KeyRound, Languages, MailCheck, RotateCcw, Trash2, Undo2 } from "lucide-react";
+import { Ban, Inbox, KeyRound, Languages, MailCheck, RotateCcw, ShieldOff, Trash2, Undo2 } from "lucide-react";
 
 import {
   ADMIN_ACTION_CONFIRM_CODES,
@@ -279,6 +279,9 @@ export interface AccountUserRosterSectionProps<
    *  the `operator` deletion mode (the route exists only then). Default off: an app whose
    *  daily job erases after the waiting days offers only the cancel. */
   erase?: boolean;
+  /** "Reset two-factor sign-in" on an account with it on (0.64) — for a server whose account
+   *  layer has a second factor (server-kit 0.32: the route exists only then). Default off. */
+  twoFactorReset?: boolean;
   /** A line above the roster, in the app's words. */
   hint?: ReactNode;
   /** Rows a page; default server-kit's 25. */
@@ -348,6 +351,7 @@ export function AccountUserRosterSection<R extends string = string, Row extends 
   choosable,
   reviewer,
   erase = false,
+  twoFactorReset = false,
   hint,
   pageSize = USER_ROSTER_PAGE_SIZE,
   extraColumns = [],
@@ -478,6 +482,25 @@ export function AccountUserRosterSection<R extends string = string, Row extends 
           label: labels.reviewer,
           icon: Languages,
           onSelect: () => setDialog({ kind: "reviewer", row }),
+        },
+      // 0.64 (server-kit 0.32): a lost phone with no backup code and no passkey. Never one's own.
+      twoFactorReset &&
+        row.totp_enabled === true &&
+        !self && {
+          key: "two-factor-reset",
+          label: labels.resetTwoFactor,
+          icon: ShieldOff,
+          onSelect: () =>
+            ask({
+              row,
+              level: level("two_factor_reset"),
+              title: labels.resetTwoFactorTitle(named(row)),
+              confirmLabel: labels.resetTwoFactor,
+              consequence: labels.resetTwoFactorBody,
+              tone: "warning",
+              run: (body) => actions.resetTwoFactor.mutateAsync({ id: row.id, ...body }),
+              done: labels.twoFactorReset(row.email),
+            }),
         },
       ...(extraActions?.(row as Row) ?? []),
       erase &&

@@ -142,6 +142,18 @@ export interface AccountTwoFactorSetup {
   otpauth_url: string;
 }
 
+/** `POST /auth/me/2fa/enable` and `POST /auth/me/2fa/backup-codes` (server-kit 0.32): the
+ *  backup codes, shown once — the server keeps their digests only. */
+export interface AccountTwoFactorEnabled {
+  backup_codes: string[];
+}
+
+/** `GET /auth/me/2fa` (server-kit 0.32): on or off, and the backup codes left. */
+export interface AccountTwoFactorStatus {
+  enabled: boolean;
+  backup_codes_left: number;
+}
+
 /** One of `GET /auth/passkeys`. */
 export interface AccountPasskey {
   id: number;
@@ -205,6 +217,8 @@ export interface AccountAdminUser extends UserRosterRow {
   is_active: boolean;
   translation_review_locales: string[];
   translation_review_areas: string[] | null;
+  /** Whether the account signs in with a second factor (server-kit 0.32 reads its store). */
+  totp_enabled?: boolean;
   extra?: Record<string, unknown>;
 }
 
@@ -329,8 +343,13 @@ export interface AccountsApi<U extends AccountUser = AccountMe> {
   /** `POST /auth/me/2fa/setup {password}` (server-kit 0.32): the password every time, a first
    *  setup and a replacement alike; what signs in now keeps doing so until `enableTwoFactor`. */
   twoFactorSetup(password: string): Promise<AccountTwoFactorSetup>;
-  /** `POST /auth/me/2fa/enable {code}`: a code from the pending secret switches it on. */
-  enableTwoFactor(code: string): Promise<void>;
+  /** `POST /auth/me/2fa/enable {code}`: a code from the pending secret switches it on; the
+   *  answer carries the backup codes, once. */
+  enableTwoFactor(code: string): Promise<AccountTwoFactorEnabled>;
+  /** `GET /auth/me/2fa`: on or off, and the backup codes left. */
+  twoFactorStatus(): Promise<AccountTwoFactorStatus>;
+  /** `POST /auth/me/2fa/backup-codes {password}`: a new set; the old codes end. */
+  renewBackupCodes(password: string): Promise<AccountTwoFactorEnabled>;
   /** `POST /auth/me/2fa/disable {password, code}`: the password and a live code. */
   disableTwoFactor(body: { password: string; code: string }): Promise<void>;
   invitations(): Promise<AccountInvitation[]>;
@@ -350,6 +369,9 @@ export interface AccountsApi<U extends AccountUser = AccountMe> {
   setReviewer(id: number, body: { locales: string[]; areas: string[] | null }): Promise<AccountReviewerResult>;
   /** The operator's erasure of an account that asked to be deleted. */
   eraseAccount(id: number, body: { confirm_email: string } & AccountAdminConfirmation): Promise<AccountErasureResult>;
+  /** Another account's second factor off (server-kit 0.32, where the server has one): the
+   *  account is told by mail. */
+  resetTwoFactor(id: number, body?: AccountAdminConfirmation): Promise<AccountAdminUser>;
   adminActions(query?: AccountAdminActionQuery): Promise<AccountAdminActionPage>;
   adminAttention(): Promise<AdminAttention>;
   /** The transport the server mails through (`GET /admin/mail`): `console` means nothing is
@@ -414,7 +436,9 @@ export function createAccountsApi<U extends AccountUser>(http: AccountsHttp): Ac
     passkeyRegisterFinish: (body) => call("post", "/auth/passkey/register/finish", body),
     passkeyLoginBegin: () => call("post", "/auth/passkey/login/begin"),
     twoFactorSetup: (password) => call("post", "/auth/me/2fa/setup", { password }),
-    enableTwoFactor: (code) => none("post", "/auth/me/2fa/enable", { code }),
+    enableTwoFactor: (code) => call("post", "/auth/me/2fa/enable", { code }),
+    twoFactorStatus: () => call("get", "/auth/me/2fa"),
+    renewBackupCodes: (password) => call("post", "/auth/me/2fa/backup-codes", { password }),
     disableTwoFactor: (body) => none("post", "/auth/me/2fa/disable", body),
     invitations: () => call("get", "/admin/invitations"),
     invite: (draft) => call("post", "/admin/invitations", draft),
@@ -428,6 +452,7 @@ export function createAccountsApi<U extends AccountUser>(http: AccountsHttp): Ac
     sendAccountMail: (user, body) => call("post", `/admin/users/${id(user)}/mail`, body),
     setReviewer: (user, body) => call("put", `/admin/users/${id(user)}/reviewer`, body),
     eraseAccount: (user, body) => call("post", `/admin/users/${id(user)}/erase`, body),
+    resetTwoFactor: (user, body = {}) => call("post", `/admin/users/${id(user)}/two-factor-reset`, body),
     adminActions: (query) => read("/admin/actions", query),
     adminAttention: () => call("get", "/admin/attention"),
     adminMail: () => call("get", "/admin/mail"),

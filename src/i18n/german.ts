@@ -308,6 +308,16 @@ export function germanLabels(numberLocale: string): UiKitLabels {
           "Die Zwei-Faktor-Authentifizierung ändert, wie Sie sich anmelden – darum braucht die Einrichtung zuerst Ihr Kontopasswort. Danach scannen Sie einen Code mit Ihrer Authenticator-App.",
         turnedOn: "Zwei-Faktor-Authentifizierung aktiviert.",
         turnedOff: "Zwei-Faktor-Authentifizierung deaktiviert.",
+        // 0.64: the backup codes, shown once, and how many are left.
+        backupTitle: "Backup-Codes",
+        backupHint:
+          "Jeder Code meldet Sie einmal anstelle des Codes aus der Authenticator-App an. Bewahren Sie sie sicher auf: Sie werden nur jetzt angezeigt.",
+        backupLeft: (count) => (count === 1 ? "Noch 1 Backup-Code übrig." : `Noch ${count} Backup-Codes übrig.`),
+        backupRenew: "Neue Backup-Codes erstellen",
+        backupRenewHint: "Neue Codes ersetzen die bisherigen; diese funktionieren sofort nicht mehr.",
+        backupCopy: "Codes kopieren",
+        backupDownload: "Herunterladen",
+        backupDone: "Ich habe sie gespeichert",
       },
       passkeys: {
         title: "Passkeys",
@@ -1526,6 +1536,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         role: "Rolle geändert",
         password_change_require: "Neues Passwort verlangt",
         password_change_withdraw: "Passwortforderung zurückgenommen",
+        two_factor_reset: "Zwei-Faktor-Anmeldung zurückgesetzt",
         mail_verification: "Bestätigungsmail gesendet",
         mail_reset: "Mail zum Zurücksetzen des Passworts gesendet",
         reviewer: "Prüfrolle geändert",
@@ -2311,6 +2322,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         two_factor_unavailable:
           "Die Zwei-Faktor-Anmeldung ist auf diesem Server gerade nicht verfügbar. Ihre Authenticator-App ist in Ordnung. Bitte versuchen Sie es später erneut.",
         two_factor_not_pending: "Keine Einrichtung wartet auf einen Code. Starten Sie die Einrichtung erneut.",
+        two_factor_not_enabled:
+          "Für dieses Konto ist die Zwei-Faktor-Anmeldung ausgeschaltet. Richten Sie sie zuerst ein.",
       },
       offline: "Der Server ist nicht erreichbar. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
       timeout: "Der Server hat zu lange nicht geantwortet. Bitte versuchen Sie es erneut.",
@@ -2349,6 +2362,12 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       roleToAdminBody:
         "Mit Administratorrechten darf das Konto alle Konten und die Einstellungen der App verwalten, sofort, ab seiner nächsten Anfrage.",
       roleFromAdminBody: "Das Konto verliert seine Administratorrechte sofort, ab seiner nächsten Anfrage.",
+      // 0.64: an administrator's reset of another account's second factor.
+      resetTwoFactor: "Zwei-Faktor-Anmeldung zurücksetzen",
+      resetTwoFactorTitle: (name) => `Die Zwei-Faktor-Anmeldung von ${name} zurücksetzen?`,
+      resetTwoFactorBody:
+        "Das Konto meldet sich danach nur mit Passwort oder Passkey an und erhält dazu eine E-Mail. Es kann die Zwei-Faktor-Anmeldung danach neu einrichten.",
+      twoFactorReset: (email) => `Die Zwei-Faktor-Anmeldung von ${email} ist zurückgesetzt.`,
       roleChanged: (email, role) => `${email} hat jetzt die Rolle „${role}“.`,
       deactivate: "Deaktivieren",
       deactivateTitle: (name) => `${name} deaktivieren?`,

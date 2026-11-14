@@ -27,7 +27,12 @@ are new sentences, not yet reviewed):
   `two_factor_not_pending`;
 - `accountSettings.twoFactor`: `replaceTitle`, `replaceHint` and `replace` (a lost
   authenticator's way back, keksdose's words in de-CH, fr and it), `setupReauth`, `turnedOn` and
-  `turnedOff` (the accounts section's).
+  `turnedOff` (the accounts section's), and the backup codes' `backupTitle`, `backupHint`,
+  `backupLeft(count)`, `backupRenew`, `backupRenewHint`, `backupCopy`, `backupDownload`,
+  `backupDone`;
+- `accountRoster`: `resetTwoFactor`, `resetTwoFactorTitle(name)`, `resetTwoFactorBody`,
+  `twoFactorReset(email)`; `adminActionLog.actions.two_factor_reset`; `accountFailure.codes`'
+  `two_factor_not_enabled`.
 - the namespace `accountTranslations`: the review page's heading and line, its empty state, the
   source filter's two words, "Saved" and "Marked unreviewed".
 
@@ -70,10 +75,21 @@ gives `AuthDeps(two_factor=…, secret_seal=…)` (its README, "Two-factor sign-
   While it is on, "Lost your authenticator?" sets up a new one with the password (the current one
   keeps working until the new code confirms it), and switching off takes the password and a live
   code. Props: `labels`, `reauthLabels`, `renderQr`, `id` (default `two-factor`).
-- `TwoFactorSetting` (the card without the wiring) takes `onReplace` for the same way back.
-- `client.api.twoFactorSetup(password)` → `{secret, otpauth_url}`, `enableTwoFactor(code)`,
-  `disableTwoFactor({password, code})`; `useTwoFactor()` → `{ setup, enable, disable }`, the last
-  two reading `/auth/me` again.
+- **Backup codes and the admin reset** (Marcel 2026-11-14, over keksdose's "none": a lost
+  phone with no passkey locked the account out for good). Switching on answers ten backup codes,
+  which the section shows once (copy, download, "I have saved them"); then "N backup codes
+  left." and "Make new backup codes" behind the password. The sign-in page's code step offers
+  "Use a backup code" (`SignInForm`'s `recoveryCode`), sent in the same `code`.
+  `AccountUserRosterSection` takes `twoFactorReset` (the server mounts the route with its second
+  factor): "Reset two-factor sign-in" on another account with it on, acknowledged; the account
+  is told by mail. The log words it ("Two-factor sign-in reset").
+- `TwoFactorSetting` (the card without the wiring) takes `onReplace` for the same way back, and
+  `backupCodes` (`fresh`, `left`, `onRenew`, `onDismiss`, `fileName`).
+- `client.api.twoFactorSetup(password)` → `{secret, otpauth_url}`, `enableTwoFactor(code)` →
+  `{backup_codes}`, `twoFactorStatus()` → `{enabled, backup_codes_left}`,
+  `renewBackupCodes(password)` → `{backup_codes}`, `disableTwoFactor({password, code})`, and the
+  admin's `resetTwoFactor(id, confirmation)`; `useTwoFactor()` → `{ status, setup, enable,
+  disable, renew }`, each change reading `/auth/me` and the status again.
 
 **keksdose**: its `two-factor-card.tsx` (the card, the replace card, the reauth dialog) is this
 section; its `qr_svg` goes, the kit draws the QR code from `otpauth_url`.

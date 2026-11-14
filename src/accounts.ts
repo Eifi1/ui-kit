@@ -56,7 +56,9 @@ export type {
   AccountProfilePatch,
   AccountsApi,
   AccountSessionInfo,
+  AccountTwoFactorEnabled,
   AccountTwoFactorSetup,
+  AccountTwoFactorStatus,
 } from "./accounts/accounts-api";
 // 0.64 (§12.9, server-kit 0.30–0.31's user_admin_router): the admin's routes on `client.api`.
 export type {
