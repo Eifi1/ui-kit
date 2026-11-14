@@ -40,14 +40,18 @@ export const accountQueryKeys = {
    *  never go stale in a tab. */
   translationStrings: ["accounts", "translations", "strings"] as const,
   invitationCheck: (token: string) => ["accounts", "invitation-check", token] as const,
-  /** Every feedback list (0.64): a write invalidates them all. */
-  feedback: ["accounts", "feedback"] as const,
-  feedbackMine: ["accounts", "feedback", "mine"] as const,
-  feedbackAll: ["accounts", "feedback", "all"] as const,
+  /** Every feedback list (0.64): a write invalidates them all. Under their own root, as the
+   *  comment threads (`feedbackCommentsQueryKey`, `["feedback", "comments", id]`) and the apps'
+   *  own keys are, NOT under `accounts`: an app persisting its cache denies the account's root
+   *  (the account, its sessions, its passkeys) and keeps a reader's own reports for offline
+   *  (Kurvenschmiede's U10 on dev.5). */
+  feedback: ["feedback"] as const,
+  feedbackMine: ["feedback", "mine"] as const,
+  feedbackAll: ["feedback", "all"] as const,
   /** Every public page of titles, whatever its query: a vote's answer is written into each. */
-  feedbackPublicLists: ["accounts", "feedback", "public", "list"] as const,
-  feedbackPublic: (query: object) => ["accounts", "feedback", "public", "list", query] as const,
-  feedbackPublicOne: (id: number) => ["accounts", "feedback", "public", "one", id] as const,
+  feedbackPublicLists: ["feedback", "public", "list"] as const,
+  feedbackPublic: (query: object) => ["feedback", "public", "list", query] as const,
+  feedbackPublicOne: (id: number) => ["feedback", "public", "one", id] as const,
 };
 
 export interface AccountsProviderProps {
@@ -60,7 +64,8 @@ export interface AccountsProviderProps {
  * the app's `QueryClientProvider`.
  *
  * When the account in the session changes — a sign-out, another tab, a sign-in as someone
- * else — it drops the kit's own queries (`accountQueryKeys.all`): what one account read
+ * else — it drops the kit's own queries (`accountQueryKeys.all`, and the feedback's
+ * `accountQueryKeys.feedback`, a root of its own so an app may persist it): what one account read
  * (its sessions, its passkeys, its pending address) is never shown to the next one in this
  * tab, Kurvenschmiede's F33. The app's own queries are its `onSessionEnded`'s to drop.
  */
@@ -73,6 +78,8 @@ export function AccountsProvider({ client, children }: AccountsProviderProps) {
       if (next === account) return;
       account = next;
       queryClient.removeQueries({ queryKey: accountQueryKeys.all });
+      // The feedback's own root (0.64): one account's reports are never the next one's.
+      queryClient.removeQueries({ queryKey: accountQueryKeys.feedback });
     });
   }, [client, queryClient]);
   return <AccountsContext.Provider value={client}>{children}</AccountsContext.Provider>;

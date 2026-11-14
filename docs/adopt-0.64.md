@@ -230,6 +230,11 @@ const submit = useAccountFeedbackSubmit({ version: __APP_VERSION__ });  // the m
 
 Nothing new is stored in the browser; the file parts fetch through the session.
 
+- The feedback's query keys sit under their own root, `["feedback", …]` (`accountQueryKeys.feedback*`),
+  beside the comment threads (`feedbackCommentsQueryKey`), not under `accounts`: an app persisting
+  its cache denies the account's root and may keep a reader's own reports (`["feedback", "mine"]`)
+  for offline. `AccountsProvider` drops both roots when the account changes.
+
 ## The settings sections
 
 - `AccountInvitationsSection` takes `intro`, `listTitle` and `className` (the panel's), reads the

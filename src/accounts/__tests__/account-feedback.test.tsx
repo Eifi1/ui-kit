@@ -213,3 +213,22 @@ describe("accountFeedbackApi", () => {
     ]);
   });
 });
+
+describe("the feedback's query keys (0.64, Kurvenschmiede's U10)", () => {
+  it("sit under their own root, beside the comment threads, not under the account's", async () => {
+    const { accountQueryKeys } = await import("../accounts-context");
+    const { feedbackCommentsQueryKey } = await import("../../offline/feedback-comments-query");
+    for (const key of [
+      accountQueryKeys.feedback,
+      accountQueryKeys.feedbackMine,
+      accountQueryKeys.feedbackAll,
+      accountQueryKeys.feedbackPublicLists,
+      accountQueryKeys.feedbackPublic({ sort: "new" }),
+      accountQueryKeys.feedbackPublicOne(3),
+    ]) {
+      expect(key[0]).toBe("feedback");
+    }
+    expect(feedbackCommentsQueryKey(3, false)[0]).toBe("feedback");
+    expect(accountQueryKeys.all[0]).toBe("accounts");
+  });
+});
