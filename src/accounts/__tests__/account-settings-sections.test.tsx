@@ -367,5 +367,64 @@ describe("AccountInvitationsSection", () => {
     });
     await user.click(await screen.findByRole("button", { name: "Send eve@example.com a new link" }));
     await waitFor(() => expect(calls.map((c) => c.route)).toContain("post /admin/invitations/7/resend"));
+    // Beside the form, in the account words; the panel's own "failed" only where none fits.
+    expect(await screen.findByText("This invitation has already been accepted or revoked.")).toBeInTheDocument();
+  });
+
+  it("says the console's hint on load, read from the server before any invitation", async () => {
+    mount(<AccountInvitationsSection />, {
+      "get /admin/invitations": () => ({ status: 200, data: [] }),
+      "get /admin/mail": () => ({ status: 200, data: { mail_backend: "console" } }),
+    });
+    expect(await screen.findByText(/written to the server log/)).toBeInTheDocument();
+  });
+
+  it("asks no transport of a server when the app names it, and says the app's words for a refusal", async () => {
+    const row = {
+      id: 7,
+      email: "eve@example.com",
+      role: "MEMBER",
+      locale: "en",
+      status: "open",
+      created_at: "2026-11-13T09:00:00Z",
+      expires_at: "2026-11-27T09:00:00Z",
+    };
+    const { calls, user } = mount(
+      <AccountInvitationsSection mailBackend="resend" describeError={() => "Die Einladung ist schon erledigt."} />,
+      {
+        "get /admin/invitations": () => ({ status: 200, data: [row] }),
+        "post /admin/invitations/7/resend": () => ({ status: 409, data: { code: "invitation_closed" } }),
+      },
+    );
+    await user.click(await screen.findByRole("button", { name: "Send eve@example.com a new link" }));
+    expect(await screen.findByText("Die Einladung ist schon erledigt.")).toBeInTheDocument();
+    expect(calls.map((c) => c.route)).not.toContain("get /admin/mail");
+  });
+
+  it("tells the app after an invitation is made, sent again or revoked", async () => {
+    const row = {
+      id: 7,
+      email: "eve@example.com",
+      role: "MEMBER",
+      locale: "en",
+      status: "open",
+      created_at: "2026-11-13T09:00:00Z",
+      expires_at: "2026-11-27T09:00:00Z",
+    };
+    const onChanged = vi.fn();
+    const { user } = mount(<AccountInvitationsSection onChanged={onChanged} />, {
+      "get /admin/invitations": () => ({ status: 200, data: [row] }),
+      "post /admin/invitations/7/resend": () => ({
+        status: 200,
+        data: { ...row, sent: true, mail_backend: "resend" },
+      }),
+      "delete /admin/invitations/7": () => ({ status: 204 }),
+    });
+    await user.click(await screen.findByRole("button", { name: "Send eve@example.com a new link" }));
+    await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(1));
+    // Revoking is in the row's "⋯" menu, and asks nothing (level `none`).
+    await user.click(screen.getByRole("button", { name: /eve@example\.com/, expanded: false }));
+    await user.click(await screen.findByRole("button", { name: "Revoke the invitation for eve@example.com" }));
+    await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(2));
   });
 });
