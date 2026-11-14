@@ -2283,6 +2283,19 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       eraseBody: "A fiók és minden tartalma véglegesen törlődik. A napló csak a címét őrzi meg.",
       erased: (email) => `${email} véglegesen törölve.`,
     },
+    // 0.64 (auth §12.9): AccountTranslationReview — the review page's heading, its empty
+    // state and the source filter's words.
+    accountTranslations: {
+      title: "Fordítások lektorálása",
+      description:
+        "Olvassa el a szövegeket a saját nyelvén a referencia mellett, és hagyja jóvá őket, vagy jelezze, min kell változtatni. A javítások a fejlesztőhöz kerülnek exportálva; maguk a szövegek itt nem változnak.",
+      saved: "Mentve",
+      cleared: "Lektorálatlannak jelölve",
+      noAccess: "Nincs lektorálandó nyelv",
+      noAccessHint: "A lektorálandó nyelveket egy rendszergazda adja meg. Forduljon hozzá, ha itt nyelveket várt.",
+      sourceApp: "Az alkalmazás szövegei",
+      sourceKit: "Közös komponensek",
+    },
   };
 }
 

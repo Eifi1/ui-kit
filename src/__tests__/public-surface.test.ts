@@ -525,7 +525,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.64 (+5, the admin's sections): `AccountAdminOverviewSection`, `AccountMailTestSection`,
   // `AccountAdminLogSection`, `AccountUserRosterSection` and its words, `DEFAULT_ACCOUNT_ROSTER_LABELS`.
   // 0.64 (+2, server-kit 0.32's second factor): `useTwoFactor` and `AccountTwoFactorSection`.
-  ["@eifi1/ui-kit/accounts", accounts, 46],
+  // 0.64 (+3, the review page): `AccountTranslationReview`, `useTranslationReviews` and the
+  // page's words, `DEFAULT_ACCOUNT_TRANSLATIONS_LABELS`.
+  ["@eifi1/ui-kit/accounts", accounts, 49],
   // 0.46.0: local-first phase 3 (docs/local-first-harmonization.md §2.3) — `createSyncDb`,
   // `SYNC_DB_STORES`, `createSyncEngine`, `DEFAULT_HOLD_CODES`, `DEFAULT_SYNC_BACKOFF_MS`,
   // `syncEngineFor`, `releaseSyncEngine`, `useSyncWorker`, `useSyncStatus`, `useSyncQuery` and the

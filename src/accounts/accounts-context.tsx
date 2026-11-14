@@ -32,6 +32,11 @@ export const accountQueryKeys = {
   adminActions: (query: object) => ["accounts", "admin", "actions", query] as const,
   adminAttention: ["accounts", "admin", "attention"] as const,
   adminMail: ["accounts", "admin", "mail"] as const,
+  /** The verdicts the viewer may see (0.64); a save or a clear patches the answer. */
+  translationReviews: ["accounts", "translations", "reviews"] as const,
+  /** The strings the review reads, per set of languages: what the app ships, so they
+   *  never go stale in a tab. */
+  translationStrings: ["accounts", "translations", "strings"] as const,
   invitationCheck: (token: string) => ["accounts", "invitation-check", token] as const,
 };
 

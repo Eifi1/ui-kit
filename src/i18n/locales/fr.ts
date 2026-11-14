@@ -2325,6 +2325,19 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       eraseBody: "Le compte et ce qu’il contient sont effacés définitivement. Le journal ne garde que son adresse.",
       erased: (email) => `${email} est effacé.`,
     },
+    // 0.64 (auth §12.9): AccountTranslationReview — the review page's heading, its empty
+    // state and the source filter's words.
+    accountTranslations: {
+      title: "Relire les traductions",
+      description:
+        "Lisez chaque texte dans votre langue à côté de la référence, puis approuvez-le ou indiquez ce qui doit changer. Les corrections sont exportées pour un développeur\u202f; les textes eux-mêmes ne changent pas ici.",
+      saved: "Enregistré",
+      cleared: "Marqué comme non relu",
+      noAccess: "Aucune langue à relire",
+      noAccessHint: "Un administrateur attribue les langues que vous relisez. Demandez-lui si vous en attendiez ici.",
+      sourceApp: "Textes de cette application",
+      sourceKit: "Composants partagés",
+    },
   };
 }
 

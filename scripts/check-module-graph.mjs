@@ -304,17 +304,20 @@ const BUDGETS = [
   // user_admin_router: the roster and its actions, the log, the counts, the mail; about 0.9 kB)
   // and the sign-out's `notice` — meant growth, 1,103 B. The admin's hooks and sections are not
   // in it either.
+  // 17,636 B (6,406 gzip) with the review's three routes (server-kit 0.31's
+  // translation_review_router), 246 B; the review page and its hook are not in it.
   // 17,669 B (6,413 gzip) with server-kit 0.32's second factor: `verifyCode`, the sign-in's
   // code step, and `twoFactorSetup` / `enableTwoFactor` / `disableTwoFactor` on `client.api` —
   // meant growth, 279 B. Its section and hook are not in it.
   // 18,430 B (6,700 gzip) with keksdose's KG-9 and KG-10: `onPassword` at the four places a
   // password reaches the server, and `pageMode: "per-page"` — the page's mode read at load, a
   // sign-in handed to a fresh page through the tab, `afterSignIn` — meant growth, 761 B.
+  // Both together at the merge: 18.7 kB minified (6.8 kB gzip), ceiling 18,800.
   {
     label: "{ createAccountsClient }",
     entry: "dist/accounts.js",
     names: ["createAccountsClient", "accountStorageEntries"],
-    max: 18_500,
+    max: 18_800,
   },
 ];
 const ENTRY = "\0import-cost";

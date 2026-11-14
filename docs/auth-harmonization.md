@@ -1165,6 +1165,12 @@ code confirms), switching off by the password and a live code. Its three refusal
 (`two_factor_invalid`, `two_factor_unavailable`, `two_factor_not_pending`) are said in the
 account words; an unreadable second factor is never said as a wrong code.
 
+**The review page** (0.64, on server-kit 0.31's `translation_review_router`): the three routes on
+`client.api`, `useTranslationReviews`, and `AccountTranslationReview` — the language tabs, the
+panel, the export and the empty state for a viewer granted nothing, with the strings from the app
+(`loadStrings`) and the kit's own catalogues under `kit.`. Kurvenschmiede's `TranslationsPage`,
+≈ 300 lines, was the model; its words are the `accountTranslations` namespace.
+
 **Found on the way** (Staunlabor's inventory):
 - `@eifi1/ui-kit/offline` imports `idb-keyval` and `@tanstack/query-async-storage-persister`
   statically, so an app that needs only `SharedComputerChoice` must install both: the

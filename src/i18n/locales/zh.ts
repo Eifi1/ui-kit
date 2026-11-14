@@ -2171,6 +2171,19 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       eraseBody: "该账户及其所有内容将被永久删除。日志只保留其地址。",
       erased: (email) => `${email} 已永久删除。`,
     },
+    // 0.64 (auth §12.9): AccountTranslationReview — the review page's heading, its empty
+    // state and the source filter's words.
+    accountTranslations: {
+      title: "审校翻译",
+      description:
+        "在参考文本旁阅读您语言的每条文本，予以批准或说明需要修改之处。修改建议会导出给开发人员；文本本身不会在此更改。",
+      saved: "已保存",
+      cleared: "已标记为未审校",
+      noAccess: "没有需要审校的语言",
+      noAccessHint: "您审校的语言由管理员分配。如果您原本期望在此看到语言，请联系管理员。",
+      sourceApp: "本应用的文本",
+      sourceKit: "共享组件",
+    },
   };
 }
 

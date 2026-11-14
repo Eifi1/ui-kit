@@ -111,6 +111,7 @@ import { DEFAULT_QUANTITY_LABELS } from "../components/quantity-labels";
 import { DEFAULT_REORDER_LABELS } from "../components/reorder-labels";
 import { DEFAULT_ACCOUNT_FAILURE_LABELS } from "../accounts/account-failure-labels";
 import { DEFAULT_ACCOUNT_ROSTER_LABELS } from "../accounts/account-roster-labels";
+import { DEFAULT_ACCOUNT_TRANSLATIONS_LABELS } from "../accounts/account-translations-labels";
 import { DEFAULT_SHARE_CARD_LABELS } from "../components/share-card-labels";
 import { DEFAULT_REAUTH_DIALOG_LABELS } from "../components/reauth-dialog-labels";
 import { DEFAULT_SERVER_WAKE_LABELS } from "../components/server-wake-labels";
@@ -286,4 +287,5 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   reorder: DEFAULT_REORDER_LABELS,
   accountFailure: DEFAULT_ACCOUNT_FAILURE_LABELS,
   accountRoster: DEFAULT_ACCOUNT_ROSTER_LABELS,
+  accountTranslations: DEFAULT_ACCOUNT_TRANSLATIONS_LABELS,
 };

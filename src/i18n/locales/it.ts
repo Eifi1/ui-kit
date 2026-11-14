@@ -2303,6 +2303,19 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         "L’account e ciò che contiene vengono cancellati per sempre. Il registro conserva solo il suo indirizzo.",
       erased: (email) => `${email} è cancellato.`,
     },
+    // 0.64 (auth §12.9): AccountTranslationReview — the review page's heading, its empty
+    // state and the source filter's words.
+    accountTranslations: {
+      title: "Rivedere le traduzioni",
+      description:
+        "Legga ogni testo nella Sua lingua accanto al riferimento, poi lo approvi o indichi che cosa deve cambiare. Le correzioni vengono esportate per uno sviluppatore; qui i testi non cambiano.",
+      saved: "Salvato",
+      cleared: "Segnato come non rivisto",
+      noAccess: "Nessuna lingua da rivedere",
+      noAccessHint: "Le lingue da rivedere le assegna un amministratore. Si rivolga a lui se se ne aspettava qui.",
+      sourceApp: "Testi di questa app",
+      sourceKit: "Componenti condivisi",
+    },
   };
 }
 
