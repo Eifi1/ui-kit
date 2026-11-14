@@ -514,7 +514,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // (+8) the settings sections: `AccountProfileSection`, `AccountPasswordSection`,
   // `AccountEmailSection`, `AccountSessionsSection`, `AccountPasskeysSection`,
   // `AccountExportSection`, `AccountDeletionSection`, `AccountInvitationsSection`.
-  ["@eifi1/ui-kit/accounts", accounts, 29],
+  // 0.64 (+2, Staunlabor's dev.1 run): `accountRouteElements`, the pages as JSX `<Route>`s,
+  // and `useAccountStorageLines`, the privacy page's lines.
+  ["@eifi1/ui-kit/accounts", accounts, 31],
   // 0.46.0: local-first phase 3 (docs/local-first-harmonization.md §2.3) — `createSyncDb`,
   // `SYNC_DB_STORES`, `createSyncEngine`, `DEFAULT_HOLD_CODES`, `DEFAULT_SYNC_BACKOFF_MS`,
   // `syncEngineFor`, `releaseSyncEngine`, `useSyncWorker`, `useSyncStatus`, `useSyncQuery` and the

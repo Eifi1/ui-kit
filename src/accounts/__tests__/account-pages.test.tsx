@@ -9,7 +9,7 @@ import { setSharedComputer } from "../../offline/shared-computer";
 import { fakeFetch, fakeHttp, noAnswer, tokens } from "../../test/fake-axios";
 import type { Answer, Cfg } from "../../test/fake-axios";
 import { fill } from "../../test/fill";
-import { accountRoutes, RequireSession } from "../account-pages";
+import { accountRouteElements, accountRoutes, RequireSession } from "../account-pages";
 import type { AccountRoutesOptions } from "../account-pages";
 import { AccountsProvider } from "../accounts-context";
 import { createAccountsClient } from "../accounts-client";
@@ -363,5 +363,35 @@ describe("RequireSession", () => {
       },
     ]);
     expect(screen.getByText("Private")).toBeInTheDocument();
+  });
+});
+
+describe("accountRouteElements (0.64, Staunlabor)", () => {
+  it("are the same pages as <Route> elements, for an app that writes its routes as JSX", async () => {
+    const { MemoryRouter, Route, Routes } = await import("react-router");
+    const client = createAccountsClient<typeof ada>({
+      http: fakeHttp(() => ({ status: 204 })),
+      storagePrefix: "app.",
+      publicPaths: ["/"],
+      fetch: fakeFetch(() => ({ status: 401 })),
+      navigate: vi.fn(),
+    });
+    clients.push(client);
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <AccountsProvider client={client}>
+          <MemoryRouter initialEntries={["/forgot-password"]}>
+            <Routes>
+              {accountRouteElements()}
+              <Route path="/" element={<p>Home</p>} />
+            </Routes>
+          </MemoryRouter>
+        </AccountsProvider>
+      </QueryClientProvider>,
+    );
+    expect(await screen.findByRole("button", { name: /send/i })).toBeInTheDocument();
+    expect(accountRouteElements().map((element) => (element.props as { path?: string }).path)).toEqual(
+      accountRoutes().map((route) => route.path),
+    );
   });
 });

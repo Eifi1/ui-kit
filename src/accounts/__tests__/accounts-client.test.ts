@@ -237,6 +237,34 @@ describe("the refresh", () => {
     }
   });
 
+  it("privatePaths, for an open site: only the pages it lists need a session (Staunlabor, 0.64)", async () => {
+    for (const [path, leaves] of [
+      ["/", false],
+      ["/exhibits/pendulum", false],
+      ["/settings/profile", true],
+      ["/admin", true],
+    ] as const) {
+      localStorage.clear();
+      window.history.replaceState(null, "", path);
+      stored("a1");
+      const made = setup({
+        publicPaths: undefined,
+        privatePaths: ["/settings", "/admin"],
+        refresh: () => ({ status: 401 }),
+      });
+      await settle(made.http.get("/me"));
+      expect(made.navigate.mock.calls.length > 0, path).toBe(leaves);
+      made.client.detach();
+    }
+  });
+
+  it("takes one list: publicPaths or privatePaths, never both and never neither", () => {
+    const http = fakeHttp(() => ({ status: 204 }));
+    const both = { http, storagePrefix: "x.", publicPaths: ["/"], privatePaths: ["/admin"] };
+    expect(() => createAccountsClient(both as never)).toThrow(TypeError);
+    expect(() => createAccountsClient({ http, storagePrefix: "x." } as never)).toThrow(TypeError);
+  });
+
   it("a refresh that got no answer is asked again, and the session stays", async () => {
     vi.useFakeTimers();
     stored("a1");

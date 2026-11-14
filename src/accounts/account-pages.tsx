@@ -1,6 +1,6 @@
 import { useState } from "react";
-import type { ComponentType, ReactNode } from "react";
-import { Navigate, useLocation, useNavigate, useSearchParams } from "react-router";
+import type { ComponentType, ReactElement, ReactNode } from "react";
+import { Navigate, Route, useLocation, useNavigate, useSearchParams } from "react-router";
 import type { RouteObject } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -388,6 +388,22 @@ export function accountRoutes(options: AccountRoutesOptions = {}): RouteObject[]
   ];
   if (o.demo) routes.push({ path: o.paths.demoEnded, element: <DemoEndedPage o={o} /> });
   return routes;
+}
+
+/**
+ * {@link accountRoutes} as `<Route>` elements (0.64, Staunlabor), for an app that writes its
+ * routes as JSX — React Router takes only `<Route>` children in `<Routes>`, so a component of
+ * the kit's could not stand there; an array spread into it can:
+ *
+ * ```tsx
+ * <Routes>
+ *   {accountRouteElements({ frame: SiteFrame, legal: { privacyHref: "/privacy" } })}
+ *   <Route path="/" element={<Home />} />
+ * </Routes>
+ * ```
+ */
+export function accountRouteElements(options: AccountRoutesOptions = {}): ReactElement[] {
+  return accountRoutes(options).map((route) => <Route key={route.path} path={route.path} element={route.element} />);
 }
 
 /** What {@link RequireSession} takes. */

@@ -8,6 +8,8 @@
 // later rounds' TanStack Query hooks stay out of the barrel with it.
 export { accountStorageEntries } from "./accounts/storage-entries";
 export type { AccountStorageEntry } from "./accounts/storage-entries";
+export { useAccountStorageLines } from "./accounts/storage-lines";
+export type { AccountStorageLine } from "./accounts/storage-lines";
 export { createAccountsClient } from "./accounts/accounts-client";
 export type {
   AccountsClient,
@@ -70,7 +72,7 @@ export {
   useUpdateProfile,
 } from "./accounts/accounts-hooks";
 // 0.63 (§12.9 "The pages"): the signed-out pages as route objects, and the gate.
-export { accountRoutes, RequireSession } from "./accounts/account-pages";
+export { accountRouteElements, accountRoutes, RequireSession } from "./accounts/account-pages";
 export type {
   AccountPageFrameProps,
   AccountPaths,

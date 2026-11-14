@@ -1287,21 +1287,24 @@ are the contract's:
 `@eifi1/ui-kit/accounts` (0.63, standalone) wires the kit's sign-in parts to server-kit 0.29's
 `auth_router` once, so an app writes no account wiring of its own:
 
-- **The session:** `createAccountsClient({ http, storagePrefix, publicPaths, … })` on the
-  app's own axios instance (typed structurally: axios stays the app's) puts the bearer on every
+- **The session:** `createAccountsClient({ http, storagePrefix, publicPaths, … })` (or
+  `privatePaths` for an open site whose private pages are few, 0.64) on the app's own axios
+  instance (typed structurally: axios stays the app's) puts the bearer on every
   request to the app's API and no other host, renews the session through the kit's refresh over
   a bare `fetch`, keeps it where the shared-computer choice says (the device, the tab, or page
   memory), signs out in the contract's order (this device's push, `DELETE
   /auth/sessions/current`, then the tokens), and sends `shared_device` with the sign-in, the
   sign-up and the passkey finish. `client.api` types every route; `accountStorageEntries` lists
-  the keys it keeps, each with the privacy page's line in the kit's seven languages.
+  the keys it keeps, each with the privacy page's line in the kit's seven languages, and
+  `useAccountStorageLines(prefix)` (0.64) answers the lines themselves.
 - **The hooks** (TanStack Query, under `<AccountsProvider client>`): `useCurrentUser`,
   `useUpdateProfile`, `useChangePassword`, `useEmailChange`, `useAccountSessions`,
   `usePasskeys`, `useAccountExport`, `useAccountDeletion`, `useInvitationsAdmin`, with
   `accountQueryKeys`.
 - **The pages:** `accountRoutes(options)` answers route objects for the sign-in, the sign-up
-  (with the invitation's check), the password reset, the mailed links and the demo's end;
-  `RequireSession` gates the private ones.
+  (with the invitation's check), the password reset, the mailed links and the demo's end, and
+  `accountRouteElements(options)` (0.64) the same as `<Route>` elements for an app whose
+  routes are JSX `<Routes>`; `RequireSession` gates the private ones.
 - **The settings:** `AccountProfileSection`, `AccountPasswordSection`, `AccountEmailSection`,
   `AccountSessionsSection`, `AccountPasskeysSection`, `AccountExportSection`,
   `AccountDeletionSection`, and the admin's `AccountInvitationsSection`, for the app's own

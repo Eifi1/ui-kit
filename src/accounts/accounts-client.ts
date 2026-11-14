@@ -161,7 +161,14 @@ export interface AccountsClientOptions<U extends AccountUser = AccountUser> {
    * ones is Kurvenschmiede's rule: the private list is the one that grows, and a page
    * forgotten there would have been left standing with nothing behind it.
    */
-  publicPaths: readonly PathPattern[];
+  publicPaths?: readonly PathPattern[];
+  /**
+   * 0.64 (Staunlabor): the other way round, for an open site whose private pages are few —
+   * the pages that NEED a session, everything else public (`["/settings", "/admin"]`). The
+   * same patterns as `publicPaths`. Give one of the two, never both: the client refuses
+   * both, and neither, with a `TypeError`.
+   */
+  privatePaths?: readonly PathPattern[];
   /** The sign-in page. Default `"/login"`. A session that ended under a private page goes
    *  there with `?next=` that page. */
   signInPath?: string;
@@ -371,9 +378,14 @@ export function createAccountsClient<U extends AccountUser = AccountUser>(
 
   const isDemo = () => options.demo !== undefined && isDemoSession(useSession.getState().user);
   const here = () => `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  const { publicPaths, privatePaths } = options;
+  if ((publicPaths === undefined) === (privatePaths === undefined)) {
+    throw new TypeError("createAccountsClient takes publicPaths or privatePaths: one of the two");
+  }
   const needsSession = (pathname: string) => {
     const path = routerPathname(pathname);
-    return !options.publicPaths.some((pattern) => matchesPathPattern(path, pattern));
+    const matches = (pattern: PathPattern) => matchesPathPattern(path, pattern);
+    return privatePaths !== undefined ? privatePaths.some(matches) : !(publicPaths ?? []).some(matches);
   };
   const withNext = (path: string, next: string) =>
     `${path}${path.includes("?") ? "&" : "?"}${NEXT_PARAM}=${encodeURIComponent(next)}`;
