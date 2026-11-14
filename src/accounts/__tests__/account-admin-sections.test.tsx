@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { Toaster } from "../../components/toast";
 import { fakeFetch, fakeHttp } from "../../test/fake-axios";
 import type { Answer, Cfg } from "../../test/fake-axios";
 import {
@@ -233,6 +234,24 @@ describe("AccountUserRosterSection", () => {
     await user.click(within(menu).getByRole("button", { name: "Send a password reset mail" }));
     expect(await screen.findByText("http://localhost/reset?token=t1")).toBeInTheDocument();
     expect(calls.find((c) => c.route === "post /admin/users/7/mail")?.data).toEqual({ kind: "password_reset" });
+  });
+
+  it("toasts the app's own words for a refusal as they are, markup too", async () => {
+    const { user } = mount(
+      <>
+        <Toaster />
+        <AccountUserRosterSection roles={roles} describeError={() => <em>Not now, says the app</em>} />
+      </>,
+      {
+        "get /admin/users": () => page([person(1, "Ada", { role: "ADMIN" }), person(7, "Ben")]),
+        "post /admin/users/7/mail": () => ({ status: 409, data: { code: "account_inactive", detail: "inactive" } }),
+      },
+    );
+    await user.click((await screen.findAllByRole("button", { name: "Actions for Ben Example" }))[0]);
+    const menu = await screen.findByRole("dialog", { name: "Actions for Ben Example" });
+    await user.click(within(menu).getByRole("button", { name: "Send a password reset mail" }));
+    expect(await screen.findByText("Not now, says the app")).toBeInTheDocument();
+    expect(screen.queryByText("[object Object]")).not.toBeInTheDocument();
   });
 
   it("narrows the roster to the deletion requests from the overview tile's link, until everybody is shown", async () => {

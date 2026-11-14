@@ -178,7 +178,6 @@ export interface AccountInvitationDraft {
   locale?: string;
 }
 
-/** The typed routes, on the app's instance: `client.api`. */
 // ── The admin's (server-kit 0.30–0.31, `user_admin_router`) ──────────────────
 
 /** One row of `GET /admin/users` (server-kit's `AdminUserRow`): the kit's roster row, with the
@@ -274,6 +273,7 @@ export interface AccountAdminActionQuery {
   target_email?: string;
 }
 
+/** The typed routes, on the app's instance: `client.api`. */
 export interface AccountsApi<U extends AccountUser = AccountMe> {
   me(): Promise<U>;
   updateMe(patch: AccountProfilePatch): Promise<U>;

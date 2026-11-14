@@ -375,7 +375,7 @@ export function AccountUserRosterSection<R extends string = string>({
           else
             toast.success(kind === "verification" ? labels.verificationSent(row.email) : labels.resetSent(row.email));
         },
-        onError: (error) => toast.error(String(say(error))),
+        onError: (error) => toast.error(say(error)),
       },
     );
 
@@ -406,7 +406,7 @@ export function AccountUserRosterSection<R extends string = string>({
                 { id: row.id },
                 {
                   onSuccess: () => toast.success(labels.passwordChangeWithdrawn(row.email)),
-                  onError: (error) => toast.error(String(say(error))),
+                  onError: (error) => toast.error(say(error)),
                 },
               ),
           }
