@@ -102,7 +102,19 @@ export type AccountErrorCode =
   | "household_has_members"
   | "confirmation_required"
   | "confirmation_mismatch"
-  | "password_incorrect";
+  | "password_incorrect"
+  // 0.64: server-kit 0.30's admin routes (`user_admin_router`, auth §12.4): the target is
+  // gone or outside the admin's scope (404); a role the admin may not give (422); a reviewer
+  // scope for an admin, a verification mail to a confirmed address, an erasure no deletion
+  // was asked for (409).
+  | "user_not_found"
+  | "role_not_grantable"
+  | "reviewer_is_admin"
+  | "email_already_verified"
+  | "deletion_not_requested"
+  // server-kit's AccountErrorCode carries it too (the admin's mail to a deactivated account);
+  // the same word as the sign-in's AuthErrorCode.
+  | "account_inactive";
 
 /**
  * 0.31.0: the demo's coded refusals (docs/landing-demo-harmonization.md §6.2) —
@@ -214,6 +226,11 @@ const CODES: ReadonlySet<string> = new Set<KitErrorCode>([
   "confirmation_required",
   "confirmation_mismatch",
   "password_incorrect",
+  "user_not_found",
+  "role_not_grantable",
+  "reviewer_is_admin",
+  "email_already_verified",
+  "deletion_not_requested",
   "demo_disabled",
   "demo_rate_limited",
   "demo_capacity",

@@ -3,7 +3,7 @@
 // fails while this file is stale.
 
 /** The server-kit release the Server kit pages document. */
-export const SERVER_KIT_VERSION = "0.29.0";
+export const SERVER_KIT_VERSION = "0.31.0";
 
 export interface ServerKitSearchModule {
   /** The Server kit page that documents it. */
@@ -47,6 +47,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["LOGIN_FAILURE_MAX_DELAY", "constant"],
       ["LOGIN_FAILURE_WINDOW_SECONDS", "constant"],
       ["LOGIN_PER_IP", "constant"],
+      ["MAIL_TEST_PER_ACCOUNT", "constant"],
       ["MAX_EMAIL_LENGTH", "constant"],
       ["MAX_NAME_LENGTH", "constant"],
       ["MAX_PASSKEY_NAME_LENGTH", "constant"],
@@ -65,6 +66,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["REFRESH_TOKEN_LIFETIME", "constant"],
       ["REFRESH_TOKEN_TYPE", "constant"],
       ["REGISTER_PER_IP", "constant"],
+      ["REQUESTS_PER_IP", "constant"],
       ["RESERVED_CLAIMS", "constant"],
       ["RESET_PER_ADDRESS", "constant"],
       ["RESET_PER_IP", "constant"],
@@ -206,6 +208,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["IssuedSession", "class"],
       ["SessionsEndedReason", "enum"],
       ["SignedIn", "class"],
+      ["StartedSession", "class"],
     ],
   },
   {
@@ -214,6 +217,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
     summary: "The account routes as router factories: ``auth_router(AuthDeps(...))`` and ``invitations_admin_router(...)``.",
     members: [
       ["AuthDeps", "class"],
+      ["account_request_window", "function"],
       ["account_service", "function"],
       ["admin_guard", "function"],
       ["app_state_limiters", "function"],
@@ -222,6 +226,22 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["invitations_admin_router", "function"],
       ["no_hooks", "function"],
       ["peer_address", "function"],
+    ],
+  },
+  {
+    page: "server-auth",
+    module: "auth.jobs",
+    summary: "The account layer's daily jobs as the scheduler's routes (0.31), behind the ``fastapi`` extra.",
+    members: [
+      ["ACCOUNT_ROWS_RETENTION", "constant"],
+      ["UPLOAD_WAIT", "constant"],
+      ["AccountJobsDeps", "class"],
+      ["DailyAccountJobs", "model"],
+      ["ErasureAnswer", "model"],
+      ["PruneAnswer", "model"],
+      ["PruneCounts", "protocol"],
+      ["UploadSweepAnswer", "model"],
+      ["account_jobs_router", "function"],
     ],
   },
   {
@@ -252,6 +272,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["base64url_encode", "function"],
       ["credential_id_of", "function"],
       ["registration_options", "function"],
+      ["rp_id_fits", "function"],
       ["user_handle_of", "function"],
       ["verify_authentication", "function"],
       ["verify_registration", "function"],
@@ -265,6 +286,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["ACCOUNTS_TABLE", "constant"],
       ["EMAIL_WIDTH", "constant"],
       ["AccountColumns", "class"],
+      ["AccountPrune", "class"],
       ["AdminActionColumns", "class"],
       ["DemoAccountColumn", "class"],
       ["InvitationColumns", "class"],
@@ -278,8 +300,32 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["SqlInvitationStore", "class"],
       ["SqlOneTimeTokenStore", "class"],
       ["SqlPasskeyStore", "class"],
+      ["SqlRosterStore", "class"],
       ["SqlSessionStore", "class"],
       ["SqlUserStore", "class"],
+      ["UtcDateTime", "class"],
+      ["alembic_render_item", "function"],
+      ["prune_account_rows", "function"],
+    ],
+  },
+  {
+    page: "server-auth",
+    module: "auth.jwt_signer",
+    summary: "The account layer's :class:`~eifi1_server_kit.auth.ports.TokenSigner`, ready-made: HS256 with PyJWT, the ``jwt`` extra (``eifi1-server-kit[jwt]``, 0.30).",
+    members: [
+      ["JWT_ALGORITHM", "constant"],
+      ["JwtSigner", "class"],
+    ],
+  },
+  {
+    page: "server-auth",
+    module: "auth.bcrypt_hasher",
+    summary: "The account layer's :class:`~eifi1_server_kit.auth.ports.PasswordHasher`, ready-made: bcrypt at the app's cost, the ``bcrypt`` extra (``eifi1-server-kit[bcrypt]``, 0.30).",
+    members: [
+      ["DEFAULT_BCRYPT_ROUNDS", "constant"],
+      ["MAX_BCRYPT_ROUNDS", "constant"],
+      ["MIN_BCRYPT_ROUNDS", "constant"],
+      ["BcryptHasher", "class"],
     ],
   },
   {
@@ -322,6 +368,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["ActionConfirmation", "model"],
       ["ActiveChange", "model"],
       ["AdminAction", "enum"],
+      ["AdminActionPage", "model"],
       ["AdminActionRow", "model"],
       ["AdminAttention", "model"],
       ["AdminUserRow", "model"],
@@ -332,6 +379,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["DeletionRequest", "model"],
       ["EmailChangeConfirm", "model"],
       ["EmailChangeRequest", "model"],
+      ["ErasureResult", "model"],
       ["ExportSecretError", "class"],
       ["GroupNameProblem", "constant"],
       ["GroupRef", "model"],
@@ -339,11 +387,13 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["InvitationIssued", "model"],
       ["InvitationRow", "model"],
       ["InvitationStatus", "enum"],
+      ["MailBackendInfo", "model"],
       ["MailKind", "enum"],
       ["MailRequest", "model"],
       ["MailResult", "model"],
       ["PersonRef", "model"],
       ["RetentionNote", "class"],
+      ["ReviewerResult", "model"],
       ["ReviewerUpdate", "model"],
       ["RoleChange", "model"],
       ["RolesChange", "model"],
@@ -373,6 +423,50 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["refuse_self", "function"],
       ["require_confirmation", "function"],
       ["secret_paths", "function"],
+    ],
+  },
+  {
+    page: "server-user-admin",
+    module: "user_admin.ports",
+    summary: "The admin router's ports beside the account layer's: the roster, and the invitations an erasure forgets.",
+    members: [
+      ["AcceptedInvitations", "protocol"],
+      ["AccountLogScrub", "protocol"],
+      ["AdminActionsByEmail", "protocol"],
+      ["RosterCounts", "class"],
+      ["RosterStore", "protocol"],
+    ],
+  },
+  {
+    page: "server-user-admin",
+    module: "user_admin.scope",
+    summary: "The admin scope: which accounts an admin sees and acts on, how the last admin is counted, whether a role is one value or a set, and which roles may be given.",
+    members: [
+      ["AdminScope", "protocol"],
+      ["GlobalScope", "class"],
+    ],
+  },
+  {
+    page: "server-user-admin",
+    module: "user_admin.service",
+    summary: "The admin's flows over the scope and the account layer: the roster, the four actions, the reviewer scope, the log, the overview, the test mail and the operator's erasure.",
+    members: [
+      ["ADMIN_ACTIONS", "constant"],
+      ["AdminPolicy", "class"],
+      ["ErasureRun", "class"],
+      ["UserAdminHooks", "class"],
+      ["UserAdminService", "class"],
+      ["erase_due_accounts", "function"],
+    ],
+  },
+  {
+    page: "server-user-admin",
+    module: "user_admin.router",
+    summary: "The admin's routes as a router factory: ``user_admin_router(UserAdminDeps(...))``.",
+    members: [
+      ["UserAdminDeps", "class"],
+      ["no_admin_hooks", "function"],
+      ["user_admin_router", "function"],
     ],
   },
   {
@@ -440,6 +534,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["database_is_local", "function"],
       ["dev_switch_enabled", "function"],
       ["effective_today", "function"],
+      ["origin_is_local", "function"],
       ["require_dev_switch", "function"],
       ["validate_dev_switch", "function"],
     ],
@@ -936,6 +1031,27 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
     ],
   },
   {
+    page: "server-feedback",
+    module: "feedback.sql",
+    summary: "The feedback tables as SQLAlchemy declarative mixins, and the feedback ports' stores over them: the ``sql`` extra (``docs/server-services-harmonization.md`` §2.3–§2.6 and ``docs/feedback-harmonization.md`` §9.14 in ``Eifi1/ui-kit``).",
+    members: [
+      ["FEEDBACK_OBJECT_PREFIX", "constant"],
+      ["FEEDBACK_TABLE", "constant"],
+      ["FeedbackAttachmentColumns", "class"],
+      ["FeedbackColumns", "class"],
+      ["FeedbackCommentColumns", "class"],
+      ["FeedbackReplyColumns", "class"],
+      ["FeedbackVoteColumns", "class"],
+      ["SqlAttachmentStorage", "class"],
+      ["SqlFeedbackCommentStore", "class"],
+      ["SqlFeedbackReplyStore", "class"],
+      ["SqlFeedbackRepository", "class"],
+      ["SqlFeedbackVoteStore", "class"],
+      ["SqlPeopleLookup", "class"],
+      ["UploadPrune", "class"],
+    ],
+  },
+  {
     page: "server-settings",
     module: "tours",
     summary: "Tour progress on the account (``docs/tours-harmonization.md`` §10 in ``Eifi1/ui-kit``, 0.15).",
@@ -1011,6 +1127,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["MAX_KEY_BYTES", "constant"],
       ["MAX_SEGMENT_BYTES", "constant"],
       ["PURGE_CONCURRENCY", "constant"],
+      ["PURGE_SPARE_RECENT", "constant"],
       ["GcsObjectStore", "class"],
       ["LocalObjectStore", "class"],
       ["ObjectNotFoundError", "class"],
@@ -1130,6 +1247,15 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
     members: [
       ["TranslationReviewDeps", "class"],
       ["translation_review_router", "function"],
+    ],
+  },
+  {
+    page: "server-translation-review",
+    module: "translation_review.sql",
+    summary: "The translation review's table as a SQLAlchemy declarative mixin, and the store over it: the ``sql`` extra (``docs/server-services-harmonization.md`` §6.2.3 in ``Eifi1/ui-kit``).",
+    members: [
+      ["SqlTranslationReviewStore", "class"],
+      ["TranslationReviewColumns", "class"],
     ],
   },
   {

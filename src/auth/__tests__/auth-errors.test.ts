@@ -90,6 +90,23 @@ describe("authErrorCode — server-kit 0.29's account routes (auth §12.5 item 3
   });
 });
 
+/** 0.64: server-kit 0.30's admin routes (`user_admin_router`) answer five refusals more. */
+const CODES_0_30 = [
+  "user_not_found",
+  "role_not_grantable",
+  "reviewer_is_admin",
+  "email_already_verified",
+  "deletion_not_requested",
+] as const;
+
+describe("authErrorCode — server-kit 0.30's admin routes (auth §12.4)", () => {
+  it.each(CODES_0_30)("knows %s", (code) => {
+    const refused = { response: { status: 409, data: { detail: "English for the logs", code } } };
+    expect(authErrorCode(refused)).toBe(code);
+    expect(isAuthError(refused, code)).toBe(true);
+  });
+});
+
 describe("isAuthError", () => {
   const taken = { response: { status: 409, data: { code: "email_taken" } } };
 

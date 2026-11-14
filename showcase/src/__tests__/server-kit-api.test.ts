@@ -55,7 +55,14 @@ describe("cross-links", () => {
   it("reads the map both ways", () => {
     expect(KIT_COUNTERPARTS.auth).toContain("auth-account");
     expect(KIT_COUNTERPARTS.user_admin).toContain("user-admin");
-    expect(serverModulesFor("user-admin")).toEqual(["user_admin"]);
+    // server-kit 0.30: the admin half beside layer 1.
+    expect([...serverModulesFor("user-admin")].sort()).toEqual([
+      "user_admin",
+      "user_admin.ports",
+      "user_admin.router",
+      "user_admin.scope",
+      "user_admin.service",
+    ]);
     expect(serverModulesFor("auth-account")).toEqual(expect.arrayContaining(["auth", "user_admin", "mail"]));
     expect(serverModulesFor("tokens")).toEqual([]);
     // server-kit 0.9: the Notifications page's server half, and the feedback router;
@@ -77,6 +84,7 @@ describe("a nested module (server-kit 0.9's feedback.router)", () => {
     expect(PAGES.find((p) => p.slug === "server-feedback")?.serverModules).toEqual([
       "feedback",
       "feedback.router",
+      "feedback.sql",
       "uploads",
       "objects",
       "clock",

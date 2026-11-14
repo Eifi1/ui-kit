@@ -130,6 +130,12 @@ describe("server-kit's vocabularies, as this package writes them", () => {
       confirmation_required: true,
       confirmation_mismatch: true,
       password_incorrect: true,
+      user_not_found: true,
+      role_not_grantable: true,
+      reviewer_is_admin: true,
+      account_inactive: true,
+      email_already_verified: true,
+      deletion_not_requested: true,
     });
     expect(sorted(codes)).toEqual(sorted(enumValues("user_admin", "AccountErrorCode")));
   });

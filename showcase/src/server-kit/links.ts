@@ -24,6 +24,17 @@ export const KIT_COUNTERPARTS: Readonly<Record<string, readonly string[]>> = {
   "auth.mails": ["auth-account"],
   "auth.passkeys": ["auth-account"],
   "auth.sql": ["auth-account"],
+  // server-kit 0.30–0.31: the daily jobs, the ready signer and hasher (the account pages),
+  // the admin half (the admin pages), the feedback's and the verdicts' ready tables.
+  "auth.jobs": ["auth-account"],
+  "auth.jwt_signer": ["auth-account"],
+  "auth.bcrypt_hasher": ["auth-account"],
+  "user_admin.router": ["user-admin"],
+  "user_admin.service": ["user-admin"],
+  "user_admin.scope": ["user-admin"],
+  "user_admin.ports": ["user-admin"],
+  "feedback.sql": ["feedback-compose", "feedback-inbox"],
+  "translation_review.sql": ["localisation", "kit-review"],
   // The admin roster, actions and invitations — and the account's own email change,
   // sessions, deletion and export, which the Auth page shows.
   user_admin: ["user-admin", "auth-account"],

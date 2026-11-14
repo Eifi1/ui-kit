@@ -2189,7 +2189,18 @@ export const GROUPS: ShowcaseGroup[] = [
         // server-kit 0.29 (docs/auth-harmonization.md §12): the account layer — the routes,
         // their service, ports, mails, passkeys and the `[sql]` tables — joins layer 1 here:
         // one page for the sign-in, as the frontend has one group (the Server kit holds ten).
-        serverModules: ["auth", "auth.router", "auth.service", "auth.ports", "auth.mails", "auth.passkeys", "auth.sql"],
+        serverModules: [
+          "auth",
+          "auth.router",
+          "auth.service",
+          "auth.ports",
+          "auth.mails",
+          "auth.passkeys",
+          "auth.sql",
+          "auth.jobs",
+          "auth.jwt_signer",
+          "auth.bcrypt_hasher",
+        ],
       }),
       serverPage({
         slug: "server-user-admin",
@@ -2198,7 +2209,13 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The user list's query, the four admin actions and their confirmation levels, the audit entry, two-stage deletion and the data export.",
         icon: UserCog,
-        serverModules: ["user_admin"],
+        serverModules: [
+          "user_admin",
+          "user_admin.router",
+          "user_admin.service",
+          "user_admin.scope",
+          "user_admin.ports",
+        ],
       }),
       serverPage({
         slug: "server-settings",
@@ -2259,7 +2276,7 @@ export const GROUPS: ShowcaseGroup[] = [
         // the store behind an app's feedback `AttachmentStorage`, so it follows `uploads`.
         // `clock` (0.10) is the layer-2 services' shared clock port; feedback was its first
         // user.
-        serverModules: ["feedback", "feedback.router", "uploads", "objects", "clock"],
+        serverModules: ["feedback", "feedback.router", "feedback.sql", "uploads", "objects", "clock"],
       }),
       serverPage({
         slug: "server-limits",
@@ -2279,7 +2296,7 @@ export const GROUPS: ShowcaseGroup[] = [
         icon: Languages,
         // `translation_review.router` (server-kit 0.10) needs the `fastapi` extra, as
         // `feedback.router` does.
-        serverModules: ["translation_review", "translation_review.router"],
+        serverModules: ["translation_review", "translation_review.router", "translation_review.sql"],
       }),
     ],
   },

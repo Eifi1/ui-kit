@@ -2289,6 +2289,12 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         confirmation_mismatch: "Das ist nicht die Adresse Ihres Kontos.",
         password_incorrect: "Das Passwort ist falsch.",
         demo_refused: "Das ist in der Demo nicht möglich.",
+        user_not_found: "Dieses Konto gibt es nicht mehr.",
+        role_not_grantable: "Diese Rolle kann hier nicht vergeben werden.",
+        reviewer_is_admin:
+          "Ein Konto mit Administratorrechten kann keine Prüfrolle haben. Ändern Sie zuerst die Rolle.",
+        email_already_verified: "Diese Adresse ist bereits bestätigt.",
+        deletion_not_requested: "Für dieses Konto wurde keine Löschung beantragt, oder es ist noch aktiv.",
       },
       offline: "Der Server ist nicht erreichbar. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
       timeout: "Der Server hat zu lange nicht geantwortet. Bitte versuchen Sie es erneut.",
