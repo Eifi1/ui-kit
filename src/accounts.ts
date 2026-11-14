@@ -120,3 +120,19 @@ export type {
   AccountPasskeysSectionProps,
   AccountProfileSectionProps,
 } from "./accounts/account-settings-sections";
+// 0.64 (§12.9 "The admin's sections"): the kit's admin parts on server-kit 0.30–0.31's
+// user_admin_router — the overview, the test mail, the log and the roster with its actions.
+export {
+  AccountAdminLogSection,
+  AccountAdminOverviewSection,
+  AccountMailTestSection,
+  AccountUserRosterSection,
+} from "./accounts/account-admin-sections";
+export type {
+  AccountAdminLogSectionProps,
+  AccountAdminOverviewSectionProps,
+  AccountMailTestSectionProps,
+  AccountRosterLabels,
+  AccountUserRosterSectionProps,
+} from "./accounts/account-admin-sections";
+export { DEFAULT_ACCOUNT_ROSTER_LABELS } from "./accounts/account-roster-labels";

@@ -125,6 +125,7 @@ import type { SignOutPendingDialogLabels } from "../offline/sign-out-pending-dia
 import type { PwaUpdatePromptLabels } from "../offline/pwa-update-prompt";
 import type { SharedComputerLabels } from "../offline/shared-computer";
 import type { AccountFailureLabels } from "../accounts/account-failure";
+import type { AccountRosterLabels } from "../accounts/account-roster-labels";
 import type { HeldChangesBannerLabels } from "../shell/held-changes-banner-labels";
 import type { FieldSuggestionLabels } from "../components/field-parts";
 import type { ConsentAgainLabels } from "../components/consent-again-notice-labels";
@@ -544,6 +545,9 @@ export interface UiKitLabels {
    *  0.29's `auth_router`, docs/auth-harmonization.md §12.5 item 3, §12.9), offline, a
    *  timeout, the server's fault and a throttle. */
   accountFailure: AccountFailureLabels;
+  /** 0.64: `AccountUserRosterSection` — the roster's actions on server-kit 0.30's
+   *  `user_admin_router`, the question each asks and what it says once done. */
+  accountRoster: AccountRosterLabels;
 }
 
 /**

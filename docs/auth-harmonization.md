@@ -1140,6 +1140,22 @@ has. Demo, billing, teams, 2FA and tours are **off unless the app turns them on*
 tile) with server-kit 0.30; the feedback pages (inbox, my feedback, public) and the review page
 wired to `current_user` after them. The invitations panel comes first, with 0.29's routes.
 
+**The admin's sections** (0.64, on server-kit 0.30–0.31's `user_admin_router`): the routes on
+`client.api` and their hooks under `accountQueryKeys.admin`, so every action refreshes the
+roster, the overview's counts and the log together; then four sections an app puts into its
+admin `SettingsLayout` — `AccountAdminOverviewSection` (`GET /admin/attention`),
+`AccountMailTestSection` (`GET /admin/mail`, `POST /admin/mail/test`), `AccountAdminLogSection`
+(`GET /admin/actions`, filtered by a person's id or, for an erased account, by the address the
+row kept) and `AccountUserRosterSection`. The roster pages, sorts and searches on the server
+with its state in the URL, asks each action at the level the server states, shows a mail's link
+while the transport is the console, and reads the overview tile's `?state=deletion_requested`
+(server-kit's token is `deletion_scheduled`; both are read). What exists only in some servers is
+the app's to switch on: the reviewer's scope (`reviewer`, a server with review languages) and
+"Erase now" (`erase`, the `operator` deletion mode). Its words are the `accountRoster` namespace,
+in the seven languages; the app brings its roles (`roles`, `choosable`) and its own columns and
+actions. Kurvenschmiede's `UsersPanel`, `ActivityPanel` and `MailTestPanel`, ≈ 830 lines, were
+the model.
+
 **Found on the way** (Staunlabor's inventory):
 - `@eifi1/ui-kit/offline` imports `idb-keyval` and `@tanstack/query-async-storage-persister`
   statically, so an app that needs only `SharedComputerChoice` must install both: the

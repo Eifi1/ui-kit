@@ -2222,6 +2222,51 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       rateLimited,
       failed: "No ha funcionado. Inténtelo de nuevo.",
     },
+    // 0.64 (auth §12.9): AccountUserRosterSection — the roster's actions, the question each
+    // asks and what it says once done.
+    accountRoster: {
+      search: "Buscar cuentas",
+      consoleMail:
+        "Este servidor no envía correos: cada uno va a su registro. Tras una acción de correo, su enlace aparece aquí para que lo haga llegar.",
+      mailLink: (email) => `El enlace para ${email}, para hacerlo llegar:`,
+      onlyDeletions: "Solo las cuentas que han pedido su eliminación.",
+      showEverybody: "Mostrar todas",
+      reviews: "Idiomas que revisa",
+      sendVerification: "Reenviar el correo de confirmación",
+      verificationSent: (email) => `Correo de confirmación enviado a ${email}.`,
+      sendReset: "Enviar un correo de restablecimiento de contraseña",
+      resetSent: (email) => `Correo de restablecimiento de contraseña enviado a ${email}.`,
+      requirePasswordChange: "Exigir una nueva contraseña",
+      requirePasswordChangeTitle: (name) => `¿Exigir una nueva contraseña a ${name}?`,
+      requirePasswordChangeBody:
+        "En el próximo inicio de sesión, la cuenta deberá elegir primero una nueva contraseña.",
+      passwordChangeRequired: (email) => `${email} deberá elegir una nueva contraseña en el próximo inicio de sesión.`,
+      withdrawPasswordChange: "Retirar la exigencia de nueva contraseña",
+      passwordChangeWithdrawn: (email) => `${email} ya no tiene que elegir una nueva contraseña.`,
+      reviewer: "Revisión de traducciones",
+      reviewerTitle: (name) => `Qué revisa ${name}`,
+      reviewerSet: (email, languages) => `${email} revisa ahora: ${languages}.`,
+      reviewerRemoved: (email) => `${email} ya no revisa traducciones.`,
+      changeRole: "Cambiar el rol",
+      roleTitle: (name, role) => `¿Cambiar el rol de ${name} a «${role}»?`,
+      roleBody: "Lo que la cuenta puede hacer cambia de inmediato, desde su próxima solicitud.",
+      roleChanged: (email, role) => `${email} tiene ahora el rol «${role}».`,
+      deactivate: "Desactivar",
+      deactivateTitle: (name) => `¿Desactivar a ${name}?`,
+      deactivateBody:
+        "La cuenta se cierra en todas partes y ya no puede iniciar sesión. No se elimina nada, y se puede reactivar.",
+      deactivated: (email) => `${email} está desactivada.`,
+      reactivate: "Reactivar",
+      reactivateTitle: (name) => `¿Reactivar a ${name}?`,
+      reactivated: (email) => `${email} vuelve a estar activa.`,
+      cancelDeletion: "Cancelar la eliminación",
+      cancelDeletionTitle: (name) => `¿Conservar la cuenta de ${name}?`,
+      deletionCancelled: (email) => `${email} se conserva y vuelve a estar activa.`,
+      erase: "Borrar ahora",
+      eraseTitle: (name) => `¿Borrar ahora la cuenta de ${name}?`,
+      eraseBody: "La cuenta y lo que contiene se borran para siempre. El registro solo conserva su dirección.",
+      erased: (email) => `${email} está borrada.`,
+    },
   };
 }
 
