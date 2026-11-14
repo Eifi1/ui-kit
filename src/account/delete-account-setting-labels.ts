@@ -21,6 +21,8 @@ export const DEFAULT_DELETE_ACCOUNT_LABELS: DeleteAccountLabels = {
       : `${count} items others can see will pass to an administrator.`,
   confirm: "Delete my account",
   done: "Your account is deactivated. You are being signed out.",
+  requested:
+    "Your request to delete your account has been received. The account is deactivated, and you are signed out on every device.",
   wrongPassword: "The password is incorrect.",
   confirmationMismatch: "This is not your account’s address.",
   lastAdmin: "You are the last administrator. Make someone else an administrator first.",

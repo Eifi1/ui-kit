@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { fakeFetch, fakeHttp, tokens } from "../../test/fake-axios";
+import { drainTasks } from "../../test/tasks";
 import type { Answer, Cfg } from "../../test/fake-axios";
 import { accountQueryKeys, AccountsProvider, useAccountsClient } from "../accounts-context";
 import { createAccountsClient } from "../accounts-client";
@@ -14,7 +15,13 @@ import {
   useChangePassword,
   useCurrentUser,
   useEmailChange,
+  useAdminActions,
+  useAdminAttention,
+  useAdminMail,
+  useAdminRoster,
+  useAdminUserActions,
   useInvitationsAdmin,
+  useMailTest,
   usePasskeys,
   useUpdateProfile,
 } from "../accounts-hooks";
@@ -293,5 +300,89 @@ describe("AccountsProvider", () => {
     expect(queryClient.getQueryData(accountQueryKeys.sessions)).toBeUndefined();
     // The app's own queries are its `onSessionEnded`'s to drop.
     expect(queryClient.getQueryData(["app", "own"])).toBe(1);
+  });
+});
+
+describe("the admin's hooks (server-kit 0.30–0.31)", () => {
+  const page = {
+    users: [{ id: 7, email: "b@x" }],
+    total: 1,
+    mail_backend: "console",
+    levels: { deactivate: "type_email" },
+  };
+
+  it("reads a page of the roster for its query, and the query's page alone", async () => {
+    const { wrapper, http } = setup({ "get /admin/users": () => ({ status: 200, data: page }) });
+    const { result } = renderHook(() => useAdminRoster({ limit: 25, offset: 0, q: "b" }), { wrapper });
+    await waitFor(() => expect(result.current.data).toEqual(page));
+    expect(http.sent[0]!.params).toEqual({ limit: 25, offset: 0, q: "b" });
+  });
+
+  it("an action reads the roster, the log and the overview again, and hands back its answer", async () => {
+    const { wrapper, calls } = setup({
+      "get /admin/users": () => ({ status: 200, data: page }),
+      "get /admin/actions": () => ({ status: 200, data: { actions: [], total: 0 } }),
+      "get /admin/attention": () => ({ status: 200, data: { users_total: 1, extra: {} } }),
+      "post /admin/users/7/mail": () => ({ status: 200, data: { sent: false, mail_backend: "console", link: "L" } }),
+    });
+    const { result } = renderHook(
+      () => ({
+        roster: useAdminRoster({ limit: 25 }),
+        log: useAdminActions({ limit: 20 }),
+        attention: useAdminAttention(),
+        actions: useAdminUserActions(),
+      }),
+      { wrapper },
+    );
+    await waitFor(() => expect(result.current.attention.data).toBeDefined());
+    const answer = await act(() => result.current.actions.sendMail.mutateAsync({ id: 7, kind: "password_reset" }));
+    expect(answer.link).toBe("L");
+    await waitFor(() => {
+      for (const route of ["get /admin/users", "get /admin/actions", "get /admin/attention"]) {
+        expect(calls.filter((call) => call === route)).toHaveLength(2);
+      }
+    });
+  });
+
+  it("each action goes to its route", async () => {
+    const { wrapper, calls } = setup({ "get /admin/users": () => ({ status: 200, data: page }) });
+    const { result } = renderHook(() => useAdminUserActions(), { wrapper });
+    const actions = result.current;
+    await act(() => actions.setActive.mutateAsync({ id: 7, active: false, confirm_email: "b@x" }));
+    await act(() => actions.setRole.mutateAsync({ id: 7, role: "ADMIN", acknowledged: true }));
+    await act(() => actions.requirePasswordChange.mutateAsync({ id: 7, acknowledged: true }));
+    await act(() => actions.withdrawPasswordChange.mutateAsync({ id: 7 }));
+    await act(() => actions.setReviewer.mutateAsync({ id: 7, locales: ["fr"], areas: null }));
+    await act(() => actions.erase.mutateAsync({ id: 7, confirm_email: "b@x" }));
+    expect(calls).toEqual([
+      "post /admin/users/7/active",
+      "post /admin/users/7/role",
+      "post /admin/users/7/password-change",
+      "delete /admin/users/7/password-change",
+      "put /admin/users/7/reviewer",
+      "post /admin/users/7/erase",
+    ]);
+  });
+
+  it("knows the transport before the first invitation, and sends the test mail", async () => {
+    const { wrapper } = setup({
+      "get /admin/mail": () => ({ status: 200, data: { mail_backend: "console" } }),
+      "post /admin/mail/test": () => ({ status: 200, data: { sent: true, mail_backend: "console" } }),
+    });
+    const { result } = renderHook(() => ({ mail: useAdminMail(), test: useMailTest() }), { wrapper });
+    await waitFor(() => expect(result.current.mail.data).toEqual({ mail_backend: "console" }));
+    await expect(act(() => result.current.test.mutateAsync())).resolves.toEqual({
+      sent: true,
+      mail_backend: "console",
+    });
+  });
+
+  it("asks nothing while it is told not to", async () => {
+    const { wrapper, calls } = setup();
+    renderHook(() => ({ roster: useAdminRoster({}, { enabled: false }), mail: useAdminMail({ enabled: false }) }), {
+      wrapper,
+    });
+    await drainTasks();
+    expect(calls).toEqual([]);
   });
 });

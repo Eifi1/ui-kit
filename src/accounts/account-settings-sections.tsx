@@ -2,7 +2,11 @@ import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 import { DataExportSetting } from "../account/data-export-setting";
-import { DeleteAccountSetting, type DeleteAccountConsequence } from "../account/delete-account-setting";
+import {
+  DeleteAccountSetting,
+  type DeleteAccountConsequence,
+  type DeleteAccountLabels,
+} from "../account/delete-account-setting";
 import { EmailChangeSetting } from "../account/email-change-setting";
 import { PasskeysSetting, type PasskeyItem } from "../account/passkeys-setting";
 import { PasswordSetting, ProfileSetting } from "../account/account-settings";
@@ -10,15 +14,19 @@ import { SessionsSetting, type SessionItem } from "../account/sessions-setting";
 import { InvitationsPanel, type InvitationRow, type InvitationsPanelProps } from "../admin/invitations-panel";
 import { formatPersonName } from "../lib/person-name";
 import { useKitFormat } from "../lib/format";
-import { ReauthDialog } from "../components/reauth-dialog";
+import { ReauthDialog, type ReauthDialogLabels } from "../components/reauth-dialog";
+import type { LabelOverride } from "../i18n/kit-labels";
+import type { PasskeysSettingLabels } from "../account/account-settings-labels";
 import { toast } from "../components/toast";
 import { useDescribeAccountFailure, useFailureBeside } from "./account-failure";
+import type { DescribeAccountFailureOptions } from "./account-failure";
 import type { AccountMe, AccountPasskeyOptions } from "./accounts-api";
 import { useAccountsClient } from "./accounts-context";
 import {
   useAccountDeletion,
   useAccountExport,
   useAccountSessions,
+  useAdminMail,
   useChangePassword,
   useEmailChange,
   useInvitationsAdmin,
@@ -166,6 +174,11 @@ export interface AccountPasskeysSectionProps {
   unavailable?: ReactNode;
   /** `"alongside"` (the default): the password stays and a passkey is a second way in. */
   mode?: "instead" | "alongside";
+  /** The card's words over the provider's `passkeys` namespace. */
+  labels?: LabelOverride<PasskeysSettingLabels>;
+  /** The password question's words before a passkey is added, over the provider's
+   *  `reauthDialog` — an app that says why it asks ("to add a passkey"). */
+  reauthLabels?: LabelOverride<ReauthDialogLabels>;
 }
 
 /**
@@ -178,6 +191,8 @@ export function AccountPasskeysSection({
   id = "passkeys",
   unavailable,
   mode = "alongside",
+  labels,
+  reauthLabels,
 }: AccountPasskeysSectionProps) {
   const { list, begin, register, rename, remove } = usePasskeys();
   const describe = useDescribeAccountFailure();
@@ -207,6 +222,7 @@ export function AccountPasskeysSection({
       <PasskeysSetting<number>
         id={id}
         mode={mode}
+        labels={labels}
         passkeys={available ? items : []}
         loading={list.isPending && list.fetchStatus !== "idle"}
         unavailable={available ? undefined : unavailable}
@@ -233,6 +249,7 @@ export function AccountPasskeysSection({
       />
       {asking !== null && (
         <ReauthDialog
+          labels={reauthLabels}
           error={passwordError}
           busy={begin.isPending}
           onSubmit={async (password) => {
@@ -276,6 +293,8 @@ export interface AccountDeletionSectionProps {
   /** The field of the server's terms (`deletion_terms`' extras) that counts what passes to
    *  someone else instead (Kurvenschmiede's `hand_over_count`). */
   handOverField?: string;
+  /** The card's words over the provider's `deleteAccount` namespace. */
+  labels?: LabelOverride<DeleteAccountLabels>;
 }
 
 /**
@@ -283,7 +302,12 @@ export interface AccountDeletionSectionProps {
  * after N days, or by an operator), the password and the address typed, then the request — and
  * the server ends every session with it, so the tab signs out in the contract's order.
  */
-export function AccountDeletionSection({ id = "delete", consequences, handOverField }: AccountDeletionSectionProps) {
+export function AccountDeletionSection({
+  id = "delete",
+  consequences,
+  handOverField,
+  labels,
+}: AccountDeletionSectionProps) {
   const user = useAccount();
   const { terms, request } = useAccountDeletion();
   const describe = useFailureBeside([
@@ -304,36 +328,66 @@ export function AccountDeletionSection({ id = "delete", consequences, handOverFi
       consequences={consequences}
       handOverCount={typeof handOver === "number" ? handOver : undefined}
       describeError={describe}
+      labels={labels}
       onRequest={({ password, confirmEmail }) => request.mutateAsync({ password, confirm_email: confirmEmail })}
     />
   );
 }
 
-/** What {@link AccountInvitationsSection} takes: `InvitationsPanel`'s vocabulary, the app's. */
+/** What {@link AccountInvitationsSection} takes: `InvitationsPanel`'s vocabulary and words, the
+ *  app's; the transport, the refusals and a change, the app's to add to. */
 export type AccountInvitationsSectionProps<R extends string = string> = Pick<
   InvitationsPanelProps<R>,
-  "roles" | "invitableRoles" | "defaultRole" | "scopes" | "scopeRequired" | "languages" | "defaultLocale" | "labels"
->;
+  | "roles"
+  | "invitableRoles"
+  | "defaultRole"
+  | "scopes"
+  | "scopeRequired"
+  | "languages"
+  | "defaultLocale"
+  | "labels"
+  | "intro"
+  | "listTitle"
+  | "className"
+> & {
+  /** The server's transport, where the app knows it already. Left out, it is read on load
+   *  (`GET /admin/mail`, server-kit 0.30's `user_admin_router`), so the console's hint is
+   *  there before the first invitation; then the last answer's. */
+  mailBackend?: string | null;
+  /** The app's words for a refusal, asked before the kit's `accountFailure`: beside the row
+   *  and in the toast. */
+  describeError?: (error: unknown) => ReactNode | undefined;
+  /** The app's own coded refusals, as `useDescribeAccountFailure` takes them. */
+  appCode?: DescribeAccountFailureOptions["appCode"];
+  /** An invitation was made, sent again or revoked: what the app shows beside the panel
+   *  (Kurvenschmiede's pending count) is the app's to refresh. */
+  onChanged?: () => void;
+};
 
 /**
  * The admin's invitations (`invitations_admin_router`, user-admin §5): the list, inviting,
  * re-sending and revoking, on the kit's `InvitationsPanel`. On the console mail transport the
- * answer carries the link once (§12.5 item 11), and the panel shows it; the transport is read
- * from the last answer, as the list carries none.
+ * answer carries the link once (§12.5 item 11), and the panel shows it. The transport is read on
+ * load where the server has `GET /admin/mail`, and from each answer after it.
  */
-export function AccountInvitationsSection<R extends string = string>(props: AccountInvitationsSectionProps<R>) {
+export function AccountInvitationsSection<R extends string = string>({
+  mailBackend: mailBackendProp,
+  describeError,
+  appCode,
+  onChanged,
+  ...props
+}: AccountInvitationsSectionProps<R>) {
   const { list, invite, resend, revoke } = useInvitationsAdmin();
-  const describe = useDescribeAccountFailure();
-  const [mailBackend, setMailBackend] = useState<string | null>(null);
+  const describe = useDescribeAccountFailure({ appCode });
+  const say = (error: unknown) => describeError?.(error) ?? describe(error);
+  // The app's word wins; without one, the server's, read once per sign-in.
+  const mail = useAdminMail({ enabled: mailBackendProp === undefined });
+  const [answered, setAnswered] = useState<string | null>(null);
+  const mailBackend = answered ?? mailBackendProp ?? mail.data?.mail_backend ?? null;
   const said = <T extends { mail_backend: string; link?: string | null; sent: boolean; id: number }>(answer: T) => {
-    setMailBackend(answer.mail_backend);
+    setAnswered(answer.mail_backend);
+    onChanged?.();
     return { id: answer.id, link: answer.link ?? null, sent: answer.sent };
-  };
-  // The panel shows its own "failed" beside the row; the refusal's reason — a closed
-  // invitation, a scope the app does not take — is said in the account words.
-  const fail = (error: unknown): never => {
-    toast.error(describe(error));
-    throw error;
   };
   const rows: InvitationRow<R>[] = (list.data ?? []).map((row) => ({
     id: row.id,
@@ -354,6 +408,9 @@ export function AccountInvitationsSection<R extends string = string>(props: Acco
       invitations={rows}
       loading={list.isPending && list.fetchStatus !== "idle"}
       mailBackend={mailBackend}
+      // The panel says a refusal beside its form — a closed invitation, a scope the app does
+      // not take — in the app's words first, else the account words; no toast says it twice.
+      describeError={say}
       onInvite={(draft) =>
         invite
           .mutateAsync({
@@ -365,10 +422,10 @@ export function AccountInvitationsSection<R extends string = string>(props: Acco
             note: draft.note ?? null,
             locale: draft.locale,
           })
-          .then(said, fail)
+          .then(said)
       }
-      onResend={(row) => resend.mutateAsync(Number(row.id)).then(said, fail)}
-      onRevoke={(row) => revoke.mutateAsync(Number(row.id)).catch(fail)}
+      onResend={(row) => resend.mutateAsync(Number(row.id)).then(said)}
+      onRevoke={(row) => revoke.mutateAsync(Number(row.id)).then(() => onChanged?.())}
     />
   );
 }

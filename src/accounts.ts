@@ -56,6 +56,19 @@ export type {
   AccountsApi,
   AccountSessionInfo,
 } from "./accounts/accounts-api";
+// 0.64 (§12.9, server-kit 0.30–0.31's user_admin_router): the admin's routes on `client.api`.
+export type {
+  AccountAdminActionPage,
+  AccountAdminActionQuery,
+  AccountAdminActionRow,
+  AccountAdminConfirmation,
+  AccountAdminMailResult,
+  AccountAdminUser,
+  AccountErasureResult,
+  AccountReviewerResult,
+  AccountRosterPage,
+  AccountRosterQuery,
+} from "./accounts/accounts-api";
 export { passkeysAvailable } from "./accounts/passkey-ceremony";
 // 0.63 (§12.9 "The API and its hooks"): the provider and the TanStack Query hooks, with their
 // query keys. `@tanstack/react-query` is an optional peer, and this entry is one that needs it.
@@ -65,10 +78,16 @@ export {
   useAccountDeletion,
   useAccountExport,
   useAccountSessions,
+  useAdminActions,
+  useAdminAttention,
+  useAdminMail,
+  useAdminRoster,
+  useAdminUserActions,
   useChangePassword,
   useCurrentUser,
   useEmailChange,
   useInvitationsAdmin,
+  useMailTest,
   usePasskeys,
   useUpdateProfile,
 } from "./accounts/accounts-hooks";
@@ -101,3 +120,19 @@ export type {
   AccountPasskeysSectionProps,
   AccountProfileSectionProps,
 } from "./accounts/account-settings-sections";
+// 0.64 (§12.9 "The admin's sections"): the kit's admin parts on server-kit 0.30–0.31's
+// user_admin_router — the overview, the test mail, the log and the roster with its actions.
+export {
+  AccountAdminLogSection,
+  AccountAdminOverviewSection,
+  AccountMailTestSection,
+  AccountUserRosterSection,
+} from "./accounts/account-admin-sections";
+export type {
+  AccountAdminLogSectionProps,
+  AccountAdminOverviewSectionProps,
+  AccountMailTestSectionProps,
+  AccountRosterLabels,
+  AccountUserRosterSectionProps,
+} from "./accounts/account-admin-sections";
+export { DEFAULT_ACCOUNT_ROSTER_LABELS } from "./accounts/account-roster-labels";

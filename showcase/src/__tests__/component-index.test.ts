@@ -136,6 +136,14 @@ const NOT_ON_A_PAGE: Record<string, string> = {
     "DeleteAccountSetting wired to server-kit's routes through AccountsProvider; DeleteAccountSetting is on its own page",
   AccountInvitationsSection:
     "InvitationsPanel wired to server-kit's routes through AccountsProvider; InvitationsPanel is on its own page",
+  AccountAdminOverviewSection:
+    "AdminOverview wired to server-kit's routes through AccountsProvider; AdminOverview is on its own page",
+  AccountMailTestSection:
+    "MailTestCard wired to server-kit's routes through AccountsProvider; MailTestCard is on its own page",
+  AccountAdminLogSection:
+    "AdminActionLog wired to server-kit's routes through AccountsProvider; AdminActionLog is on its own page",
+  AccountUserRosterSection:
+    "the user roster's columns, AdminActionConfirm and ReviewerScopeEditor wired to server-kit's routes through AccountsProvider; each part is on its own page",
 };
 
 /**
@@ -196,6 +204,17 @@ const NOT_SHOWN: Record<string, string> = {
   useAccountExport: ACCOUNTS,
   useAccountDeletion: ACCOUNTS,
   useInvitationsAdmin: ACCOUNTS,
+  useAdminRoster: ACCOUNTS,
+  useAdminUserActions: ACCOUNTS,
+  useAdminActions: ACCOUNTS,
+  useAdminAttention: ACCOUNTS,
+  useAdminMail: ACCOUNTS,
+  useMailTest: ACCOUNTS,
+  accountPage: ACCOUNTS,
+  accountRouteElements: ACCOUNTS,
+  useAccountStorageLines: ACCOUNTS,
+  useFailureBeside: ACCOUNTS,
+  stubDocumentNavigation: TEST_HELPER,
   accountRoutes: ACCOUNTS,
   releaseSyncEngine: ENGINE,
   syncEngineFor: ENGINE,

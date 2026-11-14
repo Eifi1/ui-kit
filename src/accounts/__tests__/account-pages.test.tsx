@@ -77,6 +77,17 @@ afterEach(() => {
 const stored = () => JSON.parse(localStorage.getItem(KEY) ?? sessionStorage.getItem(KEY) ?? "null") as unknown;
 
 describe("the sign-in page", () => {
+  it("says a deletion request was received, when the request signed the tab out", async () => {
+    mount("/login?notice=deletion_requested");
+    expect(await screen.findByText(/request to delete your account has been received/)).toBeInTheDocument();
+  });
+
+  it("says nothing of a deletion on an ordinary visit", async () => {
+    mount("/login");
+    await screen.findByRole("button", { name: "Sign in" });
+    expect(screen.queryByText(/request to delete your account/)).not.toBeInTheDocument();
+  });
+
   it("signs in with shared_device and lands where ?next= says", async () => {
     const { calls, router, user } = mount("/login?next=%2Fsettings", {
       "post /auth/login": () => ({ status: 200, data: tokens("a1", "r1", ada) }),

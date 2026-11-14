@@ -582,7 +582,7 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2296 names from 387 modules** in the main barrel — 1029 values and 1267 types — and 280 more in 17 standalone entries. _Italic_ is a type-only export.
+**2297 names from 387 modules** in the main barrel — 1030 values and 1267 types — and 306 more in 17 standalone entries. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 `node scripts/gen-export-inventory.mjs`; the counts are pinned by
@@ -590,7 +590,7 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2296 |
+| `@eifi1/ui-kit` | 2297 |
 | `@eifi1/ui-kit/chart` | 102 |
 | `@eifi1/ui-kit/shell` | 109 |
 | `@eifi1/ui-kit/data-table` | 57 |
@@ -606,7 +606,7 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 | `@eifi1/ui-kit/testing/react` | 2 |
 | `@eifi1/ui-kit/rhf` | 52 |
 | `@eifi1/ui-kit/offline` | 38 |
-| `@eifi1/ui-kit/accounts` | 76 |
+| `@eifi1/ui-kit/accounts` | 102 |
 | `@eifi1/ui-kit/sync` | 37 |
 | `@eifi1/ui-kit/sync/testing` | 3 |
 | `@eifi1/ui-kit/push-worker` | 10 |
@@ -1029,7 +1029,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `admin/user-roster` | `DEFAULT_USER_ROSTER_LABELS`, `USER_ROSTER_MAX_PAGE_SIZE`, `USER_ROSTER_PAGE_SIZE`, `USER_ROSTER_SORT_KEYS`, `UserIdentityCell`, `userRosterSort`, `UserRowActions`, `useUserRosterColumns`, _`AdminUserStateFields`_, _`RoleEditing`_, _`RosterState`_, _`UserIdentityCellProps`_, _`UserRosterColumnsOptions`_, _`UserRosterLabels`_, _`UserRosterRow`_, _`UserRosterSortKey`_, _`UserRowAction`_, _`UserRowActionList`_, _`UserRowActionsProps`_ |
 | `admin/role-select` | `DEFAULT_ROLE_SELECT_LABELS`, `RolesEditor`, `RoleSelect`, _`RoleLock`_, _`RoleLockCode`_, _`RolesEditorProps`_, _`RoleSelectLabels`_, _`RoleSelectProps`_ |
 | `admin/reviewer-scope-editor` | `DEFAULT_REVIEWER_SCOPE_LABELS`, `ReviewerScopeEditor`, _`ReviewerScope`_, _`ReviewerScopeArea`_, _`ReviewerScopeEditorProps`_, _`ReviewerScopeLabels`_, _`ReviewerScopeLanguage`_ |
-| `admin/admin-action-confirm` | `AdminActionConfirm`, `DEFAULT_ADMIN_ACTION_LABELS`, _`AdminActionConfirmProps`_, _`AdminActionConfirmValues`_, _`AdminActionLabels`_, _`AdminActionTarget`_, _`AdminConfirmLevel`_ |
+| `admin/admin-action-confirm` | `ADMIN_ACTION_CONFIRM_CODES`, `AdminActionConfirm`, `DEFAULT_ADMIN_ACTION_LABELS`, _`AdminActionConfirmProps`_, _`AdminActionConfirmValues`_, _`AdminActionLabels`_, _`AdminActionTarget`_, _`AdminConfirmLevel`_ |
 | `admin/admin-action-log` | `ADMIN_ACTION_KINDS`, `AdminActionLog`, `DEFAULT_ADMIN_ACTION_LOG_LABELS`, _`AdminActionKind`_, _`AdminActionLogEntry`_, _`AdminActionLogLabels`_, _`AdminActionLogPaging`_, _`AdminActionLogProps`_, _`AdminGroupNoun`_, _`AdminGroupTarget`_, _`AdminOtherTarget`_ |
 | `admin/transfer-ownership-dialog` | `DEFAULT_TRANSFER_OWNERSHIP_LABELS`, `TransferOwnershipDialog`, _`TransferCandidate`_, _`TransferOwnershipDialogProps`_, _`TransferOwnershipLabels`_, _`TransferUnavailable`_, _`TransferValues`_ |
 | `admin/invitations-panel` | `DEFAULT_INVITATIONS_LABELS`, `InvitationsPanel`, _`InvitationDraft`_, _`InvitationRow`_, _`InvitationScope`_, _`InvitationSentAnswer`_, _`InvitationsLabels`_, _`InvitationsPanelProps`_, _`InvitationStatus`_ |
@@ -1167,13 +1167,15 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `accounts/accounts-client` | `createAccountsClient`, _`AccountsClient`_, _`AccountsClientOptions`_, _`AccountSessionEnd`_, _`AccountsHttp`_, _`AccountsPasskeyFinish`_, _`AccountsRequest`_, _`AccountTokens`_ |
 | `accounts/session-store` | _`AccountSession`_, _`AccountUser`_, _`SharedSessionPlace`_ |
 | `accounts/account-failure` | `ACCOUNT_FAILURE_CODES`, `DEFAULT_ACCOUNT_FAILURE_LABELS`, `describeAccountFailure`, `useDescribeAccountFailure`, `useFailureBeside`, _`AccountFailureCode`_, _`AccountFailureLabels`_, _`DescribeAccountFailureOptions`_ |
-| `accounts/accounts-api` | _`AccountDeletionResult`_, _`AccountDeletionTerms`_, _`AccountEmailChange`_, _`AccountEmailConfirmed`_, _`AccountEmailVerification`_, _`AccountInvitation`_, _`AccountInvitationAccepted`_, _`AccountInvitationCheck`_, _`AccountInvitationDraft`_, _`AccountInvitationIssued`_, _`AccountMe`_, _`AccountPasskey`_, _`AccountPasskeyOptions`_, _`AccountPasswordReset`_, _`AccountProfilePatch`_, _`AccountsApi`_, _`AccountSessionInfo`_ |
+| `accounts/accounts-api` | _`AccountAdminActionPage`_, _`AccountAdminActionQuery`_, _`AccountAdminActionRow`_, _`AccountAdminConfirmation`_, _`AccountAdminMailResult`_, _`AccountAdminUser`_, _`AccountDeletionResult`_, _`AccountDeletionTerms`_, _`AccountEmailChange`_, _`AccountEmailConfirmed`_, _`AccountEmailVerification`_, _`AccountErasureResult`_, _`AccountInvitation`_, _`AccountInvitationAccepted`_, _`AccountInvitationCheck`_, _`AccountInvitationDraft`_, _`AccountInvitationIssued`_, _`AccountMe`_, _`AccountPasskey`_, _`AccountPasskeyOptions`_, _`AccountPasswordReset`_, _`AccountProfilePatch`_, _`AccountReviewerResult`_, _`AccountRosterPage`_, _`AccountRosterQuery`_, _`AccountsApi`_, _`AccountSessionInfo`_ |
 | `accounts/passkey-ceremony` | `passkeysAvailable` |
 | `accounts/accounts-context` | `accountQueryKeys`, `AccountsProvider`, `useAccountsClient`, _`AccountsProviderProps`_ |
-| `accounts/accounts-hooks` | `useAccountDeletion`, `useAccountExport`, `useAccountSessions`, `useChangePassword`, `useCurrentUser`, `useEmailChange`, `useInvitationsAdmin`, `usePasskeys`, `useUpdateProfile` |
+| `accounts/accounts-hooks` | `useAccountDeletion`, `useAccountExport`, `useAccountSessions`, `useAdminActions`, `useAdminAttention`, `useAdminMail`, `useAdminRoster`, `useAdminUserActions`, `useChangePassword`, `useCurrentUser`, `useEmailChange`, `useInvitationsAdmin`, `useMailTest`, `usePasskeys`, `useUpdateProfile` |
 | `accounts/account-pages` | `accountPage`, `accountRouteElements`, `accountRoutes`, _`AccountPageFrameProps`_, _`AccountPageName`_, _`AccountPaths`_, _`AccountRegisterFieldsProps`_, _`AccountRoutesOptions`_ |
 | `accounts/require-session` | `RequireSession`, _`RequireSessionProps`_ |
 | `accounts/account-settings-sections` | `AccountDeletionSection`, `AccountEmailSection`, `AccountExportSection`, `AccountInvitationsSection`, `AccountPasskeysSection`, `AccountPasswordSection`, `AccountProfileSection`, `AccountSessionsSection`, _`AccountDeletionSectionProps`_, _`AccountInvitationsSectionProps`_, _`AccountPasskeysSectionProps`_, _`AccountProfileSectionProps`_ |
+| `accounts/account-admin-sections` | `AccountAdminLogSection`, `AccountAdminOverviewSection`, `AccountMailTestSection`, `AccountUserRosterSection`, _`AccountAdminLogSectionProps`_, _`AccountAdminOverviewSectionProps`_, _`AccountMailTestSectionProps`_, _`AccountRosterLabels`_, _`AccountUserRosterSectionProps`_ |
+| `accounts/account-roster-labels` | `DEFAULT_ACCOUNT_ROSTER_LABELS` |
 
 ### @eifi1/ui-kit/sync (standalone)
 
