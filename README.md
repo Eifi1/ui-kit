@@ -582,7 +582,7 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2296 names from 387 modules** in the main barrel — 1029 values and 1267 types — and 274 more in 17 standalone entries. _Italic_ is a type-only export.
+**2296 names from 387 modules** in the main barrel — 1029 values and 1267 types — and 280 more in 17 standalone entries. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 `node scripts/gen-export-inventory.mjs`; the counts are pinned by
@@ -602,11 +602,11 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 | `@eifi1/ui-kit/table-text` | 14 |
 | `@eifi1/ui-kit/currencies` | 3 |
 | `@eifi1/ui-kit/eslint` | 1 |
-| `@eifi1/ui-kit/testing` | 15 |
+| `@eifi1/ui-kit/testing` | 18 |
 | `@eifi1/ui-kit/testing/react` | 2 |
 | `@eifi1/ui-kit/rhf` | 52 |
 | `@eifi1/ui-kit/offline` | 38 |
-| `@eifi1/ui-kit/accounts` | 73 |
+| `@eifi1/ui-kit/accounts` | 76 |
 | `@eifi1/ui-kit/sync` | 37 |
 | `@eifi1/ui-kit/sync/testing` | 3 |
 | `@eifi1/ui-kit/push-worker` | 10 |
@@ -1128,6 +1128,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `testing/css-variables` | `declaredCustomProperties`, `KIT_CSS_VARIABLES`, `undeclaredCssVariables`, _`UndeclaredCssVariablesOptions`_ |
 | `testing/viewport` | `setViewportWidth`, `stubResizeObserver`, `stubViewportWidth`, `viewportMatchMedia`, _`ResizeObserverStub`_, _`StubbedBoxSize`_, _`ViewportOptions`_ |
 | `testing/tour` | `tourStepContext`, _`TestTourStepContext`_, _`TourStepContextOptions`_, _`TourStepVia`_ |
+| `testing/navigation` | `stubDocumentNavigation`, _`DocumentNavigationCall`_, _`DocumentNavigationStub`_ |
 
 ### @eifi1/ui-kit/testing/react (standalone)
 
@@ -1165,12 +1166,13 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `accounts/storage-lines` | `useAccountStorageLines`, _`AccountStorageLine`_ |
 | `accounts/accounts-client` | `createAccountsClient`, _`AccountsClient`_, _`AccountsClientOptions`_, _`AccountSessionEnd`_, _`AccountsHttp`_, _`AccountsPasskeyFinish`_, _`AccountsRequest`_, _`AccountTokens`_ |
 | `accounts/session-store` | _`AccountSession`_, _`AccountUser`_, _`SharedSessionPlace`_ |
-| `accounts/account-failure` | `ACCOUNT_FAILURE_CODES`, `DEFAULT_ACCOUNT_FAILURE_LABELS`, `describeAccountFailure`, `useDescribeAccountFailure`, _`AccountFailureCode`_, _`AccountFailureLabels`_, _`DescribeAccountFailureOptions`_ |
+| `accounts/account-failure` | `ACCOUNT_FAILURE_CODES`, `DEFAULT_ACCOUNT_FAILURE_LABELS`, `describeAccountFailure`, `useDescribeAccountFailure`, `useFailureBeside`, _`AccountFailureCode`_, _`AccountFailureLabels`_, _`DescribeAccountFailureOptions`_ |
 | `accounts/accounts-api` | _`AccountDeletionResult`_, _`AccountDeletionTerms`_, _`AccountEmailChange`_, _`AccountEmailConfirmed`_, _`AccountEmailVerification`_, _`AccountInvitation`_, _`AccountInvitationAccepted`_, _`AccountInvitationCheck`_, _`AccountInvitationDraft`_, _`AccountInvitationIssued`_, _`AccountMe`_, _`AccountPasskey`_, _`AccountPasskeyOptions`_, _`AccountPasswordReset`_, _`AccountProfilePatch`_, _`AccountsApi`_, _`AccountSessionInfo`_ |
 | `accounts/passkey-ceremony` | `passkeysAvailable` |
 | `accounts/accounts-context` | `accountQueryKeys`, `AccountsProvider`, `useAccountsClient`, _`AccountsProviderProps`_ |
 | `accounts/accounts-hooks` | `useAccountDeletion`, `useAccountExport`, `useAccountSessions`, `useChangePassword`, `useCurrentUser`, `useEmailChange`, `useInvitationsAdmin`, `usePasskeys`, `useUpdateProfile` |
-| `accounts/account-pages` | `accountRouteElements`, `accountRoutes`, `RequireSession`, _`AccountPageFrameProps`_, _`AccountPaths`_, _`AccountRegisterFieldsProps`_, _`AccountRoutesOptions`_, _`RequireSessionProps`_ |
+| `accounts/account-pages` | `accountPage`, `accountRouteElements`, `accountRoutes`, _`AccountPageFrameProps`_, _`AccountPageName`_, _`AccountPaths`_, _`AccountRegisterFieldsProps`_, _`AccountRoutesOptions`_ |
+| `accounts/require-session` | `RequireSession`, _`RequireSessionProps`_ |
 | `accounts/account-settings-sections` | `AccountDeletionSection`, `AccountEmailSection`, `AccountExportSection`, `AccountInvitationsSection`, `AccountPasskeysSection`, `AccountPasswordSection`, `AccountProfileSection`, `AccountSessionsSection`, _`AccountDeletionSectionProps`_, _`AccountInvitationsSectionProps`_, _`AccountPasskeysSectionProps`_, _`AccountProfileSectionProps`_ |
 
 ### @eifi1/ui-kit/sync (standalone)

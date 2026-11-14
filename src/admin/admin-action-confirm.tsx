@@ -177,6 +177,25 @@ interface AdminActionConfirmCommonProps {
  *  and `acknowledge`. */
 export type AdminActionConfirmProps = AdminActionConfirmCommonProps & AdminActionConfirmTarget;
 
+/**
+ * The refusals the dialog words itself (0.64, Kurvenschmiede): an app that hands it a
+ * `describeError` built with `useFailureBeside(ADMIN_ACTION_CONFIRM_CODES)` leaves these to
+ * the dialog's own sentences and says the rest.
+ */
+export const ADMIN_ACTION_CONFIRM_CODES = [
+  "last_admin",
+  "self_action",
+  "confirmation_mismatch",
+  "other_companies",
+] as const satisfies readonly KitErrorCode[];
+
+const OWN_WORDS: Record<(typeof ADMIN_ACTION_CONFIRM_CODES)[number], keyof AdminActionLabels> = {
+  last_admin: "lastAdmin",
+  self_action: "self",
+  confirmation_mismatch: "confirmationMismatch",
+  other_companies: "otherCompanies",
+};
+
 /** The refusal's words and code. */
 function refusalOf(
   error: unknown,
@@ -188,17 +207,8 @@ function refusalOf(
   const code = authErrorCode(error);
   const own = describeError?.(error);
   if (hasContent(own)) return { text: own, code };
-  const text =
-    code === "last_admin"
-      ? labels.lastAdmin
-      : code === "self_action"
-        ? labels.self
-        : code === "confirmation_mismatch"
-          ? labels.confirmationMismatch
-          : code === "other_companies"
-            ? labels.otherCompanies
-            : labels.failed;
-  return { text, code };
+  const word = code !== undefined && code in OWN_WORDS ? OWN_WORDS[code as keyof typeof OWN_WORDS] : undefined;
+  return { text: word === undefined ? labels.failed : labels[word], code };
 }
 
 /** The selector for the first field among the caller's `children` — what opening focuses. */

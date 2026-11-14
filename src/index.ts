@@ -997,7 +997,11 @@ export type {
   ReviewerScopeLabels,
   ReviewerScopeEditorProps,
 } from "./admin/reviewer-scope-editor";
-export { AdminActionConfirm, DEFAULT_ADMIN_ACTION_LABELS } from "./admin/admin-action-confirm";
+export {
+  ADMIN_ACTION_CONFIRM_CODES,
+  AdminActionConfirm,
+  DEFAULT_ADMIN_ACTION_LABELS,
+} from "./admin/admin-action-confirm";
 export type {
   AdminConfirmLevel,
   AdminActionConfirmValues,

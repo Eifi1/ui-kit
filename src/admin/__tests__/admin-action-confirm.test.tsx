@@ -266,3 +266,15 @@ describe("AdminActionConfirm", () => {
     expect(within(dialog).getByRole("checkbox")).toBeInTheDocument();
   });
 });
+
+describe("ADMIN_ACTION_CONFIRM_CODES (0.64, Kurvenschmiede)", () => {
+  it("names exactly the refusals the dialog words itself, for an app's useFailureBeside", async () => {
+    const { ADMIN_ACTION_CONFIRM_CODES } = await import("../admin-action-confirm");
+    expect([...ADMIN_ACTION_CONFIRM_CODES].sort()).toEqual([
+      "confirmation_mismatch",
+      "last_admin",
+      "other_companies",
+      "self_action",
+    ]);
+  });
+});
