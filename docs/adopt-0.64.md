@@ -212,7 +212,8 @@ unless the app passes `storageKey` (the panel's sort and page size).
 ### Per app
 
 - **Staunlabor**: the admin area on the four sections (`reviewer` on, its areas `experiments`
-  and `legal`; `erase` off: its daily call erases after the waiting days).
+  and `legal`; `erase` on: its deletion mode is `operator`, so a request deactivates the account
+  and the admin erases it) and the review page at `/translations`.
 - **Kurvenschmiede**: `UsersPanel` and `MailTestPanel` go; its teams' and plans' columns and
   actions stay its own (`extraColumns`, `extraActions`). Its `ActivityPanel` stays for now: the
   log section reads a person as the target, not yet a team's rows (`target_group_*`).
