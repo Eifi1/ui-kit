@@ -26,6 +26,7 @@ import {
   translationRows,
 } from "../lib/translation-review";
 import type { ReviewStatus, TranslationReviewFilter, TranslationRow } from "../lib/translation-review";
+import { httpStatusOf } from "../lib/http-status";
 import { useDescribeAccountFailure } from "./account-failure";
 import { DEFAULT_ACCOUNT_TRANSLATIONS_LABELS } from "./account-translations-labels";
 import type { AccountTranslationsLabels } from "./account-translations-labels";
@@ -72,7 +73,7 @@ export interface AccountTranslationReviewProps {
 
 const englishFirst = (code: string) => (code === "en" ? "de-CH" : "en");
 /** The list's 403: the server grants this viewer no language — an answer, said as one. */
-const isForbidden = (error: unknown) => (error as { response?: { status?: number } })?.response?.status === 403;
+const isForbidden = (error: unknown) => httpStatusOf(error) === 403;
 const nativeName = (code: string) => KIT_LANGUAGES.find((language) => language.code === code)?.nativeName ?? code;
 
 /**

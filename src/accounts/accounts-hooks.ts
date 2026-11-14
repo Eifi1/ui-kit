@@ -18,6 +18,7 @@ import type {
   ApiTranslationReviewWrite,
   TranslationReviewKey,
 } from "../lib/translation-review";
+import { httpStatusOf } from "../lib/http-status";
 import { accountQueryKeys, useAccountsClient } from "./accounts-context";
 import { passkeyAttestation } from "./passkey-ceremony";
 import type { AccountUser } from "./session-store";
@@ -348,7 +349,7 @@ export function useMailTest() {
 }
 
 /** A 403 from the review's list is an answer (no language to review), not a hiccup to retry. */
-const forbidden = (error: unknown) => (error as { response?: { status?: number } })?.response?.status === 403;
+const forbidden = (error: unknown) => httpStatusOf(error) === 403;
 
 /**
  * The translation review (server-kit 0.31's `translation_review_router`): the verdicts the
