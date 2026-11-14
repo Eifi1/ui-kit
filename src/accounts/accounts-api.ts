@@ -3,6 +3,12 @@ import type { AdminAttention } from "../admin/admin-overview";
 import type { AdminPerson } from "../admin/admin-parts";
 import type { MailTestAnswer } from "../admin/mail-test-card";
 import type { UserRosterRow } from "../admin/user-roster";
+import type {
+  ApiTranslationReview,
+  ApiTranslationReviewsResponse,
+  ApiTranslationReviewWrite,
+  TranslationReviewKey,
+} from "../lib/translation-review";
 import type { AccountsHttp, AccountTokens } from "./accounts-client";
 import type { AccountUser } from "./session-store";
 
@@ -330,6 +336,13 @@ export interface AccountsApi<U extends AccountUser = AccountMe> {
    *  sent, so a page says so before the first invitation, not after it. */
   adminMail(): Promise<{ mail_backend: string }>;
   mailTest(): Promise<MailTestAnswer>;
+  /** `GET /translations/reviews` (server-kit's `translation_review_router`): the languages and
+   *  areas the caller may review and every verdict in them; a 403 for a caller with none. */
+  translationReviews(): Promise<ApiTranslationReviewsResponse>;
+  /** `PUT /translations/reviews`: up to 2000 verdicts, answered as stored. */
+  saveTranslationReviews(items: ApiTranslationReviewWrite[]): Promise<ApiTranslationReview[]>;
+  /** `POST /translations/reviews/clear`: back to unreviewed; answers how many there were. */
+  clearTranslationReviews(items: TranslationReviewKey[]): Promise<number>;
 }
 
 /** @internal The routes on `http`; `createAccountsClient` hands them out as `client.api`. */
@@ -396,5 +409,10 @@ export function createAccountsApi<U extends AccountUser>(http: AccountsHttp): Ac
     adminAttention: () => call("get", "/admin/attention"),
     adminMail: () => call("get", "/admin/mail"),
     mailTest: () => call("post", "/admin/mail/test"),
+    translationReviews: () => call("get", "/translations/reviews"),
+    saveTranslationReviews: async (items) =>
+      (await call<{ reviews: ApiTranslationReview[] }>("put", "/translations/reviews", { items })).reviews,
+    clearTranslationReviews: async (items) =>
+      (await call<{ cleared: number }>("post", "/translations/reviews/clear", { items })).cleared,
   };
 }

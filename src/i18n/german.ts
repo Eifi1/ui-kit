@@ -2348,5 +2348,19 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       eraseBody: "Das Konto und was es enthält, werden endgültig gelöscht. Das Protokoll behält nur seine Adresse.",
       erased: (email) => `${email} ist endgültig gelöscht.`,
     },
+    // 0.64 (auth §12.9): AccountTranslationReview — the review page's heading, its empty
+    // state and the source filter's words.
+    accountTranslations: {
+      title: "Übersetzungen prüfen",
+      description:
+        "Lesen Sie jeden Text in Ihrer Sprache neben der Vorlage, und geben Sie ihn frei oder sagen Sie, was sich ändern soll. Korrekturen werden für die Entwicklung exportiert; die Texte selbst ändern sich hier nicht.",
+      saved: "Gespeichert",
+      cleared: "Als ungeprüft markiert",
+      noAccess: "Keine Sprachen zu prüfen",
+      noAccessHint:
+        "Welche Sprachen Sie prüfen, legt ein Administrator fest. Fragen Sie nach, wenn Sie hier welche erwartet haben.",
+      sourceApp: "Texte dieser App",
+      sourceKit: "Gemeinsame Bausteine",
+    },
   };
 }

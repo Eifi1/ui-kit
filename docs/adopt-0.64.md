@@ -7,8 +7,8 @@ its admin area — and what Staunlabor's and Kurvenschmiede's runs on the pre-re
 session, the pages and the settings sections. Marcel, 2026-11-14: the three apps move to it
 locally and deploy together, once all are ready.
 
-_This document is written as the round goes; the parts still to come (the review page, the
-feedback pages, the second factor) add their own sections._
+_This document is written as the round goes; the parts still to come (the feedback pages, the
+second factor) add their own sections._
 
 **From 0.63, nothing else first.**
 
@@ -22,7 +22,9 @@ are new sentences, not yet reviewed):
   `email_already_verified`, `deletion_not_requested`;
 - the namespace `accountRoster`: the roster section's actions, the question each asks and what
   each says once done (38 words, 19 of them templates naming the account's name or address);
-- `deleteAccount.requested`: the sign-in page's notice after a deletion request.
+- `deleteAccount.requested`: the sign-in page's notice after a deletion request;
+- the namespace `accountTranslations`: the review page's heading and line, its empty state, the
+  source filter's two words, "Saved" and "Marked unreviewed".
 
 **Must change** (in the types only; no app's code is affected today):
 
@@ -99,6 +101,33 @@ const ROLES = { ADMIN: { label: t("roles.ADMIN"), tone: "brand" }, MEMBER: { lab
   app's own actions through `describeDetail`.
 - **`AccountAdminOverviewSection`** is `AdminOverview` on `GET /admin/attention`, with its
   "Try again"; **`AccountMailTestSection`** is `MailTestCard`, to the signed-in admin's address.
+
+## The review page (`AccountTranslationReview`)
+
+Built against server-kit 0.31's `translation_review_router` (`GET` and `PUT
+/translations/reviews`, `POST /translations/reviews/clear`), which the app mounts on its
+`current_user` with its grant (`review_grant`: an admin every language, a reviewer what an admin
+granted through the roster). `client.api` has the three routes; `useTranslationReviews()` reads
+the verdicts the viewer may see and saves and clears them in the server's chunks, each answer
+patching the cached list.
+
+`AccountTranslationReview` is Kurvenschmiede's `TranslationsPage` as a kit part: the language
+tabs, `TranslationReviewPanel` with its groups, swipe and Undo, the export of corrections, and
+the empty state for a viewer the server grants nothing. The app hands it what only it knows:
+
+```tsx
+<AccountTranslationReview
+  loadStrings={loadBundle} // one language's catalogue as the app ships it
+  kitWords={{ operator: OPERATOR }} // the kit's words under `kit.`, its legal text as the page shows it
+  referenceOf={(code) => (code === "de-CH" ? "en" : "de-CH")} // default: English, and English against German
+  reviewAreas={["experiments", "legal"]} // the server's review_areas; default ["legal"]
+  areaLabels={{ experiments: t("areas.experiments") }}
+  exportName="staunlabor" // staunlabor-translation-corrections-<date>.json
+/>
+```
+
+The language, the filters and the search live in the address. Nothing is kept in the browser
+unless the app passes `storageKey` (the panel's sort and page size).
 
 ## The settings sections
 

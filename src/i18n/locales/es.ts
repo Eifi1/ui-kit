@@ -2269,6 +2269,19 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       eraseBody: "La cuenta y lo que contiene se borran para siempre. El registro solo conserva su dirección.",
       erased: (email) => `${email} está borrada.`,
     },
+    // 0.64 (auth §12.9): AccountTranslationReview — the review page's heading, its empty
+    // state and the source filter's words.
+    accountTranslations: {
+      title: "Revisar traducciones",
+      description:
+        "Lea cada texto en su idioma junto a la referencia y apruébelo o indique qué debe cambiar. Las correcciones se exportan para un desarrollador; aquí los textos no cambian.",
+      saved: "Guardado",
+      cleared: "Marcado como no revisado",
+      noAccess: "No hay idiomas que revisar",
+      noAccessHint: "Un administrador asigna los idiomas que usted revisa. Pregúntele si esperaba ver alguno aquí.",
+      sourceApp: "Textos de esta aplicación",
+      sourceKit: "Componentes compartidos",
+    },
   };
 }
 

@@ -304,11 +304,13 @@ const BUDGETS = [
   // user_admin_router: the roster and its actions, the log, the counts, the mail; about 0.9 kB)
   // and the sign-out's `notice` — meant growth, 1,103 B. The admin's hooks and sections are not
   // in it either.
+  // 17,636 B (6,406 gzip) with the review's three routes (server-kit 0.31's
+  // translation_review_router), 246 B; the review page and its hook are not in it.
   {
     label: "{ createAccountsClient }",
     entry: "dist/accounts.js",
     names: ["createAccountsClient", "accountStorageEntries"],
-    max: 17_500,
+    max: 17_800,
   },
 ];
 const ENTRY = "\0import-cost";

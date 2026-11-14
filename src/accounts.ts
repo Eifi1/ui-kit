@@ -88,6 +88,7 @@ export {
   useEmailChange,
   useInvitationsAdmin,
   useMailTest,
+  useTranslationReviews,
   usePasskeys,
   useUpdateProfile,
 } from "./accounts/accounts-hooks";
@@ -136,3 +137,8 @@ export type {
   AccountUserRosterSectionProps,
 } from "./accounts/account-admin-sections";
 export { DEFAULT_ACCOUNT_ROSTER_LABELS } from "./accounts/account-roster-labels";
+// 0.64 (§12.9): the review page on server-kit 0.31's translation_review_router.
+export { AccountTranslationReview } from "./accounts/account-translation-review";
+export type { AccountTranslationReviewProps } from "./accounts/account-translation-review";
+export { DEFAULT_ACCOUNT_TRANSLATIONS_LABELS } from "./accounts/account-translations-labels";
+export type { AccountTranslationsLabels } from "./accounts/account-translations-labels";

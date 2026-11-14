@@ -11,6 +11,13 @@ import type {
   AccountAdminConfirmation,
   AccountRosterQuery,
 } from "./accounts-api";
+import { clearReviewsInChunks, dropReviews, mergeReviews, saveReviewsInChunks } from "../lib/translation-review";
+import type {
+  ApiTranslationReview,
+  ApiTranslationReviewsResponse,
+  ApiTranslationReviewWrite,
+  TranslationReviewKey,
+} from "../lib/translation-review";
 import { accountQueryKeys, useAccountsClient } from "./accounts-context";
 import { passkeyAttestation } from "./passkey-ceremony";
 import type { AccountUser } from "./session-store";
@@ -320,4 +327,40 @@ export function useAdminMail(options: { enabled?: boolean } = {}) {
 export function useMailTest() {
   const client = useAccountsClient();
   return useMutation({ mutationFn: () => client.api.mailTest() });
+}
+
+/** A 403 from the review's list is an answer (no language to review), not a hiccup to retry. */
+const forbidden = (error: unknown) => (error as { response?: { status?: number } })?.response?.status === 403;
+
+/**
+ * The translation review (server-kit 0.31's `translation_review_router`): the verdicts the
+ * viewer may see, and saving and clearing them in the server's chunks of 1000 — each answer
+ * patching the cached list, so a click does not download every verdict again. The list's 403
+ * (no language to review) is not retried.
+ */
+export function useTranslationReviews() {
+  const client = useAccountsClient();
+  const queryClient = useQueryClient();
+  const signedIn = useSignedIn();
+  const list = useQuery({
+    queryKey: accountQueryKeys.translationReviews,
+    queryFn: () => client.api.translationReviews(),
+    enabled: signedIn,
+    retry: (count, error) => !forbidden(error) && count < 2,
+  });
+  const patch = (update: (reviews: ApiTranslationReview[]) => ApiTranslationReview[]) =>
+    queryClient.setQueryData<ApiTranslationReviewsResponse>(accountQueryKeys.translationReviews, (previous) =>
+      previous ? { ...previous, reviews: update(previous.reviews) } : previous,
+    );
+  const save = useMutation({
+    mutationFn: (items: ApiTranslationReviewWrite[]) =>
+      saveReviewsInChunks(items, (chunk) => client.api.saveTranslationReviews(chunk)),
+    onSuccess: (written) => patch((reviews) => mergeReviews(reviews, written)),
+  });
+  const clear = useMutation({
+    mutationFn: (keys: TranslationReviewKey[]) =>
+      clearReviewsInChunks(keys, (chunk) => client.api.clearTranslationReviews(chunk)),
+    onSuccess: (keys) => patch((reviews) => dropReviews(reviews, keys)),
+  });
+  return { list, save, clear };
 }

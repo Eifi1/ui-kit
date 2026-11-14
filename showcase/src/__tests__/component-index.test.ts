@@ -142,6 +142,8 @@ const NOT_ON_A_PAGE: Record<string, string> = {
     "MailTestCard wired to server-kit's routes through AccountsProvider; MailTestCard is on its own page",
   AccountAdminLogSection:
     "AdminActionLog wired to server-kit's routes through AccountsProvider; AdminActionLog is on its own page",
+  AccountTranslationReview:
+    "TranslationReviewPanel, its tabs and its export wired to server-kit's routes through AccountsProvider; each part is on the Translation review page",
   AccountUserRosterSection:
     "the user roster's columns, AdminActionConfirm and ReviewerScopeEditor wired to server-kit's routes through AccountsProvider; each part is on its own page",
 };
@@ -210,6 +212,7 @@ const NOT_SHOWN: Record<string, string> = {
   useAdminAttention: ACCOUNTS,
   useAdminMail: ACCOUNTS,
   useMailTest: ACCOUNTS,
+  useTranslationReviews: ACCOUNTS,
   accountPage: ACCOUNTS,
   accountRouteElements: ACCOUNTS,
   useAccountStorageLines: ACCOUNTS,
