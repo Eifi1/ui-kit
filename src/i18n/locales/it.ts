@@ -1496,6 +1496,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       filteredTo: (target) => `Solo ${target}`,
       showAll: "Mostra tutte le azioni",
       filterBy: (target) => `Mostra solo le azioni su ${target}`,
+      notSent: "E-mail non inviata",
+      reviewerNone: "Nessuna lingua",
       // Agreeing with "account" (masculine), like `accountState`.
       actions: {
         deactivate: "Disattivato",

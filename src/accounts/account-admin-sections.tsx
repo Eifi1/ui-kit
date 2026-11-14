@@ -9,7 +9,7 @@ import {
   DEFAULT_ADMIN_ACTION_LABELS,
 } from "../admin/admin-action-confirm";
 import type { AdminActionConfirmValues, AdminConfirmLevel } from "../admin/admin-action-confirm";
-import { AdminActionLog } from "../admin/admin-action-log";
+import { AdminActionLog, DEFAULT_ADMIN_ACTION_LOG_LABELS } from "../admin/admin-action-log";
 import type {
   AdminActionLogEntry,
   AdminActionLogProps,
@@ -154,8 +154,10 @@ function sharedDetail(
   row: AccountAdminActionRow,
   roleLabel: (role: string) => string,
   groupRoleLabel: (role: string) => string,
+  words: { notSent?: string; reviewerNone?: string },
 ): ReactNode {
   const { detail } = row;
+  if (detail.sent === false) return words.notSent;
   if (row.action === "role" && typeof detail.from === "string" && typeof detail.to === "string") {
     return `${roleLabel(detail.from)} → ${roleLabel(detail.to)}`;
   }
@@ -166,8 +168,9 @@ function sharedDetail(
   if ((row.action === "membership_add" || row.action === "membership_remove") && typeof detail.role === "string") {
     return groupRoleLabel(detail.role);
   }
-  if (row.action === "reviewer" && Array.isArray(detail.locales) && detail.locales.length > 0) {
-    return (detail.locales as unknown[]).filter((code) => typeof code === "string").join(", ");
+  if (row.action === "reviewer" && Array.isArray(detail.locales)) {
+    const codes = (detail.locales as unknown[]).filter((code) => typeof code === "string");
+    return codes.length > 0 ? codes.join(", ") : words.reviewerNone;
   }
   return undefined;
 }
@@ -190,6 +193,7 @@ export function AccountAdminLogSection({
   className,
 }: AccountAdminLogSectionProps) {
   const { sections } = useAdminAreaLabels();
+  const logWords = useKitLabels("adminActionLog", DEFAULT_ADMIN_ACTION_LOG_LABELS, labels);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(firstPageSize);
   const [target, setTarget] = useState<AdminPerson | null>(null);
@@ -220,7 +224,9 @@ export function AccountAdminLogSection({
       // A row about the group itself has it as its target; a membership or an invitation has
       // the person, with the group beside them.
       ...(group && row.action.startsWith("group_") ? { target: group } : { target: person, group }),
-      detail: describeDetail ? describeDetail(row) : sharedDetail(row, roleLabel, groupRoleLabel),
+      // The app's words first, for its own actions; the kit's reading for the rest
+      // (Kurvenschmiede's U9: it replaced the kit's reading whole).
+      detail: describeDetail?.(row) ?? sharedDetail(row, roleLabel, groupRoleLabel, logWords),
     };
   });
 

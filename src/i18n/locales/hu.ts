@@ -1483,6 +1483,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       filteredTo: (target) => `Csak: ${target}`,
       showAll: "Az összes művelet megjelenítése",
       filterBy: (target) => `Csak az ezt a fiókot érintő műveletek megjelenítése: ${target}`,
+      notSent: "Az e-mail nem ment el",
+      reviewerNone: "Nincs nyelv",
       actions: {
         deactivate: "Inaktiválva",
         reactivate: "Újraaktiválva",

@@ -1427,6 +1427,8 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       filteredTo: (target) => `仅 ${target}`,
       showAll: "显示全部操作",
       filterBy: (target) => `仅显示针对 ${target} 的操作`,
+      notSent: "邮件未发送",
+      reviewerNone: "无语言",
       actions: {
         deactivate: "已停用",
         reactivate: "已重新激活",

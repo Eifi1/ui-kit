@@ -162,6 +162,33 @@ describe("AccountAdminLogSection", () => {
     expect(screen.getByText(/a deleted team/i)).toBeInTheDocument();
   });
 
+  it("asks the app's words first and reads the kit's for the rest (Kurvenschmiede's U9)", async () => {
+    mount(
+      <AccountAdminLogSection
+        roleLabel={(role) => (role === "ADMIN" ? "Admin" : "Mitglied")}
+        describeDetail={(entry) => (entry.action === "transfer" ? "3 moved" : undefined)}
+      />,
+      {
+        "get /admin/actions": () => ({
+          status: 200,
+          data: {
+            actions: [
+              { ...row(9, "transfer", 7), detail: { moved: { curves: 3 } } },
+              { ...row(8, "role", 7), detail: { from: "MEMBER", to: "ADMIN" } },
+              { ...row(7, "invite", null), target_email: "c@x", detail: { sent: false } },
+              { ...row(6, "reviewer", 7), detail: { locales: [] } },
+            ],
+            total: 4,
+          },
+        }),
+      },
+    );
+    expect(await screen.findByText("3 moved")).toBeInTheDocument();
+    expect(screen.getByText("Mitglied → Admin")).toBeInTheDocument();
+    expect(screen.getByText("Mail not sent")).toBeInTheDocument();
+    expect(screen.getByText("No languages")).toBeInTheDocument();
+  });
+
   it("narrows the log to one account by its id, from its name in a row", async () => {
     const { calls, user } = mount(<AccountAdminLogSection />, {
       "get /admin/actions": () => ({ status: 200, data: { actions: [row(9, "deactivate", 7)], total: 1 } }),

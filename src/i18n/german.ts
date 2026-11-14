@@ -1530,6 +1530,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       filteredTo: (target) => `Nur ${target}`,
       showAll: "Alle Aktionen zeigen",
       filterBy: (target) => `Nur Aktionen zu ${target} zeigen`,
+      notSent: "E-Mail nicht gesendet",
+      reviewerNone: "Keine Sprachen",
       actions: {
         deactivate: "Deaktiviert",
         reactivate: "Reaktiviert",
