@@ -286,8 +286,12 @@ export interface AccountsClient<U extends AccountUser = AccountUser> {
    *
    * `{ everywhere: true }` ("Sign out everywhere", §6.3) sends `POST /auth/logout`, which ends
    * every session of the account, in step 2's place.
+   *
+   * `{ notice: "deletion_requested" }` (0.64): the sign-in page it leaves for says why, from its
+   * address (`?notice=`) — a deletion request is the one sign-out a person did not ask for by
+   * that name. Nothing is stored for it.
    */
-  signOut(options?: { everywhere?: boolean }): Promise<void>;
+  signOut(options?: { everywhere?: boolean; notice?: "deletion_requested" }): Promise<void>;
   /** Eject the interceptors and stop watching other tabs: for a test, or a hot reload. */
   detach(): void;
 }
@@ -609,7 +613,10 @@ export function createAccountsClient<U extends AccountUser = AccountUser>(
           }
         }
         store.drop();
-        ended({ reason: "signed-out", user, demo }, demo ? (options.demo?.endedPath ?? "/demo/ended") : signInPath);
+        const signIn = signOutOptions?.notice
+          ? `${signInPath}${signInPath.includes("?") ? "&" : "?"}notice=${encodeURIComponent(signOutOptions.notice)}`
+          : signInPath;
+        ended({ reason: "signed-out", user, demo }, demo ? (options.demo?.endedPath ?? "/demo/ended") : signIn);
       })().finally(() => {
         signingOut = null;
       });

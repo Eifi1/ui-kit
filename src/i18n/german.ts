@@ -1428,6 +1428,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
           : `${n(count)} Elemente, die andere sehen können, gehen an einen Administrator über.`,
       confirm: "Mein Konto löschen",
       done: "Ihr Konto ist deaktiviert. Sie werden abgemeldet.",
+      requested:
+        "Ihr Antrag auf Löschung des Kontos ist eingegangen. Das Konto ist deaktiviert, und Sie sind auf allen Geräten abgemeldet.",
       wrongPassword: "Das Passwort ist falsch.",
       confirmationMismatch: "Das ist nicht die Adresse Ihres Kontos.",
       lastAdmin:

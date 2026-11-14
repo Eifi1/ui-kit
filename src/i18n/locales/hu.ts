@@ -1385,6 +1385,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       handOver: (count) => `${n(count)} elem, amelyet mások is látnak, egy adminisztrátorhoz kerül.`,
       confirm: "Fiókom törlése",
       done: "A fiókja inaktiválva. Kijelentkeztetjük.",
+      requested:
+        "Megkaptuk a fiókja törlésére vonatkozó kérését. A fiók inaktiválva, és minden eszközön kijelentkeztettük.",
       wrongPassword: "A jelszó helytelen.",
       confirmationMismatch: "Ez nem a fiókja címe.",
       lastAdmin: "Ön az utolsó adminisztrátor. Előbb tegyen adminisztrátorrá valaki mást.",

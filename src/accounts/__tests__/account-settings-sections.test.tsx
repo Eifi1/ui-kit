@@ -295,7 +295,7 @@ describe("AccountExportSection and AccountDeletionSection", () => {
   });
 
   it("says the server's terms, and a granted request signs the tab out", async () => {
-    const { calls, user } = mount(<AccountDeletionSection />, {
+    const { calls, user, navigate } = mount(<AccountDeletionSection />, {
       "get /auth/me/deletion": () => ({ status: 200, data: { mode: "operator", days: null } }),
       "post /auth/me/deletion": () => ({ status: 202, data: { mail_sent: true } }),
     });
@@ -307,6 +307,8 @@ describe("AccountExportSection and AccountDeletionSection", () => {
     await fill(user, screen.getByLabelText(/Type “ada@example.com”/), ada.email);
     await user.click(screen.getByRole("button", { name: "Delete my account" }));
     await waitFor(() => expect(record()).toBeNull());
+    // To the sign-in page, which says the request is in (no storage: its address).
+    expect(navigate).toHaveBeenCalledWith("/login?notice=deletion_requested");
     expect(calls.find((c) => c.route === "post /auth/me/deletion")!.data).toEqual({
       password: "pw",
       confirm_email: ada.email,

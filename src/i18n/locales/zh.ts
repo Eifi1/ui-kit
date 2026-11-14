@@ -1340,6 +1340,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       handOver: (count) => `${n(count)} 项他人可见的内容将移交给一位管理员。`,
       confirm: "删除我的账户",
       done: "您的账户已停用，正在退出登录。",
+      requested: "我们已收到您删除账户的申请。该账户已停用，您已在所有设备上退出登录。",
       wrongPassword: "密码不正确。",
       confirmationMismatch: "这不是您账户的地址。",
       lastAdmin: "您是最后一位管理员。请先将其他人设为管理员。",

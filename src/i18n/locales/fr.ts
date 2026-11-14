@@ -1413,6 +1413,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
           : `${n(count)} éléments visibles par d’autres passeront à un administrateur.`,
       confirm: "Supprimer mon compte",
       done: "Votre compte est désactivé. Déconnexion en cours.",
+      requested:
+        "Votre demande de suppression du compte a bien été reçue. Le compte est désactivé, et vos sessions sont fermées sur tous les appareils.",
       wrongPassword: "Le mot de passe est incorrect.",
       confirmationMismatch: "Ce n’est pas l’adresse de votre compte.",
       lastAdmin: "Votre compte est le dernier compte administrateur. Nommez d’abord quelqu’un d’autre administrateur.",

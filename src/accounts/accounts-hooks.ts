@@ -189,7 +189,8 @@ export function useAccountDeletion() {
   });
   const request = useMutation({
     mutationFn: (body: { password: string; confirm_email: string }) => client.api.requestDeletion(body),
-    onSuccess: () => client.signOut(),
+    // The sign-in page says the request is in: the tab is signed out with no button pressed.
+    onSuccess: () => client.signOut({ notice: "deletion_requested" }),
   });
   return { terms, request };
 }

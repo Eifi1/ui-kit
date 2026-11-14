@@ -13,6 +13,7 @@ import { DEFAULT_REGISTER_LABELS } from "../auth/register-form-labels";
 import { ResetPasswordForm } from "../auth/reset-password-form";
 import { SignInForm, type SignInAnswer } from "../auth/sign-in-form";
 import { DEFAULT_SIGN_IN_LABELS } from "../auth/sign-in-form-labels";
+import { DEFAULT_DELETE_ACCOUNT_LABELS } from "../account/delete-account-setting-labels";
 import { VerifyEmailStatus } from "../auth/verify-email";
 import { DEFAULT_FORGOT_PASSWORD_LABELS } from "../auth/forgot-password-form-labels";
 import { DEFAULT_RESET_PASSWORD_LABELS } from "../auth/reset-password-form-labels";
@@ -146,6 +147,7 @@ function SignInPage({ o }: { o: Resolved }) {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const labels = useKitLabels("signIn", DEFAULT_SIGN_IN_LABELS);
+  const deletion = useKitLabels("deleteAccount", DEFAULT_DELETE_ACCOUNT_LABELS);
   const describe = useFailureBeside(["invalid_credentials", "token_invalid"], o.appCode);
   // Where they were headed, read through the kit's open-redirect check (KS's F34).
   const destination = safeNextPath(params.get(NEXT_PARAM)) ?? o.afterSignIn;
@@ -155,6 +157,12 @@ function SignInPage({ o }: { o: Resolved }) {
   };
   return (
     <Page o={o} title={labels.submit}>
+      {/* A deletion request signed this tab out (`signOut({ notice })`): say it was received. */}
+      {params.get("notice") === "deletion_requested" && (
+        <AlertBanner tone="info" size="sm" className="mb-4">
+          {deletion.requested}
+        </AlertBanner>
+      )}
       <SignInForm
         onSubmit={async (credentials) => done(await client.signIn(credentials))}
         onSetPassword={async (values) => done(await client.setPassword(values))}

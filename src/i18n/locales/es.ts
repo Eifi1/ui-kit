@@ -1385,6 +1385,8 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
           : `${n(count)} elementos que otros pueden ver pasarán a un administrador.`,
       confirm: "Eliminar mi cuenta",
       done: "Su cuenta está desactivada. Se está cerrando su sesión.",
+      requested:
+        "Hemos recibido su solicitud de eliminar la cuenta. La cuenta está desactivada y su sesión se ha cerrado en todos los dispositivos.",
       wrongPassword: "La contraseña no es correcta.",
       confirmationMismatch: "Esta no es la dirección de su cuenta.",
       lastAdmin: "Su cuenta es la última con rol de administrador. Primero haga administrador a otra persona.",

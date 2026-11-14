@@ -1398,6 +1398,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
           : `${n(count)} elementi visibili ad altri passeranno a un amministratore.`,
       confirm: "Elimina il mio account",
       done: "Il Suo account è disattivato. Disconnessione in corso.",
+      requested:
+        "La Sua richiesta di eliminare l’account è stata ricevuta. L’account è disattivato e la sessione è stata chiusa su tutti i dispositivi.",
       wrongPassword: "La password non è corretta.",
       confirmationMismatch: "Questo non è l’indirizzo del Suo account.",
       lastAdmin: "Il Suo è l’ultimo account amministratore. Renda prima amministratore qualcun altro.",
