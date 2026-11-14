@@ -312,6 +312,27 @@ describe("AccountExportSection and AccountDeletionSection", () => {
       confirm_email: ada.email,
     });
   });
+  it("says the card in the app's words where it gives them", async () => {
+    const operator = "Ihr Konto wird sofort deaktiviert und später von Hand gelöscht.";
+    mount(<AccountDeletionSection labels={{ operator }} />, {
+      "get /auth/me/deletion": () => ({ status: 200, data: { mode: "operator", days: null } }),
+    });
+    expect(await screen.findByText(operator)).toBeInTheDocument();
+  });
+});
+
+describe("AccountPasskeysSection's words", () => {
+  it("asks for the password in the app's words before a passkey is added", async () => {
+    vi.stubGlobal("isSecureContext", true);
+    vi.stubGlobal("PublicKeyCredential", function PublicKeyCredential() {});
+    vi.stubGlobal("navigator", { ...navigator, credentials: { get: vi.fn(), create: vi.fn() } });
+    const { user } = mount(
+      <AccountPasskeysSection reauthLabels={{ title: "Passwort, um einen Passkey hinzuzufügen" }} />,
+      { "get /auth/passkeys": () => ({ status: 200, data: [] }) },
+    );
+    await user.click(await screen.findByRole("button", { name: "Add passkey" }));
+    expect(await screen.findByRole("dialog", { name: "Passwort, um einen Passkey hinzuzufügen" })).toBeInTheDocument();
+  });
 });
 
 describe("AccountInvitationsSection", () => {

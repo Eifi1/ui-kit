@@ -2,7 +2,11 @@ import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 import { DataExportSetting } from "../account/data-export-setting";
-import { DeleteAccountSetting, type DeleteAccountConsequence } from "../account/delete-account-setting";
+import {
+  DeleteAccountSetting,
+  type DeleteAccountConsequence,
+  type DeleteAccountLabels,
+} from "../account/delete-account-setting";
 import { EmailChangeSetting } from "../account/email-change-setting";
 import { PasskeysSetting, type PasskeyItem } from "../account/passkeys-setting";
 import { PasswordSetting, ProfileSetting } from "../account/account-settings";
@@ -10,7 +14,9 @@ import { SessionsSetting, type SessionItem } from "../account/sessions-setting";
 import { InvitationsPanel, type InvitationRow, type InvitationsPanelProps } from "../admin/invitations-panel";
 import { formatPersonName } from "../lib/person-name";
 import { useKitFormat } from "../lib/format";
-import { ReauthDialog } from "../components/reauth-dialog";
+import { ReauthDialog, type ReauthDialogLabels } from "../components/reauth-dialog";
+import type { LabelOverride } from "../i18n/kit-labels";
+import type { PasskeysSettingLabels } from "../account/account-settings-labels";
 import { toast } from "../components/toast";
 import { useDescribeAccountFailure, useFailureBeside } from "./account-failure";
 import type { DescribeAccountFailureOptions } from "./account-failure";
@@ -168,6 +174,11 @@ export interface AccountPasskeysSectionProps {
   unavailable?: ReactNode;
   /** `"alongside"` (the default): the password stays and a passkey is a second way in. */
   mode?: "instead" | "alongside";
+  /** The card's words over the provider's `passkeys` namespace. */
+  labels?: LabelOverride<PasskeysSettingLabels>;
+  /** The password question's words before a passkey is added, over the provider's
+   *  `reauthDialog` — an app that says why it asks ("to add a passkey"). */
+  reauthLabels?: LabelOverride<ReauthDialogLabels>;
 }
 
 /**
@@ -180,6 +191,8 @@ export function AccountPasskeysSection({
   id = "passkeys",
   unavailable,
   mode = "alongside",
+  labels,
+  reauthLabels,
 }: AccountPasskeysSectionProps) {
   const { list, begin, register, rename, remove } = usePasskeys();
   const describe = useDescribeAccountFailure();
@@ -209,6 +222,7 @@ export function AccountPasskeysSection({
       <PasskeysSetting<number>
         id={id}
         mode={mode}
+        labels={labels}
         passkeys={available ? items : []}
         loading={list.isPending && list.fetchStatus !== "idle"}
         unavailable={available ? undefined : unavailable}
@@ -235,6 +249,7 @@ export function AccountPasskeysSection({
       />
       {asking !== null && (
         <ReauthDialog
+          labels={reauthLabels}
           error={passwordError}
           busy={begin.isPending}
           onSubmit={async (password) => {
@@ -278,6 +293,8 @@ export interface AccountDeletionSectionProps {
   /** The field of the server's terms (`deletion_terms`' extras) that counts what passes to
    *  someone else instead (Kurvenschmiede's `hand_over_count`). */
   handOverField?: string;
+  /** The card's words over the provider's `deleteAccount` namespace. */
+  labels?: LabelOverride<DeleteAccountLabels>;
 }
 
 /**
@@ -285,7 +302,12 @@ export interface AccountDeletionSectionProps {
  * after N days, or by an operator), the password and the address typed, then the request — and
  * the server ends every session with it, so the tab signs out in the contract's order.
  */
-export function AccountDeletionSection({ id = "delete", consequences, handOverField }: AccountDeletionSectionProps) {
+export function AccountDeletionSection({
+  id = "delete",
+  consequences,
+  handOverField,
+  labels,
+}: AccountDeletionSectionProps) {
   const user = useAccount();
   const { terms, request } = useAccountDeletion();
   const describe = useFailureBeside([
@@ -306,6 +328,7 @@ export function AccountDeletionSection({ id = "delete", consequences, handOverFi
       consequences={consequences}
       handOverCount={typeof handOver === "number" ? handOver : undefined}
       describeError={describe}
+      labels={labels}
       onRequest={({ password, confirmEmail }) => request.mutateAsync({ password, confirm_email: confirmEmail })}
     />
   );
