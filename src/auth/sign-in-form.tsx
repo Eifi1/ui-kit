@@ -202,8 +202,11 @@ export interface SignInFormProps extends Omit<ComponentPropsWithRef<"div">, "onS
    */
   onSubmit: (credentials: SignInCredentials) => Promise<SignInAnswer>;
   /** The second factor was submitted (`/auth/login/2fa`). Resolves with the next answer
-   *  — keksdose may still require a new password after the code. */
-  onCode: (values: SignInCodeValues) => Promise<SignInAnswer>;
+   *  — keksdose may still require a new password after the code. Optional since 0.64: an
+   *  app whose server asks for no second factor (server-kit 0.29–0.31's `auth_router`)
+   *  leaves it out, and a `2fa` answer then reads as a failed sign-in (`failed`) rather than
+   *  a step nobody can finish. */
+  onCode?: (values: SignInCodeValues) => Promise<SignInAnswer>;
   /** The new password was submitted (`/auth/login/set-password`). Resolves with the
    *  answer, `signed-in` in practice; keksdose's `key_wrap_unchanged` note is the app's
    *  to show from here. */
@@ -487,6 +490,10 @@ export function SignInForm({
     setNewPassword("");
     setConfirm("");
     if (answer.kind === "2fa") {
+      if (onCode === undefined) {
+        setFailure({ action: "password", code: undefined, message: labels.failed });
+        return;
+      }
       setChallenge({ token: answer.challengeToken });
       goTo("2fa");
     } else if (answer.kind === "password-change") {
@@ -635,7 +642,7 @@ export function SignInForm({
     const ready = asRecovery ? recoveryReady : code.length === codeLength;
     const submitCode = (e: FormEvent) => {
       e.preventDefault();
-      if (!ready) return;
+      if (!ready || onCode === undefined) return;
       if (asRecovery) {
         attempt(
           "code",

@@ -134,9 +134,6 @@ function Page({ o, title, children }: { o: Resolved; title: ReactNode; children:
   return <Frame title={title}>{children}</Frame>;
 }
 
-/** The code step of a server with no second factor (server-kit 0.29). */
-const noSecondFactor = (): Promise<SignInAnswer> => Promise.reject(new Error("This server asks for no second factor"));
-
 function SignInPage({ o }: { o: Resolved }) {
   const client = useAccountsClient();
   const navigate = useNavigate();
@@ -153,7 +150,6 @@ function SignInPage({ o }: { o: Resolved }) {
     <Page o={o} title={labels.submit}>
       <SignInForm
         onSubmit={async (credentials) => done(await client.signIn(credentials))}
-        onCode={noSecondFactor}
         onSetPassword={async (values) => done(await client.setPassword(values))}
         onPasskey={passkeysAvailable() ? async () => done(await client.signInWithPasskey()) : undefined}
         forgotHref={o.paths.forgotPassword}

@@ -25,7 +25,7 @@ function deferred<T>() {
 
 function setup(props: Partial<SignInFormProps> = {}) {
   const onSubmit = vi.fn<SignInFormProps["onSubmit"]>(async () => ({ kind: "signed-in" }));
-  const onCode = vi.fn<SignInFormProps["onCode"]>(async () => ({ kind: "signed-in" }));
+  const onCode = vi.fn<NonNullable<SignInFormProps["onCode"]>>(async () => ({ kind: "signed-in" }));
   const onSetPassword = vi.fn<SignInFormProps["onSetPassword"]>(async () => ({ kind: "signed-in" }));
   const user = userEvent.setup();
   const utils = render(<SignInForm onSubmit={onSubmit} onCode={onCode} onSetPassword={onSetPassword} {...props} />);
@@ -171,6 +171,22 @@ describe("SignInForm — the second factor", () => {
     expect(onCode).toHaveBeenCalledWith({ challengeToken: "challenge-1", code: "123456" });
   });
 
+  it("without onCode (a server with no second factor) a 2fa answer is a failed sign-in, not a dead step", async () => {
+    // 0.64: server-kit 0.29–0.31's auth_router has no 2FA routes, so @eifi1/ui-kit/accounts
+    // passed a refusing onCode; the prop is optional now.
+    const user = userEvent.setup();
+    render(
+      <SignInForm
+        onSubmit={async () => ({ kind: "2fa", challengeToken: "c" })}
+        onSetPassword={async () => ({ kind: "signed-in" })}
+      />,
+    );
+    await signIn(user);
+    expect(await screen.findByText("Sign-in failed. Please try again.")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Two-factor authentication" })).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Email")).toBeInTheDocument();
+  });
+
   it("a refused code stays on the step with its error, which an edit clears", async () => {
     const { user } = setup({
       onSubmit: async () => ({ kind: "2fa", challengeToken: "c" }),
@@ -252,7 +268,7 @@ describe("SignInForm — a backup code (0.30.0)", () => {
   });
 
   it("a refused backup code says so; switching back clears it, focuses the digits, and sends no kind", async () => {
-    const onCode = vi.fn<SignInFormProps["onCode"]>(async ({ kind }) =>
+    const onCode = vi.fn<NonNullable<SignInFormProps["onCode"]>>(async ({ kind }) =>
       kind === "recovery" ? Promise.reject(new Error("401")) : { kind: "signed-in" },
     );
     const { user } = setup({ onSubmit: twoFactor, onCode, recoveryCode: true });
