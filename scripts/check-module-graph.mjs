@@ -300,11 +300,15 @@ const BUDGETS = [
   // rendered), and the passkey sign-in's ceremony, converting WebAuthn's JSON itself instead of
   // a library (2.6 kB) — meant growth, 4,172 B. The hooks, pages and sections are not in it:
   // an app imports them where it draws them.
+  // 17,390 B (6,343 gzip) with 0.64's admin routes on `client.api` (server-kit 0.30–0.31's
+  // user_admin_router: the roster and its actions, the log, the counts, the mail; about 0.9 kB)
+  // and the sign-out's `notice` — meant growth, 1,103 B. The admin's hooks and sections are not
+  // in it either.
   {
     label: "{ createAccountsClient }",
     entry: "dist/accounts.js",
     names: ["createAccountsClient", "accountStorageEntries"],
-    max: 16_400,
+    max: 17_500,
   },
 ];
 const ENTRY = "\0import-cost";
