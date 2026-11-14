@@ -10,7 +10,12 @@ import {
 } from "../admin/admin-action-confirm";
 import type { AdminActionConfirmValues, AdminConfirmLevel } from "../admin/admin-action-confirm";
 import { AdminActionLog } from "../admin/admin-action-log";
-import type { AdminActionLogEntry, AdminActionLogProps, AdminGroupNoun } from "../admin/admin-action-log";
+import type {
+  AdminActionLogEntry,
+  AdminActionLogProps,
+  AdminGroupNoun,
+  AdminGroupTarget,
+} from "../admin/admin-action-log";
 import { useAdminAreaLabels } from "../admin/admin-area-labels";
 import { AdminOverview } from "../admin/admin-overview";
 import type { AdminAttentionTile, AdminExtraTile, AdminOverviewProps } from "../admin/admin-overview";
@@ -128,8 +133,12 @@ export interface AccountAdminLogSectionProps {
   /** The role in the app's words, for a role row's "Member → Admin"; left out, the role's
    *  code as the server logged it. */
   roleLabel?: (role: string) => string;
-  /** A row's `detail` in the app's words, for the actions only the app has; it outranks the
-   *  kit's reading of `role` and `reviewer` rows. `undefined` says nothing. */
+  /** A role IN A GROUP in the app's words (0.64: a team's member and manager), for a
+   *  membership row's "Member → Manager"; left out, the role's code as logged. */
+  groupRoleLabel?: (role: string) => string;
+  /** A row's `detail` in the app's words, for the actions only the app has (a team's
+   *  deletion's counts); it outranks the kit's reading of `role`, `reviewer` and membership
+   *  rows. `undefined` says nothing. */
   describeDetail?: (row: AccountAdminActionRow) => ReactNode;
   groupNoun?: AdminGroupNoun;
   labels?: AdminActionLogProps["labels"];
@@ -141,10 +150,21 @@ export interface AccountAdminLogSectionProps {
  * there is to say about the shared actions: a role change as "Member → Admin", a reviewer's
  * languages as their codes. Anything else says nothing rather than a dump of the JSON.
  */
-function sharedDetail(row: AccountAdminActionRow, roleLabel: (role: string) => string): ReactNode {
+function sharedDetail(
+  row: AccountAdminActionRow,
+  roleLabel: (role: string) => string,
+  groupRoleLabel: (role: string) => string,
+): ReactNode {
   const { detail } = row;
   if (row.action === "role" && typeof detail.from === "string" && typeof detail.to === "string") {
     return `${roleLabel(detail.from)} → ${roleLabel(detail.to)}`;
+  }
+  // 0.64: a role in a group changed, and who joined or left it as what (Kurvenschmiede's teams).
+  if (row.action === "membership_role" && typeof detail.from === "string" && typeof detail.to === "string") {
+    return `${groupRoleLabel(detail.from)} → ${groupRoleLabel(detail.to)}`;
+  }
+  if ((row.action === "membership_add" || row.action === "membership_remove") && typeof detail.role === "string") {
+    return groupRoleLabel(detail.role);
   }
   if (row.action === "reviewer" && Array.isArray(detail.locales) && detail.locales.length > 0) {
     return (detail.locales as unknown[]).filter((code) => typeof code === "string").join(", ");
@@ -163,6 +183,7 @@ export function AccountAdminLogSection({
   pageSize: firstPageSize = 20,
   hint,
   roleLabel = (role) => role,
+  groupRoleLabel = (role) => role,
   describeDetail,
   groupNoun,
   labels,
@@ -182,15 +203,26 @@ export function AccountAdminLogSection({
     target_email: targetEmail,
   });
 
-  const entries: AdminActionLogEntry[] = (log.data?.actions ?? []).map((row) => ({
-    id: row.id,
-    at: row.at,
-    action: row.action,
-    actor: row.actor,
+  const entries: AdminActionLogEntry[] = (log.data?.actions ?? []).map((row) => {
+    // A group the row names (0.64, Kurvenschmiede's activity panel), by the name the server
+    // joined; none left reads as the noun's "a deleted team".
+    const group: AdminGroupTarget | null =
+      row.target_group_id === null || row.target_group_id === undefined
+        ? null
+        : { kind: "group", id: row.target_group_id, name: row.target_group?.name ?? null };
     // The person as the server joined them; with no account left, the address the row kept.
-    target: row.target ?? (row.target_email ? { email: row.target_email } : null),
-    detail: describeDetail ? describeDetail(row) : sharedDetail(row, roleLabel),
-  }));
+    const person = row.target ?? (row.target_email ? { email: row.target_email } : null);
+    return {
+      id: row.id,
+      at: row.at,
+      action: row.action,
+      actor: row.actor,
+      // A row about the group itself has it as its target; a membership or an invitation has
+      // the person, with the group beside them.
+      ...(group && row.action.startsWith("group_") ? { target: group } : { target: person, group }),
+      detail: describeDetail ? describeDetail(row) : sharedDetail(row, roleLabel, groupRoleLabel),
+    };
+  });
 
   return (
     // Alone in the section named after it: the title is for screen readers, the admin

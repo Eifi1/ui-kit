@@ -269,6 +269,12 @@ export interface AccountAdminActionRow {
   detail: Record<string, unknown>;
   actor: AdminPerson | null;
   target: AdminPerson | null;
+  /** 0.64: the group a row names (Kurvenschmiede's team), and its name as the server joined
+   *  it (`UserAdminHooks.group_names`): the live group's, else the one its deletion kept. */
+  target_group_id?: number | null;
+  target_group?: { id?: number | null; name?: string | null } | null;
+  /** kastlan's company, where its log has one. */
+  company_id?: number | null;
 }
 
 /** `GET /admin/actions`'s answer. */

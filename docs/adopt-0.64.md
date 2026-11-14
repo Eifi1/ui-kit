@@ -143,7 +143,10 @@ const ROLES = { ADMIN: { label: t("roles.ADMIN"), tone: "brand" }, MEMBER: { lab
 - **`AccountAdminLogSection`** reads the log a page at a time; any person's name in it narrows
   the log to that account — by its id, or by the address an erased account's rows kept
   (server-kit 0.31's `target_email`). A role row reads "Member → Admin" through `roleLabel`; the
-  app's own actions through `describeDetail`.
+  app's own actions through `describeDetail`. A group's rows (Kurvenschmiede's teams,
+  `target_group_*`) have the group as their target, a membership row the person with the group
+  beside them, its role through `groupRoleLabel`; a group with no name left reads as the noun's
+  "a deleted team".
 - **`AccountAdminOverviewSection`** is `AdminOverview` on `GET /admin/attention`, with its
   "Try again"; **`AccountMailTestSection`** is `MailTestCard`, to the signed-in admin's address.
 
@@ -256,6 +259,7 @@ Nothing new is stored in the browser; the file parts fetch through the session.
 - **Staunlabor**: the admin area on the four sections (`reviewer` on, its areas `experiments`
   and `legal`; `erase` on: its deletion mode is `operator`, so a request deactivates the account
   and the admin erases it) and the review page at `/translations`.
-- **Kurvenschmiede**: `UsersPanel` and `MailTestPanel` go; its teams' and plans' columns and
-  actions stay its own (`extraColumns`, `extraActions`). Its `ActivityPanel` stays for now: the
-  log section reads a person as the target, not yet a team's rows (`target_group_*`).
+- **Kurvenschmiede**: `UsersPanel`, `MailTestPanel` and `ActivityPanel` go; its teams' and plans'
+  columns and actions stay its own (`extraColumns`, `extraActions`), and the log section shows its
+  team rows (`groupNoun="team"`, `groupRoleLabel` for "Member → Manager", `describeDetail` for a
+  team deletion's counts).

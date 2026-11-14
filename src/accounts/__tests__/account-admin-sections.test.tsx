@@ -141,6 +141,27 @@ describe("AccountAdminLogSection", () => {
     expect(await screen.findByText("Mitglied → Admin")).toBeInTheDocument();
   });
 
+  it("shows a team's rows: the team as the target of its own, beside the person in a membership", async () => {
+    const team = { target_group_id: 3, target_group: { id: 3, name: "Rig crew" } };
+    const words: Record<string, string> = { member: "Mitglied", manager: "Leitung" };
+    mount(<AccountAdminLogSection groupNoun="team" groupRoleLabel={(role) => words[role] ?? role} />, {
+      "get /admin/actions": () => ({
+        status: 200,
+        data: {
+          actions: [
+            { ...row(6, "group_rename", null), ...team },
+            { ...row(5, "membership_role", 7), ...team, detail: { from: "member", to: "manager" } },
+            { ...row(4, "group_delete", null), target_group_id: 9, target_group: null },
+          ],
+          total: 3,
+        },
+      }),
+    });
+    expect(await screen.findByText("Mitglied → Leitung")).toBeInTheDocument();
+    expect(screen.getAllByText("Rig crew").length).toBe(2);
+    expect(screen.getByText(/a deleted team/i)).toBeInTheDocument();
+  });
+
   it("narrows the log to one account by its id, from its name in a row", async () => {
     const { calls, user } = mount(<AccountAdminLogSection />, {
       "get /admin/actions": () => ({ status: 200, data: { actions: [row(9, "deactivate", 7)], total: 1 } }),
