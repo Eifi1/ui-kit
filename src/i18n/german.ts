@@ -2334,7 +2334,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       resetSent: (email) => `Mail zum Zurücksetzen des Passworts an ${email} gesendet.`,
       requirePasswordChange: "Neues Passwort verlangen",
       requirePasswordChangeTitle: (name) => `Von ${name} ein neues Passwort verlangen?`,
-      requirePasswordChangeBody: "Bei der nächsten Anmeldung muss das Konto zuerst ein neues Passwort wählen.",
+      requirePasswordChangeBody:
+        "Bei der nächsten Anmeldung muss das Konto zuerst ein neues Passwort wählen. Alle Sitzungen des Kontos enden sofort.",
       passwordChangeRequired: (email) => `${email} muss bei der nächsten Anmeldung ein neues Passwort wählen.`,
       withdrawPasswordChange: "Passwortforderung zurücknehmen",
       passwordChangeWithdrawn: (email) => `${email} muss kein neues Passwort mehr wählen.`,
@@ -2345,6 +2346,9 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       changeRole: "Rolle ändern",
       roleTitle: (name, role) => `Die Rolle von ${name} auf „${role}“ ändern?`,
       roleBody: "Was das Konto darf, ändert sich sofort, mit seiner nächsten Anfrage.",
+      roleToAdminBody:
+        "Mit Administratorrechten darf das Konto alle Konten und die Einstellungen der App verwalten, sofort, ab seiner nächsten Anfrage.",
+      roleFromAdminBody: "Das Konto verliert seine Administratorrechte sofort, ab seiner nächsten Anfrage.",
       roleChanged: (email, role) => `${email} hat jetzt die Rolle „${role}“.`,
       deactivate: "Deaktivieren",
       deactivateTitle: (name) => `${name} deaktivieren?`,

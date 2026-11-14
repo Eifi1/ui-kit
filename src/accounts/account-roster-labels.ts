@@ -38,6 +38,10 @@ export interface AccountRosterLabels {
   /** `role`: the role's word in the app's vocabulary. */
   roleTitle: (name: string, role: string) => string;
   roleBody: string;
+  /** 0.64 (Kurvenschmiede's U4): the consequence when the change makes the account an
+   *  administrator, and when it takes that away; `roleBody` for every other change. */
+  roleToAdminBody: string;
+  roleFromAdminBody: string;
   roleChanged: (email: string, role: string) => string;
   deactivate: string;
   deactivateTitle: (name: string) => string;
@@ -72,7 +76,8 @@ export const DEFAULT_ACCOUNT_ROSTER_LABELS: AccountRosterLabels = {
   resetSent: (email) => `Password reset mail sent to ${email}.`,
   requirePasswordChange: "Require a new password",
   requirePasswordChangeTitle: (name) => `Require a new password from ${name}?`,
-  requirePasswordChangeBody: "At the next sign-in, the account must choose a new password before anything else.",
+  requirePasswordChangeBody:
+    "At the next sign-in, the account must choose a new password before anything else. Every session of the account ends at once.",
   passwordChangeRequired: (email) => `${email} must choose a new password at the next sign-in.`,
   withdrawPasswordChange: "Withdraw the new password requirement",
   passwordChangeWithdrawn: (email) => `${email} no longer has to choose a new password.`,
@@ -83,6 +88,9 @@ export const DEFAULT_ACCOUNT_ROSTER_LABELS: AccountRosterLabels = {
   changeRole: "Change role",
   roleTitle: (name, role) => `Change the role of ${name} to “${role}”?`,
   roleBody: "What the account may do changes at once, on its next request.",
+  roleToAdminBody:
+    "As an administrator, the account may manage every account and the app’s settings, at once, from its next request.",
+  roleFromAdminBody: "The account loses its administrator rights at once, from its next request.",
   roleChanged: (email, role) => `${email} now has the role “${role}”.`,
   deactivate: "Deactivate",
   deactivateTitle: (name) => `Deactivate ${name}?`,

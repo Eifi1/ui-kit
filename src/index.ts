@@ -1053,7 +1053,7 @@ export { adminSectionOrder } from "./admin/admin-sections";
 export type { AdminSectionPlace, AdminSectionOrderOptions, AdminKeptSection } from "./admin/admin-sections";
 export { AdminForbidden } from "./admin/admin-forbidden";
 export type { AdminForbiddenProps } from "./admin/admin-forbidden";
-export { AdminOverview, AttentionTile, adminWaitingCount } from "./admin/admin-overview";
+export { AdminOverview, AttentionTile, DEFAULT_ADMIN_ATTENTION_HREFS, adminWaitingCount } from "./admin/admin-overview";
 export type {
   AdminAttention,
   AdminAttentionTile,

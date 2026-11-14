@@ -17,7 +17,11 @@ import { useKitFormat } from "../lib/format";
 import { ReauthDialog, type ReauthDialogLabels } from "../components/reauth-dialog";
 import type { LabelOverride } from "../i18n/kit-labels";
 import { useAccountSettingsLabels } from "../account/account-settings-labels";
-import type { PasskeysSettingLabels, TwoFactorSettingLabels } from "../account/account-settings-labels";
+import type {
+  PasskeysSettingLabels,
+  PasswordSettingLabels,
+  TwoFactorSettingLabels,
+} from "../account/account-settings-labels";
 import { toast } from "../components/toast";
 import { useDescribeAccountFailure, useFailureBeside } from "./account-failure";
 import type { DescribeAccountFailureOptions } from "./account-failure";
@@ -88,13 +92,23 @@ export function AccountProfileSection({ id = "profile", roleLabel }: AccountProf
 /** A new password (`POST /auth/me/password`): every other session ends, and this one goes on
  *  with the fresh pair the answer brings (§6.3). A wrong current password is said under its
  *  field, by the card. */
-export function AccountPasswordSection({ id = "password", minLength }: { id?: string; minLength?: number }) {
+export function AccountPasswordSection({
+  id = "password",
+  minLength,
+  labels,
+}: {
+  id?: string;
+  minLength?: number;
+  /** The card's words over the provider's `accountSettings.password` (0.64, Kurvenschmiede's U8). */
+  labels?: LabelOverride<PasswordSettingLabels>;
+}) {
   const change = useChangePassword();
   const describe = useFailureBeside(["password_incorrect", "invalid_credentials"]);
   return (
     <PasswordSetting
       id={id}
       minLength={minLength}
+      labels={labels}
       pending={change.isPending}
       describeError={describe}
       onSubmit={(current, next) => change.mutateAsync({ current_password: current, new_password: next })}

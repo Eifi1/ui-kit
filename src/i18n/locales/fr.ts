@@ -2297,7 +2297,8 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       resetSent: (email) => `E-mail de réinitialisation du mot de passe envoyé à ${email}.`,
       requirePasswordChange: "Exiger un nouveau mot de passe",
       requirePasswordChangeTitle: (name) => `Exiger un nouveau mot de passe de ${name}\u202f?`,
-      requirePasswordChangeBody: "À la prochaine connexion, le compte devra d’abord choisir un nouveau mot de passe.",
+      requirePasswordChangeBody:
+        "À la prochaine connexion, le compte devra d’abord choisir un nouveau mot de passe. Toutes les sessions du compte prennent fin aussitôt.",
       passwordChangeRequired: (email) => `${email} devra choisir un nouveau mot de passe à la prochaine connexion.`,
       withdrawPasswordChange: "Retirer l’exigence de nouveau mot de passe",
       passwordChangeWithdrawn: (email) => `${email} n’a plus à choisir de nouveau mot de passe.`,
@@ -2308,6 +2309,9 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       changeRole: "Changer le rôle",
       roleTitle: (name, role) => `Changer le rôle de ${name} en «\u202f${role}\u202f»\u202f?`,
       roleBody: "Ce que le compte peut faire change aussitôt, dès sa prochaine requête.",
+      roleToAdminBody:
+        "Avec les droits d’administrateur, le compte peut gérer tous les comptes et les réglages de l’application, aussitôt, dès sa prochaine requête.",
+      roleFromAdminBody: "Le compte perd ses droits d’administrateur aussitôt, dès sa prochaine requête.",
       roleChanged: (email, role) => `${email} a désormais le rôle «\u202f${role}\u202f».`,
       deactivate: "Désactiver",
       deactivateTitle: (name) => `Désactiver ${name}\u202f?`,

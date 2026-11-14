@@ -2255,7 +2255,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       resetSent: (email) => `Jelszó-visszaállító e-mail elküldve ide: ${email}.`,
       requirePasswordChange: "Új jelszó előírása",
       requirePasswordChangeTitle: (name) => `Új jelszót ír elő ennek a fióknak: ${name}?`,
-      requirePasswordChangeBody: "A következő bejelentkezéskor a fióknak először új jelszót kell választania.",
+      requirePasswordChangeBody:
+        "A következő bejelentkezéskor a fióknak először új jelszót kell választania. A fiók minden munkamenete azonnal véget ér.",
       passwordChangeRequired: (email) => `${email}: a következő bejelentkezéskor új jelszót kell választani.`,
       withdrawPasswordChange: "Jelszócsere-előírás visszavonása",
       passwordChangeWithdrawn: (email) => `${email}: már nem kell új jelszót választani.`,
@@ -2266,6 +2267,9 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       changeRole: "Szerepkör módosítása",
       roleTitle: (name, role) => `${name} szerepköre legyen „${role}”?`,
       roleBody: "Hogy mit tehet a fiók, az azonnal, a következő kérésétől megváltozik.",
+      roleToAdminBody:
+        "Adminisztrátori jogokkal a fiók minden fiókot és az alkalmazás beállításait kezelheti, azonnal, a következő kérésétől.",
+      roleFromAdminBody: "A fiók azonnal, a következő kérésétől elveszíti adminisztrátori jogait.",
       roleChanged: (email, role) => `${email} szerepköre mostantól „${role}”.`,
       deactivate: "Inaktiválás",
       deactivateTitle: (name) => `Inaktiválja ezt a fiókot: ${name}?`,

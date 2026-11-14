@@ -63,13 +63,18 @@ export function pendingSessionKey(prefix: string): string {
  *
  * The session: on a personal device in `localStorage`; after a sign-in with "This is a shared
  * computer" in the tab's `sessionStorage`, or in no storage at all on the stricter page-memory
- * path (`sharedSession: "memory"`). With `pageMode: "per-page"` (0.64) two more under the same
- * line, both in the tab's `sessionStorage`: the next page's mode, and a sign-in on its way to
- * that page, kept only between the two.
+ * path (`sharedSession: "memory"`). With `{ pageMode: "per-page" }` (0.64), as the client is
+ * made, two more under the same line, both in the tab's `sessionStorage`: the next page's mode,
+ * and a sign-in on its way to that page, kept only between the two.
  */
-export function accountStorageEntries(prefix: string): readonly AccountStorageEntry[] {
+export function accountStorageEntries(
+  prefix: string,
+  options: { pageMode?: "per-sign-in" | "per-page" } = {},
+): readonly AccountStorageEntry[] {
+  const session: AccountStorageEntry = { key: sessionKey(prefix), entry: "session" };
+  if (options.pageMode !== "per-page") return [session];
   return [
-    { key: sessionKey(prefix), entry: "session" },
+    session,
     { key: sharedPageKey(prefix), entry: "session" },
     { key: pendingSessionKey(prefix), entry: "session" },
   ];

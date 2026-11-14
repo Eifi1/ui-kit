@@ -19,7 +19,9 @@ are new sentences, not yet reviewed):
   `account_inactive`, `user_not_found`, `role_not_grantable`, `reviewer_is_admin`,
   `email_already_verified`, `deletion_not_requested`;
 - the namespace `accountRoster`: the roster section's actions, the question each asks and what
-  each says once done (38 words, 19 of them templates naming the account's name or address);
+  each says once done (40 words, 19 of them templates naming the account's name or address;
+  `roleToAdminBody` and `roleFromAdminBody` for a change to or from the admin role, and
+  `requirePasswordChangeBody` says every session ends at once);
 - `deleteAccount.requested`: the sign-in page's notice after a deletion request;
 - `accountFailure.codes`: server-kit 0.32's `two_factor_invalid`, `two_factor_unavailable` and
   `two_factor_not_pending`;
@@ -132,8 +134,12 @@ const ROLES = { ADMIN: { label: t("roles.ADMIN"), tone: "brand" }, MEMBER: { lab
   (the reviewer's languages and areas, `ReviewerScopeEditor`; a server whose policy names
   `review_locales`) and `erase` ("Erase now"; the `operator` deletion mode). `choosable` names
   the roles the select sets (default: every role but `REVIEWER`); `extraColumns` and
-  `extraActions` carry the app's own. Nothing is kept in the browser: the table gets no
-  `storageKey`.
+  `extraActions` carry the app's own, typed on the app's row (the second type parameter,
+  `AccountUserRosterSection<Role, Row>`). The Reviews column names an area-limited reviewer's
+  areas in `reviewer.areas`' words; the confirmation dialog says its own refusals (the last
+  admin, oneself, a mistyped address) in its words; a role change to or from the admin role says
+  what it brings (`roleToAdminBody`, `roleFromAdminBody`), and requiring a new password says
+  every session ends at once. Nothing is kept in the browser: the table gets no `storageKey`.
 - **`AccountAdminLogSection`** reads the log a page at a time; any person's name in it narrows
   the log to that account — by its id, or by the address an erased account's rows kept
   (server-kit 0.31's `target_email`). A role row reads "Member → Admin" through `roleLabel`; the
@@ -211,7 +217,9 @@ Nothing new is stored in the browser; the file parts fetch through the session.
   calls `onChanged` after an invitation is made, sent again or revoked.
 - `AccountDeletionSection` takes `labels` (the card's `deleteAccount` words);
   `AccountPasskeysSection` takes `labels` (the card's) and `reauthLabels` (the password question
-  before a passkey is added).
+  before a passkey is added); `AccountPasswordSection` takes `labels` (the card's).
+- `DEFAULT_ADMIN_ATTENTION_HREFS` is exported from the main barrel, for an app's own link to the
+  roster's filters (an every-page deletion banner).
 
 ## The session and the pages
 
@@ -234,7 +242,8 @@ Nothing new is stored in the browser; the file parts fetch through the session.
   sign-in whose box differs from the page is handed to a fresh load of the tab, and
   `client.afterSignIn(href, inApp)` makes that load (the kit's sign-in and sign-up pages call
   it; an app's own page does too). `accountStorageEntries` lists the two keys it keeps in the
-  tab for it, under the session's line. keksdose's `shared-session.ts` hand-over is this.
+  tab for it, under the session's line, when asked with `{ pageMode: "per-page" }` (so does
+  `useAccountStorageLines`). keksdose's `shared-session.ts` hand-over is this.
 - `useFailureBeside` is public, for an app's `describeError` beside a kit part.
 - `/demo/ended` stands in the app's `frame`; an accepted invitation names what it joined
   (server-kit 0.32's `group`, or the app's field through `invitationName`).

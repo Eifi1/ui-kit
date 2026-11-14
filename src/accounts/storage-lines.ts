@@ -22,7 +22,10 @@ export interface AccountStorageLine {
  *
  * Pass the same `prefix` as `createAccountsClient`'s `storagePrefix`.
  */
-export function useAccountStorageLines(prefix: string): readonly AccountStorageLine[] {
+export function useAccountStorageLines(
+  prefix: string,
+  options: { pageMode?: "per-sign-in" | "per-page" } = {},
+): readonly AccountStorageLine[] {
   const standard = useLegalLabels().sections.privacy.browser.standardEntries;
-  return accountStorageEntries(prefix).map(({ key, entry }) => ({ key, line: standard?.[entry] ?? "" }));
+  return accountStorageEntries(prefix, options).map(({ key, entry }) => ({ key, line: standard?.[entry] ?? "" }));
 }

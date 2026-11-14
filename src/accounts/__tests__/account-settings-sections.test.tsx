@@ -107,6 +107,12 @@ describe("AccountPasswordSection", () => {
     await waitFor(() => expect(record()!.token).toBe("a2"));
   });
 
+  it("takes the card's words from the app (Kurvenschmiede's U8)", () => {
+    mount(<AccountPasswordSection labels={{ title: "Passwort ändern", submit: "Speichern" }} />);
+    expect(screen.getByText("Passwort ändern")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Speichern" })).toBeInTheDocument();
+  });
+
   it("leaves a wrong current password to the card, under its field", async () => {
     const { user } = mount(<AccountPasswordSection />, {
       "post /auth/me/password": () => ({ status: 400, data: { code: "password_incorrect" } }),

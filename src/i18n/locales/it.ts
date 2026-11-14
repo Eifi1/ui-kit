@@ -2274,7 +2274,8 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       resetSent: (email) => `Email di reimpostazione password inviata a ${email}.`,
       requirePasswordChange: "Richiedi una nuova password",
       requirePasswordChangeTitle: (name) => `Richiedere una nuova password a ${name}?`,
-      requirePasswordChangeBody: "Al prossimo accesso, l’account dovrà prima scegliere una nuova password.",
+      requirePasswordChangeBody:
+        "Al prossimo accesso, l’account dovrà prima scegliere una nuova password. Tutte le sessioni dell’account terminano subito.",
       passwordChangeRequired: (email) => `${email} dovrà scegliere una nuova password al prossimo accesso.`,
       withdrawPasswordChange: "Ritira la richiesta di nuova password",
       passwordChangeWithdrawn: (email) => `${email} non deve più scegliere una nuova password.`,
@@ -2285,6 +2286,9 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       changeRole: "Cambia ruolo",
       roleTitle: (name, role) => `Cambiare il ruolo di ${name} in «${role}»?`,
       roleBody: "Ciò che l’account può fare cambia subito, dalla sua prossima richiesta.",
+      roleToAdminBody:
+        "Con i diritti di amministratore, l’account può gestire tutti gli account e le impostazioni dell’app, subito, dalla sua prossima richiesta.",
+      roleFromAdminBody: "L’account perde subito i diritti di amministratore, dalla sua prossima richiesta.",
       roleChanged: (email, role) => `${email} ha ora il ruolo «${role}».`,
       deactivate: "Disattiva",
       deactivateTitle: (name) => `Disattivare ${name}?`,

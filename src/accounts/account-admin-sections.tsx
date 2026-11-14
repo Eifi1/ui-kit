@@ -1,9 +1,13 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import type { ReactNode } from "react";
 import { useSearchParams } from "react-router";
 import { Ban, Inbox, KeyRound, Languages, MailCheck, RotateCcw, Trash2, Undo2 } from "lucide-react";
 
-import { AdminActionConfirm, DEFAULT_ADMIN_ACTION_LABELS } from "../admin/admin-action-confirm";
+import {
+  ADMIN_ACTION_CONFIRM_CODES,
+  AdminActionConfirm,
+  DEFAULT_ADMIN_ACTION_LABELS,
+} from "../admin/admin-action-confirm";
 import type { AdminActionConfirmValues, AdminConfirmLevel } from "../admin/admin-action-confirm";
 import { AdminActionLog } from "../admin/admin-action-log";
 import type { AdminActionLogEntry, AdminActionLogProps, AdminGroupNoun } from "../admin/admin-action-log";
@@ -37,7 +41,7 @@ import { useTableUrlState } from "../components/use-table-state";
 import { useKitLabels } from "../i18n/kit-labels";
 import type { LabelOverride } from "../i18n/kit-labels";
 import { SettingsSection } from "../settings/settings-section";
-import { DEFAULT_ACCOUNT_FAILURE_LABELS, useDescribeAccountFailure } from "./account-failure";
+import { DEFAULT_ACCOUNT_FAILURE_LABELS, useDescribeAccountFailure, useFailureBeside } from "./account-failure";
 import { DEFAULT_ACCOUNT_ROSTER_LABELS } from "./account-roster-labels";
 import type { AccountRosterLabels } from "./account-roster-labels";
 import type { AccountAdminActionRow, AccountAdminConfirmation, AccountAdminUser, AccountMe } from "./accounts-api";
@@ -225,7 +229,10 @@ export function AccountAdminLogSection({
 export type { AccountRosterLabels };
 
 /** What {@link AccountUserRosterSection} takes. */
-export interface AccountUserRosterSectionProps<R extends string = string> {
+export interface AccountUserRosterSectionProps<
+  R extends string = string,
+  Row extends AccountAdminUser = AccountAdminUser,
+> {
   /** The section's anchor; default `users`, the shared section's id. */
   id?: string;
   /** The app's roles and their words, as the role chip and select read them. */
@@ -244,10 +251,11 @@ export interface AccountUserRosterSectionProps<R extends string = string> {
   hint?: ReactNode;
   /** Rows a page; default server-kit's 25. */
   pageSize?: number;
-  /** The app's own columns, after the dates. */
-  extraColumns?: readonly DataTableColumn<AccountAdminUser>[];
+  /** The app's own columns, after the dates — typed on the app's row (`Row`, its `row_model`'s
+   *  fields beside the kit's), as the server answers it. */
+  extraColumns?: readonly DataTableColumn<Row>[];
   /** The app's own actions on a row, before the kit's (de)activation. */
-  extraActions?: (row: AccountAdminUser) => UserRowActionList;
+  extraActions?: (row: Row) => UserRowActionList;
   /** The app's words for a refusal; asked before the kit's `accountFailure`. */
   describeError?: (error: unknown) => ReactNode | undefined;
   labels?: LabelOverride<AccountRosterLabels>;
@@ -302,7 +310,7 @@ function confirmation(values: AdminActionConfirmValues): AccountAdminConfirmatio
  * **Mail on the console**: the server sends nothing and answers a mail action with the
  * link; the section shows it to copy and hand on (auth §12.8 item 10).
  */
-export function AccountUserRosterSection<R extends string = string>({
+export function AccountUserRosterSection<R extends string = string, Row extends AccountAdminUser = AccountAdminUser>({
   id = "users",
   roles,
   choosable,
@@ -315,13 +323,18 @@ export function AccountUserRosterSection<R extends string = string>({
   describeError,
   labels: labelsProp,
   className,
-}: AccountUserRosterSectionProps<R>) {
+}: AccountUserRosterSectionProps<R, Row>) {
   const labels = useKitLabels("accountRoster", DEFAULT_ACCOUNT_ROSTER_LABELS, labelsProp);
   const guards = useKitLabels("adminAction", DEFAULT_ADMIN_ACTION_LABELS);
   const { sections } = useAdminAreaLabels();
   const describeFailure = useDescribeAccountFailure();
   const failures = useKitLabels("accountFailure", DEFAULT_ACCOUNT_FAILURE_LABELS);
   const say = (error: unknown) => describeError?.(error) ?? describeFailure(error);
+  // The confirmation's own refusals (the last admin, oneself, a mistyped address) are the
+  // dialog's to word (Kurvenschmiede's U1 on dev.4): `say` answers every code, so it is not
+  // what the dialog asks.
+  const confirmBeside = useFailureBeside(ADMIN_ACTION_CONFIRM_CODES);
+  const sayInDialog = (error: unknown) => describeError?.(error) ?? confirmBeside(error);
   const nameOf = usePersonLabel();
   const me = useAccountsClient<AccountMe>().useSession((state) => state.user?.id);
   const actions = useAdminUserActions();
@@ -434,7 +447,7 @@ export function AccountUserRosterSection<R extends string = string>({
           icon: Languages,
           onSelect: () => setDialog({ kind: "reviewer", row }),
         },
-      ...(extraActions?.(row) ?? []),
+      ...(extraActions?.(row as Row) ?? []),
       erase &&
         !row.is_active &&
         deletionAsked && {
@@ -495,13 +508,30 @@ export function AccountUserRosterSection<R extends string = string>({
     ];
   };
 
+  // The app's columns are typed on its row; the table's on the kit's, which its rows extend.
+  const ownColumns = extraColumns as unknown as readonly DataTableColumn<AccountAdminUser>[];
   const offered = choosable ?? (Object.keys(roles) as R[]).filter((role) => role !== "REVIEWER");
   const reviewsColumn: DataTableColumn<AccountAdminUser> = {
     key: "reviews",
     header: labels.reviews,
+    // The languages, and the areas of a reviewer limited to some (Kurvenschmiede's U3: "legal
+    // pages only"), in the words the reviewer action offers them under.
     cell: (row) =>
       row.role === "REVIEWER" && row.translation_review_locales.length > 0 ? (
-        <Caption as="span">{row.translation_review_locales.join(", ")}</Caption>
+        <Caption as="span">
+          {row.translation_review_locales.join(", ")}
+          {row.translation_review_areas !== null && row.translation_review_areas.length > 0 && (
+            <>
+              {" · "}
+              {row.translation_review_areas.map((area, index) => (
+                <Fragment key={area}>
+                  {index > 0 && ", "}
+                  {reviewer?.areas?.find((option) => option.value === area)?.label ?? area}
+                </Fragment>
+              ))}
+            </>
+          )}
+        </Caption>
       ) : null,
     mobileHidden: true,
     fitPriority: 3,
@@ -520,13 +550,19 @@ export function AccountUserRosterSection<R extends string = string>({
         level: level("role"),
         title: labels.roleTitle(named(row), word),
         confirmLabel: labels.changeRole,
-        consequence: labels.roleBody,
+        // Becoming an admin, or no longer one, says what it brings (Kurvenschmiede's U4).
+        consequence:
+          role === "ADMIN" && row.role !== "ADMIN"
+            ? labels.roleToAdminBody
+            : row.role === "ADMIN" && role !== "ADMIN"
+              ? labels.roleFromAdminBody
+              : labels.roleBody,
         tone: "warning",
         run: (body) => actions.setRole.mutateAsync({ id: row.id, role, ...body }),
         done: labels.roleChanged(row.email, word),
       });
     },
-    extra: reviewer ? [reviewsColumn, ...extraColumns] : extraColumns,
+    extra: reviewer ? [reviewsColumn, ...ownColumns] : ownColumns,
   });
 
   return (
@@ -589,7 +625,7 @@ export function AccountUserRosterSection<R extends string = string>({
           confirmLabel={dialog.pending.confirmLabel}
           consequence={dialog.pending.consequence}
           tone={dialog.pending.tone}
-          describeError={say}
+          describeError={sayInDialog}
           onConfirm={(values) => dialog.pending.run(confirmation(values))}
           onClose={(done) => {
             const message = dialog.pending.done;

@@ -16,6 +16,8 @@ import {
 } from "../account-admin-sections";
 import { AccountsProvider } from "../accounts-context";
 import { createAccountsClient } from "../accounts-client";
+import type { AccountAdminUser } from "../accounts-api";
+import type { DataTableColumn } from "../../components/data-table";
 
 /**
  * The admin's sections on server-kit 0.30–0.31's `user_admin_router` (docs/auth-harmonization.md
@@ -269,6 +271,75 @@ describe("AccountUserRosterSection", () => {
     await waitFor(() =>
       expect(calls.filter((c) => c.route === "get /admin/users").at(-1)?.params).toEqual({ limit: 25, offset: 0 }),
     );
+  });
+
+  it("says a mistyped address in the dialog's own words (Kurvenschmiede's U1)", async () => {
+    mount(<AccountUserRosterSection roles={roles} />, {
+      "get /admin/users": () => page([person(1, "Ada", { role: "ADMIN" }), person(7, "Ben")]),
+      "post /admin/users/7/active": () => ({ status: 409, data: { code: "confirmation_mismatch" } }),
+    });
+    const user = userEvent.setup();
+    await user.click((await screen.findAllByRole("button", { name: "Actions for Ben Example" }))[0]);
+    const menu = await screen.findByRole("dialog", { name: "Actions for Ben Example" });
+    await user.click(within(menu).getByRole("button", { name: "Deactivate" }));
+    const dialog = await screen.findByRole("alertdialog", { name: "Deactivate Ben Example?" });
+    await user.type(within(dialog).getByLabelText(/ben@example\.com/), "ben@example.com");
+    await user.click(within(dialog).getByRole("button", { name: "Deactivate" }));
+    expect(
+      await within(dialog).findByText("The address doesn’t match this account. Check which account you are on."),
+    ).toBeInTheDocument();
+  });
+
+  it("says what becoming an admin brings, and losing it (Kurvenschmiede's U4)", async () => {
+    const { user } = mount(<AccountUserRosterSection roles={roles} />, {
+      "get /admin/users": () =>
+        page([person(1, "Ada", { role: "ADMIN" }), person(2, "Cleo", { role: "ADMIN" }), person(7, "Ben")], {
+          summary: { active_admins: 2 },
+        }),
+    });
+    await user.selectOptions((await screen.findAllByLabelText("Role of Ben Example"))[0]!, "ADMIN");
+    let dialog = await screen.findByRole("alertdialog");
+    expect(within(dialog).getByText(/may manage every account and the app’s settings/)).toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    await user.selectOptions(screen.getAllByLabelText("Role of Cleo Example")[0]!, "MEMBER");
+    dialog = await screen.findByRole("alertdialog");
+    expect(within(dialog).getByText(/loses its administrator rights at once/)).toBeInTheDocument();
+  });
+
+  it("names the areas of a reviewer limited to some, in the reviewer action's words (Kurvenschmiede's U3)", async () => {
+    mount(
+      <AccountUserRosterSection
+        roles={roles}
+        reviewer={{ languages: ["de-CH", "fr"], areas: [{ value: "legal", label: "Legal pages" }] }}
+      />,
+      {
+        "get /admin/users": () =>
+          page([
+            person(1, "Ada", { role: "ADMIN" }),
+            person(7, "Ben", {
+              role: "REVIEWER",
+              translation_review_locales: ["fr"],
+              translation_review_areas: ["legal"],
+            }),
+            person(8, "Dora", { role: "REVIEWER", translation_review_locales: ["de-CH"] }),
+          ]),
+      },
+    );
+    expect((await screen.findAllByText("fr · Legal pages")).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("de-CH").length).toBeGreaterThan(0);
+  });
+
+  it("types the app's columns and actions on its own row (Kurvenschmiede's U2)", async () => {
+    type PlanRow = AccountAdminUser & { extra: { plan: string } };
+    const plan: DataTableColumn<PlanRow> = { key: "plan", header: "Plan", cell: (row) => row.extra.plan };
+    mount(<AccountUserRosterSection<string, PlanRow> roles={roles} extraColumns={[plan]} />, {
+      "get /admin/users": () =>
+        page([
+          person(1, "Ada", { role: "ADMIN", extra: { plan: "Team" } }),
+          person(7, "Ben", { extra: { plan: "Solo" } }),
+        ]),
+    });
+    expect((await screen.findAllByText("Solo")).length).toBeGreaterThan(0);
   });
 
   it("offers the reviewer's scope only where the app reviews translations, and sends it", async () => {

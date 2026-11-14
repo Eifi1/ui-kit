@@ -2255,7 +2255,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       requirePasswordChange: "Exigir una nueva contraseña",
       requirePasswordChangeTitle: (name) => `¿Exigir una nueva contraseña a ${name}?`,
       requirePasswordChangeBody:
-        "En el próximo inicio de sesión, la cuenta deberá elegir primero una nueva contraseña.",
+        "En el próximo inicio de sesión, la cuenta deberá elegir primero una nueva contraseña. Todas las sesiones de la cuenta terminan de inmediato.",
       passwordChangeRequired: (email) => `${email} deberá elegir una nueva contraseña en el próximo inicio de sesión.`,
       withdrawPasswordChange: "Retirar la exigencia de nueva contraseña",
       passwordChangeWithdrawn: (email) => `${email} ya no tiene que elegir una nueva contraseña.`,
@@ -2266,6 +2266,9 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       changeRole: "Cambiar el rol",
       roleTitle: (name, role) => `¿Cambiar el rol de ${name} a «${role}»?`,
       roleBody: "Lo que la cuenta puede hacer cambia de inmediato, desde su próxima solicitud.",
+      roleToAdminBody:
+        "Con derechos de administrador, la cuenta puede gestionar todas las cuentas y la configuración de la aplicación, de inmediato, desde su próxima solicitud.",
+      roleFromAdminBody: "La cuenta pierde sus derechos de administrador de inmediato, desde su próxima solicitud.",
       roleChanged: (email, role) => `${email} tiene ahora el rol «${role}».`,
       deactivate: "Desactivar",
       deactivateTitle: (name) => `¿Desactivar a ${name}?`,
