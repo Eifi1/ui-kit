@@ -285,6 +285,20 @@ export function TreemapDemo() {
       </Example>
 
       <Example
+        label="Treemap — the amount on the tile"
+        hint="showValues: the valueFormatter's text under the name, data-private, drawn only where it fits whole; a note goes a line lower"
+      >
+        <Treemap
+          data={SPEND}
+          valueFormatter={moneyAndShare}
+          shareInValue
+          height={320}
+          showValues
+          nodeNote={(id) => DELTAS[id]}
+        />
+      </Example>
+
+      <Example
         label="Treemap — names that are the user's own data"
         hint="redactNames: tile labels and the tooltip bubble carry data-private"
       >
