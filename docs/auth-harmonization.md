@@ -1171,6 +1171,13 @@ panel, the export and the empty state for a viewer granted nothing, with the str
 (`loadStrings`) and the kit's own catalogues under `kit.`. Kurvenschmiede's `TranslationsPage`,
 ≈ 300 lines, was the model; its words are the `accountTranslations` namespace.
 
+**The feedback pages** (0.64, on server-kit 0.31's `feedback_router`): `accountFeedbackApi` on the
+client's `http` — its own module, so the routes load with the pages and not with every sign-in —
+and `AccountFeedbackPage` (the inbox and one's own reports, on `FeedbackInbox`),
+`AccountPublicFeedbackPage` (on `FeedbackPublicPage`) and `useAccountFeedbackSubmit`.
+Kurvenschmiede's `FeedbackPage`, `AllFeedbackPage` and `useAppFeedbackSubmit`, ≈ 400 lines with
+their requests, were the model; the parts' words were the kit's already.
+
 **Found on the way** (Staunlabor's inventory):
 - `@eifi1/ui-kit/offline` imports `idb-keyval` and `@tanstack/query-async-storage-persister`
   statically, so an app that needs only `SharedComputerChoice` must install both: the

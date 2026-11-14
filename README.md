@@ -582,7 +582,7 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2297 names from 387 modules** in the main barrel — 1030 values and 1267 types — and 316 more in 17 standalone entries. _Italic_ is a type-only export.
+**2297 names from 387 modules** in the main barrel — 1030 values and 1267 types — and 325 more in 17 standalone entries. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 `node scripts/gen-export-inventory.mjs`; the counts are pinned by
@@ -606,7 +606,7 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 | `@eifi1/ui-kit/testing/react` | 2 |
 | `@eifi1/ui-kit/rhf` | 52 |
 | `@eifi1/ui-kit/offline` | 38 |
-| `@eifi1/ui-kit/accounts` | 112 |
+| `@eifi1/ui-kit/accounts` | 121 |
 | `@eifi1/ui-kit/sync` | 37 |
 | `@eifi1/ui-kit/sync/testing` | 3 |
 | `@eifi1/ui-kit/push-worker` | 10 |
@@ -1178,6 +1178,8 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `accounts/account-roster-labels` | `DEFAULT_ACCOUNT_ROSTER_LABELS` |
 | `accounts/account-translation-review` | `AccountTranslationReview`, _`AccountTranslationReviewProps`_ |
 | `accounts/account-translations-labels` | `DEFAULT_ACCOUNT_TRANSLATIONS_LABELS`, _`AccountTranslationsLabels`_ |
+| `accounts/account-feedback` | `AccountFeedbackPage`, `AccountPublicFeedbackPage`, `useAccountFeedbackApi`, `useAccountFeedbackSubmit`, _`AccountFeedbackPageProps`_, _`AccountPublicFeedbackPageProps`_, _`UseAccountFeedbackSubmitOptions`_ |
+| `accounts/account-feedback-api` | `accountFeedbackApi`, _`AccountFeedbackApi`_ |
 
 ### @eifi1/ui-kit/sync (standalone)
 
