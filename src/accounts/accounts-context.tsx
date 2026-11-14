@@ -26,6 +26,12 @@ export const accountQueryKeys = {
   passkeys: ["accounts", "passkeys"] as const,
   deletionTerms: ["accounts", "deletion-terms"] as const,
   invitations: ["accounts", "admin", "invitations"] as const,
+  /** Everything the admin reads (0.64): an action invalidates it all at once. */
+  admin: ["accounts", "admin"] as const,
+  roster: (query: object) => ["accounts", "admin", "users", query] as const,
+  adminActions: (query: object) => ["accounts", "admin", "actions", query] as const,
+  adminAttention: ["accounts", "admin", "attention"] as const,
+  adminMail: ["accounts", "admin", "mail"] as const,
   invitationCheck: (token: string) => ["accounts", "invitation-check", token] as const,
 };
 

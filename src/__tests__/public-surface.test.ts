@@ -518,7 +518,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // and `useAccountStorageLines`, the privacy page's lines.
   // 0.64 (+2, Kurvenschmiede's dev.2 run): `accountPage`, one page for a lazy route, and
   // `useFailureBeside`, public for an app's own `describeError`.
-  ["@eifi1/ui-kit/accounts", accounts, 33],
+  // 0.64 (+6, server-kit 0.30–0.31's user_admin_router): the admin's hooks `useAdminRoster`,
+  // `useAdminUserActions`, `useAdminActions`, `useAdminAttention`, `useAdminMail`, `useMailTest`.
+  ["@eifi1/ui-kit/accounts", accounts, 39],
   // 0.46.0: local-first phase 3 (docs/local-first-harmonization.md §2.3) — `createSyncDb`,
   // `SYNC_DB_STORES`, `createSyncEngine`, `DEFAULT_HOLD_CODES`, `DEFAULT_SYNC_BACKOFF_MS`,
   // `syncEngineFor`, `releaseSyncEngine`, `useSyncWorker`, `useSyncStatus`, `useSyncQuery` and the

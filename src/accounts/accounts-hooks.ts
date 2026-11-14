@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type {
   AccountDeletionTerms,
@@ -7,6 +7,9 @@ import type {
   AccountMe,
   AccountPasskeyOptions,
   AccountProfilePatch,
+  AccountAdminActionQuery,
+  AccountAdminConfirmation,
+  AccountRosterQuery,
 } from "./accounts-api";
 import { accountQueryKeys, useAccountsClient } from "./accounts-context";
 import { passkeyAttestation } from "./passkey-ceremony";
@@ -211,4 +214,109 @@ export function useInvitationsAdmin(options: { enabled?: boolean } = {}) {
   const resend = useMutation({ mutationFn: (id: number) => client.api.resendInvitation(id), onSuccess: refresh });
   const revoke = useMutation({ mutationFn: (id: number) => client.api.revokeInvitation(id), onSuccess: refresh });
   return { list, invite, resend, revoke };
+}
+
+// ── The admin's (0.64, server-kit 0.30–0.31's user_admin_router) ─────────────
+
+/** A page of the roster for `query` (`GET /admin/users`). The previous page stays shown while
+ *  the next loads, so a table does not flash empty between pages. */
+export function useAdminRoster(query: AccountRosterQuery, options: { enabled?: boolean } = {}) {
+  const client = useAccountsClient();
+  const signedIn = useSignedIn();
+  return useQuery({
+    queryKey: accountQueryKeys.roster(query),
+    queryFn: () => client.api.roster(query),
+    enabled: signedIn && options.enabled !== false,
+    placeholderData: keepPreviousData,
+  });
+}
+
+/**
+ * The roster's actions, each a mutation taking the account's `id` with the action's body. Every
+ * one, done, reads the admin's data again (the roster, the log, the overview, the invitations:
+ * `accountQueryKeys.admin`), since an action changes rows the page may show in several places.
+ * The answer is handed back as the server sent it: the admin's mail's console `link` once.
+ */
+export function useAdminUserActions() {
+  const client = useAccountsClient();
+  const queryClient = useQueryClient();
+  const refresh = () => queryClient.invalidateQueries({ queryKey: accountQueryKeys.admin });
+  const done = { onSuccess: refresh };
+  type Confirmed = { id: number } & AccountAdminConfirmation;
+  return {
+    setActive: useMutation({
+      mutationFn: ({ id, ...body }: Confirmed & { active: boolean }) => client.api.setActive(id, body),
+      ...done,
+    }),
+    setRole: useMutation({
+      mutationFn: ({ id, ...body }: Confirmed & { role: string }) => client.api.setRole(id, body),
+      ...done,
+    }),
+    requirePasswordChange: useMutation({
+      mutationFn: ({ id, ...body }: Confirmed) => client.api.requirePasswordChange(id, body),
+      ...done,
+    }),
+    withdrawPasswordChange: useMutation({
+      mutationFn: ({ id, ...body }: Confirmed) => client.api.withdrawPasswordChange(id, body),
+      ...done,
+    }),
+    sendMail: useMutation({
+      mutationFn: ({ id, ...body }: Confirmed & { kind: "verification" | "password_reset" }) =>
+        client.api.sendAccountMail(id, body),
+      ...done,
+    }),
+    setReviewer: useMutation({
+      mutationFn: ({ id, ...body }: { id: number; locales: string[]; areas: string[] | null }) =>
+        client.api.setReviewer(id, body),
+      ...done,
+    }),
+    erase: useMutation({
+      mutationFn: ({ id, ...body }: Confirmed & { confirm_email: string }) => client.api.eraseAccount(id, body),
+      ...done,
+    }),
+  };
+}
+
+/** A page of the admin's log (`GET /admin/actions`), for one account when `target` or
+ *  `target_email` names it. */
+export function useAdminActions(query: AccountAdminActionQuery, options: { enabled?: boolean } = {}) {
+  const client = useAccountsClient();
+  const signedIn = useSignedIn();
+  return useQuery({
+    queryKey: accountQueryKeys.adminActions(query),
+    queryFn: () => client.api.adminActions(query),
+    enabled: signedIn && options.enabled !== false,
+    placeholderData: keepPreviousData,
+  });
+}
+
+/** The overview's counts (`GET /admin/attention`). */
+export function useAdminAttention(options: { enabled?: boolean } = {}) {
+  const client = useAccountsClient();
+  const signedIn = useSignedIn();
+  return useQuery({
+    queryKey: accountQueryKeys.adminAttention,
+    queryFn: () => client.api.adminAttention(),
+    enabled: signedIn && options.enabled !== false,
+  });
+}
+
+/** The transport the server mails through (`GET /admin/mail`): read on load, so a page says
+ *  "nothing is sent" before the first invitation rather than after it. It changes with a
+ *  deploy only, so it is read once per sign-in. */
+export function useAdminMail(options: { enabled?: boolean } = {}) {
+  const client = useAccountsClient();
+  const signedIn = useSignedIn();
+  return useQuery({
+    queryKey: accountQueryKeys.adminMail,
+    queryFn: () => client.api.adminMail(),
+    enabled: signedIn && options.enabled !== false,
+    staleTime: Number.POSITIVE_INFINITY,
+  });
+}
+
+/** The test mail (`POST /admin/mail/test`, 3 in 10 minutes per admin). */
+export function useMailTest() {
+  const client = useAccountsClient();
+  return useMutation({ mutationFn: () => client.api.mailTest() });
 }
