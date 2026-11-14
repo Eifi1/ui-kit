@@ -72,9 +72,11 @@ interface AccountsAxiosConfig extends ServerWakeAxiosConfig {
 /** One request the client sends on the app's instance itself. `timeout` and `responseType`
  *  are axios's. */
 export interface AccountsRequest {
-  method: "get" | "post" | "patch" | "delete";
+  method: "get" | "post" | "put" | "patch" | "delete";
   url: string;
   data?: unknown;
+  /** The query string's fields (0.64: the admin's roster and log). */
+  params?: Record<string, string | number | boolean>;
   timeout?: number;
   responseType?: "blob";
 }

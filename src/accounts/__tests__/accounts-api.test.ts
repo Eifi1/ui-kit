@@ -262,3 +262,116 @@ describe("the passkey ceremony", () => {
     expect(localStorage.getItem(KEY)).toBeNull();
   });
 });
+
+describe("the admin's routes (server-kit 0.30–0.31, user_admin_router)", () => {
+  type AdminRoute = [
+    string,
+    (api: ReturnType<typeof setup>["client"]["api"]) => Promise<unknown>,
+    string,
+    string,
+    unknown?,
+    Record<string, unknown>?,
+  ];
+  const ADMIN_ROUTES: AdminRoute[] = [
+    [
+      "roster",
+      (api) => api.roster({ limit: 25, offset: 50, sort: "-last_login_at", q: "ada", role: "ADMIN", state: "active" }),
+      "get",
+      "/admin/users",
+      undefined,
+      { limit: 25, offset: 50, sort: "-last_login_at", q: "ada", role: "ADMIN", state: "active" },
+    ],
+    [
+      "setActive",
+      (api) => api.setActive(7, { active: false, confirm_email: "b@x" }),
+      "post",
+      "/admin/users/7/active",
+      { active: false, confirm_email: "b@x" },
+    ],
+    [
+      "setRole",
+      (api) => api.setRole(7, { role: "ADMIN", acknowledged: true }),
+      "post",
+      "/admin/users/7/role",
+      { role: "ADMIN", acknowledged: true },
+    ],
+    [
+      "requirePasswordChange",
+      (api) => api.requirePasswordChange(7, { acknowledged: true }),
+      "post",
+      "/admin/users/7/password-change",
+      { acknowledged: true },
+    ],
+    [
+      "withdrawPasswordChange",
+      (api) => api.withdrawPasswordChange(7, { acknowledged: true }),
+      "delete",
+      "/admin/users/7/password-change",
+      { acknowledged: true },
+    ],
+    [
+      "sendAccountMail",
+      (api) => api.sendAccountMail(7, { kind: "password_reset" }),
+      "post",
+      "/admin/users/7/mail",
+      { kind: "password_reset" },
+    ],
+    [
+      "setReviewer",
+      (api) => api.setReviewer(7, { locales: ["fr", "it"], areas: ["legal"] }),
+      "put",
+      "/admin/users/7/reviewer",
+      { locales: ["fr", "it"], areas: ["legal"] },
+    ],
+    [
+      "eraseAccount",
+      (api) => api.eraseAccount(7, { confirm_email: "b@x" }),
+      "post",
+      "/admin/users/7/erase",
+      { confirm_email: "b@x" },
+    ],
+    [
+      "adminActions",
+      (api) => api.adminActions({ limit: 20, offset: 0, target: 7 }),
+      "get",
+      "/admin/actions",
+      undefined,
+      { limit: 20, offset: 0, target: 7 },
+    ],
+    [
+      "adminActions by address",
+      (api) => api.adminActions({ limit: 20, offset: 0, target_email: "b@x" }),
+      "get",
+      "/admin/actions",
+      undefined,
+      { limit: 20, offset: 0, target_email: "b@x" },
+    ],
+    ["adminAttention", (api) => api.adminAttention(), "get", "/admin/attention"],
+    ["adminMail", (api) => api.adminMail(), "get", "/admin/mail"],
+    ["mailTest", (api) => api.mailTest(), "post", "/admin/mail/test"],
+  ];
+
+  it.each(ADMIN_ROUTES)(
+    "%s goes to its route with its body and its query, with the bearer",
+    async (_, call, method, url, data, params) => {
+      const { client, http } = setup();
+      await call(client.api);
+      expect(http.sent).toHaveLength(1);
+      expect(http.sent[0]).toMatchObject({ method, url, bearer: "Bearer a1" });
+      expect(http.sent[0]!.data).toEqual(data);
+      expect(http.sent[0]!.params).toEqual(params);
+    },
+  );
+
+  it("leaves a filter the admin did not set out of the query", async () => {
+    const { client, http } = setup(() => ({ users: [], total: 0, mail_backend: "console" }));
+    await client.api.roster({ limit: 25, offset: 0, q: undefined });
+    expect(http.sent[0]!.params).toEqual({ limit: 25, offset: 0 });
+  });
+
+  it("answers the console's link with the admin's mail", async () => {
+    const answer = { sent: false, mail_backend: "console", link: "https://site/reset-password?token=t" };
+    const { client } = setup(() => answer);
+    await expect(client.api.sendAccountMail(7, { kind: "password_reset" })).resolves.toEqual(answer);
+  });
+});

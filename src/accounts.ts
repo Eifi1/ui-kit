@@ -56,6 +56,19 @@ export type {
   AccountsApi,
   AccountSessionInfo,
 } from "./accounts/accounts-api";
+// 0.64 (§12.9, server-kit 0.30–0.31's user_admin_router): the admin's routes on `client.api`.
+export type {
+  AccountAdminActionPage,
+  AccountAdminActionQuery,
+  AccountAdminActionRow,
+  AccountAdminConfirmation,
+  AccountAdminMailResult,
+  AccountAdminUser,
+  AccountErasureResult,
+  AccountReviewerResult,
+  AccountRosterPage,
+  AccountRosterQuery,
+} from "./accounts/accounts-api";
 export { passkeysAvailable } from "./accounts/passkey-ceremony";
 // 0.63 (§12.9 "The API and its hooks"): the provider and the TanStack Query hooks, with their
 // query keys. `@tanstack/react-query` is an optional peer, and this entry is one that needs it.

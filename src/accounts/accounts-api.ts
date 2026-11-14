@@ -1,3 +1,8 @@
+import type { AdminConfirmLevel } from "../admin/admin-action-confirm";
+import type { AdminAttention } from "../admin/admin-overview";
+import type { AdminPerson } from "../admin/admin-parts";
+import type { MailTestAnswer } from "../admin/mail-test-card";
+import type { UserRosterRow } from "../admin/user-roster";
 import type { AccountsHttp, AccountTokens } from "./accounts-client";
 import type { AccountUser } from "./session-store";
 
@@ -174,6 +179,101 @@ export interface AccountInvitationDraft {
 }
 
 /** The typed routes, on the app's instance: `client.api`. */
+// ── The admin's (server-kit 0.30–0.31, `user_admin_router`) ──────────────────
+
+/** One row of `GET /admin/users` (server-kit's `AdminUserRow`): the kit's roster row, with the
+ *  reviewer's scope and the app's `extra` (its `row_model` fields). */
+export interface AccountAdminUser extends UserRosterRow {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: string | null;
+  locale?: string;
+  is_active: boolean;
+  translation_review_locales: string[];
+  translation_review_areas: string[] | null;
+  extra?: Record<string, unknown>;
+}
+
+/** `GET /admin/users`'s query (server-kit's `UserListQuery`); a field left out is no filter. */
+export interface AccountRosterQuery {
+  limit?: number;
+  offset?: number;
+  /** A sort key, `-` in front for descending (`"-last_login_at"`). */
+  sort?: string;
+  q?: string;
+  role?: string;
+  state?: string;
+}
+
+/** `GET /admin/users`'s answer (server-kit's `UserListResponse`). `levels` is the
+ *  confirmation each action asks for, the server's word (§4.2): the page asks for no less. */
+export interface AccountRosterPage<R extends AccountAdminUser = AccountAdminUser> {
+  users: R[];
+  total: number;
+  mail_backend: string;
+  summary?: Record<string, unknown> | null;
+  levels?: Record<string, AdminConfirmLevel> | null;
+}
+
+/** What an action carries to show it was confirmed (server-kit's `ActionConfirmation`): the
+ *  tick, or the target's address typed again, as the action's level asks. */
+export interface AccountAdminConfirmation {
+  acknowledged?: boolean;
+  confirm_email?: string | null;
+}
+
+/** `POST /admin/users/{id}/mail`'s answer: `link` only where the transport is the console,
+ *  for the admin to hand on (auth §12.8 item 10). */
+export interface AccountAdminMailResult {
+  sent: boolean;
+  mail_backend: string;
+  link?: string | null;
+}
+
+/** `PUT /admin/users/{id}/reviewer`'s answer. */
+export interface AccountReviewerResult {
+  user_id: number;
+  role: string | null;
+  locales: string[];
+  areas: string[] | null;
+}
+
+/** `POST /admin/users/{id}/erase`'s answer: what the erasure anonymised. */
+export interface AccountErasureResult {
+  feedback_anonymised: number;
+}
+
+/** One row of `GET /admin/actions` (server-kit's `AdminActionRow`): the actor and the target
+ *  as people (`PersonRef`), the target's address kept for an erased account's row. */
+export interface AccountAdminActionRow {
+  id: number;
+  at: string;
+  action: string;
+  actor_id: number | null;
+  target_user_id: number | null;
+  target_email: string | null;
+  detail: Record<string, unknown>;
+  actor: AdminPerson | null;
+  target: AdminPerson | null;
+}
+
+/** `GET /admin/actions`'s answer. */
+export interface AccountAdminActionPage {
+  actions: AccountAdminActionRow[];
+  total: number;
+}
+
+/** `GET /admin/actions`'s query: a page, and the rows about one account by its id or (0.31)
+ *  by the address it had. */
+export interface AccountAdminActionQuery {
+  limit?: number;
+  offset?: number;
+  target?: number;
+  target_email?: string;
+}
+
 export interface AccountsApi<U extends AccountUser = AccountMe> {
   me(): Promise<U>;
   updateMe(patch: AccountProfilePatch): Promise<U>;
@@ -211,12 +311,41 @@ export interface AccountsApi<U extends AccountUser = AccountMe> {
   invite(draft: AccountInvitationDraft): Promise<AccountInvitationIssued>;
   resendInvitation(id: number): Promise<AccountInvitationIssued>;
   revokeInvitation(id: number): Promise<void>;
+  /** The roster, a page of it (`GET /admin/users`). */
+  roster(query?: AccountRosterQuery): Promise<AccountRosterPage>;
+  setActive(id: number, body: { active: boolean } & AccountAdminConfirmation): Promise<AccountAdminUser>;
+  setRole(id: number, body: { role: string } & AccountAdminConfirmation): Promise<AccountAdminUser>;
+  requirePasswordChange(id: number, body?: AccountAdminConfirmation): Promise<AccountAdminUser>;
+  withdrawPasswordChange(id: number, body?: AccountAdminConfirmation): Promise<AccountAdminUser>;
+  sendAccountMail(
+    id: number,
+    body: { kind: "verification" | "password_reset" } & AccountAdminConfirmation,
+  ): Promise<AccountAdminMailResult>;
+  setReviewer(id: number, body: { locales: string[]; areas: string[] | null }): Promise<AccountReviewerResult>;
+  /** The operator's erasure of an account that asked to be deleted. */
+  eraseAccount(id: number, body: { confirm_email: string } & AccountAdminConfirmation): Promise<AccountErasureResult>;
+  adminActions(query?: AccountAdminActionQuery): Promise<AccountAdminActionPage>;
+  adminAttention(): Promise<AdminAttention>;
+  /** The transport the server mails through (`GET /admin/mail`): `console` means nothing is
+   *  sent, so a page says so before the first invitation, not after it. */
+  adminMail(): Promise<{ mail_backend: string }>;
+  mailTest(): Promise<MailTestAnswer>;
 }
 
 /** @internal The routes on `http`; `createAccountsClient` hands them out as `client.api`. */
 export function createAccountsApi<U extends AccountUser>(http: AccountsHttp): AccountsApi<U> {
-  const call = async <T>(method: "get" | "post" | "patch" | "delete", url: string, data?: unknown): Promise<T> =>
-    (await http.request({ method, url, data })).data as T;
+  const call = async <T>(
+    method: "get" | "post" | "put" | "patch" | "delete",
+    url: string,
+    data?: unknown,
+  ): Promise<T> => (await http.request({ method, url, data })).data as T;
+  // A filter the caller left out is no field in the query: `?q=` would search for nothing.
+  const read = async <T>(url: string, query: object = {}): Promise<T> => {
+    const params = Object.fromEntries(
+      Object.entries(query).filter(([, value]) => value !== undefined && value !== null && value !== ""),
+    ) as Record<string, string | number | boolean>;
+    return (await http.request({ method: "get", url, params })).data as T;
+  };
   const none = async (method: "post" | "delete", url: string, data?: unknown): Promise<void> => {
     await http.request({ method, url, data });
   };
@@ -255,5 +384,17 @@ export function createAccountsApi<U extends AccountUser>(http: AccountsHttp): Ac
     invite: (draft) => call("post", "/admin/invitations", draft),
     resendInvitation: (invitation) => call("post", `/admin/invitations/${id(invitation)}/resend`),
     revokeInvitation: (invitation) => none("delete", `/admin/invitations/${id(invitation)}`),
+    roster: (query) => read("/admin/users", query),
+    setActive: (user, body) => call("post", `/admin/users/${id(user)}/active`, body),
+    setRole: (user, body) => call("post", `/admin/users/${id(user)}/role`, body),
+    requirePasswordChange: (user, body = {}) => call("post", `/admin/users/${id(user)}/password-change`, body),
+    withdrawPasswordChange: (user, body = {}) => call("delete", `/admin/users/${id(user)}/password-change`, body),
+    sendAccountMail: (user, body) => call("post", `/admin/users/${id(user)}/mail`, body),
+    setReviewer: (user, body) => call("put", `/admin/users/${id(user)}/reviewer`, body),
+    eraseAccount: (user, body) => call("post", `/admin/users/${id(user)}/erase`, body),
+    adminActions: (query) => read("/admin/actions", query),
+    adminAttention: () => call("get", "/admin/attention"),
+    adminMail: () => call("get", "/admin/mail"),
+    mailTest: () => call("post", "/admin/mail/test"),
   };
 }
