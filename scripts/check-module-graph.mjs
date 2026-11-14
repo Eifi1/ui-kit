@@ -313,11 +313,13 @@ const BUDGETS = [
   // password reaches the server, and `pageMode: "per-page"` — the page's mode read at load, a
   // sign-in handed to a fresh page through the tab, `afterSignIn` — meant growth, 761 B.
   // Both together at the merge: 18.7 kB minified (6.8 kB gzip), ceiling 18,800.
+  // 18,919 B (6,834 gzip) with server-kit 0.32's backup codes and the admin's reset on
+  // `client.api` (`twoFactorStatus`, `renewBackupCodes`, `resetTwoFactor`) — meant growth.
   {
     label: "{ createAccountsClient }",
     entry: "dist/accounts.js",
     names: ["createAccountsClient", "accountStorageEntries"],
-    max: 18_800,
+    max: 19_000,
   },
 ];
 const ENTRY = "\0import-cost";
