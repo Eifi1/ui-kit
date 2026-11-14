@@ -585,6 +585,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "Treemap — clickable tiles, drilling down",
     "Treemap — groups: shops by chain",
     "Treemap — a second line per tile",
+    "Treemap — the amount on the tile",
     "Treemap — names that are the user's own data",
     "Treemap — a series that is not money",
     "Treemap — default format, dropped nodes, nothing drawable",
