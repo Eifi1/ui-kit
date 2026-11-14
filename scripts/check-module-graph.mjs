@@ -307,11 +307,14 @@ const BUDGETS = [
   // 17,669 B (6,413 gzip) with server-kit 0.32's second factor: `verifyCode`, the sign-in's
   // code step, and `twoFactorSetup` / `enableTwoFactor` / `disableTwoFactor` on `client.api` —
   // meant growth, 279 B. Its section and hook are not in it.
+  // 18,430 B (6,700 gzip) with keksdose's KG-9 and KG-10: `onPassword` at the four places a
+  // password reaches the server, and `pageMode: "per-page"` — the page's mode read at load, a
+  // sign-in handed to a fresh page through the tab, `afterSignIn` — meant growth, 761 B.
   {
     label: "{ createAccountsClient }",
     entry: "dist/accounts.js",
     names: ["createAccountsClient", "accountStorageEntries"],
-    max: 17_800,
+    max: 18_500,
   },
 ];
 const ENTRY = "\0import-cost";

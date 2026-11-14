@@ -11,9 +11,18 @@ import { accountStorageEntries } from "../storage-entries";
  * nobody had listed (its third plan's F102): an entry here is the line, worded once.
  */
 describe("accountStorageEntries", () => {
-  it("names the session's key with the app's prefix in front, verbatim", () => {
-    expect(accountStorageEntries("staunlabor.")).toEqual([{ key: "staunlabor.session", entry: "session" }]);
-    expect(accountStorageEntries("kurvenschmiede-").map((e) => e.key)).toEqual(["kurvenschmiede-session"]);
+  it("names the session's keys with the app's prefix in front, verbatim", () => {
+    expect(accountStorageEntries("staunlabor.")).toEqual([
+      { key: "staunlabor.session", entry: "session" },
+      // 0.64, `pageMode: "per-page"`: the next page's mode and a sign-in on its way there.
+      { key: "staunlabor.shared-page", entry: "session" },
+      { key: "staunlabor.pending-session", entry: "session" },
+    ]);
+    expect(accountStorageEntries("kurvenschmiede-").map((e) => e.key)).toEqual([
+      "kurvenschmiede-session",
+      "kurvenschmiede-shared-page",
+      "kurvenschmiede-pending-session",
+    ]);
   });
 
   it("points every key at a standard entry the kit words in its catalogues", () => {

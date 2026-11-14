@@ -153,7 +153,8 @@ function SignInPage({ o }: { o: Resolved }) {
   // Where they were headed, read through the kit's open-redirect check (KS's F34).
   const destination = safeNextPath(params.get(NEXT_PARAM)) ?? o.afterSignIn;
   const done = (answer: SignInAnswer) => {
-    if (answer.kind === "signed-in") void navigate(destination, { replace: true });
+    // A sign-in handed to a fresh page (`pageMode: "per-page"`) goes on by a full load.
+    if (answer.kind === "signed-in") client.afterSignIn(destination, (to) => void navigate(to, { replace: true }));
     return answer;
   };
   return (
@@ -261,7 +262,7 @@ function Registration({ o, token, invitedEmail }: { o: Resolved; token: string |
       <RegisterForm
         onSubmit={async (values) => {
           await client.register(values, { ...extra.fields, ...(token !== null ? { invite_token: token } : {}) });
-          void navigate(o.afterSignIn, { replace: true });
+          client.afterSignIn(o.afterSignIn, (to) => void navigate(to, { replace: true }));
         }}
         emailTag={o.emailTag}
         invitedEmail={invitedEmail}

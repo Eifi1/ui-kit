@@ -20,9 +20,10 @@ import { dropPushSubscription } from "../notifications/use-push-device";
 import { isSharedComputer } from "../offline/shared-computer";
 import { createAccountsApi, type AccountsApi } from "./accounts-api";
 import { passkeyAssertion } from "./passkey-ceremony";
+import { readSessionStored, writeSessionStored } from "../lib/safe-storage";
 import { createSessionStore, type AccountSession, type AccountUser, type SharedSessionPlace } from "./session-store";
 import type { StoredSession } from "./session-store";
-import { sessionKey } from "./storage-entries";
+import { pendingSessionKey, sessionKey, sharedPageKey } from "./storage-entries";
 
 /**
  * The session client of `@eifi1/ui-kit/accounts` (docs/auth-harmonization.md §12.9): one
@@ -185,6 +186,30 @@ export interface AccountsClientOptions<U extends AccountUser = AccountUser> {
    *  stricter `"memory"` (§2.14). */
   sharedSession?: SharedSessionPlace;
   /**
+   * When the shared-computer choice takes effect (0.64, keksdose's KG-10):
+   *
+   * - `"per-sign-in"` (the default): the box is read at each sign-in, and the session goes
+   *   where it says on this page.
+   * - `"per-page"`: the mode belongs to the PAGE, read once as it loads ({@link
+   *   AccountsClient.pageShared}), so every store the app opens at load — its query
+   *   persister, an offline mirror, the table storage (`createMemoryStorage()` on a shared
+   *   computer's page) — picks its place once and nothing moves while the page lives. A
+   *   sign-in whose box differs from the page is handed to a fresh load of the tab instead:
+   *   the answer waits in `sessionStorage` (the one moment a shared computer's tokens are
+   *   there), the next page starts it, and {@link AccountsClient.afterSignIn} makes the
+   *   load. Pair it with `sharedSession: "memory"` for keksdose's rule: a shared computer's
+   *   tokens in page memory only.
+   */
+  pageMode?: "per-sign-in" | "per-page";
+  /**
+   * The password just typed, once the server took it (0.64, keksdose's KG-9): at a sign-in
+   * (`"sign-in"`, before a second factor or a forced change), a sign-up (`"register"`), the
+   * forced change (`"set-password"`, the new one) and `client.api.changePassword`
+   * (`"change"`, the new one). keksdose keeps a salted digest of it to refuse an encryption
+   * passphrase that is the same string. Never for a refused one; nothing is kept by the kit.
+   */
+  onPassword?: (password: string, step: AccountPasswordStep) => void;
+  /**
    * The session is over in this tab: drop what else the account left here — the query
    * cache (`queryClient.clear()`), an offline copy, a tour cache. Called once per end,
    * after the client has dropped the session and before it leaves the page. Not called for
@@ -299,7 +324,20 @@ export interface AccountsClient<U extends AccountUser = AccountUser> {
   signOut(options?: { everywhere?: boolean; notice?: "deletion_requested" }): Promise<void>;
   /** Eject the interceptors and stop watching other tabs: for a test, or a hot reload. */
   detach(): void;
+  /** What this page was loaded as (0.64): `true` for a shared computer's page under
+   *  `pageMode: "per-page"`, fixed while the page lives; always `false` otherwise. Read it
+   *  where the app opens a store at load. */
+  readonly pageShared: boolean;
+  /**
+   * Where a sign-in goes on (0.64): `inApp(href)`, the app's own navigation — or, when the
+   * sign-in was handed to a fresh page (`pageMode: "per-page"`), a full load of `href`, where
+   * the session starts. The kit's sign-in and sign-up pages call it; an app's own page does.
+   */
+  afterSignIn(href: string, inApp: (href: string) => void): void;
 }
+
+/** Which form a password reached the server through, for {@link AccountsClientOptions.onPassword}. */
+export type AccountPasswordStep = "sign-in" | "register" | "set-password" | "change";
 
 /** axios's `combineURLs`: one slash between the base and the path. */
 const joinUrl = (base: string, path: string) => `${base.replace(/\/+$/, "")}/${path.replace(/^\/+/, "")}`;
@@ -547,6 +585,39 @@ export function createAccountsClient<U extends AccountUser = AccountUser>(
     store.begin(toStored(answer, before));
   };
 
+  // ── The page's mode (0.64, KG-10) ───────────────────────────────────────────
+  const perPage = options.pageMode === "per-page";
+  const pageKey = sharedPageKey(options.storagePrefix);
+  const pendingKey = pendingSessionKey(options.storagePrefix);
+  const pageShared = perPage && readSessionStored(pageKey) === "1";
+  let handedOver = false;
+  /** A session for the tab's next page, when the box says other than this page was loaded
+   *  as; `false` to start it here (the same mode, or a tab whose storage took nothing). */
+  const handOver = (answer: AccountTokens<U>): boolean => {
+    const shared = isSharedComputer();
+    if (!perPage || shared === pageShared) return false;
+    writeSessionStored(pendingKey, JSON.stringify(answer));
+    if (readSessionStored(pendingKey) === null) return false;
+    writeSessionStored(pageKey, shared ? "1" : null);
+    handedOver = true;
+    return true;
+  };
+  const started = (answer: AccountTokens<U>) => {
+    if (!handOver(answer)) begin(answer);
+  };
+  if (perPage) {
+    const pending = readSessionStored(pendingKey);
+    writeSessionStored(pendingKey, null);
+    if (pending !== null) {
+      try {
+        const answer: unknown = JSON.parse(pending);
+        if (isTokens<U>(answer)) begin(answer);
+      } catch {
+        // Not a session: nothing to start.
+      }
+    }
+  }
+
   /** A sign-in route's answer, as `SignInForm` reads it (§5.1). */
   const answerOf = (data: unknown): SignInAnswer => {
     if (isRecord(data) && typeof data.challenge_token === "string") {
@@ -559,12 +630,21 @@ export function createAccountsClient<U extends AccountUser = AccountUser>(
       if (requires_2fa === true) return { kind: "2fa", challengeToken: challenge_token };
     }
     if (!isTokens<U>(data)) throw new TypeError("the sign-in answered neither a session nor a challenge");
-    begin(data);
+    started(data);
     return { kind: "signed-in" };
   };
   const post = async (url: string, data: unknown) => (await http.request({ method: "post", url, data })).data;
 
-  const api = createAccountsApi<U>(http);
+  const typed = (password: string, step: AccountPasswordStep) => options.onPassword?.(password, step);
+  const routes = createAccountsApi<U>(http);
+  const api: AccountsApi<U> = {
+    ...routes,
+    changePassword: async (body) => {
+      const answer = await routes.changePassword(body);
+      typed(body.new_password, "change");
+      return answer;
+    },
+  };
   const passkeyFinish = async (body: AccountsPasskeyFinish) =>
     answerOf(await post("/auth/passkey/login/finish", { ...body, shared_device: isSharedComputer() }));
 
@@ -572,10 +652,16 @@ export function createAccountsClient<U extends AccountUser = AccountUser>(
     api,
     useSession,
     currentToken: () => store.token(),
-    signIn: async ({ email, password }) =>
-      answerOf(await post("/auth/login", { email, password, shared_device: isSharedComputer() })),
-    setPassword: async ({ challengeToken, password }) =>
-      answerOf(await post("/auth/login/set-password", { challenge_token: challengeToken, new_password: password })),
+    signIn: async ({ email, password }) => {
+      const data = await post("/auth/login", { email, password, shared_device: isSharedComputer() });
+      typed(password, "sign-in");
+      return answerOf(data);
+    },
+    setPassword: async ({ challengeToken, password }) => {
+      const data = await post("/auth/login/set-password", { challenge_token: challengeToken, new_password: password });
+      typed(password, "set-password");
+      return answerOf(data);
+    },
     verifyCode: async ({ challengeToken, code }) =>
       answerOf(await post("/auth/login/2fa", { challenge_token: challengeToken, code })),
     passkeyFinish,
@@ -595,7 +681,8 @@ export function createAccountsClient<U extends AccountUser = AccountUser>(
         shared_device: isSharedComputer(),
       });
       if (!isTokens<U>(data)) throw new TypeError("POST /auth/register answered no session");
-      begin(data);
+      typed(password, "register");
+      started(data);
       return data.user;
     },
     storeSession(answer) {
@@ -634,6 +721,15 @@ export function createAccountsClient<U extends AccountUser = AccountUser>(
       detachRefresh();
       stopWatching();
       if (typeof window !== "undefined") window.removeEventListener("storage", takeUp);
+    },
+    pageShared,
+    afterSignIn(href, inApp) {
+      if (!handedOver) {
+        inApp(href);
+        return;
+      }
+      handedOver = false;
+      navigate(href);
     },
   };
 }

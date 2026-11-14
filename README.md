@@ -582,7 +582,7 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2297 names from 387 modules** in the main barrel — 1030 values and 1267 types — and 310 more in 17 standalone entries. _Italic_ is a type-only export.
+**2297 names from 387 modules** in the main barrel — 1030 values and 1267 types — and 311 more in 17 standalone entries. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 `node scripts/gen-export-inventory.mjs`; the counts are pinned by
@@ -606,7 +606,7 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 | `@eifi1/ui-kit/testing/react` | 2 |
 | `@eifi1/ui-kit/rhf` | 52 |
 | `@eifi1/ui-kit/offline` | 38 |
-| `@eifi1/ui-kit/accounts` | 106 |
+| `@eifi1/ui-kit/accounts` | 107 |
 | `@eifi1/ui-kit/sync` | 37 |
 | `@eifi1/ui-kit/sync/testing` | 3 |
 | `@eifi1/ui-kit/push-worker` | 10 |
@@ -1164,7 +1164,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 |---|---|
 | `accounts/storage-entries` | `accountStorageEntries`, _`AccountStorageEntry`_ |
 | `accounts/storage-lines` | `useAccountStorageLines`, _`AccountStorageLine`_ |
-| `accounts/accounts-client` | `createAccountsClient`, _`AccountsClient`_, _`AccountsClientOptions`_, _`AccountSessionEnd`_, _`AccountsHttp`_, _`AccountsPasskeyFinish`_, _`AccountsRequest`_, _`AccountTokens`_ |
+| `accounts/accounts-client` | `createAccountsClient`, _`AccountPasswordStep`_, _`AccountsClient`_, _`AccountsClientOptions`_, _`AccountSessionEnd`_, _`AccountsHttp`_, _`AccountsPasskeyFinish`_, _`AccountsRequest`_, _`AccountTokens`_ |
 | `accounts/session-store` | _`AccountSession`_, _`AccountUser`_, _`SharedSessionPlace`_ |
 | `accounts/account-failure` | `ACCOUNT_FAILURE_CODES`, `DEFAULT_ACCOUNT_FAILURE_LABELS`, `describeAccountFailure`, `useDescribeAccountFailure`, `useFailureBeside`, _`AccountFailureCode`_, _`AccountFailureLabels`_, _`DescribeAccountFailureOptions`_ |
 | `accounts/accounts-api` | _`AccountAdminActionPage`_, _`AccountAdminActionQuery`_, _`AccountAdminActionRow`_, _`AccountAdminConfirmation`_, _`AccountAdminMailResult`_, _`AccountAdminUser`_, _`AccountDeletionResult`_, _`AccountDeletionTerms`_, _`AccountEmailChange`_, _`AccountEmailConfirmed`_, _`AccountEmailVerification`_, _`AccountErasureResult`_, _`AccountInvitation`_, _`AccountInvitationAccepted`_, _`AccountInvitationCheck`_, _`AccountInvitationDraft`_, _`AccountInvitationIssued`_, _`AccountMe`_, _`AccountPasskey`_, _`AccountPasskeyOptions`_, _`AccountPasswordReset`_, _`AccountProfilePatch`_, _`AccountReviewerResult`_, _`AccountRosterPage`_, _`AccountRosterQuery`_, _`AccountsApi`_, _`AccountSessionInfo`_, _`AccountTwoFactorSetup`_ |

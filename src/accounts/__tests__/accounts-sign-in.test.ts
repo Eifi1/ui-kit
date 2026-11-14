@@ -263,3 +263,129 @@ describe("storeSession", () => {
     expect(() => client.storeSession({ access_token: "", user: ada })).toThrow(TypeError);
   });
 });
+
+describe("onPassword (0.64, keksdose's KG-9)", () => {
+  const start = (onPassword: (password: string, step: string) => void, server: (config: Cfg) => Answer) => {
+    const client = createAccountsClient<User>({
+      http: fakeHttp(server),
+      storagePrefix: "app.",
+      publicPaths: ["/login"],
+      fetch: fakeFetch(() => ({ status: 401 })),
+      navigate: vi.fn(),
+      onPassword,
+    });
+    clients.push(client);
+    return client;
+  };
+
+  it("hands the app each password the server took: the sign-in, the forced change, the sign-up and the change", async () => {
+    const onPassword = vi.fn();
+    const client = start(onPassword, (config) =>
+      config.url === "/auth/register"
+        ? { status: 201, data: tokens("a1", "r1", ada) }
+        : { status: 200, data: tokens("a1", "r1", ada) },
+    );
+    await client.signIn({ email: "ada@example.com", password: "typed at sign-in" });
+    await client.setPassword({ challengeToken: "c1", password: "set when asked" });
+    await client.register({
+      firstName: "Ada",
+      lastName: "Lovelace",
+      email: "ada@example.com",
+      password: "chosen at sign-up",
+      locale: "de-CH",
+    });
+    await client.api.changePassword({ current_password: "chosen at sign-up", new_password: "changed later" });
+    expect(onPassword.mock.calls).toEqual([
+      ["typed at sign-in", "sign-in"],
+      ["set when asked", "set-password"],
+      ["chosen at sign-up", "register"],
+      ["changed later", "change"],
+    ]);
+  });
+
+  it("hands nothing for a password the server refused", async () => {
+    const onPassword = vi.fn();
+    const client = start(onPassword, () => ({ status: 401, data: { code: "invalid_credentials" } }));
+    await client.signIn({ email: "a@x", password: "wrong" }).catch(() => undefined);
+    expect(onPassword).not.toHaveBeenCalled();
+  });
+});
+
+describe("pageMode per-page (0.64, keksdose's KG-10)", () => {
+  const start = (extra: { navigate?: (href: string) => void; sharedSession?: "tab" | "memory" } = {}) => {
+    const client = createAccountsClient<User>({
+      http: fakeHttp(() => ({ status: 200, data: tokens("a1", "r1", ada) })),
+      storagePrefix: "app.",
+      publicPaths: ["/login"],
+      fetch: fakeFetch(() => ({ status: 401 })),
+      navigate: extra.navigate ?? vi.fn(),
+      sharedSession: extra.sharedSession,
+      pageMode: "per-page",
+    });
+    clients.push(client);
+    return client;
+  };
+
+  it("reads the page's mode once, as the tab says, and a default client never hands over", async () => {
+    expect(start().pageShared).toBe(false);
+    sessionStorage.setItem("app.shared-page", "1");
+    expect(start().pageShared).toBe(true);
+    setSharedComputer(false);
+    const { client } = setup();
+    expect(client.pageShared).toBe(false);
+    await client.signIn({ email: "ada@example.com", password: "pw" });
+    expect(client.useSession.getState().token).toBe("a1");
+  });
+
+  it("hands a sign-in whose box differs from the page over to a fresh load, which starts it", async () => {
+    setSharedComputer(true);
+    const navigate = vi.fn();
+    const inApp = vi.fn();
+    const before = start({ navigate });
+    await expect(before.signIn({ email: "ada@example.com", password: "pw" })).resolves.toEqual({ kind: "signed-in" });
+    // Not on this page: its stores are a personal computer's.
+    expect(before.useSession.getState().token).toBeNull();
+    expect(localStorage.getItem(KEY)).toBeNull();
+    expect(sessionStorage.getItem("app.shared-page")).toBe("1");
+    before.afterSignIn("/budget", inApp);
+    expect(navigate).toHaveBeenCalledExactlyOnceWith("/budget");
+    expect(inApp).not.toHaveBeenCalled();
+    before.detach();
+
+    const after = start({ sharedSession: "memory" });
+    expect(after.pageShared).toBe(true);
+    expect(after.useSession.getState()).toEqual({ token: "a1", user: ada });
+    // Taken as it was read: the tab holds the tokens only between the two pages.
+    expect(sessionStorage.getItem("app.pending-session")).toBeNull();
+    expect(sessionStorage.getItem(KEY)).toBeNull();
+    expect(localStorage.getItem(KEY)).toBeNull();
+  });
+
+  it("starts a sign-in whose box matches the page here, and goes on in the app", async () => {
+    setSharedComputer(false);
+    const navigate = vi.fn();
+    const inApp = vi.fn();
+    const client = start({ navigate });
+    await client.signIn({ email: "ada@example.com", password: "pw" });
+    expect(client.useSession.getState().token).toBe("a1");
+    client.afterSignIn("/budget", inApp);
+    expect(inApp).toHaveBeenCalledExactlyOnceWith("/budget");
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it("goes back to a personal page when the box is cleared on a shared one", async () => {
+    sessionStorage.setItem("app.shared-page", "1");
+    setSharedComputer(false);
+    const client = start();
+    await client.register({
+      firstName: "Ada",
+      lastName: "Lovelace",
+      email: "ada@example.com",
+      password: "long-enough",
+      locale: "de-CH",
+    });
+    expect(client.useSession.getState().token).toBeNull();
+    expect(sessionStorage.getItem("app.shared-page")).toBeNull();
+    expect(sessionStorage.getItem("app.pending-session")).not.toBeNull();
+  });
+});

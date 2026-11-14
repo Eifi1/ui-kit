@@ -14,6 +14,7 @@ export { createAccountsClient } from "./accounts/accounts-client";
 export type {
   AccountsClient,
   AccountsClientOptions,
+  AccountPasswordStep,
   AccountSessionEnd,
   AccountsHttp,
   AccountsPasskeyFinish,

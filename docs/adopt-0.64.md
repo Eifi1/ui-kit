@@ -162,6 +162,17 @@ const ROLES = { ADMIN: { label: t("roles.ADMIN"), tone: "brand" }, MEMBER: { lab
   lazily. `RequireSession` is a module of its own, so gating eager routes with it no longer pulls
   every form into the first load.
 - `useAccountStorageLines(prefix)` answers each key the session keeps with its privacy sentence.
+- `createAccountsClient` takes `onPassword(password, step)` (keksdose's KG-9): the password the
+  server just took at a sign-in, a sign-up, the forced change and `client.api.changePassword`,
+  for an app that keeps a digest of it (keksdose refuses an encryption passphrase that is the
+  same string). Never for a refused one.
+- `createAccountsClient` takes `pageMode: "per-page"` (keksdose's KG-10): the shared-computer
+  mode belongs to the page, read once as it loads (`client.pageShared`), so the app opens its
+  stores in the right place once (`createMemoryStorage()` on a shared computer's page). A
+  sign-in whose box differs from the page is handed to a fresh load of the tab, and
+  `client.afterSignIn(href, inApp)` makes that load (the kit's sign-in and sign-up pages call
+  it; an app's own page does too). `accountStorageEntries` lists the two keys it keeps in the
+  tab for it, under the session's line. keksdose's `shared-session.ts` hand-over is this.
 - `useFailureBeside` is public, for an app's `describeError` beside a kit part.
 - `/demo/ended` stands in the app's `frame`; an accepted invitation names what it joined
   (server-kit 0.32's `group`, or the app's field through `invitationName`).

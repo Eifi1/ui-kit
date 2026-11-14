@@ -35,6 +35,18 @@ export function sessionKey(prefix: string): string {
   return `${prefix}session`;
 }
 
+/** @internal `pageMode: "per-page"` (0.64): what the tab's next page is loaded as, `"1"` for a
+ *  shared computer's — a marker in `sessionStorage`, not the person's data. */
+export function sharedPageKey(prefix: string): string {
+  return `${prefix}shared-page`;
+}
+
+/** @internal `pageMode: "per-page"` (0.64): a sign-in handed to the tab's next page, in
+ *  `sessionStorage` from the sign-in until that page starts and takes it. */
+export function pendingSessionKey(prefix: string): string {
+  return `${prefix}pending-session`;
+}
+
 /**
  * The keys the accounts client keeps under `prefix`, each with its privacy line — for the
  * app's privacy page and its own list of keys (Staunlabor's `storage-keys.ts`, Kurvenschmiede's
@@ -49,10 +61,16 @@ export function sessionKey(prefix: string): string {
  * Pass the same `prefix` as `createAccountsClient`'s `storagePrefix`. Pure: it reads and
  * writes nothing, so a module may call it at load.
  *
- * One key so far, the session: on a personal device in `localStorage`; after a sign-in with
- * "This is a shared computer" in the tab's `sessionStorage`, or in no storage at all on the
- * stricter page-memory path (`sharedSession: "memory"`).
+ * The session: on a personal device in `localStorage`; after a sign-in with "This is a shared
+ * computer" in the tab's `sessionStorage`, or in no storage at all on the stricter page-memory
+ * path (`sharedSession: "memory"`). With `pageMode: "per-page"` (0.64) two more under the same
+ * line, both in the tab's `sessionStorage`: the next page's mode, and a sign-in on its way to
+ * that page, kept only between the two.
  */
 export function accountStorageEntries(prefix: string): readonly AccountStorageEntry[] {
-  return [{ key: sessionKey(prefix), entry: "session" }];
+  return [
+    { key: sessionKey(prefix), entry: "session" },
+    { key: sharedPageKey(prefix), entry: "session" },
+    { key: pendingSessionKey(prefix), entry: "session" },
+  ];
 }
