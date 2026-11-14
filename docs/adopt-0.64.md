@@ -49,7 +49,9 @@ are new sentences, not yet reviewed):
 - `AuthErrorCode` has server-kit 0.32's `two_factor_invalid`, `two_factor_unavailable` and
   `two_factor_not_pending`; `AccountsApi` has `twoFactorSetup`, `enableTwoFactor` and
   `disableTwoFactor`, and `AccountsClient` has `verifyCode`, `pageShared`, `afterSignIn` and `http`
-  (a test double adds them).
+  (a test double adds them);
+- `AdminActionKind` (and `ADMIN_ACTION_KINDS`) has server-kit 0.32's `two_factor_reset`: an
+  exhaustive `switch` over it adds the case.
 
 **Behaviour that changes without a code change:**
 
