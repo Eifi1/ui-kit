@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { ComponentType, ReactElement, ReactNode } from "react";
-import { Navigate, Route, useLocation, useNavigate, useSearchParams } from "react-router";
+import { Route, useNavigate, useSearchParams } from "react-router";
 import type { RouteObject } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -30,6 +30,7 @@ import { NEXT_PARAM, safeNextPath } from "../landing/routing";
 import { httpStatusOf } from "../lib/http-status";
 import { SharedComputerChoice } from "../offline/shared-computer";
 import { AuthLayout } from "../shell/auth-layout";
+import type { AccountInvitationAccepted } from "./accounts-api";
 import { describeAccountFailure, useFailureBeside, type DescribeAccountFailureOptions } from "./account-failure";
 import { DEFAULT_ACCOUNT_FAILURE_LABELS } from "./account-failure-labels";
 import { accountQueryKeys, useAccountsClient } from "./accounts-context";
@@ -117,6 +118,12 @@ export interface AccountRoutesOptions {
   appCode?: DescribeAccountFailureOptions["appCode"];
   /** The demo's end page (landing-demo §5.5), off unless given. */
   demo?: { model: DemoModel; access: AccessChoice; restartHref?: string };
+  /**
+   * 0.64: what an accepted invitation joined, by name, for the confirmation ("You’ve joined
+   * Rig 4"). Default: the `group` server-kit 0.32 answers (`invitation_group`); an app whose
+   * server answers the name in its own field (Kurvenschmiede's `team_name`) reads it here.
+   */
+  invitationName?: (accepted: AccountInvitationAccepted) => string | undefined;
 }
 
 interface Resolved extends Omit<AccountRoutesOptions, "paths"> {
@@ -212,8 +219,9 @@ function RegisterPage({ o }: { o: Resolved }) {
           token={token}
           signedIn={signedIn}
           onAccept={async (value) => {
-            await client.api.acceptInvitation(value);
-            return {};
+            const accepted = await client.api.acceptInvitation(value);
+            const name = (o.invitationName ?? groupName)(accepted);
+            return name ? { name } : {};
           }}
           continueHref={o.afterSignIn}
           signInHref={`${o.paths.signIn}?${NEXT_PARAM}=${encodeURIComponent(back)}`}
@@ -348,7 +356,7 @@ function VerifyEmailPage({ o, change }: { o: Resolved; change: boolean }) {
 function DemoEndedPage({ o }: { o: Resolved }) {
   useNoIndex();
   if (!o.demo) return null;
-  return (
+  const ended = (
     <DemoEnded
       model={o.demo.model}
       access={o.demo.access}
@@ -356,6 +364,10 @@ function DemoEndedPage({ o }: { o: Resolved }) {
       signInHref={o.paths.signIn}
     />
   );
+  // 0.64: in the app's frame when it gives one (DemoEnded's own heading is the page's title);
+  // bare otherwise, as before.
+  const Frame = o.frame;
+  return Frame ? <Frame title={null}>{ended}</Frame> : ended;
 }
 
 /**
@@ -375,7 +387,7 @@ function DemoEndedPage({ o }: { o: Resolved }) {
 export function accountRoutes(options: AccountRoutesOptions = {}): RouteObject[] {
   const o: Resolved = {
     ...options,
-    paths: { ...DEFAULT_PATHS, ...options.paths },
+    paths: resolvePaths(options),
     afterSignIn: options.afterSignIn ?? "/",
   };
   const routes: RouteObject[] = [
@@ -402,30 +414,40 @@ export function accountRoutes(options: AccountRoutesOptions = {}): RouteObject[]
  * </Routes>
  * ```
  */
-export function accountRouteElements(options: AccountRoutesOptions = {}): ReactElement[] {
-  return accountRoutes(options).map((route) => <Route key={route.path} path={route.path} element={route.element} />);
+function resolvePaths(options: AccountRoutesOptions): AccountPaths {
+  return { ...DEFAULT_PATHS, ...options.paths };
 }
 
-/** What {@link RequireSession} takes. */
-export interface RequireSessionProps {
-  children?: ReactNode;
-  /** The sign-in page. Default `"/login"`. */
-  signInPath?: string;
+/** The group server-kit 0.32's accept answers (`{group: {id, name}}`), by name. */
+function groupName(accepted: AccountInvitationAccepted): string | undefined {
+  const group = accepted.group;
+  if (typeof group !== "object" || group === null) return undefined;
+  const name = (group as { name?: unknown }).name;
+  return typeof name === "string" && name !== "" ? name : undefined;
 }
+
+/** The names {@link accountPage} answers, one per page of {@link accountRoutes}. */
+export type AccountPageName = keyof AccountPaths;
 
 /**
- * The gate for the pages that need an account (Kurvenschmiede's `ProtectedRoute`): without a
- * session it goes to the sign-in, carrying where the reader was — the query and the fragment
- * too, which are often the point (`/settings?focus=…`) — so signing in lands back there
- * (KS's F34). In the URL rather than in router state, so it survives a reload of the sign-in.
+ * One account page alone (0.64, Kurvenschmiede), for an app whose route table loads each
+ * page lazily or wraps some of them: the element {@link accountRoutes} would put at that
+ * page's path, the same options read the same way.
+ *
+ * ```tsx
+ * { path: "/login", lazy: async () => {
+ *     const { accountPage } = await import("@eifi1/ui-kit/accounts");
+ *     return { element: <Shell>{accountPage("signIn", options)}</Shell> };
+ * } }
+ * ```
+ *
+ * `demoEnded` answers `null` without `demo`.
  */
-export function RequireSession({ children, signInPath = "/login" }: RequireSessionProps) {
-  const client = useAccountsClient();
-  const signedIn = client.useSession((state) => state.token !== null);
-  const { pathname, search, hash } = useLocation();
-  if (!signedIn) {
-    const next = encodeURIComponent(`${pathname}${search}${hash}`);
-    return <Navigate to={`${signInPath}${signInPath.includes("?") ? "&" : "?"}${NEXT_PARAM}=${next}`} replace />;
-  }
-  return <>{children}</>;
+export function accountPage(name: AccountPageName, options: AccountRoutesOptions = {}): ReactElement | null {
+  const found = accountRoutes(options).find((route) => route.path === resolvePaths(options)[name]);
+  return (found?.element as ReactElement | undefined) ?? null;
+}
+
+export function accountRouteElements(options: AccountRoutesOptions = {}): ReactElement[] {
+  return accountRoutes(options).map((route) => <Route key={route.path} path={route.path} element={route.element} />);
 }

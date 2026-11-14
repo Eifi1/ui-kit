@@ -28,6 +28,7 @@ export {
   DEFAULT_ACCOUNT_FAILURE_LABELS,
   describeAccountFailure,
   useDescribeAccountFailure,
+  useFailureBeside,
 } from "./accounts/account-failure";
 export type {
   AccountFailureCode,
@@ -72,14 +73,16 @@ export {
   useUpdateProfile,
 } from "./accounts/accounts-hooks";
 // 0.63 (§12.9 "The pages"): the signed-out pages as route objects, and the gate.
-export { accountRouteElements, accountRoutes, RequireSession } from "./accounts/account-pages";
+export { accountPage, accountRouteElements, accountRoutes } from "./accounts/account-pages";
+export { RequireSession } from "./accounts/require-session";
 export type {
   AccountPageFrameProps,
+  AccountPageName,
   AccountPaths,
   AccountRegisterFieldsProps,
   AccountRoutesOptions,
-  RequireSessionProps,
 } from "./accounts/account-pages";
+export type { RequireSessionProps } from "./accounts/require-session";
 // 0.63 (§12.9 "The account's settings"): the kit's cards wired, as sections an app puts into
 // its own SettingsLayout beside its own.
 export {

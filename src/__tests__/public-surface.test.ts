@@ -516,7 +516,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `AccountExportSection`, `AccountDeletionSection`, `AccountInvitationsSection`.
   // 0.64 (+2, Staunlabor's dev.1 run): `accountRouteElements`, the pages as JSX `<Route>`s,
   // and `useAccountStorageLines`, the privacy page's lines.
-  ["@eifi1/ui-kit/accounts", accounts, 31],
+  // 0.64 (+2, Kurvenschmiede's dev.2 run): `accountPage`, one page for a lazy route, and
+  // `useFailureBeside`, public for an app's own `describeError`.
+  ["@eifi1/ui-kit/accounts", accounts, 33],
   // 0.46.0: local-first phase 3 (docs/local-first-harmonization.md §2.3) — `createSyncDb`,
   // `SYNC_DB_STORES`, `createSyncEngine`, `DEFAULT_HOLD_CODES`, `DEFAULT_SYNC_BACKOFF_MS`,
   // `syncEngineFor`, `releaseSyncEngine`, `useSyncWorker`, `useSyncStatus`, `useSyncQuery` and the
@@ -551,7 +553,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `stubViewportWidth`, `viewportMatchMedia`, `stubResizeObserver`.
   // 0.35 (+1): `setViewportWidth`, a live resize of the active stub (keksdose's 0.34 report).
   // 0.50.1 (+1): `tourStepContext`, a step context for a test (keksdose N4).
-  ["@eifi1/ui-kit/testing", testing, 8],
+  // 0.64 (+1, Kurvenschmiede): `stubDocumentNavigation`.
+  ["@eifi1/ui-kit/testing", testing, 9],
   // 0.50: `rowMenuAction`, the row "⋯" opener (keksdose's test/row-menu.ts). Its own entry:
   // it needs Testing Library, and `/testing` reaches no package.
   ["@eifi1/ui-kit/testing/react", testingReact, 1],

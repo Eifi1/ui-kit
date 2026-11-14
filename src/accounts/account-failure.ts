@@ -125,7 +125,9 @@ export function useDescribeAccountFailure(
  * answer, a throttle, the server's fault, the app's own codes. Answering everything would
  * have taken the field-level messages (a wrong password under its field) away from the cards.
  *
- * @internal The account pages' and settings sections'.
+ * Public since 0.64 (Kurvenschmiede): an app that hands a kit part its own `describeError`
+ * builds it here with the codes that part words itself, so it neither repeats the part's
+ * field-level messages nor leaves a refusal unsaid.
  */
 export function useFailureBeside(
   handled: readonly KitErrorCode[],

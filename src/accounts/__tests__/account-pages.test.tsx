@@ -9,8 +9,9 @@ import { setSharedComputer } from "../../offline/shared-computer";
 import { fakeFetch, fakeHttp, noAnswer, tokens } from "../../test/fake-axios";
 import type { Answer, Cfg } from "../../test/fake-axios";
 import { fill } from "../../test/fill";
-import { accountRouteElements, accountRoutes, RequireSession } from "../account-pages";
-import type { AccountRoutesOptions } from "../account-pages";
+import { accountPage, accountRouteElements, accountRoutes } from "../account-pages";
+import { RequireSession } from "../require-session";
+import type { AccountPageFrameProps, AccountRoutesOptions } from "../account-pages";
 import { AccountsProvider } from "../accounts-context";
 import { createAccountsClient } from "../accounts-client";
 
@@ -393,5 +394,77 @@ describe("accountRouteElements (0.64, Staunlabor)", () => {
     expect(accountRouteElements().map((element) => (element.props as { path?: string }).path)).toEqual(
       accountRoutes().map((route) => route.path),
     );
+  });
+});
+
+describe("0.64: Kurvenschmiede's dev.2 findings", () => {
+  it("an accepted invitation says what it joined: the group the server names", async () => {
+    localStorage.setItem(KEY, JSON.stringify({ token: "a1", refreshToken: "r1", user: ada }));
+    mount("/register?invite=tok", {
+      "post /auth/invitations/check": () => ({
+        status: 200,
+        data: { email: "ada@example.com", expires_at: "2026-12-01T00:00:00Z", account_exists: true },
+      }),
+      "post /auth/invitations/accept": () => ({
+        status: 200,
+        data: { email: "ada@example.com", group: { id: 4, name: "Rig 4" } },
+      }),
+    });
+    expect(await screen.findByText("You’ve joined Rig 4.")).toBeInTheDocument();
+  });
+
+  it("an app names the group from its own field with invitationName", async () => {
+    localStorage.setItem(KEY, JSON.stringify({ token: "a1", refreshToken: "r1", user: ada }));
+    mount(
+      "/register?invite=tok",
+      {
+        "post /auth/invitations/check": () => ({
+          status: 200,
+          data: { email: "ada@example.com", expires_at: "2026-12-01T00:00:00Z", account_exists: true },
+        }),
+        "post /auth/invitations/accept": () => ({
+          status: 200,
+          data: { email: "ada@example.com", team_name: "North" },
+        }),
+      },
+      { invitationName: (accepted) => (typeof accepted.team_name === "string" ? accepted.team_name : undefined) },
+    );
+    expect(await screen.findByText("You’ve joined North.")).toBeInTheDocument();
+  });
+
+  it("the demo's end page stands in the app's frame when the app gives one", async () => {
+    const frame = ({ children }: AccountPageFrameProps) => <section aria-label="app frame">{children}</section>;
+    mount("/demo/ended", {}, { frame, demo: { model: "sandbox", access: { kind: "register", href: "/register" } } });
+    const framed = await screen.findByRole("region", { name: "app frame" });
+    expect(framed).toHaveTextContent(/demo/i);
+  });
+
+  it("accountPage answers one page alone, for an app that loads and wraps each lazily", async () => {
+    const { MemoryRouter } = await import("react-router");
+    const client = createAccountsClient<typeof ada>({
+      http: fakeHttp(() => ({ status: 204 })),
+      storagePrefix: "app.",
+      publicPaths: ["/"],
+      fetch: fakeFetch(() => ({ status: 401 })),
+      navigate: vi.fn(),
+    });
+    clients.push(client);
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <AccountsProvider client={client}>
+          <MemoryRouter initialEntries={["/anywhere"]}>
+            <main>{accountPage("forgotPassword")}</main>
+          </MemoryRouter>
+        </AccountsProvider>
+      </QueryClientProvider>,
+    );
+    expect(await screen.findByRole("button", { name: /send/i })).toBeInTheDocument();
+  });
+
+  it("RequireSession is a module of its own: the gate does not pull the pages into an app's first load", async () => {
+    const { readFileSync } = await import("node:fs");
+    const source = readFileSync(`${process.cwd()}/src/accounts/require-session.tsx`, "utf8");
+    expect(source).not.toMatch(/from "\.\/account-pages"/);
+    expect(source).not.toMatch(/sign-in-form|register-form|reset-password/);
   });
 });
