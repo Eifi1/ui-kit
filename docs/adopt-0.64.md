@@ -8,9 +8,6 @@ Staunlabor's, Kurvenschmiede's and keksdose's runs on the pre-releases found in 
 pages, the settings sections and the charts. Marcel, 2026-11-14: the three apps move to it
 locally and deploy together, once all are ready.
 
-_This document is written as the round goes; the part still to come (the feedback pages) adds its
-own section._
-
 **From 0.63, nothing else first.**
 
 **Restart the Vite dev server after the bump** (`vite --force` if a change still does not show).
@@ -170,6 +167,41 @@ the empty state for a viewer the server grants nothing. The app hands it what on
 The language, the filters and the search live in the address. Nothing is kept in the browser
 unless the app passes `storageKey` (the panel's sort and page size).
 
+## The feedback pages (`AccountFeedbackPage`, `AccountPublicFeedbackPage`, `useAccountFeedbackSubmit`)
+
+Built against server-kit 0.31's `feedback_router`, which the app mounts on its `current_user` as
+the feedback's actor. The kit's feedback parts (`@eifi1/ui-kit/feedback`) did the drawing
+already; what each app wrote around them — the routes, the three mutations, whose the inbox is,
+where a vote's answer goes, the submit dialog's requests — is the kit's now:
+
+```tsx
+<Route path="/feedback" element={<AccountFeedbackPage mine={false} />} />    // the admin's inbox
+<Route path="/my-feedback" element={<AccountFeedbackPage mine />} />         // everybody's own
+<Route path="/all-feedback" element={<AccountPublicFeedbackPage fallback={<NotFoundPage />} />} />
+
+const submit = useAccountFeedbackSubmit({ version: __APP_VERSION__ });  // the menu's open(category)
+<FeedbackMenu onFile={submit.open} myFeedbackHref="/my-feedback" inboxHref="/feedback" />
+{submit.dialog}
+```
+
+- **`AccountFeedbackPage`** is `FeedbackInbox` on `GET /feedback` (`mine={false}`, an admin's)
+  or `GET /feedback/my`; anybody but an admin who opens the inbox is sent to `myPath` (default
+  `/my-feedback`), the link's `?row=` kept. Every edit is one `PATCH`; a reply or a rework's
+  answer goes into the list at once. Who is the admin (`isAdmin`, default `role === "ADMIN"`)
+  and who reads the public parts — the votes column and a report's comments (`publicReader`,
+  default everybody signed in but a demo, as server-kit's `public_viewer`) — are the app's to
+  say; `swipe`, `pageLinkParams` and `table` go to the inbox.
+- **`AccountPublicFeedbackPage`** is `FeedbackPublicPage` on `GET /feedback/public` and
+  `/public/{id}`, its sort, search, page and open report in the address; a vote's answer is
+  written into every cached view of the report.
+- **`useAccountFeedbackSubmit`** is `useFeedbackSubmit` on `POST /feedback/attachments` and
+  `POST /feedback`, the signed-in account as the reporter.
+- **`accountFeedbackApi(client.http)`** (`useAccountFeedbackApi()` in a component) has the routes
+  for anything else; `createAccountsClient` hands out its instance as `client.http`, and a
+  request takes `headers` and `signal`.
+
+Nothing new is stored in the browser; the file parts fetch through the session.
+
 ## The settings sections
 
 - `AccountInvitationsSection` takes `intro`, `listTitle` and `className` (the panel's), reads the
@@ -212,7 +244,8 @@ unless the app passes `storageKey` (the panel's sort and page size).
 ### Per app
 
 - **Staunlabor**: the admin area on the four sections (`reviewer` on, its areas `experiments`
-  and `legal`; `erase` off: its daily call erases after the waiting days).
+  and `legal`; `erase` on: its deletion mode is `operator`, so a request deactivates the account
+  and the admin erases it) and the review page at `/translations`.
 - **Kurvenschmiede**: `UsersPanel` and `MailTestPanel` go; its teams' and plans' columns and
   actions stay its own (`extraColumns`, `extraActions`). Its `ActivityPanel` stays for now: the
   log section reads a person as the target, not yet a team's rows (`target_group_*`).

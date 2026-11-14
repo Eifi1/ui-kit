@@ -38,6 +38,14 @@ export const accountQueryKeys = {
    *  never go stale in a tab. */
   translationStrings: ["accounts", "translations", "strings"] as const,
   invitationCheck: (token: string) => ["accounts", "invitation-check", token] as const,
+  /** Every feedback list (0.64): a write invalidates them all. */
+  feedback: ["accounts", "feedback"] as const,
+  feedbackMine: ["accounts", "feedback", "mine"] as const,
+  feedbackAll: ["accounts", "feedback", "all"] as const,
+  /** Every public page of titles, whatever its query: a vote's answer is written into each. */
+  feedbackPublicLists: ["accounts", "feedback", "public", "list"] as const,
+  feedbackPublic: (query: object) => ["accounts", "feedback", "public", "list", query] as const,
+  feedbackPublicOne: (id: number) => ["accounts", "feedback", "public", "one", id] as const,
 };
 
 export interface AccountsProviderProps {

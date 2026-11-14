@@ -80,6 +80,11 @@ export interface AccountsRequest {
   params?: Record<string, string | number | boolean>;
   timeout?: number;
   responseType?: "blob";
+  /** 0.64 (the feedback's files): a multipart upload sends `Content-Type: undefined`, so the
+   *  browser sets the boundary the instance's JSON default would overwrite. */
+  headers?: Record<string, string | undefined>;
+  /** 0.64: a file's download stops with the part that asked for it. */
+  signal?: AbortSignal;
 }
 
 /** An interceptor manager, structurally. The callback is generic so that axios's — typed
@@ -246,6 +251,10 @@ export interface AccountsClient<U extends AccountUser = AccountUser> {
   /** The routes of server-kit's `auth_router` and the admin's invitations, typed, on `http`
    *  (`accountsApi`, §12.9). They keep nothing: what an answer changes is the caller's. */
   api: AccountsApi<U>;
+  /** 0.64: the instance the client was made on, its bearer and refresh in place — for the
+   *  routes of the kit's other account parts (the feedback pages' `accountFeedbackApi`),
+   *  which load where they are drawn rather than with every sign-in. */
+  http: AccountsHttp;
   /** The session store: `client.useSession((s) => s.user)` in a component,
    *  `client.useSession.getState()` outside one. Read it; write it only through the
    *  client, which keeps the stored copy beside it. */
@@ -650,6 +659,7 @@ export function createAccountsClient<U extends AccountUser = AccountUser>(
 
   return {
     api,
+    http,
     useSession,
     currentToken: () => store.token(),
     signIn: async ({ email, password }) => {

@@ -147,3 +147,17 @@ export { AccountTranslationReview } from "./accounts/account-translation-review"
 export type { AccountTranslationReviewProps } from "./accounts/account-translation-review";
 export { DEFAULT_ACCOUNT_TRANSLATIONS_LABELS } from "./accounts/account-translations-labels";
 export type { AccountTranslationsLabels } from "./accounts/account-translations-labels";
+// 0.64 (§12.9): the feedback pages on server-kit 0.31's feedback_router, through the session.
+export {
+  AccountFeedbackPage,
+  AccountPublicFeedbackPage,
+  useAccountFeedbackApi,
+  useAccountFeedbackSubmit,
+} from "./accounts/account-feedback";
+export type {
+  AccountFeedbackPageProps,
+  AccountPublicFeedbackPageProps,
+  UseAccountFeedbackSubmitOptions,
+} from "./accounts/account-feedback";
+export { accountFeedbackApi } from "./accounts/account-feedback-api";
+export type { AccountFeedbackApi } from "./accounts/account-feedback-api";
