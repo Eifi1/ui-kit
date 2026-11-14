@@ -1,14 +1,15 @@
 # Adopting `@eifi1/ui-kit` 0.64
 
-ui-kit 0.64 ships with **server-kit 0.30–0.31**. It continues the account layer
-(docs/auth-harmonization.md §12.9): the admin's half of `@eifi1/ui-kit/accounts` — the routes of
-server-kit's `user_admin_router` on `client.api`, their hooks, and four sections an app puts into
-its admin area — and what Staunlabor's and Kurvenschmiede's runs on the pre-releases found in the
-session, the pages and the settings sections. Marcel, 2026-11-14: the three apps move to it
+ui-kit 0.64 ships with **server-kit 0.32** (the admin's half needs 0.30–0.31, the second factor
+0.32). It continues the account layer (docs/auth-harmonization.md §12.9): the admin's half of
+`@eifi1/ui-kit/accounts` — the routes of server-kit's `user_admin_router` on `client.api`, their
+hooks, and four sections an app puts into its admin area — two-factor sign-in, and what
+Staunlabor's, Kurvenschmiede's and keksdose's runs on the pre-releases found in the session, the
+pages, the settings sections and the charts. Marcel, 2026-11-14: the three apps move to it
 locally and deploy together, once all are ready.
 
-_This document is written as the round goes; the parts still to come (the review page, the
-feedback pages, the second factor) add their own sections._
+_This document is written as the round goes; the parts still to come (the review page and the
+feedback pages) add their own sections._
 
 **From 0.63, nothing else first.**
 
@@ -22,7 +23,12 @@ are new sentences, not yet reviewed):
   `email_already_verified`, `deletion_not_requested`;
 - the namespace `accountRoster`: the roster section's actions, the question each asks and what
   each says once done (38 words, 19 of them templates naming the account's name or address);
-- `deleteAccount.requested`: the sign-in page's notice after a deletion request.
+- `deleteAccount.requested`: the sign-in page's notice after a deletion request;
+- `accountFailure.codes`: server-kit 0.32's `two_factor_invalid`, `two_factor_unavailable` and
+  `two_factor_not_pending`;
+- `accountSettings.twoFactor`: `replaceTitle`, `replaceHint` and `replace` (a lost
+  authenticator's way back, keksdose's words in de-CH, fr and it), `setupReauth`, `turnedOn` and
+  `turnedOff` (the accounts section's).
 
 **Must change** (in the types only; no app's code is affected today):
 
@@ -33,14 +39,49 @@ are new sentences, not yet reviewed):
 - `AccountsApi` has the admin's methods (below): a test double that implements the interface
   whole adds them, or types itself `Partial<AccountsApi>`;
 - `DeleteAccountLabels` has `requested`: a whole `deleteAccount` namespace written out (not a
-  `LabelOverride`, which is partial) adds it.
+  `LabelOverride`, which is partial) adds it;
+- `AuthErrorCode` has server-kit 0.32's `two_factor_invalid`, `two_factor_unavailable` and
+  `two_factor_not_pending`; `AccountsApi` has `twoFactorSetup`, `enableTwoFactor` and
+  `disableTwoFactor`, and `AccountsClient` has `verifyCode` (a test double adds them).
 
 **Behaviour that changes without a code change:**
 
 - `AccountInvitationsSection` says a refusal beside its form, in the app's words first
   (`describeError`) and else the account words — no longer in a toast as well;
 - a granted deletion request leaves for `/login?notice=deletion_requested` (the client's
-  `signInPath` with the notice), where the sign-in page says the request was received.
+  `signInPath` with the notice), where the sign-in page says the request was received;
+- `SignInForm`'s code step says "Sign-in failed" instead of "Invalid 2FA code" for a server
+  fault (a 5xx, server-kit 0.32's `two_factor_unavailable`): the code was not what failed.
+
+## Two-factor sign-in (server-kit 0.32)
+
+server-kit 0.32 mounts `/auth/login/2fa` and `/auth/me/2fa/setup|enable|disable` when the app
+gives `AuthDeps(two_factor=…, secret_seal=…)` (its README, "Two-factor sign-in"). On the front:
+
+- **The sign-in** needs nothing: `accountRoutes`' page passes `client.verifyCode` as `SignInForm`'s
+  `onCode`, so an account with 2FA on is asked its code after the password, then signed in, or
+  asked for the new password an admin required. A wrong or replayed code is the form's "Invalid
+  2FA code"; a second factor the server cannot read, the account words for
+  `two_factor_unavailable`. A passkey sign-in asks no code.
+- **The settings**: `<AccountTwoFactorSection />` beside the others. A setup asks for the password
+  first (`ReauthDialog`), draws the pending secret's QR code and key, and a code switches it on.
+  While it is on, "Lost your authenticator?" sets up a new one with the password (the current one
+  keeps working until the new code confirms it), and switching off takes the password and a live
+  code. Props: `labels`, `reauthLabels`, `renderQr`, `id` (default `two-factor`).
+- `TwoFactorSetting` (the card without the wiring) takes `onReplace` for the same way back.
+- `client.api.twoFactorSetup(password)` → `{secret, otpauth_url}`, `enableTwoFactor(code)`,
+  `disableTwoFactor({password, code})`; `useTwoFactor()` → `{ setup, enable, disable }`, the last
+  two reading `/auth/me` again.
+
+**keksdose**: its `two-factor-card.tsx` (the card, the replace card, the reauth dialog) is this
+section; its `qr_svg` goes, the kit draws the QR code from `otpauth_url`.
+
+## Charts
+
+- `Treemap` takes `showValues` (keksdose live #517): each tile's value — the `valueFormatter`'s
+  text, the one the tooltip prints — as a second, smaller line under its name, tagged
+  `data-private`, drawn only where it fits whole (an amount is dropped rather than clipped). A
+  `nodeNote` moves to a third line where the tile has the room; a group's band keeps its name.
 
 ## The admin's half (`client.api`, the hooks, the sections)
 

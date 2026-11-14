@@ -1156,6 +1156,15 @@ in the seven languages; the app brings its roles (`roles`, `choosable`) and its 
 actions. Kurvenschmiede's `UsersPanel`, `ActivityPanel` and `MailTestPanel`, ≈ 830 lines, were
 the model.
 
+**The second factor** (0.64, on server-kit 0.32's `/auth/login/2fa` and `/auth/me/2fa/*`,
+keksdose's rules, its KG-1): the sign-in page passes `client.verifyCode` as `SignInForm`'s
+`onCode`, so the code step needs no wiring; `AccountTwoFactorSection` is keksdose's card — every
+setup behind the password (`ReauthDialog`), the pending secret's QR code drawn by the kit from
+`otpauth_url`, "Lost your authenticator?" while it is on (the current one works until the new
+code confirms), switching off by the password and a live code. Its three refusals
+(`two_factor_invalid`, `two_factor_unavailable`, `two_factor_not_pending`) are said in the
+account words; an unreadable second factor is never said as a wrong code.
+
 **Found on the way** (Staunlabor's inventory):
 - `@eifi1/ui-kit/offline` imports `idb-keyval` and `@tanstack/query-async-storage-persister`
   statically, so an app that needs only `SharedComputerChoice` must install both: the
@@ -1167,7 +1176,7 @@ the model.
 
 **Order**: ui-kit **0.63** with server-kit 0.29 (session, pages, the account's settings, the
 invitations panel, the `offline` split, plus the legal credits and the link referrer collected
-for 0.63); ui-kit **0.64** with server-kit 0.30 (the admin pages), then the feedback and review
-pages. Staunlabor goes live on 0.63/0.29 for accounts and on 0.64/0.30 for the admin, with no
+for 0.63); ui-kit **0.64** with server-kit 0.30 (the admin pages) and 0.32 (the second factor),
+then the feedback and review pages. Staunlabor goes live on 0.63/0.29 for accounts and on 0.64/0.30 for the admin, with no
 account wiring of its own.
 

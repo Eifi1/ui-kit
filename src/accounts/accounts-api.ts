@@ -129,6 +129,13 @@ export interface AccountDeletionResult {
   [field: string]: unknown;
 }
 
+/** `POST /auth/me/2fa/setup`'s answer (server-kit 0.32): the new secret, PENDING until a code
+ *  from it confirms it, and its `otpauth://` URI, which `TwoFactorSetting` draws as a QR code. */
+export interface AccountTwoFactorSetup {
+  secret: string;
+  otpauth_url: string;
+}
+
 /** One of `GET /auth/passkeys`. */
 export interface AccountPasskey {
   id: number;
@@ -307,6 +314,13 @@ export interface AccountsApi<U extends AccountUser = AccountMe> {
   passkeyRegisterBegin(currentPassword: string): Promise<AccountPasskeyOptions>;
   passkeyRegisterFinish(body: { challenge_token: string; credential: unknown; name: string }): Promise<AccountPasskey>;
   passkeyLoginBegin(): Promise<AccountPasskeyOptions>;
+  /** `POST /auth/me/2fa/setup {password}` (server-kit 0.32): the password every time, a first
+   *  setup and a replacement alike; what signs in now keeps doing so until `enableTwoFactor`. */
+  twoFactorSetup(password: string): Promise<AccountTwoFactorSetup>;
+  /** `POST /auth/me/2fa/enable {code}`: a code from the pending secret switches it on. */
+  enableTwoFactor(code: string): Promise<void>;
+  /** `POST /auth/me/2fa/disable {password, code}`: the password and a live code. */
+  disableTwoFactor(body: { password: string; code: string }): Promise<void>;
   invitations(): Promise<AccountInvitation[]>;
   invite(draft: AccountInvitationDraft): Promise<AccountInvitationIssued>;
   resendInvitation(id: number): Promise<AccountInvitationIssued>;
@@ -380,6 +394,9 @@ export function createAccountsApi<U extends AccountUser>(http: AccountsHttp): Ac
       call("post", "/auth/passkey/register/begin", { current_password: currentPassword }),
     passkeyRegisterFinish: (body) => call("post", "/auth/passkey/register/finish", body),
     passkeyLoginBegin: () => call("post", "/auth/passkey/login/begin"),
+    twoFactorSetup: (password) => call("post", "/auth/me/2fa/setup", { password }),
+    enableTwoFactor: (code) => none("post", "/auth/me/2fa/enable", { code }),
+    disableTwoFactor: (body) => none("post", "/auth/me/2fa/disable", body),
     invitations: () => call("get", "/admin/invitations"),
     invite: (draft) => call("post", "/admin/invitations", draft),
     resendInvitation: (invitation) => call("post", `/admin/invitations/${id(invitation)}/resend`),

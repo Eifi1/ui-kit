@@ -304,11 +304,14 @@ const BUDGETS = [
   // user_admin_router: the roster and its actions, the log, the counts, the mail; about 0.9 kB)
   // and the sign-out's `notice` — meant growth, 1,103 B. The admin's hooks and sections are not
   // in it either.
+  // 17,669 B (6,413 gzip) with server-kit 0.32's second factor: `verifyCode`, the sign-in's
+  // code step, and `twoFactorSetup` / `enableTwoFactor` / `disableTwoFactor` on `client.api` —
+  // meant growth, 279 B. Its section and hook are not in it.
   {
     label: "{ createAccountsClient }",
     entry: "dist/accounts.js",
     names: ["createAccountsClient", "accountStorageEntries"],
-    max: 17_500,
+    max: 17_800,
   },
 ];
 const ENTRY = "\0import-cost";

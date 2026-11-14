@@ -242,6 +242,53 @@ describe("account settings labels (0.12.0)", () => {
   });
 });
 
+describe("TwoFactorSetting's replacement (0.64, keksdose)", () => {
+  const noop = () => {};
+
+  it("offers a lost authenticator's way back while two-factor is on, and only with onReplace", async () => {
+    const onReplace = vi.fn();
+    const { rerender } = render(
+      <TwoFactorSetting
+        enabled
+        setup={null}
+        onStartSetup={noop}
+        onEnable={noop}
+        onDisable={noop}
+        onReplace={onReplace}
+      />,
+    );
+    expect(screen.getByText("Lost your authenticator?")).toBeInTheDocument();
+    expect(screen.getByText(/The current one keeps working until you confirm the new code/)).toBeInTheDocument();
+    await userEvent.setup().click(screen.getByRole("button", { name: "Replace authenticator" }));
+    expect(onReplace).toHaveBeenCalledOnce();
+    // While the new one waits for its code, the setup stands in its place.
+    rerender(
+      <TwoFactorSetting
+        enabled
+        setup={{ otpauthUri: "otpauth://totp/A:b?secret=JBSWY3DPEHPK3PXP&issuer=A" }}
+        onStartSetup={noop}
+        onEnable={noop}
+        onDisable={noop}
+        onReplace={onReplace}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: "Replace authenticator" })).toBeNull();
+    rerender(<TwoFactorSetting enabled setup={null} onStartSetup={noop} onEnable={noop} onDisable={noop} />);
+    expect(screen.queryByRole("button", { name: "Replace authenticator" })).toBeNull();
+    rerender(
+      <TwoFactorSetting
+        enabled={false}
+        setup={null}
+        onStartSetup={noop}
+        onEnable={noop}
+        onDisable={noop}
+        onReplace={onReplace}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: "Replace authenticator" })).toBeNull();
+  });
+});
+
 describe("TwoFactorSetting setup", () => {
   const URI = "otpauth://totp/Kastlan:ada%40example.com?secret=JBSWY3DPEHPK3PXP&issuer=Kastlan";
   const noop = () => {};

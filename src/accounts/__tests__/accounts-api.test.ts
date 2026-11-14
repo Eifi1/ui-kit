@@ -117,6 +117,15 @@ describe("client.api", () => {
       { challenge_token: "c", credential: { id: "x" }, name: "" },
     ],
     ["passkeyLoginBegin", (api) => api.passkeyLoginBegin(), "post", "/auth/passkey/login/begin"],
+    ["twoFactorSetup", (api) => api.twoFactorSetup("pw"), "post", "/auth/me/2fa/setup", { password: "pw" }],
+    ["enableTwoFactor", (api) => api.enableTwoFactor("123456"), "post", "/auth/me/2fa/enable", { code: "123456" }],
+    [
+      "disableTwoFactor",
+      (api) => api.disableTwoFactor({ password: "pw", code: "123456" }),
+      "post",
+      "/auth/me/2fa/disable",
+      { password: "pw", code: "123456" },
+    ],
     ["invitations", (api) => api.invitations(), "get", "/admin/invitations"],
     [
       "invite",

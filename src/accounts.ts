@@ -55,6 +55,7 @@ export type {
   AccountProfilePatch,
   AccountsApi,
   AccountSessionInfo,
+  AccountTwoFactorSetup,
 } from "./accounts/accounts-api";
 // 0.64 (§12.9, server-kit 0.30–0.31's user_admin_router): the admin's routes on `client.api`.
 export type {
@@ -89,6 +90,7 @@ export {
   useInvitationsAdmin,
   useMailTest,
   usePasskeys,
+  useTwoFactor,
   useUpdateProfile,
 } from "./accounts/accounts-hooks";
 // 0.63 (§12.9 "The pages"): the signed-out pages as route objects, and the gate.
@@ -113,12 +115,14 @@ export {
   AccountPasswordSection,
   AccountProfileSection,
   AccountSessionsSection,
+  AccountTwoFactorSection,
 } from "./accounts/account-settings-sections";
 export type {
   AccountDeletionSectionProps,
   AccountInvitationsSectionProps,
   AccountPasskeysSectionProps,
   AccountProfileSectionProps,
+  AccountTwoFactorSectionProps,
 } from "./accounts/account-settings-sections";
 // 0.64 (§12.9 "The admin's sections"): the kit's admin parts on server-kit 0.30–0.31's
 // user_admin_router — the overview, the test mail, the log and the roster with its actions.

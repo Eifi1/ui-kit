@@ -282,6 +282,15 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         copySecret: "Kulcs másolása",
         // 0.31.0: the card's title; the state ("Bekapcsolva") stands beside it.
         title: "Kétlépcsős azonosítás",
+        // 0.64 (keksdose): a lost authenticator's way back, and the accounts section's words.
+        replaceTitle: "Elveszett a hitelesítő alkalmazása?",
+        replaceHint:
+          "Adja meg a fiókja jelszavát egy új hitelesítő beállításához. A jelenlegi addig működik, amíg meg nem erősíti az új kódot.",
+        replace: "Hitelesítő cseréje",
+        setupReauth:
+          "A kétlépcsős azonosítás megváltoztatja a bejelentkezés módját, ezért a beállításához először a fiókja jelszava kell. Utána egy kódot olvas be a hitelesítő alkalmazásával.",
+        turnedOn: "Kétlépcsős azonosítás bekapcsolva.",
+        turnedOff: "Kétlépcsős azonosítás kikapcsolva.",
       },
       passkeys: {
         title: "Hozzáférési kulcsok",

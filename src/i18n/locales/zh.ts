@@ -272,6 +272,13 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         copySecret: "复制密钥",
         // 0.31.0: the card's title; the state ("已开启") stands beside it.
         title: "双重验证",
+        // 0.64 (keksdose): a lost authenticator's way back, and the accounts section's words.
+        replaceTitle: "身份验证器丢失了？",
+        replaceHint: "输入账户密码以设置新的身份验证器。在您确认新验证码之前，当前的身份验证器仍然有效。",
+        replace: "更换身份验证器",
+        setupReauth: "双重验证会改变您的登录方式，因此设置前需要先输入账户密码。之后请用身份验证器应用扫描一个二维码。",
+        turnedOn: "双重验证已开启。",
+        turnedOff: "双重验证已关闭。",
       },
       passkeys: {
         title: "通行密钥",

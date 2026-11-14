@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { Toaster } from "../../components/toast";
 import { fakeFetch, fakeHttp, tokens } from "../../test/fake-axios";
 import type { Answer, Cfg } from "../../test/fake-axios";
 import { fill } from "../../test/fill";
@@ -16,6 +17,7 @@ import {
   AccountPasswordSection,
   AccountProfileSection,
   AccountSessionsSection,
+  AccountTwoFactorSection,
 } from "../account-settings-sections";
 import { AccountsProvider } from "../accounts-context";
 import { createAccountsClient } from "../accounts-client";
@@ -225,6 +227,105 @@ describe("AccountPasskeysSection", () => {
     await user.click(within(dialog).getByRole("button", { name: "Continue" }));
     expect(await within(dialog).findByText("The password is incorrect.")).toBeInTheDocument();
     expect(create).not.toHaveBeenCalled();
+  });
+});
+
+describe("AccountTwoFactorSection (0.64, server-kit 0.32)", () => {
+  const URI = "otpauth://totp/Staunlabor:ada%40example.com?secret=JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP&issuer=Staunlabor";
+  const setup = () => ({ status: 200, data: { secret: "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP", otpauth_url: URI } });
+
+  it("asks the password before a setup, draws the pending secret, and switches it on with a code", async () => {
+    let enabled = false;
+    const { calls, user } = mount(
+      <>
+        <Toaster />
+        <AccountTwoFactorSection />
+      </>,
+      {
+        "get /auth/me": () => ({ status: 200, data: { ...ada, totp_enabled: enabled } }),
+        "post /auth/me/2fa/setup": (config) =>
+          (config.data as { password: string }).password === "pw"
+            ? setup()
+            : { status: 400, data: { code: "password_incorrect" } },
+        "post /auth/me/2fa/enable": () => {
+          enabled = true;
+          return { status: 204 };
+        },
+      },
+    );
+    await user.click(await screen.findByRole("button", { name: "Set up two-factor authentication" }));
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByText(/changes how you sign in/)).toBeInTheDocument();
+    await fill(user, within(dialog).getByLabelText("Current password"), "wrong");
+    await user.click(within(dialog).getByRole("button", { name: "Continue" }));
+    expect(await within(dialog).findByText("The password is incorrect.")).toBeInTheDocument();
+    await user.clear(within(dialog).getByLabelText("Current password"));
+    await fill(user, within(dialog).getByLabelText("Current password"), "pw");
+    await user.click(within(dialog).getByRole("button", { name: "Continue" }));
+    expect(await screen.findByRole("img", { name: "QR code" })).toBeInTheDocument();
+    expect(screen.getByText("JBSW Y3DP EHPK 3PXP JBSW Y3DP EHPK 3PXP")).toBeInTheDocument();
+    await user.type(screen.getByLabelText("Verification code"), "123456");
+    await user.click(screen.getByRole("button", { name: "Verify and turn on" }));
+    expect(await screen.findByText("Two-factor authentication turned on.")).toBeInTheDocument();
+    expect(calls.find((c) => c.route === "post /auth/me/2fa/enable")?.data).toEqual({ code: "123456" });
+    expect(await screen.findByText("On")).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: "QR code" })).toBeNull();
+  });
+
+  it("says a refused code in the account words, and keeps the setup", async () => {
+    const { user } = mount(
+      <>
+        <Toaster />
+        <AccountTwoFactorSection />
+      </>,
+      {
+        "get /auth/me": () => ({ status: 200, data: { ...ada, totp_enabled: false } }),
+        "post /auth/me/2fa/setup": setup,
+        "post /auth/me/2fa/enable": () => ({ status: 400, data: { code: "two_factor_invalid" } }),
+      },
+    );
+    await user.click(await screen.findByRole("button", { name: "Set up two-factor authentication" }));
+    const dialog = await screen.findByRole("dialog");
+    await fill(user, within(dialog).getByLabelText("Current password"), "pw");
+    await user.click(within(dialog).getByRole("button", { name: "Continue" }));
+    await user.type(await screen.findByLabelText("Verification code"), "000000");
+    await user.click(screen.getByRole("button", { name: "Verify and turn on" }));
+    expect(await screen.findByText(/That code isn’t right, or it was used already/)).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "QR code" })).toBeInTheDocument();
+  });
+
+  it("replaces a lost authenticator with the password, and switches off with the password and a code", async () => {
+    let enabled = true;
+    const { calls, user } = mount(
+      <>
+        <Toaster />
+        <AccountTwoFactorSection />
+      </>,
+      {
+        "get /auth/me": () => ({ status: 200, data: { ...ada, totp_enabled: enabled } }),
+        "post /auth/me/2fa/setup": setup,
+        "post /auth/me/2fa/disable": () => {
+          enabled = false;
+          return { status: 204 };
+        },
+      },
+    );
+    await user.click(await screen.findByRole("button", { name: "Replace authenticator" }));
+    const dialog = await screen.findByRole("dialog", { name: "Lost your authenticator?" });
+    await fill(user, within(dialog).getByLabelText("Current password"), "pw");
+    await user.click(within(dialog).getByRole("button", { name: "Replace authenticator" }));
+    expect(await screen.findByRole("img", { name: "QR code" })).toBeInTheDocument();
+    expect(calls.find((c) => c.route === "post /auth/me/2fa/setup")?.data).toEqual({ password: "pw" });
+    await fill(user, screen.getByLabelText("Current password"), "pw");
+    const codes = screen.getAllByLabelText("Verification code");
+    await user.type(codes[codes.length - 1]!, "654321");
+    await user.click(screen.getByRole("button", { name: "Turn off" }));
+    expect(await screen.findByText("Two-factor authentication turned off.")).toBeInTheDocument();
+    expect(calls.find((c) => c.route === "post /auth/me/2fa/disable")?.data).toEqual({
+      password: "pw",
+      code: "654321",
+    });
+    expect(await screen.findByText("Off")).toBeInTheDocument();
   });
 });
 

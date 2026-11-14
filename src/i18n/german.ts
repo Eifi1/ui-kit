@@ -299,6 +299,15 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         copySecret: "Schlüssel kopieren",
         // 0.31.0: the card's title; the state ("Aktiv") stands beside it.
         title: "Zwei-Faktor-Authentifizierung",
+        // 0.64 (keksdose): a lost authenticator's way back, and the accounts section's words.
+        replaceTitle: "Authenticator verloren?",
+        replaceHint:
+          "Geben Sie Ihr Kontopasswort ein, um einen neuen Authenticator einzurichten. Der bisherige funktioniert weiter, bis Sie den neuen Code bestätigen.",
+        replace: "Authenticator ersetzen",
+        setupReauth:
+          "Die Zwei-Faktor-Authentifizierung ändert, wie Sie sich anmelden – darum braucht die Einrichtung zuerst Ihr Kontopasswort. Danach scannen Sie einen Code mit Ihrer Authenticator-App.",
+        turnedOn: "Zwei-Faktor-Authentifizierung aktiviert.",
+        turnedOff: "Zwei-Faktor-Authentifizierung deaktiviert.",
       },
       passkeys: {
         title: "Passkeys",

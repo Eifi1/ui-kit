@@ -291,6 +291,15 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         copySecret: "Copier la clé",
         // 0.31.0: the card's title; the state ("Activée") stands beside it.
         title: "Authentification à deux facteurs",
+        // 0.64 (keksdose): a lost authenticator's way back, and the accounts section's words.
+        replaceTitle: "Authentificateur perdu\u202f?",
+        replaceHint:
+          "Saisissez le mot de passe de votre compte pour configurer un nouvel authentificateur. L’actuel continue de fonctionner jusqu’à ce que vous confirmiez le nouveau code.",
+        replace: "Remplacer l’authentificateur",
+        setupReauth:
+          "L’authentification à deux facteurs change votre façon de vous connecter. Pour la configurer, il faut donc d’abord le mot de passe de votre compte. Vous scannez ensuite un code avec votre application d’authentification.",
+        turnedOn: "Authentification à deux facteurs activée.",
+        turnedOff: "Authentification à deux facteurs désactivée.",
       },
       passkeys: {
         title: "Clés d’accès",

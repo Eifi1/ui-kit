@@ -287,6 +287,15 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         copySecret: "Copiar clave",
         // 0.31.0: the card's title; the state ("Activada") stands beside it.
         title: "Verificación en dos pasos",
+        // 0.64 (keksdose): a lost authenticator's way back, and the accounts section's words.
+        replaceTitle: "¿Ha perdido su autenticador?",
+        replaceHint:
+          "Introduzca la contraseña de su cuenta para configurar un nuevo autenticador. El actual sigue funcionando hasta que confirme el nuevo código.",
+        replace: "Sustituir el autenticador",
+        setupReauth:
+          "La verificación en dos pasos cambia cómo inicia sesión, por eso configurarla pide primero la contraseña de su cuenta. Después escaneará un código con su app de autenticación.",
+        turnedOn: "Verificación en dos pasos activada.",
+        turnedOff: "Verificación en dos pasos desactivada.",
       },
       passkeys: {
         title: "Llaves de acceso",

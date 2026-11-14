@@ -290,6 +290,15 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         copySecret: "Copia chiave",
         // 0.31.0: the card's title; the state ("Attiva") stands beside it.
         title: "Autenticazione a due fattori",
+        // 0.64 (keksdose): a lost authenticator's way back, and the accounts section's words.
+        replaceTitle: "Ha perso l’autenticatore?",
+        replaceHint:
+          "Inserisca la password del Suo account per configurare un nuovo autenticatore. Quello attuale continua a funzionare finché non conferma il nuovo codice.",
+        replace: "Sostituisci autenticatore",
+        setupReauth:
+          "L’autenticazione a due fattori cambia il modo in cui accede, perciò per configurarla serve prima la password del Suo account. Poi scansiona un codice con la Sua app di autenticazione.",
+        turnedOn: "Autenticazione a due fattori attivata.",
+        turnedOff: "Autenticazione a due fattori disattivata.",
       },
       passkeys: {
         title: "Passkey",

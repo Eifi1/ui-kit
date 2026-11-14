@@ -548,6 +548,7 @@ export function TwoFactorSetting({
   onStartSetup,
   onEnable,
   onDisable,
+  onReplace,
   busy,
   renderQr,
   labels: labelsProp,
@@ -559,6 +560,13 @@ export function TwoFactorSetting({
   onStartSetup: () => void;
   onEnable: (code: string) => void;
   onDisable: (password: string, code: string) => void;
+  /**
+   * 0.64 (keksdose): a new setup while two-factor is on — the way back from a lost
+   * authenticator. Switching off needs a LIVE code, so without it a lost phone locks the
+   * account out for good; the server (server-kit 0.32) keeps the current secret working
+   * until a code from the new one confirms it. Left out, the card offers none.
+   */
+  onReplace?: () => void;
   busy?: boolean;
   /** Draw the code yourself (a branded QR, a library you already ship). Given the
    *  `otpauthUri`; the kit's own {@link QrCode} otherwise. Unused with `qrSvg`. */
@@ -661,6 +669,16 @@ export function TwoFactorSetting({
           />
           <Button onClick={() => onEnable(code)} disabled={!code || busy}>
             {labels.verify}
+          </Button>
+        </div>
+      )}
+
+      {enabled && !setup && onReplace && (
+        <div className="space-y-2 border-t border-subtle pt-3">
+          <div className="text-sm font-medium">{labels.replaceTitle}</div>
+          <div className="text-xs text-secondary">{labels.replaceHint}</div>
+          <Button variant="secondary" onClick={onReplace} disabled={busy}>
+            {labels.replace}
           </Button>
         </div>
       )}

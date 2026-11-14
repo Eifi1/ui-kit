@@ -167,6 +167,24 @@ export function usePasskeys() {
   return { list, begin, register, rename, remove };
 }
 
+/**
+ * The second factor (0.64, server-kit 0.32): `setup` (the password; the answer is the pending
+ * secret), `enable` (a code from it) and `disable` (the password and a live code). The two
+ * that change the account read `/auth/me` again, so `totp_enabled` shows.
+ */
+export function useTwoFactor() {
+  const client = useAccountsClient();
+  const queryClient = useQueryClient();
+  const refresh = () => queryClient.invalidateQueries({ queryKey: accountQueryKeys.me });
+  const setup = useMutation({ mutationFn: (password: string) => client.api.twoFactorSetup(password) });
+  const enable = useMutation({ mutationFn: (code: string) => client.api.enableTwoFactor(code), onSuccess: refresh });
+  const disable = useMutation({
+    mutationFn: (body: { password: string; code: string }) => client.api.disableTwoFactor(body),
+    onSuccess: refresh,
+  });
+  return { setup, enable, disable };
+}
+
 /** `GET /auth/me/export`, the account's data as one JSON file (user-admin §6.5), for
  *  `DataExportSetting`'s `onExport`. Once a minute: a 429 is said as such. */
 export function useAccountExport() {

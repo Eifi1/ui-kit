@@ -9,18 +9,19 @@ import {
 } from "../account/delete-account-setting";
 import { EmailChangeSetting } from "../account/email-change-setting";
 import { PasskeysSetting, type PasskeyItem } from "../account/passkeys-setting";
-import { PasswordSetting, ProfileSetting } from "../account/account-settings";
+import { PasswordSetting, ProfileSetting, TwoFactorSetting } from "../account/account-settings";
 import { SessionsSetting, type SessionItem } from "../account/sessions-setting";
 import { InvitationsPanel, type InvitationRow, type InvitationsPanelProps } from "../admin/invitations-panel";
 import { formatPersonName } from "../lib/person-name";
 import { useKitFormat } from "../lib/format";
 import { ReauthDialog, type ReauthDialogLabels } from "../components/reauth-dialog";
 import type { LabelOverride } from "../i18n/kit-labels";
-import type { PasskeysSettingLabels } from "../account/account-settings-labels";
+import { useAccountSettingsLabels } from "../account/account-settings-labels";
+import type { PasskeysSettingLabels, TwoFactorSettingLabels } from "../account/account-settings-labels";
 import { toast } from "../components/toast";
 import { useDescribeAccountFailure, useFailureBeside } from "./account-failure";
 import type { DescribeAccountFailureOptions } from "./account-failure";
-import type { AccountMe, AccountPasskeyOptions } from "./accounts-api";
+import type { AccountMe, AccountPasskeyOptions, AccountTwoFactorSetup } from "./accounts-api";
 import { useAccountsClient } from "./accounts-context";
 import {
   useAccountDeletion,
@@ -28,9 +29,11 @@ import {
   useAccountSessions,
   useAdminMail,
   useChangePassword,
+  useCurrentUser,
   useEmailChange,
   useInvitationsAdmin,
   usePasskeys,
+  useTwoFactor,
   useUpdateProfile,
 } from "./accounts-hooks";
 import { passkeysAvailable } from "./passkey-ceremony";
@@ -163,6 +166,94 @@ export function AccountSessionsSection({ id = "sessions" }: { id?: string }) {
       onSignOutEverywhere={signOutEverywhere}
       describeError={describe}
     />
+  );
+}
+
+/** What {@link AccountTwoFactorSection} takes. */
+export interface AccountTwoFactorSectionProps {
+  id?: string;
+  /** The card's words over the provider's `accountSettings.twoFactor`. */
+  labels?: LabelOverride<TwoFactorSettingLabels>;
+  /** The password question's words over the provider's `reauthDialog` (its field, Cancel). */
+  reauthLabels?: LabelOverride<ReauthDialogLabels>;
+  /** Draw the QR code yourself; the kit's own otherwise (`TwoFactorSetting`'s `renderQr`). */
+  renderQr?: (otpauthUri: string) => ReactNode;
+}
+
+/**
+ * Two-factor sign-in (0.64, server-kit 0.32's `/auth/me/2fa/*`, keksdose's card): setting it up,
+ * switching it on with a code, replacing a lost authenticator and switching it off. Every setup
+ * asks for the password first (`ReauthDialog`: the server refuses one without it, and a wrong
+ * password is said there); the new secret is PENDING until its code confirms it, so a setup
+ * walked away from changes nothing. Switching off takes the password and a live code. A
+ * refusal is said in the account words; the card reads `totp_enabled` off `/auth/me`.
+ */
+export function AccountTwoFactorSection({
+  id = "two-factor",
+  labels,
+  reauthLabels,
+  renderQr,
+}: AccountTwoFactorSectionProps) {
+  const me = useCurrentUser<AccountMe>();
+  const { setup, enable, disable } = useTwoFactor();
+  const describe = useDescribeAccountFailure();
+  const words = useAccountSettingsLabels("twoFactor", labels);
+  const [asking, setAsking] = useState<"setup" | "replace" | null>(null);
+  const [passwordError, setPasswordError] = useState<string>();
+  const [pending, setPending] = useState<AccountTwoFactorSetup | null>(null);
+  if (!me.data) return null;
+  const ask = (why: "setup" | "replace") => {
+    setPasswordError(undefined);
+    setAsking(why);
+  };
+  const done = (said: string | undefined) => () => {
+    setPending(null);
+    toast.success(said);
+  };
+  const replacing = asking === "replace";
+
+  return (
+    <>
+      <TwoFactorSetting
+        id={id}
+        enabled={me.data.totp_enabled === true}
+        setup={pending ? { otpauthUri: pending.otpauth_url, secret: pending.secret } : null}
+        onStartSetup={() => ask("setup")}
+        onReplace={() => ask("replace")}
+        onEnable={(code) =>
+          enable.mutate(code, { onSuccess: done(words.turnedOn), onError: (error) => toast.error(describe(error)) })
+        }
+        onDisable={(password, code) =>
+          disable.mutate(
+            { password, code },
+            { onSuccess: done(words.turnedOff), onError: (error) => toast.error(describe(error)) },
+          )
+        }
+        busy={setup.isPending || enable.isPending || disable.isPending}
+        renderQr={renderQr}
+        labels={labels}
+      />
+      {asking !== null && (
+        <ReauthDialog
+          labels={reauthLabels}
+          title={replacing ? words.replaceTitle : words.enable}
+          description={replacing ? words.replaceHint : words.setupReauth}
+          // A first setup keeps the dialog's "Continue": the next step is the QR code.
+          submitLabel={replacing ? words.replace : undefined}
+          error={passwordError}
+          busy={setup.isPending}
+          onSubmit={async (password) => {
+            try {
+              setPending(await setup.mutateAsync(password));
+            } catch (error) {
+              setPasswordError(describe(error));
+              throw error;
+            }
+          }}
+          onClose={() => setAsking(null)}
+        />
+      )}
+    </>
   );
 }
 
