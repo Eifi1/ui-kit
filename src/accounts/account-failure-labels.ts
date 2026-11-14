@@ -48,6 +48,11 @@ export const DEFAULT_ACCOUNT_FAILURE_LABELS: AccountFailureLabels = {
     reviewer_is_admin: "An administrator can’t also be a reviewer. Change the role first.",
     email_already_verified: "This address is already confirmed.",
     deletion_not_requested: "This account hasn’t asked to be deleted, or it is still active.",
+    two_factor_invalid:
+      "That code isn’t right, or it was used already. Enter the code your authenticator app shows now.",
+    two_factor_unavailable:
+      "Two-factor sign-in is unavailable on this server right now. Your authenticator app is fine. Please try again later.",
+    two_factor_not_pending: "No setup is waiting for a code. Start the setup again.",
   },
   offline: "Can’t reach the server. Check your connection and try again.",
   timeout: "The server took too long to answer. Please try again.",

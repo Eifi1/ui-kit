@@ -148,7 +148,8 @@ function SignInPage({ o }: { o: Resolved }) {
   const [params] = useSearchParams();
   const labels = useKitLabels("signIn", DEFAULT_SIGN_IN_LABELS);
   const deletion = useKitLabels("deleteAccount", DEFAULT_DELETE_ACCOUNT_LABELS);
-  const describe = useFailureBeside(["invalid_credentials", "token_invalid"], o.appCode);
+  // The form words a wrong password, a wrong code and a dead challenge itself.
+  const describe = useFailureBeside(["invalid_credentials", "two_factor_invalid", "token_invalid"], o.appCode);
   // Where they were headed, read through the kit's open-redirect check (KS's F34).
   const destination = safeNextPath(params.get(NEXT_PARAM)) ?? o.afterSignIn;
   const done = (answer: SignInAnswer) => {
@@ -166,6 +167,7 @@ function SignInPage({ o }: { o: Resolved }) {
       <SignInForm
         onSubmit={async (credentials) => done(await client.signIn(credentials))}
         onSetPassword={async (values) => done(await client.setPassword(values))}
+        onCode={async (values) => done(await client.verifyCode(values))}
         onPasskey={passkeysAvailable() ? async () => done(await client.signInWithPasskey()) : undefined}
         forgotHref={o.paths.forgotPassword}
         registerHref={o.signUp === "open" ? o.paths.register : undefined}

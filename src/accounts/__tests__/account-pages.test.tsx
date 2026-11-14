@@ -133,6 +133,37 @@ describe("the sign-in page", () => {
     });
   });
 
+  it("asks for the second factor's code, and signs in with it (server-kit 0.32)", async () => {
+    const { calls, user } = mount("/login", {
+      "post /auth/login": () => ({ status: 200, data: { requires_2fa: true, challenge_token: "c1" } }),
+      "post /auth/login/2fa": () => ({ status: 200, data: tokens("a1", "r1", ada) }),
+    });
+    await fill(user, screen.getByLabelText("Email"), "ada@example.com");
+    await fill(user, screen.getByLabelText("Password"), "pw");
+    await user.click(screen.getByRole("button", { name: "Sign in" }));
+    await user.type(await screen.findByLabelText("2FA code"), "123456{Enter}");
+    await screen.findByText("Home");
+    expect(calls[1]).toEqual({ route: "post /auth/login/2fa", data: { challenge_token: "c1", code: "123456" } });
+  });
+
+  it("says a wrong code in the form's words, and an unreadable second factor in the account words", async () => {
+    let answer: () => Answer = () => ({ status: 400, data: { code: "two_factor_invalid" } });
+    const { user } = mount("/login", {
+      "post /auth/login": () => ({ status: 200, data: { requires_2fa: true, challenge_token: "c1" } }),
+      "post /auth/login/2fa": () => answer(),
+    });
+    await fill(user, screen.getByLabelText("Email"), "ada@example.com");
+    await fill(user, screen.getByLabelText("Password"), "pw");
+    await user.click(screen.getByRole("button", { name: "Sign in" }));
+    const code = await screen.findByLabelText("2FA code");
+    await user.type(code, "000000{Enter}");
+    expect(await screen.findByText("Invalid 2FA code.")).toBeInTheDocument();
+    answer = () => ({ status: 503, data: { code: "two_factor_unavailable" } });
+    await user.clear(code);
+    await user.type(code, "123456{Enter}");
+    expect(await screen.findByText(/Two-factor sign-in is unavailable on this server/)).toBeInTheDocument();
+  });
+
   it("leaves the shared-computer choice out when the app says so", () => {
     mount("/login", {}, { sharedComputerChoice: false });
     expect(screen.queryByRole("checkbox", { name: /shared computer/ })).toBeNull();

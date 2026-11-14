@@ -2218,6 +2218,11 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         reviewer_is_admin: "Adminisztrátori fióknak nem lehet lektori szerepköre. Először módosítsa a szerepkört.",
         email_already_verified: "Ez a cím már meg van erősítve.",
         deletion_not_requested: "Ehhez a fiókhoz nem kérték a törlést, vagy még aktív.",
+        two_factor_invalid:
+          "Ez a kód nem helyes, vagy már felhasználták. Adja meg azt a kódot, amelyet a hitelesítő alkalmazása most mutat.",
+        two_factor_unavailable:
+          "A kétlépcsős bejelentkezés jelenleg nem érhető el ezen a szerveren. A hitelesítő alkalmazása rendben van. Próbálja újra később.",
+        two_factor_not_pending: "Nincs kódra váró beállítás. Kezdje újra a beállítást.",
       },
       offline: "A kiszolgáló nem érhető el. Ellenőrizze a kapcsolatot, és próbálja újra.",
       timeout: "A kiszolgáló túl sokáig nem válaszolt. Kérjük, próbálja újra.",

@@ -2217,6 +2217,11 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         reviewer_is_admin: "Una cuenta de administrador no puede tener el rol de revisor. Cambie primero el rol.",
         email_already_verified: "Esta dirección ya está confirmada.",
         deletion_not_requested: "Esta cuenta no ha pedido su eliminación, o sigue activa.",
+        two_factor_invalid:
+          "Este código no es correcto o ya se ha usado. Introduzca el código que muestra ahora su app de autenticación.",
+        two_factor_unavailable:
+          "El inicio de sesión en dos pasos no está disponible en este servidor ahora mismo. Su app de autenticación funciona bien. Vuelva a intentarlo más tarde.",
+        two_factor_not_pending: "Ninguna configuración espera un código. Vuelva a iniciar la configuración.",
       },
       offline: "No se puede conectar con el servidor. Compruebe su conexión e inténtelo de nuevo.",
       timeout: "El servidor ha tardado demasiado en responder. Inténtelo de nuevo.",

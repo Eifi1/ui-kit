@@ -47,6 +47,15 @@ import { httpStatusOf } from "../lib/http-status";
  *   account's (or the admin's) to rename, end or act on.
  * - `invitation_closed` — accepted or revoked already, so it cannot be re-sent or revoked.
  * - `invitation_scope_invalid` — an admin's invitation `scope` the app does not take.
+ *
+ * 0.64 (server-kit 0.32's second factor, keksdose's KG-1):
+ * - `two_factor_invalid` — `400`: the code is wrong, not six digits, or of a step already
+ *   spent (one answer, so a replay says nothing), at the sign-in's code step, the setup's
+ *   confirmation and switching it off. Never a 401: two of those routes are signed in.
+ * - `two_factor_unavailable` — `503`: the stored second factor cannot be read (its key is
+ *   missing or rotated out), or a setup cannot be stored. The operator's to mend: never
+ *   said as a wrong code, which would send the person to re-pair a phone that is fine.
+ * - `two_factor_not_pending` — `404`: a confirmation with no setup waiting for its code.
  */
 export type AuthErrorCode =
   | "invalid_credentials"
@@ -73,7 +82,10 @@ export type AuthErrorCode =
   | "session_not_found"
   | "invitation_not_found"
   | "invitation_closed"
-  | "invitation_scope_invalid";
+  | "invitation_scope_invalid"
+  | "two_factor_invalid"
+  | "two_factor_unavailable"
+  | "two_factor_not_pending";
 
 /**
  * 0.30.0: the coded refusals of user administration and the account's own settings
@@ -219,6 +231,9 @@ const CODES: ReadonlySet<string> = new Set<KitErrorCode>([
   "invitation_not_found",
   "invitation_closed",
   "invitation_scope_invalid",
+  "two_factor_invalid",
+  "two_factor_unavailable",
+  "two_factor_not_pending",
   "last_admin",
   "self_action",
   "other_companies",

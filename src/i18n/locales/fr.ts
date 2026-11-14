@@ -2260,6 +2260,11 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         reviewer_is_admin: "Un compte administrateur ne peut pas avoir le rôle de relecteur. Changez d’abord le rôle.",
         email_already_verified: "Cette adresse est déjà confirmée.",
         deletion_not_requested: "Ce compte n’a pas demandé sa suppression, ou il est encore actif.",
+        two_factor_invalid:
+          "Ce code n’est pas correct ou a déjà été utilisé. Saisissez le code que votre application d’authentification affiche maintenant.",
+        two_factor_unavailable:
+          "La connexion à deux facteurs est indisponible sur ce serveur pour le moment. Votre application d’authentification fonctionne. Veuillez réessayer plus tard.",
+        two_factor_not_pending: "Aucune configuration n’attend de code. Recommencez la configuration.",
       },
       offline: "Impossible de joindre le serveur. Vérifiez votre connexion et réessayez.",
       timeout: "Le serveur a mis trop de temps à répondre. Veuillez réessayer.",

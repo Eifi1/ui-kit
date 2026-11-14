@@ -201,6 +201,17 @@ describe("SignInForm — the second factor", () => {
     expect(screen.queryByText("Invalid 2FA code.")).not.toBeInTheDocument();
   });
 
+  it("a second factor this server cannot read is no wrong code (server-kit 0.32's 503)", async () => {
+    const { user } = setup({
+      onSubmit: async () => ({ kind: "2fa", challengeToken: "c" }),
+      onCode: async () => Promise.reject(refusal(503, "two_factor_unavailable")),
+    });
+    await signIn(user);
+    await user.type(await screen.findByLabelText("2FA code"), "123456{Enter}");
+    expect(await screen.findByText("Sign-in failed. Please try again.")).toBeInTheDocument();
+    expect(screen.queryByText("Invalid 2FA code.")).not.toBeInTheDocument();
+  });
+
   it("token_invalid: the challenge expired — back to the credentials, saying so", async () => {
     const { user } = setup({
       onSubmit: async () => ({ kind: "2fa", challengeToken: "c" }),

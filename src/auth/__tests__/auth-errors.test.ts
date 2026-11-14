@@ -99,6 +99,17 @@ const CODES_0_30 = [
   "deletion_not_requested",
 ] as const;
 
+/** 0.64: server-kit 0.32's two-factor routes (keksdose's KG-1). */
+const CODES_0_32 = ["two_factor_invalid", "two_factor_unavailable", "two_factor_not_pending"] as const;
+
+describe("authErrorCode — server-kit 0.32's two-factor routes", () => {
+  it.each(CODES_0_32)("knows %s", (code) => {
+    const refused = { response: { status: 400, data: { detail: "English for the logs", code } } };
+    expect(authErrorCode(refused)).toBe(code);
+    expect(isAuthError(refused, code)).toBe(true);
+  });
+});
+
 describe("authErrorCode — server-kit 0.30's admin routes (auth §12.4)", () => {
   it.each(CODES_0_30)("knows %s", (code) => {
     const refused = { response: { status: 409, data: { detail: "English for the logs", code } } };

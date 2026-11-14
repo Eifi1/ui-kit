@@ -2297,6 +2297,11 @@ export function germanLabels(numberLocale: string): UiKitLabels {
           "Ein Konto mit Administratorrechten kann keine Prüfrolle haben. Ändern Sie zuerst die Rolle.",
         email_already_verified: "Diese Adresse ist bereits bestätigt.",
         deletion_not_requested: "Für dieses Konto wurde keine Löschung beantragt, oder es ist noch aktiv.",
+        two_factor_invalid:
+          "Dieser Code stimmt nicht oder wurde schon verwendet. Geben Sie den Code ein, den Ihre Authenticator-App jetzt anzeigt.",
+        two_factor_unavailable:
+          "Die Zwei-Faktor-Anmeldung ist auf diesem Server gerade nicht verfügbar. Ihre Authenticator-App ist in Ordnung. Bitte versuchen Sie es später erneut.",
+        two_factor_not_pending: "Keine Einrichtung wartet auf einen Code. Starten Sie die Einrichtung erneut.",
       },
       offline: "Der Server ist nicht erreichbar. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
       timeout: "Der Server hat zu lange nicht geantwortet. Bitte versuchen Sie es erneut.",

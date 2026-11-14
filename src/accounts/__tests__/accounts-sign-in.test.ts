@@ -129,6 +129,31 @@ describe("signIn", () => {
   });
 });
 
+describe("verifyCode (0.64, server-kit 0.32's second factor)", () => {
+  it("sends the challenge and the code to the code step, and keeps the session it answers", async () => {
+    const { client, http } = setup();
+    await expect(client.verifyCode({ challengeToken: "c2", code: "123456" })).resolves.toEqual({ kind: "signed-in" });
+    expect(http.sent.map((c) => [c.method, c.url])).toEqual([["post", "/auth/login/2fa"]]);
+    expect(body(http.sent[0])).toEqual({ challenge_token: "c2", code: "123456" });
+    expect(client.useSession.getState().user).toEqual(ada);
+  });
+
+  it("answers the forced change's challenge where the code is followed by one", async () => {
+    const { client } = setup(() => ({ status: 200, data: { requires_password_change: true, challenge_token: "c3" } }));
+    await expect(client.verifyCode({ challengeToken: "c2", code: "123456" })).resolves.toEqual({
+      kind: "password-change",
+      challengeToken: "c3",
+    });
+    expect(localStorage.getItem(KEY)).toBeNull();
+  });
+
+  it("sends a backup code in the same field, for a server that takes one there", async () => {
+    const { client, http } = setup();
+    await client.verifyCode({ challengeToken: "c2", code: "ABCD-EFGH", kind: "recovery" });
+    expect(body(http.sent[0])).toEqual({ challenge_token: "c2", code: "ABCD-EFGH" });
+  });
+});
+
 describe("setPassword", () => {
   it("sends the challenge and the new password to the forced change, and keeps the session it answers", async () => {
     setSharedComputer(true);

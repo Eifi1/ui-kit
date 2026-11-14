@@ -1,7 +1,7 @@
 import type { StoreApi, UseBoundStore } from "zustand";
 
 import type { RegisterValues } from "../auth/register-form";
-import type { SignInAnswer, SignInCredentials, SignInNewPasswordValues } from "../auth/sign-in-form";
+import type { SignInAnswer, SignInCodeValues, SignInCredentials, SignInNewPasswordValues } from "../auth/sign-in-form";
 import { isDemoSession } from "../demo/demo-session";
 import { NEXT_PARAM, type PathPattern } from "../landing/routing";
 import { documentNavigation } from "../lib/document-navigation";
@@ -240,6 +240,11 @@ export interface AccountsClient<U extends AccountUser = AccountUser> {
    *  `SignInForm`'s `onSetPassword` as it is. Its challenge carries the box, so it sends
    *  nothing of it. */
   setPassword(values: SignInNewPasswordValues): Promise<SignInAnswer>;
+  /** `POST /auth/login/2fa {challenge_token, code}`, the second factor's step (0.64, server-kit
+   *  0.32) — `SignInForm`'s `onCode` as it is. A session, or the forced change's challenge
+   *  where an admin asked for a new password; the challenge carries the shared-computer box.
+   *  A backup code (`kind: "recovery"`) goes in the same `code`, for a server that takes one. */
+  verifyCode(values: SignInCodeValues): Promise<SignInAnswer>;
   /** `POST /auth/passkey/login/finish {challenge_token, credential, shared_device}`, the end of
    *  `SignInForm`'s `onPasskey` once the browser's ceremony has answered. */
   passkeyFinish(body: AccountsPasskeyFinish): Promise<SignInAnswer>;
@@ -571,6 +576,8 @@ export function createAccountsClient<U extends AccountUser = AccountUser>(
       answerOf(await post("/auth/login", { email, password, shared_device: isSharedComputer() })),
     setPassword: async ({ challengeToken, password }) =>
       answerOf(await post("/auth/login/set-password", { challenge_token: challengeToken, new_password: password })),
+    verifyCode: async ({ challengeToken, code }) =>
+      answerOf(await post("/auth/login/2fa", { challenge_token: challengeToken, code })),
     passkeyFinish,
     async signInWithPasskey() {
       const begin = await api.passkeyLoginBegin();

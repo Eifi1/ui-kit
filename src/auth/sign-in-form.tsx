@@ -4,6 +4,7 @@ import { KeyRound } from "lucide-react";
 
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
+import { httpStatusOf } from "../lib/http-status";
 import { AlertBanner } from "../components/alert-banner";
 import { hasContent } from "../lib/presence";
 import { CurrentPasswordInput } from "../components/danger-confirm";
@@ -519,6 +520,9 @@ export function SignInForm({
     if (action === "passkey") return labels.passkeyFailed;
     if (action === "code") {
       if (code === "token_invalid") return labels.expired;
+      // A second factor the server cannot read (server-kit 0.32's 503) is no wrong code:
+      // "invalid code" would send the person to re-pair an authenticator that is fine.
+      if (code === "two_factor_unavailable" || (httpStatusOf(error) ?? 0) >= 500) return labels.failed;
       return recoveryUsed
         ? (labels.recoveryCodeInvalid ?? DEFAULT_SIGN_IN_LABELS.recoveryCodeInvalid)
         : labels.codeInvalid;
