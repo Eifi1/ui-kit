@@ -41,7 +41,8 @@ are new sentences, not yet reviewed):
   `LabelOverride`, which is partial) adds it;
 - `AuthErrorCode` has server-kit 0.32's `two_factor_invalid`, `two_factor_unavailable` and
   `two_factor_not_pending`; `AccountsApi` has `twoFactorSetup`, `enableTwoFactor` and
-  `disableTwoFactor`, and `AccountsClient` has `verifyCode` (a test double adds them).
+  `disableTwoFactor`, and `AccountsClient` has `verifyCode`, `pageShared`, `afterSignIn` and `http`
+  (a test double adds them).
 
 **Behaviour that changes without a code change:**
 
