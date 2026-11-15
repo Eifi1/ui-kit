@@ -53,6 +53,18 @@ export function useAccountFeedbackApi<T extends FeedbackRecord = FeedbackRecord>
   return useMemo(() => accountFeedbackApi<T>(client.http), [client]);
 }
 
+/**
+ * The signed-in account: `/auth/me`'s answer, else the session's own (0.64,
+ * Kurvenschmiede). The query shows the session's account only until its first answer: after
+ * a failed first read its `data` is `undefined`, and a page waiting on it drew its spinner for
+ * good while a report was filed in nobody's name — though the session held the account.
+ */
+function useAccount(): AccountMe | undefined {
+  const me = useCurrentUser<AccountMe>();
+  const stored = useAccountsClient<AccountMe>().useSession((state) => state.user);
+  return me.data ?? stored ?? undefined;
+}
+
 /** A refusal in the account words where its code is known, else the part's own fallback. */
 function useErrorMessage(): (error: unknown, fallback: string) => string {
   const describe = useDescribeAccountFailure();
@@ -94,13 +106,13 @@ export function AccountFeedbackPage({
   myPath = "/my-feedback",
   ...inbox
 }: AccountFeedbackPageProps) {
-  const me = useCurrentUser<AccountMe>();
+  const me = useAccount();
   const { search } = useLocation();
-  if (!me.data) return <LoadingState className="py-16" />;
-  const admin = isAdmin(me.data);
+  if (!me) return <LoadingState className="py-16" />;
+  const admin = isAdmin(me);
   if (!mine && !admin) return <Navigate to={`${myPath}${search}`} replace />;
-  const reader = typeof publicReader === "function" ? publicReader(me.data) : publicReader;
-  return <FeedbackList mine={mine} admin={admin} reader={reader} viewerId={me.data.id} {...inbox} />;
+  const reader = typeof publicReader === "function" ? publicReader(me) : publicReader;
+  return <FeedbackList mine={mine} admin={admin} reader={reader} viewerId={me.id} {...inbox} />;
 }
 
 function FeedbackList({
@@ -226,10 +238,10 @@ export function AccountPublicFeedbackPage({
   publicReader = notADemo,
   fallback = null,
 }: AccountPublicFeedbackPageProps) {
-  const me = useCurrentUser<AccountMe>();
-  if (!me.data) return <LoadingState className="py-16" />;
-  if (!publicReader(me.data)) return <>{fallback}</>;
-  return <PublicFeedback pageSize={pageSize} admin={isAdmin(me.data)} />;
+  const me = useAccount();
+  if (!me) return <LoadingState className="py-16" />;
+  if (!publicReader(me)) return <>{fallback}</>;
+  return <PublicFeedback pageSize={pageSize} admin={isAdmin(me)} />;
 }
 
 function PublicFeedback({ pageSize, admin }: { pageSize: number; admin: boolean }) {
@@ -300,18 +312,18 @@ export function useAccountFeedbackSubmit(options: UseAccountFeedbackSubmitOption
   const api = useAccountFeedbackApi();
   const queryClient = useQueryClient();
   const errorMessage = useErrorMessage();
-  const me = useCurrentUser<AccountMe>();
+  const me = useAccount();
   const locale = useKitLocale();
   return useFeedbackSubmit<FeedbackRecord>({
     errorMessage,
     ...options,
     upload: api.upload,
     create: api.create,
-    user: me.data
+    user: me
       ? {
-          id: me.data.id,
-          email: me.data.email,
-          display_name: personLabel({ first: me.data.first_name, last: me.data.last_name }, locale) || null,
+          id: me.id,
+          email: me.email,
+          display_name: personLabel({ first: me.first_name, last: me.last_name }, locale) || null,
         }
       : null,
     onSubmitted: (report) => {

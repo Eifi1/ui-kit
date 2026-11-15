@@ -237,6 +237,10 @@ Nothing new is stored in the browser; the file parts fetch through the session.
   beside the comment threads (`feedbackCommentsQueryKey`), not under `accounts`: an app persisting
   its cache denies the account's root and may keep a reader's own reports (`["feedback", "mine"]`)
   for offline. `AccountsProvider` drops both roots when the account changes.
+- **The account is `/auth/me`'s, else the session's** (Kurvenschmiede on 0.64.0-dev.6): after a
+  failed first `/auth/me` both pages draw for the account the session holds, no longer their
+  spinner for good, and `useAccountFeedbackSubmit` files the report in that account's name, no
+  longer in nobody's.
 
 ## Teams (opt-in)
 
