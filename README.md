@@ -582,7 +582,7 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2298 names from 387 modules** in the main barrel — 1031 values and 1267 types — and 350 more in 17 standalone entries. _Italic_ is a type-only export.
+**2302 names from 388 modules** in the main barrel — 1032 values and 1270 types — and 350 more in 17 standalone entries. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 `node scripts/gen-export-inventory.mjs`; the counts are pinned by
@@ -590,7 +590,7 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2298 |
+| `@eifi1/ui-kit` | 2302 |
 | `@eifi1/ui-kit/chart` | 102 |
 | `@eifi1/ui-kit/shell` | 109 |
 | `@eifi1/ui-kit/data-table` | 57 |
@@ -769,7 +769,8 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/lightbox` | `DEFAULT_LIGHTBOX_LABELS`, `imageItemKind`, `Lightbox`, _`ImageItem`_, _`ImageItemKind`_, _`LightboxLabels`_, _`LightboxProps`_ |
 | `components/zoomable-image` | `DEFAULT_ZOOMABLE_IMAGE_LABELS`, `ZoomableImage`, _`ZoomableImageLabels`_, _`ZoomableImageProps`_ |
 | `components/button-group` | `ButtonGroup`, `ButtonGroupLink`, _`ButtonGroupLinkProps`_, _`ButtonGroupLinkRenderProps`_, _`ButtonGroupProps`_ |
-| `components/table` | `NUMERIC_CELL_CLASS`, `Table`, `TableBody`, `TableCaption`, `TableCell`, `TableEmpty`, `TableFoot`, `TableHead`, `TableHeaderCell`, `TableRow`, _`TableAlign`_, _`TableBodyProps`_, _`TableCaptionProps`_, _`TableCellProps`_, _`TableDensity`_, _`TableEmptyProps`_, _`TableFootProps`_, _`TableHeaderCellProps`_, _`TableHeaderCellSize`_, _`TableHeaderCellWeight`_, _`TableHeadProps`_, _`TableLayout`_, _`TableProps`_, _`TableRowProps`_, _`TableRowVariant`_, _`TableVAlign`_ |
+| `components/table` | `NUMERIC_CELL_CLASS`, `Table`, `TableBody`, `TableCaption`, `TableCell`, `TableEmpty`, `TableFoot`, `TableHead`, `TableHeaderCell`, `TableRow`, _`TableAlign`_, _`TableBodyProps`_, _`TableCaptionProps`_, _`TableCellProps`_, _`TableDensity`_, _`TableEmptyProps`_, _`TableFootProps`_, _`TableHeaderCellProps`_, _`TableHeaderCellSize`_, _`TableHeaderCellSort`_, _`TableHeaderCellWeight`_, _`TableHeadProps`_, _`TableLayout`_, _`TableProps`_, _`TableRowProps`_, _`TableRowVariant`_, _`TableVAlign`_ |
+| `components/sort-strip` | `SortStrip`, _`SortStripOption`_, _`SortStripProps`_ |
 | `components/separator` | `Separator`, _`SeparatorProps`_ |
 | `components/scroll-area` | `ScrollArea`, _`ScrollAreaProps`_ |
 | `components/list` | `DEFAULT_LIST_LABELS`, `List`, `ListItem`, _`ListDensity`_, _`ListItemCheckedStyle`_, _`ListItemLinkProps`_, _`ListItemProps`_, _`ListItemTrailingTone`_, _`ListLabels`_, _`ListProps`_, _`ListSeparator`_ |
