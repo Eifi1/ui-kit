@@ -209,6 +209,37 @@ describe("AccountAdminLogSection", () => {
     expect(screen.getByText("No longer a reviewer")).toBeInTheDocument();
   });
 
+  it("reads a reviewer row as from → to, and the flat shape as before (keksdose, server-kit 0.32)", async () => {
+    mount(<AccountAdminLogSection />, {
+      "get /admin/actions": () => ({
+        status: 200,
+        data: {
+          actions: [
+            {
+              ...row(9, "reviewer", 7),
+              detail: { from: { locales: ["fr"], areas: [] }, to: { locales: ["de-CH", "fr"], areas: [] } },
+            },
+            {
+              ...row(8, "reviewer", 7),
+              detail: { from: { locales: ["it"], areas: [] }, to: { locales: [], areas: [] } },
+            },
+            {
+              ...row(7, "reviewer", 7),
+              detail: { from: { locales: [], areas: [] }, to: { locales: ["it"], areas: [] } },
+            },
+            { ...row(6, "reviewer", 7), detail: { locales: ["hu"] } },
+          ],
+          total: 4,
+        },
+      }),
+    });
+    expect(await screen.findByText("fr → de-CH, fr")).toBeInTheDocument();
+    // A grant withdrawn or a first grant reads as the flat shape did: no arrow from or to nothing.
+    expect(screen.getByText("No longer a reviewer")).toBeInTheDocument();
+    expect(screen.getByText("it")).toBeInTheDocument();
+    expect(screen.getByText("hu")).toBeInTheDocument();
+  });
+
   it("narrows the log to one account by its id, from its name in a row", async () => {
     const { calls, user } = mount(<AccountAdminLogSection />, {
       "get /admin/actions": () => ({ status: 200, data: { actions: [row(9, "deactivate", 7)], total: 1 } }),

@@ -148,6 +148,8 @@ export interface AccountAdminLogSectionProps {
 }
 
 const isCount = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
 
 /**
  * The server wrote ids, roles, flags and counts only (server-kit's guard), so this is all
@@ -174,9 +176,19 @@ function sharedDetail(
   if ((row.action === "membership_add" || row.action === "membership_remove") && typeof detail.role === "string") {
     return groupRoleLabel(detail.role);
   }
-  if (row.action === "reviewer" && Array.isArray(detail.locales)) {
-    const codes = (detail.locales as unknown[]).filter((code) => typeof code === "string");
-    return codes.length > 0 ? codes.join(", ") : words.reviewerNone;
+  // server-kit 0.32 logs `{from: {locales, areas}, to: {locales, areas}}` (keksdose's); a row
+  // written before reads `{locales, areas}`, the "to" alone.
+  if (row.action === "reviewer") {
+    const locales = (side: unknown): string[] | undefined => {
+      const list = isRecord(side) ? side.locales : undefined;
+      return Array.isArray(list) ? list.filter((code): code is string => typeof code === "string") : undefined;
+    };
+    const to = locales(detail.to) ?? locales(detail);
+    if (to !== undefined) {
+      const from = locales(detail.from) ?? [];
+      if (to.length === 0) return words.reviewerNone;
+      return from.length > 0 ? `${from.join(", ")} → ${to.join(", ")}` : to.join(", ");
+    }
   }
   // 0.64: what went with a deleted team, as its delete dialog counted it — server-kit 0.32
   // logs `{members, grants, invitations}` (Kurvenschmiede wrote its own reading of it).
