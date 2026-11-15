@@ -221,6 +221,10 @@ export interface AccountAdminUser extends UserRosterRow {
   translation_review_areas: string[] | null;
   /** Whether the account signs in with a second factor (server-kit 0.32 reads its store). */
   totp_enabled?: boolean;
+  /** The confirmation each action asks on THIS account, where the app's row states it
+   *  (keksdose's `to_rows`, from server-kit's `confirmation` hook); the section asks the
+   *  stronger of it and the list's `levels`. */
+  levels?: Record<string, AdminConfirmLevel>;
   extra?: Record<string, unknown>;
 }
 

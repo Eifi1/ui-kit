@@ -150,6 +150,9 @@ export interface AccountAdminLogSectionProps {
 const isCount = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
+const LEVEL_RANK: Record<AdminConfirmLevel, number> = { none: 0, acknowledge: 1, type_email: 2 };
+const isConfirmLevel = (value: unknown): value is AdminConfirmLevel =>
+  typeof value === "string" && Object.hasOwn(LEVEL_RANK, value);
 
 /**
  * The server wrote ids, roles, flags and counts only (server-kit's guard), so this is all
@@ -442,7 +445,13 @@ export function AccountUserRosterSection<R extends string = string, Row extends 
     state: onlyDeletions ? "deletion_scheduled" : undefined,
   });
 
-  const level = (action: string): AdminConfirmLevel => roster.data?.levels?.[action] ?? "none";
+  // The list's levels are the contract's floor; an app's row may state its own (keksdose's
+  // to_rows: a password that opens a key asks for the address). The stronger one asks.
+  const level = (action: string, row: AccountAdminUser): AdminConfirmLevel => {
+    const own = isRecord(row.levels) ? row.levels[action] : undefined;
+    const floor = roster.data?.levels?.[action] ?? "none";
+    return isConfirmLevel(own) && LEVEL_RANK[own] > LEVEL_RANK[floor] ? own : floor;
+  };
   const activeAdmins = Number(roster.data?.summary?.active_admins ?? 0);
   const lastAdmin = (row: AccountAdminUser) => row.role === "ADMIN" && row.is_active && activeAdmins <= 1;
   const named = (row: AccountAdminUser) => nameOf({ first: row.first_name, last: row.last_name, email: row.email });
@@ -506,7 +515,7 @@ export function AccountUserRosterSection<R extends string = string, Row extends 
             onSelect: () =>
               ask({
                 row,
-                level: level("password_change_require"),
+                level: level("password_change_require", row),
                 title: labels.requirePasswordChangeTitle(named(row)),
                 confirmLabel: labels.requirePasswordChange,
                 consequence: labels.requirePasswordChangeBody,
@@ -533,7 +542,7 @@ export function AccountUserRosterSection<R extends string = string, Row extends 
           onSelect: () =>
             ask({
               row,
-              level: level("two_factor_reset"),
+              level: level("two_factor_reset", row),
               title: labels.resetTwoFactorTitle(named(row)),
               confirmLabel: labels.resetTwoFactor,
               consequence: labels.resetTwoFactorBody,
@@ -555,7 +564,7 @@ export function AccountUserRosterSection<R extends string = string, Row extends 
           onSelect: () =>
             ask({
               row,
-              level: level("erase"),
+              level: level("erase", row),
               title: labels.eraseTitle(named(row)),
               confirmLabel: labels.erase,
               consequence: labels.eraseBody,
@@ -576,7 +585,7 @@ export function AccountUserRosterSection<R extends string = string, Row extends 
             onSelect: () =>
               ask({
                 row,
-                level: level("deactivate"),
+                level: level("deactivate", row),
                 title: labels.deactivateTitle(named(row)),
                 confirmLabel: labels.deactivate,
                 consequence: labels.deactivateBody,
@@ -592,7 +601,7 @@ export function AccountUserRosterSection<R extends string = string, Row extends 
             onSelect: () =>
               ask({
                 row,
-                level: level(deletionAsked ? "deletion_cancel" : "reactivate"),
+                level: level(deletionAsked ? "deletion_cancel" : "reactivate", row),
                 title: deletionAsked ? labels.cancelDeletionTitle(named(row)) : labels.reactivateTitle(named(row)),
                 confirmLabel: deletionAsked ? labels.cancelDeletion : labels.reactivate,
                 tone: "neutral",
@@ -642,7 +651,7 @@ export function AccountUserRosterSection<R extends string = string, Row extends 
       const word = roles[role]?.label ?? role;
       ask({
         row,
-        level: level("role"),
+        level: level("role", row),
         title: labels.roleTitle(named(row), word),
         confirmLabel: labels.changeRole,
         // Becoming an admin, or no longer one, says what it brings (Kurvenschmiede's U4).

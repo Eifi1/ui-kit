@@ -311,6 +311,29 @@ describe("AccountUserRosterSection", () => {
     );
   });
 
+  it("asks at a row's own level where the app's row states one above the list's (keksdose)", async () => {
+    const { user } = mount(<AccountUserRosterSection roles={roles} />, {
+      "get /admin/users": () =>
+        page([
+          person(1, "Ada", { role: "ADMIN" }),
+          // keksdose's to_rows: a password that opens a key raises the forced change.
+          person(7, "Ben", { levels: { password_change_require: "type_email", deactivate: "none" } }),
+        ]),
+    });
+    await user.click((await screen.findAllByRole("button", { name: "Actions for Ben Example" }))[0]);
+    let menu = await screen.findByRole("dialog", { name: "Actions for Ben Example" });
+    await user.click(within(menu).getByRole("button", { name: "Require a new password" }));
+    let dialog = await screen.findByRole("alertdialog");
+    expect(within(dialog).getByLabelText(/ben@example\.com/)).toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    // A row never asks below the list's level: the contract's floor stays.
+    await user.click((await screen.findAllByRole("button", { name: "Actions for Ben Example" }))[0]);
+    menu = await screen.findByRole("dialog", { name: "Actions for Ben Example" });
+    await user.click(within(menu).getByRole("button", { name: "Deactivate" }));
+    dialog = await screen.findByRole("alertdialog", { name: "Deactivate Ben Example?" });
+    expect(within(dialog).getByLabelText(/ben@example\.com/)).toBeInTheDocument();
+  });
+
   it("locks the signed-in admin's own deactivation, and says why", async () => {
     const { user } = mount(<AccountUserRosterSection roles={roles} />, {
       "get /admin/users": () => page([person(1, "Ada", { role: "ADMIN" }), person(7, "Ben")]),
