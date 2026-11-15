@@ -29,7 +29,7 @@ import { DEFAULT_TRANSFER_OWNERSHIP_LABELS } from "./transfer-ownership-dialog-l
 /**
  * Why a candidate cannot receive the work: the kit's two, or the app's own words.
  *
- * `"customer"` is deprecated (0.63) and goes in 0.64: it was Kurvenschmiede's CUSTOMER, an
+ * `"customer"` is deprecated (0.65) and goes in 0.66: it was Kurvenschmiede's CUSTOMER, an
  * account that owns nothing, and Kurvenschmiede has no such role since its migration 0060
  * (Marcel, 2026-11-12: every customer became a member). No app has customers any more.
  * Until then the dialog still says it with `transferOwnership.customer`.
@@ -37,7 +37,7 @@ import { DEFAULT_TRANSFER_OWNERSHIP_LABELS } from "./transfer-ownership-dialog-l
 export type TransferUnavailable =
   | "deactivated"
   | "self"
-  /** @deprecated 0.63 — none: drop the case, no app has customers any more; removed in 0.64 */
+  /** @deprecated 0.65 — none: drop the case, no app has customers any more; removed in 0.66 */
   | "customer";
 
 /** An account that might receive the work. */
@@ -45,7 +45,7 @@ export interface TransferCandidate extends AdminPerson {
   id: string | number;
   email: string;
   /** Why it cannot: `"deactivated"`, `"self"`, or the app's own words. `"customer"` is
-   *  deprecated (0.63, removed in 0.64; {@link TransferUnavailable}). */
+   *  deprecated (0.65, removed in 0.66; {@link TransferUnavailable}). */
   unavailable?: TransferUnavailable | (string & {});
 }
 
@@ -73,8 +73,8 @@ export interface TransferOwnershipLabels {
   confirm: string;
   /**
    * `"customer"`'s reason, which no app passes any more ({@link TransferUnavailable}).
-   * @deprecated 0.63 — none: drop the key from an app's own labels, `"customer"` goes with
-   * it; removed in 0.64
+   * @deprecated 0.65 — none: drop the key from an app's own labels, `"customer"` goes with
+   * it; removed in 0.66
    */
   customer: string;
   /** Reasons, said after the account's name inside its option. */

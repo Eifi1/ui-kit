@@ -195,13 +195,14 @@ describe("deprecations", () => {
     ]);
   });
 
-  it("holds 0.63's: the transfer dialog's customer texts, which go in 0.64", () => {
-    // Kurvenschmiede dropped its customer role (2026-11-12); no app passes "customer". Goes
-    // with the names it lists, in 0.64.
+  it("holds 0.65's: the transfer dialog's customer texts, which go in 0.66", () => {
+    // Kurvenschmiede dropped its customer role (2026-11-12); no app passes "customer". 0.63
+    // and 0.64 reach npm only inside 0.65.0 (Marcel, 2026-11-15), so the deprecation written
+    // in 0.63 is first published, and dated, in 0.65; the names go in 0.66, with this test.
     const transfer = all.filter((d) => d.at.startsWith("src/admin/transfer-ownership-dialog.tsx"));
     expect(transfer.map((d) => [d.name, d.since, d.removal])).toEqual([
-      ["TransferUnavailable.customer", [0, 63], [0, 64]],
-      ["TransferOwnershipLabels.customer", [0, 63], [0, 64]],
+      ["TransferUnavailable.customer", [0, 65], [0, 66]],
+      ["TransferOwnershipLabels.customer", [0, 65], [0, 66]],
     ]);
   });
 

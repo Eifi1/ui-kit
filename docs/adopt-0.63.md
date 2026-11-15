@@ -306,9 +306,10 @@ table keeps its own there under the app's prefix. Neither writes to `localStorag
 CUSTOMER role. That was an account that owned nothing and so could not receive work.
 Kurvenschmiede dropped the role on 2026-11-12 (its migration 0060: every customer became a
 member), and no app has customers any more. Both texts are deprecated for one minor and work as
-before until 0.64 removes them.
+before until 0.66 removes them (0.63 reaches npm inside 0.65.0, so the deprecation is
+published there and kept for one minor).
 
-**Deprecated (removed in 0.64):**
+**Deprecated (removed in 0.66):**
 
 - `TransferUnavailable`'s `"customer"` → none: drop the case. A candidate the app cannot hand
   work to for a reason of its own takes its own words in `unavailable`.
@@ -326,8 +327,8 @@ deactivated accounts only.
 
 - "names a member of a union type by its literal, in its type": the scanner now reads a tag on
   a union's `| "literal"`;
-- "holds 0.63's": both tags, deprecated in 0.63 and removed in 0.64. This test goes with them in
-  0.64.
+- "holds 0.65's": both tags, dated 0.65 (where npm first carries them) and removed in 0.66. This test goes with them in
+  0.66.
 
 ## server-kit 0.29 for the backends
 
