@@ -205,7 +205,8 @@ describe("AccountAdminLogSection", () => {
     expect(await screen.findByText("3 moved")).toBeInTheDocument();
     expect(screen.getByText("Mitglied → Admin")).toBeInTheDocument();
     expect(screen.getByText("Mail not sent")).toBeInTheDocument();
-    expect(screen.getByText("No languages")).toBeInTheDocument();
+    // An empty reviewer row is the grant withdrawn, not a reviewer of nothing.
+    expect(screen.getByText("No longer a reviewer")).toBeInTheDocument();
   });
 
   it("narrows the log to one account by its id, from its name in a row", async () => {

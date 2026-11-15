@@ -170,6 +170,9 @@ const ROLES = { ADMIN: { label: t("roles.ADMIN"), tone: "brand" }, MEMBER: { lab
   `target_group_*`) have the group as their target, a membership row the person with the group
   beside them, its role through `groupRoleLabel`; a group with no name left reads as the noun's
   "a deleted team".
+- **A reviewer row with no language reads "No longer a reviewer"** (`adminActionLog.reviewerNone`,
+  all seven catalogues; Kurvenschmiede on 0.64.0-dev.6): the grant was withdrawn, which "No
+  languages" misread.
 - **`AccountAdminOverviewSection`** is `AdminOverview` on `GET /admin/attention`, with its
   "Try again"; **`AccountMailTestSection`** is `MailTestCard`, to the signed-in admin's address.
 

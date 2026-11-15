@@ -1513,7 +1513,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       showAll: "Afficher toutes les actions",
       filterBy: (target) => `Afficher uniquement les actions concernant ${target}`,
       notSent: "E-mail non envoyé",
-      reviewerNone: "Aucune langue",
+      reviewerNone: "Rôle de relecteur retiré",
       // Agreeing with "compte" (masculine), like `accountState`.
       actions: {
         deactivate: "Désactivé",
