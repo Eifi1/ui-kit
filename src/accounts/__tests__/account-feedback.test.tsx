@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { Toaster } from "../../components/toast";
 import { fakeFetch, fakeHttp } from "../../test/fake-axios";
 import type { Answer, Cfg } from "../../test/fake-axios";
 import { AccountFeedbackPage, AccountPublicFeedbackPage, useAccountFeedbackSubmit } from "../account-feedback";
@@ -95,6 +96,7 @@ function mount(
     <MemoryRouter initialEntries={[entry]}>
       <QueryClientProvider client={queryClient}>
         <AccountsProvider client={client}>
+          <Toaster />
           <Routes>
             <Route path="/feedback" element={ui} />
             <Route path="/all-feedback" element={ui} />
@@ -195,6 +197,93 @@ describe("the account when /auth/me fails (Kurvenschmiede, 0.64.0-dev.6)", () =>
   });
 });
 
+/** A row of the public list, as `GET /feedback/public` answers it. */
+const publicRow = (id: number, title: string) => ({
+  id,
+  title,
+  category: "IDEA",
+  status: "OPEN",
+  author_name: "Ben Example",
+  mine: false,
+  comment_count: 0,
+  votes: 3,
+  voted: false,
+  created_at: "2026-11-14T09:00:00Z",
+  updated_at: "2026-11-14T09:00:00Z",
+  resolved_at: null,
+});
+
+describe("a refusal's words (Kurvenschmiede, 0.64.0-dev.6)", () => {
+  /** The admin's reply to report 2, refused with `answer`; resolves once it is sent. */
+  async function replyRefused(answer: Answer, ui: ReactNode = <AccountFeedbackPage mine={false} />) {
+    const { calls } = mount(ui, {
+      entry: "/feedback?row=2",
+      routes: {
+        "get /feedback": () => ({ status: 200, data: [report(2, "Die Pendelwelle")] }),
+        "post /feedback/2/replies": () => answer,
+      },
+    });
+    const field = await screen.findByRole("textbox", { name: "Write a reply" });
+    fireEvent.change(field, { target: { value: "Geplant." } });
+    fireEvent.click(screen.getByRole("button", { name: "Reply" }));
+    await waitFor(() => expect(calls.map((c) => c.route)).toContain("post /feedback/2/replies"));
+  }
+
+  it("asks the app's describeError first", async () => {
+    await replyRefused(
+      { status: 403, data: { detail: "(English)", code: "admin_required" } },
+      <AccountFeedbackPage
+        mine={false}
+        describeError={(error) => (error ? "Die eigenen Worte der App." : undefined)}
+      />,
+    );
+    expect(await screen.findByText("Die eigenen Worte der App.")).toBeInTheDocument();
+  });
+
+  it("says a coded refusal in the account words after it", async () => {
+    await replyRefused(
+      { status: 403, data: { detail: "(English)", code: "admin_required" } },
+      <AccountFeedbackPage mine={false} describeError={() => undefined} />,
+    );
+    expect(await screen.findByText("Only an administrator can do this.")).toBeInTheDocument();
+  });
+
+  it("says an uncoded 4xx in the server's own sentence", async () => {
+    await replyRefused({ status: 400, data: { detail: "This report is closed to replies." } });
+    expect(await screen.findByText("This report is closed to replies.")).toBeInTheDocument();
+  });
+
+  it("keeps the part's own words for an uncoded 4xx with no sentence", async () => {
+    await replyRefused({ status: 422, data: { detail: [{ loc: ["body"], msg: "field required" }] } });
+    expect(await screen.findByText("Could not send the reply.")).toBeInTheDocument();
+  });
+
+  it("says the coded legacy_rework_append in the kit's words", async () => {
+    await replyRefused({
+      status: 422,
+      data: { detail: "(the server's English)", code: "legacy_rework_append" },
+    });
+    expect(await screen.findByText("This page is out of date. Reload it and try again.")).toBeInTheDocument();
+  });
+
+  it("asks the app's describeError first on the public page too", async () => {
+    const { calls } = mount(
+      <AccountPublicFeedbackPage describeError={(error) => (error ? "Die eigenen Worte der App." : undefined)} />,
+      {
+        entry: "/all-feedback",
+        routes: {
+          "get /feedback/public": () => ({ status: 200, data: [publicRow(2, "Die Pendelwelle")] }),
+          "put /feedback/2/vote": () => ({ status: 403, data: { detail: "(English)", code: "demo_refused" } }),
+        },
+      },
+    );
+    await screen.findAllByText("Die Pendelwelle");
+    fireEvent.click(screen.getAllByRole("button", { name: /I want this too/ })[0]);
+    await waitFor(() => expect(calls.map((c) => c.route)).toContain("put /feedback/2/vote"));
+    expect(await screen.findByText("Die eigenen Worte der App.")).toBeInTheDocument();
+  });
+});
+
 describe("AccountPublicFeedbackPage", () => {
   it("reads the public titles a page at a time, newest first", async () => {
     const { calls } = mount(<AccountPublicFeedbackPage pageSize={20} />, {
@@ -202,22 +291,7 @@ describe("AccountPublicFeedbackPage", () => {
       routes: {
         "get /feedback/public": () => ({
           status: 200,
-          data: [
-            {
-              id: 2,
-              title: "Die Pendelwelle",
-              category: "IDEA",
-              status: "OPEN",
-              author_name: "Ben Example",
-              mine: false,
-              comment_count: 0,
-              votes: 3,
-              voted: false,
-              created_at: "2026-11-14T09:00:00Z",
-              updated_at: "2026-11-14T09:00:00Z",
-              resolved_at: null,
-            },
-          ],
+          data: [publicRow(2, "Die Pendelwelle")],
         }),
       },
     });

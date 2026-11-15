@@ -105,6 +105,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       commentFailed: "A hozzászólást nem sikerült elküldeni.",
       voteFailed: "A szavazatot nem sikerült menteni.",
       replyFailed: "A választ nem sikerült elküldeni.",
+      legacyReworkAppend: "Ez az oldal elavult. Töltse be újra, és próbálja meg ismét.",
     },
     feedbackMenu: {
       trigger: "Visszajelzés küldése",

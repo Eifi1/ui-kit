@@ -107,6 +107,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       commentFailed: "No se ha podido publicar el comentario.",
       voteFailed: "No se ha podido guardar su voto.",
       replyFailed: "No se ha podido enviar la respuesta.",
+      legacyReworkAppend: "Esta página está desactualizada. Recárguela y vuelva a intentarlo.",
     },
     feedbackMenu: {
       trigger: "Enviar comentarios",

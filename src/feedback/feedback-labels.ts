@@ -105,6 +105,10 @@ export interface FeedbackToastLabels {
   /** 0.38.1: `POST /feedback/{id}/replies` failed with no `detail` of its own — for
    *  `FeedbackRowDetail`'s `onReply`. de-CH: "Antwort konnte nicht gesendet werden." */
   replyFailed: string;
+  /** 0.64: the coded `legacy_rework_append` — a tab older than the server sent a rework the
+   *  old way, and nothing was written. de-CH: "Diese Seite ist nicht mehr aktuell. Laden Sie
+   *  sie neu und versuchen Sie es noch einmal." */
+  legacyReworkAppend: string;
 }
 
 export const DEFAULT_FEEDBACK_TOAST_LABELS: FeedbackToastLabels = {
@@ -124,6 +128,7 @@ export const DEFAULT_FEEDBACK_TOAST_LABELS: FeedbackToastLabels = {
   commentFailed: "Could not post the comment.",
   voteFailed: "Could not save your vote.",
   replyFailed: "Could not send the reply.",
+  legacyReworkAppend: "This page is out of date. Reload it and try again.",
 };
 
 /** `feedbackStatus` resolved: English, then `<UiKitProvider labels>`, then `labels`. For

@@ -21,6 +21,8 @@ import { useFeedbackRenderDate } from "../feedback/feedback-table";
 import { useKitLocale } from "../i18n/kit-labels";
 import { useFeedbackCommentsQuery } from "../offline/feedback-comments-query";
 import { personLabel } from "../admin/admin-parts";
+import { errorBodyWithCode } from "../auth/auth-errors";
+import { httpStatusOf } from "../lib/http-status";
 import { useDescribeAccountFailure } from "./account-failure";
 import { accountFeedbackApi } from "./account-feedback-api";
 import type { AccountFeedbackApi } from "./account-feedback-api";
@@ -65,13 +67,56 @@ function useAccount(): AccountMe | undefined {
   return me.data ?? stored ?? undefined;
 }
 
-/** A refusal in the account words where its code is known, else the part's own fallback. */
-function useErrorMessage(): (error: unknown, fallback: string) => string {
+const isBag = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null;
+
+/** An uncoded 4xx's own sentence: a FastAPI `detail` that is a string (a validation 422's list
+ *  is not one), wherever `authErrorCode` reads a body. English on every locale — but the
+ *  server's reason, which the apps showed before, where the part's own words say only that it
+ *  failed. */
+function serverSentence(error: unknown): string | undefined {
+  const status = httpStatusOf(error);
+  if (status === undefined || status < 400 || status >= 500 || !isBag(error)) return undefined;
+  if (errorBodyWithCode(error, (code) => typeof code === "string") !== undefined) return undefined;
+  const response = error.response;
+  for (const body of [isBag(response) ? response.data : undefined, error.data, error.body]) {
+    if (isBag(body) && typeof body.detail === "string" && body.detail.trim() !== "") return body.detail;
+  }
+  return undefined;
+}
+
+/** The app's `describeError`: its words for a refusal, or `undefined` for the kit's. */
+type DescribeError = (error: unknown) => ReactNode | undefined;
+
+/**
+ * A refusal's words on the feedback pages, in this order (0.64, Kurvenschmiede):
+ *
+ *  1. the app's `describeError`;
+ *  2. the coded `legacy_rework_append` (a tab older than the server) → `feedbackToast`'s
+ *     `legacyReworkAppend`;
+ *  3. the account words, where they know more than "That didn't work";
+ *  4. an uncoded 4xx → the server's `detail` sentence;
+ *  5. the part's own fallback ("Could not send the reply.").
+ *
+ * `say` is for the page's own toasts; `text` for a kit part that toasts a string
+ * (`errorMessage`: the comments, the vote, the submit dialog), which takes the app's answer
+ * when it is a string and the kit's words otherwise.
+ */
+function useFailureWords(describeError?: DescribeError) {
   const describe = useDescribeAccountFailure();
+  const { legacyReworkAppend } = useFeedbackToastLabels();
   const unknown = describe(undefined);
-  return (error, fallback) => {
+  const kit = (error: unknown, fallback: string): string => {
+    if (errorBodyWithCode(error, (code) => code === "legacy_rework_append")) return legacyReworkAppend;
     const said = describe(error);
-    return said === unknown ? fallback : said;
+    if (said !== unknown) return said;
+    return serverSentence(error) ?? fallback;
+  };
+  return {
+    say: (error: unknown, fallback: string): ReactNode => describeError?.(error) ?? kit(error, fallback),
+    text: (error: unknown, fallback: string): string => {
+      const own = describeError?.(error);
+      return typeof own === "string" ? own : kit(error, fallback);
+    },
   };
 }
 
@@ -91,6 +136,10 @@ export interface AccountFeedbackPageProps extends Pick<
   /** Where anybody but an admin is sent from the inbox, the address's query (`?row=`) kept.
    *  Default `/my-feedback`. */
   myPath?: string;
+  /** The app's words for a refusal, asked first; `undefined` leaves it to the kit's — the
+   *  account words, an uncoded 4xx's own sentence, the part's fallback. A report's comments
+   *  toast text only: there, an answer that is not a string is the kit's words. */
+  describeError?: DescribeError;
 }
 
 /**
@@ -104,6 +153,7 @@ export function AccountFeedbackPage({
   isAdmin = roleIsAdmin,
   publicReader = notADemo,
   myPath = "/my-feedback",
+  describeError,
   ...inbox
 }: AccountFeedbackPageProps) {
   const me = useAccount();
@@ -112,7 +162,9 @@ export function AccountFeedbackPage({
   const admin = isAdmin(me);
   if (!mine && !admin) return <Navigate to={`${myPath}${search}`} replace />;
   const reader = typeof publicReader === "function" ? publicReader(me) : publicReader;
-  return <FeedbackList mine={mine} admin={admin} reader={reader} viewerId={me.id} {...inbox} />;
+  return (
+    <FeedbackList mine={mine} admin={admin} reader={reader} viewerId={me.id} describeError={describeError} {...inbox} />
+  );
 }
 
 function FeedbackList({
@@ -120,15 +172,16 @@ function FeedbackList({
   admin,
   reader,
   viewerId,
+  describeError,
   ...inbox
 }: { mine: boolean; admin: boolean; reader: boolean; viewerId: number } & Pick<
   AccountFeedbackPageProps,
-  "swipe" | "pageLinkParams" | "pageLinkExclude" | "table" | "header"
+  "swipe" | "pageLinkParams" | "pageLinkExclude" | "table" | "header" | "describeError"
 >) {
   const api = useAccountFeedbackApi();
   const queryClient = useQueryClient();
   const toastLabels = useFeedbackToastLabels();
-  const errorMessage = useErrorMessage();
+  const words = useFailureWords(describeError);
   const renderDate = useFeedbackRenderDate(undefined, useKitLocale());
   const reports = useQuery({
     queryKey: mine ? accountQueryKeys.feedbackMine : accountQueryKeys.feedbackAll,
@@ -142,7 +195,7 @@ function FeedbackList({
   const update = useMutation({
     mutationFn: (patch: FeedbackDetailPatch) => api.update(patch),
     onSuccess: refresh,
-    onError: (error) => toast.error(errorMessage(error, toastLabels.updateFailed)),
+    onError: (error) => toast.error(words.say(error, toastLabels.updateFailed)),
   });
   // A report answered whole, replies and all, goes into the list at once: the reply box clears
   // when the mutation resolves, and a timeline without the reply would read as a lost answer.
@@ -157,12 +210,12 @@ function FeedbackList({
   const reply = useMutation({
     mutationFn: ({ id, body, status, attachmentUrl }: FeedbackReplyPost) => api.reply(id, body, status, attachmentUrl),
     onSuccess: putInList,
-    onError: (error) => toast.error(errorMessage(error, toastLabels.replyFailed)),
+    onError: (error) => toast.error(words.say(error, toastLabels.replyFailed)),
   });
   const rework = useMutation({
     mutationFn: ({ id, note, attachmentUrl }: FeedbackReworkPost) => api.rework(id, note, attachmentUrl),
     onSuccess: putInList,
-    onError: (error) => toast.error(errorMessage(error, toastLabels.updateFailed)),
+    onError: (error) => toast.error(words.say(error, toastLabels.updateFailed)),
   });
 
   return (
@@ -180,7 +233,9 @@ function FeedbackList({
         votes={reader}
         // A crash report is private, and the server takes no comment on one.
         comments={(row) =>
-          reader && row.category !== "CRASH" ? <ReportComments id={row.id} admin={admin} onChanged={refresh} /> : null
+          reader && row.category !== "CRASH" ? (
+            <ReportComments id={row.id} admin={admin} onChanged={refresh} errorMessage={words.text} />
+          ) : null
         }
         onUpload={api.upload}
         fetcher={api.file}
@@ -194,9 +249,18 @@ function FeedbackList({
 
 /** The comments under an opened row: the kit's thread on the routes, the comments alone (the
  *  row's detail draws the replies above). Hide is the admin's; Delete the writer's own. */
-function ReportComments({ id, admin, onChanged }: { id: number; admin: boolean; onChanged: () => void }) {
+function ReportComments({
+  id,
+  admin,
+  onChanged,
+  errorMessage,
+}: {
+  id: number;
+  admin: boolean;
+  onChanged: () => void;
+  errorMessage: (error: unknown, fallback: string) => string;
+}) {
   const api = useAccountFeedbackApi();
-  const errorMessage = useErrorMessage();
   const thread = useFeedbackCommentsQuery(id, api, { admin, errorMessage, onChanged });
   return (
     <FeedbackCommentThread
@@ -225,6 +289,10 @@ export interface AccountPublicFeedbackPageProps {
   publicReader?: (user: AccountMe) => boolean;
   /** For a reader the server would refuse: the app's not-found page. Default nothing. */
   fallback?: ReactNode;
+  /** The app's words for a refusal (a vote, a comment), asked first; `undefined` leaves it to
+   *  the kit's, as on {@link AccountFeedbackPage}. The page toasts text: an answer that is
+   *  not a string is the kit's words. */
+  describeError?: DescribeError;
 }
 
 /**
@@ -237,17 +305,26 @@ export function AccountPublicFeedbackPage({
   isAdmin = roleIsAdmin,
   publicReader = notADemo,
   fallback = null,
+  describeError,
 }: AccountPublicFeedbackPageProps) {
   const me = useAccount();
   if (!me) return <LoadingState className="py-16" />;
   if (!publicReader(me)) return <>{fallback}</>;
-  return <PublicFeedback pageSize={pageSize} admin={isAdmin(me)} />;
+  return <PublicFeedback pageSize={pageSize} admin={isAdmin(me)} describeError={describeError} />;
 }
 
-function PublicFeedback({ pageSize, admin }: { pageSize: number; admin: boolean }) {
+function PublicFeedback({
+  pageSize,
+  admin,
+  describeError,
+}: {
+  pageSize: number;
+  admin: boolean;
+  describeError?: DescribeError;
+}) {
   const api = useAccountFeedbackApi();
   const queryClient = useQueryClient();
-  const errorMessage = useErrorMessage();
+  const errorMessage = useFailureWords(describeError).text;
   const renderDate = useFeedbackRenderDate(undefined, useKitLocale());
   const view = useFeedbackPublicPage({ pageSize, search: true });
   const list = useQuery({
@@ -311,7 +388,7 @@ export type UseAccountFeedbackSubmitOptions = Omit<
 export function useAccountFeedbackSubmit(options: UseAccountFeedbackSubmitOptions = {}): FeedbackSubmit {
   const api = useAccountFeedbackApi();
   const queryClient = useQueryClient();
-  const errorMessage = useErrorMessage();
+  const errorMessage = useFailureWords().text;
   const me = useAccount();
   const locale = useKitLocale();
   return useFeedbackSubmit<FeedbackRecord>({

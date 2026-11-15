@@ -98,6 +98,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       commentFailed: "无法发表评论。",
       voteFailed: "无法保存您的投票。",
       replyFailed: "无法发送回复。",
+      legacyReworkAppend: "此页面已过时。请重新加载后再试。",
     },
     feedbackMenu: {
       trigger: "发送反馈",

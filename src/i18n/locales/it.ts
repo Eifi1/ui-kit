@@ -107,6 +107,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       commentFailed: "Non è stato possibile pubblicare il commento.",
       voteFailed: "Non è stato possibile salvare il Suo voto.",
       replyFailed: "Non è stato possibile inviare la risposta.",
+      legacyReworkAppend: "Questa pagina non è più aggiornata. La ricarichi e riprovi.",
     },
     feedbackMenu: {
       trigger: "Invia feedback",

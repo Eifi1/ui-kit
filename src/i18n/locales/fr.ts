@@ -108,6 +108,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       commentFailed: "Le commentaire n’a pas pu être publié.",
       voteFailed: "Votre vote n’a pas pu être enregistré.",
       replyFailed: "La réponse n’a pas pu être envoyée.",
+      legacyReworkAppend: "Cette page n’est plus à jour. Rechargez-la et réessayez.",
     },
     feedbackMenu: {
       trigger: "Envoyer un retour",

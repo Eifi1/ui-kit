@@ -38,6 +38,8 @@ are new sentences, not yet reviewed):
 - the namespace `accountTeams`: the teams' parts (below) — Kurvenschmiede's `teams.*` words, as
   its reviewers read them, with the kit's "administrator" — and a team's six coded refusals
   (`accountTeams.codes`); `team_not_found`'s sentence and `team_changed`'s second half are new.
+- `feedbackToast.legacyReworkAppend`: the coded `legacy_rework_append` on the feedback pages
+  ("This page is out of date. Reload it and try again.").
 
 **Must change** (in the types only; no app's code is affected today):
 
@@ -241,6 +243,12 @@ Nothing new is stored in the browser; the file parts fetch through the session.
   failed first `/auth/me` both pages draw for the account the session holds, no longer their
   spinner for good, and `useAccountFeedbackSubmit` files the report in that account's name, no
   longer in nobody's.
+- **A refusal keeps its reason** (Kurvenschmiede on 0.64.0-dev.6): both pages take
+  `describeError`, asked first as on the other account sections; then the coded
+  `legacy_rework_append` in the kit's words, the account words, and for an uncoded 4xx the
+  server's `detail` sentence, as the apps showed it before — no longer "Could not save that
+  change." or "Could not send the reply." for every refusal. The comments and the vote toast
+  text: there an answer of `describeError` that is not a string is the kit's words.
 
 ## Teams (opt-in)
 
