@@ -9,10 +9,12 @@ import {
   useRef,
   useState,
 } from "react";
-import type { ComponentPropsWithRef, ReactNode, Ref } from "react";
+import type { ComponentPropsWithRef, MouseEvent, ReactNode, Ref } from "react";
 import { cn } from "../lib/cn";
 import { useEdgeFade } from "../lib/strip-fade";
 import { assignRef } from "./field-parts";
+import type { SortDir } from "./data-table-sort";
+import { ariaSortOf, SortHeaderButton } from "./sort-header-button";
 import { THIN_SCROLLBAR_CLASS, useScrollOverflow } from "./scroll-area";
 
 /** `none` (0.10.0): no cell padding at all — keksdose's VAT summary, a table set
@@ -566,6 +568,19 @@ export interface TableHeaderCellProps extends Omit<ComponentPropsWithRef<"th">, 
   size?: TableHeaderCellSize;
   /** Default `medium`. `normal` for the quiet header above; see {@link size}. */
   weight?: TableHeaderCellWeight;
+  /**
+   * A sortable column (0.65): the header becomes DataTable's sort button — its arrow
+   * both ways at 40 % while `dir` is `null`, up or down while sorted — and the cell says
+   * the sort with `aria-sort`. The caller holds the sort and orders the rows; `onToggle`
+   * is the press. keksdose's budget page (dev #679) copied DataTable's header for this.
+   */
+  sort?: TableHeaderCellSort;
+}
+
+/** A {@link TableHeaderCell}'s sort: the column's direction, or `null` while unsorted. */
+export interface TableHeaderCellSort {
+  dir: SortDir | null;
+  onToggle: (event: MouseEvent<HTMLButtonElement>) => void;
 }
 
 /**
@@ -580,7 +595,9 @@ export function TableHeaderCell({
   size,
   weight = "medium",
   scope,
+  sort,
   className,
+  children,
   ref: refProp,
   ...rest
 }: TableHeaderCellProps) {
@@ -595,6 +612,7 @@ export function TableHeaderCell({
       ref={ref}
       {...rest}
       scope={scope ?? (section === "head" ? "col" : "row")}
+      aria-sort={sort ? ariaSortOf(sort.dir) : rest["aria-sort"]}
       className={cn(
         CELL_PAD[density],
         ALIGN[align ?? (numeric ? "end" : "start")],
@@ -605,7 +623,16 @@ export function TableHeaderCell({
         textSize && HEADER_SIZE[textSize],
         className,
       )}
-    />
+    >
+      {sort ? (
+        // Inline, so the cell's own alignment (`numeric`, `align`) places it.
+        <SortHeaderButton className="inline-flex" dir={sort.dir} onClick={sort.onToggle}>
+          {children}
+        </SortHeaderButton>
+      ) : (
+        children
+      )}
+    </th>
   );
 }
 

@@ -403,7 +403,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // words itself.
   // 0.64 (+1, Kurvenschmiede's U7): `DEFAULT_ADMIN_ATTENTION_HREFS`, listed under 0.42 above
   // and never exported until now.
-  ["@eifi1/ui-kit", barrel, 1031],
+  // 0.65 (+1, keksdose's budget page, dev #679): `SortStrip`, DataTable's phone sort row
+  // for any list; `TableHeaderCell` gains `sort` (a prop, not a name).
+  ["@eifi1/ui-kit", barrel, 1032],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

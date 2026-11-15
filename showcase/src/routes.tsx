@@ -196,6 +196,7 @@ const WizardStepHooksDemo = lazySection(() => import("./sections/wizard-012-demo
 const DescriptionPlaceholderDemo = lazySection(() => import("./sections/table-012-demo"), "DescriptionPlaceholderDemo");
 const TableVariantsDemo = lazySection(() => import("./sections/table-012-demo"), "TableVariantsDemo");
 const TableStackDemo = lazySection(() => import("./sections/table-012-demo"), "TableStackDemo");
+const TableSortDemo = lazySection(() => import("./sections/table-sort-065-demo"), "TableSortDemo");
 const DataTableUrlFiltersDemo = lazySection(() => import("./sections/data-table-server"), "DataTableUrlFiltersDemo");
 const UrlStateDemo = lazySection(() => import("./sections/url-state-demo"), "UrlStateDemo");
 const FormattingDemo = lazySection(() => import("./sections/formatting-demo"), "FormattingDemo");
@@ -1170,6 +1171,7 @@ export const GROUPS: ShowcaseGroup[] = [
           "TableEmpty",
           "TableCaption",
           "TableFoot",
+          "SortStrip",
           "NUMERIC_CELL_CLASS",
           "Separator",
           "ScrollArea",
@@ -1181,6 +1183,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <TableHeaderValignDemo />
             <TableVariantsDemo />
             <TableStackDemo />
+            <TableSortDemo />
             <TableRefs016Demo />
             <DescriptionPlaceholderDemo />
             <TableEdgeFadeDemo />

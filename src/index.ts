@@ -627,6 +627,7 @@ export { ZoomableImage, DEFAULT_ZOOMABLE_IMAGE_LABELS } from "./components/zooma
 export type { ZoomableImageProps, ZoomableImageLabels } from "./components/zoomable-image";
 export * from "./components/button-group";
 export * from "./components/table";
+export * from "./components/sort-strip";
 export * from "./components/separator";
 // Named: scroll-area.tsx also holds the overflow hook and scrollbar class Table shares.
 export { ScrollArea } from "./components/scroll-area";

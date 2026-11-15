@@ -1,9 +1,8 @@
-import { Fragment, isValidElement, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Fragment, isValidElement, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent, ReactNode } from "react";
-import { ArrowDownWideNarrow, ArrowUpNarrowWide, ChevronDown, ChevronRight, Filter } from "lucide-react";
+import { ChevronDown, ChevronRight, Filter } from "lucide-react";
 import { FOCUS_RING } from "./focus-ring";
-import { IconButton } from "./icon-button";
-import { Select } from "./select";
+import { SortStrip } from "./sort-strip";
 import { cn } from "../lib/cn";
 import { dirOf, type Direction } from "../lib/direction";
 import { defaultFilterState, isFilterActive, resolveFilter } from "./data-table-filters";
@@ -276,51 +275,29 @@ export function MobileSort<T>({
   onPick: (key: string | null) => void;
   onFlip: () => void;
 }) {
-  const selectId = useId();
-  const sortLabels: DataTableSortLabels = labels;
   if (columns.length === 0) return null;
   // A persisted or URL sort can name a column with no `sortBy` (or a hidden one): the
   // sort chain drops it, and so does the control rather than claiming it.
   const primary = sorts[0] && columns.some((c) => c.key === sorts[0].key) ? sorts[0] : null;
-  const offerDefault = sortCycle === "tri" || primary === null;
-  const desc = primary?.dir === "desc";
+  const sortLabels: DataTableSortLabels = labels;
   return (
-    <div
+    <SortStrip
       data-table-mobile-sort=""
-      className={cn(
-        // At Large the direction button shows its words (IconButton's label, §4); the
-        // row wraps so the select keeps a usable width on a 240 px card.
-        "flex flex-wrap items-center gap-2 border-b border-subtle",
-        compact ? "px-3 py-1.5" : "px-4 py-2",
-      )}
-    >
-      <label htmlFor={selectId} className="shrink-0 text-xs text-muted">
-        {sortLabels.sortBy}
-      </label>
-      <Select
-        id={selectId}
-        size={compact ? "sm" : "md"}
-        className="min-w-0 flex-1 large:basis-40"
-        value={primary?.key ?? ""}
-        onChange={(e) => onPick(e.target.value || null)}
-      >
-        {offerDefault && <option value="">{sortLabels.sortDefault}</option>}
-        {columns.map((col) => (
-          <option key={col.key} value={col.key}>
-            {columnLabel(col, labels)}
-          </option>
-        ))}
-      </Select>
-      <IconButton
-        size={compact ? "xs" : "md"}
-        variant="secondary"
-        label={desc ? sortLabels.sortDescending : sortLabels.sortAscending}
-        disabled={primary === null}
-        onClick={onFlip}
-      >
-        {desc ? <ArrowDownWideNarrow /> : <ArrowUpNarrowWide />}
-      </IconButton>
-    </div>
+      className={cn("border-b border-subtle", compact ? "px-3 py-1.5" : "px-4 py-2")}
+      options={columns.map((col) => ({ value: col.key, label: columnLabel(col, labels) }))}
+      value={primary?.key ?? null}
+      dir={primary?.dir ?? "asc"}
+      offerDefault={sortCycle === "tri"}
+      compact={compact}
+      labels={{
+        sortBy: sortLabels.sortBy,
+        sortDefault: sortLabels.sortDefault,
+        sortAscending: sortLabels.sortAscending,
+        sortDescending: sortLabels.sortDescending,
+      }}
+      onPick={onPick}
+      onFlip={onFlip}
+    />
   );
 }
 
