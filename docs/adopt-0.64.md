@@ -252,6 +252,8 @@ Nothing new is stored in the browser; the file parts fetch through the session.
   server's `detail` sentence, as the apps showed it before — no longer "Could not save that
   change." or "Could not send the reply." for every refusal. The comments and the vote toast
   text: there an answer of `describeError` that is not a string is the kit's words.
+- `AccountPublicFeedbackPage`'s `publicReader` takes `true` or `false` as well as a function,
+  as `AccountFeedbackPage`'s does.
 
 ## Teams (opt-in)
 

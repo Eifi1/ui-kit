@@ -285,8 +285,9 @@ export interface AccountPublicFeedbackPageProps {
   /** Who is the admin (hides and shows comments). Default: `role` is `ADMIN`. */
   isAdmin?: (user: AccountMe) => boolean;
   /** Who may read it; anybody else is shown `fallback`, and nothing is asked of the server.
-   *  Default: everybody signed in but a demo. */
-  publicReader?: (user: AccountMe) => boolean;
+   *  Default: everybody signed in but a demo; `true` or `false` for everybody or nobody, as on
+   *  {@link AccountFeedbackPage}. */
+  publicReader?: boolean | ((user: AccountMe) => boolean);
   /** For a reader the server would refuse: the app's not-found page. Default nothing. */
   fallback?: ReactNode;
   /** The app's words for a refusal (a vote, a comment), asked first; `undefined` leaves it to
@@ -309,7 +310,8 @@ export function AccountPublicFeedbackPage({
 }: AccountPublicFeedbackPageProps) {
   const me = useAccount();
   if (!me) return <LoadingState className="py-16" />;
-  if (!publicReader(me)) return <>{fallback}</>;
+  const reader = typeof publicReader === "function" ? publicReader(me) : publicReader;
+  if (!reader) return <>{fallback}</>;
   return <PublicFeedback pageSize={pageSize} admin={isAdmin(me)} describeError={describeError} />;
 }
 

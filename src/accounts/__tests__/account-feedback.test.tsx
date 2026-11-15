@@ -303,6 +303,23 @@ describe("AccountPublicFeedbackPage", () => {
     });
   });
 
+  it("takes publicReader as a boolean, as the inbox does", async () => {
+    const { calls } = mount(<AccountPublicFeedbackPage publicReader={false} fallback={<p>Nicht gefunden</p>} />, {
+      entry: "/all-feedback",
+    });
+    expect(await screen.findByText("Nicht gefunden")).toBeInTheDocument();
+    expect(calls.map((c) => c.route)).not.toContain("get /feedback/public");
+  });
+
+  it("reads the list for publicReader true, a demo too", async () => {
+    mount(<AccountPublicFeedbackPage publicReader />, {
+      user: { ...ada, is_demo: true },
+      entry: "/all-feedback",
+      routes: { "get /feedback/public": () => ({ status: 200, data: [publicRow(2, "Die Pendelwelle")] }) },
+    });
+    expect((await screen.findAllByText("Die Pendelwelle")).length).toBeGreaterThan(0);
+  });
+
   it("shows a reader the server would refuse the app's fallback, and asks nothing", async () => {
     const { calls } = mount(<AccountPublicFeedbackPage publicReader={() => false} fallback={<p>Nicht gefunden</p>} />, {
       entry: "/all-feedback",
