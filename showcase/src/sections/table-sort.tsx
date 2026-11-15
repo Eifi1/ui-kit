@@ -4,7 +4,7 @@ import { Example, Note, code } from "../lib/section";
 import { numberFormat } from "../lib/number-format";
 
 /**
- * 0.65 on the Description list & table page: `TableHeaderCell sort` and `SortStrip` —
+ * The Description list & table page's sorting: `TableHeaderCell sort` and `SortStrip` —
  * keksdose's budget page (dev #679) sorts every category by Available on a hand-built
  * Table. Figures are formatted once with en-GB, so the specimens do not move with the
  * language.
