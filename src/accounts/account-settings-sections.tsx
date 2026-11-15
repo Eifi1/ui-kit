@@ -552,7 +552,13 @@ export function AccountInvitationsSection<R extends string = string>({
           })
           .then(said)
       }
-      onResend={(row) => resend.mutateAsync(Number(row.id)).then(said)}
+      // server-kit answers resent on /resend too; there the admin asked for it, no news.
+      onResend={(row) =>
+        resend
+          .mutateAsync(Number(row.id))
+          .then(said)
+          .then((answer) => ({ ...answer, resent: false }))
+      }
       onRevoke={(row) => revoke.mutateAsync(Number(row.id)).then(() => onChanged?.())}
     />
   );

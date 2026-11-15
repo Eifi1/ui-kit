@@ -530,6 +530,30 @@ describe("AccountInvitationsSection", () => {
     expect(await screen.findByText("This invitation has already been accepted or revoked.")).toBeInTheDocument();
   });
 
+  it("says nothing of an earlier invitation after an explicit resend, whatever resent says (keksdose)", async () => {
+    const row = {
+      id: 7,
+      email: "eve@example.com",
+      role: "MEMBER",
+      locale: "en",
+      status: "open",
+      created_at: "2026-11-13T09:00:00Z",
+      expires_at: "2026-11-27T09:00:00Z",
+    };
+    const { calls, user } = mount(<AccountInvitationsSection />, {
+      "get /admin/invitations": () => ({ status: 200, data: [row] }),
+      // server-kit 0.32 answers resent: true on /resend too: true, and no news to the admin.
+      "post /admin/invitations/7/resend": () => ({
+        status: 200,
+        data: { ...row, sent: true, resent: true, mail_backend: "resend" },
+      }),
+    });
+    await user.click(await screen.findByRole("button", { name: "Send eve@example.com a new link" }));
+    await waitFor(() => expect(calls.map((c) => c.route)).toContain("post /admin/invitations/7/resend"));
+    await waitFor(() => expect(calls.filter((c) => c.route === "get /admin/invitations").length).toBeGreaterThan(0));
+    expect(screen.queryByText(/already had an invitation/)).toBeNull();
+  });
+
   it("says the console's hint on load, read from the server before any invitation", async () => {
     mount(<AccountInvitationsSection />, {
       "get /admin/invitations": () => ({ status: 200, data: [] }),
