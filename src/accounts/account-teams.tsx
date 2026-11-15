@@ -442,7 +442,12 @@ export function AccountTeamsSection({
   const [deleting, setDeleting] = useState<AccountAdminTeam | null>(null);
   const [handOn, setHandOn] = useState<HandOn | null>(null);
   const failed = (team?: string) => (error: unknown) => toast.error(say(error, team));
+  // Any change of a team holds every other door: each answers with the team, and each sends
+  // the version read, so a second one before the first's answer is refused as `team_changed`.
   const busy =
+    actions.create.isPending ||
+    actions.rename.isPending ||
+    actions.delete.isPending ||
     actions.addMember.isPending ||
     actions.setRole.isPending ||
     actions.removeMember.isPending ||
@@ -532,12 +537,19 @@ export function AccountTeamsSection({
       name: (team) => team.name,
       size: "sm",
       actions: (team) => [
-        { key: "rename", label: labels.rename, icon: Pencil, onSelect: () => setRenaming({ team, name: team.name }) },
+        {
+          key: "rename",
+          label: labels.rename,
+          icon: Pencil,
+          disabled: busy,
+          onSelect: () => setRenaming({ team, name: team.name }),
+        },
         {
           key: "delete",
           label: labels.delete,
           icon: Trash2,
           tone: "danger",
+          disabled: busy,
           // Asked at the server's level in the dialog; the menu's own question would ask twice.
           confirm: false,
           onSelect: () => setDeleting(team),
@@ -568,7 +580,7 @@ export function AccountTeamsSection({
         }}
       >
         <Input label={labels.name} value={name} maxLength={120} onChange={(event) => setName(event.target.value)} />
-        <Button type="submit" variant="accent" disabled={actions.create.isPending || !name.trim()}>
+        <Button type="submit" variant="accent" disabled={busy || !name.trim()}>
           <Plus className="size-4" aria-hidden /> {labels.create}
         </Button>
       </form>

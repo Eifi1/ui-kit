@@ -302,6 +302,9 @@ no word is shown, and the account's and the admin's other parts behave as before
 - **The add row asks the language before Add** (Kurvenschmiede on 0.64.0-dev.6): the tab goes
   address → role (the admin's) → language → Add, and the row has a column per field at `sm`, so
   the language no longer wraps under the address.
+- **One team change at a time in `AccountTeamsSection`** (Kurvenschmiede on 0.64.0-dev.6): while
+  a create, a rename, a delete or a member change is on its way, the others wait — rename and
+  delete are greyed during a member change, the member doors during a rename or a delete.
 
 ## The settings sections
 
