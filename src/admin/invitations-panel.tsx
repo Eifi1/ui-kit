@@ -97,6 +97,9 @@ export interface InvitationSentAnswer {
   link?: string | null;
   /** `false`: the invitation exists but the mail failed — say so, resend it. */
   sent?: boolean;
+  /** The address had an invitation already, and it went again with a new link (server-kit
+   *  0.32's `resent`, keksdose's "sent again"). */
+  resent?: boolean;
 }
 
 /** A scope an invitation can carry. */
@@ -145,6 +148,8 @@ export interface InvitationsLabels {
   linkReady: (email: string) => string;
   /** The answer said the mail was not sent. */
   notSent: (email: string) => string;
+  /** The answer said the address had an invitation already, sent again (0.65). */
+  sentAgain?: (email: string) => string;
   /** A rejected callback, unless `describeError` says better. */
   failed: string;
 }
@@ -277,6 +282,7 @@ export function InvitationsPanel<R extends string = string>({
       else setLooseLink({ email: address, link: answer.link });
     }
     if (answer.sent === false) setNotice(labels.notSent(address));
+    else if (answer.resent && labels.sentAgain) setNotice(labels.sentAgain(address));
   };
 
   const address = email.trim();

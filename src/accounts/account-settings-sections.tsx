@@ -510,10 +510,12 @@ export function AccountInvitationsSection<R extends string = string>({
   const mail = useAdminMail({ enabled: mailBackendProp === undefined });
   const [answered, setAnswered] = useState<string | null>(null);
   const mailBackend = answered ?? mailBackendProp ?? mail.data?.mail_backend ?? null;
-  const said = <T extends { mail_backend: string; link?: string | null; sent: boolean; id: number }>(answer: T) => {
+  const said = <T extends { mail_backend: string; link?: string | null; sent: boolean; resent?: boolean; id: number }>(
+    answer: T,
+  ) => {
     setAnswered(answer.mail_backend);
     onChanged?.();
-    return { id: answer.id, link: answer.link ?? null, sent: answer.sent };
+    return { id: answer.id, link: answer.link ?? null, sent: answer.sent, resent: answer.resent === true };
   };
   const rows: InvitationRow<R>[] = (list.data ?? []).map((row) => ({
     id: row.id,

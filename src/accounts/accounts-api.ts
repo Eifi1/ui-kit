@@ -192,6 +192,8 @@ export interface AccountInvitation {
 export interface AccountInvitationIssued extends AccountInvitation {
   sent: boolean;
   mail_backend: string;
+  /** server-kit 0.32: the address had an invitation, and it went again (keksdose's). */
+  resent?: boolean;
 }
 
 /** `POST /admin/invitations` (server-kit's `InvitationCreate`). */

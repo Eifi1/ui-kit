@@ -1609,6 +1609,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
         "Questo server non invia email: vengono scritte nel log del server. Copi qui ogni link di invito e lo inoltri Lei stesso: viene mostrato una sola volta.",
       linkReady: (email) => `Il link di invito per ${email}, mostrato solo questa volta:`,
       notSent: (email) => `${email} è invitato, ma non è stato possibile inviare l’email. La reinvii.`,
+      sentAgain: (email) => `${email} aveva già un invito. È stato inviato di nuovo con un nuovo link.`,
       failed: "Non ha funzionato. Riprovi.",
     },
     characterCount: {

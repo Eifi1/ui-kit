@@ -1592,6 +1592,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         "Ez a szerver nem küld leveleket – a szervernaplóba írja őket. Innen másolja ki az egyes meghívóhivatkozásokat, és adja tovább maga: mindegyik csak egyszer jelenik meg.",
       linkReady: (email) => `Meghívóhivatkozás ehhez a címhez: ${email}. Csak most jelenik meg:`,
       notSent: (email) => `${email} meghívást kapott, de az e-mailt nem sikerült elküldeni. Küldje el újra.`,
+      sentAgain: (email) => `${email} már kapott meghívót. Új hivatkozással újra elküldtük.`,
       failed: "Ez nem sikerült. Kérjük, próbálja újra.",
     },
     characterCount: {

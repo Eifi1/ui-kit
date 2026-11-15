@@ -1624,6 +1624,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
         "Ce serveur n’envoie pas d’e-mails — ils sont écrits dans le journal du serveur. Copiez ici chaque lien d’invitation et transmettez-le vous-même\u00a0: il n’est affiché qu’une seule fois.",
       linkReady: (email) => `Le lien d’invitation pour ${email}, affiché cette seule fois\u00a0:`,
       notSent: (email) => `${email} est invité, mais l’e-mail n’a pas pu être envoyé. Renvoyez-le.`,
+      sentAgain: (email) => `${email} avait déjà une invitation. Elle a été renvoyée avec un nouveau lien.`,
       failed: "Cela n’a pas fonctionné. Veuillez réessayer.",
     },
     characterCount: {

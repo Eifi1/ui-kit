@@ -1534,6 +1534,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       consoleHint: "此服务器不发送邮件——邮件会写入服务器日志。请在这里复制每个邀请链接并自行转交：链接只显示一次。",
       linkReady: (email) => `${email} 的邀请链接，仅显示这一次：`,
       notSent: (email) => `已邀请 ${email}，但邮件未能发送。请重新发送。`,
+      sentAgain: (email) => `${email} 已有一份邀请，已用新链接重新发送。`,
       failed: "操作未成功，请重试。",
     },
     characterCount: {

@@ -279,4 +279,15 @@ describe("InvitationsPanel at Large (0.33, text size §10.17)", () => {
     expect(address.className.split(" ")).toContain("truncate-until-large");
     expect(address.className.split(" ")).not.toContain("truncate");
   });
+
+  it("says an invitation that already existed was sent again (keksdose, server-kit 0.32's resent)", async () => {
+    const user = userEvent.setup();
+    const onInvite = vi.fn(async () => ({ id: 1, sent: true, resent: true }));
+    render(<InvitationsPanel<Role> invitations={ROWS.slice(0, 1)} onInvite={onInvite} />);
+    await user.type(screen.getByLabelText("Email address"), "nina@example.com");
+    await user.click(screen.getByRole("button", { name: "Invite" }));
+    expect(
+      await screen.findByText("nina@example.com already had an invitation. It was sent again with a new link."),
+    ).toBeInTheDocument();
+  });
 });

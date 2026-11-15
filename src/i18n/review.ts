@@ -416,6 +416,7 @@ export const KIT_LABEL_SAMPLES: Readonly<Record<string, readonly (readonly unkno
   "invitations.revoke": [["{{email}}"]],
   "invitations.linkReady": [["{{email}}"]],
   "invitations.notSent": [["{{email}}"]],
+  "invitations.sentAgain": [["{{email}}"]],
   "accountState.deletionOn": [["{{date}}"]],
   // 0.31.0: the settings shell, the landing page and the demo
   // (docs/settings-harmonization.md, docs/landing-demo-harmonization.md). An optional

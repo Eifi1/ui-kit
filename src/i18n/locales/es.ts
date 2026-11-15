@@ -1594,6 +1594,7 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         "Este servidor no envía correos: se escriben en el registro del servidor. Copie aquí cada enlace de invitación y transmítalo usted mismo: solo se muestra una vez.",
       linkReady: (email) => `El enlace de invitación para ${email}, que solo se muestra esta vez:`,
       notSent: (email) => `${email} está invitado, pero no se pudo enviar el correo. Reenvíelo.`,
+      sentAgain: (email) => `${email} ya tenía una invitación. Se ha reenviado con un enlace nuevo.`,
       failed: "No ha funcionado. Inténtelo de nuevo.",
     },
     characterCount: {

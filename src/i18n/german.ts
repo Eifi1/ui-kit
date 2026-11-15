@@ -1640,6 +1640,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         "Dieser Server verschickt keine Mails – sie werden ins Server-Log geschrieben. Kopieren Sie jeden Einladungslink hier und geben Sie ihn selbst weiter: Er wird nur einmal angezeigt.",
       linkReady: (email) => `Der Einladungslink für ${email}, nur dieses eine Mal angezeigt:`,
       notSent: (email) => `${email} ist eingeladen, aber die Mail konnte nicht gesendet werden. Senden Sie sie erneut.`,
+      sentAgain: (email) => `${email} hatte schon eine Einladung. Sie wurde mit einem neuen Link erneut gesendet.`,
       failed: "Das hat nicht geklappt. Bitte erneut versuchen.",
     },
     characterCount: {
