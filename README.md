@@ -582,7 +582,7 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2298 names from 387 modules** in the main barrel — 1031 values and 1267 types — and 327 more in 17 standalone entries. _Italic_ is a type-only export.
+**2298 names from 387 modules** in the main barrel — 1031 values and 1267 types — and 350 more in 17 standalone entries. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 `node scripts/gen-export-inventory.mjs`; the counts are pinned by
@@ -606,7 +606,7 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 | `@eifi1/ui-kit/testing/react` | 2 |
 | `@eifi1/ui-kit/rhf` | 52 |
 | `@eifi1/ui-kit/offline` | 38 |
-| `@eifi1/ui-kit/accounts` | 123 |
+| `@eifi1/ui-kit/accounts` | 146 |
 | `@eifi1/ui-kit/sync` | 37 |
 | `@eifi1/ui-kit/sync/testing` | 3 |
 | `@eifi1/ui-kit/push-worker` | 10 |
@@ -1180,6 +1180,10 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `accounts/account-translations-labels` | `DEFAULT_ACCOUNT_TRANSLATIONS_LABELS`, _`AccountTranslationsLabels`_ |
 | `accounts/account-feedback` | `AccountFeedbackPage`, `AccountPublicFeedbackPage`, `useAccountFeedbackApi`, `useAccountFeedbackSubmit`, _`AccountFeedbackPageProps`_, _`AccountPublicFeedbackPageProps`_, _`UseAccountFeedbackSubmitOptions`_ |
 | `accounts/account-feedback-api` | `accountFeedbackApi`, _`AccountFeedbackApi`_ |
+| `accounts/account-teams-api` | `ACCOUNT_TEAM_ERROR_CODES`, `accountTeamsApi`, _`AccountAdminTeam`_, _`AccountAdminTeams`_, _`AccountTeam`_, _`AccountTeamErrorCode`_, _`AccountTeamInvitation`_, _`AccountTeamInvited`_, _`AccountTeamMember`_, _`AccountTeamMemberDraft`_, _`AccountTeamRole`_, _`AccountTeamsApi`_ |
+| `accounts/account-teams-hooks` | `useAdminTeamActions`, `useAdminTeams`, `useMyTeams`, `useTeamActions` |
+| `accounts/account-teams` | `AccountTeamsPage`, `AccountTeamsSection`, _`AccountTeamsPageProps`_, _`AccountTeamsSectionProps`_ |
+| `accounts/account-teams-labels` | `DEFAULT_ACCOUNT_TEAMS_LABELS`, _`AccountTeamRefusalLabels`_, _`AccountTeamsLabels`_ |
 
 ### @eifi1/ui-kit/sync (standalone)
 

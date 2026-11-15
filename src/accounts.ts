@@ -163,3 +163,24 @@ export type {
 } from "./accounts/account-feedback";
 export { accountFeedbackApi } from "./accounts/account-feedback-api";
 export type { AccountFeedbackApi } from "./accounts/account-feedback-api";
+// 0.64 (§12.9, server-kit 0.32's opt-in teams): the teams' routes, their hooks under the
+// `["teams", …]` root, the admin's section and a member's page. Nothing appears unless the app
+// mounts them.
+export { ACCOUNT_TEAM_ERROR_CODES, accountTeamsApi } from "./accounts/account-teams-api";
+export type {
+  AccountAdminTeam,
+  AccountAdminTeams,
+  AccountTeam,
+  AccountTeamErrorCode,
+  AccountTeamInvitation,
+  AccountTeamInvited,
+  AccountTeamMember,
+  AccountTeamMemberDraft,
+  AccountTeamRole,
+  AccountTeamsApi,
+} from "./accounts/account-teams-api";
+export { useAdminTeamActions, useAdminTeams, useMyTeams, useTeamActions } from "./accounts/account-teams-hooks";
+export { AccountTeamsPage, AccountTeamsSection } from "./accounts/account-teams";
+export type { AccountTeamsPageProps, AccountTeamsSectionProps } from "./accounts/account-teams";
+export { DEFAULT_ACCOUNT_TEAMS_LABELS } from "./accounts/account-teams-labels";
+export type { AccountTeamRefusalLabels, AccountTeamsLabels } from "./accounts/account-teams-labels";
