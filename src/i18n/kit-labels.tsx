@@ -127,6 +127,7 @@ import type { SharedComputerLabels } from "../offline/shared-computer";
 import type { AccountFailureLabels } from "../accounts/account-failure";
 import type { AccountRosterLabels } from "../accounts/account-roster-labels";
 import type { AccountTranslationsLabels } from "../accounts/account-translations-labels";
+import type { AccountTeamsLabels } from "../accounts/account-teams-labels";
 import type { HeldChangesBannerLabels } from "../shell/held-changes-banner-labels";
 import type { FieldSuggestionLabels } from "../components/field-parts";
 import type { ConsentAgainLabels } from "../components/consent-again-notice-labels";
@@ -552,6 +553,10 @@ export interface UiKitLabels {
   /** 0.64: `AccountTranslationReview` — the review page's heading, its empty state and the
    *  source filter's words, on server-kit 0.31's `translation_review_router`. */
   accountTranslations: AccountTranslationsLabels;
+  /** 0.64: `AccountTeamsSection` and `AccountTeamsPage` — server-kit 0.32's opt-in teams: the
+   *  admin's list and a member's page, their questions, what each change says once done,
+   *  and the six coded refusals of a team. */
+  accountTeams: AccountTeamsLabels;
 }
 
 /**

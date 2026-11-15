@@ -63,6 +63,10 @@ describe("uiKitLabelsEn (@eifi1/ui-kit/i18n/en)", () => {
       .filter(([k, v]) => k !== "file.size" && english.get(k) !== v)
       .map(([k]) => k);
     expect(changed.sort()).toEqual([
+      // 0.64: a team's deletion counts what goes with it.
+      "accountTeams.countGrants",
+      "accountTeams.countInvitations",
+      "accountTeams.countMembers",
       // 0.42.0: the admin area's two counts.
       "adminArea.tiles.usersNew",
       "adminArea.waiting",

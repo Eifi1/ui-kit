@@ -2362,6 +2362,69 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       sourceApp: "Textes de cette application",
       sourceKit: "Composants partagés",
     },
+    // 0.64 (server-kit 0.32's opt-in teams): AccountTeamsSection and AccountTeamsPage — the
+    // admin's list and a member's page, their questions, counts and a team's refusals.
+    accountTeams: {
+      title: "Équipes",
+      pageHint:
+        "Les équipes dont vous faites partie. Tout ce qui est partagé avec une équipe l’est avec chacun de ses membres, aussi longtemps qu’il en fait partie. Les responsables ajoutent et retirent des membres et invitent quelqu’un qui n’a pas encore de compte\u202f; les administrateurs créent les équipes et nomment les responsables.",
+      adminHelp: "Les groupes avec qui partager, et qui les gère.",
+      adminHint:
+        "Une équipe est un destinataire de partage, pas un propriétaire\u202f: une autorisation accordée à une équipe atteint chacun de ses membres et disparaît avec quiconque la quitte. Vous nommez les responsables, qui ajoutent et retirent ensuite eux-mêmes les membres.",
+      none: "Vous ne faites partie d’aucune équipe.",
+      noneAdmin: "Aucune équipe pour l’instant.",
+      youManage: "Vous gérez cette équipe.",
+      youAreIn: "Vous êtes membre.",
+      name: "Nom de l’équipe",
+      create: "Créer l’équipe",
+      created: (name) => `Équipe ${name} créée.`,
+      rename: "Renommer",
+      renameTitle: (name) => `Renommer l’équipe ${name}`,
+      renamed: (name) => `L’équipe s’appelle désormais ${name}.`,
+      delete: "Supprimer l’équipe",
+      deleteTitle: (name) => `Supprimer l’équipe ${name}\u202f?`,
+      deleteBody:
+        "Tout ce qui était partagé avec l’équipe cesse immédiatement d’être partagé avec ses membres. Leurs propres travaux ne sont pas touchés.",
+      deleteGoes: (list) => `Ce qui part avec elle\u202f: ${list}.`,
+      deleted: (name) => `L’équipe ${name} est supprimée.`,
+      countMembers: (count) => `${n(count)} ${plural(count, "membre", "membres")}`,
+      countGrants: (count) => `${n(count)} ${plural(count, "partage", "partages")}`,
+      countInvitations: (count) => `${n(count)} ${plural(count, "invitation", "invitations")}`,
+      members: "Membres",
+      managers: "Responsables",
+      invitedTitle: "Invités",
+      nobody: "Personne pour l’instant.",
+      roles: { member: "Membre", manager: "Responsable" },
+      roleOf: (name) => `Rôle de ${name} dans l’équipe`,
+      roleLabel: "En tant que",
+      remove: (name) => `Retirer ${name}`,
+      removeShort: "Retirer",
+      removeTitle: (name, team) => `Retirer ${name} de ${team}\u202f?`,
+      removeBody:
+        "Tout ce qui était partagé avec l’équipe cesse d’être partagé avec cette personne dès sa prochaine requête. Ses propres travaux ne sont pas touchés.",
+      addEmail: "Ajouter par adresse e-mail",
+      add: "Ajouter",
+      added: (email, team) => `${email} fait désormais partie de ${team}.`,
+      removed: (name, team) => `${name} ne fait plus partie de ${team}.`,
+      invited: (email, team) =>
+        `${email} n’a pas encore de compte — une invitation dans l’équipe ${team} est en route.`,
+      invitedNotSent: (email) =>
+        `${email} n’a pas encore de compte, et l’invitation n’a pas pu être envoyée — renvoyez-la.`,
+      withdraw: (email) => `Retirer l’invitation de ${email}`,
+      withdrawShort: "Retirer",
+      withdrawTitle: (email) => `Retirer l’invitation de ${email}\u202f?`,
+      withdrawBody: "Le lien ne fonctionne plus. Un compte déjà créé grâce à lui est conservé.",
+      codes: {
+        team_not_found: "Cette équipe n’existe plus, ou vous ne la gérez plus.",
+        team_name_taken: (name) => `Une équipe s’appelle déjà ${name}.`,
+        team_changed: (name) =>
+          `L’équipe ${name} a été modifiée après que vous l’avez ouverte. Elle affiche maintenant la modification\u202f; veuillez réessayer.`,
+        manager_named_by_admin: "Seul un administrateur nomme les responsables d’une équipe.",
+        manager_kept_by_admin: (email) =>
+          `${email} est responsable de cette équipe\u202f; seul un administrateur peut changer cela.`,
+        manager_removed_by_admin: "Seul un administrateur retire le responsable d’une équipe.",
+      },
+    },
   };
 }
 
