@@ -3,7 +3,7 @@
 // fails while this file is stale.
 
 /** The server-kit release the Server kit pages document. */
-export const SERVER_KIT_VERSION = "0.31.0";
+export const SERVER_KIT_VERSION = "0.32.0";
 
 export interface ServerKitSearchModule {
   /** The Server kit page that documents it. */
@@ -87,6 +87,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["VERIFY_TTL", "constant"],
       ["AuthError", "class"],
       ["AuthErrorCode", "enum"],
+      ["AuthEvent", "enum"],
       ["AuthLimiters", "class"],
       ["Budget", "class"],
       ["ChallengeKind", "enum"],
@@ -140,6 +141,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["TwoFactorSetup", "model"],
       ["TwoFactorSetupRequest", "model"],
       ["TwoFactorStatus", "model"],
+      ["UserCore", "model"],
       ["UserResponse", "model"],
       ["UtcDateTime", "constant"],
       ["WebAuthnCredentialJson", "constant"],
@@ -190,6 +192,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
     members: [
       ["ACCOUNT_FIELDS", "constant"],
       ["OPTIONAL_ACCOUNT_FIELDS", "constant"],
+      ["UNCHANGED", "constant"],
       ["AccountRow", "protocol"],
       ["AdminActionLog", "protocol"],
       ["AdminActionRowView", "protocol"],
@@ -211,6 +214,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["TokenSigner", "protocol"],
       ["TwoFactorState", "class"],
       ["TwoFactorStore", "protocol"],
+      ["Unchanged", "enum"],
       ["UserStore", "protocol"],
     ],
   },
@@ -416,6 +420,7 @@ export const SERVER_KIT_MODULES: readonly ServerKitSearchModule[] = [
       ["AdminActionRow", "model"],
       ["AdminAttention", "model"],
       ["AdminUserRow", "model"],
+      ["AdminUserRowBase", "model"],
       ["AttentionCount", "constant"],
       ["AuditDetailError", "class"],
       ["ConfirmationLevel", "enum"],

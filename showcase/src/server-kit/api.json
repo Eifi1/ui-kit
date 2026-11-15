@@ -1,12 +1,12 @@
 {
   "format": "eifi1-server-kit-api",
   "version": 1,
-  "kit_version": "0.31.0",
+  "kit_version": "0.32.0",
   "modules": [
     {
       "name": "eifi1_server_kit.auth",
       "summary": "Sign-in, sign-up and the account, as code (``docs/auth-harmonization.md`` §8 in ``Eifi1/ui-kit``).",
-      "doc": "Sign-in, sign-up and the account, as code (``docs/auth-harmonization.md`` §8 in ``Eifi1/ui-kit``).\n\nLayer 1, like the rest of the kit: pure functions, Pydantic models and small classes —\nno database, no app ``User``, no routes, and no JWT signing (each app keeps its JWT\nlibrary; :mod:`~eifi1_server_kit.auth.tokens` builds and checks the claims). keksdose is\nthe reference, cited ``file`` per rule.\n\n* :mod:`~eifi1_server_kit.auth.accounts` — the address and its tag, invitations, the\n  registration gate, names, erasure identifiers;\n* :mod:`~eifi1_server_kit.auth.tokens` — one-time tokens (reset, verification,\n  invitation, email change), the session's claims, and what a refresh answers;\n* :mod:`~eifi1_server_kit.auth.limits` — :class:`AuthLimiters`, with the per-address\n  delay that never locks out;\n* :mod:`~eifi1_server_kit.auth.passwords` — :func:`absent_account_check`, the dummy hash an\n  address with no account is checked against, so it costs what one with an account costs;\n* :mod:`~eifi1_server_kit.auth.totp` — the second factor's code: the time step it matches\n  (:func:`totp_matched_step`), the replay rule, a step accepted once\n  (:func:`totp_step_accepted`), and one 2FA challenge for one sign-in\n  (:func:`two_factor_challenge_claims`, :func:`two_factor_challenge_is_spent`); since 0.32 a\n  new secret (:func:`new_totp_secret`), its ``otpauth://`` URI (:func:`totp_uri`) and the code\n  an authenticator shows (:func:`totp_code`, for tests);\n* :mod:`~eifi1_server_kit.auth.sessions` — a session's life on the server (0.27):\n  :class:`SessionPolicy`, a shared computer's short session (:func:`session_expired`,\n  :func:`refresh_lifetime`, :func:`access_lifetime`, :func:`session_expires_at`);\n* :mod:`~eifi1_server_kit.auth.schemas` — the wire shapes, with the account's text size\n  and contrast (``docs/text-size-harmonization.md`` §6);\n* :mod:`~eifi1_server_kit.auth.errors` — :class:`AuthError` and its codes.",
+      "doc": "Sign-in, sign-up and the account, as code (``docs/auth-harmonization.md`` §8 in ``Eifi1/ui-kit``).\n\nLayer 1, like the rest of the kit: pure functions, Pydantic models and small classes —\nno database, no app ``User``, no routes, and no JWT signing (each app keeps its JWT\nlibrary; :mod:`~eifi1_server_kit.auth.tokens` builds and checks the claims). keksdose is\nthe reference, cited ``file`` per rule.\n\n* :mod:`~eifi1_server_kit.auth.accounts` — the address and its tag, invitations, the\n  registration gate, names, erasure identifiers;\n* :mod:`~eifi1_server_kit.auth.tokens` — one-time tokens (reset, verification,\n  invitation, email change), the session's claims, and what a refresh answers;\n* :mod:`~eifi1_server_kit.auth.limits` — :class:`AuthLimiters`, with the per-address\n  delay that never locks out;\n* :mod:`~eifi1_server_kit.auth.passwords` — :func:`absent_account_check`, the dummy hash an\n  address with no account is checked against, so it costs what one with an account costs;\n* :mod:`~eifi1_server_kit.auth.totp` — the second factor's code: the time step it matches\n  (:func:`totp_matched_step`), the replay rule, a step accepted once\n  (:func:`totp_step_accepted`), and one 2FA challenge for one sign-in\n  (:func:`two_factor_challenge_claims`, :func:`two_factor_challenge_is_spent`); since 0.32 a\n  new secret (:func:`new_totp_secret`), its ``otpauth://`` URI (:func:`totp_uri`) and the code\n  an authenticator shows (:func:`totp_code`, for tests);\n* :mod:`~eifi1_server_kit.auth.sessions` — a session's life on the server (0.27):\n  :class:`SessionPolicy`, a shared computer's short session (:func:`session_expired`,\n  :func:`refresh_lifetime`, :func:`access_lifetime`, :func:`session_expires_at`);\n* :mod:`~eifi1_server_kit.auth.schemas` — the wire shapes, with the account's text size\n  and contrast (``docs/text-size-harmonization.md`` §6);\n* :mod:`~eifi1_server_kit.auth.errors` — :class:`AuthError` and its codes;\n* :mod:`~eifi1_server_kit.auth.events` — :class:`AuthEvent`, the flows whose decisions the\n  account service tells ``AuthHooks.observe`` (0.32), so an app counts its sign-in funnel.",
       "contract": {
         "doc": "docs/auth-harmonization.md",
         "section": "§8",
@@ -540,6 +540,66 @@
             {
               "name": "TWO_FACTOR_NOT_ENABLED",
               "value": "two_factor_not_enabled"
+            }
+          ]
+        },
+        {
+          "name": "AuthEvent",
+          "kind": "enum",
+          "signature": "class AuthEvent(enum.StrEnum)",
+          "doc": "The flow ``AuthHooks.observe`` is told a decision of. A ``StrEnum`` with stable values,\nso ``str(event)`` is the metric's label.",
+          "values": [
+            {
+              "name": "REGISTER",
+              "value": "register"
+            },
+            {
+              "name": "LOGIN",
+              "value": "login"
+            },
+            {
+              "name": "LOGIN_2FA",
+              "value": "login_2fa"
+            },
+            {
+              "name": "LOGIN_SET_PASSWORD",
+              "value": "login_set_password"
+            },
+            {
+              "name": "PASSKEY_LOGIN",
+              "value": "passkey_login"
+            },
+            {
+              "name": "REFRESH",
+              "value": "refresh"
+            },
+            {
+              "name": "PASSWORD_RESET_REQUEST",
+              "value": "password_reset_request"
+            },
+            {
+              "name": "PASSWORD_RESET_CHECK",
+              "value": "password_reset_check"
+            },
+            {
+              "name": "PASSWORD_RESET_CONFIRM",
+              "value": "password_reset_confirm"
+            },
+            {
+              "name": "EMAIL_VERIFY",
+              "value": "email_verify"
+            },
+            {
+              "name": "EMAIL_CHANGE_CONFIRM",
+              "value": "email_change_confirm"
+            },
+            {
+              "name": "INVITATION_CHECK",
+              "value": "invitation_check"
+            },
+            {
+              "name": "INVITATION_ACCEPT",
+              "value": "invitation_accept"
             }
           ]
         },
@@ -1679,9 +1739,108 @@
           ]
         },
         {
+          "name": "UserCore",
+          "kind": "model",
+          "signature": "class UserCore(BaseModel)",
+          "doc": "The account's fields every answer about a person shares (0.32): :class:`UserResponse`\nwithout its derived names. :class:`UserResponse` adds ``display_name`` and\n``name_incomplete``; ``user_admin.AdminUserRowBase`` adds ``name_incomplete`` alone, for\nan answer about ANOTHER person, which carries first and last name and no formatted\n``display_name`` (§3.2, keksdose's rule). Subclass :class:`UserResponse`, not this, for\n``/auth/me``.",
+          "fields": [
+            {
+              "name": "id",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "email",
+              "type": "str",
+              "default": null,
+              "doc": "As stored — already normalised; not re-validated on the way out."
+            },
+            {
+              "name": "first_name",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "last_name",
+              "type": "str",
+              "default": null,
+              "doc": "May be ``\"\"`` on a migrated account until the name is completed (§3.3)."
+            },
+            {
+              "name": "locale",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "role",
+              "type": "str | None",
+              "default": null,
+              "doc": "The app's role, or ``None`` for an account that holds none (kastlan: in no company).\nRequired all the same: the key is always in the answer."
+            },
+            {
+              "name": "is_active",
+              "type": "bool",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "email_verified",
+              "type": "bool",
+              "default": "False",
+              "doc": ""
+            },
+            {
+              "name": "totp_enabled",
+              "type": "bool",
+              "default": "False",
+              "doc": ""
+            },
+            {
+              "name": "created_at",
+              "type": "datetime",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "demo_expires_at",
+              "type": "UtcDateTime | None",
+              "default": "None",
+              "doc": "When a demo account ends, ISO-8601 in UTC (landing-demo §5.3): ``created_at`` plus\nthe maximum age, :func:`~eifi1_server_kit.demo.demo_expires_at`. ``None`` for a real\naccount. The ORM row rarely has it, so the app passes it — a property on its model\nread through ``from_attributes``, or ``model_copy(update=…)``."
+            },
+            {
+              "name": "text_size",
+              "type": "TextSize | None",
+              "default": "None",
+              "doc": "The account's text size (text-size §6, §10.6); ``None`` = never chosen, so a device\nwithout its own choice uses Normal. The app's column, read through\n``from_attributes``; an app without the column yet answers ``None``."
+            },
+            {
+              "name": "contrast",
+              "type": "ContrastMode | None",
+              "default": "None",
+              "doc": "The account's contrast mode (text-size §6, §10.6); ``None`` = never chosen, which\nreads as ``\"system\"``."
+            },
+            {
+              "name": "device_timezone",
+              "type": "str | None",
+              "default": "None",
+              "doc": "The zone the device last used reported (notifications §10.3, 0.16), an IANA name;\nthe client reports its own when it differs. It IS the account's zone — automatic\nonly (amended 2026-10-20), ``None`` = the app's (``effective_zone``)."
+            }
+          ],
+          "methods": [
+            {
+              "name": "name_completion_exempt",
+              "signature": "name_completion_exempt() -> bool",
+              "doc": "Override to exempt an account from completing its name — keksdose's demo\nsession (``return self.is_demo``, §3.3)."
+            }
+          ]
+        },
+        {
           "name": "UserResponse",
           "kind": "model",
-          "signature": "class UserResponse(BaseModel)",
+          "signature": "class UserResponse(UserCore)",
           "doc": "``GET /auth/me`` (§6.1): the core every app answers; subclass to add its own.\n\n``display_name`` and ``name_incomplete`` are DERIVED and read-only: computed from\n``first_name`` / ``last_name`` on every serialisation, never accepted as input. The\ndisplay name is written in the user's own ``locale`` — this is the user reading about\nthemselves; the kit formats from first and last name on screen, in the reader's\nlanguage, and uses ``display_name`` only as a fallback (§3.2).\n\n``role`` is the app's vocabulary; narrow it to the app's enum in the subclass. Since\n0.21 it may be ``None`` — always answered, ``null`` for an account that holds no role:\na kastlan user in no company (its ``MeResponse.role``). An app whose every account has\none narrows it as before (``role: UserRole``, keksdose), and its answer stays a string.",
           "fields": [
             {
@@ -1779,11 +1938,6 @@
               "name": "name_incomplete",
               "signature": "@computed_field @property name_incomplete -> bool",
               "doc": "Either part empty — the app shows ``CompleteNameDialog`` after sign-in (§3.3)."
-            },
-            {
-              "name": "name_completion_exempt",
-              "signature": "name_completion_exempt() -> bool",
-              "doc": "Override to exempt an account from completing its name — keksdose's demo\nsession (``return self.is_demo``, §3.3)."
             }
           ]
         },
@@ -1862,8 +2016,8 @@
         {
           "name": "erasure_identifiers",
           "kind": "function",
-          "signature": "erasure_identifiers(email: str | None, first: str | None, last: str | None, old_display_name: str | None = None) -> list[str]",
-          "doc": "A person's own strings, for :func:`eifi1_server_kit.feedback.anonymise_feedback`'s\n``identifiers`` (§8, §10.6).\n\nThe email, the old ``display_name`` (what a stamp written before the switch holds),\nand the full name in every order :func:`full_name` writes it — \"First Last\",\n\"Last First\", and zh's \"LastFirst\" — because the feedback stamp is frozen in its\nAUTHOR's language. **Never a bare first or last name**: redacting \"Mai\" or \"Bank\"\non its own would shred a report that mentions the month or the bank. With a part\nmissing, the full-name forms are left out; the old display name covers a migrated\naccount.\n\nDe-duplicated case-insensitively and ordered LONGEST FIRST, because\n:func:`~eifi1_server_kit.feedback.scrub_text` replaces needles one after another: an\nold display name \"Ada Lovelace\" replaced before \"Ada Lovelace-Byron\" would leave\n\"[erased]-Byron\" behind."
+          "signature": "erasure_identifiers(email: str | None, first: str | None, last: str | None, old_display_name: str | None = None, extra: Iterable[str] = ()) -> list[str]",
+          "doc": "A person's own strings, for :func:`eifi1_server_kit.feedback.anonymise_feedback`'s\n``identifiers`` (§8, §10.6).\n\nThe email, the old ``display_name`` (what a stamp written before the switch holds),\nand the full name in every order :func:`full_name` writes it — \"First Last\",\n\"Last First\", and zh's \"LastFirst\" — because the feedback stamp is frozen in its\nAUTHOR's language. **Never a bare first or last name**: redacting \"Mai\" or \"Bank\"\non its own would shred a report that mentions the month or the bank. With a part\nmissing, the full-name forms are left out; the old display name covers a migrated\naccount.\n\nDe-duplicated case-insensitively and ordered LONGEST FIRST, because\n:func:`~eifi1_server_kit.feedback.scrub_text` replaces needles one after another: an\nold display name \"Ada Lovelace\" replaced before \"Ada Lovelace-Byron\" would leave\n\"[erased]-Byron\" behind.\n\n``extra`` (0.32): the app's own strings for the person (keksdose's whole name from\nbefore its first/last split), under the same rules; never a bare first or last name\nthere either."
         },
         {
           "name": "first_name_of",
@@ -2057,6 +2211,12 @@
           "kind": "constant",
           "signature": "OPTIONAL_ACCOUNT_FIELDS: Mapping[str, object] = {\"is_demo\": False, \"sessions_invalid_before\": None}",
           "doc": "The members an app may leave out, with what the kit reads instead."
+        },
+        {
+          "name": "UNCHANGED",
+          "kind": "constant",
+          "signature": "UNCHANGED: Final = Unchanged.UNCHANGED",
+          "doc": "A ``remint`` field left as the row has it (0.32): the default of each, so a plain re-send\nkeeps the invitation's own language, note and inviter."
         },
         {
           "name": "AccountRow",
@@ -2341,8 +2501,8 @@
             },
             {
               "name": "listing",
-              "signature": "async listing() -> Sequence[InvT]",
-              "doc": "Every invitation that was not accepted (open, expired and revoked ones), newest\nfirst, the higher id first on a tie: the admin's list."
+              "signature": "async listing(*, accepted: bool = False) -> Sequence[InvT]",
+              "doc": "Every invitation that was not accepted (open, expired and revoked ones), newest\nfirst, the higher id first on a tie: the admin's list. ``accepted`` (0.32): the\naccepted ones too, in the same order; the kit asks for them only with\n``AccountPolicy.list_accepted_invitations``, so a store without the parameter keeps\nworking without it."
             },
             {
               "name": "add",
@@ -2351,8 +2511,8 @@
             },
             {
               "name": "remint",
-              "signature": "async remint(invitation: InvT, *, token_hash: str, expires_at: datetime) -> InvT",
-              "doc": "A new link for the same invitation (a re-send), flushed."
+              "signature": "async remint(invitation: InvT, *, token_hash: str, expires_at: datetime, locale: str | Literal[Unchanged.UNCHANGED] = UNCHANGED, note: str | Literal[Unchanged.UNCHANGED] | None = UNCHANGED, invited_by_user_id: int | Literal[Unchanged.UNCHANGED] | None = UNCHANGED) -> InvT",
+              "doc": "A new link for the same invitation (a re-send), flushed. ``locale``, ``note`` and\n``invited_by_user_id`` (0.32) are written where given, each left as it is by default\n(:data:`UNCHANGED`): the kit gives them only when an admin's new invitation re-uses\nthe row (``AccountPolicy.reuse_open_invitations``), never on a plain re-send."
             },
             {
               "name": "accept",
@@ -2942,6 +3102,18 @@
           ]
         },
         {
+          "name": "Unchanged",
+          "kind": "enum",
+          "signature": "class Unchanged(Enum)",
+          "doc": "The type of :data:`UNCHANGED`.",
+          "values": [
+            {
+              "name": "UNCHANGED",
+              "value": "unchanged"
+            }
+          ]
+        },
+        {
           "name": "UserStore",
           "kind": "protocol",
           "signature": "class UserStore[UserT: AccountRow](Protocol)",
@@ -2994,7 +3166,7 @@
     {
       "name": "eifi1_server_kit.auth.service",
       "summary": "The account service: sign-up, sign-in, the session, the account's own settings, written once against the ports.",
-      "doc": "The account service: sign-up, sign-in, the session, the account's own settings, written\nonce against the ports.\n\nLayer 2 (``docs/auth-harmonization.md`` §12 in ``Eifi1/ui-kit``; the pattern of\n:mod:`eifi1_server_kit.feedback.service`). What the three apps each wrote around the layer-1\nrules — the lookups, the gate, the claims, the limits, the links and their mails, the\nsession rows — as one :class:`AccountService` over the app's\n:mod:`~eifi1_server_kit.auth.ports`. No FastAPI: :mod:`eifi1_server_kit.auth.router` builds one\nper request on the request's stores, and a caller without a router (a command-line tool)\nbuilds its own.\n\n**The kit settles where the copies differ** (§12.5), each point one app's today:\n\n1. session rows and ``sid`` in every token; ``logout_everywhere`` ends every row (and stamps\n   the ``iat`` cut-off where the row has one), ``end_session`` this one;\n2. **every account mail after the commit** (:class:`~eifi1_server_kit.auth.ports.AfterCommit`):\n   a route whose answer says whether its mail went out commits first\n   (``commit_now``) and then sends; every other mail waits in ``later``;\n3. a code on every refusal (:class:`~eifi1_server_kit.auth.AuthError`, ``AccountError``);\n4. a limit on every anonymous redemption, on the refresh, and on every signed-in password\n   check (:class:`~eifi1_server_kit.auth.AuthLimiters`), charged before the work;\n5. sign-up checks in the order invitation, gate, ``email_taken``, so an anonymous caller\n   learns nothing about addresses it holds no invitation for;\n6. a reset ends a forced password change, ends every session and marks the address\n   verified (it proved it), and answers no tokens;\n7. a forced password change ends the person's sessions;\n8. passkeys: user verification required, one use per challenge (:mod:`~eifi1_server_kit.auth.passkeys`);\n9. only open, unexpired invitations attach at an address confirmation;\n10. the kit's mail texts (:mod:`~eifi1_server_kit.auth.mails`).\n\n**The kit never commits** but where ``commit_now`` says (§2.7 of\n``docs/server-services-harmonization.md``): every store write flushes. A refusal raised\nafter a write leaves it to the app's rollback.\n\n**The hooks** (:class:`AuthHooks`, every one optional and async) are what differs between\nthe apps (§12.2's six seams): what a sign-up or an invitation attaches, what a token carries\nand what each request binds, the private mode around passwords and passkeys, what else ends\nwith the sessions, the deletion's outcomes, and the extras on the answers.",
+      "doc": "The account service: sign-up, sign-in, the session, the account's own settings, written\nonce against the ports.\n\nLayer 2 (``docs/auth-harmonization.md`` §12 in ``Eifi1/ui-kit``; the pattern of\n:mod:`eifi1_server_kit.feedback.service`). What the three apps each wrote around the layer-1\nrules — the lookups, the gate, the claims, the limits, the links and their mails, the\nsession rows — as one :class:`AccountService` over the app's\n:mod:`~eifi1_server_kit.auth.ports`. No FastAPI: :mod:`eifi1_server_kit.auth.router` builds one\nper request on the request's stores, and a caller without a router (a command-line tool)\nbuilds its own.\n\n**The kit settles where the copies differ** (§12.5), each point one app's today:\n\n1. session rows and ``sid`` in every token; ``logout_everywhere`` ends every row (and stamps\n   the ``iat`` cut-off where the row has one), ``end_session`` this one;\n2. **every account mail after the commit** (:class:`~eifi1_server_kit.auth.ports.AfterCommit`):\n   a route whose answer says whether its mail went out commits first\n   (``commit_now``) and then sends; every other mail waits in ``later``;\n3. a code on every refusal (:class:`~eifi1_server_kit.auth.AuthError`, ``AccountError``);\n4. a limit on every anonymous redemption, on the refresh, and on every signed-in password\n   check (:class:`~eifi1_server_kit.auth.AuthLimiters`), charged before the work;\n5. sign-up checks in the order invitation, gate, ``email_taken``, so an anonymous caller\n   learns nothing about addresses it holds no invitation for;\n6. a reset ends a forced password change, ends every session and marks the address\n   verified (it proved it), and answers no tokens;\n7. a forced password change ends the person's sessions;\n8. passkeys: user verification required, one use per challenge (:mod:`~eifi1_server_kit.auth.passkeys`);\n9. only open, unexpired invitations attach at an address confirmation;\n10. the kit's mail texts (:mod:`~eifi1_server_kit.auth.mails`).\n\n**The kit never commits** but where ``commit_now`` says (§2.7 of\n``docs/server-services-harmonization.md``): every store write flushes. A refusal raised\nafter a write leaves it to the app's rollback.\n\n**The hooks** (:class:`AuthHooks`, every one optional, and async but ``observe``) are what\ndiffers between the apps (§12.2's six seams): what a sign-up or an invitation attaches, what a\ntoken carries and what each request binds, the private mode around passwords and passkeys, what\nelse ends with the sessions, the deletion's outcomes, and the extras on the answers; and, since\n0.32, what an app counts (``observe``: each decision as an :class:`~eifi1_server_kit.auth.AuthEvent`\nand its outcome).",
       "contract": {
         "doc": "docs/auth-harmonization.md",
         "section": "§12",
@@ -3129,7 +3301,13 @@
               "name": "reuse_open_invitations",
               "type": "bool",
               "default": "False",
-              "doc": "An invitation to an address that has an open one with the same role and scope sends\nthat one again — a new link, 14 more days, logged ``invite_resend`` — instead of adding\na second row (0.31, G7; Kurvenschmiede's). Off: every invitation is a row, as in 0.29."
+              "doc": "An invitation to an address that has an open one with the same role and scope sends\nthat one again — a new link, 14 more days, logged ``invite_resend`` — instead of adding\na second row (0.31, G7; Kurvenschmiede's); since 0.32 the row takes the new request's\nlanguage, note and inviter (``remint``'s fields). Off: every invitation is a row, as in\n0.29."
+            },
+            {
+              "name": "list_accepted_invitations",
+              "type": "bool",
+              "default": "False",
+              "doc": "The admin's invitation list shows the accepted invitations too, status ``accepted``\n(0.32, keksdose's: who came in by an invitation); the store's ``listing(accepted=True)``\nanswers them. Off: every invitation but the accepted ones, as in 0.29. Re-sending or\nwithdrawing an accepted one is ``invitation_closed`` either way."
             },
             {
               "name": "bootstrap",
@@ -3166,6 +3344,12 @@
               "type": "timedelta",
               "default": "datetime.timedelta(seconds=3)",
               "doc": "How long an answer that must not tell whether an account exists takes, at least\n(0.31, security: Kurvenschmiede's audit F29): ``POST /auth/password-reset/request``\ncommits and sends its mail inside this time, and every path answers when it has passed.\nAbove the mail provider's slow answers (Resend's are well under a second); a send still\nrunning at the floor is cut and logged, so the answer is never late."
+            },
+            {
+              "name": "mail_date",
+              "type": "Callable[[date | datetime, str | None], str]",
+              "default": "<function mail_date>",
+              "doc": "How a mail writes a day (``{date}``, the deletion mail's erasure day): ``(day,\nlocale)`` to the words. Default :func:`~eifi1_server_kit.auth.mails.mail_date`,\nnumeric so no month name needs a translation; keksdose writes it as a sentence does\n(\"6. November 2026\", its ``server_text.format_day``) (0.32, KG-5)."
             }
           ]
         },
@@ -3363,12 +3547,12 @@
             {
               "name": "invitation_rows",
               "signature": "async invitation_rows() -> list[dict[str, Any]]",
-              "doc": "``GET /admin/invitations`` (user-admin §5): every invitation not accepted, newest\nfirst, as ``InvitationRow`` fields — the inviter as a person, the status from the\ncolumns, never a link. A row never sent (an allow-list entry carried over) reads as\nexpired, so the admin re-sends it."
+              "doc": "``GET /admin/invitations`` (user-admin §5): every invitation not accepted — and the\naccepted ones too with ``AccountPolicy.list_accepted_invitations`` (0.32) — newest\nfirst, as ``InvitationRow`` fields — the inviter as a person, the status from the\ncolumns, never a link. A row never sent (an allow-list entry carried over) reads as\nexpired, so the admin re-sends it."
             },
             {
               "name": "create_invitation",
               "signature": "async create_invitation(admin: UserT, body: InvitationCreate, *, show_link: bool, scope: Mapping[str, Any] | None = None, detail: Mapping[str, object] | None = None) -> dict[str, Any]",
-              "doc": "``POST /admin/invitations`` (user-admin §5): an invitation to an address, in the\ninvitee's language, logged as ``invite``; the mail after the commit. ``show_link``:\nthe console transport's shown-once link (§12.5 item 11). A ``scope`` goes through the\n``invitation_scope`` hook, else it is refused.\n\nFor a caller that decided the scope itself (0.32, the teams: a team and the role in\nit), ``scope`` is stored as it is, past the hook, and ``detail`` joins the ``invite``\nrow's detail beside the kit's (``team_role``). A body that names a scope too is a\n:class:`ValueError`. Without either, nothing changes."
+              "doc": "``POST /admin/invitations`` (user-admin §5): an invitation to an address, in the\ninvitee's language; the mail after the commit, then the ``invite`` row with ``sent``\n(0.32, as the admin's mails log it). ``show_link``:\nthe console transport's shown-once link (§12.5 item 11). A ``scope`` goes through the\n``invitation_scope`` hook, else it is refused.\n\nFor a caller that decided the scope itself (0.32, the teams: a team and the role in\nit), ``scope`` is stored as it is, past the hook, and ``detail`` joins the ``invite``\nrow's detail beside the kit's (``team_role``). A body that names a scope too is a\n:class:`ValueError`. Without either, nothing changes."
             },
             {
               "name": "resend_invitation",
@@ -3456,7 +3640,7 @@
           "name": "AuthHooks",
           "kind": "class",
           "signature": "@dataclass(frozen=True, slots=True, kw_only=True) class AuthHooks[UserT: AccountRow = Any, InvT: InvitationRow = Any]",
-          "doc": "What differs between the apps (§12.3), as optional coroutines the app's hook\ndependency answers per request, on the request's own session — so ``on_register`` can\nwrite the app's rows in the sign-up's transaction (kastlan's company). Each may raise a\nkit refusal (``AuthError``, ``AccountError``) to refuse the step. A hook that answers a\nmapping adds its keys to the route's answer, which the app's answer model (an\n``AuthDeps`` field) declares.",
+          "doc": "What differs between the apps (§12.3), as optional coroutines the app's hook\ndependency answers per request, on the request's own session — so ``on_register`` can\nwrite the app's rows in the sign-up's transaction (kastlan's company). Each may raise a\nkit refusal (``AuthError``, ``AccountError``) to refuse the step. A hook that answers a\nmapping adds its keys to the route's answer, which the app's answer model (an\n``AuthDeps`` field) declares. ``observe`` (0.32) is the one plain function: it is told,\nand refuses nothing.",
           "fields": [
             {
               "name": "on_register",
@@ -3600,13 +3784,25 @@
               "name": "purge_files",
               "type": "Callable[[Sequence[str]], Awaitable[None]] | None",
               "default": "None",
-              "doc": "Seam 5 (0.30): the stored files an erasure left nobody naming (the feedback's), deleted\nafter the commit (keksdose's object purge). Without it they are left to the app.\nDelete them through ``objects.purge_objects``: since 0.31 it spares a file written in\nthe last minutes by default, as a byte-identical upload committed after the erasure's\ndecision names the same content-addressed object."
+              "doc": "Seam 5 (0.30): the stored files an erasure left nobody naming (the feedback's), deleted\nafter the commit (keksdose's object purge). Without it they stay in the store, and each\nerasure that leaves any logs a WARNING (0.32): an app with feedback files sets it.\nDelete them through ``objects.purge_objects``: since 0.31 it spares a file written in\nthe last minutes by default, as a byte-identical upload committed after the erasure's\ndecision names the same content-addressed object.\nThe keys are bare, as ``FeedbackService.erase_author`` answers them: the store's path is\nthe attachment storage's ``object_key(key)`` (keksdose's ``feedback/`` prefix)."
+            },
+            {
+              "name": "erasure_identifiers",
+              "type": "Callable[[UserT], Awaitable[Sequence[str]]] | None",
+              "default": "None",
+              "doc": "Seam 5 (0.32, keksdose's): the app's own strings for the person, added to the kit's\n:func:`~eifi1_server_kit.auth.erasure_identifiers` when an erasure anonymises the\nfeedback (keksdose's ``legacy_display_name``, which older report stamps hold). Same\nrules: never a bare first or last name."
             },
             {
               "name": "to_me",
               "type": "Callable[[UserT], Awaitable[BaseModel]] | None",
               "default": "None",
               "doc": "Seam 6: ``/auth/me`` and the user in every token answer, as the app's ``me_model``;\nwithout it, ``me_model.model_validate(user)`` with ``email_verified`` from the row."
+            },
+            {
+              "name": "observe",
+              "type": "Callable[[AuthEvent, str], None] | None",
+              "default": "None",
+              "doc": "Every decision of the signed-out flows and the refresh (0.32, keksdose's review of\n0.32.0.dev4): ``(event, outcome)``, an :class:`~eifi1_server_kit.auth.AuthEvent` and a\nshort stable string — ``ok``, the internal reason where the answer folds several into\none code (``unknown_email``, ``bad_password``), else the refusal's code — never an\naddress, an id or a token (keksdose's ``auth_events_total`` counter). Synchronous, as\na metric counter is; an exception it raises is logged at WARNING and changes no answer."
             }
           ]
         },
@@ -4511,7 +4707,7 @@
           "name": "account_mail_texts",
           "kind": "function",
           "signature": "account_mail_texts(overrides: Mapping[AccountMailText | str, Mapping[str, MailText]] | None = None) -> Mapping[AccountMailText, Mapping[str, MailText]]",
-          "doc": "The kit's tables with the app's own in place of the kinds it names, checked: an\napp's table needs a fallback row (``de-CH``, ``de`` or ``en``, as\n:func:`~eifi1_server_kit.mail.pick` falls back) and may use only the kind's\n:data:`ACCOUNT_MAIL_VALUES`; either fault is a :class:`ValueError`, raised when the\nrouter is built. A kind the kit does not know is one too."
+          "doc": "The kit's tables with the app's own in place of the kinds it names, checked: an\napp's table needs a fallback row (``de-CH``, ``de`` or ``en``, as\n:func:`~eifi1_server_kit.mail.pick` falls back) and may use only the kind's\n:data:`ACCOUNT_MAIL_VALUES`; either fault is a :class:`ValueError`, raised when the\nrouter is built. A kind the kit does not know is one too.\n\nThe existing account's invitations take the app's words for the general ones (0.32,\nKurvenschmiede's review): a table for ``invitation`` or ``group_invitation`` stands for\n``invitation_account`` or ``group_invitation_account`` too, unless the app names that kind\nitself — the kit's own words share one table for both, and an app that wrote the one\nmeant the other."
         },
         {
           "name": "mail_date",
@@ -4939,13 +5135,13 @@
             },
             {
               "name": "listing",
-              "signature": "async listing() -> Sequence[InvT]",
+              "signature": "async listing(*, accepted: bool = False) -> Sequence[InvT]",
               "doc": ""
             },
             {
               "name": "prune",
               "signature": "async prune(*, before: datetime, now: datetime | None = None) -> int",
-              "doc": "Delete the invitations that were never accepted and expired or were revoked before\n``before``, and answer how many. They leave the admin's list (which shows expired and\nrevoked ones, :meth:`listing`): one pruned cannot be re-sent, a new one is. An\naccepted invitation stays, whatever its dates (it records how its account came in),\nand so does an allow-list entry carried over, which has no expiry. Not on the port;\nsee :func:`prune_account_rows`. Flushes first, commits nothing; ``before`` must have\npassed by ``now`` (``utc_now()`` unless given)."
+              "doc": "Delete the invitations that were never accepted and expired or were revoked before\n``before``, and answer how many. They leave the admin's list (which shows expired and\nrevoked ones, :meth:`listing`): one pruned cannot be re-sent, a new one is. An\naccepted invitation stays, whatever its dates (it records how its account came in, and\nthe list shows it with ``listing(accepted=True)``, 0.32), and so does an allow-list\nentry carried over, which has no expiry. Not on the port;\nsee :func:`prune_account_rows`. Flushes first, commits nothing; ``before`` must have\npassed by ``now`` (``utc_now()`` unless given)."
             },
             {
               "name": "add",
@@ -4954,7 +5150,7 @@
             },
             {
               "name": "remint",
-              "signature": "async remint(invitation: InvT, *, token_hash: str, expires_at: datetime) -> InvT",
+              "signature": "async remint(invitation: InvT, *, token_hash: str, expires_at: datetime, locale: str | Literal[Unchanged.UNCHANGED] = UNCHANGED, note: str | Literal[Unchanged.UNCHANGED] | None = UNCHANGED, invited_by_user_id: int | Literal[Unchanged.UNCHANGED] | None = UNCHANGED) -> InvT",
               "doc": ""
             },
             {
@@ -5069,7 +5265,7 @@
           "name": "SqlRosterStore",
           "kind": "class",
           "signature": "class SqlRosterStore[UserT: AccountColumns]",
-          "doc": ":class:`~eifi1_server_kit.user_admin.ports.RosterStore` over a model built from\n:class:`AccountColumns` (0.30): the admin's user list, the overview's counts and the\nerasure job's candidates, people only — ``is_demo`` accounts left out where the model has\n:class:`DemoAccountColumn`; an app with a system account of its own subclasses and narrows\n:meth:`people`, as with :class:`SqlUserStore`. An app that sorts by a column of its own\n(keksdose's ``plan``) subclasses and widens :meth:`sort_columns`.",
+          "doc": ":class:`~eifi1_server_kit.user_admin.ports.RosterStore` over a model built from\n:class:`AccountColumns` (0.30): the admin's user list, the overview's counts and the\nerasure job's candidates, people only — ``is_demo`` accounts left out where the model has\n:class:`DemoAccountColumn`; an app with a system account of its own subclasses and narrows\n:meth:`people`, as with :class:`SqlUserStore`. An app that sorts by a column of its own\n(keksdose's ``plan``) subclasses and widens :meth:`sort_columns`, and one with filters of\nits own (0.32, ``UserAdminDeps.roster_query_model``) answers them in :meth:`filter_clause`.",
           "methods": [
             {
               "name": "__init__",
@@ -5087,8 +5283,13 @@
               "doc": "The columns of each sort key, in order (user-admin §3.1)."
             },
             {
+              "name": "filter_clause",
+              "signature": "filter_clause(filters: BaseModel) -> ColumnElement[bool] | None",
+              "doc": "The ``WHERE`` clause of the app's own filters (0.32, an instance of\n``UserAdminDeps.roster_query_model``: keksdose's plan, privacy mode and dates), AND-ed\nwith the kit's; ``None``, here, for none: the kit's store takes them and ignores them."
+            },
+            {
               "name": "page",
-              "signature": "async page(query: UserListQuery, *, admin_role: str, reviewer_role: str | None) -> tuple[Sequence[UserT], int]",
+              "signature": "async page(query: UserListQuery, *, admin_role: str, reviewer_role: str | None, filters: BaseModel | None = None) -> tuple[Sequence[UserT], int]",
               "doc": ""
             },
             {
@@ -6078,7 +6279,7 @@
         {
           "name": "AdminUserRow",
           "kind": "model",
-          "signature": "class AdminUserRow(UserResponse)",
+          "signature": "class AdminUserRow(AdminUserRowBase, UserResponse)",
           "doc": "One row of ``GET /admin/users`` (§3.2): the auth contract's ``UserResponse`` core —\nwith its derived ``display_name`` and ``name_incomplete`` — plus what the admin page\nshows. Reads an ORM row (``from_attributes``).\n\n``extra`` holds the app's own columns: keksdose's plan and key custody,\nKurvenschmiede's owned counts; kastlan's companies only in the PLATFORM list — a\ncompany's list never names another company (§3.2). Attributes and counts, never\ncontent (keksdose's roster rule).\n\nThe person's device zone (``UserResponse.device_timezone``) is NOT on the row (0.17.0):\nit is where their device last was — their own data, a location signal the roster has\nno use for. The row reads an account that has it and never answers it.",
           "fields": [
             {
@@ -6163,7 +6364,7 @@
               "name": "device_timezone",
               "type": "SkipJsonSchema[Annotated[None, BeforeValidator(_discard)]]",
               "default": "None",
-              "doc": "Never read, never answered, not in the schema (0.17.0): see above."
+              "doc": "Never read, never answered, not in the schema (0.17.0): where the person's device last\nwas is no roster's (:class:`AdminUserRow`)."
             },
             {
               "name": "last_login_at",
@@ -6206,6 +6407,147 @@
               "type": "dict[str, Any]",
               "default": "dict()",
               "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "AdminUserRowBase",
+          "kind": "model",
+          "signature": "class AdminUserRowBase(UserCore)",
+          "doc": "One row of ``GET /admin/users`` without the formatted ``display_name`` (0.32,\nkeksdose's rule, auth §3.2): an answer about ANOTHER person carries ``first_name`` and\n``last_name`` and no ``display_name``; the page formats the name in the reader's language.\nEverything else is :class:`AdminUserRow`'s — the ``UserResponse`` core, the derived\n``name_incomplete``, the admin's columns and ``extra``. An app's row subclasses it in\nplace of :class:`AdminUserRow` (``UserAdminDeps.row_model``); the kit takes either.",
+          "fields": [
+            {
+              "name": "id",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "email",
+              "type": "str",
+              "default": null,
+              "doc": "As stored — already normalised; not re-validated on the way out."
+            },
+            {
+              "name": "first_name",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "last_name",
+              "type": "str",
+              "default": null,
+              "doc": "May be ``\"\"`` on a migrated account until the name is completed (§3.3)."
+            },
+            {
+              "name": "locale",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "role",
+              "type": "str | None",
+              "default": null,
+              "doc": "The app's role, or ``None`` for an account that holds none (kastlan: in no company).\nRequired all the same: the key is always in the answer."
+            },
+            {
+              "name": "is_active",
+              "type": "bool",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "email_verified",
+              "type": "bool",
+              "default": "False",
+              "doc": ""
+            },
+            {
+              "name": "totp_enabled",
+              "type": "bool",
+              "default": "False",
+              "doc": ""
+            },
+            {
+              "name": "created_at",
+              "type": "datetime",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "demo_expires_at",
+              "type": "UtcDateTime | None",
+              "default": "None",
+              "doc": "When a demo account ends, ISO-8601 in UTC (landing-demo §5.3): ``created_at`` plus\nthe maximum age, :func:`~eifi1_server_kit.demo.demo_expires_at`. ``None`` for a real\naccount. The ORM row rarely has it, so the app passes it — a property on its model\nread through ``from_attributes``, or ``model_copy(update=…)``."
+            },
+            {
+              "name": "text_size",
+              "type": "TextSize | None",
+              "default": "None",
+              "doc": "The account's text size (text-size §6, §10.6); ``None`` = never chosen, so a device\nwithout its own choice uses Normal. The app's column, read through\n``from_attributes``; an app without the column yet answers ``None``."
+            },
+            {
+              "name": "contrast",
+              "type": "ContrastMode | None",
+              "default": "None",
+              "doc": "The account's contrast mode (text-size §6, §10.6); ``None`` = never chosen, which\nreads as ``\"system\"``."
+            },
+            {
+              "name": "device_timezone",
+              "type": "SkipJsonSchema[Annotated[None, BeforeValidator(_discard)]]",
+              "default": "None",
+              "doc": "Never read, never answered, not in the schema (0.17.0): where the person's device last\nwas is no roster's (:class:`AdminUserRow`)."
+            },
+            {
+              "name": "last_login_at",
+              "type": "datetime | None",
+              "default": "None",
+              "doc": "``None``: never signed in (or not since the column shipped) — \"never\", not \"0\ndays ago\". kastlan's comes from its session rows, account-wide (§3.2)."
+            },
+            {
+              "name": "password_change_required_at",
+              "type": "datetime | None",
+              "default": "None",
+              "doc": "An admin required a new password; the next sign-in answers\n``password_change_required`` (§4.1)."
+            },
+            {
+              "name": "deletion_requested_at",
+              "type": "datetime | None",
+              "default": "None",
+              "doc": "The user asked to delete the account (§6.4); the account is deactivated."
+            },
+            {
+              "name": "deletion_scheduled_at",
+              "type": "datetime | None",
+              "default": "None",
+              "doc": "When the erasure runs; ``None`` in ``operator`` mode, where an operator erases."
+            },
+            {
+              "name": "translation_review_locales",
+              "type": "Annotated[list[str], BeforeValidator(_list_or_empty)]",
+              "default": "list()",
+              "doc": "The reviewer scope (``[]`` = none; an admin reviews everything without one)."
+            },
+            {
+              "name": "translation_review_areas",
+              "type": "list[str] | None",
+              "default": "None",
+              "doc": "…limited to these areas; ``None`` = every area."
+            },
+            {
+              "name": "extra",
+              "type": "dict[str, Any]",
+              "default": "dict()",
+              "doc": ""
+            }
+          ],
+          "methods": [
+            {
+              "name": "name_incomplete",
+              "signature": "@computed_field @property name_incomplete -> bool",
+              "doc": "Either part empty — the app shows ``CompleteNameDialog`` after sign-in (§3.3)."
             }
           ]
         },
@@ -6498,6 +6840,12 @@
               "type": "str",
               "default": null,
               "doc": ""
+            },
+            {
+              "name": "resent",
+              "type": "bool",
+              "default": "False",
+              "doc": "The invitation was sent again (0.32): ``POST /admin/invitations`` re-used the address's\nopen one (``AccountPolicy.reuse_open_invitations``), or ``POST …/{id}/resend``."
             }
           ]
         },
@@ -7182,8 +7530,8 @@
           "methods": [
             {
               "name": "page",
-              "signature": "async page(query: UserListQuery, *, admin_role: str, reviewer_role: str | None) -> tuple[Sequence[UserT], int]",
-              "doc": "One page of ``query`` (:func:`~eifi1_server_kit.user_admin.parse_roster_query`) and\nhow many people match it across every page.\n\n* ``q`` (its :attr:`~eifi1_server_kit.user_admin.UserListQuery.search_pattern`):\n  the address, the first name, the last name, and both orders of the two together\n  (``\"Ada Lovelace\"``, ``\"Lovelace Ada\"``), case-insensitively; its own ``%`` and\n  ``_`` match themselves.\n* ``role``: the account's role is one of them.\n* ``state``: any of the tokens (OR-ed), AND-ed with the rest: ``active``,\n  ``deactivated``, ``unverified``, ``verified``, ``password_change_required``,\n  ``deletion_scheduled`` (a deletion asked for), ``never_logged_in``, ``admin`` (the\n  role is ``admin_role``), ``reviewer`` (the role is ``reviewer_role``; with\n  ``None``, any account with review locales), and ``invited``, which no account row\n  of the kit's is (an invitation is its own row), so it matches none.\n* ``sort``: ``name`` (last name, then first name), ``email``, ``role``, ``created``,\n  ``last_login``, each ascending or descending, NULLs LAST either way, and the id\n  ascending as the last key, so equal values never trade places between pages."
+              "signature": "async page(query: UserListQuery, *, admin_role: str, reviewer_role: str | None, filters: BaseModel | None = None) -> tuple[Sequence[UserT], int]",
+              "doc": "One page of ``query`` (:func:`~eifi1_server_kit.user_admin.parse_roster_query`) and\nhow many people match it across every page.\n\n``filters`` (0.32) is the app's own query, an instance of\n``UserAdminDeps.roster_query_model`` (keksdose's plan, privacy mode and dates), AND-ed\nwith the rest. The kit passes it only when the app has that model, so a store whose\n``page`` lacks the parameter keeps working; ``SqlRosterStore`` takes it and applies\nwhat its ``filter_clause`` answers (nothing, unless a subclass says).\n\n* ``q`` (its :attr:`~eifi1_server_kit.user_admin.UserListQuery.search_pattern`):\n  the address, the first name, the last name, and both orders of the two together\n  (``\"Ada Lovelace\"``, ``\"Lovelace Ada\"``), case-insensitively; its own ``%`` and\n  ``_`` match themselves.\n* ``role``: the account's role is one of them.\n* ``state``: any of the tokens (OR-ed), AND-ed with the rest: ``active``,\n  ``deactivated``, ``unverified``, ``verified``, ``password_change_required``,\n  ``deletion_scheduled`` (a deletion asked for), ``never_logged_in``, ``admin`` (the\n  role is ``admin_role``), ``reviewer`` (the role is ``reviewer_role``; with\n  ``None``, any account with review locales), and ``invited``, which no account row\n  of the kit's is (an invitation is its own row), so it matches none.\n* ``sort``: ``name`` (last name, then first name), ``email``, ``role``, ``created``,\n  ``last_login``, each ascending or descending, NULLs LAST either way, and the id\n  ascending as the last key, so equal values never trade places between pages."
             },
             {
               "name": "counts",
@@ -7229,8 +7577,8 @@
             },
             {
               "name": "roster",
-              "signature": "async roster(query: UserListQuery) -> tuple[Sequence[UserT], int]",
-              "doc": "One page of the people in the scope, and how many match in all\n(:meth:`~eifi1_server_kit.user_admin.ports.RosterStore.page`'s promises)."
+              "signature": "async roster(query: UserListQuery, *, filters: BaseModel | None = None) -> tuple[Sequence[UserT], int]",
+              "doc": "One page of the people in the scope, and how many match in all\n(:meth:`~eifi1_server_kit.user_admin.ports.RosterStore.page`'s promises). ``filters``\n(0.32) is the app's own query (``UserAdminDeps.roster_query_model``), passed only when\nthe app has one: a scope without the parameter runs as before."
             },
             {
               "name": "counts",
@@ -7292,7 +7640,7 @@
             },
             {
               "name": "roster",
-              "signature": "async roster(query: UserListQuery) -> tuple[Sequence[UserT], int]",
+              "signature": "async roster(query: UserListQuery, *, filters: BaseModel | None = None) -> tuple[Sequence[UserT], int]",
               "doc": ""
             },
             {
@@ -7342,7 +7690,7 @@
     {
       "name": "eifi1_server_kit.user_admin.service",
       "summary": "The admin's flows over the scope and the account layer: the roster, the four actions, the reviewer scope, the log, the overview, the test mail and the operator's erasure.",
-      "doc": "The admin's flows over the scope and the account layer: the roster, the four actions, the\nreviewer scope, the log, the overview, the test mail and the operator's erasure.\n\nLayer 2 (``docs/auth-harmonization.md`` §12.3–§12.5, ``docs/user-admin-harmonization.md``\n§3–§6, ``docs/admin-harmonization.md`` §2.4, §9.2 in ``Eifi1/ui-kit``), on layer 1's rules:\n:func:`~eifi1_server_kit.user_admin.parse_roster_query`, :func:`~eifi1_server_kit.user_admin.refuse_self`,\n:func:`~eifi1_server_kit.user_admin.confirmation_level`,\n:func:`~eifi1_server_kit.user_admin.require_confirmation`,\n:func:`~eifi1_server_kit.user_admin.admin_action_record`, :class:`~eifi1_server_kit.user_admin.AdminAttention`.\nNo FastAPI: :mod:`eifi1_server_kit.user_admin.router` builds one per request.\n\n**What the kit settles where the three apps differ** (each app's adopt note names its own):\n\n* **No change, no row**: an action that changes nothing (deactivating an inactive account,\n  the role it has, a password change already required, the same review scope) answers the\n  row as it is, asks no confirmation and writes no log row (keksdose and Kurvenschmiede;\n  kastlan wrote one every time).\n* **The order of the refusals**: the account (``user_not_found``, ``demo_refused``), then\n  ``self_action``, the scope's account-wide refusal (``other_companies``), ``last_admin``,\n  then the confirmation the server decided (keksdose's and Kurvenschmiede's; kastlan\n  confirmed before ``last_admin``). Every refusal is coded.\n* **Deactivating** ends every session (:meth:`~eifi1_server_kit.auth.service.AccountService.end_sessions`:\n  the rows, the ``iat`` cut-off where the row has one, the pending address change, the\n  ``sessions_ended`` hook) and clears nothing else; **reactivating** withdraws a pending\n  deletion first (``deletion_cancel``, then ``reactivate``: Kurvenschmiede's and kastlan's\n  two rows).\n* **A forced password change ends every session** (keksdose, Kurvenschmiede; §12.5 item 7),\n  is allowed on a deactivated account (it waits for the return) and on oneself.\n* **The admin's mail** refuses a deactivated account (``account_inactive``) and a verified\n  address's verification (``email_already_verified``), is charged to the recipient's public\n  window, commits its link before it mails it, and logs ``{sent}``; its link is answered only\n  while mail goes to the console.\n* **Demo accounts** are never on the roster and every action on one is ``demo_refused``\n  (Kurvenschmiede, kastlan); a demo admin sees no count and sends no test mail.",
+      "doc": "The admin's flows over the scope and the account layer: the roster, the four actions, the\nreviewer scope, the log, the overview, the test mail and the operator's erasure.\n\nLayer 2 (``docs/auth-harmonization.md`` §12.3–§12.5, ``docs/user-admin-harmonization.md``\n§3–§6, ``docs/admin-harmonization.md`` §2.4, §9.2 in ``Eifi1/ui-kit``), on layer 1's rules:\n:func:`~eifi1_server_kit.user_admin.parse_roster_query`, :func:`~eifi1_server_kit.user_admin.refuse_self`,\n:func:`~eifi1_server_kit.user_admin.confirmation_level`,\n:func:`~eifi1_server_kit.user_admin.require_confirmation`,\n:func:`~eifi1_server_kit.user_admin.admin_action_record`, :class:`~eifi1_server_kit.user_admin.AdminAttention`.\nNo FastAPI: :mod:`eifi1_server_kit.user_admin.router` builds one per request.\n\n**What the kit settles where the three apps differ** (each app's adopt note names its own):\n\n* **No change, no row**: an action that changes nothing (deactivating an inactive account,\n  the role it has, a password change already required, the same review scope) answers the\n  row as it is, asks no confirmation and writes no log row (keksdose and Kurvenschmiede;\n  kastlan wrote one every time).\n* **The order of the refusals**: the account (``user_not_found``, ``demo_refused``), then\n  ``self_action``, the scope's account-wide refusal (``other_companies``), ``last_admin``,\n  then the confirmation the server decided (keksdose's and Kurvenschmiede's; kastlan\n  confirmed before ``last_admin``). Every refusal is coded.\n* **Deactivating** ends every session (:meth:`~eifi1_server_kit.auth.service.AccountService.end_sessions`:\n  the rows, the ``iat`` cut-off where the row has one, the pending address change, the\n  ``sessions_ended`` hook) and clears nothing else; **reactivating** withdraws a pending\n  deletion first (``deletion_cancel``, then ``reactivate``: Kurvenschmiede's and kastlan's\n  two rows).\n* **A forced password change ends every session** (keksdose, Kurvenschmiede; §12.5 item 7),\n  is allowed on oneself, and refuses a deactivated account (``account_inactive``, 0.32,\n  keksdose's: the admin's mails' refusal).\n* **The admin's mail** refuses a deactivated account (``account_inactive``) and a verified\n  address's verification (``email_already_verified``), is charged to the recipient's public\n  window, commits its link before it mails it, and logs ``{sent}``; its link is answered only\n  while mail goes to the console.\n* **Demo accounts** are never on the roster and every action on one is ``demo_refused``\n  (Kurvenschmiede, kastlan); a demo admin sees no count and sends no test mail.",
       "contract": {
         "doc": "docs/user-admin-harmonization.md",
         "section": "§3, §4, §6.4",
@@ -7513,6 +7861,12 @@
               "type": "Callable[[Sequence[int]], Awaitable[Mapping[int, str | None]]] | None",
               "default": "None",
               "doc": "The log's groups: their names by id (Kurvenschmiede's teams, kastlan's companies), a\ndeleted one's from its ``group_delete`` row."
+            },
+            {
+              "name": "summary",
+              "type": "Callable[[UserT], Awaitable[_Extras]] | None",
+              "default": "None",
+              "doc": "``GET /admin/users``' ``summary``: the app's counts beside the kit's ``active_admins``,\nwhich always wins (0.32, keksdose's install-wide ``total``, ``by_plan``, …); type it with\n``UserAdminDeps.summary_model``. Asked with the admin, whatever the page and filter."
             }
           ]
         },
@@ -7524,7 +7878,7 @@
           "methods": [
             {
               "name": "__init__",
-              "signature": "__init__(*, accounts: AccountService[UserT, Any, Any], scope: AdminScope[UserT], users: UserStore[UserT], log: AdminActionLog[Any], invitations: InvitationStore[Any], mailer: Mailer, mail_backend: str, account_policy: AccountPolicy, policy: AdminPolicy, limiters: AuthLimiters, hooks: UserAdminHooks[UserT] | None = None, feedback: FeedbackService[Any] | None = None, role_sets: bool = False, row_model: type[AdminUserRow] = AdminUserRow, action_row_model: type[AdminActionRow] = AdminActionRow, now: Clock = utc_now) -> None",
+              "signature": "__init__(*, accounts: AccountService[UserT, Any, Any], scope: AdminScope[UserT], users: UserStore[UserT], log: AdminActionLog[Any], invitations: InvitationStore[Any], mailer: Mailer, mail_backend: str, account_policy: AccountPolicy, policy: AdminPolicy, limiters: AuthLimiters, hooks: UserAdminHooks[UserT] | None = None, feedback: FeedbackService[Any] | None = None, role_sets: bool = False, row_model: type[AdminUserRowBase] = AdminUserRow, action_row_model: type[AdminActionRow] = AdminActionRow, now: Clock = utc_now) -> None",
               "doc": ""
             },
             {
@@ -7549,8 +7903,8 @@
             },
             {
               "name": "roster",
-              "signature": "async roster(**raw: Any) -> dict[str, Any]",
-              "doc": "``GET /admin/users`` (§3.1): the query parsed (``422`` for a bad one), one page of\nthe scope's people as rows, the total, the transport, the active admins and the\nlevels."
+              "signature": "async roster(admin: UserT | None = None, *, filters: BaseModel | None = None, **raw: Any) -> dict[str, Any]",
+              "doc": "``GET /admin/users`` (§3.1): the query parsed (``422`` for a bad one), one page of\nthe scope's people as rows, the total, the transport, the summary and the levels.\n\n``filters`` (0.32, ``UserAdminDeps.roster_query_model``) is the app's own query, handed\nto the scope's roster only when given, so a roster without the parameter still runs.\nThe summary is the ``summary`` hook's counts, asked with ``admin``, under the kit's\n``active_admins``, which an app cannot override."
             },
             {
               "name": "set_active",
@@ -7565,7 +7919,7 @@
             {
               "name": "require_password_change",
               "signature": "async require_password_change(admin: UserT, target: UserT, body: ActionConfirmation) -> UserT",
-              "doc": "``POST /admin/users/{id}/password-change`` (§4.1): the scope's account-wide refusal,\nacknowledged; the next sign-in asks for a new password, and every session ends now\n(§12.5 item 7)."
+              "doc": "``POST /admin/users/{id}/password-change`` (§4.1): ``account_inactive`` for a\ndeactivated account (0.32, keksdose's; the admin's mails' refusal), the scope's\naccount-wide refusal, acknowledged; the next sign-in asks for a new password, and every\nsession ends now (§12.5 item 7)."
             },
             {
               "name": "withdraw_password_change",
@@ -7590,7 +7944,7 @@
             {
               "name": "set_reviewer",
               "signature": "async set_reviewer(admin: UserT, target: UserT, body: ReviewerUpdate) -> ReviewerResult",
-              "doc": "``PUT /admin/users/{id}/reviewer {locales, areas}`` (§4.1): never an admin's\n(``reviewer_is_admin``: they review every locale, and taking the admin role away is the\nrole change's); the locales and areas checked against the app's (``422``). Locales give\nthe reviewer role (with ``AdminPolicy.reviewer_role``), none take it away again; the\nareas count only with locales. No confirmation (``none``)."
+              "doc": "``PUT /admin/users/{id}/reviewer {locales, areas}`` (§4.1): never an admin's\n(``reviewer_is_admin``: they review every locale, and taking the admin role away is the\nrole change's); the locales and areas checked against the app's (``422``). Locales give\nthe reviewer role (with ``AdminPolicy.reviewer_role``), none take it away again; the\nareas count only with locales. No confirmation (``none``). Logged ``{from: {locales,\nareas}, to: {locales, areas}}``, the account's scope before and after (0.32; before,\n``{locales, areas}``, the new scope alone)."
             },
             {
               "name": "actions",
@@ -7690,9 +8044,9 @@
             },
             {
               "name": "row_model",
-              "type": "type[AdminUserRow]",
+              "type": "type[AdminUserRowBase]",
               "default": "<class 'eifi1_server_kit.user_admin.schemas.AdminUserRow'>",
-              "doc": ""
+              "doc": "The roster's row: an :class:`AdminUserRow` subclass, or (0.32) an\n:class:`AdminUserRowBase` one, which answers no ``display_name`` (auth §3.2)."
             },
             {
               "name": "action_row_model",
@@ -7735,6 +8089,18 @@
               "type": "type[MailRequest]",
               "default": "<class 'eifi1_server_kit.user_admin.schemas.MailRequest'>",
               "doc": ""
+            },
+            {
+              "name": "summary_model",
+              "type": "type[BaseModel] | None",
+              "default": "None",
+              "doc": "The roster's ``summary`` as the app's model (0.32, keksdose's install-wide counts from\n``UserAdminHooks.summary``), so the OpenAPI types it; it declares the kit's\n``active_admins`` too. ``None``: the summary is a plain mapping, as before."
+            },
+            {
+              "name": "roster_query_model",
+              "type": "type[BaseModel] | None",
+              "default": "None",
+              "doc": "The app's own roster filters (0.32, keksdose's plan, privacy mode and dates): ``GET\n/admin/users`` alone takes its fields as query parameters, and the roster store's\n``page`` gets the instance as ``filters``. Its fields never name the kit's parameters,\nand it does not forbid extra fields (the kit's parameters are in the same query).\n``None``: no ``filters`` is passed, so a store without the parameter keeps working."
             }
           ]
         },
@@ -7748,7 +8114,7 @@
           "name": "user_admin_router",
           "kind": "function",
           "signature": "user_admin_router(deps: UserAdminDeps, *, prefix: str = '/admin', tags: Sequence[str] = ('admin',)) -> APIRouter",
-          "doc": "The admin's routes (§12.1), every one behind the guard, on\n``APIRouter(prefix=prefix, tags=tags)``:\n\n* ``GET /users`` — the roster (``UserListResponse[row_model]``);\n* ``POST /users/{user_id}/active``, ``POST /users/{user_id}/role`` (or ``PUT …/roles``\n  with ``role_sets``), ``POST`` and ``DELETE /users/{user_id}/password-change`` — each\n  answers the account's row;\n* ``POST /users/{user_id}/mail`` → ``MailResult``;\n* ``PUT /users/{user_id}/reviewer`` → ``ReviewerResult``, with ``policy.review_locales``;\n* ``POST /users/{user_id}/erase`` → ``erasure_result_model``, where an operator erases\n  (``deletion_mode`` ``operator``; where a job does, the route is not there);\n* ``GET /actions`` → ``AdminActionPage[action_row_model]``, ``GET /attention`` →\n  ``attention_model``, ``GET /mail`` → ``MailBackendInfo``, ``POST /mail/test`` →\n  ``MailTestResult``.\n\nRaises :class:`ValueError` for a policy naming a role the app does not have, and for the\nglobal scope without a roster."
+          "doc": "The admin's routes (§12.1), every one behind the guard, on\n``APIRouter(prefix=prefix, tags=tags)``:\n\n* ``GET /users`` — the roster (``UserListResponse[row_model]``; its ``summary`` typed as\n  ``summary_model`` and its query widened by ``roster_query_model``, where the app has\n  them);\n* ``POST /users/{user_id}/active``, ``POST /users/{user_id}/role`` (or ``PUT …/roles``\n  with ``role_sets``), ``POST`` and ``DELETE /users/{user_id}/password-change`` — each\n  answers the account's row;\n* ``POST /users/{user_id}/mail`` → ``MailResult``;\n* ``PUT /users/{user_id}/reviewer`` → ``ReviewerResult``, with ``policy.review_locales``;\n* ``POST /users/{user_id}/erase`` → ``erasure_result_model``, where an operator erases\n  (``deletion_mode`` ``operator``; where a job does, the route is not there);\n* ``GET /actions`` → ``AdminActionPage[action_row_model]``, ``GET /attention`` →\n  ``attention_model``, ``GET /mail`` → ``MailBackendInfo``, ``POST /mail/test`` →\n  ``MailTestResult``.\n\nRaises :class:`ValueError` for a policy naming a role the app does not have, for the\nglobal scope without a roster, for a ``summary_model`` without ``active_admins`` and for a\n``roster_query_model`` naming one of the kit's roster parameters."
         }
       ]
     },
@@ -16954,6 +17320,11 @@
               "name": "read",
               "signature": "async read(key: str, *, viewer: FeedbackActor) -> StoredAttachment | None",
               "doc": ""
+            },
+            {
+              "name": "keys_in_use",
+              "signature": "async keys_in_use(keys: Collection[str]) -> set[str]",
+              "doc": "The ``keys`` an upload row of a living account still holds (0.32, Kurvenschmiede).\n\n**Why.** An erasure's keys (``ErasedFeedback.keys``, the ``AuthHooks.purge_files``\nhook's) count what the reports name, not the uploads: the same bytes uploaded by\nsomebody else and not filed yet (the prune's day of waiting) are the same\ncontent-addressed object. An erased person's own rows hold nothing, their ``user_id``\ngone with the account. In the hook, after the commit, on a session of its own::\n\n    async def purge_files(keys: Sequence[str]) -> None:\n        async with sessions() as session:\n            held = await storage_on(session).keys_in_use(keys)\n        await purge_objects(store, [k for k in keys if k not in held], object_key=...)\n\nFlushes first, commits nothing."
             },
             {
               "name": "prune",

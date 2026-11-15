@@ -1025,6 +1025,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "auth.service · Enums",
     "auth.service · Constants",
     "auth.ports · Classes",
+    "auth.ports · Enums",
     "auth.ports · Protocols",
     "auth.ports · Constants",
     "auth.mails · Functions",
