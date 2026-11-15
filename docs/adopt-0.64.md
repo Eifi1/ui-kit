@@ -38,6 +38,8 @@ are new sentences, not yet reviewed):
 - the namespace `accountTeams`: the teams' parts (below) — Kurvenschmiede's `teams.*` words, as
   its reviewers read them, with the kit's "administrator" — and a team's six coded refusals
   (`accountTeams.codes`); `team_not_found`'s sentence and `team_changed`'s second half are new.
+- `feedbackToast.legacyReworkAppend`: the coded `legacy_rework_append` on the feedback pages
+  ("This page is out of date. Reload it and try again.").
 
 **Must change** (in the types only; no app's code is affected today):
 
@@ -168,6 +170,9 @@ const ROLES = { ADMIN: { label: t("roles.ADMIN"), tone: "brand" }, MEMBER: { lab
   `target_group_*`) have the group as their target, a membership row the person with the group
   beside them, its role through `groupRoleLabel`; a group with no name left reads as the noun's
   "a deleted team".
+- **A reviewer row with no language reads "No longer a reviewer"** (`adminActionLog.reviewerNone`,
+  all seven catalogues; Kurvenschmiede on 0.64.0-dev.6): the grant was withdrawn, which "No
+  languages" misread.
 - **`AccountAdminOverviewSection`** is `AdminOverview` on `GET /admin/attention`, with its
   "Try again"; **`AccountMailTestSection`** is `MailTestCard`, to the signed-in admin's address.
 
@@ -237,6 +242,18 @@ Nothing new is stored in the browser; the file parts fetch through the session.
   beside the comment threads (`feedbackCommentsQueryKey`), not under `accounts`: an app persisting
   its cache denies the account's root and may keep a reader's own reports (`["feedback", "mine"]`)
   for offline. `AccountsProvider` drops both roots when the account changes.
+- **The account is `/auth/me`'s, else the session's** (Kurvenschmiede on 0.64.0-dev.6): after a
+  failed first `/auth/me` both pages draw for the account the session holds, no longer their
+  spinner for good, and `useAccountFeedbackSubmit` files the report in that account's name, no
+  longer in nobody's.
+- **A refusal keeps its reason** (Kurvenschmiede on 0.64.0-dev.6): both pages take
+  `describeError`, asked first as on the other account sections; then the coded
+  `legacy_rework_append` in the kit's words, the account words, and for an uncoded 4xx the
+  server's `detail` sentence, as the apps showed it before — no longer "Could not save that
+  change." or "Could not send the reply." for every refusal. The comments and the vote toast
+  text: there an answer of `describeError` that is not a string is the kit's words.
+- `AccountPublicFeedbackPage`'s `publicReader` takes `true` or `false` as well as a function,
+  as `AccountFeedbackPage`'s does.
 
 ## Teams (opt-in)
 
@@ -278,6 +295,16 @@ no word is shown, and the account's and the admin's other parts behave as before
 - Their query keys sit under their own root, `["teams", …]` (`accountQueryKeys.teams`,
   `teamsMine`, `teamsAdmin`), beside the feedback's; `AccountsProvider` drops it when the account
   changes. `accountTeams.title` and `adminHelp` are the words for the app's sidebar entry.
+- **The admin's log words a team's deletion** (Kurvenschmiede on 0.64.0-dev.6):
+  `AccountAdminLogSection` reads a `group_delete` row's `{members, grants, invitations}` as the
+  delete dialog counted them ("2 members, 3 shares and 1 invitation", `accountTeams`' count
+  words, a count of nothing left out). An app's `describeDetail` for it can go.
+- **The add row asks the language before Add** (Kurvenschmiede on 0.64.0-dev.6): the tab goes
+  address → role (the admin's) → language → Add, and the row has a column per field at `sm`, so
+  the language no longer wraps under the address.
+- **One team change at a time in `AccountTeamsSection`** (Kurvenschmiede on 0.64.0-dev.6): while
+  a create, a rename, a delete or a member change is on its way, the others wait — rename and
+  delete are greyed during a member change, the member doors during a rename or a delete.
 
 ## The settings sections
 

@@ -228,8 +228,9 @@ export interface AdminActionLogLabels {
   /** A target name as a filter button — "Show only the actions on Ada Example". */
   filterBy: (target: string) => string;
   /** 0.64 (Kurvenschmiede's U9): a mail action's or an invitation's row whose mail did not go
-   *  (`detail.sent === false`), and a reviewer row that took every language away. Read by
-   *  `@eifi1/ui-kit/accounts`' log section; optional, as every key added since 0.34. */
+   *  (`detail.sent === false`), and a reviewer row that took every language away — the grant
+   *  withdrawn, so "No longer a reviewer". Read by `@eifi1/ui-kit/accounts`' log section;
+   *  optional, as every key added since 0.34. */
   notSent?: string;
   reviewerNone?: string;
   /** 0.45: after "Company renamed" when the row carries both names — "from A to B". */

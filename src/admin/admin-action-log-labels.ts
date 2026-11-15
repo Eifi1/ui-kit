@@ -16,7 +16,7 @@ export const DEFAULT_ADMIN_ACTION_LOG_LABELS: AdminActionLogLabels = {
   showAll: "Show all actions",
   filterBy: (target) => `Show only the actions on ${target}`,
   notSent: "Mail not sent",
-  reviewerNone: "No languages",
+  reviewerNone: "No longer a reviewer",
   actions: {
     deactivate: "Deactivated",
     reactivate: "Reactivated",

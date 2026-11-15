@@ -115,6 +115,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       commentFailed: "Kommentar konnte nicht gesendet werden.",
       voteFailed: "Stimme konnte nicht gespeichert werden.",
       replyFailed: "Antwort konnte nicht gesendet werden.",
+      legacyReworkAppend: "Diese Seite ist nicht mehr aktuell. Laden Sie sie neu und versuchen Sie es noch einmal.",
     },
     feedbackMenu: {
       trigger: "Feedback senden",
@@ -1531,7 +1532,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       showAll: "Alle Aktionen zeigen",
       filterBy: (target) => `Nur Aktionen zu ${target} zeigen`,
       notSent: "E-Mail nicht gesendet",
-      reviewerNone: "Keine Sprachen",
+      reviewerNone: "Keine Prüfrolle mehr",
       actions: {
         deactivate: "Deaktiviert",
         reactivate: "Reaktiviert",

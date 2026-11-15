@@ -47,7 +47,7 @@ const adminList = (teams: object[] = [{ ...rig(), grant_count: 3 }]) => ({
   data: { teams, levels: { group_delete: "acknowledge" } },
 });
 
-function mount(ui: ReactNode, routes: Record<string, (config: Cfg) => Answer> = {}) {
+function mount(ui: ReactNode, routes: Record<string, (config: Cfg) => Answer | Promise<Answer>> = {}) {
   const calls: Array<{ route: string; data?: unknown; ifMatch?: unknown }> = [];
   const http = fakeHttp((config) => {
     const route = `${config.method} ${config.url}`;
@@ -187,6 +187,68 @@ describe("AccountTeamsSection", () => {
     expect(await screen.findByText("http://localhost/register?invite=t1")).toBeInTheDocument();
   });
 
+  it("asks the invitation's language before the Add button, in the row's own column", async () => {
+    const { user } = mount(<AccountTeamsSection languages={["en", "fr"]} />, { "get /admin/teams": () => adminList() });
+    const team = await openRig(user);
+    const form = within(team).getByLabelText("Add by email address").closest("form") as HTMLFormElement;
+    // Tab order is DOM order: the address, the role, the language, then Add.
+    const order = Array.from(
+      form.querySelectorAll<HTMLElement>("input[type=email], [role=radiogroup], select, button[type=submit]"),
+    );
+    expect(order).toEqual([
+      within(form).getByLabelText("Add by email address"),
+      within(form).getByRole("radiogroup", { name: "As" }),
+      within(form).getByLabelText("Language of the invitation"),
+      within(form).getByRole("button", { name: "Add" }),
+    ]);
+    // Four fields, four columns at sm: the select no longer wraps under the address.
+    expect(form.className).toContain("sm:grid-cols-[minmax(0,1fr)_auto_auto_auto]");
+  });
+
+  it("keeps three columns when there is no language to ask", async () => {
+    const { user } = mount(<AccountTeamsSection languages={["en"]} />, { "get /admin/teams": () => adminList() });
+    const team = await openRig(user);
+    const form = within(team).getByLabelText("Add by email address").closest("form") as HTMLFormElement;
+    expect(within(form).queryByLabelText("Language of the invitation")).toBeNull();
+    expect(form.className).toContain("sm:grid-cols-[minmax(0,1fr)_auto_auto]");
+    expect(form.className).not.toContain("_auto_auto_auto]");
+  });
+
+  it("holds the team's rename and delete while a member change is on its way", async () => {
+    let answer: (value: Answer) => void = () => undefined;
+    const { calls, user } = mount(<AccountTeamsSection />, {
+      "get /admin/teams": () => adminList(),
+      "patch /admin/teams/4/members/7": () => new Promise<Answer>((resolve) => (answer = resolve)),
+    });
+    const team = await openRig(user);
+    const ben = within(team).getByRole("radiogroup", { name: "Role of Ben Example in the team" });
+    await user.click(within(ben).getByRole("radio", { name: "Manager" }));
+    await waitFor(() => expect(calls.map((c) => c.route)).toContain("patch /admin/teams/4/members/7"));
+    await waitFor(() => expect(screen.getAllByRole("button", { name: "Rename" })[0]).toBeDisabled());
+    await user.click(screen.getAllByRole("button", { name: /Actions for Rig crew/ })[0]);
+    expect(await screen.findByRole("button", { name: "Delete team" })).toBeDisabled();
+    answer({ status: 200, data: rig() });
+    await waitFor(() => expect(screen.getAllByRole("button", { name: "Rename" })[0]).toBeEnabled());
+  });
+
+  it("holds a team's member doors while its rename is on its way", async () => {
+    let answer: (value: Answer) => void = () => undefined;
+    const { calls, user } = mount(<AccountTeamsSection />, {
+      "get /admin/teams": () => adminList(),
+      "patch /admin/teams/4": () => new Promise<Answer>((resolve) => (answer = resolve)),
+    });
+    const team = await openRig(user);
+    await user.click(screen.getAllByRole("button", { name: "Rename" })[0]);
+    const dialog = await screen.findByRole("dialog", { name: "Rename the team Rig crew" });
+    await user.type(within(dialog).getByLabelText("Team name"), " 2");
+    await user.click(within(dialog).getByRole("button", { name: "Rename" }));
+    await waitFor(() => expect(calls.map((c) => c.route)).toContain("patch /admin/teams/4"));
+    const ben = within(team).getByRole("radiogroup", { name: "Role of Ben Example in the team" });
+    await waitFor(() => expect(within(ben).getByRole("radio", { name: "Manager" })).toBeDisabled());
+    answer({ status: 200, data: rig({ name: "Rig crew 2", version: 4 }) });
+    await waitFor(() => expect(within(ben).getByRole("radio", { name: "Manager" })).toBeEnabled());
+  });
+
   it("names a manager, and re-sends a team's invitation through the admin's invitations", async () => {
     const { calls, user } = mount(<AccountTeamsSection />, {
       "get /admin/teams": () => adminList(),
@@ -241,6 +303,24 @@ describe("AccountTeamsPage", () => {
     expect(sent?.data).toEqual({ email: "dee@example.com", role: "member", locale: "en" });
     expect(sent?.ifMatch).toBe("3");
     expect(await screen.findByText("dee@example.com is in Rig crew now.")).toBeInTheDocument();
+  });
+
+  it("asks a manager's invitation language before the Add button", async () => {
+    mount(<AccountTeamsPage languages={["en", "fr"]} />, {
+      "get /teams": () => ({ status: 200, data: [rig({ my_role: "manager" })] }),
+    });
+    const form = (await screen.findByLabelText("Add by email address")).closest("form") as HTMLFormElement;
+    const order = Array.from(
+      form.querySelectorAll<HTMLElement>("input[type=email], [role=radiogroup], select, button[type=submit]"),
+    );
+    expect(order).toEqual([
+      within(form).getByLabelText("Add by email address"),
+      within(form).getByLabelText("Language of the invitation"),
+      within(form).getByRole("button", { name: "Add" }),
+    ]);
+    // A manager picks no role: three fields, three columns.
+    expect(form.className).toContain("sm:grid-cols-[minmax(0,1fr)_auto_auto]");
+    expect(form.className).not.toContain("_auto_auto_auto]");
   });
 
   it("lets a manager remove a member but not a manager, after asking", async () => {

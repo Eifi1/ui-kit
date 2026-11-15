@@ -107,6 +107,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       commentFailed: "Non è stato possibile pubblicare il commento.",
       voteFailed: "Non è stato possibile salvare il Suo voto.",
       replyFailed: "Non è stato possibile inviare la risposta.",
+      legacyReworkAppend: "Questa pagina non è più aggiornata. La ricarichi e riprovi.",
     },
     feedbackMenu: {
       trigger: "Invia feedback",
@@ -1497,7 +1498,7 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       showAll: "Mostra tutte le azioni",
       filterBy: (target) => `Mostra solo le azioni su ${target}`,
       notSent: "E-mail non inviata",
-      reviewerNone: "Nessuna lingua",
+      reviewerNone: "Ruolo di revisore rimosso",
       // Agreeing with "account" (masculine), like `accountState`.
       actions: {
         deactivate: "Disattivato",

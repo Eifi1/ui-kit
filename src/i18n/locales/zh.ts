@@ -98,6 +98,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       commentFailed: "无法发表评论。",
       voteFailed: "无法保存您的投票。",
       replyFailed: "无法发送回复。",
+      legacyReworkAppend: "此页面已过时。请重新加载后再试。",
     },
     feedbackMenu: {
       trigger: "发送反馈",
@@ -1428,7 +1429,7 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       showAll: "显示全部操作",
       filterBy: (target) => `仅显示针对 ${target} 的操作`,
       notSent: "邮件未发送",
-      reviewerNone: "无语言",
+      reviewerNone: "已取消审校者角色",
       actions: {
         deactivate: "已停用",
         reactivate: "已重新激活",

@@ -40,7 +40,7 @@ import type {
   AccountTeamRole,
 } from "./account-teams-api";
 import { useAdminTeamActions, useAdminTeams, useMyTeams, useTeamActions } from "./account-teams-hooks";
-import { DEFAULT_ACCOUNT_TEAMS_LABELS } from "./account-teams-labels";
+import { DEFAULT_ACCOUNT_TEAMS_LABELS, teamToll } from "./account-teams-labels";
 import type { AccountTeamRefusalLabels, AccountTeamsLabels } from "./account-teams-labels";
 
 /**
@@ -99,25 +99,16 @@ function useSayTeamFailure(
     });
 }
 
-/** What the cascade takes when a team is deleted, as one phrase in the reader's language —
- *  "2 members, 3 shares and 1 invitation" — or `undefined` when nothing goes with it.
- *  Kurvenschmiede's `useTeamToll`: a count of nothing is left out rather than said as
- *  "0 shares", and the list is joined by `Intl.ListFormat`, whose "and" is the language's. */
+/** What the cascade takes when a team is deleted, counted from the team in hand
+ *  ({@link teamToll}), or `undefined` when nothing goes with it. */
 function useTeamToll(labels: AccountTeamsLabels): (team: AccountAdminTeam) => string | undefined {
   const locale = useKitLocale();
-  return (team) => {
-    const parts = [
-      team.members.length > 0 && labels.countMembers(team.members.length),
-      team.grant_count > 0 && labels.countGrants(team.grant_count),
-      team.invitations.length > 0 && labels.countInvitations(team.invitations.length),
-    ].filter((part): part is string => typeof part === "string");
-    if (parts.length === 0) return undefined;
-    try {
-      return new Intl.ListFormat(locale, { style: "long", type: "conjunction" }).format(parts);
-    } catch {
-      return new Intl.ListFormat(undefined, { style: "long", type: "conjunction" }).format(parts);
-    }
-  };
+  return (team) =>
+    teamToll(
+      { members: team.members.length, grants: team.grant_count, invitations: team.invitations.length },
+      labels,
+      locale,
+    );
 }
 
 /** A console mail's link, shown once to copy and hand on. */
@@ -163,6 +154,14 @@ function HandOnBanner({ handOn, onDismiss }: { handOn: HandOn | null; onDismiss:
 
 /* ── One team's people ───────────────────────────────────────────────────── */
 
+/** The add row's columns at sm, by how many fields sit between the address and Add (the
+ *  admin's role, the language): written out whole, for Tailwind's scan. */
+const ADD_ROW_COLUMNS = [
+  "sm:grid-cols-[minmax(0,1fr)_auto]",
+  "sm:grid-cols-[minmax(0,1fr)_auto_auto]",
+  "sm:grid-cols-[minmax(0,1fr)_auto_auto_auto]",
+] as const;
+
 /** The doors a viewer has on one team; each left out is a door not drawn. */
 interface TeamDoors {
   busy: boolean;
@@ -203,6 +202,7 @@ function TeamPeople({ team, mode, doors, languages, defaultLocale, labels }: Tea
     { value: "manager" as const, label: labels.roles.manager },
   ];
   const busy = doors?.busy ?? false;
+  const asksLanguage = languages.length > 1;
   const add = () => {
     const address = email.trim();
     if (!address || !doors?.onAdd) return;
@@ -328,7 +328,9 @@ function TeamPeople({ team, mode, doors, languages, defaultLocale, labels }: Tea
 
       {doors?.onAdd && mode !== "member" && (
         <form
-          className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end"
+          // One column per field at sm, so the language sits beside the address rather than
+          // wrapping under it: the address, the admin's role, the language, then Add.
+          className={`grid grid-cols-1 gap-2 sm:items-end ${ADD_ROW_COLUMNS[(mode === "admin" ? 1 : 0) + (asksLanguage ? 1 : 0)]}`}
           onSubmit={(event) => {
             event.preventDefault();
             add();
@@ -340,23 +342,17 @@ function TeamPeople({ team, mode, doors, languages, defaultLocale, labels }: Tea
             value={email}
             onChange={(event) => setEmail(event.target.value)}
           />
-          {mode === "admin" ? (
+          {mode === "admin" && (
             <ToggleGroup<AccountTeamRole>
               aria-label={labels.roleLabel}
               options={roles}
               value={role}
               onChange={setRole}
             />
-          ) : (
-            <span />
           )}
-          {/* Enter in the field is this button's click, so its lock refuses the submit too. */}
-          <Button type="submit" variant="secondary" commit disabled={busy || !email.trim()}>
-            <UserPlus className="size-4" aria-hidden /> {labels.add}
-          </Button>
           {/* Only used for an address with no account, which is invited in the invitee's
-              language: so it is asked for. */}
-          {languages.length > 1 && (
+              language: so it is asked for — before Add, which is where the tab goes next. */}
+          {asksLanguage && (
             <LanguageSelect
               label={invitationWords.language}
               size="sm"
@@ -365,6 +361,10 @@ function TeamPeople({ team, mode, doors, languages, defaultLocale, labels }: Tea
               onChange={(next) => setLocale(next as KitLanguageCode)}
             />
           )}
+          {/* Enter in the field is this button's click, so its lock refuses the submit too. */}
+          <Button type="submit" variant="secondary" commit disabled={busy || !email.trim()}>
+            <UserPlus className="size-4" aria-hidden /> {labels.add}
+          </Button>
         </form>
       )}
     </div>
@@ -442,7 +442,12 @@ export function AccountTeamsSection({
   const [deleting, setDeleting] = useState<AccountAdminTeam | null>(null);
   const [handOn, setHandOn] = useState<HandOn | null>(null);
   const failed = (team?: string) => (error: unknown) => toast.error(say(error, team));
+  // Any change of a team holds every other door: each answers with the team, and each sends
+  // the version read, so a second one before the first's answer is refused as `team_changed`.
   const busy =
+    actions.create.isPending ||
+    actions.rename.isPending ||
+    actions.delete.isPending ||
     actions.addMember.isPending ||
     actions.setRole.isPending ||
     actions.removeMember.isPending ||
@@ -532,12 +537,19 @@ export function AccountTeamsSection({
       name: (team) => team.name,
       size: "sm",
       actions: (team) => [
-        { key: "rename", label: labels.rename, icon: Pencil, onSelect: () => setRenaming({ team, name: team.name }) },
+        {
+          key: "rename",
+          label: labels.rename,
+          icon: Pencil,
+          disabled: busy,
+          onSelect: () => setRenaming({ team, name: team.name }),
+        },
         {
           key: "delete",
           label: labels.delete,
           icon: Trash2,
           tone: "danger",
+          disabled: busy,
           // Asked at the server's level in the dialog; the menu's own question would ask twice.
           confirm: false,
           onSelect: () => setDeleting(team),
@@ -568,7 +580,7 @@ export function AccountTeamsSection({
         }}
       >
         <Input label={labels.name} value={name} maxLength={120} onChange={(event) => setName(event.target.value)} />
-        <Button type="submit" variant="accent" disabled={actions.create.isPending || !name.trim()}>
+        <Button type="submit" variant="accent" disabled={busy || !name.trim()}>
           <Plus className="size-4" aria-hidden /> {labels.create}
         </Button>
       </form>

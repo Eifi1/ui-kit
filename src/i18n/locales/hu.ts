@@ -105,6 +105,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       commentFailed: "A hozzászólást nem sikerült elküldeni.",
       voteFailed: "A szavazatot nem sikerült menteni.",
       replyFailed: "A választ nem sikerült elküldeni.",
+      legacyReworkAppend: "Ez az oldal elavult. Töltse be újra, és próbálja meg ismét.",
     },
     feedbackMenu: {
       trigger: "Visszajelzés küldése",
@@ -1484,7 +1485,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       showAll: "Az összes művelet megjelenítése",
       filterBy: (target) => `Csak az ezt a fiókot érintő műveletek megjelenítése: ${target}`,
       notSent: "Az e-mail nem ment el",
-      reviewerNone: "Nincs nyelv",
+      reviewerNone: "Lektori szerepkör megszüntetve",
       actions: {
         deactivate: "Inaktiválva",
         reactivate: "Újraaktiválva",

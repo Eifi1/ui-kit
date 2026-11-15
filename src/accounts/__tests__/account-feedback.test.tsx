@@ -1,15 +1,18 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { Toaster } from "../../components/toast";
 import { fakeFetch, fakeHttp } from "../../test/fake-axios";
 import type { Answer, Cfg } from "../../test/fake-axios";
-import { AccountFeedbackPage, AccountPublicFeedbackPage } from "../account-feedback";
+import { AccountFeedbackPage, AccountPublicFeedbackPage, useAccountFeedbackSubmit } from "../account-feedback";
 import { accountFeedbackApi } from "../account-feedback-api";
-import { AccountsProvider } from "../accounts-context";
+import { AccountsProvider, accountQueryKeys } from "../accounts-context";
 import { createAccountsClient } from "../accounts-client";
+import type { FeedbackSubmit } from "../../feedback/feedback-submit";
 
 /**
  * The feedback pages on server-kit 0.31's `feedback_router` (docs/auth-harmonization.md §12.9):
@@ -44,20 +47,39 @@ function Where() {
   return <output data-testid="where">{`${pathname}${search}`}</output>;
 }
 
+/** The submit hook's latest `open`, as an app's top bar holds it, and its dialog. */
+const submitter: { current: FeedbackSubmit | null } = { current: null };
+function Submitter() {
+  const feedback = useAccountFeedbackSubmit({ environment: "dev", version: "1.0.0" });
+  useEffect(() => {
+    submitter.current = feedback;
+  });
+  return <>{feedback.dialog}</>;
+}
+
+/** `/auth/me` answering the server's fault: the account is the session's alone. */
+const meFails = () => ({ status: 500, data: { detail: "Internal Server Error" } });
+/** Until `/auth/me`'s refusal is the query's state: before it, the session's account is the
+ *  query's placeholder, which would hide the bug. */
+async function meFailed(queryClient: QueryClient) {
+  await waitFor(() => expect(queryClient.getQueryState(accountQueryKeys.me)?.status).toBe("error"));
+}
+
 function mount(
   ui: ReactNode,
   {
     user = ada,
     routes = {},
     entry = "/feedback",
-  }: { user?: object; routes?: Record<string, (c: Cfg) => Answer>; entry?: string } = {},
+    me = () => ({ status: 200, data: user }),
+  }: { user?: object; routes?: Record<string, (c: Cfg) => Answer>; entry?: string; me?: (c: Cfg) => Answer } = {},
 ) {
   localStorage.setItem("app.session", JSON.stringify({ token: "a1", refreshToken: "r1", user }));
   const calls: Array<{ route: string; params?: unknown }> = [];
   const http = fakeHttp((config) => {
     const route = `${config.method} ${config.url}`;
     calls.push({ route, params: config.params });
-    if (route === "get /auth/me") return { status: 200, data: user };
+    if (route === "get /auth/me") return me(config);
     const answer = routes[route];
     return answer ? answer(config) : { status: 204 };
   });
@@ -74,6 +96,7 @@ function mount(
     <MemoryRouter initialEntries={[entry]}>
       <QueryClientProvider client={queryClient}>
         <AccountsProvider client={client}>
+          <Toaster />
           <Routes>
             <Route path="/feedback" element={ui} />
             <Route path="/all-feedback" element={ui} />
@@ -83,7 +106,7 @@ function mount(
       </QueryClientProvider>
     </MemoryRouter>,
   );
-  return { calls };
+  return { calls, queryClient };
 }
 
 beforeEach(() => {
@@ -126,6 +149,141 @@ describe("AccountFeedbackPage", () => {
   });
 });
 
+describe("the account when /auth/me fails (Kurvenschmiede, 0.64.0-dev.6)", () => {
+  it("draws the inbox for the session's account rather than loading for ever", async () => {
+    const { queryClient } = mount(<AccountFeedbackPage mine={false} />, {
+      me: meFails,
+      routes: { "get /feedback": () => ({ status: 200, data: [report(2, "Die Pendelwelle")] }) },
+    });
+    await meFailed(queryClient);
+    expect((await screen.findAllByText("Die Pendelwelle")).length).toBeGreaterThan(0);
+  });
+
+  it("draws the public page for the session's account", async () => {
+    const { queryClient } = mount(
+      <AccountPublicFeedbackPage publicReader={() => false} fallback={<p>Nicht gefunden</p>} />,
+      {
+        me: meFails,
+        entry: "/all-feedback",
+      },
+    );
+    await meFailed(queryClient);
+    expect(await screen.findByText("Nicht gefunden")).toBeInTheDocument();
+  });
+
+  it("files a report in the session account's name", async () => {
+    const created: unknown[] = [];
+    const { queryClient } = mount(<Submitter />, {
+      me: meFails,
+      routes: {
+        "post /feedback": (config) => {
+          created.push(config.data);
+          return { status: 201, data: report(9, "Der Doppelkegel") };
+        },
+      },
+    });
+    await meFailed(queryClient);
+    act(() => submitter.current!.open("IDEA"));
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog).toHaveTextContent("Ada Lovelace (ada@example.com)");
+    fireEvent.change(screen.getByLabelText("Subject"), { target: { value: "Der Doppelkegel" } });
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Send" })));
+    await waitFor(() => expect(created).toHaveLength(1));
+    expect((created[0] as { context: Record<string, unknown> }).context).toMatchObject({
+      user_id: 1,
+      user_email: "ada@example.com",
+      user_display_name: "Ada Lovelace",
+    });
+  });
+});
+
+/** A row of the public list, as `GET /feedback/public` answers it. */
+const publicRow = (id: number, title: string) => ({
+  id,
+  title,
+  category: "IDEA",
+  status: "OPEN",
+  author_name: "Ben Example",
+  mine: false,
+  comment_count: 0,
+  votes: 3,
+  voted: false,
+  created_at: "2026-11-14T09:00:00Z",
+  updated_at: "2026-11-14T09:00:00Z",
+  resolved_at: null,
+});
+
+describe("a refusal's words (Kurvenschmiede, 0.64.0-dev.6)", () => {
+  /** The admin's reply to report 2, refused with `answer`; resolves once it is sent. */
+  async function replyRefused(answer: Answer, ui: ReactNode = <AccountFeedbackPage mine={false} />) {
+    const { calls } = mount(ui, {
+      entry: "/feedback?row=2",
+      routes: {
+        "get /feedback": () => ({ status: 200, data: [report(2, "Die Pendelwelle")] }),
+        "post /feedback/2/replies": () => answer,
+      },
+    });
+    const field = await screen.findByRole("textbox", { name: "Write a reply" });
+    fireEvent.change(field, { target: { value: "Geplant." } });
+    fireEvent.click(screen.getByRole("button", { name: "Reply" }));
+    await waitFor(() => expect(calls.map((c) => c.route)).toContain("post /feedback/2/replies"));
+  }
+
+  it("asks the app's describeError first", async () => {
+    await replyRefused(
+      { status: 403, data: { detail: "(English)", code: "admin_required" } },
+      <AccountFeedbackPage
+        mine={false}
+        describeError={(error) => (error ? "Die eigenen Worte der App." : undefined)}
+      />,
+    );
+    expect(await screen.findByText("Die eigenen Worte der App.")).toBeInTheDocument();
+  });
+
+  it("says a coded refusal in the account words after it", async () => {
+    await replyRefused(
+      { status: 403, data: { detail: "(English)", code: "admin_required" } },
+      <AccountFeedbackPage mine={false} describeError={() => undefined} />,
+    );
+    expect(await screen.findByText("Only an administrator can do this.")).toBeInTheDocument();
+  });
+
+  it("says an uncoded 4xx in the server's own sentence", async () => {
+    await replyRefused({ status: 400, data: { detail: "This report is closed to replies." } });
+    expect(await screen.findByText("This report is closed to replies.")).toBeInTheDocument();
+  });
+
+  it("keeps the part's own words for an uncoded 4xx with no sentence", async () => {
+    await replyRefused({ status: 422, data: { detail: [{ loc: ["body"], msg: "field required" }] } });
+    expect(await screen.findByText("Could not send the reply.")).toBeInTheDocument();
+  });
+
+  it("says the coded legacy_rework_append in the kit's words", async () => {
+    await replyRefused({
+      status: 422,
+      data: { detail: "(the server's English)", code: "legacy_rework_append" },
+    });
+    expect(await screen.findByText("This page is out of date. Reload it and try again.")).toBeInTheDocument();
+  });
+
+  it("asks the app's describeError first on the public page too", async () => {
+    const { calls } = mount(
+      <AccountPublicFeedbackPage describeError={(error) => (error ? "Die eigenen Worte der App." : undefined)} />,
+      {
+        entry: "/all-feedback",
+        routes: {
+          "get /feedback/public": () => ({ status: 200, data: [publicRow(2, "Die Pendelwelle")] }),
+          "put /feedback/2/vote": () => ({ status: 403, data: { detail: "(English)", code: "demo_refused" } }),
+        },
+      },
+    );
+    await screen.findAllByText("Die Pendelwelle");
+    fireEvent.click(screen.getAllByRole("button", { name: /I want this too/ })[0]);
+    await waitFor(() => expect(calls.map((c) => c.route)).toContain("put /feedback/2/vote"));
+    expect(await screen.findByText("Die eigenen Worte der App.")).toBeInTheDocument();
+  });
+});
+
 describe("AccountPublicFeedbackPage", () => {
   it("reads the public titles a page at a time, newest first", async () => {
     const { calls } = mount(<AccountPublicFeedbackPage pageSize={20} />, {
@@ -133,22 +291,7 @@ describe("AccountPublicFeedbackPage", () => {
       routes: {
         "get /feedback/public": () => ({
           status: 200,
-          data: [
-            {
-              id: 2,
-              title: "Die Pendelwelle",
-              category: "IDEA",
-              status: "OPEN",
-              author_name: "Ben Example",
-              mine: false,
-              comment_count: 0,
-              votes: 3,
-              voted: false,
-              created_at: "2026-11-14T09:00:00Z",
-              updated_at: "2026-11-14T09:00:00Z",
-              resolved_at: null,
-            },
-          ],
+          data: [publicRow(2, "Die Pendelwelle")],
         }),
       },
     });
@@ -158,6 +301,23 @@ describe("AccountPublicFeedbackPage", () => {
       limit: 20,
       offset: 0,
     });
+  });
+
+  it("takes publicReader as a boolean, as the inbox does", async () => {
+    const { calls } = mount(<AccountPublicFeedbackPage publicReader={false} fallback={<p>Nicht gefunden</p>} />, {
+      entry: "/all-feedback",
+    });
+    expect(await screen.findByText("Nicht gefunden")).toBeInTheDocument();
+    expect(calls.map((c) => c.route)).not.toContain("get /feedback/public");
+  });
+
+  it("reads the list for publicReader true, a demo too", async () => {
+    mount(<AccountPublicFeedbackPage publicReader />, {
+      user: { ...ada, is_demo: true },
+      entry: "/all-feedback",
+      routes: { "get /feedback/public": () => ({ status: 200, data: [publicRow(2, "Die Pendelwelle")] }) },
+    });
+    expect((await screen.findAllByText("Die Pendelwelle")).length).toBeGreaterThan(0);
   });
 
   it("shows a reader the server would refuse the app's fallback, and asks nothing", async () => {
