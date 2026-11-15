@@ -21,6 +21,75 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.65.0](https://github.com/Eifi1/ui-kit/compare/v0.62.0...v0.65.0) (2026-11-15)
+
+### Added
+
+* **accounts:** AccountInvitationsSection's transport on load, the app's words and onChanged ([3cd6f7e](https://github.com/Eifi1/ui-kit/commit/3cd6f7ec7bfdcaf0cf12074e4330edb0c60609d0))
+* **accounts:** accountRoutes, the signed-out pages as route objects, and RequireSession ([673a84e](https://github.com/Eifi1/ui-kit/commit/673a84ef564afa9634c733f84be761e2787c72d9))
+* **accounts:** AccountTeamsSection and AccountTeamsPage, the teams' parts lifted ([d797915](https://github.com/Eifi1/ui-kit/commit/d79791509452c156c76a233ab8bb8f69324eab05))
+* **accounts:** AccountTwoFactorSection, keksdose's two-factor card on server-kit 0.32 ([a3ae566](https://github.com/Eifi1/ui-kit/commit/a3ae566aa043f19f8ae0f34f1a2bb37b4f8d9b7a))
+* **accounts:** backup codes and the admin's reset of a second factor, on server-kit 0.32 ([7c28d50](https://github.com/Eifi1/ui-kit/commit/7c28d507231da07995c1f31f9db637c2ee522dfc))
+* **accounts:** createAccountsClient, the session on the app's axios with its refresh and store ([540d039](https://github.com/Eifi1/ui-kit/commit/540d039a0db32b5fd620d800a20341c7a17e6f7b))
+* **accounts:** describeAccountFailure, every account refusal in the kit's seven languages ([c5d5f07](https://github.com/Eifi1/ui-kit/commit/c5d5f0755a3940123c148e972ab56455e5db8321))
+* **accounts:** one sign-out in §6.3's order, push then the server's session then the tokens ([c018d11](https://github.com/Eifi1/ui-kit/commit/c018d11e6261b71b5d5d4ba1f41b89c6d87a223f))
+* **accounts:** onPassword and pageMode "per-page", keksdose's KG-9 and KG-10 ([6c86817](https://github.com/Eifi1/ui-kit/commit/6c86817de1ea79b6d1859d32f42ee6463eabbd78))
+* **accounts:** privatePaths, accountRouteElements and useAccountStorageLines ([47a5b13](https://github.com/Eifi1/ui-kit/commit/47a5b1334f2f128760ac3a921b6e87436dae40a3))
+* **accounts:** sign-in, sign-up and the passkey finish send shared_device and keep the session ([8735ed9](https://github.com/Eifi1/ui-kit/commit/8735ed9dc92682dd3e8da6d2bae06e7f7f388036))
+* **accounts:** the @eifi1/ui-kit/accounts entry, and accountStorageEntries for the privacy page ([74d5f1d](https://github.com/Eifi1/ui-kit/commit/74d5f1d5f0514f8221b025accf2aebfab6970a45))
+* **accounts:** the account's settings sections, the kit's cards wired to auth_router ([370a833](https://github.com/Eifi1/ui-kit/commit/370a8337fd1b5024e86536eeb1b3dfdd419e592b))
+* **accounts:** the accountTeams words in the seven catalogues ([42e5238](https://github.com/Eifi1/ui-kit/commit/42e52387434229a8e02c6481812e53696958a4f7))
+* **accounts:** the admin log section shows a group's rows, Kurvenschmiede's teams ([cdd4d58](https://github.com/Eifi1/ui-kit/commit/cdd4d58ffbe067261edb09034ea74142b34c7163))
+* **accounts:** the admin's routes on client.api, typed once against server-kit 0.31 ([e79d046](https://github.com/Eifi1/ui-kit/commit/e79d04674536355a1d629ae293b3ae3455ebaa47))
+* **accounts:** the admin's sections, overview, test mail, log and roster on user_admin_router ([88b440d](https://github.com/Eifi1/ui-kit/commit/88b440d2ef6f1a078be829402cf03e3be860cd27))
+* **accounts:** the admin's TanStack hooks, under accountQueryKeys.admin ([f678593](https://github.com/Eifi1/ui-kit/commit/f678593efd985f5792abfa8d24c7333a673ec1c1))
+* **accounts:** the deletion and passkey sections take the app's words for their cards ([c5f9fff](https://github.com/Eifi1/ui-kit/commit/c5f9fff243e7b094f29bd7b8fe04265b80c54ec7))
+* **accounts:** the feedback pages on feedback_router, the inbox, one's own, the public list ([e46fc32](https://github.com/Eifi1/ui-kit/commit/e46fc32042ca34688cf5d93bd11e6b9f8c9e54c8))
+* **accounts:** the invitations say an address's invitation went again ([baa9022](https://github.com/Eifi1/ui-kit/commit/baa90221c0958a2dd603db773b8446d6a8bcb219))
+* **accounts:** the log reads a reviewer change as from → to ([9b15bee](https://github.com/Eifi1/ui-kit/commit/9b15beec6f7ed6dcddd01fdf532e52d39f963f49))
+* **accounts:** the review page, AccountTranslationReview on translation_review_router ([9390e99](https://github.com/Eifi1/ui-kit/commit/9390e9990c45116a285c913b0ec509c7203d221f))
+* **accounts:** the routes typed once as client.api, the passkey sign-in, and sign out everywhere ([4a58687](https://github.com/Eifi1/ui-kit/commit/4a586870474cfc885c63a66d5d8617ba35d05d5a))
+* **accounts:** the second factor's code step on server-kit 0.32 ([bb487fa](https://github.com/Eifi1/ui-kit/commit/bb487fa445d390cb80621a27fb0542cca54a34d6))
+* **accounts:** the sign-in page says a deletion request was received ([4562d47](https://github.com/Eifi1/ui-kit/commit/4562d4743e9935de8c1bd7c912e8d30ef6c6ad0b))
+* **accounts:** the TanStack Query hooks on auth_router, with AccountsProvider and the query keys ([f42ce7b](https://github.com/Eifi1/ui-kit/commit/f42ce7b898b4600b6ea6541a3abecf80c9d37ddb))
+* **accounts:** the teams in the accounts entry, and the inventories ([b7c5918](https://github.com/Eifi1/ui-kit/commit/b7c5918067b168ca28275d14cbd19df49a9c5770))
+* **accounts:** the teams' routes and hooks on server-kit 0.32's opt-in teams ([c472945](https://github.com/Eifi1/ui-kit/commit/c472945d186c1bfc2159703b77f068f0fc95ed18))
+* **accounts:** the words for server-kit 0.30's admin refusals, and the showcase on 0.31 ([1499415](https://github.com/Eifi1/ui-kit/commit/14994155888cc9cdbf6d3689609137f718460440))
+* **admin:** ADMIN_ACTION_CONFIRM_CODES, the refusals the dialog words itself ([df94c29](https://github.com/Eifi1/ui-kit/commit/df94c29d43361b43ec2baef519359dcb45fb90e7))
+* **auth:** authErrorCode knows server-kit 0.29's fourteen new refusal codes ([c6fa204](https://github.com/Eifi1/ui-kit/commit/c6fa20464d100924d3615c18353cdf30c59c59b9))
+* **auth:** SignInForm's onCode is optional, for a server with no second factor ([db20c49](https://github.com/Eifi1/ui-kit/commit/db20c49ff678cd377d205baab8b28ba06a1a165f))
+* **charts:** Treemap showValues, the amount on the tile under its name ([2c95331](https://github.com/Eifi1/ui-kit/commit/2c9533189262bcbd3911e6d4cd02ed6a4aa95a7f))
+* **legal:** the imprint's credits for the chart palette, `<LegalKitSection section="credits" />` ([f8be6d6](https://github.com/Eifi1/ui-kit/commit/f8be6d65680af14db1c07d56bd147385092a7976))
+* **legal:** the sign-in's line among the browser section's standard entries ([03f3580](https://github.com/Eifi1/ui-kit/commit/03f358001d63f91d20bf43404e18c628a42776bc))
+* **links:** `referrer` on an external link that counts for the site it names ([dbef81b](https://github.com/Eifi1/ui-kit/commit/dbef81b9e72e02617a08e3a1636f88587a5b5f82))
+* **table:** TableHeaderCell sort and SortStrip, DataTable's sort for a hand-built table ([b10c216](https://github.com/Eifi1/ui-kit/commit/b10c216fb6b79025d3abb763cd8b68dd0e2deac4))
+* **translation-review:** `TranslationReviewPanel` takes `storage`, as DataTable does ([7697812](https://github.com/Eifi1/ui-kit/commit/7697812a8e141cdf97a00157231148b67140b1f3))
+
+### Fixed
+
+* **accounts:** an empty reviewer row reads "No longer a reviewer" ([daf17b2](https://github.com/Eifi1/ui-kit/commit/daf17b29a4b23703d1a4966a29216144f125ca4d))
+* **accounts:** an explicit resend says nothing of an earlier invitation ([a08db88](https://github.com/Eifi1/ui-kit/commit/a08db886ac1f951b2993997289053f74d5cdca5a))
+* **accounts:** Kurvenschmiede's dev.2 findings, the gate, the demo's frame, the invitation's name ([239f7b4](https://github.com/Eifi1/ui-kit/commit/239f7b462ba20d7c671e3c09a670766a63a89a05))
+* **accounts:** Kurvenschmiede's dev.4 round, the roster's dialog words and seven gaps ([cf4f22b](https://github.com/Eifi1/ui-kit/commit/cf4f22b9cf689be7209c1f46acf19dc9da859daa))
+* **accounts:** the admin log words a deleted team's counts ([a9f1351](https://github.com/Eifi1/ui-kit/commit/a9f13514c884e824a91b07fdffeed8c470e276fa))
+* **accounts:** the admin section's invitation names the default role when the panel names none ([0fc8366](https://github.com/Eifi1/ui-kit/commit/0fc8366b51c5eba423f06e5868a248b56d797e5e))
+* **accounts:** the bearer goes only to the app's own API, never to another host ([f531203](https://github.com/Eifi1/ui-kit/commit/f531203a1af17ebb1d9112f4fcc919963ac21de0))
+* **accounts:** the feedback pages fall back to the session's account ([d3d733e](https://github.com/Eifi1/ui-kit/commit/d3d733eb536eac9cd6957af36625560ef8fc4c27))
+* **accounts:** the feedback pages keep a refusal's reason, describeError first ([359cef8](https://github.com/Eifi1/ui-kit/commit/359cef8fb9f81552636b2701ba67d3ba91d406e7))
+* **accounts:** the feedback's query keys under a root of their own ([45ed4f8](https://github.com/Eifi1/ui-kit/commit/45ed4f84bb0930b303d6ee277efed58e5ca1ab3a))
+* **accounts:** the log section asks the app's describeDetail first, then reads the kit's ([dc47876](https://github.com/Eifi1/ui-kit/commit/dc47876bde5d17e53525a2c2073cba060f384ed3))
+* **accounts:** the public feedback page takes publicReader as a boolean too ([eb92f1c](https://github.com/Eifi1/ui-kit/commit/eb92f1cd538b71540ef8b3f1ee12452fa637825b))
+* **accounts:** the roster asks a row's own confirmation where it is above the list's ([882b6ec](https://github.com/Eifi1/ui-kit/commit/882b6ec0d692bc906f9b0c493df5a683c4e4a91a))
+* **accounts:** the roster toasts an app's refusal words as they are; AccountsApi keeps its doc ([6a88d8a](https://github.com/Eifi1/ui-kit/commit/6a88d8a0ea54ed9498d8c0b2be32815f402fb392))
+* **accounts:** the team's add row asks the language before Add ([e2c4721](https://github.com/Eifi1/ui-kit/commit/e2c47212f8787a09603c4b225fb895c8c1e842ac))
+* **accounts:** the teams section holds rename and delete while a change runs ([1be4677](https://github.com/Eifi1/ui-kit/commit/1be4677d6fd97d48c167ebbf2a81ccfca72290b4))
+* **offline:** the entry loads without idb-keyval and the persister ([87dea63](https://github.com/Eifi1/ui-kit/commit/87dea633b9b4a39e755430f617a0e2c61b55644d))
+
+### Changed
+
+* **accounts:** the review page reads its 403 through httpStatusOf ([e36a38d](https://github.com/Eifi1/ui-kit/commit/e36a38d69c29f09590336d15f97b05a81a84fc5a))
+* **admin:** deprecate the transfer dialog's "customer" texts, removed in 0.64 ([502aa36](https://github.com/Eifi1/ui-kit/commit/502aa36c542e1dfd69b144a1972cc2d9ab12d7c3))
+
 ## [0.62.0](https://github.com/Eifi1/ui-kit/compare/v0.61.0...v0.62.0) (2026-11-13)
 
 ### Added
