@@ -35,6 +35,11 @@ export const KIT_COUNTERPARTS: Readonly<Record<string, readonly string[]>> = {
   "user_admin.service": ["user-admin"],
   "user_admin.scope": ["user-admin"],
   "user_admin.ports": ["user-admin"],
+  // server-kit 0.32: the opt-in teams (AccountTeamsSection and AccountTeamsPage beside the
+  // user admin's parts).
+  teams: ["user-admin"],
+  "teams.router": ["user-admin"],
+  "teams.sql": ["user-admin"],
   "feedback.sql": ["feedback-compose", "feedback-inbox"],
   "translation_review.sql": ["localisation", "kit-review"],
   // The admin roster, actions and invitations — and the account's own email change,
