@@ -35,6 +35,9 @@ are new sentences, not yet reviewed):
   `two_factor_not_enabled`.
 - the namespace `accountTranslations`: the review page's heading and line, its empty state, the
   source filter's two words, "Saved" and "Marked unreviewed".
+- the namespace `accountTeams`: the teams' parts (below) — Kurvenschmiede's `teams.*` words, as
+  its reviewers read them, with the kit's "administrator" — and a team's six coded refusals
+  (`accountTeams.codes`); `team_not_found`'s sentence and `team_changed`'s second half are new.
 
 **Must change** (in the types only; no app's code is affected today):
 
@@ -235,6 +238,47 @@ Nothing new is stored in the browser; the file parts fetch through the session.
   its cache denies the account's root and may keep a reader's own reports (`["feedback", "mine"]`)
   for offline. `AccountsProvider` drops both roots when the account changes.
 
+## Teams (opt-in)
+
+Built against server-kit 0.32's `eifi1_server_kit.teams` (`teams_router`, `teams_admin_router`;
+Marcel, 2026-11-14). **Nothing changes for an app that mounts neither part**: no request is made,
+no word is shown, and the account's and the admin's other parts behave as before.
+
+```tsx
+// The admin's area: one more section, in the app's own sidebar entry
+<AccountTeamsSection />                                   // anchor "teams"
+// A member's page
+<Route path="/teams" element={<AccountTeamsPage />} />
+```
+
+- **`AccountTeamsSection`** (`GET /admin/teams`): every team in a table — its name, how many are
+  in it, its managers, its waiting invitations — a row opening the team's people under it (a
+  dialog on a phone). Create by name; rename in a dialog, against the version read
+  (`If-Match`); delete on `AdminActionConfirm` at the level the server states (`group_delete`,
+  `acknowledge`), the tick under what goes with the team, counted from the team in hand ("2
+  members, 3 shares and 1 invitation"; the shares are the app's `grant_count`). In the open
+  team: add anybody by address as a member or a manager — an address with no account is invited
+  into the team, in the language picked (`languages`, default the kit's seven) — switch a
+  member's role, remove anybody, re-send or withdraw a waiting invitation (through the account
+  layer's `/admin/invitations/{id}`: the admin's teams router has none).
+- **`AccountTeamsPage`** (`GET /teams`): the caller's teams, each a card with its members. A
+  manager adds members (never a manager) against the version read, removes members after
+  asking, and re-sends or withdraws the team's invitations. Adding and re-sending are `commit`s,
+  removals `COMMIT_EXCEPT_BILLING`: an app with a billing lock (server-kit's `billing_gate`) puts
+  its `WriteLockProvider` round the page.
+- An add or a re-send that **invited** says so; while the server's mail is the console's, the
+  link is shown above the teams to copy and hand on.
+- A team's refusal is said from `accountTeams.codes`, naming the team or the address the answer
+  carries; the parts read the team again after a refusal, so a team that moved on
+  (`team_changed`) shows as it is now. `describeError` and `appCode` (the app's `billing_gate`'s
+  and `refuse_address`' codes) are asked first.
+- **`accountTeamsApi(client.http)`** has the routes for anything else; the hooks are `useMyTeams`, `useTeamActions`,
+  `useAdminTeams` and `useAdminTeamActions`, and the wire's types `AccountTeam`,
+  `AccountAdminTeam`, `AccountTeamMember`, `AccountTeamInvitation`, `AccountTeamRole`.
+- Their query keys sit under their own root, `["teams", …]` (`accountQueryKeys.teams`,
+  `teamsMine`, `teamsAdmin`), beside the feedback's; `AccountsProvider` drops it when the account
+  changes. `accountTeams.title` and `adminHelp` are the words for the app's sidebar entry.
+
 ## The settings sections
 
 - `AccountInvitationsSection` takes `intro`, `listTitle` and `className` (the panel's), reads the
@@ -285,4 +329,6 @@ Nothing new is stored in the browser; the file parts fetch through the session.
 - **Kurvenschmiede**: `UsersPanel`, `MailTestPanel` and `ActivityPanel` go; its teams' and plans'
   columns and actions stay its own (`extraColumns`, `extraActions`), and the log section shows its
   team rows (`groupNoun="team"`, `groupRoleLabel` for "Member → Manager", `describeDetail` for a
-  team deletion's counts).
+  team deletion's counts). With server-kit 0.32's teams, `TeamsPanel`, `TeamsPage`, `TeamCard`,
+  `team-toll.ts` and `announce-invited.ts` go too: `AccountTeamsSection` and `AccountTeamsPage`
+  speak its wire, and its `teams.*` and the five `error.refusal.*` team words are the kit's.

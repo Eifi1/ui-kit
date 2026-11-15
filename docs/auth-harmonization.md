@@ -1178,6 +1178,15 @@ and `AccountFeedbackPage` (the inbox and one's own reports, on `FeedbackInbox`),
 Kurvenschmiede's `FeedbackPage`, `AllFeedbackPage` and `useAppFeedbackSubmit`, ≈ 400 lines with
 their requests, were the model; the parts' words were the kit's already.
 
+**The teams** (0.64, opt-in, on server-kit 0.32's `teams_router` and `teams_admin_router`; Marcel,
+2026-11-14: in both kits before the apps' joint deploy): `accountTeamsApi` on the client's `http`
+in its own module, the hooks under their own `["teams", …]` root, `AccountTeamsSection` (the
+admin's: the teams in a table, create, rename, delete at the stated level with what goes with the
+team, members by address in either role, the waiting invitations) and `AccountTeamsPage` (a
+member's teams; a manager's adds, removals and invitations), the six team refusals worded in
+`accountTeams`. Kurvenschmiede's `TeamsPanel`, `TeamsPage` and `TeamCard`, whose wire server-kit
+lifted, were the model; nothing appears unless the app mounts them.
+
 **Found on the way** (Staunlabor's inventory):
 - `@eifi1/ui-kit/offline` imports `idb-keyval` and `@tanstack/query-async-storage-persister`
   statically, so an app that needs only `SharedComputerChoice` must install both: the
