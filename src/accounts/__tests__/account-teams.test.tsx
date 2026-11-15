@@ -187,6 +187,33 @@ describe("AccountTeamsSection", () => {
     expect(await screen.findByText("http://localhost/register?invite=t1")).toBeInTheDocument();
   });
 
+  it("asks the invitation's language before the Add button, in the row's own column", async () => {
+    const { user } = mount(<AccountTeamsSection languages={["en", "fr"]} />, { "get /admin/teams": () => adminList() });
+    const team = await openRig(user);
+    const form = within(team).getByLabelText("Add by email address").closest("form") as HTMLFormElement;
+    // Tab order is DOM order: the address, the role, the language, then Add.
+    const order = Array.from(
+      form.querySelectorAll<HTMLElement>("input[type=email], [role=radiogroup], select, button[type=submit]"),
+    );
+    expect(order).toEqual([
+      within(form).getByLabelText("Add by email address"),
+      within(form).getByRole("radiogroup", { name: "As" }),
+      within(form).getByLabelText("Language of the invitation"),
+      within(form).getByRole("button", { name: "Add" }),
+    ]);
+    // Four fields, four columns at sm: the select no longer wraps under the address.
+    expect(form.className).toContain("sm:grid-cols-[minmax(0,1fr)_auto_auto_auto]");
+  });
+
+  it("keeps three columns when there is no language to ask", async () => {
+    const { user } = mount(<AccountTeamsSection languages={["en"]} />, { "get /admin/teams": () => adminList() });
+    const team = await openRig(user);
+    const form = within(team).getByLabelText("Add by email address").closest("form") as HTMLFormElement;
+    expect(within(form).queryByLabelText("Language of the invitation")).toBeNull();
+    expect(form.className).toContain("sm:grid-cols-[minmax(0,1fr)_auto_auto]");
+    expect(form.className).not.toContain("_auto_auto_auto]");
+  });
+
   it("names a manager, and re-sends a team's invitation through the admin's invitations", async () => {
     const { calls, user } = mount(<AccountTeamsSection />, {
       "get /admin/teams": () => adminList(),
@@ -241,6 +268,24 @@ describe("AccountTeamsPage", () => {
     expect(sent?.data).toEqual({ email: "dee@example.com", role: "member", locale: "en" });
     expect(sent?.ifMatch).toBe("3");
     expect(await screen.findByText("dee@example.com is in Rig crew now.")).toBeInTheDocument();
+  });
+
+  it("asks a manager's invitation language before the Add button", async () => {
+    mount(<AccountTeamsPage languages={["en", "fr"]} />, {
+      "get /teams": () => ({ status: 200, data: [rig({ my_role: "manager" })] }),
+    });
+    const form = (await screen.findByLabelText("Add by email address")).closest("form") as HTMLFormElement;
+    const order = Array.from(
+      form.querySelectorAll<HTMLElement>("input[type=email], [role=radiogroup], select, button[type=submit]"),
+    );
+    expect(order).toEqual([
+      within(form).getByLabelText("Add by email address"),
+      within(form).getByLabelText("Language of the invitation"),
+      within(form).getByRole("button", { name: "Add" }),
+    ]);
+    // A manager picks no role: three fields, three columns.
+    expect(form.className).toContain("sm:grid-cols-[minmax(0,1fr)_auto_auto]");
+    expect(form.className).not.toContain("_auto_auto_auto]");
   });
 
   it("lets a manager remove a member but not a manager, after asking", async () => {

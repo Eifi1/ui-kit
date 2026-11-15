@@ -154,6 +154,14 @@ function HandOnBanner({ handOn, onDismiss }: { handOn: HandOn | null; onDismiss:
 
 /* ── One team's people ───────────────────────────────────────────────────── */
 
+/** The add row's columns at sm, by how many fields sit between the address and Add (the
+ *  admin's role, the language): written out whole, for Tailwind's scan. */
+const ADD_ROW_COLUMNS = [
+  "sm:grid-cols-[minmax(0,1fr)_auto]",
+  "sm:grid-cols-[minmax(0,1fr)_auto_auto]",
+  "sm:grid-cols-[minmax(0,1fr)_auto_auto_auto]",
+] as const;
+
 /** The doors a viewer has on one team; each left out is a door not drawn. */
 interface TeamDoors {
   busy: boolean;
@@ -194,6 +202,7 @@ function TeamPeople({ team, mode, doors, languages, defaultLocale, labels }: Tea
     { value: "manager" as const, label: labels.roles.manager },
   ];
   const busy = doors?.busy ?? false;
+  const asksLanguage = languages.length > 1;
   const add = () => {
     const address = email.trim();
     if (!address || !doors?.onAdd) return;
@@ -319,7 +328,9 @@ function TeamPeople({ team, mode, doors, languages, defaultLocale, labels }: Tea
 
       {doors?.onAdd && mode !== "member" && (
         <form
-          className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end"
+          // One column per field at sm, so the language sits beside the address rather than
+          // wrapping under it: the address, the admin's role, the language, then Add.
+          className={`grid grid-cols-1 gap-2 sm:items-end ${ADD_ROW_COLUMNS[(mode === "admin" ? 1 : 0) + (asksLanguage ? 1 : 0)]}`}
           onSubmit={(event) => {
             event.preventDefault();
             add();
@@ -331,23 +342,17 @@ function TeamPeople({ team, mode, doors, languages, defaultLocale, labels }: Tea
             value={email}
             onChange={(event) => setEmail(event.target.value)}
           />
-          {mode === "admin" ? (
+          {mode === "admin" && (
             <ToggleGroup<AccountTeamRole>
               aria-label={labels.roleLabel}
               options={roles}
               value={role}
               onChange={setRole}
             />
-          ) : (
-            <span />
           )}
-          {/* Enter in the field is this button's click, so its lock refuses the submit too. */}
-          <Button type="submit" variant="secondary" commit disabled={busy || !email.trim()}>
-            <UserPlus className="size-4" aria-hidden /> {labels.add}
-          </Button>
           {/* Only used for an address with no account, which is invited in the invitee's
-              language: so it is asked for. */}
-          {languages.length > 1 && (
+              language: so it is asked for — before Add, which is where the tab goes next. */}
+          {asksLanguage && (
             <LanguageSelect
               label={invitationWords.language}
               size="sm"
@@ -356,6 +361,10 @@ function TeamPeople({ team, mode, doors, languages, defaultLocale, labels }: Tea
               onChange={(next) => setLocale(next as KitLanguageCode)}
             />
           )}
+          {/* Enter in the field is this button's click, so its lock refuses the submit too. */}
+          <Button type="submit" variant="secondary" commit disabled={busy || !email.trim()}>
+            <UserPlus className="size-4" aria-hidden /> {labels.add}
+          </Button>
         </form>
       )}
     </div>
