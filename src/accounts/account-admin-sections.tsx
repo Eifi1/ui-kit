@@ -43,11 +43,13 @@ import { Input } from "../components/input";
 import { Caption } from "../components/text";
 import { toast } from "../components/toast";
 import { useTableUrlState } from "../components/use-table-state";
-import { useKitLabels } from "../i18n/kit-labels";
+import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import type { LabelOverride } from "../i18n/kit-labels";
 import { SettingsSection } from "../settings/settings-section";
 import { DEFAULT_ACCOUNT_FAILURE_LABELS, useDescribeAccountFailure, useFailureBeside } from "./account-failure";
 import { DEFAULT_ACCOUNT_ROSTER_LABELS } from "./account-roster-labels";
+import { DEFAULT_ACCOUNT_TEAMS_LABELS, teamToll } from "./account-teams-labels";
+import type { TeamTollCounts } from "./account-teams-labels";
 import type { AccountRosterLabels } from "./account-roster-labels";
 import type { AccountAdminActionRow, AccountAdminConfirmation, AccountAdminUser, AccountMe } from "./accounts-api";
 import { useAccountsClient } from "./accounts-context";
@@ -136,25 +138,29 @@ export interface AccountAdminLogSectionProps {
   /** A role IN A GROUP in the app's words (0.64: a team's member and manager), for a
    *  membership row's "Member → Manager"; left out, the role's code as logged. */
   groupRoleLabel?: (role: string) => string;
-  /** A row's `detail` in the app's words, for the actions only the app has (a team's
-   *  deletion's counts); it outranks the kit's reading of `role`, `reviewer` and membership
-   *  rows. `undefined` says nothing. */
+  /** A row's `detail` in the app's words, for the actions only the app has; it outranks the
+   *  kit's reading of `role`, `reviewer`, membership and `group_delete` rows (a deleted team's
+   *  counts, in `accountTeams`' count words). `undefined` leaves the row to the kit's. */
   describeDetail?: (row: AccountAdminActionRow) => ReactNode;
   groupNoun?: AdminGroupNoun;
   labels?: AdminActionLogProps["labels"];
   className?: string;
 }
 
+const isCount = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
+
 /**
  * The server wrote ids, roles, flags and counts only (server-kit's guard), so this is all
  * there is to say about the shared actions: a role change as "Member → Admin", a reviewer's
- * languages as their codes. Anything else says nothing rather than a dump of the JSON.
+ * languages as their codes, what went with a deleted team in the teams' count words. Anything
+ * else says nothing rather than a dump of the JSON.
  */
 function sharedDetail(
   row: AccountAdminActionRow,
   roleLabel: (role: string) => string,
   groupRoleLabel: (role: string) => string,
   words: { notSent?: string; reviewerNone?: string },
+  toll: (counts: TeamTollCounts) => string | undefined,
 ): ReactNode {
   const { detail } = row;
   if (detail.sent === false) return words.notSent;
@@ -171,6 +177,19 @@ function sharedDetail(
   if (row.action === "reviewer" && Array.isArray(detail.locales)) {
     const codes = (detail.locales as unknown[]).filter((code) => typeof code === "string");
     return codes.length > 0 ? codes.join(", ") : words.reviewerNone;
+  }
+  // 0.64: what went with a deleted team, as its delete dialog counted it — server-kit 0.32
+  // logs `{members, grants, invitations}` (Kurvenschmiede wrote its own reading of it).
+  if (
+    row.action === "group_delete" &&
+    (isCount(detail.members) || isCount(detail.grants) || isCount(detail.invitations))
+  ) {
+    const count = (value: unknown) => (isCount(value) ? value : 0);
+    return toll({
+      members: count(detail.members),
+      grants: count(detail.grants),
+      invitations: count(detail.invitations),
+    });
   }
   return undefined;
 }
@@ -194,6 +213,9 @@ export function AccountAdminLogSection({
 }: AccountAdminLogSectionProps) {
   const { sections } = useAdminAreaLabels();
   const logWords = useKitLabels("adminActionLog", DEFAULT_ADMIN_ACTION_LOG_LABELS, labels);
+  const teamWords = useKitLabels("accountTeams", DEFAULT_ACCOUNT_TEAMS_LABELS);
+  const locale = useKitLocale();
+  const toll = (counts: TeamTollCounts) => teamToll(counts, teamWords, locale);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(firstPageSize);
   const [target, setTarget] = useState<AdminPerson | null>(null);
@@ -226,7 +248,7 @@ export function AccountAdminLogSection({
       ...(group && row.action.startsWith("group_") ? { target: group } : { target: person, group }),
       // The app's words first, for its own actions; the kit's reading for the rest
       // (Kurvenschmiede's U9: it replaced the kit's reading whole).
-      detail: describeDetail?.(row) ?? sharedDetail(row, roleLabel, groupRoleLabel, logWords),
+      detail: describeDetail?.(row) ?? sharedDetail(row, roleLabel, groupRoleLabel, logWords, toll),
     };
   });
 

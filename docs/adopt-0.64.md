@@ -290,6 +290,10 @@ no word is shown, and the account's and the admin's other parts behave as before
 - Their query keys sit under their own root, `["teams", …]` (`accountQueryKeys.teams`,
   `teamsMine`, `teamsAdmin`), beside the feedback's; `AccountsProvider` drops it when the account
   changes. `accountTeams.title` and `adminHelp` are the words for the app's sidebar entry.
+- **The admin's log words a team's deletion** (Kurvenschmiede on 0.64.0-dev.6):
+  `AccountAdminLogSection` reads a `group_delete` row's `{members, grants, invitations}` as the
+  delete dialog counted them ("2 members, 3 shares and 1 invitation", `accountTeams`' count
+  words, a count of nothing left out). An app's `describeDetail` for it can go.
 
 ## The settings sections
 

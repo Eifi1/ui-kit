@@ -40,7 +40,7 @@ import type {
   AccountTeamRole,
 } from "./account-teams-api";
 import { useAdminTeamActions, useAdminTeams, useMyTeams, useTeamActions } from "./account-teams-hooks";
-import { DEFAULT_ACCOUNT_TEAMS_LABELS } from "./account-teams-labels";
+import { DEFAULT_ACCOUNT_TEAMS_LABELS, teamToll } from "./account-teams-labels";
 import type { AccountTeamRefusalLabels, AccountTeamsLabels } from "./account-teams-labels";
 
 /**
@@ -99,25 +99,16 @@ function useSayTeamFailure(
     });
 }
 
-/** What the cascade takes when a team is deleted, as one phrase in the reader's language —
- *  "2 members, 3 shares and 1 invitation" — or `undefined` when nothing goes with it.
- *  Kurvenschmiede's `useTeamToll`: a count of nothing is left out rather than said as
- *  "0 shares", and the list is joined by `Intl.ListFormat`, whose "and" is the language's. */
+/** What the cascade takes when a team is deleted, counted from the team in hand
+ *  ({@link teamToll}), or `undefined` when nothing goes with it. */
 function useTeamToll(labels: AccountTeamsLabels): (team: AccountAdminTeam) => string | undefined {
   const locale = useKitLocale();
-  return (team) => {
-    const parts = [
-      team.members.length > 0 && labels.countMembers(team.members.length),
-      team.grant_count > 0 && labels.countGrants(team.grant_count),
-      team.invitations.length > 0 && labels.countInvitations(team.invitations.length),
-    ].filter((part): part is string => typeof part === "string");
-    if (parts.length === 0) return undefined;
-    try {
-      return new Intl.ListFormat(locale, { style: "long", type: "conjunction" }).format(parts);
-    } catch {
-      return new Intl.ListFormat(undefined, { style: "long", type: "conjunction" }).format(parts);
-    }
-  };
+  return (team) =>
+    teamToll(
+      { members: team.members.length, grants: team.grant_count, invitations: team.invitations.length },
+      labels,
+      locale,
+    );
 }
 
 /** A console mail's link, shown once to copy and hand on. */

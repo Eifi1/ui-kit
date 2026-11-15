@@ -162,6 +162,25 @@ describe("AccountAdminLogSection", () => {
     expect(screen.getByText(/a deleted team/i)).toBeInTheDocument();
   });
 
+  it("says what went with a deleted team in the teams' count words, a count of nothing left out", async () => {
+    mount(<AccountAdminLogSection groupNoun="team" />, {
+      "get /admin/actions": () => ({
+        status: 200,
+        data: {
+          actions: [
+            { ...row(5, "group_delete", null), target_group_id: 9, detail: { members: 2, grants: 3, invitations: 1 } },
+            { ...row(4, "group_delete", null), target_group_id: 8, detail: { members: 1, grants: 0, invitations: 0 } },
+            { ...row(3, "group_delete", null), target_group_id: 7, detail: { members: 0, grants: 0, invitations: 0 } },
+          ],
+          total: 3,
+        },
+      }),
+    });
+    expect(await screen.findByText("2 members, 3 shares, and 1 invitation")).toBeInTheDocument();
+    expect(screen.getByText("1 member")).toBeInTheDocument();
+    expect(screen.queryByText(/\b0 (members?|shares?|invitations?)/)).toBeNull();
+  });
+
   it("asks the app's words first and reads the kit's for the rest (Kurvenschmiede's U9)", async () => {
     mount(
       <AccountAdminLogSection

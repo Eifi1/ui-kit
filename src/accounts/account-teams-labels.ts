@@ -83,6 +83,40 @@ export interface AccountTeamsLabels {
   codes: AccountTeamRefusalLabels;
 }
 
+/** What went, or goes, with a deleted team: server-kit's `group_delete` detail, or the team in
+ *  hand's counts. */
+export interface TeamTollCounts {
+  members: number;
+  grants: number;
+  invitations: number;
+}
+
+/**
+ * The counts as one phrase in the reader's language — "2 members, 3 shares and 1 invitation"
+ * — or `undefined` when nothing goes with the team: the delete dialog's toll and the admin
+ * log's `group_delete` row say the same (0.64). Kurvenschmiede's `useTeamToll`: a count of
+ * nothing is left out rather than said as "0 shares", and the list is joined by
+ * `Intl.ListFormat`, whose "and" is the language's. Package-private: no component code, so it
+ * may sit beside the words.
+ */
+export function teamToll(
+  counts: TeamTollCounts,
+  labels: Pick<AccountTeamsLabels, "countMembers" | "countGrants" | "countInvitations">,
+  locale?: string,
+): string | undefined {
+  const parts = [
+    counts.members > 0 && labels.countMembers(counts.members),
+    counts.grants > 0 && labels.countGrants(counts.grants),
+    counts.invitations > 0 && labels.countInvitations(counts.invitations),
+  ].filter((part): part is string => typeof part === "string");
+  if (parts.length === 0) return undefined;
+  try {
+    return new Intl.ListFormat(locale, { style: "long", type: "conjunction" }).format(parts);
+  } catch {
+    return new Intl.ListFormat(undefined, { style: "long", type: "conjunction" }).format(parts);
+  }
+}
+
 /** 0.64: the teams' words. Kurvenschmiede's `teams.*` and `error.refusal.*` keys, which its
  *  reviewers read, with the kit's "administrator" where it said "admin". */
 export const DEFAULT_ACCOUNT_TEAMS_LABELS: AccountTeamsLabels = {
