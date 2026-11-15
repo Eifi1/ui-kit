@@ -52,6 +52,13 @@ export const accountQueryKeys = {
   feedbackPublicLists: ["feedback", "public", "list"] as const,
   feedbackPublic: (query: object) => ["feedback", "public", "list", query] as const,
   feedbackPublicOne: (id: number) => ["feedback", "public", "one", id] as const,
+  /** Every team list (0.64, server-kit 0.32's opt-in teams): a change invalidates them all.
+   *  Under their own root, as the feedback's, not under `accounts`. */
+  teams: ["teams"] as const,
+  /** The teams the caller is in (`GET /teams`). */
+  teamsMine: ["teams", "mine"] as const,
+  /** Every team, for the admin (`GET /admin/teams`). */
+  teamsAdmin: ["teams", "admin"] as const,
 };
 
 export interface AccountsProviderProps {
@@ -65,7 +72,8 @@ export interface AccountsProviderProps {
  *
  * When the account in the session changes — a sign-out, another tab, a sign-in as someone
  * else — it drops the kit's own queries (`accountQueryKeys.all`, and the feedback's
- * `accountQueryKeys.feedback`, a root of its own so an app may persist it): what one account read
+ * `accountQueryKeys.feedback` and the teams' `accountQueryKeys.teams`, roots of their own so an
+ * app may persist them): what one account read
  * (its sessions, its passkeys, its pending address) is never shown to the next one in this
  * tab, Kurvenschmiede's F33. The app's own queries are its `onSessionEnded`'s to drop.
  */
@@ -80,6 +88,8 @@ export function AccountsProvider({ client, children }: AccountsProviderProps) {
       queryClient.removeQueries({ queryKey: accountQueryKeys.all });
       // The feedback's own root (0.64): one account's reports are never the next one's.
       queryClient.removeQueries({ queryKey: accountQueryKeys.feedback });
+      // The teams' own root (0.64): one account's teams are never the next one's.
+      queryClient.removeQueries({ queryKey: accountQueryKeys.teams });
     });
   }, [client, queryClient]);
   return <AccountsContext.Provider value={client}>{children}</AccountsContext.Provider>;

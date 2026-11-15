@@ -2216,6 +2216,10 @@ export const GROUPS: ShowcaseGroup[] = [
           "user_admin.service",
           "user_admin.scope",
           "user_admin.ports",
+          // server-kit 0.32: the opt-in teams — the shapes and refusals, the routes, the tables.
+          "teams",
+          "teams.router",
+          "teams.sql",
         ],
       }),
       serverPage({

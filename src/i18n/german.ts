@@ -2401,5 +2401,66 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       sourceApp: "Texte dieser App",
       sourceKit: "Gemeinsame Bausteine",
     },
+    // 0.64 (server-kit 0.32's opt-in teams): AccountTeamsSection and AccountTeamsPage — the
+    // admin's list and a member's page, their questions, counts and a team's refusals.
+    accountTeams: {
+      title: "Teams",
+      pageHint:
+        "Die Teams, in denen Sie sind. Was mit einem Team geteilt wird, ist mit allen darin geteilt, solange sie dazugehören. Leiter nehmen Mitglieder auf, entfernen sie und laden jemanden ohne Konto ein; Administratoren legen Teams an und bestimmen die Leiter.",
+      adminHelp: "Gruppen zum Teilen und wer sie leitet.",
+      adminHint:
+        "Ein Team ist jemand, mit dem man teilt, nicht jemand, der besitzt: Eine Freigabe an ein Team erreicht alle darin und geht mit jedem, der geht. Sie bestimmen die Leiter, die dann selbst Mitglieder aufnehmen und entfernen.",
+      none: "Sie sind in keinem Team.",
+      noneAdmin: "Noch keine Teams.",
+      youManage: "Sie leiten dieses Team.",
+      youAreIn: "Sie sind Mitglied.",
+      name: "Teamname",
+      create: "Team anlegen",
+      created: (name) => `Team ${name} angelegt.`,
+      rename: "Umbenennen",
+      renameTitle: (name) => `Das Team ${name} umbenennen`,
+      renamed: (name) => `Das Team heisst jetzt ${name}.`,
+      delete: "Team löschen",
+      deleteTitle: (name) => `Das Team ${name} löschen?`,
+      deleteBody:
+        "Alles, was mit dem Team geteilt war, ist sofort nicht mehr mit seinen Mitgliedern geteilt. Deren eigene Arbeit bleibt unberührt.",
+      deleteGoes: (list) => `Was mit dem Team geht: ${list}.`,
+      deleted: (name) => `Das Team ${name} ist gelöscht.`,
+      countMembers: (count) => `${n(count)} ${count === 1 ? "Mitglied" : "Mitglieder"}`,
+      countGrants: (count) => `${n(count)} ${count === 1 ? "Freigabe" : "Freigaben"}`,
+      countInvitations: (count) => `${n(count)} ${count === 1 ? "Einladung" : "Einladungen"}`,
+      members: "Mitglieder",
+      managers: "Leiter",
+      invitedTitle: "Eingeladen",
+      nobody: "Noch niemand darin.",
+      roles: { member: "Mitglied", manager: "Leiter" },
+      roleOf: (name) => `Rolle von ${name} im Team`,
+      roleLabel: "Als",
+      remove: (name) => `${name} entfernen`,
+      removeShort: "Entfernen",
+      removeTitle: (name, team) => `${name} aus ${team} entfernen?`,
+      removeBody:
+        "Was mit dem Team geteilt war, ist ab der nächsten Anfrage dieser Person nicht mehr mit ihr geteilt. Ihre eigene Arbeit bleibt unberührt.",
+      addEmail: "Per E-Mail-Adresse aufnehmen",
+      add: "Aufnehmen",
+      added: (email, team) => `${email} ist jetzt in ${team}.`,
+      removed: (name, team) => `${name} ist nicht mehr in ${team}.`,
+      invited: (email, team) => `${email} hat noch kein Konto – eine Einladung ins Team ${team} ist unterwegs.`,
+      invitedNotSent: (email) =>
+        `${email} hat noch kein Konto, und die Einladung konnte nicht gesendet werden – senden Sie sie erneut.`,
+      withdraw: (email) => `Einladung an ${email} zurückziehen`,
+      withdrawShort: "Zurückziehen",
+      withdrawTitle: (email) => `Einladung an ${email} zurückziehen?`,
+      withdrawBody: "Der Link funktioniert nicht mehr. Ein bereits darüber angelegtes Konto bleibt bestehen.",
+      codes: {
+        team_not_found: "Dieses Team gibt es nicht mehr, oder Sie leiten es nicht mehr.",
+        team_name_taken: (name) => `Es gibt bereits ein Team namens ${name}.`,
+        team_changed: (name) =>
+          `Das Team ${name} wurde geändert, nachdem Sie es geöffnet haben. Es zeigt die Änderung jetzt; bitte versuchen Sie es erneut.`,
+        manager_named_by_admin: "Nur ein Administrator bestimmt die Leiter eines Teams.",
+        manager_kept_by_admin: (email) => `${email} leitet dieses Team; das ändert nur ein Administrator.`,
+        manager_removed_by_admin: "Nur ein Administrator entfernt den Leiter eines Teams.",
+      },
+    },
   };
 }

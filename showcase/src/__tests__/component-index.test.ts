@@ -152,6 +152,10 @@ const NOT_ON_A_PAGE: Record<string, string> = {
     "TranslationReviewPanel, its tabs and its export wired to server-kit's routes through AccountsProvider; each part is on the Translation review page",
   AccountUserRosterSection:
     "the user roster's columns, AdminActionConfirm and ReviewerScopeEditor wired to server-kit's routes through AccountsProvider; each part is on its own page",
+  AccountTeamsSection:
+    "server-kit 0.32's opt-in teams for the admin: DataTable, AdminActionConfirm and the roster's patterns wired through AccountsProvider; each part is on its own page",
+  AccountTeamsPage:
+    "server-kit 0.32's opt-in teams for a member and a manager, wired through AccountsProvider; its Card, Chip, ToggleGroup and RowActions are on their own pages",
 };
 
 /**
@@ -223,6 +227,11 @@ const NOT_SHOWN: Record<string, string> = {
   useTwoFactor: ACCOUNTS,
   useAccountFeedbackSubmit: ACCOUNTS,
   accountFeedbackApi: ACCOUNTS,
+  accountTeamsApi: ACCOUNTS,
+  useMyTeams: ACCOUNTS,
+  useTeamActions: ACCOUNTS,
+  useAdminTeams: ACCOUNTS,
+  useAdminTeamActions: ACCOUNTS,
   accountPage: ACCOUNTS,
   accountRouteElements: ACCOUNTS,
   useAccountStorageLines: ACCOUNTS,

@@ -2319,6 +2319,67 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       sourceApp: "Textos de esta aplicación",
       sourceKit: "Componentes compartidos",
     },
+    // 0.64 (server-kit 0.32's opt-in teams): AccountTeamsSection and AccountTeamsPage — the
+    // admin's list and a member's page, their questions, counts and a team's refusals.
+    accountTeams: {
+      title: "Equipos",
+      pageHint:
+        "Los equipos a los que pertenece. Todo lo que se comparte con un equipo se comparte con todos sus miembros mientras formen parte de él. Los responsables añaden y quitan miembros e invitan a quien aún no tiene cuenta; los administradores crean equipos y nombran a los responsables.",
+      adminHelp: "Grupos con los que compartir y quién los gestiona.",
+      adminHint:
+        "Un equipo es alguien con quien compartir, no alguien que posee: una concesión a un equipo llega a todos sus miembros y se va con quien se marcha. Usted nombra a los responsables, que después añaden y quitan miembros por sí mismos.",
+      none: "No pertenece a ningún equipo.",
+      noneAdmin: "Aún no hay equipos.",
+      youManage: "Usted gestiona este equipo.",
+      youAreIn: "Usted es miembro.",
+      name: "Nombre del equipo",
+      create: "Crear equipo",
+      created: (name) => `Equipo ${name} creado.`,
+      rename: "Cambiar nombre",
+      renameTitle: (name) => `Cambiar el nombre del equipo ${name}`,
+      renamed: (name) => `El equipo se llama ahora ${name}.`,
+      delete: "Eliminar equipo",
+      deleteTitle: (name) => `¿Eliminar el equipo ${name}?`,
+      deleteBody:
+        "Todo lo que se compartía con el equipo deja de compartirse con sus miembros de inmediato. Su propio trabajo no se ve afectado.",
+      deleteGoes: (list) => `Lo que se va con él: ${list}.`,
+      deleted: (name) => `El equipo ${name} se ha eliminado.`,
+      countMembers: (count) => `${n(count)} ${plural(count, "miembro", "miembros")}`,
+      countGrants: (count) => `${n(count)} ${plural(count, "elemento compartido", "elementos compartidos")}`,
+      countInvitations: (count) => `${n(count)} ${plural(count, "invitación", "invitaciones")}`,
+      members: "Miembros",
+      managers: "Responsables",
+      invitedTitle: "Invitados",
+      nobody: "Todavía no hay nadie.",
+      roles: { member: "Miembro", manager: "Responsable" },
+      roleOf: (name) => `Rol de ${name} en el equipo`,
+      roleLabel: "Como",
+      remove: (name) => `Quitar a ${name}`,
+      removeShort: "Quitar",
+      removeTitle: (name, team) => `¿Quitar a ${name} de ${team}?`,
+      removeBody:
+        "Todo lo que se compartía con el equipo deja de compartirse con esa persona en su próxima solicitud. Su propio trabajo no se ve afectado.",
+      addEmail: "Añadir por dirección de correo",
+      add: "Añadir",
+      added: (email, team) => `${email} está ahora en ${team}.`,
+      removed: (name, team) => `${name} ya no está en ${team}.`,
+      invited: (email, team) => `${email} aún no tiene cuenta: va de camino una invitación al equipo ${team}.`,
+      invitedNotSent: (email) => `${email} aún no tiene cuenta y no se pudo enviar la invitación: reenvíela.`,
+      withdraw: (email) => `Retirar la invitación de ${email}`,
+      withdrawShort: "Retirar",
+      withdrawTitle: (email) => `¿Retirar la invitación de ${email}?`,
+      withdrawBody: "El enlace deja de funcionar. Una cuenta ya creada con él se conserva.",
+      codes: {
+        team_not_found: "Este equipo ya no existe, o usted ya no lo gestiona.",
+        team_name_taken: (name) => `Ya existe un equipo llamado ${name}.`,
+        team_changed: (name) =>
+          `El equipo ${name} se modificó después de que usted lo abriera. Ahora muestra el cambio; inténtelo de nuevo.`,
+        manager_named_by_admin: "Solo un administrador nombra a los responsables de un equipo.",
+        manager_kept_by_admin: (email) =>
+          `${email} es responsable de este equipo; solo un administrador puede cambiarlo.`,
+        manager_removed_by_admin: "Solo un administrador quita al responsable de un equipo.",
+      },
+    },
   };
 }
 

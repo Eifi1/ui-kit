@@ -2320,6 +2320,68 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       sourceApp: "Az alkalmazás szövegei",
       sourceKit: "Közös komponensek",
     },
+    // 0.64 (server-kit 0.32's opt-in teams): AccountTeamsSection and AccountTeamsPage — the
+    // admin's list and a member's page, their questions, counts and a team's refusals.
+    accountTeams: {
+      title: "Csapatok",
+      pageHint:
+        "A csapatok, amelyeknek Ön tagja. Amit egy csapattal megosztanak, az a csapat minden tagjával meg van osztva, amíg tagjai. A vezetők tagokat vesznek fel és távolítanak el, és meghívhatnak olyat, akinek még nincs fiókja; az adminisztrátorok csapatokat hoznak létre és kinevezik a vezetőket.",
+      adminHelp: "Csoportok a megosztáshoz, és akik vezetik őket.",
+      adminHint:
+        "A csapat valaki, akivel megosztunk, nem valaki, akié valami: egy csapatnak adott jogosultság mindenkihez eljut benne, és távozik azzal, aki távozik. Ön nevezi ki a vezetőket, akik aztán maguk vesznek fel és távolítanak el tagokat.",
+      none: "Ön egyetlen csapatnak sem tagja.",
+      noneAdmin: "Még nincsenek csapatok.",
+      youManage: "Ön vezeti ezt a csapatot.",
+      youAreIn: "Ön tag.",
+      name: "Csapat neve",
+      create: "Csapat létrehozása",
+      created: (name) => `Csapat létrehozva: ${name}.`,
+      rename: "Átnevezés",
+      renameTitle: (name) => `Csapat átnevezése: ${name}`,
+      renamed: (name) => `A csapat új neve: ${name}.`,
+      delete: "Csapat törlése",
+      deleteTitle: (name) => `Törli a csapatot: ${name}?`,
+      deleteBody:
+        "Minden, amit a csapattal megosztottak, azonnal megszűnik megosztva lenni a tagjaival. A saját munkájuk érintetlen marad.",
+      deleteGoes: (list) => `Ami vele együtt megszűnik: ${list}.`,
+      deleted: (name) => `A csapat törölve: ${name}.`,
+      countMembers: (count) => `${n(count)} tag`,
+      countGrants: (count) => `${n(count)} megosztás`,
+      countInvitations: (count) => `${n(count)} meghívó`,
+      members: "Tagok",
+      managers: "Vezetők",
+      invitedTitle: "Meghívottak",
+      nobody: "Még nincs benne senki.",
+      roles: { member: "Tag", manager: "Vezető" },
+      roleOf: (name) => `Szerepkör a csapatban: ${name}`,
+      roleLabel: "Mint",
+      remove: (name) => `Eltávolítás: ${name}`,
+      removeShort: "Eltávolítás",
+      removeTitle: (name, team) => `Eltávolítja a csapatból (${team}): ${name}?`,
+      removeBody:
+        "Amit a csapattal megosztottak, az a következő kérésénél megszűnik vele megosztva lenni. A saját munkája érintetlen marad.",
+      addEmail: "Hozzáadás e-mail-cím alapján",
+      add: "Hozzáadás",
+      added: (email, team) => `Mostantól tagja a csapatnak (${team}): ${email}.`,
+      removed: (name, team) => `Már nem tagja a csapatnak (${team}): ${name}.`,
+      invited: (email, team) => `${email} még nem rendelkezik fiókkal – meghívó van úton ebbe a csapatba: ${team}.`,
+      invitedNotSent: (email) =>
+        `${email} még nem rendelkezik fiókkal, és a meghívót nem sikerült elküldeni – küldje el újra.`,
+      withdraw: (email) => `Meghívó visszavonása: ${email}`,
+      withdrawShort: "Visszavonás",
+      withdrawTitle: (email) => `Visszavonja ezt a meghívót: ${email}?`,
+      withdrawBody: "A hivatkozás többé nem működik. A már vele létrehozott fiók megmarad.",
+      codes: {
+        team_not_found: "Ez a csapat már nem létezik, vagy Ön már nem vezeti.",
+        team_name_taken: (name) => `Már van ${name} nevű csapat.`,
+        team_changed: (name) =>
+          `A(z) ${name} csapat megváltozott, miután megnyitotta. Most már a változást mutatja; kérjük, próbálja újra.`,
+        manager_named_by_admin: "Egy csapat vezetőit csak adminisztrátor nevezheti ki.",
+        manager_kept_by_admin: (email) =>
+          `A(z) ${email} fiók vezeti ezt a csapatot; ezt csak adminisztrátor módosíthatja.`,
+        manager_removed_by_admin: "Egy csapat vezetőjét csak adminisztrátor távolíthatja el.",
+      },
+    },
   };
 }
 

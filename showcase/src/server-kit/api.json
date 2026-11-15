@@ -3367,8 +3367,8 @@
             },
             {
               "name": "create_invitation",
-              "signature": "async create_invitation(admin: UserT, body: InvitationCreate, *, show_link: bool) -> dict[str, Any]",
-              "doc": "``POST /admin/invitations`` (user-admin §5): an invitation to an address, in the\ninvitee's language, logged as ``invite``; the mail after the commit. ``show_link``:\nthe console transport's shown-once link (§12.5 item 11). A ``scope`` goes through the\n``invitation_scope`` hook, else it is refused."
+              "signature": "async create_invitation(admin: UserT, body: InvitationCreate, *, show_link: bool, scope: Mapping[str, Any] | None = None, detail: Mapping[str, object] | None = None) -> dict[str, Any]",
+              "doc": "``POST /admin/invitations`` (user-admin §5): an invitation to an address, in the\ninvitee's language, logged as ``invite``; the mail after the commit. ``show_link``:\nthe console transport's shown-once link (§12.5 item 11). A ``scope`` goes through the\n``invitation_scope`` hook, else it is refused.\n\nFor a caller that decided the scope itself (0.32, the teams: a team and the role in\nit), ``scope`` is stored as it is, past the hook, and ``detail`` joins the ``invite``\nrow's detail beside the kit's (``team_role``). A body that names a scope too is a\n:class:`ValueError`. Without either, nothing changes."
             },
             {
               "name": "resend_invitation",
@@ -4880,6 +4880,11 @@
               "name": "scrub_account",
               "signature": "async scrub_account(user_id: int) -> None",
               "doc": "0.31's :class:`~eifi1_server_kit.user_admin.ports.AccountLogScrub`: the rows about\nthe account lose their address, whichever it was, before its row goes."
+            },
+            {
+              "name": "deleted_group_names",
+              "signature": "async deleted_group_names(group_ids: Sequence[int]) -> Mapping[int, str]",
+              "doc": "0.32's :class:`~eifi1_server_kit.user_admin.ports.DeletedGroupNames`: the names the\n``group_delete`` rows of these groups kept, in one query."
             }
           ]
         },
@@ -7131,6 +7136,19 @@
           ]
         },
         {
+          "name": "DeletedGroupNames",
+          "kind": "protocol",
+          "signature": "@runtime_checkable class DeletedGroupNames(Protocol)",
+          "doc": "An admin log that reads the name a deleted group had off its ``group_delete`` row (0.32,\nthe teams' ready ``UserAdminHooks.group_names``): the one row that keeps it,\n``target_group_name`` (§11.2 decision 6), so the log still says which team went.\n\nOptional: the ``sql`` extra's and the in-memory logs have it; without it a deleted team's\nrows read \"a deleted team\". The teams check for it with ``isinstance``.",
+          "methods": [
+            {
+              "name": "deleted_group_names",
+              "signature": "async deleted_group_names(group_ids: Sequence[int]) -> Mapping[int, str]",
+              "doc": "The ``target_group_name`` of the ``group_delete`` rows of these groups, by id; a\ngroup with no such row (or one without a name) is left out."
+            }
+          ]
+        },
+        {
           "name": "RosterCounts",
           "kind": "class",
           "signature": "@dataclass(frozen=True, slots=True) class RosterCounts",
@@ -7731,6 +7749,1155 @@
           "kind": "function",
           "signature": "user_admin_router(deps: UserAdminDeps, *, prefix: str = '/admin', tags: Sequence[str] = ('admin',)) -> APIRouter",
           "doc": "The admin's routes (§12.1), every one behind the guard, on\n``APIRouter(prefix=prefix, tags=tags)``:\n\n* ``GET /users`` — the roster (``UserListResponse[row_model]``);\n* ``POST /users/{user_id}/active``, ``POST /users/{user_id}/role`` (or ``PUT …/roles``\n  with ``role_sets``), ``POST`` and ``DELETE /users/{user_id}/password-change`` — each\n  answers the account's row;\n* ``POST /users/{user_id}/mail`` → ``MailResult``;\n* ``PUT /users/{user_id}/reviewer`` → ``ReviewerResult``, with ``policy.review_locales``;\n* ``POST /users/{user_id}/erase`` → ``erasure_result_model``, where an operator erases\n  (``deletion_mode`` ``operator``; where a job does, the route is not there);\n* ``GET /actions`` → ``AdminActionPage[action_row_model]``, ``GET /attention`` →\n  ``attention_model``, ``GET /mail`` → ``MailBackendInfo``, ``POST /mail/test`` →\n  ``MailTestResult``.\n\nRaises :class:`ValueError` for a policy naming a role the app does not have, and for the\nglobal scope without a roster."
+        }
+      ]
+    },
+    {
+      "name": "eifi1_server_kit.teams",
+      "summary": "Teams (opt-in): named groups of accounts, their managers, and invitations into them — Kurvenschmiede's teams, lifted into the kit so an app adopts them with no data migration and no change on the wire.",
+      "doc": "Teams (opt-in): named groups of accounts, their managers, and invitations into them —\nKurvenschmiede's teams, lifted into the kit so an app adopts them with no data migration and\nno change on the wire.\n\nThe coded refusals (:class:`TeamError`, :class:`TeamErrorCode`), the wire shapes\n(:class:`TeamOut`, :class:`AdminTeamOut`, :class:`AdminTeamsResponse`, the bodies), the\nstore's port (:class:`TeamStore`; a team invitation's ``scope``, :func:`team_scope`) and the\nflows over it (:class:`TeamsService`, the app's :class:`TeamHooks`, the joins by invitation\n:class:`TeamAccountHooks` and :func:`join_team`, a demo's :func:`add_system_member`) are here,\nwithout FastAPI or SQLAlchemy. The routes are ``eifi1_server_kit.teams.router`` (the\n``fastapi`` extra) and the tables ``eifi1_server_kit.teams.sql`` (the ``sql`` extra).\nThe in-memory store and its contract suite are ``eifi1_server_kit.teams.testing``, not\nre-exported.\n\nNothing in the account layer or the admin's routes changes unless an app gives teams.",
+      "contract": {
+        "doc": "docs/user-admin-harmonization.md",
+        "section": "§11",
+        "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/user-admin-harmonization.md#11-groups-in-the-audit-round-034-settled-2026-10-12",
+        "links": [
+          {
+            "section": "§11",
+            "heading": "11. Groups in the audit (round 0.34; settled 2026-10-12)",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/user-admin-harmonization.md#11-groups-in-the-audit-round-034-settled-2026-10-12"
+          }
+        ]
+      },
+      "members": [
+        {
+          "name": "MAX_TEAM_NAME_LENGTH",
+          "kind": "constant",
+          "signature": "MAX_TEAM_NAME_LENGTH = 120",
+          "doc": "The longest team name: Kurvenschmiede's ``teams.name`` is ``String(120)``.",
+          "value": 120
+        },
+        {
+          "name": "TEAM_ERROR_DETAIL",
+          "kind": "constant",
+          "signature": "TEAM_ERROR_DETAIL: Mapping[TeamErrorCode, str] = {\n    TeamErrorCode.TEAM_NOT_FOUND: \"Team not found\",\n    TeamErrorCode.TEAM_NAME_TAKEN: \"There is already a team with this name.\",\n    TeamErrorCode.TEAM_CHANGED: \"The team was changed after you opened it. Reload to see the change.\",\n    TeamErrorCode.MANAGER_NAMED_BY_ADMIN: \"Only an admin names a team's managers.\",\n    TeamErrorCode.MANAGER_KEPT_BY_ADMIN: \"This person manages the team; only an admin changes that.\",\n    TeamErrorCode.MANAGER_REMOVED_BY_ADMIN: \"Only an admin removes a team's manager.\",\n}",
+          "doc": "The English ``detail`` of each code when the raiser says nothing more; the service says the\nteam's name where Kurvenschmiede's sentence did. None of these echoes an address."
+        },
+        {
+          "name": "TEAM_ERROR_STATUS",
+          "kind": "constant",
+          "signature": "TEAM_ERROR_STATUS: Mapping[TeamErrorCode, int] = {\n    **dict.fromkeys(TeamErrorCode, 409),\n    TeamErrorCode.TEAM_NOT_FOUND: 404,\n}",
+          "doc": "Each code's status: ``409``, but ``team_not_found``'s ``404``."
+        },
+        {
+          "name": "AdminTeamOut",
+          "kind": "model",
+          "signature": "class AdminTeamOut(TeamOut)",
+          "doc": "A team on the admin's list, with what deleting it would take back beyond the members and\nthe waiting invitations it already lists: how many grants it holds (the app's\n``TeamHooks.deleting``; ``0`` without one). The confirmation counts all three before the\ncascade does (the user-admin contract §11.2 decision 5).",
+          "fields": [
+            {
+              "name": "id",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "name",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "version",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "created_at",
+              "type": "datetime",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "my_role",
+              "type": "TeamRole | None",
+              "default": null,
+              "doc": "The caller's own role in the team; ``None`` for an admin looking from the admin page."
+            },
+            {
+              "name": "members",
+              "type": "list[TeamMemberOut]",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "invitations",
+              "type": "list[TeamInvitationOut]",
+              "default": "[]",
+              "doc": "Waiting invitations — empty for anybody who may not invite into it."
+            },
+            {
+              "name": "invited",
+              "type": "TeamInvited | None",
+              "default": "None",
+              "doc": "Only on the answer to an add that invited."
+            },
+            {
+              "name": "grant_count",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "AdminTeamsResponse",
+          "kind": "model",
+          "signature": "class AdminTeamsResponse(BaseModel)",
+          "doc": "``GET /admin/teams``: every team, and the confirmation each action asks for —\n``levels``, as the roster states them (§4.2), so the page asks before its first delete for\nexactly what the server refuses without: ``group_delete`` is ``acknowledge``.",
+          "fields": [
+            {
+              "name": "teams",
+              "type": "list[AdminTeamOut]",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "levels",
+              "type": "dict[str, str]",
+              "default": "dict()",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "Membership",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class Membership[MemberT: TeamMemberRow = Any, UserT: AccountRow = Any]",
+          "doc": "One membership and the account it is: what a team's member list is made of.",
+          "fields": [
+            {
+              "name": "member",
+              "type": "MemberT",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "user",
+              "type": "UserT",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "NewTeam",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class NewTeam",
+          "doc": "A team to insert: its stripped name, and ``is_system`` for the app's own (a demo's).",
+          "fields": [
+            {
+              "name": "name",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "is_system",
+              "type": "bool",
+              "default": "False",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "TeamAccountHooks",
+          "kind": "class",
+          "signature": "class TeamAccountHooks[UserT: AccountRow = Any]",
+          "doc": "The teams' ready coroutines for the account layer's hooks and the admin log, on one\nrequest's team store and log::\n\n    teams = TeamAccountHooks(SqlTeamStore(session, Team, TeamMember, users=User,\n                                          invitations=Invitation),\n                             SqlAdminActionLog(session, AdminActionRecord))\n    AuthHooks(on_register=teams.on_register, on_invitation_redeemed=teams.on_invitation_redeemed,\n              invitation_group=teams.invitation_group, invitation_scope=teams.invitation_scope,\n              describe_invitation=teams.describe_invitation)\n    UserAdminHooks(group_names=teams.group_names)\n\nAn app whose own hook does more (Kurvenschmiede's sign-up starts a subscription) calls\nthese from it.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(teams: TeamStore[Any, Any], log: AdminActionLog[Any], *, now: Clock = utc_now) -> None",
+              "doc": ""
+            },
+            {
+              "name": "join",
+              "signature": "async join(invitation: InvitationRow, user: UserT) -> bool",
+              "doc": ":func:`join_team` on this request's stores."
+            },
+            {
+              "name": "on_register",
+              "signature": "async on_register(user: UserT, invitation: InvitationRow | None, _body: RegisterRequest) -> None",
+              "doc": "``AuthHooks.on_register``: a sign-up through a team invitation joins its team."
+            },
+            {
+              "name": "on_invitation_redeemed",
+              "signature": "async on_invitation_redeemed(user: UserT, invitation: InvitationRow) -> None",
+              "doc": "``AuthHooks.on_invitation_redeemed``: an existing account took up a team invitation\n(``/auth/invitations/accept``), or confirmed the address one was sent to."
+            },
+            {
+              "name": "invitation_group",
+              "signature": "async invitation_group(invitation: InvitationRow) -> GroupRef | None",
+              "doc": "``AuthHooks.invitation_group``: the team an invitation is for — its id on the\ninvitation's log rows, its name in the mail."
+            },
+            {
+              "name": "invitation_scope",
+              "signature": "async invitation_scope(_admin: UserT, scope: int | str) -> Mapping[str, Any]",
+              "doc": "``AuthHooks.invitation_scope``: an admin's ``scope`` on ``POST /admin/invitations`` is\na team to invite into, as a member; the system team is hidden here too. Any other is\n``invitation_scope_invalid``."
+            },
+            {
+              "name": "describe_invitation",
+              "signature": "async describe_invitation(invitation: InvitationRow) -> dict[str, Any]",
+              "doc": "``AuthHooks.describe_invitation``: the team an invitation brings the person into, on\nthe check, the acceptance and the admin's rows — its id (the contract's ``scope``), its\nname and the role in it (Kurvenschmiede's three fields)."
+            },
+            {
+              "name": "group_names",
+              "signature": "async group_names(group_ids: Sequence[int]) -> Mapping[int, str | None]",
+              "doc": "``UserAdminHooks.group_names``: the teams the log names — the live team's name, else\nthe one its ``group_delete`` row kept (with a log that reads it,\n:class:`~eifi1_server_kit.user_admin.ports.DeletedGroupNames`)."
+            }
+          ]
+        },
+        {
+          "name": "TeamError",
+          "kind": "class",
+          "signature": "class TeamError(ValueError)",
+          "doc": "A team's coded refusal: ``status_code`` and ``code`` from :class:`TeamErrorCode`.\n\n``TeamError(TeamErrorCode.TEAM_CHANGED, \"The team Rig was changed…\", extra={\"name\": \"Rig\"})``\n→ ``409 {\"detail\": …, \"code\": \"team_changed\", \"name\": \"Rig\"}``. ``extra`` may not set\n``detail`` or ``code``. A ``ValueError`` like every kit refusal, and registered in\n:data:`~eifi1_server_kit.errors.CONTRACT_ERRORS`, so an app-wide ``ValueError`` → 400\nhandler does not swallow its status.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(code: TeamErrorCode, detail: str | None = None, *, extra: Mapping[str, object] | None = None)",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "TeamErrorCode",
+          "kind": "enum",
+          "signature": "class TeamErrorCode(enum.StrEnum)",
+          "doc": "The ``code`` of a team's refusal. A ``StrEnum``, so ``str(code)`` is the wire value. The\nfield each one adds to the answer is named beside it.",
+          "values": [
+            {
+              "name": "TEAM_NOT_FOUND",
+              "value": "team_not_found"
+            },
+            {
+              "name": "TEAM_NAME_TAKEN",
+              "value": "team_name_taken"
+            },
+            {
+              "name": "TEAM_CHANGED",
+              "value": "team_changed"
+            },
+            {
+              "name": "MANAGER_NAMED_BY_ADMIN",
+              "value": "manager_named_by_admin"
+            },
+            {
+              "name": "MANAGER_KEPT_BY_ADMIN",
+              "value": "manager_kept_by_admin"
+            },
+            {
+              "name": "MANAGER_REMOVED_BY_ADMIN",
+              "value": "manager_removed_by_admin"
+            }
+          ]
+        },
+        {
+          "name": "TeamGate",
+          "kind": "constant",
+          "signature": "type TeamGate = Literal[\"add\", \"resend\"]",
+          "doc": "What a manager does that the app's billing gate is asked about: an add, a re-send."
+        },
+        {
+          "name": "TeamHooks",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True, kw_only=True) class TeamHooks[UserT: AccountRow = Any]",
+          "doc": "What is the app's around its teams, as optional coroutines its hook dependency answers\nper request, on the request's own session. Each may raise a kit refusal to refuse the step.",
+          "fields": [
+            {
+              "name": "deleting",
+              "type": "Callable[[Sequence[int]], Awaitable[Mapping[int, int]]] | None",
+              "default": "None",
+              "doc": "The grants these teams hold, by id (Kurvenschmiede's shares to a team), in one call:\nthe admin list's ``grant_count`` and the ``grants`` a ``group_delete`` row counts. An id\nleft out holds none; without the hook no team holds any."
+            },
+            {
+              "name": "member_added",
+              "type": "Callable[[UserT, TeamRow, UserT], Awaitable[None]] | None",
+              "default": "None",
+              "doc": "``(actor, team, user)``: a NEW membership made by an add (Kurvenschmiede's\n``team_added`` notice) — not a role change, not a join by invitation (which has its own\nmail and is the invitee's own doing), never the system team's."
+            },
+            {
+              "name": "billing_gate",
+              "type": "Callable[[UserT, TeamGate], Awaitable[None]] | None",
+              "default": "None",
+              "doc": "``(manager, \"add\" | \"resend\")``: a manager's add or re-send, on the manager's own\nstanding (Kurvenschmiede's billing contract §12.13). Never a removal, a withdrawal or an\nadmin's."
+            },
+            {
+              "name": "refuse_address",
+              "type": "Callable[[str], Awaitable[None]] | None",
+              "default": "None",
+              "doc": "The address of an add, trimmed and lower-cased, before it is looked up: refuse one the\napp never puts in a team (Kurvenschmiede's demo addresses, by their shape, a ``400``)."
+            }
+          ]
+        },
+        {
+          "name": "TeamIn",
+          "kind": "model",
+          "signature": "class TeamIn(BaseModel)",
+          "doc": "``POST /admin/teams`` and ``PATCH /admin/teams/{id}``: ``{name}``, kept stripped. A name\nthat is blank once stripped is a 422, as an empty one is.",
+          "fields": [
+            {
+              "name": "name",
+              "type": "Annotated[str, Field(min_length=1, max_length=MAX_TEAM_NAME_LENGTH), AfterValidator(_named)]",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "TeamInvitationOut",
+          "kind": "model",
+          "signature": "class TeamInvitationOut(BaseModel)",
+          "doc": "Somebody invited into the team who has not come in yet — shown to the admin and the\nteam's managers, who may invite (the auth contract §2.11).",
+          "fields": [
+            {
+              "name": "id",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "email",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "role",
+              "type": "TeamRole",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "status",
+              "type": "str",
+              "default": null,
+              "doc": "``open`` or ``expired`` — an accepted one is a member instead, a withdrawn one is gone."
+            },
+            {
+              "name": "expires_at",
+              "type": "datetime | None",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "TeamInvitationSent",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class TeamInvitationSent",
+          "doc": "The answer of an add that invited (or re-sent an invitation): the address, whether the\nmail went, and the link only while mail goes to the console.",
+          "fields": [
+            {
+              "name": "email",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "sent",
+              "type": "bool",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "link",
+              "type": "str | None",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "TeamInvited",
+          "kind": "model",
+          "signature": "class TeamInvited(BaseModel)",
+          "doc": "The answer's note that the address had no account and was INVITED rather than added:\nwhether the mail went, and — only while mail is the console backend — the link, shown this\nonce.",
+          "fields": [
+            {
+              "name": "email",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "sent",
+              "type": "bool",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "link",
+              "type": "str | None",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "TeamMemberIn",
+          "kind": "model",
+          "signature": "class TeamMemberIn(BaseModel)",
+          "doc": "Put somebody in a team by their exact address — or invite them into it, if the address\nhas no account. A manager may only add ``member``\\ s; naming a manager is an admin's call.\nThe address is trimmed and lower-cased (:func:`~eifi1_server_kit.auth.normalise_email`).",
+          "fields": [
+            {
+              "name": "email",
+              "type": "Email",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "locale",
+              "type": "LocaleTag | None",
+              "default": "None",
+              "doc": "The invitation mail's language, for an address with no account: the invitee's, picked\nin the dialog. Left out, the inviter's own."
+            },
+            {
+              "name": "role",
+              "type": "TeamRole",
+              "default": "<TeamRole.MEMBER: 'member'>",
+              "doc": ""
+            },
+            {
+              "name": "offered_locales",
+              "type": "ClassVar[Sequence[str] | None]",
+              "default": "None",
+              "doc": "The app's languages (``AuthDeps.offered_locales``, which the teams' routers set on this\nbody as the account routes set it on theirs); ``None`` checks the tag's shape only."
+            }
+          ]
+        },
+        {
+          "name": "TeamMemberOut",
+          "kind": "model",
+          "signature": "class TeamMemberOut(BaseModel)",
+          "doc": "One person in a team: the name's parts, for the page to write in its reader's order (the\nauth contract §3.2), and ``display_name`` already in the viewer's, for anything that only\nshows a name.",
+          "fields": [
+            {
+              "name": "user_id",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "first_name",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "last_name",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "display_name",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "email",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "role",
+              "type": "TeamRole",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "is_active",
+              "type": "bool",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "TeamMemberRoleIn",
+          "kind": "model",
+          "signature": "class TeamMemberRoleIn(BaseModel)",
+          "doc": "``PATCH /admin/teams/{id}/members/{user_id}``: ``{role}`` — an admin names or un-names a\nmanager.",
+          "fields": [
+            {
+              "name": "role",
+              "type": "TeamRole",
+              "default": null,
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "TeamMemberRow",
+          "kind": "protocol",
+          "signature": "class TeamMemberRow(Protocol)",
+          "doc": "One person in one team, and whether they manage it.",
+          "methods": [
+            {
+              "name": "team_id",
+              "signature": "@property team_id -> int",
+              "doc": ""
+            },
+            {
+              "name": "user_id",
+              "signature": "@property user_id -> int",
+              "doc": ""
+            },
+            {
+              "name": "role",
+              "signature": "@property role -> str",
+              "doc": ""
+            },
+            {
+              "name": "created_at",
+              "signature": "@property created_at -> datetime",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "TeamOut",
+          "kind": "model",
+          "signature": "class TeamOut(BaseModel)",
+          "doc": "One team as its viewer may see it.",
+          "fields": [
+            {
+              "name": "id",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "name",
+              "type": "str",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "version",
+              "type": "int",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "created_at",
+              "type": "datetime",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "my_role",
+              "type": "TeamRole | None",
+              "default": null,
+              "doc": "The caller's own role in the team; ``None`` for an admin looking from the admin page."
+            },
+            {
+              "name": "members",
+              "type": "list[TeamMemberOut]",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "invitations",
+              "type": "list[TeamInvitationOut]",
+              "default": "[]",
+              "doc": "Waiting invitations — empty for anybody who may not invite into it."
+            },
+            {
+              "name": "invited",
+              "type": "TeamInvited | None",
+              "default": "None",
+              "doc": "Only on the answer to an add that invited."
+            }
+          ]
+        },
+        {
+          "name": "TeamRole",
+          "kind": "enum",
+          "signature": "class TeamRole(enum.StrEnum)",
+          "doc": "What a membership lets its holder do beyond being in the team. A ``StrEnum``: the stored\nand the wire value is ``str(role)``.",
+          "values": [
+            {
+              "name": "MEMBER",
+              "value": "member"
+            },
+            {
+              "name": "MANAGER",
+              "value": "manager"
+            }
+          ]
+        },
+        {
+          "name": "TeamRow",
+          "kind": "protocol",
+          "signature": "class TeamRow(Protocol)",
+          "doc": "A team as the kit reads it: read-only members; every write goes through the store.",
+          "methods": [
+            {
+              "name": "id",
+              "signature": "@property id -> int",
+              "doc": ""
+            },
+            {
+              "name": "name",
+              "signature": "@property name -> str",
+              "doc": ""
+            },
+            {
+              "name": "version",
+              "signature": "@property version -> int",
+              "doc": ""
+            },
+            {
+              "name": "created_at",
+              "signature": "@property created_at -> datetime",
+              "doc": ""
+            },
+            {
+              "name": "is_system",
+              "signature": "@property is_system -> bool",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "TeamStore",
+          "kind": "protocol",
+          "signature": "class TeamStore[TeamT: TeamRow = Any, MemberT: TeamMemberRow = Any](Protocol)",
+          "doc": "The app's teams, their members and the invitations into them, on the request's session.\nAsync; every write flushes and never commits.",
+          "methods": [
+            {
+              "name": "get",
+              "signature": "async get(team_id: int) -> TeamT | None",
+              "doc": "The team, a system team too, or ``None``."
+            },
+            {
+              "name": "names",
+              "signature": "async names(team_ids: Sequence[int]) -> Mapping[int, str]",
+              "doc": "The names of the teams that exist among ``team_ids``, by id (the admin log's)."
+            },
+            {
+              "name": "name_taken",
+              "signature": "async name_taken(name: str, *, other_than: int | None = None) -> bool",
+              "doc": "Whether a team other than ``other_than`` is called exactly ``name``."
+            },
+            {
+              "name": "listing",
+              "signature": "async listing() -> Sequence[TeamT]",
+              "doc": "Every team but the system teams, by name: the admin's list."
+            },
+            {
+              "name": "of_user",
+              "signature": "async of_user(user_id: int) -> Sequence[tuple[TeamT, str]]",
+              "doc": "The teams the account is in, but the system teams, by name, each with its role there."
+            },
+            {
+              "name": "managed",
+              "signature": "async managed(team_id: int, user_id: int) -> TeamT | None",
+              "doc": "The team, if the account manages it and it is no system team; else ``None`` — for a\nteam it is merely in as much as for one it is not in. One query: the manager's\npredicate."
+            },
+            {
+              "name": "add",
+              "signature": "async add(new: NewTeam) -> TeamT",
+              "doc": "Insert and flush, ``version`` 1."
+            },
+            {
+              "name": "rename",
+              "signature": "async rename(team: TeamT, name: str) -> None",
+              "doc": "The new name, flushed (the service bumps the version)."
+            },
+            {
+              "name": "bump",
+              "signature": "async bump(team: TeamT) -> None",
+              "doc": "``version`` one higher, flushed."
+            },
+            {
+              "name": "delete",
+              "signature": "async delete(team: TeamT) -> None",
+              "doc": "Delete the team and flush; its memberships and every invitation into it go with it\n(Kurvenschmiede's ``CASCADE``)."
+            },
+            {
+              "name": "members",
+              "signature": "async members(team_ids: Sequence[int]) -> Sequence[Membership[MemberT, Any]]",
+              "doc": "The memberships of these teams with their accounts, by team, then by the account's\n``last_name``, ``first_name`` and id."
+            },
+            {
+              "name": "membership",
+              "signature": "async membership(team_id: int, user_id: int) -> MemberT | None",
+              "doc": "The account's membership of the team, or ``None``."
+            },
+            {
+              "name": "add_member",
+              "signature": "async add_member(team_id: int, user_id: int, role: TeamRole) -> MemberT",
+              "doc": "Insert and flush. One membership per team and account (the app's unique\nconstraint); the kit asks :meth:`membership` first."
+            },
+            {
+              "name": "set_member_role",
+              "signature": "async set_member_role(member: MemberT, role: TeamRole) -> None",
+              "doc": "The new role, flushed."
+            },
+            {
+              "name": "remove_member",
+              "signature": "async remove_member(member: MemberT) -> None",
+              "doc": "Delete and flush."
+            },
+            {
+              "name": "open_invitations",
+              "signature": "async open_invitations(team_ids: Sequence[int]) -> Mapping[int, Sequence[InvitationRow]]",
+              "doc": "The invitations into these teams neither accepted nor withdrawn (expired ones too),\nby team, each oldest first, the lower id first on a tie. A team with none may be left\nout."
+            },
+            {
+              "name": "set_invitation_role",
+              "signature": "async set_invitation_role(invitation: InvitationRow, role: TeamRole) -> None",
+              "doc": "The role in the team an open invitation gives, written into its ``scope`` (and the\napp's own column of it), flushed: inviting the address again in another role."
+            }
+          ]
+        },
+        {
+          "name": "TeamView",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True) class TeamView",
+          "doc": "One team as a viewer sees it: the caller's role in it (``None`` from the admin page),\neverybody in it, the invitations waiting (for an admin and the team's managers; empty for\neverybody else), and on the admin's list the grants it holds.",
+          "fields": [
+            {
+              "name": "team",
+              "type": "TeamRow",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "my_role",
+              "type": "TeamRole | None",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "members",
+              "type": "Sequence[Membership[Any, Any]]",
+              "default": null,
+              "doc": ""
+            },
+            {
+              "name": "invitations",
+              "type": "Sequence[InvitationRow]",
+              "default": "()",
+              "doc": ""
+            },
+            {
+              "name": "grants",
+              "type": "int",
+              "default": "0",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "TeamsService",
+          "kind": "class",
+          "signature": "class TeamsService[UserT: AccountRow = Any]",
+          "doc": "The teams' flows for one request, over the team store and the account layer's stores and\nservice (the invitations and their mail are the account layer's).\n\n``invitation_role`` is the account role an invitation into a team gives a new account (the\npolicy's ``default_role``); ``show_link`` answers an invitation's link while mail goes to\nthe console.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(*, teams: TeamStore[Any, Any], users: UserStore[Any], invitations: InvitationStore[Any], log: AdminActionLog[Any], accounts: AccountService[Any, Any, Any], invitation_role: str, hooks: TeamHooks[UserT] | None = None, show_link: bool = False, now: Clock = utc_now) -> None",
+              "doc": ""
+            },
+            {
+              "name": "get",
+              "signature": "async get(team_id: int) -> TeamRow",
+              "doc": "A team the admin may act on: any but a system team, else ``team_not_found``."
+            },
+            {
+              "name": "managed",
+              "signature": "async managed(user: UserT, team_id: int) -> TeamRow",
+              "doc": "A team ``user`` manages — or ``team_not_found``, for a team they are merely in as\nmuch as for one they are not in at all."
+            },
+            {
+              "name": "teams_of",
+              "signature": "async teams_of(user: UserT) -> list[TeamView]",
+              "doc": "The teams ``user`` is in, by name, with everybody in them; the invitations waiting\nonly where they manage. Nobody but an admin is told which other teams exist."
+            },
+            {
+              "name": "all_teams",
+              "signature": "async all_teams() -> list[TeamView]",
+              "doc": "Every team but the system teams, by name, with everybody in it, the invitations\nwaiting and the grants it holds — the admin's view."
+            },
+            {
+              "name": "view",
+              "signature": "async view(team: TeamRow, my_role: TeamRole | None = None) -> TeamView",
+              "doc": "One team for its admin (``my_role`` ``None``) or one of its managers — the two who\nmay invite into it, and so see who is waiting."
+            },
+            {
+              "name": "check_version",
+              "signature": "check_version(team: TeamRow, expected: int | None) -> None",
+              "doc": "Refuse a change made against a version the team has moved on from\n(``team_changed``, with its name). Checked when the client sends one, never demanded:\na membership is a set and each change is idempotent."
+            },
+            {
+              "name": "gate",
+              "signature": "async gate(user: UserT, what: TeamGate) -> None",
+              "doc": "The app's billing gate on a manager's add or re-send (``TeamHooks.billing_gate``)."
+            },
+            {
+              "name": "create",
+              "signature": "async create(actor: UserT, name: str) -> TeamRow",
+              "doc": "A new team by its stripped name, logged ``group_create``."
+            },
+            {
+              "name": "rename",
+              "signature": "async rename(actor: UserT, team: TeamRow, name: str) -> None",
+              "doc": "A new name, and a ``group_rename`` row that says neither name: the log joins what the\nteam is called when it is read. Its own name again changes nothing."
+            },
+            {
+              "name": "delete",
+              "signature": "async delete(actor: UserT, team: TeamRow, *, acknowledged: bool) -> None",
+              "doc": "Delete a team, and with it every membership and every invitation into it — and, the\napp's own cascade, every grant made to it — once acknowledged (§11.2 decision 5): a\nrequest without the tick is ``confirmation_required`` and deletes nothing. The\n``group_delete`` row counts what goes (an accepted invitation is history, not counted)\nand keeps the name the team had."
+            },
+            {
+              "name": "add",
+              "signature": "async add(actor: UserT, team: TeamRow, email: str, role: TeamRole = TeamRole.MEMBER, *, by_admin: bool, locale: str | None = None) -> UserT | TeamInvitationSent",
+              "doc": "Put the account with this exact address in the team as ``role`` — or, for an\naddress with no account, invite it into the team (in ``locale``, else the actor's).\nAnswers the account, or the invitation sent.\n\nA manager (``by_admin`` false) may only add members, and never changes a manager's\nrole. Adding somebody already in the team changes their role; the role they have\nchanges nothing."
+            },
+            {
+              "name": "set_role",
+              "signature": "async set_role(actor: UserT, team: TeamRow, user_id: int, role: TeamRole) -> None",
+              "doc": "An admin names or un-names a manager; the role the member has changes nothing."
+            },
+            {
+              "name": "remove",
+              "signature": "async remove(actor: UserT, team: TeamRow, user_id: int, *, by_admin: bool) -> None",
+              "doc": "Take somebody out of the team — and with them, on their next request, everything\nshared with it. A manager removes members only. The ``membership_remove`` row says the\nrole they had."
+            },
+            {
+              "name": "invitation",
+              "signature": "async invitation(team: TeamRow, invitation_id: int) -> InvitationRow",
+              "doc": "One of THIS team's invitations, in any state, or ``team_not_found``: a manager's\nreach ends at the team they manage."
+            },
+            {
+              "name": "resend",
+              "signature": "async resend(actor: UserT, invitation: InvitationRow) -> TeamInvitationSent",
+              "doc": "A team invitation (:meth:`invitation`) sent again with a new link, through the\naccount layer's re-send (``invitation_closed`` once taken up or withdrawn)."
+            },
+            {
+              "name": "withdraw",
+              "signature": "async withdraw(actor: UserT, invitation: InvitationRow) -> None",
+              "doc": "A team invitation (:meth:`invitation`) withdrawn, through the account layer's:\nstamped and kept (``revoked_at``); one taken up is ``invitation_closed``."
+            }
+          ]
+        },
+        {
+          "name": "add_system_member",
+          "kind": "function",
+          "signature": "async add_system_member(teams: TeamStore[Any, Any], team: TeamRow, user: AccountRow) -> bool",
+          "doc": "Put a demo account in the app's system team (Kurvenschmiede's \"Demo\" team, through which\nevery demo reads the worked examples), as a member: no row in the admin log, no notice, no\nnew version — the team is the app's, hidden everywhere. Answers whether it was added; an\naccount in it already is left as it is. A team that is no system team is a\n:class:`ValueError`."
+        },
+        {
+          "name": "invitation_team",
+          "kind": "function",
+          "signature": "invitation_team(invitation: InvitationRow) -> int | None",
+          "doc": "The team an invitation brings its invitee into, or ``None`` for one that names none."
+        },
+        {
+          "name": "invitation_team_role",
+          "kind": "function",
+          "signature": "invitation_team_role(invitation: InvitationRow) -> TeamRole",
+          "doc": "The role in the team an invitation gives: its scope's, a member's when it names none."
+        },
+        {
+          "name": "join_team",
+          "kind": "function",
+          "signature": "async join_team(teams: TeamStore[Any, Any], log: AdminActionLog[Any], invitation: InvitationRow, user: AccountRow, *, now: Clock = utc_now) -> bool",
+          "doc": "The team an invitation names, in its role, for the account that took it up — at a\nsign-up, at ``POST /auth/invitations/accept`` and at an address confirmation alike (the\naccount layer stamps the invitation itself). A ``membership_add`` whose actor is the\ninvitee: whoever invited chose the team, and the invitee chose to come in. An invitation\nthat names no team, a team that is gone, or an account already in it changes nothing and\nwrites nothing. Answers whether it joined."
+        },
+        {
+          "name": "team_scope",
+          "kind": "function",
+          "signature": "team_scope(team_id: int, role: TeamRole | str) -> dict[str, Any]",
+          "doc": "What the account layer stores as a team invitation's ``scope``: the team and the role in\nit, Kurvenschmiede's spelling, so its stored invitations read as the kit's."
+        }
+      ]
+    },
+    {
+      "name": "eifi1_server_kit.teams.router",
+      "summary": "The teams' routes as router factories: ``teams_router(TeamsDeps(...))`` and ``teams_admin_router(...)`` — Kurvenschmiede's paths, bodies and answers.",
+      "doc": "The teams' routes as router factories: ``teams_router(TeamsDeps(...))`` and\n``teams_admin_router(...)`` — Kurvenschmiede's paths, bodies and answers.\n\nBehind the ``fastapi`` extra, beside :func:`~eifi1_server_kit.auth.router.auth_router` and on its\n``AuthDeps``: the same account, the same :func:`~eifi1_server_kit.auth.router.current_user`, the\nsame invitation store and mail, and, unless the app passes its own, the same\n:func:`~eifi1_server_kit.auth.router.admin_guard` on the admin's router. An app mounts them as::\n\n    teams = TeamsDeps(auth=deps, teams=team_store, hooks=team_hooks)\n    app.include_router(teams_router(teams), prefix=\"/api/v1\")\n    app.include_router(teams_admin_router(teams), prefix=\"/api/v1\")\n\n**``/teams``** (:func:`teams_router`) is everybody's: ``GET \"\"`` the teams the caller is in (no\ndemo guard), and a manager's door into a team they manage — ``POST /{id}/members``, ``DELETE\n/{id}/members/{user_id}``, ``POST /{id}/invitations/{inv}/resend``, ``DELETE\n/{id}/invitations/{inv}``, each behind the app's ``demo_guard(\"teams\")``. A team the caller does\nnot manage is ``404 team_not_found``, from the one query that answers a manager's team.\n\n**``/admin/teams``** (:func:`teams_admin_router`) is the admin's: ``GET \"\"`` every team with its\ngrants and the confirmation levels; ``POST \"\"`` (``201``); ``PATCH /{id}``; ``DELETE /{id}``\n(``204``, its optional body the acknowledgement); ``POST``, ``PATCH`` and ``DELETE`` on\n``/{id}/members``.\n\n**Every answer to a change is the whole team again**, as Kurvenschmiede's: who is in it is what\nthe page draws next. A version is read off ``If-Match`` (``3``, ``\"3\"`` or ``W/\"3\"``) where it\nis checked — a manager's add and removal, the admin's rename — and never demanded. The router\nraises no ``HTTPException``: every refusal is a coded kit refusal, answered by\n:func:`~eifi1_server_kit.errors.install_contract_error_handlers`.\n\nNo ``from __future__ import annotations`` here, on purpose: the endpoints' parameter types are\nclosed over in the factories.",
+      "contract": {
+        "doc": "docs/user-admin-harmonization.md",
+        "section": "§11",
+        "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/user-admin-harmonization.md#11-groups-in-the-audit-round-034-settled-2026-10-12",
+        "links": [
+          {
+            "section": "§11",
+            "heading": "11. Groups in the audit (round 0.34; settled 2026-10-12)",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/user-admin-harmonization.md#11-groups-in-the-audit-round-034-settled-2026-10-12"
+          }
+        ]
+      },
+      "members": [
+        {
+          "name": "TeamsDeps",
+          "kind": "class",
+          "signature": "@dataclass(frozen=True, slots=True, kw_only=True, eq=False) class TeamsDeps",
+          "doc": "What an app hands the teams' routers: its ``AuthDeps`` (the account, the stores, the\nmail, the demo guard, the clock), its team store and its hooks.",
+          "fields": [
+            {
+              "name": "auth",
+              "type": "AuthDeps",
+              "default": null,
+              "doc": "The account layer's: ``current_user``, ``admin_guard``, the account service (the\ninvitations and their mail), the users, invitations and log stores, ``demo_guard``,\n``offered_locales``, ``mail_backend`` and ``now``."
+            },
+            {
+              "name": "teams",
+              "type": "Callable[..., Any]",
+              "default": null,
+              "doc": "A dependency answering the :class:`~eifi1_server_kit.teams.ports.TeamStore` on the\nrequest's session (``SqlTeamStore`` on ``[sql]``)."
+            },
+            {
+              "name": "hooks",
+              "type": "Callable[..., Any]",
+              "default": "<function no_team_hooks>",
+              "doc": "A dependency answering the request's :class:`~eifi1_server_kit.teams.service.TeamHooks`."
+            },
+            {
+              "name": "guard",
+              "type": "Callable[..., Any] | None",
+              "default": "None",
+              "doc": "The admin router's guard; ``None``: ``admin_guard(auth)``."
+            }
+          ]
+        },
+        {
+          "name": "if_match_version",
+          "kind": "function",
+          "signature": "if_match_version(if_match: str | None) -> int | None",
+          "doc": "The version an ``If-Match`` header names — ``3``, ``\"3\"`` or ``W/\"3\"`` — or ``None`` when\nnone was sent. One that names no number names no version the team has (``0``): the change\nis ``team_changed``, and the page reloads."
+        },
+        {
+          "name": "no_team_hooks",
+          "kind": "function",
+          "signature": "async no_team_hooks() -> TeamHooks[Any]",
+          "doc": "``TeamsDeps.hooks``' default: no hook at all."
+        },
+        {
+          "name": "team_out",
+          "kind": "function",
+          "signature": "team_out(view: TeamView, viewer: Any, invited: TeamInvitationSent | None = None, *, now: datetime) -> TeamOut",
+          "doc": "One team as ``viewer`` may see it: every member with their address, ``display_name`` in\nthe viewer's language (the auth contract §3.2), the waiting invitations ``open`` or\n``expired`` at ``now``, and the note of an add that invited."
+        },
+        {
+          "name": "teams_admin_router",
+          "kind": "function",
+          "signature": "teams_admin_router(deps: TeamsDeps, *, prefix: str = '/admin/teams', tags: Sequence[str] = ('admin',)) -> APIRouter",
+          "doc": "The admin's teams (see the module docstring), every route behind the guard, on\n``APIRouter(prefix=prefix, tags=tags)``. An admin adds anybody in either role, names and\nun-names managers, and is never asked through the billing gate."
+        },
+        {
+          "name": "teams_router",
+          "kind": "function",
+          "signature": "teams_router(deps: TeamsDeps, *, prefix: str = '/teams', tags: Sequence[str] = ('teams',)) -> APIRouter",
+          "doc": "A member's teams and a manager's door into theirs (see the module docstring), on\n``APIRouter(prefix=prefix, tags=tags)``. A manager adds only members, removes only\nmembers, and is asked through the app's ``billing_gate`` before an add or a re-send."
+        }
+      ]
+    },
+    {
+      "name": "eifi1_server_kit.teams.sql",
+      "summary": "The teams' tables as SQLAlchemy declarative mixins, and the store over them — the ``sql`` extra.",
+      "doc": "The teams' tables as SQLAlchemy declarative mixins, and the store over them — the ``sql`` extra.\n\nKurvenschmiede's tables column for column (its migrations 0032 and 0046), so the app swaps its\nmodels for these with no migration: Alembic's comparison of its database with the mixins finds\nnothing to change.\n\n* :class:`TeamColumns` — ``teams``: ``id``; ``name`` ``String(120)``, unique and indexed (one\n  unique index, ``ix_teams_name``); ``created_at``; ``version`` (``1``); ``is_system``\n  (``False``, no server default).\n* :class:`TeamMemberColumns` — ``team_members``: a surrogate ``id``; ``team_id`` and\n  ``user_id``, each a ``CASCADE`` foreign key with its index (unnamed, so the app's naming\n  convention names them); ``role``, a :class:`~eifi1_server_kit.teams.TeamRole` as\n  ``VARCHAR(16)`` with no ``CHECK``; ``created_at``; unique per pair,\n  ``uq_team_members_team_user``.\n* :class:`TeamInvitationColumns` — beside :class:`~eifi1_server_kit.auth.sql.InvitationColumns`\n  on the app's invitation model: ``team_id`` (``CASCADE`` foreign key, indexed, nullable) and\n  ``team_role``, the team a ``scope`` names written into columns of its own, so a team's\n  invitations go with it and are found by an index. :class:`SqlTeamInvitationStore` writes them\n  from the scope (Kurvenschmiede's ``TeamInvitations``, lifted).\n\n**The store**: :class:`SqlTeamStore` implements :class:`~eifi1_server_kit.teams.ports.TeamStore`\nover the app's team, membership, account and invitation models, on the request's\n``AsyncSession``. Every write flushes and none commits.\n\n**The tables' names.** A foreign key to the accounts is built from ``__accounts_table__``\n(default ``\"users\"``), one to the teams from ``__teams_table__`` (default ``\"teams\"``); an app\nwhose tables are called otherwise sets them on each subclass, or once on a mixin of its own\nplaced before these.\n\nNeeds the ``sql`` extra (``eifi1-server-kit[sql]``).",
+      "contract": {
+        "doc": "docs/user-admin-harmonization.md",
+        "section": "§11",
+        "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/user-admin-harmonization.md#11-groups-in-the-audit-round-034-settled-2026-10-12",
+        "links": [
+          {
+            "section": "§11",
+            "heading": "11. Groups in the audit (round 0.34; settled 2026-10-12)",
+            "url": "https://github.com/Eifi1/ui-kit/blob/main/docs/user-admin-harmonization.md#11-groups-in-the-audit-round-034-settled-2026-10-12"
+          }
+        ]
+      },
+      "members": [
+        {
+          "name": "TEAMS_TABLE",
+          "kind": "constant",
+          "signature": "TEAMS_TABLE = \"teams\"",
+          "doc": "The team table every foreign key to a team points at unless a subclass says otherwise.",
+          "value": "teams"
+        },
+        {
+          "name": "SqlTeamInvitationStore",
+          "kind": "class",
+          "signature": "class SqlTeamInvitationStore[InvT: InvitationColumns](SqlInvitationStore[InvT])",
+          "doc": "The account layer's :class:`~eifi1_server_kit.auth.sql.SqlInvitationStore` over a model\nthat has :class:`TeamInvitationColumns` too: an invitation whose ``scope`` names a team of\n``teams`` (the app's team model) gets that team and the role in it written into\n``team_id`` and ``team_role`` as well. A scope naming no team that exists is kept as the\nkit keeps every scope, its columns left empty (the account layer's contract suite writes\none). Kurvenschmiede's ``TeamInvitations``, lifted.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(session: AsyncSession, model: type[InvT], *, teams: type[Any]) -> None",
+              "doc": ""
+            },
+            {
+              "name": "add",
+              "signature": "async add(new: NewInvitation) -> InvT",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "SqlTeamStore",
+          "kind": "class",
+          "signature": "class SqlTeamStore[TeamT: TeamColumns, MemberT: TeamMemberColumns]",
+          "doc": ":class:`~eifi1_server_kit.teams.ports.TeamStore` over the app's team model\n(:class:`TeamColumns`) and membership model (:class:`TeamMemberColumns`), reading its\naccount model (``users``, :class:`~eifi1_server_kit.auth.sql.AccountColumns`) for the member\nlists and its invitation model (``invitations``, with :class:`TeamInvitationColumns`) for a\nteam's open invitations. Deleting a team deletes its memberships and invitations first, so\nthe result is the cascade's whether or not the database enforces it.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(session: AsyncSession, model: type[TeamT], members: type[MemberT], *, users: type[Any], invitations: type[Any]) -> None",
+              "doc": ""
+            },
+            {
+              "name": "get",
+              "signature": "async get(team_id: int) -> TeamT | None",
+              "doc": ""
+            },
+            {
+              "name": "names",
+              "signature": "async names(team_ids: Sequence[int]) -> Mapping[int, str]",
+              "doc": ""
+            },
+            {
+              "name": "name_taken",
+              "signature": "async name_taken(name: str, *, other_than: int | None = None) -> bool",
+              "doc": ""
+            },
+            {
+              "name": "listing",
+              "signature": "async listing() -> Sequence[TeamT]",
+              "doc": ""
+            },
+            {
+              "name": "of_user",
+              "signature": "async of_user(user_id: int) -> Sequence[tuple[TeamT, str]]",
+              "doc": ""
+            },
+            {
+              "name": "managed",
+              "signature": "async managed(team_id: int, user_id: int) -> TeamT | None",
+              "doc": ""
+            },
+            {
+              "name": "add",
+              "signature": "async add(new: NewTeam) -> TeamT",
+              "doc": ""
+            },
+            {
+              "name": "rename",
+              "signature": "async rename(team: TeamT, name: str) -> None",
+              "doc": ""
+            },
+            {
+              "name": "bump",
+              "signature": "async bump(team: TeamT) -> None",
+              "doc": ""
+            },
+            {
+              "name": "delete",
+              "signature": "async delete(team: TeamT) -> None",
+              "doc": ""
+            },
+            {
+              "name": "members",
+              "signature": "async members(team_ids: Sequence[int]) -> Sequence[Membership[Any, Any]]",
+              "doc": ""
+            },
+            {
+              "name": "membership",
+              "signature": "async membership(team_id: int, user_id: int) -> MemberT | None",
+              "doc": ""
+            },
+            {
+              "name": "add_member",
+              "signature": "async add_member(team_id: int, user_id: int, role: TeamRole) -> MemberT",
+              "doc": ""
+            },
+            {
+              "name": "set_member_role",
+              "signature": "async set_member_role(member: MemberT, role: TeamRole) -> None",
+              "doc": ""
+            },
+            {
+              "name": "remove_member",
+              "signature": "async remove_member(member: MemberT) -> None",
+              "doc": ""
+            },
+            {
+              "name": "open_invitations",
+              "signature": "async open_invitations(team_ids: Sequence[int]) -> Mapping[int, Sequence[InvitationRow]]",
+              "doc": ""
+            },
+            {
+              "name": "set_invitation_role",
+              "signature": "async set_invitation_role(invitation: InvitationRow, role: TeamRole) -> None",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "TeamColumns",
+          "kind": "class",
+          "signature": "class TeamColumns",
+          "doc": "A team: its unique name, when it was made, its version and whether it is the app's own\n(a system team, hidden everywhere)."
+        },
+        {
+          "name": "TeamInvitationColumns",
+          "kind": "class",
+          "signature": "class TeamInvitationColumns(_PointsAtTeams)",
+          "doc": "The team an invitation brings its invitee into, beside\n:class:`~eifi1_server_kit.auth.sql.InvitationColumns`' ``scope``: ``None`` for an invitation\nto the instance alone. The ``CASCADE`` takes a team's invitations with it.",
+          "methods": [
+            {
+              "name": "team_id",
+              "signature": "@declared_attr team_id() -> Mapped[int | None]",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "TeamMemberColumns",
+          "kind": "class",
+          "signature": "class TeamMemberColumns(_PointsAtAccounts, _PointsAtTeams)",
+          "doc": "One person in one team, and whether they manage it. ``CASCADE`` both ways: a membership\nof a team that is gone, or of an account that is gone, is a membership of nothing; a\ndeactivated account keeps its rows and comes back into its teams when it is reactivated.",
+          "methods": [
+            {
+              "name": "team_id",
+              "signature": "@declared_attr team_id() -> Mapped[int]",
+              "doc": ""
+            },
+            {
+              "name": "user_id",
+              "signature": "@declared_attr user_id() -> Mapped[int]",
+              "doc": ""
+            },
+            {
+              "name": "table_args",
+              "signature": "@classmethod table_args() -> tuple[Any, ...]",
+              "doc": "One membership per team and account: Kurvenschmiede's named constraint."
+            }
+          ]
+        },
+        {
+          "name": "team_role_type",
+          "kind": "function",
+          "signature": "team_role_type() -> Enum",
+          "doc": "A :class:`~eifi1_server_kit.teams.TeamRole` column's type: Kurvenschmiede's\n``Enum(TeamRole, name=\"team_role\", native_enum=False, length=16, validate_strings=True)``\nby value — ``VARCHAR(16)`` holding ``member`` or ``manager``, no ``CHECK``, read back as\nthe enum."
         }
       ]
     },
@@ -17003,7 +18170,7 @@
     {
       "name": "eifi1_server_kit.errors",
       "summary": "The kit's refusals as HTTP answers: one call, so no app maps them by hand — or forgets to.",
-      "doc": "The kit's refusals as HTTP answers: one call, so no app maps them by hand — or forgets to.\n\nEvery refusal the kit raises is a plain exception carrying the contract's status as\n``status_code`` (:class:`~eifi1_server_kit.feedback.FeedbackError` 422 / 403 / 404 / 429,\n:class:`~eifi1_server_kit.uploads.UploadRejectedError` 400 / 413 / 415, the translation\nreview's 422 / 403, :class:`~eifi1_server_kit.auth.AuthError` 400 / 401 / 403 / 409,\nuser administration's :class:`~eifi1_server_kit.user_admin.AccountError` 409 and\n:class:`~eifi1_server_kit.user_admin.RosterQueryError` 422, the settings rule's\n:class:`~eifi1_server_kit.settings.PatchNullError` 422, the demo's\n:class:`~eifi1_server_kit.demo.DemoError` 403 / 404 / 429 / 503, the dev switch's\n:class:`~eifi1_server_kit.dev_switch.DevSwitchError` 404 / 409 / 422, and billing's\n:class:`~eifi1_server_kit.billing.BillingError` 400 / 402 / 404 / 409 / 422 / 502 / 503 and\n:class:`~eifi1_server_kit.billing.PlanLimitError` 402, a token route's\n:class:`~eifi1_server_kit.jobs.JobsTokenError` 401, and the notifications'\n:class:`~eifi1_server_kit.notifications.NotificationError` 400 / 409 / 422, and tour\nprogress's :class:`~eifi1_server_kit.tours.TourProgressError` 422, a legal change's\n:class:`~eifi1_server_kit.legal.LegalNoticeError` 409, and a full window's\n:class:`~eifi1_server_kit.limiter.ThrottledError` 429, uncoded, with its ``Retry-After``).\nMost of them are :class:`ValueError` subclasses — on purpose, so one\nraised inside a Pydantic validator is still a 422 there — and that is the trap this module\ncloses: keksdose (``main.py:166``) and Kurvenschmiede (``main.py:193``) each answer every\nuncaught ``ValueError`` with a 400, so a kit refusal that slipped past an endpoint's own\n``except`` came out as 400 instead of 403, 415 or 422, silently.\n\n:func:`install_contract_error_handlers` registers one handler for each kit base class.\nStarlette picks the handler by walking the exception's MRO\n(``starlette/_exception_handler.py`` ``_lookup_exception_handler``) and takes the first\nclass it has one for, so ``FeedbackForbiddenError`` reaches the ``FeedbackError`` handler\nbefore ``ValueError``'s — whichever was registered first. An endpoint's own ``except``\nstill wins over both; this answers only what nobody caught. The body is FastAPI's own\n``HTTPException`` shape, ``{\"detail\": str(exc)}``, so no client can tell the difference —\nplus ``\"code\"`` for a refusal that carries one (:class:`~eifi1_server_kit.auth.AuthError`:\n``{\"detail\": \"Invalid credentials\", \"code\": \"invalid_credentials\"}``), which the kit's\npages switch on instead of the English detail — and the refusal's ``extra`` fields, for\none that names something (:class:`~eifi1_server_kit.user_admin.AccountError`: kastlan's\n``{\"detail\": …, \"code\": \"last_admin\", \"companies\": [...]}``; a plan limit's ``dimension``,\n``plan``, ``limit`` and ``used``) — and the refusal's\n``headers``, for one that carries a ``Retry-After``\n(:class:`~eifi1_server_kit.demo.DemoError`'s ``demo_rate_limited``).\n\nkastlan routes its refusals through ``DomainError`` and may keep mapping kit errors\nthere; the installer is the same answer without the mapping.\n\n**A 422 never echoes the request** (0.17.0). FastAPI's own ``RequestValidationError``\nanswer puts each error's ``input`` (and ``ctx``, and pydantic's ``url``) in the body — so\na too-long password in ``LoginRequest``, ``EmailChangeRequest`` or ``DeletionRequest``, a\nmalformed ``EmailChangeConfirm`` token, any body's values came back in the 422 and landed\nin request and response logs. On a FastAPI app the installer also registers\n:func:`validation_error_response`: FastAPI's same shape, ``{\"detail\": [{\"type\", \"loc\",\n\"msg\"}, ...]}``, without ``input``, ``ctx`` or ``url``, for every route — no app has to\ntake bodies untyped and parse them by hand. An app's own ``RequestValidationError``\nhandler is kept: registered before the call, the kit leaves it alone; registered after,\nit replaces the kit's as any later registration does. ``redact_validation_errors=False``\nkeeps FastAPI's echoing answer.",
+      "doc": "The kit's refusals as HTTP answers: one call, so no app maps them by hand — or forgets to.\n\nEvery refusal the kit raises is a plain exception carrying the contract's status as\n``status_code`` (:class:`~eifi1_server_kit.feedback.FeedbackError` 422 / 403 / 404 / 429,\n:class:`~eifi1_server_kit.uploads.UploadRejectedError` 400 / 413 / 415, the translation\nreview's 422 / 403, :class:`~eifi1_server_kit.auth.AuthError` 400 / 401 / 403 / 409,\nuser administration's :class:`~eifi1_server_kit.user_admin.AccountError` 409 and\n:class:`~eifi1_server_kit.user_admin.RosterQueryError` 422, the settings rule's\n:class:`~eifi1_server_kit.settings.PatchNullError` 422, the demo's\n:class:`~eifi1_server_kit.demo.DemoError` 403 / 404 / 429 / 503, the dev switch's\n:class:`~eifi1_server_kit.dev_switch.DevSwitchError` 404 / 409 / 422, and billing's\n:class:`~eifi1_server_kit.billing.BillingError` 400 / 402 / 404 / 409 / 422 / 502 / 503 and\n:class:`~eifi1_server_kit.billing.PlanLimitError` 402, a token route's\n:class:`~eifi1_server_kit.jobs.JobsTokenError` 401, and the notifications'\n:class:`~eifi1_server_kit.notifications.NotificationError` 400 / 409 / 422, and tour\nprogress's :class:`~eifi1_server_kit.tours.TourProgressError` 422, a legal change's\n:class:`~eifi1_server_kit.legal.LegalNoticeError` 409, and a full window's\n:class:`~eifi1_server_kit.limiter.ThrottledError` 429, uncoded, with its ``Retry-After``, and\na team's :class:`~eifi1_server_kit.teams.TeamError` 404 / 409).\nMost of them are :class:`ValueError` subclasses — on purpose, so one\nraised inside a Pydantic validator is still a 422 there — and that is the trap this module\ncloses: keksdose (``main.py:166``) and Kurvenschmiede (``main.py:193``) each answer every\nuncaught ``ValueError`` with a 400, so a kit refusal that slipped past an endpoint's own\n``except`` came out as 400 instead of 403, 415 or 422, silently.\n\n:func:`install_contract_error_handlers` registers one handler for each kit base class.\nStarlette picks the handler by walking the exception's MRO\n(``starlette/_exception_handler.py`` ``_lookup_exception_handler``) and takes the first\nclass it has one for, so ``FeedbackForbiddenError`` reaches the ``FeedbackError`` handler\nbefore ``ValueError``'s — whichever was registered first. An endpoint's own ``except``\nstill wins over both; this answers only what nobody caught. The body is FastAPI's own\n``HTTPException`` shape, ``{\"detail\": str(exc)}``, so no client can tell the difference —\nplus ``\"code\"`` for a refusal that carries one (:class:`~eifi1_server_kit.auth.AuthError`:\n``{\"detail\": \"Invalid credentials\", \"code\": \"invalid_credentials\"}``), which the kit's\npages switch on instead of the English detail — and the refusal's ``extra`` fields, for\none that names something (:class:`~eifi1_server_kit.user_admin.AccountError`: kastlan's\n``{\"detail\": …, \"code\": \"last_admin\", \"companies\": [...]}``; a plan limit's ``dimension``,\n``plan``, ``limit`` and ``used``) — and the refusal's\n``headers``, for one that carries a ``Retry-After``\n(:class:`~eifi1_server_kit.demo.DemoError`'s ``demo_rate_limited``).\n\nkastlan routes its refusals through ``DomainError`` and may keep mapping kit errors\nthere; the installer is the same answer without the mapping.\n\n**A 422 never echoes the request** (0.17.0). FastAPI's own ``RequestValidationError``\nanswer puts each error's ``input`` (and ``ctx``, and pydantic's ``url``) in the body — so\na too-long password in ``LoginRequest``, ``EmailChangeRequest`` or ``DeletionRequest``, a\nmalformed ``EmailChangeConfirm`` token, any body's values came back in the 422 and landed\nin request and response logs. On a FastAPI app the installer also registers\n:func:`validation_error_response`: FastAPI's same shape, ``{\"detail\": [{\"type\", \"loc\",\n\"msg\"}, ...]}``, without ``input``, ``ctx`` or ``url``, for every route — no app has to\ntake bodies untyped and parse them by hand. An app's own ``RequestValidationError``\nhandler is kept: registered before the call, the kit leaves it alone; registered after,\nit replaces the kit's as any later registration does. ``redact_validation_errors=False``\nkeeps FastAPI's echoing answer.",
       "contract": {
         "doc": "docs/feedback-harmonization.md",
         "section": "§3.7",
@@ -17020,7 +18187,7 @@
         {
           "name": "CONTRACT_ERRORS",
           "kind": "constant",
-          "signature": "CONTRACT_ERRORS: tuple[type[Exception], ...] = (\n    FeedbackError,\n    UploadRejectedError,\n    TranslationLocaleError,\n    TranslationAreaError,\n    TranslationAccessError,\n    AuthError,\n    AccountError,\n    RosterQueryError,\n    PatchNullError,\n    DemoError,\n    DevSwitchError,\n    BillingError,\n    PlanLimitError,\n    JobsTokenError,\n    NotificationError,\n    TourProgressError,\n    LegalNoticeError,\n    ThrottledError,\n)",
+          "signature": "CONTRACT_ERRORS: tuple[type[Exception], ...] = (\n    FeedbackError,\n    UploadRejectedError,\n    TranslationLocaleError,\n    TranslationAreaError,\n    TranslationAccessError,\n    AuthError,\n    AccountError,\n    RosterQueryError,\n    PatchNullError,\n    DemoError,\n    DevSwitchError,\n    BillingError,\n    PlanLimitError,\n    JobsTokenError,\n    NotificationError,\n    TourProgressError,\n    LegalNoticeError,\n    ThrottledError,\n    TeamError,\n)",
           "doc": "Every kit exception base that carries a ``status_code``; subclasses are covered by MRO."
         },
         {

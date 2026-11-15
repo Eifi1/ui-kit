@@ -2340,6 +2340,68 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       sourceApp: "Testi di questa app",
       sourceKit: "Componenti condivisi",
     },
+    // 0.64 (server-kit 0.32's opt-in teams): AccountTeamsSection and AccountTeamsPage — the
+    // admin's list and a member's page, their questions, counts and a team's refusals.
+    accountTeams: {
+      title: "Team",
+      pageHint:
+        "I team di cui fa parte. Ciò che è condiviso con un team è condiviso con tutti i suoi membri, finché ne fanno parte. I responsabili aggiungono e rimuovono membri e invitano chi non ha ancora un account; gli amministratori creano i team e nominano i responsabili.",
+      adminHelp: "I gruppi con cui condividere e chi li gestisce.",
+      adminHint:
+        "Un team è qualcuno con cui condividere, non qualcuno che possiede: un’autorizzazione a un team raggiunge tutti i suoi membri e se ne va con chi se ne va. Lei nomina i responsabili, che poi aggiungono e rimuovono i membri da sé.",
+      none: "Non fa parte di alcun team.",
+      noneAdmin: "Ancora nessun team.",
+      youManage: "Lei gestisce questo team.",
+      youAreIn: "Lei è un membro.",
+      name: "Nome del team",
+      create: "Crea team",
+      created: (name) => `Team ${name} creato.`,
+      rename: "Rinomina",
+      renameTitle: (name) => `Rinomina il team ${name}`,
+      renamed: (name) => `Il team ora si chiama ${name}.`,
+      delete: "Elimina team",
+      deleteTitle: (name) => `Eliminare il team ${name}?`,
+      deleteBody:
+        "Tutto ciò che era condiviso con il team smette subito di esserlo con i suoi membri. Il loro lavoro resta intatto.",
+      deleteGoes: (list) => `Che cosa se ne va con il team: ${list}.`,
+      deleted: (name) => `Il team ${name} è eliminato.`,
+      countMembers: (count) => `${n(count)} ${plural(count, "membro", "membri")}`,
+      countGrants: (count) => `${n(count)} ${plural(count, "condivisione", "condivisioni")}`,
+      countInvitations: (count) => `${n(count)} ${plural(count, "invito", "inviti")}`,
+      members: "Membri",
+      managers: "Responsabili",
+      invitedTitle: "Invitati",
+      nobody: "Ancora nessun membro.",
+      roles: { member: "Membro", manager: "Responsabile" },
+      roleOf: (name) => `Ruolo di ${name} nel team`,
+      roleLabel: "Come",
+      remove: (name) => `Rimuovi ${name}`,
+      removeShort: "Rimuovi",
+      removeTitle: (name, team) => `Rimuovere ${name} da ${team}?`,
+      removeBody:
+        "Ciò che era condiviso con il team smette di esserlo con questa persona alla sua prossima richiesta. Il suo lavoro resta intatto.",
+      addEmail: "Aggiungi per indirizzo e-mail",
+      add: "Aggiungi",
+      added: (email, team) => `${email} ora fa parte di ${team}.`,
+      removed: (name, team) => `${name} non fa più parte di ${team}.`,
+      invited: (email, team) => `${email} non ha ancora un account: è in arrivo un invito nel team ${team}.`,
+      invitedNotSent: (email) =>
+        `${email} non ha ancora un account e non è stato possibile inviare l’invito: lo reinvii.`,
+      withdraw: (email) => `Ritira l’invito di ${email}`,
+      withdrawShort: "Ritira",
+      withdrawTitle: (email) => `Ritirare l’invito di ${email}?`,
+      withdrawBody: "Il link smette di funzionare. Un account già creato con esso resta.",
+      codes: {
+        team_not_found: "Questo team non esiste più, oppure Lei non lo gestisce più.",
+        team_name_taken: (name) => `Esiste già un team chiamato ${name}.`,
+        team_changed: (name) =>
+          `Il team ${name} è stato modificato dopo che Lei lo ha aperto. Ora mostra la modifica: riprovi, per favore.`,
+        manager_named_by_admin: "Solo un amministratore nomina i responsabili di un team.",
+        manager_kept_by_admin: (email) =>
+          `${email} è responsabile di questo team; solo un amministratore può cambiarlo.`,
+        manager_removed_by_admin: "Solo un amministratore rimuove il responsabile di un team.",
+      },
+    },
   };
 }
 
