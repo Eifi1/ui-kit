@@ -44,6 +44,10 @@ export interface SortStripProps extends Omit<ComponentPropsWithoutRef<"div">, "c
  * The select's label is a real `<label>` beside it, and the button sits outside that
  * label: a click inside a label is forwarded to the control it names, so a nested button
  * would flip AND open the select. The direction button is off while nothing is picked.
+ *
+ * The select takes the strip's free width — right on a phone. Over a wide container cap
+ * the strip itself (`className="md:max-w-sm"`), or the select reads as a text field
+ * (keksdose's budget table, 0.65.0-dev.1).
  */
 export function SortStrip({
   options,

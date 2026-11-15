@@ -21,6 +21,8 @@ DataTable's sortable header and its phone "Sort by" row to do it.
   the smaller controls. Its words are the provider's `dataTable` ones (`sortBy`,
   `sortDefault`, `sortAscending`, `sortDescending`), over which `labels` writes. DataTable's
   `mobileSort` is now this strip on the table's own sort; it looks and behaves as before.
+  The select takes the strip's free width: over a wide container cap the strip with
+  `className` (`md:max-w-sm`), or the select reads as a text field.
 
 ## What an app does
 
