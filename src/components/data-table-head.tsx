@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from "react";
-import { ArrowDown, ArrowUp, ArrowUpDown, Filter } from "lucide-react";
+import { Filter } from "lucide-react";
 import { cn } from "../lib/cn";
 import { defaultFilterState, isFilterActive, resolveFilter } from "./data-table-filters";
 import type { FilterValue } from "./data-table-filters";
@@ -8,6 +8,7 @@ import { FilterPopover, KeySetPanel } from "./data-table-filter-popover";
 import { Popover } from "./popover";
 import { Tooltip } from "./tooltip";
 import { Checkbox } from "./checkbox";
+import { ariaSortOf, SortHeaderButton } from "./sort-header-button";
 import type { DataTableLabels } from "./data-table-labels";
 import { isTableOwnColumn } from "./data-table-row-actions";
 import { columnLabel, logicalAlign, splitCellProps } from "./data-table-shared";
@@ -129,7 +130,6 @@ export function DataTableHead<T>({
           const setHere = keySet?.column === col.key ? keySet : undefined;
           const sortIdx = sorts.findIndex((s) => s.key === col.key);
           const active = sortIdx !== -1;
-          const Icon = active ? (sorts[sortIdx].dir === "asc" ? ArrowUp : ArrowDown) : ArrowUpDown;
           const filterActive = !!setHere || (filterState && isFilterActive(filterState));
           // Logical, and a legacy `text-right` still counts — see `logicalAlign`.
           const headClass = logicalAlign(col.headClassName);
@@ -158,9 +158,7 @@ export function DataTableHead<T>({
               // user presses it. Secondary criteria read "none" too: ARIA allows
               // exactly one sorted column, and the priority is carried by the
               // badge and by what the header button announces on press.
-              aria-sort={
-                sortable ? (sortIdx === 0 ? (sorts[0].dir === "asc" ? "ascending" : "descending") : "none") : undefined
-              }
+              aria-sort={sortable ? ariaSortOf(active ? sorts[sortIdx].dir : null, sortIdx === 0) : undefined}
               style={
                 ownHead.style || pinnedHead || lockedWidths?.[col.key] !== undefined || growFloor
                   ? {
@@ -188,18 +186,15 @@ export function DataTableHead<T>({
               <div className={cn("flex items-center gap-1", isEndAligned && "flex-row-reverse")}>
                 {sortable ? (
                   <Tooltip label={multiSort ? labels.sortHint : undefined} portal>
-                    <button
-                      type="button"
+                    <SortHeaderButton
+                      className="flex"
+                      dir={active ? sorts[sortIdx].dir : null}
+                      // The priority badge, only meaningful with 2+ sort keys.
+                      priority={active && sorts.length > 1 ? sortIdx + 1 : undefined}
                       onClick={(e) => toggleSort(col.key, e.shiftKey)}
-                      className="flex items-center gap-1 text-start hover:text-primary"
                     >
-                      <span>{col.header}</span>
-                      <Icon className={cn("size-3", active ? "opacity-100" : "opacity-40")} />
-                      {/* Priority badge, only meaningful with 2+ sort keys */}
-                      {active && sorts.length > 1 && (
-                        <span className="text-micro font-semibold leading-none text-brand">{sortIdx + 1}</span>
-                      )}
-                    </button>
+                      {col.header}
+                    </SortHeaderButton>
                   </Tooltip>
                 ) : (
                   // Plain text (refactor audit 2026-10-30, DSP-23 a): a `<button disabled>`

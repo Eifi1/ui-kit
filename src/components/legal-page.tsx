@@ -58,6 +58,13 @@ export interface LegalSkeletonEntry {
    *  app's own sections go (zero or more: keksdose's `credits`, `price_pool`, …). */
   key: string;
   owner: LegalSectionOwner;
+  /**
+   * 0.63: a kit section the page may leave out — the imprint's `credits`, for the app that
+   * colours its charts from the kit's default palette (anyplot.ai's "Imprint"). An app
+   * that does not use the palette has nothing to credit. Every other entry is on every
+   * app's page.
+   */
+  optional?: boolean;
 }
 
 export interface LegalSkeletonPage {
@@ -78,7 +85,9 @@ export interface LegalSkeletonPage {
  *     expect(ids.filter((id) => fixed.includes(id))).toEqual(fixed);
  *
  * Every fixed key is there, in the skeleton's order; the ids that are not in it are the
- * app's own sections, which belong where `"*"` stands.
+ * app's own sections, which belong where `"*"` stands. An app that leaves an `optional`
+ * section out (0.63: the imprint's `credits`) sets those aside first:
+ * `.filter((s) => s.key !== "*" && !s.optional)`.
  */
 export const LEGAL_SKELETON: Readonly<Record<LegalPageKey, LegalSkeletonPage>> = Object.freeze({
   impressum: Object.freeze({
@@ -88,6 +97,8 @@ export const LEGAL_SKELETON: Readonly<Record<LegalPageKey, LegalSkeletonPage>> =
       { key: "contact", owner: "kit" },
       { key: "disclaimer", owner: "kit" },
       { key: "*", owner: "app" },
+      // 0.63: last, where all four apps had their own `credits` section.
+      { key: "credits", owner: "kit", optional: true },
     ] as const),
   }),
   privacy: Object.freeze({
@@ -122,11 +133,12 @@ export const LEGAL_SKELETON: Readonly<Record<LegalPageKey, LegalSkeletonPage>> =
 });
 
 /** The sections the kit writes (§4.3), on whichever page they sit. `contact` is on two
- *  pages, with two texts; the page decides which. */
+ *  pages, with two texts; the page decides which. `credits` (0.63) is optional. */
 export type LegalKitSectionKey =
   | "operator"
   | "contact"
   | "disclaimer"
+  | "credits"
   | "controller"
   | "legal_basis"
   | "browser"
@@ -271,7 +283,7 @@ export function LegalKitSection(props: LegalKitSectionProps) {
       `LegalKitSection: "${section}" is not one of the kit's sections of the ${page} page (${kitSections.join(", ")}).`,
     );
   }
-  const entry = (labels.sections[page] as Record<string, SectionLabels>)[section];
+  const entry = sectionLabels(labels, page, section)!;
   const operator = props.operator ? legalOperatorText(props.operator, kitLocale) : context?.operator;
   const fill = (body: string | ((o: LegalOperatorText) => string)): string => {
     if (typeof body === "string") return body;
@@ -290,7 +302,9 @@ export function LegalKitSection(props: LegalKitSectionProps) {
 
   const app = appPart(props.children);
   let parts: ReactNode[];
-  if ("lead" in entry) {
+  if (props.section === "credits") {
+    parts = [<CreditsText key="body" template={(entry as LegalTextSectionLabels).body} />];
+  } else if ("lead" in entry) {
     const lead = <LegalText key="lead" text={entry.lead} />;
     const tail = <LegalText key="tail" text={entry.tail} />;
     if (props.section === "browser") {
@@ -338,6 +352,52 @@ export function LegalKitSection(props: LegalKitSectionProps) {
 }
 
 type SectionLabels = LegalTextSectionLabels | LegalOperatorSectionLabels | LegalFramedSectionLabels;
+
+/** A kit section's words: the provider's, else English — for a key added to the namespace
+ *  after an app wrote its own catalogue (`credits`, 0.63), which an app's full `legal`
+ *  tree may lack. */
+function sectionLabels(labels: LegalLabels, page: LegalPageKey, section: string): SectionLabels | undefined {
+  const own = (labels.sections[page] as Record<string, SectionLabels | undefined>)[section];
+  return own ?? (DEFAULT_LEGAL_LABELS.sections[page] as Record<string, SectionLabels | undefined>)[section];
+}
+
+/** 0.63: the credits' two links — the palette's own page and the site — and their texts,
+ *  names that are the same in every language. */
+const ANYPLOT_LINKS = {
+  "{palette}": { href: "https://anyplot.ai/palette", text: "Imprint" },
+  "{site}": { href: "https://anyplot.ai", text: "anyplot.ai" },
+} as const;
+
+/**
+ * The credits' sentence with its `{palette}` and `{site}` as links — split, not
+ * interpolated, as the terms checkbox's template: the text between them is the
+ * catalogue's own, to the character. Both are `external` with `referrer`: they count for
+ * anyplot.ai, which the apps' credits are there to do (Marcel 2026-11-13).
+ */
+function CreditsText({ template }: { template: string }) {
+  for (const placeholder of Object.keys(ANYPLOT_LINKS)) {
+    if (!template.includes(placeholder)) {
+      warnLegalOnce(`legal.sections.impressum.credits.body has no ${placeholder}: "${template}".`);
+    }
+  }
+  return (
+    <p className="whitespace-pre-line break-words">
+      {template
+        .split(/(\{palette\}|\{site\})/)
+        .filter((part) => part !== "")
+        .map((part, i) => {
+          const link = Object.hasOwn(ANYPLOT_LINKS, part) ? ANYPLOT_LINKS[part as keyof typeof ANYPLOT_LINKS] : null;
+          return link ? (
+            <TextLink key={i} href={link.href} external referrer>
+              {link.text}
+            </TextLink>
+          ) : (
+            part
+          );
+        })}
+    </p>
+  );
+}
 
 /** The one page a kit section key is on; `contact` is on two, so it needs the page. */
 function onlyPageOf(section: string): LegalPageKey {
@@ -471,8 +531,7 @@ function sectionOf(
   if (!isValidElement(node)) return null;
   if (node.type === LegalKitSection) {
     const { section } = node.props as LegalKitSectionProps;
-    const entry = (labels.sections[page] as Record<string, SectionLabels | undefined>)[section];
-    return { key: section, heading: entry?.title ?? section };
+    return { key: section, heading: sectionLabels(labels, page, section)?.title ?? section };
   }
   if (node.type === LegalSection) {
     const props = node.props as LegalSectionProps;

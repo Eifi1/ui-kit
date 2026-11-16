@@ -36,7 +36,7 @@ src/
   currencies.ts  push-worker.ts
                       subpath barrels: a re-slicing of index.ts, never a second API
                       (currencies imports nothing; push-worker is safe in a worker)
-  rhf.ts  offline.ts  sync.ts  table-text.ts
+  rhf.ts  offline.ts  accounts.ts  sync.ts  table-text.ts
                       standalone entries: an API of their own that shares no name with
                       index.ts (public-surface.test.ts STANDALONE), mostly to keep an
                       optional peer out of everyone's install; so are lib/dates.ts,
@@ -58,6 +58,9 @@ src/
                       the harmonised app areas, one per contract in docs/: sign-in,
                       the account's own settings, user admin, the settings page, plans,
                       the public landing page, the demo
+  accounts/           those parts wired to server-kit's auth_router (@eifi1/ui-kit/accounts,
+                      auth §12.9): the session client, the hooks, the pages, the settings
+                      sections, describeAccountFailure (@tanstack/react-query an optional peer)
   rhf/                the react-hook-form adapter (@eifi1/ui-kit/rhf, optional peer)
   testing/            helpers for the apps' own tests (@eifi1/ui-kit/testing, /testing/react)
   eslint/             the role-utility lint plugin the apps run (@eifi1/ui-kit/eslint)
@@ -69,10 +72,10 @@ tokens.css            the design tokens and role utilities, shipped to npm as-is
 docs/                 the contracts, the adoption notes, audits and plans (index: docs/README.md)
 ```
 
-The `exports` map: the main barrel; eighteen subpaths — `/chart`, `/shell`, `/data-table`,
+The `exports` map: the main barrel; nineteen subpaths — `/chart`, `/shell`, `/data-table`,
 `/wizard`, `/tour`, `/feedback`, `/search`, `/dates` (`lib/dates.ts`), `/table-text`,
-`/currencies`, `/eslint`, `/testing`, `/testing/react`, `/rhf`, `/offline`, `/sync`,
-`/sync/testing`, `/push-worker`; `/i18n/<code>` for each of the seven catalogues; and
+`/currencies`, `/eslint`, `/testing`, `/testing/react`, `/rhf`, `/offline`, `/accounts`,
+`/sync`, `/sync/testing`, `/push-worker`; `/i18n/<code>` for each of the seven catalogues; and
 `/tokens.css`.
 
 **Where a new module goes** follows from what it needs, in this order:

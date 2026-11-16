@@ -22,9 +22,9 @@ primitives with the shared ones. Keep this app's domain-specific pieces local.
    `recharts` (`>=3.8`; the main barrel re-exports the chart kit) and `lucide-react`.
    **Optional:** `sonner` (the kit's `toast` / `<Toaster>`), `react-hook-form` (only for
    `@eifi1/ui-kit/rhf`), `modern-screenshot` (the feedback dialog's screenshot
-   capture); for `@eifi1/ui-kit/offline`, `@tanstack/react-query`,
-   `@tanstack/react-query-persist-client`, `@tanstack/query-async-storage-persister` and
-   `idb-keyval`; `dexie` for `@eifi1/ui-kit/sync`; and `@testing-library/react` for
+   capture); for `@eifi1/ui-kit/offline`, `@tanstack/react-query`, and for its persisted
+   cache `@tanstack/react-query-persist-client`, `@tanstack/query-async-storage-persister`
+   and `idb-keyval`; `dexie` for `@eifi1/ui-kit/sync`; and `@testing-library/react` for
    `@eifi1/ui-kit/testing/react`. Each is needed only by the entry that names it.
    `flag-icons` is a stylesheet your app imports if it renders flags. The README's "What
    you install alongside it" table has the ranges and the reasons.

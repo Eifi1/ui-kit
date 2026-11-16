@@ -47,6 +47,9 @@ export interface DeleteAccountLabels {
   confirm: string;
   /** Said once the request is accepted — the app signs out next. */
   done: string;
+  /** 0.64: on the sign-in page the request leaves the tab on (`?notice=deletion_requested`):
+   *  the request is in, the account deactivated, every session ended. */
+  requested: string;
   /** `password_incorrect` (server-kit's `400` for a wrong current password), under the
    *  password field. */
   wrongPassword: string;

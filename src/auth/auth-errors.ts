@@ -28,7 +28,35 @@ import { httpStatusOf } from "../lib/http-status";
  * - `session_ended` — 0.34.0 (§11.2, decision 7; server-kit 0.8): every definitive
  *   refusal of `POST /auth/refresh`, a `401`. No form shows it, so it has no label: the
  *   kit's `attachSessionRefresh` decides by the STATUS, so an app whose server has not
- *   switched yet keeps working.
+ *   switched yet keeps working. Since server-kit 0.29 also a signed-in route's 401 once
+ *   the session is over.
+ *
+ * 0.63 (server-kit 0.29's `auth_router`, §12.5 item 3: a code on every refusal, so the kit
+ * says them in seven languages, `describeAccountFailure`):
+ * - `not_signed_in` — `401` with `WWW-Authenticate: Bearer`: no usable access token.
+ * - `admin_required` — `403`: an admin route asked by someone who is not one.
+ * - `password_unchanged` — the new password is the old one (a change, the forced change).
+ * - `password_change_not_required` — the forced change's step for an account that no
+ *   longer has to change its password.
+ * - `email_unchanged` — an address change to the address the account has.
+ * - `email_change_not_pending` — a re-send with no address change waiting.
+ * - `mail_not_sent` — `503`: the verification mail's re-send could not go out.
+ * - `passkey_refused` — `401` on the passkey sign-in's finish (a signed-out step).
+ * - `passkey_registration_refused` — `400`: the authenticator's answer to an added passkey.
+ * - `passkey_not_found`, `session_not_found`, `invitation_not_found` — the id is not the
+ *   account's (or the admin's) to rename, end or act on.
+ * - `invitation_closed` — accepted or revoked already, so it cannot be re-sent or revoked.
+ * - `invitation_scope_invalid` — an admin's invitation `scope` the app does not take.
+ *
+ * 0.64 (server-kit 0.32's second factor, keksdose's KG-1):
+ * - `two_factor_invalid` — `400`: the code is wrong, not six digits, or of a step already
+ *   spent (one answer, so a replay says nothing), at the sign-in's code step, the setup's
+ *   confirmation and switching it off. Never a 401: two of those routes are signed in.
+ * - `two_factor_unavailable` — `503`: the stored second factor cannot be read (its key is
+ *   missing or rotated out), or a setup cannot be stored. The operator's to mend: never
+ *   said as a wrong code, which would send the person to re-pair a phone that is fine.
+ * - `two_factor_not_pending` — `404`: a confirmation with no setup waiting for its code.
+ * - `two_factor_not_enabled` — `409`: new backup codes while two-factor sign-in is off.
  */
 export type AuthErrorCode =
   | "invalid_credentials"
@@ -41,7 +69,25 @@ export type AuthErrorCode =
    *  refusals tell it from `token_invalid`, so a page can say "expired, ask for a new one". */
   | "token_expired"
   | "account_inactive"
-  | "session_ended";
+  | "session_ended"
+  | "not_signed_in"
+  | "admin_required"
+  | "password_unchanged"
+  | "password_change_not_required"
+  | "email_unchanged"
+  | "email_change_not_pending"
+  | "mail_not_sent"
+  | "passkey_refused"
+  | "passkey_registration_refused"
+  | "passkey_not_found"
+  | "session_not_found"
+  | "invitation_not_found"
+  | "invitation_closed"
+  | "invitation_scope_invalid"
+  | "two_factor_invalid"
+  | "two_factor_unavailable"
+  | "two_factor_not_pending"
+  | "two_factor_not_enabled";
 
 /**
  * 0.30.0: the coded refusals of user administration and the account's own settings
@@ -70,7 +116,19 @@ export type AccountErrorCode =
   | "household_has_members"
   | "confirmation_required"
   | "confirmation_mismatch"
-  | "password_incorrect";
+  | "password_incorrect"
+  // 0.64: server-kit 0.30's admin routes (`user_admin_router`, auth §12.4): the target is
+  // gone or outside the admin's scope (404); a role the admin may not give (422); a reviewer
+  // scope for an admin, a verification mail to a confirmed address, an erasure no deletion
+  // was asked for (409).
+  | "user_not_found"
+  | "role_not_grantable"
+  | "reviewer_is_admin"
+  | "email_already_verified"
+  | "deletion_not_requested"
+  // server-kit's AccountErrorCode carries it too (the admin's mail to a deactivated account);
+  // the same word as the sign-in's AuthErrorCode.
+  | "account_inactive";
 
 /**
  * 0.31.0: the demo's coded refusals (docs/landing-demo-harmonization.md §6.2) —
@@ -161,6 +219,24 @@ const CODES: ReadonlySet<string> = new Set<KitErrorCode>([
   "token_expired",
   "account_inactive",
   "session_ended",
+  "not_signed_in",
+  "admin_required",
+  "password_unchanged",
+  "password_change_not_required",
+  "email_unchanged",
+  "email_change_not_pending",
+  "mail_not_sent",
+  "passkey_refused",
+  "passkey_registration_refused",
+  "passkey_not_found",
+  "session_not_found",
+  "invitation_not_found",
+  "invitation_closed",
+  "invitation_scope_invalid",
+  "two_factor_invalid",
+  "two_factor_unavailable",
+  "two_factor_not_pending",
+  "two_factor_not_enabled",
   "last_admin",
   "self_action",
   "other_companies",
@@ -168,6 +244,11 @@ const CODES: ReadonlySet<string> = new Set<KitErrorCode>([
   "confirmation_required",
   "confirmation_mismatch",
   "password_incorrect",
+  "user_not_found",
+  "role_not_grantable",
+  "reviewer_is_admin",
+  "email_already_verified",
+  "deletion_not_requested",
   "demo_disabled",
   "demo_rate_limited",
   "demo_capacity",

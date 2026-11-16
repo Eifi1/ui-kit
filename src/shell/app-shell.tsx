@@ -21,7 +21,7 @@ import { dirOf, type Direction } from "../lib/direction";
 import { readStored, writeStored } from "../lib/safe-storage";
 import { registerDeviceSetting } from "../lib/device-settings";
 import { Tooltip } from "../components/tooltip";
-import { pickLinkRenderer } from "../components/text-link";
+import { externalRel, pickLinkRenderer } from "../components/text-link";
 import { DialogFrame } from "../components/dialog-frame";
 import { CompactControls } from "../components/field-parts";
 import { mergeRefs } from "../components/field-parts";
@@ -122,6 +122,10 @@ export type AppShellSidebarFooterItem =
       hint?: string;
       /** Leaves the app: a plain `<a target="_blank" rel="noopener noreferrer">`. */
       external?: boolean;
+      /** 0.63: an `external` link that counts for the site it names — `rel="noopener"`
+       *  alone (no `noreferrer`, no `nofollow`). See `TextLink`'s `referrer`. Ignored
+       *  without `external`. */
+      referrer?: boolean;
       /**
        * 0.42.0 (docs/admin-harmonization.md §6.9): a count of what waits behind the link —
        * kastlan's "Administration" with its To-triage count. A pill at the end of the
@@ -141,7 +145,8 @@ export type AppShellSidebarFooterItem =
       label: string;
       /** The collapsed icon's target. Default the first link's `to`. */
       to?: string;
-      links: { to: string; label: string; external?: boolean }[];
+      /** `external` and `referrer` (0.63) as on a single link. */
+      links: { to: string; label: string; external?: boolean; referrer?: boolean }[];
     };
 
 /**
@@ -825,12 +830,17 @@ function SidebarFooterItems({
   renderLink?: KitLinkComponent;
 }) {
   const kitLink = useKitLink();
-  const linkTo = (to: string, external: boolean | undefined, { children, ...props }: Omit<KitLinkProps, "href">) => {
+  const linkTo = (
+    to: string,
+    external: boolean | undefined,
+    referrer: boolean | undefined,
+    { children, ...props }: Omit<KitLinkProps, "href">,
+  ) => {
     // The kit's one link rule (`pickLinkRenderer`): an external `to` or an in-page
     // `#anchor` is a plain `<a>` even without `external`; only `external` opens a tab.
     const InApp = pickLinkRenderer(renderLink, kitLink ?? routerLink, to) ?? plainLink;
     return external ? (
-      <a href={to} target="_blank" rel="noopener noreferrer" {...props}>
+      <a href={to} target="_blank" rel={externalRel(referrer)} {...props}>
         {children}
       </a>
     ) : (
@@ -846,12 +856,14 @@ function SidebarFooterItems({
         if (collapsed) {
           const to = item.kind === "links" ? (item.to ?? item.links[0]?.to) : item.to;
           if (!to) return null;
-          const external = item.kind === "links" ? item.links.find((l) => l.to === to)?.external : item.external;
+          const target = item.kind === "links" ? item.links.find((l) => l.to === to) : item;
+          const external = target?.external;
+          const referrer = target?.referrer;
           const count = item.kind === "links" ? null : footerBadgeText(item.badge);
           const spoken = count === null || item.kind === "links" ? null : (item.badgeLabel ?? count);
           return (
             <Tooltip key={item.key} label={item.label} side="end" portal className="block">
-              {linkTo(to, external, {
+              {linkTo(to, external, referrer, {
                 "aria-label": spoken === null ? item.label : `${item.label}, ${spoken}`,
                 className: cn(FOOTER_ICON_LINK, count !== null && "relative"),
                 children: (
@@ -877,7 +889,7 @@ function SidebarFooterItems({
             >
               {item.links.map((l) => (
                 <span key={l.to}>
-                  {linkTo(l.to, l.external, {
+                  {linkTo(l.to, l.external, l.referrer, {
                     className: "rounded-sm hover:text-secondary hover:underline",
                     children: l.label,
                   })}
@@ -887,7 +899,7 @@ function SidebarFooterItems({
           );
         }
         const count = footerBadgeText(item.badge);
-        const link = linkTo(item.to, item.external, {
+        const link = linkTo(item.to, item.external, item.referrer, {
           className: cn(FOOTER_ICON_LINK, "gap-1.5 text-xs font-medium"),
           children: (
             <>

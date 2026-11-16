@@ -114,6 +114,20 @@ export function routerLinkNavigation(replace: boolean | undefined): { replace?: 
 }
 
 /**
+ * The `rel` of a kit link that leaves the app (`external`). `noopener` keeps the new tab
+ * from reaching back into this one through `window.opener`; `noreferrer` also hides from
+ * the target where its visitor came from. That is the default, right for a link the kit
+ * cannot vouch for. `referrer` (0.63, Marcel 2026-11-13: "Links sind wichtig für
+ * Bekanntheit") keeps `noopener` alone, for a link that should count for the site it
+ * names: the imprint's credits to anyplot.ai, which a referrer-less visit leaves unseen.
+ * Never `nofollow`: such a link is a recommendation.
+ * @internal Shared by the kit's `external` links; not part of the barrel.
+ */
+export function externalRel(referrer: boolean | undefined): string {
+  return referrer ? "noopener" : "noopener noreferrer";
+}
+
+/**
  * Draws `props` through `render` as a component of its own, so a router link's hooks
  * belong to it and not to the kit component calling it — for the kit components that
  * call their own `renderLink` inline and reach the provider's link through here.
@@ -208,8 +222,17 @@ export interface TextLinkProps extends Omit<
    * (never the router's), an external-link mark after the text (mirrored in RTL), and
    * "opens in a new tab" (`common.opensInNewTab`) read after it — the mark says it
    * only to the eye. kastlan's BWO / BFS source links (rent-increase-calculator-page).
+   * The `rel` is the kit's on such a link: see `referrer` to drop `noreferrer`.
    */
   external?: boolean;
+  /**
+   * 0.63: an `external` link that counts for the site it names — `rel="noopener"` alone, so
+   * the target sees where its visitors came from (no `noreferrer`, and no `nofollow`). The
+   * mark and "opens in a new tab" stay. For a credit or a recommendation the app vouches
+   * for (`<LegalKitSection section="credits">`'s anyplot.ai links); not for a URL a user
+   * wrote. Ignored without `external`.
+   */
+  referrer?: boolean;
   /**
    * Keep the click (and the Enter that activates the link) from reaching an ancestor —
    * a link in a DataTable row with `onRowClick` goes to its own target instead of
@@ -272,6 +295,7 @@ export function TextLink({
   tone = "brand",
   underline: underlineProp,
   external = false,
+  referrer = false,
   replace,
   reloadDocument = false,
   stopPropagation = false,
@@ -343,7 +367,7 @@ export function TextLink({
       {...anchor}
       href={href}
       onClick={plainClick}
-      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : null)}
+      {...(external ? { target: "_blank", rel: externalRel(referrer) } : null)}
     >
       {content}
     </a>

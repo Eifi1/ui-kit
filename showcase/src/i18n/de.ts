@@ -536,7 +536,7 @@ export const de: Dictionary = {
       title: "Anmeldung & Konto",
       short: "Anmeldung",
       blurb:
-        "Registrierung, Anmeldung, Einmal-Tokens, Sitzungs-Claims und die Übertragungsformate des Kontos — die Serverhälfte der Seiten für Anmeldung, Registrierung und Konto.",
+        "Registrierung, Anmeldung, Einmal-Tokens, Sitzungs-Claims und die Übertragungsformate des Kontos — und seit 0.29 die Routen selbst: ein Router über den Speichern der App, die Konto-Mails, Passkeys und fertige Tabellen. Die Serverhälfte der Seiten für Anmeldung, Registrierung und Konto.",
     },
     "server-user-admin": {
       title: "Benutzerverwaltung",
@@ -1267,6 +1267,8 @@ export const de: Dictionary = {
       "Claims des Sitzungs-Tokens",
       "E-Mail-Adresse normalisieren",
       "Fehlercodes der Anmeldung",
+      "Konto-Routen auf dem Server",
+      "Anmeldung mit Passkey auf dem Server",
     ],
     "server-user-admin": [
       "Benutzerliste auf dem Server abfragen",

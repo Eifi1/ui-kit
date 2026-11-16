@@ -90,6 +90,27 @@ export interface TwoFactorSettingLabels {
    * `status` stands in for it, then English.
    */
   title?: string;
+  /** 0.64 (keksdose): the way back from a lost authenticator, shown while two-factor is on
+   *  and the card has `onReplace` — its heading, the line under it, and its button. */
+  replaceTitle?: string;
+  replaceHint?: string;
+  replace?: string;
+  /** 0.64: `@eifi1/ui-kit/accounts`' section — the password question's line before a
+   *  first setup, and what it says once two-factor is on or off. */
+  setupReauth?: string;
+  turnedOn?: string;
+  turnedOff?: string;
+  /** 0.64 (server-kit 0.32): the backup codes — their heading and line where they are shown
+   *  once, how many are left, making new ones (and its password question's line), and the
+   *  copy, download and "saved" buttons. */
+  backupTitle?: string;
+  backupHint?: string;
+  backupLeft?: (count: number) => string;
+  backupRenew?: string;
+  backupRenewHint?: string;
+  backupCopy?: string;
+  backupDownload?: string;
+  backupDone?: string;
 }
 
 export interface PasskeysSettingLabels {
@@ -183,6 +204,23 @@ export const DEFAULT_ACCOUNT_SETTINGS_LABELS: AccountSettingsLabels = {
     secretHint: "Can’t scan it? Enter this key in the app instead:",
     copySecret: "Copy key",
     title: "Two-factor authentication",
+    replaceTitle: "Lost your authenticator?",
+    replaceHint:
+      "Enter your account password to set up a new authenticator. The current one keeps working until you confirm the new code.",
+    replace: "Replace authenticator",
+    setupReauth:
+      "Two-factor authentication changes how you sign in, so setting it up takes your account password first. Then you scan a code with your authenticator app.",
+    turnedOn: "Two-factor authentication turned on.",
+    turnedOff: "Two-factor authentication turned off.",
+    backupTitle: "Backup codes",
+    backupHint:
+      "Each code signs in once in place of the authenticator’s code. Keep them somewhere safe: they are shown only now.",
+    backupLeft: (count) => (count === 1 ? "1 backup code left." : `${count} backup codes left.`),
+    backupRenew: "Make new backup codes",
+    backupRenewHint: "New codes replace the old ones, which stop working at once.",
+    backupCopy: "Copy codes",
+    backupDownload: "Download",
+    backupDone: "I have saved them",
   },
   passkeys: {
     title: "Passkeys",

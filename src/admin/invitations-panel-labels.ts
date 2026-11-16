@@ -27,5 +27,6 @@ export const DEFAULT_INVITATIONS_LABELS: InvitationsLabels = {
     "Mail isn’t sent on this server — it is written to the server log. Copy each invitation link from here and pass it on yourself: it is shown only once.",
   linkReady: (email) => `The invitation link for ${email}, shown only this once:`,
   notSent: (email) => `${email} is invited, but the mail couldn’t be sent. Resend it.`,
+  sentAgain: (email) => `${email} already had an invitation. It was sent again with a new link.`,
   failed: "That didn’t work. Please try again.",
 };

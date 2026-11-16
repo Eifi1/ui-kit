@@ -286,6 +286,17 @@ export interface LegalLabels {
       contact: LegalOperatorSectionLabels;
       /** `body` is the default, non-commercial text; `commercial` the 0.32 variant. */
       disclaimer: LegalDisclaimerSectionLabels;
+      /**
+       * 0.63: where the charts' colours come from — the kit's default palette is anyplot.ai's
+       * categorical palette "Imprint" (keksdose's, kastlan's, Kurvenschmiede's and
+       * Staunlabor's credits, worded once). `body` is ONE template with `{palette}` and
+       * `{site}`, which become the links "Imprint" (https://anyplot.ai/palette) and
+       * "anyplot.ai" (https://anyplot.ai), as `accept`'s `{terms}`: a language puts them
+       * where its grammar wants them, quotation marks included, and nothing is added around
+       * a placeholder. OPTIONAL, as every key added to a namespace an app may annotate:
+       * left out, the provider's, then English.
+       */
+      credits?: LegalTextSectionLabels;
     };
     privacy: {
       controller: LegalOperatorSectionLabels;
@@ -349,6 +360,15 @@ export interface LegalBrowserStandardEntries {
   recentData: (hours: number) => string;
   /** The shared-computer choice's own flag (`SharedComputerChoice`), kept for the session. */
   sharedComputer: string;
+  /**
+   * 0.63 (docs/auth-harmonization.md §12.9): the sign-in `@eifi1/ui-kit/accounts` keeps — the
+   * tokens and the account as the app shows it, until the person signs out, and only with
+   * the tab after a sign-in with "This is a shared computer". The line for every key
+   * `accountStorageEntries` names with `entry: "session"`; true on both of that choice's
+   * paths, the tab's storage and page memory. OPTIONAL, as every key added to a namespace an
+   * app may annotate: left out, the provider's, then English.
+   */
+  session?: string;
 }
 
 /** The `legal` namespace, resolved: defaults < provider < `labels` prop. The prop may be

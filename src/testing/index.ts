@@ -27,3 +27,6 @@ export {
 // 0.50.1 (keksdose N4): a valid `TourStepContext` for a test that calls a step's
 // `beforeStep` or `when` itself — `beforeStep!(tourStepContext())`.
 export { tourStepContext, type TestTourStepContext, type TourStepContextOptions, type TourStepVia } from "./tour";
+// 0.64 (Kurvenschmiede): the kit's full-document navigations recorded instead of made, for an
+// app test that signs out (jsdom implements none).
+export { stubDocumentNavigation, type DocumentNavigationCall, type DocumentNavigationStub } from "./navigation";

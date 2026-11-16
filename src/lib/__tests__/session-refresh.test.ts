@@ -7,6 +7,7 @@ import {
   createSessionRefresh,
   isSignedOutStep,
   isTransientRefreshFailure,
+  markUnanswered,
 } from "../session-refresh";
 import type { SessionRefreshOptions, SessionRenewal } from "../session-refresh";
 
@@ -391,6 +392,17 @@ describe("retry only where waiting helps (decision 5, KS 7)", () => {
     await vi.advanceTimersByTimeAsync(10_000);
     await second;
     expect(busy.refresh).toHaveBeenCalledTimes(3);
+  });
+
+  it("a throw the kit marked as unanswered (a fetch refresh's TypeError) is retried, as axios's is", async () => {
+    // `@eifi1/ui-kit/accounts` refreshes over a bare `fetch`, whose network failure is a
+    // TypeError — read as a bug in `refresh` unless marked (0.63).
+    const { api, refresh } = setup({ refresh: () => Promise.reject(markUnanswered(new TypeError("Failed to fetch"))) });
+    const pending = settle(api.get("/a"));
+    await vi.advanceTimersByTimeAsync(10_000);
+    const r = await pending;
+    expect(refresh).toHaveBeenCalledTimes(3);
+    expect(isTransientRefreshFailure(r.ok ? undefined : r.error)).toBe(true);
   });
 
   it("a thrown non-object is a bug: one attempt, transient", async () => {

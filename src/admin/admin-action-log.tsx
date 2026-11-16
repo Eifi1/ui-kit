@@ -76,7 +76,9 @@ export type AdminActionKind =
   // 0.45 (admin §9.1.3): a group switched off or on again — kastlan's company PATCH
   // (`is_active`). server-kit 0.15's `AdminAction.GROUP_DEACTIVATE` / `GROUP_REACTIVATE`.
   | "group_deactivate"
-  | "group_reactivate";
+  | "group_reactivate"
+  // 0.64 (server-kit 0.32): an administrator switched another account's second factor off.
+  | "two_factor_reset";
 
 /** Every {@link AdminActionKind}, in the contract's order. */
 export const ADMIN_ACTION_KINDS: readonly AdminActionKind[] = [
@@ -104,6 +106,7 @@ export const ADMIN_ACTION_KINDS: readonly AdminActionKind[] = [
   "membership_role",
   "group_deactivate",
   "group_reactivate",
+  "two_factor_reset",
 ];
 
 /** The app's word for its groups (§11.5): Kurvenschmiede's teams, kastlan's companies,
@@ -224,6 +227,12 @@ export interface AdminActionLogLabels {
   showAll: string;
   /** A target name as a filter button — "Show only the actions on Ada Example". */
   filterBy: (target: string) => string;
+  /** 0.64 (Kurvenschmiede's U9): a mail action's or an invitation's row whose mail did not go
+   *  (`detail.sent === false`), and a reviewer row that took every language away — the grant
+   *  withdrawn, so "No longer a reviewer". Read by `@eifi1/ui-kit/accounts`' log section;
+   *  optional, as every key added since 0.34. */
+  notSent?: string;
+  reviewerNone?: string;
   /** 0.45: after "Company renamed" when the row carries both names — "from A to B". */
   renamedFromTo: (from: string, to: string) => string;
   /** What each action is called, past tense, keyed by the vocabulary. An app adds its

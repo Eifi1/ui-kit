@@ -16,6 +16,32 @@ import { PAGES } from "../routes";
 export const KIT_COUNTERPARTS: Readonly<Record<string, readonly string[]>> = {
   // The sign-in, register, reset and verify pages, and the session rules behind them.
   auth: ["auth-account"],
+  // server-kit 0.29 (auth §12): the account layer — the routes those pages call, the service
+  // and ports behind them, their mails, the passkey ceremony and the `[sql]` tables.
+  "auth.router": ["auth-account"],
+  "auth.service": ["auth-account"],
+  "auth.ports": ["auth-account"],
+  "auth.mails": ["auth-account"],
+  "auth.passkeys": ["auth-account"],
+  "auth.sql": ["auth-account"],
+  // server-kit 0.30–0.31: the daily jobs, the ready signer and hasher (the account pages),
+  // the admin half (the admin pages), the feedback's and the verdicts' ready tables.
+  "auth.jobs": ["auth-account"],
+  "auth.jwt_signer": ["auth-account"],
+  "auth.bcrypt_hasher": ["auth-account"],
+  // server-kit 0.32: the TOTP secret's ready seal (the second factor on the account pages).
+  "auth.seal": ["auth-account"],
+  "user_admin.router": ["user-admin"],
+  "user_admin.service": ["user-admin"],
+  "user_admin.scope": ["user-admin"],
+  "user_admin.ports": ["user-admin"],
+  // server-kit 0.32: the opt-in teams (AccountTeamsSection and AccountTeamsPage beside the
+  // user admin's parts).
+  teams: ["user-admin"],
+  "teams.router": ["user-admin"],
+  "teams.sql": ["user-admin"],
+  "feedback.sql": ["feedback-compose", "feedback-inbox"],
+  "translation_review.sql": ["localisation", "kit-review"],
   // The admin roster, actions and invitations — and the account's own email change,
   // sessions, deletion and export, which the Auth page shows.
   user_admin: ["user-admin", "auth-account"],

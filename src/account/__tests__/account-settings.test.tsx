@@ -242,6 +242,89 @@ describe("account settings labels (0.12.0)", () => {
   });
 });
 
+describe("TwoFactorSetting's replacement (0.64, keksdose)", () => {
+  const noop = () => {};
+
+  it("offers a lost authenticator's way back while two-factor is on, and only with onReplace", async () => {
+    const onReplace = vi.fn();
+    const { rerender } = render(
+      <TwoFactorSetting
+        enabled
+        setup={null}
+        onStartSetup={noop}
+        onEnable={noop}
+        onDisable={noop}
+        onReplace={onReplace}
+      />,
+    );
+    expect(screen.getByText("Lost your authenticator?")).toBeInTheDocument();
+    expect(screen.getByText(/The current one keeps working until you confirm the new code/)).toBeInTheDocument();
+    await userEvent.setup().click(screen.getByRole("button", { name: "Replace authenticator" }));
+    expect(onReplace).toHaveBeenCalledOnce();
+    // While the new one waits for its code, the setup stands in its place.
+    rerender(
+      <TwoFactorSetting
+        enabled
+        setup={{ otpauthUri: "otpauth://totp/A:b?secret=JBSWY3DPEHPK3PXP&issuer=A" }}
+        onStartSetup={noop}
+        onEnable={noop}
+        onDisable={noop}
+        onReplace={onReplace}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: "Replace authenticator" })).toBeNull();
+    rerender(<TwoFactorSetting enabled setup={null} onStartSetup={noop} onEnable={noop} onDisable={noop} />);
+    expect(screen.queryByRole("button", { name: "Replace authenticator" })).toBeNull();
+    rerender(
+      <TwoFactorSetting
+        enabled={false}
+        setup={null}
+        onStartSetup={noop}
+        onEnable={noop}
+        onDisable={noop}
+        onReplace={onReplace}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: "Replace authenticator" })).toBeNull();
+  });
+});
+
+describe("TwoFactorSetting's backup codes (0.64, server-kit 0.32)", () => {
+  const noop = () => {};
+
+  it("shows a fresh set once, then how many are left and the way to new ones", async () => {
+    const onDismiss = vi.fn();
+    const onRenew = vi.fn();
+    const { rerender } = render(
+      <TwoFactorSetting
+        enabled
+        setup={null}
+        onStartSetup={noop}
+        onEnable={noop}
+        onDisable={noop}
+        backupCodes={{ fresh: ["ABCD-EFGH-JKLM-NPQR"], left: 1, onRenew, onDismiss }}
+      />,
+    );
+    expect(screen.getByText("ABCD-EFGH-JKLM-NPQR").closest("[data-private]")).not.toBeNull();
+    expect(screen.queryByText("1 backup code left.")).toBeNull();
+    await userEvent.setup().click(screen.getByRole("button", { name: "I have saved them" }));
+    expect(onDismiss).toHaveBeenCalledOnce();
+    rerender(
+      <TwoFactorSetting
+        enabled
+        setup={null}
+        onStartSetup={noop}
+        onEnable={noop}
+        onDisable={noop}
+        backupCodes={{ left: 3, onRenew, onDismiss }}
+      />,
+    );
+    expect(screen.getByText("3 backup codes left.")).toBeInTheDocument();
+    await userEvent.setup().click(screen.getByRole("button", { name: "Make new backup codes" }));
+    expect(onRenew).toHaveBeenCalledOnce();
+  });
+});
+
 describe("TwoFactorSetting setup", () => {
   const URI = "otpauth://totp/Kastlan:ada%40example.com?secret=JBSWY3DPEHPK3PXP&issuer=Kastlan";
   const noop = () => {};

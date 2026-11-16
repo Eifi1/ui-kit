@@ -301,5 +301,12 @@ export function uiKitLabelsEn(numberLocale = "en-US"): UiKitLabels {
       ...d.reorder,
       moved: (position, total) => `Moved to position ${n(position)} of ${n(total)}`,
     },
+    // 0.64: a team's deletion counts what goes with it.
+    accountTeams: {
+      ...d.accountTeams,
+      countMembers: (count) => (count === 1 ? "1 member" : `${n(count)} members`),
+      countGrants: (count) => (count === 1 ? "1 share" : `${n(count)} shares`),
+      countInvitations: (count) => (count === 1 ? "1 invitation" : `${n(count)} invitations`),
+    },
   };
 }

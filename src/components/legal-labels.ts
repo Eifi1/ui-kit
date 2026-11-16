@@ -57,6 +57,12 @@ export const DEFAULT_LEGAL_LABELS: LegalLabels = {
         commercial:
           "This is a commercial service. Paid plans are sold by our reseller, which acts as the Merchant of Record: it sells the subscription in its own name, takes the payment, issues the invoice and handles VAT, and its terms of sale apply to the purchase. We take care that the content of this service is accurate, but cannot guarantee that it is complete or up to date. External sites we link to are the responsibility of their respective operators; we have no control over their content.",
       },
+      // 0.63: the apps' credits for the kit's default palette (Staunlabor's wording, the
+      // charts only: not every app has drawings).
+      credits: {
+        title: "Credits",
+        body: "The colours in the charts come from “{palette}”, the categorical palette of {site}. Its eight hues were validated by anyplot.ai against deuteranopia, protanopia and tritanopia and tuned for warm paper.",
+      },
     },
     privacy: {
       controller: {
@@ -86,6 +92,10 @@ export const DEFAULT_LEGAL_LABELS: LegalLabels = {
           recentData: (hours) =>
             `Recently loaded data, so pages also open without a connection; what is older than ${hours} hours the app no longer uses and removes the next time it opens. None of it is kept when you sign in with “This is a shared computer”`,
           sharedComputer: "Whether you chose “This is a shared computer” at sign-in, kept with the tab",
+          // 0.63 (auth §12.9): `@eifi1/ui-kit/accounts`' one key. "Only with the tab" holds on
+          // both shared paths: the tab's storage, and page memory, where a reload signs out.
+          session:
+            "Your sign-in, until you sign out: the sign-in tokens and your account's details, such as your name and email address. After a sign-in with “This is a shared computer”, kept only with the tab",
         },
       },
       rights: {

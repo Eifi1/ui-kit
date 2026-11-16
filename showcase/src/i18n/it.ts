@@ -524,7 +524,7 @@ export const it: Dictionary = {
       title: "Accesso e account",
       short: "Accesso",
       blurb:
-        "Registrazione, accesso, token monouso, claim di sessione e i formati di scambio dell’account — la metà server delle pagine di accesso, registrazione e account.",
+        "Registrazione, accesso, token monouso, claim di sessione e i formati di scambio dell’account — e dalla 0.29 le route stesse: un router sugli archivi dell’app, le email dell’account, le passkey e tabelle pronte. La metà server delle pagine di accesso, registrazione e account.",
     },
     "server-user-admin": {
       title: "Amministrazione utenti",
@@ -1261,6 +1261,8 @@ export const it: Dictionary = {
       "claim del token di sessione",
       "normalizzare un indirizzo email",
       "codici di errore dell’autenticazione",
+      "route dell’account sul server",
+      "accesso con passkey sul server",
     ],
     "server-user-admin": [
       "interrogare l’elenco utenti sul server",

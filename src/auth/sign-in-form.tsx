@@ -4,6 +4,7 @@ import { KeyRound } from "lucide-react";
 
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { cn } from "../lib/cn";
+import { httpStatusOf } from "../lib/http-status";
 import { AlertBanner } from "../components/alert-banner";
 import { hasContent } from "../lib/presence";
 import { CurrentPasswordInput } from "../components/danger-confirm";
@@ -202,8 +203,11 @@ export interface SignInFormProps extends Omit<ComponentPropsWithRef<"div">, "onS
    */
   onSubmit: (credentials: SignInCredentials) => Promise<SignInAnswer>;
   /** The second factor was submitted (`/auth/login/2fa`). Resolves with the next answer
-   *  — keksdose may still require a new password after the code. */
-  onCode: (values: SignInCodeValues) => Promise<SignInAnswer>;
+   *  — keksdose may still require a new password after the code. Optional since 0.64: an
+   *  app whose server asks for no second factor (server-kit 0.29–0.31's `auth_router`)
+   *  leaves it out, and a `2fa` answer then reads as a failed sign-in (`failed`) rather than
+   *  a step nobody can finish. */
+  onCode?: (values: SignInCodeValues) => Promise<SignInAnswer>;
   /** The new password was submitted (`/auth/login/set-password`). Resolves with the
    *  answer, `signed-in` in practice; keksdose's `key_wrap_unchanged` note is the app's
    *  to show from here. */
@@ -487,6 +491,10 @@ export function SignInForm({
     setNewPassword("");
     setConfirm("");
     if (answer.kind === "2fa") {
+      if (onCode === undefined) {
+        setFailure({ action: "password", code: undefined, message: labels.failed });
+        return;
+      }
       setChallenge({ token: answer.challengeToken });
       goTo("2fa");
     } else if (answer.kind === "password-change") {
@@ -512,6 +520,9 @@ export function SignInForm({
     if (action === "passkey") return labels.passkeyFailed;
     if (action === "code") {
       if (code === "token_invalid") return labels.expired;
+      // A second factor the server cannot read (server-kit 0.32's 503) is no wrong code:
+      // "invalid code" would send the person to re-pair an authenticator that is fine.
+      if (code === "two_factor_unavailable" || (httpStatusOf(error) ?? 0) >= 500) return labels.failed;
       return recoveryUsed
         ? (labels.recoveryCodeInvalid ?? DEFAULT_SIGN_IN_LABELS.recoveryCodeInvalid)
         : labels.codeInvalid;
@@ -635,7 +646,7 @@ export function SignInForm({
     const ready = asRecovery ? recoveryReady : code.length === codeLength;
     const submitCode = (e: FormEvent) => {
       e.preventDefault();
-      if (!ready) return;
+      if (!ready || onCode === undefined) return;
       if (asRecovery) {
         attempt(
           "code",

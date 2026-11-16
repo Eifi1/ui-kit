@@ -55,7 +55,17 @@ describe("cross-links", () => {
   it("reads the map both ways", () => {
     expect(KIT_COUNTERPARTS.auth).toContain("auth-account");
     expect(KIT_COUNTERPARTS.user_admin).toContain("user-admin");
-    expect(serverModulesFor("user-admin")).toEqual(["user_admin"]);
+    // server-kit 0.30: the admin half beside layer 1; 0.32 its opt-in teams.
+    expect([...serverModulesFor("user-admin")].sort()).toEqual([
+      "teams",
+      "teams.router",
+      "teams.sql",
+      "user_admin",
+      "user_admin.ports",
+      "user_admin.router",
+      "user_admin.scope",
+      "user_admin.service",
+    ]);
     expect(serverModulesFor("auth-account")).toEqual(expect.arrayContaining(["auth", "user_admin", "mail"]));
     expect(serverModulesFor("tokens")).toEqual([]);
     // server-kit 0.9: the Notifications page's server half, and the feedback router;
@@ -66,6 +76,8 @@ describe("cross-links", () => {
     expect(serverPageOf("notifications")).toBe("server-notifications");
     // server-kit 0.26: the object store an app keeps the attachment field's files in.
     expect(serverPageOf("objects")).toBe("server-feedback");
+    // server-kit 0.32: the opt-in teams on the User admin page.
+    expect(serverPageOf("teams.router")).toBe("server-user-admin");
     expect(serverModulesFor("feedback-compose")).toContain("objects");
   });
 });
@@ -77,6 +89,7 @@ describe("a nested module (server-kit 0.9's feedback.router)", () => {
     expect(PAGES.find((p) => p.slug === "server-feedback")?.serverModules).toEqual([
       "feedback",
       "feedback.router",
+      "feedback.sql",
       "uploads",
       "objects",
       "clock",

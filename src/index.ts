@@ -627,6 +627,7 @@ export { ZoomableImage, DEFAULT_ZOOMABLE_IMAGE_LABELS } from "./components/zooma
 export type { ZoomableImageProps, ZoomableImageLabels } from "./components/zoomable-image";
 export * from "./components/button-group";
 export * from "./components/table";
+export * from "./components/sort-strip";
 export * from "./components/separator";
 // Named: scroll-area.tsx also holds the overflow hook and scrollbar class Table shares.
 export { ScrollArea } from "./components/scroll-area";
@@ -997,7 +998,11 @@ export type {
   ReviewerScopeLabels,
   ReviewerScopeEditorProps,
 } from "./admin/reviewer-scope-editor";
-export { AdminActionConfirm, DEFAULT_ADMIN_ACTION_LABELS } from "./admin/admin-action-confirm";
+export {
+  ADMIN_ACTION_CONFIRM_CODES,
+  AdminActionConfirm,
+  DEFAULT_ADMIN_ACTION_LABELS,
+} from "./admin/admin-action-confirm";
 export type {
   AdminConfirmLevel,
   AdminActionConfirmValues,
@@ -1049,7 +1054,7 @@ export { adminSectionOrder } from "./admin/admin-sections";
 export type { AdminSectionPlace, AdminSectionOrderOptions, AdminKeptSection } from "./admin/admin-sections";
 export { AdminForbidden } from "./admin/admin-forbidden";
 export type { AdminForbiddenProps } from "./admin/admin-forbidden";
-export { AdminOverview, AttentionTile, adminWaitingCount } from "./admin/admin-overview";
+export { AdminOverview, AttentionTile, DEFAULT_ADMIN_ATTENTION_HREFS, adminWaitingCount } from "./admin/admin-overview";
 export type {
   AdminAttention,
   AdminAttentionTile,

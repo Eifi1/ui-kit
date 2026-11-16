@@ -5,7 +5,10 @@
 // The only entry point that requires `@tanstack/react-query`,
 // `@tanstack/react-query-persist-client`, `@tanstack/query-async-storage-persister` and
 // `idb-keyval` — optional peers for that reason. NOT re-exported from the main barrel, which
-// would make them everyone's install; the packaging contract test holds that line.
+// would make them everyone's install; the packaging contract test holds that line. Since 0.63
+// the entry loads with `@tanstack/react-query` alone: `createQueryPersistence` imports the
+// persister and idb-keyval on first use, so an app that takes only `SharedComputerChoice` or
+// `useFeedbackCommentsQuery` installs neither.
 export {
   createQueryPersistence,
   DEFAULT_SCRUB_FIELDS,

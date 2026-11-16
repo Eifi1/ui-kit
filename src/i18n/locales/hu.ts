@@ -105,6 +105,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       commentFailed: "A hozzászólást nem sikerült elküldeni.",
       voteFailed: "A szavazatot nem sikerült menteni.",
       replyFailed: "A választ nem sikerült elküldeni.",
+      legacyReworkAppend: "Ez az oldal elavult. Töltse be újra, és próbálja meg ismét.",
     },
     feedbackMenu: {
       trigger: "Visszajelzés küldése",
@@ -282,6 +283,25 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         copySecret: "Kulcs másolása",
         // 0.31.0: the card's title; the state ("Bekapcsolva") stands beside it.
         title: "Kétlépcsős azonosítás",
+        // 0.64 (keksdose): a lost authenticator's way back, and the accounts section's words.
+        replaceTitle: "Elveszett a hitelesítő alkalmazása?",
+        replaceHint:
+          "Adja meg a fiókja jelszavát egy új hitelesítő beállításához. A jelenlegi addig működik, amíg meg nem erősíti az új kódot.",
+        replace: "Hitelesítő cseréje",
+        setupReauth:
+          "A kétlépcsős azonosítás megváltoztatja a bejelentkezés módját, ezért a beállításához először a fiókja jelszava kell. Utána egy kódot olvas be a hitelesítő alkalmazásával.",
+        turnedOn: "Kétlépcsős azonosítás bekapcsolva.",
+        turnedOff: "Kétlépcsős azonosítás kikapcsolva.",
+        // 0.64: the backup codes, shown once, and how many are left.
+        backupTitle: "Tartalékkódok",
+        backupHint:
+          "Minden kód egyszer használható bejelentkezésre a hitelesítő alkalmazás kódja helyett. Tárolja őket biztonságos helyen: csak most jelennek meg.",
+        backupLeft: (count) => `${count} tartalékkód maradt.`,
+        backupRenew: "Új tartalékkódok létrehozása",
+        backupRenewHint: "Az új kódok felváltják a régieket, amelyek azonnal érvényüket vesztik.",
+        backupCopy: "Kódok másolása",
+        backupDownload: "Letöltés",
+        backupDone: "Elmentettem őket",
       },
       passkeys: {
         title: "Hozzáférési kulcsok",
@@ -992,6 +1012,12 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
             commercial:
               "Ez egy kereskedelmi szolgáltatás. A fizetős csomagokat viszonteladónk értékesíti, amely Merchant of Record szerepben jár el: a saját nevében értékesíti az előfizetést, beszedi a vételárat, kiállítja a számlát és elszámolja az áfát, a vásárlásra pedig az ő értékesítési feltételei vonatkoznak. Igyekszünk gondoskodni arról, hogy a szolgáltatás tartalma pontos legyen, de nem tudjuk szavatolni, hogy teljes és naprakész legyen. Az általunk hivatkozott külső oldalakért azok üzemeltetői felelősek; tartalmukra nincs befolyásunk.",
           },
+          // 0.63: the credits for the kit's default chart palette (Staunlabor's wording,
+          // the charts only).
+          credits: {
+            title: "Köszönetnyilvánítás",
+            body: "A diagramok színei az {site} „{palette}” nevű kategorikus palettájából származnak. Nyolc színárnyalatát az anyplot.ai deuteranópiára, protanópiára és tritanópiára ellenőrizte, és meleg tónusú papírhoz hangolta.",
+          },
         },
         privacy: {
           controller: {
@@ -1015,6 +1041,9 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
                 `A nemrég betöltött adatok, hogy az oldalak kapcsolat nélkül is megnyíljanak; ami ${hours} óránál régebbi, azt az alkalmazás már nem használja, és a következő megnyitáskor törli. Semmi sem marad meg belőle, ha az „Ez egy közös használatú számítógép” beállítással jelentkezik be`,
               sharedComputer:
                 "Hogy bejelentkezéskor az „Ez egy közös használatú számítógép” lehetőséget választotta-e, a lappal együtt tárolva",
+              // 0.63 (auth §12.9): the sign-in `@eifi1/ui-kit/accounts` keeps.
+              session:
+                "Az Ön bejelentkezése, amíg ki nem jelentkezik: a bejelentkezési tokenek és a fiókja adatai, például a neve és az e-mail-címe. Az „Ez egy közös használatú számítógép” beállítással történt bejelentkezés után csak a lappal együtt tárolva",
             },
           },
           rights: {
@@ -1376,6 +1405,8 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       handOver: (count) => `${n(count)} elem, amelyet mások is látnak, egy adminisztrátorhoz kerül.`,
       confirm: "Fiókom törlése",
       done: "A fiókja inaktiválva. Kijelentkeztetjük.",
+      requested:
+        "Megkaptuk a fiókja törlésére vonatkozó kérését. A fiók inaktiválva, és minden eszközön kijelentkeztettük.",
       wrongPassword: "A jelszó helytelen.",
       confirmationMismatch: "Ez nem a fiókja címe.",
       lastAdmin: "Ön az utolsó adminisztrátor. Előbb tegyen adminisztrátorrá valaki mást.",
@@ -1453,12 +1484,15 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       filteredTo: (target) => `Csak: ${target}`,
       showAll: "Az összes művelet megjelenítése",
       filterBy: (target) => `Csak az ezt a fiókot érintő műveletek megjelenítése: ${target}`,
+      notSent: "Az e-mail nem ment el",
+      reviewerNone: "Lektori szerepkör megszüntetve",
       actions: {
         deactivate: "Inaktiválva",
         reactivate: "Újraaktiválva",
         role: "Szerepkör módosítva",
         password_change_require: "Új jelszó előírva",
         password_change_withdraw: "Jelszócsere-előírás visszavonva",
+        two_factor_reset: "Kétlépcsős azonosítás visszaállítva",
         mail_verification: "Megerősítő e-mail elküldve",
         mail_reset: "Jelszó-visszaállító e-mail elküldve",
         reviewer: "Lektori beállítás módosítva",
@@ -1558,6 +1592,7 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         "Ez a szerver nem küld leveleket – a szervernaplóba írja őket. Innen másolja ki az egyes meghívóhivatkozásokat, és adja tovább maga: mindegyik csak egyszer jelenik meg.",
       linkReady: (email) => `Meghívóhivatkozás ehhez a címhez: ${email}. Csak most jelenik meg:`,
       notSent: (email) => `${email} meghívást kapott, de az e-mailt nem sikerült elküldeni. Küldje el újra.`,
+      sentAgain: (email) => `${email} már kapott meghívót. Új hivatkozással újra elküldtük.`,
       failed: "Ez nem sikerült. Kérjük, próbálja újra.",
     },
     characterCount: {
@@ -2163,6 +2198,191 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       atTop: "Már a legfelső helyen van",
       atBottom: "Már a legalsó helyen van",
       moved: (position, total) => `Áthelyezve: ${n(position)}. hely (összesen ${n(total)})`,
+    },
+    // 0.63 (auth §12.9, server-kit 0.29): describeAccountFailure — every coded refusal of the
+    // account routes; the older codes in the words the kit's forms already use for them.
+    accountFailure: {
+      codes: {
+        invalid_credentials: "Az e-mail-cím vagy a jelszó helytelen.",
+        registration_closed:
+          "Új fiókot csak meghívással lehet létrehozni. Kérje meg az üzemeltetőt, hogy küldjön meghívót az e-mail-címére.",
+        email_taken: "Ezzel az e-mail-címmel már létezik fiók.",
+        invitation_invalid: "Ez a meghívóhivatkozás érvénytelen.",
+        invitation_expired: "Ez a meghívó lejárt. Kérjen újat.",
+        token_invalid: "Ez a hivatkozás érvénytelen vagy lejárt.",
+        token_expired: "Ez a hivatkozás lejárt. Kérjen újat.",
+        account_inactive: "Ez a fiók inaktív.",
+        session_ended: "A munkamenete véget ért. Kérjük, jelentkezzen be újra.",
+        not_signed_in: "Nincs bejelentkezve. Kérjük, jelentkezzen be.",
+        admin_required: "Ezt csak adminisztrátor teheti meg.",
+        password_unchanged: "Az új jelszó megegyezik a jelenlegivel. Válasszon másikat.",
+        password_change_not_required: "Ennek a fióknak már nincs szüksége új jelszóra. Kérjük, jelentkezzen be.",
+        email_unchanged: "Már ez az Ön címe.",
+        email_change_not_pending: "Nincs függőben lévő címváltoztatás.",
+        mail_not_sent: "Az e-mailt nem sikerült elküldeni. Kérjük, próbálja újra később.",
+        passkey_refused: "A bejelentkezés hozzáférési kulccsal sikertelen.",
+        passkey_registration_refused: "A hozzáférési kulcsot nem sikerült hozzáadni. Kérjük, próbálja újra.",
+        passkey_not_found: "Ez a hozzáférési kulcs már nem létezik.",
+        session_not_found: "Ez a munkamenet már véget ért.",
+        invitation_not_found: "Ez a meghívó már nem létezik.",
+        invitation_closed: "Ezt a meghívót már elfogadták vagy visszavonták.",
+        invitation_scope_invalid: "A meghívóhoz választott lehetőség nem érhető el.",
+        last_admin: "Ez az utolsó aktív adminisztrátor. Előbb tegyen adminisztrátorrá valaki mást.",
+        self_action: "Ezt a saját fiókjával nem teheti meg.",
+        other_companies:
+          "Ez a fiók más cégekhez is tartozik, ezért ezt csak a platform üzemeltetője teheti meg. Ehelyett eltávolíthatja ebből a cégből.",
+        household_has_members:
+          "A háztartásának más tagjai is vannak, ezért a fiók itt nem törölhető. Kérjük, írjon az üzemeltetőnek.",
+        confirmation_required: "Kérjük, előbb erősítse meg.",
+        confirmation_mismatch: "Ez nem a fiókja címe.",
+        password_incorrect: "A jelszó helytelen.",
+        demo_refused: "Ez a demóban nem lehetséges.",
+        user_not_found: "Ez a fiók már nem létezik.",
+        role_not_grantable: "Ez a szerepkör itt nem adható meg.",
+        reviewer_is_admin: "Adminisztrátori fióknak nem lehet lektori szerepköre. Először módosítsa a szerepkört.",
+        email_already_verified: "Ez a cím már meg van erősítve.",
+        deletion_not_requested: "Ehhez a fiókhoz nem kérték a törlést, vagy még aktív.",
+        two_factor_invalid:
+          "Ez a kód nem helyes, vagy már felhasználták. Adja meg azt a kódot, amelyet a hitelesítő alkalmazása most mutat.",
+        two_factor_unavailable:
+          "A kétlépcsős bejelentkezés jelenleg nem érhető el ezen a szerveren. A hitelesítő alkalmazása rendben van. Próbálja újra később.",
+        two_factor_not_pending: "Nincs kódra váró beállítás. Kezdje újra a beállítást.",
+        two_factor_not_enabled: "Ennél a fióknál ki van kapcsolva a kétlépcsős azonosítás. Először állítsa be.",
+      },
+      offline: "A kiszolgáló nem érhető el. Ellenőrizze a kapcsolatot, és próbálja újra.",
+      timeout: "A kiszolgáló túl sokáig nem válaszolt. Kérjük, próbálja újra.",
+      server: "Hiba történt a kiszolgálón. Kérjük, próbálja újra később.",
+      rateLimited,
+      failed: "Ez nem sikerült. Kérjük, próbálja újra.",
+    },
+    // 0.64 (auth §12.9): AccountUserRosterSection — the roster's actions, the question each
+    // asks and what it says once done.
+    accountRoster: {
+      search: "Fiókok keresése",
+      consoleMail:
+        "Ez a szerver nem küld e-mailt: mindegyik a naplójába kerül. Egy e-mail-művelet után a hivatkozása itt jelenik meg, hogy továbbadhassa.",
+      mailLink: (email) => `A hivatkozás ehhez: ${email}. Továbbadhatja:`,
+      onlyDeletions: "Csak azok a fiókok, amelyek a törlésüket kérték.",
+      showEverybody: "Mindenki megjelenítése",
+      reviews: "Lektorált nyelvek",
+      sendVerification: "Megerősítő e-mail újraküldése",
+      verificationSent: (email) => `Megerősítő e-mail elküldve ide: ${email}.`,
+      sendReset: "Jelszó-visszaállító e-mail küldése",
+      resetSent: (email) => `Jelszó-visszaállító e-mail elküldve ide: ${email}.`,
+      requirePasswordChange: "Új jelszó előírása",
+      requirePasswordChangeTitle: (name) => `Új jelszót ír elő ennek a fióknak: ${name}?`,
+      requirePasswordChangeBody:
+        "A következő bejelentkezéskor a fióknak először új jelszót kell választania. A fiók minden munkamenete azonnal véget ér.",
+      passwordChangeRequired: (email) => `${email}: a következő bejelentkezéskor új jelszót kell választani.`,
+      withdrawPasswordChange: "Jelszócsere-előírás visszavonása",
+      passwordChangeWithdrawn: (email) => `${email}: már nem kell új jelszót választani.`,
+      reviewer: "Fordítások lektorálása",
+      reviewerTitle: (name) => `Mit lektorál: ${name}`,
+      reviewerSet: (email, languages) => `${email} mostantól ezeket lektorálja: ${languages}.`,
+      reviewerRemoved: (email) => `${email} már nem lektorál fordításokat.`,
+      changeRole: "Szerepkör módosítása",
+      roleTitle: (name, role) => `${name} szerepköre legyen „${role}”?`,
+      roleBody: "Hogy mit tehet a fiók, az azonnal, a következő kérésétől megváltozik.",
+      roleToAdminBody:
+        "Adminisztrátori jogokkal a fiók minden fiókot és az alkalmazás beállításait kezelheti, azonnal, a következő kérésétől.",
+      roleFromAdminBody: "A fiók azonnal, a következő kérésétől elveszíti adminisztrátori jogait.",
+      // 0.64: an administrator's reset of another account's second factor.
+      resetTwoFactor: "Kétlépcsős azonosítás visszaállítása",
+      resetTwoFactorTitle: (name) => `Visszaállítja ${name} kétlépcsős azonosítását?`,
+      resetTwoFactorBody:
+        "A fiók ezután csak jelszóval vagy azonosítókulccsal jelentkezik be, és e-mailt kap erről. Később újra beállíthatja.",
+      twoFactorReset: (email) => `${email} kétlépcsős azonosítása visszaállítva.`,
+      roleChanged: (email, role) => `${email} szerepköre mostantól „${role}”.`,
+      deactivate: "Inaktiválás",
+      deactivateTitle: (name) => `Inaktiválja ezt a fiókot: ${name}?`,
+      deactivateBody:
+        "A fiók mindenhol kijelentkezik, és többé nem tud bejelentkezni. Semmi sem törlődik, és újraaktiválható.",
+      deactivated: (email) => `${email} inaktiválva.`,
+      reactivate: "Újraaktiválás",
+      reactivateTitle: (name) => `Újraaktiválja ezt a fiókot: ${name}?`,
+      reactivated: (email) => `${email} újra aktív.`,
+      cancelDeletion: "Törlés visszavonása",
+      cancelDeletionTitle: (name) => `Megtartja ezt a fiókot: ${name}?`,
+      deletionCancelled: (email) => `${email} megmarad, és újra aktív.`,
+      erase: "Végleges törlés most",
+      eraseTitle: (name) => `Most véglegesen törli ezt a fiókot: ${name}?`,
+      eraseBody: "A fiók és minden tartalma véglegesen törlődik. A napló csak a címét őrzi meg.",
+      erased: (email) => `${email} véglegesen törölve.`,
+    },
+    // 0.64 (auth §12.9): AccountTranslationReview — the review page's heading, its empty
+    // state and the source filter's words.
+    accountTranslations: {
+      title: "Fordítások lektorálása",
+      description:
+        "Olvassa el a szövegeket a saját nyelvén a referencia mellett, és hagyja jóvá őket, vagy jelezze, min kell változtatni. A javítások a fejlesztőhöz kerülnek exportálva; maguk a szövegek itt nem változnak.",
+      saved: "Mentve",
+      cleared: "Lektorálatlannak jelölve",
+      noAccess: "Nincs lektorálandó nyelv",
+      noAccessHint: "A lektorálandó nyelveket egy rendszergazda adja meg. Forduljon hozzá, ha itt nyelveket várt.",
+      sourceApp: "Az alkalmazás szövegei",
+      sourceKit: "Közös komponensek",
+    },
+    // 0.64 (server-kit 0.32's opt-in teams): AccountTeamsSection and AccountTeamsPage — the
+    // admin's list and a member's page, their questions, counts and a team's refusals.
+    accountTeams: {
+      title: "Csapatok",
+      pageHint:
+        "A csapatok, amelyeknek Ön tagja. Amit egy csapattal megosztanak, az a csapat minden tagjával meg van osztva, amíg tagjai. A vezetők tagokat vesznek fel és távolítanak el, és meghívhatnak olyat, akinek még nincs fiókja; az adminisztrátorok csapatokat hoznak létre és kinevezik a vezetőket.",
+      adminHelp: "Csoportok a megosztáshoz, és akik vezetik őket.",
+      adminHint:
+        "A csapat valaki, akivel megosztunk, nem valaki, akié valami: egy csapatnak adott jogosultság mindenkihez eljut benne, és távozik azzal, aki távozik. Ön nevezi ki a vezetőket, akik aztán maguk vesznek fel és távolítanak el tagokat.",
+      none: "Ön egyetlen csapatnak sem tagja.",
+      noneAdmin: "Még nincsenek csapatok.",
+      youManage: "Ön vezeti ezt a csapatot.",
+      youAreIn: "Ön tag.",
+      name: "Csapat neve",
+      create: "Csapat létrehozása",
+      created: (name) => `Csapat létrehozva: ${name}.`,
+      rename: "Átnevezés",
+      renameTitle: (name) => `Csapat átnevezése: ${name}`,
+      renamed: (name) => `A csapat új neve: ${name}.`,
+      delete: "Csapat törlése",
+      deleteTitle: (name) => `Törli a csapatot: ${name}?`,
+      deleteBody:
+        "Minden, amit a csapattal megosztottak, azonnal megszűnik megosztva lenni a tagjaival. A saját munkájuk érintetlen marad.",
+      deleteGoes: (list) => `Ami vele együtt megszűnik: ${list}.`,
+      deleted: (name) => `A csapat törölve: ${name}.`,
+      countMembers: (count) => `${n(count)} tag`,
+      countGrants: (count) => `${n(count)} megosztás`,
+      countInvitations: (count) => `${n(count)} meghívó`,
+      members: "Tagok",
+      managers: "Vezetők",
+      invitedTitle: "Meghívottak",
+      nobody: "Még nincs benne senki.",
+      roles: { member: "Tag", manager: "Vezető" },
+      roleOf: (name) => `Szerepkör a csapatban: ${name}`,
+      roleLabel: "Mint",
+      remove: (name) => `Eltávolítás: ${name}`,
+      removeShort: "Eltávolítás",
+      removeTitle: (name, team) => `Eltávolítja a csapatból (${team}): ${name}?`,
+      removeBody:
+        "Amit a csapattal megosztottak, az a következő kérésénél megszűnik vele megosztva lenni. A saját munkája érintetlen marad.",
+      addEmail: "Hozzáadás e-mail-cím alapján",
+      add: "Hozzáadás",
+      added: (email, team) => `Mostantól tagja a csapatnak (${team}): ${email}.`,
+      removed: (name, team) => `Már nem tagja a csapatnak (${team}): ${name}.`,
+      invited: (email, team) => `${email} még nem rendelkezik fiókkal – meghívó van úton ebbe a csapatba: ${team}.`,
+      invitedNotSent: (email) =>
+        `${email} még nem rendelkezik fiókkal, és a meghívót nem sikerült elküldeni – küldje el újra.`,
+      withdraw: (email) => `Meghívó visszavonása: ${email}`,
+      withdrawShort: "Visszavonás",
+      withdrawTitle: (email) => `Visszavonja ezt a meghívót: ${email}?`,
+      withdrawBody: "A hivatkozás többé nem működik. A már vele létrehozott fiók megmarad.",
+      codes: {
+        team_not_found: "Ez a csapat már nem létezik, vagy Ön már nem vezeti.",
+        team_name_taken: (name) => `Már van ${name} nevű csapat.`,
+        team_changed: (name) =>
+          `A(z) ${name} csapat megváltozott, miután megnyitotta. Most már a változást mutatja; kérjük, próbálja újra.`,
+        manager_named_by_admin: "Egy csapat vezetőit csak adminisztrátor nevezheti ki.",
+        manager_kept_by_admin: (email) =>
+          `A(z) ${email} fiók vezeti ezt a csapatot; ezt csak adminisztrátor módosíthatja.`,
+        manager_removed_by_admin: "Egy csapat vezetőjét csak adminisztrátor távolíthatja el.",
+      },
     },
   };
 }

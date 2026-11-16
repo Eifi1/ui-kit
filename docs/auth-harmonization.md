@@ -35,6 +35,7 @@ Snapshots, per-repo to-dos and the review logs are in
 | 11 | Session refresh | ui-kit 0.34.0, server-kit 0.8.0 | §11.7 |
 | 11.1, 11.5 | Where each one stands; per app | — (archived) | |
 | 11.7 | Settled after the reviews | — | index; folded into §11.2–§11.4 |
+| 12 | Layer 2: the kits run the account routes, server and frontend | — (draft, 2026-11-13; A, B, C decided) | §12.8, §12.9 |
 
 ## 1. Where each one stands
 
@@ -829,3 +830,375 @@ went:
 - the kit's interceptor goes last (kk 4) → §11.3;
 - a signed-in endpoint answers 401 only about the session (ka 2) → §11.3, and decision 7;
 - each app's own steps (kk 1–5, kk 7, ka 4–9, KS 5, KS 6, KS 9) → the archive's §11.5.
+
+## 12. Layer 2: the server-kit runs the account routes (draft, 2026-11-13)
+
+**Status: decided 2026-11-13 (A from Marcel's "as soon as possible" and his "2"; B and C "wie
+empfohlen"); kastlan rests, so its seams wait. Being built: server-kit 0.29.** Marcel, 2026-11-13, in
+Staunlabor's session: accounts and user admin should move into the server-kit next, "wenn das
+in weiten Teilen, wenn nicht sogar komplett, gleich ist". Staunlabor, a fourth app, starts
+accounts, admin, public feedback, passkeys and the translation review now, and would otherwise
+copy about 5,000 lines of backend a fourth time. The edge-token gap in the per-IP limits (only
+keksdose had the fix) shows what four copies cost. This section asks whether the copies are
+alike enough, and draws the cut on the pattern of feedback (server-kit 0.9) and the translation
+review (0.10): services behind ports that each app fills with its own tables, and a router
+factory (`docs/server-services-harmonization.md` §2).
+
+Sources: three read-only maps of the backends (2026-11-13: keksdose `main`, kastlan `main`,
+Kurvenschmiede `fix/edge-token` = `origin/main` + the edge token), and Staunlabor's two maps.
+
+### 12.1 Where each one stands
+
+| | keksdose | kastlan | Kurvenschmiede |
+|---|---|---|---|
+| Auth + account + user-admin backend, no tests | ≈ 11,800 lines (+ ≈ 450 erasure) | ≈ 6,300 (+ ≈ 2,200 shared with other parts) | ≈ 8,300 (teams, demo and dev switch ≈ 1,200 of it) |
+| Their tests | ≈ 12,700 | ≈ 3,900 | ≈ 6,000 |
+| server-kit pinned | 0.25 | 0.25 | 0.26 |
+| Sessions | the `iat` cut-off only | rows (`sid`), no expiry, never pruned | the `iat` cut-off only |
+| Access token | 24 h | 15 min, carries `company_id`, `roles`, `sid` | 24 h |
+| 2FA | TOTP, no backup codes | TOTP + 8 backup codes | none |
+| Passkeys | resident key; PRF for private mode; "passkey added" notice | resident key | resident key; spent-challenge table; name sealed |
+| Invitations | registration table + budget-share invites, one token lookup | one table: company + role, or a sign-up invitation | one table: role + team |
+| Pending address, links | token tables | columns on `users` | token tables |
+| Deletion | after 30 days, a job erases | operator: the platform erases | operator: an admin erases |
+| Admin scope | everybody | the acting company; a superuser's `/platform` | everybody |
+| Mail texts | inline, 4 languages | one file, 4 languages | inline, 7 languages |
+
+**The route surface is the same.** All three serve `register`, `login`, `login/set-password`,
+`refresh`, `logout`, `me` (GET, PATCH), `me/password`, `me/email` (with `resend`, `DELETE` and
+`confirm`), `me/export`, `me/deletion`, `invitations/check` and `invitations/accept`,
+`verify-email`, `resend-verification`, `password-reset/request`, `check` and `confirm`,
+`passkey/{register,login}/{begin,finish}`, `passkeys` (GET, PATCH, DELETE) and `demo-session`:
+about 30 routes, with the same bodies and answers within a field or a status, and the decisions
+inside them already server-kit layer 1 (`registration_decision`, `absent_account_check`, the
+claims, `mint`/`hash_token`, the schemas and `AuthErrorCode`). The admin surface is the same as
+well: the roster, active, role, forced password change, the two mails, the log, the attention
+tile, invitations, erase, the reviewer scope and the test mail, on `user_admin` layer 1.
+
+What only some have: 2FA (keksdose, kastlan), a sessions list (kastlan), the company routes
+(kastlan: switch company or role, create, leave), private mode's routes (keksdose: PRF, the key
+wrap) and keksdose's data operations under `/auth/me` (reset budget, wipe, load demo).
+
+### 12.2 The verdict: alike enough, with six seams
+
+What differs between the apps sits in six places, and each is a hook, not a fork:
+
+1. **What a sign-up and an accepted invitation attach**: keksdose's subscription, household,
+   budget and starter categories, or a budget share; kastlan's company, membership, contact and
+   subscription (with its RLS binding); Kurvenschmiede's subscription, team and shares.
+2. **What a token carries and what each request binds**: kastlan's acting company and roles,
+   the membership check (401) and the company check (403), the RLS variables.
+3. **Private mode around passwords and passkeys** (keksdose): the `encrypted` flag on the
+   challenge and the reset, the key wrap on a password change, PRF, and the last unlock path
+   that may not be deleted.
+4. **What else ends with the sessions**, and why: keksdose's API tokens and push devices
+   (revoked at a reset, a deactivation and a deletion request; kept at a password change).
+5. **Deletion and erasure**: the mode (operator or after N days, server-kit
+   `deletion_schedule`), what the request cancels or tells (billing, budget guests), and what
+   the erasure hands over (Kurvenschmiede's shared work, keksdose's budgets).
+6. **The extras on `/auth/me` and on the roster row**: plan, review scope, companies, privacy
+   fields, counts.
+
+Everything else is the same code three times, and **the drift between the copies is where the
+faults are**:
+- every app mails before its commit, so a request that rolls back can send a link that does not
+  work (only the public reset waits);
+- the token redemptions (`verify-email`, `password-reset/check|confirm`, `invitations/check`),
+  `refresh` and, in kastlan, the passkey, 2FA, password and address routes run without a limit;
+- kastlan checks `email_taken` before the registration gate, so an anonymous caller can tell
+  which addresses have an account;
+- kastlan's reset leaves an admin's forced password change in place; its forced change ends no
+  session; its `GET /auth/sessions` never marks the current one;
+- Kurvenschmiede's address confirmation attaches every unaccepted invitation for the new
+  address, expired ones included;
+- many refusals have no code (the bearer 401s, a wrong 2FA code, the passkey errors), so the
+  frontends show the server's English sentence;
+- a passkey sign-in skips the second factor in keksdose and kastlan, while no app asks the
+  authenticator to verify the person (UV).
+
+### 12.3 The cut
+
+Two router factories, on the pattern of `feedback_router(FeedbackDeps(...))`:
+
+- **`auth_router(AuthDeps(...))`** in `eifi1_server_kit.auth` (new `auth.ports`, `auth.service`,
+  `auth.router`, `auth.testing`): the ≈ 30 routes of §12.1, with 2FA, passkeys, the sessions
+  list and the demo session each mounted only when the app gives what they need.
+- **`user_admin_router(UserAdminDeps(...))`** in `eifi1_server_kit.user_admin`: the admin
+  surface of §12.1. kastlan mounts it twice, its company admin and its platform, each with its
+  own scope (§12.4).
+
+What stays app-side: the database and migrations, the app's routes beside the kit's (kastlan's
+company routes, keksdose's private-mode and data routes, Kurvenschmiede's teams), the hooks'
+bodies, and JWT signing (the kit keeps "no JWT library", §8: the app hands a signer).
+
+**The ports.** Async, in the caller's transaction; every write flushes and none commits
+(server-services §2.7). Rows are read through protocols, so an app's own columns and sealed
+fields stay in its adapter.
+
+| Port | Holds | Notes |
+|---|---|---|
+| `UserStore[UserT]` | the account row: `AccountRow` protocol (id, email, password hash, names, locale, role, active, verified, last sign-in, forced change, deletion stamps, appearance, zone, created, the review scope's locales and areas); optional, with a default: `is_demo` (false) and the `iat` cut-off (absent) | lookups by id and exact address (and the address tag's variants); add; update named fields; count people; delete |
+| `SessionStore` | the `user_sessions` rows of server-kit 0.27 (`sid`, user, device, address, started, last active, `shared_device`, `expires_at`, active) | start, get, touch, end one, end all but one, list a user's live ones |
+| `OneTimeTokenStore` | the reset, verification and address-change links (`OneTimeTokenKind`): hash, user, pinned address or new address, expiry | put replaces the user's earlier one of that kind; take by hash; drop. kastlan fills it from its `users` columns |
+| `InvitationStore[InvT]` | invitations: address, role, the app's `scope` (company, team, budget; opaque to the kit), expiry, accepted, revoked | by token hash; open ones for an address; accept; and the admin's list, add, re-mint, revoke |
+| `PasskeyStore` | credentials (id, public key, sign count, transports, name, used) and spent challenges | one-use challenges through a spend that answers false the second time (Kurvenschmiede's table), for every app |
+| `TwoFactorStore` (optional) | the sealed secret, the pending secret, the last step, the backup-code digests | mounted only with it; the app hands a `SecretSeal` (seal, open), so keksdose and kastlan keep their keys |
+| `AdminActionLog` | `admin_actions` rows (`admin_action_record`) | add; page by target; kastlan's company column through the scope |
+| `Mailer` | the transport (exists: Resend, console; kastlan's SMTP as its own `Mailer`) | with the console transport, the admin's answer shows the link once (§12.5 item 11) |
+| `AfterCommit` | work that waits for the app's commit: the account mails, the purge of an erased person's files | `later(fn)`; the app runs the queue from its session's commit event (Kurvenschmiede's `send_after_commit`) and drops it on a rollback. The kit never commits, so it cannot know otherwise |
+| `TokenSigner` | sign and verify the app's JWTs | the kit builds and checks the claims, as today |
+
+**The hooks** (`AuthHooks`, every one optional). `AuthDeps.hooks` is a **dependency** that
+answers the hooks for this request, as the stores are, so a hook works on the request's own
+session and transaction (kastlan's `on_register` makes a company in it):
+- `on_register(user, invitation: InvT | None, body)` and `on_invitation_redeemed(user,
+  invitation)`: seam 1. The invitation is `None` for the first account and any sign-up the
+  gate lets in without one.
+  The second also runs at an address confirmation, for open and unexpired invitations only.
+  `register_model` (a subclass of `RegisterRequest`) carries the app's fields: keksdose's
+  currency and terms version, kastlan's company name.
+- `claims(user, session)` and `bind(user, claims)`: seam 2. The kit's `current_user`
+  dependency checks the token, the session row and the cut-off, then calls `bind`, which may
+  refuse (kastlan's 401 for a lost membership, 403 for a deactivated company).
+- `password_changing(user, body)`, `challenge_extras(user)`, `reset_extras(user)`,
+  `passkey_extensions(user, ceremony)` and `passkey_removing(user, credential)`: seam 3, each
+  with a schema subclass where the body grows.
+- `sessions_ended(user, reason)`, the reason one of logout everywhere, password changed,
+  reset, deactivated, deletion requested, forced change: seam 4. "Every session" means every
+  row; the `iat` cut-off is stamped too only where the app's `AccountRow` has it (keksdose and
+  Kurvenschmiede, until their tokens all carry a `sid`). A new app builds rows only.
+- `DeletionPolicy` (server-kit's `deletion_schedule`), `on_deletion_requested(user)`,
+  `on_deletion_withdrawn(user)` and `erase(user)` (the hand-over; the kit then scrubs the log,
+  anonymises the feedback through `FeedbackService.erase_author` when the app gives its
+  feedback stores, hands the returned file keys to `AfterCommit` for the purge, and deletes
+  the row): seam 5. An app without feedback skips that step.
+- `me_model` (a subclass of `UserResponse`) with `to_me(user)`, and `row_model` with
+  `to_row(user)` on the roster: seam 6.
+- `demo_guard` and `admin_guard`, the factories `feedback_router` already takes.
+- **One `current_user` for every router**: `auth_router` exports the dependency it checks the
+  bearer with (token, session row, cut-off, `bind`), and `admin_guard` built on it, so
+  `FeedbackDeps.actor` and `TranslationReviewDeps.reviewer` are a mapping from that user, not
+  a second bearer check.
+- **Mail texts**: the kit writes the account mails in the seven languages (reset,
+  verification, address change and its notice, invitation, deletion, passkey added, the test
+  mail), as the ui-kit writes the sign-in words: German is `de-CH`, formal, with "ss", as in
+  the ui-kit's catalogues. An app may replace one kind.
+
+**Testing support** (`auth.testing`, `user_admin.testing`): in-memory stores, a `check_*`
+contract suite per port that an app runs against its own adapters, and a software
+authenticator for passkey tests (keksdose and Kurvenschmiede each have a `soft_webauthn.py`
+today).
+
+### 12.4 The admin scope
+
+`user_admin_router` takes an `AdminScope`: which accounts an admin sees and acts on, how the last
+admin is counted, whether a role is one value or a set, and which roles may be given. keksdose,
+Kurvenschmiede and Staunlabor use the global scope (one role per account). kastlan mounts its
+company admin with a company scope (the roles of the acting company, `other_companies`,
+`last_admin` naming the companies, seats through a hook) and its platform with the global scope
+under `/platform`. Teams (Kurvenschmiede) and budget shares (keksdose) stay app routes.
+
+### 12.5 What the kit settles where the copies differ
+
+The router does one thing where the apps do three. Most of it is the contract as written
+(§4–§6, §11, server-kit 0.27); these are the points where at least one app does otherwise
+today, and its adopt note names each:
+
+1. **Session rows and `sid` in every app** (0.27 already says so); `POST /auth/logout` ends
+   every session, `DELETE /auth/sessions/current` this one (§6.3); `GET /auth/sessions` marks
+   the caller's.
+2. **Mail after the commit**, every account mail (feedback already works this way, server-services
+   §2.16).
+3. **A code on every refusal**: new `AuthErrorCode` values for the bearer 401s, a wrong 2FA code
+   and a refused passkey, so the ui-kit says them in seven languages.
+4. **A limit on every anonymous redemption and on `refresh`** (per address of the caller, through
+   the edge-token check), and keksdose's per-account limit on signed-in password checks for all.
+5. **Sign-up checks in the order invitation, gate, `email_taken`**: kastlan changes.
+6. **A reset ends a forced password change, ends every session, and marks the address
+   verified** (it proved the address): kastlan's first part changes; keksdose and
+   Kurvenschmiede gain the last.
+7. **A forced password change ends the person's sessions** (keksdose, Kurvenschmiede): kastlan
+   changes.
+8. **Passkeys: one use per challenge through the store**; a passkey sign-in asks the
+   authenticator to verify the person (UV required) and then counts as both factors, so a
+   person with 2FA is not asked for a code after it. Today no app requires UV.
+9. **Only open, unexpired invitations attach** at an address confirmation (Kurvenschmiede
+   changes).
+10. **The kit's mail texts** in seven languages; an app may keep its own kind by kind.
+11. **Without a mail transport** (the console mailer, Staunlabor's start): the admin's answer to
+    `users/{id}/mail` and to creating or re-sending an invitation carries the link once
+    (Kurvenschmiede's rule; server-kit `MailResult` already allows it only then), and a sign-up
+    through an invitation to its exact address counts as verified (`verified_by_invitation`).
+
+Not in this cut: rotating refresh tokens with reuse detection (no app rotates today; two tabs
+renewing at once would sign each other out without a grace window), and security notices for a
+password, 2FA or new sign-in (no app sends them). Both are later rounds if Marcel wants them.
+
+### 12.6 The order
+
+The numbers moved by one: the edge-token proof shipped alone as server-kit 0.28
+(`vouched_hops`), so the accounts are 0.29 and the admin 0.30.
+
+1. **server-kit 0.29**: `auth_router` with its ports, hooks, texts and testing support, the
+   admin's invitation routes (list, create, re-send, revoke: an invitation-only app cannot let
+   anybody in without them), the `[sql]` tables and stores (decision C). Staunlabor builds its side against the draft ports at the same time
+   (models, adapters, migration 0001, the contract suites) and reports gaps; it is the first
+   app on it.
+2. **server-kit 0.30**: `user_admin_router` with `AdminScope`, the rest of the admin surface,
+   and one public entry for a demo: start a session for an account just made, with a fixed
+   end (no sliding, no refresh token), and its access token with the `sid` and that life
+   (`start_session(user, *, expires_at, refresh=False, shared_device=False)`, Kurvenschmiede's
+   `demo_router`, keksdose's 60-minute demo the same shape). Reaping a demo account takes its
+   rows along: `[sql]`'s `user_sessions` cascades, an app's own table calls `end_all`.
+   Staunlabor next, then Kurvenschmiede (closest
+   to the kit: one role, global scope). Its 0.27 session table comes with the switch, from
+   `[sql]`, not wired by hand before it: until then it stays on server-kit 0.26 with its own
+   copy of the proxy rule, live and checked against production (2026-11-13). It may move its
+   account routes on 0.29 and keep its admin and demo routes until 0.30.
+3. **kastlan and keksdose when it suits them**: kastlan's company scope and binding, keksdose's
+   private mode, are the largest hooks. Each keeps its own routes until it moves; nothing in the
+   kit forces a date.
+
+The ui-kit side is small: the new codes' words (§12.5 item 3) and the sessions list's current
+mark, in the round that ships with 0.29 (ui-kit 0.63).
+
+### 12.7 For Marcel (one decision)
+
+- **A. The cut and the order** of §12.3–§12.6: two routers, the ports and hooks as drawn,
+  server-kit 0.28 (accounts) and 0.29 (admin) (shipped as 0.29 and 0.30, §12.6), Staunlabor first, then Kurvenschmiede, kastlan
+  and keksdose at their own pace. *Recommended.*
+- **B. The kit's behaviour where the copies differ** (§12.5), as the default for every app.
+  Two of them a person notices: a passkey sign-in asks to unlock the device (PIN, fingerprint)
+  and then needs no 2FA code; and the account mails read in the kit's words.
+  *Recommended.*
+- **C. Ready tables for the common case** (Staunlabor's proposal): an optional extra
+  `eifi1-server-kit[sql]` with SQLAlchemy mixins for `users`, `user_sessions`,
+  `one_time_tokens`, `invitations`, `passkeys` and `admin_actions`, and the stores over them.
+  An app with one role and the global scope (Staunlabor, Kurvenschmiede, a new app) inherits
+  them, adds its columns and writes only its Alembic migration; keksdose and kastlan keep their
+  own adapters behind the same ports. It bends §8's "the database is app-side" (the tables'
+  shape moves into the kit, the database and the migrations stay with the app), and the kit
+  pins SQLAlchemy 2 in that extra. Without it Staunlabor and Kurvenschmiede write the same
+  adapters twice. *Recommended.*
+
+### 12.8 After Staunlabor's reading (2026-11-13)
+
+Staunlabor, the first app on it, read the draft (13 points). Folded in: `last_login_at` and the
+review scope on `AccountRow`, `is_demo` and the cut-off optional (§12.3); hooks as a per-request
+dependency, `on_register`'s invitation may be `None`, the `AfterCommit` port, erasure with or
+without feedback, one `current_user` for every router (§12.3); the console-transport rule and
+`de-CH` mail texts (§12.3, §12.5 item 11); the invitation routes with the accounts (0.29, §12.6). Its point 13
+is decision C (§12.7).
+
+### 12.9 The frontend half: `@eifi1/ui-kit/accounts` (2026-11-13)
+
+Marcel, 2026-11-13 (in Staunlabor's session): "Das sollte doch lieber vollständig in die kits
+kommen, frontend wie backend. Noch eine nahezu ähnliche Fassung ist nicht wünschenswert." The
+ui-kit already ships the parts (`SignInForm`, the settings cards, `InvitationsPanel`,
+`FeedbackInbox`, `TranslationReviewPanel`, …); each app wires them itself. In Kurvenschmiede that
+wiring is about 5,000 lines (Staunlabor's inventory, 2026-11-13): the session ≈ 1,200, the
+sign-in pages ≈ 550, settings ≈ 800, admin ≈ 1,190, feedback ≈ 390, the review ≈ 330, the shell
+≈ 700, most of it generic. With `auth_router` making the routes one, the wiring can be one too:
+a new entry `@eifi1/ui-kit/accounts`, on react-router, TanStack Query and zustand, which the kit
+already uses or names as peers.
+
+**What it takes over:**
+
+- **The session**: `createAccountsClient({ http, storagePrefix, publicPaths, signInPath, … })`
+  on the app's axios instance: the bearer from the stored session, the refresh
+  (`createSessionRefresh`/`attachSessionRefresh`, §11), `watchSessionElsewhere`, the session
+  store (zustand; the tab's storage on a shared computer, page memory on the stricter path,
+  local storage otherwise, §2.14), and **one sign-out in the contract's order** (§6.3:
+  `dropPushSubscription`, then `DELETE /auth/sessions/current`, then the tokens; a failed
+  revoke still signs out). The sign-in, the sign-up and the passkey finish **send
+  `shared_device`** (server-kit 0.27). The storage keys come from the app's prefix, and the
+  client lists them for the privacy page (`accountStorageEntries`).
+- **The API and its hooks**: the routes of `auth_router` typed once (`accountsApi`), and
+  `useCurrentUser`, `useSignIn`, `useRegister`, `useSessions` (with `current` and the revoke),
+  `usePasskeys`, `useEmailChange`, `useDeletion`, `useExport`, `useAccountLanguage`,
+  `useInvitationsAdmin`, with their query keys.
+- **The pages**: `accountRoutes(options)` answers plain route objects for the sign-in,
+  sign-up (with the invitation check, a dead link's banner and `AcceptInvitation` for an
+  existing account), forgotten and new password, verification and address confirmation; and
+  `RequireSession` for the private routes.
+- **The account's settings**: the cards wired (profile, password, language, address, sessions
+  with the device list, passkeys, export, deletion) as sections the app puts into its own
+  `SettingsLayout`, beside its own.
+- **Refusals**: `describeAccountFailure`: every coded refusal (§12.5 item 3) in the kit's seven
+  languages, offline and timeouts, and the app's own codes through its catalogue.
+- **Usable outside `AppShell`**: the account menu's rows, the sign-out and the role chip work in
+  an app's own header (Staunlabor has no `AppShell`).
+
+**What the app passes in:** its axios instance and base URL, the storage prefix and the privacy
+lines, the public paths and the page after sign-in, its `User` type (the kit's
+`UserResponse` and the app's `me_model` fields), extra sign-up fields (rendered in
+`RegisterForm`'s slot and sent in the body), the sign-in hint and contact address, its legal
+links (a terms link may be left out), the deletion mode's wording, and which optional parts it
+has. Demo, billing, teams, 2FA and tours are **off unless the app turns them on**.
+
+**Later rounds of the same entry**: the admin pages (roster, action log, test mail, attention
+tile) with server-kit 0.30; the feedback pages (inbox, my feedback, public) and the review page
+wired to `current_user` after them. The invitations panel comes first, with 0.29's routes.
+
+**The admin's sections** (0.64, on server-kit 0.30–0.31's `user_admin_router`): the routes on
+`client.api` and their hooks under `accountQueryKeys.admin`, so every action refreshes the
+roster, the overview's counts and the log together; then four sections an app puts into its
+admin `SettingsLayout` — `AccountAdminOverviewSection` (`GET /admin/attention`),
+`AccountMailTestSection` (`GET /admin/mail`, `POST /admin/mail/test`), `AccountAdminLogSection`
+(`GET /admin/actions`, filtered by a person's id or, for an erased account, by the address the
+row kept) and `AccountUserRosterSection`. The roster pages, sorts and searches on the server
+with its state in the URL, asks each action at the level the server states, shows a mail's link
+while the transport is the console, and reads the overview tile's `?state=deletion_requested`
+(server-kit's token is `deletion_scheduled`; both are read). What exists only in some servers is
+the app's to switch on: the reviewer's scope (`reviewer`, a server with review languages) and
+"Erase now" (`erase`, the `operator` deletion mode). Its words are the `accountRoster` namespace,
+in the seven languages; the app brings its roles (`roles`, `choosable`) and its own columns and
+actions. Kurvenschmiede's `UsersPanel`, `ActivityPanel` and `MailTestPanel`, ≈ 830 lines, were
+the model.
+
+**The second factor** (0.64, on server-kit 0.32's `/auth/login/2fa` and `/auth/me/2fa/*`,
+keksdose's rules, its KG-1): the sign-in page passes `client.verifyCode` as `SignInForm`'s
+`onCode`, so the code step needs no wiring; `AccountTwoFactorSection` is keksdose's card — every
+setup behind the password (`ReauthDialog`), the pending secret's QR code drawn by the kit from
+`otpauth_url`, "Lost your authenticator?" while it is on (the current one works until the new
+code confirms), switching off by the password and a live code. Its three refusals
+(`two_factor_invalid`, `two_factor_unavailable`, `two_factor_not_pending`) are said in the
+account words; an unreadable second factor is never said as a wrong code.
+
+**The review page** (0.64, on server-kit 0.31's `translation_review_router`): the three routes on
+`client.api`, `useTranslationReviews`, and `AccountTranslationReview` — the language tabs, the
+panel, the export and the empty state for a viewer granted nothing, with the strings from the app
+(`loadStrings`) and the kit's own catalogues under `kit.`. Kurvenschmiede's `TranslationsPage`,
+≈ 300 lines, was the model; its words are the `accountTranslations` namespace.
+
+**The feedback pages** (0.64, on server-kit 0.31's `feedback_router`): `accountFeedbackApi` on the
+client's `http` — its own module, so the routes load with the pages and not with every sign-in —
+and `AccountFeedbackPage` (the inbox and one's own reports, on `FeedbackInbox`),
+`AccountPublicFeedbackPage` (on `FeedbackPublicPage`) and `useAccountFeedbackSubmit`.
+Kurvenschmiede's `FeedbackPage`, `AllFeedbackPage` and `useAppFeedbackSubmit`, ≈ 400 lines with
+their requests, were the model; the parts' words were the kit's already.
+
+**The teams** (0.64, opt-in, on server-kit 0.32's `teams_router` and `teams_admin_router`; Marcel,
+2026-11-14: in both kits before the apps' joint deploy): `accountTeamsApi` on the client's `http`
+in its own module, the hooks under their own `["teams", …]` root, `AccountTeamsSection` (the
+admin's: the teams in a table, create, rename, delete at the stated level with what goes with the
+team, members by address in either role, the waiting invitations) and `AccountTeamsPage` (a
+member's teams; a manager's adds, removals and invitations), the six team refusals worded in
+`accountTeams`. Kurvenschmiede's `TeamsPanel`, `TeamsPage` and `TeamCard`, whose wire server-kit
+lifted, were the model; nothing appears unless the app mounts them.
+
+**Found on the way** (Staunlabor's inventory):
+- `@eifi1/ui-kit/offline` imports `idb-keyval` and `@tanstack/query-async-storage-persister`
+  statically, so an app that needs only `SharedComputerChoice` must install both: the
+  persistence moves behind a lazy import or its own entry (ui-kit 0.63).
+- Kurvenschmiede sends no `shared_device` and its sign-out ends no server session; it has no
+  session rows yet, so both come with its move to the kit, not as a fix now.
+- `SessionsSetting` takes `sessions`, `onRevoke` and `current` since 0.61; no app passes them.
+  The wired card does.
+
+**Order**: ui-kit **0.63** with server-kit 0.29 (session, pages, the account's settings, the
+invitations panel, the `offline` split, plus the legal credits and the link referrer collected
+for 0.63); ui-kit **0.64** with server-kit 0.30 (the admin pages) and 0.32 (the second factor),
+then the feedback and review pages. Staunlabor goes live on 0.63/0.29 for accounts and on 0.64/0.30 for the admin, with no
+account wiring of its own.
+

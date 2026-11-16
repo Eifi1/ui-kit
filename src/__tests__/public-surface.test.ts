@@ -11,6 +11,7 @@ import * as tour from "../tour";
 import * as wizard from "../wizard";
 import * as rhf from "../rhf";
 import * as offline from "../offline";
+import * as accounts from "../accounts";
 import * as sync from "../sync";
 import * as syncTesting from "../sync/testing";
 import * as pushWorker from "../push-worker";
@@ -398,7 +399,13 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // page's memory, and `useKitTableStorage`, the provider's new `tableStorage`.
   // 0.62 (+1, Marcel 2026-11-13: every sign-out drops this device's push): `dropPushSubscription`,
   // `releaseThisDevicePush` that never rejects.
-  ["@eifi1/ui-kit", barrel, 1029],
+  // 0.64 (+1, Kurvenschmiede): `ADMIN_ACTION_CONFIRM_CODES`, the refusals AdminActionConfirm
+  // words itself.
+  // 0.64 (+1, Kurvenschmiede's U7): `DEFAULT_ADMIN_ATTENTION_HREFS`, listed under 0.42 above
+  // and never exported until now.
+  // 0.65 (+1, keksdose's budget page, dev #679): `SortStrip`, DataTable's phone sort row
+  // for any list; `TableHeaderCell` gains `sort` (a prop, not a name).
+  ["@eifi1/ui-kit", barrel, 1032],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -499,6 +506,37 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.62 (+1, Marcel 2026-11-12: a shared-computer sign-in has a short life):
   // `useSharedComputerIdleSignOut`.
   ["@eifi1/ui-kit/offline", offline, 22],
+  // 0.63 (docs/auth-harmonization.md §12.9): the account layer's frontend half, its first
+  // part the session — `createAccountsClient`, `accountStorageEntries`. Standalone: an API of
+  // its own, whose later rounds bring TanStack Query hooks the barrel must not reach.
+  // 0.63, the round's second part (+4): `describeAccountFailure`, `useDescribeAccountFailure`,
+  // `ACCOUNT_FAILURE_CODES` and `DEFAULT_ACCOUNT_FAILURE_LABELS`.
+  // (+1) `passkeysAvailable`; the routes are `client.api`, a property, not a name.
+  // (+12) the provider and the hooks: `AccountsProvider`, `useAccountsClient`,
+  // `accountQueryKeys`, `useCurrentUser`, `useUpdateProfile`, `useChangePassword`,
+  // `useEmailChange`, `useAccountSessions`, `usePasskeys`, `useAccountExport`,
+  // `useAccountDeletion`, `useInvitationsAdmin`.
+  // (+2) the pages: `accountRoutes`, `RequireSession`.
+  // (+8) the settings sections: `AccountProfileSection`, `AccountPasswordSection`,
+  // `AccountEmailSection`, `AccountSessionsSection`, `AccountPasskeysSection`,
+  // `AccountExportSection`, `AccountDeletionSection`, `AccountInvitationsSection`.
+  // 0.64 (+2, Staunlabor's dev.1 run): `accountRouteElements`, the pages as JSX `<Route>`s,
+  // and `useAccountStorageLines`, the privacy page's lines.
+  // 0.64 (+2, Kurvenschmiede's dev.2 run): `accountPage`, one page for a lazy route, and
+  // `useFailureBeside`, public for an app's own `describeError`.
+  // 0.64 (+6, server-kit 0.30–0.31's user_admin_router): the admin's hooks `useAdminRoster`,
+  // `useAdminUserActions`, `useAdminActions`, `useAdminAttention`, `useAdminMail`, `useMailTest`.
+  // 0.64 (+5, the admin's sections): `AccountAdminOverviewSection`, `AccountMailTestSection`,
+  // `AccountAdminLogSection`, `AccountUserRosterSection` and its words, `DEFAULT_ACCOUNT_ROSTER_LABELS`.
+  // 0.64 (+2, server-kit 0.32's second factor): `useTwoFactor` and `AccountTwoFactorSection`.
+  // 0.64 (+3, the review page): `AccountTranslationReview`, `useTranslationReviews` and the
+  // page's words, `DEFAULT_ACCOUNT_TRANSLATIONS_LABELS`.
+  // 0.64 (+5, the feedback pages): `AccountFeedbackPage`, `AccountPublicFeedbackPage`,
+  // `useAccountFeedbackSubmit`, `useAccountFeedbackApi` and `accountFeedbackApi`.
+  // 0.64 (+9, server-kit 0.32's opt-in teams): `accountTeamsApi`, `ACCOUNT_TEAM_ERROR_CODES`,
+  // the hooks `useMyTeams`, `useTeamActions`, `useAdminTeams`, `useAdminTeamActions`, the parts
+  // `AccountTeamsSection`, `AccountTeamsPage` and their words, `DEFAULT_ACCOUNT_TEAMS_LABELS`.
+  ["@eifi1/ui-kit/accounts", accounts, 63],
   // 0.46.0: local-first phase 3 (docs/local-first-harmonization.md §2.3) — `createSyncDb`,
   // `SYNC_DB_STORES`, `createSyncEngine`, `DEFAULT_HOLD_CODES`, `DEFAULT_SYNC_BACKOFF_MS`,
   // `syncEngineFor`, `releaseSyncEngine`, `useSyncWorker`, `useSyncStatus`, `useSyncQuery` and the
@@ -533,7 +571,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `stubViewportWidth`, `viewportMatchMedia`, `stubResizeObserver`.
   // 0.35 (+1): `setViewportWidth`, a live resize of the active stub (keksdose's 0.34 report).
   // 0.50.1 (+1): `tourStepContext`, a step context for a test (keksdose N4).
-  ["@eifi1/ui-kit/testing", testing, 8],
+  // 0.64 (+1, Kurvenschmiede): `stubDocumentNavigation`.
+  ["@eifi1/ui-kit/testing", testing, 9],
   // 0.50: `rowMenuAction`, the row "⋯" opener (keksdose's test/row-menu.ts). Its own entry:
   // it needs Testing Library, and `/testing` reaches no package.
   ["@eifi1/ui-kit/testing/react", testingReact, 1],
@@ -562,6 +601,7 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
 const STANDALONE = new Set([
   "@eifi1/ui-kit/rhf",
   "@eifi1/ui-kit/offline",
+  "@eifi1/ui-kit/accounts",
   "@eifi1/ui-kit/sync",
   "@eifi1/ui-kit/sync/testing",
   "@eifi1/ui-kit/table-text",

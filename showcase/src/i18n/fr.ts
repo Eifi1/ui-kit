@@ -530,7 +530,7 @@ export const fr: Dictionary = {
       title: "Connexion et compte",
       short: "Connexion",
       blurb:
-        "Inscription, connexion, jetons à usage unique, claims de session et formats d’échange du compte — la moitié serveur des pages de connexion, d’inscription et de compte.",
+        "Inscription, connexion, jetons à usage unique, claims de session et formats d’échange du compte — et depuis la 0.29 les routes elles-mêmes : un routeur sur les stockages de l’app, les e-mails du compte, les passkeys et des tables prêtes. La moitié serveur des pages de connexion, d’inscription et de compte.",
     },
     "server-user-admin": {
       title: "Administration des utilisateurs",
@@ -1267,6 +1267,8 @@ export const fr: Dictionary = {
       "claims du jeton de session",
       "normaliser une adresse e-mail",
       "codes d’erreur d’authentification",
+      "routes du compte côté serveur",
+      "connexion par passkey côté serveur",
     ],
     "server-user-admin": [
       "interroger la liste des utilisateurs côté serveur",

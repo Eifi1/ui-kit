@@ -23,6 +23,7 @@ import type { PasswordSettingLabels, ProfileSettingLabels, TwoFactorSettingLabel
 import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
 import { AlertBanner } from "../components/alert-banner";
 import { hasContent } from "../lib/presence";
+import { saveBlob } from "../lib/download";
 import { authErrorCode } from "../auth/auth-errors";
 
 // The label types moved beside the namespace's defaults (0.12.0); re-exported here so
@@ -548,6 +549,8 @@ export function TwoFactorSetting({
   onStartSetup,
   onEnable,
   onDisable,
+  onReplace,
+  backupCodes,
   busy,
   renderQr,
   labels: labelsProp,
@@ -559,6 +562,26 @@ export function TwoFactorSetting({
   onStartSetup: () => void;
   onEnable: (code: string) => void;
   onDisable: (password: string, code: string) => void;
+  /**
+   * 0.64 (keksdose): a new setup while two-factor is on — the way back from a lost
+   * authenticator. Switching off needs a LIVE code, so without it a lost phone locks the
+   * account out for good; the server (server-kit 0.32) keeps the current secret working
+   * until a code from the new one confirms it. Left out, the card offers none.
+   */
+  onReplace?: () => void;
+  /**
+   * 0.64 (server-kit 0.32): the backup codes. `fresh`, a set just made: shown once, with copy,
+   * download (`fileName`, default `backup-codes.txt`) and "I have saved them" (`onDismiss`).
+   * Otherwise, while two-factor is on, how many are `left` and "Make new backup codes"
+   * (`onRenew`). Left out, the card shows none.
+   */
+  backupCodes?: {
+    fresh?: readonly string[] | null;
+    left?: number;
+    onRenew?: () => void;
+    onDismiss: () => void;
+    fileName?: string;
+  };
   busy?: boolean;
   /** Draw the code yourself (a branded QR, a library you already ship). Given the
    *  `otpauthUri`; the kit's own {@link QrCode} otherwise. Unused with `qrSvg`. */
@@ -661,6 +684,61 @@ export function TwoFactorSetting({
           />
           <Button onClick={() => onEnable(code)} disabled={!code || busy}>
             {labels.verify}
+          </Button>
+        </div>
+      )}
+
+      {backupCodes?.fresh && backupCodes.fresh.length > 0 && (
+        <div className="space-y-2 border-t border-subtle pt-3">
+          <div className="text-sm font-medium">{labels.backupTitle}</div>
+          <div className="text-xs text-secondary">{labels.backupHint}</div>
+          {/* `data-private`: each code signs in, as the authenticator's secret does. */}
+          <ul data-private dir="ltr" className="grid grid-cols-2 gap-1 font-mono text-sm select-all">
+            {backupCodes.fresh.map((backupCode) => (
+              <li key={backupCode}>{backupCode}</li>
+            ))}
+          </ul>
+          <div className="flex flex-wrap items-center gap-2">
+            <CopyButton text={backupCodes.fresh.join("\n")} label={labels.backupCopy} size="xs" tone="muted" />
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() =>
+                saveBlob(
+                  new Blob([`${(backupCodes.fresh ?? []).join("\n")}\n`], { type: "text/plain" }),
+                  backupCodes.fileName ?? "backup-codes.txt",
+                )
+              }
+            >
+              {labels.backupDownload}
+            </Button>
+            <Button size="sm" onClick={backupCodes.onDismiss}>
+              {labels.backupDone}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {enabled && !setup && backupCodes && !backupCodes.fresh?.length && (
+        <div className="space-y-2 border-t border-subtle pt-3">
+          <div className="text-sm font-medium">{labels.backupTitle}</div>
+          {backupCodes.left !== undefined && (
+            <div className="text-xs text-secondary">{labels.backupLeft?.(backupCodes.left)}</div>
+          )}
+          {backupCodes.onRenew && (
+            <Button variant="secondary" size="sm" onClick={backupCodes.onRenew} disabled={busy}>
+              {labels.backupRenew}
+            </Button>
+          )}
+        </div>
+      )}
+
+      {enabled && !setup && onReplace && (
+        <div className="space-y-2 border-t border-subtle pt-3">
+          <div className="text-sm font-medium">{labels.replaceTitle}</div>
+          <div className="text-xs text-secondary">{labels.replaceHint}</div>
+          <Button variant="secondary" onClick={onReplace} disabled={busy}>
+            {labels.replace}
           </Button>
         </div>
       )}

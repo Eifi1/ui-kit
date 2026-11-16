@@ -1,7 +1,5 @@
-import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import type { QueryClient } from "@tanstack/react-query";
-import type { PersistedClient, PersistQueryClientOptions } from "@tanstack/react-query-persist-client";
-import { del, get, keys, set } from "idb-keyval";
+import type { PersistedClient, Persister, PersistQueryClientOptions } from "@tanstack/react-query-persist-client";
 import { listenOn, postOnce } from "../lib/broadcast";
 
 /**
@@ -13,8 +11,12 @@ import { listenOn, postOnce } from "../lib/broadcast";
  * secret fields from payloads that are otherwise wanted offline, and `removeStale` for
  * another account's leftovers.
  *
- * The only module of the kit that imports TanStack and idb-keyval: both are optional peers
- * of `@eifi1/ui-kit/offline` and never reached from the main barrel (packaging-contract).
+ * The only module of the kit that imports the persister and idb-keyval: both are optional
+ * peers of `@eifi1/ui-kit/offline` and never reached from the main barrel
+ * (packaging-contract). Since 0.63 it imports them on first use — the first save, restore,
+ * delete or sweep — not when the entry loads: the entry's other parts (`SharedComputerChoice`,
+ * `useFeedbackCommentsQuery`) need neither, and an app that takes only those installs
+ * neither. The exports map allows no deep import that could have spared them.
  */
 
 /** A field name the scrub removes: an exact name, or a pattern (`/^signature_/`). */
@@ -116,12 +118,56 @@ export interface QueryPersistence {
   removeStale: () => Promise<void>;
 }
 
+// `import()` on each call: the module system loads it once and answers the same module
+// after. A failed load (a chunk that did not arrive) rejects that one call, and the next
+// tries again; every caller here already treats the store as best-effort.
+const idb = () => import("idb-keyval");
+
 const idbStorage: QueryPersistenceStorage = {
-  getItem: (key) => get<string>(key),
-  setItem: (key, value) => set(key, value),
-  removeItem: (key) => del(key),
-  keys: () => keys(),
+  getItem: async (key) => (await idb()).get<string>(key),
+  setItem: async (key, value) => (await idb()).set(key, value),
+  removeItem: async (key) => (await idb()).del(key),
+  keys: async () => (await idb()).keys(),
 };
+
+/** What {@link lazyPersister} hands `createAsyncStoragePersister`: typed here, since a type
+ *  import of the persister would be one more import of it (packaging-contract reads them). */
+interface AsyncPersisterOptions {
+  storage: {
+    getItem: (key: string) => Promise<string | null>;
+    setItem: (key: string, value: string) => Promise<void>;
+    removeItem: (key: string) => Promise<void>;
+  };
+  key: string;
+  throttleTime: number;
+  serialize: (client: PersistedClient) => string;
+  deserialize: (raw: string) => PersistedClient;
+}
+
+/**
+ * A `Persister` whose real one (`createAsyncStoragePersister`) is made on its first call,
+ * once its module has loaded — the same object every call after, so its throttle holds.
+ * The calls wait in the order they came, so the throttle still sees the latest save last.
+ * A failed load is not kept: the next call tries again.
+ */
+function lazyPersister(options: AsyncPersisterOptions): Persister {
+  let real: Promise<Persister> | null = null;
+  const load = () => {
+    real ??= import("@tanstack/query-async-storage-persister").then(
+      ({ createAsyncStoragePersister }) => createAsyncStoragePersister(options),
+      (error: unknown) => {
+        real = null;
+        throw error;
+      },
+    );
+    return real;
+  };
+  return {
+    persistClient: async (client) => (await load()).persistClient(client),
+    restoreClient: async () => (await load()).restoreClient(),
+    removeClient: async () => (await load()).removeClient(),
+  };
+}
 
 export interface RemoveStaleQueryCopiesOptions {
   /** Default: IndexedDB (idb-keyval), the store {@link createQueryPersistence} writes to. */
@@ -336,7 +382,7 @@ export function createQueryPersistence({
     }
   };
 
-  const persister = createAsyncStoragePersister({
+  const persister = lazyPersister({
     storage: {
       // Only the provider's restore reads: mounting this persistence again re-arms it.
       getItem: async (k) => {

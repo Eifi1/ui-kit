@@ -533,7 +533,7 @@ export const en: Dictionary = {
       title: "Sign-in & account",
       short: "Auth",
       blurb:
-        "Registration, sign-in, one-time tokens, session claims and the account's wire shapes — the server half of the sign-in, register and account pages.",
+        "Registration, sign-in, one-time tokens, session claims and the account's wire shapes — and since 0.29 the routes themselves: one router over the app's stores, the account mails, passkeys and ready tables. The server half of the sign-in, register and account pages.",
     },
     "server-user-admin": {
       title: "User admin",
@@ -1245,6 +1245,8 @@ export const en: Dictionary = {
       "session token claims",
       "normalise an email address",
       "auth error codes",
+      "account routes on the server",
+      "passkey sign-in on the server",
     ],
     "server-user-admin": [
       "query the user list on the server",

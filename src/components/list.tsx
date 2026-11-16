@@ -19,7 +19,7 @@ import { Collapse } from "./disclosure";
 import { toneTextClass } from "./signed-amount";
 import type { TextTone } from "./signed-amount";
 import { useKitLabels, useKitLink } from "../i18n/kit-labels";
-import { pickLinkRenderer } from "./text-link";
+import { externalRel, pickLinkRenderer } from "./text-link";
 import { LockedReason, mergeDescribedBy, useLockReason, type DisabledReasonDisplay } from "./field-parts";
 import type { CommitScope } from "./write-lock";
 import { DEFAULT_LIST_LABELS } from "./list-labels";
@@ -490,6 +490,7 @@ export type ListItemProps = ListItemBaseProps &
         href?: never;
         renderLink?: never;
         external?: never;
+        referrer?: never;
         onAuxClick?: never;
       } & NotExpandable &
         NotCheckable)
@@ -510,6 +511,10 @@ export type ListItemProps = ListItemBaseProps &
          * after the title. keksdose's inbox rows whose URL is absolute.
          */
         external?: boolean;
+        /** 0.63: an `external` row that counts for the site it names — `rel="noopener"`
+         *  alone (no `noreferrer`, no `nofollow`); the mark and the new-tab note stay. See
+         *  `TextLink`'s `referrer`. Ignored without `external`. */
+        referrer?: boolean;
         /** Runs on a click, before the navigation (mark the row read). */
         onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
         /** Runs on a middle click, which fires no `click` — keksdose marks a
@@ -526,6 +531,7 @@ export type ListItemProps = ListItemBaseProps &
         href?: never;
         renderLink?: never;
         external?: never;
+        referrer?: never;
         onAuxClick?: never;
         disabledReason?: never;
         disabledReasonDisplay?: never;
@@ -555,6 +561,7 @@ export type ListItemProps = ListItemBaseProps &
         href?: never;
         renderLink?: never;
         external?: never;
+        referrer?: never;
         onAuxClick?: never;
         disabledReason?: never;
         disabledReasonDisplay?: never;
@@ -599,6 +606,7 @@ export type ListItemProps = ListItemBaseProps &
         href?: never;
         renderLink?: never;
         external?: never;
+        referrer?: never;
         onAuxClick?: never;
       } & NotExpandable)
   );
@@ -667,6 +675,7 @@ export function ListItem({
   href,
   renderLink,
   external = false,
+  referrer = false,
   onClick,
   onAuxClick,
   disabledReason,
@@ -883,7 +892,7 @@ export function ListItem({
     main = render ? (
       <RenderedLink render={render} {...linkProps} />
     ) : (
-      <a {...anchorProps} {...(external ? { target: "_blank", rel: "noopener noreferrer" } : null)}>
+      <a {...anchorProps} {...(external ? { target: "_blank", rel: externalRel(referrer) } : null)}>
         {linkBody}
       </a>
     );

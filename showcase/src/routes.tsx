@@ -196,6 +196,7 @@ const WizardStepHooksDemo = lazySection(() => import("./sections/wizard-012-demo
 const DescriptionPlaceholderDemo = lazySection(() => import("./sections/table-012-demo"), "DescriptionPlaceholderDemo");
 const TableVariantsDemo = lazySection(() => import("./sections/table-012-demo"), "TableVariantsDemo");
 const TableStackDemo = lazySection(() => import("./sections/table-012-demo"), "TableStackDemo");
+const TableSortDemo = lazySection(() => import("./sections/table-sort"), "TableSortDemo");
 const DataTableUrlFiltersDemo = lazySection(() => import("./sections/data-table-server"), "DataTableUrlFiltersDemo");
 const UrlStateDemo = lazySection(() => import("./sections/url-state-demo"), "UrlStateDemo");
 const FormattingDemo = lazySection(() => import("./sections/formatting-demo"), "FormattingDemo");
@@ -1170,6 +1171,7 @@ export const GROUPS: ShowcaseGroup[] = [
           "TableEmpty",
           "TableCaption",
           "TableFoot",
+          "SortStrip",
           "NUMERIC_CELL_CLASS",
           "Separator",
           "ScrollArea",
@@ -1181,6 +1183,7 @@ export const GROUPS: ShowcaseGroup[] = [
             <TableHeaderValignDemo />
             <TableVariantsDemo />
             <TableStackDemo />
+            <TableSortDemo />
             <TableRefs016Demo />
             <DescriptionPlaceholderDemo />
             <TableEdgeFadeDemo />
@@ -2184,9 +2187,24 @@ export const GROUPS: ShowcaseGroup[] = [
         title: "Sign-in & account",
         short: "Auth",
         blurb:
-          "Registration, sign-in, one-time tokens, session claims and the account's wire shapes — the server half of the sign-in, register and account pages.",
+          "Registration, sign-in, one-time tokens, session claims and the account's wire shapes — and since 0.29 the routes themselves: one router over the app's stores, the account mails, passkeys and ready tables. The server half of the sign-in, register and account pages.",
         icon: KeyRound,
-        serverModules: ["auth"],
+        // server-kit 0.29 (docs/auth-harmonization.md §12): the account layer — the routes,
+        // their service, ports, mails, passkeys and the `[sql]` tables — joins layer 1 here:
+        // one page for the sign-in, as the frontend has one group (the Server kit holds ten).
+        serverModules: [
+          "auth",
+          "auth.router",
+          "auth.service",
+          "auth.ports",
+          "auth.mails",
+          "auth.passkeys",
+          "auth.sql",
+          "auth.jobs",
+          "auth.jwt_signer",
+          "auth.bcrypt_hasher",
+          "auth.seal",
+        ],
       }),
       serverPage({
         slug: "server-user-admin",
@@ -2195,7 +2213,17 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The user list's query, the four admin actions and their confirmation levels, the audit entry, two-stage deletion and the data export.",
         icon: UserCog,
-        serverModules: ["user_admin"],
+        serverModules: [
+          "user_admin",
+          "user_admin.router",
+          "user_admin.service",
+          "user_admin.scope",
+          "user_admin.ports",
+          // server-kit 0.32: the opt-in teams — the shapes and refusals, the routes, the tables.
+          "teams",
+          "teams.router",
+          "teams.sql",
+        ],
       }),
       serverPage({
         slug: "server-settings",
@@ -2256,7 +2284,7 @@ export const GROUPS: ShowcaseGroup[] = [
         // the store behind an app's feedback `AttachmentStorage`, so it follows `uploads`.
         // `clock` (0.10) is the layer-2 services' shared clock port; feedback was its first
         // user.
-        serverModules: ["feedback", "feedback.router", "uploads", "objects", "clock"],
+        serverModules: ["feedback", "feedback.router", "feedback.sql", "uploads", "objects", "clock"],
       }),
       serverPage({
         slug: "server-limits",
@@ -2276,7 +2304,7 @@ export const GROUPS: ShowcaseGroup[] = [
         icon: Languages,
         // `translation_review.router` (server-kit 0.10) needs the `fastapi` extra, as
         // `feedback.router` does.
-        serverModules: ["translation_review", "translation_review.router"],
+        serverModules: ["translation_review", "translation_review.router", "translation_review.sql"],
       }),
     ],
   },

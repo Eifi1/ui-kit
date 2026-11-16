@@ -10,6 +10,7 @@ import type { ReviewStatus, TranslationReviewFilter, TranslationRow } from "../.
 import { TranslationReviewPanel } from "../translation-review";
 import type { TranslationReviewPanelProps } from "../translation-review";
 import { stubPhone } from "../../test/viewport";
+import { createMemoryStorage } from "../../lib/safe-storage";
 
 /**
  * 0.25.1 — what the apps found on 0.25.0.
@@ -276,6 +277,45 @@ describe("TranslationReviewPanel's grouped view in storage (Kurvenschmiede, 0.35
     render(panel({ rows }));
     fireEvent.click(within(screen.getByRole("table", { name: "area000" })).getByRole("button", { name: "Key" }));
     expect(localStorage.length).toBe(0);
+  });
+
+  // 0.63: the panel takes `storage`, as DataTable does since 0.62 — the app's choice of where
+  // the view lives (a shared computer's page memory), over the provider's `tableStorage`.
+  describe("storage (0.63)", () => {
+    const keysIn = (store: Storage) => Array.from({ length: store.length }, (_, i) => store.key(i)).sort();
+
+    it("the groups read their view from it and write it there, over the provider's", () => {
+      const own = createMemoryStorage();
+      const provider = createMemoryStorage();
+      own.setItem("hbui-table:translations", JSON.stringify({ sort: [{ key: "key", dir: "desc" }], pageSize: 10 }));
+      render(
+        <UiKitProvider tableStorage={provider}>
+          {panel({ rows, storageKey: "translations", storage: own })}
+        </UiKitProvider>,
+      );
+      expect(keyHeader(screen.getByRole("table", { name: "area000" }))).toHaveAttribute("aria-sort", "descending");
+      fireEvent.change(pageSizeOf("area001"), { target: { value: "25" } });
+      expect(JSON.parse(own.getItem("hbui-table:translations") ?? "null")).toMatchObject({
+        sort: [{ key: "key", dir: "desc" }],
+        pageSize: 25,
+      });
+      expect(keysIn(provider)).toEqual([]);
+      expect(localStorage.length).toBe(0);
+    });
+
+    it("the ungrouped table keeps its view in it, under the app's prefix", () => {
+      const own = createMemoryStorage();
+      render(
+        <UiKitProvider tableStorageKeyPrefix="app-table:">
+          {panel({ rows, storageKey: "translations", storage: own, groupBy: undefined })}
+        </UiKitProvider>,
+      );
+      fireEvent.click(within(screen.getByRole("table")).getByRole("button", { name: "Key" }));
+      expect(JSON.parse(own.getItem("app-table:translations") ?? "null")).toMatchObject({
+        sort: [{ key: "key", dir: "asc" }],
+      });
+      expect(localStorage.length).toBe(0);
+    });
   });
 });
 

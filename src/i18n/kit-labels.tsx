@@ -124,6 +124,10 @@ import type { TopBarPartsLabels } from "../shell/top-bar-parts-labels";
 import type { SignOutPendingDialogLabels } from "../offline/sign-out-pending-dialog";
 import type { PwaUpdatePromptLabels } from "../offline/pwa-update-prompt";
 import type { SharedComputerLabels } from "../offline/shared-computer";
+import type { AccountFailureLabels } from "../accounts/account-failure";
+import type { AccountRosterLabels } from "../accounts/account-roster-labels";
+import type { AccountTranslationsLabels } from "../accounts/account-translations-labels";
+import type { AccountTeamsLabels } from "../accounts/account-teams-labels";
 import type { HeldChangesBannerLabels } from "../shell/held-changes-banner-labels";
 import type { FieldSuggestionLabels } from "../components/field-parts";
 import type { ConsentAgainLabels } from "../components/consent-again-notice-labels";
@@ -539,6 +543,20 @@ export interface UiKitLabels {
   /** 0.58: `useReorder` — "Move up" and "Move down", why one is not available at an end,
    *  and the announcement of a move, "Moved to position 3 of 7" (keksdose SL-10). */
   reorder: ReorderLabels;
+  /** 0.63: `describeAccountFailure` — every coded refusal of the account routes (server-kit
+   *  0.29's `auth_router`, docs/auth-harmonization.md §12.5 item 3, §12.9), offline, a
+   *  timeout, the server's fault and a throttle. */
+  accountFailure: AccountFailureLabels;
+  /** 0.64: `AccountUserRosterSection` — the roster's actions on server-kit 0.30's
+   *  `user_admin_router`, the question each asks and what it says once done. */
+  accountRoster: AccountRosterLabels;
+  /** 0.64: `AccountTranslationReview` — the review page's heading, its empty state and the
+   *  source filter's words, on server-kit 0.31's `translation_review_router`. */
+  accountTranslations: AccountTranslationsLabels;
+  /** 0.64: `AccountTeamsSection` and `AccountTeamsPage` — server-kit 0.32's opt-in teams: the
+   *  admin's list and a member's page, their questions, what each change says once done,
+   *  and the six coded refusals of a team. */
+  accountTeams: AccountTeamsLabels;
 }
 
 /**

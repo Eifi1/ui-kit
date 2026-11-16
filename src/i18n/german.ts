@@ -115,6 +115,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       commentFailed: "Kommentar konnte nicht gesendet werden.",
       voteFailed: "Stimme konnte nicht gespeichert werden.",
       replyFailed: "Antwort konnte nicht gesendet werden.",
+      legacyReworkAppend: "Diese Seite ist nicht mehr aktuell. Laden Sie sie neu und versuchen Sie es noch einmal.",
     },
     feedbackMenu: {
       trigger: "Feedback senden",
@@ -299,6 +300,25 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         copySecret: "Schlüssel kopieren",
         // 0.31.0: the card's title; the state ("Aktiv") stands beside it.
         title: "Zwei-Faktor-Authentifizierung",
+        // 0.64 (keksdose): a lost authenticator's way back, and the accounts section's words.
+        replaceTitle: "Authenticator verloren?",
+        replaceHint:
+          "Geben Sie Ihr Kontopasswort ein, um einen neuen Authenticator einzurichten. Der bisherige funktioniert weiter, bis Sie den neuen Code bestätigen.",
+        replace: "Authenticator ersetzen",
+        setupReauth:
+          "Die Zwei-Faktor-Authentifizierung ändert, wie Sie sich anmelden – darum braucht die Einrichtung zuerst Ihr Kontopasswort. Danach scannen Sie einen Code mit Ihrer Authenticator-App.",
+        turnedOn: "Zwei-Faktor-Authentifizierung aktiviert.",
+        turnedOff: "Zwei-Faktor-Authentifizierung deaktiviert.",
+        // 0.64: the backup codes, shown once, and how many are left.
+        backupTitle: "Backup-Codes",
+        backupHint:
+          "Jeder Code meldet Sie einmal anstelle des Codes aus der Authenticator-App an. Bewahren Sie sie sicher auf: Sie werden nur jetzt angezeigt.",
+        backupLeft: (count) => (count === 1 ? "Noch 1 Backup-Code übrig." : `Noch ${count} Backup-Codes übrig.`),
+        backupRenew: "Neue Backup-Codes erstellen",
+        backupRenewHint: "Neue Codes ersetzen die bisherigen; diese funktionieren sofort nicht mehr.",
+        backupCopy: "Codes kopieren",
+        backupDownload: "Herunterladen",
+        backupDone: "Ich habe sie gespeichert",
       },
       passkeys: {
         title: "Passkeys",
@@ -1010,6 +1030,12 @@ export function germanLabels(numberLocale: string): UiKitLabels {
             commercial:
               "Dies ist ein kommerzieller Dienst. Kostenpflichtige Tarife verkauft unser Wiederverkäufer, der als Merchant of Record auftritt: Er verkauft das Abonnement im eigenen Namen, nimmt die Zahlung entgegen, stellt die Rechnung aus und rechnet die MWST ab, und für den Kauf gelten seine Verkaufsbedingungen. Wir achten darauf, dass die Inhalte dieses Dienstes richtig sind, können aber keine Gewähr für ihre Vollständigkeit und Aktualität übernehmen. Für verlinkte externe Websites sind deren Betreiber verantwortlich; auf deren Inhalte haben wir keinen Einfluss.",
           },
+          // 0.63: the credits for the kit's default chart palette (Staunlabor's wording,
+          // the charts only).
+          credits: {
+            title: "Danksagungen",
+            body: "Die Farben in den Diagrammen stammen aus „{palette}“, der kategorialen Palette von {site}. Ihre acht Farbtöne hat anyplot.ai gegen Deuteranopie, Protanopie und Tritanopie geprüft und auf warmes Papier abgestimmt.",
+          },
         },
         privacy: {
           controller: {
@@ -1037,6 +1063,9 @@ export function germanLabels(numberLocale: string): UiKitLabels {
                 `Kürzlich geladene Daten, damit Seiten auch ohne Verbindung öffnen; was älter als ${hours} Stunden ist, verwendet die App nicht mehr und entfernt es, sobald sie wieder geöffnet wird. Davon bleibt nichts, wenn Sie sich mit «Dies ist ein gemeinsam genutzter Computer» anmelden`,
               sharedComputer:
                 "Ob Sie bei der Anmeldung «Dies ist ein gemeinsam genutzter Computer» gewählt haben, zusammen mit dem Tab gespeichert",
+              // 0.63 (auth §12.9): the sign-in `@eifi1/ui-kit/accounts` keeps.
+              session:
+                "Ihre Anmeldung, bis Sie sich abmelden: die Anmeldetoken und die Angaben Ihres Kontos, etwa Ihr Name und Ihre E-Mail-Adresse. Nach einer Anmeldung mit «Dies ist ein gemeinsam genutzter Computer» nur zusammen mit dem Tab gespeichert",
             },
           },
           rights: {
@@ -1419,6 +1448,8 @@ export function germanLabels(numberLocale: string): UiKitLabels {
           : `${n(count)} Elemente, die andere sehen können, gehen an einen Administrator über.`,
       confirm: "Mein Konto löschen",
       done: "Ihr Konto ist deaktiviert. Sie werden abgemeldet.",
+      requested:
+        "Ihr Antrag auf Löschung des Kontos ist eingegangen. Das Konto ist deaktiviert, und Sie sind auf allen Geräten abgemeldet.",
       wrongPassword: "Das Passwort ist falsch.",
       confirmationMismatch: "Das ist nicht die Adresse Ihres Kontos.",
       lastAdmin:
@@ -1500,12 +1531,15 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       filteredTo: (target) => `Nur ${target}`,
       showAll: "Alle Aktionen zeigen",
       filterBy: (target) => `Nur Aktionen zu ${target} zeigen`,
+      notSent: "E-Mail nicht gesendet",
+      reviewerNone: "Keine Prüfrolle mehr",
       actions: {
         deactivate: "Deaktiviert",
         reactivate: "Reaktiviert",
         role: "Rolle geändert",
         password_change_require: "Neues Passwort verlangt",
         password_change_withdraw: "Passwortforderung zurückgenommen",
+        two_factor_reset: "Zwei-Faktor-Anmeldung zurückgesetzt",
         mail_verification: "Bestätigungsmail gesendet",
         mail_reset: "Mail zum Zurücksetzen des Passworts gesendet",
         reviewer: "Prüfrolle geändert",
@@ -1606,6 +1640,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
         "Dieser Server verschickt keine Mails – sie werden ins Server-Log geschrieben. Kopieren Sie jeden Einladungslink hier und geben Sie ihn selbst weiter: Er wird nur einmal angezeigt.",
       linkReady: (email) => `Der Einladungslink für ${email}, nur dieses eine Mal angezeigt:`,
       notSent: (email) => `${email} ist eingeladen, aber die Mail konnte nicht gesendet werden. Senden Sie sie erneut.`,
+      sentAgain: (email) => `${email} hatte schon eine Einladung. Sie wurde mit einem neuen Link erneut gesendet.`,
       failed: "Das hat nicht geklappt. Bitte erneut versuchen.",
     },
     characterCount: {
@@ -2240,6 +2275,194 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       atTop: "Steht bereits ganz oben",
       atBottom: "Steht bereits ganz unten",
       moved: (position, total) => `An Position ${n(position)} von ${n(total)} verschoben`,
+    },
+    // 0.63 (auth §12.9, server-kit 0.29): describeAccountFailure — every coded refusal of the
+    // account routes; the older codes in the words the kit's forms already use for them.
+    accountFailure: {
+      codes: {
+        invalid_credentials: "Die E-Mail-Adresse oder das Passwort ist falsch.",
+        registration_closed:
+          "Neue Konten gibt es nur auf Einladung. Bitten Sie den Betreiber, Ihre E-Mail-Adresse einzuladen.",
+        email_taken: "Ein Konto mit dieser E-Mail-Adresse existiert bereits.",
+        invitation_invalid: "Dieser Einladungslink ist ungültig.",
+        invitation_expired: "Diese Einladung ist abgelaufen. Bitten Sie um eine neue.",
+        token_invalid: "Dieser Link ist ungültig oder abgelaufen.",
+        token_expired: "Dieser Link ist abgelaufen. Fordern Sie einen neuen an.",
+        account_inactive: "Dieses Konto ist deaktiviert.",
+        session_ended: "Ihre Sitzung ist beendet. Bitte melden Sie sich erneut an.",
+        not_signed_in: "Sie sind nicht angemeldet. Bitte melden Sie sich an.",
+        admin_required: "Das ist nur mit Administratorrechten möglich.",
+        password_unchanged: "Das neue Passwort ist dasselbe wie das bisherige. Bitte wählen Sie ein anderes.",
+        password_change_not_required: "Für dieses Konto ist kein neues Passwort mehr nötig. Bitte melden Sie sich an.",
+        email_unchanged: "Das ist bereits Ihre Adresse.",
+        email_change_not_pending: "Es wartet keine Adressänderung.",
+        mail_not_sent: "Die E-Mail konnte nicht gesendet werden. Bitte versuchen Sie es später erneut.",
+        passkey_refused: "Passkey-Anmeldung fehlgeschlagen.",
+        passkey_registration_refused: "Der Passkey konnte nicht hinzugefügt werden. Bitte versuchen Sie es erneut.",
+        passkey_not_found: "Diesen Passkey gibt es nicht mehr.",
+        session_not_found: "Diese Sitzung ist bereits beendet.",
+        invitation_not_found: "Diese Einladung gibt es nicht mehr.",
+        invitation_closed: "Diese Einladung wurde bereits angenommen oder zurückgezogen.",
+        invitation_scope_invalid: "Die Auswahl für diese Einladung ist nicht verfügbar.",
+        last_admin:
+          "Dies ist das letzte aktive Konto mit Administratorrechten. Geben Sie zuerst einem anderen Konto Administratorrechte.",
+        self_action: "Mit Ihrem eigenen Konto ist das nicht möglich.",
+        other_companies:
+          "Dieses Konto gehört auch zu anderen Unternehmen, deshalb kann nur der Plattformbetreiber das tun. Sie können es stattdessen aus diesem Unternehmen entfernen.",
+        household_has_members:
+          "Ihr Haushalt hat weitere Mitglieder, deshalb kann das Konto hier nicht gelöscht werden. Bitte schreiben Sie dem Betreiber.",
+        confirmation_required: "Bitte bestätigen Sie das zuerst.",
+        confirmation_mismatch: "Das ist nicht die Adresse Ihres Kontos.",
+        password_incorrect: "Das Passwort ist falsch.",
+        demo_refused: "Das ist in der Demo nicht möglich.",
+        user_not_found: "Dieses Konto gibt es nicht mehr.",
+        role_not_grantable: "Diese Rolle kann hier nicht vergeben werden.",
+        reviewer_is_admin:
+          "Ein Konto mit Administratorrechten kann keine Prüfrolle haben. Ändern Sie zuerst die Rolle.",
+        email_already_verified: "Diese Adresse ist bereits bestätigt.",
+        deletion_not_requested: "Für dieses Konto wurde keine Löschung beantragt, oder es ist noch aktiv.",
+        two_factor_invalid:
+          "Dieser Code stimmt nicht oder wurde schon verwendet. Geben Sie den Code ein, den Ihre Authenticator-App jetzt anzeigt.",
+        two_factor_unavailable:
+          "Die Zwei-Faktor-Anmeldung ist auf diesem Server gerade nicht verfügbar. Ihre Authenticator-App ist in Ordnung. Bitte versuchen Sie es später erneut.",
+        two_factor_not_pending: "Keine Einrichtung wartet auf einen Code. Starten Sie die Einrichtung erneut.",
+        two_factor_not_enabled:
+          "Für dieses Konto ist die Zwei-Faktor-Anmeldung ausgeschaltet. Richten Sie sie zuerst ein.",
+      },
+      offline: "Der Server ist nicht erreichbar. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+      timeout: "Der Server hat zu lange nicht geantwortet. Bitte versuchen Sie es erneut.",
+      server: "Auf dem Server ist etwas schiefgegangen. Bitte versuchen Sie es später erneut.",
+      rateLimited,
+      failed: "Das hat nicht geklappt. Bitte erneut versuchen.",
+    },
+    // 0.64 (auth §12.9): AccountUserRosterSection — the roster's actions, the question each
+    // asks and what it says once done.
+    accountRoster: {
+      search: "Konten durchsuchen",
+      consoleMail:
+        "Dieser Server versendet keine E-Mails: Jede landet in seinem Protokoll. Nach einer Mail-Aktion erscheint ihr Link hier zum Weitergeben.",
+      mailLink: (email) => `Der Link für ${email}, zum Weitergeben:`,
+      onlyDeletions: "Nur die Konten, die ihre Löschung beantragt haben.",
+      showEverybody: "Alle anzeigen",
+      reviews: "Prüfsprachen",
+      sendVerification: "Bestätigungsmail erneut senden",
+      verificationSent: (email) => `Bestätigungsmail an ${email} gesendet.`,
+      sendReset: "Mail zum Zurücksetzen des Passworts senden",
+      resetSent: (email) => `Mail zum Zurücksetzen des Passworts an ${email} gesendet.`,
+      requirePasswordChange: "Neues Passwort verlangen",
+      requirePasswordChangeTitle: (name) => `Von ${name} ein neues Passwort verlangen?`,
+      requirePasswordChangeBody:
+        "Bei der nächsten Anmeldung muss das Konto zuerst ein neues Passwort wählen. Alle Sitzungen des Kontos enden sofort.",
+      passwordChangeRequired: (email) => `${email} muss bei der nächsten Anmeldung ein neues Passwort wählen.`,
+      withdrawPasswordChange: "Passwortforderung zurücknehmen",
+      passwordChangeWithdrawn: (email) => `${email} muss kein neues Passwort mehr wählen.`,
+      reviewer: "Übersetzungsprüfung",
+      reviewerTitle: (name) => `Was ${name} prüft`,
+      reviewerSet: (email, languages) => `${email} prüft jetzt: ${languages}.`,
+      reviewerRemoved: (email) => `${email} prüft keine Übersetzungen mehr.`,
+      changeRole: "Rolle ändern",
+      roleTitle: (name, role) => `Die Rolle von ${name} auf „${role}“ ändern?`,
+      roleBody: "Was das Konto darf, ändert sich sofort, mit seiner nächsten Anfrage.",
+      roleToAdminBody:
+        "Mit Administratorrechten darf das Konto alle Konten und die Einstellungen der App verwalten, sofort, ab seiner nächsten Anfrage.",
+      roleFromAdminBody: "Das Konto verliert seine Administratorrechte sofort, ab seiner nächsten Anfrage.",
+      // 0.64: an administrator's reset of another account's second factor.
+      resetTwoFactor: "Zwei-Faktor-Anmeldung zurücksetzen",
+      resetTwoFactorTitle: (name) => `Die Zwei-Faktor-Anmeldung von ${name} zurücksetzen?`,
+      resetTwoFactorBody:
+        "Das Konto meldet sich danach nur mit Passwort oder Passkey an und erhält dazu eine E-Mail. Es kann die Zwei-Faktor-Anmeldung danach neu einrichten.",
+      twoFactorReset: (email) => `Die Zwei-Faktor-Anmeldung von ${email} ist zurückgesetzt.`,
+      roleChanged: (email, role) => `${email} hat jetzt die Rolle „${role}“.`,
+      deactivate: "Deaktivieren",
+      deactivateTitle: (name) => `${name} deaktivieren?`,
+      deactivateBody:
+        "Das Konto wird überall abgemeldet und kann sich nicht mehr anmelden. Gelöscht wird nichts, und es lässt sich wieder aktivieren.",
+      deactivated: (email) => `${email} ist deaktiviert.`,
+      reactivate: "Reaktivieren",
+      reactivateTitle: (name) => `${name} reaktivieren?`,
+      reactivated: (email) => `${email} ist wieder aktiv.`,
+      cancelDeletion: "Löschung aufheben",
+      cancelDeletionTitle: (name) => `Das Konto von ${name} behalten?`,
+      deletionCancelled: (email) => `${email} bleibt bestehen und ist wieder aktiv.`,
+      erase: "Jetzt endgültig löschen",
+      eraseTitle: (name) => `Das Konto von ${name} jetzt endgültig löschen?`,
+      eraseBody: "Das Konto und was es enthält, werden endgültig gelöscht. Das Protokoll behält nur seine Adresse.",
+      erased: (email) => `${email} ist endgültig gelöscht.`,
+    },
+    // 0.64 (auth §12.9): AccountTranslationReview — the review page's heading, its empty
+    // state and the source filter's words.
+    accountTranslations: {
+      title: "Übersetzungen prüfen",
+      description:
+        "Lesen Sie jeden Text in Ihrer Sprache neben der Vorlage, und geben Sie ihn frei oder sagen Sie, was sich ändern soll. Korrekturen werden für die Entwicklung exportiert; die Texte selbst ändern sich hier nicht.",
+      saved: "Gespeichert",
+      cleared: "Als ungeprüft markiert",
+      noAccess: "Keine Sprachen zu prüfen",
+      noAccessHint:
+        "Welche Sprachen Sie prüfen, legt ein Administrator fest. Fragen Sie nach, wenn Sie hier welche erwartet haben.",
+      sourceApp: "Texte dieser App",
+      sourceKit: "Gemeinsame Bausteine",
+    },
+    // 0.64 (server-kit 0.32's opt-in teams): AccountTeamsSection and AccountTeamsPage — the
+    // admin's list and a member's page, their questions, counts and a team's refusals.
+    accountTeams: {
+      title: "Teams",
+      pageHint:
+        "Die Teams, in denen Sie sind. Was mit einem Team geteilt wird, ist mit allen darin geteilt, solange sie dazugehören. Leiter nehmen Mitglieder auf, entfernen sie und laden jemanden ohne Konto ein; Administratoren legen Teams an und bestimmen die Leiter.",
+      adminHelp: "Gruppen zum Teilen und wer sie leitet.",
+      adminHint:
+        "Ein Team ist jemand, mit dem man teilt, nicht jemand, der besitzt: Eine Freigabe an ein Team erreicht alle darin und geht mit jedem, der geht. Sie bestimmen die Leiter, die dann selbst Mitglieder aufnehmen und entfernen.",
+      none: "Sie sind in keinem Team.",
+      noneAdmin: "Noch keine Teams.",
+      youManage: "Sie leiten dieses Team.",
+      youAreIn: "Sie sind Mitglied.",
+      name: "Teamname",
+      create: "Team anlegen",
+      created: (name) => `Team ${name} angelegt.`,
+      rename: "Umbenennen",
+      renameTitle: (name) => `Das Team ${name} umbenennen`,
+      renamed: (name) => `Das Team heisst jetzt ${name}.`,
+      delete: "Team löschen",
+      deleteTitle: (name) => `Das Team ${name} löschen?`,
+      deleteBody:
+        "Alles, was mit dem Team geteilt war, ist sofort nicht mehr mit seinen Mitgliedern geteilt. Deren eigene Arbeit bleibt unberührt.",
+      deleteGoes: (list) => `Was mit dem Team geht: ${list}.`,
+      deleted: (name) => `Das Team ${name} ist gelöscht.`,
+      countMembers: (count) => `${n(count)} ${count === 1 ? "Mitglied" : "Mitglieder"}`,
+      countGrants: (count) => `${n(count)} ${count === 1 ? "Freigabe" : "Freigaben"}`,
+      countInvitations: (count) => `${n(count)} ${count === 1 ? "Einladung" : "Einladungen"}`,
+      members: "Mitglieder",
+      managers: "Leiter",
+      invitedTitle: "Eingeladen",
+      nobody: "Noch niemand darin.",
+      roles: { member: "Mitglied", manager: "Leiter" },
+      roleOf: (name) => `Rolle von ${name} im Team`,
+      roleLabel: "Als",
+      remove: (name) => `${name} entfernen`,
+      removeShort: "Entfernen",
+      removeTitle: (name, team) => `${name} aus ${team} entfernen?`,
+      removeBody:
+        "Was mit dem Team geteilt war, ist ab der nächsten Anfrage dieser Person nicht mehr mit ihr geteilt. Ihre eigene Arbeit bleibt unberührt.",
+      addEmail: "Per E-Mail-Adresse aufnehmen",
+      add: "Aufnehmen",
+      added: (email, team) => `${email} ist jetzt in ${team}.`,
+      removed: (name, team) => `${name} ist nicht mehr in ${team}.`,
+      invited: (email, team) => `${email} hat noch kein Konto – eine Einladung ins Team ${team} ist unterwegs.`,
+      invitedNotSent: (email) =>
+        `${email} hat noch kein Konto, und die Einladung konnte nicht gesendet werden – senden Sie sie erneut.`,
+      withdraw: (email) => `Einladung an ${email} zurückziehen`,
+      withdrawShort: "Zurückziehen",
+      withdrawTitle: (email) => `Einladung an ${email} zurückziehen?`,
+      withdrawBody: "Der Link funktioniert nicht mehr. Ein bereits darüber angelegtes Konto bleibt bestehen.",
+      codes: {
+        team_not_found: "Dieses Team gibt es nicht mehr, oder Sie leiten es nicht mehr.",
+        team_name_taken: (name) => `Es gibt bereits ein Team namens ${name}.`,
+        team_changed: (name) =>
+          `Das Team ${name} wurde geändert, nachdem Sie es geöffnet haben. Es zeigt die Änderung jetzt; bitte versuchen Sie es erneut.`,
+        manager_named_by_admin: "Nur ein Administrator bestimmt die Leiter eines Teams.",
+        manager_kept_by_admin: (email) => `${email} leitet dieses Team; das ändert nur ein Administrator.`,
+        manager_removed_by_admin: "Nur ein Administrator entfernt den Leiter eines Teams.",
+      },
     },
   };
 }

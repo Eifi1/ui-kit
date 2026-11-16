@@ -527,7 +527,7 @@ export const es: Dictionary = {
       title: "Inicio de sesión y cuenta",
       short: "Acceso",
       blurb:
-        "Registro, inicio de sesión, tokens de un solo uso, claims de sesión y los formatos de intercambio de la cuenta — la mitad del servidor de las páginas de inicio de sesión, registro y cuenta.",
+        "Registro, inicio de sesión, tokens de un solo uso, claims de sesión y los formatos de intercambio de la cuenta — y desde la 0.29 las rutas mismas: un router sobre los almacenes de la app, los correos de la cuenta, passkeys y tablas listas. La mitad del servidor de las páginas de inicio de sesión, registro y cuenta.",
     },
     "server-user-admin": {
       title: "Administración de usuarios",
@@ -1258,6 +1258,8 @@ export const es: Dictionary = {
       "claims del token de sesión",
       "normalizar una dirección de correo",
       "códigos de error de autenticación",
+      "rutas de la cuenta en el servidor",
+      "inicio de sesión con passkey en el servidor",
     ],
     "server-user-admin": [
       "consultar la lista de usuarios en el servidor",

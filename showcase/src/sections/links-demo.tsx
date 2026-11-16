@@ -219,6 +219,14 @@ function TextLinkKinds() {
           </TextLink>{" "}
           — opens in a new tab, with the mark and &ldquo;opens in a new tab&rdquo; read after it.
         </p>
+        <p>
+          Palette:{" "}
+          <TextLink href="https://anyplot.ai" external referrer underline="always">
+            anyplot.ai
+          </TextLink>{" "}
+          — with {code("referrer")}: {code('rel="noopener"')} alone, so the site sees where its visitors came from (a
+          credit). Without it, {code('rel="noopener noreferrer"')}.
+        </p>
 
         <div className="space-y-2">
           {[true, false].map((stop) => (

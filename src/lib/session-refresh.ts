@@ -222,6 +222,25 @@ function isOffline(): boolean {
   return typeof navigator !== "undefined" && navigator.onLine === false;
 }
 
+/** On a refresh's throw that got no answer, where its client cannot say so itself. A
+ *  `Symbol.for` key, as {@link TRANSIENT}: every copy of the kit in a page reads the same. */
+const UNANSWERED = Symbol.for("@eifi1/ui-kit:session-refresh.unanswered");
+
+/**
+ * Mark a refresh's throw as one that got no answer, so the flight retries it as it retries
+ * axios's error without a `response` (§11.2 decision 5). For a `refresh` the kit writes on a
+ * bare `fetch` (`@eifi1/ui-kit/accounts`, 0.63): `fetch`'s network failure is a TypeError,
+ * which {@link classify} reads as a bug in `refresh` — one attempt, no retry — so a phone
+ * that lost the network for a second would not have been asked again. Returns the error.
+ *
+ * @internal Package-private — not re-exported from the barrel. An app's own `refresh` throws
+ * its client's errors, which the kit reads as they are.
+ */
+export function markUnanswered<E extends object>(error: E): E {
+  (error as Record<symbol, unknown>)[UNANSWERED] = true;
+  return error;
+}
+
 /** A refresh's throw, classified (§11.4). The status is read where `isRateLimited` reads
  *  it — `httpStatusOf`, one probe for axios, ofetch and Node errors (DUP-11). */
 function classify(error: unknown): "definitive" | "retry" | "transient" {
@@ -230,8 +249,12 @@ function classify(error: unknown): "definitive" | "retry" | "transient" {
   const status = httpStatusOf(error);
   if (status === undefined) {
     // No answer: axios marks its own errors, and one without a response never reached a
-    // server (offline, DNS, CORS, its own timeout). Anything else is a bug in `refresh`.
-    return (error as { isAxiosError?: unknown }).isAxiosError === true ? "retry" : "transient";
+    // server (offline, DNS, CORS, its own timeout); the kit marks a bare fetch's
+    // (`markUnanswered`). Anything else is a bug in `refresh`.
+    const unanswered =
+      (error as { isAxiosError?: unknown }).isAxiosError === true ||
+      (error as Record<symbol, unknown>)[UNANSWERED] === true;
+    return unanswered ? "retry" : "transient";
   }
   if (status === 401 || status === 403) return "definitive";
   if (status === 408 || status === 429 || status >= 500) return "retry";
@@ -364,8 +387,12 @@ type Marked = {
 
 /** `Authorization: Bearer <token>` on a config about to be replayed. The app's own
  *  request interceptor runs again on the replay and writes the same, from the same
- *  source. */
-function authorize(config: SessionRefreshAxiosConfig, token: string): void {
+ *  source.
+ *
+ *  @internal Package-private — not re-exported from the barrel. Since 0.63 it is also
+ *  `@eifi1/ui-kit/accounts`' request interceptor, which is that app-side writer: one rule
+ *  for axios's `AxiosHeaders` and a plain record. */
+export function authorize(config: SessionRefreshAxiosConfig, token: string): void {
   const value = `Bearer ${token}`;
   const headers = config.headers;
   if (typeof headers !== "object" || headers === null) {

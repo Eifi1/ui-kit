@@ -2,7 +2,7 @@ import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactElement, ReactNod
 import { cn } from "../lib/cn";
 import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLink } from "../i18n/kit-labels";
 import type { KitLinkComponent, KitLinkProps } from "../i18n/kit-labels";
-import { pickLinkRenderer, replacingClick, routerLinkNavigation } from "./text-link";
+import { externalRel, pickLinkRenderer, replacingClick, routerLinkNavigation } from "./text-link";
 import type { CommitScope } from "./write-lock";
 import { LockedReason, useRefusal, type DisabledReasonDisplay } from "./field-parts";
 import { Spinner } from "./spinner";
@@ -145,6 +145,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   href?: never;
   renderLink?: never;
   external?: never;
+  referrer?: never;
   replace?: never;
   reloadDocument?: never;
 }
@@ -178,8 +179,13 @@ export interface ButtonLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorEle
   renderLink?: KitLinkComponent;
   /** Leaves the app: a plain `<a target="_blank" rel="noopener noreferrer">`, never the
    *  router link, and "(opens in a new tab)" read after the label — billing-history's
-   *  Stripe PDF. A `target="_blank"` of your own is announced the same way. */
+   *  Stripe PDF. A `target="_blank"` of your own is announced the same way. A `rel` of
+   *  your own wins over the kit's. */
   external?: boolean;
+  /** 0.63: an `external` link that counts for the site it names — `rel="noopener"` alone
+   *  (no `noreferrer`, no `nofollow`); the new-tab note stays. See `TextLink`'s
+   *  `referrer`. Ignored without `external`. */
+  referrer?: boolean;
   /**
    * Navigate by replacing the current history entry, so Back does not return here —
    * keksdose F1: the "Continue" out of a one-shot page (an emailed confirmation link, a
@@ -226,6 +232,7 @@ function ButtonLink({
   href,
   renderLink,
   external,
+  referrer,
   replace,
   reloadDocument,
   disabled,
@@ -282,7 +289,7 @@ function ButtonLink({
         {...rest}
         href={href}
         target={external ? "_blank" : target}
-        rel={external ? (rel ?? "noopener noreferrer") : rel}
+        rel={external ? (rel ?? externalRel(referrer)) : rel}
         onClick={external ? onClick : replacingClick(onClick, href, replace, target)}
         className={cls}
       >
@@ -324,6 +331,7 @@ function ButtonElement({
   href: _href,
   renderLink: _renderLink,
   external: _external,
+  referrer: _referrer,
   replace: _replace,
   reloadDocument: _reloadDocument,
   ...rest

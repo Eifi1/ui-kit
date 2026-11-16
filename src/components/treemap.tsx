@@ -228,6 +228,22 @@ export interface TreemapProps extends Omit<ComponentPropsWithoutRef<"div">, "chi
    */
   nodeNote?: (id: string) => string | undefined;
   /**
+   * Draw each tile's value on the tile, as a second, smaller line under its name (0.64,
+   * keksdose live #517): the `valueFormatter`'s text, the one the tooltip prints ("CHF 412.30
+   * · 12.0%"), or the bare number without one. A phone never hovers and a tap on a tile
+   * drills in, so an amount only in the tooltip was never seen there.
+   *
+   * Tagged `data-private`, as the tooltip's value cell is, whatever `redactNames` says. Drawn
+   * only where the tile has the room for it WHOLE: an amount is dropped rather than
+   * ellipsised, since a clipped "CHF 41…" says a wrong figure; a tile too small keeps its
+   * name. A value the formatter gives as markup is not drawn (an SVG text holds none). With
+   * {@link TreemapProps.nodeNote} the note goes on a third line where the tile has it, and
+   * the value keeps the second. A group's band keeps its name alone.
+   *
+   * Default `false`.
+   */
+  showValues?: boolean;
+  /**
    * Draw at most this many tiles (the first N drawable nodes, in the order given —
    * sort first). Unbounded by default. A tile under ~44x20px has no room for a label,
    * and a map made of unlabelled rectangles answers nothing; around 24 is where the
@@ -365,6 +381,9 @@ interface TileContext {
   /** The pointer is on the node at `path`: what the map's tooltip says, standing where the
    *  node is drawn. Absent for a standalone cell, whose tooltip is its recharts map's. */
   hover?: (path: string) => void;
+  /** The tile's value as text, under `showValues` (0.64): absent otherwise, and for a cell
+   *  drawn on its own. */
+  value?: (path: string) => string | undefined;
 }
 
 /**
@@ -577,8 +596,19 @@ function Tile({
   // names nothing — and only where a second baseline fits: the note's baseline sits
   // 29px down and an 11px glyph hangs ~2px below it, so 36 leaves the same ~5px under
   // the note that the label keeps under itself at the 20px floor. Never in a band.
+  //
+  // The value (0.64, `showValues`) takes that second line before a note, and only WHOLE: a
+  // clipped amount says a wrong figure. A note then goes a line lower (43px, so 50 leaves the
+  // same ~5px under it).
+  const rawValue = !group && path != null && map.value ? map.value(path) : undefined;
+  const value =
+    label != null && rawValue != null && ph >= 36 * scale && fitLabel(rawValue, pw, noteSize) === rawValue
+      ? rawValue
+      : null;
+  const noteLine = value != null ? 43 : 29;
   const rawNote = !group && id != null && nodeNote ? nodeNote(id) : undefined;
-  const note = label != null && rawNote != null && ph >= 36 * scale ? fitLabel(rawNote, pw, noteSize) : null;
+  const note =
+    label != null && rawNote != null && ph >= (noteLine + 7) * scale ? fitLabel(rawNote, pw, noteSize) : null;
   // The label's START edge, 6px in from the tile's. The tiles themselves are laid out
   // physically (the plot is not mirrored, see `ChartContainer`) and the chart's SVG is
   // pinned `ltr`, so the direction is set on each <text> explicitly: `start` is then
@@ -681,10 +711,27 @@ function Tile({
           {label}
         </text>
       )}
+      {value != null && (
+        <text
+          // The tooltip's value cell is tagged in every chart; so is its line on the tile.
+          data-private=""
+          x={textX}
+          y={py + 29 * scale}
+          direction={dir}
+          fill={ink}
+          fillOpacity={0.85}
+          {...haloOf(halo)}
+          fontSize={noteSize}
+          fontWeight={500}
+          style={{ pointerEvents: "none" }}
+        >
+          {value}
+        </text>
+      )}
       {note != null && (
         <text
           x={textX}
-          y={py + 29 * scale}
+          y={py + noteLine * scale}
           direction={dir}
           fill={ink}
           fillOpacity={0.85}
@@ -1096,6 +1143,7 @@ export function Treemap({
   redactNames = false,
   shareInValue = false,
   nodeNote,
+  showValues = false,
   maxTiles,
   colors,
   edges = "auto",
@@ -1290,9 +1338,28 @@ export function Treemap({
     () => ({ name: (path) => names.get(path), onFocus, register, move }),
     [names, onFocus, register, move],
   );
+  // The tiles' values as the tooltip prints them (0.64, `showValues`); a value the
+  // formatter gives as markup has no text to draw.
+  const values = useMemo(() => {
+    if (!showValues) return undefined;
+    const texts = new Map<string, string>();
+    for (const n of order) {
+      if (n.children) continue;
+      const out = format(n.size);
+      if (typeof out === "string" || typeof out === "number") texts.set(n.path, String(out));
+    }
+    return texts;
+  }, [showValues, order, format]);
   const map = useMemo<TileContext>(
-    () => ({ tokens: tokenHex, edgeFor, edges: edgesInForce, keys, hover: anchor.set }),
-    [tokenHex, edgeFor, edgesInForce, keys, anchor],
+    () => ({
+      tokens: tokenHex,
+      edgeFor,
+      edges: edgesInForce,
+      keys,
+      hover: anchor.set,
+      value: values ? (path) => values.get(path) : undefined,
+    }),
+    [tokenHex, edgeFor, edgesInForce, keys, anchor, values],
   );
   const options = useMemo<TileOptions>(
     () => ({ onNodeClick, onGroupClick, redactNames, nodeNote, dir }),

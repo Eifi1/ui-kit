@@ -12,7 +12,8 @@
  *   - no runtime import cycle among the dist/ modules (there are none; a cycle is where
  *     load order starts to matter, and where a bundler stops splitting cleanly);
  *   - an import-cost budget: Rollup bundles `{ Button }`, `{ Spinner }`, `{ cn }` and the
- *     shell set from dist/, the way an app's build does, and fails above the ceiling.
+ *     shell set from dist/, the way an app's build does, and fails above the ceiling; since
+ *     0.63 also the accounts client, from its own entry.
  * Which modules may import recharts at all is packaging-contract.test.ts's rule.
  *
  * Run after `npm run build`. Part of `npm run check`, which CI calls as it is.
@@ -281,11 +282,49 @@ const BUDGETS = [
   // 161,677 B (56,117 gzip) in 0.62: the shared-computer words (the idle warning, Stay signed
   // in, push refused on a shared computer) registered beside every namespace, and AppShell's
   // measured top row (`--app-subnav-h`) — meant growth, 119 B (49 gzip).
-  { label: "the shell set", names: SHELL_SET, max: 161_800 },
+  // 162,003 B (56,301 gzip) in 0.63: the external links' `referrer` (TextLink, Button,
+  // IconButton, ListItem, AppShell's footer links; 81 B, 58 gzip, at 161,758) and the
+  // imprint's `credits` section, whose English words are registered with every namespace
+  // (245 B, 126 gzip) — meant growth.
+  // And the privacy page's sign-in line (`standardEntries.session`, auth §12.9), English
+  // registered beside every namespace as the legal labels are — meant growth, 211 B: 162,214 B
+  // (56,362 gzip) with both.
+  { label: "the shell set", names: SHELL_SET, max: 162_300 },
+  // 0.63 (auth §12.9): what `@eifi1/ui-kit/accounts`' session costs an app, which creates the
+  // client at once beside its axios instance — the kit's code only, zustand outside the count.
+  // 12,115 B (4,702 gzip): the client 9.1 kB, the session refresh's flight 6.7 kB, the store
+  // 2.7 kB, `dropPushSubscription` 1.5 kB and the storage guard 1.4 kB (Rollup's rendered
+  // lengths, before minifying). No component: `isSharedComputer` comes without its checkbox,
+  // `NEXT_PARAM` without the routing components.
+  // 16,287 B (6,031 gzip) with the round's second part: `client.api`, every route typed (2.7 kB
+  // rendered), and the passkey sign-in's ceremony, converting WebAuthn's JSON itself instead of
+  // a library (2.6 kB) — meant growth, 4,172 B. The hooks, pages and sections are not in it:
+  // an app imports them where it draws them.
+  // 17,390 B (6,343 gzip) with 0.64's admin routes on `client.api` (server-kit 0.30–0.31's
+  // user_admin_router: the roster and its actions, the log, the counts, the mail; about 0.9 kB)
+  // and the sign-out's `notice` — meant growth, 1,103 B. The admin's hooks and sections are not
+  // in it either.
+  // 17,636 B (6,406 gzip) with the review's three routes (server-kit 0.31's
+  // translation_review_router), 246 B; the review page and its hook are not in it.
+  // 17,669 B (6,413 gzip) with server-kit 0.32's second factor: `verifyCode`, the sign-in's
+  // code step, and `twoFactorSetup` / `enableTwoFactor` / `disableTwoFactor` on `client.api` —
+  // meant growth, 279 B. Its section and hook are not in it.
+  // 18,430 B (6,700 gzip) with keksdose's KG-9 and KG-10: `onPassword` at the four places a
+  // password reaches the server, and `pageMode: "per-page"` — the page's mode read at load, a
+  // sign-in handed to a fresh page through the tab, `afterSignIn` — meant growth, 761 B.
+  // Both together at the merge: 18.7 kB minified (6.8 kB gzip), ceiling 18,800.
+  // 18,919 B (6,834 gzip) with server-kit 0.32's backup codes and the admin's reset on
+  // `client.api` (`twoFactorStatus`, `renewBackupCodes`, `resetTwoFactor`) — meant growth.
+  {
+    label: "{ createAccountsClient }",
+    entry: "dist/accounts.js",
+    names: ["createAccountsClient", "accountStorageEntries"],
+    max: 19_000,
+  },
 ];
 const ENTRY = "\0import-cost";
-async function importCost(names) {
-  const source = `export { ${names.join(", ")} } from ${JSON.stringify(resolve("dist/index.js"))};`;
+async function importCost(names, entry = "dist/index.js") {
+  const source = `export { ${names.join(", ")} } from ${JSON.stringify(resolve(entry))};`;
   const bundle = await rollup({
     input: ENTRY,
     plugins: [
@@ -329,8 +368,8 @@ async function importCost(names) {
 }
 const size = (bytes) => (bytes < 1000 ? `${bytes} B` : `${(bytes / 1000).toFixed(1)} kB`);
 const costs = [];
-for (const { label, names, max } of BUDGETS) {
-  const { min, gzip, packages } = await importCost(names);
+for (const { label, names, max, entry } of BUDGETS) {
+  const { min, gzip, packages } = await importCost(names, entry);
   if (packages.includes("recharts"))
     fail(`${label} reaches recharts — only the chart kit may (packaging-contract.test.ts)`);
   if (min > max) {

@@ -25,7 +25,9 @@ import { describe, expect, it } from "vitest";
  *
  * A tag may sit on a declaration, on a member, or on a specifier in an `export { … }`
  * list — how an entry point deprecates a name its module keeps for the kit's own use
- * (0.52's unread names, API-4). TypeScript strikes an import through either way.
+ * (0.52's unread names, API-4). TypeScript strikes an import through either way. Since
+ * 0.63 also on a member of a union type (`| "customer"`), which TypeScript strikes
+ * through nowhere: the tag puts it on this list and the removal's.
  */
 
 interface Deprecation {
@@ -92,11 +94,11 @@ function scan(file: string, source: string): Deprecation[] {
       .replace(/\s+/g, " ")
       .trim();
     // What is deprecated: the first declaration after the comment, in the type or
-    // function above it.
+    // function above it — or a union's member, its literal after the `|` (0.63).
     let next = close + 1;
     while (next < lines.length - 1 && lines[next].trim() === "") next += 1;
     const member =
-      /^\s*(?:export\s+)?(?:declare\s+)?(?:readonly\s+)?(?:(?:async\s+)?function\*?\s+|const\s+|let\s+|type\s+|interface\s+|class\s+)?["']?([A-Za-z_$][\w$-]*)/.exec(
+      /^\s*(?:\|\s*)?(?:export\s+)?(?:declare\s+)?(?:readonly\s+)?(?:(?:async\s+)?function\*?\s+|const\s+|let\s+|type\s+|interface\s+|class\s+)?["']?([A-Za-z_$][\w$-]*)/.exec(
         lines[next] ?? "",
       )?.[1] ?? "?";
     // Only a member (an indented declaration) has an owner; a top-level name is its own.
@@ -175,6 +177,32 @@ describe("deprecations", () => {
     ].join("\n");
     expect(scan(join(SRC, "components/widget-labels.ts"), labels).map((d) => d.name)).toEqual([
       "WidgetLabels.outcomeAdd",
+    ]);
+  });
+
+  it("names a member of a union type by its literal, in its type", () => {
+    // 0.63: `TransferUnavailable`'s "customer". TypeScript strikes nothing through here (a
+    // literal is no declaration), so the tag is for this list, the adopt doc and the removal.
+    const union = [
+      "export type WidgetState =",
+      '  | "on"',
+      '  | "off"',
+      "  /** @deprecated 0.35 — none: drop the case; removed in 0.36 */",
+      '  | "legacy";',
+    ].join("\n");
+    expect(scan(join(SRC, "components/widget.tsx"), union).map((d) => [d.at, d.name])).toEqual([
+      ["src/components/widget.tsx:4", "WidgetState.legacy"],
+    ]);
+  });
+
+  it("holds 0.65's: the transfer dialog's customer texts, which go in 0.66", () => {
+    // Kurvenschmiede dropped its customer role (2026-11-12); no app passes "customer". 0.63
+    // and 0.64 reach npm only inside 0.65.0 (Marcel, 2026-11-15), so the deprecation written
+    // in 0.63 is first published, and dated, in 0.65; the names go in 0.66, with this test.
+    const transfer = all.filter((d) => d.at.startsWith("src/admin/transfer-ownership-dialog.tsx"));
+    expect(transfer.map((d) => [d.name, d.since, d.removal])).toEqual([
+      ["TransferUnavailable.customer", [0, 65], [0, 66]],
+      ["TransferOwnershipLabels.customer", [0, 65], [0, 66]],
     ]);
   });
 
