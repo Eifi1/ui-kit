@@ -109,7 +109,7 @@
     "check:package": "node scripts/verify-package.mjs --quiet",
     "check:api": "node scripts/check-api-compat.mjs",
     "check:tailwind": "node scripts/check-tailwind-scan.mjs",
-    "check:security": "npm audit --audit-level=high",
+    "check:security": "node npm-audit/cli.ts --ignore-until-fixed \"GHSA-fc5q-39xc-vjpf=picomatch ReDoS; only build and test tools (vite, vitest, tsup, typescript-eslint); no fixed version yet\"",
     "check:commits": "node scripts/check-commit-range.cjs",
     "check:commit-rules": "node scripts/check-commit-rules.mjs",
     "sync:commit-rules": "node scripts/sync-commit-rules.mjs",
@@ -121,7 +121,7 @@
     "check": "node scripts/check.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
-    "build": "node scripts/tsup-quiet.mjs && node scripts/build-dts.mjs && node scripts/fix-esm-extensions.mjs && node scripts/flatten-en.mjs && node scripts/build-pay-page.mjs",
+    "build": "node scripts/tsup-quiet.mjs && node scripts/build-dts.mjs && node scripts/fix-esm-extensions.mjs && node scripts/flatten-en.mjs && node scripts/build-pay-page.mjs && node scripts/build-npm-audit.mjs",
     "verify:package": "npm run build && node scripts/verify-package.mjs",
     "dev": "tsup --watch --onSuccess \"node scripts/build-dts.mjs && node scripts/fix-esm-extensions.mjs && node scripts/flatten-en.mjs && node scripts/build-pay-page.mjs\"",
     "dev:showcase": "vite --config showcase/vite.config.ts",
@@ -247,9 +247,10 @@
   "publishConfig": {
     "access": "public"
   },
-  "_bin": "`eifi1-pay-page` copies the kit's static pay page (dist/pay/, docs/billing-harmonization.md §14.4) into an app's web build and writes its pay-config.json. Built by scripts/build-pay-page.mjs from pay-page/; it ships inside `dist`, so `files` needs nothing more.",
+  "_bin": "`eifi1-npm-audit` is every repo's dependency audit (npm-audit/cli.ts, README → The dependency audit): high and critical block, an advisory without a fix is accepted only by id with a reason until a fix ships, never for a runtime dependency; built by scripts/build-npm-audit.mjs into dist/bin, standard library only. `eifi1-pay-page` copies the kit's static pay page (dist/pay/, docs/billing-harmonization.md §14.4) into an app's web build and writes its pay-config.json. Built by scripts/build-pay-page.mjs from pay-page/; it ships inside `dist`, so `files` needs nothing more.",
   "bin": {
-    "eifi1-pay-page": "dist/bin/eifi1-pay-page.mjs"
+    "eifi1-pay-page": "dist/bin/eifi1-pay-page.mjs",
+    "eifi1-npm-audit": "dist/bin/eifi1-npm-audit.mjs"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",

@@ -52,5 +52,5 @@
   // `startPayPage({...})` call) or `bin.ts` (`eifi1-pay-page`), so a field added to
   // `PayPageEnvironment` would have compiled there and failed only on the deployed page.
   // The declaration build sets its own `include`, so nothing here is emitted.
-  "include": ["src", "showcase/src", "pay-page"]
+  "include": ["src", "showcase/src", "pay-page", "npm-audit"]
 }

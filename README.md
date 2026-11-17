@@ -569,6 +569,27 @@ tested: [CONTRIBUTING.md → The showcase](https://github.com/Eifi1/ui-kit/blob/
 `npm test` is the suite alone (Vitest + jsdom, `TZ=Europe/Berlin`). The house rules, the
 gates and failing-first: [CONTRIBUTING.md → Tests](https://github.com/Eifi1/ui-kit/blob/main/CONTRIBUTING.md#tests).
 
+### The dependency audit: `eifi1-npm-audit`
+
+Every app's gate (`check:security:frontend`) and the kit's own (`check:security`) run the
+package's bin instead of a bare `npm audit --audit-level=high`. High and critical advisories
+block as before; one WITHOUT A FIX can be accepted on purpose, by id and with a reason, and
+only until a fixed version ships. It is the npm twin of server-kit's
+`eifi1_server_kit.dependency_audit`:
+
+```bash
+eifi1-npm-audit --ignore-until-fixed "GHSA-fc5q-39xc-vjpf=picomatch ReDoS; build and test tools only; no fix yet"
+```
+
+- An exception holds while the package's latest published version is still in the
+  advisory's vulnerable range; the day a fix ships, the gate blocks again with "upgrade,
+  then drop the exception".
+- Never for what ships: an advisory that `npm audit --omit=dev` also reports blocks,
+  accepted or not.
+- An exception that matches nothing any more blocks with "remove it".
+- Exit 0 passes, 1 blocks, 2 means the audit could not be read (or a flag is wrong) — never
+  a pass. `--audit-level` (default `high`) works as npm's.
+
 ## What's exported
 
 The full inventory, generated from the build rather than maintained by hand — the

@@ -100,7 +100,7 @@ export default defineConfig({
       // deploy it), so `pay.ts` and `cli.ts` count (refactor audit 2026-10-30, TST-4).
       // Its two entries do not: each is one call that runs on import, so no test can
       // load it; tsconfig.json type-checks them and check:package runs the bin.
-      include: ["src/**/*.{ts,tsx}", "pay-page/**/*.ts"],
+      include: ["src/**/*.{ts,tsx}", "pay-page/**/*.ts", "npm-audit/**/*.ts"],
       exclude: ["src/test/**", "**/__tests__/**", "showcase/**", "pay-page/main.ts", "pay-page/bin.ts"],
       /**
        * A RATCHET, not a target. Measured on 0.33.1's whole-suite run (its
