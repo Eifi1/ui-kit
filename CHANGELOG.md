@@ -21,6 +21,12 @@ From 0.7.0 on, this file is generated from the Conventional Commits by `npm run 
 (commit-and-tag-version); write the entry in the commit, not here.
 
 
+## [0.65.1](https://github.com/Eifi1/ui-kit/compare/v0.65.0...v0.65.1) (2026-11-17)
+
+### Added
+
+* **audit:** eifi1-npm-audit accepts an advisory without a fix, until one ships ([9ec6196](https://github.com/Eifi1/ui-kit/commit/9ec6196d24e6c8f02175d7902ca6742e8994f3e7))
+
 ## [0.65.0](https://github.com/Eifi1/ui-kit/compare/v0.62.0...v0.65.0) (2026-11-15)
 
 ### Added

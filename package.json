@@ -1,6 +1,6 @@
 {
   "name": "@eifi1/ui-kit",
-  "version": "0.65.0",
+  "version": "0.65.1",
   "type": "module",
   "description": "App-agnostic shared design system: domain-free React components, theme and tokens.",
   "_sideEffects": "The barrel (src/index.ts) re-exports EVERY component, including components/chart, which statically imports recharts. Without this field a bundler must assume each of those modules has side effects, so it cannot drop the unused ones: importing a Button from '@eifi1/ui-kit' dragged all 433KB of recharts into the consumer's ENTRY chunk, and Keksdose was preloading it on every page load, login included. Nothing in src/ imports for side effects (no bare imports, no CSS imports from JS, no module-level global writes) — the token stylesheet is its own './tokens.css' export — so this is safe. CSS is still listed so any future stylesheet survives. Re-checked when `flag-icons` left `dependencies` and tsup started emitting a `\"use client\"` banner: neither touches this. The flag stylesheet was never imported from JS in the first place (that was the finding), and a directive prologue is a string literal every bundler lifts out before it decides whether a module is inert.",
@@ -109,7 +109,7 @@
     "check:package": "node scripts/verify-package.mjs --quiet",
     "check:api": "node scripts/check-api-compat.mjs",
     "check:tailwind": "node scripts/check-tailwind-scan.mjs",
-    "check:security": "npm audit --audit-level=high",
+    "check:security": "node npm-audit/cli.ts --ignore-until-fixed \"GHSA-fc5q-39xc-vjpf=picomatch ReDoS; only build and test tools (vite, vitest, tsup, typescript-eslint); no fixed version yet\"",
     "check:commits": "node scripts/check-commit-range.cjs",
     "check:commit-rules": "node scripts/check-commit-rules.mjs",
     "sync:commit-rules": "node scripts/sync-commit-rules.mjs",
@@ -121,9 +121,9 @@
     "check": "node scripts/check.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
-    "build": "node scripts/tsup-quiet.mjs && node scripts/build-dts.mjs && node scripts/fix-esm-extensions.mjs && node scripts/flatten-en.mjs && node scripts/build-pay-page.mjs",
+    "build": "node scripts/tsup-quiet.mjs && node scripts/build-dts.mjs && node scripts/fix-esm-extensions.mjs && node scripts/flatten-en.mjs && node scripts/build-pay-page.mjs && node scripts/build-npm-audit.mjs",
     "verify:package": "npm run build && node scripts/verify-package.mjs",
-    "dev": "tsup --watch --onSuccess \"node scripts/build-dts.mjs && node scripts/fix-esm-extensions.mjs && node scripts/flatten-en.mjs && node scripts/build-pay-page.mjs\"",
+    "dev": "tsup --watch --onSuccess \"node scripts/build-dts.mjs && node scripts/fix-esm-extensions.mjs && node scripts/flatten-en.mjs && node scripts/build-pay-page.mjs && node scripts/build-npm-audit.mjs\"",
     "dev:showcase": "vite --config showcase/vite.config.ts",
     "build:showcase": "vite build --config showcase/vite.config.ts --logLevel warn",
     "preview:showcase": "vite preview --config showcase/vite.config.ts",
@@ -247,9 +247,10 @@
   "publishConfig": {
     "access": "public"
   },
-  "_bin": "`eifi1-pay-page` copies the kit's static pay page (dist/pay/, docs/billing-harmonization.md §14.4) into an app's web build and writes its pay-config.json. Built by scripts/build-pay-page.mjs from pay-page/; it ships inside `dist`, so `files` needs nothing more.",
+  "_bin": "`eifi1-npm-audit` is every repo's dependency audit (npm-audit/cli.ts, README → The dependency audit): high and critical block, an advisory without a fix is accepted only by id with a reason until a fix ships, never for a runtime dependency; built by scripts/build-npm-audit.mjs into dist/bin, standard library only. `eifi1-pay-page` copies the kit's static pay page (dist/pay/, docs/billing-harmonization.md §14.4) into an app's web build and writes its pay-config.json. Built by scripts/build-pay-page.mjs from pay-page/; it ships inside `dist`, so `files` needs nothing more.",
   "bin": {
-    "eifi1-pay-page": "dist/bin/eifi1-pay-page.mjs"
+    "eifi1-pay-page": "dist/bin/eifi1-pay-page.mjs",
+    "eifi1-npm-audit": "dist/bin/eifi1-npm-audit.mjs"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
