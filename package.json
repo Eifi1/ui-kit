@@ -123,7 +123,7 @@
     "test:watch": "vitest",
     "build": "node scripts/tsup-quiet.mjs && node scripts/build-dts.mjs && node scripts/fix-esm-extensions.mjs && node scripts/flatten-en.mjs && node scripts/build-pay-page.mjs && node scripts/build-npm-audit.mjs",
     "verify:package": "npm run build && node scripts/verify-package.mjs",
-    "dev": "tsup --watch --onSuccess \"node scripts/build-dts.mjs && node scripts/fix-esm-extensions.mjs && node scripts/flatten-en.mjs && node scripts/build-pay-page.mjs\"",
+    "dev": "tsup --watch --onSuccess \"node scripts/build-dts.mjs && node scripts/fix-esm-extensions.mjs && node scripts/flatten-en.mjs && node scripts/build-pay-page.mjs && node scripts/build-npm-audit.mjs\"",
     "dev:showcase": "vite --config showcase/vite.config.ts",
     "build:showcase": "vite build --config showcase/vite.config.ts --logLevel warn",
     "preview:showcase": "vite preview --config showcase/vite.config.ts",
