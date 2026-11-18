@@ -14,6 +14,7 @@ import { pathToFileURL } from "node:url";
  * version) reached every Eifi1 repo through vite, vitest and typescript-eslint — build and
  * test tools only — and stopped every push. *"Bis zum Fix akzeptieren"*: one advisory,
  * named, while it has no fix; the day one ships, the gate fails again by itself.
+ * (GitHub withdrew that advisory on 2026-11-18; the exception went with it.)
  *
  *     eifi1-npm-audit
  *     eifi1-npm-audit --ignore-until-fixed GHSA-xxxx-xxxx-xxxx="dev tools only, no fix yet"

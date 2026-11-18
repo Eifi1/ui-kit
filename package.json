@@ -109,7 +109,7 @@
     "check:package": "node scripts/verify-package.mjs --quiet",
     "check:api": "node scripts/check-api-compat.mjs",
     "check:tailwind": "node scripts/check-tailwind-scan.mjs",
-    "check:security": "node npm-audit/cli.ts --ignore-until-fixed \"GHSA-fc5q-39xc-vjpf=picomatch ReDoS; only build and test tools (vite, vitest, tsup, typescript-eslint); no fixed version yet\"",
+    "check:security": "node npm-audit/cli.ts",
     "check:commits": "node scripts/check-commit-range.cjs",
     "check:commit-rules": "node scripts/check-commit-rules.mjs",
     "sync:commit-rules": "node scripts/sync-commit-rules.mjs",
