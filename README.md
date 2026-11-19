@@ -578,7 +578,8 @@ only until a fixed version ships. It is the npm twin of server-kit's
 `eifi1_server_kit.dependency_audit`:
 
 ```bash
-eifi1-npm-audit --ignore-until-fixed "GHSA-fc5q-39xc-vjpf=picomatch ReDoS; build and test tools only; no fix yet"
+eifi1-npm-audit                     # as npm audit --audit-level=high
+eifi1-npm-audit --ignore-until-fixed "GHSA-xxxx-xxxx-xxxx=<package> <problem>; build and test tools only; no fix yet"
 ```
 
 - An exception holds while the package's latest published version is still in the

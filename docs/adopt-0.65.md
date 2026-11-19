@@ -45,8 +45,11 @@ dependency audit), with server-kit's rule `--ignore-until-fixed ID=reason`.
 CI's security step (`npm run check:security:frontend`) with
 
 ```json
-"check:security:frontend": "eifi1-npm-audit --ignore-until-fixed \"GHSA-fc5q-39xc-vjpf=picomatch ReDoS; build and test tools only; no fix yet\""
+"check:security:frontend": "eifi1-npm-audit"
 ```
 
-Staunlabor's interim `scripts/npm-audit.mjs` goes with it. When picomatch ships a fix, the
-gate says so: bump, then drop the exception.
+**Update 2026-11-18:** GitHub withdrew GHSA-fc5q-39xc-vjpf (15:38 UTC), so a bare
+`npm audit --audit-level=high` passes again and the exception is not needed — the tool
+itself blocks it as "matches nothing; remove it". Switch to the bare `eifi1-npm-audit`
+above (the same gate, with the exception ready for the next advisory without a fix);
+Staunlabor's interim `scripts/npm-audit.mjs` goes with it, picomatch exception and all.
