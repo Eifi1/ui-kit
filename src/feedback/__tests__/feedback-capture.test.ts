@@ -142,14 +142,14 @@ describe("the capture filter", () => {
     expect(keep(style)).toBe(true);
   });
 
-  it("drops a box wholly outside the viewport, keeps one that overlaps it and a zero box", async () => {
+  it("drops a box wholly below or right of the viewport, keeps one that overlaps it and a zero box", async () => {
     const keep = await filter();
     const el = document.createElement("div");
     document.body.append(el);
     const spy = vi.spyOn(el, "getBoundingClientRect");
     spy.mockReturnValue(rect({ top: window.innerHeight + 5, bottom: window.innerHeight + 50 }));
     expect(keep(el)).toBe(false);
-    spy.mockReturnValue(rect({ top: -40, bottom: -1 }));
+    spy.mockReturnValue(rect({ left: window.innerWidth, right: window.innerWidth + 10 }));
     expect(keep(el)).toBe(false);
     spy.mockReturnValue(rect({ top: -40, bottom: 20 }));
     expect(keep(el)).toBe(true);
@@ -157,6 +157,137 @@ describe("the capture filter", () => {
     spy.mockReturnValue(rect({ top: -900, bottom: -900, width: 0, height: 0 }));
     expect(keep(el)).toBe(true);
     expect(keep(document.createTextNode("text"))).toBe(true);
+  });
+
+  // 0.65.2 (keksdose: scrolled to a warning, the screenshot showed the top of the page with an
+  // empty photo frame): dropping what was scrolled past pulled everything after it up.
+  it("EMPTIES a box scrolled past above or left — keeps it, drops its content — so what follows keeps its place", async () => {
+    const keep = await filter();
+    document.body.insertAdjacentHTML(
+      "beforeend",
+      '<section id="past"><p id="inside">row</p>text</section><section id="left"><p id="l">x</p></section>',
+    );
+    const past = document.getElementById("past")!;
+    vi.spyOn(past, "getBoundingClientRect").mockReturnValue(rect({ top: -400, bottom: -1, height: 399 }));
+    expect(keep(past)).toBe(true);
+    expect(keep(document.getElementById("inside")!)).toBe(false);
+    expect(keep(past.lastChild!)).toBe(false); // its text too
+    const left = document.getElementById("left")!;
+    vi.spyOn(left, "getBoundingClientRect").mockReturnValue(rect({ left: -400, right: 0, width: 400 }));
+    expect(keep(left)).toBe(true);
+    expect(keep(document.getElementById("l")!)).toBe(false);
+  });
+
+  it("does not empty a box sized by its content: inline, table parts", async () => {
+    const keep = await filter();
+    for (const display of ["inline", "table-row", "table"]) {
+      const el = document.createElement("div");
+      el.style.display = display;
+      el.innerHTML = "<b>kept</b>";
+      document.body.append(el);
+      vi.spyOn(el, "getBoundingClientRect").mockReturnValue(rect({ top: -40, bottom: -1 }));
+      expect(keep(el)).toBe(true);
+      expect(keep(el.firstChild!)).toBe(true);
+    }
+  });
+});
+
+describe("the scroll in the picture (0.65.2)", () => {
+  const rect = (r: Partial<DOMRect>) =>
+    ({ x: 0, y: 0, width: 10, height: 10, top: 0, left: 0, right: 10, bottom: 10, ...r }) as DOMRect;
+
+  async function capture() {
+    domToBlob.mockResolvedValue(new Blob(["x"], { type: "image/webp" }));
+    await captureAppScreenshot();
+    return passed() as ReturnType<typeof passed> & {
+      features?: Record<string, boolean>;
+      width?: number;
+      height?: number;
+      onCloneNode?: (cloned: Node) => void;
+      onCloneEachNode: (cloned: Node) => void;
+      onCreateForeignObjectSvg?: (svg: SVGSVGElement) => void;
+    };
+  }
+
+  it("shifts every scroller's content by its scroll, and draws no scrollbar", async () => {
+    const options = await capture();
+    expect(options.features).toMatchObject({ restoreScrollPosition: true });
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    options.onCreateForeignObjectSvg!(svg);
+    expect(svg.querySelector("style")!.textContent).toContain("scrollbar-width:none");
+  });
+
+  it("leaves a root inside the viewport as it is", async () => {
+    vi.spyOn(document.getElementById("root")!, "getBoundingClientRect").mockReturnValue(
+      rect({ width: 400, height: 700, right: 400, bottom: 700 }),
+    );
+    const options = await capture();
+    expect(options.width).toBeUndefined();
+    expect(options.onCloneNode).toBeUndefined();
+  });
+
+  it("cuts a root scrolled with the document to the part on screen", async () => {
+    const root = document.getElementById("root")!;
+    root.className = "app";
+    vi.spyOn(root, "getBoundingClientRect").mockReturnValue(
+      rect({ top: -300, bottom: 1700, height: 2000, width: window.innerWidth, right: window.innerWidth }),
+    );
+    const options = await capture();
+    expect(options.width).toBe(window.innerWidth);
+    expect(options.height).toBe(window.innerHeight);
+    const clone = root.cloneNode(true) as HTMLElement;
+    clone.style.setProperty("height", `${window.innerHeight}px`, "important");
+    options.onCloneNode!(clone);
+    // A plain frame of the picture's size that clips …
+    expect(clone.className).toBe("");
+    expect(clone.style.overflow).toBe("hidden");
+    expect(clone.style.height).toBe(`${window.innerHeight}px`);
+    // … around the page at its full size, moved up by the scroll.
+    const page = clone.firstElementChild as HTMLElement;
+    expect(clone.children).toHaveLength(1);
+    expect(page.className).toBe("app");
+    expect(page.id).toBe("");
+    expect(page.style.height).toBe("2000px");
+    expect(page.style.marginTop).toBe("-300px");
+    expect(page.textContent).toBe("App");
+  });
+
+  it("keeps a sticky box where the scroll pushed it, and leaves the page untagged", async () => {
+    document.body.innerHTML =
+      '<div id="root"><table><thead id="head" style="position: sticky; top: 0px"></thead></table></div>';
+    const head = document.getElementById("head")!;
+    // Stuck at 48 px; unstuck (position: static for the read) it would sit at -152 px.
+    vi.spyOn(head, "getBoundingClientRect").mockImplementation(() =>
+      head.style.position === "static" ? rect({ top: -152, bottom: -124 }) : rect({ top: 48, bottom: 76 }),
+    );
+    let clone: HTMLElement | null = null;
+    domToBlob.mockImplementation(async (_el, options) => {
+      expect((options.filter as Filter)(head)).toBe(true);
+      clone = head.cloneNode(false) as HTMLElement;
+      (options.onCloneEachNode as (cloned: Node) => void)(clone);
+      return new Blob(["x"], { type: "image/webp" });
+    });
+    await captureAppScreenshot();
+    expect(clone!.style.position).toBe("relative");
+    expect(clone!.style.top).toBe("200px");
+    expect(clone!.hasAttribute("data-kit-capture-stuck")).toBe(false);
+    // The page: its own position back, no tag.
+    expect(head.style.position).toBe("sticky");
+    expect(head.hasAttribute("data-kit-capture-stuck")).toBe(false);
+  });
+
+  it("lets a cloned table size to the rows it has", async () => {
+    const options = await capture();
+    for (const tag of ["table", "tbody", "tr", "td"]) {
+      const el = document.createElement(tag);
+      el.style.height = "1160px";
+      options.onCloneEachNode(el);
+      expect(el.style.height).toBe("");
+    }
+    const div = document.createElement("div");
+    div.style.height = "40px";
+    options.onCloneEachNode(div);
+    expect(div.style.height).toBe("40px");
   });
 });
 
