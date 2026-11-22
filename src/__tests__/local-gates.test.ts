@@ -98,49 +98,6 @@ afterEach(() => {
   for (const dir of temps.splice(0)) rmSync(dir, { recursive: true, force: true });
 });
 
-/**
- * TST-9 (refactor audit 2026-10-30): the lists that NAME the gates had drifted from the
- * package.json scripts that ARE the gates — `format:check` ran first in check:static
- * for a release before any list said so, and ci.yml's lacked check:commit-rules and the
- * two inventories. Each list is read here and compared with the script, step for step.
- */
-describe("the gate lists say what package.json runs (TST-9)", () => {
-  /** A group's steps, as the lists name them. */
-  const steps = (group: string) =>
-    scripts[group].split(" && ").map((step) => {
-      const npm = /^npm run (\S+)$/.exec(step);
-      if (npm) return npm[1];
-      const inventory = /^node scripts\/gen-(export|styling)-inventory\.mjs --check$/.exec(step);
-      if (inventory) return `${inventory[1]} inventory`;
-      return step;
-    });
-  /** The list on the line the group's name starts: `#   check:static  a · b`, `- \`check:static\`: a · b`. */
-  const listed = (text: string, group: string) => {
-    const line = new RegExp(`^(?:\\s*[#*-])?\\s*\`?${group}\`?:?\\s+(.+)$`, "m").exec(text)?.[1] ?? "";
-    return line
-      .replace(/\s*\(.*$/, "")
-      .split(" · ")
-      .map((s) => s.trim());
-  };
-  const docs = {
-    "scripts/check.mjs": readFileSync(join(ROOT, "scripts/check.mjs"), "utf8"),
-    ".github/workflows/ci.yml": readFileSync(join(ROOT, ".github/workflows/ci.yml"), "utf8"),
-    "CONTRIBUTING.md": readFileSync(join(ROOT, "CONTRIBUTING.md"), "utf8"),
-  };
-
-  it.each(GROUPS)("%s", (group) => {
-    for (const [file, text] of Object.entries(docs)) expect(listed(text, group), file).toEqual(steps(group));
-  });
-
-  it("`npm run dev` rebuilds what `npm run build` builds, after tsup", () => {
-    // It skipped flatten-en and the pay page: a dev build's en.js imported ~90 label modules.
-    const after = scripts.build.split(" && ").slice(1);
-    const onSuccess = /--onSuccess "([^"]+)"/.exec(scripts.dev.replace(/\\"/g, '"'))?.[1];
-    expect(onSuccess?.split(" && ")).toEqual(after);
-    expect(scripts.build.split(" && ")[0]).toMatch(/tsup/);
-  });
-});
-
 describe("the check's tree stamp (TST-2)", () => {
   it("is a file named by the tree, and only the newest 20 are kept", () => {
     const dir = temp("uikit-stamps-");

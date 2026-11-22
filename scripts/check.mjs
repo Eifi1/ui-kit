@@ -3,7 +3,7 @@
  * `npm run check`: the three groups of checks, one after another, stopping at the first
  * that fails.
  *
- *   check:static  format:check · typecheck · lint · check:tokens · check:security · check:commit-rules · check:commits
+ *   check:static  format:check · typecheck · lint · check:tokens · check:security · check:commit-rules · check:commits · check:meta
  *   check:build   build · check:graph · check:package · export inventory · styling inventory · build:showcase · check:tailwind
  *   check:test    test:coverage
  *
@@ -21,7 +21,9 @@
  * Serial runs the quickest to fail first — static (~1 min), build (~1–1½ min), test
  * (~8–9 min; 0.51.3: 66 s, 91 s, 455 s; 0.51.7: 49 s, 45 s, 524 s) — and stops at the
  * first failure, naming the groups it did not run: a type error should not cost eight
- * minutes of tests before it is reported.
+ * minutes of tests before it is reported. For the same reason static ends with
+ * `check:meta`, the repository's bookkeeping tests (META_TESTS), which vitest's
+ * longest-first order ran last of all.
  *
  * The test group runs on at most 6 workers here (VITEST_MAX_WORKERS, unless you set it):
  * measured on this suite, 6 workers took 169 s at a 4.7 GB peak against 160 s at 5.1 GB
@@ -57,6 +59,21 @@ export const GROUPS = ["check:static", "check:build", "check:test"];
  * fails on one this list misses.
  */
 export const RELEASE_TESTS = ["src/__tests__/deprecations.test.ts", "src/lib/__tests__/changelog.test.ts"];
+
+/**
+ * `check:meta`, the last step of check:static: the tests of the repository's own bookkeeping
+ * — the docs index and contracts, the showcase's component index, the gate lists,
+ * deprecations and the changelog. Each takes well under 2 s, but in the test group vitest
+ * schedules the longest files first, so they failed after a 7–10 minute run: the 0.54 adopt
+ * link (8921b88) and the 0.56 gate lists (aaffb5b5). Here they fail in the first minute, and
+ * run again, cheaply, in the test group (refactor audit 2026-11-22, TST-6).
+ */
+export const META_TESTS = [
+  ...RELEASE_TESTS,
+  "src/__tests__/contracts.test.ts",
+  "src/__tests__/gate-lists.test.ts",
+  "showcase/src/__tests__/component-index.test.ts",
+];
 const ROOT = resolve(import.meta.dirname, "..");
 export const STAMPS = join(ROOT, "node_modules", ".cache", "check");
 const STAMPS_KEPT = 20;
@@ -141,8 +158,8 @@ function runTests(files) {
   return result.status ?? 1;
 }
 
-/** `--release`: the pre-push hook's release commit runs RELEASE_TESTS, and nothing else. */
-const ONLY = { "--release": RELEASE_TESTS };
+/** `--release`: the pre-push hook's release commit runs RELEASE_TESTS; `--meta` is check:meta. */
+const ONLY = { "--release": RELEASE_TESTS, "--meta": META_TESTS };
 
 async function main() {
   const only = process.argv.slice(2).find((arg) => Object.hasOwn(ONLY, arg));

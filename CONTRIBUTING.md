@@ -448,7 +448,7 @@ for one maintainer. Revisit it if a second maintainer appears.
 `npm run check` runs these in three groups, one after another (`scripts/check.mjs`), and
 every one blocks:
 
-- `check:static`: format:check · typecheck · lint · check:tokens · check:security · check:commit-rules · check:commits
+- `check:static`: format:check · typecheck · lint · check:tokens · check:security · check:commit-rules · check:commits · check:meta
 - `check:build`: build · check:graph · check:package · export inventory · styling inventory · build:showcase · check:tailwind
 - `check:test`: test:coverage
 
@@ -509,6 +509,7 @@ by hand:
 | `build:showcase` | The only place the kit is *rendered* outside jsdom. |
 | `check:tailwind` | That the documented Tailwind `@source` step works. A wrong `@source` is **silent**: the app builds, runs, and renders unstyled. README's and ADOPTING's `@source` lines are compiled as an app runs them, over this build's `dist/`: they must reach the kit's classes and scan no `.d.ts` or `.map`, whose comments become utilities (MOD-3). |
 | `check:security` | `npm audit --audit-level=high`. |
+| `check:meta` | The repository's own bookkeeping, early: `META_TESTS` in `scripts/check.mjs` (the docs index and contracts, the component index, the gate lists, deprecations, the changelog), run without coverage: 10–20 s, most of it the component index importing every entry (44 s with the machine at load 29). In the test group vitest runs the longest files first, so a missing adopt-doc link failed after 7–10 minutes (TST-6, refactor audit 2026-11-22). |
 | `check:commits` | Conventional Commits over the range: locally every commit not yet on `origin/main`, in CI the pushed or PR range. The release tool derives the version and the changelog from these messages. |
 | `check:commit-rules` | The commit rules are the apps' SHARED ones: every file in `scripts/shared-commit-rules.json`'s `files[]` (`scripts/check-commit-msg.cjs`, and the pre-push hook's `scripts/check-pushed-commits.cjs`) is a byte-for-byte copy of `Eifi1/shared-workflows`' commit check, pinned to one commit. It fails when a copy drifts from the pin, and on any HTTP answer but 200 (a 404 is a wrong pin or a moved file). Offline (a network error, no answer at all), or while the pin waits for its tag ("(pending tag)", no commit yet), it says so and passes, except under CI, which always verifies (TST-7). `npm run sync:commit-rules -- --from ../shared-workflows` copies a local checkout and leaves the pin alone. A newer shared tag is reported; take it with `npm run sync:commit-rules -- <tag>`. A copy, not the shared action, because the husky hook and `npm run check` need the rules locally. |
 
