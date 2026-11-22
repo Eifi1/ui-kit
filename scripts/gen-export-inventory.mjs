@@ -31,6 +31,7 @@
  * Usage:
  *   node scripts/gen-export-inventory.mjs           rewrite the block in README.md
  *   node scripts/gen-export-inventory.mjs --check    exit 1 if the block is stale
+ *   either one exits 2 unless README.md holds each marker exactly once (DOC-1)
  *
  * Both need `npm run build` to have run: this reads `dist/`, which is gitignored.
  */
@@ -292,16 +293,24 @@ function render(build) {
 
 /* ── Write, or refuse ─────────────────────────────────────────────────────── */
 
-const build = readBuild();
-const block = render(build);
+// The markers first, before the build is read. Each must occur exactly once: the splice runs
+// from the first BEGIN to the first END, so a second END (a stale tail pasted below the block)
+// was invisible to `--check` and survived every rewrite. 0.63–0.65.1 shipped 426 such lines
+// (refactor audit 2026-11-22, DOC-1).
 const readme = readFileSync(README, "utf8");
 const start = readme.indexOf(BEGIN);
 const stop = readme.indexOf(END);
 
-if (start === -1 || stop === -1) {
-  console.error(`README.md has no generated-exports block. Add the markers:\n${BEGIN}\n${END}`);
+if (readme.split(BEGIN).length !== 2 || readme.split(END).length !== 2 || stop < start) {
+  console.error(
+    `README.md must hold the generated-exports block once: each marker exactly once, BEGIN first.\n` +
+      `Found BEGIN ×${readme.split(BEGIN).length - 1}, END ×${readme.split(END).length - 1}:\n${BEGIN}\n${END}`,
+  );
   process.exit(2);
 }
+
+const build = readBuild();
+const block = render(build);
 
 const current = readme.slice(start, stop + END.length);
 

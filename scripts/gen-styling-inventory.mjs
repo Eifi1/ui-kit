@@ -29,6 +29,7 @@
  * Usage:
  *   node scripts/gen-styling-inventory.mjs           rewrite the block in README.md
  *   node scripts/gen-styling-inventory.mjs --check    exit 1 if the block is stale
+ *   either one exits 2 unless README.md holds each marker exactly once (DOC-1)
  *
  * Neither needs a build: it reads `tokens.css`, which is source.
  */
@@ -200,8 +201,14 @@ const readme = readFileSync(README, "utf8");
 const start = readme.indexOf(BEGIN);
 const stop = readme.indexOf(END);
 
-if (start === -1 || stop === -1) {
-  console.error(`README.md has no generated-styling block. Add the markers:\n${BEGIN}\n${END}`);
+// Each marker exactly once, as the export inventory demands (refactor audit 2026-11-22, DOC-1):
+// the splice runs from the first BEGIN to the first END, so a stray second marker would leave
+// whatever follows it unchecked and unrewritten.
+if (readme.split(BEGIN).length !== 2 || readme.split(END).length !== 2 || stop < start) {
+  console.error(
+    `README.md must hold the generated-styling block once: each marker exactly once, BEGIN first.\n` +
+      `Found BEGIN ×${readme.split(BEGIN).length - 1}, END ×${readme.split(END).length - 1}:\n${BEGIN}\n${END}`,
+  );
   process.exit(2);
 }
 
