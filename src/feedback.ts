@@ -139,6 +139,9 @@ export {
   // 0.57 (keksdose dev #663): `inbox.bulk`, the admin's selection and bulk edit (§13.6).
   type FeedbackInboxBulk,
 } from "./feedback/feedback-inbox-page";
+// 0.66 (refactor audit 2026-11-22, FLW-2): the page's `update` leaves a bulk patch's error to
+// the bar's one summary (§13.6).
+export { isFeedbackBulkPatch } from "./feedback/feedback-inbox-bulk";
 // 0.61: the feedback pages' frame (Marcel 2026-11-12) — keksdose's padding and header
 // around the inbox and the public page, which every app wrote itself. Named: the hook a
 // kit page reads the frame's header with stays the kit's.

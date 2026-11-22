@@ -2654,10 +2654,17 @@ No server change, no new wiring: `src/feedback/feedback-inbox-bulk.tsx`.
   value)`, with `feedbackToast.statusUndo`; Undo PATCHes **each report that changed back
   to its own previous value**, then `bulkRestored(count)` (or `bulkRestoreFailed(count)`
   for the ones it could not).
-- **Partial failure.** A refused PATCH is the mutation's own to report (its `onError`
-  toasts the server's sentence, as for one change). The bar adds `bulkFailed(count)` and
-  **keeps those reports selected**, so the next press retries exactly them; the changed
-  ones leave the selection, and only they are in the Undo.
+- **Partial failure.** The bar says `bulkFailed(count)` once for the batch and **keeps
+  those reports selected**, so the next press retries exactly them; the changed ones leave
+  the selection, and only they are in the Undo. The mutation's `onError` stays quiet for a
+  patch the bar sent (`isFeedbackBulkPatch(patch)`, ui-kit 0.66): its toast per report put
+  N + 1 toasts up for a batch of N (refactor audit 2026-11-22, FLW-2).
+- **One refetch per batch** (ui-kit 0.66, FLW-2). The mutation's `onSuccess` invalidating
+  the list ran once per PATCH: a bulk of N read `GET /feedback` N times, its Undo N more,
+  and re-rendered the inbox mid-batch. The `update` therefore carries a `mutationKey` and
+  reads the list again in `onSettled` only when `queryClient.isMutating({ mutationKey }) <= 1`
+  — a mutation still counts while its `onSettled` runs, so 1 is the batch's last (or a
+  single change).
 - **The words** (`feedbackPage`, seven catalogues): `bulkStatus`, `bulkCategory`,
   `bulkVisibility`, `bulkPublicOn`, `bulkPublicOff`, `bulkChanged`, `bulkFailed`,
   `bulkRestored`, `bulkRestoreFailed`. The count and Clear are `bulkActionBar`'s, the
@@ -2666,10 +2673,22 @@ No server change, no new wiring: `src/feedback/feedback-inbox-bulk.tsx`.
   reports on view), `clear`, `setStatus`, `setCategory`, `setPublic` (with
   `publicSwitch`), `pending`; `inbox.table.selection` carries the boxes.
 
-**Per app:** nothing to change. `update`'s `mutationFn` must put the variables on the wire
-as they come — all three spread them (`({ id, ...patch }) => api.patch(id, patch)`), so
-`category` reaches server-kit's `FeedbackUpdate`, which takes it. An app whose
-`mutationFn` picked fields one by one would drop it.
+**Per app:** `update`'s `mutationFn` must put the variables on the wire as they come — all
+three spread them (`({ id, ...patch }) => api.patch(id, patch)`), so `category` reaches
+server-kit's `FeedbackUpdate`, which takes it. An app whose `mutationFn` picked fields one
+by one would drop it. **Since ui-kit 0.66** its `update` refetches once per batch and leaves
+a bulk patch's error to the bar (`AccountFeedbackPage` does both):
+
+```ts
+const update = useMutation({
+  mutationKey: ["feedback", "update"],
+  mutationFn: ({ id, ...patch }: FeedbackDetailPatch) => api.patch(id, patch),
+  onSettled: () => {
+    if (queryClient.isMutating({ mutationKey: ["feedback", "update"] }) <= 1) refresh();
+  },
+  onError: (error, patch) => isFeedbackBulkPatch(patch) || toast.error(describe(error)),
+});
+```
 
 **Tests:** `src/feedback/__tests__/feedback-inbox-bulk.test.tsx` — the boxes for the admin
 only (not `/my-feedback`, not a reader, not `selectable={false}`); select-all under a
@@ -2677,8 +2696,10 @@ status filter; a row leaving the list; one PATCH per report with its patch; the 
 putting each back to its own status; nothing sent for a report already there; partial and
 total failure; three in flight; the category (no CRASH) and Visible to others (no CRASH, no
 flagless row); the provider's words; the phone's long press, the resting swipes and the
-toggle stepping aside. `src/components/__tests__/data-table-filtered-rows.test.tsx` —
-`onFilteredRowsChange`.
+toggle stepping aside; every patch of a batch and its Undo marked (0.66).
+`src/accounts/__tests__/account-feedback.test.tsx` — a batch of three reads the list again
+once, and a refused one shows the bar's one summary (0.66).
+`src/components/__tests__/data-table-filtered-rows.test.tsx` — `onFilteredRowsChange`.
 
 ### 13.7 A notice's reports: `?ids=` (ui-kit 0.59)
 

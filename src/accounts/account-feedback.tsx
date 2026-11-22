@@ -7,6 +7,7 @@ import { LoadingState } from "../components/loading-state";
 import { toast } from "../components/toast";
 import { captureAppScreenshot } from "../feedback/feedback-capture";
 import { FeedbackCommentThread } from "../feedback/feedback-comment-thread";
+import { isFeedbackBulkPatch } from "../feedback/feedback-inbox-bulk";
 import { FeedbackInbox } from "../feedback/feedback-inbox-page";
 import type { FeedbackInboxProps, FeedbackReplyPost, FeedbackReworkPost } from "../feedback/feedback-inbox-page";
 import { useFeedbackToastLabels } from "../feedback/feedback-labels";
@@ -42,6 +43,9 @@ import { useCurrentUser } from "./accounts-hooks";
  * wiring every app wrote: where the rows come from, the three mutations every control goes
  * through, whose the inbox is, and where a vote's answer goes.
  */
+
+/** The inbox's PATCH, keyed so `isMutating` can tell the bulk bar's last one (FLW-2). */
+const FEEDBACK_UPDATE_KEY = ["feedback", "update"] as const;
 
 /** Who is the admin, by default: the account's `role` is `ADMIN`, server-kit's `admin_role`. */
 const roleIsAdmin = (user: AccountMe) => user.role === "ADMIN";
@@ -192,10 +196,18 @@ function FeedbackList({
   // Every edit of a report — the status, the pills, a swipe, the description, "Visible to
   // others" — is this one PATCH; the server decides what the caller may send. The page's
   // mutation rather than a row's, so the Undo toast still comes when a filter took the row away.
+  // The bulk bar sends it once per report, three at a time (§13.6): the list is read again
+  // after the batch's last PATCH, not after each — `isMutating` still counts this one while
+  // `onSettled` runs — and a refused one is the bar's summary to say (FLW-2).
   const update = useMutation({
+    mutationKey: FEEDBACK_UPDATE_KEY,
     mutationFn: (patch: FeedbackDetailPatch) => api.update(patch),
-    onSuccess: refresh,
-    onError: (error) => toast.error(words.say(error, toastLabels.updateFailed)),
+    onSettled: () => {
+      if (queryClient.isMutating({ mutationKey: FEEDBACK_UPDATE_KEY }) <= 1) refresh();
+    },
+    onError: (error, patch) => {
+      if (!isFeedbackBulkPatch(patch)) toast.error(words.say(error, toastLabels.updateFailed));
+    },
   });
   // A report answered whole, replies and all, goes into the list at once: the reply box clears
   // when the mutation resolves, and a timeline without the reply would read as a lost answer.

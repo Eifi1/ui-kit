@@ -410,7 +410,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // its words, `DEFAULT_TOP_BAR_NAV_LABELS`.
   // 0.66 (+3, the AttachButton draft, Marcel 2026-11-16): `AttachButton`,
   // `DEFAULT_ATTACH_LABELS` and `attachDropzoneProps` — one way in for attachments.
-  ["@eifi1/ui-kit", barrel, 1038],
+    // 0.66 (+1, here and in /feedback; refactor audit 2026-11-22, FLW-2): `isFeedbackBulkPatch`,
+  // a bulk patch's error left to the bar's one summary (feedback §13.6).
+    ["@eifi1/ui-kit", barrel, 1039],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -445,7 +447,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.61: `useFeedbackComments` (+1 here and in the barrel).
   // 0.61: `useFeedbackPublicPage`, `FeedbackPublicPage` — the public page assembled once
   // (§14) (+2 here and in the barrel).
-  ["@eifi1/ui-kit/feedback", feedback, 99],
+  // 0.66: `isFeedbackBulkPatch` (+1 here and in the barrel).
+  ["@eifi1/ui-kit/feedback", feedback, 100],
   // 0.53 (−3, breaking): what 0.52 deprecated — `SEARCH_TIER_POINTS`, `matchEntries`,
   // `normalizeSearchText` (API-4).
   ["@eifi1/ui-kit/search", search, 6],

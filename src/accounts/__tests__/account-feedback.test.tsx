@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router";
@@ -7,6 +7,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Toaster } from "../../components/toast";
 import { fakeFetch, fakeHttp } from "../../test/fake-axios";
+import { drainTasks } from "../../test/tasks";
+import { DESKTOP_WIDTH, stubViewportWidth } from "../../test/viewport";
 import type { Answer, Cfg } from "../../test/fake-axios";
 import { AccountFeedbackPage, AccountPublicFeedbackPage, useAccountFeedbackSubmit } from "../account-feedback";
 import { accountFeedbackApi } from "../account-feedback-api";
@@ -72,7 +74,12 @@ function mount(
     routes = {},
     entry = "/feedback",
     me = () => ({ status: 200, data: user }),
-  }: { user?: object; routes?: Record<string, (c: Cfg) => Answer>; entry?: string; me?: (c: Cfg) => Answer } = {},
+  }: {
+    user?: object;
+    routes?: Record<string, (c: Cfg) => Answer | Promise<Answer>>;
+    entry?: string;
+    me?: (c: Cfg) => Answer;
+  } = {},
 ) {
   localStorage.setItem("app.session", JSON.stringify({ token: "a1", refreshToken: "r1", user }));
   const calls: Array<{ route: string; params?: unknown }> = [];
@@ -194,6 +201,60 @@ describe("the account when /auth/me fails (Kurvenschmiede, 0.64.0-dev.6)", () =>
       user_email: "ada@example.com",
       user_display_name: "Ada Lovelace",
     });
+  });
+});
+
+describe("the inbox's bulk edit (refactor audit 2026-11-22, FLW-2)", () => {
+  const THREE = [report(2, "Die Pendelwelle"), report(3, "Der Doppelkegel"), report(4, "Das Galtonbrett")];
+  const inboxReads = (calls: Array<{ route: string }>) => calls.filter((c) => c.route === "get /feedback").length;
+
+  /** The three reports selected and set to Done until the bar says `summary`, each PATCH
+   *  answered by `patch` — in a task
+   *  of its own, as a browser's network answers (XHR's `loadend`, a `fetch` response). */
+  async function bulkDone(patch: (c: Cfg) => Answer, summary: string) {
+    const answer = (config: Cfg) => new Promise<Answer>((resolve) => setTimeout(() => resolve(patch(config)), 0));
+    const view = mount(<AccountFeedbackPage mine={false} />, {
+      routes: {
+        "get /feedback": () => ({ status: 200, data: THREE }),
+        "patch /feedback/2": answer,
+        "patch /feedback/3": answer,
+        "patch /feedback/4": answer,
+      },
+    });
+    await screen.findAllByText("Das Galtonbrett");
+    await waitFor(() => expect(inboxReads(view.calls)).toBe(1));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Select all rows" }));
+    const bar = screen.getByRole("toolbar");
+    fireEvent.click(within(bar).getByRole("button", { name: "Set status" }));
+    fireEvent.click(within(screen.getByRole("dialog", { name: "Set status" })).getByRole("button", { name: "Done" }));
+    // The bar's summary comes once every PATCH is answered; then the refetches they started.
+    expect(await screen.findByText(summary)).toBeInTheDocument();
+    expect(view.calls.filter((c) => c.route.startsWith("patch "))).toHaveLength(3);
+    await drainTasks();
+    return view;
+  }
+
+  let restoreWidth: (() => void) | undefined;
+  beforeEach(() => {
+    restoreWidth = stubViewportWidth(DESKTOP_WIDTH);
+  });
+  afterEach(() => restoreWidth?.());
+
+  it("reads the inbox again once for the batch, not once per report", async () => {
+    const { calls } = await bulkDone(
+      (config) => ({ status: 200, data: { ...report(Number(config.url!.split("/").at(-1)), "x"), status: "DONE" } }),
+      "Set 3 reports to “Done”",
+    );
+    expect(inboxReads(calls)).toBe(2);
+  });
+
+  it("says a refused batch once, in the bar's summary, not once per report", async () => {
+    const { calls } = await bulkDone(
+      () => ({ status: 400, data: { detail: "This report is closed." } }),
+      "3 reports could not be changed and stay selected.",
+    );
+    expect(screen.queryByText("This report is closed.")).not.toBeInTheDocument();
+    expect(inboxReads(calls)).toBe(2);
   });
 });
 
