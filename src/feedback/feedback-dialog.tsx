@@ -6,7 +6,7 @@ import { Select } from "../components/select";
 import { Textarea } from "../components/textarea";
 import type { ButtonSize, ButtonVariant } from "../components/button-look";
 import { Modal } from "../components/modal";
-import { isApplePlatform } from "../hooks/use-hotkey";
+import { isApplePlatform, isSubmitChord } from "../hooks/use-hotkey";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { hasContent } from "../lib/presence";
@@ -414,7 +414,7 @@ export function FeedbackDialog<C extends string = string>(props: FeedbackDialogP
       // something") — you are describing what is under it while you type.
       draggable
       onKeyDown={(e) => {
-        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        if (isSubmitChord(e)) {
           e.preventDefault();
           trySubmit();
         }

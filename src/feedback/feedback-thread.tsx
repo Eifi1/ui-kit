@@ -7,6 +7,7 @@ import { formatDate, formatRelativeTime } from "../lib/format";
 import { relativeFormatter } from "../lib/intl-cache";
 import { upperFirst } from "../lib/text-case";
 import { hasContent } from "../lib/presence";
+import { isSubmitChord } from "../hooks/use-hotkey";
 import { Button } from "../components/button";
 import { EmptyState } from "../components/empty-state";
 import { Spinner } from "../components/spinner";
@@ -839,7 +840,7 @@ export function ChatComposer({
         onChange={(event) => setDraft(event.target.value)}
         onKeyDown={(event) => {
           if (event.key !== "Enter") return;
-          const mod = event.ctrlKey || event.metaKey;
+          const mod = isSubmitChord(event);
           // Under "enter": plain Enter sends, Shift+Enter falls through to the
           // textarea's new line, and an Enter that ends an IME composition is the
           // IME's (keyCode 229 is how Safari reports it after the composition ended).

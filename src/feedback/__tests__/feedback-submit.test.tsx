@@ -251,6 +251,18 @@ describe("useFeedbackSubmit — the dialog", () => {
     expect(toast.error).toHaveBeenCalledWith("Could not submit feedback");
   });
 
+  it("Ctrl+Shift+Enter is not the submit chord (DUP-7)", async () => {
+    const create = vi.fn(() => Promise.resolve({ id: 1 }));
+    render(<Host create={create} />);
+    await open("BUG");
+    subject("Broken");
+    await act(async () => {
+      fireEvent.keyDown(screen.getByLabelText("Subject"), { key: "Enter", ctrlKey: true, shiftKey: true });
+    });
+    expect(create).not.toHaveBeenCalled();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
   it("sends once while a send is running", async () => {
     let resolve: (v: { id: number }) => void = () => {};
     const create = vi.fn(() => new Promise<{ id: number }>((r) => (resolve = r)));
