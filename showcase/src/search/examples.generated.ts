@@ -743,6 +743,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "AppShell — the contracts",
     "TopBarActionMenu — an account menu",
     "TopBarBrand — logo and name, the name hidden on a phone",
+    "TopBarNav — the page links between the brand and the actions",
     "TopBarActionMenu — iconBadge",
     "TopBarActionMenu — a link in the header that closes the menu",
     "TopBarActionMenu — group headings",

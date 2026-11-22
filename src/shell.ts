@@ -86,6 +86,10 @@ export type { PublicHeaderProps, PublicHeaderBrand } from "./landing/public-head
 // local-dev menu, and their words.
 export { TopBarActions } from "./shell/top-bar-actions";
 export type { TopBarActionsProps } from "./shell/top-bar-actions";
+// 0.66 (Staunlabor's public site): the page links between the brand and the actions, folded
+// into one menu when they do not fit — TopBar's `nav` slot.
+export { TopBarNav, DEFAULT_TOP_BAR_NAV_LABELS } from "./shell/top-bar-nav";
+export type { TopBarNavProps, TopBarNavItem, TopBarNavLabels } from "./shell/top-bar-nav";
 export { AccountMenuLanguage } from "./shell/account-menu-language";
 export type { AccountMenuLanguageProps, AccountMenuLanguageOption } from "./shell/account-menu-language";
 // 0.46.0 (keksdose live #426): A− / A+ for the text size, beside the language.

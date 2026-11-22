@@ -2103,6 +2103,12 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
         billingOff: "La facturación está desactivada en local: los planes no cambian nada",
       },
     },
+    // 0.66: TopBarNav — the page links' landmark (no word for "navigation": a screen
+    // reader adds the role) and the menu button they fold into.
+    topBarNav: {
+      navigation: "Páginas",
+      menu: "Menú",
+    },
     // 0.45.0 — docs/local-first-harmonization.md §1.6 (`@eifi1/ui-kit/offline`): keksdose's
     // reviewed words (nav.logout_queued_*, pwa.*) where it has the language.
     signOutPending: {

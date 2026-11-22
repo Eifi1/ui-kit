@@ -406,7 +406,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.65 (+1, keksdose's budget page, dev #679): `SortStrip`, DataTable's phone sort row
   // for any list; `TableHeaderCell` gains `sort` (a prop, not a name).
   // 0.66 (+1, Staunlabor's public pages): `StatStrip`, a quiet row of StatTiles.
-  ["@eifi1/ui-kit", barrel, 1033],
+  // 0.66 (+2, Staunlabor's public site, via `/shell`): `TopBarNav`, TopBar's page links, and
+  // its words, `DEFAULT_TOP_BAR_NAV_LABELS`.
+  ["@eifi1/ui-kit", barrel, 1035],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
@@ -463,7 +465,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `RoleSwitcher` (MOD-5).
   // 0.55 (+2): `HeldChangesBanner`, `DEFAULT_HELD_CHANGES_BANNER_LABELS` (§2.6.1, see the barrel).
   // 0.60 (−1, breaking): `PaletteMenu`, deprecated in 0.59 (see the barrel).
-  ["@eifi1/ui-kit/shell", shell, 50],
+  // 0.66 (+2): `TopBarNav`, `DEFAULT_TOP_BAR_NAV_LABELS` (see the barrel).
+  ["@eifi1/ui-kit/shell", shell, 52],
   // 0.43.0 (+9): the tours page (see the barrel).
   // 0.43.0 (+3): `resetTourProgress`, `doneCount`, `earnedPoints` (build review, see the barrel).
   // 0.44.0 (+1): `completeTour` (§9.2, see the barrel).

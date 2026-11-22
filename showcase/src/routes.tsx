@@ -1547,6 +1547,7 @@ export const GROUPS: ShowcaseGroup[] = [
           "AppShell",
           "TopBar",
           "TopBarBrand",
+          "TopBarNav",
           "PageContents",
           "PageContentsLayout",
           "ThemeToggle",

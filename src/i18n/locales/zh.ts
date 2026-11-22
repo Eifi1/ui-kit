@@ -2010,6 +2010,12 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
         billingOff: "本地已关闭计费：切换套餐不会改变任何内容",
       },
     },
+    // 0.66: TopBarNav — the page links' landmark (no word for "navigation": a screen
+    // reader adds the role) and the menu button they fold into.
+    topBarNav: {
+      navigation: "页面",
+      menu: "菜单",
+    },
     // 0.45.0 — docs/local-first-harmonization.md §1.6 (`@eifi1/ui-kit/offline`): keksdose's
     // reviewed words (nav.logout_queued_*, pwa.*) where it has the language.
     signOutPending: {

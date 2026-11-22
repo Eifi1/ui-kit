@@ -103,6 +103,7 @@ import { DEFAULT_SIGN_OUT_PENDING_DIALOG_LABELS } from "../offline/sign-out-pend
 import { DEFAULT_PWA_UPDATE_PROMPT_LABELS } from "../offline/pwa-update-prompt-labels";
 import { DEFAULT_SHARED_COMPUTER_LABELS } from "../offline/shared-computer-labels";
 import { DEFAULT_TOP_BAR_PARTS_LABELS } from "../shell/top-bar-parts-labels";
+import { DEFAULT_TOP_BAR_NAV_LABELS } from "../shell/top-bar-nav-labels";
 import { DEFAULT_HELD_CHANGES_BANNER_LABELS } from "../shell/held-changes-banner-labels";
 import { DEFAULT_FIELD_SUGGESTION_LABELS } from "../components/field-suggestion-labels";
 import { DEFAULT_CONSENT_AGAIN_LABELS } from "../components/consent-again-notice-labels";
@@ -276,6 +277,7 @@ export const DEFAULT_UI_KIT_LABELS: UiKitLabels = {
   notifications: DEFAULT_NOTIFICATIONS_LABELS,
   adminArea: DEFAULT_ADMIN_AREA_LABELS,
   topBarParts: DEFAULT_TOP_BAR_PARTS_LABELS,
+  topBarNav: DEFAULT_TOP_BAR_NAV_LABELS,
   mailTestCard: DEFAULT_MAIL_TEST_CARD_LABELS,
   signOutPending: DEFAULT_SIGN_OUT_PENDING_DIALOG_LABELS,
   pwaUpdate: DEFAULT_PWA_UPDATE_PROMPT_LABELS,

@@ -121,6 +121,7 @@ import type { NotificationsLabels } from "../notifications/notifications-labels"
 import type { AdminAreaLabels } from "../admin/admin-area-labels";
 import type { MailTestCardLabels } from "../admin/mail-test-card";
 import type { TopBarPartsLabels } from "../shell/top-bar-parts-labels";
+import type { TopBarNavLabels } from "../shell/top-bar-nav-labels";
 import type { SignOutPendingDialogLabels } from "../offline/sign-out-pending-dialog";
 import type { PwaUpdatePromptLabels } from "../offline/pwa-update-prompt";
 import type { SharedComputerLabels } from "../offline/shared-computer";
@@ -516,6 +517,8 @@ export interface UiKitLabels {
   /** 0.42.0: the top bar's shared parts — `TourMenu`, `SyncStatusIndicator`, `DevMenu`
    *  (0.42's `DevSwitchers`; docs/top-bar-harmonization.md §3.1, §2.7.1). */
   topBarParts: TopBarPartsLabels;
+  /** 0.66: `TopBarNav` — the page links' landmark and the menu they fold into. */
+  topBarNav: TopBarNavLabels;
   /** 0.45.0: "Send a test mail to me" (docs/admin-harmonization.md §9.2.4). */
   mailTestCard: MailTestCardLabels;
   /** 0.45.0: the sign-out question while changes wait to sync (`@eifi1/ui-kit/offline`,

@@ -2109,6 +2109,12 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
         billingOff: "A számlázás helyben ki van kapcsolva: a csomagok semmin nem változtatnak",
       },
     },
+    // 0.66: TopBarNav — the page links' landmark (no word for "navigation": a screen
+    // reader adds the role) and the menu button they fold into.
+    topBarNav: {
+      navigation: "Oldalak",
+      menu: "Menü",
+    },
     // 0.45.0 — docs/local-first-harmonization.md §1.6 (`@eifi1/ui-kit/offline`): keksdose's
     // reviewed words (nav.logout_queued_*, pwa.*) where it has the language.
     signOutPending: {
