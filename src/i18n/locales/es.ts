@@ -628,6 +628,17 @@ export function uiKitLabelsEs(numberLocale = "es-ES"): UiKitLabels {
       taken: (count) => `${n(count)} ${plural(count, "foto hecha", "fotos hechas")}.`,
       done: (count) => `Usar ${n(count)} ${plural(count, "foto", "fotos")}`,
     },
+    // 0.66: AttachButton (es wants a native read, as the draft says).
+    attach: {
+      trigger: "Adjuntar",
+      title: "Añadir archivo adjunto",
+      camera: "Cámara",
+      photos: "Fotos",
+      files: "Archivos",
+      screenshot: "Captura de pantalla",
+      close: "Cerrar",
+      anotherPage: "Otra página",
+    },
     wizard: {
       done: "Listo",
       cancel: "Cancelar",

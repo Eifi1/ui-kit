@@ -408,7 +408,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.66 (+1, Staunlabor's public pages): `StatStrip`, a quiet row of StatTiles.
   // 0.66 (+2, Staunlabor's public site, via `/shell`): `TopBarNav`, TopBar's page links, and
   // its words, `DEFAULT_TOP_BAR_NAV_LABELS`.
-  ["@eifi1/ui-kit", barrel, 1035],
+  // 0.66 (+3, the AttachButton draft, Marcel 2026-11-16): `AttachButton`,
+  // `DEFAULT_ATTACH_LABELS` and `attachDropzoneProps` — one way in for attachments.
+  ["@eifi1/ui-kit", barrel, 1038],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).

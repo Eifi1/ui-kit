@@ -624,6 +624,18 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       taken: (count) => `${n(count)} fénykép elkészült.`,
       done: (count) => `${n(count)} fénykép használata`,
     },
+    // 0.66: AttachButton (hu wants a native read, as the draft says). "Melléklet
+    // hozzáadása" is the feedback field's attachmentAdd.
+    attach: {
+      trigger: "Csatolás",
+      title: "Melléklet hozzáadása",
+      camera: "Kamera",
+      photos: "Fotók",
+      files: "Fájlok",
+      screenshot: "Képernyőkép",
+      close: "Bezárás",
+      anotherPage: "Újabb oldal",
+    },
     wizard: {
       done: "Kész",
       cancel: "Mégse",

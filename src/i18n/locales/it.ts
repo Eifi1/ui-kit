@@ -636,6 +636,17 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       taken: (count) => `${n(count)} ${plural(count, "foto scattata", "foto scattate")}.`,
       done: (count) => `Usa ${n(count)} foto`,
     },
+    // 0.66: AttachButton. "Aggiungi allegato" is the feedback field's attachmentAdd.
+    attach: {
+      trigger: "Allega",
+      title: "Aggiungi allegato",
+      camera: "Fotocamera",
+      photos: "Foto",
+      files: "File",
+      screenshot: "Screenshot",
+      close: "Chiudi",
+      anotherPage: "Altra pagina",
+    },
     wizard: {
       done: "Fine",
       cancel: "Annulla",

@@ -646,6 +646,17 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       taken: (count) => (count === 1 ? "1 Foto aufgenommen." : `${n(count)} Fotos aufgenommen.`),
       done: (count) => (count === 1 ? "1 Foto übernehmen" : `${n(count)} Fotos übernehmen`),
     },
+    // 0.66: AttachButton. "Anhang hinzufügen" is the feedback field's attachmentAdd.
+    attach: {
+      trigger: "Anhängen",
+      title: "Anhang hinzufügen",
+      camera: "Kamera",
+      photos: "Fotos",
+      files: "Dateien",
+      screenshot: "Screenshot",
+      close: "Schließen",
+      anotherPage: "Weitere Seite",
+    },
     wizard: {
       done: "Fertig",
       cancel: "Abbrechen",

@@ -43,6 +43,7 @@ import type { IconPickerLabels } from "../components/icon-picker";
 import type { DialogFrameLabels } from "../components/dialog-frame";
 import type { FilePickerLabels } from "../components/file-button";
 import type { CameraLabels } from "../components/camera-labels";
+import type { AttachLabels } from "../components/attach-button-labels";
 import type { MeasuredGridLabels } from "../components/measured-grid";
 import type { FeedbackAttachmentFieldLabels } from "../feedback/feedback-attachment";
 import type { FeedbackDialogTextLabels } from "../feedback/feedback-dialog";
@@ -362,6 +363,9 @@ export interface UiKitLabels {
   /** 0.55: `CameraButton` and `CameraCapture` — the camera where there is one, the photo
    *  picker where there is none (kastlan reuse audit 2026-11-02, proposal 8). */
   camera: CameraLabels;
+  /** 0.66: `AttachButton` — one way in for attachments: camera, photos, files and a
+   *  screenshot behind one paperclip. The viewfinder's words stay `camera`'s. */
+  attach: AttachLabels;
   measuredGrid: MeasuredGridLabels;
   feedbackAttachment: FeedbackAttachmentFieldLabels;
   /** 0.12.0: `FeedbackDialog`'s own strings; `FeedbackThread` / `ChatComposer` (the

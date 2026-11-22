@@ -604,6 +604,17 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       taken: (count) => `已拍摄 ${n(count)} 张照片。`,
       done: (count) => `使用 ${n(count)} 张照片`,
     },
+    // 0.66: AttachButton (zh wants a native read, as the draft says).
+    attach: {
+      trigger: "附加",
+      title: "添加附件",
+      camera: "相机",
+      photos: "照片",
+      files: "文件",
+      screenshot: "截图",
+      close: "关闭",
+      anotherPage: "再拍一页",
+    },
     wizard: {
       done: "完成",
       cancel: "取消",

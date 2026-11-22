@@ -505,6 +505,17 @@ export { CameraButton } from "./components/camera-button";
 export type { CameraButtonProps } from "./components/camera-button";
 export { CameraCapture, DEFAULT_CAMERA_LABELS } from "./components/camera-capture";
 export type { CameraCaptureProps, CameraFacing, CameraLabels } from "./components/camera-capture";
+// 0.66: one way in for attachments — camera, photos, files and a screenshot behind one
+// paperclip; a sheet on a phone, a menu on a desktop, or the tiles inline (the
+// AttachButton draft, Marcel 2026-11-16).
+export { AttachButton, DEFAULT_ATTACH_LABELS, attachDropzoneProps } from "./components/attach-button";
+export type {
+  AttachButtonProps,
+  AttachLabels,
+  AttachOptions,
+  AttachSource,
+  AttachTile,
+} from "./components/attach-button";
 // The chart kit, whole, from its subpath (`@eifi1/ui-kit/chart`, which names its parts):
 // the chart shell and its palette, the treemap, the series chart with its zoom, legend,
 // labels and facing-pair axes, the height every chart takes, and the pie chart.

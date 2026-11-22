@@ -643,6 +643,17 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
       taken: (count) => `${n(count)} ${plural(count, "photo prise", "photos prises")}.`,
       done: (count) => `Utiliser ${n(count)} ${plural(count, "photo", "photos")}`,
     },
+    // 0.66: AttachButton. "Ajouter une pièce jointe" is the feedback field's attachmentAdd.
+    attach: {
+      trigger: "Joindre",
+      title: "Ajouter une pièce jointe",
+      camera: "Appareil photo",
+      photos: "Photos",
+      files: "Fichiers",
+      screenshot: "Capture d’écran",
+      close: "Fermer",
+      anotherPage: "Autre page",
+    },
     wizard: {
       done: "Terminé",
       cancel: "Annuler",
