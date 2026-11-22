@@ -10,7 +10,8 @@
 // in eleven flow-module sites, after the 2026-10-30 round had fixed the pickers.
 //
 // Reported: `disabled={…}` on a `<Button>` or `<IconButton>` that names a pending or busy
-// state (`busy`, `isPending`, `save.isPending`, `busy !== null`) when the same element's
+// state (`busy`, `isPending`, `save.isPending`, `busy !== null`, `saving`, `capturing`:
+// pending, busy or an "-ing" name) when the same element's
 // `onClick` STARTS that state — it calls the state's setter (`setBusy`), the mutation's
 // `mutate`/`mutateAsync` (`save.isPending` ← `save.mutate()`), or a function of the file
 // that does, three calls deep. A Cancel beside it, disabled by the same `busy` but not
@@ -52,7 +53,10 @@ export interface PendingNotDisabledRule {
 }
 
 const BUTTONS = new Set(["Button", "IconButton"]);
-const STATE = /pending|busy/i;
+/** A request's state by its name: `pending`, `busy`, and the progressive forms — `saving`,
+ *  `isLoading`, `capturing` (FeedbackAttachmentField's camera button, 0.66). A name that
+ *  ends in "-ing" and that the click sets is a button disabling itself in any case. */
+const STATE = /pending|busy|ing$/i;
 const MUTATE = /^mutate(Async)?$/;
 /** How many calls into the file's own functions the click is followed: `onClick={() =>
  *  run("read")}` → `run` → `setBusy(…)` is two. */

@@ -79,6 +79,16 @@ new RuleTester({
       errors: [error("remove.isPending")],
     },
     {
+      // FeedbackAttachmentField's camera button: an "-ing" state, the press swallowed by hand.
+      code: `function A({ capture, disabled }) { const [capturing, setCapturing] = useState(false);
+        return <Button disabled={capturing || disabled} onClick={() => {
+          if (capturing || disabled) return;
+          setCapturing(true);
+          void capture().finally(() => setCapturing(false));
+        }}>Capture</Button>; }`,
+      errors: [error("capturing")],
+    },
+    {
       code: `function A() { const [pending, setPending] = useState(false);
         function submit() { setPending(true); }
         return <Button disabled={pending} onClick={submit}>Send</Button>; }`,
