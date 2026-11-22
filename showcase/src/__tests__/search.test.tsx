@@ -17,7 +17,9 @@ import { MOUNT_TIMEOUT_MS, renderShowcase, useShowcaseEnvironment } from "./show
  * where they should.
  */
 
-useShowcaseEnvironment({ scrollIntoView: true });
+// The pages the palette test renders: where it opens, and where its row jumps to. Preloading
+// every section took the file from 10.6 s (0.51.6) to 16.2 s (refactor audit 2026-11-22, TST-5).
+useShowcaseEnvironment({ scrollIntoView: true, pages: ["overview", "popovers"] });
 
 /** Vitest runs from the repository root (vitest.config.ts lives there). */
 const ROOT = process.cwd();
