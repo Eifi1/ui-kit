@@ -10,6 +10,7 @@ import {
   type RefObject,
 } from "react";
 import { Camera, FileText, Image as ImageIcon, Paperclip, X } from "lucide-react";
+import { AttachButton, type AttachTile } from "../components/attach-button";
 import { Button } from "../components/button";
 import { IconButton } from "../components/icon-button";
 import { Spinner } from "../components/spinner";
@@ -192,6 +193,24 @@ interface FeedbackAttachmentFieldBaseProps {
   /** The add and capture buttons' size — Button's own `size`, with `buttonVariant`.
    *  Default `"md"`. `"sm"` draws their icons at 14px, as a small button's are. */
   buttonSize?: ButtonSize;
+  /**
+   * How files come in (0.66, the AttachButton draft of 2026-11-16):
+   *
+   * - `"buttons"` (default): the add button (the file dialog) and, with
+   *   `onCaptureScreenshot`, the capture button beside it — as the field always had.
+   * - `"sheet"`: one {@link AttachButton} in their place, under the add button's word — a
+   *   sheet of tiles on a phone (Camera · Photos · Files · Screenshot), a menu on a desktop.
+   *   The Screenshot tile follows the capture button's rule (with a screenshot slot, only
+   *   while the slot is empty), every file is checked as before and refused through
+   *   `onError`, and the paste stays.
+   *
+   * Opt-in in 0.66; `"sheet"` becomes the default in 0.67.
+   */
+  picker?: "buttons" | "sheet";
+  /** `picker="sheet"`: which ways in, of those that apply — keksdose's support chat takes
+   *  `["photos", "files"]` (no camera; Files reaches the PDF and the text log). Default:
+   *  all. */
+  sources?: readonly AttachTile[];
   className?: string;
 }
 
@@ -381,6 +400,8 @@ function SingleField({
   disabled = false,
   buttonVariant = "secondary",
   buttonSize = "md",
+  picker = "buttons",
+  sources,
   className,
 }: FeedbackAttachmentFieldSingleProps) {
   // The object URL is keyed to the file it was made for, so a stale one (from the
@@ -458,27 +479,47 @@ function SingleField({
         </div>
       ) : (
         <div className="space-y-1.5">
-          <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
+          {picker === "sheet" ? (
+            <SheetPicker
+              accept={accept}
+              maxBytes={maxBytes}
+              room={1}
+              sources={sources}
+              onCaptureScreenshot={onCaptureScreenshot}
+              disabled={disabled}
               variant={buttonVariant}
               size={buttonSize}
-              disabled={disabled}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <Paperclip className={buttonIcon(buttonSize)} /> {text.attachmentAdd}
-            </Button>
-            {onCaptureScreenshot && (
-              <CaptureButton
-                capture={onCaptureScreenshot}
-                onFile={pick}
-                label={text.attachmentCapture}
-                disabled={disabled}
+              label={text.attachmentAdd}
+              onFiles={([file]) => pick(file)}
+              onScreenshot={pick}
+              // One file: there is no count to refuse.
+              report={(kind, files) => {
+                if (kind !== "count") onError?.(kind, errorInfo(kind, files));
+              }}
+            />
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
                 variant={buttonVariant}
                 size={buttonSize}
-              />
-            )}
-          </div>
+                disabled={disabled}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Paperclip className={buttonIcon(buttonSize)} /> {text.attachmentAdd}
+              </Button>
+              {onCaptureScreenshot && (
+                <CaptureButton
+                  capture={onCaptureScreenshot}
+                  onFile={pick}
+                  label={text.attachmentCapture}
+                  disabled={disabled}
+                  variant={buttonVariant}
+                  size={buttonSize}
+                />
+              )}
+            </div>
+          )}
           {/* Said out loud, because a gesture with no affordance is a gesture
               nobody finds. */}
           <p className="text-xs text-muted">{text.attachmentPaste}</p>
@@ -520,6 +561,8 @@ function MultipleField({
   disabled = false,
   buttonVariant = "secondary",
   buttonSize = "md",
+  picker = "buttons",
+  sources,
   className,
 }: FeedbackAttachmentFieldMultipleProps) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -656,7 +699,24 @@ function MultipleField({
           ))}
         </ul>
       )}
-      {(room > 0 || canCapture) && (
+      {(room > 0 || canCapture) && picker === "sheet" && (
+        <SheetPicker
+          accept={accept}
+          maxBytes={maxBytes}
+          room={room}
+          sources={sources}
+          // The capture button's rule: with a slot, only while the slot is empty.
+          onCaptureScreenshot={canCapture ? onCaptureScreenshot : undefined}
+          disabled={disabled}
+          variant={buttonVariant}
+          size={buttonSize}
+          label={text.attachmentAdd}
+          onFiles={(files) => add(files)}
+          onScreenshot={capture}
+          report={(kind, files) => onError?.(kind, errorInfo(kind, files))}
+        />
+      )}
+      {(room > 0 || canCapture) && picker !== "sheet" && (
         <div className="flex flex-wrap gap-2">
           {room > 0 && (
             <Button
@@ -731,6 +791,8 @@ function RefsField({
   disabledReason: ownDisabledReason,
   buttonVariant = "secondary",
   buttonSize = "md",
+  picker = "buttons",
+  sources,
   className,
 }: FeedbackAttachmentFieldRefsProps) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -902,7 +964,25 @@ function RefsField({
           ))}
         </ul>
       )}
-      {room > 0 && (
+      {room > 0 && picker === "sheet" && (
+        <SheetPicker
+          accept={accept}
+          maxBytes={maxBytes}
+          room={room}
+          sources={sources}
+          onCaptureScreenshot={onCaptureScreenshot}
+          disabled={disabled}
+          disabledReason={reason}
+          variant={buttonVariant}
+          size={buttonSize}
+          label={text.attachmentAdd}
+          onFiles={(files) => add(files)}
+          onScreenshot={(file) => add([file])}
+          // `undefined` in `error`'s place, as for every refusal before an upload.
+          report={(kind, files) => onError?.(kind, undefined, errorInfo(kind, files))}
+        />
+      )}
+      {room > 0 && picker !== "sheet" && (
         <div className="flex flex-wrap gap-2">
           <Button
             type="button"
@@ -973,6 +1053,74 @@ function RefGlyph({ type }: { type?: string }) {
 function Heading({ text, className }: { text?: string; className?: string }) {
   if (!text) return null;
   return <div className={cn("mb-1 text-xs font-medium uppercase tracking-wide text-muted", className)}>{text}</div>;
+}
+
+/**
+ * `picker="sheet"` (0.66): the field's add and capture buttons as one {@link AttachButton}.
+ * It screens what it hands over by the field's own limits — `accept`, `maxBytes`, and the
+ * `room` left as its `maxFiles` — and its refusals are reported as the field's own: per
+ * file for a type or a size, once for the whole surplus of a pick. What it hands over then
+ * goes the way the buttons' files go (`onFiles` → the field's pick or add, which checks
+ * again by its own rule; a screenshot → the screenshot slot where there is one).
+ */
+function SheetPicker({
+  accept,
+  maxBytes,
+  room,
+  sources,
+  onCaptureScreenshot,
+  disabled,
+  disabledReason,
+  variant,
+  size,
+  label,
+  onFiles,
+  onScreenshot,
+  report,
+}: {
+  accept: string[];
+  maxBytes: number;
+  /** How many files may still come in. 0: only a screenshot (into its slot). */
+  room: number;
+  sources?: readonly AttachTile[];
+  onCaptureScreenshot?: () => Promise<File | null>;
+  disabled: boolean;
+  disabledReason?: ReactNode;
+  variant: ButtonVariant;
+  size: ButtonSize;
+  label: string;
+  onFiles: (files: File[]) => void;
+  onScreenshot: (file: File) => void;
+  report: (kind: FeedbackAttachmentError, files: File[]) => void;
+}) {
+  return (
+    <AttachButton
+      accept={accept.join(",")}
+      maxSize={maxBytes}
+      multiple={room > 1}
+      maxFiles={room > 1 ? room : undefined}
+      // A full set of files leaves only the screenshot slot.
+      sources={room > 0 ? sources : (sources ?? ["screenshot"]).filter((s) => s === "screenshot")}
+      onCaptureScreenshot={onCaptureScreenshot}
+      variant={variant}
+      size={size}
+      disabled={disabled}
+      disabledReason={disabledReason}
+      // The add button's word, as the field's own buttons have it; the tiles' words are
+      // the `attach` namespace's.
+      labels={{ trigger: label }}
+      data-attachment-action=""
+      onFiles={(files, source) => (source === "screenshot" ? onScreenshot(files[0]) : onFiles(files))}
+      onReject={(rejections) => {
+        const surplus: File[] = [];
+        for (const r of rejections) {
+          if (r.reason === "count") surplus.push(r.file);
+          else if (r.reason === "type" || r.reason === "size") report(r.reason, [r.file]);
+        }
+        if (surplus.length > 0) report("count", surplus);
+      }}
+    />
+  );
 }
 
 function CaptureButton({
