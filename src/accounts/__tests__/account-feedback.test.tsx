@@ -345,6 +345,107 @@ describe("a refusal's words (Kurvenschmiede, 0.64.0-dev.6)", () => {
   });
 });
 
+describe("the writes (refactor audit 2026-11-22, TST-4)", () => {
+  const inboxReads = (calls: Array<{ route: string }>) => calls.filter((c) => c.route === "get /feedback").length;
+  let restoreWidth: (() => void) | undefined;
+  beforeEach(() => {
+    restoreWidth = stubViewportWidth(DESKTOP_WIDTH);
+  });
+  afterEach(() => restoreWidth?.());
+
+  /** Report 2's status cell, pressed at `status`, the PATCH answered by `answer`. */
+  async function setStatus(status: string, answer: (c: Cfg) => Answer) {
+    const sent: Cfg[] = [];
+    const view = mount(<AccountFeedbackPage mine={false} />, {
+      routes: {
+        "get /feedback": () => ({ status: 200, data: [report(2, "Die Pendelwelle")] }),
+        "patch /feedback/2": (config) => {
+          sent.push(config);
+          return answer(config);
+        },
+      },
+    });
+    const row = (await screen.findAllByText("Die Pendelwelle"))[0].closest("tr") as HTMLElement;
+    await waitFor(() => expect(inboxReads(view.calls)).toBe(1));
+    fireEvent.click(within(row).getByRole("button", { name: status }));
+    await waitFor(() => expect(sent).toHaveLength(1));
+    return { ...view, sent };
+  }
+
+  it("a status change PATCHes the report and reads the inbox again", async () => {
+    const { calls, sent } = await setStatus("Won't do", () => ({
+      status: 200,
+      data: report(2, "Die Pendelwelle", { status: "WONT_DO" }),
+    }));
+    expect(sent[0].url).toBe("/feedback/2");
+    expect(sent[0].data).toEqual({ status: "WONT_DO" });
+    await waitFor(() => expect(inboxReads(calls)).toBe(2));
+    expect(await screen.findByText("Set to “Won't do”: Die Pendelwelle")).toBeInTheDocument();
+  });
+
+  it("a refused PATCH says the update-failed words", async () => {
+    await setStatus("Won't do", () => ({ status: 422, data: { detail: [{ loc: ["body"], msg: "invalid" }] } }));
+    expect(await screen.findByText("Could not save that change.")).toBeInTheDocument();
+  });
+
+  it("puts a reply's answer into the list before the list is read again", async () => {
+    const answered = report(2, "Die Pendelwelle", {
+      replies: [
+        {
+          id: 11,
+          author_name: "Ada Lovelace",
+          body: "Kommt in die nächste Ausstellung.",
+          kind: "reply",
+          status_to: null,
+          created_at: "2026-11-15T10:00:00Z",
+        },
+      ],
+    });
+    let reads = 0;
+    const { calls, queryClient } = mount(<AccountFeedbackPage mine={false} />, {
+      entry: "/feedback?row=2",
+      routes: {
+        // The first read answers; the one the reply starts never does, so the reply in the
+        // list can only be the answer's.
+        "get /feedback": () =>
+          (reads += 1) === 1 ? { status: 200, data: [report(2, "Die Pendelwelle")] } : new Promise<Answer>(() => {}),
+        "post /feedback/2/replies": () => ({ status: 201, data: answered }),
+      },
+    });
+    const field = await screen.findByRole("textbox", { name: "Write a reply" });
+    fireEvent.change(field, { target: { value: "Kommt in die nächste Ausstellung." } });
+    fireEvent.click(screen.getByRole("button", { name: "Reply" }));
+    await waitFor(() => expect(inboxReads(calls)).toBe(2));
+    expect(queryClient.getQueryData<Array<{ replies: unknown[] }>>(accountQueryKeys.feedbackAll)?.[0].replies).toEqual(
+      answered.replies,
+    );
+    expect(await screen.findByText("Kommt in die nächste Ausstellung.")).toBeInTheDocument();
+  });
+
+  it("puts a vote's count into the public list, the open report and the inbox", async () => {
+    const { calls, queryClient } = mount(<AccountPublicFeedbackPage />, {
+      entry: "/all-feedback?row=2",
+      routes: {
+        "get /feedback/public": () => ({ status: 200, data: [publicRow(2, "Die Pendelwelle")] }),
+        "get /feedback/public/2": () => ({ status: 200, data: { ...publicRow(2, "Die Pendelwelle"), body: "x" } }),
+        "put /feedback/2/vote": () => ({ status: 200, data: { votes: 4, voted: true } }),
+      },
+    });
+    // The admin's inbox, read earlier in the session.
+    queryClient.setQueryData(accountQueryKeys.feedbackAll, [report(2, "Die Pendelwelle", { votes: 3, voted: false })]);
+    await waitFor(() => expect(queryClient.getQueryData(accountQueryKeys.feedbackPublicOne(2))).toBeDefined());
+    await screen.findAllByText("Die Pendelwelle");
+    fireEvent.click(screen.getAllByRole("button", { name: /I want this too/ })[0]);
+    await waitFor(() => expect(calls.map((c) => c.route)).toContain("put /feedback/2/vote"));
+    const counted = { votes: 4, voted: true };
+    await waitFor(() => expect(queryClient.getQueryData(accountQueryKeys.feedbackPublicOne(2))).toMatchObject(counted));
+    for (const [, rows] of queryClient.getQueriesData<unknown[]>({ queryKey: accountQueryKeys.feedbackPublicLists })) {
+      expect(rows?.[0]).toMatchObject(counted);
+    }
+    expect(queryClient.getQueryData<unknown[]>(accountQueryKeys.feedbackAll)?.[0]).toMatchObject(counted);
+  });
+});
+
 describe("AccountPublicFeedbackPage", () => {
   it("reads the public titles a page at a time, newest first", async () => {
     const { calls } = mount(<AccountPublicFeedbackPage pageSize={20} />, {
