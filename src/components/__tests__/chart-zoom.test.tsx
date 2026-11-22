@@ -1113,6 +1113,69 @@ describe("withChartZoom — Back", () => {
   });
 });
 
+/* ── The focus when the corner goes (DSP-2, refactor audit 2026-11-22) ──── */
+
+/**
+ * Reset zoom and the last Back take both corner buttons away with the focus on them. The
+ * focus goes on in the same handler, to the chart's keyboard stop (`data-point-key`, the
+ * one in the tab order), else its first other stop, else the chart itself — never <body>.
+ */
+function PointStopChart(props: Parameters<typeof StubChart>[0]) {
+  return (
+    <>
+      <StubChart {...props} />
+      <button type="button" tabIndex={-1} data-point-key="a">
+        Point 1
+      </button>
+      <button type="button" tabIndex={0} data-point-key="b">
+        Point 2
+      </button>
+    </>
+  );
+}
+const ZoomableWithPoints = withChartZoom(PointStopChart);
+
+describe("withChartZoom — the focus when the corner buttons go", () => {
+  const press = (name: RegExp | string) => {
+    const button = screen.getByRole("button", { name });
+    act(() => button.focus());
+    fireEvent.click(button);
+    expect(screen.queryByRole("button", { name })).toBeNull();
+  };
+
+  it("Reset zoom hands it to the chart's keyboard stop", () => {
+    render(<ZoomableWithPoints axes={[{ id: "y" }]} rows={SWEEP} series={[{ key: "v" }]} />);
+    drag([160, 60], [610, 210]);
+    press(/reset zoom/i);
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Point 2" }));
+  });
+
+  it("the last Back does too", () => {
+    render(<ZoomableWithPoints axes={[{ id: "y" }]} rows={SWEEP} series={[{ key: "v" }]} />);
+    drag([160, 60], [610, 210]);
+    press("Back");
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Point 2" }));
+  });
+
+  it("a Back that is not the last keeps it on Back", () => {
+    render(<ZoomableWithPoints axes={[{ id: "y" }]} rows={SWEEP} series={[{ key: "v" }]} />);
+    drag([160, 60], [610, 210]);
+    drag([200, 100], [500, 104]);
+    const back = screen.getByRole("button", { name: "Back" });
+    act(() => back.focus());
+    fireEvent.click(back);
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Back" }));
+  });
+
+  it("with no stop of the chart's own, the chart itself rather than <body>", () => {
+    render(<Zoomable axes={[{ id: "y" }]} rows={SWEEP} series={[{ key: "v" }]} />);
+    drag([160, 60], [610, 210]);
+    press(/reset zoom/i);
+    expect(document.activeElement).not.toBe(document.body);
+    expect(document.activeElement).toContainElement(screen.getByTestId("chart"));
+  });
+});
+
 /* ── The overview strip (0.61) ──────────────────────────────────────────── */
 
 describe("withChartZoom — the overview strip", () => {
