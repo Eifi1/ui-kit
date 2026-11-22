@@ -13,7 +13,7 @@ import { TranslationReviewPanel } from "../components/translation-review";
 import { TranslationExportButton, TranslationLocaleTabs } from "../components/translation-review-parts";
 import { useSearchParamState, useSearchParamsState } from "../hooks/use-search-param-state";
 import { DEFAULT_UI_KIT_LABELS } from "../i18n/defaults";
-import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
+import { useKitLabels } from "../i18n/kit-labels";
 import type { LabelOverride } from "../i18n/kit-labels";
 import { KIT_LANGUAGES, loadUiKitLabels } from "../i18n/languages";
 import { kitLabelStrings } from "../i18n/review";
@@ -26,6 +26,7 @@ import {
   translationRows,
 } from "../lib/translation-review";
 import type { ReviewStatus, TranslationReviewFilter, TranslationRow } from "../lib/translation-review";
+import { useDayFormatter } from "../lib/day-format";
 import { httpStatusOf } from "../lib/http-status";
 import { useDescribeAccountFailure } from "./account-failure";
 import { DEFAULT_ACCOUNT_TRANSLATIONS_LABELS } from "./account-translations-labels";
@@ -107,7 +108,7 @@ export function AccountTranslationReview({
   const labels = useKitLabels("accountTranslations", DEFAULT_ACCOUNT_TRANSLATIONS_LABELS, labelsProp);
   const legal = useKitLabels("legal", DEFAULT_LEGAL_LABELS);
   const describe = useDescribeAccountFailure();
-  const locale = useKitLocale();
+  const day = useDayFormatter();
   const { list, save, clear } = useTranslationReviews();
 
   const allowed = list.data?.locales ?? [];
@@ -256,7 +257,9 @@ export function AccountTranslationReview({
           filter={filter}
           onFilterChange={setFilter}
           storageKey={storageKey}
-          formatDate={(iso) => new Date(iso).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" })}
+          // The kit's day ladder with the clock (DUP-2): the app's date preference and the
+          // provider's time zone, which a `toLocaleString` of its own passed over.
+          formatDate={(iso) => day(iso, { time: true })}
           formatError={(error) => describe(error)}
         />
       </>

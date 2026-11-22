@@ -13,7 +13,7 @@ import { PasswordSetting, ProfileSetting, TwoFactorSetting } from "../account/ac
 import { SessionsSetting, type SessionItem } from "../account/sessions-setting";
 import { InvitationsPanel, type InvitationRow, type InvitationsPanelProps } from "../admin/invitations-panel";
 import { formatPersonName } from "../lib/person-name";
-import { useKitFormat } from "../lib/format";
+import { useDayFormatter } from "../lib/day-format";
 import { ReauthDialog, type ReauthDialogLabels } from "../components/reauth-dialog";
 import type { LabelOverride } from "../i18n/kit-labels";
 import { useAccountSettingsLabels } from "../account/account-settings-labels";
@@ -72,7 +72,8 @@ export interface AccountProfileSectionProps {
 export function AccountProfileSection({ id = "profile", roleLabel }: AccountProfileSectionProps) {
   const user = useAccount();
   const save = useUpdateProfile<AccountMe>();
-  const { formatDate } = useKitFormat();
+  // The kit's day ladder (DUP-2): `useKitFormat().formatDate` skipped the app's preference.
+  const day = useDayFormatter();
   if (!user) return null;
   return (
     <ProfileSetting
@@ -80,7 +81,7 @@ export function AccountProfileSection({ id = "profile", roleLabel }: AccountProf
       name={formatPersonName({ first: user.first_name, last: user.last_name })}
       email={user.email}
       role={user.role && roleLabel ? roleLabel(user.role) : undefined}
-      memberSince={user.created_at ? formatDate(user.created_at, "medium") : undefined}
+      memberSince={user.created_at ? day(user.created_at) : undefined}
       firstName={user.first_name}
       lastName={user.last_name}
       saving={save.isPending}
