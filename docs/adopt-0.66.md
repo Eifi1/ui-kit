@@ -21,7 +21,10 @@ before ":" (DOC-5). Move the page's `updated` date in the French text.
 - **`createQueryPersistence`'s `persistMutations` now defaults to `false`** (FLW-3). Pass `true` to keep
   paused writes across a reload. The credential hooks never persist, whatever the setting, and the scrub list
   gains `password`, `current_password`, `new_password`. Kurvenschmiede already passes `false`; Staunlabor
-  persists nothing; keksdose: check your call.
+  persists nothing; keksdose does not call `createQueryPersistence` (its own `PersistQueryClientProvider`
+  options), so nothing changes there; its mutations never pause (`offlineFirst`, no retry), offline writes go
+  through its Dexie outbox, and it sets `shouldDehydrateMutation: () => false` as hardening (checked
+  2026-11-22).
 
 ## Deprecated (removed in 0.67)
 
@@ -83,7 +86,8 @@ before ":" (DOC-5). Move the page's `updated` date in the French text.
   kit's.
 - Load the kit catalogues lazily (MOD-2: −56 kB gzip on the entry chunk): `loadUiKitLabels` /
   `peekUiKitLabels`, as Kurvenschmiede and Staunlabor do (5 files).
-- `persistMutations`: see "Must change".
+- Persistence: nothing (see "Must change"); `shouldDehydrateMutation: () => false` lands with keksdose's own
+  audit round.
 
 **Kurvenschmiede:**
 - The same feedback `update` guard as keksdose.
