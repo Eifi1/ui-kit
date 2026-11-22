@@ -73,6 +73,7 @@ function DataTableSection() {
       <MainTable />
       <ControlledTable />
       <ShortTable />
+      <NamedTable />
       <DensityTable />
       <ReportTable />
       <PrivateCellsTable />
@@ -490,6 +491,57 @@ function ShortTable() {
           <code className="font-mono">ltr:text-right rtl:text-right</code> for a truly physical side).
         </Note>
       </div>
+    </Example>
+  );
+}
+
+/* ── the table's name ────────────────────────────────────────────────────── */
+
+function NamedTable() {
+  const [how, setHow] = useState<"heading" | "caption" | "hidden" | "label">("heading");
+  const rows = SMALL_ROWS.slice(0, 4);
+  const named = {
+    heading: { "aria-labelledby": "named-table-heading" },
+    caption: { caption: "Invoices still open" },
+    hidden: { caption: "Invoices still open", hideCaption: true },
+    label: { "aria-label": "Open invoices" },
+  }[how];
+  return (
+    <Example
+      label="Naming the table — aria-labelledby, caption, aria-label"
+      hint="the same name on the desktop table and on the phone's card list"
+    >
+      <Row className="mb-3">
+        <ToggleGroup
+          aria-label="Name the table by"
+          value={how}
+          onChange={setHow}
+          options={[
+            { value: "heading", label: "Heading" },
+            { value: "caption", label: "Caption" },
+            { value: "hidden", label: "Hidden caption" },
+            { value: "label", label: "aria-label" },
+          ]}
+        />
+      </Row>
+      <h4 id="named-table-heading" className="mb-2 text-sm font-semibold text-primary">
+        Open invoices
+      </h4>
+      <DataTable
+        rows={rows}
+        columns={SMALL_COLUMNS}
+        rowKey={(r) => r.id}
+        paginated={false}
+        chrome="minimal"
+        {...named}
+      />
+      <Note>
+        A page with several tables names each, or every one is &ldquo;Data table&rdquo; in a screen reader&apos;s list
+        of tables. Where the name is already on screen, point at it: {code('aria-labelledby="…"')} with the id of the
+        section&apos;s heading. Else {code("caption")}, drawn above the rows in the caption type (it scrolls away under
+        the sticky header), or with {code("hideCaption")} for screen readers only; else {code("aria-label")}. That is
+        also the order in which they win. {code("labels.table")} stays the name of a table nothing names.
+      </Note>
     </Example>
   );
 }

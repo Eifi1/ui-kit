@@ -555,8 +555,33 @@ export interface DataTableProps<T> {
   };
   /** User-facing strings (English defaults); pass translated overrides. Merged over
    *  `dataTable` from `<UiKitProvider labels>`, so a call site only states what
-   *  differs for THIS table — typically `table`, its accessible name. */
+   *  differs for THIS table. `table` is the name of a table nothing else names. */
   labels?: LabelOverride<DataTableLabels>;
+  /**
+   * The table's accessible name, on the desktop `<table>` and the phone's card list alike,
+   * when nothing on the page names it: "Transactions", "Open invoices". A page with several
+   * tables names each — without it every one is `labels.table` ("Data table") in a screen
+   * reader's list of tables. Wins over `labels.table`; {@link aria-labelledby} and
+   * {@link caption} win over it.
+   */
+  "aria-label"?: string;
+  /**
+   * The id of what names the table on the page, usually the heading of the section it sits
+   * in (`<h2 id="accounts-heading">`). Both layouts point at it. The first choice whenever
+   * the name is already on screen: the reader hears what the eye reads, and the words live
+   * in one place.
+   */
+  "aria-labelledby"?: string;
+  /**
+   * The table's title, as a `<caption>`: in the table on a wide screen, above the card list
+   * on a phone, and the name of both (unless {@link aria-labelledby} is given). In the
+   * kit's caption type, as {@link TableCaption}. At the TOP rather than Table's bottom: a
+   * DataTable's body scrolls in a bounded box, and a caption under its last row was out of
+   * sight until the end; at the top it scrolls away under the sticky header.
+   */
+  caption?: ReactNode;
+  /** {@link caption} for screen readers only: the table's name, not drawn. */
+  hideCaption?: boolean;
   /** BCP-47 locale for the date filter's calendar and the pager's numbers. Falls
    *  back to `<UiKitProvider locale>`, then to the runtime's default. */
   locale?: string;
@@ -1142,6 +1167,10 @@ export function DataTable<T>({
   onPageSizeChange,
   selection,
   labels: labelsProp,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
+  caption,
+  hideCaption = false,
   locale: localeProp,
   storageKeyPrefix: storageKeyPrefixProp,
   storage: storageProp,
@@ -1660,6 +1689,16 @@ export function DataTable<T>({
   // arrays it holds, as before, and changes neither.
   const footerValue = (col: DataTableColumn<T>) => col.footer?.(sorted as T[], slice as T[]);
   const footerHeadingId = useId();
+  // The table's name, one for both layouts: what names it on the page, else its caption,
+  // else `aria-label`, else `labels.table`. Both layouts point at the caption by id (the
+  // phone's is a `<p>`); an `aria-label` beside it would win over it, so there is none.
+  const captionId = useId();
+  const hasCaption = caption != null && caption !== false && caption !== "";
+  const labelledBy = ariaLabelledBy || (hasCaption ? captionId : undefined);
+  const nameProps = labelledBy ? { "aria-labelledby": labelledBy } : { "aria-label": ariaLabel || labels.table };
+  // Hidden: `sr-only-fixed` (CONTRIBUTING §3), as the table sits in an app's markup.
+  const captionClass = (pad: string) =>
+    hideCaption ? "sr-only-fixed" : cn("text-start text-muted", compact ? "text-xs" : "text-sm", pad);
   // Each open row's detail row, for its disclosure button's `aria-controls`.
   const detailIdBase = useId();
   // The actions column is the table's own, not one the user can hide: out of the count.
@@ -2329,11 +2368,16 @@ export function DataTable<T>({
               }}
             />
           )}
+          {hasCaption && (
+            <p id={captionId} className={captionClass("px-4 py-2")}>
+              {caption}
+            </p>
+          )}
           <ul
             ref={phoneListRef}
             // Named as the table is, and focusable while empty: where the focus goes when
             // the last card leaves (DSP-4).
-            aria-label={labels.table}
+            {...nameProps}
             tabIndex={mobileSlice.length === 0 ? -1 : undefined}
             className={cn(
               "divide-y divide-subtle",
@@ -2543,7 +2587,8 @@ export function DataTable<T>({
               style={fillHeight ? edgeFadeProps.style : { ...edgeFadeProps.style, maxHeight: maxBodyHeight }}
             >
               {/* A table with no name is "table" in a screen reader's list of tables, and
-            an app renders several. `labels.table` is how a call site says which. */}
+            an app renders several: `aria-labelledby`, `caption` or `aria-label` say which
+            (`nameProps`, above), `labels.table` where none does. */}
               {/* `aria-busy` while a server page is in flight: a reader holds off announcing
             the rows that are about to be replaced, and the dimmed body says the same
             to the eye. The pager stays live — see `ServerPagination.isLoading`. */}
@@ -2551,7 +2596,7 @@ export function DataTable<T>({
                 ref={tableRef}
                 className={cn("w-full", compact ? "text-xs" : "text-sm")}
                 data-fit-grow={growDrawn ? "" : undefined}
-                aria-label={labels.table}
+                {...nameProps}
                 // Focusable while empty: where the focus goes when the last row leaves (DSP-4).
                 tabIndex={slice.length === 0 ? -1 : undefined}
                 aria-busy={isLoading || undefined}
@@ -2559,6 +2604,15 @@ export function DataTable<T>({
                 aria-rowcount={rowWindow?.rowCount}
                 data-virtualized={rowWindow ? "" : undefined}
               >
+                {/* The first child, as HTML wants it; drawn at the top (the prop says why). */}
+                {hasCaption && (
+                  <caption
+                    id={captionId}
+                    className={cn("caption-top", captionClass(compact ? "px-2 py-1.5" : "px-3 py-2"))}
+                  >
+                    {caption}
+                  </caption>
+                )}
                 {/* The locked column widths (0.48.2, `virtualize`): rows coming and going no
               longer move the columns. */}
                 {rowWindow && (

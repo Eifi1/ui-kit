@@ -528,6 +528,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "DataTable — the whole surface",
     "Controlled filters and selection callbacks",
     "A short table — paginated={false}, labels, noRowLink, empty",
+    "Naming the table — aria-labelledby, caption, aria-label",
     "density",
     "A report table — firstSort, sortCycle, chrome, frame={false}, keyboard rows",
     "Column cellProps and headProps",
