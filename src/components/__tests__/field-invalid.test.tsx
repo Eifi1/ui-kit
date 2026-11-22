@@ -306,4 +306,13 @@ describe("the focus line thickens under More contrast", () => {
     render(<Input label="Name" invalid />);
     expect(screen.getByLabelText("Name")).toHaveClass("ring-1", "contrast:ring-2", "contrast:focus:ring-2");
   });
+
+  // Refactor audit 2026-11-22, DOC-2: the chrome-less `display` look (an amount on a phone)
+  // stayed 1px border + 1px inset shadow under More contrast. A 2px shadow there makes the
+  // line under the figure 3px, like FIELD_BASE's.
+  it("FIELD_DISPLAY: a 2px inset line under `contrast:`, beside the 1px border", () => {
+    const tokens = FIELD_DISPLAY.split(/\s+/);
+    expect(tokens).toContain("focus:shadow-[inset_0_-1px_0_var(--brand)]");
+    expect(tokens).toContain("contrast:focus:shadow-[inset_0_-2px_0_var(--brand)]");
+  });
 });
