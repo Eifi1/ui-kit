@@ -332,7 +332,7 @@ function Feedback014Demo() {
         placeholder="Reply to Jana…"
         attachmentSlot={
           <Row>
-            <Button variant="ghost" size="sm" onClick={upload} disabled={files.length + uploading >= MAX_FILES}>
+            <Button variant="ghost" size="sm" onClick={upload} refused={files.length + uploading >= MAX_FILES}>
               <Paperclip className="size-4" aria-hidden />
               Attach
             </Button>

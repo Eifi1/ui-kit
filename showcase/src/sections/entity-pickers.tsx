@@ -199,7 +199,7 @@ export function EntityPickers() {
         <div className="flex flex-wrap gap-2">
           <Button
             variant="secondary"
-            disabled={callerLoading}
+            refused={callerLoading}
             onClick={() => {
               // The caller's own fetch: rows gone, `loading` up, for two seconds.
               setRankedRows([]);
@@ -214,7 +214,7 @@ export function EntityPickers() {
           </Button>
           <Button
             variant="secondary"
-            disabled={callerLoading}
+            refused={callerLoading}
             onClick={() => {
               // A reload that keeps the old rows up while it runs.
               setCallerLoading(true);

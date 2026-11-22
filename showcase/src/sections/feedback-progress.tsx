@@ -71,7 +71,7 @@ function ProgressDeterminate() {
         <Button variant="secondary" onClick={() => setValue((v) => Math.min(100, v + 10))} disabled={running}>
           +10
         </Button>
-        <Button variant="accent" onClick={run} disabled={running}>
+        <Button variant="accent" onClick={run} refused={running}>
           {running ? "Uploading…" : "Simulate an upload"}
         </Button>
         <span className="font-mono text-xs text-muted">value={value}</span>

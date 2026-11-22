@@ -1096,7 +1096,7 @@ export function BulkActionBarPanelDemo() {
       hint='a form under the toolbar; selection mode before the first tick; variant={{ base: "floating", md: "sticky" }}'
     >
       <Row className="mb-3">
-        <Button variant="secondary" size="sm" onClick={() => setSelecting(true)} disabled={selecting}>
+        <Button variant="secondary" size="sm" onClick={() => setSelecting(true)} refused={selecting}>
           Select
         </Button>
         <span className={READOUT}>

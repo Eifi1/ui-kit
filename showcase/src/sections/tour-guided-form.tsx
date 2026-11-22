@@ -237,7 +237,7 @@ function BookingForm({
       closeLabel="Close"
       header={<TourGuideButton tour={INFO.id} at="gt-amount" />}
       footer={
-        <Button variant="accent" data-tour="gt-save" onClick={save} disabled={saving}>
+        <Button variant="accent" data-tour="gt-save" onClick={save} refused={saving}>
           {saving ? "Saving…" : "Save"}
         </Button>
       }
