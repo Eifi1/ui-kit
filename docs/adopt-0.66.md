@@ -14,6 +14,10 @@ before ":" (DOC-5). Move the page's `updated` date in the French text.
 
 - **`TransferUnavailable` loses `"customer"`, and `TransferOwnershipLabels.customer` is gone** (deprecated in
   0.65). No app passes them (searched in keksdose, Kurvenschmiede and Staunlabor).
+- **`AccountsClient` / `createAccountsClient` default the user type to `AccountMe`** (was `AccountUser`,
+  API-5(d)), the type `/auth/me` answers with. Type-only. Code that reads the user gains fields; code that
+  typed it as `AccountUser` on purpose writes `createAccountsClient<AccountUser>(…)`. Staunlabor
+  (`shared/api/accounts.ts`) takes the new default without an edit unless its typecheck says otherwise.
 - **`createQueryPersistence`'s `persistMutations` now defaults to `false`** (FLW-3). Pass `true` to keep
   paused writes across a reload. The credential hooks never persist, whatever the setting, and the scrub list
   gains `password`, `current_password`, `new_password`. Kurvenschmiede already passes `false`; Staunlabor
