@@ -1,4 +1,3 @@
-import { useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
 import { Camera, ImagePlus } from "lucide-react";
 import { hasContent } from "../lib/presence";
@@ -7,7 +6,8 @@ import { useHasCamera } from "../hooks/use-has-camera";
 import { useFilePicker, type FileRejection, type FileScreenOptions } from "../hooks/use-file-picker";
 import { Button } from "./button";
 import { useCommitReason, type CommitScope } from "./write-lock";
-import { CameraCapture, type CameraFacing } from "./camera-capture";
+import type { CameraFacing } from "./camera-capture";
+import { useCameraFlow } from "./camera-flow";
 import { DEFAULT_CAMERA_LABELS, type CameraLabels } from "./camera-labels";
 
 type ButtonOwnProps = ComponentPropsWithoutRef<typeof Button>;
@@ -131,44 +131,28 @@ export function CameraButton({
   const picker = useFilePicker({ ...screening, multiple });
   // The camera app, where the viewfinder cannot stream. Never `multiple` (see the prop).
   const cameraPicker = useFilePicker({ ...screening, capture: facing });
-  const [open, setOpen] = useState(false);
-  // The photos of this opening, in a ref: each arrives from an encoding callback, and one
-  // that reads a count from state can be a render behind the photo before it — the
-  // state is only the number the viewfinder shows. `live` is whether the viewfinder is
-  // still this button's to feed: a photo encoded after it closed hands nothing over.
-  const shots = useRef<File[]>([]);
-  const live = useRef(false);
-  const [shotCount, setShotCount] = useState(0);
+  // The viewfinder and the photos of one opening (shared with AttachButton's Camera tile).
+  const camera = useCameraFlow({
+    multiple,
+    maxFiles,
+    facing,
+    fileName,
+    labels: labelsProp,
+    busy: pending,
+    onPhotos: (photos) => picker.take(photos),
+    onUnavailable: (taken) => {
+      // What was already taken is the user's — handed over, not dropped — and the
+      // camera app is next. The input is mounted beside the button throughout, so it
+      // can be clicked now, inside the refusal that answered the tap.
+      if (taken.length > 0) picker.take(taken);
+      cameraPicker.open();
+    },
+  });
 
   if (!hasCamera && noCamera === "hide") return null;
 
   const openCamera = () => {
-    // Only the absence of `getUserMedia` is decided here (an insecure context); a denied
-    // permission or a missing camera is the viewfinder's to find, with itself on screen.
-    if (typeof navigator !== "undefined" && typeof navigator.mediaDevices?.getUserMedia === "function") {
-      shots.current = [];
-      live.current = true;
-      setShotCount(0);
-      setOpen(true);
-    } else {
-      cameraPicker.open();
-    }
-  };
-  /** Close the viewfinder; with `handOver`, give the app what was taken. */
-  const close = (handOver: boolean) => {
-    const taken = shots.current;
-    shots.current = [];
-    live.current = false;
-    setShotCount(0);
-    setOpen(false);
-    if (handOver && taken.length > 0) picker.take(taken);
-  };
-  const capture = (photo: File) => {
-    if (!live.current) return;
-    shots.current = [...shots.current, photo];
-    const full = maxFiles !== undefined && shots.current.length >= maxFiles;
-    if (!multiple || full) close(true);
-    else setShotCount(shots.current.length);
+    if (!camera.start()) cameraPicker.open();
   };
 
   // `Button` is a plain function component; under React 19 `ref` is an ordinary prop and
@@ -201,25 +185,7 @@ export function CameraButton({
       </Button>
       {picker.element}
       {cameraPicker.element}
-      {open && (
-        <CameraCapture
-          shotCount={shotCount}
-          busy={pending}
-          facing={facing}
-          fileName={fileName}
-          labels={labelsProp}
-          onCapture={capture}
-          onDone={multiple ? () => close(true) : undefined}
-          onCancel={() => close(false)}
-          onUnavailable={() => {
-            // What was already taken is the user's — handed over, not dropped — and the
-            // camera app is next. The input is mounted beside the button throughout, so it
-            // can be clicked now, inside the refusal that answered the tap.
-            close(true);
-            cameraPicker.open();
-          }}
-        />
-      )}
+      {camera.element}
     </>
   );
 }
