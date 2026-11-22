@@ -1,6 +1,9 @@
-// Types for the parts of check.mjs its test imports (src/__tests__/local-gates.test.ts).
+// Types for the parts of check.mjs its tests import (src/__tests__/local-gates.test.ts,
+// src/__tests__/gate-lists.test.ts).
 
 export const GROUPS: string[];
+export const RELEASE_TESTS: string[];
+export const META_TESTS: string[];
 export const STAMPS: string;
 export function isParallel(env: Record<string, string | undefined>): boolean;
 export function runGroups(
