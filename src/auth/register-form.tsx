@@ -380,7 +380,9 @@ export function RegisterForm({
                 variant="link"
                 size="sm"
                 className="h-auto p-0 align-baseline"
-                disabled={working}
+                // Refused, not disabled, while the sign-up runs: a native `disabled` under
+                // focus drops it to <body> (INP-1).
+                refused={working}
                 aria-describedby={tagHintId}
                 onClick={() => setEmail(suggestion)}
               >
@@ -397,7 +399,7 @@ export function RegisterForm({
                 variant="link"
                 size="sm"
                 className="h-auto p-0 align-baseline"
-                disabled={working}
+                refused={working}
                 onClick={() => setEmail(backToInvited)}
               >
                 {labels.emailTagUse(backToInvited)}
@@ -422,8 +424,13 @@ export function RegisterForm({
             label={labels.language}
             value={locale}
             codes={languages}
-            onChange={changeLocale}
-            disabled={working}
+            // Held by ignoring a change, not by `disabled`, which would drop a focused
+            // select's focus to <body> when Enter sends the form (INP-1). Controlled, so the
+            // shown language stays.
+            onChange={(next) => {
+              if (!working) changeLocale(next);
+            }}
+            aria-disabled={working || undefined}
           />
         ) : (
           languageField
@@ -436,7 +443,10 @@ export function RegisterForm({
             box keeps the submit disabled, so there is no failed attempt to explain. */}
         <LegalAcceptCheckbox
           checked={accepted}
-          onCheckedChange={setAccepted}
+          onCheckedChange={(next) => {
+            // As the language: Enter on the focused box sends the form (INP-1).
+            if (!working) setAccepted(next);
+          }}
           termsHref={termsHref}
           privacyHref={privacyHref}
           operator={operator}

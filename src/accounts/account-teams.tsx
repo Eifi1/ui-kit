@@ -249,8 +249,13 @@ function TeamPeople({ team, mode, doors, languages, defaultLocale, labels }: Tea
                     aria-label={labels.roleOf(member.display_name)}
                     options={roles}
                     value={member.role}
-                    disabled={busy}
-                    onChange={(next) => doors.onSetRole?.(member, next)}
+                    // Held by ignoring a press while a change is out, not by `disabled`: the
+                    // segment just pressed has the focus, and a native `disabled` dropped it
+                    // to <body> (INP-1). Controlled, so the segment shown stays the role.
+                    aria-busy={busy || undefined}
+                    onChange={(next) => {
+                      if (!busy) doors.onSetRole?.(member, next);
+                    }}
                   />
                 ) : (
                   <Chip size="xs" shape="square" tone={member.role === "manager" ? "info" : "neutral"}>
@@ -380,7 +385,7 @@ function TeamPeople({ team, mode, doors, languages, defaultLocale, labels }: Tea
             />
           )}
           {/* Enter in the field is this button's click, so its lock refuses the submit too. */}
-          <Button type="submit" variant="secondary" commit disabled={busy || !email.trim()}>
+          <Button type="submit" variant="secondary" commit disabled={!busy && !email.trim()} pending={busy}>
             <UserPlus className="size-4" aria-hidden /> {labels.add}
           </Button>
         </form>
@@ -598,7 +603,7 @@ export function AccountTeamsSection({
         }}
       >
         <Input label={labels.name} value={name} maxLength={120} onChange={(event) => setName(event.target.value)} />
-        <Button type="submit" variant="accent" disabled={busy || !name.trim()}>
+        <Button type="submit" variant="accent" disabled={!busy && !name.trim()} pending={busy}>
           <Plus className="size-4" aria-hidden /> {labels.create}
         </Button>
       </form>

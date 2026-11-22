@@ -83,9 +83,17 @@ describe("FeedbackPublicSwitch", () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  it("holds still while the PATCH runs", () => {
-    render(<FeedbackPublicSwitch row={row()} isAdmin onChange={() => {}} pending />);
-    expect(sw()).toBeDisabled();
+  it("holds still while the PATCH runs, the focusable way: the flipped switch keeps its focus (INP-1)", () => {
+    const onChange = vi.fn();
+    render(<FeedbackPublicSwitch row={row()} isAdmin onChange={onChange} pending />);
+    // A native `disabled` under focus dropped it to <body> for the whole PATCH.
+    expect(sw()).not.toBeDisabled();
+    expect(sw()).toHaveAttribute("aria-disabled", "true");
+    sw().focus();
+    fireEvent.click(sw());
+    expect(onChange).not.toHaveBeenCalled();
+    expect(sw()).toBeChecked();
+    expect(document.activeElement).toBe(sw());
   });
 
   it("is not drawn on a crash, for someone else, or without a `public` field", () => {

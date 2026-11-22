@@ -150,7 +150,11 @@ export function PushDeviceSetting({
   } else if (push.permission === "denied") {
     state = <p className="text-xs text-warning">{labels.blocked}</p>;
   } else {
-    const busy = push.busy || running !== null;
+    // The pressed button, and every one while the device's push is busy with no press of
+    // this card's (another tab, the sign-out's release), is `pending`: aria-disabled, so a
+    // focused one keeps its focus. `disabled={busy && …}` turned the pressed one natively
+    // disabled in the gap after `running` cleared while `push.busy` was still on (INP-1).
+    const held = (action: PushDeviceAction) => running === action || (running === null && push.busy);
     // Only "Turn on" is refused: a subscription the browser already holds goes on reaching
     // it, and turning that off is the one thing to let a shared computer's session do.
     const refusedHere = shared && !push.subscribed;
@@ -173,8 +177,8 @@ export function PushDeviceSetting({
                 size="sm"
                 variant="secondary"
                 commit={COMMIT_EXCEPT_BILLING}
-                pending={running === "test"}
-                disabled={busy && running !== "test"}
+                pending={held("test")}
+                disabled={running !== null && running !== "test"}
                 onClick={test}
               >
                 {labels.sendTest}
@@ -184,8 +188,8 @@ export function PushDeviceSetting({
                 size="sm"
                 variant="ghost"
                 commit={COMMIT_EXCEPT_BILLING}
-                pending={running === "disable"}
-                disabled={busy && running !== "disable"}
+                pending={held("disable")}
+                disabled={running !== null && running !== "disable"}
                 onClick={disable}
               >
                 {labels.disable}
@@ -196,8 +200,8 @@ export function PushDeviceSetting({
               type="button"
               size="sm"
               commit={COMMIT_EXCEPT_BILLING}
-              pending={running === "enable"}
-              disabled={busy && running !== "enable"}
+              pending={held("enable")}
+              disabled={running !== null && running !== "enable"}
               // Refused, not disabled: still focusable, and named by the line above.
               refused={refusedHere}
               aria-describedby={refusedHere ? sharedReasonId : undefined}

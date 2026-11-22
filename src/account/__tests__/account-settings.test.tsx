@@ -242,6 +242,57 @@ describe("account settings labels (0.12.0)", () => {
   });
 });
 
+describe("the pressed button keeps its focus while its request runs (refactor audit 2026-11-22, INP-1)", () => {
+  const noop = () => {};
+  // jsdom does no focus fixup on `disabled`, so the assertion is the cause: the pressed
+  // button is aria-disabled (Button's `pending`), never natively disabled.
+  const held = (name: string) => {
+    const button = screen.getByRole("button", { name });
+    expect(button).not.toBeDisabled();
+    expect(button).toHaveAttribute("aria-disabled", "true");
+  };
+
+  it("two-factor: Enable, Verify, the backup codes' renewal, Replace and Turn off", () => {
+    const { rerender } = render(
+      <TwoFactorSetting enabled={false} setup={null} onStartSetup={noop} onEnable={noop} onDisable={noop} busy />,
+    );
+    held(DEFAULT_ACCOUNT_SETTINGS_LABELS.twoFactor.enable);
+    rerender(
+      <TwoFactorSetting
+        enabled={false}
+        setup={{ otpauthUri: "otpauth://totp/A:b?secret=JBSWY3DPEHPK3PXP&issuer=A" }}
+        onStartSetup={noop}
+        onEnable={noop}
+        onDisable={noop}
+        busy
+      />,
+    );
+    held(DEFAULT_ACCOUNT_SETTINGS_LABELS.twoFactor.verify);
+    rerender(
+      <TwoFactorSetting
+        enabled
+        setup={null}
+        onStartSetup={noop}
+        onEnable={noop}
+        onDisable={noop}
+        onReplace={noop}
+        backupCodes={{ fresh: null, left: 3, onRenew: noop, onDismiss: noop }}
+        busy
+      />,
+    );
+    held("Replace authenticator");
+    held(DEFAULT_ACCOUNT_SETTINGS_LABELS.twoFactor.backupRenew);
+    held(DEFAULT_ACCOUNT_SETTINGS_LABELS.twoFactor.disable);
+  });
+
+  it("the password's Change and the name's Save", () => {
+    render(<PasswordSetting onSubmit={() => new Promise(() => {})} pending />);
+    held("Change password");
+    render(<ProfileSetting value="Ada" onChange={noop} onSave={noop} saving labels={LABELS} />);
+    held("Save");
+  });
+});
+
 describe("TwoFactorSetting's replacement (0.64, keksdose)", () => {
   const noop = () => {};
 

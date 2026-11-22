@@ -870,7 +870,8 @@ export function TranslationReviewPanel({
             // the swipe and the editor say it in words.
             labelVisible={false}
             pending={isQueued(`row:${r.id}`)}
-            disabled={busy}
+            // The pressed one stays focusable while its request runs (INP-1).
+            disabled={busy && !isQueued(`row:${r.id}`)}
             onClick={(event) => {
               // The row's own click opens the editor; this one only approves.
               event.stopPropagation();
@@ -1077,7 +1078,7 @@ export function TranslationReviewPanel({
               // The visible words say what; the group's name, read after them, says where.
               aria-describedby={titleId}
               pending={isQueued(key) && confirming !== g.key}
-              disabled={busy}
+              disabled={busy && !isQueued(key)}
               onClick={() => void approveGroup(g, false)}
             >
               <Check className="size-4" aria-hidden />
@@ -1107,7 +1108,7 @@ export function TranslationReviewPanel({
                     commit={COMMIT_EXCEPT_BILLING}
                     aria-describedby={questionId}
                     pending={isQueued(key)}
-                    disabled={busy}
+                    disabled={busy && !isQueued(key)}
                     onClick={() => void approveGroup(g, true)}
                   >
                     {labels.approveGroup(targets.length)}
@@ -1222,7 +1223,7 @@ export function TranslationReviewPanel({
             size="sm"
             commit={COMMIT_EXCEPT_BILLING}
             pending={isQueued("bulk-approve")}
-            disabled={busy || toApprove.length === 0}
+            disabled={!isQueued("bulk-approve") && (busy || toApprove.length === 0)}
             onClick={() => void approveSelected()}
           >
             <Check className="size-4" aria-hidden />
@@ -1234,7 +1235,7 @@ export function TranslationReviewPanel({
               size="sm"
               commit={COMMIT_EXCEPT_BILLING}
               pending={isQueued("bulk-reset")}
-              disabled={busy || toReset.length === 0}
+              disabled={!isQueued("bulk-reset") && (busy || toReset.length === 0)}
               onClick={() => void resetSelected()}
             >
               <RotateCcw className="size-4" aria-hidden />

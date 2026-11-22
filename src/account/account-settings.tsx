@@ -206,7 +206,7 @@ function DisplayNameField({
         onChange={(e) => onChange(e.target.value)}
         maxLength={120}
       />
-      <Button onClick={onSave} disabled={!dirty || saving}>
+      <Button onClick={onSave} disabled={!dirty && !saving} pending={saving}>
         {labels.save}
       </Button>
     </>
@@ -505,7 +505,7 @@ export function PasswordSetting({
           {failure}
         </AlertBanner>
       )}
-      <Button onClick={() => void submit()} disabled={!current || !next || !confirm || pending}>
+      <Button onClick={() => void submit()} disabled={!pending && (!current || !next || !confirm)} pending={pending}>
         {labels.submit}
       </Button>
     </Card>
@@ -626,7 +626,7 @@ export function TwoFactorSetting({
       </div>
 
       {!enabled && !setup && (
-        <Button onClick={onStartSetup} disabled={busy}>
+        <Button onClick={onStartSetup} pending={busy}>
           {labels.enable}
         </Button>
       )}
@@ -682,7 +682,7 @@ export function TwoFactorSetting({
               }
             }}
           />
-          <Button onClick={() => onEnable(code)} disabled={!code || busy}>
+          <Button onClick={() => onEnable(code)} disabled={!busy && !code} pending={busy}>
             {labels.verify}
           </Button>
         </div>
@@ -726,7 +726,7 @@ export function TwoFactorSetting({
             <div className="text-xs text-secondary">{labels.backupLeft?.(backupCodes.left)}</div>
           )}
           {backupCodes.onRenew && (
-            <Button variant="secondary" size="sm" onClick={backupCodes.onRenew} disabled={busy}>
+            <Button variant="secondary" size="sm" onClick={backupCodes.onRenew} pending={busy}>
               {labels.backupRenew}
             </Button>
           )}
@@ -737,7 +737,7 @@ export function TwoFactorSetting({
         <div className="space-y-2 border-t border-subtle pt-3">
           <div className="text-sm font-medium">{labels.replaceTitle}</div>
           <div className="text-xs text-secondary">{labels.replaceHint}</div>
-          <Button variant="secondary" onClick={onReplace} disabled={busy}>
+          <Button variant="secondary" onClick={onReplace} pending={busy}>
             {labels.replace}
           </Button>
         </div>
@@ -766,7 +766,12 @@ export function TwoFactorSetting({
               }
             }}
           />
-          <Button variant="danger" onClick={() => onDisable(password, code)} disabled={!password || !code || busy}>
+          <Button
+            variant="danger"
+            onClick={() => onDisable(password, code)}
+            disabled={!busy && (!password || !code)}
+            pending={busy}
+          >
             {labels.disable}
           </Button>
         </div>

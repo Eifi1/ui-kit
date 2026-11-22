@@ -225,6 +225,8 @@ describe("AccountTeamsSection", () => {
     await user.click(within(ben).getByRole("radio", { name: "Manager" }));
     await waitFor(() => expect(calls.map((c) => c.route)).toContain("patch /admin/teams/4/members/7"));
     await waitFor(() => expect(screen.getAllByRole("button", { name: "Rename" })[0]).toBeDisabled());
+    // The segment just pressed is not natively disabled under its focus (INP-1).
+    expect(within(ben).getByRole("radio", { name: "Manager" })).toBeEnabled();
     await user.click(screen.getAllByRole("button", { name: /Actions for Rig crew/ })[0]);
     expect(await screen.findByRole("button", { name: "Delete team" })).toBeDisabled();
     answer({ status: 200, data: rig() });
@@ -244,9 +246,14 @@ describe("AccountTeamsSection", () => {
     await user.click(within(dialog).getByRole("button", { name: "Rename" }));
     await waitFor(() => expect(calls.map((c) => c.route)).toContain("patch /admin/teams/4"));
     const ben = within(team).getByRole("radiogroup", { name: "Role of Ben Example in the team" });
-    await waitFor(() => expect(within(ben).getByRole("radio", { name: "Manager" })).toBeDisabled());
+    // Held by ignoring a press, not by `disabled`, which dropped the pressed segment's focus
+    // to <body> (INP-1): a press meanwhile sends nothing.
+    await waitFor(() => expect(ben).toHaveAttribute("aria-busy", "true"));
+    expect(within(ben).getByRole("radio", { name: "Manager" })).toBeEnabled();
+    await user.click(within(ben).getByRole("radio", { name: "Manager" }));
+    expect(calls.map((c) => c.route)).not.toContain("patch /admin/teams/4/members/7");
     answer({ status: 200, data: rig({ name: "Rig crew 2", version: 4 }) });
-    await waitFor(() => expect(within(ben).getByRole("radio", { name: "Manager" })).toBeEnabled());
+    await waitFor(() => expect(ben).not.toHaveAttribute("aria-busy"));
   });
 
   it("names a manager, and re-sends a team's invitation through the admin's invitations", async () => {
