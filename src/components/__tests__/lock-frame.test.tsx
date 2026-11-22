@@ -12,12 +12,25 @@ import { LockFrame } from "../field-parts";
 
 const REASON = "Shared with you to read";
 const LOCKED = { locked: true, reason: REASON, reasonId: "the-reason" };
-const OPEN = { locked: false, reason: undefined, reasonId: "no-reason" };
+const OPEN = { locked: false, reason: undefined, reasonId: "no-reason", framed: true };
+const NEVER = { locked: false, reason: undefined, reasonId: "no-reason", framed: false };
 
 const classes = (el: Element) => el.className.split(/\s+/);
 
 describe("LockFrame", () => {
-  it("unlocked: the field in a frame the layout does not see (`contents`), no reason", () => {
+  it("a field no lock can reach (not `framed`): the bare field, its classes untouched", () => {
+    // No `commit` and never locked: the tree apps were promised, an Input with no error
+    // still the bare <input> (field-error-identity.test.tsx).
+    const { container } = render(
+      <LockFrame lock={NEVER} display="line" className="w-48">
+        <input aria-label="Name" />
+      </LockFrame>,
+    );
+    expect(container.children).toHaveLength(1);
+    expect(container.firstElementChild).toBe(screen.getByRole("textbox"));
+  });
+
+  it("unlocked but `framed`: the field in a frame the layout does not see (`contents`), no reason", () => {
     // The frame stays so a lock arriving does not remount the field (INP-4,
     // lock-frame-keeps-focus.test.tsx); `display: contents` gives it no box, and the
     // caller's classes stay on the field.

@@ -1,4 +1,4 @@
-import { cloneElement, createContext, isValidElement, useContext, useId } from "react";
+import { cloneElement, createContext, isValidElement, useContext, useId, useState } from "react";
 import type { ComponentPropsWithoutRef, ComponentPropsWithRef, ReactNode } from "react";
 import { HelpCircle } from "lucide-react";
 import { cn } from "../lib/cn";
@@ -606,6 +606,9 @@ export interface LockReason {
   locked: boolean;
   /** The id of the reason's hidden copy, for the control's `aria-describedby`. */
   reasonId: string;
+  /** {@link LockFrame} keeps its frame: the control takes a write lock's `commit`, or has
+   *  been locked once in this mount. A control that can never lock stays bare. */
+  framed?: boolean;
 }
 
 /**
@@ -616,7 +619,11 @@ export interface LockReason {
 export function useLockReason(commit: CommitScope | undefined, disabledReason: ReactNode): LockReason {
   const reason = useCommitReason(commit, disabledReason);
   const reasonId = useId();
-  return { reason, locked: hasContent(reason), reasonId };
+  const locked = hasContent(reason);
+  // Once locked, framed for good (INP-4): a lock lifting must not remount the field either.
+  const [wasLocked, setWasLocked] = useState(false);
+  if (locked && !wasLocked) setWasLocked(true);
+  return { reason, locked, reasonId, framed: commit !== undefined || locked || wasLocked };
 }
 
 /** {@link useRefusal}'s answer: the lock's, and whether the button refuses at all. */
@@ -735,8 +742,9 @@ export function LockFrame({
   className,
   children,
 }: {
-  /** The field's lock (`useLockReason`): framed only while `locked`. */
-  lock: Pick<LockReason, "locked" | "reason" | "reasonId">;
+  /** The field's lock (`useLockReason`): in LockedReason's box while `locked`; in an
+   *  invisible frame while unlocked if it is `framed`; bare otherwise. */
+  lock: Pick<LockReason, "locked" | "reason" | "reasonId" | "framed">;
   /** Where the reason shows — the field's `disabledReasonDisplay`. Default `"auto"`. */
   display?: DisabledReasonDisplay;
   /** The frame's classes, after `block`. */
@@ -747,12 +755,35 @@ export function LockFrame({
   // LockedReason's frame while locked, a lock arriving or lifting moved the field to
   // another place in the tree, and React remounted it: a field that held the focus lost
   // it to <body>, with its caret — keksdose's add-item field when another member's Done
-  // arrives by sync, kastlan's offline lock on every connection drop. So the frame is
-  // always there: the Tooltip's wrapper (`keepFrame`, an empty label while there is no
+  // arrives by sync, kastlan's offline lock on every connection drop. So a field a lock can
+  // reach (`framed`: it takes `commit`, or was locked once) keeps one frame: the Tooltip's wrapper (`keepFrame`, an empty label while there is no
   // bubble to show), `contents` while unlocked so the layout does not see it, and
   // LockedReason's box while locked — the same classes, the line or the hidden copy after
-  // the field. The cost: every field asks the text size and the pointer for the form it
-  // would take, where only a locked one did.
+  // the field. The cost: every such field asks the text size and the pointer for the form
+  // it would take, where only a locked one did.
+  const locked = lock.locked;
+  // A field that can never lock (no `commit`, never locked) keeps the bare tree apps were
+  // promised — "an Input that never passes `error` is still a bare <input>", its className
+  // on the field: only a field a lock can reach pays for the frame.
+  if (!locked && !lock.framed) return children;
+  return (
+    <FramedLock lock={lock} display={display} className={className}>
+      {children}
+    </FramedLock>
+  );
+}
+
+function FramedLock({
+  lock,
+  display,
+  className,
+  children,
+}: {
+  lock: Pick<LockReason, "locked" | "reason" | "reasonId">;
+  display?: DisabledReasonDisplay;
+  className?: string;
+  children: ReactNode;
+}) {
   const line = useDisabledReasonLine(display);
   const locked = lock.locked;
   return (
