@@ -152,10 +152,11 @@ describe("DangerConfirm — a held confirm says which guard is open (keksdose G4
     expect(confirmButton()).toHaveAccessibleDescription("Shared with you to read.");
   });
 
-  it("while busy it is plainly disabled, with no reason — the spinner is the state", () => {
+  it("while busy it is held with no reason, and keeps the focus (INP-1) — the spinner is the state", () => {
     render(<DangerConfirm armed requirePassword busy onConfirm={() => {}} />);
     const confirm = confirmButton();
-    expect(confirm).toBeDisabled();
+    expect(confirm).not.toBeDisabled();
+    expect(confirm).toHaveAttribute("aria-disabled", "true");
     expect(confirm).not.toHaveAccessibleDescription();
   });
 

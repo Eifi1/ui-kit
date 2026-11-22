@@ -442,7 +442,8 @@ function DangerConfirm023Demo() {
           not {code("disabled")} — still focusable, with the first open guard named in its tooltip and description: the
           tick, then the phrase, then the password ({code("labels.needsAcknowledge")}, {code("needsPhrase")},{" "}
           {code("needsPassword")}). Pressing it, or Enter in a field, does nothing. A write lock&rsquo;s reason wins
-          over a guard&rsquo;s; while the action runs it is plainly disabled.
+          over a guard&rsquo;s. While the action runs it is held with no reason, its spinner the state, and keeps the
+          focus the press left on it.
         </Note>
       </Example>
       <Example

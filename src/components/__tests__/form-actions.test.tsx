@@ -49,10 +49,10 @@ describe("FormActions", () => {
     expect(onSubmit).toHaveBeenCalledTimes(1);
   });
 
-  it("while pending: a spinner in the save button, which is disabled and busy", () => {
+  it("while pending: a spinner in the save button, which is held (aria-disabled) and busy", () => {
     render(<FormActions onCancel={() => {}} pending pendingLabel="Saving…" />);
     const save = screen.getByRole("button", { name: "Saving…" });
-    expect(save).toBeDisabled();
+    expect(save).toHaveAttribute("aria-disabled", "true");
     expect(save).toHaveAttribute("aria-busy", "true");
     // Decorative: the button's name stays its text.
     expect(save.querySelector("[aria-hidden].animate-spin")).not.toBeNull();

@@ -211,8 +211,11 @@ export interface FormActionsProps extends Omit<ComponentPropsWithoutRef<"div">, 
   submitProps?: FormActionsSubmitProps;
   /**
    * The save is running: a spinner in the save button, `aria-busy` on it, and the
-   * button disabled, so a second click cannot send the form twice. Cancel stays
-   * usable. The spinner goes in front of the text, or in place of {@link submitIcon}.
+   * button held, so a second click (or an Enter in a field) cannot send the form twice.
+   * Held the way {@link Button}'s `pending` is: `aria-disabled`, not `disabled`, because
+   * the button being pressed holds the focus, and a native `disabled` drops it to
+   * `<body>` (out of a dialog's trap, too) for the whole save. Cancel stays usable. The
+   * spinner goes in front of the text, or in place of {@link submitIcon}.
    */
   pending?: boolean;
   /** Disable save for a reason of the form's own (an unbalanced entry). */
@@ -448,11 +451,11 @@ export function FormActions({
   // The caller's own `submitProps.ref` still gets the element.
   const callerSaveRef = submitProps?.ref;
   const setSaveRef = useMemo(() => mergeRefs(saveRef, callerSaveRef), [callerSaveRef]);
-  // The save settled and the form is still here — it failed, and the user retries. The
-  // button was natively disabled while it ran, and a focused button that turns disabled
-  // drops the focus to <body> (DangerConfirm's 0.24 fix, keksdose). Only after a press
-  // of THIS button (`pressed`: a click or the shortcut), so a `pending` that comes and
-  // goes on its own never pulls the page's focus in.
+  // The save settled and the form is still here — it failed, and the user retries. Save
+  // keeps the focus while it runs (`aria-disabled`, INP-1), so this is only the guard for
+  // a focus that went down meanwhile (DangerConfirm's 0.24 fix, keksdose). Only after a
+  // press of THIS button (`pressed`: a click or the shortcut), so a `pending` that comes
+  // and goes on its own never pulls the page's focus in.
   const pressed = useRef(false);
   const wasPending = useRef(pending);
   useEffect(() => {
@@ -578,20 +581,31 @@ export function FormActions({
           }
           type={onSubmit ? "button" : "submit"}
           form={form}
-          onClick={() => {
+          onClick={(e) => {
+            // Held, not `disabled` (INP-1, refactor audit 2026-11-22): the pressed button
+            // keeps the focus. `preventDefault` stops the submit a press would send — and
+            // an Enter in a field, which the browser turns into a click on this button.
+            if (pending) {
+              e.preventDefault();
+              return;
+            }
             pressed.current = true;
             onSubmit?.();
           }}
           variant={submitVariant}
           size={saveSize}
-          disabled={pending || submitDisabled}
+          disabled={!pending && submitDisabled}
+          aria-disabled={pending || undefined}
           disabledReason={pending ? undefined : submitDisabledReason}
           // Not while pending: the save already left, and the lock's look over the
           // spinner would say it had not. A ternary, not `commit && !pending`, which
           // turned a `{ except }` scope into `true` (§12.36).
           commit={pending ? false : commit}
           aria-busy={pending || undefined}
-          className={cn(submitProps?.className, full)}
+          // Not Button's own `pending`, which hides the words under a centred spinner:
+          // this row draws the spinner in front of them, and shows `pendingLabel`. Dimmed
+          // as the native `disabled` drew it, on the focusable kind.
+          className={cn(submitProps?.className, full, pending && "cursor-progress opacity-50")}
         >
           {pending ? (
             <Spinner label={null} className={glyphClass} />

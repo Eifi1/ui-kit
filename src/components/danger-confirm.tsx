@@ -533,9 +533,10 @@ export interface DangerConfirmProps extends Omit<ComponentPropsWithRef<"div">, "
    * cannot be undone, so it says nothing it cannot keep and waits — the wait is one
    * request long.
    *
-   * When the action settles still armed (it failed) and the press on the confirm had
-   * dropped the focus — a natively disabled button loses it — focus comes back to the
-   * confirm, so a keyboard user can retry or Shift+Tab to the field to correct (0.24).
+   * The confirm keeps the focus while it runs: `aria-disabled`, not `disabled`, which
+   * would drop it to `<body>` (INP-1, refactor audit 2026-11-22). When the action settles
+   * still armed (it failed) and the focus went down meanwhile anyway, it comes back to
+   * the confirm, so a keyboard user can retry or Shift+Tab to the field to correct (0.24).
    */
   busy?: boolean;
   /**
@@ -637,9 +638,9 @@ function firstSlotField(slot: HTMLElement | null): HTMLElement | null {
  * `labels.needs*`), the first open guard in the order they are drawn. FormActions'
  * `submitDisabledReason` does the same for a form's Save. Pressing it, or Enter in a
  * field, does nothing. A lock's reason wins over a guard's, the caller's guard over the
- * built-in ones; while the action runs the confirm is plainly disabled, its spinner
- * saying why — and so is Cancel, which cannot call back a request that has left (see
- * `busy`).
+ * built-in ones; while the action runs the confirm is held with no reason, its spinner
+ * saying why, and keeps the focus the press left on it — and Cancel is disabled, as it
+ * cannot call back a request that has left (see `busy`).
  *
  * Keksdose hand-rolled it three times (load demo data, wipe everything, reset a
  * budget) and then as `shared/components/danger-confirm.tsx`; the only app-specific
@@ -747,9 +748,8 @@ export function DangerConfirm(props: DangerConfirmProps) {
   }, [armed, armId, cancelId]);
 
   // The action settled and the tile is still armed — it failed, and the user retries.
-  // The confirm was natively disabled while it ran, and a focused button that turns
-  // disabled drops the focus to <body>: bring it back to the button that was pressed.
-  // Only after a confirm from THIS tile (`confirmed`), so a `busy` that comes and goes
+  // The confirm keeps the focus while it runs (`aria-disabled`, INP-1); this is the guard
+  // for a focus that went down meanwhile: back to the button that was pressed. Only after a confirm from THIS tile (`confirmed`), so a `busy` that comes and goes
   // on its own never pulls the page's focus in. (A resolve disarms, and the effect
   // above takes the focus to the arm button.)
   const wasBusy = useRef(busy);
@@ -970,14 +970,18 @@ export function DangerConfirm(props: DangerConfirmProps) {
             id={confirmId}
             type="submit"
             variant={confirmVariant ?? (tone === "warning" ? "default" : "danger")}
-            disabled={!canConfirm}
+            disabled={!canConfirm && !busy}
             // Held by a guard (the caller's or a built-in one), or armed and then locked
             // (or rendered armed under a lock): the confirm says why the way Button
             // does — focusable, `aria-disabled`, the reason in its tooltip and
             // description, a press swallowed (the submit with it) — and the fields stay
-            // as typed. Only busy is the native `disabled`.
+            // as typed. Busy, it is held with no reason: the press that started it left
+            // the focus here, and a native `disabled` would drop it to <body> (INP-1,
+            // refactor audit 2026-11-22). Its submit is refused by `submit` (`canConfirm`).
             disabledReason={confirmReason}
+            aria-disabled={busy || undefined}
             aria-busy={busy || undefined}
+            className={busy ? "cursor-progress opacity-50" : undefined}
           >
             {busy && <Spinner label={null} className="h-4 w-4" />}
             {confirmLabel ?? labels.confirm}

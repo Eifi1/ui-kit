@@ -263,9 +263,11 @@ describe("CameraCapture's controls", () => {
     withFrame();
     const p = captureProps();
     const { rerender } = render(<CameraCapture {...p} onDone={vi.fn()} shotCount={1} busy />);
-    await waitFor(() => expect(screen.getByRole("button", { name: "Use 1 photo" })).toBeDisabled());
-    expect(shutter()).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Use 1 photo" })).toHaveAttribute("aria-disabled", "true"),
+    );
+    expect(shutter()).toHaveAttribute("aria-disabled", "true");
+    expect(screen.getByRole("button", { name: "Cancel" })).toHaveAttribute("aria-disabled", "true");
     fireEvent.keyDown(document.activeElement ?? document.body, { key: "Escape" });
     expect(p.onCancel).not.toHaveBeenCalled();
 

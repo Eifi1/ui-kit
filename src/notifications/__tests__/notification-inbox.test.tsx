@@ -163,7 +163,7 @@ describe("NotificationInbox — acting", () => {
         <NotificationInbox items={ITEMS} unreadCount={0} onMarkRead={onMarkRead} onClear={vi.fn()} />
       </MemoryRouter>,
     );
-    expect(screen.getByRole("button", { name: "Mark all as read" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Mark all as read" })).toHaveAttribute("aria-disabled", "true");
   });
 
   it("clears only after asking, with focus on Cancel; Cancel and Escape go back", async () => {

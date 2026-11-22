@@ -95,7 +95,7 @@ describe("DangerConfirm", () => {
     render(<DangerConfirm onConfirm={onConfirm} />);
     await user.click(screen.getByRole("button", { name: "Delete…" }));
     await user.click(screen.getByRole("button", { name: "Delete" }));
-    expect(screen.getByRole("button", { name: "Delete" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Delete" })).toHaveAttribute("aria-disabled", "true");
     expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
     await act(async () => resolve());
     expect(screen.queryByRole("button", { name: "Cancel" })).toBeNull();

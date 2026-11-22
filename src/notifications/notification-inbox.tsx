@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { ComponentPropsWithRef, ReactNode } from "react";
 import { Bell, CheckCheck, Trash2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -6,6 +6,7 @@ import type { LucideIcon } from "lucide-react";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { DEFAULT_COMMON_LABELS } from "../i18n/shared-labels";
 import { cn } from "../lib/cn";
+import { focusContainer, focusIsLost } from "../lib/focus-left";
 import { useDayFormatter } from "../lib/day-format";
 import { Button } from "../components/button";
 import { Card } from "../components/card";
@@ -140,6 +141,17 @@ export function NotificationInbox<Id extends string | number = string | number>(
   const headingId = useId();
   // Back to "Clear all" when the confirm leaves, so focus does not fall to <body>.
   const clearRef = useRef<HTMLButtonElement>(null);
+  // "Clear all" succeeded: the confirm that held the focus is gone, and "Clear all" is not
+  // where it goes — with nothing left it turns disabled, and the rows are on their way
+  // out. The inbox's heading takes it, the one thing in the card that stays (INP-1,
+  // refactor audit 2026-11-22). In the commit that closes the confirm.
+  const cleared = useRef(false);
+  useEffect(() => {
+    if (asking || !cleared.current) return;
+    cleared.current = false;
+    const heading = document.getElementById(headingId);
+    if (heading && focusIsLost()) focusContainer(heading);
+  }, [asking, headingId]);
 
   const timeOf = (iso: string) => day(iso, { time: true });
   const iconOf = (type: string): LucideIcon => icon?.(type) ?? Bell;
@@ -178,7 +190,12 @@ export function NotificationInbox<Id extends string | number = string | number>(
       prompt={labels.clearPrompt}
       confirmLabel={labels.clearAll}
       cancelLabel={common.cancel}
-      onConfirm={() => run("clear", onClear, () => setAsking(false))}
+      onConfirm={() =>
+        run("clear", onClear, () => {
+          cleared.current = true;
+          setAsking(false);
+        })
+      }
       onLeave={() => setAsking(false)}
       busy={busy === "clear"}
       commit={COMMIT_EXCEPT_BILLING}
@@ -194,7 +211,10 @@ export function NotificationInbox<Id extends string | number = string | number>(
           tone="muted"
           commit={COMMIT_EXCEPT_BILLING}
           onClick={() => run("read", () => onMarkRead(null))}
-          disabled={unreadCount === 0 || busy !== null}
+          // Refused, not `disabled` (INP-1, refactor audit 2026-11-22): it is the button
+          // that starts `busy`, and the one that turns "nothing unread" once its request
+          // lands, both with the focus on it — a native `disabled` would drop it to <body>.
+          refused={unreadCount === 0 || busy !== null}
           label={labels.markAllRead}
         >
           <CheckCheck />

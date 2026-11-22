@@ -4,10 +4,11 @@ import { FormActions } from "../form-actions";
 
 /**
  * 0.24 — DangerConfirm's fix, for the Save button too (found while fixing it, keksdose):
- * Save is natively disabled while `pending`, and a focused button that turns disabled
- * drops the focus to <body> in a browser. After a failed save (pending back to false,
- * the form still there) the focus comes back to Save — but only after a press of it.
- * jsdom does not drop the focus by itself, so the tests blur where a browser would.
+ * after a failed save (pending back to false, the form still there) a focus that went
+ * down meanwhile comes back to Save — but only after a press of it. Since INP-1 (refactor
+ * audit 2026-11-22) Save keeps the focus while pending (`aria-disabled`,
+ * pressed-button-keeps-focus.test.tsx), so this is the guard for a focus lost some other
+ * way; the tests drop it where a browser would.
  */
 describe("FormActions: focus after a failed save", () => {
   it("brings the focus back to Save once the save it started settles", () => {
