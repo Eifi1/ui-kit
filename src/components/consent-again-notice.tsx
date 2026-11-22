@@ -32,7 +32,11 @@ interface ConsentAgainNoticeBase {
   className?: string;
 }
 
-/** `frame="card"`: everything, where the question stays until it is answered. */
+/**
+ * `frame="card"`: everything, where the question stays until it is answered.
+ *
+ * @deprecated 0.66 — none, with `ConsentAgainNotice`; removed in 0.67
+ */
 export interface ConsentAgainCardProps extends ConsentAgainNoticeBase {
   frame: "card";
   /** The full text agreed to before and the one asked for now, one paragraph per entry,
@@ -51,7 +55,11 @@ export interface ConsentAgainCardProps extends ConsentAgainNoticeBase {
   headingAs?: "div" | "h2" | "h3" | "h4";
 }
 
-/** `frame="banner"`: the short form, where the reader is about to do what waits for it. */
+/**
+ * `frame="banner"`: the short form, where the reader is about to do what waits for it.
+ *
+ * @deprecated 0.66 — none, with `ConsentAgainNotice`; removed in 0.67
+ */
 export interface ConsentAgainBannerProps extends ConsentAgainNoticeBase {
   frame: "banner";
   /** Always there: the banner is only shown to a reader who may answer. */
@@ -64,6 +72,7 @@ export interface ConsentAgainBannerProps extends ConsentAgainNoticeBase {
   wordingLink?: ReactNode;
 }
 
+/** @deprecated 0.66 — none, with `ConsentAgainNotice`; removed in 0.67 */
 export type ConsentAgainNoticeProps = ConsentAgainCardProps | ConsentAgainBannerProps;
 
 const SUB_HEADING = { div: "div", h2: "h3", h3: "h4", h4: "h5" } as const;
@@ -106,6 +115,9 @@ function ChangeList({ changes }: { changes: readonly ReactNode[] }) {
  * On the card the old text is a `<del>` and the new an `<ins>`, each paragraph led by a
  * visually hidden "Removed:" / "Added:": a line-through is not announced, and colour alone
  * must not carry the meaning.
+ *
+ * @deprecated 0.66 — none: no app asks a consent again (keksdose's price pool moved to legitimate
+ * interest, 2026-11-08); removed in 0.67
  */
 export function ConsentAgainNotice(props: ConsentAgainNoticeProps) {
   const { title, intro, changes, onAgree, agreePending = false, commit = true, className } = props;

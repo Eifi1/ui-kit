@@ -508,7 +508,8 @@ function ConsentAgainDemo() {
         modal, and Not now is not a refusal: the banner does not hide itself, the app remembers the ×. The old text is a{" "}
         {code("<del>")} and the new an {code("<ins>")}, each led by a hidden &ldquo;Removed:&rdquo; /
         &ldquo;Added:&rdquo;. Agree {code("commit")}s, so a write lock (the demo, a lapsed plan, offline) disables it
-        with its reason.
+        with its reason. Deprecated, with its {code("consentAgain")} labels: no app asks a consent again, and it leaves
+        the kit with the next minor.
       </Note>
     </Example>
   );

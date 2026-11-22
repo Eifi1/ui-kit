@@ -514,9 +514,8 @@ export function PushDeviceDemo() {
         on while the browser has not asked yet opens the explainer first; the browser&apos;s own prompt comes after
         Continue. A test that reached no device says so. Every sign-out calls {code("dropPushSubscription(unregister)")}{" "}
         before it revokes and clears the session: the device stops showing the account&apos;s notifications to whoever
-        uses it next, and a failure there never stops the sign-out ({code("releaseThisDevicePush(unregister)")} does the
-        same and rejects as the request did, for a caller that wants to know). On a shared computer (
-        {code("isSharedComputer()")}, or the {code("sharedComputer")} prop) the card does not offer push at all.
+        uses it next, and a failure there never stops the sign-out. On a shared computer ({code("isSharedComputer()")},
+        or the {code("sharedComputer")} prop) the card does not offer push at all.
       </Note>
     </Example>
   );

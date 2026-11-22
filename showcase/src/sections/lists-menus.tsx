@@ -433,9 +433,7 @@ function TickedAway() {
           <code className="font-mono">useRowLeaves</code> gives a focus that fell to the page to the next item&apos;s
           box, else the one before, else its <code className="font-mono">fallback</code> (the group&apos;s header here;
           for the last item taken back out of Done, that item&apos;s own box on the list). A focus that went somewhere
-          real stays there. The rules under it — <code className="font-mono">focusIsLost</code>,{" "}
-          <code className="font-mono">focusFirst</code> and <code className="font-mono">returnFocus</code> — are
-          exported for a recovery of an app&apos;s own.
+          real stays there.
         </Note>
       </div>
     </Example>

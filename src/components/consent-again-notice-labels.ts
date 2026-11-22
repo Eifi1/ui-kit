@@ -7,6 +7,9 @@
  * `ConsentAgainNotice`'s words — the `consentAgain` namespace of `<UiKitProvider labels>`
  * (0.55). The kit's chrome only: the title, the intro, the list of changes and the wording
  * before and now are the app's, as they say what this consent is about.
+ *
+ * @deprecated 0.66 — none, with `ConsentAgainNotice` and the `consentAgain` namespace; removed
+ * in 0.67
  */
 export interface ConsentAgainLabels {
   /** The button that gives the consent again. */
@@ -28,6 +31,7 @@ export interface ConsentAgainLabels {
   added: string;
 }
 
+/** @deprecated 0.66 — none, with `ConsentAgainNotice`; removed in 0.67 */
 export const DEFAULT_CONSENT_AGAIN_LABELS: ConsentAgainLabels = {
   agree: "Agree",
   notNow: "Not now",

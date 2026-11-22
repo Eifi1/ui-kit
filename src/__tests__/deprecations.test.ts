@@ -206,6 +206,31 @@ describe("deprecations", () => {
     ]);
   });
 
+  it("holds 0.66's: the four groups added for an app that never read them (API-3)", () => {
+    // Refactor audit 2026-11-22, API-3 / plan decision 4: 0 app sites in four apps. A
+    // subset: the round deprecates other names in 0.66 too.
+    const names = all.filter((d) => d.since?.[1] === 66 && d.removal?.[1] === 67).map((d) => d.name);
+    expect(names).toEqual(
+      expect.arrayContaining([
+        "ConsentAgainBannerProps",
+        "ConsentAgainCardProps",
+        "ConsentAgainLabels",
+        "ConsentAgainNotice",
+        "ConsentAgainNoticeProps",
+        "DEFAULT_CONSENT_AGAIN_LABELS",
+        "FEEDBACK_SWIPE_ACTIONS",
+        "FocusReturn",
+        "TRANSLATION_REVIEW_SWIPE_ACTIONS",
+        "UiKitLabels.consentAgain",
+        "focusFirst",
+        "focusIsLost",
+        "isQuietFocus",
+        "releaseThisDevicePush",
+        "returnFocus",
+      ]),
+    );
+  });
+
   it('name their schedule: "@deprecated 0.NN — <replacement>; removed in 0.MM"', () => {
     const unscheduled = all.filter((d) => !d.since || !d.removal).map((d) => `${d.at} @deprecated ${d.text}`);
     expect(unscheduled).toEqual([]);

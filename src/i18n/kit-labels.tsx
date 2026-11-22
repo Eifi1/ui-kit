@@ -531,9 +531,14 @@ export interface UiKitLabels {
   /** 0.55: a field's "suggested from" caption — the default when the app names no source,
    *  and the button that clears the suggestion (keksdose dev #638). */
   fieldSuggestion: FieldSuggestionLabels;
-  /** 0.55: "What you agreed to has changed — agree again?" — the chrome of
-   *  `ConsentAgainNotice` (Agree, Not now, the two disclosures, before and now); the
-   *  subject's words are the app's. */
+  /**
+   * 0.55: "What you agreed to has changed — agree again?" — the chrome of
+   * `ConsentAgainNotice` (Agree, Not now, the two disclosures, before and now); the
+   * subject's words are the app's. Not legal wording.
+   *
+   * @deprecated 0.66 — none: drop the namespace from an app's own labels, with
+   * `ConsentAgainNotice`; removed in 0.67
+   */
   consentAgain: ConsentAgainLabels;
   /** 0.55: `ReleaseNotes` — a release's heading and its sections' headings by key. */
   releaseNotes: ReleaseNotesLabels;
