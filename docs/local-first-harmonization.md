@@ -615,7 +615,9 @@ as optional peers). Size **S–M**.
   - `createQueryPersistence({ …, persistMutations? })`: default `true` (kk: paused mutations wait
     in TanStack's queue across a reload). `false` writes no mutation and drops any an older build
     wrote on restore — for an app whose offline writes go through its own outbox (ka's Dexie
-    outbox), instead of overriding `persistOptions.dehydrateOptions` by hand.
+    outbox), instead of overriding `persistOptions.dehydrateOptions` by hand. **0.66:** default
+    `false` (refactor audit 2026-11-22, FLW-3); a mutation with `meta: { persist: false }` (the
+    accounts' credential hooks) or a password field (now in `DEFAULT_SCRUB_FIELDS`) is never written.
   - `removeStaleQueryCopies(app, maxAge, { storage?, keep? })`: `removeStale` without a
     persistence, for the sign-in page. A session that ends with no user known (ka: the refresh
     token refused at boot) cannot name its key for `clear`; the sign-in page sweeps that copy

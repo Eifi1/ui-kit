@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { onlineManager, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -8,6 +8,7 @@ import { drainTasks } from "../../test/tasks";
 import type { Answer, Cfg } from "../../test/fake-axios";
 import { accountQueryKeys, AccountsProvider, useAccountsClient } from "../accounts-context";
 import { createAccountsClient } from "../accounts-client";
+import { createQueryPersistence } from "../../offline/query-persistence";
 import {
   useAccountDeletion,
   useAccountExport,
@@ -23,6 +24,7 @@ import {
   useInvitationsAdmin,
   useMailTest,
   usePasskeys,
+  useTwoFactor,
   useUpdateProfile,
 } from "../accounts-hooks";
 
@@ -384,5 +386,47 @@ describe("the admin's hooks (server-kit 0.30–0.31)", () => {
     });
     await drainTasks();
     expect(calls).toEqual([]);
+  });
+});
+
+describe("a credential paused offline (refactor audit 2026-11-22, FLW-3)", () => {
+  afterEach(() => onlineManager.setOnline(true));
+
+  it("is never written to the disk, even by a persistence that keeps paused mutations", async () => {
+    const { wrapper, queryClient } = setup();
+    const { result } = renderHook(
+      () => ({
+        password: useChangePassword(),
+        email: useEmailChange(),
+        passkeys: usePasskeys(),
+        twoFactor: useTwoFactor({ enabled: false }),
+        deletion: useAccountDeletion(),
+      }),
+      { wrapper },
+    );
+    onlineManager.setOnline(false);
+    act(() => {
+      result.current.password.mutate({ current_password: "old secret", new_password: "new secret" });
+      result.current.email.request.mutate({ new_email: "b@example.com", password: "secret" });
+      result.current.passkeys.begin.mutate("secret");
+      result.current.twoFactor.setup.mutate("secret");
+      result.current.twoFactor.enable.mutate("123456");
+      result.current.twoFactor.disable.mutate({ password: "secret", code: "123456" });
+      result.current.twoFactor.renew.mutate("secret");
+      result.current.deletion.request.mutate({ password: "secret", confirm_email: "ada@example.com" });
+    });
+    const mutations = queryClient.getMutationCache().getAll();
+    await waitFor(() => expect(mutations.every((m) => m.state.isPaused)).toBe(true));
+    expect(mutations).toHaveLength(8);
+    const persistence = createQueryPersistence({
+      app: "kk",
+      user: 1,
+      buster: "1",
+      maxAge: 60_000,
+      persistMutations: true,
+      storage: { getItem: async () => null, setItem: async () => {}, removeItem: async () => {}, keys: async () => [] },
+    });
+    const write = persistence.persistOptions.dehydrateOptions!.shouldDehydrateMutation!;
+    expect(mutations.filter((m) => write(m)).map((m) => m.state.variables)).toEqual([]);
   });
 });

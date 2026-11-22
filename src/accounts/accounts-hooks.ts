@@ -65,6 +65,15 @@ export function useCurrentUser<U extends AccountUser = AccountMe>() {
   });
 }
 
+/**
+ * A mutation that sends a password or a live code: never written to the disk with a paused
+ * write queue (refactor audit 2026-11-22, FLW-3). `createQueryPersistence` refuses any
+ * mutation whose `meta.persist` is `false`; under TanStack's default `networkMode: "online"`
+ * one made offline pauses, and with `persistMutations` on it went to IndexedDB in clear text.
+ * Three of these send the password as a bare string, which no scrubbed field name can match.
+ */
+const CREDENTIAL = { meta: { persist: false } } as const;
+
 /** `PATCH /auth/me`: the names, the language, the appearance — the answer is the account,
  *  kept in the store and the `/me` query. */
 export function useUpdateProfile<U extends AccountUser = AccountMe>() {
@@ -87,6 +96,7 @@ export function useChangePassword<U extends AccountUser = AccountMe>() {
   return useMutation({
     mutationFn: (body: { current_password: string; new_password: string }) => client.api.changePassword(body),
     onSuccess: (pair) => client.storeSession(pair),
+    ...CREDENTIAL,
   });
 }
 
@@ -106,6 +116,7 @@ export function useEmailChange() {
   const request = useMutation({
     mutationFn: (body: { new_email: string; password: string }) => client.api.requestEmailChange(body),
     onSuccess: keep,
+    ...CREDENTIAL,
   });
   const resend = useMutation({ mutationFn: () => client.api.resendEmailChange(), onSuccess: keep });
   const cancel = useMutation({
@@ -157,7 +168,10 @@ export function usePasskeys() {
     queryFn: () => client.api.passkeys(),
     enabled: signedIn,
   });
-  const begin = useMutation({ mutationFn: (password: string) => client.api.passkeyRegisterBegin(password) });
+  const begin = useMutation({
+    mutationFn: (password: string) => client.api.passkeyRegisterBegin(password),
+    ...CREDENTIAL,
+  });
   const register = useMutation({
     mutationFn: async ({ options, name }: { options: AccountPasskeyOptions; name: string }) =>
       client.api.passkeyRegisterFinish({
@@ -197,15 +211,21 @@ export function useTwoFactor(options: { enabled?: boolean } = {}) {
     queryFn: () => client.api.twoFactorStatus(),
     enabled: signedIn && options.enabled !== false,
   });
-  const setup = useMutation({ mutationFn: (password: string) => client.api.twoFactorSetup(password) });
-  const enable = useMutation({ mutationFn: (code: string) => client.api.enableTwoFactor(code), onSuccess: refresh });
+  const setup = useMutation({ mutationFn: (password: string) => client.api.twoFactorSetup(password), ...CREDENTIAL });
+  const enable = useMutation({
+    mutationFn: (code: string) => client.api.enableTwoFactor(code),
+    onSuccess: refresh,
+    ...CREDENTIAL,
+  });
   const disable = useMutation({
     mutationFn: (body: { password: string; code: string }) => client.api.disableTwoFactor(body),
     onSuccess: refresh,
+    ...CREDENTIAL,
   });
   const renew = useMutation({
     mutationFn: (password: string) => client.api.renewBackupCodes(password),
     onSuccess: refresh,
+    ...CREDENTIAL,
   });
   return { status, setup, enable, disable, renew };
 }
@@ -234,6 +254,7 @@ export function useAccountDeletion() {
     mutationFn: (body: { password: string; confirm_email: string }) => client.api.requestDeletion(body),
     // The sign-in page says the request is in: the tab is signed out with no button pressed.
     onSuccess: () => client.signOut({ notice: "deletion_requested" }),
+    ...CREDENTIAL,
   });
   return { terms, request };
 }

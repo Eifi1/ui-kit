@@ -31,6 +31,8 @@ function setup(over: Partial<QueryPersistenceOptions> = {}) {
     storage,
     throttleTime: 0,
     onUnsafe: () => {},
+    // The write queue on the disk, which these tests are about (off by default since 0.66).
+    persistMutations: true,
     ...over,
   });
   return { storage, persistence };
@@ -107,7 +109,15 @@ describe("createQueryPersistence — what is written", () => {
   });
 
   it("scrubs IBAN, QR-IBAN and signature_* at any depth, keeps the rest, and leaves memory alone", async () => {
-    expect(DEFAULT_SCRUB_FIELDS).toEqual(["iban", "qr_iban", "default_qr_iban", /^signature_/]);
+    expect(DEFAULT_SCRUB_FIELDS).toEqual([
+      "iban",
+      "qr_iban",
+      "default_qr_iban",
+      /^signature_/,
+      "password",
+      "current_password",
+      "new_password",
+    ]);
     const { persistence, storage } = setup();
     const queryClient = client();
     const contact = {
@@ -288,6 +298,37 @@ describe("createQueryPersistence — paused mutations and the scrub list (S6)", 
     expect(call(mutation({ signature_tenant: "data:image/png;base64,…" }))).toBe(false);
     expect(call(mutation({ estate: 1, name: "Seeblick" }))).toBe(true);
     expect(call(mutation({ estate: 1 }, false))).toBe(false);
+  });
+
+  it("never writes one whose variables carry a password field (0.66, FLW-3)", () => {
+    const { persistence } = setup();
+    const ok = persistence.persistOptions.dehydrateOptions!.shouldDehydrateMutation!;
+    expect(ok(mutation({ current_password: "old", new_password: "new" }) as never)).toBe(false);
+    expect(ok(mutation({ new_email: "b@example.com", password: "secret" }) as never)).toBe(false);
+    // A field that only names a password stays: it is no credential.
+    expect(ok(mutation({ password_change_required_at: null }) as never)).toBe(true);
+  });
+
+  it("never writes one that says meta.persist false, and drops one an older build wrote (0.66, FLW-3)", async () => {
+    const { persistence, storage } = setup();
+    const ok = persistence.persistOptions.dehydrateOptions!.shouldDehydrateMutation!;
+    // A bare string, as the kit's 2FA setup sends the password: no field name to match.
+    expect(ok({ meta: { persist: false }, state: { isPaused: true, variables: "secret" } } as never)).toBe(false);
+    expect(ok({ meta: { other: 1 }, state: { isPaused: true, variables: "fine" } } as never)).toBe(true);
+    const kept = { mutationKey: ["save"], state: { isPaused: true, variables: { name: "Ada" } } };
+    storage.map.set(
+      persistence.key,
+      JSON.stringify({
+        timestamp: Date.now(),
+        buster: "1.0.0",
+        clientState: {
+          queries: [],
+          mutations: [kept, { meta: { persist: false }, state: { isPaused: true, variables: "secret" } }],
+        },
+      }),
+    );
+    const restored = await persistence.persistOptions.persister.restoreClient();
+    expect(restored!.clientState.mutations).toEqual([kept]);
   });
 
   it("keeps every paused mutation with an empty scrub list (keksdose)", () => {

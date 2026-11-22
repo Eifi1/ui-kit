@@ -23,9 +23,18 @@ function memoryStorage(initial: Record<string, string> = {}) {
 const paused = (variables: unknown) => ({ state: { isPaused: true, variables } });
 
 describe("createQueryPersistence — persistMutations (K1)", () => {
-  it("default true: a paused mutation is written (keksdose)", () => {
-    const p = createQueryPersistence({ app: "kk", user: 1, buster: "1", maxAge: DAY, storage: memoryStorage() });
-    expect(p.persistOptions.dehydrateOptions!.shouldDehydrateMutation!(paused({ name: "Ada" }) as never)).toBe(true);
+  it("default false since 0.66 (FLW-3): no paused mutation is written unless the app asks for it", () => {
+    const off = createQueryPersistence({ app: "kk", user: 1, buster: "1", maxAge: DAY, storage: memoryStorage() });
+    expect(off.persistOptions.dehydrateOptions!.shouldDehydrateMutation!(paused({ name: "Ada" }) as never)).toBe(false);
+    const on = createQueryPersistence({
+      app: "kk",
+      user: 1,
+      buster: "1",
+      maxAge: DAY,
+      storage: memoryStorage(),
+      persistMutations: true,
+    });
+    expect(on.persistOptions.dehydrateOptions!.shouldDehydrateMutation!(paused({ name: "Ada" }) as never)).toBe(true);
   });
 
   it("false: no mutation is written, and none an older build wrote is restored (kastlan)", async () => {
