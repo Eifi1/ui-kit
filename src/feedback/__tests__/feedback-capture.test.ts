@@ -291,6 +291,46 @@ describe("the scroll in the picture (0.65.2)", () => {
   });
 });
 
+// Refactor audit 2026-11-22, DUP-9: on a phone `innerWidth` is the LAYOUT viewport, which
+// grows when anything sticks out (keksdose run 72, live #381: 430 on a 406 px screen). The
+// crop and the filter measured against it kept a strip the reader never saw.
+describe("a page wider than the phone's screen (DUP-9)", () => {
+  const rect = (r: Partial<DOMRect>) =>
+    ({ x: 0, y: 0, width: 10, height: 10, top: 0, left: 0, right: 10, bottom: 10, ...r }) as DOMRect;
+
+  beforeEach(() => {
+    vi.stubGlobal("innerWidth", 430);
+    vi.spyOn(document.documentElement, "clientWidth", "get").mockReturnValue(406);
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  async function capture() {
+    domToBlob.mockResolvedValue(new Blob(["x"], { type: "image/webp" }));
+    await captureAppScreenshot();
+    return passed() as ReturnType<typeof passed> & { width?: number; height?: number };
+  }
+
+  it("cuts the picture to the screen's width, not the layout viewport's", async () => {
+    vi.spyOn(document.getElementById("root")!, "getBoundingClientRect").mockReturnValue(
+      rect({ width: 430, right: 430, height: 700, bottom: 700 }),
+    );
+    const options = await capture();
+    expect(options.width).toBe(406);
+    expect(options.height).toBe(700);
+  });
+
+  it("drops a box in the strip past the screen's edge", async () => {
+    const keep = (await capture()).filter;
+    const el = document.createElement("div");
+    document.body.append(el);
+    vi.spyOn(el, "getBoundingClientRect").mockReturnValue(rect({ left: 410, right: 430, width: 20 }));
+    expect(keep(el)).toBe(false);
+  });
+});
+
 describe("without the optional peer", () => {
   it("rejects, naming the package to install", async () => {
     vi.resetModules();

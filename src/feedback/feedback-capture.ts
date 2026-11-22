@@ -73,6 +73,8 @@
  * picture was a canvas the height of the whole page).
  */
 
+import { viewportSize } from "../hooks/use-anchored-panel";
+
 /**
  * The computed properties copied onto the clone (keksdose `capture-screenshot.ts:94`).
  *
@@ -259,6 +261,8 @@ const SIZED_BY_CONTENT = /^(inline|contents)$|^table/;
  */
 function makeCaptureFilter(onSticky: (el: HTMLElement) => void): (node: Node) => boolean {
   const emptied = new WeakSet<Element>();
+  // The screen, measured once for the capture: see cropToViewport.
+  const screen = viewportSize();
   return (node) => {
     const parent = node.parentElement;
     if (parent && emptied.has(parent)) return false;
@@ -270,7 +274,7 @@ function makeCaptureFilter(onSticky: (el: HTMLElement) => void): (node: Node) =>
     if (tag !== "STYLE" && tag !== "LINK" && display === "none") return false;
     const rect = el.getBoundingClientRect?.();
     if (!rect || (rect.width === 0 && rect.height === 0)) return true;
-    if (rect.top >= window.innerHeight || rect.left >= window.innerWidth) return false;
+    if (rect.top >= screen.height || rect.left >= screen.width) return false;
     if ((rect.bottom <= 0 || rect.right <= 0) && !SIZED_BY_CONTENT.test(display)) emptied.add(el);
     else if (style?.position === "sticky" && el instanceof HTMLElement) onSticky(el);
     return true;
@@ -286,10 +290,14 @@ function makeCaptureFilter(onSticky: (el: HTMLElement) => void): (node: Node) =>
  */
 function cropToViewport(root: Element): { width: number; height: number; onCloneNode: (cloned: Node) => void } | null {
   const box = root.getBoundingClientRect();
+  // The screen, not `innerWidth`: on a phone that is the LAYOUT viewport, which grows when
+  // anything sticks out (430 on a 406 px screen, keksdose live #381), and the picture kept
+  // a strip the reader never saw (refactor audit 2026-11-22, DUP-9).
+  const screen = viewportSize();
   const left = Math.max(box.left, 0);
   const top = Math.max(box.top, 0);
-  const width = Math.min(box.right, window.innerWidth) - left;
-  const height = Math.min(box.bottom, window.innerHeight) - top;
+  const width = Math.min(box.right, screen.width) - left;
+  const height = Math.min(box.bottom, screen.height) - top;
   if (left === box.left && top === box.top && width === box.width && height === box.height) return null;
   if (width <= 0 || height <= 0) return null;
   return {
