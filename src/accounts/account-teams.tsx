@@ -5,6 +5,7 @@ import { Pencil, Plus, RefreshCw, Trash2, UserPlus } from "lucide-react";
 import { ADMIN_ACTION_CONFIRM_CODES, AdminActionConfirm } from "../admin/admin-action-confirm";
 import type { AdminConfirmLevel } from "../admin/admin-action-confirm";
 import { DEFAULT_INVITATIONS_LABELS } from "../admin/invitations-panel-labels";
+import { InviteAddressField } from "../admin/invite-address-field";
 import { AccountStateChip } from "../components/account-chips";
 import { AlertBanner } from "../components/alert-banner";
 import { Button } from "../components/button";
@@ -24,6 +25,7 @@ import { Caption, SectionLabel } from "../components/text";
 import { toast } from "../components/toast";
 import { ToggleGroup } from "../components/toggle-group";
 import { COMMIT_EXCEPT_BILLING } from "../components/write-lock";
+import { isEmailShape } from "../lib/email-shape";
 import { useKitLabels, useKitLocale } from "../i18n/kit-labels";
 import type { LabelOverride } from "../i18n/kit-labels";
 import { KIT_LANGUAGES, resolveLanguage } from "../i18n/languages";
@@ -195,6 +197,7 @@ function TeamPeople({ team, mode, doors, languages, defaultLocale, labels }: Tea
   const invitationWords = useKitLabels("invitations", DEFAULT_INVITATIONS_LABELS);
   const kitLocale = useKitLocale();
   const [email, setEmail] = useState("");
+  const [invalid, setInvalid] = useState(false);
   const [role, setRole] = useState<AccountTeamRole>("member");
   const [locale, setLocale] = useState<KitLanguageCode>(() => resolveLanguage([defaultLocale, kitLocale], languages));
   const roles = [
@@ -206,6 +209,12 @@ function TeamPeople({ team, mode, doors, languages, defaultLocale, labels }: Tea
   const add = () => {
     const address = email.trim();
     if (!address || !doors?.onAdd) return;
+    // The shape in the kit's words, under the field, as InvitationsPanel says it (DUP-8);
+    // the browser's own type=email bubble spoke the browser's language.
+    if (!isEmailShape(address)) {
+      setInvalid(true);
+      return;
+    }
     // The address stays in the field until the add went through, so a refusal can be fixed.
     void doors
       .onAdd(address, mode === "admin" ? role : "member", locale)
@@ -229,7 +238,9 @@ function TeamPeople({ team, mode, doors, languages, defaultLocale, labels }: Tea
                   <span className="truncate font-medium text-primary">{member.display_name}</span>
                   {!member.is_active && <AccountStateChip state="inactive" size="xs" />}
                 </div>
-                <div className="truncate text-xs text-muted">{member.email}</div>
+                <div data-private className="truncate text-xs text-muted">
+                  {member.email}
+                </div>
               </div>
               <div className="flex shrink-0 items-center gap-1">
                 {mode === "admin" && doors?.onSetRole ? (
@@ -282,7 +293,9 @@ function TeamPeople({ team, mode, doors, languages, defaultLocale, labels }: Tea
           <ul className="space-y-2">
             {team.invitations.map((invitation) => (
               <li key={invitation.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                <span className="min-w-0 truncate text-secondary">{invitation.email}</span>
+                <span data-private className="min-w-0 truncate text-secondary">
+                  {invitation.email}
+                </span>
                 <div className="flex shrink-0 items-center gap-1">
                   <Chip size="xs" shape="square" tone={invitation.status === "expired" ? "warning" : "neutral"}>
                     {invitationWords.status[invitation.status]}
@@ -328,6 +341,7 @@ function TeamPeople({ team, mode, doors, languages, defaultLocale, labels }: Tea
 
       {doors?.onAdd && mode !== "member" && (
         <form
+          noValidate
           // One column per field at sm, so the language sits beside the address rather than
           // wrapping under it: the address, the admin's role, the language, then Add.
           className={`grid grid-cols-1 gap-2 sm:items-end ${ADD_ROW_COLUMNS[(mode === "admin" ? 1 : 0) + (asksLanguage ? 1 : 0)]}`}
@@ -336,11 +350,15 @@ function TeamPeople({ team, mode, doors, languages, defaultLocale, labels }: Tea
             add();
           }}
         >
-          <Input
+          <InviteAddressField
             label={labels.addEmail}
-            type="email"
             value={email}
-            onChange={(event) => setEmail(event.target.value)}
+            invalid={invalid}
+            invalidText={invitationWords.invalidEmail}
+            onChange={(next) => {
+              setInvalid(false);
+              setEmail(next);
+            }}
           />
           {mode === "admin" && (
             <ToggleGroup<AccountTeamRole>

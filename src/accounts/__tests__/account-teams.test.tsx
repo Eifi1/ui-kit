@@ -305,6 +305,21 @@ describe("AccountTeamsPage", () => {
     expect(await screen.findByText("dee@example.com is in Rig crew now.")).toBeInTheDocument();
   });
 
+  it("says an address without its shape in the kit's words under the field, and keeps addresses private (DUP-8)", async () => {
+    const { calls, user } = mount(<AccountTeamsPage languages={["en"]} />, {
+      "get /teams": () => ({ status: 200, data: [rig({ my_role: "manager" })] }),
+    });
+    expect(await screen.findByText("You manage this team.")).toBeInTheDocument();
+    const field = screen.getByLabelText("Add by email address");
+    expect(field).toHaveAttribute("data-private");
+    expect(field).toHaveAttribute("inputmode", "email");
+    await user.type(field, "dee@example");
+    await user.click(screen.getByRole("button", { name: "Add" }));
+    expect(await screen.findByText("Enter a complete email address.")).toBeInTheDocument();
+    expect(calls.find((c) => c.route === "post /teams/4/members")).toBeUndefined();
+    expect(screen.getByText("Cy Example").closest("li")?.querySelector("[data-private]")).not.toBeNull();
+  });
+
   it("asks a manager's invitation language before the Add button", async () => {
     mount(<AccountTeamsPage languages={["en", "fr"]} />, {
       "get /teams": () => ({ status: 200, data: [rig({ my_role: "manager" })] }),
