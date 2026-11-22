@@ -2,7 +2,9 @@ import { cloneElement, createContext, isValidElement, useContext, useId } from "
 import type { ComponentPropsWithoutRef, ComponentPropsWithRef, ReactNode } from "react";
 import { HelpCircle } from "lucide-react";
 import { cn } from "../lib/cn";
+import { firstTabStop } from "../lib/focus-left";
 import { hasContent } from "../lib/presence";
+import { focusQuietly } from "../lib/quiet-focus";
 import { plainText } from "../lib/plain-text";
 import { DEFAULT_COMMON_LABELS, useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { useInlineFacts } from "../hooks/use-large-text";
@@ -286,7 +288,15 @@ export function FieldSuggestion({ from, onClear, field, labels: labelsProp }: Fi
           <span aria-hidden="true"> · </span>
           <button
             type="button"
-            onClick={onClear}
+            onClick={(e) => {
+              // Into the field first: the app's `onClear` stops passing the caption, so
+              // this button leaves the page in the commit it was pressed in and a
+              // keyboard Clear dropped the focus to <body> (INP-2, refactor audit
+              // 2026-11-22). Quietly, so a picker that opens on focus stays shut.
+              const control = describedControl(e.currentTarget);
+              if (control) focusQuietly(control);
+              onClear();
+            }}
             aria-label={labels.clearName(field)}
             // A text button in the caption's own type, underlined as the kit's secondary
             // TextLink is; the focus outline follows a wrapped line.
@@ -301,6 +311,25 @@ export function FieldSuggestion({ from, onClear, field, labels: labelsProp }: Fi
       )}
     </span>
   );
+}
+
+/**
+ * The control a suggestion's caption describes: the nearest element round the button that
+ * carries an id some control's `aria-describedby` names — the kit field's caption, or the
+ * `<p id>` an app draws outside a kit field (keksdose's split editor). A group described
+ * as a whole (ToggleGroup, CheckboxGroup) gives its first tab stop. One rule for both, so
+ * no field has to hand its control down.
+ */
+function describedControl(button: HTMLElement): HTMLElement | null {
+  const root = button.getRootNode() as Document | ShadowRoot;
+  const described = Array.from(root.querySelectorAll<HTMLElement>("[aria-describedby]"));
+  for (let at = button.parentElement; at; at = at.parentElement) {
+    if (!at.id) continue;
+    const id = at.id;
+    const control = described.find((el) => el.getAttribute("aria-describedby")!.split(/\s+/).includes(id));
+    if (control) return firstTabStop(control);
+  }
+  return null;
 }
 
 /** Whether a `hint` is a {@link FieldSuggestion} — a caption under the field at every
