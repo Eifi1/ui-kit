@@ -234,27 +234,27 @@ export function AccountTwoFactorSection({
         setup={pending ? { otpauthUri: pending.otpauth_url, secret: pending.secret } : null}
         onStartSetup={() => ask("setup")}
         onReplace={() => ask("replace")}
+        // Each call answers through its own promise (refactor audit 2026-11-22, FLW-1): the
+        // backup codes come only in the enable's answer and are shown once, and a per-call
+        // `mutate(code, { onSuccess })` is dropped when a second call starts before it lands.
         onEnable={(code) =>
-          enable.mutate(code, {
-            onSuccess: (answer) => {
+          void enable.mutateAsync(code).then(
+            (answer) => {
               setPending(null);
               setFresh(answer.backup_codes);
               toast.success(words.turnedOn);
             },
-            onError: (error) => toast.error(describe(error)),
-          })
+            (error: unknown) => toast.error(describe(error)),
+          )
         }
         onDisable={(password, code) =>
-          disable.mutate(
-            { password, code },
-            {
-              onSuccess: () => {
-                setPending(null);
-                setFresh(null);
-                toast.success(words.turnedOff);
-              },
-              onError: (error) => toast.error(describe(error)),
+          void disable.mutateAsync({ password, code }).then(
+            () => {
+              setPending(null);
+              setFresh(null);
+              toast.success(words.turnedOff);
             },
+            (error: unknown) => toast.error(describe(error)),
           )
         }
         backupCodes={{

@@ -360,6 +360,53 @@ describe("AccountUserRosterSection", () => {
     expect(calls.find((c) => c.route === "post /admin/users/7/mail")?.data).toEqual({ kind: "password_reset" });
   });
 
+  describe("two rows' mails at once (refactor audit 2026-11-22, FLW-1)", () => {
+    function mountTwo() {
+      const out: { answerBen: (answer: Answer) => void } = { answerBen: () => {} };
+      const mounted = mount(
+        <>
+          <Toaster />
+          <AccountUserRosterSection roles={roles} />
+        </>,
+        {
+          "get /admin/users": () => page([person(1, "Ada", { role: "ADMIN" }), person(7, "Ben"), person(8, "Cleo")]),
+          "post /admin/users/7/mail": () => new Promise<Answer>((resolve) => (out.answerBen = resolve)),
+          "post /admin/users/8/mail": () => ({ status: 200, data: { sent: true, mail_backend: "resend" } }),
+        } as Record<string, (config: Cfg) => Answer>,
+      );
+      const reset = async (name: string) => {
+        await mounted.user.click((await screen.findAllByRole("button", { name: `Actions for ${name}` }))[0]);
+        const menu = await screen.findByRole("dialog", { name: `Actions for ${name}` });
+        await mounted.user.click(within(menu).getByRole("button", { name: "Send a password reset mail" }));
+      };
+      const bens = () => mounted.calls.filter((c) => c.route === "post /admin/users/7/mail");
+      return { ...mounted, out, reset, bens };
+    }
+
+    it("says the first row's mail when the second row's went out before it answered", async () => {
+      const { out, reset, bens } = mountTwo();
+      await reset("Ben Example");
+      await waitFor(() => expect(bens()).toHaveLength(1));
+      await reset("Cleo Example");
+      expect(await screen.findByText("Password reset mail sent to cleo@example.com.")).toBeInTheDocument();
+      out.answerBen({ status: 200, data: { sent: true, mail_backend: "resend" } });
+      expect(await screen.findByText("Password reset mail sent to ben@example.com.")).toBeInTheDocument();
+    });
+
+    it("holds a row's mail while it is out: its menu does not open to send it again", async () => {
+      const { user, out, reset, bens } = mountTwo();
+      await reset("Ben Example");
+      await waitFor(() => expect(bens()).toHaveLength(1));
+      await user.click((await screen.findAllByRole("button", { name: "Actions for Ben Example" }))[0]);
+      expect(screen.queryByRole("dialog", { name: "Actions for Ben Example" })).not.toBeInTheDocument();
+      out.answerBen({ status: 200, data: { sent: true, mail_backend: "resend" } });
+      expect(await screen.findByText("Password reset mail sent to ben@example.com.")).toBeInTheDocument();
+      await user.click((await screen.findAllByRole("button", { name: "Actions for Ben Example" }))[0]);
+      expect(await screen.findByRole("dialog", { name: "Actions for Ben Example" })).toBeInTheDocument();
+      expect(bens()).toHaveLength(1);
+    });
+  });
+
   it("toasts the app's own words for a refusal as they are, markup too", async () => {
     const { user } = mount(
       <>

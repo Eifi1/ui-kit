@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useMutationState, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "../components/toast";
 import { useFeedbackToastLabels } from "../feedback/feedback-labels";
 import type {
@@ -47,31 +47,40 @@ export function useFeedbackCommentsQuery(
     enabled: id !== null,
   });
 
-  const settled = async () => {
-    await qc.invalidateQueries({ queryKey });
-    if (id !== null) onChanged?.(id);
+  // Every write carries its report, and the comment's mutation is keyed by it (refactor
+  // audit 2026-11-22, FLW-5). The public page reuses this hook as `?row=` changes, and
+  // TanStack hands a pending mutation the latest render's options: a comment sent on report A
+  // and still out when B was opened refreshed B's thread, called `onChanged(B)` and set B's
+  // Send spinning. A new key resets the observer instead, and `pending` is counted per report.
+  const settled = async (report: number) => {
+    await qc.invalidateQueries({ queryKey: feedbackCommentsQueryKey(report, admin) });
+    onChanged?.(report);
   };
   const failure = (fallback: string) => (error: unknown) => {
     toast.error(errorMessage ? errorMessage(error, fallback) : fallback);
   };
+  const commentKey = [...queryKey, "comment"];
   const comment = useMutation({
+    mutationKey: commentKey,
     // `attachmentUrl` only with a file, so a text comment calls with two arguments, as the
     // other hook does.
-    mutationFn: ({ body, attachmentUrl }: { body: string; attachmentUrl?: string }) =>
-      attachmentUrl === undefined ? api.comment(id ?? 0, body) : api.comment(id ?? 0, body, attachmentUrl),
-    onSuccess: settled,
+    mutationFn: ({ report, body, attachmentUrl }: { report: number; body: string; attachmentUrl?: string }) =>
+      attachmentUrl === undefined ? api.comment(report, body) : api.comment(report, body, attachmentUrl),
+    onSuccess: (_answer, { report }) => settled(report),
     onError: failure(toastLabels.commentFailed),
   });
+  const commentsOut = useMutationState({ filters: { mutationKey: commentKey, status: "pending" } }).length;
   const { hideComment, deleteComment } = api;
   const hide = useMutation({
-    mutationFn: ({ target, hidden }: { target: FeedbackComment; hidden: boolean }) =>
-      hideComment ? hideComment(id ?? 0, target.id, hidden) : Promise.resolve(),
-    onSuccess: settled,
+    mutationFn: ({ report, target, hidden }: { report: number; target: FeedbackComment; hidden: boolean }) =>
+      hideComment ? hideComment(report, target.id, hidden) : Promise.resolve(),
+    onSuccess: (_answer, { report }) => settled(report),
     onError: failure(toastLabels.updateFailed),
   });
   const remove = useMutation({
-    mutationFn: (target: FeedbackComment) => (deleteComment ? deleteComment(id ?? 0, target.id) : Promise.resolve()),
-    onSuccess: settled,
+    mutationFn: ({ report, target }: { report: number; target: FeedbackComment }) =>
+      deleteComment ? deleteComment(report, target.id) : Promise.resolve(),
+    onSuccess: (_answer, { report }) => settled(report),
     onError: failure(toastLabels.updateFailed),
   });
 
@@ -85,10 +94,10 @@ export function useFeedbackCommentsQuery(
     failed,
     offline: failed && (paused || (typeof navigator !== "undefined" && navigator.onLine === false)),
     retry: () => void query.refetch(),
-    pending: comment.isPending,
-    onComment: (body, attachmentUrl) => comment.mutateAsync({ body, attachmentUrl }),
-    onHide: hideComment ? (target, hidden) => hide.mutateAsync({ target, hidden }) : undefined,
-    onDelete: deleteComment ? (target) => remove.mutateAsync(target) : undefined,
+    pending: id !== null && commentsOut > 0,
+    onComment: (body, attachmentUrl) => comment.mutateAsync({ report: id ?? 0, body, attachmentUrl }),
+    onHide: hideComment ? (target, hidden) => hide.mutateAsync({ report: id ?? 0, target, hidden }) : undefined,
+    onDelete: deleteComment ? (target) => remove.mutateAsync({ report: id ?? 0, target }) : undefined,
   };
 }
 

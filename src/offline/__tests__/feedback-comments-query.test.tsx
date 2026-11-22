@@ -137,3 +137,61 @@ describe("useFeedbackCommentsQuery", () => {
     expect(server.comments).not.toHaveBeenCalled();
   });
 });
+
+describe("a comment still out when the reader opens another report (refactor audit 2026-11-22, FLW-5)", () => {
+  it("lands on its own report: the next one's Send does not spin, and the first is the one refreshed", async () => {
+    const qc = client();
+    const server = api();
+    let land: () => void = () => {};
+    server.comment.mockImplementationOnce(() => new Promise<unknown>((resolve) => (land = () => resolve({}))));
+    const onChanged = vi.fn();
+    const { result, rerender } = renderHook(({ id }) => useFeedbackCommentsQuery(id, server, { onChanged }), {
+      wrapper: wrapper(qc),
+      initialProps: { id: 52 },
+    });
+    await waitFor(() => expect(result.current.comments).toHaveLength(1));
+    let sent: Promise<unknown> = Promise.resolve();
+    act(() => {
+      sent = result.current.onComment("On report 52.");
+    });
+    await waitFor(() => expect(result.current.pending).toBe(true));
+    rerender({ id: 53 });
+    await waitFor(() => expect(result.current.comments).toHaveLength(1));
+    expect(result.current.pending).toBe(false);
+    const reads = server.comments.mock.calls.length;
+    await act(async () => {
+      land();
+      await sent;
+    });
+    await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(1));
+    expect(onChanged).toHaveBeenCalledWith(52);
+    expect(server.comment).toHaveBeenCalledWith(52, "On report 52.");
+    // 52's thread was read again, not 53's, which is the one on screen.
+    expect(server.comments.mock.calls.slice(reads).map(([id]) => id)).not.toContain(53);
+  });
+
+  it("spins Send again on going back to the report whose comment is still out", async () => {
+    const qc = client();
+    const server = api();
+    let land: () => void = () => {};
+    server.comment.mockImplementationOnce(() => new Promise<unknown>((resolve) => (land = () => resolve({}))));
+    const { result, rerender } = renderHook(({ id }) => useFeedbackCommentsQuery(id, server), {
+      wrapper: wrapper(qc),
+      initialProps: { id: 52 },
+    });
+    let sent: Promise<unknown> = Promise.resolve();
+    act(() => {
+      sent = result.current.onComment("On report 52.");
+    });
+    await waitFor(() => expect(result.current.pending).toBe(true));
+    rerender({ id: 53 });
+    await waitFor(() => expect(result.current.pending).toBe(false));
+    rerender({ id: 52 });
+    await waitFor(() => expect(result.current.pending).toBe(true));
+    await act(async () => {
+      land();
+      await sent;
+    });
+    await waitFor(() => expect(result.current.pending).toBe(false));
+  });
+});

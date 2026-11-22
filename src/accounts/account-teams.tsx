@@ -457,13 +457,10 @@ export function AccountTeamsSection({
   const create = () => {
     const wanted = name.trim();
     if (!wanted) return;
-    actions.create.mutate(wanted, {
-      onSuccess: (team) => {
-        setName("");
-        toast.success(labels.created(team.name));
-      },
-      onError: failed(wanted),
-    });
+    void actions.create.mutateAsync(wanted).then((team) => {
+      setName("");
+      toast.success(labels.created(team.name));
+    }, failed(wanted));
   };
 
   const doorsFor = (team: AccountAdminTeam): TeamDoors => ({
@@ -477,20 +474,23 @@ export function AccountTeamsSection({
           throw error;
         }),
     onSetRole: (member, role) =>
-      actions.setRole.mutate({ team, userId: member.user_id, role }, { onError: failed(team.name) }),
-    onRemove: (member) => actions.removeMember.mutate({ team, userId: member.user_id }, { onError: failed(team.name) }),
+      void actions.setRole.mutateAsync({ team, userId: member.user_id, role }).catch(failed(team.name)),
+    onRemove: (member) =>
+      void actions.removeMember.mutateAsync({ team, userId: member.user_id }).catch(failed(team.name)),
     onResend: (invitation) =>
-      actions.resendInvitation.mutate(invitation.id, {
-        onSuccess: (issued) =>
-          announceInvited(
-            { email: issued.email, sent: issued.sent, link: issued.link ?? null },
-            team.name,
-            labels,
-            setHandOn,
-          ),
-        onError: failed(team.name),
-      }),
-    onWithdraw: (invitation) => actions.withdrawInvitation.mutate(invitation.id, { onError: failed(team.name) }),
+      void actions.resendInvitation
+        .mutateAsync(invitation.id)
+        .then(
+          (issued) =>
+            announceInvited(
+              { email: issued.email, sent: issued.sent, link: issued.link ?? null },
+              team.name,
+              labels,
+              setHandOn,
+            ),
+          failed(team.name),
+        ),
+    onWithdraw: (invitation) => void actions.withdrawInvitation.mutateAsync(invitation.id).catch(failed(team.name)),
   });
 
   const managersOf = (team: AccountTeam) =>
@@ -621,15 +621,12 @@ export function AccountTeamsSection({
               event.preventDefault();
               const next = renaming.name.trim();
               if (!next) return;
-              actions.rename.mutate(
-                { team: renaming.team, name: next },
-                {
-                  onSuccess: (team) => {
-                    setRenaming(null);
-                    toast.success(labels.renamed(team.name));
-                  },
-                  onError: (error) => setRenaming((now) => now && { ...now, error }),
+              void actions.rename.mutateAsync({ team: renaming.team, name: next }).then(
+                (team) => {
+                  setRenaming(null);
+                  toast.success(labels.renamed(team.name));
                 },
+                (error: unknown) => setRenaming((now) => now && { ...now, error }),
               );
             }}
           >
@@ -757,23 +754,15 @@ export function AccountTeamsPage({
           throw error;
         }),
     onRemove: (member) =>
-      actions.removeMember.mutate(
-        { team, userId: member.user_id },
-        {
-          onSuccess: (next) => toast.success(labels.removed(member.display_name, next.name)),
-          onError: failed(team),
-        },
-      ),
+      void actions.removeMember
+        .mutateAsync({ team, userId: member.user_id })
+        .then((next) => toast.success(labels.removed(member.display_name, next.name)), failed(team)),
     onResend: (invitation) =>
-      actions.resendInvitation.mutate(
-        { team, invitationId: invitation.id },
-        {
-          onSuccess: (next) => announceInvited(next.invited, next.name, labels, setHandOn),
-          onError: failed(team),
-        },
-      ),
+      void actions.resendInvitation
+        .mutateAsync({ team, invitationId: invitation.id })
+        .then((next) => announceInvited(next.invited, next.name, labels, setHandOn), failed(team)),
     onWithdraw: (invitation) =>
-      actions.withdrawInvitation.mutate({ team, invitationId: invitation.id }, { onError: failed(team) }),
+      void actions.withdrawInvitation.mutateAsync({ team, invitationId: invitation.id }).catch(failed(team)),
   });
 
   const list = teams.data ?? [];
