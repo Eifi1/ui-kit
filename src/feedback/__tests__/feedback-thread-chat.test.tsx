@@ -67,6 +67,27 @@ describe("FeedbackThread — chat rows (keksdose G4)", () => {
     expect(lines).toEqual(["Mittwoch, 31. Dezember 2025", "Sonntag, 20. September", "Gestern", "Heute"]);
   });
 
+  it("counts the days, and prints the lines, clocks and tooltips, in the provider's time zone (DUP-2)", () => {
+    // New York, read on a Berlin device: each message is on an earlier day there.
+    const utc = (day: number, hour: number, minute = 0) => new Date(Date.UTC(2026, 8, day, hour, minute));
+    const messages: FeedbackThreadItem[] = [
+      { id: 1, author: "Ada", createdAt: utc(20, 2), body: "Export is broken." }, // NY Sat 19, 22:00
+      { id: 2, author: "Marcel", staff: true, createdAt: utc(25, 23, 30), body: "Looking." }, // NY Fri 25, 19:30
+      { id: 3, own: true, createdAt: utc(26, 14), body: "Still broken." }, // NY Sat 26, 10:00
+    ];
+    const { container } = render(
+      <UiKitProvider locale="en-GB" timeZone="America/New_York">
+        <FeedbackThread messages={messages} now={utc(26, 16)} daySeparators timeFormat="clock" />
+      </UiKitProvider>,
+    );
+    const lines = [...container.querySelectorAll("[data-day-separator]")];
+    expect(lines.map((li) => li.textContent)).toEqual(["Saturday 19 September", "Yesterday", "Today"]);
+    expect(lines[1]!.querySelector("time")).toHaveAttribute("dateTime", "2026-09-25");
+    const time = screen.getByText("19:30");
+    const tip = document.getElementById(time.getAttribute("aria-describedby") ?? "");
+    expect(tip).toHaveTextContent(/Friday, 25 September 2026 at 19:30/);
+  });
+
   it("draws no day lines unless asked", () => {
     const { container } = render(<FeedbackThread messages={CHAT} now={NOW} locale="en" />);
     expect(container.querySelector("[data-day-separator]")).toBeNull();

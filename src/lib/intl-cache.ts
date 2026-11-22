@@ -25,3 +25,21 @@ export function dateFormatter(locale: string | undefined, options: Intl.DateTime
   }
   return f;
 }
+
+const relativeFormatters = new Map<string, Intl.RelativeTimeFormat>();
+
+/** The cached `Intl.RelativeTimeFormat` for `locale`, `numeric` and `style` — what
+ *  `formatRelativeTime` and FeedbackThread's "Today" / "Yesterday" lines format with. */
+export function relativeFormatter(
+  locale: string | undefined,
+  numeric: Intl.RelativeTimeFormatNumeric = "auto",
+  style: Intl.RelativeTimeFormatStyle = "long",
+): Intl.RelativeTimeFormat {
+  const key = `${locale ?? ""}|${numeric}|${style}`;
+  let f = relativeFormatters.get(key);
+  if (!f) {
+    f = new Intl.RelativeTimeFormat(locale, { numeric, style });
+    relativeFormatters.set(key, f);
+  }
+  return f;
+}

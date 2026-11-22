@@ -6,7 +6,8 @@ import { cn } from "../lib/cn";
 import { IconButton } from "../components/icon-button";
 import { Tooltip } from "../components/tooltip";
 import { useBillingLabels } from "../billing/billing-labels";
-import { useKitLocale, type LabelOverride } from "../i18n/kit-labels";
+import { useKitLocale, useKitTimeZone, type LabelOverride } from "../i18n/kit-labels";
+import { clockTime } from "../lib/date-format";
 import { useTopBarPartsLabels, type SyncStatusLabels } from "./top-bar-parts-labels";
 
 /**
@@ -166,6 +167,7 @@ export function SyncStatusIndicator({
   const words = useTopBarPartsLabels(labelsProp ? { sync: labelsProp } : undefined).sync;
   const billing = useBillingLabels();
   const locale = useKitLocale(localeProp);
+  const timeZone = useKitTimeZone();
   // The tap's own round, local rather than in the app's store: the store's phase belongs
   // to the sync engine, and a second writer would race the round itself.
   const [refreshing, setRefreshing] = useState(false);
@@ -215,8 +217,11 @@ export function SyncStatusIndicator({
       text =
         !onlineOnly && status.lastSyncedAt
           ? words.syncedAt(
-              // A clock time in the UI's language, never the browser's (keksdose live #246).
-              new Date(status.lastSyncedAt).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" }),
+              // A clock time in the UI's language, never the browser's (keksdose live #246),
+              // as the kit writes every clock: English is the 24-hour "14:05", not the
+              // "02:05 PM" a bare "en" gave; in the provider's zone (refactor audit
+              // 2026-11-22, DUP-2).
+              clockTime(new Date(status.lastSyncedAt), locale, timeZone),
             )
           : words.idle;
   }

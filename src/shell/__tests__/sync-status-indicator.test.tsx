@@ -71,6 +71,22 @@ describe("SyncStatusIndicator", () => {
     expect(button.className).toContain("text-success");
   });
 
+  it("writes the clock as the language does, in the provider's time zone (refactor audit 2026-11-22, DUP-2)", () => {
+    // 13:05Z: 14:05 in Berlin (the suite's zone), 15:05 in Helsinki. A bare "en" is the
+    // kit's 24-hour English clock, not the browser's "02:05 PM".
+    const at = new Date(Date.UTC(2026, 9, 17, 12, 5));
+    const { rerender } = render(
+      <SyncStatusIndicator status={{ ...IDLE, lastSyncedAt: at }} onSync={() => {}} locale="en" />,
+    );
+    expect(screen.getByRole("button")).toHaveAccessibleName("Synced at 14:05 — Tap to sync now");
+    rerender(
+      <UiKitProvider timeZone="Europe/Helsinki">
+        <SyncStatusIndicator status={{ ...IDLE, lastSyncedAt: at }} onSync={() => {}} locale="en" />
+      </UiKitProvider>,
+    );
+    expect(screen.getByRole("button")).toHaveAccessibleName("Synced at 15:05 — Tap to sync now");
+  });
+
   it("before the first round: Up to date", () => {
     render(<SyncStatusIndicator status={IDLE} />);
     expect(screen.getByRole("status")).toHaveTextContent("Up to date");
