@@ -266,6 +266,10 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
     "All or nothing — onPick",
     "FileButton — showFileName",
     "FileButton, FileDropzone — commit",
+    "AttachButton — a sheet on a phone, a menu on a desktop",
+    "AttachButton — one way in opens it directly",
+    "AttachButton — layout=\"inline\" in a FileDropzone",
+    "FeedbackAttachmentField — picker=\"sheet\"",
   ],
   "media": [
     "ImageGrid — actions, captions and a PDF tile",
@@ -1295,6 +1299,7 @@ export const PAGE_SECTIONS: Readonly<Record<string, readonly string[]>> = {
     "FileInputs",
     "Files016Demo",
     "FileLock022Demo",
+    "AttachDemo",
   ],
   "media": [
     "MediaDemo",
