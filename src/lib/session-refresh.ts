@@ -92,8 +92,12 @@ export interface SessionRefreshOptions<R extends SessionRenewal> {
    */
   onEnded: (ended: { demo: boolean }) => void;
   /** Whether a URL is a signed-out step, whose 401 judges the form and never the
-   *  session. Replaces the default list, {@link isSignedOutStep}. */
-  isSignedOutStep?: (url: string) => boolean;
+   *  session. Replaces the default list, {@link isSignedOutStep}. Since 0.66 it is also
+   *  handed the request's config, whose `baseURL` a relative `url` is sent under (refactor
+   *  audit 2026-11-22, FLW-4): a request on the instance with another host's `baseURL` must
+   *  answer `true` too, or a refresh runs for its 401 and the replay carries the renewed token
+   *  there. */
+  isSignedOutStep?: (url: string, config?: { baseURL?: string }) => boolean;
   /** Attempts for a refresh that got no answer, timed out, or got a 408, 429 or 5xx.
    *  Default 3. */
   attempts?: number;
@@ -208,7 +212,7 @@ type Attempt<R> = { renewal: R } | "definitive" | "retry" | "transient";
 interface Engine {
   token(): string | null;
   isDemo(): boolean;
-  isSignedOutStep(url: string): boolean;
+  isSignedOutStep(url: string, config?: { baseURL?: string }): boolean;
   join(): Promise<Flight<SessionRenewal>>;
   end(token: string | null, demo: boolean): void;
 }
@@ -436,7 +440,7 @@ export function attachSessionRefresh<C extends SessionRefreshAxiosConfig, R exte
   if (!engine) throw new TypeError("attachSessionRefresh takes the session createSessionRefresh made");
 
   const onUnauthorized = async (error: object, config: C & Marked): Promise<unknown> => {
-    if (engine.isSignedOutStep(config.url ?? "")) throw error;
+    if (engine.isSignedOutStep(config.url ?? "", config as { baseURL?: string })) throw error;
     // A config the kit never stamped (sent before it was attached) counts as current.
     const stamp = config[STAMP] === undefined ? engine.token() : config[STAMP];
     const replay = (token: string) => {

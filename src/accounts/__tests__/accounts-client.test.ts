@@ -134,6 +134,16 @@ describe("the bearer", () => {
     expect(http.sent.map((c) => c.bearer)).toEqual([null]);
   });
 
+  it("reads another host's 401 by the request's own base URL too, so the renewed token never goes there (FLW-4)", async () => {
+    stored("a1");
+    const { http, fetch, onSessionEnded } = track(setup({ valid: ["a2"] }));
+    const r = await settle(http.request({ method: "get", url: "/tiles/1", baseURL: "https://maps.example" }));
+    expect(r.ok).toBe(false);
+    expect(fetch).not.toHaveBeenCalled();
+    expect(onSessionEnded).not.toHaveBeenCalled();
+    expect(http.sent.map((c) => c.bearer)).toEqual([null]);
+  });
+
   it("shows the stored session in the store from the start", () => {
     stored("a1");
     const { client } = track(setup());

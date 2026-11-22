@@ -533,7 +533,10 @@ export function createAccountsClient<U extends AccountUser = AccountMe>(
     isDemo,
     // Another host's 401 is about that host, never this session: it refreshes nothing and is
     // never replayed, so the renewed token cannot go out to it either.
-    isSignedOutStep: (url) => !forApi(url) || isSignedOutStep(url),
+    // Another host's 401 is no step of this session's: refreshed for nothing, and replayed
+    // with the renewed token stamped on (FLW-4). Judged by the request's own base URL too,
+    // as the bearer is: a relative url under another host's baseURL is that host's.
+    isSignedOutStep: (url, config) => !forApi(url, config?.baseURL) || isSignedOutStep(url),
     onEnded: ({ demo }) => {
       // The sign-out's own revoke found the session over: the sign-out ends it, once.
       if (signingOut) return;
