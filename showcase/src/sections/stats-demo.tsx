@@ -1,6 +1,15 @@
 import { useState } from "react";
 import { Activity, Users } from "lucide-react";
-import { DEFAULT_SPARKLINE_LABELS, Sparkline, StatTile, StatTileGrid, Switch, sparklineSummary } from "@eifi1/ui-kit";
+import {
+  DEFAULT_SPARKLINE_LABELS,
+  Sparkline,
+  StatStrip,
+  StatTile,
+  StatTileGrid,
+  Switch,
+  ToggleGroup,
+  sparklineSummary,
+} from "@eifi1/ui-kit";
 import type { SparklineTone, StatTileLinkProps, StatTileSubValue } from "@eifi1/ui-kit";
 import { Example, Note, OutTable, Row } from "../lib/section";
 import { numberFormat } from "../lib/number-format";
@@ -256,6 +265,7 @@ export function StatsDemo() {
         </StatTileGrid>
       </Example>
 
+      <StatStripSpecimen />
       <StatTilePrivacy />
       <SparklineOptions />
       <StatTileFormatting />
@@ -275,6 +285,46 @@ function ClickableTile() {
       onClick={() => setClicks((n) => n + 1)}
       description={clicks ? `onClick fired ${clicks}×` : "Click the tile"}
     />
+  );
+}
+
+/** The quiet row: three to six plain tiles between two hairlines. */
+function StatStripSpecimen() {
+  const [count, setCount] = useState<"3" | "4" | "6">("4");
+  const [loading, setLoading] = useState(false);
+  const tiles = [
+    <StatTile key="experiments" label="Experiments" value={42} href="#/stats#kpi-row" />,
+    <StatTile key="topics" label="Topics" value={9} />,
+    <StatTile key="visitors" label="Visitors this month" value={12_480} compact />,
+    <StatTile key="donations" label="Donations" value={1_840.5} currency="EUR" />,
+    <StatTile key="answers" label="Answers checked" value="97%" />,
+    <StatTile key="since" label="Open since" value="2024" />,
+  ].slice(0, Number(count));
+  return (
+    <Example label="StatStrip — a quiet row of figures" hint="no cards: a hairline above and below, plain StatTiles">
+      <Row>
+        <ToggleGroup<"3" | "4" | "6">
+          aria-label="Tiles"
+          value={count}
+          onChange={setCount}
+          options={[
+            { value: "3", label: "3" },
+            { value: "4", label: "4" },
+            { value: "6", label: "6" },
+          ]}
+        />
+        <Switch label="loading" checked={loading} onCheckedChange={setLoading} />
+      </Row>
+      <div className="mt-4">
+        <StatStrip loading={loading}>{tiles}</StatStrip>
+      </div>
+      <Note>
+        Two columns on a phone; three from <code className="font-mono">sm</code> (two for four tiles, so no tile is left
+        alone on a row); one row from <code className="font-mono">lg</code>. Each tile is a plain StatTile unless it
+        names a <code className="font-mono">variant</code>, so it keeps its link, its loading state and its number
+        formatting. A loading strip says &ldquo;Loading…&rdquo; once, not once per tile.
+      </Note>
+    </Example>
   );
 }
 

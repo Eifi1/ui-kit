@@ -1372,7 +1372,7 @@ export const GROUPS: ShowcaseGroup[] = [
         blurb:
           "The KPI tile every dashboard repeats — value, change, trend — and the tiny line that fits in a table cell.",
         icon: Gauge,
-        components: ["StatTile", "StatTileGrid", "Sparkline"],
+        components: ["StatTile", "StatTileGrid", "StatStrip", "Sparkline"],
         Body: StatsDemo,
       },
       {

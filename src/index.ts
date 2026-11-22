@@ -440,6 +440,9 @@ export { QuantityField } from "./components/quantity-field";
 export type { QuantityFieldProps } from "./components/quantity-field";
 export * from "./components/sparkline";
 export * from "./components/stat-tile";
+// 0.66 (Staunlabor's public pages): a quiet row of three to six StatTiles between two hairlines.
+export { StatStrip } from "./components/stat-strip";
+export type { StatStripProps } from "./components/stat-strip";
 export * from "./components/signature-pad";
 export * from "./components/password-strength";
 export * from "./components/page-contents";
