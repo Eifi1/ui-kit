@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { layoutRoot } from "../../test/layout-root";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../card";
 import { FieldHint } from "../field-parts";
@@ -240,7 +241,7 @@ describe("Select hint with a FieldHint (P8)", () => {
         <option>Giro</option>
       </Select>,
     );
-    expect(container.firstElementChild!.className).toBe("relative w-40");
+    expect(layoutRoot(container)!.className).toBe("relative w-40");
   });
 });
 

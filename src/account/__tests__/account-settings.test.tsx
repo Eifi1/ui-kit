@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { layoutParent } from "../../test/layout-root";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import {
@@ -457,7 +458,7 @@ describe("PasswordSetting strength meter (0.22.0)", () => {
     // Right under the field: the two share one box in the card's stack. (Since 0.34 the
     // field keeps a box of its own for its refusal, so the pair's box is one level up.)
     const meter = document.querySelector("[data-score]")!;
-    const pair = field.closest("div.relative")!.parentElement!.parentElement!;
+    const pair = layoutParent(layoutParent(field.closest("div.relative")!)!)!;
     expect(pair).toContainElement(meter as HTMLElement);
     expect(pair.parentElement).toHaveClass("space-y-3");
   });

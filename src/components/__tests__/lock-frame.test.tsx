@@ -17,14 +17,22 @@ const OPEN = { locked: false, reason: undefined, reasonId: "no-reason" };
 const classes = (el: Element) => el.className.split(/\s+/);
 
 describe("LockFrame", () => {
-  it("unlocked: the field as it is — no element around it, no reason", () => {
+  it("unlocked: the field in a frame the layout does not see (`contents`), no reason", () => {
+    // The frame stays so a lock arriving does not remount the field (INP-4,
+    // lock-frame-keeps-focus.test.tsx); `display: contents` gives it no box, and the
+    // caller's classes stay on the field.
     const { container } = render(
       <LockFrame lock={OPEN} display="line" className="w-48">
         <input aria-label="Name" />
       </LockFrame>,
     );
     expect(container.children).toHaveLength(1);
-    expect(container.firstElementChild).toBe(screen.getByRole("textbox"));
+    const frame = container.firstElementChild!;
+    expect(classes(frame)).toContain("contents");
+    expect(classes(frame)).not.toContain("w-48");
+    expect(frame).not.toHaveAttribute("data-lock-frame");
+    expect(frame.children).toHaveLength(1);
+    expect(frame.firstElementChild).toBe(screen.getByRole("textbox"));
     expect(container.querySelector("[data-slot='disabled-reason'], #no-reason")).toBeNull();
   });
 

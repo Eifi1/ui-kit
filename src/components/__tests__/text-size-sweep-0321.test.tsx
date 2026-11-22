@@ -1,5 +1,6 @@
 import { act, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { layoutRoot } from "../../test/layout-root";
 import { Pagination } from "../data-table-pagination";
 import { WizardStepper } from "../wizard-stepper";
 import { Button } from "../button";
@@ -236,7 +237,7 @@ describe("Date and month fields at Large (0.32.1)", () => {
     const { container } = render(
       <MonthPicker variant="stepper" value="2026-10" onChange={() => {}} currentMonth="2026-10" locale="en-GB" />,
     );
-    expect(container.firstElementChild!).toHaveClass("flex-wrap");
+    expect(layoutRoot(container)).toHaveClass("flex-wrap");
   });
 
   it("PhoneInput gives the number its own line on a phone at Large", () => {

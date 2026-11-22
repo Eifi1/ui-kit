@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { layoutRoot } from "../../test/layout-root";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { Select } from "../select";
 import { Checkbox } from "../checkbox";
@@ -231,7 +232,7 @@ describe("Select commit / disabledReason", () => {
     const { container } = render(<RoleSelect onSave={onSave} />);
     const select = screen.getByRole("combobox", { name: "Role" });
     expect(select).not.toHaveAttribute("aria-disabled");
-    expect(container.firstElementChild).toHaveClass("w-48");
+    expect(layoutRoot(container)).toHaveClass("w-48");
     fireEvent.change(select, { target: { value: "admin" } });
     expect(onSave).toHaveBeenCalledWith("admin");
   });

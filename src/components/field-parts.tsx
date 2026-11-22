@@ -743,11 +743,42 @@ export function LockFrame({
   className?: string;
   children: ReactNode;
 }) {
-  if (!lock.locked) return <>{children}</>;
+  // ONE tree in every state (refactor audit 2026-11-22, INP-4). Bare while unlocked and in
+  // LockedReason's frame while locked, a lock arriving or lifting moved the field to
+  // another place in the tree, and React remounted it: a field that held the focus lost
+  // it to <body>, with its caret — keksdose's add-item field when another member's Done
+  // arrives by sync, kastlan's offline lock on every connection drop. So the frame is
+  // always there: the Tooltip's wrapper (`keepFrame`, an empty label while there is no
+  // bubble to show), `contents` while unlocked so the layout does not see it, and
+  // LockedReason's box while locked — the same classes, the line or the hidden copy after
+  // the field. The cost: every field asks the text size and the pointer for the form it
+  // would take, where only a locked one did.
+  const line = useDisabledReasonLine(display);
+  const locked = lock.locked;
   return (
-    <LockedReason lock={lock} display={display} className={cn("block", className)}>
-      {children}
-    </LockedReason>
+    <Tooltip
+      keepFrame
+      label={locked && !line ? lock.reason : null}
+      data-lock-frame={locked ? "" : undefined}
+      data-slot={locked && line ? "disabled-reason" : undefined}
+      className={locked ? cn("block", line && "max-w-full", className) : "contents"}
+    >
+      {/* A fragment, so the Tooltip does not clone its bubble's id into the description —
+          the hidden copy is it (see LockedReason). */}
+      <>
+        {children}
+        {locked &&
+          (line ? (
+            <span id={lock.reasonId} className={DISABLED_REASON_LINE_CLASS}>
+              {lock.reason}
+            </span>
+          ) : (
+            <span id={lock.reasonId} hidden>
+              {lock.reason}
+            </span>
+          ))}
+      </>
+    </Tooltip>
   );
 }
 

@@ -1,6 +1,7 @@
 import { createRef, useState } from "react";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { layoutRoot } from "../../test/layout-root";
 import { ChoiceField, type ChoiceFieldOption, type ChoiceFieldProps } from "../choice-field";
 import { WriteLockProvider } from "../write-lock";
 import { applyTextSize } from "../../theme/text-size";
@@ -312,13 +313,13 @@ describe("ChoiceField — the control's attributes, box and ref", () => {
     // `min-w-0`) would style the select inside a block that the grid sizes instead.
     stubDesktop();
     const desktop = render(<Grains className="min-w-0" />);
-    expect(desktop.container.firstElementChild).toHaveClass("min-w-0");
+    expect(layoutRoot(desktop.container)).toHaveClass("min-w-0");
     desktop.unmount();
     vi.unstubAllGlobals();
     stubPhone();
     const phone = render(<Grains className="min-w-0" />);
-    expect(phone.container.firstElementChild).toHaveClass("min-w-0");
-    expect(phone.container.firstElementChild).toContainElement(theSelect());
+    expect(layoutRoot(phone.container)).toHaveClass("min-w-0");
+    expect(layoutRoot(phone.container)).toContainElement(theSelect());
   });
 
   it("`size=\"sm\"`: the group's 12 px segments, and an unlabelled select's toolbar size", () => {
