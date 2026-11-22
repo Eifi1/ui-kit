@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type {
   AnchorHTMLAttributes,
@@ -16,13 +16,11 @@ import { X } from "lucide-react";
 import { cn } from "../lib/cn";
 import { FOCUS_RING } from "./focus-ring";
 import { dirOf, type Direction } from "../lib/direction";
-import { registerFloating } from "../lib/floating-stack";
 import { returnFocus } from "../lib/focus-left";
 import { useFloatClearance } from "../lib/float-clearance";
 import { isComposing } from "../lib/ime";
 import { takeEscape, useOverlayOpen } from "../hooks/use-dismiss";
 import { useKitLabels, useKitLink } from "../i18n/kit-labels";
-import { assignRef } from "./field-parts";
 import { pickLinkRenderer } from "./text-link";
 import { Tooltip, type TooltipSide } from "./tooltip";
 import { DEFAULT_FLOATING_PANEL_LABELS } from "./floating-panel-labels";
@@ -185,9 +183,6 @@ export interface FloatingActionButtonProps extends Omit<ButtonHTMLAttributes<HTM
  * Portalled, because `position: fixed` inside any transformed ancestor (an animated
  * page transition) is fixed to that ancestor, not to the screen.
  *
- * While mounted it reports its box (`lib/floating-stack.ts`), so `ServerWakeNotice`
- * stacks above it rather than over it.
- *
  * 0.48: while mounted, `hidden` or not, it also publishes the room it takes above the
  * nav (`offset` + 3rem + a 0.5rem gap) as `--app-float-clearance` on `<html>` (the
  * largest of several wins), and `AppShell` pads its `<main>` past it on a phone, so the
@@ -220,20 +215,10 @@ export function FloatingActionButton({
   const toggle = pressed !== undefined;
   const tip = tooltip === true ? label : tooltip === false || tooltip === "" ? undefined : tooltip;
   const wrapped = tip !== undefined && tip !== null;
-  // The fixed element — the button, or the wrapper when there is a tooltip.
-  const [fixed, setFixed] = useState<HTMLElement | null>(null);
-  useEffect(() => (fixed ? registerFloating(fixed) : undefined), [fixed]);
   // The room it takes above the nav, for AppShell's <main> to pad past (keksdose
   // dev#612). Hidden too: the room is the launcher's while it is mounted, so the page
   // does not change length under the reader as it hides and shows.
   useFloatClearance(offset);
-  const buttonRef = useCallback(
-    (node: HTMLButtonElement | null) => {
-      assignRef(ref, node);
-      if (!wrapped) setFixed(node);
-    },
-    [ref, wrapped],
-  );
   // An empty title is "no tooltip", not an attribute with nothing in it. The kit
   // tooltip replaces it outright.
   const nativeTip = !wrapped && nativeTitle && title !== "" ? (title ?? label) : undefined;
@@ -241,7 +226,7 @@ export function FloatingActionButton({
     <button
       {...rest}
       hidden={wrapped ? undefined : hidden}
-      ref={buttonRef}
+      ref={ref}
       type={type}
       dir={dir}
       aria-label={label}
@@ -285,13 +270,7 @@ export function FloatingActionButton({
         createPortal(
           <>
             {wrapped ? (
-              <div
-                ref={setFixed}
-                dir={dir}
-                hidden={hidden}
-                style={cornerStyle(corner, offset)}
-                className="fixed z-40 inline-flex"
-              >
+              <div dir={dir} hidden={hidden} style={cornerStyle(corner, offset)} className="fixed z-40 inline-flex">
                 <Tooltip label={tip} side={tooltipSide} portal>
                   {/* A fragment when the bubble says the name again, so the tooltip
                       does not describe the button with its own label — a reader would

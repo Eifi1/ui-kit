@@ -90,7 +90,7 @@ import { DEFAULT_SETTINGS_LABELS } from "../settings/settings-labels";
 import { DEFAULT_LANDING_LABELS } from "../landing/landing-labels";
 import { DEFAULT_DEMO_LABELS } from "../demo/demo-labels";
 import { DEFAULT_BILLING_LABELS } from "../billing/billing-labels";
-import { DEFAULT_PLAN_CHANGE_LABELS } from "../admin/plan-change-labels";
+import { DEFAULT_PLAN_CHANGE_LABELS } from "../billing/plan-change-labels";
 import { DEFAULT_APPEARANCE_LABELS } from "../components/appearance-labels";
 import { DEFAULT_SWIPE_SETTING_LABELS } from "../settings/swipe-setting-labels";
 import { DEFAULT_DEVICE_RESET_LABELS } from "../settings/device-reset-setting-labels";
