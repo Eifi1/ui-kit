@@ -29,7 +29,11 @@ const KEY = "app.session";
 const ada = { id: 1, email: "ada@example.com", first_name: "Ada", last_name: "Lovelace", role: "ADMIN" };
 const clients: Array<{ detach(): void }> = [];
 
-function mount(ui: ReactNode, routes: Record<string, (config: Cfg) => Answer> = {}, initialEntries = ["/admin/users"]) {
+function mount(
+  ui: ReactNode,
+  routes: Record<string, (config: Cfg) => Answer | Promise<Answer>> = {},
+  initialEntries = ["/admin/users"],
+) {
   const calls: Array<{ route: string; params: unknown; data?: unknown }> = [];
   const http = fakeHttp((config) => {
     const route = `${config.method} ${config.url}`;
@@ -372,7 +376,7 @@ describe("AccountUserRosterSection", () => {
           "get /admin/users": () => page([person(1, "Ada", { role: "ADMIN" }), person(7, "Ben"), person(8, "Cleo")]),
           "post /admin/users/7/mail": () => new Promise<Answer>((resolve) => (out.answerBen = resolve)),
           "post /admin/users/8/mail": () => ({ status: 200, data: { sent: true, mail_backend: "resend" } }),
-        } as Record<string, (config: Cfg) => Answer>,
+        },
       );
       const reset = async (name: string) => {
         await mounted.user.click((await screen.findAllByRole("button", { name: `Actions for ${name}` }))[0]);
