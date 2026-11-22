@@ -149,7 +149,9 @@ describe("MailTestCard — seven languages", () => {
         </UiKitProvider>,
       );
       await userEvent.click(screen.getByRole("button", { name: words.action }));
-      expect(await screen.findByRole("status")).toHaveTextContent(words.console);
+      // toHaveTextContent folds the rendered text's whitespace, a no-break space too (the
+      // French "e-mails\u00a0;", DOC-5), and not the expected string's: fold both.
+      expect(await screen.findByRole("status")).toHaveTextContent(words.console.replace(/\s+/g, " "));
     },
   );
 
