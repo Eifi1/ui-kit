@@ -1,5 +1,5 @@
 import { useId } from "react";
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
 import { ArrowDownWideNarrow, ArrowUpNarrowWide } from "lucide-react";
 import { cn } from "../lib/cn";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
@@ -15,7 +15,9 @@ export interface SortStripOption {
   label: string;
 }
 
-export interface SortStripProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "onChange" | "dir"> {
+/** The root `<div>`'s attributes and its `ref` (refactor audit 2026-11-22, API-4: the strip
+ *  spread them and typed no ref, the one component since 0.51 that did). */
+export interface SortStripProps extends Omit<ComponentPropsWithRef<"div">, "children" | "onChange" | "dir"> {
   options: readonly SortStripOption[];
   /** The picked option's `value`; `null` is the rows' own order. */
   value: string | null;
@@ -29,7 +31,11 @@ export interface SortStripProps extends Omit<ComponentPropsWithoutRef<"div">, "c
   /** Over the provider's `dataTable` words: `sortBy`, `sortDefault`, `sortAscending`,
    *  `sortDescending`. */
   labels?: LabelOverride<DataTableSortLabels>;
-  onPick: (value: string | null) => void;
+  /** A pick in the select: the option's `value`, `null` for "Default order" — the kit's
+   *  `value` + `onChange(value)` (CONTRIBUTING §4). Give this or {@link onPick}. */
+  onChange?: (value: string | null) => void;
+  /** @deprecated 0.66 — `onChange`, the same call under the kit's name; removed in 0.67 */
+  onPick?: (value: string | null) => void;
   /** The direction button: the caller turns `dir` round. */
   onFlip: () => void;
 }
@@ -56,12 +62,14 @@ export function SortStrip({
   offerDefault = false,
   compact = false,
   labels: labelsProp,
+  onChange,
   onPick,
   onFlip,
   className,
   ...rest
 }: SortStripProps) {
   const selectId = useId();
+  const pick = onChange ?? onPick;
   const labels = useKitLabels("dataTable", DEFAULT_DATA_TABLE_LABELS, labelsProp);
   const desc = dir === "desc";
   return (
@@ -79,7 +87,7 @@ export function SortStrip({
         size={compact ? "sm" : "md"}
         className="min-w-0 flex-1 large:basis-40"
         value={value ?? ""}
-        onChange={(e) => onPick(e.target.value || null)}
+        onChange={(e) => pick?.(e.target.value || null)}
       >
         {(offerDefault || value === null) && <option value="">{labels.sortDefault}</option>}
         {options.map((option) => (

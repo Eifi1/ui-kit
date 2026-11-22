@@ -300,7 +300,7 @@ export function MobileSort<T>({
         sortAscending: sortLabels.sortAscending,
         sortDescending: sortLabels.sortDescending,
       }}
-      onPick={onPick}
+      onChange={onPick}
       onFlip={onFlip}
     />
   );

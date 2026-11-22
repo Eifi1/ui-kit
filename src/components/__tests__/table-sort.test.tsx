@@ -1,3 +1,4 @@
+import { createRef } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -75,9 +76,9 @@ const OPTIONS = [
 
 describe("SortStrip", () => {
   it("is a labelled select and a direction button, each reporting its own change", () => {
-    const onPick = vi.fn();
+    const onChange = vi.fn();
     const onFlip = vi.fn();
-    render(<SortStrip options={OPTIONS} value="available" dir="desc" onPick={onPick} onFlip={onFlip} />);
+    render(<SortStrip options={OPTIONS} value="available" dir="desc" onChange={onChange} onFlip={onFlip} />);
 
     const select = screen.getByRole("combobox", { name: "Sort by" });
     expect(select).toHaveValue("available");
@@ -85,7 +86,9 @@ describe("SortStrip", () => {
     expect(screen.queryByRole("option", { name: "Default order" })).toBeNull();
 
     fireEvent.change(select, { target: { value: "name" } });
-    expect(onPick).toHaveBeenCalledWith("name");
+    // The value, as every kit `onChange` (refactor audit 2026-11-22, API-4): once, not the event.
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith("name");
 
     const flip = screen.getByRole("button", { name: "Descending" });
     // Outside the label: a click on it must not also open the select.
@@ -95,14 +98,46 @@ describe("SortStrip", () => {
   });
 
   it("offers the default order as null, and holds the direction while nothing is picked", () => {
-    const onPick = vi.fn();
-    render(<SortStrip options={OPTIONS} value={null} dir="asc" offerDefault onPick={onPick} onFlip={() => {}} />);
+    const onChange = vi.fn();
+    render(<SortStrip options={OPTIONS} value={null} dir="asc" offerDefault onChange={onChange} onFlip={() => {}} />);
     const select = screen.getByRole("combobox", { name: "Sort by" });
     expect(select).toHaveValue("");
     expect(screen.getByRole("button", { name: "Ascending" })).toBeDisabled();
     fireEvent.change(select, { target: { value: "name" } });
     fireEvent.change(select, { target: { value: "" } });
-    expect(onPick).toHaveBeenLastCalledWith(null);
+    expect(onChange).toHaveBeenLastCalledWith(null);
+  });
+
+  it("still answers onPick, the deprecated name, when there is no onChange", () => {
+    const onPick = vi.fn();
+    render(<SortStrip options={OPTIONS} value="available" dir="desc" onPick={onPick} onFlip={() => {}} />);
+    fireEvent.change(screen.getByRole("combobox", { name: "Sort by" }), { target: { value: "name" } });
+    expect(onPick).toHaveBeenCalledWith("name");
+  });
+
+  it("calls onChange alone when given both", () => {
+    const onChange = vi.fn();
+    const onPick = vi.fn();
+    render(
+      <SortStrip
+        options={OPTIONS}
+        value="available"
+        dir="desc"
+        onChange={onChange}
+        onPick={onPick}
+        onFlip={() => {}}
+      />,
+    );
+    fireEvent.change(screen.getByRole("combobox", { name: "Sort by" }), { target: { value: "name" } });
+    expect(onChange).toHaveBeenCalledWith("name");
+    expect(onPick).not.toHaveBeenCalled();
+  });
+
+  it("takes a ref to its root", () => {
+    const ref = createRef<HTMLDivElement>();
+    render(<SortStrip ref={ref} options={OPTIONS} value="name" dir="asc" onChange={() => {}} onFlip={() => {}} />);
+    expect(ref.current).toBeInstanceOf(HTMLDivElement);
+    expect(ref.current).toContainElement(screen.getByRole("combobox", { name: "Sort by" }));
   });
 
   it("reads the dataTable words from the provider, and a labels prop over them", () => {
@@ -113,7 +148,7 @@ describe("SortStrip", () => {
           value="name"
           dir="desc"
           labels={{ sortBy: "Ordnen" }}
-          onPick={() => {}}
+          onChange={() => {}}
           onFlip={() => {}}
         />
       </UiKitProvider>,

@@ -57,7 +57,7 @@ export function TableSortDemo() {
         options={OPTIONS}
         value={key}
         dir={dir}
-        onPick={(value) => value && toggle(value as Key)()}
+        onChange={(value) => value && toggle(value as Key)()}
         onFlip={() => setDir((d) => (d === "asc" ? "desc" : "asc"))}
       />
       <Table framed>
@@ -87,7 +87,8 @@ export function TableSortDemo() {
           {code("sort={{ dir, onToggle }}")} draws DataTable&apos;s sort button in the header — its arrow both ways at
           40&nbsp;% while {code("dir")} is {code("null")} — and sets {code("aria-sort")}. The caller holds the sort and
           orders the rows. {code("SortStrip")} is DataTable&apos;s phone sort row for any list: a labelled select and a
-          direction button, each reporting its own change; {code("offerDefault")} adds &ldquo;Default order&rdquo;.
+          direction button, each reporting its own change ({code("onChange(value)")}, {code("onFlip()")});{" "}
+          {code("offerDefault")} adds &ldquo;Default order&rdquo;, {code("null")} to {code("onChange")}.
         </Note>
       </div>
     </Example>
