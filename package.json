@@ -109,7 +109,7 @@
     "check:package": "node scripts/verify-package.mjs --quiet",
     "check:api": "node scripts/check-api-compat.mjs",
     "check:tailwind": "node scripts/check-tailwind-scan.mjs",
-    "check:security": "node npm-audit/cli.ts",
+    "check:security": "node npm-audit/bin.mjs",
     "check:commits": "node scripts/check-commit-range.cjs",
     "check:commit-rules": "node scripts/check-commit-rules.mjs",
     "check:meta": "node scripts/check.mjs --meta",
@@ -248,7 +248,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "_bin": "`eifi1-npm-audit` is every repo's dependency audit (npm-audit/cli.ts, README → The dependency audit): high and critical block, an advisory without a fix is accepted only by id with a reason until a fix ships, never for a runtime dependency; built by scripts/build-npm-audit.mjs into dist/bin, standard library only. `eifi1-pay-page` copies the kit's static pay page (dist/pay/, docs/billing-harmonization.md §14.4) into an app's web build and writes its pay-config.json. Built by scripts/build-pay-page.mjs from pay-page/; it ships inside `dist`, so `files` needs nothing more.",
+  "_bin": "`eifi1-npm-audit` is every repo's dependency audit (npm-audit/bin.mjs over cli.ts, README → The dependency audit): high and critical block, an advisory without a fix is accepted only by id with a reason until a fix ships, never for a runtime dependency; built by scripts/build-npm-audit.mjs into dist/bin, standard library only. `eifi1-pay-page` copies the kit's static pay page (dist/pay/, docs/billing-harmonization.md §14.4) into an app's web build and writes its pay-config.json. Built by scripts/build-pay-page.mjs from pay-page/; it ships inside `dist`, so `files` needs nothing more.",
   "bin": {
     "eifi1-pay-page": "dist/bin/eifi1-pay-page.mjs",
     "eifi1-npm-audit": "dist/bin/eifi1-npm-audit.mjs"

@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
- * The `eifi1-npm-audit` bin (npm-audit/cli.ts): `npm-audit/cli.ts` bundled for Node into
- * `dist/bin/eifi1-npm-audit.mjs`, after the library's own build. Standard library only, so
- * the bundle imports nothing but `node:` modules — checked below.
+ * The `eifi1-npm-audit` bin: `npm-audit/bin.mjs`, which runs cli.ts's main unconditionally
+ * (TST-3), bundled for Node into `dist/bin/eifi1-npm-audit.mjs`, after the library's own
+ * build. Standard library only, so the bundle imports nothing but `node:` modules — checked
+ * below.
  */
 import { chmodSync, readFileSync } from "node:fs";
 import { builtinModules } from "node:module";
@@ -22,7 +23,7 @@ await build({
   minify: false,
   silent: true,
   tsconfig: join(ROOT, "tsconfig.json"),
-  entry: { "eifi1-npm-audit": join(ROOT, "npm-audit", "cli.ts") },
+  entry: { "eifi1-npm-audit": join(ROOT, "npm-audit", "bin.mjs") },
   outDir: dirname(BIN),
   format: ["esm"],
   platform: "node",

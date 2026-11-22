@@ -1,4 +1,9 @@
 // @vitest-environment node
+import { spawnSync } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -187,5 +192,45 @@ describe("versionInRange", () => {
   it("returns null for what it cannot read", () => {
     expect(versionInRange("latest", "<=4.0.7")).toBeNull();
     expect(versionInRange("4.0.7", "^4.0.0")).toBeNull();
+  });
+});
+
+/**
+ * The bin's entry ran behind a run-as-script guard that failed OPEN: `if (argv[1] is this
+ * module) process.exitCode = runNpmAuditCli(…)`. Reached any other way (a loader or shim that
+ * hands Node another path, a bundler that rewrites `import.meta.url`), nothing ran, nothing
+ * printed, and the exit code was 0: a security gate that passes silently looks exactly like a
+ * green one (refactor audit 2026-11-22, TST-3). The entry check:security runs is the one
+ * scripts/build-npm-audit.mjs bundles into `dist/bin/eifi1-npm-audit.mjs`.
+ */
+describe("the eifi1-npm-audit entry (TST-3)", () => {
+  const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+  const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")) as {
+    scripts: Record<string, string>;
+    bin: Record<string, string>;
+  };
+  const entry = /^node (npm-audit\/\S+)$/.exec(pkg.scripts["check:security"])?.[1] ?? "";
+
+  it("is the source of the bin the build bundles", () => {
+    expect(entry).not.toBe("");
+    const [dir, file] = entry.split("/");
+    expect(readFileSync(join(ROOT, "scripts/build-npm-audit.mjs"), "utf8")).toContain(
+      `join(ROOT, ${JSON.stringify(dir)}, ${JSON.stringify(file)})`,
+    );
+    expect(pkg.bin["eifi1-npm-audit"]).toBe("dist/bin/eifi1-npm-audit.mjs");
+  });
+
+  it("runs its main however Node reaches it, never a silent exit 0", () => {
+    // Started through a shim that imports it: argv[1] is the shim, not the entry.
+    const dir = mkdtempSync(join(tmpdir(), "uikit-npm-audit-shim-"));
+    try {
+      const shim = join(dir, "eifi1-npm-audit.mjs");
+      writeFileSync(shim, `await import(${JSON.stringify(pathToFileURL(join(ROOT, entry)).href)});\n`);
+      const r = spawnSync(process.execPath, [shim, "--audit-level", "bogus"], { cwd: dir, encoding: "utf8" });
+      expect(r.status, r.stdout + r.stderr).toBe(2);
+      expect(r.stderr).toMatch(/usage: eifi1-npm-audit/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

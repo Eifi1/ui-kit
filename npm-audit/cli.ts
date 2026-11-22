@@ -1,8 +1,5 @@
-#!/usr/bin/env node
 import { spawnSync } from "node:child_process";
-import { realpathSync } from "node:fs";
 import process from "node:process";
-import { pathToFileURL } from "node:url";
 
 /**
  * `eifi1-npm-audit` — the dependency audit for every npm project's gate: known
@@ -37,6 +34,9 @@ import { pathToFileURL } from "node:url";
  *    or not.
  * 5. **No stale exceptions** (the same): an exception npm no longer reports at the level
  *    blocks with "remove it", so the list never outlives its advisory.
+ *
+ * This module only exports. The bin is `npm-audit/bin.mjs`, which runs `runNpmAuditCli`
+ * unconditionally (refactor audit 2026-11-22, TST-3).
  */
 
 /** Severity ranks, as npm names them. */
@@ -352,11 +352,4 @@ export function runNpmAuditCli(argv: readonly string[], io: AuditCliIo = {}): 0 
     error(`eifi1-npm-audit: ${(e as Error).message} — not a pass`);
     return 2;
   }
-}
-
-// Run as the bin (`dist/bin/eifi1-npm-audit.mjs`) or straight from source in the kit's own
-// gate (`node npm-audit/cli.ts`, Node's type stripping) — not when a test imports it.
-const entry = process.argv[1];
-if (entry !== undefined && pathToFileURL(realpathSync(entry)).href === import.meta.url) {
-  process.exitCode = runNpmAuditCli(process.argv.slice(2));
 }
