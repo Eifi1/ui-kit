@@ -6,6 +6,7 @@
 // the controls that leave the page while the focus is IN them, and decide where it goes
 // instead; `returnFocus` is the one rule for that and for an overlay giving the focus
 // back as it closes (0.52 code review 2026-10-31, held to 0.55; use-focus-trap reads it).
+import { focusQuietly } from "./quiet-focus";
 
 /**
  * Candidate tab stops, in DOM order — narrowed by {@link isTabStop} to the ones a Tab
@@ -196,6 +197,24 @@ export function returnFocus({ opener, fallback = [], closing }: FocusReturn): bo
   const inside = Boolean(closing?.isConnected && active && closing.contains(active));
   if (!inside && !focusIsLost()) return false;
   return focusFirst([opener, ...fallback]);
+}
+
+/**
+ * {@link returnFocus}'s rule for a field that OPENS on focus: Combobox and
+ * InlineEntityCombobox open their phone sheet from the field's own `onFocus`, so a plain
+ * `focus()` back on the field re-opened the sheet just closed — which is why PickerSheet
+ * leaves the focus where it is, and a pick or a close left it on <body> (refactor audit
+ * 2026-11-22, INP-3). `focusQuietly` is the focus such a field takes without opening.
+ * Only a lost focus or one still in `closing` is moved, as by `returnFocus`. Internal:
+ * not on the barrel.
+ */
+export function returnFocusQuietly(field: HTMLElement | null, closing: Element | null): boolean {
+  if (typeof document === "undefined" || !field?.isConnected) return false;
+  const active = document.activeElement;
+  const inside = Boolean(closing?.isConnected && active && closing.contains(active));
+  if (!inside && !focusIsLost()) return false;
+  focusQuietly(field);
+  return document.activeElement === field;
 }
 
 /**

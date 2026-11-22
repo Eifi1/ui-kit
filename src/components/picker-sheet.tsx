@@ -181,6 +181,9 @@ export function PickerSheet({
    * `onClose` where it can: `ComboboxPanel`'s triggers open on a click, and its
    * `onClose` hands focus back to the trigger (0.52, refactor audit 2026-10-30, INP-7) —
    * a screen-reader user is in exactly this layout, and <body> was where they landed.
+   * `Combobox` and `InlineEntityCombobox` hand it back to their field with
+   * `focusQuietly`, the focus that opens nothing (lib/focus-left `returnFocusQuietly`;
+   * refactor audit 2026-11-22, INP-3), after a pick and on a close alike.
    */
   useFocusTrap(sheetRef, {
     active: open,

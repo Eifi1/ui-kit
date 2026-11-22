@@ -9,6 +9,7 @@ import { useDropdown } from "./dropdown";
 import { claimEscape, takeEscape, useDismissLayer } from "../hooks/use-dismiss";
 import { isImeEnter } from "../lib/ime";
 import { isQuietFocus } from "../lib/quiet-focus";
+import { returnFocusQuietly } from "../lib/focus-left";
 import { usePhoneLayout } from "../hooks/use-breakpoint";
 import { PickerSheet, SHEET_ROW_CLASS } from "./picker-sheet";
 import {
@@ -34,6 +35,7 @@ import {
   LABEL_IN_ROW,
   LockFrame,
   mergeDescribedBy,
+  mergeRefs,
   StaticLabelRow,
   useFieldError,
   useFieldHint,
@@ -265,6 +267,14 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
   // null = not editing → the input shows the selected option's label.
   const [text, setText] = useState<string | null>(null);
   const sheetInputRef = useRef<HTMLInputElement | null>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
+  // The field itself, for the focus the sheet hands back; the caller's `ref` still gets it.
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const setInput = useMemo(() => mergeRefs(inputRef, ref), [ref]);
+  // A pick from the sheet, or a close without one, would leave the focus on <body>: the
+  // sheet does not give it back, because a plain focus on this field re-opens it. A quiet
+  // one does not (refactor audit 2026-11-22, INP-3). In the handler that closes.
+  const backToField = () => returnFocusQuietly(inputRef.current, sheetRef.current);
   // The box the portalled list hangs off — see {@link SuggestionList}.
   const fieldRef = useRef<HTMLDivElement>(null);
   // The sheet's search box. Starts empty on every open, so a field that already
@@ -390,6 +400,9 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
     // the field is locked.
     if (o.disabled || locked) return;
     if (o.value !== value) onChange(o.value);
+    // Before `setText(null)`: the quiet focus runs this field's `onFocus`, which sets the
+    // text to the label it showed — the old one — and the later update has to win.
+    backToField();
     setText(null);
     close();
   };
@@ -406,6 +419,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
   const create = () => {
     if (!onCreate || locked || createLocked) return;
     onCreate(createQuery);
+    backToField();
     setText(null);
     close();
   };
@@ -437,6 +451,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
   // has not loaded yet — judged, it read as "the user emptied the field" and the X
   // cleared the answer (0.52 code review, inline-entity-combobox.tsx).
   const dismissSheet = () => {
+    backToField();
     setText(null);
     close();
   };
@@ -537,7 +552,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
               `peer`, so it is dimmed by hand above). */
           <div ref={fieldRef} className={cn("relative", inert && "cursor-not-allowed opacity-50")}>
             <input
-              ref={ref}
+              ref={setInput}
               id={fieldId}
               value={shown}
               placeholder={placeholder}
@@ -698,6 +713,7 @@ export function InlineEntityCombobox<V extends string | number, C extends ComboC
       {!isPhone && statusRegion}
       {isPhone && (
         <PickerSheet
+          ref={sheetRef}
           open={open && !inert}
           // Closing without choosing keeps the value — see `dismissSheet`.
           onClose={dismissSheet}
