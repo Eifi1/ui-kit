@@ -20,6 +20,10 @@ import {
 } from "./feedback-attachment";
 import { DEFAULT_FEEDBACK_DIALOG_LABELS } from "./feedback-dialog-labels";
 
+/** Where an attachment can come from (0.66). Declared here until the field's own type
+ *  reaches this branch; the field's `AttachSource`. */
+type FeedbackDialogAttachSource = "camera" | "photos" | "files" | "screenshot";
+
 /** One category the dialog offers. `C` (0.52): the app's category type — the kit's
  *  `FeedbackCategory`, or `string` (the default) for a vocabulary of the app's own. */
 export interface FeedbackCategoryOption<C extends string = string> {
@@ -187,6 +191,15 @@ interface FeedbackDialogBaseProps<C extends string = string> {
    *  Default `"md"`; `"sm"` draws the paperclip and camera at 14px. */
   attachmentButtonSize?: ButtonSize;
   /**
+   * The attachment field's `picker` (0.66): `"sheet"` offers the ways in as one sheet of
+   * sources rather than a row of buttons. Opt-in; left out, the field's default
+   * (`"buttons"`). Handed through unchanged, in both `attachments` modes.
+   */
+  picker?: "buttons" | "sheet";
+  /** The attachment field's `sources` (0.66): which ways in it offers, in order. Left out,
+   *  the field's default. */
+  sources?: readonly FeedbackDialogAttachSource[];
+  /**
    * A muted line under the body saying who will read it (0.38, docs/feedback-harmonization.md
    * §9.2 decision 6) — the kit's sentence is `feedbackDialog.publicNotice`, "Other users
    * will see the title and text (never your screenshots or files)", which
@@ -264,6 +277,8 @@ export function FeedbackDialog<C extends string = string>(props: FeedbackDialogP
     requireBody = true,
     attachmentButtonVariant,
     attachmentButtonSize,
+    picker,
+    sources,
     publicNotice,
   } = props;
   const [title, setTitle] = useState(defaultTitle);
@@ -361,6 +376,9 @@ export function FeedbackDialog<C extends string = string>(props: FeedbackDialogP
     // Left undefined they are the field's own defaults (secondary / md).
     buttonVariant: attachmentButtonVariant,
     buttonSize: attachmentButtonSize,
+    // Left undefined they are the field's own defaults too.
+    picker,
+    sources,
     // On `document`, not on the panel: the Modal focuses its own panel on open
     // and traps Tab inside it, so while this dialog is up every paste in the
     // page is meant for it — including the one made with nothing in
