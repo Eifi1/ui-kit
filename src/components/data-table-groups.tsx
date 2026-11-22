@@ -256,6 +256,40 @@ export function groupRows<T>(rows: readonly T[], levels: readonly DataTableGroup
   return out;
 }
 
+/**
+ * The `<tbody>` keys of `groups` (from {@link groupRows}), one list per first-level group,
+ * one key per `<tbody>` it renders (refactor audit 2026-11-22, DSP-1 (2)).
+ *
+ * A group's key and its run ordinal — the nth run of that key, since an unsorted table can
+ * show the same key twice — and not its first row's index. Keyed by that index, a row
+ * inserted into or taken from an earlier group shifted it, and every later group remounted
+ * with its rows: the focus in one of them fell to `<body>`, and DataTableRow's memo was
+ * defeated for all of them. A declared empty group's key is the one it has once filled, so
+ * its band, and the "+" in it that added the first row, stay mounted.
+ *
+ * Two levels: the first child's `<tbody>` (the one that holds the first level's band) takes
+ * the first-level key alone, so that band stays put whichever second-level run opens the
+ * group; the others add theirs. Written as JSON, so no key a caller writes can collide.
+ */
+export function groupBodyKeys<T>(groups: readonly RowGroup<T>[]): string[][] {
+  const runs = new Map<string, number>();
+  const nth = (seen: Map<string, number>, key: string) => {
+    const n = seen.get(key) ?? 0;
+    seen.set(key, n + 1);
+    return n;
+  };
+  return groups.map((g1) => {
+    const n1 = nth(runs, g1.key);
+    const base = JSON.stringify([g1.key, n1]);
+    if (!g1.children) return [base];
+    const inner = new Map<string, number>();
+    return g1.children.map((g2, j) => {
+      const n2 = nth(inner, g2.key);
+      return j === 0 ? base : JSON.stringify([g1.key, n1, g2.key, n2]);
+    });
+  });
+}
+
 /** `groupBy` as a list of at most two levels. */
 export function groupLevels<T>(
   groupBy: DataTableGroupBy<T> | readonly [DataTableGroupBy<T>, DataTableGroupBy<T>?] | undefined,

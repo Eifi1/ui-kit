@@ -1,10 +1,13 @@
 import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { MemoryRouter } from "react-router";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { Trash2 } from "lucide-react";
 
 import { AlertBanner } from "../alert-banner";
+import { DataTable } from "../data-table";
+import type { DataTableColumn } from "../data-table";
 import { DatePicker } from "../date-picker";
 import { EntityCombobox } from "../entity-combobox";
 import { FloatingPanel } from "../floating-panel";
@@ -335,5 +338,121 @@ describe("AlertBanner's ×", () => {
     render(<Page />);
     press(button("Dismiss"));
     expect(button("After")).toHaveFocus();
+  });
+});
+
+describe("a DataTable row that stays while its element leaves (refactor audit 2026-11-22, DSP-1)", () => {
+  // The row's KEY is still in the rows, so the recovery for a row that LEFT (DSP-4) did
+  // nothing; the element that held the focus went all the same, and the focus with it.
+  interface Row {
+    id: string;
+    group: string;
+  }
+  const START: Row[] = [
+    { id: "A", group: "One" },
+    { id: "B", group: "Two" },
+    { id: "C", group: "Two" },
+  ];
+
+  function Table({ focusable = false, grouped = false }: { focusable?: boolean; grouped?: boolean }) {
+    const [rows, setRows] = useState(START);
+    const [open, setOpen] = useState<string | null>(null);
+    const columns: DataTableColumn<Row>[] = [
+      { key: "id", header: "Name", cell: (r) => r.id },
+      {
+        key: "act",
+        header: "Actions",
+        noRowLink: true,
+        cell: (r) => (
+          <>
+            <button type="button" onClick={() => setOpen(r.id)}>
+              Edit {r.id}
+            </button>
+            <button
+              type="button"
+              onClick={() => setRows((all) => all.map((x) => (x.id === r.id ? { ...x, group: "One" } : x)))}
+            >
+              Move {r.id}
+            </button>
+            <button type="button" onClick={() => setRows((all) => [{ id: `N${all.length}`, group: "One" }, ...all])}>
+              Add above {r.id}
+            </button>
+          </>
+        ),
+      },
+    ];
+    return (
+      <MemoryRouter>
+        <DataTable
+          rows={rows}
+          columns={columns}
+          rowKey={(r) => r.id}
+          onRowClick={focusable ? (r) => setOpen((o) => (o === r.id ? null : r.id)) : undefined}
+          groupBy={grouped ? { key: (r) => r.group } : undefined}
+          isExpanded={(r) => r.id === open}
+          expandedRow={(r) => (
+            <button type="button" onClick={() => setOpen(null)}>
+              Save {r.id}
+            </button>
+          )}
+        />
+      </MemoryRouter>
+    );
+  }
+
+  const rowOf = (name: string) => screen.getByRole("cell", { name }).closest("tr");
+
+  it("an inline editor's Save closes it: the focus goes back to the control that opened it", () => {
+    render(<Table />);
+    press(button("Edit B"));
+    press(button("Save B"));
+    expect(screen.queryByRole("button", { name: "Save B" })).toBeNull();
+    expect(document.activeElement).toBe(button("Edit B"));
+  });
+
+  it("…to the row itself, when the row opened it (`onRowClick`)", () => {
+    render(<Table focusable />);
+    const row = rowOf("B")!;
+    act(() => row.focus());
+    fireEvent.keyDown(row, { key: "Enter" });
+    press(button("Save B"));
+    expect(screen.queryByRole("button", { name: "Save B" })).toBeNull();
+    expect(document.activeElement).toBe(rowOf("B"));
+  });
+
+  it("on a phone: the card", () => {
+    const restore = stubPhone();
+    try {
+      render(<Table focusable />);
+      fireEvent.click(button("B"));
+      press(button("Save B"));
+      expect(screen.queryByRole("button", { name: "Save B" })).toBeNull();
+      expect(document.activeElement).toBe(button("B"));
+    } finally {
+      restore();
+    }
+  });
+
+  it("a grouped row moved to another group: the same control in it", () => {
+    render(<Table grouped focusable />);
+    press(button("Move C"));
+    // A, B, C by group: One, Two, One: a second run of One.
+    expect(rowOf("C")?.parentElement?.firstElementChild).toHaveTextContent("One");
+    expect(document.activeElement).toBe(button("Move C"));
+  });
+
+  it("a row added to an earlier group: the same control in a row of a later one", () => {
+    render(<Table grouped />);
+    press(button("Add above C"));
+    expect(screen.getByRole("cell", { name: "N3" })).toBeTruthy();
+    expect(document.activeElement).toBe(button("Add above C"));
+  });
+
+  it("a row added to an earlier group re-mounts no later group's rows", () => {
+    render(<Table grouped />);
+    const before = rowOf("C");
+    fireEvent.click(button("Add above A"));
+    expect(screen.getByRole("cell", { name: "N3" })).toBeTruthy();
+    expect(rowOf("C")).toBe(before);
   });
 });

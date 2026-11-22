@@ -1,10 +1,11 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { useState } from "react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router";
 import { Plus } from "lucide-react";
 import { DataTable } from "../data-table";
 import type { DataTableColumn, DataTableGroupBy } from "../data-table";
-import { emptyGroupsIn, placeEmptyGroups } from "../data-table-groups";
+import { emptyGroupsIn, groupBodyKeys, placeEmptyGroups, type RowGroup } from "../data-table-groups";
 import { IconButton } from "../icon-button";
 import { stubPhone } from "../../test/viewport";
 import { axeViolations } from "../../test/axe";
@@ -295,6 +296,53 @@ describe("DataTable groupBy keys — declared groups drawn empty (0.59, live #50
       </MemoryRouter>,
     );
     expect(await axeViolations(container)).toEqual([]);
+  });
+
+  it("keeps the band, and the focus on its +, when the + fills the empty group (audit 2026-11-22, DSP-1)", () => {
+    // The empty and the filled group were two `<tbody>` keys: the band re-mounted under
+    // the press, and the focus on its "+" fell to <body>.
+    function Host() {
+      const [rows, setRows] = useState(ACCOUNTS);
+      const add = (type: string) => setRows((all) => [...all, { id: `n${all.length}`, type, name: "New" }]);
+      return (
+        <MemoryRouter>
+          <DataTable rows={rows} columns={COLUMNS} rowKey={(r) => r.id} groupBy={byType(add)} />
+        </MemoryRouter>
+      );
+    }
+    render(<Host />);
+    const plus = screen.getByRole("button", { name: "Add DEPOT" });
+    act(() => plus.focus());
+    fireEvent.click(plus);
+    expect(screen.queryByText("No DEPOT account yet")).toBeNull();
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Add DEPOT" }));
+  });
+});
+
+describe("groupBodyKeys — a group's <tbody> key is its key and its run (audit 2026-11-22, DSP-1)", () => {
+  const run = (key: string, start: number, children: RowGroup<string>[] | null = null): RowGroup<string> => ({
+    key,
+    rows: [],
+    start,
+    children,
+  });
+
+  it("does not move with the group's first row, and counts a key's repeated runs", () => {
+    const before = groupBodyKeys([run("A", 0), run("B", 2), run("A", 5)]);
+    const after = groupBodyKeys([run("A", 0), run("B", 3), run("A", 6)]);
+    expect(after).toEqual(before);
+    expect(new Set(before.flat()).size).toBe(3);
+  });
+
+  it("gives a declared empty group the key it has once filled", () => {
+    expect(groupBodyKeys([{ ...run("D", 4), empty: true }])).toEqual(groupBodyKeys([run("D", 4)]));
+  });
+
+  it("two levels: the first child holds the first level's key, the others add their own", () => {
+    const [keys] = groupBodyKeys([run("Nov", 0, [run("Mon", 0), run("Tue", 2), run("Mon", 3)])]);
+    const [one] = groupBodyKeys([run("Nov", 0)]);
+    expect(keys[0]).toBe(one[0]);
+    expect(new Set(keys).size).toBe(3);
   });
 });
 

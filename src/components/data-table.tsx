@@ -26,6 +26,7 @@ import {
   DataTableLoadMoreFooter,
   emptyGroupsIn,
   GroupBandEnd,
+  groupBodyKeys,
   groupLevels,
   groupRows,
   placeEmptyGroups,
@@ -1016,6 +1017,25 @@ const FOOTER_CELL = "sticky bottom-0 z-10 bg-surface-2 shadow-[inset_0_2px_0_var
  *  own (`data-kit-layer`); an app's dialog says what it is. */
 const OVERLAY_SELECTOR = '[data-kit-layer],[role="dialog"],[role="alertdialog"],[aria-modal="true"],[role="menu"]';
 
+/** The row holding the focus (DSP-4): its key, where it stood, and the element in it with
+ *  its place among the row's own stops, -1 for the row itself or none (DSP-1). */
+interface HeldRow {
+  key: string | number;
+  index: number;
+  slot: number;
+  el: Element | null;
+}
+
+/** The row `el` is in, when that row is one of `list`'s own: a `<tr>` of the table's
+ *  bodies, a card of the phone's list — not a row of a table nested in a cell or a
+ *  detail, and not the detail row itself (it has no `data-row-index`). */
+function ownRowOf(el: Element, list: HTMLElement): HTMLElement | null {
+  const row = el.closest<HTMLElement>(list.tagName === "TABLE" ? "tr[data-row-index]" : "li[data-row-index]");
+  if (!row) return null;
+  const owner = list.tagName === "TABLE" ? row.parentElement?.parentElement : row.parentElement;
+  return owner === list ? row : null;
+}
+
 /** `rows`' places by `rowKey`, the first row of a key winning as a `findIndex`'s did; the
  *  map built at the first lookup (0.52 code review, data-table.tsx). */
 function keyIndex<T>(rows: readonly T[], rowKey: (row: T) => string | number): (key: string | number) => number {
@@ -1858,9 +1878,25 @@ export function DataTable<T>({
   // portal is the row's too). A delete, a status change that filters the row out, an
   // approval: the row's DOM goes, the focus with it to <body>, and the commit that took it
   // puts the focus on the row now in its place (below).
-  const heldRow = useRef<{ key: string | number; index: number } | null>(null);
-  const noteRowFocus = (key: string | number) => {
-    heldRow.current = { key, index: (isMdUp ? sliceIndex : mobileIndex)(key) };
+  //
+  // And the element itself, with its place among the row's own stops (refactor audit
+  // 2026-11-22, DSP-1): a row can STAY while that element leaves — an expanded row's
+  // editor closing itself with its Save, a grouped row moving to another group's
+  // `<tbody>` — and the focus goes back into the row, to the same stop (as useRowLeaves
+  // does for a list). A focus in the row's detail or in a portal it opened has no place
+  // among the row's stops: it keeps the last one the row had, the control that opened it.
+  const heldRow = useRef<HeldRow | null>(null);
+  const lastSlot = useRef<{ key: string | number; slot: number } | null>(null);
+  const noteRowFocus = (key: string | number, target: EventTarget | null) => {
+    const list = isMdUp ? tableRef.current : phoneListRef.current;
+    const el = target instanceof HTMLElement || target instanceof SVGElement ? target : null;
+    const box = el && list ? ownRowOf(el, list) : null;
+    let slot = lastSlot.current?.key === key ? lastSlot.current.slot : -1;
+    if (box) {
+      slot = el === box ? -1 : tabStops(box, { includeSelf: false }).indexOf(el as HTMLElement);
+      lastSlot.current = { key, slot };
+    }
+    heldRow.current = { key, index: (isMdUp ? sliceIndex : mobileIndex)(key), slot, el };
   };
   // A gone row's note waiting for the overlay that holds the focus (below): watched as
   // a node until it leaves the page, since its close need not render the table.
@@ -1991,6 +2027,8 @@ export function DataTable<T>({
         )
       : null;
   const desktopEmptyGroups = !!desktopGroups?.some((g) => g.empty);
+  // Each group's `<tbody>` keys: its key and run, not its first row's index (DSP-1).
+  const bodyKeys = desktopGroups ? groupBodyKeys(desktopGroups) : null;
   // An empty declared group's line: the level's words, the table's "No entries" by
   // default; `null` (or `false`, `""`) for the band alone.
   const emptyGroupLine = (def: DataTableGroupBy<T> | null, key: string): ReactNode => {
@@ -2006,6 +2044,8 @@ export function DataTable<T>({
   // One run per innermost group, with its bands (`virtualOn` is above, with the rows' context).
   const virtualGroups: VirtualGroup[] = [];
   const virtualBands: { g1: RowGroup<T>; g2: RowGroup<T> | null }[] = [];
+  // In `virtualGroups`' order: one per first-level group without children, else per child.
+  const virtualBodyKeys = bodyKeys?.flat() ?? [];
   if (virtualOn) {
     if (!desktopGroups) virtualGroups.push({ start: 0, end: slice.length, bands: NO_BANDS, first: 0 });
     else
@@ -2074,11 +2114,26 @@ export function DataTable<T>({
     const held = heldRow.current;
     if (!held) return;
     const now = (isMdUp ? sliceIndex : mobileIndex)(held.key);
+    const list = isMdUp ? tableRef.current : phoneListRef.current;
     if (now !== -1) {
       held.index = now;
+      // The row stayed and the element that had the focus left it (DSP-1): an inline
+      // editor's Save that closed it, a `<tbody>` re-keyed round the row. Only that — a
+      // control still in the page that lost the focus (disabled while it saves) is its
+      // own business, and the focus is not pulled to a neighbour of it.
+      if (!list || !focusIsLost() || held.el?.isConnected) return;
+      if (isMdUp && virtualOn && rowsFocusable && held.slot < 0) {
+        focusRowRef.current?.(now);
+        return;
+      }
+      const row = list.querySelector<HTMLElement>(
+        isMdUp ? `:scope > tbody > tr[data-row-index="${now}"]` : `:scope > li[data-row-index="${now}"]`,
+      );
+      if (!row) return;
+      const stops = tabStops(row, { includeSelf: false });
+      focusFirst([stops[held.slot], isMdUp && rowsFocusable ? row : null, stops[0]]);
       return;
     }
-    const list = isMdUp ? tableRef.current : phoneListRef.current;
     // In an overlay — a confirm, an edit drawer — the focus is not lost yet: the overlay
     // hands it back to its opener as it closes, and the opener was in the row (0.52 code
     // review, data-table.tsx: an optimistic delete with its confirm still open dropped the
@@ -2423,8 +2478,8 @@ export function DataTable<T>({
             open={dialogOpen}
             // The open row's editor is the row's focus too: a Delete in it takes the row,
             // and the dialog with it (DSP-4).
-            onFocus={() => {
-              if (mobileDialogRow) noteRowFocus(rowKey(mobileDialogRow));
+            onFocus={(e) => {
+              if (mobileDialogRow) noteRowFocus(rowKey(mobileDialogRow), e.target);
             }}
             onClose={closeDialog}
             closeLabel={labels.close}
@@ -2654,7 +2709,7 @@ export function DataTable<T>({
                           const vb = virtualBands[b.group];
                           return (
                             <tbody
-                              key={vb ? `vg:${vb.g1.key}:${vb.g2?.key ?? ""}:${g.start}` : "vg"}
+                              key={vb ? `vg:${virtualBodyKeys[b.group]}` : "vg"}
                               data-vt-body=""
                               className={bodyClass}
                             >
@@ -2699,23 +2754,26 @@ export function DataTable<T>({
                           {emptyRow}
                         </tbody>
                       )}
-                      {desktopGroups.map((g1) =>
+                      {/* One flat list of keyed `<tbody>`s (DSP-1): a nested array is
+                        matched by its place, so a group inserted above re-mounted every
+                        two-level group below it whatever its key. */}
+                      {desktopGroups.flatMap((g1, i) =>
                         g1.empty ? (
                           // A declared group with no rows (0.59): its band and one line.
-                          <tbody key={`g:${g1.key}:empty`} className={bodyClass}>
+                          <tbody key={`g:${bodyKeys![i][0]}`} className={bodyClass}>
                             {band(1, levels[0], g1)}
                             {emptyLineRow(levels[0], g1.key)}
                           </tbody>
                         ) : g1.children ? (
                           g1.children.map((g2, j) => (
-                            <tbody key={`g:${g1.key}:${g2.key}:${g2.start}`} className={bodyClass}>
+                            <tbody key={`g:${bodyKeys![i][j]}`} className={bodyClass}>
                               {j === 0 && band(1, levels[0], g1)}
                               {band(2, levels[1], g2)}
                               {rowsOf(g2)}
                             </tbody>
                           ))
                         ) : (
-                          <tbody key={`g:${g1.key}:${g1.start}`} className={bodyClass}>
+                          <tbody key={`g:${bodyKeys![i][0]}`} className={bodyClass}>
                             {band(1, levels[0], g1)}
                             {rowsOf(g1)}
                           </tbody>

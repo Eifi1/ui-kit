@@ -50,8 +50,9 @@ export interface DataTableRowCtx<T> {
   moveFocus?: (fromIndex: number, key: string) => boolean;
   /** The focus came into this row — the row, a control in it, its open detail, or a
    *  portal one of them opened: where the table puts the focus if the row leaves
-   *  (refactor audit 2026-10-30, DSP-4). */
-  noteFocus: (key: string | number) => void;
+   *  (refactor audit 2026-10-30, DSP-4). `target` is the element that took it: the row
+   *  stays while it leaves when an editor closes itself (audit 2026-11-22, DSP-1). */
+  noteFocus: (key: string | number, target: EventTarget | null) => void;
 }
 
 /** `rowAttributes`' result compared key by key: a call site returns a fresh object (or
@@ -203,7 +204,7 @@ function DataTableRowImpl<T>({
         tabIndex={rowsFocusable ? (tabbable ? 0 : -1) : undefined}
         onFocus={(e) => {
           if (rowsFocusable && e.target === e.currentTarget) ctx.current.setFocusRowKey(key);
-          ctx.current.noteFocus(key);
+          ctx.current.noteFocus(key, e.target);
         }}
         onKeyDown={
           rowsFocusable
@@ -358,7 +359,7 @@ function DataTableRowImpl<T>({
           aria-rowindex={windowed ? ariaRowIndex + 1 : undefined}
           data-row-detail={windowed ? rowIndex : undefined}
           // An inline editor's field is the row's focus too (DSP-4).
-          onFocus={() => ctx.current.noteFocus(key)}
+          onFocus={(e) => ctx.current.noteFocus(key, e.target)}
           className="bg-surface-2 border-t border-subtle"
         >
           {/* The detail panel spans every column. In an `auto` table
@@ -471,7 +472,7 @@ function DataTableMobileRowImpl<T>({
       rowAttributes={() => attrs}
       onRowClick={interactive ? (r) => ctx.current.onRowClick!(r) : undefined}
       rowHref={href !== undefined ? () => href : undefined}
-      onFocusIn={() => ctx.current.noteFocus(key)}
+      onFocusIn={(e) => ctx.current.noteFocus(key, e.target)}
       select={
         selectionOn
           ? {
