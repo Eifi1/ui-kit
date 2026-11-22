@@ -35,4 +35,12 @@ export type {
   SyncResponseBody,
   SyncWireChange,
 } from "./sync/wire";
-export { isOfflineError, readLocalFirst, stampAfter, uuid5, writeLocalFirst } from "./offline/local-first";
+export {
+  isOfflineError,
+  randomUuid,
+  readLocalFirst,
+  stampAfter,
+  uuid5,
+  uuid5Sync,
+  writeLocalFirst,
+} from "./offline/local-first";

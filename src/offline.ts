@@ -41,7 +41,15 @@ export type { SharedComputerChoiceProps, SharedComputerLabels, SharedComputerSto
 export { useSharedComputerIdleSignOut } from "./offline/shared-computer-idle";
 export type { SharedComputerIdleSignOutOptions } from "./offline/shared-computer-idle";
 // 0.46 (§2.3): the leaf utilities, shared with `@eifi1/ui-kit/sync` from one module that imports no peer.
-export { isOfflineError, readLocalFirst, stampAfter, uuid5, writeLocalFirst } from "./offline/local-first";
+export {
+  isOfflineError,
+  randomUuid,
+  readLocalFirst,
+  stampAfter,
+  uuid5,
+  uuid5Sync,
+  writeLocalFirst,
+} from "./offline/local-first";
 // 0.61 (Marcel 2026-11-12): one report's comment thread through the app's TanStack cache, so
 // a persisted cache keeps it for offline reading — keksdose's hook, for every app.
 export { useFeedbackCommentsQuery, feedbackCommentsQueryKey } from "./offline/feedback-comments-query";

@@ -315,7 +315,6 @@ const NOT_SHOWN: Record<string, string> = {
   missingRoles: OWED,
   readTextFile: OWED,
   roleOfColumn: OWED,
-  uuid5: OWED,
   withAllPlurals: OWED,
   filterTranslationRows: OWED,
   groupTranslationRows: OWED,

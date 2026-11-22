@@ -246,6 +246,97 @@ export function addMonthsClamped(d: Date, months: number): Date {
   return out;
 }
 
+// ---------- From a given day (0.66) ----------
+// The helpers above count from TODAY; these count from the day they are given — where a
+// month or a week starts, how far apart two days are (refactor audit 2026-11-22, DUP-4:
+// keksdose's ledger months and register periods, Staunlabor's weekly exhibit and kastlan's
+// schedules each wrote their own). Pure arithmetic on the day's number in UTC: a day never
+// slides across a time zone or a DST fold, and neither the device clock nor `setToday`
+// enters. What is not a real day ("2026-02-30") comes back unchanged, as from `addDaysIso`,
+// and a count over one is NaN.
+
+const MS_PER_DAY = 86_400_000;
+
+/** `iso` as days since 1970-01-01, or NaN when it is not a real "YYYY-MM-DD" day. */
+function dayNumber(iso: string): number {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!m) return Number.NaN;
+  const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const t = Date.UTC(y, mo - 1, d);
+  const back = new Date(t);
+  // Date.UTC rolls an out-of-range part over, as `new Date` does in parseIsoDate.
+  if (back.getUTCFullYear() !== y || back.getUTCMonth() !== mo - 1 || back.getUTCDate() !== d) return Number.NaN;
+  return t / MS_PER_DAY;
+}
+
+/** Day number `n` as "YYYY-MM-DD". */
+function dayString(n: number): string {
+  return new Date(n * MS_PER_DAY).toISOString().slice(0, 10);
+}
+
+/** Day number `n`'s `Date#getDay` (0 = Sunday). Day 0, 1970-01-01, was a Thursday. */
+function weekdayOf(n: number): number {
+  return (((n + 4) % 7) + 7) % 7;
+}
+
+/** The 1st of `iso`'s month: "2026-11-22" → "2026-11-01". */
+export function monthStartOf(iso: string): string {
+  return Number.isNaN(dayNumber(iso)) ? iso : `${iso.slice(0, 7)}-01`;
+}
+
+/**
+ * `iso` moved by whole `months` (negative moves back), the day clamped to the target
+ * month's last: 31 January + 1 is 28 (or 29) February, never 3 March. The string twin of
+ * {@link addMonthsClamped}; from a month's 1st it is the next or the previous month.
+ */
+export function addMonthsIso(iso: string, months: number): string {
+  if (Number.isNaN(dayNumber(iso))) return iso;
+  const index = Number(iso.slice(0, 4)) * 12 + Number(iso.slice(5, 7)) - 1 + months;
+  const year = Math.floor(index / 12);
+  const month = index - year * 12;
+  const last = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+  const day = Math.min(Number(iso.slice(8, 10)), last);
+  return `${String(year).padStart(4, "0")}-${pad(month + 1)}-${pad(day)}`;
+}
+
+/** Calendar months from `from`'s month to `to`'s (the days within them do not count);
+ *  negative when `to` is the earlier. "2026-01-31" → "2026-02-01" is 1. */
+export function monthsBetweenIso(from: string, to: string): number {
+  if (Number.isNaN(dayNumber(from)) || Number.isNaN(dayNumber(to))) return Number.NaN;
+  const month = (iso: string) => Number(iso.slice(0, 4)) * 12 + Number(iso.slice(5, 7));
+  return month(to) - month(from);
+}
+
+/**
+ * The first day of the week `iso` is in: the last `weekStart` on or before it.
+ * `weekStart` is a `Date#getDay` index, as {@link localeWeekStart} answers it; default 1,
+ * Monday — ISO 8601's week, which keksdose's register and Staunlabor's weekly exhibit use
+ * in every locale.
+ */
+export function weekStartOf(iso: string, weekStart: 0 | 1 | 2 | 3 | 4 | 5 | 6 = 1): string {
+  const n = dayNumber(iso);
+  if (Number.isNaN(n)) return iso;
+  return dayString(n - ((weekdayOf(n) - weekStart + 7) % 7));
+}
+
+/** Days from `from` to `to`, negative when `to` is the earlier; NaN when either is not a
+ *  day. Whole days across a DST change, which a difference of local Dates is not. */
+export function daysBetweenIso(from: string, to: string): number {
+  return dayNumber(to) - dayNumber(from);
+}
+
+/** The ISO 8601 week number of `iso`, 1–53: week 1 is the one holding the year's first
+ *  Thursday, so 1 January can be in week 52 or 53 and 30 December in week 1. NaN when it
+ *  is not a day. */
+export function isoWeekNumber(iso: string): number {
+  const n = dayNumber(iso);
+  if (Number.isNaN(n)) return Number.NaN;
+  // The Thursday of this ISO week decides the week's year.
+  const thursday = n - ((weekdayOf(n) + 6) % 7) + 3;
+  const jan1 = Date.UTC(new Date(thursday * MS_PER_DAY).getUTCFullYear(), 0, 1) / MS_PER_DAY;
+  return 1 + Math.floor((thursday - jan1) / 7);
+}
+
 /**
  * The first day of the week in `locale`, as a `Date#getDay` index (0 = Sunday).
  *

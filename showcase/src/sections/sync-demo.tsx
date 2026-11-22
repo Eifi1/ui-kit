@@ -4,6 +4,7 @@ import { isSharedComputer } from "@eifi1/ui-kit/offline";
 import {
   createSyncDb,
   createSyncEngine,
+  randomUuid,
   useSyncQuery,
   useSyncStatus,
   useSyncWorker,
@@ -11,8 +12,9 @@ import {
   type SyncEngine,
   type SyncRequestBody,
   type SyncResponseBody,
+  uuid5Sync,
 } from "@eifi1/ui-kit/sync";
-import { Example, Note, Row, StateLine, code, READOUT_PRE } from "../lib/section";
+import { Example, Note, OutTable, Row, StateLine, code, READOUT_PRE } from "../lib/section";
 
 /**
  * LOCAL-FIRST, PHASE 3 (0.46, docs/local-first-harmonization.md §2.3): the sync engine on a
@@ -198,6 +200,9 @@ const { status, onSync } = useSyncStatus(engine);    // → <SyncStatusIndicator
 await engine.write("handover", "handover_rooms", id, "upsert", { notes });
 await engine.forget({ keepQueue: true });            // at sign-out`;
 
+/** The DNS namespace of RFC 4122, Appendix C. */
+const DNS = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
+
 export function SyncDemo() {
   return (
     <>
@@ -208,6 +213,26 @@ export function SyncDemo() {
           The leaf utilities {code("stampAfter")}, {code("isOfflineError")}, {code("readLocalFirst")} and{" "}
           {code("writeLocalFirst")} come from either {code("@eifi1/ui-kit/offline")} or {code("/sync")}: one module, no
           Dexie and no TanStack behind it.
+        </Note>
+      </Example>
+      <Example
+        label="Ids on plain http — randomUuid and uuid5Sync"
+        hint="from /offline or /sync; neither needs a secure context"
+      >
+        <OutTable
+          rows={[
+            // A phone on the dev server's LAN address has no crypto.randomUUID and no
+            // crypto.subtle; getRandomValues is there in every context.
+            ["randomUuid()", randomUuid()],
+            // Python's uuid.uuid5(uuid.NAMESPACE_DNS, "python.org"), byte for byte.
+            ['uuid5Sync("6ba7b810-9dad-11d1-80b4-00c04fd430c8", "python.org")', uuid5Sync(DNS, "python.org")],
+          ]}
+        />
+        <Note>
+          {code("randomUuid()")} is the browser&apos;s {code("crypto.randomUUID()")} where there is one, else a
+          version-4 id from {code("crypto.getRandomValues()")}. {code("uuid5Sync")} is Python&apos;s{" "}
+          {code("uuid.uuid5")}, the same id for the same namespace and name on the device and on the server;{" "}
+          {code("uuid5")} is it behind a promise.
         </Note>
       </Example>
     </>

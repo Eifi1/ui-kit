@@ -505,7 +505,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // and `feedbackCommentsQueryKey`, keksdose's TanStack-backed comment thread.
   // 0.62 (+1, Marcel 2026-11-12: a shared-computer sign-in has a short life):
   // `useSharedComputerIdleSignOut`.
-  ["@eifi1/ui-kit/offline", offline, 22],
+  // 0.66 (+2, refactor audit 2026-11-22, DUP-4): `randomUuid` and `uuid5Sync`, the ids that
+  // work over plain http (keksdose's and kastlan's copies).
+  ["@eifi1/ui-kit/offline", offline, 24],
   // 0.63 (docs/auth-harmonization.md §12.9): the account layer's frontend half, its first
   // part the session — `createAccountsClient`, `accountStorageEntries`. Standalone: an API of
   // its own, whose later rounds bring TanStack Query hooks the barrel must not reach.
@@ -544,7 +546,8 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.46.1 (+3, kastlan N4/N5): `rowByPk`, `SYNC_DB_PK_INDEX` (the opt-in `[entity+pk]` index)
   // and the leaf `uuid5`.
   // 0.53 (−2, breaking): what 0.52 deprecated — `SYNC_DB_STORES`, `DEFAULT_SYNC_BACKOFF_MS` (API-4).
-  ["@eifi1/ui-kit/sync", sync, 15],
+  // 0.66 (+2, DUP-4): the leaf `randomUuid` and `uuid5Sync`, as `/offline`.
+  ["@eifi1/ui-kit/sync", sync, 17],
   // 0.46.0: `createFakeSyncTransport`, the scripted `/sync` server for an app's tests.
   ["@eifi1/ui-kit/sync/testing", syncTesting, 1],
   // 0.46.0 (docs/notifications-harmonization.md §10.6 rule 5): the service worker's entry —
@@ -558,7 +561,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // lines and keksdose on 2, and nothing counted it. The local-calendar ISO helpers.
   // 0.55 (+4, keksdose's 0.51 adoption N2): `setToday`, `todayOverride`, `subscribeToday`,
   // `currentDate` — one "today" the dev clock moves and every helper here reads.
-  ["@eifi1/ui-kit/dates", dates, 24],
+  // 0.66 (+6, refactor audit 2026-11-22, DUP-4): counting from a GIVEN day — `monthStartOf`,
+  // `addMonthsIso`, `monthsBetweenIso`, `weekStartOf`, `daysBetweenIso`, `isoWeekNumber`.
+  ["@eifi1/ui-kit/dates", dates, 30],
   // 0.35: `CURRENCIES` and `CURRENCY_COUNTRIES` as plain data an app's build tooling
   // imports in Node (keksdose's flag subset read them out of a dist/ file 0.34 moved). A
   // slice of the barrel, not standalone in the sense below: both names are the barrel's

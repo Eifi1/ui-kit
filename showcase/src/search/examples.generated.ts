@@ -967,6 +967,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
   "helpers": [
     "@eifi1/ui-kit/dates — the helpers",
     "dateRangePresets()",
+    "From a given day",
     "One today: setToday",
     "CURRENCIES, CurrencyFlag and getCurrency",
     "lib/calc — the evaluator",
@@ -1008,6 +1009,7 @@ export const PAGE_EXAMPLE_LABELS: Readonly<Record<string, readonly string[]>> = 
   "sync": [
     "createSyncEngine — a Dexie copy in this browser, a pretend server in memory",
     "The wiring — a handover copy",
+    "Ids on plain http — randomUuid and uuid5Sync",
   ],
   "release-notes": [
     "ReleaseNotes — one release, on the kit's parser",
