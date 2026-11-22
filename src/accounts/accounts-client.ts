@@ -17,7 +17,7 @@ import {
   type SessionRenewal,
 } from "../lib/session-refresh";
 import { dropPushSubscription } from "../notifications/use-push-device";
-import { isSharedComputer } from "../offline/shared-computer";
+import { isSharedComputer } from "../offline/shared-computer-store";
 import { createAccountsApi, type AccountsApi } from "./accounts-api";
 import { passkeyAssertion } from "./passkey-ceremony";
 import { readSessionStored, writeSessionStored } from "../lib/safe-storage";

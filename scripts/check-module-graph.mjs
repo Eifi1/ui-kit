@@ -13,7 +13,8 @@
  *     load order starts to matter, and where a bundler stops splitting cleanly);
  *   - an import-cost budget: Rollup bundles `{ Button }`, `{ Spinner }`, `{ cn }` and the
  *     shell set from dist/, the way an app's build does, and fails above the ceiling; since
- *     0.63 also the accounts client, from its own entry.
+ *     0.63 also the accounts client, from its own entry, and since 0.66 a public site's first
+ *     load of it (the client, the gate and the route table).
  * Which modules may import recharts at all is packaging-contract.test.ts's rule.
  *
  * Run after `npm run build`. Part of `npm run check`, which CI calls as it is.
@@ -320,6 +321,22 @@ const BUDGETS = [
     entry: "dist/accounts.js",
     names: ["createAccountsClient", "accountStorageEntries"],
     max: 19_000,
+  },
+  // 0.66 (refactor audit 2026-11-22, MOD-1): what a public site with `/accounts` loads at once,
+  // Staunlabor's shape — the client, the provider, the session gate and the route table, built
+  // at module scope in its entry chunk. The shell set above cannot see it (Staunlabor mounts no
+  // AppShell). At 0.65.1 the route table imported every signed-out page, 134,789 B (46,606
+  // gzip); with the pages in their own chunk behind `lazyWithFallback` and the shared-computer
+  // store apart from its checkbox, 29,035 B (10,733 gzip): the client and its refresh, the
+  // builders, LoadingState and the chunk-failure stand-in. Measured with this script's Rollup
+  // step over a copy of the 0.65.1 dist/ with the changed modules transpiled by esbuild in
+  // place, not over a build; the ceiling is that figure with about 10 % headroom, to be
+  // tightened at the first measure of a real build.
+  {
+    label: "the public-site set",
+    entry: "dist/accounts.js",
+    names: ["accountRouteElements", "RequireSession", "AccountsProvider", "createAccountsClient"],
+    max: 32_000,
   },
 ];
 const ENTRY = "\0import-cost";
