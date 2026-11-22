@@ -6,8 +6,8 @@ parts held back from 0.53, the old "later" list, Kurvenschmiede's and keksdose's
 TOTP replay rule, keksdose's F-63, the dependency audit). The places are from keksdose,
 kastlan and Kurvenschmiede (KS) on 2026-11-04 (`frontend/src`, `backend/`).
 
-**From 0.52, adopt 0.53 and 0.54 first:** their notes apply (docs/adopt-0.53.md,
-docs/adopt-0.54.md). An app on 0.52's must-change list can go straight to `^0.55.0`.
+**From 0.52, adopt 0.53 and 0.54 first:** their notes apply (docs/archive/adopt/adopt-0.53.md,
+docs/archive/adopt/adopt-0.54.md). An app on 0.52's must-change list can go straight to `^0.55.0`.
 
 **Legal wording:** none. No `legal.*` sentence changed; the new consent and footer words are
 outside the legal namespace.

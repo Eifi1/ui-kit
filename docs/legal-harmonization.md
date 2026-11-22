@@ -27,7 +27,7 @@ snapshot of the three apps, the per-repo to-dos and the reviews' list as written
 | 1 | Where each one stands | — (archived) | |
 | 2 | Decisions | — | §7.8; decision 9 (0.28.1); decision 7 by billing §8, §9 (Paddle); decisions 10 (0.51.3; keksdose's legal audit, 0.58; its scan for absolute claims, 0.59) and 11 (0.51.4) |
 | 3 | The page contract | ui-kit 0.28.0 | §7.3, §7.6, §7.9; 0.28.1 (translation note, `AuthLayout` footer); landing-demo §4.3 (robots, sitemap); 0.51.3 (as-of line, keksdose's stored version); 0.51.4 (summary, footer's optional pages); 0.55 (the footer's `siteLinks` row); 0.58 (§3.4's minimum age, §3.5 announcing a change) |
-| 4 | The content contract | ui-kit 0.28.0 | §7.1–§7.4; 0.28.1 (`language` section); 0.32.0 (commercial disclaimer); 0.51.3 (`changes` wording, `updated` label); 0.51.4 (`summary`, `links.security`/`accessibility` labels); 0.58 (`changes`' commercial variant, the `browser` tail, `acceptWithAge`, `changeNotice`); 0.59 (the `browser` lead and its commercial variant); 0.63 (the imprint's optional `credits`) |
+| 4 | The content contract | ui-kit 0.28.0 | §7.1–§7.4; 0.28.1 (`language` section); 0.32.0 (commercial disclaimer); 0.51.3 (`changes` wording, `updated` label); 0.51.4 (`summary`, `links.security`/`accessibility` labels); 0.58 (`changes`' commercial variant, the `browser` tail, `acceptWithAge`, `changeNotice`); 0.59 (the `browser` lead and its commercial variant); 0.61–0.63 (the `browser` section's standard entries); 0.63 (the imprint's optional `credits`) |
 | 5 | What the kit adds, what stays app-side | ui-kit 0.28.0, server-kit 0.2.1 | §7.5; 0.28.1; 0.32.0; 0.55 (`ConsentAgainNotice`); 0.58 (`LegalChangeNotice`, `LegalOperator.minAge`) |
 | 6 | Per repo | — (archived) | |
 | 7 | Settled after the reviews | — | index; folded items point to their § |
@@ -441,7 +441,20 @@ The texts are keksdose's unless marked otherwise.
     - The app sets no cookies and stores the following in your browser's storage: (0.59,
       decision 10: "No cookies." until then; the claim is about the app, not about a pay
       host's checkout script.)
-    - `{entries}`, rendered as a list, one item per entry, from the app.
+    - `{entries}`, rendered as a list, one item per entry, from the app. For what the kit
+      itself keeps, the kit words the line, in its seven languages, as
+      `sections.privacy.browser.standardEntries` (`useLegalLabels()`), and the app places it
+      in its list where its reading order wants it. Each is legal wording (decision 10):
+      - `recentData(hours)` (0.61, keksdose's reviewed line; 0.62 without the full stop):
+        Recently loaded data, so pages also open without a connection; what is older than
+        `{hours}` hours the app no longer uses and removes the next time it opens. None of it
+        is kept when you sign in with “This is a shared computer”
+      - `sharedComputer` (0.61; 0.62 "kept with the tab"): Whether you chose “This is a
+        shared computer” at sign-in, kept with the tab
+      - `session` (0.63, auth §12.9; `accountStorageEntries` points to it): Your sign-in,
+        until you sign out: the sign-in tokens and your account's details, such as your name
+        and email address. After a sign-in with “This is a shared computer”, kept only with
+        the tab
     - None of it is used to track you. Entries waiting to be sent are sent to us as soon
       as they can be. All of it disappears when you clear the site's data, and signing out
       removes the sign-in tokens. (0.58, decision 10: without "everything else stays on

@@ -2893,7 +2893,7 @@ props, merged last), `labels`, `pageLabels`, `header`, `className`. It draws:
 ### 14.6 Per app
 
 Each page becomes the hook, its two queries and one component; both apps drop their comment
-hook for `useFeedbackComments`. `docs/adopt-0.61.md` names the files.
+hook for `useFeedbackComments`. `docs/archive/adopt/adopt-0.61.md` names the files.
 
 **Tests:** `src/feedback/__tests__/feedback-public-page.test.tsx` (35) — the first page newest
 first under the title; the sort and the page read from the address and written to it, a new

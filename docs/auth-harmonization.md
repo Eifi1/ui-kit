@@ -35,7 +35,7 @@ Snapshots, per-repo to-dos and the review logs are in
 | 11 | Session refresh | ui-kit 0.34.0, server-kit 0.8.0 | §11.7 |
 | 11.1, 11.5 | Where each one stands; per app | — (archived) | |
 | 11.7 | Settled after the reviews | — | index; folded into §11.2–§11.4 |
-| 12 | Layer 2: the kits run the account routes, server and frontend | — (draft, 2026-11-13; A, B, C decided) | §12.8, §12.9 |
+| 12 | Layer 2: the kits run the account routes, server and frontend | ui-kit 0.63–0.65, server-kit 0.29–0.32 | §12.8; §12.9 (0.64: admin, second factor, review, feedback, teams) |
 
 ## 1. Where each one stands
 
@@ -831,10 +831,11 @@ went:
 - a signed-in endpoint answers 401 only about the session (ka 2) → §11.3, and decision 7;
 - each app's own steps (kk 1–5, kk 7, ka 4–9, KS 5, KS 6, KS 9) → the archive's §11.5.
 
-## 12. Layer 2: the server-kit runs the account routes (draft, 2026-11-13)
+## 12. Layer 2: the server-kit runs the account routes
 
 **Status: decided 2026-11-13 (A from Marcel's "as soon as possible" and his "2"; B and C "wie
-empfohlen"); kastlan rests, so its seams wait. Being built: server-kit 0.29.** Marcel, 2026-11-13, in
+empfohlen"); kastlan rests, so its seams wait. Shipped: ui-kit 0.63–0.65 on server-kit 0.29–0.32
+(`@eifi1/ui-kit/accounts`, §12.9; Staunlabor runs it).** Marcel, 2026-11-13, in
 Staunlabor's session: accounts and user admin should move into the server-kit next, "wenn das
 in weiten Teilen, wenn nicht sogar komplett, gleich ist". Staunlabor, a fourth app, starts
 accounts, admin, public feedback, passkeys and the translation review now, and would otherwise
@@ -1062,7 +1063,7 @@ The numbers moved by one: the edge-token proof shipped alone as server-kit 0.28
 The ui-kit side is small: the new codes' words (§12.5 item 3) and the sessions list's current
 mark, in the round that ships with 0.29 (ui-kit 0.63).
 
-### 12.7 For Marcel (one decision)
+### 12.7 Decided 2026-11-13
 
 - **A. The cut and the order** of §12.3–§12.6: two routers, the ports and hooks as drawn,
   server-kit 0.28 (accounts) and 0.29 (admin) (shipped as 0.29 and 0.30, §12.6), Staunlabor first, then Kurvenschmiede, kastlan

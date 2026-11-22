@@ -13,7 +13,7 @@ the feedback notices.
 
 **From 0.60, nothing else first.** 0.61 also carries the two fixes keksdose's 0.60 adoption
 found, which no app has as 0.60.1: `FEEDBACK_SWIPE_ACTIONS` exported again, and the feedback
-screenshot showing each select, checkbox and radio as it is (`docs/adopt-0.60.md`, section 0.60.1).
+screenshot showing each select, checkbox and radio as it is (`docs/archive/adopt/adopt-0.60.md`, section 0.60.1).
 
 **Legal wording:** the **Privacy Policy**, only for an app that adds the new standard entries
 (next to last section): its browser list gains the page cache's line and the shared-computer

@@ -1,7 +1,7 @@
 # Contributing to `@eifi1/ui-kit`
 
-Three applications build against this package, so a change here is a change in three
-products at once. That is the whole reason for the rules below: none of them is taste, and
+Four applications build against this package (keksdose, kastlan, Kurvenschmiede and,
+since 0.63, Staunlabor), so a change here is a change in four products at once. That is the whole reason for the rules below: none of them is taste, and
 each one exists because something already went wrong without it.
 
 Nothing here is a code-review preference you can argue with in a PR — every rule has a
@@ -11,7 +11,7 @@ in this document.
 ## Getting set up
 
 ```bash
-nvm use            # 24.19.0 — see .nvmrc
+nvm use            # 26.13.0 — see .nvmrc
 npm ci
 npm run check      # everything CI runs — see "The gates"
 ```
@@ -21,11 +21,11 @@ machine BEFORE anything leaves it: the husky `pre-push` hook calls it, and a fai
 the push. CI calls the same script and only confirms. Work stays local until it is done and
 goes out in one batch — every push, PR update and tag starts paid GitHub Actions minutes.
 
-**Node 24, not 20**, and not by preference. jsdom 30 pulls undici, which calls
-`webidl.util.markAsUncloneable` — added to Node in 20.18. On plain 20 every test file dies
-before it runs with "Failed to start forks worker" and a `TypeError` from inside
-`CacheStorage`, naming neither jsdom nor the Node version. It is also what all three apps
-build with (their `.nvmrc` pins the same 24.19.0).
+**Node 26** (since 0.56), and not by preference: CI and the release read `.nvmrc`, and every
+app's `.nvmrc` pins the same 26.13.0. The floor under it is jsdom's: jsdom (31 today) pulls
+undici, which calls `webidl.util.markAsUncloneable`, added to Node in 20.18. On an older
+Node every test file dies before it runs with "Failed to start forks worker" and a
+`TypeError` from inside `CacheStorage`, naming neither jsdom nor the Node version.
 
 ## Repo layout
 
@@ -44,7 +44,8 @@ src/
   lib/                pure TypeScript. No React, no DOM. calc, dates, cn, logger
   hooks/              React hooks with no markup of their own
   theme/              tokens, palette presets, colour maths, the appearance stores
-                      (theme, palette, text size, contrast)
+                      (theme, text size, contrast) and the one fixed palette
+                      (fixed-palette.ts; the palette store went in 0.60)
   components/         domain-free rendering components
   shell/              app frame: TopBar, AppShell, the topbar controls
   feedback/ wizard/ tour/ search/    feature areas with their own subpath
@@ -96,7 +97,7 @@ not have a number like that behind it, put it in `components/` and export it fro
 barrel.
 
 **Domain-free is the hard line.** If a component needs to know what a lease is, it belongs
-in the app, not here. The honest test: could all three consumers use it without explaining
+in the app, not here. The honest test: could all the consumers use it without explaining
 their business to each other?
 
 ## The barrel, and the test that pins it
@@ -105,8 +106,16 @@ Everything public is exported from `src/index.ts`. A module that is not reachabl
 barrel is not part of the package, whatever it exports.
 
 `src/__tests__/public-surface.test.ts` pins the exported **names** and their **count**, per
-entry point. The three apps pin a `^0.x` range, so a name leaving that list is a breaking
+entry point. The apps pin a `^0.x` range, so a name leaving that list is a breaking
 change for all of them and has to be a decision rather than a diff nobody read.
+
+**A name added for one app records that app, and is pruned when it stops reading it.** A
+name the kit adds because app X asked for it says so in its surface comment ("for X's …").
+X's next adoption confirms it reads the name; if it did not take it, or later moved off it,
+the name is deprecated in the next minor and removed in the one after (rule 4's window).
+Decision 4 of the 2026-10-30 audit pruned 67 unread names; by 2026-11-22 four more groups
+had lost their only reader unnoticed (`ConsentAgainNotice`, `releaseThisDevicePush`,
+`FEEDBACK_SWIPE_ACTIONS`, the focus helpers; refactor audit 2026-11-22, API-3/API-4).
 
 **If you add a barrel export, update the count in the same change.** The failure message
 prints the full sorted list, so the diff tells you exactly which names moved. The same test
@@ -569,7 +578,10 @@ just the symptom, because a reader upgrading needs to know whether it could have
    they are not; `npm run build && node scripts/gen-export-inventory.mjs` and
    `node scripts/gen-styling-inventory.mjs` regenerate them. And `docs/README.md` lists
    this minor's adopt note, with what it was and where the apps stand
-   (`src/__tests__/contracts.test.ts` fails on a note it does not list).
+   (`src/__tests__/contracts.test.ts` fails on a note it does not list). The Status row of
+   each contract the round built says this release in "Shipped in", and no longer "draft"
+   or "being built": the test checks that the table exists, not that it is current (auth
+   §12 said "draft" through three releases; refactor audit 2026-11-22, DOC-3).
 3. `npm run release:dry` to read the version and the entry; then `npm run release`. It bumps
    `package.json` and the lockfile, writes `CHANGELOG.md` and commits
    `chore(release): X.Y.Z`. It does NOT tag (`skip.tag`). Force a version with
@@ -623,7 +635,8 @@ styling inventory are generated** (edit `scripts/gen-export-inventory.mjs` or
 `scripts/gen-styling-inventory.mjs`, never the block between the markers); and the
 dependency/peer table is load-bearing for installation — a wrong entry there is the defect
 class that broke two of three consumers silently. When a release's adoption notes are
-adopted by all three apps, move them to `docs/archive/adopt/` and update `docs/README.md`.
+adopted by every active consumer (a paused app's lockfile counts as it stands), move them to
+`docs/archive/adopt/` and update `docs/README.md`.
 Each adoption note's head repeats the bump's standing line: restart the Vite dev server after
 the install (its `.vite/deps` pre-bundle keeps serving the old kit; ADOPTING.md → Every later bump).
 A release that changes kit-owned wording a legal page prints (a `legal.*` text, a kit

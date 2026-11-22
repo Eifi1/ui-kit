@@ -88,10 +88,10 @@ export function GettingStarted() {
         <div className="space-y-3 text-sm text-secondary">
           <p>
             <strong className="text-primary">@eifi1/ui-kit</strong> is the one component library behind keksdose,
-            kastlan and Kurvenschmiede. It is <em>domain-free</em>: a component takes its data as props and hands events
-            back as callbacks, and it never fetches, never routes on its own and never picks the language — it renders
-            only labels, ships them in seven languages, and the app decides which. That is why every page here works
-            without a backend.
+            kastlan, Kurvenschmiede and Staunlabor. It is <em>domain-free</em>: a component takes its data as props and
+            hands events back as callbacks, and it never fetches, never routes on its own and never picks the language —
+            it renders only labels, ships them in seven languages, and the app decides which. That is why every page
+            here works without a backend.
           </p>
           <p>
             This showcase renders the repository&rsquo;s <code className="font-mono">src/</code> directly, so what you
