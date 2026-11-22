@@ -48,10 +48,10 @@
  *   node scripts/check-api-compat.mjs --old <dir> --new <dir>    two package directories (print only)
  */
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { join, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const ROOT = resolve(import.meta.dirname, "..");
@@ -149,6 +149,17 @@ function entries(pkgDir) {
 }
 
 /**
+ * The parsed files under the kit's own node_modules (TypeScript's lib files, `@types`, react
+ * and the other packages the `.d.ts` import), kept for the process: they do not change during
+ * a run. Each comparison parsed `lib.dom` and the rest again, 2,000 ms a call on two small
+ * packages and 51 ms with this map, the change list byte-identical (refactor audit
+ * 2026-11-22, TST-2); api-compat.test.ts makes nine calls and took 85 s in the full check.
+ * Keyed on that directory, not a `node_modules` substring: verify-package installs the new
+ * package under a scratch node_modules, and the packages compared are never cached.
+ */
+const NODE_MODULES_FILES = new Map();
+
+/**
  * Every change between the public types of `oldDir` and `newDir` (two package
  * directories, each with its package.json and dist/), as
  * `{ kind, entry, name, detail, through }` — `through` lists the flagged types a change
@@ -186,10 +197,20 @@ export function compareApi(oldDir, newDir) {
   let virtualText = "";
   const host = ts.createCompilerHost(options);
   const { getSourceFile, fileExists, readFile } = host;
-  host.getSourceFile = (file, language, ...rest) =>
-    file === virtual
-      ? ts.createSourceFile(file, virtualText, language)
-      : getSourceFile.call(host, file, language, ...rest);
+  // Both spellings: a worktree's node_modules is often a symlink, and TypeScript and Node
+  // hand back the real path.
+  const cachedDirs = new Set([nm, existsSync(nm) ? realpathSync(nm) : nm].map((d) => d + sep));
+  const cacheable = (file) => [...cachedDirs].some((d) => resolve(file).startsWith(d));
+  host.getSourceFile = (file, language, onError, fresh) => {
+    if (file === virtual) return ts.createSourceFile(file, virtualText, language);
+    if (fresh || !cacheable(file)) return getSourceFile.call(host, file, language, onError, fresh);
+    let source = NODE_MODULES_FILES.get(file);
+    if (!source) {
+      source = getSourceFile.call(host, file, language, onError, fresh);
+      if (source) NODE_MODULES_FILES.set(file, source);
+    }
+    return source;
+  };
   host.fileExists = (file) => file === virtual || fileExists.call(host, file);
   host.readFile = (file) => (file === virtual ? virtualText : readFile.call(host, file));
   const first = ts.createProgram(roots, options, host);

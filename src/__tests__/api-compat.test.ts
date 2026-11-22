@@ -118,10 +118,11 @@ describe("compareApi", () => {
  * breaking change that compared as nothing, or as only another type's, so the gate passed
  * with no word in the adopt doc. Each reproduced on two small packages, as above.
  */
-// Each case builds two TypeScript programs over fixture packages and runs the checker:
-// ~4 s alone, 30 s under the full check's six loaded workers (0.52, one case timed out at
-// vitest's 20 s). Real compiler work, so a longer budget, not a retry.
-describe("compareApi: what the 0.52 code review found it passing", { timeout: 120_000 }, () => {
+// Each case builds two TypeScript programs over fixture packages. Once took ~4 s alone and
+// 30 s under the full check's six loaded workers (0.52, one case timed out at vitest's 20 s),
+// almost all of it parsing TypeScript's lib files again; compareApi keeps them parsed now
+// (refactor audit 2026-11-22, TST-2), so the suite's budget holds.
+describe("compareApi: what the 0.52 code review found it passing", () => {
   /** The changes from `old` to `new`, by name. */
   const compare = (
     name: string,
@@ -357,7 +358,7 @@ describe("the adopt doc", () => {
   });
 });
 
-describe("checkApi", { timeout: 120_000 }, () => {
+describe("checkApi", () => {
   it("reads the adopt docs of the root it reads the version and the releases from (0.52 code review)", () => {
     // The docs came from the repository's own docs/ whatever the root: a fixture's gate
     // answered by the adopt docs the repository held that day.
