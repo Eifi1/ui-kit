@@ -92,16 +92,16 @@ export function AccountProfileSection({ id = "profile", roleLabel }: AccountProf
 /** A new password (`POST /auth/me/password`): every other session ends, and this one goes on
  *  with the fresh pair the answer brings (§6.3). A wrong current password is said under its
  *  field, by the card. */
-export function AccountPasswordSection({
-  id = "password",
-  minLength,
-  labels,
-}: {
+/** What {@link AccountPasswordSection} takes (exported since 0.66; refactor audit 2026-11-22,
+ *  API-5). */
+export interface AccountPasswordSectionProps {
   id?: string;
   minLength?: number;
   /** The card's words over the provider's `accountSettings.password` (0.64, Kurvenschmiede's U8). */
   labels?: LabelOverride<PasswordSettingLabels>;
-}) {
+}
+
+export function AccountPasswordSection({ id = "password", minLength, labels }: AccountPasswordSectionProps) {
   const change = useChangePassword();
   const describe = useFailureBeside(["password_incorrect", "invalid_credentials"]);
   return (
@@ -116,10 +116,17 @@ export function AccountPasswordSection({
   );
 }
 
+/** What {@link AccountEmailSection} takes (exported since 0.66, API-5). */
+export interface AccountEmailSectionProps {
+  id?: string;
+  /** The app's address tag (`"staunlabor"`, §4.5), offered as at sign-up. */
+  emailTag?: string;
+}
+
 /** The address, changed the contract's way (user-admin §6.2): the new address and the
  *  password, then a link to the new mailbox. The pending change is the server's, so a reload
  *  or another tab shows it. The app's address tag is offered, as at sign-up (§4.5). */
-export function AccountEmailSection({ id = "email", emailTag }: { id?: string; emailTag?: string }) {
+export function AccountEmailSection({ id = "email", emailTag }: AccountEmailSectionProps) {
   const user = useAccount();
   const { state, request, resend, cancel } = useEmailChange();
   const passkeys = usePasskeys();
@@ -163,12 +170,17 @@ function sessionItems(
     }));
 }
 
+/** What {@link AccountSessionsSection} takes (exported since 0.66, API-5). */
+export interface AccountSessionsSectionProps {
+  id?: string;
+}
+
 /**
  * The account's sessions (§6.3, user-admin §6.3): the device list with this one marked
  * `current` (and first) and never offered to end — that is the sign-out — the others each
  * ended on their own, and "Sign out everywhere", a sign-out in the contract's order.
  */
-export function AccountSessionsSection({ id = "sessions" }: { id?: string }) {
+export function AccountSessionsSection({ id = "sessions" }: AccountSessionsSectionProps) {
   const { list, revoke, signOutEverywhere } = useAccountSessions();
   const describe = useFailureBeside([]);
   return (
@@ -396,9 +408,16 @@ export function AccountPasskeysSection({
   );
 }
 
+/** What {@link AccountExportSection} takes (exported since 0.66, API-5). */
+export interface AccountExportSectionProps {
+  id?: string;
+  /** The card's line under its title: what the file holds. */
+  description?: ReactNode;
+}
+
 /** The account's data as one JSON file (user-admin §6.5): server-kit's envelope, once a minute
  *  (a 429 is said as such). `description` is the app's line on what it holds. */
-export function AccountExportSection({ id = "export", description }: { id?: string; description?: ReactNode }) {
+export function AccountExportSection({ id = "export", description }: AccountExportSectionProps) {
   const exportData = useAccountExport();
   const describe = useFailureBeside([]);
   return (

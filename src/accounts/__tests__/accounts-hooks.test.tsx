@@ -16,7 +16,7 @@ import {
   useChangePassword,
   useCurrentUser,
   useEmailChange,
-  useAdminActions,
+  useAdminActionLog,
   useAdminAttention,
   useAdminMail,
   useAdminRoster,
@@ -330,7 +330,7 @@ describe("the admin's hooks (server-kit 0.30–0.31)", () => {
     const { result } = renderHook(
       () => ({
         roster: useAdminRoster({ limit: 25 }),
-        log: useAdminActions({ limit: 20 }),
+        log: useAdminActionLog({ limit: 20 }),
         attention: useAdminAttention(),
         actions: useAdminUserActions(),
       }),

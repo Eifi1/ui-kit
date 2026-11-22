@@ -82,6 +82,7 @@ export {
   useAccountDeletion,
   useAccountExport,
   useAccountSessions,
+  useAdminActionLog,
   useAdminActions,
   useAdminAttention,
   useAdminMail,
@@ -123,9 +124,13 @@ export {
 } from "./accounts/account-settings-sections";
 export type {
   AccountDeletionSectionProps,
+  AccountEmailSectionProps,
+  AccountExportSectionProps,
   AccountInvitationsSectionProps,
   AccountPasskeysSectionProps,
+  AccountPasswordSectionProps,
   AccountProfileSectionProps,
+  AccountSessionsSectionProps,
   AccountTwoFactorSectionProps,
 } from "./accounts/account-settings-sections";
 // 0.64 (§12.9 "The admin's sections"): the kit's admin parts on server-kit 0.30–0.31's

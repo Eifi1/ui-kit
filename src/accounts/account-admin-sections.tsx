@@ -54,7 +54,7 @@ import type { AccountRosterLabels } from "./account-roster-labels";
 import type { AccountAdminActionRow, AccountAdminConfirmation, AccountAdminUser, AccountMe } from "./accounts-api";
 import { useAccountsClient } from "./accounts-context";
 import {
-  useAdminActions,
+  useAdminActionLog,
   useAdminAttention,
   useAdminMail,
   useAdminRoster,
@@ -237,7 +237,7 @@ export function AccountAdminLogSection({
   // An account by its id; an address with no account (an invitation, an erasure) by itself.
   const targetId = typeof target?.id === "number" ? target.id : undefined;
   const targetEmail = target && targetId === undefined ? (target.email ?? undefined) : undefined;
-  const log = useAdminActions({
+  const log = useAdminActionLog({
     limit: pageSize,
     offset: page * pageSize,
     target: targetId,

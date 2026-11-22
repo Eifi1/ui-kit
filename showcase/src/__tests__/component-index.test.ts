@@ -218,7 +218,7 @@ const NOT_SHOWN: Record<string, string> = {
   useInvitationsAdmin: ACCOUNTS,
   useAdminRoster: ACCOUNTS,
   useAdminUserActions: ACCOUNTS,
-  useAdminActions: ACCOUNTS,
+  useAdminActionLog: ACCOUNTS,
   useAdminAttention: ACCOUNTS,
   useAdminMail: ACCOUNTS,
   useMailTest: ACCOUNTS,

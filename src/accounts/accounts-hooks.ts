@@ -347,8 +347,9 @@ export function useAdminUserActions() {
 }
 
 /** A page of the admin's log (`GET /admin/actions`), for one account when `target` or
- *  `target_email` names it. */
-export function useAdminActions(query: AccountAdminActionQuery, options: { enabled?: boolean } = {}) {
+ *  `target_email` names it. The log's query, beside `AccountAdminLogSection` and the
+ *  barrel's `AdminActionLog` (0.66; refactor audit 2026-11-22, API-5). */
+export function useAdminActionLog(query: AccountAdminActionQuery, options: { enabled?: boolean } = {}) {
   const client = useAccountsClient();
   const signedIn = useSignedIn();
   return useQuery({
@@ -358,6 +359,15 @@ export function useAdminActions(query: AccountAdminActionQuery, options: { enabl
     placeholderData: keepPreviousData,
   });
 }
+
+/**
+ * {@link useAdminActionLog} under its 0.64 name, which read as a bundle of the admin's
+ * actions beside `useAdminUserActions`, `useTeamActions` and `useAdminTeamActions` (those
+ * are mutations; this is the log's query).
+ *
+ * @deprecated 0.66 — `useAdminActionLog`, the same hook; removed in 0.67
+ */
+export const useAdminActions = useAdminActionLog;
 
 /** The overview's counts (`GET /admin/attention`). */
 export function useAdminAttention(options: { enabled?: boolean } = {}) {

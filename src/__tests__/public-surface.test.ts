@@ -547,7 +547,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // 0.64 (+9, server-kit 0.32's opt-in teams): `accountTeamsApi`, `ACCOUNT_TEAM_ERROR_CODES`,
   // the hooks `useMyTeams`, `useTeamActions`, `useAdminTeams`, `useAdminTeamActions`, the parts
   // `AccountTeamsSection`, `AccountTeamsPage` and their words, `DEFAULT_ACCOUNT_TEAMS_LABELS`.
-  ["@eifi1/ui-kit/accounts", accounts, 63],
+  // 0.66 (+1, refactor audit 2026-11-22, API-5): `useAdminActionLog`, the log's query under its
+  // own name; `useAdminActions` stays one minor, deprecated.
+  ["@eifi1/ui-kit/accounts", accounts, 64],
   // 0.46.0: local-first phase 3 (docs/local-first-harmonization.md §2.3) — `createSyncDb`,
   // `SYNC_DB_STORES`, `createSyncEngine`, `DEFAULT_HOLD_CODES`, `DEFAULT_SYNC_BACKOFF_MS`,
   // `syncEngineFor`, `releaseSyncEngine`, `useSyncWorker`, `useSyncStatus`, `useSyncQuery` and the

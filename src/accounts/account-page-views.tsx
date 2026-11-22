@@ -326,8 +326,6 @@ function DemoEndedPage({ o }: { o: Resolved }) {
 
 /** The group server-kit 0.32's accept answers (`{group: {id, name}}`), by name. */
 function groupName(accepted: AccountInvitationAccepted): string | undefined {
-  const group = accepted.group;
-  if (typeof group !== "object" || group === null) return undefined;
-  const name = (group as { name?: unknown }).name;
+  const name = accepted.group?.name;
   return typeof name === "string" && name !== "" ? name : undefined;
 }
