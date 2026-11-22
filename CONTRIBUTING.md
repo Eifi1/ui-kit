@@ -576,7 +576,10 @@ just the symptom, because a reader upgrading needs to know whether it could have
 4. Push, open the PR, and merge it once CI confirms. The pre-push hook does not run
    `npm run check` again for the release commit: on a parent whose tree passed in step 1,
    a commit that changes only CHANGELOG.md and the `"version"` lines runs the commit
-   messages and `deprecations.test.ts` (TST-1, refactor audit 2026-10-30). Pushes wait until the work is done and go out in one batch. The version bump
+   messages and the tests that read those files, `RELEASE_TESTS` in `scripts/check.mjs`
+   (`deprecations.test.ts`, `changelog.test.ts`; TST-1, refactor audits 2026-10-30 and
+   2026-11-22). A new test that reads CHANGELOG.md or the version goes on that list;
+   `gate-lists.test.ts` fails until it does. Pushes wait until the work is done and go out in one batch. The version bump
    makes it a release PR, so CI also runs the truncation sweep (`Truncation sweep (release)`,
    see [The gates](#the-gates)); a TRUNCATED or PINNED finding fails it and stops the
    release. To know the verdict before you push, run `npm run check:sweep` yourself.

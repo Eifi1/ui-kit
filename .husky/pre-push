@@ -11,8 +11,8 @@
 #     are checked: scripts/check-pushed-commits.cjs, the shared copy from
 #     Eifi1/shared-workflows (scripts/shared-commit-rules.json, as server-kit's hook),
 #     over every commit the push sends (0.46; it was check:commits per pushed tip).
-#   - a release commit on a tree that passed: the commit messages and deprecations.test.ts
-#     (TST-1, refactor audit 2026-10-30; see release_bump below).
+#   - a release commit on a tree that passed: the commit messages and the release tests,
+#     scripts/check.mjs RELEASE_TESTS (TST-1, refactor audit 2026-10-30; see release_bump below).
 #
 # Otherwise the full check runs, and it checks the WORKING TREE, not the pushed commits:
 # a modified tracked file is what gets tested. That is warned about, not refused.
@@ -46,9 +46,13 @@ node scripts/check-dependencies.mjs </dev/null || exit 1
 # passed (CONTRIBUTING "Cutting a release", step 1), and the full check ran again for that
 # diff: 6–10 minutes per release, 41 releases between 0.34 and 0.51.6. It counts as checked
 # when its parent's tree has a stamp, it is the checked-out commit with nothing modified,
-# and every changed manifest line is a "version" line naming the new version. The one test
-# that reads the version still runs: a MINOR bump can make a deprecation due. CI still runs
-# everything, the sweep included, on the release PR.
+# and every changed manifest line is a "version" line naming the new version. The tests that
+# read what it wrote still run, `node scripts/check.mjs --release` (RELEASE_TESTS): a MINOR
+# bump can make a deprecation due, and the generated entry can hold an item changelog.test.ts
+# rejects. Until 0.66 this ran deprecations.test.ts alone, "the one test that reads the
+# version", while changelog.test.ts read CHANGELOG.md, so such an entry went red only in CI
+# (refactor audit 2026-11-22, TST-1); gate-lists.test.ts now fails on a reader the list
+# misses. CI still runs everything, the sweep included, on the release PR.
 release_bump() {
   parent=$(git rev-parse -q --verify "$1^") || return 1
   [ -f "node_modules/.cache/check/$(git rev-parse "$parent^{tree}")" ] || return 1
@@ -72,13 +76,13 @@ for sha in $tips; do
 done
 if [ "$stamped" = yes ]; then
   if [ -n "$bumps" ]; then
-    echo "pre-push: a release commit on a tree that already passed npm run check; checking the commit messages and deprecations.test.ts."
+    echo "pre-push: a release commit on a tree that already passed npm run check; checking the commit messages and the release tests."
   else
     echo "pre-push: this tree already passed npm run check; checking the commit messages only."
   fi
   printf '%s\n' "$input" | node scripts/check-pushed-commits.cjs "${1:-origin}" || exit 1
   if [ -n "$bumps" ]; then
-    npm exec --no -- vitest run src/__tests__/deprecations.test.ts </dev/null || exit 1
+    node scripts/check.mjs --release </dev/null || exit 1
   fi
   exit 0
 fi

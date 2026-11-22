@@ -37,7 +37,7 @@
  * a passing group is one line with its time. Interleaving three live streams would be
  * unreadable, and a green run has nothing to say.
  */
-import { execFileSync, spawn } from "node:child_process";
+import { execFileSync, spawn, spawnSync } from "node:child_process";
 import { mkdirSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { availableParallelism } from "node:os";
 import { join, resolve } from "node:path";
@@ -45,6 +45,18 @@ import { pathToFileURL } from "node:url";
 
 /** In the order serial mode runs them: the quickest to fail first. */
 export const GROUPS = ["check:static", "check:build", "check:test"];
+
+/**
+ * The tests a release commit can turn red, and so the ones the pre-push hook still runs
+ * for it (TST-1, refactor audit 2026-10-30): the readers of package.json's `version` and of
+ * CHANGELOG.md, the files `npm run release` writes. A MINOR bump can make a deprecation due
+ * (deprecations.test.ts), and the generated entry can hold an item changelog.test.ts rejects.
+ * The list once named only the first; changelog.test.ts began reading CHANGELOG.md four days
+ * after the shortcut landed, so a release entry it rejects passed the push and went red only
+ * in CI (refactor audit 2026-11-22, TST-1). gate-lists.test.ts finds every such reader and
+ * fails on one this list misses.
+ */
+export const RELEASE_TESTS = ["src/__tests__/deprecations.test.ts", "src/lib/__tests__/changelog.test.ts"];
 const ROOT = resolve(import.meta.dirname, "..");
 export const STAMPS = join(ROOT, "node_modules", ".cache", "check");
 const STAMPS_KEPT = 20;
@@ -123,7 +135,19 @@ function run(script, env) {
   });
 }
 
+/** `npm exec vitest run` over `files`, with this terminal; its exit code. */
+function runTests(files) {
+  const result = spawnSync("npm", ["exec", "--no", "--", "vitest", "run", ...files], { cwd: ROOT, stdio: "inherit" });
+  return result.status ?? 1;
+}
+
+/** `--release`: the pre-push hook's release commit runs RELEASE_TESTS, and nothing else. */
+const ONLY = { "--release": RELEASE_TESTS };
+
 async function main() {
+  const only = process.argv.slice(2).find((arg) => Object.hasOwn(ONLY, arg));
+  if (only) process.exit(runTests(ONLY[only]));
+
   const started = Date.now();
   // Ctrl-C stops every running group, not just the terminal's foreground one.
   for (const signal of ["SIGINT", "SIGTERM"]) {
