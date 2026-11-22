@@ -378,7 +378,7 @@ function SpinnerDemo() {
         <Spinner className="size-8 border-4" />
         {/* Inside a button whose text already says it: decorative, or the button's
             name becomes "Loading… Saving…". */}
-        <Button variant="default" onClick={() => setBusy((v) => !v)} disabled={busy}>
+        <Button variant="default" onClick={() => setBusy((v) => !v)} refused={busy}>
           {busy && <Spinner className="size-4 border-2" label={null} />}
           {busy ? "Saving…" : "Save"}
         </Button>

@@ -694,7 +694,7 @@ function DropzoneStates() {
           <input type="checkbox" checked={locked} onChange={(e) => setLocked(e.target.checked)} />
           <code className="font-mono">disabled</code>
         </label>
-        <Button variant="ghost" onClick={() => setBusy(true)} disabled={busy}>
+        <Button variant="ghost" onClick={() => setBusy(true)} refused={busy}>
           {/* One span: a Button lays its children out with a flex gap, which put a space
               either side of the code chip — "( busy )". */}
           <span>

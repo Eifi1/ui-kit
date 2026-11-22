@@ -5,6 +5,10 @@ import reactHooks from "eslint-plugin-react-hooks";
 import jsxA11y from "eslint-plugin-jsx-a11y";
 import importX from "eslint-plugin-import-x";
 import { createTypeScriptImportResolver } from "eslint-import-resolver-typescript";
+// From source, under Node's type stripping (erasable TypeScript, importing nothing), as
+// scripts/gen-role-utilities.mjs reads role-utilities.ts: the plugin's index imports
+// without extensions, which Node does not resolve.
+import { pendingNotDisabled } from "./src/eslint/pending-not-disabled.ts";
 
 /**
  * The package had no linter at all — and seven inert `eslint-disable` comments in `src`,
@@ -150,6 +154,17 @@ export default tseslint.config(
         { selector: MUTATE_CALLBACKS, message: MUTATE_CALLBACKS_MESSAGE },
       ],
     },
+  },
+
+  // The kit's own `@eifi1/ui-kit/pending-not-disabled` (refactor audit 2026-11-22, INP-1):
+  // a Button whose own click starts the `busy`/`pending` that natively disables it drops
+  // the focus of the pressed button to <body>. 0 in src/ since 0.66. Not the tests, which
+  // render such a button to prove the rule's point.
+  {
+    files: ["src/**/*.tsx", "showcase/src/**/*.tsx"],
+    ignores: ["**/__tests__/**", "**/*.test.tsx"],
+    plugins: { "ui-kit": { rules: { "pending-not-disabled": pendingNotDisabled } } },
+    rules: { "ui-kit/pending-not-disabled": "error" },
   },
 
   {
