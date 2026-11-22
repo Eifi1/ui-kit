@@ -1575,7 +1575,6 @@ export function uiKitLabelsHu(numberLocale = "hu-HU"): UiKitLabels {
       choose: "Válasszon egy fiókot…",
       chooseFirst: "Válassza ki, ki kapja meg a munkát",
       confirm: "Továbbadás",
-      customer: "ügyfél",
       deactivated: "inaktivált",
       self: "ugyanaz a fiók",
       unavailable: (account, reason) => `${account} (${reason})`,

@@ -1621,7 +1621,6 @@ export function germanLabels(numberLocale: string): UiKitLabels {
       choose: "Konto wählen…",
       chooseFirst: "Wählen Sie, wer die Arbeit erhält",
       confirm: "Übergeben",
-      customer: "Kundenkonto",
       deactivated: "deaktiviert",
       self: "dasselbe Konto",
       unavailable: (account, reason) => `${account} (${reason})`,

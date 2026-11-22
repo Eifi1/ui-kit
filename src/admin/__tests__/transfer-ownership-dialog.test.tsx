@@ -7,15 +7,16 @@ import type { TransferCandidate } from "../transfer-ownership-dialog";
 
 /**
  * §4.1, §9.6: the transfer is a typed confirm with a recipient — never a deactivated
- * account or the account itself; the app marks them, the kit says why. `"customer"` is
- * still the kit's reason, though no app passes it any more (`TransferUnavailable`).
+ * account or the account itself; the app marks them, the kit says why. 0.66 removed the
+ * kit's third reason, `"customer"`: an app's own words are passed through as they come.
  */
 
 const FROM = { id: 1, email: "ada@example.com", first: "Ada", last: "Example" };
 const CANDIDATES: TransferCandidate[] = [
   { id: 1, email: "ada@example.com", first: "Ada", last: "Example" },
   { id: 2, email: "ben@example.com", first: "Ben", last: "Sample" },
-  { id: 3, email: "cy@example.com", first: "Cy", last: "Customer", unavailable: "customer" },
+  // A string the kit does not know is the app's own reason — 0.65's "customer" too, now.
+  { id: 3, email: "cy@example.com", first: "Cy", last: "Client", unavailable: "customer" },
   { id: 4, email: "dee@example.com", first: "Dee", last: "Gone", unavailable: "deactivated" },
   { id: 5, email: "eve@example.com", unavailable: "in another team" },
 ];
@@ -39,7 +40,7 @@ describe("TransferOwnershipDialog", () => {
       "Choose an account…",
       "Ada Example — ada@example.com (the same account) [x]",
       "Ben Sample — ben@example.com",
-      "Cy Customer — cy@example.com (a customer) [x]",
+      "Cy Client — cy@example.com (customer) [x]",
       "Dee Gone — dee@example.com (deactivated) [x]",
       "eve@example.com (in another team) [x]",
     ]);

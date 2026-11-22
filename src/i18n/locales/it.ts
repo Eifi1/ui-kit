@@ -1589,7 +1589,6 @@ export function uiKitLabelsIt(numberLocale = "it-IT"): UiKitLabels {
       choose: "Scelga un account…",
       chooseFirst: "Scelga chi riceve il lavoro",
       confirm: "Passa il lavoro",
-      customer: "cliente",
       deactivated: "disattivato",
       self: "lo stesso account",
       unavailable: (account, reason) => `${account} (${reason})`,

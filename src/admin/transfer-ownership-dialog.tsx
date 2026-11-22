@@ -29,23 +29,17 @@ import { DEFAULT_TRANSFER_OWNERSHIP_LABELS } from "./transfer-ownership-dialog-l
 /**
  * Why a candidate cannot receive the work: the kit's two, or the app's own words.
  *
- * `"customer"` is deprecated (0.65) and goes in 0.66: it was Kurvenschmiede's CUSTOMER, an
- * account that owns nothing, and Kurvenschmiede has no such role since its migration 0060
- * (Marcel, 2026-11-12: every customer became a member). No app has customers any more.
- * Until then the dialog still says it with `transferOwnership.customer`.
+ * 0.66 removed `"customer"` (deprecated in 0.65): Kurvenschmiede's CUSTOMER, an account that
+ * owned nothing, went in its migration 0060 (Marcel, 2026-11-12: every customer became a
+ * member), and no app has customers any more.
  */
-export type TransferUnavailable =
-  | "deactivated"
-  | "self"
-  /** @deprecated 0.65 — none: drop the case, no app has customers any more; removed in 0.66 */
-  | "customer";
+export type TransferUnavailable = "deactivated" | "self";
 
 /** An account that might receive the work. */
 export interface TransferCandidate extends AdminPerson {
   id: string | number;
   email: string;
-  /** Why it cannot: `"deactivated"`, `"self"`, or the app's own words. `"customer"` is
-   *  deprecated (0.65, removed in 0.66; {@link TransferUnavailable}). */
+  /** Why it cannot: `"deactivated"`, `"self"`, or the app's own words. */
   unavailable?: TransferUnavailable | (string & {});
 }
 
@@ -71,12 +65,6 @@ export interface TransferOwnershipLabels {
   chooseFirst: string;
   /** The confirm button. */
   confirm: string;
-  /**
-   * `"customer"`'s reason, which no app passes any more ({@link TransferUnavailable}).
-   * @deprecated 0.65 — none: drop the key from an app's own labels, `"customer"` goes with
-   * it; removed in 0.66
-   */
-  customer: string;
   /** Reasons, said after the account's name inside its option. */
   deactivated: string;
   self: string;
@@ -131,7 +119,6 @@ export function TransferOwnershipDialog({
       candidate.email.trim().toLowerCase() === from.email.trim().toLowerCase();
     const code = isSource ? "self" : own;
     if (!code) return undefined;
-    if (code === "customer") return labels.customer;
     if (code === "deactivated") return labels.deactivated;
     if (code === "self") return labels.self;
     return code;

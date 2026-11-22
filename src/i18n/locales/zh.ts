@@ -1517,7 +1517,6 @@ export function uiKitLabelsZh(numberLocale = "zh-CN"): UiKitLabels {
       choose: "选择账户…",
       chooseFirst: "请选择接收工作的人",
       confirm: "移交",
-      customer: "客户",
       deactivated: "已停用",
       self: "同一账户",
       unavailable: (account, reason) => `${account}（${reason}）`,
