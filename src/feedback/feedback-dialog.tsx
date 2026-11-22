@@ -18,11 +18,8 @@ import {
   type FeedbackAttachmentError,
   type FeedbackAttachmentErrorInfo,
 } from "./feedback-attachment";
+import type { AttachTile } from "../components/attach-button";
 import { DEFAULT_FEEDBACK_DIALOG_LABELS } from "./feedback-dialog-labels";
-
-/** Where an attachment can come from (0.66). Declared here until the field's own type
- *  reaches this branch; the field's `AttachSource`. */
-type FeedbackDialogAttachSource = "camera" | "photos" | "files" | "screenshot";
 
 /** One category the dialog offers. `C` (0.52): the app's category type — the kit's
  *  `FeedbackCategory`, or `string` (the default) for a vocabulary of the app's own. */
@@ -198,7 +195,7 @@ interface FeedbackDialogBaseProps<C extends string = string> {
   picker?: "buttons" | "sheet";
   /** The attachment field's `sources` (0.66): which ways in it offers, in order. Left out,
    *  the field's default. */
-  sources?: readonly FeedbackDialogAttachSource[];
+  sources?: readonly AttachTile[];
   /**
    * A muted line under the body saying who will read it (0.38, docs/feedback-harmonization.md
    * §9.2 decision 6) — the kit's sentence is `feedbackDialog.publicNotice`, "Other users

@@ -1148,7 +1148,8 @@ function CaptureButton({
       type="button"
       variant={variant}
       size={size}
-      disabled={capturing || disabled}
+      disabled={disabled}
+      pending={capturing}
       disabledReason={disabledReason}
       {...rest}
       onClick={() => {
@@ -1161,7 +1162,7 @@ function CaptureButton({
           .finally(() => setCapturing(false));
       }}
     >
-      <Camera className={buttonIcon(size)} /> {capturing ? "…" : label}
+      <Camera className={buttonIcon(size)} /> {label}
     </Button>
   );
 }

@@ -213,6 +213,24 @@ describe("G5a: onError names the file and the limit", () => {
   });
 });
 
+describe("INP-1 (refactor audit 2026-11-22): the capture button keeps its focus while it captures", () => {
+  it("is aria-disabled, not natively disabled, and a second press starts no second capture", async () => {
+    let finish: (file: File | null) => void = () => {};
+    const capture = vi.fn(() => new Promise<File | null>((resolve) => (finish = resolve)));
+    render(<FeedbackAttachmentField value={null} onChange={vi.fn()} onCaptureScreenshot={capture} />);
+    const button = screen.getByRole("button", { name: /Capture screenshot/ });
+    button.focus();
+    fireEvent.click(button);
+    const busy = screen.getByRole("button", { name: /Capture screenshot/ });
+    expect(busy).not.toBeDisabled();
+    expect(busy).toHaveAttribute("aria-disabled", "true");
+    expect(document.activeElement).toBe(busy);
+    fireEvent.click(busy);
+    expect(capture).toHaveBeenCalledTimes(1);
+    await act(async () => finish(null));
+  });
+});
+
 describe("G5b: disabled holds the field while a send is in flight", () => {
   it("single: no add, no capture, no remove, no file input — and the chosen file stays", () => {
     const onChange = vi.fn();
