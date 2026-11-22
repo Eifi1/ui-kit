@@ -904,7 +904,7 @@ export function HooksLib() {
         <Note>
           The tabbable list is recomputed on every Tab, so fields that appear later are included. With{" "}
           <code className="font-mono">restoreFocus</code> on, closing puts focus back on the button that opened the
-          panel — or, since 0.55, on the control that stood after it when that button has gone, never on{" "}
+          panel — or on the control that stood after it when that button has gone, never on{" "}
           <code className="font-mono">&lt;body&gt;</code>; a focus the app placed as it closed is left where it is, and{" "}
           <code className="font-mono">opener</code> names a trigger to prefer (a Popover&apos;s, for Safari&apos;s
           unfocused click). <code className="font-mono">&quot;container&quot;</code> is the default because focusing a
@@ -999,8 +999,8 @@ export const useTx = create<TxState>()(
         <code className="font-mono">useRowSwipe</code> is exported and is shown with{" "}
         <code className="font-mono">SwipeableRow</code> under &ldquo;Swipeable row&rdquo;; the{" "}
         <code className="font-mono">lib/calc</code> helpers are exported and shown under &ldquo;Numbers &amp;
-        money&rdquo;, where the fields that parse with them are. The storage guards are exported (0.52 added all but the
-        first pair): <code className="font-mono">readStored</code>, <code className="font-mono">writeStored</code>,{" "}
+        money&rdquo;, where the fields that parse with them are. The storage guards are exported:{" "}
+        <code className="font-mono">readStored</code>, <code className="font-mono">writeStored</code>,{" "}
         <code className="font-mono">removeStored</code>, <code className="font-mono">readSessionStored</code>,{" "}
         <code className="font-mono">writeSessionStored</code>, and <code className="font-mono">readStoredJson</code>/
         <code className="font-mono">writeStoredJson</code> with a shape check: storage that is absent, blocked or

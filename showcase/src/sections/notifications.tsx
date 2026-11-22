@@ -309,7 +309,7 @@ export function QuietHoursDemo() {
         Zurich. The card names it read-only and a time sends no zone; screens keep showing device time. {code("held")}{" "}
         says a held push arrives when the window ends — an app that runs the notifications tick. Switch the report off
         for the fallback. A time is saved when it is entered — leaving the field, or Enter — never per keystroke, and
-        one request per field runs at a time: a time entered meanwhile is sent after it (0.52).
+        one request per field runs at a time: a time entered meanwhile is sent after it.
       </Note>
     </Example>
   );

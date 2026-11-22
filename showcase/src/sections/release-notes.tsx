@@ -73,10 +73,9 @@ function ReleaseNotesDemo() {
       </div>
       <Note>
         {code("parseChangelog(markdown)")} reads the file into releases; each goes to {code("<ReleaseNotes release />")}{" "}
-        as it is, and a server that sends the same shape with raw bullets (keksdose&apos;s) works too. The scope is a
-        chip and its notes follow it — one as a sentence, several as a list — so nine commits to one area read as one
-        topic, not nine prefixes. A section&apos;s heading is the app&apos;s word for its key (
-        {code("releaseNotes.sections")}
+        as it is, and a server that sends the same shape with raw bullets works too. The scope is a chip and its notes
+        follow it — one as a sentence, several as a list — so nine commits to one area read as one topic, not nine
+        prefixes. A section&apos;s heading is the app&apos;s word for its key ({code("releaseNotes.sections")}
         ), &ldquo;Features&rdquo; and &ldquo;Added&rdquo; alike; a heading no preset writes keeps its own title, and a
         release with no section shows its prose. The day follows the app&apos;s date setting.
       </Note>

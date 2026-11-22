@@ -248,7 +248,7 @@ export function PublicPage051Demo() {
   return (
     <Example
       label="PublicPage — a public page beside the landing"
-      hint="0.51: PublicHeader · a column at the landing's width · PublicFooter; seo is required"
+      hint="PublicHeader · a column at the landing's width · PublicFooter; seo is required"
     >
       <Sandbox start="/harvests">
         <div className="overflow-hidden rounded-md border border-subtle bg-page">

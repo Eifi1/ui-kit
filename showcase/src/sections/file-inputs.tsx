@@ -69,8 +69,8 @@ export function FileInputs() {
         </Stage>
         <Note>
           <code className="font-mono">capture</code> is a hint: Android Chrome showed its Camera-or-Files sheet for{" "}
-          <code className="font-mono">accept=&quot;image/*&quot; capture=&quot;environment&quot;</code> after five
-          rounds of keksdose&apos;s live #292, and a desktop ignores it outright. So a camera opens in the page —{" "}
+          <code className="font-mono">accept=&quot;image/*&quot; capture=&quot;environment&quot;</code> however it was
+          asked, and a desktop ignores it outright. So a camera opens in the page —{" "}
           <code className="font-mono">CameraCapture</code>, the full-screen viewfinder, through{" "}
           <code className="font-mono">getUserMedia</code>, which opens it or refuses — and a refusal (an insecure
           context, a denied permission) opens the <code className="font-mono">capture</code> input instead, so nothing
@@ -83,7 +83,7 @@ export function FileInputs() {
 
       <Example
         label='CameraButton — noCamera="hide" beside an upload button'
-        hint="kastlan's photo row: the camera only where there is one, and the upload always."
+        hint="a photo row: the camera only where there is one, and the upload always."
       >
         <Stage>
           <CameraBesideUpload />

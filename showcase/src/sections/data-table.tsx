@@ -1234,11 +1234,11 @@ function PeriodGroupsTable() {
           rows — and says what it loads; at the end the app&apos;s {code("endLabel")} (default “All rows loaded”).
         </Note>
         <Note>
-          0.48.2: {code("virtualize")} renders only the rows near the view (and 12 more each side), spacer rows standing
-          in for the rest inside each day&apos;s {code("<tbody>")} — the bands stay sticky and stacked. Switch to 1000
-          or 3000 rows and compare: the columns hold still while the rows come and go, End on a focused row reaches the
-          last one, a Shift+click range covers the rows not drawn, and an open row stays. Find-in-page only sees the
-          rows drawn.
+          {code("virtualize")} renders only the rows near the view (and 12 more each side), spacer rows standing in for
+          the rest inside each day&apos;s {code("<tbody>")} — the bands stay sticky and stacked. Switch to 1000 or 3000
+          rows and compare: the columns hold still while the rows come and go, End on a focused row reaches the last
+          one, a Shift+click range covers the rows not drawn, and an open row stays. Find-in-page only sees the rows
+          drawn.
         </Note>
       </div>
     </Example>
@@ -1542,8 +1542,8 @@ function DataTableActionsDemo() {
           {code("disabledReason")} for Kemal, who owes rent. The delete runs only after {code("useConfirm()")} says yes.
           A press on an action never opens the row. On a phone the column disappears and the same actions become the
           card&apos;s swipes. Archive or delete a row from the keyboard: the focus moves to the row now in its place
-          (the last row, or the table once none is left) and the remaining count is spoken — it no longer falls to the
-          top of the page (0.52).
+          (the last row, or the table once none is left) and the remaining count is spoken, never falling to the top of
+          the page.
         </Note>
         <Note>
           The search lives in the {code("toolbar")}, inside the table&apos;s frame. Type {code("nobody")} — the empty

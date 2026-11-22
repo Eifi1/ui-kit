@@ -312,10 +312,10 @@ function DebouncedKey() {
       <div className="mt-3">
         <Note>
           Untick the key and leave the fields alone: the count climbs every 400 ms. The settled body re-renders this
-          specimen, the render builds another object, and a debounce on identity takes that as news — Kurvenschmiede ran
-          its control page&apos;s simulation that way with nobody touching it (KS U9). With{" "}
-          <code className="font-mono">{"{ key }"}</code> the wait restarts only when the key changes, and the object
-          that comes back keeps its identity until the next one settles, so it can be a query key as it is.
+          specimen, the render builds another object, and a debounce on identity takes that as news — a simulation on a
+          control page runs that way with nobody touching it. With <code className="font-mono">{"{ key }"}</code> the
+          wait restarts only when the key changes, and the object that comes back keeps its identity until the next one
+          settles, so it can be a query key as it is.
         </Note>
       </div>
     </Example>

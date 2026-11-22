@@ -132,7 +132,7 @@ export function GuidedFormTourDemo() {
             ],
             [
               "<TourProvider launch={(id, opts, start, engine) => …}>",
-              "The app's launcher builds the steps and calls start, the provider's own (third argument): no ref. The fourth is the whole engine, read live: engine.stop() ends the run (0.50.1).",
+              "The app's launcher builds the steps and calls start, the provider's own (third argument): no ref. The fourth is the whole engine, read live: engine.stop() ends the run.",
             ],
           ]}
         />

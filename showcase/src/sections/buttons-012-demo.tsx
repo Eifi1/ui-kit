@@ -275,12 +275,14 @@ function Shutter() {
       hint="a 64px camera release over the viewfinder, white ink on a dark scrim in both themes"
     >
       <div
-        role="img"
-        aria-label="Camera viewfinder (simulated)"
         className="relative mx-auto flex aspect-[3/4] w-full max-w-72 items-end justify-center overflow-hidden rounded-lg pb-6"
         style={{ background: VIEWFINDER }}
       >
-        <div aria-hidden className="pointer-events-none absolute inset-6 rounded-md border border-white/30" />
+        <div
+          role="img"
+          aria-label="Camera viewfinder (simulated)"
+          className="pointer-events-none absolute inset-6 rounded-md border border-white/30"
+        />
         {flash && <div aria-hidden className="pointer-events-none absolute inset-0 bg-white/70" />}
         <span className="absolute start-3 top-3 rounded bg-black/50 px-2 py-0.5 font-mono text-xs text-white">
           {shots} photo{shots === 1 ? "" : "s"}

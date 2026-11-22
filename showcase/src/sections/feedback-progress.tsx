@@ -500,7 +500,7 @@ function AlertInteractiveDemo() {
           <code className="font-mono">common.dismiss</code>). <code className="font-mono">icon</code> replaces the
           tone&apos;s glyph; it stays decorative. Dismiss one from the keyboard: once the banner is gone the focus moves
           on to the next control, where Tab from the × would have gone, or to{" "}
-          <code className="font-mono">dismissFocusRef</code> (0.52).
+          <code className="font-mono">dismissFocusRef</code>.
         </Note>
       </div>
     </Example>

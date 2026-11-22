@@ -367,7 +367,7 @@ export function Dates() {
         <p className="mt-2 text-xs text-secondary">
           Walk the arrows to either edge and they go flat rather than disappearing — a control that comes and goes with
           the value reflows whatever sits beside it, which is the complaint the behaviour exists to answer. Flat, not{" "}
-          <code className="font-mono">disabled</code>: since 0.52 an arrow at its edge is{" "}
+          <code className="font-mono">disabled</code>: an arrow at its edge is{" "}
           <code className="font-mono">aria-disabled</code> and refuses the click, so the key press that took it there
           leaves the focus on it rather than on the page. The today button starts flat because the value already is
           today. Note what <code className="font-mono">today</code> is: the day is passed IN, so this field can be
@@ -702,8 +702,8 @@ function WriteLockExample() {
         day={iso(day)} · from={iso(range.from)} to={iso(range.to)} · month={month}
       </StateLine>
       <p className="mt-2 text-xs text-secondary">
-        Select&apos;s lock, on the three date pickers and their <code className="font-mono">/rhf</code> twins since
-        0.52: under a locked <code className="font-mono">WriteLockProvider</code> a picker with{" "}
+        Select&apos;s lock, on the three date pickers and their <code className="font-mono">/rhf</code> twins: under a
+        locked <code className="font-mono">WriteLockProvider</code> a picker with{" "}
         <code className="font-mono">commit</code> keeps its trigger focusable and{" "}
         <code className="font-mono">aria-disabled</code>, opens nothing, offers no clear, and its ‹ › and Today refuse;
         the reason is a line under it at Large and on a touch screen, else a tooltip, and its description either way.
@@ -769,10 +769,9 @@ function ReportRangeExample() {
         the draft away. The presets are <code className="font-mono">calendarMonthPresets()</code>: WHOLE calendar months
         and years, never the rolling 90 days up to this morning. Apply and Cancel are{" "}
         <code className="font-mono">datePicker.apply</code> / <code className="font-mono">.cancel</code> and the
-        column&apos;s name <code className="font-mono">datePicker.presets</code>, from the provider.{" "}
-        <code className="font-mono">apply</code> was <code className="font-mono">commit=&quot;apply&quot;</code> until
-        0.52, which still works until 0.53: <code className="font-mono">commit</code> is the write lock&apos;s prop, as
-        on every other control.
+        column&apos;s name <code className="font-mono">datePicker.presets</code>, from the provider. The footer is
+        turned on with <code className="font-mono">apply</code>; <code className="font-mono">commit</code> is the write
+        lock&apos;s prop, as on every other control.
       </p>
     </Example>
   );

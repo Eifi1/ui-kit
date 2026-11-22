@@ -149,8 +149,8 @@ function DangerStates() {
         itself. <code>disabled</code> turns the arm button off without a reason — prefer <code>lockedReason</code> when
         the user can do something about it. The third tile takes every word from <code>labels</code>;{" "}
         <code>armLabel</code> and <code>confirmLabel</code> would win over them. The second passes the refusal as{" "}
-        <code>error</code> (0.54): under the phrase, which it marks invalid, announced as it appears, and gone again on
-        the next keystroke.
+        <code>error</code>: under the phrase, which it marks invalid, announced as it appears, and gone again on the
+        next keystroke.
       </Note>
     </Example>
   );
