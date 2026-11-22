@@ -179,6 +179,22 @@ describe("Tour awaitInput step", () => {
     expect(state()).toBe("step 1");
   });
 
+  // Refactor audit 2026-11-22, DUP-3: the gate's reading of Enter, not the key alone. The
+  // Enter that confirms an IME candidate (Chinese, Japanese) is still typing.
+  it("does not advance on the Enter that ends an IME composition", async () => {
+    renderTour([{ ...STEP, awaitInput: true }, END]);
+    await start();
+    amount().focus();
+    fireEvent.input(amount(), { target: { value: "北京" } });
+    fireEvent.keyDown(amount(), { key: "Enter", isComposing: true });
+    fireEvent.keyDown(amount(), { key: "Enter", keyCode: 229 });
+    await settle();
+    expect(state()).toBe("step 0");
+    fireEvent.keyDown(amount(), { key: "Enter" });
+    await settle();
+    expect(state()).toBe("step 1");
+  });
+
   it("names the hint in the provider's language", async () => {
     renderTour([{ ...STEP, awaitInput: true }, END], true);
     await start();

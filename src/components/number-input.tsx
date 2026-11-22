@@ -9,6 +9,7 @@ import { FieldCaption, LockFrame, mergeRefs, type DisabledReasonDisplay, type Fi
 import { useEndWidth, useNumericField } from "./numeric-field";
 import type { CommitScope } from "./write-lock";
 import { cn } from "../lib/cn";
+import { isImeEnter } from "../lib/ime";
 import { commitExpression, formatResult } from "../lib/calc";
 import { dataAttributes, type DataAttributes } from "../lib/data-attributes";
 
@@ -406,7 +407,9 @@ export function NumberInput(props: NumberInputProps) {
       if (e.key === "Enter") e.preventDefault();
       return;
     }
-    if (e.key === "Enter") return commit();
+    // Not the Enter that confirms an IME candidate (a full-width digit): still typing
+    // (refactor audit 2026-11-22, the INP note on DUP-1).
+    if (e.key === "Enter" && !isImeEnter(e)) return commit();
     // A zero, negative or non-finite step is no step: the keys stay the caret's.
     if (!step || !(step > 0) || !Number.isFinite(step) || e.altKey || e.ctrlKey || e.metaKey) return;
     const count =

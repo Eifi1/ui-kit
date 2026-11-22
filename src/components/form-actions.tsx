@@ -5,8 +5,7 @@ import { cn } from "../lib/cn";
 import { useKitLabels } from "../i18n/kit-labels";
 import { useBreakpoint, usePhoneLayout } from "../hooks/use-breakpoint";
 import { useLargeText } from "../hooks/use-large-text";
-import { isApplePlatform, matchesHotkey, type ParsedHotkey } from "../hooks/use-hotkey";
-import { isComposing } from "../lib/ime";
+import { isApplePlatform, isSubmitChord } from "../hooks/use-hotkey";
 import { hasContent } from "../lib/presence";
 import { Button, type ButtonProps } from "./button";
 import { Spinner } from "./spinner";
@@ -374,17 +373,6 @@ function shortcutScope(row: HTMLElement | null, formId: string | undefined): Ele
   return row.closest("form") ?? row.closest('[role="dialog"]') ?? row.parentElement;
 }
 
-/**
- * What {@link FormActionsProps.submitShortcut} answers, on every platform: Ctrl+Enter and
- * Cmd+Enter with nothing else held, read by `matchesHotkey` as every kit shortcut is
- * (refactor audit 2026-10-30, DUP-12). Literals, not `parseHotkey` calls: no module-scope
- * call for a bundler to keep.
- */
-const SUBMIT_CHORDS: readonly ParsedHotkey[] = [
-  { ctrl: true, meta: false, shift: false, alt: false, key: "Enter" },
-  { ctrl: false, meta: true, shift: false, alt: false, key: "Enter" },
-];
-
 function isDestructiveData(value: unknown): value is FormActionsDestructive {
   return typeof value === "object" && value !== null && !isValidElement(value) && "onClick" in value;
 }
@@ -477,9 +465,10 @@ export function FormActions({
   useEffect(() => {
     if (submitShortcut !== "mod-enter") return;
     const onKeyDown = (e: KeyboardEvent) => {
-      if (!SUBMIT_CHORDS.some((chord) => matchesHotkey(e, chord))) return;
-      // `isComposing` is lib/ime's: Safari's composition-ending Enter (keyCode 229) too.
-      if (e.repeat || isComposing(e) || e.defaultPrevented || !canSaveRef.current) return;
+      // What `submitShortcut` answers: Ctrl+Enter or Cmd+Enter with nothing else held, no
+      // repeat, no IME Enter — the kit's one reading of it (use-hotkey `isSubmitChord`;
+      // DUP-12 in 0.52, DUP-7 2026-11-22).
+      if (!isSubmitChord(e) || !canSaveRef.current) return;
       const scope = shortcutScope(rootRef.current, form);
       if (!scope || !(e.target instanceof Node) || !scope.contains(e.target)) return;
       e.preventDefault();

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 import { KeyRound } from "lucide-react";
 import { cn } from "../lib/cn";
+import { isImeEnter } from "../lib/ime";
 import { useDayFormatter } from "../lib/day-format";
 import { toDate } from "../lib/format";
 import type { LabelOverride } from "../i18n/kit-labels";
@@ -251,7 +252,9 @@ export function PasskeysSetting<Id extends PasskeyId = PasskeyId>({
               maxLength={120}
               onChange={(e) => setName(e.target.value)}
               onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
-                if (e.key === "Enter") {
+                // Not the Enter that confirms an IME candidate: that is still the name being typed
+                // (refactor audit 2026-11-22, DUP-1; BUG-9 round 0.34 for every other field).
+                if (e.key === "Enter" && !isImeEnter(e)) {
                   e.preventDefault();
                   add();
                 }
@@ -366,7 +369,7 @@ function PasskeyRow<Id extends PasskeyId>({
           maxLength={120}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
-            if (e.key === "Enter") {
+            if (e.key === "Enter" && !isImeEnter(e)) {
               e.preventDefault();
               saveRename();
             } else if (e.key === "Escape") {

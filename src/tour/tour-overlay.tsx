@@ -562,12 +562,8 @@ export function TourOverlay({
       if (to === null || (to instanceof Node && rootRef.current?.contains(to))) check();
     };
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== "Enter" || !(e.target instanceof Node) || !el.contains(e.target)) return;
-      // Heard at the document, after React's handlers: a combobox picking an option has
-      // called preventDefault by now.
-      if (e.defaultPrevented || isComposing(e)) return;
-      if (e.target instanceof HTMLTextAreaElement && !(e.ctrlKey || e.metaKey)) return;
-      check();
+      if (!(e.target instanceof Node) || !el.contains(e.target)) return;
+      if (enterEndsField(e)) check();
     };
     el.addEventListener("focusin", onFocusIn);
     el.addEventListener("focusout", onFocusOut);
@@ -604,16 +600,19 @@ export function TourOverlay({
       if (e.relatedTarget instanceof Node && el.contains(e.relatedTarget)) return;
       check();
     };
+    // At the document, as the gate's: after React's handlers, so a combobox's
+    // `preventDefault` is seen (refactor audit 2026-11-22, DUP-3).
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Enter") check();
+      if (!(e.target instanceof Node) || !el.contains(e.target)) return;
+      if (enterEndsField(e)) check();
     };
     el.addEventListener("focusout", onFocusOut);
-    el.addEventListener("keydown", onKeyDown);
+    document.addEventListener("keydown", onKeyDown);
     el.addEventListener("change", check);
     return () => {
       window.clearTimeout(timer);
       el.removeEventListener("focusout", onFocusOut);
-      el.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("keydown", onKeyDown);
       el.removeEventListener("change", check);
     };
   }, [ready, spotted, index, step, onNext]);
@@ -793,6 +792,19 @@ export function TourOverlay({
 }
 
 /** The values of the fields at or inside `el`, as one string to compare (`awaitInput`). */
+/**
+ * "Enter in the step's field means the step is done" — the ONE reading of it, for a
+ * `gate` and for `awaitInput` (refactor audit 2026-11-22, DUP-3: the `awaitInput` copy
+ * checked only the key, so a textarea's first new line, or the Enter that confirms an IME
+ * candidate, advanced the tour mid-word). Not an Enter something took first (a combobox
+ * picking an option calls `preventDefault`), not one that ends an IME composition, and
+ * not a plain Enter in a textarea, which is a new line — Ctrl/⌘+Enter there is.
+ */
+export function enterEndsField(e: KeyboardEvent): boolean {
+  if (e.key !== "Enter" || e.defaultPrevented || isComposing(e)) return false;
+  return !(e.target instanceof HTMLTextAreaElement) || e.ctrlKey || e.metaKey;
+}
+
 function fieldValues(el: Element): string {
   const fields = el.matches("input,textarea,select") ? [el] : Array.from(el.querySelectorAll("input,textarea,select"));
   return fields

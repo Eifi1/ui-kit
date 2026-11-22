@@ -7,6 +7,8 @@ import { ChipInput } from "../chip-input";
 import { Combobox, InlineEntityCombobox } from "../combobox";
 import { EntityCombobox } from "../entity-combobox";
 import { MultiSelect } from "../multi-select";
+import { NumberInput } from "../number-input";
+import { AmountInput } from "../amount-input";
 import { CommandPalette } from "../../search/command-palette";
 import { isImeEnter } from "../../lib/ime";
 
@@ -168,5 +170,36 @@ describe("a composing Enter neither picks nor submits (BUG-9)", () => {
     expect(onSelect).not.toHaveBeenCalled();
     fireEvent.keyDown(field, { key: "Enter" });
     expect(onSelect).toHaveBeenCalledTimes(1);
+  });
+});
+
+/**
+ * Refactor audit 2026-11-22 (the DUP-1 family; noted by INP since 2026-10-30): the number
+ * fields commit on Enter, and committed an IME's composing text (full-width digits).
+ */
+describe("a composing Enter does not commit a number field", () => {
+  it("NumberInput", () => {
+    // `onCommit` is told of every commit; `onChange` only of a value that changed.
+    const onCommit = vi.fn();
+    render(<NumberInput label="Count" value="12" onChange={vi.fn()} onCommit={onCommit} />);
+    const field = screen.getByRole("textbox", { name: "Count" });
+    fireEvent.keyDown(field, COMPOSING);
+    fireEvent.keyDown(field, SAFARI);
+    expect(onCommit).not.toHaveBeenCalled();
+    fireEvent.keyDown(field, { key: "Enter" });
+    expect(onCommit).toHaveBeenCalledTimes(1);
+  });
+
+  it("AmountInput", () => {
+    const onChange = vi.fn();
+    render(<AmountInput label="Amount" value="" onChange={onChange} />);
+    const field = screen.getByRole("textbox", { name: "Amount" });
+    fireEvent.change(field, { target: { value: "12" } });
+    onChange.mockClear();
+    fireEvent.keyDown(field, COMPOSING);
+    fireEvent.keyDown(field, SAFARI);
+    expect(onChange).not.toHaveBeenCalled();
+    fireEvent.keyDown(field, { key: "Enter" });
+    expect(onChange).toHaveBeenCalled();
   });
 });
