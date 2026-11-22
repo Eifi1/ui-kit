@@ -10,7 +10,8 @@ import plugin from "../index";
  * does not start it (Cancel beside Save) is left alone.
  */
 
-const rule = (plugin.rules as Record<string, Rule.RuleModule>)["pending-not-disabled"];
+// Typed as ESLint's own rule: the plugin's written-out types are assignable to ESLint's.
+const rule: Rule.RuleModule = plugin.rules["pending-not-disabled"];
 
 const error = (state: string) => ({ messageId: "pendingNotDisabled", data: { state } });
 

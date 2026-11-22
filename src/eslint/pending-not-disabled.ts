@@ -21,9 +21,15 @@
 // eslint.config.js imports it from source under Node's type stripping, and the plugin
 // ships it to an app's ESLint. The few ESTree and scope types it reads are written out.
 
-/** The part of an ESTree node the rule reads; every other key is walked generically. */
-interface Node {
+/** An ESTree node as the rule's signature names it: `type` alone, so ESLint's own node
+ *  types (which carry no index signature) are assignable, and an app's typed config
+ *  (`defineConfig`) takes the plugin. */
+interface EstreeNode {
   type: string;
+}
+
+/** The same node as the rule reads it: every other key is walked generically. */
+interface Node extends EstreeNode {
   [key: string]: unknown;
 }
 
@@ -39,7 +45,7 @@ interface Scope {
 
 interface PendingContext {
   sourceCode: object;
-  report(descriptor: { node: Node; messageId: string; data: Record<string, string> }): void;
+  report(descriptor: { node: EstreeNode; messageId: string; data: Record<string, string> }): void;
 }
 
 export interface PendingNotDisabledRule {
@@ -49,7 +55,7 @@ export interface PendingNotDisabledRule {
     schema: [];
     messages: { pendingNotDisabled: string };
   };
-  create(context: PendingContext): { JSXOpeningElement(node: Node): void };
+  create(context: PendingContext): { JSXOpeningElement(node: EstreeNode): void };
 }
 
 const BUTTONS = new Set(["Button", "IconButton"]);
@@ -227,7 +233,8 @@ export const pendingNotDisabled: PendingNotDisabledRule = {
   create(context) {
     const source = context.sourceCode as { getScope?: (node: Node) => Scope };
     return {
-      JSXOpeningElement(node) {
+      JSXOpeningElement(estree) {
+        const node = estree as Node;
         const name = node.name;
         if (!isNode(name) || name.type !== "JSXIdentifier" || !BUTTONS.has(name.name as string)) return;
         const disabled = attribute(node, "disabled");
