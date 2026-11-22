@@ -1340,7 +1340,8 @@ are the contract's:
 - **The pages:** `accountRoutes(options)` answers route objects for the sign-in, the sign-up
   (with the invitation's check), the password reset, the mailed links and the demo's end, and
   `accountRouteElements(options)` (0.64) the same as `<Route>` elements for an app whose
-  routes are JSX `<Routes>`; `RequireSession` gates the private ones.
+  routes are JSX `<Routes>`; `RequireSession` gates the private ones. The pages load when the
+  first one is drawn (0.66), so a route table built in the entry chunk ships no form.
 - **The settings:** `AccountProfileSection`, `AccountPasswordSection`, `AccountEmailSection`,
   `AccountSessionsSection`, `AccountPasskeysSection`, `AccountExportSection`,
   `AccountDeletionSection`, and the admin's `AccountInvitationsSection`, for the app's own
@@ -1349,8 +1350,13 @@ are the contract's:
   offline and timeouts in the kit's seven languages, and the app's own codes through
   `appCode`.
 
-Peer: `@tanstack/react-query` (optional for every other entry). The passkey ceremony needs no
-library. The contract is
+- **Feedback:** `AccountFeedbackPage` and `AccountPublicFeedbackPage` on server-kit's feedback
+  routes. Their "Capture screenshot" needs the optional peer `modern-screenshot`; an app that
+  does not install it passes `onCaptureScreenshot={null}` (0.66), or the button is shown and
+  every capture ends in "Could not capture a screenshot".
+
+Peer: `@tanstack/react-query` (optional for every other entry), and `modern-screenshot` for the
+feedback pages' screenshot capture. The passkey ceremony needs no library. The contract is
 [docs/auth-harmonization.md](https://github.com/Eifi1/ui-kit/blob/main/docs/auth-harmonization.md)
 §12.9.
 

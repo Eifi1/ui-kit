@@ -144,7 +144,17 @@ export interface AccountFeedbackPageProps extends Pick<
    *  account words, an uncoded 4xx's own sentence, the part's fallback. A report's comments
    *  toast text only: there, an answer that is not a string is the kit's words. */
   describeError?: DescribeError;
+  /**
+   * 0.66 (refactor audit 2026-11-22, RC-1): the "Capture screenshot" of a reply and a comment.
+   * Default the kit's `captureAppScreenshot`, which needs the optional peer `modern-screenshot`;
+   * `null` draws no capture button, for an app that does not install it (without it, every
+   * capture ended in "Could not capture a screenshot"). An app's own capture goes here too.
+   */
+  onCaptureScreenshot?: (() => Promise<File | null>) | null;
 }
+
+/** The kit's capture, as the page's default. */
+const captureDefault = () => captureAppScreenshot();
 
 /**
  * `/feedback`, the admin's inbox, and `/my-feedback`, everybody's own reports — one page, two
@@ -158,6 +168,7 @@ export function AccountFeedbackPage({
   publicReader = notADemo,
   myPath = "/my-feedback",
   describeError,
+  onCaptureScreenshot = captureDefault,
   ...inbox
 }: AccountFeedbackPageProps) {
   const me = useAccount();
@@ -167,7 +178,15 @@ export function AccountFeedbackPage({
   if (!mine && !admin) return <Navigate to={`${myPath}${search}`} replace />;
   const reader = typeof publicReader === "function" ? publicReader(me) : publicReader;
   return (
-    <FeedbackList mine={mine} admin={admin} reader={reader} viewerId={me.id} describeError={describeError} {...inbox} />
+    <FeedbackList
+      mine={mine}
+      admin={admin}
+      reader={reader}
+      viewerId={me.id}
+      describeError={describeError}
+      capture={onCaptureScreenshot}
+      {...inbox}
+    />
   );
 }
 
@@ -177,8 +196,15 @@ function FeedbackList({
   reader,
   viewerId,
   describeError,
+  capture,
   ...inbox
-}: { mine: boolean; admin: boolean; reader: boolean; viewerId: number } & Pick<
+}: {
+  mine: boolean;
+  admin: boolean;
+  reader: boolean;
+  viewerId: number;
+  capture: (() => Promise<File | null>) | null;
+} & Pick<
   AccountFeedbackPageProps,
   "swipe" | "pageLinkParams" | "pageLinkExclude" | "table" | "header" | "describeError"
 >) {
@@ -246,12 +272,19 @@ function FeedbackList({
         // A crash report is private, and the server takes no comment on one.
         comments={(row) =>
           reader && row.category !== "CRASH" ? (
-            <ReportComments id={row.id} admin={admin} onChanged={refresh} errorMessage={words.text} />
+            <ReportComments
+              id={row.id}
+              admin={admin}
+              onChanged={refresh}
+              errorMessage={words.text}
+              capture={capture ?? undefined}
+            />
           ) : null
         }
         onUpload={api.upload}
         fetcher={api.file}
-        onCaptureScreenshot={() => captureAppScreenshot()}
+        // `null`, not `undefined`: the inbox reads a missing capture as "the kit's".
+        onCaptureScreenshot={capture}
         renderDate={renderDate}
         {...inbox}
       />
@@ -266,11 +299,13 @@ function ReportComments({
   admin,
   onChanged,
   errorMessage,
+  capture,
 }: {
   id: number;
   admin: boolean;
   onChanged: () => void;
   errorMessage: (error: unknown, fallback: string) => string;
+  capture?: () => Promise<File | null>;
 }) {
   const api = useAccountFeedbackApi();
   const thread = useFeedbackCommentsQuery(id, api, { admin, errorMessage, onChanged });
@@ -284,7 +319,7 @@ function ReportComments({
       onDelete={thread.onDelete}
       pending={thread.pending}
       onUpload={api.upload}
-      onCaptureScreenshot={() => captureAppScreenshot()}
+      onCaptureScreenshot={capture}
       fetcher={api.file}
     />
   );

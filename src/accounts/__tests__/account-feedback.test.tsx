@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router";
@@ -144,6 +144,16 @@ describe("AccountFeedbackPage", () => {
     const { calls } = mount(<AccountFeedbackPage mine={false} />, { user: ben, entry: "/feedback?row=2" });
     expect(await screen.findByTestId("where")).toHaveTextContent("/my-feedback?row=2");
     expect(calls.map((c) => c.route)).not.toContain("get /feedback");
+  });
+
+  it("offers no screenshot capture with onCaptureScreenshot={null}, for an app without its peer (RC-1)", async () => {
+    const routes = { "get /feedback": () => ({ status: 200, data: [report(2, "Die Pendelwelle")] }) };
+    mount(<AccountFeedbackPage mine={false} />, { routes, entry: "/feedback?row=2" });
+    expect((await screen.findAllByRole("button", { name: "Capture screenshot" })).length).toBeGreaterThan(0);
+    cleanup();
+    mount(<AccountFeedbackPage mine={false} onCaptureScreenshot={null} />, { routes, entry: "/feedback?row=2" });
+    expect((await screen.findAllByRole("button", { name: "Add attachment" })).length).toBeGreaterThan(0);
+    expect(screen.queryByRole("button", { name: "Capture screenshot" })).not.toBeInTheDocument();
   });
 
   it("lists the caller's own reports on their page", async () => {
