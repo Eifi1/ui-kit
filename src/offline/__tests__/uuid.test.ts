@@ -16,7 +16,7 @@ const V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}
 
 /** A browser over plain http: `getRandomValues`, and neither `randomUUID` nor `subtle`. */
 function plainHttp() {
-  vi.stubGlobal("crypto", { getRandomValues: (b: Uint8Array) => webcrypto.getRandomValues(b) });
+  vi.stubGlobal("crypto", { getRandomValues: (b: Uint8Array<ArrayBuffer>) => webcrypto.getRandomValues(b) });
 }
 
 afterEach(() => vi.unstubAllGlobals());
