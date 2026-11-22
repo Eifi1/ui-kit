@@ -400,6 +400,8 @@ export function AttachButton(props: AttachButtonProps) {
       const capture = onCaptureScreenshot;
       if (!capture) return;
       setCapturing(true);
+      // `deliver` is this tap's: its screening was not yet held by the capture's own
+      // `capturing`, which only keeps a second tap from starting another.
       void capture()
         .then((file) => {
           if (file) deliver("screenshot", [file]);
