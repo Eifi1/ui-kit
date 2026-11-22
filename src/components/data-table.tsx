@@ -70,7 +70,7 @@ import {
 } from "../i18n/kit-labels";
 import { useEdgeFade } from "../lib/strip-fade";
 import { dirOf, type Direction } from "../lib/direction";
-import { focusContainer, focusFirst, focusIsLost, tabStops, whenFocusLeftForNothing } from "../lib/focus-left";
+import { useTableFocusReturn } from "./data-table-focus";
 
 // ---------- Types ----------
 
@@ -1037,43 +1037,6 @@ export interface DataTableDesktopSwipeActions<T> {
  */
 const FOOTER_CELL = "sticky bottom-0 z-10 bg-surface-2 shadow-[inset_0_2px_0_var(--border-strong)]";
 
-/** Where focus that leaves a row is still the row's (DSP-4): an overlay — a confirm, a
- *  menu, a sheet — hands it back or closes with the row it was about. The kit marks its
- *  own (`data-kit-layer`); an app's dialog says what it is. */
-const OVERLAY_SELECTOR = '[data-kit-layer],[role="dialog"],[role="alertdialog"],[aria-modal="true"],[role="menu"]';
-
-/** The row holding the focus (DSP-4): its key, where it stood, and the element in it with
- *  its place among the row's own stops, -1 for the row itself or none (DSP-1). */
-interface HeldRow {
-  key: string | number;
-  index: number;
-  slot: number;
-  el: Element | null;
-}
-
-/** The row `el` is in, when that row is one of `list`'s own: a `<tr>` of the table's
- *  bodies, a card of the phone's list — not a row of a table nested in a cell or a
- *  detail, and not the detail row itself (it has no `data-row-index`). */
-function ownRowOf(el: Element, list: HTMLElement): HTMLElement | null {
-  const row = el.closest<HTMLElement>(list.tagName === "TABLE" ? "tr[data-row-index]" : "li[data-row-index]");
-  if (!row) return null;
-  const owner = list.tagName === "TABLE" ? row.parentElement?.parentElement : row.parentElement;
-  return owner === list ? row : null;
-}
-
-/** `rows`' places by `rowKey`, the first row of a key winning as a `findIndex`'s did; the
- *  map built at the first lookup (0.52 code review, data-table.tsx). */
-function keyIndex<T>(rows: readonly T[], rowKey: (row: T) => string | number): (key: string | number) => number {
-  let at: Map<string | number, number> | null = null;
-  return (key) => {
-    if (!at) {
-      at = new Map();
-      for (let i = rows.length - 1; i >= 0; i--) at.set(rowKey(rows[i]), i);
-    }
-    return at.get(key) ?? -1;
-  };
-}
-
 /** How long a filter's "n of m rows" waits for the typing to pause (DSP-23 d): longer than
  *  the gap between two keystrokes, short enough to answer the word just typed. */
 const FILTER_ANNOUNCE_DELAY_MS = 500;
@@ -1890,75 +1853,35 @@ export function DataTable<T>({
   // stop per row, so a 100-row page does not put 100 stops between the header and
   // the pager.
   const rowsFocusable = !!onRowClick;
+  const tableRef = useRef<HTMLTableElement | null>(null);
   const [focusRowKey, setFocusRowKey] = useState<string | number | null>(null);
-  // The rows' places by key (0.52 code review, data-table.tsx): the tab stop's check
-  // below, the focus note and its recovery each walked the rows calling `rowKey` — on
-  // every render, at each focus, in every commit while a row was noted: under
-  // `virtualize`, 3000 rows, ~15000 calls per arrow step at the table's end. Built at the
-  // first lookup, once per array, so a table nobody focuses builds none. Keyed on the
-  // rows alone: `rowKey` is a pure function of its row, and a call site writes it inline.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const sliceIndex = useMemo(() => keyIndex(slice, rowKey), [slice]);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const mobileIndex = useMemo(() => keyIndex(mobileSlice, rowKey), [mobileSlice]);
+  // `virtualize` (0.48.2): desktop only, and only with rows to window. Arrow/Home/End then
+  // move over every row, rendered or not: the target is rendered, then focused.
+  const virtualOn = !!virtualize && isMdUp && slice.length > 0;
+  const focusRowRef = useRef<((index: number) => void) | undefined>(undefined);
+  // ---- When the focused row leaves (refactor audit 2026-10-30, DSP-4), or stays while
+  // its focused element leaves (2026-11-22, DSP-1): data-table-focus.ts ----
+  const focusReturn = useTableFocusReturn({
+    rows: slice,
+    phoneRows: mobileSlice,
+    rowKey,
+    isMdUp,
+    virtualOn,
+    rowsFocusable,
+    tableRef,
+    phoneListRef,
+    focusRowRef,
+    announceMoved: () => announce(labels.filterResults(paginationTotal, isServer ? paginationTotal : rows.length)),
+  });
+  const { sliceIndex } = focusReturn;
   const tabRowKey =
     focusRowKey !== null && sliceIndex(focusRowKey) !== -1 ? focusRowKey : slice.length ? rowKey(slice[0]) : null;
 
   // What the memoised rows' handlers read at event time (0.48.2, K-052-2): the latest
   // props, refreshed every commit, so a row that bailed out of a render still toggles
   // through the current `selection` and opens through the current `onRowClick`.
-  // `virtualize` (0.48.2): desktop only, and only with rows to window. Arrow/Home/End then
-  // move over every row, rendered or not: the target is rendered, then focused.
-  const virtualOn = !!virtualize && isMdUp && slice.length > 0;
-  const focusRowRef = useRef<((index: number) => void) | undefined>(undefined);
-  // ---- When the focused row leaves (refactor audit 2026-10-30, DSP-4) ----
-  // The row holding the focus — its key, and where it stood — noted as the focus comes
-  // into it (the rows report it, through React, so a menu or a dialog a row opened in a
-  // portal is the row's too). A delete, a status change that filters the row out, an
-  // approval: the row's DOM goes, the focus with it to <body>, and the commit that took it
-  // puts the focus on the row now in its place (below).
-  //
-  // And the element itself, with its place among the row's own stops (refactor audit
-  // 2026-11-22, DSP-1): a row can STAY while that element leaves — an expanded row's
-  // editor closing itself with its Save, a grouped row moving to another group's
-  // `<tbody>` — and the focus goes back into the row, to the same stop (as useRowLeaves
-  // does for a list). A focus in the row's detail or in a portal it opened has no place
-  // among the row's stops: it keeps the last one the row had, the control that opened it.
-  const heldRow = useRef<HeldRow | null>(null);
-  const lastSlot = useRef<{ key: string | number; slot: number } | null>(null);
-  const noteRowFocus = (key: string | number, target: EventTarget | null) => {
-    const list = isMdUp ? tableRef.current : phoneListRef.current;
-    const el = target instanceof HTMLElement || target instanceof SVGElement ? target : null;
-    const box = el && list ? ownRowOf(el, list) : null;
-    let slot = lastSlot.current?.key === key ? lastSlot.current.slot : -1;
-    if (box) {
-      slot = el === box ? -1 : tabStops(box, { includeSelf: false }).indexOf(el as HTMLElement);
-      lastSlot.current = { key, slot };
-    }
-    heldRow.current = { key, index: (isMdUp ? sliceIndex : mobileIndex)(key), slot, el };
-  };
-  // A gone row's note waiting for the overlay that holds the focus (below): watched as
-  // a node until it leaves the page, since its close need not render the table.
-  const overlayWatch = useRef<{ layer: Element; stop: () => void } | null>(null);
-  const settleRef = useRef<() => void>(() => {});
-  const watchOverlay = (layer: Element) => {
-    if (overlayWatch.current?.layer === layer) return;
-    overlayWatch.current?.stop();
-    const observer = new MutationObserver(() => {
-      if (layer.isConnected) return;
-      stop();
-      settleRef.current();
-    });
-    const stop = () => {
-      observer.disconnect();
-      if (overlayWatch.current?.layer === layer) overlayWatch.current = null;
-    };
-    observer.observe(layer.ownerDocument.body, { childList: true, subtree: true });
-    overlayWatch.current = { layer, stop };
-  };
-  useEffect(() => () => overlayWatch.current?.stop(), []);
   const latestRowCtx: DataTableRowCtx<T> = {
-    noteFocus: noteRowFocus,
+    noteFocus: focusReturn.noteFocus,
     moveFocus: virtualOn
       ? (from, key) => {
           const target = rowNavTarget(from, key, slice.length);
@@ -2044,7 +1967,6 @@ export function DataTable<T>({
   // sections for the "assistance"-style list (feedback #317). Null unless the
   // caller opts in via `mobileGroupBy`.
   // The desktop's bands (0.48, keksdose dev #605), over the rows on screen.
-  const tableRef = useRef<HTMLTableElement | null>(null);
   // A level's declared groups with no rows (0.59, keksdose live #504; `DataTableGroupBy.keys`):
   // only where the table knows they ARE empty — it holds every row and nothing narrows them
   // (a filter, the set), and never under `virtualize`. Placed over ALL the rows, so a page
@@ -2136,76 +2058,10 @@ export function DataTable<T>({
   useLayoutEffect(() => {
     focusRowRef.current = focusRowAt;
   }, [focusRowAt]);
-
-  // The commit that took the focused row (DSP-4): if the focus fell with it — to <body>,
-  // not into a dialog or a field the app chose — it goes to the row now at that index,
-  // else the last row, else the table itself (`tabIndex=-1` while empty, named by
-  // `labels.table`); the card on a phone. A focusable row (`onRowClick`) takes it itself,
-  // any other its first control. The remaining count is said, as a filter's is: the
-  // focus moved without the user moving it. translation-review's `keepFocusAt` is the
-  // kit's earlier copy of the rule, for its groups.
-  //
-  // Every commit while a row is noted, a lookup by its key. A focus the user took
-  // elsewhere drops the note (`onBlur` on the root, below), and since the 0.52 code review
-  // so does one that went to nothing — a click on the page's background: kept, it was the
-  // one case where a later removal (a refetch, a sync) pulled the focus back in.
-  const settleFocus = () => {
-    const held = heldRow.current;
-    if (!held) return;
-    const now = (isMdUp ? sliceIndex : mobileIndex)(held.key);
-    const list = isMdUp ? tableRef.current : phoneListRef.current;
-    if (now !== -1) {
-      held.index = now;
-      // The row stayed and the element that had the focus left it (DSP-1): an inline
-      // editor's Save that closed it, a `<tbody>` re-keyed round the row. Only that — a
-      // control still in the page that lost the focus (disabled while it saves) is its
-      // own business, and the focus is not pulled to a neighbour of it.
-      if (!list || !focusIsLost() || held.el?.isConnected) return;
-      if (isMdUp && virtualOn && rowsFocusable && held.slot < 0) {
-        focusRowRef.current?.(now);
-        return;
-      }
-      const row = list.querySelector<HTMLElement>(
-        isMdUp ? `:scope > tbody > tr[data-row-index="${now}"]` : `:scope > li[data-row-index="${now}"]`,
-      );
-      if (!row) return;
-      const stops = tabStops(row, { includeSelf: false });
-      focusFirst([stops[held.slot], isMdUp && rowsFocusable ? row : null, stops[0]]);
-      return;
-    }
-    // In an overlay — a confirm, an edit drawer — the focus is not lost yet: the overlay
-    // hands it back to its opener as it closes, and the opener was in the row (0.52 code
-    // review, data-table.tsx: an optimistic delete with its confirm still open dropped the
-    // note, and the confirm's close dropped the focus to <body>). The note waits for the
-    // overlay to leave the page, watched as a node: the table need not render when it does
-    // (`useConfirm`'s provider, a Modal's exit). Not an overlay the table itself is in.
-    const layer = focusIsLost() ? null : document.activeElement?.closest(OVERLAY_SELECTOR);
-    if (layer && !(list && layer.contains(list))) {
-      watchOverlay(layer);
-      return;
-    }
-    heldRow.current = null;
-    overlayWatch.current?.stop();
-    if (!list || !focusIsLost()) return;
-    const shown = isMdUp ? slice : mobileSlice;
-    const at = shown.length === 0 ? -1 : Math.min(Math.max(held.index, 0), shown.length - 1);
-    if (at === -1) list.focus();
-    else if (isMdUp && virtualOn && rowsFocusable) focusRowRef.current?.(at);
-    else {
-      const row = list.querySelector<HTMLElement>(
-        isMdUp ? `:scope > tbody > tr[data-row-index="${at}"]` : `:scope > li[data-row-index="${at}"]`,
-      );
-      // Each of the row's stops in turn, then the table (0.52 code review): `focus()` on
-      // one that cannot hold it — `display: none`, in a closed <details>, a hidden input —
-      // does nothing, and the focus stayed on <body>.
-      const stops = !row ? [] : isMdUp && rowsFocusable ? [row] : tabStops(row, { includeSelf: false });
-      if (!focusFirst(stops)) focusContainer(list);
-    }
-    announce(labels.filterResults(paginationTotal, isServer ? paginationTotal : rows.length));
-  };
+  // Every commit, the focus return's check (data-table-focus.ts): here, after the window's
+  // focus mover is set, which it may use.
   useLayoutEffect(() => {
-    settleRef.current = settleFocus;
-    settleFocus();
+    focusReturn.settle();
   });
 
   // `mobileGroupBy` may be a desktop `groupBy` level (0.48), its label, end slot and
@@ -2248,24 +2104,8 @@ export function DataTable<T>({
       // `<main>` and every `FillHeight` between it and this table key off it with
       // `has-[[data-fill-height]]`, so a page asks for the fill by passing the prop.
       data-fill-height={fillHeight ? "" : undefined}
-      // The focused row's note (DSP-4): cleared on the way down to whatever takes the
-      // focus, and set again on the way up by the row that holds it. Focus leaving for
-      // something real outside the table drops it — unless that is an overlay (a confirm,
-      // a menu), which hands the focus back, or closes with the row it asked about.
-      onFocusCapture={() => {
-        heldRow.current = null;
-        overlayWatch.current?.stop();
-      }}
-      onBlur={(e) => {
-        const to = e.relatedTarget;
-        if (to instanceof Element && !to.closest(OVERLAY_SELECTOR)) heldRow.current = null;
-        // Focus that left for nothing — a click on the page (0.52 code review): no
-        // element to say where, and a later removal of the row is no longer the user's.
-        const held = heldRow.current;
-        whenFocusLeftForNothing(e, () => {
-          if (heldRow.current === held) heldRow.current = null;
-        });
-      }}
+      // The focused row's note (DSP-4), dropped when the focus leaves the table for real.
+      {...focusReturn.rootProps}
       className={cn(
         "group/table",
         frame ? "overflow-clip" : "min-w-0",
@@ -2523,7 +2363,7 @@ export function DataTable<T>({
             // The open row's editor is the row's focus too: a Delete in it takes the row,
             // and the dialog with it (DSP-4).
             onFocus={(e) => {
-              if (mobileDialogRow) noteRowFocus(rowKey(mobileDialogRow), e.target);
+              if (mobileDialogRow) focusReturn.noteFocus(rowKey(mobileDialogRow), e.target);
             }}
             onClose={closeDialog}
             closeLabel={labels.close}
