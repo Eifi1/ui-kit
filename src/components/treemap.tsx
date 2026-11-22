@@ -32,6 +32,7 @@ import { resolveChartColor, useChartEdge, useEdgesInForce, type ChartEdges } fro
 import { parseHex } from "../theme/color";
 import { dirOf, rovingTarget, type Direction } from "../lib/direction";
 import { returnFocus } from "../lib/focus-left";
+import { useDismissLayer } from "../hooks/use-dismiss";
 import { shareFormat } from "../lib/share-format";
 import { cn } from "../lib/cn";
 import { useTextSize } from "../theme/text-size";
@@ -848,14 +849,11 @@ function TreemapTooltip({
 }) {
   const at = useSyncExternalStore(anchor.subscribe, anchor.read, anchor.read);
   const shown = at !== null;
-  useEffect(() => {
-    if (!shown) return;
-    const onKeyDown = (event: globalThis.KeyboardEvent) => {
-      if (event.key === "Escape") anchor.clear();
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [shown, anchor]);
+  // A layer on the kit's Escape stack while up, as Tooltip's bubble is (refactor audit
+  // 2026-11-22, DUP-10): in a Modal the first Escape closes the bubble and the next one
+  // the dialog. A raw document listener closed both with one press. Not an overlay: it
+  // annotates the map, as a tooltip does.
+  useDismissLayer(shown, () => anchor.clear(), { overlay: false });
   // A node that is gone takes the bubble with it for good: the node coming back with new
   // data is not the pointer coming back to it.
   useEffect(() => {
