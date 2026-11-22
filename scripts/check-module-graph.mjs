@@ -217,7 +217,9 @@ const SHELL_SET = [
 // (16 kB gzip). Anything the top bar imports that USES the dialog, the attachment field
 // or the context box statically puts it back over this ceiling.
 const BUDGETS = [
-  { label: "{ Button }", names: ["Button"], max: 19_800 },
+  // 19,922 B in 0.66: Button's LockedReason rides Tooltip, which gained `keepFrame` so a lock
+  // flip no longer remounts the locked control (INP-4, refactor audit 2026-11-22) — meant growth.
+  { label: "{ Button }", names: ["Button"], max: 20_100 },
   // 1,721 B in 0.48: the common labels Spinner reads gained showMore / showLess (AlertBanner
   // clampMobile, keksdose dev #611) — meant growth.
   { label: "{ Spinner }", names: ["Spinner"], max: 1_760 },
@@ -290,7 +292,11 @@ const BUDGETS = [
   // And the privacy page's sign-in line (`standardEntries.session`, auth §12.9), English
   // registered beside every namespace as the legal labels are — meant growth, 211 B: 162,214 B
   // (56,362 gzip) with both.
-  { label: "the shell set", names: SHELL_SET, max: 162_300 },
+  // 164,759 B (57,277 gzip) in 0.66, +2.4 kB: the English defaults of two new namespaces
+  // (`attach`, `topBarNav`) that the provider carries, Tooltip's `keepFrame` (INP-4), the
+  // focus-return and submit-chord helpers (INP-1/3, DUP-7). Measured as a whole, not split
+  // per item. TopBar itself imports none of TopBarNav.
+  { label: "the shell set", names: SHELL_SET, max: 165_000 },
   // 0.63 (auth §12.9): what `@eifi1/ui-kit/accounts`' session costs an app, which creates the
   // client at once beside its axios instance — the kit's code only, zustand outside the count.
   // 12,115 B (4,702 gzip): the client 9.1 kB, the session refresh's flight 6.7 kB, the store

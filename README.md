@@ -604,7 +604,7 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2302 names from 388 modules** in the main barrel — 1032 values and 1270 types — and 350 more in 17 standalone entries. _Italic_ is a type-only export.
+**2318 names from 393 modules** in the main barrel — 1039 values and 1279 types — and 365 more in 17 standalone entries. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 `node scripts/gen-export-inventory.mjs`; the counts are pinned by
@@ -612,24 +612,24 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2302 |
+| `@eifi1/ui-kit` | 2318 |
 | `@eifi1/ui-kit/chart` | 102 |
-| `@eifi1/ui-kit/shell` | 109 |
+| `@eifi1/ui-kit/shell` | 114 |
 | `@eifi1/ui-kit/data-table` | 57 |
 | `@eifi1/ui-kit/wizard` | 25 |
 | `@eifi1/ui-kit/tour` | 49 |
-| `@eifi1/ui-kit/feedback` | 222 |
+| `@eifi1/ui-kit/feedback` | 223 |
 | `@eifi1/ui-kit/search` | 20 |
-| `@eifi1/ui-kit/dates` | 26 |
+| `@eifi1/ui-kit/dates` | 32 |
 | `@eifi1/ui-kit/table-text` | 14 |
 | `@eifi1/ui-kit/currencies` | 3 |
 | `@eifi1/ui-kit/eslint` | 1 |
 | `@eifi1/ui-kit/testing` | 18 |
 | `@eifi1/ui-kit/testing/react` | 2 |
 | `@eifi1/ui-kit/rhf` | 52 |
-| `@eifi1/ui-kit/offline` | 38 |
-| `@eifi1/ui-kit/accounts` | 146 |
-| `@eifi1/ui-kit/sync` | 37 |
+| `@eifi1/ui-kit/offline` | 40 |
+| `@eifi1/ui-kit/accounts` | 151 |
+| `@eifi1/ui-kit/sync` | 39 |
 | `@eifi1/ui-kit/sync/testing` | 3 |
 | `@eifi1/ui-kit/push-worker` | 10 |
 | `@eifi1/ui-kit/i18n/de-CH` | 2 |
@@ -724,6 +724,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/quantity-field` | `QuantityField`, _`QuantityFieldProps`_ |
 | `components/sparkline` | `DEFAULT_SPARKLINE_LABELS`, `Sparkline`, `sparklineSummary`, _`SparklineLabels`_, _`SparklineProps`_, _`SparklineTone`_ |
 | `components/stat-tile` | `DEFAULT_STAT_TILE_LABELS`, `StatTile`, `StatTileGrid`, _`StatTileDelta`_, _`StatTileGridProps`_, _`StatTileLabels`_, _`StatTileLinkProps`_, _`StatTileProps`_, _`StatTileSubValue`_, _`StatTileTone`_ |
+| `components/stat-strip` | `StatStrip`, _`StatStripProps`_ |
 | `components/signature-pad` | `DEFAULT_SIGNATURE_PAD_LABELS`, `SignaturePad`, `SignatureView`, _`SignatureDetail`_, _`SignaturePadHandle`_, _`SignaturePadLabels`_, _`SignaturePadProps`_, _`SignatureViewProps`_ |
 | `components/password-strength` | `DEFAULT_PASSWORD_STRENGTH_LABELS`, `passwordByteLength`, `passwordRules`, `PasswordStrengthMeter`, `scorePassword`, _`PasswordRule`_, _`PasswordRuleId`_, _`PasswordScoreOptions`_, _`PasswordStrengthLabels`_, _`PasswordStrengthMeterProps`_, _`PasswordStrengthScore`_ |
 | `components/page-contents` | `DEFAULT_PAGE_CONTENTS_LABELS`, `PageContents`, `PageContentsLayout`, `useScrollSpy`, _`PageContentsItem`_, _`PageContentsLabels`_, _`PageContentsLayoutProps`_, _`PageContentsProps`_, _`UseScrollSpyOptions`_ |
@@ -742,6 +743,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/file-button` | `DEFAULT_FILE_PICKER_LABELS`, `FileButton`, _`FileButtonProps`_ |
 | `components/camera-button` | `CameraButton`, _`CameraButtonProps`_ |
 | `components/camera-capture` | `CameraCapture`, _`CameraCaptureProps`_, _`CameraFacing`_ |
+| `components/attach-button` | `AttachButton`, `attachDropzoneProps`, _`AttachButtonProps`_, _`AttachOptions`_, _`AttachSource`_, _`AttachTile`_ |
 | `components/chart` | `ChartContainer`, `ChartLegend`, `ChartLegendContent`, `ChartTooltip`, `ChartTooltipContent`, `useChart`, _`ChartConfig`_, _`ChartSeriesConfig`_ |
 | `components/treemap` | `fitLabel`, `Treemap`, `TreemapCell`, _`TreemapCellProps`_, _`TreemapEdges`_, _`TreemapNode`_, _`TreemapProps`_ |
 | `components/treemap-labels` | `DEFAULT_TREEMAP_LABELS`, _`TreemapLabels`_ |
@@ -833,6 +835,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/data-table-cells` | `booleanColumn`, `BooleanMark`, _`BooleanColumnOptions`_, _`BooleanMarkProps`_ |
 | `components/use-table-state` | `useTableUrlState`, _`TableUrlState`_, _`TableUrlStateProps`_, _`TableUrlSync`_, _`UseTableUrlStateOptions`_, _`UseTableUrlStateReturn`_ |
 | `components/camera-labels` | `DEFAULT_CAMERA_LABELS`, _`CameraLabels`_ |
+| `components/attach-button-labels` | `DEFAULT_ATTACH_LABELS`, _`AttachLabels`_ |
 | `components/translation-review-editor` | `TranslationReviewEditor`, _`TranslationReviewEditorProps`_ |
 | `components/translation-review-parts` | `REVIEW_STATUS_TONES`, `ReviewStatusChip`, `TranslationExportButton`, `TranslationLocaleTabs`, `TranslationProgress`, _`ReviewStatusChipProps`_, _`TranslationExportButtonProps`_, _`TranslationLocaleTab`_, _`TranslationLocaleTabsProps`_, _`TranslationProgressProps`_ |
 | `components/translation-review-labels` | `DEFAULT_TRANSLATION_REVIEW_LABELS`, _`TranslationReviewLabels`_ |
@@ -911,6 +914,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `shell/fill-height` | `FILL_HEIGHT_CLASS`, `FillHeight`, _`FillHeightProps`_ |
 | `shell/admin-menu` | `adminMenuEntry`, `AdminMenuRow`, `AdminWaitingBadge`, `useAdminMenuEntry`, _`AdminMenuEntryOptions`_, _`AdminMenuRowProps`_, _`AdminWaitingBadgeProps`_, _`UseAdminMenuEntryOptions`_ |
 | `shell/top-bar-actions` | `TopBarActions`, _`TopBarActionsProps`_ |
+| `shell/top-bar-nav` | `DEFAULT_TOP_BAR_NAV_LABELS`, `TopBarNav`, _`TopBarNavItem`_, _`TopBarNavLabels`_, _`TopBarNavProps`_ |
 | `shell/account-menu-language` | `AccountMenuLanguage`, _`AccountMenuLanguageOption`_, _`AccountMenuLanguageProps`_ |
 | `shell/account-menu-text-size` | `AccountMenuTextSize`, _`AccountMenuTextSizeProps`_ |
 | `shell/tour-menu` | `TourMenu`, _`TourMenuProps`_, _`TourMenuTour`_ |
@@ -979,6 +983,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `feedback/feedback-replies` | `DEFAULT_FEEDBACK_REPLIES_LABELS`, `FeedbackReplyComposer`, `feedbackReplyNudge`, `FeedbackReplyTimeline`, `useFeedbackRepliesLabels`, _`FeedbackRepliesLabels`_, _`FeedbackReplyComposerProps`_, _`FeedbackReplyTimelineProps`_ |
 | `feedback/feedback-entry-file` | `FeedbackEntryFile`, `useFeedbackEntryUpload`, _`FeedbackEntryFileProps`_, _`FeedbackEntryUpload`_, _`FeedbackEntryUploadOptions`_, _`FeedbackEntryUploadState`_ |
 | `feedback/feedback-inbox-page` | `FeedbackInbox`, `useFeedbackInbox`, _`FeedbackInboxBulk`_, _`FeedbackInboxMutation`_, _`FeedbackInboxProps`_, _`FeedbackInboxState`_, _`FeedbackReplyPost`_, _`FeedbackReworkPost`_, _`UseFeedbackInboxOptions`_ |
+| `feedback/feedback-inbox-bulk` | `isFeedbackBulkPatch` |
 | `feedback/feedback-page-frame` | `FeedbackPageFrame`, _`FeedbackPageFrameHeaderProps`_, _`FeedbackPageFrameProps`_ |
 | `feedback/feedback-comments` | `useFeedbackComments`, _`FeedbackCommentsApi`_, _`FeedbackCommentsState`_, _`UseFeedbackCommentsOptions`_ |
 | `feedback/feedback-public-page` | `FeedbackPublicPage`, `useFeedbackPublicPage`, _`FeedbackPublicApi`_, _`FeedbackPublicPageProps`_, _`FeedbackPublicPageState`_, _`FeedbackPublicRead`_, _`FeedbackPublicRequest`_, _`UseFeedbackPublicPageOptions`_ |
@@ -1130,7 +1135,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 
 | Module | Exports |
 |---|---|
-| `lib/dates` | `addDaysIso`, `addMonthsClamped`, `calendarMonthPresets`, `currentDate`, `dateRangePresets`, `endOfMonthIso`, `endOfYearIso`, `formatIsoDate`, `lastFullMonthsRange`, `lastFullYearsRange`, `localeWeekStart`, `monthKey`, `pad`, `parseIsoDate`, `sameYmd`, `setToday`, `shiftIso`, `startOfMonthIso`, `startOfWeekIso`, `startOfYearIso`, `subscribeToday`, `todayIso`, `todayOverride`, `toLocalIso`, _`CalendarMonthPresetOptions`_, _`DateRangePreset`_ |
+| `lib/dates` | `addDaysIso`, `addMonthsClamped`, `addMonthsIso`, `calendarMonthPresets`, `currentDate`, `dateRangePresets`, `daysBetweenIso`, `endOfMonthIso`, `endOfYearIso`, `formatIsoDate`, `isoWeekNumber`, `lastFullMonthsRange`, `lastFullYearsRange`, `localeWeekStart`, `monthKey`, `monthsBetweenIso`, `monthStartOf`, `pad`, `parseIsoDate`, `sameYmd`, `setToday`, `shiftIso`, `startOfMonthIso`, `startOfWeekIso`, `startOfYearIso`, `subscribeToday`, `todayIso`, `todayOverride`, `toLocalIso`, `weekStartOf`, _`CalendarMonthPresetOptions`_, _`DateRangePreset`_ |
 
 ### @eifi1/ui-kit/table-text (standalone)
 
@@ -1179,6 +1184,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `offline/shared-computer` | `DEFAULT_SHARED_COMPUTER_LABELS`, `isSharedComputer`, `setSharedComputer`, `SharedComputerChoice`, _`SharedComputerChoiceProps`_, _`SharedComputerLabels`_, _`SharedComputerStorage`_ |
 | `offline/shared-computer-idle` | `useSharedComputerIdleSignOut`, _`SharedComputerIdleSignOutOptions`_ |
 | `offline/local-first` | `isOfflineError`, `readLocalFirst`, `stampAfter`, `uuid5`, `writeLocalFirst` |
+| `lib/uuid` | `randomUuid`, `uuid5Sync` |
 | `offline/feedback-comments-query` | `feedbackCommentsQueryKey`, `useFeedbackCommentsQuery`, _`UseFeedbackCommentsQueryOptions`_ |
 
 ### @eifi1/ui-kit/accounts (standalone)
@@ -1193,10 +1199,10 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `accounts/accounts-api` | _`AccountAdminActionPage`_, _`AccountAdminActionQuery`_, _`AccountAdminActionRow`_, _`AccountAdminConfirmation`_, _`AccountAdminMailResult`_, _`AccountAdminUser`_, _`AccountDeletionResult`_, _`AccountDeletionTerms`_, _`AccountEmailChange`_, _`AccountEmailConfirmed`_, _`AccountEmailVerification`_, _`AccountErasureResult`_, _`AccountInvitation`_, _`AccountInvitationAccepted`_, _`AccountInvitationCheck`_, _`AccountInvitationDraft`_, _`AccountInvitationIssued`_, _`AccountMe`_, _`AccountPasskey`_, _`AccountPasskeyOptions`_, _`AccountPasswordReset`_, _`AccountProfilePatch`_, _`AccountReviewerResult`_, _`AccountRosterPage`_, _`AccountRosterQuery`_, _`AccountsApi`_, _`AccountSessionInfo`_, _`AccountTwoFactorEnabled`_, _`AccountTwoFactorSetup`_, _`AccountTwoFactorStatus`_ |
 | `accounts/passkey-ceremony` | `passkeysAvailable` |
 | `accounts/accounts-context` | `accountQueryKeys`, `AccountsProvider`, `useAccountsClient`, _`AccountsProviderProps`_ |
-| `accounts/accounts-hooks` | `useAccountDeletion`, `useAccountExport`, `useAccountSessions`, `useAdminActions`, `useAdminAttention`, `useAdminMail`, `useAdminRoster`, `useAdminUserActions`, `useChangePassword`, `useCurrentUser`, `useEmailChange`, `useInvitationsAdmin`, `useMailTest`, `usePasskeys`, `useTranslationReviews`, `useTwoFactor`, `useUpdateProfile` |
+| `accounts/accounts-hooks` | `useAccountDeletion`, `useAccountExport`, `useAccountSessions`, `useAdminActionLog`, `useAdminActions`, `useAdminAttention`, `useAdminMail`, `useAdminRoster`, `useAdminUserActions`, `useChangePassword`, `useCurrentUser`, `useEmailChange`, `useInvitationsAdmin`, `useMailTest`, `usePasskeys`, `useTranslationReviews`, `useTwoFactor`, `useUpdateProfile` |
 | `accounts/account-pages` | `accountPage`, `accountRouteElements`, `accountRoutes`, _`AccountPageFrameProps`_, _`AccountPageName`_, _`AccountPaths`_, _`AccountRegisterFieldsProps`_, _`AccountRoutesOptions`_ |
 | `accounts/require-session` | `RequireSession`, _`RequireSessionProps`_ |
-| `accounts/account-settings-sections` | `AccountDeletionSection`, `AccountEmailSection`, `AccountExportSection`, `AccountInvitationsSection`, `AccountPasskeysSection`, `AccountPasswordSection`, `AccountProfileSection`, `AccountSessionsSection`, `AccountTwoFactorSection`, _`AccountDeletionSectionProps`_, _`AccountInvitationsSectionProps`_, _`AccountPasskeysSectionProps`_, _`AccountProfileSectionProps`_, _`AccountTwoFactorSectionProps`_ |
+| `accounts/account-settings-sections` | `AccountDeletionSection`, `AccountEmailSection`, `AccountExportSection`, `AccountInvitationsSection`, `AccountPasskeysSection`, `AccountPasswordSection`, `AccountProfileSection`, `AccountSessionsSection`, `AccountTwoFactorSection`, _`AccountDeletionSectionProps`_, _`AccountEmailSectionProps`_, _`AccountExportSectionProps`_, _`AccountInvitationsSectionProps`_, _`AccountPasskeysSectionProps`_, _`AccountPasswordSectionProps`_, _`AccountProfileSectionProps`_, _`AccountSessionsSectionProps`_, _`AccountTwoFactorSectionProps`_ |
 | `accounts/account-admin-sections` | `AccountAdminLogSection`, `AccountAdminOverviewSection`, `AccountMailTestSection`, `AccountUserRosterSection`, _`AccountAdminLogSectionProps`_, _`AccountAdminOverviewSectionProps`_, _`AccountMailTestSectionProps`_, _`AccountRosterLabels`_, _`AccountUserRosterSectionProps`_ |
 | `accounts/account-roster-labels` | `DEFAULT_ACCOUNT_ROSTER_LABELS` |
 | `accounts/account-translation-review` | `AccountTranslationReview`, _`AccountTranslationReviewProps`_ |
@@ -1217,6 +1223,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `sync/hooks` | `useSyncQuery`, `useSyncStatus`, `useSyncWorker` |
 | `sync/wire` | _`SyncPageCursor`_, _`SyncRefusalBody`_, _`SyncRejectionBody`_, _`SyncRequestBody`_, _`SyncResponseBody`_, _`SyncWireChange`_ |
 | `offline/local-first` | `isOfflineError`, `readLocalFirst`, `stampAfter`, `uuid5`, `writeLocalFirst` |
+| `lib/uuid` | `randomUuid`, `uuid5Sync` |
 
 ### @eifi1/ui-kit/sync/testing (standalone)
 
