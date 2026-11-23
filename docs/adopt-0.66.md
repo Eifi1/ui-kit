@@ -71,6 +71,9 @@ before ":" (DOC-5). Move the page's `updated` date in the French text.
   first's toast); the wire types are checked against server-kit 0.32.
 - The screenshot crops to the screen's width on a phone whose layout viewport is wider.
 - The npm README lost a stale second copy of 426 lines.
+- The privacy page's `standardEntries.recentData(1)` says one hour in the singular (en, de, fr, it, es: it
+  said "1 hours"). No app passes 1 (Kurvenschmiede passes 24), so no page's text changes and no `updated`
+  date moves.
 
 ## What an app does
 

@@ -1071,7 +1071,7 @@ export function germanLabels(numberLocale: string): UiKitLabels {
             // 0.61 (Marcel 2026-11-12): the persisted cache and the shared-computer flag, for an app's entries.
             standardEntries: {
               recentData: (hours) =>
-                `Kürzlich geladene Daten, damit Seiten auch ohne Verbindung öffnen; was älter als ${hours} Stunden ist, verwendet die App nicht mehr und entfernt es, sobald sie wieder geöffnet wird. Davon bleibt nichts, wenn Sie sich mit «Dies ist ein gemeinsam genutzter Computer» anmelden`,
+                `Kürzlich geladene Daten, damit Seiten auch ohne Verbindung öffnen; was älter als ${hours === 1 ? "1 Stunde" : `${hours} Stunden`} ist, verwendet die App nicht mehr und entfernt es, sobald sie wieder geöffnet wird. Davon bleibt nichts, wenn Sie sich mit «Dies ist ein gemeinsam genutzter Computer» anmelden`,
               sharedComputer:
                 "Ob Sie bei der Anmeldung «Dies ist ein gemeinsam genutzter Computer» gewählt haben, zusammen mit dem Tab gespeichert",
               // 0.63 (auth §12.9): the sign-in `@eifi1/ui-kit/accounts` keeps.

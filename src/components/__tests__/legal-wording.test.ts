@@ -122,3 +122,21 @@ describe("the legal wording (DOC-6)", () => {
     }
   });
 });
+
+/**
+ * `recentData(1)` said "1 hours", "1 Stunden", "plus de 1 heures", "1 horas", "1 ore" (Marcel,
+ * 2026-11-23). One hour is singular; the pinned wording above (sampled at 24) does not move.
+ */
+describe("the privacy page's recent-data line at one hour", () => {
+  const ONE: Record<string, RegExp> = {
+    en: /older than 1 hour the app/,
+    "de-CH": /älter als 1 Stunde ist/,
+    fr: /date de plus de 1 heure n’est/,
+    it: /più di 1 ora l’app/,
+    es: /más de 1 hora la app/,
+  };
+  it.each(Object.keys(ONE))("%s says it in the singular", (code) => {
+    const line = CATALOGUES[code]().legal.sections.privacy.browser.standardEntries!.recentData(1);
+    expect(line).toMatch(ONE[code]);
+  });
+});

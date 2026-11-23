@@ -1063,7 +1063,7 @@ export function uiKitLabelsFr(numberLocale = "fr-FR"): UiKitLabels {
             // 0.61 (Marcel 2026-11-12): the persisted cache and the shared-computer flag, for an app's entries.
             standardEntries: {
               recentData: (hours) =>
-                `Les données chargées récemment, pour que les pages s’ouvrent aussi sans connexion\u00a0; ce qui date de plus de ${hours} heures n’est plus utilisé et est supprimé à la prochaine ouverture de l’app. Rien n’en est conservé si vous vous connectez avec « C’est un ordinateur partagé »`,
+                `Les données chargées récemment, pour que les pages s’ouvrent aussi sans connexion\u00a0; ce qui date de plus de ${hours} ${hours < 2 ? "heure" : "heures"} n’est plus utilisé et est supprimé à la prochaine ouverture de l’app. Rien n’en est conservé si vous vous connectez avec « C’est un ordinateur partagé »`,
               sharedComputer:
                 "Si vous avez choisi « C’est un ordinateur partagé » à la connexion, conservé avec l’onglet",
               // 0.63 (auth §12.9): the sign-in `@eifi1/ui-kit/accounts` keeps.
