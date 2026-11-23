@@ -219,7 +219,9 @@ const SHELL_SET = [
 const BUDGETS = [
   // 19,922 B in 0.66: Button's LockedReason rides Tooltip, which gained `keepFrame` so a lock
   // flip no longer remounts the locked control (INP-4, refactor audit 2026-11-22) — meant growth.
-  { label: "{ Button }", names: ["Button"], max: 20_100 },
+  // 20,965 B later in 0.66: `useLockFocusHandover` (with focusQuietly) hands a focused Button's
+  // focus to its new self when its lock flips (0.66 browser probe) — meant growth.
+  { label: "{ Button }", names: ["Button"], max: 21_200 },
   // 1,721 B in 0.48: the common labels Spinner reads gained showMore / showLess (AlertBanner
   // clampMobile, keksdose dev #611) — meant growth.
   { label: "{ Spinner }", names: ["Spinner"], max: 1_760 },
@@ -296,7 +298,10 @@ const BUDGETS = [
   // (`attach`, `topBarNav`) that the provider carries, Tooltip's `keepFrame` (INP-4), the
   // focus-return and submit-chord helpers (INP-1/3, DUP-7). Measured as a whole, not split
   // per item. TopBar itself imports none of TopBarNav.
-  { label: "the shell set", names: SHELL_SET, max: 165_000 },
+  // 166,388 B (57,800 gzip) later in 0.66, +1.6 kB: the focus hand-over at a lock flip
+  // (LockFrame's first lock, useLockFocusHandover in Button/IconButton/Chip) and HoverMenu's
+  // tap guard, both found by the 0.66 browser probe.
+  { label: "the shell set", names: SHELL_SET, max: 167_000 },
   // 0.63 (auth §12.9): what `@eifi1/ui-kit/accounts`' session costs an app, which creates the
   // client at once beside its axios instance — the kit's code only, zustand outside the count.
   // 12,115 B (4,702 gzip): the client 9.1 kB, the session refresh's flight 6.7 kB, the store
