@@ -2,15 +2,17 @@ import {
   cloneElement,
   createContext,
   isValidElement,
+  useCallback,
   useContext,
   useId,
   useLayoutEffect,
   useRef,
   useState,
 } from "react";
-import type { ComponentPropsWithoutRef, ComponentPropsWithRef, ReactNode, Ref } from "react";
+import type { ComponentPropsWithoutRef, ComponentPropsWithRef, ReactNode, Ref, RefCallback } from "react";
 import { HelpCircle } from "lucide-react";
 import { cn } from "../lib/cn";
+import { assignRef } from "../lib/refs";
 import { firstTabStop } from "../lib/focus-left";
 import { hasContent } from "../lib/presence";
 import { focusQuietly } from "../lib/quiet-focus";
@@ -797,6 +799,39 @@ export function LockFrame({
   );
 }
 
+/**
+ * The ref for a control drawn bare while unlocked and in {@link LockedReason} while locked
+ * (Button, IconButton, Chip): the flip remounts it, so a control that held the focus hands
+ * it to its new self rather than to <body> — the showcase's "Lock saving" switch under a
+ * focused Save, in real Chromium (0.66 browser probe, 2026-11-23). The focus is noted in
+ * the render that flips, while the old control is still in the document.
+ */
+export function useLockFocusHandover<T extends HTMLElement>(locked: boolean, ref?: Ref<T>): RefCallback<T> {
+  const [was, setWas] = useState(locked);
+  const [moved, setMoved] = useState<FocusSnapshot | null>(null);
+  if (locked !== was) {
+    setWas(locked);
+    setMoved(focusSnapshot());
+  }
+  const current = useRef<T | null>(null);
+  const previous = useRef<T | null>(null);
+  const own = useCallback(
+    (node: T | null) => {
+      if (node) current.current = node;
+      else if (current.current) {
+        previous.current = current.current;
+        current.current = null;
+      }
+      assignRef(ref, node);
+    },
+    [ref],
+  );
+  useLayoutEffect(() => {
+    if (moved && moved.node === previous.current) handOver(moved, current.current);
+  }, [moved]);
+  return own;
+}
+
 /** The focused control at a field's first lock: the node, its id, its caret, and the
  *  elements it sat in. */
 interface FocusSnapshot {
@@ -824,14 +859,18 @@ function focusSnapshot(): FocusSnapshot | null {
  *  (the field above LockFrame keeps its `useId`), else the frame's first tab stop when the
  *  frame sits where the old control sat (DatePicker's trigger has no id). Focus that moved
  *  on by itself is left where it is. */
-function restoreFocus({ node, id, selection, ancestors }: FocusSnapshot, frame: HTMLElement | null) {
-  if (node.isConnected) return;
+function restoreFocus(moved: FocusSnapshot, frame: HTMLElement | null) {
+  const byId = moved.id ? document.getElementById(moved.id) : null;
+  const here = frame?.parentElement ? moved.ancestors.includes(frame.parentElement) : false;
+  handOver(moved, byId ?? (frame && here ? firstTabStop(frame) : null));
+}
+
+/** The focus, and the caret, from a control that left the document to `next` — only while
+ *  nothing else took the focus since. */
+function handOver({ node, selection }: FocusSnapshot, next: HTMLElement | null) {
+  if (node.isConnected || !next || next === node) return;
   const active = document.activeElement;
   if (active && active !== document.body) return;
-  const byId = id ? document.getElementById(id) : null;
-  const here = frame?.parentElement ? ancestors.includes(frame.parentElement) : false;
-  const next = byId ?? (frame && here ? firstTabStop(frame) : null);
-  if (!next || next === node) return;
   focusQuietly(next, { preventScroll: true });
   if (selection && (next instanceof HTMLInputElement || next instanceof HTMLTextAreaElement)) {
     try {

@@ -6,7 +6,7 @@ import { cn } from "../lib/cn";
 import { statusTone, type StatusKind } from "../lib/status-tone";
 import { TOUCH_TARGET_LARGE } from "./button-look";
 import { FOCUS_RING } from "./focus-ring";
-import { assignRef, LockedReason, type DisabledReasonDisplay } from "./field-parts";
+import { assignRef, LockedReason, useLockFocusHandover, type DisabledReasonDisplay } from "./field-parts";
 import { hasContent } from "../lib/presence";
 import { DEFAULT_COMMON_LABELS, useKitLabels, useKitLink } from "../i18n/kit-labels";
 import { pickLinkRenderer } from "./text-link";
@@ -594,6 +594,12 @@ export function Chip({
     },
     [snapRef, ref],
   );
+  // A pressable chip's button: a disabledReason arriving or lifting remounts it (bare ↔
+  // LockedReason), and a focused one hands the focus to its new self.
+  const buttonRef = useLockFocusHandover<HTMLButtonElement>(
+    locked,
+    (onRemove ? ref : ownRef) as Ref<HTMLButtonElement>,
+  );
   const look = cn(
     CHIP_BASE,
     s.body,
@@ -775,7 +781,7 @@ export function Chip({
     const ownDescribedBy = rest["aria-describedby"];
     const button = (
       <button
-        ref={(remove ? ref : ownRef) as React.Ref<HTMLButtonElement>}
+        ref={buttonRef}
         {...toneData}
         type="button"
         onClick={(e) => {
