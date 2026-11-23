@@ -135,10 +135,15 @@ export function HoverMenu({
     [],
   );
 
-  const handleMouseLeave = useCallback(
-    () => setPhase((p) => (p === "opening" ? "closed" : p === "open" ? "closing" : p)),
-    [],
-  );
+  // The last pointer was a finger or a pen: the mouseleave a phone emulates after a tap
+  // (once the panel renders, the emulated pointer no longer counts as over the trigger) is
+  // not a pointer leaving. Real Chromium at 390 px closed TopBarNav's menu 140 ms after the
+  // tap that opened it (0.66 browser probe, 2026-11-23). A real mouse moving resets it.
+  const touchRef = useRef(false);
+  const handleMouseLeave = useCallback(() => {
+    if (touchRef.current) return;
+    setPhase((p) => (p === "opening" ? "closed" : p === "open" ? "closing" : p));
+  }, []);
 
   // Drive the delayed transitions; unmount/phase changes cancel the timer.
   useEffect(() => {
@@ -304,7 +309,12 @@ export function HoverMenu({
       onMouseLeave={handleMouseLeave}
       onPointerDownCapture={(e) => {
         rest.onPointerDownCapture?.(e);
+        touchRef.current = e.pointerType === "touch" || e.pointerType === "pen";
         markInside(e);
+      }}
+      onPointerMove={(e) => {
+        rest.onPointerMove?.(e);
+        if (e.pointerType === "mouse") touchRef.current = false;
       }}
       onKeyDown={(e) => {
         // The caller's handler sees Escape only while this menu is the layer on top: a
