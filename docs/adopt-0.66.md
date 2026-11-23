@@ -69,6 +69,10 @@ before ":" (DOC-5). Move the page's `updated` date in the French text.
 - The signed-out account pages load lazily: −23 kB gzip on a public site's first load, no edit.
 - `/accounts`: each mutation reports through its own call (a second "Send reset" no longer swallows the
   first's toast); the wire types are checked against server-kit 0.32.
+- A focused Button, IconButton or Chip keeps the focus when its `disabledReason` or write lock arrives or
+  lifts, and so does a field locked only by its own `disabledReason` (found in real Chromium).
+- A HoverMenu (TopBarNav's menu, the top bar's menus) opened by a tap on a phone stays open: it closed
+  ~140 ms after the tap.
 - The screenshot crops to the screen's width on a phone whose layout viewport is wider.
 - The npm README lost a stale second copy of 426 lines.
 - The privacy page's `standardEntries.recentData(1)` says one hour in the singular (en, de, fr, it, es: it
