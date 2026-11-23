@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { Modal } from "../modal";
 
 /**
@@ -14,6 +14,16 @@ import { Modal } from "../modal";
  */
 describe("Modal", () => {
   const panel = () => screen.getByRole("dialog");
+
+  it("is a modal panel, named by `labelledBy`", () => {
+    render(
+      <Modal onClose={vi.fn()} labelledBy="modal-title">
+        <h2 id="modal-title">Edit lease</h2>
+      </Modal>,
+    );
+    expect(screen.getByRole("dialog", { name: "Edit lease" })).toHaveAttribute("aria-modal", "true");
+    expect(panel()).toHaveAttribute("aria-labelledby", "modal-title");
+  });
 
   it("scrolls itself rather than growing off the screen", () => {
     render(
@@ -64,5 +74,57 @@ describe("Modal", () => {
     // horizontally scrolling one at 406px.
     expect(panel().className).toContain("w-full");
     expect(panel().className).not.toMatch(/(^|\s)min-w-/);
+  });
+});
+
+/**
+ * Keksdose feedback #254: selecting text in a dialog — press inside, drag out, release
+ * over the backdrop — closed it. A plain onClick fires on the release, and on the common
+ * ancestor of the press and the release, so the reverse drag closed it too. The backdrop
+ * closes on a press that starts AND ends on it (`useBackdropClose`). Lifted from
+ * keksdose's own suite (FS-7 of its 2026-11-22 audit).
+ */
+describe("Modal's backdrop", () => {
+  function setup() {
+    const onClose = vi.fn();
+    render(
+      <Modal onClose={onClose}>
+        <button type="button">Inside</button>
+      </Modal>,
+    );
+    // The backdrop is the panel's parent.
+    return { onClose, backdrop: screen.getByRole("dialog").parentElement!, inside: screen.getByText("Inside") };
+  }
+
+  it("closes on a press that starts and ends on it", () => {
+    const { onClose, backdrop } = setup();
+    fireEvent.mouseDown(backdrop);
+    fireEvent.mouseUp(backdrop);
+    fireEvent.click(backdrop);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("stays open for a press inside the panel", () => {
+    const { onClose, inside } = setup();
+    fireEvent.mouseDown(inside);
+    fireEvent.mouseUp(inside);
+    fireEvent.click(inside);
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("stays open for a drag from inside the panel released on the backdrop", () => {
+    const { onClose, backdrop, inside } = setup();
+    fireEvent.mouseDown(inside);
+    fireEvent.mouseUp(backdrop);
+    fireEvent.click(backdrop);
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("stays open for a drag from the backdrop released inside the panel", () => {
+    const { onClose, backdrop, inside } = setup();
+    fireEvent.mouseDown(backdrop);
+    fireEvent.mouseUp(inside);
+    fireEvent.click(backdrop);
+    expect(onClose).not.toHaveBeenCalled();
   });
 });
