@@ -82,6 +82,20 @@ describe("nextSorts (header click semantics)", () => {
     expect(s).toEqual([{ key: "payee", dir: "asc" }]);
   });
 
+  it("restarts a multi-sort's leading column alone, ascending, on a plain click", () => {
+    // Not a step of its cycle: the column is not the SOLE criterion, so the click makes
+    // it one, in its first direction — desc → asc here, and the second criterion goes.
+    const s = nextSorts(
+      [
+        { key: "date", dir: "desc" },
+        { key: "amount", dir: "asc" },
+      ],
+      "date",
+      false,
+    );
+    expect(s).toEqual([{ key: "date", dir: "asc" }]);
+  });
+
   it("appends on shift-click, then cycles that entry in place", () => {
     let s: SortState[] = [{ key: "date", dir: "desc" }];
     s = nextSorts(s, "amount", true);
