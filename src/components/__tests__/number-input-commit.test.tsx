@@ -42,3 +42,12 @@ describe("NumberInput on Enter", () => {
     expect(onCommit).toHaveBeenCalledExactlyOnceWith("42");
   });
 });
+
+describe("NumberInput's calculator trigger", () => {
+  it("offers the calculator by default, named, and not with calculator={false}", () => {
+    const { rerender } = render(<NumberInput aria-label="Quantity" value="" onChange={() => {}} />);
+    expect(screen.getByRole("button", { name: "Open calculator" })).toBeInTheDocument();
+    rerender(<NumberInput aria-label="Quantity" value="" onChange={() => {}} calculator={false} />);
+    expect(screen.queryByRole("button", { name: "Open calculator" })).toBeNull();
+  });
+});
