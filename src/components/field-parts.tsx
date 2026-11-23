@@ -1,5 +1,14 @@
-import { cloneElement, createContext, isValidElement, useContext, useId, useState } from "react";
-import type { ComponentPropsWithoutRef, ComponentPropsWithRef, ReactNode } from "react";
+import {
+  cloneElement,
+  createContext,
+  isValidElement,
+  useContext,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import type { ComponentPropsWithoutRef, ComponentPropsWithRef, ReactNode, Ref } from "react";
 import { HelpCircle } from "lucide-react";
 import { cn } from "../lib/cn";
 import { firstTabStop } from "../lib/focus-left";
@@ -762,32 +771,96 @@ export function LockFrame({
   // the field. The cost: every such field asks the text size and the pointer for the form
   // it would take, where only a locked one did.
   const locked = lock.locked;
+  const framed = locked || lock.framed;
+  // A field with no `commit` is bare until its first lock (its own `disabledReason`), and
+  // that first lock is the one remount left: the frame arrives around it. Note where the
+  // focus is while the old control is still in the document — this render, before the
+  // commit — and hand it, with the caret, to the new control after.
+  const [wasFramed, setWasFramed] = useState(framed);
+  const [moved, setMoved] = useState<FocusSnapshot | null>(null);
+  if (framed && !wasFramed) {
+    setWasFramed(true);
+    setMoved(focusSnapshot());
+  }
+  const frame = useRef<HTMLSpanElement>(null);
+  useLayoutEffect(() => {
+    if (moved) restoreFocus(moved, frame.current);
+  }, [moved]);
   // A field that can never lock (no `commit`, never locked) keeps the bare tree apps were
   // promised — "an Input that never passes `error` is still a bare <input>", its className
   // on the field: only a field a lock can reach pays for the frame.
-  if (!locked && !lock.framed) return children;
+  if (!framed) return children;
   return (
-    <FramedLock lock={lock} display={display} className={className}>
+    <FramedLock lock={lock} display={display} className={className} frameRef={frame}>
       {children}
     </FramedLock>
   );
+}
+
+/** The focused control at a field's first lock: the node, its id, its caret, and the
+ *  elements it sat in. */
+interface FocusSnapshot {
+  node: HTMLElement;
+  id: string;
+  selection: readonly [number, number] | null;
+  ancestors: readonly Element[];
+}
+
+function focusSnapshot(): FocusSnapshot | null {
+  if (typeof document === "undefined") return null;
+  const node = document.activeElement;
+  if (!(node instanceof HTMLElement) || node === document.body) return null;
+  const ancestors: Element[] = [];
+  for (let up = node.parentElement; up; up = up.parentElement) ancestors.push(up);
+  const text = node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement ? node : null;
+  const start = text?.selectionStart;
+  const end = text?.selectionEnd;
+  const selection = typeof start === "number" && typeof end === "number" ? ([start, end] as const) : null;
+  return { node, id: node.id, selection, ancestors };
+}
+
+/** The old control left the document with the focus: the field's new control takes it
+ *  back, quietly, so a picker that opens on focus stays shut — the one with the old id
+ *  (the field above LockFrame keeps its `useId`), else the frame's first tab stop when the
+ *  frame sits where the old control sat (DatePicker's trigger has no id). Focus that moved
+ *  on by itself is left where it is. */
+function restoreFocus({ node, id, selection, ancestors }: FocusSnapshot, frame: HTMLElement | null) {
+  if (node.isConnected) return;
+  const active = document.activeElement;
+  if (active && active !== document.body) return;
+  const byId = id ? document.getElementById(id) : null;
+  const here = frame?.parentElement ? ancestors.includes(frame.parentElement) : false;
+  const next = byId ?? (frame && here ? firstTabStop(frame) : null);
+  if (!next || next === node) return;
+  focusQuietly(next, { preventScroll: true });
+  if (selection && (next instanceof HTMLInputElement || next instanceof HTMLTextAreaElement)) {
+    try {
+      next.setSelectionRange(selection[0], selection[1]);
+    } catch {
+      // A type without a caret (number, date): the focus is what matters.
+    }
+  }
 }
 
 function FramedLock({
   lock,
   display,
   className,
+  frameRef,
   children,
 }: {
   lock: Pick<LockReason, "locked" | "reason" | "reasonId">;
   display?: DisabledReasonDisplay;
   className?: string;
+  /** The frame's element, for LockFrame's focus hand-over at a first lock. */
+  frameRef?: Ref<HTMLSpanElement>;
   children: ReactNode;
 }) {
   const line = useDisabledReasonLine(display);
   const locked = lock.locked;
   return (
     <Tooltip
+      ref={frameRef}
       keepFrame
       label={locked && !line ? lock.reason : null}
       data-lock-frame={locked ? "" : undefined}

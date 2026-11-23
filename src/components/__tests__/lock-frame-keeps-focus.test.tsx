@@ -108,3 +108,34 @@ describe.each(["tooltip", "line"] as const)("a lock flipping under a focused fie
     expect(document.activeElement).toBe(control);
   });
 });
+
+/**
+ * A field with no `commit`, locked by its own `disabledReason` (0.66 follow-up to INP-4):
+ * it keeps the bare tree until its first lock, so that first lock still remounts it. The
+ * focus, the text and the caret go to the new control, not to <body>.
+ */
+describe.each(["tooltip", "line"] as const)("a disabledReason arriving under a focused field (%s)", (display) => {
+  it.each(Object.keys(FIELDS))("%s keeps the focus on its first lock", (name) => {
+    const { field, role } = FIELDS[name];
+    const at = (reason: string | undefined) => {
+      const el = field(display);
+      const { commit: _commit, ...props } = el.props as Record<string, unknown>;
+      return { ...el, props: { ...props, disabledReason: reason } } as ReactElement;
+    };
+    const { rerender } = render(at(undefined));
+    const control = screen.getAllByRole(role)[0];
+    act(() => control.focus());
+    const typed = control instanceof HTMLInputElement && control.type === "text";
+    if (typed) control.setSelectionRange(1, 2);
+    rerender(at("The list is done"));
+    const now = screen.getAllByRole(role)[0];
+    expect(document.activeElement, "focus is not on <body>").toBe(now);
+    expect(now).toHaveAccessibleDescription(expect.stringContaining("The list is done"));
+    if (typed && now instanceof HTMLInputElement) {
+      expect([now.selectionStart, now.selectionEnd], "the caret came along").toEqual([1, 2]);
+    }
+    rerender(at(undefined));
+    expect(screen.getAllByRole(role)[0], "a lock lifting keeps the node").toBe(now);
+    expect(document.activeElement).toBe(now);
+  });
+});
