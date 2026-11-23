@@ -86,6 +86,10 @@ before ":" (DOC-5). Move the page's `updated` date in the French text.
   kit's.
 - Load the kit catalogues lazily (MOD-2: −56 kB gzip on the entry chunk): `loadUiKitLabels` /
   `peekUiKitLabels`, as Kurvenschmiede and Staunlabor do (5 files).
+- Tests the kit now holds (FS-7): delete `data-table-sort.test.ts`, `date-picker-step.test.tsx`,
+  `swipeable-row.test.tsx`, `calculator.test.tsx`, `mini-calendar.test.tsx`, `modal.test.tsx`,
+  `dropdown.test.tsx`, `multi-select.test.tsx` and `number-input.test.tsx` from
+  `frontend/src/shared/components/__tests__/`.
 - Persistence: nothing (see "Must change"); `shouldDehydrateMutation: () => false` is in (keksdose FS-13,
   2026-11-23).
 
