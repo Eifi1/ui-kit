@@ -86,8 +86,8 @@ before ":" (DOC-5). Move the page's `updated` date in the French text.
   kit's.
 - Load the kit catalogues lazily (MOD-2: −56 kB gzip on the entry chunk): `loadUiKitLabels` /
   `peekUiKitLabels`, as Kurvenschmiede and Staunlabor do (5 files).
-- Persistence: nothing (see "Must change"); `shouldDehydrateMutation: () => false` lands with keksdose's own
-  audit round.
+- Persistence: nothing (see "Must change"); `shouldDehydrateMutation: () => false` is in (keksdose FS-13,
+  2026-11-23).
 
 **Kurvenschmiede:**
 - The same feedback `update` guard as keksdose.
