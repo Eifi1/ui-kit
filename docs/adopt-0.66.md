@@ -48,6 +48,12 @@ before ":" (DOC-5). Move the page's `updated` date in the French text.
   links do not fit beside the actions, all of them move into a menu. `renderLink` takes NavPills' link props.
   Words: namespace `topBarNav`.
 - **`StatStrip`** — a quiet row of three to six `StatTile`s between hairlines.
+- **`PageContents variant="bar"`** — the page's sections as one row held under the header at every width
+  (Staunlabor's exhibit pages): the current one underlined in brand colour (`aria-current="location"`), the row
+  scrolling sideways on a phone with that entry kept in its middle. A click scrolls to the section and focuses
+  its heading without a history entry (Back leaves the page; the `href` stays for a new tab). It sticks at
+  `top-0`: under a TopBar pass `className="top-14"`; give the targets `PAGE_CONTENTS_BAR_TARGET`
+  (`scroll-mt-32`). Rail and disclosure are unchanged.
 - **DataTable `aria-label`, `aria-labelledby`, `caption`** (`hideCaption` keeps it for screen readers only) —
   name the table and its phone list.
 - **`AccountFeedbackPage onCaptureScreenshot={null}`** hides the capture button.
@@ -110,5 +116,8 @@ before ":" (DOC-5). Move the page's `updated` date in the French text.
 - Feedback pages: install `modern-screenshot`, or pass `onCaptureScreenshot={null}` (the capture button always
   failed without it).
 - Optional: `weekly.ts` helpers → `daysBetweenIso` / `addDaysIso` / `weekStartOf`.
+- `exhibit-nav.tsx` (feat/exhibit-nav) → `<PageContents variant="bar" items={parts} activeId={useScrollSpy(ids, { line: 0.2 })}
+  labels={{ title: t("experiments.frame.parts") }} className="top-14 -mx-3 px-3 md:-mx-6 md:px-6" />`, and
+  `PART_TARGET` → `PAGE_CONTENTS_BAR_TARGET`.
 
 **Words to read natively:** es, hu, zh for `attach` (zh "附加" least sure) and `topBarNav` ("Pages", "Menu").
