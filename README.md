@@ -604,7 +604,7 @@ columns, strings and permissions (see the note at the top of `src/feedback/feedb
 
 <!-- BEGIN GENERATED: exports — node scripts/gen-export-inventory.mjs -->
 
-**2318 names from 393 modules** in the main barrel — 1039 values and 1279 types — and 365 more in 17 standalone entries. _Italic_ is a type-only export.
+**2319 names from 393 modules** in the main barrel — 1040 values and 1279 types — and 365 more in 17 standalone entries. _Italic_ is a type-only export.
 
 Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 `node scripts/gen-export-inventory.mjs`; the counts are pinned by
@@ -612,7 +612,7 @@ Generated from `dist/index.d.ts` and each standalone entry's own `.d.ts` by
 
 | Entry point | Names |
 |---|---|
-| `@eifi1/ui-kit` | 2318 |
+| `@eifi1/ui-kit` | 2319 |
 | `@eifi1/ui-kit/chart` | 102 |
 | `@eifi1/ui-kit/shell` | 114 |
 | `@eifi1/ui-kit/data-table` | 57 |
@@ -727,7 +727,7 @@ Every other subpath is a re-slicing of the barrel, never a second API.
 | `components/stat-strip` | `StatStrip`, _`StatStripProps`_ |
 | `components/signature-pad` | `DEFAULT_SIGNATURE_PAD_LABELS`, `SignaturePad`, `SignatureView`, _`SignatureDetail`_, _`SignaturePadHandle`_, _`SignaturePadLabels`_, _`SignaturePadProps`_, _`SignatureViewProps`_ |
 | `components/password-strength` | `DEFAULT_PASSWORD_STRENGTH_LABELS`, `passwordByteLength`, `passwordRules`, `PasswordStrengthMeter`, `scorePassword`, _`PasswordRule`_, _`PasswordRuleId`_, _`PasswordScoreOptions`_, _`PasswordStrengthLabels`_, _`PasswordStrengthMeterProps`_, _`PasswordStrengthScore`_ |
-| `components/page-contents` | `DEFAULT_PAGE_CONTENTS_LABELS`, `PageContents`, `PageContentsLayout`, `useScrollSpy`, _`PageContentsItem`_, _`PageContentsLabels`_, _`PageContentsLayoutProps`_, _`PageContentsProps`_, _`UseScrollSpyOptions`_ |
+| `components/page-contents` | `DEFAULT_PAGE_CONTENTS_LABELS`, `PAGE_CONTENTS_BAR_TARGET`, `PageContents`, `PageContentsLayout`, `useScrollSpy`, _`PageContentsItem`_, _`PageContentsLabels`_, _`PageContentsLayoutProps`_, _`PageContentsProps`_, _`UseScrollSpyOptions`_ |
 | `components/disclosure` | `Collapse`, `Disclosure`, _`CollapseProps`_, _`DisclosureProps`_, _`DisclosureTriggerProps`_ |
 | `components/dialog-frame` | `DEFAULT_DIALOG_FRAME_LABELS`, `DialogFrame`, _`DialogFrameLabels`_, _`DialogFrameProps`_ |
 | `components/danger-confirm` | `CurrentPasswordInput`, `DangerConfirm`, `DEFAULT_DANGER_CONFIRM_LABELS`, `TypedConfirmField`, `typedMatches`, _`CurrentPasswordInputLabels`_, _`CurrentPasswordInputProps`_, _`DangerConfirmLabels`_, _`DangerConfirmProps`_, _`DangerConfirmValues`_, _`DangerConsequence`_, _`TypedConfirmFieldLabels`_, _`TypedConfirmFieldProps`_, _`TypedMatch`_ |
