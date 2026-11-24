@@ -412,7 +412,9 @@ const ENTRIES: Array<[name: string, mod: object, count: number]> = [
   // `DEFAULT_ATTACH_LABELS` and `attachDropzoneProps` — one way in for attachments.
   // 0.66 (+1, here and in /feedback; refactor audit 2026-11-22, FLW-2): `isFeedbackBulkPatch`,
   // a bulk patch's error left to the bar's one summary (feedback §13.6).
-  ["@eifi1/ui-kit", barrel, 1039],
+  // 0.66 (+1, Staunlabor's exhibit pages, Marcel 2026-11-24): `PAGE_CONTENTS_BAR_TARGET`,
+  // the scroll margin of the headings PageContents' new `variant="bar"` jumps to.
+  ["@eifi1/ui-kit", barrel, 1040],
   // 0.8.0 series-chart marks (+5 here and in the barrel): `anchoredBand`,
   // `visibleSeries`, `seriesLegendEntries`, `axisExtent`, `defaultZoomAxes`.
   // 0.15.4: `resolveTooltipPlacement` (+1 here and in the barrel).
