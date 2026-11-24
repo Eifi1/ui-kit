@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import type { ComponentPropsWithRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, MouseEvent, ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "../lib/cn";
+import { prefersReducedMotion } from "../lib/reduced-motion";
 import { useKitLabels, type LabelOverride } from "../i18n/kit-labels";
 import { DEFAULT_PAGE_CONTENTS_LABELS } from "./page-contents-labels";
 
@@ -13,7 +14,8 @@ import { DEFAULT_PAGE_CONTENTS_LABELS } from "./page-contents-labels";
  *   - {@link useScrollSpy} — which section is current, from the headings' positions in
  *     a scroll container. No markup; usable for anything that follows the reader.
  *   - {@link PageContents} — the list. `variant="rail"` for beside the page,
- *     `variant="disclosure"` for a collapsed block under the title on narrow screens.
+ *     `variant="disclosure"` for a collapsed block under the title on narrow screens,
+ *     `variant="bar"` for one row held under the app's header at every width.
  *   - {@link PageContentsLayout} — the page with the rail sticky on one side of it.
  *
  * Domain-free: the app supplies the entries and how an entry links (`hrefFor`), so it
@@ -33,6 +35,14 @@ export interface PageContentsLabels {
   /** The heading above the list, and the landmark's accessible name. */
   title: string;
 }
+
+/**
+ * The scroll margin for the headings a `variant="bar"` jumps to, under the kit's TopBar
+ * (3.5rem) and the bar (some 2.7rem), with room for a card's own top above its heading:
+ * at `scroll-mt-28` a heading stood flush under the bar (Staunlabor, 360px and 1440px).
+ * An app with a taller header writes its own.
+ */
+export const PAGE_CONTENTS_BAR_TARGET = "scroll-mt-32";
 
 // Defined in ./page-contents-labels, which holds no component code (0.34, KS U8).
 export { DEFAULT_PAGE_CONTENTS_LABELS };
@@ -109,9 +119,24 @@ export interface PageContentsProps extends Omit<ComponentPropsWithRef<"nav">, "c
   /** The link for an entry. Default `#id`; under a hash router build it with the
    *  router (react-router's `useHref({ hash: id })` gives `#/page#id`). */
   hrefFor?: (id: string) => string;
-  /** `rail` — a list beside the page. `disclosure` — collapsed under a summary line,
-   *  for narrow screens where a rail has no room. */
-  variant?: "rail" | "disclosure";
+  /**
+   * `rail` — a list beside the page. `disclosure` — collapsed under a summary line, for
+   * narrow screens where a rail has no room. `bar` — one row of entries, sticky at the
+   * top of the scroll container at every width, scrolling sideways on a phone with the
+   * current entry kept in its middle (0.66, Staunlabor's exhibit pages).
+   *
+   * The bar sticks at `top-0`; under a TopBar pass `className="top-14"`, and negative
+   * margins with the same padding to run it the container's full width
+   * (`"-mx-3 px-3 md:-mx-6 md:px-6"`). Give the targets {@link PAGE_CONTENTS_BAR_TARGET}.
+   *
+   * A click on a bar entry scrolls to its target and focuses it (`tabindex="-1"` is added
+   * where the target has none) WITHOUT following the link: an anchor link puts an entry in
+   * the history for every jump, so Back walked through the sections before it left the
+   * page. The `href` stays for a new tab and for copying; a modified click is the
+   * browser's. An app that scrolls a box of its own calls `preventDefault()` in
+   * `onClickCapture`, and the bar leaves the jump to it. `level` is not shown in a row.
+   */
+  variant?: "rail" | "disclosure" | "bar";
   labels?: LabelOverride<PageContentsLabels>;
 }
 
@@ -152,43 +177,80 @@ export function PageContents({
   }, [clicked]);
   const shown = clicked ?? activeId;
 
-  // Keep the current entry in view when the list is taller than the window.
+  // Keep the current entry in view when the list is taller than the window — or, in a
+  // bar wider than the screen, in the row's middle: a mark on an entry scrolled out of
+  // the row is a mark nobody sees. Not `scrollIntoView` there: it would scroll the page
+  // too.
   useEffect(() => {
-    if (!shown || variant !== "rail") return;
-    listRef.current
-      ?.querySelector<HTMLElement>(`[data-entry="${CSS.escape(shown)}"]`)
-      ?.scrollIntoView?.({ block: "nearest" });
+    const row = listRef.current;
+    if (!shown || !row || variant === "disclosure") return;
+    const entry = row.querySelector<HTMLElement>(`[data-entry="${CSS.escape(shown)}"]`);
+    if (!entry) return;
+    if (variant === "rail") {
+      entry.scrollIntoView?.({ block: "nearest" });
+      return;
+    }
+    if (row.scrollWidth <= row.clientWidth) return;
+    row.scrollTo?.({
+      left: entry.offsetLeft - (row.clientWidth - entry.offsetWidth) / 2,
+      behavior: prefersReducedMotion() ? "auto" : "smooth",
+    });
   }, [shown, variant]);
 
   if (items.length === 0) return null;
+
+  const bar = variant === "bar";
+  const jump = (event: MouseEvent<HTMLAnchorElement>, id: string) => {
+    setClicked(id);
+    if (!bar || event.defaultPrevented) return;
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const target = document.getElementById(id);
+    if (!target) return;
+    event.preventDefault();
+    target.scrollIntoView?.({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "start" });
+    // The keyboard follows: the next Tab goes on inside the section, not along the bar.
+    if (!target.hasAttribute("tabindex") && target.tabIndex < 0) target.setAttribute("tabindex", "-1");
+    target.focus({ preventScroll: true });
+  };
 
   const list = (
     <ul
       ref={listRef}
       className={cn(
-        "space-y-0.5 border-s border-subtle",
+        bar
+          ? "relative flex gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          : "space-y-0.5 border-s border-subtle",
         variant === "rail" && "max-h-[calc(100dvh-10rem)] overflow-y-auto [scrollbar-width:thin]",
       )}
     >
       {items.map((item) => {
         const current = item.id === shown;
         return (
-          <li key={item.id} data-entry={item.id}>
+          <li key={item.id} data-entry={item.id} className={bar ? "shrink-0" : undefined}>
             <a
               href={hrefFor(item.id)}
               // Entries WRAP in the rail rather than truncate: a cut-off heading needed a
               // native `title` to be read at all, which a keyboard never sees and which
               // broke keksdose's one-tooltip rule (dev#523).
               aria-current={current ? "location" : undefined}
-              onClick={() => setClicked(item.id)}
-              className={cn(
-                "-ms-px block border-s-2 py-1 pe-1 text-[0.8125rem] leading-snug transition-colors duration-150",
-                variant === "rail" && "[overflow-wrap:anywhere]",
-                item.level === 2 ? "ps-6" : "ps-3",
-                current
-                  ? "border-brand font-medium text-brand"
-                  : "border-transparent text-muted hover:border-strong hover:text-primary",
-              )}
+              onClick={(event) => jump(event, item.id)}
+              className={
+                bar
+                  ? cn(
+                      "block whitespace-nowrap border-b-2 px-3 py-2.5 text-sm transition-colors duration-150",
+                      current
+                        ? "border-brand font-medium text-primary"
+                        : "border-transparent text-secondary hover:text-primary",
+                    )
+                  : cn(
+                      "-ms-px block border-s-2 py-1 pe-1 text-[0.8125rem] leading-snug transition-colors duration-150",
+                      variant === "rail" && "[overflow-wrap:anywhere]",
+                      item.level === 2 ? "ps-6" : "ps-3",
+                      current
+                        ? "border-brand font-medium text-brand"
+                        : "border-transparent text-muted hover:border-strong hover:text-primary",
+                    )
+              }
             >
               {item.label}
             </a>
@@ -197,6 +259,18 @@ export function PageContents({
       })}
     </ul>
   );
+
+  if (bar) {
+    return (
+      <nav
+        {...rest}
+        aria-label={l.title}
+        className={cn("sticky top-0 z-20 border-b border-subtle bg-page print:hidden", className)}
+      >
+        {list}
+      </nav>
+    );
+  }
 
   if (variant === "disclosure") {
     return (

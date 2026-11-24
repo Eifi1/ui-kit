@@ -1013,7 +1013,7 @@ const CONTENTS_SAMPLE = [
  */
 function PageContentsExample() {
   const [position, setPosition] = useState<"start" | "end">("start");
-  const [variant, setVariant] = useState<"rail" | "disclosure">("rail");
+  const [variant, setVariant] = useState<"rail" | "disclosure" | "bar">("rail");
   const [line, setLine] = useState(0.15);
   // State, not a ref: `useScrollSpy` re-subscribes when its `root` changes, and a ref
   // filled after the first render would leave it listening to the window.
@@ -1030,15 +1030,19 @@ function PageContentsExample() {
       variant={variant}
       labels={{ title: "In this box" }}
       // Scroll the box rather than follow the href: under this page's hash router a
-      // bare `#id` would be read as a route.
-      onClick={(e) => {
+      // bare `#id` would be read as a route. In the capture phase, so the bar sees the
+      // click taken and leaves its own jump (it would scroll the page along) to this one.
+      onClickCapture={(e) => {
         const id = (e.target as HTMLElement).closest("[data-entry]")?.getAttribute("data-entry");
         if (!id) return;
         e.preventDefault();
-        // The box only: `scrollIntoView` would scroll the page along with it.
+        // The box only: `scrollIntoView` would scroll the page along with it. Under the
+        // bar, which sticks in the box, by the bar's height more.
         const target = document.getElementById(id);
-        if (box && target) box.scrollTo({ top: target.offsetTop - 8, behavior: "smooth" });
+        const under = variant === "bar" ? e.currentTarget.offsetHeight : 0;
+        if (box && target) box.scrollTo({ top: target.offsetTop - under - 8, behavior: "smooth" });
       }}
+      className={variant === "bar" ? "-mx-3 px-3" : undefined}
     />
   );
 
@@ -1057,13 +1061,14 @@ function PageContentsExample() {
             { value: "end", label: 'position="end"' },
           ]}
         />
-        <ToggleGroup<"rail" | "disclosure">
+        <ToggleGroup<"rail" | "disclosure" | "bar">
           aria-label="variant"
           value={variant}
           onChange={setVariant}
           options={[
             { value: "rail", label: 'variant="rail"' },
             { value: "disclosure", label: 'variant="disclosure"' },
+            { value: "bar", label: 'variant="bar"' },
           ]}
         />
         <label className="flex items-center gap-2 text-xs text-secondary">
@@ -1088,6 +1093,8 @@ function PageContentsExample() {
       >
         {variant === "disclosure" && <div className="mb-3">{contents}</div>}
         <div ref={setBox} className="relative h-48 overflow-y-auto rounded border border-subtle px-3">
+          {/* The bar sticks at the top of its scroller — here the box. */}
+          {variant === "bar" && contents}
           {/* The reading line, drawn where the spy puts it. */}
           <div
             aria-hidden
@@ -1112,8 +1119,10 @@ function PageContentsExample() {
       <p className="mt-2 text-xs text-secondary">
         Below <code className="font-mono">xl</code> the page&apos;s rail has no room; the same entries go in{" "}
         <code className="font-mono">{'<PageContents variant="disclosure">'}</code> under the title, as on this page at a
-        narrower window. <code className="font-mono">labels.title</code> overrides the provider&apos;s{" "}
-        <code className="font-mono">pageContents.title</code> for one instance.
+        narrower window. <code className="font-mono">{'<PageContents variant="bar">'}</code> is one row at every width,
+        sticky in its scroller (under a TopBar: <code className="font-mono">className=&quot;top-14&quot;</code>), and a
+        click jumps without a history entry. <code className="font-mono">labels.title</code> overrides the
+        provider&apos;s <code className="font-mono">pageContents.title</code> for one instance.
       </p>
     </Example>
   );
