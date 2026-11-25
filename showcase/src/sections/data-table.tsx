@@ -1051,7 +1051,12 @@ function bandTotals(rows: LedgerRow[]) {
 
 const LEDGER_PERIOD: DataTableGroupBy<LedgerRow> = {
   key: (r) => r.date.slice(0, 7),
-  label: (k) => MONTH_NAME[k] ?? k,
+  // A month the demo has no rows in (the empty days' October) is named all the same.
+  label: (k) =>
+    MONTH_NAME[k] ??
+    new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric", timeZone: "UTC" }).format(
+      new Date(`${k}-01T12:00:00Z`),
+    ),
   // The month's totals over ALL its rows — the app's own figure, not just the loaded rows.
   end: (k) => bandTotals(LEDGER.filter((r) => r.date.startsWith(k))),
 };
